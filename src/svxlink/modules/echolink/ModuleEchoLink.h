@@ -133,18 +133,14 @@ class ModuleEchoLink : public Module
     
   private:
     EchoLink::Directory *dir;
-    //QsoImpl   	      	*qso;
     Async::Timer      	*dir_refresh_timer;
     std::string       	mycall;
     std::string       	sysop_name;
     std::string       	description;
     std::string       	allow_ip;
-    //MsgHandler	      	*msg_handler;
-    //AudioPacer       	*msg_pacer;
     bool      	      	remote_activation;
     int       	      	pending_connect_id;
     std::string       	last_message;
-    //std::string       	last_info_msg;
     QsoImpl		*outgoing_con_pending;
     std::list<QsoImpl*>	qsos;
     unsigned       	max_connections;
@@ -168,16 +164,12 @@ class ModuleEchoLink : public Module
     void onError(const std::string& msg);
     void onIncomingConnection(const Async::IpAddress& ip,
       	    const std::string& callsign, const std::string& name);
-    //void onInfoMsgReceived(QsoImpl *qso, const std::string& msg);
     void onChatMsgReceived(QsoImpl *qso, const std::string& msg);
-    //void onStateChange(EchoLink::Qso::State state, QsoImpl *qso);
     void onIsReceiving(QsoImpl *qso, bool is_receiving);
-    //void onAudioReceived(short *samples, int count);
     void onDestroyMe(QsoImpl *qso);
 
     void getDirectoryList(Async::Timer *timer=0);
 
-    //void allRemoteMsgsWritten(void);
     void createOutgoingConnection(const EchoLink::StationData *station);
     int audioFromRemote(QsoImpl *qso, short *samples, int count);
     QsoImpl *findFirstTalker(void) const;
