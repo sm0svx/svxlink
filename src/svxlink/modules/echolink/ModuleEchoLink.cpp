@@ -905,6 +905,11 @@ void ModuleEchoLink::onDestroyMe(QsoImpl *qso)
   
   updateDescription();
   
+  if (qsos.empty() && !squelch_is_open)
+  {
+    setIdle(true);
+  }
+  
 } /* ModuleEchoLink::onDestroyMe */
 
 
