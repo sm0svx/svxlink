@@ -9,9 +9,11 @@
 
 * Added roger beep for SimplexLogic.
 
-* The TX hang bug might now have been fixed. I really hope so...
+* ModuleParrot: The TX hang bug might now have been fixed. I really hope so...
 
-* Now not possible to initiate a connection to own node.
+* ModuleEchoLink: Now not possible to initiate a connection to own node.
+
+* ModuleEchoLink: Added a link idle timeout timer.
 
 
 
