@@ -165,7 +165,7 @@ bool RepeaterLogic::initialize(void)
   rx().audioReceived.connect(slot(this, &RepeaterLogic::audioReceived));
   if (required_1750_duration > 0)
   {
-    if (!rx().detect1750(2000))
+    if (!rx().detect1750(required_1750_duration))
     {
       cerr << "*** WARNING: Could not setup 1750 detection\n";
     }
