@@ -69,25 +69,26 @@ else
   info "no\n"
 fi
 
-# Checking for Red Hat release
-info "--- Checking Red Hat release..."
-if [ -r /etc/redhat-release ]; then
-  REDHAT_RELEASE=$(awk '/^Red Hat Linux release/{ print $5 }' \
-      	      	   < /etc/redhat-release)
-  if [ -z "${REDHAT_RELEASE}" ]; then
-    unset REDHAT_RELEASE
-    info "not a Red Hat system\n"
-  else
-    info "${REDHAT_RELEASE}\n"
-    REDHAT_RELEASE_MAJOR=${REDHAT_RELEASE%%.*}
-    REDHAT_RELEASE_MINOR=${REDHAT_RELEASE##*.}
-    output "REDHAT_RELEASE = ${REDHAT_RELEASE}"
-    output "REDHAT_RELEASE_MAJOR = ${REDHAT_RELEASE_MAJOR}"
-    output "REDHAT_RELEASE_MINOR = ${REDHAT_RELEASE_MINOR}"
-    output "CFLAGS_DEFINES += -DREDHAT_RELEASE=\"${REDHAT_RELEASE}\""
-    output "CFLAGS_DEFINES += -DREDHAT_RELEASE_MAJOR=${REDHAT_RELEASE_MAJOR}"
-    output "CFLAGS_DEFINES += -DREDHAT_RELEASE_MINOR=${REDHAT_RELEASE_MINOR}"
+# Checking for QT
+info "--- Checking for QT..."
+if which pkg-config &> /dev/null; then
+  if pkg-config qt; then
+    info "yes (pkg-config qt)\n"
+    output "QT_LIBPATH=$(pkg-config qt --libs-only-L)"
+    output "QT_LIBS=$(pkg-config qt --libs-only-l)"
+    output "QT_CFLAGS=$(pkg-config qt --cflags)"
+  elif pkg-config qt-mt; then
+    info "yes (pkg-config qt-mt)\n"
+    output "QT_LIBPATH=$(pkg-config qt-mt --libs-only-L)"
+    output "QT_LIBS=$(pkg-config qt-mt --libs-only-l)"
+    output "QT_CFLAGS=$(pkg-config qt-mt --cflags)"
+  elif [ -n "$QTDIR" ]; then
+    info "yes (QTDIR)\n"
+    output "QT_LIBPATH=-L${QTDIR}/lib"
+    output "QT_LIBS=-lqt"
+    output "QT_CFLAGS=-I${QTDIR}/include"
   fi
+else
+  info "no\n"
 fi
-
 

@@ -33,7 +33,7 @@ PRGSRC		= MainWindow.cpp ComDialog.cpp Settings.cpp
 PROJLIBS	= -lecholib -lasyncqt
 
 # Libraries external to the project
-LIBS		= -lqt -lsigc
+LIBS		= $(QT_LIBS) -lsigc
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).
@@ -194,11 +194,11 @@ include $(ROOT)/makefile.inc
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= -I $(QTDIR)/include $(shell sigc-config --cflags)
+INCPATH 	+= 
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.
-LIBPATH 	+= -L $(QTDIR)/lib
+LIBPATH 	+= $(QT_LIBPATH)
 
 # Additional warnings to use. If you want to override the default
 # warnings, change the "+=" to "=".
@@ -206,7 +206,7 @@ WARNINGS	+= -Wno-deprecated
 
 # Extra commandline switches to the compiler. For example "-g" to
 # add debug information, "-O2" to add optimizations etc.
-CFLAGS		+= -g
+CFLAGS		+= -g $(QT_CFLAGS)/include $(shell sigc-config --cflags)
 
 # Extra commandline switches to the linker
 LDFLAGS		+= 

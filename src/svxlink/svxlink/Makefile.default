@@ -24,7 +24,7 @@ PROGS		=
 
 # C++ programs to compile
 CPPPROGS      	= $(BIN)/svxlink
-ifdef QTDIR
+ifdef QT_LIBS
 CPPPROGS	+= $(BIN)/dtmf_plot
 endif
 
@@ -35,22 +35,19 @@ PRGSRC		= LocalRx.cpp Vox.cpp LocalTx.cpp MsgHandler.cpp \
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -lasynccpp
-ifdef QTDIR
+ifdef QT_LIBS
 PROJLIBS	+= -lasyncqt
 endif
 
 # Libraries external to the project
-LIBS		= -ldl
-ifdef QTDIR
-LIBS		+= -lqt
-endif
+LIBS		= -ldl $(QT_LIBS)
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).
 QTHEADERS	= 
 
 # Specify which ui-files to include in the programs we compile.
-ifdef QTDIR
+ifdef QT_LIBS
 UI_FILES	= DtmfPlot.ui
 endif
 
@@ -201,11 +198,11 @@ RPM_NAME := svxlink
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= -I$(QTDIR)/include $(shell sigc-config --cflags)
+INCPATH 	+= 
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.
-LIBPATH 	+= -L$(QTDIR)/lib
+LIBPATH 	+= $(QT_LIBPATH)
 
 # Additional warnings to use. If you want to override the default
 # warnings, change the "+=" to "=".
@@ -213,7 +210,7 @@ WARNINGS	+= -Wno-deprecated
 
 # Extra commandline switches to the compiler. For example "-g" to
 # add debug information, "-O2" to add optimizations etc.
-CFLAGS		+=
+CFLAGS		+= $(QT_CFLAGS) $(shell sigc-config --cflags)
 
 # Extra commandline switches to the linker
 LDFLAGS		+=

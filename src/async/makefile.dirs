@@ -15,7 +15,7 @@
 # Subdirectories in the order of compilation.
 SUBDIRS	= core cpp
 
-ifdef QTDIR
+ifdef QT_LIBS
 SUBDIRS += qt
 endif
 
