@@ -1,12 +1,54 @@
+/**
+@file	 svxlink.cpp
+@brief   The main file for the SvxLink server
+@author  Tobias Blomberg / SM0SVX
+@date	 2004-03-28
+
+\verbatim
+<A brief description of the program or library this file belongs to>
+Copyright (C) 2003 Tobias Blomberg / SM0SVX
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+\endverbatim
+*/
+
+
+
+/****************************************************************************
+ *
+ * System Includes
+ *
+ ****************************************************************************/
+
 #include <termios.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <popt.h>
 
 #include <string>
 #include <iostream>
 #include <algorithm>
+
+
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
 
 #include <AsyncCppApplication.h>
 #include <AsyncConfig.h>
@@ -15,63 +57,294 @@
 
 #include <version/SVXLINK.h>
 
+
+
+/****************************************************************************
+ *
+ * Local Includes
+ *
+ ****************************************************************************/
+
 #include "LocalRx.h"
 #include "LocalTx.h"
 #include "MsgHandler.h"
 #include "SimplexLogic.h"
 #include "RepeaterLogic.h"
 
+
+
+/****************************************************************************
+ *
+ * Namespaces to use
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 using namespace SigC;
 
 
-LocalTx *tx = 0;
-Logic *logic = 0;
-MsgHandler *msg_handler = 0;
+
+/****************************************************************************
+ *
+ * Defines & typedefs
+ *
+ ****************************************************************************/
+
+#define PROGRAM_NAME "SvxLink"
 
 
 
-void squelch_open(bool is_open)
+/****************************************************************************
+ *
+ * Local class definitions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Prototypes
+ *
+ ****************************************************************************/
+
+static void parse_arguments(int argc, const char **argv);
+static void stdinHandler(FdWatch *w);
+static void initialize_logics(Config &cfg);
+
+
+/****************************************************************************
+ *
+ * Exported Global Variables
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Local Global Variables
+ *
+ ****************************************************************************/
+
+static char   	*logfile_name = NULL;
+static int    	daemonize = 0;
+static FILE   	*logfile = 0;
+static Logic  	*logic = 0;
+static FdWatch	*stdin_watch = 0;
+
+
+/****************************************************************************
+ *
+ * MAIN
+ *
+ ****************************************************************************/
+
+
+/*
+ *----------------------------------------------------------------------------
+ * Function:  main
+ * Purpose:   Start everything...
+ * Input:     argc  - The number of arguments passed to this program
+ *    	      	      (including the program name).
+ *    	      argv  - The arguments passed to this program. argv[0] is the
+ *    	      	      program name.
+ * Output:    Return 0 on success, else non-zero.
+ * Author:    Tobias Blomberg, SM0SVX
+ * Created:   2004-03-28
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
+int main(int argc, char **argv)
 {
-  printf("Squlech %s\n", is_open ? "open" : "closed");
+  CppApplication app;
+
+  parse_arguments(argc, const_cast<const char **>(argv));
   
-}
+  int noclose = 0;
+  if (logfile_name != 0)
+  {
+      /* Open the logfile */
+    FILE *logfile = fopen(logfile_name, "a");
+    if (logfile == NULL)
+    {
+      perror("fopen(logfile)");
+      exit(1);
+    }
+    
+      /* Redirect stdout to the logfile */
+    if (close(STDOUT_FILENO) == -1)
+    {
+      perror("close(stdout)");
+      exit(1);
+    }
+    if (dup2(fileno(logfile), STDOUT_FILENO) == -1)
+    {
+      perror("dup2(stdout)");
+      exit(1);
+    }
 
+      /* Redirect stderr to the logfile */
+    if (close(STDERR_FILENO) == -1)
+    {
+      perror("close(stderr)");
+      exit(1);
+    }
+    if (dup2(fileno(logfile), STDERR_FILENO) == -1)
+    {
+      perror("dup2(stderr)");
+      exit(1);
+    }
 
-int audio_received(short *samples, int count)
-{
-  printf("Received %d samples...\n", count);
-  return count;
-}
+      /* Close stdin */
+    close(STDIN_FILENO);
+    
+      /* Tell the daemon function call not to close the file descriptors */
+    noclose = 1;
+  }
 
-
-void all_audio_flushed(Timer *t)
-{
-  printf("All audio flushed. samplesToWrite=%d\n",
-      	  tx->samplesToWrite());
-  delete t;
-  msg_handler->playMsg("Core", "online");
-}
-
-
-void all_msgs_written(void)
-{
-  printf("Message has been written. samplesToWrite=%d\n",
-      	  tx->samplesToWrite());
-  Timer *timer = new Timer(5000);
-  timer->expired.connect(slot(&all_audio_flushed));
-}
-
-
-void dtmf_digit_detected(char digit)
-{
-  printf("DTMF digit detected: %c\n", digit);
+  if (daemonize)
+  {
+    if (daemon(0, noclose) == -1)
+    {
+      perror("daemon");
+      exit(1);
+    }
+  }
   
-}
+  cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__ ") starting up...\n";
+  
+  char *home_dir = getenv("HOME");
+  if (home_dir == NULL)
+  {
+    home_dir = ".";
+  }
+  
+  string cfg_filename(home_dir);
+  cfg_filename += "/.svxlinkrc";
+  Config cfg;
+  if (cfg.open(cfg_filename))
+  {
+    cout << "Using config file: " << cfg_filename << endl;
+  }
+  else
+  {
+    cfg_filename = "/etc/svxlink.conf";
+    if (cfg.open(cfg_filename))
+    {
+      cout << "Using config file: " << cfg_filename << endl;
+    }
+    else
+    {
+      cerr << "*** Error: Could not open config file. Tried both "
+      	   << "\"" << home_dir << "/.svxlinkrc\" and "
+	   << "\"/etc/svxlink.conf\"\n";
+      exit(1);
+    }
+  }
+  
+  initialize_logics(cfg);
+  
+  struct termios termios, org_termios;
+  tcgetattr(STDIN_FILENO, &org_termios);
+  termios = org_termios;
+  termios.c_lflag &= ~(ICANON | ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &termios);
+
+  stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
+  stdin_watch->activity.connect(slot(&stdinHandler));
+
+  app.exec();
+  
+  delete stdin_watch;
+  tcsetattr(STDIN_FILENO, TCSANOW, &org_termios);
+
+  delete logic;
+  
+  fclose(logfile);
+  
+  return 0;
+  
+} /* main */
 
 
-void stdinHandler(FdWatch *w)
+
+
+/****************************************************************************
+ *
+ * Functions
+ *
+ ****************************************************************************/
+
+/*
+ *----------------------------------------------------------------------------
+ * Function:  parse_arguments
+ * Purpose:   Parse the command line arguments.
+ * Input:     argc  - Number of arguments in the command line
+ *    	      argv  - Array of strings with the arguments
+ * Output:    Returns 0 if all is ok, otherwise -1.
+ * Author:    Tobias Blomberg, SM0SVX
+ * Created:   2000-06-13
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
+static void parse_arguments(int argc, const char **argv)
+{
+  poptContext optCon;
+  const struct poptOption optionsTable[] =
+  {
+    POPT_AUTOHELP
+    {"logfile", 0, POPT_ARG_STRING, &logfile_name, 0,
+	    "Specify the logfile to use (stdout and stderr)", "<filename>"},
+    /*
+    {"int_arg", 'i', POPT_ARG_INT, &int_arg, 0,
+	    "Description of int argument", "<an int>"},
+    */
+    {"daemon", 0, POPT_ARG_NONE, &daemonize, 0,
+	    "Start SvxLink as a daemon", NULL},
+    {NULL, 0, 0, NULL, 0}
+  };
+  int err;
+  //const char *arg = NULL;
+  //int argcnt = 0;
+  
+  optCon = poptGetContext(PROGRAM_NAME, argc, argv, optionsTable, 0);
+  poptReadDefaultConfig(optCon, 0);
+  
+  err = poptGetNextOpt(optCon);
+  if (err != -1)
+  {
+    fprintf(stderr, "\t%s: %s\n",
+	    poptBadOption(optCon, POPT_BADOPTION_NOALIAS),
+	    poptStrerror(err));
+    exit(1);
+  }
+
+  /*
+  printf("string_arg  = %s\n", string_arg);
+  printf("int_arg     = %d\n", int_arg);
+  printf("bool_arg    = %d\n", bool_arg);
+  */
+  
+    /* Parse arguments that do not begin with '-' (leftovers) */
+  /*
+  arg = poptGetArg(optCon);
+  while (arg != NULL)
+  {
+    printf("arg %2d      = %s\n", ++argcnt, arg);
+    arg = poptGetArg(optCon);
+  }
+  */
+
+  poptFreeContext(optCon);
+
+} /* parse_arguments */
+
+
+static void stdinHandler(FdWatch *w)
 {
   char buf[1];
   int cnt = ::read(STDIN_FILENO, buf, 1);
@@ -83,7 +356,9 @@ void stdinHandler(FdWatch *w)
   }
   else if (cnt == 0)
   {
-    Application::app().quit();
+      /* Stdin file descriptor closed */
+    delete stdin_watch;
+    stdin_watch = 0;
     return;
   }
   
@@ -107,11 +382,10 @@ void stdinHandler(FdWatch *w)
     default:
       break;
   }
-  
 }
 
 
-void initialize_logics(Config &cfg)
+static void initialize_logics(Config &cfg)
 {
   string logics;
   if (!cfg.getValue("GLOBAL", "LOGICS", logics) || logics.empty())
@@ -168,97 +442,8 @@ void initialize_logics(Config &cfg)
 }
 
 
-int main(int argc, char **argv)
-{
-  cout << "SvxLink v" SVXLINK_VERSION " (" __DATE__ ") starting up...\n";
-  
-  CppApplication app;
-  
-  char *home_dir = getenv("HOME");
-  if (home_dir == NULL)
-  {
-    home_dir = ".";
-  }
-  
-  string cfg_filename(home_dir);
-  cfg_filename += "/.svxlinkrc";
-  Config cfg;
-  if (cfg.open(cfg_filename))
-  {
-    cout << "Using config file: " << cfg_filename << endl;
-  }
-  else
-  {
-    cfg_filename = "/etc/svxlink.conf";
-    if (cfg.open(cfg_filename))
-    {
-      cout << "Using config file: " << cfg_filename << endl;
-    }
-    else
-    {
-      cerr << "*** Error: Could not open config file. Tried both "
-      	   << "\"" << home_dir << "/.svxlinkrc\" and "
-	   << "\"/etc/svxlink.conf\"\n";
-      exit(1);
-    }
-  }
-  
-#if 1
-  initialize_logics(cfg);
-  
-  struct termios termios, org_termios;
-  tcgetattr(STDIN_FILENO, &org_termios);
-  termios = org_termios;
-  termios.c_lflag &= ~(ICANON | ECHO);
-  tcsetattr(STDIN_FILENO, TCSANOW, &termios);
 
-  FdWatch *stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
-  stdin_watch->activity.connect(slot(&stdinHandler));
-
-  app.exec();
-  
-  delete stdin_watch;
-  tcsetattr(STDIN_FILENO, TCSANOW, &org_termios);
-
-  delete logic;
-  
-#else
-
-  LocalRx rx(cfg, "RxTelcom");
-  if (!rx.initialize())
-  {
-    printf("*** Error: Could not initialize RX object\n");
-    exit(1);
-  }
-  rx.squelchOpen.connect(slot(&squelch_open));
-  rx.audioReceived.connect(slot(&audio_received));
-  rx.dtmfDigitDetected.connect(slot(&dtmf_digit_detected));
-  rx.mute(true);
-  
-  tx = new LocalTx(cfg, "TxTelcom");
-  if (!tx->initialize())
-  {
-    printf("*** Error: Could not initialize TX object\n");
-    exit(1);
-  }
-  tx->transmit(true);
-  
-  msg_handler = new MsgHandler;
-  msg_handler->writeAudio.connect(slot(tx, &Tx::transmitAudio));
-  tx->transmitBufferFull.connect(
-      	  slot(msg_handler, &MsgHandler::writeBufferFull));
-  //msg_handler->playMsg("Default", "test");
-  msg_handler->playMsg("Core", "online");
-  msg_handler->allMsgsWritten.connect(slot(&all_msgs_written));
-  
-  app.exec();
-  
-#endif
-  
-  return 0;
-  
-} /* main */
-
-
-
+/*
+ * This file has not been truncated
+ */
 
