@@ -123,11 +123,11 @@ using namespace EchoLink;
  ****************************************************************************/
 
 
-QsoImpl::QsoImpl(const Async::IpAddress& ip, ModuleEchoLink *module)
-  : Qso(ip), module(module), msg_handler(0), msg_pacer(0), init_ok(false),
-    reject_qso(false), last_message(""), last_info_msg(""), idle_timer(0),
-    disc_when_done(false), idle_timer_cnt(0), idle_timeout(0), 
-    destroy_timer(0)
+QsoImpl::QsoImpl(const StationData *station, ModuleEchoLink *module)
+  : Qso(station->ip()), module(module), msg_handler(0), msg_pacer(0),
+    init_ok(false), reject_qso(false), last_message(""), last_info_msg(""),
+    idle_timer(0), disc_when_done(false), idle_timer_cnt(0), idle_timeout(0),
+    destroy_timer(0), station(*station)
 {
   assert(module != 0);
   
@@ -232,7 +232,8 @@ int QsoImpl::sendAudio(short *buf, int len)
 
 bool QsoImpl::accept(void)
 {
-  cout << "Accepting connection from " << remoteCallsign() << endl;
+  cout << remoteCallsign() << ": Accepting connection. EchoLink ID is "
+       << station.id() << "...\n";
   bool success = Qso::accept();
   if (success)
   {

@@ -752,7 +752,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   }
   
     // Create a new Qso object to accept the connection
-  QsoImpl *qso = new QsoImpl(station->ip(), this);
+  QsoImpl *qso = new QsoImpl(station, this);
   if (!qso->initOk())
   {
     delete qso;
@@ -951,7 +951,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
     }
   }
 
-  QsoImpl *qso = new QsoImpl(station->ip(), this);
+  QsoImpl *qso = new QsoImpl(station, this);
   if (!qso->initOk())
   {
     delete qso;

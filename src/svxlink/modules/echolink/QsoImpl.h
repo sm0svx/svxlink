@@ -52,6 +52,7 @@ An example of how to use the Template class
  ****************************************************************************/
 
 #include <EchoLinkQso.h>
+#include <EchoLinkStationData.h>
 
 
 /****************************************************************************
@@ -131,7 +132,7 @@ class QsoImpl : public EchoLink::Qso
     /**
      * @brief 	Default constuctor
      */
-    QsoImpl(const Async::IpAddress& ip, ModuleEchoLink *module);
+    QsoImpl(const EchoLink::StationData *station, ModuleEchoLink *module);
   
     /**
      * @brief 	Destructor
@@ -243,18 +244,19 @@ class QsoImpl : public EchoLink::Qso
   protected:
     
   private:
-    ModuleEchoLink    	*module;
-    MsgHandler	      	*msg_handler;
-    AudioPacer       	*msg_pacer;
-    bool      	      	init_ok;
-    bool      	      	reject_qso;
-    std::string       	last_message;
-    std::string       	last_info_msg;
-    Async::Timer      	*idle_timer;
-    bool      	      	disc_when_done;
-    int       	      	idle_timer_cnt;
-    int       	      	idle_timeout;
-    Async::Timer	*destroy_timer;
+    ModuleEchoLink    	  *module;
+    MsgHandler	      	  *msg_handler;
+    AudioPacer       	  *msg_pacer;
+    bool      	      	  init_ok;
+    bool      	      	  reject_qso;
+    std::string       	  last_message;
+    std::string       	  last_info_msg;
+    Async::Timer      	  *idle_timer;
+    bool      	      	  disc_when_done;
+    int       	      	  idle_timer_cnt;
+    int       	      	  idle_timeout;
+    Async::Timer	  *destroy_timer;
+    EchoLink::StationData station;
     
     void allRemoteMsgsWritten(void);
     void onInfoMsgReceived(const std::string& msg);
