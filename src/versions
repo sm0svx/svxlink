@@ -7,7 +7,7 @@ ECHOLIB=0.9.0
 ECHOLIB_RPM_RELEASE=1
 
 # Version for the Async library
-LIBASYNC=0.10.0
+LIBASYNC=0.11.0rc1
 LIBASYNC_RPM_RELEASE=1
 
 # SvxLink versions
