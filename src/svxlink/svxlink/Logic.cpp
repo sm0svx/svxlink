@@ -252,7 +252,7 @@ void Logic::playNumber(int number)
 
 void Logic::spellWord(const string& word)
 {
-  module_tx_fifo->stopOutput(true);
+  //module_tx_fifo->stopOutput(true);
   transmit(true);
   msg_handler->spellWord(word);
 } /* Logic::spellWord */
@@ -475,6 +475,7 @@ void Logic::allMsgsWritten(void)
 
   tx().flushSamples();
   transmitCheck();  
+  //module_tx_fifo->stopOutput(false);
 } /* Logic::allMsgsWritten */
 
 
