@@ -1,0 +1,13 @@
+Raw data:
+oNDATA<0d>EchoLink 1.9.890 - SM0VPH-R (2)<0d><0d>SM0VPH-R         Niklas<0d><0d>SM3XIK-L       Anders<0d>SM3SVX-L       <0d><00>A<0d>R<ce>
+
+
+How it looks (data from another session):
+EchoLink 1.9.890 - AC6JZ-L (3)
+
+> AC6JZ-L         Shigeru
+
+SK4KO-L         SBSA
+SM2FXT-L         Jan Bergstrom
+SM3SVX-L       Tobias
+
