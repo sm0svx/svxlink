@@ -312,7 +312,7 @@ void MainWindow::incomingConnection(const IpAddress& remote_ip,
     
     msg_audio_io->open(AudioIO::MODE_WR);
       // FIXME: Hard coded filename
-    msg_handler->playFile(Settings::instance()->directoryServer().latin1());
+    msg_handler->playFile(Settings::instance()->connectSound().latin1());
   }
   else
   {

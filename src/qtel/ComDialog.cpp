@@ -223,9 +223,9 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
   
   orig_background_color = rx_indicator->paletteBackgroundColor();
     
-  const StationData *station = dir.findCall(callsign.latin1());
-  //StationData *station = new StationData;
-  //station->setIp(IpAddress("192.168.1.196"));
+  //const StationData *station = dir.findCall(callsign.latin1());
+  StationData *station = new StationData;
+  station->setIp(IpAddress("192.168.1.193"));
   updateStationData(station);
   if (station != 0)
   {
