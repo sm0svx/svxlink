@@ -325,6 +325,17 @@ variables are listed below.
 </DL>
 
 
+Specific configuration variables for the <b>Parrot</b> module.
+
+<DL>
+  <DT>FIFO_LEN</DT>
+  <DD>
+  The length, in seconds, of the FIFO (First In First Out) audio buffer where
+  audio is recorded to.
+  </DD>
+</DL>
+
+
 Specific configuration variables for the <b>EchoLink</b> module.
 
 <DL>
