@@ -171,6 +171,9 @@ class Settings : public SigC::Object
     int listRefreshTime(void) const { return m_list_refresh_time; }
     bool startAsBusy(void) const { return m_start_as_busy; }
     
+    const QString& audioDevice(void) const { return m_audio_device; }
+    bool useFullDuplex(void) const { return m_use_full_duplex; }
+    
     void setBookmarks(const QStringList &bookmarks);
     const QStringList& bookmarks(void) const { return m_bookmarks; }
     
@@ -195,6 +198,9 @@ class Settings : public SigC::Object
     QString   	      m_directory_server;
     int       	      m_list_refresh_time;
     bool      	      m_start_as_busy;
+
+    QString   	      m_audio_device;
+    bool      	      m_use_full_duplex;
 
     QStringList       m_bookmarks;
     

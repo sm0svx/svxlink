@@ -148,7 +148,7 @@ using namespace EchoLink;
  *------------------------------------------------------------------------
  */
 MainWindow::MainWindow(Directory &dir)
-  : dir(dir), refresh_call_list_timer(0), is_busy(false), audio_io("/dev/dsp")
+  : dir(dir), refresh_call_list_timer(0), is_busy(false), audio_io(0)
 {
   connect(explorerView, SIGNAL(currentChanged(QListViewItem*)),
       	  this, SLOT(explorerViewClicked(QListViewItem*)));
@@ -170,6 +170,8 @@ MainWindow::MainWindow(Directory &dir)
       	  this, SLOT(clearIncomingList()));
   connect(incoming_accept_button, SIGNAL(clicked()),
       	  this, SLOT(acceptIncoming()));
+  
+  audio_io = new AudioIO(Settings::instance()->audioDevice());
   
   dir.error.connect(slot(this, &MainWindow::serverError));
   dir.statusChanged.connect(slot(this, &MainWindow::statusChanged));
@@ -238,6 +240,8 @@ MainWindow::MainWindow(Directory &dir)
 
 MainWindow::~MainWindow(void)
 {
+  delete audio_io;
+  audio_io = 0;
   Settings::instance()->setMainWindowSize(size());
   dir.makeOffline();
 } /* MainWindow::~MainWindow */
@@ -466,7 +470,7 @@ void MainWindow::explorerViewClicked(QListViewItem* item)
 
 void MainWindow::stationViewDoubleClicked(QListViewItem *item)
 {
-  ComDialog *com_dialog = new ComDialog(&audio_io, dir, item->text(0));
+  ComDialog *com_dialog = new ComDialog(audio_io, dir, item->text(0));
   com_dialog->show();
 } /* MainWindow::stationViewDoubleClicked */
 
@@ -573,7 +577,7 @@ void MainWindow::acceptIncoming(void)
   QListViewItem *item = incoming_con_view->selectedItem();
   assert(item != 0);
   incoming_accept_button->setEnabled(FALSE);
-  ComDialog *com_dialog = new ComDialog(&audio_io, dir, item->text(0),
+  ComDialog *com_dialog = new ComDialog(audio_io, dir, item->text(0),
       item->text(1));
   com_dialog->show();
   com_dialog->acceptConnection();
@@ -672,6 +676,9 @@ void MainWindow::configurationUpdated(void)
   refresh_call_list_timer->changeInterval(
       1000 * 60 * Settings::instance()->listRefreshTime());
   
+  delete audio_io;
+  audio_io = new AudioIO(Settings::instance()->audioDevice());
+
 } /* MainWindow::configurationChanged */
 
 

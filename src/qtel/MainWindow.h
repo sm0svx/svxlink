@@ -179,7 +179,7 @@ class MainWindow : public MainWindowBase, public SigC::Object
     int       	      	    station_view_popup_add;
     int       	      	    station_view_popup_add_named;
     int       	      	    station_view_popup_remove;
-    Async::AudioIO 	    audio_io;
+    Async::AudioIO 	    *audio_io;
     SelectMap 	      	    select_map;
     
     MainWindow(const MainWindow&);

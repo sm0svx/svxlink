@@ -186,8 +186,8 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
   
   audio_io->audioRead.connect(slot(this, &ComDialog::micAudioRead));
   
-  /*
-  if (audio_io->isFullDuplexCapable())
+  Settings *settings = Settings::instance();  
+  if (settings->useFullDuplex() && audio_io->isFullDuplexCapable())
   {
     //printf("Sound device is full duplex capable\n");
     audio_full_duplex = true;
@@ -196,9 +196,10 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
       return;
     }
   }
+  /*
   else
   {
-    //printf("Sound device is NOT full duplex capable\n");
+    printf("Sound device is NOT full duplex capable\n");
     if (!openAudioDevice(AudioIO::MODE_WR))
     {
       return;

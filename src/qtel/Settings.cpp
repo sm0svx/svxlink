@@ -89,6 +89,9 @@ using namespace std;
 #define CONF_LIST_REFRESH_TIME        CONF_APP_NAME "/ListRefreshTime"
 #define CONF_START_AS_BUSY            CONF_APP_NAME "/StartAsBusy"
 
+#define CONF_AUDIO_DEVICE     	      CONF_APP_NAME "/AudioDevice"
+#define CONF_USE_FULL_DUPLEX          CONF_APP_NAME "/UseFullDuplex"
+
 #define CONF_BOOKMARKS 	      	      CONF_APP_NAME "/Bookmarks"
 #define CONF_MAIN_WINDOW_SIZE_WIDTH   CONF_APP_NAME "/MwWidth"
 #define CONF_MAIN_WINDOW_SIZE_HEIGHT  CONF_APP_NAME "/MwHeight"
@@ -99,6 +102,9 @@ using namespace std;
 #define CONF_DIRECTORY_SERVER_DEFAULT 	"server1.echolink.org"
 #define CONF_LIST_REFRESH_TIME_DEFAULT	5
 #define CONF_START_AS_BUSY_DEFAULT    	false
+
+#define CONF_AUDIO_DEVICE_DEFAULT 	"/dev/dsp"
+#define CONF_USE_FULL_DUPLEX_DEFAULT    false
 
 
 
@@ -199,6 +205,9 @@ void Settings::showDialog(void)
   settings_dialog.list_refresh_time->setValue(m_list_refresh_time);
   settings_dialog.start_as_busy_checkbox->setChecked(m_start_as_busy);
 
+  settings_dialog.audio_device->setText(m_audio_device);
+  settings_dialog.use_full_duplex->setChecked(m_use_full_duplex);
+
   bool cfg_done = false;
   while (!cfg_done)
   {
@@ -225,6 +234,9 @@ void Settings::showDialog(void)
 	m_list_refresh_time = settings_dialog.list_refresh_time->value();
 	m_start_as_busy = settings_dialog.start_as_busy_checkbox->isChecked();
 
+	m_audio_device = settings_dialog.audio_device->text();
+	m_use_full_duplex = settings_dialog.use_full_duplex->isChecked();
+
 	QSettings qsettings;
 	qsettings.insertSearchPath(QSettings::Windows, CONF_SEARCH_PATH);
 	qsettings.writeEntry(CONF_CALLSIGN, m_callsign);
@@ -236,6 +248,9 @@ void Settings::showDialog(void)
 	qsettings.writeEntry(CONF_DIRECTORY_SERVER, m_directory_server);
 	qsettings.writeEntry(CONF_LIST_REFRESH_TIME, m_list_refresh_time);
 	qsettings.writeEntry(CONF_START_AS_BUSY, m_start_as_busy);
+      	
+	qsettings.writeEntry(CONF_AUDIO_DEVICE, m_audio_device);
+	qsettings.writeEntry(CONF_USE_FULL_DUPLEX, m_use_full_duplex);
       	
 	configurationUpdated();
 	
@@ -267,6 +282,11 @@ void Settings::readSettings(void)
       CONF_LIST_REFRESH_TIME_DEFAULT);
   m_start_as_busy = qsettings.readBoolEntry(CONF_START_AS_BUSY,
       CONF_START_AS_BUSY_DEFAULT);
+  
+  m_audio_device = qsettings.readEntry(CONF_AUDIO_DEVICE,
+      CONF_AUDIO_DEVICE_DEFAULT);
+  m_use_full_duplex = qsettings.readBoolEntry(CONF_USE_FULL_DUPLEX,
+      CONF_USE_FULL_DUPLEX_DEFAULT);
   
   m_bookmarks = qsettings.readListEntry(CONF_BOOKMARKS);
   
