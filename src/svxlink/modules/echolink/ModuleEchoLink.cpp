@@ -655,10 +655,14 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->setRemoteCallsign(callsign);
   qso->setRemoteName(name);
   qso->infoMsgReceived.connect(slot(this, &ModuleEchoLink::onInfoMsgReceived));
+  qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
   qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
   qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
   qso->audioReceived.connect(slot(this, &Module::audioFromModule));
   msg_pacer->audioOutput.connect(slot(qso, &Qso::sendAudio));
+  
+  last_message = "";
+  last_info_msg = "";
   
   if (!isActive())
   {
@@ -694,11 +698,36 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
  */
 void ModuleEchoLink::onInfoMsgReceived(const string& msg)
 {
-  cout << "--- EchoLink info message received from " << qso->remoteCallsign()
+  if (msg != last_info_msg)
+  {
+    cout << "--- EchoLink info message received from " << qso->remoteCallsign()
+	 << " ---" << endl
+	 << msg << endl;
+    last_info_msg = msg;
+  }  
+} /* onInfoMsgReceived */
+
+
+/*
+ *----------------------------------------------------------------------------
+ * Method:    onInfoMsgReceived
+ * Purpose:   Called by the EchoLink::Qso object when a chat message is
+ *    	      received from the remote station.
+ * Input:     msg - The received message
+ * Output:    None
+ * Author:    Tobias Blomberg / SM0SVX
+ * Created:   2004-05-04
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
+void ModuleEchoLink::onChatMsgReceived(const string& msg)
+{
+  cout << "--- EchoLink chat message received from " << qso->remoteCallsign()
        << " ---" << endl
        << msg << endl;
-  //qso->disconnect();
-} /* onInfoMsgReceived */
+  
+} /* onChatMsgReceived */
 
 
 /*
@@ -888,13 +917,16 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
     playMsg("operation_failed");
     return;
   }
-  qso->infoMsgReceived.connect(
-      	  slot(this, &ModuleEchoLink::onInfoMsgReceived));
+  qso->infoMsgReceived.connect(slot(this, &ModuleEchoLink::onInfoMsgReceived));
+  qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
   qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
   qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
   qso->audioReceived.connect(slot(this, &Module::audioFromModule));
   qso->connect();
 
+  last_message = "";
+  last_info_msg = "";
+  
 } /* ModuleEchoLink::createOutgoingConnection */
 
 

@@ -141,6 +141,7 @@ class ModuleEchoLink : public Module
     bool      	      	remote_activation;
     int       	      	pending_connect_id;
     std::string       	last_message;
+    std::string       	last_info_msg;
 
     void moduleCleanup(void);
     const char *name(void) const { return "EchoLink"; }
@@ -158,6 +159,7 @@ class ModuleEchoLink : public Module
     void onIncomingConnection(const Async::IpAddress& ip,
       	    const std::string& callsign, const std::string& name);
     void onInfoMsgReceived(const std::string& msg);
+    void onChatMsgReceived(const std::string& msg);
     void onStateChange(EchoLink::Qso::State state);
     void onIsReceiving(bool is_receiving);
     void onAudioReceived(short *samples, int count);
