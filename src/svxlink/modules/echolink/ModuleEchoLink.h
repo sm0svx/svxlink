@@ -142,6 +142,7 @@ class ModuleEchoLink : public Module
     int       	      	pending_connect_id;
     std::string       	last_message;
     std::string       	last_info_msg;
+    bool		outgoing_con_pending;
 
     void moduleCleanup(void);
     const char *name(void) const { return "EchoLink"; }
@@ -152,6 +153,7 @@ class ModuleEchoLink : public Module
     void playHelpMsg(void);
     void squelchOpen(bool is_open);
     int audioFromRx(short *samples, int count);
+    void allMsgsWritten(void);
 
     void onStatusChanged(EchoLink::StationData::Status status);
     void onStationListUpdated(void);
@@ -167,7 +169,7 @@ class ModuleEchoLink : public Module
     void getDirectoryList(Async::Timer *timer=0);
     void spellCallsign(const std::string& callsign);
 
-    void allMsgsWritten(void);
+    void allRemoteMsgsWritten(void);
     void createOutgoingConnection(const EchoLink::StationData *station);
 
 };  /* class ModuleEchoLink */

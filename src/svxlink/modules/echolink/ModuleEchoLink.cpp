@@ -145,7 +145,8 @@ extern "C" {
 ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
       	      	      	       const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), dir(0), qso(0), dir_refresh_timer(0),
-    remote_activation(false), pending_connect_id(-1)
+    remote_activation(false), pending_connect_id(-1),
+    outgoing_con_pending(false)
 {
   cout << "\tModule " << name()
        << " v" SVXLINK_VERSION " starting...\n";
@@ -238,7 +239,7 @@ bool ModuleEchoLink::initialize(void)
   //dir->makeBusy();
   dir->makeOnline();
   
-  msg_handler = new MsgHandler(sound_base_dir);
+  msg_handler = new MsgHandler(sound_base_dir, 8000);
   
   msg_pacer = new AudioPacer(8000, 160*4, 500);
   msg_handler->writeAudio.connect(slot(msg_pacer, &AudioPacer::audioInput));
@@ -247,7 +248,7 @@ bool ModuleEchoLink::initialize(void)
   msg_pacer->audioInputBufFull.connect(
       	  slot(msg_handler, &MsgHandler::writeBufferFull));
   msg_pacer->allAudioFlushed.connect(
-      	  slot(this, &ModuleEchoLink::allMsgsWritten));
+      	  slot(this, &ModuleEchoLink::allRemoteMsgsWritten));
   
     // Start listening to the EchoLink UDP ports
   if (Dispatcher::instance() == 0)
@@ -367,7 +368,7 @@ void ModuleEchoLink::deactivateCleanup(void)
  */
 void ModuleEchoLink::dtmfDigitReceived(char digit)
 {
-  printf("DTMF digit received in module %s: %c\n", name(), digit);
+  //printf("DTMF digit received in module %s: %c\n", name(), digit);
   
 } /* dtmfDigitReceived */
 
@@ -501,6 +502,28 @@ int ModuleEchoLink::audioFromRx(short *samples, int count)
 } /* audioFromRx */
 
 
+/*
+ *----------------------------------------------------------------------------
+ * Method:    allMsgsWritten
+ * Purpose:   Called by the core system when all audio messages queued
+ *            for playing have been played.
+ * Input:     None
+ * Output:    None
+ * Author:    Tobias Blomberg / SM0SVX
+ * Created:   2004-05-22
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
+void ModuleEchoLink::allMsgsWritten(void)
+{
+  //printf("ModuleEchoLink::allMsgsWritten\n");
+  if (outgoing_con_pending && (qso != 0))
+  {
+    qso->connect();
+  }
+  outgoing_con_pending = false;
+} /* allMsgsWritten */
 
 
 
@@ -754,17 +777,19 @@ void ModuleEchoLink::onStateChange(Qso::State state)
       dir->makeOnline();
       spellCallsign(qso->remoteCallsign());
       playMsg("disconnected");
+      playSilence(500);
       delete qso;
       qso = 0;
       if (remote_activation)
       {
       	deactivateMe();
       }
+      outgoing_con_pending = false;
       break;
     case Qso::STATE_CONNECTING:
       cout << "CONNECTING\n";
       setIdle(false);
-      playMsg("connecting");
+      //playMsg("connecting");
       //spellCallsign(qso->remoteCallsign());
       break;
     case Qso::STATE_CONNECTED:
@@ -772,7 +797,10 @@ void ModuleEchoLink::onStateChange(Qso::State state)
       setIdle(false);
       dir->makeBusy();
       playMsg("connected");
-      spellCallsign(qso->remoteCallsign());
+      if (qso->isRemoteInitiated())
+      {
+      	spellCallsign(qso->remoteCallsign());
+      }
       break;
     case Qso::STATE_BYE_RECEIVED:
       break;
@@ -887,22 +915,26 @@ void ModuleEchoLink::spellCallsign(const string& callsign)
       playMsg("repeater");
       break;
     case 'C':
+    {
+      string::iterator end = remove(call.begin(), call.end(), '*');
+      string conf_name(call.begin(), end);
       playMsg("conference");
-      spellWord(call);
+      spellWord(conf_name);
       break;
+    }
   }
   
 } /* spellCallsign */
 
 
-void ModuleEchoLink::allMsgsWritten(void)
+void ModuleEchoLink::allRemoteMsgsWritten(void)
 {
-  //printf("ModuleEchoLink::allMsgsWritten\n");
+  //printf("ModuleEchoLink::allRemoteMsgsWritten\n");
   if (qso != 0)
   {
     qso->flushAudioSendBuffer();
   }
-} /* ModuleEchoLink::allMsgsWritten */
+} /* ModuleEchoLink::allRemoteMsgsWritten */
 
 
 void ModuleEchoLink::createOutgoingConnection(const StationData *station)
@@ -917,13 +949,19 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
     playMsg("operation_failed");
     return;
   }
+  qso->setRemoteCallsign(station->callsign());
   qso->infoMsgReceived.connect(slot(this, &ModuleEchoLink::onInfoMsgReceived));
   qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
   qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
   qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
   qso->audioReceived.connect(slot(this, &Module::audioFromModule));
-  qso->connect();
+  //qso->connect();
 
+  playMsg("connecting_to");
+  spellCallsign(qso->remoteCallsign());
+  playSilence(500);
+  outgoing_con_pending = true;
+  
   last_message = "";
   last_info_msg = "";
   
