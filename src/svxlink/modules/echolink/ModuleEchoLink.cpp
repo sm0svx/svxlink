@@ -723,7 +723,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
       	      	      	      	      	  const string& name)
 {
   cout << "Incoming EchoLink connection from " << callsign
-       << " (" << name << ")\n";
+       << " (" << name << ") at " << ip << "\n";
   
   if (qsos.size() >= max_connections)
   {
