@@ -52,7 +52,8 @@ UI_FILES	=
 #   Where:   750     = The mode
 #            -       = Preserve owner
 #            mygroup = Set group mygroup
-PROGS_INSTALL	= $(PROGS:%=%[755,root,root]) $(CPPPROGS:%=%[755,root,root])
+#PROGS_INSTALL	= $(PROGS:%=%[755,root,root]) $(CPPPROGS:%=%[755,root,root])
+PROGS_INSTALL	= 
 
 # Daemons (server processes) to install. Same format as PROGS_INSTALL.
 DAEMONS_INSTALL	= 
