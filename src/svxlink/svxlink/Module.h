@@ -4,12 +4,18 @@
 #include <string>
 #include <list>
 
+namespace Async
+{
+  class Config;
+};
+
 class Logic;
 
 class Module : public SigC::Object
 {
   public:
-    typedef Module* (*InitFunc)(void *dl_handle, Logic *logic, int id);
+    typedef Module* (*InitFunc)(void *dl_handle, Logic *logic, int id,
+      	      	      	        const char *cfg_name);
     
     Module(void *dl_handle, Logic *logic, int id)
       : m_dl_handle(dl_handle), m_logic(logic), m_id(id) {}
@@ -21,6 +27,7 @@ class Module : public SigC::Object
     void activate(void);
     void deactivate(void);
     bool isTransmitting(void) const { return m_is_transmitting; }
+    Async::Config &cfg(void) const;
     
     virtual const char *name(void) const = 0;
     virtual void activateInit(void) = 0;
