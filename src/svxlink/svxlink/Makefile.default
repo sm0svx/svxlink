@@ -182,7 +182,7 @@ include $(ROOT)/makefile.inc
 
 # The name of the RPM to put the installed files into when doing
 # the "rpm" target.
-RPM_NAME := 
+RPM_NAME := svxlink
 
 
 ###############################################################################

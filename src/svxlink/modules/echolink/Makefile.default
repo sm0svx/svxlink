@@ -131,7 +131,8 @@ PLUGIN_LIBS	= -lecholib
 #   Where:   750     = The mode
 #            -       = Preserve owner
 #            mygroup = Set group mygroup
-PLUGINS_INSTALL	= $(PLUGINS:%=%.so[755,root,root])
+PLUGINS_INSTALL	= $(PLUGINS:%=%.so[755,root,root]) \
+		  $(PLUGINS_CPP:%=%.so[755,root,root])
 
 
 ###############################################################################
@@ -177,7 +178,7 @@ include $(ROOT)/makefile.inc
 
 # The name of the RPM to put the installed files into when doing
 # the "rpm" target.
-RPM_NAME := 
+RPM_NAME := svxlink
 
 
 ###############################################################################
