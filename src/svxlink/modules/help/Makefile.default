@@ -188,7 +188,7 @@ RPM_NAME :=
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= 
+INCPATH 	+= $(shell sigc-config --cflags)
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.
