@@ -29,7 +29,7 @@ CPPPROGS      	= $(BIN)/svxlink
 # Sources other than the main files
 PRGSRC		= LocalRx.cpp Vox.cpp LocalTx.cpp MsgHandler.cpp \
 		  ToneDetector.cpp DtmfDecoder.cpp Logic.cpp SimplexLogic.cpp \
-		  Module.cpp
+		  Module.cpp AudioPaser.cpp
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -lasynccpp
@@ -84,7 +84,7 @@ LIB_LIBS	= -lc
 STATIC_LIBS   	= 
 
 # Includefiles to export. A softlink is created in $(INC).
-EXPINC		= Module.h
+EXPINC		= Module.h MsgHandler.h AudioPaser.h
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for libraries).
