@@ -67,6 +67,10 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class Timer;
+};
 
 
 /****************************************************************************
@@ -147,7 +151,11 @@ class SimplexLogic : public Logic
     bool      	  pending_transmit;
     bool      	  squelch_is_open;
     bool      	  tx_timeout_occured;
+    Async::Timer  *ident_timer;
+    int       	  ident_interval;
+    bool      	  pending_ident;
     
+    void identify(Async::Timer *t=0);
     void squelchOpen(bool is_open);
     void txTimeout(void);
 

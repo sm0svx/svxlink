@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -121,7 +122,8 @@ using namespace Async;
 
 SimplexLogic::SimplexLogic(Async::Config& cfg, const string& name)
   : Logic(cfg, name), pending_transmit(false), squelch_is_open(false),
-    tx_timeout_occured(false)
+    tx_timeout_occured(false), ident_timer(0), ident_interval(1800),
+    pending_ident(false)
 {
 
 } /* SimplexLogic::SimplexLogic */
@@ -129,7 +131,7 @@ SimplexLogic::SimplexLogic(Async::Config& cfg, const string& name)
 
 SimplexLogic::~SimplexLogic(void)
 {
-
+  delete ident_timer;
 } /* SimplexLogic::~SimplexLogic */
 
 
@@ -140,13 +142,21 @@ bool SimplexLogic::initialize(void)
     return false;
   }
   
+  string str;
+  if (cfg().getValue(name(), "IDENT_INTERVAL", str))
+  {
+    ident_interval = atoi(str.c_str()) * 1000;
+  }
+  
   tx().txTimeout.connect(slot(this, &SimplexLogic::txTimeout));
   
-  playMsg("online");
-  if (!callsign().empty())
+  if (ident_interval > 0)
   {
-    spellWord(callsign());
+    ident_timer = new Timer(ident_interval, Timer::TYPE_PERIODIC);
+    ident_timer->expired.connect(slot(this, &SimplexLogic::identify));
   }
+      
+  identify();
   
   return true;
   
@@ -230,31 +240,47 @@ int SimplexLogic::transmitAudio(short *samples, int count)
  ****************************************************************************/
 
 
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
+void SimplexLogic::identify(Timer *t)
+{
+  printf("SimplexLogic::identify\n");
+  
+  if (squelch_is_open)
+  {
+    pending_ident = true;
+    return;
+  }
+  
+  if (!callsign().empty())
+  {
+    playMsg("online");
+    spellWord(callsign());
+    ident_timer->reset();
+  }
+} /* SimplexLogic::identify */
+
+
 void SimplexLogic::squelchOpen(bool is_open)
 {
   printf("The squelch is %s\n", is_open ? "OPEN" : "CLOSED");
   
   squelch_is_open = is_open;
   
-  if (!is_open && pending_transmit)
+  if (!is_open)
   {
-    //printf("Executing pending transmit\n");
-    pending_transmit = false;
-    transmit(true);
+    if (pending_ident)
+    {
+      pending_ident = false;
+      identify();
+    }
+
+    if (pending_transmit)
+    {
+      //printf("Executing pending transmit\n");
+      pending_transmit = false;
+      transmit(true);
+    }
   }
-  
+    
   Logic::squelchOpen(is_open);
   
 } /* SimplexLogic::squelchOpen */
