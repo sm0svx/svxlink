@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+#include <cassert>
 
 #include <qlistview.h>
 #include <qtextbrowser.h>
@@ -332,7 +333,7 @@ void MainWindow::statusChanged(StationData::Status status)
   {
     case StationData::STAT_ONLINE:
       status_indicator->setPixmap(
-	  QPixmap(static_cast<const char **>(online_icon)));
+	  QPixmap(const_cast<const char **>(online_icon)));
       break;
       
     case StationData::STAT_BUSY:
