@@ -191,7 +191,7 @@ class LocalRx : public Rx
     void activated1750(bool is_activated);
     void voxSqlOpen(bool is_open);
     void activatedCtcss(bool is_activated);
-    SqlDetType sqlDetStrToEnum(const string& sql_det_str);
+    SqlDetType sqlDetStrToEnum(const std::string& sql_det_str);
     int audioRead(short *samples, int count);
 
 };  /* class LocalRx */
