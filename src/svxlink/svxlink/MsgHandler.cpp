@@ -87,7 +87,8 @@ void MsgHandler::playNextMsg(void)
       	      	O_RDONLY);
   if (file == -1)
   {
-    file = ::open(("Default/" + msg.msg + ".raw").c_str(), O_RDONLY);
+    file = ::open((base_dir + "/" + "Default/" + msg.msg + ".raw").c_str(),
+      	      	  O_RDONLY);
   }
   if (file != -1)
   {
