@@ -91,9 +91,18 @@ if which pkg-config &> /dev/null; then
     output "QT_CFLAGS=-I${QTDIR}/include"
     QT_PREFIX=${QTDIR}
   fi
-  output "QT_MOC=${QT_PREFIX}/bin/moc"
-  output "QT_UIC=${QT_PREFIX}/bin/uic"
+elif [ -n "$QTDIR" ]; then
+  info "yes (QTDIR)\n"
+  output "QT_LIBPATH=-L${QTDIR}/lib"
+  output "QT_LIBS=-lqt"
+  output "QT_CFLAGS=-I${QTDIR}/include"
+  QT_PREFIX=${QTDIR}
 else
   info "no\n"
+fi
+
+if [ -n "$QT_PREFIX" ]; then
+  output "QT_MOC=${QT_PREFIX}/bin/moc"
+  output "QT_UIC=${QT_PREFIX}/bin/uic"
 fi
 
