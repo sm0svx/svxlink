@@ -7,3 +7,4 @@ AsyncTcpClient_demo
 AsyncTcpServer_demo
 AsyncTimer_demo
 AsyncUdpSocket_demo
+AsyncConfig_demo
