@@ -34,7 +34,7 @@ PRGSRC		= LocalRx.cpp Vox.cpp LocalTx.cpp MsgHandler.cpp \
 PROJLIBS	= -lasynccpp
 
 # Libraries external to the project
-LIBS		= -ldl
+LIBS		= -ldl -lpopt
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).
