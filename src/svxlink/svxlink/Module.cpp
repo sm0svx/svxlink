@@ -4,6 +4,7 @@
 #include "Module.h"
 
 using namespace std;
+using namespace Async;
 
 void Module::activate(void)
 {
@@ -30,6 +31,11 @@ void Module::deactivate(void)
   playModuleName();
 }
 
+
+Config &Module::cfg(void) const
+{
+  return logic()->cfg();
+} /*  */
 
 void Module::playMsg(const string& msg) const
 {
