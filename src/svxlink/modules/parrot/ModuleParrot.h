@@ -50,7 +50,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <Module.h>
-#include <AsyncSampleFifo.h>
 #include <AudioPacer.h>
 
 
@@ -68,6 +67,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Forward declarations
  *
  ****************************************************************************/
+
+namespace Async
+{
+  class Timer;
+  class SampleFifo;
+};
 
 
 
@@ -128,6 +133,8 @@ class ModuleParrot : public Module
     bool      	      squelch_is_open;
     AudioPacer	      pacer;
     bool      	      deactivate_when_done;
+    int       	      repeat_delay;
+    Async::Timer      *repeat_delay_timer;
     
     const char *name(void) const { return "Parrot"; }
     void activateInit(void);
@@ -139,6 +146,7 @@ class ModuleParrot : public Module
     
     int audioFromFifo(short *samples, int count);
     void allSamplesWritten(void);
+    void onRepeatDelayExpired(Async::Timer *t);
 
 };  /* class ModuleParrot */
 

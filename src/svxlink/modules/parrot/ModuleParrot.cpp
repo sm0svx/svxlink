@@ -48,6 +48,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <version/SVXLINK.h>
 #include <AsyncConfig.h>
+#include <AsyncSampleFifo.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -138,7 +140,8 @@ extern "C" {
 ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       	      	      	   const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), fifo(0), squelch_is_open(false),
-    pacer(8000, 800, 1000), deactivate_when_done(false)
+    pacer(8000, 800, 1000), deactivate_when_done(false), repeat_delay(0),
+    repeat_delay_timer(0)
 {
   cout << "\tModule " << name()
        << " v" SVXLINK_VERSION " starting...\n";
@@ -164,6 +167,11 @@ bool ModuleParrot::initialize(void)
   {
     cerr << "*** Error: Config variable " << cfgName() << "/FIFO_LEN not set\n";
     return false;
+  }
+  string value;
+  if (cfg().getValue(cfgName(), "REPEAT_DELAY", value))
+  {
+    repeat_delay = atoi(value.c_str());
   }
   
   fifo = new SampleFifo(atoi(fifo_len.c_str())*8000);
@@ -253,6 +261,8 @@ void ModuleParrot::activateInit(void)
 void ModuleParrot::deactivateCleanup(void)
 {
   fifo->clear();
+  delete repeat_delay_timer;
+  repeat_delay_timer = 0;
 } /* deactivateCleanup */
 
 
@@ -328,14 +338,23 @@ void ModuleParrot::squelchOpen(bool is_open)
   {
     setIdle(false);
     fifo->stopOutput(true);
+    delete repeat_delay_timer;
+    repeat_delay_timer = 0;
   }
   else
   {
     if (!fifo->empty())
     {
-      transmit(true);
-      fifo->flushSamples();
-      fifo->stopOutput(false);
+      if (repeat_delay > 0)
+      {
+      	repeat_delay_timer = new Timer(repeat_delay);
+	repeat_delay_timer->expired.connect(
+	    slot(this, &ModuleParrot::onRepeatDelayExpired));
+      }
+      else
+      {
+      	onRepeatDelayExpired(0);
+      }
     }
     else
     {
@@ -379,6 +398,18 @@ void ModuleParrot::allSamplesWritten(void)
     deactivateMe();
   }
 } /* ModuleParrot::allSamplesWritten */
+
+
+void ModuleParrot::onRepeatDelayExpired(Timer *t)
+{
+  delete repeat_delay_timer;
+  repeat_delay_timer = 0;
+  
+  transmit(true);
+  fifo->flushSamples();
+  fifo->stopOutput(false);
+  
+} /* ModuleParrot::onRepeatDelayExpired */
 
 
 
