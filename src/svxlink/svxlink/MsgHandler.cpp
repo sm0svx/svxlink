@@ -61,9 +61,9 @@ void MsgHandler::playNumber(float number)
     char digit[2];
     digit[0] = (intpart % 10) + '0';
     digit[1] = 0;
-    number /= 10;
+    intpart /= 10;
     digits.push_front(digit);
-  } while (number != 0);
+  } while (intpart != 0);
   
   if (fracpart > 0)
   {
@@ -73,9 +73,9 @@ void MsgHandler::playNumber(float number)
       char digit[2];
       digit[0] = (fracpart % 10) + '0';
       digit[1] = 0;
-      number /= 10;
+      fracpart /= 10;
       digits.push_front(digit);
-    } while (number != 0);
+    } while (fracpart != 0);
   }
   
   begin();
