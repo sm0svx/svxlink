@@ -231,7 +231,19 @@ class SampleFifo : public SigC::Object
      */
     void clear(void) { tail = head; allSamplesWritten(); }
 
-     
+    /**
+     * @brief	Set the number of samples that must be in the fifo before
+     *		any samples are written out from it.
+     * @param	prebuf_samples The number of samples
+     */
+    void setPrebufSamples(unsigned prebuf_samples);
+    
+    /**
+     * @brief	Flush out the samples in the buffer
+     */
+    void flushSamples(void);
+
+
     /**
      * @brief 	A signal that is emitted when the FIFO is full
      * @param 	is_full Set to \em true if the buffer is full or \em false
@@ -275,16 +287,17 @@ class SampleFifo : public SigC::Object
     
   protected:
     
-  private:
-    static const int  MAX_WRITE_SIZE = 800;
-    
-    short *fifo;
-    int   fifo_size;
-    int   head, tail;
-    bool  is_stopped;
-    bool  do_overwrite;
-    bool  write_buffer_is_full; // Bad name! This does NOT indicate that the
-      	      	      	      	// FIFO is full...
+  private:    
+    short     *fifo;
+    int       fifo_size;
+    int       head, tail;
+    bool      is_stopped;
+    bool      do_overwrite;
+    bool      write_buffer_is_full; // Bad name! This does NOT indicate that
+      	      	      	      	    // the FIFO is full..
+    unsigned  prebuf_samples;
+    bool      prebuf;
+    bool      do_flush;
     
     void writeSamplesFromFifo(void);
 

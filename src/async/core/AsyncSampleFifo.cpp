@@ -106,6 +106,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
+static const int  MAX_WRITE_SIZE = 800;
 
 
 /****************************************************************************
@@ -117,7 +118,8 @@ using namespace Async;
 
 SampleFifo::SampleFifo(int fifo_size)
   : fifo_size(fifo_size), head(0), tail(0), is_stopped(false),
-    do_overwrite(false), write_buffer_is_full(false)
+    do_overwrite(false), write_buffer_is_full(false), prebuf_samples(0),
+    prebuf(true), do_flush(false)
 {
   fifo = new short[fifo_size];
 } /* SampleFifo */
@@ -131,13 +133,13 @@ SampleFifo::~SampleFifo(void)
 
 int SampleFifo::addSamples(short *samples, int count)
 {
-  /*
-  printf("SampleFifo::addSamples: count=%d is_stopped=%s  empty=%s\n",
-      	  count, is_stopped ? "true" : "false", empty() ? "true" : "false");
-  */
+  //printf("SampleFifo::addSamples: count=%d is_stopped=%s  empty=%s\n",
+    //  	  count, is_stopped ? "true" : "false", empty() ? "true" : "false");
+  
+  do_flush = false;
   
   int samples_written = 0;
-  if (!is_stopped && empty())
+  if (!is_stopped && empty() && !prebuf)
   {
     samples_written = writeSamples(samples, count);
   }
@@ -159,6 +161,11 @@ int SampleFifo::addSamples(short *samples, int count)
     }
     fifo[head] = samples[samples_written++];
     head = next_head;
+  }
+  
+  if (prebuf && (samplesInFifo() >= prebuf_samples))
+  {
+    writeSamplesFromFifo();
   }
   
   return samples_written;
@@ -231,15 +238,16 @@ int SampleFifo::readSamples(short *samples, int count)
     samples_to_read = min(samples_to_read, to_end_of_fifo);
     memcpy(samples+tot_samples_read, fifo+tail,
       	    samples_to_read * sizeof(short));
-    //printf("SampleFifo::writeSamplesFromFifo: samples_to_write=%d "
-      //	   "samples_written=%d\n", samples_to_write, samples_written);
     tail = (tail + samples_to_read) % fifo_size;
     count -= samples_to_read;
     tot_samples_read += samples_to_read;
+    //printf("SampleFifo::readSamples: samples_to_read=%d "
+      //	   "tot_samples_read=%d\n", samples_to_read, tot_samples_read);
   } while((count > 0) && !empty());
   
   if (was_full)
   {
+    //printf("Clearing FIFO full condition\n");
     fifoFull(false);
     if (empty())
     {
@@ -254,6 +262,28 @@ int SampleFifo::readSamples(short *samples, int count)
   return tot_samples_read;
   
 } /* SampleFifo::readSamples */
+
+
+void SampleFifo::setPrebufSamples(unsigned prebuf_samples)
+{
+  this->prebuf_samples = prebuf_samples;
+} /* SampleFifo::setPrebufSamples */
+
+
+void SampleFifo::flushSamples(void)
+{
+  printf("SampleFifo::flushSamples\n");
+  do_flush = true;
+  prebuf = true;
+  if (!empty())
+  {
+    writeSamplesFromFifo();
+  }
+  else
+  {
+    allSamplesWritten();
+  }
+} /* SampleFifo::flushSamples */
 
 
 
@@ -311,9 +341,18 @@ void SampleFifo::writeSamplesFromFifo(void)
     return;
   }
   
+  if (prebuf && !do_flush)
+  {
+    if (samplesInFifo() < prebuf_samples)
+    {
+      return;
+    }
+    prebuf = false;
+  }
+  
   int was_full = full();
   
-  int samples_to_write;
+  int samples_to_write = 0;
   int samples_written;
   do
   {
