@@ -455,6 +455,7 @@ class Qso : public SigC::Object
     void cleanupConnection(void);
     bool sendGsmPacket(void);
     void checkRxActivity(Async::Timer *timer);
+    bool sendByePacket(void);
 
     
 };  /* class Qso */

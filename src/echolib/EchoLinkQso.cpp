@@ -295,13 +295,8 @@ bool Qso::disconnect(void)
   
   if (state != STATE_BYE_RECEIVED)
   {
-    //sendInfoData();
-    unsigned char bye[50];
-    int length = rtp_make_bye(bye, 0, "jan2002", 1);
-    int ret = Dispatcher::instance()->sendCtrlMsg(remote_ip, bye, length);
-    if (ret == -1)
+    if (!sendByePacket())
     {
-      perror("sendCtrlMsg in Qso::disconnect");
       return false;
     }
   }
@@ -560,7 +555,7 @@ inline void Qso::handleSdesPacket(unsigned char *buf, int len)
       break;
     
     case STATE_DISCONNECTED:
-      accept();
+      sendByePacket();
       break;
     
     case STATE_CONNECTED:// Keep-alive
@@ -817,6 +812,23 @@ void Qso::checkRxActivity(Timer *timer)
     rx_indicator_timer->setTimeout(RX_INDICATOR_HANG_TIME-diff_ms+100);
   }
 } /* Qso::checkRxActivity */
+
+
+bool Qso::sendByePacket(void)
+{
+  unsigned char bye[50];
+  int length = rtp_make_bye(bye, 0, "jan2002", 1);
+  int ret = Dispatcher::instance()->sendCtrlMsg(remote_ip, bye, length);
+  if (ret == -1)
+  {
+    perror("sendCtrlMsg in Qso::disconnect");
+    return false;
+  }
+
+  return true;
+
+} /* Qso::sendByePacket */
+
 
 
 
