@@ -146,7 +146,7 @@ bool Config::open(const string& name)
 {
   if (access(name.c_str(), R_OK | W_OK) != 0)
   {
-    perror("Config::open");
+    //perror("Config::open");
     return false;
   }
   
