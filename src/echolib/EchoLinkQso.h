@@ -142,8 +142,17 @@ exits.
 class Qso : public SigC::Object
 {
   public:
-    class GsmVoicePacket;
-    
+    class GsmVoicePacket
+    {
+      public:
+	unsigned char version;
+	unsigned char pt;
+	unsigned short seqNum;
+	unsigned long time;
+	unsigned long ssrc;
+	unsigned char data[33*4];
+    };
+
     /**
      * @brief The type of the connection state
      */
@@ -382,17 +391,6 @@ class Qso : public SigC::Object
   protected:
     
   private:
-    class GsmVoicePacket
-    {
-      public:
-	unsigned char version;
-	unsigned char pt;
-	unsigned short seqNum;
-	unsigned long time;
-	unsigned long ssrc;
-	unsigned char data[33*4];
-    };
-
     static const int  	KEEP_ALIVE_TIME       	= 10000;
     static const int  	MAX_CONNECT_RETRY_CNT 	= 5;
     static const int  	CON_TIMEOUT_TIME      	= 50000;
