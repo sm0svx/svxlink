@@ -907,6 +907,14 @@ void ModuleEchoLink::getDirectoryList(Timer *timer)
 
 void ModuleEchoLink::createOutgoingConnection(const StationData *station)
 {
+  if (station->callsign() == mycall)
+  {
+    cerr << "Cannot connect to myself (" << mycall << "/" << station->id()
+      	 << ")...\n";
+    playMsg("operation_failed");
+    return;
+  }
+
   cout << "Connecting to " << station->callsign() << " (" << station->id()
        << ")\n";
   
