@@ -230,7 +230,7 @@ class Qso : public SigC::Object
      * @param 	len The length, in samples, of the buffer to send
      * @return	Returns the number of samples written
      */
-    int sendAudio(const short *buf, int len);
+    int sendAudio(short *buf, int len);
     
     /**
      * @brief 	Flush the audio send buffer so that all audio get transmitted
