@@ -150,7 +150,7 @@ Directory::Directory(const string& server, const string& callsign,
     the_password(password),   	      	      the_description(description),
     error_str(""),    	      	      	      ctrl_con(0),
     the_status(StationData::STAT_OFFLINE),    reg_refresh_timer(0),
-    current_status(StationData::STAT_OFFLINE)
+    current_status(StationData::STAT_OFFLINE),server_changed(false)
 {
   the_callsign.resize(callsign.size());
   transform(callsign.begin(), callsign.end(), the_callsign.begin(), ::toupper);
@@ -212,6 +212,7 @@ void Directory::getCalls(void)
 
 void Directory::setServer(const string& server)
 {
+  server_changed = true;
   the_server = server;
 } /* Directory::setServer */
 
@@ -585,12 +586,12 @@ void Directory::ctrlSockConnected(void)
 } /* Directory::ctrlSockConnected */
 
 
-int Directory::ctrlSockDataReceived(void *ptr, int len)
+int Directory::ctrlSockDataReceived(TcpConnection *con, void *ptr, int len)
 {
   char *buf = static_cast<char *>(ptr);
   size_t tot_read_len = 0;
   size_t read_len = 0;
-  
+
   //printBuf(reinterpret_cast<unsigned char *>(buf), len);
   
   do
@@ -664,12 +665,13 @@ int Directory::ctrlSockDataReceived(void *ptr, int len)
 } /* Directory::ctrlSockDataReceived */
 
 
-void Directory::ctrlSockDisconnected(Async::TcpClient::DisconnectReason reason)
+void Directory::ctrlSockDisconnected(TcpConnection *con,
+      	Async::TcpClient::DisconnectReason reason)
 {
   switch (reason)
   {
     case Async::TcpClient::DR_HOST_NOT_FOUND:
-      error("Directory server host \"" + ctrl_con->remoteHost()
+      error("Directory server host \"" + ctrl_con->remoteHost().toString()
 	  + "\" not found\n");
       break;
     
@@ -722,8 +724,9 @@ void Directory::sendNextCmd(void)
   {
     com_state = CS_WAITING_FOR_OK;
   }
-  if (the_server != ctrl_con->remoteHost())
+  if (server_changed)
   {
+    server_changed = false;
     delete ctrl_con;
     ctrl_con = 0;
     createClientObject();

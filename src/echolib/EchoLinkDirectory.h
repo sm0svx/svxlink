@@ -360,6 +360,7 @@ class Directory : public SigC::Object
     StationData::Status     the_status;
     Async::Timer *    	    reg_refresh_timer;
     StationData::Status     current_status;
+    bool      	      	    server_changed;
     
     Directory(const Directory&);
     Directory& operator =(const Directory&);
@@ -368,8 +369,9 @@ class Directory : public SigC::Object
     int handleCallList(char *buf, int len);
     
     void ctrlSockConnected(void);
-    void ctrlSockDisconnected(Async::TcpClient::DisconnectReason reason);
-    int ctrlSockDataReceived(void *ptr, int len);
+    void ctrlSockDisconnected(Async::TcpConnection *con,
+      	    Async::TcpClient::DisconnectReason reason);
+    int ctrlSockDataReceived(Async::TcpConnection *con, void *ptr, int len);
     void sendNextCmd(void);
     void addCmdToQueue(Cmd cmd);
     void setStatus(StationData::Status new_status);
