@@ -165,7 +165,7 @@ class Tx : public SigC::Object
      */
     virtual int samplesToWrite(void) { return 0; }
     
-    /*
+    /**
      * @brief 	Call this method to flush all samples in the buffer
      *
      * This method is used to flush all the samples that are in the buffer.
@@ -174,7 +174,7 @@ class Tx : public SigC::Object
      */
     virtual void flushSamples(void) = 0;
     
-    /*
+    /**
      * @brief 	Check if the tx is busy flushing samples
      * @return	Returns \em true if flushing the buffer or else \em false
      */
@@ -193,6 +193,15 @@ class Tx : public SigC::Object
      *	      	been transmitted
      */
     SigC::Signal0<void> allSamplesFlushed;
+    
+    /**
+     * @brief 	This signal is emitted when the tx timeout timer expires
+     *
+     * This signal is emitted when the transmitter have been trasmitting
+     * for too long. This is to prevent the transmitter from tranmitting
+     * endlessly if an error occurs.
+     */
+    SigC::Signal0<void> txTimeout;
 
     
   protected:

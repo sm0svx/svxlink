@@ -125,7 +125,7 @@ using namespace Async;
 
 LocalTx::LocalTx(Config& cfg, const string& name)
   : Tx(name), name(name), cfg(cfg), audio_io(0), is_transmitting(false),
-    serial_fd(-1)
+    serial_fd(-1), txtot(0), tx_timeout_occured(false), tx_timeout(0)
 {
 
 } /* LocalTx::LocalTx */
@@ -133,13 +133,16 @@ LocalTx::LocalTx(Config& cfg, const string& name)
 
 LocalTx::~LocalTx(void)
 {
+  transmit(false);
+  
+  delete txtot;
+  
   if (serial_fd != -1)
   {
     ::close(serial_fd);
     serial_fd = -1;
   }
   
-  transmit(false);
   delete audio_io;
 } /* LocalTx::~LocalTx */
 
@@ -181,6 +184,12 @@ bool LocalTx::initialize(void)
     return false;
   }
   
+  string tx_timeout_str;
+  if (cfg.getValue(name, "TIMEOUT", tx_timeout_str))
+  {
+    tx_timeout = 1000 * atoi(tx_timeout_str.c_str());
+  }
+  
   serial_fd = ::open(ptt_port.c_str(), O_RDWR);
   if(serial_fd == -1)
   {
@@ -212,7 +221,7 @@ void LocalTx::transmit(bool do_transmit)
   {
     return;
   }
-  
+    
   is_transmitting = do_transmit;
   
   if (do_transmit)
@@ -224,15 +233,24 @@ void LocalTx::transmit(bool do_transmit)
       is_transmitting = false;
       return;
     }
+    if ((txtot == 0) && (tx_timeout > 0))
+    {
+      txtot = new Timer(tx_timeout);
+      txtot->expired.connect(slot(this, &LocalTx::txTimeoutOccured));
+    }
     transmitBufferFull(false);
   }
   else
   {
     audio_io->close();
+    delete txtot;
+    txtot = 0;
+    tx_timeout_occured = false;
   }
   
   int pin = ptt_pin;
-  if (ioctl(serial_fd, do_transmit ? TIOCMBIS : TIOCMBIC, &pin) == -1)
+  if (ioctl(serial_fd, (is_transmitting && !tx_timeout_occured)
+      	      	      	? TIOCMBIS : TIOCMBIC, &pin) == -1)
   {
      perror("ioctl");
   }
@@ -316,6 +334,24 @@ bool LocalTx::isFlushing(void) const
  * Bugs:      
  *----------------------------------------------------------------------------
  */
+void LocalTx::txTimeoutOccured(Timer *t)
+{
+  cerr << "*** Error: The transmitter have been active for too long. Turning "
+      	  "it off...\n";
+  
+  int pin = ptt_pin;
+  if (ioctl(serial_fd, TIOCMBIC, &pin) == -1)
+  {
+     perror("ioctl");
+  }
+  
+  delete txtot;
+  txtot = 0;
+  tx_timeout_occured = true;
+  txTimeout();
+} /* LocalTx::txTimeoutOccured */
+
+
 
 
 

@@ -70,6 +70,7 @@ namespace Async
 {
   class Config;
   class AudioIO;
+  class Timer;
 };
 
 
@@ -193,7 +194,12 @@ class LocalTx : public Tx
     bool      	    is_transmitting;
     int       	    serial_fd;
     int       	    ptt_pin;
+    Async::Timer    *txtot;
+    bool      	    tx_timeout_occured;
+    int       	    tx_timeout;
     
+    void txTimeoutOccured(Async::Timer *t);
+
 };  /* class LocalTx */
 
 
