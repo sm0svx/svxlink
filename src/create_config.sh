@@ -84,18 +84,9 @@ if which pkg-config &> /dev/null; then
     output "QT_LIBS=$(pkg-config qt-mt --libs-only-l)"
     output "QT_CFLAGS=$(pkg-config qt-mt --cflags)"
     QT_PREFIX=$(pkg-config qt-mt --variable=prefix)
-  elif [ -n "$QTDIR" ]; then
-    info "yes (QTDIR)\n"
-    output "QT_LIBPATH=-L${QTDIR}/lib"
-    if [ -r $QTDIR/lib/libqt-mt* ]; then
-      output "QT_LIBS=-lqt-mt"
-    else
-      output "QT_LIBS=-lqt"
-    fi
-    output "QT_CFLAGS=-I${QTDIR}/include"
-    QT_PREFIX=${QTDIR}
   fi
-elif [ -n "$QTDIR" ]; then
+fi
+if [ -z "$QT_PREFIX" -a -n "$QTDIR" ]; then
   info "yes (QTDIR)\n"
   output "QT_LIBPATH=-L${QTDIR}/lib"
   if [ -n "$(ls ${QTDIR}/lib/libqt-mt* 2> /dev/null)" ]; then
@@ -105,13 +96,12 @@ elif [ -n "$QTDIR" ]; then
   fi
   output "QT_CFLAGS=-I${QTDIR}/include"
   QT_PREFIX=${QTDIR}
-else
-  info "no\n"
 fi
-
 if [ -n "$QT_PREFIX" ]; then
   output "QT_BIN=${QT_PREFIX}/bin"
   output "QT_MOC=${QT_BIN}/moc"
   output "QT_UIC=${QT_BIN}/uic"
+else
+  info "no\n"
 fi
 
