@@ -208,6 +208,7 @@ bool Logic::initialize(void)
       	  slot(msg_handler, &MsgHandler::writeBufferFull));
   
   module_tx_fifo = new SampleFifo(15*8000); // 15 seconds
+  module_tx_fifo->setDebugName("module_tx_fifo");
   module_tx_fifo->allSamplesWritten.connect(
       	  slot(this, &Logic::allModuleSamplesWritten));
   module_tx_fifo->writeSamples.connect(slot(this, &Logic::transmitAudio));
@@ -544,8 +545,23 @@ void Logic::allModuleSamplesWritten(void)
 
 void Logic::transmitCheck(void)
 {
-  //printf("Logic::transmitCheck\n");
-  
+  //printf("Logic::transmitCheck:\n");
+  /*
+  if (active_module != 0)
+  {
+    printf("\tactive_module->isTransmitting   = %s\n",
+      active_module->isTransmitting() ? "TRUE" : "FALSE");
+  }
+  printf("\tmsg_handler->isWritingMessage() = %s\n",
+      msg_handler->isWritingMessage() ? "TRUE" : "FALSE");
+  printf("\tmodule_tx_fifo->empty()         = %s\n",
+      module_tx_fifo->empty() ? "TRUE" : "FALSE");
+  printf("\tlogic_transmit                  = %s\n",
+      logic_transmit ? "TRUE" : "FALSE");
+  printf("\ttx().isFlushing()               = %s\n",
+      tx().isFlushing() ? "TRUE" : "FALSE");
+  */
+    
   if (((active_module != 0) && active_module->isTransmitting()) ||
       msg_handler->isWritingMessage() ||
       !module_tx_fifo->empty() ||
