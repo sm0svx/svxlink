@@ -245,7 +245,7 @@ bool Config::parseCfgFile(void)
   {
     ++line_no;
     char *l = trimSpaces(line);
-    printf("%s\n", l);
+    //printf("%s\n", l);
     switch (l[0])
     {
       case 0:
@@ -260,7 +260,7 @@ bool Config::parseCfgFile(void)
 	      	  "on line " << line_no << endl;
 	  return false;
 	}
-	printf("New section=%s\n", sec);
+	//printf("New section=%s\n", sec);
 	current_sec = sec;
 	current_tag = "";
 	if (sections.count(current_sec) > 0)
@@ -282,7 +282,7 @@ bool Config::parseCfgFile(void)
 	      	  "on line " << line_no << endl;
 	  return false;
 	}
-	printf("Continued line=\"%s\"", val);
+	//printf("Continued line=\"%s\"", val);
 	
 	if (current_tag.empty())
 	{
@@ -307,7 +307,7 @@ bool Config::parseCfgFile(void)
 	      	  "on line " << line_no << endl;
 	  return false;
 	}
-	printf("tag=\"%s\"  value=\"%s\"\n", tag.c_str(), value.c_str());
+	//printf("tag=\"%s\"  value=\"%s\"\n", tag.c_str(), value.c_str());
 	
 	if (current_sec.empty())
 	{
