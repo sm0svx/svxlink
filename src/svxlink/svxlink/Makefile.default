@@ -221,7 +221,7 @@ LDFLAGS		+=
 # Additional files to install
 install-extras uninstall-extras rpm-extras:
 #	$(DIRSPEC) /var/spool/myprog[755,root,root]
-#	$(FILESPEC) install-extras/myprog.conf[644,root,root] /etc
+	$(FILESPEC) svxlink.conf[644,root,root] /etc
 
 
 #
