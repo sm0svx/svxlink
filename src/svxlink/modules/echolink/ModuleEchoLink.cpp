@@ -1142,20 +1142,20 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
   
   stringstream msg;
   msg << "SvxLink " << SVXLINK_VERSION << " - " << mycall
-      << " (" << qsos.size() << ")\n\n";
+      << " (" << qsos.size() << ")\r\n\r\n";
 
   if (squelch_is_open)
   {
-    msg << "> " << mycall << "         " << sysop_name << "\n\n";
+    msg << "> " << mycall << "         " << sysop_name << "\r\n\r\n";
   }
   else
   {
     if (talker != 0)
     {
       msg << "> " << talker->remoteCallsign() << "         "
-      	  << talker->remoteName() << "\n\n";
+      	  << talker->remoteName() << "\r\n\r\n";
     }
-    msg << mycall << "         " << sysop_name << "\n";
+    msg << mycall << "         " << sysop_name << "\r\n";
   }
   
   list<QsoImpl*>::const_iterator it;
@@ -1164,7 +1164,7 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
     if ((*it != talker) || squelch_is_open)
     {
       msg << (*it)->remoteCallsign() << "         "
-      	  << (*it)->remoteName() << "\n";
+      	  << (*it)->remoteName() << "\r\n";
     }
   }
   
