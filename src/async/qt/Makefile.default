@@ -197,7 +197,8 @@ WARNINGS	+= -Wno-deprecated
 
 # Extra commandline switches to the compiler. For example "-g" to
 # add debug information, "-O2" to add optimizations etc.
-CFLAGS		+= -g $(QT_CFLAGS) $(shell sigc-config --cflags)
+CFLAGS		+= -g
+CXXFLAGS	+= $(QT_CFLAGS) $(shell sigc-config --cflags)
 
 # Extra commandline switches to the linker
 LDFLAGS		+=

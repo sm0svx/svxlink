@@ -25,10 +25,10 @@ info "--- Checking if chgrp understand the -h switch..."
 ln -s . chgrp_test-$$.tmp
 if chgrp -h `id -gn` chgrp_test-$$.tmp 2> /dev/null; then
   info "yes\n"
-  output "CHGRP_H = chgrp -h"
+  output "CHGRP_H=chgrp -h"
 else
   info "no\n"
-  output "CHGRP_H = chgrp"
+  output "CHGRP_H=chgrp"
 fi
 rm -f chgrp_test-$$.tmp
 
@@ -37,10 +37,10 @@ info "--- Checking if chown understand the -h switch..."
 ln -s . chown_test-$$.tmp
 if chown -h `id -un` chown_test-$$.tmp 2> /dev/null; then
   info "yes\n"
-  output "CHOWN_H = chown -h"
+  output "CHOWN_H=chown -h"
 else
   info "no\n"
-  output "CHOWN_H = chown"
+  output "CHOWN_H=chown"
 fi
 rm -f chown_test-$$.tmp
 
@@ -59,8 +59,8 @@ if [ "${KDEDIR}" != "" ]; then
   fi
   if [ "${KDEINC}" != "" ]; then
     KDE_VERSION_MAJOR=$(awk '/#define KDE_VERSION_MAJOR/ { print $3; }' ${KDE_VERSION_INC})
-    output "KDE_VERSION_MAJOR = $KDE_VERSION_MAJOR"
-    output "CFLAGS_DEFINES += -DKDE_VERSION_MAJOR=$KDE_VERSION_MAJOR"
+    output "KDE_VERSION_MAJOR=$KDE_VERSION_MAJOR"
+    output "CFLAGS_DEFINES+=-DKDE_VERSION_MAJOR=$KDE_VERSION_MAJOR"
     info "yes (version=$KDE_VERSION_MAJOR)\n"
   else
     info "no\n"
@@ -77,17 +77,22 @@ if which pkg-config &> /dev/null; then
     output "QT_LIBPATH=$(pkg-config qt --libs-only-L)"
     output "QT_LIBS=$(pkg-config qt --libs-only-l)"
     output "QT_CFLAGS=$(pkg-config qt --cflags)"
+    QT_PREFIX=$(pkg-config qt --variable=prefix)
   elif pkg-config qt-mt; then
     info "yes (pkg-config qt-mt)\n"
     output "QT_LIBPATH=$(pkg-config qt-mt --libs-only-L)"
     output "QT_LIBS=$(pkg-config qt-mt --libs-only-l)"
     output "QT_CFLAGS=$(pkg-config qt-mt --cflags)"
+    QT_PREFIX=$(pkg-config qt-mt --variable=prefix)
   elif [ -n "$QTDIR" ]; then
     info "yes (QTDIR)\n"
     output "QT_LIBPATH=-L${QTDIR}/lib"
     output "QT_LIBS=-lqt"
     output "QT_CFLAGS=-I${QTDIR}/include"
+    QT_PREFIX=${QTDIR}
   fi
+  output "QT_MOC=${QT_PREFIX}/bin/moc"
+  output "QT_UIC=${QT_PREFIX}/bin/uic"
 else
   info "no\n"
 fi

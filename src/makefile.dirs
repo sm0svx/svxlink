@@ -14,7 +14,7 @@
 # Subdirectories in the order of compilation.
 SUBDIRS	= async echolib svxlink
 
-ifdef QT_LIBS
+ifdef QTDIR
 SUBDIRS += qtel
 endif
 

@@ -52,11 +52,8 @@ ifeq ($(OS),)
   -include $(ROOT)/makefile.cfg
 endif
 
-ifndef MAKEFILE_CONFIG_INCLUDED
-  -include $(ROOT)/.config
-endif
-
 include makefile.dirs
+
 
 # Reverse the order of the supplied directory list
 REVDIRS 	= $$(echo $(SUBDIRS) | \
