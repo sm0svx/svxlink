@@ -7,6 +7,32 @@
 <H2>Project News</H2>
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>25 Mar 2005: <I>Version 050325 released</I></B>
+  <TD/></TR>
+  <TR><TD>
+    Time for another release. It's been six months since the last release.
+    It didn't happen very much during the end of the last year so there really
+    was no reason to make a new release. The last months I have been working
+    a little bit on the SvxLink server. What's new then:
+    <UL>
+      <LI>
+      	The repeater controller logic has now been tested for more than one
+	month without any big problems. However, there are some audio issus
+	still to be worked out.
+      </LI>
+      <LI>COS - Carrier Operated Squelch</LI>
+      <LI>A macro (or short cut) system</LI>
+      <LI>Qtel now have a connect sound for incoming connections</LI>
+      <LI>Bugfixes</LI>
+    </UL>
+    Check out the
+    <A href="https://sf.net/project/shownotes.php?release_id=315589">ChangeLog</A>
+    for more detailed information.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>26 Sep 2004: <I>Version 040926 released</I></B>
   <TD/></TR>
   <TR><TD>
