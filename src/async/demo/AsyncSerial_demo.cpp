@@ -11,9 +11,8 @@ class MyClass : public SigC::Object
   public:
     MyClass(void)
     {
-      serial = new Serial("/dev/ttyUSB0", 4800, Serial::PARITY_NONE, 8, 1,
+      serial = new Serial("/dev/ttyS0", 9600, Serial::PARITY_NONE, 8, 1,
       	      	      	  Serial::FLOW_NONE);
-      serial->setCanonical(true);
       serial->charactersReceived.connect(
       	  slot(this, &MyClass::oncharactersReceived));
 
