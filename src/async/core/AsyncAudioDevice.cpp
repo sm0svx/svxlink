@@ -130,7 +130,6 @@ AudioDevice *AudioDevice::registerAudioIO(const string& dev_name,
 {
   if (devices.count(dev_name) == 0)
   {
-    printf("Creating new audio device %s\n", dev_name.c_str());
     devices[dev_name] = new AudioDevice(dev_name);
     
       // Open the device once to read out the device capabilities
