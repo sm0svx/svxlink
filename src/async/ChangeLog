@@ -8,7 +8,9 @@
 
 * New class "Serial" for serial port usage.
 
-* Bugfix: The DnsLookup class did not delete its DnsLookupWorker object.
+* Bugfix: The DnsLookup class did not delete its DnsLookupWorker object
+  and other memory handling was a mess as well. Thank you "valgrind"
+  for helping me find this!
 
 
 
