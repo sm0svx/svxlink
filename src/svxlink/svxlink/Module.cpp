@@ -93,53 +93,86 @@ Config &Module::cfg(void) const
 } /* Module::cfg */
 
 
+const string& Module::logicName(void) const
+{
+  return logic()->name();
+} /* Module::logicName */
+
+
 void Module::playMsg(const string& msg) const
 {
-  logic()->playMsg(msg, this);
+  if (m_is_active)
+  {
+    logic()->playMsg(msg, this);
+  }
 }
 
 
 void Module::playNumber(int number) const
 {
-  logic()->playNumber(number);
+  if (m_is_active)
+  {
+    logic()->playNumber(number);
+  }
 }
 
 
 void Module::spellWord(const string& word) const
 {
-  logic()->spellWord(word);
+  if (m_is_active)
+  {
+    logic()->spellWord(word);
+  }
 }
 
 
 void Module::playSilence(int length) const
 {
-  logic()->playSilence(length);
+  if (m_is_active)
+  {
+    logic()->playSilence(length);
+  }
 }
 
 
 int Module::audioFromModule(short *samples, int count)
 {
-  logic()->audioFromModule(samples, count);
+  if (m_is_active)
+  {
+    logic()->audioFromModule(samples, count);
+  }
   return count;
 }
 
 
 void Module::transmit(bool tx)
 {
-  logic()->moduleTransmitRequest(tx);
-  m_is_transmitting = tx;
+  if (m_is_active)
+  {
+    logic()->moduleTransmitRequest(tx);
+    m_is_transmitting = tx;
+  }
 } /* transmit */
 
 
 bool Module::activateMe(void)
 {
-  return logic()->activateModule(this);
+  if (!m_is_active)
+  {
+    return logic()->activateModule(this);
+  }
+  
+  return true;
+  
 } /* Module::activateMe */
 
 
 void Module::deactivateMe(void)
 {
-  logic()->deactivateModule(this);
+  if (m_is_active)
+  {
+    logic()->deactivateModule(this);
+  }
 } /* Module::deactivateMe */
 
 
@@ -155,15 +188,9 @@ list<Module*> Module::moduleList(void)
 } /* Module::moduleList */
 
 
-const string& Module::logicName(void) const
-{
-  return logic()->name();
-} /* Module::logicName */
-
-
 void Module::setIdle(bool is_idle)
 {
-  if (m_tmo_timer != 0)
+  if (m_is_active && (m_tmo_timer != 0))
   {
     m_tmo_timer->setEnable(is_idle);
   }

@@ -32,6 +32,7 @@ class Module : public SigC::Object
     bool isActive(void) const { return m_is_active; }
     bool isTransmitting(void) const { return m_is_transmitting; }
     Async::Config &cfg(void) const;
+    const std::string& logicName(void) const;
     
     virtual const char *name(void) const = 0;
     virtual void activateInit(void) = 0;
@@ -44,19 +45,18 @@ class Module : public SigC::Object
     virtual int audioFromRx(short *samples, int count) { return count; }
     virtual void allMsgsWritten(void) {}
     
-    
-  protected:
     void playMsg(const std::string& msg) const;
     void playNumber(int number) const;
     void spellWord(const std::string& word) const;
     void playSilence(int length) const;
+    
+  protected:
     int audioFromModule(short *samples, int count);
     void transmit(bool tx);
     bool activateMe(void);
     void deactivateMe(void);
     Module *findModule(int id);
     std::list<Module*> moduleList(void);
-    const std::string& logicName(void) const;
     void setIdle(bool is_idle);
 
   private:
