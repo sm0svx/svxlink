@@ -171,18 +171,18 @@ bool ModuleEchoLink::initialize(void)
   string server;
   if (!cfg().getValue(cfgName(), "SERVER", server))
   {
-    cerr << "*** Error: Config variable " << cfgName() << "/SERVER not set\n";
+    cerr << "*** ERROR: Config variable " << cfgName() << "/SERVER not set\n";
     return false;
   }
   
   if (!cfg().getValue(cfgName(), "CALLSIGN", mycall))
   {
-    cerr << "*** Error: Config variable " << cfgName() << "/CALLSIGN not set\n";
+    cerr << "*** ERROR: Config variable " << cfgName() << "/CALLSIGN not set\n";
     return false;
   }
   if (mycall == "MYCALL-L")
   {
-    cerr << "*** Error: Please set the EchoLink callsign (" << cfgName()
+    cerr << "*** ERROR: Please set the EchoLink callsign (" << cfgName()
       	 << "/CALLSIGN) to a real callsign\n";
     return false;
   }
@@ -190,12 +190,12 @@ bool ModuleEchoLink::initialize(void)
   string password;
   if (!cfg().getValue(cfgName(), "PASSWORD", password))
   {
-    cerr << "*** Error: Config variable " << cfgName() << "/PASSWORD not set\n";
+    cerr << "*** ERROR: Config variable " << cfgName() << "/PASSWORD not set\n";
     return false;
   }
   if (password == "MyPass")
   {
-    cerr << "*** Error: Please set the EchoLink password (" << cfgName()
+    cerr << "*** ERROR: Please set the EchoLink password (" << cfgName()
       	 << "/PASSWORD) to a real password\n";
     return false;
   }
@@ -203,20 +203,20 @@ bool ModuleEchoLink::initialize(void)
   string location;
   if (!cfg().getValue(cfgName(), "LOCATION", location))
   {
-    cerr << "*** Error: Config variable " << cfgName() << "/LOCATION not set\n";
+    cerr << "*** ERROR: Config variable " << cfgName() << "/LOCATION not set\n";
     return false;
   }
   
   if (!cfg().getValue(cfgName(), "SYSOPNAME", sysop_name))
   {
-    cerr << "*** Error: Config variable " << cfgName()
+    cerr << "*** ERROR: Config variable " << cfgName()
       	 << "/SYSOPNAME not set\n";
     return false;
   }
   
   if (!cfg().getValue(cfgName(), "DESCRIPTION", description))
   {
-    cerr << "*** Error: Config variable " << cfgName()
+    cerr << "*** ERROR: Config variable " << cfgName()
       	 << "/DESCRIPTION not set\n";
     return false;
   }
@@ -234,7 +234,7 @@ bool ModuleEchoLink::initialize(void)
   
   if (max_qsos > max_connections)
   {
-    cerr << "*** Error: The value of " << cfgName() << "/MAX_CONNECTIONS ("
+    cerr << "*** ERROR: The value of " << cfgName() << "/MAX_CONNECTIONS ("
       	 << max_connections << ") must be greater or equal to the value of "
 	 << cfgName() << "/MAX_QSOS (" << max_qsos << ").\n";
     return false;
@@ -245,7 +245,7 @@ bool ModuleEchoLink::initialize(void)
   string sound_base_dir;
   if (!cfg().getValue(logicName(), "SOUNDS", sound_base_dir))
   {
-    cerr << "*** Error: Config variable " << logicName()
+    cerr << "*** ERROR: Config variable " << logicName()
       	 << "/SOUNDS not set\n";
     return false;
   }
@@ -261,7 +261,7 @@ bool ModuleEchoLink::initialize(void)
     // Start listening to the EchoLink UDP ports
   if (Dispatcher::instance() == 0)
   {
-    cerr << "*** Error: Could not create EchoLink listener (Dispatcher) "
+    cerr << "*** ERROR: Could not create EchoLink listener (Dispatcher) "
       	    "object\n";
     moduleCleanup();
     return false;
@@ -478,6 +478,8 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
     }
     else
     {
+      cout << "EchoLink ID " << station_id << " is not in the list. "
+      	      "Refreshing the list...\n";
       getDirectoryList();
       pending_connect_id = station_id;
     }
@@ -648,6 +650,8 @@ void ModuleEchoLink::onStationListUpdated(void)
     }
     else
     {
+      cout << "The EchoLink ID " << pending_connect_id
+      	   << " could not be found.\n";
       playNumber(pending_connect_id);
       playMsg("not_found");
     }
@@ -679,7 +683,7 @@ void ModuleEchoLink::onStationListUpdated(void)
  */
 void ModuleEchoLink::onError(const string& msg)
 {
-  cerr << "*** EchoLink directory server error: " << msg << endl;
+  cerr << "*** ERROR: " << msg << endl;
   
   if (pending_connect_id > 0)
   {
@@ -743,7 +747,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   if (!qso->initOk())
   {
     delete qso;
-    cerr << "*** Error: Creation of Qso object failed\n";
+    cerr << "*** ERROR: Creation of Qso object failed\n";
     return;
   }
   qsos.push_back(qso);
@@ -767,7 +771,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
     if (!activateMe())
     {
       qso->reject();
-      cerr << "*** Warning: Could not accept incoming connection from "
+      cerr << "*** WARNING: Could not accept incoming connection from "
       	   << callsign << " since the frontend was busy doing something else.";
       return;
     }
@@ -908,11 +912,14 @@ void ModuleEchoLink::getDirectoryList(Timer *timer)
 
 void ModuleEchoLink::createOutgoingConnection(const StationData *station)
 {
+  cout << "Connecting to " << station->callsign() << " (" << station->id()
+       << ")\n";
+  
   QsoImpl *qso = new QsoImpl(station->ip(), this);
   if (!qso->initOk())
   {
     delete qso;
-    cerr << "Creation of Qso failed\n";
+    cerr << "*** ERROR: Creation of Qso failed\n";
     playMsg("operation_failed");
     return;
   }
