@@ -76,6 +76,7 @@ void Module::deactivate(void)
   
   deactivateCleanup();
   setIdle(false);
+  transmit(false);
   
   m_audio_con.disconnect();
   m_squelch_con.disconnect();
