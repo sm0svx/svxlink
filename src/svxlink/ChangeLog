@@ -23,6 +23,10 @@
 * ModuleParrot bugfix: Leading zeros were skipped when reading back
   entered DTMF digits.
 
+* ModuleEchoLink bugfix: Now and then right after a disconnection, the link
+  was automagically reestablished. Incoming connections are now not allowed
+  from the disconnected station for five seconds.
+
 
 
  0.3.0 -- 26 Sep 2004
