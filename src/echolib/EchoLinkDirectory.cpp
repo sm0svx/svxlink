@@ -195,8 +195,8 @@ void Directory::makeOffline(void)
 
 void Directory::getCalls(void)
 {
-  if ((the_status == StationData::STAT_ONLINE) ||
-      (the_status == StationData::STAT_BUSY))
+  if ((current_status == StationData::STAT_ONLINE) ||
+      (current_status == StationData::STAT_BUSY))
   {
     list<Cmd>::const_iterator it;
     for (it = cmd_queue.begin(); it != cmd_queue.end(); ++it)
@@ -817,18 +817,6 @@ void Directory::setStatus(StationData::Status new_status)
   {
     current_status = new_status;
     statusChanged(current_status);
-    /*
-    delete reg_refresh_timer;
-    reg_refresh_timer = 0;
-    if ((current_status == StationData::STAT_ONLINE) ||
-	(current_status == StationData::STAT_BUSY))
-    {
-      reg_refresh_timer = new Timer(REGISTRATION_REFRESH_TIME,
-	  Timer::TYPE_PERIODIC);
-      reg_refresh_timer->expired.connect(slot(this,
-	  &Directory::onRefreshRegistration));
-    }
-    */
   }
 } /* Directory::setStatus */
 

@@ -11,6 +11,9 @@
 * Added the possibility to send and receive raw GSM audio packets. This is
   good for forwarding audio in for example a conference node.
 
+* Bugfix: The wanted directory status was used in some places where the
+  current directory status (the true status) should be used.
+
 
 
  0.8.0 -- 27 May 2004

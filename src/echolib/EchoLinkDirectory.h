@@ -170,7 +170,7 @@ class Directory : public SigC::Object
      * @brief 	Return the current status of the registration
      * @return	Returns the status
      */
-    StationData::Status status(void) const { return the_status; }
+    StationData::Status status(void) const { return current_status; }
     
     /**
      * @brief 	Return the current status of the registration in string
@@ -179,7 +179,7 @@ class Directory : public SigC::Object
      */
     std::string statusStr(void) const
     { 
-      return StationData::statusStr(the_status);
+      return StationData::statusStr(current_status);
     }
     
     /**
