@@ -208,6 +208,7 @@ class Logic : public SigC::Object
     void transmitCheck(void);
     void loadModules(void);
     void loadModule(const std::string& module_name);
+    void unloadModules(void);
     void cmdTimeout(Async::Timer *t);
     void processCommandQueue(void);
     void Logic::putCmdOnQueue(Async::Timer *t=0);

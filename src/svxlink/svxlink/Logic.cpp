@@ -136,6 +136,9 @@ Logic::Logic(Config &cfg, const string& name)
 
 Logic::~Logic(void)
 {
+  unloadModules();
+
+  delete cmd_tmo_timer;
   delete exec_cmd_on_sql_close_timer;
   delete module_tx_fifo;
   delete write_msg_flush_timer;
@@ -673,6 +676,19 @@ void Logic::loadModule(const string& module_cfg_name)
   modules.push_back(module);
   
 } /* Logic::loadModule */
+
+
+void Logic::unloadModules(void)
+{
+  list<Module *>::iterator it;
+  for (it=modules.begin(); it!=modules.end(); ++it)
+  {
+    void *plugin_handle = (*it)->pluginHandle();
+    delete *it;
+    dlclose(plugin_handle);
+  }
+  modules.clear();
+} /* logic::unloadModules */
 
 
 void Logic::cmdTimeout(Timer *t)

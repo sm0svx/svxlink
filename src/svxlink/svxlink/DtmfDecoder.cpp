@@ -199,7 +199,11 @@ DtmfDecoder::DtmfDecoder(void)
 
 DtmfDecoder::~DtmfDecoder(void)
 {
-
+  for (int i=0; i<4; i++)
+  {
+    delete row[i];
+    delete col[i];
+  }
 } /* DtmfDecoder::~DtmfDecoder */
 
 
