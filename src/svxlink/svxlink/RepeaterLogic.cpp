@@ -275,7 +275,10 @@ void RepeaterLogic::identify(Timer *t)
   {
     spellWord(callsign());
     playMsg("repeater");
-    ident_timer->reset();
+    if (ident_timer != 0)
+    {
+      ident_timer->reset();
+    }
   }
 } /* RepeaterLogic::identify */
 

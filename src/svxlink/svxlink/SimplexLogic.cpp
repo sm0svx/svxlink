@@ -256,7 +256,10 @@ void SimplexLogic::identify(Timer *t)
   {
     playMsg("online");
     spellWord(callsign());
-    ident_timer->reset();
+    if (ident_timer != 0)
+    {
+      ident_timer->reset();
+    }
   }
 } /* SimplexLogic::identify */
 
