@@ -1,5 +1,5 @@
 /**
-@file	 LocalTx.h
+@file	 LocalTx.cpp
 @brief   Implements a local transmitter
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-03-21
@@ -154,21 +154,21 @@ bool LocalTx::initialize(void)
   string audio_dev;
   if (!cfg.getValue(name, "AUDIO_DEV", audio_dev))
   {
-    cerr << "*** Error: Config variable " << name << "/AUDIO_DEV not set\n";
+    cerr << "*** ERROR: Config variable " << name << "/AUDIO_DEV not set\n";
     return false;
   }
   
   string ptt_port;
   if (!cfg.getValue(name, "PTT_PORT", ptt_port))
   {
-    cerr << "*** Error: Config variable " << name << "/PTT_PORT not set\n";
+    cerr << "*** ERROR: Config variable " << name << "/PTT_PORT not set\n";
     return false;
   }
   
   string ptt_pin_str;
   if (!cfg.getValue(name, "PTT_PIN", ptt_pin_str))
   {
-    cerr << "*** Error: Config variable " << name << "/PTT_PIN not set\n";
+    cerr << "*** ERROR: Config variable " << name << "/PTT_PIN not set\n";
     return false;
   }
   if (ptt_pin_str == "RTS")
@@ -181,7 +181,7 @@ bool LocalTx::initialize(void)
   }
   else
   {
-    cerr << "*** Error: Accepted values for config variable "
+    cerr << "*** ERROR: Accepted values for config variable "
       	 << name << "/PTT_PIN are \"RTS\" and \"DTR\"\n";
     return false;
   }
@@ -239,7 +239,7 @@ void LocalTx::transmit(bool do_transmit)
   {
     if (!audio_io->open(AudioIO::MODE_WR))
     {
-      cerr << "*** Error: Could not open audio device for transmitter \""
+      cerr << "*** ERROR: Could not open audio device for transmitter \""
       	   << name << "\"\n";
       is_transmitting = false;
       return;
@@ -356,7 +356,15 @@ bool LocalTx::isFlushing(void) const
  */
 void LocalTx::txTimeoutOccured(Timer *t)
 {
-  cerr << "*** Error: The transmitter have been active for too long. Turning "
+  delete txtot;
+  txtot = 0;
+  
+  if (tx_timeout_occured)
+  {
+    return;
+  }
+  
+  cerr << "*** ERROR: The transmitter have been active for too long. Turning "
       	  "it off...\n";
   
   int pin = ptt_pin;
@@ -365,8 +373,6 @@ void LocalTx::txTimeoutOccured(Timer *t)
      perror("ioctl");
   }
   
-  delete txtot;
-  txtot = 0;
   tx_timeout_occured = true;
   txTimeout();
 } /* LocalTx::txTimeoutOccured */
