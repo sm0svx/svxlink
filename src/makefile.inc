@@ -107,7 +107,11 @@ LIBDEP		:= $(subst -l,$(LIB)/lib,$(PROJLIBS))
 LIBDEP		:= $(LIBDEP:%=%.a)
 
 # Compiler warnings
-WARNINGS	= -Wstrict-prototypes -Wpointer-arith \
+CWARNINGS	= -Wstrict-prototypes -Wpointer-arith \
+	  	-DNeedVarargsPrototypes  -fstrength-reduce \
+		-fpcc-struct-return -fno-common -Wall
+
+CXXWARNINGS	= -Wpointer-arith \
 	  	-DNeedVarargsPrototypes  -fstrength-reduce \
 		-fpcc-struct-return -fno-common -Wall
 
@@ -358,7 +362,7 @@ depend/%.dpp:  	%.cpp
 		chgrp $(SET_GROUP) `dirname $@`; \
 	fi
 	$(ECHO) --- Creating dependency file $(BOLD)$@$(NBOLD)...
-	g++ -M -MG -MT "$*.o $@" $(CXXFLAGS) -MF $@ $<
+	g++ -M -MG -MT "$*.o $@" $(CXXFLAGS) -MF $@ $< > /dev/null
 	chgrp $(SET_GROUP) $@
 
 depend/%.d:	%.c
@@ -367,7 +371,7 @@ depend/%.d:	%.c
 		chgrp $(SET_GROUP) `dirname $@`; \
 	fi
 	$(ECHO) --- Creating dependency file $(BOLD)$@$(NBOLD)...
-	gcc -M -MG -MT "$*.o $@" $(CFLAGS) -MF $@ $<
+	gcc -M -MG -MT "$*.o $@" $(CFLAGS) -MF $@ $< > /dev/null
 	chgrp $(SET_GROUP) $@
 
 
