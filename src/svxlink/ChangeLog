@@ -1,4 +1,4 @@
- 0.3.0 -- ?? Jul 2004
+ 0.3.0 -- ?? Aug 2004
 ----------------------
 
 * Added anti flutter to the DTMF detection code. The anti flutter code is
@@ -12,6 +12,13 @@
 * Bugfix in the Parrot module: The module timeout timer kept running after
   the module had been manually deactivated. This caused svxlink to crash when
   the timeout occured.
+
+* ModuleEchoLink: Added support for multiple echolink connections. Two new
+  configuration variable was added to support this: MAX_CONNECTIONS and
+  MAX_QSOS.
+
+* ModuleEchoLink: Now sending an audio reject message if the connection
+  was rejected.
 
 
 
