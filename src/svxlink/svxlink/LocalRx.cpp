@@ -120,7 +120,8 @@ using namespace Async;
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
   : Rx(name), cfg(cfg), name(name), audio_io(0), is_muted(true), vox(0),
-    dtmf_dec(0), det_1750(0), req_1750_duration(0)
+    dtmf_dec(0), det_1750(0), req_1750_duration(0), ctcss_det(0), ctcss_fq(0),
+    sql_is_open(false)
 {
   
 } /* LocalRx::LocalRx */
@@ -128,6 +129,7 @@ LocalRx::LocalRx(Config &cfg, const std::string& name)
 
 LocalRx::~LocalRx(void)
 {
+  delete ctcss_det;
   delete det_1750;
   delete dtmf_dec;
   delete audio_io;
@@ -140,36 +142,97 @@ bool LocalRx::initialize(void)
   string audio_dev;
   if (!cfg.getValue(name, "AUDIO_DEV", audio_dev))
   {
+    cerr << "*** ERROR: Config variable " << name << "/AUDIO_DEV not set\n";
     return false;
   }
   
+  string sql_up_det_str;
+  if (!cfg.getValue(name, "SQL_UP_DET", sql_up_det_str))
+  {
+    cerr << "*** ERROR: Config variable " << name << "/SQL_UP_DET not set\n";
+    return false;
+  }
+  sql_up_det = sqlDetStrToEnum(sql_up_det_str);
+  if (sql_up_det == SQL_DET_UNKNOWN)
+  {
+    cerr << "*** ERROR: Config variable " << name << "/SQL_UP_DET is set to "
+      	 << "an illegal value. Valid values are: VOX, CTCSS\n";
+    return false;
+  }
+  
+  string sql_down_det_str;
+  if (!cfg.getValue(name, "SQL_DOWN_DET", sql_down_det_str))
+  {
+    cerr << "*** ERROR: Config variable " << name << "/SQL_DOWN_DET not set\n";
+    return false;
+  }
+  sql_down_det = sqlDetStrToEnum(sql_down_det_str);
+  if (sql_down_det == SQL_DET_UNKNOWN)
+  {
+    cerr << "*** ERROR: Config variable " << name << "/SQL_DOWN_DET is set to "
+      	 << "an illegal value. Valid values are: VOX, CTCSS\n";
+    return false;
+  }
+
   string vox_filter_depth;
-  if (!cfg.getValue(name, "VOX_FILTER_DEPTH", vox_filter_depth))
-  {
-    return false;
-  }
-  
   string vox_limit;
-  if (!cfg.getValue(name, "VOX_LIMIT", vox_limit))
-  {
-    return false;
-  }
-  
   string vox_hangtime;
-  if (!cfg.getValue(name, "VOX_HANGTIME", vox_hangtime))
+  if ((sql_up_det == SQL_DET_VOX) || (sql_down_det == SQL_DET_VOX))
   {
-    return false;
+    if (!cfg.getValue(name, "VOX_FILTER_DEPTH", vox_filter_depth))
+    {
+      cerr << "*** ERROR: Config variable " << name
+      	   << "/VOX_FILTER_DEPTH not set\n";
+      return false;
+    }
+
+    if (!cfg.getValue(name, "VOX_LIMIT", vox_limit))
+    {
+      cerr << "*** ERROR: Config variable " << name << "/VOX_LIMIT not set\n";
+      return false;
+    }
+
+    if (!cfg.getValue(name, "VOX_HANGTIME", vox_hangtime))
+    {
+      cerr << "*** ERROR: Config variable " << name << "/VOX_HANGTIME not set\n";
+      return false;
+    }
   }
-  
-  vox = new Vox(atoi(vox_filter_depth.c_str()));
-  vox->squelchOpen.connect(squelchOpen.slot());
-  vox->setVoxLimit(atoi(vox_limit.c_str()));
-  vox->setHangtime(atoi(vox_hangtime.c_str())*8);
-  
+    
+  if ((sql_up_det == SQL_DET_CTCSS) || (sql_down_det == SQL_DET_CTCSS))
+  {
+    string ctcss_fq_str;
+    if (cfg.getValue(name, "CTCSS_FQ", ctcss_fq_str))
+    {
+      ctcss_fq = atoi(ctcss_fq_str.c_str());
+    }
+    if (ctcss_fq <= 0)
+    {
+      cerr << "*** ERROR: Config variable " << name << "/CTCSS_FQ not set or "
+      	   << "or is set to an illegal value\n";
+      return false;
+    }
+  }
+    
   audio_io = new AudioIO(audio_dev);
-  audio_io->audioRead.connect(slot(vox, &Vox::audioIn));
-  vox->audioOut.connect(audioReceived.slot());
+  audio_io->audioRead.connect(slot(this, &LocalRx::audioRead));
   
+  if ((sql_up_det == SQL_DET_VOX) || (sql_down_det == SQL_DET_VOX))
+  {
+    vox = new Vox(atoi(vox_filter_depth.c_str()));
+    vox->squelchOpen.connect(slot(this, &LocalRx::voxSqlOpen));
+    vox->setVoxLimit(atoi(vox_limit.c_str()));
+    vox->setHangtime(atoi(vox_hangtime.c_str())*8);
+    audio_io->audioRead.connect(slot(vox, &Vox::audioIn));
+  }
+    
+  if ((sql_up_det == SQL_DET_CTCSS) || (sql_down_det == SQL_DET_CTCSS))
+  {
+    ctcss_det = new ToneDetector(ctcss_fq, 2000); // FIXME: Determine optimum N
+    ctcss_det->activated.connect(slot(this, &LocalRx::activatedCtcss));
+    audio_io->audioRead.connect(slot(ctcss_det, &ToneDetector::processSamples));
+  }
+    
   dtmf_dec = new DtmfDecoder;
   audio_io->audioRead.connect(slot(dtmf_dec, &DtmfDecoder::processSamples));
   dtmf_dec->digitDetected.connect(dtmfDigitDetected.slot());
@@ -279,7 +342,64 @@ void LocalRx::activated1750(bool is_activated)
 } /* LocalRx::activated1750 */
 
 
+void LocalRx::voxSqlOpen(bool is_open)
+{
+  //printf("Vox squelch is %s...\n", is_open ? "OPEN" : "CLOSED");
+  if (is_open && (sql_up_det == SQL_DET_VOX))
+  {
+    sql_is_open = true;
+    squelchOpen(true);
+  }
+  else if (!is_open && (sql_down_det == SQL_DET_VOX))
+  {
+    sql_is_open = false;
+    squelchOpen(false);
+  }
+} /* LocalRx::voxSqlOpen */
 
+
+void LocalRx::activatedCtcss(bool is_activated)
+{
+  //printf("Ctcss %s...\n", is_activated ? "ACTIVATED" : "DEACTIVATED");
+  if (is_activated && (sql_up_det == SQL_DET_CTCSS))
+  {
+    sql_is_open = true;
+    squelchOpen(true);
+  }
+  else if (!is_activated && (sql_down_det == SQL_DET_CTCSS))
+  {
+    sql_is_open = false;
+    squelchOpen(false);
+  }
+} /* LocalRx::activatedCtcss */
+
+
+LocalRx::SqlDetType LocalRx::sqlDetStrToEnum(const string& sql_det_str)
+{
+  if (sql_det_str == "VOX")
+  {
+    return SQL_DET_VOX;
+  }
+  else if (sql_det_str == "CTCSS")
+  {
+    return SQL_DET_CTCSS;
+  }
+
+  return SQL_DET_UNKNOWN;
+  
+} /* LocalRx::sqlDetStrToEnum */
+
+
+int LocalRx::audioRead(short *samples, int count)
+{
+  if (sql_is_open)
+  {
+    return audioReceived(samples, count);
+  }
+  
+  return count;
+  
+} /* LocalRx::audioRead */
 
 
 

@@ -167,10 +167,12 @@ class LocalRx : public Rx
      */
     bool detect1750(int required_duration);
     
-    
+
   protected:
     
   private:
+    typedef enum { SQL_DET_UNKNOWN, SQL_DET_VOX, SQL_DET_CTCSS } SqlDetType;
+    
     Async::Config   &cfg;
     std::string     name;
     Async::AudioIO  *audio_io;
@@ -180,8 +182,17 @@ class LocalRx : public Rx
     ToneDetector    *det_1750;
     int       	    req_1750_duration;
     struct timeval  det_1750_timestamp;
+    ToneDetector    *ctcss_det;
+    int       	    ctcss_fq;
+    SqlDetType	    sql_up_det;
+    SqlDetType	    sql_down_det;
+    bool      	    sql_is_open;
     
     void activated1750(bool is_activated);
+    void voxSqlOpen(bool is_open);
+    void activatedCtcss(bool is_activated);
+    SqlDetType sqlDetStrToEnum(const string& sql_det_str);
+    int audioRead(short *samples, int count);
 
 };  /* class LocalRx */
 
