@@ -1,6 +1,6 @@
 /**
 @file	 AsyncSerial.h
-@brief   A class for using asyncronous serial communications
+@brief   A class for using asynchronous serial communications
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-08-02
 
@@ -121,7 +121,7 @@ class FdWatch;
 @note 	The flow control code is untested. Report success/failure to me.
 
 This class is used to communicate over an asynchronous serial link
-(e.g. RS-232 port).
+(e.g. RS-232 port). An example of how to use it is shown below.
 
 \include AsyncSerial_demo.cpp
 */
@@ -133,7 +133,9 @@ class Serial : public SigC::Object
      */
     typedef enum
     {
-      PARITY_NONE, PARITY_EVEN, PARITY_ODD
+      PARITY_NONE,  ///< Parity not used
+      PARITY_EVEN,  ///< Use even parity
+      PARITY_ODD    ///< Use odd parity
     } Parity;
 
     /**
@@ -141,7 +143,9 @@ class Serial : public SigC::Object
      */
     typedef enum
     {
-      FLOW_NONE, FLOW_HW, FLOW_XONOFF
+      FLOW_NONE,    ///< No flow control in use
+      FLOW_HW,	    ///< Use hardware flow control
+      FLOW_XONOFF   ///< Use software (XON/XOFF) flow control
     } Flow;
     
     /**
@@ -153,10 +157,11 @@ class Serial : public SigC::Object
      * @brief 	Constuctor
      * @param 	serial_port The serial port to use
      * @param 	speed 	    The serial speed to use
-     * @param 	parity	    The parity to use (@see Serial::Parity)
+     * @param 	parity	    The parity to use (see @ref Serial::Parity)
      * @param 	bits  	    The number of bits in each serial word
      * @param 	stop_bits   The number of stop bits to use
-     * @param 	flow  	    The type of flow control to use (@see Serial::Flow)
+     * @param 	flow  	    The type of flow control to use
+     *	      	      	    (see @ref Serial::Flow)
      */
     Serial(const std::string& serial_port, int speed, Parity parity,
       	   int bits, int stop_bits, Flow flow);
@@ -210,7 +215,7 @@ class Serial : public SigC::Object
      *
      * Call this method to configure the serial port for canonical mode.
      * In this mode, a couple of control characters are parsed by the kernel
-     * driver and interpreted in a special way. Most notably, only whole lines
+     * driver and interpreted in special ways. Most notably, only whole lines
      * of text are sent up to the application. Don't use canonical mode when
      * the serial stream is not readable text that is split into lines with
      * a line feed character.
@@ -236,7 +241,7 @@ class Serial : public SigC::Object
      * @brief 	A signal that is emitted when there is data to read
      * @param 	buf   A buffer containing the data that has been read
      * @param 	count The number of bytes that was read
-     * @note  	For maximum buffer size @see READ_BUFSIZE
+     * @note  	For maximum buffer size see @ref Serial::READ_BUFSIZE
      * 
      * This signal is emitted whenever one or more characters has been
      * received on the serial port. The buffer is always null-terminated

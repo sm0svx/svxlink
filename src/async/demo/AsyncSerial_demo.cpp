@@ -14,7 +14,7 @@ class MyClass : public SigC::Object
       serial = new Serial("/dev/ttyS0", 9600, Serial::PARITY_NONE, 8, 1,
       	      	      	  Serial::FLOW_NONE);
       serial->charactersReceived.connect(
-      	  slot(this, &MyClass::oncharactersReceived));
+      	  slot(this, &MyClass::onCharactersReceived));
 
       if (!serial->open())
       {
@@ -34,7 +34,7 @@ class MyClass : public SigC::Object
   private:
     Serial *serial;
     
-    void oncharactersReceived(char *buf, int count)
+    void onCharactersReceived(char *buf, int count)
     {
       cout << "Read " << count << " characters from serial port: "
       	   << buf << endl;

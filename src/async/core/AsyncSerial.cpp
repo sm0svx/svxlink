@@ -1,6 +1,6 @@
 /**
 @file	 AsyncSerial.cpp
-@brief   A class for using asyncronous serial communications
+@brief   A class for using asynchronous serial communications
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-08-02
 
