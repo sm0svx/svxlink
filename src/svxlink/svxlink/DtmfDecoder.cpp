@@ -26,6 +26,10 @@
 
 #include <stdio.h>
 
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+
 
 /****************************************************************************
  *
@@ -52,6 +56,7 @@
  *
  ****************************************************************************/
 
+using namespace std;
 using namespace SigC;
 
 
@@ -62,6 +67,12 @@ using namespace SigC;
  *
  ****************************************************************************/
 
+#define BASETONE_N    	      330
+#define OVERTONE_N    	      201
+#define POWER_THRESHOLD       500000
+#define POWER_DIFF_THRESHOLD  9
+#define MIN_TWIST     	      -8
+#define MAX_TWIST     	      4
 
 
 /****************************************************************************
@@ -70,26 +81,56 @@ using namespace SigC;
  *
  ****************************************************************************/
 
-class DtmfToneDetector : public ToneDetector
+class DtmfToneDetector : public SigC::Object
 {
   public:
     DtmfToneDetector(bool is_row, int pos, int fq)
-      : ToneDetector(fq, 205), is_row(is_row), pos(pos)
+      : is_row(is_row), pos(pos),
+      	basetone(fq, BASETONE_N),
+	//overtone(2*fq, OVERTONE_N),
+	is_active(false),
+	tot_samples_processed(0)
     {
-      ToneDetector::activated.connect(
-      	  slot(this, &DtmfToneDetector::onToneActivated));
+      //basetone.activated.connect(
+      //	  slot(this, &DtmfToneDetector::onToneActivated));
+      //overtone.activated.connect(
+      //	  slot(this, &DtmfToneDetector::onOvertoneActivated));
+    }
+    
+    float value(void)
+    {
+      return basetone.value();
+    }
+    
+    /*
+    float overtoneValue(void)
+    {
+      return overtone.value();
+    }
+    */
+    
+    int processSamples(short *samples, int count)
+    {
+      assert(count == max(BASETONE_N, OVERTONE_N));
+      
+      basetone.reset();
+      //overtone.reset();
+      
+      basetone.processSamples(samples, BASETONE_N);
+      //overtone.processSamples(samples, OVERTONE_N);
+
+      return count;
     }
     
     SigC::Signal3<void, bool, int, bool>  activated;
     
   private:
-    bool  is_row;
-    int   pos;
-    
-    void onToneActivated(bool is_activated)
-    {
-      activated(is_row, pos, is_activated);
-    }
+    bool      	  is_row;
+    int       	  pos;
+    ToneDetector  basetone;
+    //ToneDetector  overtone;
+    bool      	  is_active;
+    int       	  tot_samples_processed;
     
 }; /* class DtmfToneDetector */
 
@@ -140,26 +181,18 @@ class DtmfToneDetector : public ToneDetector
  *------------------------------------------------------------------------
  */
 DtmfDecoder::DtmfDecoder(void)
-  : active_row(-1), active_col(-1)
+  : active_row(-1), active_col(-1), buffered_samples(0),
+    last_detected_digit('?'), digit_activated(false)
 {
   row[0] = new DtmfToneDetector(true, 0, 697);
-  row[0]->activated.connect(slot(this, &DtmfDecoder::toneActivated));
   row[1] = new DtmfToneDetector(true, 1, 770);
-  row[1]->activated.connect(slot(this, &DtmfDecoder::toneActivated));
   row[2] = new DtmfToneDetector(true, 2, 852);
-  row[2]->activated.connect(slot(this, &DtmfDecoder::toneActivated));
   row[3] = new DtmfToneDetector(true, 3, 941);
-  row[3]->activated.connect(slot(this, &DtmfDecoder::toneActivated));
   
   col[0] = new DtmfToneDetector(false, 0, 1209);
-  col[0]->activated.connect(slot(this, &DtmfDecoder::toneActivated));
   col[1] = new DtmfToneDetector(false, 1, 1336);
-  col[1]->activated.connect(slot(this, &DtmfDecoder::toneActivated));
   col[2] = new DtmfToneDetector(false, 2, 1477);
-  col[2]->activated.connect(slot(this, &DtmfDecoder::toneActivated));
   col[3] = new DtmfToneDetector(false, 3, 1633);
-  col[3]->activated.connect(slot(this, &DtmfDecoder::toneActivated));
-
 
 } /* DtmfDecoder::DtmfDecoder */
 
@@ -174,16 +207,29 @@ int DtmfDecoder::processSamples(short *buf, int len)
 {
   //printf("len=%d\n", len);
   
-  for (int i=0; i<len/160; i++)
+  int block_len = max(BASETONE_N, OVERTONE_N);
+  int orig_len = len;
+  
+  while (len > 0)
   {
-    for (int n=0; n<4; n++)
+    int samples_to_copy = min(block_len - buffered_samples, len);
+    memcpy(sample_buf + buffered_samples, buf, sizeof(short) * samples_to_copy);
+    buffered_samples += samples_to_copy;
+    if (buffered_samples == block_len)
     {
-      row[n]->processSamples(buf+i*160, 160);
-      col[n]->processSamples(buf+i*160, 160);
+      for (int n=0; n<4; n++)
+      {
+	row[n]->processSamples(sample_buf, block_len);
+	col[n]->processSamples(sample_buf, block_len);
+      }
+      checkTones();
+      buffered_samples = 0;
     }
+    len -= samples_to_copy;
+    buf += samples_to_copy;
   }
   
-  return len;
+  return orig_len;
   
 } /* DtmfDecoder::processSamples */
 
@@ -233,8 +279,74 @@ int DtmfDecoder::processSamples(short *buf, int len)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void DtmfDecoder::toneActivated(bool is_row, int pos, bool is_activated)
+void DtmfDecoder::checkTones(void)
 {
+  float max_row_val = 1;
+  float second_max_val = 1;
+  
+  int active_row = -1;
+  for (int i=0; i<4; ++i)
+  {
+    if (row[i]->value() > max_row_val)
+    {
+      second_max_val = max_row_val;
+      max_row_val = row[i]->value();
+      active_row = i;
+    }
+    else if (row[i]->value() > second_max_val)
+    {
+      second_max_val = row[i]->value();
+    }
+  }
+  
+  double dB = 10 * log10(max_row_val / second_max_val);
+  if ((max_row_val < POWER_THRESHOLD) || (dB < POWER_DIFF_THRESHOLD))
+  {
+    last_detected_digit = '?';
+    digit_activated = false;
+    return;
+  }
+  //printf("row max=%.0f second_max=%.0f diff=%.1lfdB\n",
+  //   	 max_row_val, second_max_val, dB);
+  
+  int active_col = -1;
+  float max_col_val = 1;
+  second_max_val = 1;
+  for (int i=0; i<4; ++i)
+  {
+    if (col[i]->value() > max_col_val)
+    {
+      second_max_val = max_col_val;
+      max_col_val = col[i]->value();
+      active_col = i;
+    }
+    else if (col[i]->value() > second_max_val)
+    {
+      second_max_val = col[i]->value();
+    }
+  }
+  
+  dB = 10 * log10(max_col_val / second_max_val);
+  if ((max_col_val < POWER_THRESHOLD) || (dB < POWER_DIFF_THRESHOLD))
+  {
+    last_detected_digit = '?';
+    digit_activated = false;
+    return;
+  }
+  //printf("col max=%.0f second_max=%.0f diff=%.1lf\n",
+  //    	 max_col_val, second_max_val, dB);
+  
+  dB = 10 * log10(max_col_val / max_row_val);
+  //printf("Twist=%.1lf\n", dB);
+  if ((dB < MIN_TWIST) || (dB > MAX_TWIST))
+  {
+    last_detected_digit = '?';
+    digit_activated = false;
+    return;
+  }
+  
+  //printf("Active row=%d col=%d\n", active_row, active_col);
+  
   const char digit_map[4][4] =
   {
     { '1', '2', '3', 'A' },
@@ -243,37 +355,22 @@ void DtmfDecoder::toneActivated(bool is_row, int pos, bool is_activated)
     { '*', '0', '#', 'D' },
   };
   
-  if (is_row)
+  char digit = digit_map[active_row][active_col];
+  
+  //printf("DTMF digit detected: %c\n", digit);
+  
+  if (digit == last_detected_digit)
   {
-    if (is_activated)
+    if (!digit_activated)
     {
-      active_row = pos;
-    }
-    else if (pos == active_row)
-    {
-      active_row = -1;
-    }
-  }
-  else
-  {
-    if (is_activated)
-    {
-      active_col = pos;
-    }
-    else if (pos == active_col)
-    {
-      active_col = -1;
+      digitDetected(digit);
+      digit_activated = true;
     }
   }
   
-  if ((active_row != -1) && (active_col != -1))
-  {
-    //printf("Digit=%c\n", digit_map[active_row][active_col]);
-    digitDetected(digit_map[active_row][active_col]);
-  }
+  last_detected_digit = digit;
   
-} /* DtmfDecoder::toneActivated */
-
+} /* DtmfDecoder::checkTones */
 
 
 

@@ -154,8 +154,12 @@ class DtmfDecoder : public SigC::Object
     DtmfToneDetector  *col[4];
     int       	      active_row;
     int       	      active_col;
+    short     	      sample_buf[512];
+    int       	      buffered_samples;
+    char      	      last_detected_digit;
+    bool      	      digit_activated;
 
-    void toneActivated(bool is_row, int pos, bool is_activated);
+    void checkTones(void);
     
 };  /* class DtmfDecoder */
 

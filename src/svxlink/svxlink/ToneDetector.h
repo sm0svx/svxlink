@@ -144,6 +144,10 @@ class ToneDetector : public SigC::Object
     ~ToneDetector(void) {}
     
     int processSamples(short *buf, int len);
+    bool isActivated(void) const { return is_activated; }
+    FLOATING value(void) const { return result; }
+    int toneFq(void) const { return tone_fq; }
+    void reset(void) { resetGoertzel(); }
     
     SigC::Signal1<void, bool> activated;
     SigC::Signal2<void, ToneDetector*, double>	valueChanged;
@@ -151,9 +155,11 @@ class ToneDetector : public SigC::Object
   protected:
     
   private:
-    int   tone;
-    int   block_pos;
-    int  is_activated;
+    int       tone;
+    int       block_pos;
+    int       is_activated;
+    FLOATING  result;
+    int       tone_fq;
     
     FLOATING  coeff;
     FLOATING  Q1;
@@ -164,7 +170,7 @@ class ToneDetector : public SigC::Object
     
     void resetGoertzel(void);
     void processSample(SAMPLE sample);
-    void getRealImag(FLOATING *realPart, FLOATING *imagPart);
+    //void getRealImag(FLOATING *realPart, FLOATING *imagPart);
     FLOATING getMagnitudeSquared(void);
 
 };  /* class ToneDetector */
