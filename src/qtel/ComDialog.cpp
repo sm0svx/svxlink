@@ -151,19 +151,19 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
 {
   if (callsign.find("-L") != -1)
   {
-    setIcon(QPixmap(static_cast<const char **>(link_xpm)));
+    setIcon(QPixmap(const_cast<const char **>(link_xpm)));
   }
   else if (callsign.find("-R") != -1)
   {
-    setIcon(QPixmap(static_cast<const char **>(repeater_xpm)));
+    setIcon(QPixmap(const_cast<const char **>(repeater_xpm)));
   }
   else if (callsign.find("*") == 0)
   {
-    setIcon(QPixmap(static_cast<const char **>(conference_xpm)));
+    setIcon(QPixmap(const_cast<const char **>(conference_xpm)));
   }
   else
   {
-    setIcon(QPixmap(static_cast<const char **>(online_icon)));
+    setIcon(QPixmap(const_cast<const char **>(online_icon)));
   }
   
   setWFlags(getWFlags() | Qt::WDestructiveClose);
