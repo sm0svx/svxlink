@@ -389,6 +389,10 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
       deactivateMe();
     }
   }
+  else if (cmd == "0")
+  {
+    playHelpMsg();
+  }
   else if (qso == 0)
   {
     const StationData *station = dir->findStation(atoi(cmd.c_str()));
