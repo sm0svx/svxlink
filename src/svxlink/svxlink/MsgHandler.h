@@ -16,6 +16,7 @@ class MsgHandler : public SigC::Object
     void spellWord(const std::string& word);
     void writeBufferFull(bool is_full);
     bool isWritingMessage(void) const { return !msg_queue.empty(); }
+    void clear(void);
     
     SigC::Signal2<int, short*, int> writeAudio;
     SigC::Signal0<void>       	    allMsgsWritten;

@@ -70,6 +70,14 @@ void MsgHandler::writeBufferFull(bool is_full)
 }
 
 
+void MsgHandler::clear(void)
+{
+  msg_queue.clear();
+  ::close(file);
+  file = -1;
+  allMsgsWritten();
+} /* MsgHandler::clear */
+
 
 
 
