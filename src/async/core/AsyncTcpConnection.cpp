@@ -187,7 +187,9 @@ int TcpConnection::write(const void *buf, int count)
   int cnt = ::write(sock, buf, count);
   if (cnt == -1)
   {
+    int errno_tmp = errno;
     disconnect();
+    errno = errno_tmp;
     disconnected(this, DR_SYSTEM_ERROR);
   }
   else if (cnt < count)
@@ -307,8 +309,9 @@ void TcpConnection::recvHandler(FdWatch *watch)
   int cnt = read(sock, recv_buf+recv_buf_cnt, recv_buf_len-recv_buf_cnt);
   if (cnt == -1)
   {
-    //cout << "System error!\n";
+    int errno_tmp = errno;
     disconnect();
+    errno = errno_tmp;
     disconnected(this, DR_SYSTEM_ERROR);
     return;
   }

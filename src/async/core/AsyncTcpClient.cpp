@@ -261,7 +261,9 @@ void TcpClient::connectToRemote(const IpAddress& ip_addr)
     /* Setup non-blocking operation */
   if (fcntl(sock, F_SETFL, O_NONBLOCK))
   {
+    int errno_tmp = errno;
     disconnect();
+    errno = errno_tmp;
     disconnected(this, DR_SYSTEM_ERROR);
     return;
   }
@@ -278,7 +280,9 @@ void TcpClient::connectToRemote(const IpAddress& ip_addr)
     }
     else
     {
+      int errno_tmp = errno;
       disconnect();
+      errno = errno_tmp;
       disconnected(this, DR_SYSTEM_ERROR);
       return;
     }
@@ -301,14 +305,16 @@ void TcpClient::connectHandler(FdWatch *watch)
   socklen_t error_size = sizeof(error);
   if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &error, &error_size) == -1)
   {
+    int errno_tmp = errno;
     disconnect();
+    errno = errno_tmp;
     disconnected(this, DR_SYSTEM_ERROR);
     return;
   }
   if (error)
   {
-    perror("delayed connect");
     disconnect();
+    errno = error;
     disconnected(this, DR_SYSTEM_ERROR);
     return;
   }
