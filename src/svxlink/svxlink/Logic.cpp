@@ -539,13 +539,25 @@ void Logic::loadModule(const string& module_cfg_name)
 {
   cout << "Loading module \"" << module_cfg_name << "\"\n";
 
-  string module_name;  
+  string module_path;
+  if (!cfg().getValue("GLOBAL", "MODULE_PATH", module_path))
+  {
+    module_path = "";
+  }
+  
+  string module_name;
   if (!cfg().getValue(module_cfg_name, "NAME", module_name))
   {
     module_name = module_cfg_name;
   }
   
-  string module_filename("Module" + module_name + ".so");
+  string module_filename;
+  if (!module_path.empty())
+  {
+    module_filename = module_path + "/"; 
+  }
+  module_filename +=  "Module" + module_name + ".so";
+  
   void *handle = dlopen(module_filename.c_str(), RTLD_NOW);
   if (handle == NULL)
   {
