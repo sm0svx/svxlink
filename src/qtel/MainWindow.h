@@ -185,8 +185,8 @@ class MainWindow : public MainWindowBase, public SigC::Object
     MainWindow(const MainWindow&);
     MainWindow operator=(const MainWindow&);
     
-    void incomingConnection(const std::string& remote_call,
-	const std::string& remote_name);
+    void incomingConnection(const Async::IpAddress& remote_address,
+      	const std::string& remote_call, const std::string& remote_name);
     void closeEvent(QCloseEvent *e);
     void serverError(const std::string& msg);
     void statusChanged(EchoLink::StationData::Status status);

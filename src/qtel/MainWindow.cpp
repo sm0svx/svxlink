@@ -55,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncIpAddress.h>
 #include <EchoLinkDirectory.h>
 
 
@@ -82,6 +83,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 using namespace EchoLink;
 
 
@@ -274,8 +276,8 @@ MainWindow::~MainWindow(void)
  ****************************************************************************/
 
 
-void MainWindow::incomingConnection(const string& remote_call,
-    const string& remote_name)
+void MainWindow::incomingConnection(const IpAddress& remote_ip,
+    const string& remote_call, const string& remote_name)
 {
   time_t t = time(0);
   struct tm *tm = localtime(&t);
