@@ -37,6 +37,7 @@
  ****************************************************************************/
 
 #include <assert.h>
+#include <sys/types.h>
 #include <sys/select.h>
 #include <sys/time.h>
 
