@@ -276,14 +276,26 @@ void Logic::audioFromModule(short *samples, int count)
 
 void Logic::moduleTransmitRequest(bool do_transmit)
 {
-  //printf("Logic::moduleTransmitRequest\n");
+  //printf("Logic::moduleTransmitRequest: do_transmit=%s\n",
+  //    	  do_transmit ? "TRUE" : "FALSE");
   /*
   if (!do_transmit && tx().isTransmitting())
   {
     tx().flushSamples();
   }
   */
-  tx().flushSamples();
+  //tx().flushSamples();
+  if (!do_transmit)
+  {
+    if (!module_tx_fifo->empty())
+    {
+      module_tx_fifo->flushSamples();
+    }
+    else
+    {
+      tx().flushSamples();
+    }
+  }
   transmitCheck();
 } /* Logic::moduleTransmitRequest */
 
