@@ -13,7 +13,7 @@
 
 
 # Subdirectories in the order of compilation.
-SUBDIRS	= async gsm-1.0-pl10 echolib
+SUBDIRS	= async echolib
 
 ifdef QTDIR
 SUBDIRS += qtel
