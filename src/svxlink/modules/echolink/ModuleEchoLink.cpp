@@ -855,7 +855,6 @@ void ModuleEchoLink::onIsReceiving(QsoImpl *qso, bool is_receiving)
 
 void ModuleEchoLink::onDestroyMe(QsoImpl *qso)
 {
-  printf("ModuleEchoLink::onDestroyMe\n");
   list<QsoImpl*>::iterator it = find(qsos.begin(), qsos.end(), qso);
   assert (it != qsos.end());
   qsos.erase(it);
