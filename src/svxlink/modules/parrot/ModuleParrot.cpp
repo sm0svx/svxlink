@@ -138,7 +138,7 @@ extern "C" {
 ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       	      	      	   const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), fifo(0), squelch_is_open(false),
-    pacer(8000, 800, 7500)
+    pacer(8000, 800, 1000)
 {
   cout << "\tModule " << name()
        << " v" SVXLINK_VERSION " starting...\n";
