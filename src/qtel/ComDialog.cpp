@@ -174,8 +174,10 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
   
   //audio_io = new AudioIO;
   audio_io->audioRead.connect(slot(this, &ComDialog::micAudioRead));
+  /*
   if (audio_io->isFullDuplexCapable())
   {
+    //printf("Sound device is full duplex capable\n");
     audio_full_duplex = true;
     if (!openAudioDevice(AudioIO::MODE_RDWR))
     {
@@ -183,7 +185,9 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
     }
   }
   else
+  */
   {
+    //printf("Sound device is NOT full duplex capable\n");
     if (!openAudioDevice(AudioIO::MODE_WR))
     {
       return;
@@ -414,7 +418,10 @@ void ComDialog::micAudioRead(short *buf, int len)
 {
   if (is_transmitting)
   {
-    con->sendAudio(buf, len);
+    if (con->sendAudio(buf, len) != len)
+    {
+      printf("*** warning: Mic samples thrown away\n");
+    }
   }
 } /* ComDialog::micAudioRead */
 
