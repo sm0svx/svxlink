@@ -69,4 +69,36 @@ H3
     border: 1px solid black;
 }
 
+.body-code-snippet {
+  border: 1px solid black;
+  padding: 10px;
+  padding-right: 15px;
+  padding-left: 5px;
+  background-color: lightblue;
+}
+
+.body-code-snippet > pre {
+  color: darkgreen;
+}
+
+.body-code-snippet-caption {
+  border: 1px solid black;
+  padding-right:5px;
+  padding-left:5px;
+  background-color:lightgray;
+  position:relative;
+  top:0.5em;
+  left:0.5em;
+  margin-left:10px;
+  margin-right:10px;
+}
+
+menuitem {
+  padding-right: 5px;
+  padding-left: 5px;
+}
+
+menuitem:hover {
+  background-color: yellow;
+}
 

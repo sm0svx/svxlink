@@ -17,19 +17,20 @@
     <COL width="0*">
     <COL>
   </COLGROUP>
-  <TR valign="top"><TD NOWRAP align="right">
-  <DIV id="coloredbox">
-    <A href="index.php">Main Screen</A><BR/>
-    <A href="news.php">Project News</A><BR/>
-    <A href="screenshots.php">Screenshots</A><BR/>
-    <A href="install.php">Installation Instructions</A><BR/>
-    <A href="qtel_usage.php">Qtel User Docs</A><BR/>
-    <A href="svxlink_usage.php">SvxLink Server User Docs</A><BR/>
-    <A href="moreinfo.php">Developer Documentation</A><BR/>
-    <A
+  <TR valign="top"><TD NOWRAP>
+  <SPAN class="body-code-snippet-caption">Main Menu</SPAN>
+  <DIV class="body-code-snippet">
+    <MENUITEM><A href="index.php">Main Screen</A></MENUITEM><BR/>
+    <MENUITEM><A href="news.php">Project News</A></MENUITEM><BR/>
+    <MENUITEM><A href="screenshots.php">Screenshots</A></MENUITEM><BR/>
+    <MENUITEM><A href="install.php">Installation Instructions</A></MENUITEM><BR/>
+    <MENUITEM><A href="qtel_usage.php">Qtel User Docs</A></MENUITEM><BR/>
+    <MENUITEM><A href="svxlink_usage.php">SvxLink Server User Docs</A></MENUITEM><BR/>
+    <MENUITEM><A href="moreinfo.php">Developer Documentation</A></MENUITEM><BR/>
+    <MENUITEM><A
     href="https://sourceforge.net/project/showfiles.php?group_id=84813">
-      Software Downloads</A><BR/>
-    <A href="https://sourceforge.net/projects/svxlink/">SourceForge Summary</A>
+      Software Downloads</A></MENUITEM><BR/>
+    <MENUITEM><A href="https://sourceforge.net/projects/svxlink/">SourceForge Summary</A></MENUITEM>
   </DIV>
   <P>
   <A href="http://sourceforge.net">
