@@ -34,6 +34,7 @@ class MyClass : public SigC::Object
 	Application::app().quit();
 	return;
       }
+      buf[cnt] = 0;
       cout << "Read from STDIN: " << buf << endl;
     }
 };
