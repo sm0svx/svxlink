@@ -86,13 +86,31 @@ application global configuration data.
     Specify where the SvxLink modules can be found. The default is
     /usr/lib/svxlink
   </DD>
+
+  <DT>LOGICS</DT>
+  <DD>
+    Specify a comma separated list of logic cores that should be created.
+    The logic core is the thing that ties the transciever and the voice
+    services (modules) together. It contains the rules for how the radio
+    interface should be handled. The specified name of a logic core must
+    have a corresponding section specified in the config file. This is
+    where the behaviour of the logic core is specified.
+  </DD>
 </DL>
 
 The next section is the <b>SimlexLogic</b> section. This section contains
-configuration data for one logic controller. Right now, there can be only one
-logic controller but in the future there may be more.
+configuration data for a simplex logic core. The SvxLink server can handle
+more than one logic core. The name of the section, which in this case is
+SimplexLogic, must have a corresponding list item in the GLOBAL/LOGICS config
+variable for this logic core to be activated.
 
 <DL>
+  <DT>TYPE</DT>
+  <DD>
+    The type of logic core this is. In this case we are setting up a simplex
+    logic core so it should be set to "Simplex".
+  </DD>
+  
   <DT>RX</DT>
   <DD>
     Specify the section name of the receiver to use.
@@ -118,6 +136,81 @@ logic controller but in the future there may be more.
     Specify the path to the directory where the sound samples are stored. The
     default is /usr/share/svxlink/sounds.
   </DD>
+  
+  <DT>IDENT_INTERVAL</DT>
+  <DD>
+    The number of seconds between identification.
+  </DD>  
+</DL>
+
+The next section is the <b>RepeaterLogic</b> section. This section contains
+configuration data for a repeater logic core. The SvxLink server can handle
+more than one logic core. The name of the section, which in this case is
+RepeaterLogic, must have a corresponding list item in the GLOBAL/LOGICS
+config variable for this logic core to be activated.
+
+<DL>
+  <DT>TYPE</DT>
+  <DD>
+    The type of logic core this is. In this case we are setting up a repeater
+    logic core so it should be set to "Repeater".
+  </DD>
+  
+  <DT>RX</DT>
+  <DD>
+    Specify the section name of the receiver to use.
+  </DD>
+  
+  <DT>TX</DT>
+  <DD>
+    Specify the section name of the transmitter to use.
+  </DD>
+  
+  <DT>MODULES</DT>
+  <DD>
+    Specify a comma separated list of sections for the modules to load.
+  </DD>
+  
+  <DT>CALLSIGN</DT>
+  <DD>
+    Specify the callsign that should be announced on the radio interface.
+  </DD>
+  
+  <DT>SOUNDS</DT>
+  <DD>
+    Specify the path to the directory where the sound samples are stored. The
+    default is /usr/share/svxlink/sounds.
+  </DD>
+  
+  <DT>RGR_SOUND_DELAY</DT>
+  <DD>
+    The number of milliseconds to wait after the squelch has been closed before
+    a roger beep is played.
+  </DD>
+  
+  <DT>IDLE_TIMEOUT</DT>
+  <DD>
+    The number of seconds the repeater has been idle before turning the
+    transmitter off.
+  </DD>
+  
+  <DT>REQUIRED_1750_DURATION</DT>
+  <DD>
+    The number of milliseconds a 1750 Hz tone must be asserted before the
+    repeater is opened. A value of 0 will disable 1750 Hz repeater opening.
+  </DD>
+  
+  <DT>IDENT_INTERVAL</DT>
+  <DD>
+    The number of seconds between identification. The repeater will only
+    identify itself periodically when it is down.
+  </DD>
+    
+  <DT>IDLE_SOUND_INTERVAL</DT>
+  <DD>
+    When the repeater is idle, a sound is played. Specify the interval in
+    milliseconds between playing the idle sound.
+  </DD>  
 </DL>
 
 A receiver section (called <b>Rx1</b> in the default configuration file) is
@@ -144,6 +237,29 @@ used to specify the configuration for a receiver.
   <DD>
     How long, in milliseconds, the squelch will stay open efter the sample
     mean value have fallen below the threshold (VOX_LIMIT).
+  </DD>
+  
+  <DT>SQL_UP_DET</DT>
+  <DD>
+    Specify the type of squelch to use to detect that the squelch is open.
+    That is, detecting when the squelch goes from closed to opened.
+    Possible values are: VOX or CTCSS.
+  </DD>
+
+  <DT>SQL_DOWN_DET</DT>
+  <DD>
+    Specify the type of squelch to use to detect that the squelch is closed.
+    That is, detecting when the squelch goes from opened to closed.
+    Possible values are: VOX or CTCSS.
+  </DD>
+
+  <DT>CTCSS_FQ</DT>
+  <DD>
+    If CTCSS (subtone) squelch is used, this config variable sets the frequency
+    of the subtone to use. The tone frequency ranges from 67.0 to 254.1 Hz.
+    The detector is not very exact so it will detect tones that is near the
+    specified tone. Only whole Hz can be specifid so the value should be in the
+    range 67 to 254 Hz.
   </DD>
 </DL>
 
@@ -172,6 +288,14 @@ used to specify the configuration for a transmitter.
     This is a feature that will prevent the transmitter from getting stuck
     transmitting. Specify the number of seconds before the transmitter is turned
     off.
+  </DD>
+  
+  <DT>TX_DELAY</DT>
+  <DD>
+    The number of milliseconds (0-1000) to wait after the transmitter has been
+    turned on until audio is starting to be transmitted. This can be used to
+    compensate for slow TX reaction or remote stations with slow reacting
+    squelches.
   </DD>
 </DL>
 
@@ -214,7 +338,7 @@ Specific configuration variables for the <b>EchoLink</b> module.
 
   <DT>SERVER</DT>
   <DD>
-    The EchoLink directory server to use.
+    The IP address or name of the EchoLink directory server to use.
   </DD>
 
   <DT>CALLSIGN</DT>
@@ -224,7 +348,7 @@ Specific configuration variables for the <b>EchoLink</b> module.
 
   <DT>SYSOPNAME</DT>
   <DD>
-    The name of the person that is responsible for this system.
+    The name of the person or club that is responsible for this system.
   </DD>
 
   <DT>PASSWORD</DT>
