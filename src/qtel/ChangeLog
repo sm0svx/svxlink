@@ -3,6 +3,9 @@
 
 * Now showing node id instead of IP address in the main window.
 
+* The callsign and password is now always converted into upper case
+  in the settings and when adding bookmarks.
+
 
 
  0.7.4 -- 27 May 2004
