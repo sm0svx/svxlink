@@ -32,6 +32,9 @@
   to longer commands. See documentation for the MACROS section in the
   configuration file description.
 
+* Now possible to use an external hardware squelch indicator via a
+  serial port. Usable pins are CTS, DSR, DCD and RI.
+
 
 
  0.3.0 -- 26 Sep 2004
