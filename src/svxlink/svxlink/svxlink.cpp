@@ -12,6 +12,8 @@
 #include <AsyncTimer.h>
 #include <AsyncFdWatch.h>
 
+#include <version/SVXLINK.h>
+
 #include "LocalRx.h"
 #include "LocalTx.h"
 #include "MsgHandler.h"
@@ -110,6 +112,8 @@ void stdinHandler(FdWatch *w)
 
 int main(int argc, char **argv)
 {
+  cout << "SvxLink v" SVXLINK_VERSION " (" __DATE__ ") starting up...\n";
+  
   CppApplication app;
   
   char *home_dir = getenv("HOME");
