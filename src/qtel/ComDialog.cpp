@@ -147,7 +147,9 @@ using namespace EchoLink;
 ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
     const QString& remote_name)
   : callsign(callsign), con(0), dir(dir), accept_connection(false),
-    audio_io(audio_io), is_transmitting(false), ctrl_pressed(false)
+    audio_io(audio_io), audio_full_duplex(false), is_transmitting(false),
+    ctrl_pressed(false)
+    
 {
   if (callsign.find("-L") != -1)
   {
@@ -195,7 +197,8 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
   }
   
   const StationData *station = dir.findCall(callsign.latin1());
-  //station = new StationData("?", "?", "?", "192.168.1.110");
+  //StationData *station = new StationData;
+  //station->setIp(IpAddress("192.168.1.196"));
   updateStationData(station);
   if (station != 0)
   {
@@ -372,7 +375,8 @@ void ComDialog::createConnection(const StationData *station)
   con->chatMsgReceived.connect(slot(this, &ComDialog::chatMsgReceived));
   con->stateChange.connect(slot(this, &ComDialog::stateChange));
   con->isReceiving.connect(slot(this, &ComDialog::isReceiving));
-  con->audioReceived.connect(slot(audio_io, &AudioIO::write));
+  //con->audioReceived.connect(slot(audio_io, &AudioIO::write));
+  con->audioReceived.connect(slot(this, &ComDialog::audioFromRemote));
   
   connect_button->setEnabled(TRUE);
   connect_button->setFocus();
@@ -594,6 +598,19 @@ void ComDialog::isReceiving(bool is_receiving)
   rx_indicator->setPaletteBackgroundColor(
       is_receiving ? QColor("green") : orig_background_color);
 } /* ComDialog::isReceiving */
+
+
+int ComDialog::audioFromRemote(short *samples, int count)
+{
+  if (!is_transmitting || audio_full_duplex)
+  {
+    return audio_io->write(samples, count);
+  }
+  
+  return count;
+  
+} /* ComDialog::audioFromRemote */
+
 
 
 /*

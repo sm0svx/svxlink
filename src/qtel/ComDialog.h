@@ -193,7 +193,9 @@ class ComDialog : public ComDialogBase, public SigC::Object
     void infoMsgReceived(const std::string& msg);
     void chatMsgReceived(const std::string& msg);
     void stateChange(EchoLink::Qso::State state);
+    
     void isReceiving(bool is_receiving);
+    int audioFromRemote(short *samples, int count);
 
     
 };  /* class ComDialog */
