@@ -5,6 +5,20 @@
 
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>07 Apr 2004: <I>Web pages touch up and more documentation</I></B>
+  <TD/></TR>
+  <TR><TD>
+    Updated the web pages a bit and moved the menus from the top to the left.
+    Also added some user documentation for Qtel and the SvxLink server.
+    <P/>
+    I will be gone skiing for a week now so if I don't answer your mails that's
+    why. I hope to find some mails from people that have tried the SvxLink
+    server or Qtel when I come home :-)
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>05 Apr 2004: <I>More RPMS and documentation</I></B>
   <TD/></TR>
   <TR><TD>
