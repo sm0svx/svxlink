@@ -271,6 +271,15 @@ class Qso : public SigC::Object
     const std::string& remoteCallsign(void) const { return remote_call; }
     
     /**
+     * @brief 	Find out if the connection is remotely initiated or
+     *          locally initiated.
+     * @return	Return \em true if the connection is remotely initiated
+     *          or else \em false.
+     * @note  	Valid when either connect or accept has been called
+     */
+    bool isRemoteInitiated(void) const { return is_remote_initiated; }
+    
+    /**
      * @brief A signal that is emitted when a station info message is received
      * @param msg The received message
      */
@@ -332,6 +341,7 @@ class Qso : public SigC::Object
     struct timeval    	last_audio_packet_received;
     std::string       	remote_name;
     std::string       	remote_call;
+    bool		is_remote_initiated;
 
     Qso(const Qso&);
     Qso& operator=(const Qso&);

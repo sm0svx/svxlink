@@ -151,7 +151,7 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
     next_audio_seq(0),  keep_alive_timer(0),  con_timeout_timer(0),
     callsign(callsign), name(name),   	      local_stn_info(info),
     send_buffer_cnt(0), remote_ip(addr),      rx_indicator_timer(0),
-    remote_name("?"), remote_call("?")
+    remote_name("?"), remote_call("?"),	      is_remote_initiated(false)
 {
   if (!addr.isUnicast())
   {
@@ -213,7 +213,8 @@ bool Qso::connect(void)
   {
     return true;
   }
-
+  
+  is_remote_initiated = false;
   connect_retry_cnt = 0;
   bool setup_connection_ok = setupConnection();
   if (setup_connection_ok)
@@ -233,6 +234,7 @@ bool Qso::accept(void)
     return true;
   }
 
+  is_remote_initiated = true;
   bool setup_connection_ok = setupConnection();
   if (setup_connection_ok)
   {
