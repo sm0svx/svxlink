@@ -144,7 +144,8 @@ extern "C" {
 
 ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic, int id,
       	      	      	       const string& cfg_name)
-  : Module(dl_handle, logic, id), dir(0), qso(0), dir_refresh_timer(0)
+  : Module(dl_handle, logic, id), dir(0), qso(0), dir_refresh_timer(0),
+    remote_activation(false)
 {
   cout << "\tModule " << name()
        << " v" MODULE_ECHOLINK_VERSION " starting...\n";
@@ -313,7 +314,7 @@ void ModuleEchoLink::activateInit(void)
  */
 void ModuleEchoLink::deactivateCleanup(void)
 {
-  
+  remote_activation = false;
 } /* deactivateCleanup */
 
 
@@ -487,7 +488,7 @@ void ModuleEchoLink::onStatusChanged(StationData::Status status)
        << StationData::statusStr(status) << endl;
   if (status == StationData::STAT_ONLINE)
   {
-    getDirectoryList(0);
+    getDirectoryList();
   }
 } /* onStatusChanged */
 
@@ -564,12 +565,10 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   cout << "Incoming EchoLink connection from " << callsign
        << " (" << name << ")\n";
   
-  //return;
-
   if (qso != 0) // A connection is already active
   {
-    // FIXME: Send BYE to remote station
-    cerr << "BUSY...\n";
+    // FIXME: Send BYE or maybe first an audio info message to remote station
+    cerr << "EchoLink is BUSY...\n";
     return;
   }
   
@@ -583,10 +582,11 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   }
   else
   {
-    station = dir->findCall(callsign);
       // Check if the incoming callsign is valid
-    if (station == 0) // FIXME: If not found, a getCalls should be done
+    station = dir->findCall(callsign);
+    if (station == 0)
     {
+      getDirectoryList();
       return;
     }
   }
@@ -605,15 +605,19 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
   qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
   qso->audioReceived.connect(slot(this, &Module::audioFromModule));
-  //msg_handler->writeAudio.connect(slot(qso, &Qso::sendAudio));
   msg_paser->audioOutput.connect(slot(qso, &Qso::sendAudio));
   
-  if (!activateMe())
+  if (!isActive())
   {
-    delete qso;
-    cerr << "*** Warning: Could not accept incoming connection from "
-      	 << callsign << " since the frontend was busy doing something else.";
-    return;
+    if (!activateMe())
+    {
+      // FIXME: Send BYE or maybe first an audio info message to remote station
+      delete qso;
+      cerr << "*** Warning: Could not accept incoming connection from "
+      	   << callsign << " since the frontend was busy doing something else.";
+      return;
+    }
+    remote_activation = true;
   }
   qso->accept();
   
@@ -668,6 +672,10 @@ void ModuleEchoLink::onStateChange(Qso::State state)
       playMsg("disconnected");
       delete qso;
       qso = 0;
+      if (remote_activation)
+      {
+      	deactivateMe();
+      }
       break;
     case Qso::STATE_CONNECTING:
       cout << "CONNECTING\n";

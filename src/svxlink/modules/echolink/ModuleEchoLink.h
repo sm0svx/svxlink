@@ -137,6 +137,7 @@ class ModuleEchoLink : public Module
     std::string       	allow_ip;
     MsgHandler	      	*msg_handler;
     AudioPaser       	*msg_paser;
+    bool      	      	remote_activation;
     
     const char *name(void) const { return "EchoLink"; }
     void activateInit(void);
@@ -157,7 +158,7 @@ class ModuleEchoLink : public Module
     void onIsReceiving(bool is_receiving);
     void onAudioReceived(short *samples, int count);
 
-    void getDirectoryList(Async::Timer *timer);
+    void getDirectoryList(Async::Timer *timer=0);
     void spellCallsign(const std::string& callsign);
 
     void allMsgsWritten(void);
