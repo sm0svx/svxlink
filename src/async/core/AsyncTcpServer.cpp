@@ -154,7 +154,7 @@ TcpServer::TcpServer(const string& port_str)
   
   char *endptr = 0;
   struct servent *se;
-  short port = strtol(port_str.c_str(), &endptr, 10);
+  unsigned short port = strtol(port_str.c_str(), &endptr, 10);
   if (*endptr != '\0')
   {
     if ((se = getservbyname(port_str.c_str(), "tcp")) != NULL)
