@@ -243,11 +243,23 @@ class Qso : public SigC::Object
     bool flushAudioSendBuffer(void);
     
     /**
+     * @brief Set the name of the remote station
+     * @param name The name to set
+     */
+    void setRemoteName(const std::string& name) { remote_name = name; }
+    
+    /**
      * @brief 	Get the remote name
      * @return	Return the name of the remote station
      * @note  	Valid when the connection has been established
      */
     const std::string& remoteName(void) const { return remote_name; }
+    
+    /**
+     * @brief Set the callsign of the remote station
+     * @param call The callsign to set
+     */
+    void setRemoteCallsign(const std::string& call) { remote_call = call; }
     
     /**
      * @brief 	Get the remote callsign
@@ -287,7 +299,7 @@ class Qso : public SigC::Object
      * @param buf A pointer to the buffer that contains the audio
      * @param len The number of samples in the buffer
      */
-    SigC::Signal2<void, short*, int> audioReceived;
+    SigC::Signal2<int, short*, int> audioReceived;
     
     
   protected:
