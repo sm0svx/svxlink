@@ -155,7 +155,6 @@ class ModuleEchoLink : public Module
     void deactivateCleanup(void);
     void dtmfDigitReceived(char digit);
     void dtmfCmdReceived(const std::string& cmd);
-    void playHelpMsg(void);
     void squelchOpen(bool is_open);
     int audioFromRx(short *samples, int count);
     void allMsgsWritten(void);

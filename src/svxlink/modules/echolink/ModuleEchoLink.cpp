@@ -494,25 +494,6 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
 
 /*
  *----------------------------------------------------------------------------
- * Method:    playHelpMsg
- * Purpose:   Called by the core system to play a help message for this
- *    	      module.
- * Input:     None
- * Output:    None
- * Author:    Tobias Blomberg / SM0SVX
- * Created:   2004-03-07
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-void ModuleEchoLink::playHelpMsg(void)
-{
-  playMsg("help");
-} /* playHelpMsg */
-
-
-/*
- *----------------------------------------------------------------------------
  * Method:    squelchOpen
  * Purpose:   Called by the core system when activity is detected
  *    	      on the receiver.
