@@ -1,4 +1,4 @@
-<!DOCTYPE UI><UI version="3.0" stdsetdef="1">
+<!DOCTYPE UI><UI version="3.1" stdsetdef="1">
 <class>MainWindowBase</class>
 <comment>This is the Qtel main window</comment>
 <author>Tobias Blomberg</author>
@@ -101,7 +101,7 @@
                         <property name="clickable">
                             <bool>false</bool>
                         </property>
-                        <property name="resizeable">
+                        <property name="resizable">
                             <bool>true</bool>
                         </property>
                     </column>
@@ -171,7 +171,7 @@
                         <property name="clickable">
                             <bool>true</bool>
                         </property>
-                        <property name="resizeable">
+                        <property name="resizable">
                             <bool>true</bool>
                         </property>
                     </column>
@@ -182,7 +182,7 @@
                         <property name="clickable">
                             <bool>true</bool>
                         </property>
-                        <property name="resizeable">
+                        <property name="resizable">
                             <bool>true</bool>
                         </property>
                     </column>
@@ -193,7 +193,7 @@
                         <property name="clickable">
                             <bool>true</bool>
                         </property>
-                        <property name="resizeable">
+                        <property name="resizable">
                             <bool>true</bool>
                         </property>
                     </column>
@@ -204,18 +204,18 @@
                         <property name="clickable">
                             <bool>true</bool>
                         </property>
-                        <property name="resizeable">
+                        <property name="resizable">
                             <bool>true</bool>
                         </property>
                     </column>
                     <column>
                         <property name="text">
-                            <string>IP-address</string>
+                            <string>Node ID</string>
                         </property>
                         <property name="clickable">
                             <bool>true</bool>
                         </property>
-                        <property name="resizeable">
+                        <property name="resizable">
                             <bool>true</bool>
                         </property>
                     </column>
@@ -294,7 +294,7 @@
                         <property name="clickable">
                             <bool>true</bool>
                         </property>
-                        <property name="resizeable">
+                        <property name="resizable">
                             <bool>true</bool>
                         </property>
                     </column>
@@ -305,7 +305,7 @@
                         <property name="clickable">
                             <bool>true</bool>
                         </property>
-                        <property name="resizeable">
+                        <property name="resizable">
                             <bool>true</bool>
                         </property>
                     </column>
@@ -316,7 +316,7 @@
                         <property name="clickable">
                             <bool>true</bool>
                         </property>
-                        <property name="resizeable">
+                        <property name="resizable">
                             <bool>true</bool>
                         </property>
                     </column>
@@ -389,7 +389,7 @@
             <string>&amp;Undo</string>
         </property>
         <property name="accel">
-            <number>4194394</number>
+            <string>Ctrl+Z</string>
         </property>
     </action>
     <action>
@@ -406,7 +406,7 @@
             <string>&amp;Redo</string>
         </property>
         <property name="accel">
-            <number>4194393</number>
+            <string>Ctrl+Y</string>
         </property>
     </action>
     <action>
@@ -423,7 +423,7 @@
             <string>&amp;Cut</string>
         </property>
         <property name="accel">
-            <number>4194392</number>
+            <string>Ctrl+X</string>
         </property>
     </action>
     <action>
@@ -440,7 +440,7 @@
             <string>C&amp;opy</string>
         </property>
         <property name="accel">
-            <number>4194371</number>
+            <string>Ctrl+C</string>
         </property>
     </action>
     <action>
@@ -457,7 +457,7 @@
             <string>&amp;Paste</string>
         </property>
         <property name="accel">
-            <number>4194390</number>
+            <string>Ctrl+V</string>
         </property>
     </action>
     <action>
@@ -474,7 +474,7 @@
             <string>&amp;Find...</string>
         </property>
         <property name="accel">
-            <number>4194374</number>
+            <string>Ctrl+F</string>
         </property>
     </action>
     <action>
@@ -491,7 +491,7 @@
             <string>&amp;Contents...</string>
         </property>
         <property name="accel">
-            <number>0</number>
+            <string></string>
         </property>
     </action>
     <action>
@@ -508,7 +508,7 @@
             <string>&amp;Index...</string>
         </property>
         <property name="accel">
-            <number>0</number>
+            <string></string>
         </property>
     </action>
     <action>
@@ -528,7 +528,7 @@
             <string>About Qtel</string>
         </property>
         <property name="accel">
-            <number>0</number>
+            <string></string>
         </property>
     </action>
     <action>

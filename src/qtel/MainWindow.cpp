@@ -426,9 +426,11 @@ void MainWindow::explorerViewClicked(QListViewItem* item)
   list<StationData>::const_iterator iter;
   for (iter=station_list.begin(); iter!=station_list.end(); ++iter)
   {
+    char id_str[256];
+    sprintf(id_str, "%d", iter->id());
     new QListViewItem(stationView, iter->callsign().c_str(),
 	      	      iter->description().c_str(), iter->statusStr().c_str(),
-	      	      iter->time().c_str(), iter->ipStr().c_str());
+	      	      iter->time().c_str(), id_str);
   }
   
   if (stationView->firstChild() != 0)
