@@ -123,6 +123,8 @@ connected stations is shown below.
 class Directory : public SigC::Object
 {
   public:
+    static const unsigned MAX_DESCRIPTION_SIZE = 27;
+    
     /**
      * @brief 	Constructor
      * @param 	server      The EchoLink directory server to connect to

@@ -148,13 +148,16 @@ class Cmd
 Directory::Directory(const string& server, const string& callsign,
     const string& password, const string& description)
   : com_state(CS_IDLE),       	      	      the_server(server),
-    the_password(password),   	      	      the_description(description),
+    the_password(password),   	      	      the_description(""),
     error_str(""),    	      	      	      ctrl_con(0),
     the_status(StationData::STAT_OFFLINE),    reg_refresh_timer(0),
     current_status(StationData::STAT_OFFLINE),server_changed(false)
 {
   the_callsign.resize(callsign.size());
   transform(callsign.begin(), callsign.end(), the_callsign.begin(), ::toupper);
+  
+  setDescription(description);
+  
   createClientObject();
   
   reg_refresh_timer = new Timer(REGISTRATION_REFRESH_TIME,
@@ -245,6 +248,10 @@ void Directory::setPassword(const string& password)
 void Directory::setDescription(const string& description)
 {
   the_description = description;
+  if (the_description.size() > MAX_DESCRIPTION_SIZE)
+  {
+    the_description.resize(MAX_DESCRIPTION_SIZE);
+  }
 } /* Directory::setDescription */
 
 
