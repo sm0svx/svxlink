@@ -1,13 +1,13 @@
 /**
 @file	 AsyncAudioDevice.h
-@brief   Handle audio devices
-@author  Tobias Blomberg
+@brief   Handle OSS audio devices
+@author  Tobias Blomberg / SM0SVX
 @date	 2004-03-20
 
-A_detailed_description_for_this_file
+Implements the low level interface to an OSS audio device.
 
 \verbatim
-<A brief description of the program or library this file belongs to>
+Async - A library for programming event driven applications
 Copyright (C) 2004  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -24,10 +24,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example Template_demo.cpp
-An example of how to use the Template class
 */
 
 
@@ -115,13 +111,14 @@ class FdWatch;
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
-@author Tobias Blomberg
+@brief	A class that implements the low level interface to an OSS audio device
+@author Tobias Blomberg / SM0SVX
 @date   2004-03-20
 
-A_detailed_class_description
-
-\include Template_demo.cpp
+This class implements the low level interface to an OSS audio device. This
+class is not intended to be used by the end user of the Async library. It is
+used by the Async::AudioIO class, which is the Async API frontend for using
+audio in an application.
 */
 class AudioDevice : public SigC::Object
 {
@@ -192,7 +189,7 @@ class AudioDevice : public SigC::Object
      * @param 	is_full Set to \em true if the buffer is full or \em false
      *	      	      	if the buffer full condition has been cleared
      */
-    SigC::Signal1<void, bool> writeBufferFull;
+    //SigC::Signal1<void, bool> writeBufferFull;
     
             
     
@@ -200,7 +197,7 @@ class AudioDevice : public SigC::Object
     /**
      * @brief 	Default constuctor
      */
-    AudioDevice(const std::string& dev_name);
+    explicit AudioDevice(const std::string& dev_name);
   
     /**
      * @brief 	Destructor

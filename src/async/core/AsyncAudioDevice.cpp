@@ -493,18 +493,6 @@ void AudioDevice::audioReadHandler(FdWatch *watch)
 } /* AudioDevice::audioReadHandler */
 
 
-static inline int min(int a, int b)
-{
-  return (a < b) ? a : b;
-}
-
-
-static inline int max(int a, int b)
-{
-  return (a > b) ? a : b;
-}
-
-
 void AudioDevice::writeSpaceAvailable(FdWatch *watch)
 {
   //printf("AudioDevice::writeSpaceAvailable\n");
