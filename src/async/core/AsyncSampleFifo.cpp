@@ -117,7 +117,7 @@ static inline int min(int a, int b);
 
 SampleFifo::SampleFifo(int fifo_size)
   : fifo_size(fifo_size), head(0), tail(0), is_stopped(false),
-    do_overwrite(false)
+    do_overwrite(false), write_buffer_is_full(false)
 {
   fifo = new short[fifo_size];
 } /* SampleFifo */
@@ -193,7 +193,7 @@ bool SampleFifo::full(void) const
 } /* full */
 
 
-int SampleFifo::samplesInFifo(void) const
+unsigned SampleFifo::samplesInFifo(void) const
 {
   return (head - tail + fifo_size) % fifo_size;
 } /* SampleFifo::samplesInFifo */
@@ -203,6 +203,8 @@ void SampleFifo::writeBufferFull(bool is_full)
 {
   //printf("SampleFifo::writeBufferFull: is_full=%s\n",
   //    	  is_full ? "true" : "false");
+  
+  write_buffer_is_full = is_full;
   
   if (!is_full && !is_stopped && !empty())
   {
@@ -301,7 +303,7 @@ static inline int min(int a, int b)
 
 void SampleFifo::writeSamplesFromFifo(void)
 {
-  if (empty())
+  if (empty() || write_buffer_is_full || is_stopped)
   {
     return;
   }
@@ -320,7 +322,8 @@ void SampleFifo::writeSamplesFromFifo(void)
     //printf("SampleFifo::writeSamplesFromFifo: samples_to_write=%d "
       //	   "samples_written=%d\n", samples_to_write, samples_written);
     tail = (tail + samples_written) % fifo_size;
-  } while((samples_to_write == samples_written) && !empty());
+  } while((samples_to_write == samples_written) && !empty() &&
+      	  !write_buffer_is_full);
 
   /*  
   if (was_full)
