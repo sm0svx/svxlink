@@ -263,7 +263,10 @@ int main(int argc, char **argv)
 
   delete logic;
   
-  fclose(logfile);
+  if (logfile != 0)
+  {
+    fclose(logfile);
+  }
   
   return 0;
   
