@@ -15,6 +15,10 @@
 # Subdirectories in the order of compilation.
 SUBDIRS	= svxlink modules
 
+ifdef QTDIR
+SUBDIRS += dtmf_plot
+endif
+
 
 #
 # This file has not been truncated
