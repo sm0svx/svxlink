@@ -242,7 +242,8 @@ ifeq ($(OS),)
 	done
 	if [ -f makefile.inc ]; then \
 	  export HOME=$(RPM_DIR); \
-	  echo "%_topdir $(RPM_DIR)" > $(RPM_DIR)/.rpmmacros; \
+	  echo %_topdir $(RPM_DIR) > $(RPM_DIR)/.rpmmacros; \
+	  echo %_unpackaged_files_terminate_build 0 >> $(RPM_DIR)/.rpmmacros; \
 	  rpmbuild -bb $(RPM_DIR)/TMP_SPECS/*; \
 	  rm -rf /tmp/rpm-tmp-install; \
 	fi
