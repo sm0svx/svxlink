@@ -509,6 +509,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
   audio_buf_info info;
   bool do_flush;
   unsigned fragsize;
+  unsigned fragments;
   do
   {
     short buf[32768];
@@ -527,9 +528,10 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
     */
     //samples_to_write = min(samples_to_write, info.bytes / sizeof(short));
     
+    fragments = max(0, 2 - (info.fragstotal - info.fragments));
     fragsize = info.fragsize / sizeof(short);
     samples_to_write = min(sizeof(buf) / sizeof(short),
-    		info.fragments * fragsize);
+    		fragments * fragsize);
     //samples_to_write = min(samples_to_write, 7936U);
     
     //printf("audio device buffer=%d\n", info.fragments * fragsize);
@@ -541,6 +543,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
     
     list<AudioIO*>::iterator it;
     do_flush = true;
+    unsigned int max_samples_in_fifo = 0;
     for (it=aios.begin(); it!=aios.end(); ++it)
     {
       if (((*it)->mode() == AudioIO::MODE_WR) ||
@@ -549,10 +552,16 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
 	SampleFifo &fifo = (*it)->writeFifo();
 	do_flush &= ((*it)->isFlushing() &&
 		     (fifo.samplesInFifo() <= samples_to_write));
-	samples_to_write = min(samples_to_write, fifo.samplesInFifo());
+	if (!(*it)->isFlushing())
+	{
+	  samples_to_write = min(samples_to_write, fifo.samplesInFifo());
+	}
+	max_samples_in_fifo = max(max_samples_in_fifo, fifo.samplesInFifo());
       }
     }
-    //printf("Samples to write from FIFO=%u\n", samples_to_write);
+    samples_to_write = min(samples_to_write, max_samples_in_fifo);
+    //printf("Samples to write from FIFO=%u. do_flush=%s\n", samples_to_write,
+    //		do_flush ? "true" : "false");
     
     if (!do_flush)
     {
@@ -561,7 +570,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       
       if (prebuf && (samples_to_write < 2 * fragsize))
       {
-      	if (info.fragments * fragsize < 2 * fragsize)
+      	if (fragments < 2)
 	{
 	  break;
 	}
@@ -594,7 +603,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
 	}
       }
     }  
-
+    
     if (do_flush && (samples_to_write % fragsize > 0))
     {
       //printf("*** FLUSHING %d samples ***\n", samples_to_write);
@@ -610,6 +619,10 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       return;
     }
 
+    //FILE *f = fopen("/tmp/audio.raw", "a");
+    //fwrite(buf, sizeof(*buf), samples_to_write, f);
+    //fclose(f);
+    
     assert(written / sizeof(short) == samples_to_write);
     /*
     if (do_flush)
@@ -622,7 +635,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       }
     }
     */
-  } while(samples_to_write == info.fragments * fragsize);
+  } while(samples_to_write == fragments * fragsize);
   
   //printf("Enabling audio device file descriptor watch\n");
   watch->setEnabled(true);

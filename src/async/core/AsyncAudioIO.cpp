@@ -144,7 +144,7 @@ using namespace Async;
 
 
 AudioIO::AudioIO(const string& dev_name)
-  : io_mode(MODE_NONE), audio_dev(0), write_fifo(0), do_flush(false),
+  : io_mode(MODE_NONE), audio_dev(0), write_fifo(0), do_flush(true),
     flush_timer(0)
 {
   write_fifo = new SampleFifo(8000);
@@ -221,7 +221,7 @@ void AudioIO::close(void)
   
   write_fifo->clear();
   
-  do_flush = false;
+  do_flush = true;
   
   delete flush_timer;
   flush_timer = 0;
@@ -320,7 +320,6 @@ void AudioIO::flushDone(Timer *timer)
 {
   delete flush_timer;
   flush_timer = 0;
-  do_flush = false;
   allSamplesFlushed();
 } /* AudioIO::writeFileDone */
 
