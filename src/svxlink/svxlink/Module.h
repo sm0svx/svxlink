@@ -294,7 +294,7 @@ class Module : public SigC::Object
      * @brief 	Retrieve the name of the module
      * @return	Returns the name of the module
      */
-    const char *name(void) const = 0;
+    virtual const char *name(void) const = 0;
     
     /**
      * @brief 	Internal function for module activation
