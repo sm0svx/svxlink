@@ -1,9 +1,12 @@
- 0.9.0 -- ?? Mar 2005
+ 0.9.0 -- 25 Mar 2005
 ----------------------
 
 * Added an alert sound for incoming connections.
 
 * Added some splitters to the GUI.
+
+* Corrected a bug which caused the station list not to update at
+  Qtel startup.
 
 
 

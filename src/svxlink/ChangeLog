@@ -1,4 +1,4 @@
- 0.4.0 -- ?? Mar 2005
+ 0.4.0 -- 25 Mar 2005
 ----------------------
 
 * Bugfix: Crash when the parrot module was active and an echolink
@@ -37,6 +37,13 @@
 
 * ModuleEchoLink: New command, "1", added. When giving this command,
   all connected stations callsigns will be read back.
+
+* The Repeater logic is now nice and stable. However, there are some
+  audio issues that need to be fixed. There is some noise after playing
+  sound clips that is not nice to listen to. The cause for this may be
+  Alsa OSS emulation problems. I'll switch to native Alsa to see if that
+  might help. Also, some times (not very often) the repeated audio get
+  chopped up.
 
 
 

@@ -1,4 +1,4 @@
- 0.10.0 -- ?? Mar 2005
+ 0.10.0 -- 25 Mar 2005
 ----------------------
 
 * Fixed a compilation error which occured with newer compilers. The
