@@ -34,6 +34,11 @@
 
 * Bugfix: The TX timeout caused some problems.
 
+* Added an option to execute DTMF commands at squelch close in addition to
+  when # is pressed (XyzLogic/EXEC_CMD_ON_SQL_CLOSE). However, the DTMF
+  decoder will probably have to be improved to not false trigger for this
+  feature to be really useful.
+
 
 
  0.2.0 -- 27 May 2004
