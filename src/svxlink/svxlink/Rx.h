@@ -151,6 +151,16 @@ class Rx : public SigC::Object
     virtual bool squelchIsOpen(void) const = 0;
     
     /**
+     * @brief 	Call this function to enable/disable the detection of 1750Hz
+     *	      	tone call.
+     * @param 	required_duration The required time in milliseconds that
+     *	      	the tone must be active for activity to be reported.
+     * @return	Return \em true if the Rx is capable of detecting 1750 or
+     *	      	\em false if it's not.
+     */
+    virtual bool detect1750(int required_duration) { return false; }
+    
+    /**
      * @brief 	A signal that indicates if the squelch is open or not
      * @param 	is_open \em True if the squelch is open or \em false if not
      */
@@ -169,7 +179,13 @@ class Rx : public SigC::Object
      * @param 	digit The detected digit (0-9, A-D, *, #)
      */
     SigC::Signal1<void, char> dtmfDigitDetected;
-
+    
+    /**
+     * @brief 	A signal that is emitted when a 1750Hz tone call has been
+     *	      	detected
+     */
+    SigC::Signal0<void> detected1750;
+    
     
   protected:
     

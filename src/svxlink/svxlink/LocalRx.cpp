@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "DtmfDecoder.h"
+#include "ToneDetector.h"
 #include "Vox.h"
 #include "LocalRx.h"
 
@@ -119,7 +120,7 @@ using namespace Async;
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
   : Rx(name), cfg(cfg), name(name), audio_io(0), is_muted(true), vox(0),
-    dtmf_dec(0)
+    dtmf_dec(0), det_1750(0), req_1750_duration(0)
 {
   
 } /* LocalRx::LocalRx */
@@ -127,6 +128,7 @@ LocalRx::LocalRx(Config &cfg, const std::string& name)
 
 LocalRx::~LocalRx(void)
 {
+  delete det_1750;
   delete dtmf_dec;
   delete audio_io;
   delete vox;
@@ -209,6 +211,16 @@ bool LocalRx::squelchIsOpen(void) const
 } /* LocalRx::squelchIsOpen */
 
 
+bool LocalRx::detect1750(int required_duration)
+{
+  det_1750 = new ToneDetector(1750, 800);
+  det_1750->activated.connect(slot(this, &LocalRx::activated1750));
+  req_1750_duration = required_duration;
+  
+  return true;
+  
+} /* LocalRx::detect1750 */
+
 
 
 /****************************************************************************
@@ -243,19 +255,27 @@ bool LocalRx::squelchIsOpen(void) const
  ****************************************************************************/
 
 
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-
+void LocalRx::activated1750(bool is_activated)
+{
+  printf("1750 %s...\n", is_activated ? "ACTIVATED" : "DEACTIVATED");
+  if (is_activated)
+  {
+    gettimeofday(&det_1750_timestamp, NULL);
+  }
+  else
+  {
+    struct timeval tv, tv_diff;
+    gettimeofday(&tv, NULL);
+    timersub(&tv, &det_1750_timestamp, &tv_diff);
+    long diff = tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000;
+    printf("The 1750 tone was active for %ld milliseconds\n", diff);
+    if (diff >= req_1750_duration)
+    {
+      detected1750();
+    }
+  }
+  
+} /* LocalRx::activated1750 */
 
 
 

@@ -143,8 +143,12 @@ class RepeaterLogic : public Logic
      */
     bool initialize(void);
     
+    virtual void moduleTransmitRequest(bool do_transmit);
+
   protected:
+    virtual void transmit(bool do_transmit);
     
+
   private:
     bool      	  repeater_is_up;
     Async::Timer  *up_timer;
@@ -160,7 +164,8 @@ class RepeaterLogic : public Logic
     void sendBlip(Async::Timer *t=0);
     void squelchOpen(bool is_open);
     void txTimeout(void);
-    
+    void detected1750(void);
+
 };  /* class RepeaterLogic */
 
 

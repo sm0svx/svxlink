@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cstdio>
 #include <string>
+#include <iostream>
 
 
 /****************************************************************************
@@ -120,7 +121,7 @@ using namespace Async;
 
 
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
-  : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(60000),
+  : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(30000),
     blip_timer(0), blip_delay(0)
 {
 
@@ -156,6 +157,11 @@ bool RepeaterLogic::initialize(void)
   
   rx().mute(false);
   rx().audioReceived.connect(slot(this, &RepeaterLogic::audioReceived));
+  if (!rx().detect1750(2000))
+  {
+    cerr << "*** WARNING: Could not setup 1750 detection\n";
+  }
+  rx().detected1750.connect(slot(this, &RepeaterLogic::detected1750));
   
   playMsg("online");
   identify();
@@ -165,6 +171,14 @@ bool RepeaterLogic::initialize(void)
 } /* RepeaterLogic::initialize */
 
 
+void RepeaterLogic::moduleTransmitRequest(bool do_transmit)
+{
+  if (do_transmit)
+  {
+    setUp(true);
+  }
+  Logic::moduleTransmitRequest(do_transmit);
+} /* RepeaterLogic::moduleTransmitRequest */
 
 
 
@@ -174,20 +188,23 @@ bool RepeaterLogic::initialize(void)
  *
  ****************************************************************************/
 
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
+void RepeaterLogic::transmit(bool do_transmit)
+{
+  printf("RepeaterLogic::transmit: do_transmit=%s\n",
+      do_transmit ? "true" : "false");
+  if (repeater_is_up)
+  {
+    if (do_transmit)
+    {
+      Logic::transmit(true);
+    }
+    setIdle(!do_transmit);
+  }
+  else
+  {
+    Logic::transmit(do_transmit);
+  }
+} /* RepeaterLogic::transmit */
 
 
 
@@ -232,8 +249,13 @@ void RepeaterLogic::idleTimeout(Timer *t)
 
 void RepeaterLogic::setIdle(bool idle)
 {
-  printf("RepeaterLogic::setIdle\n");
+  printf("RepeaterLogic::setIdle: idle=%s\n", idle ? "true" : "false");
   if (!repeater_is_up)
+  {
+    return;
+  }
+  
+  if ((idle && (up_timer != 0)) || (!idle && (up_timer == 0)))
   {
     return;
   }
@@ -256,14 +278,15 @@ void RepeaterLogic::setUp(bool up)
   {
     return;
   }
+  repeater_is_up = up;
   
+  Logic::transmit(up);
   if (up)
   {
     identify();
   }
   
-  logicTransmitRequest(up);
-  repeater_is_up = up;
+  //logicTransmitRequest(up);
 } /* RepeaterLogic::setUp */
 
 
@@ -281,25 +304,36 @@ void RepeaterLogic::squelchOpen(bool is_open)
   printf("The squelch is %s\n", is_open ? "OPEN" : "CLOSED");
   
   //squelch_is_open = is_open;
-  delete blip_timer;
-  if (is_open)
+  
+  if (repeater_is_up)
   {
-    setUp(true);
-    blip_timer = 0;
-  }
-  else
-  {
-    if (blip_delay > 0)
+    delete blip_timer;
+    if (is_open)
     {
-      blip_timer = new Timer(blip_delay);
-      blip_timer->expired.connect(slot(this, &RepeaterLogic::sendBlip));
+      blip_timer = 0;
     }
     else
     {
-      sendBlip();
+      if (blip_delay > 0)
+      {
+	blip_timer = new Timer(blip_delay);
+	blip_timer->expired.connect(slot(this, &RepeaterLogic::sendBlip));
+      }
+      else
+      {
+	sendBlip();
+      }
+    }
+    //setIdle(!is_open);
+    logicTransmitRequest(is_open);
+  }
+  else
+  {
+    if (is_open)
+    {
+      //setUp(true);
     }
   }
-  setIdle(!is_open);
   
 } /* RepeaterLogic::squelchOpen */
 
@@ -311,6 +345,11 @@ void RepeaterLogic::txTimeout(void)
 } /* RepeaterLogic::txTimeout */
 
 
+void RepeaterLogic::detected1750(void)
+{
+  printf("1750 tone call detected\n");
+  setUp(true);
+} /* RepeaterLogic::detected1750 */
 
 
 

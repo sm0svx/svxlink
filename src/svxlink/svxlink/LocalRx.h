@@ -41,6 +41,7 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include <sys/time.h>
 
 
 /****************************************************************************
@@ -91,6 +92,7 @@ namespace Async
 
 class Vox;
 class DtmfDecoder;
+class ToneDetector;
 
 
 /****************************************************************************
@@ -155,6 +157,16 @@ class LocalRx : public Rx
      */
     bool squelchIsOpen(void) const;
     
+    /**
+     * @brief 	Call this function to enable/disable the detection of 1750Hz
+     *	      	tone call.
+     * @param 	required_duration The required time in milliseconds that
+     *	      	the tone must be active for activity to be reported.
+     * @return	Return \em true if the Rx is capable of detecting 1750 or
+     *	      	\em false if it's not.
+     */
+    bool detect1750(int required_duration);
+    
     
   protected:
     
@@ -165,7 +177,12 @@ class LocalRx : public Rx
     bool      	    is_muted;
     Vox       	    *vox;
     DtmfDecoder     *dtmf_dec;
+    ToneDetector    *det_1750;
+    int       	    req_1750_duration;
+    struct timeval  det_1750_timestamp;
     
+    void activated1750(bool is_activated);
+
 };  /* class LocalRx */
 
 
