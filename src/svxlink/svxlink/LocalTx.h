@@ -197,6 +197,7 @@ class LocalTx : public Tx
     Async::Timer    *txtot;
     bool      	    tx_timeout_occured;
     int       	    tx_timeout;
+    int       	    tx_delay;
     
     void txTimeoutOccured(Async::Timer *t);
 

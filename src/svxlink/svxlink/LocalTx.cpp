@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <cstdio>
+#include <algorithm>
 
 
 /****************************************************************************
@@ -125,7 +126,8 @@ using namespace Async;
 
 LocalTx::LocalTx(Config& cfg, const string& name)
   : Tx(name), name(name), cfg(cfg), audio_io(0), is_transmitting(false),
-    serial_fd(-1), txtot(0), tx_timeout_occured(false), tx_timeout(0)
+    serial_fd(-1), txtot(0), tx_timeout_occured(false), tx_timeout(0),
+    tx_delay(0)
 {
 
 } /* LocalTx::LocalTx */
@@ -190,6 +192,13 @@ bool LocalTx::initialize(void)
     tx_timeout = 1000 * atoi(tx_timeout_str.c_str());
   }
   
+  string tx_delay_str;
+  if (cfg.getValue(name, "TX_DELAY", tx_delay_str))
+  {
+    tx_delay = max(0, min(atoi(tx_delay_str.c_str()), 1000));
+  }
+  
+  
   serial_fd = ::open(ptt_port.c_str(), O_RDWR);
   if(serial_fd == -1)
   {
@@ -240,6 +249,14 @@ void LocalTx::transmit(bool do_transmit)
       txtot = new Timer(tx_timeout);
       txtot->expired.connect(slot(this, &LocalTx::txTimeoutOccured));
     }
+    
+    if (tx_delay > 0)
+    {
+      short samples[8000];
+      memset(samples, 0, sizeof(samples));
+      transmitAudio(samples, 8000 * tx_delay / 1000);
+    }
+    
     transmitBufferFull(false);
   }
   else
