@@ -800,6 +800,7 @@ void Logic::sendRgrSound(Timer *t)
 {
   //printf("RepeaterLogic::sendRogerSound\n");
   playMsg("blip");
+  playSilence(200);
   enableRgrSoundTimer(false);
 } /* Logic::sendRogerSound */
 
