@@ -1,4 +1,4 @@
- 0.3.0 -- ?? ??? 2004
+ 0.3.0 -- ?? Jul 2004
 ----------------------
 
 * Added anti flutter to the DTMF detection code. The anti flutter code is
@@ -8,6 +8,10 @@
   character "B". To end the command, use the "C" character. The anti flutter
   code is only active for one command. That is, until "C" is received.
   Example: A112B3C = 1223, AC = empty command = #.
+
+* Bugfix in the Parrot module: The module timeout timer kept running after
+  the module had been manually deactivated. This caused svxlink to crash when
+  the timeout occured.
 
 
 
