@@ -35,6 +35,9 @@
 * Now possible to use an external hardware squelch indicator via a
   serial port. Usable pins are CTS, DSR, DCD and RI.
 
+* ModuleEchoLink: New command, "1", added. When giving this command,
+  all connected stations callsigns will be read back.
+
 
 
  0.3.0 -- 26 Sep 2004
