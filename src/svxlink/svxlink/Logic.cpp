@@ -192,7 +192,7 @@ bool Logic::initialize(void)
   }
   tx().allSamplesFlushed.connect(slot(this, &Logic::allTxSamplesFlushed));
   
-  msg_handler = new MsgHandler(sounds);
+  msg_handler = new MsgHandler(sounds, 8000);
   msg_handler->writeAudio.connect(slot(this, &Logic::transmitAudio));
   msg_handler->allMsgsWritten.connect(slot(this, &Logic::allMsgsWritten));
   tx().transmitBufferFull.connect(
@@ -229,7 +229,7 @@ bool Logic::initialize(void)
 
 void Logic::playMsg(const string& msg, const Module *module)
 {
-  //module_tx_fifo->stopOutput(true);
+  module_tx_fifo->stopOutput(true);
   transmit(true);
   if (module == 0)
   {
@@ -245,7 +245,7 @@ void Logic::playMsg(const string& msg, const Module *module)
 
 void Logic::playNumber(int number)
 {
-  //module_tx_fifo->stopOutput(true);
+  module_tx_fifo->stopOutput(true);
   transmit(true);
   msg_handler->playNumber(number);
 } /* Logic::playNumber */
@@ -253,10 +253,18 @@ void Logic::playNumber(int number)
 
 void Logic::spellWord(const string& word)
 {
-  //module_tx_fifo->stopOutput(true);
+  module_tx_fifo->stopOutput(true);
   transmit(true);
   msg_handler->spellWord(word);
 } /* Logic::spellWord */
+
+
+void Logic::playSilence(int length)
+{
+  module_tx_fifo->stopOutput(true);
+  transmit(true);
+  msg_handler->playSilence(length);
+} /* Logic::playSilence */
 
 
 void Logic::audioFromModule(short *samples, int count)
@@ -448,8 +456,14 @@ void Logic::allMsgsWritten(void)
   //printf("Logic::allMsgsWritten\n");
 
   tx().flushSamples();
-  transmitCheck();  
+  transmitCheck();
   //module_tx_fifo->stopOutput(false);
+  
+  if (active_module != 0)
+  {
+     active_module->allMsgsWritten();
+  }
+  
 } /* Logic::allMsgsWritten */
 
 

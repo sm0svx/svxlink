@@ -111,6 +111,12 @@ void Module::spellWord(const string& word) const
 }
 
 
+void Module::playSilence(int length) const
+{
+  logic()->playSilence(length);
+}
+
+
 int Module::audioFromModule(short *samples, int count)
 {
   logic()->audioFromModule(samples, count);

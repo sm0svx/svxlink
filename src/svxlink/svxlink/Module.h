@@ -42,12 +42,14 @@ class Module : public SigC::Object
     virtual void playHelpMsg(void) { playMsg("help"); }
     virtual void squelchOpen(bool is_open) {}
     virtual int audioFromRx(short *samples, int count) { return count; }
+    virtual void allMsgsWritten(void) {}
     
     
   protected:
     void playMsg(const std::string& msg) const;
     void playNumber(int number) const;
     void spellWord(const std::string& word) const;
+    void playSilence(int length) const;
     int audioFromModule(short *samples, int count);
     void transmit(bool tx);
     bool activateMe(void);
