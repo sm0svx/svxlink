@@ -20,7 +20,7 @@ operation has only been briefly tested as of this writing. Hopefully I will get
 my hands on some repeater hardware this fall (2004) to test it.
 <P/>
 EchoLink is an amateur radio invention (well actually it is just a
-modified verison of Internet telephony) to link radio transcievers together
+modified verison of IP telephony) to link radio transcievers together
 over the Internet. You must have an amateur radio license to use
 it. The original EchoLink software can be found at
 <A href="http://www.echolink.org/">http://www.echolink.org/</A>. However,
@@ -34,9 +34,11 @@ and act as a link. For the latter, use the svxlink server.
 SvxLink is known to work under these operating systems (I really hope that
 this list will grow in time):
 <UL>
-  <LI>Red Hat Linux 9</LI>
-  <LI>Fedora Core 1</LI>
-  <LI>Fedora Core 2</LI>
+  <LI>Red Hat Linux 9 (RPMS provided)</LI>
+  <LI>Fedora Core 1 (RPMS provided)</LI>
+  <LI>Fedora Core 2 (RPMS provided)</LI>
+  <LI>SuSE 9.1</LI>
+  <LI>Slackware 10 (not tested by author)</LI>
 </UL>
 <P/>
 
