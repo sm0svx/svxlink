@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
+#include <cassert>
 
 #include "MsgHandler.h"
 
