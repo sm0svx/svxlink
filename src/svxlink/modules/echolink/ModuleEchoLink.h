@@ -140,6 +140,7 @@ class ModuleEchoLink : public Module
     AudioPacer       	*msg_pacer;
     bool      	      	remote_activation;
     int       	      	pending_connect_id;
+    std::string       	last_message;
 
     void moduleCleanup(void);
     const char *name(void) const { return "EchoLink"; }

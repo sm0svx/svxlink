@@ -548,9 +548,13 @@ void ModuleEchoLink::onStationListUpdated(void)
     pending_connect_id = -1;
   }
   
-  cout << "--- EchoLink directory server message: ---" << endl;
-  cout << dir->message() << endl;
-
+  if (dir->message() != last_message)
+  {
+    cout << "--- EchoLink directory server message: ---" << endl;
+    cout << dir->message() << endl;
+    last_message = dir->message();
+  }
+  
 } /* onStationListUpdated */
 
 
