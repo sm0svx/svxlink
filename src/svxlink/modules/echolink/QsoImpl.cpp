@@ -170,7 +170,7 @@ QsoImpl::QsoImpl(const Async::IpAddress& ip, ModuleEchoLink *module)
   string idle_timeout_str;
   if (cfg.getValue(cfg_name, "LINK_IDLE_TIMEOUT", idle_timeout_str))
   {
-    int idle_timeout = atoi(idle_timeout_str.c_str());
+    int idle_timeout = 1000 * atoi(idle_timeout_str.c_str());
     idle_timer = new Timer(idle_timeout, Timer::TYPE_PERIODIC);
     idle_timer->expired.connect(slot(this, &QsoImpl::idleTimeoutCheck));
   }
@@ -421,7 +421,7 @@ void QsoImpl::idleTimeoutCheck(Timer *t)
 {
   if (!activity)
   {
-    cout << localCallsign() << ": EchoLink connection idle timeout. "
+    cout << remoteCallsign() << ": EchoLink connection idle timeout. "
       	 "Disconnecting...\n";
     module->playMsg("timeout");
     disc_when_done = true;
