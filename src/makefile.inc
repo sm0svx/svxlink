@@ -388,7 +388,7 @@ moc_%.cpp:	%.h
 	else \
 	  $(ECHO) "*** WARNING: Trying to run the Qt Meta Object Compiler on " \
 	      	  "a non-qobject file "; \
-	  $(ECHO) "             (Q_OBJECT declaration missing)"; \
+	  $(ECHO) "             (Q_OBJECT declaration missing): $<"; \
 	fi
 
 
