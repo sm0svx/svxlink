@@ -117,7 +117,8 @@ using namespace Async;
 
 
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
-  : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(10000)
+  : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(10000),
+    blip_timer(0)
 {
 
 } /* RepeaterLogic::RepeaterLogic */
@@ -185,6 +186,7 @@ bool RepeaterLogic::initialize(void)
 
 void RepeaterLogic::identify(void)
 {
+  printf("RepeaterLogic::identify\n");
   if (!callsign().empty())
   {
     spellWord(callsign());
@@ -207,6 +209,7 @@ int RepeaterLogic::audioReceived(short *samples, int count)
 
 void RepeaterLogic::idleTimeout(Timer *t)
 {
+  printf("RepeaterLogic::idleTimeout\n");
   setUp(false);
   identify();
 } /* RepeaterLogic::idleTimeout */
@@ -214,6 +217,7 @@ void RepeaterLogic::idleTimeout(Timer *t)
 
 void RepeaterLogic::setIdle(bool idle)
 {
+  printf("RepeaterLogic::setIdle\n");
   if (!repeater_is_up)
   {
     return;
@@ -232,6 +236,7 @@ void RepeaterLogic::setIdle(bool idle)
 
 void RepeaterLogic::setUp(bool up)
 {
+  printf("RepeaterLogic::setUp\n");
   if (up == repeater_is_up)
   {
     return;
@@ -249,6 +254,7 @@ void RepeaterLogic::setUp(bool up)
 
 void RepeaterLogic::sendBlip(Timer *t)
 {
+  printf("RepeaterLogic::sendBlip\n");
   playMsg("blip");
   delete blip_timer;
   blip_timer = 0;
