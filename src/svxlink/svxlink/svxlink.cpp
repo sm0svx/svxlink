@@ -2,6 +2,9 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <stdlib.h>
+
+#include <string>
 
 #include <AsyncCppApplication.h>
 #include <AsyncConfig.h>
@@ -13,6 +16,7 @@
 #include "MsgHandler.h"
 #include "SimplexLogic.h"
 
+using namespace std;
 using namespace Async;
 using namespace SigC;
 
@@ -107,8 +111,16 @@ int main(int argc, char **argv)
 {
   CppApplication app;
   
+  char *home_dir = getenv("HOME");
+  if (home_dir == NULL)
+  {
+    home_dir = ".";
+  }
+  
+  string cfg_filename(home_dir);
+  cfg_filename += "/svxlink.conf";
   Config cfg;
-  if (!cfg.open("svxlink.conf"))
+  if (!cfg.open(cfg_filename))
   {
     exit(1);
   }
