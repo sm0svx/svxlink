@@ -9,6 +9,9 @@
 #include "MsgHandler.h"
 
 
+#define WRITE_BLOCK_SIZE    4*160
+
+
 using namespace std;
 
 
@@ -17,6 +20,12 @@ MsgHandler::MsgHandler(const string& base_dir)
 {
   
 }
+
+
+MsgHandler::~MsgHandler(void)
+{
+
+} /* MsgHandler::~MsgHandler */
 
 
 void MsgHandler::playMsg(const string& context, const string& msg)
@@ -119,7 +128,7 @@ void MsgHandler::playNextMsg(void)
 
 void MsgHandler::writeFromFile(void)
 {
-  short buf[160];
+  short buf[WRITE_BLOCK_SIZE];
   assert(file != -1);
   bool success = false;
   

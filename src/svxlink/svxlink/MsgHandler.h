@@ -9,7 +9,7 @@ class MsgHandler : public SigC::Object
 {
   public:
     MsgHandler(const std::string& base_dir);
-    ~MsgHandler(void) {}
+    ~MsgHandler(void);
     
     void playMsg(const std::string& context, const std::string& msg);
     void playNumber(int number);
