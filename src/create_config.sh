@@ -98,7 +98,8 @@ if [ -z "$QT_PREFIX" -a -n "$QTDIR" ]; then
   QT_PREFIX=${QTDIR}
 fi
 if [ -n "$QT_PREFIX" ]; then
-  output "QT_BIN=${QT_PREFIX}/bin"
+  QT_BIN="${QT_PREFIX}/bin"
+  output "QT_BIN=${QT_BIN}"
   output "QT_MOC=${QT_BIN}/moc"
   output "QT_UIC=${QT_BIN}/uic"
 else
