@@ -367,9 +367,10 @@ int ModuleParrot::audioFromRx(short *samples, int count)
 void ModuleParrot::allMsgsWritten(void)
 {
   //printf("ModuleParrot::allMsgsWritten\n");
-  transmit(false);
-  fifo->stopOutput(true);
-  setIdle(true);
+  if (fifo->empty())
+  {
+    setIdle(true);
+  }
 } /* ModuleParrot::allMsgsWritten */
 
 
@@ -395,8 +396,10 @@ void ModuleParrot::allSamplesWritten(void)
   }
   else
   {
-    allMsgsWritten();
+    setIdle(true);
   }
+  transmit(false);
+  fifo->stopOutput(true);
 } /* ModuleParrot::allSamplesWritten */
 
 
