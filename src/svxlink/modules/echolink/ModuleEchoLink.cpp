@@ -579,6 +579,26 @@ void ModuleEchoLink::allMsgsWritten(void)
 } /* allMsgsWritten */
 
 
+/*
+ *----------------------------------------------------------------------------
+ * Method:    reportState
+ * Purpose:   Called by the core system when the state of the module should
+ *    	      be reported.
+ * Input:     None
+ * Output:    None
+ * Author:    Tobias Blomberg / SM0SVX
+ * Created:   2005-02-12
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
+void ModuleEchoLink::reportState(void)
+{
+  playSilence(500);
+  playNumber(qsos.size());
+  playMsg("connected_stations");
+} /* reportState */
+
 
 /*
  *----------------------------------------------------------------------------
