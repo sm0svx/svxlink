@@ -269,10 +269,10 @@ void AudioPacer::outputNextBlock(Timer *t)
   
   if (do_flush && (buf_pos == 0))
   {
-    //printf("AudioPacer::outputNextBlock: Calling allAudioFlushed()\n");
-    allAudioFlushed();
     //printf("AudioPacer::outputNextBlock: do_flush=false\n");
     do_flush = false;
+    //printf("AudioPacer::outputNextBlock: Calling allAudioFlushed()\n");
+    allAudioFlushed();
   }
   
 } /* AudioPacer::outputNextBlock */
