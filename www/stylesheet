@@ -26,12 +26,15 @@ CODE
 IMG.floatleft
 {
   float: left;
+  margin-right: 1em;
+  margin-bottom: 1em;
 }
 
 IMG.floatright
 {
   float: right;
   margin-left: 1em;
+  margin-bottom: 1em;
 }
 
 DL
@@ -49,3 +52,14 @@ DD
 {
   margin-bottom: 1em;
 }
+
+H2
+{
+  background-color: lightblue;
+}
+
+H3
+{
+  margin-bottom: 0.5em;
+}
+
