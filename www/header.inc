@@ -17,7 +17,7 @@
     <TD width="20%"><A href="index.php">Main</A></TD>
     <TD width="20%"><A href="news.php">News</A></TD>
     <TD width="20%"><A href="screenshots.php">Screenshots</A></TD>
-    <TD width="20%"><A href="downloads.php">Downloads</A></TD>
+    <TD width="20%"><A href="https://sourceforge.net/project/showfiles.php?group_id=84813">Downloads</A></TD>
     <TD width="20%"><A href="moreinfo.php">More Info</A></TD>
   </TR>
 </TABLE>
