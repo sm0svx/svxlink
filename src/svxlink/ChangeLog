@@ -18,6 +18,12 @@
   the vox squelch. Make sure that your receiver let the CTCSS frequencies
   through.
 
+* Fixed the Parrot module so that the whole FIFO is played. Previously
+  only 15 seconds was played.
+
+* Now possible to set the length of the Parrot module FIFO in the config
+  file. That is, it is now possible to set the maximum recording length.
+
 
 
  0.1.1 -- 16 Apr 2004
