@@ -157,18 +157,22 @@ class RepeaterLogic : public Logic
     bool      	  repeater_is_up;
     Async::Timer  *up_timer;
     int      	  idle_timeout;
-    Async::Timer  *blip_timer;
-    int       	  blip_delay;
+    Async::Timer  *rgr_sound_timer;
+    int       	  rgr_sound_delay;
     int       	  required_1750_duration;
     Async::Timer  *idle_sound_timer;
     std::string   idle_sound;
+    Async::Timer  *ident_timer;
+    int       	  ident_interval;
+    int       	  idle_sound_interval;
+    bool      	  repeating_enabled;
     
-    void identify(void);
+    void identify(Async::Timer *t=0);
     int audioReceived(short *samples, int count);
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);
     void setUp(bool up);
-    void sendBlip(Async::Timer *t=0);
+    void sendRgrSound(Async::Timer *t=0);
     void squelchOpen(bool is_open);
     void txTimeout(void);
     void detected1750(void);
