@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "Rx.h"
 #include "Tx.h"
+#include "Module.h"
 #include "SimplexLogic.h"
 
 
@@ -121,7 +122,7 @@ using namespace Async;
 
 
 SimplexLogic::SimplexLogic(Async::Config& cfg, const string& name)
-  : Logic(cfg, name), pending_transmit(false), squelch_is_open(false),
+  : Logic(cfg, name), pending_transmit(false),
     tx_timeout_occured(false), ident_timer(0), ident_interval(1800),
     pending_ident(false)
 {
@@ -170,7 +171,7 @@ void SimplexLogic::transmit(bool do_transmit)
   {
     if (!tx_timeout_occured)
     {
-      if (!squelch_is_open)
+      if (!rx().squelchIsOpen())
       {
 	//printf("Squelch is NOT open. Transmitting...\n");
 	rx().mute(true);
@@ -244,7 +245,8 @@ void SimplexLogic::identify(Timer *t)
 {
   printf("SimplexLogic::identify\n");
   
-  if (squelch_is_open)
+  if (rx().squelchIsOpen() ||
+      ((activeModule() != 0) && (activeModule()->isTransmitting())))
   {
     pending_ident = true;
     return;
@@ -262,8 +264,6 @@ void SimplexLogic::identify(Timer *t)
 void SimplexLogic::squelchOpen(bool is_open)
 {
   printf("The squelch is %s\n", is_open ? "OPEN" : "CLOSED");
-  
-  squelch_is_open = is_open;
   
   if (!is_open)
   {
