@@ -357,6 +357,12 @@ void RepeaterLogic::setUp(bool up)
   if (up)
   {
     identify();
+    Module *module = activeModule();
+    if (module != 0)
+    {
+      playMsg("active_module");
+      module->playModuleName();
+    }
     repeater_is_up = true;
     repeating_enabled = false;
   }
