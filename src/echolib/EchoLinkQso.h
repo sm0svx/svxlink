@@ -319,7 +319,7 @@ class Qso : public SigC::Object
     static const int  	KEEP_ALIVE_TIME       	= 10000;
     static const int  	MAX_CONNECT_RETRY_CNT 	= 5;
     static const int  	CON_TIMEOUT_TIME      	= 50000;
-    static const int  	RX_INDICATOR_HANG_TIME  = 500;
+    static const int  	RX_INDICATOR_HANG_TIME  = 200;
     static const int  	SEND_BUFFER_SIZE      	= 4*160; // Four 20ms GSM frames
   
     bool      	      	init_ok;
