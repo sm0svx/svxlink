@@ -208,6 +208,16 @@ void Directory::getCalls(void)
     }
     addCmdToQueue(Cmd(Cmd::GET_CALLS));
   }
+  else
+  {
+    the_links.clear();
+    the_repeaters.clear();
+    the_conferences.clear();
+    the_stations.clear();
+    error("Trying to update the directory list while not registered with the "
+      	  "directory server");
+    //stationListUpdated();
+  }
 } /* Directory::getCalls */
 
 
@@ -727,8 +737,7 @@ void Directory::ctrlSockDisconnected(TcpConnection *con,
   switch (reason)
   {
     case Async::TcpClient::DR_HOST_NOT_FOUND:
-      error("Directory server host \"" + ctrl_con->remoteHost().toString()
-	  + "\" not found\n");
+      error("Directory server host \"" + the_server + "\" not found\n");
       break;
     
     case Async::TcpClient::DR_REMOTE_DISCONNECTED:
