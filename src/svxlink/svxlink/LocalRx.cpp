@@ -270,7 +270,7 @@ void LocalRx::mute(bool do_mute)
 
 bool LocalRx::squelchIsOpen(void) const
 {
-  return vox->isUp();
+  return sql_is_open;
 } /* LocalRx::squelchIsOpen */
 
 
