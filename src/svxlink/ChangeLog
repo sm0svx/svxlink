@@ -1,3 +1,15 @@
+ 0.3.0 -- ?? ??? 2004
+----------------------
+
+* Added anti flutter to the DTMF detection code. The anti flutter code is
+  activated by prefixing all DTMF commands with the "A" character. When the
+  feature is activated, two or more of the same digit in a row is ignored.
+  To input more than one of the same digit in a row, use the repetition
+  character "B". The anti flutter code is only active for one command.
+  That is, until "#" is received. Example: A112B3# = 1223.
+
+
+
  0.2.0 -- 27 May 2004
 ----------------------
 
