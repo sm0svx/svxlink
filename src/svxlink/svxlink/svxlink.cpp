@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include <string>
+#include <iostream>
 
 #include <AsyncCppApplication.h>
 #include <AsyncConfig.h>
@@ -122,6 +123,7 @@ int main(int argc, char **argv)
   Config cfg;
   if (!cfg.open(cfg_filename))
   {
+    cerr << "*** Error: Could not open config file \"" << cfg_filename << endl;
     exit(1);
   }
   
