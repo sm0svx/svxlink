@@ -126,7 +126,7 @@ using namespace Async;
 Logic::Logic(Config &cfg, const string& name)
   : m_cfg(cfg), m_name(name), m_rx(0), m_tx(0), msg_handler(0),
     write_msg_flush_timer(0), active_module(0), module_tx_fifo(0),
-    cmd_tmo_timer(0)
+    cmd_tmo_timer(0), logic_transmit(false)
 {
 
 } /* Logic::Logic */
@@ -442,6 +442,12 @@ void Logic::clearPendingSamples(void)
 } /* Logic::clearPendingSamples */
 
 
+void Logic::logicTransmitRequest(bool do_transmit)
+{
+  logic_transmit = do_transmit;
+  transmitCheck();
+} /* Logic::logicTransmitRequest */
+
 
 
 /****************************************************************************
@@ -488,6 +494,7 @@ void Logic::transmitCheck(void)
   if (((active_module != 0) && active_module->isTransmitting()) ||
       msg_handler->isWritingMessage() ||
       !module_tx_fifo->empty() ||
+      logic_transmit ||
       tx().isFlushing())
   {
     transmit(true);

@@ -237,9 +237,22 @@ void RepeaterLogic::setUp(bool up)
     return;
   }
   
-  transmit(up);
+  if (up)
+  {
+    identify();
+  }
+  
+  logicTransmitRequest(up);
   repeater_is_up = up;
 } /* RepeaterLogic::setUp */
+
+
+void RepeaterLogic::sendBlip(Timer *t)
+{
+  playMsg("blip");
+  delete blip_timer;
+  blip_timer = 0;
+} /* RepeaterLogic::sendBlip */
 
 
 void RepeaterLogic::squelchOpen(bool is_open)
@@ -247,9 +260,16 @@ void RepeaterLogic::squelchOpen(bool is_open)
   printf("The squelch is %s\n", is_open ? "OPEN" : "CLOSED");
   
   //squelch_is_open = is_open;
+  delete blip_timer;
   if (is_open)
   {
     setUp(true);
+    blip_timer = 0;
+  }
+  else
+  {
+    blip_timer = new Timer(500);
+    blip_timer->expired.connect(slot(this, &RepeaterLogic::sendBlip));
   }
   setIdle(!is_open);
   
@@ -261,9 +281,6 @@ void RepeaterLogic::txTimeout(void)
   Logic::transmit(false);
   clearPendingSamples();
 } /* RepeaterLogic::txTimeout */
-
-
-
 
 
 

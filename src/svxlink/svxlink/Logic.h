@@ -177,6 +177,7 @@ class Logic : public SigC::Object
     virtual int transmitAudio(short *samples, int count);
     
     void clearPendingSamples(void);
+    void logicTransmitRequest(bool do_transmit);
     
   private:
     Async::Config     	&m_cfg;
@@ -191,6 +192,7 @@ class Logic : public SigC::Object
     std::string       	received_digits;
     std::string       	m_callsign;
     Async::Timer      	*cmd_tmo_timer;
+    bool      	      	logic_transmit;
     
     void allMsgsWritten(void);
     void allModuleSamplesWritten(void);
