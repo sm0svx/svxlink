@@ -333,6 +333,7 @@ void ModuleParrot::squelchOpen(bool is_open)
     if (!fifo->empty())
     {
       transmit(true);
+      fifo->flushSamples();
       fifo->stopOutput(false);
     }
     else
