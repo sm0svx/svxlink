@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 
 
 /****************************************************************************
@@ -88,7 +89,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-static inline int min(int a, int b);
 
 
 /****************************************************************************
@@ -216,12 +216,17 @@ void SampleFifo::writeBufferFull(bool is_full)
 
 int SampleFifo::readSamples(short *samples, int count)
 {
+  if (count <= 0)
+  {
+    return 0;
+  }
+  
   int was_full = full();
   
   int tot_samples_read = 0;
   do
   {
-    int samples_to_read = min(count, samplesInFifo());
+    int samples_to_read = min((unsigned)count, samplesInFifo());
     int to_end_of_fifo = fifo_size - tail;
     samples_to_read = min(samples_to_read, to_end_of_fifo);
     memcpy(samples+tot_samples_read, fifo+tail,
@@ -296,10 +301,7 @@ int SampleFifo::readSamples(short *samples, int count)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-static inline int min(int a, int b)
-{
-  return (a < b) ? a : b;
-} /* min */
+
  
 
 void SampleFifo::writeSamplesFromFifo(void)
