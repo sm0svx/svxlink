@@ -272,7 +272,7 @@ void SampleFifo::setPrebufSamples(unsigned prebuf_samples)
 
 void SampleFifo::flushSamples(void)
 {
-  printf("SampleFifo::flushSamples\n");
+  //printf("SampleFifo::flushSamples\n");
   do_flush = true;
   prebuf = true;
   if (!empty())
