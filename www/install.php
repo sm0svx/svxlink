@@ -322,6 +322,12 @@ variable for this logic core to be activated.
     "." as decimal comma. Disable this feature by commenting out (#) this
     configuration variable.
   </DD>  
+  
+  <DT>MACROS</DT>
+  <DD>
+    Point out a section the contains the macros that should be used by this
+    logic core. See the section description for macros below for more info.
+  </DD>  
 </DL>
 
 The next section is the <b>RepeaterLogic</b> section. This section contains
@@ -412,7 +418,32 @@ config variable for this logic core to be activated.
     "." as decimal comma. Disable this feature by commenting out (#) this
     configuration variable.
   </DD>  
+  
+  <DT>MACROS</DT>
+  <DD>
+    Point out a section the contains the macros that should be used by this
+    logic core. See the section description for macros below for more info.
+  </DD>  
 </DL>
+
+A macros section is used to declare macros that can be used by a logic core.
+The logic core points out the macros section to use by using the MACROS
+configuration variable. A macros is a kind of shortcut that can be used to
+decrease the amont of key presses that have to be done to connect to common
+EchoLink stations for example. On the radio side, macros are activated by
+pressing "D" "macro number" "#". A macros section can look something like the
+example below.
+
+<PRE>
+[Macros]
+1=EchoLink:9999
+2=EchoLink:1234567
+9=Parrot:0123456789
+</PRE>
+
+For example, pressing DTMF sequence "D1#" will activate the EchoLink module
+and connect to the EchoTest conference node.
+<P>
 
 A receiver section (called <b>Rx1</b> in the default configuration file) is
 used to specify the configuration for a receiver.
