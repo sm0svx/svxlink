@@ -10,22 +10,25 @@ are binary packages available.
 SvxLink have a few dependencies. Most of them should be installed by default on
 a normal Linux workstation. The Qtel application requires X/Qt but the svxlink
 server is a pure console application.
-The only external dependency is the <em>libsigc++</em> library. Only version
-1.0 will work. The one I use is version 1.0.4. RPMS for RH9 and FC1 can be
+There are two external dependencies. The <em>libsigc++</em> library and the
+<em>gsm</em> library. Only version 1.0 of the libsigc++ library will work.
+The one I use is version 1.0.4. RPMS for RH9, FC1 and FC2 can be
 downloaded from the
-<A href="http://atrpms.physik.fu-berlin.de/dist/rh9/libsigc++/">ATrpms</A>
-site. Make sure to pick the 1.0.4 version.
+<A href="http://atrpms.net/">ATrpms</A> site. Make sure to pick the 1.0.4
+version. RPMs for the gsm library can be found for FC1 and FC2 at the
+<A href="http://freshrpms.net">FreshRPMS</A> site. An RPM for RH9 can be built
+by downloading the src-rpm for the FC1 version.
 <P>
 Download the SvxLink RPMS using the
 <A href="https://sourceforge.net/project/showfiles.php?group_id=84813">
 SourceForge download system
 </A>. Make sure you pick the RPMS that are built for your
-system (fc1=Fedora Core 1, rh9=Red Hat 9). You will at least need the
-<em>libasync</em> and the <em>echolib</em> RPMS. To run the EchoLink client GUI,
-download the <em>qtel</em> package. If it is the svxlink server you are
-interrested in, download the <em>svxlink-server</em> package.
+system (fc1=Fedora Core 1, fc2=Fedora Core 2, rh9=Red Hat 9). You will at least
+need the <em>libasync</em> and the <em>echolib</em> RPMS. To run the EchoLink
+client GUI, download the <em>qtel</em> package. If it is the svxlink server you
+are interrested in, download the <em>svxlink-server</em> package.
 <P>
-Install all of the above mentioned packages (libsigc++, libasync, echolib,
+Install all of the above mentioned packages (libsigc++, gsm, libasync, echolib,
 qtel and/or svxlink-server) on your system using the "rpm -Uvh" command.
 <P>
 If you are going to run the svxlink server, check out the configuration

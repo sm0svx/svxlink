@@ -28,6 +28,7 @@ this list will grow in time):
 <UL>
   <LI>Red Hat Linux 9</LI>
   <LI>Fedora Core 1</LI>
+  <LI>Fedora Core 2</LI>
 </UL>
 <P/>
 

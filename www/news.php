@@ -5,6 +5,25 @@
 
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>27 May 2004: <I>Version 040527 released</I></B>
+  <TD/></TR>
+  <TR><TD>
+    So, finally I have assembled a new release of SvxLink. One of the news is
+    improved support for Alsa OSS emulation. Binary packages are now also
+    available for Fedora Core 2.
+    <P>
+    Most work has gone into the development of the SvxLink server. It now can
+    act as a repeater, DTMF detection has been improved, CTCSS squelch has
+    been implemented, improved sound clips.
+    <P>
+    Unfortunately I have no real repeater hardware to try my software on so the
+    repeater logic has not been tested in a real situation. It would be really
+    interesting if someone would want to try it on real hardware.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>17 Apr 2004: <I>Good and bad news</I></B>
   <TD/></TR>
   <TR><TD>
@@ -89,7 +108,7 @@
   <TR><TD><BR/></TD></TR>
 
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
-    <B>03 Jul 2003: <I>Project has been registerad at SourceForge</I></B>
+    <B>03 Jul 2003: <I>Project has been registered at SourceForge</I></B>
   <TD/></TR>
   <TR><TD>
     The project has now been registered at
