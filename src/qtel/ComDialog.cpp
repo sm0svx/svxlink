@@ -195,17 +195,8 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
     {
       return;
     }
+    rem_audio_fifo->stopOutput(false);
   }
-  /*
-  else
-  {
-    printf("Sound device is NOT full duplex capable\n");
-    if (!openAudioDevice(AudioIO::MODE_WR))
-    {
-      return;
-    }
-  }
-  */
   
   QObject::connect(
       reinterpret_cast<QObject *>(connect_button), SIGNAL(clicked()),
