@@ -12,8 +12,8 @@
 using namespace std;
 
 
-MsgHandler::MsgHandler(void)
-  : file(-1)
+MsgHandler::MsgHandler(const string& base_dir)
+  : file(-1), base_dir(base_dir)
 {
   
 }
@@ -83,7 +83,8 @@ void MsgHandler::playNextMsg(void)
     
   MsgQueueItem& msg = msg_queue.front();
   
-  file = ::open((msg.context + "/" + msg.msg + ".raw").c_str(), O_RDONLY);
+  file = ::open((base_dir + "/" + msg.context + "/" + msg.msg + ".raw").c_str(),
+      	      	O_RDONLY);
   if (file == -1)
   {
     file = ::open(("Default/" + msg.msg + ".raw").c_str(), O_RDONLY);

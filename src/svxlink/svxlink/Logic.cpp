@@ -145,6 +145,7 @@ bool Logic::initialize(void)
 {
   string rx_name;
   string tx_name;
+  string sounds;
   
   if (!cfg().getValue(name(), "RX", rx_name))
   {
@@ -155,6 +156,12 @@ bool Logic::initialize(void)
   if (!cfg().getValue(name(), "TX", tx_name))
   {
     cerr << "*** Error: Config variable " << name() << "/TX not set\n";
+    goto cfg_failed;
+  }
+  
+  if (!cfg().getValue(name(), "SOUNDS", sounds))
+  {
+    cerr << "*** Error: Config variable " << name() << "/SOUNDS not set\n";
     goto cfg_failed;
   }
   
@@ -178,7 +185,7 @@ bool Logic::initialize(void)
   }
   tx().allSamplesFlushed.connect(slot(this, &Logic::allTxSamplesFlushed));
   
-  msg_handler = new MsgHandler;
+  msg_handler = new MsgHandler(sounds);
   msg_handler->writeAudio.connect(slot(m_tx, &Tx::transmitAudio));
   msg_handler->allMsgsWritten.connect(slot(this, &Logic::allMsgsWritten));
   tx().transmitBufferFull.connect(

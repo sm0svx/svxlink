@@ -8,7 +8,7 @@
 class MsgHandler : public SigC::Object
 {
   public:
-    MsgHandler(void);
+    MsgHandler(const std::string& base_dir);
     ~MsgHandler(void) {}
     
     void playMsg(const std::string& context, const std::string& msg);
@@ -35,6 +35,7 @@ class MsgHandler : public SigC::Object
     
     std::list<MsgQueueItem> msg_queue;
     int       	      	    file;
+    std::string       	    base_dir;
     
     void playNextMsg(void);
     void writeFromFile(void);
