@@ -168,7 +168,18 @@ variable for this logic core to be activated.
   <DT>IDENT_INTERVAL</DT>
   <DD>
     The number of seconds between identification.
-  </DD>  
+  </DD>
+  
+  <DT>EXEC_CMD_ON_SQL_CLOSE</DT>
+  <DD>
+    Specify a time, in milliseconds, after squelch close after which entered
+    DTMF digits will be executed as a command without the need to send the
+    # character. This really only is of use when using a radio that it is
+    difficult to send DTMF digits from, like the Yaesu VX-2 handheld.
+    The down side of enabling this option is that the DTMF detection some
+    times false trigger on voice. This can cause interresting situations
+    when all of a sudden a module gets activated.
+  </DD>
 </DL>
 
 The next section is the <b>RepeaterLogic</b> section. This section contains
@@ -210,6 +221,17 @@ config variable for this logic core to be activated.
     default is /usr/share/svxlink/sounds.
   </DD>
   
+  <DT>EXEC_CMD_ON_SQL_CLOSE</DT>
+  <DD>
+    Specify a time, in milliseconds, after squelch close after which entered
+    DTMF digits will be executed as a command without the need to send the
+    # character. This really only is of use when using a radio that it is
+    difficult to send DTMF digits from, like the Yaesu VX-2 handheld.
+    The down side of enabling this option is that the DTMF detection some
+    times false trigger on voice. This can cause interresting situations
+    when all of a sudden a module gets activated.
+  </DD>
+
   <DT>RGR_SOUND_DELAY</DT>
   <DD>
     The number of milliseconds to wait after the squelch has been closed before
@@ -358,8 +380,16 @@ Specific configuration variables for the <b>Parrot</b> module.
 <DL>
   <DT>FIFO_LEN</DT>
   <DD>
-  The length, in seconds, of the FIFO (First In First Out) audio buffer where
-  audio is recorded to.
+    The length, in seconds, of the FIFO (First In First Out) audio buffer where
+    audio is recorded to.
+  </DD>
+  
+  <DT>REPEAT_DELAY</DT>
+  <DD>
+    Specify a time, in milliseconds, that the parrot module will wait after
+    squelch close before playing back the recorded message. This is mostly a
+    way to prevent the parrot module to start sending if the squlech momentarily
+    closes on weak signals.
   </DD>
 </DL>
 
@@ -398,6 +428,24 @@ Specific configuration variables for the <b>EchoLink</b> module.
   <DT>LOCATION</DT>
   <DD>
     The location of the station.
+  </DD>
+
+  <DT>MAX_QSOS</DT>
+  <DD>
+    The maximum number of stations that can participate in a conference QSO
+    on this node. If more stations try to connect, the connect request will
+    be rejected.
+  </DD>
+
+  <DT>MAX_CONNECTIONS</DT>
+  <DD>
+    When more stations than specified in MAX_QSOS try to connect, a connection
+    will temporarily be established long enough to play a message telling the
+    remote station that the connection was rejected. The connection is then
+    immediately terminated.
+    If the number of connections exceeds MAX_CONNECTIONS, the connect request
+    is just ignored. This variable is typically set to MAX_QSOS+1 or more if
+    using a large number for MAX_QSOS.
   </DD>
 
   <DT>DESCRIPTION</DT>
