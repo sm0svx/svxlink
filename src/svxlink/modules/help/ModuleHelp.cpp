@@ -43,7 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/MODULE_HELP.h>
+#include <version/SVXLINK.h>
 
 
 
@@ -135,7 +135,7 @@ ModuleHelp::ModuleHelp(void *dl_handle, Logic *logic, const string& cfg_name)
   : Module(dl_handle, logic, cfg_name)
 {
   cout << "\tModule " << name()
-       << " v" MODULE_HELP_VERSION " starting...\n";
+       << " v" SVXLINK_VERSION " starting...\n";
 
 } /* ModuleHelp */
 

@@ -46,7 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/MODULE_PARROT.h>
+#include <version/SVXLINK.h>
 
 
 
@@ -140,7 +140,7 @@ ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
   : Module(dl_handle, logic, cfg_name), fifo(30*8000), squelch_is_open(false)
 {
   cout << "\tModule " << name()
-       << " v" MODULE_PARROT_VERSION " starting...\n";
+       << " v" SVXLINK_VERSION " starting...\n";
   
   fifo.stopOutput(true);
   fifo.writeSamples.connect(slot(this, &ModuleParrot::audioFromFifo));
