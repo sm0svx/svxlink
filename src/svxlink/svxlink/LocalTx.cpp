@@ -255,6 +255,7 @@ void LocalTx::transmit(bool do_transmit)
       short samples[8000];
       memset(samples, 0, sizeof(samples));
       transmitAudio(samples, 8000 * tx_delay / 1000);
+      flushSamples();
     }
     
     transmitBufferFull(false);
