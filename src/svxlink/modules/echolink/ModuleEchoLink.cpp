@@ -813,7 +813,7 @@ void ModuleEchoLink::onAudioReceived(short *samples, int count)
  */
 void ModuleEchoLink::getDirectoryList(Timer *timer)
 {
-  cout << "Refreshing directory list...\n";
+  //cout << "Refreshing directory list...\n";
   dir->getCalls();
   delete dir_refresh_timer;
   dir_refresh_timer = new Timer(600000);
