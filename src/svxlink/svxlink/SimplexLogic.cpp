@@ -36,6 +36,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <stdio.h>
 
+#include <iostream>
+
 
 /****************************************************************************
  *
@@ -65,6 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 
 
 
@@ -117,7 +120,8 @@ using namespace std;
 
 
 SimplexLogic::SimplexLogic(Async::Config& cfg, const string& name)
-  : Logic(cfg, name), pending_transmit(false), squelch_is_open(false)
+  : Logic(cfg, name), pending_transmit(false), squelch_is_open(false),
+    tx_timeout_occured(false)
 {
 
 } /* SimplexLogic::SimplexLogic */
@@ -139,6 +143,8 @@ bool SimplexLogic::initialize(void)
   string callsign;
   cfg().getValue(name(), "CALLSIGN", callsign);
   
+  tx().txTimeout.connect(slot(this, &SimplexLogic::txTimeout));
+  
   playMsg("online");
   if (!callsign.empty())
   {
@@ -155,26 +161,43 @@ void SimplexLogic::transmit(bool do_transmit)
   printf("transmit=%s\n", do_transmit ? "true" : "false");
   if (do_transmit)
   {
-    if (!squelch_is_open)
+    if (!tx_timeout_occured)
     {
-      printf("*** Squelch is NOT open. Transmitting...\n");
-      rx().mute(true);
-      Logic::transmit(true);
-    }
-    else
-    {
-      printf("*** Pending transmit request...\n");
-      pending_transmit = true;
+      if (!squelch_is_open)
+      {
+	printf("Squelch is NOT open. Transmitting...\n");
+	rx().mute(true);
+	Logic::transmit(true);
+      }
+      else
+      {
+	printf("Pending transmit request...\n");
+	pending_transmit = true;
+      }
     }
   }
   else
   {
-    //pending_transmit = false;
+    pending_transmit = false;
+    printf("Resetting tx timeout timer\n");
+    tx_timeout_occured = false;
     Logic::transmit(false);
     rx().mute(false);
   }
 } /* SimplexLogic::transmit */
 
+
+int SimplexLogic::transmitAudio(short *samples, int count)
+{
+  if (!tx_timeout_occured)
+  {
+    return Logic::transmitAudio(samples, count);
+  }
+  else
+  {
+    return count;
+  }
+} /* SimplexLogic::transmitAudio */
 
 
 
@@ -230,20 +253,20 @@ void SimplexLogic::squelchOpen(bool is_open)
   
   if (!is_open && pending_transmit)
   {
-    printf("*** Executing pending transmit\n");
+    printf("Executing pending transmit\n");
     pending_transmit = false;
     transmit(true);
   }
-  
-  /*
-  if (active_module != 0)
-  {
-    active_module->squelchOpen(is_open);
-  }
-  */
-} /* Logic::squelchOpen */
+} /* SimplexLogic::squelchOpen */
 
 
+void SimplexLogic::txTimeout(void)
+{
+  tx_timeout_occured = true;
+  Logic::transmit(false);
+  clearPendingSamples();
+  rx().mute(false);
+} /* SimplexLogic::txTimeout */
 
 
 

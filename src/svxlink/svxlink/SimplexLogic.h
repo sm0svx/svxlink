@@ -139,15 +139,18 @@ class SimplexLogic : public Logic
     
     bool initialize(void);
     void transmit(bool do_transmit);
+    int transmitAudio(short *samples, int count);
 
   protected:
     
   private:
+    bool      	  pending_transmit;
+    bool      	  squelch_is_open;
+    bool      	  tx_timeout_occured;
+    
     void squelchOpen(bool is_open);
-    
-    bool pending_transmit;
-    bool squelch_is_open;
-    
+    void txTimeout(void);
+
 };  /* class SimplexLogic */
 
 
