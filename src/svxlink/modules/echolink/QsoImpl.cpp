@@ -392,7 +392,6 @@ void QsoImpl::onStateChange(Qso::State state)
 	module->playMsg("disconnected");
 	module->playSilence(500);
       }
-      //destroyMe(this);
       destroy_timer = new Timer(5000);
       destroy_timer->expired.connect(slot(this, &QsoImpl::destroyMeNow));
       break;
