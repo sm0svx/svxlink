@@ -132,7 +132,7 @@ class ModuleEchoLink : public Module
     EchoLink::Directory *dir;
     EchoLink::Qso     	*qso;
     Async::Timer      	*dir_refresh_timer;
-    std::string       	callsign;
+    std::string       	mycall;
     std::string       	sysop_name;
     std::string       	description;
     std::string       	allow_ip;

@@ -44,7 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/MODULE_ECHOLINK.h>
+#include <version/SVXLINK.h>
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
 #include <EchoLinkDirectory.h>
@@ -148,7 +148,7 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
     remote_activation(false), pending_connect_id(-1)
 {
   cout << "\tModule " << name()
-       << " v" MODULE_ECHOLINK_VERSION " starting...\n";
+       << " v" SVXLINK_VERSION " starting...\n";
   
 } /* ModuleEchoLink */
 
@@ -173,12 +173,12 @@ bool ModuleEchoLink::initialize(void)
     return false;
   }
   
-  if (!cfg().getValue(cfgName(), "CALLSIGN", callsign))
+  if (!cfg().getValue(cfgName(), "CALLSIGN", mycall))
   {
     cerr << "*** Error: Config variable " << cfgName() << "/CALLSIGN not set\n";
     return false;
   }
-  if (callsign == "MYCALL-L")
+  if (mycall == "MYCALL-L")
   {
     cerr << "*** Error: Please set the EchoLink callsign (" << cfgName()
       	 << "/CALLSIGN) to a real callsign\n";
@@ -230,7 +230,7 @@ bool ModuleEchoLink::initialize(void)
   }
   
     // Initialize directory server communication
-  dir = new Directory(server, callsign, password, location);
+  dir = new Directory(server, mycall, password, location);
   dir->statusChanged.connect(slot(this, &ModuleEchoLink::onStatusChanged));
   dir->stationListUpdated.connect(
       	  slot(this, &ModuleEchoLink::onStationListUpdated));
@@ -645,7 +645,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   }
   
     // Create a new Qso object to accept the connection
-  qso = new Qso(station->ip(), callsign, sysop_name, description);
+  qso = new Qso(station->ip(), mycall, sysop_name, description);
   if (!qso->initOk())
   {
     delete qso;
@@ -880,7 +880,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
 {
   assert(qso == 0);
   
-  qso = new Qso(station->ip(), callsign, sysop_name, description);
+  qso = new Qso(station->ip(), mycall, sysop_name, description);
   if (!qso->initOk())
   {
     delete qso;
