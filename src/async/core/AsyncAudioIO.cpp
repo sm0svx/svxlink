@@ -216,7 +216,7 @@ bool AudioIO::open(Mode mode)
   if (open_ok)
   {
     io_mode = mode;
-    if ((mode == MODE_RD) || (mode == MODE_RDWR))
+    if ((io_mode == MODE_RD) || (io_mode == MODE_RDWR))
     {
       read_con = audio_dev->audioRead.connect(audioRead.slot());
     }
@@ -234,15 +234,16 @@ void AudioIO::close(void)
     return;
   }
   
-  io_mode = MODE_NONE;
-  audio_dev->close(); 
-  
-  write_fifo->clear();
-  
   if ((io_mode == MODE_RD) || (io_mode == MODE_RDWR))
   {
     read_con.disconnect();
   }
+  
+  io_mode = MODE_NONE;
+  
+  audio_dev->close(); 
+  
+  write_fifo->clear();
   
   do_flush = false;
   
