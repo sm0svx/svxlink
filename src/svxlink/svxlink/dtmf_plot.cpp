@@ -32,8 +32,9 @@ class BarPlot : public QWidget
     BarPlot(QWidget *parent, int bar_cnt) : QWidget(parent), bars(bar_cnt)
     {
       setMinimumSize(bar_cnt, 10);
-      setSizePolicy(QSizePolicy::MinimumExpanding,
-      	      	    QSizePolicy::MinimumExpanding);
+      QSizePolicy size_policy(QSizePolicy::MinimumExpanding,
+      	      	      	      QSizePolicy::MinimumExpanding);
+      setSizePolicy(size_policy);
       setBackgroundColor(black);
     }
     ~BarPlot(void) {}
@@ -105,16 +106,16 @@ class Det : public ToneDetector
 void detValueChanged(ToneDetector *tdet, double value)
 {
   Det *det = dynamic_cast<Det*>(tdet);
-  bar_plot->setBar(det->index, (int)(value / 2500000000.0));
-  //bar_plot->setBar(det->index, (int)(value / 15000));
+  //bar_plot->setBar(det->index, (int)(value / 2500000000.0));
+  bar_plot->setBar(det->index, (int)(value / 100000.0));
 }
 
 
 void overtoneValueChanged(ToneDetector *tdet, double value)
 {
   Det *det = dynamic_cast<Det*>(tdet);
-  overtone_plot->setBar(det->index, (int)(value / 2500000000.0));
-  //overtone_plot->setBar(det->index, (int)(value / 15000));
+  //overtone_plot->setBar(det->index, (int)(value / 2500000000.0));
+  overtone_plot->setBar(det->index, (int)(value / 100000.0));
 }
 
 
@@ -178,25 +179,33 @@ int update_peak_meter(short *samples, int count)
 } /*  */
 
 
+int fq_to_k(int N, int fq)
+{
+  int k = (int)(0.5 + fq * (float)N / 8000.0);
+  //printf("k=%d\n", k);
+  return k;
+}
+
 int main(int argc, char **argv)
 {
-  //QApplication app(argc, argv);
   QtApplication app(argc, argv);
   
-  const int start_k = 15;
-  const int end_k = 50;
+  const int basetone_N = 205;
+  const int overtone_N = 201;
+  const int start_k = fq_to_k(basetone_N, 697) - 3; /*15*/
+  const int end_k = fq_to_k(basetone_N, 1633) + 3; /*50*/
   const int start_ko = 32;
   const int end_ko = 85;
+    
+  dtmf_k.insert(fq_to_k(basetone_N, 697)-start_k);
+  dtmf_k.insert(fq_to_k(basetone_N, 770)-start_k);
+  dtmf_k.insert(fq_to_k(basetone_N, 852)-start_k);
+  dtmf_k.insert(fq_to_k(basetone_N, 941)-start_k);
   
-  dtmf_k.insert(18-start_k);
-  dtmf_k.insert(20-start_k);
-  dtmf_k.insert(22-start_k);
-  dtmf_k.insert(24-start_k);
-  
-  dtmf_k.insert(31-start_k);
-  dtmf_k.insert(34-start_k);
-  dtmf_k.insert(38-start_k);
-  dtmf_k.insert(42-start_k);
+  dtmf_k.insert(fq_to_k(basetone_N, 1209)-start_k);
+  dtmf_k.insert(fq_to_k(basetone_N, 1336)-start_k);
+  dtmf_k.insert(fq_to_k(basetone_N, 1477)-start_k);
+  dtmf_k.insert(fq_to_k(basetone_N, 1633)-start_k);
   
   dtmf_ko.insert(35-start_ko);
   dtmf_ko.insert(39-start_ko);
@@ -224,14 +233,14 @@ int main(int argc, char **argv)
   
   for (int k=start_k; k<end_k+1; ++k)
   {
-    det = new Det(k-start_k,k*8000/205+8000/410, 205);
+    det = new Det(k-start_k,k*8000/basetone_N+4000/basetone_N, basetone_N);
     det->valueChanged.connect(slot(&detValueChanged));
     audio_io->audioRead.connect(slot(det, &ToneDetector::processSamples));
   }
   
   for (int k=start_ko; k<end_ko+1; ++k)
   {
-    det = new Det(k-start_ko,k*8000/201+8000/402, 201);
+    det = new Det(k-start_ko,k*8000/overtone_N+4000/overtone_N, overtone_N);
     det->valueChanged.connect(slot(&overtoneValueChanged));
     audio_io->audioRead.connect(slot(det, &ToneDetector::processSamples));
   }
