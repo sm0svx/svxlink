@@ -151,7 +151,7 @@ POST_TARGETS   = translations/qtel_sv.qm
 
 translations/qtel_%.qm:  translations/qtel_%.ts
 	$(ECHO) --- Creating translation file $(BOLD)$@$(NBOLD)...
-	lrelease $<
+	${QT_BIN}/lrelease $<
 
 
 #pre.txt:       nisse.txt
