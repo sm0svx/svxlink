@@ -43,6 +43,7 @@ An example of how to use the Template class
 
 #include <string>
 #include <list>
+#include <map>
 
 #include <sigc++/signal_system.h>
 
@@ -163,6 +164,7 @@ class Logic : public SigC::Object
     bool activateModule(Module *module);
     void deactivateModule(Module *module);
     Module *findModule(int id);
+    Module *findModule(const std::string& name);
     std::list<Module*> moduleList(void) const { return modules; }
     virtual void dtmfDigitDetected(char digit);
     const std::string& callsign(void) const { return m_callsign; }
@@ -186,27 +188,28 @@ class Logic : public SigC::Object
     void enableRgrSoundTimer(bool enable);
 
   private:
-    Async::Config     	    &m_cfg;
-    std::string       	    m_name;
-    Rx	      	      	    *m_rx;
-    Tx	      	      	    *m_tx;
-    MsgHandler	      	    *msg_handler;
-    Async::Timer      	    *write_msg_flush_timer;
-    Module    	      	    *active_module;
-    Async::SampleFifo 	    *module_tx_fifo;
-    std::list<Module*>	    modules;
-    std::string       	    received_digits;
-    std::string       	    m_callsign;
-    Async::Timer      	    *cmd_tmo_timer;
-    bool      	      	    logic_transmit;
-    std::list<std::string>  cmd_queue;
-    bool      	      	    anti_flutter;
-    char      	      	    prev_digit;
-    int      	      	    exec_cmd_on_sql_close;
-    Async::Timer      	    *exec_cmd_on_sql_close_timer;
-    Async::Timer      	    *rgr_sound_timer;
-    int       	      	    rgr_sound_delay;
-    float       	    report_ctcss;
+    Async::Config     	      	&m_cfg;
+    std::string       	      	m_name;
+    Rx	      	      	      	*m_rx;
+    Tx	      	      	      	*m_tx;
+    MsgHandler	      	      	*msg_handler;
+    Async::Timer      	      	*write_msg_flush_timer;
+    Module    	      	      	*active_module;
+    Async::SampleFifo 	      	*module_tx_fifo;
+    std::list<Module*>	      	modules;
+    std::string       	      	received_digits;
+    std::string       	      	m_callsign;
+    Async::Timer      	      	*cmd_tmo_timer;
+    bool      	      	      	logic_transmit;
+    std::list<std::string>    	cmd_queue;
+    bool      	      	      	anti_flutter;
+    char      	      	      	prev_digit;
+    int      	      	      	exec_cmd_on_sql_close;
+    Async::Timer      	      	*exec_cmd_on_sql_close_timer;
+    Async::Timer      	      	*rgr_sound_timer;
+    int       	      	      	rgr_sound_delay;
+    float       	      	report_ctcss;
+    std::map<int, std::string>	macros;
     
     void allModuleSamplesWritten(void);
     void transmitCheck(void);
@@ -215,6 +218,7 @@ class Logic : public SigC::Object
     void unloadModules(void);
     void cmdTimeout(Async::Timer *t);
     void processCommandQueue(void);
+    void processMacroCmd(std::string& cmd);
     void putCmdOnQueue(Async::Timer *t=0);
     void sendRgrSound(Async::Timer *t=0);
 

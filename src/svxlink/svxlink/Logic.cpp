@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <algorithm>
 #include <cctype>
+#include <cassert>
 
 
 /****************************************************************************
@@ -131,7 +132,10 @@ Logic::Logic(Config &cfg, const string& name)
     prev_digit('?'), exec_cmd_on_sql_close(0), exec_cmd_on_sql_close_timer(0),
     rgr_sound_timer(0), rgr_sound_delay(-1), report_ctcss(0)
 {
-
+  macros[0] = "EchoLink:9999";
+  macros[1] = "Parrot:0123456789";
+  macros[2] = "Nisse:0123456789";
+  
 } /* Logic::Logic */
 
 
@@ -376,6 +380,22 @@ Module *Logic::findModule(int id)
 } /* Logic::findModule */
 
 
+Module *Logic::findModule(const string& name)
+{
+  list<Module *>::iterator it;
+  for (it=modules.begin(); it!=modules.end(); ++it)
+  {
+    if ((*it)->name() == name)
+    {
+      return (*it);
+    }
+  }
+  
+  return 0;
+  
+} /* Logic::findModule */
+
+
 void Logic::dtmfDigitDetected(char digit)
 {
   printf("digit=%c\n", digit);
@@ -402,6 +422,11 @@ void Logic::dtmfDigitDetected(char digit)
     else if (digit == 'A')
     {
       anti_flutter = true;
+      prev_digit = '?';
+    }
+    else if (digit == 'D')
+    {
+      received_digits = "D";
       prev_digit = '?';
     }
     else if (received_digits.size() < 10)
@@ -766,6 +791,10 @@ void Logic::processCommandQueue(void)
 	active_module->reportState();
       }
     }
+    else if ((*it)[0] == 'D')
+    {
+      processMacroCmd(*it);
+    }
     else if (active_module != 0)
     {
       active_module->dtmfCmdReceived(*it);
@@ -792,6 +821,70 @@ void Logic::processCommandQueue(void)
   cmd_queue.clear();
   
 } /* Logic::processCommandQueue */
+
+
+void Logic::processMacroCmd(string& cmd)
+{
+  printf("Processing macro command: %s...\n", cmd.c_str());
+  assert(!cmd.empty() && (cmd[0] == 'D'));
+  cmd.erase(0, 1);
+  if (cmd.empty())
+  {
+    cerr << "*** Macro error: Empty command.\n";
+    playMsg("operation_failed");
+    return;
+  }
+  
+  map<int, string>::iterator it = macros.find(atoi(cmd.c_str()));
+  if (it == macros.end())
+  {
+    cerr << "*** Macro error: Macro " << cmd << " not found.\n";
+    playMsg("operation_failed");
+    return;
+  }
+
+  string macro(it->second);
+  string::iterator colon = find(macro.begin(), macro.end(), ':');
+  if (colon == macro.end())
+  {
+    cerr << "*** Macro error: No colon found in macro (" << macro << ").\n";
+    playMsg("operation_failed");
+    return;
+  }
+  
+  string module_name(macro.begin(), colon);
+  string module_cmd(colon+1, macro.end());
+  Module *module = findModule(module_name);
+  if (module == 0)
+  {
+    cerr << "*** Macro error: Module " << module_name << " not found.\n";
+    playMsg("operation_failed");
+    return;
+  }
+  
+  if (active_module == 0)
+  {
+    if (!activateModule(module))
+    {
+      cerr << "*** Macro error: Activation of module " << module_name
+           << " failed.\n";
+      playMsg("operation_failed");
+      return;
+    }
+  }
+  else if (active_module != module)
+  {
+    cerr << "*** Macro error: Another module is active ("
+         << active_module->name() << ").\n";
+    playMsg("operation_failed");
+    playMsg("active_module");
+    active_module->playModuleName();
+    return;
+  }
+  
+  module->dtmfCmdReceived(module_cmd);
+
+} /* Logic::processMacroCmd */
 
 
 void Logic::putCmdOnQueue(Timer *t)
