@@ -271,7 +271,30 @@ class Serial : public SigC::Object
      */
     bool stopInput(bool stop);
 
+    /**
+     * @brief 	Set the state of one of the output pins in the serial port
+     * @param 	pin The pin to set. See @ref Serial::OutPin.
+     * @param 	set If \em true the pin is set, if \em false the pin is cleared
+     * @return	Return \em true on success or else \em false on failue. On
+     *	      	failure the global variable \em errno will be set to indicate
+     *	      	the cause of the error.
+     *
+     * Use this function to control one of the output pins in the serial port.
+     * For a list of available pins see @ref Serial::OutPin.
+     */
     bool setPin(OutPin pin, bool set);
+    
+    /**
+     * @brief 	Get the state of one of the input pins in the serial port
+     * @param 	pin   	The pin to get the state of. See @ref Serial::InPin.
+     * @param 	is_set	The result will be returned in this variable.
+     * @return	Return \em true on success or else \em false on failue. On
+     *	      	failure the global variable \em errno will be set to indicate
+     *	      	the cause of the error.
+     *
+     * Use this function to read the state of one of the input pins in the
+     * serial port. For a list of available pins see @ref Serial::InPin.
+     */
     bool getPin(InPin pin, bool &is_set);
 
     /**

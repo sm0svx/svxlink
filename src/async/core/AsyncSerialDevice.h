@@ -119,16 +119,43 @@ class FdWatch;
 class SerialDevice : public SigC::Object
 {
   public:
+    /**
+     * @brief 	Retrieve a SerialDevice object and open the port
+     * @param 	port The name of the port to open
+     * @return	Returns a SerialDevice object or 0 on failure
+     *
+     * Use this static function to retrieve a SerialDevice object. If
+     * one does not already exist, a new one will be created and
+     * the serial port will be opened.
+     */
     static SerialDevice *open(const std::string& port);
+
+    /**
+     * @brief 	Release a SerialDevice object and close the port
+     * @param 	dev The SerialDevice object to release
+     * @return	Return \em true on success or \em false on failure
+     *
+     * Use this static function to release a SerialDevice object. If
+     * there are no more users left, the given object will be deleted
+     * and the serial port closed.
+     */
     static bool close(SerialDevice *dev);
     
+    /**
+     * @brief 	Return the file descriptor associated with this serial device
+     * @return	Returns the file descriptor associated with this serial device
+     */
     int desc(void) { return fd; }
     
-    
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	A signal that is emitted when there is data to read
+     * @param 	buf   A buffer containing the data that has been read
+     * @param 	count The number of bytes that was read
+     * @note  	For maximum buffer size see @ref Serial::READ_BUFSIZE
+     * 
+     * This signal is emitted whenever one or more characters has been
+     * received on the serial port. The buffer is always null-terminated
+     * but the null is not included in the count.
      */
     SigC::Signal2<void, char*, int> charactersReceived;
     
