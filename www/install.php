@@ -307,6 +307,13 @@ variable for this logic core to be activated.
     times false trigger on voice. This can cause interresting situations
     when all of a sudden a module gets activated.
   </DD>
+  
+  <DT>RGR_SOUND_DELAY</DT>
+  <DD>
+    The number of milliseconds to wait after the squelch has been closed before
+    a roger beep is played. The beep can be disabled by specifying a value
+    of -1.
+  </DD>  
 </DL>
 
 The next section is the <b>RepeaterLogic</b> section. This section contains
@@ -362,7 +369,8 @@ config variable for this logic core to be activated.
   <DT>RGR_SOUND_DELAY</DT>
   <DD>
     The number of milliseconds to wait after the squelch has been closed before
-    a roger beep is played.
+    a roger beep is played. The beep can be disabled by specifying a value
+    of -1.
   </DD>
   
   <DT>IDLE_TIMEOUT</DT>
