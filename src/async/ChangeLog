@@ -1,4 +1,4 @@
- 0.10.0 -- ?? Sep 2004
+ 0.10.0 -- 26 Sep 2004
 ----------------------
 
 * Now the AudioIO object is really checking for full duplex capablility.

@@ -1,4 +1,4 @@
- 0.3.0 -- ?? Sep 2004
+ 0.3.0 -- 26 Sep 2004
 ----------------------
 
 * Added anti flutter to the DTMF detection code. The anti flutter code is
