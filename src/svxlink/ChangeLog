@@ -18,6 +18,8 @@
 * ModuleEchoLink: Now reports the number of connected stations when an
   identification is manually triggered by a "*".
 
+* Now announcing the CTCSS frequency if REPORT_CTCSS is set.
+
 
 
  0.3.0 -- 26 Sep 2004
