@@ -1,10 +1,12 @@
- 0.9.1 -- ?? Jul 2004
+ 0.10.0 -- ?? Aug 2004
 ----------------------
 
 * Now the AudioIO object is really checking for full duplex capablility.
 
 * Bugfix: The application would crash if the AudioIO object were deleted
   and then recreated.
+
+* New class "Serial" for serial port usage.
 
 
 
