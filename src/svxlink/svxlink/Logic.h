@@ -164,12 +164,11 @@ class Logic : public SigC::Object
     std::list<Module*> moduleList(void) const { return modules; }
     virtual void dtmfDigitDetected(char digit);
 
+    Async::Config &cfg(void) const { return m_cfg; }
     Rx &rx(void) const { return *m_rx; }
     Tx &tx(void) const { return *m_tx; }
     
-  protected:
-    Async::Config &cfg(void) const { return m_cfg; }
-    
+  protected:    
     virtual void squelchOpen(bool is_open) {}
     //virtual int audioReceived(short *samples, int count) { return count; }
     
