@@ -126,7 +126,8 @@ using namespace EchoLink;
 QsoImpl::QsoImpl(const Async::IpAddress& ip, ModuleEchoLink *module)
   : Qso(ip), module(module), msg_handler(0), msg_pacer(0), init_ok(false),
     reject_qso(false), last_message(""), last_info_msg(""), idle_timer(0),
-    disc_when_done(false), idle_timer_cnt(0), idle_timeout(0)
+    disc_when_done(false), idle_timer_cnt(0), idle_timeout(0), 
+    destroy_timer(0)
 {
   assert(module != 0);
   
@@ -204,6 +205,7 @@ QsoImpl::~QsoImpl(void)
   delete msg_handler;
   delete msg_pacer;
   delete idle_timer;
+  delete destroy_timer;
 } /* QsoImpl::~QsoImpl */
 
 
@@ -390,7 +392,9 @@ void QsoImpl::onStateChange(Qso::State state)
 	module->playMsg("disconnected");
 	module->playSilence(500);
       }
-      destroyMe(this);
+      //destroyMe(this);
+      destroy_timer = new Timer(5000);
+      destroy_timer->expired.connect(slot(this, &QsoImpl::destroyMeNow));
       break;
     case Qso::STATE_CONNECTING:
       cout << "CONNECTING\n";
@@ -436,6 +440,12 @@ void QsoImpl::idleTimeoutCheck(Timer *t)
     msg_handler->end();
   }
 } /* idleTimeoutCheck */
+
+
+void QsoImpl::destroyMeNow(Timer *t)
+{
+  destroyMe(this);
+} /* destroyMeNow */
 
 
 

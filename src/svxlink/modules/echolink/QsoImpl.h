@@ -254,12 +254,14 @@ class QsoImpl : public EchoLink::Qso
     bool      	      	disc_when_done;
     int       	      	idle_timer_cnt;
     int       	      	idle_timeout;
+    Async::Timer	*destroy_timer;
     
     void allRemoteMsgsWritten(void);
     void onInfoMsgReceived(const std::string& msg);
     void onChatMsgReceived(const std::string& msg);
     void onStateChange(Qso::State state);
     void idleTimeoutCheck(Async::Timer *t);
+    void destroyMeNow(Async::Timer *t);
 
 };  /* class QsoImpl */
 
