@@ -1,10 +1,15 @@
 /**
 @file	 AsyncConfig.h
-@brief   A_brief_description_for_this_file
+@brief   A class for reading configuration files that is on the famous
+      	 INI file format
 @author  Tobias Blomberg
 @date	 2004-03-17
 
-A_detailed_description_for_this_file
+This file contains a class that is used to read configuration files that is
+on the famous MS Windows INI file format. An example of a configuration file
+is shown below.
+
+\include test.cfg
 
 \verbatim
 Async - A library for programming event driven applications
@@ -113,11 +118,16 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	A class for reading configuration files that is on the famous
+      	INI file format
 @author Tobias Blomberg
-@date   2003-04-
+@date   2004-03-17
 
-A_detailed_class_description
+This class is used to read configuration files that is on the famous MS Windows
+INI file format. An example of a configuration file and how to use the class
+is shown below.
+
+\include test.cfg
 
 \include AsyncConfig_demo.cpp
 */
@@ -135,13 +145,21 @@ class Config
     ~Config(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Open the given config file
+     * @param 	name The name of the configuration file to open
+     * @return	Returns \em true on success or else \em false.
      */
-    
     bool open(const std::string& name);
     
+    /**
+     * @brief 	Get the value of the given configuration variable
+     * @param 	section The name of the section where the configuration
+     *	      	      	variable is located
+     * @param 	tag   	The name of the configuration variable to get
+     * @param 	value 	The value is returned in this argument. Any previous
+     *	      	      	contents is wiped
+     * @return	Returns \em true on success or else \em false on failure
+     */
     bool getValue(const std::string& section, const std::string& tag,
       	      	  std::string& value);
     
