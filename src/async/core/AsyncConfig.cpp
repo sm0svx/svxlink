@@ -144,13 +144,13 @@ Config::~Config(void)
 
 bool Config::open(const string& name)
 {
-  if (access(name.c_str(), R_OK | W_OK) != 0)
+  if (access(name.c_str(), R_OK) != 0)
   {
     //perror("Config::open");
     return false;
   }
   
-  file = fopen(name.c_str(), "r+");
+  file = fopen(name.c_str(), "r");
   if (file == 0)
   {
     perror("fopen");
