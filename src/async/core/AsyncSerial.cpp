@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/select.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 
 #include <cstdio>
 #include <cassert>
@@ -61,6 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "AsyncSerialDevice.h"
 #include "AsyncSerial.h"
 
 
@@ -136,10 +138,11 @@ using namespace Async;
  * Bugs:      
  *------------------------------------------------------------------------
  */
-Serial::Serial(const string& serial_port, int speed, Parity parity,
-      	       int bits, int stop_bits, Flow flow)
-  : serial_port(serial_port), speed(speed), parity(parity), bits(bits),
-    stop_bits(stop_bits), flow(flow), canonical(false), fd(-1), rd_watch(0)
+Serial::Serial(const string& serial_port)
+  : serial_port(serial_port), 
+    //speed(DEFAULT_SPEED), parity(DEFAULT_PARITY),
+    //bits(DEFAULT_BITS), stop_bits(DEFAULT_STOP_BITS), flow(DEFAULT_FLOW),
+    canonical(false), fd(-1), rd_watch(0), dev(0)
 {
 
 } /* Serial::Serial */
@@ -151,15 +154,15 @@ Serial::~Serial(void)
 } /* Serial::~Serial */
 
 
-
-bool Serial::open(void)
+bool Serial::setParams(int speed, Parity parity, int bits, int stop_bits,
+      	      	       Flow flow)
 {
-  if (fd != -1)
+  if (fd == -1)
   {
-    return true;
+    errno = EBADF;
+    return false;
   }
-  
-    /* Setup the serial port parameters */
+
   memset(&port_settings, 0, sizeof(port_settings));
   port_settings.c_iflag = INPCK   /* Perform parity checking */
       	      	      	| IGNPAR  /* Ignore characters with parity errors */
@@ -297,30 +300,6 @@ bool Serial::open(void)
     return false;
   }
   
-  fd = ::open(serial_port.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
-  if (fd == -1)
-  {
-    return false;
-  }
-  
-  if (tcflush(fd, TCIOFLUSH) == -1)
-  {
-    int errno_tmp = errno;
-    ::close(fd);
-    fd = -1;
-    errno = errno_tmp;
-    return false;
-  }
-  
-  if(tcgetattr(fd, &old_port_settings) == -1)
-  {
-    int errno_tmp = errno;
-    ::close(fd);
-    fd = -1;
-    errno = errno_tmp;
-    return false;
-  }
-  
   if (tcsetattr(fd, TCSANOW, &port_settings) == -1)
   {
     int errno_tmp = errno;
@@ -332,6 +311,25 @@ bool Serial::open(void)
   
   setCanonical(canonical);
   
+  return true;
+  
+} /* Serial::setParams */
+
+
+bool Serial::open(void)
+{
+  if (dev != 0)
+  {
+    return true;
+  }
+  
+  dev = SerialDevice::open(serial_port);
+  if (dev == NULL)
+  {
+    return false;
+  }
+  fd = dev->desc();
+    
   rd_watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
   rd_watch->activity.connect(slot(this, &Serial::onIncomingData));
   
@@ -342,7 +340,7 @@ bool Serial::open(void)
 
 bool Serial::close(void)
 {
-  if (fd == -1)
+  if (dev == 0)
   {
     return true;
   }
@@ -350,23 +348,11 @@ bool Serial::close(void)
   delete rd_watch;
   rd_watch = 0;
   
-  if (tcsetattr(fd, TCSANOW, &old_port_settings) == -1)
-  {
-    int errno_tmp = errno;
-    ::close(fd);
-    fd = -1;
-    errno = errno_tmp;
-    return false;
-  }
-  
-  if (::close(fd) == -1)
-  {
-    return false;
-  }
-  
+  bool success = SerialDevice::close(dev);
+  dev = 0;
   fd = -1;
   
-  return true;
+  return success;
   
 } /* Serial::close */
 
@@ -403,6 +389,35 @@ bool Serial::stopInput(bool stop)
 {
   return tcflow(fd, stop ? TCIOFF : TCION) == 0;
 } /* Serial::stopInput */
+
+
+bool Serial::setPin(OutPin pin, bool set)
+{
+  int the_pin;
+  
+  switch (pin)
+  {
+    case PIN_DTR:
+      the_pin = TIOCM_DTR;
+      break;
+      
+    case PIN_RTS:
+      the_pin = TIOCM_RTS;
+      break;
+    
+    default:
+      errno = EINVAL;
+      return false;
+  }
+  
+  if (ioctl(fd, set ? TIOCMBIS : TIOCMBIC, &the_pin) == -1)
+  {
+     return false;
+  }
+  
+  return true;
+  
+} /* Serial::setPin */
 
 
 

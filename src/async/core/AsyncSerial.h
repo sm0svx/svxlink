@@ -90,6 +90,7 @@ namespace Async
  ****************************************************************************/
 
 class FdWatch;
+class SerialDevice;
   
 
 /****************************************************************************
@@ -149,28 +150,50 @@ class Serial : public SigC::Object
     } Flow;
     
     /**
+     * @brief A type that defines the output pins in the serial port
+     */
+    typedef enum
+    {
+      PIN_RTS,	    ///< Request to send
+      PIN_DTR 	    ///< Data Terminal Ready
+    } OutPin;
+    
+    /**
      * @brief 	The maximum number of characters that can be read at once.
      */
     static const int READ_BUFSIZE = 1024;
+        
 
     /**
      * @brief 	Constuctor
      * @param 	serial_port The serial port to use
+     */
+    Serial(const std::string& serial_port);
+  
+    /**
+     * @brief 	Destructor
+     */
+    ~Serial(void);
+    
+    /**
+     * @brief 	Setup the serial port communications parameter
      * @param 	speed 	    The serial speed to use
      * @param 	parity	    The parity to use (see @ref Serial::Parity)
      * @param 	bits  	    The number of bits in each serial word
      * @param 	stop_bits   The number of stop bits to use
      * @param 	flow  	    The type of flow control to use
      *	      	      	    (see @ref Serial::Flow)
+     * @return	Return \em true on success or else \em false on failue. On
+     *	      	failure the global variable \em errno will be set to indicate
+     *	      	the cause of the error.
+     *
+     * This function is used to setup the serial communication parameters
+     * for the serial port. This must be done after calling the open
+     * function.
      */
-    Serial(const std::string& serial_port, int speed, Parity parity,
-      	   int bits, int stop_bits, Flow flow);
-  
-    /**
-     * @brief 	Destructor
-     */
-    ~Serial(void);
-  
+    bool setParams(int speed, Parity parity, int bits, int stop_bits,
+      	      	   Flow flow);
+    
     /**
      * @brief 	Open the serial port using the previously defined parameters
      * @return	Return \em true on success or else \em false on failue. On
@@ -237,6 +260,8 @@ class Serial : public SigC::Object
      */
     bool stopInput(bool stop);
 
+    bool setPin(OutPin pin, bool set);
+
     /**
      * @brief 	A signal that is emitted when there is data to read
      * @param 	buf   A buffer containing the data that has been read
@@ -254,17 +279,13 @@ class Serial : public SigC::Object
     
   private:    
     const std::string	serial_port;
-    int       	      	speed;
-    Parity    	      	parity;
-    int       	      	bits;
-    int       	      	stop_bits;
-    Flow        	flow;
     bool      	      	canonical;
     
     int       	      	fd;
     struct termios    	port_settings;
     struct termios    	old_port_settings;
     FdWatch   	      	*rd_watch;
+    SerialDevice      	*dev;
     
     void onIncomingData(FdWatch *watch);
 

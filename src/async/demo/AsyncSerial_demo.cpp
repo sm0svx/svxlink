@@ -11,8 +11,7 @@ class MyClass : public SigC::Object
   public:
     MyClass(void)
     {
-      serial = new Serial("/dev/ttyS0", 9600, Serial::PARITY_NONE, 8, 1,
-      	      	      	  Serial::FLOW_NONE);
+      serial = new Serial("/dev/ttyS0");
       serial->charactersReceived.connect(
       	  slot(this, &MyClass::onCharactersReceived));
 
@@ -21,6 +20,7 @@ class MyClass : public SigC::Object
       	perror("Open serial port failed");
 	exit(1);
       }
+      serial->setParams(9600, Serial::PARITY_NONE, 8, 1, Serial::FLOW_NONE);
       
       serial->write("Hello, serial\n", 14);
     }

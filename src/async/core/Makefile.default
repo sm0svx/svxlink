@@ -92,7 +92,7 @@ LIBSRC		= AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp \
 		  AsyncIpAddress.cpp AsyncDnsLookup.cpp AsyncTcpClient.cpp \
 		  AsyncAudioIO.cpp AsyncUdpSocket.cpp AsyncTcpServer.cpp \
 		  AsyncTcpConnection.cpp AsyncConfig.cpp AsyncAudioDevice.cpp \
-		  AsyncSampleFifo.cpp AsyncSerial.cpp
+		  AsyncSampleFifo.cpp AsyncSerial.cpp AsyncSerialDevice.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
 LIB_LIBS	= -lc -lsigc -lpthread -lm
