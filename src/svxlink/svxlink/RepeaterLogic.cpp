@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <cstdio>
+#include <string>
 
 
 /****************************************************************************
@@ -44,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncTimer.h>
+#include <AsyncConfig.h>
 
 
 /****************************************************************************
@@ -64,6 +66,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+using namespace std;
 using namespace Async;
 
 
@@ -117,8 +120,8 @@ using namespace Async;
 
 
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
-  : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(10000),
-    blip_timer(0)
+  : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(60000),
+    blip_timer(0), blip_delay(0)
 {
 
 } /* RepeaterLogic::RepeaterLogic */
@@ -135,6 +138,18 @@ bool RepeaterLogic::initialize(void)
   if (!Logic::initialize())
   {
     return false;
+  }
+  
+  string blip_delay_str;
+  if (cfg().getValue(name(), "BLIP_DELAY", blip_delay_str))
+  {
+    blip_delay = atoi(blip_delay_str.c_str());
+  }
+  
+  string idle_timeout_str;
+  if (cfg().getValue(name(), "IDLE_TIMEOUT", idle_timeout_str))
+  {
+    idle_timeout = atoi(idle_timeout_str.c_str());
   }
   
   tx().txTimeout.connect(slot(this, &RepeaterLogic::txTimeout));
@@ -274,8 +289,15 @@ void RepeaterLogic::squelchOpen(bool is_open)
   }
   else
   {
-    blip_timer = new Timer(500);
-    blip_timer->expired.connect(slot(this, &RepeaterLogic::sendBlip));
+    if (blip_delay > 0)
+    {
+      blip_timer = new Timer(blip_delay);
+      blip_timer->expired.connect(slot(this, &RepeaterLogic::sendBlip));
+    }
+    else
+    {
+      sendBlip();
+    }
   }
   setIdle(!is_open);
   

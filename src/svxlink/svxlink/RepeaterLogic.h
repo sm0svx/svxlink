@@ -150,13 +150,14 @@ class RepeaterLogic : public Logic
     Async::Timer  *up_timer;
     int      	  idle_timeout;
     Async::Timer  *blip_timer;
+    int       	  blip_delay;
     
     void identify(void);
     int audioReceived(short *samples, int count);
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);
     void setUp(bool up);
-    void sendBlip(Async::Timer *t);
+    void sendBlip(Async::Timer *t=0);
     void squelchOpen(bool is_open);
     void txTimeout(void);
     
