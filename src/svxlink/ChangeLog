@@ -18,7 +18,8 @@
 * ModuleEchoLink: Now reports the number of connected stations when an
   identification is manually triggered by a "*".
 
-* Now announcing the CTCSS frequency if REPORT_CTCSS is set.
+* Now announcing the CTCSS frequency at manual identification if
+  REPORT_CTCSS is set.
 
 * ModuleParrot bugfix: Leading zeros were skipped when reading back
   entered DTMF digits.
