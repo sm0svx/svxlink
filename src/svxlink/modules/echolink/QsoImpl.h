@@ -92,6 +92,7 @@ namespace Async
 
 class MsgHandler;
 class AudioPacer;
+class AsyncTimer;
 class ModuleEchoLink;
 
 
@@ -249,11 +250,15 @@ class QsoImpl : public EchoLink::Qso
     bool      	      	reject_qso;
     std::string       	last_message;
     std::string       	last_info_msg;
+    Async::Timer      	*idle_timer;
+    bool      	      	activity;
     
     void allRemoteMsgsWritten(void);
     void onInfoMsgReceived(const std::string& msg);
     void onChatMsgReceived(const std::string& msg);
     void onStateChange(Qso::State state);
+    void idleTimeoutCheck(Async::Timer *t);
+    void onIsReceiving(bool is_receiving);
 
 };  /* class QsoImpl */
 

@@ -125,7 +125,8 @@ using namespace EchoLink;
 
 QsoImpl::QsoImpl(const Async::IpAddress& ip, ModuleEchoLink *module)
   : Qso(ip), module(module), msg_handler(0), msg_pacer(0), init_ok(false),
-    reject_qso(false), last_message(""), last_info_msg("")
+    reject_qso(false), last_message(""), last_info_msg(""), idle_timer(0),
+    activity(false)
 {
   assert(module != 0);
   
@@ -166,6 +167,14 @@ QsoImpl::QsoImpl(const Async::IpAddress& ip, ModuleEchoLink *module)
     return;
   }
   
+  string idle_timeout_str;
+  if (cfg.getValue(cfg_name, "LINK_IDLE_TIMEOUT", idle_timeout_str))
+  {
+    int idle_timeout = atoi(idle_timeout_str.c_str());
+    idle_timer = new Timer(idle_timeout, Timer::TYPE_PERIODIC);
+    idle_timer->expired.connect(slot(this, &QsoImpl::idleTimeoutCheck));
+  }
+  
   msg_handler = new MsgHandler(sound_base_dir, 8000);
   
   msg_pacer = new AudioPacer(8000, 160*4, 500);
@@ -182,9 +191,9 @@ QsoImpl::QsoImpl(const Async::IpAddress& ip, ModuleEchoLink *module)
   Qso::chatMsgReceived.connect(slot(this, &QsoImpl::onChatMsgReceived));
   Qso::stateChange.connect(slot(this, &QsoImpl::onStateChange));
   Qso::isReceiving.connect(bind(isReceiving.slot(), this));
+  Qso::isReceiving.connect(slot(this, &QsoImpl::onIsReceiving));
   Qso::audioReceived.connect(bind(audioReceived.slot(), this));
   Qso::audioReceivedRaw.connect(bind(audioReceivedRaw.slot(), this));
-
   
   init_ok = true;
   
@@ -195,6 +204,7 @@ QsoImpl::~QsoImpl(void)
 {
   delete msg_handler;
   delete msg_pacer;
+  delete idle_timer;
 } /* QsoImpl::~QsoImpl */
 
 
@@ -206,7 +216,9 @@ bool QsoImpl::initOk(void)
 
 int QsoImpl::sendAudio(short *buf, int len)
 {
-    /* FIXME: Buffer audio until the message has been written. */
+  activity = true;
+  
+    /* FIXME: Buffer audio until the message has been written ? */
   if (!msg_handler->isWritingMessage())
   {
     len = Qso::sendAudio(buf, len);
@@ -404,6 +416,26 @@ void QsoImpl::onStateChange(Qso::State state)
   }
 } /* onStateChange */
 
+
+void QsoImpl::idleTimeoutCheck(Timer *t)
+{
+  if (!activity)
+  {
+    cout << localCallsign() << ": EchoLink connection idle timeout. "
+      	 "Disconnecting...\n";
+    // FIXME: Play message
+    disconnect();
+  }
+  
+  activity = false;
+  
+} /* idleTimeoutCheck */
+
+
+void QsoImpl::onIsReceiving(bool is_receiving)
+{
+  activity = true;
+} /* onIsReceiving */
 
 
 /*
