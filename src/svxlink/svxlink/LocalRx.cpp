@@ -276,7 +276,7 @@ bool LocalRx::squelchIsOpen(void) const
 
 bool LocalRx::detect1750(int required_duration)
 {
-  det_1750 = new ToneDetector(1750, 100); // FIXME: Determine optimum N
+  det_1750 = new ToneDetector(1750, 330); // FIXME: Determine optimum N
   det_1750->activated.connect(slot(this, &LocalRx::activated1750));
   req_1750_duration = required_duration;
   audio_io->audioRead.connect(slot(det_1750, &ToneDetector::processSamples));
