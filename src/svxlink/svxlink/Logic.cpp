@@ -157,6 +157,7 @@ bool Logic::initialize(void)
   string tx_name;
   string sounds;
   string value;
+  string macro_section;
   list<string> macro_list;
   list<string>::iterator mlit;
   
@@ -199,11 +200,14 @@ bool Logic::initialize(void)
     report_ctcss = atof(value.c_str());
   }
   
-  macro_list = cfg().listSection("MACROS");
-  for (mlit=macro_list.begin(); mlit!=macro_list.end(); ++mlit)
+  if (cfg().getValue(name(), "MACROS", macro_section))
   {
-    cfg().getValue("MACROS", *mlit, value);
-    macros[atoi(mlit->c_str())] = value;
+    macro_list = cfg().listSection(macro_section);
+    for (mlit=macro_list.begin(); mlit!=macro_list.end(); ++mlit)
+    {
+      cfg().getValue(macro_section, *mlit, value);
+      macros[atoi(mlit->c_str())] = value;
+    }
   }
   
   loadModules();
