@@ -50,6 +50,7 @@ class Module : public SigC::Object
     void deactivateMe(void);
     Module *findModule(int id);
     std::list<Module*> moduleList(void);
+    const std::string& logicName(void) const;
 
   private:
     void      	      *m_dl_handle;

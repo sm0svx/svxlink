@@ -93,5 +93,9 @@ list<Module*> Module::moduleList(void)
 } /* Module::moduleList */
 
 
+const string& Module::logicName(void) const
+{
+  return logic()->name();
+} /* Module::logicName */
 
 
