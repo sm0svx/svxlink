@@ -136,6 +136,12 @@ int AudioPacer::audioInput(short *samples, int count)
 {
   int samples_written = 0;
   
+  if (do_flush)
+  {
+    //printf("AudioPacer::audioInput: do_flush=false\n");
+    do_flush = false;
+  }
+  
   if (prebuf_samples > 0)
   {
     samples_written = count;
@@ -188,6 +194,7 @@ void AudioPacer::flushAllAudio(void)
   }
   else
   {
+    //printf("AudioPacer::flushAllAudio: do_flush=true\n");
     do_flush = true;
   }
 } /* AudioPacer::flushAllAudio */
@@ -249,6 +256,11 @@ void AudioPacer::outputNextBlock(Timer *t)
     //printf("AudioPacer::outputNextBlock: Turning on prebuffering...\n");
   }
   
+  if (buf_pos == 0)
+  {
+    return;
+  }
+  
     // FIXME: Take care of the case where not all samples were written
   //printf("AudioPacer::outputNextBlock: Calling audioOutput()\n");
   audioOutput(buf, buf_pos);
@@ -259,6 +271,7 @@ void AudioPacer::outputNextBlock(Timer *t)
   {
     //printf("AudioPacer::outputNextBlock: Calling allAudioFlushed()\n");
     allAudioFlushed();
+    //printf("AudioPacer::outputNextBlock: do_flush=false\n");
     do_flush = false;
   }
   
