@@ -90,7 +90,8 @@ SHLIB_VERSION	= $(ASYNCCORE)
 # Sources needed to build the library
 LIBSRC		= AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp \
 		  AsyncIpAddress.cpp AsyncDnsLookup.cpp AsyncTcpClient.cpp \
-		  AsyncAudioIO.cpp AsyncUdpSocket.cpp
+		  AsyncAudioIO.cpp AsyncUdpSocket.cpp AsyncTcpServer.cpp \
+		  AsyncTcpConnection.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
 LIB_LIBS	= -lc -lsigc -lpthread
@@ -104,7 +105,8 @@ STATIC_LIBS   	=
 # Includefiles to export. A softlink is created in $(INC).
 EXPINC		= AsyncApplication.h AsyncFdWatch.h AsyncTimer.h \
 		  AsyncIpAddress.h AsyncTcpClient.h AsyncDnsLookup.h \
-		  AsyncAudioIO.h AsyncUdpSocket.h
+		  AsyncAudioIO.h AsyncUdpSocket.h AsyncTcpServer.h \
+		  AsyncTcpConnection.h
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for libraries).
