@@ -200,11 +200,18 @@ bool ModuleEchoLink::initialize(void)
     return false;
   }
   
-  string location;
   if (!cfg().getValue(cfgName(), "LOCATION", location))
   {
     cerr << "*** ERROR: Config variable " << cfgName() << "/LOCATION not set\n";
     return false;
+  }
+  
+  if (location.size() > Directory::MAX_DESCRIPTION_SIZE)
+  {
+    cerr << "*** WARNING: The value of " << cfgName() << "/LOCATION is too "
+      	    "long. Maximum length is " << Directory::MAX_DESCRIPTION_SIZE <<
+	    " characters.\n";
+    location.resize(Directory::MAX_DESCRIPTION_SIZE);
   }
   
   if (!cfg().getValue(cfgName(), "SYSOPNAME", sysop_name))
@@ -268,7 +275,7 @@ bool ModuleEchoLink::initialize(void)
   }
   Dispatcher::instance()->incomingConnection.connect(
       slot(this, &ModuleEchoLink::onIncomingConnection));
-  
+
   return true;
   
 } /* ModuleEchoLink::initialize */
@@ -565,6 +572,7 @@ void ModuleEchoLink::allMsgsWritten(void)
   if (outgoing_con_pending != 0)
   {
     outgoing_con_pending->connect();
+    updateDescription();
     broadcastTalkerStatus();
   }
   outgoing_con_pending = 0;
@@ -761,6 +769,8 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->accept();
   broadcastTalkerStatus();
   
+  updateDescription();
+  
   setIdle(false);
 
   //msg_handler->playMsg("EchoLink", "greeting");
@@ -855,6 +865,9 @@ void ModuleEchoLink::onDestroyMe(QsoImpl *qso)
   {
     deactivateMe();
   }
+  
+  updateDescription();
+  
 } /* ModuleEchoLink::onDestroyMe */
 
 
@@ -1025,6 +1038,27 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
   
 } /* ModuleEchoLink::broadcastTalkerStatus */
 
+
+void ModuleEchoLink::updateDescription(void)
+{
+  if (max_qsos < 2)
+  {
+    return;
+  }
+  
+  string desc(location);
+  if (qsos.size() > 0)
+  {
+    stringstream sstr;
+    sstr << " (" << qsos.size() << ")";
+    desc.resize(Directory::MAX_DESCRIPTION_SIZE - sstr.str().size(), ' ');
+    desc += sstr.str();
+  }
+    
+  dir->setDescription(desc);
+  dir->refreshRegistration();
+  
+} /* ModuleEchoLink::updateDescription */
 
 
 

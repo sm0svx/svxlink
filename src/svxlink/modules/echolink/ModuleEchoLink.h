@@ -136,6 +136,7 @@ class ModuleEchoLink : public Module
     EchoLink::Directory *dir;
     Async::Timer      	*dir_refresh_timer;
     std::string       	mycall;
+    std::string       	location;
     std::string       	sysop_name;
     std::string       	description;
     std::string       	allow_ip;
@@ -175,6 +176,7 @@ class ModuleEchoLink : public Module
     void audioFromRemoteRaw(QsoImpl::GsmVoicePacket *packet, QsoImpl *qso);
     QsoImpl *findFirstTalker(void) const;
     void broadcastTalkerStatus(void);
+    void updateDescription(void);
 
 };  /* class ModuleEchoLink */
 
