@@ -44,6 +44,7 @@ An example of how to use the Serial class
 
 #include <sigc++/signal_system.h>
 #include <termios.h>
+#include <unistd.h>
 
 #include <string>
 
