@@ -90,6 +90,7 @@ namespace Async
  *
  ****************************************************************************/
 
+class Module;
   
 
 /****************************************************************************
@@ -143,11 +144,14 @@ class RepeaterLogic : public Logic
      */
     bool initialize(void);
     
+    virtual void playMsg(const std::string& msg, const Module *module=0);
+    virtual void playNumber(int number);
+    virtual void spellWord(const std::string& word);
     virtual void moduleTransmitRequest(bool do_transmit);
 
   protected:
-    virtual void transmit(bool do_transmit);
-    
+    virtual void allTxSamplesFlushed(void);
+
 
   private:
     bool      	  repeater_is_up;
@@ -156,6 +160,8 @@ class RepeaterLogic : public Logic
     Async::Timer  *blip_timer;
     int       	  blip_delay;
     int       	  required_1750_duration;
+    Async::Timer  *idle_sound_timer;
+    std::string   idle_sound;
     
     void identify(void);
     int audioReceived(short *samples, int count);
@@ -166,6 +172,7 @@ class RepeaterLogic : public Logic
     void squelchOpen(bool is_open);
     void txTimeout(void);
     void detected1750(void);
+    void playIdleSound(Async::Timer *t);
 
 };  /* class RepeaterLogic */
 

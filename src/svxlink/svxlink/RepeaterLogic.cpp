@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "Tx.h"
 #include "Rx.h"
+#include "Module.h"
 #include "RepeaterLogic.h"
 
 
@@ -122,7 +123,8 @@ using namespace Async;
 
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
   : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(30000),
-    blip_timer(0), blip_delay(0), required_1750_duration(0)
+    blip_timer(0), blip_delay(0), required_1750_duration(0),
+    idle_sound_timer(0), idle_sound("repeater_idle")
 {
 
 } /* RepeaterLogic::RepeaterLogic */
@@ -130,7 +132,9 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
 
 RepeaterLogic::~RepeaterLogic(void)
 {
-
+  delete idle_sound_timer;
+  delete blip_timer;
+  delete up_timer;
 } /* RepeaterLogic::~RepeaterLogic */
 
 
@@ -180,11 +184,42 @@ bool RepeaterLogic::initialize(void)
 } /* RepeaterLogic::initialize */
 
 
+void RepeaterLogic::playMsg(const std::string& msg, const Module *module)
+{
+  //printf("RepeaterLogic::playMsg: %s\n", msg.c_str());
+  
+  if (msg != idle_sound)
+  {
+    setIdle(false);
+  }
+  Logic::playMsg(msg, module);
+} /* RepeaterLogic::playMsg */
+
+
+void RepeaterLogic::playNumber(int number)
+{
+  //printf("RepeaterLogic::playNumber: %d\n", number);
+  
+  setIdle(false);
+  Logic::playNumber(number);
+} /* RepeaterLogic::playNumber */
+
+
+void RepeaterLogic::spellWord(const string& word)
+{
+  //printf("RepeaterLogic::spellWord: %s\n", word.c_str());
+  
+  setIdle(false);
+  Logic::spellWord(word);
+} /* RepeaterLogic::spellWord */
+
+
 void RepeaterLogic::moduleTransmitRequest(bool do_transmit)
 {
   if (do_transmit)
   {
     setUp(true);
+    setIdle(false);
   }
   Logic::moduleTransmitRequest(do_transmit);
 } /* RepeaterLogic::moduleTransmitRequest */
@@ -197,25 +232,12 @@ void RepeaterLogic::moduleTransmitRequest(bool do_transmit)
  *
  ****************************************************************************/
 
-void RepeaterLogic::transmit(bool do_transmit)
+void RepeaterLogic::allTxSamplesFlushed(void)
 {
-  printf("RepeaterLogic::transmit: do_transmit=%s\n",
-      do_transmit ? "true" : "false");
-  if (repeater_is_up)
-  {
-    if (do_transmit)
-    {
-      Logic::transmit(true);
-    }
-    setIdle(!do_transmit);
-  }
-  else
-  {
-    Logic::transmit(do_transmit);
-  }
-} /* RepeaterLogic::transmit */
-
-
+  //printf("RepeaterLogic::allTxSamplesFlushed\n");
+  setIdle(true);
+  Logic::allTxSamplesFlushed();
+} /* RepeaterLogic::allTxSamplesFlushed */
 
 
 
@@ -271,10 +293,16 @@ void RepeaterLogic::setIdle(bool idle)
   
   delete up_timer;
   up_timer = 0;
+  delete idle_sound_timer;
+  idle_sound_timer = 0;
   if (idle)
   {
     up_timer = new Timer(idle_timeout);
     up_timer->expired.connect(slot(this, &RepeaterLogic::idleTimeout));
+    
+    idle_sound_timer = new Timer(2000, Async::Timer::TYPE_PERIODIC);
+    idle_sound_timer->expired.connect(
+      	slot(this, &RepeaterLogic::playIdleSound));
   }
   
 } /* RepeaterLogic::setIdle */
@@ -282,7 +310,7 @@ void RepeaterLogic::setIdle(bool idle)
 
 void RepeaterLogic::setUp(bool up)
 {
-  printf("RepeaterLogic::setUp\n");
+  printf("RepeaterLogic::setUp: up=%s\n", up ? "true" : "false");
   if (up == repeater_is_up)
   {
     return;
@@ -294,8 +322,13 @@ void RepeaterLogic::setUp(bool up)
   {
     identify();
   }
+  else
+  {
+    delete idle_sound_timer;
+    idle_sound_timer = 0;
+  }
   
-  //logicTransmitRequest(up);
+  logicTransmitRequest(up);
 } /* RepeaterLogic::setUp */
 
 
@@ -320,6 +353,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
     if (is_open)
     {
       blip_timer = 0;
+      setIdle(false);
     }
     else
     {
@@ -332,9 +366,9 @@ void RepeaterLogic::squelchOpen(bool is_open)
       {
 	sendBlip();
       }
+      tx().flushSamples();
     }
-    //setIdle(!is_open);
-    logicTransmitRequest(is_open);
+    //logicTransmitRequest(is_open);
   }
   else
   {
@@ -361,6 +395,10 @@ void RepeaterLogic::detected1750(void)
 } /* RepeaterLogic::detected1750 */
 
 
+void RepeaterLogic::playIdleSound(Timer *t)
+{
+  playMsg(idle_sound);
+} /* RepeaterLogic::playIdleSound */
 
 
 /*
