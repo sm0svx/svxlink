@@ -1,5 +1,4 @@
 <?php
-  $headercolor = "lightblue";
   include("header.inc");
 ?>
 
@@ -29,14 +28,13 @@ interrested in, download the <em>svxlink-server</em> package.
 Install all of the above mentioned packages (libsigc++, libasync, echolib,
 qtel and/or svxlink-server) on your system using the "rpm -Uvh" command.
 <P>
-<b>Note:</b> Release note for the svxlink-server-0.1.0-1 package: There is a
-problem with the directory permissions on the sound file directories. To fix
-this, execute the command below:
-<PRE>
-  find /usr/share/svxlink -type d -exec chmod 755 {} \;
-</PRE>
 If you are going to run the svxlink server, check out the configuration
 description below before starting it.
+<P>
+After the configuration has been done, start the server by typing
+<em>svxlink</em> at the command prompt. It is possible to simulate DTMF input by
+pressing the 1-9, A-D, *, # keys. Have a look at the
+<A href="svxlink_usage.php">user documentation</A> to begin testing the server.
 
 
 <h2>Installation from source</h2>
