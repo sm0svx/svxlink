@@ -86,6 +86,16 @@ namespace Async
 
 /****************************************************************************
  *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
+
+class AudioDevice;
+class SampleFifo;
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
  *
  ****************************************************************************/
@@ -134,7 +144,7 @@ class AudioIO : public SigC::Object
     /**
      * @brief Default constructor
      */
-    AudioIO(void);
+    AudioIO(const std::string& dev_name);
     
     /**
      * @brief Destructor
@@ -168,21 +178,8 @@ class AudioIO : public SigC::Object
      * @return	Returns the number of samples written on success or else
      *	      	-1 on failure
      */
-    int write(const short *buf, int count);
+    int write(short *buf, int count);
     
-    /**
-     * @brief 	Write an audio file to the audio device
-     * @param 	filename  The name of the file to play
-     * @return	Returns \em true on success or \em false on failure
-     *
-     * This function outputs a file to the audio device. The file should be
-     * in raw format, 16 bit signed samples @ 8kHz. All other audio output
-     * will be discarded during the time the file is played. When the file
-     * has been fully written, the fileWritten signal will be emitted.
-     */
-    bool writeFile(const std::string& filename);
-
-
     /**
      * @brief 	Find out how many samples there are in the output buffer
      * @return	Returns the number of samples in the output buffer on
@@ -195,6 +192,21 @@ class AudioIO : public SigC::Object
      */
     int samplesToWrite(void) const;
     
+    /*
+     * @brief 	Call this method to flush all samples in the buffer
+     *
+     * This method is used to flush all the samples that are in the buffer.
+     * That is, all samples in the buffer will be written to the audio device
+     * and when finished, emit the allSamplesFlushed signal.
+     */
+    void flushSamples(void);
+    
+    /*
+     * @brief 	Check if the audio device is busy flushing samples
+     * @return	Returns \em true if flushing the buffer or else \em false
+     */
+    bool isFlushing(void) const { return do_flush; }
+    
     
     /**
      * @brief 	A signal that is emitted when a block of audio has been
@@ -202,7 +214,7 @@ class AudioIO : public SigC::Object
      * @param 	buf   A buffer containing the read samples
      * @param 	count The number of samples in the buffer
      */
-    SigC::Signal2<void, short *, int> audioRead;
+    SigC::Signal2<int, short *, int> audioRead;
 
     /**
      * @brief 	A signal that is emitted when the write buffer is full
@@ -212,14 +224,14 @@ class AudioIO : public SigC::Object
     SigC::Signal1<void, bool> writeBufferFull;
     
     /**
-     * @brief 	A signal that is emitted when a file has been fully written
-     * @param 	success Set to \em true on success or \em false on failure
+     * @brief 	This signal is emitted when all samples in the buffer
+     *	      	has been flushed.
      *
-     * Writing a file to the audio device is initiated by calling the method
-     * AudioIO::writeFile. When the file has been fully written or an error
-     * occurs, this signal will be emitted.
+     * When an application is done writing samples to the audio device it
+     * should call the flush-method. When all samples has been flushed
+     * from the audio device, this signal is emitted.
      */
-    SigC::Signal1<void, bool> fileWritten;
+    SigC::Signal0<void> allSamplesFlushed;
 
             
   protected:
@@ -232,21 +244,31 @@ class AudioIO : public SigC::Object
     //static const int  FRAG_SIZE_LOG2 = 8; // 256 bytes/frag
     static const int  BUF_FRAG_COUNT = 4;
 	
-    int       	      fd;
+    //int       	      fd;
     Mode      	      mode;
-    Async::FdWatch *  read_watch;
-    Async::FdWatch *  write_watch;
-    char *    	      read_buf;
+    //Async::FdWatch *  read_watch;
+    //Async::FdWatch *  write_watch;
+    //char *    	      read_buf;
     
-    int    	      file;
-    Mode      	      old_mode;
-    Async::Timer *    write_file_flush_timer;
+    //int    	      file;
+    //Mode      	      old_mode;
+    
+    AudioDevice       *audio_dev;
+    SampleFifo	      *write_fifo;
+    SigC::Connection  read_con;
+    bool      	      do_flush;
+    Async::Timer      *flush_timer;
 
     void audioReadHandler(Async::FdWatch *watch);
-    void writeSpaceAvailable(Async::FdWatch *watch);
-    void writeFromFile(void);
-    void writeFileDone(Async::Timer *timer);
-
+    void flushSamplesInDevice(int extra_samples=0);
+    void flushDone(Timer *timer);
+    
+      // Methods accessed by the Async::AudioDevice class
+    friend class AudioDevice;
+    AudioDevice *device(void) const { return audio_dev; }
+    SampleFifo &writeFifo(void) const { return *write_fifo; }
+    int readSamples(short *samples, int count);
+    
 };  /* class AudioIO */
 
 

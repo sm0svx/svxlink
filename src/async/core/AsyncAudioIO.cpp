@@ -63,6 +63,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "AsyncSampleFifo.h"
+#include "AsyncAudioDevice.h"
 #include "AsyncFdWatch.h"
 #include "AsyncAudioIO.h"
 
@@ -142,41 +144,33 @@ using namespace Async;
 
 
 
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-AudioIO::AudioIO(void)
-  : fd(-1), mode(MODE_NONE), read_watch(0), write_watch(0), read_buf(0),
-    file(-1), old_mode(MODE_NONE), write_file_flush_timer(0)
+AudioIO::AudioIO(const string& dev_name)
+  : mode(MODE_NONE), audio_dev(0), write_fifo(0), do_flush(false),
+    flush_timer(0)
 {
-
+  write_fifo = new SampleFifo(8000);
+  write_fifo->setOverwrite(false);
+  write_fifo->stopOutput(true);
+  write_fifo->fifoFull.connect(writeBufferFull.slot());
+  audio_dev = AudioDevice::registerAudioIO(dev_name, this);
+  audio_dev->writeBufferFull.connect(
+      	  slot(write_fifo, &SampleFifo::writeBufferFull));
 } /* AudioIO::AudioIO */
 
 
 AudioIO::~AudioIO(void)
 {
   close();
+  delete write_fifo;
+  AudioDevice::unregisterAudioIO(this);
 } /* AudioIO::~AudioIO */
 
 
 bool AudioIO::isFullDuplexCapable(void)
 {
+  return false;
+  
+  /*  
   if (!open(MODE_RDWR))
   {
     return false;
@@ -198,329 +192,120 @@ bool AudioIO::isFullDuplexCapable(void)
   }
   
   return true;
+  */
   
 } /* AudioIO::isFullDuplexCapable */
 
 
 bool AudioIO::open(Mode mode)
 {
-  int arg;
-  
-  if (fd != -1)
+  if (mode == this->mode)
   {
-    close();
+    return true;
   }
   
-  int flags = 0; // = O_NONBLOCK; // Not supported according to the OSS docs
-  switch (mode)
+  close();
+  
+  if (mode == MODE_NONE)
   {
-    case MODE_RD:
-      flags |= O_RDONLY;
-      break;
-    case MODE_WR:
-      flags |= O_WRONLY;
-      break;
-    case MODE_RDWR:
-      flags |= O_RDWR;
-      break;
-    case MODE_NONE:
-      return true;
+    return true;
   }
   
-  fd = ::open("/dev/dsp", flags);
-  if(fd < 0)
+  bool open_ok = audio_dev->open(static_cast<AudioDevice::Mode>(mode));
+  if (open_ok)
   {
-    perror("open failed");
-    return false;
-  }
-
-  if (mode == MODE_RDWR)
-  {
-    ioctl(fd, SNDCTL_DSP_SETDUPLEX, 0);
-  }
-  
-  int caps;
-  if (ioctl(fd, SNDCTL_DSP_GETCAPS, &caps) == -1)
-  {
-    perror("SNDCTL_DSP_GETCAPS ioctl failed");
-    close();
-    return false;
-  }
-  printf("The sound device do%s have TRIGGER capability\n",
-      (caps & DSP_CAP_TRIGGER) ? "" : " NOT");
-  
-  if (caps & DSP_CAP_TRIGGER)
-  {
-    arg = ~(PCM_ENABLE_OUTPUT | PCM_ENABLE_INPUT);
-    if(ioctl(fd, SNDCTL_DSP_SETTRIGGER, &arg) == -1)
+    this->mode = mode;
+    if ((mode == MODE_RD) || (MODE_RDWR))
     {
-      perror("SNDCTL_DSP_SETTRIGGER ioctl failed");
-      close();
-      return false;
+      read_con = audio_dev->audioRead.connect(audioRead.slot());
     }
   }
   
-  /*
-  arg  = (FRAG_COUNT << 16) | FRAG_SIZE_LOG2;
-  if (ioctl(fd, SNDCTL_DSP_SETFRAGMENT, &arg) == -1)
-  {
-    perror("SNDCTL_DSP_SETFRAGMENT ioctl failed");
-    close();
-    return false;
-  }
-  */
-  
-  /*
-  arg = SIZE;
-  if(ioctl(fd, SOUND_PCM_WRITE_BITS, &arg) == -1)
-  {
-    perror("SOUND_PCM_WRITE_BITS ioctl failed");
-    close();
-    return false;
-  }
-  if(arg != SIZE)
-  {
-    perror("unable to set sample size");
-    close();
-    return false;
-  }
-  */
-
-  arg = AFMT_S16_LE; 
-  if(ioctl(fd,  SNDCTL_DSP_SETFMT, &arg) == -1)
-  {
-    perror("SNDCTL_DSP_SETFMT ioctl failed");
-    close();
-    return false;
-  }
-  if (arg != AFMT_S16_LE)
-  {
-    fprintf(stderr, "*** error: The sound device does not support 16 bit "
-      	      	    "signed samples\n");
-    close();
-    return false;
-  }
-  
-  arg = CHANNELS;
-  if(ioctl(fd, SNDCTL_DSP_CHANNELS, &arg) == -1)
-  {
-    perror("SNDCTL_DSP_CHANNELS ioctl failed");
-    close();
-    return false;
-  }
-  if(arg != CHANNELS)
-  {
-    fprintf(stderr, "*** error: Unable to set number of channels to %d. The "
-      	      	    "driver suggested %d channels\n",
-		    CHANNELS, arg);
-    close();
-    return false;
-  }
-
-  arg = RATE;
-  if(ioctl(fd, SNDCTL_DSP_SPEED, &arg) == -1)
-  {
-    perror("SNDCTL_DSP_SPEED ioctl failed");
-    close();
-    return false;
-  }
-  if (abs(arg - RATE) > 100)
-  {
-    fprintf(stderr, "*** error: Sampling speed could not be set to %dHz. "
-      	      	    "The closest speed returned by the driver was %dHz\n",
-		    RATE, arg);
-    close();
-    return false;
-  }
-  printf("Reported sampling rate: %dHz\n", arg);
-  
-  /*  Used for playing non-full fragments.
-  if (ioctl(fd, SNDCTL_DSP_POST, 0) == -1)
-  {
-    perror("SNDCTL_DSP_POST ioctl failed");
-    close();
-    return false;
-  }
-  */
-  
-  this->mode = mode;
-  
-  arg = 0;
-  if ((mode == MODE_RD) || (mode == MODE_RDWR))
-  {
-    read_watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
-    assert(read_watch != 0);
-    read_watch->activity.connect(slot(this, &AudioIO::audioReadHandler));
-    arg |= PCM_ENABLE_INPUT;
-  }
-  
-  if ((mode == MODE_WR) || (mode == MODE_RDWR))
-  {
-    write_watch = new FdWatch(fd, FdWatch::FD_WATCH_WR);
-    assert(write_watch != 0);
-    write_watch->activity.connect(slot(this, &AudioIO::writeSpaceAvailable));
-    write_watch->setEnabled(false);
-    arg |= PCM_ENABLE_OUTPUT;
-  }
-  
-  if (caps & DSP_CAP_TRIGGER)
-  {
-    if(ioctl(fd, SNDCTL_DSP_SETTRIGGER, &arg) == -1)
-    {
-      perror("SNDCTL_DSP_SETTRIGGER ioctl failed");
-      close();
-      return false;
-    }
-  }
-      
-  int frag_size;
-  if (ioctl(fd, SNDCTL_DSP_GETBLKSIZE, &frag_size) == -1)
-  {
-    perror("SNDCTL_DSP_GETBLKSIZE ioctl failed");
-    close();
-    return false;
-  }
-  printf("frag_size=%d\n", frag_size);
-  
-  read_buf = new char[BUF_FRAG_COUNT*frag_size];
-  
-  return true;
+  return open_ok;
   
 } /* AudioIO::open */
 
 
 void AudioIO::close(void)
 {
-  mode = MODE_NONE;
-  
-  delete write_watch;
-  write_watch = 0;
-  
-  delete read_watch;
-  read_watch = 0;
-  
-  delete [] read_buf;
-  read_buf = 0;
-  
-  if (fd != -1)
+  if (mode == MODE_NONE)
   {
-    ::close(fd);
-    fd = -1;
+    return;
   }
+  
+  mode = MODE_NONE;
+  audio_dev->close(); 
+  
+  write_fifo->clear();
+  
+  if ((mode == MODE_RD) || (MODE_RDWR))
+  {
+    read_con.disconnect();
+  }
+  
+  do_flush = false;
+  
+  delete flush_timer;
+  flush_timer = 0;
+  
 } /* AudioIO::close */
 
 
-static inline int min(int a, int b)
+int AudioIO::write(short *samples, int count)
 {
-  return (a < b) ? a : b;
-}
-
-
-int AudioIO::write(const short *buf, int count)
-{
-  assert(fd >= 0);
-  /*
   assert((mode == MODE_WR) || (mode == MODE_RDWR));
-  */
   
-  if (file != -1)
+  if (do_flush)
   {
-    return count;
+    delete flush_timer;
+    flush_timer = 0;
+    do_flush = false;
   }
   
-    /* FIXME: How should we handle this case ? */
-  if ((mode != MODE_WR) && (mode != MODE_RDWR))
-  {
-    return 0;
-  }
-  
-  audio_buf_info info;
-  if (ioctl(fd, SNDCTL_DSP_GETOSPACE, &info) == -1)
-  {
-    perror("SNDCTL_DSP_GETOSPACE ioctl failed");
-    return 0;
-  }
-  /*
-  printf("fragments=%d  fragstotal=%d  fragsize=%d  bytes=%d\n",
-      	 info.fragments, info.fragstotal, info.fragsize, info.bytes);  
-  
-  int frags_to_write = sizeof(*buf) * count / info.fragsize;
-  */
-  int samples_to_write = min(count, info.bytes / sizeof(*buf));
-  
-  int written = ::write(fd, buf, samples_to_write * sizeof(*buf));
-  if (written == -1)
-  {
-    /*
-    if (errno == EAGAIN)
-    {
-      writeBufferFull(true);
-      write_watch->setEnabled(true);
-      return 0;
-    }
-    else
-    */
-    {
-      perror("write in AudioIO::write");
-      return -1;
-    }
-  }
-  int samples_written = written / sizeof(*buf);
-  
-  if (samples_written != count)
-  {
-    writeBufferFull(true);
-    write_watch->setEnabled(true);  
-  }
-  
+  int samples_written = write_fifo->addSamples(samples, count);
+  audio_dev->audioToWriteAvailable();
   return samples_written;
   
 } /* AudioIO::write */
 
 
-bool AudioIO::writeFile(const string& filename)
-{
-  old_mode = mode;
-  if ((mode == MODE_RD) || (mode == MODE_NONE))
-  {
-    close();
-    if (!open(MODE_WR))
-    {
-      open(old_mode);
-      old_mode = MODE_NONE;
-      return false;
-    }
-  }
-  
-  file = ::open(filename.c_str(), O_RDONLY);
-  if (file != -1)
-  {
-    writeFromFile();
-  }
-  else
-  {
-    open(old_mode);
-    old_mode = MODE_NONE;
-    return false;
-  }
-  
-  return true;
-  
-} /* AudioIO::writeFile */
-
-
 int AudioIO::samplesToWrite(void) const
 {
-  audio_buf_info info;
-  if (ioctl(fd, SNDCTL_DSP_GETOSPACE, &info) == -1)
-  {
-    perror("SNDCTL_DSP_GETOSPACE ioctl failed");
-    return -1;
-  }
-  
-  return (info.fragsize * (info.fragstotal - info.fragments)) / sizeof(short);
-  
+  return write_fifo->samplesInFifo() + audio_dev->samplesToWrite();
 }
+
+
+void AudioIO::flushSamples(void)
+{
+  if (write_fifo->samplesInFifo() == 0)
+  {
+    flushSamplesInDevice();
+  }
+  do_flush = true;
+} /* AudioIO::flushSamples */
+
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+/*
+ *------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
+ */
+
 
 
 /****************************************************************************
@@ -542,126 +327,34 @@ int AudioIO::samplesToWrite(void) const
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void AudioIO::audioReadHandler(FdWatch *watch)
+void AudioIO::flushSamplesInDevice(int extra_samples)
 {
-  audio_buf_info info;
-  if (ioctl(fd, SNDCTL_DSP_GETISPACE, &info) == -1)
-  {
-    perror("SNDCTL_DSP_GETISPACE ioctl failed");
-    return;
-  }
-  //printf("fragments=%d  fragstotal=%d  fragsize=%d  bytes=%d\n",
-    //  	 info.fragments, info.fragstotal, info.fragsize, info.bytes);
-  
-  if (info.fragments > 0)
-  {
-    int frags_to_read = info.fragments > BUF_FRAG_COUNT ?
-      	    BUF_FRAG_COUNT : info.fragments;
-    int cnt = read(fd, read_buf, frags_to_read * info.fragsize);
-    if (cnt == -1)
-    {
-      perror("read in AudioIO::audioReadHandler");
-      return;
-    }
-
-    audioRead(reinterpret_cast<short *>(read_buf), cnt/sizeof(short));
-  }
-    
-} /* AudioIO::audioReadHandler */
+  long flushtime = 1000 * audio_dev->samplesToWrite() / 8000;
+  flush_timer = new Timer(flushtime);
+  flush_timer->expired.connect(slot(this, &AudioIO::flushDone));
+} /* AudioIO::flushSamplesInDevice */
 
 
-void AudioIO::writeSpaceAvailable(FdWatch *watch)
+void AudioIO::flushDone(Timer *timer)
 {
-  if (file != -1)
-  {
-    writeFromFile();
-  }
-  else
-  {
-    watch->setEnabled(false);
-    writeBufferFull(false);
-  }
-} /* AudioIO::writeSpaceAvailable */
-
-
-void AudioIO::writeFromFile(void)
-{
-  short buf[160];
-  assert(file != 0);
-  bool success = false;
-  
-  int written;
-  int read_cnt;
-  do
-  {
-    read_cnt = read(file, buf, sizeof(buf));
-    if (read_cnt == -1)
-    {
-      perror("read in AudioIO::writeFromFile");
-      goto done;
-    }
-    else if (read_cnt == 0)
-    {
-      success = true;
-      goto done;
-    }
-    
-    written = ::write(fd, buf, read_cnt);
-    if (written == -1)
-    {
-      if (errno == EAGAIN)
-      {
-	written = 0;
-	break;
-      }
-      else
-      {
-	perror("write in AudioIO::writeFromFile");
-	goto done;
-      }
-    }
-  } while (written == read_cnt);
-  
-  lseek(file, written - read_cnt, SEEK_CUR);
-  write_watch->setEnabled(true);
-  
-  return;
-    
-  done:
-    write_watch->setEnabled(false);
-    ::close(file);
-    file = -1;
-    
-    audio_buf_info info;
-    if (ioctl(fd, SNDCTL_DSP_GETOSPACE, &info) == -1)
-    {
-      perror("SNDCTL_DSP_GETOSPACE ioctl failed");
-      writeFileDone(0);
-      open(old_mode);
-      return;
-    }
-    long bytes_to_flush = info.fragsize * (info.fragstotal - info.fragments);
-    long flushtime = 1000 * (bytes_to_flush / sizeof(short)) / 8000;
-    write_file_flush_timer = new Timer(flushtime);
-    write_file_flush_timer->expired.connect(
-	slot(this, &AudioIO::writeFileDone));
-    return;
-    
-} /* AudioIO::writeFromFile */
-
-
-void AudioIO::writeFileDone(Timer *timer)
-{
-  if (old_mode != mode)
-  {
-    open(old_mode);
-  }
-  old_mode = MODE_NONE;
-  fileWritten(timer != 0);
-  delete write_file_flush_timer;
-  write_file_flush_timer = 0;
+  delete flush_timer;
+  flush_timer = 0;
+  do_flush = false;
+  allSamplesFlushed();
 } /* AudioIO::writeFileDone */
 
+
+int AudioIO::readSamples(short *samples, int count)
+{
+  int samples_read = write_fifo->readSamples(samples, count);
+  if (write_fifo->empty() && do_flush)
+  {
+    flushSamplesInDevice(samples_read);
+  }
+  
+  return samples_read;
+  
+} /* AudioIO::readSamples */
 
 
 /*
