@@ -126,10 +126,9 @@ using namespace EchoLink;
 
 
 extern "C" {
-  Module *module_init(void *dl_handle, Logic *logic, int id,
-      	      	      const char *cfg_name)
+  Module *module_init(void *dl_handle, Logic *logic, const char *cfg_name)
   { 
-    return new ModuleEchoLink(dl_handle, logic, id, cfg_name);
+    return new ModuleEchoLink(dl_handle, logic, cfg_name);
   }
 } /* extern "C" */
 
@@ -142,64 +141,79 @@ extern "C" {
  ****************************************************************************/
 
 
-ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic, int id,
+ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
       	      	      	       const string& cfg_name)
-  : Module(dl_handle, logic, id), dir(0), qso(0), dir_refresh_timer(0),
+  : Module(dl_handle, logic, cfg_name), dir(0), qso(0), dir_refresh_timer(0),
     remote_activation(false)
 {
   cout << "\tModule " << name()
        << " v" MODULE_ECHOLINK_VERSION " starting...\n";
   
+} /* ModuleEchoLink */
+
+
+ModuleEchoLink::~ModuleEchoLink(void)
+{
+  moduleCleanup();
+} /* ~ModuleEchoLink */
+
+
+bool ModuleEchoLink::initialize(void)
+{
+  if (!Module::initialize())
+  {
+    return false;
+  }
+  
   string server;
+  if (!cfg().getValue(cfgName(), "SERVER", server))
+  {
+    cerr << "*** Error: Config variable " << cfgName() << "/SERVER not set\n";
+    return false;
+  }
+  
+  if (!cfg().getValue(cfgName(), "CALLSIGN", callsign))
+  {
+    cerr << "*** Error: Config variable " << cfgName() << "/CALLSIGN not set\n";
+    return false;
+  }
+  
   string password;
+  if (!cfg().getValue(cfgName(), "PASSWORD", password))
+  {
+    cerr << "*** Error: Config variable " << cfgName() << "/PASSWORD not set\n";
+    return false;
+  }
+  
   string location;
-  string sound_base_dir;
-  
-    /* FIXME: Better error handling */
-  if (!cfg().getValue(cfg_name, "SERVER", server))
+  if (!cfg().getValue(cfgName(), "LOCATION", location))
   {
-    cerr << "*** Error: Config variable " << cfg_name << "/SERVER not set\n";
-    return;
+    cerr << "*** Error: Config variable " << cfgName() << "/LOCATION not set\n";
+    return false;
   }
   
-  if (!cfg().getValue(cfg_name, "CALLSIGN", callsign))
+  if (!cfg().getValue(cfgName(), "SYSOPNAME", sysop_name))
   {
-    cerr << "*** Error: Config variable " << cfg_name << "/CALLSIGN not set\n";
-    return;
+    cerr << "*** Error: Config variable " << cfgName()
+      	 << "/SYSOPNAME not set\n";
+    return false;
   }
   
-  if (!cfg().getValue(cfg_name, "PASSWORD", password))
+  if (!cfg().getValue(cfgName(), "DESCRIPTION", description))
   {
-    cerr << "*** Error: Config variable " << cfg_name << "/PASSWORD not set\n";
-    return;
-  }
-  
-  if (!cfg().getValue(cfg_name, "LOCATION", location))
-  {
-    cerr << "*** Error: Config variable " << cfg_name << "/LOCATION not set\n";
-    return;
-  }
-  
-  if (!cfg().getValue(cfg_name, "SYSOPNAME", sysop_name))
-  {
-    cerr << "*** Error: Config variable " << cfg_name << "/SYSOPNAME not set\n";
-    return;
-  }
-  
-  if (!cfg().getValue(cfg_name, "DESCRIPTION", description))
-  {
-    cerr << "*** Error: Config variable " << cfg_name
+    cerr << "*** Error: Config variable " << cfgName()
       	 << "/DESCRIPTION not set\n";
-    return;
+    return false;
   }
   
-  cfg().getValue(cfg_name, "ALLOW_IP", allow_ip);
+  cfg().getValue(cfgName(), "ALLOW_IP", allow_ip);
   
+  string sound_base_dir;
   if (!cfg().getValue(logicName(), "SOUNDS", sound_base_dir))
   {
     cerr << "*** Error: Config variable " << logicName()
       	 << "/SOUNDS not set\n";
-    return;
+    return false;
   }
   
     // Initialize directory server communication
@@ -213,13 +227,13 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic, int id,
   
   msg_handler = new MsgHandler(sound_base_dir);
   
-  msg_paser = new AudioPacer(8000, 160*4, 500);
-  msg_handler->writeAudio.connect(slot(msg_paser, &AudioPacer::audioInput));
+  msg_pacer = new AudioPacer(8000, 160*4, 500);
+  msg_handler->writeAudio.connect(slot(msg_pacer, &AudioPacer::audioInput));
   msg_handler->allMsgsWritten.connect(
-      	  slot(msg_paser, &AudioPacer::flushAllAudio));
-  msg_paser->audioInputBufFull.connect(
+      	  slot(msg_pacer, &AudioPacer::flushAllAudio));
+  msg_pacer->audioInputBufFull.connect(
       	  slot(msg_handler, &MsgHandler::writeBufferFull));
-  msg_paser->allAudioFlushed.connect(
+  msg_pacer->allAudioFlushed.connect(
       	  slot(this, &ModuleEchoLink::allMsgsWritten));
   
     // Start listening to the EchoLink UDP ports
@@ -227,24 +241,15 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic, int id,
   {
     cerr << "*** Error: Could not create EchoLink listener (Dispatcher) "
       	    "object\n";
-    exit(1);
+    moduleCleanup();
+    return false;
   }
   Dispatcher::instance()->incomingConnection.connect(
       slot(this, &ModuleEchoLink::onIncomingConnection));
-    
-} /* ModuleEchoLink */
-
-
-ModuleEchoLink::~ModuleEchoLink(void)
-{
-  delete msg_paser;
-  delete msg_handler;
-  delete dir_refresh_timer;
-  delete qso;
-  delete Dispatcher::instance();
-  delete dir;
-} /* ~ModuleEchoLink */
-
+  
+  return true;
+  
+} /* ModuleEchoLink::initialize */
 
 
 
@@ -279,6 +284,22 @@ ModuleEchoLink::~ModuleEchoLink(void)
  * Private member functions
  *
  ****************************************************************************/
+
+
+void ModuleEchoLink::moduleCleanup(void)
+{
+  delete msg_pacer;
+  msg_pacer = 0;
+  delete msg_handler;
+  msg_handler = 0;
+  delete dir_refresh_timer;
+  dir_refresh_timer = 0;
+  delete qso;
+  qso = 0;
+  delete Dispatcher::instance();
+  delete dir;
+  dir = 0;
+} /* ModuleEchoLink::moduleCleanup */
 
 
 /*
@@ -605,7 +626,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
   qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
   qso->audioReceived.connect(slot(this, &Module::audioFromModule));
-  msg_paser->audioOutput.connect(slot(qso, &Qso::sendAudio));
+  msg_pacer->audioOutput.connect(slot(qso, &Qso::sendAudio));
   
   if (!isActive())
   {

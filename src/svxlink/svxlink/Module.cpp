@@ -1,6 +1,8 @@
 
 #include <iostream>
 
+#include <AsyncConfig.h>
+
 #include "Rx.h"
 #include "Logic.h"
 #include "Module.h"
@@ -9,12 +11,28 @@ using namespace std;
 using namespace Async;
 
 
-Module::Module(void *dl_handle, Logic *logic, int id)
-  : m_dl_handle(dl_handle), m_logic(logic), m_id(id), m_is_transmitting(false),
-    m_is_active(false)
+Module::Module(void *dl_handle, Logic *logic, const string& cfg_name)
+  : m_dl_handle(dl_handle), m_logic(logic), m_id(-1), m_is_transmitting(false),
+    m_is_active(false), m_cfg_name(cfg_name)
 {
-
+  
 } /* Module::Module */
+
+
+bool Module::initialize(void)
+{
+  string id_str;
+  if (!cfg().getValue(cfgName(), "ID", id_str))
+  {
+    cerr << "*** Error: Config variable " << cfgName()
+      	 << "/ID not set\n";
+    return false;
+  }
+  m_id = atoi(id_str.c_str());
+
+  return true;
+  
+} /* Module::initialize */
 
 
 void Module::activate(void)

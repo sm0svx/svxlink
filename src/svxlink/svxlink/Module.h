@@ -14,12 +14,15 @@ class Logic;
 class Module : public SigC::Object
 {
   public:
-    typedef Module* (*InitFunc)(void *dl_handle, Logic *logic, int id,
+    typedef Module* (*InitFunc)(void *dl_handle, Logic *logic,
       	      	      	        const char *cfg_name);
     
-    Module(void *dl_handle, Logic *logic, int id);
+    Module(void *dl_handle, Logic *logic, const std::string& cfg_name);
     virtual ~Module(void) { }
     
+    virtual bool initialize(void);
+
+    const std::string cfgName(void) const { return m_cfg_name; }
     void *pluginHandle(void) const { return m_dl_handle; }
     int id(void) const { return m_id; }
     Logic *logic(void) const { return m_logic; }
@@ -60,6 +63,7 @@ class Module : public SigC::Object
     SigC::Connection  m_audio_con;
     SigC::Connection  m_squelch_con;
     bool      	      m_is_active;
+    std::string	      m_cfg_name;
     
 };
 

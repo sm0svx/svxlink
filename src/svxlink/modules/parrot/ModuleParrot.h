@@ -122,8 +122,7 @@ namespace Async
 class ModuleParrot : public Module
 {
   public:
-    ModuleParrot(void *dl_handle, Logic *logic, int id,
-      	      	 const std::string& cfg_name);
+    ModuleParrot(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleParrot(void);
 
   private:

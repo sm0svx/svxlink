@@ -123,9 +123,9 @@ class AudioPacer;
 class ModuleEchoLink : public Module
 {
   public:
-    ModuleEchoLink(void *dl_handle, Logic *logic, int id,
-      	      	   const std::string& cfg_name);
+    ModuleEchoLink(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleEchoLink(void);
+    bool initialize(void);
 
   private:
     EchoLink::Directory *dir;
@@ -136,9 +136,10 @@ class ModuleEchoLink : public Module
     std::string       	description;
     std::string       	allow_ip;
     MsgHandler	      	*msg_handler;
-    AudioPacer       	*msg_paser;
+    AudioPacer       	*msg_pacer;
     bool      	      	remote_activation;
-    
+
+    void moduleCleanup(void);
     const char *name(void) const { return "EchoLink"; }
     void activateInit(void);
     void deactivateCleanup(void);

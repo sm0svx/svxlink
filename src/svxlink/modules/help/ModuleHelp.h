@@ -113,7 +113,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class ModuleHelp : public Module
 {
   public:
-    ModuleHelp(void *dl_handle, Logic *logic, int id);
+    ModuleHelp(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleHelp(void);
 
   private:

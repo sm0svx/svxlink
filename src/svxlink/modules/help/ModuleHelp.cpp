@@ -116,10 +116,9 @@ using namespace std;
 
 
 extern "C" {
-  Module *module_init(void *dl_handle, Logic *logic, int id,
-      	      	      const char *cfg_name)
+  Module *module_init(void *dl_handle, Logic *logic, const char *cfg_name)
   {
-    return new ModuleHelp(dl_handle, logic, id);
+    return new ModuleHelp(dl_handle, logic, cfg_name);
   }
 } /* extern "C" */
 
@@ -132,8 +131,8 @@ extern "C" {
  ****************************************************************************/
 
 
-ModuleHelp::ModuleHelp(void *dl_handle, Logic *logic, int id)
-  : Module(dl_handle, logic, id)
+ModuleHelp::ModuleHelp(void *dl_handle, Logic *logic, const string& cfg_name)
+  : Module(dl_handle, logic, cfg_name)
 {
   cout << "\tModule " << name()
        << " v" MODULE_HELP_VERSION " starting...\n";

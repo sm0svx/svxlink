@@ -123,10 +123,9 @@ using namespace Async;
 
 
 extern "C" {
-  Module *module_init(void *dl_handle, Logic *logic, int id,
-      	      	      const char *cfg_name)
+  Module *module_init(void *dl_handle, Logic *logic, const char *cfg_name)
   {
-    return new ModuleParrot(dl_handle, logic, id, cfg_name);
+    return new ModuleParrot(dl_handle, logic, cfg_name);
   }
 } /* extern "C" */
 
@@ -139,9 +138,9 @@ extern "C" {
  ****************************************************************************/
 
 
-ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic, int id,
+ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       	      	      	   const string& cfg_name)
-  : Module(dl_handle, logic, id), fifo(30*8000), squelch_is_open(false),
+  : Module(dl_handle, logic, cfg_name), fifo(30*8000), squelch_is_open(false),
     module_tmo_timer(0)
 {
   cout << "\tModule " << name()

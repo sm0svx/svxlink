@@ -534,15 +534,6 @@ void Logic::loadModule(const string& module_cfg_name)
     module_name = module_cfg_name;
   }
   
-  string module_id_str;
-  if (!cfg().getValue(module_cfg_name, "ID", module_id_str))
-  {
-    cerr << "*** Error: Config variable " << module_cfg_name
-      	 << "/ID not set\n";
-    return;
-  }
-  int id = atoi(module_id_str.c_str());
-  
   string module_filename("Module" + module_name + ".so");
   void *handle = dlopen(module_filename.c_str(), RTLD_NOW);
   if (handle == NULL)
@@ -559,14 +550,25 @@ void Logic::loadModule(const string& module_cfg_name)
     dlclose(handle);
     return;
   }
-  Module *module = init(handle, this, id, module_cfg_name.c_str());
+  
+  Module *module = init(handle, this, module_cfg_name.c_str());
   if (module == 0)
   {
-    cerr << "*** Error: Initialization failed for module "
+    cerr << "*** Error: Creation failed for module "
       	 << module_cfg_name.c_str() << endl;
     dlclose(handle);
     return;
   }
+  
+  if (!module->initialize())
+  {
+    cerr << "*** Error: Initialization failed for module "
+      	 << module_cfg_name.c_str() << endl;
+    delete module;
+    dlclose(handle);
+    return;
+  }
+  
   modules.push_back(module);
   
 } /* Logic::loadModule */
