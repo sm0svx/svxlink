@@ -153,8 +153,10 @@ AudioIO::AudioIO(const string& dev_name)
   write_fifo->stopOutput(true);
   write_fifo->fifoFull.connect(writeBufferFull.slot());
   audio_dev = AudioDevice::registerAudioIO(dev_name, this);
+  /*
   audio_dev->writeBufferFull.connect(
       	  slot(write_fifo, &SampleFifo::writeBufferFull));
+  */
 } /* AudioIO::AudioIO */
 
 
