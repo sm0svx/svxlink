@@ -59,10 +59,13 @@ endif
 PRGSRC		= 
 
 # Libraries compiled in the project (in $(LIB)).
-PROJLIBS	= -lasynccpp -lasyncqt
+PROJLIBS	= -lasynccpp
+ifdef QTDIR
+PROJLIBS      	+= -lasyncqt
+endif
 
 # Libraries external to the project
-LIBS		= -lpopt -lm
+LIBS		= -lm
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).
