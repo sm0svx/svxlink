@@ -50,8 +50,9 @@ CPPPROGS        += AsyncTcpClient_demo
 CPPPROGS        += AsyncUdpSocket_demo
 CPPPROGS        += AsyncCppApplication_demo
 CPPPROGS      	+= AsyncTcpServer_demo
+CPPPROGS      	+= AsyncConfig_demo
 ifdef QTDIR
-#CPPPROGS      	+= AsyncQtApplication_demo
+CPPPROGS      	+= AsyncQtApplication_demo
 endif
 
 # Sources other than the main files
@@ -61,7 +62,7 @@ PRGSRC		=
 PROJLIBS	= -lasynccpp -lasyncqt
 
 # Libraries external to the project
-LIBS		= -lpopt
+LIBS		= -lpopt -lm
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).
