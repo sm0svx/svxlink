@@ -162,8 +162,8 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 AudioIO::AudioIO(void)
-  : fd(-1), mode(MODE_NONE), read_watch(0), write_watch(0), file(-1),
-    old_mode(MODE_NONE), write_file_flush_timer(0)
+  : fd(-1), mode(MODE_NONE), read_watch(0), write_watch(0), read_buf(0),
+    file(-1), old_mode(MODE_NONE), write_file_flush_timer(0)
 {
 
 } /* AudioIO::AudioIO */
@@ -177,7 +177,7 @@ AudioIO::~AudioIO(void)
 
 bool AudioIO::isFullDuplexCapable(void)
 {
-  if (!open(MODE_RD))
+  if (!open(MODE_RDWR))
   {
     return false;
   }
@@ -185,7 +185,7 @@ bool AudioIO::isFullDuplexCapable(void)
   int caps;
   if (ioctl(fd, SNDCTL_DSP_GETCAPS, &caps) == -1)
   {
-    perror("SNDCTL_DSP_SETFRAGMENT ioctl failed");
+    perror("SNDCTL_DSP_GETCAPS ioctl failed");
     close();
     return false;
   }
@@ -204,6 +204,8 @@ bool AudioIO::isFullDuplexCapable(void)
 
 bool AudioIO::open(Mode mode)
 {
+  int arg;
+  
   if (fd != -1)
   {
     close();
@@ -232,14 +234,21 @@ bool AudioIO::open(Mode mode)
     return false;
   }
 
-  int arg  = (FRAG_COUNT << 16) | FRAG_SIZE_LOG2;
+  if (mode == MODE_RDWR)
+  {
+    ioctl(fd, SNDCTL_DSP_SETDUPLEX, 0);
+  }
+  
+  /*
+  arg  = (FRAG_COUNT << 16) | FRAG_SIZE_LOG2;
   if (ioctl(fd, SNDCTL_DSP_SETFRAGMENT, &arg) == -1)
   {
     perror("SNDCTL_DSP_SETFRAGMENT ioctl failed");
     close();
     return false;
   }
-
+  */
+  
   arg = SIZE;
   if(ioctl(fd, SOUND_PCM_WRITE_BITS, &arg) == -1)
   {
@@ -300,17 +309,44 @@ bool AudioIO::open(Mode mode)
     arg |= PCM_ENABLE_OUTPUT;
   }
   
-  if(ioctl(fd, SNDCTL_DSP_SETTRIGGER, &arg) == -1)
+  int caps;
+  if (ioctl(fd, SNDCTL_DSP_GETCAPS, &caps) == -1)
   {
-    perror("SNDCTL_DSP_SETTRIGGER ioctl failed");
+    perror("SNDCTL_DSP_GETCAPS ioctl failed");
     close();
     return false;
   }
   
+  if (caps & DSP_CAP_TRIGGER)
+  {
+    printf("The sound device do have TRIGGER capability\n");
+    if(ioctl(fd, SNDCTL_DSP_SETTRIGGER, &arg) == -1)
+    {
+      perror("SNDCTL_DSP_SETTRIGGER ioctl failed");
+      close();
+      return false;
+    }
+  }
+  else
+  {
+    printf("The sound device do NOT have TRIGGER capability\n");
+  }
+      
   write_watch = new FdWatch(fd, FdWatch::FD_WATCH_WR);
   assert(write_watch != 0);
   write_watch->activity.connect(slot(this, &AudioIO::writeSpaceAvailable));
   write_watch->setEnabled(false);
+  
+  int frag_size;
+  if (ioctl(fd, SNDCTL_DSP_GETBLKSIZE, &frag_size) == -1)
+  {
+    perror("SNDCTL_DSP_GETBLKSIZE ioctl failed");
+    close();
+    return false;
+  }
+  printf("frag_size=%d\n", frag_size);
+  
+  read_buf = new char[BUF_FRAG_COUNT*frag_size];
   
   return true;
   
@@ -326,6 +362,9 @@ void AudioIO::close(void)
   
   delete read_watch;
   read_watch = 0;
+  
+  delete [] read_buf;
+  read_buf = 0;
   
   if (fd != -1)
   {
@@ -427,16 +466,29 @@ bool AudioIO::writeFile(const string& filename)
  */
 void AudioIO::audioReadHandler(FdWatch *watch)
 {
-  char buf[1280];
-  int cnt = read(fd, buf, sizeof(buf));
-  if (cnt == -1)
+  audio_buf_info info;
+  if (ioctl(fd, SNDCTL_DSP_GETISPACE, &info) == -1)
   {
-    perror("read in AudioIO::audioReadHandler");
+    perror("SNDCTL_DSP_GETISPACE ioctl failed");
     return;
   }
+  //printf("fragments=%d  fragstotal=%d  fragsize=%d  bytes=%d\n",
+    //  	 info.fragments, info.fragstotal, info.fragsize, info.bytes);
   
-  audioRead(reinterpret_cast<short *>(buf), cnt/sizeof(short));
-  
+  if (info.fragments > 0)
+  {
+    int frags_to_read = info.fragments > BUF_FRAG_COUNT ?
+      	    BUF_FRAG_COUNT : info.fragments;
+    int cnt = read(fd, read_buf, frags_to_read * info.fragsize);
+    if (cnt == -1)
+    {
+      perror("read in AudioIO::audioReadHandler");
+      return;
+    }
+
+    audioRead(reinterpret_cast<short *>(read_buf), cnt/sizeof(short));
+  }
+    
 } /* AudioIO::audioReadHandler */
 
 

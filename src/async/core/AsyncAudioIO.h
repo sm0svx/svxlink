@@ -212,16 +212,18 @@ class AudioIO : public SigC::Object
   protected:
     
   private:
-    static const int  	RATE = 8000;
-    static const int  	CHANNELS = 1;
-    static const int  	SIZE = 16;
-    static const int  	FRAG_COUNT = 32;    // 32 frags ~ one second
-    static const int  	FRAG_SIZE_LOG2 = 8; // 256 bytes/frag
+    static const int  RATE = 8000;
+    static const int  CHANNELS = 1;
+    static const int  SIZE = 16;
+    //static const int  FRAG_COUNT = 32;    // 32 frags ~ one second
+    //static const int  FRAG_SIZE_LOG2 = 8; // 256 bytes/frag
+    static const int  BUF_FRAG_COUNT = 4;
 	
     int       	      fd;
     Mode      	      mode;
     Async::FdWatch *  read_watch;
     Async::FdWatch *  write_watch;
+    char *    	      read_buf;
     
     int    	      file;
     Mode      	      old_mode;
