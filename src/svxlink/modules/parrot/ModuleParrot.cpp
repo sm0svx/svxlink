@@ -144,7 +144,9 @@ ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic, int id,
   : Module(dl_handle, logic, id), fifo(30*8000), squelch_is_open(false),
     module_tmo_timer(0)
 {
-  printf("Module %s v%s starting...\n", name(), MODULE_PARROT_VERSION);
+  cout << "\tModule " << name()
+       << " v" MODULE_PARROT_VERSION " starting...\n";
+  
   fifo.stopOutput(true);
   fifo.writeSamples.connect(slot(this, &ModuleParrot::audioFromFifo));
   fifo.allSamplesWritten.connect(slot(this, &ModuleParrot::allSamplesWritten));
@@ -216,7 +218,6 @@ ModuleParrot::~ModuleParrot(void)
  */
 void ModuleParrot::activateInit(void)
 {
-  printf("Activating module %s...\n", name());
   fifo.clear();
   module_tmo_timer->setEnable(true);
 } /* activateInit */
@@ -237,7 +238,6 @@ void ModuleParrot::activateInit(void)
  */
 void ModuleParrot::deactivateCleanup(void)
 {
-  printf("Deactivating module %s...\n", name());
   fifo.clear();
   module_tmo_timer->setEnable(false);
 } /* deactivateCleanup */

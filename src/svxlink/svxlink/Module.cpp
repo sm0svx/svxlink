@@ -1,4 +1,6 @@
 
+#include <iostream>
+
 #include "Rx.h"
 #include "Logic.h"
 #include "Module.h"
@@ -8,6 +10,8 @@ using namespace Async;
 
 void Module::activate(void)
 {
+  cout << "Activating module " << name() << "...\n";
+  
   playMsg("activating_module");
   playModuleName();
   
@@ -22,6 +26,8 @@ void Module::activate(void)
 
 void Module::deactivate(void)
 {
+  cout << "Deactivating module " << name() << "...\n";
+  
   deactivateCleanup();
   
   m_audio_con.disconnect();

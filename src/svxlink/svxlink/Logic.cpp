@@ -261,7 +261,7 @@ void Logic::audioFromModule(short *samples, int count)
 
 void Logic::moduleTransmitRequest(bool do_transmit)
 {
-  printf("Logic::moduleTransmitRequest\n");
+  //printf("Logic::moduleTransmitRequest\n");
   /*
   if (!do_transmit && tx().isTransmitting())
   {
@@ -401,7 +401,7 @@ void Logic::dtmfDigitDetected(char digit)
  */
 void Logic::transmit(bool do_transmit)
 {
-  printf("Logic::transmit: do_transmit=%s\n", do_transmit ? "true" : "false");
+  //printf("Logic::transmit: do_transmit=%s\n", do_transmit ? "true" : "false");
   
   tx().transmit(do_transmit);
   if (do_transmit)
@@ -454,7 +454,7 @@ void Logic::clearPendingSamples(void)
  */
 void Logic::allMsgsWritten(void)
 {
-  printf("Logic::allMsgsWritten\n");
+  //printf("Logic::allMsgsWritten\n");
 
   tx().flushSamples();
   transmitCheck();  
@@ -463,7 +463,7 @@ void Logic::allMsgsWritten(void)
 
 void Logic::allModuleSamplesWritten(void)
 {
-  printf("Logic::allModuleSamplesWritten\n");
+  //printf("Logic::allModuleSamplesWritten\n");
   
   tx().flushSamples();
   transmitCheck();  
@@ -472,7 +472,7 @@ void Logic::allModuleSamplesWritten(void)
 
 void Logic::transmitCheck(void)
 {
-  printf("Logic::transmitCheck\n");
+  //printf("Logic::transmitCheck\n");
   
   if (((active_module != 0) && active_module->isTransmitting()) ||
       msg_handler->isWritingMessage() ||
@@ -490,7 +490,7 @@ void Logic::transmitCheck(void)
 
 void Logic::allTxSamplesFlushed(void)
 {
-  printf("Logic::allTxSamplesFlushed\n");
+  //printf("Logic::allTxSamplesFlushed\n");
   transmitCheck();
 } /* Logic::allTxSamplesFlushed */
 
@@ -526,7 +526,7 @@ void Logic::loadModules(void)
 
 void Logic::loadModule(const string& module_cfg_name)
 {
-  printf("Loading module \"%s\"\n", module_cfg_name.c_str());
+  cout << "Loading module \"" << module_cfg_name << "\"\n";
 
   string module_name;  
   if (!cfg().getValue(module_cfg_name, "NAME", module_name))

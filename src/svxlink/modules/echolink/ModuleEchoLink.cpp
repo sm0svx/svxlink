@@ -146,7 +146,8 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic, int id,
       	      	      	       const string& cfg_name)
   : Module(dl_handle, logic, id), dir(0), qso(0), dir_refresh_timer(0)
 {
-  printf("Module %s v%s starting...\n", name(), MODULE_ECHOLINK_VERSION);
+  cout << "\tModule " << name()
+       << " v" MODULE_ECHOLINK_VERSION " starting...\n";
   
   string server;
   string password;
@@ -293,7 +294,7 @@ ModuleEchoLink::~ModuleEchoLink(void)
  */
 void ModuleEchoLink::activateInit(void)
 {
-  printf("Activating module %s...\n", name());
+  
 } /* activateInit */
 
 
@@ -312,7 +313,6 @@ void ModuleEchoLink::activateInit(void)
  */
 void ModuleEchoLink::deactivateCleanup(void)
 {
-  printf("Deactivating module %s...\n", name());
   
 } /* deactivateCleanup */
 
@@ -434,7 +434,7 @@ void ModuleEchoLink::playHelpMsg(void)
  */
 void ModuleEchoLink::squelchOpen(bool is_open)
 {
-  printf("RX squelch is %s...\n", is_open ? "open" : "closed");
+  //printf("RX squelch is %s...\n", is_open ? "open" : "closed");
   
 } /* squelchOpen */
 
@@ -483,7 +483,8 @@ int ModuleEchoLink::audioFromRx(short *samples, int count)
  */
 void ModuleEchoLink::onStatusChanged(StationData::Status status)
 {
-  cerr << "Status changed to " << StationData::statusStr(status) << endl;
+  cout << "EchoLink directory status changed to "
+       << StationData::statusStr(status) << endl;
   if (status == StationData::STAT_ONLINE)
   {
     getDirectoryList(0);
@@ -515,7 +516,7 @@ void ModuleEchoLink::onStationListUpdated(void)
   }
   */
 
-  cout << "Message:" << endl;
+  cout << "--- EchoLink directory server message: ---" << endl;
   cout << dir->message() << endl;
 
 } /* onStationListUpdated */
@@ -536,7 +537,7 @@ void ModuleEchoLink::onStationListUpdated(void)
  */
 void ModuleEchoLink::onError(const string& msg)
 {
-  cerr << "*** ERROR: " << msg << endl;
+  cerr << "*** EchoLink directory server error: " << msg << endl;
   //Application::app().quit();
 } /* onError */
 
@@ -560,7 +561,8 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
       	      	      	      	      	  const string& callsign,
       	      	      	      	      	  const string& name)
 {
-  cerr << "Incoming connection from " << callsign << " (" << name << ")\n";
+  cout << "Incoming EchoLink connection from " << callsign
+       << " (" << name << ")\n";
   
   //return;
 
@@ -635,7 +637,9 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
  */
 void ModuleEchoLink::onInfoMsgReceived(const string& msg)
 {
-  cerr << "Info message received: " << endl << msg << endl;
+  cout << "--- EchoLink info message received from " << qso->remoteCallsign()
+       << " ---" << endl
+       << msg << endl;
   //qso->disconnect();
 } /* onInfoMsgReceived */
 
@@ -655,30 +659,30 @@ void ModuleEchoLink::onInfoMsgReceived(const string& msg)
  */
 void ModuleEchoLink::onStateChange(Qso::State state)
 {
-  cerr << "State changed to ";
+  cout << "EchoLink QSO state changed to ";
   switch (state)
   {
     case Qso::STATE_DISCONNECTED:
-      cerr << "DISCONNECTED\n";
+      cout << "DISCONNECTED\n";
       spellCallsign(qso->remoteCallsign());
       playMsg("disconnected");
       delete qso;
       qso = 0;
       break;
     case Qso::STATE_CONNECTING:
-      cerr << "CONNECTING\n";
+      cout << "CONNECTING\n";
       playMsg("connecting");
       //spellCallsign(qso->remoteCallsign());
       break;
     case Qso::STATE_CONNECTED:
-      cerr << "CONNECTED\n";
+      cout << "CONNECTED\n";
       playMsg("connected");
       spellCallsign(qso->remoteCallsign());
       break;
     case Qso::STATE_BYE_RECEIVED:
       break;
     default:
-      cerr << "???\n";
+      cout << "???\n";
       break;
   }
 } /* onStateChange */
@@ -700,7 +704,7 @@ void ModuleEchoLink::onStateChange(Qso::State state)
  */
 void ModuleEchoLink::onIsReceiving(bool is_receiving)
 {
-  cerr << "Receiving=" << (is_receiving ? "true" : "false") << endl;
+  //cerr << "EchoLink receiving" << (is_receiving ? "true" : "false") << endl;
   
   transmit(is_receiving);
 } /* onIsReceiving */
@@ -743,7 +747,7 @@ void ModuleEchoLink::onAudioReceived(short *samples, int count)
  */
 void ModuleEchoLink::getDirectoryList(Timer *timer)
 {
-  cout << "Refreshing directory list\n";
+  cout << "Refreshing directory list...\n";
   dir->getCalls();
   delete dir_refresh_timer;
   dir_refresh_timer = new Timer(600000);
@@ -772,7 +776,7 @@ void ModuleEchoLink::spellCallsign(const string& callsign)
     type = 'C';
   }
   
-  cout << "Call=" << call << " type=" << type << endl;
+  //cout << "Call=" << call << " type=" << type << endl;
   
   switch (type)
   {
@@ -798,7 +802,7 @@ void ModuleEchoLink::spellCallsign(const string& callsign)
 
 void ModuleEchoLink::allMsgsWritten(void)
 {
-  printf("ModuleEchoLink::allMsgsWritten\n");
+  //printf("ModuleEchoLink::allMsgsWritten\n");
   if (qso != 0)
   {
     qso->flushAudioSendBuffer();

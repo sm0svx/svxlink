@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <stdio.h>
 
+#include <iostream>
 
 
 /****************************************************************************
@@ -134,7 +135,8 @@ extern "C" {
 ModuleHelp::ModuleHelp(void *dl_handle, Logic *logic, int id)
   : Module(dl_handle, logic, id)
 {
-  printf("Module %s v%s starting...\n", name(), MODULE_HELP_VERSION);
+  cout << "\tModule " << name()
+       << " v" MODULE_HELP_VERSION " starting...\n";
 
 } /* ModuleHelp */
 
@@ -194,7 +196,6 @@ ModuleHelp::~ModuleHelp(void)
  */
 void ModuleHelp::activateInit(void)
 {
-  printf("Activating module %s...\n", name());
   playHelpMsg();
 } /* activateInit */
 
@@ -214,7 +215,6 @@ void ModuleHelp::activateInit(void)
  */
 void ModuleHelp::deactivateCleanup(void)
 {
-  printf("Deactivating module %s...\n", name());
   
 } /* deactivateCleanup */
 

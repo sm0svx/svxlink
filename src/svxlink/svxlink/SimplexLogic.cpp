@@ -155,20 +155,20 @@ bool SimplexLogic::initialize(void)
 
 void SimplexLogic::transmit(bool do_transmit)
 {
-  printf("transmit=%s\n", do_transmit ? "true" : "false");
+  //printf("transmit=%s\n", do_transmit ? "true" : "false");
   if (do_transmit)
   {
     if (!tx_timeout_occured)
     {
       if (!squelch_is_open)
       {
-	printf("Squelch is NOT open. Transmitting...\n");
+	//printf("Squelch is NOT open. Transmitting...\n");
 	rx().mute(true);
 	Logic::transmit(true);
       }
       else
       {
-	printf("Pending transmit request...\n");
+	//printf("Pending transmit request...\n");
 	pending_transmit = true;
       }
     }
@@ -176,7 +176,7 @@ void SimplexLogic::transmit(bool do_transmit)
   else
   {
     pending_transmit = false;
-    printf("Resetting tx timeout timer\n");
+    //printf("Resetting tx timeout timer\n");
     tx_timeout_occured = false;
     Logic::transmit(false);
     rx().mute(false);
@@ -250,7 +250,7 @@ void SimplexLogic::squelchOpen(bool is_open)
   
   if (!is_open && pending_transmit)
   {
-    printf("Executing pending transmit\n");
+    //printf("Executing pending transmit\n");
     pending_transmit = false;
     transmit(true);
   }

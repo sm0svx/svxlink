@@ -211,8 +211,8 @@ bool AudioDevice::open(const Mode& mode)
     close();
     return false;
   }
-  printf("The sound device do%s have TRIGGER capability\n",
-      (caps & DSP_CAP_TRIGGER) ? "" : " NOT");
+  //printf("The sound device do%s have TRIGGER capability\n",
+  //    (caps & DSP_CAP_TRIGGER) ? "" : " NOT");
   
   if (caps & DSP_CAP_TRIGGER)
   {
@@ -297,7 +297,7 @@ bool AudioDevice::open(const Mode& mode)
     close();
     return false;
   }
-  printf("Reported sampling rate: %dHz\n", arg);
+  //printf("Reported sampling rate: %dHz\n", arg);
   
   /*  Used for playing non-full fragments.
   if (ioctl(fd, SNDCTL_DSP_POST, 0) == -1)
@@ -346,7 +346,7 @@ bool AudioDevice::open(const Mode& mode)
     close();
     return false;
   }
-  printf("frag_size=%d\n", frag_size);
+  //printf("frag_size=%d\n", frag_size);
   
   read_buf = new char[BUF_FRAG_COUNT*frag_size];
   

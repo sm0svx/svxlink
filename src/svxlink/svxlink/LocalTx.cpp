@@ -221,7 +221,9 @@ void LocalTx::transmit(bool do_transmit)
   {
     return;
   }
-    
+  
+  cout << "Turning the transmitter " << (do_transmit ? "ON" : "OFF") << endl;
+  
   is_transmitting = do_transmit;
   
   if (do_transmit)
