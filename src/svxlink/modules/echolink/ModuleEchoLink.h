@@ -47,6 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <Module.h>
 #include <EchoLinkQso.h>
+#include <EchoLinkStationData.h>
 
 
 /****************************************************************************
@@ -92,6 +93,7 @@ namespace EchoLink
 
 class MsgHandler;
 class AudioPacer;
+class QsoImpl;
   
 
 /****************************************************************************
@@ -127,22 +129,28 @@ class ModuleEchoLink : public Module
     ModuleEchoLink(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleEchoLink(void);
     bool initialize(void);
-
+    void spellCallsign(const std::string& callsign);
+    
   private:
     EchoLink::Directory *dir;
-    EchoLink::Qso     	*qso;
+    //QsoImpl   	      	*qso;
     Async::Timer      	*dir_refresh_timer;
     std::string       	mycall;
     std::string       	sysop_name;
     std::string       	description;
     std::string       	allow_ip;
-    MsgHandler	      	*msg_handler;
-    AudioPacer       	*msg_pacer;
+    //MsgHandler	      	*msg_handler;
+    //AudioPacer       	*msg_pacer;
     bool      	      	remote_activation;
     int       	      	pending_connect_id;
     std::string       	last_message;
-    std::string       	last_info_msg;
-    bool		outgoing_con_pending;
+    //std::string       	last_info_msg;
+    QsoImpl		*outgoing_con_pending;
+    std::list<QsoImpl*>	qsos;
+    unsigned       	max_connections;
+    unsigned       	max_qsos;
+    QsoImpl   	      	*talker;
+    bool      	      	squelch_is_open;
 
     void moduleCleanup(void);
     const char *name(void) const { return "EchoLink"; }
@@ -160,17 +168,20 @@ class ModuleEchoLink : public Module
     void onError(const std::string& msg);
     void onIncomingConnection(const Async::IpAddress& ip,
       	    const std::string& callsign, const std::string& name);
-    void onInfoMsgReceived(const std::string& msg);
-    void onChatMsgReceived(const std::string& msg);
-    void onStateChange(EchoLink::Qso::State state);
-    void onIsReceiving(bool is_receiving);
-    void onAudioReceived(short *samples, int count);
+    //void onInfoMsgReceived(QsoImpl *qso, const std::string& msg);
+    void onChatMsgReceived(QsoImpl *qso, const std::string& msg);
+    //void onStateChange(EchoLink::Qso::State state, QsoImpl *qso);
+    void onIsReceiving(QsoImpl *qso, bool is_receiving);
+    //void onAudioReceived(short *samples, int count);
+    void onDestroyMe(QsoImpl *qso);
 
     void getDirectoryList(Async::Timer *timer=0);
-    void spellCallsign(const std::string& callsign);
 
-    void allRemoteMsgsWritten(void);
+    //void allRemoteMsgsWritten(void);
     void createOutgoingConnection(const EchoLink::StationData *station);
+    int audioFromRemote(QsoImpl *qso, short *samples, int count);
+    QsoImpl *findFirstTalker(void) const;
+    void broadcastTalkerStatus(void);
 
 };  /* class ModuleEchoLink */
 

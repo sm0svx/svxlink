@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <algorithm>
 #include <cassert>
+#include <sstream>
 
 
 /****************************************************************************
@@ -49,7 +50,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkDispatcher.h>
-#include <EchoLinkQso.h>
+//#include <EchoLinkQso.h>
 
 #include <MsgHandler.h>
 #include <AudioPacer.h>
@@ -61,6 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "QsoImpl.h"
 #include "ModuleEchoLink.h"
 
 
@@ -144,9 +146,10 @@ extern "C" {
 
 ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
       	      	      	       const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), dir(0), qso(0), dir_refresh_timer(0),
-    remote_activation(false), pending_connect_id(-1),
-    outgoing_con_pending(false)
+  : Module(dl_handle, logic, cfg_name), dir(0), /*qso(0),*/ dir_refresh_timer(0),
+    remote_activation(false), pending_connect_id(-1), last_message(""),
+    outgoing_con_pending(false), max_connections(1), max_qsos(1), talker(0),
+    squelch_is_open(false)
 {
   cout << "\tModule " << name()
        << " v" SVXLINK_VERSION " starting...\n";
@@ -220,6 +223,25 @@ bool ModuleEchoLink::initialize(void)
     return false;
   }
   
+  string value;
+  if (cfg().getValue(cfgName(), "MAX_CONNECTIONS", value))
+  {
+    max_connections = atoi(value.c_str());
+  }
+  
+  if (cfg().getValue(cfgName(), "MAX_QSOS", value))
+  {
+    max_qsos = atoi(value.c_str());
+  }
+  
+  if (max_qsos > max_connections)
+  {
+    cerr << "*** Error: The value of " << cfgName() << "/MAX_CONNECTIONS ("
+      	 << max_connections << ") must be greater or equal to the value of "
+	 << cfgName() << "/MAX_QSOS (" << max_qsos << ").\n";
+    return false;
+  }
+  
   cfg().getValue(cfgName(), "ALLOW_IP", allow_ip);
   
   string sound_base_dir;
@@ -239,6 +261,7 @@ bool ModuleEchoLink::initialize(void)
   //dir->makeBusy();
   dir->makeOnline();
   
+  /*
   msg_handler = new MsgHandler(sound_base_dir, 8000);
   
   msg_pacer = new AudioPacer(8000, 160*4, 500);
@@ -249,6 +272,7 @@ bool ModuleEchoLink::initialize(void)
       	  slot(msg_handler, &MsgHandler::writeBufferFull));
   msg_pacer->allAudioFlushed.connect(
       	  slot(this, &ModuleEchoLink::allRemoteMsgsWritten));
+  */
   
     // Start listening to the EchoLink UDP ports
   if (Dispatcher::instance() == 0)
@@ -264,6 +288,54 @@ bool ModuleEchoLink::initialize(void)
   return true;
   
 } /* ModuleEchoLink::initialize */
+
+
+void ModuleEchoLink::spellCallsign(const string& callsign)
+{
+  string call(callsign);
+  char type = 'S';
+  string::const_iterator dash = find(callsign.begin(), callsign.end(), '-');
+  if (dash != callsign.end())
+  {
+    call = string(callsign.begin(), dash);
+    ++dash;
+    if (dash != callsign.end())
+    {
+      type = *dash;
+    }
+  }
+  
+  if (callsign[0] == '*')
+  {
+    type = 'C';
+  }
+  
+  //cout << "Call=" << call << " type=" << type << endl;
+  
+  switch (type)
+  {
+    case 'S':
+      spellWord(call);
+      break;
+    case 'L':
+      spellWord(call);
+      playMsg("link");
+      break;
+    case 'R':
+      spellWord(call);
+      playMsg("repeater");
+      break;
+    case 'C':
+    {
+      string::iterator end = remove(call.begin(), call.end(), '*');
+      string conf_name(call.begin(), end);
+      playMsg("conference");
+      spellWord(conf_name);
+      break;
+    }
+  }
+  
+} /* spellCallsign */
 
 
 
@@ -302,14 +374,18 @@ bool ModuleEchoLink::initialize(void)
 
 void ModuleEchoLink::moduleCleanup(void)
 {
+  //FIXME: Delete qso objects
+  
+  /*
   delete msg_pacer;
   msg_pacer = 0;
   delete msg_handler;
   msg_handler = 0;
+  */
   delete dir_refresh_timer;
   dir_refresh_timer = 0;
-  delete qso;
-  qso = 0;
+  //delete qso;
+  //qso = 0;
   delete Dispatcher::instance();
   delete dir;
   dir = 0;
@@ -394,9 +470,10 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
   
   if (cmd == "")
   {
-    if (qso != 0)
+    //if (qso != 0)
+    if (qsos.size() != 0)
     {
-      qso->disconnect();
+      qsos.back()->disconnect();
     }
     else
     {
@@ -407,7 +484,8 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
   {
     playHelpMsg();
   }
-  else if (qso == 0)
+  //else if (qso == 0)
+  else if (qsos.size() < max_qsos)
   {
     if ((dir->status() == StationData::STAT_OFFLINE) ||
       	(dir->status() == StationData::STAT_UNKNOWN))
@@ -430,6 +508,7 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
   }
   else
   {
+    // FIXME: Change message to something like "no more connections allowed".
     playMsg("link_busy");
   }
 } /* dtmfCmdReceived */
@@ -471,7 +550,10 @@ void ModuleEchoLink::squelchOpen(bool is_open)
 {
   //printf("RX squelch is %s...\n", is_open ? "open" : "closed");
   
-  setIdle(!is_open && (qso == 0));
+  //setIdle(!is_open && (qso == 0));
+  squelch_is_open = is_open;
+  setIdle(!is_open && (qsos.size() == 0));
+  broadcastTalkerStatus();
   
 } /* squelchOpen */
 
@@ -492,9 +574,16 @@ void ModuleEchoLink::squelchOpen(bool is_open)
 int ModuleEchoLink::audioFromRx(short *samples, int count)
 {
     // FIXME: FIFO for saving samples if writing message
-  if ((qso != 0) && (!msg_handler->isWritingMessage()))
+  //if ((qso != 0) && (!msg_handler->isWritingMessage()))
+  if (qsos.size() > 0)
   {
-    count = qso->sendAudio(samples, count);
+    //count = qso->sendAudio(samples, count);
+    list<QsoImpl*>::iterator it;
+    for (it=qsos.begin(); it!=qsos.end(); ++it)
+    {
+      // FIXME: Take care of the case where not all samples are written
+      (*it)->sendAudio(samples, count);
+    }
   }
   
   return count;
@@ -518,11 +607,12 @@ int ModuleEchoLink::audioFromRx(short *samples, int count)
 void ModuleEchoLink::allMsgsWritten(void)
 {
   //printf("ModuleEchoLink::allMsgsWritten\n");
-  if (outgoing_con_pending && (qso != 0))
+  //if (outgoing_con_pending && (qso != 0))
+  if (outgoing_con_pending != 0)
   {
-    qso->connect();
+    outgoing_con_pending->connect();
   }
-  outgoing_con_pending = false;
+  outgoing_con_pending = 0;
 } /* allMsgsWritten */
 
 
@@ -641,10 +731,19 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   cout << "Incoming EchoLink connection from " << callsign
        << " (" << name << ")\n";
   
+  /*
   if ((qso != 0) || (pending_connect_id > 0)) // A connection is already active
   {
     // FIXME: Send BYE or maybe first an audio info message to remote station
     cerr << "EchoLink is BUSY...\n";
+    return;
+  }
+  */
+  
+  if (qsos.size() >= max_connections)
+  {
+    cerr << "*** WARNING: Ignoring incoming connection (too many "
+      	    "connections)\n";
     return;
   }
   
@@ -668,31 +767,41 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   }
   
     // Create a new Qso object to accept the connection
-  qso = new Qso(station->ip(), mycall, sysop_name, description);
+  //qso = new Qso(station->ip(), mycall, sysop_name, description);
+  QsoImpl *qso = new QsoImpl(station->ip(), this);
   if (!qso->initOk())
   {
     delete qso;
     cerr << "*** Error: Creation of Qso object failed\n";
     return;
   }
+  qsos.push_back(qso);
   qso->setRemoteCallsign(callsign);
   qso->setRemoteName(name);
-  qso->infoMsgReceived.connect(slot(this, &ModuleEchoLink::onInfoMsgReceived));
+  //qso->infoMsgReceived.connect(slot(this, &ModuleEchoLink::onInfoMsgReceived));
   qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
-  qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
+  //qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
   qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
-  qso->audioReceived.connect(slot(this, &Module::audioFromModule));
-  msg_pacer->audioOutput.connect(slot(qso, &Qso::sendAudio));
+  //qso->audioReceived.connect(slot(this, &Module::audioFromModule));
+  qso->audioReceived.connect(slot(this, &ModuleEchoLink::audioFromRemote));
+  qso->destroyMe.connect(slot(this, &ModuleEchoLink::onDestroyMe));
+  //msg_pacer->audioOutput.connect(slot(qso, &Qso::sendAudio));
   
-  last_message = "";
-  last_info_msg = "";
+  if (qsos.size() > max_qsos)
+  {
+    qso->reject();
+    return;
+  }
+  
+  //last_info_msg = "";  //FIXME: Per connection
   
   if (!isActive())
   {
     if (!activateMe())
     {
       // FIXME: Send BYE or maybe first an audio info message to remote station
-      delete qso;
+      //delete qso;
+      qso->reject();
       cerr << "*** Warning: Could not accept incoming connection from "
       	   << callsign << " since the frontend was busy doing something else.";
       return;
@@ -701,17 +810,18 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   }
   qso->accept();
   
-  msg_handler->playMsg("EchoLink", "greeting");
+  //msg_handler->playMsg("EchoLink", "greeting");
   
 } /* onIncomingConnection */
 
-
+#if 0
 /*
  *----------------------------------------------------------------------------
  * Method:    onInfoMsgReceived
  * Purpose:   Called by the EchoLink::Qso object when an info message is
  *    	      received from the remote station.
- * Input:     msg - The received message
+ * Input:     qso - The QSO object
+ *    	      msg - The received message
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2004-03-07
@@ -719,7 +829,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void ModuleEchoLink::onInfoMsgReceived(const string& msg)
+void ModuleEchoLink::onInfoMsgReceived(QsoImpl *qso, const string& msg)
 {
   if (msg != last_info_msg)
   {
@@ -729,14 +839,16 @@ void ModuleEchoLink::onInfoMsgReceived(const string& msg)
     last_info_msg = msg;
   }  
 } /* onInfoMsgReceived */
+#endif
 
 
 /*
  *----------------------------------------------------------------------------
- * Method:    onInfoMsgReceived
+ * Method:    onChatMsgReceived
  * Purpose:   Called by the EchoLink::Qso object when a chat message is
  *    	      received from the remote station.
- * Input:     msg - The received message
+ * Input:     qso - The QSO object
+ *    	      msg - The received message
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2004-05-04
@@ -744,15 +856,25 @@ void ModuleEchoLink::onInfoMsgReceived(const string& msg)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void ModuleEchoLink::onChatMsgReceived(const string& msg)
+void ModuleEchoLink::onChatMsgReceived(QsoImpl *qso, const string& msg)
 {
-  cout << "--- EchoLink chat message received from " << qso->remoteCallsign()
-       << " ---" << endl
-       << msg << endl;
+  //cout << "--- EchoLink chat message received from " << qso->remoteCallsign()
+    //   << " ---" << endl
+      // << msg << endl;
   
+  list<QsoImpl*>::iterator it;
+  for (it=qsos.begin(); it!=qsos.end(); ++it)
+  {
+    if (*it != qso)
+    {
+      (*it)->sendChatData(msg);
+    }
+  }
+
 } /* onChatMsgReceived */
 
 
+#if 0
 /*
  *----------------------------------------------------------------------------
  * Method:    onStateChange
@@ -766,7 +888,7 @@ void ModuleEchoLink::onChatMsgReceived(const string& msg)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void ModuleEchoLink::onStateChange(Qso::State state)
+void ModuleEchoLink::onStateChange(Qso::State state, QsoImpl *qso)
 {
   cout << "EchoLink QSO state changed to ";
   switch (state)
@@ -809,6 +931,7 @@ void ModuleEchoLink::onStateChange(Qso::State state)
       break;
   }
 } /* onStateChange */
+#endif
 
 
 /*
@@ -816,7 +939,8 @@ void ModuleEchoLink::onStateChange(Qso::State state)
  * Method:    onIsReceiving
  * Purpose:   Called by the EchoLink::Qso object to indicate whether the
  *    	      remote station is transmitting or not.
- * Input:     is_receiving  - true=remote station is transmitting
+ * Input:     qso     	    - The QSO object
+ *    	      is_receiving  - true=remote station is transmitting
  *    	      	      	      false=remote station is not transmitting
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
@@ -825,14 +949,34 @@ void ModuleEchoLink::onStateChange(Qso::State state)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void ModuleEchoLink::onIsReceiving(bool is_receiving)
+void ModuleEchoLink::onIsReceiving(QsoImpl *qso, bool is_receiving)
 {
-  //cerr << "EchoLink receiving" << (is_receiving ? "true" : "false") << endl;
+  //cerr << qso->remoteCallsign() << ": EchoLink receiving: "
+  //     << (is_receiving ? "TRUE" : "FALSE") << endl;
   
-  transmit(is_receiving);
+  if ((talker == 0) && is_receiving)
+  {
+    talker = qso;
+    broadcastTalkerStatus();
+  }
+  
+  if (talker == qso)
+  {
+    if (!is_receiving)
+    {
+      talker = findFirstTalker();
+      if (talker != 0)
+      {
+      	is_receiving = true;
+      }
+      broadcastTalkerStatus();
+    }
+    transmit(is_receiving);
+  }
 } /* onIsReceiving */
 
 
+#if 0
 /*
  *----------------------------------------------------------------------------
  * Method:    onAudioReceived
@@ -852,6 +996,23 @@ void ModuleEchoLink::onAudioReceived(short *samples, int count)
   //cerr << "Samples received from remote station\n";
   audioFromModule(samples, count);  
 } /* onAudioReceived */
+#endif
+
+
+void ModuleEchoLink::onDestroyMe(QsoImpl *qso)
+{
+  printf("ModuleEchoLink::onDestroyMe\n");
+  list<QsoImpl*>::iterator it = find(qsos.begin(), qsos.end(), qso);
+  assert (it != qsos.end());
+  qsos.erase(it);
+  delete qso;
+  qso = 0;
+  
+  if (remote_activation && (qsos.size() == 0))
+  {
+    deactivateMe();
+  }
+} /* ModuleEchoLink::onDestroyMe */
 
 
 /*
@@ -872,6 +1033,8 @@ void ModuleEchoLink::getDirectoryList(Timer *timer)
 {
   //cout << "Refreshing directory list...\n";
   dir->getCalls();
+  
+    /* FIXME: Do we really need periodic updates of the directory list ? */
   delete dir_refresh_timer;
   dir_refresh_timer = new Timer(600000);
   dir_refresh_timer->expired.connect(
@@ -879,69 +1042,26 @@ void ModuleEchoLink::getDirectoryList(Timer *timer)
 } /* ModuleEchoLink::getDirectoryList */
 
 
-void ModuleEchoLink::spellCallsign(const string& callsign)
-{
-  string call(callsign);
-  char type = 'S';
-  string::const_iterator dash = find(callsign.begin(), callsign.end(), '-');
-  if (dash != callsign.end())
-  {
-    call = string(callsign.begin(), dash);
-    ++dash;
-    if (dash != callsign.end())
-    {
-      type = *dash;
-    }
-  }
-  
-  if (callsign[0] == '*')
-  {
-    type = 'C';
-  }
-  
-  //cout << "Call=" << call << " type=" << type << endl;
-  
-  switch (type)
-  {
-    case 'S':
-      spellWord(call);
-      break;
-    case 'L':
-      spellWord(call);
-      playMsg("link");
-      break;
-    case 'R':
-      spellWord(call);
-      playMsg("repeater");
-      break;
-    case 'C':
-    {
-      string::iterator end = remove(call.begin(), call.end(), '*');
-      string conf_name(call.begin(), end);
-      playMsg("conference");
-      spellWord(conf_name);
-      break;
-    }
-  }
-  
-} /* spellCallsign */
-
-
+#if 0
 void ModuleEchoLink::allRemoteMsgsWritten(void)
 {
   //printf("ModuleEchoLink::allRemoteMsgsWritten\n");
+  /*
   if (qso != 0)
   {
     qso->flushAudioSendBuffer();
   }
+  */
 } /* ModuleEchoLink::allRemoteMsgsWritten */
+#endif
 
 
 void ModuleEchoLink::createOutgoingConnection(const StationData *station)
 {
-  assert(qso == 0);
+  //assert(qso == 0);
   
-  qso = new Qso(station->ip(), mycall, sysop_name, description);
+  //qso = new Qso(station->ip(), mycall, sysop_name, description);
+  QsoImpl *qso = new QsoImpl(station->ip(), this);
   if (!qso->initOk())
   {
     delete qso;
@@ -949,23 +1069,108 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
     playMsg("operation_failed");
     return;
   }
+  qsos.push_back(qso);
   qso->setRemoteCallsign(station->callsign());
-  qso->infoMsgReceived.connect(slot(this, &ModuleEchoLink::onInfoMsgReceived));
+  //qso->infoMsgReceived.connect(slot(this, &ModuleEchoLink::onInfoMsgReceived));
   qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
-  qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
+  //qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
   qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
-  qso->audioReceived.connect(slot(this, &Module::audioFromModule));
+  //qso->audioReceived.connect(slot(this, &Module::audioFromModule));
+  qso->audioReceived.connect(slot(this, &ModuleEchoLink::audioFromRemote));
+  qso->destroyMe.connect(slot(this, &ModuleEchoLink::onDestroyMe));
   //qso->connect();
 
   playMsg("connecting_to");
   spellCallsign(qso->remoteCallsign());
   playSilence(500);
-  outgoing_con_pending = true;
+  outgoing_con_pending = qso;
   
-  last_message = "";
-  last_info_msg = "";
+  //last_info_msg = "";
   
 } /* ModuleEchoLink::createOutgoingConnection */
+
+
+int ModuleEchoLink::audioFromRemote(QsoImpl *qso, short *samples, int count)
+{
+  if ((qso == talker) && !squelch_is_open)
+  {
+    audioFromModule(samples, count);
+    list<QsoImpl*>::iterator it;
+    for (it=qsos.begin(); it!=qsos.end(); ++it)
+    {
+      // FIXME: Take care of the case where not all samples are written
+      if (*it != qso)
+      {
+	(*it)->sendAudio(samples, count);
+      }
+    }
+  }
+    
+  return count;
+  
+} /* ModuleEchoLink::audioFromRemote */
+
+
+QsoImpl *ModuleEchoLink::findFirstTalker(void) const
+{
+  list<QsoImpl*>::const_iterator it;
+  for (it=qsos.begin(); it!=qsos.end(); ++it)
+  {
+    if ((*it)->receivingAudio())
+    {
+      return *it;
+    }
+  }
+  
+  return 0;
+  
+} /* ModuleEchoLink::findFirstTalker */
+
+
+void ModuleEchoLink::broadcastTalkerStatus(void)
+{
+  if (qsos.size() < 2)
+  {
+    return;
+  }
+  
+  stringstream msg;
+  msg << "SvxLink " << SVXLINK_VERSION << " - " << mycall
+      << " (" << qsos.size() << ")\n\n";
+
+  if (squelch_is_open)
+  {
+    msg << "> " << mycall << "         " << sysop_name << "\n\n";
+  }
+  else
+  {
+    if (talker != 0)
+    {
+      msg << "> " << talker->remoteCallsign() << "         "
+      	  << talker->remoteName() << "\n\n";
+    }
+    msg << mycall << "         " << sysop_name << "\n";
+  }
+  
+  list<QsoImpl*>::const_iterator it;
+  for (it=qsos.begin(); it!=qsos.end(); ++it)
+  {
+    if ((*it != talker) || squelch_is_open)
+    {
+      msg << (*it)->remoteCallsign() << "         "
+      	  << (*it)->remoteName() << "\n";
+    }
+  }
+  
+  //msg << endl;
+  
+  for (it=qsos.begin(); it!=qsos.end(); ++it)
+  {
+    (*it)->sendChatData(msg.str(), false);
+  }
+  
+} /* ModuleEchoLink::broadcastTalkerStatus */
+
 
 
 
