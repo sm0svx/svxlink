@@ -231,6 +231,15 @@ void RepeaterLogic::spellWord(const string& word)
 } /* RepeaterLogic::spellWord */
 
 
+void RepeaterLogic::playSilence(int length)
+{
+  //printf("RepeaterLogic::playSilence: %d ms\n", length);
+  
+  setIdle(false);
+  Logic::playSilence(length);
+} /* RepeaterLogic::playSilence */
+
+
 void RepeaterLogic::moduleTransmitRequest(bool do_transmit)
 {
   if (do_transmit)

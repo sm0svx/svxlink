@@ -147,6 +147,7 @@ class RepeaterLogic : public Logic
     virtual void playMsg(const std::string& msg, const Module *module=0);
     virtual void playNumber(int number);
     virtual void spellWord(const std::string& word);
+    virtual void playSilence(int length);
     virtual void moduleTransmitRequest(bool do_transmit);
 
   protected:

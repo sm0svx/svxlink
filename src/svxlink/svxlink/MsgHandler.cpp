@@ -6,6 +6,7 @@
 #include <ctype.h>
 
 #include <cassert>
+#include <iostream>
 
 #include "MsgHandler.h"
 
@@ -16,8 +17,8 @@
 using namespace std;
 
 
-MsgHandler::MsgHandler(const string& base_dir)
-  : file(-1), base_dir(base_dir)
+MsgHandler::MsgHandler(const string& base_dir, int sample_rate)
+  : file(-1), base_dir(base_dir), silence_left(-1), sample_rate(sample_rate)
 {
   
 }
@@ -70,6 +71,14 @@ void MsgHandler::spellWord(const string& word)
 }
 
 
+void MsgHandler::playSilence(int length)
+{
+  char str[256];
+  sprintf(str, ">SILENCE:%d", length);
+  playMsg("Default", str);
+} /* MsgHandler::playSilence */
+
+
 void MsgHandler::writeBufferFull(bool is_full)
 {
   //printf("write_buffer_full=%s\n", is_full ? "true" : "false");
@@ -94,61 +103,72 @@ void MsgHandler::clear(void)
 
 void MsgHandler::playNextMsg(void)
 {
-  if (msg_queue.size() == 0)
+  if (msg_queue.empty())
   {
+    allMsgsWritten();
     return;
   }
     
   MsgQueueItem& msg = msg_queue.front();
   
-  file = ::open((base_dir + "/" + msg.context + "/" + msg.msg + ".raw").c_str(),
-      	      	O_RDONLY);
-  if (file == -1)
+  if (msg.msg[0] == '>')
   {
-    file = ::open((base_dir + "/" + "Default/" + msg.msg + ".raw").c_str(),
-      	      	  O_RDONLY);
+    executeCmd(msg.msg);
   }
-  if (file != -1)
+  else
   {
+    file = ::open((base_dir + "/" + msg.context + "/" + msg.msg + ".raw").c_str(),
+      	      	  O_RDONLY);
+    if (file == -1)
+    {
+      file = ::open((base_dir + "/" + "Default/" + msg.msg + ".raw").c_str(),
+      	      	    O_RDONLY);
+    }
+    if (file != -1)
+    {
+      writeFromFile();
+    }
+    else
+    {
+      cerr << "*** WARNING: Could not find audio message \"" << msg.msg
+           << "\"\n";
+      msg_queue.pop_front();
+      playNextMsg();
+    }
+  }
+}
+
+
+void MsgHandler::executeCmd(const string& cmd)
+{
+  if (strstr(cmd.c_str(), ">SILENCE:") == cmd.c_str())
+  {
+    silence_left = sample_rate * atoi(cmd.c_str() + 9) / 1000;
     writeFromFile();
   }
   else
   {
+    cerr << "*** WARNING: Unknown audio command: \"" << cmd << "\"\n";
     msg_queue.pop_front();
-    if (msg_queue.empty())
-    {
-      allMsgsWritten();
-    }
-    else
-    {
-      playNextMsg();
-    }
-  }  
-}
+    playNextMsg();
+  }
+  
+} /* MsgHandler::executeCmd */
 
 
 void MsgHandler::writeFromFile(void)
 {
   short buf[WRITE_BLOCK_SIZE];
-  assert(file != -1);
-  bool success = false;
   
   int written;
   int read_cnt;
   do
   {
-    read_cnt = read(file, buf, sizeof(buf));
-    if (read_cnt == -1)
+    read_cnt = readSamples(buf, sizeof(buf) / sizeof(buf[0]));
+    if (read_cnt == 0)
     {
-      perror("read in MsgHandler::writeFromFile");
       goto done;
     }
-    else if (read_cnt == 0)
-    {
-      success = true;
-      goto done;
-    }
-    read_cnt /= sizeof(short);
     
     written = writeAudio(buf, read_cnt);
     if (written == -1)
@@ -159,26 +179,72 @@ void MsgHandler::writeFromFile(void)
     //printf("Read=%d  Written=%d\n", read_cnt, written);
   } while (written == read_cnt);
   
-  //printf("lseeking...\n");
-  lseek(file, written*sizeof(short) - read_cnt*sizeof(short), SEEK_CUR);
+  unreadSamples(read_cnt - written);
   
   return;
     
   done:
     //printf("Done...\n");
-    ::close(file);
-    file = -1;
+    if (file != -1)
+    {
+      ::close(file);
+      file = -1;
+    }
     
     msg_queue.pop_front();
-    if (msg_queue.empty())
-    {
-      allMsgsWritten();
-    }
-    else
-    {
-      playNextMsg();
-    }
+    playNextMsg();
 } /* MsgHandler::writeFromFile */
 
 
+int MsgHandler::readSamples(short *samples, int len)
+{
+  int read_cnt;
+  
+  if (silence_left >= 0)
+  {
+    read_cnt = min(len, silence_left);
+    memset(samples, 0, sizeof(*samples) * read_cnt);
+    if (silence_left == 0)
+    {
+      silence_left = -1;
+    }
+    else
+    {
+      silence_left -= read_cnt;
+    }
+    //printf("Reading %d silence samples\n", read_cnt);
+  }
+  else
+  {
+    read_cnt = read(file, samples, len * sizeof(*samples));
+    if (read_cnt == -1)
+    {
+      perror("read in MsgHandler::readSamples");
+      read_cnt = 0;
+    }
+    else
+    {
+      read_cnt /= sizeof(*samples);
+    }
+  }
+  
+  return read_cnt;
+  
+} /* MsgHandler::readSamples */
+
+
+void MsgHandler::unreadSamples(int len)
+{
+  if (silence_left >= 0)
+  {
+    silence_left += len;
+  }
+  else
+  {
+    //printf("lseeking...\n");
+    lseek(file, -len * sizeof(short), SEEK_CUR);
+  }
+    
+
+} /* MsgHandler::unreadSamples */
 

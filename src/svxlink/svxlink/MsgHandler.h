@@ -8,12 +8,13 @@
 class MsgHandler : public SigC::Object
 {
   public:
-    MsgHandler(const std::string& base_dir);
+    MsgHandler(const std::string& base_dir, int sample_rate);
     ~MsgHandler(void);
     
     void playMsg(const std::string& context, const std::string& msg);
     void playNumber(int number);
     void spellWord(const std::string& word);
+    void playSilence(int length);
     void writeBufferFull(bool is_full);
     bool isWritingMessage(void) const { return !msg_queue.empty(); }
     void clear(void);
@@ -37,9 +38,14 @@ class MsgHandler : public SigC::Object
     std::list<MsgQueueItem> msg_queue;
     int       	      	    file;
     std::string       	    base_dir;
+    int			    silence_left;
+    int			    sample_rate;
     
     void playNextMsg(void);
+    void executeCmd(const std::string& cmd);
     void writeFromFile(void);
+    int readSamples(short *samples, int len);
+    void unreadSamples(int len);
 
 
 };
