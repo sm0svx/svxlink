@@ -8,8 +8,11 @@
 
 * Added an environment variable that make it possible to disable the use
   of the trigger functionality when opening an audio device. This was necessary
-  to make Alsa OSS emulation work. Set ASYNC_AUDIO_NOTRIGGER to disable the
+  to make Alsa OSS emulation work. Set ASYNC_AUDIO_NOTRIGGER=1 to disable the
   use of the trigger functionality.
+
+* Decreased the audio buffers in the audio device to make audio playback
+  more responsive.
 
 
 
