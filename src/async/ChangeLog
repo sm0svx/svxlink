@@ -8,6 +8,8 @@
 
 * The Serial class can now handle multiple users per port.
 
+* Bugfix: The AudioIO class did not handle mutiple users correctly.
+
 
 
  0.10.0 -- 26 Sep 2004
