@@ -155,6 +155,7 @@ class RepeaterLogic : public Logic
     int      	  idle_timeout;
     Async::Timer  *blip_timer;
     int       	  blip_delay;
+    int       	  required_1750_duration;
     
     void identify(void);
     int audioReceived(short *samples, int count);

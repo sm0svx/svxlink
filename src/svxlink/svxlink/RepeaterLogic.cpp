@@ -122,7 +122,7 @@ using namespace Async;
 
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
   : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(30000),
-    blip_timer(0), blip_delay(0)
+    blip_timer(0), blip_delay(0), required_1750_duration(0)
 {
 
 } /* RepeaterLogic::RepeaterLogic */
@@ -153,16 +153,25 @@ bool RepeaterLogic::initialize(void)
     idle_timeout = atoi(idle_timeout_str.c_str());
   }
   
+  string req_1750_duration_str;
+  if (cfg().getValue(name(), "REQUIRED_1750_DURATION", req_1750_duration_str))
+  {
+    required_1750_duration = atoi(req_1750_duration_str.c_str());
+  }
+  
   tx().txTimeout.connect(slot(this, &RepeaterLogic::txTimeout));
   
   rx().mute(false);
   rx().audioReceived.connect(slot(this, &RepeaterLogic::audioReceived));
-  if (!rx().detect1750(2000))
+  if (required_1750_duration > 0)
   {
-    cerr << "*** WARNING: Could not setup 1750 detection\n";
+    if (!rx().detect1750(2000))
+    {
+      cerr << "*** WARNING: Could not setup 1750 detection\n";
+    }
+    rx().detected1750.connect(slot(this, &RepeaterLogic::detected1750));
   }
-  rx().detected1750.connect(slot(this, &RepeaterLogic::detected1750));
-  
+    
   playMsg("online");
   identify();
     
@@ -329,9 +338,9 @@ void RepeaterLogic::squelchOpen(bool is_open)
   }
   else
   {
-    if (is_open)
+    if (is_open && (required_1750_duration == 0))
     {
-      //setUp(true);
+      setUp(true);
     }
   }
   
