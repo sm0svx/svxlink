@@ -145,7 +145,7 @@ using namespace Async;
 
 AudioIO::AudioIO(const string& dev_name)
   : io_mode(MODE_NONE), audio_dev(0), write_fifo(0), do_flush(true),
-    flush_timer(0)
+    flush_timer(0), is_flushing(false)
 {
   write_fifo = new SampleFifo(8000);
   write_fifo->setOverwrite(false);
@@ -222,6 +222,7 @@ void AudioIO::close(void)
   write_fifo->clear();
   
   do_flush = true;
+  is_flushing = false;
   
   delete flush_timer;
   flush_timer = 0;
@@ -238,6 +239,7 @@ int AudioIO::write(short *samples, int count)
     delete flush_timer;
     flush_timer = 0;
     do_flush = false;
+    is_flushing = false;
   }
   
   int samples_written = write_fifo->addSamples(samples, count);
@@ -257,6 +259,7 @@ void AudioIO::flushSamples(void)
 {
   //printf("AudioIO::flushSamples\n");
   do_flush = true;
+  is_flushing = true;
   audio_dev->flushSamples();
   if (write_fifo->empty())
   {
@@ -318,6 +321,7 @@ void AudioIO::flushSamplesInDevice(int extra_samples)
 
 void AudioIO::flushDone(Timer *timer)
 {
+  is_flushing = false;
   delete flush_timer;
   flush_timer = 0;
   allSamplesFlushed();

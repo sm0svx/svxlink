@@ -205,7 +205,7 @@ class AudioIO : public SigC::Object
      * @brief 	Check if the audio device is busy flushing samples
      * @return	Returns \em true if flushing the buffer or else \em false
      */
-    bool isFlushing(void) const { return do_flush; }
+    bool isFlushing(void) const { return is_flushing; }
     
     /*
      * @brief 	Find out the current IO mode
@@ -263,6 +263,7 @@ class AudioIO : public SigC::Object
     SigC::Connection  read_con;
     bool      	      do_flush;
     Async::Timer      *flush_timer;
+    bool      	      is_flushing;
 
     void audioReadHandler(Async::FdWatch *watch);
     void flushSamplesInDevice(int extra_samples=0);
