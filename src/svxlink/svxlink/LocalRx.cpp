@@ -213,10 +213,11 @@ bool LocalRx::squelchIsOpen(void) const
 
 bool LocalRx::detect1750(int required_duration)
 {
-  det_1750 = new ToneDetector(1750, 800);
+  det_1750 = new ToneDetector(1750, 330); // FIXME: Determine optimum N
   det_1750->activated.connect(slot(this, &LocalRx::activated1750));
   req_1750_duration = required_duration;
-  
+  audio_io->audioRead.connect(slot(det_1750, &ToneDetector::processSamples));
+
   return true;
   
 } /* LocalRx::detect1750 */
@@ -257,7 +258,7 @@ bool LocalRx::detect1750(int required_duration)
 
 void LocalRx::activated1750(bool is_activated)
 {
-  printf("1750 %s...\n", is_activated ? "ACTIVATED" : "DEACTIVATED");
+  //printf("1750 %s...\n", is_activated ? "ACTIVATED" : "DEACTIVATED");
   if (is_activated)
   {
     gettimeofday(&det_1750_timestamp, NULL);
@@ -268,7 +269,7 @@ void LocalRx::activated1750(bool is_activated)
     gettimeofday(&tv, NULL);
     timersub(&tv, &det_1750_timestamp, &tv_diff);
     long diff = tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000;
-    printf("The 1750 tone was active for %ld milliseconds\n", diff);
+    //printf("The 1750 tone was active for %ld milliseconds\n", diff);
     if (diff >= req_1750_duration)
     {
       detected1750();
