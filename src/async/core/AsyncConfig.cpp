@@ -201,7 +201,7 @@ list<string> Config::listSection(const string& section)
   Values::iterator it = values.begin();
   for (it=values.begin(); it!=values.end(); ++it)
   {
-    tags.push_back(it->second);
+    tags.push_back(it->first);
   }
   
   return tags;
