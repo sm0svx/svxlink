@@ -812,6 +812,8 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->accept();
   broadcastTalkerStatus();
   
+  setIdle(false);
+
   //msg_handler->playMsg("EchoLink", "greeting");
   
 } /* onIncomingConnection */
