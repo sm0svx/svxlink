@@ -102,14 +102,6 @@ ifdef SHLIB_VERSION
 endif
 
 
-CFLAGS = $(WARNINGS) $(INCPATH) -fPIC $(CFLAGS_DEFINES)
-ifdef BUILD_RELEASE
-  CFLAGS  += $(RELEASE_CFLAGS)
-else
-  CFLAGS  += $(DEBUG_CFLAGS)
-endif
-
-
 # Dependency list created from the PROJLIBS list
 LIBDEP		:= $(subst -l,$(LIB)/lib,$(PROJLIBS))
 LIBDEP		:= $(LIBDEP:%=%.a)
@@ -326,10 +318,18 @@ ECHO		= /bin/echo -e
 BECHO		= $(ECHO) $(BOLD)txt $(NBOLD)
 
 # Compiler
+CFLAGS = $(WARNINGS) $(CWARNINGS) $(INCPATH) -fPIC $(CFLAGS_DEFINES)
+CXXFLAGS = $(WARNINGS) $(CXXWARNINGS) $(INCPATH) -fPIC $(CFLAGS_DEFINES)
+ifdef BUILD_RELEASE
+  CFLAGS += $(RELEASE_CFLAGS)
+  CXXFLAGS += $(RELEASE_CFLAGS)
+else
+  CFLAGS += $(DEBUG_CFLAGS)
+  CXXFLAGS += $(DEBUG_CFLAGS)
+endif
 COMP		= gcc
 CC		= $(ECHO) --- Compiling $(BOLD)$(@:.o=.c)$(NBOLD)...; $(COMP) $(CFLAGS)
-CXXFLAGS	= $(WARNINGS) $(INCPATH) -fPIC
-CXX		= $(ECHO) --- Compiling $(BOLD)$(@:.o=.cpp)$(NBOLD)...; g++ $(CFLAGS)
+CXX		= $(ECHO) --- Compiling $(BOLD)$(@:.o=.cpp)$(NBOLD)...; g++ $(CXXFLAGS)
 
 # Archiver
 AR		= ar
