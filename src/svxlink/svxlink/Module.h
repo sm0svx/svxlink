@@ -33,14 +33,14 @@ class Module : public SigC::Object
     bool isTransmitting(void) const { return m_is_transmitting; }
     Async::Config &cfg(void) const;
     const std::string& logicName(void) const;
+    void playModuleName(void);
+    void playHelpMsg(void);
     
     virtual const char *name(void) const = 0;
     virtual void activateInit(void) = 0;
     virtual void deactivateCleanup(void) = 0;
     virtual void dtmfDigitReceived(char digit) {}
     virtual void dtmfCmdReceived(const std::string& cmd) {}
-    virtual void playModuleName(void) { playMsg("name"); }
-    virtual void playHelpMsg(void) { playMsg("help"); }
     virtual void squelchOpen(bool is_open) {}
     virtual int audioFromRx(short *samples, int count) { return count; }
     virtual void allMsgsWritten(void) {}

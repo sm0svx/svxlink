@@ -100,6 +100,18 @@ const string& Module::logicName(void) const
 } /* Module::logicName */
 
 
+void Module::playModuleName(void)
+{
+  logic()->playMsg("name", this);
+} /* Module::playModuleName */
+
+
+void Module::playHelpMsg(void)
+{
+  logic()->playMsg("help", this);
+} /* Module::playHelpMsg */
+
+
 void Module::playMsg(const string& msg) const
 {
   if (m_is_active)
@@ -150,8 +162,8 @@ void Module::transmit(bool tx)
 {
   if (m_is_active)
   {
-    logic()->moduleTransmitRequest(tx);
     m_is_transmitting = tx;
+    logic()->moduleTransmitRequest(tx);
   }
 } /* transmit */
 
