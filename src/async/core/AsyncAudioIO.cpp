@@ -170,32 +170,7 @@ AudioIO::~AudioIO(void)
 
 bool AudioIO::isFullDuplexCapable(void)
 {
-  return false;
-  
-  /*  
-  if (!open(MODE_RDWR))
-  {
-    return false;
-  }
-  
-  int caps;
-  if (ioctl(fd, SNDCTL_DSP_GETCAPS, &caps) == -1)
-  {
-    perror("SNDCTL_DSP_GETCAPS ioctl failed");
-    close();
-    return false;
-  }
-  
-  close();
-  
-  if (!(caps & DSP_CAP_DUPLEX))
-  {
-    return false;
-  }
-  
-  return true;
-  */
-  
+  return audio_dev->isFullDuplexCapable();
 } /* AudioIO::isFullDuplexCapable */
 
 
