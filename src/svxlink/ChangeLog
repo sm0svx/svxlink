@@ -7,6 +7,8 @@
 * Applied patch from Eric Jacobson: Only ident if the link has been
   transmitting. New config variable: IDENT_ONLY_AFTER_TX.
 
+* Added roger beep for SimplexLogic.
+
 
 
  0.3.0 -- 26 Sep 2004

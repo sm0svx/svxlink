@@ -123,7 +123,7 @@ using namespace Async;
 
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
   : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(30000),
-    rgr_sound_timer(0), rgr_sound_delay(0), required_1750_duration(0),
+    required_1750_duration(0),
     idle_sound_timer(0), idle_sound("repeater_idle"), ident_timer(0),
     ident_interval(10*60*1000), idle_sound_interval(0),
     repeating_enabled(false)
@@ -136,7 +136,6 @@ RepeaterLogic::~RepeaterLogic(void)
 {
   delete ident_timer;
   delete idle_sound_timer;
-  delete rgr_sound_timer;
   delete up_timer;
 } /* RepeaterLogic::~RepeaterLogic */
 
@@ -149,11 +148,6 @@ bool RepeaterLogic::initialize(void)
   }
   
   string str;
-  if (cfg().getValue(name(), "RGR_SOUND_DELAY", str))
-  {
-    rgr_sound_delay = atoi(str.c_str());
-  }
-  
   if (cfg().getValue(name(), "IDLE_TIMEOUT", str))
   {
     idle_timeout = atoi(str.c_str()) * 1000;
@@ -389,14 +383,6 @@ void RepeaterLogic::setUp(bool up)
 } /* RepeaterLogic::setUp */
 
 
-void RepeaterLogic::sendRgrSound(Timer *t)
-{
-  //printf("RepeaterLogic::sendRogerSound\n");
-  playMsg("blip");
-  enableRgrSoundTimer(false);
-} /* RepeaterLogic::sendRogerSound */
-
-
 void RepeaterLogic::squelchOpen(bool is_open)
 {
   printf("The squelch is %s\n", is_open ? "OPEN" : "CLOSED");
@@ -445,26 +431,6 @@ void RepeaterLogic::playIdleSound(Timer *t)
 {
   playMsg(idle_sound);
 } /* RepeaterLogic::playIdleSound */
-
-
-void RepeaterLogic::enableRgrSoundTimer(bool enable)
-{
-  delete rgr_sound_timer;
-  rgr_sound_timer = 0;
-
-  if (enable)
-  {
-    if (rgr_sound_delay > 0)
-    {
-      rgr_sound_timer = new Timer(rgr_sound_delay);
-      rgr_sound_timer->expired.connect(slot(this, &RepeaterLogic::sendRgrSound));
-    }
-    else
-    {
-      sendRgrSound();
-    }
-  }  
-} /* RepeaterLogic::enableRgrSoundTimer */
 
 
 

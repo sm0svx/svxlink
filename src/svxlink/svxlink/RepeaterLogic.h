@@ -159,8 +159,6 @@ class RepeaterLogic : public Logic
     bool      	  repeater_is_up;
     Async::Timer  *up_timer;
     int      	  idle_timeout;
-    Async::Timer  *rgr_sound_timer;
-    int       	  rgr_sound_delay;
     int       	  required_1750_duration;
     Async::Timer  *idle_sound_timer;
     std::string   idle_sound;
@@ -174,12 +172,10 @@ class RepeaterLogic : public Logic
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);
     void setUp(bool up);
-    void sendRgrSound(Async::Timer *t=0);
     void squelchOpen(bool is_open);
     //void txTimeout(void);
     void detected1750(void);
     void playIdleSound(Async::Timer *t);
-    void enableRgrSoundTimer(bool enable);
 
 };  /* class RepeaterLogic */
 

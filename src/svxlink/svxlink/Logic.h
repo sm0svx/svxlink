@@ -183,7 +183,8 @@ class Logic : public SigC::Object
     void clearPendingSamples(void);
     void logicTransmitRequest(bool do_transmit);
     Module *activeModule(void) const { return active_module; }
-    
+    void enableRgrSoundTimer(bool enable);
+
   private:
     Async::Config     	    &m_cfg;
     std::string       	    m_name;
@@ -203,6 +204,8 @@ class Logic : public SigC::Object
     char      	      	    prev_digit;
     int      	      	    exec_cmd_on_sql_close;
     Async::Timer      	    *exec_cmd_on_sql_close_timer;
+    Async::Timer      	    *rgr_sound_timer;
+    int       	      	    rgr_sound_delay;
     
     void allModuleSamplesWritten(void);
     void transmitCheck(void);
@@ -211,7 +214,8 @@ class Logic : public SigC::Object
     void unloadModules(void);
     void cmdTimeout(Async::Timer *t);
     void processCommandQueue(void);
-    void Logic::putCmdOnQueue(Async::Timer *t=0);
+    void putCmdOnQueue(Async::Timer *t=0);
+    void sendRgrSound(Async::Timer *t=0);
 
 };  /* class Logic */
 

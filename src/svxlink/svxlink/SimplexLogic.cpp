@@ -297,6 +297,11 @@ void SimplexLogic::squelchOpen(bool is_open)
   
   if (!is_open)
   {
+    if (activeModule() != 0)
+    {
+      enableRgrSoundTimer(true);
+    }
+    
     if (pending_ident)
     {
       pending_ident = false;
@@ -309,6 +314,10 @@ void SimplexLogic::squelchOpen(bool is_open)
       pending_transmit = false;
       transmit(true);
     }
+  }
+  else
+  {
+    enableRgrSoundTimer(false);
   }
     
   Logic::squelchOpen(is_open);
