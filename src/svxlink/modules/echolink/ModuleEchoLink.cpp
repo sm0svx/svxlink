@@ -968,7 +968,7 @@ QsoImpl *ModuleEchoLink::findFirstTalker(void) const
 
 void ModuleEchoLink::broadcastTalkerStatus(void)
 {
-  if (qsos.size() < 2)
+  if (max_qsos < 2)
   {
     return;
   }
