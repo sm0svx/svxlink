@@ -53,20 +53,22 @@ void MsgHandler::playMsg(const string& context, const string& msg)
 void MsgHandler::playNumber(float number)
 {
   int intpart = static_cast<int>(number);
-  int fracpart = static_cast<int>((number-intpart)*1000);
+  number -= intpart;
+  number *= 10;
+  //int fracpart = static_cast<int>((number-intpart)*1000);
   
   list<string> digits;
 
-  if (fracpart > 0)
+  if (number > 0)
   {
     do
     {
       char digit[2];
-      digit[0] = (fracpart % 10) + '0';
+      digit[0] = static_cast<char>(number) + '0';
       digit[1] = 0;
-      fracpart /= 10;
-      digits.push_front(digit);
-    } while (fracpart != 0);
+      number = (number - static_cast<int>(number)) * 10;
+      digits.push_back(digit);
+    } while (number > 0);
     digits.push_front("decimal");
   }
   
