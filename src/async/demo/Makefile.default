@@ -42,13 +42,16 @@
 PROGS		= 
 
 # C++ programs to compile
-CPPPROGS      	= AsyncAudioIO_demo AsyncDnsLookup_demo AsyncFdWatch_demo \
-      	      	  AsyncTimer_demo \
-		  AsyncTcpClient_demo AsyncUdpSocket_demo \
-		  AsyncCppApplication_demo
-
+CPPPROGS        += AsyncAudioIO_demo
+CPPPROGS        += AsyncDnsLookup_demo
+CPPPROGS        += AsyncFdWatch_demo
+CPPPROGS        += AsyncTimer_demo
+CPPPROGS        += AsyncTcpClient_demo
+CPPPROGS        += AsyncUdpSocket_demo
+CPPPROGS        += AsyncCppApplication_demo
+CPPPROGS      	+= AsyncTcpServer_demo
 ifdef QTDIR
-CPPPROGS      	+= AsyncQtApplication_demo
+#CPPPROGS      	+= AsyncQtApplication_demo
 endif
 
 # Sources other than the main files
@@ -59,7 +62,6 @@ PROJLIBS	= -lasynccpp -lasyncqt
 
 # Libraries external to the project
 LIBS		= -lpopt
-#LIBS		= -lpopt -lsigc -lpthread -lqt
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).
@@ -206,7 +208,7 @@ WARNINGS	+= -Wno-deprecated
 CFLAGS		+= -g
 
 # Extra commandline switches to the linker
-LDFLAGS		+=
+LDFLAGS		+= 
 
 
 #

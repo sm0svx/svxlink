@@ -4,5 +4,6 @@ AsyncDnsLookup_demo
 AsyncFdWatch_demo
 AsyncQtApplication_demo
 AsyncTcpClient_demo
+AsyncTcpServer_demo
 AsyncTimer_demo
 AsyncUdpSocket_demo
