@@ -926,6 +926,8 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
   playSilence(500);
   outgoing_con_pending = qso;
   
+  setIdle(false);
+  
 } /* ModuleEchoLink::createOutgoingConnection */
 
 
@@ -975,20 +977,20 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
   
   stringstream msg;
   msg << "SvxLink " << SVXLINK_VERSION << " - " << mycall
-      << " (" << qsos.size() << ")\r\n\r\n";
+      << " (" << qsos.size() << ")\n\n";
 
   if (squelch_is_open)
   {
-    msg << "> " << mycall << "         " << sysop_name << "\r\n\r\n";
+    msg << "> " << mycall << "         " << sysop_name << "\n\n";
   }
   else
   {
     if (talker != 0)
     {
       msg << "> " << talker->remoteCallsign() << "         "
-      	  << talker->remoteName() << "\r\n\r\n";
+      	  << talker->remoteName() << "\n\n";
     }
-    msg << mycall << "         " << sysop_name << "\r\n";
+    msg << mycall << "         " << sysop_name << "\n";
   }
   
   list<QsoImpl*>::const_iterator it;
@@ -997,7 +999,7 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
     if ((*it != talker) || squelch_is_open)
     {
       msg << (*it)->remoteCallsign() << "         "
-      	  << (*it)->remoteName() << "\r\n";
+      	  << (*it)->remoteName() << "\n";
     }
   }
   
@@ -1005,7 +1007,7 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
   
   for (it=qsos.begin(); it!=qsos.end(); ++it)
   {
-    (*it)->sendChatData(msg.str(), false);
+    (*it)->sendInfoData(msg.str());
   }
   
 } /* ModuleEchoLink::broadcastTalkerStatus */
