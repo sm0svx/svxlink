@@ -12,6 +12,8 @@ class MyClass : public SigC::Object
     {
       server = new TcpServer("12345");
       server->clientConnected.connect(slot(this, &MyClass::onClientConnected));
+      cout << "Connect using: \"telnet localhost 12345\" from "
+      	      "another console\n";
     }
     
     ~MyClass(void)
