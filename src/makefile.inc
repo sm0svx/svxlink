@@ -339,10 +339,6 @@ LDFLAGS		= -rdynamic -Wl,-rpath-link $(LIB)
 LINK		= $(ECHO) --- Linking $(BOLD)$@$(NBOLD)...; gcc $(LIBPATH) $(LDFLAGS)
 CPPLINK		= $(ECHO) --- Linking $(BOLD)$@$(NBOLD)...; g++ $(LIBPATH) $(LDFLAGS)
 
-# Depender
-DEPEND		= $(ECHO) --- Creating dependency file $(BOLD)$@$(NBOLD)...; \
-			gcc -M -MG $(CFLAGS)
-
 # QtMoc
 QTMOC		= $(QTDIR)/bin/moc
 
@@ -355,16 +351,14 @@ MKDIR		= create_directory() { \
                     mkdir $$*; \
                   }; create_directory
 
-DEPEND_FILTER	= sed '\''s§\($*\)\.o[ :]*§\1.o $@: §g'\'' | \
-			  sed '\''s§[^/][A-Za-z0-9_][A-Za-z0-9_]*_version.h§§g'\''
-
 # Rules to make dependency files.
 depend/%.dpp:  	%.cpp
 	if [ ! -d `dirname $@` ]; then \
 		mkdir -p `dirname $@`; \
 		chgrp $(SET_GROUP) `dirname $@`; \
 	fi
-	$(SHELL) -ec '$(DEPEND) $< | $(DEPEND_FILTER) > $@'
+	$(ECHO) --- Creating dependency file $(BOLD)$@$(NBOLD)...
+	gcc -M -MG -MT "$(<:.cpp=.o) $@" $(CFLAGS) -MF $@ $<
 	chgrp $(SET_GROUP) $@
 
 depend/%.d:	%.c
@@ -372,7 +366,8 @@ depend/%.d:	%.c
 		mkdir -p `dirname $@`; \
 		chgrp $(SET_GROUP) `dirname $@`; \
 	fi
-	$(SHELL) -ec '$(DEPEND) $< | $(DEPEND_FILTER) > $@'
+	$(ECHO) --- Creating dependency file $(BOLD)$@$(NBOLD)...
+	gcc -M -MG -MT "$(<:.cpp=.o) $@" $(CFLAGS) -MF $@ $<
 	chgrp $(SET_GROUP) $@
 
 
@@ -818,7 +813,10 @@ $(ROOT)/.config:	$(ROOT)/create_config.sh
 	  echo "MAKEFILE_LOCAL_CONFIG_INCLUDED = 1" >> $@; \
 	fi
 
-$(INC)/version/%.h: $(ROOT)/versions
+# Generate version files
+# Different versions of gmake behave differently when including <version/FILE.h>
+# so we need two targets.
+$(INC)/version/%.h version/%.h: $(ROOT)/versions
 	if [ ! -d $(INC)/version ]; then \
 	  $(MKDIR) $(INC)/version -p; \
 	  chgrp $(SET_GROUP) $(INC)/version; \
@@ -830,12 +828,13 @@ $(INC)/version/%.h: $(ROOT)/versions
 	  $(ECHO) "*** WARNING: Version entry missing for \"$*\""; \
 	  VERSION="?.?.?"; \
 	fi; \
-	if ! grep -q \"$${VERSION}\" $@ > /dev/null 2>&1; then \
-	  $(ECHO) --- Creating $(BOLD)$@$(NBOLD)...; \
-	  echo "#ifndef $*_VERSION" > $@; \
-	  echo "#define $*_VERSION \"$$VERSION\"" >> $@; \
-	  echo "#endif /* $*_VERSION */" >> $@; \
-	  chgrp $(SET_GROUP) $@; \
+	TARGET="$(INC)/version/$*.h"; \
+	if ! grep -q \"$${VERSION}\" $${TARGET} > /dev/null 2>&1; then \
+	  $(ECHO) --- Creating $(BOLD)$${TARGET}$(NBOLD)...; \
+	  echo "#ifndef $*_VERSION" > $${TARGET}; \
+	  echo "#define $*_VERSION \"$$VERSION\"" >> $${TARGET}; \
+	  echo "#endif /* $*_VERSION */" >> $${TARGET}; \
+	  chgrp $(SET_GROUP) $${TARGET}; \
 	fi \
 
 
