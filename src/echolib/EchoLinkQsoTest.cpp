@@ -154,10 +154,7 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
   stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
   stdin_watch->activity.connect(slot(this, &EchoLinkQsoTest::stdinHandler));
   
-  chatMsgReceived.connect(slot(this, &EchoLinkQsoTest::chatMsg));
-  audioReceived.connect(slot(this, &EchoLinkQsoTest::onAudioReceived));
-  
-  audio_io = new AudioIO;
+  audio_io = new AudioIO("/dev/dsp");
   full_duplex = audio_io->isFullDuplexCapable();
   if (full_duplex)
   {
@@ -168,6 +165,9 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
     audio_io->open(AudioIO::MODE_WR);
   }
   audio_io->audioRead.connect(slot(this, &EchoLinkQsoTest::micAudioRead));
+  
+  chatMsgReceived.connect(slot(this, &EchoLinkQsoTest::chatMsg));
+  audioReceived.connect(slot(audio_io, &AudioIO::write));
   
   cout << string("Audio device is ") << (full_duplex ? "" : "NOT ")
       << "full duplex capable\n";
@@ -340,13 +340,7 @@ void EchoLinkQsoTest::chatMsg(const string& msg)
 } /* EchoLinkQsoTest::chatMsg */
 
 
-void EchoLinkQsoTest::onAudioReceived(short *buf, int len)
-{
-  audio_io->write(buf, len);
-} /* EchoLinkQsoTest::audioReceived */
-
-
-void EchoLinkQsoTest::micAudioRead(short *buf, int len)
+int EchoLinkQsoTest::micAudioRead(short *buf, int len)
 {
   if (is_transmitting)
   {
@@ -361,6 +355,9 @@ void EchoLinkQsoTest::micAudioRead(short *buf, int len)
       sendAudio(buf, len);
     }
   }
+  
+  return len;
+  
 } /* EchoLinkTest::micAudioRead */
 
 
