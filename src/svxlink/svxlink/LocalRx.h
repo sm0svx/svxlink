@@ -50,6 +50,7 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include <AsyncSerial.h>
 
 
 /****************************************************************************
@@ -71,6 +72,7 @@ namespace Async
 {
   class Config;
   class AudioIO;
+  class Timer;
 };
 
 
@@ -171,28 +173,39 @@ class LocalRx : public Rx
   protected:
     
   private:
-    typedef enum { SQL_DET_UNKNOWN, SQL_DET_VOX, SQL_DET_CTCSS } SqlDetType;
+    typedef enum
+    {
+      SQL_DET_UNKNOWN,
+      SQL_DET_VOX,
+      SQL_DET_CTCSS,
+      SQL_DET_SERIAL
+    } SqlDetType;
     
-    Async::Config   &cfg;
-    std::string     name;
-    Async::AudioIO  *audio_io;
-    bool      	    is_muted;
-    Vox       	    *vox;
-    DtmfDecoder     *dtmf_dec;
-    ToneDetector    *det_1750;
-    int       	    req_1750_duration;
-    struct timeval  det_1750_timestamp;
-    ToneDetector    *ctcss_det;
-    int       	    ctcss_fq;
-    SqlDetType	    sql_up_det;
-    SqlDetType	    sql_down_det;
-    bool      	    sql_is_open;
+    Async::Config     	  &cfg;
+    std::string       	  name;
+    Async::AudioIO    	  *audio_io;
+    bool      	      	  is_muted;
+    Vox       	      	  *vox;
+    DtmfDecoder       	  *dtmf_dec;
+    ToneDetector      	  *det_1750;
+    int       	      	  req_1750_duration;
+    struct timeval    	  det_1750_timestamp;
+    ToneDetector      	  *ctcss_det;
+    int       	      	  ctcss_fq;
+    SqlDetType	      	  sql_up_det;
+    SqlDetType	      	  sql_down_det;
+    bool      	      	  sql_is_open;
+    Async::Serial     	  *serial;
+    Async::Serial::InPin  sql_pin;
+    bool      	      	  sql_pin_act_lvl;
+    Async::Timer      	  *sql_pin_poll_timer;
     
     void activated1750(bool is_activated);
     void voxSqlOpen(bool is_open);
     void activatedCtcss(bool is_activated);
     SqlDetType sqlDetStrToEnum(const std::string& sql_det_str);
     int audioRead(short *samples, int count);
+    void sqlPinPoll(Async::Timer *t);
 
 };  /* class LocalRx */
 

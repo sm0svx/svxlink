@@ -121,7 +121,8 @@ using namespace Async;
 LocalRx::LocalRx(Config &cfg, const std::string& name)
   : Rx(name), cfg(cfg), name(name), audio_io(0), is_muted(true), vox(0),
     dtmf_dec(0), det_1750(0), req_1750_duration(0), ctcss_det(0), ctcss_fq(0),
-    sql_is_open(false)
+    sql_is_open(false), serial(0), sql_pin(Serial::PIN_CTS),
+    sql_pin_act_lvl(true)
 {
   
 } /* LocalRx::LocalRx */
@@ -129,6 +130,7 @@ LocalRx::LocalRx(Config &cfg, const std::string& name)
 
 LocalRx::~LocalRx(void)
 {
+  delete serial;
   delete ctcss_det;
   delete det_1750;
   delete dtmf_dec;
@@ -212,6 +214,82 @@ bool LocalRx::initialize(void)
       	   << "or is set to an illegal value\n";
       return false;
     }
+  }
+  
+  string sql_port;
+  string sql_pin_str;
+  if ((sql_up_det == SQL_DET_SERIAL) || (sql_down_det == SQL_DET_SERIAL))
+  {
+    if (!cfg.getValue(name, "SQL_PORT", sql_port))
+    {
+      cerr << "*** ERROR: Config variable " << name << "/SQL_PORT not set\n";
+      return false;
+    }
+    
+    if (!cfg.getValue(name, "SQL_PIN", sql_pin_str))
+    {
+      cerr << "*** ERROR: Config variable " << name << "/SQL_PIN not set\n";
+      return false;
+    }
+    string::iterator colon;
+    colon = find(sql_pin_str.begin(), sql_pin_str.end(), ':');
+    if ((colon == sql_pin_str.end()) || (colon + 1 == sql_pin_str.end()))
+    {
+      cerr << "*** ERROR: Illegal format for config variable " << name
+      	   << "/SQL_PIN. Should be PINNAME:LEVEL\n";
+      return false;
+    }
+    string pin_str(sql_pin_str.begin(), colon);
+    string pin_act_lvl_str(colon + 1, sql_pin_str.end());
+    if (pin_str == "CTS")
+    {
+      sql_pin = Serial::PIN_CTS;
+    }
+    else if (pin_str == "DSR")
+    {
+      sql_pin = Serial::PIN_DSR;
+    }
+    else if (pin_str == "DCD")
+    {
+      sql_pin = Serial::PIN_DCD;
+    }
+    else if (pin_str == "RI")
+    {
+      sql_pin = Serial::PIN_RI;
+    }
+    else
+    {
+      cerr << "*** ERROR: Illegal pin name for config variable " << name
+      	   << "/SQL_PIN. Should be CTS, DSR, DCD or RI.\n";
+      return false;
+    }
+    if (pin_act_lvl_str == "SET")
+    {
+      sql_pin_act_lvl = true;
+    }
+    else if (pin_act_lvl_str == "CLEAR")
+    {
+      sql_pin_act_lvl = false;
+    }
+    else
+    {
+      cerr << "*** ERROR: Illegal pin level for config variable " << name
+      	   << "/SQL_PIN. Should be SET or CLEAR.\n";
+      return false;
+    }
+  }
+    
+  if ((sql_up_det == SQL_DET_SERIAL) || (sql_down_det == SQL_DET_SERIAL))
+  {
+    serial = new Serial(sql_port);
+    if (!serial->open())
+    {
+      delete serial;
+      serial = 0;
+      return false;
+    }
+    sql_pin_poll_timer = new Timer(100, Timer::TYPE_PERIODIC);
+    sql_pin_poll_timer->expired.connect(slot(this, &LocalRx::sqlPinPoll));
   }
     
   audio_io = new AudioIO(audio_dev);
@@ -394,6 +472,10 @@ LocalRx::SqlDetType LocalRx::sqlDetStrToEnum(const string& sql_det_str)
   {
     return SQL_DET_CTCSS;
   }
+  else if (sql_det_str == "SERIAL")
+  {
+    return SQL_DET_SERIAL;
+  }
 
   return SQL_DET_UNKNOWN;
   
@@ -410,6 +492,41 @@ int LocalRx::audioRead(short *samples, int count)
   return count;
   
 } /* LocalRx::audioRead */
+
+
+void LocalRx::sqlPinPoll(Timer *t)
+{
+  if (is_muted)
+  {
+    return;
+  }
+  
+  bool is_set;
+  if (!serial->getPin(sql_pin, is_set))
+  {
+    perror("getPin");
+    return;
+  }
+  bool is_activated = (is_set == sql_pin_act_lvl);
+  
+  if (is_activated == sql_is_open)
+  {
+    return;
+  }
+  
+  //printf("Serial squelch %s...\n", is_activated ? "ACTIVATED" : "DEACTIVATED");
+  if (is_activated && (sql_up_det == SQL_DET_SERIAL))
+  {
+    sql_is_open = true;
+    squelchOpen(true);
+  }
+  else if (!is_activated && (sql_down_det == SQL_DET_SERIAL))
+  {
+    sql_is_open = false;
+    squelchOpen(false);
+  }
+  
+} /* LocalRx::sqlPinPoll */
 
 
 
