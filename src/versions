@@ -1,0 +1,15 @@
+# Version for the Qtel application
+QTEL=0.7.0
+QTEL_RPM_RELEASE=3
+
+# Version for the EchoLib library
+ECHOLIB=0.7.0
+
+# Version for the Async library
+ASYNCCORE=0.7.0
+ASYNCCORE_RPM_RELEASE=1
+ASYNCCPP=0.7.0
+ASYNCCPP_RPM_RELEASE=1
+ASYNCQT=0.7.0
+ASYNCQT_RPM_RELEASE=1
+
