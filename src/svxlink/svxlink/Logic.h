@@ -170,7 +170,7 @@ class Logic : public SigC::Object
     Tx &tx(void) const { return *m_tx; }
     
   protected:    
-    virtual void squelchOpen(bool is_open) {}
+    virtual void squelchOpen(bool is_open);
     //virtual int audioReceived(short *samples, int count) { return count; }
     
     virtual void transmit(bool do_transmit);
@@ -183,25 +183,27 @@ class Logic : public SigC::Object
     Module *activeModule(void) const { return active_module; }
     
   private:
-    Async::Config     	&m_cfg;
-    std::string       	m_name;
-    Rx	      	      	*m_rx;
-    Tx	      	      	*m_tx;
-    MsgHandler	      	*msg_handler;
-    Async::Timer      	*write_msg_flush_timer;
-    Module    	      	*active_module;
-    Async::SampleFifo 	*module_tx_fifo;
-    std::list<Module*>	modules;
-    std::string       	received_digits;
-    std::string       	m_callsign;
-    Async::Timer      	*cmd_tmo_timer;
-    bool      	      	logic_transmit;
+    Async::Config     	    &m_cfg;
+    std::string       	    m_name;
+    Rx	      	      	    *m_rx;
+    Tx	      	      	    *m_tx;
+    MsgHandler	      	    *msg_handler;
+    Async::Timer      	    *write_msg_flush_timer;
+    Module    	      	    *active_module;
+    Async::SampleFifo 	    *module_tx_fifo;
+    std::list<Module*>	    modules;
+    std::string       	    received_digits;
+    std::string       	    m_callsign;
+    Async::Timer      	    *cmd_tmo_timer;
+    bool      	      	    logic_transmit;
+    std::list<std::string>  cmd_queue;
     
     void allModuleSamplesWritten(void);
     void transmitCheck(void);
     void loadModules(void);
     void loadModule(const std::string& module_name);
     void cmdTimeout(Async::Timer *t);
+    void processCommandQueue(void);
 
 
 };  /* class Logic */

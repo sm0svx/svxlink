@@ -329,22 +329,23 @@ void Logic::dtmfDigitDetected(char digit)
   
   if (digit == '*')
   {
-    playMsg("online");
-    spellWord(callsign());
-    if (active_module != 0)
+      // Ignore multiple "identify" commands
+    if (find(cmd_queue.begin(), cmd_queue.end(), "*") == cmd_queue.end())
     {
-      playMsg("active_module");
-      active_module->playModuleName();
+      cmd_queue.push_back("*");
     }
   }
-  else if (active_module != 0)
+  else
   {
-    active_module->dtmfDigitReceived(digit);
+    if (active_module != 0)
+    {
+      active_module->dtmfDigitReceived(digit);
+    }
     if (digit == '#')
     {
-      active_module->dtmfCmdReceived(received_digits);
+      cmd_queue.push_back(received_digits);
       received_digits = "";
-      cmd_tmo_timer->setEnable(false);
+      cmd_tmo_timer->setEnable(false);    
     }
     else if (received_digits.size() < 10)
     {
@@ -353,38 +354,12 @@ void Logic::dtmfDigitDetected(char digit)
       received_digits += digit;
     }
   }
-  else
+  
+  if (!cmd_queue.empty() && !rx().squelchIsOpen())
   {
-    if (digit == '#')
-    {
-      if (received_digits.empty())
-      {
-
-      }
-      else
-      {
-      	cmd_tmo_timer->setEnable(false);
-	int module_id = atoi(received_digits.c_str());
-	received_digits = "";
-	Module *module = findModule(module_id);
-	if (module != 0)
-	{
-	  activateModule(module);
-	}
-	else
-	{
-	  playNumber(module_id);
-	  playMsg("no_such_module");
-	}
-      }
-    }
-    else if (isdigit(digit) && (received_digits.size() < 10))
-    {
-      cmd_tmo_timer->reset();
-      cmd_tmo_timer->setEnable(true);
-      received_digits += digit;
-    }
-  }  
+    processCommandQueue();
+  }
+    
 } /* Logic::dtmfDigitDetected */
 
 
@@ -398,18 +373,16 @@ void Logic::dtmfDigitDetected(char digit)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
+void Logic::squelchOpen(bool is_open)
+{
+  if (!is_open && !cmd_queue.empty())
+  {
+    processCommandQueue();
+  }
+  
+} /* Logic::squelchOpen */
+
+
 void Logic::transmit(bool do_transmit)
 {
   //printf("Logic::transmit: do_transmit=%s\n", do_transmit ? "true" : "false");
@@ -610,6 +583,53 @@ void Logic::cmdTimeout(Timer *t)
   received_digits = "";
 } /* Logic::cmdTimeout */
 
+
+void Logic::processCommandQueue(void)
+{
+  if (rx().squelchIsOpen() || cmd_queue.empty())
+  {
+    return;
+  }
+  
+  list<string>::iterator it;
+  for (it=cmd_queue.begin(); it!=cmd_queue.end(); ++it)
+  {
+    if (*it == "*")
+    {
+      playMsg("online");
+      spellWord(callsign());
+      if (active_module != 0)
+      {
+	playMsg("active_module");
+	active_module->playModuleName();
+      }
+    }
+    else if (active_module != 0)
+    {
+      active_module->dtmfCmdReceived(*it);
+    }
+    else
+    {
+      if (!(*it).empty())
+      {
+	int module_id = atoi((*it).c_str());
+	Module *module = findModule(module_id);
+	if (module != 0)
+	{
+	  activateModule(module);
+	}
+	else
+	{
+	  playNumber(module_id);
+	  playMsg("no_such_module");
+	}
+      }
+    }
+  }
+  
+  cmd_queue.clear();
+  
+} /* Logic::processCommandQueue */
 
 
 /*

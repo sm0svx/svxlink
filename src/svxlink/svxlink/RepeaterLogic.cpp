@@ -378,6 +378,8 @@ void RepeaterLogic::squelchOpen(bool is_open)
     }
   }
   
+  Logic::squelchOpen(is_open);
+  
 } /* RepeaterLogic::squelchOpen */
 
 

@@ -254,6 +254,9 @@ void SimplexLogic::squelchOpen(bool is_open)
     pending_transmit = false;
     transmit(true);
   }
+  
+  Logic::squelchOpen(is_open);
+  
 } /* SimplexLogic::squelchOpen */
 
 
