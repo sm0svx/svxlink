@@ -197,6 +197,7 @@ bool RepeaterLogic::initialize(void)
 
 void RepeaterLogic::playFile(const string& path)
 {
+  //printf("RepeaterLogic::playiFile: %s\n", path.c_str());
   setIdle(false);
   Logic::playFile(path);
 } /* RepeaterLogic::playFile */
@@ -236,7 +237,7 @@ void RepeaterLogic::playSilence(int length)
 {
   //printf("RepeaterLogic::playSilence: %d ms\n", length);
   
-  setIdle(false);
+  //setIdle(false);
   Logic::playSilence(length);
 } /* RepeaterLogic::playSilence */
 
@@ -316,6 +317,7 @@ void RepeaterLogic::idleTimeout(Timer *t)
 void RepeaterLogic::setIdle(bool idle)
 {
   //printf("RepeaterLogic::setIdle: idle=%s\n", idle ? "true" : "false");
+
   if (!repeater_is_up)
   {
     return;
