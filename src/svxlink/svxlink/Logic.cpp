@@ -205,6 +205,7 @@ bool Logic::initialize(void)
   tx().transmitBufferFull.connect(
       	  slot(module_tx_fifo, &SampleFifo::writeBufferFull));
   module_tx_fifo->stopOutput(true);
+  module_tx_fifo->setOverwrite(true);
   
   cmd_tmo_timer = new Timer(10000);
   cmd_tmo_timer->expired.connect(slot(this, &Logic::cmdTimeout));
