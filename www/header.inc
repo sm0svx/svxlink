@@ -18,6 +18,7 @@
     <COL>
   </COLGROUP>
   <TR valign="top"><TD NOWRAP align="right">
+  <DIV id="coloredbox">
     <A href="index.php">Main Screen</A><BR/>
     <A href="news.php">Project News</A><BR/>
     <A href="screenshots.php">Screenshots</A><BR/>
@@ -29,6 +30,12 @@
     href="https://sourceforge.net/project/showfiles.php?group_id=84813">
       Software Downloads</A><BR/>
     <A href="https://sourceforge.net/projects/svxlink/">SourceForge Summary</A>
+  </DIV>
+  <P>
+  <A href="http://sourceforge.net">
+    <img src="http://sourceforge.net/sflogo.php?group_id=84813&amp;type=5"
+         width="210" height="62" border="0" alt="SourceForge.net Logo" />
+  </A>
   </TD>
   <TD>
   

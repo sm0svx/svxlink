@@ -63,3 +63,10 @@ H3
   margin-bottom: 0.5em;
 }
 
+#coloredbox {
+    background-color: lightblue;
+    padding: 10px;
+    border: 1px solid black;
+}
+
+
