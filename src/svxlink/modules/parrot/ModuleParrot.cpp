@@ -439,7 +439,7 @@ void ModuleParrot::execCmdQueue(void)
       }
       else
       {
-	playNumber(atoi(cmd.c_str()));
+	spellWord(cmd);
 	playSilence(500);
       }
     }
