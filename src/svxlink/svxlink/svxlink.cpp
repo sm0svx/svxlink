@@ -18,6 +18,7 @@
 #include "LocalTx.h"
 #include "MsgHandler.h"
 #include "SimplexLogic.h"
+#include "RepeaterLogic.h"
 
 using namespace std;
 using namespace Async;
@@ -25,7 +26,7 @@ using namespace SigC;
 
 
 LocalTx *tx = 0;
-SimplexLogic *logic = 0;
+Logic *logic = 0;
 MsgHandler *msg_handler = 0;
 
 
@@ -109,6 +110,62 @@ void stdinHandler(FdWatch *w)
 }
 
 
+void initialize_logics(Config &cfg)
+{
+  string logics;
+  if (!cfg.getValue("GLOBAL", "LOGICS", logics) || logics.empty())
+  {
+    cerr << "*** ERROR: Config variable GLOBAL/LOGICS is not set\n";
+    exit(1);
+  }
+
+  string::iterator comma;
+  string::iterator begin = logics.begin();
+  do
+  {
+    comma = find(begin, logics.end(), ',');
+    string logic_name;
+    if (comma == logics.end())
+    {
+      logic_name = string(begin, logics.end());
+    }
+    else
+    {
+      logic_name = string(begin, comma);
+      begin = comma + 1;
+    }
+    
+    string logic_type;
+    if (!cfg.getValue(logic_name, "TYPE", logic_type) || logic_type.empty())
+    {
+      cerr << "*** ERROR: Logic TYPE not specified for logic \""
+      	   << logic_name << "\". Skipping...\n";
+      continue;
+    }
+    if (logic_type == "Simplex")
+    {
+      logic = new SimplexLogic(cfg, logic_name);
+    }
+    else if (logic_type == "Repeater")
+    {
+      logic = new RepeaterLogic(cfg, logic_name);
+    }
+    else
+    {
+      cerr << "*** ERROR: Unknown logic type \"" << logic_type
+      	   << "\"specified.\n";
+      continue;
+    }
+    if (!logic->initialize())
+    {
+      cerr << "*** ERROR: Could not initialize Logic object \""
+      	   << logic_name << "\". Skipping...\n";
+      delete logic;
+    }
+    
+  } while (comma != logics.end());
+}
+
 
 int main(int argc, char **argv)
 {
@@ -146,12 +203,7 @@ int main(int argc, char **argv)
   }
   
 #if 1
-  logic = new SimplexLogic(cfg, "SimplexLogic");
-  if (!logic->initialize())
-  {
-    printf("*** Error: Could not initialize Logic object\n");
-    exit(1);
-  }
+  initialize_logics(cfg);
   
   struct termios termios, org_termios;
   tcgetattr(STDIN_FILENO, &org_termios);

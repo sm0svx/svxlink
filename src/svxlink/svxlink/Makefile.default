@@ -30,8 +30,8 @@ endif
 
 # Sources other than the main files
 PRGSRC		= LocalRx.cpp Vox.cpp LocalTx.cpp MsgHandler.cpp \
-		  ToneDetector.cpp DtmfDecoder.cpp Logic.cpp SimplexLogic.cpp \
-		  Module.cpp AudioPacer.cpp
+		  ToneDetector.cpp DtmfDecoder.cpp Module.cpp AudioPacer.cpp \
+		  Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -lasynccpp
