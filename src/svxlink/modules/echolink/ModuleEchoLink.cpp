@@ -451,6 +451,8 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
 {
   printf("DTMF command received in module %s: %s\n", name(), cmd.c_str());
   
+  remote_activation = false;
+  
   if (cmd == "")
   {
     if (qsos.size() != 0)
@@ -789,16 +791,18 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   
   if (!isActive())
   {
-    if (!activateMe())
-    {
-      qso->reject();
-      cerr << "*** WARNING: Could not accept incoming connection from "
-      	   << callsign
-	   << " since the frontend was busy doing something else.\n";
-      return;
-    }
     remote_activation = true;
   }
+  
+  if (!activateMe())
+  {
+    qso->reject();
+    cerr << "*** WARNING: Could not accept incoming connection from "
+      	 << callsign
+	 << " since the frontend was busy doing something else.\n";
+    return;
+  }
+  
   qso->accept();
   broadcastTalkerStatus();
   

@@ -176,13 +176,7 @@ void Module::transmit(bool tx)
 
 bool Module::activateMe(void)
 {
-  if (!m_is_active)
-  {
-    return logic()->activateModule(this);
-  }
-  
-  return true;
-  
+  return logic()->activateModule(this);
 } /* Module::activateMe */
 
 
