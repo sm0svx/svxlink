@@ -1,5 +1,8 @@
 <?php include("header.inc"); ?>
 
+<font color="red" size="+2">This site is under construction so don't expect
+everything to work yet. This includes the CVS repository as well.</font>
+<P/>
 Welcome to the home of SvxLink. The goal iof this project is to
 implement a well documented C++ library to build EchoLink applications
 around. The only application that exists right now is Qtel -- the Qt
