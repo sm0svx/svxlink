@@ -395,6 +395,13 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
   }
   else if (qso == 0)
   {
+    if ((dir->status() == StationData::STAT_OFFLINE) ||
+      	(dir->status() == StationData::STAT_UNKNOWN))
+    {
+      playMsg("directory_server_offline");
+      return;
+    }
+    
     const StationData *station = dir->findStation(atoi(cmd.c_str()));
     if (station != 0)
     {
@@ -513,7 +520,9 @@ void ModuleEchoLink::onStatusChanged(StationData::Status status)
 {
   cout << "EchoLink directory status changed to "
        << StationData::statusStr(status) << endl;
-  if (status == StationData::STAT_ONLINE)
+  
+    // Get the directory list on first connection to the directory server
+  if ((status == StationData::STAT_ONLINE) && (dir->stations().empty()))
   {
     getDirectoryList();
   }
@@ -696,6 +705,7 @@ void ModuleEchoLink::onStateChange(Qso::State state)
     case Qso::STATE_DISCONNECTED:
       cout << "DISCONNECTED\n";
       setIdle(true);
+      dir->makeOnline();
       spellCallsign(qso->remoteCallsign());
       playMsg("disconnected");
       delete qso;
@@ -714,6 +724,7 @@ void ModuleEchoLink::onStateChange(Qso::State state)
     case Qso::STATE_CONNECTED:
       cout << "CONNECTED\n";
       setIdle(false);
+      dir->makeBusy();
       playMsg("connected");
       spellCallsign(qso->remoteCallsign());
       break;
