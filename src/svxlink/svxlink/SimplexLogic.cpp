@@ -123,7 +123,7 @@ using namespace Async;
 
 SimplexLogic::SimplexLogic(Async::Config& cfg, const string& name)
   : Logic(cfg, name), pending_transmit(false),
-    tx_timeout_occured(false), ident_timer(0), ident_interval(1800),
+    tx_timeout_occured(false), ident_timer(0), ident_interval(0),
     pending_ident(false)
 {
 
@@ -243,7 +243,7 @@ int SimplexLogic::transmitAudio(short *samples, int count)
 
 void SimplexLogic::identify(Timer *t)
 {
-  printf("SimplexLogic::identify\n");
+  //printf("SimplexLogic::identify\n");
   
   if (rx().squelchIsOpen() ||
       ((activeModule() != 0) && (activeModule()->isTransmitting())))
