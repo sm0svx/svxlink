@@ -253,6 +253,13 @@ void RepeaterLogic::moduleTransmitRequest(bool do_transmit)
 } /* RepeaterLogic::moduleTransmitRequest */
 
 
+bool RepeaterLogic::activateModule(Module *module)
+{
+  setUp(true);
+  return Logic::activateModule(module);
+} /* RepeaterLogic::activateModule */
+
+
 
 /****************************************************************************
  *

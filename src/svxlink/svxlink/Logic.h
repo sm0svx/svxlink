@@ -161,8 +161,8 @@ class Logic : public SigC::Object
     virtual void playSilence(int length);
     void audioFromModule(short *samples, int count);
     virtual void moduleTransmitRequest(bool do_transmit);
-    bool activateModule(Module *module);
-    void deactivateModule(Module *module);
+    virtual bool activateModule(Module *module);
+    virtual void deactivateModule(Module *module);
     Module *findModule(int id);
     Module *findModule(const std::string& name);
     std::list<Module*> moduleList(void) const { return modules; }

@@ -150,6 +150,8 @@ class RepeaterLogic : public Logic
     virtual void spellWord(const std::string& word);
     virtual void playSilence(int length);
     virtual void moduleTransmitRequest(bool do_transmit);
+    virtual bool activateModule(Module *module);
+
 
   protected:
     virtual void allTxSamplesFlushed(void);
