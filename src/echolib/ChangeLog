@@ -1,3 +1,17 @@
+ 0.9.1 -- ?? Mar 2005
+----------------------
+
+* Fixed a compilation error which occured with newer compilers. The
+  declaration of class Qso::GsmVoicePacket was not standards compliant.
+
+* Fixed a memory leak. The GSM codec instance was not destroyed when the
+  Qso object was destroyed.
+
+* Instead of crashing (assert) when the registration of a connection fails
+  we now return an error.
+
+
+
  0.9.0 -- 26 Sep 2004
 ----------------------
 

@@ -220,7 +220,7 @@ class Dispatcher : public SigC::Object
     Async::UdpSocket * 	ctrl_sock;
     Async::UdpSocket * 	audio_sock;
     
-    void registerConnection(Qso *con, CtrlInputHandler cih,
+    bool registerConnection(Qso *con, CtrlInputHandler cih,
 	AudioInputHandler aih);
     void unregisterConnection(Qso *con);
     

@@ -137,12 +137,12 @@ using namespace EchoLink;
  */
 Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
       	 const string& info)
-  : init_ok(false),   	sdes_packet(0),       state(STATE_DISCONNECTED),
-    next_audio_seq(0),  keep_alive_timer(0),  con_timeout_timer(0),
-    callsign(callsign), name(name),   	      local_stn_info(info),
-    send_buffer_cnt(0), remote_ip(addr),      rx_indicator_timer(0),
-    remote_name("?"), 	remote_call("?"),     is_remote_initiated(false),
-    receiving_audio(false)
+  : init_ok(false),   	      	sdes_packet(0),       state(STATE_DISCONNECTED),
+    gsmh(0),  	      	      	next_audio_seq(0),    keep_alive_timer(0),
+    con_timeout_timer(0),     	callsign(callsign),   name(name),
+    local_stn_info(info),     	send_buffer_cnt(0),   remote_ip(addr),
+    rx_indicator_timer(0),    	remote_name("?"),     remote_call("?"),
+    is_remote_initiated(false), receiving_audio(false)
 {
   if (!addr.isUnicast())
   {
@@ -154,8 +154,13 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
       
   gsmh = gsm_create();
     
-  Dispatcher::instance()->registerConnection(this, &Qso::handleCtrlInput,
-      &Qso::handleAudioInput);
+  if (!Dispatcher::instance()->registerConnection(this, &Qso::handleCtrlInput,
+      &Qso::handleAudioInput))
+  {
+    cerr << "Cannot create a new Qso object becasue registration with the "
+      	    "dispatcher object failed for some reason.\n";
+    return;
+  }
   
   init_ok = true;
   return;
@@ -179,6 +184,9 @@ Qso::~Qso(void)
 {
   disconnect();
   
+  gsm_destroy(gsmh);
+  gsmh = 0;
+  
   if (sdes_packet != 0)
   {
     free(sdes_packet);
@@ -187,8 +195,7 @@ Qso::~Qso(void)
   if (init_ok)
   {
     Dispatcher::instance()->unregisterConnection(this);
-  }
-  
+  }  
 } /* Qso::~Qso */
 
 

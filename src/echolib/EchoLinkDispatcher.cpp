@@ -168,15 +168,22 @@ Dispatcher::~Dispatcher(void)
 } /* Dispatcher::~Dispatcher */
 
 
-void Dispatcher::registerConnection(Qso *con, CtrlInputHandler cih,
+bool Dispatcher::registerConnection(Qso *con, CtrlInputHandler cih,
 	AudioInputHandler aih)
 {
-  assert(con_map.find(con->remoteIp()) == con_map.end());
+  if (con_map.find(con->remoteIp()) != con_map.end())
+  {
+    return false;
+  }
+  
   ConData con_data;
   con_data.con = con;
   con_data.cih = cih;
   con_data.aih = aih;
   con_map[con->remoteIp()] = con_data;
+  
+  return true;
+  
 } /* Dispatcher::registerConnection */
 
 
