@@ -27,10 +27,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example AsyncTcpConnection_demo.cpp
-An example of how to use the Async::TcpConnection class
-*/
-
 
 
 #ifndef ASYNC_TCP_CONNECTION_INCLUDED
