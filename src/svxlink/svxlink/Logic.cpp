@@ -754,6 +754,7 @@ void Logic::processCommandQueue(void)
       spellWord(callsign());
       if (report_ctcss > 0)
       {
+      	playSilence(200);
       	playMsg("pl_is");
       	playNumber(report_ctcss);
 	playMsg("hz");
