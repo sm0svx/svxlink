@@ -248,7 +248,8 @@ bool Config::parseCfgFile(void)
     //printf("%s\n", l);
     switch (l[0])
     {
-      case 0:
+      case 0: 	  // Ignore empty rows and
+      case '#':   // rows starting with a #-character == comments
       	break;
       
       case '[':
