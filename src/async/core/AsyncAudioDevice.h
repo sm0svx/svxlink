@@ -163,6 +163,11 @@ class AudioDevice : public SigC::Object
      */
     void audioToWriteAvailable(void);
 
+    /*
+     * @brief	Tell the audio device to flush its buffers
+     */
+    void flushSamples(void);
+    
     /**
      * @brief 	Find out how many samples there are in the output buffer
      * @return	Returns the number of samples in the output buffer on
@@ -210,7 +215,7 @@ class AudioDevice : public SigC::Object
     static const int  CHANNELS = 1;
     //static const int  SIZE = 16;
     static const int  FRAG_COUNT = 32;    // 32 frags ~ one second
-    static const int  FRAG_SIZE_LOG2 = 8; // 256 bytes/frag
+    static const int  FRAG_SIZE_LOG2 = 10; // 1024 bytes/frag (512 samples)
     static const int  BUF_FRAG_COUNT = 4;
     static std::map<std::string, AudioDevice*>  devices;
     
@@ -224,6 +229,7 @@ class AudioDevice : public SigC::Object
     char      	      	*read_buf;
     int       	      	device_caps;
     bool      	      	use_trigger;
+    bool		prebuf;
     
     void audioReadHandler(FdWatch *watch);
     void writeSpaceAvailable(FdWatch *watch);

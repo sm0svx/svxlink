@@ -366,14 +366,27 @@ void AudioDevice::audioToWriteAvailable(void)
 {
   //printf("AudioDevice::audioToWriteAvailable\n");
   
+  /*
   if (write_watch->isEnabled())
   {
     return;
   }
+  */
   
   write_watch->setEnabled(true);
   
 } /* AudioDevice::audioToWriteAvailable */
+
+
+void AudioDevice::flushSamples(void)
+{
+  //printf("AudioDevice::flushSamples\n");
+  prebuf = false;
+  if (write_watch != 0)
+  {
+    write_watch->setEnabled(true);
+  }
+} /* AudioDevice::flushSamples */
 
 
 int AudioDevice::samplesToWrite(void) const
@@ -417,7 +430,7 @@ int AudioDevice::samplesToWrite(void) const
  */
 AudioDevice::AudioDevice(const string& dev_name)
   : dev_name(dev_name), use_count(0), current_mode(MODE_NONE), fd(-1),
-    read_watch(0), write_watch(0), read_buf(0), device_caps(0)
+    read_watch(0), write_watch(0), read_buf(0), device_caps(0), prebuf(true)
 {
   char *use_trigger_str = getenv("ASYNC_AUDIO_NOTRIGGER");
   use_trigger = (use_trigger_str == 0);
@@ -461,7 +474,7 @@ void AudioDevice::audioReadHandler(FdWatch *watch)
     perror("SNDCTL_DSP_GETISPACE ioctl failed");
     return;
   }
-  //printf("fragments=%d  fragstotal=%d  fragsize=%d  bytes=%d\n",
+  //printf("read: fragments=%d  fragstotal=%d  fragsize=%d  bytes=%d\n",
     //  	 info.fragments, info.fragstotal, info.fragsize, info.bytes);
   
   if (info.fragments > 0)
@@ -474,7 +487,8 @@ void AudioDevice::audioReadHandler(FdWatch *watch)
       perror("read in AudioDevice::audioReadHandler");
       return;
     }
-
+    
+    //printf("Read %d samples\n", cnt / sizeof(short));
     audioRead(reinterpret_cast<short *>(read_buf), cnt/sizeof(short));
   }
     
@@ -493,6 +507,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
   unsigned samples_to_write ;
   audio_buf_info info;
   bool do_flush;
+  unsigned fragsize;
   do
   {
     short buf[32768];
@@ -503,15 +518,20 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       perror("SNDCTL_DSP_GETOSPACE ioctl failed");
       return;
     }
-    /*
-    printf("fragments=%d  fragstotal=%d  fragsize=%d  bytes=%d\n",
-      	   info.fragments, info.fragstotal, info.fragsize, info.bytes);  
+    //printf("write: fragments=%d  fragstotal=%d  fragsize=%d  bytes=%d\n",
+      //	   info.fragments, info.fragstotal, info.fragsize, info.bytes);  
 
+    /*
     int frags_to_write = sizeof(*buf) * count / info.fragsize;
     */
     //samples_to_write = min(samples_to_write, info.bytes / sizeof(short));
-    samples_to_write = min(sizeof(buf),
-      	    info.fragments * info.fragsize / sizeof(short));
+    
+    fragsize = info.fragsize / sizeof(short);
+    samples_to_write = min(sizeof(buf) / sizeof(short),
+    		info.fragments * fragsize);
+    //samples_to_write = min(samples_to_write, 7936U);
+    
+    //printf("audio device buffer=%d\n", info.fragments * fragsize);
     
     if (samples_to_write == 0)
     {
@@ -531,7 +551,29 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
 	samples_to_write = min(samples_to_write, fifo.samplesInFifo());
       }
     }
+    //printf("Samples to write from FIFO=%u\n", samples_to_write);
     
+    if (!do_flush)
+    {
+      samples_to_write /= fragsize;
+      samples_to_write *= fragsize;
+      
+      if (prebuf && (samples_to_write < 2 * fragsize))
+      {
+      	if (info.fragments * fragsize < 2 * fragsize)
+	{
+	  break;
+	}
+	else
+	{
+      	  watch->setEnabled(false);
+	}
+	return;
+      }
+    }
+    prebuf = do_flush;
+    //printf("prebuf=%s\n", prebuf ? "TRUE" : "FALSE");
+    	
     if (samples_to_write == 0)
     {
       watch->setEnabled(false);
@@ -543,7 +585,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       if (((*it)->mode() == AudioIO::MODE_WR) ||
       	  ((*it)->mode() == AudioIO::MODE_RDWR))
       {
-	short tmp[sizeof(buf)];
+	short tmp[sizeof(buf)/sizeof(short)];
 	int samples_read = (*it)->readSamples(tmp, samples_to_write);
 	for (int i=0; i<samples_read; ++i)
 	{
@@ -552,6 +594,13 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       }
     }  
 
+    if (do_flush && (samples_to_write % fragsize > 0))
+    {
+      //printf("*** FLUSHING %d samples ***\n", samples_to_write);
+      samples_to_write /= fragsize;
+      samples_to_write = (samples_to_write + 1) * fragsize;
+    }
+    
     //printf("Writing %d samples to audio device...\n", samples_to_write);
     int written = ::write(fd, buf, samples_to_write * sizeof(*buf));
     if (written == -1)
@@ -561,19 +610,20 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
     }
 
     assert(written / sizeof(short) == samples_to_write);
-    
+    /*
     if (do_flush)
     {
-      //printf("*** FLUSHING ***\n");
+      printf("*** FLUSHING ***\n");
       if (ioctl(fd, SNDCTL_DSP_POST, NULL) == -1)
       {
 	perror("SNDCTL_DSP_POST ioctl failed");
 	return;
       }
     }
-    
-  } while(samples_to_write == info.bytes / sizeof(short));
-    
+    */
+  } while(samples_to_write == info.fragments * fragsize);
+  
+  //printf("Enabling audio device file descriptor watch\n");
   watch->setEnabled(true);
   
 } /* AudioDevice::writeSpaceAvailable */
