@@ -85,7 +85,7 @@ DAEMONS_INSTALL	=
 LIBNAME		= asynccore
 
 # The version of the produced shared library
-SHLIB_VERSION	= $(ASYNCCORE)
+SHLIB_VERSION	= $(LIBASYNC)
 
 # Sources needed to build the library
 LIBSRC		= AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp \

@@ -85,7 +85,7 @@ DAEMONS_INSTALL	=
 LIBNAME		= asynccpp
 
 # The version of the produced shared library
-SHLIB_VERSION	= $(ASYNCCPP)
+SHLIB_VERSION	= $(LIBASYNC)
 
 # Sources needed to build the library
 LIBSRC		= AsyncCppApplication.cpp AsyncCppDnsLookupWorker.cpp

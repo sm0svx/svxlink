@@ -85,7 +85,7 @@ DAEMONS_INSTALL	=
 LIBNAME		= asyncqt
 
 # The version of the produced shared library
-SHLIB_VERSION	= $(ASYNCQT)
+SHLIB_VERSION	= $(LIBASYNC)
 
 # Sources needed to build the library
 LIBSRC		= AsyncQtApplication.cpp AsyncQtDnsLookupWorker.cpp
