@@ -261,7 +261,8 @@ void RepeaterLogic::moduleTransmitRequest(bool do_transmit)
 void RepeaterLogic::allTxSamplesFlushed(void)
 {
   //printf("RepeaterLogic::allTxSamplesFlushed\n");
-  if (!rx().squelchIsOpen())
+  Module *module = activeModule();
+  if (!rx().squelchIsOpen() && ((module == 0) || (!module->isTransmitting())))
   {
     setIdle(true);
   }
