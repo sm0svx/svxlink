@@ -37,7 +37,7 @@ PRGSRC		= EchoLinkQsoTest.cpp
 PROJLIBS	= -lecholib -lasynccpp
 
 # Libraries external to the project
-LIBS		= -lpopt -lsigc -lpthread
+LIBS		= -lpopt
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).
@@ -81,7 +81,7 @@ LIB_LIBS	= -lc -lasynccore -lgsm
 # These libs must be in the $(LIB) directory. Only the name of the
 # lib should be specified. Ex: If the filename is "libclient.a",
 # you should specify "client".
-STATIC_LIBS   	= gsm
+STATIC_LIBS   	= 
 
 # Includefiles to export. A softlink is created in $(INC).
 EXPINC		= EchoLinkDirectory.h EchoLinkDispatcher.h EchoLinkQso.h \
