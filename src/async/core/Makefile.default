@@ -92,7 +92,7 @@ LIBSRC		= AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp \
 		  AsyncIpAddress.cpp AsyncDnsLookup.cpp AsyncTcpClient.cpp \
 		  AsyncAudioIO.cpp AsyncUdpSocket.cpp AsyncTcpServer.cpp \
 		  AsyncTcpConnection.cpp AsyncConfig.cpp AsyncAudioDevice.cpp \
-		  AsyncSampleFifo.cpp
+		  AsyncSampleFifo.cpp AsyncSerial.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
 LIB_LIBS	= -lc -lsigc -lpthread -lm
@@ -107,7 +107,8 @@ STATIC_LIBS   	=
 EXPINC		= AsyncApplication.h AsyncFdWatch.h AsyncTimer.h \
 		  AsyncIpAddress.h AsyncTcpClient.h AsyncDnsLookup.h \
 		  AsyncAudioIO.h AsyncUdpSocket.h AsyncTcpServer.h \
-		  AsyncTcpConnection.h AsyncConfig.h AsyncSampleFifo.h
+		  AsyncTcpConnection.h AsyncConfig.h AsyncSampleFifo.h \
+		  AsyncSerial.h
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for libraries).

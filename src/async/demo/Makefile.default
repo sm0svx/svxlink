@@ -51,6 +51,7 @@ CPPPROGS        += AsyncUdpSocket_demo
 CPPPROGS        += AsyncCppApplication_demo
 CPPPROGS      	+= AsyncTcpServer_demo
 CPPPROGS      	+= AsyncConfig_demo
+CPPPROGS      	+= AsyncSerial_demo
 ifdef QTDIR
 CPPPROGS      	+= AsyncQtApplication_demo
 endif
