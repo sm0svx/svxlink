@@ -496,6 +496,7 @@ int Directory::handleCallList(char *buf, int len)
 	get_call_entry.setIp(IpAddress(buf));
 	//printf("Station ip: %s\n", get_call_ip);
 	
+	/*
 	if (strlen(get_call_entry.callsign().c_str()) == 1)
 	{
 	  the_message += get_call_entry.description() + "\n";
@@ -503,6 +504,18 @@ int Directory::handleCallList(char *buf, int len)
 	else if (strchr(get_call_entry.callsign().c_str(), ' ') != 0)
 	{
 	  error_str = get_call_entry.callsign();
+	}
+	*/
+	
+	if (get_call_entry.callsign() == ".")
+	{
+	  com_state = CS_WAITING_FOR_CALL;
+	  break;
+	}
+	
+	if (get_call_entry.callsign() == " ")
+	{
+	  the_message += get_call_entry.description() + "\n";
 	}
 	else
 	{
