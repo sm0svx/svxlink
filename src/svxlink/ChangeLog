@@ -28,6 +28,10 @@
   was automagically reestablished. Incoming connections are now not allowed
   from the disconnected station for five seconds.
 
+* Added a simple macro system to be able to assign short command strings
+  to longer commands. See documentation for the MACROS section in the
+  configuration file description.
+
 
 
  0.3.0 -- 26 Sep 2004
