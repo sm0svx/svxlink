@@ -12,16 +12,24 @@
 <BODY>
 <H1 align="center">SvxLink - Multi Purpose Voice Services System</H1>
 <HR noshade/>
-<TABLE align="center" width="90%" border="0">
-  <TR align="center">
-    <TD width="13%"><A href="index.php">Main</A></TD>
-    <TD width="13%"><A href="news.php">News</A></TD>
-    <TD width="13%"><A href="screenshots.php">Screenshots</A></TD>
-    <TD width="13%"><A href="https://sourceforge.net/project/showfiles.php?group_id=84813">Downloads</A></TD>
-    <TD width="13%"><A href="install.php">Install</A></TD>
-    <TD width="13%"><A href="moreinfo.php">Developers</A></TD>
-    <TD width="13%"><A href="https://sourceforge.net/projects/svxlink/">Summary</A></TD>
-  </TR>
-</TABLE>
-<HR noshade/>
+<TABLE width="100%" border="0" cellspacing="20">
+  <COLGROUP>
+    <COL width="0*">
+    <COL>
+  </COLGROUP>
+  <TR valign="top"><TD NOWRAP align="right">
+    <A href="index.php">Main Screen</A><BR/>
+    <A href="news.php">Project News</A><BR/>
+    <A href="screenshots.php">Screenshots</A><BR/>
+    <A href="install.php">Installation Instructions</A><BR/>
+    <A href="qtel_usage.php">Qtel User Docs</A><BR/>
+    <A href="svxlink_usage.php">SvxLink Server User Docs</A><BR/>
+    <A href="moreinfo.php">Developer Documentation</A><BR/>
+    <A
+    href="https://sourceforge.net/project/showfiles.php?group_id=84813">
+      Software Downloads</A><BR/>
+    <A href="https://sourceforge.net/projects/svxlink/">SourceForge Summary</A>
+  </TD>
+  <TD>
+  
 
