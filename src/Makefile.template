@@ -1,0 +1,226 @@
+#------------------------------------------------------------------------------
+# Filename:             Makefile.template
+# Author:               Tobias Blomberg
+# Created:              2000-10-17
+# Description:          There should be one copy of this file in
+#			each leaf sub-directory. It is here you specify
+#			which files you want to compile and which
+#			libraries/programs you want to create.
+#
+#------------------------------------------------------------------------------
+
+# Include version information
+-include $(ROOT)/versions
+
+
+###############################################################################
+#
+# This section contains things to setup when compiling PROGRAMS.
+#
+###############################################################################
+
+# Programs to compile
+PROGS		= 
+
+# C++ programs to compile
+CPPPROGS      	= 
+
+# Sources other than the main files
+PRGSRC		= 
+
+# Libraries compiled in the project (in $(LIB)).
+PROJLIBS	= 
+
+# Libraries external to the project
+LIBS		= 
+
+# Specify Qt header files here that you want to run the
+# Qt Meta Object Compiler on (for programs).
+QTHEADERS	= 
+
+# Specify which ui-files to include in the programs we compile.
+UI_FILES	= 
+
+# Programs to install. You may optionally specify mode, owner and
+# group if you want to. The syntax is: filename[mode,owner,group].
+#   Example: myprog[750,-,mygroup]
+#   Where:   750     = The mode
+#            -       = Preserve owner
+#            mygroup = Set group mygroup
+PROGS_INSTALL	= $(PROGS:%=%[755,root,root]) $(CPPPROGS:%=%[755,root,root])
+
+# Daemons (server processes) to install. Same format as PROGS_INSTALL.
+DAEMONS_INSTALL	= 
+
+
+###############################################################################
+#
+# This section contains things to setup when compiling LIBRARIES.
+#
+###############################################################################
+
+# The name of the library (without the preceeding "lib").
+LIBNAME		= 
+
+# The version of the produced shared library. Most often specified like
+# $(LIBXXX). LIBXXX is then specified in the "versions" file.
+SHLIB_VERSION	= 
+
+# Sources needed to build the library
+LIBSRC		= 
+
+# Which libs are used by the DYNAMIC lib generated.
+LIB_LIBS	= -lc
+
+# Which STATIC libs should be included in the generated STATIC lib.
+# These libs must be in the $(LIB) directory. Only the name of the
+# lib should be specified. Ex: If the filename is "libclient.a",
+# you should specify "client".
+STATIC_LIBS   	= 
+
+# Includefiles to export. A softlink is created in $(INC).
+EXPINC		= 
+
+# Specify Qt header files here that you want to run the
+# Qt Meta Object Compiler on (for libraries).
+LIB_QTHEADERS	= 
+
+# Specify which ui-files to include in the lib we compile.
+LIB_UI_FILES	= 
+
+# Include files to install.  You may optionally specify mode, owner and
+# group if you want to. The syntax is: filename[mode,owner,group].
+#   Example: myinc.h[750,-,mygroup]
+#   Where:   750     = The mode
+#            -       = Preserve owner
+#            mygroup = Set group mygroup
+INC_INSTALL	= $(EXPINC:%=%[644,root,root])
+
+# Library to install (just one at the moment).
+# You may optionally specify mode, owner and group if you want to.
+# The syntax is: filename[mode,owner,group].
+#   Example: mylib[750,-,mygroup]
+#   Where:   750     = The mode
+#            -       = Preserve owner
+#            mygroup = Set group mygroup
+LIB_INSTALL	= $(LIBNAME:%=%[-,root,root])
+
+
+###############################################################################
+#
+# This section contains things to setup when compiling PLUGINS.
+#
+###############################################################################
+
+# C plugins to compile (No .so extension)
+PLUGINS		= 
+
+# C++ plugins to compile (No .so extension)
+PLUGINS_CPP   	= 
+
+# Additional C sources to compile.
+PLUGINSRC	= 
+
+# Libs that the plugins depend on.
+PLUGIN_LIBS	= 
+
+# List the plugins to install (With the .so extension!).
+# You may optionally specify mode, owner and group if you want to.
+# The syntax is: filename[mode,owner,group].
+#   Example: mylib[750,-,mygroup]
+#   Where:   750     = The mode
+#            -       = Preserve owner
+#            mygroup = Set group mygroup
+PLUGINS_INSTALL	= $(PLUGINS:%=%.so[755,root,root]) \
+		  $(PLUGINS_CPP:%=%.so[755,root,root])
+
+
+###############################################################################
+#
+# This section contains extra targets. They should be used as
+# a last resort if the existing features can not solve a problem.
+# PRE_TARGETS are made _before_ anything else and POST_TARGETS are
+# made _after_ everything else.
+# On a "make clean", the specified targets are removed.
+#
+###############################################################################
+
+#PRE_TARGETS	= pre.txt
+#POST_TARGETS	= post.txt
+
+
+#pre.txt:	nisse.txt
+#	$(ECHO) --- Creating file $(BOLD)$@$(NBOLD)...
+#	echo "Hello, target $@!" > $@
+
+#post.txt:	nisse.txt
+#	$(ECHO) --- Creating file $(BOLD)$@$(NBOLD)...
+#	echo "Hello, target $@!" > $@
+
+
+
+###############################################################################
+#
+# This section contains the inclusion of the main makefile
+# containing all targets. DON'T TOUCH!
+#
+###############################################################################
+
+# Include main makefile.
+include $(ROOT)/makefile.inc
+
+
+##################################################################
+#
+# This section contains things to setup when creating RPMs.
+#
+##################################################################
+
+# The name of the RPM to put the installed files into when doing
+# the "rpm" target.
+RPM_NAME := 
+
+
+###############################################################################
+#
+# This section contains compiler and linker options.
+#
+###############################################################################
+
+# Paths to includefile-directories. All directories must be preceeded
+# by the "-I" switch.
+INCPATH 	+= 
+
+# Paths to library-directories. All directories must be preceeded
+# by the "-L" switch.
+LIBPATH 	+= 
+
+# Additional warnings to use. If you want to override the default
+# warnings, change the "+=" to "=".
+WARNINGS	+= 
+
+# Extra commandline switches to the compiler. For example "-g" to
+# add debug information, "-O2" to add optimizations etc.
+CFLAGS		+=
+
+# Extra commandline switches to the linker
+LDFLAGS		+=
+
+
+
+##################################################################
+#
+# This section contains extra make targets
+#
+##################################################################
+
+# Additional files to install
+install-extras uninstall-extras rpm-extras:
+#	$(DIRSPEC) /var/spool/myprog[755,root,root]
+#	$(FILESPEC) install-extras/myprog.conf[644,root,root] /etc
+
+
+#
+# EOF -- This file has not been truncated.
+#
+
