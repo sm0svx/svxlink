@@ -178,11 +178,23 @@ bool ModuleEchoLink::initialize(void)
     cerr << "*** Error: Config variable " << cfgName() << "/CALLSIGN not set\n";
     return false;
   }
+  if (callsign == "MYCALL-L")
+  {
+    cerr << "*** Error: Please set the EchoLink callsign (" << cfgName()
+      	 << "/CALLSIGN) to a real callsign\n";
+    return false;
+  }
   
   string password;
   if (!cfg().getValue(cfgName(), "PASSWORD", password))
   {
     cerr << "*** Error: Config variable " << cfgName() << "/PASSWORD not set\n";
+    return false;
+  }
+  if (password == "MyPass")
+  {
+    cerr << "*** Error: Please set the EchoLink password (" << cfgName()
+      	 << "/PASSWORD) to a real password\n";
     return false;
   }
   
