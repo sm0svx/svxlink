@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdio>
 #include <cerrno>
 #include <cctype>
+#include <cassert>
 
 
 /****************************************************************************
@@ -279,6 +280,48 @@ const StationData *Directory::findCall(const string& call)
 } /* Directory::findCall */
 
 
+const StationData *Directory::findStation(int id)
+{
+  list<StationData> calls;
+  list<StationData>::const_iterator iter;
+  
+  for (iter=the_links.begin(); iter!=the_links.end(); ++iter)
+  {
+    if (iter->id() == id)
+    {
+      return &(*iter);
+    }
+  }
+  
+  for (iter=the_repeaters.begin(); iter!=the_repeaters.end(); ++iter)
+  {
+    if (iter->id() == id)
+    {
+      return &(*iter);
+    }
+  }
+  
+  for (iter=the_conferences.begin(); iter!=the_conferences.end(); ++iter)
+  {
+    if (iter->id() == id)
+    {
+      return &(*iter);
+    }
+  }
+  
+  for (iter=the_stations.begin(); iter!=the_stations.end(); ++iter)
+  {
+    if (iter->id() == id)
+    {
+      return &(*iter);
+    }
+  }
+  
+  return 0;
+  
+} /* Directory::findStation */
+
+
 ostream& EchoLink::operator<<(ostream& os, const StationData& station)
 {
   os  << setiosflags(ios::left)
@@ -389,7 +432,7 @@ int Directory::handleCallList(char *buf, int len)
 	if (get_call_cnt > 0)
 	{
 	  get_call_list.clear();
-	  the_message.clear();
+	  the_message = "";
 	  com_state = CS_WAITING_FOR_CALL;
 	}
 	else

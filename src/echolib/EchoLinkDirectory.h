@@ -310,6 +310,14 @@ class Directory : public SigC::Object
     const StationData *findCall(const std::string& call);
     
     /**
+     * @brief 	Find a station in the station list given a station ID
+     * @param 	id  The ID to find
+     * @return	Returns a pointer to a StationData object if the ID was
+     *	      	found. Otherwise a NULL-pointer is returned.
+     */
+    const StationData *findStation(int id);
+    
+    /**
      * @brief A signal that is emitted when the registration status changes
      * @param status The new status
      */
