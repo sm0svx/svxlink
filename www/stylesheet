@@ -1,0 +1,35 @@
+BODY
+{
+  color: black;
+  background: white;
+  font-family: sans-serif;
+}
+
+P
+{
+  text-indent: 0em;
+}
+
+CODE
+{
+  display: block;
+  padding: 10pt;
+  white-space: pre;
+  color: black;
+  background-color: #AAAAAA;
+  border-style: solid;
+  border-color: black;
+  border-width: thin;
+  margin: 2em;
+}
+
+IMG.floatleft
+{
+  float: left;
+}
+
+IMG.floatright
+{
+  float: right;
+  margin-left: 1em;
+}
