@@ -180,8 +180,9 @@ class Qso : public SigC::Object
     /**
      * @brief 	Set the local name (name of station operator)
      * @param 	name  The name to set
+     * @return	Returns \em true on success or \em false on failure
      */
-    void setLocalName(const std::string& name);
+    bool setLocalName(const std::string& name);
 
     /**
      * @brief 	Set the local info

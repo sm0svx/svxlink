@@ -223,9 +223,24 @@ bool Qso::setLocalCallsign(const std::string& callsign)
 } /* Qso::setLocalCallsign */
 
 
-void Qso::setLocalName(const std::string& name)
+bool Qso::setLocalName(const std::string& name)
 {
   this->name = name;
+  if (sdes_packet != 0)
+  {
+    free(sdes_packet);
+    sdes_packet = 0;
+  }
+  sdes_length = rtp_make_sdes(&sdes_packet, 0, 1, callsign.c_str(),
+      name.c_str());
+  if(sdes_length <= 0)
+  {
+    cerr << "Could not create SDES packet\n";
+    return false;
+  }
+  
+  return true;
+  
 } /* Qso::setLocalName */
 
 
