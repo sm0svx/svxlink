@@ -5,6 +5,25 @@
 
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>04 Apr 2004: <I>We have transciever connection!</I></B>
+  <TD/></TR>
+  <TR><TD>
+    So, here goes. The first try at EchoLink "sysop mode" grew into a
+    pretty general voice services system for ham radio use. The svxlink
+    server is a standalone server that is connected to a transciever.
+    Voice services modules can then be loaded into the system. Existing
+    modules right now are: a help system, a parrot module that plays back
+    everything you say to it and an EchoLink connection module.
+    <P>
+    There is a lack of documentation at the moment but I'll try to get some
+    up as soon as I can. Only binary packages for Fedora Core 1 exist at the
+    moment. Source code is of course available as well. Go to the download
+    section to get your hands on the new goodies.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>16 Mar 2004: <I>Still alive...</I></B>
   <TD/></TR>
   <TR><TD>
