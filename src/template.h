@@ -2,13 +2,13 @@
 @file	 Template.h
 @brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2004-08-
+@date	 2005-02-
 
 A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -110,7 +110,7 @@ namespace MyNameSpace
 /**
 @brief	A_brief_class_description
 @author Tobias Blomberg
-@date   2004-03-
+@date   2005-02-
 
 A_detailed_class_description
 
