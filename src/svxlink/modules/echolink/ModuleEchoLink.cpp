@@ -611,6 +611,7 @@ void ModuleEchoLink::allMsgsWritten(void)
   if (outgoing_con_pending != 0)
   {
     outgoing_con_pending->connect();
+    broadcastTalkerStatus();
   }
   outgoing_con_pending = 0;
 } /* allMsgsWritten */
@@ -809,6 +810,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
     remote_activation = true;
   }
   qso->accept();
+  broadcastTalkerStatus();
   
   //msg_handler->playMsg("EchoLink", "greeting");
   
@@ -1008,6 +1010,8 @@ void ModuleEchoLink::onDestroyMe(QsoImpl *qso)
   delete qso;
   qso = 0;
   
+  broadcastTalkerStatus();
+
   if (remote_activation && (qsos.size() == 0))
   {
     deactivateMe();
