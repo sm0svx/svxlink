@@ -358,7 +358,7 @@ depend/%.dpp:  	%.cpp
 		chgrp $(SET_GROUP) `dirname $@`; \
 	fi
 	$(ECHO) --- Creating dependency file $(BOLD)$@$(NBOLD)...
-	gcc -M -MG -MT "$*.o $@" $(CFLAGS) -MF $@ $<
+	g++ -M -MG -MT "$*.o $@" $(CXXFLAGS) -MF $@ $<
 	chgrp $(SET_GROUP) $@
 
 depend/%.d:	%.c
