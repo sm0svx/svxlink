@@ -22,9 +22,11 @@ class MyClass : public SigC::Object
     }
     
   private:
-    void onIncomingConnection(const string& callsign, const string& name)
+    void onIncomingConnection(const IpAddress& ip, const string& callsign,
+      	      	      	      const string& name)
     {
-      cerr << "Incoming connection from " << callsign << " (" << name << ")\n";
+      cerr << "Incoming connection from " << ip << ": " << callsign
+      	   << " (" << name << ")\n";
       // Find out the station data by using the Directory class
       // Create a new Qso object to accept the connection
     }
