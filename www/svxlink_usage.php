@@ -10,7 +10,7 @@ signalling. All commands to the system ends with the number sign (#). It's like
 the <em>enter</em> key on a computer. However, the sysop have an option to make
 commands execute on squelch close so that the number sign is not needed.
 <P>
-There is also an "anti-flutter" mode of operation. This mode of operation make
+There also is an "anti-flutter" mode of operation. This mode of operation make
 DTMF detection perform well when the signal is weak or there is mobile flutter
 present. This mode is activated on a per command basis. To activate, start each
 command with an "A" (think: Activate Anti-flutter). Enter the digits, replacing
@@ -36,6 +36,14 @@ Exactly the same result as the first example, even though some digits were
 detected multiple times.
 <P>
 The star key (*) is special. It triggers the node to identify itself.
+<P>
+The "D" key is used to activate a pre programmed macro or short cut. A macro is
+used to reduce the number of DTMF codes that have to be sent. For example if the
+macro 5 have been defined to connect to the *ECHOTEST* node only D5# have to be
+pressed instead of 2#9999#. It is the node sysop that defines the macros. Check
+with your local node sysop which macros are setup. If you connect to an
+EchoLink node very often it can be nice to setup a macro for it. Ask your sysop
+to do that.
 <P>
 The system is built up of a core system that handles the transciever interface.
 The core system can then be extended by loading modules that handles a specific

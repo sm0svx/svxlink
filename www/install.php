@@ -235,7 +235,8 @@ application global configuration data.
 
 The next section is the <b>SimlexLogic</b> section. This section contains
 configuration data for a simplex logic core. The SvxLink server can handle
-more than one logic core. The name of the section, which in this case is
+more than one logic core. However, no real tests have been performed with
+more than one core. The name of the section, which in this case is
 SimplexLogic, must have a corresponding list item in the GLOBAL/LOGICS config
 variable for this logic core to be activated.
 
@@ -325,14 +326,15 @@ variable for this logic core to be activated.
   
   <DT>MACROS</DT>
   <DD>
-    Point out a section the contains the macros that should be used by this
+    Point out a section that contains the macros that should be used by this
     logic core. See the section description for macros below for more info.
   </DD>  
 </DL>
 
 The next section is the <b>RepeaterLogic</b> section. This section contains
 configuration data for a repeater logic core. The SvxLink server can handle
-more than one logic core. The name of the section, which in this case is
+more than one logic core. However, no real tests have been performed with
+more than one core. The name of the section, which in this case is
 RepeaterLogic, must have a corresponding list item in the GLOBAL/LOGICS
 config variable for this logic core to be activated.
 
@@ -421,15 +423,15 @@ config variable for this logic core to be activated.
   
   <DT>MACROS</DT>
   <DD>
-    Point out a section the contains the macros that should be used by this
+    Point out a section that contains the macros that should be used by this
     logic core. See the section description for macros below for more info.
   </DD>  
 </DL>
 
 A macros section is used to declare macros that can be used by a logic core.
 The logic core points out the macros section to use by using the MACROS
-configuration variable. A macros is a kind of shortcut that can be used to
-decrease the amont of key presses that have to be done to connect to common
+configuration variable. A macro is a kind of shortcut that can be used to
+decrease the amount of key presses that have to be done to connect to common
 EchoLink stations for example. On the radio side, macros are activated by
 pressing "D" "macro number" "#". A macros section can look something like the
 example below.
@@ -493,6 +495,28 @@ used to specify the configuration for a receiver.
     The detector is not very exact so it will detect tones that is near the
     specified tone. Only whole Hz can be specifid so the value should be in the
     range 67 to 254 Hz.
+  </DD>
+
+  <DT>SQL_PORT</DT>
+  <DD>
+    If SQL_UP_DET or SQL_DOWN_DET is set to SERIAL, this config variable
+    determines which serial port should be used for hardware squelch input
+    (COS - Carrier Operated Squelch).<BR/>
+    Note: If the same serial port is used for the PTT, make sure you specify
+    exactly the same device name. Otherwise the RX and TX will not be able
+    to share the port.<BR/>
+    Example: SQL_PORT=/dev/ttyS0
+  </DD>
+
+  <DT>SQL_PIN</DT>
+  <DD>
+    If SQL_UP_DET or SQL_DOWN_DET is set to SERIAL, this config variable
+    determines which pin in the serial port that should be used for hardware
+    squelch input (COS - Carrier Operated Squelch). It is possible to use
+    the DCD, CTS, DSR or RI pin. The squelch-open-level must also be specified.
+    This is done using the syntax SQL_PIN=PIN:LEVEL, where PIN is one of the
+    pins above and LEVEL is either SET or CLEAR.<BR/>
+    Example: SQL_PIN=CTS:SET
   </DD>
 </DL>
 
