@@ -24,6 +24,9 @@
 * Now possible to set the length of the Parrot module FIFO in the config
   file. That is, it is now possible to set the maximum recording length.
 
+* ModuleEchoLink: "Connecting to <callsign>" is now announced before
+  actually connecting.
+
 
 
  0.1.1 -- 16 Apr 2004
