@@ -1,3 +1,25 @@
+ 0.2.0 -- ?? May 2004
+----------------------
+
+* A SvxLink server node can now act as a repeater system.
+
+* Added periodic identification.
+
+* Improved sound clips.
+
+* Improved DTMF decoding algorithm.
+
+* ModuleEchoLink: Now printing out incoming chat messages.
+
+* ModuleEchoLink: Now only printing out incoming info messages if it
+  differs from the last message received.
+
+* CTCSS squelch implemented. Usage of this is recommended over using
+  the vox squelch. Make sure that your receiver let the CTCSS frequencies
+  through.
+
+
+
  0.1.1 -- 16 Apr 2004
 ----------------------
 
