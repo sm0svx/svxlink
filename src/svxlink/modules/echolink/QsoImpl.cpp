@@ -126,7 +126,7 @@ using namespace EchoLink;
 QsoImpl::QsoImpl(const Async::IpAddress& ip, ModuleEchoLink *module)
   : Qso(ip), module(module), msg_handler(0), msg_pacer(0), init_ok(false),
     reject_qso(false), last_message(""), last_info_msg(""), idle_timer(0),
-    activity(false)
+    activity(false), disc_when_done(false)
 {
   assert(module != 0);
   
@@ -311,7 +311,7 @@ void QsoImpl::reject(void)
 void QsoImpl::allRemoteMsgsWritten(void)
 {
   flushAudioSendBuffer();
-  if (reject_qso)
+  if (reject_qso || disc_when_done)
   {
     disconnect();
   }
@@ -423,8 +423,12 @@ void QsoImpl::idleTimeoutCheck(Timer *t)
   {
     cout << localCallsign() << ": EchoLink connection idle timeout. "
       	 "Disconnecting...\n";
-    // FIXME: Play message
-    disconnect();
+    module->playMsg("timeout");
+    disc_when_done = true;
+    msg_handler->begin();
+    msg_handler->playMsg("EchoLink", "timeout");
+    msg_handler->playSilence(1000);
+    msg_handler->end();
   }
   
   activity = false;
@@ -436,6 +440,7 @@ void QsoImpl::onIsReceiving(bool is_receiving)
 {
   activity = true;
 } /* onIsReceiving */
+
 
 
 /*

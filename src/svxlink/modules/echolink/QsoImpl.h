@@ -252,6 +252,7 @@ class QsoImpl : public EchoLink::Qso
     std::string       	last_info_msg;
     Async::Timer      	*idle_timer;
     bool      	      	activity;
+    bool      	      	disc_when_done;
     
     void allRemoteMsgsWritten(void);
     void onInfoMsgReceived(const std::string& msg);
