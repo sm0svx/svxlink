@@ -132,10 +132,7 @@ Logic::Logic(Config &cfg, const string& name)
     prev_digit('?'), exec_cmd_on_sql_close(0), exec_cmd_on_sql_close_timer(0),
     rgr_sound_timer(0), rgr_sound_delay(-1), report_ctcss(0)
 {
-  macros[0] = "EchoLink:9999";
-  macros[1] = "Parrot:0123456789";
-  macros[2] = "Nisse:0123456789";
-  
+
 } /* Logic::Logic */
 
 
@@ -160,6 +157,8 @@ bool Logic::initialize(void)
   string tx_name;
   string sounds;
   string value;
+  list<string> macro_list;
+  list<string>::iterator mlit;
   
   if (!cfg().getValue(name(), "RX", rx_name))
   {
@@ -198,6 +197,13 @@ bool Logic::initialize(void)
   if (cfg().getValue(name(), "REPORT_CTCSS", value))
   {
     report_ctcss = atof(value.c_str());
+  }
+  
+  macro_list = cfg().listSection("MACROS");
+  for (mlit=macro_list.begin(); mlit!=macro_list.end(); ++mlit)
+  {
+    cfg().getValue("MACROS", *mlit, value);
+    macros[atoi(mlit->c_str())] = value;
   }
   
   loadModules();
