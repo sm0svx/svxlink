@@ -314,6 +314,14 @@ variable for this logic core to be activated.
     a roger beep is played. The beep can be disabled by specifying a value
     of -1.
   </DD>  
+  
+  <DT>REPORT_CTCSS</DT>
+  <DD>
+    If set, will report the specified CTCSS frequency upon manual
+    identification (* pressed). It is possible to specify fractions using
+    "." as decimal comma. Disable this feature by commenting out (#) this
+    configuration variable.
+  </DD>  
 </DL>
 
 The next section is the <b>RepeaterLogic</b> section. This section contains
@@ -395,6 +403,14 @@ config variable for this logic core to be activated.
   <DD>
     When the repeater is idle, a sound is played. Specify the interval in
     milliseconds between playing the idle sound.
+  </DD>  
+  
+  <DT>REPORT_CTCSS</DT>
+  <DD>
+    If set, will report the specified CTCSS frequency upon manual
+    identification (* pressed). It is possible to specify fractions using
+    "." as decimal comma. Disable this feature by commenting out (#) this
+    configuration variable.
   </DD>  
 </DL>
 
@@ -571,6 +587,14 @@ Specific configuration variables for the <b>EchoLink</b> module.
     The maximum number of stations that can participate in a conference QSO
     on this node. If more stations try to connect, the connect request will
     be rejected.
+  </DD>
+
+  <DT>LINK_IDLE_TIMEOUT</DT>
+  <DD>
+    The number of seconds that a connection is idle before disconnection
+    will occur. This is to prevent a link to stay open if someone forgets
+    to disconnect. Disable this feature by setting this config variable
+    to zero (or comment it out).
   </DD>
 
   <DT>MAX_CONNECTIONS</DT>
