@@ -36,12 +36,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <linux/soundcard.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/soundcard.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
 #include <sys/types.h>
 
 #include <cstdio>
@@ -211,7 +211,7 @@ bool AudioIO::open(Mode mode)
     close();
   }
   
-  int flags = O_NONBLOCK;
+  int flags = 0; // = O_NONBLOCK; // Not supported according to the OSS docs
   switch (mode)
   {
     case MODE_RD:
@@ -230,13 +230,34 @@ bool AudioIO::open(Mode mode)
   fd = ::open("/dev/dsp", flags);
   if(fd < 0)
   {
-    perror("open in AudioIO::open");
+    perror("open failed");
     return false;
   }
 
   if (mode == MODE_RDWR)
   {
     ioctl(fd, SNDCTL_DSP_SETDUPLEX, 0);
+  }
+  
+  int caps;
+  if (ioctl(fd, SNDCTL_DSP_GETCAPS, &caps) == -1)
+  {
+    perror("SNDCTL_DSP_GETCAPS ioctl failed");
+    close();
+    return false;
+  }
+  printf("The sound device do%s have TRIGGER capability\n",
+      (caps & DSP_CAP_TRIGGER) ? "" : " NOT");
+  
+  if (caps & DSP_CAP_TRIGGER)
+  {
+    arg = ~(PCM_ENABLE_OUTPUT | PCM_ENABLE_INPUT);
+    if(ioctl(fd, SNDCTL_DSP_SETTRIGGER, &arg) == -1)
+    {
+      perror("SNDCTL_DSP_SETTRIGGER ioctl failed");
+      close();
+      return false;
+    }
   }
   
   /*
@@ -249,6 +270,7 @@ bool AudioIO::open(Mode mode)
   }
   */
   
+  /*
   arg = SIZE;
   if(ioctl(fd, SOUND_PCM_WRITE_BITS, &arg) == -1)
   {
@@ -262,36 +284,63 @@ bool AudioIO::open(Mode mode)
     close();
     return false;
   }
+  */
 
-  arg = CHANNELS;
-  if(ioctl(fd, SOUND_PCM_WRITE_CHANNELS, &arg) == -1)
+  arg = AFMT_S16_LE; 
+  if(ioctl(fd,  SNDCTL_DSP_SETFMT, &arg) == -1)
   {
-    perror("SOUND_PCM_WRITE_CHANNELS ioctl failed");
+    perror("SNDCTL_DSP_SETFMT ioctl failed");
+    close();
+    return false;
+  }
+  if (arg != AFMT_S16_LE)
+  {
+    fprintf(stderr, "*** error: The sound device does not support 16 bit "
+      	      	    "signed samples\n");
+    close();
+    return false;
+  }
+  
+  arg = CHANNELS;
+  if(ioctl(fd, SNDCTL_DSP_CHANNELS, &arg) == -1)
+  {
+    perror("SNDCTL_DSP_CHANNELS ioctl failed");
     close();
     return false;
   }
   if(arg != CHANNELS)
   {
-    perror("unable to set number of channels");
+    fprintf(stderr, "*** error: Unable to set number of channels to %d. The "
+      	      	    "driver suggested %d channels\n",
+		    CHANNELS, arg);
     close();
     return false;
   }
 
   arg = RATE;
-  if(ioctl(fd, SOUND_PCM_WRITE_RATE, &arg) == -1)
+  if(ioctl(fd, SNDCTL_DSP_SPEED, &arg) == -1)
   {
-    perror("SOUND_PCM_WRITE_RATE ioctl failed");
+    perror("SNDCTL_DSP_SPEED ioctl failed");
+    close();
+    return false;
+  }
+  if (abs(arg - RATE) > 100)
+  {
+    fprintf(stderr, "*** error: Sampling speed could not be set to %dHz. "
+      	      	    "The closest speed returned by the driver was %dHz\n",
+		    RATE, arg);
     close();
     return false;
   }
   
-  arg = AFMT_S16_LE; 
-  if(ioctl(fd,  SOUND_PCM_SETFMT, &arg) == -1)
+  /*  Used for playing non-full fragments.
+  if (ioctl(fd, SNDCTL_DSP_POST, 0) == -1)
   {
-    perror(" SOUND_PCM_SETFMT ioctl failed");
+    perror("SNDCTL_DSP_POST ioctl failed");
     close();
     return false;
   }
+  */
   
   this->mode = mode;
   
@@ -306,20 +355,15 @@ bool AudioIO::open(Mode mode)
   
   if ((mode == MODE_WR) || (mode == MODE_RDWR))
   {
+    write_watch = new FdWatch(fd, FdWatch::FD_WATCH_WR);
+    assert(write_watch != 0);
+    write_watch->activity.connect(slot(this, &AudioIO::writeSpaceAvailable));
+    write_watch->setEnabled(false);
     arg |= PCM_ENABLE_OUTPUT;
-  }
-  
-  int caps;
-  if (ioctl(fd, SNDCTL_DSP_GETCAPS, &caps) == -1)
-  {
-    perror("SNDCTL_DSP_GETCAPS ioctl failed");
-    close();
-    return false;
   }
   
   if (caps & DSP_CAP_TRIGGER)
   {
-    printf("The sound device do have TRIGGER capability\n");
     if(ioctl(fd, SNDCTL_DSP_SETTRIGGER, &arg) == -1)
     {
       perror("SNDCTL_DSP_SETTRIGGER ioctl failed");
@@ -327,16 +371,7 @@ bool AudioIO::open(Mode mode)
       return false;
     }
   }
-  else
-  {
-    printf("The sound device do NOT have TRIGGER capability\n");
-  }
       
-  write_watch = new FdWatch(fd, FdWatch::FD_WATCH_WR);
-  assert(write_watch != 0);
-  write_watch->activity.connect(slot(this, &AudioIO::writeSpaceAvailable));
-  write_watch->setEnabled(false);
-  
   int frag_size;
   if (ioctl(fd, SNDCTL_DSP_GETBLKSIZE, &frag_size) == -1)
   {
@@ -391,6 +426,19 @@ int AudioIO::write(const short *buf, int count)
   {
     return 0;
   }
+  
+  /*
+  audio_buf_info info;
+  if (ioctl(fd, SNDCTL_DSP_GETOSPACE, &info) == -1)
+  {
+    perror("SNDCTL_DSP_GETOSPACE ioctl failed");
+    return 0;
+  }
+  printf("fragments=%d  fragstotal=%d  fragsize=%d  bytes=%d\n",
+      	 info.fragments, info.fragstotal, info.fragsize, info.bytes);  
+  
+  int frags_to_write = sizeof(*buf) * count / info.fragsize;
+  */
   
   int written = ::write(fd, buf, sizeof(*buf) * count);
   if (written == -1)
