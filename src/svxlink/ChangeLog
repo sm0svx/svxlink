@@ -27,10 +27,12 @@
 
 * ModuleEchoLink: Improved directory list handling.
 
-* Bugfix in ModuleParrot: The TX would hang some times.
+* Bugfix: The TX would hang some times.
 
 * Bugfix: Audio transmitted by modules had precendence over local messages
   which caused interrupted announcements.
+
+* Bugfix: The TX timeout caused some problems.
 
 
 
