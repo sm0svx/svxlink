@@ -37,7 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <stdio.h>
-
+#include <iostream>
 
 
 /****************************************************************************
@@ -48,6 +48,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <version/MODULE_PARROT.h>
 
+#include <AsyncConfig.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -67,6 +69,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 
 
 
@@ -76,6 +79,7 @@ using namespace std;
  *
  ****************************************************************************/
 
+#define DEFAULT_MODULE_TIMEOUT	"300"
 
 
 /****************************************************************************
@@ -122,7 +126,7 @@ extern "C" {
   Module *module_init(void *dl_handle, Logic *logic, int id,
       	      	      const char *cfg_name)
   {
-    return new ModuleParrot(dl_handle, logic, id);
+    return new ModuleParrot(dl_handle, logic, id, cfg_name);
   }
 } /* extern "C" */
 
@@ -135,19 +139,31 @@ extern "C" {
  ****************************************************************************/
 
 
-ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic, int id)
-  : Module(dl_handle, logic, id), fifo(30*8000), squelch_is_open(false)
+ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic, int id,
+      	      	      	   const string& cfg_name)
+  : Module(dl_handle, logic, id), fifo(30*8000), squelch_is_open(false),
+    module_tmo_timer(0)
 {
   printf("Module %s v%s starting...\n", name(), MODULE_PARROT_VERSION);
   fifo.stopOutput(true);
   fifo.writeSamples.connect(slot(this, &ModuleParrot::audioFromFifo));
   fifo.allSamplesWritten.connect(slot(this, &ModuleParrot::allSamplesWritten));
+  
+  string timeout;
+  if (!cfg().getValue(cfg_name, "TIMEOUT", timeout))
+  {
+    timeout = DEFAULT_MODULE_TIMEOUT;
+  }
+  module_tmo_timer = new Timer(1000 * atoi(timeout.c_str()));
+  module_tmo_timer->setEnable(false);
+  module_tmo_timer->expired.connect(slot(this, &ModuleParrot::moduleTimeout));
+  
 } /* ModuleParrot */
 
 
 ModuleParrot::~ModuleParrot(void)
 {
-
+  delete module_tmo_timer;
 } /* ~ModuleParrot */
 
 
@@ -201,7 +217,8 @@ ModuleParrot::~ModuleParrot(void)
 void ModuleParrot::activateInit(void)
 {
   printf("Activating module %s...\n", name());
-  //playHelpMsg();
+  fifo.clear();
+  module_tmo_timer->setEnable(true);
 } /* activateInit */
 
 
@@ -221,7 +238,8 @@ void ModuleParrot::activateInit(void)
 void ModuleParrot::deactivateCleanup(void)
 {
   printf("Deactivating module %s...\n", name());
-  
+  fifo.clear();
+  module_tmo_timer->setEnable(false);
 } /* deactivateCleanup */
 
 
@@ -270,43 +288,35 @@ void ModuleParrot::dtmfCmdReceived(const string& cmd)
   }
   else
   {
-    playNumber(atoi(cmd.c_str()));
+    if (cmd == "0")
+    {
+      playHelpMsg();
+    }
+    else
+    {
+      playNumber(atoi(cmd.c_str()));
+    }
   }
 } /* dtmfCmdReceived */
-
-#if 0
-/*
- *----------------------------------------------------------------------------
- * Method:    playHelpMsg
- * Purpose:   Called by the core system to play a help message for this
- *    	      module.
- * Input:     None
- * Output:    None
- * Author:    Tobias Blomberg / SM0SVX
- * Created:   2004-03-07
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-void ModuleParrot::playHelpMsg(void)
-{
-  playMsg("help");
-} /* playHelpMsg */
-#endif
 
 
 void ModuleParrot::squelchOpen(bool is_open)
 {
   squelch_is_open = is_open;
   
-  if (!is_open && !fifo.empty())
+  if (is_open)
   {
-    transmit(true);
-    fifo.stopOutput(false);
+    module_tmo_timer->setEnable(false);
+    fifo.stopOutput(true);
   }
   else
   {
-    fifo.stopOutput(true);
+    if (!fifo.empty())
+    {
+      transmit(true);
+      fifo.stopOutput(false);
+    }
+    module_tmo_timer->setEnable(true);
   }
 
 } /* ModuleParrot::squelchOpen */
@@ -325,7 +335,6 @@ int ModuleParrot::audioFromRx(short *samples, int count)
 } /* ModuleParrot::audioFromRx */
 
 
-
 int ModuleParrot::audioFromFifo(short *samples, int count)
 {
   //printf("Writing %d samples from FIFO...\n", count);
@@ -339,6 +348,17 @@ void ModuleParrot::allSamplesWritten(void)
   transmit(false);
   fifo.stopOutput(true);
 } /* ModuleParrot::allSamplesWritten */
+
+
+void ModuleParrot::moduleTimeout(Timer *t)
+{
+  cout << "Module timeout: " << name() << endl;
+  //playMsg("module");
+  //playModuleName();
+  playMsg("timeout");
+  deactivateMe();
+} /* ModuleParrot::moduleTimeout */
+
 
 
 /*

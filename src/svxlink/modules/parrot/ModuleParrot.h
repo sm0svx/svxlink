@@ -68,6 +68,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class Timer;
+};
 
 
 /****************************************************************************
@@ -118,12 +122,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class ModuleParrot : public Module
 {
   public:
-    ModuleParrot(void *dl_handle, Logic *logic, int id);
+    ModuleParrot(void *dl_handle, Logic *logic, int id,
+      	      	 const std::string& cfg_name);
     ~ModuleParrot(void);
 
   private:
     Async::SampleFifo fifo;
     bool      	      squelch_is_open;
+    Async::Timer      *module_tmo_timer;
     
     const char *name(void) const { return "Parrot"; }
     void activateInit(void);
@@ -135,6 +141,7 @@ class ModuleParrot : public Module
     
     int audioFromFifo(short *samples, int count);
     void allSamplesWritten(void);
+    void moduleTimeout(Async::Timer *t);
 
 };  /* class ModuleParrot */
 
