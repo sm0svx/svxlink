@@ -1,7 +1,12 @@
- 0.8.1 -- ?? Jul 2004
+ 0.8.1 -- ?? Aug 2004
 ----------------------
 
 * Bugfix: Server messages was not handled correctly.
+
+* Fixed a strange error message.
+
+* The getCalls method now emits the error signal when the status is not
+  ONLINE or BUSY.
 
 
 
