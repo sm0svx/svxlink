@@ -58,7 +58,9 @@ disconnected the application exits.
  *
  ****************************************************************************/
 
+extern "C" {
 #include <gsm.h>
+}
 #include <AsyncTimer.h>
 #include <AsyncIpAddress.h>
 
