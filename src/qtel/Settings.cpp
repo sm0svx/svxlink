@@ -215,8 +215,8 @@ void Settings::showDialog(void)
       }
       else
       {
-	m_callsign = settings_dialog.my_callsign->text();
-	m_password = settings_dialog.my_password->text();
+	m_callsign = settings_dialog.my_callsign->text().upper();
+	m_password = settings_dialog.my_password->text().upper();
 	m_name = settings_dialog.my_name->text();
 	m_location = settings_dialog.my_location->text();
 	m_info = settings_dialog.my_info->text();
@@ -255,8 +255,8 @@ void Settings::readSettings(void)
 {
   QSettings qsettings;
   qsettings.insertSearchPath(QSettings::Windows, CONF_SEARCH_PATH);
-  m_callsign = qsettings.readEntry(CONF_CALLSIGN);
-  m_password = qsettings.readEntry(CONF_PASSWORD);
+  m_callsign = qsettings.readEntry(CONF_CALLSIGN).upper();
+  m_password = qsettings.readEntry(CONF_PASSWORD).upper();
   m_name = qsettings.readEntry(CONF_NAME);
   m_location = qsettings.readEntry(CONF_LOCATION);
   m_info = qsettings.readEntry(CONF_INFO, CONF_INFO_DEFAULT);
