@@ -90,7 +90,7 @@ namespace EchoLink
  ****************************************************************************/
 
 class MsgHandler;
-class AudioPaser;
+class AudioPacer;
   
 
 /****************************************************************************
@@ -136,7 +136,7 @@ class ModuleEchoLink : public Module
     std::string       	description;
     std::string       	allow_ip;
     MsgHandler	      	*msg_handler;
-    AudioPaser       	*msg_paser;
+    AudioPacer       	*msg_paser;
     bool      	      	remote_activation;
     
     const char *name(void) const { return "EchoLink"; }

@@ -51,7 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <EchoLinkQso.h>
 
 #include <MsgHandler.h>
-#include <AudioPaser.h>
+#include <AudioPacer.h>
 
 
 /****************************************************************************
@@ -213,10 +213,10 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic, int id,
   
   msg_handler = new MsgHandler(sound_base_dir);
   
-  msg_paser = new AudioPaser(8000, 160*4, 500);
-  msg_handler->writeAudio.connect(slot(msg_paser, &AudioPaser::audioInput));
+  msg_paser = new AudioPacer(8000, 160*4, 500);
+  msg_handler->writeAudio.connect(slot(msg_paser, &AudioPacer::audioInput));
   msg_handler->allMsgsWritten.connect(
-      	  slot(msg_paser, &AudioPaser::flushAllAudio));
+      	  slot(msg_paser, &AudioPacer::flushAllAudio));
   msg_paser->audioInputBufFull.connect(
       	  slot(msg_handler, &MsgHandler::writeBufferFull));
   msg_paser->allAudioFlushed.connect(

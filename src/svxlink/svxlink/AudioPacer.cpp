@@ -1,5 +1,5 @@
 /**
-@file	 AudioPaser.cpp
+@file	 AudioPacer.cpp
 @brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-04-03
@@ -54,7 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AudioPaser.h"
+#include "AudioPacer.h"
 
 
 
@@ -117,22 +117,22 @@ using namespace Async;
  ****************************************************************************/
 
 
-AudioPaser::AudioPaser(int sample_rate, int block_size, int prebuf_time)
+AudioPacer::AudioPacer(int sample_rate, int block_size, int prebuf_time)
   : sample_rate(sample_rate), buf_size(block_size), prebuf_time(prebuf_time),
     buf_pos(0), do_flush(false)
 {
   buf = new short[buf_size];
   prebuf_samples = prebuf_time * sample_rate / 1000;
-} /* AudioPaser::AudioPaser */
+} /* AudioPacer::AudioPacer */
 
 
-AudioPaser::~AudioPaser(void)
+AudioPacer::~AudioPacer(void)
 {
   delete [] buf;
-} /* AudioPaser::~AudioPaser */
+} /* AudioPacer::~AudioPacer */
 
 
-int AudioPaser::audioInput(short *samples, int count)
+int AudioPacer::audioInput(short *samples, int count)
 {
   int samples_written = 0;
   
@@ -149,7 +149,7 @@ int AudioPaser::audioInput(short *samples, int count)
       	      	      	      	    count - samples_written);
       pase_timer = new Timer(buf_size * 1000 / sample_rate,
       	      	      	     Timer::TYPE_PERIODIC);
-      pase_timer->expired.connect(slot(this, &AudioPaser::outputNextBlock));
+      pase_timer->expired.connect(slot(this, &AudioPacer::outputNextBlock));
     }
     else
     {
@@ -172,10 +172,10 @@ int AudioPaser::audioInput(short *samples, int count)
   
   return samples_written;
   
-} /* AudioPaser::audioInput */
+} /* AudioPacer::audioInput */
 
 
-void AudioPaser::flushAllAudio(void)
+void AudioPacer::flushAllAudio(void)
 {
   if (buf_pos == 0)
   {
@@ -185,7 +185,7 @@ void AudioPaser::flushAllAudio(void)
   {
     do_flush = true;
   }
-} /* AudioPaser::flushAllAudio */
+} /* AudioPacer::flushAllAudio */
 
 
 
@@ -233,7 +233,7 @@ void AudioPaser::flushAllAudio(void)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void AudioPaser::outputNextBlock(Timer *t)
+void AudioPacer::outputNextBlock(Timer *t)
 {
   //printf("Timer expired\n");
   if (buf_pos < buf_size)
@@ -241,7 +241,7 @@ void AudioPaser::outputNextBlock(Timer *t)
     delete pase_timer;
     pase_timer = 0;
     prebuf_samples = prebuf_time * sample_rate / 1000;
-    //printf("AudioPaser::outputNextBlock: Turning on prebuffering...\n");
+    //printf("AudioPacer::outputNextBlock: Turning on prebuffering...\n");
   }
   
     // FIXME: Take care of the case where not all samples were written
@@ -255,7 +255,7 @@ void AudioPaser::outputNextBlock(Timer *t)
     do_flush = false;
   }
   
-} /* AudioPaser::outputNextBlock */
+} /* AudioPacer::outputNextBlock */
 
 
 

@@ -1,5 +1,5 @@
 /**
-@file	 AudioPaser.h
+@file	 AudioPacer.h
 @brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-04-03
@@ -26,8 +26,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example AudioPaser_demo.cpp
-An example of how to use the AudioPaser class
+/** @example AudioPacer_demo.cpp
+An example of how to use the AudioPacer class
 */
 
 
@@ -115,20 +115,20 @@ An example of how to use the AudioPaser class
 
 A_detailed_class_description
 
-\include AudioPaser_demo.cpp
+\include AudioPacer_demo.cpp
 */
-class AudioPaser : public SigC::Object
+class AudioPacer : public SigC::Object
 {
   public:
     /**
      * @brief 	Default constuctor
      */
-    AudioPaser(int sample_rate, int block_size, int prebuf_time);
+    AudioPacer(int sample_rate, int block_size, int prebuf_time);
   
     /**
      * @brief 	Destructor
      */
-    ~AudioPaser(void);
+    ~AudioPacer(void);
   
     /**
      * @brief 	A_brief_member_function_description
@@ -158,7 +158,7 @@ class AudioPaser : public SigC::Object
     
     void outputNextBlock(Async::Timer *t);
 
-};  /* class AudioPaser */
+};  /* class AudioPacer */
 
 
 //} /* namespace */
