@@ -129,7 +129,7 @@ Logic::Logic(Config &cfg, const string& name)
     write_msg_flush_timer(0), active_module(0), module_tx_fifo(0),
     cmd_tmo_timer(0), logic_transmit(false), anti_flutter(false),
     prev_digit('?'), exec_cmd_on_sql_close(0), exec_cmd_on_sql_close_timer(0),
-    rgr_sound_timer(0), rgr_sound_delay(0)
+    rgr_sound_timer(0), rgr_sound_delay(-1)
 {
 
 } /* Logic::Logic */
