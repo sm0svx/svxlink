@@ -233,7 +233,7 @@ void ModuleHelp::deactivateCleanup(void)
  */
 void ModuleHelp::dtmfDigitReceived(char digit)
 {
-  printf("DTMF digit received in module %s: %c\n", name(), digit);
+  //printf("DTMF digit received in module %s: %c\n", name(), digit);
   
 } /* dtmfDigitReceived */
 
@@ -290,7 +290,9 @@ void ModuleHelp::playChooseModuleMsg(void)
   for (it=modules.begin(); it!=modules.end(); ++it)
   {
     playNumber((*it)->id());
+    playSilence(50);
     (*it)->playModuleName();
+    playSilence(200);
   }
 
 } /* ModuleHelp::playChooseModuleMsg */
