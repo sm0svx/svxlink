@@ -151,10 +151,10 @@ ToneDetector::ToneDetector(int tone_hz)
   cosine = cos(omega);
   coeff = 2.0 * cosine;
 
-  printf("For SAMPLING_RATE = %f", SAMPLING_RATE);
-  printf(" N = %.2f", floatN);
-  printf(" and FREQUENCY = %d,\n", tone_hz);
-  printf("k = %d and coeff = %f\n\n", k, coeff);
+  //printf("For SAMPLING_RATE = %f", SAMPLING_RATE);
+  //printf(" N = %.2f", floatN);
+  //printf(" and FREQUENCY = %d,\n", tone_hz);
+  //printf("k = %d and coeff = %f\n\n", k, coeff);
 
   resetGoertzel();
 
