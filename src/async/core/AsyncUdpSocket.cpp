@@ -223,7 +223,7 @@ bool UdpSocket::write(const IpAddress& remote_ip, int remote_port,
   addr.sin_family = AF_INET;
   addr.sin_port = htons(remote_port);
   addr.sin_addr = remote_ip.ip4Addr();
-  int ret = sendto(sock, buf, count, MSG_NOSIGNAL,
+  int ret = sendto(sock, buf, count, 0,
       reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));
   if (ret == -1)
   {
@@ -320,7 +320,7 @@ void UdpSocket::handleInput(FdWatch *watch)
   struct sockaddr_in addr;
   socklen_t addr_len = sizeof(addr);
   
-  int len = recvfrom(sock, buf, sizeof(buf), MSG_NOSIGNAL,
+  int len = recvfrom(sock, buf, sizeof(buf), 0,
       reinterpret_cast<struct sockaddr *>(&addr), &addr_len);
   if (len == -1)
   {
@@ -344,7 +344,7 @@ void UdpSocket::sendRest(FdWatch *watch)
       << "  ip=" << send_buf->ip.toString() << "  len=" << send_buf->len
       << endl;
   */
-  int ret = sendto(sock, send_buf->buf, send_buf->len, MSG_NOSIGNAL,
+  int ret = sendto(sock, send_buf->buf, send_buf->len, 0,
       reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));
   if (ret == -1)
   {
