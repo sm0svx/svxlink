@@ -761,7 +761,8 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
     {
       qso->reject();
       cerr << "*** WARNING: Could not accept incoming connection from "
-      	   << callsign << " since the frontend was busy doing something else.";
+      	   << callsign
+	   << " since the frontend was busy doing something else.\n";
       return;
     }
     remote_activation = true;
