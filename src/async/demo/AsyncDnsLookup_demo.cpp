@@ -10,8 +10,8 @@ class MyClass : public SigC::Object
   public:
     MyClass(void)
     {
-      cout << "Starting query...\n";
-      dns_lookup = new DnsLookup("ftp.sunet.se");
+      cout << "Starting query of www.ibm.com...\n";
+      dns_lookup = new DnsLookup("www.ibm.com");
       dns_lookup->resultsReady.connect(slot(this, &MyClass::onResultsReady));
     }
     
@@ -29,6 +29,10 @@ class MyClass : public SigC::Object
       {
 	cout << *it << endl;
       }
+      
+      delete dns_lookup;
+      dns_lookup = 0;
+      
       Application::app().quit();
     }
     
