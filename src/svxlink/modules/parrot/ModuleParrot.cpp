@@ -119,7 +119,8 @@ using namespace std;
 
 
 extern "C" {
-  Module *module_init(void *dl_handle, Logic *logic, int id)
+  Module *module_init(void *dl_handle, Logic *logic, int id,
+      	      	      const char *cfg_name)
   {
     return new ModuleParrot(dl_handle, logic, id);
   }
