@@ -151,7 +151,8 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
     next_audio_seq(0),  keep_alive_timer(0),  con_timeout_timer(0),
     callsign(callsign), name(name),   	      local_stn_info(info),
     send_buffer_cnt(0), remote_ip(addr),      rx_indicator_timer(0),
-    remote_name("?"), remote_call("?"),	      is_remote_initiated(false)
+    remote_name("?"), 	remote_call("?"),     is_remote_initiated(false),
+    receiving_audio(false)
 {
   if (!addr.isUnicast())
   {
@@ -159,13 +160,7 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
     return;
   }
   
-  sdes_length = rtp_make_sdes(&sdes_packet, 0, 1, callsign.c_str(),
-      name.c_str());
-  if(sdes_length <= 0)
-  {
-    cerr << "Could not create SDES packet\n";
-    return;
-  }
+  setLocalCallsign(callsign);
       
   gsmh = gsm_create();
     
@@ -205,6 +200,39 @@ Qso::~Qso(void)
   }
   
 } /* Qso::~Qso */
+
+
+bool Qso::setLocalCallsign(const std::string& callsign)
+{
+  this->callsign = callsign;
+  if (sdes_packet != 0)
+  {
+    free(sdes_packet);
+    sdes_packet = 0;
+  }
+  sdes_length = rtp_make_sdes(&sdes_packet, 0, 1, callsign.c_str(),
+      name.c_str());
+  if(sdes_length <= 0)
+  {
+    cerr << "Could not create SDES packet\n";
+    return false;
+  }
+  
+  return true;
+  
+} /* Qso::setLocalCallsign */
+
+
+void Qso::setLocalName(const std::string& name)
+{
+  this->name = name;
+} /* Qso::setLocalName */
+
+
+void Qso::setLocalInfo(const std::string& info)
+{
+  local_stn_info = info;
+} /* Qso::setLocalInfo */
 
 
 bool Qso::connect(void)
@@ -273,14 +301,19 @@ bool Qso::disconnect(void)
 } /* Qso::disconnect */
 
 
-bool Qso::sendChatData(const string& msg)
+bool Qso::sendChatData(const string& msg, bool add_callsign)
 {
   if (state != STATE_CONNECTED)
   {
     return false;
   }
   
-  string buf("oNDATA" + callsign + '>' + msg + "\r\n");
+  string buf("oNDATA");
+  if (add_callsign)
+  {
+    buf += callsign + '>';
+  }
+  buf += msg + "\r\n";
   
   int ret = Dispatcher::instance()->sendAudioMsg(remote_ip, buf.c_str(),
       buf.length()+1);
@@ -544,6 +577,7 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
     gsm_decode(gsmh, voice_packet->data + i*33, sbuff);
     if (rx_indicator_timer == 0)
     {
+      receiving_audio = true;
       isReceiving(true); 
       rx_indicator_timer = new Timer(RX_INDICATOR_HANG_TIME);
       rx_indicator_timer->expired.connect(slot(this, &Qso::checkRxActivity));
@@ -658,6 +692,7 @@ void Qso::cleanupConnection(void)
 {
   if (rx_indicator_timer != 0)
   {
+    receiving_audio = false;
     isReceiving(false);
     delete rx_indicator_timer;
     rx_indicator_timer = 0;
@@ -707,6 +742,7 @@ void Qso::checkRxActivity(Timer *timer)
   long diff_ms = diff.tv_sec * 1000 + diff.tv_usec / 1000;
   if (diff_ms >= RX_INDICATOR_HANG_TIME)
   {
+    receiving_audio = false;
     isReceiving(false);
     delete rx_indicator_timer;
     rx_indicator_timer = 0;

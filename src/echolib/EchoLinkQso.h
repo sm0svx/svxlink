@@ -152,8 +152,8 @@ class Qso : public SigC::Object
      * @param 	name  	  Name of local user (not remote name)
      * @param 	info  	  Local information to send upon connect
      */
-    Qso(const Async::IpAddress& ip, const std::string& callsign,
-      	const std::string& name, const std::string& info);
+    Qso(const Async::IpAddress& ip, const std::string& callsign="",
+      	const std::string& name="", const std::string& info="");
     
     /**
      * @brief 	Destructor
@@ -170,6 +170,26 @@ class Qso : public SigC::Object
      */
     bool initOk(void) { return init_ok; }
     
+    /**
+     * @brief 	Set the local callsign
+     * @param 	callsign  The callsign to set
+     * @return	Returns \em true on success or \em false on failure
+     */
+    bool setLocalCallsign(const std::string& callsign);
+    
+    /**
+     * @brief 	Set the local name (name of station operator)
+     * @param 	name  The name to set
+     */
+    void setLocalName(const std::string& name);
+
+    /**
+     * @brief 	Set the local info
+     * @param 	info  The informational message that is sent to the remote
+     *	      	      station upon connection.
+     */
+    void setLocalInfo(const std::string& info);
+        
     /**
      * @brief 	Initiate a connection to the remote station
      * @return	Returns \em true if the connect message was sent ok or \em false
@@ -213,9 +233,11 @@ class Qso : public SigC::Object
     /**
      * @brief 	Send chat data to the remote station
      * @param 	msg The message to send
+     * @param 	add_callsign  Add the local callsign at the beginning of the
+     *	      	      	      message
      * @return	Returns \em true on success or \em false on failure
      */
-    bool sendChatData(const std::string& msg);
+    bool sendChatData(const std::string& msg, bool add_callsign=true);
     
     /**
      * @brief 	Get the IP address of the remote station
@@ -226,7 +248,7 @@ class Qso : public SigC::Object
       return remote_ip;
     }
     
-    /** 
+    /**
      * @brief 	Send audio to the remote station
      * @param 	buf A buffer containing 16 bit samples to send
      * @param 	len The length, in samples, of the buffer to send
@@ -278,6 +300,13 @@ class Qso : public SigC::Object
      * @note  	Valid when either connect or accept has been called
      */
     bool isRemoteInitiated(void) const { return is_remote_initiated; }
+    
+    /**
+     * @brief 	Find out if there is audio coming in on this connection
+     * @return	Return \em true if audio is being received
+     *          or else \em false.
+     */
+    bool receivingAudio(void) const { return receiving_audio; }
     
     /**
      * @brief A signal that is emitted when a station info message is received
@@ -342,6 +371,7 @@ class Qso : public SigC::Object
     std::string       	remote_name;
     std::string       	remote_call;
     bool		is_remote_initiated;
+    bool      	      	receiving_audio;
 
     Qso(const Qso&);
     Qso& operator=(const Qso&);
