@@ -412,8 +412,9 @@ used to specify the configuration for a receiver.
 
   <DT>CTCSS_FQ</DT>
   <DD>
-    If CTCSS (subtone) squelch is used, this config variable sets the frequency
-    of the subtone to use. The tone frequency ranges from 67.0 to 254.1 Hz.
+    If CTCSS (PL,subtone) squelch is used (SQL_DOWN_DET and/or SQL_UP_DET is set
+    to CTCSS), this config variable sets the frequency of the tone to use.
+    The tone frequency ranges from 67.0 to 254.1 Hz.
     The detector is not very exact so it will detect tones that is near the
     specified tone. Only whole Hz can be specifid so the value should be in the
     range 67 to 254 Hz.
