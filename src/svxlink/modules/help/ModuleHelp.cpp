@@ -195,7 +195,7 @@ ModuleHelp::~ModuleHelp(void)
  */
 void ModuleHelp::activateInit(void)
 {
-  playHelpMsg();
+  playChooseModuleMsg();
 } /* activateInit */
 
 
@@ -271,6 +271,7 @@ void ModuleHelp::dtmfCmdReceived(const string& cmd)
     if (module != 0)
     {
       module->playHelpMsg();
+      playChooseModuleMsg();
     }
     else
     {
@@ -281,22 +282,9 @@ void ModuleHelp::dtmfCmdReceived(const string& cmd)
 } /* dtmfCmdReceived */
 
 
-/*
- *----------------------------------------------------------------------------
- * Method:    playHelpMsg
- * Purpose:   Called by the core system to play a help message for this
- *    	      module.
- * Input:     None
- * Output:    None
- * Author:    Tobias Blomberg / SM0SVX
- * Created:   2004-03-07
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-void ModuleHelp::playHelpMsg(void)
+void ModuleHelp::playChooseModuleMsg(void)
 {
-  playMsg("general_help");
+  playMsg("choose_module");
   list<Module*> modules = moduleList();
   list<Module*>::const_iterator it;
   for (it=modules.begin(); it!=modules.end(); ++it)
@@ -304,8 +292,8 @@ void ModuleHelp::playHelpMsg(void)
     playNumber((*it)->id());
     (*it)->playModuleName();
   }
-} /* playHelpMsg */
 
+} /* ModuleHelp::playChooseModuleMsg */
 
 
 
