@@ -293,13 +293,13 @@ bool Qso::sendChatData(const string& msg)
 } /* Qso::sendChatData */
 
 
-int Qso::sendAudio(const short *buf, int len)
+int Qso::sendAudio(short *buf, int len)
 {
   int samples_read = 0;
   
   if (state != STATE_CONNECTED)
   {
-    return false;
+    return 0;
   }
   
   while (samples_read < len)
@@ -313,13 +313,15 @@ int Qso::sendAudio(const short *buf, int len)
     if (send_buffer_cnt == SEND_BUFFER_SIZE)
     {
       bool packet_sent = sendGsmPacket();
-      send_buffer_cnt = 0;  // Throw away packet even if not sent
       if (!packet_sent)
       {
 	break;
       }
+      send_buffer_cnt = 0;
     }
   }
+  
+  //printf("Samples read = %d\n", samples_read);
   
   return samples_read;
   
