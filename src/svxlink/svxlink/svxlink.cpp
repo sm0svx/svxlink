@@ -6,6 +6,7 @@
 
 #include <string>
 #include <iostream>
+#include <algorithm>
 
 #include <AsyncCppApplication.h>
 #include <AsyncConfig.h>
