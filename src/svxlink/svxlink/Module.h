@@ -17,8 +17,7 @@ class Module : public SigC::Object
     typedef Module* (*InitFunc)(void *dl_handle, Logic *logic, int id,
       	      	      	        const char *cfg_name);
     
-    Module(void *dl_handle, Logic *logic, int id)
-      : m_dl_handle(dl_handle), m_logic(logic), m_id(id) {}
+    Module(void *dl_handle, Logic *logic, int id);
     virtual ~Module(void) { }
     
     void *pluginHandle(void) const { return m_dl_handle; }
@@ -26,6 +25,7 @@ class Module : public SigC::Object
     Logic *logic(void) const { return m_logic; }
     void activate(void);
     void deactivate(void);
+    bool isActive(void) const { return m_is_active; }
     bool isTransmitting(void) const { return m_is_transmitting; }
     Async::Config &cfg(void) const;
     
@@ -59,6 +59,7 @@ class Module : public SigC::Object
     bool      	      m_is_transmitting;
     SigC::Connection  m_audio_con;
     SigC::Connection  m_squelch_con;
+    bool      	      m_is_active;
     
 };
 

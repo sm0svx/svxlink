@@ -8,9 +8,20 @@
 using namespace std;
 using namespace Async;
 
+
+Module::Module(void *dl_handle, Logic *logic, int id)
+  : m_dl_handle(dl_handle), m_logic(logic), m_id(id), m_is_transmitting(false),
+    m_is_active(false)
+{
+
+} /* Module::Module */
+
+
 void Module::activate(void)
 {
   cout << "Activating module " << name() << "...\n";
+  
+  m_is_active = true;
   
   playMsg("activating_module");
   playModuleName();
@@ -20,7 +31,7 @@ void Module::activate(void)
   m_squelch_con = logic()->rx().squelchOpen.connect(
       	  slot(this, &Module::squelchOpen));
   
-  activateInit();
+  activateInit();  
 }
 
 
@@ -35,6 +46,8 @@ void Module::deactivate(void)
   
   playMsg("deactivating_module");
   playModuleName();
+  
+  m_is_active = false;
 }
 
 
