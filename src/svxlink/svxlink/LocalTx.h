@@ -49,6 +49,7 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include <AsyncSerial.h>
 
 
 /****************************************************************************
@@ -188,16 +189,16 @@ class LocalTx : public Tx
   protected:
     
   private:
-    std::string     name;
-    Async::Config   &cfg;
-    Async::AudioIO  *audio_io;
-    bool      	    is_transmitting;
-    int       	    serial_fd;
-    int       	    ptt_pin;
-    Async::Timer    *txtot;
-    bool      	    tx_timeout_occured;
-    int       	    tx_timeout;
-    int       	    tx_delay;
+    std::string       	  name;
+    Async::Config     	  &cfg;
+    Async::AudioIO    	  *audio_io;
+    bool      	      	  is_transmitting;
+    Async::Serial     	  *serial;
+    Async::Serial::OutPin ptt_pin;
+    Async::Timer      	  *txtot;
+    bool      	      	  tx_timeout_occured;
+    int       	      	  tx_timeout;
+    int       	      	  tx_delay;
     
     void txTimeoutOccured(Async::Timer *t);
 

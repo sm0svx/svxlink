@@ -126,7 +126,7 @@ using namespace Async;
 
 LocalTx::LocalTx(Config& cfg, const string& name)
   : Tx(name), name(name), cfg(cfg), audio_io(0), is_transmitting(false),
-    serial_fd(-1), txtot(0), tx_timeout_occured(false), tx_timeout(0),
+    serial(0), txtot(0), tx_timeout_occured(false), tx_timeout(0),
     tx_delay(0)
 {
 
@@ -139,10 +139,10 @@ LocalTx::~LocalTx(void)
   
   delete txtot;
   
-  if (serial_fd != -1)
+  if (serial != 0)
   {
-    ::close(serial_fd);
-    serial_fd = -1;
+    serial->close();
+    serial = 0;
   }
   
   delete audio_io;
@@ -173,11 +173,11 @@ bool LocalTx::initialize(void)
   }
   if (ptt_pin_str == "RTS")
   {
-    ptt_pin = TIOCM_RTS;
+    ptt_pin = Serial::PIN_RTS;
   }
   else if (ptt_pin_str == "DTR")
   {
-    ptt_pin = TIOCM_DTR;
+    ptt_pin = Serial::PIN_DTR;
   }
   else
   {
@@ -199,19 +199,17 @@ bool LocalTx::initialize(void)
   }
   
   
-  serial_fd = ::open(ptt_port.c_str(), O_RDWR);
-  if(serial_fd == -1)
+  serial = new Serial(ptt_port.c_str());
+  if (!serial->open())
   {
     perror("open serial port");
     return false;
   }
-  
-  int pin = ptt_pin;
-  if (ioctl(serial_fd, TIOCMBIC, &pin) == -1)
+  if (!serial->setPin(ptt_pin, false))
   {
-    ::close(serial_fd);
-    serial_fd = -1;
     perror("ioctl");
+    serial->close();
+    serial = 0;
     return false;
   }
   
@@ -268,13 +266,11 @@ void LocalTx::transmit(bool do_transmit)
     tx_timeout_occured = false;
   }
   
-  int pin = ptt_pin;
-  if (ioctl(serial_fd, (is_transmitting && !tx_timeout_occured)
-      	      	      	? TIOCMBIS : TIOCMBIC, &pin) == -1)
+  if (!serial->setPin(ptt_pin, is_transmitting && !tx_timeout_occured))
   {
-     perror("ioctl");
+    perror("PTT");
   }
-  
+
 } /* LocalTx::transmit */
 
 
@@ -367,10 +363,9 @@ void LocalTx::txTimeoutOccured(Timer *t)
   cerr << "*** ERROR: The transmitter have been active for too long. Turning "
       	  "it off...\n";
   
-  int pin = ptt_pin;
-  if (ioctl(serial_fd, TIOCMBIC, &pin) == -1)
+  if (!serial->setPin(ptt_pin, false))
   {
-     perror("ioctl");
+    perror("PTT");
   }
   
   tx_timeout_occured = true;
