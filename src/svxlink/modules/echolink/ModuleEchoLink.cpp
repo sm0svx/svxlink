@@ -466,6 +466,18 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
   {
     playHelpMsg();
   }
+  else if (cmd == "1")
+  {
+    playNumber(0);
+    playMsg("connected_stations");
+    playSilence(500);
+    list<QsoImpl*>::iterator it;
+    for (it=qsos.begin(); it!=qsos.end(); ++it)
+    {
+      spellCallsign((*it)->remoteCallsign());
+      playSilence(500);
+    }
+  }
   else if (qsos.size() < max_qsos)
   {
     if ((dir->status() == StationData::STAT_OFFLINE) ||
