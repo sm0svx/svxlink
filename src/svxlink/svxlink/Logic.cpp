@@ -128,7 +128,7 @@ Logic::Logic(Config &cfg, const string& name)
   : m_cfg(cfg), m_name(name), m_rx(0), m_tx(0), msg_handler(0),
     write_msg_flush_timer(0), active_module(0), module_tx_fifo(0),
     cmd_tmo_timer(0), logic_transmit(false), anti_flutter(false),
-    prev_digit('?')
+    prev_digit('?'), exec_cmd_on_sql_close(0), exec_cmd_on_sql_close_timer(0)
 {
 
 } /* Logic::Logic */
@@ -136,6 +136,7 @@ Logic::Logic(Config &cfg, const string& name)
 
 Logic::~Logic(void)
 {
+  delete exec_cmd_on_sql_close_timer;
   delete module_tx_fifo;
   delete write_msg_flush_timer;
   delete msg_handler;
@@ -149,29 +150,35 @@ bool Logic::initialize(void)
   string rx_name;
   string tx_name;
   string sounds;
+  string value;
   
   if (!cfg().getValue(name(), "RX", rx_name))
   {
-    cerr << "*** Error: Config variable " << name() << "/RX not set\n";
+    cerr << "*** ERROR: Config variable " << name() << "/RX not set\n";
     goto cfg_failed;
   }
   
   if (!cfg().getValue(name(), "TX", tx_name))
   {
-    cerr << "*** Error: Config variable " << name() << "/TX not set\n";
+    cerr << "*** ERROR: Config variable " << name() << "/TX not set\n";
     goto cfg_failed;
   }
   
   if (!cfg().getValue(name(), "SOUNDS", sounds))
   {
-    cerr << "*** Error: Config variable " << name() << "/SOUNDS not set\n";
+    cerr << "*** ERROR: Config variable " << name() << "/SOUNDS not set\n";
     goto cfg_failed;
   }
   
   if (!cfg().getValue(name(), "CALLSIGN", m_callsign))
   {
-    cerr << "*** Error: Config variable " << name() << "/CALLSIGN not set\n";
+    cerr << "*** ERROR: Config variable " << name() << "/CALLSIGN not set\n";
     goto cfg_failed;
+  }
+  
+  if (cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", value))
+  {
+    exec_cmd_on_sql_close = atoi(value.c_str());
   }
   
   loadModules();
@@ -179,7 +186,7 @@ bool Logic::initialize(void)
   m_rx = new LocalRx(cfg(), rx_name);
   if (!rx().initialize())
   {
-    cerr << "*** Error: Could not initialize RX \"" << rx_name << "\"\n";
+    cerr << "*** ERROR: Could not initialize RX \"" << rx_name << "\"\n";
     goto rx_init_failed;
   }
   rx().squelchOpen.connect(slot(this, &Logic::squelchOpen));
@@ -189,7 +196,7 @@ bool Logic::initialize(void)
   m_tx = new LocalTx(cfg(), tx_name);
   if (!tx().initialize())
   {
-    cerr << "*** Error: Could not initialize TX \"" << tx_name << "\"\n";
+    cerr << "*** ERROR: Could not initialize TX \"" << tx_name << "\"\n";
     goto tx_init_failed;
   }
   tx().allSamplesFlushed.connect(slot(this, &Logic::allTxSamplesFlushed));
@@ -373,11 +380,8 @@ void Logic::dtmfDigitDetected(char digit)
     }
     if ((digit == '#') || (anti_flutter && (digit == 'C')))
     {
-      cmd_queue.push_back(received_digits);
-      received_digits = "";
-      cmd_tmo_timer->setEnable(false);
+      putCmdOnQueue();
       anti_flutter = false;
-      prev_digit = '?';
     }
     else if (digit == 'A')
     {
@@ -434,9 +438,21 @@ void Logic::dtmfDigitDetected(char digit)
 
 void Logic::squelchOpen(bool is_open)
 {
-  if (!is_open && !cmd_queue.empty())
+  if (!is_open)
   {
+    if ((exec_cmd_on_sql_close > 0) && !anti_flutter &&
+      	!received_digits.empty())
+    {
+      exec_cmd_on_sql_close_timer = new Timer(exec_cmd_on_sql_close);
+      exec_cmd_on_sql_close_timer->expired.connect(
+	  slot(this, &Logic::putCmdOnQueue));
+    }
     processCommandQueue();
+  }
+  else
+  {
+    delete exec_cmd_on_sql_close_timer;
+    exec_cmd_on_sql_close_timer = 0;
   }
   
 } /* Logic::squelchOpen */
@@ -607,14 +623,14 @@ void Logic::loadModule(const string& module_cfg_name)
   void *handle = dlopen(module_filename.c_str(), RTLD_NOW);
   if (handle == NULL)
   {
-    cerr << "*** Error: Failed to load module "
+    cerr << "*** ERROR: Failed to load module "
       	 << module_cfg_name.c_str() << ": " << dlerror() << endl;
     return;
   }
   Module::InitFunc init = (Module::InitFunc)dlsym(handle, "module_init");
   if (init == NULL)
   {
-    cerr << "*** Error: Could not find init func for module "
+    cerr << "*** ERROR: Could not find init func for module "
       	 << module_cfg_name.c_str() << ": " << dlerror() << endl;
     dlclose(handle);
     return;
@@ -623,7 +639,7 @@ void Logic::loadModule(const string& module_cfg_name)
   Module *module = init(handle, this, module_cfg_name.c_str());
   if (module == 0)
   {
-    cerr << "*** Error: Creation failed for module "
+    cerr << "*** ERROR: Creation failed for module "
       	 << module_cfg_name.c_str() << endl;
     dlclose(handle);
     return;
@@ -631,7 +647,7 @@ void Logic::loadModule(const string& module_cfg_name)
   
   if (!module->initialize())
   {
-    cerr << "*** Error: Initialization failed for module "
+    cerr << "*** ERROR: Initialization failed for module "
       	 << module_cfg_name.c_str() << endl;
     delete module;
     dlclose(handle);
@@ -697,6 +713,22 @@ void Logic::processCommandQueue(void)
   cmd_queue.clear();
   
 } /* Logic::processCommandQueue */
+
+
+void Logic::putCmdOnQueue(Timer *t)
+{
+  delete exec_cmd_on_sql_close_timer;
+  exec_cmd_on_sql_close_timer = 0;
+  
+  cmd_queue.push_back(received_digits);
+  received_digits = "";
+  cmd_tmo_timer->setEnable(false);
+  prev_digit = '?';
+  
+  processCommandQueue();
+  
+} /* Logic::putCmdOnQueue */
+
 
 
 /*

@@ -201,6 +201,8 @@ class Logic : public SigC::Object
     std::list<std::string>  cmd_queue;
     bool      	      	    anti_flutter;
     char      	      	    prev_digit;
+    int      	      	    exec_cmd_on_sql_close;
+    Async::Timer      	    *exec_cmd_on_sql_close_timer;
     
     void allModuleSamplesWritten(void);
     void transmitCheck(void);
@@ -208,7 +210,7 @@ class Logic : public SigC::Object
     void loadModule(const std::string& module_name);
     void cmdTimeout(Async::Timer *t);
     void processCommandQueue(void);
-
+    void Logic::putCmdOnQueue(Async::Timer *t=0);
 
 };  /* class Logic */
 
