@@ -1,4 +1,7 @@
-<?php include("header.inc"); ?>
+<?php
+  $selected="qtel_usage";
+  include("header.inc");
+?>
 
 <H2>Qtel user documentation</H2>
 Qtel stands for the "QT EchoLink" client. It is only a EchoLink client

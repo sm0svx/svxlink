@@ -24,12 +24,25 @@
     <MENUITEM><A href="news.php">Project News</A></MENUITEM><BR/>
     <MENUITEM><A href="screenshots.php">Screenshots</A></MENUITEM><BR/>
     <MENUITEM><A href="install.php">Installation Instructions</A></MENUITEM><BR/>
+    <?php if ($selected == "install") { ?>
+    <SUBMENUITEM><A href="#prebuilt">Prebuilt binaries</A></SUBMENUITEM><BR/>
+    <SUBMENUITEM><A href="#source">Source install</A></SUBMENUITEM></BR>
+    <SUBMENUITEM><A href="#post-install">Post install</A></SUBMENUITEM></BR>
+    <SUBMENUITEM><A href="#hardware">Hardware</A></SUBMENUITEM></BR>
+    <SUBMENUITEM><A href="#audio-level-adj">Audio levels</A></SUBMENUITEM></BR>
+    <SUBMENUITEM><A href="#server-config">SvxLink server config</A></SUBMENUITEM></BR>
+    <?php } ?>
     <MENUITEM><A href="qtel_usage.php">Qtel User Docs</A></MENUITEM><BR/>
     <MENUITEM><A href="svxlink_usage.php">SvxLink Server User Docs</A></MENUITEM><BR/>
     <MENUITEM><A href="moreinfo.php">Developer Documentation</A></MENUITEM><BR/>
     <MENUITEM><A
     href="https://sourceforge.net/project/showfiles.php?group_id=84813">
       Software Downloads</A></MENUITEM><BR/>
+    <MENUITEM><A href="support.php">Support</A></MENUITEM><BR/>
+    <?php if ($selected == "support") { ?>
+    <SUBMENUITEM><A href="#mailing-lists">Mailing lists</A></SUBMENUITEM><BR/>
+    <SUBMENUITEM><A href="#reporting-bugs">Reporting Bugs</A></SUBMENUITEM></BR>
+    <?php } ?>
     <MENUITEM><A href="https://sourceforge.net/projects/svxlink/">SourceForge Summary</A></MENUITEM>
   </DIV>
   <P>

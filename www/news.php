@@ -1,9 +1,34 @@
 <?php
-  $headercolor = "lightblue";
+  $headercolor = "#CCCCFF";
+  $selected = "news";
   include("header.inc");
 ?>
 
+<H2>Project News</H2>
 <TABLE width="95%" align="center">
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>26 Sep 2004: <I>Version 040926 released</I></B>
+  <TD/></TR>
+  <TR><TD>
+    Hmmm... I aimed at making one release per month. I guess I failed...
+    There was just too much fun stuff to poke around with so the thing would
+    never achive release quality. And there were some bugs that just refused to
+    go away. But now it's here; the best release ever of SvxLink :-)
+    <P>
+    As with the last release, most effort have gone into the development of the
+    SvxLink server. The biggest news in this release are:
+    <UL>
+      <LI>The EchoLink module now supports multiple connections</LI>
+      <LI>Anti-flutter mode for better DTMF detection</LI>
+      <LI>A bunch of bug fixes and new small features</LI>
+      <LI>Improved documentation</LI>
+    </UL>
+    Qtel didn't change much. The IP-address in the station list have been
+    replaced with the node ID. This is of more use I think.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>27 May 2004: <I>Version 040527 released</I></B>
   <TD/></TR>

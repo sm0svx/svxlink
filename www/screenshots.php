@@ -1,4 +1,7 @@
-<?php include("header.inc"); ?>
+<?php
+  $selected="screenshots";
+  include("header.inc");
+?>
 
 <H2>Qtel Screenshots</H2>
 

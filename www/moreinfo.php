@@ -1,4 +1,7 @@
-<?php include("header.inc"); ?>
+<?php
+  $selected="moreinfo";
+  include("header.inc");
+?>
 
 <H2>Developer Documentation</H2>
 This page contains some more technical information about the SvxLink project

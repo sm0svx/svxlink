@@ -1,11 +1,12 @@
 <?php
+  $selected="install";
   include("header.inc");
 ?>
 
-<h2>Installation from prebuilt binaries</h2>
+<A name="prebuilt"><h2>Installation from prebuilt binaries</h2></A>
 SvxLink has been developed under RedHat Linux 9 and briefly tested under Fedora
-Core 1. SvxLink should be easy to install under these Linux versions since there
-are binary packages available.
+Core 1. My own node is running under Fedora Core 2. SvxLink should be easy to
+install under these Linux versions since there are binary packages available.
 <P>
 SvxLink have a few dependencies. Most of them should be installed by default on
 a normal Linux workstation. The Qtel application requires X/Qt but the svxlink
@@ -17,8 +18,12 @@ downloaded from the
 <A href="http://atrpms.net/">ATrpms</A> site. Make sure to pick the 1.0.4
 version. RPMs for the gsm library can be found for FC1 and FC2 at the
 <A href="http://freshrpms.net">FreshRPMS</A> site. An RPM for RH9 can be built
-by downloading the src-rpm for the FC1 version.
-<P>
+by downloading the src-rpm for the FC1 version. Build and install it by
+executing the folowing commands:
+<PRE>
+rpmbuild --rebuild gsm-1.0.10-4.1.fc1.fr.src.rpm
+rpm -Uvh /usr/src/redhat/RPMS/gsm-1.0.10-4.1.fc1.fr.i386.rpm
+</PRE>
 Download the SvxLink RPMS using the
 <A href="https://sourceforge.net/project/showfiles.php?group_id=84813">
 SourceForge download system
@@ -31,15 +36,57 @@ are interrested in, download the <em>svxlink-server</em> package.
 Install all of the above mentioned packages (libsigc++, gsm, libasync, echolib,
 qtel and/or svxlink-server) on your system using the "rpm -Uvh" command.
 <P>
-If you are going to run the svxlink server, check out the configuration
-description below before starting it.
+Now continue below reading the
+<A href="#post-install">post install stuff</A> chapter.
 <P>
-After the configuration has been done, start the server by typing
-<em>svxlink</em> at the command prompt. It is possible to simulate DTMF input by
-pressing the 1-9, A-D, *, # keys. Have a look at the
-<A href="svxlink_usage.php">user documentation</A> to begin testing the server.
-<P/>
-<strong>Note:</strong> For Alsa based systems (like Fedora Core 2), the Alsa
+
+
+<A name="source"><h2>Installation from source</h2></A>
+If you are not running one of the distributions that there are prebuilt
+binaries for, you will have to build the whole thing from source. You will still
+need to satisfy the dependencies specified above. That is
+<A href="http://libsigc.sourceforge.net/">libsigc++</A> (make sure you pick the
+1.0.4 version!) and
+<A href="http://kbs.cs.tu-berlin.de/~jutta/toast.html">gsm</A>. Maybe you can
+find prebuilt binaries for these two libs for your distribution. Otherwise you
+will just have to compile them as well.
+<P>
+To compile Qtel, the <A href="http://www.trolltech.com/">Qt widget toolkit</A>
+and the X window system are needed. There is a good chance that these will
+already be installed on your system. If Qt is not installed, find a prebuilt
+package or compile it from source. If the X window system is not installed,
+you're on your own...
+<P>
+Now download the sources for SvxLink from the
+<A href="https://sourceforge.net/project/showfiles.php?group_id=84813">
+sourceforge download area</A>. Find the <em>svxlink-YYMMDD.tar.gz</em> with the
+latest date. If you are going to run the svxlink-server, you will also need the
+<em>sounds-YYMMDD.tar.gz</em> with the matching date. Find a good spot to unpack
+and compile the source and cd into that directory. Then do the following
+(install must be done as user root):
+<PRE>
+tar xvzf svxlink-YYMMDD.tar.gz
+cd svxlink
+make
+make install
+</PRE>
+If you are going to run the SvxLink server, unpack the sound files in a good
+location. A good location could for example be /usr/share/svxlink/. As user
+root, do the following:
+<PRE>
+cd /usr/share
+mkdir svxlink
+cd svxlink
+tar xvzf /path-to-wherever-you-put-the-tar-file/sounds-YYMMDD.tar.gz
+</PRE>
+<P>
+Now continue below reading the
+<A href="#post-install">post install stuff</A> chapter.
+<P>
+
+
+<A name="post-install"><h2>Post install stuff</h2></A>
+<strong>Note1:</strong> For Alsa based systems (like Fedora Core 2), the Alsa
 OSS emulation is used for sound I/O. There is a bug in the emulation layer
 which will make SvxLink/Qtel fail. To work around this bug, set the
 environment variable ASYNC_AUDIO_NOTRIGGER to 1 before starting SvxLink/Qtel.
@@ -55,25 +102,79 @@ ASYNC_AUDIO_NOTRIGGER=1 qtel &
 The environment variable setting will be lost on logout so the <em>export</em>
 line is best put into the file ".bash_profile", which can be found in your home
 directory.
-<P/>
+<P>
 Note that setting this environment variable when it is not needed can make
-SvxLink/Qtel to stop working. Only set it if you are having audio problems.
-<P/>
+SvxLink/Qtel to stop working. Only set it if you are getting the error message
+below.
+<PRE>
+SNDCTL_DSP_SETTRIGGER ioctl failed: Broken pipe
+</PRE>
+<P>
 <strong>Note2:</strong> Make sure that no other audio applications are running
 at the same time as SvxLink/Qtel. If another application has opened the sound
 device, SvxLink/Qtel will hang until the device is closed by the other
 application. Especially, if you are having problems with SvxLink/Qtel hanging,
 check for sound servers like <em>artsd</em> and the like.
+<P>
+If you only are going to run Qtel, go directly to the
+<A href="qtel_usage.php">Qtel User Docs</A>.
+<P>
+If you are going to run the svxlink server, first check out the
+<A href="#server-config">configuration description</A> below before starting it.
+After the configuration has been done, start the server by typing
+<em>svxlink</em> at the command prompt. It is possible to simulate DTMF input by
+pressing the 1-9, A-D, *, # keys. Have a look at the
+<A href="svxlink_usage.php">user documentation</A> to begin testing the server.
+<P>
 
-<h2>Installation from source</h2>
-[To be written]
+
+<A name="hardware"><h2>Hardware</h2></A>
+To run the SvxLink server, some kind of hardware is needed to connect the
+computer to the transciever. I have done very few experiments on this. My
+hardware consists of just a cable. No active components needed. I have connected
+the microphone input and the line out output on the computer to the transcievers
+packet radio connector. This works quite well. However, there is a slight hum on
+the signal. This can be fixed with an isolation transformer but I havn't gotten
+around to buy one yet.
+<P>
+Typical EchoLink hardware should work with SvxLink as well. Have a look at the
+<A href="http://www.echolink.org/interfaces.htm">EchoLink interfaces</A> page.
+However, I have not tried any of these so there are no guarantees. SvxLink
+cannot make use of an external DTMF detector.
+<P>
 
 
-<h2>Hardware</h2>
-[To be written]
+<A name="audio-level-adj"><h2>Audio level adjustment</h2></A>
+There are no audio level controls in SvxLink server nor Qtel. The levels must be
+adjusted with an external tool like aumix, kmix, alsamixer or whatever your
+favourite mixer is. Start one of the mixers and locate the controls to use for
+adjusting the levels. The output level is adjusted using the two sliders Pcm
+and Vol. The input level is adjusted using the IGain slider, not the
+Mic or Input (line-in) slider. The latter two are used to adjust the monitoring
+level of the two inputs. Set these two to zero. Select to use either the
+microphone or the line-in input. Set the Pcm, Vol and Mic/Input sliders half way
+up. Adjust the levels according to the instructions below.
+<P>
+To adjust the levels in Qtel, start by connecting to the *ECHOTEST* server. This
+EchoLink server will echo back everything you send to it. Right after the
+connection has been established, a greeting message will be played back. Adjust
+the speaker level to a comfortable level using the Pcm and Vol sliders. Press
+the PTT and say something and listen how it comes back. Adjust the Mic slider
+until you are satisfied.
+<P>
+To adjust the levels for the SvxLink server, start it up and press the * key on
+the keyboard. This will make the svxlink server identify itself. Do this a
+couple of times and adjust the Pcm and Vol sliders to the highest volume
+possible without distorsion. Now, activate the parrot module by pressing 1# on
+the keyboard. Use another transmitter to make a short transmission. Listen to
+the recorded audio and adjust the Mic slider (if using the microphone input) or
+Input slider (if using the line-in input) to the highest level possible without
+distorsion. Repeat util happy. Now try to press some DTMF digits and see if the
+digits are detected. If not, try to adjust the input level up or down and try
+again.
 
 
-<h2>SvxLink server configuration</h2>
+<A name="server-config"><h2>SvxLink server configuration</h2></A>
 During the svxlink-server package installation the <em>/etc/svxlink.conf</em>
 default configuration file is installed. Optionally, copy this file to the
 home directory of the user you are going to run the svxlink server as and

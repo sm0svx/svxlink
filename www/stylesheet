@@ -41,6 +41,7 @@ DL
 {
   background-color: #DDDDDD;
   padding: 0.5em 0.5em 0.5em 0.5em;
+  border: 1px solid black;
 }
 
 DT
@@ -53,9 +54,17 @@ DD
   margin-bottom: 1em;
 }
 
+LI
+{
+  margin-bottom: 0.5em;
+}
+
 H2
 {
-  background-color: lightblue;
+  background-color: #CCCCFF;
+  padding-bottom: 0.15em;
+  padding-left: 0.2em;
+  border: 1px solid black;
 }
 
 H3
@@ -74,7 +83,7 @@ H3
   padding: 10px;
   padding-right: 15px;
   padding-left: 5px;
-  background-color: lightblue;
+  background-color: #CCCCFF;
 }
 
 .body-code-snippet > pre {
@@ -99,6 +108,16 @@ menuitem {
 }
 
 menuitem:hover {
+  background-color: yellow;
+}
+
+submenuitem {
+  margin-left: 1em;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+submenuitem:hover {
   background-color: yellow;
 }
 

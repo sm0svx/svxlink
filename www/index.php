@@ -1,5 +1,9 @@
-<?php include("header.inc"); ?>
+<?php
+  $selected="index";
+  include("header.inc");
+?>
 
+<H2>Main Screen</H2>
 Welcome to the home of SvxLink. 
 The SvxLink project aim to develop a flexible general purpose voice services
 system for ham radio use. The svxlink server consists of a core that handles the
@@ -10,6 +14,10 @@ lingo. Examples of existing voice services are: Help - a help system, Parrot - a
 module that plays back everything you say and EchoLink - connect to other
 EchoLink stations. The project also includes an EchoLink client GUI application
 (Qtel).
+<P/>
+The SvxLink server can also act as a repeater controller. However, this mode of
+operation has only been briefly tested as of this writing. Hopefully I will get
+my hands on some repeater hardware this fall (2004) to test it.
 <P/>
 EchoLink is an amateur radio invention (well actually it is just a
 modified verison of Internet telephony) to link radio transcievers together
