@@ -62,7 +62,7 @@ void MsgHandler::spellWord(const string& word)
 
 void MsgHandler::writeBufferFull(bool is_full)
 {
-  printf("write_buffer_full=%s\n", is_full ? "true" : "false");
+  //printf("write_buffer_full=%s\n", is_full ? "true" : "false");
   if (!is_full && !msg_queue.empty())
   {
     writeFromFile();
@@ -137,7 +137,7 @@ void MsgHandler::writeFromFile(void)
       perror("write in MsgHandler::writeFromFile");
       goto done;
     }
-    printf("Read=%d  Written=%d\n", read_cnt, written);
+    //printf("Read=%d  Written=%d\n", read_cnt, written);
   } while (written == read_cnt);
   
   //printf("lseeking...\n");
