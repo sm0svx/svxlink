@@ -6,6 +6,11 @@
   operation. Previously, only one AudioIO object could have the device opened
   at a time.
 
+* Added an environment variable that make it possible to disable the use
+  of the trigger functionality when opening an audio device. This was necessary
+  to make Alsa OSS emulation work. Set ASYNC_AUDIO_NOTRIGGER to disable the
+  use of the trigger functionality.
+
 
 
  0.8.0 -- 04 Apr 2004
