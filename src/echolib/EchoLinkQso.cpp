@@ -81,16 +81,6 @@ using namespace EchoLink;
  *
  ****************************************************************************/
 
-typedef struct
-{
-  unsigned char version;
-  unsigned char pt;
-  unsigned short seqNum;
-  unsigned long time;
-  unsigned long ssrc;
-  unsigned char data[33*4];
-} GsmVoicePacket;
-
 
 
 /****************************************************************************
@@ -398,6 +388,23 @@ int Qso::sendAudio(short *buf, int len)
 } /* Qso::sendAudio */
 
 
+bool Qso::sendAudioRaw(GsmVoicePacket *packet)
+{
+  packet->seqNum = htons(next_audio_seq++);
+  
+  int ret = Dispatcher::instance()->sendAudioMsg(remote_ip, packet,
+      	      	      	      	      	      	 sizeof(*packet));
+  if (ret == -1)
+  {
+    perror("sendAudioMsg in Qso::sendAudioRaw");
+    return false;
+  }
+  
+  return true;
+
+} /* Qso::sendAudioRaw */
+
+
 bool Qso::flushAudioSendBuffer(void)
 {
   if (state != STATE_CONNECTED)
@@ -636,6 +643,8 @@ inline void Qso::handleNonAudioPacket(unsigned char *buf, int len)
 inline void Qso::handleAudioPacket(unsigned char *buf, int len)
 {
   GsmVoicePacket *voice_packet = reinterpret_cast<GsmVoicePacket*>(buf);
+  
+  audioReceivedRaw(voice_packet);
   
   /* gsm_signal average = 0; */
   for(int i=0; i<4; i++)

@@ -92,6 +92,14 @@ namespace EchoLink
 
 /****************************************************************************
  *
+ * Forward declarations inside the declared namespace
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
  *
  ****************************************************************************/
@@ -134,6 +142,8 @@ exits.
 class Qso : public SigC::Object
 {
   public:
+    class GsmVoicePacket;
+    
     /**
      * @brief The type of the connection state
      */
@@ -263,6 +273,16 @@ class Qso : public SigC::Object
     int sendAudio(short *buf, int len);
     
     /**
+     * @brief 	Send a raw GSM audio packet to the remote station
+     * @param 	packet The packet to send
+     *
+     * This function can be used to send a raw GSM packet to the remote
+     * station. Probably only useful if you received it from the
+     * audioReceivedRaw signal.
+     */
+    bool sendAudioRaw(GsmVoicePacket *packet);
+    
+    /**
      * @brief 	Flush the audio send buffer so that all audio get transmitted
      * @return	Returns \em true on success or \em false on failure
      *
@@ -347,10 +367,32 @@ class Qso : public SigC::Object
      */
     SigC::Signal2<int, short*, int> audioReceived;
     
+    /**
+     * @brief A signal that is emitted when an audio datagram has been received
+     * @param data A pointer to the buffer that contains the raw audio packet
+     *
+     * This signal is emitted whenever an audio packet has been received on
+     * the connection. It gives access to the raw GSM packet. This can be used
+     * if the encoded data is going to be retransmitted. In this case it is
+     * not good to decode and then encode the data again. It will sound awful.
+     */
+    SigC::Signal1<void, GsmVoicePacket*>  audioReceivedRaw;
+    
     
   protected:
     
   private:
+    class GsmVoicePacket
+    {
+      public:
+	unsigned char version;
+	unsigned char pt;
+	unsigned short seqNum;
+	unsigned long time;
+	unsigned long ssrc;
+	unsigned char data[33*4];
+    };
+
     static const int  	KEEP_ALIVE_TIME       	= 10000;
     static const int  	MAX_CONNECT_RETRY_CNT 	= 5;
     static const int  	CON_TIMEOUT_TIME      	= 50000;
