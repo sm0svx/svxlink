@@ -148,6 +148,13 @@ bool SimplexLogic::initialize(void)
   {
     ident_interval = atoi(str.c_str()) * 1000;
   }
+
+    // This is off by default and isn't required to exist
+  ident_only_after_tx = 0;
+  if (cfg().getValue(name(), "IDENT_ONLY_AFTER_TX", str))
+  {
+    ident_only_after_tx = atoi(str.c_str());
+  }
   
   //tx().txTimeout.connect(slot(this, &SimplexLogic::txTimeout));
   
@@ -157,7 +164,10 @@ bool SimplexLogic::initialize(void)
     ident_timer->expired.connect(slot(this, &SimplexLogic::identify));
   }
       
-  identify();
+  need_ident = false;
+  ident_last_sent = time(NULL);
+
+  rx().mute(false);
   
   return true;
   
@@ -175,6 +185,16 @@ void SimplexLogic::transmit(bool do_transmit)
       if (!rx().squelchIsOpen())
       {
 	//printf("Squelch is NOT open. Transmitting...\n");
+
+	  // If ident_only_after_tx set, flag that we transmitted and will need
+	  // to ID ourselves -- but only if we didn't just finish IDing already.
+	if (ident_only_after_tx && !need_ident)
+	{
+	  if (time(NULL) - ident_last_sent > ident_only_after_tx) 
+	  {
+	    need_ident = true;
+	  }
+	}
 	rx().mute(true);
 	Logic::transmit(true);
       }
@@ -255,8 +275,14 @@ void SimplexLogic::identify(Timer *t)
   
   if (!callsign().empty())
   {
-    playMsg("online");
-    spellWord(callsign());
+    if (!ident_only_after_tx || need_ident) 
+    {
+      playMsg("online");
+      spellWord(callsign());
+      need_ident = false;
+      ident_last_sent = time(NULL);
+    }
+    
     if (ident_timer != 0)
     {
       ident_timer->reset();

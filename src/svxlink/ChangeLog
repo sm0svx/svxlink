@@ -1,8 +1,11 @@
- 0.3.1 -- ?? ??? 2004
+ 0.4.0 -- ?? ??? 2005
 ----------------------
 
 * Bugfix: Crash when the parrot module was active and an echolink
   connection were coming in.
+
+* Applied patch from Eric Jacobson: Only ident if the link has been
+  transmitting. New config variable: IDENT_ONLY_AFTER_TX.
 
 
 
