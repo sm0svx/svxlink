@@ -333,7 +333,7 @@ bool AudioDevice::open(Mode mode)
     }
   }
       
-  int frag_size;
+  int frag_size = 0;
   if (ioctl(fd, SNDCTL_DSP_GETBLKSIZE, &frag_size) == -1)
   {
     perror("SNDCTL_DSP_GETBLKSIZE ioctl failed");
