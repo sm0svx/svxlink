@@ -42,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <netinet/tcp.h>
 #include <iostream>
 #include <stdio.h>
+#include <algorithm>
 
 
 /****************************************************************************
@@ -189,7 +190,7 @@ TcpServer::TcpServer(const string& port_str)
   }
 
   rd_watch = new FdWatch(sock, FdWatch::FD_WATCH_RD);
-  rd_watch->activity.connect(slot(this, &TcpServer::incomingConnection));
+  rd_watch->activity.connect(slot(this, &TcpServer::onConnection));
     
 } /* TcpServer::TcpServer */
 
@@ -210,6 +211,146 @@ TcpServer::~TcpServer(void)
 {
   cleanup();
 } /* TcpServer::~TcpServer */
+
+
+/*
+ *------------------------------------------------------------------------
+ * Method:    TcpServer::numberOfClients
+ * Purpose:   Get the number of clients that is connected to the server
+ * Input:     None
+ * Output:    Returns the number of connected clients
+ * Author:    Ulf Larsson
+ * Created:   2004-14-14
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
+ */
+int TcpServer::numberOfClients(void)
+{
+  return tcpConnectionList.size();
+} /* TcpServer::numberOfClients */
+
+
+/*
+ *------------------------------------------------------------------------
+ * Method:    TcpServer::getClient
+ * Purpose:   Return TcpConnection pointer to the given client
+ * Input:     Index of the requested client
+ * Output:    Returns a TcpConnection pointer
+ * Author:    Ulf Larsson
+ * Created:   2004-14-14
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
+ */
+TcpConnection *TcpServer::getClient(unsigned int index)
+{
+  if ((numberOfClients() > 0) && (index < tcpConnectionList.size()))
+  {
+    return tcpConnectionList[index];
+  }
+  
+  return 0;
+
+} /* TcpServer::getClient */
+
+
+/*
+ *------------------------------------------------------------------------
+ * Method:    TcpServer::writeAll
+ * Purpose:   Write data to all connected clients 
+ * Input:     buf   Data buffer to send to clients
+ *            count Number of bytes in buf buffer
+ * Output:    Number of bytes sent
+ * Author:    Ulf Larsson
+ * Created:   2004-14-14
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
+ */
+int TcpServer::writeAll(const void *buf, int count)
+{
+  if (tcpConnectionList.empty())
+  {
+    return 0;
+  }
+  
+  TcpConnectionList::const_iterator it;
+  for (it=tcpConnectionList.begin(); it!=tcpConnectionList.end() ; ++it)
+  {
+    (*it)->write(buf,count);
+  }
+  
+  return count;
+
+} /* TcpServer::writeAll */
+
+
+/*
+ *------------------------------------------------------------------------
+ * Method:    TcpServer::writeOnly
+ * Purpose:   Send data only to the given client
+ * Input:     con   client
+ *            but   Data buffer to send to clients
+ *            count Number of bytes in the buffer
+ * Output:    Number of bytes sent
+ * Author:    Ulf Larsson
+ * Created:   2004-14-14
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
+ */
+int TcpServer::writeOnly(TcpConnection *con, const void *buf, int count)
+{
+  if (tcpConnectionList.empty())
+  {
+    return 0;
+  }
+  
+  TcpConnectionList::const_iterator it;
+  it = find(tcpConnectionList.begin(), tcpConnectionList.end(), con);
+  assert(it != tcpConnectionList.end());
+  (*it)->write(buf, count);
+  
+  return count;
+
+} /* TcpServer::writeOnly */
+
+
+/*
+ *------------------------------------------------------------------------
+ * Method:    TcpServer::writeExcept
+ * Purpose:   Send data to all connected clients except the given client
+ * Input:     con   client
+ *            but   Data buffer to send to clients
+ *            count Number of bytes in buf buffer
+ * Output:    Number of sent bytes
+ * Author:    Ulf Larsson
+ * Created:   2004-14-14
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
+ */
+int TcpServer::writeExcept(TcpConnection *con, const void *buf, int count)
+{
+  if (tcpConnectionList.empty())
+  {
+    return 0;
+  }
+  
+  TcpConnectionList::const_iterator it;
+  for (it=tcpConnectionList.begin(); it!=tcpConnectionList.end() ; ++it)
+  {
+    if(*it != con)
+    {
+      (*it)->write(buf, count);
+    }
+  }
+  
+  return count;
+
+} /* TcpServer::writeExcept */
+
 
 
 
@@ -267,6 +408,15 @@ void TcpServer::cleanup(void)
     close(sock);
     sock = -1;
   }
+  
+    // If there are any connected clients, disconnect them and clear the list
+  TcpConnectionList::const_iterator it;
+  for (it=tcpConnectionList.begin(); it!=tcpConnectionList.end(); ++it)
+  {
+    delete *it;
+  }
+  tcpConnectionList.clear();
+  
 } /* TcpServer::cleanup */
 
 
@@ -282,7 +432,7 @@ void TcpServer::cleanup(void)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void TcpServer::incomingConnection(FdWatch *watch)
+void TcpServer::onConnection(FdWatch *watch)
 {
   int client_sock;
   struct sockaddr_in client;
@@ -294,23 +444,54 @@ void TcpServer::incomingConnection(FdWatch *watch)
     return;
   }
   
-  /* Force close on exec */
+    // Force close on exec
   fcntl(client_sock, F_SETFD, 1);
   
-    /* Write must not block! */
+    // Write must not block!
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
   
-    /* Send small packets at once. */
+    // Send small packets at once
   const int on = 1;
   setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof(on));
   
+    // Create client object, add signal handling, add to client list
   TcpConnection *con = new TcpConnection(client_sock,
       	  IpAddress(client.sin_addr), ntohs(client.sin_port));
+  con->disconnected.connect(slot(this, &TcpServer::onDisconnected));
+  tcpConnectionList.push_back(con);
+  
+    // Emit signal on client connection
   clientConnected(con);
   
-} /* TcpServer::incomingConnection */
+} /* TcpServer::onConnection */
 
 
+/*
+ *----------------------------------------------------------------------------
+ * Method:    TcpServer::onDisconnected
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    Ulf Larsson
+ * Created:   2004-09-14
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
+void TcpServer::onDisconnected(TcpConnection *con,
+      	      	       	       TcpConnection::DisconnectReason reason)
+{
+    // Emit signal on client disconnection
+  clientDisconnected(con, reason);
+  
+    // Remove client from client list
+  TcpConnectionList::iterator it;
+  it = find(tcpConnectionList.begin(), tcpConnectionList.end(), con);
+  assert(it != tcpConnectionList.end());
+  tcpConnectionList.erase(it);
+  delete con;
+  
+} /* TcpServer::onDisconnected */
 
 
 
@@ -318,4 +499,6 @@ void TcpServer::incomingConnection(FdWatch *watch)
 /*
  * This file has not been truncated
  */
+
+
 
