@@ -136,12 +136,18 @@ int SampleFifo::addSamples(short *samples, int count)
   //printf("SampleFifo::addSamples: count=%d is_stopped=%s  empty=%s\n",
     //  	  count, is_stopped ? "true" : "false", empty() ? "true" : "false");
   
-  do_flush = false;
+  if (do_flush)
+  {
+    //printf("SampleFifo::addSamples(%s): do_flush=false\n", debug_name.c_str());
+    do_flush = false;
+  }
   
   int samples_written = 0;
   if (!is_stopped && empty() && !prebuf)
   {
     samples_written = writeSamples(samples, count);
+    //printf("SampleFifo::addSamples(%s): samples_to_write=%d "
+    //  	   "samples_written=%d\n", debug_name.c_str(), count, samples_written);
   }
   
   while (samples_written < count)
@@ -273,6 +279,7 @@ void SampleFifo::setPrebufSamples(unsigned prebuf_samples)
 void SampleFifo::flushSamples(void)
 {
   //printf("SampleFifo::flushSamples\n");
+  //printf("SampleFifo::flushSamples(%s): do_flush=true\n", debug_name.c_str());
   do_flush = true;
   prebuf = true;
   if (!empty())
@@ -361,8 +368,9 @@ void SampleFifo::writeSamplesFromFifo(void)
     int to_end_of_fifo = fifo_size - tail;
     samples_to_write = min(samples_to_write, to_end_of_fifo);
     samples_written = writeSamples(fifo+tail, samples_to_write);
-    //printf("SampleFifo::writeSamplesFromFifo: samples_to_write=%d "
-      //	   "samples_written=%d\n", samples_to_write, samples_written);
+    //printf("SampleFifo::writeSamplesFromFifo(%s): samples_to_write=%d "
+    //  	   "samples_written=%d\n", debug_name.c_str(), samples_to_write,
+	//   samples_written);
     tail = (tail + samples_written) % fifo_size;
   } while((samples_to_write == samples_written) && !empty() &&
       	  !write_buffer_is_full);
@@ -387,9 +395,12 @@ void SampleFifo::writeSamplesFromFifo(void)
     fifoFull(false);
   }
   
-  if (empty())
+  if (do_flush && empty())
   {
     allSamplesWritten();
+    //printf("SampleFifo::writeSamplesFromFifo(%s): do_flush=false\n",
+    //  	   debug_name.c_str());
+    do_flush = false;
   }
   
 } /* writeSamplesFromFifo */

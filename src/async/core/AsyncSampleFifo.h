@@ -39,6 +39,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sigc++/signal_system.h>
 
+#include <string>
+
 
 /****************************************************************************
  *
@@ -242,6 +244,12 @@ class SampleFifo : public SigC::Object
      * @brief	Flush out the samples in the buffer
      */
     void flushSamples(void);
+    
+    /**
+     * @brief 	Set a name for this FIFO used for debugging
+     * @param 	name The name to use for this FIFO
+     */
+    void setDebugName(const std::string& name) { debug_name = name; }
 
 
     /**
@@ -288,16 +296,17 @@ class SampleFifo : public SigC::Object
   protected:
     
   private:    
-    short     *fifo;
-    int       fifo_size;
-    int       head, tail;
-    bool      is_stopped;
-    bool      do_overwrite;
-    bool      write_buffer_is_full; // Bad name! This does NOT indicate that
-      	      	      	      	    // the FIFO is full..
-    unsigned  prebuf_samples;
-    bool      prebuf;
-    bool      do_flush;
+    short     	*fifo;
+    int       	fifo_size;
+    int       	head, tail;
+    bool      	is_stopped;
+    bool      	do_overwrite;
+    bool      	write_buffer_is_full; // Bad name! This does NOT indicate that
+      	      	      	      	      // the FIFO is full..
+    unsigned  	prebuf_samples;
+    bool      	prebuf;
+    bool      	do_flush;
+    std::string debug_name;
     
     void writeSamplesFromFifo(void);
 
