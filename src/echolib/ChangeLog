@@ -1,4 +1,4 @@
- 0.9.1 -- ?? Mar 2005
+ 0.10.0 -- ?? Mar 2005
 ----------------------
 
 * Fixed a compilation error which occured with newer compilers. The
@@ -9,6 +9,8 @@
 
 * Instead of crashing (assert) when the registration of a connection fails
   we now return an error.
+
+* Added getters for localCallsign, localName and localInfo.
 
 
 

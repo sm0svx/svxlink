@@ -197,6 +197,12 @@ class Qso : public SigC::Object
     bool setLocalCallsign(const std::string& callsign);
     
     /**
+     * @brief 	Retrieve the local callsign
+     * @return	Returns the local callsign
+     */
+    const std::string& localCallsign(void) const { return callsign; }
+    
+    /**
      * @brief 	Set the local name (name of station operator)
      * @param 	name  The name to set
      * @return	Returns \em true on success or \em false on failure
@@ -204,12 +210,24 @@ class Qso : public SigC::Object
     bool setLocalName(const std::string& name);
 
     /**
+     * @brief 	Retrieve the local name
+     * @return	Returns the local name
+     */
+    const std::string& localName(void) const { return name; }
+    
+    /**
      * @brief 	Set the local info
      * @param 	info  The informational message that is sent to the remote
      *	      	      station upon connection.
      */
     void setLocalInfo(const std::string& info);
         
+    /**
+     * @brief 	Retrieve the local station info
+     * @return	Returns the local station info
+     */
+    const std::string& localInfo(void) const { return local_stn_info; }
+    
     /**
      * @brief 	Initiate a connection to the remote station
      * @return	Returns \em true if the connect message was sent ok or \em false
