@@ -145,7 +145,7 @@ using namespace Async;
 
 
 AudioIO::AudioIO(const string& dev_name)
-  : mode(MODE_NONE), audio_dev(0), write_fifo(0), do_flush(false),
+  : io_mode(MODE_NONE), audio_dev(0), write_fifo(0), do_flush(false),
     flush_timer(0)
 {
   write_fifo = new SampleFifo(8000);
@@ -199,7 +199,7 @@ bool AudioIO::isFullDuplexCapable(void)
 
 bool AudioIO::open(Mode mode)
 {
-  if (mode == this->mode)
+  if (mode == io_mode)
   {
     return true;
   }
@@ -215,8 +215,8 @@ bool AudioIO::open(Mode mode)
   bool open_ok = audio_dev->open((AudioDevice::Mode)mode);
   if (open_ok)
   {
-    this->mode = mode;
-    if ((mode == MODE_RD) || (MODE_RDWR))
+    io_mode = mode;
+    if ((mode == MODE_RD) || (mode == MODE_RDWR))
     {
       read_con = audio_dev->audioRead.connect(audioRead.slot());
     }
@@ -229,17 +229,17 @@ bool AudioIO::open(Mode mode)
 
 void AudioIO::close(void)
 {
-  if (mode == MODE_NONE)
+  if (io_mode == MODE_NONE)
   {
     return;
   }
   
-  mode = MODE_NONE;
+  io_mode = MODE_NONE;
   audio_dev->close(); 
   
   write_fifo->clear();
   
-  if ((mode == MODE_RD) || (MODE_RDWR))
+  if ((io_mode == MODE_RD) || (io_mode == MODE_RDWR))
   {
     read_con.disconnect();
   }
@@ -254,7 +254,7 @@ void AudioIO::close(void)
 
 int AudioIO::write(short *samples, int count)
 {
-  assert((mode == MODE_WR) || (mode == MODE_RDWR));
+  assert((io_mode == MODE_WR) || (io_mode == MODE_RDWR));
   
   if (do_flush)
   {

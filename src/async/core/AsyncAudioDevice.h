@@ -142,11 +142,18 @@ class AudioDevice : public SigC::Object
     static void unregisterAudioIO(AudioIO *audio_io);
     
     /**
+     * @brief 	Check if the audio device has full duplex capability
+     * @return	Returns \em true if the device has full duplex capability
+     *	      	or else \em false
+     */
+    bool isFullDuplexCapable(void);
+    
+    /**
      * @brief 	Open the audio device
      * @param 	mode The mode to open the audio device in (See AudioIO::Mode)
      * @return	Returns \em true on success or else \em false
      */
-    bool open(const Mode& mode);
+    bool open(Mode mode);
     
     /**
      * @brief 	Close the audio device
@@ -218,10 +225,12 @@ class AudioDevice : public SigC::Object
     FdWatch	      	*read_watch;
     FdWatch	      	*write_watch;
     char      	      	*read_buf;
+    int       	      	device_caps;
     
     void audioReadHandler(FdWatch *watch);
     void writeSpaceAvailable(FdWatch *watch);
-    
+    void closeDevice(void);
+
 };  /* class AudioDevice */
 
 

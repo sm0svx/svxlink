@@ -130,6 +130,12 @@ AudioDevice *AudioDevice::registerAudioIO(const string& dev_name,
   if (devices.count(dev_name) == 0)
   {
     devices[dev_name] = new AudioDevice(dev_name);
+    
+      // Open the device once to read out the device capabilities
+    if (devices[dev_name]->open(MODE_RDWR))
+    {
+      devices[dev_name]->close();
+    }
   }
   AudioDevice *dev = devices[dev_name];
   ++dev->use_count;
@@ -156,24 +162,40 @@ void AudioDevice::unregisterAudioIO(AudioIO *audio_io)
 } /* AudioDevice::unregisterAudioIO */
 
 
-
-bool AudioDevice::open(const Mode& mode)
+bool AudioDevice::isFullDuplexCapable(void)
 {
-  if (mode == current_mode)
+  return (device_caps & DSP_CAP_DUPLEX);
+} /* AudioDevice::isFullDuplexCapable */
+
+
+bool AudioDevice::open(Mode mode)
+{
+  if (mode == current_mode) // Same mode => do nothing
   {
     return true;
   }
   
-  if (current_mode != MODE_NONE)
+  if (mode == MODE_NONE)  // Same as calling close
   {
-    return false;
+    close();
+  }
+  
+  if (current_mode == MODE_RDWR)  // Already RDWR => don't have to do anything
+  {
+    return true;
+  }
+  
+     // Is not closed and is either read or write and we want the other
+  if ((current_mode != MODE_NONE) && (mode != current_mode))
+  {
+    mode = MODE_RDWR;
   }
   
   int arg;
   
   if (fd != -1)
   {
-    close();
+    closeDevice();
   }
   
   int flags = 0; // = O_NONBLOCK; // Not supported according to the OSS docs
@@ -204,8 +226,8 @@ bool AudioDevice::open(const Mode& mode)
     ioctl(fd, SNDCTL_DSP_SETDUPLEX, 0);
   }
   
-  int caps;
-  if (ioctl(fd, SNDCTL_DSP_GETCAPS, &caps) == -1)
+  //int caps;
+  if (ioctl(fd, SNDCTL_DSP_GETCAPS, &device_caps) == -1)
   {
     perror("SNDCTL_DSP_GETCAPS ioctl failed");
     close();
@@ -214,7 +236,7 @@ bool AudioDevice::open(const Mode& mode)
   //printf("The sound device do%s have TRIGGER capability\n",
   //    (caps & DSP_CAP_TRIGGER) ? "" : " NOT");
   
-  if (caps & DSP_CAP_TRIGGER)
+  if (device_caps & DSP_CAP_TRIGGER)
   {
     arg = ~(PCM_ENABLE_OUTPUT | PCM_ENABLE_INPUT);
     if(ioctl(fd, SNDCTL_DSP_SETTRIGGER, &arg) == -1)
@@ -329,7 +351,7 @@ bool AudioDevice::open(const Mode& mode)
     arg |= PCM_ENABLE_OUTPUT;
   }
   
-  if (caps & DSP_CAP_TRIGGER)
+  if (device_caps & DSP_CAP_TRIGGER)
   {
     if(ioctl(fd, SNDCTL_DSP_SETTRIGGER, &arg) == -1)
     {
@@ -357,22 +379,15 @@ bool AudioDevice::open(const Mode& mode)
 
 void AudioDevice::close(void)
 {
-  current_mode = MODE_NONE;
-  
-  delete write_watch;
-  write_watch = 0;
-  
-  delete read_watch;
-  read_watch = 0;
-  
-  delete [] read_buf;
-  read_buf = 0;
-  
-  if (fd != -1)
+  list<AudioIO*>::iterator it;
+  for (it=aios.begin(); it!=aios.end(); ++it)
   {
-    ::close(fd);
-    fd = -1;
+    if ((*it)->mode() != AudioIO::MODE_NONE)
+    {
+      return;
+    }
   }
+  closeDevice();
 } /* AudioDevice::close */
 
 
@@ -431,7 +446,7 @@ int AudioDevice::samplesToWrite(void) const
  */
 AudioDevice::AudioDevice(const string& dev_name)
   : dev_name(dev_name), use_count(0), current_mode(MODE_NONE), fd(-1),
-    read_watch(0), write_watch(0), read_buf(0)
+    read_watch(0), write_watch(0), read_buf(0), device_caps(0)
 {
 
 } /* AudioDevice::AudioDevice */
@@ -523,8 +538,8 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
     list<AudioIO*>::iterator it;
     for (it=aios.begin(); it!=aios.end(); ++it)
     {
-      if (((*it)->mode == AudioIO::MODE_WR) ||
-      	  ((*it)->mode == AudioIO::MODE_RDWR))
+      if (((*it)->mode() == AudioIO::MODE_WR) ||
+      	  ((*it)->mode() == AudioIO::MODE_RDWR))
       {
 	SampleFifo &fifo = (*it)->writeFifo();
 	samples_to_write = max(samples_to_write, fifo.samplesInFifo());
@@ -563,8 +578,8 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
     
     for (it=aios.begin(); it!=aios.end(); ++it)
     {
-      if (((*it)->mode == AudioIO::MODE_WR) ||
-      	  ((*it)->mode == AudioIO::MODE_RDWR))
+      if (((*it)->mode() == AudioIO::MODE_WR) ||
+      	  ((*it)->mode() == AudioIO::MODE_RDWR))
       {
 	short tmp[sizeof(buf)];
 	int samples_read = (*it)->readSamples(tmp, samples_to_write);
@@ -590,6 +605,27 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
   watch->setEnabled(true);
   
 } /* AudioDevice::writeSpaceAvailable */
+
+
+void AudioDevice::closeDevice(void)
+{
+  current_mode = MODE_NONE;
+  
+  delete write_watch;
+  write_watch = 0;
+  
+  delete read_watch;
+  read_watch = 0;
+  
+  delete [] read_buf;
+  read_buf = 0;
+  
+  if (fd != -1)
+  {
+    ::close(fd);
+    fd = -1;
+  }
+} /* AudioDevice::closeDevice */
 
 
 

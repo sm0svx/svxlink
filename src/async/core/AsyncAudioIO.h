@@ -207,6 +207,11 @@ class AudioIO : public SigC::Object
      */
     bool isFlushing(void) const { return do_flush; }
     
+    /*
+     * @brief 	Find out the current IO mode
+     * @return	Returns the current IO mode
+     */
+    Mode mode(void) const { return io_mode; }    
     
     /**
      * @brief 	A signal that is emitted when a block of audio has been
@@ -245,7 +250,7 @@ class AudioIO : public SigC::Object
     static const int  BUF_FRAG_COUNT = 4;
 	
     //int       	      fd;
-    Mode      	      mode;
+    Mode      	      io_mode;
     //Async::FdWatch *  read_watch;
     //Async::FdWatch *  write_watch;
     //char *    	      read_buf;
