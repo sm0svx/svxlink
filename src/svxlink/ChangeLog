@@ -1,3 +1,11 @@
+ 0.3.1 -- ?? ??? 2004
+----------------------
+
+* Bugfix: Crash when the parrot module was active and an echolink
+  connection were coming in.
+
+
+
  0.3.0 -- 26 Sep 2004
 ----------------------
 
