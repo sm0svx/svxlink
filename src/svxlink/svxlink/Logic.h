@@ -153,11 +153,11 @@ class Logic : public SigC::Object
     
     const std::string& name(void) const { return m_name; }
     
-    void playMsg(const std::string& msg, const Module *module=0);
-    void playNumber(int number);
-    void spellWord(const std::string& word);
+    virtual void playMsg(const std::string& msg, const Module *module=0);
+    virtual void playNumber(int number);
+    virtual void spellWord(const std::string& word);
     void audioFromModule(short *samples, int count);
-    void moduleTransmitRequest(bool do_transmit);
+    virtual void moduleTransmitRequest(bool do_transmit);
     bool activateModule(Module *module);
     void deactivateModule(Module *module);
     Module *findModule(int id);
@@ -175,9 +175,12 @@ class Logic : public SigC::Object
     
     virtual void transmit(bool do_transmit);
     virtual int transmitAudio(short *samples, int count);
+    virtual void allMsgsWritten(void);
+    virtual void allTxSamplesFlushed(void);
     
     void clearPendingSamples(void);
     void logicTransmitRequest(bool do_transmit);
+    Module *activeModule(void) const { return active_module; }
     
   private:
     Async::Config     	&m_cfg;
@@ -194,10 +197,8 @@ class Logic : public SigC::Object
     Async::Timer      	*cmd_tmo_timer;
     bool      	      	logic_transmit;
     
-    void allMsgsWritten(void);
     void allModuleSamplesWritten(void);
     void transmitCheck(void);
-    void allTxSamplesFlushed(void);
     void loadModules(void);
     void loadModule(const std::string& module_name);
     void cmdTimeout(Async::Timer *t);
