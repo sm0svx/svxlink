@@ -896,6 +896,19 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
   cout << "Connecting to " << station->callsign() << " (" << station->id()
        << ")\n";
   
+  list<QsoImpl*>::iterator it;
+  for (it=qsos.begin(); it!=qsos.end(); ++it)
+  {
+    if ((*it)->remoteCallsign() == station->callsign())
+    {
+      cerr << "*** WARNING: Already connected to " << station->callsign()
+      	   << ". Ignoring connect request.\n";
+      playMsg("already_connected_to");
+      spellCallsign(station->callsign());
+      return;
+    }
+  }
+
   QsoImpl *qso = new QsoImpl(station->ip(), this);
   if (!qso->initOk())
   {
