@@ -1,4 +1,4 @@
- 0.10.0 -- ?? Aug 2004
+ 0.10.0 -- ?? Sep 2004
 ----------------------
 
 * Now the AudioIO object is really checking for full duplex capablility.
@@ -7,6 +7,8 @@
   and then recreated.
 
 * New class "Serial" for serial port usage.
+
+* Bugfix: The DnsLookup class did not delete its DnsLookupWorker object.
 
 
 

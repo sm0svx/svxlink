@@ -129,7 +129,7 @@ class DnsLookup : public SigC::Object
     /**
      * @brief 	Destructor
      */
-    ~DnsLookup(void) {}
+    ~DnsLookup(void);
     
     /**
      * @brief 	Return the addresses for the host in the query

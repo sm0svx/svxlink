@@ -140,6 +140,12 @@ DnsLookup::DnsLookup(const string& label)
 } /* DnsLookup::DnsLookup */
 
 
+DnsLookup::~DnsLookup(void)
+{
+  delete worker;
+} /* DnsLookup::~DnsLookup */
+
+
 vector<IpAddress> DnsLookup::addresses(void)
 {
   return worker->addresses();
