@@ -193,8 +193,8 @@ QsoImpl::QsoImpl(const Async::IpAddress& ip, ModuleEchoLink *module)
 
 QsoImpl::~QsoImpl(void)
 {
-  delete msg_pacer;
   delete msg_handler;
+  delete msg_pacer;
 } /* QsoImpl::~QsoImpl */
 
 
@@ -223,7 +223,10 @@ bool QsoImpl::accept(void)
   bool success = Qso::accept();
   if (success)
   {
+    msg_handler->begin();
+    msg_handler->playSilence(1000);
     msg_handler->playMsg("EchoLink", "greeting");
+    msg_handler->end();
   }
   
   return success;
@@ -239,8 +242,11 @@ void QsoImpl::reject(void)
   if (success)
   {
     sendChatData("The connection was rejected");
+    msg_handler->begin();
+    msg_handler->playSilence(1000);
     msg_handler->playMsg("EchoLink", "reject_connection");
     msg_handler->playSilence(1000);
+    msg_handler->end();
   }
 } /* QsoImpl::reject */
 
