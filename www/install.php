@@ -277,6 +277,26 @@ variable for this logic core to be activated.
     The number of seconds between identification.
   </DD>
   
+  <DT>IDENT_ONLY_AFTER_TX</DT>
+  <DD>
+    This feature controls when identification is done.  By default,
+    identification is done every time the IDENT_INTERVAL expires.  If you
+    enable this feature, identification will be done only if there has been
+    a recent transmission.  This feature is good for nodes using an RF link
+    to provide echolink to a repeater.  Often, in this situation, it is not
+    desirable for the link to identify unless legally necessary.  The number
+    provided should be greater than 0 and represents the number of seconds
+    after an identification has been sent before a transmission is considered
+    "new" and requires a new identification to be sent.  If the value is too
+    low, the identification itself could trigger the need to identify.  If
+    it's too long, a transmission could be made that won't be identified
+    because it happened within this window.  For most configurations, 4
+    seconds is a good number.
+    Note that IDENT_INTERVAL still have to be set for this feature to work.
+    That config variable will then be interpreted as the minimum number of
+    seconds between identifications.
+  </DD>
+    
   <DT>EXEC_CMD_ON_SQL_CLOSE</DT>
   <DD>
     Specify a time, in milliseconds, after squelch close after which entered
@@ -362,7 +382,7 @@ config variable for this logic core to be activated.
     The number of seconds between identification. The repeater will only
     identify itself periodically when it is down.
   </DD>
-    
+
   <DT>IDLE_SOUND_INTERVAL</DT>
   <DD>
     When the repeater is idle, a sound is played. Specify the interval in
