@@ -20,6 +20,11 @@
 * ModuleEchoLink: Now sending an audio reject message if the connection
   was rejected.
 
+* Added command line parsing and two command line switches. The first is the
+  --daemon switch which make the SvxLink server run in the background.
+  The second is --logfile which make it possible to redirect stdout and
+  stderr to a file.
+
 
 
  0.2.0 -- 27 May 2004
