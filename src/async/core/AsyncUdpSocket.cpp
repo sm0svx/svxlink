@@ -293,17 +293,14 @@ bool UdpSocket::write(const IpAddress& remote_ip, int remote_port,
  */
 void UdpSocket::cleanup(void)
 {
-  if (rd_watch != 0)
-  {
-    delete rd_watch;
-    rd_watch = 0;
-  }
+  delete rd_watch;
+  rd_watch = 0;
   
-  if (wr_watch != 0)
-  {
-    delete wr_watch;
-    wr_watch = 0;
-  }
+  delete wr_watch;
+  wr_watch = 0;
+  
+  delete send_buf;
+  send_buf = 0;
   
   if (sock != -1)
   {
