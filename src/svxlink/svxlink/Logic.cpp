@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <algorithm>
+#include <cctype>
 
 
 /****************************************************************************
@@ -351,23 +352,24 @@ void Logic::dtmfDigitDetected(char digit)
     {
       active_module->dtmfDigitReceived(digit);
     }
-    if (digit == '#')
+    if ((digit == '#') || (anti_flutter && (digit == 'C')))
     {
       cmd_queue.push_back(received_digits);
       received_digits = "";
       cmd_tmo_timer->setEnable(false);
       anti_flutter = false;
+      prev_digit = '?';
+    }
+    else if (digit == 'A')
+    {
+      anti_flutter = true;
+      prev_digit = '?';
     }
     else if (received_digits.size() < 10)
     {
       cmd_tmo_timer->reset();
       cmd_tmo_timer->setEnable(true);
-      if (digit == 'A')
-      {
-      	anti_flutter = true;
-	prev_digit = '?';
-      }
-      else if (digit == 'B')
+      if (digit == 'B')
       {
       	if (anti_flutter && (prev_digit != '?'))
 	{
@@ -375,7 +377,7 @@ void Logic::dtmfDigitDetected(char digit)
 	  prev_digit = '?';
 	}
       }
-      else
+      else if (isdigit(digit))
       {
       	if (anti_flutter)
 	{
