@@ -5,6 +5,18 @@
 
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>16 Mar 2004: <I>Still alive...</I></B>
+  <TD/></TR>
+  <TR><TD>
+    I just want to say that the project is still alive. It is just a little
+    slow. I am now working on a stand alone link daemon. It is operational
+    but there are still some work to be done to make it really usable. I will
+    check in some code some time the following weeks.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>18 Nov 2003: <I>Cleaned up the web pages a bit</I></B>
   <TD/></TR>
   <TR><TD>
