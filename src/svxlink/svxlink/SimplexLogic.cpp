@@ -149,7 +149,7 @@ bool SimplexLogic::initialize(void)
     ident_interval = atoi(str.c_str()) * 1000;
   }
   
-  tx().txTimeout.connect(slot(this, &SimplexLogic::txTimeout));
+  //tx().txTimeout.connect(slot(this, &SimplexLogic::txTimeout));
   
   if (ident_interval > 0)
   {
@@ -166,7 +166,8 @@ bool SimplexLogic::initialize(void)
 
 void SimplexLogic::transmit(bool do_transmit)
 {
-  //printf("transmit=%s\n", do_transmit ? "true" : "false");
+  //printf("SimplexLogic::transmit: do_transmit=%s\n",
+  //  	  do_transmit ? "true" : "false");
   if (do_transmit)
   {
     if (!tx_timeout_occured)
@@ -289,6 +290,7 @@ void SimplexLogic::squelchOpen(bool is_open)
 } /* SimplexLogic::squelchOpen */
 
 
+#if 0
 void SimplexLogic::txTimeout(void)
 {
   tx_timeout_occured = true;
@@ -296,7 +298,7 @@ void SimplexLogic::txTimeout(void)
   clearPendingSamples();
   rx().mute(false);
 } /* SimplexLogic::txTimeout */
-
+#endif
 
 
 

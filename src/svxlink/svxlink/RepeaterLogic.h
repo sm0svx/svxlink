@@ -175,7 +175,7 @@ class RepeaterLogic : public Logic
     void setUp(bool up);
     void sendRgrSound(Async::Timer *t=0);
     void squelchOpen(bool is_open);
-    void txTimeout(void);
+    //void txTimeout(void);
     void detected1750(void);
     void playIdleSound(Async::Timer *t);
     void enableRgrSoundTimer(bool enable);

@@ -174,7 +174,7 @@ bool RepeaterLogic::initialize(void)
     idle_sound_interval = atoi(str.c_str());
   }
   
-  tx().txTimeout.connect(slot(this, &RepeaterLogic::txTimeout));
+  //tx().txTimeout.connect(slot(this, &RepeaterLogic::txTimeout));
   
   rx().mute(false);
   rx().audioReceived.connect(slot(this, &RepeaterLogic::audioReceived));
@@ -418,11 +418,13 @@ void RepeaterLogic::squelchOpen(bool is_open)
 } /* RepeaterLogic::squelchOpen */
 
 
+#if 0
 void RepeaterLogic::txTimeout(void)
 {
   Logic::transmit(false);
   clearPendingSamples();
 } /* RepeaterLogic::txTimeout */
+#endif
 
 
 void RepeaterLogic::detected1750(void)

@@ -156,7 +156,7 @@ class SimplexLogic : public Logic
     
     void identify(Async::Timer *t=0);
     void squelchOpen(bool is_open);
-    void txTimeout(void);
+    //void txTimeout(void);
 
 };  /* class SimplexLogic */
 
