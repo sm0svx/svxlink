@@ -1,11 +1,12 @@
 <?php include("header.inc"); ?>
 
-This page contains some more technical information about the Qtel application
+<H2>Developer Documentation</H2>
+This page contains some more technical information about the SvxLink project
 and its associated libraries.
 <P/>
-The actual EchoLink protocols are implemented in the EchoLib library. It is
+The EchoLink protocols are implemented in the EchoLib library. It is
 a C++ library that was written at the same time as the Qtel GUI. The goal is
-to make EchoLib platform independent and easy to use. The API is well
+to make EchoLib platform independent and easy to use. The API is fairly well
 documented. EchoLib can be used to write both GUI application (in Qt) and
 server applications with no Qt dependency.
 <P/>
