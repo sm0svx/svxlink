@@ -464,6 +464,8 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
     if ((dir->status() == StationData::STAT_OFFLINE) ||
       	(dir->status() == StationData::STAT_UNKNOWN))
     {
+      cout << "*** ERROR: Directory server offline (status="
+      	   << dir->statusStr() << "). Can't create outgoing connection.\n";
       playMsg("directory_server_offline");
       return;
     }
