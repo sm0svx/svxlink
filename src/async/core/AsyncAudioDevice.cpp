@@ -233,8 +233,6 @@ bool AudioDevice::open(Mode mode)
     close();
     return false;
   }
-  //printf("The sound device do%s have TRIGGER capability\n",
-  //    (caps & DSP_CAP_TRIGGER) ? "" : " NOT");
   
   if (use_trigger && (device_caps & DSP_CAP_TRIGGER))
   {
@@ -247,7 +245,6 @@ bool AudioDevice::open(Mode mode)
     }
   }
   
-  /*
   arg  = (FRAG_COUNT << 16) | FRAG_SIZE_LOG2;
   if (ioctl(fd, SNDCTL_DSP_SETFRAGMENT, &arg) == -1)
   {
@@ -255,7 +252,6 @@ bool AudioDevice::open(Mode mode)
     close();
     return false;
   }
-  */
   
   arg = AFMT_S16_LE; 
   if(ioctl(fd,  SNDCTL_DSP_SETFMT, &arg) == -1)
@@ -304,15 +300,6 @@ bool AudioDevice::open(Mode mode)
     return false;
   }
   //printf("Reported sampling rate: %dHz\n", arg);
-  
-  /*  Used for playing non-full fragments.
-  if (ioctl(fd, SNDCTL_DSP_POST, 0) == -1)
-  {
-    perror("SNDCTL_DSP_POST ioctl failed");
-    close();
-    return false;
-  }
-  */
   
   current_mode = mode;
   
@@ -505,29 +492,11 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
   
   unsigned samples_to_write ;
   audio_buf_info info;
+  bool do_flush;
   do
   {
-    samples_to_write = 0;
-    list<AudioIO*>::iterator it;
-    for (it=aios.begin(); it!=aios.end(); ++it)
-    {
-      if (((*it)->mode() == AudioIO::MODE_WR) ||
-      	  ((*it)->mode() == AudioIO::MODE_RDWR))
-      {
-	SampleFifo &fifo = (*it)->writeFifo();
-	samples_to_write = max(samples_to_write, fifo.samplesInFifo());
-      }
-    }
-    
-    if (samples_to_write == 0)
-    {
-      watch->setEnabled(false);
-      return;
-    }
-
     short buf[32768];
     memset(buf, 0, sizeof(buf));
-    samples_to_write = min(samples_to_write, sizeof(buf));
 
     if (ioctl(fd, SNDCTL_DSP_GETOSPACE, &info) == -1)
     {
@@ -541,7 +510,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
     int frags_to_write = sizeof(*buf) * count / info.fragsize;
     */
     //samples_to_write = min(samples_to_write, info.bytes / sizeof(short));
-    samples_to_write = min(samples_to_write,
+    samples_to_write = min(sizeof(buf),
       	    info.fragments * info.fragsize / sizeof(short));
     
     if (samples_to_write == 0)
@@ -549,6 +518,26 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       break;
     }
     
+    list<AudioIO*>::iterator it;
+    do_flush = true;
+    for (it=aios.begin(); it!=aios.end(); ++it)
+    {
+      if (((*it)->mode() == AudioIO::MODE_WR) ||
+      	  ((*it)->mode() == AudioIO::MODE_RDWR))
+      {
+	SampleFifo &fifo = (*it)->writeFifo();
+	do_flush &= ((*it)->isFlushing() &&
+		     (fifo.samplesInFifo() <= samples_to_write));
+	samples_to_write = min(samples_to_write, fifo.samplesInFifo());
+      }
+    }
+    
+    if (samples_to_write == 0)
+    {
+      watch->setEnabled(false);
+      return;
+    }
+
     for (it=aios.begin(); it!=aios.end(); ++it)
     {
       if (((*it)->mode() == AudioIO::MODE_WR) ||
@@ -572,6 +561,16 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
     }
 
     assert(written / sizeof(short) == samples_to_write);
+    
+    if (do_flush)
+    {
+      //printf("*** FLUSHING ***\n");
+      if (ioctl(fd, SNDCTL_DSP_POST, NULL) == -1)
+      {
+	perror("SNDCTL_DSP_POST ioctl failed");
+	return;
+      }
+    }
     
   } while(samples_to_write == info.bytes / sizeof(short));
     
