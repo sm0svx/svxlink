@@ -607,9 +607,18 @@ void ModuleEchoLink::onStatusChanged(StationData::Status status)
        << StationData::statusStr(status) << endl;
   
     // Get the directory list on first connection to the directory server
-  if ((status == StationData::STAT_ONLINE) && (dir->stations().empty()))
+  if ((status == StationData::STAT_ONLINE) ||
+      (status == StationData::STAT_BUSY))
   {
-    getDirectoryList();
+    if (dir_refresh_timer == 0)
+    {
+      getDirectoryList();
+    }
+  }
+  else
+  {
+    delete dir_refresh_timer;
+    dir_refresh_timer = 0;
   }
 } /* onStatusChanged */
 
@@ -878,14 +887,20 @@ void ModuleEchoLink::onDestroyMe(QsoImpl *qso)
  */
 void ModuleEchoLink::getDirectoryList(Timer *timer)
 {
-  //cout << "Refreshing directory list...\n";
-  dir->getCalls();
-  
-    /* FIXME: Do we really need periodic updates of the directory list ? */
   delete dir_refresh_timer;
-  dir_refresh_timer = new Timer(600000);
-  dir_refresh_timer->expired.connect(
-      	  slot(this, &ModuleEchoLink::getDirectoryList));
+  dir_refresh_timer = 0;
+  
+  if ((dir->status() == StationData::STAT_ONLINE) ||
+      (dir->status() == StationData::STAT_BUSY))
+  {
+    //cout << "Refreshing directory list...\n";
+    dir->getCalls();
+
+      /* FIXME: Do we really need periodic updates of the directory list ? */
+    dir_refresh_timer = new Timer(600000);
+    dir_refresh_timer->expired.connect(
+      	    slot(this, &ModuleEchoLink::getDirectoryList));
+  }
 } /* ModuleEchoLink::getDirectoryList */
 
 
