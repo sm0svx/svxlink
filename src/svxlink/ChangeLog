@@ -15,6 +15,9 @@
 
 * ModuleEchoLink: Added a link idle timeout timer.
 
+* ModuleEchoLink: Now reports the number of connected stations when an
+  identification is manually triggered by a "*".
+
 
 
  0.3.0 -- 26 Sep 2004
