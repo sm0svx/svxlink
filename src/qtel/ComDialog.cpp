@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+#include <cassert>
 
 #include <qstring.h>
 #include <qlabel.h>
@@ -54,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioIO.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkQso.h>
+#include <AsyncSampleFifo.h>
 
 
 /****************************************************************************
@@ -148,7 +150,7 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
     const QString& remote_name)
   : callsign(callsign), con(0), dir(dir), accept_connection(false),
     audio_io(audio_io), audio_full_duplex(false), is_transmitting(false),
-    ctrl_pressed(false)
+    ctrl_pressed(false), rem_audio_fifo(0)
     
 {
   if (callsign.find("-L") != -1)
@@ -174,8 +176,16 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
   call->setText(callsign);
   name_label->setText(remote_name);
   
-  //audio_io = new AudioIO;
+  rem_audio_fifo = new SampleFifo(8000);
+  rem_audio_fifo->stopOutput(true);
+  rem_audio_fifo->setOverwrite(true);
+  rem_audio_fifo->setPrebufSamples(1280);
+  rem_audio_fifo->writeSamples.connect(slot(audio_io, &AudioIO::write));
+  rem_audio_fifo->allSamplesWritten.connect(
+  	slot(audio_io, &AudioIO::flushSamples));
+  
   audio_io->audioRead.connect(slot(this, &ComDialog::micAudioRead));
+  
   /*
   if (audio_io->isFullDuplexCapable())
   {
@@ -187,7 +197,6 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
     }
   }
   else
-  */
   {
     //printf("Sound device is NOT full duplex capable\n");
     if (!openAudioDevice(AudioIO::MODE_WR))
@@ -195,19 +204,7 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
       return;
     }
   }
-  
-  const StationData *station = dir.findCall(callsign.latin1());
-  //StationData *station = new StationData;
-  //station->setIp(IpAddress("192.168.1.196"));
-  updateStationData(station);
-  if (station != 0)
-  {
-    createConnection(station);
-  }
-  else
-  {
-    dir.getCalls();
-  }
+  */
   
   QObject::connect(
       reinterpret_cast<QObject *>(connect_button), SIGNAL(clicked()),
@@ -233,13 +230,26 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
   dir.stationListUpdated.connect(slot(this, &ComDialog::onStationListUpdated));
   
   orig_background_color = rx_indicator->paletteBackgroundColor();
+    
+  const StationData *station = dir.findCall(callsign.latin1());
+  //StationData *station = new StationData;
+  //station->setIp(IpAddress("192.168.1.196"));
+  updateStationData(station);
+  if (station != 0)
+  {
+    createConnection(station);
+  }
+  else
+  {
+    dir.getCalls();
+  }
   
 } /* ComDialog::ComDialog */
 
 
 ComDialog::~ComDialog(void)
 {
-  //delete audio_io;
+  delete rem_audio_fifo;
   audio_io->close();
   delete con;
 } /* ComDialog::~ComDialog */
@@ -375,8 +385,7 @@ void ComDialog::createConnection(const StationData *station)
   con->chatMsgReceived.connect(slot(this, &ComDialog::chatMsgReceived));
   con->stateChange.connect(slot(this, &ComDialog::stateChange));
   con->isReceiving.connect(slot(this, &ComDialog::isReceiving));
-  //con->audioReceived.connect(slot(audio_io, &AudioIO::write));
-  con->audioReceived.connect(slot(this, &ComDialog::audioFromRemote));
+  con->audioReceived.connect(slot(rem_audio_fifo, &SampleFifo::addSamples));
   
   connect_button->setEnabled(TRUE);
   connect_button->setFocus();
@@ -385,6 +394,8 @@ void ComDialog::createConnection(const StationData *station)
   {
     con->accept();
   }
+  
+  setIsTransmitting(false);
   
 } /* ComDialog::createConnection */
 
@@ -463,6 +474,7 @@ void ComDialog::setIsTransmitting(bool transmit)
   {
     if (!audio_full_duplex)
     {
+      rem_audio_fifo->stopOutput(true);
       audio_io->close();
       if (!openAudioDevice(AudioIO::MODE_RD))
       {
@@ -475,7 +487,10 @@ void ComDialog::setIsTransmitting(bool transmit)
   }
   else
   {
-    con->flushAudioSendBuffer();
+    if (con != 0)
+    {
+      con->flushAudioSendBuffer();
+    }
     if (!audio_full_duplex)
     {
       audio_io->close();
@@ -484,6 +499,7 @@ void ComDialog::setIsTransmitting(bool transmit)
 	disconnect();
 	return;
       }
+      rem_audio_fifo->stopOutput(false);
     }
     is_transmitting = false;
     tx_indicator->setPaletteBackgroundColor(orig_background_color);
@@ -597,19 +613,12 @@ void ComDialog::isReceiving(bool is_receiving)
 {
   rx_indicator->setPaletteBackgroundColor(
       is_receiving ? QColor("green") : orig_background_color);
+  if (!is_receiving)
+  {
+    rem_audio_fifo->flushSamples();
+  }
 } /* ComDialog::isReceiving */
 
-
-int ComDialog::audioFromRemote(short *samples, int count)
-{
-  if (!is_transmitting || audio_full_duplex)
-  {
-    return audio_io->write(samples, count);
-  }
-  
-  return count;
-  
-} /* ComDialog::audioFromRemote */
 
 
 

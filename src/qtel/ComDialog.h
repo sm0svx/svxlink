@@ -65,6 +65,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class SampleFifo;
+};
+
 class QString;
 
 
@@ -173,6 +178,7 @@ class ComDialog : public ComDialogBase, public SigC::Object
     bool      	      	  is_transmitting;
     QColor    	      	  orig_background_color;
     bool      	      	  ctrl_pressed;
+    Async::SampleFifo *   rem_audio_fifo;
   
     ComDialog(const ComDialog&);
     ComDialog& operator=(const ComDialog&);
@@ -195,7 +201,6 @@ class ComDialog : public ComDialogBase, public SigC::Object
     void stateChange(EchoLink::Qso::State state);
     
     void isReceiving(bool is_receiving);
-    int audioFromRemote(short *samples, int count);
 
     
 };  /* class ComDialog */
