@@ -310,6 +310,7 @@ void AudioIO::flushSamples(void)
 void AudioIO::flushSamplesInDevice(int extra_samples)
 {
   long flushtime = 1000 * audio_dev->samplesToWrite() / 8000;
+  delete flush_timer;
   flush_timer = new Timer(flushtime);
   flush_timer->expired.connect(slot(this, &AudioIO::flushDone));
 } /* AudioIO::flushSamplesInDevice */
