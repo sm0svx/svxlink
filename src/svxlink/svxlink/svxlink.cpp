@@ -123,7 +123,8 @@ int main(int argc, char **argv)
   Config cfg;
   if (!cfg.open(cfg_filename))
   {
-    cerr << "*** Error: Could not open config file \"" << cfg_filename << endl;
+    cerr << "*** Error: Could not open config file \"" << cfg_filename
+      	 << "\"\n";
     exit(1);
   }
   
