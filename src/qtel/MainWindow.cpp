@@ -47,6 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <qtooltip.h>
 #include <qpushbutton.h>
 #include <qinputdialog.h>
+#include <qsplitter.h>
 
 
 /****************************************************************************
@@ -148,7 +149,8 @@ using namespace EchoLink;
  *------------------------------------------------------------------------
  */
 MainWindow::MainWindow(Directory &dir)
-  : dir(dir), refresh_call_list_timer(0), is_busy(false), audio_io(0)
+  : dir(dir), refresh_call_list_timer(0), is_busy(false), audio_io(0),
+    prev_status(StationData::STAT_UNKNOWN)
 {
   connect(explorerView, SIGNAL(currentChanged(QListViewItem*)),
       	  this, SLOT(explorerViewClicked(QListViewItem*)));
@@ -193,8 +195,8 @@ MainWindow::MainWindow(Directory &dir)
       	  SIGNAL(toggled(bool)),
       	  this, SLOT(setBusy(bool)));
   
-  statusBar()->message(trUtf8("Getting calls from directory server..."));
-  dir.getCalls();
+  //statusBar()->message(trUtf8("Getting calls from directory server..."));
+  //dir.getCalls();
   refresh_call_list_timer = new QTimer(this, "refresh_call_list_timer");
   refresh_call_list_timer->start(
       1000 * 60 * Settings::instance()->listRefreshTime());
@@ -225,6 +227,8 @@ MainWindow::MainWindow(Directory &dir)
       SLOT(stationViewRightClicked(QListViewItem*, const QPoint&, int)));
   
   resize(Settings::instance()->mainWindowSize());
+  vsplitter->setSizes(Settings::instance()->vSplitterSizes());
+  hsplitter->setSizes(Settings::instance()->hSplitterSizes());
   
   Settings::instance()->configurationUpdated.connect(
       slot(this, &MainWindow::configurationUpdated));
@@ -253,6 +257,8 @@ MainWindow::~MainWindow(void)
   delete msg_audio_io;
   msg_audio_io = 0;
   Settings::instance()->setMainWindowSize(size());
+  Settings::instance()->setHSplitterSizes(hsplitter->sizes());
+  Settings::instance()->setVSplitterSizes(vsplitter->sizes());
   dir.makeOffline();
 } /* MainWindow::~MainWindow */
 
@@ -306,7 +312,7 @@ void MainWindow::incomingConnection(const IpAddress& remote_ip,
     
     msg_audio_io->open(AudioIO::MODE_WR);
       // FIXME: Hard coded filename
-    msg_handler->playFile("/usr/share/qtel/sounds/connect.raw");
+    msg_handler->playFile(Settings::instance()->directoryServer().latin1());
   }
   else
   {
@@ -352,10 +358,18 @@ void MainWindow::statusChanged(StationData::Status status)
     case StationData::STAT_ONLINE:
       status_indicator->setPixmap(
 	  QPixmap(const_cast<const char **>(online_icon)));
+      if (prev_status != StationData::STAT_BUSY)
+      {
+      	refreshCallList();
+      }
       break;
       
     case StationData::STAT_BUSY:
       status_indicator->setPixmap(QPixmap(busy_icon));
+      if (prev_status != StationData::STAT_ONLINE)
+      {
+      	refreshCallList();
+      }
       break;
       
     case StationData::STAT_OFFLINE:
@@ -368,6 +382,8 @@ void MainWindow::statusChanged(StationData::Status status)
       break;
       
   }
+  
+  prev_status = status;
   
 } /* MainWindow::statusChanged */
 

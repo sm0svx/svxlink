@@ -1,4 +1,4 @@
-<!DOCTYPE UI><UI version="3.1" stdsetdef="1">
+<!DOCTYPE UI><UI version="3.3" stdsetdef="1">
 <class>SettingsDialog</class>
 <widget class="QDialog">
     <property name="name">
@@ -339,7 +339,7 @@ Message</string>
                                     <string>Full duplex</string>
                                 </property>
                             </widget>
-                            <widget class="QLineEdit" row="0" column="2">
+                            <widget class="QLineEdit" row="0" column="2" rowspan="1" colspan="2">
                                 <property name="name">
                                     <cstring>audio_device</cstring>
                                 </property>
@@ -347,16 +347,39 @@ Message</string>
                                     <string>The audio device to use (e.g. /dev/dsp)</string>
                                 </property>
                             </widget>
-                            <widget class="QCheckBox" row="1" column="1" rowspan="1" colspan="2">
+                            <widget class="QCheckBox" row="1" column="1" rowspan="1" colspan="3">
                                 <property name="name">
                                     <cstring>use_full_duplex</cstring>
                                 </property>
                                 <property name="text">
-                                    <string>
-</string>
+                                    <string></string>
                                 </property>
                                 <property name="toolTip" stdset="0">
                                     <string>Check this check box to enable full duplex operation</string>
+                                </property>
+                            </widget>
+                            <widget class="QLabel" row="2" column="0" rowspan="1" colspan="2">
+                                <property name="name">
+                                    <cstring>textLabel1_2</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>Connect Sound</string>
+                                </property>
+                            </widget>
+                            <widget class="QLineEdit" row="2" column="2">
+                                <property name="name">
+                                    <cstring>connect_sound</cstring>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>The connect sound to use on incoming EchoLink connections</string>
+                                </property>
+                            </widget>
+                            <widget class="QPushButton" row="2" column="3">
+                                <property name="name">
+                                    <cstring>connect_sound_browse_button</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>Browse...</string>
                                 </property>
                             </widget>
                         </grid>
@@ -415,6 +438,12 @@ Message</string>
         <receiver>SettingsDialog</receiver>
         <slot>reject()</slot>
     </connection>
+    <connection>
+        <sender>connect_sound_browse_button</sender>
+        <signal>clicked()</signal>
+        <receiver>SettingsDialog</receiver>
+        <slot>browseConnectSound()</slot>
+    </connection>
 </connections>
 <tabstops>
     <tabstop>TabWidget2</tabstop>
@@ -433,6 +462,7 @@ Message</string>
 </includes>
 <slots>
     <slot access="private" specifier="non virtual">init()</slot>
+    <slot>browseConnectSound()</slot>
 </slots>
 <pixmapinproject/>
 <layoutdefaults spacing="6" margin="11"/>

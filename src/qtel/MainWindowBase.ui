@@ -27,71 +27,19 @@
         <property name="spacing">
             <number>6</number>
         </property>
-        <widget class="QGroupBox" row="1" column="0">
+        <widget class="QSplitter" row="0" column="0">
             <property name="name">
-                <cstring>GroupBox3</cstring>
+                <cstring>vsplitter</cstring>
             </property>
-            <property name="sizePolicy">
-                <sizepolicy>
-                    <hsizetype>5</hsizetype>
-                    <vsizetype>5</vsizetype>
-                    <horstretch>0</horstretch>
-                    <verstretch>1</verstretch>
-                </sizepolicy>
+            <property name="orientation">
+                <enum>Vertical</enum>
             </property>
-            <property name="title">
-                <string>Messages</string>
-            </property>
-            <vbox>
+            <widget class="QSplitter">
                 <property name="name">
-                    <cstring>unnamed</cstring>
+                    <cstring>hsplitter</cstring>
                 </property>
-                <property name="margin">
-                    <number>11</number>
-                </property>
-                <property name="spacing">
-                    <number>6</number>
-                </property>
-                <widget class="QTextBrowser">
-                    <property name="name">
-                        <cstring>server_msg_view</cstring>
-                    </property>
-                    <property name="focusPolicy">
-                        <enum>NoFocus</enum>
-                    </property>
-                </widget>
-            </vbox>
-        </widget>
-        <widget class="QGroupBox" row="0" column="0" rowspan="1" colspan="2">
-            <property name="name">
-                <cstring>GroupBox4</cstring>
-            </property>
-            <property name="sizePolicy">
-                <sizepolicy>
-                    <hsizetype>5</hsizetype>
-                    <vsizetype>5</vsizetype>
-                    <horstretch>0</horstretch>
-                    <verstretch>2</verstretch>
-                </sizepolicy>
-            </property>
-            <property name="frameShape">
-                <enum>Box</enum>
-            </property>
-            <property name="frameShadow">
-                <enum>Sunken</enum>
-            </property>
-            <property name="title">
-                <string>Station Browser</string>
-            </property>
-            <hbox>
-                <property name="name">
-                    <cstring>unnamed</cstring>
-                </property>
-                <property name="margin">
-                    <number>11</number>
-                </property>
-                <property name="spacing">
-                    <number>6</number>
+                <property name="orientation">
+                    <enum>Horizontal</enum>
                 </property>
                 <widget class="QListView">
                     <column>
@@ -240,114 +188,162 @@
                         <enum>LastColumn</enum>
                     </property>
                 </widget>
-            </hbox>
-        </widget>
-        <widget class="QGroupBox" row="1" column="1">
-            <property name="name">
-                <cstring>GroupBox3_2</cstring>
-            </property>
-            <property name="sizePolicy">
-                <sizepolicy>
-                    <hsizetype>5</hsizetype>
-                    <vsizetype>5</vsizetype>
-                    <horstretch>0</horstretch>
-                    <verstretch>1</verstretch>
-                </sizepolicy>
-            </property>
-            <property name="title">
-                <string>Incoming connections</string>
-            </property>
-            <grid>
+            </widget>
+            <widget class="QLayoutWidget">
                 <property name="name">
-                    <cstring>unnamed</cstring>
+                    <cstring>layout1</cstring>
                 </property>
-                <property name="margin">
-                    <number>11</number>
-                </property>
-                <property name="spacing">
-                    <number>6</number>
-                </property>
-                <widget class="QPushButton" row="0" column="1">
+                <hbox>
                     <property name="name">
-                        <cstring>incoming_accept_button</cstring>
+                        <cstring>unnamed</cstring>
                     </property>
-                    <property name="enabled">
-                        <bool>false</bool>
+                    <property name="margin">
+                        <number>0</number>
                     </property>
-                    <property name="text">
-                        <string>Accept</string>
-                    </property>
-                </widget>
-                <widget class="QPushButton" row="1" column="1">
-                    <property name="name">
-                        <cstring>incoming_clear_button</cstring>
-                    </property>
-                    <property name="text">
-                        <string>Clear</string>
-                    </property>
-                </widget>
-                <widget class="QListView" row="0" column="0" rowspan="3" colspan="1">
-                    <column>
-                        <property name="text">
-                            <string>Callsign</string>
+                    <widget class="QGroupBox">
+                        <property name="name">
+                            <cstring>GroupBox3</cstring>
                         </property>
-                        <property name="clickable">
-                            <bool>true</bool>
+                        <property name="sizePolicy">
+                            <sizepolicy>
+                                <hsizetype>5</hsizetype>
+                                <vsizetype>5</vsizetype>
+                                <horstretch>0</horstretch>
+                                <verstretch>1</verstretch>
+                            </sizepolicy>
                         </property>
-                        <property name="resizable">
-                            <bool>true</bool>
+                        <property name="title">
+                            <string>Messages</string>
                         </property>
-                    </column>
-                    <column>
-                        <property name="text">
-                            <string>Name</string>
+                        <vbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <property name="margin">
+                                <number>11</number>
+                            </property>
+                            <property name="spacing">
+                                <number>6</number>
+                            </property>
+                            <widget class="QTextBrowser">
+                                <property name="name">
+                                    <cstring>server_msg_view</cstring>
+                                </property>
+                                <property name="focusPolicy">
+                                    <enum>NoFocus</enum>
+                                </property>
+                            </widget>
+                        </vbox>
+                    </widget>
+                    <widget class="QGroupBox">
+                        <property name="name">
+                            <cstring>GroupBox3_2</cstring>
                         </property>
-                        <property name="clickable">
-                            <bool>true</bool>
+                        <property name="sizePolicy">
+                            <sizepolicy>
+                                <hsizetype>5</hsizetype>
+                                <vsizetype>5</vsizetype>
+                                <horstretch>0</horstretch>
+                                <verstretch>1</verstretch>
+                            </sizepolicy>
                         </property>
-                        <property name="resizable">
-                            <bool>true</bool>
+                        <property name="title">
+                            <string>Incoming connections</string>
                         </property>
-                    </column>
-                    <column>
-                        <property name="text">
-                            <string>Time</string>
-                        </property>
-                        <property name="clickable">
-                            <bool>true</bool>
-                        </property>
-                        <property name="resizable">
-                            <bool>true</bool>
-                        </property>
-                    </column>
-                    <property name="name">
-                        <cstring>incoming_con_view</cstring>
-                    </property>
-                    <property name="allColumnsShowFocus">
-                        <bool>true</bool>
-                    </property>
-                    <property name="resizeMode">
-                        <enum>AllColumns</enum>
-                    </property>
-                </widget>
-                <spacer row="2" column="1">
-                    <property name="name">
-                        <cstring>Spacer4</cstring>
-                    </property>
-                    <property name="orientation">
-                        <enum>Vertical</enum>
-                    </property>
-                    <property name="sizeType">
-                        <enum>Expanding</enum>
-                    </property>
-                    <property name="sizeHint">
-                        <size>
-                            <width>20</width>
-                            <height>20</height>
-                        </size>
-                    </property>
-                </spacer>
-            </grid>
+                        <grid>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <property name="margin">
+                                <number>11</number>
+                            </property>
+                            <property name="spacing">
+                                <number>6</number>
+                            </property>
+                            <widget class="QPushButton" row="0" column="1">
+                                <property name="name">
+                                    <cstring>incoming_accept_button</cstring>
+                                </property>
+                                <property name="enabled">
+                                    <bool>false</bool>
+                                </property>
+                                <property name="text">
+                                    <string>Accept</string>
+                                </property>
+                            </widget>
+                            <widget class="QPushButton" row="1" column="1">
+                                <property name="name">
+                                    <cstring>incoming_clear_button</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>Clear</string>
+                                </property>
+                            </widget>
+                            <widget class="QListView" row="0" column="0" rowspan="3" colspan="1">
+                                <column>
+                                    <property name="text">
+                                        <string>Callsign</string>
+                                    </property>
+                                    <property name="clickable">
+                                        <bool>true</bool>
+                                    </property>
+                                    <property name="resizable">
+                                        <bool>true</bool>
+                                    </property>
+                                </column>
+                                <column>
+                                    <property name="text">
+                                        <string>Name</string>
+                                    </property>
+                                    <property name="clickable">
+                                        <bool>true</bool>
+                                    </property>
+                                    <property name="resizable">
+                                        <bool>true</bool>
+                                    </property>
+                                </column>
+                                <column>
+                                    <property name="text">
+                                        <string>Time</string>
+                                    </property>
+                                    <property name="clickable">
+                                        <bool>true</bool>
+                                    </property>
+                                    <property name="resizable">
+                                        <bool>true</bool>
+                                    </property>
+                                </column>
+                                <property name="name">
+                                    <cstring>incoming_con_view</cstring>
+                                </property>
+                                <property name="allColumnsShowFocus">
+                                    <bool>true</bool>
+                                </property>
+                                <property name="resizeMode">
+                                    <enum>AllColumns</enum>
+                                </property>
+                            </widget>
+                            <spacer row="2" column="1">
+                                <property name="name">
+                                    <cstring>Spacer4</cstring>
+                                </property>
+                                <property name="orientation">
+                                    <enum>Vertical</enum>
+                                </property>
+                                <property name="sizeType">
+                                    <enum>Expanding</enum>
+                                </property>
+                                <property name="sizeHint">
+                                    <size>
+                                        <width>20</width>
+                                        <height>20</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                        </grid>
+                    </widget>
+                </hbox>
+            </widget>
         </widget>
     </grid>
 </widget>

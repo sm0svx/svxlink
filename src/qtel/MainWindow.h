@@ -171,19 +171,20 @@ class MainWindow : public MainWindowBase, public SigC::Object
   private:    
     typedef QMap<QListViewItem *, QString> SelectMap;
   
-    EchoLink::Directory &   dir;
-    QTimer *  	      	    refresh_call_list_timer;
-    bool      	      	    is_busy;
-    QLabel *  	      	    status_indicator;
-    std::string       	    old_server_msg;
-    QPopupMenu *      	    station_view_popup;
-    int       	      	    station_view_popup_add;
-    int       	      	    station_view_popup_add_named;
-    int       	      	    station_view_popup_remove;
-    Async::AudioIO 	    *audio_io;
-    SelectMap 	      	    select_map;
-    MsgHandler		    *msg_handler;
-    Async::AudioIO 	    *msg_audio_io;
+    EchoLink::Directory &     	  dir;
+    QTimer *  	      	      	  refresh_call_list_timer;
+    bool      	      	      	  is_busy;
+    QLabel *  	      	      	  status_indicator;
+    std::string       	      	  old_server_msg;
+    QPopupMenu *      	      	  station_view_popup;
+    int       	      	      	  station_view_popup_add;
+    int       	      	      	  station_view_popup_add_named;
+    int       	      	      	  station_view_popup_remove;
+    Async::AudioIO 	      	  *audio_io;
+    SelectMap 	      	      	  select_map;
+    MsgHandler		      	  *msg_handler;
+    Async::AudioIO 	      	  *msg_audio_io;
+    EchoLink::StationData::Status prev_status;
     
     MainWindow(const MainWindow&);
     MainWindow operator=(const MainWindow&);

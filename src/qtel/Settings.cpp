@@ -39,6 +39,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <qmessagebox.h>
 #include <qspinbox.h>
 #include <qcheckbox.h>
+#include <qstringlist.h>
+
 
 
 /****************************************************************************
@@ -91,10 +93,13 @@ using namespace std;
 
 #define CONF_AUDIO_DEVICE     	      CONF_APP_NAME "/AudioDevice"
 #define CONF_USE_FULL_DUPLEX          CONF_APP_NAME "/UseFullDuplex"
+#define CONF_CONNECT_SOUND            CONF_APP_NAME "/ConnectSound"
 
 #define CONF_BOOKMARKS 	      	      CONF_APP_NAME "/Bookmarks"
 #define CONF_MAIN_WINDOW_SIZE_WIDTH   CONF_APP_NAME "/MwWidth"
 #define CONF_MAIN_WINDOW_SIZE_HEIGHT  CONF_APP_NAME "/MwHeight"
+#define CONF_VSPLITTER_SIZES  	      CONF_APP_NAME "/VSplitterSizes"
+#define CONF_HSPLITTER_SIZES  	      CONF_APP_NAME "/HSplitterSizes"
 
 #define CONF_INFO_DEFAULT     	      "Running Qtel, an EchoLink client for " \
       	      	      	      	      "Linux"
@@ -105,6 +110,7 @@ using namespace std;
 
 #define CONF_AUDIO_DEVICE_DEFAULT 	"/dev/dsp"
 #define CONF_USE_FULL_DUPLEX_DEFAULT    false
+#define CONF_CONNECT_SOUND_DEFAULT 	"/usr/share/qtel/sounds/connect.raw"
 
 
 
@@ -207,6 +213,7 @@ void Settings::showDialog(void)
 
   settings_dialog.audio_device->setText(m_audio_device);
   settings_dialog.use_full_duplex->setChecked(m_use_full_duplex);
+  settings_dialog.connect_sound->setText(m_connect_sound);
 
   bool cfg_done = false;
   while (!cfg_done)
@@ -236,6 +243,7 @@ void Settings::showDialog(void)
 
 	m_audio_device = settings_dialog.audio_device->text();
 	m_use_full_duplex = settings_dialog.use_full_duplex->isChecked();
+	m_connect_sound = settings_dialog.connect_sound->text();
 
 	QSettings qsettings;
 	qsettings.insertSearchPath(QSettings::Windows, CONF_SEARCH_PATH);
@@ -251,6 +259,7 @@ void Settings::showDialog(void)
       	
 	qsettings.writeEntry(CONF_AUDIO_DEVICE, m_audio_device);
 	qsettings.writeEntry(CONF_USE_FULL_DUPLEX, m_use_full_duplex);
+	qsettings.writeEntry(CONF_CONNECT_SOUND, m_connect_sound);
       	
 	configurationUpdated();
 	
@@ -287,12 +296,43 @@ void Settings::readSettings(void)
       CONF_AUDIO_DEVICE_DEFAULT);
   m_use_full_duplex = qsettings.readBoolEntry(CONF_USE_FULL_DUPLEX,
       CONF_USE_FULL_DUPLEX_DEFAULT);
+  m_connect_sound = qsettings.readEntry(CONF_CONNECT_SOUND,
+      CONF_CONNECT_SOUND_DEFAULT);
   
   m_bookmarks = qsettings.readListEntry(CONF_BOOKMARKS);
   
   m_main_window_size =
       QSize(qsettings.readNumEntry(CONF_MAIN_WINDOW_SIZE_WIDTH, 0),
       	    qsettings.readNumEntry(CONF_MAIN_WINDOW_SIZE_HEIGHT, 0));
+  QStringList::const_iterator it;
+  m_vsplitter_sizes.clear();
+  QStringList str_list = qsettings.readListEntry(CONF_VSPLITTER_SIZES);
+  if (str_list.size() != 2)
+  {
+    for (it=str_list.begin(); it!=str_list.end(); ++it)
+    {
+      m_vsplitter_sizes.push_back(atoi((*it).latin1()));
+    }
+  }
+  else
+  {
+    m_vsplitter_sizes.push_back(200);
+    m_vsplitter_sizes.push_back(150);
+  }
+  m_hsplitter_sizes.clear();
+  str_list = qsettings.readListEntry(CONF_HSPLITTER_SIZES);
+  if (str_list.size() != 2)
+  {
+    for (it=str_list.begin(); it!=str_list.end(); ++it)
+    {
+      m_hsplitter_sizes.push_back(atoi((*it).latin1()));
+    }
+  }
+  else
+  {
+    m_hsplitter_sizes.push_back(130);
+    m_hsplitter_sizes.push_back(540);
+  }
   
   if (m_callsign.isEmpty() || m_password.isEmpty() || m_name.isEmpty())
   {
@@ -318,7 +358,37 @@ void Settings::setMainWindowSize(QSize size)
   qsettings.insertSearchPath(QSettings::Windows, CONF_SEARCH_PATH);
   qsettings.writeEntry(CONF_MAIN_WINDOW_SIZE_WIDTH, size.width());
   qsettings.writeEntry(CONF_MAIN_WINDOW_SIZE_HEIGHT, size.height());
-} /* Settings::setBookmarks */
+} /* Settings::setMainWindowSize */
+
+
+void Settings::setVSplitterSizes(QValueList<int> sizes)
+{
+  m_vsplitter_sizes = sizes;
+  QStringList str_list;
+  QValueList<int>::const_iterator it;
+  for (it=sizes.begin(); it!=sizes.end(); ++it)
+  {
+    str_list.push_back(QString("%1").arg(*it));
+  }
+  QSettings qsettings;
+  qsettings.insertSearchPath(QSettings::Windows, CONF_SEARCH_PATH);
+  qsettings.writeEntry(CONF_VSPLITTER_SIZES, str_list);
+} /* Settings::setVSplitterSizes */
+
+
+void Settings::setHSplitterSizes(QValueList<int> sizes)
+{
+  m_hsplitter_sizes = sizes;
+  QStringList str_list;
+  QValueList<int>::const_iterator it;
+  for (it=sizes.begin(); it!=sizes.end(); ++it)
+  {
+    str_list.push_back(QString("%1").arg(*it));
+  }
+  QSettings qsettings;
+  qsettings.insertSearchPath(QSettings::Windows, CONF_SEARCH_PATH);
+  qsettings.writeEntry(CONF_HSPLITTER_SIZES, str_list);
+} /* Settings::setHSplitterSizes */
 
 
 

@@ -173,12 +173,17 @@ class Settings : public SigC::Object
     
     const QString& audioDevice(void) const { return m_audio_device; }
     bool useFullDuplex(void) const { return m_use_full_duplex; }
+    const QString& connectSound(void) const { return m_connect_sound; }
     
     void setBookmarks(const QStringList &bookmarks);
     const QStringList& bookmarks(void) const { return m_bookmarks; }
     
     QSize mainWindowSize(void) const { return m_main_window_size; }
     void setMainWindowSize(QSize size);
+    QValueList<int> vSplitterSizes() const { return m_vsplitter_sizes; }
+    void setVSplitterSizes(QValueList<int> sizes);
+    QValueList<int> hSplitterSizes() const { return m_hsplitter_sizes; }
+    void setHSplitterSizes(QValueList<int> sizes);
     
     SigC::Signal0<void> configurationUpdated;
     
@@ -201,10 +206,13 @@ class Settings : public SigC::Object
 
     QString   	      m_audio_device;
     bool      	      m_use_full_duplex;
+    QString   	      m_connect_sound;
 
     QStringList       m_bookmarks;
     
     QSize     	      m_main_window_size;
+    QValueList<int>   m_vsplitter_sizes;
+    QValueList<int>   m_hsplitter_sizes;
     
     Settings(void);
     

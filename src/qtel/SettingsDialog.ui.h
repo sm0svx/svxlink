@@ -6,12 +6,28 @@
 ** a constructor, and a destroy() slot in place of a destructor.
 *****************************************************************************/
 
+#include <qfiledialog.h>
 #include <EchoLinkStationData.h>
 
 void SettingsDialog::init()
 {
     my_callsign->setMaxLength(
-	    EchoLink::StationData::MAXCALL);
+     EchoLink::StationData::MAXCALL);
     my_location->setMaxLength(
-	    EchoLink::StationData::MAXDESC);
+     EchoLink::StationData::MAXDESC);
+}
+
+
+void SettingsDialog::browseConnectSound()
+{
+    QString s = QFileDialog::getOpenFileName(
+                    connect_sound->text(),
+                    "Raw Sound Files (*.raw)",
+                    this,
+                    "choose connect sound browse dialog",
+                    "Choose a connect sound file" );
+    if (!s.isNull())
+    {
+        connect_sound->setText(s);
+    }
 }
