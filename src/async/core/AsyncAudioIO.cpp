@@ -211,7 +211,8 @@ bool AudioIO::open(Mode mode)
     return true;
   }
   
-  bool open_ok = audio_dev->open(static_cast<AudioDevice::Mode>(mode));
+    /* FIXME: Yes, I knwow... Ugly cast... */
+  bool open_ok = audio_dev->open((AudioDevice::Mode)mode);
   if (open_ok)
   {
     this->mode = mode;
