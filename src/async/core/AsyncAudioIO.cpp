@@ -281,11 +281,13 @@ int AudioIO::samplesToWrite(void) const
 
 void AudioIO::flushSamples(void)
 {
-  if (write_fifo->samplesInFifo() == 0)
+  //printf("AudioIO::flushSamples\n");
+  do_flush = true;
+  audio_dev->flushSamples();
+  if (write_fifo->empty())
   {
     flushSamplesInDevice();
   }
-  do_flush = true;
 } /* AudioIO::flushSamples */
 
 
