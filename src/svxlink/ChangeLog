@@ -27,6 +27,8 @@
 
 * ModuleEchoLink: Improved directory list handling.
 
+* Bugfix in ModuleParrot: The TX would hang some times.
+
 
 
  0.2.0 -- 27 May 2004
