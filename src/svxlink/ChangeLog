@@ -20,6 +20,9 @@
 
 * Now announcing the CTCSS frequency if REPORT_CTCSS is set.
 
+* ModuleParrot bugfix: Leading zeros were skipped when reading back
+  entered DTMF digits.
+
 
 
  0.3.0 -- 26 Sep 2004
