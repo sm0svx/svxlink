@@ -146,7 +146,7 @@ using namespace EchoLink;
  *------------------------------------------------------------------------
  */
 MainWindow::MainWindow(Directory &dir)
-  : dir(dir), refresh_call_list_timer(0), is_busy(false)
+  : dir(dir), refresh_call_list_timer(0), is_busy(false), audio_io("/dev/dsp")
 {
   connect(explorerView, SIGNAL(currentChanged(QListViewItem*)),
       	  this, SLOT(explorerViewClicked(QListViewItem*)));
@@ -288,7 +288,7 @@ void MainWindow::incomingConnection(const string& remote_call,
     item = new QListViewItem(incoming_con_view, remote_call.c_str(),
 	remote_name.c_str(), time_str);
     
-    audio_io.writeFile("/usr/share/qtel/sounds/connect.raw");
+    //audio_io.writeFile("/usr/share/qtel/sounds/connect.raw");
   }
   else
   {
