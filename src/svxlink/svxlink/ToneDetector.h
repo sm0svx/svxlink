@@ -140,7 +140,7 @@ class ToneDetector : public SigC::Object
      * Bugs:  	
      *------------------------------------------------------------------------
      */
-    ToneDetector(int tone_hz);
+    ToneDetector(int tone_hz, int base_N);
     ~ToneDetector(void) {}
     
     int processSamples(short *buf, int len);

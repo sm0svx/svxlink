@@ -71,7 +71,7 @@
 //#define TARGET_FREQUENCY	941.0	//941 Hz
 //#define BASE_N	205	//Block size
 //#define N	201	//Block size
-#define BASE_N	205	//Block size
+//#define BASE_N	205	//Block size
 #define PI  M_PI
 
 //#define THRESHOLD   5000000000000
@@ -133,15 +133,15 @@
  * Bugs:      
  *------------------------------------------------------------------------
  */
-ToneDetector::ToneDetector(int tone_hz)
+ToneDetector::ToneDetector(int tone_hz, int base_N)
   : tone(tone_hz), block_pos(0), is_activated(0)
 {
   int 	    k;
   FLOATING  floatN;
   FLOATING  omega;
 
-  floatN = (FLOATING) BASE_N;
-  N = BASE_N;
+  floatN = (FLOATING) base_N;
+  N = base_N;
   k = (int) (0.5 + ((2 * floatN * tone_hz) / SAMPLING_RATE));
   //k = (int)(((floatN * tone_hz) / SAMPLING_RATE));
   //N = (int)(k * SAMPLING_RATE / tone_hz + 0.5);

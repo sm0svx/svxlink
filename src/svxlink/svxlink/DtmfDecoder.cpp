@@ -74,7 +74,7 @@ class DtmfToneDetector : public ToneDetector
 {
   public:
     DtmfToneDetector(bool is_row, int pos, int fq)
-      : ToneDetector(fq), is_row(is_row), pos(pos)
+      : ToneDetector(fq, 205), is_row(is_row), pos(pos)
     {
       ToneDetector::activated.connect(
       	  slot(this, &DtmfToneDetector::onToneActivated));
