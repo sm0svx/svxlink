@@ -1,0 +1,360 @@
+/**
+@file	 AsyncSampleFifo.cpp
+@brief   A FIFO for handling samples
+@author  Tobias Blomberg / SM0SVX
+@date	 2004-03-07
+
+A_detailed_description_for_this_file
+
+\verbatim
+<A brief description of the program or library this file belongs to>
+Copyright (C) 2003 Tobias Blomberg / SM0SVX
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+\endverbatim
+*/
+
+
+
+/****************************************************************************
+ *
+ * System Includes
+ *
+ ****************************************************************************/
+
+#include <cstdio>
+#include <cstring>
+
+
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Local Includes
+ *
+ ****************************************************************************/
+
+#include "AsyncSampleFifo.h"
+
+
+
+/****************************************************************************
+ *
+ * Namespaces to use
+ *
+ ****************************************************************************/
+
+using namespace std;
+using namespace Async;
+
+
+/****************************************************************************
+ *
+ * Defines & typedefs
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Local class definitions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Prototypes
+ *
+ ****************************************************************************/
+
+static inline int min(int a, int b);
+
+
+/****************************************************************************
+ *
+ * Exported Global Variables
+ *
+ ****************************************************************************/
+
+
+
+
+/****************************************************************************
+ *
+ * Local Global Variables
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Public member functions
+ *
+ ****************************************************************************/
+
+
+SampleFifo::SampleFifo(int fifo_size)
+  : fifo_size(fifo_size), head(0), tail(0), is_stopped(false),
+    do_overwrite(false)
+{
+  fifo = new short[fifo_size];
+} /* SampleFifo */
+
+
+SampleFifo::~SampleFifo(void)
+{
+  delete [] fifo;
+} /* ~SampleFifo */
+
+
+int SampleFifo::addSamples(short *samples, int count)
+{
+  /*
+  printf("SampleFifo::addSamples: count=%d is_stopped=%s  empty=%s\n",
+      	  count, is_stopped ? "true" : "false", empty() ? "true" : "false");
+  */
+  
+  int samples_written = 0;
+  if (!is_stopped && empty())
+  {
+    samples_written = writeSamples(samples, count);
+  }
+  
+  while (samples_written < count)
+  {
+    int next_head = (head < fifo_size-1) ? head + 1 : 0;
+    if (next_head == tail)
+    {
+      if (do_overwrite)
+      {
+      	tail = (tail < fifo_size-1) ? tail + 1 : 0;
+      }
+      else
+      {
+      	fifoFull(true);
+      	break;
+      }
+    }
+    fifo[head] = samples[samples_written++];
+    head = next_head;
+  }
+  
+  return samples_written;
+  
+} /* addSamples */
+
+
+void SampleFifo::stopOutput(bool stop)
+{
+  /*
+  printf("SampleFifo::stopOutput: stop=%s  is_stopped=%s\n",
+      stop ? "true" : "false", is_stopped ? "true" : "false");
+  */
+    
+  if (stop == is_stopped)
+  {
+    return;
+  }
+  
+  if (!stop)
+  {
+    writeSamplesFromFifo();
+  }
+  
+  is_stopped = stop;
+} /* stopOutput */
+
+
+bool SampleFifo::full(void) const
+{
+  return !do_overwrite && (((head + 1) % fifo_size) == tail);
+} /* full */
+
+
+int SampleFifo::samplesInFifo(void) const
+{
+  return (head - tail + fifo_size) % fifo_size;
+} /* SampleFifo::samplesInFifo */
+
+
+void SampleFifo::writeBufferFull(bool is_full)
+{
+  //printf("SampleFifo::writeBufferFull: is_full=%s\n",
+  //    	  is_full ? "true" : "false");
+  
+  if (!is_full && !is_stopped && !empty())
+  {
+    writeSamplesFromFifo();
+  }
+} /* writeBufferFull */
+
+
+int SampleFifo::readSamples(short *samples, int count)
+{
+  int was_full = full();
+  
+  int tot_samples_read = 0;
+  do
+  {
+    int samples_to_read = min(count, samplesInFifo());
+    int to_end_of_fifo = fifo_size - tail;
+    samples_to_read = min(samples_to_read, to_end_of_fifo);
+    memcpy(samples+tot_samples_read, fifo+tail,
+      	    samples_to_read * sizeof(short));
+    //printf("SampleFifo::writeSamplesFromFifo: samples_to_write=%d "
+      //	   "samples_written=%d\n", samples_to_write, samples_written);
+    tail = (tail + samples_to_read) % fifo_size;
+    count -= samples_to_read;
+    tot_samples_read += samples_to_read;
+  } while((count > 0) && !empty());
+  
+  if (was_full)
+  {
+    fifoFull(false);
+    if (empty())
+    {
+      allSamplesWritten();
+    }
+  }
+  else
+  {
+    allSamplesWritten();
+  }
+  
+  return tot_samples_read;
+  
+} /* SampleFifo::readSamples */
+
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+/*
+ *------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
+ */
+
+
+
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
+
+/*
+ *----------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
+static inline int min(int a, int b)
+{
+  return (a < b) ? a : b;
+} /* min */
+ 
+
+void SampleFifo::writeSamplesFromFifo(void)
+{
+  if (empty())
+  {
+    return;
+  }
+  
+  int was_full = full();
+  
+  int samples_to_write;
+  int samples_written;
+  do
+  {
+    int samples_in_fifo = (head + fifo_size - tail) % fifo_size;
+    samples_to_write = min(MAX_WRITE_SIZE, samples_in_fifo);
+    int to_end_of_fifo = fifo_size - tail;
+    samples_to_write = min(samples_to_write, to_end_of_fifo);
+    samples_written = writeSamples(fifo+tail, samples_to_write);
+    //printf("SampleFifo::writeSamplesFromFifo: samples_to_write=%d "
+      //	   "samples_written=%d\n", samples_to_write, samples_written);
+    tail = (tail + samples_written) % fifo_size;
+  } while((samples_to_write == samples_written) && !empty());
+
+  /*  
+  if (was_full)
+  {
+    fifoFull(false);
+    if (empty())
+    {
+      allSamplesWritten();
+    }
+  }
+  else
+  {
+    allSamplesWritten();
+  }
+  */
+  
+  if (was_full && !full())
+  {
+    fifoFull(false);
+  }
+  
+  if (empty())
+  {
+    allSamplesWritten();
+  }
+  
+} /* writeSamplesFromFifo */
+
+
+
+
+
+
+/*
+ * This file has not been truncated
+ */
+
