@@ -144,6 +144,7 @@ int AudioPacer::audioInput(short *samples, int count)
     {
       //printf("Prebuffering done...\n");
       samples_written += prebuf_samples;
+      //printf("AudioPacer::audioInput1: Calling audioOutput()\n");
       samples_written = audioOutput(samples, samples_written);
       samples_written += audioInput(samples + samples_written,
       	      	      	      	    count - samples_written);
@@ -154,6 +155,7 @@ int AudioPacer::audioInput(short *samples, int count)
     else
     {
       	// FIXME: Take care of the case where not all samples were written
+      //printf("AudioPacer::audioInput2: Calling audioOutput()\n");
       audioOutput(samples, samples_written);
     }
   }
@@ -177,8 +179,11 @@ int AudioPacer::audioInput(short *samples, int count)
 
 void AudioPacer::flushAllAudio(void)
 {
+  //printf("AudioPacer::flushAllAudio: buf_pos=%d\n", buf_pos);
+  
   if (buf_pos == 0)
   {
+    //printf("AudioPacer::flushAllAudio: Calling allAudioFlushed()\n");
     allAudioFlushed();
   }
   else
@@ -245,12 +250,14 @@ void AudioPacer::outputNextBlock(Timer *t)
   }
   
     // FIXME: Take care of the case where not all samples were written
+  //printf("AudioPacer::outputNextBlock: Calling audioOutput()\n");
   audioOutput(buf, buf_pos);
   buf_pos = 0;
   audioInputBufFull(false);
   
-  if (do_flush)
+  if (do_flush && (buf_pos == 0))
   {
+    //printf("AudioPacer::outputNextBlock: Calling allAudioFlushed()\n");
     allAudioFlushed();
     do_flush = false;
   }
