@@ -129,7 +129,7 @@ Logic::Logic(Config &cfg, const string& name)
     write_msg_flush_timer(0), active_module(0), module_tx_fifo(0),
     cmd_tmo_timer(0), logic_transmit(false), anti_flutter(false),
     prev_digit('?'), exec_cmd_on_sql_close(0), exec_cmd_on_sql_close_timer(0),
-    rgr_sound_timer(0), rgr_sound_delay(-1)
+    rgr_sound_timer(0), rgr_sound_delay(-1), report_ctcss(0)
 {
 
 } /* Logic::Logic */
@@ -189,6 +189,11 @@ bool Logic::initialize(void)
   if (cfg().getValue(name(), "RGR_SOUND_DELAY", value))
   {
     rgr_sound_delay = atoi(value.c_str());
+  }
+  
+  if (cfg().getValue(name(), "REPORT_CTCSS", value))
+  {
+    report_ctcss = atof(value.c_str());
   }
   
   loadModules();
@@ -270,7 +275,7 @@ void Logic::playMsg(const string& msg, const Module *module)
 } /* Logic::playMsg */
 
 
-void Logic::playNumber(int number)
+void Logic::playNumber(float number)
 {
   module_tx_fifo->stopOutput(true);
   msg_handler->playNumber(number);
@@ -747,6 +752,12 @@ void Logic::processCommandQueue(void)
     {
       playMsg("online");
       spellWord(callsign());
+      if (report_ctcss > 0)
+      {
+      	playMsg("pl_is");
+      	playNumber(report_ctcss);
+	playMsg("hz");
+      }
       if (active_module != 0)
       {
 	playMsg("active_module");

@@ -13,7 +13,7 @@ class MsgHandler : public SigC::Object
     
     void playFile(const std::string& path);
     void playMsg(const std::string& context, const std::string& msg);
-    void playNumber(int number);
+    void playNumber(float number);
     void spellWord(const std::string& word);
     void playSilence(int length);
     void writeBufferFull(bool is_full);

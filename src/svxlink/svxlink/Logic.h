@@ -155,7 +155,7 @@ class Logic : public SigC::Object
     
     virtual void playFile(const std::string& path);
     virtual void playMsg(const std::string& msg, const Module *module=0);
-    virtual void playNumber(int number);
+    virtual void playNumber(float number);
     virtual void spellWord(const std::string& word);
     virtual void playSilence(int length);
     void audioFromModule(short *samples, int count);
@@ -206,6 +206,7 @@ class Logic : public SigC::Object
     Async::Timer      	    *exec_cmd_on_sql_close_timer;
     Async::Timer      	    *rgr_sound_timer;
     int       	      	    rgr_sound_delay;
+    float       	    report_ctcss;
     
     void allModuleSamplesWritten(void);
     void transmitCheck(void);
