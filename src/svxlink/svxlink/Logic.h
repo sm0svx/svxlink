@@ -173,7 +173,9 @@ class Logic : public SigC::Object
     //virtual int audioReceived(short *samples, int count) { return count; }
     
     virtual void transmit(bool do_transmit);
+    virtual int transmitAudio(short *samples, int count);
     
+    void clearPendingSamples(void);
     
   private:
     Async::Config     	&m_cfg;

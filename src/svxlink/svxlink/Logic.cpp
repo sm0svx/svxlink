@@ -186,7 +186,7 @@ bool Logic::initialize(void)
   tx().allSamplesFlushed.connect(slot(this, &Logic::allTxSamplesFlushed));
   
   msg_handler = new MsgHandler(sounds);
-  msg_handler->writeAudio.connect(slot(m_tx, &Tx::transmitAudio));
+  msg_handler->writeAudio.connect(slot(this, &Logic::transmitAudio));
   msg_handler->allMsgsWritten.connect(slot(this, &Logic::allMsgsWritten));
   tx().transmitBufferFull.connect(
       	  slot(msg_handler, &MsgHandler::writeBufferFull));
@@ -194,7 +194,7 @@ bool Logic::initialize(void)
   module_tx_fifo = new SampleFifo(10*8000); // 10 seconds
   module_tx_fifo->allSamplesWritten.connect(
       	  slot(this, &Logic::allModuleSamplesWritten));
-  module_tx_fifo->writeSamples.connect(slot(m_tx, &Tx::transmitAudio));
+  module_tx_fifo->writeSamples.connect(slot(this, &Logic::transmitAudio));
   tx().transmitBufferFull.connect(
       	  slot(module_tx_fifo, &SampleFifo::writeBufferFull));
   module_tx_fifo->stopOutput(true);
@@ -399,6 +399,17 @@ void Logic::transmit(bool do_transmit)
 } /* Logic::transmit */
 
 
+int Logic::transmitAudio(short *samples, int count)
+{
+  return tx().transmitAudio(samples, count);
+} /* Logic::transmitAudio */
+
+
+void Logic::clearPendingSamples(void)
+{
+  msg_handler->clear();
+  module_tx_fifo->clear();
+} /* Logic::clearPendingSamples */
 
 
 
