@@ -127,6 +127,7 @@ class ModuleParrot : public Module
     Async::SampleFifo *fifo;
     bool      	      squelch_is_open;
     AudioPacer	      pacer;
+    bool      	      deactivate_when_done;
     
     const char *name(void) const { return "Parrot"; }
     void activateInit(void);

@@ -138,7 +138,7 @@ extern "C" {
 ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       	      	      	   const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), fifo(0), squelch_is_open(false),
-    pacer(8000, 800, 1000)
+    pacer(8000, 800, 1000), deactivate_when_done(false)
 {
   cout << "\tModule " << name()
        << " v" SVXLINK_VERSION " starting...\n";
@@ -231,6 +231,7 @@ bool ModuleParrot::initialize(void)
  */
 void ModuleParrot::activateInit(void)
 {
+  deactivate_when_done = false;
   fifo->clear();
 } /* activateInit */
 
@@ -295,7 +296,14 @@ void ModuleParrot::dtmfCmdReceived(const string& cmd)
   
   if (cmd == "")
   {
-    deactivateMe();
+    if (fifo->empty())
+    {
+      deactivateMe();
+    }
+    else
+    {
+      deactivate_when_done = true;
+    }
   }
   else
   {
@@ -362,6 +370,10 @@ void ModuleParrot::allSamplesWritten(void)
   transmit(false);
   fifo->stopOutput(true);
   setIdle(true);
+  if (deactivate_when_done)
+  {
+    deactivateMe();
+  }
 } /* ModuleParrot::allSamplesWritten */
 
 
