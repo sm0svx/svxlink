@@ -385,6 +385,10 @@ moc_%.cpp:	%.h
 	if grep -q Q_OBJECT $<; then \
 	  $(ECHO) --- Running the Meta Object Compiler on $(BOLD)$<$(NBOLD)...;\
 	  $(QTMOC) $< > $@ ;\
+	else \
+	  $(ECHO) "*** WARNING: Trying to run the Qt Meta Object Compiler on " \
+	      	  "a non-qobject file "; \
+	  $(ECHO) "             (Q_OBJECT declaration missing)"; \
 	fi
 
 
