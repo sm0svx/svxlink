@@ -126,7 +126,8 @@ using namespace Async;
 Logic::Logic(Config &cfg, const string& name)
   : m_cfg(cfg), m_name(name), m_rx(0), m_tx(0), msg_handler(0),
     write_msg_flush_timer(0), active_module(0), module_tx_fifo(0),
-    cmd_tmo_timer(0), logic_transmit(false)
+    cmd_tmo_timer(0), logic_transmit(false), anti_flutter(false),
+    prev_digit('?')
 {
 
 } /* Logic::Logic */
@@ -354,13 +355,41 @@ void Logic::dtmfDigitDetected(char digit)
     {
       cmd_queue.push_back(received_digits);
       received_digits = "";
-      cmd_tmo_timer->setEnable(false);    
+      cmd_tmo_timer->setEnable(false);
+      anti_flutter = false;
     }
     else if (received_digits.size() < 10)
     {
       cmd_tmo_timer->reset();
       cmd_tmo_timer->setEnable(true);
-      received_digits += digit;
+      if (digit == 'A')
+      {
+      	anti_flutter = true;
+	prev_digit = '?';
+      }
+      else if (digit == 'B')
+      {
+      	if (anti_flutter && (prev_digit != '?'))
+	{
+	  received_digits += prev_digit;
+	  prev_digit = '?';
+	}
+      }
+      else
+      {
+      	if (anti_flutter)
+	{
+      	  if (digit != prev_digit)
+	  {
+      	    received_digits += digit;
+	    prev_digit = digit;
+	  }
+	}
+	else
+	{
+      	  received_digits += digit;
+	}
+      }
     }
   }
   
@@ -596,6 +625,8 @@ void Logic::loadModule(const string& module_cfg_name)
 void Logic::cmdTimeout(Timer *t)
 {
   received_digits = "";
+  anti_flutter = false;
+  prev_digit = '?';
 } /* Logic::cmdTimeout */
 
 

@@ -198,6 +198,8 @@ class Logic : public SigC::Object
     Async::Timer      	    *cmd_tmo_timer;
     bool      	      	    logic_transmit;
     std::list<std::string>  cmd_queue;
+    bool      	      	    anti_flutter;
+    char      	      	    prev_digit;
     
     void allModuleSamplesWritten(void);
     void transmitCheck(void);
