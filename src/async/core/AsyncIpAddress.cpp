@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include <cmath>
 
 
 /****************************************************************************
@@ -163,6 +164,34 @@ bool IpAddress::isUnicast(void) const
   return is_unicast;
   
 } /* IpAddress::isUnicast */
+
+
+bool IpAddress::isWithinSubet(const std::string& subnet) const
+{
+  string::const_iterator slash;
+  slash = find(subnet.begin(), subnet.end(), '/');
+  if (slash == subnet.end())
+  {
+    return false;
+  }
+  
+  string ip_str(subnet.begin(), slash);
+  Ip4Addr ip;
+  if (inet_aton(ip_str.c_str(), &ip) == 0)  // Address is invalid
+  {
+    return false;
+  }
+  
+  if (++slash == subnet.end())
+  {
+    return false;
+  }
+  string mask_str(slash, subnet.end());
+  unsigned long mask = (unsigned long)pow(2.0, atoi(mask_str.c_str())) - 1;
+  
+  return (m_addr.s_addr & mask) == (ip.s_addr & mask);
+  
+} /* IpAddress::isWithinSubet */
 
 
 string IpAddress::toString(void) const

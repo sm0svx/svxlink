@@ -151,6 +151,15 @@ class IpAddress
     bool isUnicast(void) const;
     
     /**
+     * @brief 	Check if the IP address is within the given netmask
+     * @param 	subnet	The subnet to use in the check. The subnet should
+     *	      	      	be given on the form a.b.c.d/m (e.g. 192.168.1.0/24).
+     * @return	Return \em true if within the given subnet or \em false
+     *	      	if it is not.
+     */
+    bool isWithinSubet(const std::string& subnet) const;
+    
+    /**
      * @brief 	Return the string representation of the IP address.
      * @return  The IP address string
      */
