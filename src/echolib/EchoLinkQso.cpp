@@ -283,7 +283,7 @@ bool Qso::disconnect(void)
   
   if (state != STATE_BYE_RECEIVED)
   {
-    //sendInfoPacket();
+    //sendInfoData();
     unsigned char bye[50];
     int length = rtp_make_bye(bye, 0, "jan2002", 1);
     int ret = Dispatcher::instance()->sendCtrlMsg(remote_ip, bye, length);
@@ -301,20 +301,40 @@ bool Qso::disconnect(void)
 } /* Qso::disconnect */
 
 
-bool Qso::sendChatData(const string& msg, bool add_callsign)
+bool Qso::sendInfoData(const string& info)
+{
+  string info_msg("oNDATA\r");
+  if (info.empty())
+  {
+    info_msg += local_stn_info;
+  }
+  else
+  {
+    info_msg += info;
+  }
+  replace(info_msg.begin(), info_msg.end(), '\n', '\r');
+
+  int ret = Dispatcher::instance()->sendAudioMsg(remote_ip, info_msg.c_str(),
+      info_msg.length()+1);
+  if (ret == -1)
+  {
+    perror("sendAudioMsg in Qso::sendInfoData");
+    return false;
+  }
+  
+  return true;
+  
+} /* Qso::sendInfoData */
+
+
+bool Qso::sendChatData(const string& msg)
 {
   if (state != STATE_CONNECTED)
   {
     return false;
   }
   
-  string buf("oNDATA");
-  if (add_callsign)
-  {
-    buf += callsign + '>';
-  }
-  buf += msg + "\r\n";
-  
+  string buf("oNDATA" + callsign + '>' + msg + "\r\n");
   int ret = Dispatcher::instance()->sendAudioMsg(remote_ip, buf.c_str(),
       buf.length()+1);
   if (ret == -1)
@@ -540,25 +560,57 @@ void Qso::handleAudioInput(unsigned char *buf, int len)
 
 inline void Qso::handleNonAudioPacket(unsigned char *buf, int len)
 {
+  //printData(buf, len);
+
   if(memcmp(buf+1, "NDATA", 5) == 0)
   {
-    if (buf[6] == 0x0d) // Remote station info
+    if (buf[6] == 0x0d) // Remote station info / conference status
     {
       char *info_buf = reinterpret_cast<char *>(buf);
-      string info_msg(info_buf+7);
+      char *null = (char *)memchr(info_buf, 0, len);
+      if (null == 0)
+      {
+      	cerr << "Malformed info packet received:\n";
+	printData(buf, len);
+	return;
+      }
+      string info_msg(info_buf+7, null);
       replace(info_msg.begin(), info_msg.end(), '\r', '\n');
       infoMsgReceived(info_msg);
+      if (null+1 < info_buf+len)
+      {
+      	string trailing_data(null+1, info_buf+len);
+	cerr << "Trailing info data: ";
+	printData(reinterpret_cast<const unsigned char*>(null+1),
+	      	  info_buf+len-(null+1));
+      }
     }
     else  // Chat data
     {
-      string chat_msg(buf+6, buf+len);
+      char *chat_buf = reinterpret_cast<char *>(buf);
+      char *null = (char *)memchr(buf, 0, len);
+      if (null == 0)
+      {
+      	cerr << "Malformed chat packet received:\n";
+	printData(buf, len);
+	return;
+      }
+      //string chat_msg(buf+6, buf+len);
+      string chat_msg(chat_buf+6, null);
       replace(chat_msg.begin(), chat_msg.end(), '\r', '\n');
       chatMsgReceived(chat_msg);
+      if (null+1 < chat_buf+len)
+      {
+      	string trailing_data(null+1, chat_buf+len);
+	cerr << "Trailing chat data: ";
+	printData(reinterpret_cast<const unsigned char*>(null+1),
+	      	  chat_buf+len-(null+1));
+      }
     }
   }
   else
   {
-    cerr << "Unknown non-audio packet received\n";
+    cerr << "Unknown non-audio packet received:\n";
     printData(buf, len);
     return;
   }
@@ -618,24 +670,6 @@ bool Qso::sendSdesPacket(void)
 } /* Qso::sendSdesPacket */
 
 
-bool Qso::sendInfoPacket(void)
-{
-  string info_msg("oNDATA\r" + local_stn_info);
-  replace(info_msg.begin(), info_msg.end(), '\n', '\r');
-
-  int ret = Dispatcher::instance()->sendAudioMsg(remote_ip, info_msg.c_str(),
-      info_msg.length()+1);
-  if (ret == -1)
-  {
-    perror("sendAudioMsg in Qso::sendInfoPacket");
-    return false;
-  }
-  
-  return true;
-  
-} /* Qso::sendInfoPacket */
-
-
 void Qso::sendKeepAlive(Timer *timer)
 {
   if ((state == STATE_CONNECTING) &&
@@ -657,7 +691,7 @@ void Qso::setState(State state)
     this->state = state;
     if (state == STATE_CONNECTED)
     {
-      sendInfoPacket();
+      sendInfoData();
     }
     stateChange(state);
   }

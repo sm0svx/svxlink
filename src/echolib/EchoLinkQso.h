@@ -231,13 +231,18 @@ class Qso : public SigC::Object
     bool disconnect(void);
     
     /**
-     * @brief 	Send chat data to the remote station
-     * @param 	msg The message to send
-     * @param 	add_callsign  Add the local callsign at the beginning of the
-     *	      	      	      message
+     * @brief 	Send info data to the remote station
+     * @param 	info The info to send
      * @return	Returns \em true on success or \em false on failure
      */
-    bool sendChatData(const std::string& msg, bool add_callsign=true);
+    bool sendInfoData(const std::string& info="");
+    
+    /**
+     * @brief 	Send chat data to the remote station
+     * @param 	msg The message to send
+     * @return	Returns \em true on success or \em false on failure
+     */
+    bool sendChatData(const std::string& msg);
     
     /**
      * @brief 	Get the IP address of the remote station
@@ -384,7 +389,6 @@ class Qso : public SigC::Object
     inline void handleAudioPacket(unsigned char *buf, int len);
     void micAudioRead(void *buf, size_t len);
     bool sendSdesPacket(void);
-    bool sendInfoPacket(void);
     void sendKeepAlive(Async::Timer *timer);
     void setState(State state);
     void connectionTimeout(Async::Timer *timer);
