@@ -207,7 +207,7 @@ bool LocalTx::initialize(void)
   }
   if (!serial->setPin(ptt_pin, false))
   {
-    perror("ioctl");
+    perror("setPin");
     serial->close();
     serial = 0;
     return false;
@@ -268,7 +268,7 @@ void LocalTx::transmit(bool do_transmit)
   
   if (!serial->setPin(ptt_pin, is_transmitting && !tx_timeout_occured))
   {
-    perror("PTT");
+    perror("setPin");
   }
 
 } /* LocalTx::transmit */
@@ -365,7 +365,7 @@ void LocalTx::txTimeoutOccured(Timer *t)
   
   if (!serial->setPin(ptt_pin, false))
   {
-    perror("PTT");
+    perror("setPin");
   }
   
   tx_timeout_occured = true;
