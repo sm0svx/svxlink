@@ -123,13 +123,26 @@ int main(int argc, char **argv)
   }
   
   string cfg_filename(home_dir);
-  cfg_filename += "/svxlink.conf";
+  cfg_filename += "/.svxlinkrc";
   Config cfg;
-  if (!cfg.open(cfg_filename))
+  if (cfg.open(cfg_filename))
   {
-    cerr << "*** Error: Could not open config file \"" << cfg_filename
-      	 << "\"\n";
-    exit(1);
+    cout << "Using config file: " << cfg_filename << endl;
+  }
+  else
+  {
+    cfg_filename = "/etc/svxlink.conf";
+    if (cfg.open(cfg_filename))
+    {
+      cout << "Using config file: " << cfg_filename << endl;
+    }
+    else
+    {
+      cerr << "*** Error: Could not open config file. Tried both "
+      	   << "\"" << home_dir << "/.svxlinkrc\" and "
+	   << "\"/etc/svxlink.conf\"\n";
+      exit(1);
+    }
   }
   
 #if 1
