@@ -167,6 +167,7 @@ bool ModuleParrot::initialize(void)
   }
   
   fifo = new SampleFifo(atoi(fifo_len.c_str())*8000);
+  fifo->setDebugName("parrot_fifo");
   fifo->stopOutput(true);
   fifo->setOverwrite(true);
   fifo->writeSamples.connect(slot(&pacer, &AudioPacer::audioInput));
@@ -368,6 +369,8 @@ int ModuleParrot::audioFromFifo(short *samples, int count)
 
 void ModuleParrot::allSamplesWritten(void)
 {
+  //cout << "ModuleParrot::allSamplesWritten\n";
+
   transmit(false);
   fifo->stopOutput(true);
   setIdle(true);
