@@ -1,5 +1,5 @@
 # Version for the Qtel application
-QTEL=0.7.3
+QTEL=0.7.4
 QTEL_RPM_RELEASE=1
 
 # Version for the EchoLib library
