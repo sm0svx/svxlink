@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netinet/ip.h>
+#include <arpa/inet.h>
 
 #include "rtp.h"
 #include "rtpacket.h"
