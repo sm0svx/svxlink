@@ -286,7 +286,7 @@ void StationData::removeTrailingSpaces(string& str)
   }
   else
   {
-    str.clear();
+    str = "";
   }
 } /* StationData::removeTrailingSpaces */
 
