@@ -27,7 +27,7 @@ PROGS		=
 CPPPROGS      	= $(BIN)/qtel
 
 # Sources other than the main files
-PRGSRC		= MainWindow.cpp ComDialog.cpp Settings.cpp
+PRGSRC		= MainWindow.cpp ComDialog.cpp Settings.cpp MsgHandler.cpp
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -lecholib -lasyncqt

@@ -73,7 +73,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "EchoLinkDispatcher.h"
 #include "ComDialog.h"
 #include "MainWindow.h"
-
+#include "MsgHandler.h"
 
 
 /****************************************************************************
@@ -172,6 +172,7 @@ MainWindow::MainWindow(Directory &dir)
       	  this, SLOT(acceptIncoming()));
   
   audio_io = new AudioIO(Settings::instance()->audioDevice());
+  msg_audio_io = new AudioIO(Settings::instance()->audioDevice());
   
   dir.error.connect(slot(this, &MainWindow::serverError));
   dir.statusChanged.connect(slot(this, &MainWindow::statusChanged));
@@ -235,6 +236,13 @@ MainWindow::MainWindow(Directory &dir)
   directoryBusyAction->setAccel(
       QKeySequence(trUtf8("Ctrl+B", "directoryBusyAction")));
   
+  msg_handler = new MsgHandler("/", 8000);
+  msg_handler->writeAudio.connect(slot(msg_audio_io, &AudioIO::write));
+  msg_audio_io->writeBufferFull.connect(
+  	slot(msg_handler, &MsgHandler::writeBufferFull));
+  msg_audio_io->allSamplesFlushed.connect(
+  	slot(this, &MainWindow::allSamplesFlushed));
+  msg_handler->allMsgsWritten.connect(slot(this, &MainWindow::allMsgsWritten));
 } /* MainWindow::MainWindow */
 
 
@@ -242,6 +250,8 @@ MainWindow::~MainWindow(void)
 {
   delete audio_io;
   audio_io = 0;
+  delete msg_audio_io;
+  msg_audio_io = 0;
   Settings::instance()->setMainWindowSize(size());
   dir.makeOffline();
 } /* MainWindow::~MainWindow */
@@ -294,7 +304,9 @@ void MainWindow::incomingConnection(const IpAddress& remote_ip,
     item = new QListViewItem(incoming_con_view, remote_call.c_str(),
 	remote_name.c_str(), time_str);
     
-    //audio_io.writeFile("/usr/share/qtel/sounds/connect.raw");
+    msg_audio_io->open(AudioIO::MODE_WR);
+      // FIXME: Hard coded filename
+    msg_handler->playFile("/usr/share/qtel/sounds/connect.raw");
   }
   else
   {
@@ -303,7 +315,7 @@ void MainWindow::incomingConnection(const IpAddress& remote_ip,
     item->setText(2, time_str);
   }
   incoming_con_view->setSelected(item, TRUE);
-    
+  
 } /* MainWindow::incomingConnection */
 
 
@@ -358,6 +370,20 @@ void MainWindow::statusChanged(StationData::Status status)
   }
   
 } /* MainWindow::statusChanged */
+
+
+void MainWindow::allMsgsWritten(void)
+{
+  cout << "MainWindow::allMsgsWritten\n";
+  msg_audio_io->flushSamples();
+} /* MainWindow::allMsgsWritten */
+
+
+void MainWindow::allSamplesFlushed(void)
+{
+  cout << "MainWindow::allSamplesFlushed\n";
+  msg_audio_io->close();  
+} /* MainWindow::allSamplesFlushed */
 
 
 /*
@@ -680,7 +706,6 @@ void MainWindow::configurationUpdated(void)
   audio_io = new AudioIO(Settings::instance()->audioDevice());
 
 } /* MainWindow::configurationChanged */
-
 
 
 /*

@@ -72,6 +72,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class IncomingConnection;
 class QPopupMenu;
+class MsgHandler;
 
 
 /****************************************************************************
@@ -181,6 +182,8 @@ class MainWindow : public MainWindowBase, public SigC::Object
     int       	      	    station_view_popup_remove;
     Async::AudioIO 	    *audio_io;
     SelectMap 	      	    select_map;
+    MsgHandler		    *msg_handler;
+    Async::AudioIO 	    *msg_audio_io;
     
     MainWindow(const MainWindow&);
     MainWindow operator=(const MainWindow&);
@@ -190,6 +193,8 @@ class MainWindow : public MainWindowBase, public SigC::Object
     void closeEvent(QCloseEvent *e);
     void serverError(const std::string& msg);
     void statusChanged(EchoLink::StationData::Status status);
+    void allMsgsWritten(void);
+    void allSamplesFlushed(void);
     
   private slots:
     void initialize(void);
