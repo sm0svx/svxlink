@@ -14,11 +14,12 @@
 <HR noshade/>
 <TABLE align="center" width="90%" border="0">
   <TR align="center">
-    <TD width="20%"><A href="index.php">Main</A></TD>
-    <TD width="20%"><A href="news.php">News</A></TD>
-    <TD width="20%"><A href="screenshots.php">Screenshots</A></TD>
-    <TD width="20%"><A href="https://sourceforge.net/project/showfiles.php?group_id=84813">Downloads</A></TD>
-    <TD width="20%"><A href="moreinfo.php">More Info</A></TD>
+    <TD width="17%"><A href="index.php">Main</A></TD>
+    <TD width="17%"><A href="news.php">News</A></TD>
+    <TD width="17%"><A href="screenshots.php">Screenshots</A></TD>
+    <TD width="17%"><A href="https://sourceforge.net/project/showfiles.php?group_id=84813">Downloads</A></TD>
+    <TD width="17%"><A href="moreinfo.php">More Info</A></TD>
+    <TD width="17%"><A href="https://sourceforge.net/projects/svxlink/">SourceForge Summary</A></TD>
   </TR>
 </TABLE>
 <HR noshade/>
