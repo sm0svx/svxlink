@@ -44,6 +44,7 @@ class Module : public SigC::Object
     virtual void squelchOpen(bool is_open) {}
     virtual int audioFromRx(short *samples, int count) { return count; }
     virtual void allMsgsWritten(void) {}
+    virtual void reportState(void) {}
     
     void playFile(const std::string& path);
     void playMsg(const std::string& msg) const;

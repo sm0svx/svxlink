@@ -751,6 +751,7 @@ void Logic::processCommandQueue(void)
       {
 	playMsg("active_module");
 	active_module->playModuleName();
+	active_module->reportState();
       }
     }
     else if (active_module != 0)
