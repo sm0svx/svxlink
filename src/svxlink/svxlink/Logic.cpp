@@ -165,6 +165,12 @@ bool Logic::initialize(void)
     goto cfg_failed;
   }
   
+  if (!cfg().getValue(name(), "CALLSIGN", m_callsign))
+  {
+    cerr << "*** Error: Config variable " << name() << "/CALLSIGN not set\n";
+    goto cfg_failed;
+  }
+  
   loadModules();
   
   m_rx = new LocalRx(cfg(), rx_name);
@@ -313,7 +319,17 @@ void Logic::dtmfDigitDetected(char digit)
 {
   printf("digit=%c\n", digit);
   
-  if (active_module != 0)
+  if (digit == '*')
+  {
+    playMsg("online");
+    spellWord(callsign());
+    if (active_module != 0)
+    {
+      playMsg("active_module");
+      active_module->playModuleName();
+    }
+  }
+  else if (active_module != 0)
   {
     active_module->dtmfDigitReceived(digit);
     if (digit == '#')

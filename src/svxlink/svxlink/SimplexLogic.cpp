@@ -140,15 +140,12 @@ bool SimplexLogic::initialize(void)
     return false;
   }
   
-  string callsign;
-  cfg().getValue(name(), "CALLSIGN", callsign);
-  
   tx().txTimeout.connect(slot(this, &SimplexLogic::txTimeout));
   
   playMsg("online");
-  if (!callsign.empty())
+  if (!callsign().empty())
   {
-    spellWord(callsign);
+    spellWord(callsign());
   }
   
   return true;

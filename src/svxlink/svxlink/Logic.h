@@ -163,6 +163,7 @@ class Logic : public SigC::Object
     Module *findModule(int id);
     std::list<Module*> moduleList(void) const { return modules; }
     virtual void dtmfDigitDetected(char digit);
+    const std::string& callsign(void) const { return m_callsign; }
 
     Async::Config &cfg(void) const { return m_cfg; }
     Rx &rx(void) const { return *m_rx; }
@@ -188,6 +189,7 @@ class Logic : public SigC::Object
     Async::SampleFifo 	*module_tx_fifo;
     std::list<Module*>	modules;
     std::string       	received_digits;
+    std::string       	m_callsign;
     
     void allMsgsWritten(void);
     void allModuleSamplesWritten(void);
