@@ -31,13 +31,13 @@ class MyClass : public SigC::Object
       con->write("GET /\n", 6);
     }
     
-    void onDisconnected(TcpClient::DisconnectReason reason)
+    void onDisconnected(TcpConnection *con, TcpClient::DisconnectReason reason)
     {
       cout << "Disconnected from " << con->remoteHost() << "...\n";
       Application::app().quit();
     }
     
-    int onDataReceived(void *buf, int count)
+    int onDataReceived(TcpConnection *con, void *buf, int count)
     {
       char *str = static_cast<char *>(buf);
       string html(str, str+count);
