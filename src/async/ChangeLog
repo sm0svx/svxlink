@@ -1,8 +1,10 @@
- 0.11.0 -- ?? ??? 2004
+ 0.11.0 -- ?? ??? 2005
 -----------------------
 
 * Added some code to AsyncTcpServer to broadcast data to connected
   clients. Contribution by SM0LCB / Ulf.
+
+* Now possible to list all tags in a config section.
 
 
 

@@ -163,6 +163,14 @@ class Config
     bool getValue(const std::string& section, const std::string& tag,
       	      	  std::string& value);
     
+    /**
+     * @brief 	Return the name of all the tags in the given section
+     * @param 	section The name of the section where the configuration
+     *	      	      	variables are located
+     * @return	Returns the list of tags in the given section
+     */
+    std::list<std::string> listSection(const std::string& section);
+    
     //bool setValue(const std::string& section, const std::string& tag,
     //  	      	  const std::string& value);
     

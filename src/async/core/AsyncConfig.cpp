@@ -188,6 +188,26 @@ bool Config::getValue(const string& section, const string& tag, string& value)
 } /* Config::getValue */
 
 
+list<string> Config::listSection(const string& section)
+{
+  list<string> tags;
+  
+  if (sections.count(section) == 0)
+  {
+    return tags;
+  }
+  
+  Values& values = sections[section];  
+  Values::iterator it = values.begin();
+  for (it=values.begin(); it!=values.end(); ++it)
+  {
+    tags.push_back(it->second);
+  }
+  
+  return tags;
+  
+} /* Config::listSection */
+
 
 
 
