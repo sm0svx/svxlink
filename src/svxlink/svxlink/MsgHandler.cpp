@@ -18,7 +18,8 @@ using namespace std;
 
 
 MsgHandler::MsgHandler(const string& base_dir, int sample_rate)
-  : file(-1), base_dir(base_dir), silence_left(-1), sample_rate(sample_rate)
+  : file(-1), base_dir(base_dir), silence_left(-1), sample_rate(sample_rate),
+    play_next(true), pending_play_next(false)
 {
   
 }
@@ -61,11 +62,13 @@ void MsgHandler::playNumber(int number)
     digits.push_front(digit);
   } while (number != 0);
   
+  begin();
   list<string>::iterator it;
   for (it=digits.begin(); it!=digits.end(); ++it)
   {
     playMsg("Default", *it);
   }
+  end();
 }
 
 
@@ -107,11 +110,34 @@ void MsgHandler::clear(void)
 } /* MsgHandler::clear */
 
 
+void MsgHandler::begin(void)
+{
+  pending_play_next = false;
+  play_next = false;
+} /* MsgHandler::begin */
+
+
+void MsgHandler::end(void)
+{
+  play_next = true;
+  if (pending_play_next)
+  {
+    pending_play_next = false;
+    playNextMsg();
+  }
+} /* MsgHandler::end */
+
 
 
 
 void MsgHandler::playNextMsg(void)
 {
+  if (!play_next)
+  {
+    pending_play_next = true;
+    return;
+  }
+  
   if (msg_queue.empty())
   {
     allMsgsWritten();

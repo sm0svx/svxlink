@@ -19,6 +19,8 @@ class MsgHandler : public SigC::Object
     void writeBufferFull(bool is_full);
     bool isWritingMessage(void) const { return !msg_queue.empty(); }
     void clear(void);
+    void begin(void);
+    void end(void);
     
     SigC::Signal2<int, short*, int> writeAudio;
     SigC::Signal0<void>       	    allMsgsWritten;
@@ -41,6 +43,8 @@ class MsgHandler : public SigC::Object
     std::string       	    base_dir;
     int			    silence_left;
     int			    sample_rate;
+    bool      	      	    play_next;
+    bool      	      	    pending_play_next;
     
     void playNextMsg(void);
     void executeCmd(const std::string& cmd);
