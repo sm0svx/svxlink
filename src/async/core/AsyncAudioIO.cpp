@@ -286,16 +286,20 @@ bool AudioIO::open(Mode mode)
   
   this->mode = mode;
   
+  arg = 0;
   if ((mode == MODE_RD) || (mode == MODE_RDWR))
   {
     read_watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
+    assert(read_watch != 0);
     read_watch->activity.connect(slot(this, &AudioIO::audioReadHandler));
-    arg = PCM_ENABLE_INPUT;
+    arg |= PCM_ENABLE_INPUT;
   }
-  else
+  
+  if ((mode == MODE_WR) || (mode == MODE_RDWR))
   {
-    arg = 0;
+    arg |= PCM_ENABLE_OUTPUT;
   }
+  
   if(ioctl(fd, SNDCTL_DSP_SETTRIGGER, &arg) == -1)
   {
     perror("SNDCTL_DSP_SETTRIGGER ioctl failed");
