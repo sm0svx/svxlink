@@ -151,7 +151,7 @@ class UdpPacket
  * Bugs:      
  *------------------------------------------------------------------------
  */
-UdpSocket::UdpSocket(short local_port)
+UdpSocket::UdpSocket(unsigned short local_port)
   : sock(-1), rd_watch(0), wr_watch(0), send_buf(0)
 {
   struct sockaddr_in addr;
@@ -174,7 +174,7 @@ UdpSocket::UdpSocket(short local_port)
   }
   
     // Bind the socket to a local port if one was specified
-  if (local_port != -1)
+  if (local_port > 0)
   {
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
