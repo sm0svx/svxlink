@@ -207,20 +207,27 @@ class QsoImpl : public EchoLink::Qso
     
     /**
      * @brief A signal that is emitted when the audio receive state changes
-     * @param qso The QSO object
      * @param is_receiving  Is \em true when audio is being received and
      *                      \em false when not
+     * @param qso The QSO object
      * @note This signal can be used to control a reception indicator
      */
-    SigC::Signal2<void, QsoImpl*, bool> isReceiving;
+    SigC::Signal2<void, bool, QsoImpl*> isReceiving;
     
     /**
      * @brief A signal that is emitted when an audio datagram has been received
-     * @param qso The QSO object
      * @param buf A pointer to the buffer that contains the audio
+     * @param qso The QSO object
      * @param len The number of samples in the buffer
      */
-    SigC::Signal3<int, QsoImpl*, short*, int> audioReceived;
+    SigC::Signal3<int, short*, int, QsoImpl*> audioReceived;
+    
+    /**
+     * @brief A signal that is emitted when an audio datagram has been received
+     * @param packet A pointer to the buffer that contains the raw GSM audio
+     * @param qso The QSO object
+     */
+    SigC::Signal2<void, Qso::GsmVoicePacket*, QsoImpl*> audioReceivedRaw;
     
     SigC::Signal1<void, QsoImpl*> destroyMe;
     
@@ -247,8 +254,6 @@ class QsoImpl : public EchoLink::Qso
     void onInfoMsgReceived(const std::string& msg);
     void onChatMsgReceived(const std::string& msg);
     void onStateChange(Qso::State state);
-    void onIsReceiving(bool is_receiving);
-    int onAudioReceived(short *samples, int count);
 
 };  /* class QsoImpl */
 

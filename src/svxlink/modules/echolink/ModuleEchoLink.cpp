@@ -61,7 +61,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "QsoImpl.h"
 #include "ModuleEchoLink.h"
 
 
@@ -751,6 +750,8 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
   qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
   qso->audioReceived.connect(slot(this, &ModuleEchoLink::audioFromRemote));
+  qso->audioReceivedRaw.connect(
+      	  slot(this, &ModuleEchoLink::audioFromRemoteRaw));
   qso->destroyMe.connect(slot(this, &ModuleEchoLink::onDestroyMe));
   
   if (qsos.size() > max_qsos)
@@ -826,7 +827,7 @@ void ModuleEchoLink::onChatMsgReceived(QsoImpl *qso, const string& msg)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void ModuleEchoLink::onIsReceiving(QsoImpl *qso, bool is_receiving)
+void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
 {
   //cerr << qso->remoteCallsign() << ": EchoLink receiving: "
   //     << (is_receiving ? "TRUE" : "FALSE") << endl;
@@ -918,6 +919,8 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
   qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
   qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
   qso->audioReceived.connect(slot(this, &ModuleEchoLink::audioFromRemote));
+  qso->audioReceivedRaw.connect(
+      	  slot(this, &ModuleEchoLink::audioFromRemoteRaw));
   qso->destroyMe.connect(slot(this, &ModuleEchoLink::onDestroyMe));
 
   playMsg("connecting_to");
@@ -930,25 +933,33 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
 } /* ModuleEchoLink::createOutgoingConnection */
 
 
-int ModuleEchoLink::audioFromRemote(QsoImpl *qso, short *samples, int count)
+int ModuleEchoLink::audioFromRemote(short *samples, int count, QsoImpl *qso)
 {
   if ((qso == talker) && !squelch_is_open)
   {
     audioFromModule(samples, count);
-    list<QsoImpl*>::iterator it;
-    for (it=qsos.begin(); it!=qsos.end(); ++it)
-    {
-      // FIXME: Take care of the case where not all samples are written
-      if (*it != qso)
-      {
-	(*it)->sendAudio(samples, count);
-      }
-    }
   }
     
   return count;
   
 } /* ModuleEchoLink::audioFromRemote */
+
+
+void ModuleEchoLink::audioFromRemoteRaw(QsoImpl::GsmVoicePacket *packet,
+      	QsoImpl *qso)
+{
+  if ((qso == talker) && !squelch_is_open)
+  {
+    list<QsoImpl*>::iterator it;
+    for (it=qsos.begin(); it!=qsos.end(); ++it)
+    {
+      if (*it != qso)
+      {
+	(*it)->sendAudioRaw(packet);
+      }
+    }
+  }
+} /* ModuleEchoLink::audioFromRemoteRaw */
 
 
 QsoImpl *ModuleEchoLink::findFirstTalker(void) const

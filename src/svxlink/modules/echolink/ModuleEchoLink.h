@@ -56,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "QsoImpl.h"
 
 
 /****************************************************************************
@@ -165,13 +166,14 @@ class ModuleEchoLink : public Module
     void onIncomingConnection(const Async::IpAddress& ip,
       	    const std::string& callsign, const std::string& name);
     void onChatMsgReceived(QsoImpl *qso, const std::string& msg);
-    void onIsReceiving(QsoImpl *qso, bool is_receiving);
+    void onIsReceiving(bool is_receiving, QsoImpl *qso);
     void onDestroyMe(QsoImpl *qso);
 
     void getDirectoryList(Async::Timer *timer=0);
 
     void createOutgoingConnection(const EchoLink::StationData *station);
-    int audioFromRemote(QsoImpl *qso, short *samples, int count);
+    int audioFromRemote(short *samples, int count, QsoImpl *qso);
+    void audioFromRemoteRaw(QsoImpl::GsmVoicePacket *packet, QsoImpl *qso);
     QsoImpl *findFirstTalker(void) const;
     void broadcastTalkerStatus(void);
 

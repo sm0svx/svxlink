@@ -181,8 +181,9 @@ QsoImpl::QsoImpl(const Async::IpAddress& ip, ModuleEchoLink *module)
   Qso::infoMsgReceived.connect(slot(this, &QsoImpl::onInfoMsgReceived));
   Qso::chatMsgReceived.connect(slot(this, &QsoImpl::onChatMsgReceived));
   Qso::stateChange.connect(slot(this, &QsoImpl::onStateChange));
-  Qso::isReceiving.connect(slot(this, &QsoImpl::onIsReceiving));
-  Qso::audioReceived.connect(slot(this, &QsoImpl::onAudioReceived));
+  Qso::isReceiving.connect(bind(isReceiving.slot(), this));
+  Qso::audioReceived.connect(bind(audioReceived.slot(), this));
+  Qso::audioReceivedRaw.connect(bind(audioReceivedRaw.slot(), this));
 
   
   init_ok = true;
@@ -396,33 +397,6 @@ void QsoImpl::onStateChange(Qso::State state)
       break;
   }
 } /* onStateChange */
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    onIsReceiving
- * Purpose:   Called by the EchoLink::Qso object to indicate whether the
- *    	      remote station is transmitting or not.
- * Input:     is_receiving  - true=remote station is transmitting
- *    	      	      	      false=remote station is not transmitting
- * Output:    None
- * Author:    Tobias Blomberg / SM0SVX
- * Created:   2004-03-07
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-void QsoImpl::onIsReceiving(bool is_receiving)
-{
-  //cerr << "EchoLink receiving" << (is_receiving ? "true" : "false") << endl;
-  isReceiving(this, is_receiving);
-} /* onIsReceiving */
-
-
-int QsoImpl::onAudioReceived(short *samples, int count)
-{
-  return audioReceived(this, samples, count);
-} /* QsoImpl::onAudioReceived */
 
 
 
