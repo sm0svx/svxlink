@@ -344,6 +344,11 @@ void LocalRx::activated1750(bool is_activated)
 
 void LocalRx::voxSqlOpen(bool is_open)
 {
+  if (is_muted)
+  {
+    return;
+  }
+  
   //printf("Vox squelch is %s...\n", is_open ? "OPEN" : "CLOSED");
   if (is_open && (sql_up_det == SQL_DET_VOX))
   {
@@ -360,6 +365,11 @@ void LocalRx::voxSqlOpen(bool is_open)
 
 void LocalRx::activatedCtcss(bool is_activated)
 {
+  if (is_muted)
+  {
+    return;
+  }
+  
   //printf("Ctcss %s...\n", is_activated ? "ACTIVATED" : "DEACTIVATED");
   if (is_activated && (sql_up_det == SQL_DET_CTCSS))
   {
@@ -392,7 +402,7 @@ LocalRx::SqlDetType LocalRx::sqlDetStrToEnum(const string& sql_det_str)
 
 int LocalRx::audioRead(short *samples, int count)
 {
-  if (sql_is_open)
+  if (sql_is_open && !is_muted)
   {
     return audioReceived(samples, count);
   }
