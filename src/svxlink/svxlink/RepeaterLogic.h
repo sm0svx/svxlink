@@ -178,6 +178,7 @@ class RepeaterLogic : public Logic
     void txTimeout(void);
     void detected1750(void);
     void playIdleSound(Async::Timer *t);
+    void enableRgrSoundTimer(bool enable);
 
 };  /* class RepeaterLogic */
 

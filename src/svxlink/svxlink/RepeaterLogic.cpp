@@ -205,7 +205,7 @@ void RepeaterLogic::playMsg(const std::string& msg, const Module *module)
 {
   //printf("RepeaterLogic::playMsg: %s\n", msg.c_str());
   
-  if (msg != idle_sound)
+  if ((msg != idle_sound) && (msg != "blip"))
   {
     setIdle(false);
   }
@@ -340,6 +340,8 @@ void RepeaterLogic::setIdle(bool idle)
       	  slot(this, &RepeaterLogic::playIdleSound));
     }
   }
+
+  enableRgrSoundTimer(idle);
   
 } /* RepeaterLogic::setIdle */
 
@@ -377,8 +379,7 @@ void RepeaterLogic::sendRgrSound(Timer *t)
 {
   //printf("RepeaterLogic::sendRogerSound\n");
   playMsg("blip");
-  delete rgr_sound_timer;
-  rgr_sound_timer = 0;
+  enableRgrSoundTimer(false);
 } /* RepeaterLogic::sendRogerSound */
 
 
@@ -388,24 +389,12 @@ void RepeaterLogic::squelchOpen(bool is_open)
   
   if (repeater_is_up)
   {
-    delete rgr_sound_timer;
     if (is_open)
     {
-      rgr_sound_timer = 0;
       setIdle(false);
     }
     else
     {
-      if (rgr_sound_delay > 0)
-      {
-	rgr_sound_timer = new Timer(rgr_sound_delay);
-	rgr_sound_timer->expired.connect(
-	      	slot(this, &RepeaterLogic::sendRgrSound));
-      }
-      else
-      {
-	sendRgrSound();
-      }
       tx().flushSamples();
     }
   }
@@ -440,6 +429,27 @@ void RepeaterLogic::playIdleSound(Timer *t)
 {
   playMsg(idle_sound);
 } /* RepeaterLogic::playIdleSound */
+
+
+void RepeaterLogic::enableRgrSoundTimer(bool enable)
+{
+  delete rgr_sound_timer;
+  rgr_sound_timer = 0;
+
+  if (enable)
+  {
+    if (rgr_sound_delay > 0)
+    {
+      rgr_sound_timer = new Timer(rgr_sound_delay);
+      rgr_sound_timer->expired.connect(slot(this, &RepeaterLogic::sendRgrSound));
+    }
+    else
+    {
+      sendRgrSound();
+    }
+  }  
+} /* RepeaterLogic::enableRgrSoundTimer */
+
 
 
 /*
