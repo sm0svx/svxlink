@@ -126,7 +126,7 @@ using namespace EchoLink;
 QsoImpl::QsoImpl(const Async::IpAddress& ip, ModuleEchoLink *module)
   : Qso(ip), module(module), msg_handler(0), msg_pacer(0), init_ok(false),
     reject_qso(false), last_message(""), last_info_msg(""), idle_timer(0),
-    activity(false), disc_when_done(false)
+    disc_when_done(false), idle_timer_cnt(0), idle_timeout(0)
 {
   assert(module != 0);
   
@@ -170,8 +170,8 @@ QsoImpl::QsoImpl(const Async::IpAddress& ip, ModuleEchoLink *module)
   string idle_timeout_str;
   if (cfg.getValue(cfg_name, "LINK_IDLE_TIMEOUT", idle_timeout_str))
   {
-    int idle_timeout = 1000 * atoi(idle_timeout_str.c_str());
-    idle_timer = new Timer(idle_timeout, Timer::TYPE_PERIODIC);
+    idle_timeout = atoi(idle_timeout_str.c_str());
+    idle_timer = new Timer(1000, Timer::TYPE_PERIODIC);
     idle_timer->expired.connect(slot(this, &QsoImpl::idleTimeoutCheck));
   }
   
@@ -191,7 +191,6 @@ QsoImpl::QsoImpl(const Async::IpAddress& ip, ModuleEchoLink *module)
   Qso::chatMsgReceived.connect(slot(this, &QsoImpl::onChatMsgReceived));
   Qso::stateChange.connect(slot(this, &QsoImpl::onStateChange));
   Qso::isReceiving.connect(bind(isReceiving.slot(), this));
-  Qso::isReceiving.connect(slot(this, &QsoImpl::onIsReceiving));
   Qso::audioReceived.connect(bind(audioReceived.slot(), this));
   Qso::audioReceivedRaw.connect(bind(audioReceivedRaw.slot(), this));
   
@@ -216,7 +215,7 @@ bool QsoImpl::initOk(void)
 
 int QsoImpl::sendAudio(short *buf, int len)
 {
-  activity = true;
+  idle_timer_cnt = 0;
   
     /* FIXME: Buffer audio until the message has been written ? */
   if (!msg_handler->isWritingMessage())
@@ -419,7 +418,13 @@ void QsoImpl::onStateChange(Qso::State state)
 
 void QsoImpl::idleTimeoutCheck(Timer *t)
 {
-  if (!activity)
+  if (receivingAudio())
+  {
+    idle_timer_cnt = 0;
+    return;
+  }  
+  
+  if (++idle_timer_cnt == idle_timeout)
   {
     cout << remoteCallsign() << ": EchoLink connection idle timeout. "
       	 "Disconnecting...\n";
@@ -430,16 +435,7 @@ void QsoImpl::idleTimeoutCheck(Timer *t)
     msg_handler->playSilence(1000);
     msg_handler->end();
   }
-  
-  activity = false;
-  
 } /* idleTimeoutCheck */
-
-
-void QsoImpl::onIsReceiving(bool is_receiving)
-{
-  activity = true;
-} /* onIsReceiving */
 
 
 
