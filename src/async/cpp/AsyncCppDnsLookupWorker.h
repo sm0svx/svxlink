@@ -146,7 +146,7 @@ class CppDnsLookupWorker : public DnsLookupWorker, public SigC::Object
     std::vector<IpAddress>  the_addresses;
     Async::Timer *    	    timer;
   
-    void onTimeout(Timer *timer);
+    void onTimeout(Timer *t);
 
 };  /* class CppDnsLookupWorker */
 

@@ -194,24 +194,23 @@ CppDnsLookupWorker::~CppDnsLookupWorker(void)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void CppDnsLookupWorker::onTimeout(Timer *timer)
+void CppDnsLookupWorker::onTimeout(Timer *t)
 {
+  delete timer;
+  timer = 0;
+  
   struct hostent *he = gethostbyname(label.c_str());
   if (he != 0)
   {
-    struct in_addr *h_addr;
-    h_addr = (struct in_addr *)he->h_addr_list[0];
-    while (h_addr->s_addr != INADDR_ANY)
+    for (int i=0; he->h_addr_list[i] != NULL; ++i)
     {
+      struct in_addr *h_addr;
+      h_addr = reinterpret_cast<struct in_addr *>(he->h_addr_list[i]);
       the_addresses.push_back(IpAddress(*h_addr));
-      ++h_addr;
     }
   }
   
   resultsReady();
-  
-  delete timer;
-  timer = 0;
   
 } /* CppDnsLookupWorker::onTimeout */
 
