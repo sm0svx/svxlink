@@ -5,6 +5,24 @@
 
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>17 Apr 2004: <I>Good and bad news</I></B>
+  <TD/></TR>
+  <TR><TD>
+    The good news are that I'm back from my skiing holiday and no bones are
+    broken.
+    <P>
+    The bad news is that I found a serious bug in the EchoLink communications
+    svxlink server module. Connecting EchoLink stations only get a timeout.
+    This bug does not affect Qtel. It's fixed in CVS but I have not compiled
+    a new release yet.
+    <P>
+    I also discovered that the DTMF detector is a little sensitive to speech.
+    It detects random digits when someone is speaking on the channel.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>07 Apr 2004: <I>Web pages touch up and more documentation</I></B>
   <TD/></TR>
   <TR><TD>
