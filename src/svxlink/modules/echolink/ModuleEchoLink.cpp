@@ -468,7 +468,7 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
   }
   else if (cmd == "1")
   {
-    playNumber(0);
+    playNumber(qsos.size());
     playMsg("connected_stations");
     playSilence(500);
     list<QsoImpl*>::iterator it;
