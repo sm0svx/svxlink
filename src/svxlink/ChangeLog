@@ -1,4 +1,4 @@
- 0.4.0 -- ?? ??? 2005
+ 0.4.0 -- ?? Mar 2005
 ----------------------
 
 * Bugfix: Crash when the parrot module was active and an echolink
@@ -10,6 +10,8 @@
 * Added roger beep for SimplexLogic.
 
 * The TX hang bug might now have been fixed. I really hope so...
+
+* Now not possible to initiate a connection to own node.
 
 
 
