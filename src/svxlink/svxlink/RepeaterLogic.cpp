@@ -187,8 +187,8 @@ bool RepeaterLogic::initialize(void)
     ident_timer->expired.connect(slot(this, &RepeaterLogic::identify));
   }
       
-  playMsg("online");
-  identify();
+  //playMsg("online");
+  //identify();
   
   return true;
   
