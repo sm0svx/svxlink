@@ -5,6 +5,16 @@
 
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>18 Nov 2003: <I>Cleaned up the web pages a bit</I></B>
+  <TD/></TR>
+  <TR><TD>
+    The web pages should be operational now. It should be possible to
+    check out from CVS and compile.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>03 Jul 2003: <I>Project has been registerad at SourceForge</I></B>
   <TD/></TR>
   <TR><TD>
