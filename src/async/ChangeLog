@@ -1,0 +1,10 @@
+ 0.8.0 -- 04 Apr 2004
+----------------------
+
+* Audio handling rewritten to handle a separate reader and writer within
+  the same application.
+
+* Split the async lib into core, cpp, qt and demo parts.
+
+* Earlier log entries for the async library can be found in ../qtel/ChangeLog.
+

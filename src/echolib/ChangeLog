@@ -1,0 +1,7 @@
+ 0.7.2 -- 04 Apr 2004
+----------------------
+
+* Look for earlier ChangeLog entries in ../qtel/ChangeLog.
+
+* Adapted for changes in the async library.
+

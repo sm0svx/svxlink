@@ -1,0 +1,192 @@
+ 0.7.2 -- 04 Apr 2004
+----------------------
+
+* Adapted for changes in the async library.
+
+
+
+ 0.7.1 -- 18 Nov 2003
+----------------------
+
+* Bugfix in AsyncAudioIO.cpp: Wrong usage of SNDCTL_DSP_SETTRIGGER. Output
+  was not enabled.
+
+
+
+ 0.7.0 -- 10 May 2003
+----------------------
+
+* Ctrl/focus/PTT bug fixed. Focus is now set to the PTT button when pressed
+  with the mouse.
+
+* Connected double-click and ENTER in the incoming connections view to Accept.
+
+* Outgoing chat data is now shown in the chat window
+
+* Connect sound added
+
+* Bugfix in EchoLinkDirectory.cpp: The refresh timer was not handled correctly
+
+* The length of the callsign and location (description) fields in the settings
+  window are now limited.
+
+* The station selection in each view is now remembered
+
+
+
+ 0.6.0 -- 04 May 2003
+----------------------
+
+* Bugfix: Fixed a crash when a connect packet was received on a disconnected
+  EchoLink::Qso object.
+
+* The Async API has now been documented.
+
+* Bugfix: The application no longer hangs if multiple connection windows are
+  opened. The sound device is now opened in non-blocking mode.
+
+* The Async::TcpClient class is now non-blocking
+
+* The EchoLink::Directory object now automatically refresh the registration
+
+* The EchoLib API has now been documented
+
+* Added a copyright notice (GPL) to all source files in the project
+
+* Now possible to set the UDP port base to something other than the default
+  in EchoLib
+
+* The name of the remote station is now shown in the connection dialog
+
+* Keyboard accelerators can now be translated to work with other languages
+
+* A couple of more keyboard accelerators added: Ctrl+B (toggle busy status)
+  and F5 (refresh station list).
+
+* Stripping trailing spaces from the description field
+
+* Converting the callsign to upper case in EchoLink::Directory
+
+
+
+ 0.5.0 -- 27 Apr 2003
+----------------------
+
+* Bugfix: Right click menu was shown in empty areas in the station view.
+
+* Added a time field to the incoming connections list view
+
+* The StationData class is now in the EchoLink namespace
+
+* Cleaned up the StationData class
+
+* Audio handling separated from echolib
+
+* Async class for UDP "connections" added
+
+* RX/TX indicators added
+
+* Included the GSM codec source
+
+* Added a license file (The GNU General Public License - GPL)
+
+* Added a lock feature for the PTT. Press the Ctrl key at the same time as
+  the PTT to lock it.
+
+* Added settings for list refresh interval and "start as busy"
+
+* Now updating settings, for example in EchoLink::Directory, when the settings
+  dialog closes.
+  
+
+
+ 0.4.0 -- 22 Apr 2003
+----------------------
+
+* Bugfix in ILinkDispatcher::handleCtrlInput: Fixed bad handling of strtok_r
+  buffer.
+
+* Bugfix in ILink::ctrlSockDisconnected: State machine hanged if the directory
+  server host was not found or any other error occured that lead to a
+  disconnect.
+
+* Changed the name of the ILink class to EchoLink::Directory
+
+* The ilink_test application now work again
+
+* Changed the frag size and frag count in the AudioIO class. A large frag
+  size (11) caused the CPU usage to go up to 80% (?!) in full duplex mode.
+  The frag size is now set to 8 (=256 samples).
+
+* Name of the ILinkCon class changed to EchoLink::Qso
+
+* The ComDialogs are now updated when a station list update from the directory
+  server comes in.
+
+* Incoming connections are now handled.
+
+* Bookmarks section implemented
+
+* Window size is now saved on exit
+
+
+
+ 0.3.0 -- 12 Apr 2003
+---------------------
+
+* When any other key than space is pressed in the ComDialog when the PTT button
+  has focus, the input focus go to the chat entry field. When ENTER is pressed,
+  focus goes back to the PTT button.
+
+* Rewritten the ILink object to use asyncronous communications
+
+* All Async classes are now in the "Async" namespace.
+
+* Added some icons.
+
+* The config dialog now works when used from the MainWindow
+
+* Bugfix: No crash on connection failure anymore
+
+
+
+ 0.2.0 -- 7 Apr 2003
+---------------------
+
+* Increased the station to station connection timeout time from 20 to 50
+  seconds.
+
+* The "Server Messages" window is now cleared every time a new message from
+  the server is received.
+  
+* Added a directory menu.
+
+* Manual refresh of the station list in the directory menu
+
+* Set station status (busy/online) in the directory menu
+
+* Refreshing call list from directory server
+
+* Station status updates every five minutes
+
+
+
+ 0.1.0 -- 6 Apr 2003
+---------------------
+
+* Status updates from ILinkCon.
+
+* Status updates are used in the Gui to disable/enable buttons
+
+* Focus is set to the PTT button on connect
+
+* Added support for different languages
+
+* Cleaned up the menus
+
+* Removed the toolbar
+
+* Cleaned up tab order
+
+* Removed some debug printouts
+

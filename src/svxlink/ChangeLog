@@ -1,0 +1,13 @@
+ 0.1.0 -- 04 Apr 2004
+----------------------
+
+* Initial revision
+
+* New application: svxlink, a multi purpose voice services frontend.
+
+* New module: A Help module for svxlink.
+
+* New module: A Parrot module for svxlink that echos back everything you say.
+
+* New module: An EchoLink module for svxlink to handle EchoLink connections.
+
