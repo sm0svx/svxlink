@@ -136,26 +136,24 @@ using namespace Async;
  * Bugs:      
  *------------------------------------------------------------------------
  */
-TcpClient::TcpClient(const string& remote_host, short remote_port,
+TcpClient::TcpClient(const string& remote_host, unsigned short remote_port,
     size_t recv_buf_len)
-  : remote_host(remote_host), remote_port(remote_port),
-    recv_buf_len(recv_buf_len), dns(0), sock(-1), rd_watch(0), wr_watch(0),
-    recv_buf(0), recv_buf_cnt(0)
+  : TcpConnection(recv_buf_len), dns(0), remote_host(remote_host),
+    remote_port(remote_port), sock(-1), wr_watch(0)
 {
-  recv_buf = new char[recv_buf_len];
+  
 } /* TcpClient::TcpClient */
 
 
 TcpClient::~TcpClient(void)
 {
   disconnect();
-  delete [] recv_buf;
 } /* TcpClient::~TcpClient */
 
 
 void TcpClient::connect(void)
 {
-  if ((dns != 0) || (sock != -1))
+  if ((dns != 0) || (socket() != -1))
   {
     return;
   }
@@ -167,43 +165,14 @@ void TcpClient::connect(void)
 
 void TcpClient::disconnect(void)
 {
-  recv_buf_cnt = 0;
-  
+  TcpConnection::disconnect();
+
   delete dns;
   dns = 0;
   
-  delete wr_watch;
-  wr_watch = 0;
+  sock = -1;
   
-  delete rd_watch;
-  rd_watch = 0;
-  
-  if (sock != -1)
-  {
-    close(sock);
-    sock = -1;  
-  }
 } /* TcpClient::disconnect */
-
-
-int TcpClient::write(const void *buf, int count)
-{
-  assert(sock != -1);
-  int cnt = ::write(sock, buf, count);
-  if (cnt == -1)
-  {
-    disconnect();
-    disconnected(DR_SYSTEM_ERROR);
-  }
-  else if (cnt < count)
-  {
-    sendBufferFull(true);
-    wr_watch->setEnabled(true);
-  }
-  
-  return cnt;
-  
-} /* TcpClient::write */
 
 
 
@@ -261,7 +230,7 @@ void TcpClient::dnsResultsReady(DnsLookup& dns_lookup)
   if (result.empty() || (result[0].ip4Addr().s_addr == INADDR_NONE))
   {
     disconnect();
-    disconnected(DR_HOST_NOT_FOUND);
+    disconnected(this, DR_HOST_NOT_FOUND);
     return;
   }
   
@@ -272,6 +241,9 @@ void TcpClient::dnsResultsReady(DnsLookup& dns_lookup)
 
 void TcpClient::connectToRemote(const IpAddress& ip_addr)
 {
+  setRemoteAddr(ip_addr);
+  setRemotePort(remote_port);
+  
   struct sockaddr_in addr;
   memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
@@ -279,10 +251,10 @@ void TcpClient::connectToRemote(const IpAddress& ip_addr)
   addr.sin_addr = ip_addr.ip4Addr();
 
     /* Create a TCP/IP socket to use */
-  sock = socket(PF_INET, SOCK_STREAM, 0);
+  sock = ::socket(PF_INET, SOCK_STREAM, 0);
   if (sock == -1)
   {
-    disconnected(DR_SYSTEM_ERROR);
+    disconnected(this, DR_SYSTEM_ERROR);
     return;
   }
 
@@ -290,14 +262,10 @@ void TcpClient::connectToRemote(const IpAddress& ip_addr)
   if (fcntl(sock, F_SETFL, O_NONBLOCK))
   {
     disconnect();
-    disconnected(DR_SYSTEM_ERROR);
+    disconnected(this, DR_SYSTEM_ERROR);
     return;
   }
-  
-  rd_watch = new FdWatch(sock, FdWatch::FD_WATCH_RD);
-  rd_watch->activity.connect(slot(this, &TcpClient::recvHandler));
-  
-  
+    
     /* Connect to the server */
   int result = ::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
       	      	       sizeof(addr));
@@ -311,7 +279,7 @@ void TcpClient::connectToRemote(const IpAddress& ip_addr)
     else
     {
       disconnect();
-      disconnected(DR_SYSTEM_ERROR);
+      disconnected(this, DR_SYSTEM_ERROR);
       return;
     }
   }
@@ -324,50 +292,6 @@ void TcpClient::connectToRemote(const IpAddress& ip_addr)
 } /* TcpClient::connectToRemote */
 
 
-void TcpClient::recvHandler(FdWatch *watch)
-{
-  //cout << "recv_buf_cnt=" << recv_buf_cnt << endl;
-  //cout << "recv_buf_len=" << recv_buf_len << endl;
-  
-  if (recv_buf_cnt == recv_buf_len)
-  {
-    disconnect();
-    disconnected(DR_RECV_BUFFER_OVERFLOW);
-    return;
-  }
-  
-  int cnt = read(sock, recv_buf+recv_buf_cnt, recv_buf_len-recv_buf_cnt);
-  if (cnt == -1)
-  {
-    //cout << "System error!\n";
-    disconnect();
-    disconnected(DR_SYSTEM_ERROR);
-    return;
-  }
-  else if (cnt == 0)
-  {
-    //cout << "Connection closed by remote host!\n";
-    disconnect();
-    disconnected(DR_REMOTE_DISCONNECTED);
-    return;
-  }
-  
-  recv_buf_cnt += cnt;
-  size_t processed = dataReceived(recv_buf, recv_buf_cnt);
-  //cout << "processed=" << processed << endl;
-  if (processed >= recv_buf_cnt)
-  {
-    recv_buf_cnt = 0;
-  }
-  else
-  {
-    memmove(recv_buf, recv_buf + processed, recv_buf_cnt - processed);
-    recv_buf_cnt = recv_buf_cnt - processed;
-  }
-  
-} /* TcpClient::recvHandler */
-
-
 void TcpClient::connectHandler(FdWatch *watch)
 {
   delete wr_watch;
@@ -378,31 +302,22 @@ void TcpClient::connectHandler(FdWatch *watch)
   if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &error, &error_size) == -1)
   {
     disconnect();
-    disconnected(DR_SYSTEM_ERROR);
+    disconnected(this, DR_SYSTEM_ERROR);
     return;
   }
   if (error)
   {
     perror("delayed connect");
     disconnect();
-    disconnected(DR_SYSTEM_ERROR);
+    disconnected(this, DR_SYSTEM_ERROR);
     return;
   }
   
-  wr_watch = new FdWatch(sock, FdWatch::FD_WATCH_WR);
-  wr_watch->activity.connect(slot(this, &TcpClient::writeHandler));
-  wr_watch->setEnabled(false);
+  setSocket(sock);
   
   connected();
   
 } /* TcpClient::connectHandler */
-
-
-void TcpClient::writeHandler(FdWatch *watch)
-{
-  watch->setEnabled(false);
-  sendBufferFull(false);
-} /* TcpClient::writeHandler */
 
 
 

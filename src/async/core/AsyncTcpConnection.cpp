@@ -136,20 +136,22 @@ using namespace Async;
  * Bugs:      
  *------------------------------------------------------------------------
  */
+TcpConnection::TcpConnection(size_t recv_buf_len)
+  : remote_port(0), recv_buf_len(recv_buf_len), sock(-1), rd_watch(0),
+    wr_watch(0), recv_buf(0), recv_buf_cnt(0)
+{
+  recv_buf = new char[recv_buf_len];
+} /* TcpConnection::TcpConnection */
+
+
 TcpConnection::TcpConnection(int sock, const IpAddress& remote_addr,
-      	      	      	     short remote_port, size_t recv_buf_len)
+      	      	      	     unsigned short remote_port, size_t recv_buf_len)
   : remote_addr(remote_addr), remote_port(remote_port),
     recv_buf_len(recv_buf_len), sock(sock), rd_watch(0), wr_watch(0),
     recv_buf(0), recv_buf_cnt(0)
 {
   recv_buf = new char[recv_buf_len];
-  
-  rd_watch = new FdWatch(sock, FdWatch::FD_WATCH_RD);
-  rd_watch->activity.connect(slot(this, &TcpConnection::recvHandler));
-  
-  wr_watch = new FdWatch(sock, FdWatch::FD_WATCH_WR);
-  wr_watch->activity.connect(slot(this, &TcpConnection::writeHandler));
-  wr_watch->setEnabled(false);
+  setSocket(sock);
 } /* TcpConnection::TcpConnection */
 
 
@@ -208,17 +210,63 @@ int TcpConnection::write(const void *buf, int count)
 
 /*
  *------------------------------------------------------------------------
- * Method:    
+ * Method:    TcpConnection::setSocket
  * Purpose:   
  * Input:     
  * Output:    
- * Author:    
- * Created:   
+ * Author:    Tobias Blomberg
+ * Created:   2003-12-07
  * Remarks:   
  * Bugs:      
  *------------------------------------------------------------------------
  */
+void TcpConnection::setSocket(int sock)
+{
+  this->sock = sock;
+  
+  rd_watch = new FdWatch(sock, FdWatch::FD_WATCH_RD);
+  rd_watch->activity.connect(slot(this, &TcpConnection::recvHandler));
+  
+  wr_watch = new FdWatch(sock, FdWatch::FD_WATCH_WR);
+  wr_watch->activity.connect(slot(this, &TcpConnection::writeHandler));
+  wr_watch->setEnabled(false);
+} /* TcpConnection::setSocket */
 
+
+/*
+ *------------------------------------------------------------------------
+ * Method:    TcpConnection::setRemoteAddr
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    Tobias Blomberg
+ * Created:   2003-12-07
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
+ */
+void TcpConnection::setRemoteAddr(const IpAddress& remote_addr)
+{
+  this->remote_addr = remote_addr;
+} /* TcpConnection::setRemoteAddr */
+
+
+/*
+ *------------------------------------------------------------------------
+ * Method:    TcpConnection::setRemotePort
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    Tobias Blomberg
+ * Created:   2003-12-07
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
+ */
+void TcpConnection::setRemotePort(unsigned short remote_port)
+{
+  this->remote_port = remote_port;
+} /* TcpConnection::setRemotePort */
 
 
 

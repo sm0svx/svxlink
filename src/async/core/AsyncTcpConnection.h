@@ -137,7 +137,13 @@ class TcpConnection : public SigC::Object
      * @brief The default length of the reception buffer
      */
     static const int DEFAULT_RECV_BUF_LEN = 1024;
-      
+    
+    /**
+     * @brief 	Constructor
+     * @param 	recv_buf_len  The length of the receiver buffer to use
+     */
+    explicit TcpConnection(size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
+    
     /**
      * @brief 	Constructor
      * @param 	sock  	      The socket for the connection to handle
@@ -145,7 +151,8 @@ class TcpConnection : public SigC::Object
      * @param 	remote_port   The remote TCP-port of the connection
      * @param 	recv_buf_len  The length of the receiver buffer to use
      */
-    TcpConnection(int sock, const IpAddress& remote_addr, short remote_port,
+    TcpConnection(int sock, const IpAddress& remote_addr,
+      	      	  unsigned short remote_port,
       	      	  size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
     
     /**
@@ -182,7 +189,7 @@ class TcpConnection : public SigC::Object
      * @brief 	Return the remote port used
      * @return	Returns the remote port
      */
-    short remotePort(void) const { return remote_port; }
+    unsigned short remotePort(void) const { return remote_port; }
     
     /**
      * @brief 	A signal that is emitted when a connection has been terminated
@@ -216,16 +223,49 @@ class TcpConnection : public SigC::Object
 
         
   protected:
+    /**
+     * @brief 	Setup information about the connection
+     * @param 	sock  	      The socket for the connection to handle
+     *
+     * Use this function to set up the socket for the connection.
+     */
+    void setSocket(int sock);
+    
+    /**
+     * @brief 	Setup information about the connection
+     * @param 	remote_addr   The remote IP-address of the connection
+     *
+     * Use this function to set up the remote IP-address for the connection.
+     */
+    void setRemoteAddr(const IpAddress& remote_addr);
+    
+    /**
+     * @brief 	Setup information about the connection
+     * @param 	remote_port   The remote TCP-port of the connection
+     *
+     * Use this function to set up the remote port for the connection.
+     */
+    void setRemotePort(unsigned short remote_port);
+    
+    /**
+     * @brief 	Return the socket file descriptor
+     * @return	Returns the currently used socket file descriptor
+     *
+     * Use this function to get the socket file descriptor that is currently
+     * in use. If it is -1 it has not been set.
+     */
+    int socket(void) const { return sock; }
+    
     
   private:
-    IpAddress 	remote_addr;
-    short       remote_port;
-    size_t      recv_buf_len;
-    int       	sock;
-    FdWatch *   rd_watch;
-    FdWatch *   wr_watch;
-    char *    	recv_buf;
-    size_t      recv_buf_cnt;
+    IpAddress 	    remote_addr;
+    unsigned short  remote_port;
+    size_t          recv_buf_len;
+    int       	    sock;
+    FdWatch *       rd_watch;
+    FdWatch *       wr_watch;
+    char *    	    recv_buf;
+    size_t          recv_buf_cnt;
     
     void recvHandler(FdWatch *watch);
     void writeHandler(FdWatch *watch);
