@@ -38,7 +38,32 @@ After the configuration has been done, start the server by typing
 <em>svxlink</em> at the command prompt. It is possible to simulate DTMF input by
 pressing the 1-9, A-D, *, # keys. Have a look at the
 <A href="svxlink_usage.php">user documentation</A> to begin testing the server.
-
+<P/>
+<strong>Note:</strong> For Alsa based systems (like Fedora Core 2), the Alsa
+OSS emulation is used for sound I/O. There is a bug in the emulation layer
+which will make SvxLink/Qtel fail. To work around this bug, set the
+environment variable ASYNC_AUDIO_NOTRIGGER to 1 before starting SvxLink/Qtel.
+An example of how this is done is shown below (assuming you are running the bash shell = usually the default).
+<pre>
+export ASYNC_AUDIO_NOTRIGGER=1
+qtel &
+</pre>
+Or on one line:
+<pre>
+ASYNC_AUDIO_NOTRIGGER=1 qtel &
+</pre>
+The environment variable setting will be lost on logout so the <em>export</em>
+line is best put into the file ".bash_profile", which can be found in your home
+directory.
+<P/>
+Note that setting this environment variable when it is not needed can make
+SvxLink/Qtel to stop working. Only set it if you are having audio problems.
+<P/>
+<strong>Note2:</strong> Make sure that no other audio applications are running
+at the same time as SvxLink/Qtel. If another application has opened the sound
+device, SvxLink/Qtel will hang until the device is closed by the other
+application. Especially, if you are having problems with SvxLink/Qtel hanging,
+check for sound servers like <em>artsd</em> and the like.
 
 <h2>Installation from source</h2>
 [To be written]
