@@ -5,6 +5,17 @@
 
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>05 Apr 2004: <I>More RPMS and documentation</I></B>
+  <TD/></TR>
+  <TR><TD>
+    RPMS are now available for Red Hat Linux 9. I have also whipped together
+    some installation documents. No usage document yet though. Try pressing 0#
+    when you have the svxlink server running to get some help.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>04 Apr 2004: <I>We have transciever connection!</I></B>
   <TD/></TR>
   <TR><TD>
