@@ -68,10 +68,6 @@ Kan ej skapa uppkoppling till</translation>
         <translation>Tid:</translation>
     </message>
     <message>
-        <source>Chat</source>
-        <translation type="obsolete"></translation>
-    </message>
-    <message>
         <source>Connect</source>
         <translation type="obsolete">Anslut</translation>
     </message>
@@ -106,21 +102,6 @@ Kan ej skapa uppkoppling till</translation>
     <message>
         <source>Name:</source>
         <translation>Namn:</translation>
-    </message>
-</context>
-<context>
-    <name>IncomingConnection</name>
-    <message>
-        <source>Incoming connection</source>
-        <translation type="obsolete"></translation>
-    </message>
-    <message>
-        <source>Incoming connection from</source>
-        <translation type="obsolete"></translation>
-    </message>
-    <message>
-        <source>Do you want to accept it ?</source>
-        <translation type="obsolete"></translation>
     </message>
 </context>
 <context>
@@ -195,10 +176,6 @@ station du vill lägga till</translation>
 <context>
     <name>MainWindowBase</name>
     <message>
-        <source>qtel</source>
-        <translation type="obsolete"></translation>
-    </message>
-    <message>
         <source>Server Messages</source>
         <translation type="obsolete">Servermeddelanden</translation>
     </message>
@@ -248,7 +225,7 @@ station du vill lägga till</translation>
     </message>
     <message>
         <source>IP-address</source>
-        <translation>IP-adress</translation>
+        <translation type="obsolete">IP-adress</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -444,6 +421,34 @@ station du vill lägga till</translation>
         <source>Name</source>
         <translation>Namn</translation>
     </message>
+    <message>
+        <source>Node ID</source>
+        <translation>Nod-ID</translation>
+    </message>
+    <message>
+        <source>Ctrl+Z</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Ctrl+Y</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Ctrl+X</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Ctrl+C</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Ctrl+V</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Ctrl+F</source>
+        <translation></translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -528,6 +533,30 @@ meddelande</translation>
     <message>
         <source>Start as busy</source>
         <translation>Starta som upptagen</translation>
+    </message>
+    <message>
+        <source>Sound</source>
+        <translation>Ljud</translation>
+    </message>
+    <message>
+        <source>Sound settings</source>
+        <translation>Ljudinställningar</translation>
+    </message>
+    <message>
+        <source>Audio device</source>
+        <translation>Ljudenhet</translation>
+    </message>
+    <message>
+        <source>Full duplex</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>The audio device to use (e.g. /dev/dsp)</source>
+        <translation>Vilken ljudenhet som skall användas (ex /dev/dsp)</translation>
+    </message>
+    <message>
+        <source>Check this check box to enable full duplex operation</source>
+        <translation>Klicka i denna för att aktivera ljudhantering i full duplex</translation>
     </message>
 </context>
 </TS>
