@@ -1,14 +1,15 @@
 /**
 @file	 AsyncAudioDevice.cpp
-@brief   Handle audio devices
+@brief   Handle OSS audio devices
 @author  Tobias Blomberg
 @date	 2004-03-20
 
-A_detailed_description_for_this_file
+This file contains an implementation of a class that handles OSS audio
+devices.
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003-2004 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
