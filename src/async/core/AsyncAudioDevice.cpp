@@ -392,6 +392,11 @@ void AudioDevice::audioToWriteAvailable(void)
 
 int AudioDevice::samplesToWrite(void) const
 {
+  if ((current_mode != MODE_WR) && (current_mode != MODE_RDWR))
+  {
+    return 0;
+  }
+  
   audio_buf_info info;
   if (ioctl(fd, SNDCTL_DSP_GETOSPACE, &info) == -1)
   {
@@ -547,7 +552,9 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
 
     int frags_to_write = sizeof(*buf) * count / info.fragsize;
     */
-    samples_to_write = min(samples_to_write, info.bytes / sizeof(short));
+    //samples_to_write = min(samples_to_write, info.bytes / sizeof(short));
+    samples_to_write = min(samples_to_write,
+      	    info.fragments * info.fragsize / sizeof(short));
     
     if (samples_to_write == 0)
     {
