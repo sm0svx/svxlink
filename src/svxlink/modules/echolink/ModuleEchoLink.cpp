@@ -594,7 +594,7 @@ void ModuleEchoLink::allMsgsWritten(void)
  */
 void ModuleEchoLink::reportState(void)
 {
-  playSilence(500);
+  playSilence(200);
   playNumber(qsos.size());
   playMsg("connected_stations");
 } /* reportState */
