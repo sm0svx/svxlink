@@ -8,6 +8,21 @@ svxlink-devel@lists.sourceforge.net</A>. So, whatever your business is, please
 use the mailing list. Do not use EchoLink or direct e-mail to the author. The
 list is very low volume so don't be afraid to register.
 <P>
+There are a couple of reasons why only the mailing list should be used for
+support:
+<UL>
+  <LI>There are more people that can help. I only use RedHat Linux but there are
+      people on the mailing list that have gotten SvxLink to work under other
+      distributions.</LI>
+  <LI>Documentation. All mails sent to the mailing list get stored in the
+      <A href="https://sourceforge.net/mailarchive/forum.php?forum_id=34097">mailing list archive</A>.
+      A good way to find solutions to problems is to
+      <A href="https://sourceforge.net/search/index.php?type_of_search=mlists&group_id=84813&forum_id=34097">search</A>
+      the archive.</LI>
+  <LI>Other people subscribing to the mailing list might get helped by the
+      discussion.</LI>
+</UL>
+<P>
 There is also another mailing list svxlink-announce@lists.sourceforge.net, which
 is even lower volume. Just a single mail per SvxLink release, which is not that
 often. If you join the svxlink-devel list there is no need to join the
