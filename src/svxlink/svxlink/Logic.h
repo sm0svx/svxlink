@@ -190,6 +190,7 @@ class Logic : public SigC::Object
     std::list<Module*>	modules;
     std::string       	received_digits;
     std::string       	m_callsign;
+    Async::Timer      	*cmd_tmo_timer;
     
     void allMsgsWritten(void);
     void allModuleSamplesWritten(void);
@@ -197,6 +198,7 @@ class Logic : public SigC::Object
     void allTxSamplesFlushed(void);
     void loadModules(void);
     void loadModule(const std::string& module_name);
+    void cmdTimeout(Async::Timer *t);
 
 
 };  /* class Logic */

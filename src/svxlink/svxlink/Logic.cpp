@@ -125,7 +125,8 @@ using namespace Async;
 
 Logic::Logic(Config &cfg, const string& name)
   : m_cfg(cfg), m_name(name), m_rx(0), m_tx(0), msg_handler(0),
-    write_msg_flush_timer(0), active_module(0), module_tx_fifo(0)
+    write_msg_flush_timer(0), active_module(0), module_tx_fifo(0),
+    cmd_tmo_timer(0)
 {
 
 } /* Logic::Logic */
@@ -197,13 +198,17 @@ bool Logic::initialize(void)
   tx().transmitBufferFull.connect(
       	  slot(msg_handler, &MsgHandler::writeBufferFull));
   
-  module_tx_fifo = new SampleFifo(10*8000); // 10 seconds
+  module_tx_fifo = new SampleFifo(15*8000); // 15 seconds
   module_tx_fifo->allSamplesWritten.connect(
       	  slot(this, &Logic::allModuleSamplesWritten));
   module_tx_fifo->writeSamples.connect(slot(this, &Logic::transmitAudio));
   tx().transmitBufferFull.connect(
       	  slot(module_tx_fifo, &SampleFifo::writeBufferFull));
   module_tx_fifo->stopOutput(true);
+  
+  cmd_tmo_timer = new Timer(10000);
+  cmd_tmo_timer->expired.connect(slot(this, &Logic::cmdTimeout));
+  cmd_tmo_timer->setEnable(false);
   
   return true;
   
@@ -339,9 +344,12 @@ void Logic::dtmfDigitDetected(char digit)
     {
       active_module->dtmfCmdReceived(received_digits);
       received_digits = "";
+      cmd_tmo_timer->setEnable(false);
     }
-    else
+    else if (received_digits.size() < 10)
     {
+      cmd_tmo_timer->reset();
+      cmd_tmo_timer->setEnable(true);
       received_digits += digit;
     }
   }
@@ -355,6 +363,7 @@ void Logic::dtmfDigitDetected(char digit)
       }
       else
       {
+      	cmd_tmo_timer->setEnable(false);
 	int module_id = atoi(received_digits.c_str());
 	received_digits = "";
 	Module *module = findModule(module_id);
@@ -369,8 +378,10 @@ void Logic::dtmfDigitDetected(char digit)
 	}
       }
     }
-    else if (isdigit(digit))
+    else if (isdigit(digit) && (received_digits.size() < 10))
     {
+      cmd_tmo_timer->reset();
+      cmd_tmo_timer->setEnable(true);
       received_digits += digit;
     }
   }  
@@ -572,6 +583,13 @@ void Logic::loadModule(const string& module_cfg_name)
   modules.push_back(module);
   
 } /* Logic::loadModule */
+
+
+void Logic::cmdTimeout(Timer *t)
+{
+  received_digits = "";
+} /* Logic::cmdTimeout */
+
 
 
 /*
