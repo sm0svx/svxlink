@@ -3,6 +3,9 @@
 
 * Now the AudioIO object is really checking for full duplex capablility.
 
+* Bugfix: The application would crash if the AudioIO object were deleted
+  and then recreated.
+
 
 
  0.9.0 -- 27 May 2004
