@@ -70,6 +70,7 @@ namespace Async
 namespace EchoLink
 {
   class Directory;
+  class StationData;
 };
 
 
@@ -138,6 +139,7 @@ class ModuleEchoLink : public Module
     MsgHandler	      	*msg_handler;
     AudioPacer       	*msg_pacer;
     bool      	      	remote_activation;
+    int       	      	pending_connect_id;
 
     void moduleCleanup(void);
     const char *name(void) const { return "EchoLink"; }
@@ -163,6 +165,7 @@ class ModuleEchoLink : public Module
     void spellCallsign(const std::string& callsign);
 
     void allMsgsWritten(void);
+    void createOutgoingConnection(const EchoLink::StationData *station);
 
 };  /* class ModuleEchoLink */
 

@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdio.h>
 
 #include <algorithm>
+#include <cassert>
 
 
 /****************************************************************************
@@ -144,7 +145,7 @@ extern "C" {
 ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
       	      	      	       const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), dir(0), qso(0), dir_refresh_timer(0),
-    remote_activation(false)
+    remote_activation(false), pending_connect_id(-1)
 {
   cout << "\tModule " << name()
        << " v" MODULE_ECHOLINK_VERSION " starting...\n";
@@ -402,28 +403,16 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
       return;
     }
     
-    const StationData *station = dir->findStation(atoi(cmd.c_str()));
+    int station_id = atoi(cmd.c_str());
+    const StationData *station = dir->findStation(station_id);
     if (station != 0)
     {
-      qso = new Qso(station->ip(), callsign, sysop_name, description);
-      if (!qso->initOk())
-      {
-	delete qso;
-	cerr << "Creation of Qso failed\n";
-	playMsg("operation_failed");
-	return;
-      }
-      qso->infoMsgReceived.connect(
-      	      slot(this, &ModuleEchoLink::onInfoMsgReceived));
-      qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
-      qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
-      qso->audioReceived.connect(slot(this, &Module::audioFromModule));
-      qso->connect();
+      createOutgoingConnection(station);
     }
     else
     {
-      spellWord(cmd);
-      playMsg("not_found");
+      getDirectoryList();
+      pending_connect_id = station_id;
     }
   }
   else
@@ -544,15 +533,21 @@ void ModuleEchoLink::onStatusChanged(StationData::Status status)
  */
 void ModuleEchoLink::onStationListUpdated(void)
 {
-  /*
-  const list<StationData>& stations = dir->stations();
-  list<StationData>::const_iterator it;
-  for (it = stations.begin(); it != stations.end(); ++it)
+  if (pending_connect_id > 0)
   {
-    cerr << *it << endl;
+    const StationData *station = dir->findStation(pending_connect_id);
+    if (station != 0)
+    {
+      createOutgoingConnection(station);
+    }
+    else
+    {
+      playNumber(pending_connect_id);
+      playMsg("not_found");
+    }
+    pending_connect_id = -1;
   }
-  */
-
+  
   cout << "--- EchoLink directory server message: ---" << endl;
   cout << dir->message() << endl;
 
@@ -575,7 +570,13 @@ void ModuleEchoLink::onStationListUpdated(void)
 void ModuleEchoLink::onError(const string& msg)
 {
   cerr << "*** EchoLink directory server error: " << msg << endl;
-  //Application::app().quit();
+  
+  if (pending_connect_id > 0)
+  {
+    playMsg("operation_failed");
+    pending_connect_id = -1;
+  }
+  
 } /* onError */
 
 
@@ -601,7 +602,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   cout << "Incoming EchoLink connection from " << callsign
        << " (" << name << ")\n";
   
-  if (qso != 0) // A connection is already active
+  if ((qso != 0) || (pending_connect_id > 0)) // A connection is already active
   {
     // FIXME: Send BYE or maybe first an audio info message to remote station
     cerr << "EchoLink is BUSY...\n";
@@ -857,6 +858,29 @@ void ModuleEchoLink::allMsgsWritten(void)
     qso->flushAudioSendBuffer();
   }
 } /* ModuleEchoLink::allMsgsWritten */
+
+
+void ModuleEchoLink::createOutgoingConnection(const StationData *station)
+{
+  assert(qso == 0);
+  
+  qso = new Qso(station->ip(), callsign, sysop_name, description);
+  if (!qso->initOk())
+  {
+    delete qso;
+    cerr << "Creation of Qso failed\n";
+    playMsg("operation_failed");
+    return;
+  }
+  qso->infoMsgReceived.connect(
+      	  slot(this, &ModuleEchoLink::onInfoMsgReceived));
+  qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
+  qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
+  qso->audioReceived.connect(slot(this, &Module::audioFromModule));
+  qso->connect();
+
+} /* ModuleEchoLink::createOutgoingConnection */
+
 
 
 /*
