@@ -527,7 +527,7 @@ void Logic::loadModule(const string& module_cfg_name)
     dlclose(handle);
     return;
   }
-  Module *module = init(handle, this, id);
+  Module *module = init(handle, this, id, module_cfg_name.c_str());
   if (module == 0)
   {
     cerr << "*** Error: Initialization failed for module "
