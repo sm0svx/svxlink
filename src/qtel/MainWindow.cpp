@@ -644,6 +644,7 @@ void MainWindow::addNamedStationToBookmarks(void)
   
   if (!call.isEmpty())
   {
+    call = call.upper();
     QStringList bookmarks = Settings::instance()->bookmarks();
     if (bookmarks.find(call) == bookmarks.end())
     {
