@@ -180,8 +180,7 @@ class ComDialog : public ComDialogBase, public SigC::Object
     void updateStationData(const EchoLink::StationData *station);
     void createConnection(const EchoLink::StationData *station);
     void onStationListUpdated(void);
-    void audioReceived(short *buf, int len);
-    void micAudioRead(short *buf, int len);
+    int micAudioRead(short *buf, int len);
     bool openAudioDevice(Async::AudioIO::Mode mode);
 
   private slots:

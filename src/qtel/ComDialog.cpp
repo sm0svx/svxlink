@@ -372,7 +372,7 @@ void ComDialog::createConnection(const StationData *station)
   con->chatMsgReceived.connect(slot(this, &ComDialog::chatMsgReceived));
   con->stateChange.connect(slot(this, &ComDialog::stateChange));
   con->isReceiving.connect(slot(this, &ComDialog::isReceiving));
-  con->audioReceived.connect(slot(this, &ComDialog::audioReceived));
+  con->audioReceived.connect(slot(audio_io, &AudioIO::write));
   
   connect_button->setEnabled(TRUE);
   connect_button->setFocus();
@@ -408,21 +408,20 @@ void ComDialog::onStationListUpdated(void)
 } /* ComDialog::onStationListUpdated */
 
 
-void ComDialog::audioReceived(short *buf, int len)
+int ComDialog::micAudioRead(short *buf, int len)
 {
-  audio_io->write(buf, len);
-} /* ComDialog::audioReceived */
-
-
-void ComDialog::micAudioRead(short *buf, int len)
-{
+  int samples_sent = 0;
   if (is_transmitting)
   {
-    if (con->sendAudio(buf, len) != len)
+    samples_sent = con->sendAudio(buf, len);
+    if (samples_sent != len)
     {
       printf("*** warning: Mic samples thrown away\n");
     }
   }
+  
+  return samples_sent;
+  
 } /* ComDialog::micAudioRead */
 
 
