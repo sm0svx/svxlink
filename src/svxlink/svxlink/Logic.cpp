@@ -232,7 +232,6 @@ bool Logic::initialize(void)
 void Logic::playMsg(const string& msg, const Module *module)
 {
   module_tx_fifo->stopOutput(true);
-  transmit(true);
   if (module == 0)
   {
     msg_handler->playMsg("Core", msg);
@@ -241,31 +240,31 @@ void Logic::playMsg(const string& msg, const Module *module)
   {
     msg_handler->playMsg(module->name(), msg);
   }
-  
+  transmit(true);  
 } /* Logic::playMsg */
 
 
 void Logic::playNumber(int number)
 {
   module_tx_fifo->stopOutput(true);
-  transmit(true);
   msg_handler->playNumber(number);
+  transmit(true);
 } /* Logic::playNumber */
 
 
 void Logic::spellWord(const string& word)
 {
   module_tx_fifo->stopOutput(true);
-  transmit(true);
   msg_handler->spellWord(word);
+  transmit(true);
 } /* Logic::spellWord */
 
 
 void Logic::playSilence(int length)
 {
   module_tx_fifo->stopOutput(true);
-  transmit(true);
   msg_handler->playSilence(length);
+  transmit(true);
 } /* Logic::playSilence */
 
 
