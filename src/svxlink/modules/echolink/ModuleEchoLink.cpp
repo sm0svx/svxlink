@@ -50,6 +50,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <EchoLinkDispatcher.h>
 #include <EchoLinkQso.h>
 
+#include <MsgHandler.h>
+#include <AudioPaser.h>
 
 
 /****************************************************************************
@@ -149,6 +151,7 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic, int id,
   string server;
   string password;
   string location;
+  string sound_base_dir;
   
     /* FIXME: Better error handling */
   if (!cfg().getValue(cfg_name, "SERVER", server))
@@ -188,6 +191,15 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic, int id,
     return;
   }
   
+  cfg().getValue(cfg_name, "ALLOW_IP", allow_ip);
+  
+  if (!cfg().getValue(logicName(), "SOUNDS", sound_base_dir))
+  {
+    cerr << "*** Error: Config variable " << logicName()
+      	 << "/SOUNDS not set\n";
+    return;
+  }
+  
     // Initialize directory server communication
   dir = new Directory(server, callsign, password, location);
   dir->statusChanged.connect(slot(this, &ModuleEchoLink::onStatusChanged));
@@ -196,6 +208,17 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic, int id,
   dir->error.connect(slot(this, &ModuleEchoLink::onError));
   //dir->makeBusy();
   dir->makeOnline();
+  
+  msg_handler = new MsgHandler(sound_base_dir);
+  
+  msg_paser = new AudioPaser(8000, 160*4, 500);
+  msg_handler->writeAudio.connect(slot(msg_paser, &AudioPaser::audioInput));
+  msg_handler->allMsgsWritten.connect(
+      	  slot(msg_paser, &AudioPaser::flushAllAudio));
+  msg_paser->audioInputBufFull.connect(
+      	  slot(msg_handler, &MsgHandler::writeBufferFull));
+  msg_paser->allAudioFlushed.connect(
+      	  slot(this, &ModuleEchoLink::allMsgsWritten));
   
     // Start listening to the EchoLink UDP ports
   if (Dispatcher::instance() == 0)
@@ -212,6 +235,8 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic, int id,
 
 ModuleEchoLink::~ModuleEchoLink(void)
 {
+  delete msg_paser;
+  delete msg_handler;
   delete dir_refresh_timer;
   delete qso;
   delete Dispatcher::instance();
@@ -429,9 +454,10 @@ void ModuleEchoLink::squelchOpen(bool is_open)
  */
 int ModuleEchoLink::audioFromRx(short *samples, int count)
 {
-  if (qso != 0)
+    // FIXME: FIFO for saving samples if writing message
+  if ((qso != 0) && (!msg_handler->isWritingMessage()))
   {
-    qso->sendAudio(samples, count);
+    count = qso->sendAudio(samples, count);
   }
   
   return count;
@@ -530,7 +556,8 @@ void ModuleEchoLink::onError(const string& msg)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void ModuleEchoLink::onIncomingConnection(const string& callsign,
+void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
+      	      	      	      	      	  const string& callsign,
       	      	      	      	      	  const string& name)
 {
   cerr << "Incoming connection from " << callsign << " (" << name << ")\n";
@@ -544,11 +571,22 @@ void ModuleEchoLink::onIncomingConnection(const string& callsign,
     return;
   }
   
-    // Check if the incoming callsign is valid
-  const StationData *station = dir->findCall(callsign);
-  if (station == 0) // FIXME: If not found, a getCalls should be done
+  const StationData *station;
+  StationData tmp_stn_data;
+  if (ip.isWithinSubet(allow_ip))
   {
-    return;
+    tmp_stn_data.setIp(ip);
+    tmp_stn_data.setCallsign(callsign);
+    station = &tmp_stn_data;
+  }
+  else
+  {
+    station = dir->findCall(callsign);
+      // Check if the incoming callsign is valid
+    if (station == 0) // FIXME: If not found, a getCalls should be done
+    {
+      return;
+    }
   }
   
     // Create a new Qso object to accept the connection
@@ -565,6 +603,8 @@ void ModuleEchoLink::onIncomingConnection(const string& callsign,
   qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
   qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
   qso->audioReceived.connect(slot(this, &Module::audioFromModule));
+  //msg_handler->writeAudio.connect(slot(qso, &Qso::sendAudio));
+  msg_paser->audioOutput.connect(slot(qso, &Qso::sendAudio));
   
   if (!activateMe())
   {
@@ -574,7 +614,9 @@ void ModuleEchoLink::onIncomingConnection(const string& callsign,
     return;
   }
   qso->accept();
-
+  
+  msg_handler->playMsg("EchoLink", "greeting");
+  
 } /* onIncomingConnection */
 
 
@@ -753,6 +795,15 @@ void ModuleEchoLink::spellCallsign(const string& callsign)
   
 } /* spellCallsign */
 
+
+void ModuleEchoLink::allMsgsWritten(void)
+{
+  printf("ModuleEchoLink::allMsgsWritten\n");
+  if (qso != 0)
+  {
+    qso->flushAudioSendBuffer();
+  }
+} /* ModuleEchoLink::allMsgsWritten */
 
 
 /*

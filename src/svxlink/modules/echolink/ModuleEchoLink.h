@@ -89,6 +89,8 @@ namespace EchoLink
  *
  ****************************************************************************/
 
+class MsgHandler;
+class AudioPaser;
   
 
 /****************************************************************************
@@ -132,6 +134,9 @@ class ModuleEchoLink : public Module
     std::string       	callsign;
     std::string       	sysop_name;
     std::string       	description;
+    std::string       	allow_ip;
+    MsgHandler	      	*msg_handler;
+    AudioPaser       	*msg_paser;
     
     const char *name(void) const { return "EchoLink"; }
     void activateInit(void);
@@ -145,8 +150,8 @@ class ModuleEchoLink : public Module
     void onStatusChanged(EchoLink::StationData::Status status);
     void onStationListUpdated(void);
     void onError(const std::string& msg);
-    void onIncomingConnection(const std::string& callsign,
-      	    const std::string& name);
+    void onIncomingConnection(const Async::IpAddress& ip,
+      	    const std::string& callsign, const std::string& name);
     void onInfoMsgReceived(const std::string& msg);
     void onStateChange(EchoLink::Qso::State state);
     void onIsReceiving(bool is_receiving);
@@ -155,6 +160,7 @@ class ModuleEchoLink : public Module
     void getDirectoryList(Async::Timer *timer);
     void spellCallsign(const std::string& callsign);
 
+    void allMsgsWritten(void);
 
 };  /* class ModuleEchoLink */
 
