@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sigc++/signal_system.h>
 #include <termios.h>
 
 #include <string>
@@ -85,6 +86,7 @@ namespace Async
  *
  ****************************************************************************/
 
+class FdWatch;
   
 
 /****************************************************************************
@@ -114,7 +116,7 @@ namespace Async
 @author Tobias Blomberg
 @date   2005-03-10
 */
-class SerialDevice
+class SerialDevice : public SigC::Object
 {
   public:
     static SerialDevice *open(const std::string& port);
@@ -128,6 +130,8 @@ class SerialDevice
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
+    SigC::Signal2<void, char*, int> charactersReceived;
+    
     
   protected:
     
@@ -138,12 +142,13 @@ class SerialDevice
     int       	    use_count;
     int       	    fd;
     struct termios  old_port_settings;
+    FdWatch   	    *rd_watch;
     
     SerialDevice(const std::string& port);
     ~SerialDevice(void);
     bool openPort(void);
     bool closePort(void);
-
+    void onIncomingData(FdWatch *watch);
   
     
 };  /* class SerialDevice */

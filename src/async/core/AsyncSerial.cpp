@@ -139,10 +139,7 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 Serial::Serial(const string& serial_port)
-  : serial_port(serial_port), 
-    //speed(DEFAULT_SPEED), parity(DEFAULT_PARITY),
-    //bits(DEFAULT_BITS), stop_bits(DEFAULT_STOP_BITS), flow(DEFAULT_FLOW),
-    canonical(false), fd(-1), rd_watch(0), dev(0)
+  : serial_port(serial_port), canonical(false), fd(-1), dev(0)
 {
 
 } /* Serial::Serial */
@@ -329,9 +326,7 @@ bool Serial::open(void)
     return false;
   }
   fd = dev->desc();
-    
-  rd_watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
-  rd_watch->activity.connect(slot(this, &Serial::onIncomingData));
+  dev->charactersReceived.connect(charactersReceived.slot());
   
   return true;
   
@@ -344,9 +339,6 @@ bool Serial::close(void)
   {
     return true;
   }
-  
-  delete rd_watch;
-  rd_watch = 0;
   
   bool success = SerialDevice::close(dev);
   dev = 0;
@@ -420,6 +412,47 @@ bool Serial::setPin(OutPin pin, bool set)
 } /* Serial::setPin */
 
 
+bool Serial::getPin(InPin pin, bool &is_set)
+{
+  int the_pin;
+  
+  switch (pin)
+  {
+    case PIN_CTS:
+      the_pin = TIOCM_CTS;
+      break;
+      
+    case PIN_DSR:
+      the_pin = TIOCM_DSR;
+      break;
+    
+    case PIN_DCD:
+      the_pin = TIOCM_CD;
+      break;
+    
+    case PIN_RI:
+      the_pin = TIOCM_RI;
+      break;
+    
+    default:
+      errno = EINVAL;
+      return false;
+  }
+  
+  int pins;
+  if (ioctl(fd, TIOCMGET, &pins) == -1)
+  {
+     return false;
+  }
+  
+  is_set = (pins & the_pin);
+  
+  return true;
+  
+} /* Serial::getPin */
+
+
+
 
 /****************************************************************************
  *
@@ -465,24 +498,6 @@ bool Serial::setPin(OutPin pin, bool set)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void Serial::onIncomingData(FdWatch *watch)
-{
-  char buf[READ_BUFSIZE];
-  int cnt;
-  
-  cnt = ::read(fd, buf, sizeof(buf)-1);
-  if (cnt == -1)
-  {
-    perror("read");
-    return;
-  }
-  
-  buf[cnt] = 0;
-  charactersReceived(buf, cnt);
-  
-} /* Serial::onIncomingData */
-
-
 
 
 

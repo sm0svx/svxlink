@@ -47,6 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncFdWatch.h>
 
 
 /****************************************************************************
@@ -55,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "AsyncSerial.h"
 #include "AsyncSerialDevice.h"
 
 
@@ -217,7 +219,7 @@ bool SerialDevice::close(SerialDevice *dev)
  *----------------------------------------------------------------------------
  */
 SerialDevice::SerialDevice(const string& port)
-  : port_name(port), use_count(0), fd(-1)
+  : port_name(port), use_count(0), fd(-1), rd_watch(0)
 {
   
 } /* SerialDevice::SerialDevice */
@@ -225,7 +227,7 @@ SerialDevice::SerialDevice(const string& port)
 
 SerialDevice::~SerialDevice(void)
 {
-
+  delete rd_watch;
 } /* SerialDevice::~SerialDevice */
 
 
@@ -255,6 +257,9 @@ bool SerialDevice::openPort(void)
     return false;
   }
 
+  rd_watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
+  rd_watch->activity.connect(slot(this, &SerialDevice::onIncomingData));
+  
   return true;
   
 } /* SerialDevice::openPort */
@@ -281,6 +286,26 @@ bool SerialDevice::closePort(void)
   return true;
   
 } /* SerialDevice::closePort */
+
+
+void SerialDevice::onIncomingData(FdWatch *watch)
+{
+  char buf[Serial::READ_BUFSIZE];
+  int cnt;
+  
+  cnt = ::read(fd, buf, sizeof(buf)-1);
+  if (cnt == -1)
+  {
+    perror("read");
+    return;
+  }
+  
+  buf[cnt] = 0;
+  charactersReceived(buf, cnt);
+  
+} /* SerialDevice::onIncomingData */
+
+
 
 
 

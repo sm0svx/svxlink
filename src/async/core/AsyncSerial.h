@@ -154,9 +154,20 @@ class Serial : public SigC::Object
      */
     typedef enum
     {
-      PIN_RTS,	    ///< Request to send
-      PIN_DTR 	    ///< Data Terminal Ready
+      PIN_RTS,	///< Request To Send
+      PIN_DTR 	///< Data Terminal Ready
     } OutPin;
+    
+    /**
+     * @brief A type that defines the input pins in the serial port
+     */
+    typedef enum
+    {
+      PIN_CTS,	///< Clear To Send
+      PIN_DSR, 	///< Data Set Ready
+      PIN_DCD,	///< Data Carrier Detect
+      PIN_RI  	///< Ring Indicate
+    } InPin;
     
     /**
      * @brief 	The maximum number of characters that can be read at once.
@@ -261,6 +272,7 @@ class Serial : public SigC::Object
     bool stopInput(bool stop);
 
     bool setPin(OutPin pin, bool set);
+    bool getPin(InPin pin, bool &is_set);
 
     /**
      * @brief 	A signal that is emitted when there is data to read
@@ -283,11 +295,8 @@ class Serial : public SigC::Object
     
     int       	      	fd;
     struct termios    	port_settings;
-    struct termios    	old_port_settings;
-    FdWatch   	      	*rd_watch;
     SerialDevice      	*dev;
     
-    void onIncomingData(FdWatch *watch);
 
 };  /* class Serial */
 
