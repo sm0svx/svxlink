@@ -226,6 +226,7 @@ class AudioDevice : public SigC::Object
     FdWatch	      	*write_watch;
     char      	      	*read_buf;
     int       	      	device_caps;
+    bool      	      	use_trigger;
     
     void audioReadHandler(FdWatch *watch);
     void writeSpaceAvailable(FdWatch *watch);

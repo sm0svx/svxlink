@@ -226,7 +226,6 @@ bool AudioDevice::open(Mode mode)
     ioctl(fd, SNDCTL_DSP_SETDUPLEX, 0);
   }
   
-  //int caps;
   if (ioctl(fd, SNDCTL_DSP_GETCAPS, &device_caps) == -1)
   {
     perror("SNDCTL_DSP_GETCAPS ioctl failed");
@@ -236,7 +235,7 @@ bool AudioDevice::open(Mode mode)
   //printf("The sound device do%s have TRIGGER capability\n",
   //    (caps & DSP_CAP_TRIGGER) ? "" : " NOT");
   
-  if (device_caps & DSP_CAP_TRIGGER)
+  if (use_trigger && (device_caps & DSP_CAP_TRIGGER))
   {
     arg = ~(PCM_ENABLE_OUTPUT | PCM_ENABLE_INPUT);
     if(ioctl(fd, SNDCTL_DSP_SETTRIGGER, &arg) == -1)
@@ -257,22 +256,6 @@ bool AudioDevice::open(Mode mode)
   }
   */
   
-  /*
-  arg = SIZE;
-  if(ioctl(fd, SOUND_PCM_WRITE_BITS, &arg) == -1)
-  {
-    perror("SOUND_PCM_WRITE_BITS ioctl failed");
-    close();
-    return false;
-  }
-  if(arg != SIZE)
-  {
-    perror("unable to set sample size");
-    close();
-    return false;
-  }
-  */
-
   arg = AFMT_S16_LE; 
   if(ioctl(fd,  SNDCTL_DSP_SETFMT, &arg) == -1)
   {
@@ -351,7 +334,7 @@ bool AudioDevice::open(Mode mode)
     arg |= PCM_ENABLE_OUTPUT;
   }
   
-  if (device_caps & DSP_CAP_TRIGGER)
+  if (use_trigger && (device_caps & DSP_CAP_TRIGGER))
   {
     if(ioctl(fd, SNDCTL_DSP_SETTRIGGER, &arg) == -1)
     {
@@ -448,7 +431,8 @@ AudioDevice::AudioDevice(const string& dev_name)
   : dev_name(dev_name), use_count(0), current_mode(MODE_NONE), fd(-1),
     read_watch(0), write_watch(0), read_buf(0), device_caps(0)
 {
-
+  char *use_trigger_str = getenv("ASYNC_AUDIO_NOTRIGGER");
+  use_trigger = (use_trigger_str == 0);
 } /* AudioDevice::AudioDevice */
 
 
