@@ -125,6 +125,12 @@ After the configuration has been done, start the server by typing
 <em>svxlink</em> at the command prompt. It is possible to simulate DTMF input by
 pressing the 1-9, A-D, *, # keys. Have a look at the
 <A href="svxlink_usage.php">user documentation</A> to begin testing the server.
+To get help about command line options, start the svxlink server with the
+<em>--help</em> switch.
+<P>
+<strong>Note3:</strong> To start the svxlink server in the background, use the
+<em>--daemon</em> switch. Do not use "&amp;". This will make the server hang
+when trying to read from standard input.
 <P>
 
 
