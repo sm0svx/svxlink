@@ -178,12 +178,13 @@ void SampleFifo::stopOutput(bool stop)
     return;
   }
   
+  is_stopped = stop;
+  
   if (!stop)
   {
     writeSamplesFromFifo();
   }
-  
-  is_stopped = stop;
+    
 } /* stopOutput */
 
 
