@@ -56,18 +56,9 @@ void MsgHandler::playNumber(float number)
   int fracpart = static_cast<int>((number-intpart)*1000);
   
   list<string> digits;
-  do
-  {
-    char digit[2];
-    digit[0] = (intpart % 10) + '0';
-    digit[1] = 0;
-    intpart /= 10;
-    digits.push_front(digit);
-  } while (intpart != 0);
-  
+
   if (fracpart > 0)
   {
-    digits.push_front("decimal");
     do
     {
       char digit[2];
@@ -76,7 +67,17 @@ void MsgHandler::playNumber(float number)
       fracpart /= 10;
       digits.push_front(digit);
     } while (fracpart != 0);
+    digits.push_front("decimal");
   }
+  
+  do
+  {
+    char digit[2];
+    digit[0] = (intpart % 10) + '0';
+    digit[1] = 0;
+    intpart /= 10;
+    digits.push_front(digit);
+  } while (intpart != 0);
   
   begin();
   list<string>::iterator it;
