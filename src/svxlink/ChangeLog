@@ -25,6 +25,8 @@
   The second is --logfile which make it possible to redirect stdout and
   stderr to a file.
 
+* ModuleEchoLink: Improved directory list handling.
+
 
 
  0.2.0 -- 27 May 2004
