@@ -144,7 +144,7 @@ class SampleFifo : public SigC::Object
     void setOverwrite(bool overwrite) { do_overwrite = overwrite; }
     bool overwrite(void) const { return do_overwrite; }
     int readSamples(short *samples, int count);
-    void clear(void) { tail = head; }
+    void clear(void) { tail = head; allSamplesWritten(); }
 
      
     /**
