@@ -137,6 +137,35 @@ PLUGINS_INSTALL	= $(PLUGINS:%=%.so[755,root,root])
 
 ###############################################################################
 #
+# This section contains extra targets. They should be used as
+# a last resort if the existing features can not solve a problem.
+# PRE_TARGETS are made _before_ anything else and POST_TARGETS are
+# made _after_ everything else.
+# On a "make clean", the specified targets are removed.
+#
+###############################################################################
+
+#PRE_TARGETS    = pre.txt
+POST_TARGETS   = translations/qtel_sv.qm
+
+
+translations/qtel_%.qm:  translations/qtel_%.ts
+	$(ECHO) --- Creating translation file $(BOLD)$@$(NBOLD)...
+	lrelease $<
+
+
+#pre.txt:       nisse.txt
+#       $(ECHO) --- Creating file $(BOLD)$@$(NBOLD)...
+#       echo "Hello, target $@!" > $@
+
+#post.txt:      nisse.txt
+#       $(ECHO) --- Creating file $(BOLD)$@$(NBOLD)...
+#       echo "Hello, target $@!" > $@
+
+
+
+###############################################################################
+#
 # This section contains the inclusion of the main makefile
 # containing all targets. DON'T TOUCH!
 #
@@ -196,6 +225,8 @@ install-extras uninstall-extras rpm-extras:
 	$(FILESPEC) connect.raw[644,root,root] /usr/share/qtel/sounds
 
 #	$(DIRSPEC) /var/spool/myprog[755,root,root]
+
+
 
 #
 # EOF -- This file has not been truncated.
