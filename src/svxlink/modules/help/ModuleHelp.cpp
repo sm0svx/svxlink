@@ -263,6 +263,9 @@ void ModuleHelp::dtmfCmdReceived(const string& cmd)
   }
   else
   {
+    setIdle(false); /* Reset the module timeout timer */
+    setIdle(true);
+    
     int module_id = atoi(cmd.c_str());
     Module *module = findModule(module_id);
     if (module != 0)

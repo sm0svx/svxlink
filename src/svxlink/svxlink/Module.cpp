@@ -2,10 +2,12 @@
 #include <iostream>
 
 #include <AsyncConfig.h>
+#include <AsyncTimer.h>
 
 #include "Rx.h"
 #include "Logic.h"
 #include "Module.h"
+
 
 using namespace std;
 using namespace Async;
@@ -13,10 +15,16 @@ using namespace Async;
 
 Module::Module(void *dl_handle, Logic *logic, const string& cfg_name)
   : m_dl_handle(dl_handle), m_logic(logic), m_id(-1), m_is_transmitting(false),
-    m_is_active(false), m_cfg_name(cfg_name)
+    m_is_active(false), m_cfg_name(cfg_name), m_tmo_timer(0)
 {
   
 } /* Module::Module */
+
+
+Module::~Module(void)
+{
+  delete m_tmo_timer;
+} /* Module::~Module */
 
 
 bool Module::initialize(void)
@@ -30,6 +38,14 @@ bool Module::initialize(void)
   }
   m_id = atoi(id_str.c_str());
 
+  string timeout_str;
+  if (cfg().getValue(cfgName(), "TIMEOUT", timeout_str))
+  {
+    m_tmo_timer = new Timer(1000 * atoi(timeout_str.c_str()));
+    m_tmo_timer->setEnable(false);
+    m_tmo_timer->expired.connect(slot(this, &Module::moduleTimeout));
+  }
+  
   return true;
   
 } /* Module::initialize */
@@ -49,7 +65,8 @@ void Module::activate(void)
   m_squelch_con = logic()->rx().squelchOpen.connect(
       	  slot(this, &Module::squelchOpen));
   
-  activateInit();  
+  setIdle(true);
+  activateInit();
 }
 
 
@@ -58,6 +75,7 @@ void Module::deactivate(void)
   cout << "Deactivating module " << name() << "...\n";
   
   deactivateCleanup();
+  setIdle(false);
   
   m_audio_con.disconnect();
   m_squelch_con.disconnect();
@@ -72,7 +90,8 @@ void Module::deactivate(void)
 Config &Module::cfg(void) const
 {
   return logic()->cfg();
-} /*  */
+} /* Module::cfg */
+
 
 void Module::playMsg(const string& msg) const
 {
@@ -134,5 +153,23 @@ const string& Module::logicName(void) const
 {
   return logic()->name();
 } /* Module::logicName */
+
+
+void Module::setIdle(bool is_idle)
+{
+  if (m_tmo_timer != 0)
+  {
+    m_tmo_timer->setEnable(is_idle);
+  }
+} /* Module::setIdle */
+
+
+void Module::moduleTimeout(Timer *t)
+{
+  cout << "Module timeout: " << name() << endl;
+  playMsg("timeout");
+  deactivateMe();
+} /* ModuleParrot::moduleTimeout */
+
 
 

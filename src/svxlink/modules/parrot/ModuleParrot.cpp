@@ -48,8 +48,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <version/MODULE_PARROT.h>
 
-#include <AsyncConfig.h>
-#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -79,7 +77,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define DEFAULT_MODULE_TIMEOUT	"300"
 
 
 /****************************************************************************
@@ -140,8 +137,7 @@ extern "C" {
 
 ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       	      	      	   const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), fifo(30*8000), squelch_is_open(false),
-    module_tmo_timer(0)
+  : Module(dl_handle, logic, cfg_name), fifo(30*8000), squelch_is_open(false)
 {
   cout << "\tModule " << name()
        << " v" MODULE_PARROT_VERSION " starting...\n";
@@ -150,21 +146,12 @@ ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
   fifo.writeSamples.connect(slot(this, &ModuleParrot::audioFromFifo));
   fifo.allSamplesWritten.connect(slot(this, &ModuleParrot::allSamplesWritten));
   
-  string timeout;
-  if (!cfg().getValue(cfg_name, "TIMEOUT", timeout))
-  {
-    timeout = DEFAULT_MODULE_TIMEOUT;
-  }
-  module_tmo_timer = new Timer(1000 * atoi(timeout.c_str()));
-  module_tmo_timer->setEnable(false);
-  module_tmo_timer->expired.connect(slot(this, &ModuleParrot::moduleTimeout));
-  
 } /* ModuleParrot */
 
 
 ModuleParrot::~ModuleParrot(void)
 {
-  delete module_tmo_timer;
+
 } /* ~ModuleParrot */
 
 
@@ -218,7 +205,6 @@ ModuleParrot::~ModuleParrot(void)
 void ModuleParrot::activateInit(void)
 {
   fifo.clear();
-  module_tmo_timer->setEnable(true);
 } /* activateInit */
 
 
@@ -238,7 +224,6 @@ void ModuleParrot::activateInit(void)
 void ModuleParrot::deactivateCleanup(void)
 {
   fifo.clear();
-  module_tmo_timer->setEnable(false);
 } /* deactivateCleanup */
 
 
@@ -305,7 +290,7 @@ void ModuleParrot::squelchOpen(bool is_open)
   
   if (is_open)
   {
-    module_tmo_timer->setEnable(false);
+    setIdle(false);
     fifo.stopOutput(true);
   }
   else
@@ -315,7 +300,10 @@ void ModuleParrot::squelchOpen(bool is_open)
       transmit(true);
       fifo.stopOutput(false);
     }
-    module_tmo_timer->setEnable(true);
+    else
+    {
+      setIdle(true);
+    }
   }
 
 } /* ModuleParrot::squelchOpen */
@@ -346,17 +334,8 @@ void ModuleParrot::allSamplesWritten(void)
 {
   transmit(false);
   fifo.stopOutput(true);
+  setIdle(true);
 } /* ModuleParrot::allSamplesWritten */
-
-
-void ModuleParrot::moduleTimeout(Timer *t)
-{
-  cout << "Module timeout: " << name() << endl;
-  //playMsg("module");
-  //playModuleName();
-  playMsg("timeout");
-  deactivateMe();
-} /* ModuleParrot::moduleTimeout */
 
 
 

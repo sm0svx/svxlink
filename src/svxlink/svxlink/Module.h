@@ -7,6 +7,7 @@
 namespace Async
 {
   class Config;
+  class Timer;
 };
 
 class Logic;
@@ -18,7 +19,7 @@ class Module : public SigC::Object
       	      	      	        const char *cfg_name);
     
     Module(void *dl_handle, Logic *logic, const std::string& cfg_name);
-    virtual ~Module(void) { }
+    virtual ~Module(void);
     
     virtual bool initialize(void);
 
@@ -54,6 +55,7 @@ class Module : public SigC::Object
     Module *findModule(int id);
     std::list<Module*> moduleList(void);
     const std::string& logicName(void) const;
+    void setIdle(bool is_idle);
 
   private:
     void      	      *m_dl_handle;
@@ -64,6 +66,9 @@ class Module : public SigC::Object
     SigC::Connection  m_squelch_con;
     bool      	      m_is_active;
     std::string	      m_cfg_name;
+    Async::Timer      *m_tmo_timer;
     
+    void moduleTimeout(Async::Timer *t);
+
 };
 

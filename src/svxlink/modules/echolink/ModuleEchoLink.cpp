@@ -458,6 +458,8 @@ void ModuleEchoLink::squelchOpen(bool is_open)
 {
   //printf("RX squelch is %s...\n", is_open ? "open" : "closed");
   
+  setIdle(!is_open && (qso == 0));
+  
 } /* squelchOpen */
 
 
@@ -689,6 +691,7 @@ void ModuleEchoLink::onStateChange(Qso::State state)
   {
     case Qso::STATE_DISCONNECTED:
       cout << "DISCONNECTED\n";
+      setIdle(true);
       spellCallsign(qso->remoteCallsign());
       playMsg("disconnected");
       delete qso;
@@ -700,11 +703,13 @@ void ModuleEchoLink::onStateChange(Qso::State state)
       break;
     case Qso::STATE_CONNECTING:
       cout << "CONNECTING\n";
+      setIdle(false);
       playMsg("connecting");
       //spellCallsign(qso->remoteCallsign());
       break;
     case Qso::STATE_CONNECTED:
       cout << "CONNECTED\n";
+      setIdle(false);
       playMsg("connected");
       spellCallsign(qso->remoteCallsign());
       break;
