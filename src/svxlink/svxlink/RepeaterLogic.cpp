@@ -201,7 +201,14 @@ bool RepeaterLogic::initialize(void)
 } /* RepeaterLogic::initialize */
 
 
-void RepeaterLogic::playMsg(const std::string& msg, const Module *module)
+void RepeaterLogic::playFile(const string& path)
+{
+  setIdle(false);
+  Logic::playFile(path);
+} /* RepeaterLogic::playFile */
+
+
+void RepeaterLogic::playMsg(const string& msg, const Module *module)
 {
   //printf("RepeaterLogic::playMsg: %s\n", msg.c_str());
   

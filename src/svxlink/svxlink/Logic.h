@@ -153,6 +153,7 @@ class Logic : public SigC::Object
     
     const std::string& name(void) const { return m_name; }
     
+    virtual void playFile(const std::string& path);
     virtual void playMsg(const std::string& msg, const Module *module=0);
     virtual void playNumber(int number);
     virtual void spellWord(const std::string& word);

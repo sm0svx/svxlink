@@ -112,6 +112,12 @@ void Module::playHelpMsg(void)
 } /* Module::playHelpMsg */
 
 
+void Module::playFile(const string& path)
+{
+  logic()->playFile(path);
+} /* Module::playFile */
+
+
 void Module::playMsg(const string& msg) const
 {
   if (m_is_active)

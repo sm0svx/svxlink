@@ -45,6 +45,7 @@ class Module : public SigC::Object
     virtual int audioFromRx(short *samples, int count) { return count; }
     virtual void allMsgsWritten(void) {}
     
+    void playFile(const std::string& path);
     void playMsg(const std::string& msg) const;
     void playNumber(int number) const;
     void spellWord(const std::string& word) const;

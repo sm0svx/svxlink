@@ -229,6 +229,14 @@ bool Logic::initialize(void)
 } /* Logic::initialize */
 
 
+void Logic::playFile(const string& path)
+{
+  module_tx_fifo->stopOutput(true);
+  msg_handler->playFile(path);
+  transmit(true);  
+} /* Logic::playFile */
+
+
 void Logic::playMsg(const string& msg, const Module *module)
 {
   module_tx_fifo->stopOutput(true);

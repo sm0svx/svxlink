@@ -30,6 +30,15 @@ MsgHandler::~MsgHandler(void)
 } /* MsgHandler::~MsgHandler */
 
 
+void MsgHandler::playFile(const string& path)
+{
+  char *str = new char[path.length() + 7];
+  sprintf(str, ">FILE:%s", path.c_str());
+  playMsg("Default", str);
+  delete [] str;
+} /* MsgHandler::playFile */
+
+
 void MsgHandler::playMsg(const string& context, const string& msg)
 {
   msg_queue.push_back(MsgQueueItem(context, msg));
@@ -145,6 +154,21 @@ void MsgHandler::executeCmd(const string& cmd)
   {
     silence_left = sample_rate * atoi(cmd.c_str() + 9) / 1000;
     writeFromFile();
+  }
+  else if (strstr(cmd.c_str(), ">FILE:") == cmd.c_str())
+  {
+    file = ::open(cmd.c_str() + 6, O_RDONLY);
+    if (file != -1)
+    {
+      writeFromFile();
+    }
+    else
+    {
+      cerr << "*** WARNING: Could not find audio file \"" << cmd.c_str() + 6
+           << "\"\n";
+      msg_queue.pop_front();
+      playNextMsg();
+    }
   }
   else
   {

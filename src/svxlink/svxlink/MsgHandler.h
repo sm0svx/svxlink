@@ -11,6 +11,7 @@ class MsgHandler : public SigC::Object
     MsgHandler(const std::string& base_dir, int sample_rate);
     ~MsgHandler(void);
     
+    void playFile(const std::string& path);
     void playMsg(const std::string& context, const std::string& msg);
     void playNumber(int number);
     void spellWord(const std::string& word);
