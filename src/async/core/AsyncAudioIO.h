@@ -182,7 +182,20 @@ class AudioIO : public SigC::Object
      */
     bool writeFile(const std::string& filename);
 
-  
+
+    /**
+     * @brief 	Find out how many samples there are in the output buffer
+     * @return	Returns the number of samples in the output buffer on
+     *          success or -1 on failure.
+     *
+     * This function can be used to find out how many samples there are
+     * in the output buffer at the moment. This can for example be used
+     * to find out how long it will take before the output buffer has
+     * been flushed.
+     */
+    int samplesToWrite(void) const;
+    
+    
     /**
      * @brief 	A signal that is emitted when a block of audio has been
      *	      	received from the audio device

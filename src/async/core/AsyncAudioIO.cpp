@@ -332,6 +332,7 @@ bool AudioIO::open(Mode mode)
     close();
     return false;
   }
+  printf("Reported sampling rate: %dHz\n", arg);
   
   /*  Used for playing non-full fragments.
   if (ioctl(fd, SNDCTL_DSP_POST, 0) == -1)
@@ -409,6 +410,12 @@ void AudioIO::close(void)
 } /* AudioIO::close */
 
 
+static inline int min(int a, int b)
+{
+  return (a < b) ? a : b;
+}
+
+
 int AudioIO::write(const short *buf, int count)
 {
   assert(fd >= 0);
@@ -427,22 +434,24 @@ int AudioIO::write(const short *buf, int count)
     return 0;
   }
   
-  /*
   audio_buf_info info;
   if (ioctl(fd, SNDCTL_DSP_GETOSPACE, &info) == -1)
   {
     perror("SNDCTL_DSP_GETOSPACE ioctl failed");
     return 0;
   }
+  /*
   printf("fragments=%d  fragstotal=%d  fragsize=%d  bytes=%d\n",
       	 info.fragments, info.fragstotal, info.fragsize, info.bytes);  
   
   int frags_to_write = sizeof(*buf) * count / info.fragsize;
   */
+  int samples_to_write = min(count, info.bytes / sizeof(*buf));
   
-  int written = ::write(fd, buf, sizeof(*buf) * count);
+  int written = ::write(fd, buf, samples_to_write * sizeof(*buf));
   if (written == -1)
   {
+    /*
     if (errno == EAGAIN)
     {
       writeBufferFull(true);
@@ -450,13 +459,21 @@ int AudioIO::write(const short *buf, int count)
       return 0;
     }
     else
+    */
     {
       perror("write in AudioIO::write");
       return -1;
     }
   }
+  int samples_written = written / sizeof(*buf);
   
-  return written / 2;
+  if (samples_written != count)
+  {
+    writeBufferFull(true);
+    write_watch->setEnabled(true);  
+  }
+  
+  return samples_written;
   
 } /* AudioIO::write */
 
@@ -489,8 +506,21 @@ bool AudioIO::writeFile(const string& filename)
   
   return true;
   
-} /* AudioIO::playFile */
+} /* AudioIO::writeFile */
 
+
+int AudioIO::samplesToWrite(void) const
+{
+  audio_buf_info info;
+  if (ioctl(fd, SNDCTL_DSP_GETOSPACE, &info) == -1)
+  {
+    perror("SNDCTL_DSP_GETOSPACE ioctl failed");
+    return -1;
+  }
+  
+  return (info.fragsize * (info.fragstotal - info.fragments)) / sizeof(short);
+  
+}
 
 
 /****************************************************************************
