@@ -40,7 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <string>
-
+#include <list>
 
 
 /****************************************************************************
@@ -129,12 +129,12 @@ class ModuleParrot : public Module
     bool initialize(void);
 
   private:
-    Async::SampleFifo *fifo;
-    bool      	      squelch_is_open;
-    AudioPacer	      pacer;
-    bool      	      deactivate_when_done;
-    int       	      repeat_delay;
-    Async::Timer      *repeat_delay_timer;
+    Async::SampleFifo 	    *fifo;
+    bool      	      	    squelch_is_open;
+    AudioPacer	      	    pacer;
+    int       	      	    repeat_delay;
+    Async::Timer      	    *repeat_delay_timer;
+    std::list<std::string>  cmd_queue;
     
     const char *name(void) const { return "Parrot"; }
     void activateInit(void);
@@ -143,10 +143,12 @@ class ModuleParrot : public Module
     void dtmfCmdReceived(const std::string& cmd);
     void squelchOpen(bool is_open);
     int audioFromRx(short *samples, int count);
-    
+    void allMsgsWritten(void);
+
     int audioFromFifo(short *samples, int count);
     void allSamplesWritten(void);
     void onRepeatDelayExpired(Async::Timer *t);
+    void execCmdQueue(void);
 
 };  /* class ModuleParrot */
 

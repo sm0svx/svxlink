@@ -140,8 +140,7 @@ extern "C" {
 ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       	      	      	   const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), fifo(0), squelch_is_open(false),
-    pacer(8000, 800, 1000), deactivate_when_done(false), repeat_delay(0),
-    repeat_delay_timer(0)
+    pacer(8000, 800, 1000), repeat_delay(0), repeat_delay_timer(0)
 {
   cout << "\tModule " << name()
        << " v" SVXLINK_VERSION " starting...\n";
@@ -240,8 +239,8 @@ bool ModuleParrot::initialize(void)
  */
 void ModuleParrot::activateInit(void)
 {
-  deactivate_when_done = false;
   fifo->clear();
+  cmd_queue.clear();
 } /* activateInit */
 
 
@@ -281,7 +280,7 @@ void ModuleParrot::deactivateCleanup(void)
  */
 void ModuleParrot::dtmfDigitReceived(char digit)
 {
-  printf("DTMF digit received in module %s: %c\n", name(), digit);
+  //printf("DTMF digit received in module %s: %c\n", name(), digit);
   
 } /* dtmfDigitReceived */
 
@@ -305,27 +304,10 @@ void ModuleParrot::dtmfCmdReceived(const string& cmd)
 {
   printf("DTMF command received in module %s: %s\n", name(), cmd.c_str());
   
-  if (cmd == "")
+  cmd_queue.push_back(cmd);
+  if (fifo->empty() && !squelch_is_open)
   {
-    if (fifo->empty())
-    {
-      deactivateMe();
-    }
-    else
-    {
-      deactivate_when_done = true;
-    }
-  }
-  else
-  {
-    if (cmd == "0")
-    {
-      playHelpMsg();
-    }
-    else
-    {
-      playNumber(atoi(cmd.c_str()));
-    }
+    execCmdQueue();
   }
 } /* dtmfCmdReceived */
 
@@ -356,6 +338,10 @@ void ModuleParrot::squelchOpen(bool is_open)
       	onRepeatDelayExpired(0);
       }
     }
+    else if (!cmd_queue.empty())
+    {
+      execCmdQueue();
+    }
     else
     {
       setIdle(true);
@@ -378,6 +364,17 @@ int ModuleParrot::audioFromRx(short *samples, int count)
 } /* ModuleParrot::audioFromRx */
 
 
+void ModuleParrot::allMsgsWritten(void)
+{
+  //printf("ModuleParrot::allMsgsWritten\n");
+  transmit(false);
+  fifo->stopOutput(true);
+  setIdle(true);
+} /* ModuleParrot::allMsgsWritten */
+
+
+
+
 int ModuleParrot::audioFromFifo(short *samples, int count)
 {
   //printf("Writing %d samples from FIFO...\n", count);
@@ -389,13 +386,16 @@ int ModuleParrot::audioFromFifo(short *samples, int count)
 void ModuleParrot::allSamplesWritten(void)
 {
   //cout << "ModuleParrot::allSamplesWritten\n";
-
-  transmit(false);
-  fifo->stopOutput(true);
-  setIdle(true);
-  if (deactivate_when_done)
+  
+  playSilence(500);
+  
+  if (!cmd_queue.empty())
   {
-    deactivateMe();
+    execCmdQueue();
+  }
+  else
+  {
+    allMsgsWritten();
   }
 } /* ModuleParrot::allSamplesWritten */
 
@@ -410,6 +410,39 @@ void ModuleParrot::onRepeatDelayExpired(Timer *t)
   fifo->stopOutput(false);
   
 } /* ModuleParrot::onRepeatDelayExpired */
+
+
+void ModuleParrot::execCmdQueue(void)
+{
+  //printf("ModuleParrot::execCmdQueue\n");
+  
+  list<string> cq = cmd_queue;
+  cmd_queue.clear();
+  
+  list<string>::iterator it;
+  for (it=cq.begin(); it!=cq.end(); ++it)
+  {
+    string cmd(*it);
+    
+    if (cmd == "")
+    {
+      deactivateMe();
+    }
+    else
+    {
+      if (cmd == "0")
+      {
+	playHelpMsg();
+      }
+      else
+      {
+	playNumber(atoi(cmd.c_str()));
+	playSilence(500);
+      }
+    }
+  }
+} /* ModuleParrot::execCmdQueue */
+
 
 
 
