@@ -164,10 +164,17 @@ class FdWatch : public SigC::Object
     void setEnabled(bool enabled);
     
     /**
+     * @brief Check if the watch is enabled or not
+     * @return Returns true if the watch is enabled, or else false.
+     */
+    bool isEnabled(void) const { return m_enabled; }
+    
+    /**
      * @brief Signal to indicate that the descriptor is active
      * @param watch Pointer to the watch object
      */
     SigC::Signal1<void, FdWatch*> activity;
+    
     
   protected:
     
