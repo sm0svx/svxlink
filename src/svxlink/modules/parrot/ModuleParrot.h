@@ -51,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <Module.h>
 #include <AsyncSampleFifo.h>
+#include <AudioPacer.h>
 
 
 
@@ -120,10 +121,12 @@ class ModuleParrot : public Module
   public:
     ModuleParrot(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleParrot(void);
+    bool initialize(void);
 
   private:
-    Async::SampleFifo fifo;
+    Async::SampleFifo *fifo;
     bool      	      squelch_is_open;
+    AudioPacer	      pacer;
     
     const char *name(void) const { return "Parrot"; }
     void activateInit(void);

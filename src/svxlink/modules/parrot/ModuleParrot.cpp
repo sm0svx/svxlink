@@ -47,7 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <version/SVXLINK.h>
-
+#include <AsyncConfig.h>
 
 
 /****************************************************************************
@@ -137,22 +137,49 @@ extern "C" {
 
 ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       	      	      	   const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), fifo(30*8000), squelch_is_open(false)
+  : Module(dl_handle, logic, cfg_name), fifo(0), squelch_is_open(false),
+    pacer(8000, 800, 7500)
 {
   cout << "\tModule " << name()
        << " v" SVXLINK_VERSION " starting...\n";
-  
-  fifo.stopOutput(true);
-  fifo.writeSamples.connect(slot(this, &ModuleParrot::audioFromFifo));
-  fifo.allSamplesWritten.connect(slot(this, &ModuleParrot::allSamplesWritten));
   
 } /* ModuleParrot */
 
 
 ModuleParrot::~ModuleParrot(void)
 {
-
+  delete fifo;
 } /* ~ModuleParrot */
+
+
+bool ModuleParrot::initialize(void)
+{
+  if (!Module::initialize())
+  {
+    return false;
+  }
+  
+  string fifo_len;
+  if (!cfg().getValue(cfgName(), "FIFO_LEN", fifo_len))
+  {
+    cerr << "*** Error: Config variable " << cfgName() << "/FIFO_LEN not set\n";
+    return false;
+  }
+  
+  fifo = new SampleFifo(atoi(fifo_len.c_str())*8000);
+  fifo->stopOutput(true);
+  fifo->setOverwrite(true);
+  fifo->writeSamples.connect(slot(&pacer, &AudioPacer::audioInput));
+  fifo->allSamplesWritten.connect(slot(&pacer, &AudioPacer::flushAllAudio));
+  
+  pacer.audioInputBufFull.connect(slot(fifo, &SampleFifo::writeBufferFull));
+  pacer.audioOutput.connect(slot(this, &ModuleParrot::audioFromFifo));
+  pacer.allAudioFlushed.connect(slot(this, &ModuleParrot::allSamplesWritten));
+  
+  return true;
+  
+} /* ModuleParrot::initialize */
+
 
 
 
@@ -204,7 +231,7 @@ ModuleParrot::~ModuleParrot(void)
  */
 void ModuleParrot::activateInit(void)
 {
-  fifo.clear();
+  fifo->clear();
 } /* activateInit */
 
 
@@ -223,7 +250,7 @@ void ModuleParrot::activateInit(void)
  */
 void ModuleParrot::deactivateCleanup(void)
 {
-  fifo.clear();
+  fifo->clear();
 } /* deactivateCleanup */
 
 
@@ -291,14 +318,14 @@ void ModuleParrot::squelchOpen(bool is_open)
   if (is_open)
   {
     setIdle(false);
-    fifo.stopOutput(true);
+    fifo->stopOutput(true);
   }
   else
   {
-    if (!fifo.empty())
+    if (!fifo->empty())
     {
       transmit(true);
-      fifo.stopOutput(false);
+      fifo->stopOutput(false);
     }
     else
     {
@@ -314,7 +341,7 @@ int ModuleParrot::audioFromRx(short *samples, int count)
   if (squelch_is_open)
   {
     //printf("Adding samples to FIFO...\n");
-    fifo.addSamples(samples, count);
+    fifo->addSamples(samples, count);
   }
   
   return count;
@@ -333,7 +360,7 @@ int ModuleParrot::audioFromFifo(short *samples, int count)
 void ModuleParrot::allSamplesWritten(void)
 {
   transmit(false);
-  fifo.stopOutput(true);
+  fifo->stopOutput(true);
   setIdle(true);
 } /* ModuleParrot::allSamplesWritten */
 
