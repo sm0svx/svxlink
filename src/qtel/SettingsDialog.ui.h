@@ -22,10 +22,10 @@ void SettingsDialog::browseConnectSound()
 {
     QString s = QFileDialog::getOpenFileName(
                     connect_sound->text(),
-                    "Raw Sound Files (*.raw)",
+                    tr("Raw Sound Files (*.raw)"),
                     this,
                     "choose connect sound browse dialog",
-                    "Choose a connect sound file" );
+                    tr("Choose a connect sound file"));
     if (!s.isNull())
     {
         connect_sound->setText(s);

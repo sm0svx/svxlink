@@ -120,7 +120,7 @@ Kan ej skapa uppkoppling till</translation>
     </message>
     <message>
         <source>Getting calls from directory server...</source>
-        <translation>Hämtar stationslista från listserver...</translation>
+        <translation type="obsolete">Hämtar stationslista från listserver...</translation>
     </message>
     <message>
         <source>Connect request from</source>
@@ -181,7 +181,7 @@ station du vill lägga till</translation>
     </message>
     <message>
         <source>Station Browser</source>
-        <translation>Stationsbläddrare</translation>
+        <translation type="obsolete">Stationsbläddrare</translation>
     </message>
     <message>
         <source>Explorer</source>
@@ -557,6 +557,26 @@ meddelande</translation>
     <message>
         <source>Check this check box to enable full duplex operation</source>
         <translation>Klicka i denna för att aktivera ljudhantering i full duplex</translation>
+    </message>
+    <message>
+        <source>Connect Sound</source>
+        <translation>Anslutningsljud</translation>
+    </message>
+    <message>
+        <source>The connect sound to use on incoming EchoLink connections</source>
+        <translation>Ljudfil som skall spelas upp vid inkommande EchoLink-förbindelse</translation>
+    </message>
+    <message>
+        <source>Browse...</source>
+        <translation>Bläddra...</translation>
+    </message>
+    <message>
+        <source>Raw Sound Files (*.raw)</source>
+        <translation>16-bit 8kHz ljudfiler (*.raw)</translation>
+    </message>
+    <message>
+        <source>Choose a connect sound file</source>
+        <translation>Välj ett anslutningsljud</translation>
     </message>
 </context>
 </TS>
