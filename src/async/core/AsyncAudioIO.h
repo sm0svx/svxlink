@@ -202,6 +202,16 @@ class AudioIO : public SigC::Object
     void flushSamples(void);
     
     /*
+     * @brief 	Call this method to clear all samples in the buffer
+     *
+     * This method is used to clear all the samples that are in the buffer.
+     * That is, all samples in the buffer will be thrown away. Remaining
+     * samples that have already been written to the sound card will be
+     * flushed and when finished, the allSamplesFlushed signal is emitted.
+     */
+    void clearSamples(void);
+    
+    /*
      * @brief 	Check if the audio device is busy flushing samples
      * @return	Returns \em true if flushing the buffer or else \em false
      */
@@ -274,6 +284,7 @@ class AudioIO : public SigC::Object
     AudioDevice *device(void) const { return audio_dev; }
     SampleFifo &writeFifo(void) const { return *write_fifo; }
     int readSamples(short *samples, int count);
+    bool doFlush(void) const { return do_flush; }
     
 };  /* class AudioIO */
 

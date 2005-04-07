@@ -268,6 +268,17 @@ void AudioIO::flushSamples(void)
 } /* AudioIO::flushSamples */
 
 
+void AudioIO::clearSamples(void)
+{
+  do_flush = true;
+  is_flushing = true;
+  write_fifo->clear();
+  audio_dev->flushSamples();
+  flushSamplesInDevice();
+} /* AudioIO::clearSamples */
+
+
+
 
 /****************************************************************************
  *
@@ -313,6 +324,7 @@ void AudioIO::flushSamples(void)
 void AudioIO::flushSamplesInDevice(int extra_samples)
 {
   long flushtime = 1000 * audio_dev->samplesToWrite() / 8000;
+  //printf("flushtime=%ld\n", flushtime);
   delete flush_timer;
   flush_timer = new Timer(flushtime);
   flush_timer->expired.connect(slot(this, &AudioIO::flushDone));
@@ -321,6 +333,7 @@ void AudioIO::flushSamplesInDevice(int extra_samples)
 
 void AudioIO::flushDone(Timer *timer)
 {
+  //printf("ALL SAMPLES FLUSHED\n");
   is_flushing = false;
   delete flush_timer;
   flush_timer = 0;
@@ -330,6 +343,11 @@ void AudioIO::flushDone(Timer *timer)
 
 int AudioIO::readSamples(short *samples, int count)
 {
+  if (write_fifo->empty())
+  {
+    return 0;
+  }
+  
   int samples_read = write_fifo->readSamples(samples, count);
   if (write_fifo->empty() && do_flush)
   {

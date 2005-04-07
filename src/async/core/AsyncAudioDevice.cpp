@@ -550,9 +550,9 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       	  ((*it)->mode() == AudioIO::MODE_RDWR))
       {
 	SampleFifo &fifo = (*it)->writeFifo();
-	do_flush &= ((*it)->isFlushing() &&
+	do_flush &= ((*it)->doFlush() &&
 		     (fifo.samplesInFifo() <= samples_to_write));
-	if (!(*it)->isFlushing())
+	if (!(*it)->doFlush())
 	{
 	  samples_to_write = min(samples_to_write, fifo.samplesInFifo());
 	}
