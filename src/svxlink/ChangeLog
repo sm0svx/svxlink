@@ -7,6 +7,10 @@
 * Now possible to specify custom activation/deactivation sounds for
   the repeater logic.
 
+* The repeater logic now opens on squelch close rather than squelch
+  open. This is so that the first announcement will not be missed
+  by the opener.
+
 
 
  0.4.0 -- 25 Mar 2005

@@ -467,7 +467,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
   }
   else
   {
-    if (is_open && (required_1750_duration == 0))
+    if (!is_open && (required_1750_duration == 0))
     {
       setUp(true);
     }
