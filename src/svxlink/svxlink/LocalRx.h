@@ -181,6 +181,9 @@ class LocalRx : public Rx
       SQL_DET_SERIAL
     } SqlDetType;
     
+    static const int  	  NPOLES = 4;
+    static const int  	  NZEROS = 4;
+    
     Async::Config     	  &cfg;
     std::string       	  name;
     Async::AudioIO    	  *audio_io;
@@ -199,6 +202,8 @@ class LocalRx : public Rx
     Async::Serial::InPin  sql_pin;
     bool      	      	  sql_pin_act_lvl;
     Async::Timer      	  *sql_pin_poll_timer;
+    float     	      	  xv[NZEROS+1];
+    float     	      	  yv[NPOLES+1];
     
     void activated1750(bool is_activated);
     void voxSqlOpen(bool is_open);
@@ -206,6 +211,7 @@ class LocalRx : public Rx
     SqlDetType sqlDetStrToEnum(const std::string& sql_det_str);
     int audioRead(short *samples, int count);
     void sqlPinPoll(Async::Timer *t);
+    void highpassFilter(short *samples, int count);
 
 };  /* class LocalRx */
 

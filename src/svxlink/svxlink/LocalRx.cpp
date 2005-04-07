@@ -486,7 +486,14 @@ int LocalRx::audioRead(short *samples, int count)
 {
   if (sql_is_open && !is_muted)
   {
-    return audioReceived(samples, count);
+    short *filtered = new short[count];
+    for (int i=0; i<count; ++i)
+    {
+      filtered[i] = samples[i];
+    }
+    highpassFilter(filtered, count);
+    count = audioReceived(filtered, count);
+    delete [] filtered;
   }
   
   return count;
@@ -527,6 +534,48 @@ void LocalRx::sqlPinPoll(Timer *t)
   }
   
 } /* LocalRx::sqlPinPoll */
+
+
+
+/* Digital filter designed by mkfilter/mkshape/gencode   A.J. Fisher
+   Command line: /www/usr/fisher/helpers/mkfilter -Bu -Hp -o 4 \
+      	      	  -a 3.7500000000e-02 0.0000000000e+00 -l
+
+      filtertype  = Butterworth
+      passtype	  = Highpass
+      ripple  	  = 
+      order   	  = 4
+      samplerate  = 8000
+      corner1 	  = 400
+      corner2 	  = 
+      adzero  	  = 
+      logmin  	  = -60
+
+
+*/
+
+#define GAIN   1.361640944e+00
+
+
+void LocalRx::highpassFilter(short *samples, int count)
+{ 
+  for (int i=0; i<count; ++i)
+  {
+    xv[0] = xv[1]; xv[1] = xv[2]; xv[2] = xv[3]; xv[3] = xv[4]; 
+    xv[4] = static_cast<float>(samples[i]) / 32768 / GAIN;
+    yv[0] = yv[1]; yv[1] = yv[2]; yv[2] = yv[3]; yv[3] = yv[4]; 
+    yv[4] = (xv[0] + xv[4]) - 4 * (xv[1] + xv[3]) + 6 * xv[2]
+                   + (-0.5393551283 * yv[0]) + (2.4891382938 * yv[1])
+                   + (-4.3370618174 * yv[2]) + (3.3849727283 * yv[3]);
+    /*
+    if (yv[4] > 1.0)
+    {
+      printf("*** Distorsion: %.1f\n", yv[4]);
+    }
+    */
+    samples[i] = static_cast<short>(32767 * yv[4]);
+  }
+} /* LocalRx::highpassFilter */
 
 
 

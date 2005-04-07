@@ -1,3 +1,11 @@
+ 0.5.0 -- ?? ??? 2005
+----------------------
+
+* Added a highpass filter on the receiver side to filter out incoming
+  CTCSS tones.
+
+
+
  0.4.0 -- 25 Mar 2005
 ----------------------
 
