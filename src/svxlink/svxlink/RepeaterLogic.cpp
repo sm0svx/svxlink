@@ -126,7 +126,7 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
     required_1750_duration(0),
     idle_sound_timer(0), idle_sound("repeater_idle"), ident_timer(0),
     ident_interval(10*60*1000), idle_sound_interval(0),
-    repeating_enabled(false)
+    repeating_enabled(false), activate_id(true), deactivate_id(true)
 {
 
 } /* RepeaterLogic::RepeaterLogic */
@@ -166,6 +166,36 @@ bool RepeaterLogic::initialize(void)
   if (cfg().getValue(name(), "IDLE_SOUND_INTERVAL", str))
   {
     idle_sound_interval = atoi(str.c_str());
+  }
+  
+  if (cfg().getValue(name(), "ACTIVATE_ID", str))
+  {
+    activate_id = (atoi(str.c_str()) != 0);
+  }
+  
+  if (cfg().getValue(name(), "ACTIVATE_PRE_ID_SOUND", str))
+  {
+    activate_pre_id_sound = str;
+  }
+  
+  if (cfg().getValue(name(), "ACTIVATE_POST_ID_SOUND", str))
+  {
+    activate_post_id_sound = str;
+  }
+  
+  if (cfg().getValue(name(), "DEACTIVATE_ID", str))
+  {
+    deactivate_id = (atoi(str.c_str()) != 0);
+  }
+  
+  if (cfg().getValue(name(), "DEACTIVATE_PRE_ID_SOUND", str))
+  {
+    deactivate_pre_id_sound = str;
+  }
+  
+  if (cfg().getValue(name(), "DEACTIVATE_POST_ID_SOUND", str))
+  {
+    deactivate_post_id_sound = str;
   }
   
   //tx().txTimeout.connect(slot(this, &RepeaterLogic::txTimeout));
@@ -367,7 +397,21 @@ void RepeaterLogic::setUp(bool up)
   
   if (up)
   {
-    identify();
+    if (!activate_pre_id_sound.empty())
+    {
+      playFile(activate_pre_id_sound);
+      playSilence(250);
+    }
+    if (activate_id)
+    {
+      identify();
+      playSilence(250);
+    }
+    if (!activate_post_id_sound.empty())
+    {
+      playFile(activate_post_id_sound);
+      playSilence(250);
+    }
     Module *module = activeModule();
     if (module != 0)
     {
@@ -384,7 +428,21 @@ void RepeaterLogic::setUp(bool up)
     up_timer = 0;
     delete idle_sound_timer;
     idle_sound_timer = 0;
-    identify();
+    if (!deactivate_pre_id_sound.empty())
+    {
+      playFile(deactivate_pre_id_sound);
+      playSilence(250);
+    }
+    if (deactivate_id)
+    {
+      identify();
+      playSilence(250);
+    }
+    if (!deactivate_post_id_sound.empty())
+    {
+      playFile(deactivate_post_id_sound);
+      playSilence(250);
+    }
   }
   
   logicTransmitRequest(up);

@@ -168,6 +168,12 @@ class RepeaterLogic : public Logic
     int       	  ident_interval;
     int       	  idle_sound_interval;
     bool      	  repeating_enabled;
+    bool      	  activate_id;
+    std::string   activate_pre_id_sound;
+    std::string   activate_post_id_sound;
+    bool      	  deactivate_id;
+    std::string   deactivate_pre_id_sound;
+    std::string   deactivate_post_id_sound;
     
     void identify(Async::Timer *t=0);
     int audioReceived(short *samples, int count);

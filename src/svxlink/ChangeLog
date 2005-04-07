@@ -4,6 +4,9 @@
 * Added a highpass filter on the receiver side to filter out incoming
   CTCSS tones.
 
+* Now possible to specify custom activation/deactivation sounds for
+  the repeater logic.
+
 
 
  0.4.0 -- 25 Mar 2005
