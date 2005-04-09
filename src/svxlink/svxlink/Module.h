@@ -383,7 +383,6 @@ class Module : public SigC::Object
      * transmitter. Exactly what to do is specified in a handler script.
      * The handler script is pointed out in the configuration file under
      * XxxLogic/EVENT_HANDLER.
-     * The module must be active for this function to do anything.
      */
     void processEvent(const std::string& event);
     

@@ -144,7 +144,7 @@ class RepeaterLogic : public Logic
      */
     bool initialize(void);
     
-    virtual bool processEvent(const std::string& event, const Module *module=0);
+    virtual void processEvent(const std::string& event, const Module *module=0);
     virtual void playFile(const std::string& path);
     virtual void playMsg(const std::string& msg, const Module *module=0);
     virtual void playNumber(int number);
@@ -175,6 +175,7 @@ class RepeaterLogic : public Logic
     bool      	  deactivate_id;
     std::string   deactivate_pre_id_sound;
     std::string   deactivate_post_id_sound;
+    bool      	  preserve_idle_state;
     
     void identify(Async::Timer *t=0);
     int audioReceived(short *samples, int count);

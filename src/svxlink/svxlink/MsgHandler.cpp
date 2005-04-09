@@ -19,7 +19,7 @@ using namespace std;
 
 MsgHandler::MsgHandler(const string& base_dir, int sample_rate)
   : file(-1), base_dir(base_dir), silence_left(-1), sample_rate(sample_rate),
-    play_next(true), pending_play_next(false)
+    nesting_level(0), pending_play_next(false)
 {
   
 }
@@ -113,7 +113,7 @@ void MsgHandler::playSilence(int length)
 void MsgHandler::writeBufferFull(bool is_full)
 {
   //printf("write_buffer_full=%s\n", is_full ? "true" : "false");
-  if (!is_full && !msg_queue.empty())
+  if (!is_full && !msg_queue.empty() && (nesting_level == 0))
   {
     writeFromFile();
   }
@@ -131,15 +131,21 @@ void MsgHandler::clear(void)
 
 void MsgHandler::begin(void)
 {
-  pending_play_next = false;
-  play_next = false;
+  //printf("MsgHandler::begin\n");
+  if (nesting_level == 0)
+  {
+    pending_play_next = false;
+  }
+  ++nesting_level;
 } /* MsgHandler::begin */
 
 
 void MsgHandler::end(void)
 {
-  play_next = true;
-  if (pending_play_next)
+  //printf("MsgHandler::end\n");
+  assert(nesting_level > 0);
+  --nesting_level;
+  if (pending_play_next && (nesting_level == 0))
   {
     pending_play_next = false;
     playNextMsg();
@@ -151,7 +157,7 @@ void MsgHandler::end(void)
 
 void MsgHandler::playNextMsg(void)
 {
-  if (!play_next)
+  if (nesting_level > 0)
   {
     pending_play_next = true;
     return;
@@ -283,7 +289,7 @@ int MsgHandler::readSamples(short *samples, int len)
     }
     //printf("Reading %d silence samples\n", read_cnt);
   }
-  else
+  else if (file != -1)
   {
     read_cnt = read(file, samples, len * sizeof(*samples));
     if (read_cnt == -1)
@@ -295,6 +301,10 @@ int MsgHandler::readSamples(short *samples, int len)
     {
       read_cnt /= sizeof(*samples);
     }
+  }
+  else
+  {
+    read_cnt = 0;
   }
   
   return read_cnt;
@@ -311,7 +321,10 @@ void MsgHandler::unreadSamples(int len)
   else
   {
     //printf("lseeking...\n");
-    lseek(file, -len * sizeof(short), SEEK_CUR);
+    if (lseek(file, -len * sizeof(short), SEEK_CUR) == -1)
+    {
+      perror("lseek in MsgHandler::unreadSamples");
+    }
   }
     
 

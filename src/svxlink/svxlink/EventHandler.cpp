@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+#include <cassert>
 
 
 /****************************************************************************
@@ -52,7 +53,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "EventHandler.h"
-#include "MsgHandler.h"
+#include "Logic.h"
+#include "Module.h"
 
 
 
@@ -126,8 +128,8 @@ using namespace std;
  * Bugs:      
  *------------------------------------------------------------------------
  */
-EventHandler::EventHandler(const string& event_script, MsgHandler *msg_handler)
-  : event_script(event_script), msg_handler(msg_handler)
+EventHandler::EventHandler(const string& event_script, Logic *logic)
+  : event_script(event_script), logic(logic)
 {
   interp = Tcl_CreateInterp();
   Tcl_CreateCommand(interp, "playFile", playFile, this, NULL);
@@ -136,7 +138,6 @@ EventHandler::EventHandler(const string& event_script, MsgHandler *msg_handler)
   Tcl_CreateCommand(interp, "playNumber", playNumber, this, NULL);
   Tcl_CreateCommand(interp, "reportActiveModuleState",
       	  reportActiveModuleState, this, NULL);
-  Tcl_EvalFile(interp, event_script.c_str());
 } /* EventHandler::EventHandler */
 
 
@@ -144,6 +145,19 @@ EventHandler::~EventHandler(void)
 {
   Tcl_DeleteInterp(interp);
 } /* EventHandler::~EventHandler */
+
+
+bool EventHandler::initialize(void)
+{
+  if (Tcl_EvalFile(interp, event_script.c_str()) != TCL_OK)
+  {
+    cerr << event_script << ": " << Tcl_GetStringResult(interp) << endl;
+    return false;
+  }
+  
+  return true;
+  
+} /* EventHandler::initialize */
 
 
 void EventHandler::setVariable(const string& name, const string& value)
@@ -156,11 +170,13 @@ bool EventHandler::processEvent(const string& event)
 {
   if (Tcl_Eval(interp, (event + ";").c_str()) != TCL_OK)
   {
-    cerr << "*** ERROR: Unable to handle event: " << event << endl;
+    cerr << "*** ERROR: Unable to handle event: " << event
+      	 << " (" << Tcl_GetStringResult(interp) << ")" << endl;
     return false;
   }
   
   return true;
+  
 } /* EventHandler::processEvent */
 
 
@@ -213,8 +229,6 @@ bool EventHandler::processEvent(const string& event)
 int EventHandler::playFile(ClientData cdata, Tcl_Interp *irp, int argc,
       	      	      	   const char *argv[])
 {
-  EventHandler *self = static_cast<EventHandler *>(cdata);
-  
   if(argc != 2)
   {
     Tcl_SetResult(irp,"Usage: playFile: <filename>", TCL_STATIC);
@@ -222,8 +236,8 @@ int EventHandler::playFile(ClientData cdata, Tcl_Interp *irp, int argc,
   }
   cout << "EventHandler::playFile: " << argv[1] << endl;
 
-  //Tcl_AppendResult(irp,"Spell word=", argv[1], NULL);
-  self->msg_handler->playFile(argv[1]);
+  EventHandler *self = static_cast<EventHandler *>(cdata);
+  self->logic->playFile(argv[1]);
 
   return TCL_OK;
 }
@@ -232,8 +246,6 @@ int EventHandler::playFile(ClientData cdata, Tcl_Interp *irp, int argc,
 int EventHandler::playSilence(ClientData cdata, Tcl_Interp *irp, int argc,
       	      	      	      const char *argv[])
 {
-  EventHandler *self = static_cast<EventHandler *>(cdata);
-  
   if(argc != 2)
   {
     Tcl_SetResult(irp,"Usage: playSilence <milliseconds>", TCL_STATIC);
@@ -241,8 +253,8 @@ int EventHandler::playSilence(ClientData cdata, Tcl_Interp *irp, int argc,
   }
   cout << "EventHandler::playSilence: " << argv[1] << endl;
 
-  //Tcl_AppendResult(irp,"Spell word=", argv[1], NULL);
-  self->msg_handler->playSilence(atoi(argv[1]));
+  EventHandler *self = static_cast<EventHandler *>(cdata);
+  self->logic->playSilence(atoi(argv[1]));
 
   return TCL_OK;
 }
@@ -251,8 +263,6 @@ int EventHandler::playSilence(ClientData cdata, Tcl_Interp *irp, int argc,
 int EventHandler::spellWord(ClientData cdata, Tcl_Interp *irp, int argc,
       	      	      	    const char *argv[])
 {
-  EventHandler *self = static_cast<EventHandler *>(cdata);
-  
   if(argc != 2)
   {
     Tcl_SetResult(irp,"Usage: spellWord <word>", TCL_STATIC);
@@ -260,8 +270,8 @@ int EventHandler::spellWord(ClientData cdata, Tcl_Interp *irp, int argc,
   }
   cout << "EventHandler::spellWord: " << argv[1] << endl;
 
-  //Tcl_AppendResult(irp,"Spell word=", argv[1], NULL);
-  self->msg_handler->spellWord(argv[1]);
+  EventHandler *self = static_cast<EventHandler *>(cdata);
+  self->logic->spellWord(argv[1]);
   
   return TCL_OK;
 }
@@ -270,8 +280,6 @@ int EventHandler::spellWord(ClientData cdata, Tcl_Interp *irp, int argc,
 int EventHandler::playNumber(ClientData cdata, Tcl_Interp *irp, int argc,
       	      	      	     const char *argv[])
 {
-  EventHandler *self = static_cast<EventHandler *>(cdata);
-  
   if(argc != 2)
   {
     Tcl_SetResult(irp, "Usage: playNumber <word>", TCL_STATIC);
@@ -279,8 +287,8 @@ int EventHandler::playNumber(ClientData cdata, Tcl_Interp *irp, int argc,
   }
   cout << "EventHandler::playNumber: " << argv[1] << endl;
 
-  //Tcl_AppendResult(irp,"Spell word=", argv[1], NULL);
-  self->msg_handler->playNumber(atof(argv[1]));
+  EventHandler *self = static_cast<EventHandler *>(cdata);
+  self->logic->playNumber(atof(argv[1]));
 
   return TCL_OK;
 }
@@ -289,8 +297,6 @@ int EventHandler::playNumber(ClientData cdata, Tcl_Interp *irp, int argc,
 int EventHandler::reportActiveModuleState(ClientData cdata, Tcl_Interp *irp,
       	      	      	      	      	  int argc, const char *argv[])
 {
-  //EventHandler *self = static_cast<EventHandler *>(cdata);
-  
   if(argc != 1)
   {
     Tcl_SetResult(irp, "Usage: reportActiveModuleState", TCL_STATIC);
@@ -298,8 +304,15 @@ int EventHandler::reportActiveModuleState(ClientData cdata, Tcl_Interp *irp,
   }
   cout << "EventHandler::reportActiveModuleState" << endl;
 
-  //Tcl_AppendResult(irp,"Spell word=", argv[1], NULL);
-
+  EventHandler *self = static_cast<EventHandler *>(cdata);
+  Module *module = self->logic->activeModule();
+  if (module == 0)
+  {
+    Tcl_SetResult(irp, "reportActiveModuleState: No active module", TCL_STATIC);
+    return TCL_ERROR;
+  }
+  module->reportState();
+  
   return TCL_OK;
 }
 

@@ -29,9 +29,6 @@ proc reportActiveModuleState {} {
 }
 
 
-source events.tcl;
-
-
 proc SimplexLogic {} {
   puts "--- SimplexLogic_startup";
   SimplexLogic_startup;
@@ -147,6 +144,22 @@ proc RepeaterLogic {} {
 
 
 proc Help {} {
+  puts "--- Help_activating_module";
+  Help_activating_module;
+  puts "";
+
+  puts "--- Help_deactivating_module";
+  Help_deactivating_module;
+  puts "";
+
+  puts "--- Help_timeout";
+  Help_timeout;
+  puts "";
+
+  puts "--- Help_play_help";
+  Help_play_help;
+  puts "";
+
   puts "--- Help_choose_module";
   Help_choose_module [list 0 Help 1 Parrot 2 EchoLink];
   puts "";
@@ -162,6 +175,22 @@ proc Help {} {
 
 
 proc Parrot {} {
+  puts "--- Parrot_activating_module";
+  Parrot_activating_module;
+  puts "";
+
+  puts "--- Parrot_deactivating_module";
+  Parrot_deactivating_module;
+  puts "";
+
+  puts "--- Parrot_timeout";
+  Parrot_timeout;
+  puts "";
+
+  puts "--- Parrot_play_help";
+  Parrot_play_help;
+  puts "";
+
   puts "--- Parrot_spell_digits";
   Parrot_spell_digits "0123456789";
   puts "";
@@ -169,6 +198,22 @@ proc Parrot {} {
 
 
 proc EchoLink {} {
+  puts "--- EchoLink_activating_module";
+  EchoLink_activating_module;
+  puts "";
+
+  puts "--- EchoLink_deactivating_module";
+  EchoLink_deactivating_module;
+  puts "";
+
+  puts "--- EchoLink_timeout";
+  EchoLink_timeout;
+  puts "";
+
+  puts "--- EchoLink_play_help";
+  EchoLink_play_help;
+  puts "";
+
   puts "--- EchoLink_list_connected_stations";
   EchoLink_list_connected_stations [list SM0SVX *ECHOTEST* SM3SVX-L SM3SVX-R];
   puts "";
@@ -226,10 +271,17 @@ proc EchoLink {} {
   puts "";
 }
 
+if {$argc < 1} {
+  puts "Usage: $argv0 <path to events.tcl>";
+  exit 1;
+}
 
 set mycall "SM0XXX";
 set report_ctcss 136.5;
 set active_module "EchoLink";
+set script_path [lindex $argv 0];
+
+source [lindex $argv 0];
 
 SimplexLogic;
 RepeaterLogic;

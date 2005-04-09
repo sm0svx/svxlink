@@ -106,10 +106,7 @@ void Module::playHelpMsg(void)
 
 void Module::processEvent(const string& event)
 {
-  if (m_is_active)
-  {
-    logic()->processEvent(event, this);
-  }
+  logic()->processEvent(event, this);
 } /* Module::playFile */
 
 

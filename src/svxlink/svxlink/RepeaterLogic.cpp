@@ -126,7 +126,8 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
     required_1750_duration(0),
     idle_sound_timer(0), idle_sound("repeater_idle"), ident_timer(0),
     ident_interval(10*60*1000), idle_sound_interval(0),
-    repeating_enabled(false), activate_id(true), deactivate_id(true)
+    repeating_enabled(false), activate_id(true), deactivate_id(true),
+    preserve_idle_state(false)
 {
 
 } /* RepeaterLogic::RepeaterLogic */
@@ -192,16 +193,16 @@ bool RepeaterLogic::initialize(void)
 } /* RepeaterLogic::initialize */
 
 
-bool RepeaterLogic::processEvent(const string& event, const Module *module)
+void RepeaterLogic::processEvent(const string& event, const Module *module)
 {
-  bool sound_generated = Logic::processEvent(event, module);
-  if ((event != "repeater_idle") && (event != "send_rgr_beep") &&
-      sound_generated)
+  if ((event == "repeater_idle") || (event == "send_rgr_sound"))
   {
-    setIdle(false);
+    preserve_idle_state = true;
   }
   
-  return sound_generated;
+  Logic::processEvent(event, module);
+  
+  preserve_idle_state = false;
   
 } /* RepeaterLogic::processEvent */
 
@@ -209,7 +210,10 @@ bool RepeaterLogic::processEvent(const string& event, const Module *module)
 void RepeaterLogic::playFile(const string& path)
 {
   //printf("RepeaterLogic::playiFile: %s\n", path.c_str());
-  setIdle(false);
+  if (!preserve_idle_state)
+  {
+    setIdle(false);
+  }
   Logic::playFile(path);
 } /* RepeaterLogic::playFile */
 
@@ -218,7 +222,7 @@ void RepeaterLogic::playMsg(const string& msg, const Module *module)
 {
   //printf("RepeaterLogic::playMsg: %s\n", msg.c_str());
   
-  if ((msg != idle_sound) && (msg != "blip"))
+  if ((msg != idle_sound) && (msg != "blip") && !preserve_idle_state)
   {
     setIdle(false);
   }
@@ -230,7 +234,10 @@ void RepeaterLogic::playNumber(int number)
 {
   //printf("RepeaterLogic::playNumber: %d\n", number);
   
-  setIdle(false);
+  if (!preserve_idle_state)
+  {
+    setIdle(false);
+  }
   Logic::playNumber(number);
 } /* RepeaterLogic::playNumber */
 
@@ -239,7 +246,10 @@ void RepeaterLogic::spellWord(const string& word)
 {
   //printf("RepeaterLogic::spellWord: %s\n", word.c_str());
   
-  setIdle(false);
+  if (!preserve_idle_state)
+  {
+    setIdle(false);
+  }
   Logic::spellWord(word);
 } /* RepeaterLogic::spellWord */
 
@@ -248,7 +258,10 @@ void RepeaterLogic::playSilence(int length)
 {
   //printf("RepeaterLogic::playSilence: %d ms\n", length);
   
-  //setIdle(false);
+  if (!preserve_idle_state)
+  {
+    setIdle(false);
+  }
   Logic::playSilence(length);
 } /* RepeaterLogic::playSilence */
 

@@ -155,7 +155,7 @@ class Logic : public SigC::Object
     
     const std::string& name(void) const { return m_name; }
     
-    virtual bool processEvent(const std::string& event, const Module *module=0);
+    virtual void processEvent(const std::string& event, const Module *module=0);
     virtual void playFile(const std::string& path);
     virtual void playMsg(const std::string& msg, const Module *module=0);
     virtual void playNumber(float number);
@@ -163,11 +163,14 @@ class Logic : public SigC::Object
     virtual void playSilence(int length);
     void audioFromModule(short *samples, int count);
     virtual void moduleTransmitRequest(bool do_transmit);
+
     virtual bool activateModule(Module *module);
     virtual void deactivateModule(Module *module);
+    Module *activeModule(void) const { return active_module; }
     Module *findModule(int id);
     Module *findModule(const std::string& name);
     std::list<Module*> moduleList(void) const { return modules; }
+
     virtual void dtmfDigitDetected(char digit);
     const std::string& callsign(void) const { return m_callsign; }
 
@@ -186,7 +189,6 @@ class Logic : public SigC::Object
     
     void clearPendingSamples(void);
     void logicTransmitRequest(bool do_transmit);
-    Module *activeModule(void) const { return active_module; }
     void enableRgrSoundTimer(bool enable);
 
   private:

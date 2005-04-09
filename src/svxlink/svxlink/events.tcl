@@ -4,8 +4,6 @@
 #
 ###############################################################################
 
-set basedir "/home/blomman/.svxlink/sounds";
-
 proc playMsg {context msg} {
   global basedir;
   if [file exists "$basedir/$context/$msg.raw"] {
@@ -210,7 +208,7 @@ proc RepeaterLogic_repeater_up {} {
   global mycall;
   global active_module;
   
-  playFile "/home/blomman/.svxlink/extra-sounds/attention.raw";
+  playMsg "../extra-sounds" "attention";
   playSilence 250;
 
   spellWord $mycall;
@@ -231,7 +229,7 @@ proc RepeaterLogic_repeater_down {} {
   playMsg "Core" "repeater";
   playSilence 250;
 
-  playFile "/home/blomman/.svxlink/extra-sounds/beback.raw";
+  playMsg "../extra-sounds" "beback";
 }
 
 
@@ -243,26 +241,60 @@ proc RepeaterLogic_repeater_idle {} {
 
 ###############################################################################
 #
+# Generic module event handlers
+#
+###############################################################################
+
+proc Module_activating_module {module_name} {
+  playMsg "Default" "activating_module";
+  playSilence 100;
+  playMsg $module_name "name";
+}
+
+
+proc Module_deactivating_module {module_name} {
+  playMsg "Default" "deactivating_module";
+  playSilence 100;
+  playMsg $module_name "name";
+}
+
+
+proc Module_timeout {module_name} {
+  playMsg "Default" "timeout";
+  playSilence 100;
+}
+
+
+proc Module_play_help {module_name} {
+  playMsg $module_name "help";
+}
+
+
+
+
+###############################################################################
+#
 # Help module event handlers
 #
 ###############################################################################
 
 proc Help_activating_module {} {
-  playMsg "Core" "activating_module";
-  playSilence 100;
-  playMsg "Help" "name";
+  Module_activating_module "Help";
 }
 
 
 proc Help_deactivating_module {} {
-  playMsg "Core" "deactivating_module";
-  playSilence 100;
-  playMsg "Help" "name";
+  Module_deactivating_module "Help";
 }
 
 
 proc Help_timeout {} {
-  playMsg "Core" "timeout";
+  Module_timeout "Help";
+}
+
+
+proc Help_play_help {} {
+  Module_play_help "Help";
 }
 
 
@@ -283,11 +315,6 @@ proc Help_no_such_module {module_id} {
 }
 
 
-proc Help_play_help {} {
-  playMsg "Help" "help";
-}
-
-
 
 ###############################################################################
 #
@@ -296,21 +323,22 @@ proc Help_play_help {} {
 ###############################################################################
 
 proc Parrot_activating_module {} {
-  playMsg "Core" "activating_module";
-  playSilence 100;
-  playMsg "Parrot" "name";
+  Module_activating_module "Parrot";
 }
 
 
 proc Parrot_deactivating_module {} {
-  playMsg "Core" "deactivating_module";
-  playSilence 100;
-  playMsg "Parrot" "name";
+  Module_deactivating_module "Parrot";
 }
 
 
 proc Parrot_timeout {} {
-  playMsg "Core" "timeout";
+  Module_timeout "Parrot";
+}
+
+
+proc Parrot_play_help {} {
+  Module_play_help "Parrot";
 }
 
 
@@ -327,21 +355,22 @@ proc Parrot_spell_digits {digits} {
 ###############################################################################
 
 proc EchoLink_activating_module {} {
-  playMsg "Core" "activating_module";
-  playSilence 100;
-  playMsg "EchoLink" "name";
+  Module_activating_module "EchoLink";
 }
 
 
 proc EchoLink_deactivating_module {} {
-  playMsg "Core" "deactivating_module";
-  playSilence 100;
-  playMsg "EchoLink" "name";
+  Module_deactivating_module "EchoLink";
 }
 
 
 proc EchoLink_timeout {} {
-  playMsg "Core" "timeout";
+  Module_timeout "EchoLink";
+}
+
+
+proc EchoLink_play_help {} {
+  Module_play_help "EchoLink";
 }
 
 
@@ -461,6 +490,7 @@ proc EchoLink_link_inactivity_timeout {} {
 #
 ###############################################################################
 
-puts "Event handler script successfully loaded.";
+set basedir [file dirname $script_path];
 
+puts "Event handler script successfully loaded.";
 

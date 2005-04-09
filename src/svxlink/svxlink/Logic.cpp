@@ -261,12 +261,14 @@ bool Logic::initialize(void)
   tx().transmitBufferFull.connect(
       	  slot(msg_handler, &MsgHandler::writeBufferFull));
   
-  event_handler = new EventHandler(event_handler_str, msg_handler);
+  event_handler = new EventHandler(event_handler_str, this);
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
   event_handler->setVariable("report_ctcss", str);
   event_handler->setVariable("active_module", "");
+  event_handler->setVariable("script_path", event_handler_str);
+  event_handler->initialize();
   
   processEvent("startup");
   
@@ -286,9 +288,9 @@ bool Logic::initialize(void)
 } /* Logic::initialize */
 
 
-bool Logic::processEvent(const string& event, const Module *module)
+void Logic::processEvent(const string& event, const Module *module)
 {
-  module_tx_fifo->stopOutput(true);
+  msg_handler->begin();
   if (module == 0)
   {
     event_handler->processEvent(name() + "_" + event);
@@ -297,16 +299,7 @@ bool Logic::processEvent(const string& event, const Module *module)
   {
     event_handler->processEvent(string(module->name()) + "_" + event);
   }
-  
-  if (msg_handler->isWritingMessage())
-  {
-    transmit(true);
-  }
-  else
-  {
-    module_tx_fifo->stopOutput(false);
-  }
-  return msg_handler->isWritingMessage();
+  msg_handler->end();
 }
 
 

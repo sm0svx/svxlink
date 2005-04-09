@@ -43,7 +43,7 @@ class MsgHandler : public SigC::Object
     std::string       	    base_dir;
     int			    silence_left;
     int			    sample_rate;
-    bool      	      	    play_next;
+    int      	      	    nesting_level;
     bool      	      	    pending_play_next;
     
     void playNextMsg(void);

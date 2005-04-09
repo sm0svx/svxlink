@@ -68,7 +68,7 @@ An example of how to use the EventHandler class
  *
  ****************************************************************************/
 
-class MsgHandler;
+class Logic;
 
 
 /****************************************************************************
@@ -126,7 +126,7 @@ class EventHandler
     /**
      * @brief 	Default constuctor
      */
-    EventHandler(const std::string& event_script, MsgHandler *msg_handler);
+    EventHandler(const std::string& event_script, Logic *logic);
   
     /**
      * @brief 	Destructor
@@ -138,6 +138,7 @@ class EventHandler
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
+    bool initialize(void);
     void setVariable(const std::string& name, const std::string& value);
     bool processEvent(const std::string& event);
     
@@ -146,7 +147,7 @@ class EventHandler
     
   private:
     std::string event_script;
-    MsgHandler	*msg_handler;
+    Logic	*logic;
     Tcl_Interp  *interp;
     
     static int playFile(ClientData cdata, Tcl_Interp *irp,
