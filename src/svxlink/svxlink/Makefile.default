@@ -28,13 +28,14 @@ CPPPROGS      	= $(BIN)/svxlink
 # Sources other than the main files
 PRGSRC		= LocalRx.cpp Vox.cpp LocalTx.cpp MsgHandler.cpp \
 		  ToneDetector.cpp DtmfDecoder.cpp Module.cpp AudioPacer.cpp \
-		  Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp
+		  Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp \
+		  EventHandler.cpp
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -lasynccpp
 
 # Libraries external to the project
-LIBS		= -ldl -lpopt
+LIBS		= -ldl -lpopt -ltcl
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).
