@@ -213,8 +213,16 @@ proc EchoLink {} {
   EchoLink_disconnected SM0SVX;
   puts "";
 
-  puts "--- EchoLink_link_inactivity_timeout";
-  EchoLink_link_inactivity_timeout;
+  puts "--- EchoLink_remote_connected";
+  EchoLink_remote_connected SM0SVX;
+  puts "";
+
+  puts "--- EchoLink_disconnected";
+  EchoLink_disconnected SM0SVX;
+  puts "";
+
+  puts "--- EchoLink_connected";
+  EchoLink_connected;
   puts "";
 }
 

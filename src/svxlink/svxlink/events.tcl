@@ -436,6 +436,19 @@ proc EchoLink_disconnected {call} {
 }
 
 
+proc EchoLink_remote_connected {call} {
+  playMsg "EchoLink" "connected";
+  spellCallsign $call;
+  playSilence 500;
+}
+
+
+proc EchoLink_connected {} {
+  playMsg "EchoLink" "connected";
+  playSilence 500;
+}
+
+
 proc EchoLink_link_inactivity_timeout {} {
   playMsg "EchoLink" "timeout";
 }
