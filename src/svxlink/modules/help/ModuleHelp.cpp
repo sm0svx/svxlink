@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdio.h>
 
 #include <iostream>
+#include <sstream>
 
 
 /****************************************************************************
@@ -275,8 +276,9 @@ void ModuleHelp::dtmfCmdReceived(const string& cmd)
     }
     else
     {
-      playNumber(module_id);
-      playMsg("no_such_module");
+      stringstream ss;
+      ss << "no_such_module " << module_id;
+      processEvent(ss.str());
     }
   }
 } /* dtmfCmdReceived */
@@ -284,16 +286,17 @@ void ModuleHelp::dtmfCmdReceived(const string& cmd)
 
 void ModuleHelp::playChooseModuleMsg(void)
 {
-  playMsg("choose_module");
+  stringstream ss;
+  ss << "choose_module [list";
+
   list<Module*> modules = moduleList();
   list<Module*>::const_iterator it;
   for (it=modules.begin(); it!=modules.end(); ++it)
   {
-    playNumber((*it)->id());
-    playSilence(50);
-    (*it)->playModuleName();
-    playSilence(200);
+    ss << " " << (*it)->id() << " " << (*it)->name();
   }
+  ss << "]";
+  processEvent(ss.str());
 
 } /* ModuleHelp::playChooseModuleMsg */
 

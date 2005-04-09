@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <stdio.h>
 #include <iostream>
+#include <sstream>
 
 
 /****************************************************************************
@@ -388,8 +389,6 @@ void ModuleParrot::allSamplesWritten(void)
 {
   //cout << "ModuleParrot::allSamplesWritten\n";
   
-  playSilence(500);
-  
   if (!cmd_queue.empty())
   {
     execCmdQueue();
@@ -439,8 +438,9 @@ void ModuleParrot::execCmdQueue(void)
       }
       else
       {
-	spellWord(cmd);
-	playSilence(500);
+      	stringstream ss;
+	ss << "spell_digits " << cmd;
+      	processEvent(ss.str());
       }
     }
   }

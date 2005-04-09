@@ -281,55 +281,6 @@ bool ModuleEchoLink::initialize(void)
 } /* ModuleEchoLink::initialize */
 
 
-void ModuleEchoLink::spellCallsign(const string& callsign)
-{
-  string call(callsign);
-  char type = 'S';
-  string::const_iterator dash = find(callsign.begin(), callsign.end(), '-');
-  if (dash != callsign.end())
-  {
-    call = string(callsign.begin(), dash);
-    ++dash;
-    if (dash != callsign.end())
-    {
-      type = *dash;
-    }
-  }
-  
-  if (callsign[0] == '*')
-  {
-    type = 'C';
-  }
-  
-  //cout << "Call=" << call << " type=" << type << endl;
-  
-  switch (type)
-  {
-    case 'S':
-      spellWord(call);
-      break;
-    case 'L':
-      spellWord(call);
-      playMsg("link");
-      break;
-    case 'R':
-      spellWord(call);
-      playMsg("repeater");
-      break;
-    case 'C':
-    {
-      string::iterator end = remove(call.begin(), call.end(), '*');
-      string conf_name(call.begin(), end);
-      playMsg("conference");
-      spellWord(conf_name);
-      break;
-    }
-  }
-  
-} /* spellCallsign */
-
-
-
 
 /****************************************************************************
  *
@@ -470,15 +421,15 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
   }
   else if (cmd == "1")
   {
-    playNumber(qsos.size());
-    playMsg("connected_stations");
-    playSilence(500);
+    stringstream ss;
+    ss << "list_connected_stations [list";
     list<QsoImpl*>::iterator it;
     for (it=qsos.begin(); it!=qsos.end(); ++it)
     {
-      spellCallsign((*it)->remoteCallsign());
-      playSilence(500);
+      ss << " " << (*it)->remoteCallsign();
     }
+    ss << "]";
+    processEvent(ss.str());
   }
   else if (qsos.size() < max_qsos)
   {
@@ -487,7 +438,7 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
     {
       cout << "*** ERROR: Directory server offline (status="
       	   << dir->statusStr() << "). Can't create outgoing connection.\n";
-      playMsg("directory_server_offline");
+      processEvent("directory_server_offline");
       return;
     }
     
@@ -507,8 +458,7 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
   }
   else
   {
-    // FIXME: Change message to something like "no more connections allowed".
-    playMsg("link_busy");
+    processEvent("no_more_connections_allowed");
   }
 } /* dtmfCmdReceived */
 
@@ -608,9 +558,9 @@ void ModuleEchoLink::allMsgsWritten(void)
  */
 void ModuleEchoLink::reportState(void)
 {
-  playSilence(200);
-  playNumber(qsos.size());
-  playMsg("connected_stations");
+  stringstream ss;
+  ss << "status_report " << qsos.size();
+  processEvent(ss.str());
 } /* reportState */
 
 
@@ -675,8 +625,9 @@ void ModuleEchoLink::onStationListUpdated(void)
     {
       cout << "The EchoLink ID " << pending_connect_id
       	   << " could not be found.\n";
-      playNumber(pending_connect_id);
-      playMsg("not_found");
+      stringstream ss;
+      ss << "station_id_not_found " << pending_connect_id;
+      processEvent(ss.str());
     }
     pending_connect_id = -1;
   }
@@ -710,8 +661,9 @@ void ModuleEchoLink::onError(const string& msg)
   
   if (pending_connect_id > 0)
   {
-    playMsg("operation_failed");
-    pending_connect_id = -1;
+    stringstream ss;
+    ss << "lookup_failed " << pending_connect_id;
+    processEvent(ss.str());
   }
   
 } /* onError */
@@ -810,8 +762,6 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   
   setIdle(false);
 
-  //msg_handler->playMsg("EchoLink", "greeting");
-  
 } /* onIncomingConnection */
 
 
@@ -952,7 +902,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
   {
     cerr << "Cannot connect to myself (" << mycall << "/" << station->id()
       	 << ")...\n";
-    playMsg("operation_failed");
+    processEvent("self_connect");
     return;
   }
 
@@ -966,8 +916,9 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
     {
       cerr << "*** WARNING: Already connected to " << station->callsign()
       	   << ". Ignoring connect request.\n";
-      playMsg("already_connected_to");
-      spellCallsign(station->callsign());
+      stringstream ss;
+      ss << "already_connected_to " << station->callsign();
+      processEvent(ss.str());
       return;
     }
   }
@@ -977,7 +928,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
   {
     delete qso;
     cerr << "*** ERROR: Creation of Qso failed\n";
-    playMsg("operation_failed");
+    processEvent("internal_error");
     return;
   }
   qsos.push_back(qso);
@@ -989,9 +940,9 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
       	  slot(this, &ModuleEchoLink::audioFromRemoteRaw));
   qso->destroyMe.connect(slot(this, &ModuleEchoLink::onDestroyMe));
 
-  playMsg("connecting_to");
-  spellCallsign(qso->remoteCallsign());
-  playSilence(500);
+  stringstream ss;
+  ss << "connecting_to " << qso->remoteCallsign();
+  processEvent(ss.str());
   outgoing_con_pending = qso;
   
   setIdle(false);

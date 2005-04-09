@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cassert>
 #include <sigc++/bind.h>
+#include <sstream>
 
 
 /****************************************************************************
@@ -389,9 +390,9 @@ void QsoImpl::onStateChange(Qso::State state)
       cout << "DISCONNECTED\n";
       if (!reject_qso)
       {
-	module->spellCallsign(remoteCallsign());
-	module->playMsg("disconnected");
-	module->playSilence(500);
+      	stringstream ss;
+	ss << "disconnected " << remoteCallsign();
+      	module->processEvent(ss.str());
       }
       destroy_timer = new Timer(5000);
       destroy_timer->expired.connect(slot(this, &QsoImpl::destroyMeNow));
@@ -403,10 +404,15 @@ void QsoImpl::onStateChange(Qso::State state)
       cout << "CONNECTED\n";
       if (!reject_qso)
       {
-	module->playMsg("connected");
 	if (isRemoteInitiated())
 	{
-      	  module->spellCallsign(remoteCallsign());
+      	  stringstream ss;
+	  ss << "remote_connected" << remoteCallsign();
+      	  module->processEvent(ss.str());
+	}
+	else
+	{
+	  module->processEvent("connected");
 	}
       }
       break;
@@ -432,7 +438,7 @@ void QsoImpl::idleTimeoutCheck(Timer *t)
   {
     cout << remoteCallsign() << ": EchoLink connection idle timeout. "
       	 "Disconnecting...\n";
-    module->playMsg("timeout");
+    module->processEvent("link_inactivity_timeout");
     disc_when_done = true;
     msg_handler->begin();
     msg_handler->playMsg("EchoLink", "timeout");
