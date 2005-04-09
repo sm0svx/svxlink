@@ -1,14 +1,14 @@
 /**
-@file	 RepeaterLogic.h
+@file	 EventHandler.h
 @brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2004-04-24
+@date	 2005-04-09
 
 A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,13 +26,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example RepeaterLogic_demo.cpp
-An example of how to use the RepeaterLogic class
+/** @example EventHandler_demo.cpp
+An example of how to use the EventHandler class
 */
 
 
-#ifndef REPEATER_LOGIC_INCLUDED
-#define REPEATER_LOGIC_INCLUDED
+#ifndef EVENT_HANDLER_INCLUDED
+#define EVENT_HANDLER_INCLUDED
 
 
 /****************************************************************************
@@ -40,6 +40,8 @@ An example of how to use the RepeaterLogic class
  * System Includes
  *
  ****************************************************************************/
+
+#include <tcl.h>
 
 #include <string>
 
@@ -58,7 +60,6 @@ An example of how to use the RepeaterLogic class
  *
  ****************************************************************************/
 
-#include "Logic.h"
 
 
 /****************************************************************************
@@ -67,11 +68,7 @@ An example of how to use the RepeaterLogic class
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class Config;
-  class Timer;
-};
+class MsgHandler;
 
 
 /****************************************************************************
@@ -90,7 +87,6 @@ namespace Async
  *
  ****************************************************************************/
 
-class Module;
   
 
 /****************************************************************************
@@ -118,80 +114,58 @@ class Module;
 /**
 @brief	A_brief_class_description
 @author Tobias Blomberg
-@date   2004-04-24
+@date   2005-04-09
 
 A_detailed_class_description
 
-\include RepeaterLogic_demo.cpp
+\include EventHandler_demo.cpp
 */
-class RepeaterLogic : public Logic
+class EventHandler
 {
   public:
     /**
      * @brief 	Default constuctor
      */
-    RepeaterLogic(Async::Config& cfg, const std::string& name);
+    EventHandler(const std::string& event_script, MsgHandler *msg_handler);
   
     /**
      * @brief 	Destructor
      */
-    ~RepeaterLogic(void);
+    ~EventHandler(void);
   
     /**
      * @brief 	A_brief_member_function_description
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
-    bool initialize(void);
+    void setVariable(const std::string& name, const std::string& value);
+    bool processEvent(const std::string& event);
     
-    virtual bool processEvent(const std::string& event, const Module *module=0);
-    virtual void playFile(const std::string& path);
-    virtual void playMsg(const std::string& msg, const Module *module=0);
-    virtual void playNumber(int number);
-    virtual void spellWord(const std::string& word);
-    virtual void playSilence(int length);
-    virtual void moduleTransmitRequest(bool do_transmit);
-    virtual bool activateModule(Module *module);
-
-
+    
   protected:
-    virtual void allTxSamplesFlushed(void);
-
-
-  private:
-    bool      	  repeater_is_up;
-    Async::Timer  *up_timer;
-    int      	  idle_timeout;
-    int       	  required_1750_duration;
-    Async::Timer  *idle_sound_timer;
-    std::string   idle_sound;
-    Async::Timer  *ident_timer;
-    int       	  ident_interval;
-    int       	  idle_sound_interval;
-    bool      	  repeating_enabled;
-    bool      	  activate_id;
-    std::string   activate_pre_id_sound;
-    std::string   activate_post_id_sound;
-    bool      	  deactivate_id;
-    std::string   deactivate_pre_id_sound;
-    std::string   deactivate_post_id_sound;
     
-    void identify(Async::Timer *t=0);
-    int audioReceived(short *samples, int count);
-    void idleTimeout(Async::Timer *t);
-    void setIdle(bool idle);
-    void setUp(bool up);
-    void squelchOpen(bool is_open);
-    //void txTimeout(void);
-    void detected1750(void);
-    void playIdleSound(Async::Timer *t);
+  private:
+    std::string event_script;
+    MsgHandler	*msg_handler;
+    Tcl_Interp  *interp;
+    
+    static int playFile(ClientData cdata, Tcl_Interp *irp,
+      	      	    int argc, const char *argv[]);
+    static int playSilence(ClientData cdata, Tcl_Interp *irp,
+      	      	    int argc, const char *argv[]);
+    static int spellWord(ClientData cdata, Tcl_Interp *irp,
+      	      	    int argc, const char *argv[]);
+    static int playNumber(ClientData cdata, Tcl_Interp *irp,
+      	      	    int argc, const char *argv[]);
+    static int reportActiveModuleState(ClientData cdata, Tcl_Interp *irp,
+      	      	    int argc, const char *argv[]);
 
-};  /* class RepeaterLogic */
+};  /* class EventHandler */
 
 
 //} /* namespace */
 
-#endif /* REPEATER_LOGIC_INCLUDED */
+#endif /* EVENT_HANDLER_INCLUDED */
 
 
 

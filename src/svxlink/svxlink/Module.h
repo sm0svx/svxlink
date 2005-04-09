@@ -275,14 +275,6 @@ class Module : public SigC::Object
     const std::string& logicName(void) const;
 
     /**
-     * @brief 	Play the module name to the transceiver
-     *
-     * Call this function to order playback of this modules name to the
-     * transceiver frontend.
-     */
-    void playModuleName(void);
-
-    /**
      * @brief 	Play the module help message to the transceiver
      *
      * Call this function to order playback of this modules help message to
@@ -381,6 +373,19 @@ class Module : public SigC::Object
      * This function will only be called if this module is active.
      */
     virtual void reportState(void) {}
+    
+    /**
+     * @brief 	Order the logic core to process an event
+     * @param 	event The name of the event to process
+     *
+     * This function is called by the module when it wishes to process an
+     * event. An event almost always generate sounds to be played over the
+     * transmitter. Exactly what to do is specified in a handler script.
+     * The handler script is pointed out in the configuration file under
+     * XxxLogic/EVENT_HANDLER.
+     * The module must be active for this function to do anything.
+     */
+    void processEvent(const std::string& event);
     
     /**
      * @brief 	Order the logic core to play an audio file over the transmitter

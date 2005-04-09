@@ -98,6 +98,7 @@ class Rx;
 class Tx;
 class MsgHandler;
 class Module;
+class EventHandler;
   
 
 /****************************************************************************
@@ -154,6 +155,7 @@ class Logic : public SigC::Object
     
     const std::string& name(void) const { return m_name; }
     
+    virtual bool processEvent(const std::string& event, const Module *module=0);
     virtual void playFile(const std::string& path);
     virtual void playMsg(const std::string& msg, const Module *module=0);
     virtual void playNumber(float number);
@@ -210,6 +212,7 @@ class Logic : public SigC::Object
     int       	      	      	rgr_sound_delay;
     float       	      	report_ctcss;
     std::map<int, std::string>	macros;
+    EventHandler      	      	*event_handler;
     
     void allModuleSamplesWritten(void);
     void transmitCheck(void);

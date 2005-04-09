@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <cctype>
 #include <cassert>
+#include <sstream>
 
 
 /****************************************************************************
@@ -59,6 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "EventHandler.h"
 #include "Module.h"
 #include "MsgHandler.h"
 #include "LocalRx.h"
@@ -130,7 +132,7 @@ Logic::Logic(Config &cfg, const string& name)
     write_msg_flush_timer(0), active_module(0), module_tx_fifo(0),
     cmd_tmo_timer(0), logic_transmit(false), anti_flutter(false),
     prev_digit('?'), exec_cmd_on_sql_close(0), exec_cmd_on_sql_close_timer(0),
-    rgr_sound_timer(0), rgr_sound_delay(-1), report_ctcss(0)
+    rgr_sound_timer(0), rgr_sound_delay(-1), report_ctcss(0), event_handler(0)
 {
 
 } /* Logic::Logic */
@@ -148,6 +150,7 @@ Logic::~Logic(void)
   delete m_tx;
   delete m_rx;
   delete rgr_sound_timer;
+  delete event_handler;
 } /* Logic::~Logic */
 
 
@@ -158,9 +161,17 @@ bool Logic::initialize(void)
   string sounds;
   string value;
   string macro_section;
+  string event_handler_str;
   list<string> macro_list;
   list<string>::iterator mlit;
   
+  if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
+  {
+    cerr << "*** ERROR: Config variable " << name()
+      	 << "/EVENT_HANDLER not set\n";
+    goto cfg_failed;
+  }
+
   if (!cfg().getValue(name(), "RX", rx_name))
   {
     cerr << "*** ERROR: Config variable " << name() << "/RX not set\n";
@@ -230,12 +241,6 @@ bool Logic::initialize(void)
   }
   tx().allSamplesFlushed.connect(slot(this, &Logic::allTxSamplesFlushed));
   
-  msg_handler = new MsgHandler(sounds, 8000);
-  msg_handler->writeAudio.connect(slot(this, &Logic::transmitAudio));
-  msg_handler->allMsgsWritten.connect(slot(this, &Logic::allMsgsWritten));
-  tx().transmitBufferFull.connect(
-      	  slot(msg_handler, &MsgHandler::writeBufferFull));
-  
   module_tx_fifo = new SampleFifo(15*8000); // 15 seconds
   module_tx_fifo->setDebugName("module_tx_fifo");
   module_tx_fifo->allSamplesWritten.connect(
@@ -249,6 +254,21 @@ bool Logic::initialize(void)
   cmd_tmo_timer = new Timer(10000);
   cmd_tmo_timer->expired.connect(slot(this, &Logic::cmdTimeout));
   cmd_tmo_timer->setEnable(false);
+  
+  msg_handler = new MsgHandler(sounds, 8000);
+  msg_handler->writeAudio.connect(slot(this, &Logic::transmitAudio));
+  msg_handler->allMsgsWritten.connect(slot(this, &Logic::allMsgsWritten));
+  tx().transmitBufferFull.connect(
+      	  slot(msg_handler, &MsgHandler::writeBufferFull));
+  
+  event_handler = new EventHandler(event_handler_str, msg_handler);
+  event_handler->setVariable("mycall", m_callsign);
+  char str[256];
+  sprintf(str, "%.1f", report_ctcss);
+  event_handler->setVariable("report_ctcss", str);
+  event_handler->setVariable("active_module", "");
+  
+  processEvent("startup");
   
   return true;
   
@@ -264,6 +284,30 @@ bool Logic::initialize(void)
     return false;
     
 } /* Logic::initialize */
+
+
+bool Logic::processEvent(const string& event, const Module *module)
+{
+  module_tx_fifo->stopOutput(true);
+  if (module == 0)
+  {
+    event_handler->processEvent(name() + "_" + event);
+  }
+  else
+  {
+    event_handler->processEvent(string(module->name()) + "_" + event);
+  }
+  
+  if (msg_handler->isWritingMessage())
+  {
+    transmit(true);
+  }
+  else
+  {
+    module_tx_fifo->stopOutput(false);
+  }
+  return msg_handler->isWritingMessage();
+}
 
 
 void Logic::playFile(const string& path)
@@ -356,6 +400,7 @@ bool Logic::activateModule(Module *module)
   {
     active_module = module;
     module->activate();
+    event_handler->setVariable("active_module", module->name());
     return true;
   }
   
@@ -370,6 +415,7 @@ void Logic::deactivateModule(Module *module)
   {
     active_module = 0;
     module->deactivate();
+    event_handler->setVariable("active_module", "");
   }
 } /* Logic::deactivateModule */
 
@@ -785,21 +831,7 @@ void Logic::processCommandQueue(void)
   {
     if (*it == "*")
     {
-      playMsg("online");
-      spellWord(callsign());
-      if (report_ctcss > 0)
-      {
-      	playSilence(200);
-      	playMsg("pl_is");
-      	playNumber(report_ctcss);
-	playMsg("hz");
-      }
-      if (active_module != 0)
-      {
-	playMsg("active_module");
-	active_module->playModuleName();
-	active_module->reportState();
-      }
+      processEvent("manual_identification");
     }
     else if ((*it)[0] == 'D')
     {
@@ -821,8 +853,9 @@ void Logic::processCommandQueue(void)
 	}
 	else
 	{
-	  playNumber(module_id);
-	  playMsg("no_such_module");
+	  stringstream ss;
+	  ss << "no_such_module " << module_id;
+	  processEvent(ss.str());
 	}
       }
     }
@@ -841,7 +874,7 @@ void Logic::processMacroCmd(string& cmd)
   if (cmd.empty())
   {
     cerr << "*** Macro error: Empty command.\n";
-    playMsg("operation_failed");
+    processEvent("macro_empty");
     return;
   }
   
@@ -849,7 +882,7 @@ void Logic::processMacroCmd(string& cmd)
   if (it == macros.end())
   {
     cerr << "*** Macro error: Macro " << cmd << " not found.\n";
-    playMsg("operation_failed");
+    processEvent("macro_not_found");
     return;
   }
 
@@ -858,7 +891,7 @@ void Logic::processMacroCmd(string& cmd)
   if (colon == macro.end())
   {
     cerr << "*** Macro error: No colon found in macro (" << macro << ").\n";
-    playMsg("operation_failed");
+    processEvent("macro_syntax_error");
     return;
   }
   
@@ -868,7 +901,7 @@ void Logic::processMacroCmd(string& cmd)
   if (module == 0)
   {
     cerr << "*** Macro error: Module " << module_name << " not found.\n";
-    playMsg("operation_failed");
+    processEvent("macro_module_not_found");
     return;
   }
   
@@ -878,7 +911,7 @@ void Logic::processMacroCmd(string& cmd)
     {
       cerr << "*** Macro error: Activation of module " << module_name
            << " failed.\n";
-      playMsg("operation_failed");
+      processEvent("macro_module_activation_failed");
       return;
     }
   }
@@ -886,9 +919,7 @@ void Logic::processMacroCmd(string& cmd)
   {
     cerr << "*** Macro error: Another module is active ("
          << active_module->name() << ").\n";
-    playMsg("operation_failed");
-    playMsg("active_module");
-    active_module->playModuleName();
+    processEvent("macro_another_active_module");
     return;
   }
   
@@ -915,8 +946,7 @@ void Logic::putCmdOnQueue(Timer *t)
 void Logic::sendRgrSound(Timer *t)
 {
   //printf("RepeaterLogic::sendRogerSound\n");
-  playMsg("blip");
-  playSilence(200);
+  processEvent("send_rgr_sound");
   enableRgrSoundTimer(false);
 } /* Logic::sendRogerSound */
 

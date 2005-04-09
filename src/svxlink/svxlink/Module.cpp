@@ -57,8 +57,7 @@ void Module::activate(void)
   
   m_is_active = true;
   
-  playMsg("activating_module");
-  playModuleName();
+  processEvent("activating_module");
   
   m_audio_con = logic()->rx().audioReceived.connect(
       	  slot(this, &Module::audioFromRx));
@@ -81,8 +80,7 @@ void Module::deactivate(void)
   m_audio_con.disconnect();
   m_squelch_con.disconnect();
   
-  playMsg("deactivating_module");
-  playModuleName();
+  processEvent("deactivating_module");
   
   m_is_active = false;
 }
@@ -100,21 +98,27 @@ const string& Module::logicName(void) const
 } /* Module::logicName */
 
 
-void Module::playModuleName(void)
-{
-  logic()->playMsg("name", this);
-} /* Module::playModuleName */
-
-
 void Module::playHelpMsg(void)
 {
-  logic()->playMsg("help", this);
+  processEvent("play_help");
 } /* Module::playHelpMsg */
+
+
+void Module::processEvent(const string& event)
+{
+  if (m_is_active)
+  {
+    logic()->processEvent(event, this);
+  }
+} /* Module::playFile */
 
 
 void Module::playFile(const string& path)
 {
-  logic()->playFile(path);
+  if (m_is_active)
+  {
+    logic()->playFile(path);
+  }
 } /* Module::playFile */
 
 
@@ -213,7 +217,7 @@ void Module::setIdle(bool is_idle)
 void Module::moduleTimeout(Timer *t)
 {
   cout << "Module timeout: " << name() << endl;
-  playMsg("timeout");
+  processEvent("timeout");
   deactivateMe();
 } /* ModuleParrot::moduleTimeout */
 

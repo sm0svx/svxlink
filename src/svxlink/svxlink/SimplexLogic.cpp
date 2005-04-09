@@ -277,8 +277,7 @@ void SimplexLogic::identify(Timer *t)
   {
     if (!ident_only_after_tx || need_ident) 
     {
-      playMsg("online");
-      spellWord(callsign());
+      processEvent("periodic_identify");
       need_ident = false;
       ident_last_sent = time(NULL);
     }

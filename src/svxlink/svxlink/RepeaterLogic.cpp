@@ -168,36 +168,6 @@ bool RepeaterLogic::initialize(void)
     idle_sound_interval = atoi(str.c_str());
   }
   
-  if (cfg().getValue(name(), "ACTIVATE_ID", str))
-  {
-    activate_id = (atoi(str.c_str()) != 0);
-  }
-  
-  if (cfg().getValue(name(), "ACTIVATE_PRE_ID_SOUND", str))
-  {
-    activate_pre_id_sound = str;
-  }
-  
-  if (cfg().getValue(name(), "ACTIVATE_POST_ID_SOUND", str))
-  {
-    activate_post_id_sound = str;
-  }
-  
-  if (cfg().getValue(name(), "DEACTIVATE_ID", str))
-  {
-    deactivate_id = (atoi(str.c_str()) != 0);
-  }
-  
-  if (cfg().getValue(name(), "DEACTIVATE_PRE_ID_SOUND", str))
-  {
-    deactivate_pre_id_sound = str;
-  }
-  
-  if (cfg().getValue(name(), "DEACTIVATE_POST_ID_SOUND", str))
-  {
-    deactivate_post_id_sound = str;
-  }
-  
   //tx().txTimeout.connect(slot(this, &RepeaterLogic::txTimeout));
   
   rx().mute(false);
@@ -217,12 +187,23 @@ bool RepeaterLogic::initialize(void)
     ident_timer->expired.connect(slot(this, &RepeaterLogic::identify));
   }
       
-  //playMsg("online");
-  //identify();
-  
   return true;
   
 } /* RepeaterLogic::initialize */
+
+
+bool RepeaterLogic::processEvent(const string& event, const Module *module)
+{
+  bool sound_generated = Logic::processEvent(event, module);
+  if ((event != "repeater_idle") && (event != "send_rgr_beep") &&
+      sound_generated)
+  {
+    setIdle(false);
+  }
+  
+  return sound_generated;
+  
+} /* RepeaterLogic::processEvent */
 
 
 void RepeaterLogic::playFile(const string& path)
@@ -322,8 +303,7 @@ void RepeaterLogic::identify(Timer *t)
   //printf("RepeaterLogic::identify\n");
   if (!callsign().empty() && !repeater_is_up)
   {
-    spellWord(callsign());
-    playMsg("repeater");
+    processEvent("periodic_identify");
     if (ident_timer != 0)
     {
       ident_timer->reset();
@@ -397,27 +377,7 @@ void RepeaterLogic::setUp(bool up)
   
   if (up)
   {
-    if (!activate_pre_id_sound.empty())
-    {
-      playFile(activate_pre_id_sound);
-      playSilence(250);
-    }
-    if (activate_id)
-    {
-      identify();
-      playSilence(250);
-    }
-    if (!activate_post_id_sound.empty())
-    {
-      playFile(activate_post_id_sound);
-      playSilence(250);
-    }
-    Module *module = activeModule();
-    if (module != 0)
-    {
-      playMsg("active_module");
-      module->playModuleName();
-    }
+    processEvent("repeater_up");
     repeater_is_up = true;
     repeating_enabled = false;
   }
@@ -428,21 +388,7 @@ void RepeaterLogic::setUp(bool up)
     up_timer = 0;
     delete idle_sound_timer;
     idle_sound_timer = 0;
-    if (!deactivate_pre_id_sound.empty())
-    {
-      playFile(deactivate_pre_id_sound);
-      playSilence(250);
-    }
-    if (deactivate_id)
-    {
-      identify();
-      playSilence(250);
-    }
-    if (!deactivate_post_id_sound.empty())
-    {
-      playFile(deactivate_post_id_sound);
-      playSilence(250);
-    }
+    processEvent("repeater_down");
   }
   
   logicTransmitRequest(up);
@@ -496,7 +442,7 @@ void RepeaterLogic::detected1750(void)
 
 void RepeaterLogic::playIdleSound(Timer *t)
 {
-  playMsg(idle_sound);
+  processEvent("repeater_idle");
 } /* RepeaterLogic::playIdleSound */
 
 
