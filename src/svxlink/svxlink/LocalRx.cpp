@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+#include <cassert>
 
 
 /****************************************************************************
@@ -85,6 +86,50 @@ using namespace Async;
  *
  ****************************************************************************/
 
+class ToneDurationDet : public ToneDetector
+{
+  public:
+    ToneDurationDet(int fq, int bw, int duration)
+      : ToneDetector(fq, 8000 / bw), required_duration(duration)
+    {
+      timerclear(&activation_timestamp);
+      ToneDetector::activated.connect(
+      	      slot(this, &ToneDurationDet::toneActivated));
+    }
+    
+    SigC::Signal1<void, int> detected;
+    
+  private:
+    int     	    required_duration;
+    struct timeval  activation_timestamp;
+    
+    void toneActivated(bool is_activated)
+    {
+      //printf("%d tone %s...\n", toneFq(),
+      //	     is_activated ? "ACTIVATED" : "DEACTIVATED");
+      if (is_activated)
+      {
+	gettimeofday(&activation_timestamp, NULL);
+      }
+      else
+      {
+      	assert(timerisset(&activation_timestamp));
+	struct timeval tv, tv_diff;
+	gettimeofday(&tv, NULL);
+	timersub(&tv, &activation_timestamp, &tv_diff);
+	long diff = tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000;
+	//printf("The %d tone was active for %ld milliseconds\n",
+	//      	 toneFq(), diff);
+	if (diff >= required_duration)
+	{
+	  detected(toneFq());
+	}
+      	timerclear(&activation_timestamp);
+      }
+    }
+};
+
+
 
 
 /****************************************************************************
@@ -120,9 +165,8 @@ using namespace Async;
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
   : Rx(name), cfg(cfg), name(name), audio_io(0), is_muted(true), vox(0),
-    dtmf_dec(0), det_1750(0), req_1750_duration(0), ctcss_det(0), ctcss_fq(0),
-    sql_is_open(false), serial(0), sql_pin(Serial::PIN_CTS),
-    sql_pin_act_lvl(true)
+    dtmf_dec(0), ctcss_det(0), ctcss_fq(0), sql_is_open(false), serial(0),
+    sql_pin(Serial::PIN_CTS), sql_pin_act_lvl(true)
 {
   
 } /* LocalRx::LocalRx */
@@ -132,7 +176,6 @@ LocalRx::~LocalRx(void)
 {
   delete serial;
   delete ctcss_det;
-  delete det_1750;
   delete dtmf_dec;
   delete audio_io;
   delete vox;
@@ -352,16 +395,18 @@ bool LocalRx::squelchIsOpen(void) const
 } /* LocalRx::squelchIsOpen */
 
 
-bool LocalRx::detect1750(int required_duration)
+bool LocalRx::addToneDetector(int fq, int bw, int required_duration)
 {
-  det_1750 = new ToneDetector(1750, 330); // FIXME: Determine optimum N
-  det_1750->activated.connect(slot(this, &LocalRx::activated1750));
-  req_1750_duration = required_duration;
-  audio_io->audioRead.connect(slot(det_1750, &ToneDetector::processSamples));
-
-  return true;
+  //printf("Adding tone detector with fq=%d  bw=%d  req_dur=%d\n",
+  //    	 fq, bw, required_duration);
+  ToneDurationDet *det = new ToneDurationDet(fq, bw, required_duration);
+  assert(det != 0);
+  det->detected.connect(toneDetected.slot());
+  audio_io->audioRead.connect(slot(det, &ToneDurationDet::processSamples));
   
-} /* LocalRx::detect1750 */
+  return true;
+
+} /* LocalRx::addToneDetector */
 
 
 
@@ -395,30 +440,6 @@ bool LocalRx::detect1750(int required_duration)
  * Private member functions
  *
  ****************************************************************************/
-
-
-void LocalRx::activated1750(bool is_activated)
-{
-  //printf("1750 %s...\n", is_activated ? "ACTIVATED" : "DEACTIVATED");
-  if (is_activated)
-  {
-    gettimeofday(&det_1750_timestamp, NULL);
-  }
-  else
-  {
-    struct timeval tv, tv_diff;
-    gettimeofday(&tv, NULL);
-    timersub(&tv, &det_1750_timestamp, &tv_diff);
-    long diff = tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000;
-    //printf("The 1750 tone was active for %ld milliseconds\n", diff);
-    if (diff >= req_1750_duration)
-    {
-      detected1750();
-    }
-  }
-  
-} /* LocalRx::activated1750 */
-
 
 void LocalRx::voxSqlOpen(bool is_open)
 {

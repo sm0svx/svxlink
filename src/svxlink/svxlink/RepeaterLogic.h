@@ -159,23 +159,17 @@ class RepeaterLogic : public Logic
 
 
   private:
-    bool      	  repeater_is_up;
-    Async::Timer  *up_timer;
-    int      	  idle_timeout;
-    int       	  required_1750_duration;
-    Async::Timer  *idle_sound_timer;
-    std::string   idle_sound;
-    Async::Timer  *ident_timer;
-    int       	  ident_interval;
-    int       	  idle_sound_interval;
-    bool      	  repeating_enabled;
-    bool      	  activate_id;
-    std::string   activate_pre_id_sound;
-    std::string   activate_post_id_sound;
-    bool      	  deactivate_id;
-    std::string   deactivate_pre_id_sound;
-    std::string   deactivate_post_id_sound;
-    bool      	  preserve_idle_state;
+    bool      	    repeater_is_up;
+    Async::Timer    *up_timer;
+    int      	    idle_timeout;
+    Async::Timer    *idle_sound_timer;
+    Async::Timer    *ident_timer;
+    int       	    ident_interval;
+    int       	    idle_sound_interval;
+    bool      	    repeating_enabled;
+    bool      	    preserve_idle_state;
+    struct timeval  sql_open_timestamp;
+    int      	    required_sql_open_duration;
     
     void identify(Async::Timer *t=0);
     int audioReceived(short *samples, int count);
@@ -184,7 +178,7 @@ class RepeaterLogic : public Logic
     void setUp(bool up);
     void squelchOpen(bool is_open);
     //void txTimeout(void);
-    void detected1750(void);
+    void detectedTone(int fq);
     void playIdleSound(Async::Timer *t);
 
 };  /* class RepeaterLogic */

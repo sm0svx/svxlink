@@ -75,6 +75,8 @@ namespace Async
   class Timer;
 };
 
+class ToneDurationDet;
+
 
 /****************************************************************************
  *
@@ -160,14 +162,15 @@ class LocalRx : public Rx
     bool squelchIsOpen(void) const;
     
     /**
-     * @brief 	Call this function to enable/disable the detection of 1750Hz
-     *	      	tone call.
+     * @brief 	Call this function to add a tone detector to the RX
+     * @param 	fq The tone frequency to detect
+     * @param 	bw The bandwidth of the detector
      * @param 	required_duration The required time in milliseconds that
      *	      	the tone must be active for activity to be reported.
-     * @return	Return \em true if the Rx is capable of detecting 1750 or
+     * @return	Return \em true if the Rx is capable of tone detection or
      *	      	\em false if it's not.
      */
-    bool detect1750(int required_duration);
+    bool addToneDetector(int fq, int bw, int required_duration);
     
 
   protected:
@@ -181,31 +184,28 @@ class LocalRx : public Rx
       SQL_DET_SERIAL
     } SqlDetType;
     
-    static const int  	  NPOLES = 4;
-    static const int  	  NZEROS = 4;
+    static const int  	    NPOLES = 4;
+    static const int  	    NZEROS = 4;
     
-    Async::Config     	  &cfg;
-    std::string       	  name;
-    Async::AudioIO    	  *audio_io;
-    bool      	      	  is_muted;
-    Vox       	      	  *vox;
-    DtmfDecoder       	  *dtmf_dec;
-    ToneDetector      	  *det_1750;
-    int       	      	  req_1750_duration;
-    struct timeval    	  det_1750_timestamp;
-    ToneDetector      	  *ctcss_det;
-    int       	      	  ctcss_fq;
-    SqlDetType	      	  sql_up_det;
-    SqlDetType	      	  sql_down_det;
-    bool      	      	  sql_is_open;
-    Async::Serial     	  *serial;
-    Async::Serial::InPin  sql_pin;
-    bool      	      	  sql_pin_act_lvl;
-    Async::Timer      	  *sql_pin_poll_timer;
-    float     	      	  xv[NZEROS+1];
-    float     	      	  yv[NPOLES+1];
+    Async::Config     	    &cfg;
+    std::string       	    name;
+    Async::AudioIO    	    *audio_io;
+    bool      	      	    is_muted;
+    Vox       	      	    *vox;
+    DtmfDecoder       	    *dtmf_dec;
+    ToneDetector      	    *ctcss_det;
+    int       	      	    ctcss_fq;
+    SqlDetType	      	    sql_up_det;
+    SqlDetType	      	    sql_down_det;
+    bool      	      	    sql_is_open;
+    Async::Serial     	    *serial;
+    Async::Serial::InPin    sql_pin;
+    bool      	      	    sql_pin_act_lvl;
+    Async::Timer      	    *sql_pin_poll_timer;
+    float     	      	    xv[NZEROS+1];
+    float     	      	    yv[NPOLES+1];
+    std::list<ToneDurationDet*>  tone_detectors;
     
-    void activated1750(bool is_activated);
     void voxSqlOpen(bool is_open);
     void activatedCtcss(bool is_activated);
     SqlDetType sqlDetStrToEnum(const std::string& sql_det_str);

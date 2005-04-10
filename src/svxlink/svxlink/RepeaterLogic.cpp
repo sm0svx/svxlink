@@ -34,9 +34,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sys/time.h>
+
 #include <cstdio>
 #include <string>
 #include <iostream>
+#include <cassert>
 
 
 /****************************************************************************
@@ -123,13 +126,12 @@ using namespace Async;
 
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
   : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(30000),
-    required_1750_duration(0),
-    idle_sound_timer(0), idle_sound("repeater_idle"), ident_timer(0),
+    idle_sound_timer(0), ident_timer(0),
     ident_interval(10*60*1000), idle_sound_interval(0),
-    repeating_enabled(false), activate_id(true), deactivate_id(true),
-    preserve_idle_state(false)
+    repeating_enabled(false), 
+    preserve_idle_state(false), required_sql_open_duration(-1)
 {
-
+  timerclear(&sql_open_timestamp);
 } /* RepeaterLogic::RepeaterLogic */
 
 
@@ -148,15 +150,39 @@ bool RepeaterLogic::initialize(void)
     return false;
   }
   
+  int open_on_ctcss_fq = 0;
+  int open_on_ctcss_duration = 0;
+  int required_1750_duration = 0;
+  
   string str;
   if (cfg().getValue(name(), "IDLE_TIMEOUT", str))
   {
     idle_timeout = atoi(str.c_str()) * 1000;
   }
   
-  if (cfg().getValue(name(), "REQUIRED_1750_DURATION", str))
+  if (cfg().getValue(name(), "OPEN_ON_1750", str))
   {
     required_1750_duration = atoi(str.c_str());
+  }
+  
+  if (cfg().getValue(name(), "OPEN_ON_CTCSS", str))
+  {
+    string::iterator it;
+    it = find(str.begin(), str.end(), ':');
+    if (it == str.end())
+    {
+      cerr << "*** ERROR: Illegal format for config variable " << name()
+      	   << "/OPEN_ON_CTCSS. Should be <fq>:<required duration>.\n";
+    }
+    string fq_str(str.begin(), it);
+    string dur_str(it+1, str.end());
+    open_on_ctcss_fq = atoi(fq_str.c_str());
+    open_on_ctcss_duration = atoi(dur_str.c_str());
+  }
+
+  if (cfg().getValue(name(), "OPEN_ON_SQL", str))
+  {
+    required_sql_open_duration = atoi(str.c_str());
   }
   
   if (cfg().getValue(name(), "IDENT_INTERVAL", str))
@@ -173,13 +199,23 @@ bool RepeaterLogic::initialize(void)
   
   rx().mute(false);
   rx().audioReceived.connect(slot(this, &RepeaterLogic::audioReceived));
+  
   if (required_1750_duration > 0)
   {
-    if (!rx().detect1750(required_1750_duration))
+    if (!rx().addToneDetector(1750, 25, required_1750_duration))
     {
       cerr << "*** WARNING: Could not setup 1750 detection\n";
     }
-    rx().detected1750.connect(slot(this, &RepeaterLogic::detected1750));
+    rx().toneDetected.connect(slot(this, &RepeaterLogic::detectedTone));
+  }
+  
+  if ((open_on_ctcss_fq > 0) && (open_on_ctcss_duration > 0))
+  {
+    if (!rx().addToneDetector(open_on_ctcss_fq, 4, open_on_ctcss_duration))
+    {
+      cerr << "*** WARNING: Could not setup CTCSS tone detection\n";
+    }
+    rx().toneDetected.connect(slot(this, &RepeaterLogic::detectedTone));
   }
   
   if (ident_interval > 0)
@@ -427,9 +463,23 @@ void RepeaterLogic::squelchOpen(bool is_open)
   }
   else
   {
-    if (!is_open && (required_1750_duration == 0))
+    if (is_open)
     {
-      setUp(true);
+      gettimeofday(&sql_open_timestamp, NULL);
+    }
+    else if (required_sql_open_duration >= 0)
+    {
+      assert(timerisset(&sql_open_timestamp));
+      struct timeval tv, tv_diff;
+      gettimeofday(&tv, NULL);
+      timersub(&tv, &sql_open_timestamp, &tv_diff);
+      long diff = tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000;
+      //printf("The squelch was open for %ld milliseconds\n", diff);
+      if (diff >= required_sql_open_duration)
+      {
+	setUp(true);
+      }
+      timerclear(&sql_open_timestamp);
     }
   }
   
@@ -447,11 +497,14 @@ void RepeaterLogic::txTimeout(void)
 #endif
 
 
-void RepeaterLogic::detected1750(void)
+void RepeaterLogic::detectedTone(int fq)
 {
-  printf("1750 tone call detected\n");
-  setUp(true);
-} /* RepeaterLogic::detected1750 */
+  if (!repeater_is_up)
+  {
+    printf("%d Hz tone call detected\n", fq);
+    setUp(true);
+  }
+} /* RepeaterLogic::detectedTone */
 
 
 void RepeaterLogic::playIdleSound(Timer *t)
