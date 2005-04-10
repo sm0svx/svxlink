@@ -42,9 +42,9 @@ proc playNumber {number} {
 ###############################################################################
 
 proc SimplexLogic_startup {} {
-  global mycall;
-  playMsg "Core" "online";
-  spellWord $mycall;
+  #global mycall;
+  #playMsg "Core" "online";
+  #spellWord $mycall;
 }
 
 
@@ -73,7 +73,10 @@ proc SimplexLogic_manual_identification {} {
     playMsg "Core" "active_module";
     playMsg $active_module "name";
     playSilence 250;
-    reportActiveModuleState;
+    append func $active_module "_status_report";
+    if {"[info procs $func]" ne ""} {
+      $func;
+    }
     playSilence 250;
   }
   #playFile "";
