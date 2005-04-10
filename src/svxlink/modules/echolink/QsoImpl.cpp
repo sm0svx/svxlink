@@ -407,7 +407,7 @@ void QsoImpl::onStateChange(Qso::State state)
 	if (isRemoteInitiated())
 	{
       	  stringstream ss;
-	  ss << "remote_connected" << remoteCallsign();
+	  ss << "remote_connected " << remoteCallsign();
       	  module->processEvent(ss.str());
 	}
 	else
