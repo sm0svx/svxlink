@@ -154,10 +154,12 @@ class EventHandler
       	      	    int argc, const char *argv[]);
     static int playSilence(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
+    /*
     static int spellWord(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
     static int playNumber(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
+    */
     static int reportActiveModuleState(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
 

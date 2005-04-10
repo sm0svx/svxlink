@@ -134,8 +134,8 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
   interp = Tcl_CreateInterp();
   Tcl_CreateCommand(interp, "playFile", playFile, this, NULL);
   Tcl_CreateCommand(interp, "playSilence", playSilence, this, NULL);
-  Tcl_CreateCommand(interp, "spellWord", spellWord, this, NULL);
-  Tcl_CreateCommand(interp, "playNumber", playNumber, this, NULL);
+  //Tcl_CreateCommand(interp, "spellWord", spellWord, this, NULL);
+  //Tcl_CreateCommand(interp, "playNumber", playNumber, this, NULL);
   Tcl_CreateCommand(interp, "reportActiveModuleState",
       	  reportActiveModuleState, this, NULL);
 } /* EventHandler::EventHandler */
@@ -260,6 +260,7 @@ int EventHandler::playSilence(ClientData cdata, Tcl_Interp *irp, int argc,
 }
 
 
+#if 0
 int EventHandler::spellWord(ClientData cdata, Tcl_Interp *irp, int argc,
       	      	      	    const char *argv[])
 {
@@ -292,6 +293,7 @@ int EventHandler::playNumber(ClientData cdata, Tcl_Interp *irp, int argc,
 
   return TCL_OK;
 }
+#endif
 
 
 int EventHandler::reportActiveModuleState(ClientData cdata, Tcl_Interp *irp,

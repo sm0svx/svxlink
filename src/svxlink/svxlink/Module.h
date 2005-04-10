@@ -397,6 +397,7 @@ class Module : public SigC::Object
      */
     void playFile(const std::string& path);
     
+    #if 0
     /**
      * @brief 	Order the logic core to play an audio message over the
      *	      	transmitter
@@ -443,6 +444,7 @@ class Module : public SigC::Object
      * The module must be active for this function to do anything.
      */
     void playSilence(int length) const;
+    #endif
     
   protected:
     

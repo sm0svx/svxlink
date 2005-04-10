@@ -310,7 +310,7 @@ void Logic::playFile(const string& path)
   transmit(true);  
 } /* Logic::playFile */
 
-
+#if 0
 void Logic::playMsg(const string& msg, const Module *module)
 {
   module_tx_fifo->stopOutput(true);
@@ -340,6 +340,7 @@ void Logic::spellWord(const string& word)
   msg_handler->spellWord(word);
   transmit(true);
 } /* Logic::spellWord */
+#endif
 
 
 void Logic::playSilence(int length)

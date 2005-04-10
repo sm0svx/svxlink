@@ -217,7 +217,7 @@ void RepeaterLogic::playFile(const string& path)
   Logic::playFile(path);
 } /* RepeaterLogic::playFile */
 
-
+#if 0
 void RepeaterLogic::playMsg(const string& msg, const Module *module)
 {
   //printf("RepeaterLogic::playMsg: %s\n", msg.c_str());
@@ -252,6 +252,7 @@ void RepeaterLogic::spellWord(const string& word)
   }
   Logic::spellWord(word);
 } /* RepeaterLogic::spellWord */
+#endif
 
 
 void RepeaterLogic::playSilence(int length)

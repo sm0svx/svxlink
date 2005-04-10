@@ -157,9 +157,9 @@ class Logic : public SigC::Object
     
     virtual void processEvent(const std::string& event, const Module *module=0);
     virtual void playFile(const std::string& path);
-    virtual void playMsg(const std::string& msg, const Module *module=0);
-    virtual void playNumber(float number);
-    virtual void spellWord(const std::string& word);
+    //virtual void playMsg(const std::string& msg, const Module *module=0);
+    //virtual void playNumber(float number);
+    //virtual void spellWord(const std::string& word);
     virtual void playSilence(int length);
     void audioFromModule(short *samples, int count);
     virtual void moduleTransmitRequest(bool do_transmit);

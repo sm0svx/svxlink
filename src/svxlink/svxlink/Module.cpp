@@ -119,6 +119,7 @@ void Module::playFile(const string& path)
 } /* Module::playFile */
 
 
+#if 0
 void Module::playMsg(const string& msg) const
 {
   if (m_is_active)
@@ -153,6 +154,7 @@ void Module::playSilence(int length) const
     logic()->playSilence(length);
   }
 }
+#endif
 
 
 int Module::audioFromModule(short *samples, int count)

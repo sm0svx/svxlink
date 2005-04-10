@@ -9,9 +9,9 @@ proc playFile {filename} {
 }
 
 
-proc playNumber {number} {
-  puts "playNumber($number);";
-}
+#proc playNumber {number} {
+#  puts "playNumber($number);";
+#}
 
 
 proc playSilence {milliseconds} {
@@ -19,9 +19,9 @@ proc playSilence {milliseconds} {
 }
 
 
-proc spellWord {word} {
-  puts "spellWord(\"$word\");";
-}
+#proc spellWord {word} {
+#  puts "spellWord(\"$word\");";
+#}
 
 
 proc reportActiveModuleState {} {

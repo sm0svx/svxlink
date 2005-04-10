@@ -50,6 +50,7 @@ void MsgHandler::playMsg(const string& context, const string& msg)
 }
 
 
+#if 0
 void MsgHandler::playNumber(float number)
 {
   int intpart = static_cast<int>(number);
@@ -100,6 +101,7 @@ void MsgHandler::spellWord(const string& word)
     playMsg("Default", ch);
   }
 }
+#endif
 
 
 void MsgHandler::playSilence(int length)

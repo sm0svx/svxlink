@@ -14,6 +14,26 @@ proc playMsg {context msg} {
 }
 
 
+proc spellWord {word} {
+  set word [string tolower $word];
+  for {set i 0} {$i < [string length $word]} {set i [expr $i + 1]} {
+    playMsg "Default" "phonetic_[string index $word $i]";
+  }
+}
+
+
+proc playNumber {number} {
+  for {set i 0} {$i < [string length $number]} {set i [expr $i + 1]} {
+    set ch [string index $number $i];
+    if {$ch == "."} {
+      playMsg "Default" "decimal";
+    } else {
+      playMsg "Default" "$ch";
+    }
+  }
+}
+
+
 
 ###############################################################################
 #
@@ -374,7 +394,7 @@ proc EchoLink_play_help {} {
 }
 
 
-proc spellCallsign {call} {
+proc spellEchoLinkCallsign {call} {
   global basedir;
   if [regexp {^(\w+)-L$} $call ignored callsign] {
     spellWord $callsign;
@@ -401,7 +421,8 @@ proc EchoLink_list_connected_stations {connected_stations} {
   playSilence 50;
   playMsg "EchoLink" "connected_stations";
   foreach {call} "$connected_stations" {
-    spellCallsign $call;
+    spellEchoLinkCallsign $call;
+    playSilence 250;
   }
 }
 
@@ -442,7 +463,7 @@ proc EchoLink_self_connect {} {
 proc EchoLink_already_connected_to {call} {
   playMsg "EchoLink" "already_connected_to";
   playSilence 50;
-  spellCallsign $call;
+  spellEchoLinkCallsign $call;
 }
 
 
@@ -453,13 +474,13 @@ proc EchoLink_internal_error {} {
 
 proc EchoLink_connecting_to {call} {
   playMsg "EchoLink" "connecting_to";
-  spellCallsign $call;
+  spellEchoLinkCallsign $call;
   playSilence 500;
 }
 
 
 proc EchoLink_disconnected {call} {
-  spellCallsign $call;
+  spellEchoLinkCallsign $call;
   playMsg "EchoLink" "disconnected";
   playSilence 500;
 }
@@ -467,7 +488,7 @@ proc EchoLink_disconnected {call} {
 
 proc EchoLink_remote_connected {call} {
   playMsg "EchoLink" "connected";
-  spellCallsign $call;
+  spellEchoLinkCallsign $call;
   playSilence 500;
 }
 
