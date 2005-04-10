@@ -234,7 +234,7 @@ int EventHandler::playFile(ClientData cdata, Tcl_Interp *irp, int argc,
     Tcl_SetResult(irp,"Usage: playFile: <filename>", TCL_STATIC);
     return TCL_ERROR;
   }
-  cout << "EventHandler::playFile: " << argv[1] << endl;
+  //cout << "EventHandler::playFile: " << argv[1] << endl;
 
   EventHandler *self = static_cast<EventHandler *>(cdata);
   self->logic->playFile(argv[1]);
@@ -251,7 +251,7 @@ int EventHandler::playSilence(ClientData cdata, Tcl_Interp *irp, int argc,
     Tcl_SetResult(irp,"Usage: playSilence <milliseconds>", TCL_STATIC);
     return TCL_ERROR;
   }
-  cout << "EventHandler::playSilence: " << argv[1] << endl;
+  //cout << "EventHandler::playSilence: " << argv[1] << endl;
 
   EventHandler *self = static_cast<EventHandler *>(cdata);
   self->logic->playSilence(atoi(argv[1]));
@@ -304,7 +304,7 @@ int EventHandler::reportActiveModuleState(ClientData cdata, Tcl_Interp *irp,
     Tcl_SetResult(irp, "Usage: reportActiveModuleState", TCL_STATIC);
     return TCL_ERROR;
   }
-  cout << "EventHandler::reportActiveModuleState" << endl;
+  //cout << "EventHandler::reportActiveModuleState" << endl;
 
   EventHandler *self = static_cast<EventHandler *>(cdata);
   Module *module = self->logic->activeModule();
