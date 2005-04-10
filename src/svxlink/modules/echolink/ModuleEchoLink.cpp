@@ -340,7 +340,7 @@ void ModuleEchoLink::moduleCleanup(void)
  */
 void ModuleEchoLink::activateInit(void)
 {
-  
+  updateEventVariables();
 } /* activateInit */
 
 
@@ -726,6 +726,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
     return;
   }
   qsos.push_back(qso);
+  updateEventVariables();
   qso->setRemoteCallsign(callsign);
   qso->setRemoteName(name);
   qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
@@ -843,6 +844,7 @@ void ModuleEchoLink::onDestroyMe(QsoImpl *qso)
   list<QsoImpl*>::iterator it = find(qsos.begin(), qsos.end(), qso);
   assert (it != qsos.end());
   qsos.erase(it);
+  updateEventVariables();
   delete qso;
   qso = 0;
   
@@ -932,6 +934,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
     return;
   }
   qsos.push_back(qso);
+  updateEventVariables();
   qso->setRemoteCallsign(station->callsign());
   qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
   qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
@@ -1061,6 +1064,15 @@ void ModuleEchoLink::updateDescription(void)
   
 } /* ModuleEchoLink::updateDescription */
 
+
+void ModuleEchoLink::updateEventVariables(void)
+{
+  stringstream ss;
+  ss << qsos.size();
+  string var_name(name());
+  var_name +=  "_connected_stations";
+  setEventVariable(var_name, ss.str());
+} /* ModuleEchoLink::updateEventVariables */
 
 
 /*

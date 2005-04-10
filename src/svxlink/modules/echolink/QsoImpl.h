@@ -92,6 +92,7 @@ namespace Async
  ****************************************************************************/
 
 class MsgHandler;
+class EventHandler;
 class AudioPacer;
 class AsyncTimer;
 class ModuleEchoLink;
@@ -245,6 +246,7 @@ class QsoImpl : public EchoLink::Qso
     
   private:
     ModuleEchoLink    	  *module;
+    EventHandler      	  *event_handler;
     MsgHandler	      	  *msg_handler;
     AudioPacer       	  *msg_pacer;
     bool      	      	  init_ok;

@@ -50,6 +50,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#include <Module.h>
 
 #include <MsgHandler.h>
+#include <EventHandler.h>
 #include <AudioPacer.h>
 
 
@@ -125,10 +126,10 @@ using namespace EchoLink;
 
 
 QsoImpl::QsoImpl(const StationData *station, ModuleEchoLink *module)
-  : Qso(station->ip()), module(module), msg_handler(0), msg_pacer(0),
-    init_ok(false), reject_qso(false), last_message(""), last_info_msg(""),
-    idle_timer(0), disc_when_done(false), idle_timer_cnt(0), idle_timeout(0),
-    destroy_timer(0), station(*station)
+  : Qso(station->ip()), module(module), event_handler(0), msg_handler(0),
+    msg_pacer(0), init_ok(false), reject_qso(false), last_message(""),
+    last_info_msg(""), idle_timer(0), disc_when_done(false), idle_timer_cnt(0),
+    idle_timeout(0), destroy_timer(0), station(*station)
 {
   assert(module != 0);
   
@@ -161,11 +162,11 @@ QsoImpl::QsoImpl(const StationData *station, ModuleEchoLink *module)
   }
   setLocalInfo(description);
   
-  string sound_base_dir;
-  if (!cfg.getValue(module->logicName(), "SOUNDS", sound_base_dir))
+  string event_handler_script;
+  if (!cfg.getValue(module->logicName(), "EVENT_HANDLER", event_handler_script))
   {
-    cerr << "*** ERROR: Config variable " << cfg_name
-      	 << "/SOUNDS not set\n";
+    cerr << "*** ERROR: Config variable " << module->logicName()
+      	 << "/EVENT_HANDLER not set\n";
     return;
   }
   
@@ -177,7 +178,7 @@ QsoImpl::QsoImpl(const StationData *station, ModuleEchoLink *module)
     idle_timer->expired.connect(slot(this, &QsoImpl::idleTimeoutCheck));
   }
   
-  msg_handler = new MsgHandler(sound_base_dir, 8000);
+  msg_handler = new MsgHandler("/", 8000);
   
   msg_pacer = new AudioPacer(8000, 160*4, 500);
   msg_handler->writeAudio.connect(slot(msg_pacer, &AudioPacer::audioInput));
@@ -188,6 +189,12 @@ QsoImpl::QsoImpl(const StationData *station, ModuleEchoLink *module)
   msg_pacer->allAudioFlushed.connect(
       	  slot(this, &QsoImpl::allRemoteMsgsWritten));
   msg_pacer->audioOutput.connect(slot(this, &Qso::sendAudio));
+  
+  event_handler = new EventHandler(event_handler_script, 0);
+  event_handler->playFile.connect(slot(msg_handler, &MsgHandler::playFile));
+  event_handler->playSilence.connect(
+      	  slot(msg_handler, &MsgHandler::playSilence));
+  event_handler->initialize();
   
   Qso::infoMsgReceived.connect(slot(this, &QsoImpl::onInfoMsgReceived));
   Qso::chatMsgReceived.connect(slot(this, &QsoImpl::onChatMsgReceived));
@@ -203,6 +210,7 @@ QsoImpl::QsoImpl(const StationData *station, ModuleEchoLink *module)
 
 QsoImpl::~QsoImpl(void)
 {
+  delete event_handler;
   delete msg_handler;
   delete msg_pacer;
   delete idle_timer;
@@ -239,8 +247,7 @@ bool QsoImpl::accept(void)
   if (success)
   {
     msg_handler->begin();
-    msg_handler->playSilence(1000);
-    msg_handler->playMsg("EchoLink", "greeting");
+    event_handler->processEvent(string(module->name()) + "_remote_greeting");
     msg_handler->end();
   }
   
@@ -258,9 +265,8 @@ void QsoImpl::reject(void)
   {
     sendChatData("The connection was rejected");
     msg_handler->begin();
-    msg_handler->playSilence(1000);
-    msg_handler->playMsg("EchoLink", "reject_connection");
-    msg_handler->playSilence(1000);
+    event_handler->processEvent(
+      	    string(module->name()) + "_reject_remote_connection");
     msg_handler->end();
   }
 } /* QsoImpl::reject */
@@ -441,8 +447,7 @@ void QsoImpl::idleTimeoutCheck(Timer *t)
     module->processEvent("link_inactivity_timeout");
     disc_when_done = true;
     msg_handler->begin();
-    msg_handler->playMsg("EchoLink", "timeout");
-    msg_handler->playSilence(1000);
+    event_handler->processEvent(string(module->name()) + "_remote_timeout");
     msg_handler->end();
   }
 } /* idleTimeoutCheck */

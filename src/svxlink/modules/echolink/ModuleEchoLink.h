@@ -130,6 +130,7 @@ class ModuleEchoLink : public Module
     ModuleEchoLink(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleEchoLink(void);
     bool initialize(void);
+    const char *name(void) const { return "EchoLink"; }
     
   private:
     EchoLink::Directory *dir;
@@ -150,7 +151,6 @@ class ModuleEchoLink : public Module
     bool      	      	squelch_is_open;
 
     void moduleCleanup(void);
-    const char *name(void) const { return "EchoLink"; }
     void activateInit(void);
     void deactivateCleanup(void);
     void dtmfDigitReceived(char digit);
@@ -177,6 +177,7 @@ class ModuleEchoLink : public Module
     QsoImpl *findFirstTalker(void) const;
     void broadcastTalkerStatus(void);
     void updateDescription(void);
+    void updateEventVariables(void);
 
 };  /* class ModuleEchoLink */
 
