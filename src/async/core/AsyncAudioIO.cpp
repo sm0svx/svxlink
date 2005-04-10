@@ -258,6 +258,16 @@ int AudioIO::samplesToWrite(void) const
 void AudioIO::flushSamples(void)
 {
   //printf("AudioIO::flushSamples\n");
+  
+  if (do_flush)
+  {
+    if (!is_flushing)
+    {
+      allSamplesFlushed();
+    }
+    return;
+  }
+  
   do_flush = true;
   is_flushing = true;
   audio_dev->flushSamples();
@@ -270,6 +280,15 @@ void AudioIO::flushSamples(void)
 
 void AudioIO::clearSamples(void)
 {
+  if (do_flush)
+  {
+    if (!is_flushing)
+    {
+      allSamplesFlushed();
+    }
+    return;
+  }
+  
   do_flush = true;
   is_flushing = true;
   write_fifo->clear();
