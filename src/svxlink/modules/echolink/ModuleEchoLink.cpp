@@ -249,14 +249,6 @@ bool ModuleEchoLink::initialize(void)
   
   cfg().getValue(cfgName(), "ALLOW_IP", allow_ip);
   
-  string sound_base_dir;
-  if (!cfg().getValue(logicName(), "SOUNDS", sound_base_dir))
-  {
-    cerr << "*** ERROR: Config variable " << logicName()
-      	 << "/SOUNDS not set\n";
-    return false;
-  }
-  
     // Initialize directory server communication
   dir = new Directory(server, mycall, password, location);
   dir->statusChanged.connect(slot(this, &ModuleEchoLink::onStatusChanged));
