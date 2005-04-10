@@ -317,7 +317,8 @@ void Logic::playFile(const string& path)
 {
   module_tx_fifo->stopOutput(true);
   msg_handler->playFile(path);
-  transmit(true);  
+  //transmit(true);
+  transmitCheck();
 } /* Logic::playFile */
 
 #if 0
@@ -357,7 +358,8 @@ void Logic::playSilence(int length)
 {
   module_tx_fifo->stopOutput(true);
   msg_handler->playSilence(length);
-  transmit(true);
+  //transmit(true);
+  transmitCheck();
 } /* Logic::playSilence */
 
 
@@ -672,8 +674,8 @@ void Logic::allModuleSamplesWritten(void)
 
 void Logic::transmitCheck(void)
 {
-  //printf("Logic::transmitCheck:\n");
   /*
+  printf("Logic::transmitCheck:\n");
   if (active_module != 0)
   {
     printf("\tactive_module->isTransmitting   = %s\n",
@@ -688,7 +690,7 @@ void Logic::transmitCheck(void)
   printf("\ttx().isFlushing()               = %s\n",
       tx().isFlushing() ? "TRUE" : "FALSE");
   */
-    
+  
   if (((active_module != 0) && active_module->isTransmitting()) ||
       msg_handler->isWritingMessage() ||
       !module_tx_fifo->empty() ||
