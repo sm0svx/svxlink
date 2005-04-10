@@ -5,6 +5,8 @@
 
 * New method in AudioIO to clear all samples in the buffer.
 
+* Bugfix: Handling flushing when already flushed correctly.
+
 
 
  0.11.0 -- 25 Mar 2005
