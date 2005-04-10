@@ -171,7 +171,10 @@ proc RepeaterLogic_manual_identification {} {
   if {$active_module != ""} {
     playMsg "Core" "active_module";
     playMsg $active_module "name";
-    reportActiveModuleState;
+    append func $active_module "_status_report";
+    if {"[info procs $func]" ne ""} {
+      $func;
+    }
     playSilence 250;
   }
 }
@@ -438,8 +441,9 @@ proc EchoLink_no_more_connections_allowed {} {
 }
 
 
-proc EchoLink_status_report {connected_stations} {
-  playNumber $connected_stations;
+proc EchoLink_status_report {} {
+  global EchoLink_connected_stations;
+  playNumber $EchoLink_connected_stations;
   playMsg "EchoLink" "connected_stations";
 }
 
@@ -504,6 +508,29 @@ proc EchoLink_link_inactivity_timeout {} {
 }
 
 
+#
+# The three events below are for remote EchoLink announcements.
+#
+
+proc EchoLink_remote_greeting {} {
+  playSilence 1000;
+  playMsg "EchoLink" "greeting";
+}
+
+
+proc EchoLink_reject_remote_connection {} {
+  playSilence 1000;
+  playMsg "EchoLink" "reject_connection";
+  playSilence 1000;
+}
+
+
+proc EchoLink_remote_timeout {} {
+  playMsg "EchoLink" "timeout";
+  playSilence 1000;
+}
+
+
 
 ###############################################################################
 #
@@ -513,5 +540,7 @@ proc EchoLink_link_inactivity_timeout {} {
 
 set basedir [file dirname $script_path];
 
-puts "Event handler script successfully loaded.";
+if [info exists is_core_event_handler] {
+  puts "Event handler script successfully loaded.";
+}
 

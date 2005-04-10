@@ -147,10 +147,17 @@ void MsgHandler::end(void)
   //printf("MsgHandler::end\n");
   assert(nesting_level > 0);
   --nesting_level;
-  if (pending_play_next && (nesting_level == 0))
+  if (nesting_level == 0)
   {
-    pending_play_next = false;
-    playNextMsg();
+    if (pending_play_next)
+    {
+      pending_play_next = false;
+      playNextMsg();
+    }
+    else
+    {
+      allMsgsWritten();
+    }
   }
 } /* MsgHandler::end */
 

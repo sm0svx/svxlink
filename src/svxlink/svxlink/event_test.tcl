@@ -269,6 +269,18 @@ proc EchoLink {} {
   puts "--- EchoLink_connected";
   EchoLink_connected;
   puts "";
+
+  puts "--- EchoLink_remote_greeting";
+  EchoLink_remote_greeting;
+  puts "";
+
+  puts "--- EchoLink_reject_remote_connection";
+  EchoLink_reject_remote_connection;
+  puts "";
+
+  puts "--- EchoLink_remote_timeout";
+  EchoLink_remote_timeout;
+  puts "";
 }
 
 if {$argc < 1} {
@@ -279,7 +291,9 @@ if {$argc < 1} {
 set mycall "SM0XXX";
 set report_ctcss 136.5;
 set active_module "EchoLink";
+set EchoLink_connected_stations 2;
 set script_path [lindex $argv 0];
+set is_core_event_handler 1;
 
 source [lindex $argv 0];
 

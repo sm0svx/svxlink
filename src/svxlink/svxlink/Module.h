@@ -387,6 +387,17 @@ class Module : public SigC::Object
     void processEvent(const std::string& event);
     
     /**
+     * @brief 	Order the logic to set a variable in the event handler
+     * @param 	name The name of the variable
+     * @param 	value The new value of the variable
+     *
+     * This function is called by the module when it wishes to set a
+     * variable in the event handling system. These variables can be read
+     * by the event scripts to make announcements more dynamic.
+     */
+    void setEventVariable(const std::string& name, const std::string& value);
+    
+    /**
      * @brief 	Order the logic core to play an audio file over the transmitter
      * @param 	path The full path to an audio file
      *

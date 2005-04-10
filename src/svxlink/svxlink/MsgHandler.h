@@ -12,7 +12,6 @@ class MsgHandler : public SigC::Object
     ~MsgHandler(void);
     
     void playFile(const std::string& path);
-    void playMsg(const std::string& context, const std::string& msg);
     //void playNumber(float number);
     //void spellWord(const std::string& word);
     void playSilence(int length);
@@ -46,6 +45,7 @@ class MsgHandler : public SigC::Object
     int      	      	    nesting_level;
     bool      	      	    pending_play_next;
     
+    void playMsg(const std::string& context, const std::string& msg);
     void playNextMsg(void);
     void executeCmd(const std::string& cmd);
     void writeFromFile(void);

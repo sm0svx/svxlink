@@ -156,6 +156,7 @@ class Logic : public SigC::Object
     const std::string& name(void) const { return m_name; }
     
     virtual void processEvent(const std::string& event, const Module *module=0);
+    void setEventVariable(const std::string& name, const std::string& value);
     virtual void playFile(const std::string& path);
     //virtual void playMsg(const std::string& msg, const Module *module=0);
     //virtual void playNumber(float number);

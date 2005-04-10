@@ -132,12 +132,13 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
   : event_script(event_script), logic(logic)
 {
   interp = Tcl_CreateInterp();
-  Tcl_CreateCommand(interp, "playFile", playFile, this, NULL);
-  Tcl_CreateCommand(interp, "playSilence", playSilence, this, NULL);
+  Tcl_CreateCommand(interp, "playFile", playFileHandler, this, NULL);
+  Tcl_CreateCommand(interp, "playSilence", playSilenceHandler, this, NULL);
   //Tcl_CreateCommand(interp, "spellWord", spellWord, this, NULL);
   //Tcl_CreateCommand(interp, "playNumber", playNumber, this, NULL);
-  Tcl_CreateCommand(interp, "reportActiveModuleState",
-      	  reportActiveModuleState, this, NULL);
+  //Tcl_CreateCommand(interp, "reportActiveModuleState",
+  //    	  reportActiveModuleState, this, NULL);
+  setVariable("script_path", event_script);
 } /* EventHandler::EventHandler */
 
 
@@ -226,7 +227,7 @@ bool EventHandler::processEvent(const string& event)
  *----------------------------------------------------------------------------
  */
 
-int EventHandler::playFile(ClientData cdata, Tcl_Interp *irp, int argc,
+int EventHandler::playFileHandler(ClientData cdata, Tcl_Interp *irp, int argc,
       	      	      	   const char *argv[])
 {
   if(argc != 2)
@@ -237,14 +238,15 @@ int EventHandler::playFile(ClientData cdata, Tcl_Interp *irp, int argc,
   //cout << "EventHandler::playFile: " << argv[1] << endl;
 
   EventHandler *self = static_cast<EventHandler *>(cdata);
-  self->logic->playFile(argv[1]);
+  string filename(argv[1]);
+  self->playFile(filename);
 
   return TCL_OK;
 }
 
 
-int EventHandler::playSilence(ClientData cdata, Tcl_Interp *irp, int argc,
-      	      	      	      const char *argv[])
+int EventHandler::playSilenceHandler(ClientData cdata, Tcl_Interp *irp,
+      	      	      	      int argc, const char *argv[])
 {
   if(argc != 2)
   {
@@ -254,7 +256,7 @@ int EventHandler::playSilence(ClientData cdata, Tcl_Interp *irp, int argc,
   //cout << "EventHandler::playSilence: " << argv[1] << endl;
 
   EventHandler *self = static_cast<EventHandler *>(cdata);
-  self->logic->playSilence(atoi(argv[1]));
+  self->playSilence(atoi(argv[1]));
 
   return TCL_OK;
 }
@@ -293,7 +295,6 @@ int EventHandler::playNumber(ClientData cdata, Tcl_Interp *irp, int argc,
 
   return TCL_OK;
 }
-#endif
 
 
 int EventHandler::reportActiveModuleState(ClientData cdata, Tcl_Interp *irp,
@@ -317,6 +318,7 @@ int EventHandler::reportActiveModuleState(ClientData cdata, Tcl_Interp *irp,
   
   return TCL_OK;
 }
+#endif
 
 
 

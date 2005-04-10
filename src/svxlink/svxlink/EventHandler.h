@@ -42,6 +42,7 @@ An example of how to use the EventHandler class
  ****************************************************************************/
 
 #include <tcl.h>
+#include <sigc++/signal_system.h>
 
 #include <string>
 
@@ -120,7 +121,7 @@ A_detailed_class_description
 
 \include EventHandler_demo.cpp
 */
-class EventHandler
+class EventHandler : public SigC::Object
 {
   public:
     /**
@@ -142,6 +143,9 @@ class EventHandler
     void setVariable(const std::string& name, const std::string& value);
     bool processEvent(const std::string& event);
     
+    SigC::Signal1<void, const std::string&> playFile;
+    SigC::Signal1<void, int>   	      	    playSilence;
+    
     
   protected:
     
@@ -150,18 +154,18 @@ class EventHandler
     Logic	*logic;
     Tcl_Interp  *interp;
     
-    static int playFile(ClientData cdata, Tcl_Interp *irp,
+    static int playFileHandler(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
-    static int playSilence(ClientData cdata, Tcl_Interp *irp,
+    static int playSilenceHandler(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
     /*
     static int spellWord(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
     static int playNumber(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
-    */
     static int reportActiveModuleState(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
+    */
 
 };  /* class EventHandler */
 

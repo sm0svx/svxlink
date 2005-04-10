@@ -110,6 +110,12 @@ void Module::processEvent(const string& event)
 } /* Module::playFile */
 
 
+void Module::setEventVariable(const string& name, const string& value)
+{
+  logic()->setEventVariable(name, value);
+} /* Module::setEventVariable */
+
+
 void Module::playFile(const string& path)
 {
   if (m_is_active)

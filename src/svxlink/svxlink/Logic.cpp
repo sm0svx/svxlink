@@ -158,7 +158,7 @@ bool Logic::initialize(void)
 {
   string rx_name;
   string tx_name;
-  string sounds;
+  //string sounds;
   string value;
   string macro_section;
   string event_handler_str;
@@ -184,11 +184,13 @@ bool Logic::initialize(void)
     goto cfg_failed;
   }
   
+  /*
   if (!cfg().getValue(name(), "SOUNDS", sounds))
   {
     cerr << "*** ERROR: Config variable " << name() << "/SOUNDS not set\n";
     goto cfg_failed;
   }
+  */
   
   if (!cfg().getValue(name(), "CALLSIGN", m_callsign))
   {
@@ -255,19 +257,21 @@ bool Logic::initialize(void)
   cmd_tmo_timer->expired.connect(slot(this, &Logic::cmdTimeout));
   cmd_tmo_timer->setEnable(false);
   
-  msg_handler = new MsgHandler(sounds, 8000);
+  msg_handler = new MsgHandler("/", 8000);
   msg_handler->writeAudio.connect(slot(this, &Logic::transmitAudio));
   msg_handler->allMsgsWritten.connect(slot(this, &Logic::allMsgsWritten));
   tx().transmitBufferFull.connect(
       	  slot(msg_handler, &MsgHandler::writeBufferFull));
   
   event_handler = new EventHandler(event_handler_str, this);
+  event_handler->playFile.connect(slot(this, &Logic::playFile));
+  event_handler->playSilence.connect(slot(this, &Logic::playSilence));
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
   event_handler->setVariable("report_ctcss", str);
   event_handler->setVariable("active_module", "");
-  event_handler->setVariable("script_path", event_handler_str);
+  event_handler->setVariable("is_core_event_handler", "1");
   event_handler->initialize();
   
   processEvent("startup");
@@ -301,6 +305,12 @@ void Logic::processEvent(const string& event, const Module *module)
   }
   msg_handler->end();
 }
+
+
+void Logic::setEventVariable(const string& name, const string& value)
+{
+  event_handler->setVariable(name, value);
+} /* Logic::setEventVariable */
 
 
 void Logic::playFile(const string& path)
