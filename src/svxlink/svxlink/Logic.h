@@ -162,6 +162,7 @@ class Logic : public SigC::Object
     //virtual void playNumber(float number);
     //virtual void spellWord(const std::string& word);
     virtual void playSilence(int length);
+    virtual void playTone(int fq, int amp, int len);
     void audioFromModule(short *samples, int count);
     virtual void moduleTransmitRequest(bool do_transmit);
 

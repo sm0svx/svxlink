@@ -303,6 +303,18 @@ void RepeaterLogic::playSilence(int length)
 } /* RepeaterLogic::playSilence */
 
 
+void RepeaterLogic::playTone(int fq, int amp, int len)
+{
+  //printf("RepeaterLogic::playSilence: %d ms\n", length);
+  
+  if (!preserve_idle_state)
+  {
+    setIdle(false);
+  }
+  Logic::playTone(fq, amp, len);
+} /* RepeaterLogic::playSilence */
+
+
 void RepeaterLogic::moduleTransmitRequest(bool do_transmit)
 {
   if (do_transmit)

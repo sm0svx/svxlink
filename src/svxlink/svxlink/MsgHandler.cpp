@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <math.h>
 
 #include <cassert>
 #include <iostream>
@@ -17,9 +18,70 @@
 using namespace std;
 
 
-MsgHandler::MsgHandler(const string& base_dir, int sample_rate)
-  : file(-1), base_dir(base_dir), silence_left(-1), sample_rate(sample_rate),
-    nesting_level(0), pending_play_next(false)
+class QueueItem
+{
+  public:
+    virtual ~QueueItem(void) {}
+    virtual bool initialize(void) { return true; }
+    virtual int readSamples(short *samples, int len) = 0;
+    virtual void unreadSamples(int len) = 0;
+};
+
+class SilenceQueueItem : public QueueItem
+{
+  public:
+    SilenceQueueItem(int len, int sample_rate)
+      : len(len), silence_left(sample_rate * len / 1000) {}
+    int readSamples(short *samples, int len);
+    void unreadSamples(int len);
+
+  private:
+    int len;
+    int silence_left;
+    
+};
+
+class ToneQueueItem : public QueueItem
+{
+  public:
+    ToneQueueItem(int fq, int amp, int len, int sample_rate)
+      : fq(fq), amp(amp), tone_len(sample_rate * len / 1000), pos(0),
+      	sample_rate(sample_rate) {}
+    int readSamples(short *samples, int len);
+    void unreadSamples(int len);
+
+  private:
+    int fq;
+    int amp;
+    int tone_len;
+    int pos;
+    int sample_rate;
+    
+};
+
+class FileQueueItem : public QueueItem
+{
+  public:
+    FileQueueItem(const std::string& filename) : filename(filename), file(-1) {}
+    ~FileQueueItem(void);
+    bool initialize(void);
+    int readSamples(short *samples, int len);
+    void unreadSamples(int len);
+
+  private:
+    string  filename;
+    int     file;
+    
+};
+
+
+
+
+using namespace std;
+
+
+MsgHandler::MsgHandler(int sample_rate)
+  : sample_rate(sample_rate), nesting_level(0), pending_play_next(false)
 {
   
 }
@@ -33,82 +95,22 @@ MsgHandler::~MsgHandler(void)
 
 void MsgHandler::playFile(const string& path)
 {
-  char *str = new char[path.length() + 7];
-  sprintf(str, ">FILE:%s", path.c_str());
-  playMsg("Default", str);
-  delete [] str;
+  QueueItem *item = new FileQueueItem(path);
+  addItemToQueue(item);
 } /* MsgHandler::playFile */
-
-
-void MsgHandler::playMsg(const string& context, const string& msg)
-{
-  msg_queue.push_back(MsgQueueItem(context, msg));
-  if (msg_queue.size() == 1)
-  {
-    playNextMsg();
-  }
-}
-
-
-#if 0
-void MsgHandler::playNumber(float number)
-{
-  int intpart = static_cast<int>(number);
-  number -= intpart;
-  number *= 10;
-  //int fracpart = static_cast<int>((number-intpart)*1000);
-  
-  list<string> digits;
-
-  if (number > 0)
-  {
-    do
-    {
-      char digit[2];
-      digit[0] = static_cast<char>(number) + '0';
-      digit[1] = 0;
-      number = (number - static_cast<int>(number)) * 10;
-      digits.push_back(digit);
-    } while (number > 0);
-    digits.push_front("decimal");
-  }
-  
-  do
-  {
-    char digit[2];
-    digit[0] = (intpart % 10) + '0';
-    digit[1] = 0;
-    intpart /= 10;
-    digits.push_front(digit);
-  } while (intpart != 0);
-  
-  begin();
-  list<string>::iterator it;
-  for (it=digits.begin(); it!=digits.end(); ++it)
-  {
-    playMsg("Default", *it);
-  }
-  end();
-}
-
-
-void MsgHandler::spellWord(const string& word)
-{
-  for (unsigned i=0; i<word.size(); ++i)
-  {
-    char ch[] = "phonetic_?";
-    ch[9] = tolower(word[i]);
-    playMsg("Default", ch);
-  }
-}
-#endif
 
 
 void MsgHandler::playSilence(int length)
 {
-  char str[256];
-  sprintf(str, ">SILENCE:%d", length);
-  playMsg("Default", str);
+  QueueItem *item = new SilenceQueueItem(length, sample_rate);
+  addItemToQueue(item);
+} /* MsgHandler::playSilence */
+
+
+void MsgHandler::playTone(int fq, int amp, int length)
+{
+  QueueItem *item = new ToneQueueItem(fq, amp, length, sample_rate);
+  addItemToQueue(item);
 } /* MsgHandler::playSilence */
 
 
@@ -117,16 +119,19 @@ void MsgHandler::writeBufferFull(bool is_full)
   //printf("write_buffer_full=%s\n", is_full ? "true" : "false");
   if (!is_full && !msg_queue.empty() && (nesting_level == 0))
   {
-    writeFromFile();
+    writeSamples();
   }
 }
 
 
 void MsgHandler::clear(void)
 {
+  list<QueueItem*>::iterator it;
+  for (it=msg_queue.begin(); it!=msg_queue.end(); ++it)
+  {
+    delete *it;
+  }
   msg_queue.clear();
-  ::close(file);
-  file = -1;
   allMsgsWritten();
 } /* MsgHandler::clear */
 
@@ -164,6 +169,22 @@ void MsgHandler::end(void)
 
 
 
+
+
+
+
+
+
+void MsgHandler::addItemToQueue(QueueItem *item)
+{
+  msg_queue.push_back(item);
+  if (msg_queue.size() == 1)
+  {
+    playNextMsg();
+  }
+} /* MsgHandler::addItemToQueue */
+
+
 void MsgHandler::playNextMsg(void)
 {
   if (nesting_level > 0)
@@ -178,77 +199,31 @@ void MsgHandler::playNextMsg(void)
     return;
   }
     
-  MsgQueueItem& msg = msg_queue.front();
-  
-  if (msg.msg[0] == '>')
+  QueueItem *item = msg_queue.front();
+  if (!item->initialize())
   {
-    executeCmd(msg.msg);
+    msg_queue.pop_front();
+    delete item;
+    playNextMsg();
   }
   else
   {
-    file = ::open((base_dir + "/" + msg.context + "/" + msg.msg + ".raw").c_str(),
-      	      	  O_RDONLY);
-    if (file == -1)
-    {
-      file = ::open((base_dir + "/" + "Default/" + msg.msg + ".raw").c_str(),
-      	      	    O_RDONLY);
-    }
-    if (file != -1)
-    {
-      writeFromFile();
-    }
-    else
-    {
-      cerr << "*** WARNING: Could not find audio message \"" << msg.msg
-           << "\"\n";
-      msg_queue.pop_front();
-      playNextMsg();
-    }
+    writeSamples();
   }
 }
 
 
-void MsgHandler::executeCmd(const string& cmd)
-{
-  if (strstr(cmd.c_str(), ">SILENCE:") == cmd.c_str())
-  {
-    silence_left = sample_rate * atoi(cmd.c_str() + 9) / 1000;
-    writeFromFile();
-  }
-  else if (strstr(cmd.c_str(), ">FILE:") == cmd.c_str())
-  {
-    file = ::open(cmd.c_str() + 6, O_RDONLY);
-    if (file != -1)
-    {
-      writeFromFile();
-    }
-    else
-    {
-      cerr << "*** WARNING: Could not find audio file \"" << cmd.c_str() + 6
-           << "\"\n";
-      msg_queue.pop_front();
-      playNextMsg();
-    }
-  }
-  else
-  {
-    cerr << "*** WARNING: Unknown audio command: \"" << cmd << "\"\n";
-    msg_queue.pop_front();
-    playNextMsg();
-  }
-  
-} /* MsgHandler::executeCmd */
-
-
-void MsgHandler::writeFromFile(void)
+void MsgHandler::writeSamples(void)
 {
   short buf[WRITE_BLOCK_SIZE];
+  
+  QueueItem *item = msg_queue.front();
   
   int written;
   int read_cnt;
   do
   {
-    read_cnt = readSamples(buf, sizeof(buf) / sizeof(buf[0]));
+    read_cnt = item->readSamples(buf, sizeof(buf) / sizeof(buf[0]));
     if (read_cnt == 0)
     {
       goto done;
@@ -263,79 +238,121 @@ void MsgHandler::writeFromFile(void)
     //printf("Read=%d  Written=%d\n", read_cnt, written);
   } while (written == read_cnt);
   
-  unreadSamples(read_cnt - written);
+  item->unreadSamples(read_cnt - written);
   
   return;
     
   done:
     //printf("Done...\n");
-    if (file != -1)
-    {
-      ::close(file);
-      file = -1;
-    }
-    
     msg_queue.pop_front();
+    delete item;
     playNextMsg();
-} /* MsgHandler::writeFromFile */
+}
 
 
-int MsgHandler::readSamples(short *samples, int len)
+
+
+FileQueueItem::~FileQueueItem(void)
 {
-  int read_cnt;
-  
-  if (silence_left >= 0)
+  if (file != -1)
   {
-    read_cnt = min(len, silence_left);
-    memset(samples, 0, sizeof(*samples) * read_cnt);
-    if (silence_left == 0)
-    {
-      silence_left = -1;
-    }
-    else
-    {
-      silence_left -= read_cnt;
-    }
-    //printf("Reading %d silence samples\n", read_cnt);
+    ::close(file);
   }
-  else if (file != -1)
+} /* FileQueueItem::~FileQueueItem */
+
+
+bool FileQueueItem::initialize(void)
+{
+  file = ::open(filename.c_str(), O_RDONLY);
+  if (file == -1)
   {
-    read_cnt = read(file, samples, len * sizeof(*samples));
-    if (read_cnt == -1)
-    {
-      perror("read in MsgHandler::readSamples");
-      read_cnt = 0;
-    }
-    else
-    {
-      read_cnt /= sizeof(*samples);
-    }
+    cerr << "*** WARNING: Could not find audio file \"" << filename << "\"\n";
+    return false;
+  }
+  
+  return true;
+  
+} /* FileQueueItem::initialize */
+
+
+int FileQueueItem::readSamples(short *samples, int len)
+{
+  assert(file != -1);
+  int read_cnt = read(file, samples, len * sizeof(*samples));
+  if (read_cnt == -1)
+  {
+    perror("read in FileQueueItem::readSamples");
+    read_cnt = 0;
   }
   else
   {
-    read_cnt = 0;
+    read_cnt /= sizeof(*samples);
   }
   
   return read_cnt;
   
-} /* MsgHandler::readSamples */
+} /* FileQueueItem::readSamples */
 
 
-void MsgHandler::unreadSamples(int len)
+void FileQueueItem::unreadSamples(int len)
 {
-  if (silence_left >= 0)
+  if (lseek(file, -len * sizeof(short), SEEK_CUR) == -1)
   {
-    silence_left += len;
+    perror("lseek in FileQueueItem::unreadSamples");
+  }
+} /* FileQueueItem::unreadSamples */
+
+
+
+
+int SilenceQueueItem::readSamples(short *samples, int len)
+{
+  assert(silence_left != -1);
+  
+  int read_cnt = min(len, silence_left);
+  memset(samples, 0, sizeof(*samples) * read_cnt);
+  if (silence_left == 0)
+  {
+    silence_left = -1;
   }
   else
   {
-    //printf("lseeking...\n");
-    if (lseek(file, -len * sizeof(short), SEEK_CUR) == -1)
-    {
-      perror("lseek in MsgHandler::unreadSamples");
-    }
+    silence_left -= read_cnt;
   }
-    
+  
+  return read_cnt;
+  
+} /* SilenceQueueItem::readSamples */
 
-} /* MsgHandler::unreadSamples */
+
+void SilenceQueueItem::unreadSamples(int len)
+{
+  silence_left += len;
+} /* SilenceQueueItem::unreadSamples */
+
+
+
+
+
+int ToneQueueItem::readSamples(short *samples, int len)
+{
+  int read_cnt = min(len, tone_len-pos);
+  for (int i=0; i<read_cnt; ++i)
+  {
+    samples[i] = static_cast<short>(
+      	    amp / 1000.0 * 32767.0 * sin(2*M_PI*fq*pos/sample_rate));
+    ++pos;
+  }
+  
+  return read_cnt;
+  
+} /* ToneQueueItem::readSamples */
+
+
+void ToneQueueItem::unreadSamples(int len)
+{
+  pos -= len;
+} /* ToneQueueItem::unreadSamples */
+
+
 

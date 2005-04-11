@@ -9,19 +9,14 @@ proc playFile {filename} {
 }
 
 
-#proc playNumber {number} {
-#  puts "playNumber($number);";
-#}
+proc playTone {fq amp len} {
+  puts "playTone($fq, $amp, $len);";
+}
 
 
 proc playSilence {milliseconds} {
   puts "playSilence($milliseconds);";
 }
-
-
-#proc spellWord {word} {
-#  puts "spellWord(\"$word\");";
-#}
 
 
 proc reportActiveModuleState {} {
@@ -227,7 +222,7 @@ proc EchoLink {} {
   puts "";
 
   puts "--- EchoLink_status_report";
-  EchoLink_status_report 5;
+  EchoLink_status_report;
   puts "";
 
   puts "--- EchoLink_station_id_not_found";

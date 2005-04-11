@@ -145,6 +145,7 @@ class EventHandler : public SigC::Object
     
     SigC::Signal1<void, const std::string&> playFile;
     SigC::Signal1<void, int>   	      	    playSilence;
+    SigC::Signal3<void, int, int, int>      playTone;
     
     
   protected:
@@ -157,6 +158,8 @@ class EventHandler : public SigC::Object
     static int playFileHandler(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
     static int playSilenceHandler(ClientData cdata, Tcl_Interp *irp,
+      	      	    int argc, const char *argv[]);
+    static int playToneHandler(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
     /*
     static int spellWord(ClientData cdata, Tcl_Interp *irp,

@@ -5,16 +5,19 @@
 #include <sigc++/signal_system.h>
 
 
+class QueueItem;
+
+
 class MsgHandler : public SigC::Object
 {
   public:
-    MsgHandler(const std::string& base_dir, int sample_rate);
+    MsgHandler(int sample_rate);
     ~MsgHandler(void);
     
     void playFile(const std::string& path);
-    //void playNumber(float number);
-    //void spellWord(const std::string& word);
     void playSilence(int length);
+    void playTone(int fq, int amp, int length);
+
     void writeBufferFull(bool is_full);
     bool isWritingMessage(void) const { return !msg_queue.empty(); }
     void clear(void);
@@ -26,31 +29,13 @@ class MsgHandler : public SigC::Object
     
     
   private:
-    class MsgQueueItem
-    {
-      public:
-      	std::string context;
-      	std::string msg;
-      	MsgQueueItem(const std::string& context, const std::string& msg)
-	  : context(context), msg(msg)
-	{
-	}
-    };
-    
-    std::list<MsgQueueItem> msg_queue;
-    int       	      	    file;
-    std::string       	    base_dir;
-    int			    silence_left;
+    std::list<QueueItem*>   msg_queue;
     int			    sample_rate;
     int      	      	    nesting_level;
     bool      	      	    pending_play_next;
     
-    void playMsg(const std::string& context, const std::string& msg);
+    void addItemToQueue(QueueItem *item);
     void playNextMsg(void);
-    void executeCmd(const std::string& cmd);
-    void writeFromFile(void);
-    int readSamples(short *samples, int len);
-    void unreadSamples(int len);
-
+    void writeSamples(void);
 
 };

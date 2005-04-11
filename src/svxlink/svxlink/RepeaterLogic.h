@@ -150,6 +150,7 @@ class RepeaterLogic : public Logic
     //virtual void playNumber(int number);
     //virtual void spellWord(const std::string& word);
     virtual void playSilence(int length);
+    virtual void playTone(int fq, int amp, int len);
     virtual void moduleTransmitRequest(bool do_transmit);
     virtual bool activateModule(Module *module);
 

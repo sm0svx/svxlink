@@ -134,6 +134,7 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
   interp = Tcl_CreateInterp();
   Tcl_CreateCommand(interp, "playFile", playFileHandler, this, NULL);
   Tcl_CreateCommand(interp, "playSilence", playSilenceHandler, this, NULL);
+  Tcl_CreateCommand(interp, "playTone", playToneHandler, this, NULL);
   //Tcl_CreateCommand(interp, "spellWord", spellWord, this, NULL);
   //Tcl_CreateCommand(interp, "playNumber", playNumber, this, NULL);
   //Tcl_CreateCommand(interp, "reportActiveModuleState",
@@ -257,6 +258,23 @@ int EventHandler::playSilenceHandler(ClientData cdata, Tcl_Interp *irp,
 
   EventHandler *self = static_cast<EventHandler *>(cdata);
   self->playSilence(atoi(argv[1]));
+
+  return TCL_OK;
+}
+
+
+int EventHandler::playToneHandler(ClientData cdata, Tcl_Interp *irp,
+      	      	      	      int argc, const char *argv[])
+{
+  if(argc != 4)
+  {
+    Tcl_SetResult(irp,"Usage: playTone <fq> <amp> <milliseconds>", TCL_STATIC);
+    return TCL_ERROR;
+  }
+  //cout << "EventHandler::playTone: " << argv[1] << endl;
+
+  EventHandler *self = static_cast<EventHandler *>(cdata);
+  self->playTone(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]));
 
   return TCL_OK;
 }

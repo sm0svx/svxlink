@@ -257,7 +257,7 @@ bool Logic::initialize(void)
   cmd_tmo_timer->expired.connect(slot(this, &Logic::cmdTimeout));
   cmd_tmo_timer->setEnable(false);
   
-  msg_handler = new MsgHandler("/", 8000);
+  msg_handler = new MsgHandler(8000);
   msg_handler->writeAudio.connect(slot(this, &Logic::transmitAudio));
   msg_handler->allMsgsWritten.connect(slot(this, &Logic::allMsgsWritten));
   tx().transmitBufferFull.connect(
@@ -266,6 +266,7 @@ bool Logic::initialize(void)
   event_handler = new EventHandler(event_handler_str, this);
   event_handler->playFile.connect(slot(this, &Logic::playFile));
   event_handler->playSilence.connect(slot(this, &Logic::playSilence));
+  event_handler->playTone.connect(slot(this, &Logic::playTone));
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
@@ -359,6 +360,14 @@ void Logic::playSilence(int length)
   module_tx_fifo->stopOutput(true);
   msg_handler->playSilence(length);
   //transmit(true);
+  transmitCheck();
+} /* Logic::playSilence */
+
+
+void Logic::playTone(int fq, int amp, int len)
+{
+  module_tx_fifo->stopOutput(true);
+  msg_handler->playTone(fq, amp, len);
   transmitCheck();
 } /* Logic::playSilence */
 

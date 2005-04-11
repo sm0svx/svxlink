@@ -58,6 +58,9 @@ proc SimplexLogic_manual_identification {} {
   global mycall;
   global report_ctcss;
   global active_module;
+  global prev_ident;
+  
+  set prev_ident [clock seconds];
   
   #playFile "";
   playMsg "Core" "online";
@@ -84,7 +87,7 @@ proc SimplexLogic_manual_identification {} {
 
 
 proc SimplexLogic_send_rgr_sound {} {
-  playMsg "Core" "blip";
+  playTone 440 900 100;
 }
 
 
@@ -130,6 +133,15 @@ proc SimplexLogic_macro_another_active_module {} {
 
 proc SimplexLogic_periodic_identify {} {
   global mycall;
+  global prev_ident;
+  global min_time_between_ident;
+  
+  set now [clock seconds];
+  if {$now-$prev_ident < $min_time_between_ident} {
+    return;
+  }
+  set prev_ident $now;
+
   spellWord $mycall;
 }
 
@@ -160,6 +172,9 @@ proc RepeaterLogic_manual_identification {} {
   global mycall;
   global report_ctcss;
   global active_module;
+  global prev_ident;
+  
+  set prev_ident [clock seconds];
   
   playMsg "Core" "online";
   spellWord $mycall;
@@ -225,6 +240,15 @@ proc RepeaterLogic_macro_another_active_module {} {
 
 proc RepeaterLogic_periodic_identify {} {
   global mycall;
+  global prev_ident;
+  global min_time_between_ident;
+  
+  set now [clock seconds];
+  if {$now-$prev_ident < $min_time_between_ident} {
+    return;
+  }
+  set prev_ident $now;
+  
   spellWord $mycall;
   playMsg "Core" "repeater";
 }
@@ -233,6 +257,14 @@ proc RepeaterLogic_periodic_identify {} {
 proc RepeaterLogic_repeater_up {} {
   global mycall;
   global active_module;
+  global prev_ident;
+  global min_time_between_ident;
+  
+  set now [clock seconds];
+  if {$now-$prev_ident < $min_time_between_ident} {
+    return;
+  }
+  set prev_ident $now;
   
   playMsg "../extra-sounds" "attention";
   playSilence 250;
@@ -250,7 +282,19 @@ proc RepeaterLogic_repeater_up {} {
 
 proc RepeaterLogic_repeater_down {} {
   global mycall;
+  global prev_ident;
+  global min_time_between_ident;
   
+  set now [clock seconds];
+  if {$now-$prev_ident < $min_time_between_ident} {
+    playTone 400 900 50
+    playSilence 100
+    playTone 360 900 50
+    playSilence 500
+    return;
+  }
+  set prev_ident $now;
+    
   spellWord $mycall;
   playMsg "Core" "repeater";
   playSilence 250;
@@ -260,7 +304,15 @@ proc RepeaterLogic_repeater_down {} {
 
 
 proc RepeaterLogic_repeater_idle {} {
-  playMsg "Core" "repeater_idle";
+  #playMsg "Core" "repeater_idle";
+  
+  set iterations 8;
+  set base 2;
+  set max [expr {pow($base, $iterations)}];
+  for {set i $iterations} {$i>0} {set i [expr $i - 1]} {
+    playTone 1100 [expr {round(pow($base, $i) * 800 / $max)}] 100;
+    playTone 1200 [expr {round(pow($base, $i) * 800 / $max)}] 100;
+  }
 }
 
 
@@ -542,6 +594,8 @@ proc EchoLink_remote_timeout {} {
 ###############################################################################
 
 set basedir [file dirname $script_path];
+set prev_ident 0;
+set min_time_between_ident 60;
 
 if [info exists is_core_event_handler] {
   puts "Event handler script successfully loaded.";
