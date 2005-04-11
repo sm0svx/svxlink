@@ -178,7 +178,7 @@ QsoImpl::QsoImpl(const StationData *station, ModuleEchoLink *module)
     idle_timer->expired.connect(slot(this, &QsoImpl::idleTimeoutCheck));
   }
   
-  msg_handler = new MsgHandler("/", 8000);
+  msg_handler = new MsgHandler(8000);
   
   msg_pacer = new AudioPacer(8000, 160*4, 500);
   msg_handler->writeAudio.connect(slot(msg_pacer, &AudioPacer::audioInput));
@@ -194,6 +194,7 @@ QsoImpl::QsoImpl(const StationData *station, ModuleEchoLink *module)
   event_handler->playFile.connect(slot(msg_handler, &MsgHandler::playFile));
   event_handler->playSilence.connect(
       	  slot(msg_handler, &MsgHandler::playSilence));
+  event_handler->playTone.connect(slot(msg_handler, &MsgHandler::playTone));
   event_handler->initialize();
   
   Qso::infoMsgReceived.connect(slot(this, &QsoImpl::onInfoMsgReceived));
