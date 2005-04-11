@@ -528,7 +528,8 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
     */
     //samples_to_write = min(samples_to_write, info.bytes / sizeof(short));
     
-    fragments = max(0, 2 - (info.fragstotal - info.fragments));
+    //fragments = max(0, 2 - (info.fragstotal - info.fragments));
+    fragments = info.fragments;
     fragsize = info.fragsize / sizeof(short);
     samples_to_write = min(sizeof(buf) / sizeof(short),
     		fragments * fragsize);
