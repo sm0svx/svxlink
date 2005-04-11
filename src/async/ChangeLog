@@ -7,6 +7,9 @@
 
 * Bugfix: Handling flushing when already flushed correctly.
 
+* Bugfix: CPU could go up to 100% when writing audio to the
+  sound card.
+
 
 
  0.11.0 -- 25 Mar 2005
