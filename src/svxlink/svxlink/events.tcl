@@ -595,7 +595,7 @@ proc EchoLink_remote_timeout {} {
 
 set basedir [file dirname $script_path];
 set prev_ident 0;
-set min_time_between_ident 60;
+set min_time_between_ident 120;
 
 if [info exists is_core_event_handler] {
   puts "Event handler script successfully loaded.";
