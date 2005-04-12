@@ -126,10 +126,10 @@ using namespace Async;
 
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
   : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(30000),
-    idle_sound_timer(0), ident_timer(0),
-    ident_interval(10*60*1000), idle_sound_interval(0),
-    repeating_enabled(false), 
-    preserve_idle_state(false), required_sql_open_duration(-1)
+    idle_sound_timer(0), ident_timer(0), ident_interval(10*60*1000),
+    idle_sound_interval(0), repeating_enabled(false), 
+    preserve_idle_state(false), required_sql_open_duration(-1),
+    open_on_dtmf('?'), activate_on_sql_close(false)
 {
   timerclear(&sql_open_timestamp);
 } /* RepeaterLogic::RepeaterLogic */
@@ -183,6 +183,11 @@ bool RepeaterLogic::initialize(void)
   if (cfg().getValue(name(), "OPEN_ON_SQL", str))
   {
     required_sql_open_duration = atoi(str.c_str());
+  }
+  
+  if (cfg().getValue(name(), "OPEN_ON_DTMF", str))
+  {
+    open_on_dtmf = str.c_str()[0];
   }
   
   if (cfg().getValue(name(), "IDENT_INTERVAL", str))
@@ -333,6 +338,29 @@ bool RepeaterLogic::activateModule(Module *module)
 } /* RepeaterLogic::activateModule */
 
 
+void RepeaterLogic::dtmfDigitDetected(char digit)
+{
+  if (repeater_is_up)
+  {
+    Logic::dtmfDigitDetected(digit);
+  }
+  else
+  {
+    if (digit == open_on_dtmf)
+    {
+      cout << "DTMF digit \"" << digit << "\" detected. "
+      	      "Activating repeater...\n";
+      activate_on_sql_close = true;
+    }
+    else
+    {
+      cout << "Ignoring DTMF digit \"" << digit << "\"\n";
+    }
+  }
+} /* RepeaterLogic::dtmfDigitDetected */
+
+
+
 
 /****************************************************************************
  *
@@ -479,19 +507,28 @@ void RepeaterLogic::squelchOpen(bool is_open)
     {
       gettimeofday(&sql_open_timestamp, NULL);
     }
-    else if (required_sql_open_duration >= 0)
+    else
     {
-      assert(timerisset(&sql_open_timestamp));
-      struct timeval tv, tv_diff;
-      gettimeofday(&tv, NULL);
-      timersub(&tv, &sql_open_timestamp, &tv_diff);
-      long diff = tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000;
-      //printf("The squelch was open for %ld milliseconds\n", diff);
-      if (diff >= required_sql_open_duration)
+      if (required_sql_open_duration >= 0)
       {
-	setUp(true);
+	assert(timerisset(&sql_open_timestamp));
+	struct timeval tv, tv_diff;
+	gettimeofday(&tv, NULL);
+	timersub(&tv, &sql_open_timestamp, &tv_diff);
+	long diff = tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000;
+	//printf("The squelch was open for %ld milliseconds\n", diff);
+	if (diff >= required_sql_open_duration)
+	{
+	  setUp(true);
+	}
+	timerclear(&sql_open_timestamp);
       }
-      timerclear(&sql_open_timestamp);
+      
+      if (activate_on_sql_close)
+      {
+      	activate_on_sql_close = false;
+      	setUp(true);
+      }
     }
   }
   

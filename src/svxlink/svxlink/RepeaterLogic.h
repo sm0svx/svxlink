@@ -153,6 +153,7 @@ class RepeaterLogic : public Logic
     virtual void playTone(int fq, int amp, int len);
     virtual void moduleTransmitRequest(bool do_transmit);
     virtual bool activateModule(Module *module);
+    virtual void dtmfDigitDetected(char digit);
 
 
   protected:
@@ -171,6 +172,8 @@ class RepeaterLogic : public Logic
     bool      	    preserve_idle_state;
     struct timeval  sql_open_timestamp;
     int      	    required_sql_open_duration;
+    char      	    open_on_dtmf;
+    bool      	    activate_on_sql_close;
     
     void identify(Async::Timer *t=0);
     int audioReceived(short *samples, int count);
