@@ -87,7 +87,7 @@ proc SimplexLogic_manual_identification {} {
 
 
 proc SimplexLogic_send_rgr_sound {} {
-  playTone 440 900 100;
+  playTone 440 700 100;
 }
 
 
@@ -304,8 +304,6 @@ proc RepeaterLogic_repeater_down {} {
 
 
 proc RepeaterLogic_repeater_idle {} {
-  #playMsg "Core" "repeater_idle";
-  
   set iterations 8;
   set base 2;
   set max [expr {pow($base, $iterations)}];
@@ -327,6 +325,7 @@ proc Module_activating_module {module_name} {
   playMsg "Default" "activating_module";
   playSilence 100;
   playMsg $module_name "name";
+  playSilence 200;
 }
 
 
@@ -334,6 +333,7 @@ proc Module_deactivating_module {module_name} {
   playMsg "Default" "deactivating_module";
   playSilence 100;
   playMsg $module_name "name";
+  playSilence 200;
 }
 
 
