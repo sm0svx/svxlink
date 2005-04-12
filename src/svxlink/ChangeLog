@@ -16,10 +16,11 @@
   of words is not the same as in english. It would also be possible
   to use a speech synthesizer which generate the sounds on the fly.
 
-* Now three different ways of opening up the repeater is supported:
-  1750 Hz tone burst, CTCSS and squelch controlled. The three
+* Now four different ways of activating the repeater is supported:
+  1750 Hz tone burst, CTCSS, DTMF and squelch controlled. The three
   types are configured individually using the configuration
-  variables OPEN_ON_1750, OPEN_ON_CTCSS and OPEN_ON_SQL.
+  variables OPEN_ON_1750, OPEN_ON_CTCSS, OPEN_ON_DTMF and
+  OPEN_ON_SQL.
 
 
 
