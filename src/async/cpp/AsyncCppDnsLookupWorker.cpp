@@ -42,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/time.h>
 
 
 /****************************************************************************
@@ -50,6 +51,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncTimer.h>
+#include <AsyncFdWatch.h>
 
 
 /****************************************************************************
@@ -58,7 +61,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncTimer.h"
 #include "AsyncCppDnsLookupWorker.h"
 
 
@@ -135,18 +137,70 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 CppDnsLookupWorker::CppDnsLookupWorker(const string &label)
-  : label(label)
+  : label(label), worker(0), notifier_rd(-1), notifier_wr(-1), notifier_watch(0)
 {
-  timer = new Timer(0);
-  timer->expired.connect(slot(this, &CppDnsLookupWorker::onTimeout));
   
 } /* CppDnsLookupWorker::CppDnsLookupWorker */
 
 
 CppDnsLookupWorker::~CppDnsLookupWorker(void)
 {
-  delete timer;
+  if (worker != 0)
+  {
+    if (pthread_cancel(worker) == -1)
+    {
+      perror("pthread_cancel");
+    }
+
+    void *ud;
+    if (pthread_join(worker, &ud) == -1)
+    {
+      perror("pthread_create");
+    }
+  }
+  
+  delete notifier_watch;
+  if (notifier_rd != -1)
+  {
+    close(notifier_rd);
+  }
+  if (notifier_wr != -1)
+  {
+    close(notifier_wr);
+  }
 } /* CppDnsLookupWorker::~CppDnsLookupWorker */
+
+
+bool CppDnsLookupWorker::doLookup(void)
+{
+  int fd[2];
+  if (pipe(fd) != 0)
+  {
+    perror("pipe");
+    return false;
+  }
+  notifier_rd = fd[0];
+  notifier_wr = fd[1];
+  notifier_watch = new FdWatch(notifier_rd, FdWatch::FD_WATCH_RD);
+  notifier_watch->activity.connect(
+      	  slot(this, &CppDnsLookupWorker::notificationReceived));
+  if (pthread_create(&worker, NULL, workerFunc, this) != 0)
+  {
+    perror("pthread_create");
+    return false;
+  }
+  /*
+  if (pthread_detach(worker) != 0)
+  {
+    perror("pthread_detach");
+    return false;
+  }
+  */
+  
+  return true;
+  
+} /* CppDnsLookupWorker::doLookup */
+
 
 
 
@@ -184,38 +238,60 @@ CppDnsLookupWorker::~CppDnsLookupWorker(void)
 
 /*
  *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
+ * Method:    CppDnsLookupWorker::workerFunc
+ * Purpose:   This is the function that do the actual DNS lookup. It is
+ *    	      started as a separate thread since gethostbyname is a
+ *    	      blocking function.
+ * Input:     w - Thread user data. This is the actual CppDnsLookupWorker
+ *    	      	  object
+ * Output:    the_addresses will be filled in with all IP addresses
+ *    	      associated with the name.
+ * Author:    Tobias Blomberg
+ * Created:   2005-04-12
  * Remarks:   
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void CppDnsLookupWorker::onTimeout(Timer *t)
+void *CppDnsLookupWorker::workerFunc(void *w)
 {
-  delete timer;
-  timer = 0;
-  
-  struct hostent *he = gethostbyname(label.c_str());
+  CppDnsLookupWorker *worker = reinterpret_cast<CppDnsLookupWorker *>(w);
+
+  struct hostent *he = gethostbyname(worker->label.c_str());
   if (he != 0)
   {
     for (int i=0; he->h_addr_list[i] != NULL; ++i)
     {
       struct in_addr *h_addr;
       h_addr = reinterpret_cast<struct in_addr *>(he->h_addr_list[i]);
-      the_addresses.push_back(IpAddress(*h_addr));
+      worker->the_addresses.push_back(IpAddress(*h_addr));
     }
   }
   
-  resultsReady();
+  write(worker->notifier_wr, "D", 1);
   
-} /* CppDnsLookupWorker::onTimeout */
+  return NULL;
+  
+} /* CppDnsLookupWorker::workerFunc */
 
 
-
+/*
+ *----------------------------------------------------------------------------
+ * Method:    CppDnsLookupWorker::notificationReceived
+ * Purpose:   When the DNS lookup thread is done, this function will be
+ *    	      called to notify the user of the result.
+ * Input:     w - The file watch object (notification pipe)
+ * Output:    None
+ * Author:    Tobias Blomberg
+ * Created:   2005-04-12
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
+void CppDnsLookupWorker::notificationReceived(FdWatch *w)
+{
+  w->setEnabled(false);
+  resultsReady();  
+} /* CppDnsLookupWorker::notificationReceived */
 
 
 

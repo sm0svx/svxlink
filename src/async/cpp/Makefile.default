@@ -91,7 +91,7 @@ SHLIB_VERSION	= $(LIBASYNC)
 LIBSRC		= AsyncCppApplication.cpp AsyncCppDnsLookupWorker.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
-LIB_LIBS	= -lasynccore
+LIB_LIBS	= -lasynccore -lpthread
 
 # Which STATIC libs should be included in the generated STATIC lib.
 # These libs must be in the $(LIB) directory. Only the name of the
@@ -197,7 +197,7 @@ WARNINGS	+= -Wno-deprecated
 
 # Extra commandline switches to the compiler. For example "-g" to
 # add debug information, "-O2" to add optimizations etc.
-CFLAGS		+= -g
+CFLAGS		+= -D_REENTRANT
 
 # Extra commandline switches to the linker
 LDFLAGS		+=

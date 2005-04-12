@@ -124,6 +124,8 @@ class DnsLookupWorker
      */
     virtual ~DnsLookupWorker(void) {}
     
+    virtual bool doLookup(void) { return true; }
+    
     /**
      * @brief 	Return the addresses for the host in the query
      * @return	Returns an stl vector which contains all the addresses

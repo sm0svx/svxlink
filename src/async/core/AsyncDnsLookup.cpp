@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <cassert>
 
 
 /****************************************************************************
@@ -137,6 +138,7 @@ DnsLookup::DnsLookup(const string& label)
 {
   worker = Application::app().newDnsLookupWorker(label);
   worker->resultsReady.connect(slot(this, &DnsLookup::onResultsReady));
+  assert(worker->doLookup());
 } /* DnsLookup::DnsLookup */
 
 

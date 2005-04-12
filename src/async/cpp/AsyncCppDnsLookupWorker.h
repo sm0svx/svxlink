@@ -41,6 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <sigc++/signal_system.h>
+#include <pthread.h>
 
 #include <string>
 #include <vector>
@@ -82,6 +83,7 @@ namespace Async
 {
 
 class Timer;
+class FdWatch;
   
   
 /****************************************************************************
@@ -129,6 +131,8 @@ class CppDnsLookupWorker : public DnsLookupWorker, public SigC::Object
      */
     ~CppDnsLookupWorker(void);
   
+    bool doLookup(void);
+
     /**
      * @brief 	Return the addresses for the host in the query
      * @return	Returns an stl vector which contains all the addresses
@@ -139,14 +143,21 @@ class CppDnsLookupWorker : public DnsLookupWorker, public SigC::Object
      */
     virtual std::vector<IpAddress> addresses(void) { return the_addresses; }
     
+    
   protected:
     
   private:
     std::string       	    label;
     std::vector<IpAddress>  the_addresses;
-    Async::Timer *    	    timer;
+    pthread_t 	      	    worker;
+    int       	      	    notifier_rd;
+    int       	      	    notifier_wr;
+    Async::FdWatch    	    *notifier_watch;
   
+    static void *workerFunc(void *);
+
     void onTimeout(Timer *t);
+    void notificationReceived(FdWatch *w);
 
 };  /* class CppDnsLookupWorker */
 
