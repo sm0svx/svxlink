@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdio>
 #include <cassert>
 #include <cerrno>
+#include <cmath>
 
 
 /****************************************************************************
@@ -145,7 +146,7 @@ using namespace Async;
 
 AudioIO::AudioIO(const string& dev_name)
   : io_mode(MODE_NONE), audio_dev(0), write_fifo(0), do_flush(true),
-    flush_timer(0), is_flushing(false)
+    flush_timer(0), is_flushing(false), lead_in_pos(0)
 {
   write_fifo = new SampleFifo(8000);
   write_fifo->setOverwrite(false);
@@ -240,9 +241,33 @@ int AudioIO::write(short *samples, int count)
     flush_timer = 0;
     do_flush = false;
     is_flushing = false;
+    lead_in_pos = 0;
   }
   
-  int samples_written = write_fifo->addSamples(samples, count);
+  short *buf = samples;;
+  if (lead_in_pos < 100)
+  {
+    buf = new short[count];
+    int cnt = min(count, 100-lead_in_pos);
+    for (int i=0; i<cnt; ++i)
+    {
+      float gain = pow(2, lead_in_pos++ / 10.0) / pow(2, 10.0);
+      //printf("gain=%.4f  lead_in_pos=%d\n", gain, lead_in_pos);
+      buf[i] = static_cast<short>(gain * samples[i]);
+    }
+    for (int i=cnt; i<count; ++i)
+    {
+      buf[i] = samples[i];
+    }
+  }
+  
+  int samples_written = write_fifo->addSamples(buf, count);
+  
+  if (buf != samples)
+  {
+    delete [] buf;
+  }
+  
   audio_dev->audioToWriteAvailable();
   return samples_written;
   
@@ -368,6 +393,29 @@ int AudioIO::readSamples(short *samples, int count)
   }
   
   int samples_read = write_fifo->readSamples(samples, count);
+  
+  if (do_flush)
+  {
+    if (write_fifo->samplesInFifo() < 100)
+    {
+      int samples_left = write_fifo->samplesInFifo() + samples_read;
+      int pos = max(0, 100 - samples_left);
+      int start_pos = max(0, samples_left - 100);
+      for (int i=start_pos; i<samples_read; i++)
+      {
+      	float gain = pow(2, (100.0 - pos - (i - start_pos)) / 10.0)
+	      	      / pow(2, 10.0);
+	/*
+	printf("gain=%.3f  samples_in_fifo=%d  samples_read=%d  pos=%d "
+	       "start_pos=%d  i=%d\n",
+	       gain, write_fifo->samplesInFifo(), samples_read, pos,
+	       start_pos, i);
+	*/
+      	samples[i] = static_cast<short>(gain * samples[i]);
+      }
+    }
+  }
+  
   if (write_fifo->empty() && do_flush)
   {
     flushSamplesInDevice(samples_read);

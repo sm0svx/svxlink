@@ -13,6 +13,9 @@
 * DNS lookups are now asynchronous (well, threaded anyway)
   so no more blocking DNS lookup calls.
 
+* Start and end of sound playback is now amplitude shaped
+  to not create noise at end of playback.
+
 
 
  0.11.0 -- 25 Mar 2005

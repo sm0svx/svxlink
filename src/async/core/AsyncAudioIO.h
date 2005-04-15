@@ -274,6 +274,7 @@ class AudioIO : public SigC::Object
     bool      	      do_flush;
     Async::Timer      *flush_timer;
     bool      	      is_flushing;
+    int       	      lead_in_pos;
 
     void audioReadHandler(Async::FdWatch *watch);
     void flushSamplesInDevice(int extra_samples=0);
