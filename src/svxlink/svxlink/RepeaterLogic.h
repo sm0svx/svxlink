@@ -158,6 +158,7 @@ class RepeaterLogic : public Logic
 
   protected:
     virtual void allTxSamplesFlushed(void);
+    virtual void remoteLogicTransmitRequest(bool do_tx);
 
 
   private:

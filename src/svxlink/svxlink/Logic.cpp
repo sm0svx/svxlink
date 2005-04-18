@@ -68,7 +68,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Logic.h"
 
 
-
 /****************************************************************************
  *
  * Namespaces to use
@@ -119,6 +118,8 @@ using namespace Async;
  *
  ****************************************************************************/
 
+AudioSwitchMatrix Logic::audio_switch_matrix;
+
 
 
 /****************************************************************************
@@ -127,12 +128,20 @@ using namespace Async;
  *
  ****************************************************************************/
 
+void Logic::connectLogics(const string& l1, const string& l2)
+{
+  audio_switch_matrix.connect(l1, l2);
+  audio_switch_matrix.connect(l2, l1);
+} /* Logic::connectLogics */
+
+
 Logic::Logic(Config &cfg, const string& name)
   : m_cfg(cfg), m_name(name), m_rx(0), m_tx(0), msg_handler(0),
     write_msg_flush_timer(0), active_module(0), module_tx_fifo(0),
     cmd_tmo_timer(0), logic_transmit(false), anti_flutter(false),
     prev_digit('?'), exec_cmd_on_sql_close(0), exec_cmd_on_sql_close_timer(0),
-    rgr_sound_timer(0), rgr_sound_delay(-1), report_ctcss(0), event_handler(0)
+    rgr_sound_timer(0), rgr_sound_delay(-1), report_ctcss(0), event_handler(0),
+    remote_logic_tx(false)
 {
 
 } /* Logic::Logic */
@@ -158,7 +167,6 @@ bool Logic::initialize(void)
 {
   string rx_name;
   string tx_name;
-  //string sounds;
   string value;
   string macro_section;
   string event_handler_str;
@@ -183,14 +191,6 @@ bool Logic::initialize(void)
     cerr << "*** ERROR: Config variable " << name() << "/TX not set\n";
     goto cfg_failed;
   }
-  
-  /*
-  if (!cfg().getValue(name(), "SOUNDS", sounds))
-  {
-    cerr << "*** ERROR: Config variable " << name() << "/SOUNDS not set\n";
-    goto cfg_failed;
-  }
-  */
   
   if (!cfg().getValue(name(), "CALLSIGN", m_callsign))
   {
@@ -232,7 +232,7 @@ bool Logic::initialize(void)
     goto rx_init_failed;
   }
   rx().squelchOpen.connect(slot(this, &Logic::squelchOpen));
-  //rx().audioReceived.connect(slot(this, &Logic::audioReceived));
+  rx().audioReceived.connect(slot(this, &Logic::audioReceived));
   rx().dtmfDigitDetected.connect(slot(this, &Logic::dtmfDigitDetected));
   
   m_tx = new LocalTx(cfg(), tx_name);
@@ -274,6 +274,13 @@ bool Logic::initialize(void)
   event_handler->setVariable("active_module", "");
   event_handler->setVariable("is_core_event_handler", "1");
   event_handler->initialize();
+
+  audio_switch_matrix.addSource(name(), &logic_con_out);
+  logic_con_in.sigWriteSamples.connect(
+      	  slot(this, &Logic::remoteLogicWriteSamples));
+  logic_con_in.sigFlushSamples.connect(
+      	  slot(this, &Logic::remoteLogicFlushSamples));
+  audio_switch_matrix.addSink(name(), &logic_con_in);
   
   processEvent("startup");
   
@@ -552,6 +559,7 @@ void Logic::squelchOpen(bool is_open)
 {
   if (!is_open)
   {
+    logic_con_out.sinkFlushSamples();
     if ((exec_cmd_on_sql_close > 0) && !anti_flutter &&
       	!received_digits.empty())
     {
@@ -696,6 +704,8 @@ void Logic::transmitCheck(void)
       module_tx_fifo->empty() ? "TRUE" : "FALSE");
   printf("\tlogic_transmit                  = %s\n",
       logic_transmit ? "TRUE" : "FALSE");
+  printf("\tremote_logic_tx                 = %s\n",
+      remote_logic_tx ? "TRUE" : "FALSE");
   printf("\ttx().isFlushing()               = %s\n",
       tx().isFlushing() ? "TRUE" : "FALSE");
   */
@@ -704,6 +714,7 @@ void Logic::transmitCheck(void)
       msg_handler->isWritingMessage() ||
       !module_tx_fifo->empty() ||
       logic_transmit ||
+      remote_logic_tx ||
       tx().isFlushing())
   {
     transmit(true);
@@ -720,6 +731,20 @@ void Logic::allTxSamplesFlushed(void)
   //printf("Logic::allTxSamplesFlushed\n");
   transmitCheck();
 } /* Logic::allTxSamplesFlushed */
+
+
+void Logic::remoteLogicTransmitRequest(bool do_tx)
+{
+  /*
+  if (do_tx == remote_logic_tx)
+  {
+    return;
+  }
+  */
+  
+  remote_logic_tx = do_tx;
+  transmitCheck();
+} /* Logic::remoteLogicTx */
 
 
 void Logic::loadModules(void)
@@ -964,6 +989,42 @@ void Logic::sendRgrSound(Timer *t)
   processEvent("send_rgr_sound");
   enableRgrSoundTimer(false);
 } /* Logic::sendRogerSound */
+
+
+int Logic::remoteLogicWriteSamples(const short *samples, int len)
+{
+  if (msg_handler->isWritingMessage() || rx().squelchIsOpen() ||
+      ((active_module != 0) && active_module->isTransmitting()) ||
+      (len <= 0))
+  {
+    return len;
+  }
+  if (!remote_logic_tx)
+  {
+    remoteLogicTransmitRequest(true);
+  }
+  short *buf = new short[len];
+  memcpy(buf, samples, len * sizeof(*samples));
+  return transmitAudio(buf, len);
+  delete [] buf;
+} /* Logic::remoteLogicWriteSamples */
+
+
+void Logic::remoteLogicFlushSamples(void)
+{
+  remoteLogicTransmitRequest(false);
+  tx().flushSamples();
+} /* Logic::remoteLogicFlushSamples */
+
+
+int Logic::audioReceived(short *samples, int len)
+{
+  short *buf = new short[len];
+  memcpy(buf, samples, len * sizeof(*samples));
+  len = logic_con_out.sinkWriteSamples(buf, len);
+  delete [] buf;
+  return len;
+} /* Logic::audioReceived */
 
 
 

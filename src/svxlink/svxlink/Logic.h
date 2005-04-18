@@ -62,6 +62,10 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include "SigCAudioSource.h"
+#include "SigCAudioSink.h"
+#include "AudioSwitchMatrix.h"
+
 
 
 /****************************************************************************
@@ -99,6 +103,8 @@ class Tx;
 class MsgHandler;
 class Module;
 class EventHandler;
+class SigCAudioSource;
+class SigCAudioSink;
   
 
 /****************************************************************************
@@ -135,6 +141,8 @@ A_detailed_class_description
 class Logic : public SigC::Object
 {
   public:
+    static void connectLogics(const std::string& l1, const std::string& l2);
+    
     /**
      * @brief 	Default constuctor
      */
@@ -188,12 +196,15 @@ class Logic : public SigC::Object
     virtual int transmitAudio(short *samples, int count);
     virtual void allMsgsWritten(void);
     virtual void allTxSamplesFlushed(void);
+    virtual void remoteLogicTransmitRequest(bool do_tx);
     
     void clearPendingSamples(void);
     void logicTransmitRequest(bool do_transmit);
     void enableRgrSoundTimer(bool enable);
 
   private:
+    static AudioSwitchMatrix  	audio_switch_matrix;
+    
     Async::Config     	      	&m_cfg;
     std::string       	      	m_name;
     Rx	      	      	      	*m_rx;
@@ -217,6 +228,9 @@ class Logic : public SigC::Object
     float       	      	report_ctcss;
     std::map<int, std::string>	macros;
     EventHandler      	      	*event_handler;
+    SigCAudioSource       	logic_con_out;
+    SigCAudioSink 	      	logic_con_in;
+    bool      	      	      	remote_logic_tx;
     
     void allModuleSamplesWritten(void);
     void transmitCheck(void);
@@ -228,6 +242,9 @@ class Logic : public SigC::Object
     void processMacroCmd(std::string& cmd);
     void putCmdOnQueue(Async::Timer *t=0);
     void sendRgrSound(Async::Timer *t=0);
+    int remoteLogicWriteSamples(const short *samples, int len);
+    void remoteLogicFlushSamples(void);
+    int audioReceived(short *samples, int len);
 
 };  /* class Logic */
 

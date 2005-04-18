@@ -381,6 +381,17 @@ void RepeaterLogic::allTxSamplesFlushed(void)
 } /* RepeaterLogic::allTxSamplesFlushed */
 
 
+void RepeaterLogic::remoteLogicTransmitRequest(bool do_tx)
+{
+  if (do_tx)
+  {
+    setUp(true);
+    setIdle(false);
+  }
+  Logic::remoteLogicTransmitRequest(do_tx);
+} /* RepeaterLogic::remoteLogicTransmitRequest */
+
+
 
 /****************************************************************************
  *
