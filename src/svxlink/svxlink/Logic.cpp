@@ -65,6 +65,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "MsgHandler.h"
 #include "LocalRx.h"
 #include "LocalTx.h"
+#include "Voter.h"
 #include "Logic.h"
 
 
@@ -166,6 +167,7 @@ Logic::~Logic(void)
 bool Logic::initialize(void)
 {
   string rx_name;
+  string rx_type;
   string tx_name;
   string value;
   string macro_section;
@@ -183,6 +185,12 @@ bool Logic::initialize(void)
   if (!cfg().getValue(name(), "RX", rx_name))
   {
     cerr << "*** ERROR: Config variable " << name() << "/RX not set\n";
+    goto cfg_failed;
+  }
+  
+  if (!cfg().getValue(rx_name, "TYPE", rx_type))
+  {
+    cerr << "*** ERROR: Config variable " << rx_name << "/TYPE not set\n";
     goto cfg_failed;
   }
   
@@ -225,7 +233,20 @@ bool Logic::initialize(void)
   
   loadModules();
   
-  m_rx = new LocalRx(cfg(), rx_name);
+  if (rx_type == "Local")
+  {
+    m_rx = new LocalRx(cfg(), rx_name);
+  }
+  else if (rx_type == "Voter")
+  {
+    m_rx = new Voter(cfg(), rx_name);
+  }
+  else
+  {
+    cerr << "*** ERROR: Unknown RX type \"" << rx_type << "\". Legal values "
+      	 << "are: \"Local\" or \"Voter\"\n";
+    goto rx_init_failed;
+  }
   if (!rx().initialize())
   {
     cerr << "*** ERROR: Could not initialize RX \"" << rx_name << "\"\n";
