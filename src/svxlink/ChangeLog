@@ -22,6 +22,11 @@
   variables OPEN_ON_1750, OPEN_ON_CTCSS, OPEN_ON_DTMF and
   OPEN_ON_SQL.
 
+* A simple Voter has been added so that multiple receivers can
+  be used with one logic. The voter works on a first come first
+  serve basis. The receiver that signals squelch open first will
+  be the receiver that is used. The other receivers are muted.
+
 
 
  0.4.0 -- 25 Mar 2005
