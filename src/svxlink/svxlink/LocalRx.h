@@ -187,8 +187,6 @@ class LocalRx : public Rx
     static const int  	    NPOLES = 4;
     static const int  	    NZEROS = 4;
     
-    Async::Config     	    &cfg;
-    std::string       	    name;
     Async::AudioIO    	    *audio_io;
     bool      	      	    is_muted;
     Vox       	      	    *vox;

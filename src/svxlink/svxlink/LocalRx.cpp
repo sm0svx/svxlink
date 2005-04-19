@@ -164,8 +164,8 @@ class ToneDurationDet : public ToneDetector
  ****************************************************************************/
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
-  : Rx(name), cfg(cfg), name(name), audio_io(0), is_muted(true), vox(0),
-    dtmf_dec(0), ctcss_det(0), ctcss_fq(0), sql_is_open(false), serial(0),
+  : Rx(cfg, name), audio_io(0), is_muted(true), vox(0), dtmf_dec(0),
+    ctcss_det(0), ctcss_fq(0), sql_is_open(false), serial(0),
     sql_pin(Serial::PIN_CTS), sql_pin_act_lvl(true)
 {
   
@@ -185,37 +185,39 @@ LocalRx::~LocalRx(void)
 bool LocalRx::initialize(void)
 {
   string audio_dev;
-  if (!cfg.getValue(name, "AUDIO_DEV", audio_dev))
+  if (!cfg().getValue(name(), "AUDIO_DEV", audio_dev))
   {
-    cerr << "*** ERROR: Config variable " << name << "/AUDIO_DEV not set\n";
+    cerr << "*** ERROR: Config variable " << name() << "/AUDIO_DEV not set\n";
     return false;
   }
   
   string sql_up_det_str;
-  if (!cfg.getValue(name, "SQL_UP_DET", sql_up_det_str))
+  if (!cfg().getValue(name(), "SQL_UP_DET", sql_up_det_str))
   {
-    cerr << "*** ERROR: Config variable " << name << "/SQL_UP_DET not set\n";
+    cerr << "*** ERROR: Config variable " << name() << "/SQL_UP_DET not set\n";
     return false;
   }
   sql_up_det = sqlDetStrToEnum(sql_up_det_str);
   if (sql_up_det == SQL_DET_UNKNOWN)
   {
-    cerr << "*** ERROR: Config variable " << name << "/SQL_UP_DET is set to "
+    cerr << "*** ERROR: Config variable " << name() << "/SQL_UP_DET is set to "
       	 << "an illegal value. Valid values are: VOX, CTCSS\n";
     return false;
   }
   
   string sql_down_det_str;
-  if (!cfg.getValue(name, "SQL_DOWN_DET", sql_down_det_str))
+  if (!cfg().getValue(name(), "SQL_DOWN_DET", sql_down_det_str))
   {
-    cerr << "*** ERROR: Config variable " << name << "/SQL_DOWN_DET not set\n";
+    cerr << "*** ERROR: Config variable " << name()
+      	 << "/SQL_DOWN_DET not set\n";
     return false;
   }
   sql_down_det = sqlDetStrToEnum(sql_down_det_str);
   if (sql_down_det == SQL_DET_UNKNOWN)
   {
-    cerr << "*** ERROR: Config variable " << name << "/SQL_DOWN_DET is set to "
-      	 << "an illegal value. Valid values are: VOX, CTCSS\n";
+    cerr << "*** ERROR: Config variable " << name()
+      	 << "/SQL_DOWN_DET is set to an illegal value. Valid values are: "
+	 << "VOX, CTCSS\n";
     return false;
   }
 
@@ -224,22 +226,23 @@ bool LocalRx::initialize(void)
   string vox_hangtime;
   if ((sql_up_det == SQL_DET_VOX) || (sql_down_det == SQL_DET_VOX))
   {
-    if (!cfg.getValue(name, "VOX_FILTER_DEPTH", vox_filter_depth))
+    if (!cfg().getValue(name(), "VOX_FILTER_DEPTH", vox_filter_depth))
     {
-      cerr << "*** ERROR: Config variable " << name
+      cerr << "*** ERROR: Config variable " << name()
       	   << "/VOX_FILTER_DEPTH not set\n";
       return false;
     }
 
-    if (!cfg.getValue(name, "VOX_LIMIT", vox_limit))
+    if (!cfg().getValue(name(), "VOX_LIMIT", vox_limit))
     {
-      cerr << "*** ERROR: Config variable " << name << "/VOX_LIMIT not set\n";
+      cerr << "*** ERROR: Config variable " << name() << "/VOX_LIMIT not set\n";
       return false;
     }
 
-    if (!cfg.getValue(name, "VOX_HANGTIME", vox_hangtime))
+    if (!cfg().getValue(name(), "VOX_HANGTIME", vox_hangtime))
     {
-      cerr << "*** ERROR: Config variable " << name << "/VOX_HANGTIME not set\n";
+      cerr << "*** ERROR: Config variable " << name()
+      	   << "/VOX_HANGTIME not set\n";
       return false;
     }
   }
@@ -247,14 +250,14 @@ bool LocalRx::initialize(void)
   if ((sql_up_det == SQL_DET_CTCSS) || (sql_down_det == SQL_DET_CTCSS))
   {
     string ctcss_fq_str;
-    if (cfg.getValue(name, "CTCSS_FQ", ctcss_fq_str))
+    if (cfg().getValue(name(), "CTCSS_FQ", ctcss_fq_str))
     {
       ctcss_fq = atoi(ctcss_fq_str.c_str());
     }
     if (ctcss_fq <= 0)
     {
-      cerr << "*** ERROR: Config variable " << name << "/CTCSS_FQ not set or "
-      	   << "or is set to an illegal value\n";
+      cerr << "*** ERROR: Config variable " << name()
+      	   << "/CTCSS_FQ not set or is set to an illegal value\n";
       return false;
     }
   }
@@ -263,22 +266,22 @@ bool LocalRx::initialize(void)
   string sql_pin_str;
   if ((sql_up_det == SQL_DET_SERIAL) || (sql_down_det == SQL_DET_SERIAL))
   {
-    if (!cfg.getValue(name, "SQL_PORT", sql_port))
+    if (!cfg().getValue(name(), "SQL_PORT", sql_port))
     {
-      cerr << "*** ERROR: Config variable " << name << "/SQL_PORT not set\n";
+      cerr << "*** ERROR: Config variable " << name() << "/SQL_PORT not set\n";
       return false;
     }
     
-    if (!cfg.getValue(name, "SQL_PIN", sql_pin_str))
+    if (!cfg().getValue(name(), "SQL_PIN", sql_pin_str))
     {
-      cerr << "*** ERROR: Config variable " << name << "/SQL_PIN not set\n";
+      cerr << "*** ERROR: Config variable " << name() << "/SQL_PIN not set\n";
       return false;
     }
     string::iterator colon;
     colon = find(sql_pin_str.begin(), sql_pin_str.end(), ':');
     if ((colon == sql_pin_str.end()) || (colon + 1 == sql_pin_str.end()))
     {
-      cerr << "*** ERROR: Illegal format for config variable " << name
+      cerr << "*** ERROR: Illegal format for config variable " << name()
       	   << "/SQL_PIN. Should be PINNAME:LEVEL\n";
       return false;
     }
@@ -302,7 +305,7 @@ bool LocalRx::initialize(void)
     }
     else
     {
-      cerr << "*** ERROR: Illegal pin name for config variable " << name
+      cerr << "*** ERROR: Illegal pin name for config variable " << name()
       	   << "/SQL_PIN. Should be CTS, DSR, DCD or RI.\n";
       return false;
     }
@@ -316,7 +319,7 @@ bool LocalRx::initialize(void)
     }
     else
     {
-      cerr << "*** ERROR: Illegal pin level for config variable " << name
+      cerr << "*** ERROR: Illegal pin level for config variable " << name()
       	   << "/SQL_PIN. Should be SET or CLEAR.\n";
       return false;
     }
@@ -379,7 +382,7 @@ void LocalRx::mute(bool do_mute)
     if (!audio_io->open(AudioIO::MODE_RD))
     {
       cerr << "*** Error: Could not open audio device for receiver \""
-      	   << name << "\"\n";
+      	   << name() << "\"\n";
       return;
     }
   }

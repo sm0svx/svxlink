@@ -52,6 +52,7 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include <AsyncConfig.h>
 
 
 /****************************************************************************
@@ -122,10 +123,13 @@ A_detailed_class_description
 class Rx : public SigC::Object
 {
   public:
+    static Rx *create(Async::Config& cfg, const std::string& name);
+    
     /**
      * @brief 	Default constuctor
      */
-    explicit Rx(const std::string& name) {}
+    explicit Rx(Async::Config& cfg, const std::string& name)
+      : m_cfg(cfg), m_name(name) {}
   
     /**
      * @brief 	Destructor
@@ -137,6 +141,12 @@ class Rx : public SigC::Object
      * @return 	Return \em true on success, or \em false on failure
      */
     virtual bool initialize(void) = 0;
+    
+    /**
+     * @brief 	Return the name of the receiver
+     * @return	Return the name of the receiver
+     */
+    const std::string& name(void) const { return m_name; }
     
     /**
      * @brief 	Mute the receiver
@@ -193,8 +203,16 @@ class Rx : public SigC::Object
     
     
   protected:
+    /**
+     * @brief 	Return the config object
+     * @return	Return the config object
+     */
+    Async::Config& cfg(void) const { return m_cfg; }
+    
     
   private:
+    Async::Config &m_cfg;
+    std::string   m_name;
     
 };  /* class Rx */
 

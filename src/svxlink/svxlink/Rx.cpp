@@ -34,6 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <iostream>
+
 
 
 /****************************************************************************
@@ -50,7 +52,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "template.h"
+#include "Rx.h"
+#include "LocalRx.h"
+#include "Voter.h"
 
 
 
@@ -61,6 +65,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 
 
 
@@ -111,19 +116,34 @@ using namespace std;
  *
  ****************************************************************************/
 
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
+Rx *Rx::create(Config& cfg, const string& name)
+{
+  Rx *rx = 0;
+  string rx_type;
+  if (!cfg.getValue(name, "TYPE", rx_type))
+  {
+    cerr << "*** ERROR: Config variable " << name << "/TYPE not set\n";
+    return 0;
+  }
+  
+  if (rx_type == "Local")
+  {
+    rx = new LocalRx(cfg, name);
+  }
+  else if (rx_type == "Voter")
+  {
+    rx = new Voter(cfg, name);
+  }
+  else
+  {
+    cerr << "*** ERROR: Unknown RX type \"" << rx_type << "\". Legal values "
+      	 << "are: \"Local\" or \"Voter\"\n";
+    return 0;
+  }
+  
+  return rx;
+  
+} /* Rx::create */
 
 
 

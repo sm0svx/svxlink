@@ -167,7 +167,7 @@ Logic::~Logic(void)
 bool Logic::initialize(void)
 {
   string rx_name;
-  string rx_type;
+  //string rx_type;
   string tx_name;
   string value;
   string macro_section;
@@ -188,11 +188,13 @@ bool Logic::initialize(void)
     goto cfg_failed;
   }
   
+  /*
   if (!cfg().getValue(rx_name, "TYPE", rx_type))
   {
     cerr << "*** ERROR: Config variable " << rx_name << "/TYPE not set\n";
     goto cfg_failed;
   }
+  */
   
   if (!cfg().getValue(name(), "TX", tx_name))
   {
@@ -233,6 +235,7 @@ bool Logic::initialize(void)
   
   loadModules();
   
+  /*
   if (rx_type == "Local")
   {
     m_rx = new LocalRx(cfg(), rx_name);
@@ -247,7 +250,9 @@ bool Logic::initialize(void)
       	 << "are: \"Local\" or \"Voter\"\n";
     goto rx_init_failed;
   }
-  if (!rx().initialize())
+  */
+  m_rx = Rx::create(cfg(), rx_name);
+  if ((m_rx == 0) || !rx().initialize())
   {
     cerr << "*** ERROR: Could not initialize RX \"" << rx_name << "\"\n";
     goto rx_init_failed;

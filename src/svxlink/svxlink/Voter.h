@@ -113,7 +113,7 @@ An example of how to use the Voter class
 /**
 @brief	A_brief_class_description
 @author Tobias Blomberg
-@date   2005-02-
+@date   2005-04-18
 
 A_detailed_class_description
 
@@ -130,7 +130,7 @@ class Voter : public Rx
     /**
      * @brief 	Destructor
      */
-    ~Voter(void) {}
+    ~Voter(void);
   
     /**
      * @brief 	Initialize the receiver object
@@ -165,8 +165,6 @@ class Voter : public Rx
   protected:
     
   private:
-    Async::Config     &cfg;
-    const std::string name;
     std::list<Rx *>   rxs;
     Rx	      	      *active_rx;
     bool      	      is_muted;

@@ -116,18 +116,29 @@ using namespace Async;
  ****************************************************************************/
 
 Voter::Voter(Config &cfg, const std::string& name)
-  : Rx(name), cfg(cfg), name(name), active_rx(0), is_muted(true)
+  : Rx(cfg, name), active_rx(0), is_muted(true)
 {
 
 } /* Voter::Voter */
 
 
+Voter::~Voter(void)
+{
+  list<Rx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    delete *it;
+  }
+  rxs.clear();
+} /* Voter::~Voter */
+
+
 bool Voter::initialize(void)
 {
   string receivers;
-  if (!cfg.getValue(name, "RECEIVERS", receivers))
+  if (!cfg().getValue(name(), "RECEIVERS", receivers))
   {
-    cerr << "*** ERROR: Config variable " << name << "/RECEIVERS not set\n";
+    cerr << "*** ERROR: Config variable " << name() << "/RECEIVERS not set\n";
     return false;
   }
 
@@ -139,10 +150,9 @@ bool Voter::initialize(void)
     if (!rx_name.empty())
     {
       cout << "Adding receiver to Voter: " << rx_name << endl;
-      Rx *rx = new LocalRx(cfg, rx_name);
-      if (!rx->initialize())
+      Rx *rx = Rx::create(cfg(), rx_name);
+      if ((rx == 0) || !rx->initialize())
       {
-      	// FIXME: Cleanup
       	return false;
       }
       rx->mute(true);
