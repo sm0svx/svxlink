@@ -125,44 +125,6 @@ void Module::playFile(const string& path)
 } /* Module::playFile */
 
 
-#if 0
-void Module::playMsg(const string& msg) const
-{
-  if (m_is_active)
-  {
-    logic()->playMsg(msg, this);
-  }
-}
-
-
-void Module::playNumber(int number) const
-{
-  if (m_is_active)
-  {
-    logic()->playNumber(number);
-  }
-}
-
-
-void Module::spellWord(const string& word) const
-{
-  if (m_is_active)
-  {
-    logic()->spellWord(word);
-  }
-}
-
-
-void Module::playSilence(int length) const
-{
-  if (m_is_active)
-  {
-    logic()->playSilence(length);
-  }
-}
-#endif
-
-
 int Module::audioFromModule(short *samples, int count)
 {
   if (m_is_active)

@@ -408,54 +408,6 @@ class Module : public SigC::Object
      */
     void playFile(const std::string& path);
     
-    #if 0
-    /**
-     * @brief 	Order the logic core to play an audio message over the
-     *	      	transmitter
-     * @param 	msg The message to transmit
-     *
-     * Calling this function will trigger a playback of an audio file over
-     * the transmitter. The file should be located under the
-     * directory pointed out by the SOUNDS config variable. Under the SOUNDS
-     * directory there is a subdirectory for each module where the logic core
-     * will first look for the file. If no file can be found there, the logic
-     * core will look under the "Default" subdirectory. If not found there,
-     * a warning will be issued.
-     * The module must be active for this function to do anything.
-     */
-    void playMsg(const std::string& msg) const;
-    
-    /**
-     * @brief 	Order the logic core to play a number over the transmitter
-     * @param 	number The number to transmit
-     *
-     * Calling this function will order the logic core to read back the digits
-     * in "number" one by one.
-     * The module must be active for this function to do anything.
-     */
-    void playNumber(int number) const;
-    
-    /**
-     * @brief 	Order the logic core to spell a word over the transmitter
-     * @param 	word The word to spell
-     *
-     * Calling this function will order the logic core to read back the letters
-     * in "word" one by one. This is done using the phonetic alphabet.
-     * The module must be active for this function to do anything.
-     */
-    void spellWord(const std::string& word) const;
-    
-    /**
-     * @brief 	Order the logic core to play some silence over the transmitter
-     * @param 	length The amount of silence specified in milliseconds
-     *
-     * Calling this function will order the logic core to play a specified
-     * number of milliseconds of silence over the transmitter. This can be
-     * used to make some room inbetween multiple audio messages.
-     * The module must be active for this function to do anything.
-     */
-    void playSilence(int length) const;
-    #endif
     
   protected:
     

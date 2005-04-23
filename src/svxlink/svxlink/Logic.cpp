@@ -167,7 +167,6 @@ Logic::~Logic(void)
 bool Logic::initialize(void)
 {
   string rx_name;
-  //string rx_type;
   string tx_name;
   string value;
   string macro_section;
@@ -187,14 +186,6 @@ bool Logic::initialize(void)
     cerr << "*** ERROR: Config variable " << name() << "/RX not set\n";
     goto cfg_failed;
   }
-  
-  /*
-  if (!cfg().getValue(rx_name, "TYPE", rx_type))
-  {
-    cerr << "*** ERROR: Config variable " << rx_name << "/TYPE not set\n";
-    goto cfg_failed;
-  }
-  */
   
   if (!cfg().getValue(name(), "TX", tx_name))
   {
@@ -235,22 +226,6 @@ bool Logic::initialize(void)
   
   loadModules();
   
-  /*
-  if (rx_type == "Local")
-  {
-    m_rx = new LocalRx(cfg(), rx_name);
-  }
-  else if (rx_type == "Voter")
-  {
-    m_rx = new Voter(cfg(), rx_name);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown RX type \"" << rx_type << "\". Legal values "
-      	 << "are: \"Local\" or \"Voter\"\n";
-    goto rx_init_failed;
-  }
-  */
   m_rx = Rx::create(cfg(), rx_name);
   if ((m_rx == 0) || !rx().initialize())
   {
@@ -354,38 +329,6 @@ void Logic::playFile(const string& path)
   //transmit(true);
   transmitCheck();
 } /* Logic::playFile */
-
-#if 0
-void Logic::playMsg(const string& msg, const Module *module)
-{
-  module_tx_fifo->stopOutput(true);
-  if (module == 0)
-  {
-    msg_handler->playMsg("Core", msg);
-  }
-  else
-  {
-    msg_handler->playMsg(module->name(), msg);
-  }
-  transmit(true);  
-} /* Logic::playMsg */
-
-
-void Logic::playNumber(float number)
-{
-  module_tx_fifo->stopOutput(true);
-  msg_handler->playNumber(number);
-  transmit(true);
-} /* Logic::playNumber */
-
-
-void Logic::spellWord(const string& word)
-{
-  module_tx_fifo->stopOutput(true);
-  msg_handler->spellWord(word);
-  transmit(true);
-} /* Logic::spellWord */
-#endif
 
 
 void Logic::playSilence(int length)

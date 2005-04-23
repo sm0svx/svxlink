@@ -258,43 +258,6 @@ void RepeaterLogic::playFile(const string& path)
   Logic::playFile(path);
 } /* RepeaterLogic::playFile */
 
-#if 0
-void RepeaterLogic::playMsg(const string& msg, const Module *module)
-{
-  //printf("RepeaterLogic::playMsg: %s\n", msg.c_str());
-  
-  if ((msg != idle_sound) && (msg != "blip") && !preserve_idle_state)
-  {
-    setIdle(false);
-  }
-  Logic::playMsg(msg, module);
-} /* RepeaterLogic::playMsg */
-
-
-void RepeaterLogic::playNumber(int number)
-{
-  //printf("RepeaterLogic::playNumber: %d\n", number);
-  
-  if (!preserve_idle_state)
-  {
-    setIdle(false);
-  }
-  Logic::playNumber(number);
-} /* RepeaterLogic::playNumber */
-
-
-void RepeaterLogic::spellWord(const string& word)
-{
-  //printf("RepeaterLogic::spellWord: %s\n", word.c_str());
-  
-  if (!preserve_idle_state)
-  {
-    setIdle(false);
-  }
-  Logic::spellWord(word);
-} /* RepeaterLogic::spellWord */
-#endif
-
 
 void RepeaterLogic::playSilence(int length)
 {
