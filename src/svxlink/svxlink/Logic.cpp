@@ -326,7 +326,6 @@ void Logic::playFile(const string& path)
 {
   module_tx_fifo->stopOutput(true);
   msg_handler->playFile(path);
-  //transmit(true);
   transmitCheck();
 } /* Logic::playFile */
 
@@ -335,7 +334,6 @@ void Logic::playSilence(int length)
 {
   module_tx_fifo->stopOutput(true);
   msg_handler->playSilence(length);
-  //transmit(true);
   transmitCheck();
 } /* Logic::playSilence */
 
@@ -358,13 +356,6 @@ void Logic::moduleTransmitRequest(bool do_transmit)
 {
   //printf("Logic::moduleTransmitRequest: do_transmit=%s\n",
   //    	  do_transmit ? "TRUE" : "FALSE");
-  /*
-  if (!do_transmit && tx().isTransmitting())
-  {
-    tx().flushSamples();
-  }
-  */
-  //tx().flushSamples();
   if (!do_transmit)
   {
     if (!module_tx_fifo->empty())
@@ -704,13 +695,6 @@ void Logic::allTxSamplesFlushed(void)
 
 void Logic::remoteLogicTransmitRequest(bool do_tx)
 {
-  /*
-  if (do_tx == remote_logic_tx)
-  {
-    return;
-  }
-  */
-  
   remote_logic_tx = do_tx;
   transmitCheck();
 } /* Logic::remoteLogicTx */
