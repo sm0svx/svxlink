@@ -202,7 +202,7 @@ bool RepeaterLogic::initialize(void)
   
   //tx().txTimeout.connect(slot(this, &RepeaterLogic::txTimeout));
   
-  rx().mute(false);
+  //rx().mute(false);
   rx().audioReceived.connect(slot(this, &RepeaterLogic::audioReceived));
   
   if (required_1750_duration > 0)

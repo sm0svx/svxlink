@@ -167,7 +167,7 @@ bool SimplexLogic::initialize(void)
   need_ident = false;
   ident_last_sent = time(NULL);
 
-  rx().mute(false);
+  //rx().mute(false);
   
   return true;
   

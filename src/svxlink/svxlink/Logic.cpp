@@ -235,7 +235,8 @@ bool Logic::initialize(void)
   rx().squelchOpen.connect(slot(this, &Logic::squelchOpen));
   rx().audioReceived.connect(slot(this, &Logic::audioReceived));
   rx().dtmfDigitDetected.connect(slot(this, &Logic::dtmfDigitDetected));
-  
+  rx().mute(false);
+    
   m_tx = new LocalTx(cfg(), tx_name);
   if (!tx().initialize())
   {
@@ -354,8 +355,8 @@ void Logic::audioFromModule(short *samples, int count)
 
 void Logic::moduleTransmitRequest(bool do_transmit)
 {
-  //printf("Logic::moduleTransmitRequest: do_transmit=%s\n",
-  //    	  do_transmit ? "TRUE" : "FALSE");
+  printf("Logic::moduleTransmitRequest: do_transmit=%s\n",
+      	  do_transmit ? "TRUE" : "FALSE");
   if (!do_transmit)
   {
     if (!module_tx_fifo->empty())
@@ -651,7 +652,6 @@ void Logic::allModuleSamplesWritten(void)
 
 void Logic::transmitCheck(void)
 {
-  /*
   printf("Logic::transmitCheck:\n");
   if (active_module != 0)
   {
@@ -668,7 +668,6 @@ void Logic::transmitCheck(void)
       remote_logic_tx ? "TRUE" : "FALSE");
   printf("\ttx().isFlushing()               = %s\n",
       tx().isFlushing() ? "TRUE" : "FALSE");
-  */
   
   if (((active_module != 0) && active_module->isTransmitting()) ||
       msg_handler->isWritingMessage() ||
