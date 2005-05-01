@@ -660,8 +660,8 @@ void Logic::transmitCheck(void)
   }
   printf("\tmsg_handler->isWritingMessage() = %s\n",
       msg_handler->isWritingMessage() ? "TRUE" : "FALSE");
-  printf("\tmodule_tx_fifo->empty()         = %s\n",
-      module_tx_fifo->empty() ? "TRUE" : "FALSE");
+  printf("\t!module_tx_fifo->empty()         = %s\n",
+      !module_tx_fifo->empty() ? "TRUE" : "FALSE");
   printf("\tlogic_transmit                  = %s\n",
       logic_transmit ? "TRUE" : "FALSE");
   printf("\tremote_logic_tx                 = %s\n",
