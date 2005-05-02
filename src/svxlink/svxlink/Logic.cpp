@@ -355,8 +355,8 @@ void Logic::audioFromModule(short *samples, int count)
 
 void Logic::moduleTransmitRequest(bool do_transmit)
 {
-  printf("Logic::moduleTransmitRequest: do_transmit=%s\n",
-      	  do_transmit ? "TRUE" : "FALSE");
+  cout << "Logic::moduleTransmitRequest: do_transmit="
+       << (do_transmit ? "TRUE" : "FALSE") << endl;
   if (!do_transmit)
   {
     if (!module_tx_fifo->empty())
@@ -437,7 +437,7 @@ Module *Logic::findModule(const string& name)
 
 void Logic::dtmfDigitDetected(char digit)
 {
-  printf("digit=%c\n", digit);
+  cout << "digit=" << digit << endl;
   
   if (digit == '*')
   {
@@ -541,7 +541,8 @@ void Logic::squelchOpen(bool is_open)
 
 void Logic::transmit(bool do_transmit)
 {
-  //printf("Logic::transmit: do_transmit=%s\n", do_transmit ? "true" : "false");
+  //cout << "Logic::transmit: do_transmit="
+    //   << (do_transmit ? "true" : "false") << endl;
   
   tx().transmit(do_transmit);
   if (do_transmit)
@@ -627,7 +628,7 @@ void Logic::enableRgrSoundTimer(bool enable)
  */
 void Logic::allMsgsWritten(void)
 {
-  //printf("Logic::allMsgsWritten\n");
+  //cout << "Logic::allMsgsWritten\n";
 
   tx().flushSamples();
   transmitCheck();
@@ -643,7 +644,7 @@ void Logic::allMsgsWritten(void)
 
 void Logic::allModuleSamplesWritten(void)
 {
-  //printf("Logic::allModuleSamplesWritten\n");
+  //cout << "Logic::allModuleSamplesWritten\n";
   
   tx().flushSamples();
   transmitCheck();  
@@ -652,22 +653,22 @@ void Logic::allModuleSamplesWritten(void)
 
 void Logic::transmitCheck(void)
 {
-  printf("Logic::transmitCheck:\n");
+  cout << "Logic::transmitCheck:\n";
   if (active_module != 0)
   {
-    printf("\tactive_module->isTransmitting   = %s\n",
-      active_module->isTransmitting() ? "TRUE" : "FALSE");
+    cout << "\tactive_module->isTransmitting   = "
+      	 << (active_module->isTransmitting() ? "TRUE" : "FALSE") << endl;
   }
-  printf("\tmsg_handler->isWritingMessage() = %s\n",
-      msg_handler->isWritingMessage() ? "TRUE" : "FALSE");
-  printf("\t!module_tx_fifo->empty()        = %s\n",
-      !module_tx_fifo->empty() ? "TRUE" : "FALSE");
-  printf("\tlogic_transmit                  = %s\n",
-      logic_transmit ? "TRUE" : "FALSE");
-  printf("\tremote_logic_tx                 = %s\n",
-      remote_logic_tx ? "TRUE" : "FALSE");
-  printf("\ttx().isFlushing()               = %s\n",
-      tx().isFlushing() ? "TRUE" : "FALSE");
+  cout << "\tmsg_handler->isWritingMessage() = "
+       << (msg_handler->isWritingMessage() ? "TRUE" : "FALSE") << endl;
+  cout << "\t!module_tx_fifo->empty()        = "
+       << (!module_tx_fifo->empty() ? "TRUE" : "FALSE") << endl;
+  cout << "\tlogic_transmit                  = "
+       << (logic_transmit ? "TRUE" : "FALSE") << endl;
+  cout << "\tremote_logic_tx                 = "
+       << (remote_logic_tx ? "TRUE" : "FALSE") << endl;
+  cout << "\ttx().isFlushing()               = "
+       << (tx().isFlushing() ? "TRUE" : "FALSE") << endl;
   
   if (((active_module != 0) && active_module->isTransmitting()) ||
       msg_handler->isWritingMessage() ||
@@ -687,7 +688,7 @@ void Logic::transmitCheck(void)
 
 void Logic::allTxSamplesFlushed(void)
 {
-  //printf("Logic::allTxSamplesFlushed\n");
+  //cout << "Logic::allTxSamplesFlushed\n";
   transmitCheck();
 } /* Logic::allTxSamplesFlushed */
 
@@ -860,7 +861,7 @@ void Logic::processCommandQueue(void)
 
 void Logic::processMacroCmd(string& cmd)
 {
-  printf("Processing macro command: %s...\n", cmd.c_str());
+  cout << "Processing macro command: " << cmd << "...\n";
   assert(!cmd.empty() && (cmd[0] == 'D'));
   cmd.erase(0, 1);
   if (cmd.empty())
@@ -937,7 +938,7 @@ void Logic::putCmdOnQueue(Timer *t)
 
 void Logic::sendRgrSound(Timer *t)
 {
-  //printf("RepeaterLogic::sendRogerSound\n");
+  //cout << "RepeaterLogic::sendRogerSound\n";
   processEvent("send_rgr_sound");
   enableRgrSoundTimer(false);
 } /* Logic::sendRogerSound */
