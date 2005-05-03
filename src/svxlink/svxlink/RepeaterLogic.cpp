@@ -462,7 +462,7 @@ void RepeaterLogic::setUp(bool up)
 
 void RepeaterLogic::squelchOpen(bool is_open)
 {
-  printf("The squelch is %s\n", is_open ? "OPEN" : "CLOSED");
+  cout << "The squelch is " << (is_open ? "OPEN" : "CLOSED") << endl;
   
   if (repeater_is_up)
   {
@@ -524,7 +524,7 @@ void RepeaterLogic::detectedTone(int fq)
 {
   if (!repeater_is_up)
   {
-    printf("%d Hz tone call detected\n", fq);
+    cout << fq << " Hz tone call detected" << endl;
     setUp(true);
   }
 } /* RepeaterLogic::detectedTone */

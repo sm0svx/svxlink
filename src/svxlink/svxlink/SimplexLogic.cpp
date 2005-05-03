@@ -292,7 +292,7 @@ void SimplexLogic::identify(Timer *t)
 
 void SimplexLogic::squelchOpen(bool is_open)
 {
-  printf("The squelch is %s\n", is_open ? "OPEN" : "CLOSED");
+  cout << "The squelch is " << (is_open ? "OPEN" : "CLOSED") << endl;
   
   if (!is_open)
   {
