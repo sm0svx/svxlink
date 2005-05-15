@@ -35,7 +35,7 @@ class MsgHandler : public SigC::Object
     bool      	      	    pending_play_next;
     
     void addItemToQueue(QueueItem *item);
-    void playNextMsg(void);
+    void playMsg(void);
     void writeSamples(void);
 
 };

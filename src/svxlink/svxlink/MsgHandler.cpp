@@ -116,10 +116,11 @@ void MsgHandler::playTone(int fq, int amp, int length)
 
 void MsgHandler::writeBufferFull(bool is_full)
 {
-  //printf("write_buffer_full=%s\n", is_full ? "true" : "false");
-  if (!is_full && !msg_queue.empty() && (nesting_level == 0))
+  //cout << "MsgHandler::writeBufferFull: write_buffer_full=" << is_full
+  //     << "  msg_queue.empty()=" << msg_queue.empty() << endl;
+  if (!is_full && !msg_queue.empty())
   {
-    writeSamples();
+    playMsg();
   }
 }
 
@@ -138,7 +139,7 @@ void MsgHandler::clear(void)
 
 void MsgHandler::begin(void)
 {
-  //printf("MsgHandler::begin\n");
+  //printf("MsgHandler::begin: nesting_level=%d\n", nesting_level);
   if (nesting_level == 0)
   {
     pending_play_next = false;
@@ -149,7 +150,7 @@ void MsgHandler::begin(void)
 
 void MsgHandler::end(void)
 {
-  //printf("MsgHandler::end\n");
+  //printf("MsgHandler::end: nesting_level=%d\n", nesting_level);
   assert(nesting_level > 0);
   --nesting_level;
   if (nesting_level == 0)
@@ -157,7 +158,7 @@ void MsgHandler::end(void)
     if (pending_play_next)
     {
       pending_play_next = false;
-      playNextMsg();
+      playMsg();
     }
     else
     {
@@ -180,12 +181,12 @@ void MsgHandler::addItemToQueue(QueueItem *item)
   msg_queue.push_back(item);
   if (msg_queue.size() == 1)
   {
-    playNextMsg();
+    playMsg();
   }
 } /* MsgHandler::addItemToQueue */
 
 
-void MsgHandler::playNextMsg(void)
+void MsgHandler::playMsg(void)
 {
   if (nesting_level > 0)
   {
@@ -204,7 +205,7 @@ void MsgHandler::playNextMsg(void)
   {
     msg_queue.pop_front();
     delete item;
-    playNextMsg();
+    playMsg();
   }
   else
   {
@@ -246,7 +247,7 @@ void MsgHandler::writeSamples(void)
     //printf("Done...\n");
     msg_queue.pop_front();
     delete item;
-    playNextMsg();
+    playMsg();
 }
 
 
@@ -263,13 +264,16 @@ FileQueueItem::~FileQueueItem(void)
 
 bool FileQueueItem::initialize(void)
 {
-  file = ::open(filename.c_str(), O_RDONLY);
   if (file == -1)
   {
-    cerr << "*** WARNING: Could not find audio file \"" << filename << "\"\n";
-    return false;
+    file = ::open(filename.c_str(), O_RDONLY);
+    if (file == -1)
+    {
+      cerr << "*** WARNING: Could not find audio file \"" << filename << "\"\n";
+      return false;
+    }
   }
-  
+    
   return true;
   
 } /* FileQueueItem::initialize */
