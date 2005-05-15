@@ -160,6 +160,8 @@ void Vox::setHangtime(int hangtime)
 
 int Vox::audioIn(short *samples, int count)
 {
+  bool was_up = is_up;
+  
   for (int i=0; i<count; ++i)
   {
     sum -= buf[head];
@@ -170,25 +172,30 @@ int Vox::audioIn(short *samples, int count)
     {
       //printf("sum=%ld\n", sum);
       samples_since_up = 0;
-      if (!is_up)
-      {
-      	is_up = true;
-      	squelchOpen(true);
-      }
+      is_up = true;
     }
     else if (is_up && (sum < down_limit))
     {
       if (++samples_since_up > hangtime)
       {
       	is_up = false;
-      	squelchOpen(false);
       }
     }
   }
   
+  if (!was_up && is_up)
+  {
+    squelchOpen(true);
+  }
+  
   if (is_up)
   {
-    return audioOut(samples, count);
+    count = audioOut(samples, count);
+  }
+  
+  if (was_up && !is_up)
+  {
+    squelchOpen(false);
   }
   
   return count;
