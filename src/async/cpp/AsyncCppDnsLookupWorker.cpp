@@ -137,7 +137,8 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 CppDnsLookupWorker::CppDnsLookupWorker(const string &label)
-  : label(label), worker(0), notifier_rd(-1), notifier_wr(-1), notifier_watch(0)
+  : label(label), worker(0), notifier_rd(-1), notifier_wr(-1),
+    notifier_watch(0), done(false)
 {
   
 } /* CppDnsLookupWorker::CppDnsLookupWorker */
@@ -147,15 +148,22 @@ CppDnsLookupWorker::~CppDnsLookupWorker(void)
 {
   if (worker != 0)
   {
-    if (pthread_cancel(worker) == -1)
+    int ret;
+    
+    if (!done)
     {
-      perror("pthread_cancel");
+      ret = pthread_cancel(worker);
+      if (ret != 0)
+      {
+	cerr << "pthread_cancel: error " << ret << endl;
+      }
     }
-
+   
     void *ud;
-    if (pthread_join(worker, &ud) == -1)
+    ret = pthread_join(worker, &ud);
+    if (ret != 0)
     {
-      perror("pthread_create");
+      cerr << "pthread_cancel: error " << ret << endl;
     }
   }
   
@@ -184,9 +192,10 @@ bool CppDnsLookupWorker::doLookup(void)
   notifier_watch = new FdWatch(notifier_rd, FdWatch::FD_WATCH_RD);
   notifier_watch->activity.connect(
       	  slot(this, &CppDnsLookupWorker::notificationReceived));
-  if (pthread_create(&worker, NULL, workerFunc, this) != 0)
+  int ret = pthread_create(&worker, NULL, workerFunc, this);
+  if (ret != 0)
   {
-    perror("pthread_create");
+    cerr << "pthread_create: error " << ret << endl;
     return false;
   }
   /*
@@ -268,6 +277,8 @@ void *CppDnsLookupWorker::workerFunc(void *w)
   }
   
   write(worker->notifier_wr, "D", 1);
+  
+  worker->done = true;
   
   return NULL;
   

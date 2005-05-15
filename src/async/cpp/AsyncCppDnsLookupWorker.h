@@ -153,6 +153,7 @@ class CppDnsLookupWorker : public DnsLookupWorker, public SigC::Object
     int       	      	    notifier_rd;
     int       	      	    notifier_wr;
     Async::FdWatch    	    *notifier_watch;
+    bool      	      	    done;
   
     static void *workerFunc(void *);
 
