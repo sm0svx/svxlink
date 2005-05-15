@@ -138,13 +138,7 @@ LocalTx::~LocalTx(void)
   transmit(false);
   
   delete txtot;
-  
-  if (serial != 0)
-  {
-    serial->close();
-    serial = 0;
-  }
-  
+  delete serial;
   delete audio_io;
 } /* LocalTx::~LocalTx */
 
@@ -208,7 +202,7 @@ bool LocalTx::initialize(void)
   if (!serial->setPin(ptt_pin, false))
   {
     perror("setPin");
-    serial->close();
+    delete serial;
     serial = 0;
     return false;
   }
