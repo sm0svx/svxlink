@@ -2,7 +2,7 @@
 @file	 Template.h
 @brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2005-02-
+@date	 2005-05-
 
 A_detailed_description_for_this_file
 
@@ -109,8 +109,8 @@ namespace MyNameSpace
 
 /**
 @brief	A_brief_class_description
-@author Tobias Blomberg
-@date   2005-02-
+@author Tobias Blomberg / SM0SVX
+@date   2005-05-
 
 A_detailed_class_description
 
@@ -138,6 +138,8 @@ class Template
   protected:
     
   private:
+    Template(const Template&);
+    Template& operator=(const Template&);
     
 };  /* class Template */
 

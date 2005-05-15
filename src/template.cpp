@@ -2,7 +2,7 @@
 @file	 Template.cpp
 @brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2004-08-
+@date	 2005-05-
 
 A_detailed_description_for_this_file
 
@@ -50,7 +50,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "template.h"
+#include "Template.h"
 
 
 
@@ -111,19 +111,17 @@ using namespace std;
  *
  ****************************************************************************/
 
+Template::Template(void)
+{
+  
+} /* Template::Template */
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
+
+Template::~Template(void)
+{
+  
+} /* Template::Template */
+
 
 
 
