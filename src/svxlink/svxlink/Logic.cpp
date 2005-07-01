@@ -355,8 +355,10 @@ void Logic::audioFromModule(short *samples, int count)
 
 void Logic::moduleTransmitRequest(bool do_transmit)
 {
+  /*
   cout << "Logic::moduleTransmitRequest: do_transmit="
        << (do_transmit ? "TRUE" : "FALSE") << endl;
+  */
   if (!do_transmit)
   {
     if (!module_tx_fifo->empty())
@@ -653,6 +655,7 @@ void Logic::allModuleSamplesWritten(void)
 
 void Logic::transmitCheck(void)
 {
+  /*
   cout << "Logic::transmitCheck:\n";
   if (active_module != 0)
   {
@@ -669,7 +672,8 @@ void Logic::transmitCheck(void)
        << (remote_logic_tx ? "TRUE" : "FALSE") << endl;
   cout << "\ttx().isFlushing()               = "
        << (tx().isFlushing() ? "TRUE" : "FALSE") << endl;
-  
+  */
+   
   if (((active_module != 0) && active_module->isTransmitting()) ||
       msg_handler->isWritingMessage() ||
       !module_tx_fifo->empty() ||
