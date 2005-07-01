@@ -1,3 +1,12 @@
+ 0.10.1 -- ?? Jul 2005
+-----------------------
+
+* Bugfix: There was no timeout on commands sent to the directory server.
+  This caused hanging connections when the directory server did not
+  answer properly. The timeout is now two minutes.
+
+
+
  0.10.0 -- 25 Mar 2005
 ----------------------
 

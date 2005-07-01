@@ -151,7 +151,8 @@ Directory::Directory(const string& server, const string& callsign,
     the_password(password),   	      	      the_description(""),
     error_str(""),    	      	      	      ctrl_con(0),
     the_status(StationData::STAT_OFFLINE),    reg_refresh_timer(0),
-    current_status(StationData::STAT_OFFLINE),server_changed(false)
+    current_status(StationData::STAT_OFFLINE),server_changed(false),
+    cmd_timer(0)
 {
   the_callsign.resize(callsign.size());
   transform(callsign.begin(), callsign.end(), the_callsign.begin(), ::toupper);
@@ -782,11 +783,17 @@ void Directory::ctrlSockDisconnected(TcpConnection *con,
 
 void Directory::sendNextCmd(void)
 {
+  delete cmd_timer;
+  cmd_timer = 0;
+
   if (cmd_queue.empty())
   {
     return;
   }
   
+  cmd_timer = new Timer(CMD_TIMEOUT);
+  cmd_timer->expired.connect(slot(this, &Directory::onCmdTimeout));
+
   if (cmd_queue.front().type == Cmd::GET_CALLS)
   {
     error_str = "";
@@ -848,6 +855,16 @@ void Directory::onRefreshRegistration(Timer *timer)
     makeBusy();
   }
 } /* Directory::onRefreshRegistration */
+
+
+void Directory::onCmdTimeout(Timer *timer)
+{
+  error("Command timeout while communicating to the directory server");
+  ctrl_con->disconnect();
+  cmd_queue.pop_front();
+  com_state = CS_IDLE;
+  sendNextCmd();
+} /* Directory::onCmdTimeout */
 
 
 

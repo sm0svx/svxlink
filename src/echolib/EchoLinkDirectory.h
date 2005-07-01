@@ -348,6 +348,7 @@ class Directory : public SigC::Object
     
     static const int DIRECTORY_SERVER_PORT    	= 5200;
     static const int REGISTRATION_REFRESH_TIME  = 5 * 60 * 1000; // 5 minutes
+    static const int CMD_TIMEOUT                = 120 * 1000; // 2 minutes
     
     ComState      	    com_state;
     std::string       	    the_server;
@@ -371,6 +372,7 @@ class Directory : public SigC::Object
     Async::Timer *    	    reg_refresh_timer;
     StationData::Status     current_status;
     bool      	      	    server_changed;
+    Async::Timer *          cmd_timer;
     
     Directory(const Directory&);
     Directory& operator =(const Directory&);
@@ -387,6 +389,7 @@ class Directory : public SigC::Object
     void setStatus(StationData::Status new_status);
     void createClientObject(void);
     void onRefreshRegistration(Async::Timer *timer);
+    void onCmdTimeout(Async::Timer *timer);
 
 };  /* class Directory */
 
