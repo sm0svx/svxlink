@@ -38,6 +38,7 @@ this list will grow in time):
   <LI>Fedora Core 3 (RPMS provided)</LI>
   <LI>SuSE 9.1</LI>
   <LI>Slackware 10 (not tested by author)</LI>
+  <LI>SuSE Linux 9.2 Pro (not tested by author)</LI>
 </UL>
 <P/>
 
