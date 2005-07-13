@@ -150,7 +150,7 @@ void AudioSwitchMatrix::connect(const string& source_name,
   assert(sources.count(source_name) == 1);
   assert(sinks.count(sink_name) == 1);
   AudioSource *source = sources[source_name];
-  assert(!source->isRegistered());
+  if (source->isRegistered()) return;
   AudioSink *sink = sinks[sink_name];
   assert(!sink->isRegistered());
   assert(sink->registerSource(source));
@@ -163,9 +163,10 @@ void AudioSwitchMatrix::disconnect(const string& source_name,
   assert(sources.count(source_name) == 1);
   assert(sinks.count(sink_name) == 1);
   AudioSource *source = sources[source_name];
-  assert(source->isRegistered());
+  if (!source->isRegistered()) return;
   AudioSink *sink = sinks[sink_name];
   assert(sink->isRegistered());
+  sink->flushSamples();
   sink->unregisterSource();
 } /* AudioSwitchMatrix::disconnect */
 
