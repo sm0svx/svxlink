@@ -455,12 +455,12 @@ void LocalRx::voxSqlOpen(bool is_open)
   if (is_open && (sql_up_det == SQL_DET_VOX))
   {
     sql_is_open = true;
-    squelchOpen(true);
+    setSquelchState(true);
   }
   else if (!is_open && (sql_down_det == SQL_DET_VOX))
   {
     sql_is_open = false;
-    squelchOpen(false);
+    setSquelchState(false);
   }
 } /* LocalRx::voxSqlOpen */
 
@@ -476,12 +476,12 @@ void LocalRx::activatedCtcss(bool is_activated)
   if (is_activated && (sql_up_det == SQL_DET_CTCSS))
   {
     sql_is_open = true;
-    squelchOpen(true);
+    setSquelchState(true);
   }
   else if (!is_activated && (sql_down_det == SQL_DET_CTCSS))
   {
     sql_is_open = false;
-    squelchOpen(false);
+    setSquelchState(false);
   }
 } /* LocalRx::activatedCtcss */
 
@@ -549,12 +549,12 @@ void LocalRx::sqlPinPoll(Timer *t)
   if (is_activated && (sql_up_det == SQL_DET_SERIAL))
   {
     sql_is_open = true;
-    squelchOpen(true);
+    setSquelchState(true);
   }
   else if (!is_activated && (sql_down_det == SQL_DET_SERIAL))
   {
     sql_is_open = false;
-    squelchOpen(false);
+    setSquelchState(false);
   }
   
 } /* LocalRx::sqlPinPoll */

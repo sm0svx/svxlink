@@ -209,6 +209,13 @@ class Rx : public SigC::Object
      */
     Async::Config& cfg(void) const { return m_cfg; }
     
+    /**
+     * @brief 	Set the state of the squelch
+     * @param	is_open Set to \em true if the squelch is open and to
+     *	      	      	\em false if it is closed.
+     */
+    void setSquelchState(bool is_open);
+    
     
   private:
     Async::Config &m_cfg;

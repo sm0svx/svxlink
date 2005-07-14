@@ -462,7 +462,8 @@ void RepeaterLogic::setUp(bool up)
 
 void RepeaterLogic::squelchOpen(bool is_open)
 {
-  cout << "The squelch is " << (is_open ? "OPEN" : "CLOSED") << endl;
+  //cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
+  //     << endl;
   
   if (repeater_is_up)
   {

@@ -301,7 +301,7 @@ void Voter::satSquelchOpen(bool is_open)
     active_rx = 0;
   }
 
-  squelchOpen(is_open);
+  setSquelchState(is_open);
 
 } /* Voter::satSquelchOpen */
 

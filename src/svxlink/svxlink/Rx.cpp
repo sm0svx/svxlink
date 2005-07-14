@@ -166,7 +166,12 @@ Rx *Rx::create(Config& cfg, const string& name)
  * Bugs:      
  *------------------------------------------------------------------------
  */
-
+void Rx::setSquelchState(bool is_open)
+{
+  cout << m_name << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
+       << endl;
+  squelchOpen(is_open);
+} /* Rx::setSquelchState */
 
 
 
