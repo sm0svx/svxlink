@@ -209,6 +209,7 @@ class LocalRx : public Rx
     SqlDetType sqlDetStrToEnum(const std::string& sql_det_str);
     int audioRead(short *samples, int count);
     void sqlPinPoll(Async::Timer *t);
+    void resetHighpassFilter(void);
     void highpassFilter(short *samples, int count);
 
 };  /* class LocalRx */

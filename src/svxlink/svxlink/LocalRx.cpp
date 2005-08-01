@@ -168,7 +168,7 @@ LocalRx::LocalRx(Config &cfg, const std::string& name)
     ctcss_det(0), ctcss_fq(0), sql_is_open(false), serial(0),
     sql_pin(Serial::PIN_CTS), sql_pin_act_lvl(true)
 {
-  
+  resetHighpassFilter();
 } /* LocalRx::LocalRx */
 
 
@@ -579,6 +579,16 @@ void LocalRx::sqlPinPoll(Timer *t)
 */
 
 #define GAIN   1.361640944e+00
+
+
+void LocalRx::resetHighpassFilter(void)
+{
+  for (int i=0; i<NPOLES+1; ++i)
+  {
+    xv[i] = 0.0;
+    yv[i] = 0.0;
+  }
+} /* LocalRx::resetHighpassFilter */
 
 
 void LocalRx::highpassFilter(short *samples, int count)
