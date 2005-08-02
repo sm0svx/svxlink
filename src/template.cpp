@@ -2,7 +2,7 @@
 @file	 Template.cpp
 @brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2005-05-
+@date	 2005-08-
 
 A_detailed_description_for_this_file
 
@@ -120,7 +120,7 @@ Template::Template(void)
 Template::~Template(void)
 {
   
-} /* Template::Template */
+} /* Template::~Template */
 
 
 

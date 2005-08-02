@@ -2,7 +2,7 @@
 @file	 Template.h
 @brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2005-05-
+@date	 2005-08-
 
 A_detailed_description_for_this_file
 
@@ -110,7 +110,7 @@ namespace MyNameSpace
 /**
 @brief	A_brief_class_description
 @author Tobias Blomberg / SM0SVX
-@date   2005-05-
+@date   2005-08-
 
 A_detailed_class_description
 
