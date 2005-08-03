@@ -439,7 +439,7 @@ bool Serial::getPin(InPin pin, bool &is_set)
       return false;
   }
   
-  int pins;
+  int pins = 0;
   if (ioctl(fd, TIOCMGET, &pins) == -1)
   {
      return false;
