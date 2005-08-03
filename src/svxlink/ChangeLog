@@ -27,6 +27,12 @@
   serve basis. The receiver that signals squelch open first will
   be the receiver that is used. The other receivers are muted.
 
+* Made some changes to the receiver config section:
+    - VOX_HANGTIME renamed to SQL_HANGTIME and it now affects all squelch
+      types.
+    - SQL_UP_DET and SQL_DOWN_DET merged into one config variable SQL_DET.
+    - Renamed SQL_PORT to SERIAL_PORT and SQL_PIN to SERIAL_PIN.
+
 
 
  0.4.0 -- 25 Mar 2005
