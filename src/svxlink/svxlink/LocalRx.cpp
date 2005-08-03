@@ -56,7 +56,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "DtmfDecoder.h"
 #include "ToneDetector.h"
-#include "Vox.h"
+#include "SquelchVox.h"
+#include "SquelchCtcss.h"
+#include "SquelchSerial.h"
 #include "LocalRx.h"
 
 
@@ -164,9 +166,8 @@ class ToneDurationDet : public ToneDetector
  ****************************************************************************/
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
-  : Rx(cfg, name), audio_io(0), is_muted(true), vox(0), dtmf_dec(0),
-    ctcss_det(0), ctcss_fq(0), sql_is_open(false), serial(0),
-    sql_pin(Serial::PIN_CTS), sql_pin_act_lvl(true)
+  : Rx(cfg, name), audio_io(0), is_muted(true), dtmf_dec(0),
+    squelch(0)
 {
   resetHighpassFilter();
 } /* LocalRx::LocalRx */
@@ -174,11 +175,16 @@ LocalRx::LocalRx(Config &cfg, const std::string& name)
 
 LocalRx::~LocalRx(void)
 {
-  delete serial;
-  delete ctcss_det;
+  list<ToneDurationDet*>::iterator it;
+  for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
+  {
+    delete *it;
+  }
+  tone_detectors.clear();
+  
+  delete squelch;
   delete dtmf_dec;
   delete audio_io;
-  delete vox;
 } /* LocalRx::~LocalRx */
 
 
@@ -191,174 +197,45 @@ bool LocalRx::initialize(void)
     return false;
   }
   
-  string sql_up_det_str;
-  if (!cfg().getValue(name(), "SQL_UP_DET", sql_up_det_str))
+  string sql_det_str;
+  if (!cfg().getValue(name(), "SQL_DET", sql_det_str))
   {
-    cerr << "*** ERROR: Config variable " << name() << "/SQL_UP_DET not set\n";
+    cerr << "*** ERROR: Config variable " << name() << "/SQL_DET not set\n";
     return false;
   }
-  sql_up_det = sqlDetStrToEnum(sql_up_det_str);
-  if (sql_up_det == SQL_DET_UNKNOWN)
+
+  if (sql_det_str == "VOX")
   {
-    cerr << "*** ERROR: Config variable " << name() << "/SQL_UP_DET is set to "
-      	 << "an illegal value. Valid values are: VOX, CTCSS\n";
+    squelch = new SquelchVox;
+  }
+  else if (sql_det_str == "CTCSS")
+  {
+    squelch = new SquelchCtcss;
+  }
+  else if (sql_det_str == "SERIAL")
+  {
+    squelch = new SquelchSerial;
+  }
+  else
+  {
+    cerr << "*** ERROR: Unknown squelch type specified in config variable "
+      	 << name() << "/SQL_DET. Legal values are: VOX, CTCSS and SERIAL\n";
     return false;
   }
   
-  string sql_down_det_str;
-  if (!cfg().getValue(name(), "SQL_DOWN_DET", sql_down_det_str))
+  if (!squelch->initialize(cfg(), name()))
   {
-    cerr << "*** ERROR: Config variable " << name()
-      	 << "/SQL_DOWN_DET not set\n";
+    cerr << "*** ERROR: Squelch detector initialization failed for RX \""
+      	 << name() << "\"\n";
+    delete squelch;
+    squelch = 0;
     return false;
-  }
-  sql_down_det = sqlDetStrToEnum(sql_down_det_str);
-  if (sql_down_det == SQL_DET_UNKNOWN)
-  {
-    cerr << "*** ERROR: Config variable " << name()
-      	 << "/SQL_DOWN_DET is set to an illegal value. Valid values are: "
-	 << "VOX, CTCSS\n";
-    return false;
-  }
-
-  string vox_filter_depth;
-  string vox_limit;
-  string vox_hangtime;
-  if ((sql_up_det == SQL_DET_VOX) || (sql_down_det == SQL_DET_VOX))
-  {
-    if (!cfg().getValue(name(), "VOX_FILTER_DEPTH", vox_filter_depth))
-    {
-      cerr << "*** ERROR: Config variable " << name()
-      	   << "/VOX_FILTER_DEPTH not set\n";
-      return false;
-    }
-
-    if (!cfg().getValue(name(), "VOX_LIMIT", vox_limit))
-    {
-      cerr << "*** ERROR: Config variable " << name() << "/VOX_LIMIT not set\n";
-      return false;
-    }
-
-    if (!cfg().getValue(name(), "VOX_HANGTIME", vox_hangtime))
-    {
-      cerr << "*** ERROR: Config variable " << name()
-      	   << "/VOX_HANGTIME not set\n";
-      return false;
-    }
-  }
-    
-  if ((sql_up_det == SQL_DET_CTCSS) || (sql_down_det == SQL_DET_CTCSS))
-  {
-    string ctcss_fq_str;
-    if (cfg().getValue(name(), "CTCSS_FQ", ctcss_fq_str))
-    {
-      ctcss_fq = atoi(ctcss_fq_str.c_str());
-    }
-    if (ctcss_fq <= 0)
-    {
-      cerr << "*** ERROR: Config variable " << name()
-      	   << "/CTCSS_FQ not set or is set to an illegal value\n";
-      return false;
-    }
-  }
-  
-  string sql_port;
-  string sql_pin_str;
-  if ((sql_up_det == SQL_DET_SERIAL) || (sql_down_det == SQL_DET_SERIAL))
-  {
-    if (!cfg().getValue(name(), "SQL_PORT", sql_port))
-    {
-      cerr << "*** ERROR: Config variable " << name() << "/SQL_PORT not set\n";
-      return false;
-    }
-    
-    if (!cfg().getValue(name(), "SQL_PIN", sql_pin_str))
-    {
-      cerr << "*** ERROR: Config variable " << name() << "/SQL_PIN not set\n";
-      return false;
-    }
-    string::iterator colon;
-    colon = find(sql_pin_str.begin(), sql_pin_str.end(), ':');
-    if ((colon == sql_pin_str.end()) || (colon + 1 == sql_pin_str.end()))
-    {
-      cerr << "*** ERROR: Illegal format for config variable " << name()
-      	   << "/SQL_PIN. Should be PINNAME:LEVEL\n";
-      return false;
-    }
-    string pin_str(sql_pin_str.begin(), colon);
-    string pin_act_lvl_str(colon + 1, sql_pin_str.end());
-    if (pin_str == "CTS")
-    {
-      sql_pin = Serial::PIN_CTS;
-    }
-    else if (pin_str == "DSR")
-    {
-      sql_pin = Serial::PIN_DSR;
-    }
-    else if (pin_str == "DCD")
-    {
-      sql_pin = Serial::PIN_DCD;
-    }
-    else if (pin_str == "RI")
-    {
-      sql_pin = Serial::PIN_RI;
-    }
-    else
-    {
-      cerr << "*** ERROR: Illegal pin name for config variable " << name()
-      	   << "/SQL_PIN. Should be CTS, DSR, DCD or RI.\n";
-      return false;
-    }
-    if (pin_act_lvl_str == "SET")
-    {
-      sql_pin_act_lvl = true;
-    }
-    else if (pin_act_lvl_str == "CLEAR")
-    {
-      sql_pin_act_lvl = false;
-    }
-    else
-    {
-      cerr << "*** ERROR: Illegal pin level for config variable " << name()
-      	   << "/SQL_PIN. Should be SET or CLEAR.\n";
-      return false;
-    }
-  }
-    
-  if ((sql_up_det == SQL_DET_SERIAL) || (sql_down_det == SQL_DET_SERIAL))
-  {
-    serial = new Serial(sql_port);
-    if (!serial->open())
-    {
-      delete serial;
-      serial = 0;
-      return false;
-    }
-    sql_pin_poll_timer = new Timer(100, Timer::TYPE_PERIODIC);
-    sql_pin_poll_timer->expired.connect(slot(this, &LocalRx::sqlPinPoll));
   }
     
   audio_io = new AudioIO(audio_dev);
   audio_io->audioRead.connect(slot(this, &LocalRx::audioRead));
-  
-  if ((sql_up_det == SQL_DET_VOX) || (sql_down_det == SQL_DET_VOX))
-  {
-    vox = new Vox(atoi(vox_filter_depth.c_str()));
-    vox->squelchOpen.connect(slot(this, &LocalRx::voxSqlOpen));
-    vox->setVoxLimit(atoi(vox_limit.c_str()));
-    vox->setHangtime(atoi(vox_hangtime.c_str())*8);
-    audio_io->audioRead.connect(slot(vox, &Vox::audioIn));
-  }
-    
-  if ((sql_up_det == SQL_DET_CTCSS) || (sql_down_det == SQL_DET_CTCSS))
-  {
-    ctcss_det = new ToneDetector(ctcss_fq, 2000); // FIXME: Determine optimum N
-    ctcss_det->activated.connect(slot(this, &LocalRx::activatedCtcss));
-    audio_io->audioRead.connect(slot(ctcss_det, &ToneDetector::processSamples));
-  }
-    
+
   dtmf_dec = new DtmfDecoder;
-  audio_io->audioRead.connect(slot(dtmf_dec, &DtmfDecoder::processSamples));
   dtmf_dec->digitDetected.connect(dtmfDigitDetected.slot());
   
   return true;
@@ -394,7 +271,7 @@ void LocalRx::mute(bool do_mute)
 
 bool LocalRx::squelchIsOpen(void) const
 {
-  return sql_is_open;
+  return squelch->isOpen();
 } /* LocalRx::squelchIsOpen */
 
 
@@ -405,7 +282,8 @@ bool LocalRx::addToneDetector(int fq, int bw, int required_duration)
   ToneDurationDet *det = new ToneDurationDet(fq, bw, required_duration);
   assert(det != 0);
   det->detected.connect(toneDetected.slot());
-  audio_io->audioRead.connect(slot(det, &ToneDurationDet::processSamples));
+  
+  tone_detectors.push_back(det);
   
   return true;
 
@@ -444,71 +322,24 @@ bool LocalRx::addToneDetector(int fq, int bw, int required_duration)
  *
  ****************************************************************************/
 
-void LocalRx::voxSqlOpen(bool is_open)
-{
-  if (is_muted)
-  {
-    return;
-  }
-  
-  //printf("Vox squelch is %s...\n", is_open ? "OPEN" : "CLOSED");
-  if (is_open && (sql_up_det == SQL_DET_VOX))
-  {
-    sql_is_open = true;
-    setSquelchState(true);
-  }
-  else if (!is_open && (sql_down_det == SQL_DET_VOX))
-  {
-    sql_is_open = false;
-    setSquelchState(false);
-  }
-} /* LocalRx::voxSqlOpen */
-
-
-void LocalRx::activatedCtcss(bool is_activated)
-{
-  if (is_muted)
-  {
-    return;
-  }
-  
-  //printf("Ctcss %s...\n", is_activated ? "ACTIVATED" : "DEACTIVATED");
-  if (is_activated && (sql_up_det == SQL_DET_CTCSS))
-  {
-    sql_is_open = true;
-    setSquelchState(true);
-  }
-  else if (!is_activated && (sql_down_det == SQL_DET_CTCSS))
-  {
-    sql_is_open = false;
-    setSquelchState(false);
-  }
-} /* LocalRx::activatedCtcss */
-
-
-LocalRx::SqlDetType LocalRx::sqlDetStrToEnum(const string& sql_det_str)
-{
-  if (sql_det_str == "VOX")
-  {
-    return SQL_DET_VOX;
-  }
-  else if (sql_det_str == "CTCSS")
-  {
-    return SQL_DET_CTCSS;
-  }
-  else if (sql_det_str == "SERIAL")
-  {
-    return SQL_DET_SERIAL;
-  }
-
-  return SQL_DET_UNKNOWN;
-  
-} /* LocalRx::sqlDetStrToEnum */
-
-
 int LocalRx::audioRead(short *samples, int count)
 {
-  if (sql_is_open && !is_muted)
+  bool was_open = squelch->isOpen();
+  squelch->audioIn(samples, count);
+  if (!was_open && squelch->isOpen())
+  {
+    setSquelchState(true);
+  }
+  
+  dtmf_dec->processSamples(samples, count);
+  
+  list<ToneDurationDet*>::iterator it;
+  for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
+  {
+    (*it)->processSamples(samples, count);
+  }
+  
+  if (squelch->isOpen() && !is_muted)
   {
     short *filtered = new short[count];
     for (int i=0; i<count; ++i)
@@ -520,44 +351,15 @@ int LocalRx::audioRead(short *samples, int count)
     delete [] filtered;
   }
   
+  if (was_open && !squelch->isOpen())
+  {
+    setSquelchState(false);
+  }
+  
   return count;
   
 } /* LocalRx::audioRead */
 
-
-void LocalRx::sqlPinPoll(Timer *t)
-{
-  if (is_muted)
-  {
-    return;
-  }
-  
-  bool is_set;
-  if (!serial->getPin(sql_pin, is_set))
-  {
-    perror("getPin");
-    return;
-  }
-  bool is_activated = (is_set == sql_pin_act_lvl);
-  
-  if (is_activated == sql_is_open)
-  {
-    return;
-  }
-  
-  //printf("Serial squelch %s...\n", is_activated ? "ACTIVATED" : "DEACTIVATED");
-  if (is_activated && (sql_up_det == SQL_DET_SERIAL))
-  {
-    sql_is_open = true;
-    setSquelchState(true);
-  }
-  else if (!is_activated && (sql_down_det == SQL_DET_SERIAL))
-  {
-    sql_is_open = false;
-    setSquelchState(false);
-  }
-  
-} /* LocalRx::sqlPinPoll */
 
 
 

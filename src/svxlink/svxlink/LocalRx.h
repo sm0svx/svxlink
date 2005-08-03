@@ -50,7 +50,6 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
-#include <AsyncSerial.h>
 
 
 /****************************************************************************
@@ -72,10 +71,10 @@ namespace Async
 {
   class Config;
   class AudioIO;
-  class Timer;
 };
 
 class ToneDurationDet;
+class Squelch;
 
 
 /****************************************************************************
@@ -94,7 +93,6 @@ class ToneDurationDet;
  *
  ****************************************************************************/
 
-class Vox;
 class DtmfDecoder;
 class ToneDetector;
 
@@ -176,39 +174,19 @@ class LocalRx : public Rx
   protected:
     
   private:
-    typedef enum
-    {
-      SQL_DET_UNKNOWN,
-      SQL_DET_VOX,
-      SQL_DET_CTCSS,
-      SQL_DET_SERIAL
-    } SqlDetType;
-    
     static const int  	    NPOLES = 4;
     static const int  	    NZEROS = 4;
     
     Async::AudioIO    	    *audio_io;
     bool      	      	    is_muted;
-    Vox       	      	    *vox;
     DtmfDecoder       	    *dtmf_dec;
     ToneDetector      	    *ctcss_det;
-    int       	      	    ctcss_fq;
-    SqlDetType	      	    sql_up_det;
-    SqlDetType	      	    sql_down_det;
-    bool      	      	    sql_is_open;
-    Async::Serial     	    *serial;
-    Async::Serial::InPin    sql_pin;
-    bool      	      	    sql_pin_act_lvl;
-    Async::Timer      	    *sql_pin_poll_timer;
+    Squelch   	      	    *squelch;
     float     	      	    xv[NZEROS+1];
     float     	      	    yv[NPOLES+1];
     std::list<ToneDurationDet*>  tone_detectors;
     
-    void voxSqlOpen(bool is_open);
-    void activatedCtcss(bool is_activated);
-    SqlDetType sqlDetStrToEnum(const std::string& sql_det_str);
     int audioRead(short *samples, int count);
-    void sqlPinPoll(Async::Timer *t);
     void resetHighpassFilter(void);
     void highpassFilter(short *samples, int count);
 
