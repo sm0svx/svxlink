@@ -146,7 +146,9 @@ class AudioSwitchMatrix
     void connect(const std::string& source_name, const std::string& sink_name);
     void disconnect(const std::string& source_name,
       	    const std::string& sink_name);
-    
+    void disconnectSource(const std::string& source_name);
+    void disconnectSink(const std::string& sink_name);
+
     
   protected:
     

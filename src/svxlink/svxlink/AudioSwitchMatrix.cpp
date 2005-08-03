@@ -171,6 +171,27 @@ void AudioSwitchMatrix::disconnect(const string& source_name,
 } /* AudioSwitchMatrix::disconnect */
 
 
+void AudioSwitchMatrix::disconnectSource(const string& source_name)
+{
+  assert(sources.count(source_name) == 1);
+  AudioSource *source = sources[source_name];
+  AudioSink *sink = source->sink();
+  if (sink == 0) return;
+  sink->flushSamples();
+  sink->unregisterSource();
+} /* AudioSwitchMatrix::disconnectSource */
+
+
+void AudioSwitchMatrix::disconnectSink(const string& sink_name)
+{
+  assert(sinks.count(sink_name) == 1);
+  AudioSink *sink = sinks[sink_name];
+  if (!sink->isRegistered()) return;
+  sink->flushSamples();
+  sink->unregisterSource();
+} /* AudioSwitchMatrix::disconnectSink */
+
+
 
 /****************************************************************************
  *
