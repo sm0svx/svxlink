@@ -138,6 +138,7 @@ class AudioSource
     bool registerSink(AudioSink *sink);
     void unregisterSink(void);
     bool isRegistered(void) const { return m_sink != 0; }
+    AudioSink *sink(void) const { return m_sink; }
     
     virtual void resumeOutput(void) = 0;
     
