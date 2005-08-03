@@ -413,6 +413,8 @@ static void initialize_logics(Config &cfg)
       begin = comma + 1;
     }
     
+    cout << "\nStarting logic: " << logic_name << endl;
+    
     string logic_type;
     if (!cfg.getValue(logic_name, "TYPE", logic_type) || logic_type.empty())
     {
