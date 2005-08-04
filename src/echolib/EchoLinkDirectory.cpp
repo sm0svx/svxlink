@@ -172,6 +172,7 @@ Directory::Directory(const string& server, const string& callsign,
 Directory::~Directory(void)
 {
   delete reg_refresh_timer;
+  delete cmd_timer;
   delete ctrl_con;
 } /* Directory::~Directory */
 
