@@ -16,6 +16,9 @@
 * Start and end of sound playback is now amplitude shaped
   to not create noise at end of playback.
 
+* Bugfix: Forgot to clean up everything when the disconnect
+  method was called.
+
 
 
  0.11.0 -- 25 Mar 2005

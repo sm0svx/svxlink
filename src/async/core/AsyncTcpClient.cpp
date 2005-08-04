@@ -167,6 +167,9 @@ void TcpClient::disconnect(void)
 {
   TcpConnection::disconnect();
 
+  delete wr_watch;
+  wr_watch = 0;
+
   delete dns;
   dns = 0;
   
@@ -289,7 +292,7 @@ void TcpClient::connectToRemote(const IpAddress& ip_addr)
   }
   else
   {
-    wr_watch->setEnabled(false);
+    //wr_watch->setEnabled(false);
     connected();
   }
 
