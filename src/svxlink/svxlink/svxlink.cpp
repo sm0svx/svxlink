@@ -238,9 +238,11 @@ int main(int argc, char **argv)
     }
     else
     {
-      cerr << "*** Error: Could not open config file. Tried both "
+      cerr << "*** ERROR: Could not open config file. Tried both "
       	   << "\"" << home_dir << "/.svxlinkrc\" and "
-	   << "\"/etc/svxlink.conf\"\n";
+	   << "\"/etc/svxlink.conf\". Possible reasons are: None of the files "
+	   << "exist, you do not have permission to read the file or there "
+	   << "was a syntax error in the file\n";
       exit(1);
     }
   }
