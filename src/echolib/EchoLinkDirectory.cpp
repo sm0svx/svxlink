@@ -237,7 +237,7 @@ void Directory::setCallsign(const string& callsign)
 {
   the_callsign.resize(callsign.size());
   transform(callsign.begin(), callsign.end(), the_callsign.begin(), ::toupper);
-  the_callsign = callsign;
+  //the_callsign = callsign;
 } /* Directory::setCall */
 
 
@@ -657,7 +657,10 @@ void Directory::ctrlSockConnected(void)
       
   }
   
+  //cerr << "Connected. Writing: ";
+  //printBuf(reinterpret_cast<const unsigned char *>(cmdstr.c_str()), cmdstr.size());
   ctrl_con->write(cmdstr.c_str(), cmdstr.size());
+  //cerr << "Write returned: " << ret << endl;
 } /* Directory::ctrlSockConnected */
 
 
@@ -667,6 +670,7 @@ int Directory::ctrlSockDataReceived(TcpConnection *con, void *ptr, int len)
   size_t tot_read_len = 0;
   size_t read_len = 0;
 
+  //cerr << "Data received: ";
   //printBuf(reinterpret_cast<unsigned char *>(buf), len);
   
   do
@@ -762,6 +766,8 @@ void Directory::ctrlSockDisconnected(TcpConnection *con,
       error("Directory server receiver buffer overflow!\n");
       break;
   }
+  
+  assert(!cmd_queue.empty());
 
   switch (cmd_queue.front().type)
   {
@@ -784,6 +790,7 @@ void Directory::ctrlSockDisconnected(TcpConnection *con,
 
 void Directory::sendNextCmd(void)
 {
+  //cerr << "Directory::sendNextCmd\n";
   delete cmd_timer;
   cmd_timer = 0;
 
@@ -811,6 +818,7 @@ void Directory::sendNextCmd(void)
     ctrl_con = 0;
     createClientObject();
   }
+  //cerr << "Connecting...\n";
   ctrl_con->connect();
   
 } /* Directory::sendNextCmd */
@@ -847,6 +855,9 @@ void Directory::createClientObject(void)
 
 void Directory::onRefreshRegistration(Timer *timer)
 {
+  //printf("Directory::onRefreshRegistration: cmds=%d  com_state=%d\n",
+	//cmd_queue.size(), com_state);
+
   if (the_status == StationData::STAT_ONLINE)
   {
     makeOnline();
@@ -861,6 +872,7 @@ void Directory::onRefreshRegistration(Timer *timer)
 void Directory::onCmdTimeout(Timer *timer)
 {
   error("Command timeout while communicating to the directory server");
+  //cerr << "Directory::onCmdTimeout: Disconnecting...\n";
   ctrl_con->disconnect();
   cmd_queue.pop_front();
   com_state = CS_IDLE;
