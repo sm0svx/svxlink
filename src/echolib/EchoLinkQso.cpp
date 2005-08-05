@@ -201,7 +201,10 @@ Qso::~Qso(void)
 
 bool Qso::setLocalCallsign(const std::string& callsign)
 {
-  this->callsign = callsign;
+  //this->callsign = callsign;
+  this->callsign.resize(callsign.size());
+  transform(callsign.begin(), callsign.end(), this->callsign.begin(),
+      	   ::toupper);
   if (sdes_packet != 0)
   {
     free(sdes_packet);
