@@ -874,6 +874,21 @@ void Directory::onCmdTimeout(Timer *timer)
   error("Command timeout while communicating to the directory server");
   //cerr << "Directory::onCmdTimeout: Disconnecting...\n";
   ctrl_con->disconnect();
+
+  assert(!cmd_queue.empty());
+
+  switch (cmd_queue.front().type)
+  {
+    case Cmd::OFFLINE:
+    case Cmd::ONLINE:
+    case Cmd::BUSY:
+      setStatus(StationData::STAT_UNKNOWN);
+      break;
+    
+    case Cmd::GET_CALLS:
+      break;
+  }
+
   cmd_queue.pop_front();
   com_state = CS_IDLE;
   sendNextCmd();
