@@ -33,6 +33,11 @@
     - SQL_UP_DET and SQL_DOWN_DET merged into one config variable SQL_DET.
     - Renamed SQL_PORT to SERIAL_PORT and SQL_PIN to SERIAL_PIN.
 
+* It is now possible to link two logic cores together. This can for example
+  be used to link a repeater to another repeater via a link tranceiver.
+  Another use is if you have two repeater logics defined (e.g. 2m and 70cm)
+  you can link those together. The link is activated/deactivated on command.
+
 
 
  0.4.0 -- 25 Mar 2005
