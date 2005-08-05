@@ -155,7 +155,7 @@ bool SquelchVox::initialize(Config& cfg, const string& rx_name)
       	 << "/VOX_FILTER_DEPTH not set\n";
     return false;
   }
-  buf_size = atoi(value.c_str());
+  buf_size = 8000 * atoi(value.c_str()) / 1000;
   buf = new short[buf_size];
   for (int i=0; i<buf_size; ++i)
   {
