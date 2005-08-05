@@ -30,7 +30,7 @@ PRGSRC		= LocalRx.cpp SquelchVox.cpp LocalTx.cpp MsgHandler.cpp \
 		  ToneDetector.cpp DtmfDecoder.cpp Module.cpp AudioPacer.cpp \
 		  Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp \
 		  EventHandler.cpp AudioSource.cpp AudioSink.cpp \
-		  AudioSwitchMatrix.cpp Voter.cpp Rx.cpp
+		  AudioSwitchMatrix.cpp Voter.cpp Rx.cpp CmdParser.cpp
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -lasynccpp
@@ -223,6 +223,10 @@ install-extras uninstall-extras rpm-extras:
 #	$(DIRSPEC) /var/spool/myprog[755,root,root]
 	$(FILESPEC) svxlink.conf[644,root,root] /etc
 	$(FILESPEC) events.tcl[644,root,root] /usr/share/svxlink/sounds
+	$(FILESPEC) RepeaterLogic.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
+	$(FILESPEC) SimplexLogic.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
+	$(FILESPEC) Module.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
+	$(FILESPEC) Logic.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
 
 
 #
