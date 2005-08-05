@@ -709,6 +709,15 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
     }
   }
   
+  if (station->ip() != ip)
+  {
+    cerr << "*** WARNING: Ignoring incoming connection from " << callsign
+      	 << "since the IP address registered in the directory server "
+	 << "(" << station->ip() << ") is not the same as the remote IP "
+	 << "address (" << ip << ") of the incoming connection\n";
+    return;
+  }
+
     // Create a new Qso object to accept the connection
   QsoImpl *qso = new QsoImpl(station, this);
   if (!qso->initOk())
@@ -1062,7 +1071,7 @@ void ModuleEchoLink::updateEventVariables(void)
   stringstream ss;
   ss << qsos.size();
   string var_name(name());
-  var_name +=  "_connected_stations";
+  var_name +=  "::connected_stations";
   setEventVariable(var_name, ss.str());
 } /* ModuleEchoLink::updateEventVariables */
 
