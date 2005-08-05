@@ -278,8 +278,8 @@ bool Config::parseCfgFile(void)
       	char *sec = parseSection(l);
 	if (sec == 0)
 	{
-	  cerr << "*** Config file parse error: Illegal section name syntax "
-	      	  "on line " << line_no << endl;
+	  cerr << "*** ERROR: Configuration file parse error. Illegal section "
+	      	  "name syntax on line " << line_no << endl;
 	  return false;
 	}
 	//printf("New section=%s\n", sec);
@@ -287,8 +287,8 @@ bool Config::parseCfgFile(void)
 	current_tag = "";
 	if (sections.count(current_sec) > 0)
 	{
-	  cerr << "*** Config file parse error: Section previously defined "
-	      	  "on line " << line_no << endl;
+	  cerr << "*** ERROR: Configuration file parse error: Section "
+	      	  "previously defined on line " << line_no << endl;
 	  return false;
 	}
 	sections[current_sec];	// Create a new empty section
@@ -300,16 +300,17 @@ bool Config::parseCfgFile(void)
       	char *val = parseValue(l);
 	if (val == 0)
 	{
-	  cerr << "*** Config file parse error: Illegal value syntax "
-	      	  "on line " << line_no << endl;
+	  cerr << "*** ERROR: Configuration file parse error. Illegal value "
+	      	  "syntax on line " << line_no << endl;
 	  return false;
 	}
 	//printf("Continued line=\"%s\"", val);
 	
 	if (current_tag.empty())
 	{
-	  cerr << "*** Config file parse error: Line continuation without "
-	      	  "previous value on line " << line_no << endl;
+	  cerr << "*** ERROR: Configuration file parse error. Line "
+	      	  "continuation without previous value on line "
+	       << line_no << endl;
 	  return false;
 	}
 	assert(!current_sec.empty());
@@ -325,16 +326,16 @@ bool Config::parseCfgFile(void)
       	string tag, value;
       	if (!parseValueLine(l, tag, value))
 	{
-	  cerr << "*** Config file parse error: Illegal value line syntax "
-	      	  "on line " << line_no << endl;
+	  cerr << "*** ERROR: Configuration file parse error. Illegal value "
+	      	  "line syntax on line " << line_no << endl;
 	  return false;
 	}
 	//printf("tag=\"%s\"  value=\"%s\"\n", tag.c_str(), value.c_str());
 	
 	if (current_sec.empty())
 	{
-	  cerr << "*** Config file parse error: Value without section "
-	      	  "on line " << line_no << endl;
+	  cerr << "*** ERROR: Configuration file parse error. Value without "
+	      	  "section on line " << line_no << endl;
 	  return false;
 	}
 	Values &values = sections[current_sec];
