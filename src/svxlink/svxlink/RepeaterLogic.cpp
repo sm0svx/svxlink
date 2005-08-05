@@ -452,6 +452,7 @@ void RepeaterLogic::setUp(bool up)
     up_timer = 0;
     delete idle_sound_timer;
     idle_sound_timer = 0;
+    disconnectAllLogics();
     processEvent("repeater_down");
   }
   
