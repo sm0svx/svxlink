@@ -25,256 +25,300 @@ proc reportActiveModuleState {} {
 
 
 proc SimplexLogic {} {
-  puts "--- SimplexLogic_startup";
-  SimplexLogic_startup;
+  puts "--- SimplexLogic::startup";
+  SimplexLogic::startup;
   puts "";
 
-  puts "--- SimplexLogic_no_such_module";
-  SimplexLogic_no_such_module 1;
+  puts "--- SimplexLogic::no_such_module";
+  SimplexLogic::no_such_module 1;
   puts "";
 
-  puts "--- SimplexLogic_manual_identification";
-  SimplexLogic_manual_identification;
+  puts "--- SimplexLogic::manual_identification";
+  SimplexLogic::manual_identification;
   puts "";
 
-  puts "--- SimplexLogic_send_rgr_sound";
-  SimplexLogic_send_rgr_sound;
+  puts "--- SimplexLogic::send_rgr_sound";
+  SimplexLogic::send_rgr_sound;
   puts "";
 
-  puts "--- SimplexLogic_no_such_module";
-  SimplexLogic_no_such_module 1;
+  #puts "--- SimplexLogic::no_such_module";
+  #SimplexLogic::no_such_module 1;
+  #puts "";
+
+  puts "--- SimplexLogic::macro_empty";
+  SimplexLogic::macro_empty;
   puts "";
 
-  puts "--- SimplexLogic_macro_empty";
-  SimplexLogic_macro_empty;
+  puts "--- SimplexLogic::macro_not_found";
+  SimplexLogic::macro_not_found;
   puts "";
 
-  puts "--- SimplexLogic_macro_not_found";
-  SimplexLogic_macro_not_found;
+  puts "--- SimplexLogic::macro_syntax_error";
+  SimplexLogic::macro_syntax_error;
   puts "";
 
-  puts "--- SimplexLogic_macro_syntax_error";
-  SimplexLogic_macro_syntax_error;
+  puts "--- SimplexLogic::macro_module_not_found";
+  SimplexLogic::macro_module_not_found;
   puts "";
 
-  puts "--- SimplexLogic_macro_module_not_found";
-  SimplexLogic_macro_module_not_found;
+  puts "--- SimplexLogic::macro_module_activation_failed";
+  SimplexLogic::macro_module_activation_failed;
   puts "";
 
-  puts "--- SimplexLogic_macro_module_activation_failed";
-  SimplexLogic_macro_module_activation_failed;
+  puts "--- SimplexLogic::macro_another_active_module";
+  SimplexLogic::macro_another_active_module;
   puts "";
 
-  puts "--- SimplexLogic_macro_another_active_module";
-  SimplexLogic_macro_another_active_module;
+  puts "--- SimplexLogic::periodic_identify";
+  SimplexLogic::periodic_identify;
   puts "";
 
-  puts "--- SimplexLogic_periodic_identify";
-  SimplexLogic_periodic_identify;
+  puts "--- SimplexLogic::command_failed";
+  SimplexLogic::unknown_command 123;
+  puts "";
+
+  puts "--- SimplexLogic::command_failed";
+  SimplexLogic::command_failed;
+  puts "";
+
+  puts "--- SimplexLogic::activating_link";
+  SimplexLogic::activating_link "TEST";
+  puts "";
+
+  puts "--- SimplexLogic::deactivating_link";
+  SimplexLogic::deactivating_link "TEST";
+  puts "";
+
+  puts "--- SimplexLogic::link_not_active";
+  SimplexLogic::link_not_active "TEST";
+  puts "";
+
+  puts "--- SimplexLogic::link_already_active";
+  SimplexLogic::link_already_active "TEST";
   puts "";
 }
 
 
 proc RepeaterLogic {} {
-  puts "--- RepeaterLogic_startup";
-  RepeaterLogic_startup;
+  puts "--- RepeaterLogic::startup";
+  RepeaterLogic::startup;
   puts "";
 
-  puts "--- RepeaterLogic_no_such_module";
-  RepeaterLogic_no_such_module 1;
+  puts "--- RepeaterLogic::no_such_module";
+  RepeaterLogic::no_such_module 1;
   puts "";
 
-  puts "--- RepeaterLogic_manual_identification";
-  RepeaterLogic_manual_identification;
+  puts "--- RepeaterLogic::manual_identification";
+  RepeaterLogic::manual_identification;
   puts "";
 
-  puts "--- RepeaterLogic_send_rgr_sound";
-  RepeaterLogic_send_rgr_sound;
+  puts "--- RepeaterLogic::send_rgr_sound";
+  RepeaterLogic::send_rgr_sound;
   puts "";
 
-  puts "--- RepeaterLogic_no_such_module";
-  RepeaterLogic_no_such_module 1;
+  #puts "--- RepeaterLogic::no_such_module";
+  #RepeaterLogic::no_such_module 1;
+  #puts "";
+
+  puts "--- RepeaterLogic::macro_empty";
+  RepeaterLogic::macro_empty;
   puts "";
 
-  puts "--- RepeaterLogic_macro_empty";
-  RepeaterLogic_macro_empty;
+  puts "--- RepeaterLogic::macro_not_found";
+  RepeaterLogic::macro_not_found;
   puts "";
 
-  puts "--- RepeaterLogic_macro_not_found";
-  RepeaterLogic_macro_not_found;
+  puts "--- RepeaterLogic::macro_syntax_error";
+  RepeaterLogic::macro_syntax_error;
   puts "";
 
-  puts "--- RepeaterLogic_macro_syntax_error";
-  RepeaterLogic_macro_syntax_error;
+  puts "--- RepeaterLogic::macro_module_not_found";
+  RepeaterLogic::macro_module_not_found;
   puts "";
 
-  puts "--- RepeaterLogic_macro_module_not_found";
-  RepeaterLogic_macro_module_not_found;
+  puts "--- RepeaterLogic::macro_module_activation_failed";
+  RepeaterLogic::macro_module_activation_failed;
   puts "";
 
-  puts "--- RepeaterLogic_macro_module_activation_failed";
-  RepeaterLogic_macro_module_activation_failed;
+  puts "--- RepeaterLogic::macro_another_active_module";
+  RepeaterLogic::macro_another_active_module;
   puts "";
 
-  puts "--- RepeaterLogic_macro_another_active_module";
-  RepeaterLogic_macro_another_active_module;
+  puts "--- RepeaterLogic::command_failed";
+  RepeaterLogic::unknown_command 123;
   puts "";
 
-  puts "--- RepeaterLogic_periodic_identify";
-  RepeaterLogic_periodic_identify;
+  puts "--- RepeaterLogic::command_failed";
+  RepeaterLogic::command_failed;
+  puts "";
+
+  puts "--- RepeaterLogic::activating_link";
+  RepeaterLogic::activating_link "TEST";
+  puts "";
+
+  puts "--- RepeaterLogic::deactivating_link";
+  RepeaterLogic::deactivating_link "TEST";
+  puts "";
+
+  puts "--- RepeaterLogic::link_not_active";
+  RepeaterLogic::link_not_active "TEST";
+  puts "";
+
+  puts "--- RepeaterLogic::link_already_active";
+  RepeaterLogic::link_already_active "TEST";
+  puts "";
+
+  puts "--- RepeaterLogic::periodic_identify";
+  RepeaterLogic::periodic_identify;
   puts "";
   
-  puts "--- RepeaterLogic_repeater_up";
-  RepeaterLogic_repeater_up;
+  puts "--- RepeaterLogic::repeater_up";
+  RepeaterLogic::repeater_up;
   puts "";
   
-  puts "--- RepeaterLogic_repeater_down";
-  RepeaterLogic_repeater_down;
+  puts "--- RepeaterLogic::repeater_down";
+  RepeaterLogic::repeater_down;
   puts "";
   
-  puts "--- RepeaterLogic_repeater_idle";
-  RepeaterLogic_repeater_idle;
+  puts "--- RepeaterLogic::repeater_idle";
+  RepeaterLogic::repeater_idle;
   puts "";
 }
 
 
 proc Help {} {
-  puts "--- Help_activating_module";
-  Help_activating_module;
+  puts "--- Help::activating_module";
+  Help::activating_module;
   puts "";
 
-  puts "--- Help_deactivating_module";
-  Help_deactivating_module;
+  puts "--- Help::deactivating_module";
+  Help::deactivating_module;
   puts "";
 
-  puts "--- Help_timeout";
-  Help_timeout;
+  puts "--- Help::timeout";
+  Help::timeout;
   puts "";
 
-  puts "--- Help_play_help";
-  Help_play_help;
+  puts "--- Help::play_help";
+  Help::play_help;
   puts "";
 
-  puts "--- Help_choose_module";
-  Help_choose_module [list 0 Help 1 Parrot 2 EchoLink];
+  puts "--- Help::choose_module";
+  Help::choose_module [list 0 Help 1 Parrot 2 EchoLink];
   puts "";
 
-  puts "--- Help_no_such_module";
-  Help_no_such_module 1;
-  puts "";
-
-  puts "--- Help_play_help";
-  Help_play_help;
+  puts "--- Help::no_such_module";
+  Help::no_such_module 1;
   puts "";
 }
 
 
 proc Parrot {} {
-  puts "--- Parrot_activating_module";
-  Parrot_activating_module;
+  puts "--- Parrot::activating_module";
+  Parrot::activating_module;
   puts "";
 
-  puts "--- Parrot_deactivating_module";
-  Parrot_deactivating_module;
+  puts "--- Parrot::deactivating_module";
+  Parrot::deactivating_module;
   puts "";
 
-  puts "--- Parrot_timeout";
-  Parrot_timeout;
+  puts "--- Parrot::timeout";
+  Parrot::timeout;
   puts "";
 
-  puts "--- Parrot_play_help";
-  Parrot_play_help;
+  puts "--- Parrot::play_help";
+  Parrot::play_help;
   puts "";
 
-  puts "--- Parrot_spell_digits";
-  Parrot_spell_digits "0123456789";
+  puts "--- Parrot::spell_digits";
+  Parrot::spell_digits "0123456789";
   puts "";
 }
 
 
 proc EchoLink {} {
-  puts "--- EchoLink_activating_module";
-  EchoLink_activating_module;
+  puts "--- EchoLink::activating_module";
+  EchoLink::activating_module;
   puts "";
 
-  puts "--- EchoLink_deactivating_module";
-  EchoLink_deactivating_module;
+  puts "--- EchoLink::deactivating_module";
+  EchoLink::deactivating_module;
   puts "";
 
-  puts "--- EchoLink_timeout";
-  EchoLink_timeout;
+  puts "--- EchoLink::timeout";
+  EchoLink::timeout;
   puts "";
 
-  puts "--- EchoLink_play_help";
-  EchoLink_play_help;
+  puts "--- EchoLink::play_help";
+  EchoLink::play_help;
   puts "";
 
-  puts "--- EchoLink_list_connected_stations";
-  EchoLink_list_connected_stations [list SM0SVX *ECHOTEST* SM3SVX-L SM3SVX-R];
+  puts "--- EchoLink::list_connected_stations";
+  EchoLink::list_connected_stations [list SM0SVX *ECHOTEST* SM3SVX-L SM3SVX-R];
   puts "";
 
-  puts "--- EchoLink_directory_server_offline";
-  EchoLink_directory_server_offline;
+  puts "--- EchoLink::directory_server_offline";
+  EchoLink::directory_server_offline;
   puts "";
 
-  puts "--- EchoLink_no_more_connections_allowed";
-  EchoLink_no_more_connections_allowed;
+  puts "--- EchoLink::no_more_connections_allowed";
+  EchoLink::no_more_connections_allowed;
   puts "";
 
-  puts "--- EchoLink_status_report";
-  EchoLink_status_report;
+  puts "--- EchoLink::status_report";
+  EchoLink::status_report;
   puts "";
 
-  puts "--- EchoLink_station_id_not_found";
-  EchoLink_station_id_not_found 12345;
+  puts "--- EchoLink::station_id_not_found";
+  EchoLink::station_id_not_found 12345;
   puts "";
 
-  puts "--- EchoLink_lookup_failed";
-  EchoLink_lookup_failed 12345;
+  puts "--- EchoLink::lookup_failed";
+  EchoLink::lookup_failed 12345;
   puts "";
 
-  puts "--- EchoLink_self_connect";
-  EchoLink_self_connect;
+  puts "--- EchoLink::self_connect";
+  EchoLink::self_connect;
   puts "";
 
-  puts "--- EchoLink_already_connected_to";
-  EchoLink_already_connected_to SM0SVX;
+  puts "--- EchoLink::already_connected_to";
+  EchoLink::already_connected_to SM0SVX;
   puts "";
 
-  puts "--- EchoLink_internal_error";
-  EchoLink_internal_error;
+  puts "--- EchoLink::internal_error";
+  EchoLink::internal_error;
   puts "";
 
-  puts "--- EchoLink_connecting_to";
-  EchoLink_connecting_to SM0SVX;
-  puts "";
-
-  puts "--- EchoLink_disconnected";
-  EchoLink_disconnected SM0SVX;
-  puts "";
-
-  puts "--- EchoLink_remote_connected";
-  EchoLink_remote_connected SM0SVX;
+  puts "--- EchoLink::connecting_to";
+  EchoLink::connecting_to SM0SVX;
   puts "";
 
   puts "--- EchoLink_disconnected";
-  EchoLink_disconnected SM0SVX;
+  EchoLink::disconnected SM0SVX;
   puts "";
 
-  puts "--- EchoLink_connected";
-  EchoLink_connected;
+  puts "--- EchoLink::remote_connected";
+  EchoLink::remote_connected SM0SVX;
   puts "";
 
-  puts "--- EchoLink_remote_greeting";
-  EchoLink_remote_greeting;
+  puts "--- EchoLink::connected";
+  EchoLink::connected;
   puts "";
 
-  puts "--- EchoLink_reject_remote_connection";
-  EchoLink_reject_remote_connection;
+  puts "--- EchoLink::link_inactivity_timeout";
+  EchoLink::link_inactivity_timeout;
   puts "";
 
-  puts "--- EchoLink_remote_timeout";
-  EchoLink_remote_timeout;
+  puts "--- EchoLink::remote_greeting";
+  EchoLink::remote_greeting;
+  puts "";
+
+  puts "--- EchoLink::reject_remote_connection";
+  EchoLink::reject_remote_connection;
+  puts "";
+
+  puts "--- EchoLink::remote_timeout";
+  EchoLink::remote_timeout;
   puts "";
 }
 
@@ -286,11 +330,12 @@ if {$argc < 1} {
 set mycall "SM0XXX";
 set report_ctcss 136.5;
 set active_module "EchoLink";
-set EchoLink_connected_stations 2;
 set script_path [lindex $argv 0];
 set is_core_event_handler 1;
 
 source [lindex $argv 0];
+
+set EchoLink::num_connected_stations 2;
 
 SimplexLogic;
 RepeaterLogic;
