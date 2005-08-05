@@ -192,6 +192,20 @@ void AudioSwitchMatrix::disconnectSink(const string& sink_name)
 } /* AudioSwitchMatrix::disconnectSink */
 
 
+bool AudioSwitchMatrix::isConnected(const string& source_name,
+      	const string& sink_name)
+{
+  assert(sources.count(source_name) == 1);
+  assert(sinks.count(sink_name) == 1);
+  AudioSource *source = sources[source_name];
+  if (!source->isRegistered()) return false;
+  AudioSink *sink = sinks[sink_name];
+  if (!sink->isRegistered()) return false;
+  
+  return source->sink() == sink;
+  
+} /* AudioSwitchMatrix::isConnected */
+
 
 /****************************************************************************
  *
