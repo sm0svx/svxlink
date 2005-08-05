@@ -193,7 +193,7 @@ proc deactivating_link {name} {
 # link is not currently active.
 #
 proc link_not_active {name} {
-  playMsg "Core" "link_not_active";
+  playMsg "Core" "link_not_active_to";
   spellWord $name;
 }
 
@@ -203,7 +203,7 @@ proc link_not_active {name} {
 # link is already active.
 #
 proc link_already_active {name} {
-  playMsg "Core" "link_already_active";
+  playMsg "Core" "link_already_active_to";
   spellWord $name;
 }
 

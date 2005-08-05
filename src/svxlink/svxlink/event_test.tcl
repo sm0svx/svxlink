@@ -73,12 +73,12 @@ proc SimplexLogic {} {
   SimplexLogic::periodic_identify;
   puts "";
 
-  puts "--- SimplexLogic::command_failed";
+  puts "--- SimplexLogic::unknown_command";
   SimplexLogic::unknown_command 123;
   puts "";
 
   puts "--- SimplexLogic::command_failed";
-  SimplexLogic::command_failed;
+  SimplexLogic::command_failed 123;
   puts "";
 
   puts "--- SimplexLogic::activating_link";
@@ -144,12 +144,12 @@ proc RepeaterLogic {} {
   RepeaterLogic::macro_another_active_module;
   puts "";
 
-  puts "--- RepeaterLogic::command_failed";
+  puts "--- RepeaterLogic::unknown_command";
   RepeaterLogic::unknown_command 123;
   puts "";
 
   puts "--- RepeaterLogic::command_failed";
-  RepeaterLogic::command_failed;
+  RepeaterLogic::command_failed 123;
   puts "";
 
   puts "--- RepeaterLogic::activating_link";
