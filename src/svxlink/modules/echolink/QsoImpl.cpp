@@ -248,7 +248,7 @@ bool QsoImpl::accept(void)
   if (success)
   {
     msg_handler->begin();
-    event_handler->processEvent(string(module->name()) + "_remote_greeting");
+    event_handler->processEvent(string(module->name()) + "::remote_greeting");
     msg_handler->end();
   }
   
@@ -267,7 +267,7 @@ void QsoImpl::reject(void)
     sendChatData("The connection was rejected");
     msg_handler->begin();
     event_handler->processEvent(
-      	    string(module->name()) + "_reject_remote_connection");
+      	    string(module->name()) + "::reject_remote_connection");
     msg_handler->end();
   }
 } /* QsoImpl::reject */
@@ -448,7 +448,7 @@ void QsoImpl::idleTimeoutCheck(Timer *t)
     module->processEvent("link_inactivity_timeout");
     disc_when_done = true;
     msg_handler->begin();
-    event_handler->processEvent(string(module->name()) + "_remote_timeout");
+    event_handler->processEvent(string(module->name()) + "::remote_timeout");
     msg_handler->end();
   }
 } /* idleTimeoutCheck */
