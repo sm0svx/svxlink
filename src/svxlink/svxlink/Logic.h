@@ -65,6 +65,7 @@ An example of how to use the Template class
 #include "SigCAudioSource.h"
 #include "SigCAudioSink.h"
 #include "AudioSwitchMatrix.h"
+#include "CmdParser.h"
 
 
 
@@ -105,6 +106,7 @@ class Module;
 class EventHandler;
 class SigCAudioSource;
 class SigCAudioSink;
+class Command;
   
 
 /****************************************************************************
@@ -141,8 +143,12 @@ A_detailed_class_description
 class Logic : public SigC::Object
 {
   public:
-    static void connectLogics(const std::string& l1, const std::string& l2);
-    
+    static void connectLogics(const std::string& l1, const std::string& l2,
+      	    int timeout=0);
+    static void disconnectLogics(const std::string& l1, const std::string& l2);
+    static bool logicsAreConnected(const std::string& l1,
+      	    const std::string& l2);
+
     /**
      * @brief 	Default constuctor
      */
@@ -184,6 +190,8 @@ class Logic : public SigC::Object
     Async::Config &cfg(void) const { return m_cfg; }
     Rx &rx(void) const { return *m_rx; }
     Tx &tx(void) const { return *m_tx; }
+    
+    void disconnectAllLogics(void);
     
   protected:    
     virtual void squelchOpen(bool is_open);
@@ -228,6 +236,7 @@ class Logic : public SigC::Object
     SigCAudioSource       	logic_con_out;
     SigCAudioSink 	      	logic_con_in;
     bool      	      	      	remote_logic_tx;
+    CmdParser 	      	      	cmd_parser;
     
     void allModuleSamplesWritten(void);
     void transmitCheck(void);

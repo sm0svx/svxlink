@@ -41,6 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cctype>
 #include <cassert>
 #include <sstream>
+#include <map>
 
 
 /****************************************************************************
@@ -66,6 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "LocalRx.h"
 #include "LocalTx.h"
 #include "Voter.h"
+#include "LogicCmds.h"
 #include "Logic.h"
 
 
@@ -77,6 +79,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
+using namespace SigC;
 
 
 
@@ -122,18 +125,33 @@ using namespace Async;
 AudioSwitchMatrix Logic::audio_switch_matrix;
 
 
-
 /****************************************************************************
  *
  * Public member functions
  *
  ****************************************************************************/
 
-void Logic::connectLogics(const string& l1, const string& l2)
+void Logic::connectLogics(const string& l1, const string& l2, int timeout)
 {
+  cout << "Activating link " << l1 << " <--> " << l2 << endl;
   audio_switch_matrix.connect(l1, l2);
   audio_switch_matrix.connect(l2, l1);
 } /* Logic::connectLogics */
+
+
+void Logic::disconnectLogics(const string& l1, const string& l2)
+{
+  cout << "Deactivating link " << l1 << " <--> " << l2 << endl;
+  audio_switch_matrix.disconnect(l1, l2);
+  audio_switch_matrix.disconnect(l2, l1);
+} /* Logic::connectLogics */
+
+
+bool Logic::logicsAreConnected(const string& l1, const string& l2)
+{
+  return audio_switch_matrix.isConnected(l1, l2);
+} /* Logic::logicsAreConnected */
+
 
 
 Logic::Logic(Config &cfg, const string& name)
@@ -144,7 +162,7 @@ Logic::Logic(Config &cfg, const string& name)
     rgr_sound_timer(0), rgr_sound_delay(-1), report_ctcss(0), event_handler(0),
     remote_logic_tx(false)
 {
-
+  
 } /* Logic::Logic */
 
 
@@ -173,6 +191,12 @@ bool Logic::initialize(void)
   string event_handler_str;
   list<string> macro_list;
   list<string>::iterator mlit;
+  
+  if (cfg().getValue(name(), "LINKS", value))
+  {
+    LinkCmd *link_cmd = new LinkCmd(&cmd_parser, this);
+    link_cmd->initialize(cfg(), value);
+  }
   
   if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
   {
@@ -307,11 +331,11 @@ void Logic::processEvent(const string& event, const Module *module)
   msg_handler->begin();
   if (module == 0)
   {
-    event_handler->processEvent(name() + "_" + event);
+    event_handler->processEvent(name() + "::" + event);
   }
   else
   {
-    event_handler->processEvent(string(module->name()) + "_" + event);
+    event_handler->processEvent(string(module->name()) + "::" + event);
   }
   msg_handler->end();
 }
@@ -506,6 +530,14 @@ void Logic::dtmfDigitDetected(char digit)
   }
     
 } /* Logic::dtmfDigitDetected */
+
+
+void Logic::disconnectAllLogics(void)
+{
+  cout << "Deactivating all links to/from \"" << name() << "\"\n";
+  audio_switch_matrix.disconnectSource(name());
+  audio_switch_matrix.disconnectSink(name());
+} /* Logic::disconnectAllLogics */
 
 
 
@@ -735,7 +767,8 @@ void Logic::loadModules(void)
 
 void Logic::loadModule(const string& module_cfg_name)
 {
-  cout << "Loading module \"" << module_cfg_name << "\"\n";
+  cout << "Loading module \"" << module_cfg_name << "\" into logic \""
+       << name() << "\"\n";
 
   string module_path;
   if (!cfg().getValue("GLOBAL", "MODULE_PATH", module_path))
@@ -792,6 +825,10 @@ void Logic::loadModule(const string& module_cfg_name)
   
   modules.push_back(module);
   
+  stringstream ss;
+  ss << module->id();
+  new ModuleActivateCmd(&cmd_parser, ss.str(), this);
+  
 } /* Logic::loadModule */
 
 
@@ -838,23 +875,29 @@ void Logic::processCommandQueue(void)
     {
       active_module->dtmfCmdReceived(*it);
     }
-    else
+    else if (!(*it).empty())
     {
-      if (!(*it).empty())
+      if (!cmd_parser.processCmd(*it))
       {
-	int module_id = atoi((*it).c_str());
-	Module *module = findModule(module_id);
-	if (module != 0)
-	{
-	  activateModule(module);
-	}
-	else
-	{
-	  stringstream ss;
-	  ss << "no_such_module " << module_id;
-	  processEvent(ss.str());
-	}
+      	stringstream ss;
+	ss << "unknown_command " << *it;
+      	processEvent(ss.str());
       }
+      
+      /*
+      int module_id = atoi((*it).c_str());
+      Module *module = findModule(module_id);
+      if (module != 0)
+      {
+	activateModule(module);
+      }
+      else
+      {
+	stringstream ss;
+	ss << "no_such_module " << module_id;
+	processEvent(ss.str());
+      }
+      */
     }
   }
   
@@ -882,8 +925,9 @@ void Logic::processMacroCmd(string& cmd)
     processEvent("macro_not_found");
     return;
   }
-
   string macro(it->second);
+  cout << "Macro command found: \"" << macro << "\"\n";
+
   string::iterator colon = find(macro.begin(), macro.end(), ':');
   if (colon == macro.end())
   {
@@ -962,8 +1006,9 @@ int Logic::remoteLogicWriteSamples(const short *samples, int len)
   }
   short *buf = new short[len];
   memcpy(buf, samples, len * sizeof(*samples));
-  return transmitAudio(buf, len);
+  int cnt = transmitAudio(buf, len);
   delete [] buf;
+  return cnt;
 } /* Logic::remoteLogicWriteSamples */
 
 
