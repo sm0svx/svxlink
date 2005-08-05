@@ -188,6 +188,17 @@ class IpAddress
     }
     
     /**
+     * @brief 	Unequality operator
+     * @param 	rhs Right hand side expression
+     * @return  Returns \em true if the right hand side object is
+     *          unequal to this object, or else returns \em false.
+     */
+    bool operator!=(const IpAddress& rhs) const
+    {
+      return !(*this == rhs);
+    }
+    
+    /**
      * @brief 	Less than operator
      * @param 	rhs Right hand side expression
      * @return  Returns \em true if the right hand side object is

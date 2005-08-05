@@ -19,6 +19,8 @@
 * Bugfix: Forgot to clean up everything when the disconnect
   method was called.
 
+* Added an unequality operator to the Async::IpAddress class.
+
 
 
  0.11.0 -- 25 Mar 2005
