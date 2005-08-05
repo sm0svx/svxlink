@@ -3,7 +3,7 @@ QTEL=0.9.0
 QTEL_RPM_RELEASE=1
 
 # Version for the EchoLib library
-ECHOLIB=0.10.1rc1
+ECHOLIB=0.10.1rc2
 ECHOLIB_RPM_RELEASE=1
 
 # Version for the Async library
