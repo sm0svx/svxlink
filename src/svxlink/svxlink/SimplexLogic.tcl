@@ -148,6 +148,14 @@ proc link_already_active {name} {
 }
 
 
+#
+# Executed once every whole minute
+#
+proc every_minute {} {
+  Logic::every_minute;
+}
+
+
 
 # end of namespace
 }

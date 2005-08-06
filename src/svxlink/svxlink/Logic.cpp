@@ -160,7 +160,7 @@ Logic::Logic(Config &cfg, const string& name)
     cmd_tmo_timer(0), logic_transmit(false), anti_flutter(false),
     prev_digit('?'), exec_cmd_on_sql_close(0), exec_cmd_on_sql_close_timer(0),
     rgr_sound_timer(0), rgr_sound_delay(-1), report_ctcss(0), event_handler(0),
-    remote_logic_tx(false)
+    remote_logic_tx(false), every_minute_timer(0)
 {
   
 } /* Logic::Logic */
@@ -179,6 +179,7 @@ Logic::~Logic(void)
   delete m_rx;
   delete rgr_sound_timer;
   delete event_handler;
+  delete every_minute_timer;
 } /* Logic::~Logic */
 
 
@@ -309,6 +310,8 @@ bool Logic::initialize(void)
   audio_switch_matrix.addSink(name(), &logic_con_in);
   
   processEvent("startup");
+  
+  everyMinute(0);
   
   return true;
   
@@ -1028,6 +1031,20 @@ int Logic::audioReceived(short *samples, int len)
   return len;
 } /* Logic::audioReceived */
 
+
+void Logic::everyMinute(Timer *t)
+{
+  if (t != 0)
+  {
+    processEvent("every_minute");
+    delete every_minute_timer;
+  }
+  
+  int seconds = 60 - (time(NULL) % 60);
+  every_minute_timer = new Timer(1000 * seconds);
+  every_minute_timer->expired.connect(slot(this, &Logic::everyMinute));
+  
+} /* Logic::everyMinute */
 
 
 /*

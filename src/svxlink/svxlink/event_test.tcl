@@ -96,6 +96,10 @@ proc SimplexLogic {} {
   puts "--- SimplexLogic::link_already_active";
   SimplexLogic::link_already_active "TEST";
   puts "";
+
+  puts "--- SimplexLogic::every_minute";
+  SimplexLogic::every_minute;
+  puts "";
 }
 
 
@@ -144,6 +148,10 @@ proc RepeaterLogic {} {
   RepeaterLogic::macro_another_active_module;
   puts "";
 
+  puts "--- RepeaterLogic::periodic_identify";
+  RepeaterLogic::periodic_identify;
+  puts "";
+  
   puts "--- RepeaterLogic::unknown_command";
   RepeaterLogic::unknown_command 123;
   puts "";
@@ -168,10 +176,10 @@ proc RepeaterLogic {} {
   RepeaterLogic::link_already_active "TEST";
   puts "";
 
-  puts "--- RepeaterLogic::periodic_identify";
-  RepeaterLogic::periodic_identify;
+  puts "--- RepeaterLogic::every_minute";
+  RepeaterLogic::every_minute;
   puts "";
-  
+
   puts "--- RepeaterLogic::repeater_up";
   RepeaterLogic::repeater_up;
   puts "";

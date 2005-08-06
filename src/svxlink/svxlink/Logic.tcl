@@ -208,6 +208,13 @@ proc link_already_active {name} {
 }
 
 
+#
+# Executed once every whole minute
+#
+proc every_minute {} {
+  #puts "Hello, SvxLink!";
+}
+
 
 # end of namespace
 }

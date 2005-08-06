@@ -46,7 +46,7 @@ proc manual_identification {} {
   if {$active_module != ""} {
     playMsg "Core" "active_module";
     playMsg $active_module "name";
-    append func $active_module "_status_report";
+    append func $active_module "::status_report";
     if {"[info procs $func]" ne ""} {
       $func;
     }
@@ -183,6 +183,14 @@ proc link_already_active {name} {
 
 
 #
+# Executed once every whole minute
+#
+proc every_minute {} {
+  Logic::every_minute;
+}
+
+
+#
 # Executed when the repeater is activated
 #
 proc repeater_up {} {
@@ -248,6 +256,7 @@ proc repeater_idle {} {
     playTone 1200 [expr {round(pow($base, $i) * 800 / $max)}] 100;
   }
 }
+
 
 
 # end of namespace

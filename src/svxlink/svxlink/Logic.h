@@ -237,6 +237,7 @@ class Logic : public SigC::Object
     SigCAudioSink 	      	logic_con_in;
     bool      	      	      	remote_logic_tx;
     CmdParser 	      	      	cmd_parser;
+    Async::Timer      	      	*every_minute_timer;
     
     void allModuleSamplesWritten(void);
     void transmitCheck(void);
@@ -251,7 +252,8 @@ class Logic : public SigC::Object
     int remoteLogicWriteSamples(const short *samples, int len);
     void remoteLogicFlushSamples(void);
     int audioReceived(short *samples, int len);
-
+    void everyMinute(Async::Timer *t);
+    
 };  /* class Logic */
 
 
