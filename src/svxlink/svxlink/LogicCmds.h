@@ -259,6 +259,7 @@ class LinkCmd : public Command
 	}
       	logic->processEvent(ss.str());
       }
+      /*
       else if (subcmd == "2")
       {
 	std::stringstream ss;
@@ -273,6 +274,7 @@ class LinkCmd : public Command
 	}
       	logic->processEvent(ss.str());
       }
+      */
       else
       {
       	std::stringstream ss;
