@@ -32,6 +32,8 @@
       types.
     - SQL_UP_DET and SQL_DOWN_DET merged into one config variable SQL_DET.
     - Renamed SQL_PORT to SERIAL_PORT and SQL_PIN to SERIAL_PIN.
+    - VOX_FILER_DEPTH is now given in milliseconds instead of in number
+      of samples.
 
 * It is now possible to link two logic cores together. This can for example
   be used to link a repeater to another repeater via a link tranceiver.
