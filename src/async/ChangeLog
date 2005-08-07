@@ -16,8 +16,8 @@
 * Start and end of sound playback is now amplitude shaped
   to not create noise at end of playback.
 
-* Bugfix: Forgot to clean up everything when the disconnect
-  method was called.
+* Bugfix: Forgot to clean up everything when the
+  Async::TcpClient::disconnect method was called.
 
 * Added an unequality operator to the Async::IpAddress class.
 
