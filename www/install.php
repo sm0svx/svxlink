@@ -180,6 +180,10 @@ digits are detected. If not, try to adjust the input level up or down and try
 again.
 
 
+<A name="event-subsystem"><h2>The Event Handling Subsystem</h2></A>
+*** To be written ***
+
+
 <A name="server-config"><h2>SvxLink server configuration</h2></A>
 During the svxlink-server package installation the <em>/etc/svxlink.conf</em>
 default configuration file is installed. Optionally, copy this file to the
@@ -235,10 +239,10 @@ application global configuration data.
 
 The next section is the <b>SimlexLogic</b> section. This section contains
 configuration data for a simplex logic core. The SvxLink server can handle
-more than one logic core. However, no real tests have been performed with
-more than one core. The name of the section, which in this case is
+more than one logic core. The name of the section, which in this case is
 SimplexLogic, must have a corresponding list item in the GLOBAL/LOGICS config
-variable for this logic core to be activated.
+variable for this logic core to be activated. The name "SimplexLogic" is not
+magic. It could be called what ever you want.
 
 <DL>
   <DT>TYPE</DT>
@@ -249,28 +253,27 @@ variable for this logic core to be activated.
   
   <DT>RX</DT>
   <DD>
-    Specify the section name of the receiver to use.
+    Specify the configuration section name of the receiver to use. All
+    configuration for the receiver is done in the specified configuration
+    section.
   </DD>
   
   <DT>TX</DT>
   <DD>
-    Specify the section name of the transmitter to use.
+    Specify the configuration section name of the transmitter to use. All
+    configuration for the trasceiver is done in the specified configuration
+    section.
   </DD>
   
   <DT>MODULES</DT>
   <DD>
-    Specify a comma separated list of sections for the modules to load.
+    Specify a comma separated list of configuration sections for the modules
+    to load.
   </DD>
   
   <DT>CALLSIGN</DT>
   <DD>
     Specify the callsign that should be announced on the radio interface.
-  </DD>
-  
-  <DT>SOUNDS</DT>
-  <DD>
-    Specify the path to the directory where the sound samples are stored. The
-    default is /usr/share/svxlink/sounds.
   </DD>
   
   <DT>IDENT_INTERVAL</DT>
@@ -309,6 +312,12 @@ variable for this logic core to be activated.
     when all of a sudden a module gets activated.
   </DD>
   
+  <DT>EVENT_HANDLER</DT>
+  <DD>
+    Point out the TCL event handler script to use. Read more about the event
+    handling subsystem above.
+  </DD>
+  
   <DT>RGR_SOUND_DELAY</DT>
   <DD>
     The number of milliseconds to wait after the squelch has been closed before
@@ -328,15 +337,15 @@ variable for this logic core to be activated.
   <DD>
     Point out a section that contains the macros that should be used by this
     logic core. See the section description for macros below for more info.
-  </DD>  
+  </DD>
 </DL>
 
 The next section is the <b>RepeaterLogic</b> section. This section contains
 configuration data for a repeater logic core. The SvxLink server can handle
-more than one logic core. However, no real tests have been performed with
-more than one core. The name of the section, which in this case is
+more than one logic core. The name of the section, which in this case is
 RepeaterLogic, must have a corresponding list item in the GLOBAL/LOGICS
-config variable for this logic core to be activated.
+config variable for this logic core to be activated. The name "RepeaterLogic"
+is not magic. It could be called what ever you want.
 
 <DL>
   <DT>TYPE</DT>
@@ -347,28 +356,27 @@ config variable for this logic core to be activated.
   
   <DT>RX</DT>
   <DD>
-    Specify the section name of the receiver to use.
+    Specify the configuration section name of the receiver to use. All
+    configuration for the receiver is done in the specified configuration
+    section.
   </DD>
   
   <DT>TX</DT>
   <DD>
-    Specify the section name of the transmitter to use.
+    Specify the configuration section name of the transmitter to use. All
+    configuration for the trasceiver is done in the specified configuration
+    section.
   </DD>
   
   <DT>MODULES</DT>
   <DD>
-    Specify a comma separated list of sections for the modules to load.
+    Specify a comma separated list of configuration sections for the modules
+    to load.
   </DD>
   
   <DT>CALLSIGN</DT>
   <DD>
     Specify the callsign that should be announced on the radio interface.
-  </DD>
-  
-  <DT>SOUNDS</DT>
-  <DD>
-    Specify the path to the directory where the sound samples are stored. The
-    default is /usr/share/svxlink/sounds.
   </DD>
   
   <DT>EXEC_CMD_ON_SQL_CLOSE</DT>
@@ -382,11 +390,10 @@ config variable for this logic core to be activated.
     when all of a sudden a module gets activated.
   </DD>
 
-  <DT>RGR_SOUND_DELAY</DT>
+  <DT>EVENT_HANDLER</DT>
   <DD>
-    The number of milliseconds to wait after the squelch has been closed before
-    a roger beep is played. The beep can be disabled by specifying a value
-    of -1.
+    Point out the TCL event handler script to use. Read more about the event
+    handling subsystem above.
   </DD>
   
   <DT>IDLE_TIMEOUT</DT>
@@ -395,23 +402,58 @@ config variable for this logic core to be activated.
     transmitter off.
   </DD>
   
-  <DT>REQUIRED_1750_DURATION</DT>
+  <DT>OPEN_ON_1750</DT>
   <DD>
-    The number of milliseconds a 1750 Hz tone must be asserted before the
-    repeater is opened. A value of 0 will disable 1750 Hz repeater opening.
+    Use this configuration variable if it should be possible to open the
+    repeater with a 1750Hz tone burst. Specify the number of milliseconds
+    the tone must be asserted before the repeater is opened. A value of
+    0 will disable 1750 Hz repeater opening.
+  </DD>
+  
+  <DT>OPEN_ON_CTCSS</DT>
+  <DD>
+    Use this configuration variable if it should be possible to open the
+    repeater with a CTCSS tone (PL). The syntax of the value is
+    tone_fq:min_length. The tone frequency is specified in whole Hz and the
+    minimum tone length is specified in milliseconds. For examples if a 136.5
+    Hz tone must be asserted for two seconds for the repeater to open, the
+    value 136:2000 should be specified.
+  </DD>
+  
+  <DT>OPEN_ON_DTMF</DT>
+  <DD>
+    Use this configuration variable if it should be possible to open the
+    repeater with a DTMF digit. Only one digit can be specified. DTMF digits
+    pressed when the repeater is down will be ignored.
+  </DD>
+  
+  <DT>OPEN_ON_SQL</DT>
+  <DD>
+    Use this configuration variable if it should be possible to open the
+    repeater just by keeping the squelch open for a while. The value to set
+    is the minimum number of millisecons the squelch must be open for the
+    repeater to open.
   </DD>
   
   <DT>IDENT_INTERVAL</DT>
   <DD>
-    The number of seconds between identification. The repeater will only
-    identify itself periodically when it is down.
+    The number of seconds between identification. For now, the repeater will
+    only identify itself periodically when it is down.
   </DD>
 
   <DT>IDLE_SOUND_INTERVAL</DT>
   <DD>
     When the repeater is idle, a sound is played. Specify the interval in
-    milliseconds between playing the idle sound.
+    milliseconds between playing the idle sound. An interval of 0 disables
+    the idle sound.
   </DD>  
+  
+  <DT>RGR_SOUND_DELAY</DT>
+  <DD>
+    The number of milliseconds to wait after the squelch has been closed before
+    a roger beep is played. The beep can be disabled by specifying a value
+    of -1.
+  </DD>
   
   <DT>REPORT_CTCSS</DT>
   <DD>
@@ -434,7 +476,7 @@ configuration variable. A macro is a kind of shortcut that can be used to
 decrease the amount of key presses that have to be done to connect to common
 EchoLink stations for example. On the radio side, macros are activated by
 pressing "D" "macro number" "#". A macros section can look something like the
-example below.
+example below. Note that the module name is case sensitive.
 
 <PRE>
 [Macros]
@@ -447,78 +489,112 @@ For example, pressing DTMF sequence "D1#" will activate the EchoLink module
 and connect to the EchoTest conference node.
 <P>
 
-A receiver section (called <b>Rx1</b> in the default configuration file) is
-used to specify the configuration for a receiver.
+A receiver section is used to specify the configuration for a receiver.
+Right now there are two types of receivers: Local and Voter. Type Local is
+the normal thing to use for a receiver connected to the sound card. An example
+of a configuration section for a Local receiver is shown below. In the default
+configuration file there is a Local configuration section called <b>Rx1</b>.
 
 <DL>
+  <DT>TYPE</DT>
+  <DD>
+    Always "Local" for a local receiver.
+  </DD>
+  
   <DT>AUDIO_DEV</DT>
   <DD>
     Specify the audio device to use. Normally <em>/dev/dsp</em>.
   </DD>
 
+  <DT>SQL_DET</DT>
+  <DD>
+    Specify the type of squelch detector to use. Possible values are: VOX,
+    CTCSS or SERIAL. The <b>VOX</b> squelch detector determines if there is a
+    signal present by calculating a mean value of the sound samples. The VOX
+    squelch detector behaviour is adjusted with VOX_FILTER_DEPTH and
+    VOX_LIMIT.<BR/>
+    The <b>CTCSS</b> squelch detector checks for the precense of a tone with
+    the specified frequency. The tone frequency is specified with CTCSS_FQ.<br/>
+    The <b>SERIAL</b> squelch detector use a pin in a serial port to detect
+    if the squelch is open. This squelch detector can be used if the receiver
+    have an external hardware indicator of when the squelch is open. Specify
+    which serial port/pin to use with SERIAL_PORT and SERIAL_PIN.
+  </DD>
+  
+  <DT>SQL_HANGTIME</DT>
+  <DD>
+    How long, in milliseconds, the squelch will stay open after the detector
+    has indicated that it is closed.
+  </DD>
+  
   <DT>VOX_FILTER_DEPTH</DT>
   <DD>
-    The number of samples to use for calculating the mean value.
+    The number of milliseconds to create the mean value over. A small value
+    will make the vox react quicker (<500) and larger values will make it
+    a little bit more sluggish. A small value is often better.
   </DD>
 
   <DT>VOX_LIMIT</DT>
   <DD>
     The threshold that the mean value of the samples must exceed for the
-    squlech to be considered open.
-  </DD>
-
-  <DT>VOX_HANGTIME</DT>
-  <DD>
-    How long, in milliseconds, the squelch will stay open efter the sample
-    mean value have fallen below the threshold (VOX_LIMIT).
-  </DD>
-  
-  <DT>SQL_UP_DET</DT>
-  <DD>
-    Specify the type of squelch to use to detect that the squelch is open.
-    That is, detecting when the squelch goes from closed to opened.
-    Possible values are: VOX or CTCSS.
-  </DD>
-
-  <DT>SQL_DOWN_DET</DT>
-  <DD>
-    Specify the type of squelch to use to detect that the squelch is closed.
-    That is, detecting when the squelch goes from opened to closed.
-    Possible values are: VOX or CTCSS.
+    squlech to be considered open. It's hard to say what is a good value.
+    Something around 1000 is probably a good value. Set it as low as
+    possible without getting the vox to false trigger.
   </DD>
 
   <DT>CTCSS_FQ</DT>
   <DD>
-    If CTCSS (PL,subtone) squelch is used (SQL_DOWN_DET and/or SQL_UP_DET is set
-    to CTCSS), this config variable sets the frequency of the tone to use.
+    If CTCSS (PL,subtone) squelch is used (SQL_DET is set to CTCSS), this
+    config variable sets the frequency of the tone to use.
     The tone frequency ranges from 67.0 to 254.1 Hz.
     The detector is not very exact so it will detect tones that is near the
     specified tone. Only whole Hz can be specifid so the value should be in the
     range 67 to 254 Hz.
   </DD>
 
-  <DT>SQL_PORT</DT>
+  <DT>SERIAL_PORT</DT>
   <DD>
-    If SQL_UP_DET or SQL_DOWN_DET is set to SERIAL, this config variable
-    determines which serial port should be used for hardware squelch input
-    (COS - Carrier Operated Squelch).<BR/>
+    If SQL_DET is set to SERIAL, this config variable determines which serial
+    port should be used for hardware squelch input (COS - Carrier Operated
+    Squelch).<BR/>
     Note: If the same serial port is used for the PTT, make sure you specify
     exactly the same device name. Otherwise the RX and TX will not be able
     to share the port.<BR/>
     Example: SQL_PORT=/dev/ttyS0
   </DD>
 
-  <DT>SQL_PIN</DT>
+  <DT>SERIAL_PIN</DT>
   <DD>
-    If SQL_UP_DET or SQL_DOWN_DET is set to SERIAL, this config variable
-    determines which pin in the serial port that should be used for hardware
-    squelch input (COS - Carrier Operated Squelch). It is possible to use
+    If SQL_DET is set to SERIAL, this config variable determines which pin in
+    the serial port that should be used for hardware squelch input
+    (COS - Carrier Operated Squelch). It is possible to use
     the DCD, CTS, DSR or RI pin. The squelch-open-level must also be specified.
     This is done using the syntax SQL_PIN=PIN:LEVEL, where PIN is one of the
     pins above and LEVEL is either SET or CLEAR.<BR/>
     Example: SQL_PIN=CTS:SET
   </DD>
 </DL>
+
+
+Receiver type "Voter" is a "receiver" that combines multiple receivers and
+selects one of them to take audio from when the squelch opens. A real voter
+selects the receiver that have the best signal strength. For now, this voter
+selects the receiver where the squelch opens first. The plan is to implement
+a signal strength detector in the future.
+
+<DL>
+  <DT>TYPE</DT>
+  <DD>
+    Always "Voter" for for a voter.
+  </DD>
+  
+  <DT>RECEIVERS</DT>
+  <DD>
+    Specify a comma separated list of receivers that the voter should use.
+    Example: RECEIVERS=Rx1,Rx2,Rx3
+  </DD>
+</DL>
+
 
 A transmitter section (called <b>Tx1</b> in the default configuration file) is
 used to specify the configuration for a transmitter.
@@ -544,7 +620,10 @@ used to specify the configuration for a transmitter.
   <DD>
     This is a feature that will prevent the transmitter from getting stuck
     transmitting. Specify the number of seconds before the transmitter is turned
-    off.
+    off. Note that this is a low level security mechanism that is meant to
+    only kick in if there is a software bug in SvxLink. Just so that the
+    transmitter will not transmit indefinately. It is not meant to be used to
+    keep people from talking too long.
   </DD>
   
   <DT>TX_DELAY</DT>
@@ -634,7 +713,10 @@ Specific configuration variables for the <b>EchoLink</b> module.
 
   <DT>LOCATION</DT>
   <DD>
-    The location of the station.
+    The location of the station.<BR/>
+    Note: In the default configuration file the value of this configuration
+    variable starts with "[Svx]". This is ofcource not necessary but it's fun
+    to see which other stations are running SvxLink.
   </DD>
 
   <DT>MAX_QSOS</DT>
@@ -642,14 +724,6 @@ Specific configuration variables for the <b>EchoLink</b> module.
     The maximum number of stations that can participate in a conference QSO
     on this node. If more stations try to connect, the connect request will
     be rejected.
-  </DD>
-
-  <DT>LINK_IDLE_TIMEOUT</DT>
-  <DD>
-    The number of seconds that a connection is idle before disconnection
-    will occur. This is to prevent a link to stay open if someone forgets
-    to disconnect. Disable this feature by setting this config variable
-    to zero (or comment it out).
   </DD>
 
   <DT>MAX_CONNECTIONS</DT>
@@ -663,9 +737,19 @@ Specific configuration variables for the <b>EchoLink</b> module.
     using a large number for MAX_QSOS.
   </DD>
 
+  <DT>LINK_IDLE_TIMEOUT</DT>
+  <DD>
+    The number of seconds that a connection is idle before disconnection
+    will occur. This is to prevent a link to stay open if someone forgets
+    to disconnect. Disable this feature by setting this config variable
+    to zero (or comment it out).
+  </DD>
+
   <DT>DESCRIPTION</DT>
   <DD>
-    A longer description that is sent to remote stations upon connection.
+    A longer description that is sent to remote stations upon connection. This
+    description should typically include detailed station information like
+    QTH, transceiver frequency/power, antenna, CTCSS tone frequency etc.
   </DD>
 </DL>
 
