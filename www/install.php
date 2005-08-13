@@ -181,7 +181,27 @@ again.
 
 
 <A name="event-subsystem"><h2>The Event Handling Subsystem</h2></A>
-*** To be written ***
+There are a lot of sounds that should be played as a response to an event in
+the SvxLink system. To make these sounds as configurable as possible there is
+a programmable event handling subsystem. The programming language chosen for
+this is TCL (Tool Command Language). For each event in SvxLink there is
+a corresponding TCL function that is called when the event occurs. In this
+function the normal action is to play a sound or a couple of sound clips. It is
+of course also possible to use the full power of TCL to make all sorts of things
+happen. For example execution of an external application, reading files with
+information (e.g. DX, weather data etc), time based events (e.g. only do this
+when the time is...).
+
+The TCL event scripts are located under /usr/share/svxlink/sounds. The main
+script is called events.tcl. When this script is loaded by the SvxLink server at
+startup, it looks in a subdirectory called events.d. Any file that ends in
+".tcl" in this directory will be read and should contain a TCL script. If you
+have a look in this directory you will find files like: Logic.tcl (common
+events for logic cores), RepeaterLogic.tcl (repeater logic events),
+SimplexLogic.tcl (simplex logic events), Module.tcl (common module events),
+Help.tcl (help module events), Parrot.tcl (parrot module events), EchoLink.tcl
+(echolink module events). There is a comment above each function that says what
+it does so have a look in these files and let your imagination flow.
 
 
 <A name="server-config"><h2>SvxLink server configuration</h2></A>
