@@ -77,32 +77,6 @@ TRIM_SOUNDS="\
   Default/phonetic_w.raw \
   Default/phonetic_y.raw \
   Default/phonetic_z.raw \
-  Default/a.raw \
-  Default/b.raw \
-  Default/c.raw \
-  Default/d.raw \
-  Default/e.raw \
-  Default/f.raw \
-  Default/g.raw \
-  Default/h.raw \
-  Default/i.raw \
-  Default/j.raw \
-  Default/k.raw \
-  Default/l.raw \
-  Default/m.raw \
-  Default/n.raw \
-  Default/o.raw \
-  Default/p.raw \
-  Default/q.raw \
-  Default/r.raw \
-  Default/s.raw \
-  Default/t.raw \
-  Default/u.raw \
-  Default/v.raw \
-  Default/w.raw \
-  Default/x.raw \
-  Default/y.raw \
-  Default/z.raw \
   Default/module.raw \
   Default/timeout.raw \
   Default/operation_failed.raw \
@@ -113,6 +87,15 @@ TRIM_SOUNDS="\
   Core/hz.raw \
   Core/activating_link_to.raw \
   Core/deactivating_link_to.raw \
+  Core/unknown_command.raw \
+  Core/link_already_active_to.raw \
+  Core/link_not_active_to.raw \
+  Core/10.raw \
+  Core/11.raw \
+  Core/12.raw \
+  Core/AM.raw \
+  Core/PM.raw \
+  Core/the_time_is.raw \
   Help/name.raw \
   Parrot/name.raw \
   EchoLink/connected.raw \
