@@ -4,7 +4,11 @@
 #
 ###############################################################################
 
+#
+# This is the namespace in which all functions and variables below will exist.
+#
 namespace eval Logic {
+
 
 #
 # A variable used to store a timestamp for the last identification.
@@ -212,6 +216,22 @@ proc link_already_active {name} {
 # Executed once every whole minute
 #
 proc every_minute {} {
+  #puts [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"];
+  
+  #
+  # An example of how to announce the callsign and time every whole hour.
+  #
+  #global mycall;
+  #set epoch [clock seconds];
+  #if {[clock format $epoch -format "%M"] == 0} {
+  #  spellWord $mycall;
+  #  playMsg "EchoLink" "link"
+  #  playSilence 500;
+  #  playMsg "Core" "the_time_is";
+  #  playMsg "Core" [string trimleft [clock format $epoch -format "%I"] 0];
+  #  playMsg "Core" [clock format $epoch -format "%p"];
+  #}
+  
   #puts "Hello, SvxLink!";
 }
 

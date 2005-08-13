@@ -4,7 +4,14 @@
 #
 ###############################################################################
 
+#
+# This is the namespace in which all functions and variables below will exist.
+# The name must match the configuration variable "NAME" in the
+# [ModuleHelp] section in the configuration file. The name may be changed
+# but it must be changed in both places.
+#
 namespace eval Help {
+
 
 #
 # Executed when this module is being activated

@@ -4,7 +4,11 @@
 #
 ###############################################################################
 
+#
+# This is the namespace in which all functions and variables below will exist.
+#
 namespace eval Module {
+
 
 #
 # Executed when a module is being activated
