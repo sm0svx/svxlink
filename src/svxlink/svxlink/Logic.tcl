@@ -228,7 +228,9 @@ proc every_minute {} {
   #  playMsg "EchoLink" "link"
   #  playSilence 500;
   #  playMsg "Core" "the_time_is";
+  #  playSilence 100;
   #  playMsg "Core" [string trimleft [clock format $epoch -format "%I"] 0];
+  #  playSilence 100;
   #  playMsg "Core" [clock format $epoch -format "%p"];
   #}
   
