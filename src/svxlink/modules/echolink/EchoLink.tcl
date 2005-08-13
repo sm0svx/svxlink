@@ -66,8 +66,9 @@ proc spellEchoLinkCallsign {call} {
   } elseif [regexp {^\*(\w+)\*$} $call ignored name] {
     playMsg "EchoLink" "conference";
     playSilence 50;
-    if [file exists "$basedir/EchoLink/conf-$call.raw"] {
-      playFile "$basedir/EchoLink/conf-$call.raw";
+    set name [string tolower $name];
+    if [file exists "$basedir/EchoLink/conf-$name.raw"] {
+      playFile "$basedir/EchoLink/conf-$name.raw";
     } else {
       spellWord $name;
     }
