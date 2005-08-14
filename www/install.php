@@ -219,7 +219,7 @@ it does so have a look in these files and let your imagination flow.
 <P>
 There are four functions that can be used within a TCL function to play sounds.
 <DL>
-  <DT>playFile <i>filename</i></DT>
+  <DT>playFile filename</DT>
   <DD>
     Play the file pointed out by <i>filename</i>. The filename may be given
     with an absolute path or a path relative to the directory where the
@@ -229,25 +229,26 @@ There are four functions that can be used within a TCL function to play sounds.
     <PRE>sox filename.wav -r8000 -sw filename.raw</PRE>
   </DD>
 
-  <DT>playMsg <i>context name</i></DT>
+  <DT>playMsg context name</DT>
   <DD>
     This function also play a file. It actually use the playFile function to
     play the file. The path to the file to play is formed as
     follows: <em>event.tcl directory/context/name.raw</em>.
   </DD>
 
-  <DT>playTone <i>fq amplitude length</i></DT>
+  <DT>playTone fq amplitude length</DT>
   <DD>
     Play a tone with the specified frequency (Hz), amplitude (0-1000) and
     length (milliseconds).
   </DD>
 
-  <DT>playSilence <i>length</i></DT>
+  <DT>playSilence length</DT>
   <DD>
     Play the specified number of milliseconds of silence. This can be used to
     trim the spacing between audio clips.
   </DD>
 </DL>
+<P>
 
 
 <A name="server-config"><h2>SvxLink server configuration</h2></A>
@@ -349,19 +350,19 @@ magic. It could be called what ever you want.
   
   <DT>IDENT_ONLY_AFTER_TX</DT>
   <DD>
-    This feature controls when identification is done.  By default,
-    identification is done every time the IDENT_INTERVAL expires.  If you
-    enable this feature, identification will be done only if there has been
-    a recent transmission.  This feature is good for nodes using an RF link
-    to provide echolink to a repeater.  Often, in this situation, it is not
-    desirable for the link to identify unless legally necessary.  The number
-    provided should be greater than 0 and represents the number of seconds
-    after an identification has been sent before a transmission is considered
-    "new" and requires a new identification to be sent.  If the value is too
-    low, the identification itself could trigger the need to identify.  If
-    it's too long, a transmission could be made that won't be identified
-    because it happened within this window.  For most configurations, 4
-    seconds is a good number.
+    This feature controls when identification is done.  By default,
+    identification is done every time the IDENT_INTERVAL expires.  If you
+    enable this feature, identification will be done only if there has been
+    a recent transmission.  This feature is good for nodes using an RF link
+    to provide echolink to a repeater.  Often, in this situation, it is not
+    desirable for the link to identify unless legally necessary.  The number
+    provided should be greater than 0 and represents the number of seconds
+    after an identification has been sent before a transmission is considered
+    "new" and requires a new identification to be sent.  If the value is too
+    low, the identification itself could trigger the need to identify.  If
+    it's too long, a transmission could be made that won't be identified
+    because it happened within this window.  For most configurations, 4
+    seconds is a good number.
     Note that IDENT_INTERVAL still have to be set for this feature to work.
     That config variable will then be interpreted as the minimum number of
     seconds between identifications.
