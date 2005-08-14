@@ -47,12 +47,12 @@
       <LI>
       	A couple of configuration variables have changed since the last release.
 	It's all in the
-	<A href="https://sf.net/project/shownotes.php?release_id=349143">ChangeLog</A>.
+	<A href="http://sf.net/project/shownotes.php?release_id=349143">ChangeLog</A>.
       </LI>
       <LI>As usual a bunch of smaller bugs have been fixed.</LI>
     </UL>
     Be sure to check out the
-    <A href="https://sf.net/project/shownotes.php?release_id=349143">ChangeLog</A>
+    <A href="http://sf.net/project/shownotes.php?release_id=349143">ChangeLog</A>
     for more detailed information.
   </TD></TR>
   
@@ -78,7 +78,7 @@
       <LI>Bugfixes</LI>
     </UL>
     Check out the
-    <A href="https://sf.net/project/shownotes.php?release_id=315589">ChangeLog</A>
+    <A href="http://sf.net/project/shownotes.php?release_id=315589">ChangeLog</A>
     for more detailed information.
   </TD></TR>
   
