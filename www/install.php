@@ -90,7 +90,7 @@ Now continue below reading the
 
 
 <A name="post-install"><h2>Post install stuff</h2></A>
-<strong>Note1:</strong> For Alsa based systems (like Fedora Core > 2), the Alsa
+<strong>Note1:</strong> For Alsa based systems (like Fedora Core >= 2), the Alsa
 OSS emulation is used for sound I/O. There is a bug in the emulation layer
 which will make SvxLink/Qtel fail. To work around this bug, set the
 environment variable ASYNC_AUDIO_NOTRIGGER to 1 before starting SvxLink/Qtel.
@@ -108,8 +108,8 @@ ASYNC_AUDIO_NOTRIGGER=1 qtel &
 - or -
 ASYNC_AUDIO_NOTRIGGER=1 svxlink
 </pre>
-Note that the is no "&amp;" behind svxlink. Do not start svxlink with an "&amp;"
-after it. See the explaination below.
+Note that there is no "&amp;" behind svxlink. Do not start svxlink with an
+"&amp;" after it. See the explaination below.
 <P>
 The environment variable setting will be lost on logout so the <em>export</em>
 line is best put into the file ".bash_profile", which can be found in your home
@@ -205,7 +205,7 @@ of course also possible to use the full power of TCL to make all sorts of things
 happen. For example execution of an external application, reading files with
 information (e.g. DX, weather data etc), time based events (e.g. only do this
 when the time is...).
-
+<P>
 The TCL event scripts are located under /usr/share/svxlink/sounds. The main
 script is called events.tcl. When this script is loaded by the SvxLink server at
 startup, it looks in a subdirectory called events.d. Any file that ends in
@@ -216,6 +216,38 @@ SimplexLogic.tcl (simplex logic events), Module.tcl (common module events),
 Help.tcl (help module events), Parrot.tcl (parrot module events), EchoLink.tcl
 (echolink module events). There is a comment above each function that says what
 it does so have a look in these files and let your imagination flow.
+<P>
+There are four functions that can be used within a TCL function to play sounds.
+<DL>
+  <DT>playFile <i>filename</i></DT>
+  <DD>
+    Play the file pointed out by <i>filename</i>. The filename may be given
+    with an absolute path or a path relative to the directory where the
+    events.tcl script is at. The format of the file must be 16 bit signed raw
+    samples. A wav-file can be converted to the correct format by using the
+    "sox" application:
+    <PRE>sox filename.wav -r8000 -sw filename.raw</PRE>
+  </DD>
+
+  <DT>playMsg <i>context name</i></DT>
+  <DD>
+    This function also play a file. It actually use the playFile function to
+    play the file. The path to the file to play is formed as
+    follows: <em>event.tcl directory/context/name.raw</em>.
+  </DD>
+
+  <DT>playTone <i>fq amplitude length</i></DT>
+  <DD>
+    Play a tone with the specified frequency (Hz), amplitude (0-1000) and
+    length (milliseconds).
+  </DD>
+
+  <DT>playSilence <i>length</i></DT>
+  <DD>
+    Play the specified number of milliseconds of silence. This can be used to
+    trim the spacing between audio clips.
+  </DD>
+</DL>
 
 
 <A name="server-config"><h2>SvxLink server configuration</h2></A>
