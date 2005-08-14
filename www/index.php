@@ -32,11 +32,12 @@ and act as a link. For the latter, use the svxlink server.
 SvxLink is known to work under these operating systems (I really hope that
 this list will grow in time):
 <UL>
-  <LI>Red Hat Linux 9 (RPMS provided)</LI>
-  <LI>Fedora Core 1</LI>
-  <LI>Fedora Core 2 (RPMS provided)</LI>
+  <LI>Red Hat Linux 9 (RPMS provided for older versions)</LI>
+  <LI>Fedora Core 1 (only tested with older versions)</LI>
+  <LI>Fedora Core 2 (RPMS provided for older versions)</LI>
   <LI>Fedora Core 3 (RPMS provided)</LI>
-  <LI>SuSE 9.1</LI>
+  <LI>Fedora Core 4 (RPMS provided)</LI>
+  <LI>SuSE 9.1 (only tested with older versions)</LI>
   <LI>Slackware 10 (not tested by author)</LI>
   <LI>SuSE Linux 9.2 Pro (not tested by author)</LI>
 </UL>
