@@ -309,7 +309,8 @@ configuration data for a simplex logic core. The SvxLink server can handle
 more than one logic core. The name of the section, which in this case is
 SimplexLogic, must have a corresponding list item in the GLOBAL/LOGICS config
 variable for this logic core to be activated. The name "SimplexLogic" is not
-magic. It could be called what ever you want.
+magic. It could be called what ever you want but it must match the namespace
+name in the SimplexLogic.tcl script.
 
 <DL>
   <DT>TYPE</DT>
@@ -389,7 +390,10 @@ magic. It could be called what ever you want.
   <DD>
     The number of milliseconds to wait after the squelch has been closed before
     a roger beep is played. The beep can be disabled by specifying a value
-    of -1.
+    of -1 or commenting out this line. Often it is best to use the
+    SQL_HANGTIME receiver configuration variable to specify a delay instead of
+    specifying a delay here. This configuration variable should then be set
+    to 0.
   </DD>  
   
   <DT>REPORT_CTCSS</DT>
@@ -421,7 +425,8 @@ configuration data for a repeater logic core. The SvxLink server can handle
 more than one logic core. The name of the section, which in this case is
 RepeaterLogic, must have a corresponding list item in the GLOBAL/LOGICS
 config variable for this logic core to be activated. The name "RepeaterLogic"
-is not magic. It could be called what ever you want.
+is not magic. It could be called what ever you want but it must match the
+namespace name in the SimplexLogic.tcl script.
 
 <DL>
   <DT>TYPE</DT>
@@ -541,7 +546,10 @@ is not magic. It could be called what ever you want.
   <DD>
     The number of milliseconds to wait after the squelch has been closed before
     a roger beep is played. The beep can be disabled by specifying a value
-    of -1.
+    of -1 or commenting out this line. Often it is best to use the
+    SQL_HANGTIME receiver configuration variable to specify a delay instead of
+    specifying a delay here. This configuration variable should then be set
+    to 0.
   </DD>
   
   <DT>REPORT_CTCSS</DT>
@@ -568,8 +576,8 @@ is not magic. It could be called what ever you want.
   </DD>
 </DL>
 
-A macros section is used to declare macros that can be used by a logic core.
-The logic core points out the macros section to use by using the MACROS
+A <b>macros</b> section is used to declare macros that can be used by a logic
+core. The logic core points out the macros section to use by using the MACROS
 configuration variable. A macro is a kind of shortcut that can be used to
 decrease the amount of key presses that have to be done to connect to common
 EchoLink stations for example. On the radio side, macros are activated by
@@ -626,7 +634,7 @@ fixed in a future release.
 </DL>
 <P>
 
-A receiver section is used to specify the configuration for a receiver.
+A <b>receiver section</b> is used to specify the configuration for a receiver.
 Right now there are two types of receivers: Local and Voter. Type Local is
 the normal thing to use for a receiver connected to the sound card. An example
 of a configuration section for a Local receiver is shown below. In the default
@@ -661,13 +669,14 @@ configuration file there is a Local configuration section called <b>Rx1</b>.
   <DT>SQL_HANGTIME</DT>
   <DD>
     How long, in milliseconds, the squelch will stay open after the detector
-    has indicated that it is closed.
+    has indicated that it is closed. This configuration variable will affect
+    all squelch detector types.
   </DD>
   
   <DT>VOX_FILTER_DEPTH</DT>
   <DD>
     The number of milliseconds to create the mean value over. A small value
-    will make the vox react quicker (<500) and larger values will make it
+    will make the vox react quicker (<200) and larger values will make it
     a little bit more sluggish. A small value is often better.
   </DD>
 
