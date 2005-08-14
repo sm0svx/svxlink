@@ -86,7 +86,7 @@ It can act both as a simplex node and as a repeater controller.
 %attr(-,root,root) /usr/share/svxlink/sounds
 %doc svxlink/ChangeLog
 %defattr(755,root,root)
-/usr/lib/svxlink/event_test.tcl
+/usr/share/svxlink/event_test.tcl
 /usr/bin/svxlink
 /usr/bin/dtmf_plot
 /usr/lib/svxlink/ModuleEchoLink.so
