@@ -5,7 +5,7 @@
 
 # Version for the Qtel application
 %define QTEL			0.9.0
-%define QTEL_RPM_RELEASE	1
+%define QTEL_RPM_RELEASE	2
 
 # Version for the EchoLib library
 %define ECHOLIB			0.10.1
