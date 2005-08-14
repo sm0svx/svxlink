@@ -358,6 +358,15 @@ magic. It could be called what ever you want.
     Point out a section that contains the macros that should be used by this
     logic core. See the section description for macros below for more info.
   </DD>
+
+  <DT>LINKS</DT>
+  <DD>
+    Specify the name of a configuration section that contains logic linking
+    infomation. There is an example section in the default configuration
+    file called [LinkToR4]. Right now only one link can be specified.
+    A LINKS variable is only needed in the logic that the link should be
+    activated from.
+  </DD>
 </DL>
 
 The next section is the <b>RepeaterLogic</b> section. This section contains
@@ -501,6 +510,15 @@ is not magic. It could be called what ever you want.
     Point out a section that contains the macros that should be used by this
     logic core. See the section description for macros below for more info.
   </DD>  
+
+  <DT>LINKS</DT>
+  <DD>
+    Specify the name of a configuration section that contains logic linking
+    infomation. There is an example section in the default configuration
+    file called [LinkToR4]. Right now only one link can be specified.
+    A LINKS variable is only needed in the logic that the link should be
+    activated from.
+  </DD>
 </DL>
 
 A macros section is used to declare macros that can be used by a logic core.
@@ -520,6 +538,45 @@ example below. Note that the module name is case sensitive.
 
 For example, pressing DTMF sequence "D1#" will activate the EchoLink module
 and connect to the EchoTest conference node.
+<P>
+
+A <b>logic linking configuration section</b> is used to specify information for
+a link between two SvxLink logics. Such a link can for example be used to
+connect a local repeater to a remote repeater using a separate link transceiver.
+The link is activated/deactivated using DTMF commands. To be able to define two
+SvxLink logics, the computer must be equipped with two sound cards.
+When the link is active, all audio received by one logic will be transmitted by
+the other logic.<BR/>
+<EM>Note:</EM> At the moment only locally received audio will be transmitted to
+the other logic. EchoLink audio will for example not go through. This will be
+fixed in a future release.
+
+<DL>
+  <DT>NAME</DT>
+  <DD>
+    The name of the link. The default action on activation/deactivation of the
+    link is to spell the value of this variable. In other words, a callsign is
+    a good value.
+  </DD>
+
+  <DT>LOGIC1</DT>
+  <DD>
+    The name of the first logic core that should be linked.
+  </DD>
+
+  <DT>LOGIC2</DT>
+  <DD>
+    The name of the second logic core that should be linked.
+  </DD>
+
+  <DT>COMMAND</DT>
+  <DD>
+    The command prefix to use to activate/deactivate this link. The full command
+    consists of one more digit that is either 0 or 1 where 0 means "deactivate"
+    and 1 means "activate". If you for example set COMMAND=94, the received DTMF
+    command "941#" will activate the link and "940#" will deactivate the link.
+  </DD>
+</DL>
 <P>
 
 A receiver section is used to specify the configuration for a receiver.
