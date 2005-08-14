@@ -4,19 +4,20 @@
 ?>
 
 <A name="prebuilt"><h2>Installation from prebuilt binaries</h2></A>
-SvxLink has been developed under RedHat Linux 9 and briefly tested under Fedora
-Core 1. My own node is running under Fedora Core 2. SvxLink should be easy to
-install under these Linux versions since there are binary packages available.
+SvxLink has been developed under Fedora Core 2 and 3. My own node is running
+under Fedora Core 2. The node also seem to run fine under Fedora Core 4.
+SvxLink should be easy to install under these Linux versions since there are
+binary packages available.
 <P>
 SvxLink have a few dependencies. Most of them should be installed by default on
 a normal Linux workstation. The Qtel application requires X/Qt but the svxlink
 server is a pure console application.
 There are two external dependencies. The <em>libsigc++</em> library and the
 <em>gsm</em> library. Only version 1.0 of the libsigc++ library will work.
-The one I use is version 1.0.4. RPMS for RH9, FC1 and FC2 can be
+The one I use is version 1.0.4. RPMS for RH9, FC1-FC4 can be
 downloaded from the
 <A href="http://atrpms.net/">ATrpms</A> site. Make sure to pick the 1.0.4
-version. RPMs for the gsm library can be found for FC1 and FC2 at the
+version. RPMs for the gsm library can be found for FC1-FC4 at the
 <A href="http://freshrpms.net">FreshRPMS</A> site. An RPM for RH9 can be built
 by downloading the src-rpm for the FC1 version. Build and install it by
 executing the folowing commands:
@@ -28,10 +29,12 @@ Download the SvxLink RPMS using the
 <A href="https://sourceforge.net/project/showfiles.php?group_id=84813">
 SourceForge download system
 </A>. Make sure you pick the RPMS that are built for your
-system (fc1=Fedora Core 1, fc2=Fedora Core 2, rh9=Red Hat 9). You will at least
-need the <em>libasync</em> and the <em>echolib</em> RPMS. To run the EchoLink
-client GUI, download the <em>qtel</em> package. If it is the svxlink server you
-are interrested in, download the <em>svxlink-server</em> package.
+system (rh9=Red Hat 9, fc1=Fedora Core 1, fc2=Fedora Core 2 etc). You will at
+least need the <em>libasync</em> and the <em>echolib</em> RPMS. To run the
+EchoLink client GUI, download the <em>qtel</em> package. If it is the svxlink
+server you are interrested in, download the <em>svxlink-server</em> package.
+The development packages (xxx-devel-...) is not needed unless you are going to
+develop a new application that use the libasync or echolib libraries.
 <P>
 Install all of the above mentioned packages (libsigc++, gsm, libasync, echolib,
 qtel and/or svxlink-server) on your system using the "rpm -Uvh" command.
@@ -57,6 +60,9 @@ already be installed on your system. If Qt is not installed, find a prebuilt
 package or compile it from source. If the X window system is not installed,
 you're on your own...
 <P>
+You may also need to install the development package for the TCL scripting
+language. There is a big chance that you can find it in your distribution.
+<P>
 Now download the sources for SvxLink from the
 <A href="https://sourceforge.net/project/showfiles.php?group_id=84813">
 sourceforge download area</A>. Find the <em>svxlink-YYMMDD.tar.gz</em> with the
@@ -74,9 +80,7 @@ If you are going to run the SvxLink server, unpack the sound files in a good
 location. A good location could for example be /usr/share/svxlink/. As user
 root, do the following:
 <PRE>
-cd /usr/share
-mkdir svxlink
-cd svxlink
+cd /usr/share/svxlink
 tar xvzf /path-to-wherever-you-put-the-tar-file/sounds-YYMMDD.tar.gz
 </PRE>
 <P>
@@ -86,19 +90,27 @@ Now continue below reading the
 
 
 <A name="post-install"><h2>Post install stuff</h2></A>
-<strong>Note1:</strong> For Alsa based systems (like Fedora Core 2), the Alsa
+<strong>Note1:</strong> For Alsa based systems (like Fedora Core > 2), the Alsa
 OSS emulation is used for sound I/O. There is a bug in the emulation layer
 which will make SvxLink/Qtel fail. To work around this bug, set the
 environment variable ASYNC_AUDIO_NOTRIGGER to 1 before starting SvxLink/Qtel.
-An example of how this is done is shown below (assuming you are running the bash shell = usually the default).
+An example of how this is done is shown below (assuming you are running the bash
+shell = usually the default).
 <pre>
 export ASYNC_AUDIO_NOTRIGGER=1
 qtel &
+- or -
+svxlink
 </pre>
 Or on one line:
 <pre>
 ASYNC_AUDIO_NOTRIGGER=1 qtel &
+- or -
+ASYNC_AUDIO_NOTRIGGER=1 svxlink
 </pre>
+Note that the is no "&amp;" behind svxlink. Do not start svxlink with an "&amp;"
+after it. See the explaination below.
+<P>
 The environment variable setting will be lost on logout so the <em>export</em>
 line is best put into the file ".bash_profile", which can be found in your home
 directory.
@@ -141,12 +153,14 @@ hardware consists of just a cable. No active components needed. I have connected
 the microphone input and the line out output on the computer to the transcievers
 packet radio connector. This works quite well. However, there is a slight hum on
 the signal. This can be fixed with an isolation transformer but I havn't gotten
-around to buy one yet.
+around to buy one yet. Using opto couplers for PTT/COS is also a good idea.
 <P>
 Typical EchoLink hardware should work with SvxLink as well. Have a look at the
 <A href="http://www.echolink.org/interfaces.htm">EchoLink interfaces</A> page.
 However, I have not tried any of these so there are no guarantees. SvxLink
-cannot make use of an external DTMF detector.
+cannot make use of an external DTMF detector.<BR/>
+Please tell me if you get any of the interfaces working or if they are not
+working.
 <P>
 
 
