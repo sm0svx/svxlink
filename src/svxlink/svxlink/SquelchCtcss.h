@@ -164,7 +164,7 @@ class SquelchCtcss : public Squelch
       }
       
       det = new ToneDetector(ctcss_fq, 2000); // FIXME: Determine optimum N
-      det->activated.connect(slot(this, &Squelch::setOpen));
+      det->activated.connect(slot(this, &SquelchCtcss::setOpen));
       
       return true;
     }
