@@ -416,6 +416,19 @@ is not magic. It could be called what ever you want.
     handling subsystem above.
   </DD>
   
+  <DT>NO_REPEAT</DT>
+  <DD>
+    Set this to 1 if you do NOT want SvxLink to play back the incoming audio.
+    This can be used when the received audio is directly coupled by hardware
+    wiring to the transmitter. What you win by doing this is that there is
+    zero delay on the repeated audio. When the audio is routed through SvxLink
+    there is always an amount of delay. What you loose by doing this is the
+    audio processing done by SvxLink. Right now not much is done to the audio
+    though. There is a high pass filter that removes frequencies below 300Hz.
+    It is used to remove CTCSS tones. In the future there might be more audio
+    processing like DTMF muting and compression.
+  </DD>
+  
   <DT>IDLE_TIMEOUT</DT>
   <DD>
     The number of seconds the repeater has been idle before turning the
