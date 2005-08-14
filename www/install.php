@@ -349,7 +349,7 @@ magic. It could be called what ever you want.
   </DD>
   
   <DT>IDENT_ONLY_AFTER_TX</DT>
-  <DD>
+  <DD>
     This feature controls when identification is done.  By default,
     identification is done every time the IDENT_INTERVAL expires.  If you
     enable this feature, identification will be done only if there has been
