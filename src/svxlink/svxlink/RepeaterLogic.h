@@ -172,6 +172,7 @@ class RepeaterLogic : public Logic
     int      	    required_sql_open_duration;
     char      	    open_on_dtmf;
     bool      	    activate_on_sql_close;
+    bool            no_repeat;
     
     void identify(Async::Timer *t=0);
     int audioReceived(short *samples, int count);

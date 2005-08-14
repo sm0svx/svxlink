@@ -40,6 +40,11 @@
   Another use is if you have two repeater logics defined (e.g. 2m and 70cm)
   you can link those together. The link is activated/deactivated on command.
 
+* Now possible to use the repeater controller with external repeater
+  hardware that repeats the audio directly. Normally SvxLink plays back
+  the audio that is sampled but by setting NO_REPEAT=1 in the configuration
+  file this is prohibited.
+
 
 
  0.4.0 -- 25 Mar 2005

@@ -129,7 +129,7 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
     idle_sound_timer(0), ident_timer(0), ident_interval(10*60*1000),
     idle_sound_interval(0), repeating_enabled(false), 
     preserve_idle_state(false), required_sql_open_duration(-1),
-    open_on_dtmf('?'), activate_on_sql_close(false)
+    open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false)
 {
   timerclear(&sql_open_timestamp);
 } /* RepeaterLogic::RepeaterLogic */
@@ -198,6 +198,11 @@ bool RepeaterLogic::initialize(void)
   if (cfg().getValue(name(), "IDLE_SOUND_INTERVAL", str))
   {
     idle_sound_interval = atoi(str.c_str());
+  }
+  
+  if (cfg().getValue(name(), "NO_REPEAT", str))
+  {
+    no_repeat = atoi(str.c_str()) != 0;
   }
   
   //tx().txTimeout.connect(slot(this, &RepeaterLogic::txTimeout));
@@ -378,7 +383,7 @@ void RepeaterLogic::identify(Timer *t)
 
 int RepeaterLogic::audioReceived(short *samples, int count)
 {
-  if (repeater_is_up && repeating_enabled)
+  if (repeater_is_up && repeating_enabled && !no_repeat)
   {
     return transmitAudio(samples, count);
   }
