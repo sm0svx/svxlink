@@ -7,6 +7,58 @@
 <H2>Project News</H2>
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>14 Aug 2005: <I>Version 050814 released</I></B>
+  <TD/></TR>
+  <TR><TD>
+    Hmmm... Let's face it. I will not be able to release more than two times per
+    year but I guess you have all noticed that already. Sooo... here is a brand
+    new release for you to play with.<BR/>
+    For all of you running Qtel nothing have happened besides some bugfixes in
+    libraries that are shared between Qtel and the SvxLink server.
+    The SvxLink server is still the focus for my interest. The most important
+    changes are:
+    <UL>
+      <LI>
+      	DNS lookups could sometimes block SvxLink which could cause dropouts
+	in the sound. DNS lookups are now done as a background job.
+      </LI>
+      <LI>
+      	SvxLink could some times be silently logged out from the EchoLink
+	directory server on communications error. Now an error message will
+	be emitted and the directory server connection will be restored.
+      </LI>
+      <LI>
+      	There is a new, more flexible, event handling subsystem for audio
+	announcements. All events triggers the execution of a TCL function.
+	The TCL function is then responsible for emitting the proper sounds.
+	Have a look at the <A href="install.php#event-subsystem">installation
+	documentation</A> for more information.
+      </LI>
+      <LI>
+      	The repeater controller logic is now fully working and have been tested
+	since march with good results. It is running a real repeater at SK3GW-R.
+      </LI>
+      <LI>
+      	It is now possible to link two SvxLink logics together if you have two
+	sound cards in the computer. An example usage of this is to connect the
+	local repeater to a remote repeater via a linking transceiver.
+	Connection/disconnection is done with DTMF commands.
+      </LI>
+      <LI>
+      	A couple of configuration variables have changed since the last release.
+	It's all in the
+	<A href="https://sf.net/project/shownotes.php?release_id=???">ChangeLog</A>.
+      </LI>
+      <LI>As usual a bunch of smaller bugs have been fixed.</LI>
+    </UL>
+    Be sure to check out the
+    <A href="https://sf.net/project/shownotes.php?release_id=???">ChangeLog</A>
+    for more detailed information.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>25 Mar 2005: <I>Version 050325 released</I></B>
   <TD/></TR>
   <TR><TD>
