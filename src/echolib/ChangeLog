@@ -1,4 +1,4 @@
- 0.10.1 -- ?? ??? 2005
+ 0.10.1 -- 14 Aug 2005
 -----------------------
 
 * Bugfix: There was no timeout on commands sent to the directory server.
