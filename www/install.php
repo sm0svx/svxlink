@@ -304,7 +304,7 @@ application global configuration data.
   </DD>
 </DL>
 
-The next section is the <b>SimlexLogic</b> section. This section contains
+The next section is the <b>SimplexLogic</b> section. This section contains
 configuration data for a simplex logic core. The SvxLink server can handle
 more than one logic core. The name of the section, which in this case is
 SimplexLogic, must have a corresponding list item in the GLOBAL/LOGICS config
