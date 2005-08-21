@@ -262,6 +262,8 @@ void LocalRx::mute(bool do_mute)
       	   << name() << "\"\n";
       return;
     }
+    
+    squelch->reset();
   }
 
   is_muted = do_mute;

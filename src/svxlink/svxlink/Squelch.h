@@ -158,6 +158,14 @@ class Squelch : public SigC::Object
     {
       this->hangtime = (hang_samples >= 1) ? hang_samples : 1;
     }
+    
+    /**
+     * @brief 	Reset the squelch detector
+     *
+     *  Reset the squelch so that the detection process starts from
+     *	the beginning again.
+     */
+    virtual void reset(void) {}
 
     /**
      * @brief 	Handle incoming audio

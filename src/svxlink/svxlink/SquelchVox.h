@@ -146,6 +146,24 @@ class SquelchVox : public Squelch
      */
     void setVoxLimit(short limit);
     
+    /**
+     * @brief 	Set the vox start delay
+     * @param 	delay The delay in milliseconds to set
+     *
+     * Use this function to set the vox startup delay. The delay is specified
+     * in milliseconds. When a value > 0 is specified, the vox will not trigger
+     * within this time after Squelch::reset function has been called.
+     */
+    void setVoxStartDelay(int delay);
+
+    /**
+     * @brief 	Reset the squelch detector
+     *
+     * Reset the squelch so that the detection process starts from
+     * the beginning again.
+     */
+    virtual void reset(void);
+
     
   protected:
     int processSamples(short *samples, int count);
@@ -157,6 +175,8 @@ class SquelchVox : public Squelch
     long  sum;
     long  up_limit;
     long  down_limit;
+    int   start_delay;
+    int   start_delay_left;
     
 };  /* class SquelchVox */
 

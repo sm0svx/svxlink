@@ -129,7 +129,8 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 SquelchVox::SquelchVox(void)
-  : buf(0), buf_size(0), head(0), sum(0), up_limit(0), down_limit(0)
+  : buf(0), buf_size(0), head(0), sum(0), up_limit(0), down_limit(0),
+    start_delay(0), start_delay_left(0)
 {
 } /* SquelchVox::SquelchVox */
 
@@ -169,6 +170,11 @@ bool SquelchVox::initialize(Config& cfg, const string& rx_name)
   }
   setVoxLimit(atoi(value.c_str()));
 
+  if (cfg.getValue(rx_name, "VOX_START_DELAY", value))
+  {
+    setVoxStartDelay(atoi(value.c_str()));
+  }
+
   return true;
   
 } /* SquelchVox::initialize */
@@ -179,6 +185,22 @@ void SquelchVox::setVoxLimit(short limit)
   up_limit = limit * buf_size;
   down_limit = limit * buf_size;
 } /* SquelchVox::setVoxLimit */
+
+
+void SquelchVox::setVoxStartDelay(int delay)
+{
+  start_delay = delay > 0 ? 8 * delay : 0;
+} /* SquelchVox::setVoxStartDelay */
+
+
+void SquelchVox::reset(void)
+{
+  start_delay_left = start_delay;
+  for (int i=0; i<buf_size; ++i)
+  {
+    buf[i] = 0;
+  }
+} /* SquelchVox::reset */
 
 
 
@@ -202,6 +224,21 @@ void SquelchVox::setVoxLimit(short limit)
  */
 int SquelchVox::processSamples(short *samples, int count)
 {
+  int orig_count = count;
+  
+  if (start_delay_left > 0)
+  {
+    int sample_cnt = min(count, start_delay_left);
+    start_delay_left -= sample_cnt;
+    count -= sample_cnt;
+    samples += sample_cnt;
+    
+    if (count == 0)
+    {
+      return orig_count;
+    }
+  }
+  
   for (int i=0; i<count; ++i)
   {
     sum -= buf[head];
@@ -219,7 +256,7 @@ int SquelchVox::processSamples(short *samples, int count)
     }
   }
   
-  return count;
+  return orig_count;
   
 } /* SquelchVox::processSamples */
 
