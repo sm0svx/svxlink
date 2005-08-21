@@ -173,8 +173,8 @@ MainWindow::MainWindow(Directory &dir)
   connect(incoming_accept_button, SIGNAL(clicked()),
       	  this, SLOT(acceptIncoming()));
   
-  audio_io = new AudioIO(Settings::instance()->audioDevice());
-  msg_audio_io = new AudioIO(Settings::instance()->audioDevice());
+  audio_io = new AudioIO(Settings::instance()->audioDevice().latin1());
+  msg_audio_io = new AudioIO(Settings::instance()->audioDevice().latin1());
   
   dir.error.connect(slot(this, &MainWindow::serverError));
   dir.statusChanged.connect(slot(this, &MainWindow::statusChanged));
@@ -719,7 +719,7 @@ void MainWindow::configurationUpdated(void)
       1000 * 60 * Settings::instance()->listRefreshTime());
   
   delete audio_io;
-  audio_io = new AudioIO(Settings::instance()->audioDevice());
+  audio_io = new AudioIO(Settings::instance()->audioDevice().latin1());
 
 } /* MainWindow::configurationChanged */
 
