@@ -200,6 +200,8 @@ void SquelchVox::reset(void)
   {
     buf[i] = 0;
   }
+  sum = 0;
+  head = 0;
 } /* SquelchVox::reset */
 
 
