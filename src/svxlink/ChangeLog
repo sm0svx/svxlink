@@ -1,3 +1,16 @@
+ 0.6.0 -- ?? ??? 200?
+----------------------
+
+* New vox configuration variable VOX_START_DELAY. Specify a time in
+  milliseconds after the receiver has been unmuted until the vox starts
+  to operate. In a simplex logic configuration the receiver is muted
+  (internally in SvxLink) when the transmitter is activated and unmuted
+  when the transmitter is turned off. The vox start delay can be used
+  if the transceiver makes a noise when the PTT is released. This noise
+  would otherwise trigger the vox.
+
+
+
  0.5.0 -- 14 Aug 2005
 ----------------------
 
