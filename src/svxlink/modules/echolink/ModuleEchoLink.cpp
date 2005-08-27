@@ -712,7 +712,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   if (station->ip() != ip)
   {
     cerr << "*** WARNING: Ignoring incoming connection from " << callsign
-      	 << "since the IP address registered in the directory server "
+      	 << " since the IP address registered in the directory server "
 	 << "(" << station->ip() << ") is not the same as the remote IP "
 	 << "address (" << ip << ") of the incoming connection\n";
     return;
