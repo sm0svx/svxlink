@@ -119,7 +119,6 @@ class ModuleTemplate : public Module
 
   private:
     bool initialize(void);
-    const char *name(void) const { return "Template"; }
     void activateInit(void);
     void deactivateCleanup(void);
     void dtmfDigitReceived(char digit);

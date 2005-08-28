@@ -136,7 +136,6 @@ class ModuleParrot : public Module
     Async::Timer      	    *repeat_delay_timer;
     std::list<std::string>  cmd_queue;
     
-    const char *name(void) const { return "Parrot"; }
     void activateInit(void);
     void deactivateCleanup(void);
     void dtmfDigitReceived(char digit);

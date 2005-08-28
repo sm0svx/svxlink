@@ -149,8 +149,7 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
     outgoing_con_pending(false), max_connections(1), max_qsos(1), talker(0),
     squelch_is_open(false)
 {
-  cout << "\tModule " << name()
-       << " v" SVXLINK_VERSION " starting...\n";
+  cout << "\tModule EchoLink v" SVXLINK_VERSION " starting...\n";
   
 } /* ModuleEchoLink */
 
@@ -370,7 +369,7 @@ void ModuleEchoLink::deactivateCleanup(void)
  */
 void ModuleEchoLink::dtmfDigitReceived(char digit)
 {
-  //printf("DTMF digit received in module %s: %c\n", name(), digit);
+  //cout << "DTMF digit received in module " << name() << ": " << digit << endl;
   
 } /* dtmfDigitReceived */
 
@@ -392,7 +391,7 @@ void ModuleEchoLink::dtmfDigitReceived(char digit)
  */
 void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
 {
-  printf("DTMF command received in module %s: %s\n", name(), cmd.c_str());
+  cout << "DTMF command received in module " << name() << ": " << cmd << endl;
   
   remote_activation = false;
   

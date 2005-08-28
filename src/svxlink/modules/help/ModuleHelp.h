@@ -117,7 +117,6 @@ class ModuleHelp : public Module
     ~ModuleHelp(void);
 
   private:
-    const char *name(void) const { return "Help"; }
     void activateInit(void);
     void deactivateCleanup(void);
     void dtmfDigitReceived(char digit);

@@ -143,8 +143,7 @@ ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
   : Module(dl_handle, logic, cfg_name), fifo(0), squelch_is_open(false),
     pacer(8000, 800, 1000), repeat_delay(0), repeat_delay_timer(0)
 {
-  cout << "\tModule " << name()
-       << " v" SVXLINK_VERSION " starting...\n";
+  cout << "\tModule Parrot v" SVXLINK_VERSION " starting...\n";
   
 } /* ModuleParrot */
 
@@ -281,7 +280,7 @@ void ModuleParrot::deactivateCleanup(void)
  */
 void ModuleParrot::dtmfDigitReceived(char digit)
 {
-  //printf("DTMF digit received in module %s: %c\n", name(), digit);
+  //cout << "DTMF digit received in module " << name() << ": " << digit << endl;
   
 } /* dtmfDigitReceived */
 
@@ -303,7 +302,7 @@ void ModuleParrot::dtmfDigitReceived(char digit)
  */
 void ModuleParrot::dtmfCmdReceived(const string& cmd)
 {
-  printf("DTMF command received in module %s: %s\n", name(), cmd.c_str());
+  cout << "DTMF command received in module " << name() << ": " << cmd << endl;
   
   cmd_queue.push_back(cmd);
   if (fifo->empty() && !squelch_is_open)

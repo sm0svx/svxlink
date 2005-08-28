@@ -118,7 +118,6 @@ class ModuleTcl : public Module
     ~ModuleTcl(void);
 
   private:
-    const char *name(void) const { return "Tcl"; }
     void activateInit(void);
     void deactivateCleanup(void);
     void dtmfDigitReceived(char digit);

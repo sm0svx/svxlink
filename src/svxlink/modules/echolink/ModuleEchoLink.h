@@ -130,7 +130,6 @@ class ModuleEchoLink : public Module
     ModuleEchoLink(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleEchoLink(void);
     bool initialize(void);
-    const char *name(void) const { return "EchoLink"; }
     
   private:
     EchoLink::Directory *dir;

@@ -135,8 +135,7 @@ extern "C" {
 ModuleTemplate::ModuleTemplate(void *dl_handle, Logic *logic, const string& cfg_name)
   : Module(dl_handle, logic, cfg_name)
 {
-  cout << "\tModule " << name()
-       << " v" SVXLINK_VERSION " starting...\n";
+  cout << "\tModule Template v" SVXLINK_VERSION " starting...\n";
 
 } /* ModuleTemplate */
 
@@ -261,7 +260,7 @@ void ModuleTemplate::deactivateCleanup(void)
  */
 void ModuleTemplate::dtmfDigitReceived(char digit)
 {
-  printf("DTMF digit received in module %s: %c\n", name(), digit);
+  cout << "DTMF digit received in module " << name() << ": " << digit << endl;
   
 } /* dtmfDigitReceived */
 
@@ -284,7 +283,7 @@ void ModuleTemplate::dtmfDigitReceived(char digit)
  */
 void ModuleTemplate::dtmfCmdReceived(const string& cmd)
 {
-  printf("DTMF command received in module %s: %s\n", name(), cmd.c_str());
+  cout << "DTMF command received in module " << name() << ": " << cmd << endl;
   
   if (cmd == "")
   {
