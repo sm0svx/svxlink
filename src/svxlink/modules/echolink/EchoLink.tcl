@@ -79,7 +79,8 @@ proc spellEchoLinkCallsign {call} {
 
 
 #
-# Executed when 
+# Executed when a request to list all connected stations is received.
+# That is, someone pressed DTMF "1#" when the EchoLink modules was active.
 #
 proc list_connected_stations {connected_stations} {
   playNumber [llength $connected_stations];
@@ -93,7 +94,8 @@ proc list_connected_stations {connected_stations} {
 
 
 #
-# Executed when 
+# Executed when someone tries to setup an outgoing EchoLink connection but
+# the directory server is offline due to communications failure.
 #
 proc directory_server_offline {} {
   playMsg "EchoLink" "directory_server_offline";
@@ -101,7 +103,8 @@ proc directory_server_offline {} {
 
 
 #
-# Executed when 
+# Executed when the limit for maximum number of QSOs has been reached and
+# an outgoing connection request is received.
 #
 proc no_more_connections_allowed {} {
   # FIXME: Change the message to something that makes more sense...
@@ -110,7 +113,8 @@ proc no_more_connections_allowed {} {
 
 
 #
-# Executed when 
+# Executed when a status report is requested. This usually happens at
+# manual identification when the user press DTMF "*".
 #
 proc status_report {} {
   variable num_connected_stations;
@@ -120,7 +124,7 @@ proc status_report {} {
 
 
 #
-# Executed when 
+# Executed when an EchoLink id cannot be found in an outgoing connect request.
 #
 proc station_id_not_found {station_id} {
   playNumber $station_id;
@@ -129,7 +133,8 @@ proc station_id_not_found {station_id} {
 
 
 #
-# Executed when 
+# Executed when the lookup of an EchoLink callsign fail in an outgoing connect
+# request.
 #
 proc lookup_failed {station_id} {
   playMsg "EchoLink" "operation_failed";
@@ -137,7 +142,7 @@ proc lookup_failed {station_id} {
 
 
 #
-# Executed when 
+# Executed when a local user tries to connect to the local node.
 #
 proc self_connect {} {
   playMsg "EchoLink" "operation_failed";
@@ -145,7 +150,8 @@ proc self_connect {} {
 
 
 #
-# Executed when 
+# Executed when a local user tries to connect to a node that is already
+# connected.
 #
 proc already_connected_to {call} {
   playMsg "EchoLink" "already_connected_to";
@@ -155,7 +161,7 @@ proc already_connected_to {call} {
 
 
 #
-# Executed when 
+# Executed when an internal error occurs.
 #
 proc internal_error {} {
   playMsg "EchoLink" "operation_failed";
@@ -163,7 +169,7 @@ proc internal_error {} {
 
 
 #
-# Executed when 
+# Executed when an outgoing connection has been requested.
 #
 proc connecting_to {call} {
   playMsg "EchoLink" "connecting_to";
@@ -173,7 +179,7 @@ proc connecting_to {call} {
 
 
 #
-# Executed when 
+# Executed when an EchoLink connection has been terminated
 #
 proc disconnected {call} {
   spellEchoLinkCallsign $call;
@@ -183,7 +189,7 @@ proc disconnected {call} {
 
 
 #
-# Executed when 
+# Executed when an incoming EchoLink connection has been accepted.
 #
 proc remote_connected {call} {
   playMsg "EchoLink" "connected";
@@ -193,7 +199,7 @@ proc remote_connected {call} {
 
 
 #
-# Executed when 
+# Executed when an outgoing connection has been established.
 #
 proc connected {} {
   playMsg "EchoLink" "connected";
@@ -202,7 +208,8 @@ proc connected {} {
 
 
 #
-# Executed when 
+# Executed when the EchoLink connection has been idle for too long. The
+# connection will be terminated.
 #
 proc link_inactivity_timeout {} {
   playMsg "EchoLink" "timeout";
