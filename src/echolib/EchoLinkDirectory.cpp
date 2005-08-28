@@ -700,7 +700,7 @@ int Directory::ctrlSockDataReceived(TcpConnection *con, void *ptr, int len)
 	    default:
 	      break;
 	  }
-	  read_len = 2;
+	  //read_len = 2;
 	}
 	else
 	{
@@ -709,6 +709,8 @@ int Directory::ctrlSockDataReceived(TcpConnection *con, void *ptr, int len)
 	  printBuf(reinterpret_cast<unsigned char *>(buf), len);
 	  setStatus(StationData::STAT_UNKNOWN);
 	}
+	//printBuf(reinterpret_cast<unsigned char *>(buf), len);
+	read_len = len;
 	ctrl_con->disconnect();
 	cmd_queue.pop_front();
 	com_state = CS_IDLE;
@@ -720,6 +722,13 @@ int Directory::ctrlSockDataReceived(TcpConnection *con, void *ptr, int len)
       read_len = handleCallList(buf, len);
       if (com_state == CS_IDLE)
       {
+      	//if (read_len < len)
+	//{
+	  //buf += read_len;
+	  //len -= read_len;
+	  //printBuf(reinterpret_cast<unsigned char *>(buf), len);
+	//}
+	read_len = len;
 	ctrl_con->disconnect();
 	if (!error_str.empty())
 	{
