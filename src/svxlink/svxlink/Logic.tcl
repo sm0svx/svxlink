@@ -65,7 +65,7 @@ proc manual_identification {} {
     playMsg "Core" "active_module";
     playMsg $active_module "name";
     playSilence 250;
-    append func $active_module "_status_report";
+    append func "::" $active_module "::status_report";
     if {"[info procs $func]" ne ""} {
       $func;
     }
