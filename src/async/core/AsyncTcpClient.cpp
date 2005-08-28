@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cerrno>
 #include <cstdio>
+#include <cassert>
 
 
 /****************************************************************************
@@ -153,10 +154,12 @@ TcpClient::~TcpClient(void)
 
 void TcpClient::connect(void)
 {
-  if ((dns != 0) || (socket() != -1))
+  if ((dns != 0) || (sock != -1) || (socket() != -1))
   {
     return;
   }
+  
+  assert(dns == 0);
   
   dns = new DnsLookup(remote_host);
   dns->resultsReady.connect(slot(this, &TcpClient::dnsResultsReady));
@@ -173,7 +176,11 @@ void TcpClient::disconnect(void)
   delete dns;
   dns = 0;
   
-  sock = -1;
+  if (sock != -1)
+  {
+    ::close(sock);
+    sock = -1;
+  }
   
 } /* TcpClient::disconnect */
 
@@ -247,6 +254,8 @@ void TcpClient::connectToRemote(const IpAddress& ip_addr)
   setRemoteAddr(ip_addr);
   setRemotePort(remote_port);
   
+  assert(sock == -1);
+  
   struct sockaddr_in addr;
   memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
@@ -292,7 +301,9 @@ void TcpClient::connectToRemote(const IpAddress& ip_addr)
   }
   else
   {
-    //wr_watch->setEnabled(false);
+    setSocket(sock);
+    sock = -1;
+    
     connected();
   }
 
@@ -323,6 +334,7 @@ void TcpClient::connectHandler(FdWatch *watch)
   }
   
   setSocket(sock);
+  sock = -1;
   
   connected();
   
