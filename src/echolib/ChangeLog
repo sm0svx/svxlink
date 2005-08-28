@@ -1,3 +1,11 @@
+ 0.10.2 -- ?? ??? ????
+-----------------------
+
+* Bugfix in EchoLib::Directory: Fixed the "Unexpected reply from directory
+  server" bug.
+
+
+
  0.10.1 -- 14 Aug 2005
 -----------------------
 
