@@ -9,6 +9,12 @@
   if the transceiver makes a noise when the PTT is released. This noise
   would otherwise trigger the vox.
 
+* New module "ModuleTcl" added. This module does not do anything in
+  itself. It is just a wrapper that calls TCL functions on different
+  events (squelch open/close, DTMF commands received etc). This makes
+  it possible to write new modules in TCL which can be a little bit
+  more convinient than doing it in C++ directly.
+
 
 
  0.5.0 -- 14 Aug 2005
