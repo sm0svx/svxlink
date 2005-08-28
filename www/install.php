@@ -688,6 +688,16 @@ configuration file there is a Local configuration section called <b>Rx1</b>.
     possible without getting the vox to false trigger.
   </DD>
 
+  <DT>VOX_START_DELAY</DT>
+  <DD>
+    Use the vox start delay if your transceiver makes a noise when the
+    transmitter is turned off. The noise will trigger the vox and can in some
+    situations cause an infinite sequence of squelch open/closed
+    transmitter on/off.
+    Specify the number of milliseconds that the vox should be "deaf" after
+    the transmitter has been turned off.
+  </DD>
+
   <DT>CTCSS_FQ</DT>
   <DD>
     If CTCSS (PL,subtone) squelch is used (SQL_DET is set to CTCSS), this
