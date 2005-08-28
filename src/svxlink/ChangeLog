@@ -15,6 +15,9 @@
   it possible to write new modules in TCL which can be a little bit
   more convinient than doing it in C++ directly.
 
+* Added a template for writing modules in C++. It can be found in
+  svxlink/modules/template in the source code tree.
+
 
 
  0.5.0 -- 14 Aug 2005
