@@ -286,7 +286,7 @@ class Module : public SigC::Object
      * @brief 	Retrieve the name of the module
      * @return	Returns the name of the module
      */
-    virtual const char *name(void) const = 0;
+    virtual const std::string& name(void) const { return m_name; }
     
     /**
      * @brief 	Internal function for module activation
@@ -491,6 +491,7 @@ class Module : public SigC::Object
     void      	      *m_dl_handle;
     Logic     	      *m_logic;
     int       	      m_id;
+    std::string       m_name;
     bool      	      m_is_transmitting;
     SigC::Connection  m_audio_con;
     SigC::Connection  m_squelch_con;

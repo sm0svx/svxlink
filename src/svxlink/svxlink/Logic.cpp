@@ -779,20 +779,18 @@ void Logic::loadModule(const string& module_cfg_name)
     module_path = "";
   }
   
-  string module_name;
-  if (!cfg().getValue(module_cfg_name, "NAME", module_name))
-  {
-    module_name = module_cfg_name;
-  }
+  string plugin_name = module_cfg_name;
+  cfg().getValue(module_cfg_name, "NAME", plugin_name);
+  cfg().getValue(module_cfg_name, "PLUGIN_NAME", plugin_name);
   
-  string module_filename;
+  string plugin_filename;
   if (!module_path.empty())
   {
-    module_filename = module_path + "/"; 
+    plugin_filename = module_path + "/"; 
   }
-  module_filename +=  "Module" + module_name + ".so";
+  plugin_filename +=  "Module" + plugin_name + ".so";
   
-  void *handle = dlopen(module_filename.c_str(), RTLD_NOW);
+  void *handle = dlopen(plugin_filename.c_str(), RTLD_NOW);
   if (handle == NULL)
   {
     cerr << "*** ERROR: Failed to load module "
