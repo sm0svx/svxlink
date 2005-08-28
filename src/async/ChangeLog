@@ -1,3 +1,12 @@
+ 0.12.1 -- ?? ??? ????
+-----------------------
+
+* Bugfix in Async::TcpClient: In some situations sockets could be leaked
+  and functions could be called twice instead of once. This may have caused
+  crashes.
+
+
+
  0.12.0 -- 14 Aug 2005
 -----------------------
 
