@@ -49,6 +49,7 @@ proc manual_identification {} {
   global report_ctcss;
   global active_module;
   global prev_ident;
+  global loaded_modules;
   
   set prev_ident [clock seconds];
   
