@@ -118,8 +118,12 @@ proc no_more_connections_allowed {} {
 #
 proc status_report {} {
   variable num_connected_stations;
-  playNumber $num_connected_stations;
-  playMsg "EchoLink" "connected_stations";
+  global active_module;
+  
+  if {$active_module == "EchoLink"} {
+    playNumber $num_connected_stations;
+    playMsg "EchoLink" "connected_stations";
+  }
 }
 
 
