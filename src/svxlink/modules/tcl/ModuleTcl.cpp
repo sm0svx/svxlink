@@ -259,16 +259,9 @@ void ModuleTcl::dtmfCmdReceived(const string& cmd)
 {
   //cout << "DTMF command received in module " << name() << ": " << cmd << endl;
   
-  if (cmd == "")
-  {
-    deactivateMe();
-  }
-  else
-  {
-    stringstream ss;
-    ss << "dtmf_cmd_received " << cmd;
-    processEvent(ss.str());
-  }
+  stringstream ss;
+  ss << "dtmf_cmd_received \"" << cmd << "\"";
+  processEvent(ss.str());
 } /* dtmfCmdReceived */
 
 
