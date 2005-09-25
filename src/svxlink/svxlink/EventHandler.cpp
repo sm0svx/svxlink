@@ -44,6 +44,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncTimer.h>
+
 
 
 /****************************************************************************
@@ -65,6 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 
 
 
@@ -135,6 +138,10 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
   Tcl_CreateCommand(interp, "playFile", playFileHandler, this, NULL);
   Tcl_CreateCommand(interp, "playSilence", playSilenceHandler, this, NULL);
   Tcl_CreateCommand(interp, "playTone", playToneHandler, this, NULL);
+  Tcl_CreateCommand(interp, "recordStart", recordHandler, this, NULL);
+  Tcl_CreateCommand(interp, "recordStop", recordHandler, this, NULL);
+  Tcl_CreateCommand(interp, "deactivateModule", deactivateModuleHandler,
+                    this, NULL);
   //Tcl_CreateCommand(interp, "spellWord", spellWord, this, NULL);
   //Tcl_CreateCommand(interp, "playNumber", playNumber, this, NULL);
   //Tcl_CreateCommand(interp, "reportActiveModuleState",
@@ -280,65 +287,60 @@ int EventHandler::playToneHandler(ClientData cdata, Tcl_Interp *irp,
 }
 
 
-#if 0
-int EventHandler::spellWord(ClientData cdata, Tcl_Interp *irp, int argc,
-      	      	      	    const char *argv[])
+int EventHandler::recordHandler(ClientData cdata, Tcl_Interp *irp,
+      	      	      	      int argc, const char *argv[])
 {
-  if(argc != 2)
+  //cout << "recordHandler: " << argv[0] << endl;
+  if (strcmp(argv[0], "recordStart") == 0)
   {
-    Tcl_SetResult(irp,"Usage: spellWord <word>", TCL_STATIC);
-    return TCL_ERROR;
-  }
-  cout << "EventHandler::spellWord: " << argv[1] << endl;
+    if(argc != 2)
+    {
+      Tcl_SetResult(irp,"Usage: recordStart <filename>", TCL_STATIC);
+      return TCL_ERROR;
+    }
 
-  EventHandler *self = static_cast<EventHandler *>(cdata);
-  self->logic->spellWord(argv[1]);
+    EventHandler *self = static_cast<EventHandler *>(cdata);
+    self->recordStart(argv[1]);
+  }
+  else
+  {
+    if(argc != 1)
+    {
+      Tcl_SetResult(irp,"Usage: recordStop", TCL_STATIC);
+      return TCL_ERROR;
+    }
+
+    EventHandler *self = static_cast<EventHandler *>(cdata);
+    self->recordStop();
+  }
   
-  return TCL_OK;
-}
-
-
-int EventHandler::playNumber(ClientData cdata, Tcl_Interp *irp, int argc,
-      	      	      	     const char *argv[])
-{
-  if(argc != 2)
-  {
-    Tcl_SetResult(irp, "Usage: playNumber <word>", TCL_STATIC);
-    return TCL_ERROR;
-  }
-  cout << "EventHandler::playNumber: " << argv[1] << endl;
-
-  EventHandler *self = static_cast<EventHandler *>(cdata);
-  self->logic->playNumber(atof(argv[1]));
 
   return TCL_OK;
 }
 
 
-int EventHandler::reportActiveModuleState(ClientData cdata, Tcl_Interp *irp,
-      	      	      	      	      	  int argc, const char *argv[])
+int EventHandler::deactivateModuleHandler(ClientData cdata, Tcl_Interp *irp,
+      	      	      	      int argc, const char *argv[])
 {
   if(argc != 1)
   {
-    Tcl_SetResult(irp, "Usage: reportActiveModuleState", TCL_STATIC);
+    Tcl_SetResult(irp,"Usage: deactivateModuleHandler", TCL_STATIC);
     return TCL_ERROR;
   }
-  //cout << "EventHandler::reportActiveModuleState" << endl;
 
   EventHandler *self = static_cast<EventHandler *>(cdata);
-  Module *module = self->logic->activeModule();
-  if (module == 0)
-  {
-    Tcl_SetResult(irp, "reportActiveModuleState: No active module", TCL_STATIC);
-    return TCL_ERROR;
-  }
-  module->reportState();
-  
+  Timer *t = new Timer(0);
+  t->expired.connect(slot(self, &EventHandler::doDeactivateModule));
+
   return TCL_OK;
 }
-#endif
 
 
+void EventHandler::doDeactivateModule(Timer *t)
+{
+  delete t;
+  deactivateModule();
+} /* EventHandler::doDeactivateModule */
 
 
 

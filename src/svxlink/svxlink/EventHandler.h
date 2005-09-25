@@ -71,6 +71,11 @@ An example of how to use the EventHandler class
 
 class Logic;
 
+namespace Async
+{
+  class Timer;
+}
+
 
 /****************************************************************************
  *
@@ -146,6 +151,9 @@ class EventHandler : public SigC::Object
     SigC::Signal1<void, const std::string&> playFile;
     SigC::Signal1<void, int>   	      	    playSilence;
     SigC::Signal3<void, int, int, int>      playTone;
+    SigC::Signal1<void, const std::string&> recordStart;
+    SigC::Signal0<void>       	      	    recordStop;
+    SigC::Signal0<void>       	      	    deactivateModule;
     
     
   protected:
@@ -161,14 +169,12 @@ class EventHandler : public SigC::Object
       	      	    int argc, const char *argv[]);
     static int playToneHandler(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
-    /*
-    static int spellWord(ClientData cdata, Tcl_Interp *irp,
+    static int recordHandler(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
-    static int playNumber(ClientData cdata, Tcl_Interp *irp,
+    static int deactivateModuleHandler(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
-    static int reportActiveModuleState(ClientData cdata, Tcl_Interp *irp,
-      	      	    int argc, const char *argv[]);
-    */
+    
+    void doDeactivateModule(Async::Timer *t);
 
 };  /* class EventHandler */
 
