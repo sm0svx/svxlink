@@ -65,12 +65,21 @@ proc manual_identification {} {
     playMsg "Core" "active_module";
     playMsg $active_module "name";
     playSilence 250;
-    append func "::" $active_module "::status_report";
+    set func "::";
+    append func $active_module "::status_report";
     if {"[info procs $func]" ne ""} {
       $func;
     }
-    playSilence 250;
+  } else {
+    foreach module [split $loaded_modules " "] {
+      set func "::";
+      append func $module "::status_report";
+      if {"[info procs $func]" ne ""} {
+	$func;
+      }
+    }
   }
+  playSilence 250;
 }
 
 
@@ -220,7 +229,9 @@ proc every_minute {} {
   
   #
   # An example of how to announce the callsign and time every whole hour.
+  # Also, announce module state for each module.
   #
+  #global loaded_modules;
   #global mycall;
   #set epoch [clock seconds];
   #if {[clock format $epoch -format "%M"] == 0} {
@@ -232,6 +243,13 @@ proc every_minute {} {
   #  playMsg "Core" [string trimleft [clock format $epoch -format "%I"] 0];
   #  playSilence 100;
   #  playMsg "Core" [clock format $epoch -format "%p"];
+  #  foreach module [split $loaded_modules " "] {
+  #    set func "::";
+  #    append func $module "::status_report";
+  #    if {"[info procs $func]" ne ""} {
+  #      $func;
+  #    }
+  #  }
   #}
   
   #puts "Hello, SvxLink!";
