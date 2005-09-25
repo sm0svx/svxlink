@@ -107,6 +107,7 @@ class EventHandler;
 class SigCAudioSource;
 class SigCAudioSink;
 class Command;
+class Recorder;
   
 
 /****************************************************************************
@@ -174,6 +175,8 @@ class Logic : public SigC::Object
     virtual void playFile(const std::string& path);
     virtual void playSilence(int length);
     virtual void playTone(int fq, int amp, int len);
+    void recordStart(const std::string& filename);
+    void recordStop(void);
     void audioFromModule(short *samples, int count);
     virtual void moduleTransmitRequest(bool do_transmit);
 
@@ -238,6 +241,7 @@ class Logic : public SigC::Object
     bool      	      	      	remote_logic_tx;
     CmdParser 	      	      	cmd_parser;
     Async::Timer      	      	*every_minute_timer;
+    Recorder  	      	      	*recorder;
     
     void allModuleSamplesWritten(void);
     void transmitCheck(void);

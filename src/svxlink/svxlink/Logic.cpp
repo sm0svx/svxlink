@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <dlfcn.h>
+#include <sigc++/bind.h>
 
 #include <iostream>
 #include <algorithm>
@@ -61,6 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "Recorder.h"
 #include "EventHandler.h"
 #include "Module.h"
 #include "MsgHandler.h"
@@ -192,6 +194,8 @@ bool Logic::initialize(void)
   string event_handler_str;
   list<string> macro_list;
   list<string>::iterator mlit;
+  string loaded_modules;
+  list<Module*>::const_iterator mit;
   
   if (cfg().getValue(name(), "LINKS", value))
   {
@@ -294,12 +298,25 @@ bool Logic::initialize(void)
   event_handler->playFile.connect(slot(this, &Logic::playFile));
   event_handler->playSilence.connect(slot(this, &Logic::playSilence));
   event_handler->playTone.connect(slot(this, &Logic::playTone));
+  event_handler->recordStart.connect(slot(this, &Logic::recordStart));
+  event_handler->recordStop.connect(slot(this, &Logic::recordStop));
+  event_handler->deactivateModule.connect(
+          bind(slot(this, &Logic::deactivateModule), (Module *)0));
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
   event_handler->setVariable("report_ctcss", str);
   event_handler->setVariable("active_module", "");
   event_handler->setVariable("is_core_event_handler", "1");
+  for (mit=modules.begin(); mit!=modules.end(); ++mit)
+  {
+    if (!loaded_modules.empty())
+    {
+      loaded_modules += " ";
+    }
+    loaded_modules += (*mit)->name();
+  }
+  event_handler->setVariable("loaded_modules", loaded_modules);
   event_handler->initialize();
 
   audio_switch_matrix.addSource(name(), &logic_con_out);
@@ -374,6 +391,28 @@ void Logic::playTone(int fq, int amp, int len)
 } /* Logic::playSilence */
 
 
+void Logic::recordStart(const string& filename)
+{
+  recordStop();
+  recorder = new Recorder(filename);
+  if (!recorder->initialize())
+  {
+    cerr << "*** ERROR: Could not open file for recording: "
+      	 << filename << endl;
+    recordStop();
+    return;
+  }
+  rx().audioReceived.connect(slot(recorder, &Recorder::writeSamples));
+} /* Logic::recordStart */
+
+
+void Logic::recordStop(void)
+{
+  delete recorder;
+  recorder = 0;
+} /* Logic::recordStart */
+
+
 void Logic::audioFromModule(short *samples, int count)
 {
   module_tx_fifo->addSamples(samples, count);
@@ -423,7 +462,11 @@ bool Logic::activateModule(Module *module)
 
 void Logic::deactivateModule(Module *module)
 {
-  if (module == active_module)
+  if (module == 0)
+  {
+    module = active_module;
+  }
+  if ((module != 0) && (module == active_module))
   {
     active_module = 0;
     module->deactivate();
