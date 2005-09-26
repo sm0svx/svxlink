@@ -1,4 +1,4 @@
- 0.6.0 -- ?? ??? 200?
+ 0.6.0 -- ?? Okt 2005
 ----------------------
 
 * New vox configuration variable VOX_START_DELAY. Specify a time in
@@ -9,11 +9,16 @@
   if the transceiver makes a noise when the PTT is released. This noise
   would otherwise trigger the vox.
 
-* New module "ModuleTcl" added. This module does not do anything in
+* New module "Tcl" added. This module does not do anything in
   itself. It is just a wrapper that calls TCL functions on different
   events (squelch open/close, DTMF commands received etc). This makes
   it possible to write new modules in TCL which can be a little bit
-  more convinient than doing it in C++ directly.
+  more convenient than doing it in C++ directly.
+
+* New module "TclVoiceMail". This module is implemented using the new Tcl
+  module. I wrote it to test the Tcl module. It is a quite simplistic
+  voice mail system but it demonstrates what you can do with modules
+  written in TCL.
 
 * Added a template for writing modules in C++. It can be found in
   svxlink/modules/template in the source code tree.
