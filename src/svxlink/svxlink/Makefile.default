@@ -224,10 +224,10 @@ install-extras uninstall-extras rpm-extras:
 #	$(DIRSPEC) /var/spool/myprog[755,root,root]
 	$(FILESPEC) svxlink.conf[644,root,root,config] /etc
 	$(FILESPEC) events.tcl[644,root,root,config] /usr/share/svxlink/sounds
-	$(FILESPEC) RepeaterLogic.tcl[644,root,root,config] /usr/share/svxlink/sounds/events.d
-	$(FILESPEC) SimplexLogic.tcl[644,root,root,config] /usr/share/svxlink/sounds/events.d
-	$(FILESPEC) Module.tcl[644,root,root,config] /usr/share/svxlink/sounds/events.d
-	$(FILESPEC) Logic.tcl[644,root,root,config] /usr/share/svxlink/sounds/events.d
+	$(FILESPEC) RepeaterLogic.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
+	$(FILESPEC) SimplexLogic.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
+	$(FILESPEC) Module.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
+	$(FILESPEC) Logic.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
 	$(FILESPEC) event_test.tcl[755,root,root] /usr/share/svxlink
 
 

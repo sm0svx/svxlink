@@ -218,7 +218,7 @@ LDFLAGS		+=
 install-extras uninstall-extras rpm-extras:
 #	$(DIRSPEC) /var/spool/myprog[755,root,root]
 #	$(FILESPEC) install-extras/myprog.conf[644,root,root] /etc
-	$(FILESPEC) Parrot.tcl[644,root,root,config] /usr/share/svxlink/sounds/events.d
+	$(FILESPEC) Parrot.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
 
 
 #
