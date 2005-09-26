@@ -283,6 +283,7 @@ void ModuleTcl::squelchOpen(bool is_open)
   stringstream ss;
   ss << "squelch_open " << (is_open ? 1 : 0);
   processEvent(ss.str());
+  setIdle(!is_open);
 } /* dtmfCmdReceived */
 
 
