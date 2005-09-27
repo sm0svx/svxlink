@@ -12,104 +12,123 @@ if [ $# -gt 1 ]; then
 fi
 
 COPY_SOUNDS="\
-  Default/phonetic_0.raw \
-  Default/phonetic_1.raw \
-  Default/phonetic_2.raw \
-  Default/phonetic_3.raw \
-  Default/phonetic_4.raw \
-  Default/phonetic_5.raw \
-  Default/phonetic_6.raw \
-  Default/phonetic_7.raw \
-  Default/phonetic_8.raw \
-  Default/phonetic_9.raw \
-  EchoLink/repeater.raw \
+  Default/phonetic_0 \
+  Default/phonetic_1 \
+  Default/phonetic_2 \
+  Default/phonetic_3 \
+  Default/phonetic_4 \
+  Default/phonetic_5 \
+  Default/phonetic_6 \
+  Default/phonetic_7 \
+  Default/phonetic_8 \
+  Default/phonetic_9 \
+  EchoLink/repeater \
   "
 
 MAXIMIZE_SOUNDS="\
-  Default/help.raw \
-  Help/help.raw \
-  Help/choose_module.raw \
-  Parrot/help.raw \
-  EchoLink/help.raw \
-  EchoLink/greeting.raw \
-  EchoLink/directory_server_offline.raw \
-  EchoLink/reject_connection.raw \
+  Default/help \
+  Help/help \
+  Help/choose_module \
+  Parrot/help \
+  EchoLink/help \
+  EchoLink/greeting \
+  EchoLink/directory_server_offline \
+  EchoLink/reject_connection \
+  TclVoiceMail/help \
+  TclVoiceMail/logged_in_menu \
+  TclVoiceMail/message_deleted \
+  TclVoiceMail/pnm_menu \
+  TclVoiceMail/rec_message \
+  TclVoiceMail/rec_subject \
+  TclVoiceMail/wrong_userid_or_password \
+  TclVoiceMail/login_ok \
+  TclVoiceMail/rec_done \
+  TclVoiceMail/login \
+  TclVoiceMail/rec_enter_rcpt \
   "
 
 TRIM_SOUNDS="\
-  Default/0.raw \
-  Default/1.raw \
-  Default/2.raw \
-  Default/3.raw \
-  Default/4.raw \
-  Default/5.raw \
-  Default/6.raw \
-  Default/7.raw \
-  Default/8.raw \
-  Default/9.raw \
-  Default/decimal.raw \
-  Default/activating_module.raw \
-  Default/deactivating_module.raw \
-  Default/no_such_module.raw \
-  Default/phonetic_x.raw \
-  Default/phonetic_m.raw \
-  Default/phonetic_s.raw \
-  Default/phonetic_v.raw \
-  Default/phonetic_e.raw \
-  Default/phonetic_c.raw \
-  Default/phonetic_h.raw \
-  Default/phonetic_o.raw \
-  Default/phonetic_t.raw \
-  Default/phonetic_a.raw \
-  Default/phonetic_b.raw \
-  Default/phonetic_d.raw \
-  Default/phonetic_f.raw \
-  Default/phonetic_g.raw \
-  Default/phonetic_i.raw \
-  Default/phonetic_j.raw \
-  Default/phonetic_k.raw \
-  Default/phonetic_l.raw \
-  Default/phonetic_n.raw \
-  Default/phonetic_p.raw \
-  Default/phonetic_q.raw \
-  Default/phonetic_r.raw \
-  Default/phonetic_u.raw \
-  Default/phonetic_w.raw \
-  Default/phonetic_y.raw \
-  Default/phonetic_z.raw \
-  Default/module.raw \
-  Default/timeout.raw \
-  Default/operation_failed.raw \
-  Core/online.raw \
-  Core/active_module.raw \
-  Core/repeater.raw \
-  Core/pl_is.raw \
-  Core/hz.raw \
-  Core/activating_link_to.raw \
-  Core/deactivating_link_to.raw \
-  Core/unknown_command.raw \
-  Core/link_already_active_to.raw \
-  Core/link_not_active_to.raw \
-  Core/10.raw \
-  Core/11.raw \
-  Core/12.raw \
-  Core/AM.raw \
-  Core/PM.raw \
-  Core/the_time_is.raw \
-  Help/name.raw \
-  Parrot/name.raw \
-  EchoLink/connected.raw \
-  EchoLink/connecting_to.raw \
-  EchoLink/disconnected.raw \
-  EchoLink/not_found.raw \
-  EchoLink/link_busy.raw \
-  EchoLink/link.raw \
-  EchoLink/name.raw \
-  EchoLink/conference.raw \
-  EchoLink/already_connected_to.raw \
-  EchoLink/connected_stations.raw \
-  EchoLink/conf-echotest.raw \
+  Default/0 \
+  Default/1 \
+  Default/2 \
+  Default/3 \
+  Default/4 \
+  Default/5 \
+  Default/6 \
+  Default/7 \
+  Default/8 \
+  Default/9 \
+  Default/decimal \
+  Default/activating_module \
+  Default/deactivating_module \
+  Default/no_such_module \
+  Default/phonetic_x \
+  Default/phonetic_m \
+  Default/phonetic_s \
+  Default/phonetic_v \
+  Default/phonetic_e \
+  Default/phonetic_c \
+  Default/phonetic_h \
+  Default/phonetic_o \
+  Default/phonetic_t \
+  Default/phonetic_a \
+  Default/phonetic_b \
+  Default/phonetic_d \
+  Default/phonetic_f \
+  Default/phonetic_g \
+  Default/phonetic_i \
+  Default/phonetic_j \
+  Default/phonetic_k \
+  Default/phonetic_l \
+  Default/phonetic_n \
+  Default/phonetic_p \
+  Default/phonetic_q \
+  Default/phonetic_r \
+  Default/phonetic_u \
+  Default/phonetic_w \
+  Default/phonetic_y \
+  Default/phonetic_z \
+  Default/module \
+  Default/timeout \
+  Default/operation_failed \
+  Default/unknown_command \
+  Core/online \
+  Core/active_module \
+  Core/repeater \
+  Core/pl_is \
+  Core/hz \
+  Core/activating_link_to \
+  Core/deactivating_link_to \
+  Core/link_already_active_to \
+  Core/link_not_active_to \
+  Core/10 \
+  Core/11 \
+  Core/12 \
+  Core/AM \
+  Core/PM \
+  Core/the_time_is \
+  Help/name \
+  Parrot/name \
+  EchoLink/connected \
+  EchoLink/connecting_to \
+  EchoLink/disconnected \
+  EchoLink/not_found \
+  EchoLink/link_busy \
+  EchoLink/link \
+  EchoLink/name \
+  EchoLink/conference \
+  EchoLink/already_connected_to \
+  EchoLink/connected_stations \
+  EchoLink/conf-echotest \
+  TclVoiceMail/aborted \
+  TclVoiceMail/messages_for \
+  TclVoiceMail/new_messages \
+  TclVoiceMail/rec_sending_to \
+  TclVoiceMail/name \
+  TclVoiceMail/unknown_userid \
   "
+
+
 
 #src_tmp=$(mktemp /tmp/$SRC_DIR-XXXXXX)
 #pushd $SRC_DIR > /dev/null
@@ -128,9 +147,9 @@ TRIM_SOUNDS="\
 
 for sound in $COPY_SOUNDS; do
   [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
-  if [ -r $SRC_DIR/$sound ]; then
+  if [ -r $SRC_DIR/$sound.raw -o -r $SRC_DIR/$sound.wav ]; then
     echo "Copying $SRC_DIR/$sound -> $DEST_DIR/$sound"
-    cp -a $SRC_DIR/$sound $DEST_DIR/$sound
+    ./play_sound.sh -c $SRC_DIR/$sound > $DEST_DIR/$sound.raw
   else
     echo "*** Missing sound: $sound"
   fi
@@ -139,9 +158,9 @@ done
 
 for sound in $MAXIMIZE_SOUNDS; do
   [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
-  if [ -r $SRC_DIR/$sound ]; then
-    echo "Maximizing $SRC_DIR/${sound%%.raw} -> $DEST_DIR/$sound"
-    ./play_sound.sh -f $SRC_DIR/${sound%%.raw} > $DEST_DIR/$sound
+  if [ -r $SRC_DIR/$sound.raw -o -r $SRC_DIR/$sound.wav ]; then
+    echo "Maximizing $SRC_DIR/$sound -> $DEST_DIR/$sound.raw"
+    ./play_sound.sh -f $SRC_DIR/$sound > $DEST_DIR/$sound.raw
   else
     echo "*** Missing sound: $sound"
   fi
@@ -151,10 +170,10 @@ done
 echo -n > /tmp/all_trimmed.raw
 for sound in $TRIM_SOUNDS; do
   [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
-  if [ -r $SRC_DIR/$sound ]; then
-    echo "Trimming $SRC_DIR/${sound%%.raw} -> $DEST_DIR/$sound"
-    ./play_sound.sh -tf $SRC_DIR/${sound%%.raw} > $DEST_DIR/$sound
-    cat $DEST_DIR/$sound >> /tmp/all_trimmed.raw
+  if [ -r $SRC_DIR/$sound.raw -o -r $SRC_DIR/$sound.wav ]; then
+    echo "Trimming $SRC_DIR/$sound -> $DEST_DIR/$sound.raw"
+    ./play_sound.sh -tf $SRC_DIR/$sound > $DEST_DIR/$sound.raw
+    cat $DEST_DIR/$sound.raw >> /tmp/all_trimmed.raw
   else
     echo "*** Missing sound: $sound"
   fi

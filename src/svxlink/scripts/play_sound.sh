@@ -2,10 +2,21 @@
 
 trim_silence=0
 
+
+convert()
+{
+  if [ -r "$1.raw" ]; then
+    cat "$1.raw"
+  elif [ -r "$1.wav" ]; then
+    sox "$1.wav" -r8000 -sw -traw -
+  fi
+}
+
+
 process()
 {
   effects="highpass 500"
-  max_vol=$(sox -r8000 -sw $1.raw -t raw /dev/null stat -v 2>&1)
+  max_vol=$(sox -traw -r8000 -sw $1 -traw /dev/null stat -v 2>&1)
   #echo max_vol=$max_vol 1>&2
   if [ $trim_silence -gt 0 ]; then
     #above_thresh=$(echo 0.2 \* $max_vol | bc)
@@ -14,11 +25,11 @@ process()
     below_thresh=$(echo 0.3 \* $max_vol | bc)
     #effects="$effects silence 1 50 $above_thresh% 1 200 $below_thresh%"
     effects="$effects silence 1 50 $above_thresh% 1 20 $below_thresh%"
-    sox -r8000 -sw $1.raw -traw - highpass 500 silence 1 0:0:0.01 -55d reverse | \
+    sox -traw -r8000 -sw $1 -traw -r8000 -sw - highpass 500 silence 1 0:0:0.01 -55d reverse | \
 	sox -traw -r8000 -sw - -traw -r8000 -sw - silence 1 0:0:0.01 -55d reverse | \
 	sox -traw -r8000 -sw - -v $max_vol -traw -r8000 -sw -
   else
-    sox -r8000 -sw -v $max_vol $1.raw -traw - highpass 500 
+    sox -traw -r8000 -sw $1 -v $max_vol -traw -r8000 -sw - highpass 500 
   fi
   #sox -r8000 -sw -v $max_vol $1.raw -traw - $effects
 }
@@ -26,7 +37,7 @@ process()
 
 spell()
 {
-  tmp=$(mktemp /tmp/audio-XXXXXX)
+  tmp=$(mktemp /tmp/svxlink-XXXXXX)
   ( for letter in $*; do
     process phonetic_$letter
     #max_vol=$(sox -r8000 -sw phonetic_$letter.raw -t raw /dev/null stat -v 2>&1)
@@ -40,10 +51,10 @@ spell()
     #dd if=/dev/zero bs=1 count=800 2> /dev/null
   done ) > $tmp
   play -r8000 -sw -traw $tmp
-  rm $tmp
+  rm -f $tmp
 }
 
-while getopts spft opt; do
+while getopts spfct opt; do
   case $opt in
     s)
       shift
@@ -59,6 +70,11 @@ while getopts spft opt; do
       shift
       operation=filter
       ;;
+      
+    c)
+      shift
+      operation=convert
+      ;;
     
     t)
       trim_silence=1
@@ -73,11 +89,21 @@ case $operation in
     ;;
   
   play)
-    process $1 | play -r8000 -sw -traw -
+    tmp=$(mktemp /tmp/svxlink-XXXXXX)
+    convert $1 > $tmp
+    process $tmp | play -r8000 -sw -traw -
+    rm -f $tmp
+    ;;
+  
+  convert)
+    convert $1
     ;;
     
   filter)
-    process $1
+    tmp=$(mktemp /tmp/svxlink-XXXXXX)
+    convert $1 > $tmp
+    process $tmp
+    rm -f $tmp
     ;;
 esac
 
