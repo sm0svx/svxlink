@@ -129,7 +129,7 @@ class Rx : public SigC::Object
      * @brief 	Default constuctor
      */
     explicit Rx(Async::Config& cfg, const std::string& name)
-      : m_cfg(cfg), m_name(name) {}
+      : m_cfg(cfg), m_name(name), m_verbose(true) {}
   
     /**
      * @brief 	Destructor
@@ -148,6 +148,12 @@ class Rx : public SigC::Object
      */
     const std::string& name(void) const { return m_name; }
     
+    /**
+     * @brief 	Set the verbosity level of the receiver
+     * @param	verbose Set to \em false to keep the rx from printing things
+     */
+    virtual void setVerbose(bool verbose) { m_verbose = verbose; }
+
     /**
      * @brief 	Mute the receiver
      * @param 	do_mute Set to \em true to mute or \em false to unmute
@@ -220,6 +226,7 @@ class Rx : public SigC::Object
   private:
     Async::Config &m_cfg;
     std::string   m_name;
+    bool          m_verbose;
     
 };  /* class Rx */
 

@@ -116,9 +116,9 @@ using namespace Async;
  ****************************************************************************/
 
 Voter::Voter(Config &cfg, const std::string& name)
-  : Rx(cfg, name), active_rx(0), is_muted(true)
+  : Rx(cfg, name), active_rx(0), is_muted(true), m_verbose(true)
 {
-
+  Rx::setVerbose(false);
 } /* Voter::Voter */
 
 
@@ -156,6 +156,7 @@ bool Voter::initialize(void)
       	return false;
       }
       rx->mute(true);
+      rx->setVerbose(false);
       rx->squelchOpen.connect(slot(this, &Voter::satSquelchOpen));
       rx->audioReceived.connect(audioReceived.slot());
       rx->dtmfDigitDetected.connect(dtmfDigitDetected.slot());
@@ -268,7 +269,8 @@ bool Voter::addToneDetector(int fq, int bw, int required_duration)
 void Voter::satSquelchOpen(bool is_open)
 {
   //cout << "Voter::satSquelchOpen(" << (is_open ? "TRUE" : "FALSE") << ")\n";
-  
+  string rx_name;
+
   if (is_open)
   {
     assert(active_rx == 0);
@@ -286,10 +288,12 @@ void Voter::satSquelchOpen(bool is_open)
       }
     }
     assert(active_rx != 0);
+    rx_name = active_rx->name();
   }
   else
   {
     assert(active_rx != 0);
+    rx_name = active_rx->name();
     list<Rx *>::iterator it;
     for (it=rxs.begin(); it!=rxs.end(); ++it)
     {
@@ -301,11 +305,14 @@ void Voter::satSquelchOpen(bool is_open)
     active_rx = 0;
   }
 
+  if (m_verbose)
+  {
+    cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
+         << " (" << rx_name << ")" << endl;  
+  }
   setSquelchState(is_open);
 
 } /* Voter::satSquelchOpen */
-
-
 
 
 

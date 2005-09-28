@@ -139,6 +139,12 @@ class Voter : public Rx
     bool initialize(void);
     
     /**
+     * @brief   Set the verbosity level of the receiver
+     * @param   verbose Set to \em false to keep the rx from printing things
+     */
+    void setVerbose(bool verbose) { m_verbose = verbose; }
+
+    /**
      * @brief 	Mute the receiver
      * @param 	do_mute Set to \em true to mute or \em false to unmute
      */
@@ -168,6 +174,7 @@ class Voter : public Rx
     std::list<Rx *>   rxs;
     Rx	      	      *active_rx;
     bool      	      is_muted;
+    bool	      m_verbose;
     
     void satSquelchOpen(bool is_open);
 
