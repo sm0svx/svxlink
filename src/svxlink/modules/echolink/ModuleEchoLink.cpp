@@ -1070,7 +1070,7 @@ void ModuleEchoLink::updateEventVariables(void)
   stringstream ss;
   ss << qsos.size();
   string var_name(name());
-  var_name +=  "::connected_stations";
+  var_name +=  "::num_connected_stations";
   setEventVariable(var_name, ss.str());
 } /* ModuleEchoLink::updateEventVariables */
 
