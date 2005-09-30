@@ -179,10 +179,11 @@ proc squelch_open {is_open} {
     } else {
       recordStop;
       playMsg "rec_done";
-      playFile $subj_filename;
-      playSilence 1000;
-      playFile $mesg_filename;
-      playSilence 1000;
+      #playFile $subj_filename;
+      #playSilence 1000;
+      #playFile $mesg_filename;
+      #playSilence 1000;
+      playSilence 500;
       set rec_rcpt "";
       setState "logged_in";
     }
@@ -326,7 +327,7 @@ proc cmdPlayNextNewMessage {cmd} {
       playSilence 1000;
       playMsg "pnm_menu";
     } elseif {$cmd == ""} {
-      playInfo "Aborted operation play next message";
+      printInfo "Aborted operation play next message";
       playMsg "aborted";
       setState "logged_in";
     } else {
