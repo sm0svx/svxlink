@@ -196,6 +196,8 @@ bool Logic::initialize(void)
   list<string>::iterator mlit;
   string loaded_modules;
   list<Module*>::const_iterator mit;
+  list<string> cfgvars;
+  list<string>::const_iterator cfgit;
   
   if (cfg().getValue(name(), "LINKS", value))
   {
@@ -253,8 +255,6 @@ bool Logic::initialize(void)
     }
   }
   
-  loadModules();
-  
   m_rx = Rx::create(cfg(), rx_name);
   if ((m_rx == 0) || !rx().initialize())
   {
@@ -308,6 +308,9 @@ bool Logic::initialize(void)
   event_handler->setVariable("report_ctcss", str);
   event_handler->setVariable("active_module", "");
   event_handler->setVariable("is_core_event_handler", "1");
+
+  loadModules();
+  
   for (mit=modules.begin(); mit!=modules.end(); ++mit)
   {
     if (!loaded_modules.empty())
@@ -317,6 +320,17 @@ bool Logic::initialize(void)
     loaded_modules += (*mit)->name();
   }
   event_handler->setVariable("loaded_modules", loaded_modules);
+
+  event_handler->processEvent("namespace eval Logic {}");
+  cfgvars = cfg().listSection(name());
+  for (cfgit=cfgvars.begin(); cfgit!=cfgvars.end(); ++cfgit)
+  {
+    string var = "Logic::CFG_" + *cfgit;
+    string value;
+    cfg().getValue(name(), *cfgit, value);
+    event_handler->setVariable(var, value);
+  }
+
   event_handler->initialize();
 
   audio_switch_matrix.addSource(name(), &logic_con_out);
