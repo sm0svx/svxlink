@@ -612,6 +612,10 @@ void Logic::disconnectAllLogics(void)
 
 void Logic::squelchOpen(bool is_open)
 {
+  stringstream ss;
+  ss << "squelch_open " << (is_open ? "1" : "0");
+  processEvent(ss.str());
+
   if (!is_open)
   {
     logic_con_out.sinkFlushSamples();
@@ -638,7 +642,17 @@ void Logic::transmit(bool do_transmit)
   //cout << "Logic::transmit: do_transmit="
     //   << (do_transmit ? "true" : "false") << endl;
   
+  bool was_transmitting = tx().isTransmitting();
+
   tx().transmit(do_transmit);
+
+  if (do_transmit != was_transmitting)
+  {
+    stringstream ss;
+    ss << "transmit " << (do_transmit ? "1" : "0");
+    processEvent(ss.str());
+  }
+
   if (do_transmit)
   {
     if (!msg_handler->isWritingMessage())
