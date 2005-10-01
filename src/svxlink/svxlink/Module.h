@@ -57,6 +57,7 @@ An example of how to use the Template class
 
 
 
+
 /****************************************************************************
  *
  * Local Includes
@@ -186,6 +187,8 @@ class Module : public SigC::Object
      * return value checked.
      */
     virtual bool initialize(void);
+
+    virtual const char *compiledForVersion(void) const = 0;
 
     /**
      * @brief 	Retrieve the name of the config file section for this module
@@ -485,7 +488,7 @@ class Module : public SigC::Object
      * is specified in the configuration file, it will be deactivated.
      */
     void setIdle(bool is_idle);
-    
+
 
   private:
     void      	      *m_dl_handle;

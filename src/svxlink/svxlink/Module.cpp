@@ -3,6 +3,7 @@
 
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
+#include <version/SVXLINK.h>
 
 #include "Rx.h"
 #include "Logic.h"
@@ -30,6 +31,14 @@ Module::~Module(void)
 
 bool Module::initialize(void)
 {
+  if (strcmp(compiledForVersion(), SVXLINK_VERSION) != 0)
+  {
+    cerr << "*** ERROR: This module is compiled for version "
+         << compiledForVersion() << " of SvxLink but the running version "
+         << "of the SvxLink core is " << SVXLINK_VERSION << ".\n";
+    return false;
+  }
+
   string id_str;
   if (!cfg().getValue(cfgName(), "ID", id_str))
   {
