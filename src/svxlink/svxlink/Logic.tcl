@@ -16,10 +16,32 @@ namespace eval Logic {
 variable prev_ident 0;
 
 #
-# A constant that indicates the minimum time to wait between two
-# identifications. Manual identification is not affected.
+# A constant that indicates the minimum time in seconds to wait between two
+# identifications. Manual and long identifications is not affected.
 #
 variable min_time_between_ident 120;
+
+#
+# Short and long identification intervals. They are setup from config
+# variables below.
+#
+variable short_ident_interval 2000;
+variable long_ident_interval 2000;
+
+
+#
+# The ident_only_after_tx variable indicates if identification is only to
+# occur after the node has transmitted. The variable is setup below from the
+# configuration variable with the same name.
+# The need_ident variable indicates if identification is needed.
+#
+variable ident_only_after_tx 0;
+variable need_ident 0;
+
+#
+# A list of functions that should be called once every whole minute
+#
+variable timer_tick_subscribers [list];
 
 
 #
@@ -60,7 +82,7 @@ proc manual_identification {} {
     playMsg "Core" "pl_is";
     playNumber $report_ctcss;
     playMsg "Core" "hz";
-    playSilence 250;
+    playSilence 500;
   }
   if {$active_module != ""} {
     playMsg "Core" "active_module";
@@ -149,24 +171,6 @@ proc macro_another_active_module {} {
 
 
 #
-# Executed when the IDENT_INTERVAL timer has expired.
-#
-proc periodic_identify {} {
-  global mycall;
-  variable prev_ident;
-  variable min_time_between_ident;
-  
-  set now [clock seconds];
-  if {$now-$prev_ident < $min_time_between_ident} {
-    return;
-  }
-  set prev_ident $now;
-
-  spellWord $mycall;
-}
-
-
-#
 # Executed when an unknown DTMF command is entered
 #
 proc unknown_command {cmd} {
@@ -223,38 +227,135 @@ proc link_already_active {name} {
 
 
 #
-# Executed once every whole minute
+# Executed each time the transmitter is turned on or off
+#
+proc transmit {is_on} {
+  #puts "Turning the transmitter $is_on";
+  variable prev_ident;
+  variable need_ident;
+  if {$is_on && ([clock seconds] - $prev_ident > 5)} {
+    set need_ident 1;
+  }
+}
+
+
+#
+# Executed each time the squelch is opened or closed
+#
+proc squelch_open {is_open} {
+  #puts "The squelch is $is_open";
+}
+
+
+#
+# Executed once every whole minute. Don't put any code here directly
+# Create a new function and add it to the timer tick subscriber list
+# by using the function addTimerTickSubscriber.
 #
 proc every_minute {} {
+  variable timer_tick_subscribers;
   #puts [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"];
-  
-  #
-  # An example of how to announce the callsign and time every whole hour.
-  # Also, announce module state for each module.
-  #
-  #global loaded_modules;
-  #global mycall;
-  #set epoch [clock seconds];
-  #if {[clock format $epoch -format "%M"] == 0} {
-  #  spellWord $mycall;
-  #  playMsg "EchoLink" "link"
-  #  playSilence 500;
-  #  playMsg "Core" "the_time_is";
-  #  playSilence 100;
-  #  playMsg "Core" [string trimleft [clock format $epoch -format "%I"] 0];
-  #  playSilence 100;
-  #  playMsg "Core" [clock format $epoch -format "%p"];
-  #  foreach module [split $loaded_modules " "] {
-  #    set func "::";
-  #    append func $module "::status_report";
-  #    if {"[info procs $func]" ne ""} {
-  #      $func;
-  #    }
-  #  }
-  #}
-  
-  #puts "Hello, SvxLink!";
+  foreach subscriber $timer_tick_subscribers {
+    $subscriber;
+  }
 }
+
+
+#
+# Use this function to add a function to the list of functions that
+# should be executed once every whole minute.
+#
+proc addTimerTickSubscriber {func} {
+  variable timer_tick_subscribers;
+  lappend timer_tick_subscribers $func;
+}
+
+
+#
+# Should be executed once every whole minute to check if it is time to
+# identify.
+#
+proc checkPeriodicIdentify {} {
+  global loaded_modules;
+  global mycall;
+  global active_module;
+  variable prev_ident;
+  variable short_ident_interval;
+  variable long_ident_interval;
+  variable min_time_between_ident;
+  variable ident_only_after_tx;
+  variable need_ident;
+  variable CFG_TYPE;
+  
+  set epoch [clock seconds];
+  set hour [clock format $epoch -format "%k"];
+  regexp {([1-5]?\d)$} [clock format $epoch -format "%M"] -> minute;
+
+  set now [clock seconds];
+  if {($hour * 60 + $minute) % $long_ident_interval != 0} {
+    if {$now-$prev_ident < $min_time_between_ident} {
+      return;
+    }
+    if {$ident_only_after_tx && !$need_ident} {
+      return;
+    }
+  }
+  set prev_ident $now;
+  set need_ident 0;
+
+  if {($hour * 60 + $minute) % $short_ident_interval == 0} {
+    spellWord $mycall;
+    if {$CFG_TYPE == "Simplex"} {
+      playMsg "EchoLink" "link";
+    } elseif {$CFG_TYPE == "Repeater"} {
+      playMsg "EchoLink" "repeater";
+    }
+    playSilence 500;
+  }
+  if {($hour * 60 + $minute) % $long_ident_interval == 0} {
+    playMsg "Core" "the_time_is";
+    playSilence 100;
+    playMsg "Core" [string trimleft [clock format $epoch -format "%I"] 0];
+    playSilence 100;
+    playMsg "Core" [clock format $epoch -format "%p"];
+    playSilence 500;
+    if {$active_module == ""} {
+      foreach module [split $loaded_modules " "] {
+        set func "::";
+        append func $module "::status_report";
+        if {"[info procs $func]" ne ""} {
+          $func;
+        }
+      }
+    }
+  }
+}
+
+
+##############################################################################
+#
+# Main program
+#
+##############################################################################
+
+if [info exists CFG_SHORT_IDENT_INTERVAL] {
+  if {$CFG_SHORT_IDENT_INTERVAL > 0} {
+    set short_ident_interval $CFG_SHORT_IDENT_INTERVAL;
+  }
+}
+
+if [info exists CFG_LONG_IDENT_INTERVAL] {
+  if {$CFG_LONG_IDENT_INTERVAL > 0} {
+    set long_ident_interval $CFG_LONG_IDENT_INTERVAL;
+  }
+}
+
+if [info exists CFG_IDENT_ONLY_AFTER_TX] {
+  if {$CFG_IDENT_ONLY_AFTER_TX > 0} {
+    set ident_only_after_tx $CFG_IDENT_ONLY_AFTER_TX;
+  }
+}
+
 
 
 # end of namespace

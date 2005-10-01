@@ -11,11 +11,19 @@
 #
 namespace eval SimplexLogic {
 
+#
+# Extract the logic name from the current namespace
+#
+variable logic_name [namespace tail [namespace current]];
+
 
 #
 # Executed when the SvxLink software is started
 # 
 proc startup {} {
+  variable logic_name;
+  append func $logic_name "::checkPeriodicIdentify";
+  Logic::addTimerTickSubscriber $func;
   Logic::startup;
 }
 
@@ -97,14 +105,6 @@ proc macro_another_active_module {} {
 
 
 #
-# Executed when the IDENT_INTERVAL timer has expired.
-#
-proc periodic_identify {} {
-  Logic::periodic_identify;
-}
-
-
-#
 # Executed when an unknown DTMF command is entered
 #
 proc unknown_command {cmd} {
@@ -159,6 +159,30 @@ proc link_already_active {name} {
 #
 proc every_minute {} {
   Logic::every_minute;
+}
+
+
+#
+# Executed each time the transmitter is turned on or off
+#
+proc transmit {is_on} {
+  Logic::transmit $is_on;
+}
+
+
+#
+# Executed each time the squelch is opened or closed
+#
+proc squelch_open {is_open} {
+  Logic::squelch_open $is_open;
+}
+
+
+#
+# Executed once every whole minute to check if it's time to identify
+#
+proc checkPeriodicIdentify {} {
+  Logic::checkPeriodicIdentify;
 }
 
 

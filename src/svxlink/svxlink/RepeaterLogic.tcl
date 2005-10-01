@@ -11,13 +11,26 @@
 #
 namespace eval RepeaterLogic {
 
+#
+# Extract the logic name from the current namespace
+#
+variable logic_name [namespace tail [namespace current]];
+
+
+#
+# This variable indicates if the repeater is up or not
+# 
+variable repeater_is_up 0;
+
 
 #
 # Executed when the SvxLink software is started
 # 
 proc startup {} {
+  variable logic_name;
+  append func $logic_name "::checkPeriodicIdentify";
+  Logic::addTimerTickSubscriber $func;
   Logic::startup;
-  #playMsg "Core" "repeater";
 }
 
 
@@ -122,23 +135,6 @@ proc macro_another_active_module {} {
 
 
 #
-# Executed when the IDENT_INTERVAL timer has expired.
-#
-proc periodic_identify {} {
-  global mycall;
-  
-  set now [clock seconds];
-  if {$now-$Logic::prev_ident < $Logic::min_time_between_ident} {
-    return;
-  }
-  set Logic::prev_ident $now;
-  
-  spellWord $mycall;
-  playMsg "Core" "repeater";
-}
-
-
-#
 # Executed when an unknown DTMF command is entered
 #
 proc unknown_command {cmd} {
@@ -189,6 +185,22 @@ proc link_already_active {name} {
 
 
 #
+# Executed each time the transmitter is turned on or off
+#
+proc transmit {is_on} {
+  Logic::transmit $is_on;
+}
+
+
+#
+# Executed each time the squelch is opened or closed
+#
+proc squelch_open {is_open} {
+  Logic::squelch_open $is_open;
+}
+
+
+#
 # Executed once every whole minute
 #
 proc every_minute {} {
@@ -202,7 +214,10 @@ proc every_minute {} {
 proc repeater_up {} {
   global mycall;
   global active_module;
-  
+  variable repeater_is_up;
+
+  set repeater_is_up 1;
+
   #playMsg "../extra-sounds" "attention";
   #playSilence 250;
 
@@ -228,6 +243,9 @@ proc repeater_up {} {
 #
 proc repeater_down {} {
   global mycall;
+  variable repeater_is_up;
+
+  set repeater_is_up 0;
   
   set now [clock seconds];
   if {$now-$Logic::prev_ident < $Logic::min_time_between_ident} {
@@ -260,6 +278,17 @@ proc repeater_idle {} {
   for {set i $iterations} {$i>0} {set i [expr $i - 1]} {
     playTone 1100 [expr {round(pow($base, $i) * 800 / $max)}] 100;
     playTone 1200 [expr {round(pow($base, $i) * 800 / $max)}] 100;
+  }
+}
+
+
+#
+# Executed once every whole minute to check if it's time to identify
+#
+proc checkPeriodicIdentify {} {
+  variable repeater_is_up;
+  if {!$repeater_is_up} {
+    Logic::checkPeriodicIdentify;
   }
 }
 
