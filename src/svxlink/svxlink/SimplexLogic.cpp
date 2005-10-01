@@ -122,9 +122,7 @@ using namespace Async;
 
 
 SimplexLogic::SimplexLogic(Async::Config& cfg, const string& name)
-  : Logic(cfg, name), pending_transmit(false),
-    tx_timeout_occured(false), ident_timer(0), ident_interval(0),
-    pending_ident(false)
+  : Logic(cfg, name), pending_transmit(false), tx_timeout_occured(false)
 {
 
 } /* SimplexLogic::SimplexLogic */
@@ -132,7 +130,6 @@ SimplexLogic::SimplexLogic(Async::Config& cfg, const string& name)
 
 SimplexLogic::~SimplexLogic(void)
 {
-  delete ident_timer;
 } /* SimplexLogic::~SimplexLogic */
 
 
@@ -144,29 +141,9 @@ bool SimplexLogic::initialize(void)
   }
   
   string str;
-  if (cfg().getValue(name(), "IDENT_INTERVAL", str))
-  {
-    ident_interval = atoi(str.c_str()) * 1000;
-  }
 
-    // This is off by default and isn't required to exist
-  ident_only_after_tx = 0;
-  if (cfg().getValue(name(), "IDENT_ONLY_AFTER_TX", str))
-  {
-    ident_only_after_tx = atoi(str.c_str());
-  }
-  
   //tx().txTimeout.connect(slot(this, &SimplexLogic::txTimeout));
   
-  if (ident_interval > 0)
-  {
-    ident_timer = new Timer(ident_interval, Timer::TYPE_PERIODIC);
-    ident_timer->expired.connect(slot(this, &SimplexLogic::identify));
-  }
-      
-  need_ident = false;
-  ident_last_sent = time(NULL);
-
   //rx().mute(false);
   
   return true;
@@ -184,23 +161,11 @@ void SimplexLogic::transmit(bool do_transmit)
     {
       if (!rx().squelchIsOpen())
       {
-	//printf("Squelch is NOT open. Transmitting...\n");
-
-	  // If ident_only_after_tx set, flag that we transmitted and will need
-	  // to ID ourselves -- but only if we didn't just finish IDing already.
-	if (ident_only_after_tx && !need_ident)
-	{
-	  if (time(NULL) - ident_last_sent > ident_only_after_tx) 
-	  {
-	    need_ident = true;
-	  }
-	}
 	rx().mute(true);
 	Logic::transmit(true);
       }
       else
       {
-	//printf("Pending transmit request...\n");
 	pending_transmit = true;
       }
     }
@@ -208,7 +173,6 @@ void SimplexLogic::transmit(bool do_transmit)
   else
   {
     pending_transmit = false;
-    //printf("Resetting tx timeout timer\n");
     tx_timeout_occured = false;
     Logic::transmit(false);
     rx().mute(false);
@@ -262,34 +226,6 @@ int SimplexLogic::transmitAudio(short *samples, int count)
  ****************************************************************************/
 
 
-void SimplexLogic::identify(Timer *t)
-{
-  //printf("SimplexLogic::identify\n");
-  
-  if (rx().squelchIsOpen() ||
-      ((activeModule() != 0) && (activeModule()->isTransmitting())))
-  {
-    pending_ident = true;
-    return;
-  }
-  
-  if (!callsign().empty())
-  {
-    if (!ident_only_after_tx || need_ident) 
-    {
-      processEvent("periodic_identify");
-      need_ident = false;
-      ident_last_sent = time(NULL);
-    }
-    
-    if (ident_timer != 0)
-    {
-      ident_timer->reset();
-    }
-  }
-} /* SimplexLogic::identify */
-
-
 void SimplexLogic::squelchOpen(bool is_open)
 {
   //cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
@@ -302,15 +238,8 @@ void SimplexLogic::squelchOpen(bool is_open)
       enableRgrSoundTimer(true);
     }
     
-    if (pending_ident)
-    {
-      pending_ident = false;
-      identify();
-    }
-
     if (pending_transmit)
     {
-      //printf("Executing pending transmit\n");
       pending_transmit = false;
       transmit(true);
     }

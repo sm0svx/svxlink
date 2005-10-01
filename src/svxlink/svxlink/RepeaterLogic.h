@@ -163,8 +163,6 @@ class RepeaterLogic : public Logic
     Async::Timer    *up_timer;
     int      	    idle_timeout;
     Async::Timer    *idle_sound_timer;
-    Async::Timer    *ident_timer;
-    int       	    ident_interval;
     int       	    idle_sound_interval;
     bool      	    repeating_enabled;
     bool      	    preserve_idle_state;
@@ -174,7 +172,6 @@ class RepeaterLogic : public Logic
     bool      	    activate_on_sql_close;
     bool            no_repeat;
     
-    void identify(Async::Timer *t=0);
     int audioReceived(short *samples, int count);
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);

@@ -150,14 +150,7 @@ class SimplexLogic : public Logic
   private:
     bool      	  pending_transmit;
     bool      	  tx_timeout_occured;
-    Async::Timer  *ident_timer;
-    int       	  ident_interval;
-    bool      	  pending_ident;
-    int           ident_only_after_tx;
-    int           ident_last_sent;
-    bool          need_ident;
     
-    void identify(Async::Timer *t=0);
     void squelchOpen(bool is_open);
     //void txTimeout(void);
 

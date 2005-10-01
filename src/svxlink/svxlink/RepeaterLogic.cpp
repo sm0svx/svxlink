@@ -126,8 +126,7 @@ using namespace Async;
 
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
   : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(30000),
-    idle_sound_timer(0), ident_timer(0), ident_interval(10*60*1000),
-    idle_sound_interval(0), repeating_enabled(false), 
+    idle_sound_timer(0), idle_sound_interval(0), repeating_enabled(false),
     preserve_idle_state(false), required_sql_open_duration(-1),
     open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false)
 {
@@ -137,7 +136,6 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
 
 RepeaterLogic::~RepeaterLogic(void)
 {
-  delete ident_timer;
   delete idle_sound_timer;
   delete up_timer;
 } /* RepeaterLogic::~RepeaterLogic */
@@ -190,11 +188,6 @@ bool RepeaterLogic::initialize(void)
     open_on_dtmf = str.c_str()[0];
   }
   
-  if (cfg().getValue(name(), "IDENT_INTERVAL", str))
-  {
-    ident_interval = atoi(str.c_str()) * 1000;
-  }
-  
   if (cfg().getValue(name(), "IDLE_SOUND_INTERVAL", str))
   {
     idle_sound_interval = atoi(str.c_str());
@@ -228,12 +221,6 @@ bool RepeaterLogic::initialize(void)
     rx().toneDetected.connect(slot(this, &RepeaterLogic::detectedTone));
   }
   
-  if (ident_interval > 0)
-  {
-    ident_timer = new Timer(ident_interval, Timer::TYPE_PERIODIC);
-    ident_timer->expired.connect(slot(this, &RepeaterLogic::identify));
-  }
-      
   return true;
   
 } /* RepeaterLogic::initialize */
@@ -366,20 +353,6 @@ void RepeaterLogic::remoteLogicTransmitRequest(bool do_tx)
  * Private member functions
  *
  ****************************************************************************/
-
-void RepeaterLogic::identify(Timer *t)
-{
-  //printf("RepeaterLogic::identify\n");
-  if (!callsign().empty() && !repeater_is_up)
-  {
-    processEvent("periodic_identify");
-    if (ident_timer != 0)
-    {
-      ident_timer->reset();
-    }
-  }
-} /* RepeaterLogic::identify */
-
 
 int RepeaterLogic::audioReceived(short *samples, int count)
 {
