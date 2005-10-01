@@ -222,18 +222,25 @@ proc status_report {} {
   
   set user_list {};
   foreach userid [lsort [array names users]] {
-    if {[llength [glob -nocomplain -directory "$recdir/$userid" *.subj]] > 0} {
-      lappend user_list $userid;
+    set call [id2call $userid];
+    if {[llength [glob -nocomplain -directory "$recdir/$call" *.subj]] > 0} {
+      lappend user_list $call;
     }
   }
   if {[llength $user_list] > 0} {
     playMsg "messages_for";
-    foreach userid $user_list {
-      array set user [split $users($userid) " ="];
-      spellWord $user(call);
+    foreach call $user_list {
+      spellWord $call;
       playSilence 250;  
     }
   }
+}
+
+
+proc id2call {id} {
+  variable users;
+  array set user [split $users($id) " ="];
+  return $user(call);
 }
 
 
@@ -267,8 +274,8 @@ proc cmdLogin {cmd} {
       printInfo "User $user(call) logged in with password $user(pass)";
       spellWord $user(call);
       playMsg "login_ok";
-      if {[file exists "$recdir/$userid"] != 1} {
-        file mkdir "$recdir/$userid";
+      if {[file exists "$recdir/$user(call)"] != 1} {
+        file mkdir "$recdir/$user(call)";
       }
       setState "logged_in";
     } else {
@@ -296,7 +303,8 @@ proc cmdPlayNextNewMessage {cmd} {
   variable state;
 
   #puts "cmdPlayNextNewMessage";
-  set subjects [glob -nocomplain -directory "$recdir/$userid" *.subj];
+  set call [id2call $userid];
+  set subjects [glob -nocomplain -directory "$recdir/$call]" *.subj];
   if {$state == "logged_in"} {
     set msg_cnt [llength $subjects];
     playNumber $msg_cnt;
@@ -391,7 +399,7 @@ proc cmdRecordMessage {cmd} {
       spellWord $user(call);
       playSilence 500;
       playMsg "rec_subject";
-      set rec_rcpt $cmd;
+      set rec_rcpt [id2call $cmd];
       if {[file exists "$recdir/$rec_rcpt"] != 1} {
         file mkdir "$recdir/$rec_rcpt";
       }
