@@ -14,10 +14,37 @@ namespace eval Help {
 
 
 #
+# Extract the module name from the current namespace
+#
+set module_name [namespace tail [namespace current]];
+
+
+#
+# An "overloaded" playMsg that eliminates the need to write the module name
+# as the first argument.
+#
+proc playMsg {msg} {
+  variable module_name;
+  ::playMsg $module_name $msg;
+}
+
+
+#
+# A convenience function for printing out information prefixed by the
+# module name
+#
+proc printInfo {msg} {
+  variable module_name;
+  puts "$module_name: $msg";
+}
+
+
+#
 # Executed when this module is being activated
 #
 proc activating_module {} {
-  Module::activating_module "Help";
+  variable module_name;
+  Module::activating_module $module_name;
 }
 
 
@@ -25,7 +52,8 @@ proc activating_module {} {
 # Executed when this module is being deactivated.
 #
 proc deactivating_module {} {
-  Module::deactivating_module "Help";
+  variable module_name;
+  Module::deactivating_module $module_name;
 }
 
 
@@ -33,7 +61,8 @@ proc deactivating_module {} {
 # Executed when the inactivity timeout for this module has expired.
 #
 proc timeout {} {
-  Module::timeout "Help";
+  variable module_name;
+  Module::timeout $module_name;
 }
 
 
@@ -41,7 +70,8 @@ proc timeout {} {
 # Executed when playing of the help message for this module has been requested.
 #
 proc play_help {} {
-  Module::play_help "Help";
+  variable module_name;
+  Module::play_help $module_name;
 }
 
 
@@ -49,11 +79,11 @@ proc play_help {} {
 # Executed to prompt the user to select a module to get help about
 #
 proc choose_module {module_list} {
-  playMsg "Help" "choose_module";
+  playMsg "choose_module";
   foreach {module_id module_name} "$module_list" {
     playNumber $module_id;
     playSilence 50;
-    playMsg $module_name "name";
+    ::playMsg $module_name "name";
     playSilence 200;
   }
 }
@@ -64,7 +94,7 @@ proc choose_module {module_list} {
 #
 proc no_such_module {module_id} {
   playNumber $module_id;
-  playMsg "Help" "no_such_module";
+  playMsg "no_such_module";
 }
 
 

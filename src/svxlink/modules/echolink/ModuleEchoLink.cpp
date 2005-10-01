@@ -45,7 +45,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/SVXLINK.h>
+#include <version/MODULE_ECHOLINK.h>
+
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
 #include <EchoLinkDirectory.h>
@@ -149,7 +150,7 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
     outgoing_con_pending(false), max_connections(1), max_qsos(1), talker(0),
     squelch_is_open(false)
 {
-  cout << "\tModule EchoLink v" SVXLINK_VERSION " starting...\n";
+  cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
 } /* ModuleEchoLink */
 

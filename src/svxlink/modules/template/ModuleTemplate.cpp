@@ -44,7 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/SVXLINK.h>
+#include <version/MODULE_TEMPLATE.h>
 
 
 
@@ -135,7 +135,7 @@ extern "C" {
 ModuleTemplate::ModuleTemplate(void *dl_handle, Logic *logic, const string& cfg_name)
   : Module(dl_handle, logic, cfg_name)
 {
-  cout << "\tModule Template v" SVXLINK_VERSION " starting...\n";
+  cout << "\tModule Template v" MODULE_TEMPLATE_VERSION " starting...\n";
 
 } /* ModuleTemplate */
 

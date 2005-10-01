@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <version/SVXLINK.h>
 #include <Module.h>
 
 
@@ -115,6 +116,7 @@ class ModuleHelp : public Module
   public:
     ModuleHelp(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleHelp(void);
+    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
   private:
     void activateInit(void);

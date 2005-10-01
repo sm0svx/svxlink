@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <version/SVXLINK.h>
 #include <Module.h>
 #include <EchoLinkQso.h>
 #include <EchoLinkStationData.h>
@@ -130,6 +131,8 @@ class ModuleEchoLink : public Module
     ModuleEchoLink(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleEchoLink(void);
     bool initialize(void);
+    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
+
     
   private:
     EchoLink::Directory *dir;

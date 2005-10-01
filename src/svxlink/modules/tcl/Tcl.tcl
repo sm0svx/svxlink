@@ -12,12 +12,37 @@
 #
 namespace eval Tcl {
 
+#
+# Extract the module name from the current namespace
+#
+set module_name [namespace tail [namespace current]];
+
+
+#
+# An "overloaded" playMsg that eliminates the need to write the module name
+# as the first argument.
+#
+proc playMsg {msg} {
+  variable module_name;
+  ::playMsg $module_name $msg;
+}
+
+
+#
+# A convenience function for printing out information prefixed by the
+# module name
+#
+proc printInfo {msg} {
+  variable module_name;
+  puts "$module_name: $msg";
+}
+
 
 #
 # Executed when this module is being activated
 #
 proc activating_module {} {
-  Module::activating_module "Tcl";
+  Module::activating_module $module_name;
 }
 
 
@@ -25,7 +50,7 @@ proc activating_module {} {
 # Executed when this module is being deactivated.
 #
 proc deactivating_module {} {
-  Module::deactivating_module "Tcl";
+  Module::deactivating_module $module_name;
 }
 
 
@@ -33,7 +58,7 @@ proc deactivating_module {} {
 # Executed when the inactivity timeout for this module has expired.
 #
 proc timeout {} {
-  Module::timeout "Tcl";
+  Module::timeout $module_name;
 }
 
 
@@ -41,7 +66,7 @@ proc timeout {} {
 # Executed when playing of the help message for this module has been requested.
 #
 proc play_help {} {
-  Module::play_help "Tcl";
+  Module::play_help $module_name;
 }
 
 
@@ -49,7 +74,7 @@ proc play_help {} {
 # Executed when a DTMF digit (0-9, A-F, *, #) is received
 #
 proc dtmf_digit_received {char} {
-  puts "DTMF digit received: $char";
+  printInfo "DTMF digit received: $char";
 }
 
 
@@ -57,7 +82,7 @@ proc dtmf_digit_received {char} {
 # Executed when a DTMF command is received
 #
 proc dtmf_cmd_received {cmd} {
-  puts "DTMF command received: $cmd";
+  printInfo "DTMF command received: $cmd";
 }
 
 
@@ -67,7 +92,7 @@ proc dtmf_cmd_received {cmd} {
 #
 proc squelch_open {is_open} {
   if {$is_open} {set str "OPEN"} else { set str "CLOSED"};
-  puts "ModuleTcl: The squelch is $str";
+  printInfo "The squelch is $str";
 }
 
 
@@ -79,7 +104,7 @@ proc squelch_open {is_open} {
 # NOTE: Does not work right now.
 #
 #proc all_msgs_written {} {
-  #puts "ModuleTcl: all_msgs_written called...";
+  #printInfo "all_msgs_written called...";
 #}
 
 
@@ -90,7 +115,7 @@ proc squelch_open {is_open} {
 # This function will only be called if this module is active.
 #
 proc status_report {} {
-  puts "ModuleTcl: status_report called...";
+  printInfo "status_report called...";
 }
 
 

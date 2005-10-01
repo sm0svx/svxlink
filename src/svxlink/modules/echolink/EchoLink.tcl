@@ -12,10 +12,35 @@
 #
 namespace eval EchoLink {
 
+#
+# Extract the module name from the current namespace
+#
+set module_name [namespace tail [namespace current]];
+
+
+#
+# An "overloaded" playMsg that eliminates the need to write the module name
+# as the first argument.
+#
+proc playMsg {msg} {
+  variable module_name;
+  ::playMsg $module_name $msg;
+}
+
+
+#
+# A convenience function for printing out information prefixed by the
+# module name
+#
+proc printInfo {msg} {
+  variable module_name;
+  puts "$module_name: $msg";
+}
+
 
 #
 # This variable is updated by the EchoLink module when a station connects or
-# disconnects.
+# disconnects. It contains the number of currently connected stations.
 #
 variable num_connected_stations 0;
 
@@ -24,7 +49,8 @@ variable num_connected_stations 0;
 # Executed when this module is being activated
 #
 proc activating_module {} {
-  Module::activating_module "EchoLink";
+  variable module_name;
+  Module::activating_module $module_name;
 }
 
 
@@ -32,7 +58,8 @@ proc activating_module {} {
 # Executed when this module is being deactivated.
 #
 proc deactivating_module {} {
-  Module::deactivating_module "EchoLink";
+  variable module_name;
+  Module::deactivating_module $module_name;
 }
 
 
@@ -40,7 +67,8 @@ proc deactivating_module {} {
 # Executed when the inactivity timeout for this module has expired.
 #
 proc timeout {} {
-  Module::timeout "EchoLink";
+  variable module_name;
+  Module::timeout $module_name;
 }
 
 
@@ -48,7 +76,8 @@ proc timeout {} {
 # Executed when playing of the help message for this module has been requested.
 #
 proc play_help {} {
-  Module::play_help "EchoLink";
+  variable module_name;
+  Module::play_help $module_name;
 }
 
 
@@ -59,12 +88,12 @@ proc spellEchoLinkCallsign {call} {
   global basedir;
   if [regexp {^(\w+)-L$} $call ignored callsign] {
     spellWord $callsign;
-    playMsg "EchoLink" "link";
+    playMsg "link";
   } elseif [regexp {^(\w+)-R$} $call ignored callsign] {
     spellWord $callsign;
-    playMsg "EchoLink" "repeater";
+    playMsg "repeater";
   } elseif [regexp {^\*(\w+)\*$} $call ignored name] {
-    playMsg "EchoLink" "conference";
+    playMsg "conference";
     playSilence 50;
     set name [string tolower $name];
     if [file exists "$basedir/EchoLink/conf-$name.raw"] {
@@ -85,7 +114,7 @@ proc spellEchoLinkCallsign {call} {
 proc list_connected_stations {connected_stations} {
   playNumber [llength $connected_stations];
   playSilence 50;
-  playMsg "EchoLink" "connected_stations";
+  playMsg "connected_stations";
   foreach {call} "$connected_stations" {
     spellEchoLinkCallsign $call;
     playSilence 250;
@@ -98,7 +127,7 @@ proc list_connected_stations {connected_stations} {
 # the directory server is offline due to communications failure.
 #
 proc directory_server_offline {} {
-  playMsg "EchoLink" "directory_server_offline";
+  playMsg "directory_server_offline";
 }
 
 
@@ -108,7 +137,7 @@ proc directory_server_offline {} {
 #
 proc no_more_connections_allowed {} {
   # FIXME: Change the message to something that makes more sense...
-  playMsg "EchoLink" "link_busy";
+  playMsg "link_busy";
 }
 
 
@@ -118,11 +147,12 @@ proc no_more_connections_allowed {} {
 #
 proc status_report {} {
   variable num_connected_stations;
+  variable module_name;
   global active_module;
   
-  if {$active_module == "EchoLink"} {
+  if {$active_module == $module_name} {
     playNumber $num_connected_stations;
-    playMsg "EchoLink" "connected_stations";
+    playMsg "connected_stations";
   }
 }
 
@@ -132,7 +162,7 @@ proc status_report {} {
 #
 proc station_id_not_found {station_id} {
   playNumber $station_id;
-  playMsg "EchoLink" "not_found";
+  playMsg "not_found";
 }
 
 
@@ -141,7 +171,7 @@ proc station_id_not_found {station_id} {
 # request.
 #
 proc lookup_failed {station_id} {
-  playMsg "EchoLink" "operation_failed";
+  playMsg "operation_failed";
 }
 
 
@@ -149,7 +179,7 @@ proc lookup_failed {station_id} {
 # Executed when a local user tries to connect to the local node.
 #
 proc self_connect {} {
-  playMsg "EchoLink" "operation_failed";
+  playMsg "operation_failed";
 }
 
 
@@ -158,7 +188,7 @@ proc self_connect {} {
 # connected.
 #
 proc already_connected_to {call} {
-  playMsg "EchoLink" "already_connected_to";
+  playMsg "already_connected_to";
   playSilence 50;
   spellEchoLinkCallsign $call;
 }
@@ -168,7 +198,7 @@ proc already_connected_to {call} {
 # Executed when an internal error occurs.
 #
 proc internal_error {} {
-  playMsg "EchoLink" "operation_failed";
+  playMsg "operation_failed";
 }
 
 
@@ -176,7 +206,7 @@ proc internal_error {} {
 # Executed when an outgoing connection has been requested.
 #
 proc connecting_to {call} {
-  playMsg "EchoLink" "connecting_to";
+  playMsg "connecting_to";
   spellEchoLinkCallsign $call;
   playSilence 500;
 }
@@ -187,7 +217,7 @@ proc connecting_to {call} {
 #
 proc disconnected {call} {
   spellEchoLinkCallsign $call;
-  playMsg "EchoLink" "disconnected";
+  playMsg "disconnected";
   playSilence 500;
 }
 
@@ -196,7 +226,7 @@ proc disconnected {call} {
 # Executed when an incoming EchoLink connection has been accepted.
 #
 proc remote_connected {call} {
-  playMsg "EchoLink" "connected";
+  playMsg "connected";
   spellEchoLinkCallsign $call;
   playSilence 500;
 }
@@ -206,7 +236,7 @@ proc remote_connected {call} {
 # Executed when an outgoing connection has been established.
 #
 proc connected {} {
-  playMsg "EchoLink" "connected";
+  playMsg "connected";
   playSilence 500;
 }
 
@@ -216,7 +246,7 @@ proc connected {} {
 # connection will be terminated.
 #
 proc link_inactivity_timeout {} {
-  playMsg "EchoLink" "timeout";
+  playMsg "timeout";
 }
 
 
@@ -232,7 +262,7 @@ proc link_inactivity_timeout {} {
 #
 proc remote_greeting {} {
   playSilence 1000;
-  playMsg "EchoLink" "greeting";
+  playMsg "greeting";
 }
 
 
@@ -241,7 +271,7 @@ proc remote_greeting {} {
 #
 proc reject_remote_connection {} {
   playSilence 1000;
-  playMsg "EchoLink" "reject_connection";
+  playMsg "reject_connection";
   playSilence 1000;
 }
 
@@ -250,7 +280,7 @@ proc reject_remote_connection {} {
 # Executed when the inactivity timer times out
 #
 proc remote_timeout {} {
-  playMsg "EchoLink" "timeout";
+  playMsg "timeout";
   playSilence 1000;
 }
 

@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <version/SVXLINK.h>
 #include <Module.h>
 #include <AudioPacer.h>
 
@@ -127,6 +128,7 @@ class ModuleParrot : public Module
     ModuleParrot(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleParrot(void);
     bool initialize(void);
+    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
   private:
     Async::SampleFifo 	    *fifo;

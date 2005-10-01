@@ -52,10 +52,15 @@ proc playMsg {msg} {
 }
 
 
+#
+# A convenience function for printing out information prefixed by the
+# module name
+#
 proc printInfo {msg} {
   variable module_name;  
   puts "$module_name: $msg";
 }
+
 
 #
 # Executed when this module is being activated
@@ -106,7 +111,7 @@ proc play_help {} {
 # Executed when a DTMF digit (0-9, A-F, *, #) is received
 #
 proc dtmf_digit_received {char} {
-  #puts "DTMF digit received: $char";
+  #printInfo "DTMF digit received: $char";
 }
 
 
@@ -116,7 +121,7 @@ proc dtmf_digit_received {char} {
 proc dtmf_cmd_received {cmd} {
   variable state;
   
-  #puts "DTMF command received: $cmd";
+  #printInfo "DTMF command received: $cmd";
   
   if {$state == "login"} {
     cmdLogin $cmd;
@@ -407,7 +412,7 @@ proc cmdRecordMessage {cmd} {
 
 
 proc cmdPlayMessage {msg} {
-  puts "cmdPlayMessage $msg";
+  printInfo "cmdPlayMessage $msg";
 }
 
 

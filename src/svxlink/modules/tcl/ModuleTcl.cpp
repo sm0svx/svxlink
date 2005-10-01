@@ -44,7 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/SVXLINK.h>
+#include <version/MODULE_TCL.h>
 
 
 
@@ -135,7 +135,7 @@ extern "C" {
 ModuleTcl::ModuleTcl(void *dl_handle, Logic *logic, const string& cfg_name)
   : Module(dl_handle, logic, cfg_name)
 {
-  cout << "\tModule Tcl v" SVXLINK_VERSION " starting...\n";
+  cout << "\tModule Tcl v" MODULE_TCL_VERSION " starting...\n";
 
 } /* ModuleTcl */
 

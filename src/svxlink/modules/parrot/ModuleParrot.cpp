@@ -47,7 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/SVXLINK.h>
+#include <version/MODULE_PARROT.h>
 #include <AsyncConfig.h>
 #include <AsyncSampleFifo.h>
 #include <AsyncTimer.h>
@@ -143,7 +143,7 @@ ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
   : Module(dl_handle, logic, cfg_name), fifo(0), squelch_is_open(false),
     pacer(8000, 800, 1000), repeat_delay(0), repeat_delay_timer(0)
 {
-  cout << "\tModule Parrot v" SVXLINK_VERSION " starting...\n";
+  cout << "\tModule Parrot v" MODULE_PARROT_VERSION " starting...\n";
   
 } /* ModuleParrot */
 

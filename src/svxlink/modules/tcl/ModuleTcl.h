@@ -47,6 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <Module.h>
+#include <version/SVXLINK.h>
 
 
 
@@ -116,6 +117,7 @@ class ModuleTcl : public Module
   public:
     ModuleTcl(void *dl_handle, Logic *logic, const std::string& cfg_name);
     ~ModuleTcl(void);
+    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
   private:
     void activateInit(void);
