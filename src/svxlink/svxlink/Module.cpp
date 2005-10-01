@@ -49,6 +49,16 @@ bool Module::initialize(void)
     m_tmo_timer->expired.connect(slot(this, &Module::moduleTimeout));
   }
   
+  list<string> vars = cfg().listSection(cfgName());
+  list<string>::const_iterator cfgit;
+  for (cfgit=vars.begin(); cfgit!=vars.end(); ++cfgit)
+  {
+    string var = name() + "::CFG_" + *cfgit;
+    string value;
+    cfg().getValue(cfgName(), *cfgit, value);
+    setEventVariable(var, value);
+  }
+
   return true;
   
 } /* Module::initialize */
