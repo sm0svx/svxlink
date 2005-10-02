@@ -24,6 +24,44 @@ proc reportActiveModuleState {} {
 }
 
 
+proc activateModule {name} {
+  global active_module;
+  puts "--- ${name}::activating_module";
+  ${name}::activating_module;
+  puts "";
+  set active_module $name;
+}
+
+
+proc deactivateModule {} {
+  global active_module;
+  puts "deactivateModule";
+  ${active_module}::deactivating_module;
+  set active_module "";
+}
+
+
+proc recordStart {filename} {
+  global rec_file;
+  puts "recordStart \"$filename\"";
+  set rec_file [open $filename w];
+}
+
+
+proc recordStop {} {
+  global rec_file;
+  puts "recordStop";
+  close $rec_file;
+}
+
+
+proc exec {cmd} {
+  puts "--- $cmd";
+  eval $cmd;
+  puts "";
+}
+
+
 proc SimplexLogic {} {
   puts "--- SimplexLogic::startup";
   SimplexLogic::startup;
@@ -67,10 +105,6 @@ proc SimplexLogic {} {
 
   puts "--- SimplexLogic::macro_another_active_module";
   SimplexLogic::macro_another_active_module;
-  puts "";
-
-  puts "--- SimplexLogic::periodic_identify";
-  SimplexLogic::periodic_identify;
   puts "";
 
   puts "--- SimplexLogic::unknown_command";
@@ -148,10 +182,6 @@ proc RepeaterLogic {} {
   RepeaterLogic::macro_another_active_module;
   puts "";
 
-  puts "--- RepeaterLogic::periodic_identify";
-  RepeaterLogic::periodic_identify;
-  puts "";
-  
   puts "--- RepeaterLogic::unknown_command";
   RepeaterLogic::unknown_command 123;
   puts "";
@@ -330,6 +360,63 @@ proc EchoLink {} {
   puts "";
 }
 
+
+proc TclVoiceMail {} {
+  namespace eval TclVoiceMail {
+    variable module_name [namespace tail [namespace current]];
+    variable users;
+
+    set users(000) "call=TEST pass=123";
+
+    activateModule $module_name;
+    exec "${module_name}::dtmf_digit_received 1";
+    exec "${module_name}::dtmf_cmd_received \"\"";
+
+    activateModule $module_name;
+    exec "${module_name}::dtmf_cmd_received \"00012\"";
+    exec "${module_name}::dtmf_cmd_received \"000123\"";
+
+    exec "${module_name}::dtmf_cmd_received \"0\"";
+    exec "${module_name}::dtmf_cmd_received \"1\"";
+
+    exec "${module_name}::dtmf_cmd_received \"2\"";
+    exec "${module_name}::dtmf_cmd_received \"0000\"";
+    exec "${module_name}::squelch_open \"1\"";
+    exec "${module_name}::dtmf_cmd_received \"\"";
+    exec "${module_name}::squelch_open \"0\"";
+
+    exec "${module_name}::dtmf_cmd_received \"2\"";
+    exec "${module_name}::dtmf_cmd_received \"000\"";
+    exec "${module_name}::squelch_open \"1\"";
+    exec "${module_name}::dtmf_cmd_received \"\"";
+    exec "${module_name}::squelch_open \"0\"";
+
+    exec "${module_name}::dtmf_cmd_received \"2000\"";
+    exec "${module_name}::squelch_open \"1\"";
+    exec "${module_name}::squelch_open \"0\"";
+    exec "${module_name}::squelch_open \"1\"";
+    exec "${module_name}::squelch_open \"0\"";
+
+    exec "${module_name}::dtmf_cmd_received \"1\"";
+    exec "${module_name}::dtmf_cmd_received \"3\"";
+    exec "${module_name}::dtmf_cmd_received \"2\"";
+    exec "${module_name}::squelch_open \"1\"";
+    exec "${module_name}::squelch_open \"0\"";
+    exec "${module_name}::squelch_open \"1\"";
+    exec "${module_name}::squelch_open \"0\"";
+
+    exec "${module_name}::dtmf_cmd_received \"1\"";
+    exec "${module_name}::dtmf_cmd_received \"0\"";
+    exec "${module_name}::dtmf_cmd_received \"1\"";
+
+    exec "${module_name}::timeout";
+    exec "${module_name}::dtmf_cmd_received \"\"";
+
+    file delete "$recdir/TEST";
+  }
+}
+
+
 if {$argc < 1} {
   puts "Usage: $argv0 <path to events.tcl>";
   exit 1;
@@ -350,4 +437,5 @@ RepeaterLogic;
 Help;
 Parrot;
 EchoLink;
+TclVoiceMail;
 
