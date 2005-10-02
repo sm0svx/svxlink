@@ -188,6 +188,11 @@ class Module : public SigC::Object
      */
     virtual bool initialize(void);
 
+    /**
+     * @brief	Retrieve the version that the module was compiled for
+     * @return	Returns a version string representing the version of the
+     *		SvxLink core that this module was compiled for.
+     */
     virtual const char *compiledForVersion(void) const = 0;
 
     /**
