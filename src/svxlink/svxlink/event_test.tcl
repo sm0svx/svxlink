@@ -405,6 +405,8 @@ proc TclVoiceMail {} {
     exec "${module_name}::squelch_open \"1\"";
     exec "${module_name}::squelch_open \"0\"";
 
+    exec "${module_name}::status_report";
+
     exec "${module_name}::dtmf_cmd_received \"1\"";
     exec "${module_name}::dtmf_cmd_received \"0\"";
     exec "${module_name}::dtmf_cmd_received \"1\"";
