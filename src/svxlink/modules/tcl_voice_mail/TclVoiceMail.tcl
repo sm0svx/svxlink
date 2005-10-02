@@ -304,7 +304,7 @@ proc cmdPlayNextNewMessage {cmd} {
 
   #puts "cmdPlayNextNewMessage";
   set call [id2call $userid];
-  set subjects [glob -nocomplain -directory "$recdir/$call]" *.subj];
+  set subjects [glob -nocomplain -directory "$recdir/$call" *.subj];
   if {$state == "logged_in"} {
     set msg_cnt [llength $subjects];
     playNumber $msg_cnt;
