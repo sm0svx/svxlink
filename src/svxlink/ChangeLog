@@ -1,4 +1,4 @@
- 0.6.0 -- ?? Okt 2005
+ 0.6.0 -- ?? Oct 2005
 ----------------------
 
 * New vox configuration variable VOX_START_DELAY. Specify a time in
@@ -22,6 +22,10 @@
 
 * Added a template for writing modules in C++. It can be found in
   svxlink/modules/template in the source code tree.
+
+* Removed configuration variable IDENT_INTERVAL and replaced it with
+  two new variables: SHORT_IDENT_INTERVAL and LONG_IDENT_INTERVAL.
+  Identification is now entirely handled in TCL.
 
 
 
