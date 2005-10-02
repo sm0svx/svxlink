@@ -310,6 +310,7 @@ proc cmdPlayNextNewMessage {cmd} {
     playNumber $msg_cnt;
     playMsg "new_messages";
     playSilence 500;
+    printInfo "$msg_cnt new messages for $call";
     if {$msg_cnt > 0} {
       set basename [file rootname [lindex $subjects 0]];
       playFile "$basename.subj";
@@ -324,16 +325,19 @@ proc cmdPlayNextNewMessage {cmd} {
     if {$cmd == "0"} {
       playMsg "pnm_menu";
     } elseif {$cmd == "1"} {
+      printInfo "Deleting message $basename";
       file delete "$basename.subj" "$basename.mesg";
       playMsg "message_deleted";
       setState "logged_in";
     } elseif {$cmd == "2"} {
+      printInfo "Reply to and delete message $basename";
       file delete "$basename.subj" "$basename.mesg";
       playMsg "message_deleted";
       regexp {\d{8}_\d{6}_(\d+)$} $basename -> sender;
       setState "rec_reply";
       cmdRecordMessage "x$sender";
     } elseif {$cmd == "3"} {
+      printInfo "Replay message $basename";
       playFile "$basename.subj";
       playSilence 1000;
       playFile "$basename.mesg";
@@ -344,6 +348,7 @@ proc cmdPlayNextNewMessage {cmd} {
       playMsg "aborted";
       setState "logged_in";
     } else {
+      printInfo "Unknown command: $cmd";
       playNumber $cmd;
       playMsg "unknown_command";
     }
