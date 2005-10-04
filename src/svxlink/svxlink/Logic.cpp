@@ -1103,14 +1103,17 @@ int Logic::audioReceived(short *samples, int len)
 
 void Logic::everyMinute(Timer *t)
 {
-  if (t != 0)
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  int msec = (59 - tv.tv_sec % 60) * 1000 + (999999 - tv.tv_usec) / 1000 + 1;
+
+  if ((t != 0) && (msec > 1000))
   {
     processEvent("every_minute");
-    delete every_minute_timer;
   }
+  delete every_minute_timer;
   
-  int seconds = 60 - (time(NULL) % 60);
-  every_minute_timer = new Timer(1000 * seconds);
+  every_minute_timer = new Timer(msec);
   every_minute_timer->expired.connect(slot(this, &Logic::everyMinute));
   
 } /* Logic::everyMinute */
