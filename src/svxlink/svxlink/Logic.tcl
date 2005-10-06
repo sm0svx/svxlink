@@ -300,7 +300,6 @@ proc checkPeriodicIdentify {} {
       return;
     }
   }
-  set prev_ident $now;
   set need_ident 0;
 
   if {($hour * 60 + $minute) % $short_ident_interval == 0} {
@@ -311,6 +310,7 @@ proc checkPeriodicIdentify {} {
       playMsg "EchoLink" "repeater";
     }
     playSilence 500;
+    set prev_ident $now;
   }
   if {($hour * 60 + $minute) % $long_ident_interval == 0} {
     playMsg "Core" "the_time_is";
