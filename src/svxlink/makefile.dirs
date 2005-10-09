@@ -13,7 +13,7 @@
 
 
 # Subdirectories in the order of compilation.
-SUBDIRS	= svxlink modules
+SUBDIRS	= svxlink modules scripts
 
 ifdef QTDIR
 SUBDIRS += dtmf_plot
