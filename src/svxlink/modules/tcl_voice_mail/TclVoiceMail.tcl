@@ -35,12 +35,22 @@ set state "idle";
 #
 # The directory where the voice mails are stored
 #
-set recdir "$basedir/$module_name/recordings";
+set recdir "/var/spool/voice_mail";
 
 #
 # Read configuration file
 #
-source "$basedir/events.d/TclVoiceMail.cfg";
+set cfg_etc "/etc/TclVoiceMail.cfg";
+set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.cfg";
+
+if [file exists $cfg_etc] {
+  source $cfg_etc;
+} elseif [file exists $cfg_home] {
+  source $cfg_home;
+} else {
+  puts "*** ERROR: Could not find a configuration file in module \"$module_name\". Tried \"$cfg_etc\" and \"$cfg_home\"";
+}
+
 
 #
 # An "overloaded" playMsg that eliminates the need to write the module name
