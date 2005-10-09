@@ -38,10 +38,7 @@ MAXIMIZE_SOUNDS="\
   TclVoiceMail/logged_in_menu \
   TclVoiceMail/message_deleted \
   TclVoiceMail/pnm_menu \
-  TclVoiceMail/rec_message \
-  TclVoiceMail/rec_subject \
   TclVoiceMail/wrong_userid_or_password \
-  TclVoiceMail/login_ok \
   TclVoiceMail/rec_done \
   TclVoiceMail/login \
   TclVoiceMail/rec_enter_rcpt \
@@ -126,6 +123,9 @@ TRIM_SOUNDS="\
   TclVoiceMail/rec_sending_to \
   TclVoiceMail/name \
   TclVoiceMail/unknown_userid \
+  TclVoiceMail/login_ok \
+  TclVoiceMail/rec_message \
+  TclVoiceMail/rec_subject \
   "
 
 
@@ -147,9 +147,9 @@ TRIM_SOUNDS="\
 
 for sound in $COPY_SOUNDS; do
   [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
-  if [ -r $SRC_DIR/$sound.raw -o -r $SRC_DIR/$sound.wav ]; then
+  if [ -r $SRC_DIR/$sound.raw ]; then
     echo "Copying $SRC_DIR/$sound -> $DEST_DIR/$sound"
-    ./play_sound.sh -c $SRC_DIR/$sound > $DEST_DIR/$sound.raw
+    cp -a $SRC_DIR/$sound.raw $DEST_DIR/$sound.raw
   else
     echo "*** Missing sound: $sound"
   fi
