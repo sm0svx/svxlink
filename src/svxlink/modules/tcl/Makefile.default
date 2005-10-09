@@ -217,7 +217,7 @@ LDFLAGS		+=
 # Additional files to install
 install-extras uninstall-extras rpm-extras:
 #	$(DIRSPEC) /var/spool/myprog[755,root,root]
-	$(FILESPEC) Tcl.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
+	$(FILESPEC) Tcl.tcl.example[644,root,root] /usr/share/svxlink/sounds/events.d
 
 
 #
