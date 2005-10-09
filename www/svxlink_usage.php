@@ -48,13 +48,13 @@ to do that.
 The system is built up of a core system that handles the transciever interface.
 The core system can then be extended by loading modules that handles a specific
 voice service. Each module have a unique ID number associated with it. The
-association is done during the configuration of the system. To ativate a module,
-press its ID number followed by the number sign. The default
+association is done during the configuration of the system. To activate a
+module, press its ID number followed by the number sign. The default
 configuration specifies the <em>Help</em> module as ID 0, so start by
-activating that module and listen to the help messages (i.e. send 0# or A0C). Go
-on to test the other modules. When a module is activated, send the 0# command to
-get help about that module. To exit a module, just send a # (or AC). Description
-in more detail for the different modules follow below.
+activating that module and listen to the help messages (i.e. send 0# or A0C).
+Go on to test the other modules. When a module is activated, send the 0#
+command to get help about that module. To exit a module, just send a #
+(or AC). Description in more detail for the different modules follow below.
 
 <H3>The Help Module</H3>
 The Help module is used to get help about the system as a whole and also help
@@ -70,13 +70,42 @@ Exit the module by sending just the number sign.
 
 
 <H3>The EchoLink Module</H3>
-The EchoLink module is used to connect to other EchoLink stations. To connect to
-another station, just enter the node number ended with the number sign. To
+The EchoLink module is used to connect to other EchoLink stations. To connect
+to another station, just enter the node number ended with the number sign. To
 disconnect, press the number sign. To exit the module, press the number sign
-when not connected.
+when not connected. Pressing 1# will tell you the callsign of all connected
+stations.
 <P>
 To get more information on the EchoLink system, have a look at the
 <A href="http://www.echolink.org">EchoLink homepage</A>.
 
 
+<H3>The TclVoiceMail Module</H3>
+This module implements a simple voice mail system to be used by the local
+node users. It is not possible (yet) to send voice mails to users at other
+nodes. To be able to use the voice mail module you must have a personal
+login ID and password. Contact your sysop to get these.
+<P>
+When the module is activated (default 3#) you will be prompted to enter your
+login ID and password. The login ID always is three digits long. The password
+can be between one to seven digits long. Enter your login ID and password in
+one sequence like 123456# if your login ID is 123 and your password is 456#.
+After that, context menus will guide you through using the system. An empty
+command (#) will abort the current operation.
+<P>
+To start recording a voice mail command 2# is used. The system will then ask
+you for a recepient. You can combine these two steps by entering the user ID
+directly after the command. For example if you want to record a voice mail
+for user 123, send the sequence 2123#.
+<P>
+The recommended way of encoding user IDs is the "phone method". Many phones
+have letters on the key pad like: 2=ABC, 3=DEF, 4=GHI, 5=JKL, 6=MNO,
+7=PQRS, 8=TUV, 9=WXYZ. To encode the callsign SM0SVX, use the three last
+letters and map them to digits. Then we will get the user ID 789. In case of
+a collition, add 1. For example AFC and ADB will both map to 232. One
+possible mapping is then AFC=232 and ADB=233.
+<P>
+To deactivate the module, just press # when the main menu is active.
+
 <?php include("footer.inc"); ?>
+

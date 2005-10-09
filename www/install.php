@@ -217,7 +217,8 @@ Help.tcl (help module events), Parrot.tcl (parrot module events), EchoLink.tcl
 (echolink module events). There is a comment above each function that says what
 it does so have a look in these files and let your imagination flow.
 <P>
-There are four functions that can be used within a TCL function to play sounds.
+There are seven functions that can be used within a TCL function to make
+things happen in the SvxLink core.
 <DL>
   <DT>playFile filename</DT>
   <DD>
@@ -246,6 +247,17 @@ There are four functions that can be used within a TCL function to play sounds.
   <DD>
     Play the specified number of milliseconds of silence. This can be used to
     trim the spacing between audio clips.
+  </DD>
+
+  <DT>recordStart filename</DT>
+  <DD>
+    Start recording of received audio to a file. Only one recording at a time
+    can be active.
+  </DD>
+
+  <DT>recordStop</DT>
+  <DD>
+    Stop a previously started recording.
   </DD>
 </DL>
 <P>
@@ -344,29 +356,39 @@ name in the SimplexLogic.tcl script.
     Specify the callsign that should be announced on the radio interface.
   </DD>
   
-  <DT>IDENT_INTERVAL</DT>
+  <DT>SHORT_IDENT_INTERVAL</DT>
   <DD>
-    The number of seconds between identification.
+    The number of minutes between short identifications. The purpose of the
+    short identification is to just announce that the station is on the air.
+    Typically just the callsign is transmitted. For a repeater a good value
+    is ten minutes and for a simplex node one time every 60 minutes is
+    probably enough. The LONG_IDENT_INTERVAL must be an even multiple of
+    the SHORT_IDENT_INTERVAL so if LONG_IDENT_INTERVAL is 60 then some of
+    the legal values for SHORT_IDENT_INTERVAL are: 5, 10, 15, 20, 30.
+  </DD>
+  
+  <DT>LONG_IDENT_INTERVAL</DT>
+  <DD>
+    The number of minutes between long identifications. The purpose of the
+    long identification is to transmit some more info about the station
+    status (new voice mails etc). The time of day is also transmitted.
+    A good value here is 60 minutes. It must be set to whole hours (60,120,
+    180 etc) otherwise the time of day announcement will sound strange since
+    it just announces the hour. 
   </DD>
   
   <DT>IDENT_ONLY_AFTER_TX</DT>
   <DD>
     This feature controls when identification is done.  By default,
-    identification is done every time the IDENT_INTERVAL expires.  If you
-    enable this feature, identification will be done only if there has been
-    a recent transmission.  This feature is good for nodes using an RF link
-    to provide echolink to a repeater.  Often, in this situation, it is not
-    desirable for the link to identify unless legally necessary.  The number
-    provided should be greater than 0 and represents the number of seconds
-    after an identification has been sent before a transmission is considered
-    "new" and requires a new identification to be sent.  If the value is too
-    low, the identification itself could trigger the need to identify.  If
-    it's too long, a transmission could be made that won't be identified
-    because it happened within this window.  For most configurations, 4
-    seconds is a good number.
-    Note that IDENT_INTERVAL still have to be set for this feature to work.
-    That config variable will then be interpreted as the minimum number of
-    seconds between identifications.
+    identification is done every time the SHORT_IDENT_INTERVAL expires. 
+    If this feature is enabled, identification will be done only if there
+    has been a recent transmission. This feature is good for nodes using
+    an RF link to provide echolink to a repeater. Often, in this situation,
+    it is not desirable for the link to identify unless legally necessary.
+    Note that SHORT_IDENT_INTERVAL still have to be set for this feature to
+    work. That config variable will then be interpreted as the minimum
+    number of seconds between identifications. The LONG_IDENT_INTERVAL will
+    not be affected by this parameter.
   </DD>
     
   <DT>EXEC_CMD_ON_SQL_CLOSE</DT>
@@ -460,6 +482,27 @@ namespace name in the SimplexLogic.tcl script.
     Specify the callsign that should be announced on the radio interface.
   </DD>
   
+  <DT>SHORT_IDENT_INTERVAL</DT>
+  <DD>
+    The number of minutes between short identifications. The purpose of the
+    short identification is to just announce that the station is on the air.
+    Typically just the callsign is transmitted. For a repeater a good value
+    is ten minutes and for a simplex node one time every 60 minutes is
+    probably enough. The LONG_IDENT_INTERVAL must be an even multiple of
+    the SHORT_IDENT_INTERVAL so if LONG_IDENT_INTERVAL is 60 then some of
+    the legal values for SHORT_IDENT_INTERVAL are: 5, 10, 15, 20, 30.
+  </DD>
+  
+  <DT>LONG_IDENT_INTERVAL</DT>
+  <DD>
+    The number of minutes between long identifications. The purpose of the
+    long identification is to transmit some more info about the station
+    status (new voice mails etc). The time of day is also transmitted.
+    A good value here is 60 minutes. It must be set to whole hours (60,120,
+    180 etc) otherwise the time of day announcement will sound strange since
+    it just announces the hour. 
+  </DD>
+  
   <DT>EXEC_CMD_ON_SQL_CLOSE</DT>
   <DD>
     Specify a time, in milliseconds, after squelch close after which entered
@@ -529,12 +572,6 @@ namespace name in the SimplexLogic.tcl script.
     repeater to open.
   </DD>
   
-  <DT>IDENT_INTERVAL</DT>
-  <DD>
-    The number of seconds between identification. For now, the repeater will
-    only identify itself periodically when it is down.
-  </DD>
-
   <DT>IDLE_SOUND_INTERVAL</DT>
   <DD>
     When the repeater is idle, a sound is played. Specify the interval in
@@ -676,7 +713,7 @@ configuration file there is a Local configuration section called <b>Rx1</b>.
   <DT>VOX_FILTER_DEPTH</DT>
   <DD>
     The number of milliseconds to create the mean value over. A small value
-    will make the vox react quicker (<200) and larger values will make it
+    will make the vox react quicker (&lt;200) and larger values will make it
     a little bit more sluggish. A small value is often better.
   </DD>
 
@@ -799,8 +836,16 @@ variables are listed below.
 <DL>
   <DT>NAME</DT>
   <DD>
-    The base name of the module. For example if this configuration variable is
-    set to Foo, the core will look for a plugin called ModuleFoo.so.
+    The name of the module. This name must match the namespace used in the
+    TCL event handling script. If not set, NAME will be set to the section
+    name.
+  </DD>
+
+  <DT>PLUGIN_NAME</DT>
+  <DD>
+    The base name of the plugin. For example if this configuration variable is
+    set to Foo, the core will look for a plugin called ModuleFoo.so. If not
+    set, PLUGIN_NAME will be set to the same value as NAME.
   </DD>
 
   <DT>ID</DT>
@@ -908,6 +953,12 @@ Specific configuration variables for the <b>EchoLink</b> module.
     QTH, transceiver frequency/power, antenna, CTCSS tone frequency etc.
   </DD>
 </DL>
+
+
+The <b>TclVoiceMail</b> module does not have any specific configuration
+variables. It is configured in another configuration file. Its default
+location is <em>/etc/TclVoiceMail.cfg</em>. The configuration file is also
+looked for in directory "$HOME/.svxlink".
 
 
 <?php include("footer.inc"); ?>

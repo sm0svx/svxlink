@@ -7,6 +7,32 @@
 <H2>Project News</H2>
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>9 Oct 2005: <I>Version 051009 released</I></B>
+  <TD/></TR>
+  <TR><TD>
+    The biggest reason for this release is that a couple of serious bugs
+    have been fixed. The most important changes are:
+    <UL>
+      <LI>
+        Bugfix in the networking code which caused the svxlink server to
+        crash or hang.
+      </LI>
+      <LI>
+        New module Tcl which make it possible to write simpler modules in
+        the TCL scripting language.
+      </LI>
+      <LI>
+        New module TclVoiceMail, which is a simple voice mail system.
+      </LI>
+    </UL>
+    Be sure to check out the
+    <A href="http://sf.net/project/shownotes.php?release_id=362318">ChangeLog</A>
+    for more detailed information.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>14 Aug 2005: <I>Version 050814 released</I></B>
   <TD/></TR>
   <TR><TD>
