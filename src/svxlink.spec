@@ -1,22 +1,22 @@
 
 # Release date (YYMMDD)
-%define RELEASE_DATE		050814
+%define RELEASE_DATE		051009
 %define RELEASE_NO		1
 
 # Version for the Qtel application
-%define QTEL			0.9.0
-%define QTEL_RPM_RELEASE	2
+%define QTEL			0.9.1
+%define QTEL_RPM_RELEASE	1
 
 # Version for the EchoLib library
-%define ECHOLIB			0.10.1
+%define ECHOLIB			0.10.2
 %define ECHOLIB_RPM_RELEASE	1
 
 # Version for the Async library
-%define LIBASYNC		0.12.0
+%define LIBASYNC		0.12.1
 %define LIBASYNC_RPM_RELEASE	1
 
 # SvxLink versions
-%define SVXLINK			0.5.0
+%define SVXLINK			0.6.0
 %define SVXLINK_RPM_RELEASE	1
 
 
@@ -73,7 +73,7 @@ Group: Ham
 Requires: libasync echolib
 
 %description -n svxlink-server
-The SvxLink sserver is a general purpose voice services system for ham radio use.
+The SvxLink server is a general purpose voice services system for ham radio use.
 Each voice service is implemented as a plugin called a module. Some examples of
 voice services are: Help system, Simplex repeater, EchoLink connection.
 
@@ -83,6 +83,7 @@ It can act both as a simplex node and as a repeater controller.
 %files -n svxlink-server
 %defattr(644,root,root)
 %config(noreplace) /etc/svxlink.conf
+%config(noreplace) /etc/TclVoiceMail.conf
 %attr(-,root,root) /usr/share/svxlink/sounds
 %doc svxlink/ChangeLog
 %defattr(755,root,root)
@@ -92,6 +93,8 @@ It can act both as a simplex node and as a repeater controller.
 /usr/lib/svxlink/ModuleEchoLink.so
 /usr/lib/svxlink/ModuleHelp.so
 /usr/lib/svxlink/ModuleParrot.so
+/usr/lib/svxlink/ModuleTcl.so
+/usr/lib/svxlink/logtime.pl
 %exclude /usr/include/svxlink/AudioPacer.h
 %exclude /usr/include/svxlink/Module.h
 %exclude /usr/include/svxlink/MsgHandler.h
