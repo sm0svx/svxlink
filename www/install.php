@@ -957,7 +957,7 @@ Specific configuration variables for the <b>EchoLink</b> module.
 
 The <b>TclVoiceMail</b> module does not have any specific configuration
 variables. It is configured in another configuration file. Its default
-location is <em>/etc/TclVoiceMail.cfg</em>. The configuration file is also
+location is <em>/etc/TclVoiceMail.conf</em>. The configuration file is also
 looked for in directory "$HOME/.svxlink".
 
 
