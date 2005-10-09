@@ -1,4 +1,4 @@
- 0.12.1 -- ?? ??? ????
+ 0.12.1 -- 09 Oct 2005
 -----------------------
 
 * Bugfix in Async::TcpClient: In some situations sockets could be leaked
