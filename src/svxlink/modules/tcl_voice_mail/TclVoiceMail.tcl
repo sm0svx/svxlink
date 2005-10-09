@@ -40,8 +40,8 @@ set recdir "/var/spool/voice_mail";
 #
 # Read configuration file
 #
-set cfg_etc "/etc/TclVoiceMail.cfg";
-set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.cfg";
+set cfg_etc "/etc/TclVoiceMail.conf";
+set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.conf";
 
 if [file exists $cfg_etc] {
   source $cfg_etc;
