@@ -185,6 +185,8 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
   	slot(audio_io, &AudioIO::flushSamples));
   
   audio_io->audioRead.connect(slot(this, &ComDialog::micAudioRead));
+  audio_io->writeBufferFull.connect(
+		slot(rem_audio_fifo, &SampleFifo::writeBufferFull));
   
   Settings *settings = Settings::instance();  
   if (settings->useFullDuplex() && audio_io->isFullDuplexCapable())

@@ -1,3 +1,11 @@
+ 0.9.2 -- ?? ??? 2005
+----------------------
+
+* Bugfix: The audio output to the speaker could stop suddenly. The audio
+  came back when pressing and releasing the PTT.
+
+
+
  0.9.1 -- 09 Oct 2005
 ----------------------
 
