@@ -1,3 +1,10 @@
+ 0.6.1 -- ?? ??? 2005
+----------------------
+
+* Bugfix: An uninitialized variable caused svxlink to crash.
+
+
+
  0.6.0 -- 09 Oct 2005
 ----------------------
 
