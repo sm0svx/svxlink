@@ -162,7 +162,7 @@ Logic::Logic(Config &cfg, const string& name)
     cmd_tmo_timer(0), logic_transmit(false), anti_flutter(false),
     prev_digit('?'), exec_cmd_on_sql_close(0), exec_cmd_on_sql_close_timer(0),
     rgr_sound_timer(0), rgr_sound_delay(-1), report_ctcss(0), event_handler(0),
-    remote_logic_tx(false), every_minute_timer(0)
+    remote_logic_tx(false), every_minute_timer(0), recorder(0)
 {
   
 } /* Logic::Logic */
