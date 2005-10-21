@@ -165,33 +165,40 @@ working.
 
 
 <A name="audio-level-adj"><h2>Audio level adjustment</h2></A>
-There are no audio level controls in SvxLink server nor Qtel. The levels must be
-adjusted with an external tool like aumix, kmix, alsamixer or whatever your
+There are no audio level controls in SvxLink server nor Qtel. The levels must
+be adjusted with an external tool like aumix, kmix, alsamixer or whatever your
 favourite mixer is. Start one of the mixers and locate the controls to use for
 adjusting the levels. The output level is adjusted using the two sliders Pcm
-and Vol. The input level is adjusted using the IGain slider, not the
-Mic or Input (line-in) slider. The latter two are used to adjust the monitoring
-level of the two inputs. Set these two to zero. Select to use either the
-microphone or the line-in input. Set the Pcm, Vol and Mic/Input sliders half way
-up. Adjust the levels according to the instructions below.
+and Vol. The input level is adjusted using the Capture (sometimes called
+IGain) slider, not the Mic or Input (line-in) slider. The latter two are used
+to adjust the monitoring level of the two inputs. Set these two to zero.
+Select to use either the microphone or the line-in input. Set the Pcm, Vol
+and Mic/Input sliders half way up. Adjust the levels according to the
+instructions below.
 <P>
 To adjust the levels in Qtel, start by connecting to the *ECHOTEST* server. This
 EchoLink server will echo back everything you send to it. Right after the
 connection has been established, a greeting message will be played back. Adjust
 the speaker level to a comfortable level using the Pcm and Vol sliders. Press
-the PTT and say something and listen how it comes back. Adjust the Mic slider
-until you are satisfied.
+the PTT and say something and listen how it comes back. Adjust the Capture
+slider until you are satisfied.
 <P>
 To adjust the levels for the SvxLink server, start it up and press the * key on
 the keyboard. This will make the svxlink server identify itself. Do this a
 couple of times and adjust the Pcm and Vol sliders to the highest volume
 possible without distorsion. Now, activate the parrot module by pressing 1# on
 the keyboard. Use another transmitter to make a short transmission. Listen to
-the recorded audio and adjust the Mic slider (if using the microphone input) or
-Input slider (if using the line-in input) to the highest level possible without
-distorsion. Repeat util happy. Now try to press some DTMF digits and see if the
-digits are detected. If not, try to adjust the input level up or down and try
-again.
+the recorded audio and adjust the Capture slider to the highest level
+possible without distorsion. Repeat until happy. Now try to press some DTMF
+digits and see if the digits are detected. If not, try to adjust the input
+level up or down and try again.
+<P>
+An alternate way to adjust the input gain is to use a utility that is
+included in the SvxLink project called dtmf_plot. Open the squelch on your
+receiver and adjust the input level until the level indicator at the bottom
+of the window show about 90%. Also test all DTMF digits so that they are
+all correctly detected. Adjust further if necessary.
+<P>
 
 
 <A name="event-subsystem"><h2>The Event Handling Subsystem</h2></A>
