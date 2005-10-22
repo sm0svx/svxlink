@@ -525,61 +525,50 @@ void Logic::dtmfDigitDetected(char digit)
 {
   cout << "digit=" << digit << endl;
   
-  if (digit == '*')
+  if (active_module != 0)
   {
-      // Ignore multiple "identify" commands
-    if (find(cmd_queue.begin(), cmd_queue.end(), "*") == cmd_queue.end())
-    {
-      cmd_queue.push_back("*");
-    }
+     active_module->dtmfDigitReceived(digit);
   }
-  else
+  if ((digit == '#') || (anti_flutter && (digit == 'C')))
   {
-    if (active_module != 0)
+    putCmdOnQueue();
+    anti_flutter = false;
+  }
+  else if (digit == 'A')
+  {
+    anti_flutter = true;
+    prev_digit = '?';
+  }
+  else if (digit == 'D')
+  {
+    received_digits = "D";
+    prev_digit = '?';
+  }
+  else if (received_digits.size() < 10)
+  {
+    cmd_tmo_timer->reset();
+    cmd_tmo_timer->setEnable(true);
+    if (digit == 'B')
     {
-      active_module->dtmfDigitReceived(digit);
-    }
-    if ((digit == '#') || (anti_flutter && (digit == 'C')))
-    {
-      putCmdOnQueue();
-      anti_flutter = false;
-    }
-    else if (digit == 'A')
-    {
-      anti_flutter = true;
-      prev_digit = '?';
-    }
-    else if (digit == 'D')
-    {
-      received_digits = "D";
-      prev_digit = '?';
-    }
-    else if (received_digits.size() < 10)
-    {
-      cmd_tmo_timer->reset();
-      cmd_tmo_timer->setEnable(true);
-      if (digit == 'B')
+      if (anti_flutter && (prev_digit != '?'))
       {
-      	if (anti_flutter && (prev_digit != '?'))
-	{
-	  received_digits += prev_digit;
-	  prev_digit = '?';
-	}
+        received_digits += prev_digit;
+        prev_digit = '?';
       }
-      else if (isdigit(digit))
+    }
+    else if (isdigit(digit) || ((digit == '*') && (received_digits != "*")))
+    {
+      if (anti_flutter)
       {
-      	if (anti_flutter)
-	{
-      	  if (digit != prev_digit)
-	  {
-      	    received_digits += digit;
-	    prev_digit = digit;
-	  }
-	}
-	else
-	{
-      	  received_digits += digit;
-	}
+        if (digit != prev_digit)
+        {
+          received_digits += digit;
+	  prev_digit = digit;
+        }
+      }
+      else
+      {
+        received_digits += digit;
       }
     }
   }
@@ -619,8 +608,8 @@ void Logic::squelchOpen(bool is_open)
   if (!is_open)
   {
     logic_con_out.sinkFlushSamples();
-    if ((exec_cmd_on_sql_close > 0) && !anti_flutter &&
-      	!received_digits.empty())
+    if (((exec_cmd_on_sql_close > 0) || (received_digits == "*")) && 
+        !anti_flutter && !received_digits.empty())
     {
       exec_cmd_on_sql_close_timer = new Timer(exec_cmd_on_sql_close);
       exec_cmd_on_sql_close_timer->expired.connect(
@@ -1046,7 +1035,11 @@ void Logic::putCmdOnQueue(Timer *t)
   delete exec_cmd_on_sql_close_timer;
   exec_cmd_on_sql_close_timer = 0;
   
-  cmd_queue.push_back(received_digits);
+  if ((received_digits != "*") ||
+      (find(cmd_queue.begin(), cmd_queue.end(), "*") == cmd_queue.end()))
+  {
+    cmd_queue.push_back(received_digits);
+  }
   received_digits = "";
   cmd_tmo_timer->setEnable(false);
   prev_digit = '?';
