@@ -28,7 +28,16 @@ proc playMsg {context msg} {
 proc spellWord {word} {
   set word [string tolower $word];
   for {set i 0} {$i < [string length $word]} {set i [expr $i + 1]} {
-    playMsg "Default" "phonetic_[string index $word $i]";
+    set char [string index $word $i];
+    if {$char == "*"} {
+      playMsg "Default" "star";
+    } elseif {$char == "/"} {
+      playMsg "Default" "slash";
+    } elseif {$char == "-"} {
+      playMsg "Default" "dash";
+    } else {
+      playMsg "Default" "phonetic_$char";
+    }
   }
 }
 
