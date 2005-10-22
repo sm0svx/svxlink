@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <ctype.h>
 #include <stdlib.h>
 #include <popt.h>
+#include <locale.h>
 
 #include <string>
 #include <iostream>
@@ -111,6 +112,7 @@ using namespace SigC;
 
 static void parse_arguments(int argc, const char **argv);
 static void stdinHandler(FdWatch *w);
+static void stdout_handler(FdWatch *w);
 static void initialize_logics(Config &cfg);
 
 
@@ -133,6 +135,8 @@ static int    	daemonize = 0;
 static FILE   	*logfile = 0;
 static Logic  	*logic = 0;
 static FdWatch	*stdin_watch = 0;
+static FdWatch	*stdout_watch = 0;
+static string   tstamp_format;
 
 
 /****************************************************************************
@@ -159,40 +163,52 @@ static FdWatch	*stdin_watch = 0;
  */
 int main(int argc, char **argv)
 {
+  setlocale(LC_ALL, "");
+
   CppApplication app;
 
   parse_arguments(argc, const_cast<const char **>(argv));
-  
+
+  int pipefd[2] = {-1, -1};
   int noclose = 0;
   if (logfile_name != 0)
   {
       /* Open the logfile */
-    FILE *logfile = fopen(logfile_name, "a");
+    logfile = fopen(logfile_name, "a");
     if (logfile == NULL)
     {
       perror("fopen(logfile)");
       exit(1);
     }
-    
-      /* Redirect stdout to the logfile */
+
+      /* Create a pipe to route stdout through */
+    if (pipe(pipefd) == -1)
+    {
+      perror("pipe");
+      exit(1);
+    }
+    stdout_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
+    stdout_watch->activity.connect(slot(&stdout_handler));
+
+      /* Redirect stdout to the logpipe */
     if (close(STDOUT_FILENO) == -1)
     {
       perror("close(stdout)");
       exit(1);
     }
-    if (dup2(fileno(logfile), STDOUT_FILENO) == -1)
+    if (dup2(pipefd[1], STDOUT_FILENO) == -1)
     {
       perror("dup2(stdout)");
       exit(1);
     }
 
-      /* Redirect stderr to the logfile */
+      /* Redirect stderr to the logpipe */
     if (close(STDERR_FILENO) == -1)
     {
       perror("close(stderr)");
       exit(1);
     }
-    if (dup2(fileno(logfile), STDERR_FILENO) == -1)
+    if (dup2(pipefd[1], STDERR_FILENO) == -1)
     {
       perror("dup2(stderr)");
       exit(1);
@@ -213,15 +229,15 @@ int main(int argc, char **argv)
       exit(1);
     }
   }
-  
-  cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__ ") starting up...\n";
-  
+
   char *home_dir = getenv("HOME");
   if (home_dir == NULL)
   {
     home_dir = ".";
   }
   
+  tstamp_format = "%c";
+
   string cfg_filename(home_dir);
   cfg_filename += "/.svxlinkrc";
   Config cfg;
@@ -246,6 +262,10 @@ int main(int argc, char **argv)
       exit(1);
     }
   }
+
+  cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
+  
+  cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__ ") starting up...\n";
   
   initialize_logics(cfg);
   
@@ -262,6 +282,13 @@ int main(int argc, char **argv)
   
   delete stdin_watch;
   tcsetattr(STDIN_FILENO, TCSANOW, &org_termios);
+
+  if (stdout_watch != 0)
+  {
+    delete stdout_watch;
+    close(pipefd[0]);
+    close(pipefd[1]);
+  }
 
   delete logic;
   
@@ -388,6 +415,50 @@ static void stdinHandler(FdWatch *w)
       break;
   }
 }
+
+
+static void stdout_handler(FdWatch *w)
+{
+  char buf[256];
+  ssize_t len = read(w->fd(), buf, sizeof(buf)-1);
+  if (len == -1)
+  {
+    return;
+  }
+  buf[len] = 0;
+
+  char *ptr = buf;
+  while (*ptr != 0)
+  {
+    static bool print_timestamp = true;
+
+    if (print_timestamp && !tstamp_format.empty())
+    {
+      time_t epoch = time(NULL);
+      struct tm *tm = localtime(&epoch);
+      char tstr[256];
+      size_t tlen = strftime(tstr, sizeof(tstr), tstamp_format.c_str(), tm);
+      fwrite(tstr, 1, tlen, logfile);
+      fwrite(": ", 1, 2, logfile);
+      print_timestamp = false;
+    }
+
+    int write_len = 0;
+    char *nl = strchr(ptr, '\n');
+    if (nl != 0)
+    {
+      write_len = nl-ptr+1;
+      print_timestamp = true;
+    }
+    else
+    {
+      write_len = strlen(ptr);
+    }
+    fwrite(ptr, 1, write_len, logfile);
+    ptr += write_len;
+    fflush(logfile);
+  }
+} /* stdout_handler  */
 
 
 static void initialize_logics(Config &cfg)

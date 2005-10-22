@@ -1,7 +1,17 @@
- 0.6.1 -- ?? ??? 2005
+ 0.7.0 -- ?? ??? 2005
 ----------------------
 
 * Bugfix: An uninitialized variable caused svxlink to crash.
+
+* The PTT_PIN configuration variable now accept multiple pins. Also, it
+  is now possible to specify reverse polarity if needed.
+  Examples: RTS, DTRRTS, !DTR!RTS or even DTR!RTS.
+
+* A timestamp is now printed infront of each row in the logfile. The format
+  of the timestamp is controlled by the new configuration variable
+  GLOBAL/TIMESTAMP_FORMAT. Some formats are affected by the setting of the
+  LC_TIME, LC_ALL and LANG environment variables. Have a look at the manual
+  page for "strftime" for how to construct the format string.
 
 
 
