@@ -247,7 +247,7 @@ class SquelchSerial : public Squelch
     
   private:
     Async::Serial     	    *serial;
-    Async::Serial::InPin    sql_pin;
+    Async::Serial::Pin      sql_pin;
     bool      	      	    sql_pin_act_lvl;
   
     SquelchSerial(const SquelchSerial&);
