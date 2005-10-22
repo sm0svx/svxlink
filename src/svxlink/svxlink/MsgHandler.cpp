@@ -1,3 +1,39 @@
+/**
+@file	 MsgHandler.cpp
+@brief   Handling of playback of audio clips
+@author  Tobias Blomberg / SM0SVX
+@date	 2005-10-22
+
+This file contains an object that handles the playback of audio clips.
+
+\verbatim
+<A brief description of the program or library this file belongs to>
+Copyright (C) 2003 Tobias Blomberg / SM0SVX
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+\endverbatim
+*/
+
+
+
+/****************************************************************************
+ *
+ * System Includes
+ *
+ ****************************************************************************/
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -9,14 +45,51 @@
 #include <cassert>
 #include <iostream>
 
+
+
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Local Includes
+ *
+ ****************************************************************************/
+
 #include "MsgHandler.h"
 
+
+
+/****************************************************************************
+ *
+ * Namespaces to use
+ *
+ ****************************************************************************/
+
+using namespace std;
+
+
+
+/****************************************************************************
+ *
+ * Defines & typedefs
+ *
+ ****************************************************************************/
 
 #define WRITE_BLOCK_SIZE    4*160
 
 
-using namespace std;
 
+/****************************************************************************
+ *
+ * Local class definitions
+ *
+ ****************************************************************************/
 
 class QueueItem
 {
@@ -76,9 +149,36 @@ class FileQueueItem : public QueueItem
 
 
 
+/****************************************************************************
+ *
+ * Prototypes
+ *
+ ****************************************************************************/
 
-using namespace std;
 
+
+/****************************************************************************
+ *
+ * Exported Global Variables
+ *
+ ****************************************************************************/
+
+
+
+
+/****************************************************************************
+ *
+ * Local Global Variables
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Public member functions
+ *
+ ****************************************************************************/
 
 MsgHandler::MsgHandler(int sample_rate)
   : sample_rate(sample_rate), nesting_level(0), pending_play_next(false)
@@ -160,21 +260,48 @@ void MsgHandler::end(void)
       pending_play_next = false;
       playMsg();
     }
+    /*
     else
     {
       allMsgsWritten();
     }
+    */
   }
 } /* MsgHandler::end */
 
 
 
 
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+/*
+ *------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
+ */
 
 
 
 
 
+
+/****************************************************************************
+ *
+ * Private member functions for class MsgHandler
+ *
+ ****************************************************************************/
 
 void MsgHandler::addItemToQueue(QueueItem *item)
 {
@@ -252,6 +379,11 @@ void MsgHandler::writeSamples(void)
 
 
 
+/****************************************************************************
+ *
+ * Private member functions for class FileQueueItem
+ *
+ ****************************************************************************/
 
 FileQueueItem::~FileQueueItem(void)
 {
@@ -308,6 +440,11 @@ void FileQueueItem::unreadSamples(int len)
 
 
 
+/****************************************************************************
+ *
+ * Private member functions for class SilenceQueueItem
+ *
+ ****************************************************************************/
 
 int SilenceQueueItem::readSamples(short *samples, int len)
 {
@@ -337,6 +474,11 @@ void SilenceQueueItem::unreadSamples(int len)
 
 
 
+/****************************************************************************
+ *
+ * Private member functions for class ToneQueueItem
+ *
+ ****************************************************************************/
 
 int ToneQueueItem::readSamples(short *samples, int len)
 {
@@ -357,6 +499,22 @@ void ToneQueueItem::unreadSamples(int len)
 {
   pos -= len;
 } /* ToneQueueItem::unreadSamples */
+
+
+
+
+/*
+ * This file has not been truncated
+ */
+
+
+
+
+
+
+
+
+
 
 
 
