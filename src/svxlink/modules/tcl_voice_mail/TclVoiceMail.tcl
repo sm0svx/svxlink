@@ -211,11 +211,9 @@ proc squelch_open {is_open} {
 # Note that this function also may be called even if it wasn't this module
 # that initiated the message playing.
 #
-# NOTE: Does not work right now.
-#
-#proc all_msgs_written {} {
+proc all_msgs_written {} {
   #printInfo "all_msgs_written called...";
-#}
+}
 
 
 #
