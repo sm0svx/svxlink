@@ -88,18 +88,20 @@ proc spellEchoLinkCallsign {call} {
   global basedir;
   if [regexp {^(\w+)-L$} $call ignored callsign] {
     spellWord $callsign;
+    playSilence 50;
     playMsg "link";
   } elseif [regexp {^(\w+)-R$} $call ignored callsign] {
     spellWord $callsign;
+    playSilence 50;
     playMsg "repeater";
-  } elseif [regexp {^\*(\w+)\*$} $call ignored name] {
+  } elseif [regexp {^\*(.+)\*$} $call ignored name] {
     playMsg "conference";
     playSilence 50;
-    set name [string tolower $name];
-    if [file exists "$basedir/EchoLink/conf-$name.raw"] {
-      playFile "$basedir/EchoLink/conf-$name.raw";
+    set lc_name [string tolower $name];
+    if [file exists "$basedir/EchoLink/conf-$lc_name.raw"] {
+      playFile "$basedir/EchoLink/conf-$lc_name.raw";
     } else {
-      spellWord $name;
+      spellEchoLinkCallsign $name;
     }
   } else {
     spellWord $call;
@@ -250,6 +252,78 @@ proc link_inactivity_timeout {} {
 }
 
 
+#
+# Executed when a too short connect by callsign command is received
+#
+proc cbc_too_short_cmd {cmd} {
+  spellWord $cmd;
+  playSilence 50;
+  playMsg "operation_failed";
+}
+
+
+#
+# Executed when the connect by callsign function cannot find a match
+#
+proc cbc_no_match {code} {
+  playNumber $code;
+  playSilence 50;
+  playMsg "no_match";
+}
+
+
+#
+# Executed when the connect by callsign list has been retrieved
+#
+proc cbc_list {call_list} {
+  playMsg "choose_station";
+  set idx 0;
+  foreach {call} $call_list {
+    incr idx;
+    playSilence 500;
+    playNumber $idx;
+    playSilence 200;
+    spellEchoLinkCallsign $call;
+  }
+}
+
+
+#
+# Executed when the connect by callsign function is manually aborted
+#
+proc cbc_aborted {} {
+  playMsg "aborted";
+}
+
+
+#
+# Executed when an out of range index is entered in the connect by callsign
+# list
+#
+proc cbc_index_out_of_range {idx} {
+  playNumber $idx;
+  playSilence 50;
+  playMsg "idx_out_of_range";
+}
+
+
+#
+# Executed when there are more than nine matches in the connect by
+# callsign function
+#
+proc cbc_too_many_matches {} {
+  playMsg "too_many_matches";
+}
+
+
+#
+# Executed when no station have been chosen in 60 seconds in the connect
+# by callsign function
+#
+proc cbc_timeout {} {
+  playMsg "aborted";
+}
+
 
 
 #-----------------------------------------------------------------------------
@@ -283,7 +357,6 @@ proc remote_timeout {} {
   playMsg "timeout";
   playSilence 1000;
 }
-
 
 
 # end of namespace

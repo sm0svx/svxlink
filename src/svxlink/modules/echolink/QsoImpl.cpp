@@ -125,11 +125,11 @@ using namespace EchoLink;
  ****************************************************************************/
 
 
-QsoImpl::QsoImpl(const StationData *station, ModuleEchoLink *module)
-  : Qso(station->ip()), module(module), event_handler(0), msg_handler(0),
+QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
+  : Qso(station.ip()), module(module), event_handler(0), msg_handler(0),
     msg_pacer(0), init_ok(false), reject_qso(false), last_message(""),
     last_info_msg(""), idle_timer(0), disc_when_done(false), idle_timer_cnt(0),
-    idle_timeout(0), destroy_timer(0), station(*station)
+    idle_timeout(0), destroy_timer(0), station(station)
 {
   assert(module != 0);
   

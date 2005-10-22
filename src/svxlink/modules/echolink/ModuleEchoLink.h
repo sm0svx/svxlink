@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <string>
+#include <vector>
 
 
 
@@ -135,6 +136,13 @@ class ModuleEchoLink : public Module
 
     
   private:
+    typedef enum
+    {
+      STATE_NORMAL,
+      STATE_CONNECT_BY_CALL
+    } State;
+    typedef std::vector<EchoLink::StationData> StnList;
+
     EchoLink::Directory *dir;
     Async::Timer      	*dir_refresh_timer;
     std::string       	mycall;
@@ -151,6 +159,9 @@ class ModuleEchoLink : public Module
     unsigned       	max_qsos;
     QsoImpl   	      	*talker;
     bool      	      	squelch_is_open;
+    State		state;
+    StnList		cbc_stns;
+    Async::Timer	*cbc_timer;
 
     void moduleCleanup(void);
     void activateInit(void);
@@ -173,13 +184,16 @@ class ModuleEchoLink : public Module
 
     void getDirectoryList(Async::Timer *timer=0);
 
-    void createOutgoingConnection(const EchoLink::StationData *station);
+    void createOutgoingConnection(const EchoLink::StationData &station);
     int audioFromRemote(short *samples, int count, QsoImpl *qso);
     void audioFromRemoteRaw(QsoImpl::GsmVoicePacket *packet, QsoImpl *qso);
     QsoImpl *findFirstTalker(void) const;
     void broadcastTalkerStatus(void);
     void updateDescription(void);
     void updateEventVariables(void);
+    void connectByCallsign(std::string cmd);
+    void handleConnectByCall(const std::string& cmd);
+    void cbcTimeout(Async::Timer *t);
 
 };  /* class ModuleEchoLink */
 

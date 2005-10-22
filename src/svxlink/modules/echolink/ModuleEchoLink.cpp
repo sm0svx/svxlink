@@ -148,7 +148,7 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
   : Module(dl_handle, logic, cfg_name), dir(0), dir_refresh_timer(0),
     remote_activation(false), pending_connect_id(-1), last_message(""),
     outgoing_con_pending(false), max_connections(1), max_qsos(1), talker(0),
-    squelch_is_open(false)
+    squelch_is_open(false), state(STATE_NORMAL), cbc_timer(0)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
@@ -315,6 +315,9 @@ void ModuleEchoLink::moduleCleanup(void)
   delete Dispatcher::instance();
   delete dir;
   dir = 0;
+  delete cbc_timer;
+  cbc_timer = 0;
+  state = STATE_NORMAL;
 } /* ModuleEchoLink::moduleCleanup */
 
 
@@ -333,6 +336,7 @@ void ModuleEchoLink::moduleCleanup(void)
 void ModuleEchoLink::activateInit(void)
 {
   updateEventVariables();
+  state = STATE_NORMAL;
 } /* activateInit */
 
 
@@ -352,6 +356,9 @@ void ModuleEchoLink::activateInit(void)
 void ModuleEchoLink::deactivateCleanup(void)
 {
   remote_activation = false;
+  delete cbc_timer;
+  cbc_timer = 0;
+  state = STATE_NORMAL;
 } /* deactivateCleanup */
 
 
@@ -396,6 +403,12 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
   
   remote_activation = false;
   
+  if (state == STATE_CONNECT_BY_CALL)
+  {
+    handleConnectByCall(cmd);
+    return;
+  }
+  
   if (cmd == "")
   {
     if (qsos.size() != 0)
@@ -423,6 +436,10 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
     ss << "]";
     processEvent(ss.str());
   }
+  else if (cmd[0] == '*')
+  {
+    connectByCallsign(cmd);
+  }
   else if (qsos.size() < max_qsos)
   {
     if ((dir->status() == StationData::STAT_OFFLINE) ||
@@ -438,7 +455,7 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
     const StationData *station = dir->findStation(station_id);
     if (station != 0)
     {
-      createOutgoingConnection(station);
+      createOutgoingConnection(*station);
     }
     else
     {
@@ -611,7 +628,7 @@ void ModuleEchoLink::onStationListUpdated(void)
     const StationData *station = dir->findStation(pending_connect_id);
     if (station != 0)
     {
-      createOutgoingConnection(station);
+      createOutgoingConnection(*station);
     }
     else
     {
@@ -719,7 +736,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   }
 
     // Create a new Qso object to accept the connection
-  QsoImpl *qso = new QsoImpl(station, this);
+  QsoImpl *qso = new QsoImpl(*station, this);
   if (!qso->initOk())
   {
     delete qso;
@@ -899,28 +916,28 @@ void ModuleEchoLink::getDirectoryList(Timer *timer)
 } /* ModuleEchoLink::getDirectoryList */
 
 
-void ModuleEchoLink::createOutgoingConnection(const StationData *station)
+void ModuleEchoLink::createOutgoingConnection(const StationData &station)
 {
-  if (station->callsign() == mycall)
+  if (station.callsign() == mycall)
   {
-    cerr << "Cannot connect to myself (" << mycall << "/" << station->id()
+    cerr << "Cannot connect to myself (" << mycall << "/" << station.id()
       	 << ")...\n";
     processEvent("self_connect");
     return;
   }
 
-  cout << "Connecting to " << station->callsign() << " (" << station->id()
+  cout << "Connecting to " << station.callsign() << " (" << station.id()
        << ")\n";
   
   list<QsoImpl*>::iterator it;
   for (it=qsos.begin(); it!=qsos.end(); ++it)
   {
-    if ((*it)->remoteCallsign() == station->callsign())
+    if ((*it)->remoteCallsign() == station.callsign())
     {
-      cerr << "*** WARNING: Already connected to " << station->callsign()
+      cerr << "*** WARNING: Already connected to " << station.callsign()
       	   << ". Ignoring connect request.\n";
       stringstream ss;
-      ss << "already_connected_to " << station->callsign();
+      ss << "already_connected_to " << station.callsign();
       processEvent(ss.str());
       return;
     }
@@ -936,7 +953,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData *station)
   }
   qsos.push_back(qso);
   updateEventVariables();
-  qso->setRemoteCallsign(station->callsign());
+  qso->setRemoteCallsign(station.callsign());
   qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
   qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
   qso->audioReceived.connect(slot(this, &ModuleEchoLink::audioFromRemote));
@@ -1074,6 +1091,133 @@ void ModuleEchoLink::updateEventVariables(void)
   var_name +=  "::num_connected_stations";
   setEventVariable(var_name, ss.str());
 } /* ModuleEchoLink::updateEventVariables */
+
+
+void ModuleEchoLink::connectByCallsign(string cmd)
+{
+  stringstream ss;
+
+  if (cmd.length() < 4)
+  {
+    ss << "cbc_too_short_cmd " << cmd;
+    processEvent(ss.str());
+    return;
+  }
+
+  string code;
+  bool exact;
+  if (cmd[cmd.size()-1] == '*')
+  {
+    code = string(cmd.begin() + 1, cmd.end() - 1);
+    exact = false;
+  }
+  else
+  {
+    code = string(cmd.begin() + 1, cmd.end());
+    exact = true;
+  }
+
+  cout << "Looking up callsign code: " << code << " "
+       << (exact ? "(exact match)" : "(wildcard match)") << endl;
+  dir->findStationsByCode(cbc_stns, code, exact);
+  cout << "Found " << cbc_stns.size() << " stations:\n";
+  StnList::const_iterator it;
+  for (it = cbc_stns.begin(); it != cbc_stns.end(); ++it)
+  {
+    cout << *it << endl;
+  }
+
+  if (cbc_stns.size() == 0)
+  {
+    ss << "cbc_no_match " << code;
+    processEvent(ss.str());
+    return;
+  }
+
+  if (cbc_stns.size() > 9)
+  {
+    processEvent("cbc_too_many_matches");
+    return;
+  }
+
+  /*
+  if (cbc_stns.size() == 1)
+  {
+    createOutgoingConnection(cbc_stns.front());
+  }
+  else
+  */
+  {
+    ss << "cbc_list [list";
+    for (it = cbc_stns.begin(); it != cbc_stns.end(); ++it)
+    {
+      ss << " " << (*it).callsign();
+    }
+    ss << "]";
+    processEvent(ss.str());
+    state = STATE_CONNECT_BY_CALL;
+    delete cbc_timer;
+    cbc_timer = new Timer(60000);
+    cbc_timer->expired.connect(slot(this, &ModuleEchoLink::cbcTimeout));
+  }
+
+} /* ModuleEchoLink::connectByCallsign */
+
+
+void ModuleEchoLink::handleConnectByCall(const string& cmd)
+{
+  if (cmd.empty())
+  {
+    processEvent("cbc_aborted");
+    cbc_stns.clear();
+    delete cbc_timer;
+    cbc_timer = 0;
+    state = STATE_NORMAL;
+    return;
+  }
+  
+  unsigned idx = static_cast<unsigned>(atoi(cmd.c_str()));
+  stringstream ss;
+
+  if (idx == 0)
+  {
+    ss << "cbc_list [list";
+    StnList::const_iterator it;
+    for (it = cbc_stns.begin(); it != cbc_stns.end(); ++it)
+    {
+      ss << " " << (*it).callsign();
+    }
+    ss << "]";
+    processEvent(ss.str());
+    cbc_timer->reset();
+    return;
+  }
+
+  if (idx > cbc_stns.size())
+  {
+    ss << "cbc_index_out_of_range " << idx;
+    processEvent(ss.str());
+    cbc_timer->reset();
+    return;
+  }
+
+  createOutgoingConnection(cbc_stns[idx-1]);
+  cbc_stns.clear();
+  delete cbc_timer;
+  cbc_timer = 0;
+  state = STATE_NORMAL;
+} /* ModuleEchoLink::handleConnectByCall  */
+
+
+void ModuleEchoLink::cbcTimeout(Timer *t)
+{
+  delete cbc_timer;
+  cbc_timer = 0;
+  cbc_stns.clear();
+  state = STATE_NORMAL;
+  cout << "Connect by call command timeout\n";
+  processEvent("cbc_timeout");
+} /* ModuleEchoLink::cbcTimeout  */
 
 
 /*

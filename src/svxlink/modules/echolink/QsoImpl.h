@@ -133,7 +133,7 @@ class QsoImpl : public EchoLink::Qso
     /**
      * @brief 	Default constuctor
      */
-    QsoImpl(const EchoLink::StationData *station, ModuleEchoLink *module);
+    QsoImpl(const EchoLink::StationData &station, ModuleEchoLink *module);
   
     /**
      * @brief 	Destructor
