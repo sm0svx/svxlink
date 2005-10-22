@@ -276,7 +276,7 @@ bool Config::parseCfgFile(void)
       case '[':
       {
       	char *sec = parseSection(l);
-	if (sec == 0)
+	if ((sec == 0) || (sec[0] == 0))
 	{
 	  cerr << "*** ERROR: Configuration file parse error. Illegal section "
 	      	  "name syntax on line " << line_no << endl;
@@ -390,10 +390,12 @@ char *Config::parseDelimitedString(char *str, char begin_tok, char end_tok)
   }
   *end = 0;
   
+  /*
   if (end == str+1)
   {
     return 0;
   }
+  */
   
   return str + 1;
   
