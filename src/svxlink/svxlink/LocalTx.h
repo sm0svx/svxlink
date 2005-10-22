@@ -194,13 +194,18 @@ class LocalTx : public Tx
     Async::AudioIO    	  *audio_io;
     bool      	      	  is_transmitting;
     Async::Serial     	  *serial;
-    Async::Serial::OutPin ptt_pin;
+    Async::Serial::Pin    ptt_pin1;
+    bool                  ptt_pin1_rev;
+    Async::Serial::Pin    ptt_pin2;
+    bool                  ptt_pin2_rev;
     Async::Timer      	  *txtot;
     bool      	      	  tx_timeout_occured;
     int       	      	  tx_timeout;
     int       	      	  tx_delay;
     
     void txTimeoutOccured(Async::Timer *t);
+    int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);
+    bool setPtt(bool tx);
 
 };  /* class LocalTx */
 

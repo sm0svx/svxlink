@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <cstdio>
+#include <cstring>
 #include <algorithm>
 
 
@@ -126,8 +127,9 @@ using namespace Async;
 
 LocalTx::LocalTx(Config& cfg, const string& name)
   : Tx(name), name(name), cfg(cfg), audio_io(0), is_transmitting(false),
-    serial(0), txtot(0), tx_timeout_occured(false), tx_timeout(0),
-    tx_delay(0)
+    serial(0), ptt_pin1(Serial::PIN_NONE), ptt_pin1_rev(false),
+    ptt_pin2(Serial::PIN_NONE), ptt_pin2_rev(false), txtot(0),
+    tx_timeout_occured(false), tx_timeout(0), tx_delay(0)
 {
 
 } /* LocalTx::LocalTx */
@@ -165,21 +167,22 @@ bool LocalTx::initialize(void)
     cerr << "*** ERROR: Config variable " << name << "/PTT_PIN not set\n";
     return false;
   }
-  if (ptt_pin_str == "RTS")
+  const char *ptr = ptt_pin_str.c_str();
+  int cnt;
+  cnt = parsePttPin(ptr, ptt_pin1, ptt_pin1_rev);
+  if (cnt == 0)
   {
-    ptt_pin = Serial::PIN_RTS;
-  }
-  else if (ptt_pin_str == "DTR")
-  {
-    ptt_pin = Serial::PIN_DTR;
-  }
-  else
-  {
-    cerr << "*** ERROR: Accepted values for config variable "
-      	 << name << "/PTT_PIN are \"RTS\" and \"DTR\"\n";
     return false;
   }
-  
+  ptr += cnt;
+  if (*ptr != 0)
+  {
+    if (parsePttPin(ptr, ptt_pin2, ptt_pin2_rev) == 0)
+    {
+      return false;
+    }
+  }
+
   string tx_timeout_str;
   if (cfg.getValue(name, "TIMEOUT", tx_timeout_str))
   {
@@ -199,7 +202,7 @@ bool LocalTx::initialize(void)
     perror("open serial port");
     return false;
   }
-  if (!serial->setPin(ptt_pin, false))
+  if (!setPtt(false))
   {
     perror("setPin");
     delete serial;
@@ -261,7 +264,7 @@ void LocalTx::transmit(bool do_transmit)
     tx_timeout_occured = false;
   }
   
-  if (!serial->setPin(ptt_pin, is_transmitting && !tx_timeout_occured))
+  if (!setPtt(is_transmitting && !tx_timeout_occured))
   {
     perror("setPin");
   }
@@ -358,7 +361,7 @@ void LocalTx::txTimeoutOccured(Timer *t)
   cerr << "*** ERROR: The transmitter have been active for too long. Turning "
       	  "it off...\n";
   
-  if (!serial->setPin(ptt_pin, false))
+  if (!setPtt(false))
   {
     perror("setPin");
   }
@@ -368,10 +371,54 @@ void LocalTx::txTimeoutOccured(Timer *t)
 } /* LocalTx::txTimeoutOccured */
 
 
+int LocalTx::parsePttPin(const char *str, Serial::Pin &pin, bool &rev)
+{
+  int cnt = 0;
+  if (*str == '!')
+  {
+    rev = true;
+    str++;
+    cnt++;
+  }
+  if (strncmp(str, "RTS", 3) == 0)
+  {
+    pin = Serial::PIN_RTS;
+    str += 3;
+    cnt += 3;
+  }
+  else if (strncmp(str, "DTR", 3) == 0)
+  {
+    pin = Serial::PIN_DTR;
+    str += 3;
+    cnt += 3;
+  }
+  else
+  {
+    cerr << "*** ERROR: Accepted values for config variable "
+      	 << name << "/PTT_PIN are \"[!]RTS\" and/or \"[!]DTR\".\n";
+    return 0;
+  }
+
+  return cnt;
+
+} /* LocalTx::parsePttPin */
 
 
+bool LocalTx::setPtt(bool tx)
+{
+  if (!serial->setPin(ptt_pin1, tx ^ ptt_pin1_rev))
+  {
+    return false;
+  }
 
+  if (!serial->setPin(ptt_pin2, tx ^ ptt_pin2_rev))
+  {
+    return false;
+  }
 
+  return true;
+
+} /* LocalTx::setPtt  */
 
 
 
