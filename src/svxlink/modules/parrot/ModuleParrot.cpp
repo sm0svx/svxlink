@@ -367,7 +367,7 @@ int ModuleParrot::audioFromRx(short *samples, int count)
 void ModuleParrot::allMsgsWritten(void)
 {
   //printf("ModuleParrot::allMsgsWritten\n");
-  if (fifo->empty())
+  if (fifo->empty() && !squelch_is_open)
   {
     setIdle(true);
   }
