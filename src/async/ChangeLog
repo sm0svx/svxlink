@@ -1,3 +1,14 @@
+ 0.13.0 -- ?? ??? 2005
+-----------------------
+
+* Merged Serial::InPin and Serial::OutPin to a new typedef Serial::Pin.
+  Also added PIN_NONE.
+
+* Bugfix in Config: It was not possible to specify an empty configuration
+  variable using "".
+
+
+
  0.12.1 -- 09 Oct 2005
 -----------------------
 

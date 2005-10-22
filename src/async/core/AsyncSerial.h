@@ -150,24 +150,18 @@ class Serial : public SigC::Object
     } Flow;
     
     /**
-     * @brief A type that defines the output pins in the serial port
+     * @brief A type that defines the read/write pins in the serial port
      */
     typedef enum
     {
-      PIN_RTS,	///< Request To Send
-      PIN_DTR 	///< Data Terminal Ready
-    } OutPin;
-    
-    /**
-     * @brief A type that defines the input pins in the serial port
-     */
-    typedef enum
-    {
-      PIN_CTS,	///< Clear To Send
-      PIN_DSR, 	///< Data Set Ready
-      PIN_DCD,	///< Data Carrier Detect
-      PIN_RI  	///< Ring Indicate
-    } InPin;
+      PIN_NONE, ///< No pin
+      PIN_RTS,	///< Output: Request To Send
+      PIN_DTR, 	///< Output: Data Terminal Ready
+      PIN_CTS,	///< Input: Clear To Send
+      PIN_DSR, 	///< Input: Data Set Ready
+      PIN_DCD,	///< Input: Data Carrier Detect
+      PIN_RI  	///< Input: Ring Indicate
+    } Pin;
     
     /**
      * @brief 	The maximum number of characters that can be read at once.
@@ -273,29 +267,29 @@ class Serial : public SigC::Object
 
     /**
      * @brief 	Set the state of one of the output pins in the serial port
-     * @param 	pin The pin to set. See @ref Serial::OutPin.
+     * @param 	pin The pin to set. See @ref Serial::Pin.
      * @param 	set If \em true the pin is set, if \em false the pin is cleared
      * @return	Return \em true on success or else \em false on failue. On
      *	      	failure the global variable \em errno will be set to indicate
      *	      	the cause of the error.
      *
      * Use this function to control one of the output pins in the serial port.
-     * For a list of available pins see @ref Serial::OutPin.
+     * For a list of available pins see @ref Serial::Pin.
      */
-    bool setPin(OutPin pin, bool set);
+    bool setPin(Pin pin, bool set);
     
     /**
      * @brief 	Get the state of one of the input pins in the serial port
-     * @param 	pin   	The pin to get the state of. See @ref Serial::InPin.
+     * @param 	pin   	The pin to get the state of. See @ref Serial::Pin.
      * @param 	is_set	The result will be returned in this variable.
      * @return	Return \em true on success or else \em false on failue. On
      *	      	failure the global variable \em errno will be set to indicate
      *	      	the cause of the error.
      *
      * Use this function to read the state of one of the input pins in the
-     * serial port. For a list of available pins see @ref Serial::InPin.
+     * serial port. For a list of available pins see @ref Serial::Pin.
      */
-    bool getPin(InPin pin, bool &is_set);
+    bool getPin(Pin pin, bool &is_set);
 
     /**
      * @brief 	A signal that is emitted when there is data to read

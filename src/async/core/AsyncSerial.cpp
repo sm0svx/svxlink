@@ -383,7 +383,7 @@ bool Serial::stopInput(bool stop)
 } /* Serial::stopInput */
 
 
-bool Serial::setPin(OutPin pin, bool set)
+bool Serial::setPin(Pin pin, bool set)
 {
   int the_pin;
   
@@ -396,6 +396,9 @@ bool Serial::setPin(OutPin pin, bool set)
     case PIN_RTS:
       the_pin = TIOCM_RTS;
       break;
+
+    case PIN_NONE:
+      return true;
     
     default:
       errno = EINVAL;
@@ -412,7 +415,7 @@ bool Serial::setPin(OutPin pin, bool set)
 } /* Serial::setPin */
 
 
-bool Serial::getPin(InPin pin, bool &is_set)
+bool Serial::getPin(Pin pin, bool &is_set)
 {
   int the_pin;
   
@@ -433,7 +436,11 @@ bool Serial::getPin(InPin pin, bool &is_set)
     case PIN_RI:
       the_pin = TIOCM_RI;
       break;
-    
+
+    case PIN_NONE:
+      is_set = false;
+      return true;
+
     default:
       errno = EINVAL;
       return false;
