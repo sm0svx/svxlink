@@ -303,7 +303,7 @@ void ModuleTcl::squelchOpen(bool is_open)
  */
 void ModuleTcl::allMsgsWritten(void)
 {
-  //processEvent("all_msgs_written");
+  processEvent("all_msgs_written");
 } /* allMsgsWritten */
 
 
