@@ -151,7 +151,7 @@ class StationData
      * @brief 	Set the callsign
      * @param 	callsign The callsign to set
      */
-    void setCallsign(const std::string& callsign) { m_callsign = callsign; }
+    void setCallsign(const std::string& callsign);
     
     /**
      * @brief 	Get the callsign
@@ -243,6 +243,20 @@ class StationData
      * @return	Returns the string representation of the IP address
      */
     std::string ipStr(void) const { return m_ip.toString(); }
+
+    /**
+     *
+     * @brief	Get the code representation of the callsign
+     * @return  Returns the code representation of the callsign
+     *
+     * The code representation is the callsign mapped to digits only.
+     * The mapping is done using the "phone method".
+     * ABC=2, DEF=3, GHI=4, JKL=5, MNO=6, PQRS=7, TUV=8, WXYZ=9.
+     * Digits are mapped to its corresponding digit.
+     * Star is ignored.
+     * All other characters are mapped to digit 1.
+     */
+    std::string code(void) const { return m_code; }
     
     /**
      * @brief 	Assignment operator
@@ -269,8 +283,10 @@ class StationData
     std::string       m_description;
     int       	      m_id;
     Async::IpAddress  m_ip;
+    std::string       m_code;
   
     void removeTrailingSpaces(std::string& str);
+    std::string callToCode(const std::string& call);
 
 };  /* class StationData */
 

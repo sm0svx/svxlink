@@ -117,7 +117,6 @@ using namespace EchoLink;
  *
  ****************************************************************************/
 
-
 string StationData::statusStr(Status status)
 {
   char *str;
@@ -171,7 +170,15 @@ void StationData::clear(void)
   m_time = "";
   m_description = "";
   m_id = -1;
+  m_code = "";
 } /* StationData::clear */
+
+
+void StationData::setCallsign(const string& callsign)
+{
+  m_callsign = callsign;
+  m_code = callToCode(callsign);
+} /* StationData::setCallsign  */
 
 
 void StationData::setData(const char *data)
@@ -223,6 +230,7 @@ StationData& StationData::operator=(const StationData& rhs)
   m_description = rhs.m_description;
   m_id = rhs.m_id;
   m_ip = rhs.m_ip;
+  m_code = rhs.m_code;
   
   return *this;
   
@@ -292,6 +300,40 @@ void StationData::removeTrailingSpaces(string& str)
   }
 } /* StationData::removeTrailingSpaces */
 
+
+string StationData::callToCode(const string& call)
+{
+  string code;
+
+  for (unsigned i=0; i<call.length(); ++i)
+  {
+    char digit;
+    if ((call[i] >= 'A') && (call[i] <= 'R'))
+    {
+      digit = (call[i] - 'A') / 3 + 2 + '0';
+    }
+    else if ((call[i] >= 'S') && (call[i] <= 'Z'))
+    {
+      digit = min((call[i] - 'A' - 1) / 3 + 2 + '0', int('9'));
+    }
+    else if (isdigit(call[i]))
+    {
+      digit = call[i];
+    }
+    else if (call[i] == '*')
+    {
+      continue;
+    }
+    else
+    {
+      digit = '1';
+    }
+    code += digit;
+  }
+
+  return code;
+  
+} /* StationData::callToCode  */
 
 
 

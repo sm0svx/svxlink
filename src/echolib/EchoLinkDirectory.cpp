@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cerrno>
 #include <cctype>
 #include <cassert>
+#include <cstring>
 
 
 /****************************************************************************
@@ -339,6 +340,62 @@ const StationData *Directory::findStation(int id)
   return 0;
   
 } /* Directory::findStation */
+
+
+bool Directory::stationCodeEq(const StationData& stn, string code, bool exact)
+{
+  if (exact)
+  {
+    return (stn.code() == code);
+  }
+  else
+  {
+    const char *stn_code = stn.code().c_str();
+    return (strstr(stn_code, code.c_str()) == stn_code);
+  }
+} /* Directory::stationCodeEq  */
+
+
+void Directory::findStationsByCode(vector<StationData> &stns,
+		const string& code, bool exact)
+{
+  list<StationData>::const_iterator iter;
+  
+  stns.clear();
+
+  for (iter=the_links.begin(); iter!=the_links.end(); ++iter)
+  {
+    if (stationCodeEq(*iter, code, exact))
+    {
+      stns.push_back(*iter);
+    }
+  }
+  
+  for (iter=the_repeaters.begin(); iter!=the_repeaters.end(); ++iter)
+  {
+    if (stationCodeEq(*iter, code, exact))
+    {
+      stns.push_back(*iter);
+    }
+  }
+  
+  for (iter=the_conferences.begin(); iter!=the_conferences.end(); ++iter)
+  {
+    if (stationCodeEq(*iter, code, exact))
+    {
+      stns.push_back(*iter);
+    }
+  }
+  
+  for (iter=the_stations.begin(); iter!=the_stations.end(); ++iter)
+  {
+    if (stationCodeEq(*iter, code, exact))
+    {
+      stns.push_back(*iter);
+    }
+  }
+
+} /* Directory::findStationsByCode  */
 
 
 ostream& EchoLink::operator<<(ostream& os, const StationData& station)

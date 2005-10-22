@@ -47,6 +47,7 @@ An example of how to use the EchoLink::Directory class
 
 #include <string>
 #include <list>
+#include <vector>
 
 
 /****************************************************************************
@@ -318,6 +319,19 @@ class Directory : public SigC::Object
      *	      	found. Otherwise a NULL-pointer is returned.
      */
     const StationData *findStation(int id);
+
+    /**
+     * @brief	Find stations from their mapping code
+     * @param	stns This list is filled in by this function
+     * @param	code The code to searh for
+     * @param	exact \em true if it should be an exact match or else
+     *                \em false
+     *
+     * Find stations matching the given code. For a description of how the
+     * callsign to code mapping is done see @see EchoLink::StationData::code.
+     */
+    void findStationsByCode(std::vector<StationData> &stns,
+		    const std::string& code, bool exact=true);
     
     /**
      * @brief A signal that is emitted when the registration status changes
@@ -390,6 +404,7 @@ class Directory : public SigC::Object
     void createClientObject(void);
     void onRefreshRegistration(Async::Timer *timer);
     void onCmdTimeout(Async::Timer *timer);
+    bool stationCodeEq(const StationData& stn, std::string code, bool exact);
 
 };  /* class Directory */
 
