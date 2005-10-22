@@ -13,6 +13,30 @@
   LC_TIME, LC_ALL and LANG environment variables. Have a look at the manual
   page for "strftime" for how to construct the format string.
 
+* Bugfix in ModuleParrot: The module timeout was not handled correctly.
+  The timeout timer was reset at squelch open but then it started to
+  count down directly instead of waiting until the squelch was closed.
+
+* It is now possible to use DTMF * as part of a command. Previously it
+  was only used for triggering an identification. The only difference should
+  be that when typing * on the console it must be followed by a # for the
+  identification to be executed. When * is received on the radio channel,
+  the identification is executed on squelch close. No # needed here.
+
+* ModuleEchoLink: A new "connect by call" feature has been added. This can
+  be used if the node number is unknown or if you want to search for
+  stations starting with a specific prefix. Callsigns are mapped to digits
+  by using the following method: ABC=2, DEF=3, GHI=4, JKL=5, MNO=6, PQRS=7,
+  TUV=8, WXYZ=9. The same mapping as on many phones. Digits are mapped to its
+  corresponding digit. The star character is ignored and all other characters
+  are mapped to digit 1.
+  A searh command start with * and then the callsign code is entered. So if
+  you want to connect to SM3SVX-L you should enter "*76378915#". Since the
+  codes are not unique a list of search hits will be presented to the user.
+  If the entered code ends with *, a wildcard search will be performed. So
+  if you want to search for all stations starting with SM3 you enter
+  "*763*#".
+
 
 
  0.6.0 -- 09 Oct 2005
