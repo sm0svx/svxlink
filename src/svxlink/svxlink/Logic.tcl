@@ -318,7 +318,6 @@ proc checkPeriodicIdentify {} {
     playSilence 100;
     playMsg "Core" [string trimleft [clock format $epoch -format "%I"] 0];
     playSilence 100;
-    #playMsg "Core" [clock format $epoch -format "%p"];
     if {[clock format $epoch -format "%k"] < 12} {
       playMsg "Core" "AM";
     } else {
