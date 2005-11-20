@@ -38,17 +38,35 @@ set state "idle";
 set recdir "/var/spool/voice_mail";
 
 #
-# Read configuration file
+# Configuration file names
 #
 set cfg_etc "/etc/TclVoiceMail.conf";
 set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.conf";
 
+
+#
+# Read configuration file
+#
 if [file exists $cfg_etc] {
   source $cfg_etc;
 } elseif [file exists $cfg_home] {
   source $cfg_home;
 } else {
   puts "*** ERROR: Could not find a configuration file in module \"$module_name\". Tried \"$cfg_etc\" and \"$cfg_home\"";
+}
+
+
+#
+# Read the specified user configuration variable for the specified user ID
+#
+proc id2var {id var} {
+  variable users;
+  array set user [split $users($id) " ="];
+  if {[array names user -exact $var] != ""} {
+    return $user($var);
+  } else {
+    return "";
+  }
 }
 
 
@@ -168,13 +186,20 @@ proc squelch_open {is_open} {
   variable rec_rcpt;
   variable rec_timestamp;
   variable userid;
+  variable mail_from_addr;
+  variable mail_from_name;
+  variable mail_subj;
+  variable mail_msg;
+  variable CFG_ID;
+  variable ::Logic::CFG_CALLSIGN;
   
   if {$is_open} {set str "OPEN"} else { set str "CLOSED"};
   #printInfo "$module_name: The squelch is $str";
 
   if {$state == "rec_subject"} {
     if {$is_open} {
-      set subj_filename "$recdir/$rec_rcpt/$rec_timestamp";
+      set rec_rcpt_call [id2var $rec_rcpt call];
+      set subj_filename "$recdir/$rec_rcpt_call/$rec_timestamp";
       append subj_filename "_$userid.subj";
       printInfo "Recording subject to file: $subj_filename";
       recordStart $subj_filename;
@@ -184,9 +209,10 @@ proc squelch_open {is_open} {
       setState "rec_message";
     }
   } elseif {$state == "rec_message"} {
-    set subj_filename "$recdir/$rec_rcpt/$rec_timestamp";
+    set rec_rcpt_call [id2var $rec_rcpt call];
+    set subj_filename "$recdir/$rec_rcpt_call/$rec_timestamp";
     append subj_filename "_$userid.subj";
-    set mesg_filename "$recdir/$rec_rcpt/$rec_timestamp";
+    set mesg_filename "$recdir/$rec_rcpt_call/$rec_timestamp";
     append mesg_filename "_$userid.mesg";
     if {$is_open} {
       printInfo "Recording message to file: $mesg_filename";
@@ -199,6 +225,17 @@ proc squelch_open {is_open} {
       #playFile $mesg_filename;
       #playSilence 1000;
       playSilence 500;
+      set email [id2var $rec_rcpt email];
+      if {$email != ""} {
+        printInfo "Sending notification e-mail to \"$email\"";
+      	eval set msg \"$mail_msg\";
+      	#exec mail -s "$mail_subj" $email -- -f $mail_from_addr \
+	#	-F "$mail_from_name" << "$msg" &;
+      	exec mutt -s "$mail_subj" $email \
+		-e "set from=\"$mail_from_addr\"" \
+		-e "set realname=\"$mail_from_name\"" \
+		<< "$msg" &;
+      }
       set rec_rcpt "";
       setState "logged_in";
     }
@@ -230,7 +267,7 @@ proc status_report {} {
   
   set user_list {};
   foreach userid [lsort [array names users]] {
-    set call [id2call $userid];
+    set call [id2var $userid call];
     if {[llength [glob -nocomplain -directory "$recdir/$call" *.subj]] > 0} {
       lappend user_list $call;
     }
@@ -242,13 +279,6 @@ proc status_report {} {
       playSilence 250;  
     }
   }
-}
-
-
-proc id2call {id} {
-  variable users;
-  array set user [split $users($id) " ="];
-  return $user(call);
 }
 
 
@@ -311,8 +341,9 @@ proc cmdPlayNextNewMessage {cmd} {
   variable state;
 
   #puts "cmdPlayNextNewMessage";
-  set call [id2call $userid];
+  set call [id2var $userid call];
   set subjects [glob -nocomplain -directory "$recdir/$call" *.subj];
+  set subjects [lsort -ascii -increasing $subjects];
   if {$state == "logged_in"} {
     set msg_cnt [llength $subjects];
     playNumber $msg_cnt;
@@ -372,9 +403,10 @@ proc abortRecording {} {
 
   if {$rec_rcpt != ""} {
     printInfo "Aborted recording";
-    set subj_filename "$recdir/$rec_rcpt/$rec_timestamp";
+    set rec_rcpt_call [id2var $rec_rcpt call];
+    set subj_filename "$recdir/$rec_rcpt_call/$rec_timestamp";
     append subj_filename "_$userid.subj";
-    set mesg_filename "$recdir/$rec_rcpt/$rec_timestamp";
+    set mesg_filename "$recdir/$rec_rcpt_call/$rec_timestamp";
     append mesg_filename "_$userid.mesg";
     file delete $subj_filename $mesg_filename;
     set rec_rcpt "";
@@ -412,9 +444,10 @@ proc cmdRecordMessage {cmd} {
       spellWord $user(call);
       playSilence 500;
       playMsg "rec_subject";
-      set rec_rcpt [id2call $cmd];
-      if {[file exists "$recdir/$rec_rcpt"] != 1} {
-        file mkdir "$recdir/$rec_rcpt";
+      set rec_rcpt $cmd;
+      set rec_rcpt_call [id2var $rec_rcpt call];
+      if {[file exists "$recdir/$rec_rcpt_call"] != 1} {
+        file mkdir "$recdir/$rec_rcpt_call";
       }
       setState "rec_subject";
     } else {
@@ -435,6 +468,7 @@ proc cmdRecordMessage {cmd} {
 proc cmdPlayMessage {msg} {
   printInfo "cmdPlayMessage $msg";
 }
+
 
 
 # end of namespace
