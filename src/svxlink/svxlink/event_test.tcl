@@ -55,7 +55,7 @@ proc recordStop {} {
 }
 
 
-proc exec {cmd} {
+proc execTest {cmd} {
   puts "--- $cmd";
   eval $cmd;
   puts "";
@@ -362,57 +362,62 @@ proc EchoLink {} {
 
 
 proc TclVoiceMail {} {
+  namespace eval Logic {
+    variable CFG_CALLSIGN = "SM0XXX";
+  }
   namespace eval TclVoiceMail {
     variable module_name [namespace tail [namespace current]];
     variable users;
+    variable CFG_ID = 3;
+    variable ::Logic::CFG_CALLSIGN;
 
-    set users(000) "call=TEST pass=123";
-
-    activateModule $module_name;
-    exec "${module_name}::dtmf_digit_received 1";
-    exec "${module_name}::dtmf_cmd_received \"\"";
+    set users(000) "call=TEST pass=123 email=root";
 
     activateModule $module_name;
-    exec "${module_name}::dtmf_cmd_received \"00012\"";
-    exec "${module_name}::dtmf_cmd_received \"000123\"";
+    execTest "${module_name}::dtmf_digit_received 1";
+    execTest "${module_name}::dtmf_cmd_received \"\"";
 
-    exec "${module_name}::dtmf_cmd_received \"0\"";
-    exec "${module_name}::dtmf_cmd_received \"1\"";
+    activateModule $module_name;
+    execTest "${module_name}::dtmf_cmd_received \"00012\"";
+    execTest "${module_name}::dtmf_cmd_received \"000123\"";
 
-    exec "${module_name}::dtmf_cmd_received \"2\"";
-    exec "${module_name}::dtmf_cmd_received \"0000\"";
-    exec "${module_name}::squelch_open \"1\"";
-    exec "${module_name}::dtmf_cmd_received \"\"";
-    exec "${module_name}::squelch_open \"0\"";
+    execTest "${module_name}::dtmf_cmd_received \"0\"";
+    execTest "${module_name}::dtmf_cmd_received \"1\"";
 
-    exec "${module_name}::dtmf_cmd_received \"2\"";
-    exec "${module_name}::dtmf_cmd_received \"000\"";
-    exec "${module_name}::squelch_open \"1\"";
-    exec "${module_name}::dtmf_cmd_received \"\"";
-    exec "${module_name}::squelch_open \"0\"";
+    execTest "${module_name}::dtmf_cmd_received \"2\"";
+    execTest "${module_name}::dtmf_cmd_received \"0000\"";
+    execTest "${module_name}::squelch_open \"1\"";
+    execTest "${module_name}::dtmf_cmd_received \"\"";
+    execTest "${module_name}::squelch_open \"0\"";
 
-    exec "${module_name}::dtmf_cmd_received \"2000\"";
-    exec "${module_name}::squelch_open \"1\"";
-    exec "${module_name}::squelch_open \"0\"";
-    exec "${module_name}::squelch_open \"1\"";
-    exec "${module_name}::squelch_open \"0\"";
+    execTest "${module_name}::dtmf_cmd_received \"2\"";
+    execTest "${module_name}::dtmf_cmd_received \"000\"";
+    execTest "${module_name}::squelch_open \"1\"";
+    execTest "${module_name}::dtmf_cmd_received \"\"";
+    execTest "${module_name}::squelch_open \"0\"";
 
-    exec "${module_name}::dtmf_cmd_received \"1\"";
-    exec "${module_name}::dtmf_cmd_received \"3\"";
-    exec "${module_name}::dtmf_cmd_received \"2\"";
-    exec "${module_name}::squelch_open \"1\"";
-    exec "${module_name}::squelch_open \"0\"";
-    exec "${module_name}::squelch_open \"1\"";
-    exec "${module_name}::squelch_open \"0\"";
+    execTest "${module_name}::dtmf_cmd_received \"2000\"";
+    execTest "${module_name}::squelch_open \"1\"";
+    execTest "${module_name}::squelch_open \"0\"";
+    execTest "${module_name}::squelch_open \"1\"";
+    execTest "${module_name}::squelch_open \"0\"";
 
-    exec "${module_name}::status_report";
+    execTest "${module_name}::dtmf_cmd_received \"1\"";
+    execTest "${module_name}::dtmf_cmd_received \"3\"";
+    execTest "${module_name}::dtmf_cmd_received \"2\"";
+    execTest "${module_name}::squelch_open \"1\"";
+    execTest "${module_name}::squelch_open \"0\"";
+    execTest "${module_name}::squelch_open \"1\"";
+    execTest "${module_name}::squelch_open \"0\"";
 
-    exec "${module_name}::dtmf_cmd_received \"1\"";
-    exec "${module_name}::dtmf_cmd_received \"0\"";
-    exec "${module_name}::dtmf_cmd_received \"1\"";
+    execTest "${module_name}::status_report";
 
-    exec "${module_name}::timeout";
-    exec "${module_name}::dtmf_cmd_received \"\"";
+    execTest "${module_name}::dtmf_cmd_received \"1\"";
+    execTest "${module_name}::dtmf_cmd_received \"0\"";
+    execTest "${module_name}::dtmf_cmd_received \"1\"";
+
+    execTest "${module_name}::timeout";
+    execTest "${module_name}::dtmf_cmd_received \"\"";
 
     file delete "$recdir/TEST";
   }
