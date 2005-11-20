@@ -37,6 +37,10 @@
   if you want to search for all stations starting with SM3 you enter
   "*763*#".
 
+* ModuleTclVoiceMail: This module now can send an e-mail to the recepient
+  when a new voice mail has arrived. The e-mail address to use is
+  configured in the TclVoiceMail.conf file for each user.
+
 
 
  0.6.0 -- 09 Oct 2005
