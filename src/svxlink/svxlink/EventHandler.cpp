@@ -171,7 +171,11 @@ bool EventHandler::initialize(void)
 
 void EventHandler::setVariable(const string& name, const string& value)
 {
-  Tcl_SetVar(interp, name.c_str(), value.c_str(), 0);
+  if (Tcl_SetVar(interp, name.c_str(), value.c_str(), TCL_LEAVE_ERR_MSG)
+  	== NULL)
+  {
+    cerr << event_script << ": " << Tcl_GetStringResult(interp) << endl;
+  }
 } /* EventHandler::setVariable */
 
 
