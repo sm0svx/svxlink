@@ -363,12 +363,12 @@ proc EchoLink {} {
 
 proc TclVoiceMail {} {
   namespace eval Logic {
-    variable CFG_CALLSIGN = "SM0XXX";
+    variable CFG_CALLSIGN "TEST";
   }
   namespace eval TclVoiceMail {
     variable module_name [namespace tail [namespace current]];
     variable users;
-    variable CFG_ID = 3;
+    variable CFG_ID 3;
     variable ::Logic::CFG_CALLSIGN;
 
     set users(000) "call=TEST pass=123 email=root";
