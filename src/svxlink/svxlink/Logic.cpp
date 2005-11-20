@@ -841,6 +841,10 @@ void Logic::loadModule(const string& module_cfg_name)
   
   string plugin_name = module_cfg_name;
   cfg().getValue(module_cfg_name, "NAME", plugin_name);
+  
+    // Define the module namespace so that we can set some variables in it
+  event_handler->processEvent("namespace eval " + plugin_name + " {}");
+  
   cfg().getValue(module_cfg_name, "PLUGIN_NAME", plugin_name);
   
   string plugin_filename;
