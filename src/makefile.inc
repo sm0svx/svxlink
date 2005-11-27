@@ -340,7 +340,7 @@ AR		= ar
 
 # Linker
 #LDFLAGS		= -rdynamic -Wl,-rpath-link,$(LIB)
-LDFLAGS		= 
+LDFLAGS		= -Wl,-rpath-link,$(LIB)
 LINK		= $(ECHO) --- Linking $(BOLD)$@$(NBOLD)...; gcc $(LIBPATH) $(LDFLAGS)
 CPPLINK		= $(ECHO) --- Linking $(BOLD)$@$(NBOLD)...; g++ $(LIBPATH) $(LDFLAGS)
 
