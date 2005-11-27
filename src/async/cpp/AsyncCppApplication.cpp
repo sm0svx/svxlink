@@ -40,6 +40,7 @@
 #include <sys/types.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#include <sys/errno.h>
 
 #include <cstdlib>
 #include <cstdio>
@@ -187,8 +188,15 @@ void CppApplication::exec(void)
 	timeout_ptr);
     if (dcnt == -1)
     {
-      perror("select");
-      exit(1);
+      if (errno == EINTR)
+      {
+      	continue;
+      }
+      else
+      {
+      	perror("select");
+      	exit(1);
+      }
     }
     
     if ((timeout_ptr != 0) && (timeout_ptr->tv_sec == 0) &&
