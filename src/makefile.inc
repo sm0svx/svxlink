@@ -339,7 +339,8 @@ CXX		= $(ECHO) --- Compiling $(BOLD)$(@:.o=.cpp)$(NBOLD)...; g++ $(CXXFLAGS)
 AR		= ar
 
 # Linker
-LDFLAGS		= -rdynamic -Wl,-rpath-link $(LIB)
+#LDFLAGS		= -rdynamic -Wl,-rpath-link,$(LIB)
+LDFLAGS		= 
 LINK		= $(ECHO) --- Linking $(BOLD)$@$(NBOLD)...; gcc $(LIBPATH) $(LDFLAGS)
 CPPLINK		= $(ECHO) --- Linking $(BOLD)$@$(NBOLD)...; g++ $(LIBPATH) $(LDFLAGS)
 
@@ -565,7 +566,7 @@ $(SHLIBFILE):	$(LIBOBJS)
 	#ld -o $@ -G -h lib$(LIBNAME).so.$(SHLIB_MAJOR) $(LIBOBJS)
 	#ld -o $@ -soname=lib$(LIBNAME).so.$(SHLIB_MAJOR).$(SHLIB_MINOR) \
 	#      	-shared $(LIBPATH) $(LIBOBJS) $(LIB_LIBS)
-	gcc -shared -o $@ -Wl,-soname,lib$(LIBNAME).so.$(SHLIB_MAJOR).$(SHLIB_MINOR),$(LIBPATH) \
+	gcc -shared -o $@ -Wl,-soname,lib$(LIBNAME).so.$(SHLIB_MAJOR).$(SHLIB_MINOR) $(LIBPATH) \
 	      	$(LIBOBJS) $(LIB_LIBS)
 	chgrp $(SET_GROUP) $@
 	ln -s $(notdir $@) \
