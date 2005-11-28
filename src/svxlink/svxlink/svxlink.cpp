@@ -39,6 +39,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdlib.h>
 #include <popt.h>
 #include <locale.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include <string>
 #include <iostream>
@@ -114,6 +118,8 @@ static void parse_arguments(int argc, const char **argv);
 static void stdinHandler(FdWatch *w);
 static void stdout_handler(FdWatch *w);
 static void initialize_logics(Config &cfg);
+static void sighup_handler(int signal);
+static bool open_logfile(void);
 
 
 /****************************************************************************
@@ -130,13 +136,15 @@ static void initialize_logics(Config &cfg);
  *
  ****************************************************************************/
 
-static char   	*logfile_name = NULL;
-static int    	daemonize = 0;
-static FILE   	*logfile = 0;
-static Logic  	*logic = 0;
-static FdWatch	*stdin_watch = 0;
-static FdWatch	*stdout_watch = 0;
-static string   tstamp_format;
+static char   	      	*logfile_name = NULL;
+static int    	      	daemonize = 0;
+static int    	      	logfd = -1;
+static Logic  	      	*logic = 0;
+static FdWatch	      	*stdin_watch = 0;
+static FdWatch	      	*stdout_watch = 0;
+static string         	tstamp_format;
+static struct sigaction oldact;
+static volatile bool  	reopen_log = false;
 
 
 /****************************************************************************
@@ -169,15 +177,23 @@ int main(int argc, char **argv)
 
   parse_arguments(argc, const_cast<const char **>(argv));
 
+  struct sigaction act;
+  act.sa_handler = sighup_handler;
+  sigemptyset(&act.sa_mask);
+  act.sa_flags = 0;
+  if (sigaction(SIGHUP, &act, &oldact) == -1)
+  {
+    perror("sigaction");
+    exit(1);
+  }
+
   int pipefd[2] = {-1, -1};
   int noclose = 0;
   if (logfile_name != 0)
   {
       /* Open the logfile */
-    logfile = fopen(logfile_name, "a");
-    if (logfile == NULL)
+    if (!open_logfile())
     {
-      perror("fopen(logfile)");
       exit(1);
     }
 
@@ -292,9 +308,14 @@ int main(int argc, char **argv)
 
   delete logic;
   
-  if (logfile != 0)
+  if (logfd != -1)
   {
-    fclose(logfile);
+    close(logfd);
+  }
+  
+  if (sigaction(SIGHUP, &oldact, NULL) == -1)
+  {
+    perror("sigaction");
   }
   
   return 0;
@@ -431,16 +452,29 @@ static void stdout_handler(FdWatch *w)
   while (*ptr != 0)
   {
     static bool print_timestamp = true;
-
-    if (print_timestamp && !tstamp_format.empty())
+    
+    if (print_timestamp)
     {
-      time_t epoch = time(NULL);
-      struct tm *tm = localtime(&epoch);
-      char tstr[256];
-      size_t tlen = strftime(tstr, sizeof(tstr), tstamp_format.c_str(), tm);
-      fwrite(tstr, 1, tlen, logfile);
-      fwrite(": ", 1, 2, logfile);
-      print_timestamp = false;
+      if (!tstamp_format.empty())
+      {
+	time_t epoch = time(NULL);
+	struct tm *tm = localtime(&epoch);
+	char tstr[256];
+	size_t tlen = strftime(tstr, sizeof(tstr), tstamp_format.c_str(), tm);
+	write(logfd, tstr, tlen);
+	write(logfd, ": ", 2);
+	print_timestamp = false;
+      }
+
+      if (reopen_log)
+      {
+	const char *reopen_txt = "SIGHUP received. Reopening logfile\n";
+	write(logfd, reopen_txt, strlen(reopen_txt));
+	open_logfile();
+	reopen_log = false;
+	print_timestamp = true;
+	continue;
+      }
     }
 
     int write_len = 0;
@@ -454,9 +488,8 @@ static void stdout_handler(FdWatch *w)
     {
       write_len = strlen(ptr);
     }
-    fwrite(ptr, 1, write_len, logfile);
+    write(logfd, ptr, write_len);
     ptr += write_len;
-    fflush(logfile);
   }
 } /* stdout_handler  */
 
@@ -519,6 +552,41 @@ static void initialize_logics(Config &cfg)
   } while (comma != logics.end());
 }
 
+
+void sighup_handler(int signal)
+{
+  if (logfile_name == 0)
+  {
+    write(STDOUT_FILENO, "Ignoring SIGHUP\n", 16);
+    return;
+  }
+  
+  write(STDOUT_FILENO, "SIGHUP received. Logfile reopened\n", 34);
+  reopen_log = true;
+    
+} /* sighup_handler */
+
+
+bool open_logfile(void)
+{
+  if (logfd != -1)
+  {
+    close(logfd);
+  }
+  
+  logfd = open(logfile_name, O_WRONLY | O_APPEND | O_CREAT, 00644);
+  if (logfd == -1)
+  {
+    char str[256] = "open(\"";
+    strcat(str, logfile_name);
+    strcat(str, "\")");
+    perror(str);
+    return false;
+  }
+
+  return true;
+  
+} /* open_logfile */
 
 
 /*
