@@ -1,7 +1,8 @@
  0.7.0 -- ?? ??? 2005
 ----------------------
 
-* Bugfix: An uninitialized variable caused svxlink to crash.
+* Bugfix: An uninitialized variable caused svxlink to crash. This bug
+  showed itself when using the TclVoiceMail module.
 
 * The PTT_PIN configuration variable now accept multiple pins. Also, it
   is now possible to specify reverse polarity if needed.
@@ -12,6 +13,9 @@
   GLOBAL/TIMESTAMP_FORMAT. Some formats are affected by the setting of the
   LC_TIME, LC_ALL and LANG environment variables. Have a look at the manual
   page for "strftime" for how to construct the format string.
+  The log file will be reopened if svxlink is sent the SIGHUP UNIX signal.
+  This can be used when setting up logrotate to automatically rotate the
+  SvxLink logs.
 
 * Bugfix in ModuleParrot: The module timeout was not handled correctly.
   The timeout timer was reset at squelch open but then it started to
