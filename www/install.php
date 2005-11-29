@@ -183,9 +183,12 @@ the speaker level to a comfortable level using the Pcm and Vol sliders. Press
 the PTT and say something and listen how it comes back. Adjust the Capture
 slider until you are satisfied.
 <P>
-To adjust the levels for the SvxLink server, start it up and press the * key on
-the keyboard. This will make the svxlink server identify itself. Do this a
-couple of times and adjust the Pcm and Vol sliders to the highest volume
+To adjust the levels for the SvxLink server, start it up and press *# on
+the keyboard. This will make the svxlink server identify itself. The # is
+only needed for the *-command when entering commands on the keyboard. When
+doing it from the radio, a * followed by a squelch close will trigger an
+identification.
+Do this a couple of times and adjust the Pcm and Vol sliders to the highest volume
 possible without distorsion. Now, activate the parrot module by pressing 1# on
 the keyboard. Use another transmitter to make a short transmission. Listen to
 the recorded audio and adjust the Capture slider to the highest level
@@ -320,6 +323,30 @@ application global configuration data.
     interface should be handled. The specified name of a logic core must
     have a corresponding section specified in the config file. This is
     where the behaviour of the logic core is specified.
+  </DD>
+
+  <DT>TIMESTAMP_FORMAT</DT>
+  <DD>
+    This variable specifies the format of the timestamp that is written
+    in front of each row in the log file. The format string is in the
+    same format as specified in the manual page for function strftime.
+    Just type "man strftime" at a command prompt for more information.
+    The default is "%c" which is described as: "the preferred date and
+    time representation for the current locale". The environment
+    variables LC_TIME, LC_ALL and LANG will affect how this time
+    format will look. For example, setting LC_TIME="sv_SE.UTF8" will
+    give you swedish timestamp representation.<BR/>
+    Other examples of format specifiers are:
+    <UL>
+      <LI>%d - The day of the month as a decimal number (range 01 to 31)</LI>
+      <LI>%B - The full month name according to the current locale</LI>
+      <LI>%Y - The year as a decimal number including the century</LI>
+      <LI>%H - The hour as a decimal number using a 24-hour clock (range 00 to 23)</LI>
+      <LI>%M - The minute as a decimal number (range 00 to 59)</LI>
+      <LI>%S - The second as a decimal number (range 00 to 61)</LI>
+    </UL>
+    So, TIMESTAMP_FORMAT="%d %B %Y %H:%M:%S" would give a timestamp
+    looking something like: "29 Nov 2005 22:31:59".
   </DD>
 </DL>
 
@@ -812,8 +839,11 @@ used to specify the configuration for a transmitter.
 
   <DT>PTT_PIN</DT>
   <DD>
-    Specify the pin in the serial port that the PTT is connected to. The
-    possible values are RTS or DTR.
+    Specify the pin(s) in the serial port that the PTT is connected to. It is
+    possible to specify one or two pins. Some interface boards require that you
+    specify two pins since one pin does not provide enough drive power to the
+    circuit. A "!" in front of the pin name indicates inverted operation. Some
+    of the possible values are RTS, DTRRTS, !DTR!RTS or even DTR!RTS
   </DD>
 
   <DT>TIMEOUT</DT>
@@ -965,7 +995,8 @@ Specific configuration variables for the <b>EchoLink</b> module.
 The <b>TclVoiceMail</b> module does not have any specific configuration
 variables. It is configured in another configuration file. Its default
 location is <em>/etc/TclVoiceMail.conf</em>. The configuration file is also
-looked for in directory "$HOME/.svxlink".
+looked for in directory "$HOME/.svxlink/". The comments in that file should
+be enough to understand how to configure the voice mail module.
 
 
 <?php include("footer.inc"); ?>

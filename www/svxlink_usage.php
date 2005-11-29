@@ -35,7 +35,13 @@ AA12B2233C  <-- Command executed: 12223
 Exactly the same result as the first example, even though some digits were
 detected multiple times.
 <P>
-The star key (*) is special. It triggers the node to identify itself.
+There is a command timeout that is 10 seconds. If no DTMF characters has 
+been received for 10 seconds, the reception buffer will be cleared.
+<P>
+The star key (*) is special. It triggers the node to identify itself. However,
+identification is only performed if the star is entered as the only DTMF
+character. If digits are received, before or after, it will be considered
+to be part of a command.
 <P>
 The "D" key is used to activate a pre programmed macro or short cut. A macro is
 used to reduce the number of DTMF codes that have to be sent. For example if the
@@ -71,10 +77,23 @@ Exit the module by sending just the number sign.
 
 <H3>The EchoLink Module</H3>
 The EchoLink module is used to connect to other EchoLink stations. To connect
-to another station, just enter the node number ended with the number sign. To
-disconnect, press the number sign. To exit the module, press the number sign
-when not connected. Pressing 1# will tell you the callsign of all connected
+to another station, just enter the node number ended with a #. To
+disconnect, press #. To exit the module, press #
+when not connected. Pressing 1# will tell you the callsigns of all connected
 stations.
+<P>
+The "connect by callsign" function will make it possible to connect to a
+station even if the node number is unknown. Callsigns are mapped to digits
+by using the following method: ABC=2, DEF=3, GHI=4, JKL=5, MNO=6, PQRS=7,
+TUV=8, WXYZ=9. The same mapping as on many phones. Letters are mapped to its
+corresponding digit. All other characters are mapped to digit 1.
+A searh command start with * and then the callsign code is entered. So if
+you want to connect to SM3SVX-L you should enter "*76378915#". Since the
+codes are not unique a list of search hits will be presented to the user
+to choose from.
+If the entered code ends with *, a wildcard search will be performed. So
+if you want to search for all stations starting with SM3 you enter
+"*763*#".
 <P>
 To get more information on the EchoLink system, have a look at the
 <A href="http://www.echolink.org">EchoLink homepage</A>.
@@ -104,6 +123,10 @@ have letters on the key pad like: 2=ABC, 3=DEF, 4=GHI, 5=JKL, 6=MNO,
 letters and map them to digits. Then we will get the user ID 789. In case of
 a collition, add 1. For example AFC and ADB will both map to 232. One
 possible mapping is then AFC=232 and ADB=233.
+<P>
+It is possible for the sysop to configure an e-mail address for each user.
+If this has been done, an e-mail will be sent to the user if someone
+records a new voice mail for him.
 <P>
 To deactivate the module, just press # when the main menu is active.
 
