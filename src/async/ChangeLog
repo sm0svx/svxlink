@@ -7,6 +7,10 @@
 * Bugfix in Config: It was not possible to specify an empty configuration
   variable using "".
 
+* Fixed the makefile problem where it was not possible to compile SvxLink
+  when a previous "make install" had been done. It tried to link against
+  the installed libraries instead of the ones just compiled.
+
 
 
  0.12.1 -- 09 Oct 2005
