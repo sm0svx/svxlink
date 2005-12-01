@@ -2,4 +2,6 @@ The EchoLink module is used to connect to other EchoLink stations. To connect to
 another station, just enter a node number ended with the number sign. To
 disconnect, press the number sign.
 
+Use command 1 to list connected stations.
+
 To exit the module, press the number sign when not connected.
