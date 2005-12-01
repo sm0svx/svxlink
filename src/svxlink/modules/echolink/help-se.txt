@@ -1,0 +1,9 @@
+EchoLink-modulen används för att ansluta till andra EchoLink-stationer
+över Internet. För att ansluta till en station, mata in dess nod-ID och
+avsluta med fyrkant. För att koppla ner den senast anslutna stationen, tryck
+fyrkant.
+
+Använd kommando 1 för att lista anslutna stationer.
+
+För att avaktivera modulen, tryck fyrkant när inga stationer är anslutna.
+

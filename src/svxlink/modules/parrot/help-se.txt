@@ -1,0 +1,9 @@
+Papegojan repeterar tillbaka det som sägs under ett sändningspass. Detta kan
+användas som en simplexrepeater eller för att höra hur din modulation låter.
+
+Den läser också upp de DTMF siffror du trycker avslutat med fyrkant. Detta
+kan användas för att se om alla dina DTMF-siffror detekteras korrekt av
+SvxLink.
+
+Avaktivera modulen genom att skicka en ensam fyrkant.
+
