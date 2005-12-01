@@ -89,6 +89,10 @@ TRIM_SOUNDS="\
   Default/timeout \
   Default/operation_failed \
   Default/unknown_command \
+  Default/aborted \
+  Default/star \
+  Default/slash \
+  Default/dash \
   Core/online \
   Core/active_module \
   Core/repeater \
@@ -116,8 +120,12 @@ TRIM_SOUNDS="\
   EchoLink/conference \
   EchoLink/already_connected_to \
   EchoLink/connected_stations \
+  EchoLink/choose_station \
+  EchoLink/idx_out_of_range \
+  EchoLink/no_match \
+  EchoLink/too_many_matches \
   EchoLink/conf-echotest \
-  TclVoiceMail/aborted \
+  EchoLink/conf-linux \
   TclVoiceMail/messages_for \
   TclVoiceMail/new_messages \
   TclVoiceMail/rec_sending_to \
@@ -128,6 +136,10 @@ TRIM_SOUNDS="\
   TclVoiceMail/rec_subject \
   "
 
+warning()
+{
+  echo -e "\033[31m*** WARNING: $@\033[0m";
+}
 
 
 #src_tmp=$(mktemp /tmp/$SRC_DIR-XXXXXX)
@@ -151,7 +163,7 @@ for sound in $COPY_SOUNDS; do
     echo "Copying $SRC_DIR/$sound -> $DEST_DIR/$sound"
     cp -a $SRC_DIR/$sound.raw $DEST_DIR/$sound.raw
   else
-    echo "*** Missing sound: $sound"
+    warning "Missing sound: $sound"
   fi
 done
 
@@ -162,7 +174,7 @@ for sound in $MAXIMIZE_SOUNDS; do
     echo "Maximizing $SRC_DIR/$sound -> $DEST_DIR/$sound.raw"
     ./play_sound.sh -f $SRC_DIR/$sound > $DEST_DIR/$sound.raw
   else
-    echo "*** Missing sound: $sound"
+    warning "Missing sound: $sound"
   fi
 done
 
@@ -175,7 +187,7 @@ for sound in $TRIM_SOUNDS; do
     ./play_sound.sh -tf $SRC_DIR/$sound > $DEST_DIR/$sound.raw
     cat $DEST_DIR/$sound.raw >> /tmp/all_trimmed.raw
   else
-    echo "*** Missing sound: $sound"
+    warning "Missing sound: $sound"
   fi
 done
 
