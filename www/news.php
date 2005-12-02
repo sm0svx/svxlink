@@ -7,6 +7,41 @@
 <H2>Project News</H2>
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>2 Dec 2005: <I>Version 051202 released</I></B>
+  <TD/></TR>
+  <TR><TD>
+    Ok, time for another release. There was just too much small things
+    in the ChangeLogs to wait with a release any longer. Hopefully, this
+    release is bug free ;-)
+    <UL>
+      <LI>
+        Bugfix: The SvxLink server would crash when recording voice mails
+        on other distributions than Fedora.
+      </LI>
+      <LI>
+        A new "connect by call" feature in the EchoLink module.
+      </LI>
+      <LI>
+        The voice mail module now can send a notification e-mail when
+        a new voice mail arrives for a user. First implementation by
+        PA3FNT, improved by me (SM0SVX).
+      </LI>
+      <LI>
+        Timestamps in the log file.
+      </LI>
+      <LI>
+        Now possible to use both DTR and RTS together for PTT, which is
+        required by some interface boards.
+      </LI>
+    </UL>
+    Be sure to check out the
+    <A href="http://sf.net/project/shownotes.php?release_id=375500">ChangeLog</A>
+    for more detailed information.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>9 Oct 2005: <I>Version 051009 released</I></B>
   <TD/></TR>
   <TR><TD>
