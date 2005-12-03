@@ -1,4 +1,4 @@
- 0.13.0 -- ?? ??? 2005
+ 0.13.0 -- 02 Dec 2005
 -----------------------
 
 * Merged Serial::InPin and Serial::OutPin to a new typedef Serial::Pin.

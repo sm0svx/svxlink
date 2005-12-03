@@ -1,4 +1,4 @@
- 0.7.0 -- ?? ??? 2005
+ 0.7.0 -- 02 Dec 2005
 ----------------------
 
 * Bugfix: An uninitialized variable caused svxlink to crash. This bug
