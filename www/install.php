@@ -345,7 +345,7 @@ application global configuration data.
       <LI>%M - The minute as a decimal number (range 00 to 59)</LI>
       <LI>%S - The second as a decimal number (range 00 to 61)</LI>
     </UL>
-    So, TIMESTAMP_FORMAT="%d %B %Y %H:%M:%S" would give a timestamp
+    So, TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S" would give a timestamp
     looking something like: "29 Nov 2005 22:31:59".
   </DD>
 </DL>
