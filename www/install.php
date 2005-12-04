@@ -339,7 +339,7 @@ application global configuration data.
     Other examples of format specifiers are:
     <UL>
       <LI>%d - The day of the month as a decimal number (range 01 to 31)</LI>
-      <LI>%B - The full month name according to the current locale</LI>
+      <LI>%b - The abbreviated month name according to the current locale</LI>
       <LI>%Y - The year as a decimal number including the century</LI>
       <LI>%H - The hour as a decimal number using a 24-hour clock (range 00 to 23)</LI>
       <LI>%M - The minute as a decimal number (range 00 to 59)</LI>
