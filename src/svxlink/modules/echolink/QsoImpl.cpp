@@ -229,7 +229,6 @@ int QsoImpl::sendAudio(short *buf, int len)
 {
   idle_timer_cnt = 0;
   
-    /* FIXME: Buffer audio until the message has been written ? */
   if (!msg_handler->isWritingMessage())
   {
     len = Qso::sendAudio(buf, len);
@@ -238,6 +237,20 @@ int QsoImpl::sendAudio(short *buf, int len)
   return len;
   
 } /* QsoImpl::sendAudio */
+
+
+bool QsoImpl::sendAudioRaw(GsmVoicePacket *packet)
+{
+  idle_timer_cnt = 0;
+  
+  if (!msg_handler->isWritingMessage())
+  {
+    return Qso::sendAudioRaw(packet);
+  }
+  
+  return true;
+  
+} /* QsoImpl::sendAudioRaw */
 
 
 bool QsoImpl::accept(void)

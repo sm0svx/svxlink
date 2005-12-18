@@ -163,6 +163,16 @@ class QsoImpl : public EchoLink::Qso
     int sendAudio(short *buf, int len);
     
     /**
+     * @brief 	Send a raw GSM audio packet to the remote station
+     * @param 	packet The packet to send
+     *
+     * This function can be used to send a raw GSM packet to the remote
+     * station. Probably only useful if you received it from the
+     * audioReceivedRaw signal.
+     */
+    bool sendAudioRaw(GsmVoicePacket *packet);
+    
+    /**
      * @brief 	Accept an incoming connection
      * @return	Returns \em true if the connect message was sent successfully or
      *	      	\em false on failure
