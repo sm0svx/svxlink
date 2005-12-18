@@ -1,3 +1,12 @@
+ ?.?.? -- ?? ??? ????
+----------------------
+
+ * Bugfix in ModuleEchoLink: The outgoing greeting message would be
+   mixed with incoming EchoLink traffic instead of muting the EchoLink
+   traffic until the greeting message had been played.
+
+
+ 
  0.7.0 -- 02 Dec 2005
 ----------------------
 
