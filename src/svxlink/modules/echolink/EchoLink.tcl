@@ -111,7 +111,7 @@ proc spellEchoLinkCallsign {call} {
 
 #
 # Executed when a request to list all connected stations is received.
-# That is, someone pressed DTMF "1#" when the EchoLink modules was active.
+# That is, someone press DTMF "1#" when the EchoLink module is active.
 #
 proc list_connected_stations {connected_stations} {
   playNumber [llength $connected_stations];
