@@ -108,9 +108,16 @@ proc all_msgs_written {} {
 
 #
 # Executed when the state of this module should be reported on the radio
-# channel. Typically this is done when a manual identification has been
-# triggered by the user by sending a "*".
-# This function will only be called if this module is active.
+# channel. The rules for when this function is called are:
+#
+# When a module is active:
+# * At manual identification the status_report function for the active module is
+#   called.
+# * At periodic identification no status_report function is called.
+#
+# When no module is active:
+# * At both manual and periodic (long variant) identification the status_report
+#   function is called for all modules.
 #
 proc status_report {} {
   printInfo "status_report called...";
