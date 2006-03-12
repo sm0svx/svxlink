@@ -173,6 +173,20 @@ class QsoImpl : public EchoLink::Qso
     bool sendAudioRaw(GsmVoicePacket *packet);
     
     /**
+     * @brief 	Initiate a connection to the remote station
+     * @return	Returns \em true if the connect message was sent ok or \em false
+     *        	on failure
+     *
+     * Use this function to connect to the remote station. The \em StateChange
+     * signal will be emitted to indicate that a connection is in progress.
+     * When the connection has been established, the \em stateChange signal
+     * will be emitted again. On failure to connect, the \em stateChange
+     * signal will be emitted to indicate that the disconnected state
+     * has been entered again.
+     */
+    bool connect(void);
+    
+    /**
      * @brief 	Accept an incoming connection
      * @return	Returns \em true if the connect message was sent successfully or
      *	      	\em false on failure
@@ -199,10 +213,10 @@ class QsoImpl : public EchoLink::Qso
 
     /**
      * @brief A signal that is emitted when the connection state changes
-     * @param state The new connection state
      * @param qso The QSO object
+     * @param state The new connection state
      */
-    //SigC::Signal2<void, Qso::State, QsoImpl*> stateChange;
+    SigC::Signal2<void, QsoImpl*, Qso::State> stateChange;
     
     /**
      * @brief A signal that is emitted when a station info message is received

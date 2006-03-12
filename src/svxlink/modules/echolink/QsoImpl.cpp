@@ -253,6 +253,17 @@ bool QsoImpl::sendAudioRaw(GsmVoicePacket *packet)
 } /* QsoImpl::sendAudioRaw */
 
 
+bool QsoImpl::connect(void)
+{
+  if (destroy_timer != 0)
+  {
+    delete destroy_timer;
+    destroy_timer = 0;
+  }
+  return Qso::connect();
+} /* QsoImpl::connect */
+
+
 bool QsoImpl::accept(void)
 {
   cout << remoteCallsign() << ": Accepting connection. EchoLink ID is "
@@ -443,6 +454,7 @@ void QsoImpl::onStateChange(Qso::State state)
       cout << "???\n";
       break;
   }
+  stateChange(this, state);
 } /* onStateChange */
 
 
