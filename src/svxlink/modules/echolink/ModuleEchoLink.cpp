@@ -147,7 +147,7 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
       	      	      	       const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), dir(0), dir_refresh_timer(0),
     remote_activation(false), pending_connect_id(-1), last_message(""),
-    outgoing_con_pending(false), max_connections(1), max_qsos(1), talker(0),
+    outgoing_con_pending(0), max_connections(1), max_qsos(1), talker(0),
     squelch_is_open(false), state(STATE_NORMAL), cbc_timer(0)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
@@ -411,7 +411,8 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
   
   if (cmd == "")
   {
-    if (qsos.size() != 0)
+    if ((qsos.size() != 0) &&
+      	(qsos.back()->currentState() != Qso::STATE_DISCONNECTED))
     {
       qsos.back()->disconnect();
     }
@@ -431,7 +432,10 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
     list<QsoImpl*>::iterator it;
     for (it=qsos.begin(); it!=qsos.end(); ++it)
     {
-      ss << " " << (*it)->remoteCallsign();
+      if ((*it)->currentState() != Qso::STATE_DISCONNECTED)
+      {
+      	ss << " " << (*it)->remoteCallsign();
+      }
     }
     ss << "]";
     processEvent(ss.str());
@@ -568,7 +572,7 @@ void ModuleEchoLink::allMsgsWritten(void)
 void ModuleEchoLink::reportState(void)
 {
   stringstream ss;
-  ss << "status_report " << qsos.size();
+  ss << "status_report " << numConnectedStations();
   processEvent(ss.str());
 } /* reportState */
 
@@ -747,6 +751,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   updateEventVariables();
   qso->setRemoteCallsign(callsign);
   qso->setRemoteName(name);
+  qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
   qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
   qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
   qso->audioReceived.connect(slot(this, &ModuleEchoLink::audioFromRemote));
@@ -786,8 +791,48 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
 
 /*
  *----------------------------------------------------------------------------
+ * Method:    onStateChange
+ * Purpose:   Called by the EchoLink::QsoImpl object when a state change has
+ *    	      occured on the connection.
+ * Input:     qso     	- The QSO object
+ *    	      qso_state - The new QSO connection state
+ * Output:    None
+ * Author:    Tobias Blomberg / SM0SVX
+ * Created:   2006-03-12
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
+void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
+{
+  switch (qso_state)
+  {
+    case Qso::STATE_DISCONNECTED:
+    {
+      list<QsoImpl*>::iterator it = find(qsos.begin(), qsos.end(), qso);
+      assert (it != qsos.end());
+      qsos.erase(it);
+      qsos.push_front(qso);
+      updateEventVariables();
+      if (remote_activation &&
+      	  (qsos.back()->currentState() == Qso::STATE_DISCONNECTED))
+      {
+      	deactivateMe();
+      }
+      break;
+    }
+    
+    default:
+      updateEventVariables();
+      break;
+  }  
+} /* ModuleEchoLink::onStateChange */
+
+
+/*
+ *----------------------------------------------------------------------------
  * Method:    onChatMsgReceived
- * Purpose:   Called by the EchoLink::Qso object when a chat message is
+ * Purpose:   Called by the EchoLink::Qso object when a chat message has been
  *    	      received from the remote station.
  * Input:     qso - The QSO object
  *    	      msg - The received message
@@ -859,19 +904,35 @@ void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
 
 void ModuleEchoLink::onDestroyMe(QsoImpl *qso)
 {
+  cout << qso->remoteCallsign() << ": Destroying QSO object" << endl;
+  
   list<QsoImpl*>::iterator it = find(qsos.begin(), qsos.end(), qso);
   assert (it != qsos.end());
   qsos.erase(it);
   updateEventVariables();
   delete qso;
+  
+  if (talker == qso)
+  {
+    talker = findFirstTalker();
+    transmit(talker != 0);
+  }
+
+  if (outgoing_con_pending == qso)
+  {
+    outgoing_con_pending = 0;
+  }
+
   qso = 0;
   
   broadcastTalkerStatus();
-
+  
+  /*
   if (remote_activation && (qsos.size() == 0))
   {
     deactivateMe();
   }
+  */
   
   updateDescription();
   
@@ -929,38 +990,51 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
   cout << "Connecting to " << station.callsign() << " (" << station.id()
        << ")\n";
   
+  QsoImpl *qso = 0;
+  
   list<QsoImpl*>::iterator it;
   for (it=qsos.begin(); it!=qsos.end(); ++it)
   {
     if ((*it)->remoteCallsign() == station.callsign())
     {
-      cerr << "*** WARNING: Already connected to " << station.callsign()
-      	   << ". Ignoring connect request.\n";
-      stringstream ss;
-      ss << "already_connected_to " << station.callsign();
-      processEvent(ss.str());
-      return;
+      if ((*it)->currentState() != Qso::STATE_DISCONNECTED)
+      {
+	cerr << "*** WARNING: Already connected to " << station.callsign()
+      	     << ". Ignoring connect request.\n";
+	stringstream ss;
+	ss << "already_connected_to " << station.callsign();
+	processEvent(ss.str());
+	return;
+      }
+      qsos.erase(it);
+      qso = *it;
+      qsos.push_back(qso);
+      break;
     }
   }
 
-  QsoImpl *qso = new QsoImpl(station, this);
-  if (!qso->initOk())
+  if (qso == 0)
   {
-    delete qso;
-    cerr << "*** ERROR: Creation of Qso failed\n";
-    processEvent("internal_error");
-    return;
+    qso = new QsoImpl(station, this);
+    if (!qso->initOk())
+    {
+      delete qso;
+      cerr << "*** ERROR: Creation of Qso failed\n";
+      processEvent("internal_error");
+      return;
+    }
+    qsos.push_back(qso);
+    updateEventVariables();    
+    qso->setRemoteCallsign(station.callsign());
+    qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
+    qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
+    qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
+    qso->audioReceived.connect(slot(this, &ModuleEchoLink::audioFromRemote));
+    qso->audioReceivedRaw.connect(
+      	    slot(this, &ModuleEchoLink::audioFromRemoteRaw));
+    qso->destroyMe.connect(slot(this, &ModuleEchoLink::onDestroyMe));
   }
-  qsos.push_back(qso);
-  updateEventVariables();
-  qso->setRemoteCallsign(station.callsign());
-  qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
-  qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
-  qso->audioReceived.connect(slot(this, &ModuleEchoLink::audioFromRemote));
-  qso->audioReceivedRaw.connect(
-      	  slot(this, &ModuleEchoLink::audioFromRemoteRaw));
-  qso->destroyMe.connect(slot(this, &ModuleEchoLink::onDestroyMe));
-
+    
   stringstream ss;
   ss << "connecting_to " << qso->remoteCallsign();
   processEvent(ss.str());
@@ -1025,7 +1099,7 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
   
   stringstream msg;
   msg << "SvxLink " << SVXLINK_VERSION << " - " << mycall
-      << " (" << qsos.size() << ")\n\n";
+      << " (" << numConnectedStations() << ")\n\n";
 
   if (squelch_is_open)
   {
@@ -1044,6 +1118,10 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
   list<QsoImpl*>::const_iterator it;
   for (it=qsos.begin(); it!=qsos.end(); ++it)
   {
+    if ((*it)->currentState() == Qso::STATE_DISCONNECTED)
+    {
+      continue;
+    }
     if ((*it != talker) || squelch_is_open)
     {
       msg << (*it)->remoteCallsign() << "         "
@@ -1069,10 +1147,10 @@ void ModuleEchoLink::updateDescription(void)
   }
   
   string desc(location);
-  if (qsos.size() > 0)
+  if (numConnectedStations() > 0)
   {
     stringstream sstr;
-    sstr << " (" << qsos.size() << ")";
+    sstr << " (" << numConnectedStations() << ")";
     desc.resize(Directory::MAX_DESCRIPTION_SIZE - sstr.str().size(), ' ');
     desc += sstr.str();
   }
@@ -1086,7 +1164,7 @@ void ModuleEchoLink::updateDescription(void)
 void ModuleEchoLink::updateEventVariables(void)
 {
   stringstream ss;
-  ss << qsos.size();
+  ss << numConnectedStations();
   string var_name(name());
   var_name +=  "::num_connected_stations";
   setEventVariable(var_name, ss.str());
@@ -1218,6 +1296,24 @@ void ModuleEchoLink::cbcTimeout(Timer *t)
   cout << "Connect by call command timeout\n";
   processEvent("cbc_timeout");
 } /* ModuleEchoLink::cbcTimeout  */
+
+
+int ModuleEchoLink::numConnectedStations(void)
+{
+  int cnt = 0;
+  list<QsoImpl*>::iterator it;
+  for (it=qsos.begin(); it!=qsos.end(); ++it)
+  {
+    if ((*it)->currentState() != Qso::STATE_DISCONNECTED)
+    {
+      ++cnt;
+    }
+  }
+  
+  return cnt;
+  
+} /* ModuleEchoLink::numConnectedStations */
+
 
 
 /*

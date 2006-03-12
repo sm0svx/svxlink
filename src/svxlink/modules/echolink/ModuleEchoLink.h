@@ -178,6 +178,7 @@ class ModuleEchoLink : public Module
     void onError(const std::string& msg);
     void onIncomingConnection(const Async::IpAddress& ip,
       	    const std::string& callsign, const std::string& name);
+    void onStateChange(QsoImpl *qso, EchoLink::Qso::State qso_state);
     void onChatMsgReceived(QsoImpl *qso, const std::string& msg);
     void onIsReceiving(bool is_receiving, QsoImpl *qso);
     void onDestroyMe(QsoImpl *qso);
@@ -194,6 +195,7 @@ class ModuleEchoLink : public Module
     void connectByCallsign(std::string cmd);
     void handleConnectByCall(const std::string& cmd);
     void cbcTimeout(Async::Timer *t);
+    int numConnectedStations(void);
 
 };  /* class ModuleEchoLink */
 
