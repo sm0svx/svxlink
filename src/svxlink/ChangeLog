@@ -1,9 +1,15 @@
- ?.?.? -- ?? ??? ????
+ 0.7.1 -- ?? ??? 2006
 ----------------------
 
- * Bugfix in ModuleEchoLink: The outgoing greeting message would be
-   mixed with incoming EchoLink traffic instead of muting the EchoLink
-   traffic until the greeting message had been played.
+* Bugfix in ModuleEchoLink: The outgoing greeting message would be
+  mixed with incoming EchoLink traffic instead of muting the EchoLink
+  traffic until the greeting message had been played.
+
+* Bugfix in ModuleEchoLink: A crash could occur if the remote station sent
+  some audio directly after a local diconnect.
+
+* ModuleEchoLink: Better handling of QSO objects that are in the DISCONNECTED
+  state.
 
 
  
