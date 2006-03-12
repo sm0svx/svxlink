@@ -362,6 +362,12 @@ class Qso : public SigC::Object
     bool receivingAudio(void) const { return receiving_audio; }
     
     /**
+     * @brief 	Get the current state of the connection
+     * @return	Return the current connection state (@see State)
+     */
+    State currentState(void) const { return state; }
+    
+    /**
      * @brief A signal that is emitted when a station info message is received
      * @param msg The received message
      */

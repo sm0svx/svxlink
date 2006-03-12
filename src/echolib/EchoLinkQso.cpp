@@ -313,6 +313,11 @@ bool Qso::disconnect(void)
 
 bool Qso::sendInfoData(const string& info)
 {
+  if (state != STATE_CONNECTED)
+  {
+    return false;
+  }
+  
   string info_msg("oNDATA\r");
   if (info.empty())
   {
@@ -395,6 +400,11 @@ int Qso::sendAudio(short *buf, int len)
 
 bool Qso::sendAudioRaw(GsmVoicePacket *packet)
 {
+  if (state != STATE_CONNECTED)
+  {
+    return false;
+  }
+  
   packet->seqNum = htons(next_audio_seq++);
   
   int ret = Dispatcher::instance()->sendAudioMsg(remote_ip, packet,
@@ -574,6 +584,13 @@ inline void Qso::handleSdesPacket(unsigned char *buf, int len)
 
 void Qso::handleAudioInput(unsigned char *buf, int len)
 {
+  if (state == STATE_DISCONNECTED)
+  {
+    cerr << "Ignoring audio/info/chat packet from " << remote_ip <<
+      	    " since we are disconnected.\n";
+    return;
+  }
+  
   if(buf[0] != 0xc0) /* Not an audio packet */
   {
     handleNonAudioPacket(buf, len);

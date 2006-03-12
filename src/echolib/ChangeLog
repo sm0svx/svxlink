@@ -1,3 +1,13 @@
+ 0.12.0 -- ?? ??? 2006
+-----------------------
+
+* Now not possible to send audio/info/chat packets while not connected.
+  Also, incoming audio/info/chat packets are thrown away when not connected.
+
+* New method: Qso::currentState.
+
+
+
  0.11.0 -- 02 Dec 2005
 -----------------------
 
