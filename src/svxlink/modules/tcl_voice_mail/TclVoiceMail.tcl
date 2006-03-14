@@ -35,7 +35,7 @@ set state "idle";
 #
 # The directory where the voice mails are stored
 #
-set recdir "/var/spool/voice_mail";
+set recdir "/var/spool/svxlink/voice_mail";
 
 #
 # Configuration file names
