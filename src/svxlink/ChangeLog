@@ -1,4 +1,4 @@
- 0.7.1 -- ?? ??? 2006
+ 0.8.0 -- ?? ??? 2006
 ----------------------
 
 * Bugfix in ModuleEchoLink: The outgoing greeting message would be
@@ -13,6 +13,14 @@
 
 * ModuleTclVoiceMail: Voice mails are now stored in
   /var/spool/svxlink/voice_mail.
+
+* Added a logrotate config file: /etc/logrotate.d/svxlink. It rotates the
+  logfile /var/log/svxlink.
+
+* Now possible to point out a configuration file on the command line using
+  the --config command line option.
+
+* Now also looking for the configuration file at $HOME/.svxlink/svxlink.conf
 
 
 
