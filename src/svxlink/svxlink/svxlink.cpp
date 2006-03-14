@@ -137,6 +137,7 @@ static bool open_logfile(void);
  ****************************************************************************/
 
 static char   	      	*logfile_name = NULL;
+static char   	      	*config = NULL;
 static int    	      	daemonize = 0;
 static int    	      	logfd = -1;
 static Logic  	      	*logic = 0;
@@ -254,34 +255,47 @@ int main(int argc, char **argv)
   
   tstamp_format = "%c";
 
-  string cfg_filename(home_dir);
-  cfg_filename += "/.svxlinkrc";
   Config cfg;
-  if (cfg.open(cfg_filename))
+  string cfg_filename;
+  if (config != NULL)
   {
-    cout << "Using config file: " << cfg_filename << endl;
-  }
-  else
-  {
-    cfg_filename = "/etc/svxlink.conf";
-    if (cfg.open(cfg_filename))
+    cfg_filename = string(config);
+    if (!cfg.open(cfg_filename))
     {
-      cout << "Using config file: " << cfg_filename << endl;
-    }
-    else
-    {
-      cerr << "*** ERROR: Could not open config file. Tried both "
-      	   << "\"" << home_dir << "/.svxlinkrc\" and "
-	   << "\"/etc/svxlink.conf\". Possible reasons are: None of the files "
-	   << "exist, you do not have permission to read the file or there "
-	   << "was a syntax error in the file\n";
+      cerr << "*** ERROR: Could not open configuration file: "
+      	   << config << endl;
       exit(1);
     }
   }
-
+  else
+  {
+    cfg_filename = string(home_dir);
+    cfg_filename += "/.svxlink/svxlink.conf";
+    if (!cfg.open(cfg_filename))
+    {
+      cfg_filename = string(home_dir);
+      cfg_filename += "/.svxlinkrc";
+      if (!cfg.open(cfg_filename))
+      {
+	cfg_filename = "/etc/svxlink.conf";
+	if (!cfg.open(cfg_filename))
+	{
+	  cerr << "*** ERROR: Could not open configuration file. Tried "
+      	       << "\"" << home_dir << "/.svxlink/svxlink.conf\", "
+      	       << "\"" << home_dir << "/.svxlinkrc\" and "
+	       << "\"/etc/svxlink.conf\". Possible reasons are: None of the "
+	       << "files exist, you do not have permission to read the file or "
+	       << "there was a syntax error in the file\n";
+	  exit(1);
+	}
+      }
+    }
+  }
+  
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
   cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__ ") starting up...\n";
+  cout << "\nUsing configuration file: " << cfg_filename << endl;
   
   initialize_logics(cfg);
   
@@ -352,6 +366,8 @@ static void parse_arguments(int argc, const char **argv)
     POPT_AUTOHELP
     {"logfile", 0, POPT_ARG_STRING, &logfile_name, 0,
 	    "Specify the logfile to use (stdout and stderr)", "<filename>"},
+    {"config", 0, POPT_ARG_STRING, &config, 0,
+	    "Specify the configuration file to use", "<filename>"},
     /*
     {"int_arg", 'i', POPT_ARG_INT, &int_arg, 0,
 	    "Description of int argument", "<an int>"},
