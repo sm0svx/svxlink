@@ -218,7 +218,7 @@ LDFLAGS		+=
 install-extras uninstall-extras rpm-extras:
 #	$(DIRSPEC) /var/spool/myprog[755,root,root]
 #	$(FILESPEC) install-extras/myprog.conf[644,root,root] /etc
-	$(FILESPEC) logtime.pl[755,root,root] /usr/lib/svxlink
+	$(FILESPEC) logrotate/svxlink[644,root,root] /etc/logrotate.d
 
 
 #

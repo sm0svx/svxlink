@@ -84,6 +84,7 @@ It can act both as a simplex node and as a repeater controller.
 %defattr(644,root,root)
 %config(noreplace) /etc/svxlink.conf
 %config(noreplace) /etc/TclVoiceMail.conf
+%config(noreplace) /etc/logrotate.d/svxlink
 %attr(-,root,root) /usr/share/svxlink/sounds
 %doc svxlink/ChangeLog
 %defattr(755,root,root)
@@ -95,7 +96,6 @@ It can act both as a simplex node and as a repeater controller.
 /usr/lib/svxlink/ModuleHelp.so
 /usr/lib/svxlink/ModuleParrot.so
 /usr/lib/svxlink/ModuleTcl.so
-/usr/lib/svxlink/logtime.pl
 %exclude /usr/include/svxlink/AudioPacer.h
 %exclude /usr/include/svxlink/Module.h
 %exclude /usr/include/svxlink/MsgHandler.h
