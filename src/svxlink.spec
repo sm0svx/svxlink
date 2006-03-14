@@ -1,22 +1,22 @@
 
 # Release date (YYMMDD)
-%define RELEASE_DATE		051009
+%define RELEASE_DATE		051202
 %define RELEASE_NO		1
 
 # Version for the Qtel application
-%define QTEL			0.9.1
+%define QTEL			0.9.2
 %define QTEL_RPM_RELEASE	1
 
 # Version for the EchoLib library
-%define ECHOLIB			0.10.2
+%define ECHOLIB			0.11.0
 %define ECHOLIB_RPM_RELEASE	1
 
 # Version for the Async library
-%define LIBASYNC		0.12.1
+%define LIBASYNC		0.13.0
 %define LIBASYNC_RPM_RELEASE	1
 
 # SvxLink versions
-%define SVXLINK			0.6.0
+%define SVXLINK			0.7.0
 %define SVXLINK_RPM_RELEASE	1
 
 
