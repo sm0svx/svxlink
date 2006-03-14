@@ -11,8 +11,11 @@
 * ModuleEchoLink: Better handling of QSO objects that are in the DISCONNECTED
   state.
 
+* ModuleTclVoiceMail: Voice mails are now stored in
+  /var/spool/svxlink/voice_mail.
 
- 
+
+
  0.7.0 -- 02 Dec 2005
 ----------------------
 
