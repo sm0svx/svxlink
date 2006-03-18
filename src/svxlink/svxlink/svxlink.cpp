@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <dirent.h>
 
 #include <string>
 #include <iostream>
@@ -291,11 +292,57 @@ int main(int argc, char **argv)
       }
     }
   }
+  string main_cfg_filename(cfg_filename);
+  
+  string cfg_dir;
+  if (cfg.getValue("GLOBAL", "CFG_DIR", cfg_dir))
+  {
+    if (cfg_dir[0] != '/')
+    {
+      int slash_pos = main_cfg_filename.rfind('/');
+      if (slash_pos != -1)
+      {
+      	cfg_dir = main_cfg_filename.substr(0, slash_pos+1) + cfg_dir;
+      }
+      else
+      {
+      	cfg_dir = string("./") + cfg_dir;
+      }
+    }
+    
+    DIR *dir = opendir(cfg_dir.c_str());
+    if (dir == NULL)
+    {
+      cerr << "*** ERROR: Could not read from directory spcified by "
+      	   << "configuration variable GLOBAL/CFG_DIR=" << cfg_dir << endl;
+      exit(1);
+    }
+    
+    struct dirent *dirent;
+    while ((dirent = readdir(dir)) != NULL)
+    {
+      if (dirent->d_name[0] == '.') continue;
+      cfg_filename = cfg_dir + "/" + dirent->d_name;
+      if (!cfg.open(cfg_filename))
+       {
+	 cerr << "*** ERROR: Could not open configuration file: "
+	      << cfg_filename << endl;
+	 exit(1);
+       }
+    }
+    
+    if (closedir(dir) == -1)
+    {
+      cerr << "*** ERROR: Error closing directory specified by"
+      	   << "configuration variable GLOBAL/CFG_DIR=" << cfg_dir << endl;
+      exit(1);
+    }
+  }
   
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
   cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__ ") starting up...\n";
-  cout << "\nUsing configuration file: " << cfg_filename << endl;
+  cout << "\nUsing configuration file: " << main_cfg_filename << endl;
   
   initialize_logics(cfg);
   
