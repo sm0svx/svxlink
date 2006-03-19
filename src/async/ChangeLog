@@ -1,3 +1,11 @@
+ 0.14.0 -- ?? ??? 2006
+-----------------------
+
+* Async::Config: Now possible to use the "open" method more than once to
+  read multiple configuration files.
+
+
+
  0.13.0 -- 02 Dec 2005
 -----------------------
 
