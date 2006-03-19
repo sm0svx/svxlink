@@ -11,11 +11,11 @@
 # Source function library.
 . /etc/init.d/functions
 
-prog="svxlink"
+PROG="svxlink"
 RETVAL=0
 
-if [ -f /etc/sysconfig/$prog ];then
-        . /etc/sysconfig/$prog
+if [ -f /etc/sysconfig/$PROG ];then
+        . /etc/sysconfig/$PROG
 fi
 
 POPTS="--daemon ${LOGFILE:+--logfile=$LOGFILE} ${CFGFILE:+--config=$CFGFILE}"
@@ -23,23 +23,23 @@ DOPTS="${USER:+--user=$USER}"
 
 
 start() {
-        echo -n $"Starting $prog: "
+        echo -n $"Starting $PROG: "
 	touch $LOGFILE
 	[ -n "$USER" ] && chown ${USER} $LOGFILE
-        daemon $DOPTS $prog $POPTS
+        daemon $DOPTS $ENV $PROG $POPTS
 	RETVAL=$?
         echo
-        [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$prog
+        [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$PROG
 	return $RETVAL
 }
 
 
 stop() {
-        echo -n $"Shutting down $prog: "
-	killproc $prog
+        echo -n $"Shutting down $PROG: "
+	killproc $PROG
 	RETVAL=$?
         echo
-        [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/$prog
+        [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/$PROG
 	return $RETVAL
 }
 
@@ -53,7 +53,7 @@ case "$1" in
 	stop
         ;;
   status)
-	status $prog
+	status $PROG
 	RETVAL=$?
 	;;
   restart|reload)
@@ -62,7 +62,7 @@ case "$1" in
 	RETVAL=$?
 	;;
   condrestart)
-	if [ -f /var/lock/subsys/$prog ]; then
+	if [ -f /var/lock/subsys/$PROG ]; then
 	    stop
 	    start
 	    RETVAL=$?
