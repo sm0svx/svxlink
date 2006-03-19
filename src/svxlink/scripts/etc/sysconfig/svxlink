@@ -10,3 +10,6 @@ LOGFILE=/var/log/svxlink
 # The user to run the SvxLink server as
 USER=svxlink
 
+# Specify which configuration file to use
+CFGFILE=/etc/svxlink.conf
+
