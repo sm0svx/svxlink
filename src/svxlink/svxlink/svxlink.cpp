@@ -345,20 +345,27 @@ int main(int argc, char **argv)
   cout << "\nUsing configuration file: " << main_cfg_filename << endl;
   
   initialize_logics(cfg);
-  
-  struct termios termios, org_termios;
-  tcgetattr(STDIN_FILENO, &org_termios);
-  termios = org_termios;
-  termios.c_lflag &= ~(ICANON | ECHO);
-  tcsetattr(STDIN_FILENO, TCSANOW, &termios);
 
-  stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
-  stdin_watch->activity.connect(slot(&stdinHandler));
+  struct termios org_termios;
+  if (logfile_name == 0)
+  {
+    struct termios termios;
+    tcgetattr(STDIN_FILENO, &org_termios);
+    termios = org_termios;
+    termios.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &termios);
+
+    stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
+    stdin_watch->activity.connect(slot(&stdinHandler));
+  }
 
   app.exec();
-  
-  delete stdin_watch;
-  tcsetattr(STDIN_FILENO, TCSANOW, &org_termios);
+
+  if (stdin_watch != 0)
+  {
+    delete stdin_watch;
+    tcsetattr(STDIN_FILENO, TCSANOW, &org_termios);
+  }
 
   if (stdout_watch != 0)
   {
