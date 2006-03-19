@@ -1,0 +1,12 @@
+#############################################################################
+#
+# Configuration file for the SvxLink startup script /etc/init.d/svxlink
+#
+#############################################################################
+
+# The log file to use
+LOGFILE=/var/log/svxlink
+
+# The user to run the SvxLink server as
+USER=svxlink
+
