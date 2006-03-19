@@ -130,7 +130,7 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 Config::Config(void)
-  : file(0)
+  : file(NULL)
 {
 
 } /* Config::Config */
@@ -138,7 +138,7 @@ Config::Config(void)
 
 Config::~Config(void)
 {
-  fclose(file);
+  //fclose(file);
 } /* Config::~Config */
 
 
@@ -151,7 +151,7 @@ bool Config::open(const string& name)
   }
   
   file = fopen(name.c_str(), "r");
-  if (file == 0)
+  if (file == NULL)
   {
     perror("fopen");
     return false;
@@ -160,9 +160,12 @@ bool Config::open(const string& name)
   if (!parseCfgFile())
   {
     fclose(file);
-    file = 0;
+    file = NULL;
     return false;
   }
+  
+  fclose(file);
+  file = NULL;
   
   return true;
   
@@ -285,13 +288,13 @@ bool Config::parseCfgFile(void)
 	//printf("New section=%s\n", sec);
 	current_sec = sec;
 	current_tag = "";
-	if (sections.count(current_sec) > 0)
+	if (sections.count(current_sec) == 0)
 	{
-	  cerr << "*** ERROR: Configuration file parse error: Section "
-	      	  "previously defined on line " << line_no << endl;
-	  return false;
+	  sections[current_sec];	// Create a new empty section
+	  //cerr << "*** ERROR: Configuration file parse error: Section "
+	  //    	  "previously defined on line " << line_no << endl;
+	  //return false;
 	}
-	sections[current_sec];	// Create a new empty section
       	break;
       }
       
