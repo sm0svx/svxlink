@@ -33,6 +33,8 @@
 
 * Bugfix: The stdin file descriptor was used after it had been closed.
 
+* Catching SIGTERM and SIGINT. A message is written to stdout/logfile.
+
 
 
  0.7.0 -- 02 Dec 2005
