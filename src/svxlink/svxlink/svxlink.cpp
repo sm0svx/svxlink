@@ -117,9 +117,11 @@ using namespace SigC;
 
 static void parse_arguments(int argc, const char **argv);
 static void stdinHandler(FdWatch *w);
+static void write_to_logfile(const char *buf);
 static void stdout_handler(FdWatch *w);
 static void initialize_logics(Config &cfg);
 static void sighup_handler(int signal);
+static void sigterm_handler(int signal);
 static bool open_logfile(void);
 
 
@@ -145,7 +147,7 @@ static Logic  	      	*logic = 0;
 static FdWatch	      	*stdin_watch = 0;
 static FdWatch	      	*stdout_watch = 0;
 static string         	tstamp_format;
-static struct sigaction oldact;
+static struct sigaction sighup_oldact, sigint_oldact, sigterm_oldact;
 static volatile bool  	reopen_log = false;
 
 
@@ -183,12 +185,26 @@ int main(int argc, char **argv)
   act.sa_handler = sighup_handler;
   sigemptyset(&act.sa_mask);
   act.sa_flags = 0;
-  if (sigaction(SIGHUP, &act, &oldact) == -1)
+  if (sigaction(SIGHUP, &act, &sighup_oldact) == -1)
   {
     perror("sigaction");
     exit(1);
   }
 
+  act.sa_handler = sigterm_handler;
+  if (sigaction(SIGTERM, &act, &sigterm_oldact) == -1)
+  {
+    perror("sigaction");
+    exit(1);
+  }
+  
+  act.sa_handler = sigterm_handler;
+  if (sigaction(SIGINT, &act, &sigint_oldact) == -1)
+  {
+    perror("sigaction");
+    exit(1);
+  }
+  
   int pipefd[2] = {-1, -1};
   int noclose = 0;
   if (logfile_name != 0)
@@ -381,7 +397,17 @@ int main(int argc, char **argv)
     close(logfd);
   }
   
-  if (sigaction(SIGHUP, &oldact, NULL) == -1)
+  if (sigaction(SIGHUP, &sighup_oldact, NULL) == -1)
+  {
+    perror("sigaction");
+  }
+  
+  if (sigaction(SIGHUP, &sigterm_oldact, NULL) == -1)
+  {
+    perror("sigaction");
+  }
+  
+  if (sigaction(SIGHUP, &sigint_oldact, NULL) == -1)
   {
     perror("sigaction");
   }
@@ -508,17 +534,15 @@ static void stdinHandler(FdWatch *w)
 }
 
 
-static void stdout_handler(FdWatch *w)
+static void write_to_logfile(const char *buf)
 {
-  char buf[256];
-  ssize_t len = read(w->fd(), buf, sizeof(buf)-1);
-  if (len == -1)
+  if (logfd == -1)
   {
+    cout << buf;
     return;
   }
-  buf[len] = 0;
-
-  char *ptr = buf;
+  
+  const char *ptr = buf;
   while (*ptr != 0)
   {
     static bool print_timestamp = true;
@@ -561,6 +585,21 @@ static void stdout_handler(FdWatch *w)
     write(logfd, ptr, write_len);
     ptr += write_len;
   }
+} /* write_to_logfile */
+
+
+static void stdout_handler(FdWatch *w)
+{
+  char buf[256];
+  ssize_t len = read(w->fd(), buf, sizeof(buf)-1);
+  if (len == -1)
+  {
+    return;
+  }
+  buf[len] = 0;
+  
+  write_to_logfile(buf);
+  
 } /* stdout_handler  */
 
 
@@ -635,6 +674,29 @@ void sighup_handler(int signal)
   reopen_log = true;
     
 } /* sighup_handler */
+
+
+void sigterm_handler(int signal)
+{
+  char *signame = 0;
+  switch (signal)
+  {
+    case SIGTERM:
+      signame = "SIGTERM";
+      break;
+    case SIGINT:
+      signame = "SIGINT";
+      break;
+    default:
+      signame = "???";
+      break;
+  }
+  string msg("\n");
+  msg += signame;
+  msg += " received. Shutting down application...\n";
+  write_to_logfile(msg.c_str());
+  Application::app().quit();
+} /* sigterm_handler */
 
 
 bool open_logfile(void)
