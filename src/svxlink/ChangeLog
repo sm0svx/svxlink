@@ -17,10 +17,21 @@
 * Added a logrotate config file: /etc/logrotate.d/svxlink. It rotates the
   logfile /var/log/svxlink.
 
+* Added a startup script /etc/init.d/svxlink that can be used to start
+  the SvxLink server at boot. It also have a configuration file:
+  /etc/sysconfig/svxlink.
+
 * Now possible to point out a configuration file on the command line using
   the --config command line option.
 
 * Now also looking for the configuration file at $HOME/.svxlink/svxlink.conf
+
+* New configuration variable GLOBAL/CFG_DIR. It should point out a directory
+  (e.g. /etc/svxlink.d) where additional configuration files can be found.
+  This will make it possible for each module to have its own configuration
+  file. Good for modularity and it's easier to install third party modules.
+
+* Bugfix: The stdin file descriptor was used after it had been closed.
 
 
 
