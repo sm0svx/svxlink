@@ -36,13 +36,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #include <cstdio>
 #include <cassert>
 #include <cerrno>
@@ -146,13 +139,14 @@ using namespace Async;
 
 AudioIO::AudioIO(const string& dev_name)
   : io_mode(MODE_NONE), audio_dev(0), write_fifo(0), do_flush(true),
-    flush_timer(0), is_flushing(false), lead_in_pos(0)
+    flush_timer(0), is_flushing(false), lead_in_pos(0), m_gain(1.0)
 {
   write_fifo = new SampleFifo(8000);
   write_fifo->setOverwrite(false);
   write_fifo->stopOutput(true);
   write_fifo->fifoFull.connect(writeBufferFull.slot());
   audio_dev = AudioDevice::registerAudioIO(dev_name, this);
+  sample_rate = audio_dev->sampleRate();
   /*
   audio_dev->writeBufferFull.connect(
       	  slot(write_fifo, &SampleFifo::writeBufferFull));
@@ -251,9 +245,9 @@ int AudioIO::write(short *samples, int count)
     int cnt = min(count, 100-lead_in_pos);
     for (int i=0; i<cnt; ++i)
     {
-      float gain = pow(2, lead_in_pos++ / 10.0) / pow(2, 10.0);
+      float fade_gain = pow(2, lead_in_pos++ / 10.0) / pow(2, 10.0);
       //printf("gain=%.4f  lead_in_pos=%d\n", gain, lead_in_pos);
-      buf[i] = static_cast<short>(gain * samples[i]);
+      buf[i] = static_cast<short>(fade_gain * samples[i]);
     }
     for (int i=cnt; i<count; ++i)
     {
@@ -394,6 +388,14 @@ int AudioIO::readSamples(short *samples, int count)
   
   int samples_read = write_fifo->readSamples(samples, count);
   
+  if (m_gain != 1.0)
+  {
+    for (int i=0; i<samples_read; ++i)
+    {
+      samples[i] = static_cast<short>(m_gain * samples[i]);
+    }
+  }
+  
   if (do_flush)
   {
     if (write_fifo->samplesInFifo() < 100)
@@ -403,7 +405,7 @@ int AudioIO::readSamples(short *samples, int count)
       int start_pos = max(0, samples_left - 100);
       for (int i=start_pos; i<samples_read; i++)
       {
-      	float gain = pow(2, (100.0 - pos - (i - start_pos)) / 10.0)
+      	float fade_gain = pow(2, (100.0 - pos - (i - start_pos)) / 10.0)
 	      	      / pow(2, 10.0);
 	/*
 	printf("gain=%.3f  samples_in_fifo=%d  samples_read=%d  pos=%d "
@@ -411,7 +413,7 @@ int AudioIO::readSamples(short *samples, int count)
 	       gain, write_fifo->samplesInFifo(), samples_read, pos,
 	       start_pos, i);
 	*/
-      	samples[i] = static_cast<short>(gain * samples[i]);
+      	samples[i] = static_cast<short>(fade_gain * samples[i]);
       }
     }
   }

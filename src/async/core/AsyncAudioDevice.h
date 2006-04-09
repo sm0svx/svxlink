@@ -180,7 +180,12 @@ class AudioDevice : public SigC::Object
      */
     int samplesToWrite(void) const;
     
-    
+    /**
+     * @brief 	Return the sample rate
+     * @return	Returns the sample rate
+     */
+    int sampleRate(void) const { return RATE; }
+        
     /**
      * @brief 	A signal that is emitted when a block of audio has been
      *	      	received from the audio device

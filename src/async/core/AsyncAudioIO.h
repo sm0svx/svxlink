@@ -221,7 +221,30 @@ class AudioIO : public SigC::Object
      * @brief 	Find out the current IO mode
      * @return	Returns the current IO mode
      */
-    Mode mode(void) const { return io_mode; }    
+    Mode mode(void) const { return io_mode; }
+    
+    /**
+     * @brief 	Set the gain to use
+     * @param 	gain  The new gain to set
+     *
+     * This function will setup the gain to use for this audio stream.
+     * The default gain is 1.0, that is no amplification or attenuation.
+     * A value < 1.0 will attenuate the audio stream and a value > 1.0
+     * will result in an amplification of the audio stream.
+     */
+    void setGain(float gain) { m_gain = gain; }
+
+    /**
+     * @brief 	Return the gain
+     * @return	Returns the gain
+     */
+    float gain(void) const { return m_gain; }
+    
+    /**
+     * @brief 	Return the sample rate
+     * @return	Returns the sample rate
+     */
+    int sampleRate(void) const { return sample_rate; }    
     
     /**
      * @brief 	A signal that is emitted when a block of audio has been
@@ -252,22 +275,7 @@ class AudioIO : public SigC::Object
   protected:
     
   private:
-    static const int  RATE = 8000;
-    static const int  CHANNELS = 1;
-    //static const int  SIZE = 16;
-    //static const int  FRAG_COUNT = 32;    // 32 frags ~ one second
-    //static const int  FRAG_SIZE_LOG2 = 8; // 256 bytes/frag
-    static const int  BUF_FRAG_COUNT = 4;
-	
-    //int       	      fd;
     Mode      	      io_mode;
-    //Async::FdWatch *  read_watch;
-    //Async::FdWatch *  write_watch;
-    //char *    	      read_buf;
-    
-    //int    	      file;
-    //Mode      	      old_mode;
-    
     AudioDevice       *audio_dev;
     SampleFifo	      *write_fifo;
     SigC::Connection  read_con;
@@ -275,6 +283,8 @@ class AudioIO : public SigC::Object
     Async::Timer      *flush_timer;
     bool      	      is_flushing;
     int       	      lead_in_pos;
+    float     	      m_gain;
+    int       	      sample_rate;
 
     void audioReadHandler(Async::FdWatch *watch);
     void flushSamplesInDevice(int extra_samples=0);
