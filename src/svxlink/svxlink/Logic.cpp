@@ -1,10 +1,12 @@
 /**
 @file	 Logic.cpp
-@brief   A_brief_description_for_this_file
+@brief   The logic core of the SvxLink Server application
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-03-23
 
-A_detailed_description_for_this_file
+This is the logic core of the SvxLink Server application. This is where
+everything is tied together. It is also the base class for implementing
+specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -162,7 +164,8 @@ Logic::Logic(Config &cfg, const string& name)
     cmd_tmo_timer(0), logic_transmit(false), anti_flutter(false),
     prev_digit('?'), exec_cmd_on_sql_close(0), exec_cmd_on_sql_close_timer(0),
     rgr_sound_timer(0), rgr_sound_delay(-1), report_ctcss(0), event_handler(0),
-    remote_logic_tx(false), every_minute_timer(0), recorder(0)
+    remote_logic_tx(false), every_minute_timer(0), recorder(0),
+    tx_ctcss(TX_CTCSS_NEVER)
 {
   
 } /* Logic::Logic */
@@ -255,6 +258,18 @@ bool Logic::initialize(void)
     }
   }
   
+  if (cfg().getValue(name(), "TX_CTCSS", value))
+  {
+    if (value == "ALWAYS")
+    {
+      tx_ctcss = TX_CTCSS_ALWAYS;
+    }
+    else if (value == "SQL_OPEN")
+    {
+      tx_ctcss = TX_CTCSS_SQL_OPEN;
+    }
+  }
+  
   m_rx = Rx::create(cfg(), rx_name);
   if ((m_rx == 0) || !rx().initialize())
   {
@@ -273,6 +288,11 @@ bool Logic::initialize(void)
     goto tx_init_failed;
   }
   tx().allSamplesFlushed.connect(slot(this, &Logic::allTxSamplesFlushed));
+  
+  if (tx_ctcss == TX_CTCSS_ALWAYS)
+  {
+    tx().enableCtcss(true);
+  }
   
   module_tx_fifo = new SampleFifo(15*8000); // 15 seconds
   module_tx_fifo->setDebugName("module_tx_fifo");
@@ -621,6 +641,11 @@ void Logic::squelchOpen(bool is_open)
   {
     delete exec_cmd_on_sql_close_timer;
     exec_cmd_on_sql_close_timer = 0;
+  }
+  
+  if (tx_ctcss == TX_CTCSS_SQL_OPEN)
+  {
+    tx().enableCtcss(is_open);
   }
   
 } /* Logic::squelchOpen */

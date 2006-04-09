@@ -213,6 +213,11 @@ class Logic : public SigC::Object
   private:
     static AudioSwitchMatrix  	audio_switch_matrix;
     
+    typedef enum
+    {
+      TX_CTCSS_NEVER, TX_CTCSS_ALWAYS, TX_CTCSS_SQL_OPEN
+    } TxCtcssType;
+    
     Async::Config     	      	&m_cfg;
     std::string       	      	m_name;
     Rx	      	      	      	*m_rx;
@@ -242,6 +247,7 @@ class Logic : public SigC::Object
     CmdParser 	      	      	cmd_parser;
     Async::Timer      	      	*every_minute_timer;
     Recorder  	      	      	*recorder;
+    TxCtcssType       	      	tx_ctcss;
     
     void allModuleSamplesWritten(void);
     void transmitCheck(void);

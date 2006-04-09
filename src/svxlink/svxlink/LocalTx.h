@@ -4,7 +4,7 @@
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-03-21
 
-A_detailed_description_for_this_file
+This file contains a class that implements a local transmitter.
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -24,10 +24,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example Template_demo.cpp
-An example of how to use the Template class
 */
 
 
@@ -91,6 +87,7 @@ namespace Async
  *
  ****************************************************************************/
 
+class SineGenerator;
   
 
 /****************************************************************************
@@ -116,13 +113,12 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	A class that implements a local transmitter
 @author Tobias Blomberg
 @date   2004-03-21
 
-A_detailed_class_description
-
-\include Template_demo.cpp
+This class implements a local tranmitter. A local tranmitter is connected
+directly to the sound card in the PC where the logic core runs.
 */
 class LocalTx : public Tx
 {
@@ -185,6 +181,12 @@ class LocalTx : public Tx
      */
     bool isFlushing(void) const;
     
+    /**
+     * @brief 	Enable/disable CTCSS on TX
+     * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
+     */
+    void enableCtcss(bool enable);
+    
     
   protected:
     
@@ -202,6 +204,8 @@ class LocalTx : public Tx
     bool      	      	  tx_timeout_occured;
     int       	      	  tx_timeout;
     int       	      	  tx_delay;
+    SineGenerator     	  *sine_gen;
+    bool      	      	  ctcss_enable;
     
     void txTimeoutOccured(Async::Timer *t);
     int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);

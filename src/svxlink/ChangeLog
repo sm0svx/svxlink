@@ -35,6 +35,10 @@
 
 * Catching SIGTERM and SIGINT. A message is written to stdout/logfile.
 
+* Implemented CTCSS tone on transmit. New configuration variables are
+  Tx1/CTCSS_FQ, Tx1/CTCSS_LEVEL, SimplexLogic/TX_CTCSS and
+  RepeaterLogic/TX_CTCSS.
+
 
 
  0.7.0 -- 02 Dec 2005

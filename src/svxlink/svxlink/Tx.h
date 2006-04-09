@@ -181,6 +181,12 @@ class Tx : public SigC::Object
     virtual bool isFlushing(void) const = 0;
     
     /**
+     * @brief 	Enable/disable CTCSS on TX
+     * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
+     */
+    virtual void enableCtcss(bool enable) { }
+    
+    /**
      * @brief 	A signal that is emitted when the audio transmit buffer full
      *	      	state is set or cleared
      * @param 	is_full Set to \em true to indicate that the transmit buffer

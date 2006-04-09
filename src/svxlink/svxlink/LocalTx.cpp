@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
+#include <cmath>
 
 
 /****************************************************************************
@@ -92,6 +93,84 @@ using namespace Async;
  *
  ****************************************************************************/
 
+class SineGenerator : public SigC::Object
+{
+  public:
+    explicit SineGenerator(const string& audio_dev)
+      : audio_io(audio_dev), pos(0), fq(0.0), level(0.0),
+      	sample_rate(0)
+    {
+      sample_rate = audio_io.sampleRate();
+      audio_io.writeBufferFull.connect(
+      	  SigC::slot(this, &SineGenerator::onWriteBufferFull));
+    }
+    
+    ~SineGenerator(void)
+    {
+      enable(false);
+    }
+    
+    void setFq(double tone_fq)
+    {
+      fq = tone_fq;
+    }
+    
+    void setLevel(int level_percent)
+    {
+      level = level_percent * 32767 / 100;
+    }
+    
+    void enable(bool enable)
+    {
+      if (enable == (audio_io.mode() != AudioIO::MODE_NONE))
+      {
+      	return;
+      }
+      
+      if (enable && (fq != 0))
+      {
+      	audio_io.open(AudioIO::MODE_WR);
+	pos = 0;
+      	writeSamples();
+      }
+      else
+      {
+      	audio_io.close();
+      }
+    }
+    
+  private:
+    static const int BLOCK_SIZE = 200;
+    
+    AudioIO   audio_io;
+    unsigned  pos;
+    double    fq;
+    double    level;
+    int       sample_rate;
+    
+    void onWriteBufferFull(bool is_full)
+    {
+      if (!is_full)
+      {
+      	writeSamples();
+      }
+    }
+    
+    void writeSamples(void)
+    {
+      int written;
+      do {
+	short buf[BLOCK_SIZE];
+	for (int i=0; i<BLOCK_SIZE; ++i)
+	{
+      	  buf[i] = (short)(level * sin(2 * M_PI * fq * (pos+i) / sample_rate));
+	}
+	written = audio_io.write(buf, BLOCK_SIZE);
+	pos += written;
+      } while (written == BLOCK_SIZE);
+    }
+    
+};
 
 
 /****************************************************************************
@@ -99,6 +178,7 @@ using namespace Async;
  * Prototypes
  *
  ****************************************************************************/
+
 
 
 
@@ -129,9 +209,9 @@ LocalTx::LocalTx(Config& cfg, const string& name)
   : Tx(name), name(name), cfg(cfg), audio_io(0), is_transmitting(false),
     serial(0), ptt_pin1(Serial::PIN_NONE), ptt_pin1_rev(false),
     ptt_pin2(Serial::PIN_NONE), ptt_pin2_rev(false), txtot(0),
-    tx_timeout_occured(false), tx_timeout(0), tx_delay(0)
+    tx_timeout_occured(false), tx_timeout(0), tx_delay(0), ctcss_enable(false)
 {
-
+  
 } /* LocalTx::LocalTx */
 
 
@@ -142,6 +222,7 @@ LocalTx::~LocalTx(void)
   delete txtot;
   delete serial;
   delete audio_io;
+  delete sine_gen;
 } /* LocalTx::~LocalTx */
 
 
@@ -195,7 +276,6 @@ bool LocalTx::initialize(void)
     tx_delay = max(0, min(atoi(tx_delay_str.c_str()), 1000));
   }
   
-  
   serial = new Serial(ptt_port.c_str());
   if (!serial->open())
   {
@@ -213,6 +293,21 @@ bool LocalTx::initialize(void)
   audio_io = new AudioIO(audio_dev);
   audio_io->writeBufferFull.connect(transmitBufferFull.slot());
   audio_io->allSamplesFlushed.connect(allSamplesFlushed.slot());
+  
+  sine_gen = new SineGenerator(audio_dev);
+  
+  string value;
+  if (cfg.getValue(name, "CTCSS_FQ", value))
+  {
+    sine_gen->setFq(atof(value.c_str()));
+  }  
+  
+  if (cfg.getValue(name, "CTCSS_LEVEL", value))
+  {
+    int level = atoi(value.c_str());
+    sine_gen->setLevel(level);
+    audio_io->setGain((100.0 - level) / 100);
+  }  
   
   return true;
   
@@ -240,6 +335,10 @@ void LocalTx::transmit(bool do_transmit)
       is_transmitting = false;
       return;
     }
+    if (ctcss_enable)
+    {
+      sine_gen->enable(true);
+    }
     if ((txtot == 0) && (tx_timeout > 0))
     {
       txtot = new Timer(tx_timeout);
@@ -259,6 +358,10 @@ void LocalTx::transmit(bool do_transmit)
   else
   {
     audio_io->close();
+    if (ctcss_enable)
+    {
+      sine_gen->enable(false);
+    }
     delete txtot;
     txtot = 0;
     tx_timeout_occured = false;
@@ -301,6 +404,17 @@ bool LocalTx::isFlushing(void) const
 {
   return audio_io->isFlushing();
 } /* LocalTx::isFlushing */
+
+
+void LocalTx::enableCtcss(bool enable)
+{
+  ctcss_enable = enable;
+  if (is_transmitting)
+  {
+    sine_gen->enable(enable);
+  }
+} /* LocalTx::enableCtcss */
+
 
 
 
@@ -419,6 +533,7 @@ bool LocalTx::setPtt(bool tx)
   return true;
 
 } /* LocalTx::setPtt  */
+
 
 
 
