@@ -622,7 +622,7 @@ void Logic::disconnectAllLogics(void)
 void Logic::squelchOpen(bool is_open)
 {
   stringstream ss;
-  ss << "squelch_open " << (is_open ? "1" : "0");
+  ss << "squelch_open " << rx().sqlRxId() << " " << (is_open ? "1" : "0");
   processEvent(ss.str());
 
   if (!is_open)

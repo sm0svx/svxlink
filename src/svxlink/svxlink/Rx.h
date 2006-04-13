@@ -181,6 +181,18 @@ class Rx : public SigC::Object
     }
     
     /**
+     * @brief 	Read the current signal strength
+     * @return	Returns the signal strength
+     */
+    virtual float signalStrength(void) const { return 0; }
+    
+    /**
+     * @brief 	Find out RX ID of last receiver with squelch activity
+     * @returns Returns the RX ID
+     */
+    virtual int sqlRxId(void) const { return 0; }
+    
+    /**
      * @brief 	A signal that indicates if the squelch is open or not
      * @param 	is_open \em True if the squelch is open or \em false if not
      */

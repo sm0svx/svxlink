@@ -43,6 +43,10 @@ variable need_ident 0;
 #
 variable timer_tick_subscribers [list];
 
+#
+# Contains the ID of the last receiver that indicated squelch activity
+#
+variable sql_rx_id 0;
 
 #
 # Executed when the SvxLink software is started
@@ -111,7 +115,15 @@ proc manual_identification {} {
 # expired.
 #
 proc send_rgr_sound {} {
-  playTone 440 700 100;
+  global sql_rx_id;
+  
+  playTone 440 500 100;
+  playSilence 200;
+  
+  for {set i 0} {$i < $sql_rx_id} {incr i 1} {
+    playTone 880 500 50;
+    playSilence 50;
+  }
 }
 
 
@@ -242,8 +254,10 @@ proc transmit {is_on} {
 #
 # Executed each time the squelch is opened or closed
 #
-proc squelch_open {is_open} {
-  #puts "The squelch is $is_open";
+proc squelch_open {rx_id is_open} {
+  global sql_rx_id;
+  #puts "The squelch is $is_open on RX $rx_id";
+  set sql_rx_id $rx_id;
 }
 
 

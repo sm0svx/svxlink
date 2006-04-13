@@ -173,8 +173,8 @@ proc transmit {is_on} {
 #
 # Executed each time the squelch is opened or closed
 #
-proc squelch_open {is_open} {
-  Logic::squelch_open $is_open;
+proc squelch_open {rx_id is_open} {
+  Logic::squelch_open $rx_id $is_open;
 }
 
 

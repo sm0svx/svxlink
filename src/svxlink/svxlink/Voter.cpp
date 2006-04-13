@@ -1,10 +1,8 @@
 /**
 @file	 Voter.cpp
-@brief   A_brief_description_for_this_file
+@brief   This file contains a class that implement a receiver voter
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-18
-
-A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -36,6 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <cassert>
+#include <cmath>
+#include <sigc++/bind.h>
 
 
 /****************************************************************************
@@ -44,6 +44,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncTimer.h>
+#include <AsyncSampleFifo.h>
 
 
 /****************************************************************************
@@ -53,7 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "Voter.h"
-#include "LocalRx.h"
+//#include "LocalRx.h"
 
 
 
@@ -64,6 +66,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace SigC;
 using namespace Async;
 
 
@@ -74,6 +77,8 @@ using namespace Async;
  *
  ****************************************************************************/
 
+#define BEST_RX_SIGLEV_RESET  -100
+#define MAX_VOTING_DELAY      5000
 
 
 /****************************************************************************
@@ -82,6 +87,63 @@ using namespace Async;
  *
  ****************************************************************************/
 
+class SatRx : public SigC::Object
+{
+  public:
+    int id;
+    Rx *rx;
+    SampleFifo fifo;
+    
+    SatRx(int id, Rx *rx)
+      : id(id), rx(rx), fifo(MAX_VOTING_DELAY), stop_output(true)
+    {
+      fifo.stopOutput(true);
+      fifo.setOverwrite(true);
+      fifo.setDebugName("SatRx");
+      rx->audioReceived.connect(slot(&fifo, &SampleFifo::addSamples));
+      rx->dtmfDigitDetected.connect(slot(this, &SatRx::onDtmfDigitDetected));
+    }
+    
+    ~SatRx(void) {}
+    
+    void stopOutput(bool do_stop)
+    {
+      fifo.stopOutput(do_stop);
+      stop_output = do_stop;
+      if (!do_stop)
+      {
+      	string::iterator it;
+      	for (it=dtmf_buf.begin(); it!=dtmf_buf.end(); ++it)
+	{
+	  dtmfDigitDetected(*it);
+	}
+      }
+    }
+    
+    void clear(void)
+    {
+      fifo.clear();
+      dtmf_buf.clear();
+    }
+  
+    Signal1<void, char> dtmfDigitDetected;
+    
+  private:
+    bool    stop_output;
+    string  dtmf_buf;
+    
+    void onDtmfDigitDetected(char digit)
+    {
+      if (stop_output)
+      {
+      	dtmf_buf += digit;
+      }
+      else
+      {
+      	dtmfDigitDetected(digit);
+      }
+    }
+};
 
 
 /****************************************************************************
@@ -116,7 +178,9 @@ using namespace Async;
  ****************************************************************************/
 
 Voter::Voter(Config &cfg, const std::string& name)
-  : Rx(cfg, name), active_rx(0), is_muted(true), m_verbose(true)
+  : Rx(cfg, name), active_rx(0), is_muted(true), m_verbose(true),
+    best_rx(0), best_rx_siglev(BEST_RX_SIGLEV_RESET), best_rx_timer(0),
+    voting_delay(0), sql_rx_id(0)
 {
   Rx::setVerbose(false);
 } /* Voter::Voter */
@@ -124,9 +188,12 @@ Voter::Voter(Config &cfg, const std::string& name)
 
 Voter::~Voter(void)
 {
-  list<Rx *>::iterator it;
+  delete best_rx_timer;
+  
+  list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
+    delete (*it)->rx;
     delete *it;
   }
   rxs.clear();
@@ -142,6 +209,12 @@ bool Voter::initialize(void)
     return false;
   }
 
+  string value;
+  if (cfg().getValue(name(), "VOTING_DELAY", value))
+  {
+    voting_delay = atoi(value.c_str());
+  }
+
   string::iterator start(receivers.begin());
   for (;;)
   {
@@ -150,19 +223,20 @@ bool Voter::initialize(void)
     if (!rx_name.empty())
     {
       cout << "Adding receiver to Voter: " << rx_name << endl;
-      Rx *rx = Rx::create(cfg(), rx_name);
-      if ((rx == 0) || !rx->initialize())
+      SatRx *srx = new SatRx(rxs.size() + 1, Rx::create(cfg(), rx_name));
+      Rx *rx = srx->rx;
+      if ((srx == 0) || !rx->initialize())
       {
       	return false;
       }
       rx->mute(true);
       rx->setVerbose(false);
-      rx->squelchOpen.connect(slot(this, &Voter::satSquelchOpen));
-      rx->audioReceived.connect(audioReceived.slot());
-      rx->dtmfDigitDetected.connect(dtmfDigitDetected.slot());
+      rx->squelchOpen.connect(bind(slot(this, &Voter::satSquelchOpen), srx));
+      srx->fifo.writeSamples.connect(audioReceived.slot());
+      srx->dtmfDigitDetected.connect(dtmfDigitDetected.slot());
       rx->toneDetected.connect(toneDetected.slot());
       
-      rxs.push_back(rx);
+      rxs.push_back(srx);
     }
     if (comma == receivers.end())
     {
@@ -171,7 +245,6 @@ bool Voter::initialize(void)
     start = comma;
     ++start;
   }
-  
   
   return true;
   
@@ -185,17 +258,30 @@ void Voter::mute(bool do_mute)
     return;
   }
   
-  list<Rx *>::iterator it;
-  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  if (active_rx != 0)
   {
-    (*it)->mute(do_mute);
-  }
-  
-  if (do_mute)
-  {
+    assert(!is_muted);
+    active_rx->rx->mute(true);
     active_rx = 0;
   }
-  
+  else if (best_rx_timer != 0)
+  {
+    assert(!is_muted);
+    delete best_rx_timer;
+    best_rx_timer = 0;
+    best_rx = 0;
+    best_rx_siglev = BEST_RX_SIGLEV_RESET;
+  }
+  else
+  {
+    list<SatRx *>::iterator it;
+    for (it=rxs.begin(); it!=rxs.end(); ++it)
+    {
+      Rx *rx = (*it)->rx;
+      rx->mute(do_mute);
+    }
+  }
+    
   is_muted = do_mute;
   
 } /* Voter::mute */
@@ -210,15 +296,22 @@ bool Voter::squelchIsOpen(void) const
 bool Voter::addToneDetector(int fq, int bw, int required_duration)
 {
   bool success = true;
-  list<Rx *>::iterator it;
+  list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    success &= (*it)->addToneDetector(fq, bw, required_duration);
+    Rx *rx = (*it)->rx;
+    success &= rx->addToneDetector(fq, bw, required_duration);
   }
   
   return success;
   
 } /* Voter::addToneDetector */
+
+
+int Voter::sqlRxId(void) const
+{
+  return sql_rx_id;
+} /* Voter::sqlRxId */
 
 
 
@@ -266,54 +359,116 @@ bool Voter::addToneDetector(int fq, int bw, int required_duration)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void Voter::satSquelchOpen(bool is_open)
+void Voter::satSquelchOpen(bool is_open, SatRx *srx)
 {
-  //cout << "Voter::satSquelchOpen(" << (is_open ? "TRUE" : "FALSE") << ")\n";
-  string rx_name;
+  Rx *rx = srx->rx;
+  
+  //cout << "Voter::satSquelchOpen(" << (is_open ? "TRUE" : "FALSE")
+  //     << ", " << rx->name() << "): Signal Strength = "
+  //     << rx->signalStrength() << "\n";
 
   if (is_open)
   {
     assert(active_rx == 0);
-    list<Rx *>::iterator it;
-    for (it=rxs.begin(); it!=rxs.end(); ++it)
+    
+    if (best_rx == 0)
     {
-      if ((*it)->squelchIsOpen())
-      {
-      	assert(active_rx == 0);
-      	active_rx = *it;
-      }
-      else
-      {
-      	(*it)->mute(true);
-      }
+      delete best_rx_timer;
+      best_rx_timer = new Timer(voting_delay);
+      best_rx_timer->expired.connect(slot(this, &Voter::chooseBestRx));
     }
-    assert(active_rx != 0);
-    rx_name = active_rx->name();
+    
+    if (rx->signalStrength() > best_rx_siglev)
+    {
+      best_rx_siglev = rx->signalStrength();
+      best_rx = srx;
+    }
+    
+    srx->clear();
   }
   else
   {
-    assert(active_rx != 0);
-    rx_name = active_rx->name();
-    list<Rx *>::iterator it;
-    for (it=rxs.begin(); it!=rxs.end(); ++it)
+    if (active_rx != 0)
     {
-      if (active_rx != *it)
+      assert(best_rx == 0);
+      assert(srx == active_rx);
+      
+      list<SatRx *>::iterator it;
+      for (it=rxs.begin(); it!=rxs.end(); ++it)
       {
-      	(*it)->mute(false);
+	if (*it != best_rx)
+	{
+	  (*it)->rx->mute(false);
+	}
+      }
+      
+      if (m_verbose)
+      {
+      	cout << name() << ": The squelch is CLOSED"
+             << " (" << active_rx->rx->name() << ")" << endl;
+      }
+      
+      active_rx = 0;
+      
+      srx->stopOutput(true);
+      sql_rx_id = srx->id;
+      setSquelchState(false);
+    }
+    else if (srx == best_rx)
+    {
+      assert(active_rx == 0);
+      
+      best_rx = 0;
+      best_rx_siglev = BEST_RX_SIGLEV_RESET;
+      list<SatRx *>::iterator it;
+      for (it=rxs.begin(); it!=rxs.end(); ++it)
+      {
+	if ((*it)->rx->squelchIsOpen() &&
+	    ((*it)->rx->signalStrength() > best_rx_siglev))
+	{
+	  best_rx = *it;
+	  best_rx_siglev = (*it)->rx->signalStrength();
+	}
       }
     }
-    active_rx = 0;
   }
-
-  if (m_verbose)
-  {
-    cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
-         << " (" << rx_name << ")" << endl;  
-  }
-  setSquelchState(is_open);
 
 } /* Voter::satSquelchOpen */
 
+
+void Voter::chooseBestRx(Timer *t)
+{
+  //cout << "Voter::chooseBestRx\n";
+  
+  delete best_rx_timer;
+  best_rx_timer = 0;
+  
+  if (best_rx != 0)
+  {
+    list<SatRx *>::iterator it;
+    for (it=rxs.begin(); it!=rxs.end(); ++it)
+    {
+      if (*it != best_rx)
+      {
+	(*it)->rx->mute(true);
+      }
+    }
+    
+    active_rx = best_rx;
+    best_rx = 0;
+    best_rx_siglev = BEST_RX_SIGLEV_RESET;
+
+    if (m_verbose)
+    {
+      cout << name() << ": The squelch is OPEN"
+           << " (" << active_rx->rx->name() << ")" << endl;
+    }
+    sql_rx_id = active_rx->id;
+    setSquelchState(true);
+    active_rx->stopOutput(false);
+  }
+  
+} /* Voter::chooseBestRx */
 
 
 

@@ -1,10 +1,8 @@
 /**
 @file	 Voter.h
-@brief   A_brief_description_for_this_file
+@brief   This file contains a class that implement a receiver voter
 @author  Tobias Blomberg / SM0SVX
-@date	 2005-02-
-
-A_detailed_description_for_this_file
+@date	 2005-04-18
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -24,10 +22,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example Voter_demo.cpp
-An example of how to use the Voter class
 */
 
 
@@ -68,6 +62,10 @@ An example of how to use the Voter class
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class Timer;
+};
 
 
 /****************************************************************************
@@ -86,6 +84,7 @@ An example of how to use the Voter class
  *
  ****************************************************************************/
 
+class SatRx;
   
 
 /****************************************************************************
@@ -111,19 +110,21 @@ An example of how to use the Voter class
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	An Rx class that implement a receiver voter
 @author Tobias Blomberg
 @date   2005-04-18
 
-A_detailed_class_description
-
-\include Voter_demo.cpp
+This class implements a receiver voter. A voter is a device that choose the
+best receiver from a pool of receivers tuned to the same frequency. This
+make it possible to cover a larger geographical area with a radio system.
 */
 class Voter : public Rx
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
+     * @param 	cfg   The Config object to read configuration data from
+     * @param 	name  The name of the receiver configuration section
      */
     Voter(Async::Config &cfg, const std::string& name);
   
@@ -167,16 +168,34 @@ class Voter : public Rx
      */
     bool addToneDetector(int fq, int bw, int required_duration);
     
+    /**
+     * @brief 	Read the current signal strength
+     * @return	Returns the signal strength
+     */
+    float signalStrength(void) const { return best_rx_siglev; }
+    
+    /**
+     * @brief 	Find out RX ID of last receiver with squelch activity
+     * @returns Returns the RX ID
+     */
+    int sqlRxId(void) const;
+    
     
   protected:
     
   private:
-    std::list<Rx *>   rxs;
-    Rx	      	      *active_rx;
-    bool      	      is_muted;
-    bool	      m_verbose;
+    std::list<SatRx *>	rxs;
+    SatRx	      	*active_rx;
+    bool      	      	is_muted;
+    bool	      	m_verbose;
+    SatRx	      	*best_rx;
+    double    	      	best_rx_siglev;
+    Async::Timer      	*best_rx_timer;
+    int       	      	voting_delay;
+    int       	      	sql_rx_id;
     
-    void satSquelchOpen(bool is_open);
+    void satSquelchOpen(bool is_open, SatRx *rx);
+    void chooseBestRx(Async::Timer *t);
 
 };  /* class Voter */
 
