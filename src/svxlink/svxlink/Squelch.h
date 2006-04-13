@@ -129,23 +129,32 @@ class Squelch : public SigC::Object
      * @brief 	Default constuctor
      */
     explicit Squelch(void)
-      : m_open(false), hangtime(1), hangtime_left(0) {}
+      : m_open(false), hangtime(0), hangtime_left(0), delay(0), delay_left(0) {}
   
   
     /**
      * @brief 	Destructor
      */
     virtual ~Squelch(void) {}
-  
+    
+    /**
+     * @brief 	Initialize the squelch detector
+     * @param 	cfg
+     * @param 	rx_name
+     * @returns 
+     */
     virtual bool initialize(Async::Config& cfg, const std::string& rx_name)
     {
-      int sql_hangtime = 0;
       std::string value;
       if (cfg.getValue(rx_name, "SQL_HANGTIME", value))
       {
-      	sql_hangtime = atoi(value.c_str())*8;
+      	setHangtime(atoi(value.c_str())*8);
       }
-      setHangtime(sql_hangtime);
+      
+      if (cfg.getValue(rx_name, "SQL_DELAY", value))
+      {
+      	setDelay(atoi(value.c_str())*8);
+      }
       
       return true;
     }
@@ -156,7 +165,16 @@ class Squelch : public SigC::Object
      */
     void setHangtime(int hang_samples)
     {
-      this->hangtime = (hang_samples >= 1) ? hang_samples : 1;
+      hangtime = (hang_samples >= 0) ? hang_samples : 0;
+    }
+    
+    /**
+     * @brief 	Set the time a squelch open should be delayed
+     * @param 	delay_samples The number of samples to delay
+     */
+    void setDelay(int delay_samples)
+    {
+      delay = (delay_samples >= 0) ? delay_samples : 0;
     }
     
     /**
@@ -183,6 +201,15 @@ class Squelch : public SigC::Object
 	{
 	  m_open = false;
 	  squelchOpen(false);
+	}
+      }
+      if (delay_left > 0)
+      {
+      	delay_left -= count;
+	if (delay_left <= 0)
+	{
+	  m_open = true;
+	  squelchOpen(true);
 	}
       }
       return ret_count;
@@ -220,15 +247,40 @@ class Squelch : public SigC::Object
       if (is_open)
       {
 	hangtime_left = 0;
-      	if (!m_open)
-      	{
-      	  m_open = true;
-	  squelchOpen(true);
-      	}
+	if (delay == 0)
+	{
+      	  if (!m_open)
+      	  {
+      	    m_open = true;
+	    squelchOpen(true);
+      	  }
+	}
+	else
+	{
+      	  if (!m_open && (delay_left <= 0))
+	  {
+	    delay_left = delay;
+	  }
+	}
       }
-      else if (m_open && (hangtime_left <= 0))
+      else
       {
-	hangtime_left = hangtime;
+      	delay_left = 0;
+	if (hangtime == 0)
+	{
+      	  if (m_open)
+      	  {
+      	    m_open = false;
+	    squelchOpen(false);
+      	  }
+	}
+	else
+	{
+	  if (m_open && (hangtime_left <= 0))
+	  {
+	    hangtime_left = hangtime;
+	  }
+	}
       }
     }
     
@@ -238,6 +290,8 @@ class Squelch : public SigC::Object
     bool      	  m_open;
     int       	  hangtime;
     int       	  hangtime_left;
+    int       	  delay;
+    int       	  delay_left;
 
     Squelch(const Squelch&);
     Squelch& operator=(const Squelch&);
