@@ -39,6 +39,9 @@
   Tx1/CTCSS_FQ, Tx1/CTCSS_LEVEL, SimplexLogic/TX_CTCSS and
   RepeaterLogic/TX_CTCSS.
 
+* Now possible to set a squelch delay which can be good in some odd
+  situations. Configuration variable: Rx1/SQL_DELAY.
+
 
 
  0.7.0 -- 02 Dec 2005
