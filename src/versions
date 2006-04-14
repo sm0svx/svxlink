@@ -22,5 +22,5 @@ MODULE_ECHOLINK=0.7.1rc2
 MODULE_TCL=0.2.0
 
 # Version for the NetRX application
-NETRX=0.1.0rc1
+REMOTE_RX=0.1.0rc1
 
