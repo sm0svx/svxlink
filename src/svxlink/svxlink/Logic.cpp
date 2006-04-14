@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <dlfcn.h>
 #include <sigc++/bind.h>
+#include <sys/time.h>
 
 #include <iostream>
 #include <algorithm>
@@ -56,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 #include <AsyncSampleFifo.h>
+#include <Rx.h>
 
 
 /****************************************************************************
@@ -68,9 +70,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "EventHandler.h"
 #include "Module.h"
 #include "MsgHandler.h"
-#include "LocalRx.h"
 #include "LocalTx.h"
-#include "Voter.h"
 #include "LogicCmds.h"
 #include "Logic.h"
 
