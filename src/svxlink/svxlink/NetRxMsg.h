@@ -231,7 +231,7 @@ class MsgAudio : public Msg
     MsgAudio(short *samples, int count)
       : Msg(TYPE, sizeof(MsgAudio))
     {
-      assert(count <= 400);
+      assert(count <= 512);
       memcpy(m_samples, samples, count * sizeof(*samples));
       m_count = count;
     }
@@ -239,7 +239,7 @@ class MsgAudio : public Msg
     int count(void) const { return m_count; }
   
   private:
-    short m_samples[400];
+    short m_samples[512];
     int   m_count;
     
 }; /* MsgAudio */
