@@ -232,7 +232,7 @@ class MsgAudio : public Msg
       : Msg(TYPE, sizeof(MsgAudio))
     {
       assert(count <= 400);
-      memcpy(m_samples, samples, count);
+      memcpy(m_samples, samples, count * sizeof(*samples));
       m_count = count;
     }
     short *samples(void) { return m_samples; }
