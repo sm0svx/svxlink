@@ -70,6 +70,11 @@ namespace NetRxMsg
   class Msg;
 };
 
+namespace Async
+{
+  class Timer;
+};
+
 
 /****************************************************************************
  *
@@ -186,13 +191,15 @@ class NetRx : public Rx
   private:
     bool      	      	is_muted;
     Async::TcpClient  	*tcp_con;
-    char      	      	recv_buf[1024];
+    char      	      	recv_buf[2048];
     int       	      	recv_cnt;
     int       	      	recv_exp;
     bool      	      	squelch_open;
     float     	      	last_signal_strength;
     int       	      	last_sql_rx_id;
     std::list<ToneDet*> tone_detectors;
+    bool      	      	is_connected;
+    Async::Timer      	*reconnect_timer;
     
     void tcpConnected(void);
     void tcpDisconnected(Async::TcpConnection *con,
@@ -200,6 +207,7 @@ class NetRx : public Rx
     int tcpDataReceived(Async::TcpConnection *con, void *data, int size);
     void handleMsg(NetRxMsg::Msg *msg);
     void sendMsg(NetRxMsg::Msg *msg);
+    void reconnect(Async::Timer *t);
 
 };  /* class NetRx */
 

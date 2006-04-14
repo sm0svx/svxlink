@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -51,8 +52,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "NetRxMsg.h"
 #include "NetRx.h"
+#include "NetRxMsg.h"
 
 
 
@@ -125,7 +126,8 @@ class ToneDet
 
 NetRx::NetRx(Config &cfg, const string& name)
   : Rx(cfg, name), is_muted(true), tcp_con(0), recv_cnt(0), recv_exp(0),
-    squelch_open(false), last_signal_strength(0.0)
+    squelch_open(false), last_signal_strength(0.0), is_connected(false),
+    reconnect_timer(0)
 {
 } /* NetRx::NetRx */
 
@@ -140,6 +142,8 @@ NetRx::~NetRx(void)
     delete *it;
   }
   tone_detectors.clear();
+  
+  delete reconnect_timer;
   
 } /* NetRx::~NetRx */
 
@@ -269,9 +273,14 @@ void NetRx::tcpConnected(void)
   cout << name() << ": Connected to remote receiver at "
        << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << "\n";
   
-  MsgMute *msg = new MsgMute(is_muted);
-  sendMsg(msg);
-
+  is_connected = true;
+  
+  if (!is_muted)
+  {
+    MsgMute *msg = new MsgMute(false);
+    sendMsg(msg);
+  }
+  
   list<ToneDet*>::iterator it;
   for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
   {
@@ -286,14 +295,20 @@ void NetRx::tcpConnected(void)
 void NetRx::tcpDisconnected(TcpConnection *con,
       	      	      	    TcpConnection::DisconnectReason reason)
 {
-  cout << name() << ": Disconnected from remote receiver at "
-       << con->remoteHost() << ":" << con->remotePort() << "\n";
+  cout << name() << ": Disconnected "
+       << con->remoteHost() << ":" << con->remotePort()
+       << ": " << TcpConnection::disconnectReasonStr(reason) << "\n";
   
   if (squelch_open)
   {
     setSquelchState(false);
     squelch_open = false;
   }
+  
+  is_connected = false;
+  
+  reconnect_timer = new Timer(10000);
+  reconnect_timer->expired.connect(slot(this, &NetRx::reconnect));
   
 } /* NetRx::tcpDisconnected */
 
@@ -421,6 +436,13 @@ void NetRx::sendMsg(Msg *msg)
   
 } /* NetUplink::sendMsg */
 
+
+void NetRx::reconnect(Timer *t)
+{
+  delete reconnect_timer;
+  reconnect_timer = 0;
+  tcp_con->connect();
+} /* NetRx::reconnect */
 
 
 
