@@ -192,6 +192,13 @@ class TcpConnection : public SigC::Object
     unsigned short remotePort(void) const { return remote_port; }
     
     /**
+     * @brief 	Check if the connection is established or not
+     * @return	Returns \em true if the connection is established or
+     *	      	\em false if the connection is not established
+     */
+    bool isConnected(void) const { return sock != -1; }
+    
+    /**
      * @brief 	A signal that is emitted when a connection has been terminated
      * @param 	con   	The connection object
      * @param 	reason  The reason for the disconnect

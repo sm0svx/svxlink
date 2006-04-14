@@ -9,6 +9,8 @@
 
 * It is now possible to set the gain to use on an audio stream.
 
+* New method: TcpConnection::isConnected.
+
 
 
  0.13.0 -- 02 Dec 2005
