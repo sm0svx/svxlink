@@ -314,6 +314,27 @@ int Voter::sqlRxId(void) const
 } /* Voter::sqlRxId */
 
 
+void Voter::reset(void)
+{
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    Rx *rx = (*it)->rx;
+    rx->reset();
+  }
+  
+  is_muted = true;
+  active_rx = 0;
+  best_rx = 0;
+  best_rx_siglev = BEST_RX_SIGLEV_RESET;
+  delete best_rx_timer;
+  best_rx_timer = 0;
+  sql_rx_id = 0;
+  
+} /* Voter::reset */
+
+
+
 
 /****************************************************************************
  *

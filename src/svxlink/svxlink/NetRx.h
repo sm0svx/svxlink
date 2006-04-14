@@ -1,10 +1,8 @@
 /**
-@file	 LocalRx.h
-@brief   A receiver class to handle local receivers
+@file	 NetRx.h
+@brief   Contains a class that connect to a remote receiver via IP
 @author  Tobias Blomberg
-@date	 2004-03-21
-
-A_detailed_description_for_this_file
+@date	 2006-04-14
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -26,13 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example Template_demo.cpp
-An example of how to use the Template class
-*/
 
-
-#ifndef LOCAL_RX_INCLUDED
-#define LOCAL_RX_INCLUDED
+#ifndef NET_RX_INCLUDED
+#define NET_RX_INCLUDED
 
 
 /****************************************************************************
@@ -41,7 +35,9 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
-#include <sys/time.h>
+#include <sigc++/signal_system.h>
+
+#include <string>
 
 
 /****************************************************************************
@@ -50,6 +46,8 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include <AsyncConfig.h>
+#include <AsyncTcpClient.h>
 
 
 /****************************************************************************
@@ -67,14 +65,10 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
-namespace Async
+namespace NetRxMsg
 {
-  class Config;
-  class AudioIO;
+  class Msg;
 };
-
-class ToneDurationDet;
-class Squelch;
 
 
 /****************************************************************************
@@ -93,9 +87,8 @@ class Squelch;
  *
  ****************************************************************************/
 
-class DtmfDecoder;
-class ToneDetector;
-
+class ToneDet;
+  
 
 /****************************************************************************
  *
@@ -120,26 +113,26 @@ class ToneDetector;
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	Implements a class that connect to a remote receiver via IP
 @author Tobias Blomberg
-@date   2004-03-21
+@date   2006-04-14
 
 A_detailed_class_description
-
-\include Template_demo.cpp
 */
-class LocalRx : public Rx
+class NetRx : public Rx
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
+     * @param 	cfg   The configuration object to use
+     * @param 	name  The name of the configuration section to use
      */
-    explicit LocalRx(Async::Config &cfg, const std::string& name);
+    explicit NetRx(Async::Config& cfg, const std::string& name);
   
     /**
      * @brief 	Destructor
      */
-    ~LocalRx(void);
+    ~NetRx(void);
   
     /**
      * @brief 	Initialize the receiver object
@@ -157,7 +150,7 @@ class LocalRx : public Rx
      * @brief 	Check the squelch status
      * @return	Return \em true if the squelch is open or else \em false
      */
-    bool squelchIsOpen(void) const;
+    bool squelchIsOpen(void) const { return squelch_open; }
     
     /**
      * @brief 	Call this function to add a tone detector to the RX
@@ -171,36 +164,49 @@ class LocalRx : public Rx
     bool addToneDetector(int fq, int bw, int required_duration);
     
     /**
+     * @brief 	Read the current signal strength
+     * @return	Returns the signal strength
+     */
+    float signalStrength(void) const { return last_signal_strength; }
+    
+    /**
+     * @brief 	Find out RX ID of last receiver with squelch activity
+     * @returns Returns the RX ID
+     */
+    int sqlRxId(void) const { return last_sql_rx_id; }
+        
+    /**
      * @brief 	Reset the receiver object to its default settings
      */
     void reset(void);
     
-
   protected:
     
+    
   private:
-    static const int  	      	NPOLES = 4;
-    static const int  	      	NZEROS = 4;
+    bool      	      	is_muted;
+    Async::TcpClient  	*tcp_con;
+    char      	      	recv_buf[1024];
+    int       	      	recv_cnt;
+    int       	      	recv_exp;
+    bool      	      	squelch_open;
+    float     	      	last_signal_strength;
+    int       	      	last_sql_rx_id;
+    std::list<ToneDet*> tone_detectors;
     
-    Async::AudioIO    	      	*audio_io;
-    bool      	      	      	is_muted;
-    DtmfDecoder       	      	*dtmf_dec;
-    ToneDetector      	      	*ctcss_det;
-    Squelch   	      	      	*squelch;
-    float     	      	      	xv[NZEROS+1];
-    float     	      	      	yv[NPOLES+1];
-    std::list<ToneDurationDet*> tone_detectors;
-    
-    int audioRead(short *samples, int count);
-    void resetHighpassFilter(void);
-    void highpassFilter(short *samples, int count);
+    void tcpConnected(void);
+    void tcpDisconnected(Async::TcpConnection *con,
+      	      	      	 Async::TcpConnection::DisconnectReason reason);
+    int tcpDataReceived(Async::TcpConnection *con, void *data, int size);
+    void handleMsg(NetRxMsg::Msg *msg);
+    void sendMsg(NetRxMsg::Msg *msg);
 
-};  /* class LocalRx */
+};  /* class NetRx */
 
 
 //} /* namespace */
 
-#endif /* LOCAL_RX_INCLUDED */
+#endif /* NET_RX_INCLUDED */
 
 
 

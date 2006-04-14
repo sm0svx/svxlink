@@ -193,6 +193,11 @@ class Rx : public SigC::Object
     virtual int sqlRxId(void) const { return 0; }
     
     /**
+     * @brief 	Reset the receiver object to its default settings
+     */
+    virtual void reset(void) = 0;
+    
+    /**
      * @brief 	A signal that indicates if the squelch is open or not
      * @param 	is_open \em True if the squelch is open or \em false if not
      */

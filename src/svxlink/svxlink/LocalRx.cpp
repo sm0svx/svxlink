@@ -292,6 +292,19 @@ bool LocalRx::addToneDetector(int fq, int bw, int required_duration)
 } /* LocalRx::addToneDetector */
 
 
+void LocalRx::reset(void)
+{
+  mute(true);
+  
+  list<ToneDurationDet*>::iterator it;
+  for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
+  {
+    delete *it;
+  }
+  tone_detectors.clear();
+  
+} /* LocalRx::reset */
+
 
 /****************************************************************************
  *

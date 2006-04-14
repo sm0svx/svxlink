@@ -4,8 +4,6 @@
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-03-21
 
-A_detailed_description_for_this_file
-
 \verbatim
 <A brief description of the program or library this file belongs to>
 Copyright (C) 2003 Tobias Blomberg / SM0SVX
@@ -55,6 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Rx.h"
 #include "LocalRx.h"
 #include "Voter.h"
+#include "NetRx.h"
 
 
 
@@ -134,10 +133,14 @@ Rx *Rx::create(Config& cfg, const string& name)
   {
     rx = new Voter(cfg, name);
   }
+  else if (rx_type == "Net")
+  {
+    rx = new NetRx(cfg, name);
+  }
   else
   {
     cerr << "*** ERROR: Unknown RX type \"" << rx_type << "\". Legal values "
-      	 << "are: \"Local\" or \"Voter\"\n";
+      	 << "are: \"Local\", \"Net\" or \"Voter\"\n";
     return 0;
   }
   

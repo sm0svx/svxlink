@@ -180,6 +180,10 @@ class Voter : public Rx
      */
     int sqlRxId(void) const;
     
+    /**
+     * @brief 	Reset the receiver object to its default settings
+     */
+    void reset(void);
     
   protected:
     
