@@ -124,6 +124,28 @@ using namespace Async;
  *
  ****************************************************************************/
 
+const char *TcpConnection::disconnectReasonStr(DisconnectReason reason)
+{
+  switch (reason)
+  {
+    case DR_HOST_NOT_FOUND:
+      return "Host not found";
+      break;
+
+    case DR_REMOTE_DISCONNECTED:
+      return "Connection closed by remote peer";
+      break;
+
+    case DR_SYSTEM_ERROR:
+      return strerror(errno);
+      break;
+
+    case DR_RECV_BUFFER_OVERFLOW:
+      return "Receiver buffer overflow";
+      break;
+  }
+} /* TcpConnection::disconnectReasonStr */
+
 
 /*
  *------------------------------------------------------------------------

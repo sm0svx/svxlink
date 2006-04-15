@@ -139,6 +139,11 @@ class TcpConnection : public SigC::Object
     static const int DEFAULT_RECV_BUF_LEN = 1024;
     
     /**
+     * @brief Translate disconnect reason to a string
+     */
+    static const char *disconnectReasonStr(DisconnectReason reason);
+    
+    /**
      * @brief 	Constructor
      * @param 	recv_buf_len  The length of the receiver buffer to use
      */
