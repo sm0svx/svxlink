@@ -144,6 +144,9 @@ const char *TcpConnection::disconnectReasonStr(DisconnectReason reason)
       return "Receiver buffer overflow";
       break;
   }
+  
+  return "Unknown disconnect reason";
+  
 } /* TcpConnection::disconnectReasonStr */
 
 
