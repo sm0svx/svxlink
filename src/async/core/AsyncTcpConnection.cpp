@@ -143,6 +143,10 @@ const char *TcpConnection::disconnectReasonStr(DisconnectReason reason)
     case DR_RECV_BUFFER_OVERFLOW:
       return "Receiver buffer overflow";
       break;
+
+    case DR_ORDERED_DISCONNECT:
+      return "Receiver buffer overflow";
+      break;
   }
   
   return "Unknown disconnect reason";

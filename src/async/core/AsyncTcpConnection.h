@@ -127,10 +127,11 @@ class TcpConnection : public SigC::Object
      */
     typedef enum
     { 
-      DR_HOST_NOT_FOUND,      ///< The specified host was not found in the DNS
-      DR_REMOTE_DISCONNECTED, ///< The remote host disconnected
-      DR_SYSTEM_ERROR,	      ///< A system error occured (check errno)
-      DR_RECV_BUFFER_OVERFLOW ///< Receiver buffer overflow
+      DR_HOST_NOT_FOUND,       ///< The specified host was not found in the DNS
+      DR_REMOTE_DISCONNECTED,  ///< The remote host disconnected
+      DR_SYSTEM_ERROR,	       ///< A system error occured (check errno)
+      DR_RECV_BUFFER_OVERFLOW, ///< Receiver buffer overflow
+      DR_ORDERED_DISCONNECT    ///< Disconnect ordered locally
     } DisconnectReason;
     
     /**
