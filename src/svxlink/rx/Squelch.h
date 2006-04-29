@@ -183,7 +183,12 @@ class Squelch : public SigC::Object
      *  Reset the squelch so that the detection process starts from
      *	the beginning again.
      */
-    virtual void reset(void) {}
+    virtual void reset(void)
+    {
+      m_open = false;
+      hangtime_left = 0;
+      delay_left = 0;
+    }
 
     /**
      * @brief 	Handle incoming audio

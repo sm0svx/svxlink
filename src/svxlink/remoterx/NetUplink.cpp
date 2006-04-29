@@ -199,6 +199,7 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
     con->disconnected.connect(slot(this, &NetUplink::clientDisconnected));
     con->dataReceived.connect(slot(this, &NetUplink::tcpDataReceived));
     recv_exp = sizeof(Msg);
+    recv_cnt = 0;
   }
   else
   {
@@ -221,7 +222,7 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
 
 int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
 {
-  cout << "NetRx::tcpDataReceived: size=" << size << endl;
+  //cout << "NetRx::tcpDataReceived: size=" << size << endl;
   
   //Msg *msg = reinterpret_cast<Msg*>(data);
   //cout << "Received a TCP message with type " << msg->type()
@@ -239,6 +240,13 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
   while (size > 0)
   {
     int read_cnt = min(size, recv_exp-recv_cnt);
+    if (recv_cnt+read_cnt > static_cast<int>(sizeof(recv_buf)))
+    {
+      cerr << "*** ERROR: TCP receive buffer overflow. Disconnecting...\n";
+      con->disconnect();
+      clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+      return orig_size;
+    }
     memcpy(recv_buf+recv_cnt, buf, read_cnt);
     size -= read_cnt;
     recv_cnt += read_cnt;
@@ -281,33 +289,32 @@ void NetUplink::handleMsg(Msg *msg)
   {
     case MsgHeartbeat::TYPE:
     {
-      msg = reinterpret_cast<MsgHeartbeat*>(msg);
       break;
     }
     case MsgAuth::TYPE:
     {
-      msg = reinterpret_cast<MsgAuth*>(msg);
       break;
     }
     case MsgMute::TYPE:
     {
       MsgMute *mute_msg = reinterpret_cast<MsgMute*>(msg);
-      cout << "Mute=" << (mute_msg->doMute() ? "true" : "false") << endl;
+      cout << "MsgMute(" << (mute_msg->doMute() ? "true" : "false") << ")\n";
       rx->mute(mute_msg->doMute());
       break;
     }
     case MsgAddToneDetector::TYPE:
     {
       MsgAddToneDetector *atd = reinterpret_cast<MsgAddToneDetector*>(msg);
-      cout << "AddToneDetector: fq=" << atd->fq()
-      	   << " bw=" << atd->bw()
-	   << " required_duration=" << atd->requiredDuration() << endl;
-      rx->addToneDetector(atd->fq(), atd->bw(), atd->requiredDuration());
+      cout << "AddToneDetector(" << atd->fq()
+      	   << ", " << atd->bw()
+	   << ", " << atd->requiredDuration() << ")\n";
+      rx->addToneDetector(atd->fq(), atd->bw(), atd->thresh(),
+      	      	      	  atd->requiredDuration());
       break;
     }
     default:
-      cerr << "*** ERROR: Unknown TCP message received. Type="
-      	   << msg->type() << ", Size=" << msg->size() << endl;
+      cerr << "*** ERROR: Unknown TCP message received. type="
+      	   << msg->type() << ", tize=" << msg->size() << endl;
       break;
   }
   
@@ -318,7 +325,13 @@ void NetUplink::sendMsg(Msg *msg)
 {
   if (con != 0)
   {
-    cout << con->write(msg, msg->size()) << " bytes written\n";
+    int written = con->write(msg, msg->size());
+    if (written != static_cast<int>(msg->size()))
+    {
+      cerr << "*** ERROR: TCP transmit buffer overflow.\n";
+      con->disconnect();
+      clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+    }
   }
   
   delete msg;
@@ -336,13 +349,15 @@ void NetUplink::squelchOpen(bool is_open)
 
 void NetUplink::dtmfDigitDetected(char digit)
 {
+  cout << "DTMF digit detected: " << digit << endl;
   MsgDtmf *msg = new MsgDtmf(digit);
   sendMsg(msg);
 } /* NetUplink::dtmfDigitDetected */
 
 
-void NetUplink::toneDetected(int tone_fq)
+void NetUplink::toneDetected(float tone_fq)
 {
+  cout << "Tone detected: " << tone_fq << endl;
   MsgTone *msg = new MsgTone(tone_fq);
   sendMsg(msg);
 } /* NetUplink::toneDetected */
@@ -350,14 +365,12 @@ void NetUplink::toneDetected(int tone_fq)
 
 int NetUplink::audioReceived(short *samples, int count)
 {
-  cout << "NetUplink::audioReceived: count=" << count << endl;
+  //cout << "NetUplink::audioReceived: count=" << count << endl;
   count = min(count, 512);
   MsgAudio *msg = new MsgAudio(samples, count);
   sendMsg(msg);
   return count;
 } /* NetUplink::audioReceived */
-
-
 
 
 

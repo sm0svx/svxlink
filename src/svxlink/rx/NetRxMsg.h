@@ -41,6 +41,7 @@ An example of how to use the NetRxMsg class
  *
  ****************************************************************************/
 
+#include <cassert>
 
 
 /****************************************************************************
@@ -214,12 +215,12 @@ class MsgTone : public Msg
 {
   public:
     static const int TYPE = 4;
-    MsgTone(int tone_fq)
+    MsgTone(float tone_fq)
       : Msg(TYPE, sizeof(MsgTone)), m_tone_fq(tone_fq) {}
-    int toneFq(void) const { return m_tone_fq; }
+    float toneFq(void) const { return m_tone_fq; }
   
   private:
-    char  m_tone_fq;
+    float  m_tone_fq;
     
 }; /* MsgTone */
 
@@ -263,17 +264,19 @@ class MsgAddToneDetector : public Msg
 {
   public:
     static const int TYPE = 7;
-    MsgAddToneDetector(int fq, int bw, int required_duration)
+    MsgAddToneDetector(float fq, int bw, float thresh, int required_duration)
       : Msg(TYPE, sizeof(MsgAddToneDetector)), m_fq(fq), m_bw(bw),
-      	m_required_duration(required_duration) {}
-    int fq(void) const { return m_fq; }
+      	m_thresh(thresh), m_required_duration(required_duration) {}
+    float fq(void) const { return m_fq; }
     int bw(void) const { return m_bw; }
+    float thresh(void) const { return m_thresh; }
     int requiredDuration(void) const { return m_required_duration; }
   
   private:
-    int m_fq;
-    int m_bw;
-    int m_required_duration;
+    float m_fq;
+    int   m_bw;
+    float m_thresh;
+    int   m_required_duration;
     
 }; /* MsgAddToneDetector */
 

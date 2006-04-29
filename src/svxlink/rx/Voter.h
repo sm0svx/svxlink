@@ -161,12 +161,13 @@ class Voter : public Rx
      * @brief 	Call this function to add a tone detector to the RX
      * @param 	fq The tone frequency to detect
      * @param 	bw The bandwidth of the detector
+     * @param 	thresh The detection threshold in dB SNR
      * @param 	required_duration The required time in milliseconds that
      *	      	the tone must be active for activity to be reported.
      * @return	Return \em true if the Rx is capable of tone detection or
      *	      	\em false if it's not.
      */
-    bool addToneDetector(int fq, int bw, int required_duration);
+    bool addToneDetector(float fq, int bw, float thresh, int required_duration);
     
     /**
      * @brief 	Read the current signal strength

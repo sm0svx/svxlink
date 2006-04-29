@@ -174,7 +174,7 @@ void Rx::setSquelchState(bool is_open)
   if (m_verbose)
   {
     cout << m_name << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
-         << endl;
+         << " (" << signalStrength() << ")" << endl;
   }
   squelchOpen(is_open);
 } /* Rx::setSquelchState */

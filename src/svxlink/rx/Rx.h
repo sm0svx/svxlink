@@ -4,8 +4,6 @@
 @author  Tobias Blomberg
 @date	 2004-03-21
 
-A_detailed_description_for_this_file
-
 \verbatim
 <A brief description of the program or library this file belongs to>
 Copyright (C) 2004  Tobias Blomberg / SM0SVX
@@ -112,13 +110,11 @@ An example of how to use the Template class
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	The base class for a receiver
 @author Tobias Blomberg
-@date   2003-04-
+@date   2004-03-21
 
-A_detailed_class_description
-
-\include Template_demo.cpp
+This class is used as the base class for all receivers.
 */
 class Rx : public SigC::Object
 {
@@ -170,12 +166,14 @@ class Rx : public SigC::Object
      * @brief 	Call this function to add a tone detector to the RX
      * @param 	fq The tone frequency to detect
      * @param 	bw The bandwidth of the detector
+     * @param 	thresh The detection threshold in dB SNR
      * @param 	required_duration The required time in milliseconds that
      *	      	the tone must be active for activity to be reported.
      * @return	Return \em true if the Rx is capable of tone detection or
      *	      	\em false if it's not.
      */
-    virtual bool addToneDetector(int fq, int bw, int required_duration)
+    virtual bool addToneDetector(float fq, int bw, float thresh,
+      	      	      	      	 int required_duration)
     {
       return false;
     }
@@ -222,7 +220,7 @@ class Rx : public SigC::Object
      *	      	been detected for the specified duration
      * @param 	fq The frequency of the tone
      */
-    SigC::Signal1<void, int> toneDetected;
+    SigC::Signal1<void, float> toneDetected;
     
     
   protected:

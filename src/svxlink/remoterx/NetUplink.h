@@ -180,7 +180,7 @@ class NetUplink : public Uplink
      * @brief 	Pass on detected tone
      * @param 	tone_fq The frequency of the received tone
      */
-    void toneDetected(int tone_fq);
+    void toneDetected(float tone_fq);
     
     /**
      * @brief 	Pass on received audio

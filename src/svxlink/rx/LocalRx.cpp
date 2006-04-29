@@ -4,7 +4,9 @@
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-03-21
 
-A_detailed_description_for_this_file
+This file contains a class that handle local receivers. A local receiver is
+a receiver that is directly connected to the sound card on the computer where
+the SvxLink core is running.
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -36,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <cassert>
+#include <cmath>
 
 
 /****************************************************************************
@@ -60,7 +63,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SquelchCtcss.h"
 #include "SquelchSerial.h"
 #include "LocalRx.h"
-
 
 
 /****************************************************************************
@@ -91,7 +93,7 @@ using namespace Async;
 class ToneDurationDet : public ToneDetector
 {
   public:
-    ToneDurationDet(int fq, int bw, int duration)
+    ToneDurationDet(float fq, int bw, int duration)
       : ToneDetector(fq, 8000 / bw), required_duration(duration)
     {
       timerclear(&activation_timestamp);
@@ -99,7 +101,7 @@ class ToneDurationDet : public ToneDetector
       	      slot(this, &ToneDurationDet::toneActivated));
     }
     
-    SigC::Signal1<void, int> detected;
+    SigC::Signal1<void, float> detected;
     
   private:
     int     	    required_duration;
@@ -107,7 +109,7 @@ class ToneDurationDet : public ToneDetector
     
     void toneActivated(bool is_activated)
     {
-      //printf("%d tone %s...\n", toneFq(),
+      //printf("%.1f tone %s...\n", toneFq(),
       //	     is_activated ? "ACTIVATED" : "DEACTIVATED");
       if (is_activated)
       {
@@ -167,7 +169,9 @@ class ToneDurationDet : public ToneDetector
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
   : Rx(cfg, name), audio_io(0), is_muted(true), dtmf_dec(0),
-    squelch(0)
+    squelch(0), hpff(0), hpff_run(0), hpff_buf(0),
+    siglev_offset(0.0), siglev_slope(1.0), deemph(0), deemph_run(0),
+    deemph_buf(0)
 {
   resetHighpassFilter();
 } /* LocalRx::LocalRx */
@@ -182,6 +186,20 @@ LocalRx::~LocalRx(void)
   }
   tone_detectors.clear();
   
+  if (hpff != 0)
+  {
+    fid_run_freebuf(hpff_buf);
+    fid_run_free(hpff_run);
+    free(hpff);
+  }
+    
+  if (deemph != 0)
+  {
+    fid_run_freebuf(deemph_buf);
+    fid_run_free(deemph_run);
+    free(deemph);
+  }
+    
   delete squelch;
   delete dtmf_dec;
   delete audio_io;
@@ -223,6 +241,23 @@ bool LocalRx::initialize(void)
     return false;
   }
   
+  string value;
+  if (cfg().getValue(name(), "SIGLEV_OFFSET", value))
+  {
+    siglev_offset = atof(value.c_str());
+  }
+  
+  if (cfg().getValue(name(), "SIGLEV_SLOPE", value))
+  {
+    siglev_slope = atof(value.c_str());
+  }
+  
+  bool deemphasis = false;
+  if (cfg().getValue(name(), "DEEMPHASIS", value))
+  {
+    deemphasis = (atoi(value.c_str()) != 0);
+  }
+  
   if (!squelch->initialize(cfg(), name()))
   {
     cerr << "*** ERROR: Squelch detector initialization failed for RX \""
@@ -238,6 +273,29 @@ bool LocalRx::initialize(void)
   dtmf_dec = new DtmfDecoder;
   dtmf_dec->digitDetected.connect(dtmfDigitDetected.slot());
   
+  char *spec = "HpBu4/3500";
+  char *fferr = fid_parse(audio_io->sampleRate(), &spec, &hpff);
+  if (fferr != 0)
+  {
+    cerr << "***ERROR: Filter creation error: " << fferr << endl;
+    exit(1);
+  }
+  hpff_run = fid_run_new(hpff, &hpff_func);
+  hpff_buf = fid_run_newbuf(hpff_run);
+  
+  if (deemphasis)
+  {
+    spec = "LpBu1/300";
+    fferr = fid_parse(audio_io->sampleRate(), &spec, &deemph);
+    if (fferr != 0)
+    {
+      cerr << "***ERROR: Deemphasis filter creation error: " << fferr << endl;
+      exit(1);
+    }
+    deemph_run = fid_run_new(deemph, &deemph_func);
+    deemph_buf = fid_run_newbuf(deemph_run);
+  }
+    
   return true;
   
 } /* LocalRx:initialize */
@@ -277,12 +335,14 @@ bool LocalRx::squelchIsOpen(void) const
 } /* LocalRx::squelchIsOpen */
 
 
-bool LocalRx::addToneDetector(int fq, int bw, int required_duration)
+bool LocalRx::addToneDetector(float fq, int bw, float thresh,
+      	      	      	      int required_duration)
 {
   //printf("Adding tone detector with fq=%d  bw=%d  req_dur=%d\n",
   //    	 fq, bw, required_duration);
   ToneDurationDet *det = new ToneDurationDet(fq, bw, required_duration);
   assert(det != 0);
+  det->setSnrThresh(thresh);
   det->detected.connect(toneDetected.slot());
   
   tone_detectors.push_back(det);
@@ -291,6 +351,12 @@ bool LocalRx::addToneDetector(int fq, int bw, int required_duration)
 
 } /* LocalRx::addToneDetector */
 
+
+float LocalRx::signalStrength(void) const
+{
+  return siglev_offset - siglev_slope * log10(last_siglev);
+} /* LocalRx::signalStrength */
+    
 
 void LocalRx::reset(void)
 {
@@ -304,6 +370,7 @@ void LocalRx::reset(void)
   tone_detectors.clear();
   
 } /* LocalRx::reset */
+
 
 
 /****************************************************************************
@@ -340,10 +407,20 @@ void LocalRx::reset(void)
 int LocalRx::audioRead(short *samples, int count)
 {
   bool was_open = squelch->isOpen();
+  
+  double rms = 0.0;
+  for (int i=0; i<count; ++i)
+  {
+    double sample = samples[i] / 32768.0;
+    rms += pow(hpff_func(hpff_buf, sample), 2);
+  }
+  last_siglev = sqrt(rms / count);
+    
   squelch->audioIn(samples, count);
   if (!was_open && squelch->isOpen())
   {
     setSquelchState(true);
+    fid_run_zapbuf(hpff_buf);
   }
   
   dtmf_dec->processSamples(samples, count);
@@ -359,7 +436,14 @@ int LocalRx::audioRead(short *samples, int count)
     short *filtered = new short[count];
     for (int i=0; i<count; ++i)
     {
-      filtered[i] = samples[i];
+      if (deemph != 0)
+      {
+      	filtered[i] = deemph_func(deemph_buf, samples[i]);
+      }
+      else
+      {
+      	filtered[i] = samples[i];
+      }
     }
     highpassFilter(filtered, count);
     count = audioReceived(filtered, count);

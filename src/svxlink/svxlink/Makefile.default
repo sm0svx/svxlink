@@ -26,15 +26,15 @@ PROGS		=
 CPPPROGS      	= $(BIN)/svxlink
 
 # Sources other than the main files
-PRGSRC		= LocalRx.cpp SquelchVox.cpp LocalTx.cpp MsgHandler.cpp \
-		  ToneDetector.cpp DtmfDecoder.cpp Module.cpp AudioPacer.cpp \
+PRGSRC		= LocalTx.cpp MsgHandler.cpp \
+		  Module.cpp AudioPacer.cpp \
 		  Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp \
 		  EventHandler.cpp AudioSource.cpp AudioSink.cpp \
-		  AudioSwitchMatrix.cpp Voter.cpp Rx.cpp CmdParser.cpp \
-		  Recorder.cpp NetRx.cpp
+		  AudioSwitchMatrix.cpp CmdParser.cpp \
+		  Recorder.cpp
 
 # Libraries compiled in the project (in $(LIB)).
-PROJLIBS	= -lasynccpp
+PROJLIBS	= -lasynccpp -lrx
 
 # Libraries external to the project
 LIBS		= -ldl -lpopt -ltcl
@@ -84,8 +84,7 @@ LIB_LIBS	= -lc
 STATIC_LIBS   	= 
 
 # Includefiles to export. A softlink is created in $(INC).
-EXPINC		= Module.h MsgHandler.h AudioPacer.h EventHandler.h \
-		  NetRxMsg.h
+EXPINC		= Module.h MsgHandler.h AudioPacer.h EventHandler.h
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for libraries).
@@ -210,7 +209,7 @@ CFLAGS		+=
 CXXFLAGS	+= $(shell sigc-config --cflags)
 
 # Extra commandline switches to the linker
-LDFLAGS		+=
+LDFLAGS		+= 
 
 
 
@@ -222,7 +221,7 @@ LDFLAGS		+=
 
 # Additional files to install
 install-extras uninstall-extras rpm-extras:
-#	$(DIRSPEC) /var/spool/myprog[755,root,root]
+	$(DIRSPEC) /etc/svxlink.d[755,root,root]
 	$(FILESPEC) svxlink.conf[644,root,root,config] /etc
 	$(FILESPEC) events.tcl[644,root,root] /usr/share/svxlink/sounds
 	$(FILESPEC) RepeaterLogic.tcl[644,root,root] /usr/share/svxlink/sounds/events.d

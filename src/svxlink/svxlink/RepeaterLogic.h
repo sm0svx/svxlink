@@ -178,7 +178,7 @@ class RepeaterLogic : public Logic
     void setUp(bool up);
     void squelchOpen(bool is_open);
     //void txTimeout(void);
-    void detectedTone(int fq);
+    void detectedTone(float fq);
     void playIdleSound(Async::Timer *t);
 
 };  /* class RepeaterLogic */

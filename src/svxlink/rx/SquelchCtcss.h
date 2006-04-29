@@ -151,10 +151,10 @@ class SquelchCtcss : public Squelch
       }
       
       std::string value;
-      int ctcss_fq = 0;
+      float ctcss_fq = 0;
       if (cfg.getValue(rx_name, "CTCSS_FQ", value))
       {
-	ctcss_fq = atoi(value.c_str());
+	ctcss_fq = atof(value.c_str());
       }
       if (ctcss_fq <= 0)
       {
@@ -163,12 +163,32 @@ class SquelchCtcss : public Squelch
 	return false;
       }
       
-      det = new ToneDetector(ctcss_fq, 2000); // FIXME: Determine optimum N
+      float ctcss_thresh = -5.0;
+      if (cfg.getValue(rx_name, "CTCSS_THRESH", value))
+      {
+	ctcss_thresh = atof(value.c_str());
+      }
+      
+      det = new ToneDetector(ctcss_fq, 1000);
+      det->setFilter("LpBu8/270");
+      det->setSnrThresh(ctcss_thresh);
       det->activated.connect(slot(this, &SquelchCtcss::setOpen));
       
       return true;
     }
     
+    /**
+     * @brief 	Reset the squelch detector
+     *
+     *  Reset the squelch so that the detection process starts from
+     *	the beginning again.
+     */
+    void reset(void)
+    {
+      det->reset();
+      Squelch::reset();
+    }
+
     
   protected:
     /**

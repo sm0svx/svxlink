@@ -253,6 +253,8 @@ bool Voter::initialize(void)
 
 void Voter::mute(bool do_mute)
 {
+  //cout << "Voter::mute: do_mute=" << (do_mute ? "TRUE" : "FALSE") << endl;
+  
   if (do_mute == is_muted)
   {
     return;
@@ -261,7 +263,6 @@ void Voter::mute(bool do_mute)
   if (active_rx != 0)
   {
     assert(!is_muted);
-    active_rx->rx->mute(true);
     active_rx = 0;
   }
   else if (best_rx_timer != 0)
@@ -272,14 +273,12 @@ void Voter::mute(bool do_mute)
     best_rx = 0;
     best_rx_siglev = BEST_RX_SIGLEV_RESET;
   }
-  else
+  
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    list<SatRx *>::iterator it;
-    for (it=rxs.begin(); it!=rxs.end(); ++it)
-    {
-      Rx *rx = (*it)->rx;
-      rx->mute(do_mute);
-    }
+    Rx *rx = (*it)->rx;
+    rx->mute(do_mute);
   }
     
   is_muted = do_mute;
@@ -293,14 +292,15 @@ bool Voter::squelchIsOpen(void) const
 } /* Voter::squelchIsOpen */
 
 
-bool Voter::addToneDetector(int fq, int bw, int required_duration)
+bool Voter::addToneDetector(float fq, int bw, float thresh,
+      	      	      	    int required_duration)
 {
   bool success = true;
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
     Rx *rx = (*it)->rx;
-    success &= rx->addToneDetector(fq, bw, required_duration);
+    success &= rx->addToneDetector(fq, bw, thresh, required_duration);
   }
   
   return success;
@@ -426,7 +426,8 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
       if (m_verbose)
       {
       	cout << name() << ": The squelch is CLOSED"
-             << " (" << active_rx->rx->name() << ")" << endl;
+             << " (" << active_rx->rx->name() << "="
+	     << active_rx->rx->signalStrength() << ")" << endl;
       }
       
       active_rx = 0;
@@ -475,15 +476,17 @@ void Voter::chooseBestRx(Timer *t)
       }
     }
     
+    if (m_verbose)
+    {
+      cout << name() << ": The squelch is OPEN"
+           << " (" << best_rx->rx->name() << "=" << best_rx_siglev << ")"
+	   << endl;
+    }
+    
     active_rx = best_rx;
     best_rx = 0;
     best_rx_siglev = BEST_RX_SIGLEV_RESET;
 
-    if (m_verbose)
-    {
-      cout << name() << ": The squelch is OPEN"
-           << " (" << active_rx->rx->name() << ")" << endl;
-    }
     sql_rx_id = active_rx->id;
     setSquelchState(true);
     active_rx->stopOutput(false);

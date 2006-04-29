@@ -51,6 +51,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
 
+#include <Rx.h>
+
 
 /****************************************************************************
  *
@@ -59,7 +61,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "Tx.h"
-#include "Rx.h"
 #include "Module.h"
 #include "RepeaterLogic.h"
 
@@ -205,7 +206,7 @@ bool RepeaterLogic::initialize(void)
   
   if (required_1750_duration > 0)
   {
-    if (!rx().addToneDetector(1750, 25, required_1750_duration))
+    if (!rx().addToneDetector(1750, 25, -15, required_1750_duration))
     {
       cerr << "*** WARNING: Could not setup 1750 detection\n";
     }
@@ -214,7 +215,7 @@ bool RepeaterLogic::initialize(void)
   
   if ((open_on_ctcss_fq > 0) && (open_on_ctcss_duration > 0))
   {
-    if (!rx().addToneDetector(open_on_ctcss_fq, 4, open_on_ctcss_duration))
+    if (!rx().addToneDetector(open_on_ctcss_fq, 8, -5, open_on_ctcss_duration))
     {
       cerr << "*** WARNING: Could not setup CTCSS tone detection\n";
     }
@@ -500,7 +501,7 @@ void RepeaterLogic::txTimeout(void)
 #endif
 
 
-void RepeaterLogic::detectedTone(int fq)
+void RepeaterLogic::detectedTone(float fq)
 {
   if (!repeater_is_up)
   {

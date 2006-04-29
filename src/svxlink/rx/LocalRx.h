@@ -4,7 +4,9 @@
 @author  Tobias Blomberg
 @date	 2004-03-21
 
-A_detailed_description_for_this_file
+This file contains a class that handle local receivers. A local receiver is
+a receiver that is directly connected to the sound card on the computer where
+the SvxLink core is running.
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -24,10 +26,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example Template_demo.cpp
-An example of how to use the Template class
 */
 
 
@@ -57,6 +55,10 @@ An example of how to use the Template class
  * Local Includes
  *
  ****************************************************************************/
+
+extern "C" {
+#include "fidlib.h"
+};
 
 #include "Rx.h"
 
@@ -120,13 +122,13 @@ class ToneDetector;
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	A class to handle local receivers
 @author Tobias Blomberg
 @date   2004-03-21
 
-A_detailed_class_description
-
-\include Template_demo.cpp
+This class handle local receivers. A local receiver is a receiver that is
+directly connected to the sound card on the computer where the SvxLink core
+is running.
 */
 class LocalRx : public Rx
 {
@@ -163,12 +165,19 @@ class LocalRx : public Rx
      * @brief 	Call this function to add a tone detector to the RX
      * @param 	fq The tone frequency to detect
      * @param 	bw The bandwidth of the detector
+     * @param 	thresh The detection threshold in dB SNR
      * @param 	required_duration The required time in milliseconds that
      *	      	the tone must be active for activity to be reported.
      * @return	Return \em true if the Rx is capable of tone detection or
      *	      	\em false if it's not.
      */
-    bool addToneDetector(int fq, int bw, int required_duration);
+    bool addToneDetector(float fq, int bw, float thresh, int required_duration);
+
+    /**
+     * @brief 	Read the current signal strength
+     * @return	Returns the signal strength
+     */
+    float signalStrength(void) const;
     
     /**
      * @brief 	Reset the receiver object to its default settings
@@ -190,6 +199,18 @@ class LocalRx : public Rx
     float     	      	      	xv[NZEROS+1];
     float     	      	      	yv[NPOLES+1];
     std::list<ToneDurationDet*> tone_detectors;
+
+    FidFilter 	      	      	*hpff;
+    FidRun    	      	      	*hpff_run;
+    FidFunc   	      	      	*hpff_func;
+    void      	      	      	*hpff_buf;
+    double    	      	      	last_siglev;
+    float     	      	      	siglev_offset;
+    float     	      	      	siglev_slope;
+    FidFilter 	      	      	*deemph;
+    FidRun    	      	      	*deemph_run;
+    FidFunc   	      	      	*deemph_func;
+    void      	      	      	*deemph_buf;
     
     int audioRead(short *samples, int count);
     void resetHighpassFilter(void);

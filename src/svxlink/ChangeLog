@@ -42,6 +42,20 @@
 * Now possible to set a squelch delay which can be good in some odd
   situations. Configuration variable: Rx1/SQL_DELAY.
 
+* Improved the CTCSS squelch detector. It is now possible to have a
+  setup with open squelch. It is also more resistant to QRM.
+  The configuration variable CTCSS_THRESH set the squelch threshold.
+  The configuration variable CTCSS_FQ now understand fractions so we
+  can write "136.5" instead of the approximation "136".
+
+* Added a signal strength detector that can be used with the voter.
+
+* Added a de-emphasis filter on received audio. This can be good if
+  you connect to the receiver via a 9k6 packet radio connector.
+  The audio must then be de-emphasisen to not sound "thin".
+  The filter can be turned on/off by the configuration variable
+  DEEMPHASIS in the receiver configuration section.
+
 
 
  0.7.0 -- 02 Dec 2005

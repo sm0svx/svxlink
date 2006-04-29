@@ -1,19 +1,28 @@
-/*
- *----------------------------------------------------------------------------
- * Filename:  	ToneDetector.h
- * Module:    	
- * Author:    	Tobias Blomberg
- * Created:   	2003-04-15
- * License:   	GPL
- * Description: A tone decoder that uses the Goertzel algorithm to detect
- *    	      	a tone.
- *----------------------------------------------------------------------------
- * Signatures:
- * Sign Name  	      	  E-mail
- * TBg	Tobias Blomberg   blomman@ludd.luth.se
- *
- *----------------------------------------------------------------------------
- */
+/**
+@file	 ToneDetector.h
+@brief   A tone detector that use the Goertzel algorithm
+@author  Tobias Blomberg / SM0SVX
+@date	 2003-04-15
+
+\verbatim
+<A brief description of the program or library this file belongs to>
+Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+\endverbatim
+*/
 
 
 #ifndef TONE_DETECTOR_INCLUDED
@@ -27,6 +36,8 @@
  ****************************************************************************/
 
 #include <sigc++/signal_system.h>
+
+#include <string>
 
 
 /****************************************************************************
@@ -43,6 +54,9 @@
  *
  ****************************************************************************/
 
+extern "C" {
+#include "fidlib.h"
+};
 
 
 /****************************************************************************
@@ -80,7 +94,7 @@
  * Bugs:    
  *----------------------------------------------------------------------------
  */
-#define FLOATING	float
+#define FLOATING	double
 #define SAMPLE	      	short
 
 
@@ -112,42 +126,24 @@
  *
  ****************************************************************************/
 
-/*
- *----------------------------------------------------------------------------
- * Class:     ToneDetector
- * Purpose:   ToneDetector class
- * Inherits:  
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */   
+/**
+@brief	A tone detector that use the Goertzel algorithm
+@author Tobias Blomberg / SM0SVX
+@date   2003-04-15
+*/
 class ToneDetector : public SigC::Object
 {
   public:
-    /*
-     *------------------------------------------------------------------------
-     * Method:	ToneDetector
-     * Purpose: Constructor
-     * Input: 	
-     * Output:	None
-     * Author:	
-     * Created: 
-     * Remarks: 
-     * Bugs:  	
-     *------------------------------------------------------------------------
-     */
-    ToneDetector(int tone_hz, int base_N);
-    ~ToneDetector(void) {}
+    ToneDetector(float tone_hz, int base_N);
+    ~ToneDetector(void);
     
     int processSamples(short *buf, int len);
-    bool isActivated(void) const { return is_activated; }
+    bool isActivated(void) const { return (det_delay_left == 0); }
     FLOATING value(void) const { return result; }
-    int toneFq(void) const { return tone_fq; }
-    void reset(void) { resetGoertzel(); }
+    float toneFq(void) const { return tone_fq; }
+    void setFilter(const std::string &filter_spec);
+    void setSnrThresh(float thresh) { snr_thresh = thresh; }
+    void reset(void);
     
     SigC::Signal1<void, bool> activated;
     SigC::Signal2<void, ToneDetector*, double>	valueChanged;
@@ -155,23 +151,32 @@ class ToneDetector : public SigC::Object
   protected:
     
   private:
-    int       tone;
-    int       block_pos;
-    int       is_activated;
-    FLOATING  result;
-    int       tone_fq;
+    int       	block_pos;
+    int       	is_activated;
+    FLOATING  	result;
+    float     	tone_fq;
+    short     	*block;
     
-    FLOATING  coeff;
-    FLOATING  Q1;
-    FLOATING  Q2;
-    FLOATING  sine;
-    FLOATING  cosine;
-    int       N;
+    FLOATING  	coeff;
+    FLOATING  	Q1;
+    FLOATING  	Q2;
+    FLOATING  	sine;
+    FLOATING  	cosine;
+    int       	N;
     
-    void resetGoertzel(void);
-    void processSample(SAMPLE sample);
+    FidFilter 	*ff;
+    FidRun    	*ff_run;
+    FidFunc   	*ff_func;
+    void      	*ff_buf;    
+    std::string filter_spec;
+    int       	det_delay_left;
+    int       	undet_delay_left;
+    float     	snr_thresh;
+    
+    inline void resetGoertzel(void);
+    inline void processSample(SAMPLE sample);
     //void getRealImag(FLOATING *realPart, FLOATING *imagPart);
-    FLOATING getMagnitudeSquared(void);
+    inline FLOATING getMagnitudeSquared(void);
 
 };  /* class ToneDetector */
 

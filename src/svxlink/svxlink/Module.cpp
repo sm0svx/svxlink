@@ -5,7 +5,8 @@
 #include <AsyncTimer.h>
 #include <version/SVXLINK.h>
 
-#include "Rx.h"
+#include <Rx.h>
+
 #include "Logic.h"
 #include "Module.h"
 

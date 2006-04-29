@@ -86,9 +86,13 @@ using namespace NetRxMsg;
 class ToneDet
 {
   public:
-    int fq, bw, required_duration;
-    ToneDet(int fq, int bw, int required_duration)
-      : fq(fq), bw(bw), required_duration(required_duration) {}
+    float fq;
+    int   bw;
+    float thresh;
+    int   required_duration;
+    
+    ToneDet(float fq, int bw, float thresh, int required_duration)
+      : fq(fq), bw(bw), thresh(thresh), required_duration(required_duration) {}
     
 };
 
@@ -167,7 +171,6 @@ bool NetRx::initialize(void)
   tcp_con->connected.connect(slot(this, &NetRx::tcpConnected));
   tcp_con->disconnected.connect(slot(this, &NetRx::tcpDisconnected));
   tcp_con->dataReceived.connect(slot(this, &NetRx::tcpDataReceived));
-  recv_exp = sizeof(Msg);
   tcp_con->connect();
   
   return true;
@@ -177,15 +180,15 @@ bool NetRx::initialize(void)
 
 void NetRx::mute(bool do_mute)
 {
-  cout << "NetRx::mute: do_mute=" << (do_mute ? "true" : "false") << "\n";
+  /*
+  cout << "NetRx::mute[" << name() << "]: do_mute="
+       << (do_mute ? "TRUE" : "FALSE") << "\n";
+  */
   
   if (do_mute == is_muted)
   {
     return;
   }
-  
-  MsgMute *msg = new MsgMute(do_mute);
-  sendMsg(msg);
   
   is_muted = do_mute;
   
@@ -196,19 +199,24 @@ void NetRx::mute(bool do_mute)
     last_sql_rx_id = 0;
   }
     
+  MsgMute *msg = new MsgMute(do_mute);
+  sendMsg(msg);
+  
 } /* NetRx::mute */
 
 
-bool NetRx::addToneDetector(int fq, int bw, int required_duration)
+bool NetRx::addToneDetector(float fq, int bw, float thresh,
+      	      	      	    int required_duration)
 {
   cout << "addToneDetector: fq=" << fq << " bw=" << bw
        << " required_duration=" << required_duration << endl;
        
-  MsgAddToneDetector *msg = new MsgAddToneDetector(fq, bw, required_duration);
-  sendMsg(msg);
-  
-  ToneDet *det = new ToneDet(fq, bw, required_duration);
+  ToneDet *det = new ToneDet(fq, bw, thresh, required_duration);
   tone_detectors.push_back(det);
+  
+  MsgAddToneDetector *msg =
+      new MsgAddToneDetector(fq, bw, thresh, required_duration);
+  sendMsg(msg);
   
   return true;
 
@@ -224,13 +232,13 @@ void NetRx::reset(void)
   }
   tone_detectors.clear();
   
-  MsgReset *msg = new MsgReset;
-  sendMsg(msg);
-
   is_muted = true;
   squelch_open = false;
   last_signal_strength = 0;
   last_sql_rx_id = 0;
+
+  MsgReset *msg = new MsgReset;
+  sendMsg(msg);
 
 } /* NetRx::reset */
 
@@ -274,6 +282,8 @@ void NetRx::tcpConnected(void)
        << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << "\n";
   
   is_connected = true;
+  recv_cnt = 0;
+  recv_exp = sizeof(Msg);
   
   if (!is_muted)
   {
@@ -285,10 +295,11 @@ void NetRx::tcpConnected(void)
   for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
   {
     MsgAddToneDetector *msg =
-      new MsgAddToneDetector((*it)->fq, (*it)->bw, (*it)->required_duration);
+      	new MsgAddToneDetector((*it)->fq, (*it)->bw, (*it)->thresh,
+      	      	      	       (*it)->required_duration);
     sendMsg(msg);
   }
-
+  
 } /* NetRx::tcpConnected */
 
 
@@ -306,6 +317,8 @@ void NetRx::tcpDisconnected(TcpConnection *con,
   }
   
   is_connected = false;
+  
+  recv_exp = 0;
   
   reconnect_timer = new Timer(10000);
   reconnect_timer->expired.connect(slot(this, &NetRx::reconnect));
@@ -327,6 +340,13 @@ int NetRx::tcpDataReceived(TcpConnection *con, void *data, int size)
   while (size > 0)
   {
     int read_cnt = min(size, recv_exp-recv_cnt);
+    if (recv_cnt+read_cnt > static_cast<int>(sizeof(recv_buf)))
+    {
+      cerr << "*** ERROR: TCP receive buffer overflow. Disconnecting...\n";
+      con->disconnect();
+      tcpDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+      return orig_size;
+    }
     memcpy(recv_buf+recv_cnt, buf, read_cnt);
     size -= read_cnt;
     recv_cnt += read_cnt;
@@ -429,7 +449,13 @@ void NetRx::sendMsg(Msg *msg)
 {
   if ((tcp_con != 0) && (tcp_con->isConnected()))
   {
-    cout << tcp_con->write(msg, msg->size()) << " bytes written\n";
+    int written = tcp_con->write(msg, msg->size());
+    if (written != static_cast<int>(msg->size()))
+    {
+      cerr << "*** ERROR: TCP transmit buffer overflow.\n";
+      tcp_con->disconnect();
+      tcpDisconnected(tcp_con, TcpConnection::DR_ORDERED_DISCONNECT);
+    }
   }
   
   delete msg;
