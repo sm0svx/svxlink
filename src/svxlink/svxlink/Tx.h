@@ -160,12 +160,6 @@ class Tx : public SigC::Object
     virtual int transmitAudio(short *samples, int count) { return count; }
     
     /**
-     * @brief 	Return the number of samples left to send
-     * @return	Returns the number of samples left to send
-     */
-    virtual int samplesToWrite(void) { return 0; }
-    
-    /**
      * @brief 	Call this method to flush all samples in the buffer
      *
      * This method is used to flush all the samples that are in the buffer.
