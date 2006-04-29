@@ -831,6 +831,9 @@ void Directory::ctrlSockDisconnected(TcpConnection *con,
     case Async::TcpClient::DR_RECV_BUFFER_OVERFLOW:
       error("Directory server receiver buffer overflow!\n");
       break;
+    
+    case Async::TcpClient::DR_ORDERED_DISCONNECT:
+      break;
   }
   
   assert(!cmd_queue.empty());
