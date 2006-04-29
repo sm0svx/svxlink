@@ -259,7 +259,7 @@ class Logic : public SigC::Object
     void processMacroCmd(std::string& cmd);
     void putCmdOnQueue(Async::Timer *t=0);
     void sendRgrSound(Async::Timer *t=0);
-    int remoteLogicWriteSamples(const short *samples, int len);
+    int remoteLogicWriteSamples(short *samples, int len);
     void remoteLogicFlushSamples(void);
     int audioReceived(short *samples, int len);
     void everyMinute(Async::Timer *t);

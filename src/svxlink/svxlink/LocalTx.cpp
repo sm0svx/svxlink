@@ -64,6 +64,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "AudioFilter.h"
+#include "SigCAudioSink.h"
+#include "SigCAudioSource.h"
 #include "LocalTx.h"
 
 
@@ -209,9 +212,10 @@ LocalTx::LocalTx(Config& cfg, const string& name)
   : Tx(name), name(name), cfg(cfg), audio_io(0), is_transmitting(false),
     serial(0), ptt_pin1(Serial::PIN_NONE), ptt_pin1_rev(false),
     ptt_pin2(Serial::PIN_NONE), ptt_pin2_rev(false), txtot(0),
-    tx_timeout_occured(false), tx_timeout(0), tx_delay(0), ctcss_enable(false)
+    tx_timeout_occured(false), tx_timeout(0), tx_delay(0), ctcss_enable(false),
+    sigc_preemph(0), is_flushing(false)
 {
-  
+
 } /* LocalTx::LocalTx */
 
 
@@ -291,8 +295,13 @@ bool LocalTx::initialize(void)
   }
   
   audio_io = new AudioIO(audio_dev);
-  audio_io->writeBufferFull.connect(transmitBufferFull.slot());
-  audio_io->allSamplesFlushed.connect(allSamplesFlushed.slot());
+  //audio_io->setGain(0.84740);
+  //audio_io->setGain(0.9084);
+  //audio_io->setGain(1.0);
+  //audio_io->writeBufferFull.connect(transmitBufferFull.slot());
+  //audio_io->allSamplesFlushed.connect(allSamplesFlushed.slot());
+  //audio_io->allSamplesFlushed.connect(
+  //    slot(this, &LocalTx::onAllSamplesFlushed));
   
   sine_gen = new SineGenerator(audio_dev);
   
@@ -309,6 +318,30 @@ bool LocalTx::initialize(void)
     audio_io->setGain((100.0 - level) / 100);
   }  
   
+  if (cfg.getValue(name, "PREEMPHASIS", value))
+  {
+    sigc_preemph = new SigCAudioSource;
+    sigc_preemph->sigWriteBufferFull.connect(transmitBufferFull.slot());
+    sigc_preemph->sigAllSamplesFlushed.connect(
+	slot(this, &LocalTx::onAllSamplesFlushed));
+    AudioFilter *filter = new AudioFilter("HpCh1/-3/3000 x LpCh1/-3/3000");
+    filter->registerSource(sigc_preemph);
+    SigCAudioSink *sigc_sink = new SigCAudioSink;
+    sigc_sink->registerSource(filter);
+    sigc_sink->sigWriteSamples.connect(slot(audio_io, &AudioIO::write));
+    sigc_sink->sigFlushSamples.connect(slot(audio_io, &AudioIO::flushSamples));
+    audio_io->writeBufferFull.connect(
+	slot(sigc_sink, &SigCAudioSink::writeBufferFull));
+    audio_io->allSamplesFlushed.connect(
+	slot(sigc_sink, &SigCAudioSink::allSamplesFlushed));
+  }
+  else
+  {
+    audio_io->writeBufferFull.connect(transmitBufferFull.slot());
+    audio_io->allSamplesFlushed.connect(
+        slot(this, &LocalTx::onAllSamplesFlushed));
+  }
+    
   return true;
   
 } /* LocalTx::initialize */
@@ -335,10 +368,12 @@ void LocalTx::transmit(bool do_transmit)
       is_transmitting = false;
       return;
     }
+
     if (ctcss_enable)
     {
       sine_gen->enable(true);
     }
+
     if ((txtot == 0) && (tx_timeout > 0))
     {
       txtot = new Timer(tx_timeout);
@@ -358,10 +393,12 @@ void LocalTx::transmit(bool do_transmit)
   else
   {
     audio_io->close();
+    
     if (ctcss_enable)
     {
       sine_gen->enable(false);
     }
+    
     delete txtot;
     txtot = 0;
     tx_timeout_occured = false;
@@ -377,33 +414,46 @@ void LocalTx::transmit(bool do_transmit)
 
 int LocalTx::transmitAudio(short *samples, int count)
 {
+  is_flushing = false;
+  
   if (!is_transmitting)
   {
     transmitBufferFull(true);
     return 0;
   }
   
-  return audio_io->write(samples, count);
+  int ret;
+  if (sigc_preemph != 0)
+  {
+    ret = sigc_preemph->writeSamples(samples, count);
+  }
+  else
+  {
+    ret = audio_io->write(samples, count);
+  }
+  /*
+  if (ret != count)
+  {
+    printf("ret=%d  count=%d\n", ret, count);
+  }
+  */
+  return ret;
   
 } /* LocalTx::transmitAudio */
 
 
-int LocalTx::samplesToWrite(void)
-{
-  return audio_io->samplesToWrite();
-} /* LocalTx::samplesToWrite */
-
-
 void LocalTx::flushSamples(void)
 {
-  audio_io->flushSamples();
+  is_flushing = true;
+  if (sigc_preemph != 0)
+  {
+    sigc_preemph->flushSamples();
+  }
+  else
+  {
+    audio_io->flushSamples();
+  }
 } /* LocalTx::flushSamples */
-
-
-bool LocalTx::isFlushing(void) const
-{
-  return audio_io->isFlushing();
-} /* LocalTx::isFlushing */
 
 
 void LocalTx::enableCtcss(bool enable)
@@ -533,6 +583,13 @@ bool LocalTx::setPtt(bool tx)
   return true;
 
 } /* LocalTx::setPtt  */
+
+
+void LocalTx::onAllSamplesFlushed(void)
+{
+  is_flushing = false;
+  allSamplesFlushed();
+} /* LocalTx::allSamplesFlushed */
 
 
 

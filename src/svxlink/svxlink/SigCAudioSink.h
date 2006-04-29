@@ -138,7 +138,7 @@ class SigCAudioSink : public AudioSink, public SigC::Object
      */
     virtual int writeSamples(const short *samples, int len)
     {
-      return sigWriteSamples(samples, len);
+      return sigWriteSamples(const_cast<short *>(samples), len);
     }
     
     virtual void flushSamples(void)
@@ -146,8 +146,21 @@ class SigCAudioSink : public AudioSink, public SigC::Object
       sigFlushSamples();
     }
     
-    SigC::Signal2<int, const short *, int>  sigWriteSamples;
-    SigC::Signal0<void>       	      	    sigFlushSamples;
+    void writeBufferFull(bool is_full)
+    {
+      if (!is_full)
+      {
+      	sourceResumeOutput();
+      }
+    }
+    
+    void allSamplesFlushed(void)
+    {
+      sourceAllSamplesFlushed();
+    }
+    
+    SigC::Signal2<int, short *, int>  sigWriteSamples;
+    SigC::Signal0<void>       	      sigFlushSamples;
     
     
   protected:

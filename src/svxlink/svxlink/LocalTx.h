@@ -88,7 +88,8 @@ namespace Async
  ****************************************************************************/
 
 class SineGenerator;
-  
+class SigCAudioSource;
+
 
 /****************************************************************************
  *
@@ -160,12 +161,6 @@ class LocalTx : public Tx
      */
     int transmitAudio(short *samples, int count);
     
-    /**
-     * @brief 	Return the number of samples left to send
-     * @return	Returns the number of samples left to send
-     */
-    int samplesToWrite(void);
-    
     /*
      * @brief 	Call this method to flush all samples in the buffer
      *
@@ -179,7 +174,7 @@ class LocalTx : public Tx
      * @brief 	Check if the tx is busy flushing samples
      * @return	Returns \em true if flushing the buffer or else \em false
      */
-    bool isFlushing(void) const;
+    bool isFlushing(void) const { return is_flushing; }
     
     /**
      * @brief 	Enable/disable CTCSS on TX
@@ -206,10 +201,13 @@ class LocalTx : public Tx
     int       	      	  tx_delay;
     SineGenerator     	  *sine_gen;
     bool      	      	  ctcss_enable;
+    SigCAudioSource   	  *sigc_preemph;
+    bool      	      	  is_flushing;
     
     void txTimeoutOccured(Async::Timer *t);
     int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);
     bool setPtt(bool tx);
+    void onAllSamplesFlushed(void);
 
 };  /* class LocalTx */
 

@@ -1,8 +1,8 @@
 /**
-@file	 SigCAudioSource.h
+@file	 AudioFilter.h
 @brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2005-04-17
+@date	 2006-04-23
 
 A_detailed_description_for_this_file
 
@@ -26,13 +26,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example SigCAudioSource_demo.cpp
-An example of how to use the SigCAudioSource class
+/** @example AudioFilter_demo.cpp
+An example of how to use the AudioFilter class
 */
 
 
-#ifndef SIGC_AUDIO_SOURCE_INCLUDED
-#define SIGC_AUDIO_SOURCE_INCLUDED
+#ifndef AUDIO_FILTER_INCLUDED
+#define AUDIO_FILTER_INCLUDED
 
 
 /****************************************************************************
@@ -41,7 +41,7 @@ An example of how to use the SigCAudioSource class
  *
  ****************************************************************************/
 
-#include <sigc++/signal_system.h>
+#include <string>
 
 
 /****************************************************************************
@@ -58,7 +58,13 @@ An example of how to use the SigCAudioSource class
  *
  ****************************************************************************/
 
+extern "C" {
+#include <fidlib.h>
+};
+
 #include "AudioSource.h"
+#include "AudioSink.h"
+
 
 
 /****************************************************************************
@@ -111,65 +117,62 @@ An example of how to use the SigCAudioSource class
 
 /**
 @brief	A_brief_class_description
-@author Tobias Blomberg
-@date   2005-04-17
+@author Tobias Blomberg / SM0SVX
+@date   2006-04-23
 
 A_detailed_class_description
 
-\include SigCAudioSource_demo.cpp
+\include AudioFilter_demo.cpp
 */
-class SigCAudioSource : public AudioSource, public SigC::Object
+class AudioFilter : public AudioSink, public AudioSource
 {
   public:
     /**
      * @brief 	Default constuctor
      */
-    SigCAudioSource(void) {}
+    AudioFilter(const std::string &filter_spec);
   
     /**
      * @brief 	Destructor
      */
-    ~SigCAudioSource(void) {}
+    ~AudioFilter(void);
   
     /**
      * @brief 	A_brief_member_function_description
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
-    virtual void resumeOutput(void)
-    {
-      sigWriteBufferFull(false);
-    }
+    int writeSamples(const short *samples, int len);
     
-    virtual void allSamplesFlushed(void)
-    {
-      sigAllSamplesFlushed();
-    }
-    
-    int writeSamples(const short *samples, int len)
-    {
-      return sinkWriteSamples(samples, len);
-    }
-    
-    void flushSamples(void)
-    {
-      sinkFlushSamples();
-    }
+    void flushSamples(void);
 
-    SigC::Signal1<void, bool> sigWriteBufferFull;
-    SigC::Signal0<void> sigAllSamplesFlushed;
+    void resumeOutput(void);
     
+    void allSamplesFlushed(void);
+
     
   protected:
     
   private:
+    FidFilter 	*ff;
+    FidRun    	*ff_run;
+    FidFunc   	*ff_func;
+    void      	*ff_buf;
+    short     	buf[1024];
+    int       	buf_cnt;
+    bool      	do_flush;
+    bool      	buf_full;
     
-};  /* class SigCAudioSource */
+    AudioFilter(const AudioFilter&);
+    AudioFilter& operator=(const AudioFilter&);
+    void writeFromBuf(void);
+
+};  /* class AudioFilter */
 
 
 //} /* namespace */
 
-#endif /* SIGC_AUDIO_SOURCE_INCLUDED */
+#endif /* AUDIO_FILTER_INCLUDED */
 
 
 

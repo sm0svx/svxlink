@@ -52,9 +52,15 @@
 
 * Added a de-emphasis filter on received audio. This can be good if
   you connect to the receiver via a 9k6 packet radio connector.
-  The audio must then be de-emphasisen to not sound "thin".
+  The audio must then be de-emphasized to not sound "thin".
   The filter can be turned on/off by the configuration variable
   DEEMPHASIS in the receiver configuration section.
+
+* Added a pre-emphasis filter on transmitted audio. This can be good if
+  you connect to the transmitter via a 9k6 packet radio connector.
+  The audio must then be pre-emphasized to not sound "thick".
+  The filter can be turned on/off by the configuration variable
+  PREEMPHASIS in the transmitter configuration section.
 
 
 

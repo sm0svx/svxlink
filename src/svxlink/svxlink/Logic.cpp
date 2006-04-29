@@ -627,7 +627,7 @@ void Logic::squelchOpen(bool is_open)
 
   if (!is_open)
   {
-    logic_con_out.sinkFlushSamples();
+    logic_con_out.flushSamples();
     if (((exec_cmd_on_sql_close > 0) || (received_digits == "*")) && 
         !anti_flutter && !received_digits.empty())
     {
@@ -1086,7 +1086,7 @@ void Logic::sendRgrSound(Timer *t)
 } /* Logic::sendRogerSound */
 
 
-int Logic::remoteLogicWriteSamples(const short *samples, int len)
+int Logic::remoteLogicWriteSamples(short *samples, int len)
 {
   if (msg_handler->isWritingMessage() || rx().squelchIsOpen() ||
       ((active_module != 0) && active_module->isTransmitting()) ||
@@ -1117,7 +1117,7 @@ int Logic::audioReceived(short *samples, int len)
 {
   short *buf = new short[len];
   memcpy(buf, samples, len * sizeof(*samples));
-  len = logic_con_out.sinkWriteSamples(buf, len);
+  len = logic_con_out.writeSamples(buf, len);
   delete [] buf;
   return len;
 } /* Logic::audioReceived */
