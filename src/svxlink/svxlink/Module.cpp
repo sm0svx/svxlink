@@ -160,7 +160,7 @@ int Module::audioFromModule(short *samples, int count)
 
 void Module::transmit(bool tx)
 {
-  if (m_is_active)
+  if (m_is_active && (tx != m_is_transmitting))
   {
     m_is_transmitting = tx;
     logic()->moduleTransmitRequest(tx);
