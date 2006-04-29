@@ -149,7 +149,7 @@ bool RepeaterLogic::initialize(void)
     return false;
   }
   
-  int open_on_ctcss_fq = 0;
+  float open_on_ctcss_fq = 0;
   int open_on_ctcss_duration = 0;
   int required_1750_duration = 0;
   
@@ -175,7 +175,7 @@ bool RepeaterLogic::initialize(void)
     }
     string fq_str(str.begin(), it);
     string dur_str(it+1, str.end());
-    open_on_ctcss_fq = atoi(fq_str.c_str());
+    open_on_ctcss_fq = atof(fq_str.c_str());
     open_on_ctcss_duration = atoi(dur_str.c_str());
   }
 
