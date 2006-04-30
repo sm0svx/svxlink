@@ -50,6 +50,7 @@
 ifeq ($(OS),)
   -include ./makefile.root
   -include $(ROOT)/makefile.cfg
+  -include $(ROOT)/.config
 endif
 
 include makefile.dirs
