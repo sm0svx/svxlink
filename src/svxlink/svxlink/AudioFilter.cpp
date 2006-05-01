@@ -114,7 +114,8 @@ using namespace std;
  ****************************************************************************/
 
 AudioFilter::AudioFilter(const string &filter_spec)
-  : ff(0), ff_run(0), ff_buf(0), buf_cnt(0), do_flush(false), buf_full(false)
+  : ff(0), ff_run(0), ff_buf(0), buf_cnt(0), do_flush(false), buf_full(false),
+    output_gain(1)
 {
   char spec_buf[256];
   strncpy(spec_buf, filter_spec.c_str(), sizeof(spec_buf));
@@ -161,7 +162,7 @@ int AudioFilter::writeSamples(const float *samples, int len)
   
   for (int i=0; i<len; ++i)
   {
-    buf[buf_cnt+i] = 4 * ff_func(ff_buf, samples[i]);
+    buf[buf_cnt+i] = output_gain * ff_func(ff_buf, samples[i]);
   }
   buf_cnt += len;
   

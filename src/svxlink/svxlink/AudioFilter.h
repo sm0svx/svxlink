@@ -137,6 +137,8 @@ class AudioFilter : public AudioSink, public AudioSource
      */
     ~AudioFilter(void);
   
+    void setOutputGain(float gain) { output_gain = gain; }
+    
     /**
      * @brief 	A_brief_member_function_description
      * @param 	param1 Description_of_param1
@@ -162,6 +164,7 @@ class AudioFilter : public AudioSink, public AudioSource
     int       	buf_cnt;
     bool      	do_flush;
     bool      	buf_full;
+    float     	output_gain;
     
     AudioFilter(const AudioFilter&);
     AudioFilter& operator=(const AudioFilter&);
