@@ -167,7 +167,7 @@ bool NetRx::initialize(void)
   string udp_port(NET_RX_DEFAULT_UDP_PORT);
   cfg().getValue(name(), "UDP_PORT", udp_port);
   
-  tcp_con = new TcpClient(host, atoi(tcp_port.c_str()));
+  tcp_con = new TcpClient(host, atoi(tcp_port.c_str()), sizeof(recv_buf));
   tcp_con->connected.connect(slot(this, &NetRx::tcpConnected));
   tcp_con->disconnected.connect(slot(this, &NetRx::tcpDisconnected));
   tcp_con->dataReceived.connect(slot(this, &NetRx::tcpDataReceived));

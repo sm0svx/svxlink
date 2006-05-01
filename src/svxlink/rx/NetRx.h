@@ -192,7 +192,7 @@ class NetRx : public Rx
   private:
     bool      	      	is_muted;
     Async::TcpClient  	*tcp_con;
-    char      	      	recv_buf[2048];
+    char      	      	recv_buf[4096];
     int       	      	recv_cnt;
     int       	      	recv_exp;
     bool      	      	squelch_open;
