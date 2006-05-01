@@ -64,6 +64,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "AudioClipper.h"
 #include "AudioFilter.h"
 #include "SigCAudioSink.h"
 #include "SigCAudioSource.h"
@@ -324,10 +325,19 @@ bool LocalTx::initialize(void)
     sigc_preemph->sigWriteBufferFull.connect(transmitBufferFull.slot());
     sigc_preemph->sigAllSamplesFlushed.connect(
 	slot(this, &LocalTx::onAllSamplesFlushed));
-    AudioFilter *filter = new AudioFilter("HpCh1/-3/3000 x LpCh1/-3/3000");
-    filter->registerSource(sigc_preemph);
+    
+    AudioFilter *preemph = new AudioFilter("HpBu1/3000");
+    preemph->setOutputGain(8);
+    preemph->registerSource(sigc_preemph);
+    
+    AudioClipper *clipper = new AudioClipper;
+    clipper->registerSource(preemph);
+    
+    AudioFilter *sf = new AudioFilter("LpBu4/3000");
+    sf->registerSource(clipper);
+    
     SigCAudioSink *sigc_sink = new SigCAudioSink;
-    sigc_sink->registerSource(filter);
+    sigc_sink->registerSource(sf);
     sigc_sink->sigWriteSamples.connect(slot(audio_io, &AudioIO::write));
     sigc_sink->sigFlushSamples.connect(slot(audio_io, &AudioIO::flushSamples));
     audio_io->writeBufferFull.connect(
