@@ -1,10 +1,8 @@
 /**
 @file	 AudioProcessor.h
-@brief   A_brief_description_for_this_file
+@brief   The base class for an audio processor class
 @author  Tobias Blomberg / SM0SVX
 @date	 2006-04-23
-
-A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -24,10 +22,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example AudioProcessor_demo.cpp
-An example of how to use the AudioProcessor class
 */
 
 
@@ -116,13 +110,13 @@ extern "C" {
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	The base class for an audio processor
 @author Tobias Blomberg / SM0SVX
 @date   2006-04-23
 
-A_detailed_class_description
-
-\include AudioProcessor_demo.cpp
+This class is the base class for an audio processor. An audio processor is
+a class that is both an audio sink and source. It receives samples, process
+them in some way and send them further down the chain. 
 */
 class AudioProcessor : public AudioSink, public AudioSource
 {
@@ -138,19 +132,29 @@ class AudioProcessor : public AudioSink, public AudioSource
     virtual ~AudioProcessor(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Write audio to the filter
+     * @param 	samples The buffer containing the samples
+     * @param 	len   	The number of samples in the buffer
+     * @return	Return the number of samples processed
      */
     int writeSamples(const float *samples, int len);
     
+    /**
+     * @brief Order a flush of all samples
+     */
     void flushSamples(void);
 
+    /**
+     * @brief Resume output to the sink if previously stopped
+     */
     void resumeOutput(void);
     
+    /**
+     * @brief All samples have been flushed by the sink
+     */
     void allSamplesFlushed(void);
 
-    
+
   protected:
     virtual void processSamples(float *dest, const float *src, int count) = 0;
     
