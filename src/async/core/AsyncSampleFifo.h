@@ -132,7 +132,7 @@ class SampleFifo : public SigC::Object
      * @param 	count The number of samples to put into the FIFO
      * @return	Return the number of samples that have been put into the FIFO
      */
-    int addSamples(short *samples, int count);
+    int addSamples(float *samples, int count);
     
     /**
      * @brief 	Stop automatic audio output via the writeSamples signal
@@ -226,7 +226,7 @@ class SampleFifo : public SigC::Object
      * output of samples is not enabled. Automatic output of samples and this
      * function must not be used at the sample time.
      */
-    int readSamples(short *samples, int count);
+    int readSamples(float *samples, int count);
     
     /**
      * @brief 	Clear all samples from the FIFO
@@ -278,7 +278,7 @@ class SampleFifo : public SigC::Object
      * stopped until the writeBufferFull function is called. This is how the
      * flow control is handled.
      */
-    SigC::Signal2<int, short *, int>  	    writeSamples;
+    SigC::Signal2<int, float *, int>  	    writeSamples;
     
     /**
      * @brief 	A signal that is emitted when the FIFO has been emptied
@@ -296,7 +296,7 @@ class SampleFifo : public SigC::Object
   protected:
     
   private:    
-    short     	*fifo;
+    float     	*fifo;
     int       	fifo_size;
     int       	head, tail;
     bool      	is_stopped;

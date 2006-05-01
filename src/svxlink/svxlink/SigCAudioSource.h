@@ -1,10 +1,8 @@
 /**
 @file	 SigCAudioSource.h
-@brief   A_brief_description_for_this_file
+@brief   Contains an adapter class to connect to an AudioSink using SigC
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-17
-
-A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -24,10 +22,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example SigCAudioSource_demo.cpp
-An example of how to use the SigCAudioSource class
 */
 
 
@@ -110,13 +104,12 @@ An example of how to use the SigCAudioSource class
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	An adapter class to connect to an AudioSink class using SigC
 @author Tobias Blomberg
 @date   2005-04-17
 
-A_detailed_class_description
-
-\include SigCAudioSource_demo.cpp
+This is an adapter class that can be used to interact with an AudioSink
+class using SigC signals and slots.
 */
 class SigCAudioSource : public AudioSource, public SigC::Object
 {
@@ -146,7 +139,7 @@ class SigCAudioSource : public AudioSource, public SigC::Object
       sigAllSamplesFlushed();
     }
     
-    int writeSamples(const short *samples, int len)
+    int writeSamples(const float *samples, int len)
     {
       return sinkWriteSamples(samples, len);
     }

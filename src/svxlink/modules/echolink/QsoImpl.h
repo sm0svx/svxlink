@@ -160,7 +160,7 @@ class QsoImpl : public EchoLink::Qso
      * reimplemented version of EchoLink::Qso::sendAudio throws away
      * the samples if a message is being played to the remote station.
      */
-    int sendAudio(short *buf, int len);
+    int sendAudio(float *buf, int len);
     
     /**
      * @brief 	Send a raw GSM audio packet to the remote station
@@ -247,7 +247,7 @@ class QsoImpl : public EchoLink::Qso
      * @param qso The QSO object
      * @param len The number of samples in the buffer
      */
-    SigC::Signal3<int, short*, int, QsoImpl*> audioReceived;
+    SigC::Signal3<int, float*, int, QsoImpl*> audioReceived;
     
     /**
      * @brief A signal that is emitted when an audio datagram has been received

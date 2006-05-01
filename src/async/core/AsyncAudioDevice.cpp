@@ -342,7 +342,8 @@ bool AudioDevice::open(Mode mode)
   }
   //printf("frag_size=%d\n", frag_size);
   
-  read_buf = new char[BUF_FRAG_COUNT*frag_size];
+  read_buf = new short[BUF_FRAG_COUNT*frag_size];
+  samples = new float[BUF_FRAG_COUNT*frag_size];
   
   return true;
     
@@ -431,7 +432,8 @@ int AudioDevice::samplesToWrite(void) const
  */
 AudioDevice::AudioDevice(const string& dev_name)
   : dev_name(dev_name), use_count(0), current_mode(MODE_NONE), fd(-1),
-    read_watch(0), write_watch(0), read_buf(0), device_caps(0), prebuf(true)
+    read_watch(0), write_watch(0), read_buf(0), device_caps(0), prebuf(true),
+    samples(0)
 {
   char *use_trigger_str = getenv("ASYNC_AUDIO_NOTRIGGER");
   use_trigger = (use_trigger_str == 0);
@@ -490,7 +492,11 @@ void AudioDevice::audioReadHandler(FdWatch *watch)
     }
     
     //printf("Read %d samples\n", cnt / sizeof(short));
-    audioRead(reinterpret_cast<short *>(read_buf), cnt/sizeof(short));
+    for (unsigned i=0; i<cnt/sizeof(short); ++i)
+    {
+      samples[i] = static_cast<float>(read_buf[i]) / 32768.0;
+    }
+    audioRead(samples, cnt/sizeof(short));
   }
     
 } /* AudioDevice::audioReadHandler */
@@ -531,7 +537,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
     //fragments = max(0, 2 - (info.fragstotal - info.fragments));
     fragments = info.fragments;
     fragsize = info.fragsize / sizeof(short);
-    samples_to_write = min(sizeof(buf) / sizeof(short),
+    samples_to_write = min(sizeof(buf) / sizeof(*buf),
     		fragments * fragsize);
     //samples_to_write = min(samples_to_write, 7936U);
     
@@ -596,11 +602,11 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       if (((*it)->mode() == AudioIO::MODE_WR) ||
       	  ((*it)->mode() == AudioIO::MODE_RDWR))
       {
-	short tmp[sizeof(buf)/sizeof(short)];
+	float tmp[sizeof(buf)/sizeof(*buf)];
 	int samples_read = (*it)->readSamples(tmp, samples_to_write);
 	for (int i=0; i<samples_read; ++i)
 	{
-      	  buf[i] += tmp[i];
+      	  buf[i] += static_cast<short>(32767.0 * tmp[i]);
 	}
       }
     }  
@@ -624,7 +630,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
     //fwrite(buf, sizeof(*buf), samples_to_write, f);
     //fclose(f);
     
-    assert(written / sizeof(short) == samples_to_write);
+    assert(written / sizeof(*buf) == samples_to_write);
     /*
     if (do_flush)
     {
@@ -656,6 +662,9 @@ void AudioDevice::closeDevice(void)
   
   delete [] read_buf;
   read_buf = 0;
+  
+  delete [] samples;
+  samples = 0;
   
   if (fd != -1)
   {

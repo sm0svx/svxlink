@@ -212,9 +212,9 @@ class LocalRx : public Rx
     FidFunc   	      	      	*deemph_func;
     void      	      	      	*deemph_buf;
     
-    int audioRead(short *samples, int count);
+    int audioRead(float *samples, int count);
     void resetHighpassFilter(void);
-    void highpassFilter(short *samples, int count);
+    void highpassFilter(float *samples, int count);
 
 };  /* class LocalRx */
 

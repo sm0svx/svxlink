@@ -13,8 +13,8 @@
 #include <AsyncAudioIO.h>
 #include <AsyncTimer.h>
 
-#include "ToneDetector.h"
-#include "DtmfDecoder.h"
+#include "../rx/ToneDetector.h"
+#include "../rx/DtmfDecoder.h"
 #include "DtmfPlot.h"
 
 using namespace std;
@@ -146,16 +146,17 @@ void dtmf_digit_detected(char digit)
 } /*  */
 
 
-int update_peak_meter(short *samples, int count)
+int update_peak_meter(float *samples, int count)
 {
   static short peak = 0;
   static int tot_count = 0;
   
   for (int i=0; i<count; ++i)
   {
-    if (abs(samples[i]) > peak)
+    short sample = static_cast<short>(samples[i] * 32767.0);
+    if (abs(sample) > peak)
     {
-      peak = abs(samples[i]);
+      peak = abs(sample);
     }
     if (++tot_count >= 800)
     {

@@ -357,7 +357,7 @@ class Module : public SigC::Object
      * received from the radio receiver. The samples are 16 bit signed samples.
      * This function will only be called if this module is active.
      */
-    virtual int audioFromRx(short *samples, int count) { return count; }
+    virtual int audioFromRx(float *samples, int count) { return count; }
     
     /**
      * @brief 	Tell the module that all announcement messages has been played
@@ -431,7 +431,7 @@ class Module : public SigC::Object
      * "transmit" function.
      * The module must be active for this function to do anything.
      */
-    int audioFromModule(short *samples, int count);
+    int audioFromModule(float *samples, int count);
     
     /**
      * @brief 	Called by the module to activate/deactivate the transmitter

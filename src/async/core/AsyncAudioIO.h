@@ -178,7 +178,7 @@ class AudioIO : public SigC::Object
      * @return	Returns the number of samples written on success or else
      *	      	-1 on failure
      */
-    int write(short *buf, int count);
+    int write(float *buf, int count);
     
     /**
      * @brief 	Find out how many samples there are in the output buffer
@@ -252,7 +252,7 @@ class AudioIO : public SigC::Object
      * @param 	buf   A buffer containing the read samples
      * @param 	count The number of samples in the buffer
      */
-    SigC::Signal2<int, short *, int> audioRead;
+    SigC::Signal2<int, float *, int> audioRead;
 
     /**
      * @brief 	A signal that is emitted when the write buffer is full
@@ -294,7 +294,7 @@ class AudioIO : public SigC::Object
     friend class AudioDevice;
     AudioDevice *device(void) const { return audio_dev; }
     SampleFifo &writeFifo(void) const { return *write_fifo; }
-    int readSamples(short *samples, int count);
+    int readSamples(float *samples, int count);
     bool doFlush(void) const { return do_flush; }
     
 };  /* class AudioIO */

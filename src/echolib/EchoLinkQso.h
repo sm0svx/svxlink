@@ -297,7 +297,7 @@ class Qso : public SigC::Object
      * @param 	len The length, in samples, of the buffer to send
      * @return	Returns the number of samples written
      */
-    int sendAudio(short *buf, int len);
+    int sendAudio(float *buf, int len);
     
     /**
      * @brief 	Send a raw GSM audio packet to the remote station
@@ -398,7 +398,7 @@ class Qso : public SigC::Object
      * @param buf A pointer to the buffer that contains the audio
      * @param len The number of samples in the buffer
      */
-    SigC::Signal2<int, short*, int> audioReceived;
+    SigC::Signal2<int, float*, int> audioReceived;
     
     /**
      * @brief A signal that is emitted when an audio datagram has been received

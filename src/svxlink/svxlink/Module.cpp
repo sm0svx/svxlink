@@ -148,7 +148,7 @@ void Module::playFile(const string& path)
 } /* Module::playFile */
 
 
-int Module::audioFromModule(short *samples, int count)
+int Module::audioFromModule(float *samples, int count)
 {
   if (m_is_active)
   {

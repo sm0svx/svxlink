@@ -229,18 +229,18 @@ class MsgAudio : public Msg
 {
   public:
     static const int TYPE = 5;
-    MsgAudio(short *samples, int count)
+    MsgAudio(float *samples, int count)
       : Msg(TYPE, sizeof(MsgAudio))
     {
       assert(count <= 512);
       memcpy(m_samples, samples, count * sizeof(*samples));
       m_count = count;
     }
-    short *samples(void) { return m_samples; }
+    float *samples(void) { return m_samples; }
     int count(void) const { return m_count; }
   
   private:
-    short m_samples[512];
+    float m_samples[512];
     int   m_count;
     
 }; /* MsgAudio */

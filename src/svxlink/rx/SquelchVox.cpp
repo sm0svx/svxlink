@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdio.h>
 #include <cstdlib>
 #include <iostream>
+#include <cmath>
 
 
 /****************************************************************************
@@ -157,7 +158,7 @@ bool SquelchVox::initialize(Config& cfg, const string& rx_name)
     return false;
   }
   buf_size = 8000 * atoi(value.c_str()) / 1000;
-  buf = new short[buf_size];
+  buf = new float[buf_size];
   for (int i=0; i<buf_size; ++i)
   {
     buf[i] = 0;
@@ -182,8 +183,8 @@ bool SquelchVox::initialize(Config& cfg, const string& rx_name)
 
 void SquelchVox::setVoxLimit(short limit)
 {
-  up_limit = limit * buf_size;
-  down_limit = limit * buf_size;
+  up_limit = pow(limit / 10000.0, 2) * buf_size;
+  down_limit = pow(limit / 10000.0, 2) * buf_size;
 } /* SquelchVox::setVoxLimit */
 
 
@@ -224,7 +225,7 @@ void SquelchVox::reset(void)
  * Bugs:      
  *------------------------------------------------------------------------
  */
-int SquelchVox::processSamples(short *samples, int count)
+int SquelchVox::processSamples(float *samples, int count)
 {
   int orig_count = count;
   
@@ -244,12 +245,12 @@ int SquelchVox::processSamples(short *samples, int count)
   for (int i=0; i<count; ++i)
   {
     sum -= buf[head];
-    buf[head] = abs(samples[i]);
+    buf[head] = samples[i] * samples[i];
     sum += buf[head];
     head = (head >= buf_size-1) ? 0 : head + 1;
     if (sum >= up_limit)
     {
-      //printf("sum=%ld\n", sum);
+      //printf("sum=%f\n", sum);
       setOpen(true);
     }
     else if (isOpen() && (sum < down_limit))
@@ -257,6 +258,8 @@ int SquelchVox::processSamples(short *samples, int count)
       setOpen(false);
     }
   }
+
+  //printf("sum=%f\n", 10000 * sqrt(sum / buf_size));
   
   return orig_count;
   

@@ -22,7 +22,7 @@ class MsgHandler : public SigC::Object
     void begin(void);
     void end(void);
     
-    SigC::Signal2<int, short*, int> writeAudio;
+    SigC::Signal2<int, float*, int> writeAudio;
     SigC::Signal0<void>       	    allMsgsWritten;
     
     
@@ -49,7 +49,7 @@ class MsgHandler : public SigC::Object
     void playNextMsg(void);
     void executeCmd(const std::string& cmd);
     void writeFromFile(void);
-    int readSamples(short *samples, int len);
+    int readSamples(float *samples, int len);
     void unreadSamples(int len);
 
 

@@ -11,6 +11,9 @@
 
 * New method: TcpConnection::isConnected.
 
+* Now using float instead of short int to represent samples. This make it
+  easier to apply audio processing on them.
+
 
 
  0.13.0 -- 02 Dec 2005

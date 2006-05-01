@@ -447,7 +447,7 @@ void Logic::recordStop(void)
 } /* Logic::recordStart */
 
 
-void Logic::audioFromModule(short *samples, int count)
+void Logic::audioFromModule(float *samples, int count)
 {
   module_tx_fifo->addSamples(samples, count);
 } /* Logic::audioFromModule */
@@ -681,7 +681,7 @@ void Logic::transmit(bool do_transmit)
 } /* Logic::transmit */
 
 
-int Logic::transmitAudio(short *samples, int count)
+int Logic::transmitAudio(float *samples, int count)
 {
   return tx().transmitAudio(samples, count);
 } /* Logic::transmitAudio */
@@ -1086,7 +1086,7 @@ void Logic::sendRgrSound(Timer *t)
 } /* Logic::sendRogerSound */
 
 
-int Logic::remoteLogicWriteSamples(short *samples, int len)
+int Logic::remoteLogicWriteSamples(float *samples, int len)
 {
   if (msg_handler->isWritingMessage() || rx().squelchIsOpen() ||
       ((active_module != 0) && active_module->isTransmitting()) ||
@@ -1098,7 +1098,7 @@ int Logic::remoteLogicWriteSamples(short *samples, int len)
   {
     remoteLogicTransmitRequest(true);
   }
-  short *buf = new short[len];
+  float *buf = new float[len];
   memcpy(buf, samples, len * sizeof(*samples));
   int cnt = transmitAudio(buf, len);
   delete [] buf;
@@ -1113,9 +1113,9 @@ void Logic::remoteLogicFlushSamples(void)
 } /* Logic::remoteLogicFlushSamples */
 
 
-int Logic::audioReceived(short *samples, int len)
+int Logic::audioReceived(float *samples, int len)
 {
-  short *buf = new short[len];
+  float *buf = new float[len];
   memcpy(buf, samples, len * sizeof(*samples));
   len = logic_con_out.writeSamples(buf, len);
   delete [] buf;

@@ -225,7 +225,7 @@ void AudioIO::close(void)
 } /* AudioIO::close */
 
 
-int AudioIO::write(short *samples, int count)
+int AudioIO::write(float *samples, int count)
 {
   assert((io_mode == MODE_WR) || (io_mode == MODE_RDWR));
   
@@ -238,16 +238,16 @@ int AudioIO::write(short *samples, int count)
     lead_in_pos = 0;
   }
   
-  short *buf = samples;;
+  float *buf = samples;;
   if (lead_in_pos < 100)
   {
-    buf = new short[count];
+    buf = new float[count];
     int cnt = min(count, 100-lead_in_pos);
     for (int i=0; i<cnt; ++i)
     {
       float fade_gain = pow(2, lead_in_pos++ / 10.0) / pow(2, 10.0);
       //printf("gain=%.4f  lead_in_pos=%d\n", gain, lead_in_pos);
-      buf[i] = static_cast<short>(fade_gain * samples[i]);
+      buf[i] = fade_gain * samples[i];
     }
     for (int i=cnt; i<count; ++i)
     {
@@ -379,7 +379,7 @@ void AudioIO::flushDone(Timer *timer)
 } /* AudioIO::writeFileDone */
 
 
-int AudioIO::readSamples(short *samples, int count)
+int AudioIO::readSamples(float *samples, int count)
 {
   if (write_fifo->empty())
   {
@@ -392,7 +392,7 @@ int AudioIO::readSamples(short *samples, int count)
   {
     for (int i=0; i<samples_read; ++i)
     {
-      samples[i] = static_cast<short>(m_gain * samples[i]);
+      samples[i] = m_gain * samples[i];
     }
   }
   
@@ -413,7 +413,7 @@ int AudioIO::readSamples(short *samples, int count)
 	       gain, write_fifo->samplesInFifo(), samples_read, pos,
 	       start_pos, i);
 	*/
-      	samples[i] = static_cast<short>(fade_gain * samples[i]);
+      	samples[i] = fade_gain * samples[i];
       }
     }
   }

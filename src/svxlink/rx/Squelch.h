@@ -196,7 +196,7 @@ class Squelch : public SigC::Object
      * @param 	count The number of samples in the buffer
      * @return	Return the number of processed samples
      */
-    int audioIn(short *samples, int count)
+    int audioIn(float *samples, int count)
     {
       int ret_count = processSamples(samples, count);
       if (hangtime_left > 0)
@@ -241,7 +241,7 @@ class Squelch : public SigC::Object
      * @param 	count The number of samples in the buffer
      * @return	Return the number of processed samples
      */
-    virtual int processSamples(short *samples, int count) = 0;
+    virtual int processSamples(float *samples, int count) = 0;
 
     /**
      * @brief 	Set the state of the squelch

@@ -351,7 +351,7 @@ void ModuleParrot::squelchOpen(bool is_open)
 } /* ModuleParrot::squelchOpen */
 
 
-int ModuleParrot::audioFromRx(short *samples, int count)
+int ModuleParrot::audioFromRx(float *samples, int count)
 {
   if (squelch_is_open)
   {
@@ -376,10 +376,10 @@ void ModuleParrot::allMsgsWritten(void)
 
 
 
-int ModuleParrot::audioFromFifo(short *samples, int count)
+int ModuleParrot::audioFromFifo(float *samples, int count)
 {
   //printf("Writing %d samples from FIFO...\n", count);
-  audioFromModule(const_cast<short *>(samples), count);
+  audioFromModule(samples, count);
   return count;
 } /* ModuleParrot::audioFromFifo */
 

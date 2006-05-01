@@ -355,7 +355,7 @@ void RepeaterLogic::remoteLogicTransmitRequest(bool do_tx)
  *
  ****************************************************************************/
 
-int RepeaterLogic::audioReceived(short *samples, int count)
+int RepeaterLogic::audioReceived(float *samples, int count)
 {
   if (repeater_is_up && repeating_enabled && !no_repeat)
   {

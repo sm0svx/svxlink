@@ -26,7 +26,7 @@ PROGS		=
 CPPPROGS      	= $(BIN)/dtmf_plot
 
 # Sources other than the main files
-PRGSRC		= ToneDetector.cpp DtmfDecoder.cpp
+PRGSRC		= ../rx/ToneDetector.cpp ../rx/DtmfDecoder.cpp
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -lasyncqt -lrx

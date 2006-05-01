@@ -145,7 +145,7 @@ class Recorder : public SigC::Object
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
-    int writeSamples(short *samples, int len);
+    int writeSamples(float *samples, int len);
     
 
   protected:

@@ -192,7 +192,7 @@ class AudioDevice : public SigC::Object
      * @param 	buf   A buffer containing the read samples
      * @param 	count The number of samples in the buffer
      */
-    SigC::Signal2<int, short *, int> audioRead;
+    SigC::Signal2<int, float *, int> audioRead;
 
     /**
      * @brief 	A signal that is emitted when the write buffer is full
@@ -231,10 +231,11 @@ class AudioDevice : public SigC::Object
     int       	      	fd;
     FdWatch	      	*read_watch;
     FdWatch	      	*write_watch;
-    char      	      	*read_buf;
+    short      	      	*read_buf;
     int       	      	device_caps;
     bool      	      	use_trigger;
     bool		prebuf;
+    float     	      	*samples;
     
     void audioReadHandler(FdWatch *watch);
     void writeSpaceAvailable(FdWatch *watch);

@@ -139,12 +139,12 @@ class AudioPacer : public SigC::Object
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
-    int audioInput(short *samples, int count);
+    int audioInput(float *samples, int count);
     void flushAllAudio(void);
     
     
     SigC::Signal1<void, bool>       audioInputBufFull;
-    SigC::Signal2<int, short*, int> audioOutput;
+    SigC::Signal2<int, float*, int> audioOutput;
     SigC::Signal0<void>       	    allAudioFlushed;
     
     
@@ -154,7 +154,7 @@ class AudioPacer : public SigC::Object
     int       	  sample_rate;
     int       	  buf_size;
     int       	  prebuf_time;
-    short     	  *buf;
+    float     	  *buf;
     int       	  buf_pos;
     int       	  prebuf_samples;
     Async::Timer  *pase_timer;

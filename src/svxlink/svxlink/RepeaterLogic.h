@@ -172,7 +172,7 @@ class RepeaterLogic : public Logic
     bool      	    activate_on_sql_close;
     bool            no_repeat;
     
-    int audioReceived(short *samples, int count);
+    int audioReceived(float *samples, int count);
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);
     void setUp(bool up);

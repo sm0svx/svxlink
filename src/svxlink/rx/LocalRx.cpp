@@ -404,15 +404,14 @@ void LocalRx::reset(void)
  *
  ****************************************************************************/
 
-int LocalRx::audioRead(short *samples, int count)
+int LocalRx::audioRead(float *samples, int count)
 {
   bool was_open = squelch->isOpen();
   
   double rms = 0.0;
   for (int i=0; i<count; ++i)
   {
-    double sample = samples[i] / 32768.0;
-    rms += pow(hpff_func(hpff_buf, sample), 2);
+    rms += pow(hpff_func(hpff_buf, samples[i]), 2);
   }
   last_siglev = sqrt(rms / count);
     
@@ -433,7 +432,7 @@ int LocalRx::audioRead(short *samples, int count)
   
   if (squelch->isOpen() && !is_muted)
   {
-    short *filtered = new short[count];
+    float *filtered = new float[count];
     for (int i=0; i<count; ++i)
     {
       if (deemph != 0)
@@ -492,12 +491,12 @@ void LocalRx::resetHighpassFilter(void)
 } /* LocalRx::resetHighpassFilter */
 
 
-void LocalRx::highpassFilter(short *samples, int count)
+void LocalRx::highpassFilter(float *samples, int count)
 { 
   for (int i=0; i<count; ++i)
   {
     xv[0] = xv[1]; xv[1] = xv[2]; xv[2] = xv[3]; xv[3] = xv[4]; 
-    xv[4] = static_cast<float>(samples[i]) / 32768 / GAIN;
+    xv[4] = samples[i] / GAIN;
     yv[0] = yv[1]; yv[1] = yv[2]; yv[2] = yv[3]; yv[3] = yv[4]; 
     yv[4] = (xv[0] + xv[4]) - 4 * (xv[1] + xv[3]) + 6 * xv[2]
                    + (-0.5393551283 * yv[0]) + (2.4891382938 * yv[1])
@@ -508,7 +507,7 @@ void LocalRx::highpassFilter(short *samples, int count)
       printf("*** Distorsion: %.1f\n", yv[4]);
     }
     */
-    samples[i] = static_cast<short>(32767 * yv[4]);
+    samples[i] = yv[4];
   }
 } /* LocalRx::highpassFilter */
 

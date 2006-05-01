@@ -166,17 +166,17 @@ class SquelchVox : public Squelch
 
     
   protected:
-    int processSamples(short *samples, int count);
+    int processSamples(float *samples, int count);
     
   private:
-    short *buf;
-    int   buf_size;
-    int   head;
-    long  sum;
-    long  up_limit;
-    long  down_limit;
-    int   start_delay;
-    int   start_delay_left;
+    float   *buf;
+    int     buf_size;
+    int     head;
+    double  sum;
+    double  up_limit;
+    double  down_limit;
+    int     start_delay;
+    int     start_delay_left;
     
 };  /* class SquelchVox */
 

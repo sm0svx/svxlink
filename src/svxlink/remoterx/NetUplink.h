@@ -187,7 +187,7 @@ class NetUplink : public Uplink
      * @param 	samples The buffer containing the samples
      * @param 	count 	The number of samples in the buffer
      */
-    int audioReceived(short *samples, int count);
+    int audioReceived(float *samples, int count);
     
 
 };  /* class NetUplink */

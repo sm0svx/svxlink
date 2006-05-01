@@ -227,19 +227,19 @@ void MsgHandler::executeCmd(const string& cmd)
 
 void MsgHandler::writeFromFile(void)
 {
-  short buf[WRITE_BLOCK_SIZE];
+  float samples[WRITE_BLOCK_SIZE];
   
   int written;
   int read_cnt;
   do
   {
-    read_cnt = readSamples(buf, sizeof(buf) / sizeof(buf[0]));
+    read_cnt = readSamples(samples, WRITE_BLOCK_SIZE);
     if (read_cnt == 0)
     {
       goto done;
     }
     
-    written = writeAudio(buf, read_cnt);
+    written = writeAudio(samples, read_cnt);
     if (written == -1)
     {
       perror("write in MsgHandler::writeFromFile");
@@ -265,9 +265,10 @@ void MsgHandler::writeFromFile(void)
 } /* MsgHandler::writeFromFile */
 
 
-int MsgHandler::readSamples(short *samples, int len)
+int MsgHandler::readSamples(float *samples, int len)
 {
   int read_cnt;
+  short buf[len];
   
   if (silence_left >= 0)
   {
@@ -285,7 +286,7 @@ int MsgHandler::readSamples(short *samples, int len)
   }
   else
   {
-    read_cnt = read(file, samples, len * sizeof(*samples));
+    read_cnt = read(file, buf, len * sizeof(*buf));
     if (read_cnt == -1)
     {
       perror("read in MsgHandler::readSamples");
@@ -293,7 +294,11 @@ int MsgHandler::readSamples(short *samples, int len)
     }
     else
     {
-      read_cnt /= sizeof(*samples);
+      read_cnt /= sizeof(*buf);
+      for (int i=0; i<read_cnt; ++i)
+      {
+      	samples[i] = static_cast<float>(buf[i]) / 32768;
+      }
     }
   }
   

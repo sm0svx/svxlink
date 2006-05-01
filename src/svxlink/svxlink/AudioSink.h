@@ -1,10 +1,8 @@
 /**
 @file	 AudioSink.h
-@brief   A_brief_description_for_this_file
+@brief   This file contains the base class for an audio sink
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-17
-
-A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -24,10 +22,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example AudioSink_demo.cpp
-An example of how to use the AudioSink class
 */
 
 
@@ -109,13 +103,12 @@ class AudioSource;
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	The base class for an audio sink
 @author Tobias Blomberg
 @date   2005-04-17
 
-A_detailed_class_description
-
-\include AudioSink_demo.cpp
+This is the base class for an audio sink. An audio sink is a class that
+can consume audio.
 */
 class AudioSink
 {
@@ -141,7 +134,7 @@ class AudioSink
     bool isRegistered(void) const { return m_source != 0; }
     AudioSource *source(void) const { return m_source; }
     
-    virtual int writeSamples(const short *samples, int len) = 0;
+    virtual int writeSamples(const float *samples, int len) = 0;
     
     virtual void flushSamples(void) = 0;    
     

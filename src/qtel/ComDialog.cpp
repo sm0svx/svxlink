@@ -417,7 +417,7 @@ void ComDialog::onStationListUpdated(void)
 } /* ComDialog::onStationListUpdated */
 
 
-int ComDialog::micAudioRead(short *buf, int len)
+int ComDialog::micAudioRead(float *buf, int len)
 {
   int samples_sent = 0;
   if (is_transmitting)

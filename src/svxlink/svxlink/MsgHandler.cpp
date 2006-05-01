@@ -96,7 +96,7 @@ class QueueItem
   public:
     virtual ~QueueItem(void) {}
     virtual bool initialize(void) { return true; }
-    virtual int readSamples(short *samples, int len) = 0;
+    virtual int readSamples(float *samples, int len) = 0;
     virtual void unreadSamples(int len) = 0;
 };
 
@@ -105,7 +105,7 @@ class SilenceQueueItem : public QueueItem
   public:
     SilenceQueueItem(int len, int sample_rate)
       : len(len), silence_left(sample_rate * len / 1000) {}
-    int readSamples(short *samples, int len);
+    int readSamples(float *samples, int len);
     void unreadSamples(int len);
 
   private:
@@ -120,7 +120,7 @@ class ToneQueueItem : public QueueItem
     ToneQueueItem(int fq, int amp, int len, int sample_rate)
       : fq(fq), amp(amp), tone_len(sample_rate * len / 1000), pos(0),
       	sample_rate(sample_rate) {}
-    int readSamples(short *samples, int len);
+    int readSamples(float *samples, int len);
     void unreadSamples(int len);
 
   private:
@@ -138,7 +138,7 @@ class FileQueueItem : public QueueItem
     FileQueueItem(const std::string& filename) : filename(filename), file(-1) {}
     ~FileQueueItem(void);
     bool initialize(void);
-    int readSamples(short *samples, int len);
+    int readSamples(float *samples, int len);
     void unreadSamples(int len);
 
   private:
@@ -343,7 +343,7 @@ void MsgHandler::playMsg(void)
 
 void MsgHandler::writeSamples(void)
 {
-  short buf[WRITE_BLOCK_SIZE];
+  float buf[WRITE_BLOCK_SIZE];
   
   QueueItem *item = msg_queue.front();
   
@@ -351,7 +351,7 @@ void MsgHandler::writeSamples(void)
   int read_cnt;
   do
   {
-    read_cnt = item->readSamples(buf, sizeof(buf) / sizeof(buf[0]));
+    read_cnt = item->readSamples(buf, sizeof(buf) / sizeof(*buf));
     if (read_cnt == 0)
     {
       goto done;
@@ -411,10 +411,11 @@ bool FileQueueItem::initialize(void)
 } /* FileQueueItem::initialize */
 
 
-int FileQueueItem::readSamples(short *samples, int len)
+int FileQueueItem::readSamples(float *samples, int len)
 {
+  short buf[len];
   assert(file != -1);
-  int read_cnt = read(file, samples, len * sizeof(*samples));
+  int read_cnt = read(file, buf, len * sizeof(*buf));
   if (read_cnt == -1)
   {
     perror("read in FileQueueItem::readSamples");
@@ -422,7 +423,11 @@ int FileQueueItem::readSamples(short *samples, int len)
   }
   else
   {
-    read_cnt /= sizeof(*samples);
+    read_cnt /= sizeof(*buf);
+    for (int i=0; i<read_cnt; ++i)
+    {
+      samples[i] = static_cast<float>(buf[i]) / 32768.0;
+    }
   }
   
   return read_cnt;
@@ -446,7 +451,7 @@ void FileQueueItem::unreadSamples(int len)
  *
  ****************************************************************************/
 
-int SilenceQueueItem::readSamples(short *samples, int len)
+int SilenceQueueItem::readSamples(float *samples, int len)
 {
   assert(silence_left != -1);
   
@@ -480,13 +485,12 @@ void SilenceQueueItem::unreadSamples(int len)
  *
  ****************************************************************************/
 
-int ToneQueueItem::readSamples(short *samples, int len)
+int ToneQueueItem::readSamples(float *samples, int len)
 {
   int read_cnt = min(len, tone_len-pos);
   for (int i=0; i<read_cnt; ++i)
   {
-    samples[i] = static_cast<short>(
-      	    amp / 1000.0 * 32767.0 * sin(2*M_PI*fq*pos/sample_rate));
+    samples[i] = amp / 1000.0 * sin(2 * M_PI * fq * pos / sample_rate);
     ++pos;
   }
   
@@ -506,15 +510,3 @@ void ToneQueueItem::unreadSamples(int len)
 /*
  * This file has not been truncated
  */
-
-
-
-
-
-
-
-
-
-
-
-

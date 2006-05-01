@@ -142,7 +142,7 @@ class AudioFilter : public AudioSink, public AudioSource
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
-    int writeSamples(const short *samples, int len);
+    int writeSamples(const float *samples, int len);
     
     void flushSamples(void);
 
@@ -158,7 +158,7 @@ class AudioFilter : public AudioSink, public AudioSource
     FidRun    	*ff_run;
     FidFunc   	*ff_func;
     void      	*ff_buf;
-    short     	buf[1024];
+    float     	buf[1024];
     int       	buf_cnt;
     bool      	do_flush;
     bool      	buf_full;

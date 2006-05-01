@@ -143,7 +143,7 @@ AudioFilter::~AudioFilter(void)
 } /* AudioFilter::~AudioFilter */
 
 
-int AudioFilter::writeSamples(const short *samples, int len)
+int AudioFilter::writeSamples(const float *samples, int len)
 {
   //cout << "AudioFilter::writeSamples: len=" << len << endl;
   
@@ -161,7 +161,7 @@ int AudioFilter::writeSamples(const short *samples, int len)
   
   for (int i=0; i<len; ++i)
   {
-    buf[buf_cnt+i] = 4 * static_cast<short int>(ff_func(ff_buf, samples[i]));
+    buf[buf_cnt+i] = 4 * ff_func(ff_buf, samples[i]);
   }
   buf_cnt += len;
   

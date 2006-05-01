@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <unistd.h>
 
 #include <cstdio>
+#include <cmath>
 #include <iostream>
 
 
@@ -340,16 +341,16 @@ void EchoLinkQsoTest::chatMsg(const string& msg)
 } /* EchoLinkQsoTest::chatMsg */
 
 
-int EchoLinkQsoTest::micAudioRead(short *buf, int len)
+int EchoLinkQsoTest::micAudioRead(float *buf, int len)
 {
   if (is_transmitting)
   {
-    long average = 0;
+    double average = 0;
     for(int i=0; i<len; i++)
     {
-      average += abs(buf[i]);
+      average += fabs(buf[i] * 32767);
     }
-    average /= 320;
+    average /= 320.0;
     if (average > vox_limit)
     {
       sendAudio(buf, len);

@@ -192,7 +192,7 @@ class MsgHandler : public SigC::Object
      * @param 	count The number of samples to write
      * @return	The slot should return the number of samples written
      */
-    SigC::Signal2<int, short*, int> writeAudio;
+    SigC::Signal2<int, float*, int> writeAudio;
     
     /**
      * @brief 	A signal that is emitted when all messages has been written

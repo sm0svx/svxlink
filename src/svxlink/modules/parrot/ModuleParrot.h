@@ -143,10 +143,10 @@ class ModuleParrot : public Module
     void dtmfDigitReceived(char digit);
     void dtmfCmdReceived(const std::string& cmd);
     void squelchOpen(bool is_open);
-    int audioFromRx(short *samples, int count);
+    int audioFromRx(float *samples, int count);
     void allMsgsWritten(void);
 
-    int audioFromFifo(short *samples, int count);
+    int audioFromFifo(float *samples, int count);
     void allSamplesWritten(void);
     void onRepeatDelayExpired(Async::Timer *t);
     void execCmdQueue(void);

@@ -159,7 +159,7 @@ class LocalTx : public Tx
      * @param 	count 	The number of samples in the supplied buffer
      * @return	Returns the number of samples transmitted
      */
-    int transmitAudio(short *samples, int count);
+    int transmitAudio(float *samples, int count);
     
     /*
      * @brief 	Call this method to flush all samples in the buffer

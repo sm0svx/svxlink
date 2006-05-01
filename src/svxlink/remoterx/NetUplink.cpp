@@ -363,7 +363,7 @@ void NetUplink::toneDetected(float tone_fq)
 } /* NetUplink::toneDetected */
 
 
-int NetUplink::audioReceived(short *samples, int count)
+int NetUplink::audioReceived(float *samples, int count)
 {
   //cout << "NetUplink::audioReceived: count=" << count << endl;
   count = min(count, 512);

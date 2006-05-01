@@ -109,7 +109,7 @@ class DtmfToneDetector : public SigC::Object
     }
     */
     
-    int processSamples(short *samples, int count)
+    int processSamples(float *samples, int count)
     {
       assert(count == max(BASETONE_N, OVERTONE_N));
       
@@ -207,7 +207,7 @@ DtmfDecoder::~DtmfDecoder(void)
 } /* DtmfDecoder::~DtmfDecoder */
 
 
-int DtmfDecoder::processSamples(short *buf, int len)
+int DtmfDecoder::processSamples(float *buf, int len)
 {
   //printf("len=%d\n", len);
   
@@ -217,7 +217,7 @@ int DtmfDecoder::processSamples(short *buf, int len)
   while (len > 0)
   {
     int samples_to_copy = min(block_len - buffered_samples, len);
-    memcpy(sample_buf + buffered_samples, buf, sizeof(short) * samples_to_copy);
+    memcpy(sample_buf + buffered_samples, buf, sizeof(*buf) * samples_to_copy);
     buffered_samples += samples_to_copy;
     if (buffered_samples == block_len)
     {

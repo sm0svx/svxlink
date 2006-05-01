@@ -1,10 +1,8 @@
 /**
 @file	 SigCAudioSink.h
-@brief   A_brief_description_for_this_file
+@brief   Contains an adapter class to connect to an AudioSource using SigC
 @author  Tobias Blomberg / SM0SVX
-@date	 2005-02-
-
-A_detailed_description_for_this_file
+@date	 2005-04-17
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -24,10 +22,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example SigCAudioSink_demo.cpp
-An example of how to use the SigCAudioSink class
 */
 
 
@@ -110,13 +104,12 @@ An example of how to use the SigCAudioSink class
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	An adapter class to connect to an AudioSource class using SigC
 @author Tobias Blomberg
 @date   2005-04-17
 
-A_detailed_class_description
-
-\include SigCAudioSink_demo.cpp
+This is an adapter class that can be used to interact with an AudioSource
+class using SigC signals and slots.
 */
 class SigCAudioSink : public AudioSink, public SigC::Object
 {
@@ -136,9 +129,9 @@ class SigCAudioSink : public AudioSink, public SigC::Object
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
-    virtual int writeSamples(const short *samples, int len)
+    virtual int writeSamples(const float *samples, int len)
     {
-      return sigWriteSamples(const_cast<short *>(samples), len);
+      return sigWriteSamples(const_cast<float *>(samples), len);
     }
     
     virtual void flushSamples(void)
@@ -159,7 +152,7 @@ class SigCAudioSink : public AudioSink, public SigC::Object
       sourceAllSamplesFlushed();
     }
     
-    SigC::Signal2<int, short *, int>  sigWriteSamples;
+    SigC::Signal2<int, float *, int>  sigWriteSamples;
     SigC::Signal0<void>       	      sigFlushSamples;
     
     

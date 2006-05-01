@@ -144,14 +144,20 @@ bool Recorder::initialize(void)
 } /* Recorder::initialize */
 
 
-int Recorder::writeSamples(short *samples, int len)
+int Recorder::writeSamples(float *samples, int len)
 {
   if (file == NULL)
   {
     return len;
   }
   
-  int cnt = fwrite(samples, sizeof(short), len, file);
+  short buf[len];
+  for (int i=0; i<len; ++i)
+  {
+    buf[i] = static_cast<short>(32767.0 * samples[i]);
+  }
+  
+  int cnt = fwrite(buf, sizeof(*buf), len, file);
   if ((cnt == 0) && ferror(file))
   {
     fclose(file);

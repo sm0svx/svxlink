@@ -1,10 +1,8 @@
 /**
 @file	 AudioSource.h
-@brief   A_brief_description_for_this_file
+@brief   This file contains the base class for an audio source
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-17
-
-A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -24,10 +22,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example AudioSource_demo.cpp
-An example of how to use the AudioSource class
 */
 
 
@@ -109,13 +103,12 @@ class AudioSink;
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	The base class for an audio source
 @author Tobias Blomberg
 @date   2005-04-17
 
-A_detailed_class_description
-
-\include AudioSource_demo.cpp
+This is the base class for an audio source. An audio source is a class that
+can produce audio.
 */
 class AudioSource
 {
@@ -146,7 +139,7 @@ class AudioSource
 
     
   protected:
-    int sinkWriteSamples(const short *samples, int len);
+    int sinkWriteSamples(const float *samples, int len);
     void sinkFlushSamples(void);
     
     

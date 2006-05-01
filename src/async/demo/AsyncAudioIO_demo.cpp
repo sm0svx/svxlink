@@ -18,10 +18,10 @@ class MyClass : public SigC::Object
       	/* Or just coonect the AudioIO object to itself... */
       //audio_io->audioRead.connect(slot(audio_io, &AudioIO::write));
       
-      short samples[8000];
+      float samples[8000];
       for (int i=0; i<8000; ++i) // Put a sine wave into the buffer
       {
-      	samples[i] = static_cast<short int>(10000 * sin(2*M_PI*440*i/8000));
+      	samples[i] = 0.33 * sin(2*M_PI*440*i/8000);
       }
       int samples_written = audio_io->write(samples, 8000);
       cout << "Wrote " << samples_written << " samples...\n";
@@ -35,7 +35,7 @@ class MyClass : public SigC::Object
   private:
     AudioIO *audio_io;
     
-    int onAudioRead(short *samples, int count)
+    int onAudioRead(float *samples, int count)
     {
       //cout << count << " samples read...\n";
       return audio_io->write(samples, count);

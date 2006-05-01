@@ -225,7 +225,7 @@ bool QsoImpl::initOk(void)
 } /* QsoImpl::initOk */
 
 
-int QsoImpl::sendAudio(short *buf, int len)
+int QsoImpl::sendAudio(float *buf, int len)
 {
   idle_timer_cnt = 0;
   

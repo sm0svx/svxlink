@@ -181,7 +181,7 @@ void SimplexLogic::transmit(bool do_transmit)
 } /* SimplexLogic::transmit */
 
 
-int SimplexLogic::transmitAudio(short *samples, int count)
+int SimplexLogic::transmitAudio(float *samples, int count)
 {
   if (!tx_timeout_occured)
   {

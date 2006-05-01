@@ -1,10 +1,8 @@
 /**
 @file	 AudioSource.cpp
-@brief   A_brief_description_for_this_file
+@brief   This file contains the base class for an audio source
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-17
-
-A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -180,7 +178,7 @@ void AudioSource::unregisterSink(void)
  * Bugs:      
  *------------------------------------------------------------------------
  */
-int AudioSource::sinkWriteSamples(const short *samples, int len)
+int AudioSource::sinkWriteSamples(const float *samples, int len)
 {
   if (m_sink != 0)
   {

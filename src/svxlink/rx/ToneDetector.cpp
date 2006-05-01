@@ -161,7 +161,7 @@ ToneDetector::ToneDetector(float tone_hz, int base_N)
   //printf(" and FREQUENCY = %d,\n", tone_hz);
   //printf("k = %d and coeff = %f\n\n", k, coeff);
 
-  block = new short[N];
+  block = new float[N];
   
   resetGoertzel();
 
@@ -177,7 +177,7 @@ ToneDetector::~ToneDetector(void)
 } /* ToneDetector::~ToneDetector */
 
 
-int ToneDetector::processSamples(short *buf, int len)
+int ToneDetector::processSamples(float *buf, int len)
 {
   //printf("Processing %d samples\n", len);
   
@@ -205,14 +205,13 @@ int ToneDetector::processSamples(short *buf, int len)
       for (int i=0; i<N; i++)
       {
 	double sample = static_cast<double>(block[i]);
-	sample /=  32768.0;
 	sample *= 0.5 - 0.5 * cos(2 * M_PI * i / N);
 	if (ff != 0)
 	{
       	  sample = ff_func(ff_buf, sample);
 	}
       	rms += sample * sample;
-	processSample(static_cast<short int>(sample * 32767.0));
+	processSample(sample * 32767.0);
 	double Q0 = coeff * Q1 - Q2 + sample;
 	Q2 = Q1;
 	Q1 = Q0;

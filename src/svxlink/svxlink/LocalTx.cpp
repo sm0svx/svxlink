@@ -120,7 +120,7 @@ class SineGenerator : public SigC::Object
     
     void setLevel(int level_percent)
     {
-      level = level_percent * 32767 / 100;
+      level = level_percent / 100;
     }
     
     void enable(bool enable)
@@ -163,10 +163,10 @@ class SineGenerator : public SigC::Object
     {
       int written;
       do {
-	short buf[BLOCK_SIZE];
+	float buf[BLOCK_SIZE];
 	for (int i=0; i<BLOCK_SIZE; ++i)
 	{
-      	  buf[i] = (short)(level * sin(2 * M_PI * fq * (pos+i) / sample_rate));
+      	  buf[i] = level * sin(2 * M_PI * fq * (pos+i) / sample_rate);
 	}
 	written = audio_io.write(buf, BLOCK_SIZE);
 	pos += written;
@@ -318,7 +318,7 @@ bool LocalTx::initialize(void)
     audio_io->setGain((100.0 - level) / 100);
   }  
   
-  if (cfg.getValue(name, "PREEMPHASIS", value))
+  if (cfg.getValue(name, "PREEMPHASIS", value) && (atoi(value.c_str()) != 0))
   {
     sigc_preemph = new SigCAudioSource;
     sigc_preemph->sigWriteBufferFull.connect(transmitBufferFull.slot());
@@ -382,7 +382,7 @@ void LocalTx::transmit(bool do_transmit)
     
     if (tx_delay > 0)
     {
-      short samples[8000];
+      float samples[8000];
       memset(samples, 0, sizeof(samples));
       transmitAudio(samples, 8000 * tx_delay / 1000);
       flushSamples();
@@ -412,7 +412,7 @@ void LocalTx::transmit(bool do_transmit)
 } /* LocalTx::transmit */
 
 
-int LocalTx::transmitAudio(short *samples, int count)
+int LocalTx::transmitAudio(float *samples, int count)
 {
   is_flushing = false;
   

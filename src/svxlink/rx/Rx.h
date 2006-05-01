@@ -207,7 +207,7 @@ class Rx : public SigC::Object
      * @param 	count 	The number of samples in the buffer
      * @return	The number of samples that the associated slot took care of
      */
-    SigC::Signal2<int, short *, int> audioReceived;
+    SigC::Signal2<int, float *, int> audioReceived;
     
     /**
      * @brief 	A signal that is emitted when a DTMF digit has been detected

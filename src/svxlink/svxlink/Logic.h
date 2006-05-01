@@ -177,7 +177,7 @@ class Logic : public SigC::Object
     virtual void playTone(int fq, int amp, int len);
     void recordStart(const std::string& filename);
     void recordStop(void);
-    void audioFromModule(short *samples, int count);
+    void audioFromModule(float *samples, int count);
     virtual void moduleTransmitRequest(bool do_transmit);
 
     virtual bool activateModule(Module *module);
@@ -198,10 +198,10 @@ class Logic : public SigC::Object
     
   protected:    
     virtual void squelchOpen(bool is_open);
-    //virtual int audioReceived(short *samples, int count) { return count; }
+    //virtual int audioReceived(float *samples, int count) { return count; }
     
     virtual void transmit(bool do_transmit);
-    virtual int transmitAudio(short *samples, int count);
+    virtual int transmitAudio(float *samples, int count);
     virtual void allMsgsWritten(void);
     virtual void allTxSamplesFlushed(void);
     virtual void remoteLogicTransmitRequest(bool do_tx);
@@ -259,9 +259,9 @@ class Logic : public SigC::Object
     void processMacroCmd(std::string& cmd);
     void putCmdOnQueue(Async::Timer *t=0);
     void sendRgrSound(Async::Timer *t=0);
-    int remoteLogicWriteSamples(short *samples, int len);
+    int remoteLogicWriteSamples(float *samples, int len);
     void remoteLogicFlushSamples(void);
-    int audioReceived(short *samples, int len);
+    int audioReceived(float *samples, int len);
     void everyMinute(Async::Timer *t);
     
 };  /* class Logic */

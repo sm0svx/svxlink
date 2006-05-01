@@ -169,7 +169,7 @@ class ModuleEchoLink : public Module
     void dtmfDigitReceived(char digit);
     void dtmfCmdReceived(const std::string& cmd);
     void squelchOpen(bool is_open);
-    int audioFromRx(short *samples, int count);
+    int audioFromRx(float *samples, int count);
     void allMsgsWritten(void);
     void reportState(void);
 
@@ -186,7 +186,7 @@ class ModuleEchoLink : public Module
     void getDirectoryList(Async::Timer *timer=0);
 
     void createOutgoingConnection(const EchoLink::StationData &station);
-    int audioFromRemote(short *samples, int count, QsoImpl *qso);
+    int audioFromRemote(float *samples, int count, QsoImpl *qso);
     void audioFromRemoteRaw(QsoImpl::GsmVoicePacket *packet, QsoImpl *qso);
     QsoImpl *findFirstTalker(void) const;
     void broadcastTalkerStatus(void);

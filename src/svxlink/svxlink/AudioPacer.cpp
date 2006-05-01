@@ -121,7 +121,7 @@ AudioPacer::AudioPacer(int sample_rate, int block_size, int prebuf_time)
   : sample_rate(sample_rate), buf_size(block_size), prebuf_time(prebuf_time),
     buf_pos(0), do_flush(false)
 {
-  buf = new short[buf_size];
+  buf = new float[buf_size];
   prebuf_samples = prebuf_time * sample_rate / 1000;
 } /* AudioPacer::AudioPacer */
 
@@ -132,7 +132,7 @@ AudioPacer::~AudioPacer(void)
 } /* AudioPacer::~AudioPacer */
 
 
-int AudioPacer::audioInput(short *samples, int count)
+int AudioPacer::audioInput(float *samples, int count)
 {
   int samples_written = 0;
   
@@ -168,7 +168,7 @@ int AudioPacer::audioInput(short *samples, int count)
   else
   {
     samples_written = min(count, buf_size - buf_pos);
-    memcpy(buf + buf_pos, samples, samples_written * sizeof(short));
+    memcpy(buf + buf_pos, samples, samples_written * sizeof(*buf));
     buf_pos += samples_written;
     if (buf_pos == buf_size)
     {

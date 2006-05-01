@@ -142,7 +142,7 @@ class DtmfDecoder : public SigC::Object
     DtmfDecoder(void);
     ~DtmfDecoder(void);
     
-    int processSamples(short *buf, int len);
+    int processSamples(float *buf, int len);
     
     SigC::Signal1<void, char> digitDetected;
     
@@ -154,7 +154,7 @@ class DtmfDecoder : public SigC::Object
     DtmfToneDetector  *col[4];
     int       	      active_row;
     int       	      active_col;
-    short     	      sample_buf[512];
+    float     	      sample_buf[512];
     int       	      buffered_samples;
     char      	      last_detected_digit;
     bool      	      digit_activated;

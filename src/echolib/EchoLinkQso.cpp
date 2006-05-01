@@ -363,7 +363,7 @@ bool Qso::sendChatData(const string& msg)
 } /* Qso::sendChatData */
 
 
-int Qso::sendAudio(short *buf, int len)
+int Qso::sendAudio(float *buf, int len)
 {
   int samples_read = 0;
   
@@ -375,10 +375,17 @@ int Qso::sendAudio(short *buf, int len)
   while (samples_read < len)
   {
     int read_cnt = min(SEND_BUFFER_SIZE - send_buffer_cnt, len-samples_read);
+    for (int i=0; i<read_cnt; ++i)
+    {
+      send_buffer[send_buffer_cnt++] =
+      	  static_cast<short>(32767.0 * buf[samples_read++]);
+    }
+    /*
     memcpy(send_buffer + send_buffer_cnt, buf + samples_read,
 	read_cnt * sizeof(*send_buffer));
     send_buffer_cnt += read_cnt;
     samples_read += read_cnt;
+    */
     
     if (send_buffer_cnt == SEND_BUFFER_SIZE)
     {
@@ -695,7 +702,12 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
     }
     */
     
-    audioReceived(sbuff, 160);
+    float samples[160];
+    for (int i=0; i<160; ++i)
+    {
+      samples[i] = static_cast<float>(sbuff[i]) / 32768.0;
+    }
+    audioReceived(samples, 160);
   }
   
 } /* Qso::handleAudioPacket */

@@ -513,7 +513,7 @@ void ModuleEchoLink::squelchOpen(bool is_open)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-int ModuleEchoLink::audioFromRx(short *samples, int count)
+int ModuleEchoLink::audioFromRx(float *samples, int count)
 {
     // FIXME: FIFO for saving samples if writing message
   if (qsos.size() > 0)
@@ -1045,7 +1045,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
 } /* ModuleEchoLink::createOutgoingConnection */
 
 
-int ModuleEchoLink::audioFromRemote(short *samples, int count, QsoImpl *qso)
+int ModuleEchoLink::audioFromRemote(float *samples, int count, QsoImpl *qso)
 {
   if ((qso == talker) && !squelch_is_open)
   {

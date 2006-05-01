@@ -95,7 +95,7 @@ extern "C" {
  *----------------------------------------------------------------------------
  */
 #define FLOATING	double
-#define SAMPLE	      	short
+#define SAMPLE	      	float
 
 
 /*
@@ -137,7 +137,7 @@ class ToneDetector : public SigC::Object
     ToneDetector(float tone_hz, int base_N);
     ~ToneDetector(void);
     
-    int processSamples(short *buf, int len);
+    int processSamples(float *buf, int len);
     bool isActivated(void) const { return (det_delay_left == 0); }
     FLOATING value(void) const { return result; }
     float toneFq(void) const { return tone_fq; }
@@ -155,7 +155,7 @@ class ToneDetector : public SigC::Object
     int       	is_activated;
     FLOATING  	result;
     float     	tone_fq;
-    short     	*block;
+    float     	*block;
     
     FLOATING  	coeff;
     FLOATING  	Q1;

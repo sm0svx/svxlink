@@ -121,7 +121,7 @@ SampleFifo::SampleFifo(int fifo_size)
     do_overwrite(false), write_buffer_is_full(false), prebuf_samples(0),
     prebuf(true), do_flush(false)
 {
-  fifo = new short[fifo_size];
+  fifo = new float[fifo_size];
 } /* SampleFifo */
 
 
@@ -131,7 +131,7 @@ SampleFifo::~SampleFifo(void)
 } /* ~SampleFifo */
 
 
-int SampleFifo::addSamples(short *samples, int count)
+int SampleFifo::addSamples(float *samples, int count)
 {
   //printf("SampleFifo::addSamples: count=%d is_stopped=%s  empty=%s\n",
     //  	  count, is_stopped ? "true" : "false", empty() ? "true" : "false");
@@ -227,7 +227,7 @@ void SampleFifo::writeBufferFull(bool is_full)
 } /* writeBufferFull */
 
 
-int SampleFifo::readSamples(short *samples, int count)
+int SampleFifo::readSamples(float *samples, int count)
 {
   if (count <= 0)
   {
@@ -243,7 +243,7 @@ int SampleFifo::readSamples(short *samples, int count)
     int to_end_of_fifo = fifo_size - tail;
     samples_to_read = min(samples_to_read, to_end_of_fifo);
     memcpy(samples+tot_samples_read, fifo+tail,
-      	    samples_to_read * sizeof(short));
+      	    samples_to_read * sizeof(float));
     tail = (tail + samples_to_read) % fifo_size;
     count -= samples_to_read;
     tot_samples_read += samples_to_read;

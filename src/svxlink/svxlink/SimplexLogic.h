@@ -143,7 +143,7 @@ class SimplexLogic : public Logic
     
     bool initialize(void);
     void transmit(bool do_transmit);
-    int transmitAudio(short *samples, int count);
+    int transmitAudio(float *samples, int count);
 
   protected:
     

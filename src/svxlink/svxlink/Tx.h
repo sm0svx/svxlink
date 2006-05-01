@@ -157,7 +157,7 @@ class Tx : public SigC::Object
      * @param 	count 	The number of samples in the supplied buffer
      * @return	Returns the number of samples transmitted
      */
-    virtual int transmitAudio(short *samples, int count) { return count; }
+    virtual int transmitAudio(float *samples, int count) { return count; }
     
     /**
      * @brief 	Call this method to flush all samples in the buffer
