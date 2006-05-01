@@ -154,7 +154,19 @@ int Recorder::writeSamples(float *samples, int len)
   short buf[len];
   for (int i=0; i<len; ++i)
   {
-    buf[i] = static_cast<short>(32767.0 * samples[i]);
+    float sample = samples[i];
+    if (sample > 1)
+    {
+      buf[i] = 32767;
+    }
+    else if (sample < -1)
+    {
+      buf[i] = -32767;
+    }
+    else
+    {
+      buf[i] = static_cast<short>(32767.0 * sample);
+    }
   }
   
   int cnt = fwrite(buf, sizeof(*buf), len, file);
