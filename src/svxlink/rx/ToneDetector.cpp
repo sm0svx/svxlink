@@ -211,7 +211,7 @@ int ToneDetector::processSamples(float *buf, int len)
       	  sample = ff_func(ff_buf, sample);
 	}
       	rms += sample * sample;
-	processSample(sample * 32767.0);
+	processSample(sample);
 	double Q0 = coeff * Q1 - Q2 + sample;
 	Q2 = Q1;
 	Q1 = Q0;
@@ -401,6 +401,18 @@ void ToneDetector::resetGoertzel(void)
 
 void ToneDetector::processSample(SAMPLE sample)
 {
+  if (sample > 1)
+  {
+    sample = 32767;
+  }
+  else if (sample < -1)
+  {
+    sample = -32767;
+  }
+  else
+  {
+    sample *= 32767.0;
+  }
   unsigned char usample = ((int)sample + 0x8000) >> 8;
   FLOATING Q0;
   Q0 = coeff * Q1 - Q2 + (FLOATING) usample;
