@@ -1,10 +1,8 @@
 /**
 @file	 AudioFilter.h
-@brief   A_brief_description_for_this_file
+@brief   Contains a class for creating a wide range of audio filters
 @author  Tobias Blomberg / SM0SVX
 @date	 2006-04-23
-
-A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -24,10 +22,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example AudioFilter_demo.cpp
-An example of how to use the AudioFilter class
 */
 
 
@@ -62,8 +56,7 @@ extern "C" {
 #include <fidlib.h>
 };
 
-#include "AudioSource.h"
-#include "AudioSink.h"
+#include "AudioProcessor.h"
 
 
 
@@ -116,7 +109,7 @@ extern "C" {
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	A class for creating a wide range of audio filters
 @author Tobias Blomberg / SM0SVX
 @date   2006-04-23
 
@@ -124,7 +117,7 @@ A_detailed_class_description
 
 \include AudioFilter_demo.cpp
 */
-class AudioFilter : public AudioSink, public AudioSource
+class AudioFilter : public AudioProcessor
 {
   public:
     /**
@@ -137,38 +130,26 @@ class AudioFilter : public AudioSink, public AudioSource
      */
     ~AudioFilter(void);
   
+    /**
+     * @brief 	Set the output gain of the filter
+     * @param 	gain The gain to set
+     */
     void setOutputGain(float gain) { output_gain = gain; }
     
-    /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
-     */
-    int writeSamples(const float *samples, int len);
-    
-    void flushSamples(void);
-
-    void resumeOutput(void);
-    
-    void allSamplesFlushed(void);
-
     
   protected:
-    
+    void processSamples(float *dest, const float *src, int count);
+
+
   private:
     FidFilter 	*ff;
     FidRun    	*ff_run;
     FidFunc   	*ff_func;
     void      	*ff_buf;
-    float     	buf[1024];
-    int       	buf_cnt;
-    bool      	do_flush;
-    bool      	buf_full;
     float     	output_gain;
     
     AudioFilter(const AudioFilter&);
     AudioFilter& operator=(const AudioFilter&);
-    void writeFromBuf(void);
 
 };  /* class AudioFilter */
 

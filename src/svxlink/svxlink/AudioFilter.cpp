@@ -1,10 +1,8 @@
 /**
 @file	 AudioFilter.cpp
-@brief   A_brief_description_for_this_file
+@brief   Contains a class for creating a wide range of audio filters
 @author  Tobias Blomberg / SM0SVX
 @date	 2006-04-23
-
-A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -114,8 +112,7 @@ using namespace std;
  ****************************************************************************/
 
 AudioFilter::AudioFilter(const string &filter_spec)
-  : ff(0), ff_run(0), ff_buf(0), buf_cnt(0), do_flush(false), buf_full(false),
-    output_gain(1)
+  : ff(0), ff_run(0), ff_buf(0), output_gain(1)
 {
   char spec_buf[256];
   strncpy(spec_buf, filter_spec.c_str(), sizeof(spec_buf));
@@ -144,63 +141,6 @@ AudioFilter::~AudioFilter(void)
 } /* AudioFilter::~AudioFilter */
 
 
-int AudioFilter::writeSamples(const float *samples, int len)
-{
-  //cout << "AudioFilter::writeSamples: len=" << len << endl;
-  
-  do_flush = false;
-  buf_full = false;
-  
-  writeFromBuf();
-  
-  int buf_avail = sizeof(buf)/sizeof(*buf) - buf_cnt;
-  if (buf_avail < len)
-  {
-    len = buf_avail;
-    buf_full = true;
-  }
-  
-  for (int i=0; i<len; ++i)
-  {
-    buf[buf_cnt+i] = output_gain * ff_func(ff_buf, samples[i]);
-  }
-  buf_cnt += len;
-  
-  writeFromBuf();
-  
-  return len;
-
-} /* AudioFilter::writeSamples */
-
-
-void AudioFilter::flushSamples(void)
-{
-  //cout << "AudioFilter::flushSamples" << endl;
-  
-  do_flush = true;
-  //buf_full = false;
-  if (buf_cnt == 0)
-  {
-    sinkFlushSamples();
-  }
-} /* AudioFilter::flushSamples */
-
-
-void AudioFilter::resumeOutput(void)
-{
-  //cout << "AudioFilter::resumeOutput" << endl;
-  writeFromBuf();
-} /* AudioFilter::resumeOutput */
-
-
-void AudioFilter::allSamplesFlushed(void)
-{
-  //cout << "AudioFilter::allSamplesFlushed" << endl;
-  do_flush = false;
-  sourceAllSamplesFlushed();
-} /* AudioFilter::allSamplesFlushed */
-
-
 
 
 /****************************************************************************
@@ -210,20 +150,15 @@ void AudioFilter::allSamplesFlushed(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
+void AudioFilter::processSamples(float *dest, const float *src, int count)
+{
+  //cout << "AudioFilter::processSamples: len=" << len << endl;
+  
+  for (int i=0; i<count; ++i)
+  {
+    dest[i] = output_gain * ff_func(ff_buf, src[i]);
+  }
+} /* AudioFilter::writeSamples */
 
 
 
@@ -233,54 +168,6 @@ void AudioFilter::allSamplesFlushed(void)
  * Private member functions
  *
  ****************************************************************************/
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-
-void AudioFilter::writeFromBuf(void)
-{
-  if (buf_cnt == 0)
-  {
-    return;
-  }
-  
-  int written;
-  do
-  {
-    written = sinkWriteSamples(buf, buf_cnt);
-    //cout << "buf_cnt=" << buf_cnt << "  written=" << written << endl;
-    buf_cnt -= written;
-    if (buf_cnt > 0)
-    {
-      memmove(buf, buf+written, buf_cnt * sizeof(*buf));
-    }
-  }
-  while ((written > 0) && (buf_cnt > 0));
-    
-  if (do_flush && (buf_cnt == 0))
-  {
-    sinkFlushSamples();
-  }
-  
-  if (buf_full && (buf_cnt < static_cast<int>(sizeof(buf) / sizeof(*buf))))
-  {
-    //cout << "Resume output!\n";
-    buf_full = false;
-    sourceResumeOutput();
-  }
-} /* AudioFilter::writeFromBuf */
-
 
 
 
