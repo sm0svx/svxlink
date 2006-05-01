@@ -606,7 +606,18 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
 	int samples_read = (*it)->readSamples(tmp, samples_to_write);
 	for (int i=0; i<samples_read; ++i)
 	{
-      	  buf[i] += static_cast<short>(32767.0 * tmp[i]);
+	  if (tmp[i] > 1)
+	  {
+	    buf[i] = 32767;
+	  }
+	  else if (tmp[i] < -1)
+	  {
+	    buf[i] = -32767;
+	  }
+	  else
+	  {
+      	    buf[i] += static_cast<short>(32767.0 * tmp[i]);
+	  }
 	}
       }
     }  
