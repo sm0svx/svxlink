@@ -377,15 +377,20 @@ int Qso::sendAudio(float *buf, int len)
     int read_cnt = min(SEND_BUFFER_SIZE - send_buffer_cnt, len-samples_read);
     for (int i=0; i<read_cnt; ++i)
     {
-      send_buffer[send_buffer_cnt++] =
-      	  static_cast<short>(32767.0 * buf[samples_read++]);
+      float sample = buf[samples_read++];
+      if (sample > 1)
+      {
+      	send_buffer[send_buffer_cnt++] = 32767;
+      }
+      else if (sample < -1)
+      {
+      	send_buffer[send_buffer_cnt++] = -32767;
+      }
+      else
+      {
+      	send_buffer[send_buffer_cnt++] = static_cast<short>(32767.0 * sample);
+      }
     }
-    /*
-    memcpy(send_buffer + send_buffer_cnt, buf + samples_read,
-	read_cnt * sizeof(*send_buffer));
-    send_buffer_cnt += read_cnt;
-    samples_read += read_cnt;
-    */
     
     if (send_buffer_cnt == SEND_BUFFER_SIZE)
     {
