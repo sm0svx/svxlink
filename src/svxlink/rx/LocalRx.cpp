@@ -437,7 +437,7 @@ int LocalRx::audioRead(float *samples, int count)
     {
       if (deemph != 0)
       {
-      	filtered[i] = deemph_func(deemph_buf, samples[i]);
+      	filtered[i] = 4 * deemph_func(deemph_buf, samples[i]);
       }
       else
       {
