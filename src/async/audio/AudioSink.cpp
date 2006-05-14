@@ -113,20 +113,17 @@ using namespace Async;
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
+AudioSink::~AudioSink(void)
+{
+  clearHandler();
+  unregisterSource();
+} /* AudioSink::~AudioSink */
+
+
 bool AudioSink::registerSource(AudioSource *source, bool reg_sink)
 {
+  assert(source != 0);
+  
   if (m_source != 0)
   {
     return m_source == source;
@@ -173,6 +170,11 @@ void AudioSink::unregisterSource(bool unreg_sink)
   if (unreg_sink)
   {
     source->unregisterSink();
+  }
+  
+  if (m_handler != 0)
+  {
+    m_handler->unregisterSource(false);
   }
   
 } /* AudioSink::unregisterSource */

@@ -123,7 +123,7 @@ class AudioSink
     /**
      * @brief 	Destructor
      */
-    virtual ~AudioSink(void) {}
+    virtual ~AudioSink(void);
   
     /**
      * @brief 	Register an audio source to provide samples to this sink
