@@ -106,6 +106,7 @@ class SineGenerator : public Async::AudioSource
       	sample_rate(0)
     {
       sample_rate = audio_io.sampleRate();
+      audio_io.registerSource(this);
     }
     
     ~SineGenerator(void)
@@ -120,7 +121,7 @@ class SineGenerator : public Async::AudioSource
     
     void setLevel(int level_percent)
     {
-      level = level_percent / 100;
+      level = level_percent / 100.0;
     }
     
     void enable(bool enable)
@@ -154,7 +155,7 @@ class SineGenerator : public Async::AudioSource
     
     
   private:
-    static const int BLOCK_SIZE = 200;
+    static const int BLOCK_SIZE = 128;
     
     AudioIO   audio_io;
     unsigned  pos;
@@ -173,7 +174,7 @@ class SineGenerator : public Async::AudioSource
 	}
 	written = sinkWriteSamples(buf, BLOCK_SIZE);
 	pos += written;
-      } while (written == BLOCK_SIZE);
+      } while (written != 0);
     }
     
 };
