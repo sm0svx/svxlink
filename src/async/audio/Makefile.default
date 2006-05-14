@@ -28,8 +28,11 @@
 #------------------------------------------------------------------------------
 # Signatures:
 # Sign Name		 E-mail
-# TBg  Tobias Blomberg   blomman@ludd.luth.se
+# TBg  Tobias Blomberg   sm0svx@users.sf.net
 #------------------------------------------------------------------------------
+
+# Include version information
+-include $(ROOT)/versions
 
 
 ###############################################################################
@@ -42,31 +45,16 @@
 PROGS		= 
 
 # C++ programs to compile
-CPPPROGS        += AsyncAudioIO_demo
-CPPPROGS        += AsyncDnsLookup_demo
-CPPPROGS        += AsyncFdWatch_demo
-CPPPROGS        += AsyncTimer_demo
-CPPPROGS        += AsyncTcpClient_demo
-CPPPROGS        += AsyncUdpSocket_demo
-CPPPROGS        += AsyncCppApplication_demo
-CPPPROGS      	+= AsyncTcpServer_demo
-CPPPROGS      	+= AsyncConfig_demo
-CPPPROGS      	+= AsyncSerial_demo
-ifdef QTDIR
-CPPPROGS      	+= AsyncQtApplication_demo
-endif
+CPPPROGS      	= 
 
 # Sources other than the main files
 PRGSRC		= 
 
 # Libraries compiled in the project (in $(LIB)).
-PROJLIBS	= -lasynccpp -lasyncaudio
-ifdef QTDIR
-PROJLIBS      	+= -lasyncqt
-endif
+PROJLIBS	= 
 
 # Libraries external to the project
-LIBS		= -lm
+LIBS		= 
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).
@@ -81,7 +69,7 @@ UI_FILES	=
 #   Where:   750     = The mode
 #            -       = Preserve owner
 #            mygroup = Set group mygroup
-PROGS_INSTALL	= 
+PROGS_INSTALL	= $(PROGS:%=%[755,root,root]) $(CPPPROGS:%=%[755,root,root])
 
 # Daemons (server processes) to install. Same format as PROGS_INSTALL.
 DAEMONS_INSTALL	= 
@@ -94,17 +82,20 @@ DAEMONS_INSTALL	=
 ###############################################################################
 
 # The name of the library (without the preceeding "lib").
-LIBNAME		= 
+LIBNAME		= asyncaudio
 
-# The version of the produced shared library
-SHLIB_MAJOR	= 
-SHLIB_MINOR	= 
+# The version of the produced shared library. Most often specified like
+# $(LIBXXX). LIBXXX is then specified in the "versions" file.
+SHLIB_VERSION	= $(LIBASYNC)
 
 # Sources needed to build the library
-LIBSRC		= 
+LIBSRC		= AudioSource.cpp AudioSink.cpp AudioProcessor.cpp \
+		  AudioCompressor.cpp AudioFilter.cpp fidlib.c \
+		  AsyncAudioDevice.cpp AsyncAudioIO.cpp AudioSplitter.cpp
+
 
 # Which libs are used by the DYNAMIC lib generated.
-LIB_LIBS	= 
+LIB_LIBS	= -lasynccore -lsigc
 
 # Which STATIC libs should be included in the generated STATIC lib.
 # These libs must be in the $(LIB) directory. Only the name of the
@@ -113,7 +104,11 @@ LIB_LIBS	=
 STATIC_LIBS   	= 
 
 # Includefiles to export. A softlink is created in $(INC).
-EXPINC		= 
+EXPINC		= AudioSource.h AudioSink.h AudioProcessor.h \
+		  AudioClipper.h AudioCompressor.h AudioFilter.h \
+		  SigCAudioSink.h  SigCAudioSource.h AsyncAudioIO.h \
+		  AudioSplitter.h
+
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for libraries).
@@ -165,7 +160,32 @@ PLUGIN_LIBS	=
 #   Where:   750     = The mode
 #            -       = Preserve owner
 #            mygroup = Set group mygroup
-PLUGINS_INSTALL	= $(PLUGINS:%=%.so[755,root,root])
+PLUGINS_INSTALL	= $(PLUGINS:%=%.so[755,root,root]) \
+		  $(PLUGINS_CPP:%=%.so[755,root,root])
+
+
+###############################################################################
+#
+# This section contains extra targets. They should be used as
+# a last resort if the existing features can not solve a problem.
+# PRE_TARGETS are made _before_ anything else and POST_TARGETS are
+# made _after_ everything else.
+# On a "make clean", the specified targets are removed.
+#
+###############################################################################
+
+#PRE_TARGETS	= pre.txt
+#POST_TARGETS	= post.txt
+
+
+#pre.txt:	nisse.txt
+#	$(ECHO) --- Creating file $(BOLD)$@$(NBOLD)...
+#	echo "Hello, target $@!" > $@
+
+#post.txt:	nisse.txt
+#	$(ECHO) --- Creating file $(BOLD)$@$(NBOLD)...
+#	echo "Hello, target $@!" > $@
+
 
 
 ###############################################################################
@@ -198,22 +218,35 @@ RPM_NAME :=
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= -I$(QTDIR)/include $(shell sigc-config --cflags)
+INCPATH 	+= $(shell sigc-config --cflags)
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.
-LIBPATH 	+=  -L$(QTDIR)/lib
+LIBPATH 	+= 
 
 # Additional warnings to use. If you want to override the default
 # warnings, change the "+=" to "=".
-WARNINGS	+= -Wno-deprecated
+WARNINGS	+= 
 
 # Extra commandline switches to the compiler. For example "-g" to
 # add debug information, "-O2" to add optimizations etc.
-CFLAGS		+= -g
+CFLAGS		+= -DT_LINUX
 
 # Extra commandline switches to the linker
-LDFLAGS		+= 
+LDFLAGS		+=
+
+
+
+##################################################################
+#
+# This section contains extra make targets
+#
+##################################################################
+
+# Additional files to install
+install-extras uninstall-extras rpm-extras:
+#	$(DIRSPEC) /var/spool/myprog[755,root,root]
+#	$(FILESPEC) install-extras/myprog.conf[644,root,root] /etc
 
 
 #

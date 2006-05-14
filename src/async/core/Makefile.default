@@ -28,7 +28,7 @@
 #------------------------------------------------------------------------------
 # Signatures:
 # Sign Name		 E-mail
-# TBg  Tobias Blomberg   blomman@ludd.luth.se
+# TBg  Tobias Blomberg   sm0svx@users.sf.net
 #------------------------------------------------------------------------------
 
 # Include version file
@@ -90,8 +90,8 @@ SHLIB_VERSION	= $(LIBASYNC)
 # Sources needed to build the library
 LIBSRC		= AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp \
 		  AsyncIpAddress.cpp AsyncDnsLookup.cpp AsyncTcpClient.cpp \
-		  AsyncAudioIO.cpp AsyncUdpSocket.cpp AsyncTcpServer.cpp \
-		  AsyncTcpConnection.cpp AsyncConfig.cpp AsyncAudioDevice.cpp \
+		  AsyncUdpSocket.cpp AsyncTcpServer.cpp \
+		  AsyncTcpConnection.cpp AsyncConfig.cpp \
 		  AsyncSampleFifo.cpp AsyncSerial.cpp AsyncSerialDevice.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
@@ -106,7 +106,7 @@ STATIC_LIBS   	=
 # Includefiles to export. A softlink is created in $(INC).
 EXPINC		= AsyncApplication.h AsyncFdWatch.h AsyncTimer.h \
 		  AsyncIpAddress.h AsyncTcpClient.h AsyncDnsLookup.h \
-		  AsyncAudioIO.h AsyncUdpSocket.h AsyncTcpServer.h \
+		  AsyncUdpSocket.h AsyncTcpServer.h \
 		  AsyncTcpConnection.h AsyncConfig.h AsyncSampleFifo.h \
 		  AsyncSerial.h
 

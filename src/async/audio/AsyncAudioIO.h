@@ -57,6 +57,8 @@ An example of how to use the Async::AudioIO class
 
 #include <AsyncFdWatch.h>
 #include <AsyncTimer.h>
+#include <AudioSink.h>
+#include <AudioSource.h>
 
 
 /****************************************************************************
@@ -127,7 +129,8 @@ sampling rate. An example usage is shown below.
 
 \include AsyncAudioIO_demo.cpp
 */
-class AudioIO : public SigC::Object
+class AudioIO
+  : public SigC::Object, public Async::AudioSource, public Async::AudioSink
 {
   public:
     /**
@@ -178,7 +181,7 @@ class AudioIO : public SigC::Object
      * @return	Returns the number of samples written on success or else
      *	      	-1 on failure
      */
-    int write(float *buf, int count);
+    //int write(float *buf, int count);
     
     /**
      * @brief 	Find out how many samples there are in the output buffer
@@ -199,7 +202,7 @@ class AudioIO : public SigC::Object
      * That is, all samples in the buffer will be written to the audio device
      * and when finished, emit the allSamplesFlushed signal.
      */
-    void flushSamples(void);
+    //void flushSamples(void);
     
     /*
      * @brief 	Call this method to clear all samples in the buffer
@@ -244,7 +247,30 @@ class AudioIO : public SigC::Object
      * @brief 	Return the sample rate
      * @return	Returns the sample rate
      */
-    int sampleRate(void) const { return sample_rate; }    
+    int sampleRate(void) const { return sample_rate; }
+    
+    void resumeOutput(void) {}
+    
+    void allSamplesFlushed(void) {}
+
+
+    /**
+     * @brief 	Write samples into this audio sink
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
+     */
+    int writeSamples(const float *samples, int count);
+    
+    /**
+     * @brief 	Tell the sink to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     */
+    void flushSamples(void);
+
     
     /**
      * @brief 	A signal that is emitted when a block of audio has been
@@ -252,14 +278,14 @@ class AudioIO : public SigC::Object
      * @param 	buf   A buffer containing the read samples
      * @param 	count The number of samples in the buffer
      */
-    SigC::Signal2<int, float *, int> audioRead;
+    //SigC::Signal2<int, float *, int> audioRead;
 
     /**
      * @brief 	A signal that is emitted when the write buffer is full
      * @param 	is_full Set to \em true if the buffer is full or \em false
      *	      	      	if the buffer full condition has been cleared
      */
-    SigC::Signal1<void, bool> writeBufferFull;
+    //SigC::Signal1<void, bool> writeBufferFull;
     
     /**
      * @brief 	This signal is emitted when all samples in the buffer
@@ -269,7 +295,7 @@ class AudioIO : public SigC::Object
      * should call the flush-method. When all samples has been flushed
      * from the audio device, this signal is emitted.
      */
-    SigC::Signal0<void> allSamplesFlushed;
+    //SigC::Signal0<void> allSamplesFlushed;
 
             
   protected:
@@ -296,7 +322,9 @@ class AudioIO : public SigC::Object
     SampleFifo &writeFifo(void) const { return *write_fifo; }
     int readSamples(float *samples, int count);
     bool doFlush(void) const { return do_flush; }
-    
+    int audioRead(float *samples, int count);
+    void fifoBufferFull(bool is_full);
+
 };  /* class AudioIO */
 
 
