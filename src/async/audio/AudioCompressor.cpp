@@ -134,7 +134,7 @@ static inline double dB2lin( double dB )
  ****************************************************************************/
 
 AudioCompressor::AudioCompressor(void)
-  : threshdB_(0.0), ratio_(1.0), output_gain(0.0),att_(10.0), rel_(100.0),
+  : threshdB_(0.0), ratio_(1.0), output_gain(1.0),att_(10.0), rel_(100.0),
     envdB_(DC_OFFSET)
 {
 } /* AudioCompressor::AudioCompressor */
@@ -198,7 +198,7 @@ void AudioCompressor::reset(void)
 
 void AudioCompressor::processSamples(float *dest, const float *src, int count)
 {
-  double max_sample = 0.0;
+  //double max_sample = 0.0;
   for (int i=0; i<count; ++i)
   {
     double rect = fabs(src[i]);	// rectify input
@@ -245,11 +245,11 @@ void AudioCompressor::processSamples(float *dest, const float *src, int count)
     // output gain
     dest[i] = output_gain * src[i] * gr;      // apply gain reduction to input
     
-    if (fabs(dest[i]) > max_sample)
-      max_sample = dest[i];
+    //if (fabs(dest[i]) > max_sample)
+    //  max_sample = dest[i];
   }
   
-  cout << "max_sample=" << max_sample << endl;
+  //cout << "max_sample=" << max_sample << endl;
   
 } /* AudioCompressor::writeSamples */
 
