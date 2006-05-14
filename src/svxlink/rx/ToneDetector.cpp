@@ -173,7 +173,7 @@ ToneDetector::ToneDetector(float tone_hz, int base_N)
   sigc_sink->sigWriteSamples.connect(slot(this, &ToneDetector::processSamples));
   sigc_sink->sigFlushSamples.connect(
       slot(sigc_sink, &SigCAudioSink::allSamplesFlushed));
-  setHandler(sigc_sink);
+  assert(setHandler(sigc_sink));
   
 } /* ToneDetector::ToneDetector */
 
@@ -195,15 +195,17 @@ void ToneDetector::setFilter(const std::string &filter_spec)
   
   if (filter != 0)
   {
+    sigc_sink->unregisterSource();
     delete filter;
     filter = 0;
-    setHandler(sigc_sink);
+    assert(setHandler(sigc_sink));
   }
   
   if (!filter_spec.empty())
   {
     filter = new AudioFilter(filter_spec);
-    setHandler(filter);
+    assert(setHandler(filter));
+    assert(sigc_sink->registerSource(filter));
   }
       
 } /* ToneDetector::setFilter */
@@ -357,7 +359,8 @@ int ToneDetector::processSamples(float *buf, int len)
       /*
       if (toneFq() < 300)
       {
-      	printf("rms=%.3f  result=%.3f  snr=%.3f\n", rms, res, snr);
+      	printf("fq=%.1f  rms=%.3f  result=%.3f  snr=%.3f\n",
+	      	toneFq(), rms, res, snr);
       }
       */
       
