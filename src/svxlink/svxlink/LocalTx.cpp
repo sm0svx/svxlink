@@ -404,7 +404,7 @@ void LocalTx::transmit(bool do_transmit)
     {
       float samples[8000];
       memset(samples, 0, sizeof(samples));
-      transmitAudio(samples, 8000 * tx_delay / 1000);
+      int cnt = audio_io->writeSamples(samples, 8000 * tx_delay / 1000);
       flushSamples();
     }
     
