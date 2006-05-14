@@ -121,7 +121,7 @@ class AudioSource
     /**
      * @brief 	Destructor
      */
-    virtual ~AudioSource(void) {}
+    virtual ~AudioSource(void);
   
     /**
      * @brief 	A_brief_member_function_description

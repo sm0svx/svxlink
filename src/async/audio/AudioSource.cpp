@@ -111,20 +111,16 @@ using namespace Async;
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
+AudioSource::~AudioSource(void)
+{
+  unregisterSink();
+} /* AudioSource::~AudioSource */
+
+
 bool AudioSource::registerSink(AudioSink *sink)
 {
+  assert(sink != 0);
+  
   if (m_sink != 0)
   {
     return m_sink == sink;
