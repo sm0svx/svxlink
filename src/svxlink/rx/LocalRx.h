@@ -56,10 +56,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-extern "C" {
-#include "fidlib.h"
-};
-
 #include "Rx.h"
 
 
@@ -73,6 +69,8 @@ namespace Async
 {
   class Config;
   class AudioIO;
+  class AudioFilter;
+  class SigCAudioSink;
 };
 
 class ToneDurationDet;
@@ -97,6 +95,7 @@ class Squelch;
 
 class DtmfDecoder;
 class ToneDetector;
+class SigLevDet;
 
 
 /****************************************************************************
@@ -199,18 +198,11 @@ class LocalRx : public Rx
     float     	      	      	xv[NZEROS+1];
     float     	      	      	yv[NPOLES+1];
     std::list<ToneDurationDet*> tone_detectors;
-
-    FidFilter 	      	      	*hpff;
-    FidRun    	      	      	*hpff_run;
-    FidFunc   	      	      	*hpff_func;
-    void      	      	      	*hpff_buf;
-    double    	      	      	last_siglev;
+    SigLevDet 	      	      	*siglevdet;
     float     	      	      	siglev_offset;
     float     	      	      	siglev_slope;
-    FidFilter 	      	      	*deemph;
-    FidRun    	      	      	*deemph_run;
-    FidFunc   	      	      	*deemph_func;
-    void      	      	      	*deemph_buf;
+    Async::AudioFilter       	*deemph_filt;
+    Async::SigCAudioSink      	*sigc_sink;
     
     int audioRead(float *samples, int count);
     void resetHighpassFilter(void);

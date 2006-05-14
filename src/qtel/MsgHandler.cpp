@@ -110,21 +110,12 @@ void MsgHandler::playSilence(int length)
 } /* MsgHandler::playSilence */
 
 
-void MsgHandler::writeBufferFull(bool is_full)
-{
-  //printf("write_buffer_full=%s\n", is_full ? "true" : "false");
-  if (!is_full && !msg_queue.empty())
-  {
-    writeFromFile();
-  }
-}
-
-
 void MsgHandler::clear(void)
 {
   msg_queue.clear();
   ::close(file);
   file = -1;
+  sinkFlushSamples();
   allMsgsWritten();
 } /* MsgHandler::clear */
 
@@ -147,6 +138,16 @@ void MsgHandler::end(void)
 } /* MsgHandler::end */
 
 
+void MsgHandler::resumeOutput(void)
+{
+  if (!msg_queue.empty())
+  {
+    writeFromFile();
+  }
+} /* MsgHandler::resumeOutput */
+
+
+
 
 
 void MsgHandler::playNextMsg(void)
@@ -159,6 +160,7 @@ void MsgHandler::playNextMsg(void)
   
   if (msg_queue.empty())
   {
+    sinkFlushSamples();
     allMsgsWritten();
     return;
   }
@@ -239,7 +241,7 @@ void MsgHandler::writeFromFile(void)
       goto done;
     }
     
-    written = writeAudio(samples, read_cnt);
+    written = sinkWriteSamples(samples, read_cnt);
     if (written == -1)
     {
       perror("write in MsgHandler::writeFromFile");

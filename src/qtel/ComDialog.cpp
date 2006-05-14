@@ -56,6 +56,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <EchoLinkDirectory.h>
 #include <EchoLinkQso.h>
 #include <AsyncSampleFifo.h>
+#include <SigCAudioSource.h>
+#include <SigCAudioSink.h>
 
 
 /****************************************************************************
@@ -150,7 +152,7 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
     const QString& remote_name)
   : callsign(callsign), con(0), dir(dir), accept_connection(false),
     audio_io(audio_io), audio_full_duplex(false), is_transmitting(false),
-    ctrl_pressed(false), rem_audio_fifo(0)
+    ctrl_pressed(false), rem_audio_fifo(0), sigc_src(0), sigc_sink(0)
     
 {
   if (callsign.find("-L") != -1)
@@ -176,17 +178,23 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
   call->setText(callsign);
   name_label->setText(remote_name);
   
+  sigc_src = new SigCAudioSource;
+  audio_io->registerSource(sigc_src);
+  
   rem_audio_fifo = new SampleFifo(8000);
   rem_audio_fifo->stopOutput(true);
   rem_audio_fifo->setOverwrite(true);
   rem_audio_fifo->setPrebufSamples(1280);
-  rem_audio_fifo->writeSamples.connect(slot(audio_io, &AudioIO::write));
+  rem_audio_fifo->writeSamples.connect(
+      slot(sigc_src, &SigCAudioSource::writeSamples));
   rem_audio_fifo->allSamplesWritten.connect(
-  	slot(audio_io, &AudioIO::flushSamples));
+      slot(sigc_src, &SigCAudioSource::flushSamples));
+  sigc_src->sigWriteBufferFull.connect(
+      slot(rem_audio_fifo, &SampleFifo::writeBufferFull));
   
-  audio_io->audioRead.connect(slot(this, &ComDialog::micAudioRead));
-  audio_io->writeBufferFull.connect(
-		slot(rem_audio_fifo, &SampleFifo::writeBufferFull));
+  sigc_sink = new SigCAudioSink;
+  sigc_sink->registerSource(audio_io);
+  sigc_sink->sigWriteSamples.connect(slot(this, &ComDialog::micAudioRead));
   
   Settings *settings = Settings::instance();  
   if (settings->useFullDuplex() && audio_io->isFullDuplexCapable())
@@ -243,6 +251,8 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
 
 ComDialog::~ComDialog(void)
 {
+  delete sigc_src;
+  delete sigc_sink;
   delete rem_audio_fifo;
   audio_io->close();
   delete con;

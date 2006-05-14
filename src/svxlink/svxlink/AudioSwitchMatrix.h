@@ -67,6 +67,11 @@ An example of how to use the AudioSwitchMatrix class
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class AudioSource;
+  class AudioSink;
+};
 
 
 /****************************************************************************
@@ -85,8 +90,6 @@ An example of how to use the AudioSwitchMatrix class
  *
  ****************************************************************************/
 
-class AudioSource;
-class AudioSink;
 
 
 /****************************************************************************
@@ -138,9 +141,9 @@ class AudioSwitchMatrix
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
-    void addSource(const std::string& source_name, AudioSource *source);
+    void addSource(const std::string& source_name, Async::AudioSource *source);
     void removeSource(const std::string& source_name);
-    void addSink(const std::string& sink_name, AudioSink *sink);
+    void addSink(const std::string& sink_name, Async::AudioSink *sink);
     void removeSink(const std::string& sink_name);
 
     void connect(const std::string& source_name, const std::string& sink_name);
@@ -155,8 +158,8 @@ class AudioSwitchMatrix
   protected:
     
   private:
-    std::map<std::string, AudioSource *>  sources;
-    std::map<std::string, AudioSink *>	  sinks;
+    std::map<std::string, Async::AudioSource *> sources;
+    std::map<std::string, Async::AudioSink *>	sinks;
     
 };  /* class AudioSwitchMatrix */
 

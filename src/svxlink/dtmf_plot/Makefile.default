@@ -26,10 +26,10 @@ PROGS		=
 CPPPROGS      	= $(BIN)/dtmf_plot
 
 # Sources other than the main files
-PRGSRC		= ../rx/ToneDetector.cpp ../rx/DtmfDecoder.cpp
+PRGSRC		= ToneDetector.cpp DtmfDecoder.cpp
 
 # Libraries compiled in the project (in $(LIB)).
-PROJLIBS	= -lasyncqt -lrx
+PROJLIBS	= -lasyncqt -lasyncaudio -lrx
 
 # Libraries external to the project
 LIBS		=  $(QT_LIBS)
@@ -162,19 +162,19 @@ PLUGINS_INSTALL	= $(PLUGINS:%=%.so[755,root,root]) \
 ToneDetector.o: ToneDetector.cpp
 
 ToneDetector.cpp:
-	ln -s ../svxlink/ToneDetector.cpp
+	ln -s ../rx/ToneDetector.cpp
 
 ToneDetector.h:
-	ln -s ../svxlink/ToneDetector.h
+	ln -s ../rx/ToneDetector.h
 
 
 DtmfDecoder.o: DtmfDecoder.cpp
 
 DtmfDecoder.cpp:
-	ln -s ../svxlink/DtmfDecoder.cpp
+	ln -s ../rx/DtmfDecoder.cpp
 
 DtmfDecoder.h:
-	ln -s ../svxlink/DtmfDecoder.h
+	ln -s ../rx/DtmfDecoder.h
 
 
 ###############################################################################

@@ -174,7 +174,6 @@ MainWindow::MainWindow(Directory &dir)
       	  this, SLOT(acceptIncoming()));
   
   audio_io = new AudioIO(Settings::instance()->audioDevice().latin1());
-  msg_audio_io = new AudioIO(Settings::instance()->audioDevice().latin1());
   
   dir.error.connect(slot(this, &MainWindow::serverError));
   dir.statusChanged.connect(slot(this, &MainWindow::statusChanged));
@@ -240,13 +239,10 @@ MainWindow::MainWindow(Directory &dir)
   directoryBusyAction->setAccel(
       QKeySequence(trUtf8("Ctrl+B", "directoryBusyAction")));
   
-  msg_handler = new MsgHandler("/", 8000);
-  msg_handler->writeAudio.connect(slot(msg_audio_io, &AudioIO::write));
-  msg_audio_io->writeBufferFull.connect(
-  	slot(msg_handler, &MsgHandler::writeBufferFull));
-  msg_audio_io->allSamplesFlushed.connect(
-  	slot(this, &MainWindow::allSamplesFlushed));
+  msg_audio_io = new AudioIO(Settings::instance()->audioDevice().latin1());  
+  msg_handler = new MsgHandler("/", msg_audio_io->sampleRate());
   msg_handler->allMsgsWritten.connect(slot(this, &MainWindow::allMsgsWritten));
+  msg_audio_io->registerSource(msg_handler);
 } /* MainWindow::MainWindow */
 
 

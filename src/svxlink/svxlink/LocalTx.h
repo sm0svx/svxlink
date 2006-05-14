@@ -68,6 +68,7 @@ namespace Async
   class Config;
   class AudioIO;
   class Timer;
+  class SigCAudioSource;
 };
 
 
@@ -88,7 +89,6 @@ namespace Async
  ****************************************************************************/
 
 class SineGenerator;
-class SigCAudioSource;
 
 
 /****************************************************************************
@@ -186,23 +186,23 @@ class LocalTx : public Tx
   protected:
     
   private:
-    std::string       	  name;
-    Async::Config     	  &cfg;
-    Async::AudioIO    	  *audio_io;
-    bool      	      	  is_transmitting;
-    Async::Serial     	  *serial;
-    Async::Serial::Pin    ptt_pin1;
-    bool                  ptt_pin1_rev;
-    Async::Serial::Pin    ptt_pin2;
-    bool                  ptt_pin2_rev;
-    Async::Timer      	  *txtot;
-    bool      	      	  tx_timeout_occured;
-    int       	      	  tx_timeout;
-    int       	      	  tx_delay;
-    SineGenerator     	  *sine_gen;
-    bool      	      	  ctcss_enable;
-    SigCAudioSource   	  *sigc_preemph;
-    bool      	      	  is_flushing;
+    std::string       	    name;
+    Async::Config     	    &cfg;
+    Async::AudioIO    	    *audio_io;
+    bool      	      	    is_transmitting;
+    Async::Serial     	    *serial;
+    Async::Serial::Pin      ptt_pin1;
+    bool                    ptt_pin1_rev;
+    Async::Serial::Pin      ptt_pin2;
+    bool                    ptt_pin2_rev;
+    Async::Timer      	    *txtot;
+    bool      	      	    tx_timeout_occured;
+    int       	      	    tx_timeout;
+    int       	      	    tx_delay;
+    SineGenerator     	    *sine_gen;
+    bool      	      	    ctcss_enable;
+    Async::SigCAudioSource  *sigc_src;
+    bool      	      	    is_flushing;
     
     void txTimeoutOccured(Async::Timer *t);
     int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);

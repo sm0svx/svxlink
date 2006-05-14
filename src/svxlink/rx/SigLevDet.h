@@ -1,8 +1,8 @@
 /**
-@file	 AudioFilter.h
-@brief   Contains a class for creating a wide range of audio filters
+@file	 SigLevDet.h
+@brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2006-04-23
+@date	 2006-05-07
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -24,9 +24,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+/** @example SigLevDet_demo.cpp
+An example of how to use the SigLevDet class
+*/
 
-#ifndef AUDIO_FILTER_INCLUDED
-#define AUDIO_FILTER_INCLUDED
+
+#ifndef SIG_LEV_DET_INCLUDED
+#define SIG_LEV_DET_INCLUDED
 
 
 /****************************************************************************
@@ -35,7 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <string>
+#include <sigc++/signal_system.h>
 
 
 /****************************************************************************
@@ -44,6 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AudioSink.h>
 
 
 /****************************************************************************
@@ -51,12 +56,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Local Includes
  *
  ****************************************************************************/
-
-extern "C" {
-#include <fidlib.h>
-};
-
-#include "AudioProcessor.h"
 
 
 
@@ -66,6 +65,11 @@ extern "C" {
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class AudioFilter;
+  class SigCAudioSink;
+};
 
 
 /****************************************************************************
@@ -109,54 +113,54 @@ extern "C" {
  ****************************************************************************/
 
 /**
-@brief	A class for creating a wide range of audio filters
+@brief	A_brief_class_description
 @author Tobias Blomberg / SM0SVX
-@date   2006-04-23
+@date   2006-05-07
 
 A_detailed_class_description
 
-\include AudioFilter_demo.cpp
+\include SigLevDet_demo.cpp
 */
-class AudioFilter : public AudioProcessor
+class SigLevDet : public SigC::Object, public Async::AudioSink
 {
   public:
     /**
      * @brief 	Default constuctor
      */
-    AudioFilter(const std::string &filter_spec);
+    SigLevDet(void);
   
     /**
      * @brief 	Destructor
      */
-    ~AudioFilter(void);
+    ~SigLevDet(void);
   
     /**
-     * @brief 	Set the output gain of the filter
-     * @param 	gain The gain to set
+     * @brief 	A_brief_member_function_description
+     * @param 	param1 Description_of_param1
+     * @return	Return_value_of_this_member_function
      */
-    void setOutputGain(float gain) { output_gain = gain; }
-    
+     double lastSiglev(void) const { return last_siglev; }
+     
+     void reset(void);
+     
     
   protected:
-    void processSamples(float *dest, const float *src, int count);
-
-
-  private:
-    FidFilter 	*ff;
-    FidRun    	*ff_run;
-    FidFunc   	*ff_func;
-    void      	*ff_buf;
-    float     	output_gain;
     
-    AudioFilter(const AudioFilter&);
-    AudioFilter& operator=(const AudioFilter&);
-
-};  /* class AudioFilter */
+  private:
+    Async::AudioFilter	  *filter;
+    Async::SigCAudioSink  *sigc_sink;
+    double    	      	  last_siglev;
+    
+    SigLevDet(const SigLevDet&);
+    SigLevDet& operator=(const SigLevDet&);
+    int processSamples(float *samples, int count);
+    
+};  /* class SigLevDet */
 
 
 //} /* namespace */
 
-#endif /* AUDIO_FILTER_INCLUDED */
+#endif /* SIG_LEV_DET_INCLUDED */
 
 
 

@@ -4,7 +4,7 @@
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-03-21
 
-A_detailed_description_for_this_file
+This file contains a class that implements a local transmitter.
 
 \verbatim
 <A brief description of the program or library this file belongs to>
@@ -56,6 +56,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncAudioIO.h>
 #include <AsyncConfig.h>
+#include <AudioClipper.h>
+#include <AudioCompressor.h>
+#include <AudioFilter.h>
+#include <SigCAudioSink.h>
+#include <SigCAudioSource.h>
 
 
 /****************************************************************************
@@ -64,10 +69,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AudioClipper.h"
-#include "AudioFilter.h"
-#include "SigCAudioSink.h"
-#include "SigCAudioSource.h"
 #include "LocalTx.h"
 
 
@@ -97,7 +98,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-class SineGenerator : public SigC::Object
+class SineGenerator : public Async::AudioSource
 {
   public:
     explicit SineGenerator(const string& audio_dev)
@@ -105,8 +106,6 @@ class SineGenerator : public SigC::Object
       	sample_rate(0)
     {
       sample_rate = audio_io.sampleRate();
-      audio_io.writeBufferFull.connect(
-      	  SigC::slot(this, &SineGenerator::onWriteBufferFull));
     }
     
     ~SineGenerator(void)
@@ -142,6 +141,17 @@ class SineGenerator : public SigC::Object
       	audio_io.close();
       }
     }
+
+    void resumeOutput(void)
+    {
+      writeSamples();
+    }
+    
+    void allSamplesFlushed(void)
+    {
+    
+    }
+    
     
   private:
     static const int BLOCK_SIZE = 200;
@@ -152,14 +162,6 @@ class SineGenerator : public SigC::Object
     double    level;
     int       sample_rate;
     
-    void onWriteBufferFull(bool is_full)
-    {
-      if (!is_full)
-      {
-      	writeSamples();
-      }
-    }
-    
     void writeSamples(void)
     {
       int written;
@@ -169,7 +171,7 @@ class SineGenerator : public SigC::Object
 	{
       	  buf[i] = level * sin(2 * M_PI * fq * (pos+i) / sample_rate);
 	}
-	written = audio_io.write(buf, BLOCK_SIZE);
+	written = sinkWriteSamples(buf, BLOCK_SIZE);
 	pos += written;
       } while (written == BLOCK_SIZE);
     }
@@ -214,7 +216,7 @@ LocalTx::LocalTx(Config& cfg, const string& name)
     serial(0), ptt_pin1(Serial::PIN_NONE), ptt_pin1_rev(false),
     ptt_pin2(Serial::PIN_NONE), ptt_pin2_rev(false), txtot(0),
     tx_timeout_occured(false), tx_timeout(0), tx_delay(0), ctcss_enable(false),
-    sigc_preemph(0), is_flushing(false)
+    sigc_src(0), is_flushing(false)
 {
 
 } /* LocalTx::LocalTx */
@@ -223,6 +225,8 @@ LocalTx::LocalTx(Config& cfg, const string& name)
 LocalTx::~LocalTx(void)
 {
   transmit(false);
+  
+  // FIXME: Free all audio processing objects
   
   delete txtot;
   delete serial;
@@ -296,13 +300,6 @@ bool LocalTx::initialize(void)
   }
   
   audio_io = new AudioIO(audio_dev);
-  //audio_io->setGain(0.84740);
-  //audio_io->setGain(0.9084);
-  //audio_io->setGain(1.0);
-  //audio_io->writeBufferFull.connect(transmitBufferFull.slot());
-  //audio_io->allSamplesFlushed.connect(allSamplesFlushed.slot());
-  //audio_io->allSamplesFlushed.connect(
-  //    slot(this, &LocalTx::onAllSamplesFlushed));
   
   sine_gen = new SineGenerator(audio_dev);
   
@@ -316,42 +313,55 @@ bool LocalTx::initialize(void)
   {
     int level = atoi(value.c_str());
     sine_gen->setLevel(level);
-    audio_io->setGain((100.0 - level) / 100);
+    audio_io->setGain((100.0 - level) / 100.0);
   }  
+  
+  sigc_src = new SigCAudioSource;
+  sigc_src->sigWriteBufferFull.connect(transmitBufferFull.slot());
+  sigc_src->sigAllSamplesFlushed.connect(
+      slot(this, &LocalTx::onAllSamplesFlushed));
+  AudioSource *prev_src = sigc_src;
+  
+  /*
+  AudioCompressor *comp = new AudioCompressor;
+  comp->setThreshold(-10);
+  comp->setRatio(0.25);
+  comp->setAttack(10);
+  comp->setDecay(100);
+  comp->setOutputGain(0);
+  comp->registerSource(prev_src);
+  prev_src = comp;
+  */
   
   if (cfg.getValue(name, "PREEMPHASIS", value) && (atoi(value.c_str()) != 0))
   {
-    sigc_preemph = new SigCAudioSource;
-    sigc_preemph->sigWriteBufferFull.connect(transmitBufferFull.slot());
-    sigc_preemph->sigAllSamplesFlushed.connect(
-	slot(this, &LocalTx::onAllSamplesFlushed));
-    
     AudioFilter *preemph = new AudioFilter("HpBu1/3000");
     preemph->setOutputGain(8);
-    preemph->registerSource(sigc_preemph);
-    
-    AudioClipper *clipper = new AudioClipper;
-    clipper->registerSource(preemph);
-    
-    AudioFilter *sf = new AudioFilter("LpBu4/3000");
-    sf->registerSource(clipper);
-    
-    SigCAudioSink *sigc_sink = new SigCAudioSink;
-    sigc_sink->registerSource(sf);
-    sigc_sink->sigWriteSamples.connect(slot(audio_io, &AudioIO::write));
-    sigc_sink->sigFlushSamples.connect(slot(audio_io, &AudioIO::flushSamples));
-    audio_io->writeBufferFull.connect(
-	slot(sigc_sink, &SigCAudioSink::writeBufferFull));
-    audio_io->allSamplesFlushed.connect(
-	slot(sigc_sink, &SigCAudioSink::allSamplesFlushed));
+    preemph->registerSource(prev_src);
+    prev_src = preemph;
   }
-  else
-  {
-    audio_io->writeBufferFull.connect(transmitBufferFull.slot());
-    audio_io->allSamplesFlushed.connect(
-        slot(this, &LocalTx::onAllSamplesFlushed));
-  }
-    
+  
+  /*
+  AudioCompressor *limit = new AudioCompressor;
+  limit->setThreshold(-1);
+  limit->setRatio(0.1);
+  limit->setAttack(2);
+  limit->setDecay(20);
+  limit->setOutputGain(1);
+  limit->registerSource(prev_src);
+  prev_src = limit;
+  */
+  
+  AudioClipper *clipper = new AudioClipper;
+  clipper->registerSource(prev_src);
+  prev_src = clipper;
+
+  AudioFilter *sf = new AudioFilter("LpBu4/3000");
+  sf->registerSource(prev_src);
+  prev_src = sf;
+  
+  audio_io->registerSource(prev_src);
+  
   return true;
   
 } /* LocalTx::initialize */
@@ -432,15 +442,7 @@ int LocalTx::transmitAudio(float *samples, int count)
     return 0;
   }
   
-  int ret;
-  if (sigc_preemph != 0)
-  {
-    ret = sigc_preemph->writeSamples(samples, count);
-  }
-  else
-  {
-    ret = audio_io->write(samples, count);
-  }
+  int ret = sigc_src->writeSamples(samples, count);
   /*
   if (ret != count)
   {
@@ -455,14 +457,7 @@ int LocalTx::transmitAudio(float *samples, int count)
 void LocalTx::flushSamples(void)
 {
   is_flushing = true;
-  if (sigc_preemph != 0)
-  {
-    sigc_preemph->flushSamples();
-  }
-  else
-  {
-    audio_io->flushSamples();
-  }
+  sigc_src->flushSamples();
 } /* LocalTx::flushSamples */
 
 

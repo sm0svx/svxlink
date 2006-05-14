@@ -12,6 +12,8 @@
 #include <AsyncQtApplication.h>
 #include <AsyncAudioIO.h>
 #include <AsyncTimer.h>
+#include <AudioSplitter.h>
+#include <SigCAudioSink.h>
 
 #include "../rx/ToneDetector.h"
 #include "../rx/DtmfDecoder.h"
@@ -227,12 +229,15 @@ int main(int argc, char **argv)
   overtone_plot = new BarPlot(plot_win->overtone_plot, end_ko-start_ko+1);
   overtone_plot->setHighlight(dtmf_ko);
   
-  AudioIO *audio_io = new AudioIO("/dev/dsp");
-  if (!audio_io->open(AudioIO::MODE_RD))
+  AudioIO audio_io("/dev/dsp");
+  if (!audio_io.open(AudioIO::MODE_RD))
   {
     printf("*** ERROR: Could not open audio device /dev/dsp\n");
     exit(1);
   }
+  
+  AudioSplitter splitter;
+  splitter.registerSource(&audio_io);
   
   ToneDetector *det;
   
@@ -240,20 +245,23 @@ int main(int argc, char **argv)
   {
     det = new Det(k-start_k,k*8000/basetone_N+4000/basetone_N, basetone_N);
     det->valueChanged.connect(slot(&detValueChanged));
-    audio_io->audioRead.connect(slot(det, &ToneDetector::processSamples));
+    splitter.addSink(det);
   }
   
   for (int k=start_ko; k<end_ko+1; ++k)
   {
     det = new Det(k-start_ko,k*8000/overtone_N+4000/overtone_N, overtone_N);
     det->valueChanged.connect(slot(&overtoneValueChanged));
-    audio_io->audioRead.connect(slot(det, &ToneDetector::processSamples));
+    splitter.addSink(det);
   }
-  
-  audio_io->audioRead.connect(slot(&update_peak_meter));
+
+  SigCAudioSink sigc_sink;
+  splitter.addSink(&sigc_sink);
+  sigc_sink.sigWriteSamples.connect(slot(&update_peak_meter));
   
   DtmfDecoder dtmf_dec;
-  audio_io->audioRead.connect(slot(&dtmf_dec, &DtmfDecoder::processSamples));
+  sigc_sink.sigWriteSamples.connect(
+      slot(&dtmf_dec, &DtmfDecoder::processSamples));
   dtmf_dec.digitDetected.connect(slot(&dtmf_digit_detected));
   
   repaint(0);

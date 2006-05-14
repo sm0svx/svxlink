@@ -54,6 +54,9 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include <SigCAudioSource.h>
+#include <SigCAudioSink.h>
+
 
 
 /****************************************************************************
@@ -62,8 +65,6 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
-#include "SigCAudioSource.h"
-#include "SigCAudioSink.h"
 #include "AudioSwitchMatrix.h"
 #include "CmdParser.h"
 
@@ -104,8 +105,6 @@ class Tx;
 class MsgHandler;
 class Module;
 class EventHandler;
-class SigCAudioSource;
-class SigCAudioSink;
 class Command;
 class Recorder;
   
@@ -241,8 +240,8 @@ class Logic : public SigC::Object
     float       	      	report_ctcss;
     std::map<int, std::string>	macros;
     EventHandler      	      	*event_handler;
-    SigCAudioSource       	logic_con_out;
-    SigCAudioSink 	      	logic_con_in;
+    Async::SigCAudioSource      logic_con_out;
+    Async::SigCAudioSink 	logic_con_in;
     bool      	      	      	remote_logic_tx;
     CmdParser 	      	      	cmd_parser;
     Async::Timer      	      	*every_minute_timer;

@@ -68,6 +68,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace Async
 {
   class SampleFifo;
+  class SigCAudioSource;
+  class SigCAudioSink;
 };
 
 class QString;
@@ -169,16 +171,18 @@ class ComDialog : public ComDialogBase, public SigC::Object
   protected:
     
   private:
-    QString   	      	  callsign;
-    EchoLink::Qso *   	  con;
-    EchoLink::Directory & dir;
-    bool      	      	  accept_connection;
-    Async::AudioIO * 	  audio_io;
-    bool      	      	  audio_full_duplex;
-    bool      	      	  is_transmitting;
-    QColor    	      	  orig_background_color;
-    bool      	      	  ctrl_pressed;
-    Async::SampleFifo *   rem_audio_fifo;
+    QString   	      	    callsign;
+    EchoLink::Qso *   	    con;
+    EchoLink::Directory &   dir;
+    bool      	      	    accept_connection;
+    Async::AudioIO * 	    audio_io;
+    bool      	      	    audio_full_duplex;
+    bool      	      	    is_transmitting;
+    QColor    	      	    orig_background_color;
+    bool      	      	    ctrl_pressed;
+    Async::SampleFifo *     rem_audio_fifo;
+    Async::SigCAudioSource  *sigc_src;
+    Async::SigCAudioSink    *sigc_sink;
   
     ComDialog(const ComDialog&);
     ComDialog& operator=(const ComDialog&);

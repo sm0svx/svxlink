@@ -1,8 +1,8 @@
 /**
-@file	 AudioSink.cpp
+@file	 SigLevDet.cpp
 @brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2005-04-17
+@date	 2006-05-07
 
 A_detailed_description_for_this_file
 
@@ -34,6 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <cmath>
+//#include <iostream>
 
 
 /****************************************************************************
@@ -42,6 +44,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AudioFilter.h>
+#include <SigCAudioSink.h>
 
 
 /****************************************************************************
@@ -50,8 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AudioSink.h"
-#include "AudioSource.h"
+#include "SigLevDet.h"
 
 
 
@@ -61,7 +64,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-//using namespace std;
+using namespace std;
+using namespace Async;
 
 
 
@@ -112,50 +116,29 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-bool AudioSink::registerSource(AudioSource *source)
+SigLevDet::SigLevDet(void)
 {
-  if (m_source != 0)
-  {
-    return m_source == source;
-  }
-  
-  m_source = source;
-  if (!m_source->registerSink(this))
-  {
-    m_source = 0;
-    return false;
-  }
-  
-  return true;
-  
-} /* AudioSink::registerSource */
+  filter = new AudioFilter("HpBu4/3500");
+  setHandler(filter);
+  sigc_sink = new SigCAudioSink;
+  sigc_sink->sigWriteSamples.connect(slot(this, &SigLevDet::processSamples));
+  sigc_sink->sigFlushSamples.connect(
+      slot(sigc_sink, &SigCAudioSink::allSamplesFlushed));
+  sigc_sink->registerSource(filter);
+} /* SigLevDet::SigLevDet */
 
 
-void AudioSink::unregisterSource(void)
+SigLevDet::~SigLevDet(void)
 {
-  if (m_source == 0)
-  {
-    return;
-  }
-  
-  AudioSource *source = m_source;
-  m_source = 0;
-  source->unregisterSink();
-  
-} /* AudioSink::unregisterSource */
+  delete filter;
+  delete sigc_sink;
+} /* SigLevDet::~SigLevDet */
+
+
+void SigLevDet::reset(void)
+{
+  filter->reset();
+} /* SigLevDet::reset */
 
 
 
@@ -178,22 +161,6 @@ void AudioSink::unregisterSource(void)
  * Bugs:      
  *------------------------------------------------------------------------
  */
-void AudioSink::sourceResumeOutput(void)
-{
-  if (m_source != 0)
-  {
-    m_source->resumeOutput();
-  }
-} /* AudioSink::sourceResumeOutput */
-
-
-void AudioSink::sourceAllSamplesFlushed(void)
-{
-  if (m_source != 0)
-  {
-    m_source->allSamplesFlushed();
-  }
-} /* AudioSink::sourceAllSamplesFlushed */
 
 
 
@@ -219,7 +186,19 @@ void AudioSink::sourceAllSamplesFlushed(void)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-
+int SigLevDet::processSamples(float *samples, int count)
+{
+  //cout << "SigLevDet::processSamples: count=" << count << "\n";
+  double rms = 0.0;
+  for (int i=0; i<count; ++i)
+  {
+    rms += pow(samples[i], 2);
+  }
+  last_siglev = sqrt(rms / count);
+  
+  return count;
+  
+} /* SigLevDet::processSamples */
 
 
 

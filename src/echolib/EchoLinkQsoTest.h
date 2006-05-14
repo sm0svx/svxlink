@@ -64,6 +64,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class SigCAudioSink;
+  class SigCAudioSource;
+};
 
 
 /****************************************************************************
@@ -120,6 +125,8 @@ class EchoLinkQsoTest : public EchoLink::Qso
     bool      	      	      	  is_transmitting;
     bool      	      	      	  full_duplex;
     long      	      	      	  vox_limit;
+    Async::SigCAudioSink      	  *sigc_sink;
+    Async::SigCAudioSource        *sigc_src;
   
     void stdinHandler(Async::FdWatch *watch);
     void printPrompt(void);

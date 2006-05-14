@@ -4,8 +4,9 @@
 
 #include <sigc++/signal_system.h>
 
+#include <AudioSource.h>
 
-class MsgHandler : public SigC::Object
+class MsgHandler : public SigC::Object, public Async::AudioSource
 {
   public:
     MsgHandler(const std::string& base_dir, int sample_rate);
@@ -16,14 +17,16 @@ class MsgHandler : public SigC::Object
     void playNumber(float number);
     void spellWord(const std::string& word);
     void playSilence(int length);
-    void writeBufferFull(bool is_full);
     bool isWritingMessage(void) const { return !msg_queue.empty(); }
     void clear(void);
     void begin(void);
     void end(void);
     
-    SigC::Signal2<int, float*, int> writeAudio;
     SigC::Signal0<void>       	    allMsgsWritten;
+    
+    void resumeOutput(void);
+    
+    void allSamplesFlushed(void) {}
     
     
   private:

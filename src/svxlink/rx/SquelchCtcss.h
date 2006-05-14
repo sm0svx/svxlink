@@ -199,7 +199,7 @@ class SquelchCtcss : public Squelch
      */
     int processSamples(float *samples, int count)
     {
-      return det->processSamples(samples, count);
+      return det->writeSamples(samples, count);
     }
     
     

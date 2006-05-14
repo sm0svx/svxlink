@@ -30,7 +30,7 @@ CPPPROGS      	= $(BIN)/qtel
 PRGSRC		= MainWindow.cpp ComDialog.cpp Settings.cpp MsgHandler.cpp
 
 # Libraries compiled in the project (in $(LIB)).
-PROJLIBS	= -lecholib -lasyncqt
+PROJLIBS	= -lecholib -lasyncqt -lasyncaudio
 
 # Libraries external to the project
 LIBS		= $(QT_LIBS) -lsigc

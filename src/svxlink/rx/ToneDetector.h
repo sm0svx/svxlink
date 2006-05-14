@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AudioSink.h>
 
 
 /****************************************************************************
@@ -54,9 +55,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-extern "C" {
-#include "fidlib.h"
-};
 
 
 /****************************************************************************
@@ -65,6 +63,11 @@ extern "C" {
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class AudioFilter;
+  class SigCAudioSink;
+};
 
 
 /****************************************************************************
@@ -131,13 +134,12 @@ extern "C" {
 @author Tobias Blomberg / SM0SVX
 @date   2003-04-15
 */
-class ToneDetector : public SigC::Object
+class ToneDetector : public SigC::Object, public Async::AudioSink
 {
   public:
     ToneDetector(float tone_hz, int base_N);
     ~ToneDetector(void);
     
-    int processSamples(float *buf, int len);
     bool isActivated(void) const { return (det_delay_left == 0); }
     FLOATING value(void) const { return result; }
     float toneFq(void) const { return tone_fq; }
@@ -151,32 +153,31 @@ class ToneDetector : public SigC::Object
   protected:
     
   private:
-    int       	block_pos;
-    int       	is_activated;
-    FLOATING  	result;
-    float     	tone_fq;
-    float     	*block;
+    int       	      	  block_pos;
+    int       	      	  is_activated;
+    FLOATING  	      	  result;
+    float     	      	  tone_fq;
+    float     	      	  *block;
     
-    FLOATING  	coeff;
-    FLOATING  	Q1;
-    FLOATING  	Q2;
-    FLOATING  	sine;
-    FLOATING  	cosine;
-    int       	N;
+    FLOATING  	      	  coeff;
+    FLOATING  	      	  Q1;
+    FLOATING  	      	  Q2;
+    FLOATING  	      	  sine;
+    FLOATING  	      	  cosine;
+    int       	      	  N;
     
-    FidFilter 	*ff;
-    FidRun    	*ff_run;
-    FidFunc   	*ff_func;
-    void      	*ff_buf;    
-    std::string filter_spec;
-    int       	det_delay_left;
-    int       	undet_delay_left;
-    float     	snr_thresh;
+    Async::AudioFilter	  *filter;
+    std::string       	  filter_spec;
+    int       	      	  det_delay_left;
+    int       	      	  undet_delay_left;
+    float     	      	  snr_thresh;
+    Async::SigCAudioSink  *sigc_sink;
     
     inline void resetGoertzel(void);
     inline void processSample(SAMPLE sample);
     //void getRealImag(FLOATING *realPart, FLOATING *imagPart);
     inline FLOATING getMagnitudeSquared(void);
+    int processSamples(float *buf, int len);
 
 };  /* class ToneDetector */
 

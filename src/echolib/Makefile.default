@@ -34,7 +34,7 @@ CPPPROGS      	= echolib_test EchoLinkDispatcher_demo EchoLinkDirectory_demo \
 PRGSRC		= EchoLinkQsoTest.cpp
 
 # Libraries compiled in the project (in $(LIB)).
-PROJLIBS	= -lecholib -lasynccpp
+PROJLIBS	= -lecholib -lasynccpp -lasyncaudio
 
 # Libraries external to the project
 LIBS		= -lpopt

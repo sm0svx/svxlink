@@ -29,13 +29,12 @@ CPPPROGS      	= $(BIN)/svxlink
 PRGSRC		= LocalTx.cpp MsgHandler.cpp \
 		  Module.cpp AudioPacer.cpp \
 		  Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp \
-		  EventHandler.cpp AudioSource.cpp AudioSink.cpp \
+		  EventHandler.cpp \
 		  AudioSwitchMatrix.cpp CmdParser.cpp \
-		  Recorder.cpp AudioFilter.cpp \
-		  AudioProcessor.cpp
+		  Recorder.cpp
 
 # Libraries compiled in the project (in $(LIB)).
-PROJLIBS	= -lasynccpp -lrx
+PROJLIBS	= -lasynccpp -lasyncaudio -lrx
 
 # Libraries external to the project
 LIBS		= -ldl -lpopt -ltcl

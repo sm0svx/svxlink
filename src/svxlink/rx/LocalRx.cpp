@@ -49,6 +49,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncConfig.h>
 #include <AsyncAudioIO.h>
+#include <AudioFilter.h>
+#include <SigCAudioSink.h>
 
 
 /****************************************************************************
@@ -57,6 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "SigLevDet.h"
 #include "DtmfDecoder.h"
 #include "ToneDetector.h"
 #include "SquelchVox.h"
@@ -169,9 +172,8 @@ class ToneDurationDet : public ToneDetector
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
   : Rx(cfg, name), audio_io(0), is_muted(true), dtmf_dec(0),
-    squelch(0), hpff(0), hpff_run(0), hpff_buf(0),
-    siglev_offset(0.0), siglev_slope(1.0), deemph(0), deemph_run(0),
-    deemph_buf(0)
+    squelch(0), siglevdet(0), siglev_offset(0.0), siglev_slope(1.0),
+    deemph_filt(0), sigc_sink(0)
 {
   resetHighpassFilter();
 } /* LocalRx::LocalRx */
@@ -186,22 +188,11 @@ LocalRx::~LocalRx(void)
   }
   tone_detectors.clear();
   
-  if (hpff != 0)
-  {
-    fid_run_freebuf(hpff_buf);
-    fid_run_free(hpff_run);
-    free(hpff);
-  }
-    
-  if (deemph != 0)
-  {
-    fid_run_freebuf(deemph_buf);
-    fid_run_free(deemph_run);
-    free(deemph);
-  }
-    
+  delete siglevdet;
   delete squelch;
   delete dtmf_dec;
+  delete sigc_sink;
+  delete deemph_filt;
   delete audio_io;
 } /* LocalRx::~LocalRx */
 
@@ -268,34 +259,24 @@ bool LocalRx::initialize(void)
   }
     
   audio_io = new AudioIO(audio_dev);
-  audio_io->audioRead.connect(slot(this, &LocalRx::audioRead));
+  AudioSource *prev_src = audio_io;
 
+  if (deemphasis)
+  {
+    deemph_filt = new AudioFilter("LpBu1/300");
+    deemph_filt->registerSource(prev_src);
+    prev_src = deemph_filt;
+  }
+  
+  sigc_sink = new SigCAudioSink;
+  sigc_sink->registerSource(prev_src);
+  sigc_sink->sigWriteSamples.connect(slot(this, &LocalRx::audioRead));
+  
   dtmf_dec = new DtmfDecoder;
   dtmf_dec->digitDetected.connect(dtmfDigitDetected.slot());
   
-  char *spec = "HpBu4/3500";
-  char *fferr = fid_parse(audio_io->sampleRate(), &spec, &hpff);
-  if (fferr != 0)
-  {
-    cerr << "***ERROR: Filter creation error: " << fferr << endl;
-    exit(1);
-  }
-  hpff_run = fid_run_new(hpff, &hpff_func);
-  hpff_buf = fid_run_newbuf(hpff_run);
+  siglevdet = new SigLevDet;
   
-  if (deemphasis)
-  {
-    spec = "LpBu1/300";
-    fferr = fid_parse(audio_io->sampleRate(), &spec, &deemph);
-    if (fferr != 0)
-    {
-      cerr << "***ERROR: Deemphasis filter creation error: " << fferr << endl;
-      exit(1);
-    }
-    deemph_run = fid_run_new(deemph, &deemph_func);
-    deemph_buf = fid_run_newbuf(deemph_run);
-  }
-    
   return true;
   
 } /* LocalRx:initialize */
@@ -354,7 +335,7 @@ bool LocalRx::addToneDetector(float fq, int bw, float thresh,
 
 float LocalRx::signalStrength(void) const
 {
-  return siglev_offset - siglev_slope * log10(last_siglev);
+  return siglev_offset - siglev_slope * log10(siglevdet->lastSiglev());
 } /* LocalRx::signalStrength */
     
 
@@ -408,18 +389,13 @@ int LocalRx::audioRead(float *samples, int count)
 {
   bool was_open = squelch->isOpen();
   
-  double rms = 0.0;
-  for (int i=0; i<count; ++i)
-  {
-    rms += pow(hpff_func(hpff_buf, samples[i]), 2);
-  }
-  last_siglev = sqrt(rms / count);
+  siglevdet->writeSamples(samples, count);
     
   squelch->audioIn(samples, count);
   if (!was_open && squelch->isOpen())
   {
     setSquelchState(true);
-    fid_run_zapbuf(hpff_buf);
+    siglevdet->reset();
   }
   
   dtmf_dec->processSamples(samples, count);
@@ -427,26 +403,18 @@ int LocalRx::audioRead(float *samples, int count)
   list<ToneDurationDet*>::iterator it;
   for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
   {
-    (*it)->processSamples(samples, count);
+    (*it)->writeSamples(samples, count);
   }
   
   if (squelch->isOpen() && !is_muted)
   {
-    float *filtered = new float[count];
+    float filtered[count];
     for (int i=0; i<count; ++i)
     {
-      if (deemph != 0)
-      {
-      	filtered[i] = 4 * deemph_func(deemph_buf, samples[i]);
-      }
-      else
-      {
-      	filtered[i] = samples[i];
-      }
+      filtered[i] = samples[i];
     }
     highpassFilter(filtered, count);
     count = audioReceived(filtered, count);
-    delete [] filtered;
   }
   
   if (was_open && !squelch->isOpen())

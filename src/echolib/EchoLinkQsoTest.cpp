@@ -49,6 +49,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncFdWatch.h>
 #include <AsyncCppApplication.h>
+#include <SigCAudioSink.h>
+#include <SigCAudioSource.h>
 
 
 /****************************************************************************
@@ -137,7 +139,7 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
     const string& info, const StationData *station)
   : Qso(station->ip(), callsign, name, info),
     station(station), chat_mode(false), is_transmitting(false),
-    vox_limit(-1)
+    vox_limit(-1), sigc_sink(0), sigc_src(0)
 {
   cout << "Call        : " << station->callsign() << endl;
   cout << "Description : " << station->description() << endl;
@@ -155,6 +157,8 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
   stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
   stdin_watch->activity.connect(slot(this, &EchoLinkQsoTest::stdinHandler));
   
+  sigc_src = new SigCAudioSource;
+  
   audio_io = new AudioIO("/dev/dsp");
   full_duplex = audio_io->isFullDuplexCapable();
   if (full_duplex)
@@ -165,10 +169,15 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
   {
     audio_io->open(AudioIO::MODE_WR);
   }
-  audio_io->audioRead.connect(slot(this, &EchoLinkQsoTest::micAudioRead));
+  audio_io->registerSource(sigc_src);
+  
+  sigc_sink = new SigCAudioSink;
+  sigc_sink->registerSource(audio_io);
+  sigc_sink->sigWriteSamples.connect(
+      slot(this, &EchoLinkQsoTest::micAudioRead));
   
   chatMsgReceived.connect(slot(this, &EchoLinkQsoTest::chatMsg));
-  audioReceived.connect(slot(audio_io, &AudioIO::write));
+  audioReceived.connect(slot(sigc_src, &SigCAudioSource::writeSamples));
   
   cout << string("Audio device is ") << (full_duplex ? "" : "NOT ")
       << "full duplex capable\n";
@@ -180,6 +189,8 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
 
 EchoLinkQsoTest::~EchoLinkQsoTest(void)
 {
+  delete sigc_src;
+  delete sigc_sink;
   delete stdin_watch;
   tcsetattr(STDIN_FILENO, TCSANOW, &org_termios);  
 } /* EchoLinkQsoTest::~EchoLinkQsoTest */

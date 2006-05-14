@@ -116,7 +116,7 @@ class DtmfToneDetector : public SigC::Object
       basetone.reset();
       //overtone.reset();
       
-      basetone.processSamples(samples, BASETONE_N);
+      basetone.writeSamples(samples, BASETONE_N);
       //overtone.processSamples(samples, OVERTONE_N);
 
       return count;
