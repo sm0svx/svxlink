@@ -120,63 +120,15 @@ AudioSink::~AudioSink(void)
 } /* AudioSink::~AudioSink */
 
 
-bool AudioSink::registerSource(AudioSource *source, bool reg_sink)
+bool AudioSink::registerSource(AudioSource *source)
 {
-  assert(source != 0);
-  
-  if (m_source != 0)
-  {
-    return m_source == source;
-  }
-  
-  m_source = source;
-  if (reg_sink)
-  {
-    if (!m_source->registerSink(this))
-    {
-      m_source = 0;
-      return false;
-    }
-  }
-  
-  if (m_handler != 0)
-  {
-    if (!m_handler->registerSource(source, false))
-    {
-      if (reg_sink)
-      {
-      	m_source->unregisterSink();
-      }
-      m_source = 0;
-      return false;
-    }
-  }
-  
-  return true;
-  
+  return registerSourceInternal(source, true);
 } /* AudioSink::registerSource */
 
 
-void AudioSink::unregisterSource(bool unreg_sink)
+void AudioSink::unregisterSource(void)
 {
-  if (m_source == 0)
-  {
-    return;
-  }
-  
-  AudioSource *source = m_source;
-  m_source = 0;
-  
-  if (unreg_sink)
-  {
-    source->unregisterSink();
-  }
-  
-  if (m_handler != 0)
-  {
-    m_handler->unregisterSource(false);
-  }
-  
+  unregisterSourceInternal(true);
 } /* AudioSink::unregisterSource */
 
 
@@ -229,7 +181,7 @@ bool AudioSink::setHandler(AudioSink *handler)
   
   if (m_source != 0)
   {
-    if (!m_handler->registerSource(m_source, false))
+    if (!m_handler->registerSourceInternal(m_source, false))
     {
       return false;
     }
@@ -251,7 +203,7 @@ void AudioSink::clearHandler(void)
   
   if (m_source != 0)
   {
-    m_handler->unregisterSource(false);
+    m_handler->unregisterSourceInternal(false);
   }
   
   m_handler = 0;
@@ -278,7 +230,64 @@ void AudioSink::clearHandler(void)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
+bool AudioSink::registerSourceInternal(AudioSource *source, bool reg_sink)
+{
+  assert(source != 0);
+  
+  if (m_source != 0)
+  {
+    return m_source == source;
+  }
+  
+  m_source = source;
+  if (reg_sink)
+  {
+    if (!m_source->registerSink(this))
+    {
+      m_source = 0;
+      return false;
+    }
+  }
+  
+  if (m_handler != 0)
+  {
+    if (!m_handler->registerSourceInternal(source, false))
+    {
+      if (reg_sink)
+      {
+      	m_source->unregisterSink();
+      }
+      m_source = 0;
+      return false;
+    }
+  }
+  
+  return true;
+  
+} /* AudioSink::registerSourceInternal */
 
+
+void AudioSink::unregisterSourceInternal(bool unreg_sink)
+{
+  if (m_source == 0)
+  {
+    return;
+  }
+  
+  AudioSource *source = m_source;
+  m_source = 0;
+  
+  if (unreg_sink)
+  {
+    source->unregisterSink();
+  }
+  
+  if (m_handler != 0)
+  {
+    m_handler->unregisterSourceInternal(false);
+  }
+  
+} /* AudioSink::unregisterSourceInternal */
 
 
 

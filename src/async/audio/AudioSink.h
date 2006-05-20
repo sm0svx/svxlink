@@ -128,17 +128,14 @@ class AudioSink
     /**
      * @brief 	Register an audio source to provide samples to this sink
      * @param 	source    The audio source to use
-     * @param 	reg_sink  Register this sink with the source. Used internally.
      * @return	Returns \em true on success or else \em false
      */
-    bool registerSource(AudioSource *source, bool reg_sink=true);
+    bool registerSource(AudioSource *source);
   
     /**
      * @brief 	Unregister the previously registered audio source
-     * @param 	unreg_sink  Unregister this sink with the source.
-     *                      Used internally.
      */
-    void unregisterSource(bool unreg_sink=true);
+    void unregisterSource(void);
   
     /**
      * @brief 	Check if an audio source has been registered
@@ -215,6 +212,9 @@ class AudioSink
   private:
     AudioSource *m_source;
     AudioSink 	*m_handler;
+    
+    bool registerSourceInternal(AudioSource *source, bool reg_sink);
+    void unregisterSourceInternal(bool unreg_sink);
     
 };  /* class AudioSink */
 
