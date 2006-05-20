@@ -116,7 +116,7 @@ class AudioSource
     /**
      * @brief 	Default constuctor
      */
-    AudioSource(void) : m_sink(0) {}
+    AudioSource(void) : m_sink(0), m_sink_managed(false) {}
   
     /**
      * @brief 	Destructor
@@ -125,10 +125,12 @@ class AudioSource
   
     /**
      * @brief 	Register an audio sink to provide samples to
-     * @param 	sink  The audio sink to register
+     * @param 	sink  	The audio sink to register
+     * @param 	managed If \em true, the registered sink will be destroyed
+     *	      	      	when this object is destroyed.
      * @return	Returns \em true on success or else \em false
      */
-    bool registerSink(AudioSink *sink);
+    bool registerSink(AudioSink *sink, bool managed=false);
 
     /**
      * @brief 	Unregister the previously registered audio sink
@@ -174,6 +176,7 @@ class AudioSource
     
   private:
     AudioSink *m_sink;
+    bool      m_sink_managed;
     
     
 };  /* class AudioSource */

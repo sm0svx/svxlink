@@ -113,11 +113,20 @@ using namespace Async;
 
 AudioSource::~AudioSource(void)
 {
-  unregisterSink();
+  if (m_sink_managed)
+  {
+    AudioSink *sink = m_sink;
+    m_sink = 0;
+    delete sink;
+  }
+  else
+  {
+    unregisterSink();
+  }
 } /* AudioSource::~AudioSource */
 
 
-bool AudioSource::registerSink(AudioSink *sink)
+bool AudioSource::registerSink(AudioSink *sink, bool managed)
 {
   assert(sink != 0);
   
@@ -132,6 +141,8 @@ bool AudioSource::registerSink(AudioSink *sink)
     m_sink = 0;
     return false;
   }
+  
+  m_sink_managed = managed;
   
   return true;
   
@@ -148,6 +159,7 @@ void AudioSource::unregisterSink(void)
   AudioSink *sink = m_sink;
   m_sink = 0;
   sink->unregisterSource();
+  m_sink_managed = false;
   
 } /* AudioSource::unregisterSink */
 
