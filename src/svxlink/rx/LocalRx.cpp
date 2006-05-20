@@ -172,8 +172,7 @@ class ToneDurationDet : public ToneDetector
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
   : Rx(cfg, name), audio_io(0), is_muted(true), dtmf_dec(0),
-    squelch(0), siglevdet(0), siglev_offset(0.0), siglev_slope(1.0),
-    deemph_filt(0), sigc_sink(0)
+    squelch(0), siglevdet(0), siglev_offset(0.0), siglev_slope(1.0)
 {
   resetHighpassFilter();
 } /* LocalRx::LocalRx */
@@ -191,8 +190,6 @@ LocalRx::~LocalRx(void)
   delete siglevdet;
   delete squelch;
   delete dtmf_dec;
-  delete sigc_sink;
-  delete deemph_filt;
   delete audio_io;
 } /* LocalRx::~LocalRx */
 
@@ -263,14 +260,14 @@ bool LocalRx::initialize(void)
 
   if (deemphasis)
   {
-    deemph_filt = new AudioFilter("LpBu1/300");
-    deemph_filt->registerSource(prev_src);
+    AudioFilter *deemph_filt = new AudioFilter("LpBu1/300");
+    prev_src->registerSink(deemph_filt, true);
     prev_src = deemph_filt;
   }
   
-  sigc_sink = new SigCAudioSink;
-  sigc_sink->registerSource(prev_src);
+  SigCAudioSink *sigc_sink = new SigCAudioSink;
   sigc_sink->sigWriteSamples.connect(slot(this, &LocalRx::audioRead));
+  prev_src->registerSink(sigc_sink, true);
   
   dtmf_dec = new DtmfDecoder;
   dtmf_dec->digitDetected.connect(dtmfDigitDetected.slot());

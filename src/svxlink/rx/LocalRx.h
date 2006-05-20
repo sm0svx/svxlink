@@ -201,8 +201,6 @@ class LocalRx : public Rx
     SigLevDet 	      	      	*siglevdet;
     float     	      	      	siglev_offset;
     float     	      	      	siglev_slope;
-    Async::AudioFilter       	*deemph_filt;
-    Async::SigCAudioSink      	*sigc_sink;
     
     int audioRead(float *samples, int count);
     void resetHighpassFilter(void);
