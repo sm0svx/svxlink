@@ -227,8 +227,7 @@ LocalTx::~LocalTx(void)
 {
   transmit(false);
   
-  // FIXME: Free all audio processing objects
-  
+  delete sigc_src;
   delete txtot;
   delete serial;
   delete audio_io;
@@ -330,7 +329,7 @@ bool LocalTx::initialize(void)
   comp->setAttack(10);
   comp->setDecay(100);
   comp->setOutputGain(0);
-  comp->registerSource(prev_src);
+  prev_src->registerSink(comp, true);
   prev_src = comp;
   */
   
@@ -338,7 +337,7 @@ bool LocalTx::initialize(void)
   {
     AudioFilter *preemph = new AudioFilter("HpBu1/3000");
     preemph->setOutputGain(8);
-    preemph->registerSource(prev_src);
+    prev_src->registerSink(preemph, true);
     prev_src = preemph;
   }
   
@@ -349,16 +348,16 @@ bool LocalTx::initialize(void)
   limit->setAttack(2);
   limit->setDecay(20);
   limit->setOutputGain(1);
-  limit->registerSource(prev_src);
+  prev_src->registerSink(limit, true);
   prev_src = limit;
   */
   
   AudioClipper *clipper = new AudioClipper;
-  clipper->registerSource(prev_src);
+  prev_src->registerSink(clipper, true);
   prev_src = clipper;
 
   AudioFilter *sf = new AudioFilter("LpBu4/3000");
-  sf->registerSource(prev_src);
+  prev_src->registerSink(sf, true);
   prev_src = sf;
   
   audio_io->registerSource(prev_src);
