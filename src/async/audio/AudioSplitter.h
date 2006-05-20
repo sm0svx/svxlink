@@ -138,7 +138,7 @@ class AudioSplitter : public Async::AudioSink
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
-    void addSink(Async::AudioSink *sink);
+    void addSink(Async::AudioSink *sink, bool managed=false);
     
     int writeSamples(const float *samples, int len);
     

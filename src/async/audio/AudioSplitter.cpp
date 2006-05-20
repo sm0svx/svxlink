@@ -90,17 +90,12 @@ class Branch : public AudioSource
     int   current_buf_pos;
     bool  is_flushed;
   
-    Branch(AudioSplitter *splitter, AudioSink *sink)
+    Branch(AudioSplitter *splitter, AudioSink *sink, bool managed)
       : current_buf_pos(0), is_flushed(true), is_stopped(false),
 	splitter(splitter)
     {
-      assert(registerSink(sink));
+      assert(registerSink(sink, managed));
     } /* Branch */
-    
-    ~Branch(void)
-    {
-      unregisterSink();
-    } /* ~Branch */
     
     int sinkWriteSamples(const float *samples, int len)
     {
@@ -195,9 +190,9 @@ AudioSplitter::~AudioSplitter(void)
 } /* AudioSplitter::~AudioSplitter */
 
 
-void AudioSplitter::addSink(AudioSink *sink)
+void AudioSplitter::addSink(AudioSink *sink, bool managed)
 {
-  Branch *branch = new Branch(this, sink);
+  Branch *branch = new Branch(this, sink, managed);
   branches.push_back(branch);
   if (do_flush)
   {
