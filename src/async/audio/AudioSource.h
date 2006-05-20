@@ -124,17 +124,46 @@ class AudioSource
     virtual ~AudioSource(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Register an audio sink to provide samples to
+     * @param 	sink  The audio sink to register
+     * @return	Returns \em true on success or else \em false
      */
     bool registerSink(AudioSink *sink);
+
+    /**
+     * @brief 	Unregister the previously registered audio sink
+     */
     void unregisterSink(void);
+  
+    /**
+     * @brief 	Check if an audio sink has been registered
+     * @return	Returns \em true if there is an audio sink registerd
+     */
     bool isRegistered(void) const { return m_sink != 0; }
+
+    /**
+     * @brief 	Get the registered audio sink
+     * @return	Returns the registered audio sink if any registered or else
+     *          returns 0.
+     */
     AudioSink *sink(void) const { return m_sink; }
     
+    /**
+     * @brief Resume audio output to the sink
+     * 
+     * This function must be reimplemented by the inheriting class. This
+     * function will be called when the registered audio sink is ready to
+     * accept more samples.
+     */
     virtual void resumeOutput(void) = 0;
     
+    /**
+     * @brief The registered sink has flushed all samples
+     *
+     * This function must be implemented by the inheriting class. This
+     * function will be called when all samples have been flushed in
+     * the registered sink.
+     */
     virtual void allSamplesFlushed(void) = 0;
 
     
