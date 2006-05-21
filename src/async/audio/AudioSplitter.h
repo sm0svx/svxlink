@@ -139,6 +139,7 @@ class AudioSplitter : public Async::AudioSink
      * @return	Return_value_of_this_member_function
      */
     void addSink(Async::AudioSink *sink, bool managed=false);
+    void removeAllSinks(void);
     
     int writeSamples(const float *samples, int len);
     

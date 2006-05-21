@@ -182,11 +182,7 @@ AudioSplitter::AudioSplitter(void)
 AudioSplitter::~AudioSplitter(void)
 {
   delete buf;
-  list<Async::Branch *>::iterator it;
-  for (it = branches.begin(); it != branches.end(); ++it)
-  {
-    delete (*it);
-  }
+  removeAllSinks();
 } /* AudioSplitter::~AudioSplitter */
 
 
@@ -199,6 +195,16 @@ void AudioSplitter::addSink(AudioSink *sink, bool managed)
     branch->sinkFlushSamples();
   }
 } /* AudioSplitter::addSink */
+
+
+void AudioSplitter::removeAllSinks(void)
+{
+  list<Async::Branch *>::iterator it;
+  for (it = branches.begin(); it != branches.end(); ++it)
+  {
+    delete (*it);
+  }
+} /* AudioSplitter::removeAllSinks */
 
 
 int AudioSplitter::writeSamples(const float *samples, int len)
