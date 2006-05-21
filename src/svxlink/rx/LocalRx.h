@@ -71,6 +71,7 @@ namespace Async
   class AudioIO;
   class AudioFilter;
   class SigCAudioSink;
+  class AudioSplitter;
 };
 
 class ToneDurationDet;
@@ -187,24 +188,23 @@ class LocalRx : public Rx
   protected:
     
   private:
-    static const int  	      	NPOLES = 4;
-    static const int  	      	NZEROS = 4;
+    //static const int  	      	NPOLES = 4;
+    //static const int  	      	NZEROS = 4;
     
     Async::AudioIO    	      	*audio_io;
     bool      	      	      	is_muted;
-    DtmfDecoder       	      	*dtmf_dec;
-    ToneDetector      	      	*ctcss_det;
     Squelch   	      	      	*squelch;
-    float     	      	      	xv[NZEROS+1];
-    float     	      	      	yv[NPOLES+1];
-    std::list<ToneDurationDet*> tone_detectors;
+    //float     	      	      	xv[NZEROS+1];
+    //float     	      	      	yv[NPOLES+1];
+    //std::list<ToneDurationDet*> tone_detectors;
     SigLevDet 	      	      	*siglevdet;
     float     	      	      	siglev_offset;
     float     	      	      	siglev_slope;
+    Async::AudioSplitter      	*tone_dets;
     
     int audioRead(float *samples, int count);
-    void resetHighpassFilter(void);
-    void highpassFilter(float *samples, int count);
+    //void resetHighpassFilter(void);
+    //void highpassFilter(float *samples, int count);
 
 };  /* class LocalRx */
 

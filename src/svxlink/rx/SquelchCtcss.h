@@ -197,7 +197,7 @@ class SquelchCtcss : public Squelch
      * @param 	count The number of samples in the buffer
      * @return	Return the number of processed samples
      */
-    int processSamples(float *samples, int count)
+    int processSamples(const float *samples, int count)
     {
       return det->writeSamples(samples, count);
     }

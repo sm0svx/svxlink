@@ -51,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioIO.h>
 #include <AudioFilter.h>
 #include <SigCAudioSink.h>
+#include <AudioSplitter.h>
 
 
 /****************************************************************************
@@ -171,26 +172,29 @@ class ToneDurationDet : public ToneDetector
  ****************************************************************************/
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
-  : Rx(cfg, name), audio_io(0), is_muted(true), dtmf_dec(0),
-    squelch(0), siglevdet(0), siglev_offset(0.0), siglev_slope(1.0)
+  : Rx(cfg, name), audio_io(0), is_muted(true),
+    squelch(0), siglevdet(0), siglev_offset(0.0), siglev_slope(1.0),
+    tone_dets(0)
 {
-  resetHighpassFilter();
+  //resetHighpassFilter();
 } /* LocalRx::LocalRx */
 
 
 LocalRx::~LocalRx(void)
 {
+  /*
   list<ToneDurationDet*>::iterator it;
   for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
   {
     delete *it;
   }
   tone_detectors.clear();
+  */
   
-  delete siglevdet;
-  delete squelch;
-  delete dtmf_dec;
-  delete audio_io;
+  //delete siglevdet;
+  //delete squelch;
+  //delete dtmf_dec;
+  delete audio_io;  // This will delete the whole chain of audio objects
 } /* LocalRx::~LocalRx */
 
 
@@ -254,7 +258,7 @@ bool LocalRx::initialize(void)
     squelch = 0;
     return false;
   }
-    
+  
   audio_io = new AudioIO(audio_dev);
   AudioSource *prev_src = audio_io;
 
@@ -265,14 +269,29 @@ bool LocalRx::initialize(void)
     prev_src = deemph_filt;
   }
   
+  AudioSplitter *splitter = new AudioSplitter;
+  prev_src->registerSink(splitter, true);
+  
+  siglevdet = new SigLevDet;
+  splitter->addSink(siglevdet, true);
+  
+  squelch->squelchOpen.connect(slot(this, &LocalRx::setSquelchState));
+  splitter->addSink(squelch, true);
+  
+  DtmfDecoder *dtmf_dec = new DtmfDecoder;
+  dtmf_dec->digitDetected.connect(dtmfDigitDetected.slot());
+  splitter->addSink(dtmf_dec, true);
+  
+  tone_dets = new AudioSplitter;
+  splitter->addSink(tone_dets, true);
+  
+  AudioFilter *ctcss_filt = new AudioFilter("HpBu4/300");
+  splitter->addSink(ctcss_filt, true);
+  prev_src = ctcss_filt;
+  
   SigCAudioSink *sigc_sink = new SigCAudioSink;
   sigc_sink->sigWriteSamples.connect(slot(this, &LocalRx::audioRead));
   prev_src->registerSink(sigc_sink, true);
-  
-  dtmf_dec = new DtmfDecoder;
-  dtmf_dec->digitDetected.connect(dtmfDigitDetected.slot());
-  
-  siglevdet = new SigLevDet;
   
   return true;
   
@@ -323,7 +342,8 @@ bool LocalRx::addToneDetector(float fq, int bw, float thresh,
   det->setSnrThresh(thresh);
   det->detected.connect(toneDetected.slot());
   
-  tone_detectors.push_back(det);
+  //tone_detectors.push_back(det);
+  tone_dets->addSink(det, true);
   
   return true;
 
@@ -340,13 +360,15 @@ void LocalRx::reset(void)
 {
   mute(true);
   
+  /*
   list<ToneDurationDet*>::iterator it;
   for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
   {
     delete *it;
   }
   tone_detectors.clear();
-  
+  */
+  tone_dets->removeAllSinks();
 } /* LocalRx::reset */
 
 
@@ -384,27 +406,32 @@ void LocalRx::reset(void)
 
 int LocalRx::audioRead(float *samples, int count)
 {
-  bool was_open = squelch->isOpen();
+  //bool was_open = squelch->isOpen();
   
-  siglevdet->writeSamples(samples, count);
-    
+  //siglevdet->writeSamples(samples, count);
+  
+  /*
   squelch->audioIn(samples, count);
   if (!was_open && squelch->isOpen())
   {
     setSquelchState(true);
     siglevdet->reset();
   }
+  */
   
-  dtmf_dec->processSamples(samples, count);
+  //dtmf_dec->processSamples(samples, count);
   
+  /*
   list<ToneDurationDet*>::iterator it;
   for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
   {
     (*it)->writeSamples(samples, count);
   }
+  */
   
   if (squelch->isOpen() && !is_muted)
   {
+    /*
     float filtered[count];
     for (int i=0; i<count; ++i)
     {
@@ -412,12 +439,16 @@ int LocalRx::audioRead(float *samples, int count)
     }
     highpassFilter(filtered, count);
     count = audioReceived(filtered, count);
+    */
+    count = audioReceived(samples, count);
   }
   
+  /*
   if (was_open && !squelch->isOpen())
   {
     setSquelchState(false);
   }
+  */
   
   return count;
   
@@ -425,7 +456,7 @@ int LocalRx::audioRead(float *samples, int count)
 
 
 
-
+#if 0
 /* Digital filter designed by mkfilter/mkshape/gencode   A.J. Fisher
    Command line: /www/usr/fisher/helpers/mkfilter -Bu -Hp -o 4 \
       	      	  -a 3.7500000000e-02 0.0000000000e+00 -l
@@ -475,7 +506,7 @@ void LocalRx::highpassFilter(float *samples, int count)
     samples[i] = yv[4];
   }
 } /* LocalRx::highpassFilter */
-
+#endif
 
 
 /*

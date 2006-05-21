@@ -225,7 +225,7 @@ void SquelchVox::reset(void)
  * Bugs:      
  *------------------------------------------------------------------------
  */
-int SquelchVox::processSamples(float *samples, int count)
+int SquelchVox::processSamples(const float *samples, int count)
 {
   int orig_count = count;
   

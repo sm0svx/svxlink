@@ -35,6 +35,7 @@
  *
  ****************************************************************************/
 
+#include <AudioSink.h>
 
 
 /****************************************************************************
@@ -124,7 +125,7 @@ class DtmfToneDetector;
  * Bugs:      
  *----------------------------------------------------------------------------
  */   
-class DtmfDecoder : public SigC::Object
+class DtmfDecoder : public SigC::Object, public Async::AudioSink
 {
   public:
     /*
@@ -142,7 +143,27 @@ class DtmfDecoder : public SigC::Object
     DtmfDecoder(void);
     ~DtmfDecoder(void);
     
-    int processSamples(float *buf, int len);
+    //int processSamples(float *buf, int len);
+    
+    /**
+     * @brief 	Write samples into this audio sink
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
+     */
+    int writeSamples(const float *samples, int count);
+    
+    /**
+     * @brief 	Tell the sink to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     */
+    void flushSamples(void)
+    {
+      sourceAllSamplesFlushed();
+    }
     
     SigC::Signal1<void, char> digitDetected;
     

@@ -227,7 +227,7 @@ class SquelchSerial : public Squelch
      * @param 	count The number of samples in the buffer
      * @return	Return the number of processed samples
      */
-    int processSamples(float *samples, int count)
+    int processSamples(const float *samples, int count)
     {
       bool is_set = false;
       if (!serial->getPin(sql_pin, is_set))

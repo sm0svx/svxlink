@@ -207,7 +207,7 @@ DtmfDecoder::~DtmfDecoder(void)
 } /* DtmfDecoder::~DtmfDecoder */
 
 
-int DtmfDecoder::processSamples(float *buf, int len)
+int DtmfDecoder::writeSamples(const float *buf, int len)
 {
   //printf("len=%d\n", len);
   

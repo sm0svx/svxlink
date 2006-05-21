@@ -166,7 +166,7 @@ class SquelchVox : public Squelch
 
     
   protected:
-    int processSamples(float *samples, int count);
+    int processSamples(const float *samples, int count);
     
   private:
     float   *buf;

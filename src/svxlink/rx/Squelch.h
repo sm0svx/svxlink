@@ -53,6 +53,7 @@ An example of how to use the Squelch class
  ****************************************************************************/
 
 #include <AsyncConfig.h>
+#include <AudioSink.h>
 
 
 /****************************************************************************
@@ -122,7 +123,7 @@ call \em setOpen to indicate if the squelch is opened or closed.
 
 \include Squelch_demo.cpp
 */
-class Squelch : public SigC::Object
+class Squelch : public SigC::Object, public Async::AudioSink
 {
   public:
     /**
@@ -196,6 +197,7 @@ class Squelch : public SigC::Object
      * @param 	count The number of samples in the buffer
      * @return	Return the number of processed samples
      */
+    /*
     int audioIn(float *samples, int count)
     {
       int ret_count = processSamples(samples, count);
@@ -219,6 +221,54 @@ class Squelch : public SigC::Object
       }
       return ret_count;
     }
+    */
+    
+    /**
+     * @brief 	Write samples into this audio sink
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
+     */
+    int writeSamples(const float *samples, int count)
+    {
+      int ret_count = processSamples(samples, count);
+      if (ret_count != count)
+      {
+      	std::cout << ret_count << " samples of " << count
+	      	  << " written to the squelch detctor\n";
+      }
+      if (hangtime_left > 0)
+      {
+      	hangtime_left -= ret_count;
+	if (hangtime_left <= 0)
+	{
+	  m_open = false;
+	  squelchOpen(false);
+	}
+      }
+      if (delay_left > 0)
+      {
+      	delay_left -= ret_count;
+	if (delay_left <= 0)
+	{
+	  m_open = true;
+	  squelchOpen(true);
+	}
+      }
+      return ret_count;
+    }
+    
+    /**
+     * @brief 	Tell the sink to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     */
+    void flushSamples(void)
+    {
+      sourceAllSamplesFlushed();
+    }
     
     /**
      * @brief 	Get the state of the squelch
@@ -241,7 +291,7 @@ class Squelch : public SigC::Object
      * @param 	count The number of samples in the buffer
      * @return	Return the number of processed samples
      */
-    virtual int processSamples(float *samples, int count) = 0;
+    virtual int processSamples(const float *samples, int count) = 0;
 
     /**
      * @brief 	Set the state of the squelch
