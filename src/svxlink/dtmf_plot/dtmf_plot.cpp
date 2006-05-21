@@ -245,14 +245,14 @@ int main(int argc, char **argv)
   {
     det = new Det(k-start_k,k*8000/basetone_N+4000/basetone_N, basetone_N);
     det->valueChanged.connect(slot(&detValueChanged));
-    splitter.addSink(det);
+    splitter.addSink(det, true);
   }
   
   for (int k=start_ko; k<end_ko+1; ++k)
   {
     det = new Det(k-start_ko,k*8000/overtone_N+4000/overtone_N, overtone_N);
     det->valueChanged.connect(slot(&overtoneValueChanged));
-    splitter.addSink(det);
+    splitter.addSink(det, true);
   }
 
   SigCAudioSink sigc_sink;
@@ -260,9 +260,10 @@ int main(int argc, char **argv)
   sigc_sink.sigWriteSamples.connect(slot(&update_peak_meter));
   
   DtmfDecoder dtmf_dec;
-  sigc_sink.sigWriteSamples.connect(
-      slot(&dtmf_dec, &DtmfDecoder::processSamples));
+  //sigc_sink.sigWriteSamples.connect(
+  //    slot(&dtmf_dec, &DtmfDecoder::processSamples));
   dtmf_dec.digitDetected.connect(slot(&dtmf_digit_detected));
+  splitter.addSink(&dtmf_dec);
   
   repaint(0);
   
