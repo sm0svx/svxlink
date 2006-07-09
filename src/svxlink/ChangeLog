@@ -62,6 +62,13 @@
   The filter can be turned on/off by the configuration variable
   PREEMPHASIS in the transmitter configuration section.
 
+* Added DTMF muting. Use the MUTE_DTMF configuration variable in an rx
+  section to enable/disable this feature.
+
+* Added squelch tail elimination. This is good if running with open squelch.
+  Use the SQL_TAIL_ELIM configuration variable in an rx section to
+  enable/disable this feature.
+
 
 
  0.7.0 -- 02 Dec 2005
