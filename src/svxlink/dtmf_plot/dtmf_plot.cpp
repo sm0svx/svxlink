@@ -262,7 +262,7 @@ int main(int argc, char **argv)
   DtmfDecoder dtmf_dec;
   //sigc_sink.sigWriteSamples.connect(
   //    slot(&dtmf_dec, &DtmfDecoder::processSamples));
-  dtmf_dec.digitDetected.connect(slot(&dtmf_digit_detected));
+  dtmf_dec.digitActivated.connect(slot(&dtmf_digit_detected));
   splitter.addSink(&dtmf_dec);
   
   repaint(0);
