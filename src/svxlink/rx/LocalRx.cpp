@@ -523,7 +523,6 @@ int LocalRx::audioRead(float *samples, int count)
 void LocalRx::dtmfDigitActivated(char digit)
 {
   //printf("DTMF digit %c activated.\n", digit);
-  dtmfDigitDetected(digit);
   if (mute_dtmf)
   {
     delay->mute(true, DTMF_MUTING_PRE);
@@ -534,6 +533,7 @@ void LocalRx::dtmfDigitActivated(char digit)
 void LocalRx::dtmfDigitDeactivated(char digit, int duration_ms)
 {
   //printf("DTMF digit %c deactivated. Duration = %d ms\n", digit, duration_ms);
+  dtmfDigitDetected(digit, duration_ms);
   if (mute_dtmf)
   {
     delay->mute(false, DTMF_MUTING_POST);

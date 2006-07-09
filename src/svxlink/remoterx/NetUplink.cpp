@@ -347,10 +347,11 @@ void NetUplink::squelchOpen(bool is_open)
 } /* NetUplink::squelchOpen */
 
 
-void NetUplink::dtmfDigitDetected(char digit)
+void NetUplink::dtmfDigitDetected(char digit, int duration)
 {
-  cout << "DTMF digit detected: " << digit << endl;
-  MsgDtmf *msg = new MsgDtmf(digit);
+  cout << "DTMF digit detected: " << digit << " with duration " << duration
+       << " milliseconds" << endl;
+  MsgDtmf *msg = new MsgDtmf(digit, duration);
   sendMsg(msg);
 } /* NetUplink::dtmfDigitDetected */
 

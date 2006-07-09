@@ -150,7 +150,7 @@ class RepeaterLogic : public Logic
     virtual void playTone(int fq, int amp, int len);
     virtual void moduleTransmitRequest(bool do_transmit);
     virtual bool activateModule(Module *module);
-    virtual void dtmfDigitDetected(char digit);
+    virtual void dtmfDigitDetected(char digit, int duration);
 
 
   protected:

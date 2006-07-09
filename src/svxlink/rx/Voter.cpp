@@ -35,6 +35,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 #include <cmath>
+#include <pair.h>
+#include <list>
 #include <sigc++/bind.h>
 
 
@@ -112,10 +114,10 @@ class SatRx : public SigC::Object
       stop_output = do_stop;
       if (!do_stop)
       {
-      	string::iterator it;
+      	DtmfBuf::iterator it;
       	for (it=dtmf_buf.begin(); it!=dtmf_buf.end(); ++it)
 	{
-	  dtmfDigitDetected(*it);
+	  dtmfDigitDetected((*it).first, (*it).second);
 	}
       }
     }
@@ -126,21 +128,23 @@ class SatRx : public SigC::Object
       dtmf_buf.clear();
     }
   
-    Signal1<void, char> dtmfDigitDetected;
+    Signal2<void, char, int> dtmfDigitDetected;
     
   private:
-    bool    stop_output;
-    string  dtmf_buf;
+    typedef list<pair<char, int> >  DtmfBuf;
     
-    void onDtmfDigitDetected(char digit)
+    bool    stop_output;
+    DtmfBuf dtmf_buf;
+    
+    void onDtmfDigitDetected(char digit, int duration)
     {
       if (stop_output)
       {
-      	dtmf_buf += digit;
+	dtmf_buf.push_back(pair<char, int>(digit, duration));
       }
       else
       {
-      	dtmfDigitDetected(digit);
+      	dtmfDigitDetected(digit, duration);
       }
     }
 };

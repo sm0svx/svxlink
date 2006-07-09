@@ -186,7 +186,7 @@ class Logic : public SigC::Object
     Module *findModule(const std::string& name);
     std::list<Module*> moduleList(void) const { return modules; }
 
-    virtual void dtmfDigitDetected(char digit);
+    virtual void dtmfDigitDetected(char digit, int duration);
     const std::string& callsign(void) const { return m_callsign; }
 
     Async::Config &cfg(void) const { return m_cfg; }

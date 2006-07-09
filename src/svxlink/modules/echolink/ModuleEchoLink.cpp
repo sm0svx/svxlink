@@ -367,7 +367,8 @@ void ModuleEchoLink::deactivateCleanup(void)
  * Method:    dtmfDigitReceived
  * Purpose:   Called by the core system when a DTMF digit has been
  *    	      received.
- * Input:     digit - The DTMF digit received (0-9, A-D, *, #)
+ * Input:     digit   	- The DTMF digit received (0-9, A-D, *, #)
+ *    	      duration	- The duration in milliseconds
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2004-03-07
@@ -375,7 +376,7 @@ void ModuleEchoLink::deactivateCleanup(void)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void ModuleEchoLink::dtmfDigitReceived(char digit)
+void ModuleEchoLink::dtmfDigitReceived(char digit, int duration)
 {
   //cout << "DTMF digit received in module " << name() << ": " << digit << endl;
   

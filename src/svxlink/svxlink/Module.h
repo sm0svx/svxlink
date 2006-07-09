@@ -317,14 +317,15 @@ class Module : public SigC::Object
     
     /**
      * @brief 	Tell the module that a DTMF digit has been received
-     * @param 	digit The received digit
+     * @param 	digit 	  The received digit
+     * @param 	duration  The duration of the tone in milliseconds
      *
      * This function is called by the logic core when a DTMF digit has been
      * detected on the receiver. Modules more often have use for the
      * "dtmfCmdReceived" function.
      * This function will only be called if this module is active.
      */
-    virtual void dtmfDigitReceived(char digit) {}
+    virtual void dtmfDigitReceived(char digit, int duration) {}
     
     /**
      * @brief 	Tell the module that a DTMF command has been received

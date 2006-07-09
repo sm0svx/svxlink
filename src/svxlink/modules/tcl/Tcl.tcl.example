@@ -73,8 +73,8 @@ proc play_help {} {
 #
 # Executed when a DTMF digit (0-9, A-F, *, #) is received
 #
-proc dtmf_digit_received {char} {
-  printInfo "DTMF digit received: $char";
+proc dtmf_digit_received {char duration} {
+  printInfo "DTMF digit $char received with duration $duration milliseconds";
 }
 
 

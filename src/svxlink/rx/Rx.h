@@ -212,8 +212,9 @@ class Rx : public SigC::Object
     /**
      * @brief 	A signal that is emitted when a DTMF digit has been detected
      * @param 	digit The detected digit (0-9, A-D, *, #)
+     * @param 	duration Tone duration in milliseconds
      */
-    SigC::Signal1<void, char> dtmfDigitDetected;
+    SigC::Signal2<void, char, int> dtmfDigitDetected;
     
     /**
      * @brief 	A signal that is emitted when a previously specified tone has

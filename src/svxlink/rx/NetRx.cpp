@@ -414,7 +414,7 @@ void NetRx::handleMsg(Msg *msg)
       if (!is_muted)
       {
       	MsgDtmf *dtmf_msg = reinterpret_cast<MsgDtmf*>(msg);
-      	dtmfDigitDetected(dtmf_msg->digit());
+      	dtmfDigitDetected(dtmf_msg->digit(), dtmf_msg->duration());
       }
       break;
     }

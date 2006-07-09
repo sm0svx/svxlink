@@ -541,13 +541,13 @@ Module *Logic::findModule(const string& name)
 } /* Logic::findModule */
 
 
-void Logic::dtmfDigitDetected(char digit)
+void Logic::dtmfDigitDetected(char digit, int duration)
 {
   cout << "digit=" << digit << endl;
   
   if (active_module != 0)
   {
-     active_module->dtmfDigitReceived(digit);
+     active_module->dtmfDigitReceived(digit, duration);
   }
   if ((digit == '#') || (anti_flutter && (digit == 'C')))
   {

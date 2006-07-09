@@ -294,11 +294,11 @@ bool RepeaterLogic::activateModule(Module *module)
 } /* RepeaterLogic::activateModule */
 
 
-void RepeaterLogic::dtmfDigitDetected(char digit)
+void RepeaterLogic::dtmfDigitDetected(char digit, int duration)
 {
   if (repeater_is_up)
   {
-    Logic::dtmfDigitDetected(digit);
+    Logic::dtmfDigitDetected(digit, duration);
   }
   else
   {

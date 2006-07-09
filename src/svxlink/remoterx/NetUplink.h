@@ -174,7 +174,7 @@ class NetUplink : public Uplink
      * @brief 	Pass on received DTMF digit
      * @param 	digit The received digit
      */
-    void dtmfDigitDetected(char digit);
+    void dtmfDigitDetected(char digit, int duration);
     
     /**
      * @brief 	Pass on detected tone

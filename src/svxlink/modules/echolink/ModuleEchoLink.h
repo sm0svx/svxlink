@@ -166,7 +166,7 @@ class ModuleEchoLink : public Module
     void moduleCleanup(void);
     void activateInit(void);
     void deactivateCleanup(void);
-    void dtmfDigitReceived(char digit);
+    void dtmfDigitReceived(char digit, int duration);
     void dtmfCmdReceived(const std::string& cmd);
     void squelchOpen(bool is_open);
     int audioFromRx(float *samples, int count);

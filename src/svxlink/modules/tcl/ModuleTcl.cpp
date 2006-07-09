@@ -223,7 +223,8 @@ void ModuleTcl::deactivateCleanup(void)
  * Method:    dtmfDigitReceived
  * Purpose:   Called by the core system when a DTMF digit has been
  *    	      received.
- * Input:     digit - The DTMF digit received (0-9, A-D, *, #)
+ * Input:     digit   	- The DTMF digit received (0-9, A-D, *, #)
+ *    	      duration	- The duration in milliseconds
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2004-03-07
@@ -231,11 +232,11 @@ void ModuleTcl::deactivateCleanup(void)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void ModuleTcl::dtmfDigitReceived(char digit)
+void ModuleTcl::dtmfDigitReceived(char digit, int duration)
 {
   //cout << "DTMF digit received in module " << name() << ": " << digit << endl;
   stringstream ss;
-  ss << "dtmf_digit_received " << digit;
+  ss << "dtmf_digit_received " << digit << " " << duration;
   processEvent(ss.str());
 } /* dtmfDigitReceived */
 

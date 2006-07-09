@@ -201,12 +201,14 @@ class MsgDtmf : public Msg
 {
   public:
     static const int TYPE = 3;
-    MsgDtmf(char digit)
-      : Msg(TYPE, sizeof(MsgDtmf)), m_digit(digit) {}
+    MsgDtmf(char digit, int duration)
+      : Msg(TYPE, sizeof(MsgDtmf)), m_digit(digit), m_duration(duration) {}
     char digit(void) const { return m_digit; }
+    int duration(void) const { return m_duration; }
   
   private:
     char  m_digit;
+    int   m_duration;
     
 }; /* MsgDtmf */
 
