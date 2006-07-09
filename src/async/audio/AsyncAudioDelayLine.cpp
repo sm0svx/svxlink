@@ -225,7 +225,15 @@ void AudioDelayLine::flushSamples(void)
 {
   //printf("AudioDelayLine::flushSamples\n");
   flush_cnt = size - last_clear;
-  writeRemainingSamples();
+  
+  if (flush_cnt > 0)
+  {
+    writeRemainingSamples();
+  }
+  else
+  {
+    sinkFlushSamples();
+  }
 }
 
 
