@@ -9,7 +9,7 @@ a receiver that is directly connected to the sound card on the computer where
 the SvxLink core is running.
 
 \verbatim
-<A brief description of the program or library this file belongs to>
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
 Copyright (C) 2003 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AudioFilter.h>
 #include <SigCAudioSink.h>
 #include <AudioSplitter.h>
+//#include <AsyncAudioAmp.h>
 
 
 /****************************************************************************
@@ -86,6 +87,14 @@ using namespace Async;
  *
  ****************************************************************************/
 
+#define DTMF_MUTING_PRE   100
+#define DTMF_MUTING_POST  50
+
+#if DTMF_MUTING_PRE > DTMF_MUTING_POST
+#define DTMF_DELAY_LINE_LEN DTMF_MUTING_PRE
+#else
+#define DTMF_DELAY_LINE_LEN DTMF_MUTING_POST
+#endif
 
 
 /****************************************************************************
@@ -138,6 +147,18 @@ class ToneDurationDet : public ToneDetector
 };
 
 
+class SigCAudioValve : public AudioValve, public SigC::Object
+{
+  public:
+    void allSamplesFlushed(void)
+    {
+      AudioValve::allSamplesFlushed();
+      sigAllSamplesFlushed();
+    }
+    
+    SigC::Signal0<void> sigAllSamplesFlushed;
+};
+
 
 
 /****************************************************************************
@@ -174,9 +195,8 @@ class ToneDurationDet : public ToneDetector
 LocalRx::LocalRx(Config &cfg, const std::string& name)
   : Rx(cfg, name), audio_io(0), is_muted(true),
     squelch(0), siglevdet(0), siglev_offset(0.0), siglev_slope(1.0),
-    tone_dets(0)
+    tone_dets(0), sql_valve(0), delay(0), mute_dtmf(false), sql_tail_elim(0)
 {
-  //resetHighpassFilter();
 } /* LocalRx::LocalRx */
 
 
@@ -191,9 +211,6 @@ LocalRx::~LocalRx(void)
   tone_detectors.clear();
   */
   
-  //delete siglevdet;
-  //delete squelch;
-  //delete dtmf_dec;
   delete audio_io;  // This will delete the whole chain of audio objects
 } /* LocalRx::~LocalRx */
 
@@ -250,6 +267,19 @@ bool LocalRx::initialize(void)
     deemphasis = (atoi(value.c_str()) != 0);
   }
   
+  int delay_line_len = 0;
+  if (cfg().getValue(name(), "MUTE_DTMF", value))
+  {
+    mute_dtmf = (atoi(value.c_str()) != 0);
+    delay_line_len = DTMF_DELAY_LINE_LEN;
+  }
+  
+  if (cfg().getValue(name(), "SQL_TAIL_ELIM", value))
+  {
+    sql_tail_elim = atoi(value.c_str());
+    delay_line_len = max(delay_line_len, sql_tail_elim);
+  }
+  
   if (!squelch->initialize(cfg(), name()))
   {
     cerr << "*** ERROR: Squelch detector initialization failed for RX \""
@@ -261,10 +291,16 @@ bool LocalRx::initialize(void)
   
   audio_io = new AudioIO(audio_dev);
   AudioSource *prev_src = audio_io;
-
+  
+  //AudioAmp *preamp = new AudioAmp;
+  //preamp->setGain(3);
+  //prev_src->registerSink(preamp, true);
+  //prev_src = preamp;
+  
   if (deemphasis)
   {
     AudioFilter *deemph_filt = new AudioFilter("LpBu1/300");
+    deemph_filt->setOutputGain(4);
     prev_src->registerSink(deemph_filt, true);
     prev_src = deemph_filt;
   }
@@ -275,11 +311,13 @@ bool LocalRx::initialize(void)
   siglevdet = new SigLevDet;
   splitter->addSink(siglevdet, true);
   
-  squelch->squelchOpen.connect(slot(this, &LocalRx::setSquelchState));
+  squelch->squelchOpen.connect(slot(this, &LocalRx::onSquelchOpen));
   splitter->addSink(squelch, true);
   
   DtmfDecoder *dtmf_dec = new DtmfDecoder;
-  dtmf_dec->digitDetected.connect(dtmfDigitDetected.slot());
+  dtmf_dec->digitActivated.connect(slot(this, &LocalRx::dtmfDigitActivated));
+  dtmf_dec->digitDeactivated.connect(
+      slot(this, &LocalRx::dtmfDigitDeactivated));
   splitter->addSink(dtmf_dec, true);
   
   tone_dets = new AudioSplitter;
@@ -289,8 +327,24 @@ bool LocalRx::initialize(void)
   splitter->addSink(ctcss_filt, true);
   prev_src = ctcss_filt;
   
+  sql_valve = new SigCAudioValve;
+  sql_valve->sigAllSamplesFlushed.connect(
+      slot(this, &LocalRx::allSamplesFlushed));
+  prev_src->registerSink(sql_valve, true);
+  prev_src = sql_valve;
+  
+  if (delay_line_len > 0)
+  {
+    delay = new AudioDelayLine(delay_line_len);
+    prev_src->registerSink(delay, true);
+    prev_src = delay;
+  }
+    
   SigCAudioSink *sigc_sink = new SigCAudioSink;
   sigc_sink->sigWriteSamples.connect(slot(this, &LocalRx::audioRead));
+  sigc_sink->sigWriteSamples.connect(audioReceived.slot());
+  sigc_sink->sigFlushSamples.connect(
+      slot(sigc_sink, &SigCAudioSink::allSamplesFlushed));
   prev_src->registerSink(sigc_sink, true);
   
   return true;
@@ -307,6 +361,11 @@ void LocalRx::mute(bool do_mute)
   
   if (do_mute)
   {
+    if (delay != 0)
+    {
+      delay->clear();
+    }
+    sql_valve->setOpen(false);
     audio_io->close();
   }
   else
@@ -429,8 +488,13 @@ int LocalRx::audioRead(float *samples, int count)
   }
   */
   
-  if (squelch->isOpen() && !is_muted)
+  if (is_muted)
   {
+    printf("*** Gaaaahhh. Audio sent while muted. Not good...\n");
+  }
+  
+  //if (/*squelch->isOpen() &&*/ !is_muted)
+  //{
     /*
     float filtered[count];
     for (int i=0; i<count; ++i)
@@ -440,8 +504,9 @@ int LocalRx::audioRead(float *samples, int count)
     highpassFilter(filtered, count);
     count = audioReceived(filtered, count);
     */
-    count = audioReceived(samples, count);
-  }
+    
+    //count = audioReceived(samples, count);
+  //}
   
   /*
   if (was_open && !squelch->isOpen())
@@ -455,58 +520,59 @@ int LocalRx::audioRead(float *samples, int count)
 } /* LocalRx::audioRead */
 
 
-
-#if 0
-/* Digital filter designed by mkfilter/mkshape/gencode   A.J. Fisher
-   Command line: /www/usr/fisher/helpers/mkfilter -Bu -Hp -o 4 \
-      	      	  -a 3.7500000000e-02 0.0000000000e+00 -l
-
-      filtertype  = Butterworth
-      passtype	  = Highpass
-      ripple  	  = 
-      order   	  = 4
-      samplerate  = 8000
-      corner1 	  = 400
-      corner2 	  = 
-      adzero  	  = 
-      logmin  	  = -60
-
-
-*/
-
-#define GAIN   1.361640944e+00
-
-
-void LocalRx::resetHighpassFilter(void)
+void LocalRx::dtmfDigitActivated(char digit)
 {
-  for (int i=0; i<NPOLES+1; ++i)
+  //printf("DTMF digit %c activated.\n", digit);
+  dtmfDigitDetected(digit);
+  if (mute_dtmf)
   {
-    xv[i] = 0.0;
-    yv[i] = 0.0;
+    delay->mute(true, DTMF_MUTING_PRE);
   }
-} /* LocalRx::resetHighpassFilter */
+} /* LocalRx::dtmfDigitActivated */
 
 
-void LocalRx::highpassFilter(float *samples, int count)
-{ 
-  for (int i=0; i<count; ++i)
+void LocalRx::dtmfDigitDeactivated(char digit, int duration_ms)
+{
+  //printf("DTMF digit %c deactivated. Duration = %d ms\n", digit, duration_ms);
+  if (mute_dtmf)
   {
-    xv[0] = xv[1]; xv[1] = xv[2]; xv[2] = xv[3]; xv[3] = xv[4]; 
-    xv[4] = samples[i] / GAIN;
-    yv[0] = yv[1]; yv[1] = yv[2]; yv[2] = yv[3]; yv[3] = yv[4]; 
-    yv[4] = (xv[0] + xv[4]) - 4 * (xv[1] + xv[3]) + 6 * xv[2]
-                   + (-0.5393551283 * yv[0]) + (2.4891382938 * yv[1])
-                   + (-4.3370618174 * yv[2]) + (3.3849727283 * yv[3]);
-    /*
-    if (yv[4] > 1.0)
+    delay->mute(false, DTMF_MUTING_POST);
+  }
+} /* LocalRx::dtmfDigitActivated */
+
+
+void LocalRx::allSamplesFlushed(void)
+{
+  //printf("LocalRx::allSamplesFlushed\n");
+  setSquelchState(false);
+} /* LocalRx::allSamplesFlushed */
+
+
+void LocalRx::onSquelchOpen(bool is_open)
+{
+  //printf("LocalRx::onSquelchOpen\n");
+  if (is_open)
+  {
+    setSquelchState(true);
+    if (delay != 0)
     {
-      printf("*** Distorsion: %.1f\n", yv[4]);
+      delay->clear();
     }
-    */
-    samples[i] = yv[4];
+    if (!is_muted)
+    {
+      sql_valve->setOpen(true);
+    }
   }
-} /* LocalRx::highpassFilter */
-#endif
+  else
+  {
+    if (sql_tail_elim > 0)
+    {
+      delay->clear(sql_tail_elim);
+    }
+    sql_valve->setOpen(false);
+  }
+} /* LocalRx::onSquelchOpen */
+
 
 
 /*

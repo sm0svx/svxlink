@@ -9,7 +9,7 @@ a receiver that is directly connected to the sound card on the computer where
 the SvxLink core is running.
 
 \verbatim
-<A brief description of the program or library this file belongs to>
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
 Copyright (C) 2004  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -48,6 +48,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncAudioValve.h>
+#include <AsyncAudioDelayLine.h>
 
 
 /****************************************************************************
@@ -69,13 +71,12 @@ namespace Async
 {
   class Config;
   class AudioIO;
-  class AudioFilter;
-  class SigCAudioSink;
   class AudioSplitter;
 };
 
-class ToneDurationDet;
+//class ToneDurationDet;
 class Squelch;
+class SigCAudioValve;
 
 
 /****************************************************************************
@@ -94,8 +95,6 @@ class Squelch;
  *
  ****************************************************************************/
 
-class DtmfDecoder;
-class ToneDetector;
 class SigLevDet;
 
 
@@ -188,23 +187,24 @@ class LocalRx : public Rx
   protected:
     
   private:
-    //static const int  	      	NPOLES = 4;
-    //static const int  	      	NZEROS = 4;
-    
     Async::AudioIO    	      	*audio_io;
     bool      	      	      	is_muted;
     Squelch   	      	      	*squelch;
-    //float     	      	      	xv[NZEROS+1];
-    //float     	      	      	yv[NPOLES+1];
     //std::list<ToneDurationDet*> tone_detectors;
     SigLevDet 	      	      	*siglevdet;
     float     	      	      	siglev_offset;
     float     	      	      	siglev_slope;
     Async::AudioSplitter      	*tone_dets;
+    SigCAudioValve 	      	*sql_valve;
+    Async::AudioDelayLine     	*delay;
+    bool      	      	      	mute_dtmf;
+    int       	      	      	sql_tail_elim;
     
     int audioRead(float *samples, int count);
-    //void resetHighpassFilter(void);
-    //void highpassFilter(float *samples, int count);
+    void dtmfDigitActivated(char digit);
+    void dtmfDigitDeactivated(char digit, int duration_ms);
+    void allSamplesFlushed(void);
+    void onSquelchOpen(bool is_open);
 
 };  /* class LocalRx */
 
