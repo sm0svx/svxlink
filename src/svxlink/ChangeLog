@@ -69,6 +69,10 @@
   Use the SQL_TAIL_ELIM configuration variable in an rx section to
   enable/disable this feature.
 
+* DTMF tone duration is now available. It is not used at the moment but it
+  would make it possible to implement LiTZ or other extra functions that
+  depend on DTMF tone length.
+
 
 
  0.7.0 -- 02 Dec 2005
