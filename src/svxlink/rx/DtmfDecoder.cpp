@@ -1,19 +1,28 @@
-/*
- *----------------------------------------------------------------------------
- * Filename:  	DtmfDecoder.cpp
- * Module:    	
- * Author:    	Tobias Blomberg
- * Created:   	2003-04-16
- * License:   	GPL
- * Description: A DTMF (Dual Tone Multi Frequency) detector using the
- *    	      	ToneDetector class.
- *----------------------------------------------------------------------------
- * Signatures:
- * Sign Name  	      	  E-mail
- * TBg	Tobias Blomberg   blomman@ludd.luth.se
- *
- *----------------------------------------------------------------------------
- */
+/**
+@file	 DtmfDecoder.cpp
+@brief   This file contains a class that implements a DTMF decoder
+@author  Tobias Blomberg / SM0SVX
+@date	 2003-04-16
+
+\verbatim
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+\endverbatim
+*/
 
 
 
@@ -306,8 +315,8 @@ void DtmfDecoder::checkTones(void)
   double dB = 10 * log10(max_row_val / second_max_val);
   if ((max_row_val < POWER_THRESHOLD) || (dB < POWER_DIFF_THRESHOLD))
   {
+    setDigitActive(false);
     last_detected_digit = '?';
-    digit_activated = false;
     return;
   }
   //printf("row max=%.0f second_max=%.0f diff=%.1lfdB\n",
@@ -333,8 +342,8 @@ void DtmfDecoder::checkTones(void)
   dB = 10 * log10(max_col_val / second_max_val);
   if ((max_col_val < POWER_THRESHOLD) || (dB < POWER_DIFF_THRESHOLD))
   {
+    setDigitActive(false);
     last_detected_digit = '?';
-    digit_activated = false;
     return;
   }
   //printf("col max=%.0f second_max=%.0f diff=%.1lf\n",
@@ -344,8 +353,8 @@ void DtmfDecoder::checkTones(void)
   //printf("Twist=%.1lf\n", dB);
   if ((dB < MIN_TWIST) || (dB > MAX_TWIST))
   {
+    setDigitActive(false);
     last_detected_digit = '?';
-    digit_activated = false;
     return;
   }
   
@@ -365,17 +374,44 @@ void DtmfDecoder::checkTones(void)
   
   if (digit == last_detected_digit)
   {
-    if (!digit_activated)
-    {
-      digitDetected(digit);
-      digit_activated = true;
-    }
+    setDigitActive(true);
   }
   
   last_detected_digit = digit;
   
 } /* DtmfDecoder::checkTones */
 
+
+void DtmfDecoder::setDigitActive(bool is_active)
+{
+  /*
+  printf("DtmfDecoder::setDigitActive: is_active=%s\n",
+    is_active ? "TRUE" : "FALSE");
+  */
+  
+  if (is_active)
+  {
+    if (!digit_activated)
+    {
+      gettimeofday(&det_time, NULL);
+      digitActivated(last_detected_digit);
+    }
+  }
+  else
+  {
+    if (digit_activated)
+    {
+      struct timeval tv, diff;
+      gettimeofday(&tv, NULL);
+      timersub(&tv, &det_time, &diff);
+      int diff_ms = diff.tv_sec * 1000 + diff.tv_usec / 1000;
+      digitDeactivated(last_detected_digit, diff_ms);
+    }
+  }
+  
+  digit_activated = is_active;
+  
+} /* DtmfDecoder::setDigitActive */
 
 
 
