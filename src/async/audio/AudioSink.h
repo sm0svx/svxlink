@@ -5,8 +5,8 @@
 @date	 2005-04-17
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2004-2006  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -155,6 +155,11 @@ class AudioSink
      * @param 	samples The buffer containing the samples
      * @param 	count The number of samples in the buffer
      * @return	Returns the number of samples that has been taken care of
+     *
+     * This function is used to write audio into this audio sink. If it
+     * returns 0, no more samples should be written until the resumeOutput
+     * function in the source have been called.
+     * This function is normally only called from a connected source object.
      */
     virtual int writeSamples(const float *samples, int count)
     {
@@ -168,6 +173,7 @@ class AudioSink
      * This function is used to tell the sink to flush previously written
      * samples. When done flushing, the sink should call the
      * sourceAllSamplesFlushed function.
+     * This function is normally only called from a connected source object.
      */
     virtual void flushSamples(void)
     {

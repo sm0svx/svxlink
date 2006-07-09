@@ -5,8 +5,8 @@
 @date	 2005-04-17
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2004-2006  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -153,18 +153,20 @@ class AudioSource
     /**
      * @brief Resume audio output to the sink
      * 
-     * This function must be reimplemented by the inheriting class. This
-     * function will be called when the registered audio sink is ready to
-     * accept more samples.
+     * This function must be reimplemented by the inheriting class. It
+     * will be called when the registered audio sink is ready to accept
+     * more samples.
+     * This function is normally only called from a connected sink object.
      */
     virtual void resumeOutput(void) = 0;
     
     /**
      * @brief The registered sink has flushed all samples
      *
-     * This function must be implemented by the inheriting class. This
-     * function will be called when all samples have been flushed in
-     * the registered sink.
+     * This function must be implemented by the inheriting class. It
+     * will be called when all samples have been flushed in the
+     * registered sink.
+     * This function is normally only called from a connected sink object.
      */
     virtual void allSamplesFlushed(void) = 0;
 
