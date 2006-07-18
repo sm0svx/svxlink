@@ -31,7 +31,7 @@ PRGSRC		= LocalTx.cpp MsgHandler.cpp \
 		  Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp \
 		  EventHandler.cpp \
 		  AudioSwitchMatrix.cpp CmdParser.cpp \
-		  Recorder.cpp
+		  Recorder.cpp DtmfEncoder.cpp
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -lasynccpp -lasyncaudio -lrx
