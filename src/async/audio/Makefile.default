@@ -108,7 +108,8 @@ STATIC_LIBS   	=
 EXPINC		= AudioSource.h AudioSink.h AudioProcessor.h \
 		  AudioClipper.h AudioCompressor.h AudioFilter.h \
 		  SigCAudioSink.h  SigCAudioSource.h AsyncAudioIO.h \
-		  AudioSplitter.h AsyncAudioDelayLine.h AsyncAudioValve.h
+		  AudioSplitter.h AsyncAudioDelayLine.h AsyncAudioValve.h \
+		  AsyncAudioAmp.h
 
 
 # Specify Qt header files here that you want to run the
