@@ -73,6 +73,9 @@
   would make it possible to implement LiTZ or other extra functions that
   depend on DTMF tone length.
 
+* Added a pre-amplifier in the RX frontend. This can be used as a last resort
+  if enough gain can't be achieved on the analogue side.
+
 
 
  0.7.0 -- 02 Dec 2005
