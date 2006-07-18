@@ -199,6 +199,7 @@ class LocalRx : public Rx
     Async::AudioDelayLine     	*delay;
     bool      	      	      	mute_dtmf;
     int       	      	      	sql_tail_elim;
+    int       	      	      	preamp_gain;
     
     int audioRead(float *samples, int count);
     void dtmfDigitActivated(char digit);

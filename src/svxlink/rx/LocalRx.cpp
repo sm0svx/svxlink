@@ -52,7 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AudioFilter.h>
 #include <SigCAudioSink.h>
 #include <AudioSplitter.h>
-//#include <AsyncAudioAmp.h>
+#include <AsyncAudioAmp.h>
 
 
 /****************************************************************************
@@ -88,7 +88,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define DTMF_MUTING_PRE   100
-#define DTMF_MUTING_POST  50
+#define DTMF_MUTING_POST  100
 
 #if DTMF_MUTING_PRE > DTMF_MUTING_POST
 #define DTMF_DELAY_LINE_LEN DTMF_MUTING_PRE
@@ -195,7 +195,8 @@ class SigCAudioValve : public AudioValve, public SigC::Object
 LocalRx::LocalRx(Config &cfg, const std::string& name)
   : Rx(cfg, name), audio_io(0), is_muted(true),
     squelch(0), siglevdet(0), siglev_offset(0.0), siglev_slope(1.0),
-    tone_dets(0), sql_valve(0), delay(0), mute_dtmf(false), sql_tail_elim(0)
+    tone_dets(0), sql_valve(0), delay(0), mute_dtmf(false), sql_tail_elim(0),
+    preamp_gain(0)
 {
 } /* LocalRx::LocalRx */
 
@@ -280,6 +281,11 @@ bool LocalRx::initialize(void)
     delay_line_len = max(delay_line_len, sql_tail_elim);
   }
   
+  if (cfg().getValue(name(), "PREAMP", value))
+  {
+    preamp_gain = atoi(value.c_str());
+  }
+  
   if (!squelch->initialize(cfg(), name()))
   {
     cerr << "*** ERROR: Squelch detector initialization failed for RX \""
@@ -292,11 +298,14 @@ bool LocalRx::initialize(void)
   audio_io = new AudioIO(audio_dev);
   AudioSource *prev_src = audio_io;
   
-  //AudioAmp *preamp = new AudioAmp;
-  //preamp->setGain(3);
-  //prev_src->registerSink(preamp, true);
-  //prev_src = preamp;
-  
+  if (preamp_gain != 0)
+  {
+    AudioAmp *preamp = new AudioAmp;
+    preamp->setGain(preamp_gain);
+    prev_src->registerSink(preamp, true);
+    prev_src = preamp;
+  }
+    
   if (deemphasis)
   {
     AudioFilter *deemph_filt = new AudioFilter("LpBu1/300");
