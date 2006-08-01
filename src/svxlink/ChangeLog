@@ -76,6 +76,10 @@
 * Added a pre-amplifier in the RX frontend. This can be used as a last resort
   if enough gain can't be achieved on the analogue side.
 
+* ModuleEchoLink: New DTMF command "2" added that will play back the local
+  node ID. This is useful if you are on a trip and find a SvxLink node that
+  you want to know the ID of.
+
 
 
  0.7.0 -- 02 Dec 2005
