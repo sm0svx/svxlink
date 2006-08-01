@@ -5,33 +5,38 @@ trim_silence=0
 
 convert()
 {
-  if [ -r "$1.raw" ]; then
-    cat "$1.raw"
-  elif [ -r "$1.wav" ]; then
+  if [ -r "$1.wav" ]; then
     sox "$1.wav" -r8000 -sw -traw -
+  elif [ -r "$1.raw" ]; then
+    cat "$1.raw"
   fi
 }
 
 
 process()
 {
-  effects="highpass 500"
-  max_vol=$(sox -traw -r8000 -sw $1 -traw /dev/null stat -v 2>&1)
-  #echo max_vol=$max_vol 1>&2
+  # The format of the audio stream
+  format="-traw -r8000 -sw";
+  
+  # The filter to apply before all other operations
+  filter="highpass 300 highpass 300 highpass 300"
+  
+  # Front and back levels for silence trimming
+  silence_front_level="-50d"
+  silence_back_level="-50d"
+  
+  # Calculate maximum gain without clipping. Leave headroom of about 3dB.
+  gain=$(sox -traw -r8000 -sw $1 -traw /dev/null stat -v 2>&1)
+  gain=$(echo "$gain * 0.7" | bc)
+  #echo $gain 1>&2
+  
   if [ $trim_silence -gt 0 ]; then
-    #above_thresh=$(echo 0.2 \* $max_vol | bc)
-    above_thresh=$(echo 0.2 \* $max_vol | bc)
-    #below_thresh=$(echo 0.05 \* $max_vol | bc)
-    below_thresh=$(echo 0.3 \* $max_vol | bc)
-    #effects="$effects silence 1 50 $above_thresh% 1 200 $below_thresh%"
-    effects="$effects silence 1 50 $above_thresh% 1 20 $below_thresh%"
-    sox -traw -r8000 -sw $1 -traw -r8000 -sw - highpass 500 silence 1 0:0:0.01 -55d reverse | \
-	sox -traw -r8000 -sw - -traw -r8000 -sw - silence 1 0:0:0.01 -55d reverse | \
-	sox -traw -r8000 -sw - -v $max_vol -traw -r8000 -sw -
+    sox $format $1 $format - $filter vol $gain \
+        silence 1 0:0:0.01 $silence_front_level reverse \
+	silence 1 0:0:0.01 $silence_back_level reverse
   else
-    sox -traw -r8000 -sw $1 -v $max_vol -traw -r8000 -sw - highpass 500 
+    sox $format $1 -v $gain $format - $filter
   fi
-  #sox -r8000 -sw -v $max_vol $1.raw -traw - $effects
 }
 
 

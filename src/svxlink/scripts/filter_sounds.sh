@@ -11,18 +11,18 @@ if [ $# -gt 1 ]; then
   DEST_DIR=$2
 fi
 
-COPY_SOUNDS="\
-  Default/phonetic_0 \
-  Default/phonetic_1 \
-  Default/phonetic_2 \
-  Default/phonetic_3 \
-  Default/phonetic_4 \
-  Default/phonetic_5 \
-  Default/phonetic_6 \
-  Default/phonetic_7 \
-  Default/phonetic_8 \
-  Default/phonetic_9 \
-  EchoLink/repeater \
+SOFTLINK_SOUNDS="\
+  Default/phonetic_0.raw|0.raw \
+  Default/phonetic_1.raw|1.raw \
+  Default/phonetic_2.raw|2.raw \
+  Default/phonetic_3.raw|3.raw \
+  Default/phonetic_4.raw|4.raw \
+  Default/phonetic_5.raw|5.raw \
+  Default/phonetic_6.raw|6.raw \
+  Default/phonetic_7.raw|7.raw \
+  Default/phonetic_8.raw|8.raw \
+  Default/phonetic_9.raw|9.raw \
+  EchoLink/repeater.raw|../Core/repeater.raw \
   "
 
 MAXIMIZE_SOUNDS="\
@@ -55,6 +55,33 @@ TRIM_SOUNDS="\
   Default/7 \
   Default/8 \
   Default/9 \
+  Default/10 \
+  Default/11 \
+  Default/12 \
+  Default/13 \
+  Default/14 \
+  Default/15 \
+  Default/16 \
+  Default/17 \
+  Default/18 \
+  Default/19 \
+  Default/20 \
+  Default/2X \
+  Default/30 \
+  Default/3X \
+  Default/40 \
+  Default/4X \
+  Default/50 \
+  Default/5X \
+  Default/60 \
+  Default/6X \
+  Default/70 \
+  Default/7X \
+  Default/80 \
+  Default/8X \
+  Default/90 \
+  Default/9X \
+  Default/O \
   Default/decimal \
   Default/activating_module \
   Default/deactivating_module \
@@ -93,6 +120,7 @@ TRIM_SOUNDS="\
   Default/star \
   Default/slash \
   Default/dash \
+  Default/unknown \
   Core/online \
   Core/active_module \
   Core/repeater \
@@ -102,9 +130,6 @@ TRIM_SOUNDS="\
   Core/deactivating_link_to \
   Core/link_already_active_to \
   Core/link_not_active_to \
-  Core/10 \
-  Core/11 \
-  Core/12 \
   Core/AM \
   Core/PM \
   Core/the_time_is \
@@ -124,6 +149,7 @@ TRIM_SOUNDS="\
   EchoLink/idx_out_of_range \
   EchoLink/no_match \
   EchoLink/too_many_matches \
+  EchoLink/node_id_is \
   EchoLink/conf-echotest \
   EchoLink/conf-linux \
   TclVoiceMail/messages_for \
@@ -159,7 +185,7 @@ warning()
 
 for sound in $COPY_SOUNDS; do
   [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
-  if [ -r $SRC_DIR/$sound.raw ]; then
+  if [ -e $SRC_DIR/$sound.raw ]; then
     echo "Copying $SRC_DIR/$sound -> $DEST_DIR/$sound"
     cp -a $SRC_DIR/$sound.raw $DEST_DIR/$sound.raw
   else
@@ -189,5 +215,20 @@ for sound in $TRIM_SOUNDS; do
   else
     warning "Missing sound: $sound"
   fi
+done
+
+for sound in $SOFTLINK_SOUNDS; do
+  link=$(echo $sound | cut -d'|' -f1)
+  target=$(echo $sound | cut -d'|' -f2)
+  [ ! -d $(dirname $DEST_DIR/$link) ] && mkdir -p $(dirname $DEST_DIR/$link)
+  pushd $(dirname $DEST_DIR/$link) > /dev/null
+  if [ -r $target ]; then
+    echo "Creating symlink $DEST_DIR/$link -> $DEST_DIR/$target"
+    rm -f $(basename $link)
+    ln -s $target $(basename $link)
+  else
+    warning "Missing sound: $(dirname $link)/$target"
+  fi
+  popd > /dev/null
 done
 
