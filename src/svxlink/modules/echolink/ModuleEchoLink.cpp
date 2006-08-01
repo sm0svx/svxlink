@@ -441,6 +441,14 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
     ss << "]";
     processEvent(ss.str());
   }
+  else if (cmd == "2")
+  {
+    stringstream ss;
+    ss << "play_node_id ";
+    const StationData *station = dir->findCall(dir->callsign());
+    ss << (station ? station->id() : 0);
+    processEvent(ss.str());
+  }
   else if (cmd[0] == '*')
   {
     connectByCallsign(cmd);
@@ -566,7 +574,8 @@ void ModuleEchoLink::allMsgsWritten(void)
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2005-02-12
- * Remarks:   
+ * Remarks:   FIXME: Is this function needed?? Status reports are handled in
+ *    	      TCL only I think.
  * Bugs:      
  *----------------------------------------------------------------------------
  */

@@ -325,6 +325,20 @@ proc cbc_timeout {} {
 }
 
 
+#
+# Executed when a local user enter the DTMF code for playing back the
+# local node ID.
+#
+proc play_node_id {my_node_id} {
+  playMsg "node_id_is";
+  playSilence 200;
+  if { $my_node_id != 0} {
+    playNumber $my_node_id;
+  } else {
+    playMsg "unknown";
+  }
+}
+
 
 #-----------------------------------------------------------------------------
 # The events below are for remote EchoLink announcements. Sounds are not
