@@ -70,7 +70,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "EventHandler.h"
 #include "Module.h"
 #include "MsgHandler.h"
-#include "LocalTx.h"
+#include "Tx.h"
 #include "LogicCmds.h"
 #include "Logic.h"
 
@@ -281,7 +281,7 @@ bool Logic::initialize(void)
   rx().dtmfDigitDetected.connect(slot(this, &Logic::dtmfDigitDetected));
   rx().mute(false);
     
-  m_tx = new LocalTx(cfg(), tx_name);
+  m_tx = Tx::create(cfg(), tx_name);
   if (!tx().initialize())
   {
     cerr << "*** ERROR: Could not initialize TX \"" << tx_name << "\"\n";

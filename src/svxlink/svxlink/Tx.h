@@ -4,10 +4,8 @@
 @author  Tobias Blomberg
 @date	 2004-03-21
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
 Copyright (C) 2004  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -24,10 +22,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example Template_demo.cpp
-An example of how to use the Template class
 */
 
 
@@ -52,6 +46,7 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include <AsyncConfig.h>
 
 
 /****************************************************************************
@@ -111,17 +106,29 @@ An example of how to use the Template class
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	This is the base class for a transmitter
 @author Tobias Blomberg
-@date   2003-04-
+@date   2004-03-21
 
-A_detailed_class_description
-
-\include Template_demo.cpp
+This is the base class for transmitters. It is an abstract class so it cannot
+be used standalone. It must be inherited from.
 */
 class Tx : public SigC::Object
 {
   public:
+    /**
+     * @brief 	Create the named transmitter object
+     * @param 	cfg   The configuration object to use
+     * @param 	name  The name of the transmitter configuration section
+     * @return	Returns a transmitter object of the specified type on success.
+     *          On failure, 0 is returned.
+     *
+     * This static function is used to create a new transmitter of a certain
+     * type. The type is read from the configuration object "cfg" in the
+     * configuration section given by parameter "name".
+     */
+    static Tx *create(Async::Config& cfg, const std::string& name);
+    
     /**
      * @brief 	Default constuctor
      */
