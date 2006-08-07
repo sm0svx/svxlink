@@ -319,13 +319,16 @@ class Module : public SigC::Object
      * @brief 	Tell the module that a DTMF digit has been received
      * @param 	digit 	  The received digit
      * @param 	duration  The duration of the tone in milliseconds
+     * @return	Return \em true if handled or else \em false
      *
      * This function is called by the logic core when a DTMF digit has been
      * detected on the receiver. Modules more often have use for the
-     * "dtmfCmdReceived" function.
+     * "dtmfCmdReceived" function. If the return value from this function
+     * is \em true, the DTMF digit is considered handled and it is ignored
+     * by the logic core.
      * This function will only be called if this module is active.
      */
-    virtual void dtmfDigitReceived(char digit, int duration) {}
+    virtual bool dtmfDigitReceived(char digit, int duration) { return false; }
     
     /**
      * @brief 	Tell the module that a DTMF command has been received
@@ -416,6 +419,8 @@ class Module : public SigC::Object
      * The module must be active for this function to do anything.
      */
     void playFile(const std::string& path);
+    
+    void sendDtmf(const std::string& digits);
     
     
   protected:

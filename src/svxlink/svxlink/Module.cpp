@@ -148,6 +148,15 @@ void Module::playFile(const string& path)
 } /* Module::playFile */
 
 
+void Module::sendDtmf(const std::string& digits)
+{
+  if (m_is_active)
+  {
+    logic()->sendDtmf(digits);
+  }
+} /* Module::sendDtmf */
+
+
 int Module::audioFromModule(float *samples, int count)
 {
   if (m_is_active)

@@ -282,12 +282,13 @@ bool Logic::initialize(void)
   rx().mute(false);
     
   m_tx = Tx::create(cfg(), tx_name);
-  if (!tx().initialize())
+  if ((m_tx == 0) || !tx().initialize())
   {
     cerr << "*** ERROR: Could not initialize TX \"" << tx_name << "\"\n";
     goto tx_init_failed;
   }
   tx().allSamplesFlushed.connect(slot(this, &Logic::allTxSamplesFlushed));
+  tx().allDtmfDigitsSent.connect(slot(this, &Logic::allDtmfDigitsSent));
   
   if (tx_ctcss == TX_CTCSS_ALWAYS)
   {
@@ -543,12 +544,16 @@ Module *Logic::findModule(const string& name)
 
 void Logic::dtmfDigitDetected(char digit, int duration)
 {
-  cout << "digit=" << digit << endl;
+  cout << name() << ": digit=" << digit << endl;
   
   if (active_module != 0)
   {
-     active_module->dtmfDigitReceived(digit, duration);
+    if (active_module->dtmfDigitReceived(digit, duration))
+    {
+      return;
+    }
   }
+  
   if ((digit == '#') || (anti_flutter && (digit == 'C')))
   {
     putCmdOnQueue();
@@ -608,6 +613,15 @@ void Logic::disconnectAllLogics(void)
   audio_switch_matrix.disconnectSink(name());
 } /* Logic::disconnectAllLogics */
 
+
+void Logic::sendDtmf(const std::string& digits)
+{
+  if (!digits.empty())
+  {
+    tx().sendDtmf(digits);
+    transmitCheck();
+  }
+} /* Logic::sendDtmf */
 
 
 
@@ -792,14 +806,17 @@ void Logic::transmitCheck(void)
        << (remote_logic_tx ? "TRUE" : "FALSE") << endl;
   cout << "\ttx().isFlushing()               = "
        << (tx().isFlushing() ? "TRUE" : "FALSE") << endl;
+  cout << "\ttx().isSendingDtmf()            = "
+       << (tx().isSendingDtmf() ? "TRUE" : "FALSE") << endl;
   */
-   
+  
   if (((active_module != 0) && active_module->isTransmitting()) ||
       msg_handler->isWritingMessage() ||
       !module_tx_fifo->empty() ||
       logic_transmit ||
       remote_logic_tx ||
-      tx().isFlushing())
+      tx().isFlushing() ||
+      tx().isSendingDtmf())
   {
     transmit(true);
   }
@@ -1139,6 +1156,13 @@ void Logic::everyMinute(Timer *t)
   every_minute_timer->expired.connect(slot(this, &Logic::everyMinute));
   
 } /* Logic::everyMinute */
+
+
+void Logic::allDtmfDigitsSent(void)
+{
+  transmitCheck();
+} /* Logic::allDtmfDigitsSent */
+
 
 
 /*

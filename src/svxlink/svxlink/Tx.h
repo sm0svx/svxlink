@@ -188,6 +188,18 @@ class Tx : public SigC::Object
     virtual void enableCtcss(bool enable) { }
     
     /**
+     * @brief 	Send a string of DTMF digits
+     * @param 	digits	The digits to send
+     */
+    virtual void sendDtmf(const std::string& digits) {}
+    
+    /*
+     * @brief 	Check if DTMF digits are being sent
+     * @return	Returns \em true if digits are being sent or else \em false
+     */
+    virtual bool isSendingDtmf(void) const { return false; }
+    
+    /**
      * @brief 	A signal that is emitted when the audio transmit buffer full
      *	      	state is set or cleared
      * @param 	is_full Set to \em true to indicate that the transmit buffer
@@ -210,6 +222,12 @@ class Tx : public SigC::Object
      */
     SigC::Signal0<void> txTimeout;
 
+    /*
+     * @brief 	A signal that is emitted when all DTMF digits has been
+     *          transmitted
+     */
+    SigC::Signal0<void> allDtmfDigitsSent;
+    
     
   protected:
     

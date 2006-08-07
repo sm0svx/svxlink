@@ -195,6 +195,9 @@ class Logic : public SigC::Object
     
     void disconnectAllLogics(void);
     
+    void sendDtmf(const std::string& digits);
+    
+    
   protected:    
     virtual void squelchOpen(bool is_open);
     //virtual int audioReceived(float *samples, int count) { return count; }
@@ -262,7 +265,8 @@ class Logic : public SigC::Object
     void remoteLogicFlushSamples(void);
     int audioReceived(float *samples, int len);
     void everyMinute(Async::Timer *t);
-    
+    void allDtmfDigitsSent(void);
+
 };  /* class Logic */
 
 

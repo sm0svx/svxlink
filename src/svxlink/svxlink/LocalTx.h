@@ -69,7 +69,12 @@ namespace Async
   class AudioIO;
   class Timer;
   class SigCAudioSource;
+  class AudioSelector;
+  class AudioSource;
+  class AudioValve;
 };
+
+class DtmfEncoder;
 
 
 /****************************************************************************
@@ -182,6 +187,18 @@ class LocalTx : public Tx
      */
     void enableCtcss(bool enable);
     
+    /**
+     * @brief 	Send a string of DTMF digits
+     * @param 	digits	The digits to send
+     */
+    void sendDtmf(const std::string& digits);
+    
+    /*
+     * @brief 	Check if DTMF digits are being sent
+     * @return	Returns \em true if digits are being sent or else \em false
+     */
+    bool isSendingDtmf(void) const;
+        
     
   protected:
     
@@ -203,11 +220,16 @@ class LocalTx : public Tx
     bool      	      	    ctcss_enable;
     Async::SigCAudioSource  *sigc_src;
     bool      	      	    is_flushing;
+    DtmfEncoder       	    *dtmf_encoder;
+    Async::AudioSelector    *selector;
+    Async::AudioSource      *audio_stream;
+    Async::AudioValve 	    *valve;
     
     void txTimeoutOccured(Async::Timer *t);
     int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);
     bool setPtt(bool tx);
     void onAllSamplesFlushed(void);
+    void onAllDtmfDigitsSent(void);
 
 };  /* class LocalTx */
 

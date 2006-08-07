@@ -61,6 +61,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AudioFilter.h>
 #include <SigCAudioSink.h>
 #include <SigCAudioSource.h>
+#include <AsyncAudioSelector.h>
+#include <AsyncAudioValve.h>
 
 
 /****************************************************************************
@@ -218,7 +220,7 @@ LocalTx::LocalTx(Config& cfg, const string& name)
     serial(0), ptt_pin1(Serial::PIN_NONE), ptt_pin1_rev(false),
     ptt_pin2(Serial::PIN_NONE), ptt_pin2_rev(false), txtot(0),
     tx_timeout_occured(false), tx_timeout(0), tx_delay(0), ctcss_enable(false),
-    sigc_src(0), is_flushing(false)
+    sigc_src(0), is_flushing(false), dtmf_encoder(0)
 {
 
 } /* LocalTx::LocalTx */
@@ -228,9 +230,12 @@ LocalTx::~LocalTx(void)
 {
   transmit(false);
   
+  delete dtmf_encoder;
   delete sigc_src;
   delete txtot;
   delete serial;
+  delete selector;
+  delete valve;
   delete audio_io;
   delete sine_gen;
 } /* LocalTx::~LocalTx */
@@ -361,8 +366,26 @@ bool LocalTx::initialize(void)
   prev_src->registerSink(sf, true);
   prev_src = sf;
   
-  audio_io->registerSource(prev_src);
+  audio_stream = prev_src;
+  selector = new AudioSelector;
+  selector->addSource(audio_stream);
+  selector->selectSource(audio_stream);
+  prev_src = selector;
   
+  dtmf_encoder = new DtmfEncoder(audio_io->sampleRate());
+  dtmf_encoder->setToneLength(100);
+  dtmf_encoder->setGapLength(50);
+  dtmf_encoder->setToneAmplitude(-18);
+  dtmf_encoder->allDigitsSent.connect(
+      slot(this, &LocalTx::onAllDtmfDigitsSent));
+  
+  valve = new AudioValve(true);
+  valve->setOpen(false);
+  dtmf_encoder->registerSink(valve);
+  selector->addSource(valve);
+  
+  audio_io->registerSource(selector);
+
   return true;
   
 } /* LocalTx::initialize */
@@ -389,7 +412,7 @@ void LocalTx::transmit(bool do_transmit)
       is_transmitting = false;
       return;
     }
-
+    
     if (ctcss_enable)
     {
       sine_gen->enable(true);
@@ -409,10 +432,14 @@ void LocalTx::transmit(bool do_transmit)
       flushSamples();
     }
     
+    valve->setOpen(true);
+
     transmitBufferFull(false);
   }
   else
   {
+    valve->setOpen(false);
+    
     audio_io->close();
     
     if (ctcss_enable)
@@ -471,6 +498,18 @@ void LocalTx::enableCtcss(bool enable)
   }
 } /* LocalTx::enableCtcss */
 
+
+void LocalTx::sendDtmf(const string& digits)
+{
+  selector->selectSource(valve);
+  dtmf_encoder->send(digits);
+} /* LocalTx::sendDtmf */
+
+
+bool LocalTx::isSendingDtmf(void) const
+{
+  return dtmf_encoder->isSending();
+} /* LocalTx::isSendingDtmf */
 
 
 
@@ -597,6 +636,12 @@ void LocalTx::onAllSamplesFlushed(void)
   allSamplesFlushed();
 } /* LocalTx::allSamplesFlushed */
 
+
+void LocalTx::onAllDtmfDigitsSent(void)
+{
+  selector->selectSource(audio_stream);
+  allDtmfDigitsSent();
+} /* LocalTx::allDtmfDigitsSent */
 
 
 
