@@ -42,6 +42,7 @@ MAXIMIZE_SOUNDS="\
   TclVoiceMail/rec_done \
   TclVoiceMail/login \
   TclVoiceMail/rec_enter_rcpt \
+  DtmfRepeater/help \
   "
 
 TRIM_SOUNDS="\
@@ -160,6 +161,7 @@ TRIM_SOUNDS="\
   TclVoiceMail/login_ok \
   TclVoiceMail/rec_message \
   TclVoiceMail/rec_subject \
+  DtmfRepeater/name \
   "
 
 warning()
