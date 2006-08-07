@@ -115,8 +115,8 @@ using namespace Async;
 
 AudioSink::~AudioSink(void)
 {
-  clearHandler();
   unregisterSource();
+  clearHandler();
 } /* AudioSink::~AudioSink */
 
 
@@ -128,7 +128,23 @@ bool AudioSink::registerSource(AudioSource *source)
 
 void AudioSink::unregisterSource(void)
 {
-  unregisterSourceInternal(true);
+  if (m_source == 0)
+  {
+    return;
+  }
+  
+  AudioSource *source = m_source;
+  m_source = 0;
+  
+  if (m_auto_unreg_sink)
+  {
+    source->unregisterSink();
+  }
+  
+  if (m_handler != 0)
+  {
+    m_handler->unregisterSource();
+  }
 } /* AudioSink::unregisterSource */
 
 
@@ -165,7 +181,7 @@ void AudioSink::sourceAllSamplesFlushed(void)
 {
   if (m_source != 0)
   {
-    m_source->allSamplesFlushed();
+    m_source->handleAllSamplesFlushed();
   }
 } /* AudioSink::sourceAllSamplesFlushed */
 
@@ -181,7 +197,7 @@ bool AudioSink::setHandler(AudioSink *handler)
   
   if (m_source != 0)
   {
-    if (!m_handler->registerSourceInternal(m_source, false))
+    if (!handler->registerSourceInternal(m_source, false))
     {
       return false;
     }
@@ -203,7 +219,7 @@ void AudioSink::clearHandler(void)
   
   if (m_source != 0)
   {
-    m_handler->unregisterSourceInternal(false);
+    m_handler->unregisterSource();
   }
   
   m_handler = 0;
@@ -240,6 +256,7 @@ bool AudioSink::registerSourceInternal(AudioSource *source, bool reg_sink)
   }
   
   m_source = source;
+  m_auto_unreg_sink = reg_sink;
   if (reg_sink)
   {
     if (!m_source->registerSink(this))
@@ -265,31 +282,6 @@ bool AudioSink::registerSourceInternal(AudioSource *source, bool reg_sink)
   return true;
   
 } /* AudioSink::registerSourceInternal */
-
-
-void AudioSink::unregisterSourceInternal(bool unreg_sink)
-{
-  if (m_source == 0)
-  {
-    return;
-  }
-  
-  AudioSource *source = m_source;
-  m_source = 0;
-  
-  if (unreg_sink)
-  {
-    source->unregisterSink();
-  }
-  
-  if (m_handler != 0)
-  {
-    m_handler->unregisterSourceInternal(false);
-  }
-  
-} /* AudioSink::unregisterSourceInternal */
-
-
 
 
 

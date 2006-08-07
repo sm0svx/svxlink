@@ -218,9 +218,9 @@ class AudioSink
   private:
     AudioSource *m_source;
     AudioSink 	*m_handler;
+    bool      	m_auto_unreg_sink;
     
     bool registerSourceInternal(AudioSource *source, bool reg_sink);
-    void unregisterSourceInternal(bool unreg_sink);
     
 };  /* class AudioSink */
 
