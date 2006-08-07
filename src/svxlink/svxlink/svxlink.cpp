@@ -611,6 +611,7 @@ static void initialize_logics(Config &cfg)
     exit(1);
   }
 
+  int logic_cnt = 0;
   string::iterator comma;
   string::iterator begin = logics.begin();
   do
@@ -650,15 +651,23 @@ static void initialize_logics(Config &cfg)
       	   << "\"specified.\n";
       continue;
     }
-    if (!logic->initialize())
+    if ((logic == 0) || !logic->initialize())
     {
       cerr << "*** ERROR: Could not initialize Logic object \""
       	   << logic_name << "\". Skipping...\n";
       delete logic;
+      continue;
     }
     
+    ++logic_cnt;
   } while (comma != logics.end());
-}
+  
+  if (logic_cnt == 0)
+  {
+    cerr << "*** ERROR: No logics available. Bailing out...\n";
+    exit(1);
+  }
+} /* initialize_logics */
 
 
 void sighup_handler(int signal)
