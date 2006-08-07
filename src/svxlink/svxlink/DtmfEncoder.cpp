@@ -73,11 +73,6 @@ using namespace std;
 
 #define BLOCK_SIZE  512
 
-typedef struct
-{
-  int low_tone;
-  int hi_tone;
-} TonePair;
 
 
 /****************************************************************************
@@ -123,7 +118,7 @@ static map<char, pair<int, int> > tone_map;
 DtmfEncoder::DtmfEncoder(int sampling_rate)
   : sampling_rate(sampling_rate), tone_length(100 * sampling_rate / 1000),
     gap_length(50 * sampling_rate / 1000), tone_amp(0.5), low_tone(-1),
-    is_playing(false)
+    is_playing(false), is_sending_digits(false)
 {
   if (tone_map.empty())
   {
@@ -169,12 +164,13 @@ void DtmfEncoder::setGapLength(int length_ms)
 void DtmfEncoder::setToneAmplitude(int amp_db)
 {
   tone_amp = powf(10, amp_db / 20.0);
-  printf("tone_amp=%.2f\n", tone_amp);
+  //printf("tone_amp=%.2f\n", tone_amp);
 } /* DtmfEncoder::setGapLength */
 
 
 void DtmfEncoder::send(const std::string &str)
 {
+  is_sending_digits = true;
   current_str += str;
   playNextDigit();
 } /* DtmfEncoder::send */
@@ -182,13 +178,17 @@ void DtmfEncoder::send(const std::string &str)
 
 void DtmfEncoder::resumeOutput(void)
 {
-  writeAudio();
+  if (isSending())
+  {
+    writeAudio();
+  }
 } /* DtmfEncoder::resumeOutput */
 
 
 void DtmfEncoder::allSamplesFlushed(void)
 {
-  printf("All digits sent!\n");
+  //printf("All digits sent!\n");
+  is_sending_digits = false;
   allDigitsSent();
 } /* DtmfEncoder::allSamplesFlushed */
 

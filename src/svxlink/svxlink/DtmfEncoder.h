@@ -131,8 +131,9 @@ class DtmfEncoder : public Async::AudioSource, SigC::Object
      */
     void setToneLength(int length_ms);
     void setGapLength(int length_ms);
-    void send(const std::string &str);
     void setToneAmplitude(int amp_db);
+    void send(const std::string &str);
+    bool isSending(void) const { return is_sending_digits; }
     
     /**
      * @brief Resume audio output to the sink
@@ -173,6 +174,7 @@ class DtmfEncoder : public Async::AudioSource, SigC::Object
     int       	pos;
     int       	length;
     bool      	is_playing;
+    bool      	is_sending_digits;
 
     DtmfEncoder(const DtmfEncoder&);
     DtmfEncoder& operator=(const DtmfEncoder&);
