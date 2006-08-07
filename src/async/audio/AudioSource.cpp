@@ -123,29 +123,15 @@ AudioSource::~AudioSource(void)
   {
     unregisterSink();
   }
+  
+  clearHandler();
+  
 } /* AudioSource::~AudioSource */
 
 
 bool AudioSource::registerSink(AudioSink *sink, bool managed)
 {
-  assert(sink != 0);
-  
-  if (m_sink != 0)
-  {
-    return m_sink == sink;
-  }
-  
-  m_sink = sink;
-  if (!m_sink->registerSource(this))
-  {
-    m_sink = 0;
-    return false;
-  }
-  
-  m_sink_managed = managed;
-  
-  return true;
-  
+  return registerSinkInternal(sink, managed, true);
 } /* AudioSource::registerSink */
 
 
@@ -158,8 +144,23 @@ void AudioSource::unregisterSink(void)
   
   AudioSink *sink = m_sink;
   m_sink = 0;
-  sink->unregisterSource();
+  
+  if (m_auto_unreg_source)
+  {
+    sink->unregisterSource();
+  }
+  
   m_sink_managed = false;
+  
+  if (m_handler != 0)
+  {
+    m_handler->unregisterSink();
+  }
+  
+  if (is_flushing)
+  {
+    handleAllSamplesFlushed();
+  }
   
 } /* AudioSource::unregisterSink */
 
@@ -188,6 +189,8 @@ void AudioSource::unregisterSink(void)
  */
 int AudioSource::sinkWriteSamples(const float *samples, int len)
 {
+  is_flushing = false;
+  
   if (m_sink != 0)
   {
     len = m_sink->writeSamples(samples, len);
@@ -202,11 +205,54 @@ void AudioSource::sinkFlushSamples(void)
 {
   if (m_sink != 0)
   {
+    is_flushing = true;
     m_sink->flushSamples();
+  }
+  else
+  {
+    handleAllSamplesFlushed();
   }
 } /* AudioSource::sinkFlushSamples */
 
 
+bool AudioSource::setHandler(AudioSource *handler)
+{
+  clearHandler();
+  
+  if (handler == 0)
+  {
+    return true;
+  }
+  
+  if (m_sink != 0)
+  {
+    if (!handler->registerSinkInternal(m_sink, false, false))
+    {
+      return false;
+    }
+  }
+  
+  m_handler = handler;
+  
+  return true;
+    
+} /* AudioSource::setHandler */
+
+
+void AudioSource::clearHandler(void)
+{
+  if (m_handler == 0)
+  {
+    return;
+  }
+  
+  if (m_sink != 0)
+  {
+    m_handler->unregisterSink();
+  }
+  
+  m_handler = 0;
+} /* AudioSource::clearHandler */
 
 
 
@@ -230,9 +276,44 @@ void AudioSource::sinkFlushSamples(void)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-
-
-
+bool AudioSource::registerSinkInternal(AudioSink *sink, bool managed, bool reg)
+{
+  assert(sink != 0);
+  
+  if (m_sink != 0)
+  {
+    return m_sink == sink;
+  }
+  
+  m_sink = sink;
+  m_auto_unreg_source = reg;
+  if (reg)
+  {
+    if (!m_sink->registerSource(this))
+    {
+      m_sink = 0;
+      return false;
+    }
+  }
+    
+  if (m_handler != 0)
+  {
+    if (!m_handler->registerSinkInternal(sink, false, false))
+    {
+      if (reg)
+      {
+      	m_sink->unregisterSource();
+      }
+      m_sink = 0;
+      return false;
+    }
+  }
+  
+  m_sink_managed = managed;
+  
+  return true;
+  
+} /* AudioSource::registerSinkInternal */
 
 
 

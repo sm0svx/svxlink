@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <cassert>
 
 
 /****************************************************************************
@@ -116,7 +117,10 @@ class AudioSource
     /**
      * @brief 	Default constuctor
      */
-    AudioSource(void) : m_sink(0), m_sink_managed(false) {}
+    AudioSource(void)
+      : m_sink(0), m_sink_managed(false), m_handler(0), is_flushing(false)
+    {
+    }
   
     /**
      * @brief 	Destructor
@@ -158,29 +162,99 @@ class AudioSource
      * more samples.
      * This function is normally only called from a connected sink object.
      */
-    virtual void resumeOutput(void) = 0;
+    virtual void resumeOutput(void)
+    {
+      assert(m_handler != 0);
+      m_handler->resumeOutput();
+    }
     
     /**
      * @brief The registered sink has flushed all samples
      *
-     * This function must be implemented by the inheriting class. It
-     * will be called when all samples have been flushed in the
-     * registered sink.
+     * This function will be called when all samples have been flushed in
+     * the registered sink.
      * This function is normally only called from a connected sink object.
      */
-    virtual void allSamplesFlushed(void) = 0;
-
+    void handleAllSamplesFlushed(void)
+    {
+      is_flushing = false;
+      allSamplesFlushed();
+    }
     
   protected:
+    /**
+     * @brief The registered sink has flushed all samples
+     *
+     * This function should be implemented by the inheriting class. It
+     * will be called when all samples have been flushed in the
+     * registered sink. If it is not reimplemented, a handler must be set
+     * that handle the function call.
+     * This function is normally only called from a connected sink object.
+     */
+    virtual void allSamplesFlushed(void)
+    {
+      assert(m_handler != 0);
+      m_handler->handleAllSamplesFlushed();
+    }
+    
+    /*
+     * @brief 	Write samples to the connected sink
+     * @param 	samples The buffer containing the samples to write
+     * @param 	len   	The number of samples in the buffer
+     * @return	Return the number of samples that was taken care of
+     *
+     * This function is used by the inheriting class to write samples to
+     * the connected sink, if any. If there is no connected sink, the samples
+     * will be thrown away. This function will return the number of samples
+     * that was taken care of. Samples that was not taken care of should
+     * normally be written again to the sink.
+     */
     int sinkWriteSamples(const float *samples, int len);
+    
+    /*
+     * @brief 	Tell the sink to flush any buffered samples
+     *
+     * This function is used by the inheriting class to tell the connected
+     * sink to flush its buffered samples. When the sink have flushed all its
+     * samples it will call the allSamplesFlushed function in this class.
+     * If there is no registered sink the allSamplesFlushed function will be
+     * called right away.
+     */
     void sinkFlushSamples(void);
     
+    /**
+     * @brief 	Setup another source to handle the outgoing audio
+     * @param 	handler The source to handle the audio
+     * @return	Returns \em true on success or else \em false
+     *
+     * This function will setup another source to handle outgoing audio.
+     * This can be used when an internal object should handle the audio
+     * for this object.
+     */
+    bool setHandler(AudioSource *handler);
+    
+    /*
+     * @brief 	Return the handler
+     * @return	Returns the handler previously set with setHandler or 0
+     *          if none have been set
+     */
+    AudioSource *handler(void) const { return m_handler; }
+    
+    /**
+     * @brief Clear a handler that was previously setup with setHandler.
+     */
+    void clearHandler(void);
+
     
   private:
-    AudioSink *m_sink;
-    bool      m_sink_managed;
+    AudioSink 	*m_sink;
+    bool      	m_sink_managed;
+    AudioSource *m_handler;
+    bool      	m_auto_unreg_source;
+    bool      	is_flushing;
     
-    
+    bool registerSinkInternal(AudioSink *sink, bool managed, bool reg);
+
 };  /* class AudioSource */
 
 
