@@ -118,8 +118,15 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
   public:
     /**
      * @brief 	Default constuctor
+     * @param 	block_when_closed When \em true, block the incoming audio
+     *	      	stream when the valve is closed. When \em false, incoming
+     *	      	audio is thrown away when the valve is closed.
      */
-    AudioValve(void) : is_open(true) {}
+    explicit AudioValve(bool block_when_closed = false)
+      : block_when_closed(block_when_closed), is_open(true),
+      	all_flushed(false), flush_samples(false)
+    {
+    }
   
     /**
      * @brief 	Destructor
@@ -131,15 +138,33 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
      * @param 	do_open If \em true the valve is open or else it's closed
      *
      * This function is used to open or close the audio valve. When the valve
-     * is closed, the connected sink is flushed. Also, when the valve is
-     * closed, all incoming samples from the source will be thrown away.
+     * is closed, the connected sink is flushed. What is done with the incoming
+     * audio when the valve is closed depends on the block_when_closed
+     * parameter to the constructor.
      */
     void setOpen(bool do_open)
     {
-      bool was_open = is_open;
-      is_open = do_open;
-      if (was_open && !do_open)
+      if (is_open == do_open)
       {
+      	return;
+      }
+      
+      is_open = do_open;
+      
+      if (do_open)
+      {
+      	sourceResumeOutput();
+      	if (flush_samples && all_flushed)
+	{
+      	  sourceAllSamplesFlushed();
+	}
+      	all_flushed = false;
+	flush_samples = false;
+      }
+      else
+      {
+      	all_flushed = false;
+	flush_samples = false;
       	sinkFlushSamples();
       }
     }
@@ -157,9 +182,10 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
      */
     int writeSamples(const float *samples, int count)
     {
+      flush_samples = false;
       if (!is_open)
       {
-      	return count;
+      	return (block_when_closed ? 0 : count);
       }
       return sinkWriteSamples(samples, count);
     }
@@ -180,7 +206,14 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       }
       else
       {
-      	sourceAllSamplesFlushed();
+      	if (block_when_closed)
+	{
+	  flush_samples = true;
+	}
+	else
+	{
+      	  sourceAllSamplesFlushed();
+	}
       }
     }
     
@@ -213,6 +246,10 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       {
       	sourceAllSamplesFlushed();
       }
+      else
+      {
+      	all_flushed = true;
+      }
     }
     
     
@@ -222,7 +259,10 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     AudioValve(const AudioValve&);
     AudioValve& operator=(const AudioValve&);
     
+    bool block_when_closed;
     bool is_open;
+    bool all_flushed;
+    bool flush_samples;
     
 };  /* class AudioValve */
 
