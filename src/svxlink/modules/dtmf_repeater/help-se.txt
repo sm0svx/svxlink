@@ -1,0 +1,5 @@
+DTMF repeater-modulen återutsänder alla mottagna DTMF siffror. Detta kan till
+exempel användas för att styra andra stationer på kanalen som också är DTMF
+styrda. Alla mottagna siffror återutsänds och ignoreras helt av SvxLink.
+
+Avaktivera modulen genom att sända fyrkant i mer än tre sekunder.
