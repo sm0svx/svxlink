@@ -92,7 +92,7 @@ SHLIB_VERSION	= $(LIBASYNC)
 LIBSRC		= AudioSource.cpp AudioSink.cpp AudioProcessor.cpp \
 		  AudioCompressor.cpp AudioFilter.cpp fidlib.c \
 		  AsyncAudioDevice.cpp AsyncAudioIO.cpp AudioSplitter.cpp \
-		  AsyncAudioDelayLine.cpp
+		  AsyncAudioDelayLine.cpp AsyncAudioSelector.cpp
 
 
 # Which libs are used by the DYNAMIC lib generated.
@@ -109,7 +109,7 @@ EXPINC		= AudioSource.h AudioSink.h AudioProcessor.h \
 		  AudioClipper.h AudioCompressor.h AudioFilter.h \
 		  SigCAudioSink.h  SigCAudioSource.h AsyncAudioIO.h \
 		  AudioSplitter.h AsyncAudioDelayLine.h AsyncAudioValve.h \
-		  AsyncAudioAmp.h
+		  AsyncAudioAmp.h AsyncAudioSelector.h AsyncAudioPassthrough.h
 
 
 # Specify Qt header files here that you want to run the
