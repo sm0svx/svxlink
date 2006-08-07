@@ -4,10 +4,8 @@
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-05-05
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
+Async - A library for programming event driven applications
 Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -24,10 +22,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example AudioSplitter_demo.cpp
-An example of how to use the AudioSplitter class
 */
 
 
@@ -85,7 +79,6 @@ namespace Async
  *
  ****************************************************************************/
 
-class Branch;
   
 
 /****************************************************************************
@@ -149,6 +142,8 @@ class AudioSplitter : public Async::AudioSink
   protected:
     
   private:
+    class Branch;
+    
     std::list<Branch *> branches;
     float     	      	*buf;
     int       	      	buf_size;

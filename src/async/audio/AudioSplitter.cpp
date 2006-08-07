@@ -81,10 +81,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-namespace Async
-{
-
-class Branch : public AudioSource
+class Async::AudioSplitter::Branch : public AudioSource
 {
   public:
     int   current_buf_pos;
@@ -138,7 +135,6 @@ class Branch : public AudioSource
 
 }; /* class Branch */
 
-} /* namespace Async */
 
 
 /****************************************************************************
@@ -199,7 +195,7 @@ void AudioSplitter::addSink(AudioSink *sink, bool managed)
 
 void AudioSplitter::removeAllSinks(void)
 {
-  list<Async::Branch *>::iterator it;
+  list<Branch *>::iterator it;
   for (it = branches.begin(); it != branches.end(); ++it)
   {
     delete (*it);
