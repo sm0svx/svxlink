@@ -1,0 +1,91 @@
+.TH MODULEECHOLINK.CONF 5 "APRIL 2006" Linux "File Formats"
+.
+.SH NAME
+.
+ModuleEchoLink.conf \- Configuration file for the SvxLink server EchoLink module
+.
+.SH DESCRIPTION
+.
+.B svxlink
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration for the EchoLink module.
+.P
+The EchoLink module is used to connect to other EchoLink stations.
+.
+.SH CONFIGURATION VARIABLES
+.
+There are a couple of configuration variables that are common to all modules.
+The documentation for these can be found in the
+.BR svxlink.conf (5)
+manual page.
+.P
+Here is the description of all module specific configuration
+variables that the SvxLink EchoLink module understands.
+.
+.SS ModuleEchoLink
+.
+.TP
+.B ALLOW_IP
+Use this variable very carefully. Connections originating from the given subnet
+will not be checked against the EchoLink directory server. A typical use of this
+is if you want to connect to your own svxlink server and both the server and you
+are behind a IP masquerading firewall. 
+.TP
+.B SERVER
+The IP address or name of the EchoLink directory server to use. 
+.TP
+.B CALLSIGN
+The callsign to use to login to the EchoLink directory server. 
+.TP
+.B SYSOPNAME
+The name of the person or club that is responsible for this system. 
+.TP
+.B PASSWORD
+The EchoLink directory server password to use. 
+.TP
+.B LOCATION
+The location of the station. Note: In the default configuration file the value
+of this configuration variable starts with "[Svx]". This is ofcource not
+necessary but it's fun to see which other stations are running SvxLink. 
+.TP
+.B MAX_QSOS
+The maximum number of stations that can participate in a conference QSO on this
+node. If more stations try to connect, the connect request will be rejected. 
+.TP
+.B MAX_CONNECTIONS
+When more stations than specified in MAX_QSOS try to connect, a connection will
+temporarily be established long enough to play a message telling the remote
+station that the connection was rejected. The connection is then immediately
+terminated. If the number of connections exceeds MAX_CONNECTIONS, the connect
+request is just ignored. This variable is typically set to MAX_QSOS+1 or more if
+using a large number for MAX_QSOS. 
+.TP
+.B LINK_IDLE_TIMEOUT
+The number of seconds that a connection is idle before disconnection will occur.
+This is to prevent a link to stay open if someone forget to disconnect. Disable
+this feature by setting this config variable to zero (or comment it out). 
+.TP
+.B DESCRIPTION
+A longer description that is sent to remote stations upon connection. This
+description should typically include detailed station information like QTH,
+transceiver frequency/power, antenna, CTCSS tone frequency etc.
+.
+.SH FILES
+.
+.TP
+.I /etc/svxlink.conf
+The system wide configuration file.
+.TP
+.IR ~/.svxlink/svxlink.conf " or " ~/.svxlinkrc
+Per user configuration file.
+.TP
+.I /etc/svxlink.d/*
+Additional configuration files. Typically one configuration file per module.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
+.
+.SH "SEE ALSO"
+.
+.BR svxlink.conf (5)
