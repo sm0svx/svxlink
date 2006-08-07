@@ -223,7 +223,7 @@ class LocalTx : public Tx
     DtmfEncoder       	    *dtmf_encoder;
     Async::AudioSelector    *selector;
     Async::AudioSource      *audio_stream;
-    Async::AudioValve 	    *valve;
+    Async::AudioValve 	    *dtmf_valve;
     
     void txTimeoutOccured(Async::Timer *t);
     int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);

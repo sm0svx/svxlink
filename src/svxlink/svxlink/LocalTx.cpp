@@ -220,7 +220,7 @@ LocalTx::LocalTx(Config& cfg, const string& name)
     serial(0), ptt_pin1(Serial::PIN_NONE), ptt_pin1_rev(false),
     ptt_pin2(Serial::PIN_NONE), ptt_pin2_rev(false), txtot(0),
     tx_timeout_occured(false), tx_timeout(0), tx_delay(0), ctcss_enable(false),
-    sigc_src(0), is_flushing(false), dtmf_encoder(0)
+    sigc_src(0), is_flushing(false), dtmf_encoder(0), selector(0), dtmf_valve(0)
 {
 
 } /* LocalTx::LocalTx */
@@ -235,7 +235,7 @@ LocalTx::~LocalTx(void)
   delete txtot;
   delete serial;
   delete selector;
-  delete valve;
+  delete dtmf_valve;
   delete audio_io;
   delete sine_gen;
 } /* LocalTx::~LocalTx */
@@ -379,10 +379,10 @@ bool LocalTx::initialize(void)
   dtmf_encoder->allDigitsSent.connect(
       slot(this, &LocalTx::onAllDtmfDigitsSent));
   
-  valve = new AudioValve(true);
-  valve->setOpen(false);
-  dtmf_encoder->registerSink(valve);
-  selector->addSource(valve);
+  dtmf_valve = new AudioValve(true);
+  dtmf_valve->setOpen(false);
+  dtmf_encoder->registerSink(dtmf_valve);
+  selector->addSource(dtmf_valve);
   
   audio_io->registerSource(selector);
 
@@ -432,13 +432,13 @@ void LocalTx::transmit(bool do_transmit)
       flushSamples();
     }
     
-    valve->setOpen(true);
+    dtmf_valve->setOpen(true);
 
     transmitBufferFull(false);
   }
   else
   {
-    valve->setOpen(false);
+    dtmf_valve->setOpen(false);
     
     audio_io->close();
     
@@ -501,7 +501,7 @@ void LocalTx::enableCtcss(bool enable)
 
 void LocalTx::sendDtmf(const string& digits)
 {
-  selector->selectSource(valve);
+  selector->selectSource(dtmf_valve);
   dtmf_encoder->send(digits);
 } /* LocalTx::sendDtmf */
 
