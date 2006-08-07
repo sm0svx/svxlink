@@ -57,6 +57,56 @@ proc playNumber {number} {
 }
 
 
+proc playTwoDigitNumber {number} {
+  if {[string length $number] != 2} {
+    puts "*** WARNING: Function playTwoDigitNumber received a non two digit number: $number";
+    return;
+  }
+  
+  set first [string index $number 0];
+  if {($first == "0") || ($first == "O")} {
+    playMsg "Default" $first;
+    playMsg "Default" [string index $number 1];
+  } elseif {$first == "1"} {
+    playMsg "Default" $number;
+  } elseif {[string index $number 1] == "0"} {
+    playMsg "Default" $number;
+  } else {
+    playMsg "Default" "[string index $number 0]X";
+    playMsg "Default" "[string index $number 1]";
+  }
+}
+
+
+proc playTime {hour minute} {
+  set hour [string trimleft $hour " "];
+  set minute [string trimleft $minute " "];
+  
+  if {$hour < 12} {
+    set ampm "AM";
+    if {$hour == 0} {
+      set hour 12;
+    }
+  } else {
+    set ampm "PM";
+    if {$hour > 12} {
+      set hour [expr $hour - 12];
+    }
+  };
+  
+  playMsg "Default" $hour;
+
+  if {$minute != 0} {
+    if {[string length $minute] == 1} {
+      set minute "O$minute";
+    }
+    playTwoDigitNumber $minute;
+  }
+  
+  playSilence 100;
+  playMsg "Core" $ampm;
+}
+
 
 ###############################################################################
 #
