@@ -53,6 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <SigCAudioSink.h>
 #include <AudioSplitter.h>
 #include <AsyncAudioAmp.h>
+#include <AsyncAudioPassthrough.h>
 
 
 /****************************************************************************
@@ -159,6 +160,38 @@ class SigCAudioValve : public AudioValve, public SigC::Object
     SigC::Signal0<void> sigAllSamplesFlushed;
 };
 
+
+class PeakMeter : public AudioPassthrough
+{
+  public:
+    PeakMeter(const string& name) : name(name) {}
+    
+    int writeSamples(const float *samples, int count)
+    {
+      int ret = sinkWriteSamples(samples, count);
+      
+      int i;
+      for (i=0; i<ret; ++i)
+      {
+      	if (abs(samples[i]) > 0.997)
+	{
+	  break;
+	}
+      }
+      
+      if (i < count)
+      {
+      	cout << name
+	     << ": Distorsion detected! Please lower the input volume!\n";
+      }
+      
+      return ret;
+    }
+  
+  private:
+    string name;
+    
+};
 
 
 /****************************************************************************
@@ -286,6 +319,12 @@ bool LocalRx::initialize(void)
     preamp_gain = atoi(value.c_str());
   }
   
+  bool peak_meter = false;
+  if (cfg().getValue(name(), "PEAK_METER", value))
+  {
+    peak_meter = (atoi(value.c_str()) != 0);
+  }
+  
   if (!squelch->initialize(cfg(), name()))
   {
     cerr << "*** ERROR: Squelch detector initialization failed for RX \""
@@ -305,7 +344,14 @@ bool LocalRx::initialize(void)
     prev_src->registerSink(preamp, true);
     prev_src = preamp;
   }
-    
+  
+  if (peak_meter)
+  {
+    PeakMeter *peak_meter = new PeakMeter(name());
+    prev_src->registerSink(peak_meter, true);
+    prev_src = peak_meter;
+  }
+      
   if (deemphasis)
   {
     AudioFilter *deemph_filt = new AudioFilter("LpBu1/300");

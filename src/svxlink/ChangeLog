@@ -83,6 +83,13 @@
 * New module DtmfRepeater. This module can be used as a DTMF pass-through
   feature on a repeater logic where DTMF muting has been enabled.
 
+* Added a peak detector in the receiver so that it is easier to adjust
+  the input volume. It is enabled by setting the PEAK_METER variable in
+  the receiver configuration section. Start SvxLink and open the squelch on
+  the receiver so that only noise is available on the input. Adjust the input
+  volume until you see messages printed about distorsion. Then lower the
+  volume until there are no more messages.
+
 
 
  0.7.0 -- 02 Dec 2005
