@@ -225,19 +225,22 @@ void ModuleTcl::deactivateCleanup(void)
  *    	      received.
  * Input:     digit   	- The DTMF digit received (0-9, A-D, *, #)
  *    	      duration	- The duration in milliseconds
- * Output:    None
+ * Output:    Return true if the digit is handled or false if not
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2004-03-07
  * Remarks:   
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void ModuleTcl::dtmfDigitReceived(char digit, int duration)
+bool ModuleTcl::dtmfDigitReceived(char digit, int duration)
 {
   //cout << "DTMF digit received in module " << name() << ": " << digit << endl;
   stringstream ss;
   ss << "dtmf_digit_received " << digit << " " << duration;
   processEvent(ss.str());
+  
+  return false;
+  
 } /* dtmfDigitReceived */
 
 

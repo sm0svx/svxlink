@@ -123,7 +123,7 @@ class ModuleTemplate : public Module
     bool initialize(void);
     void activateInit(void);
     void deactivateCleanup(void);
-    void dtmfDigitReceived(char digit);
+    bool dtmfDigitReceived(char digit, int duration);
     void dtmfCmdReceived(const std::string& cmd);
     void squelchOpen(bool is_open);
     int audioFromRx(short *samples, int count);

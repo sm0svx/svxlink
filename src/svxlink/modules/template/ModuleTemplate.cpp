@@ -250,17 +250,20 @@ void ModuleTemplate::deactivateCleanup(void)
  * Purpose:   Called by the core system when a DTMF digit has been
  *    	      received. This function will only be called if the module
  *    	      is active.
- * Input:     digit - The DTMF digit received (0-9, A-D, *, #)
- * Output:    None
+ * Input:     digit   	- The DTMF digit received (0-9, A-D, *, #)
+ *            duration	- The length in milliseconds of the received digit
+ * Output:    Return true if the digit is handled or false if not
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2004-03-07
  * Remarks:   
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void ModuleTemplate::dtmfDigitReceived(char digit)
+bool ModuleTemplate::dtmfDigitReceived(char digit, int duration)
 {
   cout << "DTMF digit received in module " << name() << ": " << digit << endl;
+  
+  return false;
   
 } /* dtmfDigitReceived */
 

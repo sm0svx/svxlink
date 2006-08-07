@@ -122,7 +122,7 @@ class ModuleTcl : public Module
   private:
     void activateInit(void);
     void deactivateCleanup(void);
-    void dtmfDigitReceived(char digit, int duration);
+    bool dtmfDigitReceived(char digit, int duration);
     void dtmfCmdReceived(const std::string& cmd);
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
