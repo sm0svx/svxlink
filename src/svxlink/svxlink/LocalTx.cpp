@@ -148,7 +148,10 @@ class SineGenerator : public Async::AudioSource
 
     void resumeOutput(void)
     {
-      writeSamples();
+      if (audio_io.mode() != AudioIO::MODE_NONE)
+      {
+      	writeSamples();
+      }
     }
     
     void allSamplesFlushed(void)
@@ -370,7 +373,7 @@ bool LocalTx::initialize(void)
   selector = new AudioSelector;
   selector->addSource(audio_stream);
   selector->selectSource(audio_stream);
-  prev_src = selector;
+  prev_src = 0;
   
   dtmf_encoder = new DtmfEncoder(audio_io->sampleRate());
   dtmf_encoder->setToneLength(100);
