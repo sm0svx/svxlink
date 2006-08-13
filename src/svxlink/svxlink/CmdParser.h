@@ -133,7 +133,7 @@ class CmdParser
     /**
      * @brief 	Destructor
      */
-    ~CmdParser(void) {}
+    ~CmdParser(void);
   
     /**
      * @brief 	A_brief_member_function_description
@@ -150,7 +150,8 @@ class CmdParser
   protected:
     
   private:
-    std::map<std::string, Command *> cmds;
+    typedef std::map<std::string, Command *> CmdMap;
+    CmdMap cmds;
     
 };  /* class CmdParser */
 

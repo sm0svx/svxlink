@@ -112,6 +112,17 @@ using namespace std;
  *
  ****************************************************************************/
 
+CmdParser::~CmdParser(void)
+{
+  CmdMap cmds_copy = cmds;
+  CmdMap::iterator it;
+  for (it = cmds_copy.begin(); it != cmds_copy.end(); ++it)
+  {
+    delete (*it).second;
+  }
+} /* CmdParser::~CmdParser */
+
+
 void CmdParser::addCmd(Command *cmd)
 {
   assert(cmds.count(cmd->cmdStr()) == 0);

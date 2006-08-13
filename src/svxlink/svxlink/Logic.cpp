@@ -9,7 +9,7 @@ everything is tied together. It is also the base class for implementing
 specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
-<A brief description of the program or library this file belongs to>
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
 Copyright (C) 2003 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify

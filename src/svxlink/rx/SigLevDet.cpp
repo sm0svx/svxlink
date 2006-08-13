@@ -130,6 +130,7 @@ SigLevDet::SigLevDet(void)
 
 SigLevDet::~SigLevDet(void)
 {
+  clearHandler();
   delete filter;
   delete sigc_sink;
 } /* SigLevDet::~SigLevDet */
