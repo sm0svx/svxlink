@@ -139,6 +139,7 @@ AudioSelector::AudioSelector(void)
 
 AudioSelector::~AudioSelector(void)
 {
+  selectSource(0);
   BranchMap::iterator it;
   for (it = branch_map.begin(); it != branch_map.end(); ++it)
   {
