@@ -121,7 +121,7 @@ AudioSource::~AudioSource(void)
   }
   else
   {
-    unregisterSink();
+    unregisterSinkInternal(true);
   }
   
   clearHandler();
@@ -137,31 +137,7 @@ bool AudioSource::registerSink(AudioSink *sink, bool managed)
 
 void AudioSource::unregisterSink(void)
 {
-  if (m_sink == 0)
-  {
-    return;
-  }
-  
-  AudioSink *sink = m_sink;
-  m_sink = 0;
-  
-  if (m_auto_unreg_source)
-  {
-    sink->unregisterSource();
-  }
-  
-  m_sink_managed = false;
-  
-  if (m_handler != 0)
-  {
-    m_handler->unregisterSink();
-  }
-  
-  if (is_flushing)
-  {
-    handleAllSamplesFlushed();
-  }
-  
+  unregisterSinkInternal(false);  
 } /* AudioSource::unregisterSink */
 
 
@@ -314,6 +290,45 @@ bool AudioSource::registerSinkInternal(AudioSink *sink, bool managed, bool reg)
   return true;
   
 } /* AudioSource::registerSinkInternal */
+
+
+void AudioSource::unregisterSinkInternal(bool is_being_destroyed)
+{
+  if (m_sink == 0)
+  {
+    return;
+  }
+  
+  AudioSink *sink = m_sink;
+  m_sink = 0;
+  
+  if (m_auto_unreg_source)
+  {
+    sink->unregisterSource();
+  }
+  
+  m_sink_managed = false;
+  
+  if (m_handler != 0)
+  {
+    m_handler->unregisterSink();
+  }
+  
+  if (!is_being_destroyed)
+  {
+    if (is_flushing)
+    {
+      handleAllSamplesFlushed();
+    }
+    else
+    {
+      resumeOutput();
+    }
+  }
+    
+} /* AudioSource::unregisterSinkInternal */
+
+
 
 
 

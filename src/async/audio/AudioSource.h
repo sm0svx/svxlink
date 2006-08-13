@@ -254,6 +254,7 @@ class AudioSource
     bool      	is_flushing;
     
     bool registerSinkInternal(AudioSink *sink, bool managed, bool reg);
+    void unregisterSinkInternal(bool is_being_destroyed);
 
 };  /* class AudioSource */
 
