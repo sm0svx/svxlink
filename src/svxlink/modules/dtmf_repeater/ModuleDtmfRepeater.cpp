@@ -310,25 +310,23 @@ void ModuleDtmfRepeater::squelchOpen(bool is_open)
 {
   setIdle(!is_open);
   
-  if (is_open)
+  delete repeat_delay_timer;
+  repeat_delay_timer = 0;    
+
+  if (!is_open && (repeat_delay > 0) && !received_digits.empty())
   {
-    delete repeat_delay_timer;
-    repeat_delay_timer = 0;    
-  }
-  else
-  {
-    if ((repeat_delay > 0) && !received_digits.empty())
-    {
-      repeat_delay_timer = new Timer(repeat_delay);
-      repeat_delay_timer->expired.connect(
-	  slot(this, &ModuleDtmfRepeater::onRepeatDelayExpired));
-    }
+    repeat_delay_timer = new Timer(repeat_delay);
+    repeat_delay_timer->expired.connect(
+	slot(this, &ModuleDtmfRepeater::onRepeatDelayExpired));
   }
 } /* squelchOpen */
 
 
 void ModuleDtmfRepeater::onRepeatDelayExpired(Timer *t)
 {
+  delete repeat_delay_timer;
+  repeat_delay_timer = 0;    
+
   cout << name() << ": Sending DTMF digits " << received_digits << endl;
   sendDtmf(received_digits);
   received_digits.clear();
