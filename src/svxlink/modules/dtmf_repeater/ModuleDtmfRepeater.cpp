@@ -283,6 +283,11 @@ bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
   
   received_digits += digit;
   
+  if (repeat_delay == 0)
+  {
+    onRepeatDelayExpired(0);
+  }
+  
   return true;
   
 } /* dtmfDigitReceived */
@@ -312,18 +317,11 @@ void ModuleDtmfRepeater::squelchOpen(bool is_open)
   }
   else
   {
-    if (!received_digits.empty())
+    if ((repeat_delay > 0) && !received_digits.empty())
     {
-      if (repeat_delay > 0)
-      {
-      	repeat_delay_timer = new Timer(repeat_delay);
-	repeat_delay_timer->expired.connect(
-	    slot(this, &ModuleDtmfRepeater::onRepeatDelayExpired));
-      }
-      else
-      {
-      	onRepeatDelayExpired(0);
-      }
+      repeat_delay_timer = new Timer(repeat_delay);
+      repeat_delay_timer->expired.connect(
+	  slot(this, &ModuleDtmfRepeater::onRepeatDelayExpired));
     }
   }
 } /* squelchOpen */
