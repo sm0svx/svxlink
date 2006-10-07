@@ -232,18 +232,20 @@ void RepeaterLogic::processEvent(const string& event, const Module *module)
   if ((event == "repeater_idle") || (event == "send_rgr_sound"))
   {
     preserve_idle_state = true;
+    Logic::processEvent(event, module);
+    preserve_idle_state = false;
   }
-  
-  Logic::processEvent(event, module);
-  
-  preserve_idle_state = false;
-  
+  else
+  {  
+    Logic::processEvent(event, module);
+  }  
 } /* RepeaterLogic::processEvent */
 
 
 void RepeaterLogic::playFile(const string& path)
 {
   //printf("RepeaterLogic::playiFile: %s\n", path.c_str());
+  
   if (!preserve_idle_state)
   {
     setIdle(false);
@@ -266,7 +268,7 @@ void RepeaterLogic::playSilence(int length)
 
 void RepeaterLogic::playTone(int fq, int amp, int len)
 {
-  //printf("RepeaterLogic::playSilence: %d ms\n", length);
+  //printf("RepeaterLogic::playTone: fq=%d amp=%d len=%d ms\n", fq, amp, len);
   
   if (!preserve_idle_state)
   {
@@ -326,7 +328,7 @@ void RepeaterLogic::dtmfDigitDetected(char digit, int duration)
 
 void RepeaterLogic::allTxSamplesFlushed(void)
 {
-  //printf("RepeaterLogic::allTxSamplesFlushed\n");
+  printf("RepeaterLogic::allTxSamplesFlushed\n");
   Module *module = activeModule();
   if (!rx().squelchIsOpen() && ((module == 0) || (!module->isTransmitting())))
   {
@@ -422,7 +424,14 @@ void RepeaterLogic::setUp(bool up)
   {
     processEvent("repeater_up");
     repeater_is_up = true;
-    repeating_enabled = false;
+      // Enable repeating only if no statup message was played. If there is
+      // a statuup message, repeating will be enabled when the message has
+      // been played.
+    repeating_enabled = !isWritingMessage();
+    if (repeating_enabled)
+    {
+      setIdle(true);
+    }
   }
   else
   {
