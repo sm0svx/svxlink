@@ -342,8 +342,11 @@ bool AudioDevice::open(Mode mode)
   }
   //printf("frag_size=%d\n", frag_size);
   
-  read_buf = new short[BUF_FRAG_COUNT*frag_size];
-  samples = new float[BUF_FRAG_COUNT*frag_size];
+  if (read_buf == 0)
+  {
+    read_buf = new short[BUF_FRAG_COUNT*frag_size];
+    samples = new float[BUF_FRAG_COUNT*frag_size];
+  }
   
   return true;
     
@@ -442,7 +445,12 @@ AudioDevice::AudioDevice(const string& dev_name)
 
 AudioDevice::~AudioDevice(void)
 {
+  delete [] read_buf;
+  read_buf = 0;
   
+  delete [] samples;
+  samples = 0;
+    
 } /* AudioDevice::~AudioDevice */
 
 
@@ -672,11 +680,13 @@ void AudioDevice::closeDevice(void)
   delete read_watch;
   read_watch = 0;
   
+  /*
   delete [] read_buf;
   read_buf = 0;
   
   delete [] samples;
   samples = 0;
+  */
   
   if (fd != -1)
   {
