@@ -740,6 +740,10 @@ void Logic::enableRgrSoundTimer(bool enable)
 } /* Logic::enableRgrSoundTimer */
 
 
+bool Logic::isWritingMessage(void)
+{
+  return msg_handler->isWritingMessage();
+} /* Logic::isWritingMessage */
 
 
 

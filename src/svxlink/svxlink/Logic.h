@@ -211,6 +211,7 @@ class Logic : public SigC::Object
     void clearPendingSamples(void);
     void logicTransmitRequest(bool do_transmit);
     void enableRgrSoundTimer(bool enable);
+    bool isWritingMessage(void);
 
   private:
     static AudioSwitchMatrix  	audio_switch_matrix;
