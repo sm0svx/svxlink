@@ -157,21 +157,27 @@ void AudioSelector::addSource(Async::AudioSource *source)
 
 void AudioSelector::selectSource(AudioSource *source)
 {
-  if (source == handler())
-  {
-    return;
-  }
+  Branch *branch = 0;
   
+  if (source != 0)
+  {
+    assert(branch_map.find(source) != branch_map.end());
+    branch = branch_map[source];
+
+    if (branch == handler())
+    {
+      return;
+    }
+  }
+    
   clearHandler();
 
-  if (source == 0)
+  if (branch == 0)
   {
     setHandler(&null_source);
     return;
   }
   
-  assert(branch_map.find(source) != branch_map.end());
-  Branch *branch = branch_map[source];
   setHandler(branch);
 } /* AudioSelector::selectSource */
 
