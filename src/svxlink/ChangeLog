@@ -90,6 +90,8 @@
   volume until you see messages printed about distorsion. Then lower the
   volume until there are no more messages.
 
+* Now using libsigc++ version 1.2 instead of the old and outdated 1.0.
+
 
 
  0.7.0 -- 02 Dec 2005
