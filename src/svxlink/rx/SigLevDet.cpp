@@ -121,9 +121,9 @@ SigLevDet::SigLevDet(void)
   filter = new AudioFilter("HpBu4/3500");
   setHandler(filter);
   sigc_sink = new SigCAudioSink;
-  sigc_sink->sigWriteSamples.connect(slot(this, &SigLevDet::processSamples));
+  sigc_sink->sigWriteSamples.connect(slot(*this, &SigLevDet::processSamples));
   sigc_sink->sigFlushSamples.connect(
-      slot(sigc_sink, &SigCAudioSink::allSamplesFlushed));
+      slot(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
   sigc_sink->registerSource(filter);
 } /* SigLevDet::SigLevDet */
 

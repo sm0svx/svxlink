@@ -95,7 +95,7 @@ LIBSRC		= AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp \
 		  AsyncSampleFifo.cpp AsyncSerial.cpp AsyncSerialDevice.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
-LIB_LIBS	= -lc -lsigc -lpthread -lm
+LIB_LIBS	= -lc $(SIGC_LIBS) -lpthread -lm
 
 # Which STATIC libs should be included in the generated STATIC lib.
 # These libs must be in the $(LIB) directory. Only the name of the
@@ -193,11 +193,11 @@ RPM_NAME := async-core
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= $(shell sigc-config --cflags)
+INCPATH 	+= $(SIGC_INCPATH)
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.
-LIBPATH 	+= 
+LIBPATH 	+= $(SIGC_LIBPATH)
 
 # Additional warnings to use. If you want to override the default
 # warnings, change the "+=" to "=".

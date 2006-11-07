@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <qevent.h>
 #include <qapplication.h>
 #include <qmessagebox.h>
+#undef emit
 
 
 /****************************************************************************
@@ -186,15 +187,15 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
   rem_audio_fifo->setOverwrite(true);
   rem_audio_fifo->setPrebufSamples(1280);
   rem_audio_fifo->writeSamples.connect(
-      slot(sigc_src, &SigCAudioSource::writeSamples));
+      slot(*sigc_src, &SigCAudioSource::writeSamples));
   rem_audio_fifo->allSamplesWritten.connect(
-      slot(sigc_src, &SigCAudioSource::flushSamples));
+      slot(*sigc_src, &SigCAudioSource::flushSamples));
   sigc_src->sigWriteBufferFull.connect(
-      slot(rem_audio_fifo, &SampleFifo::writeBufferFull));
+      slot(*rem_audio_fifo, &SampleFifo::writeBufferFull));
   
   sigc_sink = new SigCAudioSink;
   sigc_sink->registerSource(audio_io);
-  sigc_sink->sigWriteSamples.connect(slot(this, &ComDialog::micAudioRead));
+  sigc_sink->sigWriteSamples.connect(slot(*this, &ComDialog::micAudioRead));
   
   Settings *settings = Settings::instance();  
   if (settings->useFullDuplex() && audio_io->isFullDuplexCapable())
@@ -229,7 +230,7 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
   
   ptt_button->installEventFilter(this);
   
-  dir.stationListUpdated.connect(slot(this, &ComDialog::onStationListUpdated));
+  dir.stationListUpdated.connect(slot(*this, &ComDialog::onStationListUpdated));
   
   orig_background_color = rx_indicator->paletteBackgroundColor();
     
@@ -385,11 +386,11 @@ void ComDialog::createConnection(const StationData *station)
     return;
   }
   
-  con->infoMsgReceived.connect(slot(this, &ComDialog::infoMsgReceived));
-  con->chatMsgReceived.connect(slot(this, &ComDialog::chatMsgReceived));
-  con->stateChange.connect(slot(this, &ComDialog::stateChange));
-  con->isReceiving.connect(slot(this, &ComDialog::isReceiving));
-  con->audioReceived.connect(slot(rem_audio_fifo, &SampleFifo::addSamples));
+  con->infoMsgReceived.connect(slot(*this, &ComDialog::infoMsgReceived));
+  con->chatMsgReceived.connect(slot(*this, &ComDialog::chatMsgReceived));
+  con->stateChange.connect(slot(*this, &ComDialog::stateChange));
+  con->isReceiving.connect(slot(*this, &ComDialog::isReceiving));
+  con->audioReceived.connect(slot(*rem_audio_fifo, &SampleFifo::addSamples));
   
   connect_button->setEnabled(TRUE);
   connect_button->setFocus();

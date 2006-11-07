@@ -137,7 +137,7 @@ DnsLookup::DnsLookup(const string& label)
   : worker(0)
 {
   worker = Application::app().newDnsLookupWorker(label);
-  worker->resultsReady.connect(slot(this, &DnsLookup::onResultsReady));
+  worker->resultsReady.connect(slot(*this, &DnsLookup::onResultsReady));
   assert(worker->doLookup());
 } /* DnsLookup::DnsLookup */
 

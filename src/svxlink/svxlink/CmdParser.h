@@ -41,7 +41,7 @@ An example of how to use the CmdParser class
  *
  ****************************************************************************/
 
-#include <sigc++/signal_system.h>
+#include <sigc++/sigc++.h>
 
 #include <map>
 #include <string>

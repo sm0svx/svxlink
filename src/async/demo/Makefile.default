@@ -198,7 +198,7 @@ RPM_NAME :=
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= -I$(QTDIR)/include $(shell sigc-config --cflags)
+INCPATH 	+= -I$(QTDIR)/include $(SIGC_INCPATH)
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.

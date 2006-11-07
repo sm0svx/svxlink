@@ -7,6 +7,7 @@
 *****************************************************************************/
 
 #include <qmessagebox.h>
+#undef emit
 
 #include <version/QTEL.h>
 

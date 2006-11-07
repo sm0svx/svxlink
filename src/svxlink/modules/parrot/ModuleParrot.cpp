@@ -177,12 +177,12 @@ bool ModuleParrot::initialize(void)
   fifo->setDebugName("parrot_fifo");
   fifo->stopOutput(true);
   fifo->setOverwrite(true);
-  fifo->writeSamples.connect(slot(&pacer, &AudioPacer::audioInput));
-  fifo->allSamplesWritten.connect(slot(&pacer, &AudioPacer::flushAllAudio));
+  fifo->writeSamples.connect(slot(pacer, &AudioPacer::audioInput));
+  fifo->allSamplesWritten.connect(slot(pacer, &AudioPacer::flushAllAudio));
   
-  pacer.audioInputBufFull.connect(slot(fifo, &SampleFifo::writeBufferFull));
-  pacer.audioOutput.connect(slot(this, &ModuleParrot::audioFromFifo));
-  pacer.allAudioFlushed.connect(slot(this, &ModuleParrot::allSamplesWritten));
+  pacer.audioInputBufFull.connect(slot(*fifo, &SampleFifo::writeBufferFull));
+  pacer.audioOutput.connect(slot(*this, &ModuleParrot::audioFromFifo));
+  pacer.allAudioFlushed.connect(slot(*this, &ModuleParrot::allSamplesWritten));
   
   return true;
   
@@ -334,7 +334,7 @@ void ModuleParrot::squelchOpen(bool is_open)
       {
       	repeat_delay_timer = new Timer(repeat_delay);
 	repeat_delay_timer->expired.connect(
-	    slot(this, &ModuleParrot::onRepeatDelayExpired));
+	    slot(*this, &ModuleParrot::onRepeatDelayExpired));
       }
       else
       {

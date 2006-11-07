@@ -11,9 +11,9 @@ class MyClass : public SigC::Object
     MyClass(void)
     {
       server = new TcpServer("12345");
-      server->clientConnected.connect(slot(this, &MyClass::onClientConnected));
+      server->clientConnected.connect(slot(*this, &MyClass::onClientConnected));
       server->clientDisconnected.connect(
-      	      slot(this, &MyClass::onClientDisconnected));
+      	      slot(*this, &MyClass::onClientDisconnected));
       cout << "Connect using: \"telnet localhost 12345\" from "
       	      "another console\n";
     }
@@ -32,7 +32,7 @@ class MyClass : public SigC::Object
       	   << con->remotePort() << " connected, "
            << server->numberOfClients() << " clients connected\n";
       	// We need ONLY to add signal for receive data to the TcpConnection
-      con->dataReceived.connect(slot(this, &MyClass::onDataReceived));
+      con->dataReceived.connect(slot(*this, &MyClass::onDataReceived));
       	// Send welcome message to the connected client */
       con->write("Hello, client!\n", 15);
     }

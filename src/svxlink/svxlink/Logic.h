@@ -45,7 +45,7 @@ An example of how to use the Template class
 #include <list>
 #include <map>
 
-#include <sigc++/signal_system.h>
+#include <sigc++/sigc++.h>
 
 
 /****************************************************************************

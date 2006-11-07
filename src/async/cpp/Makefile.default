@@ -185,11 +185,11 @@ RPM_NAME := async-cpp
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= $(shell sigc-config --cflags)
+INCPATH 	+= $(SIGC_INCPATH)
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.
-LIBPATH 	+= 
+LIBPATH 	+= $(SIGC_LIBPATH)
 
 # Additional warnings to use. If you want to override the default
 # warnings, change the "+=" to "=".

@@ -251,10 +251,10 @@ bool ModuleEchoLink::initialize(void)
   
     // Initialize directory server communication
   dir = new Directory(server, mycall, password, location);
-  dir->statusChanged.connect(slot(this, &ModuleEchoLink::onStatusChanged));
+  dir->statusChanged.connect(slot(*this, &ModuleEchoLink::onStatusChanged));
   dir->stationListUpdated.connect(
-      	  slot(this, &ModuleEchoLink::onStationListUpdated));
-  dir->error.connect(slot(this, &ModuleEchoLink::onError));
+      	  slot(*this, &ModuleEchoLink::onStationListUpdated));
+  dir->error.connect(slot(*this, &ModuleEchoLink::onError));
   dir->makeOnline();
   
     // Start listening to the EchoLink UDP ports
@@ -266,7 +266,7 @@ bool ModuleEchoLink::initialize(void)
     return false;
   }
   Dispatcher::instance()->incomingConnection.connect(
-      slot(this, &ModuleEchoLink::onIncomingConnection));
+      slot(*this, &ModuleEchoLink::onIncomingConnection));
 
   return true;
   
@@ -763,13 +763,13 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   updateEventVariables();
   qso->setRemoteCallsign(callsign);
   qso->setRemoteName(name);
-  qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
-  qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
-  qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
-  qso->audioReceived.connect(slot(this, &ModuleEchoLink::audioFromRemote));
+  qso->stateChange.connect(slot(*this, &ModuleEchoLink::onStateChange));
+  qso->chatMsgReceived.connect(slot(*this, &ModuleEchoLink::onChatMsgReceived));
+  qso->isReceiving.connect(slot(*this, &ModuleEchoLink::onIsReceiving));
+  qso->audioReceived.connect(slot(*this, &ModuleEchoLink::audioFromRemote));
   qso->audioReceivedRaw.connect(
-      	  slot(this, &ModuleEchoLink::audioFromRemoteRaw));
-  qso->destroyMe.connect(slot(this, &ModuleEchoLink::onDestroyMe));
+      	  slot(*this, &ModuleEchoLink::audioFromRemoteRaw));
+  qso->destroyMe.connect(slot(*this, &ModuleEchoLink::onDestroyMe));
   
   if (qsos.size() > max_qsos)
   {
@@ -984,7 +984,7 @@ void ModuleEchoLink::getDirectoryList(Timer *timer)
       /* FIXME: Do we really need periodic updates of the directory list ? */
     dir_refresh_timer = new Timer(600000);
     dir_refresh_timer->expired.connect(
-      	    slot(this, &ModuleEchoLink::getDirectoryList));
+      	    slot(*this, &ModuleEchoLink::getDirectoryList));
   }
 } /* ModuleEchoLink::getDirectoryList */
 
@@ -1038,13 +1038,13 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     qsos.push_back(qso);
     updateEventVariables();    
     qso->setRemoteCallsign(station.callsign());
-    qso->stateChange.connect(slot(this, &ModuleEchoLink::onStateChange));
-    qso->chatMsgReceived.connect(slot(this, &ModuleEchoLink::onChatMsgReceived));
-    qso->isReceiving.connect(slot(this, &ModuleEchoLink::onIsReceiving));
-    qso->audioReceived.connect(slot(this, &ModuleEchoLink::audioFromRemote));
+    qso->stateChange.connect(slot(*this, &ModuleEchoLink::onStateChange));
+    qso->chatMsgReceived.connect(slot(*this, &ModuleEchoLink::onChatMsgReceived));
+    qso->isReceiving.connect(slot(*this, &ModuleEchoLink::onIsReceiving));
+    qso->audioReceived.connect(slot(*this, &ModuleEchoLink::audioFromRemote));
     qso->audioReceivedRaw.connect(
-      	    slot(this, &ModuleEchoLink::audioFromRemoteRaw));
-    qso->destroyMe.connect(slot(this, &ModuleEchoLink::onDestroyMe));
+      	    slot(*this, &ModuleEchoLink::audioFromRemoteRaw));
+    qso->destroyMe.connect(slot(*this, &ModuleEchoLink::onDestroyMe));
   }
     
   stringstream ss;
@@ -1248,7 +1248,7 @@ void ModuleEchoLink::connectByCallsign(string cmd)
     state = STATE_CONNECT_BY_CALL;
     delete cbc_timer;
     cbc_timer = new Timer(60000);
-    cbc_timer->expired.connect(slot(this, &ModuleEchoLink::cbcTimeout));
+    cbc_timer->expired.connect(slot(*this, &ModuleEchoLink::cbcTimeout));
   }
 
 } /* ModuleEchoLink::connectByCallsign */

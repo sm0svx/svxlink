@@ -254,8 +254,8 @@ Dispatcher::Dispatcher(void)
     return;
   }
   
-  ctrl_sock->dataReceived.connect(slot(this, &Dispatcher::ctrlDataReceived));
-  audio_sock->dataReceived.connect(slot(this, &Dispatcher::audioDataReceived));
+  ctrl_sock->dataReceived.connect(slot(*this, &Dispatcher::ctrlDataReceived));
+  audio_sock->dataReceived.connect(slot(*this, &Dispatcher::audioDataReceived));
   
   return;
   

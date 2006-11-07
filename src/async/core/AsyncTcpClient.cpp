@@ -162,7 +162,7 @@ void TcpClient::connect(void)
   assert(dns == 0);
   
   dns = new DnsLookup(remote_host);
-  dns->resultsReady.connect(slot(this, &TcpClient::dnsResultsReady));
+  dns->resultsReady.connect(slot(*this, &TcpClient::dnsResultsReady));
 } /* TcpClient::connect */
 
 
@@ -288,7 +288,7 @@ void TcpClient::connectToRemote(const IpAddress& ip_addr)
     if (errno == EINPROGRESS)
     {
       wr_watch = new FdWatch(sock, FdWatch::FD_WATCH_WR);
-      wr_watch->activity.connect(slot(this, &TcpClient::connectHandler));
+      wr_watch->activity.connect(slot(*this, &TcpClient::connectHandler));
     }
     else
     {

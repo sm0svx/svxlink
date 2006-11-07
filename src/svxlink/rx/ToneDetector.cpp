@@ -170,9 +170,9 @@ ToneDetector::ToneDetector(float tone_hz, int base_N)
   resetGoertzel();
 
   sigc_sink = new SigCAudioSink;
-  sigc_sink->sigWriteSamples.connect(slot(this, &ToneDetector::processSamples));
+  sigc_sink->sigWriteSamples.connect(slot(*this, &ToneDetector::processSamples));
   sigc_sink->sigFlushSamples.connect(
-      slot(sigc_sink, &SigCAudioSink::allSamplesFlushed));
+      slot(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
   assert(setHandler(sigc_sink));
   
 } /* ToneDetector::ToneDetector */

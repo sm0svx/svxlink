@@ -43,7 +43,7 @@ An example of how to use the Async::AudioIO class
  *
  ****************************************************************************/
 
-#include <sigc++/signal_system.h>
+#include <sigc++/sigc++.h>
 
 #include <cstdio>
 #include <string>

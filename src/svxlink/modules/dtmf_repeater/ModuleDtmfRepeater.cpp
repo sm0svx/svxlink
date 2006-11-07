@@ -317,7 +317,7 @@ void ModuleDtmfRepeater::squelchOpen(bool is_open)
   {
     repeat_delay_timer = new Timer(repeat_delay);
     repeat_delay_timer->expired.connect(
-	slot(this, &ModuleDtmfRepeater::onRepeatDelayExpired));
+	slot(*this, &ModuleDtmfRepeater::onRepeatDelayExpired));
   }
 } /* squelchOpen */
 

@@ -19,8 +19,8 @@ class MyClass : public SigC::Object
 	Application::app().quit();
 	return;
       }
-      qso->infoMsgReceived.connect(slot(this, &MyClass::onInfoMsgReceived));
-      qso->stateChange.connect(slot(this, &MyClass::onStateChange));
+      qso->infoMsgReceived.connect(slot(*this, &MyClass::onInfoMsgReceived));
+      qso->stateChange.connect(slot(*this, &MyClass::onStateChange));
       qso->connect();
     }
     

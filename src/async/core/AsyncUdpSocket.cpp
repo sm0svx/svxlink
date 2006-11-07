@@ -193,13 +193,13 @@ UdpSocket::UdpSocket(unsigned short local_port)
     // Setup a watch for incoming data
   rd_watch = new FdWatch(sock, FdWatch::FD_WATCH_RD);
   assert(rd_watch != 0);
-  rd_watch->activity.connect(slot(this, &UdpSocket::handleInput));
+  rd_watch->activity.connect(slot(*this, &UdpSocket::handleInput));
 
     // Setup a watch for outgoing data (signals activity when a buffer full
     // condition occurs)
   wr_watch = new FdWatch(sock, FdWatch::FD_WATCH_WR);
   assert(wr_watch != 0);
-  wr_watch->activity.connect(slot(this, &UdpSocket::sendRest));
+  wr_watch->activity.connect(slot(*this, &UdpSocket::sendRest));
   wr_watch->setEnabled(false);
   
 } /* UdpSocket::UdpSocket */

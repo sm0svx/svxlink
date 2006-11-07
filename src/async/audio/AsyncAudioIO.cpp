@@ -147,7 +147,7 @@ AudioIO::AudioIO(const string& dev_name)
   write_fifo = new SampleFifo(sample_rate);
   write_fifo->setOverwrite(false);
   write_fifo->stopOutput(true);
-  write_fifo->fifoFull.connect(slot(this, &AudioIO::fifoBufferFull));
+  write_fifo->fifoFull.connect(slot(*this, &AudioIO::fifoBufferFull));
   //write_fifo->fifoFull.connect(writeBufferFull.slot());
   /*
   audio_dev->writeBufferFull.connect(
@@ -191,7 +191,7 @@ bool AudioIO::open(Mode mode)
     io_mode = mode;
     if ((io_mode == MODE_RD) || (io_mode == MODE_RDWR))
     {
-      read_con = audio_dev->audioRead.connect(slot(this, &AudioIO::audioRead));
+      read_con = audio_dev->audioRead.connect(slot(*this, &AudioIO::audioRead));
     }
   }
   
@@ -442,7 +442,7 @@ void AudioIO::flushSamplesInDevice(int extra_samples)
   //printf("flushtime=%ld\n", flushtime);
   delete flush_timer;
   flush_timer = new Timer(flushtime);
-  flush_timer->expired.connect(slot(this, &AudioIO::flushDone));
+  flush_timer->expired.connect(slot(*this, &AudioIO::flushDone));
 } /* AudioIO::flushSamplesInDevice */
 
 

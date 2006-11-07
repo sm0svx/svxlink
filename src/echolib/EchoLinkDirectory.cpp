@@ -165,7 +165,7 @@ Directory::Directory(const string& server, const string& callsign,
   reg_refresh_timer = new Timer(REGISTRATION_REFRESH_TIME,
       Timer::TYPE_PERIODIC);
   reg_refresh_timer->expired.connect(
-      slot(this, &Directory::onRefreshRegistration));
+      slot(*this, &Directory::onRefreshRegistration));
 
 } /* Directory::Directory */
 
@@ -869,7 +869,7 @@ void Directory::sendNextCmd(void)
   }
   
   cmd_timer = new Timer(CMD_TIMEOUT);
-  cmd_timer->expired.connect(slot(this, &Directory::onCmdTimeout));
+  cmd_timer->expired.connect(slot(*this, &Directory::onCmdTimeout));
 
   if (cmd_queue.front().type == Cmd::GET_CALLS)
   {
@@ -916,9 +916,9 @@ void Directory::setStatus(StationData::Status new_status)
 void Directory::createClientObject(void)
 {
   ctrl_con = new Async::TcpClient(the_server, DIRECTORY_SERVER_PORT);
-  ctrl_con->connected.connect(slot(this, &Directory::ctrlSockConnected));
-  ctrl_con->dataReceived.connect(slot(this, &Directory::ctrlSockDataReceived));
-  ctrl_con->disconnected.connect(slot(this, &Directory::ctrlSockDisconnected));
+  ctrl_con->connected.connect(slot(*this, &Directory::ctrlSockConnected));
+  ctrl_con->dataReceived.connect(slot(*this, &Directory::ctrlSockDataReceived));
+  ctrl_con->disconnected.connect(slot(*this, &Directory::ctrlSockDisconnected));
 } /* Directory::createClientObject */
 
 

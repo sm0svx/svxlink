@@ -43,7 +43,7 @@ An example of how to use the Async::TcpServer class
 
 #include <string>
 #include <vector>
-#include <sigc++/signal_system.h>
+#include <sigc++/sigc++.h>
 
 
 /****************************************************************************

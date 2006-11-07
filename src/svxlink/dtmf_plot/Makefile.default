@@ -207,7 +207,7 @@ RPM_NAME :=
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= 
+INCPATH 	+= $(SIGC_INCPATH)
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.
@@ -221,7 +221,7 @@ CXXWARNINGS	+= -Wno-non-virtual-dtor
 # Extra commandline switches to the compiler. For example "-g" to
 # add debug information, "-O2" to add optimizations etc.
 CFLAGS		+=
-CXXFLAGS	+= $(QT_CFLAGS) $(shell sigc-config --cflags)
+CXXFLAGS	+= $(QT_CFLAGS)
 
 # Extra commandline switches to the linker
 LDFLAGS		+=

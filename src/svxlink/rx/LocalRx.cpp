@@ -112,7 +112,7 @@ class ToneDurationDet : public ToneDetector
     {
       timerclear(&activation_timestamp);
       ToneDetector::activated.connect(
-      	      slot(this, &ToneDurationDet::toneActivated));
+      	      slot(*this, &ToneDurationDet::toneActivated));
     }
     
     SigC::Signal1<void, float> detected;
@@ -366,13 +366,13 @@ bool LocalRx::initialize(void)
   siglevdet = new SigLevDet;
   splitter->addSink(siglevdet, true);
   
-  squelch->squelchOpen.connect(slot(this, &LocalRx::onSquelchOpen));
+  squelch->squelchOpen.connect(slot(*this, &LocalRx::onSquelchOpen));
   splitter->addSink(squelch, true);
   
   DtmfDecoder *dtmf_dec = new DtmfDecoder;
-  dtmf_dec->digitActivated.connect(slot(this, &LocalRx::dtmfDigitActivated));
+  dtmf_dec->digitActivated.connect(slot(*this, &LocalRx::dtmfDigitActivated));
   dtmf_dec->digitDeactivated.connect(
-      slot(this, &LocalRx::dtmfDigitDeactivated));
+      slot(*this, &LocalRx::dtmfDigitDeactivated));
   splitter->addSink(dtmf_dec, true);
   
   tone_dets = new AudioSplitter;
@@ -384,7 +384,7 @@ bool LocalRx::initialize(void)
   
   sql_valve = new SigCAudioValve;
   sql_valve->sigAllSamplesFlushed.connect(
-      slot(this, &LocalRx::allSamplesFlushed));
+      slot(*this, &LocalRx::allSamplesFlushed));
   prev_src->registerSink(sql_valve, true);
   prev_src = sql_valve;
   
@@ -396,10 +396,10 @@ bool LocalRx::initialize(void)
   }
     
   SigCAudioSink *sigc_sink = new SigCAudioSink;
-  sigc_sink->sigWriteSamples.connect(slot(this, &LocalRx::audioRead));
+  sigc_sink->sigWriteSamples.connect(slot(*this, &LocalRx::audioRead));
   sigc_sink->sigWriteSamples.connect(audioReceived.slot());
   sigc_sink->sigFlushSamples.connect(
-      slot(sigc_sink, &SigCAudioSink::allSamplesFlushed));
+      slot(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
   prev_src->registerSink(sigc_sink, true);
   
   return true;

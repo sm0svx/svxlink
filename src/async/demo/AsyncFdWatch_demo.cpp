@@ -13,7 +13,7 @@ class MyClass : public SigC::Object
     MyClass(void)
     {
       stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
-      stdin_watch->activity.connect(slot(this, &MyClass::onActivity));
+      stdin_watch->activity.connect(slot(*this, &MyClass::onActivity));
     }
     
     ~MyClass(void)

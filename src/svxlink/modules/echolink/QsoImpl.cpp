@@ -175,31 +175,31 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   {
     idle_timeout = atoi(idle_timeout_str.c_str());
     idle_timer = new Timer(1000, Timer::TYPE_PERIODIC);
-    idle_timer->expired.connect(slot(this, &QsoImpl::idleTimeoutCheck));
+    idle_timer->expired.connect(slot(*this, &QsoImpl::idleTimeoutCheck));
   }
   
   msg_handler = new MsgHandler(8000);
   
   msg_pacer = new AudioPacer(8000, 160*4, 500);
-  msg_handler->writeAudio.connect(slot(msg_pacer, &AudioPacer::audioInput));
+  msg_handler->writeAudio.connect(slot(*msg_pacer, &AudioPacer::audioInput));
   msg_handler->allMsgsWritten.connect(
-      	  slot(msg_pacer, &AudioPacer::flushAllAudio));
+      	  slot(*msg_pacer, &AudioPacer::flushAllAudio));
   msg_pacer->audioInputBufFull.connect(
-      	  slot(msg_handler, &MsgHandler::writeBufferFull));
+      	  slot(*msg_handler, &MsgHandler::writeBufferFull));
   msg_pacer->allAudioFlushed.connect(
-      	  slot(this, &QsoImpl::allRemoteMsgsWritten));
-  msg_pacer->audioOutput.connect(slot(this, &Qso::sendAudio));
+      	  slot(*this, &QsoImpl::allRemoteMsgsWritten));
+  msg_pacer->audioOutput.connect(slot(*this, &Qso::sendAudio));
   
   event_handler = new EventHandler(event_handler_script, 0);
-  event_handler->playFile.connect(slot(msg_handler, &MsgHandler::playFile));
+  event_handler->playFile.connect(slot(*msg_handler, &MsgHandler::playFile));
   event_handler->playSilence.connect(
-      	  slot(msg_handler, &MsgHandler::playSilence));
-  event_handler->playTone.connect(slot(msg_handler, &MsgHandler::playTone));
+      	  slot(*msg_handler, &MsgHandler::playSilence));
+  event_handler->playTone.connect(slot(*msg_handler, &MsgHandler::playTone));
   event_handler->initialize();
   
-  Qso::infoMsgReceived.connect(slot(this, &QsoImpl::onInfoMsgReceived));
-  Qso::chatMsgReceived.connect(slot(this, &QsoImpl::onChatMsgReceived));
-  Qso::stateChange.connect(slot(this, &QsoImpl::onStateChange));
+  Qso::infoMsgReceived.connect(slot(*this, &QsoImpl::onInfoMsgReceived));
+  Qso::chatMsgReceived.connect(slot(*this, &QsoImpl::onChatMsgReceived));
+  Qso::stateChange.connect(slot(*this, &QsoImpl::onStateChange));
   Qso::isReceiving.connect(bind(isReceiving.slot(), this));
   Qso::audioReceived.connect(bind(audioReceived.slot(), this));
   Qso::audioReceivedRaw.connect(bind(audioReceivedRaw.slot(), this));
@@ -426,7 +426,7 @@ void QsoImpl::onStateChange(Qso::State state)
       	module->processEvent(ss.str());
       }
       destroy_timer = new Timer(5000);
-      destroy_timer->expired.connect(slot(this, &QsoImpl::destroyMeNow));
+      destroy_timer->expired.connect(slot(*this, &QsoImpl::destroyMeNow));
       break;
     case Qso::STATE_CONNECTING:
       cout << "CONNECTING\n";

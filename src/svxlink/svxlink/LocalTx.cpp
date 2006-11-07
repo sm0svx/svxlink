@@ -328,7 +328,7 @@ bool LocalTx::initialize(void)
   sigc_src = new SigCAudioSource;
   sigc_src->sigWriteBufferFull.connect(transmitBufferFull.slot());
   sigc_src->sigAllSamplesFlushed.connect(
-      slot(this, &LocalTx::onAllSamplesFlushed));
+      slot(*this, &LocalTx::onAllSamplesFlushed));
   AudioSource *prev_src = sigc_src;
   
   /*
@@ -380,7 +380,7 @@ bool LocalTx::initialize(void)
   dtmf_encoder->setGapLength(50);
   dtmf_encoder->setToneAmplitude(-18);
   dtmf_encoder->allDigitsSent.connect(
-      slot(this, &LocalTx::onAllDtmfDigitsSent));
+      slot(*this, &LocalTx::onAllDtmfDigitsSent));
   
   dtmf_valve = new AudioValve(true);
   dtmf_valve->setOpen(false);
@@ -424,7 +424,7 @@ void LocalTx::transmit(bool do_transmit)
     if ((txtot == 0) && (tx_timeout > 0))
     {
       txtot = new Timer(tx_timeout);
-      txtot->expired.connect(slot(this, &LocalTx::txTimeoutOccured));
+      txtot->expired.connect(slot(*this, &LocalTx::txTimeoutOccured));
     }
     
     if (tx_delay > 0)

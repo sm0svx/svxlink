@@ -13,10 +13,10 @@ class MyClass : public SigC::Object
     MyClass(const string& mycall, const string& mypass) : mycall(mycall)
     {
       dir = new Directory("server1.echolink.org", mycall, mypass, "Testing...");
-      dir->statusChanged.connect(slot(this, &MyClass::onStatusChanged));
+      dir->statusChanged.connect(slot(*this, &MyClass::onStatusChanged));
       dir->stationListUpdated.connect(
-	  slot(this, &MyClass::onStationListUpdated));
-      dir->error.connect(slot(this, &MyClass::onError));
+	  slot(*this, &MyClass::onStationListUpdated));
+      dir->error.connect(slot(*this, &MyClass::onError));
       dir->makeBusy();	// Set status busy so noone think we are really online
     }
     

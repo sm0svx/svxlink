@@ -39,10 +39,11 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
-#include <sigc++/signal_system.h>
+#include <sigc++/sigc++.h>
 
 #include <qstringlist.h>
 #include <qsize.h>
+#undef emit
 
 
 /****************************************************************************

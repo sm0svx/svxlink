@@ -156,7 +156,7 @@ int AudioPacer::audioInput(float *samples, int count)
       	      	      	      	    count - samples_written);
       pase_timer = new Timer(buf_size * 1000 / sample_rate,
       	      	      	     Timer::TYPE_PERIODIC);
-      pase_timer->expired.connect(slot(this, &AudioPacer::outputNextBlock));
+      pase_timer->expired.connect(slot(*this, &AudioPacer::outputNextBlock));
     }
     else
     {

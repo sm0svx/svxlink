@@ -42,7 +42,7 @@ An example of how to use the Recorder class
  ****************************************************************************/
 
 #include <stdio.h>
-#include <sigc++/signal_system.h>
+#include <sigc++/sigc++.h>
 
 #include <string>
 

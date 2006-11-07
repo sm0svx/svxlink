@@ -106,3 +106,19 @@ else
   info "no\n"
 fi
 
+# Checking for libsigc++
+sigc_version=1.2
+info "--- Checking for sigc++ $sigc_version..."
+if which pkg-config &> /dev/null; then
+  if pkg-config sigc++-$sigc_version; then
+    info "yes\n"
+    output "SIGC_LIBPATH=$(pkg-config sigc++-$sigc_version --libs-only-L)"
+    output "SIGC_LIBS=$(pkg-config sigc++-$sigc_version --libs-only-l)"
+    output "SIGC_INCPATH=$(pkg-config sigc++-$sigc_version --cflags-only-I)"
+  fi
+else
+  info "no\n"
+  exit 1
+fi
+
+exit 0

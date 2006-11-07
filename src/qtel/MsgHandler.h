@@ -2,7 +2,7 @@
 #include <list>
 #include <map>
 
-#include <sigc++/signal_system.h>
+#include <sigc++/sigc++.h>
 
 #include <AudioSource.h>
 

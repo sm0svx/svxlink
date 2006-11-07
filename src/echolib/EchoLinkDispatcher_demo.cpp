@@ -17,7 +17,7 @@ class MyClass : public SigC::Object
 	exit(1);
       }
 
-      Dispatcher::instance()->incomingConnection.connect(slot(this,
+      Dispatcher::instance()->incomingConnection.connect(slot(*this,
 	  &MyClass::onIncomingConnection));
     }
     

@@ -202,7 +202,7 @@ bool RepeaterLogic::initialize(void)
   //tx().txTimeout.connect(slot(this, &RepeaterLogic::txTimeout));
   
   //rx().mute(false);
-  rx().audioReceived.connect(slot(this, &RepeaterLogic::audioReceived));
+  rx().audioReceived.connect(slot(*this, &RepeaterLogic::audioReceived));
   
   if (required_1750_duration > 0)
   {
@@ -210,7 +210,7 @@ bool RepeaterLogic::initialize(void)
     {
       cerr << "*** WARNING: Could not setup 1750 detection\n";
     }
-    rx().toneDetected.connect(slot(this, &RepeaterLogic::detectedTone));
+    rx().toneDetected.connect(slot(*this, &RepeaterLogic::detectedTone));
   }
   
   if ((open_on_ctcss_fq > 0) && (open_on_ctcss_duration > 0))
@@ -219,7 +219,7 @@ bool RepeaterLogic::initialize(void)
     {
       cerr << "*** WARNING: Could not setup CTCSS tone detection\n";
     }
-    rx().toneDetected.connect(slot(this, &RepeaterLogic::detectedTone));
+    rx().toneDetected.connect(slot(*this, &RepeaterLogic::detectedTone));
   }
   
   return true;
@@ -397,13 +397,13 @@ void RepeaterLogic::setIdle(bool idle)
   if (idle)
   {
     up_timer = new Timer(idle_timeout);
-    up_timer->expired.connect(slot(this, &RepeaterLogic::idleTimeout));
+    up_timer->expired.connect(slot(*this, &RepeaterLogic::idleTimeout));
     
     if (idle_sound_interval > 0)
     {
       idle_sound_timer = new Timer(idle_sound_interval, Timer::TYPE_PERIODIC);
       idle_sound_timer->expired.connect(
-      	  slot(this, &RepeaterLogic::playIdleSound));
+      	  slot(*this, &RepeaterLogic::playIdleSound));
     }
   }
 

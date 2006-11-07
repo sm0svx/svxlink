@@ -102,8 +102,8 @@ class SatRx : public SigC::Object
       fifo.stopOutput(true);
       fifo.setOverwrite(true);
       fifo.setDebugName("SatRx");
-      rx->audioReceived.connect(slot(&fifo, &SampleFifo::addSamples));
-      rx->dtmfDigitDetected.connect(slot(this, &SatRx::onDtmfDigitDetected));
+      rx->audioReceived.connect(slot(fifo, &SampleFifo::addSamples));
+      rx->dtmfDigitDetected.connect(slot(*this, &SatRx::onDtmfDigitDetected));
     }
     
     ~SatRx(void) {}
@@ -235,7 +235,7 @@ bool Voter::initialize(void)
       }
       rx->mute(true);
       rx->setVerbose(false);
-      rx->squelchOpen.connect(bind(slot(this, &Voter::satSquelchOpen), srx));
+      rx->squelchOpen.connect(bind(slot(*this, &Voter::satSquelchOpen), srx));
       srx->fifo.writeSamples.connect(audioReceived.slot());
       srx->dtmfDigitDetected.connect(dtmfDigitDetected.slot());
       rx->toneDetected.connect(toneDetected.slot());
@@ -400,7 +400,7 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
     {
       delete best_rx_timer;
       best_rx_timer = new Timer(voting_delay);
-      best_rx_timer->expired.connect(slot(this, &Voter::chooseBestRx));
+      best_rx_timer->expired.connect(slot(*this, &Voter::chooseBestRx));
     }
     
     if (rx->signalStrength() > best_rx_siglev)

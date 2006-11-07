@@ -129,13 +129,13 @@ NetUplink::~NetUplink(void)
 bool NetUplink::initialize(void)
 {
   server = new TcpServer(NET_RX_DEFAULT_TCP_PORT);
-  server->clientConnected.connect(slot(this, &NetUplink::clientConnected));
+  server->clientConnected.connect(slot(*this, &NetUplink::clientConnected));
   
   rx->reset();
-  rx->squelchOpen.connect(slot(this, &NetUplink::squelchOpen));
-  rx->audioReceived.connect(slot(this, &NetUplink::audioReceived));
-  rx->dtmfDigitDetected.connect(slot(this, &NetUplink::dtmfDigitDetected));
-  rx->toneDetected.connect(slot(this, &NetUplink::toneDetected));
+  rx->squelchOpen.connect(slot(*this, &NetUplink::squelchOpen));
+  rx->audioReceived.connect(slot(*this, &NetUplink::audioReceived));
+  rx->dtmfDigitDetected.connect(slot(*this, &NetUplink::dtmfDigitDetected));
+  rx->toneDetected.connect(slot(*this, &NetUplink::toneDetected));
   
   return true;
   
@@ -196,8 +196,8 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
   if (con == 0)
   {
     con = incoming_con;
-    con->disconnected.connect(slot(this, &NetUplink::clientDisconnected));
-    con->dataReceived.connect(slot(this, &NetUplink::tcpDataReceived));
+    con->disconnected.connect(slot(*this, &NetUplink::clientDisconnected));
+    con->dataReceived.connect(slot(*this, &NetUplink::tcpDataReceived));
     recv_exp = sizeof(Msg);
     recv_cnt = 0;
   }

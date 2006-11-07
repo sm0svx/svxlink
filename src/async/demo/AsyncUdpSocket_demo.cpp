@@ -12,7 +12,7 @@ class MyClass : public SigC::Object
     MyClass(void)
     {
       sock = new UdpSocket(12345);
-      sock->dataReceived.connect(slot(this, &MyClass::onDataReceived));
+      sock->dataReceived.connect(slot(*this, &MyClass::onDataReceived));
       IpAddress addr("127.0.0.1");
       sock->write(addr, 12345, "Hello, UDP!\n", 13);
     }

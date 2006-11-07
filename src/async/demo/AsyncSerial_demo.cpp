@@ -13,7 +13,7 @@ class MyClass : public SigC::Object
     {
       serial = new Serial("/dev/ttyS0");
       serial->charactersReceived.connect(
-      	  slot(this, &MyClass::onCharactersReceived));
+      	  slot(*this, &MyClass::onCharactersReceived));
 
       if (!serial->open())
       {

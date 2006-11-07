@@ -191,7 +191,7 @@ TcpServer::TcpServer(const string& port_str)
   }
 
   rd_watch = new FdWatch(sock, FdWatch::FD_WATCH_RD);
-  rd_watch->activity.connect(slot(this, &TcpServer::onConnection));
+  rd_watch->activity.connect(slot(*this, &TcpServer::onConnection));
     
 } /* TcpServer::TcpServer */
 
@@ -458,7 +458,7 @@ void TcpServer::onConnection(FdWatch *watch)
     // Create client object, add signal handling, add to client list
   TcpConnection *con = new TcpConnection(client_sock,
       	  IpAddress(client.sin_addr), ntohs(client.sin_port));
-  con->disconnected.connect(slot(this, &TcpServer::onDisconnected));
+  con->disconnected.connect(slot(*this, &TcpServer::onDisconnected));
   tcpConnectionList.push_back(con);
   
     // Emit signal on client connection

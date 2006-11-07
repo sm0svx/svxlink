@@ -48,7 +48,7 @@ disconnected the application exits.
  ****************************************************************************/
 
 #include <sys/time.h>
-#include <sigc++/signal_system.h>
+#include <sigc++/sigc++.h>
 #include <string>
 
 

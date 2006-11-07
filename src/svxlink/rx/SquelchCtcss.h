@@ -172,7 +172,7 @@ class SquelchCtcss : public Squelch
       det = new ToneDetector(ctcss_fq, 1000);
       det->setFilter("LpBu8/270");
       det->setSnrThresh(ctcss_thresh);
-      det->activated.connect(slot(this, &SquelchCtcss::setOpen));
+      det->activated.connect(slot(*this, &SquelchCtcss::setOpen));
       
       return true;
     }

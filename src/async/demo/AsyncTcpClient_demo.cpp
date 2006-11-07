@@ -11,9 +11,9 @@ class MyClass : public SigC::Object
     MyClass(void)
     {
       con = new TcpClient("www.linux.org", 80);
-      con->connected.connect(slot(this, &MyClass::onConnected));
-      con->disconnected.connect(slot(this, &MyClass::onDisconnected));
-      con->dataReceived.connect(slot(this, &MyClass::onDataReceived));
+      con->connected.connect(slot(*this, &MyClass::onConnected));
+      con->disconnected.connect(slot(*this, &MyClass::onDisconnected));
+      con->dataReceived.connect(slot(*this, &MyClass::onDataReceived));
       con->connect();
     }
     

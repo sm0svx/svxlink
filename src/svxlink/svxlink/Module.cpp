@@ -56,7 +56,7 @@ bool Module::initialize(void)
   {
     m_tmo_timer = new Timer(1000 * atoi(timeout_str.c_str()));
     m_tmo_timer->setEnable(false);
-    m_tmo_timer->expired.connect(slot(this, &Module::moduleTimeout));
+    m_tmo_timer->expired.connect(slot(*this, &Module::moduleTimeout));
   }
   
   list<string> vars = cfg().listSection(cfgName());
@@ -83,9 +83,9 @@ void Module::activate(void)
   processEvent("activating_module");
   
   m_audio_con = logic()->rx().audioReceived.connect(
-      	  slot(this, &Module::audioFromRx));
+      	  slot(*this, &Module::audioFromRx));
   m_squelch_con = logic()->rx().squelchOpen.connect(
-      	  slot(this, &Module::squelchOpen));
+      	  slot(*this, &Module::squelchOpen));
   
   setIdle(true);
   activateInit();

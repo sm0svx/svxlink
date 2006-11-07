@@ -276,9 +276,9 @@ bool Logic::initialize(void)
     cerr << "*** ERROR: Could not initialize RX \"" << rx_name << "\"\n";
     goto rx_init_failed;
   }
-  rx().squelchOpen.connect(slot(this, &Logic::squelchOpen));
-  rx().audioReceived.connect(slot(this, &Logic::audioReceived));
-  rx().dtmfDigitDetected.connect(slot(this, &Logic::dtmfDigitDetected));
+  rx().squelchOpen.connect(slot(*this, &Logic::squelchOpen));
+  rx().audioReceived.connect(slot(*this, &Logic::audioReceived));
+  rx().dtmfDigitDetected.connect(slot(*this, &Logic::dtmfDigitDetected));
   rx().mute(false);
     
   m_tx = Tx::create(cfg(), tx_name);
@@ -287,8 +287,8 @@ bool Logic::initialize(void)
     cerr << "*** ERROR: Could not initialize TX \"" << tx_name << "\"\n";
     goto tx_init_failed;
   }
-  tx().allSamplesFlushed.connect(slot(this, &Logic::allTxSamplesFlushed));
-  tx().allDtmfDigitsSent.connect(slot(this, &Logic::allDtmfDigitsSent));
+  tx().allSamplesFlushed.connect(slot(*this, &Logic::allTxSamplesFlushed));
+  tx().allDtmfDigitsSent.connect(slot(*this, &Logic::allDtmfDigitsSent));
   
   if (tx_ctcss == TX_CTCSS_ALWAYS)
   {
@@ -298,31 +298,31 @@ bool Logic::initialize(void)
   module_tx_fifo = new SampleFifo(15*8000); // 15 seconds
   module_tx_fifo->setDebugName("module_tx_fifo");
   module_tx_fifo->allSamplesWritten.connect(
-      	  slot(this, &Logic::allModuleSamplesWritten));
-  module_tx_fifo->writeSamples.connect(slot(this, &Logic::transmitAudio));
+      	  slot(*this, &Logic::allModuleSamplesWritten));
+  module_tx_fifo->writeSamples.connect(slot(*this, &Logic::transmitAudio));
   tx().transmitBufferFull.connect(
-      	  slot(module_tx_fifo, &SampleFifo::writeBufferFull));
+      	  slot(*module_tx_fifo, &SampleFifo::writeBufferFull));
   module_tx_fifo->stopOutput(true);
   module_tx_fifo->setOverwrite(true);
   
   cmd_tmo_timer = new Timer(10000);
-  cmd_tmo_timer->expired.connect(slot(this, &Logic::cmdTimeout));
+  cmd_tmo_timer->expired.connect(slot(*this, &Logic::cmdTimeout));
   cmd_tmo_timer->setEnable(false);
   
   msg_handler = new MsgHandler(8000);
-  msg_handler->writeAudio.connect(slot(this, &Logic::transmitAudio));
-  msg_handler->allMsgsWritten.connect(slot(this, &Logic::allMsgsWritten));
+  msg_handler->writeAudio.connect(slot(*this, &Logic::transmitAudio));
+  msg_handler->allMsgsWritten.connect(slot(*this, &Logic::allMsgsWritten));
   tx().transmitBufferFull.connect(
-      	  slot(msg_handler, &MsgHandler::writeBufferFull));
+      	  slot(*msg_handler, &MsgHandler::writeBufferFull));
   
   event_handler = new EventHandler(event_handler_str, this);
-  event_handler->playFile.connect(slot(this, &Logic::playFile));
-  event_handler->playSilence.connect(slot(this, &Logic::playSilence));
-  event_handler->playTone.connect(slot(this, &Logic::playTone));
-  event_handler->recordStart.connect(slot(this, &Logic::recordStart));
-  event_handler->recordStop.connect(slot(this, &Logic::recordStop));
+  event_handler->playFile.connect(slot(*this, &Logic::playFile));
+  event_handler->playSilence.connect(slot(*this, &Logic::playSilence));
+  event_handler->playTone.connect(slot(*this, &Logic::playTone));
+  event_handler->recordStart.connect(slot(*this, &Logic::recordStart));
+  event_handler->recordStop.connect(slot(*this, &Logic::recordStop));
   event_handler->deactivateModule.connect(
-          bind(slot(this, &Logic::deactivateModule), (Module *)0));
+          bind(slot(*this, &Logic::deactivateModule), (Module *)0));
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
@@ -356,9 +356,9 @@ bool Logic::initialize(void)
 
   audio_switch_matrix.addSource(name(), &logic_con_out);
   logic_con_in.sigWriteSamples.connect(
-      	  slot(this, &Logic::remoteLogicWriteSamples));
+      	  slot(*this, &Logic::remoteLogicWriteSamples));
   logic_con_in.sigFlushSamples.connect(
-      	  slot(this, &Logic::remoteLogicFlushSamples));
+      	  slot(*this, &Logic::remoteLogicFlushSamples));
   audio_switch_matrix.addSink(name(), &logic_con_in);
   
   processEvent("startup");
@@ -437,7 +437,7 @@ void Logic::recordStart(const string& filename)
     recordStop();
     return;
   }
-  rx().audioReceived.connect(slot(recorder, &Recorder::writeSamples));
+  rx().audioReceived.connect(slot(*recorder, &Recorder::writeSamples));
 } /* Logic::recordStart */
 
 
@@ -647,7 +647,7 @@ void Logic::squelchOpen(bool is_open)
     {
       exec_cmd_on_sql_close_timer = new Timer(exec_cmd_on_sql_close);
       exec_cmd_on_sql_close_timer->expired.connect(
-	  slot(this, &Logic::putCmdOnQueue));
+	  slot(*this, &Logic::putCmdOnQueue));
     }
     processCommandQueue();
   }
@@ -730,7 +730,7 @@ void Logic::enableRgrSoundTimer(bool enable)
     if (rgr_sound_delay > 0)
     {
       rgr_sound_timer = new Timer(rgr_sound_delay);
-      rgr_sound_timer->expired.connect(slot(this, &Logic::sendRgrSound));
+      rgr_sound_timer->expired.connect(slot(*this, &Logic::sendRgrSound));
     }
     else
     {
@@ -1157,7 +1157,7 @@ void Logic::everyMinute(Timer *t)
   delete every_minute_timer;
   
   every_minute_timer = new Timer(msec);
-  every_minute_timer->expired.connect(slot(this, &Logic::everyMinute));
+  every_minute_timer->expired.connect(slot(*this, &Logic::everyMinute));
   
 } /* Logic::everyMinute */
 

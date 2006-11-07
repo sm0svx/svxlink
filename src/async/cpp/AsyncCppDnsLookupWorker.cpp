@@ -191,7 +191,7 @@ bool CppDnsLookupWorker::doLookup(void)
   notifier_wr = fd[1];
   notifier_watch = new FdWatch(notifier_rd, FdWatch::FD_WATCH_RD);
   notifier_watch->activity.connect(
-      	  slot(this, &CppDnsLookupWorker::notificationReceived));
+      	  slot(*this, &CppDnsLookupWorker::notificationReceived));
   int ret = pthread_create(&worker, NULL, workerFunc, this);
   if (ret != 0)
   {

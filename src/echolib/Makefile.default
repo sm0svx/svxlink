@@ -171,7 +171,7 @@ RPM_NAME :=
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= $(shell sigc-config --cflags) -I/usr/include/gsm
+INCPATH 	+= $(SIGC_INCPATH) -I/usr/include/gsm
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.

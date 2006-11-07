@@ -43,6 +43,7 @@ An example of how to use the Async::QtApplication class
  ****************************************************************************/
 
 #include <qapplication.h>
+#undef emit
 
 #include <pair.h>
 #include <map>

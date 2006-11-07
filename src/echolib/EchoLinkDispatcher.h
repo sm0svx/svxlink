@@ -44,7 +44,7 @@ An example of how to use the EchoLink::Dispatcher class
  *
  ****************************************************************************/
 
-#include <sigc++/signal_system.h>
+#include <sigc++/sigc++.h>
 
 #include <map>
 

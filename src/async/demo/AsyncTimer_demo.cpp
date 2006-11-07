@@ -11,7 +11,7 @@ class MyClass : public SigC::Object
     MyClass(void) : count(0)
     {
       timer = new Timer(1000, Timer::TYPE_PERIODIC);
-      timer->expired.connect(slot(this, &MyClass::onTimerExpired));
+      timer->expired.connect(slot(*this, &MyClass::onTimerExpired));
     }
     
     ~MyClass(void)

@@ -12,7 +12,7 @@ class MyClass : public SigC::Object
     {
       cout << "Starting query of www.ibm.com...\n";
       dns_lookup = new DnsLookup("www.ibm.com");
-      dns_lookup->resultsReady.connect(slot(this, &MyClass::onResultsReady));
+      dns_lookup->resultsReady.connect(slot(*this, &MyClass::onResultsReady));
     }
     
     ~MyClass(void)

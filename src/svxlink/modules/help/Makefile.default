@@ -189,7 +189,7 @@ RPM_NAME := svxlink
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= $(shell sigc-config --cflags)
+INCPATH 	+= $(SIGC_INCPATH)
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.

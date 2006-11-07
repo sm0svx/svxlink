@@ -42,7 +42,7 @@ An example of how to use the EventHandler class
  ****************************************************************************/
 
 #include <tcl.h>
-#include <sigc++/signal_system.h>
+#include <sigc++/sigc++.h>
 
 #include <string>
 

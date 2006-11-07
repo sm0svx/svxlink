@@ -48,7 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <qpushbutton.h>
 #include <qinputdialog.h>
 #include <qsplitter.h>
-
+#undef emit
 
 /****************************************************************************
  *
@@ -175,13 +175,13 @@ MainWindow::MainWindow(Directory &dir)
   
   audio_io = new AudioIO(Settings::instance()->audioDevice().latin1());
   
-  dir.error.connect(slot(this, &MainWindow::serverError));
-  dir.statusChanged.connect(slot(this, &MainWindow::statusChanged));
+  dir.error.connect(slot(*this, &MainWindow::serverError));
+  dir.statusChanged.connect(slot(*this, &MainWindow::statusChanged));
   dir.stationListUpdated.connect(
-      slot(this, &MainWindow::callsignListUpdated));
+      slot(*this, &MainWindow::callsignListUpdated));
   
   EchoLink::Dispatcher *disp = EchoLink::Dispatcher::instance();
-  disp->incomingConnection.connect(slot(this, &MainWindow::incomingConnection));
+  disp->incomingConnection.connect(slot(*this, &MainWindow::incomingConnection));
 
   status_indicator = new QLabel(statusBar());
   status_indicator->setPixmap(QPixmap(offline_icon));
@@ -230,7 +230,7 @@ MainWindow::MainWindow(Directory &dir)
   hsplitter->setSizes(Settings::instance()->hSplitterSizes());
   
   Settings::instance()->configurationUpdated.connect(
-      slot(this, &MainWindow::configurationUpdated));
+      slot(*this, &MainWindow::configurationUpdated));
   
   fileQuitAction->setAccel(
       QKeySequence(trUtf8("Ctrl+Q", "fileQuitAction")));
@@ -241,7 +241,7 @@ MainWindow::MainWindow(Directory &dir)
   
   msg_audio_io = new AudioIO(Settings::instance()->audioDevice().latin1());  
   msg_handler = new MsgHandler("/", msg_audio_io->sampleRate());
-  msg_handler->allMsgsWritten.connect(slot(this, &MainWindow::allMsgsWritten));
+  msg_handler->allMsgsWritten.connect(slot(*this, &MainWindow::allMsgsWritten));
   msg_audio_io->registerSource(msg_handler);
 } /* MainWindow::MainWindow */
 

@@ -168,9 +168,9 @@ bool NetRx::initialize(void)
   cfg().getValue(name(), "UDP_PORT", udp_port);
   
   tcp_con = new TcpClient(host, atoi(tcp_port.c_str()), sizeof(recv_buf));
-  tcp_con->connected.connect(slot(this, &NetRx::tcpConnected));
-  tcp_con->disconnected.connect(slot(this, &NetRx::tcpDisconnected));
-  tcp_con->dataReceived.connect(slot(this, &NetRx::tcpDataReceived));
+  tcp_con->connected.connect(slot(*this, &NetRx::tcpConnected));
+  tcp_con->disconnected.connect(slot(*this, &NetRx::tcpDisconnected));
+  tcp_con->dataReceived.connect(slot(*this, &NetRx::tcpDataReceived));
   tcp_con->connect();
   
   return true;
@@ -321,7 +321,7 @@ void NetRx::tcpDisconnected(TcpConnection *con,
   recv_exp = 0;
   
   reconnect_timer = new Timer(10000);
-  reconnect_timer->expired.connect(slot(this, &NetRx::reconnect));
+  reconnect_timer->expired.connect(slot(*this, &NetRx::reconnect));
   
 } /* NetRx::tcpDisconnected */
 

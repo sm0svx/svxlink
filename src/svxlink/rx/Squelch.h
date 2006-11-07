@@ -41,7 +41,7 @@ An example of how to use the Squelch class
  *
  ****************************************************************************/
 
-#include <sigc++/signal_system.h>
+#include <sigc++/sigc++.h>
 #include <string>
 #include <iostream>
 
