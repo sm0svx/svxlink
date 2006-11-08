@@ -13,11 +13,7 @@
 
 
 # Subdirectories in the order of compilation.
-SUBDIRS	= core cpp audio
-
-ifdef QT_BIN
-SUBDIRS += qt
-endif
+SUBDIRS	= core cpp audio qt
 
 SUBDIRS += demo
 
