@@ -194,7 +194,7 @@ proc squelch_open {is_open} {
   variable ::Logic::CFG_CALLSIGN;
   
   if {$is_open} {set str "OPEN"} else { set str "CLOSED"};
-  #printInfo "$module_name: The squelch is $str";
+  #printInfo "The squelch is $str";
 
   if {$state == "rec_subject"} {
     if {$is_open} {
