@@ -635,6 +635,11 @@ void Logic::sendDtmf(const std::string& digits)
 
 void Logic::squelchOpen(bool is_open)
 {
+  if (active_module != 0)
+  {
+    active_module->squelchOpen(is_open);
+  }
+  
   stringstream ss;
   ss << "squelch_open " << rx().sqlRxId() << " " << (is_open ? "1" : "0");
   processEvent(ss.str());
