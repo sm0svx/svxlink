@@ -508,7 +508,6 @@ class Module : public SigC::Object
     std::string       m_name;
     bool      	      m_is_transmitting;
     SigC::Connection  m_audio_con;
-    SigC::Connection  m_squelch_con;
     bool      	      m_is_active;
     std::string	      m_cfg_name;
     Async::Timer      *m_tmo_timer;

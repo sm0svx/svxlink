@@ -84,8 +84,6 @@ void Module::activate(void)
   
   m_audio_con = logic()->rx().audioReceived.connect(
       	  slot(*this, &Module::audioFromRx));
-  m_squelch_con = logic()->rx().squelchOpen.connect(
-      	  slot(*this, &Module::squelchOpen));
   
   setIdle(true);
   activateInit();
@@ -101,7 +99,6 @@ void Module::deactivate(void)
   transmit(false);
   
   m_audio_con.disconnect();
-  m_squelch_con.disconnect();
   
   processEvent("deactivating_module");
   
