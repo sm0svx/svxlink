@@ -599,7 +599,10 @@ void LocalRx::dtmfDigitDeactivated(char digit, int duration_ms)
 void LocalRx::allSamplesFlushed(void)
 {
   //printf("LocalRx::allSamplesFlushed\n");
-  setSquelchState(false);
+  if (squelch->isOpen())
+  {
+    setSquelchState(false);
+  }
 } /* LocalRx::allSamplesFlushed */
 
 
