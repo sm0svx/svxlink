@@ -162,7 +162,10 @@ class Command : public SigC::Object
     Command(CmdParser *parser, const std::string& cmd="")
       : parser(parser)
     {
-      setCmd(cmd);
+      if (!cmd.empty())
+      {
+      	setCmd(cmd);
+      }
     }
     
     virtual ~Command(void)
@@ -182,6 +185,7 @@ class Command : public SigC::Object
   protected:
     void setCmd(const std::string& cmd_str)
     {
+      assert(!cmd_str.empty());
       assert(cmd.empty());
       cmd = cmd_str;
       parser->addCmd(this);
