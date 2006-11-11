@@ -125,7 +125,7 @@ class Rx : public SigC::Object
      * @brief 	Default constuctor
      */
     explicit Rx(Async::Config& cfg, const std::string& name)
-      : m_cfg(cfg), m_name(name), m_verbose(true) {}
+      : m_cfg(cfg), m_name(name), m_verbose(true), m_sql_open(false) {}
   
     /**
      * @brief 	Destructor
@@ -160,7 +160,7 @@ class Rx : public SigC::Object
      * @brief 	Check the squelch status
      * @return	Return \em true if the squelch is open or else \em false
      */
-    virtual bool squelchIsOpen(void) const = 0;
+    bool squelchIsOpen(void) const { return m_sql_open; }
     
     /**
      * @brief 	Call this function to add a tone detector to the RX
@@ -243,6 +243,7 @@ class Rx : public SigC::Object
     Async::Config &m_cfg;
     std::string   m_name;
     bool          m_verbose;
+    bool      	  m_sql_open;
     
 };  /* class Rx */
 

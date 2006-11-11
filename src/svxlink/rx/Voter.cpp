@@ -290,10 +290,12 @@ void Voter::mute(bool do_mute)
 } /* Voter::mute */
 
 
+#if 0
 bool Voter::squelchIsOpen(void) const
 {
   return active_rx != 0;
 } /* Voter::squelchIsOpen */
+#endif
 
 
 bool Voter::addToneDetector(float fq, int bw, float thresh,

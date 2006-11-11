@@ -155,7 +155,7 @@ class NetRx : public Rx
      * @brief 	Check the squelch status
      * @return	Return \em true if the squelch is open or else \em false
      */
-    bool squelchIsOpen(void) const { return squelch_open; }
+    //bool squelchIsOpen(void) const { return squelch_open; }
     
     /**
      * @brief 	Call this function to add a tone detector to the RX

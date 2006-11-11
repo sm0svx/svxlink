@@ -158,7 +158,7 @@ class LocalRx : public Rx
      * @brief 	Check the squelch status
      * @return	Return \em true if the squelch is open or else \em false
      */
-    bool squelchIsOpen(void) const;
+    //bool squelchIsOpen(void) const;
     
     /**
      * @brief 	Call this function to add a tone detector to the RX

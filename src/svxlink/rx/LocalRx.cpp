@@ -422,6 +422,7 @@ void LocalRx::mute(bool do_mute)
     }
     sql_valve->setOpen(false);
     audio_io->close();
+    setSquelchState(false);
   }
   else
   {
@@ -440,10 +441,12 @@ void LocalRx::mute(bool do_mute)
 } /* LocalRx::mute */
 
 
+#if 0
 bool LocalRx::squelchIsOpen(void) const
 {
   return squelch->isOpen();
 } /* LocalRx::squelchIsOpen */
+#endif
 
 
 bool LocalRx::addToneDetector(float fq, int bw, float thresh,
@@ -599,10 +602,7 @@ void LocalRx::dtmfDigitDeactivated(char digit, int duration_ms)
 void LocalRx::allSamplesFlushed(void)
 {
   //printf("LocalRx::allSamplesFlushed\n");
-  if (squelch->isOpen())
-  {
-    setSquelchState(false);
-  }
+  setSquelchState(false);
 } /* LocalRx::allSamplesFlushed */
 
 
