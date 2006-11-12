@@ -383,6 +383,7 @@ bool LocalRx::initialize(void)
   prev_src = ctcss_filt;
   
   sql_valve = new SigCAudioValve;
+  sql_valve->setOpen(false);
   sql_valve->sigAllSamplesFlushed.connect(
       slot(*this, &LocalRx::allSamplesFlushed));
   prev_src->registerSink(sql_valve, true);
