@@ -177,7 +177,7 @@ AudioSplitter::AudioSplitter(void)
 
 AudioSplitter::~AudioSplitter(void)
 {
-  delete buf;
+  delete [] buf;
   removeAllSinks();
 } /* AudioSplitter::~AudioSplitter */
 
@@ -231,7 +231,7 @@ int AudioSplitter::writeSamples(const float *samples, int len)
       {
 	if (buf_size < len)
 	{
-	  delete buf;
+	  delete [] buf;
 	  buf = new float[len];
 	}
 	memcpy(buf, samples, len * sizeof(*samples));
