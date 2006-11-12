@@ -12,16 +12,18 @@
 namespace eval SimplexLogic {
 
 #
-# Extract the logic name from the current namespace
+# Checking to see if this is the correct logic core
 #
-variable logic_name [namespace tail [namespace current]];
+if {$logic_name != [namespace tail [namespace current]]} {
+  return;
+}
 
 
 #
 # Executed when the SvxLink software is started
 # 
 proc startup {} {
-  variable logic_name;
+  global logic_name;
   append func $logic_name "::checkPeriodicIdentify";
   Logic::addTimerTickSubscriber $func;
   Logic::startup;

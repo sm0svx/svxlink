@@ -12,9 +12,11 @@
 namespace eval RepeaterLogic {
 
 #
-# Extract the logic name from the current namespace
+# Checking to see if this is the current logic core type
 #
-variable logic_name [namespace tail [namespace current]];
+if {$logic_name != [namespace tail [namespace current]]} {
+  return;
+}
 
 
 #
@@ -27,7 +29,7 @@ variable repeater_is_up 0;
 # Executed when the SvxLink software is started
 # 
 proc startup {} {
-  variable logic_name;
+  global logic_name;
   append func $logic_name "::checkPeriodicIdentify";
   Logic::addTimerTickSubscriber $func;
   Logic::startup;
