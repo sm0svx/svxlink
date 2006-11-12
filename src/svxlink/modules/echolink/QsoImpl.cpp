@@ -195,6 +195,13 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   event_handler->playSilence.connect(
       	  slot(*msg_handler, &MsgHandler::playSilence));
   event_handler->playTone.connect(slot(*msg_handler, &MsgHandler::playTone));
+
+    // Workaround: Need to set the ID config variable and "logic_name"
+    // variable to load the TCL script.
+  event_handler->processEvent("namespace eval EchoLink {}");
+  event_handler->setVariable("EchoLink::CFG_ID", "0");
+  event_handler->setVariable("logic_name", "Default");
+  
   event_handler->initialize();
   
   Qso::infoMsgReceived.connect(slot(*this, &QsoImpl::onInfoMsgReceived));
