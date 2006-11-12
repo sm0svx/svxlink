@@ -179,7 +179,7 @@ class PeakMeter : public AudioPassthrough
 	}
       }
       
-      if (i < count)
+      if (i < ret)
       {
       	cout << name
 	     << ": Distorsion detected! Please lower the input volume!\n";
@@ -191,6 +191,23 @@ class PeakMeter : public AudioPassthrough
   private:
     string name;
     
+};
+
+
+class SigCAudioSinkNoFlow : public SigCAudioSink
+{
+  public:
+    virtual int writeSamples(const float *samples, int len)
+    {
+      sigWriteSamples(const_cast<float *>(samples), len);
+      return len;
+    }
+
+    virtual void flushSamples(void)
+    {
+      sourceAllSamplesFlushed();
+    }
+  
 };
 
 
@@ -396,11 +413,9 @@ bool LocalRx::initialize(void)
     prev_src = delay;
   }
     
-  SigCAudioSink *sigc_sink = new SigCAudioSink;
-  sigc_sink->sigWriteSamples.connect(slot(*this, &LocalRx::audioRead));
+  SigCAudioSinkNoFlow *sigc_sink = new SigCAudioSinkNoFlow;
+  //sigc_sink->sigWriteSamples.connect(slot(*this, &LocalRx::audioRead));
   sigc_sink->sigWriteSamples.connect(audioReceived.slot());
-  sigc_sink->sigFlushSamples.connect(
-      slot(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
   prev_src->registerSink(sigc_sink, true);
   
   return true;
@@ -522,6 +537,7 @@ void LocalRx::reset(void)
  *
  ****************************************************************************/
 
+#if 0
 int LocalRx::audioRead(float *samples, int count)
 {
   //bool was_open = squelch->isOpen();
@@ -577,6 +593,7 @@ int LocalRx::audioRead(float *samples, int count)
   return count;
   
 } /* LocalRx::audioRead */
+#endif
 
 
 void LocalRx::dtmfDigitActivated(char digit)
@@ -609,7 +626,6 @@ void LocalRx::allSamplesFlushed(void)
 
 void LocalRx::onSquelchOpen(bool is_open)
 {
-  //printf("LocalRx::onSquelchOpen\n");
   if (is_open)
   {
     setSquelchState(true);
