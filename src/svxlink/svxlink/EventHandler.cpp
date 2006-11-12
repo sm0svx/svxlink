@@ -152,7 +152,12 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
 
 EventHandler::~EventHandler(void)
 {
-  Tcl_DeleteInterp(interp);
+  Tcl_Preserve(interp);
+  if (!Tcl_InterpDeleted(interp))
+  {
+    Tcl_DeleteInterp(interp);
+  }
+  Tcl_Release(interp);
 } /* EventHandler::~EventHandler */
 
 
@@ -171,22 +176,26 @@ bool EventHandler::initialize(void)
 
 void EventHandler::setVariable(const string& name, const string& value)
 {
+  Tcl_Preserve(interp);
   if (Tcl_SetVar(interp, name.c_str(), value.c_str(), TCL_LEAVE_ERR_MSG)
   	== NULL)
   {
     cerr << event_script << ": " << Tcl_GetStringResult(interp) << endl;
   }
+  Tcl_Release(interp);
 } /* EventHandler::setVariable */
 
 
 bool EventHandler::processEvent(const string& event)
 {
+  Tcl_Preserve(interp);
   if (Tcl_Eval(interp, (event + ";").c_str()) != TCL_OK)
   {
     cerr << "*** ERROR: Unable to handle event: " << event
       	 << " (" << Tcl_GetStringResult(interp) << ")" << endl;
     return false;
   }
+  Tcl_Release(interp);
   
   return true;
   
