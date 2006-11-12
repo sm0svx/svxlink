@@ -12,6 +12,12 @@
 #
 namespace eval Help {
 
+#
+# Check if this module is loaded in the current logic core
+#
+if {![info exists CFG_ID]} {
+  return;
+}
 
 #
 # Extract the module name from the current namespace

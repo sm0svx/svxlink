@@ -13,6 +13,13 @@
 namespace eval EchoLink {
 
 #
+# Check if this module is loaded in the current logic core
+#
+if {![info exists CFG_ID]} {
+  return;
+}
+
+#
 # Extract the module name from the current namespace
 #
 set module_name [namespace tail [namespace current]];
