@@ -68,7 +68,7 @@ if [file exists $cfg_etc] {
 # Check if the spool directory is writable
 #
 if {[file writable $recdir] != 1} {
-  puts "$module_name: *** ERROR: The spool directory ($recdir) is not writable by the current user.";
+  puts "$module_name: *** ERROR: The spool directory ($recdir) is not writable by the current user or does not exist.";
   exit 1;
 }
 
