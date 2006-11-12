@@ -57,6 +57,15 @@ if [file exists $cfg_etc] {
 
 
 #
+# Check if the spool directory is writable
+#
+if {[file writable $recdir] != 1} {
+  puts "*** ERROR: The spool directory ($recdir) is not writable by the current user.";
+  exit 1;
+}
+
+
+#
 # Read the specified user configuration variable for the specified user ID
 #
 proc id2var {id var} {
