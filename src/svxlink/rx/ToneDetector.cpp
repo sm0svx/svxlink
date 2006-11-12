@@ -183,6 +183,7 @@ ToneDetector::~ToneDetector(void)
   delete [] block;
   
   setFilter("");
+  setHandler(0);
   
   delete sigc_sink;
   
