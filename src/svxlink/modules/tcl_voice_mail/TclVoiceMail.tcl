@@ -13,6 +13,13 @@
 namespace eval TclVoiceMail {
 
 #
+# Check if this module is loaded in the current logic core
+#
+if {![info exists CFG_ID]} {
+  return;
+}
+
+#
 # Extract the module name from the current namespace
 #
 set module_name [namespace tail [namespace current]];
@@ -52,7 +59,8 @@ if [file exists $cfg_etc] {
 } elseif [file exists $cfg_home] {
   source $cfg_home;
 } else {
-  puts "*** ERROR: Could not find a configuration file in module \"$module_name\". Tried \"$cfg_etc\" and \"$cfg_home\"";
+  puts "$module_name: *** ERROR: Could not find a configuration file in module \"$module_name\". Tried \"$cfg_etc\" and \"$cfg_home\"";
+  exit 1;
 }
 
 
@@ -60,7 +68,7 @@ if [file exists $cfg_etc] {
 # Check if the spool directory is writable
 #
 if {[file writable $recdir] != 1} {
-  puts "*** ERROR: The spool directory ($recdir) is not writable by the current user.";
+  puts "$module_name: *** ERROR: The spool directory ($recdir) is not writable by the current user.";
   exit 1;
 }
 
