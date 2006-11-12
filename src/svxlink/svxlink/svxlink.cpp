@@ -48,6 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <iostream>
 #include <algorithm>
+#include <vector>
 
 
 /****************************************************************************
@@ -141,7 +142,7 @@ static char   	      	*logfile_name = NULL;
 static char   	      	*config = NULL;
 static int    	      	daemonize = 0;
 static int    	      	logfd = -1;
-static Logic  	      	*logic = 0;
+static vector<Logic*>  	logic_vec;
 static FdWatch	      	*stdin_watch = 0;
 static FdWatch	      	*stdout_watch = 0;
 static string         	tstamp_format;
@@ -389,7 +390,12 @@ int main(int argc, char **argv)
     close(pipefd[1]);
   }
 
-  delete logic;
+  vector<Logic*>::iterator lit;
+  for (lit=logic_vec.begin(); lit!=logic_vec.end(); lit++)
+  {
+    delete *lit;
+  }
+  logic_vec.clear();
   
   if (logfd != -1)
   {
@@ -524,7 +530,7 @@ static void stdinHandler(FdWatch *w)
     case '4': case '5': case '6': case '7':
     case '8': case '9': case 'A': case 'B':
     case 'C': case 'D': case '*': case '#':
-      logic->dtmfDigitDetected(buf[0], 100);
+      logic_vec[0]->dtmfDigitDetected(buf[0], 100);
       break;
     
     default:
@@ -611,7 +617,6 @@ static void initialize_logics(Config &cfg)
     exit(1);
   }
 
-  int logic_cnt = 0;
   string::iterator comma;
   string::iterator begin = logics.begin();
   do
@@ -637,6 +642,7 @@ static void initialize_logics(Config &cfg)
       	   << logic_name << "\". Skipping...\n";
       continue;
     }
+    Logic *logic = 0;
     if (logic_type == "Simplex")
     {
       logic = new SimplexLogic(cfg, logic_name);
@@ -659,10 +665,10 @@ static void initialize_logics(Config &cfg)
       continue;
     }
     
-    ++logic_cnt;
+    logic_vec.push_back(logic);
   } while (comma != logics.end());
   
-  if (logic_cnt == 0)
+  if (logic_vec.size() == 0)
   {
     cerr << "*** ERROR: No logics available. Bailing out...\n";
     exit(1);
