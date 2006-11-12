@@ -329,6 +329,7 @@ bool Logic::initialize(void)
   event_handler->setVariable("report_ctcss", str);
   event_handler->setVariable("active_module", "");
   event_handler->setVariable("is_core_event_handler", "1");
+  event_handler->setVariable("logic_name", name().c_str());
 
   loadModules();
   
@@ -799,7 +800,7 @@ void Logic::allModuleSamplesWritten(void)
 void Logic::transmitCheck(void)
 {
   /*
-  cout << "Logic::transmitCheck:\n";
+  cout << "Logic::transmitCheck [" << name() << "]:\n";
   if (active_module != 0)
   {
     cout << "\tactive_module->isTransmitting   = "
@@ -1106,7 +1107,6 @@ void Logic::putCmdOnQueue(Timer *t)
 
 void Logic::sendRgrSound(Timer *t)
 {
-  //cout << "RepeaterLogic::sendRogerSound\n";
   processEvent("send_rgr_sound");
   enableRgrSoundTimer(false);
 } /* Logic::sendRogerSound */
@@ -1114,6 +1114,8 @@ void Logic::sendRgrSound(Timer *t)
 
 int Logic::remoteLogicWriteSamples(float *samples, int len)
 {
+  //cout << "Logic::remoteLogicWriteSamples: len=" << len << endl;
+
   if (msg_handler->isWritingMessage() || rx().squelchIsOpen() ||
       ((active_module != 0) && active_module->isTransmitting()) ||
       (len <= 0))
@@ -1141,6 +1143,8 @@ void Logic::remoteLogicFlushSamples(void)
 
 int Logic::audioReceived(float *samples, int len)
 {
+  //cout << "Logic::audioReceived: len=" << len << endl;
+
   float *buf = new float[len];
   memcpy(buf, samples, len * sizeof(*samples));
   len = logic_con_out.writeSamples(buf, len);
