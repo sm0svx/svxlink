@@ -328,7 +328,7 @@ void RepeaterLogic::dtmfDigitDetected(char digit, int duration)
 
 void RepeaterLogic::allTxSamplesFlushed(void)
 {
-  printf("RepeaterLogic::allTxSamplesFlushed\n");
+  //printf("RepeaterLogic::allTxSamplesFlushed\n");
   Module *module = activeModule();
   if (!rx().squelchIsOpen() && ((module == 0) || (!module->isTransmitting())))
   {
