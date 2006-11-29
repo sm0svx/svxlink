@@ -12,7 +12,7 @@
 #-----------------------------------------------------------------
 
 # Subdirectories in the order of compilation.
-SUBDIRS	= async echolib svxlink qtel
+SUBDIRS	= async echolib svxlink qtel doc
 
 #
 # This file has not been truncated
