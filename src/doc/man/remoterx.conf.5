@@ -1,0 +1,159 @@
+.TH REMOTERX.CONF 5 "NOVEMBER 2006" Linux "File Formats"
+.
+.SH NAME
+.
+remoterx.conf \- Configuration file for the SvxLink remote receiver server
+.
+.SH DESCRIPTION
+.
+.B remoterx
+is the SvxLink remote receiver server. This man-page describe the configuration
+file format for it.
+.P
+Remoterx look for configuration files in a number of places. First it try to
+find a user specific configuration file. It will look for a user specific
+configuration file in two places:
+.BR $HOME/.svxlink/remoterx.conf " or " $HOME/.remoterxrc .
+Use the one that will best fit your need. If no user specific configuration file
+can be found, remoterx will look for the system wide configuration file
+.BR /etc/remoterx.conf .
+The
+.B --config
+command line option may also be used to specify an arbitrary configuration file.
+.
+.SH FILE FORMAT
+.
+The configuration file is in the famous INI-file format. A generic example of
+how such a file might look like is shown below.
+
+  [SECTION1]
+  VALUE1=1
+  VALUE2="TWO "
+  VAULE3="Multi "
+         "line"
+  
+  [SECTION2]
+  VALUE1=2
+
+This is a simple format that contain name=value pairs that belong to a section.
+In written text, a specific configuration variable can be referred to as
+SECTION1/VALUE2 meaning "configuration variable VALUE2 in section SECTION1".
+.P
+The same variable name can exist in two different sections. For example VALUE1
+in section SECTION1 have the value 1 and VALUE1 in section SECTION2 have the
+value 2. Values containing spaces at the beginning or end of the line must be
+surrounded by citation characters (see SECTION1/VALUE2). Likewise with a multi
+line value (see SECTION1/VALUE3).
+.
+.SH CONFIGURATION VARIABLES
+.
+Here is the description of all configuration variables that remoterx
+understands. The configuration variables are described section for section.
+.
+.SS GLOBAL
+.
+The GLOBAL section contains application global configuration data.
+.TP
+.B RX
+Point out the receiver configuration section to use.
+.TP
+.B UPLINK
+Point out the uplink configuration section to use. The uplink section specify
+how this remote receiver should be linked to the main SvxLink server.
+.TP
+.B CFG_DIR
+Specify the path to a directory that contain additional configuration files.
+If a relative path is specified, the path will be relative to the directory
+where the main configuration file is at. All files in the specified directory
+will be read as additional configuration. Filenames starting with a dot are
+ignored.
+.TP
+.B TIMESTAMP_FORMAT
+This variable specifies the format of the timestamp that is written in front of
+each row in the log file. The format string is in the same format as specified
+in the
+.BR strftime (3)
+manual page. The default is "%c" which is described as: "the preferred date and
+time representation for the current locale". The environment variables LC_TIME,
+LC_ALL and LANG will affect how this time format will look. For example, setting
+LC_TIME="sv_SE.UTF8" will give you swedish timestamp representation. Other
+examples of format specifiers are:
+.RS
+.IP \(bu 4
+.BR %d " - The day of the month as a decimal number (range 01 to 31)"
+.IP \(bu 4
+.BR %b " - The abbreviated month name according to the current locale"
+.IP \(bu 4
+.BR %Y " - The year as a decimal number including the century"
+.IP \(bu 4
+.BR %H " - The hour as a decimal number using a 24-hour clock (range 00 to 23)"
+.IP \(bu 4
+.BR %M " - The minute as a decimal number (range 00 to 59)"
+.IP \(bu 4
+.BR %S " - The second as a decimal number (range 00 to 61)"
+.P
+So, TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S" would give a timestamp looking something like:
+"29 Nov 2005 22:31:59".
+.
+.SS Network uplink section
+.
+The network uplink section is used to specify the configuration for a network
+link to the main SvxLink server. In the default configuration file there is a
+network uplink section called
+.BR NetUpLink .
+The configuration is quite boring at the moment since there is only one
+configuration variable and that variable can only have one value.
+.TP
+.B TYPE
+Always "Net" for a networked uplink.
+.
+.SS Local Receiver Section
+.
+A local receiver section is used to specify the configuration for a receiver
+connected to the sound card. In the default configuration file there is a Local
+configuration section called
+.BR Rx1 .
+The section name could be anything. It should match the RX configuration
+variable in the GLOBAL section where the receiver is to be used. The available
+configuration variables are the same as for a SvxLink server local receiver so
+use the
+.BR svxlink.conf (5)
+manual page as a reference.
+.
+.SS Voter Section
+.
+Receiver type "Voter" is a "receiver" that combines multiple receivers and
+selects one of them to take audio from when the squelch opens. Which receiver to
+use is selected directly after squelch open. Another selection is not done until
+the selected receivers squelch is closed and another receivers squelch is
+opened. In the default configuration file there is a voter section called
+.BR Voter .
+.P
+The usage of a voter on a remote receiver is not very common but it is possible.
+More common is to have one voter at the main SvxLink site that manage all
+receivers. The available configuration variables are the same as for a SvxLink
+server voter so use the
+.BR svxlink.conf (5)
+manual page as a reference.
+.
+.SH FILES
+.
+.TP
+.I /etc/remoterx.conf
+The system wide configuration file.
+.TP
+.IR ~/.svxlink/remoterx.conf " or " ~/.remoterxrc
+Per user configuration file.
+.TP
+.I /etc/remoterx.d/*
+Additional configuration files.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
+.
+.SH "SEE ALSO"
+.
+.BR svxlink (1),
+.BR svxlink.conf (1),
+.BR remoterx (1)
