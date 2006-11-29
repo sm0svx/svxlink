@@ -35,14 +35,19 @@ The system wide configuration file.
 .IR ~/.svxlink/svxlink.conf " or " ~/.svxlinkrc
 Per user configuration file.
 .TP
-.I /etc/svxlink.d/*
-Additional configuration files. Typically one configuration file per module.
+.I /etc/svxlink.d/ModuleTclVoiceMail.conf
+Global modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.TP
+.I ~/.svxlink/svxlink.d/ModuleTclVoiceMail.conf
+Per user modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
 .TP
 .I /etc/TclVoiceMail.conf
 System wide configuration file for the TclVoiceMail module.
 .TP
 .I ~/.svxlink/TclVoiceMail.conf
-Per user configuration file for the TclVoiceMail moduile.
+Per user configuration file for the TclVoiceMail module.
 .TP
 .I /var/spool/svxlink/voice_mail
 Spool directory for voice mails.

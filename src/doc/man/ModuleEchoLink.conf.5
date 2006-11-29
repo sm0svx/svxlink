@@ -79,8 +79,13 @@ The system wide configuration file.
 .IR ~/.svxlink/svxlink.conf " or " ~/.svxlinkrc
 Per user configuration file.
 .TP
-.I /etc/svxlink.d/*
-Additional configuration files. Typically one configuration file per module.
+.I /etc/svxlink.d/ModuleEchoLink.conf
+Global modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.TP
+.I ~/.svxlink/svxlink.d/ModuleEchoLink.conf
+Per user modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
 .
 .SH AUTHOR
 .
