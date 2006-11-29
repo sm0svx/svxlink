@@ -92,6 +92,9 @@
 
 * Now using libsigc++ version 1.2 instead of the old and outdated 1.0.
 
+* Manual pages added for svxlink, remoterx, all plugins and
+  configuration files.
+
 
 
  0.7.0 -- 02 Dec 2005
