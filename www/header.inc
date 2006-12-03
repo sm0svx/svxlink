@@ -21,6 +21,7 @@
   <SPAN class="body-code-snippet-caption">Main Menu</SPAN>
   <DIV class="body-code-snippet">
     <MENUITEM><A href="index.php">Main Screen</A></MENUITEM><BR/>
+    <MENUITEM><A href="featurelist.php">Feature List</A></MENUITEM><BR/>
     <MENUITEM><A href="news.php">Project News</A></MENUITEM><BR/>
     <MENUITEM><A href="screenshots.php">Screenshots</A></MENUITEM><BR/>
     <MENUITEM><A href="install.php">Installation Instructions</A></MENUITEM><BR/>
@@ -37,14 +38,14 @@
     <MENUITEM><A href="svxlink_usage.php">SvxLink Server User Docs</A></MENUITEM><BR/>
     <MENUITEM><A href="moreinfo.php">Developer Documentation</A></MENUITEM><BR/>
     <MENUITEM><A
-    href="https://sourceforge.net/project/showfiles.php?group_id=84813">
+    href="http://sourceforge.net/project/showfiles.php?group_id=84813">
       Software Downloads</A></MENUITEM><BR/>
     <MENUITEM><A href="support.php">Support</A></MENUITEM><BR/>
     <?php if ($selected == "support") { ?>
     <SUBMENUITEM><A href="#mailing-lists">Mailing lists</A></SUBMENUITEM><BR/>
     <SUBMENUITEM><A href="#reporting-bugs">Reporting Bugs</A></SUBMENUITEM></BR>
     <?php } ?>
-    <MENUITEM><A href="https://sourceforge.net/projects/svxlink/">SourceForge Summary</A></MENUITEM>
+    <MENUITEM><A href="http://sourceforge.net/projects/svxlink/">SourceForge Summary</A></MENUITEM>
   </DIV>
   <P>
   <A href="http://sourceforge.net">

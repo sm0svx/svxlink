@@ -7,6 +7,66 @@
 <H2>Project News</H2>
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>10 Dec 2006: <I>Version 061210 released</I></B>
+  <TD/></TR>
+  <TR><TD>
+    It's been a year since the latest release. That does not mean that it has
+    not happend anything for a year. I have just not found a suitable point in
+    the development process that felt good for a new release. The most important
+    changes are:
+    <UL>
+      <LI>
+      	Support for remote receivers linked over the Internet.
+      </LI>
+      <LI>
+        Manual pages written (svxlink, svxlink.conf, remoterx, remoterx.conf,
+	ModuleHelp, ModuleParrot, ModuleEchoLink, ModuleDtmfRepeater).
+      </LI>
+      <LI>
+      	CTCSS tone transmit, always or just when there is a signal received.
+      </LI>
+      <LI>
+      	Improved CTCSS squelch detector. It is now possible to run SvxLink with
+	the squelch open.
+      </LI>
+      <LI>
+      	Implemented a simple signal strength detector that can be used with the
+	voter when using multiple receivers.
+      </LI>
+      <LI>
+      	DTMF muting and squelch tail elimination added.
+      </LI>
+      <LI>
+      	New module DtmfRepeater that is used to retransmit received DTMF digits.
+      </LI>
+      <LI>
+      	Now using libsigc++ 1.2 instead of the ancient 1.0 version. This will
+	make SvxLink much easier to install on modern distributions.
+      </LI>
+      <LI>
+        Modularized configuration files. Each module now have its own
+	configuration file under /etc/svxlink.d/.
+      </LI>
+      <LI>
+      	Voice mails are now stored in /var/spool/svxlink/voice_mail. Remember to
+	move existing voice mails from /var/spool/svxlink when you upgrade.
+      </LI>
+      <LI>
+      	Added logrotate configuration for /var/log/svxlink and a system startup
+	script.
+      </LI>
+      <LI>
+      	A couple of bug fixes
+      </LI>
+    </UL>
+    As usual, be sure to check out the
+    <A href="http://sf.net/project/shownotes.php?release_id=">ChangeLog</A>
+    for more detailed information.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>2 Dec 2005: <I>Version 051202 released</I></B>
   <TD/></TR>
   <TR><TD>

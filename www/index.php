@@ -5,17 +5,17 @@
 
 <H2>Main Screen</H2>
 Welcome to the home of SvxLink. 
-The SvxLink project aim to develop a flexible general purpose voice services
-system for ham radio use. The svxlink server consists of a core that handles
-the connection to the tranceiver. The transceiver audio is connected to the PC
-through the sound card and the PTT is controlled by a pin in the serial port.
-The core can be configured to act as a repeater controller or to operate on a
-simplex channel.
-The voice services are loaded into the core as plugins called modules in
-SvxLink lingo. Existing voice services are: Help - a help system,
-Parrot - a module that plays back everything you say, EchoLink - connect
-to other EchoLink stations and TclVoiceMail - a simple voice mail system.
-The project also includes an EchoLink client GUI application (Qtel).
+The SvxLink project aim to develop a flexible, general purpose voice services
+system for ham radio use. The svxlink server consists of a core that handles the
+connection to the tranceiver. The core can be configured to act as a repeater
+controller or to operate on a simplex channel. 
+The voice services are loaded into the core as plugins, or modules as they are
+called in SvxLink. Some examples of existing voice services are: Help - a help
+system, Parrot - a module that plays back everything you say, EchoLink - connect
+to other EchoLink stations and TclVoiceMail - a simple voice mail system. The
+project also includes an EchoLink client GUI application (Qtel).
+Have a look at the <A href="featurelist.php">feature list</A> to get a quick
+overview of what the SvxLink project is all about.
 <P/>
 EchoLink is an amateur radio invention (well actually it is just a
 modified verison of IP telephony) to link radio transceivers together
@@ -29,18 +29,9 @@ Qtel is only an EchoLink client program. It does not have the
 sysop mode. That is, it can not be connected to a transceiver
 and act as a link. For the latter, use the svxlink server.
 <P/>
-SvxLink is known to work under these operating systems (I really hope that
-this list will grow in time):
-<UL>
-  <LI>Red Hat Linux 9 (RPMS provided for older versions)</LI>
-  <LI>Fedora Core 1 (only tested with older versions)</LI>
-  <LI>Fedora Core 2 (RPMS provided for older versions)</LI>
-  <LI>Fedora Core 3 (RPMS provided)</LI>
-  <LI>Fedora Core 4 (RPMS provided)</LI>
-  <LI>SuSE 9.1 (only tested with older versions)</LI>
-  <LI>Slackware 10 (not tested by author)</LI>
-  <LI>SuSE Linux 9.2 Pro (not tested by author)</LI>
-</UL>
+SvxLink is developed under Fedora but it's possible to get it woking on other
+distributions as well. However, since RPM:s are provided for Fedora it's easier
+to install.
 <P/>
 
 <?php include("footer.inc"); ?>

@@ -80,13 +80,14 @@ The EchoLink module is used to connect to other EchoLink stations. To connect
 to another station, just enter the node number ended with a #. To
 disconnect, press #. To exit the module, press #
 when not connected. Pressing 1# will tell you the callsigns of all connected
-stations.
+stations. Pressing 2# will tell you the local EchoLink node id.
 <P>
 The "connect by callsign" function will make it possible to connect to a
 station even if the node number is unknown. Callsigns are mapped to digits
 by using the following method: ABC=2, DEF=3, GHI=4, JKL=5, MNO=6, PQRS=7,
 TUV=8, WXYZ=9. The same mapping as on many phones. Letters are mapped to its
-corresponding digit. All other characters are mapped to digit 1.
+corresponding digit and digits are ofcourse mapped to their corresponding
+number. All other characters are mapped to digit 1.
 A searh command start with * and then the callsign code is entered. So if
 you want to connect to SM3SVX-L you should enter "*76378915#". Since the
 codes are not unique a list of search hits will be presented to the user
@@ -129,6 +130,16 @@ If this has been done, an e-mail will be sent to the user if someone
 records a new voice mail for him.
 <P>
 To deactivate the module, just press # when the main menu is active.
+
+
+<H3>The DtmfRepeater Module</H3>
+This module will retransmit all received DTMF digits when active. All
+received digits will be completely ignored by the SvxLink core. To
+deactivate the module, press # for at least three seconds.
+<P>
+This module is typically used on a SvxLink repeater to remote control
+other services via the repeater. The DTMF muting should be enabled so
+that received DTMF digits are not normally heard on the repeater.
 
 <?php include("footer.inc"); ?>
 

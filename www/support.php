@@ -50,7 +50,7 @@ the steps below to make a good bug report.
   </LI>
   <LI>
     If possible, try to reproduce the bug. A way to reproduce the bug makes it
-    much easier for the developer to find and fix the bug. If is is not possible
+    much easier for the developer to find and fix the bug. If it is not possible
     to reproduce it, try to remember what happened right before the bug
     appeared. Include a detailed step by step instruction in the report of how
     to reproduce the bug.
