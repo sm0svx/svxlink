@@ -115,6 +115,9 @@ if which pkg-config &> /dev/null; then
     output "SIGC_LIBPATH=$(pkg-config sigc++-$sigc_version --libs-only-L)"
     output "SIGC_LIBS=$(pkg-config sigc++-$sigc_version --libs-only-l)"
     output "SIGC_INCPATH=$(pkg-config sigc++-$sigc_version --cflags-only-I)"
+  else
+    info "no\n"
+    exit 1
   fi
 else
   info "no\n"
@@ -122,3 +125,4 @@ else
 fi
 
 exit 0
+
