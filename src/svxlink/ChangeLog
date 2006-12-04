@@ -95,6 +95,8 @@
 * Manual pages added for svxlink, remoterx, all plugins and
   configuration files.
 
+* SvxLink now announce the current time at manual identification.
+
 
 
  0.7.0 -- 02 Dec 2005
