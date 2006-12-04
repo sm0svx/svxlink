@@ -77,10 +77,16 @@ proc manual_identification {} {
   global prev_ident;
   global loaded_modules;
   
-  set prev_ident [clock seconds];
+  set epoch [clock seconds];
+  set hour [clock format $epoch -format "%k"];
+  regexp {([1-5]?\d)$} [clock format $epoch -format "%M"] -> minute;
+  set prev_ident $epoch;
   
   playMsg "Core" "online";
   spellWord $mycall;
+  playSilence 250;
+  playMsg "Core" "the_time_is";
+  playTime $hour $minute;
   playSilence 250;
   if {$report_ctcss > 0} {
     playMsg "Core" "pl_is";
@@ -304,7 +310,7 @@ proc checkPeriodicIdentify {} {
   set epoch [clock seconds];
   set hour [clock format $epoch -format "%k"];
   regexp {([1-5]?\d)$} [clock format $epoch -format "%M"] -> minute;
-
+  
   set now [clock seconds];
   if {($hour * 60 + $minute) % $long_ident_interval != 0} {
     if {$now-$prev_ident < $min_time_between_ident} {
@@ -330,13 +336,7 @@ proc checkPeriodicIdentify {} {
   if {($hour * 60 + $minute) % $long_ident_interval == 0} {
     playMsg "Core" "the_time_is";
     playSilence 100;
-    playMsg "Core" [string trimleft [clock format $epoch -format "%I"] 0];
-    playSilence 100;
-    if {[clock format $epoch -format "%k"] < 12} {
-      playMsg "Core" "AM";
-    } else {
-      playMsg "Core" "PM";
-    }
+    playTime $hour $minute;
     playSilence 500;
     if {$active_module == ""} {
       foreach module [split $loaded_modules " "] {
