@@ -6,6 +6,9 @@
 
 * Now using libsigc++ version 1.2 instead of the old and outdated 1.0.
 
+* Added a desktop menu configuration file. For example under Fedora/KDE,
+  Qtel can be found under the "Internet" menu.
+
 
 
  0.9.1 -- 09 Oct 2005
