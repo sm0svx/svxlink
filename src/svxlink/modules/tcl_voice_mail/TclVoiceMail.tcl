@@ -54,12 +54,12 @@ set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.conf";
 #
 # Read configuration file
 #
-if [file exists $cfg_etc] {
-  source $cfg_etc;
-} elseif [file exists $cfg_home] {
+if [file exists $cfg_home] {
   source $cfg_home;
+} elseif [file exists $cfg_etc] {
+  source $cfg_etc;
 } else {
-  puts "$module_name: *** ERROR: Could not find a configuration file in module \"$module_name\". Tried \"$cfg_etc\" and \"$cfg_home\"";
+  puts "$module_name: *** ERROR: Could not find a configuration file in module \"$module_name\". Tried \"$cfg_home\" and \"$cfg_etc\"";
   exit 1;
 }
 
