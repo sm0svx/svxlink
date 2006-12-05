@@ -916,7 +916,7 @@ void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
 
 void ModuleEchoLink::onDestroyMe(QsoImpl *qso)
 {
-  cout << qso->remoteCallsign() << ": Destroying QSO object" << endl;
+  //cout << qso->remoteCallsign() << ": Destroying QSO object" << endl;
   
   list<QsoImpl*>::iterator it = find(qsos.begin(), qsos.end(), qso);
   assert (it != qsos.end());
