@@ -74,8 +74,8 @@ proc manual_identification {} {
   global mycall;
   global report_ctcss;
   global active_module;
-  global prev_ident;
   global loaded_modules;
+  variable prev_ident;
   
   set epoch [clock seconds];
   set hour [clock format $epoch -format "%k"];
@@ -121,7 +121,7 @@ proc manual_identification {} {
 # expired.
 #
 proc send_rgr_sound {} {
-  global sql_rx_id;
+  variable sql_rx_id;
   
   playTone 440 500 100;
   playSilence 200;
@@ -261,7 +261,7 @@ proc transmit {is_on} {
 # Executed each time the squelch is opened or closed
 #
 proc squelch_open {rx_id is_open} {
-  global sql_rx_id;
+  variable sql_rx_id;
   #puts "The squelch is $is_open on RX $rx_id";
   set sql_rx_id $rx_id;
 }
