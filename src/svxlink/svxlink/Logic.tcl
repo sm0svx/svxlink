@@ -75,6 +75,7 @@ proc manual_identification {} {
   global report_ctcss;
   global active_module;
   global loaded_modules;
+  variable CFG_TYPE;
   variable prev_ident;
   
   set epoch [clock seconds];
@@ -84,6 +85,9 @@ proc manual_identification {} {
   
   playMsg "Core" "online";
   spellWord $mycall;
+  if {$CFG_TYPE == "Repeater"} {
+    playMsg "Core" "repeater";
+  }
   playSilence 250;
   playMsg "Core" "the_time_is";
   playTime $hour $minute;

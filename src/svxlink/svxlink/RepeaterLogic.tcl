@@ -48,31 +48,7 @@ proc no_such_module {module_id} {
 # Executed when a manual identification is initiated with the * DTMF code
 #
 proc manual_identification {} {
-  global mycall;
-  global report_ctcss;
-  global active_module;
-  
-  set Logic::prev_ident [clock seconds];
-  
-  playMsg "Core" "online";
-  spellWord $mycall;
-  playMsg "Core" "repeater";
-  playSilence 250;
-  if {$report_ctcss > 0} {
-    playMsg "Core" "pl_is";
-    playNumber $report_ctcss;
-    playMsg "Core" "hz";
-    playSilence 250;
-  }
-  if {$active_module != ""} {
-    playMsg "Core" "active_module";
-    playMsg $active_module "name";
-    append func $active_module "::status_report";
-    if {"[info procs $func]" ne ""} {
-      $func;
-    }
-    playSilence 250;
-  }
+  Logic::manual_identification;
 }
 
 
