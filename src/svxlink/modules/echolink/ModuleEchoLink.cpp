@@ -1212,9 +1212,14 @@ void ModuleEchoLink::connectByCallsign(string cmd)
   dir->findStationsByCode(cbc_stns, code, exact);
   cout << "Found " << cbc_stns.size() << " stations:\n";
   StnList::const_iterator it;
+  int cnt = 0;
   for (it = cbc_stns.begin(); it != cbc_stns.end(); ++it)
   {
     cout << *it << endl;
+    if (++cnt >= 9)
+    {
+      break;
+    }
   }
 
   if (cbc_stns.size() == 0)
@@ -1226,6 +1231,7 @@ void ModuleEchoLink::connectByCallsign(string cmd)
 
   if (cbc_stns.size() > 9)
   {
+    cout << "Too many matches. The search must be narrowed down.\n";
     processEvent("cbc_too_many_matches");
     return;
   }
