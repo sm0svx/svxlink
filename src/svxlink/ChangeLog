@@ -1,5 +1,8 @@
- 0.8.0 -- ?? ??? 2006
+ 0.8.0 -- ?? ??? 2007
 ----------------------
+
+* Implemented CW sending code in the TCL event scripts. Have a look at the
+  documentation in CW.tcl.
 
 * Bugfix in ModuleEchoLink: The outgoing greeting message would be
   mixed with incoming EchoLink traffic instead of muting the EchoLink
