@@ -20,6 +20,7 @@
 
 * Now using libsigc++ version 1.2 instead of the old and outdated 1.0.
 
+* ASYNC_AUDIO_NOTRIGGER=1 is not the default.
 
 
  0.13.0 -- 02 Dec 2005
