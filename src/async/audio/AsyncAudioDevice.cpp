@@ -439,7 +439,7 @@ AudioDevice::AudioDevice(const string& dev_name)
     samples(0)
 {
   char *use_trigger_str = getenv("ASYNC_AUDIO_NOTRIGGER");
-  use_trigger = (use_trigger_str == 0);
+  use_trigger = (use_trigger_str != 0) && (atoi(use_trigger_str) == 0);
 } /* AudioDevice::AudioDevice */
 
 
