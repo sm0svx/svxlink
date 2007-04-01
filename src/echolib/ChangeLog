@@ -8,6 +8,9 @@
 
 * Now using libsigc++ version 1.2 instead of the old and outdated 1.0.
 
+* Bugfix: The Dispatcher object instance variable was not cleared when
+  the dispatcher object was deleted.
+
 
 
  0.11.0 -- 02 Dec 2005
