@@ -222,6 +222,7 @@ bool RepeaterLogic::initialize(void)
   
   //rx().mute(false);
   rx().audioReceived.connect(slot(*this, &RepeaterLogic::audioReceived));
+  rx().toneDetected.connect(slot(*this, &RepeaterLogic::detectedTone));
   
   if (required_1750_duration > 0)
   {
@@ -229,7 +230,6 @@ bool RepeaterLogic::initialize(void)
     {
       cerr << "*** WARNING: Could not setup 1750 detection\n";
     }
-    rx().toneDetected.connect(slot(*this, &RepeaterLogic::detectedTone));
   }
   
   if ((open_on_ctcss_fq > 0) && (open_on_ctcss_duration > 0))
@@ -238,7 +238,6 @@ bool RepeaterLogic::initialize(void)
     {
       cerr << "*** WARNING: Could not setup CTCSS tone detection\n";
     }
-    rx().toneDetected.connect(slot(*this, &RepeaterLogic::detectedTone));
   }
   
   return true;
