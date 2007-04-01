@@ -366,7 +366,7 @@ proc remote_greeting {} {
 #
 proc reject_remote_connection {perm} {
   playSilence 1000;
-  if {perm} {
+  if {$perm} {
     playMsg "reject_connection";
   } else {
     playMsg "reject_connection";

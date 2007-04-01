@@ -299,7 +299,7 @@ void QsoImpl::reject(bool perm)
     sendChatData("The connection was rejected");
     msg_handler->begin();
     stringstream ss;
-    ss << module->name() << "::reject_remote_connection"
+    ss << module->name() << "::reject_remote_connection "
        << (perm ? "1" : "0");
     event_handler->processEvent(ss.str());
     msg_handler->end();
