@@ -31,6 +31,32 @@ will not be checked against the EchoLink directory server. A typical use of this
 is if you want to connect to your own svxlink server and both the server and you
 are behind a IP masquerading firewall. 
 .TP
+.B DROP
+Drop all connections where the remote callsign match this regular expression.
+No message will be sent to the remote station notifying about the drop. The
+connection will just be ignored.
+For more information see the
+.B REGULAR EXPRESSIONS
+chapter below.
+.TP
+.B REJECT
+Reject all connections where the remote callsign match this regular expression.
+A message will be sent to the remote station indicating that the connection was
+rejected.
+The DROP directive will be evaluated before REJECT.
+For more information see the
+.B REGULAR EXPRESSIONS
+chapter below.
+.TP
+.B ALLOW
+Only allow connections where the remote callsign match this regular expression.
+If the callsign doesn't match, a message will be sent to the remote station
+indicating that the connection was rejected.
+The DROP and REJECT directives will be evaluated before ALLOW.
+For more information see the
+.B REGULAR EXPRESSIONS
+chapter below.
+.TP
 .B SERVER
 The IP address or name of the EchoLink directory server to use. 
 .TP
@@ -69,6 +95,64 @@ this feature by setting this config variable to zero (or comment it out).
 A longer description that is sent to remote stations upon connection. This
 description should typically include detailed station information like QTH,
 transceiver frequency/power, antenna, CTCSS tone frequency etc.
+.
+.SH REGULAR EXPRESSIONS
+.
+Regular expressions are used in the DROP, REJECT and ALLOW configuration
+variables. A regular expression can be quite complex and the syntax is
+fully described in the
+.BR regex (7)
+manual page. This is just a quick tutorial for the most important features.
+.TP
+.B ^
+match the beginning of a string.
+.TP
+.B $
+match the end of a string.
+.TP
+.B .
+match one character.
+.TP
+.B *
+match the previous expression zero or more times.
+.TP
+.B |
+match the expression before OR after the |.
+.TP
+.B \\\\
+escape the following character. Note that backslash is also parsed by the
+SvxLink configuration parser so a backslash must actually be typed as two.
+For example to include a * in the matching pattern it must be escaped as
+\\\\*.
+.TP
+.B ()
+grouping an expression.
+.TP
+.B []
+match any of the characters inside of the brackets.
+.P
+Some examples:
+.TP
+.B ^(AB1CDE|BA5CBA-L)$
+Match AB1CDE or BA5CBA-L.
+.TP
+.B ^(AB1CDE-[LR])$
+Match AB1CDE-L or AB1CDR-R.
+.TP
+.B ^(AB1.*)$
+Match all callsigns starting with AB1.
+.TP
+.B ^(\\\\\\\\*.*\\\\\\\\*)$
+Match all conference "callsigns". We need to escape the star character since
+it would otherwise be parsed by the regular expression parser. We also need
+two backslah characters so that the SvxLink configuration reader doesn't
+parse it as an escape sequence.
+.P
+The matches in SvxLink are case insensitive so "sm3" and "SM3" are the same.
+SvxLink use extended regular expressions (see
+.BR regex (7)
+). You almost always want to start the regular expression with "^(" and end
+it with ")$" so that the whole callsign will be used in the match.
 .
 .SH FILES
 .
