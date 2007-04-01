@@ -152,7 +152,6 @@ Dispatcher *Dispatcher::instance(void)
     if (the_instance->ctrl_sock == 0)
     {
       delete the_instance;
-      the_instance = 0;
     }
   }
   
@@ -164,7 +163,8 @@ Dispatcher *Dispatcher::instance(void)
 Dispatcher::~Dispatcher(void)
 {
   delete ctrl_sock;
-  delete audio_sock;  
+  delete audio_sock;
+  the_instance = 0;
 } /* Dispatcher::~Dispatcher */
 
 
