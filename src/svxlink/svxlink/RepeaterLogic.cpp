@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <iostream>
 #include <cassert>
+#include <sstream>
 
 
 /****************************************************************************
@@ -129,14 +130,15 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
   : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(30000),
     idle_sound_timer(0), idle_sound_interval(0), repeating_enabled(false),
     preserve_idle_state(false), required_sql_open_duration(-1),
-    open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false)
+    open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false),
+    open_on_sql_timer(0), open_sql_flank(SQL_FLANK_CLOSE)
 {
-  timerclear(&sql_open_timestamp);
 } /* RepeaterLogic::RepeaterLogic */
 
 
 RepeaterLogic::~RepeaterLogic(void)
 {
+  delete open_on_sql_timer;
   delete idle_sound_timer;
   delete up_timer;
 } /* RepeaterLogic::~RepeaterLogic */
@@ -187,6 +189,23 @@ bool RepeaterLogic::initialize(void)
   if (cfg().getValue(name(), "OPEN_ON_DTMF", str))
   {
     open_on_dtmf = str.c_str()[0];
+  }
+  
+  if (cfg().getValue(name(), "OPEN_SQL_FLANK", str))
+  {
+    if (str == "OPEN")
+    {
+      open_sql_flank = SQL_FLANK_OPEN;
+    }
+    else if (str == "CLOSE")
+    {
+      open_sql_flank = SQL_FLANK_CLOSE;
+    }
+    else
+    {
+      cerr << "*** ERROR: Valid values for configuration variable "
+      	   << "OPEN_SQL_FLANK are OPEN and CLOSE.\n";
+    }
   }
   
   if (cfg().getValue(name(), "IDLE_SOUND_INTERVAL", str))
@@ -282,7 +301,7 @@ void RepeaterLogic::moduleTransmitRequest(bool do_transmit)
 {
   if (do_transmit)
   {
-    setUp(true);
+    setUp(true, false);
     setIdle(false);
   }
   Logic::moduleTransmitRequest(do_transmit);
@@ -412,7 +431,7 @@ void RepeaterLogic::setIdle(bool idle)
 } /* RepeaterLogic::setIdle */
 
 
-void RepeaterLogic::setUp(bool up)
+void RepeaterLogic::setUp(bool up, bool ident)
 {
   //printf("RepeaterLogic::setUp: up=%s\n", up ? "true" : "false");
   if (up == repeater_is_up)
@@ -422,7 +441,9 @@ void RepeaterLogic::setUp(bool up)
   
   if (up)
   {
-    processEvent("repeater_up");
+    stringstream ss;
+    ss << "repeater_up " << (ident ? "1" : "0");
+    processEvent(ss.str());
     repeater_is_up = true;
       // Enable repeating only if no statup message was played. If there is
       // a statuup message, repeating will be enabled when the message has
@@ -469,23 +490,19 @@ void RepeaterLogic::squelchOpen(bool is_open)
   {
     if (is_open)
     {
-      gettimeofday(&sql_open_timestamp, NULL);
+      if (required_sql_open_duration >= 0)
+      {
+      	open_on_sql_timer = new Timer(required_sql_open_duration);
+	open_on_sql_timer->expired.connect(
+	    slot(*this, &RepeaterLogic::openOnSqlTimerExpired));
+      }
     }
     else
     {
-      if (required_sql_open_duration >= 0)
+      if (open_on_sql_timer != 0)
       {
-	assert(timerisset(&sql_open_timestamp));
-	struct timeval tv, tv_diff;
-	gettimeofday(&tv, NULL);
-	timersub(&tv, &sql_open_timestamp, &tv_diff);
-	long diff = tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000;
-	//printf("The squelch was open for %ld milliseconds\n", diff);
-	if (diff >= required_sql_open_duration)
-	{
-	  setUp(true);
-	}
-	timerclear(&sql_open_timestamp);
+      	delete open_on_sql_timer;
+      	open_on_sql_timer = 0;
       }
       
       if (activate_on_sql_close)
@@ -515,7 +532,15 @@ void RepeaterLogic::detectedTone(float fq)
   if (!repeater_is_up)
   {
     cout << fq << " Hz tone call detected" << endl;
-    setUp(true);
+    
+    if (fq < 300.0)
+    {
+      activateOnOpenOrClose(open_sql_flank);
+    }
+    else
+    {
+      activateOnOpenOrClose(SQL_FLANK_CLOSE);
+    }
   }
 } /* RepeaterLogic::detectedTone */
 
@@ -524,6 +549,32 @@ void RepeaterLogic::playIdleSound(Timer *t)
 {
   processEvent("repeater_idle");
 } /* RepeaterLogic::playIdleSound */
+
+
+void RepeaterLogic::openOnSqlTimerExpired(Timer *t)
+{
+  delete open_on_sql_timer;
+  open_on_sql_timer = 0;
+  activateOnOpenOrClose(open_sql_flank);
+} /* RepeaterLogic::openOnSqlTimerExpired */
+
+
+void RepeaterLogic::activateOnOpenOrClose(SqlFlank flank)
+{
+  if (flank == SQL_FLANK_OPEN)
+  {
+    setUp(true, false);
+    setIdle(false);
+  }
+  else if (!rx().squelchIsOpen())
+  {
+    setUp(true);
+  }
+  else
+  {
+    activate_on_sql_close = true;
+  }
+}
 
 
 

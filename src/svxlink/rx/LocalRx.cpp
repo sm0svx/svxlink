@@ -108,18 +108,25 @@ class ToneDurationDet : public ToneDetector
 {
   public:
     ToneDurationDet(float fq, int bw, int duration)
-      : ToneDetector(fq, 8000 / bw), required_duration(duration)
+      : ToneDetector(fq, 8000 / bw), required_duration(duration),
+      	duration_timer(0)
     {
-      timerclear(&activation_timestamp);
+      //timerclear(&activation_timestamp);
       ToneDetector::activated.connect(
       	      slot(*this, &ToneDurationDet::toneActivated));
+    }
+    
+    ~ToneDurationDet(void)
+    {
+      delete duration_timer;
     }
     
     SigC::Signal1<void, float> detected;
     
   private:
     int     	    required_duration;
-    struct timeval  activation_timestamp;
+    //struct timeval  activation_timestamp;
+    Timer     	    *duration_timer;
     
     void toneActivated(bool is_activated)
     {
@@ -127,10 +134,14 @@ class ToneDurationDet : public ToneDetector
       //	     is_activated ? "ACTIVATED" : "DEACTIVATED");
       if (is_activated)
       {
-	gettimeofday(&activation_timestamp, NULL);
+	//gettimeofday(&activation_timestamp, NULL);
+	duration_timer = new Timer(required_duration);
+	duration_timer->expired.connect(
+	    slot(*this, &ToneDurationDet::toneDetected));
       }
       else
       {
+      	/*
       	assert(timerisset(&activation_timestamp));
 	struct timeval tv, tv_diff;
 	gettimeofday(&tv, NULL);
@@ -143,7 +154,18 @@ class ToneDurationDet : public ToneDetector
 	  detected(toneFq());
 	}
       	timerclear(&activation_timestamp);
+	*/
+	
+	delete duration_timer;
+	duration_timer = 0;
       }
+    }
+    
+    void toneDetected(Timer *t)
+    {
+      delete duration_timer;
+      duration_timer = 0;
+      detected(toneFq());
     }
 };
 

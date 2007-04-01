@@ -159,6 +159,11 @@ class RepeaterLogic : public Logic
 
 
   private:
+    typedef enum
+    {
+      SQL_FLANK_OPEN, SQL_FLANK_CLOSE
+    } SqlFlank;
+    
     bool      	    repeater_is_up;
     Async::Timer    *up_timer;
     int      	    idle_timeout;
@@ -166,20 +171,23 @@ class RepeaterLogic : public Logic
     int       	    idle_sound_interval;
     bool      	    repeating_enabled;
     bool      	    preserve_idle_state;
-    struct timeval  sql_open_timestamp;
     int      	    required_sql_open_duration;
     char      	    open_on_dtmf;
     bool      	    activate_on_sql_close;
     bool            no_repeat;
+    Async::Timer    *open_on_sql_timer;
+    SqlFlank  	    open_sql_flank;
     
     int audioReceived(float *samples, int count);
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);
-    void setUp(bool up);
+    void setUp(bool up, bool ident=true);
     void squelchOpen(bool is_open);
     //void txTimeout(void);
     void detectedTone(float fq);
     void playIdleSound(Async::Timer *t);
+    void openOnSqlTimerExpired(Async::Timer *t);
+    void activateOnOpenOrClose(SqlFlank flank);
 
 };  /* class RepeaterLogic */
 

@@ -189,7 +189,7 @@ proc every_minute {} {
 #
 # Executed when the repeater is activated
 #
-proc repeater_up {} {
+proc repeater_up {ident} {
   global mycall;
   global active_module;
   variable repeater_is_up;
@@ -199,19 +199,21 @@ proc repeater_up {} {
   #playMsg "../extra-sounds" "attention";
   #playSilence 250;
 
-  set now [clock seconds];
-  if {$now-$Logic::prev_ident < $Logic::min_time_between_ident} {
-    return;
-  }
-  set Logic::prev_ident $now;
-  
-  spellWord $mycall;
-  playMsg "Core" "repeater";
-  playSilence 250;
+  if {$ident} {
+    set now [clock seconds];
+    if {$now-$Logic::prev_ident < $Logic::min_time_between_ident} {
+      return;
+    }
+    set Logic::prev_ident $now;
 
-  if {$active_module != ""} {
-    playMsg "Core" "active_module";
-    playMsg $active_module "name";
+    spellWord $mycall;
+    playMsg "Core" "repeater";
+    playSilence 250;
+
+    if {$active_module != ""} {
+      playMsg "Core" "active_module";
+      playMsg $active_module "name";
+    }
   }
 }
 
