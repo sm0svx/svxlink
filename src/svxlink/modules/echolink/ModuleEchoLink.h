@@ -38,6 +38,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <vector>
 
+#include <sys/types.h>
+#include <regex.h>
 
 
 /****************************************************************************
@@ -162,6 +164,9 @@ class ModuleEchoLink : public Module
     State		state;
     StnList		cbc_stns;
     Async::Timer	*cbc_timer;
+    regex_t   	      	drop_regex;
+    regex_t   	      	reject_regex;
+    regex_t   	      	allow_regex;
 
     void moduleCleanup(void);
     void activateInit(void);

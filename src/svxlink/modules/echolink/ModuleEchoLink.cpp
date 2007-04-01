@@ -249,6 +249,51 @@ bool ModuleEchoLink::initialize(void)
   
   cfg().getValue(cfgName(), "ALLOW_IP", allow_ip);
   
+  cfg().getValue(cfgName(), "DROP", value);
+  int err = regcomp(&drop_regex, value.c_str(),
+                    REG_EXTENDED | REG_NOSUB | REG_ICASE);
+  if (err != 0)
+  {
+    size_t msg_size = regerror(err, &drop_regex, 0, 0);
+    char msg[msg_size];
+    size_t err_size = regerror(err, &drop_regex, msg, msg_size);
+    assert(err_size == msg_size);
+    cerr << "*** ERROR: Syntax error in " << cfgName() << "/DROP: "
+         << msg << endl;
+    goto init_failed;
+  }
+  
+  cfg().getValue(cfgName(), "REJECT", value);
+  err = regcomp(&reject_regex, value.c_str(),
+                REG_EXTENDED | REG_NOSUB | REG_ICASE);
+  if (err != 0)
+  {
+    size_t msg_size = regerror(err, &reject_regex, 0, 0);
+    char msg[msg_size];
+    size_t err_size = regerror(err, &reject_regex, msg, msg_size);
+    assert(err_size == msg_size);
+    cerr << "*** ERROR: Syntax error in " << cfgName() << "/REJECT: "
+         << msg << endl;
+    goto init_failed;
+  }
+  
+  if (!cfg().getValue(cfgName(), "ALLOW", value))
+  {
+    value = "^.*$";
+  }
+  err = regcomp(&allow_regex, value.c_str(),
+                REG_EXTENDED | REG_NOSUB | REG_ICASE);
+  if (err != 0)
+  {
+    size_t msg_size = regerror(err, &allow_regex, 0, 0);
+    char msg[msg_size];
+    size_t err_size = regerror(err, &allow_regex, msg, msg_size);
+    assert(err_size == msg_size);
+    cerr << "*** ERROR: Syntax error in " << cfgName() << "/ALLOW: "
+         << msg << endl;
+    goto init_failed;
+  }
+  
     // Initialize directory server communication
   dir = new Directory(server, mycall, password, location);
   dir->statusChanged.connect(slot(*this, &ModuleEchoLink::onStatusChanged));
@@ -262,13 +307,16 @@ bool ModuleEchoLink::initialize(void)
   {
     cerr << "*** ERROR: Could not create EchoLink listener (Dispatcher) "
       	    "object\n";
-    moduleCleanup();
-    return false;
+    goto init_failed;
   }
   Dispatcher::instance()->incomingConnection.connect(
       slot(*this, &ModuleEchoLink::onIncomingConnection));
 
   return true;
+  
+  init_failed:
+    moduleCleanup();
+    return false;
   
 } /* ModuleEchoLink::initialize */
 
@@ -309,6 +357,10 @@ bool ModuleEchoLink::initialize(void)
 void ModuleEchoLink::moduleCleanup(void)
 {
   //FIXME: Delete qso objects
+  
+  regfree(&allow_regex);
+  regfree(&reject_regex);
+  regfree(&drop_regex);
   
   delete dir_refresh_timer;
   dir_refresh_timer = 0;
@@ -716,6 +768,12 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   cout << "Incoming EchoLink connection from " << callsign
        << " (" << name << ") at " << ip << "\n";
   
+  if (regexec(&drop_regex, callsign.c_str(), 0, 0, 0) == 0)
+  {
+    cerr << "*** WARNING: Dropping incoming connection due to configuration.\n";
+    return;
+  }
+  
   if (qsos.size() >= max_connections)
   {
     cerr << "*** WARNING: Ignoring incoming connection (too many "
@@ -773,7 +831,14 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   
   if (qsos.size() > max_qsos)
   {
-    qso->reject();
+    qso->reject(false);
+    return;
+  }
+  
+  if ((regexec(&reject_regex, callsign.c_str(), 0, 0, 0) == 0) ||
+      (regexec(&allow_regex, callsign.c_str(), 0, 0, 0) != 0))
+  {
+    qso->reject(true);
     return;
   }
   
@@ -784,7 +849,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   
   if (!activateMe())
   {
-    qso->reject();
+    qso->reject(false);
     cerr << "*** WARNING: Could not accept incoming connection from "
       	 << callsign
 	 << " since the frontend was busy doing something else.\n";

@@ -288,17 +288,20 @@ bool QsoImpl::accept(void)
 } /* QsoImpl::accept */
 
 
-void QsoImpl::reject(void)
+void QsoImpl::reject(bool perm)
 {
-  cout << "Rejecting connection from " << remoteCallsign() << endl;
+  cout << "Rejecting connection from " << remoteCallsign()
+       << (perm ? " permanently" : " temporarily") << endl;
   reject_qso = true;
   bool success = Qso::accept();
   if (success)
   {
     sendChatData("The connection was rejected");
     msg_handler->begin();
-    event_handler->processEvent(
-      	    string(module->name()) + "::reject_remote_connection");
+    stringstream ss;
+    ss << module->name() << "::reject_remote_connection"
+       << (perm ? "1" : "0");
+    event_handler->processEvent(ss.str());
     msg_handler->end();
   }
 } /* QsoImpl::reject */

@@ -207,8 +207,10 @@ class QsoImpl : public EchoLink::Qso
     
     /**
      * @brief 	Reject the connection
+     * @param 	perm If \em true the rejection is permanent. If \em false
+     *               the rejection is temporary.
      */
-    void reject(void);
+    void reject(bool perm);
 
 
     /**

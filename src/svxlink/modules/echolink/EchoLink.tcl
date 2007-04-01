@@ -364,9 +364,14 @@ proc remote_greeting {} {
 #
 # Executed when an incoming connection is rejected
 #
-proc reject_remote_connection {} {
+proc reject_remote_connection {perm} {
   playSilence 1000;
-  playMsg "reject_connection";
+  if {perm} {
+    playMsg "reject_connection";
+  } else {
+    playMsg "reject_connection";
+    playMsg "please_try_again_later"
+  }
   playSilence 1000;
 }
 
