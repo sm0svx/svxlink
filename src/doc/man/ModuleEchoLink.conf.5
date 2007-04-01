@@ -48,11 +48,11 @@ For more information see the
 .B REGULAR EXPRESSIONS
 chapter below.
 .TP
-.B ALLOW
-Only allow connections where the remote callsign match this regular expression.
+.B ACCEPT
+Only accept connections where the remote callsign match this regular expression.
 If the callsign doesn't match, a message will be sent to the remote station
 indicating that the connection was rejected.
-The DROP and REJECT directives will be evaluated before ALLOW.
+The DROP and REJECT directives will be evaluated before ACCEPT.
 For more information see the
 .B REGULAR EXPRESSIONS
 chapter below.
@@ -98,7 +98,7 @@ transceiver frequency/power, antenna, CTCSS tone frequency etc.
 .
 .SH REGULAR EXPRESSIONS
 .
-Regular expressions are used in the DROP, REJECT and ALLOW configuration
+Regular expressions are used in the DROP, REJECT and ACCEPT configuration
 variables. A regular expression can be quite complex and the syntax is
 fully described in the
 .BR regex (7)

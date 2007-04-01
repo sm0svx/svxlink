@@ -277,19 +277,19 @@ bool ModuleEchoLink::initialize(void)
     goto init_failed;
   }
   
-  if (!cfg().getValue(cfgName(), "ALLOW", value))
+  if (!cfg().getValue(cfgName(), "ACCEPT", value))
   {
     value = "^.*$";
   }
-  err = regcomp(&allow_regex, value.c_str(),
+  err = regcomp(&accept_regex, value.c_str(),
                 REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
   {
-    size_t msg_size = regerror(err, &allow_regex, 0, 0);
+    size_t msg_size = regerror(err, &accept_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, &allow_regex, msg, msg_size);
+    size_t err_size = regerror(err, &accept_regex, msg, msg_size);
     assert(err_size == msg_size);
-    cerr << "*** ERROR: Syntax error in " << cfgName() << "/ALLOW: "
+    cerr << "*** ERROR: Syntax error in " << cfgName() << "/ACCEPT: "
          << msg << endl;
     goto init_failed;
   }
@@ -358,7 +358,7 @@ void ModuleEchoLink::moduleCleanup(void)
 {
   //FIXME: Delete qso objects
   
-  regfree(&allow_regex);
+  regfree(&accept_regex);
   regfree(&reject_regex);
   regfree(&drop_regex);
   
@@ -836,7 +836,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   }
   
   if ((regexec(&reject_regex, callsign.c_str(), 0, 0, 0) == 0) ||
-      (regexec(&allow_regex, callsign.c_str(), 0, 0, 0) != 0))
+      (regexec(&accept_regex, callsign.c_str(), 0, 0, 0) != 0))
   {
     qso->reject(true);
     return;

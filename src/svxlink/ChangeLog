@@ -100,7 +100,7 @@
 
 * SvxLink now announce the current time at manual identification.
 
-* ModuleEchoLink: New configuration variables DROP, REJECT and ALLOW added
+* ModuleEchoLink: New configuration variables DROP, REJECT and ACCEPT added
   to make it possible to filter on callsign which stations are allowed
   to connect.
 

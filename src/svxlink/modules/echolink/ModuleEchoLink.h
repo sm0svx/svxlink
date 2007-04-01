@@ -166,7 +166,7 @@ class ModuleEchoLink : public Module
     Async::Timer	*cbc_timer;
     regex_t   	      	drop_regex;
     regex_t   	      	reject_regex;
-    regex_t   	      	allow_regex;
+    regex_t   	      	accept_regex;
 
     void moduleCleanup(void);
     void activateInit(void);
