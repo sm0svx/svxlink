@@ -528,7 +528,7 @@ void RepeaterLogic::txTimeout(void)
 
 void RepeaterLogic::detectedTone(float fq)
 {
-  if (!repeater_is_up)
+  if (!repeater_is_up && !activate_on_sql_close)
   {
     cout << fq << " Hz tone call detected" << endl;
     
