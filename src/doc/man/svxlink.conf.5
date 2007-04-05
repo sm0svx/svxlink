@@ -283,7 +283,14 @@ be ignored.
 .B OPEN_ON_SQL
 Use this configuration variable if it should be possible to open the repeater just by
 keeping the squelch open for a while. The value to set is the minimum number of
-millisecons the squelch must be open for the repeater to open. 
+milliseconds the squelch must be open for the repeater to open.
+.TP
+.B OPEN_SQL_FLANK
+Determines if OPEN_ON_SQL and OPEN_ON_CTCSS should activate the repeater when
+the squelch open or close. If set to OPEN, the repeater will activate and start
+retransmitting audio immediately. No identification will be sent. If set to
+CLOSE, the repeater will not activate until the squelch close. An
+identification will be sent in this case.
 .TP
 .B IDLE_SOUND_INTERVAL
 When the repeater is idle, a sound is played. Specify the interval in milliseconds between

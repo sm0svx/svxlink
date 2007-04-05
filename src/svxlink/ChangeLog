@@ -104,6 +104,10 @@
   to make it possible to filter on callsign which stations are allowed
   to connect.
 
+* RepeaterLogic: New configuration variable OPEN_SQL_FLANK which can be set
+  to either OPEN or CLOSE to control if the repeater should activate on
+  squelch open or squelch close for OPEN_ON_SQL and OPEN_ON_CTCSS.
+
 
 
  0.7.0 -- 02 Dec 2005
