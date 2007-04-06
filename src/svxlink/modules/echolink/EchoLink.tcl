@@ -358,6 +358,9 @@ proc command_failed {cmd} {
 
 #
 # Executed when the listen only feature is activated or deactivated
+#   status    - The current status of the feature (0=deactivated, 1=activated)
+#   activate  - The requested new status of the feature
+#               (0=deactivate, 1=activate)
 #
 proc listen_only {status activate} {
   if {$status == $activate} {
