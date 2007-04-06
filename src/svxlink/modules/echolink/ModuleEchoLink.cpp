@@ -37,6 +37,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <cassert>
 #include <sstream>
+#include <cstdlib>
+#include <vector>
 
 
 /****************************************************************************
@@ -467,7 +469,7 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
     return;
   }
   
-  if (cmd == "")
+  if (cmd.size() == 0)      	    // Disconnect node or deactivate module
   {
     if ((qsos.size() != 0) &&
       	(qsos.back()->currentState() != Qso::STATE_DISCONNECTED))
@@ -479,58 +481,15 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
       deactivateMe();
     }
   }
-  else if (cmd == "0")
-  {
-    playHelpMsg();
-  }
-  else if (cmd == "1")
-  {
-    stringstream ss;
-    ss << "list_connected_stations [list";
-    list<QsoImpl*>::iterator it;
-    for (it=qsos.begin(); it!=qsos.end(); ++it)
-    {
-      if ((*it)->currentState() != Qso::STATE_DISCONNECTED)
-      {
-      	ss << " " << (*it)->remoteCallsign();
-      }
-    }
-    ss << "]";
-    processEvent(ss.str());
-  }
-  else if (cmd == "2")
-  {
-    stringstream ss;
-    ss << "play_node_id ";
-    const StationData *station = dir->findCall(dir->callsign());
-    ss << (station ? station->id() : 0);
-    processEvent(ss.str());
-  }
-  else if (cmd[0] == '5')
-  {
-    stringstream ss;
-    
-    if (cmd.size() < 2)
-    {
-      ss << "command_failed " << cmd;
-      processEvent(ss.str());
-      return;
-    }
-    
-    bool activate = (cmd[1] != '0');
-    
-    ss.clear();
-    ss << "listen_only " << (listen_only ? "1 " : "0 ")
-       << (activate ? "1" : "0");
-    processEvent(ss.str());
-    
-    listen_only = activate;
-  }
-  else if (cmd[0] == '*')
+  else if (cmd[0] == '*')   // Connect by callsign
   {
     connectByCallsign(cmd);
   }
-  else if (qsos.size() < max_qsos)
+  else if (cmd.size() < 4)  // Dispatch to command handling
+  {
+    handleCommand(cmd);
+  }
+  else if (qsos.size() < max_qsos)    // Connect to specified node
   {
     if ((dir->status() == StationData::STAT_OFFLINE) ||
       	(dir->status() == StationData::STAT_UNKNOWN))
@@ -1430,6 +1389,132 @@ int ModuleEchoLink::numConnectedStations(void)
   
 } /* ModuleEchoLink::numConnectedStations */
 
+
+void ModuleEchoLink::handleCommand(const string& cmd)
+{
+  if (cmd[0] == '0')	    // Help
+  {
+    playHelpMsg();
+  }
+  else if (cmd[0] == '1')   // Connection status
+  {
+    if (cmd.size() != 1)
+    {
+      commandFailed(cmd);
+      return;
+    }
+    
+    stringstream ss;
+    ss << "list_connected_stations [list";
+    list<QsoImpl*>::iterator it;
+    for (it=qsos.begin(); it!=qsos.end(); ++it)
+    {
+      if ((*it)->currentState() != Qso::STATE_DISCONNECTED)
+      {
+      	ss << " " << (*it)->remoteCallsign();
+      }
+    }
+    ss << "]";
+    processEvent(ss.str());
+  }
+  else if (cmd[0] == '2')   // Play own node id
+  {
+    if (cmd.size() != 1)
+    {
+      commandFailed(cmd);
+      return;
+    }
+    
+    stringstream ss;
+    ss << "play_node_id ";
+    const StationData *station = dir->findCall(dir->callsign());
+    ss << (station ? station->id() : 0);
+    processEvent(ss.str());
+  }
+  else if (cmd[0] == '3')   // Random connect
+  {
+    stringstream ss;
+    
+    if (cmd.size() != 2)
+    {
+      commandFailed(cmd);
+      return;
+    }
+    
+    vector<StationData> nodes;
+    
+    if (cmd[1] == '1')	// Random connect to link or repeater
+    {
+      const list<StationData>& links = dir->links();
+      const list<StationData>& repeaters = dir->repeaters();
+      list<StationData>::const_iterator it;
+      for (it=links.begin(); it!=links.end(); it++)
+      {
+	nodes.push_back(*it);
+      }
+      for (it=repeaters.begin(); it!=repeaters.end(); it++)
+      {
+	nodes.push_back(*it);
+      }
+    }
+    else if (cmd[1] == '2') // Random connect to conference
+    {
+      const list<StationData>& conferences = dir->conferences();
+      list<StationData>::const_iterator it;
+      for (it=conferences.begin(); it!=conferences.end(); it++)
+      {
+	nodes.push_back(*it);
+      }
+    }
+    else
+    {
+      commandFailed(cmd);
+      return;
+    }
+
+    double count = nodes.size();
+    srand(time(NULL));
+    size_t random_idx = (size_t)(count * ((double)rand() / (1.0 + RAND_MAX)));
+    StationData station = nodes[random_idx];
+    
+    cout << "Creating random connection to node:\n";
+    cout << station << endl;
+    
+    createOutgoingConnection(station);
+  }
+  else if (cmd[0] == '5')   // Listen only
+  {
+    if (cmd.size() < 2)
+    {
+      commandFailed(cmd);
+      return;
+    }
+    
+    bool activate = (cmd[1] != '0');
+    
+    stringstream ss;
+    ss << "listen_only " << (listen_only ? "1 " : "0 ")
+       << (activate ? "1" : "0");
+    processEvent(ss.str());
+    
+    listen_only = activate;
+  }
+  else
+  {
+    stringstream ss;
+    ss << "unknown_command " << cmd;
+    processEvent(ss.str());
+  }
+
+} /* ModuleEchoLink::handleCommand */
+
+
+void ModuleEchoLink::commandFailed(const string& cmd)
+{
+  stringstream ss;
+  ss << "command_failed " << cmd;
+  processEvent(ss.str());
+} /* ModuleEchoLink::commandFailed */
 
 
 /*

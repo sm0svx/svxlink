@@ -352,7 +352,16 @@ proc play_node_id {my_node_id} {
 #
 proc command_failed {cmd} {
   spellWord $cmd;
-  playMsg "operation_failed"
+  playMsg "operation_failed";
+}
+
+
+#
+# Executed when an unrecognized command has been received.
+#
+proc unknown_command {cmd} {
+  spellWord $cmd;
+  playMsg "unknown_command";
 }
 
 

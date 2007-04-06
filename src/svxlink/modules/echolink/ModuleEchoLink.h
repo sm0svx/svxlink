@@ -202,6 +202,8 @@ class ModuleEchoLink : public Module
     void handleConnectByCall(const std::string& cmd);
     void cbcTimeout(Async::Timer *t);
     int numConnectedStations(void);
+    void handleCommand(const std::string& cmd);
+    void commandFailed(const std::string& cmd);
 
 };  /* class ModuleEchoLink */
 
