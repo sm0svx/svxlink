@@ -311,13 +311,17 @@ proc checkPeriodicIdentify {} {
   variable need_ident;
   variable CFG_TYPE;
   
-  set epoch [clock seconds];
-  set hour [clock format $epoch -format "%k"];
-  regexp {([1-5]?\d)$} [clock format $epoch -format "%M"] -> minute;
-  
   set now [clock seconds];
-  if {($hour * 60 + $minute) % $long_ident_interval != 0} {
-    if {$now-$prev_ident < $min_time_between_ident} {
+  set hour [clock format $now -format "%k"];
+  regexp {([1-5]?\d)$} [clock format $now -format "%M"] -> minute;
+  
+  set short_ident_now \
+      	    [expr {($hour * 60 + $minute) % $short_ident_interval == 0}];
+  set long_ident_now \
+      	    [expr {($hour * 60 + $minute) % $long_ident_interval == 0}];
+  
+  if {!$long_ident_now} {
+    if {$now - $prev_ident < $min_time_between_ident} {
       return;
     }
     if {$ident_only_after_tx && !$need_ident} {
@@ -325,7 +329,7 @@ proc checkPeriodicIdentify {} {
     }
   }
 
-  if {($hour * 60 + $minute) % $short_ident_interval == 0} {
+  if {$short_ident_now} {
     puts "Sending identification...";
     spellWord $mycall;
     if {$CFG_TYPE == "Simplex"} {
@@ -337,7 +341,8 @@ proc checkPeriodicIdentify {} {
     set prev_ident $now;
     set need_ident 0;
   }
-  if {($hour * 60 + $minute) % $long_ident_interval == 0} {
+  
+  if {$long_ident_now} {
     playMsg "Core" "the_time_is";
     playSilence 100;
     playTime $hour $minute;
