@@ -119,6 +119,10 @@
 * ModuleEchoLink: New feature "reconnect to last disconnected". Use command
   4 to reconnect to the station that was the last one to disconnect.
 
+* Now possible to process received DTMF digits and commands in the logic
+  core TCL event scripts. New event functions: dtmf_digit_received and
+  dtmf_cmd_received.
+
 
 
  0.7.0 -- 02 Dec 2005
