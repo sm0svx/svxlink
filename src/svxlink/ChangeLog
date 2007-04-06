@@ -108,6 +108,11 @@
   to either OPEN or CLOSE to control if the repeater should activate on
   squelch open or squelch close for OPEN_ON_SQL and OPEN_ON_CTCSS.
 
+* ModuleEchoLink: New feature "listen only" added. Using command 51 one can
+  activate a mode where SvxLink will not transmit received audio to remote
+  EchoLink stations. Neither locally received nor remotely received audio
+  will be sent. Deactivate using 50.
+
 
 
  0.7.0 -- 02 Dec 2005
