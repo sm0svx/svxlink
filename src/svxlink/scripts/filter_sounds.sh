@@ -123,6 +123,10 @@ TRIM_SOUNDS="\
   Default/slash \
   Default/dash \
   Default/unknown \
+  Default/activating \
+  Default/deactivating \
+  Default/already_active \
+  Default/not_active \
   Core/online \
   Core/active_module \
   Core/repeater \
@@ -154,6 +158,7 @@ TRIM_SOUNDS="\
   EchoLink/node_id_is \
   EchoLink/conf-echotest \
   EchoLink/conf-linux \
+  EchoLink/listen_only \
   TclVoiceMail/messages_for \
   TclVoiceMail/new_messages \
   TclVoiceMail/rec_sending_to \
