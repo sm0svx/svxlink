@@ -116,6 +116,9 @@
 * ModuleEchoLink: New feature "random connect" added. Use 31 to connect to
   a random link or repeater. Use 32 to connect to a random conference.
 
+* ModuleEchoLink: New feature "reconnect to last disconnected". Use command
+  4 to reconnect to the station that was the last one to disconnect.
+
 
 
  0.7.0 -- 02 Dec 2005
