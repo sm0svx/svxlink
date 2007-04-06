@@ -347,6 +347,32 @@ proc play_node_id {my_node_id} {
 }
 
 
+#
+# Executed when an entered command failed or have bad syntax.
+#
+proc command_failed {cmd} {
+  spellWord $cmd;
+  playMsg "operation_failed"
+}
+
+
+#
+# Executed when the listen only feature is activated or deactivated
+#
+proc listen_only {status activate} {
+  if {$status == $activate} {
+    playMsg "listen_only";
+    playMsg [expr {$status ? "already_active" : "not_active"}];
+  } else {
+    puts "[expr {$activate ? "Activating" : "Deactivating"}]\
+          EchoLink listen only mode.";
+    playMsg [expr {$activate ? "activating" : "deactivating"}];
+    playMsg "listen_only";
+  }
+}
+
+
+
 #-----------------------------------------------------------------------------
 # The events below are for remote EchoLink announcements. Sounds are not
 # played over the local transmitter but are sent to the remote station.

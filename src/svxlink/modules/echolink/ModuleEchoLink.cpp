@@ -148,7 +148,8 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
   : Module(dl_handle, logic, cfg_name), dir(0), dir_refresh_timer(0),
     remote_activation(false), pending_connect_id(-1), last_message(""),
     outgoing_con_pending(0), max_connections(1), max_qsos(1), talker(0),
-    squelch_is_open(false), state(STATE_NORMAL), cbc_timer(0)
+    squelch_is_open(false), state(STATE_NORMAL), cbc_timer(0),
+    listen_only(false)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
@@ -389,6 +390,7 @@ void ModuleEchoLink::activateInit(void)
 {
   updateEventVariables();
   state = STATE_NORMAL;
+  listen_only = false;
 } /* activateInit */
 
 
@@ -411,6 +413,7 @@ void ModuleEchoLink::deactivateCleanup(void)
   delete cbc_timer;
   cbc_timer = 0;
   state = STATE_NORMAL;
+  listen_only = false;
 } /* deactivateCleanup */
 
 
@@ -503,6 +506,26 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
     ss << (station ? station->id() : 0);
     processEvent(ss.str());
   }
+  else if (cmd[0] == '5')
+  {
+    stringstream ss;
+    
+    if (cmd.size() < 2)
+    {
+      ss << "command_failed " << cmd;
+      processEvent(ss.str());
+      return;
+    }
+    
+    bool activate = (cmd[1] != '0');
+    
+    ss.clear();
+    ss << "listen_only " << (listen_only ? "1 " : "0 ")
+       << (activate ? "1" : "0");
+    processEvent(ss.str());
+    
+    listen_only = activate;
+  }
   else if (cmd[0] == '*')
   {
     connectByCallsign(cmd);
@@ -578,6 +601,11 @@ void ModuleEchoLink::squelchOpen(bool is_open)
  */
 int ModuleEchoLink::audioFromRx(float *samples, int count)
 {
+  if (listen_only)
+  {
+    return count;
+  }
+
     // FIXME: FIFO for saving samples if writing message
   if (qsos.size() > 0)
   {
@@ -1137,6 +1165,11 @@ int ModuleEchoLink::audioFromRemote(float *samples, int count, QsoImpl *qso)
 void ModuleEchoLink::audioFromRemoteRaw(QsoImpl::GsmVoicePacket *packet,
       	QsoImpl *qso)
 {
+  if (listen_only)
+  {
+    return;
+  }
+
   if ((qso == talker) && !squelch_is_open)
   {
     list<QsoImpl*>::iterator it;

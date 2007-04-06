@@ -167,6 +167,7 @@ class ModuleEchoLink : public Module
     regex_t   	      	drop_regex;
     regex_t   	      	reject_regex;
     regex_t   	      	accept_regex;
+    bool      	      	listen_only;
 
     void moduleCleanup(void);
     void activateInit(void);
