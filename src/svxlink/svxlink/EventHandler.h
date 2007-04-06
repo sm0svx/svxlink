@@ -147,6 +147,7 @@ class EventHandler : public SigC::Object
     bool initialize(void);
     void setVariable(const std::string& name, const std::string& value);
     bool processEvent(const std::string& event);
+    const std::string eventResult(void) const;
     
     SigC::Signal1<void, const std::string&> playFile;
     SigC::Signal1<void, int>   	      	    playSilence;

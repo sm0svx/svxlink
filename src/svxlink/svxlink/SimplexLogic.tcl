@@ -188,6 +188,31 @@ proc checkPeriodicIdentify {} {
 }
 
 
+#
+# Executed when a DTMF digit has been received
+#   digit     - The detected DTMF digit
+#   duration  - The duration, in milliseconds, of the digit
+#
+# Return 1 to hide the digit from further processing is SvxLink or
+# return 0 to make SvxLink continue processing as normal.
+#
+proc dtmf_digit_received {digit duration} {
+  return [Logic::dtmf_digit_received $digit $duration];
+}
+
+
+#
+# Executed when a DTMF command has been received
+#   cmd - The command
+#
+# Return 1 to hide the command from further processing is SvxLink or
+# return 0 to make SvxLink continue processing as normal.
+#
+proc dtmf_cmd_received {cmd} {
+  return [Logic::dtmf_cmd_received $cmd];
+}
+
+
 
 # end of namespace
 }

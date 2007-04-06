@@ -202,6 +202,11 @@ bool EventHandler::processEvent(const string& event)
 } /* EventHandler::processEvent */
 
 
+const string EventHandler::eventResult(void) const
+{
+  return Tcl_GetStringResult(interp);
+} /* EventHandler::eventResult */
+
 
 /****************************************************************************
  *

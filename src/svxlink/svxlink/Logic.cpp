@@ -547,6 +547,14 @@ void Logic::dtmfDigitDetected(char digit, int duration)
 {
   cout << name() << ": digit=" << digit << endl;
   
+  stringstream ss;
+  ss << "dtmf_digit_received " << digit << " " << duration;
+  processEvent(ss.str());
+  if (atoi(event_handler->eventResult().c_str()) != 0)
+  {
+    return;
+  }
+  
   if (active_module != 0)
   {
     if (active_module->dtmfDigitReceived(digit, duration))
@@ -980,6 +988,14 @@ void Logic::processCommandQueue(void)
   list<string>::iterator it;
   for (it=cmd_queue.begin(); it!=cmd_queue.end(); ++it)
   {
+    stringstream ss;
+    ss << "dtmf_cmd_received " << *it;
+    processEvent(ss.str());
+    if (atoi(event_handler->eventResult().c_str()) != 0)
+    {
+      continue;
+    }
+    
     if (*it == "*")
     {
       processEvent("manual_identification");
@@ -1000,21 +1016,6 @@ void Logic::processCommandQueue(void)
 	ss << "unknown_command " << *it;
       	processEvent(ss.str());
       }
-      
-      /*
-      int module_id = atoi((*it).c_str());
-      Module *module = findModule(module_id);
-      if (module != 0)
-      {
-	activateModule(module);
-      }
-      else
-      {
-	stringstream ss;
-	ss << "no_such_module " << module_id;
-	processEvent(ss.str());
-      }
-      */
     }
   }
   
