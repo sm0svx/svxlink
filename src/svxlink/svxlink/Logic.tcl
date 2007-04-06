@@ -324,7 +324,6 @@ proc checkPeriodicIdentify {} {
       return;
     }
   }
-  set need_ident 0;
 
   if {($hour * 60 + $minute) % $short_ident_interval == 0} {
     puts "Sending identification...";
@@ -336,6 +335,7 @@ proc checkPeriodicIdentify {} {
     }
     playSilence 500;
     set prev_ident $now;
+    set need_ident 0;
   }
   if {($hour * 60 + $minute) % $long_ident_interval == 0} {
     playMsg "Core" "the_time_is";
