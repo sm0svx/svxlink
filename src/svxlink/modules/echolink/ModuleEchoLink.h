@@ -145,29 +145,30 @@ class ModuleEchoLink : public Module
     } State;
     typedef std::vector<EchoLink::StationData> StnList;
 
-    EchoLink::Directory *dir;
-    Async::Timer      	*dir_refresh_timer;
-    std::string       	mycall;
-    std::string       	location;
-    std::string       	sysop_name;
-    std::string       	description;
-    std::string       	allow_ip;
-    bool      	      	remote_activation;
-    int       	      	pending_connect_id;
-    std::string       	last_message;
-    QsoImpl		*outgoing_con_pending;
-    std::list<QsoImpl*>	qsos;
-    unsigned       	max_connections;
-    unsigned       	max_qsos;
-    QsoImpl   	      	*talker;
-    bool      	      	squelch_is_open;
-    State		state;
-    StnList		cbc_stns;
-    Async::Timer	*cbc_timer;
-    regex_t   	      	drop_regex;
-    regex_t   	      	reject_regex;
-    regex_t   	      	accept_regex;
-    bool      	      	listen_only;
+    EchoLink::Directory   *dir;
+    Async::Timer      	  *dir_refresh_timer;
+    std::string       	  mycall;
+    std::string       	  location;
+    std::string       	  sysop_name;
+    std::string       	  description;
+    std::string       	  allow_ip;
+    bool      	      	  remote_activation;
+    int       	      	  pending_connect_id;
+    std::string       	  last_message;
+    QsoImpl		  *outgoing_con_pending;
+    std::list<QsoImpl*>	  qsos;
+    unsigned       	  max_connections;
+    unsigned       	  max_qsos;
+    QsoImpl   	      	  *talker;
+    bool      	      	  squelch_is_open;
+    State		  state;
+    StnList		  cbc_stns;
+    Async::Timer	  *cbc_timer;
+    regex_t   	      	  drop_regex;
+    regex_t   	      	  reject_regex;
+    regex_t   	      	  accept_regex;
+    bool      	      	  listen_only;
+    EchoLink::StationData last_disc_stn;
 
     void moduleCleanup(void);
     void activateInit(void);
@@ -204,6 +205,7 @@ class ModuleEchoLink : public Module
     int numConnectedStations(void);
     void handleCommand(const std::string& cmd);
     void commandFailed(const std::string& cmd);
+    void connectByNodeId(int node_id);
 
 };  /* class ModuleEchoLink */
 

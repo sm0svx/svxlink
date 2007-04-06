@@ -489,34 +489,9 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
   {
     handleCommand(cmd);
   }
-  else if (qsos.size() < max_qsos)    // Connect to specified node
-  {
-    if ((dir->status() == StationData::STAT_OFFLINE) ||
-      	(dir->status() == StationData::STAT_UNKNOWN))
-    {
-      cout << "*** ERROR: Directory server offline (status="
-      	   << dir->statusStr() << "). Can't create outgoing connection.\n";
-      processEvent("directory_server_offline");
-      return;
-    }
-    
-    int station_id = atoi(cmd.c_str());
-    const StationData *station = dir->findStation(station_id);
-    if (station != 0)
-    {
-      createOutgoingConnection(*station);
-    }
-    else
-    {
-      cout << "EchoLink ID " << station_id << " is not in the list. "
-      	      "Refreshing the list...\n";
-      getDirectoryList();
-      pending_connect_id = station_id;
-    }
-  }
   else
   {
-    processEvent("no_more_connections_allowed");
+    connectByNodeId(atoi(cmd.c_str()));
   }
 } /* dtmfCmdReceived */
 
@@ -878,6 +853,9 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
       qsos.erase(it);
       qsos.push_front(qso);
       updateEventVariables();
+      
+      last_disc_stn = qso->stationData();
+      
       if (remote_activation &&
       	  (qsos.back()->currentState() == Qso::STATE_DISCONNECTED))
       {
@@ -1482,6 +1460,17 @@ void ModuleEchoLink::handleCommand(const string& cmd)
     
     createOutgoingConnection(station);
   }
+  else if (cmd[0] == '4')   // Reconnect to the last disconnected station
+  {
+    if ((cmd.size() != 1) || last_disc_stn.callsign().empty())
+    {
+      commandFailed(cmd);
+      return;
+    }
+    
+    cout << "Trying to reconnect to " << last_disc_stn.callsign() << endl;
+    connectByNodeId(last_disc_stn.id());
+  }
   else if (cmd[0] == '5')   // Listen only
   {
     if (cmd.size() < 2)
@@ -1515,6 +1504,40 @@ void ModuleEchoLink::commandFailed(const string& cmd)
   ss << "command_failed " << cmd;
   processEvent(ss.str());
 } /* ModuleEchoLink::commandFailed */
+
+
+void ModuleEchoLink::connectByNodeId(int node_id)
+{
+  if (qsos.size() < max_qsos)
+  {
+    if ((dir->status() == StationData::STAT_OFFLINE) ||
+      	(dir->status() == StationData::STAT_UNKNOWN))
+    {
+      cout << "*** ERROR: Directory server offline (status="
+      	   << dir->statusStr() << "). Can't create outgoing connection.\n";
+      processEvent("directory_server_offline");
+      return;
+    }
+    
+    const StationData *station = dir->findStation(node_id);
+    if (station != 0)
+    {
+      createOutgoingConnection(*station);
+    }
+    else
+    {
+      cout << "EchoLink ID " << node_id << " is not in the list. "
+      	      "Refreshing the list...\n";
+      getDirectoryList();
+      pending_connect_id = node_id;
+    }
+  }
+  else
+  {
+    processEvent("no_more_connections_allowed");
+  }
+} /* ModuleEchoLink::connectByNodeId */
+
 
 
 /*

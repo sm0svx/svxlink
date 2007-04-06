@@ -211,6 +211,12 @@ class QsoImpl : public EchoLink::Qso
      *               the rejection is temporary.
      */
     void reject(bool perm);
+    
+    /**
+     * @brief 	Return the StationData object associated with this QSO
+     * @return	Returns a reference to the associated StationData object
+     */
+    const EchoLink::StationData& stationData(void) const { return station; }
 
 
     /**
@@ -258,6 +264,10 @@ class QsoImpl : public EchoLink::Qso
      */
     SigC::Signal2<void, Qso::GsmVoicePacket*, QsoImpl*> audioReceivedRaw;
     
+    /**
+     * @brief 	A signal that is emitted when the qso object should be destroyed
+     * @param 	qso The QSO object
+     */
     SigC::Signal1<void, QsoImpl*> destroyMe;
     
     
