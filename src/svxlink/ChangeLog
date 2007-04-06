@@ -113,6 +113,9 @@
   EchoLink stations. Neither locally received nor remotely received audio
   will be sent. Deactivate using 50.
 
+* ModuleEchoLink: New feature "random connect" added. Use 31 to connect to
+  a random link or repeater. Use 32 to connect to a random conference.
+
 
 
  0.7.0 -- 02 Dec 2005
