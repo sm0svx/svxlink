@@ -267,6 +267,7 @@ class Logic : public SigC::Object
     int audioReceived(float *samples, int len);
     void everyMinute(Async::Timer *t);
     void allDtmfDigitsSent(void);
+    void dtmfDigitDetectedP(char digit, int duration);
 
 };  /* class Logic */
 
