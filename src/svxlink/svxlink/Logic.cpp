@@ -278,7 +278,7 @@ bool Logic::initialize(void)
   }
   rx().squelchOpen.connect(slot(*this, &Logic::squelchOpen));
   rx().audioReceived.connect(slot(*this, &Logic::audioReceived));
-  rx().dtmfDigitDetected.connect(slot(*this, &Logic::dtmfDigitDetected));
+  rx().dtmfDigitDetected.connect(slot(*this, &Logic::dtmfDigitDetectedP));
   rx().mute(false);
     
   m_tx = Tx::create(cfg(), tx_name);
@@ -545,16 +545,6 @@ Module *Logic::findModule(const string& name)
 
 void Logic::dtmfDigitDetected(char digit, int duration)
 {
-  cout << name() << ": digit=" << digit << endl;
-  
-  stringstream ss;
-  ss << "dtmf_digit_received " << digit << " " << duration;
-  processEvent(ss.str());
-  if (atoi(event_handler->eventResult().c_str()) != 0)
-  {
-    return;
-  }
-  
   if (active_module != 0)
   {
     if (active_module->dtmfDigitReceived(digit, duration))
@@ -989,7 +979,7 @@ void Logic::processCommandQueue(void)
   for (it=cmd_queue.begin(); it!=cmd_queue.end(); ++it)
   {
     stringstream ss;
-    ss << "dtmf_cmd_received " << *it;
+    ss << "dtmf_cmd_received \"" << *it << "\"";
     processEvent(ss.str());
     if (atoi(event_handler->eventResult().c_str()) != 0)
     {
@@ -1176,6 +1166,23 @@ void Logic::allDtmfDigitsSent(void)
 {
   transmitCheck();
 } /* Logic::allDtmfDigitsSent */
+
+
+void Logic::dtmfDigitDetectedP(char digit, int duration)
+{
+  cout << name() << ": digit=" << digit << endl;
+  
+  stringstream ss;
+  ss << "dtmf_digit_received " << digit << " " << duration;
+  processEvent(ss.str());
+  if (atoi(event_handler->eventResult().c_str()) != 0)
+  {
+    return;
+  }
+  
+  dtmfDigitDetected(digit, duration);
+  
+} /* Logic::dtmfDigitDetected */
 
 
 
