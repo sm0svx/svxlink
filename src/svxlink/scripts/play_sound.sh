@@ -22,8 +22,8 @@ process()
   filter="highpass 300 highpass 300 highpass 300"
   
   # Front and back levels for silence trimming
-  silence_front_level="-50d"
-  silence_back_level="-50d"
+  silence_front_level="-45d"
+  silence_back_level="-45d"
   
   # Calculate maximum gain without clipping. Leave headroom of about 3dB.
   gain=$(sox -traw -r8000 -sw $1 -traw /dev/null stat -v 2>&1)
