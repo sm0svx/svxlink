@@ -96,7 +96,7 @@ proc manual_identification {} {
     playMsg "Core" "pl_is";
     playNumber $report_ctcss;
     playMsg "Core" "hz";
-    playSilence 500;
+    playSilence 300;
   }
   if {$active_module != ""} {
     playMsg "Core" "active_module";
@@ -116,6 +116,7 @@ proc manual_identification {} {
       }
     }
   }
+  playMsg "Default" "press_0_for_help"
   playSilence 250;
 }
 
