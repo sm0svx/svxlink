@@ -27,6 +27,7 @@ SOFTLINK_SOUNDS="\
 
 MAXIMIZE_SOUNDS="\
   Default/help \
+  Default/press_0_for_help \
   Help/help \
   Help/choose_module \
   Parrot/help \
