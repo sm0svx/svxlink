@@ -186,7 +186,6 @@ class Logic : public SigC::Object
     Module *findModule(const std::string& name);
     std::list<Module*> moduleList(void) const { return modules; }
 
-    virtual void dtmfDigitDetected(char digit, int duration);
     const std::string& callsign(void) const { return m_callsign; }
 
     Async::Config &cfg(void) const { return m_cfg; }
@@ -197,6 +196,10 @@ class Logic : public SigC::Object
     
     void sendDtmf(const std::string& digits);
     
+    void injectDtmfDigit(char digit, int duration_ms)
+    {
+      dtmfDigitDetectedP(digit, duration_ms);
+    }
     
   protected:    
     virtual void squelchOpen(bool is_open);
@@ -207,6 +210,7 @@ class Logic : public SigC::Object
     virtual void allMsgsWritten(void);
     virtual void allTxSamplesFlushed(void);
     virtual void remoteLogicTransmitRequest(bool do_tx);
+    virtual void dtmfDigitDetected(char digit, int duration);
     
     void clearPendingSamples(void);
     void logicTransmitRequest(bool do_transmit);

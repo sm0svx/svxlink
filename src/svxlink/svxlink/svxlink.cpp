@@ -530,7 +530,7 @@ static void stdinHandler(FdWatch *w)
     case '4': case '5': case '6': case '7':
     case '8': case '9': case 'A': case 'B':
     case 'C': case 'D': case '*': case '#':
-      logic_vec[0]->dtmfDigitDetected(buf[0], 100);
+      logic_vec[0]->injectDtmfDigit(buf[0], 100);
       break;
     
     default:
