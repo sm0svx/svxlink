@@ -123,6 +123,10 @@
   core TCL event scripts. New event functions: dtmf_digit_received and
   dtmf_cmd_received.
 
+* Added files to set full access permissions on the serial and OSS audio
+  devices: /etc/udev/rules.d/10-svxlink.rules and
+  /etc/security/console.perms.d/90-svxlink.perms.
+
 
 
  0.7.0 -- 02 Dec 2005
