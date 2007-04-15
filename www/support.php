@@ -15,9 +15,9 @@ support:
       people on the mailing list that have gotten SvxLink to work under other
       distributions.</LI>
   <LI>Documentation. All mails sent to the mailing list get stored in the
-      <A href="https://sourceforge.net/mailarchive/forum.php?forum_id=34097">mailing list archive</A>.
+      <A href="http://sourceforge.net/mailarchive/forum.php?forum_name=svxlink-devel">mailing list archive</A>.
       A good way to find solutions to problems is to
-      <A href="https://sourceforge.net/search/index.php?type_of_search=mlists&group_id=84813&forum_id=34097">search</A>
+      <A href="http://sourceforge.net/search/index.php?group_id=84813&type_of_search=mlists">search</A>
       the archive.</LI>
   <LI>Other people subscribing to the mailing list might get helped by the
       discussion.</LI>
