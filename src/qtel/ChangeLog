@@ -1,13 +1,18 @@
- 0.10.0 -- 02 Dec 2005
+ 0.10.0 -- ?? ??? 2007
 ----------------------
-
-* Bugfix: The audio output to the speaker could stop suddenly. The audio
-  came back when pressing and releasing the PTT.
 
 * Now using libsigc++ version 1.2 instead of the old and outdated 1.0.
 
 * Added a desktop menu configuration file. For example under Fedora/KDE,
   Qtel can be found under the "Internet" menu.
+
+
+
+ 0.9.2 -- 02 Dec 2005
+----------------------
+
+* Bugfix: The audio output to the speaker could stop suddenly. The audio
+  came back when pressing and releasing the PTT.
 
 
 
