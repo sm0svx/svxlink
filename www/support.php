@@ -11,7 +11,7 @@ list is very low volume so don't be afraid to register.
 There are a couple of reasons why only the mailing list should be used for
 support:
 <UL>
-  <LI>There are more people that can help. I only use RedHat Linux but there are
+  <LI>There are more people that can help. I only use Fedora Linux but there are
       people on the mailing list that have gotten SvxLink to work under other
       distributions.</LI>
   <LI>Documentation. All mails sent to the mailing list get stored in the

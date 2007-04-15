@@ -12,7 +12,7 @@ understand what the applications can be used for.
 These are the most important features of the SvxLink server application.
 
 <UL>
-  <LI>Can act as a repeater controller or just operate on simplex a channel</LI>
+  <LI>Can act as a repeater controller or just operate on a simplex channel</LI>
   <LI>Plugin based system to load voice services into the SvxLink logic
   core</LI>
   <LI>A sound clip based system for announcements</LI>
@@ -20,8 +20,8 @@ These are the most important features of the SvxLink server application.
   <LI>A script based (TCL) event handling system</LI>
   <LI>Roger beep</LI>
   <LI>Trigger manual identification by pressing DTMF *</LI>
-  <LI>A simple shortcut, or macro subsystem</LI>
-  <LI>Multiple repeaster activation modes: 1750 Hz tone burst, CTCSS, DTMF or
+  <LI>A simple shortcut, or macro, subsystem</LI>
+  <LI>Multiple repeater activation modes: 1750 Hz tone burst, CTCSS, DTMF or
   squelch open.</LI>
   <LI>Periodic "idle sound" when the repeater is up but no signal is being
   received</LI>
@@ -40,13 +40,19 @@ These are the most important features of the SvxLink server application.
   <LI>A parrot module that retransmit received audio</LI>
   <LI>An EchoLink module used to connect to other EchoLink nodes</LI>
   <UL>
-    <LI>List connected stations on demand</LI>
     <LI>Idle timeout</LI>
     <LI>A callsign lookup/connect by callsign function</LI>
+    <LI>List connected stations on demand</LI>
     <LI>Own node id report function</LI>
+    <LI>Random connect to link, repeater or conference</LI>
+    <LI>Reconnect to last disconnected node</LI>
+    <LI>Listen only mode</LI>
   </UL>
   <LI>A voice mail module</LI>
-  <LI>Possible to write modules in the TCL scripting language</LI>
+  <UL>
+    <LI>Record voice mail for local users</LI>
+  </UL>
+  <LI>Possible to write new modules in the TCL scripting language</LI>
 </UL>
 
 

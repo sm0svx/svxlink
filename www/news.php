@@ -7,13 +7,13 @@
 <H2>Project News</H2>
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
-    <B>10 Dec 2006: <I>Version 061210 released</I></B>
+    <B>15 Apr 2007: <I>Version 070415 released</I></B>
   <TD/></TR>
   <TR><TD>
-    It's been a year since the latest release. That does not mean that it has
-    not happend anything for a year. I have just not found a suitable point in
-    the development process that felt good for a new release. The most important
-    changes are:
+    It's been way more than a year since the latest release. That does not mean
+    that it has not happend anything during this time. I have just not found a
+    suitable point in the development process that felt good for a new release.
+    The most important changes are:
     <UL>
       <LI>
       	Support for remote receivers linked over the Internet.
@@ -54,6 +54,13 @@
       <LI>
       	Added logrotate configuration for /var/log/svxlink and a system startup
 	script.
+      </LI>
+      <LI>
+        Now possible to filter incoming Echolink connections on callsign.
+      </LI>
+      <LI>
+        A couple of Echolink standard functions implemented: "random connect",
+	"reconnect to last disconnected" and "listen only".
       </LI>
       <LI>
       	A couple of bug fixes

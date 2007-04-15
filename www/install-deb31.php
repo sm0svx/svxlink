@@ -4,6 +4,9 @@
 ?>
 
 <H2>Installation instructions for Debian 3.1</H2>
+<B>Note:</B> This page need to be updated to work with the latest release of
+SvxLink.
+<P> 
 This is an installation script contributed by SM6VQJ / Birger.
 
 <PRE>

@@ -51,7 +51,7 @@ with your local node sysop which macros are setup. If you connect to an
 EchoLink node very often it can be nice to setup a macro for it. Ask your sysop
 to do that.
 <P>
-The system is built up of a core system that handles the transciever interface.
+The system is built up of a core system that handles the transceiver interface.
 The core system can then be extended by loading modules that handles a specific
 voice service. Each module have a unique ID number associated with it. The
 association is done during the configuration of the system. To activate a
@@ -79,8 +79,19 @@ Exit the module by sending just the number sign.
 The EchoLink module is used to connect to other EchoLink stations. To connect
 to another station, just enter the node number ended with a #. To
 disconnect, press #. To exit the module, press #
-when not connected. Pressing 1# will tell you the callsigns of all connected
-stations. Pressing 2# will tell you the local EchoLink node id.
+when not connected.
+<P>
+There are a couple of subcommands that can be used when the EchoLink module
+has been activated.
+<UL>
+  <LI>1  - List all connected stations</LI>
+  <LI>2  - Play local EchoLink node id</LI>
+  <LI>31 - Connect to a random link or repeater</LI>
+  <LI>32 - Connect to a random conference</LI>
+  <LI>4  - Reconnect to the last disconnected station</LI>
+  <LI>50 - Deactivate listen only mode</LI>
+  <LI>51 - Activate listen only mode</LI>
+</UL>
 <P>
 The "connect by callsign" function will make it possible to connect to a
 station even if the node number is unknown. Callsigns are mapped to digits
@@ -88,7 +99,7 @@ by using the following method: ABC=2, DEF=3, GHI=4, JKL=5, MNO=6, PQRS=7,
 TUV=8, WXYZ=9. The same mapping as on many phones. Letters are mapped to its
 corresponding digit and digits are ofcourse mapped to their corresponding
 number. All other characters are mapped to digit 1.
-A searh command start with * and then the callsign code is entered. So if
+A search command start with * and then the callsign code is entered. So if
 you want to connect to SM3SVX-L you should enter "*76378915#". Since the
 codes are not unique a list of search hits will be presented to the user
 to choose from.
@@ -123,7 +134,8 @@ have letters on the key pad like: 2=ABC, 3=DEF, 4=GHI, 5=JKL, 6=MNO,
 7=PQRS, 8=TUV, 9=WXYZ. To encode the callsign SM0SVX, use the three last
 letters and map them to digits. Then we will get the user ID 789. In case of
 a collition, add 1. For example AFC and ADB will both map to 232. One
-possible mapping is then AFC=232 and ADB=233.
+possible mapping is then AFC=232 and ADB=233. When using this method to encode
+user IDs, it will be possible for a user to guess another user's user ID.
 <P>
 It is possible for the sysop to configure an e-mail address for each user.
 If this has been done, an e-mail will be sent to the user if someone

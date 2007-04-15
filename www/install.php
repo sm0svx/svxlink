@@ -87,63 +87,46 @@ Now continue below reading the
 
 
 <A name="post-install"><h2>Post install stuff</h2></A>
-<strong>Note1:</strong> For Alsa based systems (like Fedora Core >= 2), the Alsa
+<strong>Note:</strong> For Alsa based systems (like Fedora Core >= 2), the Alsa
 OSS emulation is used for sound I/O. There is a bug in the emulation layer
-which will make SvxLink/Qtel fail. To work around this bug, set the
-environment variable ASYNC_AUDIO_NOTRIGGER to 1 before starting SvxLink/Qtel.
-An example of how this is done is shown below (assuming you are running the bash
-shell = usually the default).
+which will make SvxLink/Qtel fail. To work around this bug, there is an
+environment variable called ASYNC_AUDIO_NOTRIGGER. This is by default set
+to 1 to activate the workaround since most modern Linux distributions now
+use Alsa by default. If you get into trouble with the audio output, try
+setting it to 0. For the SvxLink server that is done in /etc/sysconfig/svxlink
+if you are using the provided start script.
+<P>
+For Qtel set it manually on the command line, in a start script or in the
+login script for your shell. The instructions below assume you are using
+bash (usually the default).
 <pre>
-export ASYNC_AUDIO_NOTRIGGER=1
+export ASYNC_AUDIO_NOTRIGGER=0
 qtel &
-- or -
-svxlink
 </pre>
 Or on one line:
 <pre>
-ASYNC_AUDIO_NOTRIGGER=1 qtel &
-- or -
-ASYNC_AUDIO_NOTRIGGER=1 svxlink
+ASYNC_AUDIO_NOTRIGGER=0 qtel &
 </pre>
-Note that there is no "&amp;" behind svxlink. Do not start svxlink with an
-"&amp;" after it. See the explaination below.
 <P>
 The environment variable setting will be lost on logout so the <em>export</em>
 line is best put into the file ".bash_profile", which can be found in your home
 directory.
 <P>
 Note that setting this environment variable when it is not needed can make
-SvxLink/Qtel to stop working. Only set it if you are getting the error message
-below.
-<PRE>
-SNDCTL_DSP_SETTRIGGER ioctl failed: Broken pipe
-</PRE>
+SvxLink/Qtel to stop working. Only set it if you have audio problems.
 <P>
-<strong>Note2:</strong> Make sure that no other audio applications are running
+<strong>Note:</strong> Make sure that no other audio applications are running
 at the same time as SvxLink/Qtel. If another application has opened the sound
 device, SvxLink/Qtel will hang until the device is closed by the other
 application. Especially, if you are having problems with SvxLink/Qtel hanging,
-check for sound servers like <em>artsd</em> and the like. This is less of a
-problem now when most distributions are using the Alsa sound layer.
+check for sound servers like <em>artsd</em> and the like. However, this is
+less of a problem now when most distributions are using the Alsa sound layer.
 <P>
-If you only are going to run Qtel, go directly to the
-<A href="qtel_usage.php">Qtel User Docs</A>.
+If you only are going to run Qtel, first read the
+<A href="#audio-level-adj">Audio level adjustment</A> chapter
+and then go directly to the <A href="qtel_usage.php">Qtel User Docs</A>.
 <P>
-If you are going to run the svxlink server, first check out the
-<A href="#server-config">configuration description</A> below before starting it.
-After the configuration has been done, start the server by typing
-<em>svxlink</em> at the command prompt. It is possible to simulate DTMF input by
-pressing the 1-9, A-D, *, # keys. Have a look at the
-<A href="svxlink_usage.php">user documentation</A> to begin testing the server.
-To get help about command line options, start the svxlink server with the
-<em>--help</em> switch.
-<P>
-When everything is configured and working, start the SvxLink server using the
-/etc/init.d/svxlink start script. A logfile will be put in /var/log/svxlink.
-<P>
-<strong>Note3:</strong> To start the svxlink server in the background, use the
-<em>--daemon</em> switch. Do not use "&amp;". This will make the server hang
-when trying to read from standard input.
+If you are going to run the svxlink server, read on.
 <P>
 
 
@@ -195,7 +178,7 @@ to the highest volume possible without distorsion.
 <P>
 To adjust the audio input level, start by opening the squelch on the receiver
 so that SvxLink just hear noise. Pull the audio input gain sliders
-up until you see messages about distorion printed to the console. Then lower
+up until you see messages about distorion printed on the console. Then lower
 the audio gain until no distorsion messages are printed. If you cannot make
 SvxLink print distorsion messages, the input level is too low. You should try
 to fix this on the analogue side but it is possible to use the PREAMP
@@ -209,7 +192,57 @@ level up or down and try again. Try all 16 digits: 0-9, *, #, A, B ,C, D.
 <P>
 
 
+<A name="server-config"><h2>SvxLink server configuration</h2></A>
+During the svxlink-server package installation the <em>/etc/svxlink.conf</em>
+default configuration file is installed. Module configuration files are placed
+under /etc/svxlink.d. Edit the configuration files to your liking.
+<P>
+There is a voice greeting message sent to connecting echolink stations. This
+message should be replaced with a personal one. I have used the <em>rec</em>
+application that is included in the <em>sox</em> package to record the sounds.
+Any tool capable of recording raw sound files using 8kHz sampling rate and 16
+bit signed samples is ok to use. Another alternative is to record the sound
+files using your favorite tool and then convert them to the correct format using
+the sox application. The rec application should be used as shown below.
+<PRE>
+  rec -r8000 -sw /usr/share/svxlink/sounds/EchoLink/greeting.raw
+  play -r8000 -sw /usr/share/svxlink/sounds/EchoLink/greeting.raw
+</PRE>
+<P>
+Further configuration information can be found in the manual page
+<A href="man/man5/svxlink.conf.5.html">svxlink.conf</A>. There are also
+manual pages for the <A href="man/man1/svxlink.1.html">svxlink application</A>
+and its modules
+(<A href="man/man5/ModuleHelp.conf.5.html">ModuleHelp</A>,
+<A href="man/man5/ModuleParrot.conf.5.html">ModuleParrot</A>,
+<A href="man/man5/ModuleEchoLink.conf.5.html">ModuleEchoLink</A>
+<A href="man/man5/ModuleDtmfRepeater.conf.5.html">ModuleDtmfRepeater</A>).
+<P>
+To set up a remote receiver, have a look at the
+<A href="man/man1/remoterx.1.html">remoterx</A> and the
+<A href="man/man5/remoterx.conf.5.html">remoterx.conf</A> manual pages.
+<P>
+After the configuration has been done, start the server by typing
+<em>svxlink</em> at the command prompt. It is possible to simulate DTMF input by
+pressing the 0-9, A-D, *, # keys. Have a look at the
+<A href="svxlink_usage.php">user documentation</A> to begin testing the server.
+To get help about command line options, start the svxlink server with the
+<em>--help</em> switch.
+<P>
+When everything is configured and working, start the SvxLink server using the
+/etc/init.d/svxlink start script. A logfile will be put in /var/log/svxlink.
+<P>
+<strong>Note:</strong> To start the svxlink server in the background, use the
+<em>--daemon</em> switch. Do not use "&amp;". This will make the server hang
+when trying to read from standard input.
+<P>
+
+
 <A name="event-subsystem"><h2>The Event Handling Subsystem</h2></A>
+This chapter can be skipped on the first reading. Come back here to read this
+chapter when you feel like customizing your SvxLink server or adding your own
+features.
+<P>
 There are a lot of sounds that should be played as a response to an event in
 the SvxLink system. To make these sounds as configurable as possible there is
 a programmable event handling subsystem. The programming language chosen for
@@ -303,37 +336,6 @@ There are also a couple of convenience functions implemented in TCL:
   </DD>
 </DL>
 <P>
-
-
-<A name="server-config"><h2>SvxLink server configuration</h2></A>
-During the svxlink-server package installation the <em>/etc/svxlink.conf</em>
-default configuration file is installed. Module configuration files are placed
-under /etc/svxlink.d. Edit the configuration files to your liking.
-<P>
-There is a voice greeting message sent to connecting echolink stations. This
-message should be replaced with a personal one. I have used the <em>rec</em>
-application that is included in the <em>sox</em> package to record the sounds.
-Any tool capable of recording raw sound files using 8kHz sampling rate and 16
-bit signed samples is ok to use. Another alternative is to record the sound
-files using your favorite tool and then convert them to the correct format using
-the sox application. The rec application should be used as shown below.
-<PRE>
-  rec -r8000 -sw /usr/share/svxlink/sounds/EchoLink/greeting.raw
-  play -r8000 -sw /usr/share/svxlink/sounds/EchoLink/greeting.raw
-</PRE>
-<P>
-Further configuration information can be found in the manual page
-<A href="man/man5/svxlink.conf.5.html">svxlink.conf</A>. There are also
-manual pages for the <A href="man/man1/svxlink.1.html">svxlink application</A>
-and its modules
-(<A href="man/man5/ModuleHelp.conf.5.html">ModuleHelp</A>,
-<A href="man/man5/ModuleParrot.conf.5.html">ModuleParrot</A>,
-<A href="man/man5/ModuleEchoLink.conf.5.html">ModuleEchoLink</A>
-<A href="man/man5/ModuleDtmfRepeater.conf.5.html">ModuleDtmfRepeater</A>).
-<P>
-To set up a remote receiver, have a look at the
-<A href="man/man1/remoterx.1.html">remoterx</A> and the
-<A href="man/man5/remoterx.conf.5.html">remoterx.conf</A> manual pages.
 
 
 <?php include("footer.inc"); ?>

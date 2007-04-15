@@ -26,7 +26,7 @@ this software only support the Windows operating system and it is
 closed source. SvxLink is released under the GPL license. 
 <P/>
 Qtel is only an EchoLink client program. It does not have the
-sysop mode. That is, it can not be connected to a transceiver
+sysop mode. That is, it cannot be connected to a transceiver
 and act as a link. For the latter, use the svxlink server.
 <P/>
 SvxLink is developed under Fedora but it's possible to get it woking on other
