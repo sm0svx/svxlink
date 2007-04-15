@@ -67,7 +67,7 @@
       </LI>
     </UL>
     As usual, be sure to check out the
-    <A href="http://sf.net/project/shownotes.php?release_id=">ChangeLog</A>
+    <A href="http://sf.net/project/shownotes.php?release_id=501335">ChangeLog</A>
     for more detailed information.
   </TD></TR>
   
