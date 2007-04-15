@@ -31,8 +31,8 @@
     <SUBMENUITEM><A href="#post-install">Post install</A></SUBMENUITEM></BR>
     <SUBMENUITEM><A href="#hardware">Hardware</A></SUBMENUITEM></BR>
     <SUBMENUITEM><A href="#audio-level-adj">Audio levels</A></SUBMENUITEM></BR>
-    <SUBMENUITEM><A href="#event-subsystem">The Event Handling Subsystem</A></SUBMENUITEM></BR>
     <SUBMENUITEM><A href="#server-config">SvxLink server config</A></SUBMENUITEM></BR>
+    <SUBMENUITEM><A href="#event-subsystem">The Event Handling Subsystem</A></SUBMENUITEM></BR>
     <?php } ?>
     <MENUITEM><A href="qtel_usage.php">Qtel User Docs</A></MENUITEM><BR/>
     <MENUITEM><A href="svxlink_usage.php">SvxLink Server User Docs</A></MENUITEM><BR/>
