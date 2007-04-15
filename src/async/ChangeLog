@@ -1,4 +1,4 @@
- 0.14.0 -- ?? ??? 2006
+ 0.14.0 -- 15 Apr 2007
 -----------------------
 
 * Async::Config: Now possible to use the "open" method more than once to

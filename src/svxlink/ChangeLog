@@ -1,4 +1,4 @@
- 0.8.0 -- ?? ??? 2007
+ 0.8.0 -- 15 Apr 2007
 ----------------------
 
 * Bugfix in ModuleEchoLink: The outgoing greeting message would be

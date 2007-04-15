@@ -1,4 +1,4 @@
- 0.12.0 -- ?? ??? 2006
+ 0.12.0 -- 15 Apr 2007
 -----------------------
 
 * Now not possible to send audio/info/chat packets while not connected.
