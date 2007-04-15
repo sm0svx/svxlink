@@ -1,9 +1,6 @@
  0.8.0 -- ?? ??? 2007
 ----------------------
 
-* Implemented CW sending code in the TCL event scripts. Have a look at the
-  documentation in CW.tcl.
-
 * Bugfix in ModuleEchoLink: The outgoing greeting message would be
   mixed with incoming EchoLink traffic instead of muting the EchoLink
   traffic until the greeting message had been played.
@@ -99,6 +96,9 @@
   configuration files.
 
 * SvxLink now announce the current time at manual identification.
+
+* Implemented CW sending code in the TCL event scripts. Have a look at the
+  documentation in CW.tcl.
 
 * ModuleEchoLink: New configuration variables DROP, REJECT and ACCEPT added
   to make it possible to filter on callsign which stations are allowed
