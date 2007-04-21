@@ -805,7 +805,7 @@ endif
 #
 ifeq ($(INCLUDE_DEPS),yes)
   ifneq ($(strip $(DEP_FILES)),)
-    -include $(DEP_FILES)
+    include $(DEP_FILES)
   endif
 endif
 
