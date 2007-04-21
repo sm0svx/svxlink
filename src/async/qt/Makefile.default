@@ -185,7 +185,7 @@ RPM_NAME := async-qt
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= $(SIGC_INCPATH)
+INCPATH 	+= $(QT_INCPATH) $(SIGC_INCPATH)
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.

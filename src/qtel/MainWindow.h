@@ -164,7 +164,7 @@ class MainWindow : public MainWindowBase, public SigC::Object
      *------------------------------------------------------------------------
      */
     MainWindow(EchoLink::Directory& dir);
-    ~MainWindow(void);
+    virtual ~MainWindow(void);
     
     
   protected:

@@ -31,6 +31,8 @@
 # TBg  Tobias Blomberg   blomman@ludd.luth.se
 #------------------------------------------------------------------------------
 
+-include $(ROOT)/.config
+
 
 ###############################################################################
 #
@@ -52,16 +54,18 @@ CPPPROGS        += AsyncCppApplication_demo
 CPPPROGS      	+= AsyncTcpServer_demo
 CPPPROGS      	+= AsyncConfig_demo
 CPPPROGS      	+= AsyncSerial_demo
+#ifdef QT_BIN
 CPPPROGS      	+= AsyncQtApplication_demo
+#endif
 
 # Sources other than the main files
 PRGSRC		= 
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -lasynccpp -lasyncaudio
-ifdef QTDIR
+#ifdef QT_BIN
 PROJLIBS      	+= -lasyncqt
-endif
+#endif
 
 # Libraries external to the project
 LIBS		= -lm
@@ -196,11 +200,11 @@ RPM_NAME :=
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= -I$(QTDIR)/include $(SIGC_INCPATH)
+INCPATH 	+= $(SIGC_INCPATH) $(QT_INCPATH)
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.
-LIBPATH 	+=  -L$(QTDIR)/lib
+LIBPATH 	+= $(QT_LIBPATH)
 
 # Additional warnings to use. If you want to override the default
 # warnings, change the "+=" to "=".
@@ -208,7 +212,7 @@ WARNINGS	+= -Wno-deprecated
 
 # Extra commandline switches to the compiler. For example "-g" to
 # add debug information, "-O2" to add optimizations etc.
-CFLAGS		+= -g
+CFLAGS		+= -g $(QT_CFLAGS)
 
 # Extra commandline switches to the linker
 LDFLAGS		+= 

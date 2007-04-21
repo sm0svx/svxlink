@@ -76,13 +76,15 @@ if which pkg-config &> /dev/null; then
     info "yes (pkg-config qt)\n"
     output "QT_LIBPATH=$(pkg-config qt --libs-only-L)"
     output "QT_LIBS=$(pkg-config qt --libs-only-l)"
-    output "QT_CFLAGS=$(pkg-config qt --cflags)"
+    output "QT_INCPATH=$(pkg-config qt --cflags-only-I)"
+    output "QT_CFLAGS=$(pkg-config qt --cflags-only-other)"
     QT_PREFIX=$(pkg-config qt --variable=prefix)
   elif pkg-config qt-mt; then
     info "yes (pkg-config qt-mt)\n"
     output "QT_LIBPATH=$(pkg-config qt-mt --libs-only-L)"
     output "QT_LIBS=$(pkg-config qt-mt --libs-only-l)"
-    output "QT_CFLAGS=$(pkg-config qt-mt --cflags)"
+    output "QT_INCPATH=$(pkg-config qt-mt --cflags-only-I)"
+    output "QT_CFLAGS=$(pkg-config qt-mt --cflags-only-other)"
     QT_PREFIX=$(pkg-config qt-mt --variable=prefix)
   fi
 fi
@@ -94,7 +96,8 @@ if [ -z "$QT_PREFIX" -a -n "$QTDIR" ]; then
   else
     output "QT_LIBS=-lqt"
   fi
-  output "QT_CFLAGS=-I${QTDIR}/include"
+  output "QT_INCPATH=-I${QTDIR}/include"
+  output "QT_CFLAGS="
   QT_PREFIX=${QTDIR}
 fi
 if [ -n "$QT_PREFIX" ]; then

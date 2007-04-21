@@ -137,7 +137,7 @@ class AsyncQtTimer : public QObject
     /**
      * @brief 	Destructor
      */
-    ~AsyncQtTimer(void) {}
+    virtual ~AsyncQtTimer(void) {}
   
   protected:
     

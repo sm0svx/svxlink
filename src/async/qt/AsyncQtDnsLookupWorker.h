@@ -122,7 +122,7 @@ class QtDnsLookupWorker : public QObject, public DnsLookupWorker
     /**
      * @brief 	Destructor
      */
-    ~QtDnsLookupWorker(void);
+    virtual ~QtDnsLookupWorker(void);
   
     /**
      * @brief 	Return the addresses for the host in the query

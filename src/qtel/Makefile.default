@@ -194,7 +194,7 @@ include $(ROOT)/makefile.inc
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= -I/usr/include/gsm $(SIGC_INCPATH)
+INCPATH 	+= -I/usr/include/gsm $(SIGC_INCPATH) $(QT_INCPATH)
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.

@@ -167,7 +167,7 @@ class QtApplication : public QApplication, public Application
     /**
      * @brief Destructor
      */
-    ~QtApplication(void);
+    virtual ~QtApplication(void);
     
     /**
      * @brief Execute the application main loop

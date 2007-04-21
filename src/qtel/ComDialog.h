@@ -164,7 +164,7 @@ class ComDialog : public ComDialogBase, public SigC::Object
      */
     ComDialog(Async::AudioIO *audio_io, EchoLink::Directory& dir,
       	      const QString& call, const QString& remote_name="?");
-    ~ComDialog(void);
+    virtual ~ComDialog(void);
     
     void acceptConnection(void);
     

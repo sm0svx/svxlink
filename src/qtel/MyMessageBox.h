@@ -145,7 +145,7 @@ class MyMessageBox : public QMessageBox
       setWFlags(getWFlags() | Qt::WDestructiveClose);
     }
     
-    ~MyMessageBox(void)
+    virtual ~MyMessageBox(void)
     {
       closed();
     }
