@@ -54,18 +54,18 @@ CPPPROGS        += AsyncCppApplication_demo
 CPPPROGS      	+= AsyncTcpServer_demo
 CPPPROGS      	+= AsyncConfig_demo
 CPPPROGS      	+= AsyncSerial_demo
-#ifdef QT_BIN
+ifdef QT_BIN
 CPPPROGS      	+= AsyncQtApplication_demo
-#endif
+endif
 
 # Sources other than the main files
 PRGSRC		= 
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -lasynccpp -lasyncaudio
-#ifdef QT_BIN
+ifdef QT_BIN
 PROJLIBS      	+= -lasyncqt
-#endif
+endif
 
 # Libraries external to the project
 LIBS		= -lm
