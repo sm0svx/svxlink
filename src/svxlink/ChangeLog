@@ -1,7 +1,7 @@
  0.9.0 -- ?? ??? 2007
 ----------------------
 
-* It is now possible to spcify NONE for the PTT_PIN config variable if
+* It is now possible to spcify NONE for the PTT_PORT config variable if
   no hardware PTT is required.
 
 
