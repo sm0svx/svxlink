@@ -294,11 +294,14 @@ bool LocalTx::initialize(void)
     tx_delay = max(0, min(atoi(tx_delay_str.c_str()), 1000));
   }
   
-  serial = new Serial(ptt_port.c_str());
-  if (!serial->open())
+  if (ptt_port != "NONE")
   {
-    perror("open serial port");
-    return false;
+    serial = new Serial(ptt_port.c_str());
+    if (!serial->open())
+    {
+      perror("open serial port");
+      return false;
+    }
   }
   if (!setPtt(false))
   {
@@ -618,12 +621,12 @@ int LocalTx::parsePttPin(const char *str, Serial::Pin &pin, bool &rev)
 
 bool LocalTx::setPtt(bool tx)
 {
-  if (!serial->setPin(ptt_pin1, tx ^ ptt_pin1_rev))
+  if ((serial != 0) && !serial->setPin(ptt_pin1, tx ^ ptt_pin1_rev))
   {
     return false;
   }
 
-  if (!serial->setPin(ptt_pin2, tx ^ ptt_pin2_rev))
+  if ((serial != 0) && !serial->setPin(ptt_pin2, tx ^ ptt_pin2_rev))
   {
     return false;
   }
