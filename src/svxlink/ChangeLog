@@ -4,6 +4,9 @@
 * It is now possible to spcify NONE for the PTT_PORT config variable if
   no hardware PTT is required.
 
+* Bugfix: It was not possible to turn ID off completely. It would always
+  ID at 12 AM.
+
 
 
  0.8.0 -- 15 Apr 2007
