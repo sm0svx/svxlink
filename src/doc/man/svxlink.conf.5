@@ -131,15 +131,15 @@ The number of minutes between short identifications. The purpose of the short
 identification is to just announce that the station is on the air. Typically just the
 callsign is transmitted. For a repeater a good value is ten minutes and for a simplex node
 one time every 60 minutes is probably enough. The LONG_IDENT_INTERVAL must be an even
-multiple of the SHORT_IDENT_INTERVAL so if LONG_IDENT_INTERVAL is 60 then some of the
-legal values for SHORT_IDENT_INTERVAL are: 5, 10, 15, 20, 30. 
+multiple of the SHORT_IDENT_INTERVAL so if LONG_IDENT_INTERVAL is 60 then the
+legal values for SHORT_IDENT_INTERVAL are: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60. 
+If unset or set to 0, disable short identifications.
 .TP
 .B LONG_IDENT_INTERVAL
 The number of minutes between long identifications. The purpose of the long identification
-is to transmit some more info about the station status (new voice mails etc). The time of
-day is also transmitted. A good value here is 60 minutes. It must be set to whole hours
-(60,120, 180 etc) otherwise the time of day announcement will sound strange since it just
-announces the hour.
+is to transmit some more information about the station status (new voice mails etc). The time of
+day is also transmitted. A good value here is 60 minutes. 
+If unset or set to 0, disable long identifications.
 .TP
 .B IDENT_ONLY_AFTER_TX
 This feature controls when identification is done.  By default, identification is done
