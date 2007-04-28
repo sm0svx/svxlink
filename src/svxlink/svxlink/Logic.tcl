@@ -25,8 +25,8 @@ variable min_time_between_ident 120;
 # Short and long identification intervals. They are setup from config
 # variables below.
 #
-variable short_ident_interval 2000;
-variable long_ident_interval 2000;
+variable short_ident_interval 0;
+variable long_ident_interval 0;
 
 
 #
@@ -312,6 +312,10 @@ proc checkPeriodicIdentify {} {
   variable need_ident;
   variable CFG_TYPE;
   
+  if {$short_ident_interval == 0} {
+    return;
+  }
+
   set now [clock seconds];
   set hour [clock format $now -format "%k"];
   regexp {([1-5]?\d)$} [clock format $now -format "%M"] -> minute;
@@ -404,6 +408,9 @@ if [info exists CFG_SHORT_IDENT_INTERVAL] {
 if [info exists CFG_LONG_IDENT_INTERVAL] {
   if {$CFG_LONG_IDENT_INTERVAL > 0} {
     set long_ident_interval $CFG_LONG_IDENT_INTERVAL;
+    if {$short_ident_interval == 0} {
+      set short_ident_interval $long_ident_interval;
+    }
   }
 }
 
