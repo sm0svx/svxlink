@@ -167,9 +167,11 @@ class SampleFifo : public SigC::Object
     
     /**
      * @brief 	Find out how many samples there are in the FIFO
+     * @param	ignore_prebuf Set to \em true to not report pre-buffered
+		samples.
      * @return	Returns the number of samples in the FIFO
      */
-    unsigned samplesInFifo(void) const;
+    unsigned samplesInFifo(bool ignore_prebuf=false) const;
     
     /**
      * @brief 	Indicate to the FIFO if the receiver is ready or not to accept

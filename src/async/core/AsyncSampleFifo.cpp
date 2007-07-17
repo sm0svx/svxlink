@@ -207,9 +207,20 @@ bool SampleFifo::full(void) const
 } /* full */
 
 
-unsigned SampleFifo::samplesInFifo(void) const
+unsigned SampleFifo::samplesInFifo(bool ignore_prebuf) const
 {
-  return (head - tail + fifo_size) % fifo_size;
+  unsigned samples_in_buffer = (head - tail + fifo_size) % fifo_size;
+
+  if (ignore_prebuf && prebuf && !do_flush)
+  {
+    if (samples_in_buffer < prebuf_samples)
+    {
+      return 0;
+    }
+  }
+
+  return samples_in_buffer;
+
 } /* SampleFifo::samplesInFifo */
 
 
@@ -234,6 +245,15 @@ int SampleFifo::readSamples(float *samples, int count)
     return 0;
   }
   
+  if (prebuf && !do_flush)
+  {
+    if (samplesInFifo() < prebuf_samples)
+    {
+      return 0;
+    }
+    prebuf = false;
+  }
+
   int was_full = full();
   
   int tot_samples_read = 0;
