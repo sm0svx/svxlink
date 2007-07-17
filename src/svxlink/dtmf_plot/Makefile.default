@@ -12,12 +12,17 @@
 # Include version information
 -include $(ROOT)/versions
 
+# Include config file
+-include $(ROOT)/.config
+
 
 ###############################################################################
 #
 # This section contains things to setup when compiling PROGRAMS.
 #
 ###############################################################################
+
+ifdef QT_BIN
 
 # Programs to compile
 PROGS		= 
@@ -51,6 +56,8 @@ PROGS_INSTALL	= $(PROGS:%=%[755,root,root]) $(CPPPROGS:%=%[755,root,root])
 
 # Daemons (server processes) to install. Same format as PROGS_INSTALL.
 DAEMONS_INSTALL	= 
+
+endif # QT_BIN
 
 
 ###############################################################################

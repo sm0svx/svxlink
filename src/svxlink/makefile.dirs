@@ -13,11 +13,7 @@
 
 
 # Subdirectories in the order of compilation.
-SUBDIRS	= rx svxlink modules scripts remoterx
-
-ifdef QT_BIN
-SUBDIRS += dtmf_plot
-endif
+SUBDIRS	= rx svxlink modules scripts remoterx dtmf_plot
 
 
 #

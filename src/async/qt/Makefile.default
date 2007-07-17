@@ -33,6 +33,9 @@
 
 # Include version file
 include $(ROOT)/versions
+
+# Include config file
+-include $(ROOT)/.config
  
 
 ###############################################################################
@@ -81,6 +84,8 @@ DAEMONS_INSTALL	=
 #
 ###############################################################################
 
+ifdef QT_BIN
+
 # The name of the library (without the preceeding "lib").
 LIBNAME		= asyncqt
 
@@ -125,6 +130,8 @@ INC_INSTALL	= $(EXPINC:%=%[644,root,root])
 #            -       = Preserve owner
 #            mygroup = Set group mygroup
 LIB_INSTALL	= $(LIBNAME:%=%[-,root,root])
+
+endif # QT_BIN
 
 
 ###############################################################################

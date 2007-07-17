@@ -14,11 +14,17 @@
 #
 #------------------------------------------------------------------------------
 
+# Include config file
+-include $(ROOT)/.config
+
+
 ###############################################################################
 #
 # This section contains things to setup when compiling PROGRAMS.
 #
 ###############################################################################
+
+ifdef QT_BIN
 
 # Programs to compile
 PROGS		= 
@@ -52,6 +58,8 @@ PROGS_INSTALL	= $(PROGS:%=%[755,root,root]) $(CPPPROGS:%=%[755,root,root])
 
 # Daemons (server processes) to install. Same format as PROGS_INSTALL.
 DAEMONS_INSTALL	= 
+
+endif # QT_BIN
 
 
 ###############################################################################
@@ -145,6 +153,8 @@ PLUGINS_INSTALL	= $(PLUGINS:%=%.so[755,root,root])
 #
 ###############################################################################
 
+ifdef QT_BIN
+
 #PRE_TARGETS    = pre.txt
 POST_TARGETS   = translations/qtel_sv.qm
 
@@ -153,6 +163,7 @@ translations/qtel_%.qm:  translations/qtel_%.ts
 	$(ECHO) --- Creating translation file $(BOLD)$@$(NBOLD)...
 	${QT_BIN}/lrelease $<
 
+endif # QT_BIN
 
 #pre.txt:       nisse.txt
 #       $(ECHO) --- Creating file $(BOLD)$@$(NBOLD)...
