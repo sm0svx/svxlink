@@ -236,6 +236,8 @@ class AudioDevice : public SigC::Object
     bool      	      	use_trigger;
     bool		prebuf;
     float     	      	*samples;
+    short     	      	*last_frag;
+    bool      	      	use_fillin;
     
     void audioReadHandler(FdWatch *watch);
     void writeSpaceAvailable(FdWatch *watch);

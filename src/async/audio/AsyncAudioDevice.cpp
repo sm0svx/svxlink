@@ -346,6 +346,8 @@ bool AudioDevice::open(Mode mode)
   {
     read_buf = new short[BUF_FRAG_COUNT*frag_size];
     samples = new float[BUF_FRAG_COUNT*frag_size];
+    last_frag = new short[frag_size];
+    memset(last_frag, 0, frag_size * sizeof(*last_frag));
   }
   
   return true;
@@ -436,7 +438,7 @@ int AudioDevice::samplesToWrite(void) const
 AudioDevice::AudioDevice(const string& dev_name)
   : dev_name(dev_name), use_count(0), current_mode(MODE_NONE), fd(-1),
     read_watch(0), write_watch(0), read_buf(0), device_caps(0), prebuf(true),
-    samples(0)
+    samples(0), last_frag(0), use_fillin(true)
 {
   char *use_trigger_str = getenv("ASYNC_AUDIO_NOTRIGGER");
   use_trigger = (use_trigger_str != 0) && (atoi(use_trigger_str) == 0);
@@ -450,6 +452,9 @@ AudioDevice::~AudioDevice(void)
   
   delete [] samples;
   samples = 0;
+  
+  delete [] last_frag;
+  last_frag = 0;
     
 } /* AudioDevice::~AudioDevice */
 
@@ -566,12 +571,13 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       {
 	SampleFifo &fifo = (*it)->writeFifo();
 	do_flush &= ((*it)->doFlush() &&
-		     (fifo.samplesInFifo() <= samples_to_write));
+		     (fifo.samplesInFifo(true) <= samples_to_write));
 	if (!(*it)->doFlush())
 	{
-	  samples_to_write = min(samples_to_write, fifo.samplesInFifo());
+	  samples_to_write = min(samples_to_write, fifo.samplesInFifo(true));
 	}
-	max_samples_in_fifo = max(max_samples_in_fifo, fifo.samplesInFifo());
+	max_samples_in_fifo = max(max_samples_in_fifo,
+	      	      	      	  fifo.samplesInFifo(true));
       }
     }
     samples_to_write = min(samples_to_write, max_samples_in_fifo);
@@ -601,36 +607,47 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
     	
     if (samples_to_write == 0)
     {
-      watch->setEnabled(false);
-      return;
-    }
-
-    for (it=aios.begin(); it!=aios.end(); ++it)
-    {
-      if (((*it)->mode() == AudioIO::MODE_WR) ||
-      	  ((*it)->mode() == AudioIO::MODE_RDWR))
+      if (use_fillin)
       {
-	float tmp[sizeof(buf)/sizeof(*buf)];
-	int samples_read = (*it)->readSamples(tmp, samples_to_write);
-	for (int i=0; i<samples_read; ++i)
+	//printf("Injecting fillin frag\n");
+      	memcpy(buf, last_frag, fragsize * sizeof(*buf));
+	samples_to_write = fragsize;
+      }
+      else
+      {
+      	watch->setEnabled(false);
+      	return;
+      }
+    }
+    else
+    {
+      for (it=aios.begin(); it!=aios.end(); ++it)
+      {
+	if (((*it)->mode() == AudioIO::MODE_WR) ||
+      	    ((*it)->mode() == AudioIO::MODE_RDWR))
 	{
-	  float sample = 32767.0 * tmp[i] + buf[i];
-	  if (sample > 32767)
+	  float tmp[sizeof(buf)/sizeof(*buf)];
+	  int samples_read = (*it)->readSamples(tmp, samples_to_write);
+	  for (int i=0; i<samples_read; ++i)
 	  {
-	    buf[i] = 32767;
-	  }
-	  else if (sample < -32767)
-	  {
-	    buf[i] = -32767;
-	  }
-	  else
-	  {
-      	    buf[i] = static_cast<short>(sample);
+	    float sample = 32767.0 * tmp[i] + buf[i];
+	    if (sample > 32767)
+	    {
+	      buf[i] = 32767;
+	    }
+	    else if (sample < -32767)
+	    {
+	      buf[i] = -32767;
+	    }
+	    else
+	    {
+      	      buf[i] = static_cast<short>(sample);
+	    }
 	  }
 	}
-      }
-    }  
-    
+      }  
+    }
+        
     if (do_flush && (samples_to_write % fragsize > 0))
     {
       //printf("*** FLUSHING %d samples ***\n", samples_to_write);
@@ -645,12 +662,23 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       perror("write in AudioIO::write");
       return;
     }
-
-    //FILE *f = fopen("/tmp/audio.raw", "a");
-    //fwrite(buf, sizeof(*buf), samples_to_write, f);
-    //fclose(f);
     
     assert(written / sizeof(*buf) == samples_to_write);
+
+    if (use_fillin)
+    {
+      if (do_flush)
+      {
+	memset(last_frag, 0, fragsize * sizeof(*last_frag));
+      }
+      else
+      {
+	int frags_written = samples_to_write / fragsize;
+	memcpy(last_frag, buf + (frags_written - 1) * fragsize,
+               fragsize * sizeof(*last_frag));
+      }
+    }
+        
     /*
     if (do_flush)
     {
