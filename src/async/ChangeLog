@@ -1,7 +1,10 @@
- 0.14.1 -- ?? ??? 2007
+ 0.15.0 -- ?? ??? 2007
 ----------------------
 
 * Now compile under CentOS 5.0.
+
+* Inserting repeated audio fragments if incoming audio pase is too slow.
+  Good when using two sound cards with slightly different sampling rate.
 
 
 
