@@ -31,11 +31,11 @@ process()
   #echo $gain 1>&2
   
   if [ $trim_silence -gt 0 ]; then
-    sox $format $1 $format - $filter vol $gain \
+    sox $format $1 $format - vol $gain $filter \
         silence 1 0:0:0.01 $silence_front_level reverse \
 	silence 1 0:0:0.01 $silence_back_level reverse
   else
-    sox $format $1 -v $gain $format - $filter
+    sox $format $1 $format - vol $gain $filter
   fi
 }
 
