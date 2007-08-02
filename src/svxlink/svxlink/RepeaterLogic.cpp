@@ -448,7 +448,7 @@ void RepeaterLogic::setUp(bool up, bool ident)
       // a statuup message, repeating will be enabled when the message has
       // been played.
     repeating_enabled = !isWritingMessage();
-    if (repeating_enabled)
+    if (repeating_enabled && ident)
     {
       setIdle(true);
     }
