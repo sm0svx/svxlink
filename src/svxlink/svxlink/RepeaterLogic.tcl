@@ -256,8 +256,8 @@ proc repeater_idle {} {
   set base 2;
   set max [expr {pow($base, $iterations)}];
   for {set i $iterations} {$i>0} {set i [expr $i - 1]} {
-    playTone 1100 [expr {round(pow($base, $i) * 800 / $max)}] 100;
-    playTone 1200 [expr {round(pow($base, $i) * 800 / $max)}] 100;
+    playTone 1100 [expr {round(pow($base, $i) * 150 / $max)}] 100;
+    playTone 1200 [expr {round(pow($base, $i) * 150 / $max)}] 100;
   }
 }
 
