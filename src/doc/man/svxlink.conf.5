@@ -641,6 +641,18 @@ directly, like through a 9k6 packet radio input. If no preemphasis filter is
 applied to the audio, it will sound very dark when received. If you modulate the
 transmitter through the microphone input the radio will apply a preemphasis
 filter so this feature should be disabled. 0=disabled, 1=enabled.
+.TP
+.B DTMF_TONE_LENGTH
+The length, in milliseconds, of DTMF digits transmitted on this transmitter.
+100ms is the default.
+.TP
+.B DTMF_TONE_SPACING
+The spacing, in milliseconds, between DTMF digits transmitted on this
+transmitter. 50ms is the default.
+.TP
+.B DTMF_TONE_AMP
+The amplitude, in dB, of DTMF digits transmitted on this transmitter. Zero
+dB is the maximum amplitude. -18dB is the default.
 .
 .SS Module Section
 .
