@@ -117,7 +117,7 @@ static map<char, pair<int, int> > tone_map;
 
 DtmfEncoder::DtmfEncoder(int sampling_rate)
   : sampling_rate(sampling_rate), tone_length(100 * sampling_rate / 1000),
-    gap_length(50 * sampling_rate / 1000), tone_amp(0.5), low_tone(-1),
+    tone_spacing(50 * sampling_rate / 1000), tone_amp(0.5), low_tone(-1),
     is_playing(false), is_sending_digits(false)
 {
   if (tone_map.empty())
@@ -155,9 +155,9 @@ void DtmfEncoder::setToneLength(int length_ms)
 } /* DtmfEncoder::setToneLength */
 
 
-void DtmfEncoder::setGapLength(int length_ms)
+void DtmfEncoder::setToneSpacing(int spacing_ms)
 {
-  gap_length = length_ms * sampling_rate / 1000;
+  tone_spacing = spacing_ms * sampling_rate / 1000;
 } /* DtmfEncoder::setGapLength */
 
 
@@ -255,7 +255,7 @@ void DtmfEncoder::playNextDigit(void)
   {
     low_tone = 0;
     pos = 0;
-    length = gap_length;
+    length = tone_spacing;
     is_playing = true;
     writeAudio();
     return;

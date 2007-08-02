@@ -130,7 +130,7 @@ class DtmfEncoder : public Async::AudioSource, SigC::Object
      * @return	Return_value_of_this_member_function
      */
     void setToneLength(int length_ms);
-    void setGapLength(int length_ms);
+    void setToneSpacing(int spacing_ms);
     void setToneAmplitude(int amp_db);
     void send(const std::string &str);
     bool isSending(void) const { return is_sending_digits; }
@@ -166,7 +166,7 @@ class DtmfEncoder : public Async::AudioSource, SigC::Object
   private:
     int       	sampling_rate;
     int       	tone_length;
-    int       	gap_length;
+    int       	tone_spacing;
     float       tone_amp;
     std::string current_str;
     int       	low_tone;

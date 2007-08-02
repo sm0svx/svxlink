@@ -311,11 +311,29 @@ bool LocalTx::initialize(void)
     return false;
   }
   
+  string value;
+  int dtmf_tone_length = 100;
+  if (cfg.getValue(name, "DTMF_TONE_LENGTH", value))
+  {
+    dtmf_tone_length = atoi(value.c_str());
+  }
+  
+  int dtmf_tone_spacing = 50;
+  if (cfg.getValue(name, "DTMF_TONE_SPACING", value))
+  {
+    dtmf_tone_spacing = atoi(value.c_str());
+  }
+  
+  int dtmf_tone_amp = -18;
+  if (cfg.getValue(name, "DTMF_TONE_AMP", value))
+  {
+    dtmf_tone_amp = min(atoi(value.c_str()), 0);
+  }
+  
   audio_io = new AudioIO(audio_dev);
   
   sine_gen = new SineGenerator(audio_dev);
   
-  string value;
   if (cfg.getValue(name, "CTCSS_FQ", value))
   {
     sine_gen->setFq(atof(value.c_str()));
@@ -379,9 +397,9 @@ bool LocalTx::initialize(void)
   prev_src = 0;
   
   dtmf_encoder = new DtmfEncoder(audio_io->sampleRate());
-  dtmf_encoder->setToneLength(100);
-  dtmf_encoder->setGapLength(50);
-  dtmf_encoder->setToneAmplitude(-18);
+  dtmf_encoder->setToneLength(dtmf_tone_length);
+  dtmf_encoder->setToneSpacing(dtmf_tone_spacing);
+  dtmf_encoder->setToneAmplitude(dtmf_tone_amp);
   dtmf_encoder->allDigitsSent.connect(
       slot(*this, &LocalTx::onAllDtmfDigitsSent));
   
