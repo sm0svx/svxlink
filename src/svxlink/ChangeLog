@@ -10,6 +10,14 @@
 * Improved the DTMF decoder. Now using a third party DTMF decoder from the
   spandsp library.
 
+* Lowered the amplitude of the repeater idle sound.
+
+* Now possible to set parameters for outgoing DTMF digits, typically sent
+  using the DTMF Repeater module. New config variables in the tx section:
+  DTMF_TONE_LENGTH, DTMF_TONE_SPACING, DTMF_TONE_AMP.
+
+* Suppressing first roger beep when opening repeater on squelch up.
+
 
 
  0.8.0 -- 15 Apr 2007
