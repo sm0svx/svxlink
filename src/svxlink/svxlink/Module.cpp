@@ -82,8 +82,10 @@ void Module::activate(void)
   
   processEvent("activating_module");
   
+  /*
   m_audio_con = logic()->rx().audioReceived.connect(
       	  slot(*this, &Module::audioFromRx));
+  */
   
   setIdle(true);
   activateInit();
@@ -98,7 +100,7 @@ void Module::deactivate(void)
   setIdle(false);
   transmit(false);
   
-  m_audio_con.disconnect();
+  //m_audio_con.disconnect();
   
   processEvent("deactivating_module");
   

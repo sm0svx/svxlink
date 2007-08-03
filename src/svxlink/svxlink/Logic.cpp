@@ -438,7 +438,7 @@ void Logic::recordStart(const string& filename)
     recordStop();
     return;
   }
-  rx().audioReceived.connect(slot(*recorder, &Recorder::writeSamples));
+  //rx().audioReceived.connect(slot(*recorder, &Recorder::writeSamples));
 } /* Logic::recordStart */
 
 
@@ -1140,6 +1140,17 @@ int Logic::audioReceived(float *samples, int len)
   memcpy(buf, samples, len * sizeof(*samples));
   len = logic_con_out.writeSamples(buf, len);
   delete [] buf;
+  
+  if (active_module != 0)
+  {
+    active_module->audioFromRx(samples, len);
+  }
+  
+  if (recorder != 0)
+  {
+    recorder->writeSamples(samples, len);
+  }
+  
   return len;
 } /* Logic::audioReceived */
 

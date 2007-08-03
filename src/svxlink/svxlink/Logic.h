@@ -203,7 +203,7 @@ class Logic : public SigC::Object
     
   protected:    
     virtual void squelchOpen(bool is_open);
-    //virtual int audioReceived(float *samples, int count) { return count; }
+    virtual int audioReceived(float *samples, int count);
     
     virtual void transmit(bool do_transmit);
     virtual int transmitAudio(float *samples, int count);
@@ -268,7 +268,7 @@ class Logic : public SigC::Object
     void sendRgrSound(Async::Timer *t=0);
     int remoteLogicWriteSamples(float *samples, int len);
     void remoteLogicFlushSamples(void);
-    int audioReceived(float *samples, int len);
+    //int audioReceived(float *samples, int len);
     void everyMinute(Async::Timer *t);
     void allDtmfDigitsSent(void);
     void dtmfDigitDetectedP(char digit, int duration);

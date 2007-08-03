@@ -221,7 +221,7 @@ bool RepeaterLogic::initialize(void)
   //tx().txTimeout.connect(slot(this, &RepeaterLogic::txTimeout));
   
   //rx().mute(false);
-  rx().audioReceived.connect(slot(*this, &RepeaterLogic::audioReceived));
+  //rx().audioReceived.connect(slot(*this, &RepeaterLogic::audioReceived));
   rx().toneDetected.connect(slot(*this, &RepeaterLogic::detectedTone));
   
   if (required_1750_duration > 0)
@@ -379,6 +379,7 @@ int RepeaterLogic::audioReceived(float *samples, int count)
 {
   if (repeater_is_up && repeating_enabled && !no_repeat)
   {
+    Logic::audioReceived(samples, count);
     return transmitAudio(samples, count);
   }
   
@@ -484,6 +485,8 @@ void RepeaterLogic::squelchOpen(bool is_open)
     {
       tx().flushSamples();
     }
+  
+    Logic::squelchOpen(is_open);
   }
   else
   {
@@ -511,9 +514,6 @@ void RepeaterLogic::squelchOpen(bool is_open)
       }
     }
   }
-  
-  Logic::squelchOpen(is_open);
-  
 } /* RepeaterLogic::squelchOpen */
 
 
