@@ -21,6 +21,9 @@
 * Bugfix: Audio is not sent to modules and other cores when the repeater
   is down.
 
+* Bugfix: One of the frequencies for DTMF tone sending was wrong
+  (1366Hz instead of 1336Hz).
+
 
 
  0.8.0 -- 15 Apr 2007
