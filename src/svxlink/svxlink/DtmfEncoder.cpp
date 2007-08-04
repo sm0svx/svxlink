@@ -123,19 +123,19 @@ DtmfEncoder::DtmfEncoder(int sampling_rate)
   if (tone_map.empty())
   {
     tone_map['1'] = pair<int, int>(697, 1209);
-    tone_map['2'] = pair<int, int>(697, 1366);
+    tone_map['2'] = pair<int, int>(697, 1336);
     tone_map['3'] = pair<int, int>(697, 1477);
     tone_map['A'] = pair<int, int>(697, 1633);
     tone_map['4'] = pair<int, int>(770, 1209);
-    tone_map['5'] = pair<int, int>(770, 1366);
+    tone_map['5'] = pair<int, int>(770, 1336);
     tone_map['6'] = pair<int, int>(770, 1477);
     tone_map['B'] = pair<int, int>(770, 1633);
     tone_map['7'] = pair<int, int>(852, 1209);
-    tone_map['8'] = pair<int, int>(852, 1366);
+    tone_map['8'] = pair<int, int>(852, 1336);
     tone_map['9'] = pair<int, int>(852, 1477);
     tone_map['C'] = pair<int, int>(852, 1633);
     tone_map['*'] = pair<int, int>(941, 1209);
-    tone_map['0'] = pair<int, int>(941, 1366);
+    tone_map['0'] = pair<int, int>(941, 1336);
     tone_map['#'] = pair<int, int>(941, 1477);
     tone_map['D'] = pair<int, int>(941, 1633);
   }
