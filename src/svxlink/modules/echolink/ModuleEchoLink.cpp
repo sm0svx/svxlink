@@ -252,7 +252,10 @@ bool ModuleEchoLink::initialize(void)
   
   cfg().getValue(cfgName(), "ALLOW_IP", allow_ip);
   
-  cfg().getValue(cfgName(), "DROP", value);
+  if (!cfg().getValue(cfgName(), "DROP", value))
+  {
+    value = "^$";
+  }
   int err = regcomp(&drop_regex, value.c_str(),
                     REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
@@ -266,7 +269,10 @@ bool ModuleEchoLink::initialize(void)
     goto init_failed;
   }
   
-  cfg().getValue(cfgName(), "REJECT", value);
+  if (!cfg().getValue(cfgName(), "REJECT", value))
+  {
+    value = "^$";
+  }
   err = regcomp(&reject_regex, value.c_str(),
                 REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)

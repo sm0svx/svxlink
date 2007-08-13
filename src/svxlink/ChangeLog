@@ -8,7 +8,8 @@
   ID at 12 AM.
 
 * Improved the DTMF decoder. Now using a third party DTMF decoder from the
-  spandsp library.
+  spandsp library. This mean that SvxLink now depend on this library to
+  work so it must be installed.
 
 * Lowered the amplitude of the repeater idle sound.
 
@@ -16,13 +17,17 @@
   using the DTMF Repeater module. New config variables in the tx section:
   DTMF_TONE_LENGTH, DTMF_TONE_SPACING, DTMF_TONE_AMP.
 
-* Bugfix: Suppressing first roger beep when opening repeater on squelch up.
+* Bugfix: Now suppressing first roger beep when opening repeater on squelch up.
 
-* Bugfix: Audio is not sent to modules and other cores when the repeater
+* Bugfix: Audio is now not sent to modules and other cores when the repeater
   is down.
 
-* Bugfix: One of the frequencies for DTMF tone sending was wrong
-  (1366Hz instead of 1336Hz).
+* Bugfix in ModuleDtmfRepeater: One of the frequencies for DTMF tone sending
+  was wrong (1366Hz instead of 1336Hz).
+
+* Bugfix in ModuleEchoLink: The config variables DROP, REJECT and ACCEPT
+  was not properly initialized so that when they were not set in the
+  config file, SvxLink would behave unpredictably.
 
 
 
