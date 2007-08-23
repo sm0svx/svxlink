@@ -254,14 +254,14 @@ bool AudioDevice::open(Mode mode)
     return false;
   }
   
-  arg = AFMT_S16_LE; 
+  arg = AFMT_S16_NE; 
   if(ioctl(fd,  SNDCTL_DSP_SETFMT, &arg) == -1)
   {
     perror("SNDCTL_DSP_SETFMT ioctl failed");
     close();
     return false;
   }
-  if (arg != AFMT_S16_LE)
+  if (arg != AFMT_S16_NE)
   {
     fprintf(stderr, "*** error: The sound device does not support 16 bit "
       	      	    "signed samples\n");
