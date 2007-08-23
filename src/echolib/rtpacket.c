@@ -33,6 +33,8 @@ int rtp_make_sdes(pkt, ssrc_i, strict, callsign, name)
     char s[256], ev[1024];
     */
 
+    ssrc_i = htonl(ssrc_i);
+
     void addSDES(unsigned char item, char *text){
         *ap++ = item;
         *ap++ = l = strlen(text);
@@ -47,7 +49,7 @@ int rtp_make_sdes(pkt, ssrc_i, strict, callsign, name)
 	*p++ = RTCP_RR;
 	*p++ = 0;
 	*p++ = 1;
-	*((long *) p) = htonl(ssrc_i);
+	memcpy(p, &ssrc_i, 4);
 	p += 4;
 	hl = 8;
     }
@@ -63,7 +65,7 @@ int rtp_make_sdes(pkt, ssrc_i, strict, callsign, name)
 #else
     *((short *) p) = htons((RTP_VERSION << 14) | RTCP_SDES | (1 << 8));
 #endif	
-    rp->r.sdes.src = htonl(ssrc_i);
+    rp->r.sdes.src = ssrc_i;
 
     ap = (unsigned char *) rp->r.sdes.item;
 
@@ -148,6 +150,8 @@ int rtp_make_bye(p, ssrc_i, raison, strict)
     unsigned char *ap, *zp;
     int l, hl;
 
+    ssrc_i = htonl(ssrc_i);
+
     /* If requested, prefix the packet with a null receiver
        report.  This is required by the RTP spec, but is not
        required in packets sent only to the Look Who's Listening
@@ -160,8 +164,8 @@ int rtp_make_bye(p, ssrc_i, raison, strict)
         *p++ = RTCP_RR;
         *p++ = 0;
         *p++ = 1;
-        *((long *) p) = htonl(ssrc_i);
-        p += 4;
+	memcpy(p, &ssrc_i, 4);
+	p += 4;
         hl = 8;
     }
 
@@ -174,7 +178,7 @@ int rtp_make_bye(p, ssrc_i, raison, strict)
 #else
     *((short *) p) = htons((RTP_VERSION << 14) | RTCP_BYE | (1 << 8));
 #endif  
-    rp->r.bye.src[0] = htonl(ssrc_i);
+    rp->r.bye.src[0] = ssrc_i;
 
     ap = (unsigned char *) rp->r.sdes.item;
 

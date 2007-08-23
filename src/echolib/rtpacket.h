@@ -9,13 +9,13 @@
 struct rtcp_sdes_request_item {
     unsigned char r_item;
     char *r_text;
-};
+} __attribute__ ((packed));
 
 struct rtcp_sdes_request {
     int nitems; 		      /* Number of items requested */
     unsigned char ssrc[4];	      /* Source identifier */
     struct rtcp_sdes_request_item item[10]; /* Request items */
-};
+} __attribute__ ((packed));
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

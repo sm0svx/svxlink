@@ -52,7 +52,7 @@ typedef struct {
   u_int32 ts;              /* timestamp */
   u_int32 ssrc;            /* synchronization source */
   u_int32 csrc[1];         /* optional CSRC list */
-} rtp_hdr_t;
+} __attribute__ ((packed)) rtp_hdr_t;
 
 typedef struct {
   unsigned int version:2;  /* protocol version */
@@ -60,7 +60,7 @@ typedef struct {
   unsigned int count:5;    /* varies by payload type */
   unsigned int pt:8;       /* payload type */
   u_int16 length;          /* packet length in words, without this word */
-} rtcp_common_t;
+} __attribute__ ((packed)) rtcp_common_t;
 
 /* reception report */
 typedef struct {
@@ -71,13 +71,13 @@ typedef struct {
   u_int32 jitter;          /* interarrival jitter */
   u_int32 lsr;             /* last SR packet from this source */
   u_int32 dlsr;            /* delay since last SR packet */
-} rtcp_rr_t;
+} __attribute__ ((packed)) rtcp_rr_t;
 
 typedef struct {
   u_int8 type;             /* type of SDES item (rtcp_sdes_type_t) */
   u_int8 length;           /* length of SDES item (in octets) */
   char data[1];            /* text, not zero-terminated */
-} rtcp_sdes_item_t;
+} __attribute__ ((packed)) rtcp_sdes_item_t;
 
 /* one RTCP packet */
 typedef struct {
@@ -114,4 +114,5 @@ typedef struct {
       rtcp_sdes_item_t item[1]; /* list of SDES items */
     } sdes;
   } r;
-} rtcp_t;
+} __attribute__ ((packed)) rtcp_t;
+
