@@ -95,6 +95,10 @@ ifeq ($(OS),)
 	    if [ -d $$dir ]; then \
 		$(PRINT_DIR) $(CURRENT_SUBDIR)$$dir ; \
 		make CURRENT_SUBDIR="$(CURRENT_SUBDIR)$$dir/" -C $$dir $@; \
+		ec=$$?; \
+		if [ $$ec -ne 0 ]; then \
+		  exit $$ec; \
+		fi \
 	    fi \
 	done
 else
