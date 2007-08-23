@@ -322,8 +322,8 @@ ECHO		= /bin/echo -e
 BECHO		= $(ECHO) $(BOLD)txt $(NBOLD)
 
 # Compiler
-CFLAGS = $(WARNINGS) $(CWARNINGS) $(INCPATH) -fPIC $(CFLAGS_DEFINES)
-CXXFLAGS = $(WARNINGS) $(CXXWARNINGS) $(INCPATH) -fPIC $(CFLAGS_DEFINES)
+CFLAGS += $(WARNINGS) $(CWARNINGS) $(INCPATH) -fPIC $(CFLAGS_DEFINES)
+CXXFLAGS += $(WARNINGS) $(CXXWARNINGS) $(INCPATH) -fPIC $(CFLAGS_DEFINES)
 ifdef BUILD_RELEASE
   CFLAGS += $(RELEASE_CFLAGS)
   CXXFLAGS += $(RELEASE_CFLAGS)
@@ -331,17 +331,16 @@ else
   CFLAGS += $(DEBUG_CFLAGS)
   CXXFLAGS += $(DEBUG_CFLAGS)
 endif
-COMP		= gcc
-CC		= $(ECHO) --- Compiling $(BOLD)$(@:.o=.c)$(NBOLD)...; $(COMP) $(CFLAGS)
-CXX		= $(ECHO) --- Compiling $(BOLD)$(@:.o=.cpp)$(NBOLD)...; g++ $(CXXFLAGS)
+CCOMP		:= $(CC)
+CXXCOMP		:= $(CXX)
+CC		= $(ECHO) --- Compiling $(BOLD)$(@:.o=.c)$(NBOLD)...; $(CCOMP) $(CFLAGS)
+CXX		= $(ECHO) --- Compiling $(BOLD)$(@:.o=.cpp)$(NBOLD)...; $(CXXCOMP) $(CXXFLAGS)
 
-# Archiver
-AR		= ar
 
 # Linker
-LDFLAGS		= -rdynamic -Wl,-rpath-link,$(LIB)
-LINK		= $(ECHO) --- Linking $(BOLD)$@$(NBOLD)...; gcc $(LIBPATH) $(LDFLAGS)
-CPPLINK		= $(ECHO) --- Linking $(BOLD)$@$(NBOLD)...; g++ $(LIBPATH) $(LDFLAGS)
+LDFLAGS		+= -rdynamic -Wl,-rpath-link,$(LIB)
+LINK		= $(ECHO) --- Linking $(BOLD)$@$(NBOLD)...; $(CCOMP) $(LIBPATH) $(LDFLAGS)
+CPPLINK		= $(ECHO) --- Linking $(BOLD)$@$(NBOLD)...; $(CXXCOMP) $(LIBPATH) $(LDFLAGS)
 
 # QtMoc
 #QTMOC		= $(QTDIR)/bin/moc
@@ -362,7 +361,7 @@ depend/%.dpp:  	%.cpp
 		chgrp $(SET_GROUP) `dirname $@`; \
 	fi
 	$(ECHO) --- Creating dependency file $(BOLD)$@$(NBOLD)...
-	g++ -M -MG -MT "$*.o $@" $(CXXFLAGS) -MF $@ $< > /dev/null
+	$(CXXCOMP) -M -MG -MT "$*.o $@" $(CXXFLAGS) -MF $@ $< > /dev/null
 	chgrp $(SET_GROUP) $@
 
 depend/%.d:	%.c
@@ -371,7 +370,7 @@ depend/%.d:	%.c
 		chgrp $(SET_GROUP) `dirname $@`; \
 	fi
 	$(ECHO) --- Creating dependency file $(BOLD)$@$(NBOLD)...
-	gcc -M -MG -MT "$*.o $@" $(CFLAGS) -MF $@ $< > /dev/null
+	$(CCOMP) -M -MG -MT "$*.o $@" $(CFLAGS) -MF $@ $< > /dev/null
 	chgrp $(SET_GROUP) $@
 
 
@@ -561,11 +560,11 @@ $(SHLIBFILE):	$(LIBOBJS)
 	$(RM) $(SHLIBFILE) \
 	      	$(LIB)/lib$(LIBNAME).so.$(SHLIB_MAJOR).$(SHLIB_MINOR) \
 		$(LIB)/lib$(LIBNAME).so
-	$(ECHO) --- Creating shared object library $(BOLD)$@$(NBOLD)...
+	#$(ECHO) --- Creating shared object library $(BOLD)$@$(NBOLD)...
 	#ld -o $@ -G -h lib$(LIBNAME).so.$(SHLIB_MAJOR) $(LIBOBJS)
 	#ld -o $@ -soname=lib$(LIBNAME).so.$(SHLIB_MAJOR).$(SHLIB_MINOR) \
 	#      	-shared $(LIBPATH) $(LIBOBJS) $(LIB_LIBS)
-	gcc -shared -o $@ -Wl,-soname,lib$(LIBNAME).so.$(SHLIB_MAJOR).$(SHLIB_MINOR) $(LIBPATH) \
+	$(LINK) -shared -o $@ -Wl,-soname,lib$(LIBNAME).so.$(SHLIB_MAJOR).$(SHLIB_MINOR) $(LIBPATH) \
 	      	$(LIBOBJS) $(LIB_LIBS)
 	chgrp $(SET_GROUP) $@
 	ln -s $(notdir $@) \
