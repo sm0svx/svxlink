@@ -14,11 +14,17 @@
 #
 proc playMsg {context msg} {
   global basedir;
-  if [file exists "$basedir/$context/$msg.raw"] {
-    playFile "$basedir/$context/$msg.raw";
+  set candidates [glob -nocomplain "$basedir/$context/$msg.{raw,gsm}" "$basedir/Default/$msg.{raw,gsm}"];
+  if { [llength $candidates] > 0 } {
+    playFile [lindex $candidates 0];
   } else {
-    playFile "$basedir/Default/$msg.raw";
+    puts "*** WARNING: Could not find audio clip \"$msg\" in context \"$context\"";
   }
+  #if [file exists "$basedir/$context/$msg.raw"] {
+  #  playFile "$basedir/$context/$msg.raw";
+  #} else {
+  #  playFile "$basedir/Default/$msg.raw";
+  #}
 }
 
 

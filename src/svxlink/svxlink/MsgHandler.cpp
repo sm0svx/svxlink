@@ -42,6 +42,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <ctype.h>
 #include <math.h>
 
+extern "C" {
+#include <gsm.h>
+}
+
 #include <cassert>
 #include <iostream>
 
@@ -132,11 +136,12 @@ class ToneQueueItem : public QueueItem
     
 };
 
-class FileQueueItem : public QueueItem
+class RawFileQueueItem : public QueueItem
 {
   public:
-    FileQueueItem(const std::string& filename) : filename(filename), file(-1) {}
-    ~FileQueueItem(void);
+    RawFileQueueItem(const std::string& filename)
+      : filename(filename), file(-1) {}
+    ~RawFileQueueItem(void);
     bool initialize(void);
     int readSamples(float *samples, int len);
     void unreadSamples(int len);
@@ -145,6 +150,27 @@ class FileQueueItem : public QueueItem
     string  filename;
     int     file;
     
+};
+
+class GsmFileQueueItem : public QueueItem
+{
+  public:
+    GsmFileQueueItem(const std::string& filename)
+      : filename(filename), file(-1), decoder(0) {}
+    ~GsmFileQueueItem(void);
+    bool initialize(void);
+    int readSamples(float *samples, int len);
+    void unreadSamples(int len);
+
+  private:
+    static const int BUFSIZE = 160;
+    
+    string    	filename;
+    int       	file;
+    gsm       	decoder;
+    int       	buf_pos;
+    gsm_signal  buf[BUFSIZE];
+
 };
 
 
@@ -181,7 +207,8 @@ class FileQueueItem : public QueueItem
  ****************************************************************************/
 
 MsgHandler::MsgHandler(int sample_rate)
-  : sample_rate(sample_rate), nesting_level(0), pending_play_next(false)
+  : sample_rate(sample_rate), nesting_level(0), pending_play_next(false),
+    current(0)
 {
   
 }
@@ -195,7 +222,16 @@ MsgHandler::~MsgHandler(void)
 
 void MsgHandler::playFile(const string& path)
 {
-  QueueItem *item = new FileQueueItem(path);
+  QueueItem *item = 0;
+  const char *ext = strrchr(path.c_str(), '.');
+  if (strcmp(ext, ".gsm") == 0)
+  {
+    item = new GsmFileQueueItem(path);
+  }
+  else
+  {
+    item = new RawFileQueueItem(path);
+  }
   addItemToQueue(item);
 } /* MsgHandler::playFile */
 
@@ -218,15 +254,18 @@ void MsgHandler::writeBufferFull(bool is_full)
 {
   //cout << "MsgHandler::writeBufferFull: write_buffer_full=" << is_full
   //     << "  msg_queue.empty()=" << msg_queue.empty() << endl;
-  if (!is_full && !msg_queue.empty())
+  if (!is_full && (current != 0))
   {
-    playMsg();
+    writeSamples();
   }
 }
 
 
 void MsgHandler::clear(void)
 {
+  delete current;
+  current = 0;
+  
   list<QueueItem*>::iterator it;
   for (it=msg_queue.begin(); it!=msg_queue.end(); ++it)
   {
@@ -326,12 +365,18 @@ void MsgHandler::playMsg(void)
     allMsgsWritten();
     return;
   }
-    
-  QueueItem *item = msg_queue.front();
-  if (!item->initialize())
+  
+  if (current != 0)
   {
-    msg_queue.pop_front();
-    delete item;
+    return;
+  }
+    
+  current = msg_queue.front();
+  msg_queue.pop_front();
+  if (!current->initialize())
+  {
+    delete current;
+    current = 0;
     playMsg();
   }
   else
@@ -344,14 +389,14 @@ void MsgHandler::playMsg(void)
 void MsgHandler::writeSamples(void)
 {
   float buf[WRITE_BLOCK_SIZE];
-  
-  QueueItem *item = msg_queue.front();
-  
+
+  assert(current != 0);
+    
   int written;
   int read_cnt;
   do
   {
-    read_cnt = item->readSamples(buf, sizeof(buf) / sizeof(*buf));
+    read_cnt = current->readSamples(buf, sizeof(buf) / sizeof(*buf));
     if (read_cnt == 0)
     {
       goto done;
@@ -366,14 +411,14 @@ void MsgHandler::writeSamples(void)
     //printf("Read=%d  Written=%d\n", read_cnt, written);
   } while (written == read_cnt);
   
-  item->unreadSamples(read_cnt - written);
+  current->unreadSamples(read_cnt - written);
   
   return;
     
   done:
     //printf("Done...\n");
-    msg_queue.pop_front();
-    delete item;
+    delete current;
+    current = 0;
     playMsg();
 }
 
@@ -385,33 +430,32 @@ void MsgHandler::writeSamples(void)
  *
  ****************************************************************************/
 
-FileQueueItem::~FileQueueItem(void)
+RawFileQueueItem::~RawFileQueueItem(void)
 {
   if (file != -1)
   {
     ::close(file);
   }
-} /* FileQueueItem::~FileQueueItem */
+} /* RawFileQueueItem::~FileQueueItem */
 
 
-bool FileQueueItem::initialize(void)
+bool RawFileQueueItem::initialize(void)
 {
+  assert(file == -1);
+
+  file = ::open(filename.c_str(), O_RDONLY);
   if (file == -1)
   {
-    file = ::open(filename.c_str(), O_RDONLY);
-    if (file == -1)
-    {
-      cerr << "*** WARNING: Could not find audio file \"" << filename << "\"\n";
-      return false;
-    }
+    cerr << "*** WARNING: Could not find audio file \"" << filename << "\"\n";
+    return false;
   }
     
   return true;
   
-} /* FileQueueItem::initialize */
+} /* RawFileQueueItem::initialize */
 
 
-int FileQueueItem::readSamples(float *samples, int len)
+int RawFileQueueItem::readSamples(float *samples, int len)
 {
   short buf[len];
   assert(file != -1);
@@ -432,16 +476,120 @@ int FileQueueItem::readSamples(float *samples, int len)
   
   return read_cnt;
   
-} /* FileQueueItem::readSamples */
+} /* RawFileQueueItem::readSamples */
 
 
-void FileQueueItem::unreadSamples(int len)
+void RawFileQueueItem::unreadSamples(int len)
 {
   if (lseek(file, -len * sizeof(short), SEEK_CUR) == -1)
   {
-    perror("lseek in FileQueueItem::unreadSamples");
+    perror("lseek in RawFileQueueItem::unreadSamples");
   }
-} /* FileQueueItem::unreadSamples */
+} /* RawFileQueueItem::unreadSamples */
+
+
+
+/****************************************************************************
+ *
+ * Private member functions for class GsmFileQueueItem
+ *
+ ****************************************************************************/
+
+GsmFileQueueItem::~GsmFileQueueItem(void)
+{
+  if (decoder != 0)
+  {
+    gsm_destroy(decoder);
+  }
+  
+  if (file != -1)
+  {
+    ::close(file);
+  }
+} /* GsmFileQueueItem::~FileQueueItem */
+
+
+bool GsmFileQueueItem::initialize(void)
+{
+  //cout << "GsmFileQueueItem::initialize\n";
+  
+  assert(file == -1);
+
+  file = ::open(filename.c_str(), O_RDONLY);
+  if (file == -1)
+  {
+    cerr << "*** WARNING: Could not find audio file \"" << filename << "\"\n";
+    return false;
+  }
+  
+  decoder = gsm_create();
+  
+  buf_pos = BUFSIZE;
+  
+  return true;
+  
+} /* GsmFileQueueItem::initialize */
+
+
+int GsmFileQueueItem::readSamples(float *samples, int len)
+{
+  int read_cnt = 0;
+  
+  //cout << "buf_pos=" << buf_pos << endl;
+  if (buf_pos == BUFSIZE)
+  {
+    assert(file != -1);
+
+    gsm_frame gsm_data;
+    int cnt = read(file, gsm_data, sizeof(gsm_data));
+    if (cnt == -1)
+    {
+      perror("read in GsmFileQueueItem::readSamples");
+      return 0;
+    }
+    else if (cnt != sizeof(gsm_data))
+    {
+      if (cnt != 0)
+      {
+      	cerr << "*** WARNING: Corrupt GSM file: " << filename << endl;
+      }
+      
+      return 0;
+    }
+    else
+    {
+      gsm_decode(decoder, gsm_data, buf);
+      buf_pos = 0;
+    }
+  }
+  
+  while ((read_cnt < len) && (buf_pos < BUFSIZE))
+  {
+    samples[read_cnt++] = static_cast<float>(buf[buf_pos++]) / 32768.0;
+  }
+  
+  //cout << "GsmFileQueueItem::readSamples: " << read_cnt << endl;
+  
+  return read_cnt;
+  
+} /* GsmFileQueueItem::readSamples */
+
+
+void GsmFileQueueItem::unreadSamples(int len)
+{
+  //cout << "GsmFileQueueItem::unreadSamples(" << len << ")\n";
+  if (len > buf_pos)
+  {
+    cerr << "*** WARNING: Trying to unread more GSM samples then was "
+            "previously read." << endl;
+    return;
+  }
+  
+  buf_pos -= len;
+  
+  //cout << "GsmFileQueueItem::unreadSamples: buf_pos=" << buf_pos << endl;
+  
+} /* GsmFileQueueItem::unreadSamples */
 
 
 

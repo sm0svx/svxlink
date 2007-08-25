@@ -205,6 +205,7 @@ class MsgHandler : public SigC::Object
     int			    sample_rate;
     int      	      	    nesting_level;
     bool      	      	    pending_play_next;
+    QueueItem 	      	    *current;
     
     MsgHandler(const MsgHandler&);
     MsgHandler& operator=(const MsgHandler&);
