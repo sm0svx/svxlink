@@ -48,6 +48,7 @@ An example of how to use the EchoLink::Directory class
 #include <string>
 #include <list>
 #include <vector>
+#include <iostream>
 
 
 /****************************************************************************
@@ -407,6 +408,9 @@ class Directory : public SigC::Object
     bool stationCodeEq(const StationData& stn, std::string code, bool exact);
 
 };  /* class Directory */
+
+
+std::ostream& operator<<(std::ostream& os, const StationData& station);
 
 
 } /* namespace */

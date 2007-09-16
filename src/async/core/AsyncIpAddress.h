@@ -225,6 +225,9 @@ class IpAddress
 };  /* class IpAddress */
 
 
+std::ostream& operator<<(std::ostream& os, const IpAddress& ip);
+
+
 } /* namespace */
 
 
