@@ -3,6 +3,8 @@
 
 * Now compile under CentOS 5.0.
 
+* Fixes for 64 bit platforms.
+
 
 
  0.10.0 -- 15 Apr 2007

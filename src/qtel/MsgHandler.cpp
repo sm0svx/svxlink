@@ -270,7 +270,7 @@ void MsgHandler::writeFromFile(void)
 int MsgHandler::readSamples(float *samples, int len)
 {
   int read_cnt;
-  short buf[len];
+  int16_t buf[len];
   
   if (silence_left >= 0)
   {
@@ -318,7 +318,7 @@ void MsgHandler::unreadSamples(int len)
   else
   {
     //printf("lseeking...\n");
-    lseek(file, -len * sizeof(short), SEEK_CUR);
+    lseek(file, -len * sizeof(int16_t), SEEK_CUR);
   }
     
 
