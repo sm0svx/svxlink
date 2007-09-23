@@ -3,11 +3,11 @@ QTEL=0.10.1rc1
 QTEL_RPM_RELEASE=1
 
 # Version for the EchoLib library
-ECHOLIB=0.12.0
+ECHOLIB=0.12.1rc1
 ECHOLIB_RPM_RELEASE=1
 
 # Version for the Async library
-LIBASYNC=0.15.0rc1
+LIBASYNC=0.15.0rc3
 LIBASYNC_RPM_RELEASE=1
 
 # SvxLink versions

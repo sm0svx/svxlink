@@ -22,9 +22,9 @@ extern "C" {
 #endif
 
 
-extern int rtp_make_sdes(char **, unsigned long, int, const char *,
+extern int rtp_make_sdes(char **, uint32_t, int, const char *,
     const char *);
-extern int rtp_make_bye(unsigned char *, unsigned long, char *, int);
+extern int rtp_make_bye(unsigned char *, uint32_t, char *, int);
 extern int parseSDES(unsigned char *, struct rtcp_sdes_request *);
 extern void copySDESitem(char *, char *);
 extern int isRTCPByepacket(unsigned char *, int);

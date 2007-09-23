@@ -6,6 +6,8 @@
 * Inserting repeated audio fragments if incoming audio pase is too slow.
   Good when using two sound cards with slightly different sampling rate.
 
+* Fixes for 64 bit platforms.
+
 
 
  0.14.0 -- 15 Apr 2007

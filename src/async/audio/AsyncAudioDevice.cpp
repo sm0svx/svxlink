@@ -344,9 +344,9 @@ bool AudioDevice::open(Mode mode)
   
   if (read_buf == 0)
   {
-    read_buf = new short[BUF_FRAG_COUNT*frag_size];
+    read_buf = new int16_t[BUF_FRAG_COUNT*frag_size];
     samples = new float[BUF_FRAG_COUNT*frag_size];
-    last_frag = new short[frag_size];
+    last_frag = new int16_t[frag_size];
     memset(last_frag, 0, frag_size * sizeof(*last_frag));
   }
   
@@ -410,7 +410,7 @@ int AudioDevice::samplesToWrite(void) const
     return -1;
   }
   
-  return (info.fragsize * (info.fragstotal - info.fragments)) / sizeof(short);
+  return (info.fragsize * (info.fragstotal - info.fragments)) / sizeof(int16_t);
   
 } /* AudioDevice::samplesToWrite */
 
@@ -504,12 +504,12 @@ void AudioDevice::audioReadHandler(FdWatch *watch)
       return;
     }
     
-    //printf("Read %d samples\n", cnt / sizeof(short));
-    for (unsigned i=0; i<cnt/sizeof(short); ++i)
+    //printf("Read %d samples\n", cnt / sizeof(int16_t));
+    for (unsigned i=0; i<cnt/sizeof(int16_t); ++i)
     {
       samples[i] = static_cast<float>(read_buf[i]) / 32768.0;
     }
-    audioRead(samples, cnt/sizeof(short));
+    audioRead(samples, cnt/sizeof(int16_t));
   }
     
 } /* AudioDevice::audioReadHandler */
@@ -531,7 +531,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
   unsigned fragments;
   do
   {
-    short buf[32768];
+    int16_t buf[32768];
     memset(buf, 0, sizeof(buf));
 
     if (ioctl(fd, SNDCTL_DSP_GETOSPACE, &info) == -1)
@@ -545,11 +545,11 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
     /*
     int frags_to_write = sizeof(*buf) * count / info.fragsize;
     */
-    //samples_to_write = min(samples_to_write, info.bytes / sizeof(short));
+    //samples_to_write = min(samples_to_write, info.bytes / sizeof(int16_t));
     
     //fragments = max(0, 2 - (info.fragstotal - info.fragments));
     fragments = info.fragments;
-    fragsize = info.fragsize / sizeof(short);
+    fragsize = info.fragsize / sizeof(int16_t);
     samples_to_write = min(static_cast<unsigned>(sizeof(buf) / sizeof(*buf)),
     		fragments * fragsize);
     //samples_to_write = min(samples_to_write, 7936U);
@@ -641,7 +641,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
 	    }
 	    else
 	    {
-      	      buf[i] = static_cast<short>(sample);
+      	      buf[i] = static_cast<int16_t>(sample);
 	    }
 	  }
 	}

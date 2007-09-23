@@ -175,7 +175,7 @@ TcpConnection::TcpConnection(size_t recv_buf_len)
 
 
 TcpConnection::TcpConnection(int sock, const IpAddress& remote_addr,
-      	      	      	     unsigned short remote_port, size_t recv_buf_len)
+      	      	      	     uint16_t remote_port, size_t recv_buf_len)
   : remote_addr(remote_addr), remote_port(remote_port),
     recv_buf_len(recv_buf_len), sock(sock), rd_watch(0), wr_watch(0),
     recv_buf(0), recv_buf_cnt(0)
@@ -295,7 +295,7 @@ void TcpConnection::setRemoteAddr(const IpAddress& remote_addr)
  * Bugs:      
  *------------------------------------------------------------------------
  */
-void TcpConnection::setRemotePort(unsigned short remote_port)
+void TcpConnection::setRemotePort(uint16_t remote_port)
 {
   this->remote_port = remote_port;
 } /* TcpConnection::setRemotePort */

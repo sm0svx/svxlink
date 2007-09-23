@@ -189,10 +189,10 @@ bool IpAddress::isWithinSubet(const std::string& subnet) const
     return false;
   }
   string mask_str(slash, subnet.end());
-  unsigned long mask = 0xffffffff ^ ((unsigned long)pow(2.0, 32-atoi(mask_str.c_str())) - 1);
+  uint32_t mask = 0xffffffff ^ ((uint32_t)pow(2.0, 32-atoi(mask_str.c_str())) - 1);
 
   return (ntohl(m_addr.s_addr) & mask) == (ntohl(ip.s_addr) & mask);
-  
+ 
 } /* IpAddress::isWithinSubet */
 
 
@@ -206,8 +206,6 @@ std::ostream& Async::operator<<(std::ostream& os, const Async::IpAddress& ip)
 {
   return os << ip.toString();
 } /* Async::operator<< */
-
-
 
 
 

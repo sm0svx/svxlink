@@ -152,7 +152,7 @@ class UdpPacket
  * Bugs:      
  *------------------------------------------------------------------------
  */
-UdpSocket::UdpSocket(unsigned short local_port)
+UdpSocket::UdpSocket(uint16_t local_port)
   : sock(-1), rd_watch(0), wr_watch(0), send_buf(0)
 {
   struct sockaddr_in addr;

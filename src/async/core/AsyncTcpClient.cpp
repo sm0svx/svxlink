@@ -137,7 +137,7 @@ using namespace Async;
  * Bugs:      
  *------------------------------------------------------------------------
  */
-TcpClient::TcpClient(const string& remote_host, unsigned short remote_port,
+TcpClient::TcpClient(const string& remote_host, uint16_t remote_port,
     size_t recv_buf_len)
   : TcpConnection(recv_buf_len), dns(0), remote_host(remote_host),
     remote_port(remote_port), sock(-1), wr_watch(0)

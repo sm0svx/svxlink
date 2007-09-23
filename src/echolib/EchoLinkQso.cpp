@@ -388,7 +388,7 @@ int Qso::sendAudio(float *buf, int len)
       }
       else
       {
-      	send_buffer[send_buffer_cnt++] = static_cast<short>(32767.0 * sample);
+      	send_buffer[send_buffer_cnt++] = static_cast<int16_t>(32767.0 * sample);
       }
     }
     

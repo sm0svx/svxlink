@@ -158,7 +158,7 @@ class TcpConnection : public SigC::Object
      * @param 	recv_buf_len  The length of the receiver buffer to use
      */
     TcpConnection(int sock, const IpAddress& remote_addr,
-      	      	  unsigned short remote_port,
+      	      	  uint16_t remote_port,
       	      	  size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
     
     /**
@@ -195,7 +195,7 @@ class TcpConnection : public SigC::Object
      * @brief 	Return the remote port used
      * @return	Returns the remote port
      */
-    unsigned short remotePort(void) const { return remote_port; }
+    uint16_t remotePort(void) const { return remote_port; }
     
     /**
      * @brief 	Check if the connection is established or not
@@ -258,7 +258,7 @@ class TcpConnection : public SigC::Object
      *
      * Use this function to set up the remote port for the connection.
      */
-    void setRemotePort(unsigned short remote_port);
+    void setRemotePort(uint16_t remote_port);
     
     /**
      * @brief 	Return the socket file descriptor
@@ -271,14 +271,14 @@ class TcpConnection : public SigC::Object
     
     
   private:
-    IpAddress 	    remote_addr;
-    unsigned short  remote_port;
-    size_t          recv_buf_len;
-    int       	    sock;
-    FdWatch *       rd_watch;
-    FdWatch *       wr_watch;
-    char *    	    recv_buf;
-    size_t          recv_buf_cnt;
+    IpAddress remote_addr;
+    uint16_t  remote_port;
+    size_t    recv_buf_len;
+    int       sock;
+    FdWatch * rd_watch;
+    FdWatch * wr_watch;
+    char *    recv_buf;
+    size_t    recv_buf_cnt;
     
     void recvHandler(FdWatch *watch);
     void writeHandler(FdWatch *watch);

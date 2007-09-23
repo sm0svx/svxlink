@@ -128,7 +128,7 @@ class UdpSocket : public SigC::Object
      * @param 	local_port  The local port to use. If not specified, a random
      *	      	      	    local port will be used.
      */
-    UdpSocket(unsigned short local_port=0);
+    UdpSocket(uint16_t local_port=0);
   
     /**
      * @brief 	Destructor

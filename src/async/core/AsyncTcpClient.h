@@ -139,7 +139,7 @@ class TcpClient : public TcpConnection
      * no connection will be created until the connect function
      * (see @ref TcpClient::connect) is called.
      */
-    TcpClient(const std::string& remote_host, unsigned short remote_port,
+    TcpClient(const std::string& remote_host, uint16_t remote_port,
       	      size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
     
     /**
@@ -175,11 +175,11 @@ class TcpClient : public TcpConnection
   protected:
     
   private:
-    DnsLookup 	    *dns;
-    std::string     remote_host;
-    unsigned short  remote_port;
-    int       	    sock;
-    FdWatch   	    *wr_watch;
+    DnsLookup 	*dns;
+    std::string remote_host;
+    uint16_t    remote_port;
+    int       	sock;
+    FdWatch   	*wr_watch;
     
     void dnsResultsReady(DnsLookup& dns_lookup);
     void connectToRemote(const IpAddress& ip_addr);

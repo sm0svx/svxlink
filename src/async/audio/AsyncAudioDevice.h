@@ -231,12 +231,12 @@ class AudioDevice : public SigC::Object
     int       	      	fd;
     FdWatch	      	*read_watch;
     FdWatch	      	*write_watch;
-    short      	      	*read_buf;
+    int16_t      	*read_buf;
     int       	      	device_caps;
     bool      	      	use_trigger;
     bool		prebuf;
     float     	      	*samples;
-    short     	      	*last_frag;
+    int16_t     	*last_frag;
     bool      	      	use_fillin;
     
     void audioReadHandler(FdWatch *watch);

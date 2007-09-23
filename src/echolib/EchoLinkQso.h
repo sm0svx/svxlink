@@ -145,13 +145,13 @@ class Qso : public SigC::Object
     class GsmVoicePacket
     {
       public:
-	unsigned char version;
-	unsigned char pt;
-	unsigned short seqNum;
-	unsigned long time;
-	unsigned long ssrc;
-	unsigned char data[33*4];
-    };
+	uint8_t version;
+	uint8_t pt;
+	uint16_t seqNum;
+	uint32_t time;
+	uint32_t ssrc;
+	uint8_t data[33*4];
+    } __attribute__ ((packed));
 
     /**
      * @brief The type of the connection state
@@ -426,7 +426,7 @@ class Qso : public SigC::Object
     int       	      	sdes_length;
     State     	      	state;
     gsm       	      	gsmh;
-    unsigned short    	next_audio_seq;
+    uint16_t    	next_audio_seq;
     Async::Timer *	keep_alive_timer;
     int       	      	connect_retry_cnt;
     Async::Timer *      con_timeout_timer;

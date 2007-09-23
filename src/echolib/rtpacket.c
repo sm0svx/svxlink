@@ -16,7 +16,7 @@
 
 int rtp_make_sdes(pkt, ssrc_i, strict, callsign, name)
   char **pkt;
-  unsigned long ssrc_i;
+  uint32_t ssrc_i;
   int strict;
   const char *callsign;
   const char *name;
@@ -63,7 +63,7 @@ int rtp_make_sdes(pkt, ssrc_i, strict, callsign, name)
     rp->common.count = 1;
     rp->common.pt = RTCP_SDES;
 #else
-    *((short *) p) = htons((RTP_VERSION << 14) | RTCP_SDES | (1 << 8));
+    *((uint16_t *) p) = htons((RTP_VERSION << 14) | RTCP_SDES | (1 << 8));
 #endif	
     rp->r.sdes.src = ssrc_i;
 
@@ -142,7 +142,7 @@ int rtp_make_sdes(pkt, ssrc_i, strict, callsign, name)
 
 int rtp_make_bye(p, ssrc_i, raison, strict)
   unsigned char *p;
-  unsigned long ssrc_i;
+  uint32_t ssrc_i;
   char *raison;
   int strict;
 {
@@ -176,7 +176,7 @@ int rtp_make_bye(p, ssrc_i, raison, strict)
     rp->common.count = 1;
     rp->common.pt = RTCP_BYE;
 #else
-    *((short *) p) = htons((RTP_VERSION << 14) | RTCP_BYE | (1 << 8));
+    *((uint16_t *) p) = htons((RTP_VERSION << 14) | RTCP_BYE | (1 << 8));
 #endif  
     rp->r.bye.src[0] = ssrc_i;
 
@@ -254,7 +254,7 @@ int parseSDES(packet, r)
     while ((p[0] >> 6 & 3) == RTP_VERSION || (p[0] >> 6 & 3) == 1) {
 	if ((p[1] == RTCP_SDES) && ((p[0] & 0x1F) > 0)) {
 	    unsigned char *cp = p + 8,
-			  *lp = cp + (ntohs(*((short *) (p + 2))) + 1) * 4;
+			  *lp = cp + (ntohs(*((uint16_t *) (p + 2))) + 1) * 4;
 	    bcopy(p + 4, r->ssrc, 4);
 	    while (cp < lp) {
 		unsigned char itype = *cp;
@@ -281,7 +281,7 @@ int parseSDES(packet, r)
 	    break;
 	}
 	/* If not of interest to us, skip to next subpacket. */
-	p += (ntohs(*((short *) (p + 2))) + 1) * 4;
+	p += (ntohs(*((uint16_t *) (p + 2))) + 1) * 4;
     }
     return success;
 }
@@ -321,7 +321,7 @@ int isRTCPByepacket(p, len)
             sawbye = TRUE;
         }
         /* Advance to next subpacket */
-        p += (ntohs(*((short *) (p + 2))) + 1) * 4;
+        p += (ntohs(*((uint16_t *) (p + 2))) + 1) * 4;
     } while (p < end && (((p[0] >> 6) & 3) == RTP_VERSION));
 
     return (sawbye);
@@ -349,7 +349,7 @@ int isRTCPSdespacket(p, len)
             sawsdes = TRUE;
         }
         /* Advance to next subpacket */
-        p += (ntohs(*((short *) (p + 2))) + 1) * 4;
+        p += (ntohs(*((uint16_t *) (p + 2))) + 1) * 4;
     } while (p < end && (((p[0] >> 6) & 3) == RTP_VERSION));
 
     return (sawsdes);

@@ -37,9 +37,9 @@ typedef enum {
   RTCP_SDES_SOURCE = 11
 } rtcp_sdes_type_t;
 
-#define u_int8 unsigned char
-#define u_int16 unsigned short
-#define u_int32 unsigned long
+#define u_int8 uint8_t
+#define u_int16 uint16_t
+#define u_int32 uint32_t
 
 typedef struct {
   unsigned int version:2;  /* protocol version */
