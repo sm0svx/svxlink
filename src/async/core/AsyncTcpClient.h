@@ -44,6 +44,7 @@ An example of how to use the Async::TcpClient class
  ****************************************************************************/
 
 #include <sigc++/sigc++.h>
+#include <stdint.h>
 
 #include <string>
 
