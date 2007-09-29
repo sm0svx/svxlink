@@ -5,6 +5,8 @@
 * $Id$
 */
 
+#include <stdint.h>
+
 #define RTP_SEQ_MOD (1<<16)
 #define RTP_TS_MOD  (0xffffffff)
 /*

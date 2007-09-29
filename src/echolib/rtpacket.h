@@ -4,6 +4,7 @@
 
 */
 
+#include <stdint.h>
 
 
 struct rtcp_sdes_request_item {
