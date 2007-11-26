@@ -2,7 +2,7 @@
 
 info()
 {
-  echo -en $1
+  /bin/echo -en $1
 }
 
 output()
@@ -45,33 +45,33 @@ fi
 rm -f chown_test-$$.tmp
 
 # Check for KDE
-info "--- Checking for KDE..."
-if [ "${KDEDIR}" != "" ]; then
-  if [ -r "${KDEDIR}/include/kde/kdeversion.h" ]; then
-    KDEINC=${KDEDIR}/include/kde
-    KDE_VERSION_INC=${KDEINC}/kdeversion.h
-  elif [ -r "${KDEDIR}/include/kapp.h" ]; then
-    KDEINC=${KDEDIR}/include
-    KDE_VERSION_INC=${KDEINC}/kapp.h
-  elif [ -r "${KDEDIR}/include/kde/kapp.h" ]; then
-    KDEINC=${KDEDIR}/include/kde
-    KDE_VERSION_INC=${KDEINC}/kapp.h
-  fi
-  if [ "${KDEINC}" != "" ]; then
-    KDE_VERSION_MAJOR=$(awk '/#define KDE_VERSION_MAJOR/ { print $3; }' ${KDE_VERSION_INC})
-    output "KDE_VERSION_MAJOR=$KDE_VERSION_MAJOR"
-    output "CFLAGS_DEFINES+=-DKDE_VERSION_MAJOR=$KDE_VERSION_MAJOR"
-    info "yes (version=$KDE_VERSION_MAJOR)\n"
-  else
-    info "no\n"
-  fi
-else
-  info "no\n"
-fi
+#info "--- Checking for KDE..."
+#if [ "${KDEDIR}" != "" ]; then
+#  if [ -r "${KDEDIR}/include/kde/kdeversion.h" ]; then
+#    KDEINC=${KDEDIR}/include/kde
+#    KDE_VERSION_INC=${KDEINC}/kdeversion.h
+#  elif [ -r "${KDEDIR}/include/kapp.h" ]; then
+#    KDEINC=${KDEDIR}/include
+#    KDE_VERSION_INC=${KDEINC}/kapp.h
+#  elif [ -r "${KDEDIR}/include/kde/kapp.h" ]; then
+#    KDEINC=${KDEDIR}/include/kde
+#    KDE_VERSION_INC=${KDEINC}/kapp.h
+#  fi
+#  if [ "${KDEINC}" != "" ]; then
+#    KDE_VERSION_MAJOR=$(awk '/#define KDE_VERSION_MAJOR/ { print $3; }' ${KDE_VERSION_INC})
+#    output "KDE_VERSION_MAJOR=$KDE_VERSION_MAJOR"
+#    output "CFLAGS_DEFINES+=-DKDE_VERSION_MAJOR=$KDE_VERSION_MAJOR"
+#    info "yes (version=$KDE_VERSION_MAJOR)\n"
+#  else
+#    info "no\n"
+#  fi
+#else
+#  info "no\n"
+#fi
 
 # Checking for QT
 info "--- Checking for QT..."
-if which pkg-config &> /dev/null; then
+if which pkg-config > /dev/null 2>&1; then
   if pkg-config qt; then
     info "yes (pkg-config qt)\n"
     output "QT_LIBPATH=$(pkg-config qt --libs-only-L)"
@@ -112,7 +112,7 @@ fi
 # Checking for libsigc++
 sigc_version=1.2
 info "--- Checking for sigc++ $sigc_version..."
-if which pkg-config &> /dev/null; then
+if which pkg-config > /dev/null 2>&1; then
   if pkg-config sigc++-$sigc_version; then
     info "yes\n"
     output "SIGC_LIBPATH=$(pkg-config sigc++-$sigc_version --libs-only-L)"
