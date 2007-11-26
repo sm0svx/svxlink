@@ -1,5 +1,5 @@
 /* XPM */
-static char *online_icon[]={
+static const char *online_icon[]={
 "16 16 97 2",
 "Qt c None",
 ".U c #564f2c",

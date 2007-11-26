@@ -258,7 +258,8 @@ int EventHandler::playFileHandler(ClientData cdata, Tcl_Interp *irp, int argc,
 {
   if(argc != 2)
   {
-    Tcl_SetResult(irp,"Usage: playFile: <filename>", TCL_STATIC);
+    char msg[] = "Usage: playFile: <filename>";
+    Tcl_SetResult(irp, msg, TCL_STATIC);
     return TCL_ERROR;
   }
   //cout << "EventHandler::playFile: " << argv[1] << endl;
@@ -276,7 +277,8 @@ int EventHandler::playSilenceHandler(ClientData cdata, Tcl_Interp *irp,
 {
   if(argc != 2)
   {
-    Tcl_SetResult(irp,"Usage: playSilence <milliseconds>", TCL_STATIC);
+    char msg[] = "Usage: playSilence <milliseconds>";
+    Tcl_SetResult(irp, msg, TCL_STATIC);
     return TCL_ERROR;
   }
   //cout << "EventHandler::playSilence: " << argv[1] << endl;
@@ -293,7 +295,8 @@ int EventHandler::playToneHandler(ClientData cdata, Tcl_Interp *irp,
 {
   if(argc != 4)
   {
-    Tcl_SetResult(irp,"Usage: playTone <fq> <amp> <milliseconds>", TCL_STATIC);
+    char msg[] = "Usage: playTone <fq> <amp> <milliseconds>";
+    Tcl_SetResult(irp, msg, TCL_STATIC);
     return TCL_ERROR;
   }
   //cout << "EventHandler::playTone: " << argv[1] << endl;
@@ -313,7 +316,8 @@ int EventHandler::recordHandler(ClientData cdata, Tcl_Interp *irp,
   {
     if(argc != 2)
     {
-      Tcl_SetResult(irp,"Usage: recordStart <filename>", TCL_STATIC);
+      char msg[] = "Usage: recordStart <filename>";
+      Tcl_SetResult(irp, msg, TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -324,7 +328,8 @@ int EventHandler::recordHandler(ClientData cdata, Tcl_Interp *irp,
   {
     if(argc != 1)
     {
-      Tcl_SetResult(irp,"Usage: recordStop", TCL_STATIC);
+      char msg[] = "Usage: recordStop";
+      Tcl_SetResult(irp, msg, TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -342,7 +347,8 @@ int EventHandler::deactivateModuleHandler(ClientData cdata, Tcl_Interp *irp,
 {
   if(argc != 1)
   {
-    Tcl_SetResult(irp,"Usage: deactivateModuleHandler", TCL_STATIC);
+    char msg[] = "Usage: deactivateModuleHandler";
+    Tcl_SetResult(irp, msg, TCL_STATIC);
     return TCL_ERROR;
   }
 

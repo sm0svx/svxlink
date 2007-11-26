@@ -186,7 +186,7 @@ int main( int argc, const char **argv )
     Dispatcher::setPortBase(portbase);
   }
   
-  char *home = getenv("HOME");
+  const char *home = getenv("HOME");
   if (home == 0)
   {
     home = ".";

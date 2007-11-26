@@ -3,6 +3,8 @@
 
 * Fixes for 64 bit platforms.
 
+* Fixed some warnings that appeared with gcc 4.2.
+
 
 
  0.12.0 -- 15 Apr 2007

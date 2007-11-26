@@ -119,7 +119,7 @@ using namespace EchoLink;
 
 string StationData::statusStr(Status status)
 {
-  char *str;
+  const char *str;
   
   switch (status)
   {

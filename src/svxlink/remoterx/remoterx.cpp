@@ -254,7 +254,7 @@ int main(int argc, char **argv)
     }
   }
 
-  char *home_dir = getenv("HOME");
+  const char *home_dir = getenv("HOME");
   if (home_dir == NULL)
   {
     home_dir = ".";
@@ -613,7 +613,7 @@ void sighup_handler(int signal)
 
 void sigterm_handler(int signal)
 {
-  char *signame = 0;
+  const char *signame = 0;
   switch (signal)
   {
     case SIGTERM:

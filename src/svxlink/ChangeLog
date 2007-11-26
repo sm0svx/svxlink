@@ -29,6 +29,11 @@
   was not properly initialized so that when they were not set in the
   config file, SvxLink would behave unpredictably.
 
+* Fixed some warnings that appeared with gcc 4.2.
+
+* Now linking against libtcl8.4 instead of libtcl. That seem to be
+  more standard.
+
 
 
  0.8.0 -- 15 Apr 2007

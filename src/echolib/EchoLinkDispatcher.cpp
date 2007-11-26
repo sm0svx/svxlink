@@ -302,7 +302,7 @@ void Dispatcher::ctrlDataReceived(const IpAddress& ip, void *buf, int len)
 	char strtok_buf[40];
 	char *strtok_buf_ptr = strtok_buf;
 	char *remote_call = strtok_r(remote_id, " \t\n\r", &strtok_buf_ptr);
-	char *remote_name = strtok_r(NULL, " \t\n\r", &strtok_buf_ptr);
+	const char *remote_name = strtok_r(NULL, " \t\n\r", &strtok_buf_ptr);
 	if ((remote_call != 0) && (remote_call[0] != 0))
 	{
 	  if (remote_name == 0)

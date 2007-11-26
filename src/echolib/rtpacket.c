@@ -143,7 +143,7 @@ int rtp_make_sdes(pkt, ssrc_i, strict, callsign, name)
 int rtp_make_bye(p, ssrc_i, raison, strict)
   unsigned char *p;
   uint32_t ssrc_i;
-  char *raison;
+  const char *raison;
   int strict;
 {
     rtcp_t *rp;

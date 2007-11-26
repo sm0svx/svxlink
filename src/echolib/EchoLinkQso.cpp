@@ -561,7 +561,7 @@ inline void Qso::handleSdesPacket(unsigned char *buf, int len)
     char strtok_buf[40];
     char *strtok_buf_ptr = strtok_buf;
     char *remote_call_str = strtok_r(remote_id, " \t\n\r", &strtok_buf_ptr);
-    char *remote_name_str = strtok_r(NULL, " \t\n\r", &strtok_buf_ptr);
+    const char *remote_name_str = strtok_r(NULL, " \t\n\r", &strtok_buf_ptr);
     if ((remote_call_str != 0) && (remote_call_str[0] != 0))
     {
       if (remote_name_str == 0)
