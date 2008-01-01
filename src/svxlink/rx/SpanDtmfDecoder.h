@@ -220,7 +220,7 @@ class SpanDtmfDecoder : public SigC::Object, public Async::AudioSink
     
     static void toneReportCb(SPANDSP_TONE_REPORT_FUNC_ARGS);
 
-    void toneReport(int code, int level);
+    void toneReport(int code);
 
 };  /* class DtmfDecoder */
 

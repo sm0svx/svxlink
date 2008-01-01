@@ -224,10 +224,18 @@ install-extras uninstall-extras rpm-extras:
 
 spandsp_tone_report_func_args.h:	/usr/include/spandsp/super_tone_rx.h
 	$(ECHO) --- Creating file $(BOLD)$@$(NBOLD)...
-	awk '/\*tone_report_func_t/ \
-	     { printf "#define SPANDSP_TONE_REPORT_FUNC_ARGS "; \
+	awk '/\*tone_report_func_t/ { \
 	       split($$0, A, /\(|\)/); \
-	       print A[4] }' \
+	       ARGS=A[4]; \
+	     } \
+	     END { \
+	       printf "#define SPANDSP_TONE_REPORT_FUNC_ARGS "; \
+	       if (ARGS != "") { \
+	         print ARGS; \
+	       } else { \
+	         print "void *user_data, int code"; \
+	       }; \
+	     }' \
 	     /usr/include/spandsp/super_tone_rx.h > $@
 
 

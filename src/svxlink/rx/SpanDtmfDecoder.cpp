@@ -255,7 +255,7 @@ void SpanDtmfDecoder::toneReportCb(SPANDSP_TONE_REPORT_FUNC_ARGS)
 {
   SpanDtmfDecoder *dtmf_dec = reinterpret_cast<SpanDtmfDecoder*>(user_data);
   assert(dtmf_dec != 0);
-  dtmf_dec->toneReport(code, level);
+  dtmf_dec->toneReport(code);
 } /* SpanDtmfDecoder::toneReport */
 
 
@@ -266,7 +266,6 @@ void SpanDtmfDecoder::toneReportCb(SPANDSP_TONE_REPORT_FUNC_ARGS)
  *    	      DTMF digit is activated or deactivated. It's this function that
  *    	      do the real work.
  * Input:     code    	- The detected DTMF code
- *    	      level   	- The level of the detected DTMF code
  * Output:    None
  * Author:    Tobias Blomberg, SM0SVX
  * Created:   2007-04-22
@@ -274,7 +273,7 @@ void SpanDtmfDecoder::toneReportCb(SPANDSP_TONE_REPORT_FUNC_ARGS)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void SpanDtmfDecoder::toneReport(int code, int level)
+void SpanDtmfDecoder::toneReport(int code)
 {
   if (code > 0)
   {
