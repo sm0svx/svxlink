@@ -53,6 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "spandsp_tone_report_func_args.h"
 
 
 /****************************************************************************
@@ -217,7 +218,7 @@ class SpanDtmfDecoder : public SigC::Object, public Async::AudioSink
     State     	    state;
     int       	    hangtime;
     
-    static void toneReportCb(void *user_data, int code, int level);
+    static void toneReportCb(SPANDSP_TONE_REPORT_FUNC_ARGS);
 
     void toneReport(int code, int level);
 

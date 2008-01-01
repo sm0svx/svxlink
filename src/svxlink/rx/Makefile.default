@@ -222,6 +222,14 @@ install-extras uninstall-extras rpm-extras:
 #	$(FILESPEC) install-extras/myprog.conf[644,root,root] /etc
 
 
+spandsp_tone_report_func_args.h:	/usr/include/spandsp/super_tone_rx.h
+	$(ECHO) --- Creating file $(BOLD)$@$(NBOLD)...
+	awk '/\*tone_report_func_t/ \
+	     { printf "#define SPANDSP_TONE_REPORT_FUNC_ARGS "; \
+	       print gensub("^.*\\((.*)\\).*$$", "\\1", 1) }' \
+	     /usr/include/spandsp/super_tone_rx.h > $@
+
+
 #
 # EOF -- This file has not been truncated.
 #

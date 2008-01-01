@@ -241,9 +241,9 @@ int SpanDtmfDecoder::writeSamples(const float *buf, int len)
  * Method:    SpanDtmfDecoder::toneReportCb
  * Purpose:   Static callback method called when a DTMF digit is activated
  *    	      or deactivated.
- * Input:     user_data - Contains the SpanDtmfDecoder object
- *    	      code    	- The detected DTMF code
- *    	      level   	- The level of the detected DTMF code
+ * Input:     user_data - Contains the SpanDtmfDecoder object (void *)
+ *    	      code    	- The detected DTMF code (int)
+ *    	      level   	- The level of the detected DTMF code (int)
  * Output:    None
  * Author:    Tobias Blomberg, SM0SVX
  * Created:   2007-04-22
@@ -251,7 +251,7 @@ int SpanDtmfDecoder::writeSamples(const float *buf, int len)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
-void SpanDtmfDecoder::toneReportCb(void *user_data, int code, int level)
+void SpanDtmfDecoder::toneReportCb(SPANDSP_TONE_REPORT_FUNC_ARGS)
 {
   SpanDtmfDecoder *dtmf_dec = reinterpret_cast<SpanDtmfDecoder*>(user_data);
   assert(dtmf_dec != 0);
