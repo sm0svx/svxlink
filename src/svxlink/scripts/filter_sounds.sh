@@ -3,26 +3,18 @@
 SRC_DIR="orig-sounds"
 DEST_DIR="sounds"
 
-if [ $# -gt 0 ]; then
-  SRC_DIR=$1
-fi
-
-if [ $# -gt 1 ]; then
-  DEST_DIR=$2
-fi
-
 SOFTLINK_SOUNDS="\
-  Default/phonetic_0.raw|0.raw \
-  Default/phonetic_1.raw|1.raw \
-  Default/phonetic_2.raw|2.raw \
-  Default/phonetic_3.raw|3.raw \
-  Default/phonetic_4.raw|4.raw \
-  Default/phonetic_5.raw|5.raw \
-  Default/phonetic_6.raw|6.raw \
-  Default/phonetic_7.raw|7.raw \
-  Default/phonetic_8.raw|8.raw \
-  Default/phonetic_9.raw|9.raw \
-  EchoLink/repeater.raw|../Core/repeater.raw \
+  Default/phonetic_0|0 \
+  Default/phonetic_1|1 \
+  Default/phonetic_2|2 \
+  Default/phonetic_3|3 \
+  Default/phonetic_4|4 \
+  Default/phonetic_5|5 \
+  Default/phonetic_6|6 \
+  Default/phonetic_7|7 \
+  Default/phonetic_8|8 \
+  Default/phonetic_9|9 \
+  EchoLink/repeater|../Core/repeater \
   "
 
 MAXIMIZE_SOUNDS="\
@@ -191,23 +183,52 @@ warning()
 
 #diff $src_tmp $dest_tmp
 
+endian=""
+encoding=""
+ext="raw"
+while getopts LBg opt; do
+  case $opt in
+    B)
+      endian=B
+      ;;
 
-for sound in $COPY_SOUNDS; do
-  [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
-  if [ -e $SRC_DIR/$sound.raw ]; then
-    echo "Copying $SRC_DIR/$sound -> $DEST_DIR/$sound"
-    cp -a $SRC_DIR/$sound.raw $DEST_DIR/$sound.raw
-  else
-    warning "Missing sound: $sound"
-  fi
+    L)
+      endian=L
+      ;;
+
+    g)
+      encoding="g"
+      ext="gsm"
+      ;;
+  esac
 done
+shift $((OPTIND-1))
+
+if [ $# -gt 0 ]; then
+  SRC_DIR=$1
+fi
+
+if [ $# -gt 1 ]; then
+  DEST_DIR=$2
+fi
+
+
+#for sound in $COPY_SOUNDS; do
+#  [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
+#  if [ -e $SRC_DIR/$sound.raw ]; then
+#    echo "Copying $SRC_DIR/$sound -> $DEST_DIR/$sound"
+#    cp -a $SRC_DIR/$sound.raw $DEST_DIR/$sound.raw
+#  else
+#    warning "Missing sound: $sound"
+#  fi
+#done
 
 
 for sound in $MAXIMIZE_SOUNDS; do
   [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
   if [ -r $SRC_DIR/$sound.raw -o -r $SRC_DIR/$sound.wav ]; then
-    echo "Maximizing $SRC_DIR/$sound -> $DEST_DIR/$sound.raw"
-    ./play_sound.sh -f $SRC_DIR/$sound > $DEST_DIR/$sound.raw
+    echo "Maximizing $SRC_DIR/$sound -> $DEST_DIR/$sound.$ext"
+    ./play_sound.sh -f$endian$encoding $SRC_DIR/$sound > $DEST_DIR/$sound.$ext
   else
     warning "Missing sound: $sound"
   fi
@@ -218,17 +239,17 @@ echo -n > /tmp/all_trimmed.raw
 for sound in $TRIM_SOUNDS; do
   [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
   if [ -r $SRC_DIR/$sound.raw -o -r $SRC_DIR/$sound.wav ]; then
-    echo "Trimming $SRC_DIR/$sound -> $DEST_DIR/$sound.raw"
-    ./play_sound.sh -tf $SRC_DIR/$sound > $DEST_DIR/$sound.raw
-    cat $DEST_DIR/$sound.raw >> /tmp/all_trimmed.raw
+    echo "Trimming $SRC_DIR/$sound -> $DEST_DIR/$sound.$ext"
+    ./play_sound.sh -tf$endian$encoding $SRC_DIR/$sound > $DEST_DIR/$sound.$ext
+    cat $DEST_DIR/$sound.$ext >> /tmp/all_trimmed.$ext
   else
     warning "Missing sound: $sound"
   fi
 done
 
 for sound in $SOFTLINK_SOUNDS; do
-  link=$(echo $sound | cut -d'|' -f1)
-  target=$(echo $sound | cut -d'|' -f2)
+  link=$(echo $sound | cut -d'|' -f1).$ext
+  target=$(echo $sound | cut -d'|' -f2).$ext
   [ ! -d $(dirname $DEST_DIR/$link) ] && mkdir -p $(dirname $DEST_DIR/$link)
   pushd $(dirname $DEST_DIR/$link) > /dev/null
   if [ -r $target ]; then

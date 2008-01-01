@@ -1,7 +1,8 @@
 #!/bin/sh
 
 trim_silence=0
-
+endian=""
+encoding="-sw -traw"
 
 convert()
 {
@@ -20,6 +21,7 @@ process()
   
   # The filter to apply before all other operations
   filter="highpass 300 highpass 300 highpass 300"
+  filter="highpass 300"
   
   # Front and back levels for silence trimming
   silence_front_level="-45d"
@@ -59,34 +61,63 @@ spell()
   rm -f $tmp
 }
 
-while getopts spfct opt; do
+
+endian_conv()
+{
+  if [ -n "$endian" ]; then
+    sox -r8000 -sw -traw - -r8000 -sw -traw $endian -
+  else
+    cat
+  fi
+}
+
+
+encode()
+{
+  if [ "$encoding" != "-sw -traw" ]; then
+    sox -r8000 -sw -traw - $encoding -
+  else
+    cat
+  fi
+}
+
+while getopts spfctBLg opt; do
   case $opt in
     s)
-      shift
       operation=spell
       ;;
       
     p)
-      shift
       operation=play
       ;;
     
     f)
-      shift
       operation=filter
       ;;
       
     c)
-      shift
       operation=convert
       ;;
     
     t)
       trim_silence=1
       ;;
+
+    B)
+      endian="-B"
+      ;;
+      
+    L)
+      endian="-L"
+      ;;
+
+    g)
+      encoding="-tgsm"
+      ;;
       
   esac
 done
+shift $((OPTIND-1))
 
 case $operation in
   spell)
@@ -96,18 +127,19 @@ case $operation in
   play)
     tmp=$(mktemp /tmp/svxlink-XXXXXX)
     convert $1 > $tmp
-    process $tmp | play -r8000 -sw -traw -
+    #process $tmp | play -r8000 -sw -traw -
+    process $tmp | encode | play -r8000 $encoding -
     rm -f $tmp
     ;;
   
   convert)
-    convert $1
+    convert $1 | endian_conv | encode
     ;;
     
   filter)
     tmp=$(mktemp /tmp/svxlink-XXXXXX)
     convert $1 > $tmp
-    process $tmp
+    process $tmp | endian_conv | encode
     rm -f $tmp
     ;;
 esac
