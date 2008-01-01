@@ -29,6 +29,10 @@
   was not properly initialized so that when they were not set in the
   config file, SvxLink would behave unpredictably.
 
+* SvxLink can now use GSM encoded sound clips.
+
+* SvxLink now also run on bigendian systems.
+
 * Fixed some warnings that appeared with gcc 4.2.
 
 * Now linking against libtcl8.4 instead of libtcl. That seem to be
