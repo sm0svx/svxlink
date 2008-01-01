@@ -231,6 +231,11 @@ spandsp_tone_report_func_args.h:	/usr/include/spandsp/super_tone_rx.h
 	     /usr/include/spandsp/super_tone_rx.h > $@
 
 
+clean::
+	$(RM) -f spandsp_tone_report_func_args.h
+
+
+
 #
 # EOF -- This file has not been truncated.
 #
