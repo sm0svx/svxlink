@@ -226,7 +226,8 @@ spandsp_tone_report_func_args.h:	/usr/include/spandsp/super_tone_rx.h
 	$(ECHO) --- Creating file $(BOLD)$@$(NBOLD)...
 	awk '/\*tone_report_func_t/ \
 	     { printf "#define SPANDSP_TONE_REPORT_FUNC_ARGS "; \
-	       print gensub("^.*\\((.*)\\).*$$", "\\1", 1) }' \
+	       split($$0, A, /\(|\)/); \
+	       print A[4] }' \
 	     /usr/include/spandsp/super_tone_rx.h > $@
 
 
