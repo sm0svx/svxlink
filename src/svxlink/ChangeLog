@@ -1,4 +1,4 @@
- 0.9.0 -- ?? ??? 2007
+ 0.9.0 -- 02 Jan 2008
 ----------------------
 
 * It is now possible to spcify NONE for the PTT_PORT config variable if
@@ -37,6 +37,8 @@
 
 * Now linking against libtcl8.4 instead of libtcl. That seem to be
   more standard.
+
+* Now compile under CentOS 5.0, Fedora 8, Ubuntu 7.10 and Gentoo.
 
 
 

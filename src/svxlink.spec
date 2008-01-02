@@ -1,24 +1,24 @@
 
 # Release date (YYMMDD)
-%define RELEASE_DATE		070415
+%define RELEASE_DATE		080102
 %define RELEASE_NO		1
 
 # Version for the Qtel application
-%define QTEL			0.10.0
+%define QTEL			0.10.1
 %define QTEL_RPM_RELEASE	1
 
 # Version for the EchoLib library
-%define ECHOLIB			0.12.0
+%define ECHOLIB			0.12.1
 %define ECHOLIB_RPM_RELEASE	1
 
 # Version for the Async library
-%define LIBASYNC		0.14.0
+%define LIBASYNC		0.15.0
 %define LIBASYNC_RPM_RELEASE	1
 
 # SvxLink versions
-%define SVXLINK			0.8.0
+%define SVXLINK			0.9.0
 %define SVXLINK_RPM_RELEASE	1
-%define REMOTERX      	      	0.1.0
+%define REMOTERX      	      	0.1.1
 %define REMOTERX_RPM_RELEASE  	1
 
 
@@ -45,14 +45,14 @@ This is the source package which can be used to build binary RPMS:
 	rpmbuild --rebuild svxlink-%{RELEASE_DATE}-%{RELEASE_NO}.src.rpm
 
 You also need to setup the %%dist variable to something identifying the
-distribution you're compiling SvxLink for, like "fc6" if you're compiling
-SvxLink for Fedora Core 6.
+distribution you're compiling SvxLink for, like "fc8" if you're compiling
+SvxLink for Fedora 8.
 
 
 %prep
 rm -rf ${RPM_BUILD_ROOT}
-%setup -n svxlink
-%setup -n svxlink -a1 -D
+%setup
+%setup -a1 -D
 
 
 %build
@@ -283,6 +283,9 @@ The Async library development files
 /usr/lib/libasyncaudio.a
 
 %changelog
+* Wed Jan 02 2008 Tobias Blomberg (SM0SVX) <sm0svx@users.sourceforge.net>
+- Updated versions
+- The root directory of the source archive now includes the version.
 * Sat Apr 14 2007 Tobias Blomberg (SM0SVX) <sm0svx@users.sourceforge.net>
 - Added this ChangeLog :-)
 - Improved pre/post scriptlets

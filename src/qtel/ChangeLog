@@ -1,7 +1,7 @@
- 0.10.1 -- ?? ??? 2007
+ 0.10.1 -- 02 Jan 2008
 ----------------------
 
-* Now compile under CentOS 5.0.
+* Now compile under CentOS 5.0, Fedora 8, Ubuntu 7.10 and Gentoo.
 
 * Fixes for 64 bit platforms.
 
