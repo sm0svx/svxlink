@@ -113,7 +113,13 @@ fi
 %files -n svxlink-server
 %defattr(-,root,root)
 %dir /usr/share/svxlink
-/usr/share/svxlink/sounds
+/usr/share/svxlink/sounds/Core
+/usr/share/svxlink/sounds/Default
+/usr/share/svxlink/sounds/DtmfRepeater
+/usr/share/svxlink/sounds/EchoLink
+/usr/share/svxlink/sounds/Help
+/usr/share/svxlink/sounds/Parrot
+/usr/share/svxlink/sounds/TclVoiceMail
 %config /usr/share/svxlink/sounds/events.tcl
 %config /usr/share/svxlink/sounds/events.d/*
 %defattr(644,root,root)
@@ -121,6 +127,7 @@ fi
 %config(noreplace) /etc/svxlink.d
 %config(noreplace) /etc/TclVoiceMail.conf
 %config(noreplace) /etc/logrotate.d/svxlink
+%config(noreplace) /etc/remoterx.conf
 %doc svxlink/ChangeLog
 /etc/sysconfig/svxlink
 %config(noreplace) /etc/security/console.perms.d/90-svxlink.perms
