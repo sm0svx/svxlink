@@ -5,9 +5,17 @@
 
 <H2>Installation instructions for Fedora 8</H2>
 This instruction was written for the 080102 release of SvxLink.
+<P>
+The easiest way to install SvxLink is to use the installation script.
+It will only work on Fedora 8. Download the script and run it by typing
+<PRE>
+sh install_f8.sh
+</PRE>
+If that fails for some reason, follow the manual description below.
+<P>
 Start by downloading the latest versions of the following SvxLink RPM:s from the
 SourceForge
-<A gref="http://sourceforge.net/project/showfiles.php?group_id=84813">download site</A>:
+<A href="http://sourceforge.net/project/showfiles.php?group_id=84813">download site</A>:
 <A href="http://downloads.sourceforge.net/svxlink/libasync-0.15.0-1.fc8.i386.rpm">libasync</A>,
 <A href="http://downloads.sourceforge.net/svxlink/echolib-0.12.1-1.fc8.i386.rpm">echolib</A>,
 <A href="http://downloads.sourceforge.net/svxlink/svxlink-server-0.9.0-1.fc8.i386.rpm">svxlink-server</A> and/or
