@@ -33,6 +33,7 @@ The SvxLink distribution contains a couple of RPM:s:
 Specific installation instructions for different distributions:
 
 <UL>
+  <LI><A href="install-f8.php">Fedora 8</A></LI>
   <LI><A href="install-fc6.php">Fedora Core 6</A></LI>
   <LI><A href="install-deb31.php">Debian 3.1</A></LI>
 </UL>

@@ -7,6 +7,32 @@
 <H2>Project News</H2>
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>03 Jan 2008: <I>Version 080102 released</I></B>
+  <TD/></TR>
+  <TR><TD>
+    This release is a minor update to SvxLink. The most important changes
+    are listed below.
+    <UL>
+      <LI>
+      	A new, much better, DTMF decoder in the SvxLink server software
+      </LI>
+      <LI>
+        Now compile out-of-the-box on more Linux distributions. Tested
+        distributions are: Fedora 8, Fedora Core 5, CentOS 5.0,
+        Ubuntu 7.10 and Gentoo.
+      </LI>
+      <LI>
+      	Bugfixes and compatibility changes.
+      </LI>
+    </UL>
+    As usual, be sure to check out the
+    <A href="http://sf.net/project/shownotes.php?release_id=565393">ChangeLog</A>
+    for more detailed information.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>15 Apr 2007: <I>Version 070415 released</I></B>
   <TD/></TR>
   <TR><TD>
