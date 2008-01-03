@@ -141,7 +141,7 @@ around to buy one yet. Using opto couplers for PTT/COS is also a good idea.
 <P>
 WB0RXX/Tim has constructed an interface circuit that he use with his
 SvxLink system. The schematic can be found
-<A href="http://montevideocomputers.com/hacem.org/pix/tn_svxlink_interface.jpg">here</A>.
+<A href="http://montevideocomputers.com/hacem.org/pdf/Svxlink_interface.pdf">here</A>.
 <P>
 Typical EchoLink hardware should work with SvxLink as well. Have a look at the
 <A href="http://www.echolink.org/interfaces.htm">EchoLink interfaces</A> page.
