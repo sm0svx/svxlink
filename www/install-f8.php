@@ -6,7 +6,8 @@
 <H2>Installation instructions for Fedora 8</H2>
 This instruction was written for the 080102 release of SvxLink.
 <P>
-The easiest way to install SvxLink is to use the installation script.
+The easiest way to install SvxLink is to use the
+<A href="install_f8.sh">installation script</A>.
 It will only work on Fedora 8. Download the script and run it by typing
 <PRE>
 sh install_f8.sh
