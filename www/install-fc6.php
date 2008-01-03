@@ -6,7 +6,7 @@
 <H2>Installation instructions for Fedora Core 6</H2>
 Start by downloading the latest versions of the following SvxLink RPM:s from the
 SourceForge
-<A gref="http://sourceforge.net/project/showfiles.php?group_id=84813">download site</A>:
+<A href="http://sourceforge.net/project/showfiles.php?group_id=84813">download site</A>:
 <B>echolib</B>, <B>libasync</B>, <B>svxlink-server</B> and/or <B>qtel</B>.
 Be sure to download the Fedora Core 6 (fc6) files. Sorry, no direct links since the
 SoureForge download site behaved a bit strange when I tried to link to the files.
