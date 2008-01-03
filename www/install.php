@@ -4,14 +4,14 @@
 ?>
 
 <A name="prebuilt"><h2>Installation from prebuilt binaries</h2></A>
-SvxLink has been developed under Fedora Core. It should be easy to install
-under Fedora Core since there are binary packages available. Also, since the
+SvxLink has been developed under Fedora Linux. It should be easy to install
+under Fedora since there are binary packages available. Also, since the
 development is done under Fedora it's most tested under that distribution.
 <P>
 SvxLink have a few dependencies. Most of them should be installed by default on
 a normal Linux workstation. The Qtel application requires X/Qt but the svxlink
 server is a pure console application. Other dependencies: libsigc++ (only
-version 1.2 will work), libgsm, libtcl, libpopt.
+version 1.2 will work), libgsm, libtcl, libpopt, libspandsp.
 <P>
 The SvxLink distribution contains a couple of RPM:s:
 
@@ -46,19 +46,18 @@ Now continue below reading the
 If you are not running one of the distributions that there are prebuilt
 binaries for, you will have to build the whole thing from source. You will still
 need to satisfy the dependencies specified above. That is
-<A href="http://ftp.gnome.org/pub/GNOME/sources/libsigc++/1.2/">libsigc++ 1.2</A> and
-<A href="http://kbs.cs.tu-berlin.de/~jutta/toast.html">gsm</A>. Maybe you can
-find prebuilt binaries for these two libs for your distribution. Otherwise you
-will just have to compile them as well.
+<A href="http://ftp.gnome.org/pub/GNOME/sources/libsigc++/1.2/">libsigc++ 1.2</A>,
+<A href="http://kbs.cs.tu-berlin.de/~jutta/toast.html">gsm</A>,
+<A href="http://www.tcl.tk/software/tcltk/download.html">tcl 8.4</A> and
+<A href="http://www.soft-switch.org/downloads/spandsp/">spandsp</A>.
+Maybe you can find prebuilt binaries for these libs for your distribution.
+Otherwise you will just have to compile them as well.
 <P>
 To compile Qtel, the <A href="http://www.trolltech.com/">Qt widget toolkit</A>
 and the X window system are needed. There is a good chance that these will
 already be installed on your system. If Qt is not installed, find a prebuilt
 package or compile it from source. If the X window system is not installed,
 you're on your own...
-<P>
-You may also need to install the development package for the TCL scripting
-language. There is a big chance that you can find it in your distribution.
 <P>
 Now download the sources for SvxLink from the
 <A href="http://sourceforge.net/project/showfiles.php?group_id=84813&package_id=114319">
@@ -70,7 +69,7 @@ with the matching date. Find a good spot to unpack and compile the source and cd
 Then do the following (install must be done as user root):
 <PRE>
 tar xvzf svxlink-YYMMDD.tar.gz
-cd svxlink
+cd svxlink-YYMMDD
 make
 make install
 </PRE>
@@ -139,6 +138,10 @@ the microphone input and the line out output on the computer to the transcievers
 packet radio connector. This works quite well. However, there is a slight hum on
 the signal. This can be fixed with an isolation transformer but I havn't gotten
 around to buy one yet. Using opto couplers for PTT/COS is also a good idea.
+<P>
+WB0RXX/Tim has constructed an interface circuit that he use with his
+SvxLink system. The schematic can be found
+<A href="http://montevideocomputers.com/hacem.org/pix/tn_svxlink_interface.jpg">here</A>.
 <P>
 Typical EchoLink hardware should work with SvxLink as well. Have a look at the
 <A href="http://www.echolink.org/interfaces.htm">EchoLink interfaces</A> page.
