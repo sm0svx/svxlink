@@ -322,8 +322,11 @@ proc checkPeriodicIdentify {} {
   
   set short_ident_now \
       	    [expr {($hour * 60 + $minute) % $short_ident_interval == 0}];
-  set long_ident_now \
+  set long_ident_now 0;
+  if {$long_ident_interval != 0} {
+    set long_ident_now \
       	    [expr {($hour * 60 + $minute) % $long_ident_interval == 0}];
+  }
   
   if {!$long_ident_now} {
     if {$now - $prev_ident < $min_time_between_ident} {
