@@ -1,3 +1,11 @@
+ 0.10.0 -- ?? ??? 2008
+----------------------
+
+* Bugfix: If SHORT_IDENT_INTERVAL != 0 and LONG_IDENT_INTERVAL == 0 we
+  got a division by zero error.
+
+
+
  0.9.0 -- 02 Jan 2008
 ----------------------
 
