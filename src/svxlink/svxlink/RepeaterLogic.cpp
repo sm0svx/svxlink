@@ -377,10 +377,13 @@ void RepeaterLogic::remoteLogicTransmitRequest(bool do_tx)
 
 int RepeaterLogic::audioReceived(float *samples, int count)
 {
-  if (repeater_is_up && repeating_enabled && !no_repeat)
+  if (repeater_is_up && repeating_enabled)
   {
     Logic::audioReceived(samples, count);
-    return transmitAudio(samples, count);
+    if (!no_repeat)
+    {
+      return transmitAudio(samples, count);
+    }
   }
   
   return count;
