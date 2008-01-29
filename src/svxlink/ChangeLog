@@ -8,6 +8,9 @@
   was not only being cut off from being retransmitted. No modules got
   any audio either.
 
+* Bugfix in ModuleEchoLink: The DESCRIPTION config variable wasn't
+  used at all so no info message was sent upon connect.
+
 
 
  0.9.0 -- 02 Jan 2008

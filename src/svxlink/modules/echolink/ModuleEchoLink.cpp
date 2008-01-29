@@ -789,6 +789,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   updateEventVariables();
   qso->setRemoteCallsign(callsign);
   qso->setRemoteName(name);
+  qso->setLocalInfo(description);
   qso->stateChange.connect(slot(*this, &ModuleEchoLink::onStateChange));
   qso->chatMsgReceived.connect(slot(*this, &ModuleEchoLink::onChatMsgReceived));
   qso->isReceiving.connect(slot(*this, &ModuleEchoLink::onIsReceiving));
@@ -1074,6 +1075,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     qsos.push_back(qso);
     updateEventVariables();    
     qso->setRemoteCallsign(station.callsign());
+    qso->setLocalInfo(description);
     qso->stateChange.connect(slot(*this, &ModuleEchoLink::onStateChange));
     qso->chatMsgReceived.connect(slot(*this, &ModuleEchoLink::onChatMsgReceived));
     qso->isReceiving.connect(slot(*this, &ModuleEchoLink::onIsReceiving));
