@@ -131,7 +131,8 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
     idle_sound_timer(0), idle_sound_interval(0), repeating_enabled(false),
     preserve_idle_state(false), required_sql_open_duration(-1),
     open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false),
-    open_on_sql_timer(0), open_sql_flank(SQL_FLANK_CLOSE)
+    open_on_sql_timer(0), open_sql_flank(SQL_FLANK_CLOSE),
+    short_sql_open_cnt(0), sql_flap_sup_min_time(1000), sql_flap_sup_max_cnt(0)
 {
 } /* RepeaterLogic::RepeaterLogic */
 
@@ -216,6 +217,16 @@ bool RepeaterLogic::initialize(void)
   if (cfg().getValue(name(), "NO_REPEAT", str))
   {
     no_repeat = atoi(str.c_str()) != 0;
+  }
+  
+  if (cfg().getValue(name(), "SQL_FLAP_SUP_MIN_TIME", str))
+  {
+    sql_flap_sup_min_time = atoi(str.c_str());
+  }
+  
+  if (cfg().getValue(name(), "SQL_FLAP_SUP_MAX_COUNT", str))
+  {
+    sql_flap_sup_max_cnt = atoi(str.c_str());
   }
   
   //tx().txTimeout.connect(slot(this, &RepeaterLogic::txTimeout));
@@ -444,6 +455,7 @@ void RepeaterLogic::setUp(bool up, bool ident)
   
   if (up)
   {
+    short_sql_open_cnt = 0;
     stringstream ss;
     ss << "repeater_up " << (ident ? "1" : "0");
     processEvent(ss.str());
@@ -482,11 +494,32 @@ void RepeaterLogic::squelchOpen(bool is_open)
   {
     if (is_open)
     {
+      gettimeofday(&sql_up_timestamp, NULL);
       setIdle(false);
     }
     else
     {
       tx().flushSamples();
+      
+      if (sql_flap_sup_max_cnt > 0)
+      {
+	struct timeval now, diff_tv;
+	gettimeofday(&now, NULL);
+	timersub(&now, &sql_up_timestamp, &diff_tv);
+	int diff_ms = diff_tv.tv_sec * 1000 + diff_tv.tv_usec / 1000;
+	if (diff_ms < sql_flap_sup_min_time)
+	{
+      	  if (++short_sql_open_cnt >= sql_flap_sup_max_cnt)
+	  {
+	    short_sql_open_cnt = 0;
+	    setUp(false);
+	  }
+	}
+	else
+	{
+      	  short_sql_open_cnt = 0;
+	}
+      }
     }
   
     Logic::squelchOpen(is_open);

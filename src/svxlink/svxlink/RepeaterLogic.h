@@ -177,6 +177,10 @@ class RepeaterLogic : public Logic
     bool            no_repeat;
     Async::Timer    *open_on_sql_timer;
     SqlFlank  	    open_sql_flank;
+    struct timeval  sql_up_timestamp;
+    int       	    short_sql_open_cnt;
+    int       	    sql_flap_sup_min_time;
+    int       	    sql_flap_sup_max_cnt;
     
     int audioReceived(float *samples, int count);
     void idleTimeout(Async::Timer *t);
