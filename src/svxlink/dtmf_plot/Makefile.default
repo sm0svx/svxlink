@@ -175,13 +175,13 @@ ToneDetector.h:
 	ln -s ../rx/ToneDetector.h
 
 
-DtmfDecoder.o: DtmfDecoder.cpp
+#DtmfDecoder.o: DtmfDecoder.cpp
 
-DtmfDecoder.cpp:
-	ln -s ../rx/DtmfDecoder.cpp
+#DtmfDecoder.cpp:
+#	ln -s ../rx/DtmfDecoder.cpp
 
-DtmfDecoder.h:
-	ln -s ../rx/DtmfDecoder.h
+#DtmfDecoder.h:
+#	ln -s ../rx/DtmfDecoder.h
 
 
 ###############################################################################

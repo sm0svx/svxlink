@@ -16,7 +16,7 @@
 #include <SigCAudioSink.h>
 
 #include "../rx/ToneDetector.h"
-#include "../rx/DtmfDecoder.h"
+#include "DtmfDecoder.h"
 #include "DtmfPlot.h"
 
 using namespace std;
