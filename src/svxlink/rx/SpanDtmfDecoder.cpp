@@ -1,12 +1,12 @@
 /**
-@file	 DtmfDecoder.cpp
-@brief   This file contains a class that implements a DTMF decoder
+@file	 SpanDtmfDecoder.cpp
+@brief   This file contains a class that implements a sw DTMF decoder
 @author  Tobias Blomberg / SM0SVX
 @date	 2003-04-16
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2007  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -68,6 +68,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace SigC;
+using namespace Async;
 
 
 
@@ -124,35 +125,22 @@ class SpanDtmfDecoder::PrivateData
  *
  ****************************************************************************/
 
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-SpanDtmfDecoder::SpanDtmfDecoder(void)
-  : last_detected_digit('?'), active_sample_cnt(0), hang_sample_cnt(0),
-    state(STATE_IDLE), hangtime(0)
+SpanDtmfDecoder::SpanDtmfDecoder(Config &cfg, const string &name)
+  : DtmfDecoder(cfg, name), last_detected_digit('?'), active_sample_cnt(0),
+    hang_sample_cnt(0), state(STATE_IDLE)
 {
   p = new PrivateData;
   dtmf_rx_init(&p->rx_state, NULL, this);
   //dtmf_rx_parms(rx_state, FALSE, 20, 20);
   dtmf_rx_set_realtime_callback(&p->rx_state, SpanDtmfDecoder::toneReportCb,
       	      	      	        this);
-} /* DtmfDecoder::DtmfDecoder */
+} /* SpanDtmfDecoder::SpanDtmfDecoder */
 
 
 SpanDtmfDecoder::~SpanDtmfDecoder(void)
 {
   delete p;
-} /* DtmfDecoder::~DtmfDecoder */
+} /* SpanDtmfDecoder::~SpanDtmfDecoder */
 
 
 int SpanDtmfDecoder::writeSamples(const float *buf, int len)
@@ -181,7 +169,7 @@ int SpanDtmfDecoder::writeSamples(const float *buf, int len)
     if (state == STATE_HANG)
     {
       hang_sample_cnt += samples_written;
-      if (hang_sample_cnt > hangtime)
+      if (hang_sample_cnt > 8 * hangtime())
       {
       	state = STATE_IDLE;
       	digitDeactivated(last_detected_digit, 1000 * active_sample_cnt / 8000);
@@ -200,7 +188,7 @@ int SpanDtmfDecoder::writeSamples(const float *buf, int len)
   
   return len - samples_left;
   
-} /* DtmfDecoder::processSamples */
+} /* SpanDtmfDecoder::processSamples */
 
 
 
@@ -209,22 +197,6 @@ int SpanDtmfDecoder::writeSamples(const float *buf, int len)
  * Protected member functions
  *
  ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
 
 
 
@@ -300,7 +272,7 @@ void SpanDtmfDecoder::toneReport(int code)
   {
     assert(state == STATE_ACTIVE);
     
-    if (hangtime == 0)
+    if (hangtime() == 0)
     {
       digitDeactivated(last_detected_digit, 1000 * active_sample_cnt / 8000);
       state = STATE_IDLE;

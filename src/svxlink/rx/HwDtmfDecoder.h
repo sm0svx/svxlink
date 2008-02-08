@@ -1,8 +1,8 @@
 /**
-@file	 S54sDtmfDecoder.h
-@brief   This file contains a class that add support for the S54S interface
+@file	 HwDtmfDecoder.h
+@brief   This file contains the base class for implementing a hw DTMF decoder
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-02-04
+@date	 2008-02-06
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef S54S_DTMF_DECODER_INCLUDED
-#define S54S_DTMF_DECODER_INCLUDED
+#ifndef HW_DTMF_DECODER_INCLUDED
+#define HW_DTMF_DECODER_INCLUDED
 
 
 /****************************************************************************
@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sys/time.h>
 
 
 /****************************************************************************
@@ -51,7 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "HwDtmfDecoder.h"
+#include "DtmfDecoder.h"
 
 
 /****************************************************************************
@@ -62,7 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace Async
 {
-  class Serial;
+  class Timer;
 };
 
 
@@ -80,7 +81,7 @@ namespace Async
  * Defines & typedefs
  *
  ****************************************************************************/
-
+    
 
 
 /****************************************************************************
@@ -98,28 +99,18 @@ namespace Async
  ****************************************************************************/
 
 /**
- * @brief   This class add support for the S54S interface board
+ * @brief   This is the base class for implementing a hardware DTMF decoder.
  * @author  Tobias Blomberg, SM0SVX
- * @date    2008-02-04
- *
- * This class implements support for the hardware DTMF decoder on the
- * S54S SvxLink interface board.
+ * @date    2008-02-06
  */   
-class S54sDtmfDecoder : public HwDtmfDecoder
+class HwDtmfDecoder : public DtmfDecoder
 {
   public:
     /**
-     * @brief 	Constructor
-     * @param 	cfg A previously initialised configuration object
-     * @param 	name The name of the receiver configuration section
-     */
-    S54sDtmfDecoder(Async::Config &cfg, const std::string &name);
-    
-    /**
      * @brief 	Destructor
      */
-    virtual ~S54sDtmfDecoder(void);
-
+    virtual ~HwDtmfDecoder(void);
+    
     /**
      * @brief 	Initialize the DTMF decoder
      * @returns Returns \em true if the initialization was successful or
@@ -130,23 +121,57 @@ class S54sDtmfDecoder : public HwDtmfDecoder
      */
     virtual bool initialize(void);
     
+    /**
+     * @brief 	Return the active digit
+     * @return	Return the active digit if any or a '?' if none.
+     */
+    virtual char activeDigit(void) const
+    {
+      return (state != STATE_IDLE) ? last_detected_digit : '?';
+    }
+    
+    
   protected:
+    /**
+     * @brief 	Default constructor
+     * @param 	cfg A previously initialised configuration object
+     * @param 	name The name of the receiver configuration section
+     *
+     * DtmfDecoder objects are created by calling DtmfDecoder::create.
+     */
+    HwDtmfDecoder(Async::Config &cfg, const std::string &name);
+    
+    void digitActive(char digit);
+    void digitIdle(void);
+    
     
   private:
-    Async::Serial   *serial;
+    typedef enum
+    {
+      STATE_IDLE, STATE_ACTIVE, STATE_HANG
+    } State;
     
-    void charactersReceived(char *buf, int len);
+    static const int MAX_ACTIVE_TIME = 10;
+    
+    char      	    last_detected_digit;
+    State     	    state;
+    struct timeval  det_timestamp;
+    Async::Timer    *hang_timer;
+    Async::Timer    *timeout_timer;
 
-};  /* class S54sDtmfDecoder */
+    void hangtimeExpired(Async::Timer *t);
+    void timeout(Async::Timer *t);
+    void setIdle(void);
+    
+};  /* class HwDtmfDecoder */
 
 
 //} /* namespace */
 
-#endif /* S54S_DTMF_DECODER_INCLUDED */
+#endif /* HW_DTMF_DECODER_INCLUDED */
 
 
 
 /*
  * This file has not been truncated
  */
-

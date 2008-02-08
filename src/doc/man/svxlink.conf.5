@@ -488,11 +488,6 @@ the high frequencies will be amplified resulting in a very bright sound.
 Please note that this feature is experimental and there have been reports that
 the DTMF detection does not work very well when using it.
 .TP
-.B MUTE_DTMF
-Mute the audio during the time when a DTMF digit is being received. Note that
-the audio will be delayed 100ms to give the DTMF detector time to do its work.
-Legal values are 0=disabled, 1=enabled.
-.TP
 .B SQL_TAIL_ELIM
 Squelch tail elimination is used to remove noise from the end of a received
 transmission. This is of most use when using CTCSS squelch with unsquelched
@@ -514,17 +509,31 @@ squelch. Then increase the audio level until warning messages are printed.
 Decrease the audio level until no warning messages are printed. After the
 adjustment has been done, the peak meter can be disabled. 0=disabled, 1=enabled.
 .TP
+.B DTMF_DEC_TYPE
+Specify the DTMF decoder type. Set it to
+.B INTERNAL
+to use the internal software
+DTMF decoder. To use the S54S interface featuring a hardware DTMF decoder, set
+it to
+.B S54S.
+.TP
+.B MUTE_DTMF
+Mute the audio during the time when a DTMF digit is being received. Note that
+the audio will be delayed 100ms to give the DTMF detector time to do its work.
+Legal values are 0=disabled, 1=enabled.
+.TP
 .B DTMF_HANGTIME
-The DTMF decoder by default consider a tone as off if it's not detected for
-50ms. This is fine for high signal strengths. For weaker signals and mobile
-flutter it's not good at all. Each DTMF digit will be detected multiple times.
+This configuration variable can be used if the DTMF decoder is too quick to
+indicate digit idle. That does not matter at high signal strengths but for
+weaker signals and mobile flutter it's not good at all. Each DTMF digit will
+be detected multiple times.
 Using this configuration variable, the time (ms) a tone must be missing to be
 indicated as off can be extended. Setting this value too high will cause the
 decoder to be a bit sluggish and it might consider two digits as one.
 The hang time only affect consecutive digits of the same value (e.g. 1 1).
 If a detected digit differs from the previously detected digit (e.g 1 2), the
 hang time is immediately canceled and the detected digit is considered as a
-new one. A good default value is about 100ms.
+new one. A good default value is 50-100ms.
 .
 .SS Voter Section
 .

@@ -1,6 +1,6 @@
 /**
-@file	 S54sDtmfDecoder.cpp
-@brief   This file contains a class that add support for the S54S interface
+@file	 DtmfDecoder.cpp
+@brief   This file contains the base class for implementing a DTMF decoder
 @author  Tobias Blomberg / SM0SVX
 @date	 2008-02-04
 
@@ -42,7 +42,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncSerial.h>
 
 
 /****************************************************************************
@@ -51,6 +50,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "DtmfDecoder.h"
+#include "SpanDtmfDecoder.h"
 #include "S54sDtmfDecoder.h"
 
 
@@ -62,7 +63,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace SigC;
 using namespace Async;
 
 
@@ -105,11 +105,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-static const char digit_map[16] =
-{
-  'D', '1', '2', '3', '4', '5', '6', '7',
-  '8', '9', '0', '*', '#', 'A', 'B', 'C'
-};
 
 
 /****************************************************************************
@@ -118,56 +113,47 @@ static const char digit_map[16] =
  *
  ****************************************************************************/
 
-S54sDtmfDecoder::S54sDtmfDecoder(Config &cfg, const string &name)
-  : HwDtmfDecoder(cfg, name), serial(0)
+DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
 {
-  cout << "S54S DTMF decoder loaded...\n";
-  
-} /* S54sDtmfDecoder::S54sDtmfDecoder */
-
-
-S54sDtmfDecoder::~S54sDtmfDecoder(void)
-{
-  delete serial;
-} /* S54sDtmfDecoder::~S54sDtmfDecoder */
-
-
-bool S54sDtmfDecoder::initialize(void)
-{
-  if (!HwDtmfDecoder::initialize())
+  DtmfDecoder *dec = 0;
+  string type;
+  if (!cfg.getValue(name, "DTMF_DEC_TYPE", type))
   {
-    return false;
+    cerr << "*** ERROR: Config variable " << name << "/DTMF_DEC_TYPE not "
+      	 << "specified.\n";
+    return 0;
   }
   
-  string serial_dev;
-  if (!cfg().getValue(name(), "DTMF_SERIAL", serial_dev))
+  if (type == "INTERNAL")
   {
-    cerr << "*** ERROR: Config variable " << name()
-      	 << "/DTMF_SERIAL not specified\n";
-    return false;
+    dec = new SpanDtmfDecoder(cfg, name);
+  }
+  else if (type == "S54S")
+  {
+    dec = new S54sDtmfDecoder(cfg, name);
+  }
+  else
+  {
+    cerr << "*** ERROR: Unknown DTMF decoder type \"" << type << "\". "
+      	 << "Legal values are: \"INTERNAL\" or \"S54S\"\n";
   }
   
-  serial = new Serial(serial_dev);
-  if (!serial->open())
+  return dec;
+  
+} /* DtmfDecoder::create */
+
+
+bool DtmfDecoder::initialize(void)
+{
+  string value;
+  if (cfg().getValue(name(), "DTMF_HANGTIME", value))
   {
-    cerr << "*** ERROR: Could not open serial port " << serial_dev << "\n";
-    return false;
+    m_hangtime = atoi(value.c_str());
   }
-  if (!serial->setParams(9600, Serial::PARITY_NONE, 8, 1, Serial::FLOW_NONE))
-  {
-    cerr << "*** ERROR: Could not setup serial port parameters for "
-      	 << serial_dev << "\n";
-    serial->close();
-    return false;
-  }
-  serial->charactersReceived.connect(
-      slot(*this, &S54sDtmfDecoder::charactersReceived));
   
   return true;
   
-} /* S54sDtmfDecoder::initialize */
-
-
+} /* DtmfDecoder::initialize */
 
 
 /****************************************************************************
@@ -178,30 +164,11 @@ bool S54sDtmfDecoder::initialize(void)
 
 
 
-
 /****************************************************************************
  *
  * Private member functions
  *
  ****************************************************************************/
-
-void S54sDtmfDecoder::charactersReceived(char *buf, int len)
-{
-  for (int i=0; i<len; ++i)
-  {
-    int func = (buf[i] >> 4) & 0x07;
-    int data = buf[i] & 0x0f;
-    printf("event=%02x (func=%d data=%d)\n", (unsigned int)buf[i], func, data);
-    if (func == 0)
-    {
-      digitIdle();
-    }
-    else if (func == 1)
-    {
-      digitActive(digit_map[data]);
-    }
-  }
-} /* S54sDtmfDecoder::charactersReceived */
 
 
 

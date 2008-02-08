@@ -63,7 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "SigLevDet.h"
-#include "SpanDtmfDecoder.h"
+#include "DtmfDecoder.h"
 #include "ToneDetector.h"
 #include "SquelchVox.h"
 #include "SquelchCtcss.h"
@@ -373,11 +373,13 @@ bool LocalRx::initialize(void)
     return false;
   }
   
+  /*
   int dtmf_hangtime = 100;
   if (cfg().getValue(name(), "DTMF_HANGTIME", value))
   {
     dtmf_hangtime = atoi(value.c_str());
   }
+  */
   
   audio_io = new AudioIO(audio_dev);
   AudioSource *prev_src = audio_io;
@@ -414,12 +416,6 @@ bool LocalRx::initialize(void)
   squelch->squelchOpen.connect(slot(*this, &LocalRx::onSquelchOpen));
   splitter->addSink(squelch, true);
   
-  //DtmfDecoder *dtmf_dec = new DtmfDecoder;
-  //dtmf_dec->digitActivated.connect(slot(*this, &LocalRx::dtmfDigitActivated));
-  //dtmf_dec->digitDeactivated.connect(
-  //    slot(*this, &LocalRx::dtmfDigitDeactivated));
-  //splitter->addSink(dtmf_dec, true);
-  
   tone_dets = new AudioSplitter;
   splitter->addSink(tone_dets, true);
   
@@ -430,13 +426,18 @@ bool LocalRx::initialize(void)
   AudioSplitter *ctcss_splitter = new AudioSplitter;
   prev_src->registerSink(ctcss_splitter, true);
 
-  SpanDtmfDecoder *span_dtmf_dec = new SpanDtmfDecoder;
-  span_dtmf_dec->setHangtime(dtmf_hangtime);
-  span_dtmf_dec->digitActivated.connect(
+  DtmfDecoder *dtmf_dec = DtmfDecoder::create(cfg(), name());
+  if ((dtmf_dec == 0) || !dtmf_dec->initialize())
+  {
+    // FIXME: Cleanup?
+    return false;
+  }
+  //dtmf_dec->setHangtime(dtmf_hangtime);
+  dtmf_dec->digitActivated.connect(
         slot(*this, &LocalRx::dtmfDigitActivated));
-  span_dtmf_dec->digitDeactivated.connect(
+  dtmf_dec->digitDeactivated.connect(
       slot(*this, &LocalRx::dtmfDigitDeactivated));
-  ctcss_splitter->addSink(span_dtmf_dec, true);
+  ctcss_splitter->addSink(dtmf_dec, true);
 
   sql_valve = new SigCAudioValve;
   sql_valve->setOpen(false);

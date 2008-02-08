@@ -1,6 +1,6 @@
 /**
-@file	 S54sDtmfDecoder.cpp
-@brief   This file contains a class that add support for the S54S interface
+@file	 HwDtmfDecoder.cpp
+@brief   This file contains a the base class for implementing a hw DTMF decoder
 @author  Tobias Blomberg / SM0SVX
 @date	 2008-02-04
 
@@ -42,7 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncSerial.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -51,7 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "S54sDtmfDecoder.h"
+#include "HwDtmfDecoder.h"
 
 
 
@@ -105,11 +105,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-static const char digit_map[16] =
-{
-  'D', '1', '2', '3', '4', '5', '6', '7',
-  '8', '9', '0', '*', '#', 'A', 'B', 'C'
-};
 
 
 /****************************************************************************
@@ -118,55 +113,30 @@ static const char digit_map[16] =
  *
  ****************************************************************************/
 
-S54sDtmfDecoder::S54sDtmfDecoder(Config &cfg, const string &name)
-  : HwDtmfDecoder(cfg, name), serial(0)
+HwDtmfDecoder::HwDtmfDecoder(Config &cfg, const string &name)
+  : DtmfDecoder(cfg, name), last_detected_digit('?'), state(STATE_IDLE),
+    hang_timer(0), timeout_timer(0)
 {
-  cout << "S54S DTMF decoder loaded...\n";
-  
-} /* S54sDtmfDecoder::S54sDtmfDecoder */
+} /* HwDtmfDecoder::HwDtmfDecoder */
 
 
-S54sDtmfDecoder::~S54sDtmfDecoder(void)
+HwDtmfDecoder::~HwDtmfDecoder(void)
 {
-  delete serial;
-} /* S54sDtmfDecoder::~S54sDtmfDecoder */
+  delete hang_timer;
+  delete timeout_timer;
+} /* HwDtmfDecoder::~HwDtmfDecoder */
 
 
-bool S54sDtmfDecoder::initialize(void)
+bool HwDtmfDecoder::initialize(void)
 {
-  if (!HwDtmfDecoder::initialize())
+  if (!DtmfDecoder::initialize())
   {
     return false;
   }
-  
-  string serial_dev;
-  if (!cfg().getValue(name(), "DTMF_SERIAL", serial_dev))
-  {
-    cerr << "*** ERROR: Config variable " << name()
-      	 << "/DTMF_SERIAL not specified\n";
-    return false;
-  }
-  
-  serial = new Serial(serial_dev);
-  if (!serial->open())
-  {
-    cerr << "*** ERROR: Could not open serial port " << serial_dev << "\n";
-    return false;
-  }
-  if (!serial->setParams(9600, Serial::PARITY_NONE, 8, 1, Serial::FLOW_NONE))
-  {
-    cerr << "*** ERROR: Could not setup serial port parameters for "
-      	 << serial_dev << "\n";
-    serial->close();
-    return false;
-  }
-  serial->charactersReceived.connect(
-      slot(*this, &S54sDtmfDecoder::charactersReceived));
   
   return true;
   
-} /* S54sDtmfDecoder::initialize */
-
+} /* HwDtmfDecoder::initialize */
 
 
 
@@ -176,6 +146,56 @@ bool S54sDtmfDecoder::initialize(void)
  *
  ****************************************************************************/
 
+void HwDtmfDecoder::digitActive(char digit)
+{
+  if (state == STATE_ACTIVE)
+  {
+    return;
+  }
+  
+  if (state == STATE_HANG)
+  {
+    delete hang_timer;
+    hang_timer = 0;
+    
+    if (digit == last_detected_digit)
+    {
+      state = STATE_ACTIVE;
+      return;
+    }
+    else
+    {
+      setIdle();
+    }
+  }
+
+  state = STATE_ACTIVE;
+  last_detected_digit = digit;
+  gettimeofday(&det_timestamp, NULL);
+  digitActivated(digit);
+  timeout_timer = new Timer(MAX_ACTIVE_TIME * 1000);
+  timeout_timer->expired.connect(slot(*this, &HwDtmfDecoder::timeout));
+} /* HwDtmfDecoder::digitActive */
+
+
+void HwDtmfDecoder::digitIdle(void)
+{
+  if (state != STATE_ACTIVE)
+  {
+    return;
+  }
+  
+  if (hangtime() > 0)
+  {
+    hang_timer = new Timer(hangtime());
+    hang_timer->expired.connect(slot(*this, &HwDtmfDecoder::hangtimeExpired));
+    state = STATE_HANG;
+  }
+  else
+  {
+    setIdle();
+  }
+} /* HwDtmfDecoder::digitIdle */
 
 
 
@@ -185,23 +205,35 @@ bool S54sDtmfDecoder::initialize(void)
  *
  ****************************************************************************/
 
-void S54sDtmfDecoder::charactersReceived(char *buf, int len)
+void HwDtmfDecoder::hangtimeExpired(Timer *t)
 {
-  for (int i=0; i<len; ++i)
-  {
-    int func = (buf[i] >> 4) & 0x07;
-    int data = buf[i] & 0x0f;
-    printf("event=%02x (func=%d data=%d)\n", (unsigned int)buf[i], func, data);
-    if (func == 0)
-    {
-      digitIdle();
-    }
-    else if (func == 1)
-    {
-      digitActive(digit_map[data]);
-    }
-  }
-} /* S54sDtmfDecoder::charactersReceived */
+  setIdle();
+} /* HwDtmfDecoder::hangtimeExpired */
+
+
+void HwDtmfDecoder::timeout(Timer *t)
+{
+  cerr << "*** WARNING: No DTMF idle indication received within "
+       << MAX_ACTIVE_TIME << " seconds after activation indication.\n";
+  setIdle();  
+} /* HwDtmfDecoder::timeout */
+
+
+void HwDtmfDecoder::setIdle(void)
+{
+  delete hang_timer;
+  hang_timer = 0;
+  
+  delete timeout_timer;
+  timeout_timer = 0;
+  
+  struct timeval diff, now;
+  gettimeofday(&now, NULL);
+  timersub(&now, &det_timestamp, &diff);
+  digitDeactivated(last_detected_digit,
+      diff.tv_sec * 1000 + diff.tv_usec / 1000);
+  state = STATE_IDLE;
+} /* HwDtmfDecoder::setIdle */
 
 
 

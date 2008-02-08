@@ -1,12 +1,12 @@
 /**
 @file	 SpanDtmfDecoder.h
-@brief   This file contains a class that implements a DTMF decoder
+@brief   This file contains a class that implements a sw DTMF decoder
 @author  Tobias Blomberg / SM0SVX
 @date	 2003-04-16
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2007  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -44,7 +44,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AudioSink.h>
 
 
 /****************************************************************************
@@ -53,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "DtmfDecoder.h"
 #include "spandsp_tone_report_func_args.h"
 
 
@@ -78,33 +78,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Defines & typedefs
  *
  ****************************************************************************/
-
-/*
- *----------------------------------------------------------------------------
- * Macro:   
- * Purpose: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- * Bugs:    
- *----------------------------------------------------------------------------
- */
-
-
-/*
- *----------------------------------------------------------------------------
- * Type:    
- * Purpose: 
- * Members: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- *----------------------------------------------------------------------------
- */
     
 
 
@@ -122,42 +95,28 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-/*
- *----------------------------------------------------------------------------
- * Class:     DtmfDecoder
- * Purpose:   This class implements a wrapper for the DTMF decoder
- *            implemented in the "spandsp" library.
- * Inherits:  
- * Input:     
- * Output:    
- * Author:    Tobias Blomberg, SM0SVX
- * Created:   2007-05-01
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
+/**
+ * @brief   This class implements a software DTMF decoder
+ * @author  Tobias Blomberg, SM0SVX
+ * @date    2007-05-01
+ *
+ * This class implements a wrapper for the software DTMF decoder
+ * implemented in the "spandsp" library.
  */   
-class SpanDtmfDecoder : public SigC::Object, public Async::AudioSink
+class SpanDtmfDecoder : public DtmfDecoder
 {
   public:
     /**
-     * @brief 	Default constructor
+     * @brief 	Constructor
+     * @param 	cfg A previously initialised configuration object
+     * @param 	name The name of the receiver configuration section
      */
-    SpanDtmfDecoder(void);
+    SpanDtmfDecoder(Async::Config &cfg, const std::string &name);
     
     /**
      * @brief 	Destructor
      */
-    ~SpanDtmfDecoder(void);
-    
-    /**
-     * @brief 	Set the time the detector should hang on a digit
-     * @param 	hangtime_ms The hangtime in milliseconds
-     *
-     * Use this function to set the time that a digit should be considered as
-     * active after the detector has said it's idle. Higher values make the
-     * detector perform better when subjected to mobile flutter.
-     */
-    void setHangtime(int hangtime_ms) { hangtime = 8000 * hangtime_ms / 1000; }
+    virtual ~SpanDtmfDecoder(void);
     
     /**
      * @brief 	Write samples into the DTMF decoder
@@ -165,19 +124,7 @@ class SpanDtmfDecoder : public SigC::Object, public Async::AudioSink
      * @param 	count The number of samples in the buffer
      * @return	Returns the number of samples that has been taken care of
      */
-    int writeSamples(const float *samples, int count);
-    
-    /**
-     * @brief 	Tell the DTMF decoder to flush the previously written samples
-     *
-     * This function is used to tell the sink to flush previously written
-     * samples. When done flushing, the sink should call the
-     * sourceAllSamplesFlushed function.
-     */
-    void flushSamples(void)
-    {
-      sourceAllSamplesFlushed();
-    }
+    virtual int writeSamples(const float *samples, int count);
     
     /**
      * @brief 	Return the active digit
@@ -188,19 +135,6 @@ class SpanDtmfDecoder : public SigC::Object, public Async::AudioSink
       return (state != STATE_IDLE) ? last_detected_digit : '?';
     }
 
-    /*
-     * @brief 	A signal that is emitted when a DTMF digit is first detected
-     * @param 	digit The detected digit
-     */
-    SigC::Signal1<void, char> digitActivated;
-
-    /*
-     * @brief 	A signal that is emitted when a DTMF digit is no longer present
-     * @param 	digit 	  The detected digit
-     * @param 	duration  The time that the digit was active
-     */
-    SigC::Signal2<void, char, int> digitDeactivated;
-    
     
   protected:
     
@@ -216,13 +150,12 @@ class SpanDtmfDecoder : public SigC::Object, public Async::AudioSink
     int       	    active_sample_cnt;
     int       	    hang_sample_cnt;
     State     	    state;
-    int       	    hangtime;
     
     static void toneReportCb(SPANDSP_TONE_REPORT_FUNC_ARGS);
 
     void toneReport(int code);
 
-};  /* class DtmfDecoder */
+};  /* class SpanDtmfDecoder */
 
 
 //} /* namespace */

@@ -1,4 +1,4 @@
- 0.9.1 -- ?? ??? 2008
+ 0.10.0 -- ?? ??? 2008
 ----------------------
 
 * Bugfix: If SHORT_IDENT_INTERVAL != 0 and LONG_IDENT_INTERVAL == 0 we
@@ -10,6 +10,8 @@
 
 * Bugfix in ModuleEchoLink: The DESCRIPTION config variable wasn't
   used at all so no info message was sent upon connect.
+
+* Added support for the DTMF decoder on S54S / Aleks interface board.
 
 
 
