@@ -534,6 +534,10 @@ The hang time only affect consecutive digits of the same value (e.g. 1 1).
 If a detected digit differs from the previously detected digit (e.g 1 2), the
 hang time is immediately canceled and the detected digit is considered as a
 new one. A good default value is 50-100ms.
+.TP
+.B DTMF_SERIAL
+When using an external hardware DTMF decoder this config variable is used to
+specify a serial port (e.g. /dev/ttyS0).
 .
 .SS Voter Section
 .
