@@ -50,7 +50,7 @@ An example of how to use the AsyncAudioAmp class
  *
  ****************************************************************************/
 
-#include <AudioProcessor.h>
+#include <AsyncAudioProcessor.h>
 
 
 /****************************************************************************

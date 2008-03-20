@@ -186,9 +186,26 @@ class NetRx : public Rx
      */
     void reset(void);
     
+    /**
+     * @brief Resume audio output to the sink
+     *
+     * This function will be called when the registered audio sink is
+     * ready to accept more samples.
+     * This function is normally only called from a connected sink object.
+     */
+    virtual void resumeOutput(void) {}
+
   protected:
-    
-    
+    /**
+     * @brief The registered sink has flushed all samples
+     *
+     * This function will be called when all samples have been flushed in the
+     * registered sink. If it is not reimplemented, a handler must be set
+     * that handle the function call.
+     * This function is normally only called from a connected sink object.
+     */
+    virtual void allSamplesFlushed(void) {}
+
   private:
     bool      	      	is_muted;
     Async::TcpClient  	*tcp_con;

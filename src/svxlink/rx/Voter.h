@@ -65,6 +65,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace Async
 {
   class Timer;
+  class AudioSelector;
 };
 
 
@@ -152,12 +153,6 @@ class Voter : public Rx
     void mute(bool do_mute);
     
     /**
-     * @brief 	Check the squelch status
-     * @return	Return \em true if the squelch is open or else \em false
-     */
-    //bool squelchIsOpen(void) const;
-    
-    /**
      * @brief 	Call this function to add a tone detector to the RX
      * @param 	fq The tone frequency to detect
      * @param 	bw The bandwidth of the detector
@@ -189,15 +184,16 @@ class Voter : public Rx
   protected:
     
   private:
-    std::list<SatRx *>	rxs;
-    SatRx	      	*active_rx;
-    bool      	      	is_muted;
-    bool	      	m_verbose;
-    SatRx	      	*best_rx;
-    double    	      	best_rx_siglev;
-    Async::Timer      	*best_rx_timer;
-    int       	      	voting_delay;
-    int       	      	sql_rx_id;
+    std::list<SatRx *>	  rxs;
+    SatRx	      	  *active_rx;
+    bool      	      	  is_muted;
+    bool	      	  m_verbose;
+    SatRx	      	  *best_rx;
+    double    	      	  best_rx_siglev;
+    Async::Timer      	  *best_rx_timer;
+    int       	      	  voting_delay;
+    int       	      	  sql_rx_id;
+    Async::AudioSelector  *selector;
     
     void satSquelchOpen(bool is_open, SatRx *rx);
     void chooseBestRx(Async::Timer *t);

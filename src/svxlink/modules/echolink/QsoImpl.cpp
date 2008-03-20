@@ -47,11 +47,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
-//#include <Module.h>
+#include <AsyncAudioPacer.h>
+#include <AsyncAudioSelector.h>
+#include <AsyncAudioPassthrough.h>
+#include <AsyncAudioDebugger.h>
 
 #include <MsgHandler.h>
 #include <EventHandler.h>
-#include <AudioPacer.h>
 
 
 /****************************************************************************
@@ -74,6 +76,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
+using namespace SigC;
 
 
 
@@ -126,7 +129,7 @@ using namespace EchoLink;
 
 
 QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
-  : Qso(station.ip()), module(module), event_handler(0), msg_handler(0),
+  : m_qso(station.ip()), module(module), event_handler(0), msg_handler(0),
     msg_pacer(0), init_ok(false), reject_qso(false), last_message(""),
     last_info_msg(""), idle_timer(0), disc_when_done(false), idle_timer_cnt(0),
     idle_timeout(0), destroy_timer(0), station(station)
@@ -142,7 +145,7 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
     cerr << "*** ERROR: Config variable " << cfg_name << "/CALLSIGN not set\n";
     return;
   }
-  setLocalCallsign(local_callsign);
+  m_qso.setLocalCallsign(local_callsign);
   
   string sysop_name;
   if (!cfg.getValue(cfg_name, "SYSOPNAME", sysop_name))
@@ -151,7 +154,7 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
       	 << "/SYSOPNAME not set\n";
     return;
   }
-  setLocalName(sysop_name);
+  m_qso.setLocalName(sysop_name);
   
   string description;
   if (!cfg.getValue(cfg_name, "DESCRIPTION", description))
@@ -160,7 +163,7 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
       	 << "/DESCRIPTION not set\n";
     return;
   }
-  setLocalInfo(description);
+  m_qso.setLocalInfo(description);
   
   string event_handler_script;
   if (!cfg.getValue(module->logicName(), "EVENT_HANDLER", event_handler_script))
@@ -178,17 +181,22 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
     idle_timer->expired.connect(slot(*this, &QsoImpl::idleTimeoutCheck));
   }
   
+  AudioPassthrough *sink_handler = new AudioPassthrough;
+  AudioSink::setHandler(sink_handler);
+
   msg_handler = new MsgHandler(8000);
-  
-  msg_pacer = new AudioPacer(8000, 160*4, 500);
-  msg_handler->writeAudio.connect(slot(*msg_pacer, &AudioPacer::audioInput));
   msg_handler->allMsgsWritten.connect(
-      	  slot(*msg_pacer, &AudioPacer::flushAllAudio));
-  msg_pacer->audioInputBufFull.connect(
-      	  slot(*msg_handler, &MsgHandler::writeBufferFull));
-  msg_pacer->allAudioFlushed.connect(
       	  slot(*this, &QsoImpl::allRemoteMsgsWritten));
-  msg_pacer->audioOutput.connect(slot(*this, &Qso::sendAudio));
+	  
+  msg_pacer = new AudioPacer(8000, 160*4, 500);
+  msg_handler->registerSink(msg_pacer);
+
+  AudioSelector *selector = new AudioSelector;
+  selector->addSource(sink_handler);
+  selector->enableAutoSelect(sink_handler, 0);
+  selector->addSource(msg_pacer);
+  selector->enableAutoSelect(msg_pacer, 10);
+  selector->registerSink(&m_qso);
   
   event_handler = new EventHandler(event_handler_script, 0);
   event_handler->playFile.connect(slot(*msg_handler, &MsgHandler::playFile));
@@ -204,12 +212,13 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   
   event_handler->initialize();
   
-  Qso::infoMsgReceived.connect(slot(*this, &QsoImpl::onInfoMsgReceived));
-  Qso::chatMsgReceived.connect(slot(*this, &QsoImpl::onChatMsgReceived));
-  Qso::stateChange.connect(slot(*this, &QsoImpl::onStateChange));
-  Qso::isReceiving.connect(bind(isReceiving.slot(), this));
-  Qso::audioReceived.connect(bind(audioReceived.slot(), this));
-  Qso::audioReceivedRaw.connect(bind(audioReceivedRaw.slot(), this));
+  m_qso.infoMsgReceived.connect(slot(*this, &QsoImpl::onInfoMsgReceived));
+  m_qso.chatMsgReceived.connect(slot(*this, &QsoImpl::onChatMsgReceived));
+  m_qso.stateChange.connect(slot(*this, &QsoImpl::onStateChange));
+  m_qso.isReceiving.connect(bind(isReceiving.slot(), this));
+  m_qso.audioReceivedRaw.connect(bind(audioReceivedRaw.slot(), this));
+  
+  AudioSource::setHandler(&m_qso);
   
   init_ok = true;
   
@@ -228,31 +237,31 @@ QsoImpl::~QsoImpl(void)
 
 bool QsoImpl::initOk(void)
 {
-  return Qso::initOk() && init_ok;
+  return m_qso.initOk() && init_ok;
 } /* QsoImpl::initOk */
 
 
-int QsoImpl::sendAudio(float *buf, int len)
+void QsoImpl::logicIdleStateChanged(bool is_idle)
 {
-  idle_timer_cnt = 0;
+  /*
+  printf("QsoImpl::logicIdleStateChanged: is_idle=%s\n",
+      is_idle ? "TRUE" : "FALSE");
+  */
   
-  if (!msg_handler->isWritingMessage())
+  if (!is_idle)
   {
-    len = Qso::sendAudio(buf, len);
+    idle_timer_cnt = 0;
   }
-  
-  return len;
-  
-} /* QsoImpl::sendAudio */
+} /* QsoImpl::logicIdleStateChanged */
 
 
-bool QsoImpl::sendAudioRaw(GsmVoicePacket *packet)
+bool QsoImpl::sendAudioRaw(Qso::GsmVoicePacket *packet)
 {
   idle_timer_cnt = 0;
   
   if (!msg_handler->isWritingMessage())
   {
-    return Qso::sendAudioRaw(packet);
+    return m_qso.sendAudioRaw(packet);
   }
   
   return true;
@@ -267,7 +276,7 @@ bool QsoImpl::connect(void)
     delete destroy_timer;
     destroy_timer = 0;
   }
-  return Qso::connect();
+  return m_qso.connect();
 } /* QsoImpl::connect */
 
 
@@ -275,7 +284,7 @@ bool QsoImpl::accept(void)
 {
   cout << remoteCallsign() << ": Accepting connection. EchoLink ID is "
        << station.id() << "...\n";
-  bool success = Qso::accept();
+  bool success = m_qso.accept();
   if (success)
   {
     msg_handler->begin();
@@ -293,7 +302,7 @@ void QsoImpl::reject(bool perm)
   cout << "Rejecting connection from " << remoteCallsign()
        << (perm ? " permanently" : " temporarily") << endl;
   reject_qso = true;
-  bool success = Qso::accept();
+  bool success = m_qso.accept();
   if (success)
   {
     sendChatData("The connection was rejected");
@@ -313,23 +322,6 @@ void QsoImpl::reject(bool perm)
  * Protected member functions
  *
  ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
 
 
 
@@ -354,7 +346,6 @@ void QsoImpl::reject(bool perm)
  */
 void QsoImpl::allRemoteMsgsWritten(void)
 {
-  flushAudioSendBuffer();
   if (reject_qso || disc_when_done)
   {
     disconnect();
@@ -445,7 +436,7 @@ void QsoImpl::onStateChange(Qso::State state)
       cout << "CONNECTED\n";
       if (!reject_qso)
       {
-	if (isRemoteInitiated())
+	if (m_qso.isRemoteInitiated())
 	{
       	  stringstream ss;
 	  ss << "remote_connected " << remoteCallsign();

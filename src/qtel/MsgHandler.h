@@ -4,7 +4,7 @@
 
 #include <sigc++/sigc++.h>
 
-#include <AudioSource.h>
+#include <AsyncAudioSource.h>
 
 class MsgHandler : public SigC::Object, public Async::AudioSource
 {

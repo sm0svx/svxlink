@@ -44,6 +44,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <qevent.h>
 #include <qapplication.h>
 #include <qmessagebox.h>
+#include <qprogressbar.h>
+#include <qcheckbox.h>
+#include <qslider.h>
 #undef emit
 
 
@@ -56,9 +59,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioIO.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkQso.h>
-#include <AsyncSampleFifo.h>
-#include <SigCAudioSource.h>
-#include <SigCAudioSink.h>
+#include <AsyncAudioFifo.h>
+#include <AsyncAudioValve.h>
+#include <AsyncAudioSplitter.h>
 
 
 /****************************************************************************
@@ -137,23 +140,12 @@ using namespace EchoLink;
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
 ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
     const QString& remote_name)
   : callsign(callsign), con(0), dir(dir), accept_connection(false),
     audio_io(audio_io), audio_full_duplex(false), is_transmitting(false),
-    ctrl_pressed(false), rem_audio_fifo(0), sigc_src(0), sigc_sink(0)
+    ctrl_pressed(false), rem_audio_fifo(0), ptt_valve(0), tx_audio_splitter(0),
+    vox(0)
     
 {
   if (callsign.find("-L") != -1)
@@ -179,34 +171,46 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
   call->setText(callsign);
   name_label->setText(remote_name);
   
-  sigc_src = new SigCAudioSource;
-  audio_io->registerSource(sigc_src);
-  
-  rem_audio_fifo = new SampleFifo(8000);
-  rem_audio_fifo->stopOutput(true);
+  rem_audio_fifo = new AudioFifo(8000);
   rem_audio_fifo->setOverwrite(true);
   rem_audio_fifo->setPrebufSamples(1280);
-  rem_audio_fifo->writeSamples.connect(
-      slot(*sigc_src, &SigCAudioSource::writeSamples));
-  rem_audio_fifo->allSamplesWritten.connect(
-      slot(*sigc_src, &SigCAudioSource::flushSamples));
-  sigc_src->sigWriteBufferFull.connect(
-      slot(*rem_audio_fifo, &SampleFifo::writeBufferFull));
   
-  sigc_sink = new SigCAudioSink;
-  sigc_sink->registerSource(audio_io);
-  sigc_sink->sigWriteSamples.connect(slot(*this, &ComDialog::micAudioRead));
+  rem_audio_valve = new AudioValve;
+  rem_audio_valve->setOpen(false);
+  rem_audio_fifo->registerSink(rem_audio_valve);
+
+  rem_audio_valve->registerSink(audio_io);
+
+  tx_audio_splitter = new AudioSplitter;
+  audio_io->registerSink(tx_audio_splitter);
+  
+  vox = new Vox;
+  vox->setThreshold(vox_threshold->value());
+  vox->setDelay(vox_delay->value());
+  connect(vox, SIGNAL(levelChanged(int)),
+      	  this, SLOT(meterLevelChanged(int)));
+  connect(vox, SIGNAL(stateChanged(Vox::State)),
+      	  this, SLOT(voxStateChanged(Vox::State)));
+  connect(vox_enabled_checkbox, SIGNAL(toggled(bool)),
+      	  vox, SLOT(setEnable(bool)));
+  connect(vox_threshold, SIGNAL(sliderMoved(int)),
+      	  vox, SLOT(setThreshold(int)));
+  connect(vox_delay, SIGNAL(valueChanged(int)),
+      	  vox, SLOT(setDelay(int)));
+  tx_audio_splitter->addSink(vox);
+  
+  ptt_valve = new AudioValve;
+  tx_audio_splitter->addSink(ptt_valve);
   
   Settings *settings = Settings::instance();  
   if (settings->useFullDuplex() && audio_io->isFullDuplexCapable())
   {
-    //printf("Sound device is full duplex capable\n");
     audio_full_duplex = true;
     if (!openAudioDevice(AudioIO::MODE_RDWR))
     {
       return;
     }
-    rem_audio_fifo->stopOutput(false);
+    rem_audio_valve->setOpen(true);
   }
   
   QObject::connect(
@@ -236,7 +240,7 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
     
   const StationData *station = dir.findCall(callsign.latin1());
   //StationData *station = new StationData;
-  //station->setIp(IpAddress("192.168.1.193"));
+  //station->setIp(IpAddress("192.168.1.188"));
   updateStationData(station);
   if (station != 0)
   {
@@ -252,8 +256,9 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
 
 ComDialog::~ComDialog(void)
 {
-  delete sigc_src;
-  delete sigc_sink;
+  delete ptt_valve;
+  delete tx_audio_splitter;
+  delete rem_audio_valve;
   delete rem_audio_fifo;
   audio_io->close();
   delete con;
@@ -278,23 +283,6 @@ void ComDialog::acceptConnection(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
 
 /****************************************************************************
  *
@@ -303,18 +291,6 @@ void ComDialog::acceptConnection(void)
  ****************************************************************************/
 
 
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
 bool ComDialog::eventFilter(QObject *watched, QEvent *e)
 {
   if (e->type() == QEvent::KeyPress )
@@ -390,7 +366,8 @@ void ComDialog::createConnection(const StationData *station)
   con->chatMsgReceived.connect(slot(*this, &ComDialog::chatMsgReceived));
   con->stateChange.connect(slot(*this, &ComDialog::stateChange));
   con->isReceiving.connect(slot(*this, &ComDialog::isReceiving));
-  con->audioReceived.connect(slot(*rem_audio_fifo, &SampleFifo::addSamples));
+  con->registerSink(rem_audio_fifo);
+  ptt_valve->registerSink(con);
   
   connect_button->setEnabled(TRUE);
   connect_button->setFocus();
@@ -428,23 +405,6 @@ void ComDialog::onStationListUpdated(void)
 } /* ComDialog::onStationListUpdated */
 
 
-int ComDialog::micAudioRead(float *buf, int len)
-{
-  int samples_sent = 0;
-  if (is_transmitting)
-  {
-    samples_sent = con->sendAudio(buf, len);
-    if (samples_sent != len)
-    {
-      printf("*** warning: Mic samples thrown away\n");
-    }
-  }
-  
-  return samples_sent;
-  
-} /* ComDialog::micAudioRead */
-
-
 bool ComDialog::openAudioDevice(AudioIO::Mode mode)
 {
   bool open_ok = audio_io->open(mode);
@@ -479,7 +439,7 @@ void ComDialog::setIsTransmitting(bool transmit)
   {
     if (!audio_full_duplex)
     {
-      rem_audio_fifo->stopOutput(true);
+      rem_audio_valve->setOpen(false);
       audio_io->close();
       if (!openAudioDevice(AudioIO::MODE_RD))
       {
@@ -489,13 +449,11 @@ void ComDialog::setIsTransmitting(bool transmit)
     }
     is_transmitting = true;
     tx_indicator->setPaletteBackgroundColor("red");
+    ptt_valve->setOpen(true);
   }
   else
   {
-    if (con != 0)
-    {
-      con->flushAudioSendBuffer();
-    }
+    ptt_valve->setOpen(false);
     if (!audio_full_duplex)
     {
       audio_io->close();
@@ -504,7 +462,7 @@ void ComDialog::setIsTransmitting(bool transmit)
 	disconnect();
 	return;
       }
-      rem_audio_fifo->stopOutput(false);
+      rem_audio_valve->setOpen(true);
     }
     is_transmitting = false;
     tx_indicator->setPaletteBackgroundColor(orig_background_color);
@@ -527,14 +485,14 @@ void ComDialog::pttButtonPressedReleased(void)
     return;
   }
   
-  setIsTransmitting(ptt_button->isDown());
+  checkTransmit();
   
 } /* ComDialog::pttButtonPressedReleased */
 
 
 void ComDialog::pttButtonToggleStateChanged(int state)
 {
-  setIsTransmitting(state == QButton::On);
+  checkTransmit();
 } /* ComDialog::pttButtonToggleStateChanged */
 
 
@@ -591,7 +549,6 @@ void ComDialog::stateChange(Qso::State state)
     case Qso::STATE_BYE_RECEIVED:
       ctrl_pressed = false;
       ptt_button->setOn(false);
-      setIsTransmitting(false);
       connect_button->setEnabled(false);
       disconnect_button->setEnabled(false);
       ptt_button->setEnabled(false);
@@ -601,7 +558,6 @@ void ComDialog::stateChange(Qso::State state)
     case Qso::STATE_DISCONNECTED:
       ctrl_pressed = false;
       ptt_button->setOn(false);
-      setIsTransmitting(false);
       connect_button->setEnabled(true);
       disconnect_button->setEnabled(false);
       ptt_button->setEnabled(false);
@@ -611,6 +567,8 @@ void ComDialog::stateChange(Qso::State state)
       break;
   }
   
+  checkTransmit();
+  
 } /* ComDialog::stateChange */
 
 
@@ -618,12 +576,44 @@ void ComDialog::isReceiving(bool is_receiving)
 {
   rx_indicator->setPaletteBackgroundColor(
       is_receiving ? QColor("green") : orig_background_color);
-  if (!is_receiving)
-  {
-    rem_audio_fifo->flushSamples();
-  }
 } /* ComDialog::isReceiving */
 
+
+void ComDialog::meterLevelChanged(int level_db)
+{
+  vox_meter->setProgress(vox_meter->totalSteps() + level_db);
+} /* ComDialog::meterLevelChanged */
+
+
+void ComDialog::voxStateChanged(Vox::State state)
+{
+  switch (state)
+  {
+    case Vox::IDLE:
+      vox_indicator->setPaletteBackgroundColor(orig_background_color);
+      break;
+    case Vox::ACTIVE:
+      vox_indicator->setPaletteBackgroundColor("red");
+      break;
+    case Vox::HANG:
+      vox_indicator->setPaletteBackgroundColor("yellow");
+      break;
+  }
+  checkTransmit();
+} /* ComDialog::voxStateChanged */
+
+
+void ComDialog::checkTransmit(void)
+{
+  setIsTransmitting(
+      	// We must be connected to transmit.
+      ((con != 0) && (con->currentState() == Qso::STATE_CONNECTED)) &&
+      
+      	// Either the PTT or the VOX must be active to transmit
+      ((ptt_button->isOn()) || ptt_button->isDown() ||
+       (vox->state() != Vox::IDLE))
+  );
+} /* ComDialog::checkTransmit */
 
 
 

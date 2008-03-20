@@ -8,10 +8,42 @@
   was not only being cut off from being retransmitted. No modules got
   any audio either.
 
+* Internal audio handling rewritten.
+
 * Bugfix in ModuleEchoLink: The DESCRIPTION config variable wasn't
   used at all so no info message was sent upon connect.
 
+* Now mixing sound effects with "traffic audio" (received repeater
+  audio, audio from modules (e.g. EchoLink) or audio from logic
+  links).
+
 * Added support for the DTMF decoder on S54S / Aleks interface board.
+
+* Lower audio latency.
+
+* Audio is now transported between logic links and modules.
+
+* RepeaterLogic: Identifications are now also sent when the
+  repeater is up.
+
+* The volume of sound effects and announcements are now lowered
+  when there are other traffic that should be sent out
+  (received repeater audio, module audio or audio from
+  logic links). There are two new configuration variables
+  to control this behaviour: FX_GAIN_NORMAL and FX_GAIN_LOW.
+
+* New configuration variable for a simplex logic: MUTE_RX_ON_TX.
+
+* Bugfix in ModuleEchoLink: When initiating an outgoing connection it was
+  possible to deactivate the EchoLink module before the connection was
+  established. This could especially happen if double detecting #.
+
+* Bugfix in ModuleEchoLink: It was not possible to establish multiple
+  outgoing connections in one command. In fact, entering multiple
+  stations in one command would cause a memory leak.
+
+* Implemented remote TX. The new application "remotetrx" now handle
+  both remote transmitters and receivers.
 
 
 

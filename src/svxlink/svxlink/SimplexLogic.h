@@ -1,14 +1,12 @@
 /**
 @file	 SimplexLogic.h
-@brief   A_brief_description_for_this_file
+@brief   Contains a simplex logic SvxLink core implementation
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-03-23
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,10 +22,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example Template_demo.cpp
-An example of how to use the Template class
 */
 
 
@@ -67,10 +61,6 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class Timer;
-};
 
 
 /****************************************************************************
@@ -114,19 +104,17 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	This class implements a simplex logic core
 @author Tobias Blomberg
 @date   2004-03-23
-
-A_detailed_class_description
-
-\include SimplexLogic_demo.cpp
 */
 class SimplexLogic : public Logic
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
+     * @param 	cfg A previously opened configuration
+     * @param 	name The configuration section name of this logic
      */
     SimplexLogic(Async::Config &cfg, const std::string &name);
   
@@ -136,24 +124,19 @@ class SimplexLogic : public Logic
     ~SimplexLogic(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Initialize the simplex logic core
+     * @return	Returns \em true if the initialization was successful or else
+     *	      	\em false is returned.
      */
-    
     bool initialize(void);
-    void transmit(bool do_transmit);
-    int transmitAudio(float *samples, int count);
 
   protected:
+    virtual void squelchOpen(bool is_open);
+    virtual void transmitterStateChange(bool is_transmitting);
     
   private:
-    bool      	  pending_transmit;
-    bool      	  tx_timeout_occured;
+    bool  mute_rx_on_tx;
     
-    void squelchOpen(bool is_open);
-    //void txTimeout(void);
-
 };  /* class SimplexLogic */
 
 

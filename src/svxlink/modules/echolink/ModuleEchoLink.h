@@ -72,6 +72,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace Async
 {
   class Timer;
+  class AudioSplitter;
+  class AudioValve;
+  class AudioSelector;
 };
 namespace EchoLink
 {
@@ -97,7 +100,6 @@ namespace EchoLink
  ****************************************************************************/
 
 class MsgHandler;
-class AudioPacer;
 class QsoImpl;
   
 
@@ -137,6 +139,17 @@ class ModuleEchoLink : public Module
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
     
+  protected:
+    /**
+     * @brief 	Notify the module that the logic core idle state has changed
+     * @param 	is_idle Set to \em true if the logic core is idle or else
+     *	      	\em false.
+     *
+     * This function is called by the logic core when the idle state changes.
+     */
+    virtual void logicIdleStateChanged(bool is_idle);
+
+
   private:
     typedef enum
     {
@@ -155,7 +168,7 @@ class ModuleEchoLink : public Module
     bool      	      	  remote_activation;
     int       	      	  pending_connect_id;
     std::string       	  last_message;
-    QsoImpl		  *outgoing_con_pending;
+    std::list<QsoImpl*>   outgoing_con_pending;
     std::list<QsoImpl*>	  qsos;
     unsigned       	  max_connections;
     unsigned       	  max_qsos;
@@ -167,13 +180,15 @@ class ModuleEchoLink : public Module
     regex_t   	      	  drop_regex;
     regex_t   	      	  reject_regex;
     regex_t   	      	  accept_regex;
-    bool      	      	  listen_only;
     EchoLink::StationData last_disc_stn;
+    Async::AudioSplitter  *splitter;
+    Async::AudioValve 	  *listen_only_valve;
+    Async::AudioSelector  *selector;
 
     void moduleCleanup(void);
     void activateInit(void);
     void deactivateCleanup(void);
-    bool dtmfDigitReceived(char digit, int duration);
+    //bool dtmfDigitReceived(char digit, int duration);
     void dtmfCmdReceived(const std::string& cmd);
     void squelchOpen(bool is_open);
     int audioFromRx(float *samples, int count);
@@ -188,13 +203,14 @@ class ModuleEchoLink : public Module
     void onStateChange(QsoImpl *qso, EchoLink::Qso::State qso_state);
     void onChatMsgReceived(QsoImpl *qso, const std::string& msg);
     void onIsReceiving(bool is_receiving, QsoImpl *qso);
-    void onDestroyMe(QsoImpl *qso);
+    void destroyQsoObject(QsoImpl *qso);
 
     void getDirectoryList(Async::Timer *timer=0);
 
     void createOutgoingConnection(const EchoLink::StationData &station);
     int audioFromRemote(float *samples, int count, QsoImpl *qso);
-    void audioFromRemoteRaw(QsoImpl::GsmVoicePacket *packet, QsoImpl *qso);
+    void audioFromRemoteRaw(EchoLink::Qso::GsmVoicePacket *packet,
+      	      	      	    QsoImpl *qso);
     QsoImpl *findFirstTalker(void) const;
     void broadcastTalkerStatus(void);
     void updateDescription(void);
@@ -206,6 +222,7 @@ class ModuleEchoLink : public Module
     void handleCommand(const std::string& cmd);
     void commandFailed(const std::string& cmd);
     void connectByNodeId(int node_id);
+    void checkIdle(void);
 
 };  /* class ModuleEchoLink */
 

@@ -103,6 +103,30 @@ Kan ej skapa uppkoppling till</translation>
         <source>Name:</source>
         <translation>Namn:</translation>
     </message>
+    <message>
+        <source>Alt+D</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>VOX</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>VOX Enabled</source>
+        <translation>VOX aktiverad</translation>
+    </message>
+    <message>
+        <source>Threshold:</source>
+        <translation>Tröskel:</translation>
+    </message>
+    <message>
+        <source>Delay:</source>
+        <translation>Fördröjning:</translation>
+    </message>
+    <message>
+        <source>dB Level:</source>
+        <translation>dB-nivå:</translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>

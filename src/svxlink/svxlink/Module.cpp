@@ -1,3 +1,32 @@
+/**
+@file	 Module.cpp
+@brief   This file contains the base class for implementing a SvxLink module.
+@author  Tobias Blomberg / SM0SVX
+@date	 2005-02-18
+
+This file contains a class for implementing a SvxLink modules. The module
+should inherit the Module class and implement the abstract methods.
+
+\verbatim
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+\endverbatim
+*/
+
 
 #include <iostream>
 
@@ -68,7 +97,7 @@ bool Module::initialize(void)
     cfg().getValue(cfgName(), *cfgit, value);
     setEventVariable(var, value);
   }
-
+  
   return true;
   
 } /* Module::initialize */
@@ -86,8 +115,11 @@ void Module::activate(void)
   m_audio_con = logic()->rx().audioReceived.connect(
       	  slot(*this, &Module::audioFromRx));
   */
+
+  m_logic_idle_con = logic()->idleStateChanged.connect(
+      slot(*this, &Module::logicIdleStateChanged));
   
-  setIdle(true);
+  setIdle(logic()->isIdle());
   activateInit();
 }
 
@@ -97,14 +129,16 @@ void Module::deactivate(void)
   cout << "Deactivating module " << name() << "...\n";
   
   deactivateCleanup();
-  setIdle(false);
-  transmit(false);
+  //transmit(false);
   
   //m_audio_con.disconnect();
+  m_logic_idle_con.disconnect();
   
   processEvent("deactivating_module");
   
   m_is_active = false;
+
+  setIdle(true);
 }
 
 
@@ -156,6 +190,7 @@ void Module::sendDtmf(const std::string& digits)
 } /* Module::sendDtmf */
 
 
+#if 0
 int Module::audioFromModule(float *samples, int count)
 {
   if (m_is_active)
@@ -174,6 +209,7 @@ void Module::transmit(bool tx)
     logic()->moduleTransmitRequest(tx);
   }
 } /* transmit */
+#endif
 
 
 bool Module::activateMe(void)
@@ -205,11 +241,27 @@ list<Module*> Module::moduleList(void)
 
 void Module::setIdle(bool is_idle)
 {
-  if (m_is_active && (m_tmo_timer != 0))
+  if (m_tmo_timer != 0)
   {
-    m_tmo_timer->setEnable(is_idle);
+    m_tmo_timer->setEnable(m_is_active && is_idle);
   }
 } /* Module::setIdle */
+
+
+bool Module::logicIsIdle(void) const
+{
+  return logic()->isIdle();
+} /* Module::logicIsIdle */
+
+
+void Module::logicIdleStateChanged(bool is_idle)
+{
+  /*
+  printf("Module::logicIdleStateChanged: is_idle=%s\n",
+      is_idle ? "TRUE" : "FALSE");
+  */
+  setIdle(is_idle);
+} /* Module::logicIdleStateChanged */
 
 
 void Module::moduleTimeout(Timer *t)

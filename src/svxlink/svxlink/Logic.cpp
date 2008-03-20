@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -56,8 +56,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
-#include <AsyncSampleFifo.h>
 #include <Rx.h>
+#include <Tx.h>
+#include <AsyncAudioMixer.h>
+#include <AsyncAudioAmp.h>
+#include <AsyncAudioSelector.h>
+#include <AsyncAudioSplitter.h>
+#include <AsyncAudioValve.h>
+#include <AsyncAudioDebugger.h>
 
 
 /****************************************************************************
@@ -70,7 +76,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "EventHandler.h"
 #include "Module.h"
 #include "MsgHandler.h"
-#include "Tx.h"
 #include "LogicCmds.h"
 #include "Logic.h"
 
@@ -100,6 +105,38 @@ using namespace SigC;
  * Local class definitions
  *
  ****************************************************************************/
+
+class Logic::IdleDetector : public AudioPassthrough
+{
+  public:
+    IdleDetector(Logic *logic) : logic(logic), is_idle(true) {}
+    
+    virtual int writeSamples(const float *samples, int count)
+    {
+      if (is_idle)
+      {
+      	is_idle = false;
+	logic->audioStreamIdleStateChange(false);
+      }
+      return AudioPassthrough::writeSamples(samples, count);
+    }
+
+    virtual void allSamplesFlushed(void)
+    {
+      assert(!is_idle);
+      is_idle = true;
+      logic->audioStreamIdleStateChange(true);
+      sourceAllSamplesFlushed();
+    }
+    
+    bool isIdle(void) const { return is_idle; }
+    
+  private:
+    Logic *logic;
+    bool  is_idle;
+
+}; /* class Logic::IdleDetector */
+
 
 
 
@@ -157,80 +194,75 @@ bool Logic::logicsAreConnected(const string& l1, const string& l2)
 } /* Logic::logicsAreConnected */
 
 
-
 Logic::Logic(Config &cfg, const string& name)
-  : m_cfg(cfg), m_name(name), m_rx(0), m_tx(0), msg_handler(0),
-    write_msg_flush_timer(0), active_module(0), module_tx_fifo(0),
-    cmd_tmo_timer(0), logic_transmit(false), anti_flutter(false),
-    prev_digit('?'), exec_cmd_on_sql_close(0), exec_cmd_on_sql_close_timer(0),
-    rgr_sound_timer(0), rgr_sound_delay(-1), report_ctcss(0), event_handler(0),
-    remote_logic_tx(false), every_minute_timer(0), recorder(0),
-    tx_ctcss(TX_CTCSS_NEVER)
+  : m_cfg(cfg),       	      	    m_name(name),
+    m_rx(0),  	      	      	    m_tx(0),
+    msg_handler(0), 	      	    active_module(0),
+    cmd_tmo_timer(0), 	      	    
+    anti_flutter(false),      	    prev_digit('?'),
+    exec_cmd_on_sql_close(0), 	    exec_cmd_on_sql_close_timer(0),
+    rgr_sound_timer(0),       	    rgr_sound_delay(-1),
+    report_ctcss(0),  	      	    event_handler(0),
+    every_minute_timer(0),    	    recorder(0),
+    tx_ctcss(TX_CTCSS_NEVER), 	    tx_audio_mixer(0),
+    tx_audio_selector(0),     	    rx_splitter(0),
+    audio_from_module_selector(0),  audio_to_module_splitter(0),
+    audio_to_module_selector(0),    idle_det(0),
+    is_idle(true),                  fx_gain_normal(0),
+    fx_gain_low(-12)
 {
-  
+  logic_con_in = new AudioSplitter;
+  logic_con_out = new AudioSelector;
 } /* Logic::Logic */
 
 
 Logic::~Logic(void)
 {
-  unloadModules();
-
-  delete cmd_tmo_timer;
-  delete exec_cmd_on_sql_close_timer;
-  delete module_tx_fifo;
-  delete write_msg_flush_timer;
-  delete msg_handler;
-  delete m_tx;
-  delete m_rx;
-  delete rgr_sound_timer;
-  delete event_handler;
-  delete every_minute_timer;
+  cleanup();
+  delete logic_con_out;
+  delete logic_con_in;
 } /* Logic::~Logic */
 
 
 bool Logic::initialize(void)
 {
-  string rx_name;
-  string tx_name;
   string value;
-  string macro_section;
-  string event_handler_str;
-  list<string> macro_list;
-  list<string>::iterator mlit;
-  string loaded_modules;
-  list<Module*>::const_iterator mit;
-  list<string> cfgvars;
-  list<string>::const_iterator cfgit;
-  
   if (cfg().getValue(name(), "LINKS", value))
   {
     LinkCmd *link_cmd = new LinkCmd(&cmd_parser, this);
     link_cmd->initialize(cfg(), value);
   }
   
+  string event_handler_str;
   if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
   {
     cerr << "*** ERROR: Config variable " << name()
       	 << "/EVENT_HANDLER not set\n";
-    goto cfg_failed;
+    cleanup();
+    return false;
   }
 
+  string rx_name;
   if (!cfg().getValue(name(), "RX", rx_name))
   {
     cerr << "*** ERROR: Config variable " << name() << "/RX not set\n";
-    goto cfg_failed;
+    cleanup();
+    return false;
   }
   
+  string tx_name;
   if (!cfg().getValue(name(), "TX", tx_name))
   {
     cerr << "*** ERROR: Config variable " << name() << "/TX not set\n";
-    goto cfg_failed;
+    cleanup();
+    return false;
   }
   
   if (!cfg().getValue(name(), "CALLSIGN", m_callsign))
   {
     cerr << "*** ERROR: Config variable " << name() << "/CALLSIGN not set\n";
-    goto cfg_failed;
+    cleanup();
+    return false;
   }
   
   if (cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", value))
@@ -248,9 +280,11 @@ bool Logic::initialize(void)
     report_ctcss = atof(value.c_str());
   }
   
+  string macro_section;
   if (cfg().getValue(name(), "MACROS", macro_section))
   {
-    macro_list = cfg().listSection(macro_section);
+    list<string> macro_list = cfg().listSection(macro_section);
+    list<string>::iterator mlit;
     for (mlit=macro_list.begin(); mlit!=macro_list.end(); ++mlit)
     {
       cfg().getValue(macro_section, *mlit, value);
@@ -269,51 +303,146 @@ bool Logic::initialize(void)
       tx_ctcss = TX_CTCSS_SQL_OPEN;
     }
   }
+
+  if (cfg().getValue(name(), "FX_GAIN_NORMAL", value))
+  {
+    fx_gain_normal = atoi(value.c_str());
+  }
   
+  if (cfg().getValue(name(), "FX_GAIN_LOW", value))
+  {
+    fx_gain_low = atoi(value.c_str());
+  }
+  
+  AudioSource *prev_rx_src = 0;
+  
+    // Create the RX object
   m_rx = Rx::create(cfg(), rx_name);
   if ((m_rx == 0) || !rx().initialize())
   {
     cerr << "*** ERROR: Could not initialize RX \"" << rx_name << "\"\n";
-    goto rx_init_failed;
+    cleanup();
+    return false;
   }
   rx().squelchOpen.connect(slot(*this, &Logic::squelchOpen));
-  rx().audioReceived.connect(slot(*this, &Logic::audioReceived));
   rx().dtmfDigitDetected.connect(slot(*this, &Logic::dtmfDigitDetectedP));
   rx().mute(false);
+  prev_rx_src = m_rx;
+  
+    // This valve is used to turn RX audio on/off into the logic core
+  rx_valve = new AudioValve;
+  rx_valve->setOpen(false);
+  prev_rx_src->registerSink(rx_valve, true);
+  prev_rx_src = rx_valve;
+  
+    // Split the RX audio stream to multiple sinks
+  rx_splitter = new AudioSplitter;
+  prev_rx_src->registerSink(rx_splitter, true);
+  prev_rx_src = 0;
+  
+    // Create a selector for audio to the module
+  audio_to_module_selector = new AudioSelector;
+
+    // Connect RX audio to the modules
+  AudioPassthrough *passthrough = new AudioPassthrough;
+  rx_splitter->addSink(passthrough, true);
+  audio_to_module_selector->addSource(passthrough);
+  audio_to_module_selector->enableAutoSelect(passthrough, 10);
     
+    // Connect inter logic audio input to the modules
+  passthrough = new AudioPassthrough;
+  logic_con_in->addSink(passthrough, true);
+  audio_to_module_selector->addSource(passthrough);
+  audio_to_module_selector->enableAutoSelect(passthrough, 0);  
+
+    // Split audio to all modules
+  audio_to_module_splitter = new AudioSplitter;
+  audio_to_module_selector->registerSink(audio_to_module_splitter, true);
+  
+    // Connect RX audio to inter logic audio output
+  passthrough = new AudioPassthrough;
+  rx_splitter->addSink(passthrough, true);
+  logic_con_out->addSource(passthrough);
+  logic_con_out->enableAutoSelect(passthrough, 10);
+  
+    // A valve that is used to turn direct RX to TX audio on or off.
+    // Used by the repeater logic.
+  rpt_valve = new AudioValve;
+  rpt_valve->setOpen(false);
+  rx_splitter->addSink(rpt_valve, true);
+  
+    // This selector is used to select audio source for TX audio
+  tx_audio_selector = new AudioSelector;
+  
+    // Connect the direct RX to TX audio valve to the TX audio selector
+  tx_audio_selector->addSource(rpt_valve);
+  tx_audio_selector->enableAutoSelect(rpt_valve, 20);
+  
+    // Connect incoming intra logic audio to the TX audio selector
+  passthrough = new AudioPassthrough;
+  logic_con_in->addSink(passthrough, true);
+  tx_audio_selector->addSource(passthrough);
+  tx_audio_selector->enableAutoSelect(passthrough, 10);
+  
+    // Create a selector and a splitter to handle audio from modules
+  audio_from_module_selector = new AudioSelector;
+  AudioSplitter *audio_from_module_splitter = new AudioSplitter;
+  audio_from_module_selector->registerSink(audio_from_module_splitter, true);
+  
+    // Connect audio from modules to the TX audio selector
+  passthrough = new AudioPassthrough;
+  audio_from_module_splitter->addSink(passthrough, true);
+  tx_audio_selector->addSource(passthrough);
+  tx_audio_selector->enableAutoSelect(passthrough, 0);
+  
+    // Connect audio from modules to the inter logic audio output
+  passthrough = new AudioPassthrough;
+  audio_from_module_splitter->addSink(passthrough, true);
+  logic_con_out->addSource(passthrough);
+  logic_con_out->enableAutoSelect(passthrough, 0);
+  
+  
+  AudioSource *prev_tx_src = 0;
+  
+  /*
+  passthrough = new AudioPassthrough;
+  tx_audio_selector->registerSink(passthrough, true);
+  prev_tx_src = passthrough;
+  */
+  
+    // Create the idle detector and connect it to the output of the
+    // TX audio selector
+  idle_det = new IdleDetector(this);
+  tx_audio_selector->registerSink(idle_det, true);
+  prev_tx_src = idle_det;
+  
+    // Create the TX audio mixer
+  tx_audio_mixer = new AudioMixer;
+  tx_audio_mixer->addSource(prev_tx_src);
+  prev_tx_src = tx_audio_mixer;
+  
+    // Create the TX object
   m_tx = Tx::create(cfg(), tx_name);
   if ((m_tx == 0) || !tx().initialize())
   {
     cerr << "*** ERROR: Could not initialize TX \"" << tx_name << "\"\n";
-    goto tx_init_failed;
+    cleanup();
+    return false;
   }
-  tx().allSamplesFlushed.connect(slot(*this, &Logic::allTxSamplesFlushed));
-  tx().allDtmfDigitsSent.connect(slot(*this, &Logic::allDtmfDigitsSent));
+  tx().transmitterStateChange.connect(
+      slot(*this, &Logic::transmitterStateChange));
+  prev_tx_src->registerSink(m_tx, true);
   
-  if (tx_ctcss == TX_CTCSS_ALWAYS)
-  {
-    tx().enableCtcss(true);
-  }
-  
-  module_tx_fifo = new SampleFifo(15*8000); // 15 seconds
-  module_tx_fifo->setDebugName("module_tx_fifo");
-  module_tx_fifo->allSamplesWritten.connect(
-      	  slot(*this, &Logic::allModuleSamplesWritten));
-  module_tx_fifo->writeSamples.connect(slot(*this, &Logic::transmitAudio));
-  tx().transmitBufferFull.connect(
-      	  slot(*module_tx_fifo, &SampleFifo::writeBufferFull));
-  module_tx_fifo->stopOutput(true);
-  module_tx_fifo->setOverwrite(true);
-  
-  cmd_tmo_timer = new Timer(10000);
-  cmd_tmo_timer->expired.connect(slot(*this, &Logic::cmdTimeout));
-  cmd_tmo_timer->setEnable(false);
-  
+    // Create the message handler
   msg_handler = new MsgHandler(8000);
-  msg_handler->writeAudio.connect(slot(*this, &Logic::transmitAudio));
   msg_handler->allMsgsWritten.connect(slot(*this, &Logic::allMsgsWritten));
-  tx().transmitBufferFull.connect(
-      	  slot(*msg_handler, &MsgHandler::writeBufferFull));
+  
+    // This gain control is used to reduce the audio volume of effects
+    // and announcements when mixed with normal audio
+  fx_gain_ctrl = new AudioAmp;
+  fx_gain_ctrl->setGain(fx_gain_normal);
+  msg_handler->registerSink(fx_gain_ctrl, true);
+  tx_audio_mixer->addSource(fx_gain_ctrl);
   
   event_handler = new EventHandler(event_handler_str, this);
   event_handler->playFile.connect(slot(*this, &Logic::playFile));
@@ -331,8 +460,19 @@ bool Logic::initialize(void)
   event_handler->setVariable("is_core_event_handler", "1");
   event_handler->setVariable("logic_name", name().c_str());
 
+  cmd_tmo_timer = new Timer(10000);
+  cmd_tmo_timer->expired.connect(slot(*this, &Logic::cmdTimeout));
+  cmd_tmo_timer->setEnable(false);
+  
+  if (tx_ctcss == TX_CTCSS_ALWAYS)
+  {
+    tx().enableCtcss(true);
+  }
+  
   loadModules();
   
+  string loaded_modules;
+  list<Module*>::const_iterator mit;
   for (mit=modules.begin(); mit!=modules.end(); ++mit)
   {
     if (!loaded_modules.empty())
@@ -344,7 +484,8 @@ bool Logic::initialize(void)
   event_handler->setVariable("loaded_modules", loaded_modules);
 
   event_handler->processEvent("namespace eval Logic {}");
-  cfgvars = cfg().listSection(name());
+  list<string> cfgvars = cfg().listSection(name());
+  list<string>::const_iterator cfgit;
   for (cfgit=cfgvars.begin(); cfgit!=cfgvars.end(); ++cfgit)
   {
     string var = "Logic::CFG_" + *cfgit;
@@ -353,14 +494,14 @@ bool Logic::initialize(void)
     event_handler->setVariable(var, value);
   }
 
-  event_handler->initialize();
+  if (!event_handler->initialize())
+  {
+    cleanup();
+    return false;
+  }
 
-  audio_switch_matrix.addSource(name(), &logic_con_out);
-  logic_con_in.sigWriteSamples.connect(
-      	  slot(*this, &Logic::remoteLogicWriteSamples));
-  logic_con_in.sigFlushSamples.connect(
-      	  slot(*this, &Logic::remoteLogicFlushSamples));
-  audio_switch_matrix.addSink(name(), &logic_con_in);
+  audio_switch_matrix.addSource(name(), logic_con_out);
+  audio_switch_matrix.addSink(name(), logic_con_in);
   
   processEvent("startup");
   
@@ -368,17 +509,6 @@ bool Logic::initialize(void)
   
   return true;
   
-  tx_init_failed:
-    delete m_tx;
-    m_tx = 0;
-    
-  rx_init_failed:
-    delete m_rx;
-    m_rx = 0;
-    
-  cfg_failed:
-    return false;
-    
 } /* Logic::initialize */
 
 
@@ -405,25 +535,25 @@ void Logic::setEventVariable(const string& name, const string& value)
 
 void Logic::playFile(const string& path)
 {
-  module_tx_fifo->stopOutput(true);
+  //module_tx_fifo->stopOutput(true);
   msg_handler->playFile(path);
-  transmitCheck();
+  checkIdle();
 } /* Logic::playFile */
 
 
 void Logic::playSilence(int length)
 {
-  module_tx_fifo->stopOutput(true);
+  //module_tx_fifo->stopOutput(true);
   msg_handler->playSilence(length);
-  transmitCheck();
+  checkIdle();
 } /* Logic::playSilence */
 
 
 void Logic::playTone(int fq, int amp, int len)
 {
-  module_tx_fifo->stopOutput(true);
+  //module_tx_fifo->stopOutput(true);
   msg_handler->playTone(fq, amp, len);
-  transmitCheck();
+  checkIdle();
 } /* Logic::playSilence */
 
 
@@ -438,42 +568,15 @@ void Logic::recordStart(const string& filename)
     recordStop();
     return;
   }
-  //rx().audioReceived.connect(slot(*recorder, &Recorder::writeSamples));
+  rx_splitter->addSink(recorder, true);
 } /* Logic::recordStart */
 
 
 void Logic::recordStop(void)
 {
-  delete recorder;
+  rx_splitter->removeSink(recorder);
   recorder = 0;
 } /* Logic::recordStart */
-
-
-void Logic::audioFromModule(float *samples, int count)
-{
-  module_tx_fifo->addSamples(samples, count);
-} /* Logic::audioFromModule */
-
-
-void Logic::moduleTransmitRequest(bool do_transmit)
-{
-  /*
-  cout << "Logic::moduleTransmitRequest: do_transmit="
-       << (do_transmit ? "TRUE" : "FALSE") << endl;
-  */
-  if (!do_transmit)
-  {
-    if (!module_tx_fifo->empty())
-    {
-      module_tx_fifo->flushSamples();
-    }
-    else
-    {
-      tx().flushSamples();
-    }
-  }
-  transmitCheck();
-} /* Logic::moduleTransmitRequest */
 
 
 bool Logic::activateModule(Module *module)
@@ -486,6 +589,7 @@ bool Logic::activateModule(Module *module)
   if (active_module == 0)
   {
     active_module = module;
+    audio_to_module_splitter->enableSink(module, true);
     module->activate();
     event_handler->setVariable("active_module", module->name());
     return true;
@@ -504,6 +608,7 @@ void Logic::deactivateModule(Module *module)
   }
   if ((module != 0) && (module == active_module))
   {
+    audio_to_module_splitter->enableSink(module, false);
     active_module = 0;
     module->deactivate();
     event_handler->setVariable("active_module", "");
@@ -618,7 +723,6 @@ void Logic::sendDtmf(const std::string& digits)
   if (!digits.empty())
   {
     tx().sendDtmf(digits);
-    transmitCheck();
   }
 } /* Logic::sendDtmf */
 
@@ -645,7 +749,6 @@ void Logic::squelchOpen(bool is_open)
 
   if (!is_open)
   {
-    logic_con_out.flushSamples();
     if (((exec_cmd_on_sql_close > 0) || (received_digits == "*")) && 
         !anti_flutter && !received_digits.empty())
     {
@@ -666,17 +769,21 @@ void Logic::squelchOpen(bool is_open)
     tx().enableCtcss(is_open);
   }
   
+  checkIdle();
+  
 } /* Logic::squelchOpen */
 
 
 void Logic::transmit(bool do_transmit)
 {
+  return;
+  
   //cout << "Logic::transmit: do_transmit="
     //   << (do_transmit ? "true" : "false") << endl;
   
   bool was_transmitting = tx().isTransmitting();
 
-  tx().transmit(do_transmit);
+  tx().setTxCtrlMode(do_transmit ? Tx::TX_ON : Tx::TX_OFF);
 
   if (do_transmit != was_transmitting)
   {
@@ -684,39 +791,22 @@ void Logic::transmit(bool do_transmit)
     ss << "transmit " << (do_transmit ? "1" : "0");
     processEvent(ss.str());
   }
-
-  if (do_transmit)
-  {
-    if (!msg_handler->isWritingMessage())
-    {
-      module_tx_fifo->stopOutput(false);
-    }
-  }
-  else
-  {
-    module_tx_fifo->stopOutput(true);
-  }
 } /* Logic::transmit */
 
 
-int Logic::transmitAudio(float *samples, int count)
+bool Logic::getIdleState(void) const
 {
-  return tx().transmitAudio(samples, count);
-} /* Logic::transmitAudio */
+  return !rx().squelchIsOpen() &&
+      	 idle_det->isIdle() &&
+      	 !msg_handler->isWritingMessage();
+	 
+} /* Logic::getIdleState */
 
 
 void Logic::clearPendingSamples(void)
 {
   msg_handler->clear();
-  module_tx_fifo->clear();
 } /* Logic::clearPendingSamples */
-
-
-void Logic::logicTransmitRequest(bool do_transmit)
-{
-  logic_transmit = do_transmit;
-  transmitCheck();
-} /* Logic::logicTransmitRequest */
 
 
 void Logic::enableRgrSoundTimer(bool enable)
@@ -750,6 +840,40 @@ bool Logic::isWritingMessage(void)
 } /* Logic::isWritingMessage */
 
 
+#if 0
+bool Logic::remoteLogicIsTransmitting(void) const
+{
+  return logic_con_in->isTransmitting();
+} /* Logic::remoteLogicIsTransmitting */
+#endif
+
+
+void Logic::rxValveSetOpen(bool do_open)
+{
+  rx_valve->setOpen(do_open);
+} /* Logic::rxValveSetOpen */
+
+
+void Logic::rptValveSetOpen(bool do_open)
+{
+  rpt_valve->setOpen(do_open);
+} /* Logic::rptValveSetOpen */
+
+
+void Logic::checkIdle(void)
+{
+  bool new_idle_state = getIdleState();
+  if (new_idle_state != is_idle)
+  {
+    is_idle = new_idle_state;
+    //printf("Logic::checkIdle: is_idle=%s\n", is_idle ? "TRUE" : "FALSE");
+    idleStateChanged(is_idle);
+  }
+} /* Logic::checkIdle */
+
+
+
+
 
 /****************************************************************************
  *
@@ -774,79 +898,17 @@ void Logic::allMsgsWritten(void)
 {
   //cout << "Logic::allMsgsWritten\n";
 
-  tx().flushSamples();
-  transmitCheck();
+  //sigc_msg_handler->flushSamples();
   //module_tx_fifo->stopOutput(false);
   
   if (active_module != 0)
   {
      active_module->allMsgsWritten();
   }
+
+  checkIdle();
   
 } /* Logic::allMsgsWritten */
-
-
-void Logic::allModuleSamplesWritten(void)
-{
-  //cout << "Logic::allModuleSamplesWritten\n";
-  
-  tx().flushSamples();
-  transmitCheck();  
-} /* Logic::allModuleSamplesWritten */
-
-
-void Logic::transmitCheck(void)
-{
-  /*
-  cout << "Logic::transmitCheck [" << name() << "]:\n";
-  if (active_module != 0)
-  {
-    cout << "\tactive_module->isTransmitting   = "
-      	 << (active_module->isTransmitting() ? "TRUE" : "FALSE") << endl;
-  }
-  cout << "\tmsg_handler->isWritingMessage() = "
-       << (msg_handler->isWritingMessage() ? "TRUE" : "FALSE") << endl;
-  cout << "\t!module_tx_fifo->empty()        = "
-       << (!module_tx_fifo->empty() ? "TRUE" : "FALSE") << endl;
-  cout << "\tlogic_transmit                  = "
-       << (logic_transmit ? "TRUE" : "FALSE") << endl;
-  cout << "\tremote_logic_tx                 = "
-       << (remote_logic_tx ? "TRUE" : "FALSE") << endl;
-  cout << "\ttx().isFlushing()               = "
-       << (tx().isFlushing() ? "TRUE" : "FALSE") << endl;
-  cout << "\ttx().isSendingDtmf()            = "
-       << (tx().isSendingDtmf() ? "TRUE" : "FALSE") << endl;
-  */
-  
-  if (((active_module != 0) && active_module->isTransmitting()) ||
-      msg_handler->isWritingMessage() ||
-      !module_tx_fifo->empty() ||
-      logic_transmit ||
-      remote_logic_tx ||
-      tx().isFlushing() ||
-      tx().isSendingDtmf())
-  {
-    transmit(true);
-  }
-  else
-  {
-    transmit(false);
-  }
-} /* Logic::transmitCheck */
-
-
-void Logic::allTxSamplesFlushed(void)
-{
-  //cout << "Logic::allTxSamplesFlushed\n";
-  transmitCheck();
-} /* Logic::allTxSamplesFlushed */
-
-
-void Logic::remoteLogicTransmitRequest(bool do_tx)
-{
-  remote_logic_tx = do_tx;
-  transmitCheck();
-} /* Logic::remoteLogicTx */
 
 
 void Logic::loadModules(void)
@@ -937,6 +999,14 @@ void Logic::loadModule(const string& module_cfg_name)
     dlclose(handle);
     return;
   }
+  
+    // Connect module audio output to the module audio selector
+  audio_from_module_selector->addSource(module);
+  audio_from_module_selector->enableAutoSelect(module, 0);
+  
+    // Connect module audio input to the module audio splitter
+  audio_to_module_splitter->addSink(module);
+  audio_to_module_splitter->enableSink(module, false);
   
   modules.push_back(module);
   
@@ -1103,58 +1173,6 @@ void Logic::sendRgrSound(Timer *t)
 } /* Logic::sendRogerSound */
 
 
-int Logic::remoteLogicWriteSamples(float *samples, int len)
-{
-  //cout << "Logic::remoteLogicWriteSamples: len=" << len << endl;
-
-  if (msg_handler->isWritingMessage() || rx().squelchIsOpen() ||
-      ((active_module != 0) && active_module->isTransmitting()) ||
-      (len <= 0))
-  {
-    return len;
-  }
-  if (!remote_logic_tx)
-  {
-    remoteLogicTransmitRequest(true);
-  }
-  float *buf = new float[len];
-  memcpy(buf, samples, len * sizeof(*samples));
-  int cnt = transmitAudio(buf, len);
-  delete [] buf;
-  return cnt;
-} /* Logic::remoteLogicWriteSamples */
-
-
-void Logic::remoteLogicFlushSamples(void)
-{
-  remoteLogicTransmitRequest(false);
-  tx().flushSamples();
-} /* Logic::remoteLogicFlushSamples */
-
-
-int Logic::audioReceived(float *samples, int len)
-{
-  //cout << "Logic::audioReceived: len=" << len << endl;
-
-  float *buf = new float[len];
-  memcpy(buf, samples, len * sizeof(*samples));
-  len = logic_con_out.writeSamples(buf, len);
-  delete [] buf;
-  
-  if (active_module != 0)
-  {
-    active_module->audioFromRx(samples, len);
-  }
-  
-  if (recorder != 0)
-  {
-    recorder->writeSamples(samples, len);
-  }
-  
-  return len;
-} /* Logic::audioReceived */
-
-
 void Logic::everyMinute(Timer *t)
 {
   struct timeval tv;
@@ -1173,12 +1191,6 @@ void Logic::everyMinute(Timer *t)
 } /* Logic::everyMinute */
 
 
-void Logic::allDtmfDigitsSent(void)
-{
-  transmitCheck();
-} /* Logic::allDtmfDigitsSent */
-
-
 void Logic::dtmfDigitDetectedP(char digit, int duration)
 {
   cout << name() << ": digit=" << digit << endl;
@@ -1195,6 +1207,47 @@ void Logic::dtmfDigitDetectedP(char digit, int duration)
   
 } /* Logic::dtmfDigitDetected */
 
+
+void Logic::audioStreamIdleStateChange(bool is_idle)
+{
+  /*
+  printf("Logic::audioStreamIdleStateChange: is_idle=%s\n",
+      	  is_idle ? "TRUE" : "FALSE");
+  */
+  
+
+  if (is_idle)
+  {
+    fx_gain_ctrl->setGain(fx_gain_normal); 
+  }
+  else
+  {
+    fx_gain_ctrl->setGain(fx_gain_low); 
+  }
+
+  checkIdle();
+} /* Logic::audioStreamIdleStateChange */
+
+
+void Logic::cleanup(void)
+{
+  delete event_handler;       	      event_handler = 0;
+  delete cmd_tmo_timer;       	      cmd_tmo_timer = 0;
+  unloadModules();
+  delete exec_cmd_on_sql_close_timer; exec_cmd_on_sql_close_timer = 0;
+  delete rgr_sound_timer;     	      rgr_sound_timer = 0;
+  delete every_minute_timer;  	      every_minute_timer = 0;
+  
+  audio_switch_matrix.removeSource(name());
+  audio_switch_matrix.removeSink(name());
+  
+  delete msg_handler; 	      	      msg_handler = 0;
+  delete m_rx;        	      	      m_rx = 0;
+  delete audio_to_module_selector;    audio_to_module_selector = 0;
+  delete tx_audio_selector;   	      tx_audio_selector = 0;
+  delete audio_from_module_selector;  audio_from_module_selector = 0;
+  delete tx_audio_mixer;      	      tx_audio_mixer = 0;
+} /* Logic::cleanup */
 
 
 /*

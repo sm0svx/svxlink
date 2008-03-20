@@ -1,5 +1,5 @@
 /**
-@file	 SigCAudioSource.h
+@file	 SigCAsyncAudioSource.h
 @brief   Contains an adapter class to connect to an AudioSink using SigC
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-17
@@ -44,7 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AudioSource.h>
+#include <AsyncAudioSource.h>
 
 
 /****************************************************************************

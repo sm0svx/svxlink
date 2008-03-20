@@ -9,7 +9,7 @@ should inherit the Module class and implement the abstract methods.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,10 +25,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example Template_demo.cpp
-An example of how to use the Template class
 */
 
 
@@ -55,6 +51,8 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include <AsyncAudioSink.h>
+#include <AsyncAudioSource.h>
 
 
 
@@ -132,7 +130,8 @@ to the SvxLink core is done through this class.
 
 \include Template_demo.cpp
 */
-class Module : public SigC::Object
+class Module : public SigC::Object, public Async::AudioSink,
+      	       public Async::AudioSource
 {
   public:
     /**
@@ -260,7 +259,7 @@ class Module : public SigC::Object
      * This function is used to check if the module has requested that the
      * the transmitter should be on or off.
      */
-    bool isTransmitting(void) const { return m_is_transmitting; }
+    //bool isTransmitting(void) const { return m_is_transmitting; }
 
     /**
      * @brief 	Retrieve the config file object
@@ -351,6 +350,7 @@ class Module : public SigC::Object
      */
     virtual void squelchOpen(bool is_open) {}
     
+    #if 0
     /**
      * @brief 	Tell the module that audio has been received from the receiver
      * @param 	samples A buffer containing the samples
@@ -362,6 +362,7 @@ class Module : public SigC::Object
      * This function will only be called if this module is active.
      */
     virtual int audioFromRx(float *samples, int count) { return count; }
+    #endif
     
     /**
      * @brief 	Tell the module that all announcement messages has been played
@@ -424,7 +425,7 @@ class Module : public SigC::Object
     
     
   protected:
-    
+    #if 0
     /**
      * @brief 	Called by the module to send audio over the transmitter
      * @param 	samples A buffer containing samples (16 bit signed)
@@ -453,6 +454,7 @@ class Module : public SigC::Object
      * The module must be active for this function to do anything.
      */
     void transmit(bool tx);
+    #endif
     
     /**
      * @brief 	Called by the module to activate itself
@@ -499,6 +501,22 @@ class Module : public SigC::Object
      * is specified in the configuration file, it will be deactivated.
      */
     void setIdle(bool is_idle);
+    
+    /**
+     * @brief 	Check if the logic core is idle or not
+     * @returns Returns \em true if the logic core is idle or
+     *	      	\em false if it's not.
+     */
+    bool logicIsIdle(void) const;
+
+    /**
+     * @brief 	Notify the module that the logic core idle state has changed
+     * @param 	is_idle Set to \em true if the logic core is idle or else
+     *	      	\em false.
+     *
+     * This function is called by the logic core when the idle state changes.
+     */
+    virtual void logicIdleStateChanged(bool is_idle);
 
 
   private:
@@ -507,7 +525,7 @@ class Module : public SigC::Object
     int       	      m_id;
     std::string       m_name;
     bool      	      m_is_transmitting;
-    SigC::Connection  m_audio_con;
+    SigC::Connection  m_logic_idle_con;
     bool      	      m_is_active;
     std::string	      m_cfg_name;
     Async::Timer      *m_tmo_timer;

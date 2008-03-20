@@ -1,14 +1,12 @@
 /**
 @file	 AudioSwitchMatrix.h
-@brief   A_brief_description_for_this_file
+@brief   A switch matrix for audio pipe objects
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-17
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2004-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example AudioSwitchMatrix_demo.cpp
-An example of how to use the AudioSwitchMatrix class
-*/
-
 
 #ifndef AUDIO_SWITCH_MATRIX_INCLUDED
 #define AUDIO_SWITCH_MATRIX_INCLUDED
@@ -71,6 +64,9 @@ namespace Async
 {
   class AudioSource;
   class AudioSink;
+  class AudioSelector;
+  class AudioSplitter;
+  class AudioPassthrough;
 };
 
 
@@ -115,13 +111,15 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	A switch matrix for audio pipe objects
 @author Tobias Blomberg
 @date   2005-04-17
 
-A_detailed_class_description
-
-\include AudioSwitchMatrix_demo.cpp
+This is an audio switch matrix for audio pipe objects. Audio can be routed
+from any of the connected sources to any of the connected sinks. Multiple
+sources can be routed to multiple sinks. If two different sources send audio
+to the same sink at the same time, one of the sources are chosen. The samples
+from the other source are thrown away.
 */
 class AudioSwitchMatrix
 {
@@ -137,20 +135,63 @@ class AudioSwitchMatrix
     ~AudioSwitchMatrix(void) {}
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Add an audio source to the switch matrix
+     * @param 	source_name The name of the source to register
+     * @param 	source The pointer to the source to register
      */
     void addSource(const std::string& source_name, Async::AudioSource *source);
+  
+    /**
+     * @brief 	Remove an audio source from the switch matrix
+     * @param 	source_name The name of the source to remove
+     */
     void removeSource(const std::string& source_name);
+  
+    /**
+     * @brief 	Add an audio sink to the switch matrix
+     * @param 	source_name The name of the source to register
+     * @param 	sink The pointer to the sink to register
+     */
     void addSink(const std::string& sink_name, Async::AudioSink *sink);
+  
+    /**
+     * @brief 	Remove an audio sink from the switch matrix
+     * @param 	sink_name The name of the sink to remove
+     */
     void removeSink(const std::string& sink_name);
 
+    /**
+     * @brief 	Connect a registered source to one of the registered sinks
+     * @param 	source_name The name of the source to connect
+     * @param 	sink_name The name of the sink to connect
+     */
     void connect(const std::string& source_name, const std::string& sink_name);
+
+    /**
+     * @brief 	Disconnect a registered source from one of the registered sinks
+     * @param 	source_name The name of the source to disconnect
+     * @param 	sink_name The name of the sink to disconnect
+     */
     void disconnect(const std::string& source_name,
       	    const std::string& sink_name);
+
+    /**
+     * @brief 	Disconnect all sinks from the given source
+     * @param 	source_name The name of the source to disconnect
+     */
     void disconnectSource(const std::string& source_name);
+
+    /**
+     * @brief 	Disconnect all sources from the given sink
+     * @param 	sink_name The name of the sink to disconnect
+     */
     void disconnectSink(const std::string& sink_name);
+
+    /**
+     * @brief 	Check if the given source and sink is connected
+     * @param 	source_name The name of the source
+     * @param 	sink_name The name of the sink
+     */
     bool isConnected(const std::string& source_name,
       	    const std::string& sink_name);
 
@@ -158,8 +199,22 @@ class AudioSwitchMatrix
   protected:
     
   private:
-    std::map<std::string, Async::AudioSource *> sources;
-    std::map<std::string, Async::AudioSink *>	sinks;
+    typedef struct
+    {
+      Async::AudioSource      *source;
+      Async::AudioSplitter    *splitter;
+    } SourceInfo;
+    typedef struct
+    {
+      Async::AudioSink       	      	      	      	*sink;
+      Async::AudioSelector   	      	      	      	*selector;
+      std::map<std::string, Async::AudioPassthrough *>	connectors;
+    } SinkInfo;
+    typedef std::map<std::string, SourceInfo> SourceMap;
+    typedef std::map<std::string, SinkInfo>   SinkMap;
+    
+    SourceMap sources;
+    SinkMap   sinks;
     
 };  /* class AudioSwitchMatrix */
 

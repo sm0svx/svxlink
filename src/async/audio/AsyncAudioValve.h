@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2006  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -43,8 +43,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AudioSink.h>
-#include <AudioSource.h>
+#include <AsyncAudioSink.h>
+#include <AsyncAudioSource.h>
 
 
 
@@ -118,13 +118,10 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
   public:
     /**
      * @brief 	Default constuctor
-     * @param 	block_when_closed When \em true, block the incoming audio
-     *	      	stream when the valve is closed. When \em false, incoming
-     *	      	audio is thrown away when the valve is closed.
      */
-    explicit AudioValve(bool block_when_closed = false)
-      : block_when_closed(block_when_closed), is_open(true),
-      	all_flushed(false), flush_samples(false)
+    explicit AudioValve(void)
+      : block_when_closed(false), is_open(true),
+	is_idle(true), is_flushing(false), input_stopped(false)
     {
     }
   
@@ -153,20 +150,73 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       
       if (do_open)
       {
-      	sourceResumeOutput();
-      	if (flush_samples && all_flushed)
+      	if (input_stopped)
 	{
-      	  sourceAllSamplesFlushed();
+	  input_stopped = false;
+      	  sourceResumeOutput();
 	}
-      	all_flushed = false;
-	flush_samples = false;
       }
       else
       {
-      	all_flushed = false;
-	flush_samples = false;
-      	sinkFlushSamples();
+	if (!is_idle && !is_flushing)
+	{
+      	  sinkFlushSamples();
+	}
+	if (!block_when_closed && input_stopped)
+	{
+	  input_stopped = false;
+	  sourceResumeOutput();
+	}
+	if (is_flushing)
+	{
+	  is_idle = true;
+	  is_flushing = false;
+	  sourceAllSamplesFlushed();
+	}
       }
+    }
+
+    /**
+     * @brief 	Setup audio stream blocking when valve is closed
+     * @param 	block_when_closed When \em true, block the incoming audio
+     *	      	stream when the valve is closed. When \em false, incoming
+     *	      	audio is thrown away when the valve is closed.
+     *
+     * Use this method to set if the valve should block or drop the incoming
+     * audio stream when the valve is closed.
+     */
+    void setBlockWhenClosed(bool block_when_closed)
+    {
+      if (block_when_closed == this->block_when_closed)
+      {
+      	return;
+      }
+      
+      this->block_when_closed = block_when_closed;
+      
+      if (!block_when_closed && input_stopped)
+      {
+      	input_stopped = false;
+      	sourceResumeOutput();
+      }
+    }
+    
+    /**
+     * @brief 	Check if the valve is open
+     * @returns Return \em true if the valve is open or else \em false
+     */
+    bool isOpen(void) const
+    {
+      return is_open;
+    }
+    
+    /**
+     * @brief 	Check if the valve is idle
+     * @returns Return \em true if the valve is idle or else \em false
+     */
+    bool isIdle(void) const
+    {
+      return is_idle;
     }
   
     /**
@@ -182,12 +232,24 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
      */
     int writeSamples(const float *samples, int count)
     {
-      flush_samples = false;
-      if (!is_open)
+      int ret = 0;
+      is_idle = false;
+      is_flushing = false;
+      if (is_open)
       {
-      	return (block_when_closed ? 0 : count);
+      	ret = sinkWriteSamples(samples, count);
       }
-      return sinkWriteSamples(samples, count);
+      else
+      {
+      	ret = (block_when_closed ? 0 : count);
+      }
+      
+      if (ret == 0)
+      {
+      	input_stopped = true;
+      }
+      
+      return ret;
     }
     
     /**
@@ -202,18 +264,14 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     {
       if (is_open)
       {
+      	is_flushing = true;
       	sinkFlushSamples();
       }
       else
       {
-      	if (block_when_closed)
-	{
-	  flush_samples = true;
-	}
-	else
-	{
-      	  sourceAllSamplesFlushed();
-	}
+	is_flushing = false;
+	is_idle = true;
+      	sourceAllSamplesFlushed();
       }
     }
     
@@ -229,7 +287,11 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     {
       if (is_open)
       {
-      	sourceResumeOutput();
+      	if (input_stopped)
+	{
+	  input_stopped = false;
+      	  sourceResumeOutput();
+	}
       }
     }
     
@@ -242,13 +304,12 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
      */
     virtual void allSamplesFlushed(void)
     {
-      if (is_open)
+      bool was_flushing = is_flushing;
+      is_flushing = false;
+      is_idle = true;
+      if (is_open && was_flushing)
       {
       	sourceAllSamplesFlushed();
-      }
-      else
-      {
-      	all_flushed = true;
       }
     }
     
@@ -261,8 +322,9 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     
     bool block_when_closed;
     bool is_open;
-    bool all_flushed;
-    bool flush_samples;
+    bool is_idle;
+    bool is_flushing;
+    bool input_stopped;
     
 };  /* class AudioValve */
 

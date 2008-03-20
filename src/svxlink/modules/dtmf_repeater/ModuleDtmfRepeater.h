@@ -123,6 +123,12 @@ class ModuleDtmfRepeater : public Module
     ~ModuleDtmfRepeater(void);
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
+  protected:
+    virtual void resumeOutput(void);
+    virtual void allSamplesFlushed(void);
+    virtual int writeSamples(const float *samples, int count);
+    virtual void flushSamples(void);
+  
   private:
     std::string   received_digits;
     int       	  repeat_delay;

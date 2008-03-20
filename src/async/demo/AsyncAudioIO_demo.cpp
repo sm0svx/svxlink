@@ -2,8 +2,8 @@
 #include <iostream>
 #include <AsyncCppApplication.h>
 #include <AsyncAudioIO.h>
-#include <AudioSink.h>
-#include <AudioSource.h>
+#include <AsyncAudioSink.h>
+#include <AsyncAudioSource.h>
 
 using namespace std;
 using namespace Async;

@@ -195,6 +195,22 @@ Specify the name of a configuration section that contains logic linking infomati
 is an example section in the default configuration file called [LinkToR4]. Right now only
 one link can be specified. A LINKS variable is only needed in the logic that the link
 should be activated from.
+.TP
+.B FX_GAIN_NORMAL
+The gain (dB) to use for audio effects and announcements when there is no other traffic.
+This gain is normally set to 0dB which means no gain or attenuation.
+.TP
+.B FX_GAIN_LOW
+The gain (dB) to use for audio effects and announcements when there is other traffic.
+This gain is normally set to something like -12dB so that announcements and audio effects
+are attenuated when there is other traffic.
+.TP
+.B MUTE_RX_ON_TX
+Set to 1 to mute the receiver when the transmitter is transmitting (default)
+or set it to 0 to make the RX active during transmissions.
+One might want to set this to 0 if the link is operating on a split frequency.
+Then the link can accept commands even when it's transmitting.
+The normal setting is 1, to mute the RX when transmitting.
 .
 .SS Repeater Logic Section
 .
@@ -328,6 +344,15 @@ Specify the name of a configuration section that contains logic linking infomati
 is an example section in the default configuration file called [LinkToR4]. Right now only
 one link can be specified. A LINKS variable is only needed in the logic that the link
 should be activated from.
+.TP
+.B FX_GAIN_NORMAL
+The gain (dB) to use for audio effects and announcements when there is no other traffic.
+This gain is normally set to 0dB which means no gain or attenuation.
+.TP
+.B FX_GAIN_LOW
+The gain (dB) to use for audio effects and announcements when there is other traffic.
+This gain is normally set to something like -12dB so that announcements and audio effects
+are attenuated when there is other traffic.
 .
 .SS Macros Section
 .

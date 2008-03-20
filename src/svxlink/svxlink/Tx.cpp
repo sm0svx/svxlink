@@ -42,6 +42,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+//#include <AsyncAudioPassthrough.h>
+
 
 
 /****************************************************************************
@@ -80,6 +82,74 @@ using namespace Async;
  *
  ****************************************************************************/
 
+#if 0
+class Tx::InputHandler : public AudioPassthrough
+{
+  public:
+    explicit InputHandler(Tx *tx)
+      : tx(tx), is_flushing(false), samples_to_flush(false),
+      	auto_tx(false), is_transmitting(false)
+    {
+    }
+    
+    bool isFlushing(void) const { return is_flushing; }
+    //bool samplesToFlush(void) const { return samples_to_flush; }
+    void enableAutoTx(bool enable)
+    {
+      auto_tx = enable;
+      if (auto_tx)
+      {
+      	transmit(samples_to_flush);
+      }
+      else
+      {
+      	is_transmitting = false;
+      }
+    }
+    
+    int writeSamples(const float *samples, int count)
+    {
+      is_flushing = false;
+      samples_to_flush = true;
+      if (auto_tx && !is_transmitting)
+      {
+      	transmit(true);
+      }
+      return sinkWriteSamples(samples, count);
+    }
+    
+    void flushSamples(void)
+    {
+      is_flushing = true;
+      sinkFlushSamples();
+    }
+    
+    void allSamplesFlushed(void)
+    {
+      is_flushing = false;
+      samples_to_flush = false;
+      sourceAllSamplesFlushed();
+      if (auto_tx && is_transmitting && !samples_to_flush)
+      {
+      	transmit(false);
+      }
+    }
+  
+  private:
+    Tx	  *tx;
+    bool  is_flushing;
+    bool  samples_to_flush;
+    bool  auto_tx;
+    bool  is_transmitting;
+    
+    void transmit(bool do_transmit)
+    {
+      is_transmitting = do_transmit;
+      tx->transmit(do_transmit);
+    }
+    
+}; /* class Tx::InputHandler */
+#endif
 
 
 /****************************************************************************
@@ -136,8 +206,65 @@ Tx *Tx::create(Config& cfg, const string& name)
   
   return tx;
   
-} /* Rx::create */
+} /* Tx::create */
 
+
+#if 0
+Tx::Tx(const std::string name)
+  : input_handler(0)
+{
+  
+} /* Tx::Tx */
+
+
+Tx::~Tx(void)
+{
+  clearHandler();
+  delete input_handler;
+} /* Tx::~Tx */
+
+
+bool Tx::initialize(void)
+{
+  input_handler = new InputHandler(this);
+  if (input_handler == 0)
+  {
+    return false;
+  }
+  setHandler(input_handler);
+  
+  return true;
+  
+} /* Tx::initialize */
+
+
+void Tx::setTxCtrlMode(Tx::TxCtrlMode mode)
+{
+  switch (mode)
+  {
+    case TX_OFF:
+      input_handler->enableAutoTx(false);
+      transmit(false);
+      break;
+      
+    case TX_ON:
+      input_handler->enableAutoTx(false);
+      transmit(true);
+      break;
+    
+    case TX_AUTO:
+      input_handler->enableAutoTx(true);
+      break;
+  }
+  
+} /* Tx::setTxCtrlMode */
+
+
+bool Tx::isFlushing(void) const
+{
+  return input_handler->isFlushing();
+}
+#endif
 
 
 /****************************************************************************

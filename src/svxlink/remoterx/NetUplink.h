@@ -67,6 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace Async
 {
   class TcpServer;
+  class SigCAudioSink;
 };
 
 namespace NetRxMsg
@@ -153,6 +154,7 @@ class NetUplink : public Uplink
     int       	      	  recv_cnt;
     int       	      	  recv_exp;
     Rx	      	      	  *rx;
+    Async::SigCAudioSink  *sigc_sink;
     
     NetUplink(const NetUplink&);
     NetUplink& operator=(const NetUplink&);

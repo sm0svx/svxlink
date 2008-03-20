@@ -126,7 +126,7 @@ class EchoLinkQsoTest : public EchoLink::Qso
     bool      	      	      	  full_duplex;
     long      	      	      	  vox_limit;
     Async::SigCAudioSink      	  *sigc_sink;
-    Async::SigCAudioSource        *sigc_src;
+    //Async::SigCAudioSource        *sigc_src;
   
     void stdinHandler(Async::FdWatch *watch);
     void printPrompt(void);

@@ -1,4 +1,4 @@
-<!DOCTYPE UI><UI version="3.0" stdsetdef="1">
+<!DOCTYPE UI><UI version="3.3" stdsetdef="1">
 <class>ComDialogBase</class>
 <widget class="QDialog">
     <property name="name">
@@ -8,8 +8,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>458</width>
-            <height>459</height>
+            <width>528</width>
+            <height>539</height>
         </rect>
     </property>
     <property name="sizePolicy">
@@ -410,28 +410,225 @@
                     <property name="text">
                         <string>&amp;Disconnect</string>
                     </property>
+                    <property name="accel">
+                        <string>Alt+D</string>
+                    </property>
                     <property name="autoDefault">
                         <bool>false</bool>
                     </property>
                 </widget>
             </hbox>
         </widget>
-        <widget class="QPushButton">
+        <widget class="QLayoutWidget">
             <property name="name">
-                <cstring>ptt_button</cstring>
+                <cstring>layout5</cstring>
             </property>
-            <property name="enabled">
-                <bool>false</bool>
-            </property>
-            <property name="text">
-                <string>PTT</string>
-            </property>
-            <property name="autoDefault">
-                <bool>false</bool>
-            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QGroupBox">
+                    <property name="name">
+                        <cstring>vox_group</cstring>
+                    </property>
+                    <property name="title">
+                        <string>VOX</string>
+                    </property>
+                    <vbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QLayoutWidget">
+                            <property name="name">
+                                <cstring>layout6</cstring>
+                            </property>
+                            <hbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QCheckBox">
+                                    <property name="name">
+                                        <cstring>vox_enabled_checkbox</cstring>
+                                    </property>
+                                    <property name="sizePolicy">
+                                        <sizepolicy>
+                                            <hsizetype>3</hsizetype>
+                                            <vsizetype>0</vsizetype>
+                                            <horstretch>0</horstretch>
+                                            <verstretch>0</verstretch>
+                                        </sizepolicy>
+                                    </property>
+                                    <property name="text">
+                                        <string>VOX Enabled</string>
+                                    </property>
+                                </widget>
+                                <widget class="QLabel">
+                                    <property name="name">
+                                        <cstring>vox_indicator</cstring>
+                                    </property>
+                                    <property name="frameShape">
+                                        <enum>Panel</enum>
+                                    </property>
+                                    <property name="frameShadow">
+                                        <enum>Sunken</enum>
+                                    </property>
+                                    <property name="margin">
+                                        <number>3</number>
+                                    </property>
+                                    <property name="text">
+                                        <string>VOX</string>
+                                    </property>
+                                    <property name="alignment">
+                                        <set>AlignCenter</set>
+                                    </property>
+                                </widget>
+                            </hbox>
+                        </widget>
+                        <widget class="QLayoutWidget">
+                            <property name="name">
+                                <cstring>layout7</cstring>
+                            </property>
+                            <grid>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QSlider" row="2" column="2">
+                                    <property name="name">
+                                        <cstring>vox_delay</cstring>
+                                    </property>
+                                    <property name="enabled">
+                                        <bool>false</bool>
+                                    </property>
+                                    <property name="maxValue">
+                                        <number>2000</number>
+                                    </property>
+                                    <property name="lineStep">
+                                        <number>1</number>
+                                    </property>
+                                    <property name="pageStep">
+                                        <number>100</number>
+                                    </property>
+                                    <property name="value">
+                                        <number>1000</number>
+                                    </property>
+                                    <property name="orientation">
+                                        <enum>Horizontal</enum>
+                                    </property>
+                                    <property name="tickmarks">
+                                        <enum>Below</enum>
+                                    </property>
+                                    <property name="tickInterval">
+                                        <number>50</number>
+                                    </property>
+                                </widget>
+                                <widget class="QSlider" row="1" column="2">
+                                    <property name="name">
+                                        <cstring>vox_threshold</cstring>
+                                    </property>
+                                    <property name="enabled">
+                                        <bool>false</bool>
+                                    </property>
+                                    <property name="minValue">
+                                        <number>-60</number>
+                                    </property>
+                                    <property name="maxValue">
+                                        <number>0</number>
+                                    </property>
+                                    <property name="value">
+                                        <number>-30</number>
+                                    </property>
+                                    <property name="orientation">
+                                        <enum>Horizontal</enum>
+                                    </property>
+                                    <property name="tickmarks">
+                                        <enum>Above</enum>
+                                    </property>
+                                    <property name="tickInterval">
+                                        <number>10</number>
+                                    </property>
+                                </widget>
+                                <widget class="QLabel" row="1" column="0" rowspan="1" colspan="2">
+                                    <property name="name">
+                                        <cstring>vox_threshold_label</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>Threshold:</string>
+                                    </property>
+                                </widget>
+                                <widget class="QProgressBar" row="0" column="1" rowspan="1" colspan="2">
+                                    <property name="name">
+                                        <cstring>vox_meter</cstring>
+                                    </property>
+                                    <property name="totalSteps">
+                                        <number>60</number>
+                                    </property>
+                                    <property name="progress">
+                                        <number>0</number>
+                                    </property>
+                                    <property name="percentageVisible">
+                                        <bool>false</bool>
+                                    </property>
+                                </widget>
+                                <widget class="QLabel" row="2" column="0" rowspan="1" colspan="2">
+                                    <property name="name">
+                                        <cstring>vox_delay_label</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>Delay:</string>
+                                    </property>
+                                </widget>
+                                <widget class="QLabel" row="0" column="0">
+                                    <property name="name">
+                                        <cstring>vox_meter_label</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>dB Level:</string>
+                                    </property>
+                                </widget>
+                            </grid>
+                        </widget>
+                    </vbox>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>ptt_button</cstring>
+                    </property>
+                    <property name="enabled">
+                        <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>1</hsizetype>
+                            <vsizetype>1</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="text">
+                        <string>PTT</string>
+                    </property>
+                    <property name="autoDefault">
+                        <bool>false</bool>
+                    </property>
+                </widget>
+            </hbox>
         </widget>
     </vbox>
 </widget>
+<connections>
+    <connection>
+        <sender>vox_enabled_checkbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>vox_threshold</receiver>
+        <slot>setEnabled(bool)</slot>
+    </connection>
+    <connection>
+        <sender>vox_enabled_checkbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>vox_delay</receiver>
+        <slot>setEnabled(bool)</slot>
+    </connection>
+</connections>
 <tabstops>
     <tabstop>connect_button</tabstop>
     <tabstop>disconnect_button</tabstop>

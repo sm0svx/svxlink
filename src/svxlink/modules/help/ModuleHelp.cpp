@@ -155,22 +155,28 @@ ModuleHelp::~ModuleHelp(void)
  *
  ****************************************************************************/
 
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
+void ModuleHelp::resumeOutput(void)
+{
+  
+} /* ModuleHelp::resumeOutput */
 
 
+void ModuleHelp::allSamplesFlushed(void)
+{
+  
+} /* ModuleHelp::allSamplesFlushed */
 
+
+int ModuleHelp::writeSamples(const float *samples, int count)
+{
+  return count;
+} /* ModuleHelp::writeSamples */
+
+
+void ModuleHelp::flushSamples(void)
+{
+  sourceAllSamplesFlushed();
+} /* ModuleHelp::flushSamples */
 
 
 
@@ -266,8 +272,8 @@ void ModuleHelp::dtmfCmdReceived(const string& cmd)
   }
   else
   {
-    setIdle(false); /* Reset the module timeout timer */
-    setIdle(true);
+    //setIdle(false); /* Reset the module timeout timer */
+    //setIdle(true);
     
     int module_id = atoi(cmd.c_str());
     Module *module = findModule(module_id);

@@ -56,7 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncSampleFifo.h"
+#include "SampleFifo.h"
 #include "AsyncAudioDevice.h"
 #include "AsyncFdWatch.h"
 #include "AsyncAudioIO.h"
@@ -144,7 +144,7 @@ AudioIO::AudioIO(const string& dev_name)
   audio_dev = AudioDevice::registerAudioIO(dev_name, this);
   sample_rate = audio_dev->sampleRate();
 
-  write_fifo = new SampleFifo(sample_rate);
+  write_fifo = new SampleFifo(513);
   write_fifo->setOverwrite(false);
   write_fifo->stopOutput(true);
   write_fifo->fifoFull.connect(slot(*this, &AudioIO::fifoBufferFull));

@@ -318,7 +318,7 @@ RM = remove_file() { \
 BOLD		= "\033[1m"
 NBOLD		= "\033[0m"
 
-ECHO		= /bin/echo -e
+#ECHO		= /bin/echo -e
 BECHO		= $(ECHO) $(BOLD)txt $(NBOLD)
 
 # Compiler
@@ -809,12 +809,12 @@ ifeq ($(INCLUDE_DEPS),yes)
 endif
 
 $(ROOT)/.config:	$(ROOT)/create_config.sh
-	$(ECHO) --- Creating $(BOLD)$@$(NBOLD)...
+	echo -e --- Creating $(BOLD)$@$(NBOLD)...
 	$(ROOT)/create_config.sh $@
 
 .config:
 	if [ -x ./create_config ]; then \
-	  $(ECHO) --- Creating $(BOLD)$@$(NBOLD)...; \
+	  echo -e --- Creating $(BOLD)$@$(NBOLD)...; \
 	  rm -f $@; \
 	  ./create_config $@; \
 	  echo "MAKEFILE_LOCAL_CONFIG_INCLUDED = 1" >> $@; \

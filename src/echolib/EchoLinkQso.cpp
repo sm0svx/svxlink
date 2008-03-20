@@ -9,7 +9,7 @@ information, see the documentation for class EchoLink::Qso.
 
 \verbatim
 EchoLib - A library for EchoLink communication
-Copyright (C) 2003  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2007  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -363,6 +363,7 @@ bool Qso::sendChatData(const string& msg)
 } /* Qso::sendChatData */
 
 
+#if 0
 int Qso::sendAudio(float *buf, int len)
 {
   int samples_read = 0;
@@ -408,6 +409,7 @@ int Qso::sendAudio(float *buf, int len)
   return samples_read;
   
 } /* Qso::sendAudio */
+#endif
 
 
 bool Qso::sendAudioRaw(GsmVoicePacket *packet)
@@ -432,6 +434,7 @@ bool Qso::sendAudioRaw(GsmVoicePacket *packet)
 } /* Qso::sendAudioRaw */
 
 
+#if 0
 bool Qso::flushAudioSendBuffer(void)
 {
   if (state != STATE_CONNECTED)
@@ -452,8 +455,85 @@ bool Qso::flushAudioSendBuffer(void)
   return success;
   
 } /* Qso::flushAudioSendBuffer */
+#endif
 
 
+
+
+int Qso::writeSamples(const float *samples, int count)
+{
+  int samples_read = 0;
+  
+  if (state != STATE_CONNECTED)
+  {
+    return count;
+  }
+  
+  while (samples_read < count)
+  {
+    int read_cnt = min(SEND_BUFFER_SIZE - send_buffer_cnt, count-samples_read);
+    for (int i=0; i<read_cnt; ++i)
+    {
+      float sample = samples[samples_read++];
+      if (sample > 1)
+      {
+      	send_buffer[send_buffer_cnt++] = 32767;
+      }
+      else if (sample < -1)
+      {
+      	send_buffer[send_buffer_cnt++] = -32767;
+      }
+      else
+      {
+      	send_buffer[send_buffer_cnt++] = static_cast<int16_t>(32767.0 * sample);
+      }
+    }
+    
+    if (send_buffer_cnt == SEND_BUFFER_SIZE)
+    {
+      bool packet_sent = sendGsmPacket();
+      if (!packet_sent)
+      {
+	break;
+      }
+      send_buffer_cnt = 0;
+    }
+  }
+  
+  //printf("Samples read = %d\n", samples_read);
+  
+  return samples_read;
+  
+} /* Qso::writeSamples */
+
+
+void Qso::flushSamples(void)
+{
+  if (state != STATE_CONNECTED)
+  {
+    return;
+  }
+  
+  bool success = true;
+  if (send_buffer_cnt > 0)
+  {
+    memset(send_buffer + send_buffer_cnt, 0,
+	sizeof(send_buffer) - sizeof(*send_buffer) * send_buffer_cnt);
+    send_buffer_cnt = SEND_BUFFER_SIZE;
+    success = sendGsmPacket();
+    send_buffer_cnt = 0;
+  }
+  
+  sourceAllSamplesFlushed();
+  
+} /* Qso::flushSamples */
+
+
+void Qso::resumeOutput(void)
+{
+
+} /* Qso::resumeOutput */
+    
 
 
 /****************************************************************************
@@ -462,22 +542,10 @@ bool Qso::flushAudioSendBuffer(void)
  *
  ****************************************************************************/
 
+void Qso::allSamplesFlushed(void)
+{
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
+} /* Qso::allSamplesFlushed */
 
 
 
@@ -712,7 +780,7 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
     {
       samples[i] = static_cast<float>(sbuff[i]) / 32768.0;
     }
-    audioReceived(samples, 160);
+    sinkWriteSamples(samples, 160);
   }
   
 } /* Qso::handleAudioPacket */
@@ -791,6 +859,7 @@ void Qso::cleanupConnection(void)
   {
     receiving_audio = false;
     isReceiving(false);
+    sinkFlushSamples();
     delete rx_indicator_timer;
     rx_indicator_timer = 0;
   }
@@ -841,6 +910,7 @@ void Qso::checkRxActivity(Timer *timer)
   {
     receiving_audio = false;
     isReceiving(false);
+    sinkFlushSamples();
     delete rx_indicator_timer;
     rx_indicator_timer = 0;
   }

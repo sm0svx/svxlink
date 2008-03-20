@@ -33,7 +33,8 @@ PROGS		=
 CPPPROGS      	= $(BIN)/qtel
 
 # Sources other than the main files
-PRGSRC		= MainWindow.cpp ComDialog.cpp Settings.cpp MsgHandler.cpp
+PRGSRC		= MainWindow.cpp ComDialog.cpp Settings.cpp MsgHandler.cpp \
+		  Vox.cpp
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -lecholib -lasyncqt -lasyncaudio
@@ -43,7 +44,7 @@ LIBS		= $(QT_LIBS) $(SIGC_LIBS)
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).
-QTHEADERS	= MainWindow.h ComDialog.h MyMessageBox.h
+QTHEADERS	= MainWindow.h ComDialog.h MyMessageBox.h Vox.h
 
 # Specify which ui-files to include in the programs we compile.
 UI_FILES	= MainWindowBase.ui ComDialogBase.ui SettingsDialog.ui

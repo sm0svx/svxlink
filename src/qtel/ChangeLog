@@ -1,5 +1,16 @@
+ 0.11.0 -- ?? ??? 2008
+-----------------------
+
+* Qtel is now adapted to work with the new audio pipe infrastructure.
+  Nothing of this is visible to the user. It's just another way to
+  handle audio internally.
+
+* VOX implemented. Patch from Stuart Longland.
+
+
+
  0.10.1 -- 02 Jan 2008
-----------------------
+-----------------------
 
 * Now compile under CentOS 5.0, Fedora 8, Ubuntu 7.10 and Gentoo.
 
@@ -10,7 +21,7 @@
 
 
  0.10.0 -- 15 Apr 2007
-----------------------
+-----------------------
 
 * Now using libsigc++ version 1.2 instead of the old and outdated 1.0.
 

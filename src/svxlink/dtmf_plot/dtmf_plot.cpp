@@ -12,7 +12,7 @@
 #include <AsyncQtApplication.h>
 #include <AsyncAudioIO.h>
 #include <AsyncTimer.h>
-#include <AudioSplitter.h>
+#include <AsyncAudioSplitter.h>
 #include <SigCAudioSink.h>
 
 #include "../rx/ToneDetector.h"

@@ -10,7 +10,7 @@ you sound.
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004  Tobias Blomberg
+Copyright (C) 2004-2008  Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -49,8 +49,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <version/MODULE_PARROT.h>
 #include <AsyncConfig.h>
-#include <AsyncSampleFifo.h>
 #include <AsyncTimer.h>
+#include <AsyncAudioFifo.h>
+#include <AsyncAudioPassthrough.h>
+#include <AsyncAudioValve.h>
 
 
 /****************************************************************************
@@ -88,6 +90,26 @@ using namespace Async;
  *
  ****************************************************************************/
 
+class ModuleParrot::FifoAdapter : public AudioPassthrough
+{
+  public:
+    FifoAdapter(ModuleParrot *parrot) : parrot(parrot) {}
+    
+    virtual void flushSamples(void)
+    {
+      sourceAllSamplesFlushed();
+      sinkFlushSamples();
+    }
+    
+    virtual void allSamplesFlushed(void)
+    {
+      parrot->allSamplesWritten();
+    }
+  
+  private:
+    ModuleParrot *parrot;
+    
+}; /* class ModuleParrot::FifoAdapter */
 
 
 /****************************************************************************
@@ -141,7 +163,7 @@ extern "C" {
 ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       	      	      	   const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), fifo(0), squelch_is_open(false),
-    pacer(8000, 800, 1000), repeat_delay(0), repeat_delay_timer(0)
+    repeat_delay(0), repeat_delay_timer(0)
 {
   cout << "\tModule Parrot v" MODULE_PARROT_VERSION " starting...\n";
   
@@ -150,7 +172,11 @@ ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
 
 ModuleParrot::~ModuleParrot(void)
 {
+  AudioSink::clearHandler();
+  AudioSource::clearHandler();
+  delete valve;
   delete fifo;
+  delete adapter;
 } /* ~ModuleParrot */
 
 
@@ -173,16 +199,19 @@ bool ModuleParrot::initialize(void)
     repeat_delay = atoi(value.c_str());
   }
   
-  fifo = new SampleFifo(atoi(fifo_len.c_str())*8000);
-  fifo->setDebugName("parrot_fifo");
-  fifo->stopOutput(true);
-  fifo->setOverwrite(true);
-  fifo->writeSamples.connect(slot(pacer, &AudioPacer::audioInput));
-  fifo->allSamplesWritten.connect(slot(pacer, &AudioPacer::flushAllAudio));
+  adapter = new FifoAdapter(this);
+  AudioSink::setHandler(adapter);
   
-  pacer.audioInputBufFull.connect(slot(*fifo, &SampleFifo::writeBufferFull));
-  pacer.audioOutput.connect(slot(*this, &ModuleParrot::audioFromFifo));
-  pacer.allAudioFlushed.connect(slot(*this, &ModuleParrot::allSamplesWritten));
+  fifo = new AudioFifo(atoi(fifo_len.c_str())*8000);
+  fifo->setOverwrite(true);
+  adapter->registerSink(fifo);
+  
+  valve = new AudioValve;
+  valve->setBlockWhenClosed(true);
+  valve->setOpen(false);
+  fifo->registerSink(valve);
+  
+  AudioSource::setHandler(valve);
   
   return true;
   
@@ -200,20 +229,41 @@ bool ModuleParrot::initialize(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
+void ModuleParrot::logicIdleStateChanged(bool is_idle)
+{
+  /*
+  printf("ModuleParrot::logicIdleStateChanged: is_idle=%s fifo->empty()=%s\n",
+      is_idle ? "TRUE" : "FALSE",
+      fifo->empty() ? "TRUE" : "FALSE");
+  */
+  Module::logicIdleStateChanged(is_idle);
+  
+  if (is_idle)
+  {
+    if (!fifo->empty())
+    {
+      if (repeat_delay > 0)
+      {
+      	repeat_delay_timer = new Timer(repeat_delay);
+	repeat_delay_timer->expired.connect(
+	    slot(*this, &ModuleParrot::onRepeatDelayExpired));
+      }
+      else
+      {
+      	onRepeatDelayExpired(0);
+      }
+    }
+    else if (!cmd_queue.empty())
+    {
+      execCmdQueue();
+    }
+  }
+  else
+  {
+    delete repeat_delay_timer;
+    repeat_delay_timer = 0;
+  }
+} /* ModuleParrot::logicIdleStateChanged */
 
 
 
@@ -241,6 +291,7 @@ void ModuleParrot::activateInit(void)
 {
   fifo->clear();
   cmd_queue.clear();
+  valve->setOpen(false);  
 } /* activateInit */
 
 
@@ -259,6 +310,7 @@ void ModuleParrot::activateInit(void)
  */
 void ModuleParrot::deactivateCleanup(void)
 {
+  valve->setOpen(true);
   fifo->clear();
   delete repeat_delay_timer;
   repeat_delay_timer = 0;
@@ -318,73 +370,7 @@ void ModuleParrot::dtmfCmdReceived(const string& cmd)
 void ModuleParrot::squelchOpen(bool is_open)
 {
   squelch_is_open = is_open;
-  
-  if (is_open)
-  {
-    setIdle(false);
-    fifo->stopOutput(true);
-    delete repeat_delay_timer;
-    repeat_delay_timer = 0;
-  }
-  else
-  {
-    if (!fifo->empty())
-    {
-      if (repeat_delay > 0)
-      {
-      	repeat_delay_timer = new Timer(repeat_delay);
-	repeat_delay_timer->expired.connect(
-	    slot(*this, &ModuleParrot::onRepeatDelayExpired));
-      }
-      else
-      {
-      	onRepeatDelayExpired(0);
-      }
-    }
-    else if (!cmd_queue.empty())
-    {
-      execCmdQueue();
-    }
-    else
-    {
-      setIdle(true);
-    }
-  }
-
 } /* ModuleParrot::squelchOpen */
-
-
-int ModuleParrot::audioFromRx(float *samples, int count)
-{
-  if (squelch_is_open)
-  {
-    //printf("Adding samples to FIFO...\n");
-    fifo->addSamples(samples, count);
-  }
-  
-  return count;
-  
-} /* ModuleParrot::audioFromRx */
-
-
-void ModuleParrot::allMsgsWritten(void)
-{
-  //printf("ModuleParrot::allMsgsWritten\n");
-  if (fifo->empty() && !squelch_is_open)
-  {
-    setIdle(true);
-  }
-} /* ModuleParrot::allMsgsWritten */
-
-
-
-
-int ModuleParrot::audioFromFifo(float *samples, int count)
-{
-  //printf("Writing %d samples from FIFO...\n", count);
-  audioFromModule(samples, count);
-  return count;
-} /* ModuleParrot::audioFromFifo */
 
 
 void ModuleParrot::allSamplesWritten(void)
@@ -395,12 +381,7 @@ void ModuleParrot::allSamplesWritten(void)
   {
     execCmdQueue();
   }
-  else
-  {
-    setIdle(true);
-  }
-  transmit(false);
-  fifo->stopOutput(true);
+  valve->setOpen(false);
 } /* ModuleParrot::allSamplesWritten */
 
 
@@ -409,9 +390,7 @@ void ModuleParrot::onRepeatDelayExpired(Timer *t)
   delete repeat_delay_timer;
   repeat_delay_timer = 0;
   
-  transmit(true);
-  fifo->flushSamples();
-  fifo->stopOutput(false);
+  valve->setOpen(true);
   
 } /* ModuleParrot::onRepeatDelayExpired */
 

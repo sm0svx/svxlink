@@ -42,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncTcpServer.h>
 #include <NetRxMsg.h>
+#include <SigCAudioSink.h>
 
 
 /****************************************************************************
@@ -122,6 +123,7 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx)
 
 NetUplink::~NetUplink(void)
 {
+  delete sigc_sink;
   delete server;
 } /* NetUplink::~NetUplink */
 
@@ -131,9 +133,14 @@ bool NetUplink::initialize(void)
   server = new TcpServer(NET_RX_DEFAULT_TCP_PORT);
   server->clientConnected.connect(slot(*this, &NetUplink::clientConnected));
   
+  sigc_sink = new SigCAudioSink;
+  sigc_sink->registerSource(rx);
+  
   rx->reset();
   rx->squelchOpen.connect(slot(*this, &NetUplink::squelchOpen));
-  rx->audioReceived.connect(slot(*this, &NetUplink::audioReceived));
+  sigc_sink->sigWriteSamples.connect(slot(*this, &NetUplink::audioReceived));
+  sigc_sink->sigFlushSamples.connect(
+	slot(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
   rx->dtmfDigitDetected.connect(slot(*this, &NetUplink::dtmfDigitDetected));
   rx->toneDetected.connect(slot(*this, &NetUplink::toneDetected));
   
@@ -372,7 +379,6 @@ int NetUplink::audioReceived(float *samples, int count)
   sendMsg(msg);
   return count;
 } /* NetUplink::audioReceived */
-
 
 
 /*

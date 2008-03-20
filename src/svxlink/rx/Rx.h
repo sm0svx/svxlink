@@ -51,6 +51,7 @@ An example of how to use the Template class
  ****************************************************************************/
 
 #include <AsyncConfig.h>
+#include <AsyncAudioSource.h>
 
 
 /****************************************************************************
@@ -116,7 +117,7 @@ An example of how to use the Template class
 
 This class is used as the base class for all receivers.
 */
-class Rx : public SigC::Object
+class Rx : public SigC::Object, public Async::AudioSource
 {
   public:
     static Rx *create(Async::Config& cfg, const std::string& name);
@@ -207,7 +208,7 @@ class Rx : public SigC::Object
      * @param 	count 	The number of samples in the buffer
      * @return	The number of samples that the associated slot took care of
      */
-    SigC::Signal2<int, float *, int> audioReceived;
+    //SigC::Signal2<int, float *, int> audioReceived;
     
     /**
      * @brief 	A signal that is emitted when a DTMF digit has been detected

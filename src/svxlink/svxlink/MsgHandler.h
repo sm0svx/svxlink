@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncAudioSource.h>
 
 
 /****************************************************************************
@@ -119,7 +120,7 @@ class QueueItem;
 
 This class handles the playback of audio clips.
 */
-class MsgHandler : public SigC::Object
+class MsgHandler : public SigC::Object, public Async::AudioSource
 {
   public:
     /**
@@ -157,13 +158,13 @@ class MsgHandler : public SigC::Object
      * @brief 	Stop or start output of samples
      * @param 	is_full \em true to stop output or \em false to start output
      */
-    void writeBufferFull(bool is_full);
+    //void writeBufferFull(bool is_full);
     
     /**
      * @brief 	Check if a message is beeing written
      * @return	Return \em true if a message is beeing written
      */
-    bool isWritingMessage(void) const { return !msg_queue.empty(); }
+    bool isWritingMessage(void) const { return is_writing_message; }
     
     /**
      * @brief 	Clear all messages
@@ -192,13 +193,31 @@ class MsgHandler : public SigC::Object
      * @param 	count The number of samples to write
      * @return	The slot should return the number of samples written
      */
-    SigC::Signal2<int, float*, int> writeAudio;
+    //SigC::Signal2<int, float*, int> writeAudio;
     
     /**
      * @brief 	A signal that is emitted when all messages has been written
      */
     SigC::Signal0<void>       	    allMsgsWritten;
     
+    /**
+     * @brief Resume audio output to the sink
+     * 
+     * This function will be called when the registered audio sink is ready
+     * to accept more samples.
+     * This function is normally only called from a connected sink object.
+     */
+    virtual void resumeOutput(void);
+    
+  protected:
+    /**
+     * @brief The registered sink has flushed all samples
+     *
+     * This function will be called when all samples have been flushed in the
+     * registered sink.
+     * This function is normally only called from a connected sink object.
+     */
+    virtual void allSamplesFlushed(void);
     
   private:
     std::list<QueueItem*>   msg_queue;
@@ -206,6 +225,7 @@ class MsgHandler : public SigC::Object
     int      	      	    nesting_level;
     bool      	      	    pending_play_next;
     QueueItem 	      	    *current;
+    bool      	      	    is_writing_message;
     
     MsgHandler(const MsgHandler&);
     MsgHandler& operator=(const MsgHandler&);

@@ -208,7 +208,7 @@ class GsmFileQueueItem : public QueueItem
 
 MsgHandler::MsgHandler(int sample_rate)
   : sample_rate(sample_rate), nesting_level(0), pending_play_next(false),
-    current(0)
+    current(0), is_writing_message(false)
 {
   
 }
@@ -250,6 +250,7 @@ void MsgHandler::playTone(int fq, int amp, int length)
 } /* MsgHandler::playSilence */
 
 
+#if 0
 void MsgHandler::writeBufferFull(bool is_full)
 {
   //cout << "MsgHandler::writeBufferFull: write_buffer_full=" << is_full
@@ -259,6 +260,7 @@ void MsgHandler::writeBufferFull(bool is_full)
     writeSamples();
   }
 }
+#endif
 
 
 void MsgHandler::clear(void)
@@ -272,7 +274,7 @@ void MsgHandler::clear(void)
     delete *it;
   }
   msg_queue.clear();
-  allMsgsWritten();
+  sinkFlushSamples();
 } /* MsgHandler::clear */
 
 
@@ -309,6 +311,15 @@ void MsgHandler::end(void)
 } /* MsgHandler::end */
 
 
+void MsgHandler::resumeOutput(void)
+{
+  if (current != 0)
+  {
+    writeSamples();
+  }
+} /* MsgHandler::resumeOutput */
+
+
 
 
 /****************************************************************************
@@ -318,20 +329,12 @@ void MsgHandler::end(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
+void MsgHandler::allSamplesFlushed(void)
+{
+  //printf("MsgHandler::allSamplesFlushed\n");
+  is_writing_message = false;
+  allMsgsWritten();
+} /* MsgHandler::allSamplesFlushed */
 
 
 
@@ -344,6 +347,7 @@ void MsgHandler::end(void)
 
 void MsgHandler::addItemToQueue(QueueItem *item)
 {
+  is_writing_message = true;
   msg_queue.push_back(item);
   if (msg_queue.size() == 1)
   {
@@ -362,7 +366,7 @@ void MsgHandler::playMsg(void)
   
   if (msg_queue.empty())
   {
-    allMsgsWritten();
+    sinkFlushSamples();
     return;
   }
   
@@ -383,7 +387,7 @@ void MsgHandler::playMsg(void)
   {
     writeSamples();
   }
-}
+} /* MsgHandler::playMsg */
 
 
 void MsgHandler::writeSamples(void)
@@ -402,16 +406,19 @@ void MsgHandler::writeSamples(void)
       goto done;
     }
     
-    written = writeAudio(buf, read_cnt);
+    written = sinkWriteSamples(buf, read_cnt);
     if (written == -1)
     {
       perror("write in MsgHandler::writeFromFile");
       goto done;
     }
     //printf("Read=%d  Written=%d\n", read_cnt, written);
-  } while (written == read_cnt);
-  
-  current->unreadSamples(read_cnt - written);
+    
+    if (written < read_cnt)
+    {
+      current->unreadSamples(read_cnt - written);
+    }
+  } while (written > 0);
   
   return;
     
@@ -420,7 +427,7 @@ void MsgHandler::writeSamples(void)
     delete current;
     current = 0;
     playMsg();
-}
+} /* MsgHandler::writeSamples */
 
 
 

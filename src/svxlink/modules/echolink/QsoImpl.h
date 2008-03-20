@@ -43,6 +43,7 @@ An example of how to use the Template class
  ****************************************************************************/
 
 #include <string>
+#include <sigc++/sigc++.h>
 
 
 /****************************************************************************
@@ -51,6 +52,8 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include <AsyncAudioSink.h>
+#include <AsyncAudioSource.h>
 #include <EchoLinkQso.h>
 #include <EchoLinkStationData.h>
 
@@ -72,6 +75,7 @@ An example of how to use the Template class
 namespace Async
 {
   class Config;
+  class AudioPacer;
 };
 
 
@@ -93,7 +97,6 @@ namespace Async
 
 class MsgHandler;
 class EventHandler;
-class AudioPacer;
 class AsyncTimer;
 class ModuleEchoLink;
 
@@ -127,7 +130,8 @@ class ModuleEchoLink;
 
 A class that implementes the things needed for one EchoLink Qso.
 */
-class QsoImpl : public EchoLink::Qso
+class QsoImpl
+  : public Async::AudioSink, public Async::AudioSource, public SigC::Object
 {
   public:
     /**
@@ -149,18 +153,14 @@ class QsoImpl : public EchoLink::Qso
      * sure everything went well.
      */
     bool initOk(void);
-
+    
     /**
-     * @brief 	Send audio to the remote station
-     * @param 	buf A buffer containing 16 bit samples to send
-     * @param 	len The length, in samples, of the buffer to send
-     * @return	Returns the number of samples written
-     *
-     * This function is used to send audio to the remote station. This
-     * reimplemented version of EchoLink::Qso::sendAudio throws away
-     * the samples if a message is being played to the remote station.
+     * @brief 	Called by the module core when the logic core idle state
+     *	      	changes
+     * @param 	is_idle Set to \em true if the logic core is idle or else
+     *	      	\em false
      */
-    int sendAudio(float *buf, int len);
+    void logicIdleStateChanged(bool is_idle);
     
     /**
      * @brief 	Send a raw GSM audio packet to the remote station
@@ -170,7 +170,7 @@ class QsoImpl : public EchoLink::Qso
      * station. Probably only useful if you received it from the
      * audioReceivedRaw signal.
      */
-    bool sendAudioRaw(GsmVoicePacket *packet);
+    bool sendAudioRaw(EchoLink::Qso::GsmVoicePacket *packet);
     
     /**
      * @brief 	Initiate a connection to the remote station
@@ -212,6 +212,40 @@ class QsoImpl : public EchoLink::Qso
      */
     void reject(bool perm);
     
+    bool disconnect(void) { return m_qso.disconnect(); }
+
+    bool sendInfoData(const std::string& info="")
+    {
+      return m_qso.sendInfoData(info);
+    }
+    
+    EchoLink::Qso::State currentState(void) const
+    {
+      return m_qso.currentState();
+    }
+
+    void setRemoteName(const std::string& name) { m_qso.setRemoteName(name); }
+
+    const std::string& remoteName(void) const { return m_qso.remoteName(); }
+    
+    void setRemoteCallsign(const std::string& call)
+    {
+      m_qso.setRemoteCallsign(call);
+    }
+    
+    const std::string& remoteCallsign(void) const
+    {
+      return m_qso.remoteCallsign();
+    }
+    
+    bool sendChatData(const std::string& msg)
+    {
+      return m_qso.sendChatData(msg);
+    }
+
+    bool receivingAudio(void) const { return m_qso.receivingAudio(); }
+
+    
     /**
      * @brief 	Return the StationData object associated with this QSO
      * @return	Returns a reference to the associated StationData object
@@ -224,14 +258,7 @@ class QsoImpl : public EchoLink::Qso
      * @param qso The QSO object
      * @param state The new connection state
      */
-    SigC::Signal2<void, QsoImpl*, Qso::State> stateChange;
-    
-    /**
-     * @brief A signal that is emitted when a station info message is received
-     * @param qso The QSO object
-     * @param msg The received message
-     */
-    //SigC::Signal2<void, QsoImpl*, const std::string&> infoMsgReceived;
+    SigC::Signal2<void, QsoImpl*, EchoLink::Qso::State> stateChange;
     
     /**
      * @brief A signal that is emitted when a chat message is received
@@ -251,18 +278,10 @@ class QsoImpl : public EchoLink::Qso
     
     /**
      * @brief A signal that is emitted when an audio datagram has been received
-     * @param buf A pointer to the buffer that contains the audio
-     * @param qso The QSO object
-     * @param len The number of samples in the buffer
-     */
-    SigC::Signal3<int, float*, int, QsoImpl*> audioReceived;
-    
-    /**
-     * @brief A signal that is emitted when an audio datagram has been received
      * @param packet A pointer to the buffer that contains the raw GSM audio
      * @param qso The QSO object
      */
-    SigC::Signal2<void, Qso::GsmVoicePacket*, QsoImpl*> audioReceivedRaw;
+    SigC::Signal2<void, EchoLink::Qso::GsmVoicePacket*, QsoImpl*> audioReceivedRaw;
     
     /**
      * @brief 	A signal that is emitted when the qso object should be destroyed
@@ -270,21 +289,15 @@ class QsoImpl : public EchoLink::Qso
      */
     SigC::Signal1<void, QsoImpl*> destroyMe;
     
-    
-    /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
-     */
-
-    
+        
   protected:
     
   private:
+    EchoLink::Qso     	  m_qso;
     ModuleEchoLink    	  *module;
     EventHandler      	  *event_handler;
     MsgHandler	      	  *msg_handler;
-    AudioPacer       	  *msg_pacer;
+    Async::AudioPacer     *msg_pacer;
     bool      	      	  init_ok;
     bool      	      	  reject_qso;
     std::string       	  last_message;
@@ -299,7 +312,7 @@ class QsoImpl : public EchoLink::Qso
     void allRemoteMsgsWritten(void);
     void onInfoMsgReceived(const std::string& msg);
     void onChatMsgReceived(const std::string& msg);
-    void onStateChange(Qso::State state);
+    void onStateChange(EchoLink::Qso::State state);
     void idleTimeoutCheck(Async::Timer *t);
     void destroyMeNow(Async::Timer *t);
 

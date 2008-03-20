@@ -44,7 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AudioSource.h>
+#include <AsyncAudioSource.h>
 
 
 /****************************************************************************
@@ -129,6 +129,40 @@ class AudioSelector : public AudioSource
      * @param 	source The audio source to add
      */
     void addSource(AudioSource *source);
+    
+    /**
+     * @brief 	Remove a previously added audio source from the selector
+     * @param 	source The audio source to remove
+     */
+    void removeSource(AudioSource *source);
+    
+    /**
+     * @brief 	Set the prio to be used for selection
+     * @param 	source The audio source
+     * @param 	prio   The priority to set. Higher numbers give higher priority.
+     */
+    void setSelectionPrio(AudioSource *source, int prio);
+    
+    /**
+     * @brief 	Enable autoselection on the given source
+     * @param 	source The audio source
+     * @param 	prio   The priority to set. Higher numbers give higher priority.
+     */
+    void enableAutoSelect(AudioSource *source, int prio);
+
+    /**
+     * @brief 	Disable autoselection on the given source
+     * @param 	source The audio source
+     */
+    void disableAutoSelect(AudioSource *source);
+    
+    /**
+     * @brief 	Find out if auto select is enabled or not for the given source
+     * @param 	source The audio source
+     * @return	Returns \em true if auto select is enabled for the given source
+     *          or else \em false is returned
+     */
+    bool autoSelectEnabled(AudioSource *source);
 
     /**
      * @brief 	Select one of the previously added audio sources
@@ -142,11 +176,16 @@ class AudioSelector : public AudioSource
   private:
     class Branch;
     typedef std::map<Async::AudioSource *, Branch *> BranchMap;
+    class NullBranch;
     
-    BranchMap branch_map;
+    BranchMap 	branch_map;
+    NullBranch	*null_branch;
     
     AudioSelector(const AudioSelector&);
     AudioSelector& operator=(const AudioSelector&);
+    void selectBranch(Branch *branch);
+    
+    friend class Branch;
     
 };  /* class AudioSelector */
 

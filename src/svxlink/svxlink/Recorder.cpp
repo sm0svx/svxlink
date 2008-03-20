@@ -144,15 +144,15 @@ bool Recorder::initialize(void)
 } /* Recorder::initialize */
 
 
-int Recorder::writeSamples(float *samples, int len)
+int Recorder::writeSamples(const float *samples, int count)
 {
   if (file == NULL)
   {
-    return len;
+    return count;
   }
   
-  short buf[len];
-  for (int i=0; i<len; ++i)
+  short buf[count];
+  for (int i=0; i<count; ++i)
   {
     float sample = samples[i];
     if (sample > 1)
@@ -169,16 +169,22 @@ int Recorder::writeSamples(float *samples, int len)
     }
   }
   
-  int cnt = fwrite(buf, sizeof(*buf), len, file);
-  if ((cnt == 0) && ferror(file))
+  int written = fwrite(buf, sizeof(*buf), count, file);
+  if ((written == 0) && ferror(file))
   {
     fclose(file);
     file = NULL;
   }
   
-  return cnt;
-  
+  return written;
+
 } /* Recorder::writeSamples */
+
+
+void Recorder::flushSamples(void)
+{
+  sourceAllSamplesFlushed();
+} /* Recorder::flushSamples */
 
 
 

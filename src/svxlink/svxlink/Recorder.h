@@ -46,6 +46,8 @@ An example of how to use the Recorder class
 
 #include <string>
 
+#include <AsyncAudioSink.h>
+
 
 /****************************************************************************
  *
@@ -120,7 +122,7 @@ A_detailed_class_description
 
 \include Recorder_demo.cpp
 */
-class Recorder : public SigC::Object
+class Recorder : public Async::AudioSink
 {
   public:
     /**
@@ -134,21 +136,34 @@ class Recorder : public SigC::Object
     ~Recorder(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Initialize the recorder
+     * @return	Return \em true if the initialization was successful
      */
     bool initialize(void);
     
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Write samples into this audio sink
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
+     *
+     * This function is used to write audio into this audio sink. If it
+     * returns 0, no more samples should be written until the resumeOutput
+     * function in the source have been called.
+     * This function is normally only called from a connected source object.
      */
-    int writeSamples(float *samples, int len);
+    virtual int writeSamples(const float *samples, int count);
     
+    /**
+     * @brief 	Tell the sink to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     * This function is normally only called from a connected source object.
+     */
+    virtual void flushSamples(void);
 
-  protected:
     
   private:
     std::string filename;

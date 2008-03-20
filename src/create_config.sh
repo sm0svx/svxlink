@@ -44,6 +44,16 @@ else
 fi
 rm -f chown_test-$$.tmp
 
+# Check if echo reacts to "--" as "stop processing arguments"
+info "--- Checking if echo parses --..."
+if [ -z "$(/bin/echo -ne --)" ]; then
+  info "yes\n"
+  output "ECHO=/bin/echo -e --"
+else
+  info "no\n"
+  output "ECHO=/bin/echo -e"
+fi
+
 # Check for KDE
 #info "--- Checking for KDE..."
 #if [ "${KDEDIR}" != "" ]; then

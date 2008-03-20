@@ -47,6 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
+#include <AsyncAudioSink.h>
 
 
 /****************************************************************************
@@ -113,9 +114,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 This is the base class for transmitters. It is an abstract class so it cannot
 be used standalone. It must be inherited from.
 */
-class Tx : public SigC::Object
+class Tx : public SigC::Object, public Async::AudioSink
 {
   public:
+    typedef enum TxCtrlMode
+    {
+      TX_OFF, TX_ON, TX_AUTO
+    };
+    
     /**
      * @brief 	Create the named transmitter object
      * @param 	cfg   The configuration object to use
@@ -132,7 +138,7 @@ class Tx : public SigC::Object
     /**
      * @brief 	Default constuctor
      */
-    Tx(const std::string name) {}
+    explicit Tx(const std::string name) {}
   
     /**
      * @brief 	Destructor
@@ -146,11 +152,14 @@ class Tx : public SigC::Object
     virtual bool initialize(void) = 0;
   
     /**
-     * @brief 	Turn the transmitter on or off
-     * @param 	do_transmit Set to \em true to transmit or \em false to turn
-     *	      	      	    the transmitter off
+     * @brief 	Set the transmit control mode
+     * @param 	mode The mode to use to set the transmitter on or off.
+     *
+     * Use this function to turn the transmitter on (TX_ON) or off (TX__OFF).
+     * There is also a third mode (TX_AUTO) that will automatically turn the
+     * transmitter on when there is audio to transmit.
      */
-    virtual void transmit(bool do_transmit) {}
+    virtual void setTxCtrlMode(TxCtrlMode mode) = 0;
     
     /**
      * @brief 	Check if the transmitter is transmitting
@@ -164,7 +173,7 @@ class Tx : public SigC::Object
      * @param 	count 	The number of samples in the supplied buffer
      * @return	Returns the number of samples transmitted
      */
-    virtual int transmitAudio(float *samples, int count) { return count; }
+    //virtual int transmitAudio(float *samples, int count) { return count; }
     
     /**
      * @brief 	Call this method to flush all samples in the buffer
@@ -173,13 +182,22 @@ class Tx : public SigC::Object
      * That is, all samples in the buffer will be written to the audio device
      * and when finished, emit the allSamplesFlushed signal.
      */
-    virtual void flushSamples(void) = 0;
+    //virtual void flushSamples(void) = 0;
     
     /**
      * @brief 	Check if the tx is busy flushing samples
      * @return	Returns \em true if flushing the buffer or else \em false
      */
-    virtual bool isFlushing(void) const = 0;
+    //virtual bool isFlushing(void) const = 0;
+    
+    /**
+     * @brief 	Check if audio is currently being written
+     * @return	Returns \em true if audio is being written, else \em false
+     *
+     * Use this function to check if audio is being written to the audio
+     * device or if all audio has been flushed.
+     */
+    virtual bool isWritingAudio(void) const = 0;
     
     /**
      * @brief 	Enable/disable CTCSS on TX
@@ -193,45 +211,52 @@ class Tx : public SigC::Object
      */
     virtual void sendDtmf(const std::string& digits) {}
     
-    /*
-     * @brief 	Check if DTMF digits are being sent
-     * @return	Returns \em true if digits are being sent or else \em false
-     */
-    virtual bool isSendingDtmf(void) const { return false; }
-    
     /**
      * @brief 	A signal that is emitted when the audio transmit buffer full
      *	      	state is set or cleared
      * @param 	is_full Set to \em true to indicate that the transmit buffer
      *	      	      	is full or \em false if the buffer is non-full
      */
-    SigC::Signal1<void, bool> transmitBufferFull;
+    //SigC::Signal1<void, bool> transmitBufferFull;
     
     /**
      * @brief 	This signal is emitted when all samples in the buffer has
      *	      	been transmitted
      */
-    SigC::Signal0<void> allSamplesFlushed;
+    //SigC::Signal0<void> allSamplesFlushed;
     
     /**
      * @brief 	This signal is emitted when the tx timeout timer expires
      *
-     * This signal is emitted when the transmitter have been trasmitting
-     * for too long. This is to prevent the transmitter from tranmitting
+     * This signal is emitted when the transmitter have been transmitting
+     * for too long. This is to prevent the transmitter from transmitting
      * endlessly if an error occurs.
      */
     SigC::Signal0<void> txTimeout;
-
-    /*
-     * @brief 	A signal that is emitted when all DTMF digits has been
-     *          transmitted
+    
+    /**
+     * @brief 	This signal is emitted when the transmitter starts or stops
+     * @param 	is_tranmitting Set to \em true if the transmitter is
+     *          transmitting or else \em false.
      */
-    SigC::Signal0<void> allDtmfDigitsSent;
+    SigC::Signal1<void, bool> transmitterStateChange;
     
     
   protected:
+    /*
+    Async::AudioSource *inputHandler(void) const
+    {
+      return reinterpret_cast<Async::AudioSource *>(input_handler);
+    }
+    */
+    //virtual void transmit(bool do_transmit) = 0;
+    
     
   private:
+    //class InputHandler;
+    
+    //InputHandler *input_handler;
+    
     
 };  /* class Tx */
 

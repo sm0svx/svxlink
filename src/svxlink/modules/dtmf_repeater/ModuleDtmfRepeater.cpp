@@ -160,18 +160,28 @@ ModuleDtmfRepeater::~ModuleDtmfRepeater(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
+void ModuleDtmfRepeater::resumeOutput(void)
+{
+
+} /* ModuleDtmfRepeater::resumeOutput */
+
+
+void ModuleDtmfRepeater::allSamplesFlushed(void)
+{
+
+} /* ModuleDtmfRepeater::allSamplesFlushed */
+
+
+int ModuleDtmfRepeater::writeSamples(const float *samples, int count)
+{
+  return count;
+} /* ModuleDtmfRepeater::writeSamples */
+
+
+void ModuleDtmfRepeater::flushSamples(void)
+{
+  sourceAllSamplesFlushed();
+} /* ModuleDtmfRepeater::flushSamples */
 
 
 
@@ -308,7 +318,7 @@ bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
  */
 void ModuleDtmfRepeater::squelchOpen(bool is_open)
 {
-  setIdle(!is_open);
+  //setIdle(!is_open);
   
   delete repeat_delay_timer;
   repeat_delay_timer = 0;    

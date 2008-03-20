@@ -156,18 +156,28 @@ ModuleTcl::~ModuleTcl(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
+void ModuleTcl::resumeOutput(void)
+{
+
+} /* ModuleTcl::resumeOutput */
+
+
+void ModuleTcl::allSamplesFlushed(void)
+{
+
+} /* ModuleTcl::allSamplesFlushed */
+
+
+int ModuleTcl::writeSamples(const float *samples, int count)
+{
+  return count;
+} /* ModuleTcl::writeSamples */
+
+
+void ModuleTcl::flushSamples(void)
+{
+  sourceAllSamplesFlushed();
+} /* ModuleTcl::flushSamples */
 
 
 
@@ -287,7 +297,7 @@ void ModuleTcl::squelchOpen(bool is_open)
   stringstream ss;
   ss << "squelch_open " << (is_open ? 1 : 0);
   processEvent(ss.str());
-  setIdle(!is_open);
+  //setIdle(!is_open);
 } /* dtmfCmdReceived */
 
 

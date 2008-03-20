@@ -1,14 +1,12 @@
 /**
 @file	 SimplexLogic.cpp
-@brief   A_brief_description_for_this_file
+@brief   Contains a simplex logic SvxLink core implementation
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-03-23
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -34,8 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <stdio.h>
-
+#include <cstdio>
 #include <iostream>
 
 
@@ -45,10 +42,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncConfig.h>
-#include <AsyncTimer.h>
-
 #include <Rx.h>
+#include <Tx.h>
 
 
 /****************************************************************************
@@ -57,8 +52,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Tx.h"
-#include "Module.h"
 #include "SimplexLogic.h"
 
 
@@ -123,9 +116,8 @@ using namespace Async;
 
 
 SimplexLogic::SimplexLogic(Async::Config& cfg, const string& name)
-  : Logic(cfg, name), pending_transmit(false), tx_timeout_occured(false)
+  : Logic(cfg, name), mute_rx_on_tx(true)
 {
-
 } /* SimplexLogic::SimplexLogic */
 
 
@@ -141,57 +133,18 @@ bool SimplexLogic::initialize(void)
     return false;
   }
   
-  string str;
-
-  //tx().txTimeout.connect(slot(this, &SimplexLogic::txTimeout));
+  string value;
+  if (cfg().getValue(name(), "MUTE_RX_ON_TX", value))
+  {
+    mute_rx_on_tx = (atoi(value.c_str()) > 0);
+  }
   
-  //rx().mute(false);
+  rxValveSetOpen(true);
+  tx().setTxCtrlMode(Tx::TX_AUTO);
   
   return true;
   
 } /* SimplexLogic::initialize */
-
-
-void SimplexLogic::transmit(bool do_transmit)
-{
-  //printf("SimplexLogic::transmit: do_transmit=%s\n",
-  //  	  do_transmit ? "true" : "false");
-  if (do_transmit)
-  {
-    if (!tx_timeout_occured)
-    {
-      if (!rx().squelchIsOpen())
-      {
-	rx().mute(true);
-	Logic::transmit(true);
-      }
-      else
-      {
-	pending_transmit = true;
-      }
-    }
-  }
-  else
-  {
-    pending_transmit = false;
-    tx_timeout_occured = false;
-    Logic::transmit(false);
-    rx().mute(false);
-  }
-} /* SimplexLogic::transmit */
-
-
-int SimplexLogic::transmitAudio(float *samples, int count)
-{
-  if (!tx_timeout_occured)
-  {
-    return Logic::transmitAudio(samples, count);
-  }
-  else
-  {
-    return count;
-  }
-} /* SimplexLogic::transmitAudio */
 
 
 
@@ -200,32 +153,6 @@ int SimplexLogic::transmitAudio(float *samples, int count)
  * Protected member functions
  *
  ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
-
 
 void SimplexLogic::squelchOpen(bool is_open)
 {
@@ -239,15 +166,12 @@ void SimplexLogic::squelchOpen(bool is_open)
       enableRgrSoundTimer(true);
     }
     
-    if (pending_transmit)
-    {
-      pending_transmit = false;
-      transmit(true);
-    }
+    tx().setTxCtrlMode(Tx::TX_AUTO);
   }
   else
   {
     enableRgrSoundTimer(false);
+    tx().setTxCtrlMode(Tx::TX_OFF);
   }
     
   Logic::squelchOpen(is_open);
@@ -255,18 +179,23 @@ void SimplexLogic::squelchOpen(bool is_open)
 } /* SimplexLogic::squelchOpen */
 
 
-#if 0
-void SimplexLogic::txTimeout(void)
+void SimplexLogic::transmitterStateChange(bool is_transmitting)
 {
-  tx_timeout_occured = true;
-  Logic::transmit(false);
-  clearPendingSamples();
-  rx().mute(false);
-} /* SimplexLogic::txTimeout */
-#endif
+  if (mute_rx_on_tx)
+  {
+    rx().mute(is_transmitting);
+  }
+  Logic::transmitterStateChange(is_transmitting);
+} /* SimplexLogic::transmitterStateChange */
 
 
 
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
 
 
 

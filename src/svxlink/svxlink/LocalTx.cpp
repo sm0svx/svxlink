@@ -8,7 +8,7 @@ This file contains a class that implements a local transmitter.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -47,6 +47,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <cmath>
 
+#include <sigc++/sigc++.h>
+
 
 /****************************************************************************
  *
@@ -56,13 +58,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncAudioIO.h>
 #include <AsyncConfig.h>
-#include <AudioClipper.h>
-#include <AudioCompressor.h>
-#include <AudioFilter.h>
-#include <SigCAudioSink.h>
-#include <SigCAudioSource.h>
+#include <AsyncAudioClipper.h>
+#include <AsyncAudioCompressor.h>
+#include <AsyncAudioFilter.h>
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioValve.h>
+#include <AsyncAudioPassthrough.h>
+#include <AsyncAudioDebugger.h>
+#include <AsyncAudioFifo.h>
+
 
 
 /****************************************************************************
@@ -84,6 +88,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
+using namespace SigC;
 
 
 
@@ -186,6 +191,186 @@ class SineGenerator : public Async::AudioSource
 };
 
 
+class LocalTx::InputHandler : public AudioPassthrough
+{
+  public:
+    InputHandler(void) : is_flushing(false), is_writing_audio(false) {}
+    
+    bool isFlushing(void) const { return is_flushing; }
+    bool isWritingAudio(void) const { return is_writing_audio; }
+    
+    int writeSamples(const float *samples, int count)
+    {
+      is_flushing = false;
+      is_writing_audio = true;
+      return sinkWriteSamples(samples, count);
+    }
+    
+    void flushSamples(void)
+    {
+      is_flushing = true;
+      sinkFlushSamples();
+    }
+    
+    void allSamplesFlushed(void)
+    {
+      is_flushing = false;
+      is_writing_audio = false;
+      sourceAllSamplesFlushed();
+    }
+  
+  private:;
+    bool is_flushing;
+    bool is_writing_audio;
+    
+}; /* class LocalTx::InputHandler */
+
+
+class LocalTx::PttCtrl : public AudioSink, public AudioSource,
+      	      	      	 public SigC::Object
+{
+  public:
+    explicit PttCtrl(LocalTx *tx, int tx_delay)
+      : tx(tx), tx_ctrl_mode(TX_OFF), is_transmitting(false), tx_delay_timer(0),
+      	tx_delay(tx_delay), fifo(0)
+    {
+      valve.setBlockWhenClosed(false);
+      valve.setOpen(false);
+      
+      if (tx_delay > 0)
+      {
+      	fifo = new AudioFifo((tx_delay + 500) * 8);
+      	fifo->registerSink(&valve);
+      	AudioSink::setHandler(fifo);
+      }
+      else
+      {
+      	AudioSink::setHandler(&valve);
+      }
+      
+      AudioSource::setHandler(&valve);
+    }
+    
+    ~PttCtrl(void)
+    {
+      AudioSink::clearHandler();
+      AudioSource::clearHandler();
+      delete fifo;
+      delete tx_delay_timer;
+    }
+    
+    void setTxDelay(int delay_ms)
+    {
+      tx_delay = delay_ms;
+    }
+        
+    void setTxCtrlMode(TxCtrlMode mode)
+    {
+      if (mode == tx_ctrl_mode)
+      {
+      	return;
+      }
+      tx_ctrl_mode = mode;
+      
+      switch (mode)
+      {
+	case TX_OFF:
+	  transmit(false);
+	  break;
+
+	case TX_ON:
+	  transmit(true);
+	  break;
+
+	case TX_AUTO:
+      	  transmit(!valve.isIdle());
+	  break;
+      }
+    }
+    
+    int writeSamples(const float *samples, int count)
+    {
+      if ((tx_ctrl_mode == TX_AUTO) && !is_transmitting)
+      {
+      	transmit(true);
+      }
+      
+      if (fifo != 0)
+      {
+      	return fifo->writeSamples(samples, count);
+      }
+      
+      return valve.writeSamples(samples, count);
+    }
+    
+    void allSamplesFlushed(void)
+    {
+      valve.allSamplesFlushed();
+      if ((tx_ctrl_mode == TX_AUTO) && is_transmitting && valve.isIdle())
+      {
+      	transmit(false);
+      }
+    }
+    
+  private:
+    LocalTx   	*tx;
+    TxCtrlMode	tx_ctrl_mode;
+    bool      	is_transmitting;
+    Timer     	*tx_delay_timer;
+    int       	tx_delay;
+    AudioFifo 	*fifo;
+    AudioValve	valve;
+    
+    void transmit(bool do_transmit)
+    {
+      if (do_transmit == is_transmitting)
+      {
+      	return;
+      }
+      
+      is_transmitting = do_transmit;
+      tx->transmit(do_transmit);
+      if (do_transmit)
+      {
+	if (tx_delay > 0)
+	{
+	  fifo->enableBuffering(true);
+      	  valve.setBlockWhenClosed(true);
+      	  tx_delay_timer = new Timer(tx_delay);
+	  tx_delay_timer->expired.connect(
+	      slot(*this, &PttCtrl::txDelayExpired));
+	}
+	else
+	{
+      	  valve.setOpen(true);
+	}
+      }
+      else
+      {
+      	if (tx_delay_timer != 0)
+	{
+      	  delete tx_delay_timer;
+	  tx_delay_timer = 0;
+	}
+      	valve.setBlockWhenClosed(false);
+      	valve.setOpen(false);
+      }
+    }
+    
+    void txDelayExpired(Timer *t)
+    {
+      delete tx_delay_timer;
+      tx_delay_timer = 0;
+      fifo->enableBuffering(false);
+      valve.setOpen(true);
+      valve.setBlockWhenClosed(false);
+    }
+    
+}; /* class LocalTx::PttCtrl */
+
+
+
+
 /****************************************************************************
  *
  * Prototypes
@@ -222,8 +407,8 @@ LocalTx::LocalTx(Config& cfg, const string& name)
   : Tx(name), name(name), cfg(cfg), audio_io(0), is_transmitting(false),
     serial(0), ptt_pin1(Serial::PIN_NONE), ptt_pin1_rev(false),
     ptt_pin2(Serial::PIN_NONE), ptt_pin2_rev(false), txtot(0),
-    tx_timeout_occured(false), tx_timeout(0), tx_delay(0), ctcss_enable(false),
-    sigc_src(0), is_flushing(false), dtmf_encoder(0), selector(0), dtmf_valve(0)
+    tx_timeout_occured(false), tx_timeout(0), ctcss_enable(false),
+    dtmf_encoder(0), selector(0), dtmf_valve(0), input_handler(0)
 {
 
 } /* LocalTx::LocalTx */
@@ -233,19 +418,21 @@ LocalTx::~LocalTx(void)
 {
   transmit(false);
   
+  clearHandler();
+  delete input_handler;
+  delete selector;
   delete dtmf_encoder;
-  delete sigc_src;
+  
   delete txtot;
   delete serial;
-  delete selector;
-  delete dtmf_valve;
-  delete audio_io;
   delete sine_gen;
 } /* LocalTx::~LocalTx */
 
 
 bool LocalTx::initialize(void)
 {
+  string value;
+  
   string audio_dev;
   if (!cfg.getValue(name, "AUDIO_DEV", audio_dev))
   {
@@ -282,16 +469,15 @@ bool LocalTx::initialize(void)
     }
   }
 
-  string tx_timeout_str;
-  if (cfg.getValue(name, "TIMEOUT", tx_timeout_str))
+  if (cfg.getValue(name, "TIMEOUT", value))
   {
-    tx_timeout = 1000 * atoi(tx_timeout_str.c_str());
+    tx_timeout = 1000 * atoi(value.c_str());
   }
   
-  string tx_delay_str;
-  if (cfg.getValue(name, "TX_DELAY", tx_delay_str))
+  int tx_delay = 0;
+  if (cfg.getValue(name, "TX_DELAY", value))
   {
-    tx_delay = max(0, min(atoi(tx_delay_str.c_str()), 1000));
+    tx_delay = atoi(value.c_str());
   }
   
   if (ptt_port != "NONE")
@@ -311,7 +497,6 @@ bool LocalTx::initialize(void)
     return false;
   }
   
-  string value;
   int dtmf_tone_length = 100;
   if (cfg.getValue(name, "DTMF_TONE_LENGTH", value))
   {
@@ -346,11 +531,12 @@ bool LocalTx::initialize(void)
     audio_io->setGain((100.0 - level) / 100.0);
   }  
   
-  sigc_src = new SigCAudioSource;
-  sigc_src->sigWriteBufferFull.connect(transmitBufferFull.slot());
-  sigc_src->sigAllSamplesFlushed.connect(
-      slot(*this, &LocalTx::onAllSamplesFlushed));
-  AudioSource *prev_src = sigc_src;
+  AudioSource *prev_src = 0;
+  
+    // The input handler is where audio enters this TX object
+  input_handler = new InputHandler;
+  setHandler(input_handler);
+  prev_src = input_handler;
   
   /*
   AudioCompressor *comp = new AudioCompressor;
@@ -363,10 +549,11 @@ bool LocalTx::initialize(void)
   prev_src = comp;
   */
   
+    // If preemphasis is enabled, create the preemphasis filter
   if (cfg.getValue(name, "PREEMPHASIS", value) && (atoi(value.c_str()) != 0))
   {
     AudioFilter *preemph = new AudioFilter("HpBu1/3000");
-    preemph->setOutputGain(4);
+    preemph->setOutputGain(6);
     prev_src->registerSink(preemph, true);
     prev_src = preemph;
   }
@@ -382,37 +569,96 @@ bool LocalTx::initialize(void)
   prev_src = limit;
   */
   
+    // Clip audio to limit its amplitude
   AudioClipper *clipper = new AudioClipper;
   prev_src->registerSink(clipper, true);
   prev_src = clipper;
-
+  
+    // Filter out high frequencies generated by the previous clipping
   AudioFilter *sf = new AudioFilter("LpBu4/3000");
   prev_src->registerSink(sf, true);
   prev_src = sf;
   
-  audio_stream = prev_src;
+    // We need a selector to choose if DTMF or normal audio should be
+    // transmitted
   selector = new AudioSelector;
-  selector->addSource(audio_stream);
-  selector->selectSource(audio_stream);
-  prev_src = 0;
+  selector->addSource(prev_src);
+  selector->enableAutoSelect(prev_src, 0);
+  prev_src = selector;
   
+    // Create the DTMF encoder
   dtmf_encoder = new DtmfEncoder(audio_io->sampleRate());
   dtmf_encoder->setToneLength(dtmf_tone_length);
   dtmf_encoder->setToneSpacing(dtmf_tone_spacing);
   dtmf_encoder->setToneAmplitude(dtmf_tone_amp);
-  dtmf_encoder->allDigitsSent.connect(
-      slot(*this, &LocalTx::onAllDtmfDigitsSent));
   
-  dtmf_valve = new AudioValve(true);
+    // Create a valve so that we can control when to transmit DTMF
+  dtmf_valve = new AudioValve;
+  dtmf_valve->setBlockWhenClosed(true);
   dtmf_valve->setOpen(false);
-  dtmf_encoder->registerSink(dtmf_valve);
+  dtmf_encoder->registerSink(dtmf_valve, true);
   selector->addSource(dtmf_valve);
+  selector->enableAutoSelect(dtmf_valve, 10);
   
-  audio_io->registerSource(selector);
+    // Cteate the PTT controller
+  ptt_ctrl = new PttCtrl(this, tx_delay);
+  prev_src->registerSink(ptt_ctrl, true);
+  prev_src = ptt_ctrl;
+  
+    // Finally connect the whole audio pipe to the audio device
+  prev_src->registerSink(audio_io, true);
 
   return true;
   
 } /* LocalTx::initialize */
+
+
+void LocalTx::setTxCtrlMode(Tx::TxCtrlMode mode)
+{
+  ptt_ctrl->setTxCtrlMode(mode);
+  switch (mode)
+  {
+    case TX_OFF:
+      dtmf_valve->setOpen(false);
+      break;
+      
+    case TX_ON:
+    case TX_AUTO:
+      dtmf_valve->setOpen(true);
+      break;
+  }
+  
+} /* LocalTx::setTxCtrlMode */
+
+
+bool LocalTx::isWritingAudio(void) const
+{
+  return input_handler->isWritingAudio();
+}
+
+
+void LocalTx::enableCtcss(bool enable)
+{
+  ctcss_enable = enable;
+  if (is_transmitting)
+  {
+    sine_gen->enable(enable);
+  }
+} /* LocalTx::enableCtcss */
+
+
+void LocalTx::sendDtmf(const string& digits)
+{
+  dtmf_encoder->send(digits);
+} /* LocalTx::sendDtmf */
+
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
 
 
 void LocalTx::transmit(bool do_transmit)
@@ -429,6 +675,8 @@ void LocalTx::transmit(bool do_transmit)
   
   if (do_transmit)
   {
+    transmitterStateChange(true);
+
     if (!audio_io->open(AudioIO::MODE_WR))
     {
       cerr << "*** ERROR: Could not open audio device for transmitter \""
@@ -447,23 +695,9 @@ void LocalTx::transmit(bool do_transmit)
       txtot = new Timer(tx_timeout);
       txtot->expired.connect(slot(*this, &LocalTx::txTimeoutOccured));
     }
-    
-    if (tx_delay > 0)
-    {
-      float samples[8000];
-      memset(samples, 0, sizeof(samples));
-      audio_io->writeSamples(samples, 8000 * tx_delay / 1000);
-      flushSamples();
-    }
-    
-    dtmf_valve->setOpen(true);
-
-    transmitBufferFull(false);
   }
   else
   {
-    dtmf_valve->setOpen(false);
-    
     audio_io->close();
     
     if (ctcss_enable)
@@ -474,90 +708,16 @@ void LocalTx::transmit(bool do_transmit)
     delete txtot;
     txtot = 0;
     tx_timeout_occured = false;
+    
+    transmitterStateChange(false);
   }
   
   if (!setPtt(is_transmitting && !tx_timeout_occured))
   {
     perror("setPin");
   }
-
+  
 } /* LocalTx::transmit */
-
-
-int LocalTx::transmitAudio(float *samples, int count)
-{
-  is_flushing = false;
-  
-  if (!is_transmitting)
-  {
-    transmitBufferFull(true);
-    return 0;
-  }
-  
-  int ret = sigc_src->writeSamples(samples, count);
-  /*
-  if (ret != count)
-  {
-    printf("ret=%d  count=%d\n", ret, count);
-  }
-  */
-  return ret;
-  
-} /* LocalTx::transmitAudio */
-
-
-void LocalTx::flushSamples(void)
-{
-  is_flushing = true;
-  sigc_src->flushSamples();
-} /* LocalTx::flushSamples */
-
-
-void LocalTx::enableCtcss(bool enable)
-{
-  ctcss_enable = enable;
-  if (is_transmitting)
-  {
-    sine_gen->enable(enable);
-  }
-} /* LocalTx::enableCtcss */
-
-
-void LocalTx::sendDtmf(const string& digits)
-{
-  selector->selectSource(dtmf_valve);
-  dtmf_encoder->send(digits);
-} /* LocalTx::sendDtmf */
-
-
-bool LocalTx::isSendingDtmf(void) const
-{
-  return dtmf_encoder->isSending();
-} /* LocalTx::isSendingDtmf */
-
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
 
 
 
@@ -569,18 +729,6 @@ bool LocalTx::isSendingDtmf(void) const
  ****************************************************************************/
 
 
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
 void LocalTx::txTimeoutOccured(Timer *t)
 {
   delete txtot;
@@ -652,20 +800,6 @@ bool LocalTx::setPtt(bool tx)
   return true;
 
 } /* LocalTx::setPtt  */
-
-
-void LocalTx::onAllSamplesFlushed(void)
-{
-  is_flushing = false;
-  allSamplesFlushed();
-} /* LocalTx::allSamplesFlushed */
-
-
-void LocalTx::onAllDtmfDigitsSent(void)
-{
-  selector->selectSource(audio_stream);
-  allDtmfDigitsSent();
-} /* LocalTx::allDtmfDigitsSent */
 
 
 

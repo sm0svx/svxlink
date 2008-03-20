@@ -1,14 +1,12 @@
 /**
 @file	 RepeaterLogic.cpp
-@brief   A_brief_description_for_this_file
+@brief   Contains a class that implements a repeater controller
 @author  Tobias Blomberg / SM0SVX
-@date	 2004-03-
-
-A_detailed_description_for_this_file
+@date	 2004-04-24
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -53,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 
 #include <Rx.h>
+#include <Tx.h>
 
 
 /****************************************************************************
@@ -61,8 +60,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Tx.h"
-#include "Module.h"
 #include "RepeaterLogic.h"
 
 
@@ -128,11 +125,12 @@ using namespace Async;
 
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
   : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(30000),
-    idle_sound_timer(0), idle_sound_interval(0), repeating_enabled(false),
+    idle_sound_timer(0), idle_sound_interval(0),
     preserve_idle_state(false), required_sql_open_duration(-1),
     open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false),
     open_on_sql_timer(0), open_sql_flank(SQL_FLANK_CLOSE),
-    short_sql_open_cnt(0), sql_flap_sup_min_time(1000), sql_flap_sup_max_cnt(0)
+    short_sql_open_cnt(0), sql_flap_sup_min_time(1000),
+    sql_flap_sup_max_cnt(0), audio_stream_idle(true)
 {
 } /* RepeaterLogic::RepeaterLogic */
 
@@ -229,10 +227,6 @@ bool RepeaterLogic::initialize(void)
     sql_flap_sup_max_cnt = atoi(str.c_str());
   }
   
-  //tx().txTimeout.connect(slot(this, &RepeaterLogic::txTimeout));
-  
-  //rx().mute(false);
-  //rx().audioReceived.connect(slot(*this, &RepeaterLogic::audioReceived));
   rx().toneDetected.connect(slot(*this, &RepeaterLogic::detectedTone));
   
   if (required_1750_duration > 0)
@@ -250,6 +244,12 @@ bool RepeaterLogic::initialize(void)
       cerr << "*** WARNING: Could not setup CTCSS tone detection\n";
     }
   }
+  
+  rptValveSetOpen(true);
+  
+  tx().setTxCtrlMode(Tx::TX_AUTO);
+  
+  idleStateChanged.connect(slot(*this, &RepeaterLogic::setIdle));
   
   return true;
   
@@ -269,53 +269,6 @@ void RepeaterLogic::processEvent(const string& event, const Module *module)
     Logic::processEvent(event, module);
   }  
 } /* RepeaterLogic::processEvent */
-
-
-void RepeaterLogic::playFile(const string& path)
-{
-  //printf("RepeaterLogic::playiFile: %s\n", path.c_str());
-  
-  if (!preserve_idle_state)
-  {
-    setIdle(false);
-  }
-  Logic::playFile(path);
-} /* RepeaterLogic::playFile */
-
-
-void RepeaterLogic::playSilence(int length)
-{
-  //printf("RepeaterLogic::playSilence: %d ms\n", length);
-  
-  if (!preserve_idle_state)
-  {
-    setIdle(false);
-  }
-  Logic::playSilence(length);
-} /* RepeaterLogic::playSilence */
-
-
-void RepeaterLogic::playTone(int fq, int amp, int len)
-{
-  //printf("RepeaterLogic::playTone: fq=%d amp=%d len=%d ms\n", fq, amp, len);
-  
-  if (!preserve_idle_state)
-  {
-    setIdle(false);
-  }
-  Logic::playTone(fq, amp, len);
-} /* RepeaterLogic::playSilence */
-
-
-void RepeaterLogic::moduleTransmitRequest(bool do_transmit)
-{
-  if (do_transmit)
-  {
-    setUp(true, false);
-    setIdle(false);
-  }
-  Logic::moduleTransmitRequest(do_transmit);
-} /* RepeaterLogic::moduleTransmitRequest */
 
 
 bool RepeaterLogic::activateModule(Module *module)
@@ -348,35 +301,50 @@ void RepeaterLogic::dtmfDigitDetected(char digit, int duration)
 
 
 
-
 /****************************************************************************
  *
  * Protected member functions
  *
  ****************************************************************************/
 
-void RepeaterLogic::allTxSamplesFlushed(void)
+void RepeaterLogic::allMsgsWritten(void)
 {
-  //printf("RepeaterLogic::allTxSamplesFlushed\n");
-  Module *module = activeModule();
-  if (!rx().squelchIsOpen() && ((module == 0) || (!module->isTransmitting())))
+  Logic::allMsgsWritten();
+  if (!repeater_is_up)
   {
-    setIdle(true);
+    tx().setTxCtrlMode(Tx::TX_AUTO);
   }
-  Logic::allTxSamplesFlushed();
-  repeating_enabled = true;
-} /* RepeaterLogic::allTxSamplesFlushed */
+} /* RepeaterLogic::allMsgsWritten */
 
 
-void RepeaterLogic::remoteLogicTransmitRequest(bool do_tx)
+void RepeaterLogic::audioStreamIdleStateChange(bool is_idle)
 {
-  if (do_tx)
+  /*
+  printf("RepeaterLogic::audioStreamIdleStateChange: is_idle=%s\n",
+      	  is_idle ? "TRUE" : "FALSE");
+  */
+  
+  audio_stream_idle = is_idle;
+  if (!repeater_is_up && !is_idle)
   {
     setUp(true);
-    setIdle(false);
   }
-  Logic::remoteLogicTransmitRequest(do_tx);
-} /* RepeaterLogic::remoteLogicTransmitRequest */
+
+  Logic::audioStreamIdleStateChange(is_idle);
+  
+} /* Logic::audioStreamIdleStateChange */
+
+
+bool RepeaterLogic::getIdleState(void) const
+{
+  if (preserve_idle_state)
+  {
+    return isIdle();
+  }
+
+  return Logic::getIdleState();
+
+} /* RepeaterLogic::isIdle */
 
 
 
@@ -385,22 +353,6 @@ void RepeaterLogic::remoteLogicTransmitRequest(bool do_tx)
  * Private member functions
  *
  ****************************************************************************/
-
-int RepeaterLogic::audioReceived(float *samples, int count)
-{
-  if (repeater_is_up && repeating_enabled)
-  {
-    Logic::audioReceived(samples, count);
-    if (!no_repeat)
-    {
-      return transmitAudio(samples, count);
-    }
-  }
-  
-  return count;
-  
-} /* RepeaterLogic::audioReceived */
-
 
 void RepeaterLogic::idleTimeout(Timer *t)
 {
@@ -456,21 +408,22 @@ void RepeaterLogic::setUp(bool up, bool ident)
   if (up)
   {
     short_sql_open_cnt = 0;
+    repeater_is_up = true;
+
     stringstream ss;
     ss << "repeater_up " << (ident ? "1" : "0");
     processEvent(ss.str());
-    repeater_is_up = true;
-      // Enable repeating only if no statup message was played. If there is
-      // a statuup message, repeating will be enabled when the message has
-      // been played.
-    repeating_enabled = !isWritingMessage();
-    if (repeating_enabled && ident)
-    {
-      setIdle(true);
-    }
+    
+    rxValveSetOpen(true);
+    tx().setTxCtrlMode(Tx::TX_ON);
+    
+    setIdle(false);
+    checkIdle();
+    setIdle(isIdle());
   }
   else
   {
+    rxValveSetOpen(false);
     repeater_is_up = false;
     delete up_timer;
     up_timer = 0;
@@ -478,9 +431,11 @@ void RepeaterLogic::setUp(bool up, bool ident)
     idle_sound_timer = 0;
     disconnectAllLogics();
     processEvent("repeater_down");
+    if (!isWritingMessage())
+    {
+      tx().setTxCtrlMode(Tx::TX_AUTO);
+    }
   }
-  
-  logicTransmitRequest(up);
   
 } /* RepeaterLogic::setUp */
 
@@ -553,15 +508,6 @@ void RepeaterLogic::squelchOpen(bool is_open)
 } /* RepeaterLogic::squelchOpen */
 
 
-#if 0
-void RepeaterLogic::txTimeout(void)
-{
-  Logic::transmit(false);
-  clearPendingSamples();
-} /* RepeaterLogic::txTimeout */
-#endif
-
-
 void RepeaterLogic::detectedTone(float fq)
 {
   if (!repeater_is_up && !activate_on_sql_close)
@@ -599,7 +545,7 @@ void RepeaterLogic::activateOnOpenOrClose(SqlFlank flank)
   if (flank == SQL_FLANK_OPEN)
   {
     setUp(true, false);
-    setIdle(false);
+    //setIdle(false);
   }
   else if (!rx().squelchIsOpen())
   {

@@ -64,6 +64,8 @@ extern "C" {
 }
 #include <AsyncTimer.h>
 #include <AsyncIpAddress.h>
+#include <AsyncAudioSink.h>
+#include <AsyncAudioSource.h>
 
 
 /****************************************************************************
@@ -140,7 +142,8 @@ exits.
 
 \include EchoLinkQso_demo.cpp
 */
-class Qso : public SigC::Object
+class Qso
+  : public SigC::Object, public Async::AudioSink, public Async::AudioSource
 {
   public:
     class GsmVoicePacket
@@ -298,7 +301,7 @@ class Qso : public SigC::Object
      * @param 	len The length, in samples, of the buffer to send
      * @return	Returns the number of samples written
      */
-    int sendAudio(float *buf, int len);
+    //int sendAudio(float *buf, int len);
     
     /**
      * @brief 	Send a raw GSM audio packet to the remote station
@@ -318,7 +321,7 @@ class Qso : public SigC::Object
      * flush the audio send buffer. If it is not a full audio packet it will
      * be padded with zeros.
      */
-    bool flushAudioSendBuffer(void);
+    //bool flushAudioSendBuffer(void);
     
     /**
      * @brief Set the name of the remote station
@@ -399,7 +402,7 @@ class Qso : public SigC::Object
      * @param buf A pointer to the buffer that contains the audio
      * @param len The number of samples in the buffer
      */
-    SigC::Signal2<int, float*, int> audioReceived;
+    //SigC::Signal2<int, float*, int> audioReceived;
     
     /**
      * @brief A signal that is emitted when an audio datagram has been received
@@ -412,8 +415,51 @@ class Qso : public SigC::Object
      */
     SigC::Signal1<void, GsmVoicePacket*>  audioReceivedRaw;
     
+
+    /**
+     * @brief 	Write samples into this audio sink
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
+     *
+     * This function is used to write audio into this audio sink. If it
+     * returns 0, no more samples should be written until the resumeOutput
+     * function in the source have been called.
+     * This function is normally only called from a connected source object.
+     */
+    virtual int writeSamples(const float *samples, int count);
     
+    /**
+     * @brief 	Tell the sink to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     * This function is normally only called from a connected source object.
+     */
+    virtual void flushSamples(void);
+
+    /**
+     * @brief Resume audio output to the sink
+     * 
+     * This function will be called when the registered audio sink is ready
+     * to accept more samples.
+     * This function is normally only called from a connected sink object.
+     */
+    virtual void resumeOutput(void);
+    
+
   protected:
+    /**
+     * @brief The registered sink has flushed all samples
+     *
+     * This function will be called when all samples have been flushed in the
+     * registered sink. If it is not reimplemented, a handler must be set
+     * that handle the function call.
+     * This function is normally only called from a connected sink object.
+     */
+    virtual void allSamplesFlushed(void);
+
     
   private:
     static const int  	KEEP_ALIVE_TIME       	= 10000;

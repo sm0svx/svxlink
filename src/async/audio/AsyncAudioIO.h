@@ -57,8 +57,8 @@ An example of how to use the Async::AudioIO class
 
 #include <AsyncFdWatch.h>
 #include <AsyncTimer.h>
-#include <AudioSink.h>
-#include <AudioSource.h>
+#include <AsyncAudioSink.h>
+#include <AsyncAudioSource.h>
 
 
 /****************************************************************************

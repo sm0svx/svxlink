@@ -123,7 +123,7 @@ class SineGenerator;
 @author Tobias Blomberg
 @date   2004-03-21
 
-This class implements a local tranmitter. A local tranmitter is connected
+This class implements a local transmitter. A local transmitter is connected
 directly to the sound card in the PC where the logic core runs.
 */
 class LocalTx : public Tx
@@ -146,11 +146,14 @@ class LocalTx : public Tx
     bool initialize(void);
   
     /**
-     * @brief 	Turn the transmitter on or off
-     * @param 	do_transmit Set to \em true to transmit or \em false to turn
-     *	      	      	    the transmitter off
+     * @brief 	Set the transmit control mode
+     * @param 	mode The mode to use to set the transmitter on or off.
+     *
+     * Use this function to turn the transmitter on (TX_ON) or off (TX__OFF).
+     * There is also a third mode (TX_AUTO) that will automatically turn the
+     * transmitter on when there is audio to transmit.
      */
-    void transmit(bool do_transmit);
+    void setTxCtrlMode(TxCtrlMode mode);
     
     /**
      * @brief 	Check if the transmitter is transmitting
@@ -159,27 +162,13 @@ class LocalTx : public Tx
     bool isTransmitting(void) const { return is_transmitting; }
     
     /**
-     * @brief 	Send some audio to the transmitter
-     * @param 	samples The buffer of samples to transmit
-     * @param 	count 	The number of samples in the supplied buffer
-     * @return	Returns the number of samples transmitted
-     */
-    int transmitAudio(float *samples, int count);
-    
-    /*
-     * @brief 	Call this method to flush all samples in the buffer
+     * @brief 	Check if audio is currently being written
+     * @return	Returns \em true if audio is being written, else \em false
      *
-     * This method is used to flush all the samples that are in the buffer.
-     * That is, all samples in the buffer will be written to the audio device
-     * and when finished, emit the allSamplesFlushed signal.
+     * Use this function to check if audio is being written to the audio
+     * device or if all audio has been flushed.
      */
-    void flushSamples(void);
-    
-    /*
-     * @brief 	Check if the tx is busy flushing samples
-     * @return	Returns \em true if flushing the buffer or else \em false
-     */
-    bool isFlushing(void) const { return is_flushing; }
+    bool isWritingAudio(void) const;
     
     /**
      * @brief 	Enable/disable CTCSS on TX
@@ -193,16 +182,11 @@ class LocalTx : public Tx
      */
     void sendDtmf(const std::string& digits);
     
-    /*
-     * @brief 	Check if DTMF digits are being sent
-     * @return	Returns \em true if digits are being sent or else \em false
-     */
-    bool isSendingDtmf(void) const;
-        
-    
-  protected:
     
   private:
+    class InputHandler;
+    class PttCtrl;
+    
     std::string       	    name;
     Async::Config     	    &cfg;
     Async::AudioIO    	    *audio_io;
@@ -215,21 +199,19 @@ class LocalTx : public Tx
     Async::Timer      	    *txtot;
     bool      	      	    tx_timeout_occured;
     int       	      	    tx_timeout;
-    int       	      	    tx_delay;
     SineGenerator     	    *sine_gen;
     bool      	      	    ctcss_enable;
     Async::SigCAudioSource  *sigc_src;
-    bool      	      	    is_flushing;
     DtmfEncoder       	    *dtmf_encoder;
     Async::AudioSelector    *selector;
-    Async::AudioSource      *audio_stream;
     Async::AudioValve 	    *dtmf_valve;
+    InputHandler      	    *input_handler;
+    PttCtrl   	      	    *ptt_ctrl;
     
     void txTimeoutOccured(Async::Timer *t);
     int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);
     bool setPtt(bool tx);
-    void onAllSamplesFlushed(void);
-    void onAllDtmfDigitsSent(void);
+    void transmit(bool do_transmit);
 
 };  /* class LocalTx */
 

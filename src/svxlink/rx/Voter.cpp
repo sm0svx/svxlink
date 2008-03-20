@@ -5,8 +5,8 @@
 @date	 2005-04-18
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -47,7 +47,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncTimer.h>
-#include <AsyncSampleFifo.h>
+#include <AsyncAudioFifo.h>
+#include <AsyncAudioSelector.h>
+#include <AsyncAudioValve.h>
 
 
 /****************************************************************************
@@ -57,7 +59,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "Voter.h"
-//#include "LocalRx.h"
 
 
 
@@ -89,29 +90,35 @@ using namespace Async;
  *
  ****************************************************************************/
 
-class SatRx : public SigC::Object
+/**
+ * @brief A class that represents a satellite receiver
+ */
+class SatRx : public AudioSource, public SigC::Object
 {
   public:
     int id;
     Rx *rx;
-    SampleFifo fifo;
     
     SatRx(int id, Rx *rx)
-      : id(id), rx(rx), fifo(MAX_VOTING_DELAY), stop_output(true)
+      : id(id), rx(rx), fifo(MAX_VOTING_DELAY * 8000 / 1000), sql_open(false)
     {
-      fifo.stopOutput(true);
       fifo.setOverwrite(true);
-      fifo.setDebugName("SatRx");
-      rx->audioReceived.connect(slot(fifo, &SampleFifo::addSamples));
+      rx->registerSink(&fifo);
       rx->dtmfDigitDetected.connect(slot(*this, &SatRx::onDtmfDigitDetected));
+      rx->squelchOpen.connect(slot(*this, &SatRx::rxSquelchOpen));
+      
+      valve.setOpen(false);
+      valve.setBlockWhenClosed(true);
+      fifo.registerSink(&valve);
+      
+      AudioSource::setHandler(&valve);
     }
     
     ~SatRx(void) {}
     
     void stopOutput(bool do_stop)
     {
-      fifo.stopOutput(do_stop);
-      stop_output = do_stop;
+      valve.setOpen(!do_stop);
       if (!do_stop)
       {
       	DtmfBuf::iterator it;
@@ -119,26 +126,49 @@ class SatRx : public SigC::Object
 	{
 	  dtmfDigitDetected((*it).first, (*it).second);
 	}
+	dtmf_buf.clear();
       }
     }
     
+    void mute(bool do_mute)
+    {
+      rx->mute(do_mute);
+      if (do_mute)
+      {
+      	fifo.clear();
+	setSquelchOpen(false);
+      }
+    }
+    
+    /*
     void clear(void)
     {
       fifo.clear();
       dtmf_buf.clear();
     }
+    */
   
-    Signal2<void, char, int> dtmfDigitDetected;
-    
+    Signal2<void, char, int>  	dtmfDigitDetected;
+    Signal2<void, bool, SatRx*> squelchOpen;
+  
+  protected:
+    virtual void allSamplesFlushed(void)
+    {
+      AudioSource::allSamplesFlushed();
+      setSquelchOpen(rx->squelchIsOpen());
+    }
+  
   private:
     typedef list<pair<char, int> >  DtmfBuf;
     
-    bool    stop_output;
-    DtmfBuf dtmf_buf;
+    AudioFifo 	fifo;
+    AudioValve	valve;
+    DtmfBuf   	dtmf_buf;
+    bool      	sql_open;
     
     void onDtmfDigitDetected(char digit, int duration)
     {
-      if (stop_output)
+      if (!valve.isOpen())
       {
 	dtmf_buf.push_back(pair<char, int>(digit, duration));
       }
@@ -147,7 +177,32 @@ class SatRx : public SigC::Object
       	dtmfDigitDetected(digit, duration);
       }
     }
+    
+    void rxSquelchOpen(bool is_open)
+    {
+      if (is_open)
+      {
+      	setSquelchOpen(true);
+      }
+      else
+      {
+      	if (fifo.empty())
+	{
+	  setSquelchOpen(false);
+	}
+      }
+    }
+    
+    void setSquelchOpen(bool is_open)
+    {
+      if (is_open != sql_open)
+      {
+      	sql_open = is_open;
+	squelchOpen(is_open, this);
+      }
+    }
 };
+
 
 
 /****************************************************************************
@@ -184,7 +239,7 @@ class SatRx : public SigC::Object
 Voter::Voter(Config &cfg, const std::string& name)
   : Rx(cfg, name), active_rx(0), is_muted(true), m_verbose(true),
     best_rx(0), best_rx_siglev(BEST_RX_SIGLEV_RESET), best_rx_timer(0),
-    voting_delay(0), sql_rx_id(0)
+    voting_delay(0), sql_rx_id(0), selector(0)
 {
   Rx::setVerbose(false);
 } /* Voter::Voter */
@@ -192,6 +247,7 @@ Voter::Voter(Config &cfg, const std::string& name)
 
 Voter::~Voter(void)
 {
+  delete selector;
   delete best_rx_timer;
   
   list<SatRx *>::iterator it;
@@ -219,6 +275,9 @@ bool Voter::initialize(void)
     voting_delay = atoi(value.c_str());
   }
 
+  selector = new AudioSelector;
+  setHandler(selector);
+  
   string::iterator start(receivers.begin());
   for (;;)
   {
@@ -228,17 +287,18 @@ bool Voter::initialize(void)
     {
       cout << "Adding receiver to Voter: " << rx_name << endl;
       SatRx *srx = new SatRx(rxs.size() + 1, Rx::create(cfg(), rx_name));
+      srx->squelchOpen.connect(slot(*this, &Voter::satSquelchOpen));
+      srx->dtmfDigitDetected.connect(dtmfDigitDetected.slot());
       Rx *rx = srx->rx;
       if ((srx == 0) || !rx->initialize())
       {
       	return false;
       }
-      rx->mute(true);
+      srx->mute(true);
       rx->setVerbose(false);
-      rx->squelchOpen.connect(bind(slot(*this, &Voter::satSquelchOpen), srx));
-      srx->fifo.writeSamples.connect(audioReceived.slot());
-      srx->dtmfDigitDetected.connect(dtmfDigitDetected.slot());
       rx->toneDetected.connect(toneDetected.slot());
+      selector->addSource(srx);
+      selector->enableAutoSelect(srx, 0);
       
       rxs.push_back(srx);
     }
@@ -281,21 +341,12 @@ void Voter::mute(bool do_mute)
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    Rx *rx = (*it)->rx;
-    rx->mute(do_mute);
+    (*it)->mute(do_mute);
   }
     
   is_muted = do_mute;
   
 } /* Voter::mute */
-
-
-#if 0
-bool Voter::squelchIsOpen(void) const
-{
-  return active_rx != 0;
-} /* Voter::squelchIsOpen */
-#endif
 
 
 bool Voter::addToneDetector(float fq, int bw, float thresh,
@@ -349,23 +400,6 @@ void Voter::reset(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
 
 /****************************************************************************
  *
@@ -373,19 +407,6 @@ void Voter::reset(void)
  *
  ****************************************************************************/
 
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
 void Voter::satSquelchOpen(bool is_open, SatRx *srx)
 {
   Rx *rx = srx->rx;
@@ -393,7 +414,7 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
   //cout << "Voter::satSquelchOpen(" << (is_open ? "TRUE" : "FALSE")
   //     << ", " << rx->name() << "): Signal Strength = "
   //     << rx->signalStrength() << "\n";
-
+  
   if (is_open)
   {
     assert(active_rx == 0);
@@ -411,7 +432,7 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
       best_rx = srx;
     }
     
-    srx->clear();
+    //srx->clear();
   }
   else
   {
@@ -423,9 +444,9 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
       list<SatRx *>::iterator it;
       for (it=rxs.begin(); it!=rxs.end(); ++it)
       {
-	if (*it != best_rx)
+	if (*it != active_rx)
 	{
-	  (*it)->rx->mute(false);
+	  (*it)->mute(false);
 	}
       }
       
@@ -444,8 +465,6 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
     }
     else if (srx == best_rx)
     {
-      assert(active_rx == 0);
-      
       best_rx = 0;
       best_rx_siglev = BEST_RX_SIGLEV_RESET;
       list<SatRx *>::iterator it;
@@ -457,6 +476,11 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
 	  best_rx = *it;
 	  best_rx_siglev = (*it)->rx->signalStrength();
 	}
+      }
+      if (best_rx == 0)
+      {
+      	delete best_rx_timer;
+	best_rx_timer = 0;
       }
     }
   }
@@ -478,7 +502,7 @@ void Voter::chooseBestRx(Timer *t)
     {
       if (*it != best_rx)
       {
-	(*it)->rx->mute(true);
+	(*it)->mute(true);
       }
     }
     

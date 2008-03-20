@@ -92,7 +92,7 @@ LIBSRC		= AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp \
 		  AsyncIpAddress.cpp AsyncDnsLookup.cpp AsyncTcpClient.cpp \
 		  AsyncUdpSocket.cpp AsyncTcpServer.cpp \
 		  AsyncTcpConnection.cpp AsyncConfig.cpp \
-		  AsyncSampleFifo.cpp AsyncSerial.cpp AsyncSerialDevice.cpp
+		  AsyncSerial.cpp AsyncSerialDevice.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
 LIB_LIBS	= -lc $(SIGC_LIBS) -lpthread -lm
@@ -107,7 +107,7 @@ STATIC_LIBS   	=
 EXPINC		= AsyncApplication.h AsyncFdWatch.h AsyncTimer.h \
 		  AsyncIpAddress.h AsyncTcpClient.h AsyncDnsLookup.h \
 		  AsyncUdpSocket.h AsyncTcpServer.h \
-		  AsyncTcpConnection.h AsyncConfig.h AsyncSampleFifo.h \
+		  AsyncTcpConnection.h AsyncConfig.h \
 		  AsyncSerial.h
 
 # Specify Qt header files here that you want to run the

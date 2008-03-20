@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "ComDialogBase.h"
+#include "Vox.h"
 
 
 /****************************************************************************
@@ -67,9 +68,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace Async
 {
-  class SampleFifo;
-  class SigCAudioSource;
-  class SigCAudioSink;
+  class AudioFifo;
+  class AudioValve;
+  class AudioSplitter;
 };
 
 class QString;
@@ -132,36 +133,11 @@ class QString;
  *
  ****************************************************************************/
 
-/*
- *----------------------------------------------------------------------------
- * Class:     ComDialog
- * Purpose:   ComDialog class
- * Inherits:  
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */   
 class ComDialog : public ComDialogBase, public SigC::Object
 {
   Q_OBJECT
       
   public:
-    /*
-     *------------------------------------------------------------------------
-     * Method:	ComDialog
-     * Purpose: Constructor
-     * Input: 	
-     * Output:	None
-     * Author:	
-     * Created: 
-     * Remarks: 
-     * Bugs:  	
-     *------------------------------------------------------------------------
-     */
     ComDialog(Async::AudioIO *audio_io, EchoLink::Directory& dir,
       	      const QString& call, const QString& remote_name="?");
     virtual ~ComDialog(void);
@@ -180,9 +156,11 @@ class ComDialog : public ComDialogBase, public SigC::Object
     bool      	      	    is_transmitting;
     QColor    	      	    orig_background_color;
     bool      	      	    ctrl_pressed;
-    Async::SampleFifo *     rem_audio_fifo;
-    Async::SigCAudioSource  *sigc_src;
-    Async::SigCAudioSink    *sigc_sink;
+    Async::AudioFifo *      rem_audio_fifo;
+    Async::AudioValve *     rem_audio_valve;
+    Async::AudioValve *     ptt_valve;
+    Async::AudioSplitter *  tx_audio_splitter;
+    Vox *     	      	    vox;
   
     ComDialog(const ComDialog&);
     ComDialog& operator=(const ComDialog&);
@@ -190,7 +168,6 @@ class ComDialog : public ComDialogBase, public SigC::Object
     void updateStationData(const EchoLink::StationData *station);
     void createConnection(const EchoLink::StationData *station);
     void onStationListUpdated(void);
-    int micAudioRead(float *buf, int len);
     bool openAudioDevice(Async::AudioIO::Mode mode);
 
   private slots:
@@ -205,6 +182,9 @@ class ComDialog : public ComDialogBase, public SigC::Object
     void stateChange(EchoLink::Qso::State state);
     
     void isReceiving(bool is_receiving);
+    void meterLevelChanged(int level_db);
+    void voxStateChanged(Vox::State state);
+    void checkTransmit(void);
 
     
 };  /* class ComDialog */

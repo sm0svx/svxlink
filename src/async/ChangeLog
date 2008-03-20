@@ -1,5 +1,23 @@
+ 0.16.0 -- ?? ??? 2008
+-----------------------
+
+* Lots of changes to adapt everything to the audio pipe infrastructure.
+
+* Decreased buffers to improve audio latency.
+
+* New method: AudioSplitter::enableSink make it possible to enable/disable
+  branches in the splitter.
+
+* Cleanup: Removed obsolete files and fixed files with wrong names.
+
+* New method AudioFifo::enableBuffering: Use this method to enable/disable
+  the buffering in the fifo. When disabled, this will effectively just make
+  it a passthrough.
+
+
+
  0.15.0 -- 02 Jan 2008
-----------------------
+-----------------------
 
 * Now compile under CentOS 5.0, Fedora 8, Ubuntu 7.10 and Gentoo.
 

@@ -51,7 +51,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <version/SVXLINK.h>
 #include <Module.h>
-#include <AudioPacer.h>
 
 
 
@@ -73,6 +72,7 @@ namespace Async
 {
   class Timer;
   class SampleFifo;
+  class AudioValve;
 };
 
 
@@ -130,10 +130,24 @@ class ModuleParrot : public Module
     bool initialize(void);
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
+  protected:
+    /**
+     * @brief 	Notify the module that the logic core idle state has changed
+     * @param 	is_idle Set to \em true if the logic core is idle or else
+     *	      	\em false.
+     *
+     * This function is called by the logic core when the idle state changes.
+     */
+    virtual void logicIdleStateChanged(bool is_idle);
+  
   private:
-    Async::SampleFifo 	    *fifo;
+    class FifoAdapter;
+    friend class FifoAdapter;
+    
+    FifoAdapter       	    *adapter;
+    Async::AudioFifo	    *fifo;
+    Async::AudioValve 	    *valve;
     bool      	      	    squelch_is_open;
-    AudioPacer	      	    pacer;
     int       	      	    repeat_delay;
     Async::Timer      	    *repeat_delay_timer;
     std::list<std::string>  cmd_queue;
@@ -143,10 +157,7 @@ class ModuleParrot : public Module
     bool dtmfDigitReceived(char digit, int duration);
     void dtmfCmdReceived(const std::string& cmd);
     void squelchOpen(bool is_open);
-    int audioFromRx(float *samples, int count);
-    void allMsgsWritten(void);
 
-    int audioFromFifo(float *samples, int count);
     void allSamplesWritten(void);
     void onRepeatDelayExpired(Async::Timer *t);
     void execCmdQueue(void);

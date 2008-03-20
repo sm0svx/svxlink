@@ -252,19 +252,6 @@ void NetRx::reset(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
 
 
 
@@ -405,6 +392,7 @@ void NetRx::handleMsg(Msg *msg)
 	squelch_open = sql_msg->isOpen();
 	last_signal_strength = sql_msg->signalStrength();
 	last_sql_rx_id = sql_msg->sqlRxId();
+        sinkFlushSamples();
       	setSquelchState(squelch_open);
       }
       break;
@@ -432,7 +420,7 @@ void NetRx::handleMsg(Msg *msg)
       if (!is_muted)
       {
 	MsgAudio *audio_msg = reinterpret_cast<MsgAudio*>(msg);
-	audioReceived(audio_msg->samples(), audio_msg->count());
+	sinkWriteSamples(audio_msg->samples(), audio_msg->count());
       }
       break;
     }

@@ -49,9 +49,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncConfig.h>
 #include <AsyncAudioIO.h>
-#include <AudioFilter.h>
+#include <AsyncAudioFilter.h>
 #include <SigCAudioSink.h>
-#include <AudioSplitter.h>
+#include <AsyncAudioSplitter.h>
 #include <AsyncAudioAmp.h>
 #include <AsyncAudioPassthrough.h>
 
@@ -175,6 +175,7 @@ class SigCAudioValve : public AudioValve, public SigC::Object
   public:
     void allSamplesFlushed(void)
     {
+      printf("SigCAudioValve::allSamplesFlushed\n");
       AudioValve::allSamplesFlushed();
       sigAllSamplesFlushed();
     }
@@ -402,7 +403,7 @@ bool LocalRx::initialize(void)
   if (deemphasis)
   {
     AudioFilter *deemph_filt = new AudioFilter("LpBu1/300");
-    deemph_filt->setOutputGain(4);
+    deemph_filt->setOutputGain(6);
     prev_src->registerSink(deemph_filt, true);
     prev_src = deemph_filt;
   }
@@ -453,11 +454,15 @@ bool LocalRx::initialize(void)
     prev_src->registerSink(delay, true);
     prev_src = delay;
   }
-    
+  
+  setHandler(prev_src);
+  
+  #if 0
   SigCAudioSinkNoFlow *sigc_sink = new SigCAudioSinkNoFlow;
   //sigc_sink->sigWriteSamples.connect(slot(*this, &LocalRx::audioRead));
   sigc_sink->sigWriteSamples.connect(audioReceived.slot());
   prev_src->registerSink(sigc_sink, true);
+  #endif
   
   return true;
   

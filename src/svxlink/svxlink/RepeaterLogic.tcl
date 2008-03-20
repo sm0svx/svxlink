@@ -267,9 +267,9 @@ proc repeater_idle {} {
 #
 proc checkPeriodicIdentify {} {
   variable repeater_is_up;
-  if {!$repeater_is_up} {
+  #if {!$repeater_is_up} {
     Logic::checkPeriodicIdentify;
-  }
+  #}
 }
 
 

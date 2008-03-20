@@ -60,7 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncSampleFifo.h"
+#include "SampleFifo.h"
 #include "AsyncFdWatch.h"
 #include "AsyncAudioIO.h"
 #include "AsyncAudioDevice.h"
@@ -438,7 +438,7 @@ int AudioDevice::samplesToWrite(void) const
 AudioDevice::AudioDevice(const string& dev_name)
   : dev_name(dev_name), use_count(0), current_mode(MODE_NONE), fd(-1),
     read_watch(0), write_watch(0), read_buf(0), device_caps(0), prebuf(true),
-    samples(0), last_frag(0), use_fillin(true)
+    samples(0), last_frag(0), use_fillin(false)
 {
   char *use_trigger_str = getenv("ASYNC_AUDIO_NOTRIGGER");
   use_trigger = (use_trigger_str != 0) && (atoi(use_trigger_str) == 0);
@@ -582,7 +582,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
     }
     samples_to_write = min(samples_to_write, max_samples_in_fifo);
     //printf("Samples to write from FIFO=%u. do_flush=%s\n", samples_to_write,
-    //		do_flush ? "true" : "false");
+    	//	do_flush ? "true" : "false");
     
     if (!do_flush)
     {

@@ -119,6 +119,12 @@ class ModuleTcl : public Module
     ~ModuleTcl(void);
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
+  protected:
+    virtual void resumeOutput(void);
+    virtual void allSamplesFlushed(void);
+    virtual int writeSamples(const float *samples, int count);
+    virtual void flushSamples(void);
+  
   private:
     void activateInit(void);
     void deactivateCleanup(void);

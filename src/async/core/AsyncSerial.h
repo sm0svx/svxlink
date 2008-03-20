@@ -171,9 +171,14 @@ class Serial : public SigC::Object
 
     /**
      * @brief 	Constuctor
-     * @param 	serial_port The serial port to use
+     * @param 	serial_port The device name of the serial port to use
+     *
+     * This is the constructor for the serial port class. It is possible
+     * to create multiple instances connected to the same serial port.
+     * For this to work, the given device name string must be exactly
+     * the same in all instances.
      */
-    Serial(const std::string& serial_port);
+    explicit Serial(const std::string& serial_port);
   
     /**
      * @brief 	Destructor
@@ -181,18 +186,18 @@ class Serial : public SigC::Object
     ~Serial(void);
     
     /**
-     * @brief 	Setup the serial port communications parameter
+     * @brief 	Setup the serial port communications parameters
      * @param 	speed 	    The serial speed to use
      * @param 	parity	    The parity to use (see @ref Serial::Parity)
      * @param 	bits  	    The number of bits in each serial word
      * @param 	stop_bits   The number of stop bits to use
      * @param 	flow  	    The type of flow control to use
      *	      	      	    (see @ref Serial::Flow)
-     * @return	Return \em true on success or else \em false on failue. On
+     * @return	Return \em true on success or else \em false on failure. On
      *	      	failure the global variable \em errno will be set to indicate
      *	      	the cause of the error.
      *
-     * This function is used to setup the serial communication parameters
+     * This function is used to setup the serial communications parameters
      * for the serial port. This must be done after calling the open
      * function.
      */
@@ -200,14 +205,17 @@ class Serial : public SigC::Object
       	      	   Flow flow);
     
     /**
-     * @brief 	Open the serial port using the previously defined parameters
+     * @brief 	Open the serial port
      * @return	Return \em true on success or else \em false on failue. On
      *	      	failure the global variable \em errno will be set to indicate
      *	      	the cause of the error.
      *
-     * Call this method to open the serial port using the parameters specified
-     * to the constructor. If the open method is called when the port is
-     * already opened, it just returns \em true without doing anything.
+     * Call this method to open the serial port. No special setup of the
+     * port is done during the open call. The old setup is saved and restored
+     * when the port is closed. To setup the port operating
+     * parameters, use the setParams method after calling open.
+     * If the open method is called when the port is already opened, it
+     * just returns \em true without doing anything.
      */
     bool open(void);
     
@@ -219,6 +227,8 @@ class Serial : public SigC::Object
      *
      * Use this method to close a previously opened serial port. If the port is
      * already closed, \em true is returned and nothing is done.
+     * If the port has been opened by multiple instances, it will not be
+     * closed until the last instance has closed it.
      */
     bool close(void);
     

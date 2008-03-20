@@ -1,14 +1,12 @@
 /**
 @file	 RepeaterLogic.h
-@brief   A_brief_description_for_this_file
+@brief   Contains a class that implements a repeater controller
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-04-24
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2004-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,10 +22,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example RepeaterLogic_demo.cpp
-An example of how to use the RepeaterLogic class
 */
 
 
@@ -116,19 +110,18 @@ class Module;
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
-@author Tobias Blomberg
+@brief	This class implements a repeater controller
+@author Tobias Blomberg / SM0SVX
 @date   2004-04-24
 
-A_detailed_class_description
-
-\include RepeaterLogic_demo.cpp
+This class implements a SvxLink logic core repeater controller. It adds
+"repeater behaviour" to the Logic base class.
 */
 class RepeaterLogic : public Logic
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
      */
     RepeaterLogic(Async::Config& cfg, const std::string& name);
   
@@ -145,17 +138,14 @@ class RepeaterLogic : public Logic
     bool initialize(void);
     
     virtual void processEvent(const std::string& event, const Module *module=0);
-    virtual void playFile(const std::string& path);
-    virtual void playSilence(int length);
-    virtual void playTone(int fq, int amp, int len);
-    virtual void moduleTransmitRequest(bool do_transmit);
     virtual bool activateModule(Module *module);
     virtual void dtmfDigitDetected(char digit, int duration);
 
 
   protected:
-    virtual void allTxSamplesFlushed(void);
-    virtual void remoteLogicTransmitRequest(bool do_tx);
+    virtual void allMsgsWritten(void);
+    virtual void audioStreamIdleStateChange(bool is_idle);
+    virtual bool getIdleState(void) const;
 
 
   private:
@@ -169,7 +159,6 @@ class RepeaterLogic : public Logic
     int      	    idle_timeout;
     Async::Timer    *idle_sound_timer;
     int       	    idle_sound_interval;
-    bool      	    repeating_enabled;
     bool      	    preserve_idle_state;
     int      	    required_sql_open_duration;
     char      	    open_on_dtmf;
@@ -181,13 +170,12 @@ class RepeaterLogic : public Logic
     int       	    short_sql_open_cnt;
     int       	    sql_flap_sup_min_time;
     int       	    sql_flap_sup_max_cnt;
+    bool      	    audio_stream_idle;
     
-    int audioReceived(float *samples, int count);
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);
     void setUp(bool up, bool ident=true);
     void squelchOpen(bool is_open);
-    //void txTimeout(void);
     void detectedTone(float fq);
     void playIdleSound(Async::Timer *t);
     void openOnSqlTimerExpired(Async::Timer *t);

@@ -51,11 +51,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
+#include <AsyncAudioSplitter.h>
+#include <AsyncAudioValve.h>
+#include <AsyncAudioSelector.h>
+#include <AsyncAudioFifo.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkDispatcher.h>
-
-#include <MsgHandler.h>
-#include <AudioPacer.h>
 
 
 /****************************************************************************
@@ -149,9 +150,8 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
       	      	      	       const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), dir(0), dir_refresh_timer(0),
     remote_activation(false), pending_connect_id(-1), last_message(""),
-    outgoing_con_pending(0), max_connections(1), max_qsos(1), talker(0),
-    squelch_is_open(false), state(STATE_NORMAL), cbc_timer(0),
-    listen_only(false)
+    max_connections(1), max_qsos(1), talker(0), squelch_is_open(false),
+    state(STATE_NORMAL), cbc_timer(0), splitter(0), listen_only_valve(0)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
@@ -166,6 +166,8 @@ ModuleEchoLink::~ModuleEchoLink(void)
 
 bool ModuleEchoLink::initialize(void)
 {
+  AudioFifo *output_fifo = 0;
+  
   if (!Module::initialize())
   {
     return false;
@@ -321,6 +323,24 @@ bool ModuleEchoLink::initialize(void)
   Dispatcher::instance()->incomingConnection.connect(
       slot(*this, &ModuleEchoLink::onIncomingConnection));
 
+    // Create audio pipe chain for audio transmitted to the remote EchoLink
+    // stations: <from core> -> Valve -> Splitter (-> QsoImpl ...)
+  listen_only_valve = new AudioValve;
+  AudioSink::setHandler(listen_only_valve);
+  
+  splitter = new AudioSplitter;
+  listen_only_valve->registerSink(splitter);
+
+    // Create audio pipe chain for audio received from the remove EchoLink
+    // stations: (QsoImpl -> ) Selector -> Fifo -> <to core>
+  selector = new AudioSelector;
+  
+  output_fifo = new AudioFifo(4000);
+  output_fifo->setOverwrite(true);
+  output_fifo->setPrebufSamples(2000);
+  selector->registerSink(output_fifo, true);
+  AudioSource::setHandler(output_fifo);
+  
   return true;
   
   init_failed:
@@ -337,22 +357,25 @@ bool ModuleEchoLink::initialize(void)
  *
  ****************************************************************************/
 
+void ModuleEchoLink::logicIdleStateChanged(bool is_idle)
+{
+  /*
+  printf("ModuleEchoLink::logicIdleStateChanged: is_idle=%s\n",
+      is_idle ? "TRUE" : "FALSE");
+  */
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
+  if (qsos.size() > 0)
+  {
+    list<QsoImpl*>::iterator it;
+    for (it=qsos.begin(); it!=qsos.end(); ++it)
+    {
+      (*it)->logicIdleStateChanged(is_idle);
+    }
+  }
+  
+  checkIdle();
+  
+} /* ModuleEchoLink::logicIdleStateChanged */
 
 
 
@@ -379,6 +402,16 @@ void ModuleEchoLink::moduleCleanup(void)
   delete cbc_timer;
   cbc_timer = 0;
   state = STATE_NORMAL;
+  
+  AudioSink::clearHandler();
+  delete splitter;
+  splitter = 0;
+  delete listen_only_valve;
+  listen_only_valve = 0;
+  
+  AudioSource::clearHandler();
+  delete selector;
+  selector = 0;
 } /* ModuleEchoLink::moduleCleanup */
 
 
@@ -398,7 +431,7 @@ void ModuleEchoLink::activateInit(void)
 {
   updateEventVariables();
   state = STATE_NORMAL;
-  listen_only = false;
+  listen_only_valve->setOpen(true);
 } /* activateInit */
 
 
@@ -417,11 +450,21 @@ void ModuleEchoLink::activateInit(void)
  */
 void ModuleEchoLink::deactivateCleanup(void)
 {
+  list<QsoImpl*> qsos_tmp(qsos);
+  list<QsoImpl*>::iterator it;
+  for (it=qsos_tmp.begin(); it!=qsos_tmp.end(); ++it)
+  {
+    destroyQsoObject(*it);
+  }
+  qsos.clear();
+
+  outgoing_con_pending.clear();
+
   remote_activation = false;
   delete cbc_timer;
   cbc_timer = 0;
   state = STATE_NORMAL;
-  listen_only = false;
+  listen_only_valve->setOpen(false);
 } /* deactivateCleanup */
 
 
@@ -439,6 +482,7 @@ void ModuleEchoLink::deactivateCleanup(void)
  * Bugs:      
  *----------------------------------------------------------------------------
  */
+#if 0
 bool ModuleEchoLink::dtmfDigitReceived(char digit, int duration)
 {
   //cout << "DTMF digit received in module " << name() << ": " << digit << endl;
@@ -446,6 +490,7 @@ bool ModuleEchoLink::dtmfDigitReceived(char digit, int duration)
   return false;
   
 } /* dtmfDigitReceived */
+#endif
 
 
 /*
@@ -482,7 +527,7 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
     {
       qsos.back()->disconnect();
     }
-    else
+    else if (outgoing_con_pending.empty())
     {
       deactivateMe();
     }
@@ -520,46 +565,8 @@ void ModuleEchoLink::squelchOpen(bool is_open)
   //printf("RX squelch is %s...\n", is_open ? "open" : "closed");
   
   squelch_is_open = is_open;
-  setIdle(!is_open && (qsos.size() == 0));
-  broadcastTalkerStatus();
-  
+  broadcastTalkerStatus();  
 } /* squelchOpen */
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    audioFromRx
- * Purpose:   Called by the core system when the audio is received.
- * Input:     samples - The received samples
- *    	      count   - The number of samples received
- * Output:    Returns the number of samples processed.
- * Author:    Tobias Blomberg / SM0SVX
- * Created:   2004-03-07
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-int ModuleEchoLink::audioFromRx(float *samples, int count)
-{
-  if (listen_only)
-  {
-    return count;
-  }
-
-    // FIXME: FIFO for saving samples if writing message
-  if (qsos.size() > 0)
-  {
-    list<QsoImpl*>::iterator it;
-    for (it=qsos.begin(); it!=qsos.end(); ++it)
-    {
-      // FIXME: Take care of the case where not all samples are written
-      (*it)->sendAudio(samples, count);
-    }
-  }
-  
-  return count;
-  
-} /* audioFromRx */
 
 
 /*
@@ -577,13 +584,18 @@ int ModuleEchoLink::audioFromRx(float *samples, int count)
  */
 void ModuleEchoLink::allMsgsWritten(void)
 {
-  if (outgoing_con_pending != 0)
+  if (!outgoing_con_pending.empty())
   {
-    outgoing_con_pending->connect();
+    list<QsoImpl*>::iterator it;
+    for (it=outgoing_con_pending.begin(); it!=outgoing_con_pending.end(); ++it)
+    {
+      (*it)->connect();
+    }
+    //outgoing_con_pending->connect();
     updateDescription();
     broadcastTalkerStatus();
+    outgoing_con_pending.clear();
   }
-  outgoing_con_pending = 0;
 } /* allMsgsWritten */
 
 
@@ -789,14 +801,15 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   updateEventVariables();
   qso->setRemoteCallsign(callsign);
   qso->setRemoteName(name);
-  qso->setLocalInfo(description);
   qso->stateChange.connect(slot(*this, &ModuleEchoLink::onStateChange));
   qso->chatMsgReceived.connect(slot(*this, &ModuleEchoLink::onChatMsgReceived));
   qso->isReceiving.connect(slot(*this, &ModuleEchoLink::onIsReceiving));
-  qso->audioReceived.connect(slot(*this, &ModuleEchoLink::audioFromRemote));
   qso->audioReceivedRaw.connect(
       	  slot(*this, &ModuleEchoLink::audioFromRemoteRaw));
-  qso->destroyMe.connect(slot(*this, &ModuleEchoLink::onDestroyMe));
+  qso->destroyMe.connect(slot(*this, &ModuleEchoLink::destroyQsoObject));
+  splitter->addSink(qso);
+  selector->addSource(qso);
+  selector->enableAutoSelect(qso, 0);
   
   if (qsos.size() > max_qsos)
   {
@@ -830,8 +843,8 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   
   updateDescription();
   
-  setIdle(false);
-
+  checkIdle();
+  
 } /* onIncomingConnection */
 
 
@@ -868,6 +881,9 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
       {
       	deactivateMe();
       }
+
+      broadcastTalkerStatus();
+      updateDescription();
       break;
     }
     
@@ -946,15 +962,17 @@ void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
       }
       broadcastTalkerStatus();
     }
-    transmit(is_receiving);
   }
 } /* onIsReceiving */
 
 
-void ModuleEchoLink::onDestroyMe(QsoImpl *qso)
+void ModuleEchoLink::destroyQsoObject(QsoImpl *qso)
 {
   //cout << qso->remoteCallsign() << ": Destroying QSO object" << endl;
   
+  splitter->removeSink(qso);
+  selector->removeSource(qso);
+      
   list<QsoImpl*>::iterator it = find(qsos.begin(), qsos.end(), qso);
   assert (it != qsos.end());
   qsos.erase(it);
@@ -964,33 +982,23 @@ void ModuleEchoLink::onDestroyMe(QsoImpl *qso)
   if (talker == qso)
   {
     talker = findFirstTalker();
-    transmit(talker != 0);
   }
 
-  if (outgoing_con_pending == qso)
+  it = find(outgoing_con_pending.begin(), outgoing_con_pending.end(), qso);
+  if (it != outgoing_con_pending.end())
   {
-    outgoing_con_pending = 0;
+    outgoing_con_pending.erase(it);
   }
 
   qso = 0;
   
-  broadcastTalkerStatus();
+  //broadcastTalkerStatus();
   
-  /*
-  if (remote_activation && (qsos.size() == 0))
-  {
-    deactivateMe();
-  }
-  */
+  //updateDescription();
   
-  updateDescription();
+  checkIdle();
   
-  if (qsos.empty() && !squelch_is_open)
-  {
-    setIdle(true);
-  }
-  
-} /* ModuleEchoLink::onDestroyMe */
+} /* ModuleEchoLink::destroyQsoObject */
 
 
 /*
@@ -1015,7 +1023,6 @@ void ModuleEchoLink::getDirectoryList(Timer *timer)
   if ((dir->status() == StationData::STAT_ONLINE) ||
       (dir->status() == StationData::STAT_BUSY))
   {
-    //cout << "Refreshing directory list...\n";
     dir->getCalls();
 
       /* FIXME: Do we really need periodic updates of the directory list ? */
@@ -1075,42 +1082,31 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     qsos.push_back(qso);
     updateEventVariables();    
     qso->setRemoteCallsign(station.callsign());
-    qso->setLocalInfo(description);
     qso->stateChange.connect(slot(*this, &ModuleEchoLink::onStateChange));
     qso->chatMsgReceived.connect(slot(*this, &ModuleEchoLink::onChatMsgReceived));
     qso->isReceiving.connect(slot(*this, &ModuleEchoLink::onIsReceiving));
-    qso->audioReceived.connect(slot(*this, &ModuleEchoLink::audioFromRemote));
     qso->audioReceivedRaw.connect(
       	    slot(*this, &ModuleEchoLink::audioFromRemoteRaw));
-    qso->destroyMe.connect(slot(*this, &ModuleEchoLink::onDestroyMe));
+    qso->destroyMe.connect(slot(*this, &ModuleEchoLink::destroyQsoObject));
+    splitter->addSink(qso);
+    selector->addSource(qso);
+    selector->enableAutoSelect(qso, 0);
   }
     
   stringstream ss;
   ss << "connecting_to " << qso->remoteCallsign();
   processEvent(ss.str());
-  outgoing_con_pending = qso;
+  outgoing_con_pending.push_back(qso);
   
-  setIdle(false);
+  checkIdle();
   
 } /* ModuleEchoLink::createOutgoingConnection */
 
 
-int ModuleEchoLink::audioFromRemote(float *samples, int count, QsoImpl *qso)
-{
-  if ((qso == talker) && !squelch_is_open)
-  {
-    audioFromModule(samples, count);
-  }
-    
-  return count;
-  
-} /* ModuleEchoLink::audioFromRemote */
-
-
-void ModuleEchoLink::audioFromRemoteRaw(QsoImpl::GsmVoicePacket *packet,
+void ModuleEchoLink::audioFromRemoteRaw(Qso::GsmVoicePacket *packet,
       	QsoImpl *qso)
 {
-  if (listen_only)
+  if (!listen_only_valve->isOpen())
   {
     return;
   }
@@ -1183,8 +1179,6 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
       	  << (*it)->remoteName() << "\n";
     }
   }
-  
-  //msg << endl;
   
   for (it=qsos.begin(); it!=qsos.end(); ++it)
   {
@@ -1279,26 +1273,17 @@ void ModuleEchoLink::connectByCallsign(string cmd)
     return;
   }
 
-  /*
-  if (cbc_stns.size() == 1)
+  ss << "cbc_list [list";
+  for (it = cbc_stns.begin(); it != cbc_stns.end(); ++it)
   {
-    createOutgoingConnection(cbc_stns.front());
+    ss << " " << (*it).callsign();
   }
-  else
-  */
-  {
-    ss << "cbc_list [list";
-    for (it = cbc_stns.begin(); it != cbc_stns.end(); ++it)
-    {
-      ss << " " << (*it).callsign();
-    }
-    ss << "]";
-    processEvent(ss.str());
-    state = STATE_CONNECT_BY_CALL;
-    delete cbc_timer;
-    cbc_timer = new Timer(60000);
-    cbc_timer->expired.connect(slot(*this, &ModuleEchoLink::cbcTimeout));
-  }
+  ss << "]";
+  processEvent(ss.str());
+  state = STATE_CONNECT_BY_CALL;
+  delete cbc_timer;
+  cbc_timer = new Timer(60000);
+  cbc_timer->expired.connect(slot(*this, &ModuleEchoLink::cbcTimeout));
 
 } /* ModuleEchoLink::connectByCallsign */
 
@@ -1490,11 +1475,11 @@ void ModuleEchoLink::handleCommand(const string& cmd)
     bool activate = (cmd[1] != '0');
     
     stringstream ss;
-    ss << "listen_only " << (listen_only ? "1 " : "0 ")
+    ss << "listen_only " << (!listen_only_valve->isOpen() ? "1 " : "0 ")
        << (activate ? "1" : "0");
     processEvent(ss.str());
     
-    listen_only = activate;
+    listen_only_valve->setOpen(!activate);
   }
   else
   {
@@ -1546,6 +1531,13 @@ void ModuleEchoLink::connectByNodeId(int node_id)
   }
 } /* ModuleEchoLink::connectByNodeId */
 
+
+void ModuleEchoLink::checkIdle(void)
+{
+  setIdle(qsos.empty() &&
+      	  logicIsIdle() &&
+	  (state == STATE_NORMAL));
+} /* ModuleEchoLink::checkIdle */
 
 
 /*

@@ -51,7 +51,7 @@ CPPPROGS      	=
 PRGSRC		= 
 
 # Libraries compiled in the project (in $(LIB)).
-PROJLIBS	= 
+PROJLIBS	= -lasyncaudio -lasynccpp
 
 # Libraries external to the project
 LIBS		= 
@@ -89,10 +89,13 @@ LIBNAME		= asyncaudio
 SHLIB_VERSION	= $(LIBASYNC)
 
 # Sources needed to build the library
-LIBSRC		= AudioSource.cpp AudioSink.cpp AudioProcessor.cpp \
-		  AudioCompressor.cpp AudioFilter.cpp fidlib.c \
-		  AsyncAudioDevice.cpp AsyncAudioIO.cpp AudioSplitter.cpp \
-		  AsyncAudioDelayLine.cpp AsyncAudioSelector.cpp
+LIBSRC		= AsyncAudioSource.cpp AsyncAudioSink.cpp \
+		  AsyncAudioProcessor.cpp AsyncAudioCompressor.cpp \
+		  AsyncAudioFilter.cpp fidlib.c AsyncAudioDevice.cpp \
+		  AsyncAudioIO.cpp AsyncAudioSplitter.cpp \
+		  AsyncAudioDelayLine.cpp AsyncAudioSelector.cpp \
+		  AsyncAudioMixer.cpp AsyncAudioFifo.cpp AsyncAudioPacer.cpp \
+		  SampleFifo.cpp AsyncAudioReader.cpp
 
 
 # Which libs are used by the DYNAMIC lib generated.
@@ -105,11 +108,13 @@ LIB_LIBS	= -lasynccore $(SIGC_LIBS)
 STATIC_LIBS   	= 
 
 # Includefiles to export. A softlink is created in $(INC).
-EXPINC		= AudioSource.h AudioSink.h AudioProcessor.h \
-		  AudioClipper.h AudioCompressor.h AudioFilter.h \
-		  SigCAudioSink.h  SigCAudioSource.h AsyncAudioIO.h \
-		  AudioSplitter.h AsyncAudioDelayLine.h AsyncAudioValve.h \
-		  AsyncAudioAmp.h AsyncAudioSelector.h AsyncAudioPassthrough.h
+EXPINC		= AsyncAudioSource.h AsyncAudioSink.h AsyncAudioProcessor.h \
+		  AsyncAudioClipper.h AsyncAudioCompressor.h \
+		  AsyncAudioFilter.h SigCAudioSink.h  SigCAudioSource.h \
+		  AsyncAudioIO.h AsyncAudioSplitter.h AsyncAudioDelayLine.h \
+		  AsyncAudioValve.h AsyncAudioAmp.h AsyncAudioSelector.h \
+		  AsyncAudioPassthrough.h AsyncAudioMixer.h AsyncAudioFifo.h \
+		  AsyncAudioDebugger.h AsyncAudioPacer.h AsyncAudioReader.h
 
 
 # Specify Qt header files here that you want to run the
