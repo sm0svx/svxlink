@@ -1,12 +1,12 @@
 /**
-@file	 Uplink.cpp
-@brief   Contains the base class for implementing a remote trx uplink
+@file	 TxUplink.h
+@brief   A simple uplink that just retransmits what comes into the receiver
 @author  Tobias Blomberg / SM0SVX
-@date	 2006-04-14
+@date	 2008-03-20
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2008  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+#ifndef TX_UPLINK_INCLUDED
+#define TX_UPLINK_INCLUDED
 
 
 /****************************************************************************
@@ -32,7 +34,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
 
 
 /****************************************************************************
@@ -40,6 +41,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Project Includes
  *
  ****************************************************************************/
+
+#include <AsyncConfig.h>
 
 
 
@@ -50,41 +53,38 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "Uplink.h"
-#include "NetUplink.h"
-#include "TxUplink.h"
 
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Forward declarations
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
 
 
+/****************************************************************************
+ *
+ * Namespace
+ *
+ ****************************************************************************/
+
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
+
+  
 
 /****************************************************************************
  *
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
  *
  ****************************************************************************/
 
@@ -98,115 +98,60 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
+/**
+@brief	A simple uplink that just retransmits what comes into the receiver
+@author Tobias Blomberg / SM0SVX
+@date   2008-03-20
 
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-Uplink *Uplink::create(Config &cfg, const string &name, Rx *rx, Tx *tx)
+This class is a simple uplink that just retransmit what comes into the
+connected receiver(s).
+*/
+class TxUplink : public Uplink
 {
-  Uplink *uplink = 0;
-  string uplink_type;
-  if (!cfg.getValue(name, "TYPE", uplink_type))
-  {
-    cerr << "*** ERROR: Config variable " << name << "/TYPE not set\n";
-    return 0;
-  }
+  public:
+    /**
+     * @brief 	Constuctor
+     * @param 	cfg A previously initialized config object
+     * @param 	name The name of the uplink
+     * @param 	rx The receiver
+     * @param 	tx The transmitter
+     */
+    TxUplink(Async::Config &cfg, const std::string &name, Rx *rx, Tx *tx);
   
-  if (uplink_type == "Net")
-  {
-    uplink = new NetUplink(cfg, name, rx, tx);
-  }
-  else if (uplink_type == "Tx")
-  {
-    uplink = new TxUplink(cfg, name, rx, tx);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown uplink type \"" << uplink_type
-      	 << "\". Legal values are: \"Net\"\n";
-    return 0;
-  }
+    /**
+     * @brief 	Destructor
+     */
+    ~TxUplink(void);
   
-  return uplink;
-  
-} /* Rx::create */
+    /**
+     * @brief 	Initialize the uplink
+     * @return	Return \em true on success or \em false on failure
+     */
+    virtual bool initialize(void);
+        
+  protected:
+    
+  private:
+    Async::Config &cfg;
+    std::string   name;
+    Rx	      	  *rx;
+    Tx	      	  *uplink_tx;
+    
+    TxUplink(const TxUplink&);
+    TxUplink& operator=(const TxUplink&);
+    
+};  /* class TxUplink */
 
 
+//} /* namespace */
 
-
-Uplink::Uplink(void)
-{
-  
-} /* Uplink::Uplink */
-
-
-Uplink::~Uplink(void)
-{
-  
-} /* Uplink::~Uplink */
-
-
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-
-
-
-
+#endif /* TX_UPLINK_INCLUDED */
 
 
 

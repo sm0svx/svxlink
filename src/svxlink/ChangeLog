@@ -45,6 +45,10 @@
 * Implemented remote TX. The new application "remotetrx" now handle
   both remote transmitters and receivers.
 
+* Implemented a simple TX uplink for the remotetrx application. This
+  make it possible to have remote receivers that is linked up to the
+  repeater site on an RF channel.
+
 
 
  0.9.0 -- 02 Jan 2008
