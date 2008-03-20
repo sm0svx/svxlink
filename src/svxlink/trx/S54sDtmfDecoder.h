@@ -1,8 +1,8 @@
 /**
-@file	 SpanDtmfDecoder.h
-@brief   This file contains a class that implements a sw DTMF decoder
+@file	 S54sDtmfDecoder.h
+@brief   This file contains a class that add support for the S54S interface
 @author  Tobias Blomberg / SM0SVX
-@date	 2003-04-16
+@date	 2008-02-04
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef SPAN_DTMF_DECODER_INCLUDED
-#define SPAN_DTMF_DECODER_INCLUDED
+#ifndef S54S_DTMF_DECODER_INCLUDED
+#define S54S_DTMF_DECODER_INCLUDED
 
 
 /****************************************************************************
@@ -35,7 +35,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
 
 
 /****************************************************************************
@@ -44,7 +43,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-//#include <AsyncAudioSink.h>
 
 
 /****************************************************************************
@@ -53,8 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "DtmfDecoder.h"
-#include "spandsp_tone_report_func_args.h"
+#include "HwDtmfDecoder.h"
 
 
 /****************************************************************************
@@ -63,6 +60,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class Serial;
+};
 
 
 /****************************************************************************
@@ -79,7 +80,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Defines & typedefs
  *
  ****************************************************************************/
-    
+
 
 
 /****************************************************************************
@@ -97,14 +98,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
- * @brief   This class implements a software DTMF decoder
+ * @brief   This class add support for the S54S interface board
  * @author  Tobias Blomberg, SM0SVX
- * @date    2007-05-01
+ * @date    2008-02-04
  *
- * This class implements a wrapper for the software DTMF decoder
- * implemented in the "spandsp" library.
+ * This class implements support for the hardware DTMF decoder on the
+ * S54S SvxLink interface board.
  */   
-class SpanDtmfDecoder : public DtmfDecoder
+class S54sDtmfDecoder : public HwDtmfDecoder
 {
   public:
     /**
@@ -112,56 +113,36 @@ class SpanDtmfDecoder : public DtmfDecoder
      * @param 	cfg A previously initialised configuration object
      * @param 	name The name of the receiver configuration section
      */
-    SpanDtmfDecoder(Async::Config &cfg, const std::string &name);
+    S54sDtmfDecoder(Async::Config &cfg, const std::string &name);
     
     /**
      * @brief 	Destructor
      */
-    virtual ~SpanDtmfDecoder(void);
-    
-    /**
-     * @brief 	Write samples into the DTMF decoder
-     * @param 	samples The buffer containing the samples
-     * @param 	count The number of samples in the buffer
-     * @return	Returns the number of samples that has been taken care of
-     */
-    virtual int writeSamples(const float *samples, int count);
-    
-    /**
-     * @brief 	Return the active digit
-     * @return	Return the active digit if any or a '?' if none.
-     */
-    char activeDigit(void) const
-    {
-      return (state != STATE_IDLE) ? last_detected_digit : '?';
-    }
+    virtual ~S54sDtmfDecoder(void);
 
+    /**
+     * @brief 	Initialize the DTMF decoder
+     * @returns Returns \em true if the initialization was successful or
+     *          else \em false.
+     *
+     * Call this function to initialize the DTMF decoder. It must be called
+     * before using it.
+     */
+    virtual bool initialize(void);
     
   protected:
     
   private:
-    class PrivateData;
-    typedef enum
-    {
-      STATE_IDLE, STATE_ACTIVE, STATE_HANG
-    } State;
+    Async::Serial   *serial;
     
-    PrivateData     *p;
-    char      	    last_detected_digit;
-    int       	    active_sample_cnt;
-    int       	    hang_sample_cnt;
-    State     	    state;
-    
-    static void toneReportCb(SPANDSP_TONE_REPORT_FUNC_ARGS);
+    void charactersReceived(char *buf, int len);
 
-    void toneReport(int code);
-
-};  /* class SpanDtmfDecoder */
+};  /* class S54sDtmfDecoder */
 
 
 //} /* namespace */
 
-#endif /* SPAN_DTMF_DECODER_INCLUDED */
+#endif /* S54S_DTMF_DECODER_INCLUDED */
 
 
 

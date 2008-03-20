@@ -63,7 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "SigLevDet.h"
-#include "SpanDtmfDecoder.h"
+#include "DtmfDecoder.h"
 #include "ToneDetector.h"
 #include "SquelchVox.h"
 #include "SquelchCtcss.h"
@@ -431,13 +431,19 @@ bool LocalRx::initialize(void)
   AudioSplitter *ctcss_splitter = new AudioSplitter;
   prev_src->registerSink(ctcss_splitter, true);
 
-  SpanDtmfDecoder *span_dtmf_dec = new SpanDtmfDecoder;
-  span_dtmf_dec->setHangtime(dtmf_hangtime);
-  span_dtmf_dec->digitActivated.connect(
-        slot(*this, &LocalRx::dtmfDigitActivated));
-  span_dtmf_dec->digitDeactivated.connect(
+  DtmfDecoder *dtmf_dec = DtmfDecoder::create(cfg, name());
+  if ((dtmf_dec == 0) || !dtmf_dec->initialize())
+  {
+    // FIXME: Cleanup?
+    return false;
+  }
+
+  //SpanDtmfDecoder *span_dtmf_dec = new SpanDtmfDecoder;
+  //span_dtmf_dec->setHangtime(dtmf_hangtime);
+  dtmf_dec->digitActivated.connect(slot(*this, &LocalRx::dtmfDigitActivated));
+  dtmf_dec->digitDeactivated.connect(
       slot(*this, &LocalRx::dtmfDigitDeactivated));
-  ctcss_splitter->addSink(span_dtmf_dec, true);
+  ctcss_splitter->addSink(dtmf_dec, true);
 
   sql_valve = new SigCAudioValve;
   sql_valve->setOpen(false);
