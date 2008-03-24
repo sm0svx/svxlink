@@ -10,7 +10,7 @@ the SvxLink core is running.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -155,12 +155,6 @@ class LocalRx : public Rx
     void mute(bool do_mute);
     
     /**
-     * @brief 	Check the squelch status
-     * @return	Return \em true if the squelch is open or else \em false
-     */
-    //bool squelchIsOpen(void) const;
-    
-    /**
      * @brief 	Call this function to add a tone detector to the RX
      * @param 	fq The tone frequency to detect
      * @param 	bw The bandwidth of the detector
@@ -191,7 +185,6 @@ class LocalRx : public Rx
     Async::AudioIO    	      	*audio_io;
     bool      	      	      	is_muted;
     Squelch   	      	      	*squelch;
-    //std::list<ToneDurationDet*> tone_detectors;
     SigLevDet 	      	      	*siglevdet;
     float     	      	      	siglev_offset;
     float     	      	      	siglev_slope;

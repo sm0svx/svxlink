@@ -276,15 +276,6 @@ LocalRx::LocalRx(Config &cfg, const std::string& name)
 
 LocalRx::~LocalRx(void)
 {
-  /*
-  list<ToneDurationDet*>::iterator it;
-  for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
-  {
-    delete *it;
-  }
-  tone_detectors.clear();
-  */
-  
   delete audio_io;  // This will delete the whole chain of audio objects
 } /* LocalRx::~LocalRx */
 
@@ -415,12 +406,6 @@ bool LocalRx::initialize(void)
   squelch->squelchOpen.connect(slot(*this, &LocalRx::onSquelchOpen));
   splitter->addSink(squelch, true);
   
-  //DtmfDecoder *dtmf_dec = new DtmfDecoder;
-  //dtmf_dec->digitActivated.connect(slot(*this, &LocalRx::dtmfDigitActivated));
-  //dtmf_dec->digitDeactivated.connect(
-  //    slot(*this, &LocalRx::dtmfDigitDeactivated));
-  //splitter->addSink(dtmf_dec, true);
-  
   tone_dets = new AudioSplitter;
   splitter->addSink(tone_dets, true);
   
@@ -438,8 +423,6 @@ bool LocalRx::initialize(void)
     return false;
   }
 
-  //SpanDtmfDecoder *span_dtmf_dec = new SpanDtmfDecoder;
-  //span_dtmf_dec->setHangtime(dtmf_hangtime);
   dtmf_dec->digitActivated.connect(slot(*this, &LocalRx::dtmfDigitActivated));
   dtmf_dec->digitDeactivated.connect(
       slot(*this, &LocalRx::dtmfDigitDeactivated));
@@ -449,7 +432,6 @@ bool LocalRx::initialize(void)
   sql_valve->setOpen(false);
   sql_valve->sigAllSamplesFlushed.connect(
       slot(*this, &LocalRx::allSamplesFlushed));
-  //prev_src->registerSink(sql_valve, true);
   ctcss_splitter->addSink(sql_valve, true);
   prev_src = sql_valve;
   
@@ -461,13 +443,6 @@ bool LocalRx::initialize(void)
   }
   
   setHandler(prev_src);
-  
-  #if 0
-  SigCAudioSinkNoFlow *sigc_sink = new SigCAudioSinkNoFlow;
-  //sigc_sink->sigWriteSamples.connect(slot(*this, &LocalRx::audioRead));
-  sigc_sink->sigWriteSamples.connect(audioReceived.slot());
-  prev_src->registerSink(sigc_sink, true);
-  #endif
   
   return true;
   
@@ -508,14 +483,6 @@ void LocalRx::mute(bool do_mute)
 } /* LocalRx::mute */
 
 
-#if 0
-bool LocalRx::squelchIsOpen(void) const
-{
-  return squelch->isOpen();
-} /* LocalRx::squelchIsOpen */
-#endif
-
-
 bool LocalRx::addToneDetector(float fq, int bw, float thresh,
       	      	      	      int required_duration)
 {
@@ -526,7 +493,6 @@ bool LocalRx::addToneDetector(float fq, int bw, float thresh,
   det->setSnrThresh(thresh);
   det->detected.connect(toneDetected.slot());
   
-  //tone_detectors.push_back(det);
   tone_dets->addSink(det, true);
   
   return true;
@@ -543,16 +509,11 @@ float LocalRx::signalStrength(void) const
 void LocalRx::reset(void)
 {
   mute(true);
-  
-  /*
-  list<ToneDurationDet*>::iterator it;
-  for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
-  {
-    delete *it;
-  }
-  tone_detectors.clear();
-  */
   tone_dets->removeAllSinks();
+  if (delay != 0)
+  {
+    delay->mute(false);
+  }
 } /* LocalRx::reset */
 
 
@@ -564,88 +525,12 @@ void LocalRx::reset(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
 
 /****************************************************************************
  *
  * Private member functions
  *
  ****************************************************************************/
-
-#if 0
-int LocalRx::audioRead(float *samples, int count)
-{
-  //bool was_open = squelch->isOpen();
-  
-  //siglevdet->writeSamples(samples, count);
-  
-  /*
-  squelch->audioIn(samples, count);
-  if (!was_open && squelch->isOpen())
-  {
-    setSquelchState(true);
-    siglevdet->reset();
-  }
-  */
-  
-  //dtmf_dec->processSamples(samples, count);
-  
-  /*
-  list<ToneDurationDet*>::iterator it;
-  for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
-  {
-    (*it)->writeSamples(samples, count);
-  }
-  */
-  
-  if (is_muted)
-  {
-    printf("*** Gaaaahhh. Audio sent while muted. Not good...\n");
-  }
-  
-  //if (/*squelch->isOpen() &&*/ !is_muted)
-  //{
-    /*
-    float filtered[count];
-    for (int i=0; i<count; ++i)
-    {
-      filtered[i] = samples[i];
-    }
-    highpassFilter(filtered, count);
-    count = audioReceived(filtered, count);
-    */
-    
-    //count = audioReceived(samples, count);
-  //}
-  
-  /*
-  if (was_open && !squelch->isOpen())
-  {
-    setSquelchState(false);
-  }
-  */
-  
-  return count;
-  
-} /* LocalRx::audioRead */
-#endif
-
 
 void LocalRx::dtmfDigitActivated(char digit)
 {
@@ -660,7 +545,10 @@ void LocalRx::dtmfDigitActivated(char digit)
 void LocalRx::dtmfDigitDeactivated(char digit, int duration_ms)
 {
   //printf("DTMF digit %c deactivated. Duration = %d ms\n", digit, duration_ms);
-  dtmfDigitDetected(digit, duration_ms);
+  if (!is_muted)
+  {
+    dtmfDigitDetected(digit, duration_ms);
+  }
   if (mute_dtmf)
   {
     delay->mute(false, DTMF_MUTING_POST);
@@ -679,13 +567,13 @@ void LocalRx::onSquelchOpen(bool is_open)
 {
   if (is_open)
   {
-    setSquelchState(true);
     if (delay != 0)
     {
       delay->clear();
     }
     if (!is_muted)
     {
+      setSquelchState(true);
       sql_valve->setOpen(true);
     }
   }
