@@ -509,19 +509,17 @@ int Qso::writeSamples(const float *samples, int count)
 
 void Qso::flushSamples(void)
 {
-  if (state != STATE_CONNECTED)
+  if (state == STATE_CONNECTED)
   {
-    return;
-  }
-  
-  bool success = true;
-  if (send_buffer_cnt > 0)
-  {
-    memset(send_buffer + send_buffer_cnt, 0,
-	sizeof(send_buffer) - sizeof(*send_buffer) * send_buffer_cnt);
-    send_buffer_cnt = SEND_BUFFER_SIZE;
-    success = sendGsmPacket();
-    send_buffer_cnt = 0;
+    bool success = true;
+    if (send_buffer_cnt > 0)
+    {
+      memset(send_buffer + send_buffer_cnt, 0,
+	  sizeof(send_buffer) - sizeof(*send_buffer) * send_buffer_cnt);
+      send_buffer_cnt = SEND_BUFFER_SIZE;
+      success = sendGsmPacket();
+      send_buffer_cnt = 0;
+    }
   }
   
   sourceAllSamplesFlushed();
