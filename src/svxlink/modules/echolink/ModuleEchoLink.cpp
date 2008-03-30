@@ -454,9 +454,11 @@ void ModuleEchoLink::deactivateCleanup(void)
   list<QsoImpl*>::iterator it;
   for (it=qsos_tmp.begin(); it!=qsos_tmp.end(); ++it)
   {
-    destroyQsoObject(*it);
+    if ((*it)->currentState() != Qso::STATE_DISCONNECTED)
+    {
+      (*it)->disconnect();
+    }
   }
-  qsos.clear();
 
   outgoing_con_pending.clear();
 
