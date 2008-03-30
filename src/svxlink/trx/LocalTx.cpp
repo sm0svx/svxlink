@@ -64,7 +64,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioValve.h>
 #include <AsyncAudioPassthrough.h>
-#include <AsyncAudioDebugger.h>
 #include <AsyncAudioFifo.h>
 
 
@@ -109,8 +108,8 @@ using namespace SigC;
 class SineGenerator : public Async::AudioSource
 {
   public:
-    explicit SineGenerator(const string& audio_dev)
-      : audio_io(audio_dev), pos(0), fq(0.0), level(0.0),
+    explicit SineGenerator(const string& audio_dev, int channel)
+      : audio_io(audio_dev, channel), pos(0), fq(0.0), level(0.0),
       	sample_rate(0)
     {
       sample_rate = audio_io.sampleRate();
@@ -440,6 +439,14 @@ bool LocalTx::initialize(void)
     return false;
   }
   
+  if (!cfg.getValue(name, "AUDIO_CHANNEL", value))
+  {
+    cerr << "*** ERROR: Config variable " << name
+         << "/AUDIO_CHANNEL not set\n";
+    return false;
+  }
+  int audio_channel = atoi(value.c_str());
+
   string ptt_port;
   if (!cfg.getValue(name, "PTT_PORT", ptt_port))
   {
@@ -515,9 +522,9 @@ bool LocalTx::initialize(void)
     dtmf_tone_amp = min(atoi(value.c_str()), 0);
   }
   
-  audio_io = new AudioIO(audio_dev);
+  audio_io = new AudioIO(audio_dev, audio_channel);
   
-  sine_gen = new SineGenerator(audio_dev);
+  sine_gen = new SineGenerator(audio_dev, audio_channel);
   
   if (cfg.getValue(name, "CTCSS_FQ", value))
   {

@@ -159,7 +159,7 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
   
   //sigc_src = new SigCAudioSource;
   
-  audio_io = new AudioIO("/dev/dsp");
+  audio_io = new AudioIO("/dev/dsp", 0);
   full_duplex = audio_io->isFullDuplexCapable();
   if (full_duplex)
   {

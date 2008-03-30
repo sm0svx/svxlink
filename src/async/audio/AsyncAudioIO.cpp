@@ -137,9 +137,10 @@ using namespace Async;
 
 
 
-AudioIO::AudioIO(const string& dev_name)
+AudioIO::AudioIO(const string& dev_name, int channel)
   : io_mode(MODE_NONE), audio_dev(0), write_fifo(0), do_flush(true),
-    flush_timer(0), is_flushing(false), lead_in_pos(0), m_gain(1.0)
+    flush_timer(0), is_flushing(false), lead_in_pos(0), m_gain(1.0),
+    m_channel(channel)
 {
   audio_dev = AudioDevice::registerAudioIO(dev_name, this);
   sample_rate = audio_dev->sampleRate();
@@ -189,10 +190,12 @@ bool AudioIO::open(Mode mode)
   if (open_ok)
   {
     io_mode = mode;
+    /*
     if ((io_mode == MODE_RD) || (io_mode == MODE_RDWR))
     {
       read_con = audio_dev->audioRead.connect(slot(*this, &AudioIO::audioRead));
     }
+    */
   }
   
   return open_ok;

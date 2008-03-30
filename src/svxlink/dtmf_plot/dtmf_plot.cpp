@@ -229,7 +229,7 @@ int main(int argc, char **argv)
   overtone_plot = new BarPlot(plot_win->overtone_plot, end_ko-start_ko+1);
   overtone_plot->setHighlight(dtmf_ko);
   
-  AudioIO audio_io("/dev/dsp");
+  AudioIO audio_io("/dev/dsp", 0);
   if (!audio_io.open(AudioIO::MODE_RD))
   {
     printf("*** ERROR: Could not open audio device /dev/dsp\n");

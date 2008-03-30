@@ -192,7 +192,7 @@ class AudioDevice : public SigC::Object
      * @param 	buf   A buffer containing the read samples
      * @param 	count The number of samples in the buffer
      */
-    SigC::Signal2<int, float *, int> audioRead;
+    //SigC::Signal2<int, float *, int> audioRead;
 
     /**
      * @brief 	A signal that is emitted when the write buffer is full
@@ -217,10 +217,10 @@ class AudioDevice : public SigC::Object
     
   private:
     static const int  RATE = 8000;
-    static const int  CHANNELS = 1;
+    static const int  CHANNELS = 2;
     //static const int  SIZE = 16;
-    static const int  FRAG_COUNT = 2;    // 16 frags ~ one second
-    static const int  FRAG_SIZE_LOG2 = 9; // 512 bytes/frag (256 samples)
+    static const int  FRAG_COUNT = 2;
+    static const int  FRAG_SIZE_LOG2 = 10; // 1024 bytes/frag (512 samples)
     static const int  BUF_FRAG_COUNT = 4;
     static std::map<std::string, AudioDevice*>  devices;
     

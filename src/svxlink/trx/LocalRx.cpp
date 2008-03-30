@@ -282,12 +282,22 @@ LocalRx::~LocalRx(void)
 
 bool LocalRx::initialize(void)
 {
+  string value;
+
   string audio_dev;
   if (!cfg.getValue(name(), "AUDIO_DEV", audio_dev))
   {
     cerr << "*** ERROR: Config variable " << name() << "/AUDIO_DEV not set\n";
     return false;
   }
+  
+  if (!cfg.getValue(name(), "AUDIO_CHANNEL", value))
+  {
+    cerr << "*** ERROR: Config variable " << name()
+         << "/AUDIO_CHANNEL not set\n";
+    return false;
+  }
+  int audio_channel = atoi(value.c_str());
   
   string sql_det_str;
   if (!cfg.getValue(name(), "SQL_DET", sql_det_str))
@@ -315,7 +325,6 @@ bool LocalRx::initialize(void)
     return false;
   }
   
-  string value;
   if (cfg.getValue(name(), "SIGLEV_OFFSET", value))
   {
     siglev_offset = atof(value.c_str());
@@ -371,7 +380,7 @@ bool LocalRx::initialize(void)
     dtmf_hangtime = atoi(value.c_str());
   }
   
-  audio_io = new AudioIO(audio_dev);
+  audio_io = new AudioIO(audio_dev, audio_channel);
   AudioSource *prev_src = audio_io;
   
   if (preamp_gain != 0)

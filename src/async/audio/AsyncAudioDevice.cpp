@@ -9,7 +9,7 @@ devices.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2004 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -319,7 +319,8 @@ bool AudioDevice::open(Mode mode)
     assert(write_watch != 0);
     write_watch->activity.connect(
       	    slot(*this, &AudioDevice::writeSpaceAvailable));
-    write_watch->setEnabled(false);
+    //printf("%d: watch->setEnabled(false)\n", __LINE__);
+    //write_watch->setEnabled(false);
     arg |= PCM_ENABLE_OUTPUT;
   }
   
@@ -380,6 +381,7 @@ void AudioDevice::audioToWriteAvailable(void)
   }
   */
   
+  //printf("%d: watch->setEnabled(true)\n", __LINE__);
   write_watch->setEnabled(true);
   
 } /* AudioDevice::audioToWriteAvailable */
@@ -391,6 +393,7 @@ void AudioDevice::flushSamples(void)
   prebuf = false;
   if (write_watch != 0)
   {
+    //printf("%d: watch->setEnabled(true)\n", __LINE__);
     write_watch->setEnabled(true);
   }
 } /* AudioDevice::flushSamples */
@@ -410,7 +413,8 @@ int AudioDevice::samplesToWrite(void) const
     return -1;
   }
   
-  return (info.fragsize * (info.fragstotal - info.fragments)) / sizeof(int16_t);
+  return (info.fragsize * (info.fragstotal - info.fragments)) /
+         (sizeof(int16_t) * CHANNELS);
   
 } /* AudioDevice::samplesToWrite */
 
@@ -423,18 +427,6 @@ int AudioDevice::samplesToWrite(void) const
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
 AudioDevice::AudioDevice(const string& dev_name)
   : dev_name(dev_name), use_count(0), current_mode(MODE_NONE), fd(-1),
     read_watch(0), write_watch(0), read_buf(0), device_caps(0), prebuf(true),
@@ -470,18 +462,6 @@ AudioDevice::~AudioDevice(void)
  ****************************************************************************/
 
 
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
 void AudioDevice::audioReadHandler(FdWatch *watch)
 {
   audio_buf_info info;
@@ -503,13 +483,27 @@ void AudioDevice::audioReadHandler(FdWatch *watch)
       perror("read in AudioDevice::audioReadHandler");
       return;
     }
+    cnt /= sizeof(int16_t); // Convert cnt to number of samples
     
-    //printf("Read %d samples\n", cnt / sizeof(int16_t));
-    for (unsigned i=0; i<cnt/sizeof(int16_t); ++i)
+    //printf("Read %d samples\n", cnt);
+    
+    for (int ch=0; ch<CHANNELS; ++ch)
     {
-      samples[i] = static_cast<float>(read_buf[i]) / 32768.0;
+      for (int i=ch; i<cnt; i += CHANNELS)
+      {
+	samples[i/CHANNELS] = static_cast<float>(read_buf[i]) / 32768.0;
+      }
+
+      list<AudioIO*>::iterator it;
+      for (it=aios.begin(); it!=aios.end(); ++it)
+      {
+	if ((*it)->channel() == ch)
+	{
+      	  (*it)->audioRead(samples, cnt / CHANNELS);
+	}
+      }
     }
-    audioRead(samples, cnt/sizeof(int16_t));
+    //audioRead(samples, cnt/sizeof(int16_t));
   }
     
 } /* AudioDevice::audioReadHandler */
@@ -574,15 +568,16 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
 		     (fifo.samplesInFifo(true) <= samples_to_write));
 	if (!(*it)->doFlush())
 	{
-	  samples_to_write = min(samples_to_write, fifo.samplesInFifo(true));
+	  samples_to_write = min(samples_to_write,
+	      	      	      	 fifo.samplesInFifo(true) * CHANNELS);
 	}
 	max_samples_in_fifo = max(max_samples_in_fifo,
 	      	      	      	  fifo.samplesInFifo(true));
       }
     }
-    samples_to_write = min(samples_to_write, max_samples_in_fifo);
+    samples_to_write = min(samples_to_write, max_samples_in_fifo * CHANNELS);
     //printf("Samples to write from FIFO=%u. do_flush=%s\n", samples_to_write,
-    	//	do_flush ? "true" : "false");
+    //		do_flush ? "true" : "false");
     
     if (!do_flush)
     {
@@ -597,6 +592,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
 	}
 	else
 	{
+	  //printf("%d: watch->setEnabled(false)\n", __LINE__);
       	  watch->setEnabled(false);
 	}
 	return;
@@ -615,6 +611,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       }
       else
       {
+	//printf("%d: watch->setEnabled(false)\n", __LINE__);
       	watch->setEnabled(false);
       	return;
       }
@@ -626,22 +623,25 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
 	if (((*it)->mode() == AudioIO::MODE_WR) ||
       	    ((*it)->mode() == AudioIO::MODE_RDWR))
 	{
+	  int channel = (*it)->channel();
 	  float tmp[sizeof(buf)/sizeof(*buf)];
-	  int samples_read = (*it)->readSamples(tmp, samples_to_write);
+	  int samples_read =
+	      	  (*it)->readSamples(tmp, samples_to_write / CHANNELS);
 	  for (int i=0; i<samples_read; ++i)
 	  {
-	    float sample = 32767.0 * tmp[i] + buf[i];
+	    int buf_pos = i * CHANNELS + channel;
+	    float sample = 32767.0 * tmp[i] + buf[buf_pos];
 	    if (sample > 32767)
 	    {
-	      buf[i] = 32767;
+	      buf[buf_pos] = 32767;
 	    }
 	    else if (sample < -32767)
 	    {
-	      buf[i] = -32767;
+	      buf[buf_pos] = -32767;
 	    }
 	    else
 	    {
-      	      buf[i] = static_cast<int16_t>(sample);
+      	      buf[buf_pos] = static_cast<int16_t>(sample);
 	    }
 	  }
 	}
@@ -693,6 +693,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
   } while(samples_to_write == fragments * fragsize);
   
   //printf("Enabling audio device file descriptor watch\n");
+  //printf("%d: watch->setEnabled(true)\n", __LINE__);
   watch->setEnabled(true);
   
 } /* AudioDevice::writeSpaceAvailable */
@@ -722,13 +723,6 @@ void AudioDevice::closeDevice(void)
     fd = -1;
   }
 } /* AudioDevice::closeDevice */
-
-
-
-
-
-
-
 
 
 /*

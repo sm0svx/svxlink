@@ -9,7 +9,7 @@ device. See usage instruction in the class documentation.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2008 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -147,7 +147,7 @@ class AudioIO
     /**
      * @brief Default constructor
      */
-    AudioIO(const std::string& dev_name);
+    AudioIO(const std::string& dev_name, int channel);
     
     /**
      * @brief Destructor
@@ -249,6 +249,12 @@ class AudioIO
      */
     int sampleRate(void) const { return sample_rate; }
     
+    /**
+     * @brief   Return the audio channel used
+     * @return  Returns the audio channel that was given to the constructor
+     */
+    int channel(void) const { return m_channel; }
+    
     void resumeOutput(void) {}
     
     void allSamplesFlushed(void) {}
@@ -311,6 +317,7 @@ class AudioIO
     int       	      lead_in_pos;
     float     	      m_gain;
     int       	      sample_rate;
+    int       	      m_channel;
 
     void audioReadHandler(Async::FdWatch *watch);
     void flushSamplesInDevice(int extra_samples=0);

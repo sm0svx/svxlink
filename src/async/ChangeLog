@@ -14,6 +14,9 @@
   the buffering in the fifo. When disabled, this will effectively just make
   it a passthrough.
 
+* Now possible to open left/right stereo channels as separate mono
+  channels.
+
 
 
  0.15.0 -- 02 Jan 2008
