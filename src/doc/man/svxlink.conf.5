@@ -425,6 +425,10 @@ Always "Local" for a local receiver.
 .B AUDIO_DEV
 Specify the audio device to use. Normally /dev/dsp.
 .TP
+.B AUDIO_CHANNEL
+Specify the audio channel to use. SvxLink can use the left/right stereo
+channels as two mono channels. Legal values are 0 or 1.
+.TP
 .B SQL_DET
 Specify the type of squelch detector to use. Possible values are: VOX, CTCSS or SERIAL.
 The VOX squelch detector determines if there is a signal present by calculating a mean
@@ -623,6 +627,10 @@ Always "Local" for a local transmitter.
 .TP
 .B AUDIO_DEV
 Specify the audio device to use. Normally /dev/dsp. 
+.TP
+.B AUDIO_CHANNEL
+Specify the audio channel to use. SvxLink can use the left/right stereo
+channels as two mono channels. Legal values are 0 or 1.
 .TP
 .B PTT_PORT
 Specify the serial port that the PTT is connected to. E.g. /dev/ttyS0 for COM1.
