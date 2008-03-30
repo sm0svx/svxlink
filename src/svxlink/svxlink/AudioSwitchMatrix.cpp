@@ -146,7 +146,7 @@ void AudioSwitchMatrix::addSource(const string& source_name,
 void AudioSwitchMatrix::removeSource(const string& source_name)
 {
   assert(sources.count(source_name) == 1);
-  
+
   SinkMap::iterator it;
   for (it=sinks.begin(); it!=sinks.end(); ++it)
   {
@@ -158,8 +158,14 @@ void AudioSwitchMatrix::removeSource(const string& source_name)
 
   delete sources[source_name].splitter;
   sources.erase(source_name);
-  
+
 } /* AudioSwitchMatrix::removeSource */
+
+
+bool AudioSwitchMatrix::sourceIsAdded(const std::string& source_name)
+{
+  return sources.count(source_name) > 0;
+} /* AudioSwitchMatrix::sourceIsAdded */
 
 
 void AudioSwitchMatrix::addSink(const string& sink_name, AudioSink *sink)
@@ -186,7 +192,7 @@ void AudioSwitchMatrix::addSink(const string& sink_name, AudioSink *sink)
 void AudioSwitchMatrix::removeSink(const string& sink_name)
 {
   assert(sinks.count(sink_name) == 1);
-  
+
   AudioSelector *selector = sinks[sink_name].selector;
 
   map<string, AudioPassthrough *>::iterator it;
@@ -205,6 +211,12 @@ void AudioSwitchMatrix::removeSink(const string& sink_name)
   sinks.erase(sink_name);
   
 } /* AudioSwitchMatrix::removeSink */
+
+
+bool AudioSwitchMatrix::sinkIsAdded(const std::string& sink_name)
+{
+  return sinks.count(sink_name) > 0;
+} /* AudioSwitchMatrix::sinkIsAdded */
 
 
 void AudioSwitchMatrix::connect(const string& source_name,

@@ -146,6 +146,13 @@ class AudioSwitchMatrix
      * @param 	source_name The name of the source to remove
      */
     void removeSource(const std::string& source_name);
+
+    /**
+     * @brief   Check if the given source is added or not
+     * @param 	source_name The name of the source
+     * @return  Return \em true if the source is added or \em false if it's not
+     */
+    bool sourceIsAdded(const std::string& source_name);
   
     /**
      * @brief 	Add an audio sink to the switch matrix
@@ -160,6 +167,13 @@ class AudioSwitchMatrix
      */
     void removeSink(const std::string& sink_name);
 
+    /**
+     * @brief   Check if the given sink is added or not
+     * @param 	sink_name The name of the sink
+     * @return  Return \em true if the sink is added or \em false if it's not
+     */
+    bool sinkIsAdded(const std::string& sink_name);
+  
     /**
      * @brief 	Connect a registered source to one of the registered sinks
      * @param 	source_name The name of the source to connect
