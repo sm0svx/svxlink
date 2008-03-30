@@ -1238,8 +1238,14 @@ void Logic::cleanup(void)
   delete rgr_sound_timer;     	      rgr_sound_timer = 0;
   delete every_minute_timer;  	      every_minute_timer = 0;
   
-  audio_switch_matrix.removeSource(name());
-  audio_switch_matrix.removeSink(name());
+  if (audio_switch_matrix.sourceIsAdded(name()))
+  {
+    audio_switch_matrix.removeSource(name());
+  }
+  if (audio_switch_matrix.sinkIsAdded(name()))
+  {
+    audio_switch_matrix.removeSink(name());
+  }
   
   delete msg_handler; 	      	      msg_handler = 0;
   delete m_rx;        	      	      m_rx = 0;
