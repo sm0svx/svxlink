@@ -175,7 +175,7 @@ class SigCAudioValve : public AudioValve, public SigC::Object
   public:
     void allSamplesFlushed(void)
     {
-      printf("SigCAudioValve::allSamplesFlushed\n");
+      //printf("SigCAudioValve::allSamplesFlushed\n");
       AudioValve::allSamplesFlushed();
       sigAllSamplesFlushed();
     }
