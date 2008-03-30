@@ -23,7 +23,7 @@
 PROGS		= 
 
 # C++ programs to compile
-CPPPROGS      	= siglevdetcal
+CPPPROGS      	= $(BIN)/siglevdetcal
 
 # Sources other than the main files
 PRGSRC		= 
