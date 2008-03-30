@@ -58,25 +58,39 @@ int main(int argc, char **argv)
     cerr << "Usage: siglevdetcal <config file> <receiver section>\n";
     exit(1);
   }
+  string cfg_file(argv[1]);
+  string rx_name(argv[2]);
   
   CppApplication app;
   
-  if (!cfg.open(argv[1]))
+  if (!cfg.open(cfg_file))
   {
-    cerr << "*** ERROR: Could not open config file \"" << argv[1] << "\"\n";
+    cerr << "*** ERROR: Could not open config file \"" << cfg_file << "\"\n";
     exit(1);
   }
   
-  rx = Rx::create(cfg, argv[2]);
+  rx = Rx::create(cfg, rx_name);
   if ((rx == 0) || !rx->initialize())
   {
-    cerr << "*** ERROR: Could not initialize receiver \"" << argv[2] << "\"\n";
+    cerr << "*** ERROR: Could not initialize receiver \"" << rx_name << "\"\n";
     exit(1);
   }
   rx->squelchOpen.connect(slot(&squelchOpen));
   rx->mute(false);
   
-  cout << "--- Press the PTT\n";
+  string value;
+  if (cfg.getValue(rx_name, "SIGLEV_SLOPE", value))
+  {
+    cout << "*** WARNING: Configuration variable " << rx_name
+         << "/SIGLEV_SLOPE is set. Please remove it.\n\n";
+  }
+  if (cfg.getValue(rx_name, "SIGLEV_OFFSET", value))
+  {
+    cout << "*** WARNING: Configuration variable " << rx_name
+         << "/SIGLEV_OFFSET is set. Please remove it.\n\n";
+  }
+  
+  cout << "--- Press the PTT (" << ITERATIONS << " more times)\n";
   
   app.exec();
   
