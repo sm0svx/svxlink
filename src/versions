@@ -22,3 +22,6 @@ MODULE_DTMF_REPEATER=0.1.1rc2
 # Version for the RemoteTrx application
 REMOTE_TRX=0.1.0rc2
 
+# Version for the signal level calibration utility
+SIGLEV_DET_CAL=0.1.0rc1
+
