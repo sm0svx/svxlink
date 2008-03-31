@@ -18,6 +18,8 @@ static float open_close_sum = 0.0f;
 static float last_open_siglev = 0.0f;
 static float close_sum = 0.0f;
 static int open_close_cnt = 0;
+static float siglev_slope = 1.0;
+static float siglev_offset = 0.0;
 
 
 void squelchOpen(bool is_open)
@@ -33,10 +35,20 @@ void squelchOpen(bool is_open)
     close_sum += rx->signalStrength();
     if (++open_close_cnt == ITERATIONS)
     {
-      float siglev_slope = 100.0 / (open_close_sum / ITERATIONS);
-      float siglev_offset = -(close_sum / ITERATIONS) * siglev_slope;
-      printf("SIGLEV_SLOPE=%.2f\n", siglev_slope);
-      printf("SIGLEV_OFFSET=%.2f\n", siglev_offset);
+      float open_close_mean = open_close_sum / ITERATIONS;
+      float close_mean = close_sum / ITERATIONS;
+      
+      open_close_mean /= siglev_slope;
+      close_mean -= siglev_offset;
+      close_mean /= siglev_slope;
+    
+      float new_siglev_slope = 100.0 / open_close_mean;
+      float new_siglev_offset = -close_mean * new_siglev_slope;
+      
+      printf("\n");
+      printf("SIGLEV_SLOPE=%.2f\n", new_siglev_slope);
+      printf("SIGLEV_OFFSET=%.2f\n", new_siglev_offset);
+      printf("\n");
       exit(0);
     }
     else
@@ -50,6 +62,8 @@ void squelchOpen(bool is_open)
 
 int main(int argc, char **argv)
 {
+  CppApplication app;
+  
   cout << "Signal level detector calibrator v" SIGLEV_DET_CAL_VERSION
        << endl << endl;
   
@@ -61,12 +75,24 @@ int main(int argc, char **argv)
   string cfg_file(argv[1]);
   string rx_name(argv[2]);
   
-  CppApplication app;
-  
   if (!cfg.open(cfg_file))
   {
     cerr << "*** ERROR: Could not open config file \"" << cfg_file << "\"\n";
     exit(1);
+  }
+  
+  string rx_type;
+  if (!cfg.getValue(rx_name, "TYPE", rx_type))
+  {
+    cerr << "*** ERROR: Config variable " << rx_name << "/TYPE not set. "
+         << "Are you sure \"" << rx_name << "\" is an existing receiver config "
+	 << "section?\n";
+    exit(1);
+  }
+  if (rx_type != "Local")
+  {
+    cerr << "*** WARNING: The given receiver config section is not for a "
+         << "local receiver. You are on your own...\n";
   }
   
   rx = Rx::create(cfg, rx_name);
@@ -81,13 +107,11 @@ int main(int argc, char **argv)
   string value;
   if (cfg.getValue(rx_name, "SIGLEV_SLOPE", value))
   {
-    cout << "*** WARNING: Configuration variable " << rx_name
-         << "/SIGLEV_SLOPE is set. Please remove it.\n\n";
+    siglev_slope = atof(value.c_str());
   }
   if (cfg.getValue(rx_name, "SIGLEV_OFFSET", value))
   {
-    cout << "*** WARNING: Configuration variable " << rx_name
-         << "/SIGLEV_OFFSET is set. Please remove it.\n\n";
+    siglev_offset = atof(value.c_str());
   }
   
   cout << "--- Press the PTT (" << ITERATIONS << " more times)\n";
