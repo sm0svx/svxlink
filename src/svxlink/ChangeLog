@@ -53,6 +53,9 @@
   Which channel to use is chosen by the new configuration variable
   AUDIO_CHANNEL that must be set for RX and TX configuration sections.
 
+* Changed the name of RX config variable VOX_START_DELAY to SQL_START_DELAY.
+  It is now possible to use the squelch start delay for all squelch types.
+
 
 
  0.9.0 -- 02 Jan 2008

@@ -130,8 +130,7 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 SquelchVox::SquelchVox(void)
-  : buf(0), buf_size(0), head(0), sum(0), up_limit(0), down_limit(0),
-    start_delay(0), start_delay_left(0)
+  : buf(0), buf_size(0), head(0), sum(0), up_limit(0), down_limit(0)
 {
 } /* SquelchVox::SquelchVox */
 
@@ -173,7 +172,9 @@ bool SquelchVox::initialize(Config& cfg, const string& rx_name)
 
   if (cfg.getValue(rx_name, "VOX_START_DELAY", value))
   {
-    setVoxStartDelay(atoi(value.c_str()));
+    cerr << "*** ERROR: VOX_START_DELAY changed its name to SQL_START_DELAY in "
+            "configuration of " << rx_name << "\n";
+    return false;
   }
 
   return true;
@@ -188,15 +189,8 @@ void SquelchVox::setVoxLimit(short limit)
 } /* SquelchVox::setVoxLimit */
 
 
-void SquelchVox::setVoxStartDelay(int delay)
-{
-  start_delay = delay > 0 ? 8 * delay : 0;
-} /* SquelchVox::setVoxStartDelay */
-
-
 void SquelchVox::reset(void)
 {
-  start_delay_left = start_delay;
   for (int i=0; i<buf_size; ++i)
   {
     buf[i] = 0;
@@ -227,21 +221,6 @@ void SquelchVox::reset(void)
  */
 int SquelchVox::processSamples(const float *samples, int count)
 {
-  int orig_count = count;
-  
-  if (start_delay_left > 0)
-  {
-    int sample_cnt = min(count, start_delay_left);
-    start_delay_left -= sample_cnt;
-    count -= sample_cnt;
-    samples += sample_cnt;
-    
-    if (count == 0)
-    {
-      return orig_count;
-    }
-  }
-  
   for (int i=0; i<count; ++i)
   {
     sum -= buf[head];
@@ -261,7 +240,7 @@ int SquelchVox::processSamples(const float *samples, int count)
 
   //printf("sum=%f\n", 10000 * sqrt(sum / buf_size));
   
-  return orig_count;
+  return count;
   
 } /* SquelchVox::processSamples */
 

@@ -444,6 +444,14 @@ This squelch detector can be used if the receiver have an external hardware indi
 when the squelch is open. Specify which serial port/pin to use with SERIAL_PORT and
 SERIAL_PIN. 
 .TP
+.B SQL_START_DELAY
+The squelch start delay is of most use when using VOX squelch. For example, if
+the transceiver makes a noise when the transmitter is turned off, that might
+trigger the VOX and cause an infinite loop of squelch open/close transmitter
+on/off.
+Specify the number of milliseconds that the squelch should be "deaf" after
+the transmitter has been turned off. 
+.TP
 .B SQL_DELAY
 Specify a delay in milliseconds that a squelch open indication will be delayed.
 This odd feature can be of use when using a fast squelch detector in combination
@@ -465,12 +473,6 @@ value is often better.
 The threshold that the mean value of the samples must exceed for the squlech to be
 considered open. It's hard to say what is a good value. Something around 1000 is probably
 a good value. Set it as low as possible without getting the vox to false trigger. 
-.TP
-.B VOX_START_DELAY
-Use the vox start delay if your transceiver makes a noise when the transmitter is turned
-off. The noise will trigger the vox and can in some situations cause an infinite sequence
-of squelch open/closed transmitter on/off. Specify the number of milliseconds that the vox
-should be "deaf" after the transmitter has been turned off. 
 .TP
 .B CTCSS_FQ
 If CTCSS (PL,subtone) squelch is used (SQL_DET is set to CTCSS), this config

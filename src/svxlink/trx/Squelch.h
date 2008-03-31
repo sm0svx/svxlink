@@ -26,11 +26,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example Squelch_demo.cpp
-An example of how to use the Squelch class
-*/
-
-
 #ifndef SQUELCH_INCLUDED
 #define SQUELCH_INCLUDED
 
@@ -44,6 +39,7 @@ An example of how to use the Squelch class
 #include <sigc++/sigc++.h>
 #include <string>
 #include <iostream>
+#include <algorithm>
 
 
 /****************************************************************************
@@ -130,8 +126,8 @@ class Squelch : public SigC::Object, public Async::AudioSink
      * @brief 	Default constuctor
      */
     explicit Squelch(void)
-      : m_open(false), hangtime(0), hangtime_left(0), delay(0), delay_left(0) {}
-  
+      : m_open(false), start_delay(0), start_delay_left(0), delay(0),
+        delay_left(0), hangtime(0), hangtime_left(0) {}
   
     /**
      * @brief 	Destructor
@@ -140,9 +136,9 @@ class Squelch : public SigC::Object, public Async::AudioSink
     
     /**
      * @brief 	Initialize the squelch detector
-     * @param 	cfg
-     * @param 	rx_name
-     * @returns 
+     * @param 	cfg A previsously initialized config object
+     * @param 	rx_name The name of the RX (config section name)
+     * @return	Returns \em true on success or else \em false
      */
     virtual bool initialize(Async::Config& cfg, const std::string& rx_name)
     {
@@ -156,10 +152,28 @@ class Squelch : public SigC::Object, public Async::AudioSink
       {
       	setDelay(atoi(value.c_str())*8);
       }
+
+      if (cfg.getValue(rx_name, "SQL_START_DELAY", value))
+      {
+	setStartDelay(atoi(value.c_str()));
+      }
       
       return true;
     }
   
+    /**
+     * @brief 	Set the vox start delay
+     * @param 	delay The delay in milliseconds to set
+     *
+     * Use this function to set the vox startup delay. The delay is specified
+     * in milliseconds. When a value > 0 is specified, the vox will not trigger
+     * within this time after Squelch::reset function has been called.
+     */
+    void setStartDelay(int delay)
+    {
+      start_delay = delay > 0 ? 8 * delay : 0;
+    }
+    
     /**
      * @brief 	Set the time the squelch should hang open after squelch close
      * @param 	hang_samples The number of samples to hang
@@ -188,41 +202,10 @@ class Squelch : public SigC::Object, public Async::AudioSink
     {
       m_open = false;
       hangtime_left = 0;
+      start_delay_left = start_delay;
       delay_left = 0;
     }
 
-    /**
-     * @brief 	Handle incoming audio
-     * @param 	samples A buffer containing samples
-     * @param 	count The number of samples in the buffer
-     * @return	Return the number of processed samples
-     */
-    /*
-    int audioIn(float *samples, int count)
-    {
-      int ret_count = processSamples(samples, count);
-      if (hangtime_left > 0)
-      {
-      	hangtime_left -= count;
-	if (hangtime_left <= 0)
-	{
-	  m_open = false;
-	  squelchOpen(false);
-	}
-      }
-      if (delay_left > 0)
-      {
-      	delay_left -= count;
-	if (delay_left <= 0)
-	{
-	  m_open = true;
-	  squelchOpen(true);
-	}
-      }
-      return ret_count;
-    }
-    */
-    
     /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
@@ -231,12 +214,28 @@ class Squelch : public SigC::Object, public Async::AudioSink
      */
     int writeSamples(const float *samples, int count)
     {
+      int orig_count = count;
+      
+      if (start_delay_left > 0)
+      {
+	int sample_cnt = std::min(count, start_delay_left);
+	start_delay_left -= sample_cnt;
+	count -= sample_cnt;
+	samples += sample_cnt;
+
+	if (count == 0)
+	{
+	  return orig_count;
+	}
+      }
+  
       int ret_count = processSamples(samples, count);
       if (ret_count != count)
       {
       	std::cout << ret_count << " samples of " << count
 	      	  << " written to the squelch detctor\n";
       }
+      
       if (hangtime_left > 0)
       {
       	hangtime_left -= ret_count;
@@ -246,6 +245,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
 	  squelchOpen(false);
 	}
       }
+      
       if (delay_left > 0)
       {
       	delay_left -= ret_count;
@@ -255,6 +255,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
 	  squelchOpen(true);
 	}
       }
+      
       return ret_count;
     }
     
@@ -281,7 +282,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
      * @param 	is_open Is set to \em true if the squelch is open or else
      *	      	\em false
      */
-    SigC::Signal1<void, bool> 	      squelchOpen;
+    SigC::Signal1<void, bool> squelchOpen;
     
     
   protected:
@@ -343,10 +344,12 @@ class Squelch : public SigC::Object, public Async::AudioSink
   private:
     std::string   m_name;
     bool      	  m_open;
-    int       	  hangtime;
-    int       	  hangtime_left;
+    int       	  start_delay;
+    int       	  start_delay_left;
     int       	  delay;
     int       	  delay_left;
+    int       	  hangtime;
+    int       	  hangtime_left;
 
     Squelch(const Squelch&);
     Squelch& operator=(const Squelch&);

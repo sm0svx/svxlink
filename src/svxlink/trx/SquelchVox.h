@@ -1,14 +1,12 @@
 /**
 @file	 SquelchVox.h
-@brief   A_brief_description_for_this_file
+@brief   Implementes a VOX squelch
 @author  Tobias Blomberg
 @date	 2004-02-15
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003  Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example Vox_demo.cpp
-An example of how to use the Vox class
-*/
-
 
 #ifndef SQUELCH_VOX_INCLUDED
 #define SQUELCH_VOX_INCLUDED
@@ -111,13 +104,9 @@ An example of how to use the Vox class
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	Implements a VOX squelch
 @author Tobias Blomberg
 @date   2004-02-15
-
-A_detailed_class_description
-
-\include Vox_demo.cpp
 */
 class SquelchVox : public Squelch
 {
@@ -133,29 +122,19 @@ class SquelchVox : public Squelch
     ~SquelchVox(void);
     
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Initialize the VOX
+     * @param 	cfg A previously initialize config object
+     * @param   rx_name The name of the RX (config section name)
+     * @return	Returns \em true on success or else \em false
      */
     bool initialize(Async::Config& cfg, const std::string& rx_name);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Set the VOX threshold
+     * @param 	limit The limit to set
      */
     void setVoxLimit(short limit);
     
-    /**
-     * @brief 	Set the vox start delay
-     * @param 	delay The delay in milliseconds to set
-     *
-     * Use this function to set the vox startup delay. The delay is specified
-     * in milliseconds. When a value > 0 is specified, the vox will not trigger
-     * within this time after Squelch::reset function has been called.
-     */
-    void setVoxStartDelay(int delay);
-
     /**
      * @brief 	Reset the squelch detector
      *
@@ -175,8 +154,6 @@ class SquelchVox : public Squelch
     double  sum;
     double  up_limit;
     double  down_limit;
-    int     start_delay;
-    int     start_delay_left;
     
 };  /* class SquelchVox */
 
