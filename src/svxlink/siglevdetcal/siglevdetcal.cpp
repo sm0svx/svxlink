@@ -2,6 +2,8 @@
 
 #include <AsyncCppApplication.h>
 #include <AsyncConfig.h>
+#include <AsyncFdWatch.h>
+#include <AsyncTimer.h>
 #include <version/SIGLEV_DET_CAL.h>
 
 #include <Rx.h>
@@ -14,14 +16,16 @@ static const int ITERATIONS = 5;
 
 static Config cfg;
 static Rx *rx;
-static float open_close_sum = 0.0f;
-static float last_open_siglev = 0.0f;
+static float open_sum = 0.0f;
+//static float open_close_sum = 0.0f;
+//static float last_open_siglev = 0.0f;
 static float close_sum = 0.0f;
-static int open_close_cnt = 0;
+//static int open_close_cnt = 0;
 static float siglev_slope = 1.0;
 static float siglev_offset = 0.0;
 
 
+#if 0
 void squelchOpen(bool is_open)
 {
   if (is_open)
@@ -58,6 +62,103 @@ void squelchOpen(bool is_open)
     }
   }
 } /* squelchOpen */
+#endif
+
+
+void sample_squelch_close(Timer *t)
+{
+  static int count = 0;
+  printf("Signal strength=%.3f\n", rx->signalStrength());
+  
+  close_sum += rx->signalStrength();
+  
+  if (++count == ITERATIONS)
+  {
+    delete t;
+
+    float open_close_mean = (open_sum - close_sum) / ITERATIONS;
+    float close_mean = close_sum / ITERATIONS;
+
+    open_close_mean /= siglev_slope;
+    close_mean -= siglev_offset;
+    close_mean /= siglev_slope;
+
+    float new_siglev_slope = 100.0 / open_close_mean;
+    float new_siglev_offset = -close_mean * new_siglev_slope;
+
+    cout << endl;
+    cout << "--- Put the config variables below in the configuration file\n";
+    cout << "--- section for the receiver.\n";
+    printf("SIGLEV_SLOPE=%.2f\n", new_siglev_slope);
+    printf("SIGLEV_OFFSET=%.2f\n", new_siglev_offset);
+    cout << endl;
+    
+    //rx->setVerbose(true);
+    
+    Application::app().quit();
+  }
+  else
+  {
+    t->reset();
+  }
+} /* sample_squelch_close */
+
+
+void start_squelch_close_measurement(FdWatch *w)
+{
+  int ch = getchar();
+  
+  if (ch == '\n')
+  {
+    cout << "--- Starting squelch close measurement\n";
+    delete w;
+    Timer *timer = new Timer(1000);
+    timer->expired.connect(slot(&sample_squelch_close));
+  }
+} /* start_squelch_close_measurement */
+
+
+void sample_squelch_open(Timer *t)
+{
+  static int count = 0;
+  printf("Signal strength=%.3f\n", rx->signalStrength());
+  
+  open_sum += rx->signalStrength();
+  
+  if (++count == ITERATIONS)
+  {
+    delete t;
+    
+    FdWatch *w = new FdWatch(0, FdWatch::FD_WATCH_RD);
+    w->activity.connect(slot(&start_squelch_close_measurement));
+    
+    cout << endl;
+    cout << "--- Release the PTT.\n";
+    cout << "--- Open the squelch on the SvxLink receiver with no input signal\n";
+    cout << "--- so that SvxLink will only receive noise. This will represent\n";
+    cout << "--- the weakest possible input signal.\n";
+    cout << "--- Press ENTER when ready.\n";
+  }
+  else
+  {
+    t->reset();
+  }
+} /* sample_squelch_open */
+
+
+void start_squelch_open_measurement(FdWatch *w)
+{
+  int ch = getchar();
+  
+  if (ch == '\n')
+  {
+    cout << "--- Starting squelch open measurement\n";
+    delete w;
+    Timer *timer = new Timer(1000);
+    timer->expired.connect(slot(&sample_squelch_open));
+  }
+  
+} /* start_squelch_open_measurement */
 
 
 int main(int argc, char **argv)
@@ -101,8 +202,9 @@ int main(int argc, char **argv)
     cerr << "*** ERROR: Could not initialize receiver \"" << rx_name << "\"\n";
     exit(1);
   }
-  rx->squelchOpen.connect(slot(&squelchOpen));
+  //rx->squelchOpen.connect(slot(&squelchOpen));
   rx->mute(false);
+  rx->setVerbose(false);
   
   string value;
   if (cfg.getValue(rx_name, "SIGLEV_SLOPE", value))
@@ -114,7 +216,16 @@ int main(int argc, char **argv)
     siglev_offset = atof(value.c_str());
   }
   
-  cout << "--- Press the PTT (" << ITERATIONS << " more times)\n";
+  FdWatch *w = new FdWatch(0, FdWatch::FD_WATCH_RD);
+  w->activity.connect(slot(&start_squelch_open_measurement));
+  
+  //cout << "--- Press the PTT (" << ITERATIONS << " more times)\n";
+  
+  cout << "--- Adjust the audio input level to a suitable level.\n";
+  cout << "--- Transmit a strong signal into the SvxLink receiver.\n";
+  cout << "--- This will represent the strongest possible input signal.\n";
+  cout << "--- Don't release the PTT until told so.\n";
+  cout << "--- Press ENTER when ready.\n";
   
   app.exec();
   
