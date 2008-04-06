@@ -65,7 +65,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioValve.h>
 #include <AsyncAudioPassthrough.h>
 #include <AsyncAudioFifo.h>
-
+#include <AsyncAudioInterpolator.h>
 
 
 /****************************************************************************
@@ -76,7 +76,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "DtmfEncoder.h"
 #include "LocalTx.h"
-
+#include "multirate_filter_coeff.h"
 
 
 /****************************************************************************
@@ -594,7 +594,7 @@ bool LocalTx::initialize(void)
   prev_src = selector;
   
     // Create the DTMF encoder
-  dtmf_encoder = new DtmfEncoder(audio_io->sampleRate());
+  dtmf_encoder = new DtmfEncoder(8000);
   dtmf_encoder->setToneLength(dtmf_tone_length);
   dtmf_encoder->setToneSpacing(dtmf_tone_spacing);
   dtmf_encoder->setToneAmplitude(dtmf_tone_amp);
@@ -612,6 +612,16 @@ bool LocalTx::initialize(void)
   prev_src->registerSink(ptt_ctrl, true);
   prev_src = ptt_ctrl;
   
+    // Interpolate sample rate to 48kHz
+  AudioInterpolator *i1 = new AudioInterpolator(2, coeff_16_8, coeff_16_8_taps);
+  prev_src->registerSink(i1, true);
+  prev_src = i1;
+
+  AudioInterpolator *i2 = new AudioInterpolator(3, coeff_48_16,
+                                                coeff_48_16_taps);
+  prev_src->registerSink(i2, true);
+  prev_src = i2;
+
     // Finally connect the whole audio pipe to the audio device
   prev_src->registerSink(audio_io, true);
 

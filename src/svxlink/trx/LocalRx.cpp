@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSplitter.h>
 #include <AsyncAudioAmp.h>
 #include <AsyncAudioPassthrough.h>
+#include <AsyncAudioDecimator.h>
 
 
 /****************************************************************************
@@ -69,6 +70,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SquelchCtcss.h"
 #include "SquelchSerial.h"
 #include "LocalRx.h"
+#include "multirate_filter_coeff.h"
 
 
 /****************************************************************************
@@ -383,6 +385,14 @@ bool LocalRx::initialize(void)
   audio_io = new AudioIO(audio_dev, audio_channel);
   AudioSource *prev_src = audio_io;
   
+  AudioDecimator *d1 = new AudioDecimator(3, coeff_48_16, coeff_48_16_taps);
+  prev_src->registerSink(d1, true);
+  prev_src = d1;
+
+  AudioDecimator *d2 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
+  prev_src->registerSink(d2, true);
+  prev_src = d2;
+
   if (preamp_gain != 0)
   {
     AudioAmp *preamp = new AudioAmp;
@@ -436,7 +446,7 @@ bool LocalRx::initialize(void)
   dtmf_dec->digitDeactivated.connect(
       slot(*this, &LocalRx::dtmfDigitDeactivated));
   ctcss_splitter->addSink(dtmf_dec, true);
-
+  
   sql_valve = new SigCAudioValve;
   sql_valve->setOpen(false);
   sql_valve->sigAllSamplesFlushed.connect(
