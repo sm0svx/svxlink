@@ -145,7 +145,7 @@ AudioIO::AudioIO(const string& dev_name, int channel)
   audio_dev = AudioDevice::registerAudioIO(dev_name, this);
   sample_rate = audio_dev->sampleRate();
 
-  write_fifo = new SampleFifo(513);
+  write_fifo = new SampleFifo(1025);
   write_fifo->setOverwrite(false);
   write_fifo->stopOutput(true);
   write_fifo->fifoFull.connect(slot(*this, &AudioIO::fifoBufferFull));

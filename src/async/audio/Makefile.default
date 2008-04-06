@@ -95,7 +95,8 @@ LIBSRC		= AsyncAudioSource.cpp AsyncAudioSink.cpp \
 		  AsyncAudioIO.cpp AsyncAudioSplitter.cpp \
 		  AsyncAudioDelayLine.cpp AsyncAudioSelector.cpp \
 		  AsyncAudioMixer.cpp AsyncAudioFifo.cpp AsyncAudioPacer.cpp \
-		  SampleFifo.cpp AsyncAudioReader.cpp
+		  SampleFifo.cpp AsyncAudioReader.cpp AsyncAudioDecimator.cpp \
+		  AsyncAudioInterpolator.cpp
 
 
 # Which libs are used by the DYNAMIC lib generated.
@@ -114,7 +115,8 @@ EXPINC		= AsyncAudioSource.h AsyncAudioSink.h AsyncAudioProcessor.h \
 		  AsyncAudioIO.h AsyncAudioSplitter.h AsyncAudioDelayLine.h \
 		  AsyncAudioValve.h AsyncAudioAmp.h AsyncAudioSelector.h \
 		  AsyncAudioPassthrough.h AsyncAudioMixer.h AsyncAudioFifo.h \
-		  AsyncAudioDebugger.h AsyncAudioPacer.h AsyncAudioReader.h
+		  AsyncAudioDebugger.h AsyncAudioPacer.h AsyncAudioReader.h \
+		  AsyncAudioDecimator.h AsyncAudioInterpolator.h
 
 
 # Specify Qt header files here that you want to run the

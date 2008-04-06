@@ -216,11 +216,11 @@ class AudioDevice : public SigC::Object
   
     
   private:
-    static const int  RATE = 8000;
+    static const int  RATE = 48000;
     static const int  CHANNELS = 2;
     //static const int  SIZE = 16;
     static const int  FRAG_COUNT = 2;
-    static const int  FRAG_SIZE_LOG2 = 10; // 1024 bytes/frag (512 samples)
+    static const int  FRAG_SIZE_LOG2 = 11; // 2048 bytes/frag (1024 samples)
     static const int  BUF_FRAG_COUNT = 4;
     static std::map<std::string, AudioDevice*>  devices;
     

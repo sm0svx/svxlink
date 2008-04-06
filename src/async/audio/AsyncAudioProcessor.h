@@ -5,8 +5,8 @@
 @date	 2006-04-23
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -149,9 +149,27 @@ class AudioProcessor : public AudioSink, public AudioSource
      * @brief All samples have been flushed by the sink
      */
     void allSamplesFlushed(void);
-
+    
 
   protected:
+    /**
+     * @brief Set the input and output sample rates
+     * @param input_rate The input sample rate
+     * @param output_rate The output sample rate
+     */
+    void setInputOutputSampleRate(int input_rate, int output_rate);
+    
+    /**
+     * @brief Process incoming samples and put them into the output buffer
+     * @param dest  Destination buffer
+     * @param src   Source buffer
+     * @param count Number of samples in the source buffer
+     *
+     * This function should be reimplemented by the inheriting class to
+     * do the actual processing of the incoming samples. All samples must
+     * be processed, otherwise they are lost and the output buffer will
+     * contain garbage.
+     */
     virtual void processSamples(float *dest, const float *src, int count) = 0;
     
     
@@ -161,9 +179,13 @@ class AudioProcessor : public AudioSink, public AudioSource
     float     	buf[BUFSIZE];
     int       	buf_cnt;
     bool      	do_flush;
-    //bool      	buf_full;
     bool      	input_stopped;
     bool      	output_stopped;
+    int       	input_rate;
+    int       	output_rate;
+    float     	*input_buf;
+    int       	input_buf_cnt;
+    int       	input_buf_size;
     
     AudioProcessor(const AudioProcessor&);
     AudioProcessor& operator=(const AudioProcessor&);
