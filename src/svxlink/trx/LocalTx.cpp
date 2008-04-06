@@ -66,6 +66,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioPassthrough.h>
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioInterpolator.h>
+#include <AsyncAudioAmp.h>
 
 
 /****************************************************************************
@@ -621,6 +622,12 @@ bool LocalTx::initialize(void)
                                                 coeff_48_16_taps);
   prev_src->registerSink(i2, true);
   prev_src = i2;
+  
+    // Compensate for 15dB attentuation in the interpolation process
+  AudioAmp *amp = new AudioAmp;
+  amp->setGain(15);
+  prev_src->registerSink(amp);
+  prev_src = amp;
 
     // Finally connect the whole audio pipe to the audio device
   prev_src->registerSink(audio_io, true);
