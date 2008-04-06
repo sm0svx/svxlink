@@ -385,6 +385,7 @@ bool LocalRx::initialize(void)
   audio_io = new AudioIO(audio_dev, audio_channel);
   AudioSource *prev_src = audio_io;
   
+  /*
   AudioDecimator *d1 = new AudioDecimator(3, coeff_48_16, coeff_48_16_taps);
   prev_src->registerSink(d1, true);
   prev_src = d1;
@@ -392,6 +393,7 @@ bool LocalRx::initialize(void)
   AudioDecimator *d2 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
   prev_src->registerSink(d2, true);
   prev_src = d2;
+  */
 
   if (preamp_gain != 0)
   {

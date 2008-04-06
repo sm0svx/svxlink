@@ -216,7 +216,7 @@ class AudioDevice : public SigC::Object
   
     
   private:
-    static const int  RATE = 48000;
+    static const int  RATE = 8000;
     static const int  CHANNELS = 2;
     //static const int  SIZE = 16;
     static const int  FRAG_COUNT = 2;

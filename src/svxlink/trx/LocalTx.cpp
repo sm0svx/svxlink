@@ -613,6 +613,7 @@ bool LocalTx::initialize(void)
   prev_src->registerSink(ptt_ctrl, true);
   prev_src = ptt_ctrl;
   
+#if 0
     // Interpolate sample rate to 48kHz
   AudioInterpolator *i1 = new AudioInterpolator(2, coeff_16_8, coeff_16_8_taps);
   prev_src->registerSink(i1, true);
@@ -628,6 +629,7 @@ bool LocalTx::initialize(void)
   amp->setGain(15);
   prev_src->registerSink(amp);
   prev_src = amp;
+#endif
 
     // Finally connect the whole audio pipe to the audio device
   prev_src->registerSink(audio_io, true);
