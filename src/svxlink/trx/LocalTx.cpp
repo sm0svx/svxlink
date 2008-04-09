@@ -613,24 +613,38 @@ bool LocalTx::initialize(void)
   prev_src->registerSink(ptt_ctrl, true);
   prev_src = ptt_ctrl;
   
-#if 0
-    // Interpolate sample rate to 48kHz
-  AudioInterpolator *i1 = new AudioInterpolator(2, coeff_16_8, coeff_16_8_taps);
-  prev_src->registerSink(i1, true);
-  prev_src = i1;
+  if (audio_io->sampleRate() > 8000)
+  {
+      // Interpolate sample rate to 16kHz
+    AudioInterpolator *i1 = new AudioInterpolator(2, coeff_16_8,
+                                                  coeff_16_8_taps);
+    prev_src->registerSink(i1, true);
+    prev_src = i1;
+    
+      // Compensate for 6dB attentuation in the interpolation process
+      // FIXME: This amplification should be integrated with the filter
+    AudioAmp *amp = new AudioAmp;
+    amp->setGain(6);
+    prev_src->registerSink(amp);
+    prev_src = amp;
+  }
 
-  AudioInterpolator *i2 = new AudioInterpolator(3, coeff_48_16,
-                                                coeff_48_16_taps);
-  prev_src->registerSink(i2, true);
-  prev_src = i2;
+  if (audio_io->sampleRate() > 16000)
+  {
+      // Interpolate sample rate to 48kHz
+    AudioInterpolator *i2 = new AudioInterpolator(3, coeff_48_16,
+                                                  coeff_48_16_taps);
+    prev_src->registerSink(i2, true);
+    prev_src = i2;
+
+      // Compensate for 9dB attentuation in the interpolation process
+      // FIXME: This amplification should be integrated with the filter
+    AudioAmp *amp = new AudioAmp;
+    amp->setGain(9);
+    prev_src->registerSink(amp);
+    prev_src = amp;
+  }
   
-    // Compensate for 15dB attentuation in the interpolation process
-  AudioAmp *amp = new AudioAmp;
-  amp->setGain(15);
-  prev_src->registerSink(amp);
-  prev_src = amp;
-#endif
-
     // Finally connect the whole audio pipe to the audio device
   prev_src->registerSink(audio_io, true);
 

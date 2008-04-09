@@ -17,6 +17,9 @@
 * Now possible to open left/right stereo channels as separate mono
   channels.
 
+* Now possible to set sample rate, block size and buffer size for a sound
+  card.
+
 
 
  0.15.0 -- 02 Jan 2008

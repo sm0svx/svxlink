@@ -5,8 +5,8 @@
 @date	 2004-03-28
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -57,13 +57,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <version/SVXLINK.h>
+
 #include <AsyncCppApplication.h>
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 #include <AsyncFdWatch.h>
-
-#include <version/SVXLINK.h>
-
+#include <AsyncAudioIO.h>
 
 
 /****************************************************************************
@@ -359,6 +359,37 @@ int main(int argc, char **argv)
   
   cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__ ") starting up...\n";
   cout << "\nUsing configuration file: " << main_cfg_filename << endl;
+  
+  string value;
+  if (cfg.getValue("GLOBAL", "CARD_SAMPLE_RATE", value))
+  {
+    int rate = atoi(value.c_str());
+    if (rate == 8000)
+    {
+      AudioIO::setSampleRate(rate);
+      AudioIO::setBlocksize(256);
+      AudioIO::setBufferCount(2);
+    }
+    else if (rate == 16000)
+    {
+      AudioIO::setSampleRate(rate);
+      AudioIO::setBlocksize(512);
+      AudioIO::setBufferCount(2);
+    }
+    else if (rate == 48000)
+    {
+      AudioIO::setSampleRate(rate);
+      AudioIO::setBlocksize(1024);
+      AudioIO::setBufferCount(4);
+    }
+    else
+    {
+      cerr << "*** ERROR: Illegal sound card sample rate specified for "
+      	      "config variable GLOBAL/CARD_SAMPLE_RATE. Valid rates are "
+	      "8000, 16000 and 48000\n";
+      exit(1);
+    }
+  }
   
   initialize_logics(cfg);
 
