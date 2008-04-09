@@ -122,18 +122,22 @@ using namespace Async;
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
+void AudioIO::setSampleRate(int rate)
+{
+  AudioDevice::setSampleRate(rate);
+} /* AudioIO::setSampleRate */
+
+
+int AudioIO::setBlocksize(int size)
+{
+  return AudioDevice::setBlocksize(size);
+} /* AudioIO::setBlocksize */
+
+
+int AudioIO::setBufferCount(int count)
+{
+  return AudioDevice::setBufferCount(count);
+} /* AudioIO::setBufferCount */
 
 
 
@@ -144,16 +148,11 @@ AudioIO::AudioIO(const string& dev_name, int channel)
 {
   audio_dev = AudioDevice::registerAudioIO(dev_name, this);
   sample_rate = audio_dev->sampleRate();
-
-  write_fifo = new SampleFifo(1025);
+  
+  write_fifo = new SampleFifo(AudioDevice::blocksize() * 2 + 1);
   write_fifo->setOverwrite(false);
   write_fifo->stopOutput(true);
   write_fifo->fifoFull.connect(slot(*this, &AudioIO::fifoBufferFull));
-  //write_fifo->fifoFull.connect(writeBufferFull.slot());
-  /*
-  audio_dev->writeBufferFull.connect(
-      	  slot(write_fifo, &SampleFifo::writeBufferFull));
-  */
 } /* AudioIO::AudioIO */
 
 
@@ -190,12 +189,6 @@ bool AudioIO::open(Mode mode)
   if (open_ok)
   {
     io_mode = mode;
-    /*
-    if ((io_mode == MODE_RD) || (io_mode == MODE_RDWR))
-    {
-      read_con = audio_dev->audioRead.connect(slot(*this, &AudioIO::audioRead));
-    }
-    */
   }
   
   return open_ok;
@@ -230,80 +223,10 @@ void AudioIO::close(void)
 } /* AudioIO::close */
 
 
-#if 0
-int AudioIO::write(float *samples, int count)
-{
-  assert((io_mode == MODE_WR) || (io_mode == MODE_RDWR));
-  
-  if (do_flush)
-  {
-    delete flush_timer;
-    flush_timer = 0;
-    do_flush = false;
-    is_flushing = false;
-    lead_in_pos = 0;
-  }
-  
-  float *buf = samples;;
-  if (lead_in_pos < 100)
-  {
-    buf = new float[count];
-    int cnt = min(count, 100-lead_in_pos);
-    for (int i=0; i<cnt; ++i)
-    {
-      float fade_gain = pow(2, lead_in_pos++ / 10.0) / pow(2, 10.0);
-      //printf("gain=%.4f  lead_in_pos=%d\n", gain, lead_in_pos);
-      buf[i] = fade_gain * samples[i];
-    }
-    for (int i=cnt; i<count; ++i)
-    {
-      buf[i] = samples[i];
-    }
-  }
-  
-  int samples_written = write_fifo->addSamples(buf, count);
-  
-  if (buf != samples)
-  {
-    delete [] buf;
-  }
-  
-  audio_dev->audioToWriteAvailable();
-  return samples_written;
-  
-} /* AudioIO::write */
-#endif
-
-
 int AudioIO::samplesToWrite(void) const
 {
   return write_fifo->samplesInFifo() + audio_dev->samplesToWrite();
 }
-
-
-#if 0
-void AudioIO::flushSamples(void)
-{
-  //printf("AudioIO::flushSamples\n");
-  
-  if (do_flush)
-  {
-    if (!is_flushing)
-    {
-      allSamplesFlushed();
-    }
-    return;
-  }
-  
-  do_flush = true;
-  is_flushing = true;
-  audio_dev->flushSamples();
-  if (write_fifo->empty())
-  {
-    flushSamplesInDevice();
-  }
-} /* AudioIO::flushSamples */
-#endif
 
 
 void AudioIO::clearSamples(void)
@@ -338,17 +261,14 @@ int AudioIO::writeSamples(const float *samples, int count)
     lead_in_pos = 0;
   }
   
-  //float *buf = samples;
   float buf[count];
   int cnt = 0;
   if (lead_in_pos < 100)
   {
-    //buf = new float[count];
     cnt = min(count, 100-lead_in_pos);
     for (int i=0; i<cnt; ++i)
     {
       float fade_gain = pow(2, lead_in_pos++ / 10.0) / pow(2, 10.0);
-      //printf("gain=%.4f  lead_in_pos=%d\n", gain, lead_in_pos);
       buf[i] = fade_gain * samples[i];
     }
   }
@@ -359,13 +279,6 @@ int AudioIO::writeSamples(const float *samples, int count)
   }
 
   int samples_written = write_fifo->addSamples(buf, count);
-  
-  /*
-  if (buf != samples)
-  {
-    delete [] buf;
-  }
-  */
   
   audio_dev->audioToWriteAvailable();
   return samples_written;
@@ -442,7 +355,6 @@ void AudioIO::flushSamples(void)
 void AudioIO::flushSamplesInDevice(int extra_samples)
 {
   long flushtime = 1000 * audio_dev->samplesToWrite() / 8000;
-  //printf("flushtime=%ld\n", flushtime);
   delete flush_timer;
   flush_timer = new Timer(flushtime);
   flush_timer->expired.connect(slot(*this, &AudioIO::flushDone));
@@ -451,7 +363,6 @@ void AudioIO::flushSamplesInDevice(int extra_samples)
 
 void AudioIO::flushDone(Timer *timer)
 {
-  //printf("ALL SAMPLES FLUSHED\n");
   is_flushing = false;
   delete flush_timer;
   flush_timer = 0;
@@ -487,12 +398,6 @@ int AudioIO::readSamples(float *samples, int count)
       {
       	float fade_gain = pow(2, (100.0 - pos - (i - start_pos)) / 10.0)
 	      	      / pow(2, 10.0);
-	/*
-	printf("gain=%.3f  samples_in_fifo=%d  samples_read=%d  pos=%d "
-	       "start_pos=%d  i=%d\n",
-	       gain, write_fifo->samplesInFifo(), samples_read, pos,
-	       start_pos, i);
-	*/
       	samples[i] = fade_gain * samples[i];
       }
     }

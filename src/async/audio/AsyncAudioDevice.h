@@ -42,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <map>
 #include <list>
+#include <cmath>
 
 
 /****************************************************************************
@@ -134,9 +135,87 @@ class AudioDevice : public SigC::Object
       MODE_RDWR   ///< Both read and write
     } Mode;
   
+    /**
+     * @brief 	Register an AudioIO object with the given device name
+     * @param 	dev_name  The name of the audio device
+     * @param 	audio_io  A previously created AudioIO object
+     * @return	Returns an AudioDevice object associated with the given device
+     *
+     * This function is used to register an AudioIO object with the given
+     * audio device. If an AudioDevice object already exist for the given
+     * device, it is returns. If there is no AudioDevice object for the
+     * given device, a new one is created.
+     */
     static AudioDevice *registerAudioIO(const std::string& dev_name,
       	    AudioIO *audio_io);
+    
+    /**
+     * @brief 	Unregister a previously registered AudioIO object
+     * @param 	audio_io  A previously registered AudioIO object
+     */
     static void unregisterAudioIO(AudioIO *audio_io);
+    
+    /**
+     * @brief 	Set the sample rate used when doing future opens
+     * @param 	rate  The sampling rate to use
+     *
+     * Use this function to set the sample rate used when opening audio
+     * devices.
+     * This is a global setting so all sound cards will be affected. Already
+     * opened sound cards will not be affected.
+     */
+    static void setSampleRate(int rate) { sample_rate = rate; }
+    
+    /**
+     * @brief 	Set the blocksize used when opening audio devices
+     * @param 	size  The blocksize, in samples per channel, to use
+     * @return	Returns the blocksize actually set
+     *
+     * Use this function to set the block size used when opening audio
+     * devices. The block size is the size of the blocks used when reading
+     * and writing audio to/from the sound card. Smaller blocks give less
+     * delay but could cause choppy audio if the computer is too slow.
+     * The blocksize is set as samples per channel. For example, a blocksize
+     * of 256 samples at 8kHz sample rate will give a delay of 256/8000 = 32ms.
+     * This is a global setting so all sound cards will be affected. Already
+     * opened sound cards will not be affected.
+     */
+    static int setBlocksize(int size)
+    {
+      size = (size <= 0) ? 1 : size * CHANNELS * sizeof(int16_t);
+      frag_size_log2 = static_cast<int>(log2(size));
+      return blocksize();
+    }
+    
+    /**
+     * @brief 	Find out what the blocksize is set to
+     * @return	Returns the currently set blocksize in samples per channel
+     */
+    static int blocksize(void)
+    {
+      return (int)std::pow(2.0, (double)frag_size_log2) /
+      	     (CHANNELS * sizeof(int16_t));
+    }
+    
+    /**
+     * @brief 	Set the buffer count used when opening audio devices
+     * @param 	count 	The buffer count to use
+     * @return	Returns the buffer count actually set
+     *
+     * Use this function to set the buffer count used when opening audio
+     * devices. The buffer count is the maximum number of blocks the driver
+     * will buffer when reading and writing audio to/from the sound card.
+     * Lower numbers give less delay but could cause choppy audio if the
+     * computer is too slow.
+     * This is a global setting so all sound cards will be affected. Already
+     * opened sound cards will not be affected.
+     */
+    static int setBufferCount(int count)
+    {
+      frag_count = (count <=0) ? 0 : count;
+      return frag_count;
+    }
+
     
     /**
      * @brief 	Check if the audio device has full duplex capability
@@ -184,28 +263,13 @@ class AudioDevice : public SigC::Object
      * @brief 	Return the sample rate
      * @return	Returns the sample rate
      */
-    int sampleRate(void) const { return RATE; }
-        
-    /**
-     * @brief 	A signal that is emitted when a block of audio has been
-     *	      	received from the audio device
-     * @param 	buf   A buffer containing the read samples
-     * @param 	count The number of samples in the buffer
-     */
-    //SigC::Signal2<int, float *, int> audioRead;
-
-    /**
-     * @brief 	A signal that is emitted when the write buffer is full
-     * @param 	is_full Set to \em true if the buffer is full or \em false
-     *	      	      	if the buffer full condition has been cleared
-     */
-    //SigC::Signal1<void, bool> writeBufferFull;
+    int sampleRate(void) const { return sample_rate; }
     
-            
     
   protected:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
+     * @param 	dev_name  The name of the device to associate this object with
      */
     explicit AudioDevice(const std::string& dev_name);
   
@@ -216,13 +280,16 @@ class AudioDevice : public SigC::Object
   
     
   private:
-    static const int  RATE = 8000;
+    static const int  DEFAULT_SAMPLE_RATE = 8000;
     static const int  CHANNELS = 2;
-    //static const int  SIZE = 16;
-    static const int  FRAG_COUNT = 2;
-    static const int  FRAG_SIZE_LOG2 = 11; // 2048 bytes/frag (1024 samples)
+    static const int  DEFAULT_FRAG_COUNT = 2;
+    static const int  DEFAULT_FRAG_SIZE_LOG2 = 10; // 512 samples
     static const int  BUF_FRAG_COUNT = 4;
+    
     static std::map<std::string, AudioDevice*>  devices;
+    static int	      	      	      	      	sample_rate;
+    static int	      	      	      	      	frag_size_log2;
+    static int	      	      	      	      	frag_count;
     
     std::string       	dev_name;
     int       	      	use_count;

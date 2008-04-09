@@ -124,8 +124,11 @@ class SampleFifo;
 @date   2003-03-23
 
 This is a class for handling audio input and output to an audio
-device. For now, the AudioIO class only works with 16 bit mono samples at 8 Khz
-sampling rate. An example usage is shown below.
+device. For now, the AudioIO class only works with 16 bit stereo samples.
+An example usage is shown below.
+
+Multiple AudioIO objects can use the same audio device as long as the device
+name is exactly the same.
 
 \include AsyncAudioIO_demo.cpp
 */
@@ -145,7 +148,52 @@ class AudioIO
     } Mode;
   
     /**
-     * @brief Default constructor
+     * @brief 	Set the sample rate used when doing future opens
+     * @param 	rate  The sampling rate to use
+     *
+     * Use this function to set the sample rate used when opening audio
+     * devices.
+     * This is a global setting so all sound cards will be affected. Already
+     * opened sound cards will not be affected.
+     */
+    static void setSampleRate(int rate);
+    
+    /**
+     * @brief 	Set the blocksize used when opening audio devices
+     * @param 	size  The blocksize, in samples per channel, to use
+     * @return	Returns the blocksize actually set
+     *
+     * Use this function to set the block size used when opening audio
+     * devices. The block size is the size of the blocks used when reading
+     * and writing audio to/from the sound card. Smaller blocks give less
+     * delay but could cause choppy audio if the computer is too slow.
+     * The blocksize is set as samples per channel. For example, a blocksize
+     * of 256 samples at 8kHz sample rate will give a delay of 256/8000 = 32ms.
+     * This is a global setting so all sound cards will be affected. Already
+     * opened sound cards will not be affected.
+     */
+    static int setBlocksize(int size);
+    
+    /**
+     * @brief 	Set the buffer count used when opening audio devices
+     * @param 	count 	The buffer count to use
+     * @return	Returns the buffer count actually set
+     *
+     * Use this function to set the buffer count used when opening audio
+     * devices. The buffer count is the maximum number of blocks the driver
+     * will buffer when reading and writing audio to/from the sound card.
+     * Lower numbers give less delay but could cause choppy audio if the
+     * computer is too slow.
+     * This is a global setting so all sound cards will be affected. Already
+     * opened sound cards will not be affected.
+     */
+    static int setBufferCount(int count);
+    
+    
+    /**
+     * @brief Constructor
+     * @param dev_name	The name of the device to use
+     * @param channel 	The channel number (zero is the first channel)
      */
     AudioIO(const std::string& dev_name, int channel);
     
@@ -175,15 +223,6 @@ class AudioIO
     void close(void);
   
     /**
-     * @brief 	Write samples to the audio device
-     * @param 	buf   The buffer that contains the samples to write
-     * @param 	count The number of samples in the buffer
-     * @return	Returns the number of samples written on success or else
-     *	      	-1 on failure
-     */
-    //int write(float *buf, int count);
-    
-    /**
      * @brief 	Find out how many samples there are in the output buffer
      * @return	Returns the number of samples in the output buffer on
      *          success or -1 on failure.
@@ -194,15 +233,6 @@ class AudioIO
      * been flushed.
      */
     int samplesToWrite(void) const;
-    
-    /*
-     * @brief 	Call this method to flush all samples in the buffer
-     *
-     * This method is used to flush all the samples that are in the buffer.
-     * That is, all samples in the buffer will be written to the audio device
-     * and when finished, emit the allSamplesFlushed signal.
-     */
-    //void flushSamples(void);
     
     /*
      * @brief 	Call this method to clear all samples in the buffer
@@ -255,10 +285,23 @@ class AudioIO
      */
     int channel(void) const { return m_channel; }
     
+    /**
+     * @brief Resume audio output to the sink
+     * 
+     * This function will be called when the registered audio sink is
+     * ready to accept more samples.
+     * This function is normally only called from a connected sink object.
+     */
     void resumeOutput(void) {}
     
+    /**
+     * @brief The registered sink has flushed all samples
+     *
+     * This function will be called when all samples have been flushed in the
+     * registered sink.
+     * This function is normally only called from a connected sink object.
+     */
     void allSamplesFlushed(void) {}
-
 
     /**
      * @brief 	Write samples into this audio sink
@@ -276,32 +319,6 @@ class AudioIO
      * sourceAllSamplesFlushed function.
      */
     void flushSamples(void);
-
-    
-    /**
-     * @brief 	A signal that is emitted when a block of audio has been
-     *	      	received from the audio device
-     * @param 	buf   A buffer containing the read samples
-     * @param 	count The number of samples in the buffer
-     */
-    //SigC::Signal2<int, float *, int> audioRead;
-
-    /**
-     * @brief 	A signal that is emitted when the write buffer is full
-     * @param 	is_full Set to \em true if the buffer is full or \em false
-     *	      	      	if the buffer full condition has been cleared
-     */
-    //SigC::Signal1<void, bool> writeBufferFull;
-    
-    /**
-     * @brief 	This signal is emitted when all samples in the buffer
-     *	      	has been flushed.
-     *
-     * When an application is done writing samples to the audio device it
-     * should call the flush-method. When all samples has been flushed
-     * from the audio device, this signal is emitted.
-     */
-    //SigC::Signal0<void> allSamplesFlushed;
 
             
   protected:
