@@ -117,6 +117,7 @@ using namespace Async;
  ****************************************************************************/
 
 SigLevDet::SigLevDet(void)
+  : slope(1.0), offset(0.0)
 {
   filter = new AudioFilter("HpBu4/3500");
   setHandler(filter);

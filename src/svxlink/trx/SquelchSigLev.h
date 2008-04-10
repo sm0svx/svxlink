@@ -1,11 +1,11 @@
 /**
-@file	 SigLevDet.h
-@brief   A_brief_description_for_this_file
+@file	 SquelchSigLev.h
+@brief   A signal level squelch
 @author  Tobias Blomberg / SM0SVX
-@date	 2006-05-07
+@date	 2008-04-10
 
 \verbatim
-<A brief description of the program or library this file belongs to>
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
 Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -24,13 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example SigLevDet_demo.cpp
-An example of how to use the SigLevDet class
-*/
 
-
-#ifndef SIG_LEV_DET_INCLUDED
-#define SIG_LEV_DET_INCLUDED
+#ifndef SQUELCH_SIG_LEV_INCLUDED
+#define SQUELCH_SIG_LEV_INCLUDED
 
 
 /****************************************************************************
@@ -39,7 +35,8 @@ An example of how to use the SigLevDet class
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
+#include <iostream>
+#include <string>
 
 
 /****************************************************************************
@@ -48,7 +45,6 @@ An example of how to use the SigLevDet class
  *
  ****************************************************************************/
 
-#include <AsyncAudioSink.h>
 
 
 /****************************************************************************
@@ -57,6 +53,8 @@ An example of how to use the SigLevDet class
  *
  ****************************************************************************/
 
+#include "Squelch.h"
+#include "SigLevDet.h"
 
 
 /****************************************************************************
@@ -65,11 +63,6 @@ An example of how to use the SigLevDet class
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class AudioFilter;
-  class SigCAudioSink;
-};
 
 
 /****************************************************************************
@@ -113,62 +106,92 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	A signal level based squelch detector
 @author Tobias Blomberg / SM0SVX
-@date   2006-05-07
-
-A_detailed_class_description
-
-\include SigLevDet_demo.cpp
+@date   2008-04-10
 */
-class SigLevDet : public SigC::Object, public Async::AudioSink
+class SquelchSigLev : public Squelch
 {
   public:
     /**
      * @brief 	Default constuctor
      */
-    SigLevDet(void);
+    SquelchSigLev(SigLevDet *det) : sig_lev_det(det) {}
   
     /**
      * @brief 	Destructor
      */
-    ~SigLevDet(void);
-    
-    void setDetectorSlope(float slope) { this->slope = slope; }
-    void setDetectorOffset(float offset) { this->offset = offset; }
+    ~SquelchSigLev(void) {}
   
     /**
      * @brief 	A_brief_member_function_description
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
-    double lastSiglev(void) const
+    bool initialize(Async::Config& cfg, const std::string& rx_name)
     {
-      return offset - slope * log10(last_siglev);
+      if (!Squelch::initialize(cfg, rx_name))
+      {
+      	return false;
+      }
+      
+      std::string value;
+      if (!cfg.getValue(rx_name, "SIGLEV_SQL_OPEN_THRESH", value))
+      {
+	std::cerr << "*** ERROR: Config variable " << rx_name
+	      	  << "/SIGLEV_SQL_OPEN_THRESH not set\n";
+	return false;
+      }
+      open_thresh = atoi(value.c_str());
+
+      if (!cfg.getValue(rx_name, "SIGLEV_SQL_CLOSE_THRESH", value))
+      {
+	std::cerr << "*** ERROR: Config variable " << rx_name
+	      	  << "/SIGLEV_SQL_CLOSE_THRESH not set\n";
+	return false;
+      }
+      close_thresh = atoi(value.c_str());
+      
+      return true;
     }
-     
-    void reset(void);
-     
+    
     
   protected:
+    /**
+     * @brief 	Process the incoming samples in the squelch detector
+     * @param 	samples A buffer containing samples
+     * @param 	count The number of samples in the buffer
+     * @return	Return the number of processed samples
+     */
+    int processSamples(const float *samples, int count)
+    {
+      if (!isOpen() && (sig_lev_det->lastSiglev() > open_thresh))
+      {
+      	setOpen(true);
+      }
+      else if (isOpen() && (sig_lev_det->lastSiglev() < close_thresh))
+      {
+      	setOpen(false);
+      }
+      
+      return count;
+    }
+
     
   private:
-    Async::AudioFilter	  *filter;
-    Async::SigCAudioSink  *sigc_sink;
-    double    	      	  last_siglev;
-    float     	      	  slope;
-    float     	      	  offset;
+    SigLevDet *sig_lev_det;
+    int       open_thresh;
+    int       close_thresh;
     
-    SigLevDet(const SigLevDet&);
-    SigLevDet& operator=(const SigLevDet&);
-    int processSamples(float *samples, int count);
+    SquelchSigLev(const SquelchSigLev&);
+    SquelchSigLev& operator=(const SquelchSigLev&);
     
-};  /* class SigLevDet */
+};  /* class SquelchSigLev */
 
 
 //} /* namespace */
 
-#endif /* SIG_LEV_DET_INCLUDED */
+#endif /* SQUELCH_SIG_LEV_INCLUDED */
 
 
 

@@ -69,6 +69,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SquelchVox.h"
 #include "SquelchCtcss.h"
 #include "SquelchSerial.h"
+#include "SquelchSigLev.h"
 #include "LocalRx.h"
 #include "multirate_filter_coeff.h"
 
@@ -301,32 +302,6 @@ bool LocalRx::initialize(void)
   }
   int audio_channel = atoi(value.c_str());
   
-  string sql_det_str;
-  if (!cfg.getValue(name(), "SQL_DET", sql_det_str))
-  {
-    cerr << "*** ERROR: Config variable " << name() << "/SQL_DET not set\n";
-    return false;
-  }
-
-  if (sql_det_str == "VOX")
-  {
-    squelch = new SquelchVox;
-  }
-  else if (sql_det_str == "CTCSS")
-  {
-    squelch = new SquelchCtcss;
-  }
-  else if (sql_det_str == "SERIAL")
-  {
-    squelch = new SquelchSerial;
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown squelch type specified in config variable "
-      	 << name() << "/SQL_DET. Legal values are: VOX, CTCSS and SERIAL\n";
-    return false;
-  }
-  
   if (cfg.getValue(name(), "SIGLEV_OFFSET", value))
   {
     siglev_offset = atof(value.c_str());
@@ -365,15 +340,6 @@ bool LocalRx::initialize(void)
   if (cfg.getValue(name(), "PEAK_METER", value))
   {
     peak_meter = (atoi(value.c_str()) != 0);
-  }
-  
-  if (!squelch->initialize(cfg, name()))
-  {
-    cerr << "*** ERROR: Squelch detector initialization failed for RX \""
-      	 << name() << "\"\n";
-    delete squelch;
-    squelch = 0;
-    return false;
   }
   
   int dtmf_hangtime = 100;
@@ -427,6 +393,48 @@ bool LocalRx::initialize(void)
   
   siglevdet = new SigLevDet;
   splitter->addSink(siglevdet, true);
+  
+  string sql_det_str;
+  if (!cfg.getValue(name(), "SQL_DET", sql_det_str))
+  {
+    cerr << "*** ERROR: Config variable " << name() << "/SQL_DET not set\n";
+    return false;
+  }
+
+  if (sql_det_str == "VOX")
+  {
+    squelch = new SquelchVox;
+  }
+  else if (sql_det_str == "CTCSS")
+  {
+    squelch = new SquelchCtcss;
+  }
+  else if (sql_det_str == "SERIAL")
+  {
+    squelch = new SquelchSerial;
+  }
+  else if (sql_det_str == "SIGLEV")
+  {
+    squelch = new SquelchSigLev(siglevdet);
+  }
+  else
+  {
+    cerr << "*** ERROR: Unknown squelch type specified in config variable "
+      	 << name() << "/SQL_DET. Legal values are: VOX, CTCSS, SIGLEV "
+	 << "and SERIAL\n";
+    // FIXME: Cleanup
+    return false;
+  }
+  
+  if (!squelch->initialize(cfg, name()))
+  {
+    cerr << "*** ERROR: Squelch detector initialization failed for RX \""
+      	 << name() << "\"\n";
+    delete squelch;
+    squelch = 0;
+    // FIXME: Cleanup
+    return false;
+  }
   
   squelch->squelchOpen.connect(slot(*this, &LocalRx::onSquelchOpen));
   splitter->addSink(squelch, true);
@@ -527,7 +535,8 @@ bool LocalRx::addToneDetector(float fq, int bw, float thresh,
 
 float LocalRx::signalStrength(void) const
 {
-  return siglev_offset - siglev_slope * log10(siglevdet->lastSiglev());
+  //return siglev_offset - siglev_slope * log10(siglevdet->lastSiglev());
+  return siglevdet->lastSiglev();
 } /* LocalRx::signalStrength */
     
 
