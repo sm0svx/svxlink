@@ -61,6 +61,17 @@
   rate, it improves the audio quality some what. Especially there is a
   difference when going from 8 to 16kHz since the filters can look
   quite bad at 8kHz. Some audio boards simply work best at 48kHz.
+  New configuration variable GLOBAL/CARD_SAMPLE_RATE added to set this up.
+
+* Added a signal level based squelch type. Set SQL_DET to SIGLEV to
+  use the new squelch type. Configuration variables SIGLEV_OPEN_THRESH
+  and SIGLEV_CLOSE_THRESH will control at which levels the squelch will
+  open and close. To use this squelch type, the signal level detector
+  must have been calibrated by setting up SIGLEV_SLOPE and SIGLEV_OFFSET.
+  Also, since the detector is not perfect you probably need to set
+  SQL_HANGTIME to a couple of hundred milliseconds. If using a voter,
+  SQL_DELAY might have to be setup to get reliable signal level readings.
+  A value of 40 seem to work fine.
 
 
 

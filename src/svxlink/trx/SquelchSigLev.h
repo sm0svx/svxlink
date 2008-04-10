@@ -136,18 +136,18 @@ class SquelchSigLev : public Squelch
       }
       
       std::string value;
-      if (!cfg.getValue(rx_name, "SIGLEV_SQL_OPEN_THRESH", value))
+      if (!cfg.getValue(rx_name, "SIGLEV_OPEN_THRESH", value))
       {
 	std::cerr << "*** ERROR: Config variable " << rx_name
-	      	  << "/SIGLEV_SQL_OPEN_THRESH not set\n";
+	      	  << "/SIGLEV_OPEN_THRESH not set\n";
 	return false;
       }
       open_thresh = atoi(value.c_str());
 
-      if (!cfg.getValue(rx_name, "SIGLEV_SQL_CLOSE_THRESH", value))
+      if (!cfg.getValue(rx_name, "SIGLEV_CLOSE_THRESH", value))
       {
 	std::cerr << "*** ERROR: Config variable " << rx_name
-	      	  << "/SIGLEV_SQL_CLOSE_THRESH not set\n";
+	      	  << "/SIGLEV_CLOSE_THRESH not set\n";
 	return false;
       }
       close_thresh = atoi(value.c_str());
