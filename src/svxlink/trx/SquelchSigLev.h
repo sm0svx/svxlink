@@ -116,7 +116,7 @@ class SquelchSigLev : public Squelch
     /**
      * @brief 	Default constuctor
      */
-    SquelchSigLev(SigLevDet *det) : sig_lev_det(det) {}
+    SquelchSigLev(SigLevDet *det) : sig_lev_det(det), is_open(false) {}
   
     /**
      * @brief 	Destructor
@@ -155,6 +155,18 @@ class SquelchSigLev : public Squelch
       return true;
     }
     
+    /**
+     * @brief 	Reset the squelch detector
+     *
+     *  Reset the squelch so that the detection process starts from
+     *	the beginning again.
+     */
+    virtual void reset(void)
+    {
+      Squelch::reset();
+      is_open = false;
+    }
+
     
   protected:
     /**
@@ -165,12 +177,14 @@ class SquelchSigLev : public Squelch
      */
     int processSamples(const float *samples, int count)
     {
-      if (!isOpen() && (sig_lev_det->lastSiglev() > open_thresh))
+      if (!is_open && (sig_lev_det->lastSiglev() > open_thresh))
       {
+      	is_open = true;
       	setOpen(true);
       }
-      else if (isOpen() && (sig_lev_det->lastSiglev() < close_thresh))
+      else if (is_open && (sig_lev_det->lastSiglev() < close_thresh))
       {
+      	is_open = false;
       	setOpen(false);
       }
       
@@ -182,6 +196,7 @@ class SquelchSigLev : public Squelch
     SigLevDet *sig_lev_det;
     int       open_thresh;
     int       close_thresh;
+    bool      is_open;
     
     SquelchSigLev(const SquelchSigLev&);
     SquelchSigLev& operator=(const SquelchSigLev&);
