@@ -392,6 +392,8 @@ bool LocalRx::initialize(void)
   prev_src->registerSink(splitter, true);
   
   siglevdet = new SigLevDet;
+  siglevdet->setDetectorSlope(siglev_slope);
+  siglevdet->setDetectorOffset(siglev_offset);
   splitter->addSink(siglevdet, true);
   
   string sql_det_str;
