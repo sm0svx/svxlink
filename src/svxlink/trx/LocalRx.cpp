@@ -357,11 +357,17 @@ bool LocalRx::initialize(void)
     prev_src->registerSink(d1, true);
     prev_src = d1;
   }
-
+  
+  AudioSplitter *rate_16k_splitter = 0;
+  
   if (audio_io->sampleRate() > 8000)
   {
+    rate_16k_splitter = new AudioSplitter;
+    prev_src->registerSink(rate_16k_splitter, true);
+
     AudioDecimator *d2 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
-    prev_src->registerSink(d2, true);
+    //prev_src->registerSink(d2, true);
+    rate_16k_splitter->addSink(d2, true);
     prev_src = d2;
   }
 
@@ -391,10 +397,18 @@ bool LocalRx::initialize(void)
   AudioSplitter *splitter = new AudioSplitter;
   prev_src->registerSink(splitter, true);
   
-  siglevdet = new SigLevDet;
+  if (rate_16k_splitter != 0)
+  {
+    siglevdet = new SigLevDet(16000);
+    rate_16k_splitter->addSink(siglevdet, true);
+  }
+  else
+  {
+    siglevdet = new SigLevDet(8000);
+    splitter->addSink(siglevdet, true);
+  }
   siglevdet->setDetectorSlope(siglev_slope);
   siglevdet->setDetectorOffset(siglev_offset);
-  splitter->addSink(siglevdet, true);
   
   string sql_det_str;
   if (!cfg.getValue(name(), "SQL_DET", sql_det_str))

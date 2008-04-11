@@ -1,12 +1,12 @@
 /**
 @file	 SigLevDet.h
-@brief   A_brief_description_for_this_file
+@brief   A simple signal level detector
 @author  Tobias Blomberg / SM0SVX
 @date	 2006-05-07
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example SigLevDet_demo.cpp
-An example of how to use the SigLevDet class
-*/
-
 
 #ifndef SIG_LEV_DET_INCLUDED
 #define SIG_LEV_DET_INCLUDED
@@ -113,13 +108,9 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	A simple signal level detector
 @author Tobias Blomberg / SM0SVX
 @date   2006-05-07
-
-A_detailed_class_description
-
-\include SigLevDet_demo.cpp
 */
 class SigLevDet : public SigC::Object, public Async::AudioSink
 {
@@ -127,20 +118,28 @@ class SigLevDet : public SigC::Object, public Async::AudioSink
     /**
      * @brief 	Default constuctor
      */
-    SigLevDet(void);
+    explicit SigLevDet(int sample_rate);
   
     /**
      * @brief 	Destructor
      */
     ~SigLevDet(void);
     
+    /**
+     * @brief 	Set the detector slope
+     * @param 	slope The detector slope to set
+     */
     void setDetectorSlope(float slope) { this->slope = slope; }
+
+    /**
+     * @brief 	Set the detector offset
+     * @param 	offset The offset to set
+     */
     void setDetectorOffset(float offset) { this->offset = offset; }
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Read the latest calculated signal level
+     * @return	Returns the latest calculated signal level
      */
     double lastSiglev(void) const
     {

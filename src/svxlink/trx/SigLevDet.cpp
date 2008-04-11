@@ -1,14 +1,12 @@
 /**
 @file	 SigLevDet.cpp
-@brief   A_brief_description_for_this_file
+@brief   A simple signal level detector
 @author  Tobias Blomberg / SM0SVX
 @date	 2006-05-07
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -116,10 +114,17 @@ using namespace Async;
  *
  ****************************************************************************/
 
-SigLevDet::SigLevDet(void)
+SigLevDet::SigLevDet(int sample_rate)
   : slope(1.0), offset(0.0)
 {
-  filter = new AudioFilter("HpBu4/3500");
+  if (sample_rate >= 16000)
+  {
+    filter = new AudioFilter("HpBu4/6000", sample_rate);
+  }
+  else
+  {
+    filter = new AudioFilter("HpBu4/3500", sample_rate);
+  }
   setHandler(filter);
   sigc_sink = new SigCAudioSink;
   sigc_sink->sigWriteSamples.connect(slot(*this, &SigLevDet::processSamples));
@@ -151,23 +156,6 @@ void SigLevDet::reset(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
 
 /****************************************************************************
  *
@@ -175,26 +163,14 @@ void SigLevDet::reset(void)
  *
  ****************************************************************************/
 
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
 int SigLevDet::processSamples(float *samples, int count)
 {
   //cout << "SigLevDet::processSamples: count=" << count << "\n";
   double rms = 0.0;
   for (int i=0; i<count; ++i)
   {
-    rms += pow(samples[i], 2);
+    float sample = samples[i];
+    rms += sample * sample;
   }
   last_siglev = sqrt(rms / count);
   
