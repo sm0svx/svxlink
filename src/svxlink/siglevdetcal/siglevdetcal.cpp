@@ -4,6 +4,7 @@
 #include <AsyncConfig.h>
 #include <AsyncFdWatch.h>
 #include <AsyncTimer.h>
+#include <AsyncAudioIO.h>
 #include <version/SIGLEV_DET_CAL.h>
 
 #include <Rx.h>
@@ -182,6 +183,37 @@ int main(int argc, char **argv)
     exit(1);
   }
   
+  string value;
+  if (cfg.getValue("GLOBAL", "CARD_SAMPLE_RATE", value))
+  {
+    int rate = atoi(value.c_str());
+    if (rate == 8000)
+    {
+      AudioIO::setSampleRate(rate);
+      AudioIO::setBlocksize(256);
+      AudioIO::setBufferCount(2);
+    }
+    else if (rate == 16000)
+    {
+      AudioIO::setSampleRate(rate);
+      AudioIO::setBlocksize(512);
+      AudioIO::setBufferCount(2);
+    }
+    else if (rate == 48000)
+    {
+      AudioIO::setSampleRate(rate);
+      AudioIO::setBlocksize(1024);
+      AudioIO::setBufferCount(4);
+    }
+    else
+    {
+      cerr << "*** ERROR: Illegal sound card sample rate specified for "
+      	      "config variable GLOBAL/CARD_SAMPLE_RATE. Valid rates are "
+	      "8000, 16000 and 48000\n";
+      exit(1);
+    }
+  }
+  
   string rx_type;
   if (!cfg.getValue(rx_name, "TYPE", rx_type))
   {
@@ -206,7 +238,6 @@ int main(int argc, char **argv)
   rx->mute(false);
   rx->setVerbose(false);
   
-  string value;
   if (cfg.getValue(rx_name, "SIGLEV_SLOPE", value))
   {
     siglev_slope = atof(value.c_str());
