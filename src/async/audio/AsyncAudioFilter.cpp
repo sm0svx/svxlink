@@ -5,8 +5,8 @@
 @date	 2006-04-23
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -74,7 +74,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define SAMPLE_RATE 8000
 
 
 /****************************************************************************
@@ -129,7 +128,7 @@ namespace Async
  *
  ****************************************************************************/
 
-AudioFilter::AudioFilter(const string &filter_spec)
+AudioFilter::AudioFilter(const string &filter_spec, int sample_rate)
   : fv(0), output_gain(1)
 {
   fv = new FidVars;
@@ -138,7 +137,7 @@ AudioFilter::AudioFilter(const string &filter_spec)
   strncpy(spec_buf, filter_spec.c_str(), sizeof(spec_buf));
   spec_buf[sizeof(spec_buf) - 1] = 0;
   char *spec = spec_buf;
-  char *fferr = fid_parse(SAMPLE_RATE, &spec, &fv->ff);
+  char *fferr = fid_parse(sample_rate, &spec, &fv->ff);
   if (fferr != 0)
   {
     cerr << "***ERROR: Filter creation error: " << fferr << endl;
