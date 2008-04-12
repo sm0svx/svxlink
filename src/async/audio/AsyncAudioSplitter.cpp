@@ -337,7 +337,8 @@ int AudioSplitter::writeSamples(const float *samples, int len)
 	if (buf_size < len)
 	{
 	  delete [] buf;
-	  buf = new float[len];
+          buf_size = len;
+	  buf = new float[buf_size];
 	}
 	memcpy(buf, samples, len * sizeof(*samples));
 	buf_len = len;
