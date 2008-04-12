@@ -15,7 +15,7 @@
 #include <AsyncAudioSplitter.h>
 #include <SigCAudioSink.h>
 
-#include "../rx/ToneDetector.h"
+#include "ToneDetector.h"
 #include "DtmfDecoder.h"
 #include "DtmfPlot.h"
 

@@ -169,10 +169,10 @@ PLUGINS_INSTALL	= $(PLUGINS:%=%.so[755,root,root]) \
 ToneDetector.o: ToneDetector.cpp
 
 ToneDetector.cpp:
-	ln -s ../rx/ToneDetector.cpp
+	ln -s ../trx/ToneDetector.cpp
 
 ToneDetector.h:
-	ln -s ../rx/ToneDetector.h
+	ln -s ../trx/ToneDetector.h
 
 
 #DtmfDecoder.o: DtmfDecoder.cpp
@@ -246,6 +246,9 @@ install-extras uninstall-extras rpm-extras:
 #	$(DIRSPEC) /var/spool/myprog[755,root,root]
 #	$(FILESPEC) install-extras/myprog.conf[644,root,root] /etc
 
+
+realclean::
+	$(RM) ToneDetector.h ToneDetector.cpp
 
 #
 # EOF -- This file has not been truncated.
