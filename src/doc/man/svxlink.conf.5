@@ -387,6 +387,21 @@ interference on the frequency that open the squelch by short bursts.
 This configuration variable is used to specify the maximum number of consecutive
 short squelch openings allowed before shutting the repeater down. A good value
 is in between 5-10.
+.TP
+.B ACTIVATE_MODULE_ON_LONG_CMD
+This configuration variable activate a feature that might help users not aware
+of the SvxLink command structure. The idea is to activate the specified module
+when a long enough command has been received. The typical example is an
+EchoLink user that is used to just typing in the node ID and then the
+connection should be established right away. Using this configuration variable,
+specify a minimum length and a module name. If no module is active and at least
+the specified number of digits has been entered, the given module is
+activated and the command is sent to it. To be really useful this feature
+should be used in cooperation with EXEC_CMD_ON_SQL_CLOSE.
+
+For example, if this configuration variable is set to "4:EchoLink" and the
+user types in 9999, the EchoLink module is first activated and then the
+command 9999 is sent to it, which will connect to the ECHOTEST server.
 .
 .SS Macros Section
 .

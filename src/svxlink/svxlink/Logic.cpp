@@ -209,7 +209,7 @@ Logic::Logic(Config &cfg, const string& name)
     audio_from_module_selector(0),  audio_to_module_splitter(0),
     audio_to_module_selector(0),    idle_det(0),
     is_idle(true),                  fx_gain_normal(0),
-    fx_gain_low(-12)
+    fx_gain_low(-12), 	      	    long_cmd_digits(100)
 {
   logic_con_in = new AudioSplitter;
   logic_con_out = new AudioSelector;
@@ -278,6 +278,24 @@ bool Logic::initialize(void)
   if (cfg().getValue(name(), "REPORT_CTCSS", value))
   {
     report_ctcss = atof(value.c_str());
+  }
+  
+  if (cfg().getValue(name(), "ACTIVATE_MODULE_ON_LONG_CMD", value))
+  {
+    string::iterator colon = find(value.begin(), value.end(), ':');
+    if (colon == value.end())
+    {
+      cerr << "*** ERROR: Format error for configuration variable \n"
+      	<< "           " << name() << "/ACTIVATE_MODULE_ON_LONG_CMD: "
+	      	       "No colon found. \n"
+	<< "           The format should be digits:module (e.g. 4:EchoLink)\n";
+      return false;
+    }
+
+    string digits(value.begin(), colon);
+    string module(colon+1, value.end());
+    long_cmd_digits = atoi(digits.c_str());
+    long_cmd_module = module;
   }
   
   string macro_section;
@@ -1070,7 +1088,28 @@ void Logic::processCommandQueue(void)
     }
     else if (!(*it).empty())
     {
-      if (!cmd_parser.processCmd(*it))
+      if ((*it).size() >= long_cmd_digits)
+      {
+      	Module *module = findModule(long_cmd_module);
+	if (module != 0)
+	{
+	  activateModule(module);
+	  if (active_module != 0)
+	  {
+      	    active_module->dtmfCmdReceived(*it);
+	  }
+	}
+	else
+	{
+	  cerr << "*** WARNING: Could not find module \"" << long_cmd_module
+	       << "\" specified in configuration variable "
+	       << "ACTIVATE_MODULE_ON_LONG_CMD.\n";
+	  stringstream ss;
+	  ss << "command_failed " << *it;
+	  processEvent(ss.str());
+	}
+      }
+      else if (!cmd_parser.processCmd(*it))
       {
       	stringstream ss;
 	ss << "unknown_command " << *it;

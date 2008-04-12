@@ -272,6 +272,8 @@ class Logic : public SigC::Object
     bool      	      	      	is_idle;
     int                         fx_gain_normal;
     int                         fx_gain_low;
+    unsigned       	      	long_cmd_digits;
+    std::string       	      	long_cmd_module;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);

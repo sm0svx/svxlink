@@ -73,6 +73,13 @@
   SQL_DELAY might have to be setup to get reliable signal level readings.
   A value of 40 seem to work fine.
 
+* Implemented an "activate module on long command" feature. For example,
+  this feature can be used to automatically activate the EchoLink module
+  if the user types in a command longer than, lets say, four digits. This
+  make it easier for users that are not used to the SvxLink command
+  structure to establish an EchoLink connection.
+  New config variable: ACTIVATE_MODULE_ON_LONG_CMD.
+
 
 
  0.9.0 -- 02 Jan 2008
