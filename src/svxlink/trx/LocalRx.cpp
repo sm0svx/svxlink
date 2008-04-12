@@ -315,6 +315,14 @@ bool LocalRx::initialize(void)
   int delay_line_len = 0;
   if (cfg.getValue(name(), "MUTE_DTMF", value))
   {
+    cerr << "*** ERROR: The MUTE_DTMF configuration variable has been\n"
+      	 << "           renamed to DTMF_MUTING. Change this in configuration\n"
+	 << "           section \"" << name() << "\".\n";
+    return false;
+  }
+  
+  if (cfg.getValue(name(), "DTMF_MUTING", value))
+  {
     mute_dtmf = (atoi(value.c_str()) != 0);
     delay_line_len = DTMF_MUTING_PRE;
   }
