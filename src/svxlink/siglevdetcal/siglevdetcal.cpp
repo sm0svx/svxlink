@@ -212,6 +212,7 @@ int main(int argc, char **argv)
 	      "8000, 16000 and 48000\n";
       exit(1);
     }
+    cout << "--- Using sample rate " << rate << "Hz\n";
   }
   
   string rx_type;
