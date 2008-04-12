@@ -129,13 +129,13 @@ class SigLevDet : public SigC::Object, public Async::AudioSink
      * @brief 	Set the detector slope
      * @param 	slope The detector slope to set
      */
-    void setDetectorSlope(float slope) { this->slope = slope; }
+    void setDetectorSlope(float slope);
 
     /**
      * @brief 	Set the detector offset
      * @param 	offset The offset to set
      */
-    void setDetectorOffset(float offset) { this->offset = offset; }
+    void setDetectorOffset(float offset);
   
     /**
      * @brief 	Read the latest calculated signal level

@@ -119,7 +119,7 @@ SigLevDet::SigLevDet(int sample_rate)
 {
   if (sample_rate >= 16000)
   {
-    filter = new AudioFilter("HpBu4/6000", sample_rate);
+    filter = new AudioFilter("BpBu4/5000-5500", sample_rate);
   }
   else
   {
@@ -131,6 +131,7 @@ SigLevDet::SigLevDet(int sample_rate)
   sigc_sink->sigFlushSamples.connect(
       slot(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
   sigc_sink->registerSource(filter);
+  reset();
 } /* SigLevDet::SigLevDet */
 
 
@@ -145,7 +146,22 @@ SigLevDet::~SigLevDet(void)
 void SigLevDet::reset(void)
 {
   filter->reset();
+  last_siglev = pow(10, -offset / slope);
 } /* SigLevDet::reset */
+
+
+void SigLevDet::setDetectorSlope(float slope)
+{
+  this->slope = slope;
+  reset();
+} /* SigLevDet::setDetectorSlope  */
+
+
+void SigLevDet::setDetectorOffset(float offset)
+{
+  this->offset = offset;
+  reset();
+} /* SigLevDet::setDetectorOffset  */
 
 
 
@@ -174,12 +190,11 @@ int SigLevDet::processSamples(float *samples, int count)
   }
   last_siglev = sqrt(rms / count);
   
+  //cout << lastSiglev() << endl;
+
   return count;
   
 } /* SigLevDet::processSamples */
-
-
-
 
 
 
