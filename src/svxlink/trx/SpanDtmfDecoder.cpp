@@ -129,11 +129,6 @@ SpanDtmfDecoder::SpanDtmfDecoder(Config &cfg, const string &name)
   : DtmfDecoder(cfg, name), last_detected_digit('?'), active_sample_cnt(0),
     hang_sample_cnt(0), state(STATE_IDLE)
 {
-  p = new PrivateData;
-  dtmf_rx_init(&p->rx_state, NULL, this);
-  //dtmf_rx_parms(rx_state, FALSE, 20, 20);
-  dtmf_rx_set_realtime_callback(&p->rx_state, SpanDtmfDecoder::toneReportCb,
-      	      	      	        this);
 } /* SpanDtmfDecoder::SpanDtmfDecoder */
 
 
@@ -141,6 +136,43 @@ SpanDtmfDecoder::~SpanDtmfDecoder(void)
 {
   delete p;
 } /* SpanDtmfDecoder::~SpanDtmfDecoder */
+
+
+bool SpanDtmfDecoder::initialize(void)
+{
+  if (!DtmfDecoder::initialize())
+  {
+    return false;
+  }
+  
+  string value;
+
+  int max_fwd_twist = 8;
+  if  (cfg().getValue(name(), "DTMF_MAX_FWD_TWIST", value))
+  {
+    max_fwd_twist = atoi(value.c_str());
+  }
+  
+  int max_rev_twist = 8;
+  if  (cfg().getValue(name(), "DTMF_MAX_REV_TWIST", value))
+  {
+    max_rev_twist = atoi(value.c_str());
+  }
+  
+  p = new PrivateData;
+  if (p == 0)
+  {
+    return false;
+  }
+  
+  dtmf_rx_init(&p->rx_state, NULL, this);
+  dtmf_rx_parms(&p->rx_state, FALSE, max_fwd_twist, max_rev_twist);
+  dtmf_rx_set_realtime_callback(&p->rx_state, SpanDtmfDecoder::toneReportCb,
+      	      	      	        this);
+  
+  return true;
+  
+} /* SpanDtmfDecoder::initialize */
 
 
 int SpanDtmfDecoder::writeSamples(const float *buf, int len)

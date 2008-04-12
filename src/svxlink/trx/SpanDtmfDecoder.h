@@ -120,6 +120,16 @@ class SpanDtmfDecoder : public DtmfDecoder
     virtual ~SpanDtmfDecoder(void);
     
     /**
+     * @brief 	Initialize the DTMF decoder
+     * @returns Returns \em true if the initialization was successful or
+     *          else \em false.
+     *
+     * Call this function to initialize the DTMF decoder. It must be called
+     * before using it.
+     */
+    virtual bool initialize(void);
+    
+    /**
      * @brief 	Write samples into the DTMF decoder
      * @param 	samples The buffer containing the samples
      * @param 	count The number of samples in the buffer
