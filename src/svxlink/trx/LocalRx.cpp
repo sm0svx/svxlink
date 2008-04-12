@@ -91,14 +91,8 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define DTMF_MUTING_PRE   100
-#define DTMF_MUTING_POST  100
-
-#if DTMF_MUTING_PRE > DTMF_MUTING_POST
-#define DTMF_DELAY_LINE_LEN DTMF_MUTING_PRE
-#else
-#define DTMF_DELAY_LINE_LEN DTMF_MUTING_POST
-#endif
+#define DTMF_MUTING_PRE   50
+#define DTMF_MUTING_POST  200
 
 
 /****************************************************************************
@@ -322,7 +316,7 @@ bool LocalRx::initialize(void)
   if (cfg.getValue(name(), "MUTE_DTMF", value))
   {
     mute_dtmf = (atoi(value.c_str()) != 0);
-    delay_line_len = DTMF_DELAY_LINE_LEN;
+    delay_line_len = DTMF_MUTING_PRE;
   }
   
   if (cfg.getValue(name(), "SQL_TAIL_ELIM", value))
