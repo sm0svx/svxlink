@@ -148,7 +148,7 @@ PLUGINS_INSTALL	= $(PLUGINS:%=%.so[755,root,root]) \
 PRE_TARGETS	= svxlink.1.gz svxlink.conf.5.gz ModuleHelp.conf.5.gz  \
 		  ModuleParrot.conf.5.gz ModuleEchoLink.conf.5.gz \
 		  ModuleTclVoiceMail.conf.5.gz ModuleDtmfRepeater.conf.5.gz \
-		  remoterx.1.gz remoterx.conf.5.gz
+		  remotetrx.1.gz remotetrx.conf.5.gz siglevdetcal.1.gz
 
 #POST_TARGETS	= 
 
@@ -232,8 +232,9 @@ install-extras uninstall-extras rpm-extras:
 	$(FILESPEC) ModuleEchoLink.conf.5.gz[644,root,root] /usr/share/man/man5
 	$(FILESPEC) ModuleTclVoiceMail.conf.5.gz[644,root,root] /usr/share/man/man5
 	$(FILESPEC) ModuleDtmfRepeater.conf.5.gz[644,root,root] /usr/share/man/man5
-	$(FILESPEC) remoterx.1.gz[644,root,root] /usr/share/man/man1
-	$(FILESPEC) remoterx.conf.5.gz[644,root,root] /usr/share/man/man5
+	$(FILESPEC) remotetrx.1.gz[644,root,root] /usr/share/man/man1
+	$(FILESPEC) remotetrx.conf.5.gz[644,root,root] /usr/share/man/man5
+	$(FILESPEC) siglevdetcal.1.gz[644,root,root] /usr/share/man/man1
 
 
 

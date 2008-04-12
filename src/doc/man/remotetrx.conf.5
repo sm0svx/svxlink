@@ -1,22 +1,23 @@
-.TH REMOTERX.CONF 5 "NOVEMBER 2006" Linux "File Formats"
+.TH REMOTETRX.CONF 5 "APRIL 2008" Linux "File Formats"
 .
 .SH NAME
 .
-remoterx.conf \- Configuration file for the SvxLink remote receiver server
+remotetrx.conf \- Configuration file for the SvxLink remote transceiver server
 .
 .SH DESCRIPTION
 .
-.B remoterx
-is the SvxLink remote receiver server. This man-page describe the configuration
-file format for it.
+.B remotetrx
+is the SvxLink remote transceiver server. This man-page describe the
+configuration file format for it.
 .P
-Remoterx look for configuration files in a number of places. First it try to
+Remotetrx look for configuration files in a number of places. First it tries to
 find a user specific configuration file. It will look for a user specific
 configuration file in two places:
-.BR $HOME/.svxlink/remoterx.conf " or " $HOME/.remoterxrc .
-Use the one that will best fit your need. If no user specific configuration file
-can be found, remoterx will look for the system wide configuration file
-.BR /etc/remoterx.conf .
+.BR $HOME/.svxlink/remotetrx.conf " or " $HOME/.remotetrxrc .
+The latter is deprecated. Use the one that will best fit your need. If no user
+specific configuration file can be found, remotetrx will look for the system
+wide configuration file
+.BR /etc/remotetrx.conf .
 The
 .B --config
 command line option may also be used to specify an arbitrary configuration file.
@@ -47,7 +48,7 @@ line value (see SECTION1/VALUE3).
 .
 .SH CONFIGURATION VARIABLES
 .
-Here is the description of all configuration variables that remoterx
+Here is the description of all configuration variables that remotetrx
 understands. The configuration variables are described section for section.
 .
 .SS GLOBAL
@@ -55,11 +56,24 @@ understands. The configuration variables are described section for section.
 The GLOBAL section contains application global configuration data.
 .TP
 .B RX
-Point out the receiver configuration section to use.
+Point out the receiver configuration section to use. Set to NONE if no RX is
+used. A receiver is configured in the exact same way as in the SvxLink server.
+Have a look at
+.BR svxlink.conf (5)
+for more information on how to configure a receiver.
+.TP
+.B TX
+Point out the transmitter configuration section to use. Set to NONE if no TX is
+used. A transmitter is configured in the exact same way as in the SvxLink
+server. Have a look at
+.BR svxlink.conf (5)
+for more information on how to configure a transmitter.
 .TP
 .B UPLINK
 Point out the uplink configuration section to use. The uplink section specify
-how this remote receiver should be linked to the main SvxLink server.
+how this remote receiver should be linked to the main SvxLink server. Read more
+about this in the "Network Uplink Section" or "TX Uplink Section" chapters
+below.
 .TP
 .B CFG_DIR
 Specify the path to a directory that contain additional configuration files.
@@ -94,6 +108,25 @@ examples of format specifiers are:
 .P
 So, TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S" would give a timestamp looking something like:
 "29 Nov 2005 22:31:59".
+.RE
+.TP
+.B CARD_SAMPLE_RATE
+This configuration variable determines the sampling rate used for audio
+input/output. SvxLink always work with a sampling rate of 8kHz internally but
+there still are som benefits from using a higher sampling rate. On some sound
+cards the filters look pretty bad at 8kHz and the amplitude response will not be
+uniform which among other things can cause problems for the software DTMF
+decoder.
+
+Some sound cards also sound very bad at 8kHz due to insufficient
+anti-alias filtering or resampling effects. These, often cheeper, sound cards
+sound OK at 48kHz.
+
+The downside of choosing a higher sampling rate is that it puts a little bit
+more load on the CPU so if you have a very slow machine (<300MHz), it might not
+have the computational power to handle it.
+
+Supported sampling rates are: 8000, 16000 and 48000.
 .
 .SS Network uplink section
 .
@@ -107,45 +140,40 @@ configuration variable and that variable can only have one value.
 .B TYPE
 Always "Net" for a networked uplink.
 .
-.SS Local Receiver Section
+.SS TX uplink section
 .
-A local receiver section is used to specify the configuration for a receiver
-connected to the sound card. In the default configuration file there is a Local
-configuration section called
-.BR Rx1 .
-The section name could be anything. It should match the RX configuration
-variable in the GLOBAL section where the receiver is to be used. The available
-configuration variables are the same as for a SvxLink server local receiver so
-use the
-.BR svxlink.conf (5)
-manual page as a reference.
-.
-.SS Voter Section
-.
-Receiver type "Voter" is a "receiver" that combines multiple receivers and
-selects one of them to take audio from when the squelch opens. Which receiver to
-use is selected directly after squelch open. Another selection is not done until
-the selected receivers squelch is closed and another receivers squelch is
-opened. In the default configuration file there is a voter section called
-.BR Voter .
-.P
-The usage of a voter on a remote receiver is not very common but it is possible.
-More common is to have one voter at the main SvxLink site that manage all
-receivers. The available configuration variables are the same as for a SvxLink
-server voter so use the
-.BR svxlink.conf (5)
-manual page as a reference.
+The TX uplink section is used to specify the configuration for a RF
+link to the main SvxLink server. In the default configuration file there is a
+TX uplink section called
+.BR TxUpLink .
+The section name could be anything. It should match the UPLINK configuration
+variable in the GLOBAL section.
+The use of TX uplinks is very EXPERIMENTAL and has not been tested in real life
+yet. It is also very simplistic at the moment. It just retransmits what comes in
+on the receiver. This can be used to link remote receivers coming in on the
+Internet to a site that do not have access to Internet. At the moment, only
+audio is relayed, no signal level information, receiver ID or other stuff like
+detected DTMF digits, tones etc.
+.TP
+.B TYPE
+Always "Tx" for a TX uplink.
+.TP
+.B TX
+Point out the uplink transmitter configuration section to use. The configuration
+for an uplink transmitter looks exactly the same as for any other transmitter.
+In the default configuration file there is an uplink transmitter configuration
+section called "UplinkTx".
 .
 .SH FILES
 .
 .TP
-.I /etc/remoterx.conf
+.I /etc/remotetrx.conf
 The system wide configuration file.
 .TP
-.IR ~/.svxlink/remoterx.conf " or " ~/.remoterxrc
+.IR ~/.svxlink/remotetrx.conf " or " ~/.remotetrxrc
 Per user configuration file.
 .TP
-.I /etc/remoterx.d/*
+.I /etc/remotetrx.d/*
 Additional configuration files.
 .
 .SH AUTHOR
@@ -156,4 +184,5 @@ Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
 .
 .BR svxlink (1),
 .BR svxlink.conf (1),
-.BR remoterx (1)
+.BR remotetrx (1),
+.BR siglevdetcal (1)

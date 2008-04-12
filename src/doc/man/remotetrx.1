@@ -1,0 +1,90 @@
+.TH REMOTETRX 1 "APRIL 2008" Linux "User Manuals"
+.
+.SH NAME
+.
+remotetrx \- The SvxLink remote transceiver application
+.
+.SH SYNOPSIS
+.
+.BI "remotetrx [--help] [--daemon] [--logfile=" "log file" "] [--config=" "configuration file" ]
+.
+.SH DESCRIPTION
+.
+.B remotetrx
+is the SvxLink remote transceiver application. It is used to connect to a
+receiver and/or transmitter and then the main SvxLink server can connect to the
+remote transceiver server via TCP/IP to get audio to/from it.
+.P
+The setup is pretty straight forward. The setup of a receiver or transmitter is
+done in the same way as in the SvxLink server so use the
+.BR svxlink.conf (5)
+manual page as a reference for that. The remotetrx specific configuration is
+described in the
+.BR remotetrx.conf (5)
+manual page.
+.P
+On the SvxLink server side you need to configure a networked
+receiver/transmitter. That is described in the
+.BR svxlink.conf (5)
+manual page in the Networked Receiver/Transmitter Section. If using multiple
+receivers you also want to configure a voter and make proper calibration of the
+signal level detector on each receiver.
+.
+.SH OPTIONS
+.
+.TP
+.B --help
+Print a help message and exit.
+.TP
+.B --daemon
+Start the SvxLink remote receiver server as a daemon.
+.TP
+.BI "--logfile=" "log file"
+Specify a log file to put all output into. Both stdout and stderr will be
+redirected to the log file.
+.TP
+.BI "--config=" "configuration file"
+Specify which configuration file to use.
+.
+.SH FILES
+.
+.TP
+.I /etc/remotetrx.conf
+The system wide configuration file. See
+.BR remotetrx.conf (5)
+for further details.
+.TP
+.IR ~/.svxlink/remotetrx.conf " or " ~/.remotetrxrc
+Per user configuration file. See
+.BR remotetrx.conf (5)
+for further details.
+.TP
+.I /etc/remotetrx.d/*
+Additional configuration files. This directory is setup by the CFG_DIR
+configuration variable.
+.
+.SH ENVIRONMENT
+.
+.TP
+ASYNC_AUDIO_NOTRIGGER
+Set this environment variable to 1 if you get an error about
+.B ioctl: Broken pipe
+when the remotetrx server starts.
+.TP
+HOME
+Used to find the per user configuration file.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
+.
+.SH REPORTING BUGS
+.
+SvxLink Devel <svxlink-devel at lists dot sourceforge dot net>
+.
+.SH "SEE ALSO"
+.
+.BR svxlink (1),
+.BR remotetrx.conf (5),
+.BR svxlink.conf (5),
+.BR siglevdetcal (1)

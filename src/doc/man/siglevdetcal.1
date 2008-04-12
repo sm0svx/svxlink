@@ -1,0 +1,72 @@
+.TH SIGLEVDETCAL 1 "APRIL 2008" Linux "User Manuals"
+.
+.SH NAME
+.
+siglevdetcal \- The SvxLink signal level detector calibration utility
+.
+.SH SYNOPSIS
+.
+.BI "siglevdetcal <" "configuration file" "> <" "RX config section name" >
+.
+.SH DESCRIPTION
+.
+.B siglevdetcal
+is the SvxLink signal level detector calibration utility. It is used to assist
+in the setup of the SIGLEV_SLOPE and SIGLEV_OFFSET configuration variables for a
+local receiver. The signal level detector need to be calibrated if a voter or
+the SIGLEV squelch detector is going to be used.
+.P
+The calibration procedure is quite simple and everything is more or less
+explained at run-time. The procedure is outlined below.
+.RS
+.IP \(bu 2
+Disconnect the antenna and the PTT cable. The PTT might be triggered by the
+siglevdetcal utility. If you want to be really sure that no harm come to your
+transceiver, connect a dummy load.
+.IP \(bu 2
+Setup the audio input level. The audio input level must not be changed after the
+calibration has been done.
+.IP \(bu 2
+Start the siglevdetcal utility.
+.IP \(bu 2
+Transmit on another radio so that the receiver under calibration will receive
+full signal strength.
+.IP \(bu 2
+Still holding the PTT, press ENTER and wait until the squelch open level
+measurements have been done.
+.IP \(bu 2
+Release the PTT. Make sure the squelch is open so that only noise is received.
+.IP \(bu 2
+Press ENTER to start the squelch close level measurements.
+.IP \(bu 2
+When finished, the two config variables SIGLEV_SLOPE and SIGLEV_OFFSET are
+printed. Put these in your configuration file under the corresponding receiver
+configuration section.
+.IP \(bu 2
+Start the SvxLink server and verify that full signal strength is showed as about
+100 and open squelch is showed as about 0. If full signal strength is not
+showed, you might have to setup SQL_DELAY to delay the signal level measurement
+until the signal is stable.
+.RE
+.
+.SH ENVIRONMENT
+.
+.TP
+ASYNC_AUDIO_NOTRIGGER
+Set this environment variable to 1 if you get an error about
+.B ioctl: Broken pipe
+when the remotetrx server starts.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
+.
+.SH REPORTING BUGS
+.
+SvxLink Devel <svxlink-devel at lists dot sourceforge dot net>
+.
+.SH "SEE ALSO"
+.
+.BR svxlink (1),
+.BR remotetrx (1),
+.BR svxlink.conf (5)
