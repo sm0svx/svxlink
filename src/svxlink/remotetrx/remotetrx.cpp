@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncCppApplication.h>
 #include <AsyncConfig.h>
 #include <AsyncFdWatch.h>
+#include <AsyncAudioIO.h>
 
 #include <version/REMOTE_TRX.h>
 
@@ -351,6 +352,37 @@ int main(int argc, char **argv)
   cout << PROGRAM_NAME " v" REMOTE_TRX_VERSION " (" __DATE__
       	  ") starting up...\n";
   cout << "\nUsing configuration file: " << main_cfg_filename << endl;
+  
+  string value;
+  if (cfg.getValue("GLOBAL", "CARD_SAMPLE_RATE", value))
+  {
+    int rate = atoi(value.c_str());
+    if (rate == 8000)
+    {
+      AudioIO::setSampleRate(rate);
+      AudioIO::setBlocksize(256);
+      AudioIO::setBufferCount(2);
+    }
+    else if (rate == 16000)
+    {
+      AudioIO::setSampleRate(rate);
+      AudioIO::setBlocksize(512);
+      AudioIO::setBufferCount(2);
+    }
+    else if (rate == 48000)
+    {
+      AudioIO::setSampleRate(rate);
+      AudioIO::setBlocksize(1024);
+      AudioIO::setBufferCount(4);
+    }
+    else
+    {
+      cerr << "*** ERROR: Illegal sound card sample rate specified for "
+      	      "config variable GLOBAL/CARD_SAMPLE_RATE. Valid rates are "
+	      "8000, 16000 and 48000\n";
+      exit(1);
+    }
+  }
   
   struct termios org_termios;
   if (logfile_name == 0)
