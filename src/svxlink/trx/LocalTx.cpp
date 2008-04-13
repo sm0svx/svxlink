@@ -560,8 +560,9 @@ bool LocalTx::initialize(void)
     // If preemphasis is enabled, create the preemphasis filter
   if (cfg.getValue(name, "PREEMPHASIS", value) && (atoi(value.c_str()) != 0))
   {
-    AudioFilter *preemph = new AudioFilter("HpBu1/3000");
-    preemph->setOutputGain(6);
+    //AudioFilter *preemph = new AudioFilter("HpBu1/3000");
+    AudioFilter *preemph = new AudioFilter("HsBq1/0.05/36/3500");
+    preemph->setOutputGain(0.3459);
     prev_src->registerSink(preemph, true);
     prev_src = preemph;
   }

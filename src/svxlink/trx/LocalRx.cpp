@@ -393,8 +393,9 @@ bool LocalRx::initialize(void)
   if (deemphasis)
   {
     //AudioFilter *deemph_filt = new AudioFilter("LpBu1/300");
-    AudioFilter *deemph_filt = new AudioFilter("HsBq1/0.01/-18/3500");
-    deemph_filt->setOutputGain(2);
+    //AudioFilter *deemph_filt = new AudioFilter("HsBq1/0.01/-18/3500");
+    AudioFilter *deemph_filt = new AudioFilter("HsBq1/0.05/-36/3500");
+    deemph_filt->setOutputGain(2.88);
     prev_src->registerSink(deemph_filt, true);
     prev_src = deemph_filt;
   }
