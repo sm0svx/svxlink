@@ -162,6 +162,7 @@ bool TxUplink::initialize(void)
     return false;
   }
   uplink_tx->setTxCtrlMode(Tx::TX_AUTO);
+  uplink_tx->enableCtcss(true);
   prev_src->registerSink(uplink_tx);
   prev_src = 0;
   

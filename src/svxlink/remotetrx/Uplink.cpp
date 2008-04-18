@@ -134,7 +134,7 @@ Uplink *Uplink::create(Config &cfg, const string &name, Rx *rx, Tx *tx)
   else
   {
     cerr << "*** ERROR: Unknown uplink type \"" << uplink_type
-      	 << "\". Legal values are: \"Net\"\n";
+      	 << "\". Legal values are: \"Net\" and \"Tx\"\n";
     return 0;
   }
   
