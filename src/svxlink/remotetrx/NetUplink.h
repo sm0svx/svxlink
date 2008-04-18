@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncConfig.h>
 #include <AsyncTcpConnection.h>
+#include <NetTrxMsg.h>
 
 
 /****************************************************************************
@@ -130,7 +131,8 @@ class NetUplink : public Uplink
     /**
      * @brief 	Default constuctor
      */
-    NetUplink(Async::Config &cfg, const std::string &name, Rx *rx, Tx *tx);
+    NetUplink(Async::Config &cfg, const std::string &name, Rx *rx, Tx *tx,
+      	      const std::string& port_str = NET_TRX_DEFAULT_TCP_PORT);
   
     /**
      * @brief 	Destructor
@@ -156,6 +158,8 @@ class NetUplink : public Uplink
     Tx	      	      	    *tx;
     Async::AudioFifo  	    *fifo;
     Async::SigCAudioSource  *sigc_src;
+    Async::Config     	    &cfg;
+    std::string       	    name;
     
     NetUplink(const NetUplink&);
     NetUplink& operator=(const NetUplink&);

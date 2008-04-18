@@ -1,12 +1,14 @@
 /**
-@file	 TxUplink.h
-@brief   A simple uplink that just retransmits what comes into the receiver
+@file	 NetTrxAdapter.h
+@brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-03-20
+@date	 2008-04-15
+
+A_detailed_description_for_this_file
 
 \verbatim
-RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2008  Tobias Blomberg / SM0SVX
+<A brief description of the program or library this file belongs to>
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,8 +26,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef TX_UPLINK_INCLUDED
-#define TX_UPLINK_INCLUDED
+#ifndef NET_TRX_ADAPTER_INCLUDED
+#define NET_TRX_ADAPTER_INCLUDED
 
 
 /****************************************************************************
@@ -34,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <map>
 
 
 /****************************************************************************
@@ -45,14 +48,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 
 
-
 /****************************************************************************
  *
  * Local Includes
  *
  ****************************************************************************/
-
-#include "Uplink.h"
 
 
 
@@ -62,6 +62,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+class Uplink;
+class TxAdapter;
+class RxAdapter;
 
 
 /****************************************************************************
@@ -105,56 +108,62 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief	A simple uplink that just retransmits what comes into the receiver
+@brief	A_brief_class_description
 @author Tobias Blomberg / SM0SVX
-@date   2008-03-20
+@date   2008-
 
-This class is a simple uplink that just retransmit what comes into the
-connected receiver(s).
+A_detailed_class_description
+
+\include NetTrxAdapter_demo.cpp
 */
-class TxUplink : public Uplink
+class NetTrxAdapter
 {
   public:
+    static NetTrxAdapter *instance(Async::Config &cfg,
+      	      	      	      	   const std::string &net_uplink_name);
+    
     /**
-     * @brief 	Constuctor
-     * @param 	cfg A previously initialized config object
-     * @param 	name The name of the uplink
-     * @param 	rx The receiver
-     * @param 	tx The transmitter
+     * @brief 	Default constuctor
      */
-    TxUplink(Async::Config &cfg, const std::string &name, Rx *rx, Tx *tx);
+    NetTrxAdapter(Async::Config &cfg, const std::string &net_uplink_name);
   
     /**
      * @brief 	Destructor
      */
-    ~TxUplink(void);
+    ~NetTrxAdapter(void);
   
     /**
-     * @brief 	Initialize the uplink
-     * @return	Return \em true on success or \em false on failure
+     * @brief 	A_brief_member_function_description
+     * @param 	param1 Description_of_param1
+     * @return	Return_value_of_this_member_function
      */
-    virtual bool initialize(void);
-        
+    bool initialize(void);
+    
+    Rx *rx(void);
+    Tx *tx(void);
+    
+
   protected:
     
   private:
-    Async::Config &cfg;
-    std::string   name;
-    Rx	      	  *rx;
-    Tx	      	  *tx;
-    Tx	      	  *uplink_tx;
-    Rx	      	  *uplink_rx;
+    static std::map<std::string, NetTrxAdapter*> net_trx_adapters;
     
-    TxUplink(const TxUplink&);
-    TxUplink& operator=(const TxUplink&);
-    void uplinkRxDtmfRcvd(char digit, int duration);
-
-};  /* class TxUplink */
+    Uplink    	  *ul;
+    Async::Config cfg;
+    TxAdapter 	  *txa1;
+    TxAdapter 	  *txa2;
+    RxAdapter 	  *rxa1;
+    std::string   net_uplink_name;
+    
+    NetTrxAdapter(const NetTrxAdapter&);
+    NetTrxAdapter& operator=(const NetTrxAdapter&);
+    
+};  /* class NetTrxAdapter */
 
 
 //} /* namespace */
 
-#endif /* TX_UPLINK_INCLUDED */
+#endif /* NET_TRX_ADAPTER_INCLUDED */
 
 
 

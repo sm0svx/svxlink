@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Rx.h"
 #include "Tx.h"
 #include "Uplink.h"
+#include "NetTrxAdapter.h"
 
 
 /****************************************************************************
@@ -177,7 +178,25 @@ bool TrxHandler::initialize(void)
   
   if (rx_name != "NONE")
   {
-    rx = Rx::create(cfg, rx_name);
+    string rx_type;
+    if (!cfg.getValue(rx_name, "TYPE", rx_type))
+    {
+      cerr << "*** ERROR: " << rx_name << "/TYPE not set\n";
+      cleanup();
+      return false;
+    }
+    if (rx_type == "NetTrxAdapter")
+    {
+      NetTrxAdapter *adapter = NetTrxAdapter::instance(cfg, rx_name);
+      if (adapter != 0)
+      {
+      	rx = adapter->rx();
+      }
+    }
+    else
+    {
+      rx = Rx::create(cfg, rx_name);
+    }
     if ((rx == 0) || !rx->initialize())
     {
       cerr << "*** ERROR: Could not initialize Rx object \""
@@ -193,7 +212,25 @@ bool TrxHandler::initialize(void)
 
   if (tx_name != "NONE")
   {
-    tx = Tx::create(cfg, tx_name);
+    string tx_type;
+    if (!cfg.getValue(tx_name, "TYPE", tx_type))
+    {
+      cerr << "*** ERROR: " << tx_name << "/TYPE not set\n";
+      cleanup();
+      return false;
+    }
+    if (tx_type == "NetTrxAdapter")
+    {
+      NetTrxAdapter *adapter = NetTrxAdapter::instance(cfg, tx_name);
+      if (adapter != 0)
+      {
+      	tx = adapter->tx();
+      }
+    }
+    else
+    {
+      tx = Tx::create(cfg, tx_name);
+    }
     if ((tx == 0) || !tx->initialize())
     {
       cerr << "*** ERROR: Could not initialize Tx object \""

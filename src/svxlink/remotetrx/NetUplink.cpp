@@ -42,7 +42,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncTcpServer.h>
-#include <NetTrxMsg.h>
 #include <SigCAudioSink.h>
 #include <SigCAudioSource.h>
 #include <AsyncAudioFifo.h>
@@ -117,9 +116,10 @@ using namespace NetTrxMsg;
  *
  ****************************************************************************/
 
-NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx)
+NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
+      	      	     const string& port_str)
   : server(0), con(0), recv_cnt(0), recv_exp(0), rx(rx), tx(tx), fifo(0),
-    sigc_src(0)
+    sigc_src(0), cfg(cfg), name(name)
 {
   
 } /* NetUplink::NetUplink */
@@ -135,7 +135,15 @@ NetUplink::~NetUplink(void)
 
 bool NetUplink::initialize(void)
 {
-  server = new TcpServer(NET_TRX_DEFAULT_TCP_PORT);
+  string listen_port;
+  if (!cfg.getValue(name, "LISTEN_PORT", listen_port))
+  {
+    cerr << "*** ERROR: Configuration variable " << name
+      	 << "/LISTEN_PORT is missing.\n";
+    return false;
+  }
+  
+  server = new TcpServer(listen_port);
   server->clientConnected.connect(slot(*this, &NetUplink::clientConnected));
   server->clientDisconnected.connect(
       slot(*this, &NetUplink::clientDisconnected));
@@ -176,22 +184,6 @@ bool NetUplink::initialize(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
 
 
 /****************************************************************************
@@ -200,19 +192,6 @@ bool NetUplink::initialize(void)
  *
  ****************************************************************************/
 
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
 
 void NetUplink::clientConnected(TcpConnection *incoming_con)
 {
@@ -374,13 +353,13 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgAudio::TYPE:
     {
       MsgAudio *audio_msg = reinterpret_cast<MsgAudio *>(msg);
-      fifo->writeSamples(audio_msg->samples(), audio_msg->count());
+      sigc_src->writeSamples(audio_msg->samples(), audio_msg->count());
       break;
     }
      
     case MsgFlush::TYPE:
     {
-      fifo->flushSamples();
+      sigc_src->flushSamples();
       break;
     } 
     
@@ -416,7 +395,7 @@ void NetUplink::squelchOpen(bool is_open)
 {
   MsgSquelch *msg = new MsgSquelch(is_open, rx->signalStrength(),
       	      	      	      	   rx->sqlRxId());
-  sendMsg(msg);  
+  sendMsg(msg);
 } /* NetUplink::squelchOpen */
 
 
@@ -439,7 +418,6 @@ void NetUplink::toneDetected(float tone_fq)
 
 int NetUplink::audioReceived(float *samples, int count)
 {
-  //cout << "NetUplink::audioReceived: count=" << count << endl;
   count = min(count, 512);
   MsgAudio *msg = new MsgAudio(samples, count);
   sendMsg(msg);

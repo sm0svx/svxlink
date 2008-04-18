@@ -43,6 +43,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <Rx.h>
 #include <Tx.h>
+#include <AsyncAudioDebugger.h>
+#include <AsyncAudioFifo.h>
 
 
 /****************************************************************************
@@ -114,7 +116,7 @@ using namespace Async;
  ****************************************************************************/
 
 TxUplink::TxUplink(Config &cfg, const string &name, Rx *rx, Tx *tx)
-  : cfg(cfg), name(name), rx(rx), uplink_tx(0)
+  : cfg(cfg), name(name), rx(rx), tx(tx), uplink_tx(0), uplink_rx(0)
 {
   
 } /* TxUplink::TxUplink */
@@ -131,22 +133,56 @@ bool TxUplink::initialize(void)
   string uplink_tx_name;
   if (!cfg.getValue(name, "TX", uplink_tx_name))
   {
-    cerr << "*** ERROR: Config variable " << name << "/TX not spoecified.\n";
+    cerr << "*** ERROR: Config variable " << name << "/TX not set.\n";
     return false;
   }
+
+  string uplink_rx_name;
+  if (!cfg.getValue(name, "RX", uplink_rx_name))
+  {
+    cerr << "*** ERROR: Config variable " << name << "/RX not set.\n";
+    return false;
+  }
+
+  rx->reset();
+  rx->mute(false);
+  AudioSource *prev_src = rx;
+  
+  AudioFifo *fifo = new AudioFifo(8000);
+  fifo->setPrebufSamples(512);
+  prev_src->registerSink(fifo);
+  prev_src = fifo;
   
   uplink_tx = Tx::create(cfg, uplink_tx_name);
   if ((uplink_tx == 0) || !uplink_tx->initialize())
   {
     cerr << "*** ERROR: Could not initialize uplink transmitter\n";
     delete uplink_tx;
+    uplink_tx = 0;
     return false;
   }
-  
   uplink_tx->setTxCtrlMode(Tx::TX_AUTO);
-  rx->registerSink(uplink_tx);
-  rx->reset();
-  rx->mute(false);
+  prev_src->registerSink(uplink_tx);
+  prev_src = 0;
+  
+  
+  uplink_rx = Rx::create(cfg, uplink_rx_name);
+  if ((uplink_rx == 0) || !uplink_rx->initialize())
+  {
+    delete uplink_tx;
+    uplink_tx = 0;
+    delete uplink_rx;
+    uplink_rx = 0;
+    return false;
+  }
+  uplink_rx->dtmfDigitDetected.connect(
+      slot(*this, &TxUplink::uplinkRxDtmfRcvd));
+  uplink_rx->reset();
+  uplink_rx->mute(false);
+  prev_src = uplink_rx;
+  
+  tx->setTxCtrlMode(Tx::TX_AUTO);
+  prev_src->registerSink(tx);
   
   return true;
   
@@ -169,7 +205,11 @@ bool TxUplink::initialize(void)
  *
  ****************************************************************************/
 
-
+void TxUplink::uplinkRxDtmfRcvd(char digit, int duration)
+{
+  char digit_str[2] = {digit, 0};
+  tx->sendDtmf(digit_str);
+} /* TxUplink::uplinkRxDtmfRcvd */
 
 
 
