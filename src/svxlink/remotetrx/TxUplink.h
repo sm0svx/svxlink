@@ -148,6 +148,7 @@ class TxUplink : public Uplink
     TxUplink(const TxUplink&);
     TxUplink& operator=(const TxUplink&);
     void uplinkRxDtmfRcvd(char digit, int duration);
+    void rxSquelchOpen(bool is_open);
 
 };  /* class TxUplink */
 

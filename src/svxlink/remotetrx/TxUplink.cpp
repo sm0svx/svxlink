@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+#include <algorithm>
 
 
 /****************************************************************************
@@ -144,6 +145,7 @@ bool TxUplink::initialize(void)
     return false;
   }
 
+  rx->squelchOpen.connect(slot(*this, &TxUplink::rxSquelchOpen));
   rx->reset();
   rx->mute(false);
   AudioSource *prev_src = rx;
@@ -211,6 +213,18 @@ void TxUplink::uplinkRxDtmfRcvd(char digit, int duration)
   char digit_str[2] = {digit, 0};
   tx->sendDtmf(digit_str);
 } /* TxUplink::uplinkRxDtmfRcvd */
+
+void TxUplink::rxSquelchOpen(bool is_open)
+{
+  /*
+  if (is_open)
+  {
+    int ss = min(99, max(0, static_cast<int>(rx->signalStrength())));
+    char dtmf_str[] = {'0' + ss / 10, 0};
+    uplink_tx->sendDtmf(dtmf_str);
+  }
+  */
+} /* TxUplink::rxSquelchOpen  */
 
 
 
