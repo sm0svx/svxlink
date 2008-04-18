@@ -98,6 +98,7 @@ using namespace SigC;
  *
  ****************************************************************************/
 
+#define USE_AUDIO_VALVE 0
 
 
 /****************************************************************************
@@ -408,7 +409,8 @@ LocalTx::LocalTx(Config& cfg, const string& name)
     serial(0), ptt_pin1(Serial::PIN_NONE), ptt_pin1_rev(false),
     ptt_pin2(Serial::PIN_NONE), ptt_pin2_rev(false), txtot(0),
     tx_timeout_occured(false), tx_timeout(0), ctcss_enable(false),
-    dtmf_encoder(0), selector(0), dtmf_valve(0), input_handler(0)
+    dtmf_encoder(0), selector(0), dtmf_valve(0), input_handler(0),
+    audio_valve(0)
 {
 
 } /* LocalTx::LocalTx */
@@ -588,6 +590,15 @@ bool LocalTx::initialize(void)
   prev_src->registerSink(sf, true);
   prev_src = sf;
   
+    // Create a valve so that we can control when to transmit audio
+  #if USE_AUDIO_VALVE
+  audio_valve = new AudioValve;
+  audio_valve->setBlockWhenClosed(true);
+  audio_valve->setOpen(true);
+  prev_src->registerSink(audio_valve, true);
+  prev_src = audio_valve;
+  #endif
+  
     // We need a selector to choose if DTMF or normal audio should be
     // transmitted
   selector = new AudioSelector;
@@ -597,6 +608,7 @@ bool LocalTx::initialize(void)
   
     // Create the DTMF encoder
   dtmf_encoder = new DtmfEncoder(8000);
+  dtmf_encoder->allDigitsSent.connect(slot(*this, &LocalTx::allDtmfDigitsSent));
   dtmf_encoder->setToneLength(dtmf_tone_length);
   dtmf_encoder->setToneSpacing(dtmf_tone_spacing);
   dtmf_encoder->setToneAmplitude(dtmf_tone_amp);
@@ -692,6 +704,9 @@ void LocalTx::enableCtcss(bool enable)
 
 void LocalTx::sendDtmf(const string& digits)
 {
+  #if USE_AUDIO_VALVE
+  audio_valve->setOpen(false);
+  #endif
   dtmf_encoder->send(digits);
 } /* LocalTx::sendDtmf */
 
@@ -843,6 +858,14 @@ bool LocalTx::setPtt(bool tx)
   return true;
 
 } /* LocalTx::setPtt  */
+
+
+void LocalTx::allDtmfDigitsSent(void)
+{
+  #if USE_AUDIO_VALVE
+  audio_valve->setOpen(true);
+  #endif
+} /* LocalTx::allDtmfDigitsSent  */
 
 
 

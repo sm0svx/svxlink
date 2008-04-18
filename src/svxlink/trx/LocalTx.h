@@ -207,11 +207,13 @@ class LocalTx : public Tx
     Async::AudioValve 	    *dtmf_valve;
     InputHandler      	    *input_handler;
     PttCtrl   	      	    *ptt_ctrl;
+    Async::AudioValve 	    *audio_valve;
     
     void txTimeoutOccured(Async::Timer *t);
     int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);
     bool setPtt(bool tx);
     void transmit(bool do_transmit);
+    void allDtmfDigitsSent(void);
 
 };  /* class LocalTx */
 
