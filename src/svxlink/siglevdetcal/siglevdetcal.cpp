@@ -229,7 +229,7 @@ int main(int argc, char **argv)
          << "local receiver. You are on your own...\n";
   }
   
-  rx = Rx::create(cfg, rx_name);
+  rx = RxFactory::createNamedRx(cfg, rx_name);
   if ((rx == 0) || !rx->initialize())
   {
     cerr << "*** ERROR: Could not initialize receiver \"" << rx_name << "\"\n";

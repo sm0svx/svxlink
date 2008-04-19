@@ -169,7 +169,7 @@ bool TxUplink::initialize(void)
   prev_src = 0;
   
   
-  uplink_rx = Rx::create(cfg, uplink_rx_name);
+  uplink_rx = RxFactory::createNamedRx(cfg, uplink_rx_name);
   if ((uplink_rx == 0) || !uplink_rx->initialize())
   {
     delete uplink_tx;

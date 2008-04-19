@@ -195,7 +195,7 @@ bool TrxHandler::initialize(void)
     }
     else
     {
-      rx = Rx::create(cfg, rx_name);
+      rx = RxFactory::createNamedRx(cfg, rx_name);
     }
     if ((rx == 0) || !rx->initialize())
     {

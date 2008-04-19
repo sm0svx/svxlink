@@ -82,6 +82,43 @@ using namespace Async;
  *
  ****************************************************************************/
 
+class LocalRxFactory : public RxFactory
+{
+  public:
+    LocalRxFactory(void) : RxFactory("Local") {}
+    
+  protected:
+    Rx *createRx(Config &cfg, const string& name)
+    {
+      return new LocalRx(cfg, name);
+    }
+}; /* class LocalRxFactory */
+
+
+class VoterFactory : public RxFactory
+{
+  public:
+    VoterFactory(void) : RxFactory("Voter") {}
+    
+  protected:
+    Rx *createRx(Config &cfg, const string& name)
+    {
+      return new Voter(cfg, name);
+    }
+}; /* class VoterFactory */
+
+
+class NetRxFactory : public RxFactory
+{
+  public:
+    NetRxFactory(void) : RxFactory("Net") {}
+    
+  protected:
+    Rx *createRx(Config &cfg, const string& name)
+    {
+      return new NetRx(cfg, name);
+    }
+}; /* class NetRxFactory */
 
 
 /****************************************************************************
@@ -107,6 +144,9 @@ using namespace Async;
  *
  ****************************************************************************/
 
+map<string, RxFactory*> RxFactory::rx_factories;
+bool RxFactory::is_initialized = false;
+
 
 
 /****************************************************************************
@@ -115,8 +155,11 @@ using namespace Async;
  *
  ****************************************************************************/
 
+#if 0
 Rx *Rx::create(Config& cfg, const string& name)
 {
+  return RxFactory::createNamedRx(cfg, name);
+
   Rx *rx = 0;
   string rx_type;
   if (!cfg.getValue(name, "TYPE", rx_type))
@@ -147,6 +190,59 @@ Rx *Rx::create(Config& cfg, const string& name)
   return rx;
   
 } /* Rx::create */
+#endif
+
+
+RxFactory::RxFactory(const string &name)
+  : m_name(name)
+{
+  rx_factories[name] = this;
+} /* RxFactory::RxFactory */
+
+
+RxFactory::~RxFactory(void)
+{
+  std::map<std::string, RxFactory*>::iterator it;
+  it = rx_factories.find(m_name);
+  assert(it != rx_factories.end());
+  rx_factories.erase(it);
+} /* RxFactory::~RxFactory */
+
+
+Rx *RxFactory::createNamedRx(Config& cfg, const string& name)
+{
+  if (!is_initialized)
+  {
+    new LocalRxFactory;
+    new VoterFactory;
+    new NetRxFactory;
+    is_initialized = true;
+  }
+  
+  string rx_type;
+  if (!cfg.getValue(name, "TYPE", rx_type))
+  {
+    cerr << "*** ERROR: Config variable " << name << "/TYPE not set\n";
+    return 0;
+  }
+  
+  map<string, RxFactory*>::iterator it;
+  it = rx_factories.find(rx_type);
+  if (it == rx_factories.end())
+  {
+    cerr << "*** ERROR: Unknown RX type \"" << rx_type << "\". Legal values "
+         << "are: ";
+    for (it=rx_factories.begin(); it!=rx_factories.end(); ++it)
+    {
+      cerr << "\"" << (*it).first << "\" ";
+    }
+    cerr << endl;
+    return 0;
+  }
+  
+  return (*it).second->createRx(cfg, name);
+
+} /* RxFactory::createNamedRx */
 
 
 

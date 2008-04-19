@@ -58,6 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 #include <AsyncFdWatch.h>
 #include <AsyncAudioIO.h>
+#include <Rx.h>
 
 #include <version/REMOTE_TRX.h>
 
@@ -69,6 +70,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "TrxHandler.h"
+#include "NetTrxAdapter.h"
 
 
 /****************************************************************************
@@ -97,6 +99,23 @@ using namespace SigC;
  * Local class definitions
  *
  ****************************************************************************/
+
+class NetTrxAdapterFactory : public RxFactory
+{
+  public:
+    NetTrxAdapterFactory(void) : RxFactory("NetTrxAdapter") {}
+    
+  protected:
+    Rx *createRx(Config &cfg, const string& name)
+    {
+      NetTrxAdapter *adapter = NetTrxAdapter::instance(cfg, name);
+      if (adapter == 0)
+      {
+      	return 0;
+      }
+      return adapter->rx();
+    }
+}; /* class TrxAdapterFactory */
 
 
 
@@ -396,6 +415,8 @@ int main(int argc, char **argv)
     stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
     stdin_watch->activity.connect(slot(&stdinHandler));
   }
+  
+  new NetTrxAdapterFactory;
 
   TrxHandler *trx_handler = new TrxHandler(cfg);
   if (trx_handler->initialize())

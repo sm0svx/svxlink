@@ -336,7 +336,7 @@ bool Logic::initialize(void)
   AudioSource *prev_rx_src = 0;
   
     // Create the RX object
-  m_rx = Rx::create(cfg(), rx_name);
+  m_rx = RxFactory::createNamedRx(cfg(), rx_name);
   if ((m_rx == 0) || !rx().initialize())
   {
     cerr << "*** ERROR: Could not initialize RX \"" << rx_name << "\"\n";

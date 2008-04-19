@@ -42,6 +42,8 @@ An example of how to use the Template class
 #include <sigc++/sigc++.h>
 
 #include <string>
+#include <map>
+#include <cassert>
 
 
 /****************************************************************************
@@ -120,7 +122,7 @@ This class is used as the base class for all receivers.
 class Rx : public SigC::Object, public Async::AudioSource
 {
   public:
-    static Rx *create(Async::Config& cfg, const std::string& name);
+    //static Rx *create(Async::Config& cfg, const std::string& name);
     
     /**
      * @brief 	Default constuctor
@@ -240,6 +242,30 @@ class Rx : public SigC::Object, public Async::AudioSource
     bool      	  m_sql_open;
     
 };  /* class Rx */
+
+
+class RxFactory
+{
+  public:
+    static Rx *createNamedRx(Async::Config& cfg, const std::string& name);
+
+    RxFactory(const std::string &name);
+    
+    virtual ~RxFactory(void);
+    
+    //const std::string &name(void) const { return m_name; }
+    
+    
+  protected:
+    virtual Rx *createRx(Async::Config& cfg, const std::string& name) = 0;
+  
+  private:
+    static std::map<std::string, RxFactory*> rx_factories;
+    static bool is_initialized;
+    
+    std::string m_name;
+    
+};  /* class RxFactory */
 
 
 //} /* namespace */

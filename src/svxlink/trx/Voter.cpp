@@ -287,12 +287,19 @@ bool Voter::initialize(void)
     if (!rx_name.empty())
     {
       cout << "Adding receiver to Voter: " << rx_name << endl;
-      SatRx *srx = new SatRx(rxs.size() + 1, Rx::create(cfg, rx_name));
+      Rx *rx = RxFactory::createNamedRx(cfg, rx_name);
+      if (rx == 0)
+      {
+      	// FIXME: Cleanup
+      	return false;
+      }
+      SatRx *srx = new SatRx(rxs.size() + 1, rx);
       srx->squelchOpen.connect(slot(*this, &Voter::satSquelchOpen));
       srx->dtmfDigitDetected.connect(dtmfDigitDetected.slot());
-      Rx *rx = srx->rx;
+      //Rx *rx = srx->rx;
       if ((srx == 0) || !rx->initialize())
       {
+      	// FIXME: Cleanup
       	return false;
       }
       srx->mute(true);
