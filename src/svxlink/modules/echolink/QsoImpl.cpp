@@ -199,10 +199,12 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   selector->registerSink(&m_qso);
   
   event_handler = new EventHandler(event_handler_script, 0);
-  event_handler->playFile.connect(slot(*msg_handler, &MsgHandler::playFile));
+  event_handler->playFile.connect(
+      	  bind(slot(*msg_handler, &MsgHandler::playFile), false));
   event_handler->playSilence.connect(
-      	  slot(*msg_handler, &MsgHandler::playSilence));
-  event_handler->playTone.connect(slot(*msg_handler, &MsgHandler::playTone));
+      	  bind(slot(*msg_handler, &MsgHandler::playSilence), false));
+  event_handler->playTone.connect(
+      	  bind(slot(*msg_handler, &MsgHandler::playTone), false));
 
     // Workaround: Need to set the ID config variable and "logic_name"
     // variable to load the TCL script.

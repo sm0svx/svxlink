@@ -209,7 +209,8 @@ Logic::Logic(Config &cfg, const string& name)
     audio_from_module_selector(0),  audio_to_module_splitter(0),
     audio_to_module_selector(0),    idle_det(0),
     is_idle(true),                  fx_gain_normal(0),
-    fx_gain_low(-12), 	      	    long_cmd_digits(100)
+    fx_gain_low(-12), 	      	    long_cmd_digits(100),
+    report_events_as_idle(false)
 {
   logic_con_in = new AudioSplitter;
   logic_con_out = new AudioSelector;
@@ -553,24 +554,21 @@ void Logic::setEventVariable(const string& name, const string& value)
 
 void Logic::playFile(const string& path)
 {
-  //module_tx_fifo->stopOutput(true);
-  msg_handler->playFile(path);
+  msg_handler->playFile(path, report_events_as_idle);
   checkIdle();
 } /* Logic::playFile */
 
 
 void Logic::playSilence(int length)
 {
-  //module_tx_fifo->stopOutput(true);
-  msg_handler->playSilence(length);
+  msg_handler->playSilence(length, report_events_as_idle);
   checkIdle();
 } /* Logic::playSilence */
 
 
 void Logic::playTone(int fq, int amp, int len)
 {
-  //module_tx_fifo->stopOutput(true);
-  msg_handler->playTone(fq, amp, len);
+  msg_handler->playTone(fq, amp, len, report_events_as_idle);
   checkIdle();
 } /* Logic::playSilence */
 
@@ -816,7 +814,7 @@ bool Logic::getIdleState(void) const
 {
   return !rx().squelchIsOpen() &&
       	 idle_det->isIdle() &&
-      	 !msg_handler->isWritingMessage();
+      	 msg_handler->isIdle();
 	 
 } /* Logic::getIdleState */
 

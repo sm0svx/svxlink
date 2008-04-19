@@ -138,13 +138,13 @@ class MsgHandler : public SigC::Object, public Async::AudioSource
      * @brief 	Play a file
      * @param 	path The full path to the file to play
      */
-    void playFile(const std::string& path);
+    void playFile(const std::string& path, bool idle_marked);
     
     /**
      * @brief 	Play the given number of milliseconds of silence
      * @param 	length The length in milliseconds of the silence
      */
-    void playSilence(int length);
+    void playSilence(int length, bool idle_marked);
     
     /**
      * @brief 	Play a sinus tone
@@ -152,19 +152,19 @@ class MsgHandler : public SigC::Object, public Async::AudioSource
      * @param 	amp The amplitude of the tone to play
      * @param 	length The length in milliseconds of the tone to play
      */
-    void playTone(int fq, int amp, int length);
-    
-    /**
-     * @brief 	Stop or start output of samples
-     * @param 	is_full \em true to stop output or \em false to start output
-     */
-    //void writeBufferFull(bool is_full);
+    void playTone(int fq, int amp, int length, bool idle_marked);
     
     /**
      * @brief 	Check if a message is beeing written
      * @return	Return \em true if a message is beeing written
      */
     bool isWritingMessage(void) const { return is_writing_message; }
+    
+    /**
+     * @brief 	Check if the message writer is idle (ignoring idle marked items)
+     * @return	Returns \em true if the idle or else \em false
+     */
+    bool isIdle(void) const { return non_idle_cnt == 0; }
     
     /**
      * @brief 	Clear all messages
@@ -186,14 +186,6 @@ class MsgHandler : public SigC::Object, public Async::AudioSource
      * executed.
      */
     void end(void);    
-    
-    /**
-     * @brief 	A signal that is emitted to write audio
-     * @param 	samples A buffer containing the samples to write
-     * @param 	count The number of samples to write
-     * @return	The slot should return the number of samples written
-     */
-    //SigC::Signal2<int, float*, int> writeAudio;
     
     /**
      * @brief 	A signal that is emitted when all messages has been written
@@ -226,12 +218,14 @@ class MsgHandler : public SigC::Object, public Async::AudioSource
     bool      	      	    pending_play_next;
     QueueItem 	      	    *current;
     bool      	      	    is_writing_message;
+    int       	      	    non_idle_cnt;
     
     MsgHandler(const MsgHandler&);
     MsgHandler& operator=(const MsgHandler&);
     void addItemToQueue(QueueItem *item);
     void playMsg(void);
     void writeSamples(void);
+    void deleteQueueItem(QueueItem *item);
 
 }; /* class MsgHandler */
 

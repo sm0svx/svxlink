@@ -201,6 +201,8 @@ class Logic : public SigC::Object
     
     bool isIdle(void) const { return is_idle; }
     
+    void setReportEventsAsIdle(bool idle) { report_events_as_idle = idle; }
+    
     SigC::Signal1<void, bool> idleStateChanged;
     
     
@@ -274,6 +276,7 @@ class Logic : public SigC::Object
     int                         fx_gain_low;
     unsigned       	      	long_cmd_digits;
     std::string       	      	long_cmd_module;
+    bool      	      	      	report_events_as_idle;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);

@@ -98,17 +98,24 @@ using namespace std;
 class QueueItem
 {
   public:
+    QueueItem(bool idle_marked) : idle_marked(idle_marked) {}
     virtual ~QueueItem(void) {}
     virtual bool initialize(void) { return true; }
     virtual int readSamples(float *samples, int len) = 0;
     virtual void unreadSamples(int len) = 0;
+    
+    bool idleMarked(void) const { return idle_marked; }
+  
+  private:
+    bool  idle_marked;
 };
 
 class SilenceQueueItem : public QueueItem
 {
   public:
-    SilenceQueueItem(int len, int sample_rate)
-      : len(len), silence_left(sample_rate * len / 1000) {}
+    SilenceQueueItem(int len, int sample_rate, bool idle_marked)
+      : QueueItem(idle_marked), len(len),
+      	silence_left(sample_rate * len / 1000) {}
     int readSamples(float *samples, int len);
     void unreadSamples(int len);
 
@@ -121,9 +128,9 @@ class SilenceQueueItem : public QueueItem
 class ToneQueueItem : public QueueItem
 {
   public:
-    ToneQueueItem(int fq, int amp, int len, int sample_rate)
-      : fq(fq), amp(amp), tone_len(sample_rate * len / 1000), pos(0),
-      	sample_rate(sample_rate) {}
+    ToneQueueItem(int fq, int amp, int len, int sample_rate, bool idle_marked)
+      : QueueItem(idle_marked), fq(fq), amp(amp),
+      	tone_len(sample_rate * len / 1000), pos(0), sample_rate(sample_rate) {}
     int readSamples(float *samples, int len);
     void unreadSamples(int len);
 
@@ -139,8 +146,8 @@ class ToneQueueItem : public QueueItem
 class RawFileQueueItem : public QueueItem
 {
   public:
-    RawFileQueueItem(const std::string& filename)
-      : filename(filename), file(-1) {}
+    RawFileQueueItem(const std::string& filename, bool idle_marked)
+      : QueueItem(idle_marked), filename(filename), file(-1) {}
     ~RawFileQueueItem(void);
     bool initialize(void);
     int readSamples(float *samples, int len);
@@ -155,8 +162,8 @@ class RawFileQueueItem : public QueueItem
 class GsmFileQueueItem : public QueueItem
 {
   public:
-    GsmFileQueueItem(const std::string& filename)
-      : filename(filename), file(-1), decoder(0) {}
+    GsmFileQueueItem(const std::string& filename, bool idle_marked)
+      : QueueItem(idle_marked), filename(filename), file(-1), decoder(0) {}
     ~GsmFileQueueItem(void);
     bool initialize(void);
     int readSamples(float *samples, int len);
@@ -208,7 +215,7 @@ class GsmFileQueueItem : public QueueItem
 
 MsgHandler::MsgHandler(int sample_rate)
   : sample_rate(sample_rate), nesting_level(0), pending_play_next(false),
-    current(0), is_writing_message(false)
+    current(0), is_writing_message(false), non_idle_cnt(0)
 {
   
 }
@@ -220,59 +227,50 @@ MsgHandler::~MsgHandler(void)
 } /* MsgHandler::~MsgHandler */
 
 
-void MsgHandler::playFile(const string& path)
+void MsgHandler::playFile(const string& path, bool idle_marked)
 {
   QueueItem *item = 0;
   const char *ext = strrchr(path.c_str(), '.');
   if (strcmp(ext, ".gsm") == 0)
   {
-    item = new GsmFileQueueItem(path);
+    item = new GsmFileQueueItem(path, idle_marked);
   }
   else
   {
-    item = new RawFileQueueItem(path);
+    item = new RawFileQueueItem(path, idle_marked);
   }
   addItemToQueue(item);
 } /* MsgHandler::playFile */
 
 
-void MsgHandler::playSilence(int length)
+void MsgHandler::playSilence(int length, bool idle_marked)
 {
-  QueueItem *item = new SilenceQueueItem(length, sample_rate);
+  QueueItem *item = new SilenceQueueItem(length, sample_rate, idle_marked);
   addItemToQueue(item);
 } /* MsgHandler::playSilence */
 
 
-void MsgHandler::playTone(int fq, int amp, int length)
+void MsgHandler::playTone(int fq, int amp, int length, bool idle_marked)
 {
-  QueueItem *item = new ToneQueueItem(fq, amp, length, sample_rate);
+  QueueItem *item = new ToneQueueItem(fq, amp, length, sample_rate,
+      	      	      	      	      idle_marked);
   addItemToQueue(item);
 } /* MsgHandler::playSilence */
-
-
-#if 0
-void MsgHandler::writeBufferFull(bool is_full)
-{
-  //cout << "MsgHandler::writeBufferFull: write_buffer_full=" << is_full
-  //     << "  msg_queue.empty()=" << msg_queue.empty() << endl;
-  if (!is_full && (current != 0))
-  {
-    writeSamples();
-  }
-}
-#endif
 
 
 void MsgHandler::clear(void)
 {
-  delete current;
+  deleteQueueItem(current);
   current = 0;
   
   list<QueueItem*>::iterator it;
   for (it=msg_queue.begin(); it!=msg_queue.end(); ++it)
   {
-    delete *it;
+    deleteQueueItem(*it);
   }
+  
+  non_idle_cnt = 0;
+  
   msg_queue.clear();
   sinkFlushSamples();
 } /* MsgHandler::clear */
@@ -320,6 +318,16 @@ void MsgHandler::resumeOutput(void)
 } /* MsgHandler::resumeOutput */
 
 
+void MsgHandler::deleteQueueItem(QueueItem *item)
+{
+  if (!item->idleMarked())
+  {
+    non_idle_cnt -= 1;
+    assert(non_idle_cnt >= 0);
+  }
+  delete item;
+} /* MsgHandler::deleteQueueItem */
+
 
 
 /****************************************************************************
@@ -348,6 +356,10 @@ void MsgHandler::allSamplesFlushed(void)
 void MsgHandler::addItemToQueue(QueueItem *item)
 {
   is_writing_message = true;
+  if (!item->idleMarked())
+  {
+    non_idle_cnt += 1;
+  }
   msg_queue.push_back(item);
   if (msg_queue.size() == 1)
   {
@@ -379,8 +391,7 @@ void MsgHandler::playMsg(void)
   msg_queue.pop_front();
   if (!current->initialize())
   {
-    delete current;
-    current = 0;
+    deleteQueueItem(current);
     playMsg();
   }
   else
@@ -424,7 +435,7 @@ void MsgHandler::writeSamples(void)
     
   done:
     //printf("Done...\n");
-    delete current;
+    deleteQueueItem(current);
     current = 0;
     playMsg();
 } /* MsgHandler::writeSamples */

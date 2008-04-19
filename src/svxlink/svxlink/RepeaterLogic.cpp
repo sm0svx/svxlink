@@ -126,7 +126,7 @@ using namespace Async;
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
   : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(30000),
     idle_sound_timer(0), idle_sound_interval(0),
-    preserve_idle_state(false), required_sql_open_duration(-1),
+    required_sql_open_duration(-1),
     open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false),
     open_on_sql_timer(0), open_sql_flank(SQL_FLANK_CLOSE),
     short_sql_open_cnt(0), sql_flap_sup_min_time(1000),
@@ -260,9 +260,9 @@ void RepeaterLogic::processEvent(const string& event, const Module *module)
 {
   if ((event == "repeater_idle") || (event == "send_rgr_sound"))
   {
-    preserve_idle_state = true;
+    setReportEventsAsIdle(true);
     Logic::processEvent(event, module);
-    preserve_idle_state = false;
+    setReportEventsAsIdle(false);
   }
   else
   {  
@@ -335,16 +335,20 @@ void RepeaterLogic::audioStreamIdleStateChange(bool is_idle)
 } /* Logic::audioStreamIdleStateChange */
 
 
+#if 0
 bool RepeaterLogic::getIdleState(void) const
 {
+  /*
   if (preserve_idle_state)
   {
     return isIdle();
   }
+  */
 
   return Logic::getIdleState();
 
 } /* RepeaterLogic::isIdle */
+#endif
 
 
 
