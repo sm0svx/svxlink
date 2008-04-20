@@ -90,8 +90,12 @@ class RxAdapter : public Rx, public AudioSink
 {
   public:
     RxAdapter(const string &name)
-      : Rx(name), is_muted(true)
+      : Rx(name)
     {
+      mute_valve.setOpen(false);
+      mute_valve.setBlockWhenClosed(false);
+      AudioSink::setHandler(&mute_valve);
+      AudioSource::setHandler(&mute_valve);
     }
     
     virtual ~RxAdapter(void) {}
@@ -111,8 +115,16 @@ class RxAdapter : public Rx, public AudioSink
      */
     virtual void mute(bool do_mute)
     {
+      /*
+      if (do_mute && is_unflushed)
+      {
+      	is_unflushed = false;
+      	sinkFlushSamples();
+      }
+      */
+      
       //cout << "RxTx::mute: do_mute=" << do_mute << endl;
-      is_muted = do_mute;
+      mute_valve.setOpen(!do_mute);
     }
     
     /**
@@ -148,17 +160,18 @@ class RxAdapter : public Rx, public AudioSink
      */
     virtual void reset(void)
     {
-      is_muted = true;
+      mute_valve.setOpen(false);
     }
 
 
-    
+    #if 0
     virtual int writeSamples(const float *samples, int count)
     {
       if (is_muted)
       {
       	return count;
       }
+      is_unflushed = true;
       return sinkWriteSamples(samples, count);
     }
     
@@ -170,28 +183,40 @@ class RxAdapter : public Rx, public AudioSink
       }
       else
       {
+      	is_unflushed = false;
       	sinkFlushSamples();
       }
     }
 
     virtual void allSamplesFlushed(void)
     {
-      sourceAllSamplesFlushed();
+      if (!is_muted)
+      {
+      	sourceAllSamplesFlushed();
+      }
     }
 
     virtual void resumeOutput(void)
     {
-      sourceResumeOutput();
+      if (!is_muted)
+      {
+      	sourceResumeOutput();
+      }
     }
+    #endif
+    
     
     void setSquelchState(bool is_open)
     {
-      Rx::setSquelchState(is_open);
+      if (mute_valve.isOpen())
+      {
+      	Rx::setSquelchState(is_open);
+      }
     }
     
    
   private:
-    bool is_muted;
+    AudioValve mute_valve;
     
     
 }; /* class RxAdapter */
