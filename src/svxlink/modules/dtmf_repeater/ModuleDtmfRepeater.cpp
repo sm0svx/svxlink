@@ -137,7 +137,7 @@ extern "C" {
 ModuleDtmfRepeater::ModuleDtmfRepeater(void *dl_handle, Logic *logic,
       	      	      	      	       const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), repeat_delay(0), repeat_delay_timer(0),
-    sql_is_open(false)
+    sql_is_open(false), deactivate_on_sql_close(false)
 {
   cout << "\tModule DTMF Repeater v" MODULE_DTMF_REPEATER_VERSION
       	  " starting...\n";
@@ -244,6 +244,7 @@ void ModuleDtmfRepeater::activateInit(void)
 {
   received_digits.clear();
   sql_is_open = squelchIsOpen();
+  deactivate_on_sql_close = false;
 } /* activateInit */
 
 
@@ -290,7 +291,14 @@ bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
   
   if (digit == '#' && (duration > 3000))
   {
-    deactivateMe();
+    if (squelchIsOpen())
+    {
+      deactivate_on_sql_close = true;
+    }
+    else
+    {
+      deactivateMe();
+    }
     return true;
   }
   
@@ -327,6 +335,11 @@ void ModuleDtmfRepeater::squelchOpen(bool is_open)
 {
   sql_is_open = is_open;
   setupRepeatDelay();
+
+  if (!is_open && deactivate_on_sql_close)
+  {
+    deactivateMe();
+  }
 } /* squelchOpen */
 
 
