@@ -1179,7 +1179,11 @@ void Logic::processMacroCmd(string& cmd)
     return;
   }
   
-  module->dtmfCmdReceived(module_cmd);
+  for (unsigned i=0; i<module_cmd.size(); ++i)
+  {
+    dtmfDigitDetected(module_cmd[i], 100);
+  }
+  //module->dtmfCmdReceived(module_cmd);
 
 } /* Logic::processMacroCmd */
 

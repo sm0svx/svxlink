@@ -133,6 +133,7 @@ class ModuleDtmfRepeater : public Module
     std::string   received_digits;
     int       	  repeat_delay;
     Async::Timer  *repeat_delay_timer;
+    bool      	  sql_is_open;
     
     bool initialize(void);
     void activateInit(void);
@@ -141,6 +142,7 @@ class ModuleDtmfRepeater : public Module
     void squelchOpen(bool is_open);
     
     void onRepeatDelayExpired(Async::Timer *t);
+    void setupRepeatDelay(void);
 
 };  /* class ModuleDtmfRepeater */
 

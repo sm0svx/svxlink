@@ -264,6 +264,12 @@ void Module::logicIdleStateChanged(bool is_idle)
 } /* Module::logicIdleStateChanged */
 
 
+bool Module::squelchIsOpen(void)
+{
+  return logic()->rx().squelchIsOpen();
+} /* Module::squelchIsOpen */
+
+
 void Module::moduleTimeout(Timer *t)
 {
   cout << "Module timeout: " << name() << endl;

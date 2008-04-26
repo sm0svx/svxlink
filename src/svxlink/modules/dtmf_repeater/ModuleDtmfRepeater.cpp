@@ -136,7 +136,8 @@ extern "C" {
 
 ModuleDtmfRepeater::ModuleDtmfRepeater(void *dl_handle, Logic *logic,
       	      	      	      	       const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), repeat_delay(0), repeat_delay_timer(0)
+  : Module(dl_handle, logic, cfg_name), repeat_delay(0), repeat_delay_timer(0),
+    sql_is_open(false)
 {
   cout << "\tModule DTMF Repeater v" MODULE_DTMF_REPEATER_VERSION
       	  " starting...\n";
@@ -242,6 +243,7 @@ bool ModuleDtmfRepeater::initialize(void)
 void ModuleDtmfRepeater::activateInit(void)
 {
   received_digits.clear();
+  sql_is_open = squelchIsOpen();
 } /* activateInit */
 
 
@@ -262,6 +264,7 @@ void ModuleDtmfRepeater::deactivateCleanup(void)
 {
   delete repeat_delay_timer;
   repeat_delay_timer = 0;
+  sql_is_open = false;
 } /* deactivateCleanup */
 
 
@@ -297,6 +300,10 @@ bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
   {
     onRepeatDelayExpired(0);
   }
+  else if (!sql_is_open)
+  {
+    setupRepeatDelay();
+  }
   
   return true;
   
@@ -318,17 +325,8 @@ bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
  */
 void ModuleDtmfRepeater::squelchOpen(bool is_open)
 {
-  //setIdle(!is_open);
-  
-  delete repeat_delay_timer;
-  repeat_delay_timer = 0;    
-
-  if (!is_open && (repeat_delay > 0) && !received_digits.empty())
-  {
-    repeat_delay_timer = new Timer(repeat_delay);
-    repeat_delay_timer->expired.connect(
-	slot(*this, &ModuleDtmfRepeater::onRepeatDelayExpired));
-  }
+  sql_is_open = is_open;
+  setupRepeatDelay();
 } /* squelchOpen */
 
 
@@ -341,6 +339,21 @@ void ModuleDtmfRepeater::onRepeatDelayExpired(Timer *t)
   sendDtmf(received_digits);
   received_digits.clear();
 } /* ModuleDtmfRepeater::onRepeatDelayExpired */
+
+
+void ModuleDtmfRepeater::setupRepeatDelay(void)
+{
+  delete repeat_delay_timer;
+  repeat_delay_timer = 0;    
+
+  if (!sql_is_open && (repeat_delay > 0) && !received_digits.empty())
+  {
+    repeat_delay_timer = new Timer(repeat_delay);
+    repeat_delay_timer->expired.connect(
+	slot(*this, &ModuleDtmfRepeater::onRepeatDelayExpired));
+  }
+
+} /* ModuleDtmfRepeater::setupRepeatDelay */
 
 
 

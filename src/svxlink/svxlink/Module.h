@@ -517,6 +517,13 @@ class Module : public SigC::Object, public Async::AudioSink,
      * This function is called by the logic core when the idle state changes.
      */
     virtual void logicIdleStateChanged(bool is_idle);
+    
+    /**
+     * @brief 	Check if the squelch is open or not
+     * @returns Returns \em true if the squelch is open or
+     *	      	\em false if it's not.
+     */
+    bool squelchIsOpen(void);
 
 
   private:
