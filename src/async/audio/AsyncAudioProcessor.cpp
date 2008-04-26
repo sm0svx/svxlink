@@ -123,7 +123,7 @@ AudioProcessor::AudioProcessor(void)
 
 AudioProcessor::~AudioProcessor(void)
 {
-  delete input_buf;
+  delete [] input_buf;
 } /* AudioProcessor::~AudioProcessor */
 
 
@@ -248,7 +248,7 @@ void AudioProcessor::setInputOutputSampleRate(int input_rate, int output_rate)
   this->input_rate = input_rate;
   this->output_rate = output_rate;
   
-  delete input_buf;
+  delete [] input_buf;
   if (input_rate > output_rate)
   {
     input_buf_size = input_rate / output_rate;
