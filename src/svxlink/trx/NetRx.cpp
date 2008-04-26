@@ -128,7 +128,8 @@ class ToneDet
  ****************************************************************************/
 
 NetRx::NetRx(Config &cfg, const string& name)
-  : Rx(name), cfg(cfg), is_muted(true), tcp_con(0), last_signal_strength(0.0)
+  : Rx(name), cfg(cfg), is_muted(true), tcp_con(0), last_signal_strength(0.0),
+    last_sql_rx_id(0), unflushed_samples(false), sql_is_open(false)
 {
 } /* NetRx::NetRx */
 
@@ -204,8 +205,8 @@ void NetRx::mute(bool do_mute)
 bool NetRx::addToneDetector(float fq, int bw, float thresh,
       	      	      	    int required_duration)
 {
-  cout << "addToneDetector: fq=" << fq << " bw=" << bw
-       << " required_duration=" << required_duration << endl;
+  //cout << "addToneDetector: fq=" << fq << " bw=" << bw
+  //     << " required_duration=" << required_duration << endl;
        
   ToneDet *det = new ToneDet(fq, bw, thresh, required_duration);
   tone_detectors.push_back(det);
@@ -240,16 +241,20 @@ void NetRx::reset(void)
 
 
 
-
 /****************************************************************************
  *
  * Protected member functions
  *
  ****************************************************************************/
 
-
-
-
+void NetRx::allSamplesFlushed(void)
+{
+  unflushed_samples = false;
+  if (!sql_is_open)
+  {
+    setSquelchState(false);
+  }
+} /* NetRx::allSamplesFlushed */
 
 
 
@@ -289,7 +294,15 @@ void NetRx::tcpDisconnected(TcpConnection *con,
        << con->remoteHost() << ":" << con->remotePort()
        << ": " << TcpConnection::disconnectReasonStr(reason) << "\n";
   
-  setSquelchState(false);
+  sql_is_open = false;
+  if (unflushed_samples)
+  {
+    sinkFlushSamples();
+  }
+  else
+  {
+    setSquelchState(false);
+  }
 } /* NetRx::tcpDisconnected */
 
 
@@ -316,8 +329,23 @@ void NetRx::handleMsg(Msg *msg)
 	MsgSquelch *sql_msg = reinterpret_cast<MsgSquelch*>(msg);
 	last_signal_strength = sql_msg->signalStrength();
 	last_sql_rx_id = sql_msg->sqlRxId();
-        sinkFlushSamples();
-	setSquelchState(sql_msg->isOpen());
+	sql_is_open = sql_msg->isOpen();
+	
+	if (sql_msg->isOpen())
+	{
+	  setSquelchState(true);
+	}
+	else
+	{
+	  if (unflushed_samples)
+	  {
+            sinkFlushSamples();
+	  }
+	  else
+	  {
+	    setSquelchState(false);
+	  }
+	}
       }
       break;
     }
@@ -344,9 +372,10 @@ void NetRx::handleMsg(Msg *msg)
     
     case MsgAudio::TYPE:
     {
-      if (!is_muted)
+      if (!is_muted && sql_is_open)
       {
 	MsgAudio *audio_msg = reinterpret_cast<MsgAudio*>(msg);
+	unflushed_samples = true;
 	sinkWriteSamples(audio_msg->samples(), audio_msg->count());
       }
       break;

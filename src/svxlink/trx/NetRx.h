@@ -182,6 +182,7 @@ class NetRx : public Rx
      * This function is normally only called from a connected sink object.
      */
     virtual void resumeOutput(void) {}
+    
 
   protected:
     /**
@@ -192,7 +193,8 @@ class NetRx : public Rx
      * that handle the function call.
      * This function is normally only called from a connected sink object.
      */
-    virtual void allSamplesFlushed(void) {}
+    virtual void allSamplesFlushed(void);
+    
 
   private:
     Async::Config     	&cfg;
@@ -201,6 +203,8 @@ class NetRx : public Rx
     float     	      	last_signal_strength;
     int       	      	last_sql_rx_id;
     std::list<ToneDet*> tone_detectors;
+    bool      	      	unflushed_samples;
+    bool      	      	sql_is_open;
     
     void tcpConnected(void);
     void tcpDisconnected(Async::TcpConnection *con,
