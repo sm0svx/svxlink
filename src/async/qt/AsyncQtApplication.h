@@ -45,7 +45,7 @@ An example of how to use the Async::QtApplication class
 #include <qapplication.h>
 #undef emit
 
-#include <pair.h>
+#include <utility>
 #include <map>
 #include <set>
 
@@ -188,9 +188,9 @@ class QtApplication : public QApplication, public Application
   protected:
     
   private:
-    typedef pair<Async::FdWatch*, QSocketNotifier*> FdWatchMapItem;
-    typedef std::map<int, FdWatchMapItem> 	    FdWatchMap;
-    typedef std::map<Timer *, AsyncQtTimer *>       TimerMap;
+    typedef std::pair<Async::FdWatch*, QSocketNotifier*>  FdWatchMapItem;
+    typedef std::map<int, FdWatchMapItem> 	      	  FdWatchMap;
+    typedef std::map<Timer *, AsyncQtTimer *>         	  TimerMap;
     
     FdWatchMap  rd_watch_map;
     FdWatchMap  wr_watch_map;

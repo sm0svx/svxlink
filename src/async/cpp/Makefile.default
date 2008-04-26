@@ -193,7 +193,7 @@ LIBPATH 	+= $(SIGC_LIBPATH)
 
 # Additional warnings to use. If you want to override the default
 # warnings, change the "+=" to "=".
-WARNINGS	+= -Wno-deprecated
+WARNINGS	+= 
 
 # Extra commandline switches to the compiler. For example "-g" to
 # add debug information, "-O2" to add optimizations etc.

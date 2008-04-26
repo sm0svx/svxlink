@@ -44,7 +44,8 @@
 #include <sigc++/sigc++.h>
 
 #include <map>
-#include <pair.h>
+#include <utility>
+
 
 /****************************************************************************
  *
