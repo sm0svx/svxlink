@@ -80,6 +80,11 @@
   structure to establish an EchoLink connection.
   New config variable: ACTIVATE_MODULE_ON_LONG_CMD.
 
+* Macros behave a little bit different now. The macro digits are now sent
+  back into the logic core, digit by digit, as though they were received
+  from the DTMF decoder. This mean that all macro commands have to be
+  ended with a number sign to be executed.
+
 
 
  0.9.0 -- 02 Jan 2008
