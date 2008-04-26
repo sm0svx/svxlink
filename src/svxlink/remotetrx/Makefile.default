@@ -26,7 +26,7 @@ PROGS		=
 CPPPROGS      	= $(BIN)/remotetrx
 
 # Sources other than the main files
-PRGSRC		= TrxHandler.cpp Uplink.cpp NetUplink.cpp TxUplink.cpp \
+PRGSRC		= TrxHandler.cpp Uplink.cpp NetUplink.cpp TrxUplink.cpp \
 		  NetTrxAdapter.cpp
 
 # Libraries compiled in the project (in $(LIB)).

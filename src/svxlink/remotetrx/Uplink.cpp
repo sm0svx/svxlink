@@ -51,7 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "Uplink.h"
 #include "NetUplink.h"
-#include "TxUplink.h"
+#include "TrxUplink.h"
 
 
 
@@ -127,14 +127,14 @@ Uplink *Uplink::create(Config &cfg, const string &name, Rx *rx, Tx *tx)
   {
     uplink = new NetUplink(cfg, name, rx, tx);
   }
-  else if (uplink_type == "Tx")
+  else if (uplink_type == "Trx")
   {
-    uplink = new TxUplink(cfg, name, rx, tx);
+    uplink = new TrxUplink(cfg, name, rx, tx);
   }
   else
   {
     cerr << "*** ERROR: Unknown uplink type \"" << uplink_type
-      	 << "\". Legal values are: \"Net\" and \"Tx\"\n";
+      	 << "\". Legal values are: \"Net\" and \"Trx\"\n";
     return 0;
   }
   

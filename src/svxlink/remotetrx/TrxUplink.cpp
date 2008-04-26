@@ -1,6 +1,6 @@
 /**
-@file	 TxUplink.cpp
-@brief   A simple uplink that just retransmits what comes into the receiver
+@file	 TrxUplink.cpp
+@brief   Uplink type that communicates to the SvxLink core through a transceiver
 @author  Tobias Blomberg / SM0SVX
 @date	 2008-03-20
 
@@ -54,7 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "TxUplink.h"
+#include "TrxUplink.h"
 
 
 
@@ -116,20 +116,20 @@ using namespace Async;
  *
  ****************************************************************************/
 
-TxUplink::TxUplink(Config &cfg, const string &name, Rx *rx, Tx *tx)
+TrxUplink::TrxUplink(Config &cfg, const string &name, Rx *rx, Tx *tx)
   : cfg(cfg), name(name), rx(rx), tx(tx), uplink_tx(0), uplink_rx(0)
 {
   
-} /* TxUplink::TxUplink */
+} /* TrxUplink::TrxUplink */
 
 
-TxUplink::~TxUplink(void)
+TrxUplink::~TrxUplink(void)
 {
   delete uplink_tx;
-} /* TxUplink::~TxUplink */
+} /* TrxUplink::~TrxUplink */
 
 
-bool TxUplink::initialize(void)
+bool TrxUplink::initialize(void)
 {
   string uplink_tx_name;
   if (!cfg.getValue(name, "TX", uplink_tx_name))
@@ -145,7 +145,7 @@ bool TxUplink::initialize(void)
     return false;
   }
 
-  rx->squelchOpen.connect(slot(*this, &TxUplink::rxSquelchOpen));
+  rx->squelchOpen.connect(slot(*this, &TrxUplink::rxSquelchOpen));
   rx->reset();
   rx->mute(false);
   AudioSource *prev_src = rx;
@@ -179,7 +179,7 @@ bool TxUplink::initialize(void)
     return false;
   }
   uplink_rx->dtmfDigitDetected.connect(
-      slot(*this, &TxUplink::uplinkRxDtmfRcvd));
+      slot(*this, &TrxUplink::uplinkRxDtmfRcvd));
   uplink_rx->reset();
   uplink_rx->mute(false);
   prev_src = uplink_rx;
@@ -189,7 +189,7 @@ bool TxUplink::initialize(void)
   
   return true;
   
-} /* TxUplink::initialize */
+} /* TrxUplink::initialize */
 
 
 
@@ -208,13 +208,13 @@ bool TxUplink::initialize(void)
  *
  ****************************************************************************/
 
-void TxUplink::uplinkRxDtmfRcvd(char digit, int duration)
+void TrxUplink::uplinkRxDtmfRcvd(char digit, int duration)
 {
   char digit_str[2] = {digit, 0};
   tx->sendDtmf(digit_str);
-} /* TxUplink::uplinkRxDtmfRcvd */
+} /* TrxUplink::uplinkRxDtmfRcvd */
 
-void TxUplink::rxSquelchOpen(bool is_open)
+void TrxUplink::rxSquelchOpen(bool is_open)
 {
   /*
   if (is_open)
@@ -224,7 +224,7 @@ void TxUplink::rxSquelchOpen(bool is_open)
     uplink_tx->sendDtmf(dtmf_str);
   }
   */
-} /* TxUplink::rxSquelchOpen  */
+} /* TrxUplink::rxSquelchOpen  */
 
 
 

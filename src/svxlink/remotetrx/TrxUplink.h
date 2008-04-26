@@ -1,6 +1,6 @@
 /**
-@file	 TxUplink.h
-@brief   A simple uplink that just retransmits what comes into the receiver
+@file	 TrxUplink.h
+@brief   Uplink type that communicates to the SvxLink core through a transceiver
 @author  Tobias Blomberg / SM0SVX
 @date	 2008-03-20
 
@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef TX_UPLINK_INCLUDED
-#define TX_UPLINK_INCLUDED
+#ifndef TRX_UPLINK_INCLUDED
+#define TRX_UPLINK_INCLUDED
 
 
 /****************************************************************************
@@ -105,14 +105,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief	A simple uplink that just retransmits what comes into the receiver
+@brief	Uplink type that communicates to the SvxLink core through a transceiver
 @author Tobias Blomberg / SM0SVX
 @date   2008-03-20
 
 This class is a simple uplink that just retransmit what comes into the
 connected receiver(s).
 */
-class TxUplink : public Uplink
+class TrxUplink : public Uplink
 {
   public:
     /**
@@ -122,12 +122,12 @@ class TxUplink : public Uplink
      * @param 	rx The receiver
      * @param 	tx The transmitter
      */
-    TxUplink(Async::Config &cfg, const std::string &name, Rx *rx, Tx *tx);
+    TrxUplink(Async::Config &cfg, const std::string &name, Rx *rx, Tx *tx);
   
     /**
      * @brief 	Destructor
      */
-    ~TxUplink(void);
+    ~TrxUplink(void);
   
     /**
      * @brief 	Initialize the uplink
@@ -145,17 +145,17 @@ class TxUplink : public Uplink
     Tx	      	  *uplink_tx;
     Rx	      	  *uplink_rx;
     
-    TxUplink(const TxUplink&);
-    TxUplink& operator=(const TxUplink&);
+    TrxUplink(const TrxUplink&);
+    TrxUplink& operator=(const TrxUplink&);
     void uplinkRxDtmfRcvd(char digit, int duration);
     void rxSquelchOpen(bool is_open);
 
-};  /* class TxUplink */
+};  /* class TrxUplink */
 
 
 //} /* namespace */
 
-#endif /* TX_UPLINK_INCLUDED */
+#endif /* TRX_UPLINK_INCLUDED */
 
 
 
