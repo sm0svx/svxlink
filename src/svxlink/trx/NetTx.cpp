@@ -298,10 +298,7 @@ void NetTx::handleMsg(Msg *msg)
 
 void NetTx::sendMsg(Msg *msg)
 {
-  if (is_connected)
-  {
-    tcp_con->sendMsg(msg);
-  }
+  tcp_con->sendMsg(msg);
 } /* NetUplink::sendMsg */
 
 

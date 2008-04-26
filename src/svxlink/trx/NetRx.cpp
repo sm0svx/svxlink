@@ -400,10 +400,7 @@ void NetRx::handleMsg(Msg *msg)
 
 void NetRx::sendMsg(Msg *msg)
 {
-  if (tcp_con != 0)
-  {
-    tcp_con->sendMsg(msg);
-  }
+  tcp_con->sendMsg(msg);
 } /* NetUplink::sendMsg */
 
 

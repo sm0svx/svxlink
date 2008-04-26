@@ -174,9 +174,7 @@ ModuleParrot::~ModuleParrot(void)
 {
   AudioSink::clearHandler();
   AudioSource::clearHandler();
-  delete valve;
-  delete fifo;
-  delete adapter;
+  delete adapter; // This will delete all chained audio objects
 } /* ~ModuleParrot */
 
 
@@ -204,12 +202,12 @@ bool ModuleParrot::initialize(void)
   
   fifo = new AudioFifo(atoi(fifo_len.c_str())*8000);
   fifo->setOverwrite(true);
-  adapter->registerSink(fifo);
+  adapter->registerSink(fifo, true);
   
   valve = new AudioValve;
   valve->setBlockWhenClosed(true);
   valve->setOpen(false);
-  fifo->registerSink(valve);
+  fifo->registerSink(valve, true);
   
   AudioSource::setHandler(valve);
   

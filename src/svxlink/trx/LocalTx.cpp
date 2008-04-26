@@ -638,7 +638,7 @@ bool LocalTx::initialize(void)
       // FIXME: This amplification should be integrated with the filter
     AudioAmp *amp = new AudioAmp;
     amp->setGain(6);
-    prev_src->registerSink(amp);
+    prev_src->registerSink(amp, true);
     prev_src = amp;
   }
 
@@ -654,7 +654,7 @@ bool LocalTx::initialize(void)
       // FIXME: This amplification should be integrated with the filter
     AudioAmp *amp = new AudioAmp;
     amp->setGain(9);
-    prev_src->registerSink(amp);
+    prev_src->registerSink(amp, true);
     prev_src = amp;
   }
   

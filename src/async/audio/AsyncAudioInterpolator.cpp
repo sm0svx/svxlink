@@ -827,6 +827,7 @@ AudioInterpolator::AudioInterpolator(int interpolation_factor,
   
   setInputOutputSampleRate(1, factor_L);
   p_Z = new float[L_size / factor_L];
+  memset(p_Z, 0, sizeof(*p_Z) * L_size / factor_L);
 } /* AudioInterpolator::AudioInterpolator */
 
 

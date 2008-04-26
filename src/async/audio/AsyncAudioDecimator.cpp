@@ -663,6 +663,7 @@ AudioDecimator::AudioDecimator(int decimation_factor,
 {
   setInputOutputSampleRate(factor_M, 1);
   p_Z = new float[H_size];
+  memset(p_Z, 0, H_size * sizeof(*p_Z));
 } /* AudioDecimator::AudioDecimator */
 
 

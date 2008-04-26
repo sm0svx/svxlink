@@ -154,6 +154,7 @@ void AudioSwitchMatrix::removeSource(const string& source_name)
     AudioPassthrough *connector = (*it).second.connectors[source_name];
     (*it).second.selector->removeSource(connector);
     (*it).second.connectors.erase(source_name);
+    delete connector;
   }
 
   delete sources[source_name].splitter;
