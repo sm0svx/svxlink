@@ -193,7 +193,16 @@ void NetRx::mute(bool do_mute)
   {
     last_signal_strength = 0.0;
     last_sql_rx_id = 0;
-    setSquelchState(false);
+    sql_is_open = false;
+    
+    if (unflushed_samples)
+    {
+      sinkFlushSamples();
+    }
+    else
+    {
+      setSquelchState(false);
+    }
   }
     
   MsgMute *msg = new MsgMute(do_mute);
@@ -232,7 +241,16 @@ void NetRx::reset(void)
   is_muted = true;
   last_signal_strength = 0;
   last_sql_rx_id = 0;
-  setSquelchState(false);
+  sql_is_open = false;
+  
+  if (unflushed_samples)
+  {
+    sinkFlushSamples();
+  }
+  else
+  {
+    setSquelchState(false);
+  }
 
   MsgReset *msg = new MsgReset;
   sendMsg(msg);
