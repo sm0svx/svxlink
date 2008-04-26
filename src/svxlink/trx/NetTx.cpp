@@ -118,7 +118,8 @@ using namespace NetTrxMsg;
 
 NetTx::NetTx(Config &cfg, const string& name)
   : cfg(cfg), name(name), tcp_con(0), is_transmitting(false),
-    mode(Tx::TX_OFF), ctcss_enable(false), pacer(0)
+    mode(Tx::TX_OFF), ctcss_enable(false), pacer(0), is_connected(false),
+    sigc_sink(0), pending_flush(false), unflushed_samples(false)
 {
 } /* NetTx::NetTx */
 
@@ -155,7 +156,7 @@ bool NetTx::initialize(void)
   pacer = new AudioPacer(8000, 512, 50);
   setHandler(pacer);
   
-  SigCAudioSink *sigc_sink = new SigCAudioSink;
+  sigc_sink = new SigCAudioSink;
   sigc_sink->sigWriteSamples.connect(slot(*this, &NetTx::sendAudio));
   sigc_sink->sigFlushSamples.connect(slot(*this, &NetTx::sendFlush));
   pacer->registerSink(sigc_sink, true);
@@ -171,6 +172,22 @@ void NetTx::setTxCtrlMode(TxCtrlMode mode)
   
   MsgSetTxCtrlMode *msg = new MsgSetTxCtrlMode(mode);
   sendMsg(msg);
+  
+  if (!is_connected)
+  {
+    switch (mode)
+    {
+      case Tx::TX_OFF:
+      	setIsTransmitting(false);
+	break;
+      case Tx::TX_AUTO:
+      	setIsTransmitting(unflushed_samples);
+	break;
+      case Tx::TX_ON:
+      	setIsTransmitting(true);
+	break;
+    }
+  }
 } /* NetTx::setTxCtrlMode */
 
 
@@ -195,26 +212,6 @@ void NetTx::sendDtmf(const std::string& digits)
 } /* NetTx::sendDtmf */
 
 
-int NetTx::sendAudio(float *samples, int count)
-{
-  assert(count > 0);
-  if (count > MsgAudio::MAX_COUNT)
-  {
-    count = MsgAudio::MAX_COUNT;
-  }
-  MsgAudio *msg = new MsgAudio(samples, count);
-  sendMsg(msg);
-  return count;
-} /* NetTx::writeSamples */
-
-
-void NetTx::sendFlush(void)
-{
-  MsgFlush *msg = new MsgFlush;
-  sendMsg(msg);
-} /* NetTx::flushSamples */
-
-
 
 /****************************************************************************
  *
@@ -236,6 +233,8 @@ void NetTx::tcpConnected(void)
   cout << name << ": Connected to remote transmitter at "
        << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << "\n";
   
+  is_connected = true;
+  
   MsgSetTxCtrlMode *mode_msg = new MsgSetTxCtrlMode(mode);
   sendMsg(mode_msg);
   
@@ -252,6 +251,13 @@ void NetTx::tcpDisconnected(TcpConnection *con,
        << con->remoteHost() << ":" << con->remotePort()
        << ": " << TcpConnection::disconnectReasonStr(reason) << "\n";
   
+  is_connected = false;
+
+  if (pending_flush)
+  {
+    allSamplesFlushed();
+  }
+
 } /* NetTx::tcpDisconnected */
 
 
@@ -280,15 +286,13 @@ void NetTx::handleMsg(Msg *msg)
     {
       MsgTransmitterStateChange *state_msg
       	  = reinterpret_cast<MsgTransmitterStateChange*>(msg);
-      cout << name << ": The transmitter is "
-      	   << (state_msg->isTransmitting() ? "ON" : "OFF") << endl;
-      transmitterStateChange(state_msg->isTransmitting());
+      setIsTransmitting(state_msg->isTransmitting());
       break;
     }
     
     case MsgAllSamplesFlushed::TYPE:
     {
-      sourceAllSamplesFlushed();
+      allSamplesFlushed();
       break;
     }
     
@@ -305,12 +309,80 @@ void NetTx::handleMsg(Msg *msg)
 
 void NetTx::sendMsg(Msg *msg)
 {
-  if (tcp_con != 0)
+  if (is_connected)
   {
     tcp_con->sendMsg(msg);
   }
 } /* NetUplink::sendMsg */
 
+
+int NetTx::sendAudio(float *samples, int count)
+{
+  assert(count > 0);
+  if (count > MsgAudio::MAX_COUNT)
+  {
+    count = MsgAudio::MAX_COUNT;
+  }
+  
+  pending_flush = false;
+  unflushed_samples = true;
+  
+  if (is_connected)
+  {
+    MsgAudio *msg = new MsgAudio(samples, count);
+    sendMsg(msg);
+  }
+  else
+  {
+    if (mode == Tx::TX_AUTO)
+    {
+      setIsTransmitting(true);
+    }
+  }
+  
+  return count;
+  
+} /* NetTx::writeSamples */
+
+
+void NetTx::sendFlush(void)
+{
+  if (is_connected)
+  {
+    MsgFlush *msg = new MsgFlush;
+    sendMsg(msg);
+    pending_flush = true;
+  }
+  else
+  {
+    allSamplesFlushed();
+  }
+} /* NetTx::flushSamples */
+
+
+void NetTx::setIsTransmitting(bool is_transmitting)
+{
+  if (is_transmitting != this->is_transmitting)
+  {
+    cout << name << ": The transmitter is "
+      	 << (is_transmitting ? "ON" : "OFF") << endl;
+    this->is_transmitting = is_transmitting;
+    transmitterStateChange(is_transmitting);
+  }
+} /* NetTx::setIsTransmitting */
+
+
+void NetTx::allSamplesFlushed(void)
+{
+  unflushed_samples = false;
+  pending_flush = false;
+  sigc_sink->allSamplesFlushed();
+  
+  if (!is_connected && (mode == Tx::TX_AUTO))
+  {
+    setIsTransmitting(false);
+  }
+} /* NetTx::allSamplesFlushed */
 
 
 /*

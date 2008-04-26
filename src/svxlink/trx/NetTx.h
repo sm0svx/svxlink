@@ -73,6 +73,7 @@ namespace NetTrxMsg
 namespace Async
 {
   class AudioPacer;
+  class SigCAudioSink;
 };
 
 
@@ -171,45 +172,32 @@ class NetTx : public Tx
      */
     virtual void sendDtmf(const std::string& digits);
     
-    /**
-     * @brief   Write samples into this audio sink
-     * @param   samples The buffer containing the samples
-     * @param   count The number of samples in the buffer
-     * @return  Returns the number of samples that has been taken care of
-     *
-     * This function is used to write audio into this audio sink. If it
-     * returns 0, no more samples should be written until the resumeOutput
-     * function in the source have been called.
-     * This function is normally only called from a connected source object.
-     */
-    virtual int sendAudio(float *samples, int count);
 
-    /**
-     * @brief   Tell the sink to flush the previously written samples
-     *
-     * This function is used to tell the sink to flush previously written
-     * samples. When done flushing, the sink should call the
-     * sourceAllSamplesFlushed function.
-     * This function is normally only called from a connected source object.
-     */
-    virtual void sendFlush(void);
-    
   protected:
 
   private:
-    Async::Config     	&cfg;
-    std::string       	name;
-    NetTrxTcpClient   	*tcp_con;
-    bool      	      	is_transmitting;
-    Tx::TxCtrlMode    	mode;
-    bool      	      	ctcss_enable;
-    Async::AudioPacer 	*pacer;
+    Async::Config     	  &cfg;
+    std::string       	  name;
+    NetTrxTcpClient   	  *tcp_con;
+    bool      	      	  is_transmitting;
+    Tx::TxCtrlMode    	  mode;
+    bool      	      	  ctcss_enable;
+    Async::AudioPacer 	  *pacer;
+    bool      	      	  is_connected;
+    Async::SigCAudioSink  *sigc_sink;
+    bool      	      	  pending_flush;
+    bool      	      	  unflushed_samples;
     
     void tcpConnected(void);
     void tcpDisconnected(Async::TcpConnection *con,
       	      	      	 Async::TcpConnection::DisconnectReason reason);
     void handleMsg(NetTrxMsg::Msg *msg);
     void sendMsg(NetTrxMsg::Msg *msg);
+    int sendAudio(float *samples, int count);
+    void sendFlush(void);
+    void setIsTransmitting(bool is_transmitting);
+    void allSamplesFlushed(void);
+
 
 };  /* class NetTx */
 
