@@ -150,6 +150,7 @@ TrxHandler::~TrxHandler(void)
 {
   delete uplink;
   delete rx;
+  delete tx;
 } /* TrxHandler::~TrxHandler */
 
 

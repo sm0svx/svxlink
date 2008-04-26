@@ -145,7 +145,6 @@ class NetRxFactory : public RxFactory
  ****************************************************************************/
 
 map<string, RxFactory*> RxFactory::rx_factories;
-bool RxFactory::is_initialized = false;
 
 
 
@@ -154,44 +153,6 @@ bool RxFactory::is_initialized = false;
  * Public member functions
  *
  ****************************************************************************/
-
-#if 0
-Rx *Rx::create(Config& cfg, const string& name)
-{
-  return RxFactory::createNamedRx(cfg, name);
-
-  Rx *rx = 0;
-  string rx_type;
-  if (!cfg.getValue(name, "TYPE", rx_type))
-  {
-    cerr << "*** ERROR: Config variable " << name << "/TYPE not set\n";
-    return 0;
-  }
-  
-  if (rx_type == "Local")
-  {
-    rx = new LocalRx(cfg, name);
-  }
-  else if (rx_type == "Voter")
-  {
-    rx = new Voter(cfg, name);
-  }
-  else if (rx_type == "Net")
-  {
-    rx = new NetRx(cfg, name);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown RX type \"" << rx_type << "\". Legal values "
-      	 << "are: \"Local\", \"Net\" or \"Voter\"\n";
-    return 0;
-  }
-  
-  return rx;
-  
-} /* Rx::create */
-#endif
-
 
 RxFactory::RxFactory(const string &name)
   : m_name(name)
@@ -211,13 +172,9 @@ RxFactory::~RxFactory(void)
 
 Rx *RxFactory::createNamedRx(Config& cfg, const string& name)
 {
-  if (!is_initialized)
-  {
-    new LocalRxFactory;
-    new VoterFactory;
-    new NetRxFactory;
-    is_initialized = true;
-  }
+  LocalRxFactory local_rx_factory;
+  VoterFactory voter_factory;
+  NetRxFactory net_rx_factory;
   
   string rx_type;
   if (!cfg.getValue(name, "TYPE", rx_type))

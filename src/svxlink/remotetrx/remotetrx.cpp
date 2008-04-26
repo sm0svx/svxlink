@@ -416,14 +416,14 @@ int main(int argc, char **argv)
     stdin_watch->activity.connect(slot(&stdinHandler));
   }
   
-  new NetTrxAdapterFactory;
+  NetTrxAdapterFactory net_trx_adapter_factory;
 
-  TrxHandler *trx_handler = new TrxHandler(cfg);
-  if (trx_handler->initialize())
+  TrxHandler trx_handler(cfg);
+  if (trx_handler.initialize())
   {
     app.exec();
   }
-
+  
   if (stdin_watch != 0)
   {
     delete stdin_watch;
@@ -437,8 +437,6 @@ int main(int argc, char **argv)
     close(pipefd[1]);
   }
 
-  delete trx_handler;
-  
   if (logfd != -1)
   {
     close(logfd);

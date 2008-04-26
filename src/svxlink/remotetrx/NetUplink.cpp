@@ -134,6 +134,7 @@ NetUplink::~NetUplink(void)
   delete sigc_sink;
   delete server;
   delete heartbeat_timer;
+  delete sigc_src;
 } /* NetUplink::~NetUplink */
 
 

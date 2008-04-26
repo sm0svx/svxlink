@@ -261,7 +261,6 @@ class RxFactory
   
   private:
     static std::map<std::string, RxFactory*> rx_factories;
-    static bool is_initialized;
     
     std::string m_name;
     
