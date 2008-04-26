@@ -274,11 +274,6 @@ makefile.root:
 	  fi; \
 	  echo "ROOT=$${ROOT}" > $${WRITETO}/$@; \
 	  echo "export ROOT" >> $${WRITETO}/$@; \
-	  the_group=$$(perl -n -e 'print $$1 if /^SET_GROUP\s*=\s*(\S+)$$/' \
-	  	./makefile.cfg); \
-	  if [ -n "$$the_group" ]; then \
-		  chgrp $${the_group} $${WRITETO}/$@; \
-	  fi \
 	)
 
 

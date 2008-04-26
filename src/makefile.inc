@@ -28,9 +28,6 @@
 ifndef CFG_INCLUDED
   include $(ROOT)/makefile.cfg
 endif
-ifndef SET_GROUP
-  SET_GROUP := `id -gn`
-endif
 
 ifndef MAKEFILE_CONFIG_INCLUDED
   -include $(ROOT)/.config
@@ -358,29 +355,23 @@ MKDIR		= create_directory() { \
 depend/%.dpp:  	%.cpp
 	if [ ! -d `dirname $@` ]; then \
 		mkdir -p `dirname $@`; \
-		chgrp $(SET_GROUP) `dirname $@`; \
 	fi
 	$(ECHO) --- Creating dependency file $(BOLD)$@$(NBOLD)...
 	$(CXXCOMP) -M -MG -MT "$*.o $@" $(CXXFLAGS) -MF $@ $< > /dev/null
-	chgrp $(SET_GROUP) $@
 
 depend/%.d:	%.c
 	if [ ! -d `dirname $@` ]; then \
 		mkdir -p `dirname $@`; \
-		chgrp $(SET_GROUP) `dirname $@`; \
 	fi
 	$(ECHO) --- Creating dependency file $(BOLD)$@$(NBOLD)...
 	$(CCOMP) -M -MG -MT "$*.o $@" $(CFLAGS) -MF $@ $< > /dev/null
-	chgrp $(SET_GROUP) $@
 
 
 %.o:	%.c
 	$(CC) -c -o $@ $<
-	chgrp $(SET_GROUP) $@
 
 %.o:	%.cpp
 	$(CXX) -c -o $@ $<
-	chgrp $(SET_GROUP) $@
 
 
 # Rule to run the Qt Meta Object Compiler on Qt header files.
@@ -424,7 +415,6 @@ $(PROGS):	$(notdir $(PROGS:%=%.o)) $(PRGOBJS) $(LIBDEP)
 	else \
 		$(LINK) -o $@ $(notdir $@).o $(PRGOBJS) $(PROJLIBS) $(LIBS); \
 	fi
-	chgrp $(SET_GROUP) $@
 endif
 
 
@@ -446,7 +436,6 @@ $(CPPPROGS):	$(notdir $(CPPPROGS:%=%.o)) $(PRGOBJS) $(LIBDEP)
 	else \
 		$(CPPLINK) -o $@ $(notdir $@).o $(PRGOBJS) $(PROJLIBS) $(LIBS); \
 	fi
-	chgrp $(SET_GROUP) $@
 endif
 
 
@@ -474,7 +463,6 @@ debug:
 	echo LDFLAGS         = ${LDFLAGS}
 	echo LIBOBJS         = $(LIBOBJS)
 	echo SRCS            = $(SRCS)
-	echo SET_GROUP       = $(SET_GROUP)
 	echo QTHEADERS       = $(QTHEADERS)
 	echo LIB_QTHEADERS   = $(LIB_QTHEADERS)
 	echo PLUGINS         = $(PLUGINS)
@@ -526,7 +514,6 @@ $(EXPINC:%=$(INC)/%):
 	fi
 	$(RM) $@
 	ln -s $$($(REVPATH) $$(dirname $@))/$$(basename $@) $@
-	$(CHGRP_H) $(SET_GROUP) $@
 
 
 
@@ -550,7 +537,6 @@ $(LIBFILE):	$(LIBOBJS) $(STATIC_LIBS:%=$(LIB)/lib%.a)
 	  $(AR) cq $(LIBFILE) __tmp__lib__/*.o; \
 	  rm -rf __tmp__lib__; \
 	fi
-	chgrp $(SET_GROUP) $@
 endif
 
 
@@ -566,13 +552,9 @@ $(SHLIBFILE):	$(LIBOBJS)
 	#      	-shared $(LIBPATH) $(LIBOBJS) $(LIB_LIBS)
 	$(LINK) -shared -o $@ -Wl,-soname,lib$(LIBNAME).so.$(SHLIB_MAJOR).$(SHLIB_MINOR) $(LIBPATH) \
 	      	$(LIBOBJS) $(LIB_LIBS)
-	chgrp $(SET_GROUP) $@
 	ln -s $(notdir $@) \
 	      	$(LIB)/lib$(LIBNAME).so.$(SHLIB_MAJOR).$(SHLIB_MINOR)
-	$(CHGRP_H) $(SET_GROUP) \
-	      	$(LIB)/lib$(LIBNAME).so.$(SHLIB_MAJOR).$(SHLIB_MINOR)
 	ln -s $(@:$(LIB)/%=%) $(LIB)/lib$(LIBNAME).so
-	$(CHGRP_H) $(SET_GROUP) $(LIB)/lib$(LIBNAME).so
 endif
 
 
@@ -587,8 +569,7 @@ tgz:	realclean
 	cd ..; \
 	tar czf $${current_dir_name}/$${archive_name} \
 		--exclude $${archive_name} $${current_dir_name}; \
-	cd $${current_dir_name}; \
-	chgrp $(SET_GROUP) $${archive_name}
+	cd $${current_dir_name};
 
 
 
@@ -826,7 +807,6 @@ $(ROOT)/.config:	$(ROOT)/create_config.sh
 $(INC)/version/%.h version/%.h: $(ROOT)/versions
 	if [ ! -d $(INC)/version ]; then \
 	  $(MKDIR) $(INC)/version -p; \
-	  chgrp $(SET_GROUP) $(INC)/version; \
 	fi; \
 	. $(ROOT)/versions; \
 	if [ -n "$${$*}" ]; then \
@@ -841,7 +821,6 @@ $(INC)/version/%.h version/%.h: $(ROOT)/versions
 	  echo "#ifndef $*_VERSION" > $${TARGET}; \
 	  echo "#define $*_VERSION \"$$VERSION\"" >> $${TARGET}; \
 	  echo "#endif /* $*_VERSION */" >> $${TARGET}; \
-	  chgrp $(SET_GROUP) $${TARGET}; \
 	fi \
 
 
