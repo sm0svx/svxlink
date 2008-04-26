@@ -146,14 +146,14 @@ void NetTrxTcpClient::sendMsg(Msg *msg)
     {
       if (written == -1)
       {
-      	cerr << "*** ERROR: " << strerror(errno) << endl;
+      	cerr << "*** ERROR: TCP write error\n";
       }
       else
       {
       	cerr << "*** ERROR: TCP transmit buffer overflow.\n";
+      	disconnect();
+      	disconnected(this, TcpConnection::DR_ORDERED_DISCONNECT);
       }
-      disconnect();
-      disconnected(this, TcpConnection::DR_ORDERED_DISCONNECT);
     }
   }
   
@@ -172,22 +172,27 @@ void NetTrxTcpClient::sendMsg(Msg *msg)
 NetTrxTcpClient::NetTrxTcpClient(const std::string& remote_host,
       	      	      	      	 uint16_t remote_port, size_t recv_buf_len)
   : TcpClient(remote_host, remote_port, recv_buf_len), recv_cnt(0),
-    recv_exp(0), reconnect_timer(0)
+    recv_exp(0), reconnect_timer(0), heartbeat_timer(0)
 {
   connected.connect(slot(*this, &NetTrxTcpClient::tcpConnected));
   disconnected.connect(slot(*this, &NetTrxTcpClient::tcpDisconnected));
   dataReceived.connect(slot(*this, &NetTrxTcpClient::tcpDataReceived));
 
-  reconnect_timer = new Timer(10000);
+  reconnect_timer = new Timer(20000);
   reconnect_timer->setEnable(false);
   reconnect_timer->expired.connect(slot(*this, &NetTrxTcpClient::reconnect));
+  
+  heartbeat_timer = new Timer(10000);
+  heartbeat_timer->setEnable(false);
+  heartbeat_timer->expired.connect(slot(*this, &NetTrxTcpClient::heartbeat));
   
 } /* NetTrxTcpClient::NetTrxTcpClient */
 
 
 NetTrxTcpClient::~NetTrxTcpClient(void)
 {
-  delete reconnect_timer;  
+  delete reconnect_timer;
+  delete heartbeat_timer;
 } /* NetTrxTcpClient::~NetTrxTcpClient */
 
 
@@ -204,6 +209,8 @@ void NetTrxTcpClient::tcpConnected(void)
 {
   recv_cnt = 0;
   recv_exp = sizeof(Msg);
+  gettimeofday(&last_msg_timestamp, NULL);
+  heartbeat_timer->setEnable(true);  
 } /* NetTx::tcpConnected */
 
 
@@ -212,6 +219,7 @@ void NetTrxTcpClient::tcpDisconnected(TcpConnection *con,
 {
   recv_exp = 0;
   reconnect_timer->setEnable(true);
+  heartbeat_timer->setEnable(false);
 } /* NetTrxTcpClient::tcpDisconnected */
 
 
@@ -248,7 +256,7 @@ int NetTrxTcpClient::tcpDataReceived(TcpConnection *con, void *data, int size)
       	Msg *msg = reinterpret_cast<Msg*>(recv_buf);
 	if (recv_exp == static_cast<int>(msg->size()))
 	{
-	  msgReceived(msg);
+	  handleMsg(msg);
 	  recv_cnt = 0;
 	  recv_exp = sizeof(Msg);
 	}
@@ -260,7 +268,7 @@ int NetTrxTcpClient::tcpDataReceived(TcpConnection *con, void *data, int size)
       else
       {
       	Msg *msg = reinterpret_cast<Msg*>(recv_buf);
-      	msgReceived(msg);
+	handleMsg(msg);
 	recv_cnt = 0;
 	recv_exp = sizeof(Msg);
       }
@@ -277,6 +285,55 @@ void NetTrxTcpClient::reconnect(Timer *t)
   reconnect_timer->setEnable(false);
   connect();
 } /* NetTrxTcpClient::reconnect */
+
+
+void NetTrxTcpClient::handleMsg(Msg *msg)
+{
+  gettimeofday(&last_msg_timestamp, NULL);
+  
+  switch (msg->type())
+  {
+    case MsgHeartbeat::TYPE:
+    {
+      break;
+    }
+    
+    case MsgAuth::TYPE:
+    {
+      msg = reinterpret_cast<MsgAuth*>(msg);
+      break;
+    }
+    
+    default:
+      msgReceived(msg);
+      break;
+  }
+  
+  
+} /* NetTrxTcpClient::handleMsg */
+
+
+void NetTrxTcpClient::heartbeat(Timer *t)
+{
+  MsgHeartbeat *msg = new MsgHeartbeat;
+  sendMsg(msg);
+  
+  struct timeval diff_tv;
+  struct timeval now;
+  gettimeofday(&now, NULL);
+  timersub(&now, &last_msg_timestamp, &diff_tv);
+  int diff_ms = diff_tv.tv_sec * 1000 + diff_tv.tv_usec / 1000;
+  
+  if (diff_ms > 15000)
+  {
+    cerr << "*** ERROR: Heartbeat timeout\n";
+    disconnect();
+    disconnected(this, TcpConnection::DR_ORDERED_DISCONNECT);
+  }
+  
+  t->reset();
+  
+} /* NetTrxTcpClient::heartbeat */
 
 
 

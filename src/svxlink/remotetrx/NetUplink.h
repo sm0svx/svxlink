@@ -35,6 +35,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sys/time.h>
+
 #include <string>
 
 
@@ -47,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 #include <AsyncTcpConnection.h>
 #include <NetTrxMsg.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -71,6 +74,7 @@ namespace Async
   class SigCAudioSink;
   class SigCAudioSource;
   class AudioFifo;
+  class Timer;
 };
 
 namespace NetTrxMsg
@@ -161,6 +165,8 @@ class NetUplink : public Uplink
     Async::SigCAudioSource  *sigc_src;
     Async::Config     	    &cfg;
     std::string       	    name;
+    struct timeval    	    last_msg_timestamp;
+    Async::Timer      	    *heartbeat_timer;
     
     NetUplink(const NetUplink&);
     NetUplink& operator=(const NetUplink&);
@@ -199,6 +205,7 @@ class NetUplink : public Uplink
     void txTimeout(void);
     void transmitterStateChange(bool is_transmitting);
     void allSamplesFlushed(void);
+    void heartbeat(Async::Timer *t);
 
 };  /* class NetUplink */
 

@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <SigCAudioSink.h>
 #include <SigCAudioSource.h>
 #include <AsyncAudioFifo.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -119,8 +120,11 @@ using namespace NetTrxMsg;
 NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
       	      	     const string& port_str)
   : server(0), con(0), recv_cnt(0), recv_exp(0), rx(rx), tx(tx), fifo(0),
-    sigc_src(0), cfg(cfg), name(name)
+    sigc_src(0), cfg(cfg), name(name), heartbeat_timer(0)
 {
+  heartbeat_timer = new Timer(10000);
+  heartbeat_timer->setEnable(false);
+  heartbeat_timer->expired.connect(slot(*this, &NetUplink::heartbeat));
   
 } /* NetUplink::NetUplink */
 
@@ -129,6 +133,7 @@ NetUplink::~NetUplink(void)
 {
   delete sigc_sink;
   delete server;
+  delete heartbeat_timer;
 } /* NetUplink::~NetUplink */
 
 
@@ -203,6 +208,8 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
     con->dataReceived.connect(slot(*this, &NetUplink::tcpDataReceived));
     recv_exp = sizeof(Msg);
     recv_cnt = 0;
+    heartbeat_timer->setEnable(true);
+    gettimeofday(&last_msg_timestamp, NULL);
   }
   else
   {
@@ -227,6 +234,8 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
   fifo->clear();
   sigc_src->flushSamples();
   tx->setTxCtrlMode(Tx::TX_OFF);
+  
+  heartbeat_timer->setEnable(false);
   
 } /* NetUplink::clientDisconnected */
 
@@ -296,6 +305,8 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
 
 void NetUplink::handleMsg(Msg *msg)
 {
+  gettimeofday(&last_msg_timestamp, NULL);
+  
   switch (msg->type())
   {
     case MsgHeartbeat::TYPE:
@@ -311,7 +322,8 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgMute::TYPE:
     {
       MsgMute *mute_msg = reinterpret_cast<MsgMute*>(msg);
-      cout << "MsgMute(" << (mute_msg->doMute() ? "true" : "false") << ")\n";
+      cout << rx->name() << ": Mute(" << (mute_msg->doMute() ? "true" : "false")
+      	   << ")\n";
       rx->mute(mute_msg->doMute());
       break;
     }
@@ -319,7 +331,7 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgAddToneDetector::TYPE:
     {
       MsgAddToneDetector *atd = reinterpret_cast<MsgAddToneDetector*>(msg);
-      cout << "AddToneDetector(" << atd->fq()
+      cout << rx->name() << ": AddToneDetector(" << atd->fq()
       	   << ", " << atd->bw()
 	   << ", " << atd->requiredDuration() << ")\n";
       rx->addToneDetector(atd->fq(), atd->bw(), atd->thresh(),
@@ -372,7 +384,6 @@ void NetUplink::handleMsg(Msg *msg)
 
 void NetUplink::sendMsg(Msg *msg)
 {
-  //cout << "NetUplink::sendMsg: msg->size()=" << msg->size() << endl;
   if (con != 0)
   {
     int written = con->write(msg, msg->size());
@@ -449,6 +460,30 @@ void NetUplink::allSamplesFlushed(void)
   MsgAllSamplesFlushed *msg = new MsgAllSamplesFlushed;
   sendMsg(msg);
 } /* NetUplink::allSamplesFlushed */
+
+
+void NetUplink::heartbeat(Timer *t)
+{
+  MsgHeartbeat *msg = new MsgHeartbeat;
+  sendMsg(msg);
+  
+  struct timeval diff_tv;
+  struct timeval now;
+  gettimeofday(&now, NULL);
+  timersub(&now, &last_msg_timestamp, &diff_tv);
+  int diff_ms = diff_tv.tv_sec * 1000 + diff_tv.tv_usec / 1000;
+  
+  if (diff_ms > 15000)
+  {
+    cerr << "*** ERROR: Heartbeat timeout\n";
+    con->disconnect();
+    clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+  }
+  
+  t->reset();
+  
+} /* NetTrxTcpClient::heartbeat */
+
 
 
 /*

@@ -328,18 +328,6 @@ void NetRx::handleMsg(Msg *msg)
 {
   switch (msg->type())
   {
-    case MsgHeartbeat::TYPE:
-    {
-      msg = reinterpret_cast<MsgHeartbeat*>(msg);
-      break;
-    }
-    
-    case MsgAuth::TYPE:
-    {
-      msg = reinterpret_cast<MsgAuth*>(msg);
-      break;
-    }
-    
     case MsgSquelch::TYPE:
     {
       if (!is_muted)

@@ -265,17 +265,6 @@ void NetTx::handleMsg(Msg *msg)
 {
   switch (msg->type())
   {
-    case MsgHeartbeat::TYPE:
-    {
-      break;
-    }
-    
-    case MsgAuth::TYPE:
-    {
-      msg = reinterpret_cast<MsgAuth*>(msg);
-      break;
-    }
-    
     case MsgTxTimeout::TYPE:
     {
       txTimeout();

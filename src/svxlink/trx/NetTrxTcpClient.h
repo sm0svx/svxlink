@@ -36,7 +36,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <map>
-#include <pair.h>
+#include <utility>
+
+#include <sys/time.h>
 
 
 /****************************************************************************
@@ -143,6 +145,7 @@ class NetTrxTcpClient : public Async::TcpClient
      */
     SigC::Signal1<void, NetTrxMsg::Msg*> msgReceived;
     
+    
   protected:
     /**
      * @brief   Constructor
@@ -168,10 +171,12 @@ class NetTrxTcpClient : public Async::TcpClient
     static std::map<std::pair<const std::string, uint16_t>, NetTrxTcpClient*>
       	    clients;
 
-    char      	  recv_buf[RECV_BUF_SIZE];
-    int       	  recv_cnt;
-    int       	  recv_exp;
-    Async::Timer  *reconnect_timer;
+    char      	    recv_buf[RECV_BUF_SIZE];
+    int       	    recv_cnt;
+    int       	    recv_exp;
+    Async::Timer    *reconnect_timer;
+    struct timeval  last_msg_timestamp;
+    Async::Timer    *heartbeat_timer;
     
     NetTrxTcpClient(const NetTrxTcpClient&);
     NetTrxTcpClient& operator=(const NetTrxTcpClient&);
@@ -180,7 +185,9 @@ class NetTrxTcpClient : public Async::TcpClient
       	      	      	 Async::TcpConnection::DisconnectReason reason);
     int tcpDataReceived(TcpConnection *con, void *data, int size);
     void reconnect(Async::Timer *t);
-    
+    void handleMsg(NetTrxMsg::Msg *msg);
+    void heartbeat(Async::Timer *t);
+
 };  /* class NetTrxTcpClient */
 
 
