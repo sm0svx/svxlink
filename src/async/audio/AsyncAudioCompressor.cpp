@@ -179,7 +179,7 @@ void AudioCompressor::setOutputGain(float gain)
   {
     output_gain = gain;
   }
-  cout << "output_gain=" << output_gain << endl;
+  //cout << "output_gain=" << output_gain << endl;
 } /* AudioCompressor::setOutputGain */
 
 
