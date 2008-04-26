@@ -1,12 +1,12 @@
 /**
 @file	 NetUplink.cpp
-@brief   Contains a class the implements a remote receiver uplink via IP
+@brief   Contains a class the implements a remote transceiver uplink via IP
 @author  Tobias Blomberg / SM0SVX
 @date	 2006-04-14
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+RemoteTrx - A remote receiver for the SvxLink server
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -127,7 +127,6 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
 
 NetUplink::~NetUplink(void)
 {
-  delete fifo;
   delete sigc_sink;
   delete server;
 } /* NetUplink::~NetUplink */
@@ -164,12 +163,12 @@ bool NetUplink::initialize(void)
       slot(*this, &NetUplink::allSamplesFlushed));
   
   fifo = new AudioFifo(16000);
-  sigc_src->registerSink(fifo);
-  fifo->registerSink(tx);
+  sigc_src->registerSink(fifo, true);
 
   tx->txTimeout.connect(slot(*this, &NetUplink::txTimeout));
   tx->transmitterStateChange.connect(
       slot(*this, &NetUplink::transmitterStateChange));
+  fifo->registerSink(tx);
     
   return true;
   
@@ -201,7 +200,6 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
   if (con == 0)
   {
     con = incoming_con;
-    //con->disconnected.connect(slot(*this, &NetUplink::clientDisconnected));
     con->dataReceived.connect(slot(*this, &NetUplink::tcpDataReceived));
     recv_exp = sizeof(Msg);
     recv_cnt = 0;
@@ -225,10 +223,10 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
   recv_exp = 0;
   rx->reset();
   
-  tx->setTxCtrlMode(Tx::TX_OFF);
   tx->enableCtcss(false);
   fifo->clear();
-  fifo->flushSamples();
+  sigc_src->flushSamples();
+  tx->setTxCtrlMode(Tx::TX_OFF);
   
 } /* NetUplink::clientDisconnected */
 
@@ -378,7 +376,11 @@ void NetUplink::sendMsg(Msg *msg)
   if (con != 0)
   {
     int written = con->write(msg, msg->size());
-    if (written != static_cast<int>(msg->size()))
+    if (written == -1)
+    {
+      cerr << "*** ERROR: TCP transmit error.\n";
+    }
+    else if (written != static_cast<int>(msg->size()))
     {
       cerr << "*** ERROR: TCP transmit buffer overflow.\n";
       con->disconnect();
@@ -418,7 +420,9 @@ void NetUplink::toneDetected(float tone_fq)
 
 int NetUplink::audioReceived(float *samples, int count)
 {
-  count = min(count, 512);
+    // Workaround. There was a link error if MAX_COUNT was used directly.
+  const int max_count(MsgAudio::MAX_COUNT);
+  count = min(count, max_count);
   MsgAudio *msg = new MsgAudio(samples, count);
   sendMsg(msg);
   return count;

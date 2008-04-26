@@ -1,12 +1,12 @@
 /**
 @file	 NetUplink.h
-@brief   Contains a class the implements a remote trx uplink via IP
+@brief   Contains a class the implements a remote transceiver uplink via IP
 @author  Tobias Blomberg / SM0SVX
 @date	 2006-04-14
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -119,11 +119,11 @@ namespace NetTrxMsg
  ****************************************************************************/
 
 /**
-@brief	Implements a remote trx uplink via an IP network
+@brief	Implements a remote transceiver uplink via an IP network
 @author Tobias Blomberg / SM0SVX
 @date   2006-04-14
 
-This class implements a remote trx uplink via an IP network.
+This class implements a remote transceiver uplink via an IP network.
 */
 class NetUplink : public Uplink
 {
@@ -144,6 +144,7 @@ class NetUplink : public Uplink
      * @return	Return \em true on success or \em false on failure
      */
     bool initialize(void);
+    
 
   protected:
     
