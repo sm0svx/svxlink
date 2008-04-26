@@ -146,6 +146,7 @@ bool TrxUplink::initialize(void)
   }
 
   rx->squelchOpen.connect(slot(*this, &TrxUplink::rxSquelchOpen));
+  rx->dtmfDigitDetected.connect(slot(*this, &TrxUplink::rxDtmfDigitDetected));
   rx->reset();
   rx->mute(false);
   AudioSource *prev_src = rx;
@@ -214,6 +215,7 @@ void TrxUplink::uplinkRxDtmfRcvd(char digit, int duration)
   tx->sendDtmf(digit_str);
 } /* TrxUplink::uplinkRxDtmfRcvd */
 
+
 void TrxUplink::rxSquelchOpen(bool is_open)
 {
   /*
@@ -225,6 +227,14 @@ void TrxUplink::rxSquelchOpen(bool is_open)
   }
   */
 } /* TrxUplink::rxSquelchOpen  */
+
+
+void TrxUplink::rxDtmfDigitDetected(char digit, int duration)
+{
+    // FIXME: DTMF digits should be retransmitted with the correct duration.
+  const char dtmf_str[] = {digit, 0};
+  uplink_tx->sendDtmf(dtmf_str);
+} /* TrxUplink::rxDtmfDigitDetected */
 
 
 

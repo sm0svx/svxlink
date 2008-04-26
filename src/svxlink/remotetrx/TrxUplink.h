@@ -149,6 +149,7 @@ class TrxUplink : public Uplink
     TrxUplink& operator=(const TrxUplink&);
     void uplinkRxDtmfRcvd(char digit, int duration);
     void rxSquelchOpen(bool is_open);
+    void rxDtmfDigitDetected(char digit, int duration);
 
 };  /* class TrxUplink */
 
