@@ -1061,32 +1061,34 @@ void Logic::processCommandQueue(void)
     return;
   }
   
-  list<string>::iterator it;
-  for (it=cmd_queue.begin(); it!=cmd_queue.end(); ++it)
+  while (!cmd_queue.empty())
   {
+    string cmd(cmd_queue.front());
+    cmd_queue.pop_front();
+    
     stringstream ss;
-    ss << "dtmf_cmd_received \"" << *it << "\"";
+    ss << "dtmf_cmd_received \"" << cmd << "\"";
     processEvent(ss.str());
     if (atoi(event_handler->eventResult().c_str()) != 0)
     {
       continue;
     }
     
-    if (*it == "*")
+    if (cmd == "*")
     {
       processEvent("manual_identification");
     }
-    else if ((*it)[0] == 'D')
+    else if (cmd[0] == 'D')
     {
-      processMacroCmd(*it);
+      processMacroCmd(cmd);
     }
     else if (active_module != 0)
     {
-      active_module->dtmfCmdReceived(*it);
+      active_module->dtmfCmdReceived(cmd);
     }
-    else if (!(*it).empty())
+    else if (!cmd.empty())
     {
-      if ((*it).size() >= long_cmd_digits)
+      if (cmd.size() >= long_cmd_digits)
       {
       	Module *module = findModule(long_cmd_module);
 	if (module != 0)
@@ -1094,7 +1096,7 @@ void Logic::processCommandQueue(void)
 	  activateModule(module);
 	  if (active_module != 0)
 	  {
-      	    active_module->dtmfCmdReceived(*it);
+      	    active_module->dtmfCmdReceived(cmd);
 	  }
 	}
 	else
@@ -1103,21 +1105,18 @@ void Logic::processCommandQueue(void)
 	       << "\" specified in configuration variable "
 	       << "ACTIVATE_MODULE_ON_LONG_CMD.\n";
 	  stringstream ss;
-	  ss << "command_failed " << *it;
+	  ss << "command_failed " << cmd;
 	  processEvent(ss.str());
 	}
       }
-      else if (!cmd_parser.processCmd(*it))
+      else if (!cmd_parser.processCmd(cmd))
       {
       	stringstream ss;
-	ss << "unknown_command " << *it;
+	ss << "unknown_command " << cmd;
       	processEvent(ss.str());
       }
     }
-  }
-  
-  cmd_queue.clear();
-  
+  }  
 } /* Logic::processCommandQueue */
 
 
