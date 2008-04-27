@@ -120,7 +120,7 @@ class AudioDebugger : public AudioSink, public AudioSource
     /**
      * @brief 	Default constuctor
      */
-    AudioDebugger(Async::AudioSource *src)
+    AudioDebugger(Async::AudioSource *src=0)
       : name("AudioDebugger")
     {
       if (src != 0)
