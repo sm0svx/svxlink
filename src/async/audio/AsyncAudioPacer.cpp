@@ -1,14 +1,12 @@
 /**
 @file	 AudioPacer.cpp
-@brief   A_brief_description_for_this_file
+@brief   An audio pipe class for pacing audio output
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-04-03
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -151,10 +149,10 @@ int AudioPacer::writeSamples(const float *samples, int count)
   
   if (prebuf_samples > 0)
   {
-    samples_written = count;
-    prebuf_samples -= samples_written;
+    prebuf_samples -= count;
     if (prebuf_samples <= 0)
     {
+      samples_written = count;
       samples_written += prebuf_samples;
       samples_written = sinkWriteSamples(samples, samples_written);
       samples_written += writeSamples(samples + samples_written,
@@ -165,8 +163,11 @@ int AudioPacer::writeSamples(const float *samples, int count)
     }
     else
     {
-      	// FIXME: Take care of the case where not all samples were written
-      sinkWriteSamples(samples, samples_written);
+      samples_written = sinkWriteSamples(samples, count);
+      if (samples_written < count)
+      {
+        prebuf_samples += count - samples_written;
+      }
     }
   }
   else
@@ -174,12 +175,6 @@ int AudioPacer::writeSamples(const float *samples, int count)
     samples_written = min(count, buf_size - buf_pos);
     memcpy(buf + buf_pos, samples, samples_written * sizeof(*buf));
     buf_pos += samples_written;
-    /*
-    if (buf_pos == buf_size)
-    {
-      audioInputBufFull(true);
-    }
-    */
   }
   
   //printf("%d samples of %d written into paser\n", samples_written, count);
@@ -198,11 +193,12 @@ void AudioPacer::flushSamples(void)
 {
   //printf("AudioPacer::flushSamples: buf_pos=%d\n", buf_pos);
   
+  input_stopped = false;
+
   if (buf_pos == 0)
   {
-    //printf("AudioPacer::flushSamples: Calling allAudioFlushed()\n");
-    //allAudioFlushed();
-    sourceAllSamplesFlushed();
+    //printf("AudioPacer::flushSamples: Calling sinkFlushSamples()\n");
+    sinkFlushSamples();
   }
   else
   {
@@ -267,13 +263,21 @@ void AudioPacer::outputNextBlock(Timer *t)
     return;
   }
   
-    // FIXME: Take care of the case where not all samples were written
   //printf("AudioPacer::outputNextBlock: Calling sinkWriteSamples()\n");
-  sinkWriteSamples(buf, buf_pos);
-  buf_pos = 0;
-  //audioInputBufFull(false);
-  if (input_stopped && !do_flush)
+  int samples_written = sinkWriteSamples(buf, buf_pos);
+  if (samples_written < buf_pos)
   {
+    memmove(buf, buf+samples_written, (buf_pos - samples_written) * sizeof(*buf));
+    buf_pos -= samples_written;
+  }
+  else
+  {
+    buf_pos = 0;
+  }
+
+  if (input_stopped && (buf_pos < buf_size))
+  {
+    input_stopped = false;
     sourceResumeOutput();
   }
   
@@ -281,13 +285,10 @@ void AudioPacer::outputNextBlock(Timer *t)
   {
     do_flush = false;
     //printf("AudioPacer::outputNextBlock: Calling sinkFlushSamples()\n");
-    //allAudioFlushed();
     sinkFlushSamples();
   }
   
 } /* AudioPacer::outputNextBlock */
-
-
 
 
 

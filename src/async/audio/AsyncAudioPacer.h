@@ -1,6 +1,6 @@
 /**
 @file	 AsyncAudioPacer.h
-@brief   An audio pipe class for acping audio output
+@brief   An audio pipe class for pacing audio output
 @author  Tobias Blomberg / SM0SVX
 @date	 2007-11-17
 
