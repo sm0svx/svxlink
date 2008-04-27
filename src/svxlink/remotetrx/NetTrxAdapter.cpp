@@ -115,15 +115,7 @@ class RxAdapter : public Rx, public AudioSink
      */
     virtual void mute(bool do_mute)
     {
-      /*
-      if (do_mute && is_unflushed)
-      {
-      	is_unflushed = false;
-      	sinkFlushSamples();
-      }
-      */
-      
-      //cout << "RxTx::mute: do_mute=" << do_mute << endl;
+      //cout << name() << ": RxAdapter::mute: do_mute=" << do_mute << endl;
       mute_valve.setOpen(!do_mute);
     }
     
@@ -163,49 +155,6 @@ class RxAdapter : public Rx, public AudioSink
       mute_valve.setOpen(false);
     }
 
-
-    #if 0
-    virtual int writeSamples(const float *samples, int count)
-    {
-      if (is_muted)
-      {
-      	return count;
-      }
-      is_unflushed = true;
-      return sinkWriteSamples(samples, count);
-    }
-    
-    virtual void flushSamples(void)
-    {
-      if (is_muted)
-      {
-      	sourceAllSamplesFlushed();
-      }
-      else
-      {
-      	is_unflushed = false;
-      	sinkFlushSamples();
-      }
-    }
-
-    virtual void allSamplesFlushed(void)
-    {
-      if (!is_muted)
-      {
-      	sourceAllSamplesFlushed();
-      }
-    }
-
-    virtual void resumeOutput(void)
-    {
-      if (!is_muted)
-      {
-      	sourceResumeOutput();
-      }
-    }
-    #endif
-    
-    
     void setSquelchState(bool is_open)
     {
       if (mute_valve.isOpen())
@@ -251,7 +200,7 @@ class TxAdapter : public Tx, public AudioSource
      */
     virtual void setTxCtrlMode(TxCtrlMode mode)
     {
-      cout << "Tx::setTxCtrlMode: mode=" << mode << endl;
+      //cout << "Tx::setTxCtrlMode: mode=" << mode << endl;
       if (mode == tx_ctrl_mode)
       {
       	return;
@@ -305,6 +254,7 @@ class TxAdapter : public Tx, public AudioSource
 
     int writeSamples(const float *samples, int count)
     {
+      //cout << "TxAdapter::writeSamples\n";
       is_idle = false;
       if ((tx_ctrl_mode == Tx::TX_AUTO) && !is_transmitting)
       {
@@ -316,6 +266,7 @@ class TxAdapter : public Tx, public AudioSource
     
     void flushSamples(void)
     {
+      //cout << "TxAdapter::flushSamples\n";
       sinkFlushSamples();
     }
     
@@ -326,6 +277,7 @@ class TxAdapter : public Tx, public AudioSource
     
     void allSamplesFlushed(void)
     {
+      //cout << "TxAdapter::allSamplesFlushed\n";
       is_idle = true;
       sourceAllSamplesFlushed();
       if ((tx_ctrl_mode == Tx::TX_AUTO) && is_transmitting)
@@ -346,6 +298,7 @@ class TxAdapter : public Tx, public AudioSource
 
     void transmit(bool do_transmit)
     {
+      //cout << "TxAdapter::transmit: do_transmit=" << do_transmit << endl;
       if (do_transmit == is_transmitting)
       {
       	return;
@@ -443,7 +396,7 @@ bool NetTrxAdapter::initialize(void)
   prev_src->registerSink(fifo1, true);
   prev_src = fifo1;
   
-  rxa1 = new RxAdapter("One");
+  rxa1 = new RxAdapter("NetTxAdapter");
   if (!rxa1->initialize())
   {
     return false;
@@ -463,7 +416,7 @@ bool NetTrxAdapter::initialize(void)
   prev_src->registerSink(fifo2, true);
   prev_src = fifo2;
   
-  RxAdapter *rxa2 = new RxAdapter("Two");
+  RxAdapter *rxa2 = new RxAdapter("NetRxAdapter");
   if (!rxa2->initialize())
   {
     return false;

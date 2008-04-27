@@ -363,6 +363,7 @@ void NetUplink::handleMsg(Msg *msg)
      
     case MsgAudio::TYPE:
     {
+      //cout << "NetUplink [MsgAudio]\n";
       MsgAudio *audio_msg = reinterpret_cast<MsgAudio *>(msg);
       sigc_src->writeSamples(audio_msg->samples(), audio_msg->count());
       break;
@@ -370,6 +371,7 @@ void NetUplink::handleMsg(Msg *msg)
      
     case MsgFlush::TYPE:
     {
+      //cout << "NetUplink [MsgFlush]\n";
       sigc_src->flushSamples();
       break;
     } 
