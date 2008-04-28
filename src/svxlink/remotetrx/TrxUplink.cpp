@@ -46,6 +46,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <Tx.h>
 #include <AsyncAudioDebugger.h>
 #include <AsyncAudioFifo.h>
+#include <AsyncAudioSplitter.h>
+#include <AsyncAudioSelector.h>
+#include <AsyncAudioPassthrough.h>
 
 
 /****************************************************************************
@@ -117,7 +120,8 @@ using namespace Async;
  ****************************************************************************/
 
 TrxUplink::TrxUplink(Config &cfg, const string &name, Rx *rx, Tx *tx)
-  : cfg(cfg), name(name), rx(rx), tx(tx), uplink_tx(0), uplink_rx(0)
+  : cfg(cfg), name(name), rx(rx), tx(tx), uplink_tx(0), uplink_rx(0),
+    tx_audio_sel(0)
 {
   
 } /* TrxUplink::TrxUplink */
@@ -126,6 +130,8 @@ TrxUplink::TrxUplink(Config &cfg, const string &name, Rx *rx, Tx *tx)
 TrxUplink::~TrxUplink(void)
 {
   delete uplink_tx;
+  delete tx_audio_sel;
+  delete uplink_rx;
 } /* TrxUplink::~TrxUplink */
 
 
@@ -145,16 +151,37 @@ bool TrxUplink::initialize(void)
     return false;
   }
 
+  string value;
+  bool mute_rx_on_tx = false;
+  if (cfg.getValue(name, "MUTE_RX_ON_TX", value))
+  {
+    mute_rx_on_tx = atoi(value.c_str()) != 0;
+  }
+
+  bool loop_rx_to_tx = false;
+  if (cfg.getValue(name, "LOOP_RX_TO_TX", value))
+  {
+    loop_rx_to_tx = atoi(value.c_str()) != 0;
+  }
+
   rx->squelchOpen.connect(slot(*this, &TrxUplink::rxSquelchOpen));
   rx->dtmfDigitDetected.connect(slot(*this, &TrxUplink::rxDtmfDigitDetected));
   rx->reset();
   rx->mute(false);
   AudioSource *prev_src = rx;
-  
+
   AudioFifo *fifo = new AudioFifo(8000);
   fifo->setPrebufSamples(512);
   prev_src->registerSink(fifo);
   prev_src = fifo;
+  
+  AudioSplitter *splitter = 0;
+  if (loop_rx_to_tx)
+  {
+    splitter = new AudioSplitter;
+    prev_src->registerSink(splitter, true);
+    prev_src = 0;
+  }
   
   uplink_tx = Tx::create(cfg, uplink_tx_name);
   if ((uplink_tx == 0) || !uplink_tx->initialize())
@@ -166,7 +193,14 @@ bool TrxUplink::initialize(void)
   }
   uplink_tx->setTxCtrlMode(Tx::TX_AUTO);
   uplink_tx->enableCtcss(true);
-  prev_src->registerSink(uplink_tx);
+  if (loop_rx_to_tx)
+  {
+    splitter->addSink(uplink_tx);
+  }
+  else
+  {
+    prev_src->registerSink(uplink_tx);
+  }
   prev_src = 0;
   
   
@@ -183,8 +217,24 @@ bool TrxUplink::initialize(void)
       slot(*this, &TrxUplink::uplinkRxDtmfRcvd));
   uplink_rx->reset();
   uplink_rx->mute(false);
+  if (mute_rx_on_tx)
+  {
+    uplink_tx->transmitterStateChange.connect(slot(*uplink_rx, &Rx::mute));
+  }
   prev_src = uplink_rx;
   
+  if (loop_rx_to_tx)
+  {
+    tx_audio_sel = new AudioSelector;
+    tx_audio_sel->addSource(prev_src);
+    tx_audio_sel->enableAutoSelect(prev_src, 10);
+    AudioPassthrough *connector = new AudioPassthrough;
+    splitter->addSink(connector, true);
+    tx_audio_sel->addSource(connector);
+    tx_audio_sel->enableAutoSelect(connector, 0);
+    prev_src = tx_audio_sel;
+  }
+
   tx->setTxCtrlMode(Tx::TX_AUTO);
   prev_src->registerSink(tx);
   
@@ -235,7 +285,6 @@ void TrxUplink::rxDtmfDigitDetected(char digit, int duration)
   const char dtmf_str[] = {digit, 0};
   uplink_tx->sendDtmf(dtmf_str);
 } /* TrxUplink::rxDtmfDigitDetected */
-
 
 
 /*

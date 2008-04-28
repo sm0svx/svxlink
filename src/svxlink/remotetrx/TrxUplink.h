@@ -62,6 +62,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class AudioSelector;
+};
 
 
 /****************************************************************************
@@ -138,18 +142,20 @@ class TrxUplink : public Uplink
   protected:
     
   private:
-    Async::Config &cfg;
-    std::string   name;
-    Rx	      	  *rx;
-    Tx	      	  *tx;
-    Tx	      	  *uplink_tx;
-    Rx	      	  *uplink_rx;
+    Async::Config        &cfg;
+    std::string          name;
+    Rx	      	         *rx;
+    Tx	      	         *tx;
+    Tx	      	         *uplink_tx;
+    Rx	      	         *uplink_rx;
+    Async::AudioSelector *tx_audio_sel;
     
     TrxUplink(const TrxUplink&);
     TrxUplink& operator=(const TrxUplink&);
     void uplinkRxDtmfRcvd(char digit, int duration);
     void rxSquelchOpen(bool is_open);
     void rxDtmfDigitDetected(char digit, int duration);
+
 
 };  /* class TrxUplink */
 
