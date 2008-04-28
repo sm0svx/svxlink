@@ -145,7 +145,7 @@ const char *TcpConnection::disconnectReasonStr(DisconnectReason reason)
       break;
 
     case DR_ORDERED_DISCONNECT:
-      return "Receiver buffer overflow";
+      return "Locally ordered disconnect";
       break;
   }
   
