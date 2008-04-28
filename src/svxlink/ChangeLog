@@ -85,6 +85,13 @@
   from the DTMF decoder. This mean that all macro commands have to be
   ended with a number sign to be executed.
 
+* New voter configuration variable BUFFER_LENGTH to set how much audio,
+  in milliseconds, should be buffered during the voting delay.
+  Previously, the buffer length was adjusted to compensate for the
+  voting delay. This is not necessary in cases where only a short
+  voting delay is used (a couple of hundred milliseconds). It just adds
+  latency to the audio which is especially noticable on a repeater.
+
 
 
  0.9.0 -- 02 Jan 2008
