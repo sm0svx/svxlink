@@ -99,22 +99,36 @@ class SatRx : public AudioSource, public SigC::Object
     int id;
     Rx *rx;
     
-    SatRx(int id, Rx *rx)
-      : id(id), rx(rx), fifo(MAX_VOTING_DELAY * 8000 / 1000), sql_open(false)
+    SatRx(int id, Rx *rx, int fifo_length_ms)
+      : id(id), rx(rx), fifo(0), sql_open(false)
     {
-      fifo.setOverwrite(true);
-      rx->registerSink(&fifo);
       rx->dtmfDigitDetected.connect(slot(*this, &SatRx::onDtmfDigitDetected));
       rx->squelchOpen.connect(slot(*this, &SatRx::rxSquelchOpen));
+      AudioSource *prev_src = rx;
+
+      if (fifo_length_ms > 0)
+      {
+        fifo = new AudioFifo(fifo_length_ms * 8000 / 1000);
+        fifo->setOverwrite(true);
+        prev_src->registerSink(fifo);
+        prev_src = fifo;
+        valve.setBlockWhenClosed(true);
+      }
+      else
+      {
+        valve.setBlockWhenClosed(false);
+      }
       
       valve.setOpen(false);
-      valve.setBlockWhenClosed(true);
-      fifo.registerSink(&valve);
+      prev_src->registerSink(&valve);
       
       AudioSource::setHandler(&valve);
     }
     
-    ~SatRx(void) {}
+    ~SatRx(void)
+    {
+      delete fifo;
+    }
     
     void stopOutput(bool do_stop)
     {
@@ -135,7 +149,10 @@ class SatRx : public AudioSource, public SigC::Object
       rx->mute(do_mute);
       if (do_mute)
       {
-      	fifo.clear();
+      	if (fifo != 0)
+        {
+          fifo->clear();
+        }
 	setSquelchOpen(false);
 	dtmf_buf.clear();
       }
@@ -162,7 +179,7 @@ class SatRx : public AudioSource, public SigC::Object
   private:
     typedef list<pair<char, int> >  DtmfBuf;
     
-    AudioFifo 	fifo;
+    AudioFifo 	*fifo;
     AudioValve	valve;
     DtmfBuf   	dtmf_buf;
     bool      	sql_open;
@@ -187,7 +204,7 @@ class SatRx : public AudioSource, public SigC::Object
       }
       else
       {
-      	if (fifo.empty())
+      	if ((fifo == 0) || fifo->empty())
 	{
 	  setSquelchOpen(false);
 	}
@@ -240,7 +257,7 @@ class SatRx : public AudioSource, public SigC::Object
 Voter::Voter(Config &cfg, const std::string& name)
   : Rx(name), cfg(cfg), active_rx(0), is_muted(true), m_verbose(true),
     best_rx(0), best_rx_siglev(BEST_RX_SIGLEV_RESET), best_rx_timer(0),
-    voting_delay(0), sql_rx_id(0), selector(0)
+    voting_delay(0), sql_rx_id(0), selector(0), buffer_length(0)
 {
   Rx::setVerbose(false);
 } /* Voter::Voter */
@@ -276,6 +293,11 @@ bool Voter::initialize(void)
     voting_delay = atoi(value.c_str());
   }
 
+  if (cfg.getValue(name(), "BUFFER_LENGTH", value))
+  {
+    buffer_length = atoi(value.c_str());
+  }
+
   selector = new AudioSelector;
   setHandler(selector);
   
@@ -293,7 +315,7 @@ bool Voter::initialize(void)
       	// FIXME: Cleanup
       	return false;
       }
-      SatRx *srx = new SatRx(rxs.size() + 1, rx);
+      SatRx *srx = new SatRx(rxs.size() + 1, rx, buffer_length);
       srx->squelchOpen.connect(slot(*this, &Voter::satSquelchOpen));
       srx->dtmfDigitDetected.connect(dtmfDigitDetected.slot());
       //Rx *rx = srx->rx;

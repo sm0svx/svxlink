@@ -195,6 +195,7 @@ class Voter : public Rx
     int       	      	  voting_delay;
     int       	      	  sql_rx_id;
     Async::AudioSelector  *selector;
+    int                   buffer_length;
     
     void satSquelchOpen(bool is_open, SatRx *rx);
     void chooseBestRx(Async::Timer *t);
