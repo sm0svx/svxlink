@@ -5,7 +5,7 @@
 @date	 2006-04-14
 
 \verbatim
-RemoteRx - A remote receiver for the SvxLink server
+RemoteTrx - A remote receiver for the SvxLink server
 Copyright (C) 2004-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
