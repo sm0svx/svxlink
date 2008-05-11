@@ -71,9 +71,13 @@ for more information on how to configure a transmitter.
 .TP
 .B UPLINK
 Point out the uplink configuration section to use. The uplink section specify
-how this remote receiver should be linked to the main SvxLink server. Read more
-about this in the "Network Uplink Section" or "TX Uplink Section" chapters
-below.
+how this remote receiver should be linked to the main SvxLink server. The term
+"uplink" might be a bit confusing for some people. In this case it does not
+refer to any specific direction in which the data or audio is flowing. It's just
+the name for the link up to the main SvxLink server.
+
+Read more about how to configure an uplink in the "Network Uplink Section" or
+"Trx Uplink Section" chapters below.
 .TP
 .B CFG_DIR
 Specify the path to a directory that contain additional configuration files.
@@ -134,35 +138,54 @@ The network uplink section is used to specify the configuration for a network
 link to the main SvxLink server. In the default configuration file there is a
 network uplink section called
 .BR NetUpLink .
-The configuration is quite boring at the moment since there is only one
-configuration variable and that variable can only have one value.
 .TP
 .B TYPE
 Always "Net" for a networked uplink.
+.TP
+.B LISTEN_PORT
+The TCP port to listen on. The default is 5210.
 .
-.SS TX uplink section
+.SS Trx uplink section
 .
-The TX uplink section is used to specify the configuration for a RF
+The Trx uplink section is used to specify the configuration for an RF
 link to the main SvxLink server. In the default configuration file there is a
-TX uplink section called
-.BR TxUpLink .
+Trx uplink section called
+.BR TrxUpLink .
 The section name could be anything. It should match the UPLINK configuration
 variable in the GLOBAL section.
-The use of TX uplinks is very EXPERIMENTAL and has not been tested in real life
-yet. It is also very simplistic at the moment. It just retransmits what comes in
-on the receiver. This can be used to link remote receivers coming in on the
-Internet to a site that do not have access to Internet. At the moment, only
-audio is relayed, no signal level information, receiver ID or other stuff like
-detected DTMF digits, tones etc.
+
+The use of Trx uplinks is very EXPERIMENTAL and still have some flaws. Among
+other things, detected tones (like CTCSS or 1750 tone burst) are not relayed and
+all relayed DTMF tones are always 100ms long no matter how long the received
+digit was. Signal level measurements are not relayed either.
+
+Any way, it's used to link remote receivers coming in on the
+Internet to a site that do not have access to Internet.
 .TP
 .B TYPE
-Always "Tx" for a TX uplink.
+Always "Trx" for a Trx uplink.
 .TP
 .B TX
 Point out the uplink transmitter configuration section to use. The configuration
 for an uplink transmitter looks exactly the same as for any other transmitter.
 In the default configuration file there is an uplink transmitter configuration
-section called "UplinkTx".
+section called
+.BR UplinkTx .
+.TP
+.B RX
+Point out the uplink receiver configuration section to use. The configuration
+for an uplink receiver looks exactly the same as for any other receiver.
+In the default configuration file there is an uplink receiver configuration
+section called
+.BR UplinkRx .
+.TP
+.B MUTE_RX_ON_TX
+Specify if the link receiver should be muted or not when the link transmitter is
+transmitting. Set it to 0 if a full duplex link is desired. Default is 1.
+.TP
+.B LOOP_RX_TO_TX
+Set to 1 to loop incoming RX audio (not link RX) directly to the TX (not link
+TX). You figure out when to use it. Default is 0.
 .
 .SH FILES
 .
