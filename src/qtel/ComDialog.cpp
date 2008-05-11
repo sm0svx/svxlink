@@ -211,8 +211,14 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
       return;
     }
     rem_audio_valve->setOpen(true);
+    
+    vox_enabled_checkbox->setEnabled(true);
   }
-  
+  else
+  {
+    vox_enabled_checkbox->setEnabled(false);  
+  }
+    
   QObject::connect(
       reinterpret_cast<QObject *>(connect_button), SIGNAL(clicked()),
       this, SLOT(connectToStation()));
