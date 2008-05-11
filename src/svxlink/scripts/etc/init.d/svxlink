@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# ntpd		This shell script takes care of starting and stopping
+# svxlink	This shell script takes care of starting and stopping
 #		svxlink (The SvxLink server daemon).
 #
 # chkconfig: - 58 74
