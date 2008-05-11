@@ -291,8 +291,9 @@ bool Voter::initialize(void)
   if (cfg.getValue(name(), "VOTING_DELAY", value))
   {
     voting_delay = atoi(value.c_str());
+    buffer_length = voting_delay;
   }
-
+  
   if (cfg.getValue(name(), "BUFFER_LENGTH", value))
   {
     buffer_length = atoi(value.c_str());

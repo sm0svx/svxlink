@@ -694,7 +694,15 @@ time must be set sufficiently high to allow all receivers to calculate and
 report the signal level. Incoming audio and DTMF digits will be buffered for all
 receivers during the delay time so nothing will be lost. But of course the audio
 will be delayed the specified amount of time. This is most noticeble when using
-a repeater logic.
+a repeater logic. Use the BUFFER_LENGTH configuration variable to adjust the
+buffer length.
+.TP
+.B BUFFER_LENGTH
+Use this configuration variable to adjust the length of the voting delay buffer.
+If not specified, the buffer length will be the same as the voting delay. When
+using the voter with a repeater logic, try to keep this variable at 0 to reduce
+the latency. Only increase it if you feel audio is lost in the beginning of
+transmissions.
 .
 .SS Networked Receiver Section
 .
