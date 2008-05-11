@@ -674,6 +674,9 @@ void Logic::dtmfDigitDetected(char digit, int duration)
     }
   }
   
+  cmd_tmo_timer->reset();
+  cmd_tmo_timer->setEnable(true);
+
   if ((digit == '#') || (anti_flutter && (digit == 'C')))
   {
     putCmdOnQueue();
@@ -691,8 +694,6 @@ void Logic::dtmfDigitDetected(char digit, int duration)
   }
   else if (received_digits.size() < 10)
   {
-    cmd_tmo_timer->reset();
-    cmd_tmo_timer->setEnable(true);
     if (digit == 'B')
     {
       if (anti_flutter && (prev_digit != '?'))
