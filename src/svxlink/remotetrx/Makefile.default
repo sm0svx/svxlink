@@ -219,7 +219,7 @@ LDFLAGS		+=
 # Additional files to install
 install-extras uninstall-extras rpm-extras:
 #	$(DIRSPEC) /var/spool/myprog[755,root,root]
-	$(FILESPEC) remoterx.conf[644,root,root] /etc
+	$(FILESPEC) remotetrx.conf[644,root,root] /etc
 
 
 #
