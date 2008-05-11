@@ -405,24 +405,26 @@ command 9999 is sent to it, which will connect to the ECHOTEST server.
 .
 .SS Macros Section
 .
-A macros section is used to declare macros that can be used by a logic core. The logic
-core points out the macros section to use by using the MACROS configuration variable. The
-name of the MACROS section can be chosen arbitrarily as long as it match the MACROS
-configuration variable in the logic core configuration section. There could for example
-exist both a [RepeaterLogicMacros] and a [SimplexLogicMacros] section.
+A macros section is used to declare macros that can be used by a logic core. The
+logic core points out the macros section to use by using the MACROS
+configuration variable. The name of the MACROS section can be chosen arbitrarily
+as long as it match the MACROS configuration variable in the logic core
+configuration section. There could for example exist both a
+[RepeaterLogicMacros] and a [SimplexLogicMacros] section.
 .P
-A macro is a kind of shortcut that can be used to decrease the amount of key presses that
-have to be done to connect to common EchoLink stations for example. On the radio side,
-macros are activated by pressing "D" "macro number" "#". A macros section can look
-something like the example below. Note that the module name is case sensitive.
+A macro is a kind of shortcut that can be used to decrease the amount of key
+presses that have to be done to connect to common EchoLink stations for example.
+On the radio side, macros are activated by pressing "D" "macro number" "#". A
+macros section can look something like the example below. Note that the module
+name is case sensitive.
 
   [Macros]
-  1=EchoLink:9999
-  2=EchoLink:1234567
-  9=Parrot:0123456789
+  1=EchoLink:9999#
+  2=EchoLink:1234567#
+  9=Parrot:0123456789#
 
-For example, pressing DTMF sequence "D1#" will activate the EchoLink module and connect to
-the EchoTest conference node.
+For example, pressing DTMF sequence "D1#" will activate the EchoLink module and
+connect to the EchoTest conference node.
 .
 .SS Logic Linking
 A logic linking configuration section is used to specify information for a link between
