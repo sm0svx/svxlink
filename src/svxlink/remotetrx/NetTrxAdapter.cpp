@@ -1,13 +1,11 @@
 /**
 @file	 NetTrxAdapter.cpp
-@brief   A_brief_description_for_this_file
+@brief   Make it possible to connect a remote NetTx/NetRx as a Rx/Tx
 @author  Tobias Blomberg / SM0SVX
 @date	 2008-04-15
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
+RemoteTrx - A remote receiver for the SvxLink server
 Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -385,6 +383,7 @@ bool NetTrxAdapter::initialize(void)
 {
   AudioSource *prev_src = 0;
 
+    // NetTx audio chain
   txa1 = new TxAdapter;
   if (!txa1->initialize())
   {
@@ -404,7 +403,8 @@ bool NetTrxAdapter::initialize(void)
   prev_src->registerSink(rxa1, true);
   prev_src = 0;
 
-
+    
+    // NetRx audio chain
   txa2 = new TxAdapter;
   if (!txa2->initialize())
   {
@@ -443,18 +443,6 @@ bool NetTrxAdapter::initialize(void)
   return true;
   
 } /* NetTrxAdapter::initialize */
-
-
-Rx *NetTrxAdapter::rx(void)
-{
-  return rxa1;
-} /* NetTrxAdapter::rx */
-
-
-Tx *NetTrxAdapter::tx(void)
-{
-  return txa2;
-} /* NetTrxAdapter::tx */
 
 
 

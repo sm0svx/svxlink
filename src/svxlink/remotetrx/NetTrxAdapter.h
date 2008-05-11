@@ -1,13 +1,11 @@
 /**
 @file	 NetTrxAdapter.h
-@brief   A_brief_description_for_this_file
+@brief   Make it possible to connect a remote NetTx/NetRx as a Rx/Tx
 @author  Tobias Blomberg / SM0SVX
 @date	 2008-04-15
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
+RemoteTrx - A remote receiver for the SvxLink server
 Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -108,13 +106,22 @@ class RxAdapter;
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	Make it possible to connect a remote NetTx/NetRx as a Rx/Tx
 @author Tobias Blomberg / SM0SVX
-@date   2008-
+@date   2008-04-15
 
-A_detailed_class_description
+This is a bit of a strange and backwards class. It is used to make it possible
+to connect a remote NetTx to a remotetrx Rx and also the other way around,
+connect a remote NetRx to a remotetrx Tx.
 
-\include NetTrxAdapter_demo.cpp
+An example of when this comes handy is when running the following setup:
+
+  - A remotetrx application is running on the local computer
+  - One or more remote receivers are linked in through the Internet
+  - A TrxUplink is used to link to the main system through a transceiver
+  - The svxlink server application is running on the same computer (e.g. to
+    provide EchoLink to the main system) as remotetrx and want to use the
+    same transceiver as the TrxUplink is using.
 */
 class NetTrxAdapter
 {
@@ -133,14 +140,22 @@ class NetTrxAdapter
     ~NetTrxAdapter(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Initialize this class
+     * @return	Returns \em true on succcess or else \em false
      */
     bool initialize(void);
     
-    Rx *rx(void);
-    Tx *tx(void);
+    /**
+     * @brief 	Return the associated RX object
+     * @return	Returns the associated RX object
+     */
+    Rx *rx(void) { return reinterpret_cast<Rx *>(rxa1); }
+    
+    /**
+     * @brief 	Return the associated TX object
+     * @return	Returns the associated TX object
+     */
+    Tx *tx(void) { return reinterpret_cast<Tx *>(txa2); }
     
 
   protected:
