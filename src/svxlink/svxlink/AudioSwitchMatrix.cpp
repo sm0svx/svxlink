@@ -124,7 +124,7 @@ void AudioSwitchMatrix::addSource(const string& source_name,
   assert(sources.count(source_name) == 0);
 
   AudioSplitter *splitter = new AudioSplitter;
-  source->registerSink(splitter, true);
+  source->registerSink(splitter);
 
   sources[source_name].source = source;
   sources[source_name].splitter = splitter;
@@ -133,7 +133,7 @@ void AudioSwitchMatrix::addSource(const string& source_name,
   for (it=sinks.begin(); it!=sinks.end(); ++it)
   {
     AudioPassthrough *connector = new AudioPassthrough;
-    splitter->addSink(connector, true);
+    splitter->addSink(connector);
     
     AudioSelector *sel = (*it).second.selector;
     sel->addSource(connector);
@@ -146,7 +146,9 @@ void AudioSwitchMatrix::addSource(const string& source_name,
 void AudioSwitchMatrix::removeSource(const string& source_name)
 {
   assert(sources.count(source_name) == 1);
-
+  
+  AudioSplitter *splitter = sources[source_name].splitter;
+  
   SinkMap::iterator it;
   for (it=sinks.begin(); it!=sinks.end(); ++it)
   {
@@ -154,10 +156,11 @@ void AudioSwitchMatrix::removeSource(const string& source_name)
     AudioPassthrough *connector = (*it).second.connectors[source_name];
     (*it).second.selector->removeSource(connector);
     (*it).second.connectors.erase(source_name);
+    splitter->removeSink(connector);
     delete connector;
   }
 
-  delete sources[source_name].splitter;
+  delete splitter;
   sources.erase(source_name);
 
 } /* AudioSwitchMatrix::removeSource */
