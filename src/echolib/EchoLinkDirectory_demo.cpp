@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <cstdlib>
 #include <AsyncCppApplication.h>
 #include <EchoLinkDirectory.h>
 

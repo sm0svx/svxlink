@@ -117,10 +117,10 @@ be used standalone. It must be inherited from.
 class Tx : public SigC::Object, public Async::AudioSink
 {
   public:
-    typedef enum TxCtrlMode
+    typedef enum
     {
       TX_OFF, TX_ON, TX_AUTO
-    };
+    } TxCtrlMode;
     
     /**
      * @brief 	Create the named transmitter object

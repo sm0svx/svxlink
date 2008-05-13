@@ -48,6 +48,7 @@ extern "C" {
 
 #include <cassert>
 #include <iostream>
+#include <cstring>
 
 
 

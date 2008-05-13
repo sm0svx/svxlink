@@ -46,6 +46,8 @@ An example of how to use the Template class
 #include <termios.h>
 
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 

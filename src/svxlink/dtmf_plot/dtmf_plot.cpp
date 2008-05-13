@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include <cstdlib>
 
 #include <qapplication.h>
 #include <qwidget.h>
