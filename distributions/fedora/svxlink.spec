@@ -1,25 +1,27 @@
 
 # Release date (YYMMDD)
-%define RELEASE_DATE		080102
-%define RELEASE_NO		1
+%define RELEASE_DATE		  080518
+%define RELEASE_NO		  1
 
 # Version for the Qtel application
-%define QTEL			0.10.1
-%define QTEL_RPM_RELEASE	1
+%define QTEL			  0.11.0
+%define QTEL_RPM_RELEASE	  1
 
 # Version for the EchoLib library
-%define ECHOLIB			0.12.1
-%define ECHOLIB_RPM_RELEASE	1
+%define ECHOLIB			  0.13.0
+%define ECHOLIB_RPM_RELEASE	  1
 
 # Version for the Async library
-%define LIBASYNC		0.15.0
-%define LIBASYNC_RPM_RELEASE	1
+%define LIBASYNC		  0.16.0
+%define LIBASYNC_RPM_RELEASE	  1
 
 # SvxLink versions
-%define SVXLINK			0.9.0
-%define SVXLINK_RPM_RELEASE	1
-%define REMOTERX      	      	0.1.1
-%define REMOTERX_RPM_RELEASE  	1
+%define SVXLINK			  0.10.0
+%define SVXLINK_RPM_RELEASE	  1
+%define REMOTETRX      	      	  0.1.0
+%define REMOTETRX_RPM_RELEASE  	  1
+%define SIGLEVDETCAL  	      	  0.1.0
+%define SIGLEVDETCAL_RPM_RELEASE  1
 
 
 Summary: The SvxLink project files
@@ -113,6 +115,7 @@ fi
 %files -n svxlink-server
 %defattr(-,root,root)
 %dir /usr/share/svxlink
+%dir /etc/svxlink.d
 /usr/share/svxlink/sounds/Core
 /usr/share/svxlink/sounds/Default
 /usr/share/svxlink/sounds/DtmfRepeater
@@ -124,18 +127,20 @@ fi
 %config /usr/share/svxlink/sounds/events.d/*
 %defattr(644,root,root)
 %config(noreplace) /etc/svxlink.conf
-%config(noreplace) /etc/svxlink.d
+%config(noreplace) /etc/svxlink.d/*
 %config(noreplace) /etc/TclVoiceMail.conf
 %config(noreplace) /etc/logrotate.d/svxlink
-%config(noreplace) /etc/remoterx.conf
+%config(noreplace) /etc/remotetrx.conf
 %doc svxlink/ChangeLog
 /etc/sysconfig/svxlink
+/etc/sysconfig/remotetrx
 %config(noreplace) /etc/security/console.perms.d/90-svxlink.perms
 %config(noreplace) /etc/udev/rules.d/10-svxlink.rules
 /usr/share/man/man1/svxlink.1.gz
-/usr/share/man/man1/remoterx.1.gz
+/usr/share/man/man1/remotetrx.1.gz
+/usr/share/man/man1/siglevdetcal.1.gz
 /usr/share/man/man5/svxlink.conf.5.gz
-/usr/share/man/man5/remoterx.conf.5.gz
+/usr/share/man/man5/remotetrx.conf.5.gz
 /usr/share/man/man5/Module*.5.gz
 %dir %attr(755,svxlink,daemon) /var/spool/svxlink
 %dir %attr(755,svxlink,daemon) /var/spool/svxlink/voice_mail
@@ -143,17 +148,19 @@ fi
 /usr/share/svxlink/event_test.tcl
 /usr/bin/svxlink
 /usr/bin/dtmf_plot
-/usr/bin/remoterx
+/usr/bin/remotetrx
+/usr/bin/siglevdetcal
 /usr/lib/svxlink/Module*.so
 /etc/init.d/svxlink
+/etc/init.d/remotetrx
 %ghost /var/log/*
-%exclude /usr/include/svxlink/AudioPacer.h
 %exclude /usr/include/svxlink/Module.h
 %exclude /usr/include/svxlink/MsgHandler.h
 %exclude /usr/include/svxlink/EventHandler.h
-%exclude /usr/include/svxlink/NetRxMsg.h
+%exclude /usr/include/svxlink/NetTrxMsg.h
 %exclude /usr/include/svxlink/Rx.h
-%exclude /usr/lib/librx.a
+%exclude /usr/include/svxlink/Tx.h
+%exclude /usr/lib/libtrx.a
 
 
 
@@ -263,7 +270,6 @@ The Async library development files
 /usr/include/svxlink/AsyncFdWatch.h
 /usr/include/svxlink/AsyncIpAddress.h
 /usr/include/svxlink/AsyncQtApplication.h
-/usr/include/svxlink/AsyncSampleFifo.h
 /usr/include/svxlink/AsyncTcpClient.h
 /usr/include/svxlink/AsyncTcpConnection.h
 /usr/include/svxlink/AsyncTcpServer.h
@@ -275,13 +281,20 @@ The Async library development files
 /usr/include/svxlink/AsyncAudioPassthrough.h
 /usr/include/svxlink/AsyncAudioSelector.h
 /usr/include/svxlink/AsyncAudioValve.h
-/usr/include/svxlink/AudioClipper.h
-/usr/include/svxlink/AudioCompressor.h
-/usr/include/svxlink/AudioFilter.h
-/usr/include/svxlink/AudioProcessor.h
-/usr/include/svxlink/AudioSink.h
-/usr/include/svxlink/AudioSource.h
-/usr/include/svxlink/AudioSplitter.h
+/usr/include/svxlink/AsyncAudioClipper.h
+/usr/include/svxlink/AsyncAudioCompressor.h
+/usr/include/svxlink/AsyncAudioFilter.h
+/usr/include/svxlink/AsyncAudioProcessor.h
+/usr/include/svxlink/AsyncAudioSink.h
+/usr/include/svxlink/AsyncAudioSource.h
+/usr/include/svxlink/AsyncAudioSplitter.h
+/usr/include/svxlink/AsyncAudioDebugger.h
+/usr/include/svxlink/AsyncAudioDecimator.h
+/usr/include/svxlink/AsyncAudioFifo.h
+/usr/include/svxlink/AsyncAudioInterpolator.h
+/usr/include/svxlink/AsyncAudioPacer.h
+/usr/include/svxlink/AsyncAudioReader.h
+/usr/include/svxlink/AsyncAudioMixer.h
 /usr/include/svxlink/SigCAudioSink.h
 /usr/include/svxlink/SigCAudioSource.h
 /usr/lib/libasynccore.a
@@ -290,6 +303,10 @@ The Async library development files
 /usr/lib/libasyncaudio.a
 
 %changelog
+* Wed May 18 2008 Tobias Blomberg (SM0SVX) <sm0svx@users.sourceforge.net>
+- Updated versions.
+- Added the remotetrx application and removed the remoterx application.
+- The /etc/svxlink.d directory is now created with the correct permissions.
 * Wed Jan 02 2008 Tobias Blomberg (SM0SVX) <sm0svx@users.sourceforge.net>
 - Updated versions
 - The root directory of the source archive now includes the version.
