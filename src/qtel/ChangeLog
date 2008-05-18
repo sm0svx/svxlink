@@ -1,11 +1,12 @@
- 0.11.0 -- ?? ??? 2008
+ 0.11.0 -- 18 May 2008
 -----------------------
 
 * Qtel is now adapted to work with the new audio pipe infrastructure.
   Nothing of this is visible to the user. It's just another way to
   handle audio internally.
 
-* VOX implemented. Patch from Stuart Longland.
+* VOX implemented. Patch from Stuart Longland. At the moment, it only works
+  if full duplex is configured under the sound card settings.
 
 
 

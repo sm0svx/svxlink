@@ -1,4 +1,4 @@
- 0.10.0 -- ?? ??? 2008
+ 0.10.0 -- 18 May 2008
 ----------------------
 
 * Bugfix: If SHORT_IDENT_INTERVAL != 0 and LONG_IDENT_INTERVAL == 0 we
@@ -8,7 +8,8 @@
   was not only being cut off from being retransmitted. No modules got
   any audio either.
 
-* Internal audio handling rewritten.
+* Internal audio handling rewritten. The new audio pipe infrastructure
+  is now used everywhere in SvxLink.
 
 * Bugfix in ModuleEchoLink: The DESCRIPTION config variable wasn't
   used at all so no info message was sent upon connect.
@@ -43,7 +44,8 @@
   stations in one command would cause a memory leak.
 
 * Implemented remote TX. The new application "remotetrx" now handle
-  both remote transmitters and receivers.
+  both remote transmitters and receivers. The old application "remoterx"
+  has been removed.
 
 * Implemented a simple TX uplink for the remotetrx application. This
   make it possible to have remote receivers that is linked up to the
