@@ -138,8 +138,7 @@ NetRx::NetRx(Config &cfg, const string& name)
 
 NetRx::~NetRx(void)
 {
-  // FIXME
-  //delete tcp_con;
+  tcp_con->deleteInstance();
   
   list<ToneDet*>::iterator it;
   for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)

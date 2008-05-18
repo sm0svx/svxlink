@@ -130,7 +130,7 @@ NetTx::~NetTx(void)
 {
   clearHandler();
   delete pacer;
-  //FIXME delete tcp_con;
+  tcp_con->deleteInstance();
 } /* NetTx::~NetTx */
 
 

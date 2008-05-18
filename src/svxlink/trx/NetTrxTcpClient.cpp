@@ -126,6 +126,7 @@ NetTrxTcpClient *NetTrxTcpClient::instance(const std::string& remote_host,
   if (clients.find(key) != clients.end())
   {
     con = clients[key];
+    con->user_cnt += 1;
   }
   else
   {
@@ -136,6 +137,27 @@ NetTrxTcpClient *NetTrxTcpClient::instance(const std::string& remote_host,
   return con;
   
 } /* NetTrxTcpClient::instance */
+
+
+void NetTrxTcpClient::deleteInstance(void)
+{
+  user_cnt -= 1;
+  assert(user_cnt >= 0);
+  if (user_cnt == 0)
+  {
+    Clients::iterator it;
+    for (it=clients.begin(); it!=clients.end(); ++it)
+    {
+      if ((*it).second == this)
+      {
+      	break;
+      }
+    }
+    assert(it != clients.end());
+    clients.erase(it);
+    delete this;
+  }
+} /* NetTrxTcpClient::deleteInstance */
 
 
 void NetTrxTcpClient::sendMsg(Msg *msg)
@@ -173,7 +195,7 @@ void NetTrxTcpClient::sendMsg(Msg *msg)
 NetTrxTcpClient::NetTrxTcpClient(const std::string& remote_host,
       	      	      	      	 uint16_t remote_port, size_t recv_buf_len)
   : TcpClient(remote_host, remote_port, recv_buf_len), recv_cnt(0),
-    recv_exp(0), reconnect_timer(0), heartbeat_timer(0)
+    recv_exp(0), reconnect_timer(0), heartbeat_timer(0), user_cnt(0)
 {
   connected.connect(slot(*this, &NetTrxTcpClient::tcpConnected));
   disconnected.connect(slot(*this, &NetTrxTcpClient::tcpDisconnected));

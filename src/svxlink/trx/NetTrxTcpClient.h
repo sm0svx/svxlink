@@ -134,6 +134,11 @@ class NetTrxTcpClient : public Async::TcpClient
       	      	      	      	     uint16_t remote_port);
     
     /**
+     * @brief Delete a previously allocated instance if there are no more users
+     */
+    void deleteInstance(void);
+    
+    /**
      * @brief Send a message over the connection
      * @param msg The message to send
      */
@@ -167,9 +172,11 @@ class NetTrxTcpClient : public Async::TcpClient
   
     
   private:
+    typedef std::map<std::pair<const std::string, uint16_t>, NetTrxTcpClient*>
+      	    Clients;
+    
     static const int RECV_BUF_SIZE = 4096;
-    static std::map<std::pair<const std::string, uint16_t>, NetTrxTcpClient*>
-      	    clients;
+    static Clients clients;
 
     char      	    recv_buf[RECV_BUF_SIZE];
     int       	    recv_cnt;
@@ -177,6 +184,7 @@ class NetTrxTcpClient : public Async::TcpClient
     Async::Timer    *reconnect_timer;
     struct timeval  last_msg_timestamp;
     Async::Timer    *heartbeat_timer;
+    int       	    user_cnt;
     
     NetTrxTcpClient(const NetTrxTcpClient&);
     NetTrxTcpClient& operator=(const NetTrxTcpClient&);
