@@ -42,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sigc++/sigc++.h>
 #include <pthread.h>
+#include <netdb.h>
 
 #include <string>
 #include <vector>
@@ -147,13 +148,18 @@ class CppDnsLookupWorker : public DnsLookupWorker, public SigC::Object
   protected:
     
   private:
-    std::string       	    label;
+    std::string	      	    label;
     std::vector<IpAddress>  the_addresses;
     pthread_t 	      	    worker;
     int       	      	    notifier_rd;
     int       	      	    notifier_wr;
     Async::FdWatch    	    *notifier_watch;
     bool      	      	    done;
+    pthread_mutex_t   	    mutex;
+
+    struct hostent    	    he_buf;
+    struct hostent    	    *result;
+    char      	      	    *buf;
   
     static void *workerFunc(void *);
 
