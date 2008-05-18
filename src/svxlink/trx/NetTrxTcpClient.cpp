@@ -126,7 +126,6 @@ NetTrxTcpClient *NetTrxTcpClient::instance(const std::string& remote_host,
   if (clients.find(key) != clients.end())
   {
     con = clients[key];
-    con->user_cnt += 1;
   }
   else
   {
@@ -134,6 +133,8 @@ NetTrxTcpClient *NetTrxTcpClient::instance(const std::string& remote_host,
     clients[key] = con;
   }
   
+  con->user_cnt += 1;
+
   return con;
   
 } /* NetTrxTcpClient::instance */
