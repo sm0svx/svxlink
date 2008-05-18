@@ -189,6 +189,16 @@ class AudioIO
      */
     static int setBufferCount(int count);
     
+    /**
+     * @brief 	Set the number of channels used when doing future opens
+     * @param 	channels  The number of channels to use
+     *
+     * Use this function to set the number of channels used when opening audio
+     * devices.
+     * This is a global setting so all sound cards will be affected. Already
+     * opened sound cards will not be affected.
+     */
+    static void setChannels(int channels);
     
     /**
      * @brief Constructor

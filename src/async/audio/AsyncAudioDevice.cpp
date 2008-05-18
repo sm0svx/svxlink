@@ -121,6 +121,7 @@ map<string, AudioDevice*>  AudioDevice::devices;
 int AudioDevice::sample_rate = DEFAULT_SAMPLE_RATE;
 int AudioDevice::frag_size_log2 = DEFAULT_FRAG_SIZE_LOG2;
 int AudioDevice::frag_count = DEFAULT_FRAG_COUNT;
+int AudioDevice::channels = DEFAULT_CHANNELS;
 
 
 
@@ -274,18 +275,18 @@ bool AudioDevice::open(Mode mode)
     return false;
   }
   
-  arg = CHANNELS;
+  arg = channels;
   if(ioctl(fd, SNDCTL_DSP_CHANNELS, &arg) == -1)
   {
     perror("SNDCTL_DSP_CHANNELS ioctl failed");
     close();
     return false;
   }
-  if(arg != CHANNELS)
+  if(arg != channels)
   {
     fprintf(stderr, "*** error: Unable to set number of channels to %d. The "
       	      	    "driver suggested %d channels\n",
-		    CHANNELS, arg);
+		    channels, arg);
     close();
     return false;
   }
@@ -402,7 +403,7 @@ int AudioDevice::samplesToWrite(void) const
   }
   
   return (info.fragsize * (info.fragstotal - info.fragments)) /
-         (sizeof(int16_t) * CHANNELS);
+         (sizeof(int16_t) * channels);
   
 } /* AudioDevice::samplesToWrite */
 
@@ -471,11 +472,11 @@ void AudioDevice::audioReadHandler(FdWatch *watch)
     }
     cnt /= sizeof(int16_t); // Convert cnt to number of samples
     
-    for (int ch=0; ch<CHANNELS; ++ch)
+    for (int ch=0; ch<channels; ++ch)
     {
-      for (int i=ch; i<cnt; i += CHANNELS)
+      for (int i=ch; i<cnt; i += channels)
       {
-	samples[i/CHANNELS] = static_cast<float>(read_buf[i]) / 32768.0;
+	samples[i/channels] = static_cast<float>(read_buf[i]) / 32768.0;
       }
 
       list<AudioIO*>::iterator it;
@@ -483,7 +484,7 @@ void AudioDevice::audioReadHandler(FdWatch *watch)
       {
 	if ((*it)->channel() == ch)
 	{
-      	  (*it)->audioRead(samples, cnt / CHANNELS);
+      	  (*it)->audioRead(samples, cnt / channels);
 	}
       }
     }
@@ -537,13 +538,13 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
 	if (!(*it)->doFlush())
 	{
 	  samples_to_write = min(samples_to_write,
-	      	      	      	 fifo.samplesInFifo(true) * CHANNELS);
+	      	      	      	 fifo.samplesInFifo(true) * channels);
 	}
 	max_samples_in_fifo = max(max_samples_in_fifo,
 	      	      	      	  fifo.samplesInFifo(true));
       }
     }
-    samples_to_write = min(samples_to_write, max_samples_in_fifo * CHANNELS);
+    samples_to_write = min(samples_to_write, max_samples_in_fifo * channels);
     
     if (!do_flush)
     {
@@ -588,10 +589,10 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
 	  int channel = (*it)->channel();
 	  float tmp[sizeof(buf)/sizeof(*buf)];
 	  int samples_read =
-	      	  (*it)->readSamples(tmp, samples_to_write / CHANNELS);
+	      	  (*it)->readSamples(tmp, samples_to_write / channels);
 	  for (int i=0; i<samples_read; ++i)
 	  {
-	    int buf_pos = i * CHANNELS + channel;
+	    int buf_pos = i * channels + channel;
 	    float sample = 32767.0 * tmp[i] + buf[buf_pos];
 	    if (sample > 32767)
 	    {

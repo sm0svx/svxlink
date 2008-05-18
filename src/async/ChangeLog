@@ -17,8 +17,8 @@
 * Now possible to open left/right stereo channels as separate mono
   channels.
 
-* Now possible to set sample rate, block size and buffer size for a sound
-  card.
+* Now possible to set sample rate, block size, channels and buffer size for
+  a sound card.
 
 * Made Async::CppDnsLookupWorker thread safe.
 

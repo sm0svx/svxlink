@@ -140,6 +140,12 @@ int AudioIO::setBufferCount(int count)
 } /* AudioIO::setBufferCount */
 
 
+void AudioIO::setChannels(int channels)
+{
+  return AudioDevice::setChannels(channels);
+} /* AudioIO::setBufferCount */
+
+
 
 AudioIO::AudioIO(const string& dev_name, int channel)
   : io_mode(MODE_NONE), audio_dev(0), write_fifo(0), do_flush(true),

@@ -182,7 +182,7 @@ class AudioDevice : public SigC::Object
      */
     static int setBlocksize(int size)
     {
-      size = (size <= 0) ? 1 : size * CHANNELS * sizeof(int16_t);
+      size = (size <= 0) ? 1 : size * channels * sizeof(int16_t);
       frag_size_log2 = static_cast<int>(log2(size));
       return blocksize();
     }
@@ -194,7 +194,7 @@ class AudioDevice : public SigC::Object
     static int blocksize(void)
     {
       return (int)std::pow(2.0, (double)frag_size_log2) /
-      	     (CHANNELS * sizeof(int16_t));
+      	     (channels * sizeof(int16_t));
     }
     
     /**
@@ -214,6 +214,20 @@ class AudioDevice : public SigC::Object
     {
       frag_count = (count <=0) ? 0 : count;
       return frag_count;
+    }
+    
+    /**
+     * @brief 	Set the number of channels used when doing future opens
+     * @param 	channels  The number of channels to use
+     *
+     * Use this function to set the number of channels used when opening audio
+     * devices.
+     * This is a global setting so all sound cards will be affected. Already
+     * opened sound cards will not be affected.
+     */
+    static void setChannels(int channels)
+    {
+      AudioDevice::channels = channels;
     }
 
     
@@ -281,7 +295,7 @@ class AudioDevice : public SigC::Object
     
   private:
     static const int  DEFAULT_SAMPLE_RATE = 8000;
-    static const int  CHANNELS = 2;
+    static const int  DEFAULT_CHANNELS = 2;
     static const int  DEFAULT_FRAG_COUNT = 2;
     static const int  DEFAULT_FRAG_SIZE_LOG2 = 10; // 512 samples
     static const int  BUF_FRAG_COUNT = 4;
@@ -290,6 +304,7 @@ class AudioDevice : public SigC::Object
     static int	      	      	      	      	sample_rate;
     static int	      	      	      	      	frag_size_log2;
     static int	      	      	      	      	frag_count;
+    static int	      	      	      	      	channels;
     
     std::string       	dev_name;
     int       	      	use_count;
