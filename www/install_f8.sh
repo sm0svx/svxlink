@@ -1,8 +1,8 @@
 #!/bin/sh
 
 SF_DL_URL="http://downloads.sourceforge.net/svxlink"
-DOWNLOADS="libasync-0.15.0-1.fc8.i386.rpm echolib-0.12.1-1.fc8.i386.rpm \
-      	   qtel-0.10.1-1.fc8.i386.rpm svxlink-server-0.9.0-1.fc8.i386.rpm"
+DOWNLOADS="libasync-0.16.0-1.fc8.i386.rpm echolib-0.13.0-1.fc8.i386.rpm \
+      	   qtel-0.11.0-1.fc8.i386.rpm svxlink-server-0.10.0-1.fc8.i386.rpm"
 
 
 fedora_release=$(rpm -q --qf="%{version}" fedora-release)
