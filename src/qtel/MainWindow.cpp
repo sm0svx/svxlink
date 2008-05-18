@@ -173,6 +173,8 @@ MainWindow::MainWindow(Directory &dir)
   connect(incoming_accept_button, SIGNAL(clicked()),
       	  this, SLOT(acceptIncoming()));
   
+  AudioIO::setChannels(1);
+  
   audio_io = new AudioIO(Settings::instance()->audioDevice().latin1(), 0);
   
   dir.error.connect(slot(*this, &MainWindow::serverError));
