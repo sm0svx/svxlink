@@ -7,6 +7,35 @@
 <H2>Project News</H2>
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>18 May 2008: <I>Version 080518 released</I></B>
+  <TD/></TR>
+  <TR><TD>
+    The most important change in this release is internal. Most of the audio
+    handling code in SvxLink has been rewritten. This has made it possible to
+    implement a couple of new features and will make it easier to implement
+    audio related features in the future. Other changes include:
+    <UL>
+      <LI>
+      	Remote transmitter via TCP/IP now supported.
+      </LI>
+      <LI>
+        Now possible to use left/right stereo channels as two mono channels.
+      </LI>
+      <LI>
+        A signal level based squelch type was added.
+      </LI>
+      <LI>
+      	Bugfixes and compatibility changes.
+      </LI>
+    </UL>
+    As usual, be sure to check out the
+    <A href=" http://sourceforge.net/project/shownotes.php?release_id=600206">ChangeLog</A>
+    for more detailed information.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>03 Jan 2008: <I>Version 080102 released</I></B>
   <TD/></TR>
   <TR><TD>

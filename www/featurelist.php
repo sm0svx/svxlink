@@ -18,21 +18,29 @@ These are the most important features of the SvxLink server application.
   <LI>A sound clip based system for announcements</LI>
   <LI>Periodic identification</LI>
   <LI>A script based (TCL) event handling system</LI>
+  <LI>Possible to use left/right stereo channels as two mono channels</LI>
   <LI>Roger beep</LI>
   <LI>Trigger manual identification by pressing DTMF *</LI>
   <LI>A simple shortcut, or macro, subsystem</LI>
-  <LI>Multiple repeater activation modes: 1750 Hz tone burst, CTCSS, DTMF or
-  squelch open.</LI>
-  <LI>Periodic "idle sound" when the repeater is up but no signal is being
-  received</LI>
+  <LI>Repeater logic specific features:</LI>
+  <UL>
+    <LI>Multiple repeater activation modes: 1750 Hz tone burst, CTCSS, DTMF or
+    squelch open.</LI>
+    <LI>Periodic "idle sound" when the repeater is up but no signal is being
+    received</LI>
+    <LI>Announcements are mixed in with normal audio</LI>
+    <LI>The volume of announcements is lowered if there are other traffic</LI>
+  </UL>
   <LI>Possible to define multiple logic cores to connect to multiple
   transceivers</LI>
   <LI>Possible to link logic cores together</LI>
   <LI>Support for multiple receivers using a software voter</LI>
   <LI>Remote receivers can be linked to the logic core via TCP/IP(Internet)</LI>
-  <LI>Multiple squelch detectors: Vox, CTCSS, and external (through serial port
-  pin)</LI>
-  <LI>Experimental deemphasis/preemphasis filer support</LI>
+  <LI>A remote transmitter can be linked to the logic core via TCP/IP
+  (Internet)</LI>
+  <LI>Multiple squelch detectors: Vox, CTCSS, signal level and external
+  (through serial port pin)</LI>
+  <LI>Deemphasis/preemphasis filer support</LI>
   <LI>DTMF muting</LI>
   <LI>Squelch tail elimination</LI>
   <LI>CTCSS transmit, always or just when there is a signal received</LI>
@@ -52,6 +60,10 @@ These are the most important features of the SvxLink server application.
   <UL>
     <LI>Record voice mail for local users</LI>
   </UL>
+  <LI>A DTMF repeater module that retransmits received DTMF digits.</LI>
+  <UL>
+    <LI>Control other DTMF controlled stations on the same frequency</LI>
+  </UL>
   <LI>Possible to write new modules in the TCL scripting language</LI>
 </UL>
 
@@ -67,6 +79,7 @@ These are the most important features of the Qtel application.
   and Stations</LI>
   <LI>A bookmark system</LI>
   <LI>Support for multiple languages (English and Swedish at the moment)</LI>
+  <LI>VOX</LI>
 </UL>
 
 <?php include("footer.inc"); ?>
