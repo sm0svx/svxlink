@@ -131,7 +131,10 @@ class SquelchSerial : public Squelch
     /**
      * @brief 	Destructor
      */
-    ~SquelchSerial(void) {}
+    ~SquelchSerial(void)
+    {
+      delete serial;
+    }
   
     /**
      * @brief 	A_brief_member_function_description
