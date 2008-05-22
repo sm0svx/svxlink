@@ -4,6 +4,9 @@
 * Bugfix: Again the NO_REPEAT config variable did not work. It was
   simply ignored.
 
+* Bugfix: The "transmit" function was never called in Logic.tcl.
+  This probably made the IDENT_ONLY_AFTER_TX feature not to work.
+
 
 
  0.10.0 -- 18 May 2008

@@ -791,26 +791,6 @@ void Logic::squelchOpen(bool is_open)
 } /* Logic::squelchOpen */
 
 
-void Logic::transmit(bool do_transmit)
-{
-  return;
-  
-  //cout << "Logic::transmit: do_transmit="
-    //   << (do_transmit ? "true" : "false") << endl;
-  
-  bool was_transmitting = tx().isTransmitting();
-
-  tx().setTxCtrlMode(do_transmit ? Tx::TX_ON : Tx::TX_OFF);
-
-  if (do_transmit != was_transmitting)
-  {
-    stringstream ss;
-    ss << "transmit " << (do_transmit ? "1" : "0");
-    processEvent(ss.str());
-  }
-} /* Logic::transmit */
-
-
 bool Logic::getIdleState(void) const
 {
   return !rx().squelchIsOpen() &&
@@ -818,6 +798,14 @@ bool Logic::getIdleState(void) const
       	 msg_handler->isIdle();
 	 
 } /* Logic::getIdleState */
+
+
+void Logic::transmitterStateChange(bool is_transmitting)
+{
+  stringstream ss;
+  ss << "transmit " << (is_transmitting ? "1" : "0");
+  processEvent(ss.str());  
+} /* Logic::transmitterStateChange */
 
 
 void Logic::clearPendingSamples(void)

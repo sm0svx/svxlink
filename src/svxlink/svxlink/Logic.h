@@ -208,12 +208,11 @@ class Logic : public SigC::Object
     
   protected:    
     virtual void squelchOpen(bool is_open);
-    virtual void transmit(bool do_transmit);
     virtual void allMsgsWritten(void);
     virtual void dtmfDigitDetected(char digit, int duration);
     virtual void audioStreamIdleStateChange(bool is_idle);
     virtual bool getIdleState(void) const;
-    virtual void transmitterStateChange(bool is_transmitting) {}
+    virtual void transmitterStateChange(bool is_transmitting);
     
     void clearPendingSamples(void);
     void enableRgrSoundTimer(bool enable);
