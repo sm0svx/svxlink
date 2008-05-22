@@ -1,3 +1,11 @@
+ 0.10.1 -- ?? ??? 2008
+----------------------
+
+* Bugfix: Again the NO_REPEAT config variable did not work. It was
+  simply ignored.
+
+
+
  0.10.0 -- 18 May 2008
 ----------------------
 

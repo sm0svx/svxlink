@@ -247,7 +247,7 @@ bool RepeaterLogic::initialize(void)
     }
   }
   
-  rptValveSetOpen(true);
+  rptValveSetOpen(!no_repeat);
   
   tx().setTxCtrlMode(Tx::TX_AUTO);
   
