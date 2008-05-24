@@ -498,58 +498,79 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
   assert(fd >= 0);
   assert((current_mode == MODE_WR) || (current_mode == MODE_RDWR));
   
-  unsigned samples_to_write ;
+  unsigned frames_to_write;
   audio_buf_info info;
-  bool do_flush;
-  unsigned fragsize;
+  unsigned fragsize; // The frag (block) size in frames
   unsigned fragments;
   do
   {
     int16_t buf[32768];
     memset(buf, 0, sizeof(buf));
 
+      // Find out how many frags we can write to the sound card
     if (ioctl(fd, SNDCTL_DSP_GETOSPACE, &info) == -1)
     {
       perror("SNDCTL_DSP_GETOSPACE ioctl failed");
       return;
     }
-
     fragments = info.fragments;
-    fragsize = info.fragsize / sizeof(int16_t);
-    samples_to_write = min(static_cast<unsigned>(sizeof(buf) / sizeof(*buf)),
-    		fragments * fragsize);
+    fragsize = info.fragsize / (sizeof(int16_t) * channels);
+    frames_to_write =
+        min(static_cast<unsigned>(sizeof(buf) / sizeof(*buf)),
+    	    fragments * fragsize);
     
-    if (samples_to_write == 0)
+      // Bail out if there's no free frags
+    if (frames_to_write == 0)
     {
       break;
     }
     
+      // Loop through all AudioIO objects and find out if they have any
+      // samples to write and how many. The non-flushing AudioIO object with
+      // the least number of samples will decide how many samples can be
+      // written in total. If all AudioIO objects are flushing, the AudioIO
+      // object with the most number of samples will decide how many samples
+      // get written.
     list<AudioIO*>::iterator it;
-    do_flush = true;
+    bool do_flush = true;
     unsigned int max_samples_in_fifo = 0;
     for (it=aios.begin(); it!=aios.end(); ++it)
     {
-      if (((*it)->mode() == AudioIO::MODE_WR) ||
-      	  ((*it)->mode() == AudioIO::MODE_RDWR))
+      if (!(*it)->isIdle())
       {
-	//SampleFifo &fifo = (*it)->writeFifo();
 	unsigned samples_avail = (*it)->samplesAvailable();
-	do_flush &= ((*it)->doFlush() && (samples_avail <= samples_to_write));
 	if (!(*it)->doFlush())
 	{
-	  samples_to_write = min(samples_to_write, samples_avail * channels);
+          do_flush = false;
+          if (samples_avail < frames_to_write)
+          {
+            frames_to_write = samples_avail;
+          }
 	}
-	max_samples_in_fifo = max(max_samples_in_fifo, samples_avail);
+
+        if (samples_avail > max_samples_in_fifo)
+        {
+	  max_samples_in_fifo = samples_avail;
+        }
       }
     }
-    samples_to_write = min(samples_to_write, max_samples_in_fifo * channels);
+    do_flush &= (max_samples_in_fifo <= frames_to_write);
+    if (max_samples_in_fifo < frames_to_write)
+    {
+      frames_to_write = max_samples_in_fifo;
+    }
+
+    //printf("### frames_to_write=%d  do_flush=%s\n", frames_to_write, do_flush ? "TRUE" : "FALSE");
     
+      // If not flushing, make sure the number of frames to write is an even
+      // multiple of the frag size. If pre-buffering is active we must have
+      // at least two frags available to proceed.
     if (!do_flush)
     {
-      samples_to_write /= fragsize;
-      samples_to_write *= fragsize;
+      frames_to_write /= fragsize;
+      frames_to_write *= fragsize;
       
-      if (prebuf && (samples_to_write < 2 * fragsize))
+      if (prebuf && (frames_to_write < 2 * fragsize))
       {
       	if (fragments < 2)
 	{
@@ -563,15 +584,20 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       }
     }
     prebuf = do_flush;
-    	
-    if (samples_to_write == 0)
+    
+      // If there are no frames to write, bail out and wait for an AudioIO
+      // object to provide us with some. Otherwise, fill the sample buffer
+      // with samples from the non-idle AudioIO objects.
+    if (frames_to_write == 0)
     {
+      /*
       if (use_fillin)
       {
       	memcpy(buf, last_frag, fragsize * sizeof(*buf));
 	samples_to_write = fragsize;
       }
       else
+      */
       {
       	watch->setEnabled(false);
       	return;
@@ -581,13 +607,11 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
     {
       for (it=aios.begin(); it!=aios.end(); ++it)
       {
-	if (((*it)->mode() == AudioIO::MODE_WR) ||
-      	    ((*it)->mode() == AudioIO::MODE_RDWR))
+	if (!(*it)->isIdle())
 	{
 	  int channel = (*it)->channel();
 	  float tmp[sizeof(buf)/sizeof(*buf)];
-	  int samples_read =
-	      	  (*it)->readSamples(tmp, samples_to_write / channels);
+	  int samples_read = (*it)->readSamples(tmp, frames_to_write);
 	  for (int i=0; i<samples_read; ++i)
 	  {
 	    int buf_pos = i * channels + channel;
@@ -609,21 +633,26 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       }  
     }
         
-    if (do_flush && (samples_to_write % fragsize > 0))
+      // If flushing and the number of frames to write is not an even
+      // multiple of the frag size, round the number of frags to write
+      // up. The end of the buffer is already zeroed out.
+    if (do_flush && (frames_to_write % fragsize > 0))
     {
-      samples_to_write /= fragsize;
-      samples_to_write = (samples_to_write + 1) * fragsize;
+      frames_to_write /= fragsize;
+      frames_to_write = (frames_to_write + 1) * fragsize;
     }
     
-    int written = ::write(fd, buf, samples_to_write * sizeof(*buf));
+      // Write the samples to the sound card
+    int written = ::write(fd, buf, frames_to_write * channels * sizeof(*buf));
     if (written == -1)
     {
       perror("write in AudioIO::write");
       return;
     }
     
-    assert(written / sizeof(*buf) == samples_to_write);
+    assert(written / (channels * sizeof(*buf)) == frames_to_write);
 
+    /*
     if (use_fillin)
     {
       if (do_flush)
@@ -637,7 +666,8 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
                fragsize * sizeof(*last_frag));
       }
     }
-  } while(samples_to_write == fragments * fragsize);
+    */
+  } while(frames_to_write == fragments * fragsize);
   
   watch->setEnabled(true);
   

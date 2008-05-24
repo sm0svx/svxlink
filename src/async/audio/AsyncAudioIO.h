@@ -93,7 +93,8 @@ namespace Async
  ****************************************************************************/
 
 class AudioDevice;
-class SampleFifo;
+//class SampleFifo;
+class AudioValve;
 class AudioFifo;
 
 
@@ -351,6 +352,7 @@ class AudioIO
     float     	      	    m_gain;
     int       	      	    sample_rate;
     int       	      	    m_channel;
+    AudioValve              *input_valve;
     InputFifo         	    *input_fifo;
     DelayedFlushAudioReader *audio_reader;
 
@@ -365,6 +367,7 @@ class AudioIO
     //SampleFifo &writeFifo(void) const { return *write_fifo; }
     int readSamples(float *samples, int count);
     bool doFlush(void) const;
+    bool isIdle(void) const;
     int audioRead(float *samples, int count);
     unsigned samplesAvailable(void);
 

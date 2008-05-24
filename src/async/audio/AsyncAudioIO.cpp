@@ -61,8 +61,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncFdWatch.h"
 #include "AsyncAudioReader.h"
 #include "AsyncAudioFifo.h"
+#include "AsyncAudioValve.h"
 #include "AsyncAudioIO.h"
-#include "AsyncAudioPassthrough.h"
+#include "AsyncAudioDebugger.h"
 
 
 
@@ -94,23 +95,38 @@ using namespace Async;
 class Async::AudioIO::InputFifo : public AudioFifo
 {
   public:
-    InputFifo(int size) : AudioFifo(size), do_flush(false) {}
+    InputFifo(int size, AudioDevice *audio_dev)
+      : AudioFifo(size), audio_dev(audio_dev), do_flush(false)
+    {
+    }
     
-    int writeSamples(float *samples, int count)
+    virtual int writeSamples(const float *samples, int count)
     {
       do_flush = false;
+      audio_dev->audioToWriteAvailable();
       return AudioFifo::writeSamples(samples, count);
     }
     
-    void flushSamples(void)
+    virtual void flushSamples(void)
     {
       do_flush = true;
+      if (!empty())
+      {
+        audio_dev->audioToWriteAvailable();
+      }
       AudioFifo::flushSamples();
+    }
+
+    virtual void allSamplesFlushed(void)
+    {
+      do_flush = false;
+      AudioFifo::allSamplesFlushed();
     }
     
     bool doFlush(void) const { return do_flush; }
   
   private:
+    AudioDevice *audio_dev;
     bool do_flush;
     
 }; /* Async::AudioIO::InputFifo */
@@ -121,7 +137,7 @@ class Async::AudioIO::DelayedFlushAudioReader
 {
   public:
     DelayedFlushAudioReader(AudioDevice *audio_dev)
-      : audio_dev(audio_dev), flush_timer(0)
+      : audio_dev(audio_dev), flush_timer(0), is_idle(true)
     {
       
     }
@@ -130,23 +146,33 @@ class Async::AudioIO::DelayedFlushAudioReader
     {
       delete flush_timer;
     }
+
+    bool isIdle(void) const { return is_idle; }
     
     virtual int writeSamples(const float *samples, int count)
     {
+      //printf("DelayedFlushAudioReader[%s]::writeSamples: count=%d\n", audio_dev->devName().c_str(), count);
+
+      is_idle = false;
+
       if (flush_timer != 0)
       {
 	delete flush_timer;
 	flush_timer = 0;
       }
       
-      audio_dev->audioToWriteAvailable();
-  
       return AudioReader::writeSamples(samples, count);
     }
     
     virtual void flushSamples(void)
     {
-      long flushtime = 1000 * audio_dev->samplesToWrite() / 8000;
+      //printf("DelayedFlushAudioReader[%s]::flushSamples\n", audio_dev->devName().c_str());
+
+      is_idle = true;
+
+      audio_dev->flushSamples();
+      long flushtime =
+              1000 * audio_dev->samplesToWrite() / audio_dev->sampleRate();
       delete flush_timer;
       flush_timer = new Timer(flushtime);
       flush_timer->expired.connect(
@@ -156,9 +182,12 @@ class Async::AudioIO::DelayedFlushAudioReader
   private:
     AudioDevice *audio_dev;
     Timer     	*flush_timer;
+    bool        is_idle;
   
     void flushDone(Timer *timer)
     {
+      //printf("DelayedFlushAudioReader[%s]::flushDone\n", audio_dev->devName().c_str());
+
       delete flush_timer;
       flush_timer = 0;
       AudioReader::flushSamples();
@@ -228,20 +257,27 @@ void AudioIO::setChannels(int channels)
 AudioIO::AudioIO(const string& dev_name, int channel)
   : io_mode(MODE_NONE), audio_dev(0),
     /* lead_in_pos(0), */ m_gain(1.0),
-    m_channel(channel), input_fifo(0), audio_reader(0)
+    m_channel(channel), input_valve(0), input_fifo(0), audio_reader(0)
 {
   audio_dev = AudioDevice::registerAudioIO(dev_name, this);
   sample_rate = audio_dev->sampleRate();
   
-  input_fifo = new InputFifo(AudioDevice::blocksize() * 2 + 1);
+  input_valve = new AudioValve;
+  input_valve->setOpen(false);
+  AudioSink::setHandler(input_valve);
+  AudioSource *prev_src = input_valve;
+  
+  input_fifo = new InputFifo(AudioDevice::blocksize() * 2 + 1, audio_dev);
   input_fifo->setOverwrite(false);
-  AudioSink::setHandler(input_fifo);
-  AudioSource *prev_src = input_fifo;
+  prev_src->registerSink(input_fifo, true);
+  prev_src = input_fifo;
 
   audio_reader = new DelayedFlushAudioReader(audio_dev);
   prev_src->registerSink(audio_reader, true);
   prev_src = 0;
   
+  //new AudioDebugger(input_fifo);
+
   /*
   write_fifo = new SampleFifo(AudioDevice::blocksize() * 2 + 1);
   write_fifo->setOverwrite(false);
@@ -256,7 +292,7 @@ AudioIO::~AudioIO(void)
   close();
   //delete write_fifo;
   AudioSink::clearHandler();
-  delete input_fifo;
+  delete input_valve;
   AudioDevice::unregisterAudioIO(this);
 } /* AudioIO::~AudioIO */
 
@@ -288,6 +324,8 @@ bool AudioIO::open(Mode mode)
     io_mode = mode;
   }
   
+  input_valve->setOpen(true);
+
   return open_ok;
   
 } /* AudioIO::open */
@@ -309,10 +347,12 @@ void AudioIO::close(void)
   
   io_mode = MODE_NONE;
   
+  input_valve->setOpen(false);
+  input_fifo->clear();
+
   audio_dev->close(); 
   
   //write_fifo->clear();
-  input_fifo->clear();
   
   //do_flush = true;
   //is_flushing = false;
@@ -481,6 +521,8 @@ void AudioIO::fifoBufferFull(bool is_full)
 
 int AudioIO::readSamples(float *samples, int count)
 {
+  //printf("AudioIO[%s:%d]::readSamples\n", audio_dev->devName().c_str(), m_channel);
+
   /*
   if (write_fifo->empty())
   {
@@ -490,6 +532,8 @@ int AudioIO::readSamples(float *samples, int count)
   
   int samples_read = audio_reader->readSamples(samples, count);
   
+  //printf("AudioIO[%s:%d]::readSamples: count=%d  sample_read=%d\n", audio_dev->devName().c_str(), m_channel, count, samples_read);
+
   if (m_gain != 1.0)
   {
     for (int i=0; i<samples_read; ++i)
@@ -528,8 +572,16 @@ int AudioIO::readSamples(float *samples, int count)
 
 bool AudioIO::doFlush(void) const
 {
+  //printf("AudioIO::doFlush\n");
   return input_fifo->doFlush();
 } /* AudioIO::doFlush */
+
+
+bool AudioIO::isIdle(void) const
+{
+  //printf("AudioIO::doFlush\n");
+  return audio_reader->isIdle();
+} /* AudioIO::isIdle */
 
 
 int AudioIO::audioRead(float *samples, int count)
@@ -540,6 +592,7 @@ int AudioIO::audioRead(float *samples, int count)
 
 unsigned AudioIO::samplesAvailable(void)
 {
+  //printf("AudioIO[%s:%d]::samplesAvailable: %d\n", audio_dev->devName().c_str(), m_channel, input_fifo->samplesInFifo(true));
   return input_fifo->samplesInFifo(true);
 } /* AudioIO::samplesAvailable */
 
