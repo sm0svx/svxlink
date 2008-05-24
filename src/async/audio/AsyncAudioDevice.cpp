@@ -532,16 +532,14 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       if (((*it)->mode() == AudioIO::MODE_WR) ||
       	  ((*it)->mode() == AudioIO::MODE_RDWR))
       {
-	SampleFifo &fifo = (*it)->writeFifo();
-	do_flush &= ((*it)->doFlush() &&
-		     (fifo.samplesInFifo(true) <= samples_to_write));
+	//SampleFifo &fifo = (*it)->writeFifo();
+	unsigned samples_avail = (*it)->samplesAvailable();
+	do_flush &= ((*it)->doFlush() && (samples_avail <= samples_to_write));
 	if (!(*it)->doFlush())
 	{
-	  samples_to_write = min(samples_to_write,
-	      	      	      	 fifo.samplesInFifo(true) * channels);
+	  samples_to_write = min(samples_to_write, samples_avail * channels);
 	}
-	max_samples_in_fifo = max(max_samples_in_fifo,
-	      	      	      	  fifo.samplesInFifo(true));
+	max_samples_in_fifo = max(max_samples_in_fifo, samples_avail);
       }
     }
     samples_to_write = min(samples_to_write, max_samples_in_fifo * channels);

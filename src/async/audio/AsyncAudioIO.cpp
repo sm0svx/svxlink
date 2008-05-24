@@ -56,10 +56,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "SampleFifo.h"
+//#include "SampleFifo.h"
 #include "AsyncAudioDevice.h"
 #include "AsyncFdWatch.h"
+#include "AsyncAudioReader.h"
+#include "AsyncAudioFifo.h"
 #include "AsyncAudioIO.h"
+#include "AsyncAudioPassthrough.h"
 
 
 
@@ -87,6 +90,81 @@ using namespace Async;
  * Local class definitions
  *
  ****************************************************************************/
+
+class Async::AudioIO::InputFifo : public AudioFifo
+{
+  public:
+    InputFifo(int size) : AudioFifo(size), do_flush(false) {}
+    
+    int writeSamples(float *samples, int count)
+    {
+      do_flush = false;
+      return AudioFifo::writeSamples(samples, count);
+    }
+    
+    void flushSamples(void)
+    {
+      do_flush = true;
+      AudioFifo::flushSamples();
+    }
+    
+    bool doFlush(void) const { return do_flush; }
+  
+  private:
+    bool do_flush;
+    
+}; /* Async::AudioIO::InputFifo */
+
+
+class Async::AudioIO::DelayedFlushAudioReader
+  : public AudioReader, public SigC::Object
+{
+  public:
+    DelayedFlushAudioReader(AudioDevice *audio_dev)
+      : audio_dev(audio_dev), flush_timer(0)
+    {
+      
+    }
+    
+    ~DelayedFlushAudioReader(void)
+    {
+      delete flush_timer;
+    }
+    
+    virtual int writeSamples(const float *samples, int count)
+    {
+      if (flush_timer != 0)
+      {
+	delete flush_timer;
+	flush_timer = 0;
+      }
+      
+      audio_dev->audioToWriteAvailable();
+  
+      return AudioReader::writeSamples(samples, count);
+    }
+    
+    virtual void flushSamples(void)
+    {
+      long flushtime = 1000 * audio_dev->samplesToWrite() / 8000;
+      delete flush_timer;
+      flush_timer = new Timer(flushtime);
+      flush_timer->expired.connect(
+      	  slot(*this, &DelayedFlushAudioReader::flushDone));
+    }
+
+  private:
+    AudioDevice *audio_dev;
+    Timer     	*flush_timer;
+  
+    void flushDone(Timer *timer)
+    {
+      delete flush_timer;
+      flush_timer = 0;
+      AudioReader::flushSamples();
+    } /* AudioIO::flushDone */
+
+}; /* class Async::AudioIO::DelayedFlushAudioReader */
 
 
 
@@ -148,24 +226,37 @@ void AudioIO::setChannels(int channels)
 
 
 AudioIO::AudioIO(const string& dev_name, int channel)
-  : io_mode(MODE_NONE), audio_dev(0), write_fifo(0), do_flush(true),
-    flush_timer(0), is_flushing(false), lead_in_pos(0), m_gain(1.0),
-    m_channel(channel)
+  : io_mode(MODE_NONE), audio_dev(0),
+    /* lead_in_pos(0), */ m_gain(1.0),
+    m_channel(channel), input_fifo(0), audio_reader(0)
 {
   audio_dev = AudioDevice::registerAudioIO(dev_name, this);
   sample_rate = audio_dev->sampleRate();
   
+  input_fifo = new InputFifo(AudioDevice::blocksize() * 2 + 1);
+  input_fifo->setOverwrite(false);
+  AudioSink::setHandler(input_fifo);
+  AudioSource *prev_src = input_fifo;
+
+  audio_reader = new DelayedFlushAudioReader(audio_dev);
+  prev_src->registerSink(audio_reader, true);
+  prev_src = 0;
+  
+  /*
   write_fifo = new SampleFifo(AudioDevice::blocksize() * 2 + 1);
   write_fifo->setOverwrite(false);
   write_fifo->stopOutput(true);
   write_fifo->fifoFull.connect(slot(*this, &AudioIO::fifoBufferFull));
+  */
 } /* AudioIO::AudioIO */
 
 
 AudioIO::~AudioIO(void)
 {
   close();
-  delete write_fifo;
+  //delete write_fifo;
+  AudioSink::clearHandler();
+  delete input_fifo;
   AudioDevice::unregisterAudioIO(this);
 } /* AudioIO::~AudioIO */
 
@@ -209,26 +300,30 @@ void AudioIO::close(void)
     return;
   }
   
+  /*
   if ((io_mode == MODE_RD) || (io_mode == MODE_RDWR))
   {
     read_con.disconnect();
   }
+  */
   
   io_mode = MODE_NONE;
   
   audio_dev->close(); 
   
-  write_fifo->clear();
+  //write_fifo->clear();
+  input_fifo->clear();
   
-  do_flush = true;
-  is_flushing = false;
+  //do_flush = true;
+  //is_flushing = false;
   
-  delete flush_timer;
-  flush_timer = 0;
+  //delete flush_timer;
+  //flush_timer = 0;
   
 } /* AudioIO::close */
 
 
+#if 0
 int AudioIO::samplesToWrite(void) const
 {
   return write_fifo->samplesInFifo() + audio_dev->samplesToWrite();
@@ -252,8 +347,10 @@ void AudioIO::clearSamples(void)
   audio_dev->flushSamples();
   flushSamplesInDevice();
 } /* AudioIO::clearSamples */
+#endif
 
 
+#if 0
 int AudioIO::writeSamples(const float *samples, int count)
 {
   assert((io_mode == MODE_WR) || (io_mode == MODE_RDWR));
@@ -311,7 +408,7 @@ void AudioIO::flushSamples(void)
     flushSamplesInDevice();
   }
 } /* AudioIO::flushSamples */
-
+#endif
 
 
 
@@ -346,18 +443,7 @@ void AudioIO::flushSamples(void)
  ****************************************************************************/
 
 
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
+#if 0
 void AudioIO::flushSamplesInDevice(int extra_samples)
 {
   long flushtime = 1000 * audio_dev->samplesToWrite() / 8000;
@@ -373,17 +459,36 @@ void AudioIO::flushDone(Timer *timer)
   delete flush_timer;
   flush_timer = 0;
   sourceAllSamplesFlushed();
-} /* AudioIO::writeFileDone */
+} /* AudioIO::flushDone */
 
+
+void AudioIO::fifoBufferFull(bool is_full)
+{
+  if (!is_full)
+  {
+    sourceResumeOutput();
+  }
+} /* AudioIO::fifoBufferFull */
+#endif
+
+
+
+/****************************************************************************
+ *
+ * Private member functions used by friend class AudioDevice
+ *
+ ****************************************************************************/
 
 int AudioIO::readSamples(float *samples, int count)
 {
+  /*
   if (write_fifo->empty())
   {
     return 0;
   }
+  */
   
-  int samples_read = write_fifo->readSamples(samples, count);
+  int samples_read = audio_reader->readSamples(samples, count);
   
   if (m_gain != 1.0)
   {
@@ -393,6 +498,7 @@ int AudioIO::readSamples(float *samples, int count)
     }
   }
   
+  /*
   if (do_flush)
   {
     if (write_fifo->samplesInFifo() < 100)
@@ -413,10 +519,17 @@ int AudioIO::readSamples(float *samples, int count)
   {
     flushSamplesInDevice(samples_read);
   }
+  */
   
   return samples_read;
   
 } /* AudioIO::readSamples */
+
+
+bool AudioIO::doFlush(void) const
+{
+  return input_fifo->doFlush();
+} /* AudioIO::doFlush */
 
 
 int AudioIO::audioRead(float *samples, int count)
@@ -425,13 +538,10 @@ int AudioIO::audioRead(float *samples, int count)
 } /* AudioIO::audioRead */
 
 
-void AudioIO::fifoBufferFull(bool is_full)
+unsigned AudioIO::samplesAvailable(void)
 {
-  if (!is_full)
-  {
-    sourceResumeOutput();
-  }
-} /* AudioIO::fifoBufferFull */
+  return input_fifo->samplesInFifo(true);
+} /* AudioIO::samplesAvailable */
 
 
 

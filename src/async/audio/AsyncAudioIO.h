@@ -94,6 +94,7 @@ namespace Async
 
 class AudioDevice;
 class SampleFifo;
+class AudioFifo;
 
 
 /****************************************************************************
@@ -242,7 +243,7 @@ class AudioIO
      * to find out how long it will take before the output buffer has
      * been flushed.
      */
-    int samplesToWrite(void) const;
+    //int samplesToWrite(void) const;
     
     /*
      * @brief 	Call this method to clear all samples in the buffer
@@ -252,13 +253,13 @@ class AudioIO
      * samples that have already been written to the sound card will be
      * flushed and when finished, the allSamplesFlushed signal is emitted.
      */
-    void clearSamples(void);
+    //void clearSamples(void);
     
     /*
      * @brief 	Check if the audio device is busy flushing samples
      * @return	Returns \em true if flushing the buffer or else \em false
      */
-    bool isFlushing(void) const { return is_flushing; }
+    //bool isFlushing(void) const { return is_flushing; }
     
     /*
      * @brief 	Find out the current IO mode
@@ -313,6 +314,7 @@ class AudioIO
      */
     void allSamplesFlushed(void) {}
 
+#if 0
     /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
@@ -329,35 +331,42 @@ class AudioIO
      * sourceAllSamplesFlushed function.
      */
     void flushSamples(void);
+#endif
 
             
   protected:
     
   private:
-    Mode      	      io_mode;
-    AudioDevice       *audio_dev;
-    SampleFifo	      *write_fifo;
-    SigC::Connection  read_con;
-    bool      	      do_flush;
-    Async::Timer      *flush_timer;
-    bool      	      is_flushing;
-    int       	      lead_in_pos;
-    float     	      m_gain;
-    int       	      sample_rate;
-    int       	      m_channel;
+    class InputFifo;
+    class DelayedFlushAudioReader;
+    
+    Mode      	      	    io_mode;
+    AudioDevice       	    *audio_dev;
+    //SampleFifo	      *write_fifo;
+    //SigC::Connection      read_con;
+    //bool      	      do_flush;
+    //Async::Timer          *flush_timer;
+    //bool      	      is_flushing;
+    //int       	      lead_in_pos;
+    float     	      	    m_gain;
+    int       	      	    sample_rate;
+    int       	      	    m_channel;
+    InputFifo         	    *input_fifo;
+    DelayedFlushAudioReader *audio_reader;
 
-    void audioReadHandler(Async::FdWatch *watch);
-    void flushSamplesInDevice(int extra_samples=0);
-    void flushDone(Timer *timer);
+    //void audioReadHandler(Async::FdWatch *watch);
+    //void flushSamplesInDevice(int extra_samples=0);
+    //void flushDone(Timer *timer);
+    //void fifoBufferFull(bool is_full);
     
       // Methods accessed by the Async::AudioDevice class
     friend class AudioDevice;
     AudioDevice *device(void) const { return audio_dev; }
-    SampleFifo &writeFifo(void) const { return *write_fifo; }
+    //SampleFifo &writeFifo(void) const { return *write_fifo; }
     int readSamples(float *samples, int count);
-    bool doFlush(void) const { return do_flush; }
+    bool doFlush(void) const;
     int audioRead(float *samples, int count);
-    void fifoBufferFull(bool is_full);
+    unsigned samplesAvailable(void);
 
 };  /* class AudioIO */
 
