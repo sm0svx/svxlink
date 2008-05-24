@@ -141,6 +141,12 @@ class AudioDebugger : public AudioSink, public AudioSource
     virtual ~AudioDebugger(void) {}
   
     /**
+     * @brief   Set the name that is displayed before debug messages
+     * @param   debug_name The name to set
+     */
+    void setName(std::string debug_name) { name = debug_name; }
+
+    /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
      * @param 	count The number of samples in the buffer
