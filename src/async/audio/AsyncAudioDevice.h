@@ -278,6 +278,12 @@ class AudioDevice : public SigC::Object
      * @return	Returns the sample rate
      */
     int sampleRate(void) const { return sample_rate; }
+
+    /**
+     * @brief   Return the device name
+     * @return  Returns the device name
+     */
+    const std::string& devName(void) const { return dev_name; }
     
     
   protected:
