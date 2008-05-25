@@ -551,7 +551,10 @@ void RepeaterLogic::activateOnOpenOrClose(SqlFlank flank)
   if (flank == SQL_FLANK_OPEN)
   {
     setUp(true, false);
-    //setIdle(false);
+    if (rx().squelchIsOpen())
+    {
+      RepeaterLogic::squelchOpen(true);
+    }
   }
   else if (!rx().squelchIsOpen())
   {
