@@ -8,7 +8,7 @@
   This probably caused the IDENT_ONLY_AFTER_TX feature not to work.
 
 * Bugfix: The squelchOpen function was not called in a RepeaterLogic when
-  the repeater opened if using OPEN_ON_SQL_FLANK=1.
+  the repeater opened if using OPEN_SQL_FLANK=OPEN.
 
 
 
