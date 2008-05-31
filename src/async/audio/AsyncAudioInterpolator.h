@@ -1,6 +1,6 @@
 /**
 @file	 AsyncAudioInterpolator.h
-@brief   A_brief_description_for_this_file
+@brief   Interpolates a lower sampling rate to a higher one
 @author  Tobias Blomberg / SM0SVX
 @date	 2008-04-06
 
@@ -18,11 +18,6 @@ THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT EXPRESS OR IMPLIED WARRANTY OF
 ANY KIND. See http://www.dspguru.com/wol.htm for more information.
 \endverbatim
 */
-
-/** @example AudioInterpolator_demo.cpp
-An example of how to use the AudioInterpolator class
-*/
-
 
 #ifndef ASYNC_AUDIO_INTERPOLATOR_INCLUDED
 #define ASYNC_AUDIO_INTERPOLATOR_INCLUDED
@@ -103,19 +98,30 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	Interpolates a lower sampling rate to a higher one
 @author Tobias Blomberg / SM0SVX
 @date   2008-04-06
 
-A_detailed_class_description
+This audio pipe class will interpolate an audio stream up to a higher sampling
+rate. Interpolation is a process where the sampling rate is increased by an
+integer factor. After the increase in sampling rate, a lowpass filter must be
+applied to avoid aliasing effects. This filter is built into this component.
+However, the filter coefficients (FIR) must be calculated manually.
 
-\include AudioInterpolator_demo.cpp
+Use this web page to calculate the coefficients:
+http://www.dsptutor.freeuk.com/remez/RemezFIRFilterDesign.html
+
+This implementation is based on the multirate FAQ at dspguru.com:
+http://dspguru.com/info/faqs/mrfaq.htm
 */
 class AudioInterpolator : public Async::AudioProcessor
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
+     * @param 	interpolation_factor The factor to increase the sample rate with
+     * @param 	filter_coeff The filter coefficients
+     * @param 	taps The number of taps in the filter
      */
     AudioInterpolator(int interpolation_factor, const float *filter_coeff,
       	      	      int taps);
@@ -125,12 +131,7 @@ class AudioInterpolator : public Async::AudioProcessor
      */
     ~AudioInterpolator(void);
   
-    /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
-     */
-    
+
   protected:
     /**
      * @brief Process incoming samples and put them into the output buffer

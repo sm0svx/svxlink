@@ -1,12 +1,12 @@
 /**
 @file	 AsyncAudioCompressor.cpp
-@brief   Contains a class to do audio compression
+@brief   Contains a class to do audio compression/limiting
 @author  Tobias Blomberg / SM0SVX
 @date	 2006-05-01
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2004-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <cmath>
 #include <iostream>
 
 
@@ -255,33 +254,11 @@ void AudioCompressor::processSamples(float *dest, const float *src, int count)
 
 
 
-
-
-
-
-
 /****************************************************************************
  *
  * Private member functions
  *
  ****************************************************************************/
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-
-
-
 
 
 

@@ -5,8 +5,8 @@
 @date	 2006-05-01
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2004-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 
 #ifndef ASYNC_AUDIO_COMPRESSOR_INCLUDED
 #define ASYNC_AUDIO_COMPRESSOR_INCLUDED
@@ -44,6 +43,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncAudioProcessor.h>
+
 
 
 /****************************************************************************
@@ -52,7 +53,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncAudioProcessor.h"
 
 
 /****************************************************************************
@@ -140,15 +140,15 @@ class EnvelopeDetector
 
   private:
     double sampleRate_;		// sample rate
-    double ms_;				// time constant in ms
-    double coef_;			// runtime coefficient
+    double ms_;			// time constant in ms
+    double coef_;		// runtime coefficient
     
     void setCoef( void )	// coef algorithm
     {
       coef_ = exp( -1.0 / ( 0.001 * ms_ * sampleRate_ ) );
     }
 
-};	// end EnvelopeDetector class
+}; // end EnvelopeDetector class
 
 
 
@@ -159,9 +159,12 @@ class EnvelopeDetector
 @author Tobias Blomberg / SM0SVX
 @date   2006-05-01
 
-A_detailed_class_description
+Use this audio pipe class to do compression on an audio stream. Compression
+is a method to reduce the dynamic range of an audio signal. After it has been
+compressed it can be amplified to get a more audible end result.
 
-\include AudioCompressor_demo.cpp
+This audio pipe component is mostly untested and is based on some ripped off
+code which I really have not checked how it performs or if it works at all...
 */
 class AudioCompressor : public AudioProcessor
 {
@@ -177,19 +180,50 @@ class AudioCompressor : public AudioProcessor
     ~AudioCompressor(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Set the compression threshold
+     * @param 	thresh_db The compression threshold in dB
+     *
+     * The threshold is the level, in dB, the signal must rise to before
+     * the compressor kicks in.
      */
     void setThreshold(double thresh_db) { threshdB_ = thresh_db; }
+  
+    /**
+     * @brief 	Set the compression ratio
+     * @param 	ratio The compression ratio (ex 0.1 == 10:1)
+     */
     void setRatio(double ratio) { ratio_ = ratio; }
+  
+    /**
+     * @brief 	Set the compressor attack time
+     * @param 	attack_ms The attack time in milliseconds
+     */
     void setAttack(double attack_ms) { att_.setTc(attack_ms);}
+  
+    /**
+     * @brief 	Set the compressor decay time
+     * @param 	decay_ms The decay time in milliseconds
+     */
     void setDecay(double decay_ms) { rel_.setTc(decay_ms); }
+  
+    /**
+     * @brief 	Set the output gain
+     * @param 	gain The gain to set.
+     *
+     * The output gain is the amplification applied to the audio signal
+     * before it leaves the compressor. If gain > 1 the signal is amplified.
+     * If gain < 1 the signal is attenuated.
+     */
     void setOutputGain(float gain);
+  
+    /**
+     * @brief 	Reset the compressor
+     */
     void reset(void);
+
     
   protected:
-    void processSamples(float *dest, const float *src, int count);
+    virtual void processSamples(float *dest, const float *src, int count);
     
     
   private:

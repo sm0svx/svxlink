@@ -1,14 +1,12 @@
 /**
 @file	 AsyncAudioClipper.h
-@brief   A_brief_description_for_this_file
+@brief   Contains an audio pipe class to clip audio to a given maximum level
 @author  Tobias Blomberg / SM0SVX
-@date	 2005-08-
-
-A_detailed_description_for_this_file
+@date	 2005-08-01
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example AudioClipper_demo.cpp
-An example of how to use the AudioClipper class
-*/
-
 
 #ifndef ASYNC_AUDIO_CLIPPER_INCLUDED
 #define ASYNC_AUDIO_CLIPPER_INCLUDED
@@ -49,6 +42,8 @@ An example of how to use the AudioClipper class
  *
  ****************************************************************************/
 
+#include <AsyncAudioProcessor.h>
+
 
 
 /****************************************************************************
@@ -57,7 +52,6 @@ An example of how to use the AudioClipper class
  *
  ****************************************************************************/
 
-#include "AsyncAudioProcessor.h"
 
 
 /****************************************************************************
@@ -109,21 +103,21 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	An audio pipe class to clip audio to a given maximum level
 @author Tobias Blomberg / SM0SVX
-@date   2005-08-
+@date   2005-08-01
 
-A_detailed_class_description
-
-\include AudioClipper_demo.cpp
+This is an audio pipe class that is used to clip an audio stream to a
+given maximum level.
 */
 class AudioClipper : public AudioProcessor
 {
   public:
     /**
      * @brief 	Default constuctor
+     * @param 	clip_level  The level to clip at (1.0 is default)
      */
-    AudioClipper(void) : clip_level(1) {}
+    explicit AudioClipper(float clip_level=1.0) : clip_level(clip_level) {}
   
     /**
      * @brief 	Destructor
@@ -131,26 +125,24 @@ class AudioClipper : public AudioProcessor
     ~AudioClipper(void) {}
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Set the clip level
+     * @param 	level The level to set
      */
     void setClipLevel(float level) { clip_level = level; }
+
     
   protected:
-    void processSamples(float *dest, const float *src, int count)
+    virtual void processSamples(float *dest, const float *src, int count)
     {
       for (int i=0; i<count; ++i)
       {
       	if (src[i] > clip_level)
 	{
 	  dest[i] = clip_level;
-	  //printf("Clipping!\n");
 	}
 	else if (src[i] < -clip_level)
 	{
 	  dest[i] = -clip_level;
-	  //printf("Clipping!\n");
 	}
 	else
 	{

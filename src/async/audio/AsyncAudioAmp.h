@@ -1,14 +1,12 @@
 /**
 @file	 AsyncAudioAmp.h
-@brief   A_brief_description_for_this_file
+@brief   Contains an audio pipe class for amplification/attenuation
 @author  Tobias Blomberg / SM0SVX
-@date	 2005-08-
-
-A_detailed_description_for_this_file
+@date	 2006-07-08
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example AsyncAudioAmp_demo.cpp
-An example of how to use the AsyncAudioAmp class
-*/
-
 
 #ifndef ASYNC_AUDIO_AMP_INCLUDED
 #define ASYNC_AUDIO_AMP_INCLUDED
@@ -110,13 +103,11 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	An audio pipe class for amplification/attenuation of an audio stream
 @author Tobias Blomberg / SM0SVX
 @date   2006-07-08
 
-A_detailed_class_description
-
-\include AsyncAudioAmp_demo.cpp
+Use this class to amplify or attenuate an audio stream.
 */
 class AudioAmp : public Async::AudioProcessor
 {
@@ -143,6 +134,7 @@ class AudioAmp : public Async::AudioProcessor
      */
     float gain(void) const { return 20 * log10(m_gain); }
     
+    
   protected:
     void processSamples(float *dest, const float *src, int count)
     {
@@ -151,6 +143,7 @@ class AudioAmp : public Async::AudioProcessor
       	dest[i] = src[i] * m_gain;
       }
     }
+    
     
   private:
     AudioAmp(const AudioAmp&);
