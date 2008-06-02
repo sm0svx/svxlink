@@ -267,7 +267,8 @@ AudioIO::AudioIO(const string& dev_name, int channel)
   AudioSink::setHandler(input_valve);
   AudioSource *prev_src = input_valve;
   
-  input_fifo = new InputFifo(AudioDevice::blocksize() * 2 + 1, audio_dev);
+  input_fifo = new InputFifo(AudioDevice::blocksize() * 2, audio_dev);
+  input_fifo->setPrebufSamples(AudioDevice::blocksize() * 2);
   input_fifo->setOverwrite(false);
   prev_src->registerSink(input_fifo, true);
   prev_src = input_fifo;
@@ -593,7 +594,7 @@ int AudioIO::audioRead(float *samples, int count)
 unsigned AudioIO::samplesAvailable(void)
 {
   //printf("AudioIO[%s:%d]::samplesAvailable: %d\n", audio_dev->devName().c_str(), m_channel, input_fifo->samplesInFifo(true));
-  return input_fifo->samplesInFifo(true);
+  return input_fifo->samplesInFifo();
 } /* AudioIO::samplesAvailable */
 
 

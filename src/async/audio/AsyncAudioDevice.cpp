@@ -380,7 +380,7 @@ void AudioDevice::audioToWriteAvailable(void)
 
 void AudioDevice::flushSamples(void)
 {
-  prebuf = false;
+  //prebuf = false;
   if (write_watch != 0)
   {
     write_watch->setEnabled(true);
@@ -418,7 +418,7 @@ int AudioDevice::samplesToWrite(void) const
 
 AudioDevice::AudioDevice(const string& dev_name)
   : dev_name(dev_name), use_count(0), current_mode(MODE_NONE), fd(-1),
-    read_watch(0), write_watch(0), read_buf(0), device_caps(0), prebuf(true),
+    read_watch(0), write_watch(0), read_buf(0), device_caps(0), /*prebuf(false),*/
     samples(0), last_frag(0), use_fillin(false)
 {
   char *use_trigger_str = getenv("ASYNC_AUDIO_NOTRIGGER");
@@ -570,6 +570,7 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
       frames_to_write /= fragsize;
       frames_to_write *= fragsize;
       
+      /*
       if (prebuf && (frames_to_write < 2 * fragsize))
       {
       	if (fragments < 2)
@@ -582,8 +583,9 @@ void AudioDevice::writeSpaceAvailable(FdWatch *watch)
 	}
 	return;
       }
+      */
     }
-    prebuf = do_flush;
+    //prebuf = do_flush;
     
       // If there are no frames to write, bail out and wait for an AudioIO
       // object to provide us with some. Otherwise, fill the sample buffer

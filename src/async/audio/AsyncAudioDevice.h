@@ -322,7 +322,7 @@ class AudioDevice : public SigC::Object
     int16_t      	*read_buf;
     int       	      	device_caps;
     bool      	      	use_trigger;
-    bool		prebuf;
+    //bool		prebuf;
     float     	      	*samples;
     int16_t     	*last_frag;
     bool      	      	use_fillin;
