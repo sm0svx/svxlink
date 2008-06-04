@@ -10,6 +10,9 @@
 * Bugfix: The squelchOpen function was not called in a RepeaterLogic when
   the repeater opened if using OPEN_SQL_FLANK=OPEN.
 
+* Added TCL functions for sending selcall sequences. Code contributed by
+  Adi / DL1HRC. Have a look at SelCall.tcl for usage instructions.
+
 
 
  0.10.0 -- 18 May 2008
