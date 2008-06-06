@@ -63,6 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioSplitter.h>
 #include <AsyncAudioValve.h>
+#include <AsyncAudioFifo.h>
 #include <AsyncAudioDebugger.h>
 
 
@@ -434,6 +435,12 @@ bool Logic::initialize(void)
   idle_det = new IdleDetector(this);
   tx_audio_selector->registerSink(idle_det, true);
   prev_tx_src = idle_det;
+  
+    // Add a pre-buffered FIFO to avoid underrun
+  AudioFifo *tx_fifo = new AudioFifo(512);
+  tx_fifo->setPrebufSamples(512);
+  prev_tx_src->registerSink(tx_fifo, true);
+  prev_tx_src = tx_fifo;
   
     // Create the TX audio mixer
   tx_audio_mixer = new AudioMixer;
