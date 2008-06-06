@@ -241,6 +241,12 @@ int AudioIO::setBlocksize(int size)
 } /* AudioIO::setBlocksize */
 
 
+int AudioIO::blocksize(void)
+{
+  return AudioDevice::blocksize();
+} /* AudioIO::blocksize */
+
+
 int AudioIO::setBufferCount(int count)
 {
   return AudioDevice::setBufferCount(count);

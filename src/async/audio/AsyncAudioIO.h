@@ -175,6 +175,12 @@ class AudioIO
      * opened sound cards will not be affected.
      */
     static int setBlocksize(int size);
+
+    /**
+     * @brief 	Find out what the blocksize is set to
+     * @return	Returns the currently set blocksize in samples per channel
+     */
+    static int blocksize(void);
     
     /**
      * @brief 	Set the buffer count used when opening audio devices
