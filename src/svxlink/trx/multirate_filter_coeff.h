@@ -3,7 +3,7 @@
 
 
 /*
-First stage 48kHz <-> 16kHz (8kHz cut-off)
+First stage 48kHz <-> 16kHz (3.5kHz cut-off)
 
 Parks-McClellan FIR Filter Design
 
