@@ -134,7 +134,7 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 DnsLookup::DnsLookup(const string& label)
-  : worker(0)
+  : worker(0), m_label(label)
 {
   worker = Application::app().newDnsLookupWorker(label);
   worker->resultsReady.connect(slot(*this, &DnsLookup::onResultsReady));

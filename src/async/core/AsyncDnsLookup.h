@@ -132,6 +132,12 @@ class DnsLookup : public SigC::Object
     ~DnsLookup(void);
     
     /**
+     * @brief  Return the associated label
+     * @return Returns the label associated with this DNS lookup
+     */
+    const std::string &label(void) const { return m_label; }
+
+    /**
      * @brief 	Return the addresses for the host in the query
      * @return	Return a stl vector which contains all the addresses
      *	      	associated with the hostname in the query.
@@ -154,6 +160,7 @@ class DnsLookup : public SigC::Object
     
   private:
     DnsLookupWorker  *worker;
+    std::string      m_label;
     
     void onResultsReady(void);
 
