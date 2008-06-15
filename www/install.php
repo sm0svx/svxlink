@@ -223,8 +223,8 @@ and its modules
 <A href="man/man5/ModuleDtmfRepeater.conf.5.html">ModuleDtmfRepeater</A>).
 <P>
 To set up a remote receiver, have a look at the
-<A href="man/man1/remoterx.1.html">remoterx</A> and the
-<A href="man/man5/remoterx.conf.5.html">remoterx.conf</A> manual pages.
+<A href="man/man1/remotetrx.1.html">remotetrx</A> and the
+<A href="man/man5/remotetrx.conf.5.html">remotetrx.conf</A> manual pages.
 <P>
 After the configuration has been done, start the server by typing
 <em>svxlink</em> at the command prompt. It is possible to simulate DTMF input by
