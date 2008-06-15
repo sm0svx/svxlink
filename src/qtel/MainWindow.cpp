@@ -227,9 +227,12 @@ MainWindow::MainWindow(Directory &dir)
       this,
       SLOT(stationViewRightClicked(QListViewItem*, const QPoint&, int)));
   
-  resize(Settings::instance()->mainWindowSize());
-  vsplitter->setSizes(Settings::instance()->vSplitterSizes());
-  hsplitter->setSizes(Settings::instance()->hSplitterSizes());
+  if (!Settings::instance()->mainWindowSize().isNull())
+  {
+    resize(Settings::instance()->mainWindowSize());
+    vsplitter->setSizes(Settings::instance()->vSplitterSizes());
+    hsplitter->setSizes(Settings::instance()->hSplitterSizes());
+  }
   
   Settings::instance()->configurationUpdated.connect(
       slot(*this, &MainWindow::configurationUpdated));
