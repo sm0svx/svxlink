@@ -202,7 +202,7 @@ class MainWindow : public MainWindowBase, public SigC::Object
     void initialize(void);
     void explorerViewClicked(QListViewItem* item);
     void stationViewDoubleClicked(QListViewItem* item);
-    void stationViewCurrentChanged(QListViewItem *item);
+    void stationViewSelectionChanged(void);
     void callsignListUpdated(void);
     void refreshCallList(void);
     void updateRegistration(void);
@@ -217,7 +217,9 @@ class MainWindow : public MainWindowBase, public SigC::Object
     void removeSelectedFromBookmarks(void);
     void addNamedStationToBookmarks(void);
     void configurationUpdated(void);
-
+    void connectionConnectToIpActionActivated(void);
+    void connectionConnectToSelectedActionActivated(void);
+    
 };  /* class MainWindow */
 
 

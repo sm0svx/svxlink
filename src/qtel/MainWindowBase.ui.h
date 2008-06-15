@@ -7,11 +7,13 @@
 *****************************************************************************/
 
 #include <qmessagebox.h>
+#include <qinputdialog.h>
 #undef emit
 
 #include <version/QTEL.h>
 
 #include "Settings.h"
+#include "MainWindow.h"
 
 void MainWindowBase::editUndo()
 {
@@ -68,3 +70,11 @@ void MainWindowBase::settings()
 }
 
 
+void MainWindowBase::connectionConnectToIpActionActivated()
+{
+}
+
+
+void MainWindowBase::connectionConnectToSelectedActionActivated()
+{
+}

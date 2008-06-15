@@ -156,8 +156,8 @@ MainWindow::MainWindow(Directory &dir)
       	  this, SLOT(explorerViewClicked(QListViewItem*)));
   connect(stationView, SIGNAL(doubleClicked(QListViewItem*)),
       	  this, SLOT(stationViewDoubleClicked(QListViewItem*)));
-  connect(stationView, SIGNAL(currentChanged(QListViewItem*)),
-      	  this, SLOT(stationViewCurrentChanged(QListViewItem*)));
+  connect(stationView, SIGNAL(selectionChanged(void)),
+      	  this, SLOT(stationViewSelectionChanged(void)));
   connect(stationView, SIGNAL(returnPressed(QListViewItem*)),
       	  this, SLOT(stationViewDoubleClicked(QListViewItem*)));
   connect(directoryRefreshAction, SIGNAL(activated()),
@@ -400,6 +400,8 @@ void MainWindow::allSamplesFlushed(void)
 } /* MainWindow::allSamplesFlushed */
 
 
+
+
 /*
  *----------------------------------------------------------------------------
  * Method:    
@@ -425,11 +427,11 @@ void MainWindow::explorerViewClicked(QListViewItem* item)
   
   if (item == 0)
   {
-    stationView->clear();
+    //stationView->clear();
   }
   else if (item->text(0) == MainWindowBase::trUtf8("Bookmarks"))
   {
-    stationView->clear();
+    //stationView->clear();
     QStringList bookmarks = Settings::instance()->bookmarks();
     QStringList::iterator it;
     for (it = bookmarks.begin(); it != bookmarks.end(); ++it)
@@ -510,19 +512,21 @@ void MainWindow::explorerViewClicked(QListViewItem* item)
 
 void MainWindow::stationViewDoubleClicked(QListViewItem *item)
 {
-  ComDialog *com_dialog = new ComDialog(audio_io, dir, item->text(0));
+  ComDialog *com_dialog = new ComDialog(audio_io, dir, item->text(0), "?");
   com_dialog->show();
 } /* MainWindow::stationViewDoubleClicked */
 
 
-void MainWindow::stationViewCurrentChanged(QListViewItem *item)
+void MainWindow::stationViewSelectionChanged(void)
 {
   QListViewItem *explorer_item = explorerView->selectedItem();
+  QListViewItem *item = stationView->selectedItem();
   if (explorer_item != 0)
   {
-    select_map[explorer_item] = item->text(0);
+    select_map[explorer_item] = (item != 0) ? item->text(0) : "";
   }
-} /* MainWindow::stationViewCurrentChanged */
+  connectionConnectToSelectedAction->setEnabled(item != 0);
+} /* MainWindow::stationViewSelectionChanged */
 
 
 void MainWindow::callsignListUpdated(void)
@@ -720,6 +724,33 @@ void MainWindow::configurationUpdated(void)
   audio_io = new AudioIO(Settings::instance()->audioDevice().latin1(), 0);
 
 } /* MainWindow::configurationChanged */
+
+
+void MainWindow::connectionConnectToIpActionActivated(void)
+{
+  bool ok;
+  QString remote_host = QInputDialog::getText(
+	    trUtf8("Qtel: Connect to IP"),
+	    trUtf8("Enter an IP address or hostname:"),
+	    QLineEdit::Normal, QString::null, &ok, this);
+  if (ok && !remote_host.isEmpty())
+  {
+    ComDialog *com_dialog = new ComDialog(audio_io, dir, remote_host);
+    com_dialog->show();
+  }
+} /* MainWindow::connectionConnectToIpActionActivated */
+
+
+void MainWindow::connectionConnectToSelectedActionActivated(void)
+{
+  QListViewItem *item = stationView->selectedItem();
+  if (item != 0)
+  {
+    ComDialog *com_dialog = new ComDialog(audio_io, dir, item->text(0), "?");
+    com_dialog->show();
+  }
+} /* MainWindow::connectionConnectToSelectedActionActivated */
+
 
 
 /*

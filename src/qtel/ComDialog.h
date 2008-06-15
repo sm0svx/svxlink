@@ -68,6 +68,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace Async
 {
+  class DnsLookup;
   class AudioFifo;
   class AudioValve;
   class AudioSplitter;
@@ -139,7 +140,9 @@ class ComDialog : public ComDialogBase, public SigC::Object
       
   public:
     ComDialog(Async::AudioIO *audio_io, EchoLink::Directory& dir,
-      	      const QString& call, const QString& remote_name="?");
+      	      const QString& call, const QString& remote_name);
+    ComDialog(Async::AudioIO *audio_io, EchoLink::Directory& dir,
+      	      const QString& remote_host);
     virtual ~ComDialog(void);
     
     void acceptConnection(void);
@@ -161,14 +164,17 @@ class ComDialog : public ComDialogBase, public SigC::Object
     Async::AudioValve *     ptt_valve;
     Async::AudioSplitter *  tx_audio_splitter;
     Vox *     	      	    vox;
+    Async::DnsLookup *	    dns;
   
     ComDialog(const ComDialog&);
     ComDialog& operator=(const ComDialog&);
+    void init(const QString& remote_name="?");
     bool eventFilter(QObject *watched, QEvent *e);
     void updateStationData(const EchoLink::StationData *station);
     void createConnection(const EchoLink::StationData *station);
     void onStationListUpdated(void);
     bool openAudioDevice(Async::AudioIO::Mode mode);
+    void dnsResultsReady(Async::DnsLookup &);
 
   private slots:
     void connectToStation();

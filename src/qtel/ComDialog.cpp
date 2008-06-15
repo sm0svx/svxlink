@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncAudioIO.h>
+#include <AsyncDnsLookup.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkQso.h>
 #include <AsyncAudioFifo.h>
@@ -145,8 +146,76 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
   : callsign(callsign), con(0), dir(dir), accept_connection(false),
     audio_io(audio_io), audio_full_duplex(false), is_transmitting(false),
     ctrl_pressed(false), rem_audio_fifo(0), ptt_valve(0), tx_audio_splitter(0),
-    vox(0)
+    vox(0), dns(0)
     
+{
+  init(remote_name);
+
+  const StationData *station = dir.findCall(callsign.latin1());
+  updateStationData(station);
+  if (station != 0)
+  {
+    createConnection(station);
+  }
+  else
+  {
+    dir.getCalls();
+  }
+} /* ComDialog::ComDialog */
+
+
+ComDialog::ComDialog(AudioIO *audio_io, Directory& dir,
+      	      	     const QString& remote_host)
+  : callsign(remote_host), con(0), dir(dir), accept_connection(false),
+    audio_io(audio_io), audio_full_duplex(false), is_transmitting(false),
+    ctrl_pressed(false), rem_audio_fifo(0), ptt_valve(0), tx_audio_splitter(0),
+    vox(0), dns(0)
+    
+{
+  init();
+  dns = new DnsLookup(remote_host.latin1());
+  dns->resultsReady.connect(slot(*this, &ComDialog::dnsResultsReady));
+} /* ComDialog::ComDialog */
+
+
+ComDialog::~ComDialog(void)
+{
+  delete dns;
+  delete ptt_valve;
+  delete tx_audio_splitter;
+  delete rem_audio_valve;
+  delete rem_audio_fifo;
+  audio_io->close();
+  delete con;
+} /* ComDialog::~ComDialog */
+
+
+void ComDialog::acceptConnection(void)
+{
+  accept_connection = true;
+  if (con != 0)
+  {
+    con->accept();
+  }
+} /* ComDialog::accept */
+
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
+void ComDialog::init(const QString& remote_name)
 {
   if (callsign.find("-L") != -1)
   {
@@ -242,59 +311,8 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
   
   dir.stationListUpdated.connect(slot(*this, &ComDialog::onStationListUpdated));
   
-  orig_background_color = rx_indicator->paletteBackgroundColor();
-    
-  const StationData *station = dir.findCall(callsign.latin1());
-  //StationData *station = new StationData;
-  //station->setIp(IpAddress("192.168.1.188"));
-  updateStationData(station);
-  if (station != 0)
-  {
-    createConnection(station);
-  }
-  else
-  {
-    dir.getCalls();
-  }
-  
-} /* ComDialog::ComDialog */
-
-
-ComDialog::~ComDialog(void)
-{
-  delete ptt_valve;
-  delete tx_audio_splitter;
-  delete rem_audio_valve;
-  delete rem_audio_fifo;
-  audio_io->close();
-  delete con;
-} /* ComDialog::~ComDialog */
-
-
-void ComDialog::acceptConnection(void)
-{
-  accept_connection = true;
-  if (con != 0)
-  {
-    con->accept();
-  }
-} /* ComDialog::accept */
-
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
+  orig_background_color = rx_indicator->paletteBackgroundColor();  
+} /* ComDialog::init */
 
 
 bool ComDialog::eventFilter(QObject *watched, QEvent *e)
@@ -425,6 +443,31 @@ bool ComDialog::openAudioDevice(AudioIO::Mode mode)
   return open_ok;
   
 } /* ComDialog::openAudioDevice */
+
+
+void ComDialog::dnsResultsReady(DnsLookup &)
+{
+  if (dns->addresses().empty())
+  {
+    MyMessageBox *mb = new MyMessageBox(trUtf8("Qtel Error"),
+	trUtf8("Could not create connection to remote host") + " \"" +
+	dns->label().c_str() + "\"");
+    mb->show();
+    connect(mb, SIGNAL(closed()), this, SLOT(close()));
+    delete con;
+    con = 0;
+    return;
+  }
+  
+  StationData *station = new StationData;
+  station->setIp(dns->addresses()[0]);
+  updateStationData(station);
+  createConnection(station);  
+  
+  delete dns;
+  dns = 0;
+  
+} /* ComDialog::dnsResultsReady */
 
 
 void ComDialog::connectToStation()
