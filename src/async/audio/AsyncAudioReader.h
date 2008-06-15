@@ -24,11 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example AudioReader_demo.cpp
-An example of how to use the AudioReader class
-*/
-
-
 #ifndef ASYNC_AUDIO_READER_INCLUDED
 #define ASYNC_AUDIO_READER_INCLUDED
 
