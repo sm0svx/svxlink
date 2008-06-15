@@ -1,6 +1,8 @@
  0.16.1 -- ?? ??? 2008
 -----------------------
 
+* Bugfix and rewrite of the sound card code (AudioIO and AudioDevice classes).
+
 * Bugfix and rewrite of the Async::AudioPacer class.
 
 
