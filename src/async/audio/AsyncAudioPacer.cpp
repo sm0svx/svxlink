@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <algorithm>
 #include <cstring>
+#include <cassert>
 
 
 /****************************************************************************
@@ -118,15 +119,30 @@ using namespace Async;
 
 AudioPacer::AudioPacer(int sample_rate, int block_size, int prebuf_time)
   : sample_rate(sample_rate), buf_size(block_size), prebuf_time(prebuf_time),
-    buf_pos(0), do_flush(false), input_stopped(false)
+    buf_pos(0), pace_timer(0), do_flush(false), input_stopped(false)
 {
+  assert(sample_rate > 0);
+  assert(block_size > 0);
+  assert(prebuf_time >= 0);
+  
   buf = new float[buf_size];
   prebuf_samples = prebuf_time * sample_rate / 1000;
+  
+  pace_timer = new Timer(buf_size * 1000 / sample_rate,
+       	      	      	 Timer::TYPE_PERIODIC);
+  pace_timer->expired.connect(slot(*this, &AudioPacer::outputNextBlock));
+  
+  if (prebuf_samples > 0)
+  {
+    pace_timer->setEnable(false);
+  }
+  
 } /* AudioPacer::AudioPacer */
 
 
 AudioPacer::~AudioPacer(void)
 {
+  delete pace_timer;
   delete [] buf;
 } /* AudioPacer::~AudioPacer */
 
@@ -134,33 +150,41 @@ AudioPacer::~AudioPacer(void)
 int AudioPacer::writeSamples(const float *samples, int count)
 {
   //printf("AudioPacer::writeSamples: count=%d\n", count);
-
+  
+  assert(count > 0);
+  
+  /*
   if (count <= 0)
   {
     return 0;
   }
+  */
 
-  int samples_written = 0;  
-  
   if (do_flush)
   {
     //printf("AudioPacer::writeSamples: do_flush=false\n");
     do_flush = false;
   }
   
+  int samples_written = 0;
+  
   if (prebuf_samples > 0)
   {
     prebuf_samples -= count;
     if (prebuf_samples <= 0)
     {
-      samples_written = count;
-      samples_written += prebuf_samples;
-      samples_written = sinkWriteSamples(samples, samples_written);
+      //samples_written = count;
+      //samples_written += prebuf_samples;
+      
+      	// Prebuffering done.
+      	// Write incoming samples to sink, excluding samples that go
+	// beyond prebuffering (Note: prebuf_samples is zero or negative here).
+      samples_written = sinkWriteSamples(samples, count + prebuf_samples);
+      
+      	// Make a recursive call to write remaining samples into the buffer.
       samples_written += writeSamples(samples + samples_written,
       	      	      	      	      count - samples_written);
-      pace_timer = new Timer(buf_size * 1000 / sample_rate,
-      	      	      	     Timer::TYPE_PERIODIC);
-      pace_timer->expired.connect(slot(*this, &AudioPacer::outputNextBlock));
+      pace_timer->setEnable(true);
     }
     else
     {
@@ -195,23 +219,22 @@ void AudioPacer::flushSamples(void)
   //printf("AudioPacer::flushSamples: buf_pos=%d\n", buf_pos);
   
   input_stopped = false;
-
+  do_flush = true;
+  
   if (buf_pos == 0)
   {
     //printf("AudioPacer::flushSamples: Calling sinkFlushSamples()\n");
     sinkFlushSamples();
-  }
-  else
-  {
-    //printf("AudioPacer::flushSamples: do_flush=true\n");
-    do_flush = true;
   }
 } /* AudioPacer::flushSamples */
 
 
 void AudioPacer::resumeOutput(void)
 {
-
+  if (prebuf_samples <= 0)
+  {
+    pace_timer->setEnable(true);
+  }
 } /* AudioPacer::resumeOutput */
     
 
@@ -224,7 +247,11 @@ void AudioPacer::resumeOutput(void)
 
 void AudioPacer::allSamplesFlushed(void)
 {
-  sourceAllSamplesFlushed();
+  if (do_flush)
+  {
+    do_flush = false;
+    sourceAllSamplesFlushed();
+  }
 } /* AudioPacer::allSamplesFlushed */
 
 
@@ -236,25 +263,12 @@ void AudioPacer::allSamplesFlushed(void)
  ****************************************************************************/
 
 
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
 void AudioPacer::outputNextBlock(Timer *t)
 {
   //printf("Timer expired\n");
   if (buf_pos < buf_size)
   {
-    delete pace_timer;
-    pace_timer = 0;
+    pace_timer->setEnable(false);
     prebuf_samples = prebuf_time * sample_rate / 1000;
     //printf("AudioPacer::outputNextBlock: Turning on prebuffering...\n");
   }
@@ -265,17 +279,32 @@ void AudioPacer::outputNextBlock(Timer *t)
   }
   
   //printf("AudioPacer::outputNextBlock: Calling sinkWriteSamples()\n");
-  int samples_written = sinkWriteSamples(buf, buf_pos);
-  if (samples_written < buf_pos)
+  int samples_to_write = buf_pos;
+  int tot_samples_written = 0;
+  int samples_written;
+  do {
+    samples_written = sinkWriteSamples(buf + tot_samples_written,
+      	      	      	      	       samples_to_write);
+    tot_samples_written += samples_written;
+    samples_to_write -= samples_written;
+  } while ((samples_written > 0) && (samples_to_write > 0));
+
+  if (tot_samples_written < buf_pos)
   {
-    memmove(buf, buf+samples_written, (buf_pos - samples_written) * sizeof(*buf));
+    memmove(buf, buf + tot_samples_written,
+      	    (buf_pos - tot_samples_written) * sizeof(*buf));
     buf_pos -= samples_written;
   }
   else
   {
     buf_pos = 0;
   }
-
+  
+  if (samples_written == 0)
+  {
+    pace_timer->setEnable(false);
+  }
+  
   if (input_stopped && (buf_pos < buf_size))
   {
     input_stopped = false;
@@ -284,7 +313,7 @@ void AudioPacer::outputNextBlock(Timer *t)
   
   if (do_flush && (buf_pos == 0))
   {
-    do_flush = false;
+    //do_flush = false;
     //printf("AudioPacer::outputNextBlock: Calling sinkFlushSamples()\n");
     sinkFlushSamples();
   }
