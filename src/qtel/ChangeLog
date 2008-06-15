@@ -6,6 +6,8 @@
 
 * Now saving VOX parameters when closing the communications dialog.
 
+* Bugfix: At first startup of Qtel, the window was very small.
+
 
 
  0.11.0 -- 18 May 2008
