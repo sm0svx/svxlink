@@ -1,3 +1,10 @@
+ 0.16.1 -- ?? ??? 2008
+-----------------------
+
+* Bugfix and rewrite of the Async::AudioPacer class.
+
+
+
  0.16.0 -- 18 May 2008
 -----------------------
 
