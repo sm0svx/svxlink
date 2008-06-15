@@ -4,6 +4,8 @@
 * Added a new menu "Station" from where it is possible to connect to a
   specified remote host (IP or hostname).
 
+* Now saving VOX parameters when closing the communications dialog.
+
 
 
  0.11.0 -- 18 May 2008

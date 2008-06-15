@@ -186,6 +186,14 @@ class Settings : public SigC::Object
     QValueList<int> hSplitterSizes() const { return m_hsplitter_sizes; }
     void setHSplitterSizes(QValueList<int> sizes);
     
+    void setVoxParams(bool enabled, int threshold_db, int delay_ms);
+    bool voxEnabled(void) const { return m_vox_enabled; }
+    int voxThreshold(void) const { return m_vox_threshold; }
+    int voxDelay(void) const { return m_vox_delay; }
+    
+    void setConnectToIp(const QString &host);
+    const QString& connectToIp(void) const { return m_connect_to_ip; }
+    
     SigC::Signal0<void> configurationUpdated;
     
   protected:
@@ -214,6 +222,12 @@ class Settings : public SigC::Object
     QSize     	      m_main_window_size;
     QValueList<int>   m_vsplitter_sizes;
     QValueList<int>   m_hsplitter_sizes;
+    
+    bool      	      m_vox_enabled;
+    int       	      m_vox_threshold;
+    int       	      m_vox_delay;
+    
+    QString   	      m_connect_to_ip;
     
     Settings(void);
     

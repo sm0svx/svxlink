@@ -732,11 +732,15 @@ void MainWindow::connectionConnectToIpActionActivated(void)
   QString remote_host = QInputDialog::getText(
 	    trUtf8("Qtel: Connect to IP"),
 	    trUtf8("Enter an IP address or hostname:"),
-	    QLineEdit::Normal, QString::null, &ok, this);
-  if (ok && !remote_host.isEmpty())
+	    QLineEdit::Normal, Settings::instance()->connectToIp(), &ok, this);
+  if (ok)
   {
-    ComDialog *com_dialog = new ComDialog(audio_io, dir, remote_host);
-    com_dialog->show();
+    Settings::instance()->setConnectToIp(remote_host);
+    if (!remote_host.isEmpty())
+    {
+      ComDialog *com_dialog = new ComDialog(audio_io, dir, remote_host);
+      com_dialog->show();
+    }
   }
 } /* MainWindow::connectionConnectToIpActionActivated */
 

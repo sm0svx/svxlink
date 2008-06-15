@@ -116,17 +116,17 @@ using namespace Async;
  ****************************************************************************/
 
 Vox::Vox(void)
-  : threshold(0), vox_timer(0), vox_state(IDLE), enable(false)
+  : m_threshold(0), m_vox_timer(0), m_vox_state(IDLE), m_enabled(false)
 {
-  vox_timer = new QTimer;
-  connect(vox_timer, SIGNAL(timeout()),
+  m_vox_timer = new QTimer;
+  connect(m_vox_timer, SIGNAL(timeout()),
           this, SLOT(voxTimeout()));
 } /* Vox::Vox */
 
 
 Vox::~Vox(void)
 {
-  delete vox_timer;
+  delete m_vox_timer;
 } /* Vox::~Vox */
 
 
@@ -134,7 +134,7 @@ int Vox::writeSamples(const float *samples, int count)
 {
   assert(count > 0);
   
-  if (!enable)
+  if (!m_enabled)
   {
     return count;
   }
@@ -166,11 +166,11 @@ int Vox::writeSamples(const float *samples, int count)
   }
   levelChanged(db_level);
 
-  if (db_level > threshold)
+  if (db_level > m_threshold)
   {
     setState(ACTIVE);
   }
-  else if (vox_state == ACTIVE)
+  else if (m_vox_state == ACTIVE)
   {
     setState(HANG);
   }
@@ -184,15 +184,15 @@ void Vox::setThreshold(int threshold_db)
 {
   if (threshold_db < -60)
   {
-    threshold = -60;
+    m_threshold = -60;
   }
   else if (threshold_db > 0)
   {
-    threshold = 0;
+    m_threshold = 0;
   }
   else
   {
-    threshold = threshold_db;
+    m_threshold = threshold_db;
   }
 } /* Vox::setThreshold */
 
@@ -201,24 +201,24 @@ void Vox::setDelay(int delay_ms)
 {
   if (delay_ms < 0)
   {
-    delay = 0;
+    m_delay = 0;
   }
   else
   {
-    delay = delay_ms;
+    m_delay = delay_ms;
   }
 } /* Vox::setDelay */
 
 
-void Vox::setEnable(bool enable)
+void Vox::setEnabled(bool enable)
 {
-  this->enable = enable;
-  if (!enable)
+  m_enabled = enable;
+  if (!m_enabled)
   {
     levelChanged(-60);
     setState(IDLE);
   }
-} /* Vox::setEnable */
+} /* Vox::setEnabled */
 
 
 
@@ -252,25 +252,25 @@ void Vox::voxTimeout(void)
  */
 void Vox::setState(State new_state)
 {
-  if (new_state == vox_state)
+  if (new_state == m_vox_state)
   {
     return;
   }
   
-  vox_state = new_state;
-  switch (vox_state)
+  m_vox_state = new_state;
+  switch (m_vox_state)
   {
     case Vox::IDLE:
     case Vox::ACTIVE:
-      vox_timer->stop();
+      m_vox_timer->stop();
       break;
       
     case Vox::HANG:
-      vox_timer->start(delay, true);
+      m_vox_timer->start(m_delay, true);
       break;
   }
   
-  stateChanged(vox_state);
+  stateChanged(m_vox_state);
   
 } /* Vox::setState */
 

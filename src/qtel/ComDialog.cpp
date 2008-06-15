@@ -180,6 +180,10 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir,
 
 ComDialog::~ComDialog(void)
 {
+  Settings::instance()->setVoxParams(vox->enabled(), vox->threshold(),
+      	      	      	      	     vox->delay());
+				     
+  delete vox;
   delete dns;
   delete ptt_valve;
   delete tx_audio_splitter;
@@ -253,25 +257,31 @@ void ComDialog::init(const QString& remote_name)
   tx_audio_splitter = new AudioSplitter;
   audio_io->registerSink(tx_audio_splitter);
   
+  Settings *settings = Settings::instance();  
+
   vox = new Vox;
-  vox->setThreshold(vox_threshold->value());
-  vox->setDelay(vox_delay->value());
+  vox->setEnabled(settings->voxEnabled());
+  vox->setThreshold(settings->voxThreshold());
+  vox->setDelay(settings->voxDelay());
   connect(vox, SIGNAL(levelChanged(int)),
       	  this, SLOT(meterLevelChanged(int)));
   connect(vox, SIGNAL(stateChanged(Vox::State)),
       	  this, SLOT(voxStateChanged(Vox::State)));
   connect(vox_enabled_checkbox, SIGNAL(toggled(bool)),
-      	  vox, SLOT(setEnable(bool)));
+      	  vox, SLOT(setEnabled(bool)));
   connect(vox_threshold, SIGNAL(sliderMoved(int)),
       	  vox, SLOT(setThreshold(int)));
   connect(vox_delay, SIGNAL(valueChanged(int)),
       	  vox, SLOT(setDelay(int)));
   tx_audio_splitter->addSink(vox);
-  
+
+  vox_enabled_checkbox->setChecked(vox->enabled());
+  vox_threshold->setValue(vox->threshold());
+  vox_delay->setValue(vox->delay());
+     
   ptt_valve = new AudioValve;
   tx_audio_splitter->addSink(ptt_valve);
   
-  Settings *settings = Settings::instance();  
   if (settings->useFullDuplex() && audio_io->isFullDuplexCapable())
   {
     audio_full_duplex = true;
@@ -311,7 +321,8 @@ void ComDialog::init(const QString& remote_name)
   
   dir.stationListUpdated.connect(slot(*this, &ComDialog::onStationListUpdated));
   
-  orig_background_color = rx_indicator->paletteBackgroundColor();  
+  orig_background_color = rx_indicator->paletteBackgroundColor(); 
+  
 } /* ComDialog::init */
 
 

@@ -136,7 +136,26 @@ class Vox : public QObject, public Async::AudioSink
      * @brief 	Get the VOX state
      * @return	Returns the current state of the VOX
      */
-    State state(void) const { return vox_state; }
+    State state(void) const { return m_vox_state; }
+    
+    /**
+     * @brief 	Check if the VOX is enabled or not
+     * @return	Returns \em true if the VOX is enabled or else \em false
+     */
+    bool enabled(void) const { return m_enabled; }
+    
+    /**
+     * @brief 	Get the VOX threshold
+     * @return	Returns the current VOX threshold
+     */
+    int threshold(void) const { return m_threshold; }
+    
+    /**
+     * @brief 	Get the VOX delay
+     * @return	Returns the current VOX delay
+     */
+    int delay(void) const { return m_delay; }
+    
     
     /**
      * @brief 	Write samples into this audio sink
@@ -160,6 +179,7 @@ class Vox : public QObject, public Async::AudioSink
      * This function is normally only called from a connected source object.
      */
     virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
+
       
   signals:
     /**
@@ -173,6 +193,7 @@ class Vox : public QObject, public Async::AudioSink
      * @param 	new_state The new state of the VOX (IDLE, ACTIVE or HANG)
      */
     void stateChanged(Vox::State new_state);
+
 
   public slots:    
     /**
@@ -192,20 +213,22 @@ class Vox : public QObject, public Async::AudioSink
      * @param 	enable Set to \em true to enable the VOX or \em false to
      *	      	       disable it
      */
-    void setEnable(bool enable);
+    void setEnabled(bool enable);
+    
     
   protected:
     
   private:
-    int  	  threshold;
-    int       	  delay;
-    QTimer    	  *vox_timer;
-    State     	  vox_state;
-    bool      	  enable;
+    int  	  m_threshold;
+    int       	  m_delay;
+    QTimer    	  *m_vox_timer;
+    State     	  m_vox_state;
+    bool      	  m_enabled;
     
     Vox(const Vox&);
     Vox& operator=(const Vox&);
     void setState(State new_state);
+
 
   private slots:
     void voxTimeout(void);

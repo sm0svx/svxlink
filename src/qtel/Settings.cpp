@@ -103,6 +103,12 @@ using namespace std;
 #define CONF_VSPLITTER_SIZES  	      CONF_APP_NAME "/VSplitterSizes"
 #define CONF_HSPLITTER_SIZES  	      CONF_APP_NAME "/HSplitterSizes"
 
+#define CONF_VOX_ENABLED      	      CONF_APP_NAME "/VoxEnabled"
+#define CONF_VOX_THRESHOLD            CONF_APP_NAME "/VoxThreshold"
+#define CONF_VOX_DELAY      	      CONF_APP_NAME "/VoxDelay"
+
+#define CONF_CONNECT_TO_IP            CONF_APP_NAME "/ConnectToIp"
+
 #define CONF_INFO_DEFAULT     	      "Running Qtel, an EchoLink client for " \
       	      	      	      	      "Linux"
 				      
@@ -113,6 +119,10 @@ using namespace std;
 #define CONF_AUDIO_DEVICE_DEFAULT 	"/dev/dsp"
 #define CONF_USE_FULL_DUPLEX_DEFAULT    false
 #define CONF_CONNECT_SOUND_DEFAULT 	"/usr/share/qtel/sounds/connect.raw"
+
+#define CONF_VOX_ENABLED_DEFAULT      	true
+#define CONF_VOX_THRESHOLD_DEFAULT    	-30
+#define CONF_VOX_DELAY_DEFAULT      	1000
 
 
 
@@ -336,6 +346,15 @@ void Settings::readSettings(void)
     m_hsplitter_sizes.push_back(540);
   }
   
+  m_vox_enabled = qsettings.readBoolEntry(CONF_VOX_ENABLED,
+      CONF_VOX_ENABLED_DEFAULT);
+  m_vox_threshold = qsettings.readNumEntry(CONF_VOX_THRESHOLD,
+      CONF_VOX_THRESHOLD_DEFAULT);
+  m_vox_delay = qsettings.readNumEntry(CONF_VOX_DELAY,
+      CONF_VOX_DELAY_DEFAULT);
+  
+  m_connect_to_ip = qsettings.readEntry(CONF_CONNECT_TO_IP, "");
+
   if (m_callsign.isEmpty() || m_password.isEmpty() || m_name.isEmpty())
   {
     showDialog();
@@ -391,6 +410,28 @@ void Settings::setHSplitterSizes(QValueList<int> sizes)
   qsettings.insertSearchPath(QSettings::Windows, CONF_SEARCH_PATH);
   qsettings.writeEntry(CONF_HSPLITTER_SIZES, str_list);
 } /* Settings::setHSplitterSizes */
+
+
+void Settings::setVoxParams(bool enabled, int threshold_db, int delay_ms)
+{
+  m_vox_enabled = enabled;
+  m_vox_threshold = threshold_db;
+  m_vox_delay = delay_ms;
+  QSettings qsettings;
+  qsettings.insertSearchPath(QSettings::Windows, CONF_SEARCH_PATH);
+  qsettings.writeEntry(CONF_VOX_ENABLED, m_vox_enabled);
+  qsettings.writeEntry(CONF_VOX_THRESHOLD, m_vox_threshold);
+  qsettings.writeEntry(CONF_VOX_DELAY, m_vox_delay);
+} /* Settings::setVoxParams */
+
+
+void Settings::setConnectToIp(const QString &host)
+{
+  m_connect_to_ip = host;
+  QSettings qsettings;
+  qsettings.insertSearchPath(QSettings::Windows, CONF_SEARCH_PATH);
+  qsettings.writeEntry(CONF_CONNECT_TO_IP, m_connect_to_ip);
+} /* Settings::setConnectToIp */
 
 
 
