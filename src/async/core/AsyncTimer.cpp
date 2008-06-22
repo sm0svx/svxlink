@@ -10,7 +10,7 @@ class documentation.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2008 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -117,41 +117,17 @@ using namespace Async;
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
 Timer::Timer(int timeout_ms, Type type)
-  : m_type(type), m_timeout_ms(timeout_ms), m_is_enabled(true)
+  : m_type(type), m_timeout_ms(timeout_ms), m_is_enabled(false)
 {
-  Application::app().addTimer(this);
+  setEnable(true);
 } /* Timer::Timer */
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
 Timer::~Timer(void)
 {
-  Application::app().delTimer(this);
-} /* Timer::Timer */
+  setEnable(false);
+} /* Timer::~Timer */
 
 
 void Timer::setTimeout(int timeout_ms)
@@ -194,22 +170,6 @@ void Timer::reset(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
 
 
 /****************************************************************************
@@ -217,23 +177,6 @@ void Timer::reset(void)
  * Private member functions
  *
  ****************************************************************************/
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-
-
-
 
 
 

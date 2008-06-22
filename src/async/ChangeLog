@@ -5,6 +5,9 @@
 
 * Bugfix and rewrite of the Async::AudioPacer class.
 
+* Bugfix in Async::Timer: At destruction of a timer, a check was not made
+  to see if it really existed.
+
 
 
  0.16.0 -- 18 May 2008
