@@ -13,6 +13,8 @@
 * Added TCL functions for sending selcall sequences. Code contributed by
   Adi / DL1HRC. Have a look at SelCall.tcl for usage instructions.
 
+* New TX type, Multi, added to support multiple transmitters for one logic.
+
 
 
  0.10.0 -- 18 May 2008

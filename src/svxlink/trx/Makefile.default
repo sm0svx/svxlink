@@ -71,7 +71,7 @@ LIBSRC		= ToneDetector.cpp SpanDtmfDecoder.cpp Rx.cpp LocalRx.cpp \
 		  SquelchVox.cpp SigLevDet.cpp NetRx.cpp Voter.cpp \
 		  Tx.cpp LocalTx.cpp DtmfEncoder.cpp NetTx.cpp \
 		  NetTrxTcpClient.cpp DtmfDecoder.cpp HwDtmfDecoder.cpp \
-		  S54sDtmfDecoder.cpp
+		  S54sDtmfDecoder.cpp MultiTx.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
 LIB_LIBS	= -lc
