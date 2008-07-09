@@ -55,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Tx.h"
 #include "LocalTx.h"
 #include "NetTx.h"
+#include "MultiTx.h"
 
 
 
@@ -202,10 +203,14 @@ Tx *Tx::create(Config& cfg, const string& name)
   {
     tx = new NetTx(cfg, name);
   }
+  else if (tx_type == "Multi")
+  {
+    tx = new MultiTx(cfg, name);
+  }
   else
   {
     cerr << "*** ERROR: Unknown TX type \"" << tx_type << "\". Legal values "
-      	 << "are: \"Local\"\n";
+      	 << "are: Local, Net or Multi\n";
     return 0;
   }
   
