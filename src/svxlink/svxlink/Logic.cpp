@@ -1267,7 +1267,10 @@ void Logic::audioStreamIdleStateChange(bool is_idle)
 
 void Logic::cleanup(void)
 {
-  tx().setTxCtrlMode(Tx::TX_OFF);
+  if (m_tx != 0)
+  {
+    tx().setTxCtrlMode(Tx::TX_OFF);
+  }
   
   delete event_handler;       	      event_handler = 0;
   delete cmd_tmo_timer;       	      cmd_tmo_timer = 0;
