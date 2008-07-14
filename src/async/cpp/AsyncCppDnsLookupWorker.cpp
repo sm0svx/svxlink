@@ -327,9 +327,9 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
   {
     for (int i=0; result->h_addr_list[i] != NULL; ++i)
     {
-      struct in_addr *h_addr;
-      h_addr = reinterpret_cast<struct in_addr *>(result->h_addr_list[i]);
-      the_addresses.push_back(IpAddress(*h_addr));
+      struct in_addr *addr;      
+      addr = reinterpret_cast<struct in_addr *>(result->h_addr_list[i]);
+      the_addresses.push_back(IpAddress(*addr));
     }
   }
   
