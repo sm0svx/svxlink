@@ -8,6 +8,10 @@
 * Bugfix in Async::Timer: At destruction of a timer, a check was not made
   to see if it really existed.
 
+* Bugfix in Async::CppDnsLookupWorker: The DNS code had a bug which showed
+  itself under Ubuntu. A local variable was called "h_addr" which is defined
+  in netdb.h as "h_addr_list[0]".
+
 
 
  0.16.0 -- 18 May 2008
