@@ -14,7 +14,7 @@ Passband ripple: 0.1 dB
 Transition band: 0.09375 (4500Hz)
 Stopband attenuation: 60.0 dB
 */
-static const int coeff_48_16_taps = 42;
+static const int coeff_48_16_taps = 30;
 static const float coeff_48_16[coeff_48_16_taps] =
 {
   -0.001104533022845565,
