@@ -193,7 +193,7 @@ proc checkPeriodicIdentify {} {
 #   digit     - The detected DTMF digit
 #   duration  - The duration, in milliseconds, of the digit
 #
-# Return 1 to hide the digit from further processing is SvxLink or
+# Return 1 to hide the digit from further processing in SvxLink or
 # return 0 to make SvxLink continue processing as normal.
 #
 proc dtmf_digit_received {digit duration} {
