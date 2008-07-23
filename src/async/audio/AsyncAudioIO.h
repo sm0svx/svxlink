@@ -43,8 +43,6 @@ An example of how to use the Async::AudioIO class
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
-
 #include <cstdio>
 #include <string>
 
@@ -134,8 +132,7 @@ name is exactly the same.
 
 \include AsyncAudioIO_demo.cpp
 */
-class AudioIO
-  : public SigC::Object, public Async::AudioSource, public Async::AudioSink
+class AudioIO : public Async::AudioSource, public Async::AudioSink
 {
   public:
     /**
