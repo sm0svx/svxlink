@@ -1,17 +1,17 @@
 # Version for the Qtel application
-QTEL=0.11.1rc1
+QTEL=0.11.1
 QTEL_RPM_RELEASE=1
 
 # Version for the EchoLib library
 ECHOLIB=0.13.0
-ECHOLIB_RPM_RELEASE=1
+ECHOLIB_RPM_RELEASE=2
 
 # Version for the Async library
-LIBASYNC=0.16.1rc2
+LIBASYNC=0.16.1
 LIBASYNC_RPM_RELEASE=1
 
 # SvxLink versions
-SVXLINK=0.10.1rc3
+SVXLINK=0.10.1
 SVXLINK_RPM_RELEASE=1
 MODULE_HELP=0.6.2
 MODULE_PARROT=0.6.3
@@ -21,7 +21,9 @@ MODULE_DTMF_REPEATER=0.1.1
 
 # Version for the RemoteTrx application
 REMOTE_TRX=0.1.0
+REMOTE_TRX_RELEASE=2
 
 # Version for the signal level calibration utility
 SIGLEV_DET_CAL=0.1.0
+SIGLEV_DET_CAL_RELEASE=2
 
