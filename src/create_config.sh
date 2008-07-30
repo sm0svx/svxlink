@@ -137,5 +137,16 @@ else
   exit 1
 fi
 
+# Checking for tcl development library
+info "--- Checking for TCL development library..."
+if [ -r /usr/lib/tclConfig.sh ]; then
+  . /usr/lib/tclConfig.sh
+  info "${TCL_VERSION}\n"
+  output "TCL_LIBS=-ltcl${TCL_VERSION}"
+else
+  info "no\n"
+  exit 1
+fi
+
 exit 0
 
