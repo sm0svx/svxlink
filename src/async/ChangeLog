@@ -1,4 +1,4 @@
- 0.16.1 -- 23 Jul 2008
+ 0.16.1 -- 30 Jul 2008
 -----------------------
 
 * Bugfix and rewrite of the sound card code (AudioIO and AudioDevice classes).
