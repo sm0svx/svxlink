@@ -1,14 +1,12 @@
 /**
 @file	 EventHandler.h
-@brief   A_brief_description_for_this_file
+@brief   Manage the TCL interpreter and call TCL functions for different events.
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-09
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example EventHandler_demo.cpp
-An example of how to use the EventHandler class
-*/
-
 
 #ifndef EVENT_HANDLER_INCLUDED
 #define EVENT_HANDLER_INCLUDED
@@ -118,19 +111,15 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	Manage the TCL interpreter and call TCL functions for different events.
 @author Tobias Blomberg
 @date   2005-04-09
-
-A_detailed_class_description
-
-\include EventHandler_demo.cpp
 */
 class EventHandler : public SigC::Object
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
      */
     EventHandler(const std::string& event_script, Logic *logic);
   
@@ -140,20 +129,71 @@ class EventHandler : public SigC::Object
     ~EventHandler(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Load the event handling script
+     * @return	Returns \em true on success or else \em false
      */
     bool initialize(void);
+  
+    /**
+     * @brief 	Set a TCL variable
+     * @param 	name The name of the variable to set
+     * @param 	value The value to set the given variable to
+     */
     void setVariable(const std::string& name, const std::string& value);
+  
+    /**
+     * @brief 	Process the given event
+     * @param 	event The event must be a valid TCL function call
+     * @return	Returns \em true on success or else \em false
+     */
     bool processEvent(const std::string& event);
+  
+    /**
+     * @brief 	Return the event result from the last call
+     * @return	This is the return value from the called TCL function
+     */
     const std::string eventResult(void) const;
     
+    /**
+     * @brief 	A signal that is emitted when the TCL script want to play
+     *	      	back an audio file
+     * @param 	filename The name of the file to plat
+     */
     SigC::Signal1<void, const std::string&> playFile;
+    
+    /**
+     * @brief 	A signal that is emitted when the TCL script want to play
+     *	      	back silence
+     * @param 	duration  The duration of the silence in milliseconds
+     */
     SigC::Signal1<void, int>   	      	    playSilence;
+
+    /**
+     * @brief 	A signal that is emitted when the TCL script want to play
+     *	      	back a tone
+     * @param 	fq    	  The tone frequency to use
+     * @param 	amp   	  The tone amplitude to use (0-1000)
+     * @param 	duration  The duration of the tone in milliseconds
+     */
     SigC::Signal3<void, int, int, int>      playTone;
+    
+    /**
+     * @brief 	A signal that is emitted when the TCL script want to start
+     *	      	a recording
+     * @param 	filename The name of the file to record the audio to
+     */
     SigC::Signal1<void, const std::string&> recordStart;
+    
+    /**
+     * @brief 	A signal that is emitted when the TCL script want to stop
+     *	      	the current recording
+     */
     SigC::Signal0<void>       	      	    recordStop;
+    
+    /**
+     * @brief 	A signal that is emitted when the TCL script want to deactivate
+     *	      	the currently active module
+     */
     SigC::Signal0<void>       	      	    deactivateModule;
     
     
