@@ -20,7 +20,7 @@
     sure that it works, use Fedora 8.
     <P/>
     As usual, be sure to check out the
-    <A href=" http://sourceforge.net/project/shownotes.php?release_id=616650">ChangeLog</A>
+    <A href="http://sourceforge.net/project/shownotes.php?release_id=616650">ChangeLog</A>
     for more detailed information.
   </TD></TR>
   
