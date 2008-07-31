@@ -33,6 +33,7 @@ The SvxLink distribution contains a couple of RPM:s:
 Specific installation instructions for different distributions:
 
 <UL>
+  <LI><A href="install-f9.php">Fedora 9</A></LI>
   <LI><A href="install-f8.php">Fedora 8</A></LI>
   <LI><A href="install-fc6.php">Fedora Core 6</A></LI>
   <LI><A href="install-deb31.php">Debian 3.1</A></LI>
@@ -48,7 +49,7 @@ binaries for, you will have to build the whole thing from source. You will still
 need to satisfy the dependencies specified above. That is
 <A href="http://ftp.gnome.org/pub/GNOME/sources/libsigc++/1.2/">libsigc++ 1.2</A>,
 <A href="http://kbs.cs.tu-berlin.de/~jutta/toast.html">gsm</A>,
-<A href="http://www.tcl.tk/software/tcltk/download.html">tcl 8.4</A> and
+<A href="http://www.tcl.tk/software/tcltk/download.html">tcl</A> and
 <A href="http://www.soft-switch.org/downloads/spandsp/">spandsp</A>.
 Maybe you can find prebuilt binaries for these libs for your distribution.
 Otherwise you will just have to compile them as well.
@@ -132,21 +133,20 @@ If you are going to run the svxlink server, read on.
 
 <A name="hardware"><h2>Hardware</h2></A>
 To run the SvxLink server, some kind of hardware is needed to connect the
-computer to the transciever. I have done very few experiments on this. My
-hardware consists of just a cable. No active components needed. I have connected
-the microphone input and the line out output on the computer to the transcievers
-packet radio connector. This works quite well. However, there is a slight hum on
-the signal. This can be fixed with an isolation transformer but I havn't gotten
-around to buy one yet. Using opto couplers for PTT/COS is also a good idea.
+computer to the transciever. At the moment I am using an
+<A href="http://lea.hamradio.si/~s57nan/ham_radio/svx_intf/">interface designed by Aleks, s54s,</A>
+which is fully isolated with transformers and opto-couplers. For a long time I
+just used a simple direct, non-isolated, connection between the transceiver
+and the computer. This also work well but I have actually fried one sound
+card this way.
 <P>
 WB0RXX/Tim has constructed an interface circuit that he use with his
 SvxLink system. The schematic can be found
 <A href="http://montevideocomputers.com/hacem.org/pdf/Svxlink_interface.pdf">here</A>.
 <P>
-Typical EchoLink hardware should work with SvxLink as well. Have a look at the
+Typical EchoLink hardware might work with SvxLink as well. Have a look at the
 <A href="http://www.echolink.org/interfaces.htm">EchoLink interfaces</A> page.
-However, I have not tried any of these so there are no guarantees. SvxLink
-cannot make use of an external DTMF detector.<BR/>
+However, I have not tried any of these so there are no guarantees.<BR/>
 Please tell me if you get any of the interfaces working or if they are not
 working.
 <P>
@@ -193,6 +193,10 @@ the keyboard. Use another transmitter to make a short transmission. Listen to
 the recorded audio and make sure it sounds good. Now try to transmit some DTMF
 digits and see if the digits are detected. If not, try to adjust the input
 level up or down and try again. Try all 16 digits: 0-9, *, #, A, B ,C, D.
+<P/>
+As a rule of thumb, try to not pull the sliders over 90%. Most sound cards
+will distort the signal if the level is set too high. Instead, use the PREAMP
+configuration variable if received audio is too low.
 <P>
 
 
@@ -204,6 +208,7 @@ under /etc/svxlink.d. Edit the configuration files to your liking.
 There is a voice greeting message sent to connecting echolink stations. This
 message should be replaced with a personal one. I have used the <em>rec</em>
 application that is included in the <em>sox</em> package to record the sounds.
+Lately I have started using <em>audacity</em> to record sound clips.
 Any tool capable of recording raw sound files using 8kHz sampling rate and 16
 bit signed samples is ok to use. Another alternative is to record the sound
 files using your favorite tool and then convert them to the correct format using
@@ -250,7 +255,8 @@ features.
 There are a lot of sounds that should be played as a response to an event in
 the SvxLink system. To make these sounds as configurable as possible there is
 a programmable event handling subsystem. The programming language chosen for
-this is TCL (Tool Command Language). For each event in SvxLink there is
+this is <A href="http://www.tcl.tk/">TCL (Tool Command Language)</A>.
+For each event in SvxLink there is
 a corresponding TCL function that is called when the event occurs. In this
 function the normal action is to play a sound or a couple of sound clips. It is
 of course also possible to use the full power of TCL to make all sorts of things

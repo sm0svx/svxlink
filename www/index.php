@@ -5,7 +5,7 @@
 
 <H2>Main Screen</H2>
 Welcome to the home of SvxLink. 
-The SvxLink project aim to develop a flexible, general purpose voice services
+The SvxLink project is developing a flexible, general purpose voice services
 system for ham radio use. The svxlink server consists of a core that handles the
 connection to the tranceiver. The core can be configured to act as a repeater
 controller or to operate on a simplex channel. 
@@ -29,9 +29,9 @@ Qtel is only an EchoLink client program. It does not have the
 sysop mode. That is, it cannot be connected to a transceiver
 and act as a link. For the latter, use the svxlink server.
 <P/>
-SvxLink is developed under Fedora but it's possible to get it woking on other
+SvxLink is developed under Fedora but it's possible to get it working on other
 distributions as well. However, since RPM:s are provided for Fedora it's easier
-to install.
+to install there.
 <P/>
 
 <?php include("footer.inc"); ?>

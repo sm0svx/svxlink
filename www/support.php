@@ -5,8 +5,8 @@ There is one way to get in contact with the SvxLink "community". That is
 through the mailing list. The address to the mailing list is
 <A href="mailto:svxlink-devel@lists.sourceforge.net">
 svxlink-devel@lists.sourceforge.net</A>. So, whatever your business is, please
-use the mailing list. Do not use EchoLink or direct e-mail to the author. The
-list is very low volume so don't be afraid to register.
+use the mailing list. Do NOT use EchoLink or direct e-mail to the author. The
+list is usually low volume so don't be afraid to register.
 <P>
 There are a couple of reasons why only the mailing list should be used for
 support:
@@ -34,12 +34,16 @@ To subscribe to the mailing lists go
 
 
 <A name="reporting-bugs"><h2>Reporting bugs</h2></A>
-Bugs should be reported to the svxlink-devel mailing list mentioned above.
+Bugs should be reported in the
+<A href="http://sourceforge.net/tracker/?atid=573950&group_id=84813&func=browse">SourceForge bug tracker</A>.
 It can be hard filing a good bug report. But I assure you, it is even harder to
 understand a bad bug report. So, if you find a bug, take the time to go through
 the steps below to make a good bug report.
 
 <OL>
+  <LI>
+    Search the bug tracker to see if your bug is already reported.
+  </LI>
   <LI>
     Read the documentation thoroughly to verify that you have not
     misunderstood something. This includes
@@ -56,8 +60,8 @@ the steps below to make a good bug report.
     to reproduce the bug.
   </LI>
   <LI>
-    Write a bug report and send it off to the svxlink-devel mailing list. The
-    bug report should include the following:
+    Write a bug report in the bug tracker. The bug report should include the
+    following:
     <UL>
       <LI>
       	A <em>detailed</em> description of the bug. Do not just write "this

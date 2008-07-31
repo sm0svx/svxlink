@@ -15,6 +15,8 @@ These are the most important features of the SvxLink server application.
   <LI>Can act as a repeater controller or just operate on a simplex channel</LI>
   <LI>Plugin based system to load voice services into the SvxLink logic
   core</LI>
+  <LI>DTMF controlled</LI>
+  <LI>DTMF anti-flutter mode to suppress multiple digit detection when mobile flutter is present or during weak-signal conditions</LI>
   <LI>A sound clip based system for announcements</LI>
   <LI>Periodic identification</LI>
   <LI>A script based (TCL) event handling system</LI>
@@ -36,14 +38,14 @@ These are the most important features of the SvxLink server application.
   <LI>Possible to link logic cores together</LI>
   <LI>Support for multiple receivers using a software voter</LI>
   <LI>Remote receivers can be linked to the logic core via TCP/IP(Internet)</LI>
-  <LI>A remote transmitter can be linked to the logic core via TCP/IP
+  <LI>Remote transmitters can be linked to the logic core via TCP/IP
   (Internet)</LI>
   <LI>Multiple squelch detectors: Vox, CTCSS, signal level and external
   (through serial port pin)</LI>
   <LI>Deemphasis/preemphasis filer support</LI>
   <LI>DTMF muting</LI>
   <LI>Squelch tail elimination</LI>
-  <LI>CTCSS transmit, always or just when there is a signal received</LI>
+  <LI>CTCSS transmit, always or just when the squelch is open</LI>
   <LI>A simple help system module</LI>
   <LI>A parrot module that retransmit received audio</LI>
   <LI>An EchoLink module used to connect to other EchoLink nodes</LI>

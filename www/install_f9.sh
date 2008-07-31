@@ -1,13 +1,16 @@
 #!/bin/sh
 
+REL=9
 SF_DL_URL="http://downloads.sourceforge.net/svxlink"
-DOWNLOADS="libasync-0.16.1-1.fc8.i386.rpm echolib-0.13.0-2.fc8.i386.rpm \
-      	   qtel-0.11.1-1.fc8.i386.rpm svxlink-server-0.10.1-1.fc8.i386.rpm"
+DOWNLOADS="libasync-0.16.1-1.fc${REL}.i386.rpm \
+	   echolib-0.13.0-2.fc${REL}.i386.rpm \
+      	   qtel-0.11.1-1.fc${REL}.i386.rpm \
+	   svxlink-server-0.10.1-1.fc${REL}.i386.rpm"
 
 
 fedora_release=$(rpm -q --qf="%{version}" fedora-release)
-if [ "${fedora_release}" != "8" ]; then
-  echo "*** ERROR: This is not a Fedora 8 system"
+if [ "${fedora_release}" != "${REL}" ]; then
+  echo "*** ERROR: This is not a Fedora ${REL} system"
   exit 1
 fi
 

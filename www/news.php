@@ -7,6 +7,26 @@
 <H2>Project News</H2>
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>31 Jul 2008: <I>Version 080730 released</I></B>
+  <TD/></TR>
+  <TR><TD>
+    This is mostly a bugfix release. That does not mean it isn't important.
+    It fixes a number of serious bugs that was present in the previous
+    release. This one should be much more stable.
+    <P/>
+    TCL 8.5 is now supported which seem to be the default on newer
+    distributions like Fedora 9. SvxLink is not heavily tested on Fedora 9
+    though. I'm still running Fedora 8 myself so if you want to be really
+    sure that it works, use Fedora 8.
+    <P/>
+    As usual, be sure to check out the
+    <A href=" http://sourceforge.net/project/shownotes.php?release_id=616650">ChangeLog</A>
+    for more detailed information.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>18 May 2008: <I>Version 080518 released</I></B>
   <TD/></TR>
   <TR><TD>
