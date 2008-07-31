@@ -1,14 +1,12 @@
 /**
 @file	 EventHandler.cpp
-@brief   A_brief_description_for_this_file
+@brief   Manage the TCL interpreter and call TCL functions for different events.
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-09
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -121,22 +119,24 @@ using namespace Async;
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
 EventHandler::EventHandler(const string& event_script, Logic *logic)
-  : event_script(event_script), logic(logic)
+  : event_script(event_script), logic(logic), interp(0)
 {
   interp = Tcl_CreateInterp();
+  if (interp == 0)
+  {
+    cerr << "*** ERROR: Could not create TCL interpreter\n";
+    return;
+  }
+  
+  if (Tcl_Init(interp) != TCL_OK)
+  {
+    cerr << event_script << ": " << Tcl_GetStringResult(interp) << endl;
+    Tcl_DeleteInterp(interp);
+    interp = 0;
+    return;
+  }
+  
   Tcl_CreateCommand(interp, "playFile", playFileHandler, this, NULL);
   Tcl_CreateCommand(interp, "playSilence", playSilenceHandler, this, NULL);
   Tcl_CreateCommand(interp, "playTone", playToneHandler, this, NULL);
@@ -144,27 +144,33 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
   Tcl_CreateCommand(interp, "recordStop", recordHandler, this, NULL);
   Tcl_CreateCommand(interp, "deactivateModule", deactivateModuleHandler,
                     this, NULL);
-  //Tcl_CreateCommand(interp, "spellWord", spellWord, this, NULL);
-  //Tcl_CreateCommand(interp, "playNumber", playNumber, this, NULL);
-  //Tcl_CreateCommand(interp, "reportActiveModuleState",
-  //    	  reportActiveModuleState, this, NULL);
+
   setVariable("script_path", event_script);
+
 } /* EventHandler::EventHandler */
 
 
 EventHandler::~EventHandler(void)
 {
-  Tcl_Preserve(interp);
-  if (!Tcl_InterpDeleted(interp))
+  if (interp != 0)
   {
-    Tcl_DeleteInterp(interp);
+    Tcl_Preserve(interp);
+    if (!Tcl_InterpDeleted(interp))
+    {
+      Tcl_DeleteInterp(interp);
+    }
+    Tcl_Release(interp);
   }
-  Tcl_Release(interp);
 } /* EventHandler::~EventHandler */
 
 
 bool EventHandler::initialize(void)
 {
+  if (interp == 0)
+  {
+    return false;
+  }
+  
   if (Tcl_EvalFile(interp, event_script.c_str()) != TCL_OK)
   {
     cerr << event_script << ": " << Tcl_GetStringResult(interp) << endl;
@@ -178,6 +184,11 @@ bool EventHandler::initialize(void)
 
 void EventHandler::setVariable(const string& name, const string& value)
 {
+  if (interp == 0)
+  {
+    return;
+  }
+  
   Tcl_Preserve(interp);
   if (Tcl_SetVar(interp, name.c_str(), value.c_str(), TCL_LEAVE_ERR_MSG)
   	== NULL)
@@ -190,6 +201,11 @@ void EventHandler::setVariable(const string& name, const string& value)
 
 bool EventHandler::processEvent(const string& event)
 {
+  if (interp == 0)
+  {
+    return false;
+  }
+  
   Tcl_Preserve(interp);
   if (Tcl_Eval(interp, (event + ";").c_str()) != TCL_OK)
   {
@@ -206,7 +222,13 @@ bool EventHandler::processEvent(const string& event)
 
 const string EventHandler::eventResult(void) const
 {
+  if (interp == 0)
+  {
+    return 0;
+  }
+  
   return Tcl_GetStringResult(interp);
+  
 } /* EventHandler::eventResult */
 
 
