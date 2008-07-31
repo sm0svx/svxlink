@@ -1,27 +1,27 @@
 
 # Release date (YYMMDD)
-%define RELEASE_DATE		  080518
-%define RELEASE_NO		  1
+%define RELEASE_DATE              080730
+%define RELEASE_NO                1
 
 # Version for the Qtel application
-%define QTEL			  0.11.0
-%define QTEL_RPM_RELEASE	  1
+%define QTEL                      0.11.1
+%define QTEL_RPM_RELEASE          1
 
 # Version for the EchoLib library
-%define ECHOLIB			  0.13.0
-%define ECHOLIB_RPM_RELEASE	  1
+%define ECHOLIB                   0.13.0
+%define ECHOLIB_RPM_RELEASE       2
 
 # Version for the Async library
-%define LIBASYNC		  0.16.0
-%define LIBASYNC_RPM_RELEASE	  1
+%define LIBASYNC                  0.16.1
+%define LIBASYNC_RPM_RELEASE      1
 
 # SvxLink versions
-%define SVXLINK			  0.10.0
-%define SVXLINK_RPM_RELEASE	  1
-%define REMOTETRX      	      	  0.1.0
-%define REMOTETRX_RPM_RELEASE  	  1
-%define SIGLEVDETCAL  	      	  0.1.0
-%define SIGLEVDETCAL_RPM_RELEASE  1
+%define SVXLINK                   0.10.1
+%define SVXLINK_RPM_RELEASE       1
+%define REMOTETRX                 0.1.0
+%define REMOTETRX_RPM_RELEASE     2
+%define SIGLEVDETCAL              0.1.0
+%define SIGLEVDETCAL_RPM_RELEASE  2
 
 
 Summary: The SvxLink project files
@@ -30,7 +30,6 @@ Version: %{RELEASE_DATE}
 Release: %{RELEASE_NO}.%{dist}
 License: GPL
 Group: Applications/Ham Radio
-Packager: Tobias Blomberg (SM0SVX) <sm0svx@users.sourceforge.net>
 Vendor: Tobias Blomberg (SM0SVX)
 URL: http://svxlink.sourceforge.net/
 BuildRoot: %{_tmppath}/%{name}-root-%(id -u -n)
@@ -44,7 +43,7 @@ Also, the SvxLink server can act as a repeater controller.
 
 This is the source package which can be used to build binary RPMS:
 
-	rpmbuild --rebuild svxlink-%{RELEASE_DATE}-%{RELEASE_NO}.src.rpm
+        rpmbuild --rebuild svxlink-%{RELEASE_DATE}-%{RELEASE_NO}.src.rpm
 
 You also need to setup the %%dist variable to something identifying the
 distribution you're compiling SvxLink for, like "fc8" if you're compiling
@@ -52,9 +51,8 @@ SvxLink for Fedora 8.
 
 
 %prep
-rm -rf ${RPM_BUILD_ROOT}
-%setup
-%setup -a1 -D
+%setup -q
+%setup -q -a1 -D
 
 
 %build
@@ -64,17 +62,19 @@ doxygen doxygen.echolib
 
 
 %install
-INSTALL_ROOT=${RPM_BUILD_ROOT} NO_CHOWN=1 make install
-find ${RPM_BUILD_ROOT}/usr/lib -type l -exec rm {} \;
-mkdir -p ${RPM_BUILD_ROOT}/usr/share/svxlink
-cp -a sounds ${RPM_BUILD_ROOT}/usr/share/svxlink/
-mkdir -p ${RPM_BUILD_ROOT}/var/log
-touch ${RPM_BUILD_ROOT}/var/log/svxlink
-touch ${RPM_BUILD_ROOT}/var/log/svxlink.{1,2,3,4}
+make INSTALL_ROOT=%{buildroot} NO_CHOWN=1 LIB_INSTALL_DIR=%{_libdir} \
+        INC_INSTALL_DIR=%{_includedir}/svxlink BIN_INSTALL_DIR=%{_bindir} \
+        SBIN_INSTALL_DIR=%{_sbindir} install
+find %{buildroot}%{_libdir} -type l -exec rm {} \;
+mkdir -p %{buildroot}/usr/share/svxlink
+cp -a sounds %{buildroot}/usr/share/svxlink/
+mkdir -p %{buildroot}/var/log
+touch %{buildroot}/var/log/svxlink
+touch %{buildroot}/var/log/svxlink.{1,2,3,4}
 
 
 %clean
-rm -rf ${RPM_BUILD_ROOT}
+rm -rf %{buildroot}
 
 
 
@@ -146,21 +146,21 @@ fi
 %dir %attr(755,svxlink,daemon) /var/spool/svxlink/voice_mail
 %defattr(755,root,root)
 /usr/share/svxlink/event_test.tcl
-/usr/bin/svxlink
-/usr/bin/dtmf_plot
-/usr/bin/remotetrx
-/usr/bin/siglevdetcal
-/usr/lib/svxlink/Module*.so
+%{_bindir}/svxlink
+%{_bindir}/dtmf_plot
+%{_bindir}/remotetrx
+%{_bindir}/siglevdetcal
+%{_libdir}/svxlink/Module*.so
 /etc/init.d/svxlink
 /etc/init.d/remotetrx
 %ghost /var/log/*
-%exclude /usr/include/svxlink/Module.h
-%exclude /usr/include/svxlink/MsgHandler.h
-%exclude /usr/include/svxlink/EventHandler.h
-%exclude /usr/include/svxlink/NetTrxMsg.h
-%exclude /usr/include/svxlink/Rx.h
-%exclude /usr/include/svxlink/Tx.h
-%exclude /usr/lib/libtrx.a
+%exclude %{_includedir}/svxlink/Module.h
+%exclude %{_includedir}/svxlink/MsgHandler.h
+%exclude %{_includedir}/svxlink/EventHandler.h
+%exclude %{_includedir}/svxlink/NetTrxMsg.h
+%exclude %{_includedir}/svxlink/Rx.h
+%exclude %{_includedir}/svxlink/Tx.h
+%exclude %{_libdir}/libtrx.a
 
 
 
@@ -182,7 +182,7 @@ want, install the svxlink-server package.
 %doc qtel/ChangeLog
 /usr/share/qtel/sounds/connect.raw
 /usr/share/qtel/translations/qtel_sv.qm
-%attr(755,root,root) /usr/bin/qtel
+%attr(755,root,root) %{_bindir}/qtel
 /usr/share/icons/link.xpm
 /usr/share/applications/qtel.desktop
 
@@ -204,7 +204,7 @@ Requires: libasync
 %defattr(644,root,root)
 %doc echolib/ChangeLog
 %defattr(755,root,root)
-/usr/lib/libecholib-%{version}.so
+%{_libdir}/libecholib-%{version}.so
 
 
 
@@ -220,11 +220,11 @@ Group: Development/Libraries/Ham Radio
 %files -n echolib-devel
 %defattr(644,root,root)
 %doc doc/echolib/html
-/usr/include/svxlink/EchoLinkDirectory.h
-/usr/include/svxlink/EchoLinkDispatcher.h
-/usr/include/svxlink/EchoLinkQso.h
-/usr/include/svxlink/EchoLinkStationData.h
-/usr/lib/libecholib.a
+%{_includedir}/svxlink/EchoLinkDirectory.h
+%{_includedir}/svxlink/EchoLinkDispatcher.h
+%{_includedir}/svxlink/EchoLinkQso.h
+%{_includedir}/svxlink/EchoLinkStationData.h
+%{_libdir}/libecholib.a
 
 
 %package -n libasync
@@ -243,10 +243,10 @@ The Async library files.
 %defattr(644,root,root)
 %doc async/ChangeLog
 %defattr(755,root,root)
-/usr/lib/libasynccore-%{version}.so
-/usr/lib/libasynccpp-%{version}.so
-/usr/lib/libasyncqt-%{version}.so
-/usr/lib/libasyncaudio-%{version}.so
+%{_libdir}/libasynccore-%{version}.so
+%{_libdir}/libasynccpp-%{version}.so
+%{_libdir}/libasyncqt-%{version}.so
+%{_libdir}/libasyncaudio-%{version}.so
 
 
 
@@ -262,47 +262,51 @@ The Async library development files
 %files -n libasync-devel
 %defattr(644,root,root)
 %doc doc/async/html
-/usr/include/svxlink/AsyncApplication.h
-/usr/include/svxlink/AsyncAudioIO.h
-/usr/include/svxlink/AsyncConfig.h
-/usr/include/svxlink/AsyncCppApplication.h
-/usr/include/svxlink/AsyncDnsLookup.h
-/usr/include/svxlink/AsyncFdWatch.h
-/usr/include/svxlink/AsyncIpAddress.h
-/usr/include/svxlink/AsyncQtApplication.h
-/usr/include/svxlink/AsyncTcpClient.h
-/usr/include/svxlink/AsyncTcpConnection.h
-/usr/include/svxlink/AsyncTcpServer.h
-/usr/include/svxlink/AsyncTimer.h
-/usr/include/svxlink/AsyncUdpSocket.h
-/usr/include/svxlink/AsyncSerial.h
-/usr/include/svxlink/AsyncAudioAmp.h
-/usr/include/svxlink/AsyncAudioDelayLine.h
-/usr/include/svxlink/AsyncAudioPassthrough.h
-/usr/include/svxlink/AsyncAudioSelector.h
-/usr/include/svxlink/AsyncAudioValve.h
-/usr/include/svxlink/AsyncAudioClipper.h
-/usr/include/svxlink/AsyncAudioCompressor.h
-/usr/include/svxlink/AsyncAudioFilter.h
-/usr/include/svxlink/AsyncAudioProcessor.h
-/usr/include/svxlink/AsyncAudioSink.h
-/usr/include/svxlink/AsyncAudioSource.h
-/usr/include/svxlink/AsyncAudioSplitter.h
-/usr/include/svxlink/AsyncAudioDebugger.h
-/usr/include/svxlink/AsyncAudioDecimator.h
-/usr/include/svxlink/AsyncAudioFifo.h
-/usr/include/svxlink/AsyncAudioInterpolator.h
-/usr/include/svxlink/AsyncAudioPacer.h
-/usr/include/svxlink/AsyncAudioReader.h
-/usr/include/svxlink/AsyncAudioMixer.h
-/usr/include/svxlink/SigCAudioSink.h
-/usr/include/svxlink/SigCAudioSource.h
-/usr/lib/libasynccore.a
-/usr/lib/libasynccpp.a
-/usr/lib/libasyncqt.a
-/usr/lib/libasyncaudio.a
+%{_includedir}/svxlink/AsyncApplication.h
+%{_includedir}/svxlink/AsyncAudioIO.h
+%{_includedir}/svxlink/AsyncConfig.h
+%{_includedir}/svxlink/AsyncCppApplication.h
+%{_includedir}/svxlink/AsyncDnsLookup.h
+%{_includedir}/svxlink/AsyncFdWatch.h
+%{_includedir}/svxlink/AsyncIpAddress.h
+%{_includedir}/svxlink/AsyncQtApplication.h
+%{_includedir}/svxlink/AsyncTcpClient.h
+%{_includedir}/svxlink/AsyncTcpConnection.h
+%{_includedir}/svxlink/AsyncTcpServer.h
+%{_includedir}/svxlink/AsyncTimer.h
+%{_includedir}/svxlink/AsyncUdpSocket.h
+%{_includedir}/svxlink/AsyncSerial.h
+%{_includedir}/svxlink/AsyncAudioAmp.h
+%{_includedir}/svxlink/AsyncAudioDelayLine.h
+%{_includedir}/svxlink/AsyncAudioPassthrough.h
+%{_includedir}/svxlink/AsyncAudioSelector.h
+%{_includedir}/svxlink/AsyncAudioValve.h
+%{_includedir}/svxlink/AsyncAudioClipper.h
+%{_includedir}/svxlink/AsyncAudioCompressor.h
+%{_includedir}/svxlink/AsyncAudioFilter.h
+%{_includedir}/svxlink/AsyncAudioProcessor.h
+%{_includedir}/svxlink/AsyncAudioSink.h
+%{_includedir}/svxlink/AsyncAudioSource.h
+%{_includedir}/svxlink/AsyncAudioSplitter.h
+%{_includedir}/svxlink/AsyncAudioDebugger.h
+%{_includedir}/svxlink/AsyncAudioDecimator.h
+%{_includedir}/svxlink/AsyncAudioFifo.h
+%{_includedir}/svxlink/AsyncAudioInterpolator.h
+%{_includedir}/svxlink/AsyncAudioPacer.h
+%{_includedir}/svxlink/AsyncAudioReader.h
+%{_includedir}/svxlink/AsyncAudioMixer.h
+%{_includedir}/svxlink/SigCAudioSink.h
+%{_includedir}/svxlink/SigCAudioSource.h
+%{_libdir}/libasynccore.a
+%{_libdir}/libasynccpp.a
+%{_libdir}/libasyncqt.a
+%{_libdir}/libasyncaudio.a
 
 %changelog
+* Wed Jul 30 2008 Tobias Blomberg (SM0SVX) <sm0svx@users.sourceforge.net>
+- Fixed a couple of things that rpmlint complained about.
+- Making use of some directory macros (_libdir, _includedir, _bindir, _sbindir).
+- Updated versions for release 080730.
 * Wed May 18 2008 Tobias Blomberg (SM0SVX) <sm0svx@users.sourceforge.net>
 - Updated versions.
 - Added the remotetrx application and removed the remoterx application.
