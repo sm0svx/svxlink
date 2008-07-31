@@ -1,7 +1,14 @@
 #!/bin/sh
 
 SVNROOT=https://svxlink.svn.sourceforge.net/svnroot/svxlink
-DATE=$(date +%y%m%d)
+#DATE=$(date +%y%m%d)
+
+if [ $# -gt 0 ]; then
+  DATE=$1
+else
+  DATE=$(date +%y%m%d)
+fi
+
 NAME=svxlink-${DATE}
 ARCH=/tmp/${NAME}.tar.gz
 
