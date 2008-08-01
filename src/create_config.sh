@@ -139,8 +139,10 @@ fi
 
 # Checking for tcl development library
 info "--- Checking for TCL development library..."
-if [ -r /usr/lib/tclConfig.sh ]; then
-  . /usr/lib/tclConfig.sh
+tclConfig=$(ls /usr/lib/tclConfig.sh /usr/lib/tcl8.*/tclConfig.sh 2>/dev/null \
+            | cut -f1)
+if [ -n "$tclConfig" -a -r $tclConfig ]; then
+  . $tclConfig
   info "${TCL_VERSION}\n"
   output "TCL_LIBS=-ltcl${TCL_VERSION}"
 else
