@@ -60,6 +60,7 @@ proc startup {} {
 
 #
 # Executed when a specified module could not be found
+#   module_id - The numeric ID of the module
 #
 proc no_such_module {module_id} {
   playMsg "Core" "no_such_module";
@@ -118,6 +119,64 @@ proc manual_identification {} {
   }
   playMsg "Default" "press_0_for_help"
   playSilence 250;
+}
+
+
+#
+# Executed when a short identification should be sent
+#   hour    - The hour on which this identification occur
+#   minute  - The hour on which this identification occur
+#
+proc send_short_ident {hour minute} {
+  global mycall;
+  variable CFG_TYPE;
+
+  spellWord $mycall;
+  if {$CFG_TYPE == "Simplex"} {
+    playMsg "EchoLink" "link";
+  } elseif {$CFG_TYPE == "Repeater"} {
+    playMsg "EchoLink" "repeater";
+  }
+  playSilence 500;
+}
+
+
+#
+# Executed when a long identification (e.g. hourly) should be sent
+#   hour    - The hour on which this identification occur
+#   minute  - The hour on which this identification occur
+#
+proc send_long_ident {hour minute} {
+  global mycall;
+  global loaded_modules;
+  global active_module;
+  variable CFG_TYPE;
+
+  spellWord $mycall;
+  if {$CFG_TYPE == "Simplex"} {
+    playMsg "EchoLink" "link";
+  } elseif {$CFG_TYPE == "Repeater"} {
+    playMsg "EchoLink" "repeater";
+  }
+  playSilence 500;
+  
+  playMsg "Core" "the_time_is";
+  playSilence 100;
+  playTime $hour $minute;
+  playSilence 500;
+  
+    # Call the "status_report" function in all modules if no module is active
+  if {$active_module == ""} {
+    foreach module [split $loaded_modules " "] {
+      set func "::";
+      append func $module "::status_report";
+      if {"[info procs $func]" ne ""} {
+        $func;
+      }
+    }
+  }
+  
+  playSilence 500;
 }
 
 
@@ -195,6 +254,7 @@ proc macro_another_active_module {} {
 
 #
 # Executed when an unknown DTMF command is entered
+#   cmd - The command string
 #
 proc unknown_command {cmd} {
   spellWord $cmd;
@@ -204,6 +264,7 @@ proc unknown_command {cmd} {
 
 #
 # Executed when an entered DTMF command failed
+#   cmd - The command string
 #
 proc command_failed {cmd} {
   spellWord $cmd;
@@ -213,6 +274,7 @@ proc command_failed {cmd} {
 
 #
 # Executed when a link to another logic core is activated.
+#   name  - The name of the link
 #
 proc activating_link {name} {
   playMsg "Core" "activating_link_to";
@@ -222,6 +284,7 @@ proc activating_link {name} {
 
 #
 # Executed when a link to another logic core is deactivated
+#   name  - The name of the link
 #
 proc deactivating_link {name} {
   playMsg "Core" "deactivating_link_to";
@@ -232,6 +295,7 @@ proc deactivating_link {name} {
 #
 # Executed when trying to deactivate a link to another logic core but the
 # link is not currently active.
+#   name  - The name of the link
 #
 proc link_not_active {name} {
   playMsg "Core" "link_not_active_to";
@@ -242,6 +306,7 @@ proc link_not_active {name} {
 #
 # Executed when trying to activate a link to another logic core but the
 # link is already active.
+#   name  - The name of the link
 #
 proc link_already_active {name} {
   playMsg "Core" "link_already_active_to";
@@ -251,6 +316,7 @@ proc link_already_active {name} {
 
 #
 # Executed each time the transmitter is turned on or off
+#   is_on - Set to 1 if the transmitter is on or 0 if it's off
 #
 proc transmit {is_on} {
   #puts "Turning the transmitter $is_on";
@@ -264,107 +330,13 @@ proc transmit {is_on} {
 
 #
 # Executed each time the squelch is opened or closed
+#   rx_id   - The ID of the RX that the squelch opened/closed on
+#   is_open - Set to 1 if the squelch is open or 0 if it's closed
 #
 proc squelch_open {rx_id is_open} {
   variable sql_rx_id;
   #puts "The squelch is $is_open on RX $rx_id";
   set sql_rx_id $rx_id;
-}
-
-
-#
-# Executed once every whole minute. Don't put any code here directly
-# Create a new function and add it to the timer tick subscriber list
-# by using the function addTimerTickSubscriber.
-#
-proc every_minute {} {
-  variable timer_tick_subscribers;
-  #puts [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"];
-  foreach subscriber $timer_tick_subscribers {
-    $subscriber;
-  }
-}
-
-
-#
-# Use this function to add a function to the list of functions that
-# should be executed once every whole minute.
-#
-proc addTimerTickSubscriber {func} {
-  variable timer_tick_subscribers;
-  lappend timer_tick_subscribers $func;
-}
-
-
-#
-# Should be executed once every whole minute to check if it is time to
-# identify.
-#
-proc checkPeriodicIdentify {} {
-  global loaded_modules;
-  global mycall;
-  global active_module;
-  variable prev_ident;
-  variable short_ident_interval;
-  variable long_ident_interval;
-  variable min_time_between_ident;
-  variable ident_only_after_tx;
-  variable need_ident;
-  variable CFG_TYPE;
-  
-  if {$short_ident_interval == 0} {
-    return;
-  }
-
-  set now [clock seconds];
-  set hour [clock format $now -format "%k"];
-  regexp {([1-5]?\d)$} [clock format $now -format "%M"] -> minute;
-  
-  set short_ident_now \
-      	    [expr {($hour * 60 + $minute) % $short_ident_interval == 0}];
-  set long_ident_now 0;
-  if {$long_ident_interval != 0} {
-    set long_ident_now \
-      	    [expr {($hour * 60 + $minute) % $long_ident_interval == 0}];
-  }
-  
-  if {!$long_ident_now} {
-    if {$now - $prev_ident < $min_time_between_ident} {
-      return;
-    }
-    if {$ident_only_after_tx && !$need_ident} {
-      return;
-    }
-  }
-
-  if {$short_ident_now} {
-    puts "Sending identification...";
-    spellWord $mycall;
-    if {$CFG_TYPE == "Simplex"} {
-      playMsg "EchoLink" "link";
-    } elseif {$CFG_TYPE == "Repeater"} {
-      playMsg "EchoLink" "repeater";
-    }
-    playSilence 500;
-    set prev_ident $now;
-    set need_ident 0;
-  }
-  
-  if {$long_ident_now} {
-    playMsg "Core" "the_time_is";
-    playSilence 100;
-    playTime $hour $minute;
-    playSilence 500;
-    if {$active_module == ""} {
-      foreach module [split $loaded_modules " "] {
-        set func "::";
-        append func $module "::status_report";
-        if {"[info procs $func]" ne ""} {
-          $func;
-        }
-      }
-    }
-  }
 }
 
 
@@ -392,6 +364,84 @@ proc dtmf_digit_received {digit duration} {
 proc dtmf_cmd_received {cmd} {
   #puts "DTMF command received: $cmd";
   return 0;
+}
+
+
+#
+# Executed once every whole minute. Don't put any code here directly
+# Create a new function and add it to the timer tick subscriber list
+# by using the function addTimerTickSubscriber.
+#
+proc every_minute {} {
+  variable timer_tick_subscribers;
+  #puts [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"];
+  foreach subscriber $timer_tick_subscribers {
+    $subscriber;
+  }
+}
+
+
+#
+# Use this function to add a function to the list of functions that
+# should be executed once every whole minute. This is not an event
+# function but rather a management function.
+#
+proc addTimerTickSubscriber {func} {
+  variable timer_tick_subscribers;
+  lappend timer_tick_subscribers $func;
+}
+
+
+#
+# Should be executed once every whole minute to check if it is time to
+# identify. Not exactly an event function. This function handle the
+# identification logic and call the send_short_ident or send_long_ident
+# functions when it is time to identify.
+#
+proc checkPeriodicIdentify {} {
+  variable prev_ident;
+  variable short_ident_interval;
+  variable long_ident_interval;
+  variable min_time_between_ident;
+  variable ident_only_after_tx;
+  variable need_ident;
+  
+  if {$short_ident_interval == 0} {
+    return;
+  }
+
+  set now [clock seconds];
+  set hour [clock format $now -format "%k"];
+  regexp {([1-5]?\d)$} [clock format $now -format "%M"] -> minute;
+  
+  set short_ident_now \
+      	    [expr {($hour * 60 + $minute) % $short_ident_interval == 0}];
+  set long_ident_now 0;
+  if {$long_ident_interval != 0} {
+    set long_ident_now \
+      	    [expr {($hour * 60 + $minute) % $long_ident_interval == 0}];
+  }
+  
+  if {$long_ident_now} {
+    puts "Sending long identification...";
+    send_long_ident $hour $minute;
+    set prev_ident $now;
+    set need_ident 0;
+  } else {
+    if {$now - $prev_ident < $min_time_between_ident} {
+      return;
+    }
+    if {$ident_only_after_tx && !$need_ident} {
+      return;
+    }
+    
+    if {$short_ident_now} {
+      puts "Sending short identification...";
+      send_short_ident $hour $minute;
+      set prev_ident $now;
+      set need_ident 0;
+    }
+  }
 }
 
 
