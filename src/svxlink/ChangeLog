@@ -3,6 +3,9 @@
 
 * Bugfix in CW.tcl: The CW code for 'L' was incorrectly mapped to '..-.'.
 
+* Two new command line options added to SvxLink Server and RemoteTrx:
+  --pidfile and --runasuser.
+
 
 
  0.10.1 -- 30 Jul 2008

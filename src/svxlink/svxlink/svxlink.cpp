@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <pwd.h>
 
 #include <string>
 #include <iostream>
@@ -139,7 +140,9 @@ static bool open_logfile(void);
  *
  ****************************************************************************/
 
+static char   	      	*pidfile_name = NULL;
 static char   	      	*logfile_name = NULL;
+static char   	      	*runasuser = NULL;
 static char   	      	*config = NULL;
 static int    	      	daemonize = 0;
 static int    	      	logfd = -1;
@@ -260,6 +263,36 @@ int main(int argc, char **argv)
     if (daemon(0, noclose) == -1)
     {
       perror("daemon");
+      exit(1);
+    }
+  }
+
+  if (pidfile_name != NULL)
+  {
+    FILE *pidfile = fopen(pidfile_name, "w");
+    if (pidfile == 0)
+    {
+      char err[256];
+      sprintf(err, "fopen(\"%s\")", pidfile_name);
+      perror(err);
+      fflush(stderr);
+      exit(1);
+    }
+    fprintf(pidfile, "%d\n", getpid());
+    fclose(pidfile);
+  }
+
+  if (runasuser != NULL)
+  {
+    struct passwd *passwd = getpwnam(runasuser);
+    if (passwd == NULL)
+    {
+      perror("getpwnam");
+      exit(1);
+    }
+    if (setuid(passwd->pw_uid) == -1)
+    {
+      perror("setuid");
       exit(1);
     }
   }
@@ -481,8 +514,12 @@ static void parse_arguments(int argc, const char **argv)
   const struct poptOption optionsTable[] =
   {
     POPT_AUTOHELP
+    {"pidfile", 0, POPT_ARG_STRING, &pidfile_name, 0,
+	    "Specify the name of the pidfile to use", "<filename>"},
     {"logfile", 0, POPT_ARG_STRING, &logfile_name, 0,
 	    "Specify the logfile to use (stdout and stderr)", "<filename>"},
+    {"runasuser", 0, POPT_ARG_STRING, &runasuser, 0,
+	    "Specify the user to run SvxLink as", "<username>"},
     {"config", 0, POPT_ARG_STRING, &config, 0,
 	    "Specify the configuration file to use", "<filename>"},
     /*
