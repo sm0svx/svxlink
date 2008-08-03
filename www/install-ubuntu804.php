@@ -25,7 +25,7 @@ Download and compile the source code and then install it:
 <pre>
 wget  http://downloads.sourceforge.net/svxlink/svxlink-<?php echo $rel ?>.tar.gz
 tar xvzf svxlink-<?php echo $rel ?>.tar.gz
-cd svxlink-<?php echo $rel ?>
+cd svxlink-<?php echo $rel ?> 
 make
 make install
 </pre>
