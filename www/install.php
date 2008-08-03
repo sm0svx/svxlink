@@ -82,6 +82,11 @@ cd /usr/share/svxlink
 tar xvzf /path-to-wherever-you-put-the-tar-file/sounds-YYMMDD.tar.gz
 </PRE>
 <P>
+Specific installation instructions for different distributions:
+<UL>
+  <LI><A href="install-ubuntu804.php">Ubuntu 8.04</A></LI>
+</UL>
+<P>
 Now continue below reading the
 <A href="#post-install">post install stuff</A> chapter.
 <P>

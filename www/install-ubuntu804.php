@@ -8,12 +8,12 @@ This instruction was written for the 080730 release of SvxLink.
 <p/>
 There are no binary packages for Ubuntu but it is quite easy
 to compile SvxLink from source. First, install a couple of
-packages that SvxLink depend on.
+packages that SvxLink depend on. In a terminal, type the
+following commands.
 
 <pre>
 sudo apt-get update
-sudo apt-get install alsa-utils g++ libsigc++-1.2-dev \
-		libgsm1-dev libpopt-dev tcl-dev make libspandsp-dev
+sudo apt-get install alsa-utils g++ libsigc++-1.2-dev libgsm1-dev libpopt-dev tcl-dev make libspandsp-dev
 </pre>
 If you need Qtel you also need the QT development libraries.
 <pre>
