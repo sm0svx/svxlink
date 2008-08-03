@@ -85,7 +85,7 @@ tar xvzf /path-to-wherever-you-put-the-tar-file/sounds-YYMMDD.tar.gz
 Specific installation instructions for different distributions:
 <UL>
   <LI><A href="install-ubuntu804.php">Ubuntu 8.04</A></LI>
-  <LI><A href="install-debian40.php">Debian 4.0</A></LI>
+  <LI><A href="install-deb40.php">Debian 4.0</A></LI>
 </UL>
 <P>
 Now continue below reading the
