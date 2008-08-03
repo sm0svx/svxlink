@@ -19,7 +19,7 @@ apt-get install alsa-utils g++ make libsigc++-1.2-dev libgsm-dev libpopt-dev tcl
 </pre>
 If you need Qtel you also need the QT development libraries.
 <pre>
-sudo apt-get install libqt3-mt-dev
+apt-get install libqt3-mt-dev
 </pre>
 Download and compile the source code and then install it:
 <pre>
