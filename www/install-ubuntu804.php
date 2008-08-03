@@ -27,7 +27,7 @@ wget  http://downloads.sourceforge.net/svxlink/svxlink-<?php echo $rel ?>.tar.gz
 tar xvzf svxlink-<?php echo $rel ?>.tar.gz
 cd svxlink-<?php echo $rel ?> 
 make
-make install
+sudo make install
 </pre>
 You also need to download and install the sound files (sounds-<?php echo $rel ?>)
 as described in
