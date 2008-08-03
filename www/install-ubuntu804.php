@@ -1,10 +1,12 @@
 <?php
   $selected="index";
   include("header.inc");
+
+  $rel="080730";
 ?>
 
 <H2>Installation instructions for Ubuntu 8.04</H2>
-This instruction was written for the 080730 release of SvxLink.
+This instruction was written for the <?php echo $rel ?> release of SvxLink.
 <p/>
 There are no binary packages for Ubuntu but it is quite easy
 to compile SvxLink from source. First, install a couple of
@@ -21,13 +23,13 @@ sudo apt-get install libqt3-mt-dev
 </pre>
 Download and compile the source code and then install it:
 <pre>
-wget  http://downloads.sourceforge.net/svxlink/svxlink-080730.tar.gz
-tar xvzf svxlink-080730.tar.gz
-cd svxlink-080730
+wget  http://downloads.sourceforge.net/svxlink/svxlink-<?php echo $rel ?>.tar.gz
+tar xvzf svxlink-<?php echo $rel ?>.tar.gz
+cd svxlink-<?php echo $rel ?>
 make
 make install
 </pre>
-You also need to download and install the sound files (sounds-080730)
+You also need to download and install the sound files (sounds-<?php echo $rel ?>)
 as described in
 <a href="http://svxlink.sourceforge.net/install.php#source">the main installation instruction</a>
 if you want to run SvxLink Server.
