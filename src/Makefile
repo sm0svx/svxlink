@@ -277,6 +277,14 @@ makefile.root:
 	)
 
 
+#
+# Create the .config file if it does not exist
+#
+$(ROOT)/.config:	$(ROOT)/create_config.sh
+	echo -e --- Creating $(BOLD)$@$(NBOLD)...
+	$(ROOT)/create_config.sh $@
+
+
 
 #
 # This file has not been truncated
