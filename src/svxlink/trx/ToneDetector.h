@@ -97,8 +97,6 @@ namespace Async
  * Bugs:    
  *----------------------------------------------------------------------------
  */
-#define FLOATING	double
-#define SAMPLE	      	float
 
 
 /*
@@ -137,47 +135,40 @@ namespace Async
 class ToneDetector : public SigC::Object, public Async::AudioSink
 {
   public:
-    ToneDetector(float tone_hz, int base_N);
-    ~ToneDetector(void);
-    
+    ToneDetector(float tone_hz, float width_hz);
+    virtual int writeSamples(const float *buf, int len);
+
     bool isActivated(void) const { return (det_delay_left == 0); }
-    FLOATING value(void) const { return result; }
     float toneFq(void) const { return tone_fq; }
-    void setFilter(const std::string &filter_spec);
-    void setSnrThresh(float thresh) { snr_thresh = thresh; }
+    void setSnrThresh(float thresh) { peak_thresh = exp10f(thresh/10.0f); }
     void reset(void);
     
     SigC::Signal1<void, bool> activated;
-    SigC::Signal2<void, ToneDetector*, double>	valueChanged;
-    
-  protected:
     
   private:
-    int       	      	  block_pos;
-    int       	      	  is_activated;
-    FLOATING  	      	  result;
-    float     	      	  tone_fq;
-    float     	      	  *block;
-    
-    FLOATING  	      	  coeff;
-    FLOATING  	      	  Q1;
-    FLOATING  	      	  Q2;
-    FLOATING  	      	  sine;
-    FLOATING  	      	  cosine;
-    int       	      	  N;
-    
-    Async::AudioFilter	  *filter;
-    std::string       	  filter_spec;
-    int       	      	  det_delay_left;
-    int       	      	  undet_delay_left;
-    float     	      	  snr_thresh;
-    Async::SigCAudioSink  *sigc_sink;
-    
-    inline void resetGoertzel(void);
-    inline void processSample(SAMPLE sample);
-    //void getRealImag(FLOATING *realPart, FLOATING *imagPart);
-    inline FLOATING getMagnitudeSquared(void);
-    int processSamples(float *buf, int len);
+
+    typedef struct
+    {
+      float v2;
+      float v3;
+      float fac;
+    } GoertzelState;
+
+    void goertzelInit(GoertzelState *s, float freq, int sample_rate);
+    void goertzelReset(GoertzelState *s);
+    float goertzelResult(GoertzelState *s);
+
+    GoertzelState      center;
+    GoertzelState      lower;
+    GoertzelState      upper;
+
+    int       	       current_sample;
+    int       	       is_activated;
+    float              tone_fq;
+    int       	       N;
+    int       	       det_delay_left;
+    int       	       undet_delay_left;
+    float     	       peak_thresh;
 
 };  /* class ToneDetector */
 

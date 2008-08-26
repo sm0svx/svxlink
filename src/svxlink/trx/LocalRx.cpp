@@ -58,6 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioClipper.h>
 #include <AsyncAudioCompressor.h>
 #include <AsyncAudioFifo.h>
+#include <AsyncAudioStreamStateDetector.h>
 
 
 /****************************************************************************
@@ -107,9 +108,9 @@ using namespace Async;
 class ToneDurationDet : public ToneDetector
 {
   public:
-    ToneDurationDet(float fq, int bw, int duration)
-      : ToneDetector(fq, 8000 / bw), required_duration(duration),
-      	duration_timer(0)
+    ToneDurationDet(float fq, float bw, int duration)
+      : ToneDetector(fq, bw),
+      	required_duration(duration), duration_timer(0)
     {
       //timerclear(&activation_timestamp);
       ToneDetector::activated.connect(
@@ -170,20 +171,6 @@ class ToneDurationDet : public ToneDetector
 };
 
 
-class SigCAudioValve : public AudioValve, public SigC::Object
-{
-  public:
-    void allSamplesFlushed(void)
-    {
-      //printf("SigCAudioValve::allSamplesFlushed\n");
-      AudioValve::allSamplesFlushed();
-      sigAllSamplesFlushed();
-    }
-    
-    SigC::Signal0<void> sigAllSamplesFlushed;
-};
-
-
 class PeakMeter : public AudioPassthrough
 {
   public:
@@ -217,23 +204,6 @@ class PeakMeter : public AudioPassthrough
 };
 
 
-class SigCAudioSinkNoFlow : public SigCAudioSink
-{
-  public:
-    virtual int writeSamples(const float *samples, int len)
-    {
-      sigWriteSamples(const_cast<float *>(samples), len);
-      return len;
-    }
-
-    virtual void flushSamples(void)
-    {
-      sourceAllSamplesFlushed();
-    }
-  
-};
-
-
 /****************************************************************************
  *
  * Prototypes
@@ -247,7 +217,6 @@ class SigCAudioSinkNoFlow : public SigCAudioSink
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 
@@ -267,7 +236,7 @@ class SigCAudioSinkNoFlow : public SigCAudioSink
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
   : Rx(name), cfg(cfg), audio_io(0), is_muted(true),
-    squelch(0), siglevdet(0), siglev_offset(0.0), siglev_slope(1.0),
+    squelch_det(0), siglevdet(0), siglev_offset(0.0), siglev_slope(1.0),
     tone_dets(0), sql_valve(0), delay(0), mute_dtmf(false), sql_tail_elim(0),
     preamp_gain(0)
 {
@@ -358,8 +327,8 @@ bool LocalRx::initialize(void)
   AudioSource *prev_src = audio_io;
   
     // Create a fifo buffer to handle large audio blocks
-  AudioFifo *input_fifo = new AudioFifo(2048);
-  input_fifo->setOverwrite(true);
+  AudioFifo *input_fifo = new AudioFifo(1024);
+//  input_fifo->setOverwrite(true);
   prev_src->registerSink(input_fifo, true);
   prev_src = input_fifo;
   
@@ -384,7 +353,12 @@ bool LocalRx::initialize(void)
     // decimate it down to 16kHz
   if (audio_io->sampleRate() > 16000)
   {
+#if (INTERNAL_SAMPLE_RATE == 8000)
+    AudioDecimator *d1 = new AudioDecimator(3, coeff_48_16_int,
+      	      	      	      	      	    coeff_48_16_int_taps);
+#else
     AudioDecimator *d1 = new AudioDecimator(3, coeff_48_16, coeff_48_16_taps);
+#endif
     prev_src->registerSink(d1, true);
     prev_src = d1;
   }
@@ -392,6 +366,7 @@ bool LocalRx::initialize(void)
     // If the sound card sample rate is higher than 8kHz (16 or 48kHz assumed)
     // decimate it down to 8kHz. Also create a splitter to distribute the
     // 16kHz audio to other consumers.
+#if (INTERNAL_SAMPLE_RATE != 16000)
   AudioSplitter *rate_16k_splitter = 0;
   if (audio_io->sampleRate() > 8000)
   {
@@ -403,6 +378,7 @@ bool LocalRx::initialize(void)
     rate_16k_splitter->addSink(d2, true);
     prev_src = d2;
   }
+#endif
 
     // If a deemphasis filter was configured, create it
   if (deemphasis)
@@ -418,9 +394,11 @@ bool LocalRx::initialize(void)
     // Create an audio splitter to distribute the 8kHz audio to all consumers
   AudioSplitter *splitter = new AudioSplitter;
   prev_src->registerSink(splitter, true);
+  prev_src = 0;
   
     // Create the signal level detector. Connect it to the 16 or 8kHz splitter
     // depending on how the sound card sample rate is setup.
+#if (INTERNAL_SAMPLE_RATE != 16000)
   if (rate_16k_splitter != 0)
   {
     siglevdet = new SigLevDet(16000);
@@ -431,6 +409,10 @@ bool LocalRx::initialize(void)
     siglevdet = new SigLevDet(8000);
     splitter->addSink(siglevdet, true);
   }
+#else
+  siglevdet = new SigLevDet(16000);
+  splitter->addSink(siglevdet, true);
+#endif
   siglevdet->setDetectorSlope(siglev_slope);
   siglevdet->setDetectorOffset(siglev_offset);
   
@@ -445,19 +427,19 @@ bool LocalRx::initialize(void)
 
   if (sql_det_str == "VOX")
   {
-    squelch = new SquelchVox;
+    squelch_det = new SquelchVox;
   }
   else if (sql_det_str == "CTCSS")
   {
-    squelch = new SquelchCtcss;
+    squelch_det = new SquelchCtcss;
   }
   else if (sql_det_str == "SERIAL")
   {
-    squelch = new SquelchSerial;
+    squelch_det = new SquelchSerial;
   }
   else if (sql_det_str == "SIGLEV")
   {
-    squelch = new SquelchSigLev(siglevdet);
+    squelch_det = new SquelchSigLev(siglevdet);
   }
   else
   {
@@ -468,35 +450,20 @@ bool LocalRx::initialize(void)
     return false;
   }
   
-  if (!squelch->initialize(cfg, name()))
+  if (!squelch_det->initialize(cfg, name()))
   {
     cerr << "*** ERROR: Squelch detector initialization failed for RX \""
       	 << name() << "\"\n";
-    delete squelch;
-    squelch = 0;
+    delete squelch_det;
+    squelch_det = 0;
     // FIXME: Cleanup
     return false;
   }
   
-  squelch->squelchOpen.connect(slot(*this, &LocalRx::onSquelchOpen));
-  splitter->addSink(squelch, true);
-  
-    // Create a new audio splitter to handle tone detectors then add it to the
-    // 8kHz splitter
-  tone_dets = new AudioSplitter;
-  splitter->addSink(tone_dets, true);
-  
-    // Create the highpass CTCSS filter that cuts off audio below 300Hz
-  AudioFilter *ctcss_filt = new AudioFilter("HpBu20/300");
-  splitter->addSink(ctcss_filt, true);
-  prev_src = ctcss_filt;
-  
-    // Create a splitter to distribute the audio after the CTCSS filter
-  AudioSplitter *ctcss_splitter = new AudioSplitter;
-  prev_src->registerSink(ctcss_splitter, true);
-  
-    // Create the configured type of DTMF decoder and add it after the CTCSS
-    // filter
+  squelch_det->squelchOpen.connect(slot(*this, &LocalRx::onSquelchOpen));
+  splitter->addSink(squelch_det, true);
+
+    // Create the configured type of DTMF decoder and add it to the splitter
   DtmfDecoder *dtmf_dec = DtmfDecoder::create(cfg, name());
   if ((dtmf_dec == 0) || !dtmf_dec->initialize())
   {
@@ -507,16 +474,30 @@ bool LocalRx::initialize(void)
   dtmf_dec->digitActivated.connect(slot(*this, &LocalRx::dtmfDigitActivated));
   dtmf_dec->digitDeactivated.connect(
       slot(*this, &LocalRx::dtmfDigitDeactivated));
-  ctcss_splitter->addSink(dtmf_dec, true);
+  splitter->addSink(dtmf_dec, true);
   
-    // Create an audio valve to use as squelch and connect it after the CTCSS
-    // filter
-  sql_valve = new SigCAudioValve;
+    // Create a new audio splitter to handle tone detectors then add it to
+    // the splitter
+  tone_dets = new AudioSplitter;
+  splitter->addSink(tone_dets, true);
+  
+    // Create an audio valve to use as squelch and connect it to the splitter
+  sql_valve = new AudioValve;
   sql_valve->setOpen(false);
-  sql_valve->sigAllSamplesFlushed.connect(
-      slot(*this, &LocalRx::allSamplesFlushed));
-  ctcss_splitter->addSink(sql_valve, true);
+  splitter->addSink(sql_valve, true);
   prev_src = sql_valve;
+
+    // Create the state detector
+  AudioStreamStateDetector *state_det = new AudioStreamStateDetector;
+  state_det->sigStreamStateChanged.connect(
+            slot(*this, &LocalRx::audioStreamStateChange));
+  prev_src->registerSink(state_det, true);
+  prev_src = state_det;
+
+    // Create the highpass CTCSS filter that cuts off audio below 300Hz
+  AudioFilter *ctcss_filt = new AudioFilter("HpBu20/300");
+  prev_src->registerSink(ctcss_filt, true);
+  prev_src = ctcss_filt;
   
     // If we need a delay line (e.g. for DTMF muting and/or squelch tail
     // elimination), create it
@@ -544,9 +525,13 @@ bool LocalRx::initialize(void)
   prev_src = clipper;
 
     // Remove high frequencies generated by the previous clipping
-  AudioFilter *sf = new AudioFilter("LpBu20/3500");
-  prev_src->registerSink(sf, true);
-  prev_src = sf;
+#if (INTERNAL_SAMPLE_RATE == 16000)
+  AudioFilter *splatter_filter = new AudioFilter("LpBu20/5500");
+#else
+  AudioFilter *splatter_filter = new AudioFilter("LpBu20/3500");
+#endif
+  prev_src->registerSink(splatter_filter, true);
+  prev_src = splatter_filter;
   
     // Set the previous audio pipe object to handle audio distribution for
     // the LocalRx class
@@ -583,7 +568,7 @@ void LocalRx::mute(bool do_mute)
       return;
     }
     
-    squelch->reset();
+    squelch_det->reset();
   }
 
   is_muted = do_mute;
@@ -665,11 +650,13 @@ void LocalRx::dtmfDigitDeactivated(char digit, int duration_ms)
 } /* LocalRx::dtmfDigitActivated */
 
 
-void LocalRx::allSamplesFlushed(void)
+void LocalRx::audioStreamStateChange(bool is_active, bool is_idle)
 {
-  //printf("LocalRx::allSamplesFlushed\n");
-  setSquelchState(false);
-} /* LocalRx::allSamplesFlushed */
+  if (is_idle)
+  {
+    setSquelchState(false);
+  }
+} /* LocalRx::audioStreamStateChange */
 
 
 void LocalRx::onSquelchOpen(bool is_open)

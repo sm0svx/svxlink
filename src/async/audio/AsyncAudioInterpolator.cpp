@@ -142,10 +142,7 @@ void AudioInterpolator::processSamples(float *dest, const float *src, int count)
   while (count-- > 0)
   {
       // shift Z delay line up to make room for next sample
-    for (int tap = num_taps_per_phase - 1; tap > 0; tap--)
-    {
-      p_Z[tap] = p_Z[tap - 1];
-    }
+    memmove(p_Z + 1, p_Z, (num_taps_per_phase - 1) * sizeof(float));
 
       // copy next sample from input buffer to bottom of Z delay line
     p_Z[0] = *src++;
@@ -163,7 +160,7 @@ void AudioInterpolator::processSamples(float *dest, const float *src, int count)
         sum += *p_coeff * p_Z[tap];
         p_coeff += factor_L;          /* point to next coefficient */
       }
-      *dest++ = sum;     /* store sum and point to next output */
+      *dest++ = sum * factor_L; /* store scaled sum and point to next output */
       num_out++;
     }
   }

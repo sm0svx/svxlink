@@ -155,7 +155,7 @@ bool NetTx::initialize(void)
   tcp_con->msgReceived.connect(slot(*this, &NetTx::handleMsg));
   tcp_con->connect();
   
-  pacer = new AudioPacer(8000, 512, 50);
+  pacer = new AudioPacer(INTERNAL_SAMPLE_RATE, 512, 50);
   setHandler(pacer);
   
   sigc_sink = new SigCAudioSink;

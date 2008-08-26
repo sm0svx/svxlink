@@ -300,7 +300,7 @@ class AudioDevice : public SigC::Object
   
     
   private:
-    static const int  DEFAULT_SAMPLE_RATE = 8000;
+    static const int  DEFAULT_SAMPLE_RATE = INTERNAL_SAMPLE_RATE;
     static const int  DEFAULT_CHANNELS = 2;
     static const int  DEFAULT_FRAG_COUNT = 2;
     static const int  DEFAULT_FRAG_SIZE_LOG2 = 10; // 512 samples

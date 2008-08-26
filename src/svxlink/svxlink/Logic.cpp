@@ -58,12 +58,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <Rx.h>
 #include <Tx.h>
+#include <AsyncAudioPassthrough.h>
 #include <AsyncAudioMixer.h>
 #include <AsyncAudioAmp.h>
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioSplitter.h>
 #include <AsyncAudioValve.h>
 #include <AsyncAudioFifo.h>
+#include <AsyncAudioStreamStateDetector.h>
 #include <AsyncAudioDebugger.h>
 
 
@@ -107,38 +109,6 @@ using namespace SigC;
  *
  ****************************************************************************/
 
-class Logic::IdleDetector : public AudioPassthrough
-{
-  public:
-    IdleDetector(Logic *logic) : logic(logic), is_idle(true) {}
-    
-    virtual int writeSamples(const float *samples, int count)
-    {
-      if (is_idle)
-      {
-      	is_idle = false;
-	logic->audioStreamIdleStateChange(false);
-      }
-      return AudioPassthrough::writeSamples(samples, count);
-    }
-
-    virtual void allSamplesFlushed(void)
-    {
-      assert(!is_idle);
-      is_idle = true;
-      logic->audioStreamIdleStateChange(true);
-      sourceAllSamplesFlushed();
-    }
-    
-    bool isIdle(void) const { return is_idle; }
-    
-  private:
-    Logic *logic;
-    bool  is_idle;
-
-}; /* class Logic::IdleDetector */
-
-
 
 
 /****************************************************************************
@@ -154,7 +124,6 @@ class Logic::IdleDetector : public AudioPassthrough
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 
@@ -208,7 +177,7 @@ Logic::Logic(Config &cfg, const string& name)
     tx_ctcss(TX_CTCSS_NEVER), 	    tx_audio_mixer(0),
     tx_audio_selector(0),     	    rx_splitter(0),
     audio_from_module_selector(0),  audio_to_module_splitter(0),
-    audio_to_module_selector(0),    idle_det(0),
+    audio_to_module_selector(0),    state_det(0),
     is_idle(true),                  fx_gain_normal(0),
     fx_gain_low(-12), 	      	    long_cmd_digits(100),
     report_events_as_idle(false)
@@ -384,15 +353,16 @@ bool Logic::initialize(void)
   rx_splitter->addSink(passthrough, true);
   logic_con_out->addSource(passthrough);
   logic_con_out->enableAutoSelect(passthrough, 10);
-  
+
     // A valve that is used to turn direct RX to TX audio on or off.
     // Used by the repeater logic.
   rpt_valve = new AudioValve;
   rpt_valve->setOpen(false);
   rx_splitter->addSink(rpt_valve, true);
-  
+
     // This selector is used to select audio source for TX audio
   tx_audio_selector = new AudioSelector;
+  AudioSource *prev_tx_src = tx_audio_selector;
   
     // Connect the direct RX to TX audio valve to the TX audio selector
   tx_audio_selector->addSource(rpt_valve);
@@ -421,24 +391,16 @@ bool Logic::initialize(void)
   logic_con_out->addSource(passthrough);
   logic_con_out->enableAutoSelect(passthrough, 0);
   
-  
-  AudioSource *prev_tx_src = 0;
-  
-  /*
-  passthrough = new AudioPassthrough;
-  tx_audio_selector->registerSink(passthrough, true);
-  prev_tx_src = passthrough;
-  */
-  
-    // Create the idle detector and connect it to the output of the
-    // TX audio selector
-  idle_det = new IdleDetector(this);
-  tx_audio_selector->registerSink(idle_det, true);
-  prev_tx_src = idle_det;
+    // Create the state detector
+  state_det = new AudioStreamStateDetector;
+  state_det->sigStreamStateChanged.connect(
+    slot(*this, &Logic::audioStreamStateChange));
+  prev_tx_src->registerSink(state_det, true);
+  prev_tx_src = state_det;
   
     // Add a pre-buffered FIFO to avoid underrun
-  AudioFifo *tx_fifo = new AudioFifo(512);
-  tx_fifo->setPrebufSamples(512);
+  AudioFifo *tx_fifo = new AudioFifo(1024 * INTERNAL_SAMPLE_RATE / 8000);
+  tx_fifo->setPrebufSamples(512 * INTERNAL_SAMPLE_RATE / 8000);
   prev_tx_src->registerSink(tx_fifo, true);
   prev_tx_src = tx_fifo;
   
@@ -460,7 +422,7 @@ bool Logic::initialize(void)
   prev_tx_src->registerSink(m_tx, true);
   
     // Create the message handler
-  msg_handler = new MsgHandler(8000);
+  msg_handler = new MsgHandler(INTERNAL_SAMPLE_RATE);
   msg_handler->allMsgsWritten.connect(slot(*this, &Logic::allMsgsWritten));
   
     // This gain control is used to reduce the audio volume of effects
@@ -801,7 +763,7 @@ void Logic::squelchOpen(bool is_open)
 bool Logic::getIdleState(void) const
 {
   return !rx().squelchIsOpen() &&
-      	 idle_det->isIdle() &&
+      	 state_det->isIdle() &&
       	 msg_handler->isIdle();
 	 
 } /* Logic::getIdleState */
@@ -1244,25 +1206,19 @@ void Logic::dtmfDigitDetectedP(char digit, int duration)
 } /* Logic::dtmfDigitDetected */
 
 
-void Logic::audioStreamIdleStateChange(bool is_idle)
+void Logic::audioStreamStateChange(bool is_active, bool is_idle)
 {
-  /*
-  printf("Logic::audioStreamIdleStateChange: is_idle=%s\n",
-      	  is_idle ? "TRUE" : "FALSE");
-  */
-  
-
-  if (is_idle)
+  if (is_active)
   {
-    fx_gain_ctrl->setGain(fx_gain_normal); 
+    fx_gain_ctrl->setGain(fx_gain_low);
   }
   else
   {
-    fx_gain_ctrl->setGain(fx_gain_low); 
+    fx_gain_ctrl->setGain(fx_gain_normal);
   }
 
   checkIdle();
-} /* Logic::audioStreamIdleStateChange */
+} /* Logic::audioStreamStateChange */
 
 
 void Logic::cleanup(void)

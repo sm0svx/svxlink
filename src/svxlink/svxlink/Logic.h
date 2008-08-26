@@ -52,10 +52,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <SigCAudioSource.h>
-#include <SigCAudioSink.h>
-#include <AsyncAudioPassthrough.h>
-
 
 
 /****************************************************************************
@@ -79,12 +75,12 @@ namespace Async
 {
   class Config;
   class Timer;
-  class SigCAudioSource;
   class AudioMixer;
   class AudioAmp;
   class AudioSelector;
   class AudioSplitter;
   class AudioValve;
+  class AudioStreamStateDetector;
 };
 
 
@@ -210,7 +206,7 @@ class Logic : public SigC::Object
     virtual void squelchOpen(bool is_open);
     virtual void allMsgsWritten(void);
     virtual void dtmfDigitDetected(char digit, int duration);
-    virtual void audioStreamIdleStateChange(bool is_idle);
+    virtual void audioStreamStateChange(bool is_active, bool is_idle);
     virtual bool getIdleState(void) const;
     virtual void transmitterStateChange(bool is_transmitting);
     
@@ -230,52 +226,48 @@ class Logic : public SigC::Object
       TX_CTCSS_NEVER, TX_CTCSS_ALWAYS, TX_CTCSS_SQL_OPEN
     } TxCtcssType;
     
-    class IdleDetector;
-    friend class IdleDetector;
-    
-    Async::Config     	      	&m_cfg;
-    std::string       	      	m_name;
-    Rx	      	      	      	*m_rx;
-    Tx	      	      	      	*m_tx;
-    MsgHandler	      	      	*msg_handler;
-    Module    	      	      	*active_module;
-    std::list<Module*>	      	modules;
-    std::string       	      	received_digits;
-    std::string       	      	m_callsign;
-    Async::Timer      	      	*cmd_tmo_timer;
-    std::list<std::string>    	cmd_queue;
-    bool      	      	      	anti_flutter;
-    char      	      	      	prev_digit;
-    int      	      	      	exec_cmd_on_sql_close;
-    Async::Timer      	      	*exec_cmd_on_sql_close_timer;
-    Async::Timer      	      	*rgr_sound_timer;
-    int       	      	      	rgr_sound_delay;
-    float       	      	report_ctcss;
-    std::map<int, std::string>	macros;
-    EventHandler      	      	*event_handler;
-    Async::AudioSelector      	*logic_con_out;
-    Async::AudioSplitter	*logic_con_in;
-    CmdParser 	      	      	cmd_parser;
-    Async::Timer      	      	*every_minute_timer;
-    Recorder  	      	      	*recorder;
-    TxCtcssType       	      	tx_ctcss;
-    Async::SigCAudioSource    	*sigc_tx;
-    Async::AudioMixer	      	*tx_audio_mixer;
-    Async::AudioAmp   	      	*fx_gain_ctrl;
-    Async::AudioSelector      	*tx_audio_selector;
-    Async::AudioSplitter      	*rx_splitter;
-    Async::AudioValve 	      	*rx_valve;
-    Async::AudioValve 	      	*rpt_valve;
-    Async::AudioSelector      	*audio_from_module_selector;
-    Async::AudioSplitter      	*audio_to_module_splitter;
-    Async::AudioSelector      	*audio_to_module_selector;
-    IdleDetector      	      	*idle_det;
-    bool      	      	      	is_idle;
-    int                         fx_gain_normal;
-    int                         fx_gain_low;
-    unsigned       	      	long_cmd_digits;
-    std::string       	      	long_cmd_module;
-    bool      	      	      	report_events_as_idle;
+    Async::Config     	      	    &m_cfg;
+    std::string       	      	    m_name;
+    Rx	      	      	      	    *m_rx;
+    Tx	      	      	      	    *m_tx;
+    MsgHandler	      	      	    *msg_handler;
+    Module    	      	      	    *active_module;
+    std::list<Module*>	      	    modules;
+    std::string       	      	    received_digits;
+    std::string       	      	    m_callsign;
+    Async::Timer      	      	    *cmd_tmo_timer;
+    std::list<std::string>    	    cmd_queue;
+    bool      	      	      	    anti_flutter;
+    char      	      	      	    prev_digit;
+    int      	      	      	    exec_cmd_on_sql_close;
+    Async::Timer      	      	    *exec_cmd_on_sql_close_timer;
+    Async::Timer      	      	    *rgr_sound_timer;
+    int       	      	      	    rgr_sound_delay;
+    float       	      	    report_ctcss;
+    std::map<int, std::string>	    macros;
+    EventHandler      	      	    *event_handler;
+    Async::AudioSelector      	    *logic_con_out;
+    Async::AudioSplitter	    *logic_con_in;
+    CmdParser 	      	      	    cmd_parser;
+    Async::Timer      	      	    *every_minute_timer;
+    Recorder  	      	      	    *recorder;
+    TxCtcssType       	      	    tx_ctcss;
+    Async::AudioMixer	      	    *tx_audio_mixer;
+    Async::AudioAmp   	      	    *fx_gain_ctrl;
+    Async::AudioSelector      	    *tx_audio_selector;
+    Async::AudioSplitter      	    *rx_splitter;
+    Async::AudioValve 	      	    *rx_valve;
+    Async::AudioValve 	      	    *rpt_valve;
+    Async::AudioSelector      	    *audio_from_module_selector;
+    Async::AudioSplitter      	    *audio_to_module_splitter;
+    Async::AudioSelector      	    *audio_to_module_selector;
+    Async::AudioStreamStateDetector *state_det;
+    bool      	      	      	    is_idle;
+    int                             fx_gain_normal;
+    int                             fx_gain_low;
+    unsigned       	      	    long_cmd_digits;
+    std::string       	      	    long_cmd_module;
+    bool      	      	      	    report_events_as_idle;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);

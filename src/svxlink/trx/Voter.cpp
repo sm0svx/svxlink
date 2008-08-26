@@ -110,7 +110,7 @@ class SatRx : public AudioSource, public SigC::Object
 
       if (fifo_length_ms > 0)
       {
-        fifo = new AudioFifo(fifo_length_ms * 8000 / 1000);
+        fifo = new AudioFifo(fifo_length_ms * INTERNAL_SAMPLE_RATE / 1000);
         fifo->setOverwrite(true);
         prev_src->registerSink(fifo);
         prev_src = fifo;

@@ -58,7 +58,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-//#include "SampleFifo.h"
 #include "AsyncAudioDevice.h"
 #include "AsyncFdWatch.h"
 #include "AsyncAudioReader.h"
@@ -287,19 +286,12 @@ AudioIO::AudioIO(const string& dev_name, int channel)
   
   //new AudioDebugger(input_fifo);
 
-  /*
-  write_fifo = new SampleFifo(AudioDevice::blocksize() * 2 + 1);
-  write_fifo->setOverwrite(false);
-  write_fifo->stopOutput(true);
-  write_fifo->fifoFull.connect(slot(*this, &AudioIO::fifoBufferFull));
-  */
 } /* AudioIO::AudioIO */
 
 
 AudioIO::~AudioIO(void)
 {
   close();
-  //delete write_fifo;
   AudioSink::clearHandler();
   delete input_valve;
   AudioDevice::unregisterAudioIO(this);
@@ -361,105 +353,7 @@ void AudioIO::close(void)
 
   audio_dev->close(); 
   
-  //write_fifo->clear();
-  
-  //do_flush = true;
-  //is_flushing = false;
-  
-  //delete flush_timer;
-  //flush_timer = 0;
-  
 } /* AudioIO::close */
-
-
-#if 0
-int AudioIO::samplesToWrite(void) const
-{
-  return write_fifo->samplesInFifo() + audio_dev->samplesToWrite();
-}
-
-
-void AudioIO::clearSamples(void)
-{
-  if (do_flush)
-  {
-    if (!is_flushing)
-    {
-      sourceAllSamplesFlushed();
-    }
-    return;
-  }
-  
-  do_flush = true;
-  is_flushing = true;
-  write_fifo->clear();
-  audio_dev->flushSamples();
-  flushSamplesInDevice();
-} /* AudioIO::clearSamples */
-#endif
-
-
-#if 0
-int AudioIO::writeSamples(const float *samples, int count)
-{
-  assert((io_mode == MODE_WR) || (io_mode == MODE_RDWR));
-  
-  if (do_flush)
-  {
-    delete flush_timer;
-    flush_timer = 0;
-    do_flush = false;
-    is_flushing = false;
-    lead_in_pos = 0;
-  }
-  
-  float buf[count];
-  int cnt = 0;
-  if (lead_in_pos < 100)
-  {
-    cnt = min(count, 100-lead_in_pos);
-    for (int i=0; i<cnt; ++i)
-    {
-      float fade_gain = pow(2, lead_in_pos++ / 10.0) / pow(2, 10.0);
-      buf[i] = fade_gain * samples[i];
-    }
-  }
-  
-  for (int i=cnt; i<count; ++i)
-  {
-    buf[i] = samples[i];
-  }
-
-  int samples_written = write_fifo->addSamples(buf, count);
-  
-  audio_dev->audioToWriteAvailable();
-  return samples_written;
-  
-} /* AudioIO::writeSamples */
-
-
-void AudioIO::flushSamples(void)
-{
-  if (do_flush)
-  {
-    if (!is_flushing)
-    {
-      sourceAllSamplesFlushed();
-    }
-    return;
-  }
-  
-  do_flush = true;
-  is_flushing = true;
-  audio_dev->flushSamples();
-  if (write_fifo->empty())
-  {
-    flushSamplesInDevice();
-  }
-} /* AudioIO::flushSamples */
-#endif
-
-
 
 
 
@@ -485,40 +379,13 @@ void AudioIO::flushSamples(void)
 
 
 
+
 /****************************************************************************
  *
  * Private member functions
  *
  ****************************************************************************/
 
-
-#if 0
-void AudioIO::flushSamplesInDevice(int extra_samples)
-{
-  long flushtime = 1000 * audio_dev->samplesToWrite() / 8000;
-  delete flush_timer;
-  flush_timer = new Timer(flushtime);
-  flush_timer->expired.connect(slot(*this, &AudioIO::flushDone));
-} /* AudioIO::flushSamplesInDevice */
-
-
-void AudioIO::flushDone(Timer *timer)
-{
-  is_flushing = false;
-  delete flush_timer;
-  flush_timer = 0;
-  sourceAllSamplesFlushed();
-} /* AudioIO::flushDone */
-
-
-void AudioIO::fifoBufferFull(bool is_full)
-{
-  if (!is_full)
-  {
-    sourceResumeOutput();
-  }
-} /* AudioIO::fifoBufferFull */
-#endif
 
 
 
@@ -532,13 +399,6 @@ int AudioIO::readSamples(float *samples, int count)
 {
   //printf("AudioIO[%s:%d]::readSamples\n", audio_dev->devName().c_str(), m_channel);
 
-  /*
-  if (write_fifo->empty())
-  {
-    return 0;
-  }
-  */
-  
   int samples_read = audio_reader->readSamples(samples, count);
   
   //printf("AudioIO[%s:%d]::readSamples: count=%d  sample_read=%d\n", audio_dev->devName().c_str(), m_channel, count, samples_read);

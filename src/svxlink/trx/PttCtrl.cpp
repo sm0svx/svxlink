@@ -1,12 +1,12 @@
 /**
-@file	 Tx.cpp
-@brief   The base class for a transmitter
+@file	 PttCtrl.cpp
+@brief   Implements the PTT controller
 @author  Tobias Blomberg / SM0SVX
-@date	 2006-08-01
+@date	 2004-03-21
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,8 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
-
+#include <sigc++/sigc++.h>
 
 
 /****************************************************************************
@@ -50,11 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Tx.h"
-#include "LocalTx.h"
-#include "NetTx.h"
-#include "MultiTx.h"
-
+#include "PttCtrl.h"
 
 
 /****************************************************************************
@@ -63,8 +58,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-using namespace std;
 using namespace Async;
+using namespace SigC;
+
 
 
 /****************************************************************************
@@ -82,70 +78,86 @@ using namespace Async;
  ****************************************************************************/
 
 
-
-/****************************************************************************
- *
- * Prototypes
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Exported Global Variables
- *
- ****************************************************************************/
-
-
-
-
-/****************************************************************************
- *
- * Local Global Variables
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-Tx *Tx::create(Config& cfg, const string& name)
+PttCtrl::PttCtrl(int tx_delay)
+  : tx_ctrl_mode(Tx::TX_OFF), is_transmitting(false), tx_delay_timer(0),
+    tx_delay(tx_delay), fifo(0)
 {
-  Tx *tx = 0;
-  string tx_type;
-  if (!cfg.getValue(name, "TYPE", tx_type))
+  valve.setBlockWhenClosed(false);
+  valve.setOpen(false);
+      
+  if (tx_delay > 0)
   {
-    cerr << "*** ERROR: Config variable " << name << "/TYPE not set\n";
-    return 0;
-  }
-  
-  if (tx_type == "Local")
-  {
-    tx = new LocalTx(cfg, name);
-  }
-  else if (tx_type == "Net")
-  {
-    tx = new NetTx(cfg, name);
-  }
-  else if (tx_type == "Multi")
-  {
-    tx = new MultiTx(cfg, name);
+    fifo = new AudioFifo((tx_delay + 500) * INTERNAL_SAMPLE_RATE / 1000);
+    fifo->registerSink(&valve);
+    AudioSink::setHandler(fifo);
   }
   else
   {
-    cerr << "*** ERROR: Unknown TX type \"" << tx_type << "\". Legal values "
-      	 << "are: Local, Net or Multi\n";
-    return 0;
+    AudioSink::setHandler(&valve);
   }
-  
-  return tx;
-  
-} /* Tx::create */
+      
+  AudioSource::setHandler(&valve);
+}
+
+
+PttCtrl::~PttCtrl(void)
+{
+  AudioSink::clearHandler();
+  AudioSource::clearHandler();
+  delete fifo;
+  delete tx_delay_timer;
+}
+
+
+void PttCtrl::setTxCtrlMode(Tx::TxCtrlMode mode)
+{
+  if (mode == tx_ctrl_mode)
+  {
+    return;
+  }
+  tx_ctrl_mode = mode;
+      
+  switch (mode)
+  {
+    case Tx::TX_OFF:
+      transmit(false);
+      break;
+
+    case Tx::TX_ON:
+      transmit(true);
+      break;
+
+    case Tx::TX_AUTO:
+      transmit(!valve.isIdle());
+      break;
+  }
+}
+
+
+int PttCtrl::writeSamples(const float *samples, int count)
+{
+  if ((tx_ctrl_mode == Tx::TX_AUTO) && !is_transmitting)
+  {
+    transmit(true);
+  }
+      
+  if (fifo != 0)
+  {
+    return fifo->writeSamples(samples, count);
+  }
+      
+  return valve.writeSamples(samples, count);
+}
+
+
+void PttCtrl::allSamplesFlushed(void)
+{
+  valve.allSamplesFlushed();
+  if ((tx_ctrl_mode == Tx::TX_AUTO) && is_transmitting && valve.isIdle())
+  {
+    transmit(false);
+  }
+}
 
 
 
@@ -163,8 +175,54 @@ Tx *Tx::create(Config& cfg, const string& name)
  *
  ****************************************************************************/
 
+void PttCtrl::transmit(bool do_transmit)
+{
+  if (do_transmit == is_transmitting)
+  {
+    return;
+  }
+      
+  is_transmitting = do_transmit;
+  transmitterStateChange(do_transmit);
+  if (do_transmit)
+  {
+    if (tx_delay > 0)
+    {
+      fifo->enableBuffering(true);
+      valve.setBlockWhenClosed(true);
+      tx_delay_timer = new Timer(tx_delay);
+      tx_delay_timer->expired.connect(
+          slot(*this, &PttCtrl::txDelayExpired));
+    }
+    else
+    {
+      valve.setOpen(true);
+    }
+  }
+  else
+  {
+    if (tx_delay_timer != 0)
+    {
+      delete tx_delay_timer;
+      tx_delay_timer = 0;
+    }
+    valve.setBlockWhenClosed(false);
+    valve.setOpen(false);
+  }
+}
+
+
+void PttCtrl::txDelayExpired(Timer *t)
+{
+  delete tx_delay_timer;
+  tx_delay_timer = 0;
+  fifo->enableBuffering(false);
+  valve.setOpen(true);
+  valve.setBlockWhenClosed(false);
+}
 
 
 /*
  * This file has not been truncated
  */
+

@@ -118,7 +118,7 @@ class AudioFilter : public AudioProcessor
      * @param 	filter_spec The filter specification
      * @param 	sampling_rate The sampling rate
      */
-    explicit AudioFilter(const std::string &filter_spec, int sample_rate=8000);
+    explicit AudioFilter(const std::string &filter_spec, int sample_rate = INTERNAL_SAMPLE_RATE);
   
     /**
      * @brief 	Destructor

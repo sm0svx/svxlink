@@ -115,7 +115,7 @@ using namespace Async;
  ****************************************************************************/
 
 AudioDelayLine::AudioDelayLine(int length_ms)
-  : size(length_ms * 8000 / 1000), ptr(0), flush_cnt(0), is_muted(false),
+  : size(length_ms * INTERNAL_SAMPLE_RATE / 1000), ptr(0), flush_cnt(0), is_muted(false),
     mute_cnt(0), last_clear(0)
 {
   buf = new float[size];
@@ -133,7 +133,7 @@ void AudioDelayLine::mute(bool do_mute, int time_ms)
 {
   if (do_mute)
   {
-    int count = min(size, time_ms * 8000 / 1000);
+    int count = min(size, time_ms * INTERNAL_SAMPLE_RATE / 1000);
     for (int i=0; i<count; ++i)
     {
       ptr = (ptr > 0) ? ptr-1 : size-1;
@@ -150,7 +150,7 @@ void AudioDelayLine::mute(bool do_mute, int time_ms)
     }
     else
     {
-      mute_cnt = time_ms * 8000 / 1000;
+      mute_cnt = time_ms * INTERNAL_SAMPLE_RATE / 1000;
     }
   }
 } /* AudioDelayLine::mute */
@@ -168,7 +168,7 @@ void AudioDelayLine::clear(int time_ms)
   }
   else
   {
-    count = min(size, time_ms * 8000 / 1000);
+    count = min(size, time_ms * INTERNAL_SAMPLE_RATE / 1000);
     for (int i=0; i<count; ++i)
     {
       ptr = (ptr > 0) ? ptr-1 : size-1;

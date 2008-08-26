@@ -411,31 +411,35 @@ int main(int argc, char **argv)
   if (cfg.getValue("GLOBAL", "CARD_SAMPLE_RATE", value))
   {
     int rate = atoi(value.c_str());
-    if (rate == 8000)
+    if (rate == 48000)
     {
-      AudioIO::setSampleRate(rate);
-      AudioIO::setBlocksize(256);
-      AudioIO::setBufferCount(2);
-    }
-    else if (rate == 16000)
-    {
-      AudioIO::setSampleRate(rate);
-      AudioIO::setBlocksize(512);
-      AudioIO::setBufferCount(2);
-    }
-    else if (rate == 48000)
-    {
-      AudioIO::setSampleRate(rate);
       AudioIO::setBlocksize(1024);
       AudioIO::setBufferCount(4);
     }
+    else if (rate == 16000)
+    {
+      AudioIO::setBlocksize(512);
+      AudioIO::setBufferCount(2);
+    }
+    #if INTERNAL_SAMPLE_RATE <= 8000
+    else if (rate == 8000)
+    {
+      AudioIO::setBlocksize(256);
+      AudioIO::setBufferCount(2);
+    }
+    #endif
     else
     {
       cerr << "*** ERROR: Illegal sound card sample rate specified for "
       	      "config variable GLOBAL/CARD_SAMPLE_RATE. Valid rates are "
-	      "8000, 16000 and 48000\n";
+	      #if INTERNAL_SAMPLE_RATE <= 8000
+	      "8000, "
+	      #endif
+	      "16000 and 48000\n";
       exit(1);
     }
+    AudioIO::setSampleRate(rate);
+    cout << "--- Using sample rate " << rate << "Hz\n";
   }
   
   struct termios org_termios;

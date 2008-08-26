@@ -163,14 +163,13 @@ class SquelchCtcss : public Squelch
 	return false;
       }
       
-      float ctcss_thresh = -5.0;
+      float ctcss_thresh = 10;
       if (cfg.getValue(rx_name, "CTCSS_THRESH", value))
       {
 	ctcss_thresh = atof(value.c_str());
       }
       
-      det = new ToneDetector(ctcss_fq, 1000);
-      det->setFilter("LpBu8/270");
+      det = new ToneDetector(ctcss_fq, 8.0f);
       det->setSnrThresh(ctcss_thresh);
       det->activated.connect(slot(*this, &SquelchCtcss::setOpen));
       

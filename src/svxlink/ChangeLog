@@ -1,6 +1,25 @@
- 0.10.2 -- ?? ??? ????
------------------------
+ 0.11.0 -- ?? ??? 2008
+----------------------
 
+* The SvxLink internal sample rate is now configurable by a compile time
+  define (INTERNAL_SAMPLE_RATE in makefile.cfg).
+
+* The effects volume is now only lowered as long as there are traffic
+  coming into the logic core. Previously, the volume was lowered even
+  after, for example, the squelch had closed. Patch contributed by
+  Steve / DH1DM.
+
+* New DTMF decoder derived from the SpanDSP code. Contribution by
+  Steve / DH1DM.
+
+* New tone detector implementation. Contribution by Steve / DH1DM.
+
+* Increased 1750Hz tone burst detector bandwidth from 25 to 50Hz.
+  Steve / DH1DM.
+
+* Steve also contributed a couple of other improvements, bugfixes
+  and workarounds.
+  
 * Bugfix in CW.tcl: The CW code for 'L' was incorrectly mapped to '..-.'.
 
 * Two new command line options added to SvxLink Server and RemoteTrx:

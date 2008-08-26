@@ -144,8 +144,7 @@ class RepeaterLogic : public Logic
 
   protected:
     virtual void allMsgsWritten(void);
-    virtual void audioStreamIdleStateChange(bool is_idle);
-    //virtual bool getIdleState(void) const;
+    virtual void audioStreamStateChange(bool is_active, bool is_idle);
 
 
   private:
@@ -170,7 +169,6 @@ class RepeaterLogic : public Logic
     int       	    short_sql_open_cnt;
     int       	    sql_flap_sup_min_time;
     int       	    sql_flap_sup_max_cnt;
-    bool      	    audio_stream_idle;
     
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);

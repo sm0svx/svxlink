@@ -143,10 +143,7 @@ void AudioDecimator::processSamples(float *dest, const float *src, int count)
   while (count >= factor_M)
   {
       // shift Z delay line up to make room for next samples
-    for (int tap = H_size - 1; tap >= factor_M; tap--)
-    {
-      p_Z[tap] = p_Z[tap - factor_M];
-    }
+    memmove(p_Z + factor_M, p_Z, (H_size - factor_M) * sizeof(float));
 
       // copy next samples from input buffer to bottom of Z delay line
     for (int tap = factor_M - 1; tap >= 0; tap--)

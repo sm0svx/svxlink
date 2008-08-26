@@ -161,7 +161,7 @@ int update_peak_meter(float *samples, int count)
     {
       peak = abs(sample);
     }
-    if (++tot_count >= 800)
+    if (++tot_count >= INTERNAL_SAMPLE_RATE / 10)
     {
       tot_count = 0;
       plot_win->peak_meter->setProgress(peak);
@@ -185,7 +185,7 @@ int update_peak_meter(float *samples, int count)
 
 int fq_to_k(int N, int fq)
 {
-  int k = (int)(0.5 + fq * (float)N / 8000.0);
+  int k = (int)(0.5 + fq * (float)N / (float)INTERNAL_SAMPLE_RATE);
   //printf("k=%d\n", k);
   return k;
 }
@@ -244,14 +244,18 @@ int main(int argc, char **argv)
   
   for (int k=start_k; k<end_k+1; ++k)
   {
-    det = new Det(k-start_k,k*8000/basetone_N+4000/basetone_N, basetone_N);
+    det = new Det(k - start_k, k * INTERNAL_SAMPLE_RATE / basetone_N +
+      	      	      	       (INTERNAL_SAMPLE_RATE/2) / basetone_N,
+		  basetone_N);
     det->valueChanged.connect(slot(&detValueChanged));
     splitter.addSink(det, true);
   }
   
   for (int k=start_ko; k<end_ko+1; ++k)
   {
-    det = new Det(k-start_ko,k*8000/overtone_N+4000/overtone_N, overtone_N);
+    det = new Det(k - start_ko, k * INTERNAL_SAMPLE_RATE / overtone_N +
+      	      	      	      	(INTERNAL_SAMPLE_RATE/2) / overtone_N,
+		  overtone_N);
     det->valueChanged.connect(slot(&overtoneValueChanged));
     splitter.addSink(det, true);
   }

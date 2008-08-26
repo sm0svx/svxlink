@@ -72,9 +72,11 @@ namespace Async
   class AudioSelector;
   class AudioSource;
   class AudioValve;
+  class AudioPassthrough;
 };
 
 class DtmfEncoder;
+class PttCtrl;
 
 
 /****************************************************************************
@@ -162,15 +164,6 @@ class LocalTx : public Tx
     bool isTransmitting(void) const { return is_transmitting; }
     
     /**
-     * @brief 	Check if audio is currently being written
-     * @return	Returns \em true if audio is being written, else \em false
-     *
-     * Use this function to check if audio is being written to the audio
-     * device or if all audio has been flushed.
-     */
-    //bool isWritingAudio(void) const;
-    
-    /**
      * @brief 	Enable/disable CTCSS on TX
      * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
      */
@@ -184,9 +177,6 @@ class LocalTx : public Tx
     
     
   private:
-    class InputHandler;
-    class PttCtrl;
-    
     std::string       	    name;
     Async::Config     	    &cfg;
     Async::AudioIO    	    *audio_io;
@@ -205,7 +195,7 @@ class LocalTx : public Tx
     DtmfEncoder       	    *dtmf_encoder;
     Async::AudioSelector    *selector;
     Async::AudioValve 	    *dtmf_valve;
-    InputHandler      	    *input_handler;
+    Async::AudioPassthrough *input_handler;
     PttCtrl   	      	    *ptt_ctrl;
     Async::AudioValve 	    *audio_valve;
     

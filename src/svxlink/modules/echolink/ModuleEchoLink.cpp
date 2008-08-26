@@ -54,7 +54,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSplitter.h>
 #include <AsyncAudioValve.h>
 #include <AsyncAudioSelector.h>
-#include <AsyncAudioFifo.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkDispatcher.h>
 
@@ -66,7 +65,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "ModuleEchoLink.h"
-
 
 
 /****************************************************************************
@@ -166,8 +164,6 @@ ModuleEchoLink::~ModuleEchoLink(void)
 
 bool ModuleEchoLink::initialize(void)
 {
-  AudioFifo *output_fifo = 0;
-  
   if (!Module::initialize())
   {
     return false;
@@ -334,12 +330,7 @@ bool ModuleEchoLink::initialize(void)
     // Create audio pipe chain for audio received from the remove EchoLink
     // stations: (QsoImpl -> ) Selector -> Fifo -> <to core>
   selector = new AudioSelector;
-  
-  output_fifo = new AudioFifo(4000);
-  output_fifo->setOverwrite(true);
-  output_fifo->setPrebufSamples(2000);
-  selector->registerSink(output_fifo, true);
-  AudioSource::setHandler(output_fifo);
+  AudioSource::setHandler(selector);
   
   return true;
   
@@ -809,10 +800,11 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->audioReceivedRaw.connect(
       	  slot(*this, &ModuleEchoLink::audioFromRemoteRaw));
   qso->destroyMe.connect(slot(*this, &ModuleEchoLink::destroyQsoObject));
+
   splitter->addSink(qso);
   selector->addSource(qso);
   selector->enableAutoSelect(qso, 0);
-  
+
   if (qsos.size() > max_qsos)
   {
     qso->reject(false);
@@ -1090,6 +1082,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     qso->audioReceivedRaw.connect(
       	    slot(*this, &ModuleEchoLink::audioFromRemoteRaw));
     qso->destroyMe.connect(slot(*this, &ModuleEchoLink::destroyQsoObject));
+
     splitter->addSink(qso);
     selector->addSource(qso);
     selector->enableAutoSelect(qso, 0);

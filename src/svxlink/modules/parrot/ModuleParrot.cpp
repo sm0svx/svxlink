@@ -201,7 +201,7 @@ bool ModuleParrot::initialize(void)
   adapter = new FifoAdapter(this);
   AudioSink::setHandler(adapter);
   
-  fifo = new AudioFifo(atoi(fifo_len.c_str())*8000);
+  fifo = new AudioFifo(atoi(fifo_len.c_str())*INTERNAL_SAMPLE_RATE);
   fifo->setOverwrite(true);
   adapter->registerSink(fifo, true);
   

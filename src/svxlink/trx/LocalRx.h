@@ -72,11 +72,10 @@ namespace Async
   class Config;
   class AudioIO;
   class AudioSplitter;
+  class AudioValve;
 };
 
-//class ToneDurationDet;
 class Squelch;
-class SigCAudioValve;
 
 
 /****************************************************************************
@@ -184,12 +183,12 @@ class LocalRx : public Rx
     Async::Config     	      	&cfg;
     Async::AudioIO    	      	*audio_io;
     bool      	      	      	is_muted;
-    Squelch   	      	      	*squelch;
+    Squelch   	      	      	*squelch_det;
     SigLevDet 	      	      	*siglevdet;
     float     	      	      	siglev_offset;
     float     	      	      	siglev_slope;
     Async::AudioSplitter      	*tone_dets;
-    SigCAudioValve 	      	*sql_valve;
+    Async::AudioValve 	        *sql_valve;
     Async::AudioDelayLine     	*delay;
     bool      	      	      	mute_dtmf;
     int       	      	      	sql_tail_elim;
@@ -198,7 +197,7 @@ class LocalRx : public Rx
     int audioRead(float *samples, int count);
     void dtmfDigitActivated(char digit);
     void dtmfDigitDeactivated(char digit, int duration_ms);
-    void allSamplesFlushed(void);
+    void audioStreamStateChange(bool is_active, bool is_idle);
     void onSquelchOpen(bool is_open);
 
 };  /* class LocalRx */

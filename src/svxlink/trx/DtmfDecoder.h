@@ -222,7 +222,7 @@ class DtmfDecoder : public SigC::Object, public Async::AudioSink
     
     
   private:
-    static const int DEFAULT_HANGTIME = 100;
+    static const int DEFAULT_HANGTIME = 0;
     
     Async::Config   m_cfg;
     std::string     m_name;

@@ -76,6 +76,7 @@ namespace Async
 {
   class Config;
   class AudioPacer;
+  class AudioPassthrough;
 };
 
 
@@ -293,21 +294,22 @@ class QsoImpl
   protected:
     
   private:
-    EchoLink::Qso     	  m_qso;
-    ModuleEchoLink    	  *module;
-    EventHandler      	  *event_handler;
-    MsgHandler	      	  *msg_handler;
-    Async::AudioPacer     *msg_pacer;
-    bool      	      	  init_ok;
-    bool      	      	  reject_qso;
-    std::string       	  last_message;
-    std::string       	  last_info_msg;
-    Async::Timer      	  *idle_timer;
-    bool      	      	  disc_when_done;
-    int       	      	  idle_timer_cnt;
-    int       	      	  idle_timeout;
-    Async::Timer	  *destroy_timer;
-    EchoLink::StationData station;
+    EchoLink::Qso     	    m_qso;
+    ModuleEchoLink    	    *module;
+    EventHandler      	    *event_handler;
+    MsgHandler	      	    *msg_handler;
+    Async::AudioSelector    *output_sel;
+    bool      	      	    init_ok;
+    bool      	      	    reject_qso;
+    std::string       	    last_message;
+    std::string       	    last_info_msg;
+    Async::Timer      	    *idle_timer;
+    bool      	      	    disc_when_done;
+    int       	      	    idle_timer_cnt;
+    int       	      	    idle_timeout;
+    Async::Timer	    *destroy_timer;
+    EchoLink::StationData   station;
+    Async::AudioPassthrough *sink_handler;
     
     void allRemoteMsgsWritten(void);
     void onInfoMsgReceived(const std::string& msg);

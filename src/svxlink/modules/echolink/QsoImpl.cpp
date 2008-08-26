@@ -51,6 +51,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioPacer.h>
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioPassthrough.h>
+#include <AsyncAudioFifo.h>
+#include <AsyncAudioDecimator.h>
+#include <AsyncAudioInterpolator.h>
 #include <AsyncAudioDebugger.h>
 
 #include <MsgHandler.h>
@@ -65,7 +68,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "ModuleEchoLink.h"
 #include "QsoImpl.h"
-
+#include "multirate_filter_coeff.h"
 
 
 /****************************************************************************
@@ -131,12 +134,12 @@ using namespace SigC;
 
 QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   : m_qso(station.ip()), module(module), event_handler(0), msg_handler(0),
-    msg_pacer(0), init_ok(false), reject_qso(false), last_message(""),
+    output_sel(0), init_ok(false), reject_qso(false), last_message(""),
     last_info_msg(""), idle_timer(0), disc_when_done(false), idle_timer_cnt(0),
-    idle_timeout(0), destroy_timer(0), station(station)
+    idle_timeout(0), destroy_timer(0), station(station), sink_handler(0)
 {
   assert(module != 0);
-  
+
   Config &cfg = module->cfg();
   const string &cfg_name = module->cfgName();
   
@@ -182,22 +185,34 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
     idle_timer->expired.connect(slot(*this, &QsoImpl::idleTimeoutCheck));
   }
   
-  AudioPassthrough *sink_handler = new AudioPassthrough;
+  sink_handler = new AudioPassthrough;
   AudioSink::setHandler(sink_handler);
 
-  msg_handler = new MsgHandler(8000);
+  msg_handler = new MsgHandler(INTERNAL_SAMPLE_RATE);
   msg_handler->allMsgsWritten.connect(
       	  slot(*this, &QsoImpl::allRemoteMsgsWritten));
 	  
-  msg_pacer = new AudioPacer(8000, 160*4, 500);
-  msg_handler->registerSink(msg_pacer);
+  AudioPacer *msg_pacer = new AudioPacer(INTERNAL_SAMPLE_RATE,
+      	      	                         160*4*(INTERNAL_SAMPLE_RATE / 8000),
+					 500);
+  msg_handler->registerSink(msg_pacer, true);
+  
+  output_sel = new AudioSelector;
+  output_sel->addSource(sink_handler);
+  output_sel->enableAutoSelect(sink_handler, 0);
+  output_sel->addSource(msg_pacer);
+  output_sel->enableAutoSelect(msg_pacer, 10);
+  AudioSource *prev_src = output_sel;
 
-  AudioSelector *selector = new AudioSelector;
-  selector->addSource(sink_handler);
-  selector->enableAutoSelect(sink_handler, 0);
-  selector->addSource(msg_pacer);
-  selector->enableAutoSelect(msg_pacer, 10);
-  selector->registerSink(&m_qso);
+#if INTERNAL_SAMPLE_RATE == 16000
+  AudioDecimator *down_sampler = new AudioDecimator(
+          2, coeff_16_8, coeff_16_8_taps);
+  prev_src->registerSink(down_sampler, true);
+  prev_src = down_sampler;
+#endif
+
+  prev_src->registerSink(&m_qso);
+  prev_src = 0;
   
   event_handler = new EventHandler(event_handler_script, 0);
   event_handler->playFile.connect(
@@ -221,7 +236,22 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   m_qso.isReceiving.connect(bind(isReceiving.slot(), this));
   m_qso.audioReceivedRaw.connect(bind(audioReceivedRaw.slot(), this));
   
-  AudioSource::setHandler(&m_qso);
+  prev_src = &m_qso;
+  
+  AudioFifo *input_fifo = new AudioFifo(2048);
+  input_fifo->setOverwrite(true);
+  input_fifo->setPrebufSamples(1024);
+  prev_src->registerSink(input_fifo, true);
+  prev_src = input_fifo;
+  
+#if INTERNAL_SAMPLE_RATE == 16000
+  AudioInterpolator *up_sampler = new AudioInterpolator(
+          2, coeff_16_8, coeff_16_8_taps);
+  prev_src->registerSink(up_sampler, true);
+  prev_src = up_sampler;
+#endif
+
+  AudioSource::setHandler(prev_src);
   
   init_ok = true;
   
@@ -230,9 +260,12 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
 
 QsoImpl::~QsoImpl(void)
 {
+  AudioSink::clearHandler();
+  AudioSource::clearHandler();
   delete event_handler;
+  delete output_sel;
   delete msg_handler;
-  delete msg_pacer;
+  delete sink_handler;
   delete idle_timer;
   delete destroy_timer;
 } /* QsoImpl::~QsoImpl */

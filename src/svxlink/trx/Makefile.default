@@ -67,11 +67,11 @@ LIBNAME		= trx
 SHLIB_VERSION	= 
 
 # Sources needed to build the library
-LIBSRC		= ToneDetector.cpp SpanDtmfDecoder.cpp Rx.cpp LocalRx.cpp \
+LIBSRC		= ToneDetector.cpp SwDtmfDecoder.cpp Rx.cpp LocalRx.cpp \
 		  SquelchVox.cpp SigLevDet.cpp NetRx.cpp Voter.cpp \
 		  Tx.cpp LocalTx.cpp DtmfEncoder.cpp NetTx.cpp \
 		  NetTrxTcpClient.cpp DtmfDecoder.cpp HwDtmfDecoder.cpp \
-		  S54sDtmfDecoder.cpp MultiTx.cpp
+		  S54sDtmfDecoder.cpp PttCtrl.cpp MultiTx.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
 LIB_LIBS	= -lc
@@ -223,29 +223,6 @@ LDFLAGS		+=
 install-extras uninstall-extras rpm-extras:
 #	$(DIRSPEC) /var/spool/myprog[755,root,root]
 #	$(FILESPEC) install-extras/myprog.conf[644,root,root] /etc
-
-
-spandsp_tone_report_func_args.h:	/usr/include/spandsp/super_tone_rx.h
-	$(ECHO) --- Creating file $(BOLD)$@$(NBOLD)...
-	awk '/\*tone_report_func_t/ { \
-	       split($$0, A, /\(|\)/); \
-	       ARGS=A[4]; \
-	     } \
-	     END { \
-	       printf "#define SPANDSP_TONE_REPORT_FUNC_ARGS "; \
-	       if (ARGS != "") { \
-	         print ARGS; \
-	       } else { \
-	         print "void *user_data, int code"; \
-	       }; \
-	     }' \
-	     /usr/include/spandsp/super_tone_rx.h > $@
-
-
-clean::
-	$(RM) -f spandsp_tone_report_func_args.h
-
-
 
 #
 # EOF -- This file has not been truncated.

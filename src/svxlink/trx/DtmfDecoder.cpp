@@ -52,7 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "DtmfDecoder.h"
-#include "SpanDtmfDecoder.h"
+#include "SwDtmfDecoder.h"
 #include "S54sDtmfDecoder.h"
 
 
@@ -127,7 +127,7 @@ DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
   
   if (type == "INTERNAL")
   {
-    dec = new SpanDtmfDecoder(cfg, name);
+    dec = new SwDtmfDecoder(cfg, name);
   }
   else if (type == "S54S")
   {

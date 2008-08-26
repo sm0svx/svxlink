@@ -106,7 +106,7 @@ namespace Async
 class EnvelopeDetector
 {
   public:
-    EnvelopeDetector( double ms = 1.0, double sampleRate = 8000.0 )
+    EnvelopeDetector( double ms = 1.0, double sampleRate = INTERNAL_SAMPLE_RATE )
       : sampleRate_( sampleRate ), ms_( ms ), coef_( 0.0 )
     {
       setCoef();

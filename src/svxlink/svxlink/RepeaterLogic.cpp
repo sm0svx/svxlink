@@ -132,7 +132,7 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
     open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false),
     open_on_sql_timer(0), open_sql_flank(SQL_FLANK_CLOSE),
     short_sql_open_cnt(0), sql_flap_sup_min_time(1000),
-    sql_flap_sup_max_cnt(0), audio_stream_idle(true)
+    sql_flap_sup_max_cnt(0)
 {
 } /* RepeaterLogic::RepeaterLogic */
 
@@ -233,7 +233,7 @@ bool RepeaterLogic::initialize(void)
   
   if (required_1750_duration > 0)
   {
-    if (!rx().addToneDetector(1750, 25, -15, required_1750_duration))
+    if (!rx().addToneDetector(1750, 50, 10, required_1750_duration))
     {
       cerr << "*** WARNING: Could not setup 1750 detection\n";
     }
@@ -241,7 +241,7 @@ bool RepeaterLogic::initialize(void)
   
   if ((open_on_ctcss_fq > 0) && (open_on_ctcss_duration > 0))
   {
-    if (!rx().addToneDetector(open_on_ctcss_fq, 8, -5, open_on_ctcss_duration))
+    if (!rx().addToneDetector(open_on_ctcss_fq, 8, 10, open_on_ctcss_duration))
     {
       cerr << "*** WARNING: Could not setup CTCSS tone detection\n";
     }
@@ -319,22 +319,16 @@ void RepeaterLogic::allMsgsWritten(void)
 } /* RepeaterLogic::allMsgsWritten */
 
 
-void RepeaterLogic::audioStreamIdleStateChange(bool is_idle)
+void RepeaterLogic::audioStreamStateChange(bool is_active, bool is_idle)
 {
-  /*
-  printf("RepeaterLogic::audioStreamIdleStateChange: is_idle=%s\n",
-      	  is_idle ? "TRUE" : "FALSE");
-  */
-  
-  audio_stream_idle = is_idle;
   if (!repeater_is_up && !is_idle)
   {
     setUp(true);
   }
 
-  Logic::audioStreamIdleStateChange(is_idle);
+  Logic::audioStreamStateChange(is_active, is_idle);
   
-} /* Logic::audioStreamIdleStateChange */
+} /* Logic::audioStreamStateChange */
 
 
 #if 0
