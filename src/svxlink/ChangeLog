@@ -25,6 +25,9 @@
 * Two new command line options added to SvxLink Server and RemoteTrx:
   --pidfile and --runasuser.
 
+* The detection bandwidth for CTCSS repeater open have been narrowed
+  down from 8 Hz to 4 Hz.
+
 
 
  0.10.1 -- 30 Jul 2008

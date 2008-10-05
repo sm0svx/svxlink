@@ -241,7 +241,7 @@ bool RepeaterLogic::initialize(void)
   
   if ((open_on_ctcss_fq > 0) && (open_on_ctcss_duration > 0))
   {
-    if (!rx().addToneDetector(open_on_ctcss_fq, 8, 10, open_on_ctcss_duration))
+    if (!rx().addToneDetector(open_on_ctcss_fq, 4, 10, open_on_ctcss_duration))
     {
       cerr << "*** WARNING: Could not setup CTCSS tone detection\n";
     }
