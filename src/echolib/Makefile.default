@@ -72,7 +72,7 @@ LIBNAME		= echolib
 SHLIB_VERSION	= $(ECHOLIB)
 
 # Sources needed to build the library
-LIBSRC		= EchoLinkDirectory.cpp EchoLinkQso.cpp rtpacket.c \
+LIBSRC		= EchoLinkDirectory.cpp EchoLinkQso.cpp rtpacket.cpp \
       	      	  EchoLinkDispatcher.cpp EchoLinkStationData.cpp
 
 # Which libs are used by the DYNAMIC lib generated.

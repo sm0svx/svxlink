@@ -289,18 +289,11 @@ void Dispatcher::ctrlDataReceived(const IpAddress& ip, void *buf, int len)
   {
     if(isRTCPSdespacket(recv_buf, len)) // May be an incoming connection
     {
-      struct rtcp_sdes_request sdes_items;
-      sdes_items.nitems = 1;
-      sdes_items.item[0].r_item = RTCP_SDES_NAME;
-      sdes_items.item[0].r_text = NULL;
-      parseSDES(recv_buf, &sdes_items);
-      if(sdes_items.item[0].r_text != NULL)
+      char remote_id[256];
+      if(parseSDES(remote_id, recv_buf, RTCP_SDES_NAME))
       {
-	char remote_id[40];
-	remote_id[0] = 0;
-	copySDESitem(sdes_items.item[0].r_text, remote_id);
 	//printData(remote_id, strlen(remote_id));
-	char strtok_buf[40];
+	char strtok_buf[256];
 	char *strtok_buf_ptr = strtok_buf;
 	char *remote_call = strtok_r(remote_id, " \t\n\r", &strtok_buf_ptr);
 	const char *remote_name = strtok_r(NULL, " \t\n\r", &strtok_buf_ptr);

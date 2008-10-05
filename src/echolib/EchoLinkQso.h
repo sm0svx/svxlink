@@ -469,7 +469,7 @@ class Qso
     static const int  	SEND_BUFFER_SIZE      	= 4*160; // Four 20ms GSM frames
   
     bool      	      	init_ok;
-    char *    	      	sdes_packet;
+    unsigned char      	sdes_packet[1500];
     int       	      	sdes_length;
     State     	      	state;
     gsm       	      	gsmh;

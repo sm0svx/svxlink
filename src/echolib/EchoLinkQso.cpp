@@ -138,7 +138,7 @@ using namespace EchoLink;
  */
 Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
       	 const string& info)
-  : init_ok(false),   	      	sdes_packet(0),       state(STATE_DISCONNECTED),
+  : init_ok(false),   	      	state(STATE_DISCONNECTED),
     gsmh(0),  	      	      	next_audio_seq(0),    keep_alive_timer(0),
     con_timeout_timer(0),     	callsign(callsign),   name(name),
     local_stn_info(info),     	send_buffer_cnt(0),   remote_ip(addr),
@@ -188,11 +188,6 @@ Qso::~Qso(void)
   gsm_destroy(gsmh);
   gsmh = 0;
   
-  if (sdes_packet != 0)
-  {
-    free(sdes_packet);
-  }
-  
   if (init_ok)
   {
     Dispatcher::instance()->unregisterConnection(this);
@@ -206,12 +201,7 @@ bool Qso::setLocalCallsign(const std::string& callsign)
   this->callsign.resize(callsign.size());
   transform(callsign.begin(), callsign.end(), this->callsign.begin(),
       	   ::toupper);
-  if (sdes_packet != 0)
-  {
-    free(sdes_packet);
-    sdes_packet = 0;
-  }
-  sdes_length = rtp_make_sdes(&sdes_packet, 0, 1, callsign.c_str(),
+  sdes_length = rtp_make_sdes(sdes_packet, 0, callsign.c_str(),
       name.c_str());
   if(sdes_length <= 0)
   {
@@ -227,12 +217,7 @@ bool Qso::setLocalCallsign(const std::string& callsign)
 bool Qso::setLocalName(const std::string& name)
 {
   this->name = name;
-  if (sdes_packet != 0)
-  {
-    free(sdes_packet);
-    sdes_packet = 0;
-  }
-  sdes_length = rtp_make_sdes(&sdes_packet, 0, 1, callsign.c_str(),
+  sdes_length = rtp_make_sdes(sdes_packet, 0, callsign.c_str(),
       name.c_str());
   if(sdes_length <= 0)
   {
@@ -614,18 +599,11 @@ inline void Qso::handleByePacket(unsigned char *buf, int len)
 
 inline void Qso::handleSdesPacket(unsigned char *buf, int len)
 {
-  struct rtcp_sdes_request sdes_items;
-  sdes_items.nitems = 1;
-  sdes_items.item[0].r_item = RTCP_SDES_NAME;
-  sdes_items.item[0].r_text = NULL;
-  parseSDES(buf, &sdes_items);
-  if(sdes_items.item[0].r_text != NULL)
+  char remote_id[256];
+  if(parseSDES(remote_id, buf, RTCP_SDES_NAME))
   {
-    char remote_id[40];
-    remote_id[0] = 0;
-    copySDESitem(sdes_items.item[0].r_text, remote_id);
     //printData(remote_id, strlen(remote_id));
-    char strtok_buf[40];
+    char strtok_buf[256];
     char *strtok_buf_ptr = strtok_buf;
     char *remote_call_str = strtok_r(remote_id, " \t\n\r", &strtok_buf_ptr);
     const char *remote_name_str = strtok_r(NULL, " \t\n\r", &strtok_buf_ptr);
@@ -922,8 +900,8 @@ void Qso::checkRxActivity(Timer *timer)
 
 bool Qso::sendByePacket(void)
 {
-  unsigned char bye[50];
-  int length = rtp_make_bye(bye, 0, "jan2002", 1);
+  unsigned char bye[64];
+  int length = rtp_make_bye(bye, 0, "jan2002");
   int ret = Dispatcher::instance()->sendCtrlMsg(remote_ip, bye, length);
   if (ret == -1)
   {
