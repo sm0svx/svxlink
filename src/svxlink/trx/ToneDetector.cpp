@@ -48,8 +48,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioFilter.h>
-#include <SigCAudioSink.h>
 
 
 /****************************************************************************
@@ -138,22 +136,28 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 ToneDetector::ToneDetector(float tone_hz, float width_hz)
-  : current_sample(0), is_activated(false), tone_fq(tone_hz), N(0),
+  : current_sample(0), is_activated(false), tone_fq(tone_hz), block_len(0),
     det_delay_left(DEFAULT_DET_DELAY), undet_delay_left(0),
     peak_thresh(DEFAULT_PEAK_THRESH)
 {
+  // The Goertzel algorithm is just a recursive way to evaluate the DFT at a
+  // single frequency. For maximum detection reliability, the bandwidth will
+  // be adapted to place the tone frequency near the center of the DFT.
+  // As a side effect, the detection bandwidth is slightly narrowed, which
+  // however is acceptable for the current use cases (CTCSS, 1750Hz, etc..).
+
+  /* Calculate the DFT center index */
+  float idx = tone_hz / width_hz;
+  /* Adjust the bandwidth to minimize the DFT error */
+  width_hz *= idx / ceilf(idx);
+  /* Block length */
+  block_len = (int)(INTERNAL_SAMPLE_RATE / width_hz);
   /* Center frequency */
   goertzelInit(&center, tone_hz, INTERNAL_SAMPLE_RATE);
   /* Lower frequency */
-  goertzelInit(&lower, tone_hz-2*width_hz, INTERNAL_SAMPLE_RATE);
+  goertzelInit(&lower, tone_hz - 2 * width_hz, INTERNAL_SAMPLE_RATE);
   /* Upper frequency */
-  goertzelInit(&upper, tone_hz+2*width_hz, INTERNAL_SAMPLE_RATE);
-  /* Block length */
-  N = (int)(INTERNAL_SAMPLE_RATE / width_hz);
-
-  goertzelReset(&center);
-  goertzelReset(&lower);
-  goertzelReset(&upper);
+  goertzelInit(&upper, tone_hz + 2 * width_hz, INTERNAL_SAMPLE_RATE);
 
 } /* ToneDetector::ToneDetector */
 
@@ -174,38 +178,25 @@ int ToneDetector::writeSamples(const float *buf, int len)
 {
   float famp;
   float v1;
-  int sample;
-  int limit;
-  int i;
 
   /* divide buffer into blocks */
-  for (sample = 0;  sample < len;  sample = limit)
+  for (int i = 0;  i < len;  i++)
   {
-    if ((len - sample) >= (N - current_sample))
-      limit = sample + (N - current_sample);
-    else
-      limit = len;
+    famp = *(buf++);
+    /* Center frequency */
+    v1 = center.v2;
+    center.v2 = center.v3;
+    center.v3 = center.fac * center.v2 - v1 + famp;
+    /* Lower frequency */
+    v1 = lower.v2;
+    lower.v2 = lower.v3;
+    lower.v3 = lower.fac * lower.v2 - v1 + famp;
+    /* Upper frequency */
+    v1 = upper.v2;
+    upper.v2 = upper.v3;
+    upper.v3 = upper.fac * upper.v2 - v1 + famp;
 
-    /* process the block */
-    for (i = sample;  i < limit;  i++)
-    {
-      famp = buf[i];
-      /* Center frequency */
-      v1 = center.v2;
-      center.v2 = center.v3;
-      center.v3 = center.fac * center.v2 - v1 + famp;
-      /* Lower frequency */
-      v1 = lower.v2;
-      lower.v2 = lower.v3;
-      lower.v3 = lower.fac * lower.v2 - v1 + famp;
-      /* Upper frequency */
-      v1 = upper.v2;
-      upper.v2 = upper.v3;
-      upper.v3 = upper.fac * upper.v2 - v1 + famp;
-    }
-
-    current_sample += (limit - sample);
-    if (current_sample < N)
+    if (++current_sample < block_len)
       continue;
 
     /* Center frequency */
@@ -220,8 +211,7 @@ int ToneDetector::writeSamples(const float *buf, int len)
     {
       if (det_delay_left > 0)
       {
-      	--det_delay_left;
-	if (det_delay_left == 0)
+	if (--det_delay_left == 0)
 	{
 	  is_activated = true;
 	  activated(true);
@@ -236,8 +226,7 @@ int ToneDetector::writeSamples(const float *buf, int len)
     {
       if (undet_delay_left > 0)
       {
-        --undet_delay_left;
-        if (undet_delay_left == 0)
+        if (--undet_delay_left == 0)
         {
 	  is_activated = false;
 	  activated(false);
@@ -283,14 +272,10 @@ int ToneDetector::writeSamples(const float *buf, int len)
 
 void ToneDetector::goertzelInit(GoertzelState *s, float freq, int sample_rate)
 {
-    s->v2 = s->v3 = 0.0;
     s->fac = 2.0f * cosf(2.0f * M_PI * (freq / (float)sample_rate));
+    goertzelReset(s);
 }
 
-void ToneDetector::goertzelReset(GoertzelState *s)
-{
-    s->v2 = s->v3 = 0.0;
-}
 
 float ToneDetector::goertzelResult(GoertzelState *s)
 {

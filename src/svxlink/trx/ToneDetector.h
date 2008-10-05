@@ -63,11 +63,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class AudioFilter;
-  class SigCAudioSink;
-};
 
 
 /****************************************************************************
@@ -155,7 +150,7 @@ class ToneDetector : public SigC::Object, public Async::AudioSink
     } GoertzelState;
 
     void goertzelInit(GoertzelState *s, float freq, int sample_rate);
-    void goertzelReset(GoertzelState *s);
+    void goertzelReset(GoertzelState *s) { s->v2 = s->v3 = 0.0; };
     float goertzelResult(GoertzelState *s);
 
     GoertzelState      center;
@@ -165,7 +160,7 @@ class ToneDetector : public SigC::Object, public Async::AudioSink
     int       	       current_sample;
     int       	       is_activated;
     float              tone_fq;
-    int       	       N;
+    int       	       block_len;
     int       	       det_delay_left;
     int       	       undet_delay_left;
     float     	       peak_thresh;
