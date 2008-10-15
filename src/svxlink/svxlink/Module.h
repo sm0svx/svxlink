@@ -350,20 +350,6 @@ class Module : public SigC::Object, public Async::AudioSink,
      */
     virtual void squelchOpen(bool is_open) {}
     
-    #if 0
-    /**
-     * @brief 	Tell the module that audio has been received from the receiver
-     * @param 	samples A buffer containing the samples
-     * @param 	count 	The number of samples received
-     * @return	Returns the number of samples that has been taken care of
-     *
-     * This function is called by the logic core when some audio has been
-     * received from the radio receiver. The samples are 16 bit signed samples.
-     * This function will only be called if this module is active.
-     */
-    virtual int audioFromRx(float *samples, int count) { return count; }
-    #endif
-    
     /**
      * @brief 	Tell the module that all announcement messages has been played
      *
@@ -425,37 +411,6 @@ class Module : public SigC::Object, public Async::AudioSink,
     
     
   protected:
-    #if 0
-    /**
-     * @brief 	Called by the module to send audio over the transmitter
-     * @param 	samples A buffer containing samples (16 bit signed)
-     * @param 	count The number of samples in the buffer
-     * @return	Returns the number samples that have been handled by the
-     *	      	logic core
-     *
-     * This function can be called by the module to transmit audio over the
-     * radio channel. The transmitter must be activated/deactivated using the
-     * "transmit" function.
-     * The module must be active for this function to do anything.
-     */
-    int audioFromModule(float *samples, int count);
-    
-    /**
-     * @brief 	Called by the module to activate/deactivate the transmitter
-     * @param 	tx \em True activates the transmitter and \em false turns it off
-     *
-     * This function can be called by the module to tell the logic core to
-     * activate/deactivate the transmitter. The transmitter will not be
-     * deactivated until all audio has been transmitted. Note that this function
-     * just gives a hint to the logic core if the module want the transmitter
-     * to be active or not. If the logic core thinks that the transmitter should
-     * not be active (e.g. TX timeout) or always active (repeater) it will
-     * override this function.
-     * The module must be active for this function to do anything.
-     */
-    void transmit(bool tx);
-    #endif
-    
     /**
      * @brief 	Called by the module to activate itself
      * @return	Returns \em true if the activation went ok or else \em false is

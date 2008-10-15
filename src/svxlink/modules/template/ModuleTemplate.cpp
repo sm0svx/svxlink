@@ -320,27 +320,6 @@ void ModuleTemplate::squelchOpen(bool is_open)
 
 /*
  *----------------------------------------------------------------------------
- * Method:    audioFromRx
- * Purpose:   Called by the core system when audio has been received from
- *    	      the receiver. The samples are 16 bit signed samples. The
- *    	      function will only be called if the module is active.
- * Input:     samples - A buffer containing the received samples
- *    	      count   - The number of samples in the buffer
- * Output:    Return the number of processed samples
- * Author:    Tobias Blomberg / SM0SVX
- * Created:   2005-08-28
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-int ModuleTemplate::audioFromRx(short *samples, int count)
-{
-  return count;
-} /* audioFromRx */
-
-
-/*
- *----------------------------------------------------------------------------
  * Method:    allMsgsWritten
  * Purpose:   Called by the core system when all announcement messages has
  *    	      been played. Note that this function also may be called even

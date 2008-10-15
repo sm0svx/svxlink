@@ -126,7 +126,6 @@ class ModuleTemplate : public Module
     bool dtmfDigitReceived(char digit, int duration);
     void dtmfCmdReceived(const std::string& cmd);
     void squelchOpen(bool is_open);
-    int audioFromRx(short *samples, int count);
     void allMsgsWritten(void);
     void reportState(void);
 
