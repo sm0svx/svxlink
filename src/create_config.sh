@@ -10,6 +10,12 @@ output()
   echo $1 >> $OUTPUT_FILE
 }
 
+exit_error()
+{
+  rm -f $OUTPUT_FILE
+  exit 1
+}
+
 if [ $# -lt 1 ]; then
   echo "Usage: $0 <output file>"
   exit 1
@@ -54,31 +60,6 @@ else
   output "ECHO=/bin/echo -e"
 fi
 
-# Check for KDE
-#info "--- Checking for KDE..."
-#if [ "${KDEDIR}" != "" ]; then
-#  if [ -r "${KDEDIR}/include/kde/kdeversion.h" ]; then
-#    KDEINC=${KDEDIR}/include/kde
-#    KDE_VERSION_INC=${KDEINC}/kdeversion.h
-#  elif [ -r "${KDEDIR}/include/kapp.h" ]; then
-#    KDEINC=${KDEDIR}/include
-#    KDE_VERSION_INC=${KDEINC}/kapp.h
-#  elif [ -r "${KDEDIR}/include/kde/kapp.h" ]; then
-#    KDEINC=${KDEDIR}/include/kde
-#    KDE_VERSION_INC=${KDEINC}/kapp.h
-#  fi
-#  if [ "${KDEINC}" != "" ]; then
-#    KDE_VERSION_MAJOR=$(awk '/#define KDE_VERSION_MAJOR/ { print $3; }' ${KDE_VERSION_INC})
-#    output "KDE_VERSION_MAJOR=$KDE_VERSION_MAJOR"
-#    output "CFLAGS_DEFINES+=-DKDE_VERSION_MAJOR=$KDE_VERSION_MAJOR"
-#    info "yes (version=$KDE_VERSION_MAJOR)\n"
-#  else
-#    info "no\n"
-#  fi
-#else
-#  info "no\n"
-#fi
-
 # Checking for QT
 info "--- Checking for QT..."
 if which pkg-config > /dev/null 2>&1; then
@@ -116,7 +97,7 @@ if [ -n "$QT_PREFIX" ]; then
   output "QT_MOC=${QT_BIN}/moc"
   output "QT_UIC=${QT_BIN}/uic"
 else
-  info "no\n"
+  info "no (optional)\n"
 fi
 
 # Checking for libsigc++
@@ -129,12 +110,12 @@ if which pkg-config > /dev/null 2>&1; then
     output "SIGC_LIBS=$(pkg-config sigc++-$sigc_version --libs-only-l)"
     output "SIGC_INCPATH=$(pkg-config sigc++-$sigc_version --cflags-only-I)"
   else
-    info "no\n"
-    exit 1
+    info "no (required)\n"
+    exit_error
   fi
 else
-  info "no\n"
-  exit 1
+  info "no (required)\n"
+  exit_error
 fi
 
 # Checking for tcl development library
@@ -146,9 +127,41 @@ if [ -n "$tclConfig" -a -r "$tclConfig" ]; then
   info "${TCL_VERSION}\n"
   output "TCL_LIBS=-ltcl${TCL_VERSION}"
 else
-  info "no\n"
-  exit 1
+  info "no (required)\n"
+  exit_error
 fi
+
+# Checking for speex
+info "--- Checking for speex..."
+if which pkg-config > /dev/null 2>&1; then
+  if pkg-config speex; then
+    ver=$(pkg-config speex --modversion)
+    ver_major=$(echo $ver | sed -r 's/^([0-9]+)\..*$/\1/')
+    ver_minor=$(echo $ver | sed -r 's/^([0-9]+)\.([0-9]+).*$/\2/')
+    info "$ver\n"
+    output "SPEEX_LIBPATH=$(pkg-config speex --libs-only-L)"
+    output "SPEEX_LIBS=$(pkg-config speex --libs-only-l)"
+    output "SPEEX_INCPATH=$(pkg-config speex --cflags-only-I)"
+    output "CFLAGS_DEFINES+=-DSPEEX_MAJOR=$ver_major -DSPEEX_MINOR=$ver_minor"
+    output "USE_SPEEX=1"
+  else
+    info "no (optional)\n"
+  fi
+else
+  info "no (optional)\n"
+fi
+
+# Checking for libgcrypt
+info "--- Checking for libgcrypt..."
+if which libgcrypt-config > /dev/null 2>&1; then
+  info "$(libgcrypt-config --version)\n"
+  output "GCRYPT_LIBS=$(libgcrypt-config --libs)"
+  output "CFLAGS+=$(libgcrypt-config --cflags)"
+else
+  info "no (required)\n"
+  exit_error
+fi
+
 
 exit 0
 

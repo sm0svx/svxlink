@@ -1,11 +1,11 @@
 /**
-@file	 NetTx.h
-@brief   Contains a class that connect to a remote transmitter via IP
+@file	 AsyncAudioEncoderGsm.h
+@brief   An audio encoder that encodes to GSM
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-03-09
+@date	 2008-10-15
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Async - A library for programming event driven applications
 Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -24,9 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-#ifndef NET_TX_INCLUDED
-#define NET_TX_INCLUDED
+#ifndef ASYNC_AUDIO_ENCODER_GSM_INCLUDED
+#define ASYNC_AUDIO_ENCODER_GSM_INCLUDED
 
 
 /****************************************************************************
@@ -35,9 +34,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
+extern "C" {
+#include <gsm.h>
+}
 
-#include <string>
 
 
 /****************************************************************************
@@ -46,8 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncConfig.h>
-#include <AsyncTcpClient.h>
+#include <AsyncAudioEncoder.h>
 
 
 /****************************************************************************
@@ -56,7 +55,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Tx.h"
 
 
 /****************************************************************************
@@ -65,17 +63,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace NetTrxMsg
-{
-  class Msg;
-};
-
-namespace Async
-{
-  class AudioPacer;
-  class SigCAudioSink;
-  class AudioEncoder;
-};
 
 
 /****************************************************************************
@@ -84,8 +71,8 @@ namespace Async
  *
  ****************************************************************************/
 
-//namespace MyNameSpace
-//{
+namespace Async
+{
 
 
 /****************************************************************************
@@ -94,8 +81,7 @@ namespace Async
  *
  ****************************************************************************/
 
-class NetTrxTcpClient;
-
+  
 
 /****************************************************************************
  *
@@ -120,90 +106,73 @@ class NetTrxTcpClient;
  ****************************************************************************/
 
 /**
-@brief	Implements a class that connect to a remote transmitter via IP
+@brief	An audio encoder that encodes to GSM
 @author Tobias Blomberg / SM0SVX
-@date   2008-03-09
+@date   2008-10-15
+
+This class implements an audio encoder that converts the native sample
+format to GSM audio blocks.
 */
-class NetTx : public Tx
+class AudioEncoderGsm : public AudioEncoder
 {
   public:
     /**
-     * @brief 	Constuctor
-     * @param 	cfg   The configuration object to use
-     * @param 	name  The name of the configuration section to use
+     * @brief 	Default constuctor
      */
-    NetTx(Async::Config& cfg, const std::string& name);
+    AudioEncoderGsm(void);
   
     /**
      * @brief 	Destructor
      */
-    virtual ~NetTx(void);
+    virtual ~AudioEncoderGsm(void);
   
     /**
-     * @brief 	Initialize the transmitter object
-     * @return 	Return \em true on success, or \em false on failure
+     * @brief   Get the name of the codec
+     * @returns Return the name of the codec
      */
-    virtual bool initialize(void);
+    virtual const char *name(void) const { return "GSM"; }
   
     /**
-     * @brief 	Set the transmit control mode
-     * @param 	mode The mode to use to set the transmitter on or off.
+     * @brief 	A_brief_member_function_description
+     * @param 	param1 Description_of_param1
+     * @return	Return_value_of_this_member_function
+     */
+    
+    
+    /**
+     * @brief 	Write samples into this audio sink
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
      *
-     * Use this function to turn the transmitter on (TX_ON) or off (TX__OFF).
-     * There is also a third mode (TX_AUTO) that will automatically turn the
-     * transmitter on when there is audio to transmit.
+     * This function is used to write audio into this audio sink. If it
+     * returns 0, no more samples should be written until the resumeOutput
+     * function in the source have been called.
+     * This function is normally only called from a connected source object.
      */
-    virtual void setTxCtrlMode(TxCtrlMode mode);
+    virtual int writeSamples(const float *samples, int count);
     
-    /**
-     * @brief 	Check if the transmitter is transmitting
-     * @return	Return \em true if transmitting or else \em false
-     */
-    virtual bool isTransmitting(void) const;
     
-    /**
-     * @brief 	Enable/disable CTCSS on TX
-     * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
-     */
-    virtual void enableCtcss(bool enable);
-    
-    /**
-     * @brief 	Send a string of DTMF digits
-     * @param 	digits	The digits to send
-     */
-    virtual void sendDtmf(const std::string& digits);
-    
-
   protected:
-
-  private:
-    Async::Config     	  &cfg;
-    std::string       	  name;
-    NetTrxTcpClient   	  *tcp_con;
-    bool      	      	  is_transmitting;
-    Tx::TxCtrlMode    	  mode;
-    bool      	      	  ctcss_enable;
-    Async::AudioPacer 	  *pacer;
-    bool      	      	  is_connected;
-    bool      	      	  pending_flush;
-    bool      	      	  unflushed_samples;
-    Async::AudioEncoder   *audio_enc;
     
-    void connectionReady(bool is_ready);
-    void handleMsg(NetTrxMsg::Msg *msg);
-    void sendMsg(NetTrxMsg::Msg *msg);
-    void writeEncodedSamples(const void *buf, int size);
-    void flushEncodedSamples(void);
-    void setIsTransmitting(bool is_transmitting);
-    void allEncodedSamplesFlushed(void);
+  private:
+    static const int FRAME_SAMPLE_CNT = 160;
+    static const int FRAME_COUNT      = 4;
+    static const int GSM_BUF_SIZE     = FRAME_COUNT * FRAME_SAMPLE_CNT;
+    
+    gsm         gsmh;
+    gsm_signal  gsm_buf[GSM_BUF_SIZE];
+    int         gsm_buf_len;
+    
+    AudioEncoderGsm(const AudioEncoderGsm&);
+    AudioEncoderGsm& operator=(const AudioEncoderGsm&);
+    
+};  /* class AudioEncoderGsm */
 
 
-};  /* class NetTx */
+} /* namespace */
 
-
-//} /* namespace */
-
-#endif /* NET_TX_INCLUDED */
+#endif /* ASYNC_AUDIO_ENCODER_GSM_INCLUDED */
 
 
 

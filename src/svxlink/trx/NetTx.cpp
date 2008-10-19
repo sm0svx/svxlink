@@ -47,6 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 #include <AsyncAudioPacer.h>
 #include <SigCAudioSink.h>
+#include <AsyncAudioEncoder.h>
 
 
 /****************************************************************************
@@ -121,7 +122,7 @@ using namespace NetTrxMsg;
 NetTx::NetTx(Config &cfg, const string& name)
   : cfg(cfg), name(name), tcp_con(0), is_transmitting(false),
     mode(Tx::TX_OFF), ctcss_enable(false), pacer(0), is_connected(false),
-    sigc_sink(0), pending_flush(false), unflushed_samples(false)
+    pending_flush(false), unflushed_samples(false), audio_enc(0)
 {
 } /* NetTx::NetTx */
 
@@ -129,6 +130,7 @@ NetTx::NetTx(Config &cfg, const string& name)
 NetTx::~NetTx(void)
 {
   clearHandler();
+  delete audio_enc;
   delete pacer;
   tcp_con->deleteInstance();
 } /* NetTx::~NetTx */
@@ -149,19 +151,48 @@ bool NetTx::initialize(void)
   string udp_port(NET_TRX_DEFAULT_UDP_PORT);
   cfg.getValue(name, "UDP_PORT", udp_port);
   
-  tcp_con = NetTrxTcpClient::instance(host, atoi(tcp_port.c_str()));
-  tcp_con->connected.connect(slot(*this, &NetTx::tcpConnected));
-  tcp_con->disconnected.connect(slot(*this, &NetTx::tcpDisconnected));
-  tcp_con->msgReceived.connect(slot(*this, &NetTx::handleMsg));
-  tcp_con->connect();
+  string audio_enc_name;
+  cfg.getValue(name, "CODEC", audio_enc_name);
+  if (audio_enc_name.empty())
+  {
+    audio_enc_name = "RAW";
+  }
   
   pacer = new AudioPacer(INTERNAL_SAMPLE_RATE, 512, 50);
   setHandler(pacer);
   
-  sigc_sink = new SigCAudioSink;
-  sigc_sink->sigWriteSamples.connect(slot(*this, &NetTx::sendAudio));
-  sigc_sink->sigFlushSamples.connect(slot(*this, &NetTx::sendFlush));
-  pacer->registerSink(sigc_sink, true);
+  audio_enc = AudioEncoder::create(audio_enc_name);
+  if (audio_enc == 0)
+  {
+    cerr << name << ": *** ERROR: Illegal audio codec (" << audio_enc_name
+          << ") specified\n";
+    return false;
+  }
+  audio_enc->writeEncodedSamples.connect(
+          slot(*this, &NetTx::writeEncodedSamples));
+  audio_enc->flushEncodedSamples.connect(
+          slot(*this, &NetTx::flushEncodedSamples));
+  string opt_prefix(audio_enc->name());
+  opt_prefix += "_ENC_";
+  list<string> names = cfg.listSection(name);
+  list<string>::const_iterator nit;
+  for (nit=names.begin(); nit!=names.end(); ++nit)
+  {
+    if ((*nit).find(opt_prefix) == 0)
+    {
+      string opt_value;
+      cfg.getValue(name, *nit, opt_value);
+      string opt_name((*nit).substr(opt_prefix.size()));
+      audio_enc->setOption(opt_name, opt_value);
+    }
+  }
+  audio_enc->printCodecParams();
+  pacer->registerSink(audio_enc);
+  
+  tcp_con = NetTrxTcpClient::instance(host, atoi(tcp_port.c_str()));
+  tcp_con->isReady.connect(slot(*this, &NetTx::connectionReady));
+  tcp_con->msgReceived.connect(slot(*this, &NetTx::handleMsg));
+  tcp_con->connect();
   
   return true;
   
@@ -230,37 +261,54 @@ void NetTx::sendDtmf(const std::string& digits)
  *
  ****************************************************************************/
 
-void NetTx::tcpConnected(void)
+void NetTx::connectionReady(bool is_ready)
 {
-  cout << name << ": Connected to remote transmitter at "
-       << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << "\n";
-  
-  is_connected = true;
-  
-  MsgSetTxCtrlMode *mode_msg = new MsgSetTxCtrlMode(mode);
-  sendMsg(mode_msg);
-  
-  MsgEnableCtcss *ctcss_msg = new MsgEnableCtcss(ctcss_enable);
-  sendMsg(ctcss_msg);
-  
-} /* NetTx::tcpConnected */
-
-
-void NetTx::tcpDisconnected(TcpConnection *con,
-      	      	      	    TcpConnection::DisconnectReason reason)
-{
-  cout << name << ": Disconnected from remote transmitter at "
-       << con->remoteHost() << ":" << con->remotePort()
-       << ": " << TcpConnection::disconnectReasonStr(reason) << "\n";
-  
-  is_connected = false;
-
-  if (pending_flush)
+  if (is_ready)
   {
-    allSamplesFlushed();
+    cout << name << ": Connected to remote transmitter at "
+        << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << "\n";
+    
+    is_connected = true;
+    
+    MsgSetTxCtrlMode *mode_msg = new MsgSetTxCtrlMode(mode);
+    sendMsg(mode_msg);
+    
+    MsgEnableCtcss *ctcss_msg = new MsgEnableCtcss(ctcss_enable);
+    sendMsg(ctcss_msg);
+    
+    MsgAudioCodecSelect *msg = new MsgTxAudioCodecSelect(audio_enc->name());
+    cout << name << ": Requesting CODEC \"" << msg->name() << "\"\n";
+    string opt_prefix(audio_enc->name());
+    opt_prefix += "_DEC_";
+    list<string> names = cfg.listSection(name);
+    list<string>::const_iterator nit;
+    for (nit=names.begin(); nit!=names.end(); ++nit)
+    {
+      if ((*nit).find(opt_prefix) == 0)
+      {
+	string opt_value;
+	cfg.getValue(name, *nit, opt_value);
+	string opt_name((*nit).substr(opt_prefix.size()));
+	msg->addOption(opt_name, opt_value);
+      }
+    }
+    sendMsg(msg);
   }
-
-} /* NetTx::tcpDisconnected */
+  else
+  {
+    cout << name << ": Disconnected from remote transmitter at "
+        << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << ": "
+        << TcpConnection::disconnectReasonStr(tcp_con->disconnectReason())
+        << "\n";
+    
+    is_connected = false;
+  
+    if (pending_flush)
+    {
+      allEncodedSamplesFlushed();
+    }
+  }
+}
 
 
 void NetTx::handleMsg(Msg *msg)
@@ -283,13 +331,13 @@ void NetTx::handleMsg(Msg *msg)
     
     case MsgAllSamplesFlushed::TYPE:
     {
-      allSamplesFlushed();
+      allEncodedSamplesFlushed();
       break;
     }
     
     /*
     default:
-      cerr << "*** ERROR: Unknown TCP message received. Type="
+      cerr << name << ": *** ERROR: Unknown TCP message received. Type="
       	   << msg->type() << ", Size=" << msg->size() << endl;
       break;
     */
@@ -304,21 +352,23 @@ void NetTx::sendMsg(Msg *msg)
 } /* NetUplink::sendMsg */
 
 
-int NetTx::sendAudio(float *samples, int count)
+void NetTx::writeEncodedSamples(const void *buf, int size)
 {
-  assert(count > 0);
-  if (count > MsgAudio::MAX_COUNT)
-  {
-    count = MsgAudio::MAX_COUNT;
-  }
-  
   pending_flush = false;
   unflushed_samples = true;
   
   if (is_connected)
   {
-    MsgAudio *msg = new MsgAudio(samples, count);
-    sendMsg(msg);
+    const char *ptr = reinterpret_cast<const char *>(buf);
+    while (size > 0)
+    {
+      const int bufsize = MsgAudio::BUFSIZE;
+      int len = min(size, bufsize);
+      MsgAudio *msg = new MsgAudio(ptr, len);
+      sendMsg(msg);
+      size -= len;
+      ptr += len;
+    }
   }
   else
   {
@@ -327,13 +377,10 @@ int NetTx::sendAudio(float *samples, int count)
       setIsTransmitting(true);
     }
   }
-  
-  return count;
-  
-} /* NetTx::writeSamples */
+} /* NetTx::writeEncodedSamples */
 
 
-void NetTx::sendFlush(void)
+void NetTx::flushEncodedSamples(void)
 {
   if (is_connected)
   {
@@ -343,7 +390,7 @@ void NetTx::sendFlush(void)
   }
   else
   {
-    allSamplesFlushed();
+    allEncodedSamplesFlushed();
   }
 } /* NetTx::flushSamples */
 
@@ -360,17 +407,18 @@ void NetTx::setIsTransmitting(bool is_transmitting)
 } /* NetTx::setIsTransmitting */
 
 
-void NetTx::allSamplesFlushed(void)
+void NetTx::allEncodedSamplesFlushed(void)
 {
   unflushed_samples = false;
   pending_flush = false;
-  sigc_sink->allSamplesFlushed();
+  audio_enc->allEncodedSamplesFlushed();
   
   if (!is_connected && (mode == Tx::TX_AUTO))
   {
     setIsTransmitting(false);
   }
-} /* NetTx::allSamplesFlushed */
+} /* NetTx::allEncodedSamplesFlushed */
+
 
 
 /*

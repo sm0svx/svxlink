@@ -163,26 +163,14 @@ void NetTrxTcpClient::deleteInstance(void)
 
 void NetTrxTcpClient::sendMsg(Msg *msg)
 {
-  if (isConnected())
+  if (state == STATE_READY)
   {
-    int written = write(msg, msg->size());
-    if (written != static_cast<int>(msg->size()))
-    {
-      if (written == -1)
-      {
-      	cerr << "*** ERROR: TCP write error\n";
-      }
-      else
-      {
-      	cerr << "*** ERROR: TCP transmit buffer overflow.\n";
-      	disconnect();
-      	disconnected(this, TcpConnection::DR_ORDERED_DISCONNECT);
-      }
-    }
+    sendMsgP(msg);
   }
-  
-  delete msg;
-  
+  else
+  { 
+    delete msg;
+  }
 } /* NetTrxTcpClient::sendMsg */
 
 
@@ -196,7 +184,8 @@ void NetTrxTcpClient::sendMsg(Msg *msg)
 NetTrxTcpClient::NetTrxTcpClient(const std::string& remote_host,
       	      	      	      	 uint16_t remote_port, size_t recv_buf_len)
   : TcpClient(remote_host, remote_port, recv_buf_len), recv_cnt(0),
-    recv_exp(0), reconnect_timer(0), heartbeat_timer(0), user_cnt(0)
+    recv_exp(0), reconnect_timer(0), heartbeat_timer(0), user_cnt(0),
+    state(STATE_DISC)
 {
   connected.connect(slot(*this, &NetTrxTcpClient::tcpConnected));
   disconnected.connect(slot(*this, &NetTrxTcpClient::tcpDisconnected));
@@ -234,16 +223,20 @@ void NetTrxTcpClient::tcpConnected(void)
   recv_cnt = 0;
   recv_exp = sizeof(Msg);
   gettimeofday(&last_msg_timestamp, NULL);
-  heartbeat_timer->setEnable(true);  
+  heartbeat_timer->setEnable(true);
+  state = STATE_VER_WAIT;
 } /* NetTx::tcpConnected */
 
 
 void NetTrxTcpClient::tcpDisconnected(TcpConnection *con,
       	      	      	    TcpConnection::DisconnectReason reason)
 {
+  disc_reason = reason;
   recv_exp = 0;
+  state = STATE_DISC;
   reconnect_timer->setEnable(true);
   heartbeat_timer->setEnable(false);
+  isReady(false);
 } /* NetTrxTcpClient::tcpDisconnected */
 
 
@@ -260,8 +253,8 @@ int NetTrxTcpClient::tcpDataReceived(TcpConnection *con, void *data, int size)
   char *buf = static_cast<char*>(data);
   while (size > 0)
   {
-    int read_cnt = min(size, recv_exp-recv_cnt);
-    if (recv_cnt+read_cnt > static_cast<int>(sizeof(recv_buf)))
+    unsigned read_cnt = min(static_cast<unsigned>(size), recv_exp-recv_cnt);
+    if (recv_cnt+read_cnt > sizeof(recv_buf))
     {
       cerr << "*** ERROR: TCP receive buffer overflow. Disconnecting...\n";
       con->disconnect();
@@ -278,15 +271,23 @@ int NetTrxTcpClient::tcpDataReceived(TcpConnection *con, void *data, int size)
       if (recv_exp == sizeof(Msg))
       {
       	Msg *msg = reinterpret_cast<Msg*>(recv_buf);
-	if (recv_exp == static_cast<int>(msg->size()))
+	if (msg->size() == sizeof(Msg))
 	{
 	  handleMsg(msg);
 	  recv_cnt = 0;
 	  recv_exp = sizeof(Msg);
 	}
-	else
+	else if (msg->size() > sizeof(Msg))
 	{
       	  recv_exp = msg->size();
+	}
+	else
+	{
+	  cerr << "*** ERROR: Illegal message header received. Header length "
+	       << "too small (" << msg->size() << ")\n";
+	  con->disconnect();
+	  disconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+	  return orig_size;
 	}
       }
       else
@@ -313,6 +314,69 @@ void NetTrxTcpClient::reconnect(Timer *t)
 
 void NetTrxTcpClient::handleMsg(Msg *msg)
 {
+  //cout << "type=" << msg->type() << " state=" << state << endl;
+  
+  switch (state)
+  {
+    case STATE_DISC:
+      return;
+      
+    case STATE_VER_WAIT:
+      if (msg->type() == MsgProtoVer::TYPE)
+      {
+        MsgProtoVer *ver_msg = reinterpret_cast<MsgProtoVer *>(msg);
+        if ((msg->size() != sizeof(MsgProtoVer)) ||
+            (ver_msg->major() != MsgProtoVer::MAJOR) ||
+            (ver_msg->minor() != MsgProtoVer::MINOR))
+        {
+          cerr << "*** ERROR: Incompatible protocol version. Disconnecting.\n";
+          localDisconnect();
+          return;
+        }
+        cout << "RemoteTrx protocol version " << ver_msg->major() << "."
+             << ver_msg->minor() << endl;
+        state = STATE_AUTH_WAIT;
+      }
+      else
+      {
+        cerr << "*** ERROR: No protocol version received. Disconnecting.\n";
+        localDisconnect();
+      }
+      return;
+    
+    case STATE_AUTH_WAIT:
+      if (msg->type() == MsgAuthChallenge::TYPE)
+      {
+        if (msg->size() != sizeof(MsgAuthChallenge))
+        {
+          cerr << "*** ERROR: Protocol error. Wrong length of "
+                  "MsgAuthChallenge message. Disconnecting.\n";
+          localDisconnect();
+          return;
+        }
+        MsgAuthChallenge *chal_msg = reinterpret_cast<MsgAuthChallenge*>(msg);
+        MsgAuthResponse *resp_msg =
+            new MsgAuthResponse(auth_key, chal_msg->challenge());
+        sendMsgP(resp_msg);
+      }
+      else if (msg->type() == MsgAuthOk::TYPE)
+      {
+        if (msg->size() != sizeof(MsgAuthOk))
+        {
+          cerr << "*** ERROR: Protocol error. Wrong length of "
+                  "MsgAuthOk message. Disconnecting.\n";
+          localDisconnect();
+          return;
+        }
+        state = STATE_READY;
+        isReady(true);
+      }
+      return;
+    
+    case STATE_READY:
+      break;
+  }
+  
   gettimeofday(&last_msg_timestamp, NULL);
   
   switch (msg->type())
@@ -322,11 +386,13 @@ void NetTrxTcpClient::handleMsg(Msg *msg)
       break;
     }
     
-    case MsgAuth::TYPE:
-    {
-      msg = reinterpret_cast<MsgAuth*>(msg);
+    case MsgProtoVer::TYPE:
+    case MsgAuthChallenge::TYPE:
+    case MsgAuthOk::TYPE:
+      cerr << "*** ERROR: Message type " << msg->type()
+           << " received in the wrong state. Disconnecting\n";
+      localDisconnect();
       break;
-    }
     
     default:
       msgReceived(msg);
@@ -340,7 +406,7 @@ void NetTrxTcpClient::handleMsg(Msg *msg)
 void NetTrxTcpClient::heartbeat(Timer *t)
 {
   MsgHeartbeat *msg = new MsgHeartbeat;
-  sendMsg(msg);
+  sendMsgP(msg);
   
   struct timeval diff_tv;
   struct timeval now;
@@ -351,13 +417,43 @@ void NetTrxTcpClient::heartbeat(Timer *t)
   if (diff_ms > 15000)
   {
     cerr << "*** ERROR: Heartbeat timeout\n";
-    disconnect();
-    disconnected(this, TcpConnection::DR_ORDERED_DISCONNECT);
+    localDisconnect();
   }
   
   t->reset();
   
 } /* NetTrxTcpClient::heartbeat */
+
+
+void NetTrxTcpClient::localDisconnect(void)
+{
+  disconnect();
+  disconnected(this, TcpConnection::DR_ORDERED_DISCONNECT);
+} /* NetTrxTcpClient::localDisconnect */
+
+
+void NetTrxTcpClient::sendMsgP(Msg *msg)
+{
+  assert(isConnected());
+
+  int written = write(msg, msg->size());
+  if (written != static_cast<int>(msg->size()))
+  {
+    if (written == -1)
+    {
+      cerr << "*** ERROR: TCP write error\n";
+    }
+    else
+    {
+      cerr << "*** ERROR: TCP transmit buffer overflow.\n";
+      disconnect();
+      disconnected(this, TcpConnection::DR_ORDERED_DISCONNECT);
+    }
+  }
+  
+  delete msg;
+  
+} /* NetTrxTcpClient::sendMsgP */
 
 
 

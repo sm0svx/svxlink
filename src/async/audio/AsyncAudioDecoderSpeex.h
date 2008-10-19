@@ -1,11 +1,11 @@
 /**
-@file	 NetTx.h
-@brief   Contains a class that connect to a remote transmitter via IP
+@file	 AsyncAudioDecoderSpeex.h
+@brief   An audio decoder that use the Speex audio codec
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-03-09
+@date	 2008-10-15
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Async - A library for programming event driven applications
 Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -24,9 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-#ifndef NET_TX_INCLUDED
-#define NET_TX_INCLUDED
+#ifndef ASYNC_AUDIO_DECODER_SPEEX_INCLUDED
+#define ASYNC_AUDIO_DECODER_SPEEX_INCLUDED
 
 
 /****************************************************************************
@@ -35,9 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
-
-#include <string>
+#include <speex/speex.h>
 
 
 /****************************************************************************
@@ -46,8 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncConfig.h>
-#include <AsyncTcpClient.h>
+#include <AsyncAudioDecoder.h>
 
 
 /****************************************************************************
@@ -56,7 +52,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Tx.h"
 
 
 /****************************************************************************
@@ -65,17 +60,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace NetTrxMsg
-{
-  class Msg;
-};
-
-namespace Async
-{
-  class AudioPacer;
-  class SigCAudioSink;
-  class AudioEncoder;
-};
 
 
 /****************************************************************************
@@ -84,8 +68,8 @@ namespace Async
  *
  ****************************************************************************/
 
-//namespace MyNameSpace
-//{
+namespace Async
+{
 
 
 /****************************************************************************
@@ -94,8 +78,7 @@ namespace Async
  *
  ****************************************************************************/
 
-class NetTrxTcpClient;
-
+  
 
 /****************************************************************************
  *
@@ -120,90 +103,87 @@ class NetTrxTcpClient;
  ****************************************************************************/
 
 /**
-@brief	Implements a class that connect to a remote transmitter via IP
+@brief	An audio decoder that use the Speex audio codec
 @author Tobias Blomberg / SM0SVX
-@date   2008-03-09
+@date   2008-10-15
+
+This class implements an audio decoder that use the Speex audio codec.
 */
-class NetTx : public Tx
+class AudioDecoderSpeex : public AudioDecoder
 {
   public:
     /**
-     * @brief 	Constuctor
-     * @param 	cfg   The configuration object to use
-     * @param 	name  The name of the configuration section to use
+     * @brief 	Default constuctor
      */
-    NetTx(Async::Config& cfg, const std::string& name);
+    AudioDecoderSpeex(void);
   
     /**
      * @brief 	Destructor
      */
-    virtual ~NetTx(void);
+    virtual ~AudioDecoderSpeex(void);
   
     /**
-     * @brief 	Initialize the transmitter object
-     * @return 	Return \em true on success, or \em false on failure
+     * @brief   Get the name of the codec
+     * @returns Return the name of the codec
      */
-    virtual bool initialize(void);
+    virtual const char *name(void) const { return "SPEEX"; }
   
     /**
-     * @brief 	Set the transmit control mode
-     * @param 	mode The mode to use to set the transmitter on or off.
-     *
-     * Use this function to turn the transmitter on (TX_ON) or off (TX__OFF).
-     * There is also a third mode (TX_AUTO) that will automatically turn the
-     * transmitter on when there is audio to transmit.
+     * @brief 	Set an option for the decoder
+     * @param 	name The name of the option
+     * @param 	value The value of the option
      */
-    virtual void setTxCtrlMode(TxCtrlMode mode);
+    virtual void setOption(const std::string &name, const std::string &value);
+
+    /**
+     * @brief Print codec parameter settings
+     */
+    virtual void printCodecParams(void) const;
     
     /**
-     * @brief 	Check if the transmitter is transmitting
-     * @return	Return \em true if transmitting or else \em false
+     * @brief 	Get the frame size for the decoder
+     * @return	Returns the decoder frame size
      */
-    virtual bool isTransmitting(void) const;
+    int frameSize(void) const { return frame_size; }
+  
+    /**
+     * @brief 	Enable or disable the perceptual enhancer
+     * @param 	enable Set to \em true to enable or \em false to disable
+     * @return	Returns the new setting
+     */
+    bool enableEnhancer(bool enable);
+  
+    /**
+     * @brief 	Get the perceptual enhance enable/disable state
+     * @return	Returns \em true if the enhancer is enabled or \em false if
+     *          it's not
+     */
+    bool enhancerEnabled(void) const;
     
     /**
-     * @brief 	Enable/disable CTCSS on TX
-     * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
+     * @brief 	Write encoded samples into the decoder
+     * @param 	buf  Buffer containing encoded samples
+     * @param 	size The size of the buffer
      */
-    virtual void enableCtcss(bool enable);
-    
-    /**
-     * @brief 	Send a string of DTMF digits
-     * @param 	digits	The digits to send
-     */
-    virtual void sendDtmf(const std::string& digits);
+    virtual void writeEncodedSamples(void *buf, int size);
     
 
   protected:
-
-  private:
-    Async::Config     	  &cfg;
-    std::string       	  name;
-    NetTrxTcpClient   	  *tcp_con;
-    bool      	      	  is_transmitting;
-    Tx::TxCtrlMode    	  mode;
-    bool      	      	  ctcss_enable;
-    Async::AudioPacer 	  *pacer;
-    bool      	      	  is_connected;
-    bool      	      	  pending_flush;
-    bool      	      	  unflushed_samples;
-    Async::AudioEncoder   *audio_enc;
     
-    void connectionReady(bool is_ready);
-    void handleMsg(NetTrxMsg::Msg *msg);
-    void sendMsg(NetTrxMsg::Msg *msg);
-    void writeEncodedSamples(const void *buf, int size);
-    void flushEncodedSamples(void);
-    void setIsTransmitting(bool is_transmitting);
-    void allEncodedSamplesFlushed(void);
+  private:
+    SpeexBits bits;
+    void      *dec_state;
+    int       frame_size;
+    
+    AudioDecoderSpeex(const AudioDecoderSpeex&);
+    AudioDecoderSpeex& operator=(const AudioDecoderSpeex&);
+    
+};  /* class AudioDecoderSpeex */
 
 
-};  /* class NetTx */
+} /* namespace */
 
-
-//} /* namespace */
-
-#endif /* NET_TX_INCLUDED */
+#endif /* ASYNC_AUDIO_DECODER_SPEEX_INCLUDED */
 
 
 

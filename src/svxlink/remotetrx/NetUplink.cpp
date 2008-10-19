@@ -43,10 +43,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncTcpServer.h>
-#include <SigCAudioSink.h>
-#include <SigCAudioSource.h>
 #include <AsyncAudioFifo.h>
 #include <AsyncTimer.h>
+#include <AsyncAudioEncoder.h>
+#include <AsyncAudioDecoder.h>
 
 
 /****************************************************************************
@@ -121,7 +121,8 @@ using namespace NetTrxMsg;
 NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
       	      	     const string& port_str)
   : server(0), con(0), recv_cnt(0), recv_exp(0), rx(rx), tx(tx), fifo(0),
-    sigc_src(0), cfg(cfg), name(name), heartbeat_timer(0)
+    cfg(cfg), name(name), heartbeat_timer(0), audio_enc(0), audio_dec(0),
+    state(STATE_DISC)
 {
   heartbeat_timer = new Timer(10000);
   heartbeat_timer->setEnable(false);
@@ -132,10 +133,12 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
 
 NetUplink::~NetUplink(void)
 {
-  delete sigc_sink;
+  delete audio_enc;
+  delete audio_dec;
+  delete fifo;
+  //delete sigc_sink;
   delete server;
   delete heartbeat_timer;
-  delete sigc_src;
 } /* NetUplink::~NetUplink */
 
 
@@ -149,28 +152,20 @@ bool NetUplink::initialize(void)
     return false;
   }
   
+  cfg.getValue(name, "AUTH_KEY", auth_key);
+  
   server = new TcpServer(listen_port);
   server->clientConnected.connect(slot(*this, &NetUplink::clientConnected));
   server->clientDisconnected.connect(
       slot(*this, &NetUplink::clientDisconnected));
   
-  sigc_sink = new SigCAudioSink;
-  sigc_sink->registerSource(rx);
-  
   rx->reset();
   rx->squelchOpen.connect(slot(*this, &NetUplink::squelchOpen));
-  sigc_sink->sigWriteSamples.connect(slot(*this, &NetUplink::audioReceived));
-  sigc_sink->sigFlushSamples.connect(
-	slot(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
   rx->dtmfDigitDetected.connect(slot(*this, &NetUplink::dtmfDigitDetected));
   rx->toneDetected.connect(slot(*this, &NetUplink::toneDetected));
   
-  sigc_src = new SigCAudioSource;
-  sigc_src->sigAllSamplesFlushed.connect(
-      slot(*this, &NetUplink::allSamplesFlushed));
   
   fifo = new AudioFifo(16000);
-  sigc_src->registerSink(fifo, true);
 
   tx->txTimeout.connect(slot(*this, &NetUplink::txTimeout));
   tx->transmitterStateChange.connect(
@@ -212,6 +207,24 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
     recv_cnt = 0;
     heartbeat_timer->setEnable(true);
     gettimeofday(&last_msg_timestamp, NULL);
+    
+    MsgProtoVer *ver_msg = new MsgProtoVer;
+    sendMsg(ver_msg);
+    
+    if (auth_key.empty())
+    {
+      MsgAuthOk *auth_msg = new MsgAuthOk;
+      sendMsg(auth_msg);
+      state = STATE_READY;
+    }
+    else
+    {
+      MsgAuthChallenge *auth_msg = new MsgAuthChallenge;
+      memcpy(auth_challenge, auth_msg->challenge(),
+             MsgAuthChallenge::CHALLENGE_LEN);
+      sendMsg(auth_msg);
+      state = STATE_AUTH_WAIT;
+    }
   }
   else
   {
@@ -230,11 +243,22 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
   assert(the_con == con);  
   con = 0;
   recv_exp = 0;
+  state = STATE_DISC;
   rx->reset();
+  if (audio_enc != 0)
+  {
+    delete audio_enc;
+    audio_enc = 0;
+  }
   
   tx->enableCtcss(false);
   fifo->clear();
-  sigc_src->flushSamples();
+  if (audio_dec != 0)
+  {
+    audio_dec->flushEncodedSamples();
+    delete audio_dec;
+    audio_dec = 0;
+  }
   tx->setTxCtrlMode(Tx::TX_OFF);
   
   heartbeat_timer->setEnable(false);
@@ -261,8 +285,8 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
   char *buf = static_cast<char*>(data);
   while (size > 0)
   {
-    int read_cnt = min(size, recv_exp-recv_cnt);
-    if (recv_cnt+read_cnt > static_cast<int>(sizeof(recv_buf)))
+    unsigned read_cnt = min(static_cast<unsigned>(size), recv_exp-recv_cnt);
+    if (recv_cnt+read_cnt > sizeof(recv_buf))
     {
       cerr << "*** ERROR: TCP receive buffer overflow. Disconnecting...\n";
       con->disconnect();
@@ -279,15 +303,23 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
       if (recv_exp == sizeof(Msg))
       {
       	Msg *msg = reinterpret_cast<Msg*>(recv_buf);
-	if (recv_exp == static_cast<int>(msg->size()))
+	if (msg->size() == sizeof(Msg))
 	{
 	  handleMsg(msg);
 	  recv_cnt = 0;
 	  recv_exp = sizeof(Msg);
 	}
-	else
+	else if (msg->size() > sizeof(Msg))
 	{
       	  recv_exp = msg->size();
+	}
+	else
+	{
+	  cerr << "*** ERROR: Illegal message header received. Header length "
+	       << "too small (" << msg->size() << ")\n";
+	  con->disconnect();
+	  clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+	  return orig_size;
 	}
       }
       else
@@ -307,16 +339,47 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
 
 void NetUplink::handleMsg(Msg *msg)
 {
+  switch (state)
+  {
+    case STATE_DISC:
+      return;
+      
+    case STATE_AUTH_WAIT:
+      if (msg->type() == MsgAuthResponse::TYPE &&
+          msg->size() == sizeof(MsgAuthResponse))
+      {
+        MsgAuthResponse *resp_msg = reinterpret_cast<MsgAuthResponse *>(msg);
+        if (!resp_msg->verify(auth_key, auth_challenge))
+        {
+          cerr << "*** ERROR: Authentication error.\n";
+          con->disconnect();
+          clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+          return;
+        }
+        else
+        {
+          MsgAuthOk *ok_msg = new MsgAuthOk;
+          sendMsg(ok_msg);
+        }
+        state = STATE_READY;
+      }
+      else
+      {
+        cerr << "*** ERROR: Protocol error.\n";
+        con->disconnect();
+        clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+      }
+      return;
+    
+    case STATE_READY:
+      break;
+  }
+  
   gettimeofday(&last_msg_timestamp, NULL);
   
   switch (msg->type())
   {
     case MsgHeartbeat::TYPE:
-    {
-      break;
-    }
-    
-    case MsgAuth::TYPE:
     {
       break;
     }
@@ -361,19 +424,88 @@ void NetUplink::handleMsg(Msg *msg)
       tx->sendDtmf(dtmf_msg->digits());
       break;
     }
-     
+    
+    case MsgRxAudioCodecSelect::TYPE:
+    {
+      MsgRxAudioCodecSelect *codec_msg = 
+          reinterpret_cast<MsgRxAudioCodecSelect *>(msg);
+      delete audio_enc;
+      audio_enc = AudioEncoder::create(codec_msg->name());
+      if (audio_enc != 0)
+      {
+        audio_enc->writeEncodedSamples.connect(
+                slot(*this, &NetUplink::writeEncodedSamples));
+        audio_enc->flushEncodedSamples.connect(
+                slot(*audio_enc, &AudioEncoder::allEncodedSamplesFlushed));
+        audio_enc->registerSource(rx);
+        cout << name << ": Using CODEC \"" << audio_enc->name()
+             << "\" to encode RX audio\n";
+	
+	MsgRxAudioCodecSelect::Opts opts;
+	codec_msg->options(opts);
+	MsgRxAudioCodecSelect::Opts::const_iterator it;
+	for (it=opts.begin(); it!=opts.end(); ++it)
+	{
+	  audio_enc->setOption((*it).first, (*it).second);
+	}
+	audio_enc->printCodecParams();
+      }
+      else
+      {
+        cerr << "*** ERROR: Received request for unknown RX audio codec ("
+             << codec_msg->name() << ")\n";
+      }
+      break;
+    }
+    
+    case MsgTxAudioCodecSelect::TYPE:
+    {
+      MsgTxAudioCodecSelect *codec_msg = 
+          reinterpret_cast<MsgTxAudioCodecSelect *>(msg);
+      delete audio_dec;
+      audio_dec = AudioDecoder::create(codec_msg->name());
+      if (audio_dec != 0)
+      {
+        audio_dec->registerSink(fifo);
+        audio_dec->allEncodedSamplesFlushed.connect(
+            slot(*this, &NetUplink::allEncodedSamplesFlushed));
+        cout << name << ": Using CODEC \"" << audio_dec->name()
+             << "\" to decode TX audio\n";
+	
+	MsgRxAudioCodecSelect::Opts opts;
+	codec_msg->options(opts);
+	MsgTxAudioCodecSelect::Opts::const_iterator it;
+	for (it=opts.begin(); it!=opts.end(); ++it)
+	{
+	  audio_dec->setOption((*it).first, (*it).second);
+	}
+	audio_dec->printCodecParams();
+      }
+      else
+      {
+        cerr << "*** ERROR: Received request for unknown TX audio codec ("
+             << codec_msg->name() << ")\n";
+      }
+      break;
+    }
+    
     case MsgAudio::TYPE:
     {
       //cout << "NetUplink [MsgAudio]\n";
-      MsgAudio *audio_msg = reinterpret_cast<MsgAudio *>(msg);
-      sigc_src->writeSamples(audio_msg->samples(), audio_msg->count());
+      if (audio_dec != 0)
+      {
+        MsgAudio *audio_msg = reinterpret_cast<MsgAudio*>(msg);
+        audio_dec->writeEncodedSamples(audio_msg->buf(), audio_msg->size());
+      }
       break;
     }
-     
+    
     case MsgFlush::TYPE:
     {
-      //cout << "NetUplink [MsgFlush]\n";
-      sigc_src->flushSamples();
+      if (audio_dec != 0)
+      {
+        audio_dec->flushEncodedSamples();
+      }
       break;
     } 
     
@@ -433,15 +565,20 @@ void NetUplink::toneDetected(float tone_fq)
 } /* NetUplink::toneDetected */
 
 
-int NetUplink::audioReceived(float *samples, int count)
+void NetUplink::writeEncodedSamples(const void *buf, int size)
 {
-    // Workaround. There was a link error if MAX_COUNT was used directly.
-  const int max_count(MsgAudio::MAX_COUNT);
-  count = min(count, max_count);
-  MsgAudio *msg = new MsgAudio(samples, count);
-  sendMsg(msg);
-  return count;
-} /* NetUplink::audioReceived */
+  //cout << "NetUplink::writeEncodedSamples: size=" << size << endl;
+  const char *ptr = reinterpret_cast<const char *>(buf);
+  while (size > 0)
+  {
+    const int bufsize = MsgAudio::BUFSIZE;
+    int len = min(size, bufsize);
+    MsgAudio *msg = new MsgAudio(ptr, len);
+    sendMsg(msg);
+    size -= len;
+    ptr += len;
+  }
+} /* NetUplink::writeEncodedSamples */
 
 
 void NetUplink::txTimeout(void)
@@ -459,11 +596,11 @@ void NetUplink::transmitterStateChange(bool is_transmitting)
 } /* NetUplink::transmitterStateChange */
 
 
-void NetUplink::allSamplesFlushed(void)
+void NetUplink::allEncodedSamplesFlushed(void)
 {
   MsgAllSamplesFlushed *msg = new MsgAllSamplesFlushed;
   sendMsg(msg);
-} /* NetUplink::allSamplesFlushed */
+} /* NetUplink::allEncodedSamplesFlushed */
 
 
 void NetUplink::heartbeat(Timer *t)

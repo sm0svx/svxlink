@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <map>
 #include <utility>
+#include <string>
 
 #include <sys/time.h>
 
@@ -119,6 +120,8 @@ namespace Async
 class NetTrxTcpClient : public Async::TcpClient
 {
   public:
+    typedef Async::TcpConnection::DisconnectReason DiscReason;
+    
     /**
      * @brief 	Get a pointer to a client object with the given parameters
      * @param   remote_host   The hostname of the remote host
@@ -139,10 +142,28 @@ class NetTrxTcpClient : public Async::TcpClient
     void deleteInstance(void);
     
     /**
+     * @brief Setup the authentication key
+     * @param key The autentication key to use
+     */
+    void setAuthKey(const std::string &key) { auth_key = key; }
+    
+    /**
      * @brief Send a message over the connection
      * @param msg The message to send
      */
     void sendMsg(NetTrxMsg::Msg *msg);
+    
+    /**
+     * @brief Get the reason for the last disconnect
+     */
+    DiscReason disconnectReason(void) const { return disc_reason; }
+    
+    /**
+     * @brief A signal that is emitted when the connection to the remote side
+     *        is ready for operation
+     * @param is_ready  \em true when ready, \em false when not ready
+     */
+    SigC::Signal1<void, bool> isReady;
     
     /**
      * @brief A signal that is emitted when a message has been received
@@ -174,17 +195,24 @@ class NetTrxTcpClient : public Async::TcpClient
   private:
     typedef std::map<std::pair<const std::string, uint16_t>, NetTrxTcpClient*>
       	    Clients;
+    typedef enum
+    {
+      STATE_DISC, STATE_VER_WAIT, STATE_AUTH_WAIT, STATE_READY
+    } State;
     
     static const int RECV_BUF_SIZE = 4096;
     static Clients clients;
 
     char      	    recv_buf[RECV_BUF_SIZE];
-    int       	    recv_cnt;
-    int       	    recv_exp;
+    unsigned        recv_cnt;
+    unsigned        recv_exp;
     Async::Timer    *reconnect_timer;
     struct timeval  last_msg_timestamp;
     Async::Timer    *heartbeat_timer;
     int       	    user_cnt;
+    std::string     auth_key;
+    State           state;
+    DiscReason      disc_reason;
     
     NetTrxTcpClient(const NetTrxTcpClient&);
     NetTrxTcpClient& operator=(const NetTrxTcpClient&);
@@ -195,6 +223,8 @@ class NetTrxTcpClient : public Async::TcpClient
     void reconnect(Async::Timer *t);
     void handleMsg(NetTrxMsg::Msg *msg);
     void heartbeat(Async::Timer *t);
+    void localDisconnect(void);
+    void sendMsgP(NetTrxMsg::Msg *msg);
 
 };  /* class NetTrxTcpClient */
 

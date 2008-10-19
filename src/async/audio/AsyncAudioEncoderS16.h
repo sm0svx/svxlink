@@ -1,11 +1,11 @@
 /**
-@file	 NetTx.h
-@brief   Contains a class that connect to a remote transmitter via IP
+@file	 AsyncAudioEncoderS16.h
+@brief   An audio encoder that encodes samples to signed 16 bit samples
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-03-09
+@date	 2008-10-06
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Async - A library for programming event driven applications
 Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -24,9 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-#ifndef NET_TX_INCLUDED
-#define NET_TX_INCLUDED
+#ifndef ASYNC_AUDIO_ENCODER_S16_INCLUDED
+#define ASYNC_AUDIO_ENCODER_S16_INCLUDED
 
 
 /****************************************************************************
@@ -35,9 +34,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
-
-#include <string>
 
 
 /****************************************************************************
@@ -46,8 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncConfig.h>
-#include <AsyncTcpClient.h>
+#include <AsyncAudioEncoder.h>
 
 
 /****************************************************************************
@@ -56,7 +51,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Tx.h"
 
 
 /****************************************************************************
@@ -65,17 +59,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace NetTrxMsg
-{
-  class Msg;
-};
-
-namespace Async
-{
-  class AudioPacer;
-  class SigCAudioSink;
-  class AudioEncoder;
-};
 
 
 /****************************************************************************
@@ -84,8 +67,8 @@ namespace Async
  *
  ****************************************************************************/
 
-//namespace MyNameSpace
-//{
+namespace Async
+{
 
 
 /****************************************************************************
@@ -94,8 +77,7 @@ namespace Async
  *
  ****************************************************************************/
 
-class NetTrxTcpClient;
-
+  
 
 /****************************************************************************
  *
@@ -120,90 +102,58 @@ class NetTrxTcpClient;
  ****************************************************************************/
 
 /**
-@brief	Implements a class that connect to a remote transmitter via IP
+@brief	An audio encoder that encodes samples to signed 16 bit samples
 @author Tobias Blomberg / SM0SVX
-@date   2008-03-09
+@date   2008-10-06
+
+This class implements an audio "encoder" that converts the native sample
+format to signed 16 bit fixed precision samples.
 */
-class NetTx : public Tx
+class AudioEncoderS16 : public AudioEncoder
 {
   public:
     /**
-     * @brief 	Constuctor
-     * @param 	cfg   The configuration object to use
-     * @param 	name  The name of the configuration section to use
+     * @brief 	Default constuctor
      */
-    NetTx(Async::Config& cfg, const std::string& name);
+    AudioEncoderS16(void) {}
   
     /**
      * @brief 	Destructor
      */
-    virtual ~NetTx(void);
+    virtual ~AudioEncoderS16(void) {}
   
     /**
-     * @brief 	Initialize the transmitter object
-     * @return 	Return \em true on success, or \em false on failure
+     * @brief   Get the name of the codec
+     * @returns Return the name of the codec
      */
-    virtual bool initialize(void);
+    virtual const char *name(void) const { return "S16"; }
   
     /**
-     * @brief 	Set the transmit control mode
-     * @param 	mode The mode to use to set the transmitter on or off.
+     * @brief 	Write samples into this audio sink
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
      *
-     * Use this function to turn the transmitter on (TX_ON) or off (TX__OFF).
-     * There is also a third mode (TX_AUTO) that will automatically turn the
-     * transmitter on when there is audio to transmit.
+     * This function is used to write audio into this audio sink. If it
+     * returns 0, no more samples should be written until the resumeOutput
+     * function in the source have been called.
+     * This function is normally only called from a connected source object.
      */
-    virtual void setTxCtrlMode(TxCtrlMode mode);
+    virtual int writeSamples(const float *samples, int count);
     
-    /**
-     * @brief 	Check if the transmitter is transmitting
-     * @return	Return \em true if transmitting or else \em false
-     */
-    virtual bool isTransmitting(void) const;
     
-    /**
-     * @brief 	Enable/disable CTCSS on TX
-     * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
-     */
-    virtual void enableCtcss(bool enable);
-    
-    /**
-     * @brief 	Send a string of DTMF digits
-     * @param 	digits	The digits to send
-     */
-    virtual void sendDtmf(const std::string& digits);
-    
-
   protected:
-
-  private:
-    Async::Config     	  &cfg;
-    std::string       	  name;
-    NetTrxTcpClient   	  *tcp_con;
-    bool      	      	  is_transmitting;
-    Tx::TxCtrlMode    	  mode;
-    bool      	      	  ctcss_enable;
-    Async::AudioPacer 	  *pacer;
-    bool      	      	  is_connected;
-    bool      	      	  pending_flush;
-    bool      	      	  unflushed_samples;
-    Async::AudioEncoder   *audio_enc;
     
-    void connectionReady(bool is_ready);
-    void handleMsg(NetTrxMsg::Msg *msg);
-    void sendMsg(NetTrxMsg::Msg *msg);
-    void writeEncodedSamples(const void *buf, int size);
-    void flushEncodedSamples(void);
-    void setIsTransmitting(bool is_transmitting);
-    void allEncodedSamplesFlushed(void);
+  private:
+    AudioEncoderS16(const AudioEncoderS16&);
+    AudioEncoderS16& operator=(const AudioEncoderS16&);
+    
+};  /* class AudioEncoderS16 */
 
 
-};  /* class NetTx */
+} /* namespace */
 
-
-//} /* namespace */
-
-#endif /* NET_TX_INCLUDED */
+#endif /* ASYNC_AUDIO_ENCODER_S16_INCLUDED */
 
 
 

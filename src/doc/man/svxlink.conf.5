@@ -722,6 +722,71 @@ Always "Net" for a networked receiver.
 .TP
 .B HOST
 The hostname or IP address of the remote receiver host.
+.TP
+.B AUTH_KEY
+This is the authentication key (password) to use to connect to the RemoteTrx
+server. The same key have to be specified in the RemoteTrx configuration.
+If no key is specified in the RemoteTrx config, the login will be
+unauthenticated. A good authentication key should be 20 characters long.
+If the same RemoteTrx is used for both RX and TX, the same key must be
+specified in the RX as well as in the TX configuration section.
+The key will never be transmitted over the network. A HMAC-SHA1
+challenge-response procedure will be used for authentication.
+.TP
+.B CODEC
+The audio codec to use when transfering audio from this remote receiver.
+Available codecs are: RAW (256kbps), S16 (128kbps), GSM (13.2kbps),
+SPEEX (4-25kbps). These are raw bitrate values. There will be some
+overhead added to this so the real bitrates on the wire are a little bit
+higher.
+.TP
+.B SPEEX_ENC_FRAMES_PER_PACKET
+Speex encoder setting. Each Speex frame contains 20ms audio. If using a low
+bitrate configuration, the network overhead will be quite noticeable if sending
+each frame in its own packet. One way to lower the overhead is to send multiple
+frames in each network packet. The drawback with doing this is that you get
+more delay. If setting this option to something like 4 (default), the delay
+will be about 4x20=80ms.
+.TP
+.B SPEEX_ENC_QUALITY
+Speex encoder setting. Specify the encoder quality using a number between 0-10.
+Lower values give poorer quality and lower bitrates.
+.TP
+.B SPEEX_ENC_BITRATE
+Speex encoder setting. Specify the bitrate to use. Speex will snap to the
+nearest lower possible bitrate. Possible values range from 2150 to 24600 bps.
+You should probably not specify quality at the same time as bitrate. Not sure
+though...
+.TP
+.B SPEEX_ENC_COMPLEXITY
+Speex encoder setting. The complexity setting (0-10) tells the encoder how
+much CPU time it should spend on doing a good job. The difference in SNR between
+the lowest and highest value is about 2dB. Set it as high as possible without
+overloading the CPU on the encoding computer (check CPU usage using command
+"top").
+.TP
+.B SPEEX_ENC_VBR
+Speex encoder setting. Enable (1) or disable (0) variable bitrate encoding. If
+enabled, the encoder will try to keep a constant quality by increasing the
+bitrate when needed.
+.TP
+.B SPEEX_ENC_VBR_QUALITY
+Speex encoder setting. The quality (0-10) to use in variable bitrate mode.
+.TP
+.B SPEEX_ENC_ABR
+Speex encoder setting. The average bitrate encoding will try to keep a target
+bitrate by continously adjusting the quality. This configuration variable
+specify the target bitrate and enable ABR. It also need to have VBR enabled so
+don't force it to off.
+.TP
+.B SPEEX_DEC_ENHANCER
+Speex decoder setting. Enable (1) or disable (0) the perceptual enhancer in the
+decoder.
+Perceptual enhancement is a part of the decoder which, when turned on, attempts
+to reduce the perception of the noise/distortion produced by the
+encoding/decoding process. In most cases, perceptual enhancement brings the
+sound further from the original objectively (e.g. considering only SNR), but in
+the end it still sounds better (subjective improvement).
 .
 .SS Local Transmitter Section
 .
@@ -829,6 +894,71 @@ Always "Net" for a networked transmitter.
 .TP
 .B HOST
 The hostname or IP address of the remote transmitter host.
+.TP
+.B AUTH_KEY
+This is the authentication key (password) to use to connect to the RemoteTrx
+server. The same key have to be specified in the RemoteTrx configuration.
+If no key is specified in the RemoteTrx config, the login will be
+unauthenticated. A good authentication key should be 20 characters long.
+If the same RemoteTrx is used for both RX and TX, the same key must be
+specified in the RX as well as in the TX configuration section.
+The key will never be transmitted over the network. A HMAC-SHA1
+challenge-response procedure will be used for authentication.
+.TP
+.B CODEC
+The audio codec to use when transfering audio to this remote transmitter.
+Available codecs are: RAW (256kbps), S16 (128kbps), GSM (13.2kbps),
+SPEEX (4-25kbps). These are raw bitrate values. There will be some
+overhead added to this so the real bitrates on the wire are a little bit
+higher.
+.TP
+.B SPEEX_ENC_FRAMES_PER_PACKET
+Speex encoder setting. Each Speex frame contains 20ms audio. If using a low
+bitrate configuration, the network overhead will be quite noticeable if sending
+each frame in its own packet. One way to lower the overhead is to send multiple
+frames in each network packet. The drawback with doing this is that you get
+more delay. If setting this option to something like 4 (default), the delay
+will be about 4x20=80ms.
+.TP
+.B SPEEX_ENC_QUALITY
+Speex encoder setting. Specify the encoder quality using a number between 0-10.
+Lower values give poorer quality and lower bitrates.
+.TP
+.B SPEEX_ENC_BITRATE
+Speex encoder setting. Specify the bitrate to use. Speex will snap to the
+nearest lower possible bitrate. Possible values range from 2150 to 24600 bps.
+You should probably not specify quality at the same time as bitrate. Not sure
+though...
+.TP
+.B SPEEX_ENC_COMPLEXITY
+Speex encoder setting. The complexity setting (0-10) tells the encoder how
+much CPU time it should spend on doing a good job. The difference in SNR between
+the lowest and highest value is about 2dB. Set it as high as possible without
+overloading the CPU on the encoding computer (check CPU usage using command
+"top").
+.TP
+.B SPEEX_ENC_VBR
+Speex encoder setting. Enable (1) or disable (0) variable bitrate encoding. If
+enabled, the encoder will try to keep a constant quality by increasing the
+bitrate when needed.
+.TP
+.B SPEEX_ENC_VBR_QUALITY
+Speex encoder setting. The quality (0-10) to use in variable bitrate mode.
+.TP
+.B SPEEX_ENC_ABR
+Speex encoder setting. The average bitrate encoding will try to keep a target
+bitrate by continously adjusting the quality. This configuration variable
+specify the target bitrate and enable ABR. It also need to have VBR enabled so
+don't force it to off.
+.TP
+.B SPEEX_DEC_ENHANCER
+Speex decoder setting. Enable (1) or disable (0) the perceptual enhancer in the
+decoder.
+Perceptual enhancement is a part of the decoder which, when turned on, attempts
+to reduce the perception of the noise/distortion produced by the
+encoding/decoding process. In most cases, perceptual enhancement brings the
+sound further from the original objectively (e.g. considering only SNR), but in
+the end it still sounds better (subjective improvement).
 .
 .SS Module Section
 .

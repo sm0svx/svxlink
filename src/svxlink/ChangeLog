@@ -28,6 +28,11 @@
 * The detection bandwidth for CTCSS repeater open have been narrowed
   down from 8 Hz to 4 Hz.
 
+* Improved the RemoteTrx protocol: HMAC-SHA1 authentication, security
+  checks and most important, audio compression. It is not compatible
+  with the old protocol.
+  The authentication code also require a new dependency: libgcrypt.
+
 
 
  0.10.1 -- 30 Jul 2008

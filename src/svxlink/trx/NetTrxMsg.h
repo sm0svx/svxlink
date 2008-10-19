@@ -37,6 +37,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cassert>
 #include <cstring>
+#include <iostream>
+#include <vector>
+#include <utility>
+
+#include <gcrypt.h>
 
 
 /****************************************************************************
@@ -159,56 +164,294 @@ class Msg
 
 
 
-/****************************** Common Messages ******************************/
+/************************** Administrative Messages **************************/
+
+class MsgProtoVer : public Msg
+{
+  public:
+    static const unsigned TYPE  = 0;
+    static const uint16_t MAJOR = 2;
+    static const uint16_t MINOR = 0;
+    MsgProtoVer(void)
+      : Msg(TYPE, sizeof(MsgProtoVer)), m_major(MAJOR),
+        m_minor(MINOR) {}
+    uint16_t major(void) const { return m_major; }
+    uint16_t minor(void) const { return m_minor; }
+  
+  private:
+    uint16_t m_major;
+    uint16_t m_minor;
+    
+}; /* MsgProtoVer */
+
 
 class MsgHeartbeat : public Msg
 {
   public:
-    static const int TYPE = 0;
+    static const unsigned TYPE = 1;
     MsgHeartbeat(void) : Msg(TYPE, sizeof(MsgHeartbeat)) {}
     
 };  /* MsgHeartbeat */
 
 
-class MsgAuth : public Msg
+class MsgAuthChallenge : public Msg
 {
   public:
-    static const int TYPE = 1;
-    MsgAuth(const char *password)
-      : Msg(TYPE, sizeof(MsgAuth))
+    static const unsigned TYPE      = 10;
+    static const int CHALLENGE_LEN  = 20;
+    MsgAuthChallenge(void)
+      : Msg(TYPE, sizeof(MsgAuthChallenge))
     {
-      strncpy(m_password, password, sizeof(m_password));
-      m_password[sizeof(m_password)-1] = 0;
+      gcry_create_nonce(m_challenge, CHALLENGE_LEN);
     }
     
-    const char *password(void) const { return m_password; }
+    const unsigned char *challenge(void) const { return m_challenge; }
   
   private:
-    char m_password[16];
+    unsigned char m_challenge[CHALLENGE_LEN];
     
-}; /* MsgAuth */
+}; /* MsgAuthChallenge */
+
+
+class MsgAuthResponse : public Msg
+{
+  public:
+    static const unsigned TYPE        = 11;
+    static const int      ALGO        = GCRY_MD_SHA1;
+    static const int      DIGEST_LEN  = 20;
+    MsgAuthResponse(const std::string &key, const unsigned char *challenge)
+      : Msg(TYPE, sizeof(MsgAuthResponse))
+    {
+      if (!calcDigest(m_digest, key.c_str(), key.size(), challenge))
+      {
+        exit(1);
+      }
+    }
+    
+    const unsigned char *digest(void) const { return m_digest; }
+    
+    bool verify(const std::string &key, const unsigned char *challenge) const
+    {
+      unsigned char digest[DIGEST_LEN];
+      bool ok = calcDigest(digest, key.c_str(), key.size(), challenge);
+      return ok && (memcmp(m_digest, digest, DIGEST_LEN) == 0);
+    }
+  
+  private:
+    unsigned char m_digest[DIGEST_LEN];
+    
+    bool calcDigest(unsigned char *digest, const char *key,
+                    int keylen, const unsigned char *challenge) const
+    {
+      unsigned char *digest_ptr;
+      /*
+      printf("key=%s\n", key);
+      printf("Challenge=");
+      int i;
+      for (i=0; i<MsgAuthChallenge::CHALLENGE_LEN; ++i)
+      {
+        printf("%02x", challenge[i]);
+      }
+      printf("\n");
+      */
+        // Must call gcry_check_verion to initialize the gcypt library
+      gcry_check_version(NULL);
+      gcry_error_t err;
+      //err = gcry_control(GCRYCTL_INIT_SECMEM, 16384, 0);
+      err = gcry_control(GCRYCTL_DISABLE_SECMEM, 0);
+      if (err) goto error;
+      gcry_md_hd_t hd;
+      //printf("gcry_md_open\n");
+      err = gcry_md_open(&hd, ALGO, GCRY_MD_FLAG_HMAC);
+      if (err) goto error;
+      //printf("gcry_md_setkey\n");
+      err = gcry_md_setkey(hd, key, keylen);
+      if (err) goto error;
+      //printf("gcry_md_write\n");
+      gcry_md_write(hd, challenge, MsgAuthChallenge::CHALLENGE_LEN);
+      //printf("gcry_md_read\n");
+      digest_ptr = gcry_md_read(hd, 0);
+      memcpy(digest, digest_ptr, DIGEST_LEN);
+      /*
+      printf("Digest=");
+      for (i=0; i<DIGEST_LEN; ++i)
+      {
+        printf("%02x", digest[i]);
+      }
+      printf("\n");
+      printf("gcry_md_close\n");
+      */
+      gcry_md_close(hd);
+      return true;
+      
+      error:
+        std::cerr << "*** ERROR: gcrypt error: " << gcry_strerror(err)
+                  << std::endl;
+        gcry_md_close(hd);
+        return false;
+    }
+    
+}; /* MsgAuthResponse */
+
+
+class MsgAuthOk : public Msg
+{
+  public:
+    static const unsigned TYPE = 12;
+    MsgAuthOk(void) : Msg(TYPE, sizeof(MsgAuthOk)) {}
+    
+};  /* MsgAuthOk */
+
+
+
+
+
+/****************************** Common Messages *****************************/
+
+class MsgAudioCodecSelect : public Msg
+{
+  public:
+    typedef std::vector<std::pair<std::string, std::string> > Opts;
+    
+    MsgAudioCodecSelect(const char *codec_name, unsigned msg_type)
+      : Msg(msg_type, sizeof(MsgAudioCodecSelect)), m_option_cnt(0)
+    {
+      strncpy(m_codec_name, codec_name, sizeof(m_codec_name));
+      m_codec_name[sizeof(m_codec_name)-1] = 0;
+    }
+    
+    void addOption(const std::string &name, const std::string &value)
+    {
+      char *ptr = m_options;
+      for (int i=0; i<m_option_cnt; ++i)
+      {
+      	uint8_t len = static_cast<uint8_t>(*ptr++);
+	ptr += len;
+	if (ptr >= m_options + sizeof(m_options))
+	{
+	  std::cerr << "*** ERROR: Malformed option field in "
+	      	    << "MsgAudioCodecSelect message\n";
+	  return;
+	}
+      	len = static_cast<uint8_t>(*ptr++);
+	ptr += len;
+	if (ptr >= m_options + sizeof(m_options))
+	{
+	  std::cerr << "*** ERROR: Malformed option field in "
+	      	    << "MsgAudioCodecSelect message\n";
+	  return;
+	}
+      }
+      if (ptr + name.size() + value.size() + 2 >= m_options + sizeof(m_options))
+      {
+      	std::cerr << "*** ERROR: No room for option " << name << " in"
+	      	  << "MsgAudioCodecSelect message\n";
+	return;
+      }
+      *ptr++ = name.size();
+      memcpy(ptr, name.c_str(), name.size());
+      ptr += name.size();
+      *ptr++ = value.size();
+      memcpy(ptr, value.c_str(), value.size());
+      
+      m_option_cnt += 1;
+    }
+    
+    void options(Opts &opts)
+    {
+      char *ptr = m_options;
+      for (int i=0; i<m_option_cnt; ++i)
+      {
+      	uint8_t len = static_cast<uint8_t>(*ptr++);
+	if (ptr + len >= m_options + sizeof(m_options))
+	{
+	  std::cerr << "*** ERROR: Malformed option field in "
+	      	    << "MsgAudioCodecSelect message\n";
+	  return;
+	}
+	std::string name(ptr, ptr+len);
+	ptr += len;
+	if (ptr >= m_options + sizeof(m_options))
+	{
+	  std::cerr << "*** ERROR: Malformed option field in "
+	      	    << "MsgAudioCodecSelect message\n";
+	  return;
+	}
+
+      	len = static_cast<uint8_t>(*ptr++);
+	if (ptr + len >= m_options + sizeof(m_options))
+	{
+	  std::cerr << "*** ERROR: Malformed option field in "
+	      	    << "MsgAudioCodecSelect message\n";
+	  return;
+	}
+	std::string value(ptr, ptr+len);
+	ptr += len;
+	if (ptr >= m_options + sizeof(m_options))
+	{
+	  std::cerr << "*** ERROR: Malformed option field in "
+	      	    << "MsgAudioCodecSelect message\n";
+	  return;
+	}
+	
+	opts.push_back(std::pair<std::string, std::string>(name, value));
+      }
+    }
+    
+    const char *name(void) const { return m_codec_name; }
+  
+  private:
+    char    m_codec_name[32];
+    uint8_t m_option_cnt;
+    char    m_options[256];
+    
+};  /* MsgAudioCodecSelect */
+
+
+class MsgRxAudioCodecSelect : public MsgAudioCodecSelect
+{
+  public:
+    static const unsigned TYPE = 100;
+    MsgRxAudioCodecSelect(const char *codec_name)
+      : MsgAudioCodecSelect(codec_name, TYPE) {}
+  
+};  /* MsgRxAudioCodecSelect */
+
+
+class MsgTxAudioCodecSelect : public MsgAudioCodecSelect
+{
+  public:
+    static const unsigned TYPE = 101;
+    MsgTxAudioCodecSelect(const char *codec_name)
+      : MsgAudioCodecSelect(codec_name, TYPE) {}
+  
+};  /* MsgTxAudioCodecSelect */
 
 
 class MsgAudio : public Msg
 {
   public:
-    static const int TYPE = 2;
-    static const int MAX_COUNT = 512;
-    MsgAudio(float *samples, int count)
-      : Msg(TYPE, sizeof(MsgAudio) - sizeof(*samples) * (MAX_COUNT - count))
+    static const unsigned TYPE = 102;
+    static const int BUFSIZE = sizeof(float) * 512;
+    MsgAudio(const void *buf, int size)
+      : Msg(TYPE, sizeof(MsgAudio) - (BUFSIZE - size))
     {
-      assert(count <= MAX_COUNT);
-      memcpy(m_samples, samples, count * sizeof(*samples));
-      m_count = count;
+      assert(size <= BUFSIZE);
+      memcpy(m_buf, buf, size);
+      m_size = size;
     }
-    float *samples(void) { return m_samples; }
-    int count(void) const { return m_count; }
+    void *buf(void)
+    {
+      return m_buf;
+    }
+    int size(void) const { return m_size; }
   
   private:
-    int   m_count;
-    float m_samples[MAX_COUNT];
+    int     m_size;
+    uint8_t m_buf[BUFSIZE];
     
 }; /* MsgAudio */
+
 
 
 
@@ -217,7 +460,7 @@ class MsgAudio : public Msg
 class MsgMute : public Msg
 {
   public:
-    static const int TYPE = 100;
+    static const unsigned TYPE = 200;
     MsgMute(bool do_mute)
       : Msg(TYPE, sizeof(MsgMute)), m_do_mute(do_mute) {}
     int doMute(void) const { return m_do_mute; }
@@ -231,7 +474,7 @@ class MsgMute : public Msg
 class MsgAddToneDetector : public Msg
 {
   public:
-    static const int TYPE = 101;
+    static const unsigned TYPE = 201;
     MsgAddToneDetector(float fq, int bw, float thresh, int required_duration)
       : Msg(TYPE, sizeof(MsgAddToneDetector)), m_fq(fq), m_bw(bw),
       	m_thresh(thresh), m_required_duration(required_duration) {}
@@ -252,7 +495,7 @@ class MsgAddToneDetector : public Msg
 class MsgReset : public Msg
 {
   public:
-    static const int TYPE = 102;
+    static const unsigned TYPE = 202;
     MsgReset(void) : Msg(TYPE, sizeof(MsgReset)) {}
     
 }; /* MsgReset */
@@ -263,7 +506,7 @@ class MsgReset : public Msg
 class MsgSquelch : public Msg
 {
   public:
-    static const int TYPE = 150;
+    static const unsigned TYPE = 250;
     MsgSquelch(bool is_open, float signal_strength, int sql_rx_id)
       : Msg(TYPE, sizeof(MsgSquelch)), m_is_open(is_open),
       	m_signal_strength(signal_strength), m_sql_rx_id(sql_rx_id) {}
@@ -282,7 +525,7 @@ class MsgSquelch : public Msg
 class MsgDtmf : public Msg
 {
   public:
-    static const int TYPE = 151;
+    static const unsigned TYPE = 251;
     MsgDtmf(char digit, int duration)
       : Msg(TYPE, sizeof(MsgDtmf)), m_digit(digit), m_duration(duration) {}
     char digit(void) const { return m_digit; }
@@ -298,7 +541,7 @@ class MsgDtmf : public Msg
 class MsgTone : public Msg
 {
   public:
-    static const int TYPE = 152;
+    static const unsigned TYPE = 252;
     MsgTone(float tone_fq)
       : Msg(TYPE, sizeof(MsgTone)), m_tone_fq(tone_fq) {}
     float toneFq(void) const { return m_tone_fq; }
@@ -317,7 +560,7 @@ class MsgTone : public Msg
 class MsgSetTxCtrlMode : public Msg
 {
   public:
-    static const int TYPE = 200;
+    static const unsigned TYPE = 300;
     MsgSetTxCtrlMode(Tx::TxCtrlMode mode)
       : Msg(TYPE, sizeof(MsgSetTxCtrlMode)), m_mode(mode) {}
     Tx::TxCtrlMode mode(void) const { return m_mode; }
@@ -331,7 +574,7 @@ class MsgSetTxCtrlMode : public Msg
 class MsgEnableCtcss : public Msg
 {
   public:
-    static const int TYPE = 201;
+    static const unsigned TYPE = 301;
     MsgEnableCtcss(bool enable)
       : Msg(TYPE, sizeof(MsgEnableCtcss)), m_enable(enable) {}
     bool enable(void) const { return m_enable; }
@@ -345,7 +588,7 @@ class MsgEnableCtcss : public Msg
 class MsgSendDtmf : public Msg
 {
   public:
-    static const int TYPE = 202;
+    static const unsigned TYPE  = 302;
     static const int MAX_DIGITS = 256;
     MsgSendDtmf(const std::string &digits)
       : Msg(TYPE, sizeof(MsgSendDtmf))
@@ -365,7 +608,7 @@ class MsgSendDtmf : public Msg
 class MsgFlush : public Msg
 {
   public:
-    static const int TYPE = 203;
+    static const unsigned TYPE = 303;
     MsgFlush(void)
       : Msg(TYPE, sizeof(MsgFlush)) {}
 }; /* MsgFlush */
@@ -376,7 +619,7 @@ class MsgFlush : public Msg
 class MsgTxTimeout : public Msg
 {
   public:
-    static const int TYPE = 250;
+    static const unsigned TYPE = 350;
     MsgTxTimeout(void)
       : Msg(TYPE, sizeof(MsgTxTimeout)) {}
 }; /* MsgTxTimeout */
@@ -385,7 +628,7 @@ class MsgTxTimeout : public Msg
 class MsgTransmitterStateChange : public Msg
 {
   public:
-    static const int TYPE = 251;
+    static const unsigned TYPE = 351;
     MsgTransmitterStateChange(bool is_transmitting)
       : Msg(TYPE, sizeof(MsgTransmitterStateChange)),
       	m_is_transmitting(is_transmitting) {}
@@ -400,7 +643,7 @@ class MsgTransmitterStateChange : public Msg
 class MsgAllSamplesFlushed : public Msg
 {
   public:
-    static const int TYPE = 252;
+    static const unsigned TYPE = 352;
     MsgAllSamplesFlushed(void)
       : Msg(TYPE, sizeof(MsgAllSamplesFlushed)) {}
 }; /* MsgTxTimeout */

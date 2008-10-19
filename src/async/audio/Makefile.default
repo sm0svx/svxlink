@@ -33,6 +33,7 @@
 
 # Include version information
 -include $(ROOT)/versions
+-include $(ROOT)/.config
 
 
 ###############################################################################
@@ -96,11 +97,18 @@ LIBSRC		= AsyncAudioSource.cpp AsyncAudioSink.cpp \
 		  AsyncAudioDelayLine.cpp AsyncAudioSelector.cpp \
 		  AsyncAudioMixer.cpp AsyncAudioFifo.cpp AsyncAudioPacer.cpp \
 		  AsyncAudioReader.cpp AsyncAudioDecimator.cpp \
-		  AsyncAudioInterpolator.cpp
+		  AsyncAudioInterpolator.cpp AsyncAudioDecoder.cpp \
+		  AsyncAudioEncoder.cpp AsyncAudioEncoderS16.cpp \
+		  AsyncAudioDecoderS16.cpp AsyncAudioEncoderGsm.cpp \
+		  AsyncAudioDecoderGsm.cpp
+
+ifdef USE_SPEEX
+LIBSRC +=	  AsyncAudioEncoderSpeex.cpp AsyncAudioDecoderSpeex.cpp
+endif
 
 
 # Which libs are used by the DYNAMIC lib generated.
-LIB_LIBS	= -lasynccore $(SIGC_LIBS)
+LIB_LIBS	= -lasynccore $(SIGC_LIBS) -lgsm $(SPEEX_LIBS)
 
 # Which STATIC libs should be included in the generated STATIC lib.
 # These libs must be in the $(LIB) directory. Only the name of the
@@ -117,7 +125,8 @@ EXPINC		= AsyncAudioSource.h AsyncAudioSink.h AsyncAudioProcessor.h \
 		  AsyncAudioPassthrough.h AsyncAudioMixer.h AsyncAudioFifo.h \
 		  AsyncAudioDebugger.h AsyncAudioPacer.h AsyncAudioReader.h \
 		  AsyncAudioDecimator.h AsyncAudioInterpolator.h \
-		  AsyncAudioStreamStateDetector.h
+		  AsyncAudioStreamStateDetector.h AsyncAudioEncoder.h \
+		  AsyncAudioDecoder.h
 
 
 # Specify Qt header files here that you want to run the
@@ -228,11 +237,11 @@ RPM_NAME :=
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= $(SIGC_INCPATH)
+INCPATH 	+= $(SIGC_INCPATH) -I/usr/include/gsm $(SPEEX_INCPATH)
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.
-LIBPATH 	+= $(SIGC_LIBPATH)
+LIBPATH 	+= $(SIGC_LIBPATH) $(SPEEX_LIBPATH)
 
 # Additional warnings to use. If you want to override the default
 # warnings, change the "+=" to "=".

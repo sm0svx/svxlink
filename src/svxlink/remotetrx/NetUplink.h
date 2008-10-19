@@ -71,10 +71,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace Async
 {
   class TcpServer;
-  class SigCAudioSink;
-  class SigCAudioSource;
   class AudioFifo;
   class Timer;
+  class AudioEncoder;
+  class AudioDecoder;
 };
 
 namespace NetTrxMsg
@@ -149,24 +149,38 @@ class NetUplink : public Uplink
      */
     bool initialize(void);
     
+    /**
+     * @brief Setup the authentication key
+     * @param key The autentication key to use
+     */
+    void setAuthKey(const std::string &key) { auth_key = key; }
+    
 
   protected:
     
   private:
+    typedef enum
+    {
+      STATE_DISC, STATE_AUTH_WAIT, STATE_READY
+    } State;
+    
     Async::TcpServer  	    *server;
     Async::TcpConnection    *con;
     char      	      	    recv_buf[4096];
-    int       	      	    recv_cnt;
-    int       	      	    recv_exp;
+    unsigned       	    recv_cnt;
+    unsigned       	    recv_exp;
     Rx	      	      	    *rx;
-    Async::SigCAudioSink    *sigc_sink;
     Tx	      	      	    *tx;
     Async::AudioFifo  	    *fifo;
-    Async::SigCAudioSource  *sigc_src;
     Async::Config     	    &cfg;
     std::string       	    name;
     struct timeval    	    last_msg_timestamp;
     Async::Timer      	    *heartbeat_timer;
+    Async::AudioEncoder     *audio_enc;
+    Async::AudioDecoder     *audio_dec;
+    State                   state;
+    std::string             auth_key;
+    unsigned char           auth_challenge[NetTrxMsg::MsgAuthChallenge::CHALLENGE_LEN];
     
     NetUplink(const NetUplink&);
     NetUplink& operator=(const NetUplink&);
@@ -195,16 +209,10 @@ class NetUplink : public Uplink
      */
     void toneDetected(float tone_fq);
     
-    /**
-     * @brief 	Pass on received audio
-     * @param 	samples The buffer containing the samples
-     * @param 	count 	The number of samples in the buffer
-     */
-    int audioReceived(float *samples, int count);
-    
+    void writeEncodedSamples(const void *buf, int size);
     void txTimeout(void);
     void transmitterStateChange(bool is_transmitting);
-    void allSamplesFlushed(void);
+    void allEncodedSamplesFlushed(void);
     void heartbeat(Async::Timer *t);
 
 };  /* class NetUplink */

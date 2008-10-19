@@ -70,6 +70,10 @@ namespace NetTrxMsg
   class Msg;
 };
 
+namespace Async
+{
+  class AudioDecoder;
+};
 
 /****************************************************************************
  *
@@ -181,19 +185,10 @@ class NetRx : public Rx
      * ready to accept more samples.
      * This function is normally only called from a connected sink object.
      */
-    virtual void resumeOutput(void) {}
+    //virtual void resumeOutput(void) {}
     
 
   protected:
-    /**
-     * @brief The registered sink has flushed all samples
-     *
-     * This function will be called when all samples have been flushed in the
-     * registered sink. If it is not reimplemented, a handler must be set
-     * that handle the function call.
-     * This function is normally only called from a connected sink object.
-     */
-    virtual void allSamplesFlushed(void);
     
 
   private:
@@ -205,12 +200,12 @@ class NetRx : public Rx
     std::list<ToneDet*> tone_detectors;
     bool      	      	unflushed_samples;
     bool      	      	sql_is_open;
+    Async::AudioDecoder *audio_dec;
     
-    void tcpConnected(void);
-    void tcpDisconnected(Async::TcpConnection *con,
-      	      	      	 Async::TcpConnection::DisconnectReason reason);
+    void connectionReady(bool is_ready);
     void handleMsg(NetTrxMsg::Msg *msg);
     void sendMsg(NetTrxMsg::Msg *msg);
+    void allEncodedSamplesFlushed(void);
 
 };  /* class NetRx */
 

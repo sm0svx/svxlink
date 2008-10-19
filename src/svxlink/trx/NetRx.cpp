@@ -1,6 +1,6 @@
 /**
 @file	 NetRx.cpp
-@brief   Contains a class that connect to a remote receiver via IP
+@brief   Contains a class that connect to a remote receiver via TCP/IP
 @author  Tobias Blomberg
 @date	 2006-04-14
 
@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
+#include <AsyncAudioDecoder.h>
 
 
 /****************************************************************************
@@ -131,13 +132,17 @@ class ToneDet
 
 NetRx::NetRx(Config &cfg, const string& name)
   : Rx(name), cfg(cfg), is_muted(true), tcp_con(0), last_signal_strength(0.0),
-    last_sql_rx_id(0), unflushed_samples(false), sql_is_open(false)
+    last_sql_rx_id(0), unflushed_samples(false), sql_is_open(false),
+    audio_dec(0)
 {
 } /* NetRx::NetRx */
 
 
 NetRx::~NetRx(void)
 {
+  clearHandler();
+  delete audio_dec;
+  
   tcp_con->deleteInstance();
   
   list<ToneDet*>::iterator it;
@@ -165,9 +170,45 @@ bool NetRx::initialize(void)
   string udp_port(NET_TRX_DEFAULT_UDP_PORT);
   cfg.getValue(name(), "UDP_PORT", udp_port);
   
+  string audio_dec_name;
+  cfg.getValue(name(), "CODEC", audio_dec_name);
+  if (audio_dec_name.empty())
+  {
+    audio_dec_name = "RAW";
+  }
+  
+  string auth_key;
+  cfg.getValue(name(), "AUTH_KEY", auth_key);
+  
+  audio_dec = AudioDecoder::create(audio_dec_name);
+  if (audio_dec == 0)
+  {
+    cerr << name() << ": *** ERROR: Illegal audio codec (" << audio_dec_name
+          << ") specified\n";
+    return false;
+  }
+  audio_dec->allEncodedSamplesFlushed.connect(
+          slot(*this, &NetRx::allEncodedSamplesFlushed));
+  string opt_prefix(audio_dec->name());
+  opt_prefix += "_DEC_";
+  list<string> names = cfg.listSection(name());
+  list<string>::const_iterator nit;
+  for (nit=names.begin(); nit!=names.end(); ++nit)
+  {
+    if ((*nit).find(opt_prefix) == 0)
+    {
+      string opt_value;
+      cfg.getValue(name(), *nit, opt_value);
+      string opt_name((*nit).substr(opt_prefix.size()));
+      audio_dec->setOption(opt_name, opt_value);
+    }
+  }
+  audio_dec->printCodecParams();
+  setHandler(audio_dec);
+  
   tcp_con = NetTrxTcpClient::instance(host, atoi(tcp_port.c_str()));
-  tcp_con->connected.connect(slot(*this, &NetRx::tcpConnected));
-  tcp_con->disconnected.connect(slot(*this, &NetRx::tcpDisconnected));
+  tcp_con->setAuthKey(auth_key);
+  tcp_con->isReady.connect(slot(*this, &NetRx::connectionReady));
   tcp_con->msgReceived.connect(slot(*this, &NetRx::handleMsg));
   tcp_con->connect();
   
@@ -178,11 +219,6 @@ bool NetRx::initialize(void)
 
 void NetRx::mute(bool do_mute)
 {
-  /*
-  cout << "NetRx::mute[" << name() << "]: do_mute="
-       << (do_mute ? "TRUE" : "FALSE") << "\n";
-  */
-  
   if (do_mute == is_muted)
   {
     return;
@@ -198,7 +234,7 @@ void NetRx::mute(bool do_mute)
     
     if (unflushed_samples)
     {
-      sinkFlushSamples();
+      audio_dec->flushEncodedSamples();
     }
     else
     {
@@ -215,9 +251,6 @@ void NetRx::mute(bool do_mute)
 bool NetRx::addToneDetector(float fq, int bw, float thresh,
       	      	      	    int required_duration)
 {
-  //cout << "addToneDetector: fq=" << fq << " bw=" << bw
-  //     << " required_duration=" << required_duration << endl;
-       
   ToneDet *det = new ToneDet(fq, bw, thresh, required_duration);
   tone_detectors.push_back(det);
   
@@ -246,7 +279,7 @@ void NetRx::reset(void)
   
   if (unflushed_samples)
   {
-    sinkFlushSamples();
+    audio_dec->flushEncodedSamples();
   }
   else
   {
@@ -266,63 +299,72 @@ void NetRx::reset(void)
  *
  ****************************************************************************/
 
-void NetRx::allSamplesFlushed(void)
-{
-  unflushed_samples = false;
-  if (!sql_is_open)
-  {
-    setSquelchState(false);
-  }
-} /* NetRx::allSamplesFlushed */
-
 
 
 /****************************************************************************
  *
  * Private member functions
  *
- ****************************************************************************/
+ ****************************************************************************/                        
 
-void NetRx::tcpConnected(void)
+void NetRx::connectionReady(bool is_ready)
 {
-  cout << name() << ": Connected to remote receiver at "
-       << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << "\n";
-  
-  if (!is_muted)
+  if (is_ready)
   {
-    MsgMute *msg = new MsgMute(false);
+    cout << name() << ": Connected to remote receiver at "
+        << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << "\n";
+    
+    if (!is_muted)
+    {
+      MsgMute *msg = new MsgMute(false);
+      sendMsg(msg);
+    }
+    
+    list<ToneDet*>::iterator it;
+    for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
+    {
+      MsgAddToneDetector *msg =
+          new MsgAddToneDetector((*it)->fq, (*it)->bw, (*it)->thresh,
+                                (*it)->required_duration);
+      sendMsg(msg);
+    }
+    
+    MsgAudioCodecSelect *msg = new MsgRxAudioCodecSelect(audio_dec->name());
+    string opt_prefix(audio_dec->name());
+    opt_prefix += "_ENC_";
+    list<string> names = cfg.listSection(name());
+    list<string>::const_iterator nit;
+    for (nit=names.begin(); nit!=names.end(); ++nit)
+    {
+      if ((*nit).find(opt_prefix) == 0)
+      {
+	string opt_value;
+      	cfg.getValue(name(), *nit, opt_value);
+      	string opt_name((*nit).substr(opt_prefix.size()));
+      	msg->addOption(opt_name, opt_value);
+      }
+    }
+    cout << name() << ": Requesting CODEC \"" << msg->name() << "\"\n";
     sendMsg(msg);
-  }
-  
-  list<ToneDet*>::iterator it;
-  for (it=tone_detectors.begin(); it!=tone_detectors.end(); ++it)
-  {
-    MsgAddToneDetector *msg =
-      	new MsgAddToneDetector((*it)->fq, (*it)->bw, (*it)->thresh,
-      	      	      	       (*it)->required_duration);
-    sendMsg(msg);
-  }
-  
-} /* NetRx::tcpConnected */
-
-
-void NetRx::tcpDisconnected(TcpConnection *con,
-      	      	      	    TcpConnection::DisconnectReason reason)
-{
-  cout << name() << ": Disconnected from remote receiver "
-       << con->remoteHost() << ":" << con->remotePort()
-       << ": " << TcpConnection::disconnectReasonStr(reason) << "\n";
-  
-  sql_is_open = false;
-  if (unflushed_samples)
-  {
-    sinkFlushSamples();
   }
   else
   {
-    setSquelchState(false);
+    cout << name() << ": Disconnected from remote receiver "
+        << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << ": "
+        << TcpConnection::disconnectReasonStr(tcp_con->disconnectReason())
+        << "\n";
+    
+    sql_is_open = false;
+    if (unflushed_samples)
+    {
+      audio_dec->flushEncodedSamples();
+    }
+    else
+    {
+      setSquelchState(false);
+    }
   }
-} /* NetRx::tcpDisconnected */
+} /* NetRx::connectionReady */
 
 
 void NetRx::handleMsg(Msg *msg)
@@ -346,7 +388,7 @@ void NetRx::handleMsg(Msg *msg)
 	{
 	  if (unflushed_samples)
 	  {
-            sinkFlushSamples();
+            audio_dec->flushEncodedSamples();
 	  }
 	  else
 	  {
@@ -383,14 +425,14 @@ void NetRx::handleMsg(Msg *msg)
       {
 	MsgAudio *audio_msg = reinterpret_cast<MsgAudio*>(msg);
 	unflushed_samples = true;
-	sinkWriteSamples(audio_msg->samples(), audio_msg->count());
+        audio_dec->writeEncodedSamples(audio_msg->buf(), audio_msg->size());
       }
       break;
     }
     
     /*
     default:
-      cerr << "*** ERROR: Unknown TCP message received. Type="
+      cerr << name() << ": *** ERROR: Unknown TCP message received. Type="
       	   << msg->type() << ", Size=" << msg->size() << endl;
       break;
     */
@@ -403,6 +445,16 @@ void NetRx::sendMsg(Msg *msg)
 {
   tcp_con->sendMsg(msg);
 } /* NetUplink::sendMsg */
+
+
+void NetRx::allEncodedSamplesFlushed(void)
+{
+  unflushed_samples = false;
+  if (!sql_is_open)
+  {
+    setSquelchState(false);
+  }
+} /* NetRx::allEncodedSamplesFlushed */
 
 
 

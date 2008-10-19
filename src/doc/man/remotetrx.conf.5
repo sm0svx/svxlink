@@ -144,6 +144,14 @@ Always "Net" for a networked uplink.
 .TP
 .B LISTEN_PORT
 The TCP port to listen on. The default is 5210.
+.TP
+.B AUTH_KEY
+This is the authentication key (password) to use to athenticate incoming
+connections. The same key have to be specified in the client configuration.
+If no key is specified, all logins will be unauthenticated. A good
+authentication key should be 20 characters long.
+The key will never be transmitted over the network. A HMAC-SHA1
+challenge-response procedure will be used for authentication.
 .
 .SS Trx uplink section
 .
