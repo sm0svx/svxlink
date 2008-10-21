@@ -3,42 +3,46 @@
     <name>ComDialog</name>
     <message>
         <source>INFO</source>
-        <translation>INFO</translation>
+        <translation>Information</translation>
     </message>
     <message>
         <source>Connected to </source>
-        <translation>Ansluten till </translation>
+        <translation>Verbunden mit</translation>
     </message>
     <message>
         <source>Connecting to </source>
-        <translation>Ansluter till </translation>
+        <translation>Verbinden mit</translation>
     </message>
     <message>
-        <source>Disconnected
-</source>
-        <translation>Nedkopplad</translation>
+        <source>Disconnected</source>
+        <translation type="obsolete">Verbindung getrennt</translation>
     </message>
     <message>
         <source>Qtel Error</source>
-        <translation>Qtel fel</translation>
+        <translation>Qtel Fehler</translation>
     </message>
     <message>
         <source>Station data not found in directory server.
 Can&apos;t create connection to</source>
-        <translation>Kunde inte hitta stationsdatan i listservern.
-Kan ej skapa uppkoppling till</translation>
+        <translation>Stationsdaten nicht im Echolink-Verzeichnisserver gefunden. 
+<byte value="x9"/>Es kann keine Verbindung aufgebaut werden zu</translation>
     </message>
     <message>
         <source>Could not create connection to station</source>
-        <translation>Kunde inte ansluta till station</translation>
+        <translation>Es kann keine Verbindung aufgebaut werden zur Station</translation>
     </message>
     <message>
         <source>Could not open audio device</source>
-        <translation>Kunde inte komma åt ljudkortet</translation>
+        <translation>Kann auf das Soundinterface nicht zugreifen</translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
-        <translation>Kunde inte ansluta till fjärrdatorn</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disconnected
+</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -57,11 +61,11 @@ Kan ej skapa uppkoppling till</translation>
     </message>
     <message>
         <source>Description:</source>
-        <translation>Beskrivning:</translation>
+        <translation>Beschreibung:</translation>
     </message>
     <message>
         <source>IP-address:</source>
-        <translation>IP-adress:</translation>
+        <translation>IP-Adresse:</translation>
     </message>
     <message>
         <source>Status:</source>
@@ -69,31 +73,31 @@ Kan ej skapa uppkoppling till</translation>
     </message>
     <message>
         <source>Time:</source>
-        <translation>Tid:</translation>
+        <translation>Zeit:</translation>
     </message>
     <message>
         <source>Connect</source>
-        <translation type="obsolete">Anslut</translation>
+        <translation type="obsolete">Verbinden</translation>
     </message>
     <message>
         <source>Disconnect</source>
-        <translation type="obsolete">Koppla ner</translation>
+        <translation type="obsolete">Verbindung trennen</translation>
     </message>
     <message>
         <source>PTT</source>
-        <translation></translation>
+        <translation>PTT</translation>
     </message>
     <message>
         <source>Chat/Info</source>
-        <translation></translation>
+        <translation>Mitteilungen</translation>
     </message>
     <message>
         <source>&amp;Connect</source>
-        <translation>&amp;Anslut</translation>
+        <translation>&amp;Verbinden</translation>
     </message>
     <message>
         <source>&amp;Disconnect</source>
-        <translation>&amp;Koppla ner</translation>
+        <translation>&amp;Verbindung trennen</translation>
     </message>
     <message>
         <source>RX</source>
@@ -105,7 +109,7 @@ Kan ej skapa uppkoppling till</translation>
     </message>
     <message>
         <source>Name:</source>
-        <translation>Namn:</translation>
+        <translation>Name:</translation>
     </message>
     <message>
         <source>Alt+D</source>
@@ -117,11 +121,11 @@ Kan ej skapa uppkoppling till</translation>
     </message>
     <message>
         <source>VOX Enabled</source>
-        <translation>VOX aktiverad</translation>
+        <translation>VOX aktivieren</translation>
     </message>
     <message>
         <source>Threshold:</source>
-        <translation>Tröskel:</translation>
+        <translation>Schwellwert:</translation>
     </message>
     <message>
         <source>Delay:</source>
@@ -129,51 +133,50 @@ Kan ej skapa uppkoppling till</translation>
     </message>
     <message>
         <source>dB Level:</source>
-        <translation>dB-nivå:</translation>
+        <translation>dB-Level:</translation>
     </message>
 </context>
 <context>
     <name>MainWindow</name>
     <message>
         <source>Logging off from directory server...</source>
-        <translation>Loggar ut från listserver...</translation>
+        <translation>Beim Verzeichnisserver abmelden...</translation>
     </message>
     <message>
         <source>Station list has been refreshed</source>
-        <translation>Stationslistan har blivit uppdaterad</translation>
+        <translation>Die Liste der Stationen wurden erneuert</translation>
     </message>
     <message>
         <source>Refreshing station list...</source>
-        <translation>Uppdaterar stationslista...</translation>
+        <translation>Erneuere Liste der Stationen...</translation>
     </message>
     <message>
         <source>Getting calls from directory server...</source>
-        <translation type="obsolete">Hämtar stationslista från listserver...</translation>
+        <translation type="obsolete">Lese Rufzeichen vom Verzeichnisserver...</translation>
     </message>
     <message>
         <source>Connect request from</source>
-        <translation type="obsolete">Uppkopplingsförsök från</translation>
+        <translation type="obsolete">Verbindungsanfrage von</translation>
     </message>
     <message>
         <source>Add to bookmarks</source>
-        <translation>Lägg till bokmärke</translation>
+        <translation>Zu den Favoriten hinzufügen</translation>
     </message>
     <message>
         <source>Remove from bookmarks</source>
-        <translation>Tag bort bokmärke</translation>
+        <translation>Von den Favoriten entfernen</translation>
     </message>
     <message>
         <source>Add named station...</source>
-        <translation>Lägg till namngiven station...</translation>
+        <translation>Bekannte Station hinzufügen...</translation>
     </message>
     <message>
         <source>Qtel - Add station...</source>
-        <translation>Qtel - Lägg till station...</translation>
+        <translation>Qtel - Station hinzufügen...</translation>
     </message>
     <message>
         <source>Enter callsign of the station to add</source>
-        <translation>Mata in anropssignalen för den
-station du vill lägga till</translation>
+        <translation>Rufzeichen der Station eingeben, die hinzugefügt werden soll</translation>
     </message>
     <message>
         <source>Ctrl+Q</source>
@@ -202,46 +205,46 @@ station du vill lägga till</translation>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
-        <translation>Qtel: Anslut till IP</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Enter an IP address or hostname:</source>
-        <translation>Mata in en IP-adress eller datornamn:</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>MainWindowBase</name>
     <message>
         <source>Server Messages</source>
-        <translation type="obsolete">Servermeddelanden</translation>
+        <translation type="obsolete">Servermeldungenn</translation>
     </message>
     <message>
         <source>Station Browser</source>
-        <translation type="obsolete">Stationsbläddrare</translation>
+        <translation type="obsolete">Stationsbrowser</translation>
     </message>
     <message>
         <source>Explorer</source>
-        <translation>Utforskare</translation>
+        <translation>Explorer</translation>
     </message>
     <message>
         <source>Conferences</source>
-        <translation>Konferenser</translation>
+        <translation>Konferenzen</translation>
     </message>
     <message>
         <source>Links</source>
-        <translation>Länkar</translation>
+        <translation>Links</translation>
     </message>
     <message>
         <source>Repeaters</source>
-        <translation>Relästationer</translation>
+        <translation>Relais</translation>
     </message>
     <message>
         <source>Stations</source>
-        <translation>Stationer</translation>
+        <translation>Stationen</translation>
     </message>
     <message>
         <source>Bookmarks</source>
-        <translation>Bokmärken</translation>
+        <translation>Favoriten</translation>
     </message>
     <message>
         <source>Station</source>
@@ -249,91 +252,91 @@ station du vill lägga till</translation>
     </message>
     <message>
         <source>Location/Description</source>
-        <translation>Plats/Beskrivning</translation>
+        <translation>Ort/Beschreibung</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation></translation>
+        <translation>Status</translation>
     </message>
     <message>
         <source>Time</source>
-        <translation>Tid</translation>
+        <translation>Zeit</translation>
     </message>
     <message>
         <source>IP-address</source>
-        <translation type="obsolete">IP-adress</translation>
+        <translation type="obsolete">IP-Adresse</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Arkiv</translation>
+        <translation>&amp;Datei</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Inställningar</translation>
+        <translation>&amp;Einstellungen</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Hjälp</translation>
+        <translation>&amp;Hilfe</translation>
     </message>
     <message>
         <source>Undo</source>
-        <translation>Ångra</translation>
+        <translation>Rückgängig</translation>
     </message>
     <message>
         <source>&amp;Undo</source>
-        <translation>&amp;Ångra</translation>
+        <translation>&amp;Rückgängig</translation>
     </message>
     <message>
         <source>Redo</source>
-        <translation>Ångra ångra</translation>
+        <translation>Wiederholen</translation>
     </message>
     <message>
         <source>&amp;Redo</source>
-        <translation>Å&amp;ngra ångra</translation>
+        <translation>Å&amp;Wiederholen</translation>
     </message>
     <message>
         <source>Cut</source>
-        <translation>Klipp ut</translation>
+        <translation>Ausschneiden</translation>
     </message>
     <message>
         <source>&amp;Cut</source>
-        <translation>&amp;Klipp ut</translation>
+        <translation>&amp;Ausschneiden</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Kopiera</translation>
+        <translation>Kopieren</translation>
     </message>
     <message>
         <source>C&amp;opy</source>
-        <translation>K&amp;opiera</translation>
+        <translation>K&amp;opieren</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation>Klistra in</translation>
+        <translation>Einfügen</translation>
     </message>
     <message>
         <source>&amp;Paste</source>
-        <translation>K&amp;listra in</translation>
+        <translation>E&amp;nfügen</translation>
     </message>
     <message>
         <source>Find</source>
-        <translation>Sök</translation>
+        <translation>Suchen</translation>
     </message>
     <message>
         <source>&amp;Find...</source>
-        <translation>&amp;Sök</translation>
+        <translation>&amp;Suchen...</translation>
     </message>
     <message>
         <source>Contents</source>
-        <translation>Innehåll</translation>
+        <translation>Inhalt</translation>
     </message>
     <message>
         <source>&amp;Contents...</source>
-        <translation>I&amp;nnehåll...</translation>
+        <translation>I&amp;nhalt...</translation>
     </message>
     <message>
         <source>Index</source>
-        <translation></translation>
+        <translation>Index</translation>
     </message>
     <message>
         <source>&amp;Index...</source>
@@ -341,39 +344,39 @@ station du vill lägga till</translation>
     </message>
     <message>
         <source>About</source>
-        <translation>Om</translation>
+        <translation>Über</translation>
     </message>
     <message>
         <source>&amp;About...</source>
-        <translation>&amp;Om...</translation>
+        <translation>&amp;Über...</translation>
     </message>
     <message>
         <source>About Qtel</source>
-        <translation>Om Qtel</translation>
+        <translation>über Qtel</translation>
     </message>
     <message>
         <source>Quit</source>
-        <translation>Avsluta</translation>
+        <translation>Beenden</translation>
     </message>
     <message>
         <source>&amp;Quit</source>
-        <translation>&amp;Avsluta</translation>
+        <translation>&amp;Beenden</translation>
     </message>
     <message>
         <source>Quit the Qtel application</source>
-        <translation>Avsluta Qtel</translation>
+        <translation>Qtel beenden</translation>
     </message>
     <message>
         <source>Qtel Settings...</source>
-        <translation>Inställningar för Qtel...</translation>
+        <translation>Einstellungen für Qtel...</translation>
     </message>
     <message>
         <source>&amp;Qtel Settings...</source>
-        <translation>&amp;Inställningar för Qtel</translation>
+        <translation>&amp;Einstellungen für Qtel</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
-        <translation>Öppna inställningsdialogen för Qtel</translation>
+        <translation>Öffen der Einstellungen für Qtel</translation>
     </message>
     <message>
         <source>Qtel v</source>
@@ -382,84 +385,84 @@ station du vill lägga till</translation>
     <message>
         <source>- Qt EchoLink client.
 </source>
-        <translation>- Qt EchoLink-klient.
+        <translation>- Qt EchoLink-Client.
 </translation>
     </message>
     <message>
         <source>Author</source>
-        <translation>Författare</translation>
+        <translation>Verfasser</translation>
     </message>
     <message>
         <source>&amp;Directory</source>
-        <translation>&amp;Stationslista</translation>
+        <translation>&amp;Stationsverzeichnis</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation>Uppdatera</translation>
+        <translation>Erneuern</translation>
     </message>
     <message>
         <source>&amp;Refresh</source>
-        <translation>U&amp;ppdatera</translation>
+        <translation>E&amp;rneuern</translation>
     </message>
     <message>
         <source>Refresh station list</source>
-        <translation>Uppdatera stationslista</translation>
+        <translation>Stationsliste erneuern</translation>
     </message>
     <message>
         <source>Qtel - the Qt EchoLink Client</source>
-        <translation>Qtel - Qt EchoLink Klient</translation>
+        <translation>Qtel - der Qt EchoLink Client</translation>
     </message>
     <message>
         <source>Busy</source>
-        <translation>Upptagen</translation>
+        <translation>Beschäftigt</translation>
     </message>
     <message>
         <source>&amp;Busy</source>
-        <translation>&amp;Upptagen</translation>
+        <translation>&amp;Beschäftigt</translation>
     </message>
     <message>
         <source>View as busy</source>
-        <translation>Visa som upptagen</translation>
+        <translation>Als beschäftigt anzeigen</translation>
     </message>
     <message>
         <source>View as busy in directory server</source>
-        <translation>Visa som upptagen i listservern</translation>
+        <translation>Im Verzeichnisserver als beschäftigt anzeigen</translation>
     </message>
     <message>
         <source>Messages</source>
-        <translation>Meddelanden</translation>
+        <translation>Mitteilungen</translation>
     </message>
     <message>
         <source>Local Time</source>
-        <translation type="obsolete">Lokal tid</translation>
+        <translation type="obsolete">Lokalzeit</translation>
     </message>
     <message>
         <source>Local time</source>
-        <translation>Lokal tid</translation>
+        <translation>Lokalzeit</translation>
     </message>
     <message>
         <source>Incoming connections</source>
-        <translation>Inkommande uppkopplingar</translation>
+        <translation>Eingehende Verbindungen</translation>
     </message>
     <message>
         <source>Accept</source>
-        <translation>Acceptera</translation>
+        <translation>Akzeptieren</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation>Rensa</translation>
+        <translation>Löschen</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation>Anropssignal</translation>
+        <translation>Rufzeichen</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation>Namn</translation>
+        <translation>Name</translation>
     </message>
     <message>
         <source>Node ID</source>
-        <translation>Nod-ID</translation>
+        <translation>Knotennummer</translation>
     </message>
     <message>
         <source>Ctrl+Z</source>
@@ -487,72 +490,72 @@ station du vill lägga till</translation>
     </message>
     <message>
         <source>Connect to IP...</source>
-        <translation>Anslut till IP...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Connect to selected...</source>
-        <translation>Anslut till markerad station...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Disconnect</source>
-        <translation>Koppla ner</translation>
+        <translation type="unfinished">Verbindung trennen</translation>
     </message>
     <message>
         <source>Add selected to Bookmarks</source>
-        <translation>Lägg till markerad station till bokmärken</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
     <message>
         <source>Qtel: Settings</source>
-        <translation>Qtel: Inställningar</translation>
+        <translation>Qtel: Einstellungen</translation>
     </message>
     <message>
         <source>OK</source>
-        <translation></translation>
+        <translation>OK</translation>
     </message>
     <message>
         <source>User Info</source>
-        <translation>Användarinfo</translation>
+        <translation>Informationen zur Gegenstation</translation>
     </message>
     <message>
         <source>User Information</source>
-        <translation>Användarinformation</translation>
+        <translation>Informationen zur Gegenstation</translation>
     </message>
     <message>
         <source>Info
 Message</source>
-        <translation>Informations-
-meddelande</translation>
+        <translation>Information/Mitteilung
+</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation>Plats</translation>
+        <translation>Ort</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation>Anropssignal</translation>
+        <translation>Rufzeichen</translation>
     </message>
     <message>
         <source>Password</source>
-        <translation>Lösenord</translation>
+        <translation>Passwort</translation>
     </message>
     <message>
         <source>Retype password</source>
-        <translation>Repetera lösenord</translation>
+        <translation>Passwort nochmals eingeben</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation>Namn</translation>
+        <translation>Name</translation>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation>Listserver</translation>
+        <translation>Verzeichnisserver</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
-        <translation>Listserverinställningar</translation>
+        <translation>Verzeichnisservereinstellungen</translation>
     </message>
     <message>
         <source>Server</source>
@@ -560,15 +563,15 @@ meddelande</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Avbryt</translation>
+        <translation>Abbrechen</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>Namn eller IP-adress på den EchoLink listserver som skall användas</translation>
+        <translation>Hostname oder IP-Adresse des Verzeichnisservers</translation>
     </message>
     <message>
         <source>Refresh time</source>
-        <translation>Uppdateringsintervall</translation>
+        <translation>Aktualisierungsintervall</translation>
     </message>
     <message>
         <source>min</source>
@@ -576,59 +579,59 @@ meddelande</translation>
     </message>
     <message>
         <source>Time, in minutes, between station list refreshes</source>
-        <translation>Tid, i minuter, mellan uppdatering av stationslistan</translation>
+        <translation>Intervall in Minuten zwischen den Aktualisierungen</translation>
     </message>
     <message>
         <source>Register as busy on program startup</source>
-        <translation>Registrera som upptagen vid programstart</translation>
+        <translation>Beim Programmstart als beschäftigt anmelden</translation>
     </message>
     <message>
         <source>Start as busy</source>
-        <translation>Starta som upptagen</translation>
+        <translation>Beim Programmstart als beschäftigt anzeigen</translation>
     </message>
     <message>
         <source>Sound</source>
-        <translation>Ljud</translation>
+        <translation>Audio</translation>
     </message>
     <message>
         <source>Sound settings</source>
-        <translation>Ljudinställningar</translation>
+        <translation>Audioeigenschaften</translation>
     </message>
     <message>
         <source>Audio device</source>
-        <translation>Ljudenhet</translation>
+        <translation>Audiogerät</translation>
     </message>
     <message>
         <source>Full duplex</source>
-        <translation></translation>
+        <translation>Vollduplex</translation>
     </message>
     <message>
         <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation>Vilken ljudenhet som skall användas (ex /dev/dsp)</translation>
+        <translation>Zu nutzendes Audiogerät (z.B. /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
-        <translation>Klicka i denna för att aktivera ljudhantering i full duplex</translation>
+        <translation>Zum Vollduplex-Betrieb diese Checkbox anklicken</translation>
     </message>
     <message>
         <source>Connect Sound</source>
-        <translation>Anslutningsljud</translation>
+        <translation>Ton beim Verbindungsaufbau</translation>
     </message>
     <message>
         <source>The connect sound to use on incoming EchoLink connections</source>
-        <translation>Ljudfil som skall spelas upp vid inkommande EchoLink-förbindelse</translation>
+        <translation>Ton, der bei einer eingehenden Verbindung abgespielt werden soll</translation>
     </message>
     <message>
         <source>Browse...</source>
-        <translation>Bläddra...</translation>
+        <translation>Durchsuchen...</translation>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation>16-bit 8kHz ljudfiler (*.raw)</translation>
+        <translation>16-bit 8kHz Audio-Datei (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation>Välj ett anslutningsljud</translation>
+        <translation>Audiodatei auswählen</translation>
     </message>
 </context>
 </TS>
