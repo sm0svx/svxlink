@@ -33,7 +33,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Could not open audio device</source>
-        <translation>Kann auf das Soundinterface nicht zugreifen</translation>
+        <translation>Das Audiogerät kann nicht geöffnet werden</translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
@@ -57,7 +57,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>?</source>
-        <translation></translation>
+        <translation>?</translation>
     </message>
     <message>
         <source>Description:</source>
@@ -117,7 +117,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>VOX</source>
-        <translation></translation>
+        <translation>VOX</translation>
     </message>
     <message>
         <source>VOX Enabled</source>
@@ -129,11 +129,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Delay:</source>
-        <translation>Fördröjning:</translation>
+        <translation>Verzögerung:</translation>
     </message>
     <message>
         <source>dB Level:</source>
-        <translation>dB-Level:</translation>
+        <translation>Pegel [dB]:</translation>
     </message>
 </context>
 <context>
@@ -144,11 +144,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Station list has been refreshed</source>
-        <translation>Die Liste der Stationen wurden erneuert</translation>
+        <translation>Die Stationsliste wurde aktualisiert</translation>
     </message>
     <message>
         <source>Refreshing station list...</source>
-        <translation>Erneuere Liste der Stationen...</translation>
+        <translation>Aktualisiere Stationsliste...</translation>
     </message>
     <message>
         <source>Getting calls from directory server...</source>
@@ -160,11 +160,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Add to bookmarks</source>
-        <translation>Zu den Favoriten hinzufügen</translation>
+        <translation>Zu Favoriten hinzufügen</translation>
     </message>
     <message>
         <source>Remove from bookmarks</source>
-        <translation>Von den Favoriten entfernen</translation>
+        <translation>Aus den Favoriten entfernen</translation>
     </message>
     <message>
         <source>Add named station...</source>
@@ -176,7 +176,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Enter callsign of the station to add</source>
-        <translation>Rufzeichen der Station eingeben, die hinzugefügt werden soll</translation>
+        <translation>Rufzeichen der Station, die hinzugefügt werden soll</translation>
     </message>
     <message>
         <source>Ctrl+Q</source>
@@ -216,7 +216,7 @@ Can&apos;t create connection to</source>
     <name>MainWindowBase</name>
     <message>
         <source>Server Messages</source>
-        <translation type="obsolete">Servermeldungenn</translation>
+        <translation type="obsolete">Servermeldungen</translation>
     </message>
     <message>
         <source>Station Browser</source>
@@ -316,7 +316,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>&amp;Paste</source>
-        <translation>E&amp;nfügen</translation>
+        <translation>E&amp;infügen</translation>
     </message>
     <message>
         <source>Find</source>
@@ -372,15 +372,15 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>&amp;Qtel Settings...</source>
-        <translation>&amp;Einstellungen für Qtel</translation>
+        <translation>&amp;Einstellungen für Qtel...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
-        <translation>Öffen der Einstellungen für Qtel</translation>
+        <translation>Einstellungen für Qtel öffnen</translation>
     </message>
     <message>
         <source>Qtel v</source>
-        <translation></translation>
+        <translation>Qtel v</translation>
     </message>
     <message>
         <source>- Qt EchoLink client.
@@ -398,15 +398,15 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Refresh</source>
-        <translation>Erneuern</translation>
+        <translation>Aktualisieren</translation>
     </message>
     <message>
         <source>&amp;Refresh</source>
-        <translation>E&amp;rneuern</translation>
+        <translation>A&amp;ktualisieren</translation>
     </message>
     <message>
         <source>Refresh station list</source>
-        <translation>Stationsliste erneuern</translation>
+        <translation>Stationsliste aktualisieren</translation>
     </message>
     <message>
         <source>Qtel - the Qt EchoLink Client</source>
@@ -559,7 +559,7 @@ Message</source>
     </message>
     <message>
         <source>Server</source>
-        <translation></translation>
+        <translation>Server</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -567,7 +567,7 @@ Message</source>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>Hostname oder IP-Adresse des Verzeichnisservers</translation>
+        <translation>Hostname oder IP-Adresse des Echolink-Verzeichnisservers</translation>
     </message>
     <message>
         <source>Refresh time</source>
@@ -607,7 +607,7 @@ Message</source>
     </message>
     <message>
         <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation>Zu nutzendes Audiogerät (z.B. /dev/dsp)</translation>
+        <translation>Verwendetes Audiogerät (z.B. /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
@@ -619,7 +619,7 @@ Message</source>
     </message>
     <message>
         <source>The connect sound to use on incoming EchoLink connections</source>
-        <translation>Ton, der bei einer eingehenden Verbindung abgespielt werden soll</translation>
+        <translation>Ton für eingehende Verbindung</translation>
     </message>
     <message>
         <source>Browse...</source>
