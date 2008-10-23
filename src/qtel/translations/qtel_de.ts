@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Disconnected</source>
-        <translation type="obsolete">Verbindung getrennt</translation>
+        <translation>Verbindung getrennt</translation>
     </message>
     <message>
         <source>Qtel Error</source>
@@ -37,12 +37,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Disconnected
-</source>
-        <translation type="unfinished"></translation>
+        <translation>Es kann keine Verbindung aufgebaut werden zum Host</translation>
     </message>
 </context>
 <context>
@@ -113,7 +108,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Alt+D</source>
-        <translation></translation>
+        <translation>Alt+D</translation>
     </message>
     <message>
         <source>VOX</source>
@@ -121,7 +116,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>VOX Enabled</source>
-        <translation>VOX aktivieren</translation>
+        <translation>VOX aktiviert</translation>
     </message>
     <message>
         <source>Threshold:</source>
@@ -205,11 +200,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
-        <translation type="unfinished"></translation>
+        <translation>Qtel: Verbinden mit IP</translation>
     </message>
     <message>
         <source>Enter an IP address or hostname:</source>
-        <translation type="unfinished"></translation>
+        <translation>IP-Adresse oder Hostnamen eingeben:</translation>
     </message>
 </context>
 <context>
@@ -466,43 +461,43 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Ctrl+Z</source>
-        <translation></translation>
+        <translation>Ctrl+Z</translation>
     </message>
     <message>
         <source>Ctrl+Y</source>
-        <translation></translation>
+        <translation>Ctrl+Y</translation>
     </message>
     <message>
         <source>Ctrl+X</source>
-        <translation></translation>
+        <translation>Ctrl+X</translation>
     </message>
     <message>
         <source>Ctrl+C</source>
-        <translation></translation>
+        <translation>Ctrl+C</translation>
     </message>
     <message>
         <source>Ctrl+V</source>
-        <translation></translation>
+        <translation>Ctrl+V</translation>
     </message>
     <message>
         <source>Ctrl+F</source>
-        <translation></translation>
+        <translation>Ctrl+F</translation>
     </message>
     <message>
         <source>Connect to IP...</source>
-        <translation type="unfinished"></translation>
+        <translation>Verbinde mit IP...</translation>
     </message>
     <message>
         <source>Connect to selected...</source>
-        <translation type="unfinished"></translation>
+        <translation>Mit ausgewählter Station verbinden...</translation>
     </message>
     <message>
         <source>Disconnect</source>
-        <translation type="unfinished">Verbindung trennen</translation>
+        <translation>Verbindung trennen</translation>
     </message>
     <message>
         <source>Add selected to Bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Ausgewählte Station zu Favoriten hinzufügen</translation>
     </message>
 </context>
 <context>
@@ -517,7 +512,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>User Info</source>
-        <translation>Informationen zur Gegenstation</translation>
+        <translation>Info zur Gegenstation</translation>
     </message>
     <message>
         <source>User Information</source>
