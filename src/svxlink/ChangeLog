@@ -33,6 +33,10 @@
   with the old protocol.
   The authentication code also require a new dependency: libgcrypt.
 
+* Added an audio pacer for message playback so that the audio output
+  fifo will not be filled up when playing messages. If it fills up,
+  this will cause a delay for other audio.
+
 
 
  0.10.1 -- 30 Jul 2008

@@ -66,6 +66,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioValve.h>
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioStreamStateDetector.h>
+#include <AsyncAudioPacer.h>
 #include <AsyncAudioDebugger.h>
 
 
@@ -430,7 +431,13 @@ bool Logic::initialize(void)
   fx_gain_ctrl = new AudioAmp;
   fx_gain_ctrl->setGain(fx_gain_normal);
   msg_handler->registerSink(fx_gain_ctrl, true);
-  tx_audio_mixer->addSource(fx_gain_ctrl);
+  //tx_audio_mixer->addSource(fx_gain_ctrl);
+  
+    // Pace the audio so that we don't fill up the audio output pipe.
+  AudioPacer *msg_pacer = new AudioPacer(INTERNAL_SAMPLE_RATE,
+      	      	      	      	      	 256 * INTERNAL_SAMPLE_RATE / 8000, 0);
+  fx_gain_ctrl->registerSink(msg_pacer, true);
+  tx_audio_mixer->addSource(msg_pacer);
   
   event_handler = new EventHandler(event_handler_str, this);
   event_handler->playFile.connect(slot(*this, &Logic::playFile));
