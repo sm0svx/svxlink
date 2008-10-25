@@ -132,7 +132,7 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
     open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false),
     open_on_sql_timer(0), open_sql_flank(SQL_FLANK_CLOSE),
     short_sql_open_cnt(0), sql_flap_sup_min_time(1000),
-    sql_flap_sup_max_cnt(0)
+    sql_flap_sup_max_cnt(0), open_reason("?")
 {
 } /* RepeaterLogic::RepeaterLogic */
 
@@ -275,6 +275,7 @@ void RepeaterLogic::processEvent(const string& event, const Module *module)
 
 bool RepeaterLogic::activateModule(Module *module)
 {
+  open_reason = "MODULE";
   setUp(true);
   return Logic::activateModule(module);
 } /* RepeaterLogic::activateModule */
@@ -292,7 +293,8 @@ void RepeaterLogic::dtmfDigitDetected(char digit, int duration)
     {
       cout << "DTMF digit \"" << digit << "\" detected. "
       	      "Activating repeater...\n";
-      activate_on_sql_close = true;
+      open_reason = "DTMF";
+      activateOnOpenOrClose(SQL_FLANK_CLOSE);
     }
     else
     {
@@ -323,6 +325,7 @@ void RepeaterLogic::audioStreamStateChange(bool is_active, bool is_idle)
 {
   if (!repeater_is_up && !is_idle)
   {
+    open_reason = "AUDIO";
     setUp(true);
   }
 
@@ -397,9 +400,10 @@ void RepeaterLogic::setIdle(bool idle)
 } /* RepeaterLogic::setIdle */
 
 
-void RepeaterLogic::setUp(bool up, bool ident)
+void RepeaterLogic::setUp(bool up)
 {
-  //printf("RepeaterLogic::setUp: up=%s\n", up ? "true" : "false");
+  //printf("RepeaterLogic::setUp: up=%s  reason=%s\n",
+  //    	 up ? "true" : "false", open_reason.c_str());
   if (up == repeater_is_up)
   {
     return;
@@ -411,7 +415,8 @@ void RepeaterLogic::setUp(bool up, bool ident)
     repeater_is_up = true;
 
     stringstream ss;
-    ss << "repeater_up " << (ident ? "1" : "0");
+    //ss << "repeater_up " << (ident ? "1" : "0");
+    ss << "repeater_up " << open_reason;
     processEvent(ss.str());
     
     rxValveSetOpen(true);
@@ -423,6 +428,7 @@ void RepeaterLogic::setUp(bool up, bool ident)
   }
   else
   {
+    open_reason = "?";
     rxValveSetOpen(false);
     repeater_is_up = false;
     delete up_timer;
@@ -516,10 +522,12 @@ void RepeaterLogic::detectedTone(float fq)
     
     if (fq < 300.0)
     {
+      open_reason = "CTCSS";
       activateOnOpenOrClose(open_sql_flank);
     }
     else
     {
+      open_reason = "TONE";
       activateOnOpenOrClose(SQL_FLANK_CLOSE);
     }
   }
@@ -536,6 +544,7 @@ void RepeaterLogic::openOnSqlTimerExpired(Timer *t)
 {
   delete open_on_sql_timer;
   open_on_sql_timer = 0;
+  open_reason = "SQL";
   activateOnOpenOrClose(open_sql_flank);
 } /* RepeaterLogic::openOnSqlTimerExpired */
 
@@ -544,19 +553,30 @@ void RepeaterLogic::activateOnOpenOrClose(SqlFlank flank)
 {
   if (flank == SQL_FLANK_OPEN)
   {
-    setUp(true, false);
+    if ((open_reason == "SQL") || (open_reason == "CTCSS"))
+    {
+      open_reason += "_OPEN";
+    }
+    setUp(true);
     if (rx().squelchIsOpen())
     {
       RepeaterLogic::squelchOpen(true);
     }
   }
-  else if (!rx().squelchIsOpen())
-  {
-    setUp(true);
-  }
   else
   {
-    activate_on_sql_close = true;
+    if ((open_reason == "SQL") || (open_reason == "CTCSS"))
+    {
+      open_reason += "_CLOSE";
+    }
+    if (!rx().squelchIsOpen())
+    {
+      setUp(true);
+    }
+    else
+    {
+      activate_on_sql_close = true;
+    }
   }
 }
 

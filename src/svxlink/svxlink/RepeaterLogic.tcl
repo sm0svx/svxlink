@@ -188,18 +188,24 @@ proc every_minute {} {
 
 #
 # Executed when the repeater is activated
+#   reason  - The reason why the repeater was activated
+#     	      SQL_CLOSE   - Open on squelch, close flank
+#     	      SQL_OPEN	  - Open on squelch, open flank
+#     	      CTCSS_CLOSE - Open on CTCSS, squelch close flank
+#     	      CTCSS_OPEN  - Open on CTCSS, squelch open flank
+#     	      TONE    	  - Open on tone burst (always on squelch close)
+#     	      DTMF    	  - Open on DTMF digit (always on squelch close)
+#     	      MODULE  	  - Open on module activation
+#     	      AUDIO   	  - Open on incoming audio (module or logic linking)
 #
-proc repeater_up {ident} {
+proc repeater_up {reason} {
   global mycall;
   global active_module;
   variable repeater_is_up;
-
+  
   set repeater_is_up 1;
-
-  #playMsg "../extra-sounds" "attention";
-  #playSilence 250;
-
-  if {$ident} {
+  
+  if {($reason != "SQL_OPEN") && ($reason != "CTCSS_OPEN")} {
     set now [clock seconds];
     if {$now-$Logic::prev_ident < $Logic::min_time_between_ident} {
       return;

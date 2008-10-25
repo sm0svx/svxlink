@@ -122,6 +122,8 @@ class RepeaterLogic : public Logic
   public:
     /**
      * @brief 	Constuctor
+     * @param 	cfg A previously initialized config object
+     * @param 	name The name of this logic
      */
     RepeaterLogic(Async::Config& cfg, const std::string& name);
   
@@ -131,14 +133,30 @@ class RepeaterLogic : public Logic
     ~RepeaterLogic(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Initialize this logic
+     * @return	Returns \em true on success or \em false on failure
      */
     bool initialize(void);
     
+    /**
+     * @brief 	Process an event
+     * @param 	event Event string
+     * @param 	module The calling module or 0 if it's a core event
+     */
     virtual void processEvent(const std::string& event, const Module *module=0);
+    
+    /**
+     * @brief 	Called when a module is activated
+     * @param 	module The module to activate
+     * @return	Returns \em true if the activation went well or \em false if not
+     */
     virtual bool activateModule(Module *module);
+    
+    /**
+     * @brief 	Called when a DTMF digit has been detected
+     * @param 	digit The detected digit
+     * @param 	duration The duration of the detected digit
+     */
     virtual void dtmfDigitDetected(char digit, int duration);
 
 
@@ -158,7 +176,6 @@ class RepeaterLogic : public Logic
     int      	    idle_timeout;
     Async::Timer    *idle_sound_timer;
     int       	    idle_sound_interval;
-    //bool      	    preserve_idle_state;
     int      	    required_sql_open_duration;
     char      	    open_on_dtmf;
     bool      	    activate_on_sql_close;
@@ -169,10 +186,11 @@ class RepeaterLogic : public Logic
     int       	    short_sql_open_cnt;
     int       	    sql_flap_sup_min_time;
     int       	    sql_flap_sup_max_cnt;
+    std::string     open_reason;
     
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);
-    void setUp(bool up, bool ident=true);
+    void setUp(bool up);
     void squelchOpen(bool is_open);
     void detectedTone(float fq);
     void playIdleSound(Async::Timer *t);

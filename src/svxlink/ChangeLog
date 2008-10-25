@@ -43,6 +43,10 @@
   block the system indefinitly. Use the SQL_TIMEOUT configuration variable
   to set this up.
 
+* RepeaterLogic: The reason for repeater activation is now given in the
+  repeater_up event handler function. This make it possible to implement
+  different behavior depending on how the repeater was activated.
+
 
 
  0.10.1 -- 30 Jul 2008
