@@ -98,13 +98,16 @@ class DummyTx : public Tx
 class DummyRx : public Rx
 {
   public:
-    DummyRx(void) : Rx("DummyRx") {}
+    DummyRx(void) : Rx(cfg, "DummyRx") {}
     virtual ~DummyRx(void) {}
-    virtual bool initialize(void) { return true; }
+    virtual bool initialize(void) { return Rx::initialize(); }
     virtual void mute(bool do_mute) {}
     virtual void reset(void) {}
     virtual void resumeOutput(void) {}
     virtual void allSamplesFlushed(void) {}
+  
+  private:
+    Config  cfg;
 };
 
 

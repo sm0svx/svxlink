@@ -527,6 +527,14 @@ multiple receivers. A normal value could be somewhere in between 20-100ms.
 How long, in milliseconds, the squelch will stay open after the detector has indicated
 that it is closed. This configuration variable will affect all squelch detector types. 
 .TP
+.B SQL_TIMEOUT
+Use this configuration variable to set an upper limiti, in seconds, for how
+long the squelch is allowed to be open. If the timeout value is exceeded the
+squelch is forced to closed. If the squelch close for real, everthing is back
+to normal. When it opens the next time a squelch open will be signalled.
+For example, use this feature to make sure that a faulty receiver cannot block
+the system indefinitly.
+.TP
 .B VOX_FILTER_DEPTH
 The number of milliseconds to create the mean value over. A small value will make the vox
 react quicker (<200) and larger values will make it a little bit more sluggish. A small

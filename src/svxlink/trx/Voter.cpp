@@ -257,7 +257,7 @@ class SatRx : public AudioSource, public SigC::Object
  ****************************************************************************/
 
 Voter::Voter(Config &cfg, const std::string& name)
-  : Rx(name), cfg(cfg), active_rx(0), is_muted(true), m_verbose(true),
+  : Rx(cfg, name), cfg(cfg), active_rx(0), is_muted(true), m_verbose(true),
     best_rx(0), best_rx_siglev(BEST_RX_SIGLEV_RESET), best_rx_timer(0),
     voting_delay(0), sql_rx_id(0), selector(0), buffer_length(0)
 {
@@ -282,6 +282,11 @@ Voter::~Voter(void)
 
 bool Voter::initialize(void)
 {
+  if (!Rx::initialize())
+  {
+    return false;
+  }
+  
   string receivers;
   if (!cfg.getValue(name(), "RECEIVERS", receivers))
   {

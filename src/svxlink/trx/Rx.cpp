@@ -5,8 +5,8 @@
 @date	 2004-03-21
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -42,6 +42,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncTimer.h>
+#include <AsyncConfig.h>
 
 
 /****************************************************************************
@@ -154,6 +156,37 @@ map<string, RxFactory*> RxFactory::rx_factories;
  *
  ****************************************************************************/
 
+Rx::Rx(Config &cfg, const string& name)
+  : m_name(name), m_verbose(true), m_sql_open(false), m_cfg(cfg),
+    m_sql_tmo_timer(0)
+{
+} /* Rx::Rx */
+
+
+Rx::~Rx(void)
+{
+  delete m_sql_tmo_timer;
+} /* Rx::~Rx */
+
+
+bool Rx::initialize(void)
+{
+  string value;
+  if (m_cfg.getValue(name(), "SQL_TIMEOUT", value))
+  {
+    int tmo_val = atoi(value.c_str()) * 1000;
+    if (tmo_val > 0)
+    {
+      m_sql_tmo_timer = new Timer(tmo_val);
+      m_sql_tmo_timer->expired.connect(slot(*this, &Rx::sqlTimeout));
+    }
+  }
+  
+  return true;
+  
+} /* Rx::initialize */
+
+
 RxFactory::RxFactory(const string &name)
   : m_name(name)
 {
@@ -209,19 +242,6 @@ Rx *RxFactory::createNamedRx(Config& cfg, const string& name)
  *
  ****************************************************************************/
 
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
 void Rx::setSquelchState(bool is_open)
 {
   if (is_open == m_sql_open)
@@ -236,6 +256,11 @@ void Rx::setSquelchState(bool is_open)
   }
   m_sql_open = is_open;
   squelchOpen(is_open);
+  
+  if (m_sql_tmo_timer != 0)
+  {
+    m_sql_tmo_timer->setEnable(is_open);
+  }
 } /* Rx::setSquelchState */
 
 
@@ -248,22 +273,12 @@ void Rx::setSquelchState(bool is_open)
  *
  ****************************************************************************/
 
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-
-
-
+void Rx::sqlTimeout(Timer *t)
+{
+  cerr << name() << ": *** WARNING: The squelch was open for too long. "
+       << "Forcing it closed.\n";
+  setSquelchState(false);
+} /* Rx::sqlTimeout */
 
 
 

@@ -88,7 +88,7 @@ class RxAdapter : public Rx, public AudioSink
 {
   public:
     RxAdapter(const string &name)
-      : Rx(name)
+      : Rx(cfg, name)
     {
       mute_valve.setOpen(false);
       mute_valve.setBlockWhenClosed(false);
@@ -104,7 +104,7 @@ class RxAdapter : public Rx, public AudioSink
      */
     virtual bool initialize(void)
     {
-      return true;
+      return Rx::initialize();
     }
     
     /**
@@ -163,7 +163,8 @@ class RxAdapter : public Rx, public AudioSink
     
    
   private:
-    AudioValve mute_valve;
+    AudioValve  mute_valve;
+    Config    	cfg;
     
     
 }; /* class RxAdapter */

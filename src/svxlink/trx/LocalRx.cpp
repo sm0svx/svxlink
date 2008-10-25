@@ -235,7 +235,7 @@ class PeakMeter : public AudioPassthrough
  ****************************************************************************/
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
-  : Rx(name), cfg(cfg), audio_io(0), is_muted(true),
+  : Rx(cfg, name), cfg(cfg), audio_io(0), is_muted(true),
     squelch_det(0), siglevdet(0), siglev_offset(0.0), siglev_slope(1.0),
     tone_dets(0), sql_valve(0), delay(0), mute_dtmf(false), sql_tail_elim(0),
     preamp_gain(0)
@@ -251,6 +251,11 @@ LocalRx::~LocalRx(void)
 
 bool LocalRx::initialize(void)
 {
+  if (!Rx::initialize())
+  {
+    return false;
+  }
+  
   string value;
 
   string audio_dev;

@@ -39,6 +39,10 @@
 
 * Bugfix: The repeater logic hung when using the NO_REPEAT option.
 
+* Added a squelch timeout for receivers so that a faulty receiver cannot
+  block the system indefinitly. Use the SQL_TIMEOUT configuration variable
+  to set this up.
+
 
 
  0.10.1 -- 30 Jul 2008

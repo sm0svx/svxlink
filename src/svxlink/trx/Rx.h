@@ -5,8 +5,8 @@
 @date	 2004-03-21
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example Template_demo.cpp
-An example of how to use the Template class
-*/
-
 
 #ifndef RX_INCLUDED
 #define RX_INCLUDED
@@ -70,6 +65,11 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class Timer;
+  class Config;
+};
 
 
 /****************************************************************************
@@ -122,24 +122,21 @@ This class is used as the base class for all receivers.
 class Rx : public SigC::Object, public Async::AudioSource
 {
   public:
-    //static Rx *create(Async::Config& cfg, const std::string& name);
-    
     /**
      * @brief 	Default constuctor
      */
-    explicit Rx(const std::string& name)
-      : m_name(name), m_verbose(true), m_sql_open(false) {}
+    explicit Rx(Async::Config &cfg, const std::string& name);
   
     /**
      * @brief 	Destructor
      */
-    virtual ~Rx(void) {}
+    virtual ~Rx(void);
   
     /**
      * @brief 	Initialize the receiver object
      * @return 	Return \em true on success, or \em false on failure
      */
-    virtual bool initialize(void) = 0;
+    virtual bool initialize(void);
     
     /**
      * @brief 	Return the name of the receiver
@@ -240,6 +237,10 @@ class Rx : public SigC::Object, public Async::AudioSource
     std::string   m_name;
     bool          m_verbose;
     bool      	  m_sql_open;
+    Async::Config m_cfg;
+    Async::Timer  *m_sql_tmo_timer;
+    
+    void sqlTimeout(Async::Timer *t);
     
 };  /* class Rx */
 
@@ -263,7 +264,7 @@ class RxFactory
     static std::map<std::string, RxFactory*> rx_factories;
     
     std::string m_name;
-    
+
 };  /* class RxFactory */
 
 

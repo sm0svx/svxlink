@@ -131,9 +131,9 @@ class ToneDet
  ****************************************************************************/
 
 NetRx::NetRx(Config &cfg, const string& name)
-  : Rx(name), cfg(cfg), is_muted(true), tcp_con(0), last_signal_strength(0.0),
-    last_sql_rx_id(0), unflushed_samples(false), sql_is_open(false),
-    audio_dec(0)
+  : Rx(cfg, name), cfg(cfg), is_muted(true), tcp_con(0),
+    last_signal_strength(0.0), last_sql_rx_id(0), unflushed_samples(false),
+    sql_is_open(false), audio_dec(0)
 {
 } /* NetRx::NetRx */
 
@@ -157,6 +157,11 @@ NetRx::~NetRx(void)
 
 bool NetRx::initialize(void)
 {
+  if (!Rx::initialize())
+  {
+    return false;
+  }
+  
   string host;
   if (!cfg.getValue(name(), "HOST", host))
   {
