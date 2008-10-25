@@ -454,7 +454,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
     }
     else
     {
-      tx().flushSamples();
+      //tx().flushSamples();
       
       if (sql_flap_sup_max_cnt > 0)
       {

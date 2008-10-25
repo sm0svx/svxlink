@@ -37,6 +37,8 @@
   fifo will not be filled up when playing messages. If it fills up,
   this will cause a delay for other audio.
 
+* Bugfix: The repeater logic hung when using the NO_REPEAT option.
+
 
 
  0.10.1 -- 30 Jul 2008
