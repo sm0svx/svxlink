@@ -191,6 +191,11 @@ int AudioPacer::writeSamples(const float *samples, int count)
     samples_written = min(count, buf_size - buf_pos);
     memcpy(buf + buf_pos, samples, samples_written * sizeof(*buf));
     buf_pos += samples_written;
+    
+    if (!pace_timer->isEnabled())
+    {
+      pace_timer->setEnable(true);
+    }
   }
   
   if (samples_written == 0)

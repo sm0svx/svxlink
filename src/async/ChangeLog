@@ -9,6 +9,9 @@
 * Implemented an audio codec framework that is meant to be used when
   streaming audio over a network.
 
+* Bugfix in Async::AudioPacer: Using a prebuf size of zero millisecods
+  did not work.
+
 
 
  0.16.1 -- 30 Jul 2008
