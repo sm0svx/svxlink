@@ -160,6 +160,11 @@ void SimplexLogic::squelchOpen(bool is_open)
   //cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
   //     << endl;
   
+  if (tx().isTransmitting())
+  {
+    return;
+  }
+  
   if (!is_open)
   {
     if (activeModule() != 0)
