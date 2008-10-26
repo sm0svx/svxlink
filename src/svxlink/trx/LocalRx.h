@@ -193,6 +193,7 @@ class LocalRx : public Rx
     bool      	      	      	mute_dtmf;
     int       	      	      	sql_tail_elim;
     int       	      	      	preamp_gain;
+    Async::AudioValve 	      	*mute_valve;
     
     int audioRead(float *samples, int count);
     void dtmfDigitActivated(char digit);

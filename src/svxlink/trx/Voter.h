@@ -5,8 +5,8 @@
 @date	 2005-04-18
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -196,9 +196,11 @@ class Voter : public Rx
     int       	      	  sql_rx_id;
     Async::AudioSelector  *selector;
     int                   buffer_length;
+    Async::Timer      	  *check_siglev_timer;
     
     void satSquelchOpen(bool is_open, SatRx *rx);
     void chooseBestRx(Async::Timer *t);
+    void checkSiglev(Async::Timer *t);
 
 };  /* class Voter */
 

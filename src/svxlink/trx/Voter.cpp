@@ -259,9 +259,12 @@ class SatRx : public AudioSource, public SigC::Object
 Voter::Voter(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), active_rx(0), is_muted(true), m_verbose(true),
     best_rx(0), best_rx_siglev(BEST_RX_SIGLEV_RESET), best_rx_timer(0),
-    voting_delay(0), sql_rx_id(0), selector(0), buffer_length(0)
+    voting_delay(0), sql_rx_id(0), selector(0), buffer_length(0),
+    check_siglev_timer(0)
 {
   Rx::setVerbose(false);
+  check_siglev_timer = new Timer(1000, Timer::TYPE_PERIODIC);
+  check_siglev_timer->expired.connect(slot(*this, &Voter::checkSiglev));
 } /* Voter::Voter */
 
 
@@ -561,6 +564,17 @@ void Voter::chooseBestRx(Timer *t)
   }
   
 } /* Voter::chooseBestRx */
+
+
+void Voter::checkSiglev(Timer *t)
+{
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    cout << (*it)->rx->signalStrength() << " ";
+  }
+  cout << endl;
+} /* Voter::checkSiglev */
 
 
 

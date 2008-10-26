@@ -238,7 +238,7 @@ LocalRx::LocalRx(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), audio_io(0), is_muted(true),
     squelch_det(0), siglevdet(0), siglev_offset(0.0), siglev_slope(1.0),
     tone_dets(0), sql_valve(0), delay(0), mute_dtmf(false), sql_tail_elim(0),
-    preamp_gain(0)
+    preamp_gain(0), mute_valve(0)
 {
 } /* LocalRx::LocalRx */
 
@@ -367,20 +367,44 @@ bool LocalRx::initialize(void)
     prev_src->registerSink(d1, true);
     prev_src = d1;
   }
+
+  AudioSplitter *siglevdet_splitter = 0;
+  siglevdet_splitter = new AudioSplitter;
+  prev_src->registerSink(siglevdet_splitter, true);
+
+    // Create the signal level detector. Connect it to the 16 or 8kHz splitter
+    // depending on how the sound card sample rate is setup.
+  if (audio_io->sampleRate() > 8000)
+  {
+    siglevdet = new SigLevDet(16000);
+  }
+  else
+  {
+    siglevdet = new SigLevDet(8000);
+  }
+  siglevdet_splitter->addSink(siglevdet, true);
+  siglevdet->setDetectorSlope(siglev_slope);
+  siglevdet->setDetectorOffset(siglev_offset);
+  
+    // Create a mute valve
+  mute_valve = new AudioValve;
+  mute_valve->setOpen(false);
+  siglevdet_splitter->addSink(mute_valve, true);
+  prev_src = mute_valve;
   
     // If the sound card sample rate is higher than 8kHz (16 or 48kHz assumed)
     // decimate it down to 8kHz. Also create a splitter to distribute the
     // 16kHz audio to other consumers.
 #if (INTERNAL_SAMPLE_RATE != 16000)
-  AudioSplitter *rate_16k_splitter = 0;
+  //AudioSplitter *rate_16k_splitter = 0;
   if (audio_io->sampleRate() > 8000)
   {
-    rate_16k_splitter = new AudioSplitter;
-    prev_src->registerSink(rate_16k_splitter, true);
+    //rate_16k_splitter = new AudioSplitter;
+    //prev_src->registerSink(rate_16k_splitter, true);
 
     AudioDecimator *d2 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
-    //prev_src->registerSink(d2, true);
-    rate_16k_splitter->addSink(d2, true);
+    prev_src->registerSink(d2, true);
+    //rate_16k_splitter->addSink(d2, true);
     prev_src = d2;
   }
 #endif
@@ -400,7 +424,8 @@ bool LocalRx::initialize(void)
   AudioSplitter *splitter = new AudioSplitter;
   prev_src->registerSink(splitter, true);
   prev_src = 0;
-  
+
+#if 0  
     // Create the signal level detector. Connect it to the 16 or 8kHz splitter
     // depending on how the sound card sample rate is setup.
 #if (INTERNAL_SAMPLE_RATE != 16000)
@@ -420,6 +445,7 @@ bool LocalRx::initialize(void)
 #endif
   siglevdet->setDetectorSlope(siglev_slope);
   siglevdet->setDetectorOffset(siglev_offset);
+#endif
   
     // Create the configured squech detector and initialize it. Then connect
     // it to the 8kHz audio splitter
@@ -542,6 +568,15 @@ bool LocalRx::initialize(void)
     // the LocalRx class
   setHandler(prev_src);
   
+    // Open the audio device for reading
+  if (!audio_io->open(AudioIO::MODE_RD))
+  {
+    cerr << "*** Error: Could not open audio device for receiver \""
+      	 << name() << "\"\n";
+    // FIXME: Cleanup?
+    return false;
+  }
+  
   return true;
   
 } /* LocalRx:initialize */
@@ -561,18 +596,22 @@ void LocalRx::mute(bool do_mute)
       delay->clear();
     }
     sql_valve->setOpen(false);
-    audio_io->close();
+    mute_valve->setOpen(false);
+    //audio_io->close();
     setSquelchState(false);
   }
   else
   {
+    /*
     if (!audio_io->open(AudioIO::MODE_RD))
     {
       cerr << "*** Error: Could not open audio device for receiver \""
       	   << name() << "\"\n";
       return;
     }
+    */
     
+    mute_valve->setOpen(true);
     squelch_det->reset();
   }
 
