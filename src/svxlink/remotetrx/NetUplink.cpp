@@ -128,6 +128,10 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
   heartbeat_timer->setEnable(false);
   heartbeat_timer->expired.connect(slot(*this, &NetUplink::heartbeat));
   
+  siglev_check_timer = new Timer(1000, Timer::TYPE_PERIODIC);
+  siglev_check_timer->setEnable(true);
+  siglev_check_timer->expired.connect(slot(*this, &NetUplink::checkSiglev));
+  
 } /* NetUplink::NetUplink */
 
 
@@ -624,6 +628,12 @@ void NetUplink::heartbeat(Timer *t)
   t->reset();
   
 } /* NetTrxTcpClient::heartbeat */
+
+
+void NetUplink::checkSiglev(Timer *t)
+{
+  squelchOpen(rx->squelchIsOpen());
+} /* NetUplink::checkSiglev */
 
 
 

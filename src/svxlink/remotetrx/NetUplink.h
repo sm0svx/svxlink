@@ -181,6 +181,7 @@ class NetUplink : public Uplink
     State                   state;
     std::string             auth_key;
     unsigned char           auth_challenge[NetTrxMsg::MsgAuthChallenge::CHALLENGE_LEN];
+    Async::Timer      	    *siglev_check_timer;
     
     NetUplink(const NetUplink&);
     NetUplink& operator=(const NetUplink&);
@@ -214,6 +215,7 @@ class NetUplink : public Uplink
     void transmitterStateChange(bool is_transmitting);
     void allEncodedSamplesFlushed(void);
     void heartbeat(Async::Timer *t);
+    void checkSiglev(Async::Timer *t);
 
 };  /* class NetUplink */
 
