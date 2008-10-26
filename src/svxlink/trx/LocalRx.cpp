@@ -613,6 +613,11 @@ void LocalRx::mute(bool do_mute)
     
     //mute_valve->setOpen(true);
     //squelch_det->reset();
+    
+    if (squelchIsOpen())
+    {
+      sql_valve->setOpen(true);
+    }
   }
 
   is_muted = do_mute;

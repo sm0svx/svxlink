@@ -82,7 +82,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define BEST_RX_SIGLEV_RESET  -100
+#define BEST_RX_SIGLEV_RESET  -100.0
 #define MAX_VOTING_DELAY      5000
 
 
@@ -155,21 +155,16 @@ class SatRx : public AudioSource, public SigC::Object
         {
           fifo->clear();
         }
-	setSquelchOpen(false);
+	//setSquelchOpen(false);
 	dtmf_buf.clear();
       }
     }
     
-    /*
-    void clear(void)
-    {
-      fifo.clear();
-      dtmf_buf.clear();
-    }
-    */
-  
+    bool squelchIsOpen(void) const { return sql_open; }
+    
     Signal2<void, char, int>  	dtmfDigitDetected;
     Signal2<void, bool, SatRx*> squelchOpen;
+  
   
   protected:
     virtual void allSamplesFlushed(void)
@@ -177,6 +172,7 @@ class SatRx : public AudioSource, public SigC::Object
       AudioSource::allSamplesFlushed();
       setSquelchOpen(rx->squelchIsOpen());
     }
+  
   
   private:
     typedef list<pair<char, int> >  DtmfBuf;
@@ -368,6 +364,7 @@ void Voter::mute(bool do_mute)
     return;
   }
   
+  /*
   if (active_rx != 0)
   {
     assert(!is_muted);
@@ -381,6 +378,7 @@ void Voter::mute(bool do_mute)
     best_rx = 0;
     best_rx_siglev = BEST_RX_SIGLEV_RESET;
   }
+  */
   
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
@@ -528,7 +526,7 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
       list<SatRx *>::iterator it;
       for (it=rxs.begin(); it!=rxs.end(); ++it)
       {
-	if ((*it)->rx->squelchIsOpen() &&
+	if ((*it)->squelchIsOpen() &&
 	    ((*it)->rx->signalStrength() > best_rx_siglev))
 	{
 	  best_rx = *it;
@@ -589,8 +587,8 @@ void Voter::checkSiglev(Timer *t)
 {
   assert(active_rx != 0);
   
-  float active_rx_siglev = -100.0f;
-  float best_rx_siglev = -100.0f;
+  float active_rx_siglev = BEST_RX_SIGLEV_RESET;
+  float best_rx_siglev = BEST_RX_SIGLEV_RESET;
   SatRx *best_rx = active_rx;
   
   list<SatRx *>::iterator it;
@@ -599,11 +597,11 @@ void Voter::checkSiglev(Timer *t)
     float siglev = (*it)->rx->signalStrength();
     cout << siglev << " ";
     
-    if (((*it) == active_rx) && (*it)->rx->squelchIsOpen())
+    if (((*it) == active_rx) && (*it)->squelchIsOpen())
     {
       active_rx_siglev = siglev;
     }
-    if ((*it)->rx->squelchIsOpen() && (siglev > best_rx_siglev))
+    if ((*it)->squelchIsOpen() && (siglev > best_rx_siglev))
     {
       best_rx_siglev = siglev;
       best_rx = *it;
@@ -621,11 +619,11 @@ void Voter::checkSiglev(Timer *t)
     }
     
     active_rx->stopOutput(true);
-    active_rx->rx->mute(true);
+    active_rx->mute(true);
     
     active_rx = best_rx;
     active_rx->stopOutput(false);
-    active_rx->rx->mute(false);
+    active_rx->mute(false);
     
     sql_rx_id = best_rx->id;
   }
