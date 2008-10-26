@@ -233,18 +233,20 @@ void NetRx::mute(bool do_mute)
   
   if (do_mute)
   {
-    last_signal_strength = 0.0;
-    last_sql_rx_id = 0;
-    sql_is_open = false;
+    //last_signal_strength = 0.0;
+    //last_sql_rx_id = 0;
+    //sql_is_open = false;
     
     if (unflushed_samples)
     {
       audio_dec->flushEncodedSamples();
     }
+    /*
     else
     {
       setSquelchState(false);
     }
+    */
   }
     
   MsgMute *msg = new MsgMute(do_mute);
@@ -378,27 +380,23 @@ void NetRx::handleMsg(Msg *msg)
   {
     case MsgSquelch::TYPE:
     {
-      if (!is_muted)
+      MsgSquelch *sql_msg = reinterpret_cast<MsgSquelch*>(msg);
+      last_signal_strength = sql_msg->signalStrength();
+      last_sql_rx_id = sql_msg->sqlRxId();
+      sql_is_open = sql_msg->isOpen();
+      if (sql_msg->isOpen())
       {
-	MsgSquelch *sql_msg = reinterpret_cast<MsgSquelch*>(msg);
-	last_signal_strength = sql_msg->signalStrength();
-	last_sql_rx_id = sql_msg->sqlRxId();
-	sql_is_open = sql_msg->isOpen();
-	
-	if (sql_msg->isOpen())
+	setSquelchState(true);
+      }
+      else
+      {
+	if (unflushed_samples)
 	{
-	  setSquelchState(true);
+          audio_dec->flushEncodedSamples();
 	}
 	else
 	{
-	  if (unflushed_samples)
-	  {
-            audio_dec->flushEncodedSamples();
-	  }
-	  else
-	  {
-	    setSquelchState(false);
-	  }
+	  setSquelchState(false);
 	}
       }
       break;

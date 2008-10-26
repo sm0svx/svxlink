@@ -388,7 +388,7 @@ bool LocalRx::initialize(void)
   
     // Create a mute valve
   mute_valve = new AudioValve;
-  mute_valve->setOpen(false);
+  mute_valve->setOpen(true);
   siglevdet_splitter->addSink(mute_valve, true);
   prev_src = mute_valve;
   
@@ -596,9 +596,9 @@ void LocalRx::mute(bool do_mute)
       delay->clear();
     }
     sql_valve->setOpen(false);
-    mute_valve->setOpen(false);
+    //mute_valve->setOpen(false);
     //audio_io->close();
-    setSquelchState(false);
+    //setSquelchState(false);
   }
   else
   {
@@ -611,8 +611,8 @@ void LocalRx::mute(bool do_mute)
     }
     */
     
-    mute_valve->setOpen(true);
-    squelch_det->reset();
+    //mute_valve->setOpen(true);
+    //squelch_det->reset();
   }
 
   is_muted = do_mute;
@@ -696,7 +696,7 @@ void LocalRx::dtmfDigitDeactivated(char digit, int duration_ms)
 
 void LocalRx::audioStreamStateChange(bool is_active, bool is_idle)
 {
-  if (is_idle)
+  if (is_idle && !squelch_det->isOpen())
   {
     setSquelchState(false);
   }
@@ -711,9 +711,9 @@ void LocalRx::onSquelchOpen(bool is_open)
     {
       delay->clear();
     }
+    setSquelchState(true);
     if (!is_muted)
     {
-      setSquelchState(true);
       sql_valve->setOpen(true);
     }
   }
@@ -723,7 +723,14 @@ void LocalRx::onSquelchOpen(bool is_open)
     {
       delay->clear(sql_tail_elim);
     }
-    sql_valve->setOpen(false);
+    if (!sql_valve->isOpen())
+    {
+      setSquelchState(false);
+    }
+    else
+    {
+      sql_valve->setOpen(false);
+    }
   }
 } /* LocalRx::onSquelchOpen */
 
