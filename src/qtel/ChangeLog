@@ -3,6 +3,8 @@
 
 * Added a German translation contributed by Adi / DL1HRC.
 
+* Patch from Stuart Longland: Remove DC offset from VOX calculations.
+
 
 
  0.11.1 -- 30 Jul 2008

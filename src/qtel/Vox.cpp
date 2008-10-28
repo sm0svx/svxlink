@@ -139,22 +139,28 @@ int Vox::writeSamples(const float *samples, int count)
     return count;
   }
   
-    // Calculate average level
-  float sum = 0.0f;
+    // Calculate DC offset
+  float dc_offset = 0.0f;
   for (int i=0; i < count; i++)
   {
-    float sample = samples[i];
+    dc_offset += samples[i] / count;
+  }
+
+    // Calculate absolute average level sans offset
+  float avg = 0.0f;
+  for (int i=0; i < count; i++)
+  {
+    float sample = (samples[i] - dc_offset) / count;
     if (sample > 0)
     {
-      sum += sample;
+      avg += sample;
     }
     else
     {
-      sum -= sample;
+      avg -= sample;
     }
   }
 
-  float avg = sum / (float)count;
   int db_level = -60;
   if (avg > 1.0f)
   {
