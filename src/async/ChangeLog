@@ -9,8 +9,9 @@
 * Implemented an audio codec framework that is meant to be used when
   streaming audio over a network.
 
-* Bugfix in Async::AudioPacer: Using a prebuf size of zero millisecods
-  did not work.
+* Bugfixes in Async::AudioPacer: Using a prebuf size of zero millisecods
+  did not work. DH1DM: Fixed a buffer calculation error. Gaps could be
+  introduced in some situations.
 
 
 

@@ -225,6 +225,7 @@ void AudioPacer::resumeOutput(void)
   if (prebuf_samples <= 0)
   {
     pace_timer->setEnable(true);
+    outputNextBlock();
   }
 } /* AudioPacer::resumeOutput */
     
@@ -281,7 +282,7 @@ void AudioPacer::outputNextBlock(Timer *t)
   {
     memmove(buf, buf + tot_samples_written,
       	    (buf_pos - tot_samples_written) * sizeof(*buf));
-    buf_pos -= samples_written;
+    buf_pos -= tot_samples_written;
   }
   else
   {
