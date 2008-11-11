@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <stdint.h>
 #include <sigc++/sigc++.h>
 
 
@@ -148,21 +149,20 @@ class SwDtmfDecoder : public DtmfDecoder
       float v2;
       float v3;
       float fac;
+      int samples_left;
+      int block_length;
     } GoertzelState;
 
-    // Digit detection descriptor
-    typedef struct
-    {
-      /*! Tone detector working states for the row tones. */
-      GoertzelState row_out[4];
-      /*! Tone detector working states for the column tones. */
-      GoertzelState col_out[4];
-      /*! The current sample number within a processing block. */
-      int current_sample;
-    } DtmfState;
-
-    /*! The sliding window Goertzel algorithm requires two detectors. */
-    DtmfState detector[2];
+    /*! Tone detector working states for the row tones. */
+    GoertzelState row_out[8];
+    /*! Tone detector working states for the column tones. */
+    GoertzelState col_out[8];
+    /*! Row tone signal level values. */
+    float row_energy[4];
+    /*! Column tone signal level values. */
+    float col_energy[4];
+    /*! Remaining sample count in the current detection interval. */
+    int samples_left;
     /*! The result of the last tone analysis. */
     uint8_t last_hit;
     /*! This is the last stable DTMF digit. */
@@ -176,10 +176,9 @@ class SwDtmfDecoder : public DtmfDecoder
     /*! Maximum acceptable "reverse" (higher bigger than lower) twist ratio */
     float reverse_twist;
 
-    void dtmfReceive(DtmfState *d, const float *buf, int len);
+    void dtmfReceive(void);
     void dtmfPostProcess(uint8_t hit);
-    void goertzelInit(GoertzelState *s, float freq, int sample_rate);
-    void goertzelReset(GoertzelState *s) { s->v2 = s->v3 = 0.0f; };
+    void goertzelInit(GoertzelState *s, float freq, float bw);
     float goertzelResult(GoertzelState *s);
     int findMaxIndex(const float f[]);
 

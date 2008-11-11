@@ -146,12 +146,8 @@ ToneDetector::ToneDetector(float tone_hz, float width_hz)
   // As a side effect, the detection bandwidth is slightly narrowed, which
   // however is acceptable for the current use cases (CTCSS, 1750Hz, etc..).
 
-  /* Calculate the DFT center index */
-  float idx = tone_hz / width_hz;
-  /* Adjust the bandwidth to minimize the DFT error */
-  width_hz *= idx / ceilf(idx);
-  /* Block length */
-  block_len = (int)(INTERNAL_SAMPLE_RATE / width_hz);
+  /* Adjust block length to minimize the DFT error */
+  block_len = lrintf(INTERNAL_SAMPLE_RATE * ceilf(tone_hz / width_hz) / tone_hz);
   /* Center frequency */
   goertzelInit(&center, tone_hz, INTERNAL_SAMPLE_RATE);
   /* Lower frequency */
