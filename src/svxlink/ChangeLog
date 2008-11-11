@@ -47,6 +47,9 @@
   repeater_up event handler function. This make it possible to implement
   different behavior depending on how the repeater was activated.
 
+* Patch from DH1DM: Supressing roger beep after periodic id:s in
+  RepeaterLogic.
+
 
 
  0.10.1 -- 30 Jul 2008

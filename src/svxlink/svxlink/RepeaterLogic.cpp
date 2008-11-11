@@ -132,7 +132,7 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
     open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false),
     open_on_sql_timer(0), open_sql_flank(SQL_FLANK_CLOSE),
     short_sql_open_cnt(0), sql_flap_sup_min_time(1000),
-    sql_flap_sup_max_cnt(0), open_reason("?")
+    sql_flap_sup_max_cnt(0), rgr_enable(true), open_reason("?")
 {
 } /* RepeaterLogic::RepeaterLogic */
 
@@ -260,6 +260,13 @@ bool RepeaterLogic::initialize(void)
 
 void RepeaterLogic::processEvent(const string& event, const Module *module)
 {
+  rgr_enable = true;
+  
+  if ((event == "every_minute") && isIdle())
+  {
+    rgr_enable = false;
+  }
+  
   if ((event == "repeater_idle") || (event == "send_rgr_sound"))
   {
     setReportEventsAsIdle(true);
@@ -323,6 +330,8 @@ void RepeaterLogic::allMsgsWritten(void)
 
 void RepeaterLogic::audioStreamStateChange(bool is_active, bool is_idle)
 {
+  rgr_enable = true;
+
   if (!repeater_is_up && !is_idle)
   {
     open_reason = "AUDIO";
@@ -395,7 +404,7 @@ void RepeaterLogic::setIdle(bool idle)
     }
   }
 
-  enableRgrSoundTimer(idle);
+  enableRgrSoundTimer(idle && rgr_enable);
   
 } /* RepeaterLogic::setIdle */
 
@@ -450,6 +459,8 @@ void RepeaterLogic::squelchOpen(bool is_open)
 {
   //cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
   //     << endl;
+  
+  rgr_enable = true;
   
   if (repeater_is_up)
   {

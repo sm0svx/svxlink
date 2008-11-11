@@ -186,6 +186,7 @@ class RepeaterLogic : public Logic
     int       	    short_sql_open_cnt;
     int       	    sql_flap_sup_min_time;
     int       	    sql_flap_sup_max_cnt;
+    bool            rgr_enable;
     std::string     open_reason;
     
     void idleTimeout(Async::Timer *t);
