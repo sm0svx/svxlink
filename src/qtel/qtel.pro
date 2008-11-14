@@ -20,5 +20,6 @@ unix {
 }
 
 TRANSLATIONS = translations/qtel_sv.ts \
-	       translations/qtel_de.ts
+	       translations/qtel_de.ts \
+	       translations/qtel_es.ts
 
