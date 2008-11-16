@@ -50,6 +50,10 @@
 * Patch from DH1DM: Supressing roger beep after periodic id:s in
   RepeaterLogic.
 
+* Bugfix: Log lines were not flushed out to the log file immediately since
+  stdout was block buffered by default. Now it's forced to line buffered
+  mode instead.
+
 
 
  0.10.1 -- 30 Jul 2008

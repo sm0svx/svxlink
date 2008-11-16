@@ -254,6 +254,13 @@ int main(int argc, char **argv)
       /* Close stdin */
     close(STDIN_FILENO);
     
+      /* Force stdout to line buffered mode */
+    if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
+    {
+      perror("setlinebuf");
+      exit(1);
+    }    
+    
       /* Tell the daemon function call not to close the file descriptors */
     noclose = 1;
   }
