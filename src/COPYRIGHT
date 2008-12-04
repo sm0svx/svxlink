@@ -1,6 +1,10 @@
 Most of the software in this directory and its subdirectories are released under
-the GNU General Public License. The exception is the GSM codec which has its own
-license that is described in the COPYRIGHT file under the gsm subdirectory.
+the GNU General Public License. Exceptions are:
+
+WOL (Wide Open License):
+	async/audio/AudioDecimator.*
+	async/audio/AudioInterpolator.*
+
 
 
 		    GNU GENERAL PUBLIC LICENSE
