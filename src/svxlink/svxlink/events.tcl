@@ -41,7 +41,7 @@ proc spellWord {word} {
       playMsg "Default" "slash";
     } elseif {$char == "-"} {
       playMsg "Default" "dash";
-    } else {
+    } elseif {[regexp {[a-z0-9]} $char]} {
       playMsg "Default" "phonetic_$char";
     }
   }
