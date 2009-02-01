@@ -220,6 +220,13 @@ int main(int argc, char **argv)
     exit(1);
   }
   
+  act.sa_handler = SIG_IGN;
+  if (sigaction(SIGPIPE, &act, NULL) == -1)
+  {
+    perror("sigaction");
+    exit(1);
+  }
+  
   int pipefd[2] = {-1, -1};
   int noclose = 0;
   if (logfile_name != 0)
