@@ -507,11 +507,11 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
 	     << active_rx->rx->signalStrength() << ")" << endl;
       }
       
-      active_rx = 0;
-      
       srx->stopOutput(true);
       sql_rx_id = srx->id;
       setSquelchState(false);
+      
+      active_rx = 0;      
     }
     else if (srx == best_rx)
     {
