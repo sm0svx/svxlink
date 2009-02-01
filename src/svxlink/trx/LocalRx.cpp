@@ -95,7 +95,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define DTMF_MUTING_PRE   50
+#define DTMF_MUTING_PRE   75
 #define DTMF_MUTING_POST  200
 
 
