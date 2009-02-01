@@ -135,6 +135,9 @@ SwDtmfDecoder::SwDtmfDecoder(Config &cfg, const string &name)
     last_hit(0), last_stable(0), stable_timer(0), active_timer(0),
     normal_twist(DTMF_NORMAL_TWIST), reverse_twist(DTMF_REVERSE_TWIST)
 {
+    memset(row_energy, 0, sizeof(row_energy));
+    memset(col_energy, 0, sizeof(col_energy));
+    
     /* Init row detectors */
     goertzelInit(&row_out[0], 697.0f, DTMF_BANDWIDTH);
     goertzelInit(&row_out[1], 770.0f, DTMF_BANDWIDTH);
