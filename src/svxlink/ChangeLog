@@ -57,6 +57,8 @@
 * Now skipping characters we don't know how to spell in the spellWord TCL
   function.
 
+* Bugfix: It was not possible to chain two voters together.
+
 
 
  0.10.1 -- 30 Jul 2008
