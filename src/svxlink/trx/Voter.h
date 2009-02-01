@@ -168,7 +168,7 @@ class Voter : public Rx
      * @brief 	Read the current signal strength
      * @return	Returns the signal strength
      */
-    float signalStrength(void) const { return best_rx_siglev; }
+    float signalStrength(void) const;
     
     /**
      * @brief 	Find out RX ID of last receiver with squelch activity
