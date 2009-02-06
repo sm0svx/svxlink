@@ -384,6 +384,12 @@ void NetUplink::handleMsg(Msg *msg)
       break;
     }
     
+    case MsgReset::TYPE:
+    {
+      rx->reset();
+      break;
+    }
+    
     case MsgMute::TYPE:
     {
       MsgMute *mute_msg = reinterpret_cast<MsgMute*>(msg);

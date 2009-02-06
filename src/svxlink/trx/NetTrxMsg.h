@@ -171,7 +171,7 @@ class MsgProtoVer : public Msg
   public:
     static const unsigned TYPE  = 0;
     static const uint16_t MAJOR = 2;
-    static const uint16_t MINOR = 0;
+    static const uint16_t MINOR = 1;
     MsgProtoVer(void)
       : Msg(TYPE, sizeof(MsgProtoVer)), m_major(MAJOR),
         m_minor(MINOR) {}
