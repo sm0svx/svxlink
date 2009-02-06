@@ -393,6 +393,7 @@ void MsgHandler::playMsg(void)
   if (!current->initialize())
   {
     deleteQueueItem(current);
+    current = 0;
     playMsg();
   }
   else

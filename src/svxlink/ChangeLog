@@ -59,6 +59,8 @@
 
 * Bugfix: It was not possible to chain two voters together.
 
+* Bugfix: SvxLink would hang if an audio clip was missing.
+
 
 
  0.10.1 -- 30 Jul 2008
