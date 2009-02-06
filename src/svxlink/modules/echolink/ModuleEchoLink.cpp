@@ -65,6 +65,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "ModuleEchoLink.h"
+#include "QsoImpl.h"
+#include "AprsTcpClient.h"
 
 
 /****************************************************************************
@@ -149,7 +151,8 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
   : Module(dl_handle, logic, cfg_name), dir(0), dir_refresh_timer(0),
     remote_activation(false), pending_connect_id(-1), last_message(""),
     max_connections(1), max_qsos(1), talker(0), squelch_is_open(false),
-    state(STATE_NORMAL), cbc_timer(0), splitter(0), listen_only_valve(0)
+    state(STATE_NORMAL), cbc_timer(0), splitter(0), listen_only_valve(0),
+    tcon(0)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
@@ -331,6 +334,11 @@ bool ModuleEchoLink::initialize(void)
     // stations: (QsoImpl -> ) Selector -> Fifo -> <to core>
   selector = new AudioSelector;
   AudioSource::setHandler(selector);
+
+  if (cfg().getValue(cfgName(), "APRS", value))
+  {
+    tcon = new AprsTcpClient(cfg(), value);
+  }
   
   return true;
   
@@ -835,6 +843,14 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->accept();
   broadcastTalkerStatus();
   
+  if (tcon != 0)
+  {
+    const char *elformat = "incoming connection %s (%s)";
+    char elmessage[100];
+    sprintf(elmessage, elformat, callsign.c_str(), name.c_str());
+    tcon->sendAprsInfo(elmessage, qsos.size());
+  }
+  
   updateDescription();
   
   checkIdle();
@@ -963,6 +979,15 @@ void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
 void ModuleEchoLink::destroyQsoObject(QsoImpl *qso)
 {
   //cout << qso->remoteCallsign() << ": Destroying QSO object" << endl;
+
+  if (tcon != 0)
+  {
+    const char *elformat = "connection to %s closed";
+    char elmessage[100];
+    sprintf(elmessage, elformat, qso->remoteCallsign().c_str());
+    tcon->sendAprsInfo(elmessage, 0);
+  }
+  
   
   splitter->removeSink(qso);
   selector->removeSource(qso);
@@ -989,7 +1014,6 @@ void ModuleEchoLink::destroyQsoObject(QsoImpl *qso)
   //broadcastTalkerStatus();
   
   //updateDescription();
-  
   checkIdle();
   
 } /* ModuleEchoLink::destroyQsoObject */
@@ -1093,6 +1117,14 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
   processEvent(ss.str());
   outgoing_con_pending.push_back(qso);
   
+  if (tcon != 0)
+  {
+    const char *elformat = "connection to %s (%i)";
+    char elmessage[100];
+    sprintf(elmessage, elformat, station.callsign().c_str(), station.id());
+    tcon->sendAprsInfo(elmessage, qsos.size());
+  }
+    
   checkIdle();
   
 } /* ModuleEchoLink::createOutgoingConnection */

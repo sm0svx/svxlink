@@ -61,6 +61,8 @@
 
 * Bugfix: SvxLink would hang if an audio clip was missing.
 
+* APRS functionality in ModuleEchoLink contributed by DL1HRC/Adi added.
+
 
 
  0.10.1 -- 30 Jul 2008

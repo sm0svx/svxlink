@@ -60,7 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "QsoImpl.h"
+
 
 
 /****************************************************************************
@@ -101,6 +101,7 @@ namespace EchoLink
 
 class MsgHandler;
 class QsoImpl;
+class AprsTcpClient;
   
 
 /****************************************************************************
@@ -184,6 +185,7 @@ class ModuleEchoLink : public Module
     Async::AudioSplitter  *splitter;
     Async::AudioValve 	  *listen_only_valve;
     Async::AudioSelector  *selector;
+    AprsTcpClient	  *tcon;
 
     void moduleCleanup(void);
     void activateInit(void);
