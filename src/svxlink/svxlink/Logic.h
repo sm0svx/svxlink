@@ -81,6 +81,7 @@ namespace Async
   class AudioSplitter;
   class AudioValve;
   class AudioStreamStateDetector;
+  class AudioRecorder;
 };
 
 
@@ -106,7 +107,6 @@ class MsgHandler;
 class Module;
 class EventHandler;
 class Command;
-class Recorder;
   
 
 /****************************************************************************
@@ -250,7 +250,7 @@ class Logic : public SigC::Object
     Async::AudioSplitter	    *logic_con_in;
     CmdParser 	      	      	    cmd_parser;
     Async::Timer      	      	    *every_minute_timer;
-    Recorder  	      	      	    *recorder;
+    Async::AudioRecorder  	    *recorder;
     TxCtcssType       	      	    tx_ctcss;
     Async::AudioMixer	      	    *tx_audio_mixer;
     Async::AudioAmp   	      	    *fx_gain_ctrl;

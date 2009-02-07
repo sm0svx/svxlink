@@ -1,14 +1,12 @@
 /**
-@file	 Recorder.h
-@brief   A_brief_description_for_this_file
+@file	 AsyncAudioRecorder.h
+@brief   Contains a class for recording raw audio to a file
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-08-29
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2004-2009 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,13 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example Recorder_demo.cpp
-An example of how to use the Recorder class
-*/
-
-
-#ifndef RECORDER_INCLUDED
-#define RECORDER_INCLUDED
+#ifndef ASYNC_AUDIO_RECORDER_INCLUDED
+#define ASYNC_AUDIO_RECORDER_INCLUDED
 
 
 /****************************************************************************
@@ -79,8 +72,8 @@ An example of how to use the Recorder class
  *
  ****************************************************************************/
 
-//namespace MyNameSpace
-//{
+namespace Async
+{
 
 
 /****************************************************************************
@@ -114,26 +107,25 @@ An example of how to use the Recorder class
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	A class for recording raw audio to a file
 @author Tobias Blomberg / SM0SVX
 @date   2005-08-29
 
-A_detailed_class_description
-
-\include Recorder_demo.cpp
+Use this class to stream audio into a file. The audio is stored in raw format,
+only samples no header.
 */
-class Recorder : public Async::AudioSink
+class AudioRecorder : public Async::AudioSink
 {
   public:
     /**
      * @brief 	Default constuctor
      */
-    explicit Recorder(const std::string& filename);
+    explicit AudioRecorder(const std::string& filename);
   
     /**
      * @brief 	Destructor
      */
-    ~Recorder(void);
+    ~AudioRecorder(void);
   
     /**
      * @brief 	Initialize the recorder
@@ -169,15 +161,15 @@ class Recorder : public Async::AudioSink
     std::string filename;
     FILE      	*file;
     
-    Recorder(const Recorder&);
-    Recorder& operator=(const Recorder&);
+    AudioRecorder(const AudioRecorder&);
+    AudioRecorder& operator=(const AudioRecorder&);
     
-};  /* class Recorder */
+};  /* class AudioRecorder */
 
 
-//} /* namespace */
+} /* namespace */
 
-#endif /* RECORDER_INCLUDED */
+#endif /* ASYNC_AUDIO_RECORDER_INCLUDED */
 
 
 

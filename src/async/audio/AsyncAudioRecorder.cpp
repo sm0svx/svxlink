@@ -1,14 +1,12 @@
 /**
-@file	 Recorder.cpp
-@brief   A_brief_description_for_this_file
+@file	 AudioRecorder.cpp
+@brief   Contains a class for recording raw audio to a file
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-08-29
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2004-2009 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -51,7 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Recorder.h"
+#include "AsyncAudioRecorder.h"
 
 
 
@@ -62,6 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 
 
 
@@ -112,23 +111,23 @@ using namespace std;
  *
  ****************************************************************************/
 
-Recorder::Recorder(const string& filename)
+AudioRecorder::AudioRecorder(const string& filename)
   : filename(filename), file(NULL)
 {
   
-} /* Recorder::Recorder */
+} /* AudioRecorder::AudioRecorder */
 
 
-Recorder::~Recorder(void)
+AudioRecorder::~AudioRecorder(void)
 {
   if (file != NULL)
   {
     fclose(file);
   }
-} /* Recorder::~Recorder */
+} /* AudioRecorder::~AudioRecorder */
 
 
-bool Recorder::initialize(void)
+bool AudioRecorder::initialize(void)
 {
   assert(file == NULL);
   
@@ -141,10 +140,10 @@ bool Recorder::initialize(void)
   
   return true;
   
-} /* Recorder::initialize */
+} /* AudioRecorder::initialize */
 
 
-int Recorder::writeSamples(const float *samples, int count)
+int AudioRecorder::writeSamples(const float *samples, int count)
 {
   if (file == NULL)
   {
@@ -178,13 +177,13 @@ int Recorder::writeSamples(const float *samples, int count)
   
   return written;
 
-} /* Recorder::writeSamples */
+} /* AudioRecorder::writeSamples */
 
 
-void Recorder::flushSamples(void)
+void AudioRecorder::flushSamples(void)
 {
   sourceAllSamplesFlushed();
-} /* Recorder::flushSamples */
+} /* AudioRecorder::flushSamples */
 
 
 

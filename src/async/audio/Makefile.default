@@ -100,7 +100,7 @@ LIBSRC		= AsyncAudioSource.cpp AsyncAudioSink.cpp \
 		  AsyncAudioInterpolator.cpp AsyncAudioDecoder.cpp \
 		  AsyncAudioEncoder.cpp AsyncAudioEncoderS16.cpp \
 		  AsyncAudioDecoderS16.cpp AsyncAudioEncoderGsm.cpp \
-		  AsyncAudioDecoderGsm.cpp
+		  AsyncAudioDecoderGsm.cpp AsyncAudioRecorder.cpp
 
 ifdef USE_SPEEX
 LIBSRC +=	  AsyncAudioEncoderSpeex.cpp AsyncAudioDecoderSpeex.cpp
@@ -126,7 +126,7 @@ EXPINC		= AsyncAudioSource.h AsyncAudioSink.h AsyncAudioProcessor.h \
 		  AsyncAudioDebugger.h AsyncAudioPacer.h AsyncAudioReader.h \
 		  AsyncAudioDecimator.h AsyncAudioInterpolator.h \
 		  AsyncAudioStreamStateDetector.h AsyncAudioEncoder.h \
-		  AsyncAudioDecoder.h
+		  AsyncAudioDecoder.h AsyncAudioRecorder.h
 
 
 # Specify Qt header files here that you want to run the

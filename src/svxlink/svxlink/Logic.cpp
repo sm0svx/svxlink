@@ -68,6 +68,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioStreamStateDetector.h>
 #include <AsyncAudioPacer.h>
 #include <AsyncAudioDebugger.h>
+#include <AsyncAudioRecorder.h>
 
 
 /****************************************************************************
@@ -76,7 +77,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Recorder.h"
 #include "EventHandler.h"
 #include "Module.h"
 #include "MsgHandler.h"
@@ -552,7 +552,7 @@ void Logic::playTone(int fq, int amp, int len)
 void Logic::recordStart(const string& filename)
 {
   recordStop();
-  recorder = new Recorder(filename);
+  recorder = new AudioRecorder(filename);
   if (!recorder->initialize())
   {
     cerr << "*** ERROR: Could not open file for recording: "

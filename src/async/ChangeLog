@@ -13,6 +13,9 @@
   did not work. DH1DM: Fixed a buffer calculation error. Gaps could be
   introduced in some situations.
 
+* Moved the audio recorder class from the SvxLink server application
+  to Async (Async::AudioRecorder).
+
 
 
  0.16.1 -- 30 Jul 2008
