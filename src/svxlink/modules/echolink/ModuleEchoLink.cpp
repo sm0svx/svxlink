@@ -985,9 +985,8 @@ void ModuleEchoLink::destroyQsoObject(QsoImpl *qso)
     const char *elformat = "connection to %s closed";
     char elmessage[100];
     sprintf(elmessage, elformat, qso->remoteCallsign().c_str());
-    tcon->sendAprsInfo(elmessage, 0);
+    tcon->sendAprsInfo(elmessage, numConnectedStations());
   }
-  
   
   splitter->removeSink(qso);
   selector->removeSource(qso);

@@ -122,6 +122,7 @@ AprsTcpClient::AprsTcpClient(Async::Config &cfg, const std::string &name):
   cfg(cfg), beacon_timer(0), tcp_port(14580)
 {
    string value;
+   nrofstn = 0;
    destination = "APRS";				// Aprs-destination
 
    if (!cfg.getValue(name, "APRSHOST", value))
@@ -216,10 +217,12 @@ void AprsTcpClient::sendAprsInfo(std::string info, int numberofstations)
   // Format for "object from..."
   // DL1HRC>;EL-242660*111111z4900.05NE00823.29E0434.687MHz T123 R10k   DA0AAA
 
+  nrofstn = numberofstations;
+
   const char *format = "%s>%s,%s:;%s-%s*111111z%s/%s%d%s\r\n";
   sprintf(aprsmsg, format, el_call.c_str(), destination.c_str(), 
-          aprspath.c_str(), el_tok.c_str(), el_call.c_str(), aprslon.c_str(), 
-	  aprslat.c_str(), numberofstations, info.c_str());
+          aprspath.c_str(), el_tok.c_str(), el_call.c_str(), aprslat.c_str(), 
+	  aprslon.c_str(), numberofstations, info.c_str());
 
   AprsTcpClient::sendMsg();
   
@@ -228,21 +231,30 @@ void AprsTcpClient::sendAprsInfo(std::string info, int numberofstations)
 
 void AprsTcpClient::sendAprsBeacon(Async::Timer *t)
 {
+  if (nrofstn > 9)
+  {
+    nrofstn = 9;
+  }
+  if (nrofstn < 0)
+  {
+    nrofstn = 0;
+  }
 
   if (rng.length() == 3)
   {
-    const char *format = "%s>%s,%s:;%s-%s*111111z%sE%s0%sMHz %s R%s %s\r\n";
+    const char *format = "%s>%s,%s:;%s-%s*111111z%s/%s%d%sMHz %s R%s %s\r\n";
     sprintf(aprsmsg, format, el_call.c_str(), destination.c_str(), 
-            aprspath.c_str(), el_tok.c_str(), el_call.c_str(), aprslon.c_str(),
-            aprslat.c_str(), frequency.c_str(), tone.c_str(), rng.c_str(), 
-            aprs_comment.c_str());
+            aprspath.c_str(), el_tok.c_str(), el_call.c_str(), aprslat.c_str(),
+            aprslon.c_str(), nrofstn, frequency.c_str(), tone.c_str(), 
+	    rng.c_str(), aprs_comment.c_str());
   }
   else
   {
-    const char *format = "%s>%s,%s:;%s-%s*111111z%sE%s0%sMHz %s %s\r\n";
+    const char *format = "%s>%s,%s:;%s-%s*111111z%s/%s%d%sMHz %s %s\r\n";
     sprintf(aprsmsg, format, el_call.c_str(), destination.c_str(), 
-            aprspath.c_str(), el_tok.c_str(), el_call.c_str(), aprslon.c_str(), 
-	    aprslat.c_str(), frequency.c_str(), tone.c_str(), aprs_comment.c_str());
+            aprspath.c_str(), el_tok.c_str(), el_call.c_str(), aprslat.c_str(), 
+	    aprslon.c_str(), nrofstn, frequency.c_str(), tone.c_str(), 
+	    aprs_comment.c_str());
   }
 
   AprsTcpClient::sendMsg();

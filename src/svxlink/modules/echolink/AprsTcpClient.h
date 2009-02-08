@@ -126,7 +126,8 @@ class AprsTcpClient : public SigC::Object
      void  sendAprsBeacon(Async::Timer *t);
      void  sendAprsInfo(std::string info, int numberofstations);
      char  aprsmsg[200];
-
+     int   nrofstn;
+     
   protected:
 
 
