@@ -14,7 +14,7 @@
 #
 proc playMsg {context msg} {
   global basedir;
-  set candidates [glob -nocomplain "$basedir/$context/$msg.{raw,gsm}" "$basedir/Default/$msg.{raw,gsm}"];
+  set candidates [glob -nocomplain "$basedir/$context/$msg.{wav,raw,gsm}" "$basedir/Default/$msg.{wav,raw,gsm}"];
   if { [llength $candidates] > 0 } {
     playFile [lindex $candidates 0];
   } else {

@@ -208,8 +208,8 @@ class WavFileQueueItem : public QueueItem
     char      subchunk2id[4];
     uint32_t  subchunk2size;
     
-    int read32bitValue(char *ptr, uint32_t *val);
-    int read16bitValue(char *ptr, uint16_t *val);
+    int read32bitValue(unsigned char *ptr, uint32_t *val);
+    int read16bitValue(unsigned char *ptr, uint16_t *val);
 };
 
 
@@ -675,7 +675,7 @@ bool WavFileQueueItem::initialize(void)
   }
   
     // Read the wave file header
-  char buf[44];
+  unsigned char buf[44];
   int read_cnt = read(file, buf, sizeof(buf));
   if (read_cnt != sizeof(buf))
   {
@@ -684,12 +684,12 @@ bool WavFileQueueItem::initialize(void)
     return false;
   }
   
-  char *ptr = buf;
+  unsigned char *ptr = buf;
   memcpy(chunk_id, ptr, 4);
   ptr += 4;
   if (memcmp(chunk_id, "RIFF", 4) != 0)
   {
-    cerr << "*** WARNING: Illegal WAV file header. Chunk ID is not \"RIFF\": "
+    cerr << "*** WARNING: Illegal WAV file header. ChunkID is not \"RIFF\": "
       	 << filename << "\n";
     return false;
   }
@@ -710,7 +710,7 @@ bool WavFileQueueItem::initialize(void)
   if (memcmp(subchunk1id, "fmt ", 4) != 0)
   {
     cerr << "*** WARNING: Illegal WAV file header. "
-      	 << "Sub chunk 1 ID is not \"fmt \": "
+      	 << "Subchunk1ID is not \"fmt \": "
       	 << filename << "\n";
     return false;
   }
@@ -719,7 +719,7 @@ bool WavFileQueueItem::initialize(void)
   if (subchunk1size != 16)
   {
     cerr << "*** WARNING: Illegal WAV file header. "
-      	 << "Sub chunk 1 size is not 16: "
+      	 << "Subchunk1Size is not 16: "
       	 << filename << "\n";
     return false;
   }
@@ -767,7 +767,7 @@ bool WavFileQueueItem::initialize(void)
   if (memcmp(subchunk2id, "data", 4) != 0)
   {
     cerr << "*** WARNING: Illegal WAV file header. "
-      	 << "Sub chunk 2 ID is not \"data\": "
+      	 << "Subchunk2ID is not \"data\": "
       	 << filename << "\n";
     return false;
   }
@@ -776,7 +776,7 @@ bool WavFileQueueItem::initialize(void)
   if (chunk_size != subchunk2size + 36)
   {
     cerr << "*** WARNING: Illegal WAV file header. "
-      	 << "Chunk size should be Sub chunk 2 size plus 36: "
+      	 << "ChunkSize should be Subchunk2Size plus 36: "
       	 << filename << "\n";
     return false;
   }
@@ -819,14 +819,14 @@ void WavFileQueueItem::unreadSamples(int len)
 } /* WavFileQueueItem::unreadSamples */
 
 
-int WavFileQueueItem::read32bitValue(char *ptr, uint32_t *val)
+int WavFileQueueItem::read32bitValue(unsigned char *ptr, uint32_t *val)
 {
   *val = ptr[0] + (ptr[1] << 8) + (ptr[2] << 16) + (ptr[3] << 24);
   return 4;
 } /* WavFileQueueItem::read32bitValue */
 
 
-int WavFileQueueItem::read16bitValue(char *ptr, uint16_t *val)
+int WavFileQueueItem::read16bitValue(unsigned char *ptr, uint16_t *val)
 {
   *val = ptr[0] + (ptr[1] << 8);
   return 2;
