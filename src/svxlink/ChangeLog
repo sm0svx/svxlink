@@ -63,6 +63,9 @@
 
 * APRS functionality in ModuleEchoLink contributed by DL1HRC/Adi added.
 
+* SvxLink can now read WAV files. However, only 8k sampling rate,
+  mono, 16 bit signed formated files are supported.
+
 
 
  0.10.1 -- 30 Jul 2008

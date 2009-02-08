@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <cassert>
+#include <cstdio>
 
 
 /****************************************************************************
@@ -70,6 +71,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
+#define WAVE_HEADER_SIZE  44
 
 
 /****************************************************************************
@@ -111,8 +113,11 @@ using namespace Async;
  *
  ****************************************************************************/
 
-AudioRecorder::AudioRecorder(const string& filename)
-  : filename(filename), file(NULL)
+AudioRecorder::AudioRecorder(const string& filename,
+      	      	      	     AudioRecorder::Format format,
+			     int sample_rate)
+  : filename(filename), file(NULL), samples_written(0), format(format),
+    sample_rate(sample_rate)
 {
   
 } /* AudioRecorder::AudioRecorder */
@@ -122,6 +127,10 @@ AudioRecorder::~AudioRecorder(void)
 {
   if (file != NULL)
   {
+    if (format == FMT_WAV)
+    {
+      writeWaveHeader();
+    }
     fclose(file);
   }
 } /* AudioRecorder::~AudioRecorder */
@@ -136,6 +145,15 @@ bool AudioRecorder::initialize(void)
   {
     perror("*** ERROR fopen");
     return false;
+  }
+  
+  if (format == FMT_WAV)
+  {
+      // Leave room for the wave file header
+    if (fseek(file, WAVE_HEADER_SIZE, SEEK_SET) != 0)
+    {
+      perror("fseek");
+    }
   }
   
   return true;
@@ -175,6 +193,8 @@ int AudioRecorder::writeSamples(const float *samples, int count)
     file = NULL;
   }
   
+  samples_written += written;
+  
   return written;
 
 } /* AudioRecorder::writeSamples */
@@ -195,21 +215,6 @@ void AudioRecorder::flushSamples(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
 
 
 
@@ -219,23 +224,85 @@ void AudioRecorder::flushSamples(void)
  *
  ****************************************************************************/
 
+void AudioRecorder::writeWaveHeader(void)
+{
+  rewind(file);
+ 
+  char buf[WAVE_HEADER_SIZE];
+  char *ptr = buf;
+  
+    // ChunkID
+  memcpy(ptr, "RIFF", 4);
+  ptr += 4;
+  
+    // ChunkSize
+  ptr += store32bitValue(ptr, 36 + samples_written * sizeof(short));
+  
+    // Format
+  memcpy(ptr, "WAVE", 4);
+  ptr += 4;
+    
+    // Subchunk1ID
+  memcpy(ptr, "fmt ", 4);
+  ptr += 4;
+  
+    // Subchunk1Size
+  ptr += store32bitValue(ptr, 16);
+  
+    // AudioFormat (PCM)
+  ptr += store16bitValue(ptr, 1);
+  
+    // NumChannels
+  ptr += store16bitValue(ptr, 1);
+  
+    // SampleRate
+  ptr += store32bitValue(ptr, sample_rate);
+  
+    // ByteRate (sample rate * num channels * bytes per sample)
+  ptr += store32bitValue(ptr, sample_rate * 1 * sizeof(short));
+  
+    // BlockAlign (num channels * bytes per sample)
+  ptr += store16bitValue(ptr, 1 * sizeof(short));
+  
+    // BitsPerSample
+  ptr += store16bitValue(ptr, 16);
+  
+    // Subchunk2ID
+  memcpy(ptr, "data", 4);
+  ptr += 4;
+  
+    // Subchunk2Size (num samples * num channels * bytes per sample)
+  ptr += store32bitValue(ptr, samples_written * 1 * sizeof(short));
+  
+  assert(ptr - buf == WAVE_HEADER_SIZE);
 
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
+  if (fwrite(buf, 1, WAVE_HEADER_SIZE, file) != WAVE_HEADER_SIZE)
+  {
+    perror("fwrite");
+  }
+} /* AudioRecorder::writeWaveHeader */
 
 
+int AudioRecorder::store32bitValue(char *ptr, uint32_t val)
+{
+  *ptr++ = val & 0xff;
+  val >>= 8;
+  *ptr++ = val & 0xff;
+  val >>= 8;
+  *ptr++ = val & 0xff;
+  val >>= 8;
+  *ptr++ = val & 0xff;
+  return 4;
+} /* AudioRecorder::store32bitValue */
 
 
+int AudioRecorder::store16bitValue(char *ptr, uint16_t val)
+{
+  *ptr++ = val & 0xff;
+  val >>= 8;
+  *ptr++ = val & 0xff;
+  return 2;
+} /* AudioRecorder::store32bitValue */
 
 
 

@@ -16,6 +16,8 @@
 * Moved the audio recorder class from the SvxLink server application
   to Async (Async::AudioRecorder).
 
+* The AudioRecorder can now write WAV files.
+
 
 
  0.16.1 -- 30 Jul 2008
