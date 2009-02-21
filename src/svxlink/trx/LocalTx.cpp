@@ -228,7 +228,7 @@ LocalTx::LocalTx(Config& cfg, const string& name)
   : name(name), cfg(cfg), audio_io(0), is_transmitting(false),
     serial(0), ptt_pin1(Serial::PIN_NONE), ptt_pin1_rev(false),
     ptt_pin2(Serial::PIN_NONE), ptt_pin2_rev(false), txtot(0),
-    tx_timeout_occured(false), tx_timeout(0), ctcss_enable(false),
+    tx_timeout_occured(false), tx_timeout(0), sine_gen(0), ctcss_enable(false),
     dtmf_encoder(0), selector(0), dtmf_valve(0), input_handler(0),
     audio_valve(0)
 {
