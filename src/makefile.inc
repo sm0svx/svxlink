@@ -104,13 +104,11 @@ LIBDEP		:= $(subst -l,$(LIB)/lib,$(PROJLIBS))
 LIBDEP		:= $(LIBDEP:%=%.a)
 
 # Compiler warnings
-CWARNINGS	= -Wstrict-prototypes -Wpointer-arith \
-	  	-DNeedVarargsPrototypes  -fstrength-reduce \
-		-fpcc-struct-return -fno-common -Wall
+CWARNINGS	= -Wall -Wstrict-prototypes -Wpointer-arith
+# -DNeedVarargsPrototypes -fpcc-struct-return -fno-common
 
-CXXWARNINGS	= -Wpointer-arith \
-	  	-DNeedVarargsPrototypes  -fstrength-reduce \
-		-fpcc-struct-return -fno-common -Wall
+CXXWARNINGS	= -Wall -Wpointer-arith
+# -DNeedVarargsPrototypes -fpcc-struct-return -fno-common
 
 
 # Bash-script to find out the relative path from a given directory
