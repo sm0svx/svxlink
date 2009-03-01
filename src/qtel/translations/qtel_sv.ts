@@ -744,23 +744,23 @@ meddelande</translation>
     </message>
     <message>
         <source>Beep frequency</source>
-        <translation type="unfinished"></translation>
+        <translation>Tonfrekvens</translation>
     </message>
     <message>
         <source>Level</source>
-        <translation type="unfinished"></translation>
+        <translation>Tonnivå</translation>
     </message>
     <message>
         <source>Beep length</source>
-        <translation type="unfinished"></translation>
+        <translation>Tonlängd</translation>
     </message>
     <message>
         <source>Hz</source>
-        <translation type="unfinished"></translation>
+        <translation>Hz</translation>
     </message>
     <message>
         <source>ms</source>
-        <translation type="unfinished"></translation>
+        <translation>ms</translation>
     </message>
     <message>
         <source>Enter Latitude here, for example 5015.10</source>
@@ -774,27 +774,27 @@ meddelande</translation>
     </message>
     <message>
         <source>dB</source>
-        <translation type="unfinished"></translation>
+        <translation>dB</translation>
     </message>
     <message>
         <source>Roger beep level in dB</source>
-        <translation type="unfinished"></translation>
+        <translation>Nivå för rågerpip i dB</translation>
     </message>
     <message>
         <source>Roger beep length in milliseconds</source>
-        <translation type="unfinished"></translation>
+        <translation>Längd på rågerpipet i millisekunder</translation>
     </message>
     <message>
         <source>Roger beep frequency in Hz</source>
-        <translation type="unfinished"></translation>
+        <translation>Frekvens för rågerpipet i Hz</translation>
     </message>
     <message>
         <source>Check this check box to enable roger beep on PTT release</source>
-        <translation type="unfinished"></translation>
+        <translation>Klicka i denna kryssruta för att ett rågerpip skall skickas till motstationen då PTT:n släpps</translation>
     </message>
     <message>
         <source>Enable roger beep</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktivera rågerpip</translation>
     </message>
 </context>
 </TS>
