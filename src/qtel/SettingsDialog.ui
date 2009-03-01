@@ -8,8 +8,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>577</width>
-            <height>411</height>
+            <width>710</width>
+            <height>476</height>
         </rect>
     </property>
     <property name="caption">
@@ -19,12 +19,59 @@
         <property name="name">
             <cstring>unnamed</cstring>
         </property>
-        <property name="margin">
-            <number>11</number>
-        </property>
-        <property name="spacing">
-            <number>6</number>
-        </property>
+        <spacer row="0" column="0">
+            <property name="name">
+                <cstring>spacer7_2</cstring>
+            </property>
+            <property name="orientation">
+                <enum>Horizontal</enum>
+            </property>
+            <property name="sizeType">
+                <enum>Expanding</enum>
+            </property>
+            <property name="sizeHint">
+                <size>
+                    <width>31</width>
+                    <height>20</height>
+                </size>
+            </property>
+        </spacer>
+        <widget class="QPushButton" row="1" column="2">
+            <property name="name">
+                <cstring>cancel_button</cstring>
+            </property>
+            <property name="text">
+                <string>Cancel</string>
+            </property>
+        </widget>
+        <widget class="QPushButton" row="1" column="1">
+            <property name="name">
+                <cstring>ok_button</cstring>
+            </property>
+            <property name="text">
+                <string>OK</string>
+            </property>
+            <property name="default">
+                <bool>true</bool>
+            </property>
+        </widget>
+        <spacer row="1" column="0">
+            <property name="name">
+                <cstring>Spacer3</cstring>
+            </property>
+            <property name="orientation">
+                <enum>Horizontal</enum>
+            </property>
+            <property name="sizeType">
+                <enum>Expanding</enum>
+            </property>
+            <property name="sizeHint">
+                <size>
+                    <width>490</width>
+                    <height>20</height>
+                </size>
+            </property>
+        </spacer>
         <widget class="QTabWidget" row="0" column="0" rowspan="1" colspan="3">
             <property name="name">
                 <cstring>TabWidget2</cstring>
@@ -308,11 +355,11 @@ Message</string>
                 <attribute name="title">
                     <string>Sound</string>
                 </attribute>
-                <vbox>
+                <grid>
                     <property name="name">
                         <cstring>unnamed</cstring>
                     </property>
-                    <widget class="QGroupBox">
+                    <widget class="QGroupBox" row="0" column="0">
                         <property name="name">
                             <cstring>groupBox6</cstring>
                         </property>
@@ -323,6 +370,161 @@ Message</string>
                             <property name="name">
                                 <cstring>unnamed</cstring>
                             </property>
+                            <widget class="QSpinBox" row="6" column="1">
+                                <property name="name">
+                                    <cstring>beep_level</cstring>
+                                </property>
+                                <property name="suffix">
+                                    <string>dB</string>
+                                </property>
+                                <property name="maxValue">
+                                    <number>0</number>
+                                </property>
+                                <property name="minValue">
+                                    <number>-60</number>
+                                </property>
+                                <property name="lineStep">
+                                    <number>1</number>
+                                </property>
+                                <property name="value">
+                                    <number>-12</number>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Roger beep level in dB</string>
+                                </property>
+                            </widget>
+                            <widget class="QLabel" row="5" column="0">
+                                <property name="name">
+                                    <cstring>textLabel1_2_2_2</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>Beep frequency</string>
+                                </property>
+                            </widget>
+                            <widget class="QSpinBox" row="4" column="1">
+                                <property name="name">
+                                    <cstring>beep_length</cstring>
+                                </property>
+                                <property name="suffix">
+                                    <string>ms</string>
+                                </property>
+                                <property name="maxValue">
+                                    <number>1000</number>
+                                </property>
+                                <property name="minValue">
+                                    <number>200</number>
+                                </property>
+                                <property name="lineStep">
+                                    <number>50</number>
+                                </property>
+                                <property name="value">
+                                    <number>300</number>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Roger beep length in milliseconds</string>
+                                </property>
+                            </widget>
+                            <widget class="QLabel" row="6" column="0">
+                                <property name="name">
+                                    <cstring>textLabel1_2_2_2_3</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>Level</string>
+                                </property>
+                            </widget>
+                            <widget class="QLabel" row="4" column="0">
+                                <property name="name">
+                                    <cstring>textLabel1_2_2</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>Beep length</string>
+                                </property>
+                            </widget>
+                            <spacer row="5" column="2" rowspan="1" colspan="2">
+                                <property name="name">
+                                    <cstring>spacer9</cstring>
+                                </property>
+                                <property name="orientation">
+                                    <enum>Horizontal</enum>
+                                </property>
+                                <property name="sizeType">
+                                    <enum>Expanding</enum>
+                                </property>
+                                <property name="sizeHint">
+                                    <size>
+                                        <width>399</width>
+                                        <height>31</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                            <spacer row="4" column="2" rowspan="1" colspan="2">
+                                <property name="name">
+                                    <cstring>spacer8</cstring>
+                                </property>
+                                <property name="orientation">
+                                    <enum>Horizontal</enum>
+                                </property>
+                                <property name="sizeType">
+                                    <enum>Expanding</enum>
+                                </property>
+                                <property name="sizeHint">
+                                    <size>
+                                        <width>399</width>
+                                        <height>31</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                            <widget class="QSpinBox" row="5" column="1">
+                                <property name="name">
+                                    <cstring>beep_fq</cstring>
+                                </property>
+                                <property name="suffix">
+                                    <string>Hz</string>
+                                </property>
+                                <property name="maxValue">
+                                    <number>2500</number>
+                                </property>
+                                <property name="minValue">
+                                    <number>300</number>
+                                </property>
+                                <property name="lineStep">
+                                    <number>50</number>
+                                </property>
+                                <property name="value">
+                                    <number>700</number>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Roger beep frequency in Hz</string>
+                                </property>
+                            </widget>
+                            <spacer row="6" column="2" rowspan="1" colspan="2">
+                                <property name="name">
+                                    <cstring>spacer10</cstring>
+                                </property>
+                                <property name="orientation">
+                                    <enum>Horizontal</enum>
+                                </property>
+                                <property name="sizeType">
+                                    <enum>Expanding</enum>
+                                </property>
+                                <property name="sizeHint">
+                                    <size>
+                                        <width>399</width>
+                                        <height>31</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                            <widget class="QCheckBox" row="3" column="1">
+                                <property name="name">
+                                    <cstring>use_roger_beep</cstring>
+                                </property>
+                                <property name="text">
+                                    <string></string>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Check this check box to enable roger beep on PTT release</string>
+                                </property>
+                            </widget>
                             <widget class="QLabel" row="0" column="0">
                                 <property name="name">
                                     <cstring>textLabel1</cstring>
@@ -331,47 +533,12 @@ Message</string>
                                     <string>Audio device</string>
                                 </property>
                             </widget>
-                            <widget class="QLabel" row="1" column="0">
-                                <property name="name">
-                                    <cstring>textLabel2</cstring>
-                                </property>
-                                <property name="text">
-                                    <string>Full duplex</string>
-                                </property>
-                            </widget>
-                            <widget class="QLineEdit" row="0" column="2" rowspan="1" colspan="2">
-                                <property name="name">
-                                    <cstring>audio_device</cstring>
-                                </property>
-                                <property name="toolTip" stdset="0">
-                                    <string>The audio device to use (e.g. /dev/dsp)</string>
-                                </property>
-                            </widget>
-                            <widget class="QCheckBox" row="1" column="1" rowspan="1" colspan="3">
-                                <property name="name">
-                                    <cstring>use_full_duplex</cstring>
-                                </property>
-                                <property name="text">
-                                    <string></string>
-                                </property>
-                                <property name="toolTip" stdset="0">
-                                    <string>Check this check box to enable full duplex operation</string>
-                                </property>
-                            </widget>
-                            <widget class="QLabel" row="2" column="0" rowspan="1" colspan="2">
+                            <widget class="QLabel" row="2" column="0">
                                 <property name="name">
                                     <cstring>textLabel1_2</cstring>
                                 </property>
                                 <property name="text">
                                     <string>Connect Sound</string>
-                                </property>
-                            </widget>
-                            <widget class="QLineEdit" row="2" column="2">
-                                <property name="name">
-                                    <cstring>connect_sound</cstring>
-                                </property>
-                                <property name="toolTip" stdset="0">
-                                    <string>The connect sound to use on incoming EchoLink connections</string>
                                 </property>
                             </widget>
                             <widget class="QPushButton" row="2" column="3">
@@ -382,46 +549,428 @@ Message</string>
                                     <string>Browse...</string>
                                 </property>
                             </widget>
+                            <widget class="QLabel" row="1" column="0">
+                                <property name="name">
+                                    <cstring>textLabel2</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>Full duplex</string>
+                                </property>
+                            </widget>
+                            <widget class="QCheckBox" row="1" column="1" rowspan="1" colspan="2">
+                                <property name="name">
+                                    <cstring>use_full_duplex</cstring>
+                                </property>
+                                <property name="text">
+                                    <string></string>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Check this check box to enable full duplex operation</string>
+                                </property>
+                            </widget>
+                            <widget class="QLineEdit" row="2" column="1" rowspan="1" colspan="2">
+                                <property name="name">
+                                    <cstring>connect_sound</cstring>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>The connect sound to use on incoming EchoLink connections</string>
+                                </property>
+                            </widget>
+                            <widget class="QLineEdit" row="0" column="1" rowspan="1" colspan="3">
+                                <property name="name">
+                                    <cstring>audio_device</cstring>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>The audio device to use (e.g. /dev/dsp)</string>
+                                </property>
+                            </widget>
+                            <widget class="QLabel" row="3" column="0">
+                                <property name="name">
+                                    <cstring>textLabel1_4</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>Enable roger beep</string>
+                                </property>
+                            </widget>
                         </grid>
                     </widget>
-                </vbox>
+                </grid>
             </widget>
-        </widget>
-        <spacer row="1" column="0">
-            <property name="name">
-                <cstring>Spacer3</cstring>
-            </property>
-            <property name="orientation">
-                <enum>Horizontal</enum>
-            </property>
-            <property name="sizeType">
-                <enum>Expanding</enum>
-            </property>
-            <property name="sizeHint">
-                <size>
-                    <width>20</width>
-                    <height>20</height>
-                </size>
-            </property>
-        </spacer>
-        <widget class="QPushButton" row="1" column="1">
-            <property name="name">
-                <cstring>ok_button</cstring>
-            </property>
-            <property name="text">
-                <string>OK</string>
-            </property>
-            <property name="default">
-                <bool>true</bool>
-            </property>
-        </widget>
-        <widget class="QPushButton" row="1" column="2">
-            <property name="name">
-                <cstring>cancel_button</cstring>
-            </property>
-            <property name="text">
-                <string>Cancel</string>
-            </property>
+            <widget class="QWidget">
+                <property name="name">
+                    <cstring>TabPage</cstring>
+                </property>
+                <attribute name="title">
+                    <string>APRS</string>
+                </attribute>
+                <grid>
+                    <property name="name">
+                        <cstring>unnamed</cstring>
+                    </property>
+                    <widget class="QGroupBox" row="0" column="0">
+                        <property name="name">
+                            <cstring>groupbox7</cstring>
+                        </property>
+                        <property name="sizePolicy">
+                            <sizepolicy>
+                                <hsizetype>7</hsizetype>
+                                <vsizetype>7</vsizetype>
+                                <horstretch>0</horstretch>
+                                <verstretch>0</verstretch>
+                            </sizepolicy>
+                        </property>
+                        <property name="title">
+                            <string>APRS settings</string>
+                        </property>
+                        <grid>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="QSpinBox" row="2" column="8" rowspan="1" colspan="2">
+                                <property name="name">
+                                    <cstring>aprsbeacon_interval</cstring>
+                                </property>
+                                <property name="sizePolicy">
+                                    <sizepolicy>
+                                        <hsizetype>1</hsizetype>
+                                        <vsizetype>0</vsizetype>
+                                        <horstretch>0</horstretch>
+                                        <verstretch>0</verstretch>
+                                    </sizepolicy>
+                                </property>
+                                <property name="suffix">
+                                    <string>min</string>
+                                </property>
+                                <property name="maxValue">
+                                    <number>90</number>
+                                </property>
+                                <property name="minValue">
+                                    <number>15</number>
+                                </property>
+                                <property name="value">
+                                    <number>16</number>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>15 Minutes or more are ok</string>
+                                </property>
+                            </widget>
+                            <widget class="QSpinBox" row="3" column="7" rowspan="1" colspan="3">
+                                <property name="name">
+                                    <cstring>aprsport</cstring>
+                                </property>
+                                <property name="maxValue">
+                                    <number>15000</number>
+                                </property>
+                                <property name="minValue">
+                                    <number>1025</number>
+                                </property>
+                                <property name="value">
+                                    <number>14580</number>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>14580, 10151-10153 should work in most cases</string>
+                                </property>
+                            </widget>
+                            <spacer row="1" column="4">
+                                <property name="name">
+                                    <cstring>spacer7</cstring>
+                                </property>
+                                <property name="orientation">
+                                    <enum>Horizontal</enum>
+                                </property>
+                                <property name="sizeType">
+                                    <enum>Expanding</enum>
+                                </property>
+                                <property name="sizeHint">
+                                    <size>
+                                        <width>20</width>
+                                        <height>20</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                            <spacer row="2" column="4">
+                                <property name="name">
+                                    <cstring>spacer7_3</cstring>
+                                </property>
+                                <property name="orientation">
+                                    <enum>Horizontal</enum>
+                                </property>
+                                <property name="sizeType">
+                                    <enum>Expanding</enum>
+                                </property>
+                                <property name="sizeHint">
+                                    <size>
+                                        <width>20</width>
+                                        <height>20</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                            <widget class="QComboBox" row="2" column="3">
+                                <item>
+                                    <property name="text">
+                                        <string>E</string>
+                                    </property>
+                                </item>
+                                <item>
+                                    <property name="text">
+                                        <string>W</string>
+                                    </property>
+                                </item>
+                                <property name="name">
+                                    <cstring>east_west</cstring>
+                                </property>
+                                <property name="currentItem">
+                                    <number>0</number>
+                                </property>
+                            </widget>
+                            <widget class="QLineEdit" row="2" column="2">
+                                <property name="name">
+                                    <cstring>longitude</cstring>
+                                </property>
+                                <property name="sizePolicy">
+                                    <sizepolicy>
+                                        <hsizetype>1</hsizetype>
+                                        <vsizetype>0</vsizetype>
+                                        <horstretch>0</horstretch>
+                                        <verstretch>0</verstretch>
+                                    </sizepolicy>
+                                </property>
+                                <property name="text">
+                                    <string>.</string>
+                                </property>
+                                <property name="maxLength">
+                                    <number>8</number>
+                                </property>
+                                <property name="readOnly">
+                                    <bool>false</bool>
+                                </property>
+                                <property name="inputMask">
+                                    <string>99999.99; </string>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Enter Longitude here, for example: 01102.33</string>
+                                    <comment>XXXXX.XX</comment>
+                                </property>
+                            </widget>
+                            <widget class="QLineEdit" row="3" column="1" rowspan="1" colspan="4">
+                                <property name="name">
+                                    <cstring>aprsserver</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>www.db0erf.de</string>
+                                </property>
+                                <property name="maxLength">
+                                    <number>250</number>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Enter IP or hostname of the APRS-Server</string>
+                                </property>
+                            </widget>
+                            <spacer row="1" column="6" rowspan="1" colspan="3">
+                                <property name="name">
+                                    <cstring>spacer7_4</cstring>
+                                </property>
+                                <property name="orientation">
+                                    <enum>Horizontal</enum>
+                                </property>
+                                <property name="sizeType">
+                                    <enum>Expanding</enum>
+                                </property>
+                                <property name="sizeHint">
+                                    <size>
+                                        <width>40</width>
+                                        <height>20</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                            <widget class="QComboBox" row="1" column="9">
+                                <item>
+                                    <property name="text">
+                                        <string></string>
+                                    </property>
+                                </item>
+                                <item>
+                                    <property name="text">
+                                        <string></string>
+                                    </property>
+                                </item>
+                                <item>
+                                    <property name="text">
+                                        <string></string>
+                                    </property>
+                                </item>
+                                <item>
+                                    <property name="text">
+                                        <string></string>
+                                    </property>
+                                </item>
+                                <item>
+                                    <property name="text">
+                                        <string></string>
+                                    </property>
+                                </item>
+                                <item>
+                                    <property name="text">
+                                        <string></string>
+                                    </property>
+                                </item>
+                                <item>
+                                    <property name="text">
+                                        <string></string>
+                                    </property>
+                                </item>
+                                <item>
+                                    <property name="text">
+                                        <string></string>
+                                    </property>
+                                </item>
+                                <property name="name">
+                                    <cstring>aprs_icon</cstring>
+                                </property>
+                                <property name="autoMask">
+                                    <bool>false</bool>
+                                </property>
+                                <property name="currentItem">
+                                    <number>6</number>
+                                </property>
+                            </widget>
+                            <widget class="QCheckBox" row="4" column="0" rowspan="1" colspan="6">
+                                <property name="name">
+                                    <cstring>loc_as_aprs_comment</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>send location from "User Info" as comment</string>
+                                </property>
+                            </widget>
+                            <widget class="QLabel" row="5" column="0" rowspan="1" colspan="5">
+                                <property name="name">
+                                    <cstring>textLabel2_2</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>my APRS comment</string>
+                                </property>
+                            </widget>
+                            <widget class="QLineEdit" row="6" column="0" rowspan="1" colspan="10">
+                                <property name="name">
+                                    <cstring>aprs_comment</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>qtel - the open source EchoLink application</string>
+                                </property>
+                                <property name="maxLength">
+                                    <number>150</number>
+                                </property>
+                            </widget>
+                            <widget class="QLabel" row="2" column="0" rowspan="1" colspan="2">
+                                <property name="name">
+                                    <cstring>textLabel1_3_2</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>Longitude</string>
+                                </property>
+                            </widget>
+                            <widget class="QLabel" row="3" column="0">
+                                <property name="name">
+                                    <cstring>textLabel1_3_2_2</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>APRS server</string>
+                                </property>
+                            </widget>
+                            <widget class="QLabel" row="2" column="5" rowspan="1" colspan="3">
+                                <property name="name">
+                                    <cstring>textLabel2_2_2</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>Beacon interval</string>
+                                </property>
+                            </widget>
+                            <widget class="QLabel" row="3" column="5" rowspan="1" colspan="2">
+                                <property name="name">
+                                    <cstring>textLabel1_3_2_2_2</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>APRS serverport</string>
+                                </property>
+                            </widget>
+                            <widget class="QCheckBox" row="0" column="0" rowspan="1" colspan="4">
+                                <property name="name">
+                                    <cstring>aprsbeacon_enabled</cstring>
+                                </property>
+                                <property name="enabled">
+                                    <bool>true</bool>
+                                </property>
+                                <property name="text">
+                                    <string>enable APRS functions</string>
+                                </property>
+                                <property name="checked">
+                                    <bool>false</bool>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Enable APRS functions</string>
+                                </property>
+                            </widget>
+                            <widget class="QLabel" row="1" column="0" rowspan="1" colspan="2">
+                                <property name="name">
+                                    <cstring>textLabel1_3</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>Latitude</string>
+                                </property>
+                            </widget>
+                            <widget class="QLineEdit" row="1" column="2">
+                                <property name="name">
+                                    <cstring>latitude</cstring>
+                                </property>
+                                <property name="sizePolicy">
+                                    <sizepolicy>
+                                        <hsizetype>1</hsizetype>
+                                        <vsizetype>0</vsizetype>
+                                        <horstretch>0</horstretch>
+                                        <verstretch>0</verstretch>
+                                    </sizepolicy>
+                                </property>
+                                <property name="text">
+                                    <string>.</string>
+                                </property>
+                                <property name="maxLength">
+                                    <number>7</number>
+                                </property>
+                                <property name="inputMask">
+                                    <string>9999.99; </string>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Enter Latitude here, for example 5015.10</string>
+                                    <comment>Form: XXXX.XX</comment>
+                                </property>
+                            </widget>
+                            <widget class="QComboBox" row="1" column="3">
+                                <item>
+                                    <property name="text">
+                                        <string>N</string>
+                                    </property>
+                                </item>
+                                <item>
+                                    <property name="text">
+                                        <string>S</string>
+                                    </property>
+                                </item>
+                                <property name="name">
+                                    <cstring>north_south</cstring>
+                                </property>
+                            </widget>
+                            <widget class="QLabel" row="1" column="5">
+                                <property name="name">
+                                    <cstring>textLabel1_3_2_2_3_2</cstring>
+                                </property>
+                                <property name="text">
+                                    <string>APRS icon</string>
+                                </property>
+                            </widget>
+                        </grid>
+                    </widget>
+                </grid>
+            </widget>
         </widget>
     </grid>
 </widget>
@@ -444,6 +993,12 @@ Message</string>
         <receiver>SettingsDialog</receiver>
         <slot>browseConnectSound()</slot>
     </connection>
+    <connection>
+        <sender>loc_as_aprs_comment</sender>
+        <signal>stateChanged(int)</signal>
+        <receiver>SettingsDialog</receiver>
+        <slot>loc_as_aprs_comment_stateChanged(int)</slot>
+    </connection>
 </connections>
 <tabstops>
     <tabstop>TabWidget2</tabstop>
@@ -463,7 +1018,8 @@ Message</string>
 <slots>
     <slot access="private" specifier="non virtual">init()</slot>
     <slot>browseConnectSound()</slot>
+    <slot>loc_as_aprs_comment_stateChanged( int )</slot>
 </slots>
 <pixmapinproject/>
-<layoutdefaults spacing="6" margin="11"/>
+<layoutdefaults spacing="6" margin="6"/>
 </UI>

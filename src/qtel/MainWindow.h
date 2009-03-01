@@ -93,28 +93,28 @@ class MsgHandler;
 
 /*
  *----------------------------------------------------------------------------
- * Macro:   
- * Purpose: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- * Bugs:    
+ * Macro:
+ * Purpose:
+ * Input:
+ * Output:
+ * Author:
+ * Created:
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 
 
 /*
  *----------------------------------------------------------------------------
- * Type:    
- * Purpose: 
- * Members: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
+ * Type:
+ * Purpose:
+ * Members:
+ * Input:
+ * Output:
+ * Author:
+ * Created:
+ * Remarks:
  *----------------------------------------------------------------------------
  */
 
@@ -137,43 +137,45 @@ class MsgHandler;
  *----------------------------------------------------------------------------
  * Class:     MainWindow
  * Purpose:   MainWindow class
- * Inherits:  
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
+ * Inherits:
+ * Input:
+ * Output:
+ * Author:
+ * Created:
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
- */   
+ */
 class MainWindow : public MainWindowBase, public SigC::Object
 {
   Q_OBJECT
-  
+
   public:
     /*
      *------------------------------------------------------------------------
      * Method:	MainWindow
      * Purpose: Constructor
-     * Input: 	
+     * Input:
      * Output:	None
-     * Author:	
-     * Created: 
-     * Remarks: 
-     * Bugs:  	
+     * Author:
+     * Created:
+     * Remarks:
+     * Bugs:
      *------------------------------------------------------------------------
      */
     MainWindow(EchoLink::Directory& dir);
     virtual ~MainWindow(void);
-    
-    
+    QString aprsmessage;
+
   protected:
-    
-  private:    
+
+  private:
     typedef QMap<QListViewItem *, QString> SelectMap;
-  
+
     EchoLink::Directory &     	  dir;
     QTimer *  	      	      	  refresh_call_list_timer;
+    QTimer *  	      	      	  aprsbeacon_timer;
+    QTimer *                      reconnect_timer;
     bool      	      	      	  is_busy;
     QLabel *  	      	      	  status_indicator;
     std::string       	      	  old_server_msg;
@@ -181,15 +183,16 @@ class MainWindow : public MainWindowBase, public SigC::Object
     int       	      	      	  station_view_popup_add;
     int       	      	      	  station_view_popup_add_named;
     int       	      	      	  station_view_popup_remove;
-    Async::AudioIO 	      	  *audio_io;
+    Async::AudioIO 	      	      *audio_io;
     SelectMap 	      	      	  select_map;
-    MsgHandler		      	  *msg_handler;
-    Async::AudioIO 	      	  *msg_audio_io;
+    MsgHandler		      	      *msg_handler;
+    Async::AudioIO 	      	      *msg_audio_io;
+
     EchoLink::StationData::Status prev_status;
-    
+
     MainWindow(const MainWindow&);
     MainWindow operator=(const MainWindow&);
-    
+    Async::TcpClient              *aprscon;
     void incomingConnection(const Async::IpAddress& remote_address,
       	const std::string& remote_call, const std::string& remote_name);
     void closeEvent(QCloseEvent *e);
@@ -197,7 +200,7 @@ class MainWindow : public MainWindowBase, public SigC::Object
     void statusChanged(EchoLink::StationData::Status status);
     void allMsgsWritten(void);
     void allSamplesFlushed(void);
-    
+
   private slots:
     void initialize(void);
     void explorerViewClicked(QListViewItem* item);
@@ -205,6 +208,7 @@ class MainWindow : public MainWindowBase, public SigC::Object
     void stationViewSelectionChanged(void);
     void callsignListUpdated(void);
     void refreshCallList(void);
+
     void updateRegistration(void);
     void setBusy(bool busy);
     void forceQuit(void);
@@ -217,9 +221,18 @@ class MainWindow : public MainWindowBase, public SigC::Object
     void removeSelectedFromBookmarks(void);
     void addNamedStationToBookmarks(void);
     void configurationUpdated(void);
+    void onAprsConnect(void);
+    void send_aprs(void);
+    void onAprsDisconnect(Async::TcpConnection *con, Async::TcpClient::DisconnectReason reason);
     void connectionConnectToIpActionActivated(void);
     void connectionConnectToSelectedActionActivated(void);
-    
+    void aprslogin(void);
+    void send_aprsbeacon(QString info);
+    short callpass(const char *theCall);
+    void sendMsg(void);
+    void reconnect_aprsserver(void);
+    int onAprsDataReceived(Async::TcpConnection *con, void *buf, int count);
+
 };  /* class MainWindow */
 
 

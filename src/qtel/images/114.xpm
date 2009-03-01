@@ -1,0 +1,29 @@
+/* XPM */
+static const char *pic_114_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"20 19 4 1",
+"  c black",
+". c MediumBlue",
+"X c DeepSkyBlue",
+"o c None",
+/* pixels */
+"oooooooooooooooooooo",
+"oo o o oooooo o o oo",
+"oo o o o.XX.o o o oo",
+"oo                oo",
+"oo o o o.XX.o o o oo",
+"oo o o o.XX.o o o oo",
+"oooooooo.XX.oooooooo",
+"oooooooo.XX.oooooooo",
+"oooooooo.XX.oooooooo",
+"oooooooo.XX.oooooooo",
+"ooooooo..XX..ooooooo",
+"ooooooo.X..X.ooooooo",
+"ooooooo..XX..ooooooo",
+"ooooooo..XX..ooooooo",
+"ooooooo.X..X.ooooooo",
+"ooooooo.X..X.ooooooo",
+"ooooooo..XX..ooooooo",
+"ooooooo......ooooooo",
+"oooooooooooooooooooo"
+};

@@ -1,0 +1,29 @@
+/* XPM */
+static const char *pic_096_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"20 19 4 1",
+"  c black",
+". c gray27",
+"X c #5A5A5A",
+"o c None",
+/* pixels */
+"oooooooooooooooooooo",
+"oooooooooooooooooooo",
+"oo ooooooooooooooooo",
+"oo  oooooooooooooooo",
+"oo X ooooooooooooooo",
+"oo XX oooooooooooooo",
+"ooo XX        oooooo",
+"ooo XXX oooo  oooooo",
+"ooo XXXX oo o oooooo",
+"ooo. XXXX  oo oooooo",
+"oooo XXXXX oo oooooo",
+"ooooo XXXXX o oooooo",
+"oooo . XXXXX  oooooo",
+"ooo   . XXXXX oooooo",
+"oo     . XXXXX ooooo",
+"oo      o  XXXX oooo",
+"oo      .oo.  XX ooo",
+"oo       .oooo    oo",
+"oooooooooooooooooooo"
+};

@@ -31,3 +31,16 @@ void SettingsDialog::browseConnectSound()
         connect_sound->setText(s);
     }
 }
+
+
+void SettingsDialog::loc_as_aprs_comment_stateChanged( int )
+{
+    if (SettingsDialog::loc_as_aprs_comment->isChecked() == true )
+    {
+	 SettingsDialog::aprs_comment->setEnabled(false);
+     }
+     else 
+     {
+	 SettingsDialog::aprs_comment->setEnabled(true);	 
+     }
+}

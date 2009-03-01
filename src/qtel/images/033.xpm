@@ -1,0 +1,28 @@
+/* XPM */
+static const char *pic_033_xpm[] = {
+"20 19 4 1",
+"  c black",
+". c #EE0000",
+"X c gray100",
+"o c None",
+/* pixels */
+"oooooooooooooooooooo",
+"ooooooooo..ooooooooo",
+"oooooooo....oooooooo",
+"oooooooo....oooooooo",
+"ooooooo..XX..ooooooo",
+"ooooooo..XX..ooooooo",
+"oooooo..X  X..oooooo",
+"oooooo..X  X..oooooo",
+"ooooo..XX  XX..ooooo",
+"ooooo..XX  XX..ooooo",
+"oooo..XXX  XXX..oooo",
+"oooo..XXX  XXX..oooo",
+"ooo..XXXXXXXXXX..ooo",
+"ooo..XXXX  XXXX..ooo",
+"oo..XXXXX  XXXXX..oo",
+"oo..XXXXXXXXXXXX..oo",
+"o..................o",
+"oo................oo",
+"oooooooooooooooooooo"
+};

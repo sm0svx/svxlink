@@ -1,11 +1,15 @@
- 0.11.2 -- ?? ??? 2008
+ 0.12.0 -- ?? ??? 2008
 -----------------------
 
 * Added a German translation contributed by Adi / DL1HRC.
 
 * Added a Spanish translation contributed by Adi / DL1HRC.
 
+* Added an italian translation contributed by Adi / DL1HRC.
+
 * Patch from Stuart Longland: Remove DC offset from VOX calculations.
+
+* Added APRS functionality. Patch from Adi / DL1HRC.
 
 
 

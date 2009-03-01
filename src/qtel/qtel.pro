@@ -11,7 +11,19 @@ FORMS	= MainWindowBase.ui \
 	SettingsDialog.ui
 
 IMAGES	= images/exit.png \
-	images/configure.png
+	images/configure.png \
+	images/033.xpm \
+	images/035.xpm \
+	images/036.xpm \
+	images/038.xpm \
+	images/045.xpm \
+	images/096.xpm \
+	images/092.xpm \
+	images/120.xpm \
+	images/040.xpm \
+	images/045.xpm \
+	images/048.xpm 
+	
 
 unix {
   UI_DIR = .ui
@@ -21,5 +33,6 @@ unix {
 
 TRANSLATIONS = translations/qtel_sv.ts \
 	       translations/qtel_de.ts \
+	       translations/qtel_it.ts \
 	       translations/qtel_es.ts
 

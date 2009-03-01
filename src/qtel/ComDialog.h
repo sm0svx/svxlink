@@ -37,6 +37,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sigc++/sigc++.h>
 #include <string>
+#include <cmath>
+
 
 
 /****************************************************************************
@@ -60,6 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Vox.h"
 
 
+
 /****************************************************************************
  *
  * Forward declarations
@@ -72,9 +75,12 @@ namespace Async
   class AudioFifo;
   class AudioValve;
   class AudioSplitter;
+  class AudioSelector;
+  class AudioSource;
 };
 
 class QString;
+class ToneEncoder;
 
 
 /****************************************************************************
@@ -86,36 +92,39 @@ class QString;
 //namespace MyNameSpace
 //{
 
+
 /****************************************************************************
  *
  * Defines & typedefs
  *
  ****************************************************************************/
 
+#define BLOCK_SIZE  512
+
 /*
  *----------------------------------------------------------------------------
- * Macro:   
- * Purpose: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- * Bugs:    
+ * Macro:
+ * Purpose:
+ * Input:
+ * Output:
+ * Author:
+ * Created:
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 
 
 /*
  *----------------------------------------------------------------------------
- * Type:    
- * Purpose: 
- * Members: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
+ * Type:
+ * Purpose:
+ * Members:
+ * Input:
+ * Output:
+ * Author:
+ * Created:
+ * Remarks:
  *----------------------------------------------------------------------------
  */
 
@@ -133,22 +142,21 @@ class QString;
  * Class definitions
  *
  ****************************************************************************/
-
 class ComDialog : public ComDialogBase, public SigC::Object
 {
   Q_OBJECT
-      
+
   public:
     ComDialog(Async::AudioIO *audio_io, EchoLink::Directory& dir,
       	      const QString& call, const QString& remote_name);
     ComDialog(Async::AudioIO *audio_io, EchoLink::Directory& dir,
       	      const QString& remote_host);
     virtual ~ComDialog(void);
-    
+
     void acceptConnection(void);
-    
+
   protected:
-    
+
   private:
     QString   	      	    callsign;
     EchoLink::Qso *   	    con;
@@ -163,9 +171,12 @@ class ComDialog : public ComDialogBase, public SigC::Object
     Async::AudioValve *     rem_audio_valve;
     Async::AudioValve *     ptt_valve;
     Async::AudioSplitter *  tx_audio_splitter;
+    Async::AudioSelector *  tx_audio_selector;
     Vox *     	      	    vox;
     Async::DnsLookup *	    dns;
-  
+    ToneEncoder *           roger_beep;
+    //Async::AudioValve   *   beep_valve;
+
     ComDialog(const ComDialog&);
     ComDialog& operator=(const ComDialog&);
     void init(const QString& remote_name="?");
@@ -186,13 +197,12 @@ class ComDialog : public ComDialogBase, public SigC::Object
     void infoMsgReceived(const std::string& msg);
     void chatMsgReceived(const std::string& msg);
     void stateChange(EchoLink::Qso::State state);
-    
+
     void isReceiving(bool is_receiving);
     void meterLevelChanged(int level_db);
     void voxStateChanged(Vox::State state);
     void checkTransmit(void);
 
-    
 };  /* class ComDialog */
 
 

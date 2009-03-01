@@ -1,4 +1,5 @@
 <!DOCTYPE TS><TS>
+<defaultcodec></defaultcodec>
 <context>
     <name>ComDialog</name>
     <message>
@@ -92,7 +93,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>&amp;Disconnect</source>
-        <translation>&amp;Verbindung trennen</translation>
+        <translation>&amp;Trennen</translation>
     </message>
     <message>
         <source>RX</source>
@@ -205,6 +206,22 @@ Can&apos;t create connection to</source>
     <message>
         <source>Enter an IP address or hostname:</source>
         <translation>IP-Adresse oder Hostnamen eingeben:</translation>
+    </message>
+    <message>
+        <source>sending </source>
+        <translation type="obsolete">sende </translation>
+    </message>
+    <message>
+        <source>reconnect to APRS server...</source>
+        <translation>verbinde erneut mit APRS-Server...</translation>
+    </message>
+    <message>
+        <source>login into aprsserver...</source>
+        <translation>Beim APRS-Server anmelden...</translation>
+    </message>
+    <message>
+        <source>connection to aprsserver lost, try to reconnect..</source>
+        <translation>Verbindung zum APRS-Server fehlgeschlagen, neuer Anmeldeversuch..</translation>
     </message>
 </context>
 <context>
@@ -512,11 +529,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>User Info</source>
-        <translation>Info zur Gegenstation</translation>
+        <translation>Info zur Station</translation>
     </message>
     <message>
         <source>User Information</source>
-        <translation>Informationen zur Gegenstation</translation>
+        <translation>Informationen zur Station</translation>
     </message>
     <message>
         <source>Info
@@ -610,7 +627,7 @@ Message</source>
     </message>
     <message>
         <source>Connect Sound</source>
-        <translation>Ton beim Verbindungsaufbau</translation>
+        <translation>Verbindungston</translation>
     </message>
     <message>
         <source>The connect sound to use on incoming EchoLink connections</source>
@@ -627,6 +644,206 @@ Message</source>
     <message>
         <source>Choose a connect sound file</source>
         <translation>Audiodatei auswählen</translation>
+    </message>
+    <message>
+        <source>APRS</source>
+        <translation>APRS</translation>
+    </message>
+    <message>
+        <source>APRS settings</source>
+        <translation>APRS Einstellungen</translation>
+    </message>
+    <message>
+        <source>Latitude</source>
+        <translation>Geogr. Breite</translation>
+    </message>
+    <message>
+        <source>Longitude</source>
+        <translation>Geogr. Länge</translation>
+    </message>
+    <message>
+        <source>Beacon interval</source>
+        <translation>Bakenintervall</translation>
+    </message>
+    <message>
+        <source>APRS server</source>
+        <translation>APRS-Server</translation>
+    </message>
+    <message>
+        <source>APRS serverport</source>
+        <translation>APRS-Serverport</translation>
+    </message>
+    <message>
+        <source>APRS icon</source>
+        <translation>APRS-Ikone</translation>
+    </message>
+    <message>
+        <source>99999.99; </source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Enter Longitude here</source>
+        <comment>XXXXX.XX</comment>
+        <translation type="obsolete">Hier geographische Länge eingeben</translation>
+    </message>
+    <message>
+        <source>14580, 10151-10153 should work in most cases</source>
+        <translation>14580, 10151-10153 funktionieren in den meisten Fällen</translation>
+    </message>
+    <message>
+        <source>9999.99; </source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Enter Latitude here</source>
+        <comment>Form: XXXX.XX</comment>
+        <translation type="obsolete">Hier geographische Breite eingeben</translation>
+    </message>
+    <message>
+        <source>15 Minutes or more are ok</source>
+        <translation>15 Minuten oder mehr sind ausreichend</translation>
+    </message>
+    <message>
+        <source>enable APRS functions</source>
+        <translation>APRS-Funktion freigeben</translation>
+    </message>
+    <message>
+        <source>Enable APRS functions</source>
+        <translation>APRS Funktion freigeben</translation>
+    </message>
+    <message>
+        <source>my APRS comment</source>
+        <translation>Mein APRS-Kommentar</translation>
+    </message>
+    <message>
+        <source>qtel - the open source EchoLink application</source>
+        <translation>qtel - das OpenSource-Echolink-Programm</translation>
+    </message>
+    <message>
+        <source>send location from &quot;User Info&quot; as comment</source>
+        <translation>Ort aus &quot;Stationsinformation&quot; als APRS-Kommentar</translation>
+    </message>
+    <message>
+        <source>N</source>
+        <translation>N</translation>
+    </message>
+    <message>
+        <source>S</source>
+        <translation>S</translation>
+    </message>
+    <message>
+        <source>E</source>
+        <translation>E</translation>
+    </message>
+    <message>
+        <source>W</source>
+        <translation>W</translation>
+    </message>
+    <message>
+        <source>!</source>
+        <translation type="obsolete">!</translation>
+    </message>
+    <message>
+        <source>#</source>
+        <translation type="obsolete">#</translation>
+    </message>
+    <message>
+        <source>$</source>
+        <translation type="obsolete">$</translation>
+    </message>
+    <message>
+        <source>&amp;</source>
+        <translation type="obsolete">&amp;</translation>
+    </message>
+    <message>
+        <source>-</source>
+        <translation type="obsolete">-</translation>
+    </message>
+    <message>
+        <source>`</source>
+        <translation type="obsolete">`</translation>
+    </message>
+    <message>
+        <source>\</source>
+        <translation type="obsolete">\</translation>
+    </message>
+    <message>
+        <source>x</source>
+        <translation type="obsolete">x</translation>
+    </message>
+    <message>
+        <source>www.db0erf.de</source>
+        <translation>www.db0erf.de</translation>
+    </message>
+    <message>
+        <source>Enter IP or hostname of the APRS-Server</source>
+        <translation>IP-Adresse oder Hostnamen eingeben</translation>
+    </message>
+    <message>
+        <source>.</source>
+        <translation>.</translation>
+    </message>
+    <message>
+        <source>I</source>
+        <translation type="obsolete">|</translation>
+    </message>
+    <message>
+        <source>Beep frequency</source>
+        <translation>Roger Beep - Frequenz</translation>
+    </message>
+    <message>
+        <source>Level</source>
+        <translation>Lautstärke</translation>
+    </message>
+    <message>
+        <source>enable roger beep</source>
+        <translation type="obsolete">Roger Piep einschalten</translation>
+    </message>
+    <message>
+        <source>Beep length</source>
+        <translation>Tonlänge</translation>
+    </message>
+    <message>
+        <source>Hz</source>
+        <translation>Hz</translation>
+    </message>
+    <message>
+        <source>ms</source>
+        <translation>ms</translation>
+    </message>
+    <message>
+        <source>Enter Latitude here, for example 5015.10</source>
+        <comment>Form: XXXX.XX</comment>
+        <translation>Hier die geographische Breite eingeben, Beispiel 5015.00</translation>
+    </message>
+    <message>
+        <source>Enter Longitude here, for example: 01102.33</source>
+        <comment>XXXXX.XX</comment>
+        <translation>Hier die geographische Breite eingeben, Beispiel 01102.33</translation>
+    </message>
+    <message>
+        <source>dB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Roger beep level in dB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Roger beep length in milliseconds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Roger beep frequency in Hz</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Check this check box to enable roger beep on PTT release</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable roger beep</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

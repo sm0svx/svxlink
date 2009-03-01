@@ -1,0 +1,28 @@
+/* XPM */
+static const char *pic_038_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"20 19 3 1",
+"  c black",
+". c yellow",
+"X c None",
+/* pixels */
+"XXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXXX  XXXXXXXXX",
+"XXXXXXXX    XXXXXXXX",
+"XXXXXXX      XXXXXXX",
+"XXXXXX        XXXXXX",
+"XXXXX   ....   XXXXX",
+"XXXX   ......   XXXX",
+"XXX   ..    ..   XXX",
+"XX    ..          XX",
+"XX    ..   ...    XX",
+"XXX   ..    ..   XXX",
+"XXXX   ......   XXXX",
+"XXXXX   ....   XXXXX",
+"XXXXXX        XXXXXX",
+"XXXXXXX      XXXXXXX",
+"XXXXXXXX    XXXXXXXX",
+"XXXXXXXXX  XXXXXXXXX",
+"XXXXXXXXXXXXXXXXXXXX"
+};

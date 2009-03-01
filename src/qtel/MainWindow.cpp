@@ -1,4 +1,4 @@
-/**
+/*
 @file	 MainWindow.cpp
 @brief   Implementation class for the main window
 @author  Tobias Blomberg
@@ -48,6 +48,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <qpushbutton.h>
 #include <qinputdialog.h>
 #include <qsplitter.h>
+#include <qdatetime.h>
+
 #undef emit
 
 /****************************************************************************
@@ -57,6 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncIpAddress.h>
+#include <AsyncTcpClient.h>
 #include <EchoLinkDirectory.h>
 
 
@@ -127,6 +130,7 @@ using namespace EchoLink;
  *
  ****************************************************************************/
 
+#define kKey 0x73e2 				// This is the seed for the key
 
 
 /****************************************************************************
@@ -144,13 +148,13 @@ using namespace EchoLink;
  * Output:    None
  * Author:    Tobias Blomberg
  * Created:   2003-03-09
- * Remarks:   
- * Bugs:      
+ * Remarks:
+ * Bugs:
  *------------------------------------------------------------------------
  */
 MainWindow::MainWindow(Directory &dir)
   : dir(dir), refresh_call_list_timer(0), is_busy(false), audio_io(0),
-    prev_status(StationData::STAT_UNKNOWN)
+    prev_status(StationData::STAT_UNKNOWN), aprscon(0)
 {
   connect(explorerView, SIGNAL(currentChanged(QListViewItem*)),
       	  this, SLOT(explorerViewClicked(QListViewItem*)));
@@ -172,45 +176,61 @@ MainWindow::MainWindow(Directory &dir)
       	  this, SLOT(clearIncomingList()));
   connect(incoming_accept_button, SIGNAL(clicked()),
       	  this, SLOT(acceptIncoming()));
-  
+
   AudioIO::setChannels(1);
-  
+
   audio_io = new AudioIO(Settings::instance()->audioDevice().latin1(), 0);
-  
+
   dir.error.connect(slot(*this, &MainWindow::serverError));
   dir.statusChanged.connect(slot(*this, &MainWindow::statusChanged));
   dir.stationListUpdated.connect(
       slot(*this, &MainWindow::callsignListUpdated));
-  
+
   EchoLink::Dispatcher *disp = EchoLink::Dispatcher::instance();
   disp->incomingConnection.connect(slot(*this, &MainWindow::incomingConnection));
 
   status_indicator = new QLabel(statusBar());
   status_indicator->setPixmap(QPixmap(offline_icon));
   statusBar()->addWidget(status_indicator, 0, TRUE);
-    
+
   is_busy = Settings::instance()->startAsBusy();
   directoryBusyAction->setOn(is_busy);
   updateRegistration();
   connect(reinterpret_cast<QObject *>(directoryBusyAction),
       	  SIGNAL(toggled(bool)),
       	  this, SLOT(setBusy(bool)));
-  
+
   //statusBar()->message(trUtf8("Getting calls from directory server..."));
   //dir.getCalls();
   refresh_call_list_timer = new QTimer(this, "refresh_call_list_timer");
-  refresh_call_list_timer->start(
-      1000 * 60 * Settings::instance()->listRefreshTime());
-  QObject::connect(refresh_call_list_timer, SIGNAL(timeout()),
-      this, SLOT(refreshCallList()));
-  
+  refresh_call_list_timer->start(1000 * 60 * Settings::instance()->listRefreshTime());
+  QObject::connect(refresh_call_list_timer, SIGNAL(timeout()),this, SLOT(refreshCallList()));
+
+  // APRS-beacon
+  if (Settings::instance()->aprsbeacon_enabled() == true)
+  {
+    cout << "connecting " << Settings::instance()->aprsserver() << " " << Settings::instance()->aprsport();
+    aprscon = new TcpClient(Settings::instance()->aprsserver(),Settings::instance()->aprsport());
+    aprscon->connected.connect(slot(*this, &MainWindow::onAprsConnect));
+    aprscon->disconnected.connect(slot(*this, &MainWindow::onAprsDisconnect));
+    aprscon->dataReceived.connect(slot(*this, &MainWindow::onAprsDataReceived));
+    aprscon->connect();
+
+    aprsbeacon_timer = new QTimer(this, "aprsbeacon_timer");
+    QObject::connect(aprsbeacon_timer, SIGNAL(timeout()),this, SLOT(send_aprs()));
+
+    reconnect_timer = new QTimer(this, "reconnect_timer");
+    QObject::connect(reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_aprsserver()));
+    reconnect_timer->stop();
+  }
+
   QListViewItem *item = explorerView->findItem(
       MainWindowBase::trUtf8("Bookmarks"), 0);
   assert(item != 0);
   explorerView->setSelected(item, TRUE);
-  
+
   incoming_con_view->setSorting(-1);
-  
+
   station_view_popup = new QPopupMenu(stationView);
   station_view_popup_add =
       station_view_popup->insertItem(trUtf8("Add to bookmarks"), this,
@@ -226,28 +246,29 @@ MainWindow::MainWindow(Directory &dir)
       SIGNAL(rightButtonClicked(QListViewItem*, const QPoint&, int)),
       this,
       SLOT(stationViewRightClicked(QListViewItem*, const QPoint&, int)));
-  
+
   if (!Settings::instance()->mainWindowSize().isNull())
   {
     resize(Settings::instance()->mainWindowSize());
     vsplitter->setSizes(Settings::instance()->vSplitterSizes());
     hsplitter->setSizes(Settings::instance()->hSplitterSizes());
   }
-  
+
   Settings::instance()->configurationUpdated.connect(
       slot(*this, &MainWindow::configurationUpdated));
-  
+
   fileQuitAction->setAccel(
       QKeySequence(trUtf8("Ctrl+Q", "fileQuitAction")));
   directoryRefreshAction->setAccel(
       QKeySequence(trUtf8("F5", "directoryRefreshAction")));
   directoryBusyAction->setAccel(
       QKeySequence(trUtf8("Ctrl+B", "directoryBusyAction")));
-  
-  msg_audio_io = new AudioIO(Settings::instance()->audioDevice().latin1(), 0);  
+
+  msg_audio_io = new AudioIO(Settings::instance()->audioDevice().latin1(), 0);
   msg_handler = new MsgHandler("/", msg_audio_io->sampleRate());
   msg_handler->allMsgsWritten.connect(slot(*this, &MainWindow::allMsgsWritten));
   msg_audio_io->registerSource(msg_handler);
+
 } /* MainWindow::MainWindow */
 
 
@@ -256,12 +277,15 @@ MainWindow::~MainWindow(void)
   delete audio_io;
   audio_io = 0;
   delete msg_audio_io;
+  delete reconnect_timer;
+  delete aprscon;
   msg_audio_io = 0;
   Settings::instance()->setMainWindowSize(size());
   Settings::instance()->setHSplitterSizes(hsplitter->sizes());
   Settings::instance()->setVSplitterSizes(vsplitter->sizes());
   dir.makeOffline();
 } /* MainWindow::~MainWindow */
+
 
 
 
@@ -274,14 +298,14 @@ MainWindow::~MainWindow(void)
 
 /*
  *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
+ * Method:
+ * Purpose:
+ * Input:
+ * Output:
+ * Author:
+ * Created:
+ * Remarks:
+ * Bugs:
  *------------------------------------------------------------------------
  */
 
@@ -304,13 +328,13 @@ void MainWindow::incomingConnection(const IpAddress& remote_ip,
   struct tm *tm = localtime(&t);
   char time_str[16];
   strftime(time_str, sizeof(time_str), "%H:%M", tm);
-  
+
   QListViewItem *item = incoming_con_view->findItem(remote_call.c_str(), 0);
   if (item == 0)
   {
     item = new QListViewItem(incoming_con_view, remote_call.c_str(),
 	remote_name.c_str(), time_str);
-    
+
     msg_audio_io->open(AudioIO::MODE_WR);
       // FIXME: Hard coded filename
     msg_handler->playFile(Settings::instance()->connectSound().latin1());
@@ -322,14 +346,14 @@ void MainWindow::incomingConnection(const IpAddress& remote_ip,
     item->setText(2, time_str);
   }
   incoming_con_view->setSelected(item, TRUE);
-  
+
 } /* MainWindow::incomingConnection */
 
 
 void MainWindow::closeEvent(QCloseEvent *e)
 {
   static int close_count = 0;
-  
+
   if ((dir.status() != StationData::STAT_OFFLINE) && (close_count++ == 0))
   {
     statusBar()->message(trUtf8("Logging off from directory server..."));
@@ -363,29 +387,41 @@ void MainWindow::statusChanged(StationData::Status status)
       {
       	refreshCallList();
       }
+      if (aprscon != 0)
+      {
+         send_aprsbeacon("I'm online ;-)");
+      }
       break;
-      
+
     case StationData::STAT_BUSY:
       status_indicator->setPixmap(QPixmap(busy_icon));
       if (prev_status != StationData::STAT_ONLINE)
       {
       	refreshCallList();
       }
+      if (aprscon != 0)
+      {
+         send_aprsbeacon("I'm busy...");
+      }
       break;
-      
+
     case StationData::STAT_OFFLINE:
       status_indicator->setPixmap(QPixmap(offline_icon));
       close();
+      if (aprscon != 0 )
+      {
+         send_aprsbeacon("I'm offline");
+      }
       break;
-      
+
     case StationData::STAT_UNKNOWN:
       status_indicator->setPixmap(QPixmap(offline_icon));
       break;
-      
+
   }
-  
+
   prev_status = status;
-  
+
 } /* MainWindow::statusChanged */
 
 
@@ -399,7 +435,7 @@ void MainWindow::allMsgsWritten(void)
 void MainWindow::allSamplesFlushed(void)
 {
   cout << "MainWindow::allSamplesFlushed\n";
-  msg_audio_io->close();  
+  msg_audio_io->close();
 } /* MainWindow::allSamplesFlushed */
 
 
@@ -407,14 +443,14 @@ void MainWindow::allSamplesFlushed(void)
 
 /*
  *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
+ * Method:
+ * Purpose:
+ * Input:
+ * Output:
+ * Author:
+ * Created:
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 void MainWindow::initialize(void)
@@ -425,9 +461,9 @@ void MainWindow::initialize(void)
 void MainWindow::explorerViewClicked(QListViewItem* item)
 {
   list<StationData> station_list;
-  
+
   //stationView->setUpdatesEnabled(FALSE);
-  
+
   if (item == 0)
   {
     //stationView->clear();
@@ -470,7 +506,7 @@ void MainWindow::explorerViewClicked(QListViewItem* item)
   {
     station_list = dir.stations();
   }
-  
+
   stationView->clear();
   list<StationData>::const_iterator iter;
   for (iter=station_list.begin(); iter!=station_list.end(); ++iter)
@@ -484,7 +520,7 @@ void MainWindow::explorerViewClicked(QListViewItem* item)
 	      	      iter->description().c_str(), iter->statusStr().c_str(),
 	      	      iter->time().c_str(), id_str);
   }
-  
+
   if (stationView->firstChild() != 0)
   {
     QListViewItem *selected_item = stationView->findItem(select_map[item], 0);
@@ -506,10 +542,10 @@ void MainWindow::explorerViewClicked(QListViewItem* item)
       }
     }
   }
-  
+
   //stationView->setUpdatesEnabled(TRUE);
   //stationView->update();
-  
+
 } /* MainWindow::explorerViewClicked */
 
 
@@ -542,13 +578,13 @@ void MainWindow::callsignListUpdated(void)
     selected_callsign = item->text(0);
   }
   */
-  
+
   QListViewItem *item = explorerView->selectedItem();
   if (item != 0)
   {
     explorerViewClicked(item);
   }
-  
+
   /*
   if (!selected_callsign.isEmpty())
   {
@@ -560,16 +596,16 @@ void MainWindow::callsignListUpdated(void)
     }
   }
   */
-  
+
   statusBar()->message(trUtf8("Station list has been refreshed"), 5000);
-  
+
   const string &msg = dir.message();
   if (msg != old_server_msg)
   {
     server_msg_view->append(msg.c_str());
     old_server_msg = msg;
   }
-    
+
 } /* MainWindow::callsignListUpdated */
 
 
@@ -578,6 +614,148 @@ void MainWindow::refreshCallList(void)
   statusBar()->message(trUtf8("Refreshing station list..."));
   dir.getCalls();
 } /* MainWindow::refreshCallList */
+
+
+void MainWindow::send_aprs(void)
+{
+    QString test;
+    send_aprsbeacon(test); // send an empty sting...
+
+} /* MainWindow::send_aprs */
+
+
+void MainWindow::sendMsg(void)
+{
+
+  statusBar()->message(trUtf8("sending " + aprsmessage));
+  cout << aprsmessage;
+
+  int written = aprscon->write(aprsmessage, strlen(aprsmessage));
+  if (written != static_cast<int>(strlen(aprsmessage)))
+  {
+    if (written == -1)
+    {
+        cerr << "*** ERROR: TCP write error\n";
+    }
+    else
+    {
+        cerr << "*** ERROR: TCP transmit buffer overflow, reconnecting.\n";
+        aprscon->disconnect();
+    }
+  }
+} /* MainWindow::sendMsg */
+
+void MainWindow::reconnect_aprsserver(void)
+{
+   reconnect_timer->stop();
+   statusBar()->message(trUtf8("reconnect to APRS server..."));
+   aprscon->connect();
+
+} /* MainWindow::reconnect_aprsserver */
+
+
+void MainWindow::onAprsConnect(void)
+{
+   statusBar()->message(trUtf8("login into aprsserver..."));
+   aprslogin();
+   aprsbeacon_timer->start(1000 * 60 * Settings::instance()->aprsbeacon_interval());
+
+} /* MainWindow::onAprsConnect */
+
+
+// todo!!!
+void MainWindow::aprslogin(void)
+{
+   QString loginmsg;
+   const QString mycall = Settings::instance()->callsign();
+   short passcode = callpass(mycall);
+
+   loginmsg.sprintf("user %s pass %d vers QTel 0.1 filter m/10\n", mycall.latin1(), passcode);
+   statusBar()->message(trUtf8(loginmsg));
+   aprscon->write(loginmsg, strlen(loginmsg));
+
+} /* MainWindow::aprslogin */
+
+
+// generate passcode for the aprs-servers, copied from xastir-source...
+// special tnx to:
+// Copyright (C) 1999,2000  Frank Giannandrea
+// Copyright (C) 2000-2008  The Xastir Group
+short MainWindow::callpass(const char *theCall)
+{
+    char rootCall[10];           // need to copy call to remove ssid from parse
+    char *p1 = rootCall;
+    short hash;
+    short i,len;
+    char *ptr = rootCall;
+
+    while ((*theCall != '-') && (*theCall != '\0'))
+        *p1++ = toupper((int)(*theCall++));
+        *p1 = '\0';
+
+    hash = kKey;                 // Initialize with the key value
+    i = 0;
+    len = (short)strlen(rootCall);
+
+    while (i<len) {		 // Loop through the string two bytes at a time
+        hash ^= (unsigned char)(*ptr++)<<8; // xor high byte with accumulated
+					    // hash
+        hash ^= (*ptr++);	 // xor low byte with accumulated hash
+        i += 2;
+    }
+    return (short)(hash & 0x7fff); // mask off the high bit so number is always
+				   // positive
+
+} /* AprsTcpClient::callpass */
+
+void MainWindow::send_aprsbeacon(QString info)
+{
+   const QString mycall = Settings::instance()->callsign();
+   const QString latitude = Settings::instance()->latitude();
+   const QString longitude = Settings::instance()->longitude();
+   const QString north_south = Settings::instance()->north_south();
+   const QString east_west = Settings::instance()->east_west();
+   const char aprs_icon = Settings::instance()->aprs_icon();
+   QString aprs_com = Settings::instance()->aprs_comment();
+
+   QDateTime now = QDateTime::currentDateTime(Qt::UTC);
+   QString utc = now.toString("hhmmss");
+
+   if (Settings::instance()->loc_as_aprs_comment() == true )
+   {
+       aprs_com = Settings::instance()->location().latin1();
+   }
+   if ( info.isNull() == false  )
+   {
+      aprs_com = info;
+   }
+
+   aprsmessage.sprintf("%s>APRQT1,qAC,%s:@%sz%s%s/%s%s%c%s\r\n", mycall.latin1(),
+                        mycall.latin1(), utc.latin1(), latitude.latin1(),
+                        north_south.latin1(), longitude.latin1(),
+                        east_west.latin1(), aprs_icon, aprs_com.latin1());
+
+   sendMsg();
+
+} /* MainWindow::send_aprsbeacon */
+
+
+void MainWindow::onAprsDisconnect(Async::TcpConnection *con, Async::TcpClient::DisconnectReason reason)
+{
+   statusBar()->message(trUtf8("connection to aprsserver lost, try to reconnect.."));
+   cout << "disconnecting from aprsserver, reason" << reason << "\n";
+   aprsbeacon_timer->stop();
+   reconnect_timer->start(5000);
+} /* MainWindow::onAprsDisconnect */
+
+
+int MainWindow::onAprsDataReceived(Async::TcpConnection *con, void *buf, int count)
+{
+    QString tstr = (char*)buf;
+    cout << tstr.left(count);
+    statusBar()->message(trUtf8(tstr.left(count)));
+    return count;
+} /*  MainWindow::onAprsDataReceived */
 
 
 void MainWindow::updateRegistration(void)
@@ -628,13 +806,17 @@ void MainWindow::acceptIncoming(void)
       item->text(1));
   com_dialog->show();
   com_dialog->acceptConnection();
+  if (aprscon != 0 )
+  {
+      send_aprsbeacon("connection with " + item->text(0) + " (" + item->text(1) + ")");
+  }
   incoming_con_view->takeItem(item);
   delete item;
 } /* MainWindow::acceptIncoming */
 
 
 void MainWindow::stationViewRightClicked(QListViewItem *item,
-    const QPoint &point, int column)    
+    const QPoint &point, int column)
 {
   item = explorerView->selectedItem();
   if ((item == 0) || (stationView->selectedItem() == 0))
@@ -683,7 +865,7 @@ void MainWindow::removeSelectedFromBookmarks(void)
     if (item != 0)
     {
       explorerViewClicked(item);
-    }    
+    }
   }
 } /* MainWindow::removeSelectedFromBookmarks */
 
@@ -692,7 +874,7 @@ void MainWindow::addNamedStationToBookmarks(void)
 {
   QString call = QInputDialog::getText(trUtf8("Qtel - Add station..."),
       trUtf8("Enter callsign of the station to add"));
-  
+
   if (!call.isEmpty())
   {
     call = call.upper();
@@ -708,7 +890,7 @@ void MainWindow::addNamedStationToBookmarks(void)
       }
     }
   }
-  
+
 } /* MainWindow::addNamedStationToBookmarks */
 
 
@@ -719,10 +901,10 @@ void MainWindow::configurationUpdated(void)
   dir.setPassword(Settings::instance()->password().latin1());
   dir.setDescription(Settings::instance()->location().latin1());
   updateRegistration();
-  
+
   refresh_call_list_timer->changeInterval(
       1000 * 60 * Settings::instance()->listRefreshTime());
-  
+
   delete audio_io;
   audio_io = new AudioIO(Settings::instance()->audioDevice().latin1(), 0);
 

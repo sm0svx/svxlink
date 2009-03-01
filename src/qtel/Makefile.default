@@ -77,7 +77,7 @@ SHLIB_MAJOR	=
 SHLIB_MINOR	= 
 
 # Sources needed to build the library
-LIBSRC		= 
+LIBSRC		=
 
 # Which libs are used by the DYNAMIC lib generated.
 LIB_LIBS	= -lc
@@ -245,6 +245,14 @@ install-extras uninstall-extras rpm-extras:
 	$(FILESPEC) connect.raw[644,root,root] /usr/share/qtel/sounds
 	$(FILESPEC) qtel.desktop[644,root,root] /usr/share/applications
 	$(FILESPEC) images/link.xpm[644,root,root] /usr/share/icons
+	$(FILESPEC) images/033.xpm[644,root,root] /usr/share/icons
+	$(FILESPEC) images/035.xpm[644,root,root] /usr/share/icons
+	$(FILESPEC) images/036.xpm[644,root,root] /usr/share/icons
+	$(FILESPEC) images/038.xpm[644,root,root] /usr/share/icons
+	$(FILESPEC) images/045.xpm[644,root,root] /usr/share/icons
+	$(FILESPEC) images/096.xpm[644,root,root] /usr/share/icons
+	$(FILESPEC) images/092.xpm[644,root,root] /usr/share/icons
+	$(FILESPEC) images/120.xpm[644,root,root] /usr/share/icons
 
 #	$(DIRSPEC) /var/spool/myprog[755,root,root]
 

@@ -63,6 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioValve.h>
 #include <AsyncAudioSplitter.h>
+#include <AsyncAudioSelector.h>
 
 
 /****************************************************************************
@@ -78,7 +79,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "images/online_icon.xpm"
 #include "Settings.h"
 #include "ComDialog.h"
-
 
 
 /****************************************************************************
@@ -100,12 +100,71 @@ using namespace EchoLink;
  ****************************************************************************/
 
 
-
 /****************************************************************************
  *
  * Local class definitions
  *
  ****************************************************************************/
+
+class ToneEncoder : public Async::AudioSource
+{
+  public:
+    ToneEncoder(void) : tonelength(0), pos(0) {}
+
+    ~ToneEncoder(void) {}
+
+    void sendBeep(int tlen, int tfreq, int tlev)
+    {
+      tonelength = tlen;
+      tonefrequ = tfreq;
+      tonelevel = powf(10, tlev / 20.0);
+      pos = 0;
+      writeAudio();
+    }
+
+    void resumeOutput(void)
+    {
+      writeAudio();
+    }
+
+    void allSamplesFlushed(void)
+    {
+    }
+
+  protected:
+
+  private:
+    int   tonelength;
+    int   tonefrequ;
+    float tonelevel;
+    int   pos;
+
+    void writeAudio(void)
+    {
+      int ret;
+
+      do
+      {
+        float block[BLOCK_SIZE];
+        if (pos == tonelength)
+        {
+          sinkFlushSamples();
+          pos = tonelength = 0;
+          break;
+        }
+        int count = min(BLOCK_SIZE, tonelength - pos);
+        for (int i=0; i<count; i++)
+        {
+          block[i] = tonelevel * sin(2 * M_PI * tonefrequ * (i+pos) /
+                                     INTERNAL_SAMPLE_RATE);
+        }
+        ret = sinkWriteSamples(block, count);
+        pos += ret;
+      } while (ret > 0);
+    }
+};
+
+
 
 
 
@@ -147,7 +206,7 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
     audio_io(audio_io), audio_full_duplex(false), is_transmitting(false),
     ctrl_pressed(false), rem_audio_fifo(0), ptt_valve(0), tx_audio_splitter(0),
     vox(0), dns(0)
-    
+
 {
   init(remote_name);
 
@@ -169,8 +228,8 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir,
   : callsign(remote_host), con(0), dir(dir), accept_connection(false),
     audio_io(audio_io), audio_full_duplex(false), is_transmitting(false),
     ctrl_pressed(false), rem_audio_fifo(0), ptt_valve(0), tx_audio_splitter(0),
-    vox(0), dns(0)
-    
+    tx_audio_selector(0), vox(0), dns(0), roger_beep(0)
+
 {
   init();
   dns = new DnsLookup(remote_host.latin1());
@@ -182,10 +241,12 @@ ComDialog::~ComDialog(void)
 {
   Settings::instance()->setVoxParams(vox->enabled(), vox->threshold(),
       	      	      	      	     vox->delay());
-				     
+
   delete vox;
   delete dns;
   delete ptt_valve;
+  delete roger_beep;
+  delete tx_audio_selector;
   delete tx_audio_splitter;
   delete rem_audio_valve;
   delete rem_audio_fifo;
@@ -202,6 +263,7 @@ void ComDialog::acceptConnection(void)
     con->accept();
   }
 } /* ComDialog::accept */
+
 
 
 
@@ -237,28 +299,33 @@ void ComDialog::init(const QString& remote_name)
   {
     setIcon(QPixmap(const_cast<const char **>(online_icon)));
   }
-  
+
   setWFlags(getWFlags() | Qt::WDestructiveClose);
-  
+
   setCaption(QString("EchoLink QSO: ") + callsign);
   call->setText(callsign);
   name_label->setText(remote_name);
   
+    // Put received EchoLink audio in a prebuffered FIFO
   rem_audio_fifo = new AudioFifo(8000);
   rem_audio_fifo->setOverwrite(true);
   rem_audio_fifo->setPrebufSamples(1280);
-  
+
+    // Add a valve so that we can turn received EchoLink audio on and off
   rem_audio_valve = new AudioValve;
   rem_audio_valve->setOpen(false);
   rem_audio_fifo->registerSink(rem_audio_valve);
 
+    // Send received EchoLink audio to the audio playback device
   rem_audio_valve->registerSink(audio_io);
 
+    // Split mic audio into multiple streams
   tx_audio_splitter = new AudioSplitter;
   audio_io->registerSink(tx_audio_splitter);
-  
-  Settings *settings = Settings::instance();  
 
+  Settings *settings = Settings::instance();
+
+    // Create the VOX and connect it to the mic audio splitter
   vox = new Vox;
   vox->setEnabled(settings->voxEnabled());
   vox->setThreshold(settings->voxThreshold());
@@ -278,10 +345,26 @@ void ComDialog::init(const QString& remote_name)
   vox_enabled_checkbox->setChecked(vox->enabled());
   vox_threshold->setValue(vox->threshold());
   vox_delay->setValue(vox->delay());
-     
+
+    // Create a selector for the TX audio
+  tx_audio_selector = new AudioSelector;
+
+    // Create an audio valve to turn TX audio on and off using the PTT or VOX.
+    // Connect one end to the TX audio splitter and the other to the selector.
   ptt_valve = new AudioValve;
   tx_audio_splitter->addSink(ptt_valve);
-  
+  tx_audio_selector->addSource(ptt_valve);
+  tx_audio_selector->enableAutoSelect(ptt_valve, 2);
+
+    // Create a tone encoder (roger beep) and connect it to the selector
+  roger_beep = new ToneEncoder;
+  tx_audio_selector->addSource(roger_beep);
+  tx_audio_selector->enableAutoSelect(roger_beep, 1);
+
+  //beep_valve = new AudioValve;
+  //beep_valve->setOpen(false);
+  //roger_beep ->registerSink(beep_valve);
+
   if (settings->useFullDuplex() && audio_io->isFullDuplexCapable())
   {
     audio_full_duplex = true;
@@ -290,14 +373,14 @@ void ComDialog::init(const QString& remote_name)
       return;
     }
     rem_audio_valve->setOpen(true);
-    
+
     vox_enabled_checkbox->setEnabled(true);
   }
   else
   {
-    vox_enabled_checkbox->setEnabled(false);  
+    vox_enabled_checkbox->setEnabled(false);
   }
-    
+
   QObject::connect(
       reinterpret_cast<QObject *>(connect_button), SIGNAL(clicked()),
       this, SLOT(connectToStation()));
@@ -316,13 +399,13 @@ void ComDialog::init(const QString& remote_name)
   QObject::connect(
       reinterpret_cast<QObject *>(chat_outgoing), SIGNAL(returnPressed()),
       this, SLOT(sendChatMsg()));
-  
+
   ptt_button->installEventFilter(this);
-  
+
   dir.stationListUpdated.connect(slot(*this, &ComDialog::onStationListUpdated));
-  
-  orig_background_color = rx_indicator->paletteBackgroundColor(); 
-  
+
+  orig_background_color = rx_indicator->paletteBackgroundColor();
+
 } /* ComDialog::init */
 
 
@@ -338,13 +421,13 @@ bool ComDialog::eventFilter(QObject *watched, QEvent *e)
       chat_outgoing->insert(ke->text());
       return TRUE;
     }
-    
+
     if (ke->key() == Key_Control)
     {
       ptt_button->setToggleButton(true);
       ctrl_pressed = true;
     }
-  } 
+  }
   else if (e->type() == QEvent::KeyRelease)
   {
     QKeyEvent * ke = (QKeyEvent*)e;
@@ -357,7 +440,7 @@ bool ComDialog::eventFilter(QObject *watched, QEvent *e)
       ctrl_pressed = false;
     }
   }
-  
+
   return FALSE;
 }
 
@@ -376,14 +459,14 @@ void ComDialog::updateStationData(const StationData *station)
     description->setText("?");
     status->setText("?");
     ip_address->setText("?");
-    time->setText("?");  
+    time->setText("?");
   }
 } /* ComDialog::updateStationData */
 
 
 void ComDialog::createConnection(const StationData *station)
 {
-  Settings *settings = Settings::instance();  
+  Settings *settings = Settings::instance();
   con = new Qso(station->ip(), settings->callsign().latin1(),
       settings->name().latin1(), settings->info().latin1());
   if (!con->initOk())
@@ -396,24 +479,24 @@ void ComDialog::createConnection(const StationData *station)
     con = 0;
     return;
   }
-  
+
   con->infoMsgReceived.connect(slot(*this, &ComDialog::infoMsgReceived));
   con->chatMsgReceived.connect(slot(*this, &ComDialog::chatMsgReceived));
   con->stateChange.connect(slot(*this, &ComDialog::stateChange));
   con->isReceiving.connect(slot(*this, &ComDialog::isReceiving));
   con->registerSink(rem_audio_fifo);
-  ptt_valve->registerSink(con);
-  
+  tx_audio_selector->registerSink(con);
+
   connect_button->setEnabled(TRUE);
   connect_button->setFocus();
-  
+
   if (accept_connection)
   {
     con->accept();
   }
-  
+
   setIsTransmitting(false);
-  
+
 } /* ComDialog::createConnection */
 
 
@@ -450,9 +533,9 @@ bool ComDialog::openAudioDevice(AudioIO::Mode mode)
     mb->show();
     connect(mb, SIGNAL(closed()), this, SLOT(close()));
   }
-  
+
   return open_ok;
-  
+
 } /* ComDialog::openAudioDevice */
 
 
@@ -469,15 +552,15 @@ void ComDialog::dnsResultsReady(DnsLookup &)
     con = 0;
     return;
   }
-  
+
   StationData *station = new StationData;
   station->setIp(dns->addresses()[0]);
   updateStationData(station);
-  createConnection(station);  
-  
+  createConnection(station);
+
   delete dns;
   dns = 0;
-  
+
 } /* ComDialog::dnsResultsReady */
 
 
@@ -495,6 +578,12 @@ void ComDialog::disconnectFromStation()
 
 void ComDialog::setIsTransmitting(bool transmit)
 {
+  if (transmit == is_transmitting)
+  {
+    return;
+  }
+  
+  Settings *settings = Settings::instance();
   if (transmit)
   {
     if (!audio_full_duplex)
@@ -503,8 +592,8 @@ void ComDialog::setIsTransmitting(bool transmit)
       audio_io->close();
       if (!openAudioDevice(AudioIO::MODE_RD))
       {
-	disconnect();
-	return;
+      	disconnect();
+        return;
       }
     }
     is_transmitting = true;
@@ -514,39 +603,49 @@ void ComDialog::setIsTransmitting(bool transmit)
   else
   {
     ptt_valve->setOpen(false);
+
     if (!audio_full_duplex)
     {
       audio_io->close();
       if (!openAudioDevice(AudioIO::MODE_WR))
       {
-	disconnect();
-	return;
+    	disconnect();
+        return;
       }
       rem_audio_valve->setOpen(true);
     }
+
+    if (settings->rogerBeepEnabled())
+    {
+      roger_beep->sendBeep(settings->rogerBeepLength(),
+                           settings->rogerBeepFq(),
+                           settings->rogerBeepLevel());
+    }
+
     is_transmitting = false;
     tx_indicator->setPaletteBackgroundColor(orig_background_color);
-    
+
     if (!ctrl_pressed)
     {
       ptt_button->setToggleButton(false);
     }
   }
+
 } /* ComDialog::setIsTransmitting */
 
 
 void ComDialog::pttButtonPressedReleased(void)
 {
   ptt_button->setFocus();
-  
+
     /* Ignore press and release events if toggle mode is enabled */
   if (ptt_button->isToggleButton())
   {
     return;
   }
-  
+
   checkTransmit();
-  
+
 } /* ComDialog::pttButtonPressedReleased */
 
 
@@ -593,10 +692,10 @@ void ComDialog::stateChange(Qso::State state)
       chat_incoming->append(trUtf8("Connected to ") + call->text() + "\n");
       if (name_label->text() == "?")
       {
-	name_label->setText(con->remoteName().c_str());
+	     name_label->setText(con->remoteName().c_str());
       }
       break;
-    
+
     case Qso::STATE_CONNECTING:
       connect_button->setEnabled(false);
       disconnect_button->setEnabled(true);
@@ -605,7 +704,7 @@ void ComDialog::stateChange(Qso::State state)
       disconnect_button->setFocus();
       chat_incoming->append(trUtf8("Connecting to ") + call->text() + "...\n");
       break;
-      
+
     case Qso::STATE_BYE_RECEIVED:
       ctrl_pressed = false;
       ptt_button->setOn(false);
@@ -614,7 +713,7 @@ void ComDialog::stateChange(Qso::State state)
       ptt_button->setEnabled(false);
       chat_outgoing->setEnabled(false);
       break;
-      
+
     case Qso::STATE_DISCONNECTED:
       ctrl_pressed = false;
       ptt_button->setOn(false);
@@ -626,9 +725,9 @@ void ComDialog::stateChange(Qso::State state)
       chat_incoming->append(trUtf8("Disconnected") + "\n");
       break;
   }
-  
+
   checkTransmit();
-  
+
 } /* ComDialog::stateChange */
 
 
@@ -668,13 +767,12 @@ void ComDialog::checkTransmit(void)
   setIsTransmitting(
       	// We must be connected to transmit.
       ((con != 0) && (con->currentState() == Qso::STATE_CONNECTED)) &&
-      
+
       	// Either the PTT or the VOX must be active to transmit
       ((ptt_button->isOn()) || ptt_button->isDown() ||
        (vox->state() != Vox::IDLE))
   );
 } /* ComDialog::checkTransmit */
-
 
 
 /*
