@@ -18,6 +18,9 @@
 
 * The AudioRecorder can now write WAV files.
 
+* Bugfix in AudioFilter: Filters was not properly created under som locales,
+  like german (de_DE).
+
 
 
  0.16.1 -- 30 Jul 2008

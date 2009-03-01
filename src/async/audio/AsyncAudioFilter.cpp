@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cstring>
 #include <cstdlib>
+#include <locale>
 
 
 /****************************************************************************
@@ -140,7 +141,9 @@ AudioFilter::AudioFilter(const string &filter_spec, int sample_rate)
   strncpy(spec_buf, filter_spec.c_str(), sizeof(spec_buf));
   spec_buf[sizeof(spec_buf) - 1] = 0;
   char *spec = spec_buf;
+  char *old_locale = setlocale(LC_ALL, "C");
   char *fferr = fid_parse(sample_rate, &spec, &fv->ff);
+  setlocale(LC_ALL, old_locale);
   if (fferr != 0)
   {
     cerr << "***ERROR: Filter creation error: " << fferr << endl;
