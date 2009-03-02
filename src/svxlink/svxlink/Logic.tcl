@@ -194,6 +194,7 @@ proc send_rgr_sound {} {
     playTone 880 500 50;
     playSilence 50;
   }
+  playSilence 100;
 }
 
 
