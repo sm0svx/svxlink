@@ -143,9 +143,11 @@ class SineGenerator : public Async::AudioSource
       
       if (enable && (fq != 0))
       {
-      	audio_io.open(AudioIO::MODE_WR);
-	pos = 0;
-      	writeSamples();
+      	if (audio_io.open(AudioIO::MODE_WR))
+        {
+          pos = 0;
+          writeSamples();
+        }
       }
       else
       {
@@ -549,8 +551,8 @@ void LocalTx::transmit(bool do_transmit)
     {
       cerr << "*** ERROR: Could not open audio device for transmitter \""
       	   << name << "\"\n";
-      is_transmitting = false;
-      return;
+      //is_transmitting = false;
+      //return;
     }
     
     if (ctcss_enable)
