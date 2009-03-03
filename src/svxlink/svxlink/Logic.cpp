@@ -310,6 +310,8 @@ bool Logic::initialize(void)
   m_rx = RxFactory::createNamedRx(cfg(), rx_name);
   if ((m_rx == 0) || !rx().initialize())
   {
+    delete m_rx;
+    m_rx = 0;
     cerr << "*** ERROR: Could not initialize RX \"" << rx_name << "\"\n";
     cleanup();
     return false;
@@ -414,6 +416,8 @@ bool Logic::initialize(void)
   m_tx = Tx::create(cfg(), tx_name);
   if ((m_tx == 0) || !tx().initialize())
   {
+    delete m_tx;
+    m_tx = 0;
     cerr << "*** ERROR: Could not initialize TX \"" << tx_name << "\"\n";
     cleanup();
     return false;
