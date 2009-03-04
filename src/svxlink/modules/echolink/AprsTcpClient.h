@@ -2,11 +2,11 @@
 @file	 AprsTcpClient.h
 @brief   Contains an implementation of APRS updates via TCP
 @author  Adi Bier / DL1HRC
-@date	 2008-12-01
+@date	 2008-11-01
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,9 +36,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <string>
-#include <map>
-#include <utility>
-#include <sys/time.h>
 
 
 /****************************************************************************
@@ -64,6 +61,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class Config;
+  class Timer;
+};
+
 
 /****************************************************************************
  *
@@ -71,12 +74,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-   class AsyncTcpClient;
-   class AsyncConfig;
-   class AsyncTimer;
-};
+
 
 /****************************************************************************
  *
@@ -84,7 +82,7 @@ namespace Async
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -117,23 +115,21 @@ namespace Async
 class AprsTcpClient : public SigC::Object 
 {
   public:
+     static AprsTcpClient *selectAprsServer(void);
 
      AprsTcpClient(Async::Config &cfg, const std::string &name);
      ~AprsTcpClient(void);
 
-     static AprsTcpClient *selectAprsServer(void);     
-     void  sendMsg(void);
+     void  sendMsg(const char *aprsmsg);
      void  sendAprsBeacon(Async::Timer *t);
      void  sendAprsInfo(std::string info, int numberofstations);
-     char  aprsmsg[200];
-     int   nrofstn;
      
   protected:
 
-
   private:
-
     static const int RECV_BUF_SIZE = 4096;
+    
+    int    nrofstn;
     size_t recv_buf_len;
 
     Async::Config     	&cfg;
@@ -167,15 +163,17 @@ class AprsTcpClient : public SigC::Object
     void  tcpConnected(void);
     void  aprsLogin(void);
     short callpass(const char *theCall);
-    int   tcpDataReceived(Async::TcpClient::TcpConnection *con, void *buf, int count);
-    void  tcpDisconnected(Async::TcpClient::TcpConnection *con, Async::TcpClient::DisconnectReason reason);
+    int   tcpDataReceived(Async::TcpClient::TcpConnection *con, void *buf,
+                          int count);
+    void  tcpDisconnected(Async::TcpClient::TcpConnection *con,
+                          Async::TcpClient::DisconnectReason reason);
     void  reconnectNextAprsServer(Async::Timer *t);
     void  startNormalSequence(Async::Timer *t);
 
 };  /* class AprsTcpClient */
 
 
-#endif /* LOGIC_INCLUDED */
+#endif /* APRS_TCP_CLIENT */
 
 /*
  * This file has not been truncated

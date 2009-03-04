@@ -144,7 +144,8 @@ AprsTcpClient::AprsTcpClient(Async::Config &cfg, const std::string &name):
    cfg.getValue(name, "APRS_LON_POSITION", aprslon); 	// lon-position
    cfg.getValue(name, "APRSPATH", aprspath);		// aprspath
    cfg.getValue(name, "TONE", value);			// ctcss or tone
-   if (value.length() != 4) {
+   if (value.length() != 4)
+   {
      cerr << "*** ERROR: Config variable " << name 
           << "/TONE not set or wrong, example \"TONE=T136\" or \"TONE=1750\"\n";
      return;
@@ -152,7 +153,8 @@ AprsTcpClient::AprsTcpClient(Async::Config &cfg, const std::string &name):
    tone = value;
 
    cfg.getValue(name, "RANGE", rng);			// range-param
-   if (rng.length() != 3) {
+   if (rng.length() != 3)
+   {
      cerr << "*** ERROR: Config variable " << name 
           << "/RANGE not set or wrong, example \"RANGE=30k\", ignoring\n";
    }
@@ -167,18 +169,19 @@ AprsTcpClient::AprsTcpClient(Async::Config &cfg, const std::string &name):
 							
    beaconinterval = atoi(value.c_str())*1000*60;	// make 1 minute inter-
 							// vals, at least
-   if (beaconinterval < 60000) {			// every 10 minutes
+   if (beaconinterval < 60000)                          // every 10 minutes
+   {
      beaconinterval = 600000;
    }
 							
    cfg.getValue(name, "FREQUENCY", frequency);  	// frequency of the
    							// SvxLink-station
-   if (frequency.length() != 7) {
+   if (frequency.length() != 7)
+   {
      cerr << "*** ERROR: Config variable " << name 
           << "/FREQUENCY wrong value, example \"FREQUENCY=430.050\" \n";
      return;
    }
-   							
 
    con = new TcpClient(aprshost, tcp_port);
    con->connected.connect(slot(*this, &AprsTcpClient::tcpConnected));
@@ -217,29 +220,33 @@ void AprsTcpClient::sendAprsInfo(std::string info, int numberofstations)
   // Format for "object from..."
   // DL1HRC>;EL-242660*111111z4900.05NE00823.29E0434.687MHz T123 R10k   DA0AAA
 
-  nrofstn = numberofstations;
+  if (numberofstations > 9)
+  {
+    nrofstn = 9;
+  }
+  else if (numberofstations < 0)
+  {
+    nrofstn = 0;
+  }
+  else
+  {
+    nrofstn = numberofstations;
+  }
 
   const char *format = "%s>%s,%s:;%s-%s*111111z%s/%s%d%s\r\n";
+  char  aprsmsg[200];
   sprintf(aprsmsg, format, el_call.c_str(), destination.c_str(), 
           aprspath.c_str(), el_tok.c_str(), el_call.c_str(), aprslat.c_str(), 
 	  aprslon.c_str(), numberofstations, info.c_str());
 
-  AprsTcpClient::sendMsg();
+  sendMsg(aprsmsg);
   
-} /* void AprsTcpClient::sendAprsInfo */
+} /* AprsTcpClient::sendAprsInfo */
 
 
-void AprsTcpClient::sendAprsBeacon(Async::Timer *t)
+void AprsTcpClient::sendAprsBeacon(Timer *t)
 {
-  if (nrofstn > 9)
-  {
-    nrofstn = 9;
-  }
-  if (nrofstn < 0)
-  {
-    nrofstn = 0;
-  }
-
+  char  aprsmsg[200];
   if (rng.length() == 3)
   {
     const char *format = "%s>%s,%s:;%s-%s*111111z%s/%s%d%sMHz %s R%s %s\r\n";
@@ -257,14 +264,13 @@ void AprsTcpClient::sendAprsBeacon(Async::Timer *t)
 	    aprs_comment.c_str());
   }
 
-  AprsTcpClient::sendMsg();
+  sendMsg(aprsmsg);
 
 } /* AprsTcpClient::sendAprsBeacon*/
 
 
-void AprsTcpClient::sendMsg(void)
+void AprsTcpClient::sendMsg(const char *aprsmsg)
 {
-
   cout << aprsmsg << "\n";
   
   int written = con->write(aprsmsg, strlen(aprsmsg));  
@@ -272,15 +278,14 @@ void AprsTcpClient::sendMsg(void)
   {
     if (written == -1)
     {
-        cerr << "*** ERROR: TCP write error\n";
+      cerr << "*** ERROR: TCP write error\n";
     }
     else
     {
-        cerr << "*** ERROR: TCP transmit buffer overflow, reconnecting.\n";
-        con->disconnect();
+      cerr << "*** ERROR: TCP transmit buffer overflow, reconnecting.\n";
+      con->disconnect();
     }
   }
-   
 } /* AprsTcpClient::sendMsg */
 
 
@@ -305,7 +310,8 @@ void AprsTcpClient::aprsLogin(void)
    short passcode = callpass(ecall);
 
    sprintf(loginmsg, format, ecall, passcode, SVXLINK_VERSION);
-   con->write(loginmsg, strlen(loginmsg));
+   //con->write(loginmsg, strlen(loginmsg));
+   sendMsg(loginmsg);
 
 } /* AprsTcpClient::aprsLogin */
 
@@ -316,86 +322,83 @@ void AprsTcpClient::aprsLogin(void)
 // Copyright (C) 2000-2008  The Xastir Group
 short AprsTcpClient::callpass(const char *theCall)
 {
-    char rootCall[10];           // need to copy call to remove ssid from parse
-    char *p1 = rootCall;
-    short hash;
-    short i,len;
-    char *ptr = rootCall;
-
-    while ((*theCall != '-') && (*theCall != '\0')) 
-        *p1++ = toupper((int)(*theCall++));
-        *p1 = '\0';
-
-    hash = kKey;                 // Initialize with the key value
-    i = 0;
-    len = (short)strlen(rootCall);
-
-    while (i<len) {		 // Loop through the string two bytes at a time
-        hash ^= (unsigned char)(*ptr++)<<8; // xor high byte with accumulated 
-					    // hash
-        hash ^= (*ptr++);	 // xor low byte with accumulated hash
-        i += 2;
-    }
-    return (short)(hash & 0x7fff); // mask off the high bit so number is always 
-				   // positive
-
+  char rootCall[10];           // need to copy call to remove ssid from parse
+  char *p1 = rootCall;
+  short hash;
+  short i, len;
+  char *ptr = rootCall;
+  
+  while ((*theCall != '-') && (*theCall != '\0'))
+  {
+    *p1++ = toupper((int)(*theCall++));
+  }
+  *p1 = '\0';
+  
+  hash = kKey;                 // Initialize with the key value
+  i = 0;
+  len = (short)strlen(rootCall);
+  
+  while (i < len)
+  {                       // Loop through the string two bytes at a time
+    hash ^= (unsigned char)(*ptr++) << 8; // xor high byte with accumulated 
+                                          // hash
+    hash ^= (*ptr++);     // xor low byte with accumulated hash
+    i += 2;
+  }
+  return (short)(hash & 0x7fff); // mask off the high bit so number is always 
+                                  // positive
 } /* AprsTcpClient::callpass */
 
 
 
 void AprsTcpClient::tcpConnected(void)
 {
-
-  cerr << "Aprsserver connected " << con->remoteHost() << 
+  cout << "Connected to APRS server " << con->remoteHost() <<
           " on port " << con->remotePort() << "\n";
 
-  AprsTcpClient::aprsLogin();			// login
-  offset_timer->reset();			// reset th offset_timer
-  offset_timer->setEnable(true);		// restart the offset_timer
-
+  aprsLogin();                    // login
+  offset_timer->reset();          // reset th offset_timer
+  offset_timer->setEnable(true);  // restart the offset_timer
 } /* AprsTcpClient::tcpConnected */
 
 
 
-void AprsTcpClient::startNormalSequence(Async::Timer *t)
+void AprsTcpClient::startNormalSequence(Timer *t)
 {
   sendAprsBeacon(t);
   beacon_timer->setEnable(true);		// start the beaconinterval
-
 } /* AprsTcpClient::startNormalSequence */
 
 
 
 // ToDo: possible interaction of SvxLink on commands sended via
 //       APRS-net
-int AprsTcpClient::tcpDataReceived(Async::TcpClient::TcpConnection *con, 
-     void *buf, int count)
+int AprsTcpClient::tcpDataReceived(TcpClient::TcpConnection *con,
+                                   void *buf, int count)
 {
    return count;                                // do nothing...
-
 } /* AprsTcpClient::tcpDataReceived */
 
 
 
-void AprsTcpClient::tcpDisconnected(Async::TcpClient::TcpConnection *con, 
-  Async::TcpClient::DisconnectReason reason)
+void AprsTcpClient::tcpDisconnected(TcpClient::TcpConnection *con,
+                                    TcpClient::DisconnectReason reason)
 {
-   cout << "**** WARN: disconnected from Aprsserver\n";
+  cout << "*** WARNING: Disconnected from APRS server\n";
    
-   beacon_timer->setEnable(false);		// no beacon while disconnected
-   reconnect_timer->setEnable(true);		// start the reconnect-timer
-
+  beacon_timer->setEnable(false);		// no beacon while disconnected
+  reconnect_timer->setEnable(true);		// start the reconnect-timer
 } /* AprsTcpClient::tcpDisconnected */
 
 
 /* ToDo list connect to next Aprsserver if the 1st one fails */
 void AprsTcpClient::reconnectNextAprsServer(Async::Timer *t)
 {
-   reconnect_timer->setEnable(false);		// stop the reconnect-timer
-   cout << "**** WARN: try to reconnect Aprsserver\n";
-   con->connect();
-   
+  reconnect_timer->setEnable(false);		// stop the reconnect-timer
+  cout << "*** WARNING: Trying to reconnect to APRS server\n";
+  con->connect();
 } /* AprsTcpClient::reconnectNextAprsServer */
+
 
 
 /*
