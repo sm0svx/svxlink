@@ -271,7 +271,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 
 void AprsTcpClient::sendMsg(const char *aprsmsg)
 {
-  cout << aprsmsg << "\n";
+  //cout << aprsmsg << "\n";
   
   int written = con->write(aprsmsg, strlen(aprsmsg));  
   if (written != static_cast<int>(strlen(aprsmsg)))
