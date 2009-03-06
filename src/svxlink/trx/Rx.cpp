@@ -180,6 +180,7 @@ bool Rx::initialize(void)
     {
       m_sql_tmo_timer = new Timer(tmo_val);
       m_sql_tmo_timer->expired.connect(slot(*this, &Rx::sqlTimeout));
+      m_sql_tmo_timer->setEnable(false);
     }
   }
   
