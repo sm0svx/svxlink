@@ -1,4 +1,4 @@
- 0.11.0 -- ?? ??? 2008
+ 0.11.0 -- ?? ??? 2009
 ----------------------
 
 * The SvxLink internal sample rate is now configurable by a compile time
@@ -65,6 +65,11 @@
 
 * SvxLink can now read WAV files. However, only 8k sampling rate,
   mono, 16 bit signed formated files are supported.
+
+* The config file reader did not enforce a specific file extension which
+  could cause strange effects when using an editor that save backup files
+  in the same directory as the config files reside. Now all, except the
+  main config file, must have the extension ".conf".
 
 
 

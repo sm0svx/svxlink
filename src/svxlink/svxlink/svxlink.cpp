@@ -378,7 +378,11 @@ int main(int argc, char **argv)
     struct dirent *dirent;
     while ((dirent = readdir(dir)) != NULL)
     {
-      if (dirent->d_name[0] == '.') continue;
+      char *dot = strrchr(dirent->d_name, '.');
+      if ((dot == NULL) || (strcmp(dot, ".conf") != 0))
+      {
+      	continue;
+      }
       cfg_filename = cfg_dir + "/" + dirent->d_name;
       if (!cfg.open(cfg_filename))
        {
