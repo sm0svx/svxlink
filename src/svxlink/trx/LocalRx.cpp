@@ -245,6 +245,7 @@ LocalRx::LocalRx(Config &cfg, const std::string& name)
 
 LocalRx::~LocalRx(void)
 {
+  clearHandler();
   delete audio_io;  // This will delete the whole chain of audio objects
 } /* LocalRx::~LocalRx */
 

@@ -316,6 +316,8 @@ class MsgAudioCodecSelect : public Msg
     MsgAudioCodecSelect(const char *codec_name, unsigned msg_type)
       : Msg(msg_type, sizeof(MsgAudioCodecSelect)), m_option_cnt(0)
     {
+      memset(m_codec_name, 0, sizeof(m_codec_name));
+      memset(m_options, 0, sizeof(m_options));
       strncpy(m_codec_name, codec_name, sizeof(m_codec_name));
       m_codec_name[sizeof(m_codec_name)-1] = 0;
     }
