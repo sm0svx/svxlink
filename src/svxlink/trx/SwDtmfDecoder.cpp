@@ -392,8 +392,12 @@ void SwDtmfDecoder::dtmfPostProcess(uint8_t hit)
 
 void SwDtmfDecoder::goertzelInit(GoertzelState *s, float freq, float bw)
 {
-    /* Adjust block length to minimize the DFT error. */
-    s->block_length = lrintf(INTERNAL_SAMPLE_RATE * ceilf(freq / bw) / freq);
+    /* Adjust the bandwidth to minimize the DFT error. */
+    float new_bw = freq / ceilf(freq / bw);
+    /* Select a block length with minimized DFT error. */
+    s->block_length = lrintf(INTERNAL_SAMPLE_RATE / new_bw);
+    /* Scale output values to achieve same levels at different block lengths. */
+    s->scale_factor = powf(new_bw / bw, 2);
     /* Init detector frequency. */
     s->fac = 2.0f * cosf(2.0f * M_PI * freq / INTERNAL_SAMPLE_RATE);
     /* Reset the tone detector state. */
@@ -414,7 +418,7 @@ float SwDtmfDecoder::goertzelResult(GoertzelState *s)
     /* Now calculate the non-recursive side of the filter. */
     /* The result here is not scaled down to allow for the magnification
        effect of the filter (the usual DFT magnification effect). */
-    res = s->v3*s->v3 + s->v2*s->v2 - s->v2*s->v3*s->fac;
+    res = (s->v3*s->v3 + s->v2*s->v2 - s->v2*s->v3*s->fac) * s->scale_factor;
     /* Reset the tone detector state. */
     s->v2 = s->v3 = 0.0f;
     s->samples_left = s->block_length;

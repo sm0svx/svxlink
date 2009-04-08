@@ -149,6 +149,7 @@ class SwDtmfDecoder : public DtmfDecoder
       float v2;
       float v3;
       float fac;
+      float scale_factor;
       int samples_left;
       int block_length;
     } GoertzelState;
