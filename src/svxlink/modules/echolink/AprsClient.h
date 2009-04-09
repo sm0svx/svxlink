@@ -1,8 +1,8 @@
 /**
-@file	 AprsTcpClient.h
-@brief   Contains an implementation of APRS updates via TCP
-@author  Adi Bier / DL1HRC
-@date	 2008-11-01
+@file	 AprsClient.h
+@brief   Contains an interface class for APRS communication
+@author  Tobias Blomberg / SM0SVX
+@date	 2009-03-25
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef APRS_TCP_CLIENT
-#define APRS_TCP_CLIENT
+#ifndef APRS_CLIENT
+#define APRS_CLIENT
 
 
 /****************************************************************************
@@ -36,7 +36,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <string>
-#include <vector>
 
 
 /****************************************************************************
@@ -45,7 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncTcpClient.h>
+#include <EchoLinkStationData.h>
 
 
 /****************************************************************************
@@ -54,8 +53,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "LocationInfo.h"
-#include "AprsClient.h"
 
 
 /****************************************************************************
@@ -64,10 +61,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class Timer;
-};
 
 
 /****************************************************************************
@@ -100,68 +93,24 @@ namespace Async
  ****************************************************************************/
 
 
-
 /****************************************************************************
  *
  * Class definitions
  *
  ****************************************************************************/
 
-
-/**
-@brief	Aprs-logics
-@author Adi Bier / DL1HRC
-@date   2008-11-01
-*/
-class AprsTcpClient : public AprsClient, public SigC::Object
+class AprsClient
 {
   public:
-     AprsTcpClient(LocationInfo::Cfg &loc_cfg, const std::string &server,
-                   int port);
-     ~AprsTcpClient(void);
-
-     void updateDirectoryStatus(EchoLink::StationData::Status status) {};
-     void updateQsoStatus(int action, const std::string& call,
-       const std::string& info, std::list<std::string>& call_list);
-
-  private:
-    typedef std::vector<std::string> StrList;
+    virtual ~AprsClient(void) {};
     
-    LocationInfo::Cfg   &loc_cfg;
-    std::string		server;
-    int			port;
-    Async::TcpClient 	*con;
-    Async::Timer        *beacon_timer;
-    Async::Timer        *reconnect_timer;
-    Async::Timer        *offset_timer;
-    
-    int			num_connected;
-
-    std::string		el_call;
-    std::string		el_prefix;
-    std::string		destination;
-
-    int   splitStr(StrList& L, const std::string& seq,
-                   const std::string& delims);
-
-    void  sendMsg(const char *aprsmsg);
-    void  sendAprsBeacon(Async::Timer *t);
-
-    void  tcpConnected(void);
-    void  aprsLogin(void);
-    short getPasswd(const std::string& call);
-
-    int   tcpDataReceived(Async::TcpClient::TcpConnection *con, void *buf,
-                          int count);
-    void  tcpDisconnected(Async::TcpClient::TcpConnection *con,
-                          Async::TcpClient::DisconnectReason reason);
-    void  reconnectAprsServer(Async::Timer *t);
-    void  startNormalSequence(Async::Timer *t);
-
-};  /* class AprsTcpClient */
+    virtual void updateDirectoryStatus(EchoLink::StationData::Status status) = 0;
+    virtual void updateQsoStatus(int action, const std::string& call,
+      const std::string& info, std::list<std::string>& call_list) = 0;
+};  /* class AprsClient */
 
 
-#endif /* APRS_TCP_CLIENT */
+#endif /* APRS_CLIENT */
 
 /*
  * This file has not been truncated

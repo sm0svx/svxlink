@@ -1,8 +1,8 @@
 /**
-@file	 AprsTcpClient.h
-@brief   Contains an implementation of APRS updates via TCP
-@author  Adi Bier / DL1HRC
-@date	 2008-11-01
+@file	 LocationInfo.h
+@brief   Contains the infrastructure for APRS based EchoLink status updates
+@author  Adi/DL1HRC and Steve/DH1DM
+@date	 2009-03-12
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef APRS_TCP_CLIENT
-#define APRS_TCP_CLIENT
+#ifndef LOCATION_INFO
+#define LOCATION_INFO
 
 
 /****************************************************************************
@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 #include <vector>
+#include <list>
 
 
 /****************************************************************************
@@ -45,7 +46,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncTcpClient.h>
+#include <AsyncConfig.h>
+#include <EchoLinkStationData.h>
 
 
 /****************************************************************************
@@ -54,8 +56,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "LocationInfo.h"
-#include "AprsClient.h"
 
 
 /****************************************************************************
@@ -64,10 +64,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class Timer;
-};
+class AprsClient;
 
 
 /****************************************************************************
@@ -93,12 +90,12 @@ namespace Async
  ****************************************************************************/
 
 
+
 /****************************************************************************
  *
- * Exported Global Variables
+ * Exported Global Types
  *
  ****************************************************************************/
-
 
 
 /****************************************************************************
@@ -107,61 +104,59 @@ namespace Async
  *
  ****************************************************************************/
 
-
-/**
-@brief	Aprs-logics
-@author Adi Bier / DL1HRC
-@date   2008-11-01
-*/
-class AprsTcpClient : public AprsClient, public SigC::Object
+class LocationInfo
 {
   public:
-     AprsTcpClient(LocationInfo::Cfg &loc_cfg, const std::string &server,
-                   int port);
-     ~AprsTcpClient(void);
+    typedef struct
+    {
+      int deg, min, sec;
+      char dir;
+    } Coordinate;
 
-     void updateDirectoryStatus(EchoLink::StationData::Status status) {};
-     void updateQsoStatus(int action, const std::string& call,
-       const std::string& info, std::list<std::string>& call_list);
+    typedef struct
+    {
+      int         interval;
+      int         frequency;
+      int         power;
+      int         tone;
+      int         height;
+      int         gain;
+      int         beam_dir;
+      int         range;
+      char        range_unit;
+
+      Coordinate  lat_pos;
+      Coordinate  lon_pos;    
+
+      std::string mycall;
+      std::string path;
+      std::string comment;
+    } Cfg;
+
+    LocationInfo(Async::Config &cfg, const std::string &name,
+                 const std::string &callsign);
+    ~LocationInfo(void);
+
+    void updateDirectoryStatus(EchoLink::StationData::Status new_status);
+    void updateQsoStatus(int action, const std::string& call,
+      const std::string& name, std::list<std::string>& call_list);
 
   private:
-    typedef std::vector<std::string> StrList;
-    
-    LocationInfo::Cfg   &loc_cfg;
-    std::string		server;
-    int			port;
-    Async::TcpClient 	*con;
-    Async::Timer        *beacon_timer;
-    Async::Timer        *reconnect_timer;
-    Async::Timer        *offset_timer;
-    
-    int			num_connected;
+    typedef std::vector<std::string>  StrList;
+    typedef std::list<AprsClient*>    ClientList;
 
-    std::string		el_call;
-    std::string		el_prefix;
-    std::string		destination;
+    Cfg         loc_cfg;
+    ClientList  clients;
 
-    int   splitStr(StrList& L, const std::string& seq,
-                   const std::string& delims);
+    int  splitStr(StrList& L, const std::string& seq,
+                  const std::string& delims);
+    bool parseLatitude(Coordinate &lat_pos, const std::string &value);
+    bool parseLongitude(Coordinate &lon_pos, const std::string &value);
 
-    void  sendMsg(const char *aprsmsg);
-    void  sendAprsBeacon(Async::Timer *t);
-
-    void  tcpConnected(void);
-    void  aprsLogin(void);
-    short getPasswd(const std::string& call);
-
-    int   tcpDataReceived(Async::TcpClient::TcpConnection *con, void *buf,
-                          int count);
-    void  tcpDisconnected(Async::TcpClient::TcpConnection *con,
-                          Async::TcpClient::DisconnectReason reason);
-    void  reconnectAprsServer(Async::Timer *t);
-    void  startNormalSequence(Async::Timer *t);
-
-};  /* class AprsTcpClient */
+};  /* class LocationInfo */
 
 
-#endif /* APRS_TCP_CLIENT */
+#endif /* LOCATION_INFO */
 
 /*
  * This file has not been truncated

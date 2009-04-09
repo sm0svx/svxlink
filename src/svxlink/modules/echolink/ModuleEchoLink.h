@@ -101,7 +101,7 @@ namespace EchoLink
 
 class MsgHandler;
 class QsoImpl;
-class AprsTcpClient;
+class LocationInfo;
   
 
 /****************************************************************************
@@ -185,7 +185,7 @@ class ModuleEchoLink : public Module
     Async::AudioSplitter  *splitter;
     Async::AudioValve 	  *listen_only_valve;
     Async::AudioSelector  *selector;
-    AprsTcpClient	  *tcon;
+    LocationInfo	  *tinfo;
 
     void moduleCleanup(void);
     void activateInit(void);
@@ -221,6 +221,7 @@ class ModuleEchoLink : public Module
     void handleConnectByCall(const std::string& cmd);
     void cbcTimeout(Async::Timer *t);
     int numConnectedStations(void);
+    int listQsoCallsigns(std::list<std::string>& call_list);
     void handleCommand(const std::string& cmd);
     void commandFailed(const std::string& cmd);
     void connectByNodeId(int node_id);

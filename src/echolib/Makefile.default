@@ -86,7 +86,7 @@ STATIC_LIBS   	=
 
 # Includefiles to export. A softlink is created in $(INC).
 EXPINC		= EchoLinkDirectory.h EchoLinkDispatcher.h EchoLinkQso.h \
-      	      	  EchoLinkStationData.h
+      	      	  EchoLinkStationData.h rtp.h
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for libraries).

@@ -1,8 +1,8 @@
 /**
-@file	 AprsTcpClient.h
-@brief   Contains an implementation of APRS updates via TCP
-@author  Adi Bier / DL1HRC
-@date	 2008-11-01
+@file	 AprsUdpClient.h
+@brief   Contains an implementation of APRS updates via UDP
+@author  Adi/DL1HRC and Steve/DH1DM
+@date	 2009-03-12
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef APRS_TCP_CLIENT
-#define APRS_TCP_CLIENT
+#ifndef APRS_UDP_CLIENT
+#define APRS_UDP_CLIENT
 
 
 /****************************************************************************
@@ -36,7 +36,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <string>
-#include <vector>
 
 
 /****************************************************************************
@@ -45,7 +44,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncTcpClient.h>
+#include <AsyncUdpSocket.h>
+#include <AsyncDnsLookup.h>
 
 
 /****************************************************************************
@@ -66,9 +66,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace Async
 {
+  class Config;
   class Timer;
+  class DnsLookup;
 };
-
+namespace EchoLink
+{
+  class StationData;
+};
 
 /****************************************************************************
  *
@@ -107,61 +112,50 @@ namespace Async
  *
  ****************************************************************************/
 
-
-/**
-@brief	Aprs-logics
-@author Adi Bier / DL1HRC
-@date   2008-11-01
-*/
-class AprsTcpClient : public AprsClient, public SigC::Object
+class AprsUdpClient : public AprsClient, public SigC::Object
 {
   public:
-     AprsTcpClient(LocationInfo::Cfg &loc_cfg, const std::string &server,
+     AprsUdpClient(LocationInfo::Cfg &loc_cfg, const std::string &server,
                    int port);
-     ~AprsTcpClient(void);
+     ~AprsUdpClient(void);
 
-     void updateDirectoryStatus(EchoLink::StationData::Status status) {};
+     void updateDirectoryStatus(EchoLink::StationData::Status status);
      void updateQsoStatus(int action, const std::string& call,
        const std::string& info, std::list<std::string>& call_list);
-
+               
   private:
-    typedef std::vector<std::string> StrList;
-    
-    LocationInfo::Cfg   &loc_cfg;
+    LocationInfo::Cfg	&loc_cfg;
     std::string		server;
     int			port;
-    Async::TcpClient 	*con;
+    Async::UdpSocket	sock;
+    Async::IpAddress	ip_addr;
+    Async::DnsLookup	*dns;
     Async::Timer        *beacon_timer;
-    Async::Timer        *reconnect_timer;
-    Async::Timer        *offset_timer;
     
+    EchoLink::StationData::Status	curr_status;
+
     int			num_connected;
+    std::string		curr_call;
 
-    std::string		el_call;
-    std::string		el_prefix;
-    std::string		destination;
+    void  sendLocationInfo(Async::Timer *t = 0);
+    void  dnsResultsReady(Async::DnsLookup &dns_lookup);
 
-    int   splitStr(StrList& L, const std::string& seq,
-                   const std::string& delims);
+    std::string shortCallsign();
+    
+    int   buildSdesPacket(char *p);
 
-    void  sendMsg(const char *aprsmsg);
-    void  sendAprsBeacon(Async::Timer *t);
-
-    void  tcpConnected(void);
-    void  aprsLogin(void);
     short getPasswd(const std::string& call);
 
-    int   tcpDataReceived(Async::TcpClient::TcpConnection *con, void *buf,
-                          int count);
-    void  tcpDisconnected(Async::TcpClient::TcpConnection *con,
-                          Async::TcpClient::DisconnectReason reason);
-    void  reconnectAprsServer(Async::Timer *t);
-    void  startNormalSequence(Async::Timer *t);
+    int   getToneParam();
+    int   getPowerParam();
+    int   getHeightParam();
+    int   getGainParam();
+    int   getDirectionParam();
 
-};  /* class AprsTcpClient */
+};  /* class LocationInfoClient */
 
 
-#endif /* APRS_TCP_CLIENT */
+#endif /* APRS_UDP_CLIENT */
 
 /*
  * This file has not been truncated

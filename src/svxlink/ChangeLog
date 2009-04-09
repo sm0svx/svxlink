@@ -61,7 +61,11 @@
 
 * Bugfix: SvxLink would hang if an audio clip was missing.
 
-* APRS functionality in ModuleEchoLink contributed by DL1HRC/Adi added.
+* APRS and EchoLink location info (link status page) functionality in
+  ModuleEchoLink added, contributed by DH1DM/Steve and DL1HRC/Adi.
+  There is a new configuration section, "LocationInfo" for this
+  and a new config variable LOCATION_INFO in the ModuleEchoLink.conf
+  configuration file.
 
 * SvxLink can now read WAV files. However, only 8k sampling rate,
   mono, 16 bit signed formated files are supported.
