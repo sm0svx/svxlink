@@ -161,6 +161,7 @@ POST_TARGETS   = translations/qtel_sv.qm \
 		 translations/qtel_de.qm \
 		 translations/qtel_tr.qm \
 		 translations/qtel_nl.qm \
+		 translations/qtel_it.qm \
 		 translations/qtel_es.qm
 
 

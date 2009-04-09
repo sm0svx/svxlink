@@ -14,11 +14,6 @@
         <translation>Ansluter till </translation>
     </message>
     <message>
-        <source>Disconnected
-</source>
-        <translation type="obsolete">Nedkopplad</translation>
-    </message>
-    <message>
         <source>Qtel Error</source>
         <translation>Qtel fel</translation>
     </message>
@@ -74,14 +69,6 @@ Kan ej skapa uppkoppling till</translation>
     <message>
         <source>Time:</source>
         <translation>Tid:</translation>
-    </message>
-    <message>
-        <source>Connect</source>
-        <translation type="obsolete">Anslut</translation>
-    </message>
-    <message>
-        <source>Disconnect</source>
-        <translation type="obsolete">Koppla ner</translation>
     </message>
     <message>
         <source>PTT</source>
@@ -151,14 +138,6 @@ Kan ej skapa uppkoppling till</translation>
         <translation>Uppdaterar stationslista...</translation>
     </message>
     <message>
-        <source>Getting calls from directory server...</source>
-        <translation type="obsolete">Hämtar stationslista från listserver...</translation>
-    </message>
-    <message>
-        <source>Connect request from</source>
-        <translation type="obsolete">Uppkopplingsförsök från</translation>
-    </message>
-    <message>
         <source>Add to bookmarks</source>
         <translation>Lägg till bokmärke</translation>
     </message>
@@ -185,19 +164,9 @@ station du vill lägga till</translation>
         <translation>Ctrl+A</translation>
     </message>
     <message>
-        <source>Ctrl+R</source>
-        <comment>directoryRefreshAction</comment>
-        <translation type="obsolete">Ctrl+P</translation>
-    </message>
-    <message>
         <source>Ctrl+B</source>
         <comment>directoryBusyAction</comment>
         <translation>Ctrl+U</translation>
-    </message>
-    <message>
-        <source>F9</source>
-        <comment>directoryRefreshAction</comment>
-        <translation type="obsolete">F9</translation>
     </message>
     <message>
         <source>F5</source>
@@ -215,14 +184,6 @@ station du vill lägga till</translation>
 </context>
 <context>
     <name>MainWindowBase</name>
-    <message>
-        <source>Server Messages</source>
-        <translation type="obsolete">Servermeddelanden</translation>
-    </message>
-    <message>
-        <source>Station Browser</source>
-        <translation type="obsolete">Stationsbläddrare</translation>
-    </message>
     <message>
         <source>Explorer</source>
         <translation>Utforskare</translation>
@@ -262,10 +223,6 @@ station du vill lägga till</translation>
     <message>
         <source>Time</source>
         <translation>Tid</translation>
-    </message>
-    <message>
-        <source>IP-address</source>
-        <translation type="obsolete">IP-adress</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -432,10 +389,6 @@ station du vill lägga till</translation>
     <message>
         <source>Messages</source>
         <translation>Meddelanden</translation>
-    </message>
-    <message>
-        <source>Local Time</source>
-        <translation type="obsolete">Lokal tid</translation>
     </message>
     <message>
         <source>Local time</source>

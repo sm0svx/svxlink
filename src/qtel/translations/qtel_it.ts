@@ -4,52 +4,52 @@
     <name>ComDialog</name>
     <message>
         <source>INFO</source>
-        <translation>Información</translation>
+        <translation>Informazione</translation>
     </message>
     <message>
         <source>Connected to </source>
-        <translation>Conectado a</translation>
+        <translation>Connesso con </translation>
     </message>
     <message>
         <source>Connecting to </source>
-        <translation>Conectado con</translation>
+        <translation>Connesso con </translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation>Desconectado</translation>
+        <translation>Contatto disconnesso</translation>
     </message>
     <message>
         <source>Qtel Error</source>
-        <translation>Qtel error</translation>
+        <translation>Qtel errore</translation>
     </message>
     <message>
         <source>Station data not found in directory server.
 Can&apos;t create connection to</source>
-        <translation>Datos de estación no encontrados en el directorio del servidor Echolink. 
-No se puede crear conexion</translation>
-    </message>
-    <message>
-        <source>Could not create connection to remote host</source>
-        <translation>No se puede crear conexion con el host</translation>
-    </message>
-    <message>
-        <source>Could not open audio device</source>
-        <translation>No se puede abrir aparato de audio</translation>
+        <translation>Date della staziona non trovato al server. 
+<byte value="x9"/>Non e possibile collegare a</translation>
     </message>
     <message>
         <source>Could not create connection to station</source>
-        <translation>No se puede crear conexion con la estación</translation>
+        <translation>Impossibile connettere la stazione </translation>
+    </message>
+    <message>
+        <source>Could not open audio device</source>
+        <translation>Impossibile aprire il device audio </translation>
+    </message>
+    <message>
+        <source>Could not create connection to remote host</source>
+        <translation>Impossibile connettere il host</translation>
     </message>
 </context>
 <context>
     <name>ComDialogBase</name>
     <message>
         <source>Communication Dialog</source>
-        <translation>Dialogo de comunicación</translation>
+        <translation>Dialogo della comunicazione</translation>
     </message>
     <message>
         <source>Station Information</source>
-        <translation>Información de Estacion</translation>
+        <translation>Informaziona della stazione</translation>
     </message>
     <message>
         <source>?</source>
@@ -57,19 +57,19 @@ No se puede crear conexion</translation>
     </message>
     <message>
         <source>Description:</source>
-        <translation>Descripcion:</translation>
+        <translation>Descrizione:</translation>
     </message>
     <message>
         <source>IP-address:</source>
-        <translation>Dirección-IP:</translation>
+        <translation>Indirizzo IP:</translation>
     </message>
     <message>
         <source>Status:</source>
-        <translation>Estado:</translation>
+        <translation>Stato:</translation>
     </message>
     <message>
         <source>Time:</source>
-        <translation>Tiempo:</translation>
+        <translation>Tempo:</translation>
     </message>
     <message>
         <source>PTT</source>
@@ -77,15 +77,15 @@ No se puede crear conexion</translation>
     </message>
     <message>
         <source>Chat/Info</source>
-        <translation>Chat/Informacion</translation>
+        <translation>Notificatio/Informazione</translation>
     </message>
     <message>
         <source>&amp;Connect</source>
-        <translation>&amp;Conectado</translation>
+        <translation>&amp;Connesso</translation>
     </message>
     <message>
         <source>&amp;Disconnect</source>
-        <translation>&amp;Desconectado</translation>
+        <translation>&amp;Disconnesso</translation>
     </message>
     <message>
         <source>RX</source>
@@ -97,7 +97,7 @@ No se puede crear conexion</translation>
     </message>
     <message>
         <source>Name:</source>
-        <translation>Nombre:</translation>
+        <translation>Nome:</translation>
     </message>
     <message>
         <source>Alt+D</source>
@@ -109,64 +109,64 @@ No se puede crear conexion</translation>
     </message>
     <message>
         <source>VOX Enabled</source>
-        <translation>VOX activado</translation>
+        <translation>Attivato VOX</translation>
     </message>
     <message>
         <source>Threshold:</source>
-        <translation>Nivel determinado:</translation>
+        <translation>Valore limite:</translation>
     </message>
     <message>
         <source>Delay:</source>
-        <translation>Dilación:</translation>
+        <translation>Protrazione:</translation>
     </message>
     <message>
         <source>dB Level:</source>
-        <translation>Nivel de dB:</translation>
+        <translation>Valore [dB]:</translation>
     </message>
 </context>
 <context>
     <name>MainWindow</name>
     <message>
         <source>Logging off from directory server...</source>
-        <translation>Cerrar sesión en directorio del servidor...</translation>
+        <translation>Notificare la partenza di server catalogo...</translation>
     </message>
     <message>
         <source>Station list has been refreshed</source>
-        <translation>Lista de estación ha sido actualizada</translation>
+        <translation>Catalogo della stazione aggiornata</translation>
     </message>
     <message>
         <source>Refreshing station list...</source>
-        <translation>Actualizando lista de estacion...</translation>
+        <translation>Aggiornare la lista delle stazione...</translation>
     </message>
     <message>
         <source>Add to bookmarks</source>
-        <translation>Agregar a favoritos</translation>
+        <translation>Aggiungere a segnalibro</translation>
     </message>
     <message>
         <source>Remove from bookmarks</source>
-        <translation>Borrar de favoritos</translation>
+        <translation>Eliminazione di segnalibro</translation>
     </message>
     <message>
         <source>Add named station...</source>
-        <translation>Agregar estacion conocida...</translation>
+        <translation>Aggiungere staziona nominata...</translation>
     </message>
     <message>
         <source>Qtel - Add station...</source>
-        <translation>Qtel - Agregar estación...</translation>
+        <translation>Qtel - Aggiungere stazione da...</translation>
     </message>
     <message>
         <source>Enter callsign of the station to add</source>
-        <translation>Ingrese indicativo de estación a agregar</translation>
+        <translation>Segnale di chiamata della stazione d&apos;aggiungere</translation>
     </message>
     <message>
         <source>Ctrl+Q</source>
         <comment>fileQuitAction</comment>
-        <translation>Ctrl+Q</translation>
+        <translation>Ctrl+A</translation>
     </message>
     <message>
         <source>Ctrl+B</source>
         <comment>directoryBusyAction</comment>
-        <translation>Ctrl+B</translation>
+        <translation>Ctrl+U</translation>
     </message>
     <message>
         <source>F5</source>
@@ -175,122 +175,122 @@ No se puede crear conexion</translation>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
-        <translation>Qtel: Conectar a IP</translation>
+        <translation>Qtel: Connesso con indirizzo IP</translation>
     </message>
     <message>
         <source>Enter an IP address or hostname:</source>
-        <translation>Ingrese dirección IP o nombre del equipo:</translation>
+        <translation>Inserire indirizzo IP o host:</translation>
     </message>
 </context>
 <context>
     <name>MainWindowBase</name>
     <message>
         <source>Explorer</source>
-        <translation>Explorar</translation>
+        <translation>Explorer</translation>
     </message>
     <message>
         <source>Conferences</source>
-        <translation>Conferencias</translation>
+        <translation>Conferenze</translation>
     </message>
     <message>
         <source>Links</source>
-        <translation>Enlaces</translation>
+        <translation>Links</translation>
     </message>
     <message>
         <source>Repeaters</source>
-        <translation>Repetidores</translation>
+        <translation>Relé </translation>
     </message>
     <message>
         <source>Stations</source>
-        <translation>Estaciónes</translation>
+        <translation>Stazioni</translation>
     </message>
     <message>
         <source>Bookmarks</source>
-        <translation>Favoritos</translation>
+        <translation>Segnalibro</translation>
     </message>
     <message>
         <source>Station</source>
-        <translation>Estación</translation>
+        <translation>Stazione</translation>
     </message>
     <message>
         <source>Location/Description</source>
-        <translation>Localización/Descripción</translation>
+        <translation>Luogo/Descrizione</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation>Estado</translation>
+        <translation>Stato</translation>
     </message>
     <message>
         <source>Time</source>
-        <translation>Tiempo</translation>
+        <translation>Tempo</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Archivo</translation>
+        <translation>&amp;File</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Configuración</translation>
+        <translation>&amp;Impostazioni</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Ayuda</translation>
+        <translation>&amp;Aiuto</translation>
     </message>
     <message>
         <source>Undo</source>
-        <translation>Deshacer</translation>
+        <translation>Annullare</translation>
     </message>
     <message>
         <source>&amp;Undo</source>
-        <translation>&amp;Deshacer</translation>
+        <translation>A&amp;nnullare</translation>
     </message>
     <message>
         <source>Redo</source>
-        <translation>Repetir</translation>
+        <translation>Rifare</translation>
     </message>
     <message>
         <source>&amp;Redo</source>
-        <translation>&amp;Repetir</translation>
+        <translation>&amp;Rifare</translation>
     </message>
     <message>
         <source>Cut</source>
-        <translation>Cortar</translation>
+        <translation>Interrompere</translation>
     </message>
     <message>
         <source>&amp;Cut</source>
-        <translation>&amp;Cortar</translation>
+        <translation>&amp;Interrompere</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Copiar</translation>
+        <translation>Copiare</translation>
     </message>
     <message>
         <source>C&amp;opy</source>
-        <translation>C&amp;opiar</translation>
+        <translation>&amp;Copiare</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation>Pegar</translation>
+        <translation>Inserire</translation>
     </message>
     <message>
         <source>&amp;Paste</source>
-        <translation>&amp;Pegar</translation>
+        <translation>&amp;Iserire</translation>
     </message>
     <message>
         <source>Find</source>
-        <translation>Buscar</translation>
+        <translation>Cercare</translation>
     </message>
     <message>
         <source>&amp;Find...</source>
-        <translation>&amp;Buscar...</translation>
+        <translation>C&amp;ercare...</translation>
     </message>
     <message>
         <source>Contents</source>
-        <translation>Contenido</translation>
+        <translation>Contenuto</translation>
     </message>
     <message>
         <source>&amp;Contents...</source>
-        <translation>&amp;Contenido...</translation>
+        <translation>C&amp;ontenuto...</translation>
     </message>
     <message>
         <source>Index</source>
@@ -298,43 +298,43 @@ No se puede crear conexion</translation>
     </message>
     <message>
         <source>&amp;Index...</source>
-        <translation>&amp;Indice...</translation>
+        <translation>&amp;Indice....</translation>
     </message>
     <message>
         <source>About</source>
-        <translation>Acerca de</translation>
+        <translation>Su</translation>
     </message>
     <message>
         <source>&amp;About...</source>
-        <translation>Acerca &amp;de...</translation>
+        <translation>&amp;Su...</translation>
     </message>
     <message>
         <source>About Qtel</source>
-        <translation>Acerca de Qtel</translation>
+        <translation>Da Qtel</translation>
     </message>
     <message>
         <source>Quit</source>
-        <translation>Finalizar</translation>
+        <translation>Finire</translation>
     </message>
     <message>
         <source>&amp;Quit</source>
-        <translation>&amp;Finalizar</translation>
+        <translation>&amp;Finire</translation>
     </message>
     <message>
         <source>Quit the Qtel application</source>
-        <translation>Finalizar Qtel</translation>
+        <translation>Finire Qtel</translation>
     </message>
     <message>
         <source>Qtel Settings...</source>
-        <translation>Configuración de Qtel...</translation>
+        <translation>Impostazione per Qtel...</translation>
     </message>
     <message>
         <source>&amp;Qtel Settings...</source>
-        <translation>Configuración de &amp;Qtel...</translation>
+        <translation>&amp;Impostazione per Qtel...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
-        <translation>Abrir configuración de Qtel</translation>
+        <translation>Aprire il dialogo delle impostazioni per Qtel</translation>
     </message>
     <message>
         <source>Qtel v</source>
@@ -343,80 +343,80 @@ No se puede crear conexion</translation>
     <message>
         <source>- Qt EchoLink client.
 </source>
-        <translation>- Qt Echolink cliente.
+        <translation>- Il Qt-Cliente del EchoLink.
 </translation>
     </message>
     <message>
         <source>Author</source>
-        <translation>Autor</translation>
+        <translation>Autore</translation>
     </message>
     <message>
         <source>&amp;Directory</source>
-        <translation>&amp;Directorio de estación</translation>
+        <translation>&amp;Catalogo delle stazione</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation>Actualizar</translation>
+        <translation>Aggiornare</translation>
     </message>
     <message>
         <source>&amp;Refresh</source>
-        <translation>Ac&amp;tualizar</translation>
+        <translation>&amp;Aggiornare</translation>
     </message>
     <message>
         <source>Refresh station list</source>
-        <translation>Actualizar lista de estación</translation>
+        <translation>Aggiornare la lista delle stazione</translation>
     </message>
     <message>
         <source>Qtel - the Qt EchoLink Client</source>
-        <translation>Qtel - el Qt Echolink cliente</translation>
+        <translation>Qtel - il Qt-Cliente del EchoLink</translation>
     </message>
     <message>
         <source>Busy</source>
-        <translation>Ocupado</translation>
+        <translation>Occupato</translation>
     </message>
     <message>
         <source>&amp;Busy</source>
-        <translation>&amp;Ocupado</translation>
+        <translation>&amp;Occupato</translation>
     </message>
     <message>
         <source>View as busy</source>
-        <translation>Visualizar como ocupado</translation>
+        <translation>Indicare da occupato</translation>
     </message>
     <message>
         <source>View as busy in directory server</source>
-        <translation>Visualizar como ocupado en directorio del servidor</translation>
+        <translation>Indicare da occupato nel catalogo delle stazione</translation>
     </message>
     <message>
         <source>Messages</source>
-        <translation>Mensajes</translation>
+        <translation>Messaggi</translation>
     </message>
     <message>
         <source>Local time</source>
-        <translation>Tiempo local</translation>
+        <translation>Tempo locale</translation>
     </message>
     <message>
         <source>Incoming connections</source>
-        <translation>Conexiónes entrantes</translation>
+        <translation>Conttati in arrivo</translation>
     </message>
     <message>
         <source>Accept</source>
-        <translation>Aceptar</translation>
+        <translation>Accettare</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation>Borrar</translation>
+        <translation>Sgombrare</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation>Identificacion de llamada</translation>
+        <translation>Segnale di chiamata</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation>Nombre</translation>
+        <translation>Nome</translation>
     </message>
     <message>
         <source>Node ID</source>
-        <translation>Nodo ID</translation>
+        <translation>Numero del nodo</translation>
     </message>
     <message>
         <source>Ctrl+Z</source>
@@ -444,26 +444,26 @@ No se puede crear conexion</translation>
     </message>
     <message>
         <source>Connect to IP...</source>
-        <translation>Conectado con dirección IP...</translation>
+        <translation>Collegare con indirizzo IP...</translation>
     </message>
     <message>
         <source>Connect to selected...</source>
-        <translation>Conectado a estación seleccionada...</translation>
+        <translation>Collegare con la stazione...</translation>
     </message>
     <message>
         <source>Disconnect</source>
-        <translation>Desconectado</translation>
+        <translation>Disconnesso</translation>
     </message>
     <message>
         <source>Add selected to Bookmarks</source>
-        <translation>Agregar a favoritos</translation>
+        <translation>Aggiungere la staziona a segnalibro</translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
     <message>
         <source>Qtel: Settings</source>
-        <translation>Qtel: Configuración</translation>
+        <translation>Qtel: Impostazione</translation>
     </message>
     <message>
         <source>OK</source>
@@ -471,61 +471,61 @@ No se puede crear conexion</translation>
     </message>
     <message>
         <source>User Info</source>
-        <translation>Información de usuario</translation>
+        <translation>Informazioni della stazione</translation>
     </message>
     <message>
         <source>User Information</source>
-        <translation>Información de usuario</translation>
+        <translation>Informazioni della stazione</translation>
     </message>
     <message>
         <source>Info
 Message</source>
-        <translation>Info/Mensajes
+        <translation>Informazione/Messagio
 </translation>
     </message>
     <message>
         <source>Location</source>
-        <translation>Localización</translation>
+        <translation>Luogo/Posizione</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation>Identificación de llamada</translation>
+        <translation>Segnale di chiamata</translation>
     </message>
     <message>
         <source>Password</source>
-        <translation>Clave</translation>
+        <translation>Password</translation>
     </message>
     <message>
         <source>Retype password</source>
-        <translation>Ingresar nuevamente clave</translation>
+        <translation>Ricrivere il password</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation>Nombre</translation>
+        <translation>Nome</translation>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation>Directorio del servidor</translation>
+        <translation>Catalogo</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
-        <translation>Configuracion del directorio del servidor</translation>
+        <translation>Caratteristica del server catalogo</translation>
     </message>
     <message>
         <source>Server</source>
-        <translation>Servidor</translation>
+        <translation>Server</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Cancelar</translation>
+        <translation>Cancellare</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>Nombre del equipo o dirección Ip del directorio de Echolink a utilizar</translation>
+        <translation>Nome o indirizzo IP del server catalogo</translation>
     </message>
     <message>
         <source>Refresh time</source>
-        <translation>Tiempo de actualización</translation>
+        <translation>Intervallo attualizzazione</translation>
     </message>
     <message>
         <source>min</source>
@@ -533,59 +533,59 @@ Message</source>
     </message>
     <message>
         <source>Time, in minutes, between station list refreshes</source>
-        <translation>Intervalo de minutos entre la actualización</translation>
+        <translation>Intervallo mentre attualizzazione (in minuti)</translation>
     </message>
     <message>
         <source>Register as busy on program startup</source>
-        <translation>Iniciar programa en estado de ocupado</translation>
+        <translation>Registrare da occupato durante il lancio della programma</translation>
     </message>
     <message>
         <source>Start as busy</source>
-        <translation>Iniciar como Ocupado</translation>
+        <translation>Indicare da occupato durante il lancio della programma</translation>
     </message>
     <message>
         <source>Sound</source>
-        <translation>Sonido</translation>
+        <translation>Suono</translation>
     </message>
     <message>
         <source>Sound settings</source>
-        <translation>Configuración de Sonido</translation>
+        <translation>Caratteristica del suono</translation>
     </message>
     <message>
         <source>Audio device</source>
-        <translation>Aparato de audio</translation>
+        <translation>Audio device</translation>
     </message>
     <message>
         <source>Full duplex</source>
-        <translation>Full-duplex</translation>
+        <translation>Full duplex</translation>
     </message>
     <message>
         <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation>Aparato de audio a usar (p.e. /dev/dsp)</translation>
+        <translation>Device audio (per esempio /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
-        <translation>Marque esta casilla de verificación para permitir operación full-duplex</translation>
+        <translation>Puntare casella per attivare full duplex modo</translation>
     </message>
     <message>
         <source>Connect Sound</source>
-        <translation>Conectar sonido</translation>
+        <translation>Suono mentre</translation>
     </message>
     <message>
         <source>The connect sound to use on incoming EchoLink connections</source>
-        <translation>Conexion de sonido a utilizar en las conexiónes EchoLink</translation>
+        <translation>Suono per un passando contatto</translation>
     </message>
     <message>
         <source>Browse...</source>
-        <translation>Buscar...</translation>
+        <translation>Navigare...</translation>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation>Archivos Raw (*.raw)</translation>
+        <translation>16-bit 8kHz dato del audio (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation>Seleccione un archivo de sonido</translation>
+        <translation>Sceliere file dell&apos;audio</translation>
     </message>
 </context>
 </TS>

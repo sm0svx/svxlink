@@ -71,14 +71,6 @@ Can&apos;t create connection to</source>
         <translation>Zeit:</translation>
     </message>
     <message>
-        <source>Connect</source>
-        <translation type="obsolete">Verbinden</translation>
-    </message>
-    <message>
-        <source>Disconnect</source>
-        <translation type="obsolete">Verbindung trennen</translation>
-    </message>
-    <message>
         <source>PTT</source>
         <translation>PTT</translation>
     </message>
@@ -146,14 +138,6 @@ Can&apos;t create connection to</source>
         <translation>Aktualisiere Stationsliste...</translation>
     </message>
     <message>
-        <source>Getting calls from directory server...</source>
-        <translation type="obsolete">Lese Rufzeichen vom Verzeichnisserver...</translation>
-    </message>
-    <message>
-        <source>Connect request from</source>
-        <translation type="obsolete">Verbindungsanfrage von</translation>
-    </message>
-    <message>
         <source>Add to bookmarks</source>
         <translation>Zu Favoriten hinzufügen</translation>
     </message>
@@ -179,19 +163,9 @@ Can&apos;t create connection to</source>
         <translation>Ctrl+A</translation>
     </message>
     <message>
-        <source>Ctrl+R</source>
-        <comment>directoryRefreshAction</comment>
-        <translation type="obsolete">Ctrl+P</translation>
-    </message>
-    <message>
         <source>Ctrl+B</source>
         <comment>directoryBusyAction</comment>
         <translation>Ctrl+U</translation>
-    </message>
-    <message>
-        <source>F9</source>
-        <comment>directoryRefreshAction</comment>
-        <translation type="obsolete">F9</translation>
     </message>
     <message>
         <source>F5</source>
@@ -209,14 +183,6 @@ Can&apos;t create connection to</source>
 </context>
 <context>
     <name>MainWindowBase</name>
-    <message>
-        <source>Server Messages</source>
-        <translation type="obsolete">Servermeldungen</translation>
-    </message>
-    <message>
-        <source>Station Browser</source>
-        <translation type="obsolete">Stationsbrowser</translation>
-    </message>
     <message>
         <source>Explorer</source>
         <translation>Explorer</translation>
@@ -256,10 +222,6 @@ Can&apos;t create connection to</source>
     <message>
         <source>Time</source>
         <translation>Zeit</translation>
-    </message>
-    <message>
-        <source>IP-address</source>
-        <translation type="obsolete">IP-Adresse</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -426,10 +388,6 @@ Can&apos;t create connection to</source>
     <message>
         <source>Messages</source>
         <translation>Mitteilungen</translation>
-    </message>
-    <message>
-        <source>Local Time</source>
-        <translation type="obsolete">Lokalzeit</translation>
     </message>
     <message>
         <source>Local time</source>
