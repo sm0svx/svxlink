@@ -124,12 +124,15 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
    destination = "APRS";
 
    el_call = loc_cfg.mycall;
-   el_prefix = "E";
+   el_prefix = "EL";
 
    if (splitStr(str_list, loc_cfg.mycall, "-") == 2)
    {
      el_call = str_list[0];
-     el_prefix = "E" + str_list[1].substr(0, 1);
+     if (str_list[1].substr(0, 1) == "R")
+     {
+       el_prefix = "ER";
+     }
    }
       
    con = new TcpClient(server, port);
@@ -195,7 +198,7 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
 
     // APRS message
   char  aprsmsg[200];
-  sprintf(aprsmsg, "%s>%s,%s:;%s-%s*111111z%s%d%s\r\n",
+  sprintf(aprsmsg, "%s>%s,%s:;%s-%.6s*111111z%s%d%s\r\n",
           el_call.c_str(), destination.c_str(), loc_cfg.path.c_str(),
           el_prefix.c_str(), el_call.c_str(), pos,
           (num_connected < 10) ? num_connected : 9, msg);
@@ -235,7 +238,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 
     // APRS message
   char aprsmsg[200];
-  sprintf(aprsmsg, "%s>%s,%s:;%s-%s*111111z%s%d%03d.%03dMHz %s R%02d%c %s\r\n",
+  sprintf(aprsmsg, "%s>%s,%s:;%s-%.6s*111111z%s%d%03d.%03dMHz %s R%02d%c %s\r\n",
             el_call.c_str(), destination.c_str(), loc_cfg.path.c_str(),
             el_prefix.c_str(), el_call.c_str(), pos,
             (num_connected < 10) ? num_connected : 9,
