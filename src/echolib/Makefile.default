@@ -76,7 +76,7 @@ LIBSRC		= EchoLinkDirectory.cpp EchoLinkQso.cpp rtpacket.cpp \
       	      	  EchoLinkDispatcher.cpp EchoLinkStationData.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
-LIB_LIBS	= -lc -lasynccore -lgsm
+LIB_LIBS	= -lc -lgsm -lasynccore -lasyncaudio
 
 # Which STATIC libs should be included in the generated STATIC lib.
 # These libs must be in the $(LIB) directory. Only the name of the
