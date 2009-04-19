@@ -120,8 +120,9 @@ fi
 
 # Checking for tcl development library
 info "--- Checking for TCL development library..."
-tclConfig=$(ls /usr/lib{,64}/tclConfig.sh /usr/lib{,64}/tcl8.*/tclConfig.sh 2>/dev/null \
-            | head -1)
+tclConfig=$(ls /usr/lib/tclConfig.sh /usr/lib/tcl8.*/tclConfig.sh \
+	       /usr/lib64/tclConfig.sh /usr/lib64/tcl8.*/tclConfig.sh \
+	    2>/dev/null | head -1)
 if [ -n "$tclConfig" -a -r "$tclConfig" ]; then
   . $tclConfig
   info "${TCL_VERSION}\n"
