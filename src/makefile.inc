@@ -30,11 +30,7 @@ ifndef CFG_INCLUDED
 endif
 
 ifndef MAKEFILE_CONFIG_INCLUDED
-  -include $(ROOT)/.config
-endif
-
-ifndef MAKEFILE_LOCAL_CONFIG_INCLUDED
-  -include .config
+  include $(ROOT)/.config
 endif
 
 LIB		:= $(ROOT)/$(LIB)
