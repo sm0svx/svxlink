@@ -1,4 +1,4 @@
- 0.17.0 -- ?? ??? 2008
+ 0.17.0 -- 19 Apr 2009
 -----------------------
 
 * The Async internal sample rate is now configurable by a compile time
