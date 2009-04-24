@@ -203,6 +203,7 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
           el_prefix.c_str(), el_call.c_str(), pos,
           (num_connected < 10) ? num_connected : 9, msg);
 
+  //cout << aprsmsg;
   sendMsg(aprsmsg);
 
 } /* AprsTcpClient::updateQsoStatus */
@@ -253,6 +254,11 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 void AprsTcpClient::sendMsg(const char *aprsmsg)
 {
   // cout << aprsmsg << endl;
+ 
+  if (!con->isConnected())
+  {
+    return;
+  }
 
   int written = con->write(aprsmsg, strlen(aprsmsg));
   if (written < 0)
@@ -313,9 +319,10 @@ void AprsTcpClient::aprsLogin(void)
 {
    char loginmsg[150];
    const char *format = "user %s pass %d vers SvxLink %s filter m/10\n";
-
+ 
    sprintf(loginmsg, format, el_call.c_str(), getPasswd(el_call),
            SVXLINK_VERSION);
+   //cout << loginmsg << "\n";
    sendMsg(loginmsg);
 
 } /* AprsTcpClient::aprsLogin */
