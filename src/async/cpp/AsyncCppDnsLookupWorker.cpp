@@ -286,7 +286,7 @@ void *CppDnsLookupWorker::workerFunc(void *w)
     worker->result = 0;
   }
   
-  write(worker->notifier_wr, "D", 1);
+  (void)write(worker->notifier_wr, "D", 1);
   
   worker->done = true;
   

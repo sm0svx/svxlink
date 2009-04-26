@@ -296,14 +296,6 @@ class Qso
     }
     
     /**
-     * @brief 	Send audio to the remote station
-     * @param 	buf A buffer containing 16 bit samples to send
-     * @param 	len The length, in samples, of the buffer to send
-     * @return	Returns the number of samples written
-     */
-    //int sendAudio(float *buf, int len);
-    
-    /**
      * @brief 	Send a raw GSM audio packet to the remote station
      * @param 	packet The packet to send
      *
@@ -312,16 +304,6 @@ class Qso
      * audioReceivedRaw signal.
      */
     bool sendAudioRaw(GsmVoicePacket *packet);
-    
-    /**
-     * @brief 	Flush the audio send buffer so that all audio get transmitted
-     * @return	Returns \em true on success or \em false on failure
-     *
-     * When there is no more audio to send, this function should be called to
-     * flush the audio send buffer. If it is not a full audio packet it will
-     * be padded with zeros.
-     */
-    //bool flushAudioSendBuffer(void);
     
     /**
      * @brief Set the name of the remote station
@@ -396,13 +378,6 @@ class Qso
      * @note This signal can be used to control a reception indicator
      */
     SigC::Signal1<void, bool> isReceiving;
-    
-    /**
-     * @brief A signal that is emitted when an audio datagram has been received
-     * @param buf A pointer to the buffer that contains the audio
-     * @param len The number of samples in the buffer
-     */
-    //SigC::Signal2<int, float*, int> audioReceived;
     
     /**
      * @brief A signal that is emitted when an audio datagram has been received

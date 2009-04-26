@@ -7,7 +7,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2009 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -104,6 +104,10 @@ namespace Async
  *
  ****************************************************************************/
 
+/**
+ * @brief A class that just passes the audio through and fires an event when
+ *    	  the stream state changes.
+ */
 class AudioStreamStateDetector : public AudioPassthrough, public SigC::Object
 {
   public:
@@ -120,7 +124,7 @@ class AudioStreamStateDetector : public AudioPassthrough, public SigC::Object
     /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
-     * @param 	count The number of samples in the buffer
+     * @param 	count 	The number of samples in the buffer
      * @return	Returns the number of samples that has been taken care of
      *
      * This function is used to write audio into this audio sink. If it
@@ -173,11 +177,33 @@ class AudioStreamStateDetector : public AudioPassthrough, public SigC::Object
       AudioPassthrough::allSamplesFlushed();
     }
 
+    /**
+     * @brief 	Check if the steam is idle or not
+     * @returns Returns \em true if the stream is idle or \em false if it's not
+     */
     bool isIdle(void)     const { return (stream_state == STREAM_IDLE); }
+
+    /**
+     * @brief 	Check if the steam is active or not
+     * @returns Returns \em true if the stream is active or \em false if it's
+     *        	not
+     */
     bool isActive(void)   const { return (stream_state == STREAM_ACTIVE); }
+
+    /**
+     * @brief 	Check if the steam is flushing or not
+     * @returns Returns \em true if the stream is flushing or \em false if
+     *	      	it's not
+     */
     bool isFlushing(void) const { return (stream_state == STREAM_FLUSHING); }
     
+    /**
+     * @brief A signal that is emitted when the stream state changes
+     * @param is_active Is \em true if the stream is active
+     * @param is_idle 	Is \em  true if the stream is idle
+     */
     SigC::Signal2<void, bool, bool> sigStreamStateChanged;
+    
     
   private:
     AudioStreamStateDetector(const AudioStreamStateDetector&);

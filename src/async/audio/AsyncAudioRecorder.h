@@ -121,6 +121,7 @@ class AudioRecorder : public Async::AudioSink
     
     /**
      * @brief 	Default constuctor
+     * @param 	filename The name of the file to record audio to
      * @param 	format The file format (@see Format)
      * @param 	sample_rate The sample rate (only needed for format != FMT_RAW)
      */
