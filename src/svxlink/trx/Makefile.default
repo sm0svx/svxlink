@@ -98,7 +98,8 @@ LIB_UI_FILES	=
 #   Where:   750     = The mode
 #            -       = Preserve owner
 #            mygroup = Set group mygroup
-INC_INSTALL	= $(EXPINC:%=%[644,root,root])
+#INC_INSTALL	= $(EXPINC:%=%[644,root,root])
+INC_INSTALL	= 
 
 # Library to install (just one at the moment).
 # You may optionally specify mode, owner and group if you want to.

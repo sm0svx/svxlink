@@ -85,8 +85,9 @@ LIB_LIBS	= -lc -lgsm -lasynccore -lasyncaudio
 STATIC_LIBS   	= 
 
 # Includefiles to export. A softlink is created in $(INC).
-EXPINC		= EchoLinkDirectory.h EchoLinkDispatcher.h EchoLinkQso.h \
-      	      	  EchoLinkStationData.h rtp.h
+LIB_INC    	= EchoLinkDirectory.h EchoLinkDispatcher.h EchoLinkQso.h \
+      	      	  EchoLinkStationData.h
+EXPINC		= $(LIB_INC) rtp.h
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for libraries).
@@ -101,7 +102,7 @@ LIB_UI_FILES	=
 #   Where:   750     = The mode
 #            -       = Preserve owner
 #            mygroup = Set group mygroup
-INC_INSTALL	= $(EXPINC:%=%[644,root,root])
+INC_INSTALL	= $(LIB_INC:%=%[644,root,root])
 
 # Library to install (just one at the moment).
 # You may optionally specify mode, owner and group if you want to.
