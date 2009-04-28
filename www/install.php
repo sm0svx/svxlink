@@ -11,7 +11,7 @@ development is done under Fedora it's most tested under that distribution.
 SvxLink have a few dependencies. Most of them should be installed by default on
 a normal Linux workstation. The Qtel application requires X/Qt but the svxlink
 server is a pure console application. Other dependencies: libsigc++ (only
-version 1.2 will work), libgsm, libtcl, libpopt, libspandsp.
+version 1.2 will work), libgsm, libtcl, libpopt, libgcrypt and optionally libspeex.
 <P>
 The SvxLink distribution contains a couple of RPM:s:
 
@@ -33,10 +33,9 @@ The SvxLink distribution contains a couple of RPM:s:
 Specific installation instructions for different distributions:
 
 <UL>
-  <LI><A href="install-f9.php">Fedora 9</A></LI>
+  <LI><A href="install-f10.php">Fedora 10</A></LI>
+  <LI><A href="install-f10.php">Fedora 9</A></LI>
   <LI><A href="install-f8.php">Fedora 8</A></LI>
-  <LI><A href="install-fc6.php">Fedora Core 6</A></LI>
-  <LI><A href="install-deb31.php">Debian 3.1</A></LI>
 </UL>
 <P>
 Now continue below reading the
@@ -49,9 +48,10 @@ binaries for, you will have to build the whole thing from source. You will still
 need to satisfy the dependencies specified above. That is
 <A href="http://ftp.gnome.org/pub/GNOME/sources/libsigc++/1.2/">libsigc++ 1.2</A>,
 <A href="http://kbs.cs.tu-berlin.de/~jutta/toast.html">gsm</A>,
-<A href="http://www.tcl.tk/software/tcltk/download.html">tcl</A> and
-<A href="http://www.soft-switch.org/downloads/spandsp/">spandsp</A>.
-Maybe you can find prebuilt binaries for these libs for your distribution.
+<A href="http://rpm5.org/files/popt/">popt</A>,
+<A href="http://www.gnupg.org/">libgcrypt</A> and
+<A href="http://www.speex.org/">speex</A>.
+You can probably find prebuilt binaries for these libs for your distribution.
 Otherwise you will just have to compile them as well.
 <P>
 To compile Qtel, the <A href="http://www.trolltech.com/">Qt widget toolkit</A>
@@ -84,8 +84,11 @@ tar xvzf /path-to-wherever-you-put-the-tar-file/sounds-YYMMDD.tar.gz
 <P>
 Specific installation instructions for different distributions:
 <UL>
+  <LI><A href="install-ubuntu804.php">Ubuntu 8.10</A></LI>
   <LI><A href="install-ubuntu804.php">Ubuntu 8.04</A></LI>
+  <LI><A href="install-deb50.php">Debian 5.0</A></LI>
   <LI><A href="install-deb40.php">Debian 4.0</A></LI>
+  <LI><A href="install-opensuse11_1.php">openSUSE 11.1</A></LI>
 </UL>
 <P>
 Now continue below reading the
@@ -139,7 +142,7 @@ If you are going to run the svxlink server, read on.
 
 <A name="hardware"><h2>Hardware</h2></A>
 To run the SvxLink server, some kind of hardware is needed to connect the
-computer to the transciever. At the moment I am using an
+computer to the transceiver. At the moment I am using an
 <A href="http://lea.hamradio.si/~s57nan/ham_radio/svx_intf/">interface designed by Aleks, s54s,</A>
 which is fully isolated with transformers and opto-couplers. For a long time I
 just used a simple direct, non-isolated, connection between the transceiver

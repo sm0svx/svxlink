@@ -2,10 +2,10 @@
   $selected="index";
   include("header.inc");
 
-  $rel="080730";
+  $rel="090426";
 ?>
 
-<H2>Installation instructions for Ubuntu 8.04</H2>
+<H2>Installation instructions for Ubuntu 8.04 and 8.10</H2>
 This instruction was written for the <?php echo $rel ?> release of SvxLink.
 <p/>
 There are no binary packages for Ubuntu but it is quite easy
@@ -15,7 +15,7 @@ following commands.
 
 <pre>
 sudo apt-get update
-sudo apt-get install alsa-utils g++ libsigc++-1.2-dev libgsm1-dev libpopt-dev tcl-dev make libspandsp-dev
+sudo apt-get install g++ libsigc++-1.2-dev libgsm1-dev libpopt-dev tcl-dev libgcrypt11-dev libspeex-dev make alsa-utils
 </pre>
 If you need Qtel you also need the QT development libraries.
 <pre>

@@ -5,21 +5,20 @@
   $rel="090426";
 ?>
 
-<H2>Installation instructions for Debian 4.0</H2>
+<H2>Installation instructions for openSUSE 11.1</H2>
 This instruction was written for the <?php echo $rel ?> release of SvxLink.
 <p/>
-There are no binary packages for Debian but it is quite easy
+There are no official binary packages for openSUSE but it is quite easy
 to compile SvxLink from source. First, install a couple of
 packages that SvxLink depend on. In a terminal, type the
 following commands as user 'root'.
 
 <pre>
-apt-get update
-apt-get install alsa-utils g++ make libsigc++-1.2-dev libgsm-dev libpopt-dev libgcrypt-dev tcl8.4-dev libspeex-dev
+zypper install make gcc gcc-c++ libsigc++12-devel libgsm-devel popt-devel libgcrypt-devel tcl-devel speex-devel alsa-utils
 </pre>
 If you need Qtel you also need the QT development libraries.
 <pre>
-apt-get install libqt3-mt-dev
+zypper install qt3-devel qt3-devel-tools
 </pre>
 Download and compile the source code and then install it:
 <pre>

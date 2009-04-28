@@ -42,7 +42,7 @@ These are the most important features of the SvxLink server application.
   (Internet)</LI>
   <LI>Multiple squelch detectors: Vox, CTCSS, signal level and external
   (through serial port pin)</LI>
-  <LI>Deemphasis/preemphasis filer support</LI>
+  <LI>Digital deemphasis/preemphasis filter</LI>
   <LI>DTMF muting</LI>
   <LI>Squelch tail elimination</LI>
   <LI>CTCSS transmit, always or just when the squelch is open</LI>
@@ -57,6 +57,7 @@ These are the most important features of the SvxLink server application.
     <LI>Random connect to link, repeater or conference</LI>
     <LI>Reconnect to last disconnected node</LI>
     <LI>Listen only mode</LI>
+    <LI>APRS node info announcement support</LI>
   </UL>
   <LI>A voice mail module</LI>
   <UL>
@@ -80,7 +81,7 @@ These are the most important features of the Qtel application.
   <LI>The EchoLink station list is divided into Conferences, Links, Repeaters
   and Stations</LI>
   <LI>A bookmark system</LI>
-  <LI>Support for multiple languages (English and Swedish at the moment)</LI>
+  <LI>Support for multiple languages (English, Swedish, German, Spanish and Italian at the moment)</LI>
   <LI>VOX</LI>
 </UL>
 

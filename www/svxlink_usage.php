@@ -3,12 +3,13 @@
   include("header.inc");
 ?>
 
-<H2>SvxLink server user documentation</H2>
-This part of the documentation describes how to use the svxlink server via the
+<H2>SvxLink Server user documentation</H2>
+This part of the documentation describes how to use the SvxLink Server via the
 radio interface. SvxLink is controlled by DTMF (Dual Tone Multi Frequency)
 signalling. All commands to the system ends with the number sign (#). It's like
-the <em>enter</em> key on a computer. However, the sysop have an option to make
-commands execute on squelch close so that the number sign is not needed.
+the <em>enter</em> key on a computer. However, the sysop have an option to
+configure the system to execute commands on squelch close so that the number
+sign is not needed.
 <P>
 There also is an "anti-flutter" mode of operation. This mode of operation make
 DTMF detection perform well when the signal is weak or there is mobile flutter
@@ -23,7 +24,7 @@ A1C         <-- Command executed: 1
 A12B3C      <-- Command executed: 1223
 A12B23C     <-- Command executed: 12223
 </PRE>
-So what good is this ?  Well, this way of coding commands will allow digits to
+So what good is this?  Well, this way of coding commands will allow digits to
 be "double detected" without affecting the end result, which can happen if there
 is mobile flutter present on the received signal. Consider the examples below.
 <PRE>
@@ -35,7 +36,7 @@ AA12B2233C  <-- Command executed: 12223
 Exactly the same result as the first example, even though some digits were
 detected multiple times.
 <P>
-There is a command timeout that is 10 seconds. If no DTMF characters has 
+There is a command timeout of 10 seconds. If no DTMF characters has 
 been received for 10 seconds, the reception buffer will be cleared.
 <P>
 The star key (*) is special. It triggers the node to identify itself. However,
@@ -84,6 +85,7 @@ when not connected.
 There are a couple of subcommands that can be used when the EchoLink module
 has been activated.
 <UL>
+  <LI>0  - Play the help message</LI>
   <LI>1  - List all connected stations</LI>
   <LI>2  - Play local EchoLink node id</LI>
   <LI>31 - Connect to a random link or repeater</LI>
@@ -97,15 +99,15 @@ The "connect by callsign" function will make it possible to connect to a
 station even if the node number is unknown. Callsigns are mapped to digits
 by using the following method: ABC=2, DEF=3, GHI=4, JKL=5, MNO=6, PQRS=7,
 TUV=8, WXYZ=9. The same mapping as on many phones. Letters are mapped to its
-corresponding digit and digits are ofcourse mapped to their corresponding
+corresponding digit and digits are of course mapped to their corresponding
 number. All other characters are mapped to digit 1.
 A search command start with * and then the callsign code is entered. So if
-you want to connect to SM3SVX-L you should enter "*76378915#". Since the
+you want to connect to SM0SVX-L you should enter "*76078915#". Since the
 codes are not unique a list of search hits will be presented to the user
 to choose from.
 If the entered code ends with *, a wildcard search will be performed. So
-if you want to search for all stations starting with SM3 you enter
-"*763*#".
+if you want to search for all stations starting with SM0 you enter
+"*760*#".
 <P>
 To get more information on the EchoLink system, have a look at the
 <A href="http://www.echolink.org">EchoLink homepage</A>.
@@ -133,7 +135,7 @@ The recommended way of encoding user IDs is the "phone method". Many phones
 have letters on the key pad like: 2=ABC, 3=DEF, 4=GHI, 5=JKL, 6=MNO,
 7=PQRS, 8=TUV, 9=WXYZ. To encode the callsign SM0SVX, use the three last
 letters and map them to digits. Then we will get the user ID 789. In case of
-a collition, add 1. For example AFC and ADB will both map to 232. One
+a collision, add 1. For example AFC and ADB will both map to 232. One
 possible mapping is then AFC=232 and ADB=233. When using this method to encode
 user IDs, it will be possible for a user to guess another user's user ID.
 <P>

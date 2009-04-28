@@ -5,8 +5,8 @@ There is one way to get in contact with the SvxLink "community". That is
 through the mailing list. The address to the mailing list is
 <A href="mailto:svxlink-devel@lists.sourceforge.net">
 svxlink-devel@lists.sourceforge.net</A>. So, whatever your business is, please
-use the mailing list. Do NOT use EchoLink or direct e-mail to the author. The
-list is usually low volume so don't be afraid to register.
+use the mailing list. <b>Do NOT use EchoLink or direct e-mail to the author</b>.
+The list is usually fairly low volume so don't be afraid to register.
 <P>
 There are a couple of reasons why only the mailing list should be used for
 support:
@@ -77,6 +77,13 @@ the steps below to make a good bug report.
 
 If these simple guide lines are followed, bugs will be found and fixed much
 faster.
+<P/>
+
+
+<A name="feature-requests"><h2>Feature Requests</h2></A>
+To request a new feature, use the
+<A href="https://sourceforge.net/tracker/?group_id=84813&atid=573953">SourceForge feature request tracker</A>.
+If a feature is just requested via the mailing list it may easily be forgotten.
 
 <?php include("footer.inc"); ?>
 

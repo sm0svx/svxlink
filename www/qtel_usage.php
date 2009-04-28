@@ -41,6 +41,12 @@ indicator will light up. To lock the PTT in transmit, first press and hold the
 Ctrl-key and then press the PTT button. To disconnect, press the "Disconnect"
 button.
 <P/>
+The VOX is used to automatically activate the PTT when speaking into the
+microphone. To enable the VOX, check the "VOX Enabled" checkbox. Then set a
+suitable level for "Threshold" so that the VOX does not trigger by mistake on
+noise. Adjust the "Delay" slider so that the hangtime is long enough to allow
+speech pauses without the PTT getting released.
+<P/>
 In the big, white area in the middle of the window, info messages from the
 remote station are shown. Chat messages from the remote station is also shown
 here. In the one-line white area below, chat messages can be typed that is sent
