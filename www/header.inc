@@ -44,6 +44,7 @@
     <?php if ($selected == "support") { ?>
     <SUBMENUITEM><A href="#mailing-lists">Mailing lists</A></SUBMENUITEM><BR/>
     <SUBMENUITEM><A href="#reporting-bugs">Reporting Bugs</A></SUBMENUITEM></BR>
+    <SUBMENUITEM><A href="#feature-requests">Feature Requests</A></SUBMENUITEM></BR>
     <?php } ?>
     <MENUITEM><A href="links.php">Links</A></MENUITEM><BR/>
     <MENUITEM><A href="http://sourceforge.net/projects/svxlink/">SourceForge Summary</A></MENUITEM>
