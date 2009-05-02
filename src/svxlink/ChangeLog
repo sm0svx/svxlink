@@ -1,5 +1,13 @@
+ 0.11.1 -- ?? ??? 2009
+-----------------------
+
+* Bugfix in the EchoLink module: Short callsign (<6 chars) was not handled
+  correctly in the APRS code.
+
+
+
  0.11.0 -- 26 Apr 2009
-----------------------
+-----------------------
 
 * The SvxLink internal sample rate is now configurable by a compile time
   define (INTERNAL_SAMPLE_RATE in makefile.cfg).
@@ -78,7 +86,7 @@
 
 
  0.10.1 -- 30 Jul 2008
-----------------------
+-----------------------
 
 * Bugfix: Again the NO_REPEAT config variable did not work. It was
   simply ignored.
@@ -99,7 +107,7 @@
 
 
  0.10.0 -- 18 May 2008
-----------------------
+-----------------------
 
 * Bugfix: If SHORT_IDENT_INTERVAL != 0 and LONG_IDENT_INTERVAL == 0 we
   got a division by zero error.
