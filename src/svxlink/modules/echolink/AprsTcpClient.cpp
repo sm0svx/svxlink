@@ -198,7 +198,7 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
 
     // APRS message
   char  aprsmsg[200];
-  sprintf(aprsmsg, "%s>%s,%s:;%s-%.6s*111111z%s%d%s\r\n",
+  sprintf(aprsmsg, "%s>%s,%s:;%s-%-6.6s*111111z%s%d%s\r\n",
           el_call.c_str(), destination.c_str(), loc_cfg.path.c_str(),
           el_prefix.c_str(), el_call.c_str(), pos,
           (num_connected < 10) ? num_connected : 9, msg);
@@ -239,7 +239,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 
     // APRS message
   char aprsmsg[200];
-  sprintf(aprsmsg, "%s>%s,%s:;%s-%.6s*111111z%s%d%03d.%03dMHz %s R%02d%c %s\r\n",
+  sprintf(aprsmsg, "%s>%s,%s:;%s-%-6.6s*111111z%s%d%03d.%03dMHz %s R%02d%c %s\r\n",
             el_call.c_str(), destination.c_str(), loc_cfg.path.c_str(),
             el_prefix.c_str(), el_call.c_str(), pos,
             (num_connected < 10) ? num_connected : 9,
