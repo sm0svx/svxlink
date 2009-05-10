@@ -24,5 +24,6 @@ TRANSLATIONS = translations/qtel_sv.ts \
 	       translations/qtel_tr.ts \
 	       translations/qtel_nl.ts \
 	       translations/qtel_it.ts \
+	       translations/qtel_uk.ts \
 	       translations/qtel_es.ts
 

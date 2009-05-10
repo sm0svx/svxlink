@@ -162,6 +162,7 @@ POST_TARGETS   = translations/qtel_sv.qm \
 		 translations/qtel_tr.qm \
 		 translations/qtel_nl.qm \
 		 translations/qtel_it.qm \
+		 translations/qtel_uk.qm \
 		 translations/qtel_es.qm
 
 
@@ -246,6 +247,8 @@ install-extras uninstall-extras rpm-extras:
 	$(FILESPEC) translations/qtel_tr.qm[644,root,root] \
 	      	    /usr/share/qtel/translations
 	$(FILESPEC) translations/qtel_nl.qm[644,root,root] \
+	      	    /usr/share/qtel/translations
+	$(FILESPEC) translations/qtel_uk.qm[644,root,root] \
 	      	    /usr/share/qtel/translations
 	$(FILESPEC) translations/qtel_es.qm[644,root,root] \
 	      	    /usr/share/qtel/translations
