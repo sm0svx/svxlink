@@ -446,6 +446,43 @@ proc checkPeriodicIdentify {} {
 }
 
 
+#
+# Executed when the voice logger is being activated
+#
+proc activating_voice_logger {} {
+  playMsg "Core" "activating";
+  playMsg "Core" "voice_logger";
+}
+
+
+#
+# Executed when the voice logger is being deactivated
+#
+proc deactivating_voice_logger {} {
+  playMsg "Core" "deactivating";
+  playMsg "Core" "voice_logger";
+}
+
+
+#
+# Executed when trying to deactivate the voice logger even though it's
+# not active
+#
+proc voice_logger_not_active {} {
+  playMsg "Core" "voice_logger";
+  playMsg "Core" "not_active";
+}
+
+
+#
+# Executed when trying to activate the voice logger even though it's
+# already active
+#
+proc voice_logger_already_active {} {
+  playMsg "Core" "voice_logger";
+  playMsg "Core" "already_active";
+}
+
 
 ##############################################################################
 #

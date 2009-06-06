@@ -82,6 +82,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "MsgHandler.h"
 #include "LogicCmds.h"
 #include "Logic.h"
+#include "VoiceLogger.h"
 
 
 /****************************************************************************
@@ -181,7 +182,7 @@ Logic::Logic(Config &cfg, const string& name)
     audio_to_module_selector(0),    state_det(0),
     is_idle(true),                  fx_gain_normal(0),
     fx_gain_low(-12), 	      	    long_cmd_digits(100),
-    report_events_as_idle(false)
+    report_events_as_idle(false),   voice_logger(0)
 {
   logic_con_in = new AudioSplitter;
   logic_con_out = new AudioSelector;
@@ -393,6 +394,28 @@ bool Logic::initialize(void)
   audio_from_module_splitter->addSink(passthrough, true);
   logic_con_out->addSource(passthrough);
   logic_con_out->enableAutoSelect(passthrough, 0);
+  
+  if (cfg().getValue(name(), "VOICELOGGER_DIR", value) && !value.empty())
+  {
+      // Create the voice logger
+    voice_logger = new VoiceLogger(value);
+    if (cfg().getValue(name(), "VOICELOGGER_CMD", value))
+    {
+      VoiceLoggerCmd *voice_logger_cmd =
+          new VoiceLoggerCmd(&cmd_parser, this, voice_logger);
+      voice_logger_cmd->initialize(value);
+    }
+    
+      // Connect RX audio to the voice logger
+    passthrough = new AudioPassthrough;
+    rx_splitter->addSink(passthrough, true);
+    voice_logger->addSource(passthrough, 10);
+  
+      // Connect audio from modules to the voice logger
+    passthrough = new AudioPassthrough;
+    audio_from_module_splitter->addSink(passthrough, true);
+    voice_logger->addSource(passthrough, 0);
+  }
   
     // Create the state detector
   state_det = new AudioStreamStateDetector;
@@ -1261,6 +1284,7 @@ void Logic::cleanup(void)
   delete tx_audio_selector;   	      tx_audio_selector = 0;
   delete audio_from_module_selector;  audio_from_module_selector = 0;
   delete tx_audio_mixer;      	      tx_audio_mixer = 0;
+  delete voice_logger;                voice_logger = 0;
 } /* Logic::cleanup */
 
 

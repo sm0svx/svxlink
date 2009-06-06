@@ -1,8 +1,12 @@
- 0.11.1 -- ?? ??? 2009
+ 0.12.0 -- ?? ??? 2009
 -----------------------
 
 * Bugfix in the EchoLink module: Short callsign (<6 chars) was not handled
   correctly in the APRS code.
+
+* Added a voice logger feature that can record all traffic on the channel.
+  The voice logger can be turned on and off using a DTMF command.
+  New configuration variables: VOICELOGGER_DIR and VOICELOGGER_CMD.
 
 
 

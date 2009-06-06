@@ -304,6 +304,39 @@ proc dtmf_cmd_received {cmd} {
 }
 
 
+#
+# Executed when the voice logger is being activated
+#
+proc activating_voice_logger {} {
+  Logic::activating_voice_logger;
+}
+
+
+#
+# Executed when the voice logger is being deactivated
+#
+proc deactivating_voice_logger {} {
+  Logic::deactivating_voice_logger;
+}
+
+
+#
+# Executed when trying to deactivate the voice logger even though it's
+# not active
+#
+proc voice_logger_not_active {} {
+  Logic::voice_logger_not_active;
+}
+
+
+#
+# Executed when trying to activate the voice logger even though it's
+# already active
+#
+proc voice_logger_already_active {} {
+  Logic::voice_logger_already_active;
+}
+
 
 
 

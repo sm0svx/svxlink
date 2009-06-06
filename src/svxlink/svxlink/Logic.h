@@ -107,6 +107,7 @@ class MsgHandler;
 class Module;
 class EventHandler;
 class Command;
+class VoiceLogger;
   
 
 /****************************************************************************
@@ -268,6 +269,7 @@ class Logic : public SigC::Object
     unsigned       	      	    long_cmd_digits;
     std::string       	      	    long_cmd_module;
     bool      	      	      	    report_events_as_idle;
+    VoiceLogger                     *voice_logger;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);

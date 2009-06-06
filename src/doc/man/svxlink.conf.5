@@ -224,6 +224,17 @@ This gain is normally set to 0dB which means no gain or attenuation.
 The gain (dB) to use for audio effects and announcements when there is other traffic.
 This gain is normally set to something like -12dB so that announcements and audio effects
 are attenuated when there is other traffic present.
+.TP
+.B VOICELOGGER_DIR
+The voice logger is used to write all received audio to a disk file. Use this
+configuration variable to specify in which directory to write the audio files.
+A good place is /var/spool/svxlink/voice_logger.
+.TP
+.B VOICELOGGER_CMD
+The voice logger is used to write all received audio to a disk file. Use this
+configuration variable to specify which command to use to activate and
+deactivate the voice logger. For example, if this configuration variable is
+set to 8, 81 will activate the voice logger and 80 will deactivate it.
 .
 .SS Simplex Logic Section
 .
