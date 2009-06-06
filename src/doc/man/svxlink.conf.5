@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "APRIL 2008" Linux "File Formats"
+.TH SVXLINK.CONF 5 "JUNE 2009" Linux "File Formats"
 .
 .SH NAME
 .
@@ -117,31 +117,30 @@ have the computational power to handle it.
 
 Supported sampling rates are: 8000, 16000 and 48000.
 .
-.SS Simplex Logic Section
+.SS Common Logic configuration variables
 .
-The Simplex Logic section contains configuration data for a simplex logic core. The
-SvxLink server can handle more than one logic core. The name of the section, which in the
-example configuration file is
-.BR SimplexLogic ,
-must have a corresponding list item in the GLOBAL/LOGICS config variable for this logic
-core to be activated. The name "SimplexLogic" is not magic. It could be called what ever
-you want but it must match the namespace name in the SimplexLogic.tcl script.
+A logic core is what define how SvxLink should behave on the RF channel. The
+SvxLink server can handle more than one logic core and so can be connected to
+more than one transceiver. The configuration variables below are common to all
+logic types. Configuration variables that are specific to a certain logic core
+type are described below in a section of its own.
 .TP
 .B TYPE
-The type of logic core this is. In this case we are setting up a simplex logic core so it
-should be set to "Simplex".
+The type of logic core this is. The documentation for the specific logic core
+type you want to use describe what to write here.
 .TP
 .B RX
-Specify the configuration section name of the receiver to use. All configuration for the
-receiver is done in the specified configuration section.
+Specify the configuration section name of the receiver to use. All configuration
+for the receiver is done in the specified configuration section.
 .TP
 .B TX
-Specify the configuration section name of the transmitter to use. All configuration for
-the transmitter is done in the specified configuration section.
+Specify the configuration section name of the transmitter to use. All
+configuration for the transmitter is done in the specified configuration
+section.
 .TP
 .B MODULES
-Specify a comma separated list of configuration sections for the modules to load. This
-tells SvxLink which modules to actually load on startup.
+Specify a comma separated list of configuration sections for the modules to
+load. This tells SvxLink which modules to actually load on startup.
 .TP
 .B CALLSIGN
 Specify the callsign that should be announced on the radio interface.
@@ -180,7 +179,8 @@ false trigger on voice. This can cause interresting situations when all of a sud
 module get activated in the middle of a QSO.
 .TP
 .B EVENT_HANDLER
-Point out the TCL event handler script to use.
+Point out the TCL event handler script to use. The TCL event handler script is
+responsible for playing the correct audio clips when an event occurr.
 .TP
 .B RGR_SOUND_DELAY
 The number of milliseconds to wait after the squelch has been closed before a roger beep
@@ -207,8 +207,8 @@ The tone frequency and level is configured in the transmitter configuration
 section.
 .TP
 .B MACROS
-Point out a section that contains the macros that should be used by this logic core. See
-the section description for macros below for more info. 
+Point out a section that contains the macros that should be used by this logic
+core. See the section description for macros below for more information.
 .TP
 .B LINKS
 Specify the name of a configuration section that contains logic linking infomation. There
@@ -223,7 +223,22 @@ This gain is normally set to 0dB which means no gain or attenuation.
 .B FX_GAIN_LOW
 The gain (dB) to use for audio effects and announcements when there is other traffic.
 This gain is normally set to something like -12dB so that announcements and audio effects
-are attenuated when there is other traffic.
+are attenuated when there is other traffic present.
+.
+.SS Simplex Logic Section
+.
+The Simplex Logic section contains configuration data for a simplex logic core.
+The name of the section, which in the example configuration file is
+.BR SimplexLogic ,
+must have a corresponding list item in the GLOBAL/LOGICS config variable for
+this logic core to be activated. The name "SimplexLogic" is not magic. It could
+be called what ever you like but it must match the namespace name in the
+SimplexLogic.tcl script. The configuration variables below are those that are
+specific for a simplex logic core.
+.TP
+.B TYPE
+The type for a simplex logic core is always
+.BR Simplex .
 .TP
 .B MUTE_RX_ON_TX
 Set to 1 to mute the receiver when the transmitter is transmitting (default)
@@ -234,58 +249,18 @@ The normal setting is 1, to mute the RX when transmitting.
 .
 .SS Repeater Logic Section
 .
-A Repeater Logic section contains configuration data for a repeater logic core. The
-SvxLink server can handle more than one logic core. The name of the section, which in the
-example configuration file is
+A Repeater Logic section contains configuration data for a repeater logic core.
+The name of the section, which in the example configuration file is
 .BR RepeaterLogic ,
-must have a corresponding list item in the GLOBAL/LOGICS config variable for this logic
-core to be activated. The name "RepeaterLogic" is not magic. It could be called what ever
-you want but it must match the namespace name in the RepeaterLogic.tcl script.
+must have a corresponding list item in the GLOBAL/LOGICS config variable for
+this logic core to be activated. The name "RepeaterLogic" is not magic.
+It could be called what ever you like but it must match the namespace name in
+the RepeaterLogic.tcl script. The configuration variables below are those that
+are specific for a repeater logic core.
 .TP
 .B TYPE
-The type of logic core this is. In this case we are setting up a repeater logic core so it
-should be set to "Repeater". 
-.TP
-.B RX
-Specify the configuration section name of the receiver to use. All configuration for the
-receiver is done in the specified configuration section. 
-.TP
-.B TX
-Specify the configuration section name of the transmitter to use. All configuration for
-the transmitter is done in the specified configuration section. 
-.TP
-.B MODULES
-Specify a comma separated list of configuration sections for the modules to load. This
-tells SvxLink which modules to actually load on startup.
-.TP
-.B CALLSIGN
-Specify the callsign that should be announced on the radio interface. 
-.TP
-.B SHORT_IDENT_INTERVAL
-The number of minutes between short identifications. The purpose of the short
-identification is to just announce that the station is on the air. Typically just the
-callsign is transmitted. For a repeater a good value is ten minutes and for a simplex node
-one time every 60 minutes is probably enough. The LONG_IDENT_INTERVAL must be an even
-multiple of the SHORT_IDENT_INTERVAL so if LONG_IDENT_INTERVAL is 60 then some of the
-legal values for SHORT_IDENT_INTERVAL are: 5, 10, 15, 20, 30. 
-.TP
-.B LONG_IDENT_INTERVAL
-The number of minutes between long identifications. The purpose of the long identification
-is to transmit some more info about the station status (new voice mails etc). The time of
-day is also transmitted. A good value here is 60 minutes. It must be set to whole hours
-(60,120, 180 etc) otherwise the time of day announcement will sound strange since it just
-announces the hour. 
-.TP
-.B EXEC_CMD_ON_SQL_CLOSE
-Specify a time, in milliseconds, after squelch close after which entered DTMF digits will
-be executed as a command without the need to send the # character. This really only is of
-use when using a radio that it is difficult to send DTMF digits from, like the Yaesu VX-2
-handheld. The down side of enabling this option is that the DTMF detection some times
-false trigger on voice. This can cause interresting situations when all of a sudden a
-module gets activated. 
-.TP
-.B EVENT_HANDLER
-Point out the TCL event handler script to use.
+The type for a repeater logic core is always
+.BR Repeater .
 .TP
 .B NO_REPEAT
 Set this to 1 if you do NOT want SvxLink to play back the incoming audio. This
@@ -329,50 +304,9 @@ CLOSE, the repeater will not activate until the squelch close. An
 identification will be sent in this case.
 .TP
 .B IDLE_SOUND_INTERVAL
-When the repeater is idle, a sound is played. Specify the interval in milliseconds between
-playing the idle sound. An interval of 0 disables the idle sound. 
-.TP
-.B RGR_SOUND_DELAY
-The number of milliseconds to wait after the squelch has been closed before a roger beep
-is played. The beep can be disabled by specifying a value of -1 or commenting out this
-line. Often it is best to use the SQL_HANGTIME receiver configuration variable to specify
-a delay instead of specifying a delay here. This configuration variable should then be set
-to 0. 
-.TP
-.B REPORT_CTCSS
-If set, will report the specified CTCSS frequency upon manual identification (* pressed).
-It is possible to specify fractions using "." as decimal comma. Disable this feature by
-commenting out (#) this configuration variable. 
-.TP
-.B TX_CTCSS
-This configuration variable controls if a CTCSS tone should be transmitted.
-There are two possible values:
-.BR ALWAYS " or " SQL_OPEN .
-The ALWAYS alternative will always add a CTCSS tone as soon as the transmitter
-is turned on. The SQL_OPEN alternative will add a CTCSS tone only when the
-squelch is open.
-Commenting out this configuration variable will disable CTCSS transmit.
-The tone frequency and level is configured in the transmitter configuration
-section.
-.TP
-.B MACROS
-Point out a section that contains the macros that should be used by this logic core. See
-the section description for macros below for more info. 
-.TP
-.B LINKS
-Specify the name of a configuration section that contains logic linking infomation. There
-is an example section in the default configuration file called [LinkToR4]. Right now only
-one link can be specified. A LINKS variable is only needed in the logic that the link
-should be activated from.
-.TP
-.B FX_GAIN_NORMAL
-The gain (dB) to use for audio effects and announcements when there is no other traffic.
-This gain is normally set to 0dB which means no gain or attenuation.
-.TP
-.B FX_GAIN_LOW
-The gain (dB) to use for audio effects and announcements when there is other traffic.
-This gain is normally set to something like -12dB so that announcements and audio effects
-are attenuated when there is other traffic.
+When the repeater is idle, a sound is played. Specify the interval in
+milliseconds between playing the idle sound. An interval of 0 disables the idle
+sound.
 .TP
 .B SQL_FLAP_SUP_MIN_TIME
 Flapping squelch suppression is used to close the repeater down if there is
