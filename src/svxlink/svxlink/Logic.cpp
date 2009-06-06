@@ -406,9 +406,9 @@ bool Logic::initialize(void)
       voice_logger_cmd->initialize(value);
     }
     
-      // Connect RX audio to the voice logger
+      // Connect RX audio and link audio to the voice logger
     passthrough = new AudioPassthrough;
-    rx_splitter->addSink(passthrough, true);
+    audio_to_module_splitter->addSink(passthrough, true);
     voice_logger->addSource(passthrough, 10);
   
       // Connect audio from modules to the voice logger
