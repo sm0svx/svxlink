@@ -117,7 +117,7 @@ using namespace Async;
 AudioRecorder::AudioRecorder(const string& filename,
       	      	      	     AudioRecorder::Format fmt,
 			     int sample_rate)
-  : filename(filename), file(NULL), samples_written(0), format(format),
+  : filename(filename), file(NULL), samples_written(0), format(fmt),
     sample_rate(sample_rate)
 {
   if (format == FMT_AUTO)
