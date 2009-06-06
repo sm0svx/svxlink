@@ -115,12 +115,25 @@ using namespace Async;
  ****************************************************************************/
 
 AudioRecorder::AudioRecorder(const string& filename,
-      	      	      	     AudioRecorder::Format format,
+      	      	      	     AudioRecorder::Format fmt,
 			     int sample_rate)
   : filename(filename), file(NULL), samples_written(0), format(format),
     sample_rate(sample_rate)
 {
-  
+  if (format == FMT_AUTO)
+  {
+    format = FMT_RAW;
+    
+    string::size_type dot_pos = filename.rfind('.');
+    if (dot_pos > 0)
+    {
+      string ext(filename.substr(dot_pos+1));
+      if (ext == "wav")
+      {
+        format = FMT_WAV;
+      }
+    }
+  }
 } /* AudioRecorder::AudioRecorder */
 
 

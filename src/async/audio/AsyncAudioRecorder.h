@@ -117,17 +117,17 @@ only samples no header.
 class AudioRecorder : public Async::AudioSink
 {
   public:
-    typedef enum { FMT_RAW, FMT_WAV } Format;
+    typedef enum { FMT_AUTO, FMT_RAW, FMT_WAV } Format;
     
     /**
      * @brief 	Default constuctor
      * @param 	filename The name of the file to record audio to
-     * @param 	format The file format (@see Format)
-     * @param 	sample_rate The sample rate (only needed for format != FMT_RAW)
+     * @param 	fmt The file format (@see Format)
+     * @param 	sample_rate The sample rate (defaults to INTERNAL_SAMPLE_RATE)
      */
     explicit AudioRecorder(const std::string& filename,
-      	      	      	   AudioRecorder::Format format=FMT_RAW,
-			   int sample_rate=0);
+      	      	      	   AudioRecorder::Format fmt=FMT_AUTO,
+			   int sample_rate=INTERNAL_SAMPLE_RATE);
   
     /**
      * @brief 	Destructor
