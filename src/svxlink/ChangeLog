@@ -8,6 +8,11 @@
   The voice logger can be turned on and off using a DTMF command.
   New configuration variables: VOICELOGGER_DIR and VOICELOGGER_CMD.
 
+* The voice mail module now store the messages as WAV files. Old messages
+  will have to be removed or converted into WAV files.
+  Old filename format: YYYYMMDD_hhmmss_UUU{.subj,.mesg}
+  New filename format: YYYYMMDD_hhmmss_UUU{_subj,_mesg}.wav
+
 
 
  0.11.0 -- 26 Apr 2009
