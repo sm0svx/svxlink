@@ -141,6 +141,17 @@ class AudioRecorder : public Async::AudioSink
     bool initialize(void);
     
     /**
+     * @brief   Set the maximum length of this recording
+     * @param   time_ms The maximum time in milliseconds
+     * 
+     * Use this function to set the maximum time for a recording. When the
+     * limit has been reached, any incoming samples will be thrown away.
+     * The sampling rate given in the constructor call is used to calculate
+     * the time. Setting the time to 0 will allow the file to grow indefinetly.
+     */
+    void setMaxRecordingTime(unsigned time_ms);
+    
+    /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
      * @param 	count The number of samples in the buffer
@@ -167,9 +178,10 @@ class AudioRecorder : public Async::AudioSink
   private:
     std::string filename;
     FILE      	*file;
-    int       	samples_written;
+    unsigned    samples_written;
     Format    	format;
     int       	sample_rate;
+    unsigned    max_samples;
     
     AudioRecorder(const AudioRecorder&);
     AudioRecorder& operator=(const AudioRecorder&);

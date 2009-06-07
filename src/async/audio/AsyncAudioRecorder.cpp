@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 
 
 /****************************************************************************
@@ -118,7 +119,7 @@ AudioRecorder::AudioRecorder(const string& filename,
       	      	      	     AudioRecorder::Format fmt,
 			     int sample_rate)
   : filename(filename), file(NULL), samples_written(0), format(fmt),
-    sample_rate(sample_rate)
+    sample_rate(sample_rate), max_samples(0)
 {
   if (format == FMT_AUTO)
   {
@@ -175,11 +176,26 @@ bool AudioRecorder::initialize(void)
 } /* AudioRecorder::initialize */
 
 
+void AudioRecorder::setMaxRecordingTime(unsigned time_ms)
+{
+  max_samples = time_ms * (sample_rate / 1000);
+} /* AudioRecorder::setMaxRecordingTime */
+
+
 int AudioRecorder::writeSamples(const float *samples, int count)
 {
   if (file == NULL)
   {
     return count;
+  }
+  
+  if (max_samples > 0)
+  {
+    if (samples_written >= max_samples)
+    {
+      return count;
+    }
+    count = min(static_cast<unsigned>(count), max_samples - samples_written);
   }
   
   short buf[count];

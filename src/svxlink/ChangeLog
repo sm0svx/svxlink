@@ -13,6 +13,9 @@
   Old filename format: YYYYMMDD_hhmmss_UUU{.subj,.mesg}
   New filename format: YYYYMMDD_hhmmss_UUU{_subj,_mesg}.wav
 
+* Voice mail messages are now time limited to a maximum time. Default
+  is 10 seconds for the subject and two minutes for the message.
+
 
 
  0.11.0 -- 26 Apr 2009

@@ -52,6 +52,14 @@ set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.conf";
 
 
 #
+# Default maximum recording times. Set them from config variables if
+# available.
+#
+set max_subj_time 10000
+set max_mesg_time 120000
+
+
+#
 # Read configuration file
 #
 if [file exists $cfg_home] {
@@ -209,6 +217,8 @@ proc squelch_open {is_open} {
   variable mail_msg;
   variable CFG_ID;
   variable ::Logic::CFG_CALLSIGN;
+  variable max_subj_time;
+  variable max_mesg_time;
   
   if {$is_open} {set str "OPEN"} else { set str "CLOSED"};
   #printInfo "The squelch is $str";
@@ -219,7 +229,7 @@ proc squelch_open {is_open} {
       set subj_filename "$recdir/$rec_rcpt_call/$rec_timestamp";
       append subj_filename "_$userid\_subj.wav";
       printInfo "Recording subject to file: $subj_filename";
-      recordStart $subj_filename;
+      recordStart $subj_filename $max_subj_time;
     } else {
       recordStop;
       playMsg "rec_message";
@@ -233,14 +243,10 @@ proc squelch_open {is_open} {
     append mesg_filename "_$userid\_mesg.wav";
     if {$is_open} {
       printInfo "Recording message to file: $mesg_filename";
-      recordStart $mesg_filename;
+      recordStart $mesg_filename $max_mesg_time;
     } else {
       recordStop;
       playMsg "rec_done";
-      #playFile $subj_filename;
-      #playSilence 1000;
-      #playFile $mesg_filename;
-      #playSilence 1000;
       playSilence 500;
       set email [id2var $rec_rcpt email];
       if {$email != ""} {

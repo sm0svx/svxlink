@@ -576,7 +576,7 @@ void Logic::playTone(int fq, int amp, int len)
 } /* Logic::playSilence */
 
 
-void Logic::recordStart(const string& filename)
+void Logic::recordStart(const string& filename, unsigned max_time)
 {
   recordStop();
   recorder = new AudioRecorder(filename);
@@ -587,6 +587,7 @@ void Logic::recordStart(const string& filename)
     recordStop();
     return;
   }
+  recorder->setMaxRecordingTime(max_time);
   rx_splitter->addSink(recorder, true);
 } /* Logic::recordStart */
 
