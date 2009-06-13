@@ -288,7 +288,10 @@ off.
 .B OPEN_ON_1750
 Use this configuration variable if it should be possible to open the repeater with a
 1750Hz tone burst. Specify the number of milliseconds the tone must be asserted before the
-repeater is opened. A value of 0 will disable 1750 Hz repeater opening.
+repeater is opened. Make sure that the time specified is long enough for the
+squelch to have time to open. Otherwise the repeater will open "too soon" and
+you will hear an ugly 1750Hz beep as the first thing.
+A value of 0 will disable 1750 Hz repeater opening.
 .TP
 .B OPEN_ON_CTCSS
 Use this configuration variable if it should be possible to open the repeater with a CTCSS
