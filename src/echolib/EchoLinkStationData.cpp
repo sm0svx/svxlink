@@ -201,7 +201,7 @@ void StationData::setData(const char *data)
       m_status = STAT_UNKNOWN;
     }
     
-    char *space = strchr(end_desc, ' ');
+    const char *space = strchr(end_desc, ' ');
     if (space != 0)
     {
       strncpy(str, space+1, 5);

@@ -678,7 +678,7 @@ static void write_to_logfile(const char *buf)
     }
 
     int write_len = 0;
-    char *nl = strchr(ptr, '\n');
+    const char *nl = strchr(ptr, '\n');
     if (nl != 0)
     {
       write_len = nl-ptr+1;

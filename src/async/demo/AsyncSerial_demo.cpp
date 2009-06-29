@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdlib>
+#include <cstdio>
 
 #include <AsyncCppApplication.h>
 #include <AsyncSerial.h>
