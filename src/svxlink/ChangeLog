@@ -16,6 +16,8 @@
 * Voice mail messages are now time limited to a maximum time. Default
   is 10 seconds for the subject and two minutes for the message.
 
+* Bugfix: The SQL_TIMEOUT function did not work as expected.
+
 
 
  0.11.0 -- 26 Apr 2009
