@@ -203,11 +203,11 @@ class Squelch : public SigC::Object, public Async::AudioSink
     
     /**
      * @brief 	Set the maximum time the squelch is allowed to stay open
-     * @param 	timeout The squelch timeout in milliseconds
+     * @param 	timeout The squelch timeout in seconds
      */
     void setSqlTimeout(int timeout)
     {
-      sql_timeout = (timeout >= 0) ? timeout * INTERNAL_SAMPLE_RATE / 1000 : 0;
+      sql_timeout = (timeout >= 0) ? timeout * INTERNAL_SAMPLE_RATE : 0;
     }
     
     /**
