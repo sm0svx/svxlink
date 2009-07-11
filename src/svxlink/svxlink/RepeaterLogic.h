@@ -191,7 +191,7 @@ class RepeaterLogic : public Logic
     
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);
-    void setUp(bool up);
+    void setUp(bool up, std::string reason);
     void squelchOpen(bool is_open);
     void detectedTone(float fq);
     void playIdleSound(Async::Timer *t);

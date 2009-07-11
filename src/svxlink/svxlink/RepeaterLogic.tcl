@@ -226,13 +226,21 @@ proc repeater_up {reason} {
 
 #
 # Executed when the repeater is deactivated
+#   reason  - The reason why the repeater was deactivated
+#             IDLE         - The idle timeout occured
+#             SQL_FLAP_SUP - Closed due to interference
 #
-proc repeater_down {} {
+proc repeater_down {reason} {
   global mycall;
   variable repeater_is_up;
 
   set repeater_is_up 0;
   
+  if {$reason == "SQL_FLAP_SUP"} {
+    playMsg "Core" "interference"
+    playSilence 250;
+  }
+
   set now [clock seconds];
   if {$now-$Logic::prev_ident < $Logic::min_time_between_ident} {
     playTone 400 900 50

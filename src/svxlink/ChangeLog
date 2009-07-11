@@ -18,6 +18,13 @@
 
 * Bugfix: The SQL_TIMEOUT function did not work as expected.
 
+* The repeater_down TCL function now have a "reason" argument that
+  can be either "IDLE" or "SQL_FLAP_SUP".
+
+* It is now possible to have a "local" subdirectory in the events.d
+  directory where the TCL files in the "local" directory will override
+  the TCL files in the events.d directory.
+
 
 
  0.11.0 -- 26 Apr 2009
