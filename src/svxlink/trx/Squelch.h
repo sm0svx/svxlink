@@ -180,7 +180,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
      */
     void setStartDelay(int delay)
     {
-      start_delay = delay > 0 ? delay * INTERNAL_SAMPLE_RATE / 1000 : 0;
+      start_delay = ((delay > 0) ? (delay * INTERNAL_SAMPLE_RATE / 1000) : 0);
     }
     
     /**
@@ -189,7 +189,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
      */
     void setHangtime(int hang)
     {
-      hangtime = (hang >= 0) ? hang * INTERNAL_SAMPLE_RATE / 1000 : 0;
+      hangtime = ((hang > 0) ? (hang * INTERNAL_SAMPLE_RATE / 1000) : 0);
     }
     
     /**
@@ -198,7 +198,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
      */
     void setDelay(int delay)
     {
-      delay = (delay >= 0) ? delay * INTERNAL_SAMPLE_RATE / 1000 : 0;
+      delay = ((delay > 0) ? (delay * INTERNAL_SAMPLE_RATE / 1000) : 0);
     }
     
     /**
@@ -207,7 +207,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
      */
     void setSqlTimeout(int timeout)
     {
-      sql_timeout = (timeout >= 0) ? timeout * INTERNAL_SAMPLE_RATE : 0;
+      sql_timeout = ((timeout > 0) ? (timeout * INTERNAL_SAMPLE_RATE) : 0);
     }
     
     /**
