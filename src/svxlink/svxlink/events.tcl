@@ -123,7 +123,13 @@ proc playTime {hour minute} {
 set basedir [file dirname $script_path];
 
 foreach {file} [glob -directory $basedir/events.d *.tcl] {
-  source $file;
+  set filename [file tail $file];
+  set local_file "$basedir/events.d/local/$filename";
+  if [file exists $local_file] {
+    source $local_file;
+  } else {
+    source $file;
+  }
 }
 
 if [info exists is_core_event_handler] {
