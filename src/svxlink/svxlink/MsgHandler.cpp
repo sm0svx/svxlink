@@ -87,7 +87,8 @@ using namespace std;
  *
  ****************************************************************************/
 
-#define WRITE_BLOCK_SIZE    4*160
+//#define WRITE_BLOCK_SIZE    4*160
+#define WRITE_BLOCK_SIZE    256
 
 
 
