@@ -1,12 +1,12 @@
 /**
-@file	 ToneDetector.h
-@brief   A tone detector that use the Goertzel algorithm
+@file	 Goertzel.h
+@brief   An implementation of the Gortzel single bin DFT algorithm
 @author  Tobias Blomberg / SM0SVX
-@date	 2003-04-15
+@date	 2009-05-23
 
 \verbatim
 <A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef TONE_DETECTOR_INCLUDED
-#define TONE_DETECTOR_INCLUDED
+#ifndef GOERTZEL_INCLUDED
+#define GOERTZEL_INCLUDED
 
 
 /****************************************************************************
@@ -35,9 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
-
-#include <string>
+#include <cmath>
 
 
 /****************************************************************************
@@ -46,7 +44,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioSink.h>
 
 
 /****************************************************************************
@@ -74,38 +71,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //namespace MyNameSpace
 //{
 
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
+
+  
+
 /****************************************************************************
  *
  * Defines & typedefs
  *
  ****************************************************************************/
 
-/*
- *----------------------------------------------------------------------------
- * Macro:   
- * Purpose: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- * Bugs:    
- *----------------------------------------------------------------------------
- */
-
-
-/*
- *----------------------------------------------------------------------------
- * Type:    
- * Purpose: 
- * Members: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- *----------------------------------------------------------------------------
- */
 
 
 /****************************************************************************
@@ -123,55 +103,82 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief	A tone detector that use the Goertzel algorithm
+@brief	An implementation of the Gortzel single bin DFT algorithm
 @author Tobias Blomberg / SM0SVX
-@date   2003-04-15
+@date   2009-05-23
 */
-class ToneDetector : public SigC::Object, public Async::AudioSink
+class Goertzel
 {
   public:
-    ToneDetector(float tone_hz, float width_hz);
-    virtual int writeSamples(const float *buf, int len);
-
-    bool isActivated(void) const { return (det_delay_left == 0); }
-    float toneFq(void) const { return tone_fq; }
-    void setSnrThresh(float thresh) { peak_thresh = exp10f(thresh/10.0f); }
-    void reset(void);
+    /**
+     * @brief 	Default constuctor
+     * @param   freq        The frequency of interest, in Hz
+     * @param   sample_rate The sample rate used
+     */
+    Goertzel(float freq, unsigned sample_rate)
+    {
+      fac = 2.0f * cosf(2.0f * M_PI * (freq / (float)sample_rate));
+      reset();
+    }
+  
+    /**
+     * @brief 	Destructor
+     */
+    ~Goertzel(void) {}
+  
+    /**
+     * @brief 	Reset the state variables
+     */
+    void reset(void)
+    {
+      v2 = v3 = 0.0f;
+    }
     
-    SigC::Signal1<void, bool> activated;
+    /**
+     * @brief 	Call this function for each sample in a block
+     * @param 	sample A sample
+     */
+    void calc(float sample)
+    {
+      float v1 = v2;
+      v2 = v3;
+      v3 = fac * v2 - v1 + sample;
+    }
+    
+    /**
+     * @brief 	Read back the result after calling "calc" for a whole block
+     * @return	Returns the relative magnitude squared
+     */
+    float result(void)
+    {
+        // Push a zero through the process to finish things off.
+      float v1 = v2;
+      v2 = v3;
+      v3 = fac * v2 - v1;
+      
+        // Now calculate the non-recursive side of the filter.
+        // The result here is not scaled down to allow for the magnification
+        // effect of the filter (the usual DFT magnification effect).
+      return v3 * v3 + v2 * v2 - v2 * v3 * fac;
+    }
+    
+    
+  protected:
     
   private:
-
-    typedef struct
-    {
-      float v2;
-      float v3;
-      float fac;
-    } GoertzelState;
-
-    void goertzelInit(GoertzelState *s, float freq, int sample_rate);
-    void goertzelReset(GoertzelState *s) { s->v2 = s->v3 = 0.0; };
-    float goertzelResult(GoertzelState *s);
-
-    GoertzelState      center;
-    GoertzelState      lower;
-    GoertzelState      upper;
-
-    int       	       current_sample;
-    int       	       is_activated;
-    float              tone_fq;
-    int       	       block_len;
-    int       	       det_delay_left;
-    int       	       undet_delay_left;
-    float     	       peak_thresh;
-    float     	       energy_thresh;
-
-};  /* class ToneDetector */
+    float v2;
+    float v3;
+    float fac;
+    
+    Goertzel(const Goertzel&);
+    Goertzel& operator=(const Goertzel&);
+    
+};  /* class Goertzel */
 
 
 //} /* namespace */
 
-#endif /* TONE_DETECTOR_INCLUDED */
+#endif /* GOERTZEL_INCLUDED */
 
 
 

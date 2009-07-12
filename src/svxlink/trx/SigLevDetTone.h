@@ -1,12 +1,12 @@
 /**
-@file	 SigLevDet.h
-@brief   The base class for a signal level detector
+@file	 SigLevDetTone.h
+@brief   A signal level detector using tones in the 5.5 to 6.5kHz band
 @author  Tobias Blomberg / SM0SVX
 @date	 2009-05-23
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,8 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef SIG_LEV_DET_INCLUDED
-#define SIG_LEV_DET_INCLUDED
+
+#ifndef SIG_LEV_DET_TONE_INCLUDED
+#define SIG_LEV_DET_TONE_INCLUDED
 
 
 /****************************************************************************
@@ -34,8 +35,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
-#include <string>
 
 
 /****************************************************************************
@@ -44,7 +43,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioSink.h>
 
 
 /****************************************************************************
@@ -53,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "SigLevDet.h"
 
 
 /****************************************************************************
@@ -61,12 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class AudioFilter;
-  class SigCAudioSink;
-  class Config;
-};
+class Goertzel;
 
 
 /****************************************************************************
@@ -110,56 +104,88 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A simple signal level detector
+@brief	A signal level detector using tones in the 5.5 to 6.5kHz band
 @author Tobias Blomberg / SM0SVX
-@date   2006-05-07
+@date   2009-05-23
+
+This is not a signal level detector on its own but rather a transport mechanism
+to transfer signal level measurements from a remote receiver site that is
+linked in using RF. The remote site should modulate one of ten tones
+(5500Hz, 5600Hz, 5700Hz, ..., 6400Hz) on the link signal to indicate the
+locally measured signal strength. The received tone is then translated by this
+class to a signal level value that can be compared to signal level measurements
+from other receivers.
 */
-class SigLevDet : public SigC::Object, public Async::AudioSink
+class SigLevDetTone : public SigLevDet
 {
   public:
     /**
      * @brief 	Default constuctor
      */
-    SigLevDet(void) {}
+    SigLevDetTone(void);
   
     /**
      * @brief 	Destructor
      */
-    virtual ~SigLevDet(void) {}
+    ~SigLevDetTone(void);
     
     /**
      * @brief 	Initialize the signal detector
      * @return 	Return \em true on success, or \em false on failure
      */
-    virtual bool initialize(Async::Config &cfg, const std::string& name)
-    {
-      return true;
-    }
+    virtual bool initialize(Async::Config &cfg, const std::string& name);
     
     /**
      * @brief 	Read the latest measured signal level
      * @return	Returns the latest measured signal level
      */
-    virtual double lastSiglev(void) const = 0;
-    
+    virtual double lastSiglev(void) const { return last_siglev; }
+
     /**
      * @brief   Reset the signal level detector
      */
-    virtual void reset(void) = 0;
-     
+    virtual void reset(void);
+    
+    /**
+     * @brief 	Write samples into this audio sink
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
+     *
+     * This function is used to write audio into this audio sink. If it
+     * returns 0, no more samples should be written until the resumeOutput
+     * function in the source have been called.
+     * This function is normally only called from a connected source object.
+     */
+    virtual int writeSamples(const float *samples, int count);
+    
+    /**
+     * @brief 	Tell the sink to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     * This function is normally only called from a connected source object.
+     */
+    virtual void flushSamples(void);
+    
     
   protected:
     
   private:
-    SigLevDet(const SigLevDet&);
-    SigLevDet& operator=(const SigLevDet&);
+    Goertzel  *det[10];
+    int       block_idx;
+    int       last_siglev;
     
-};  /* class SigLevDet */
+    SigLevDetTone(const SigLevDetTone&);
+    SigLevDetTone& operator=(const SigLevDetTone&);
+    
+};  /* class SigLevDetTone */
 
 
 //} /* namespace */
 
-#endif /* SIG_LEV_DET_INCLUDED */
+#endif /* SIG_LEV_DET_TONE_INCLUDED */
 
 
 

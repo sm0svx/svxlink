@@ -184,9 +184,7 @@ class LocalRx : public Rx
     Async::AudioIO    	      	*audio_io;
     bool      	      	      	is_muted;
     Squelch   	      	      	*squelch_det;
-    SigLevDet 	      	      	*siglevdet;
-    float     	      	      	siglev_offset;
-    float     	      	      	siglev_slope;
+    SigLevDet 	      	        *siglevdet;
     Async::AudioSplitter      	*tone_dets;
     Async::AudioValve 	        *sql_valve;
     Async::AudioDelayLine     	*delay;
@@ -199,6 +197,7 @@ class LocalRx : public Rx
     void dtmfDigitDeactivated(char digit, int duration_ms);
     void audioStreamStateChange(bool is_active, bool is_idle);
     void onSquelchOpen(bool is_open);
+    SigLevDet *createSigLevDet(const std::string &name, int sample_rate);
 
 };  /* class LocalRx */
 

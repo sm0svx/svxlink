@@ -68,10 +68,11 @@ SHLIB_VERSION	=
 
 # Sources needed to build the library
 LIBSRC		= ToneDetector.cpp SwDtmfDecoder.cpp Rx.cpp LocalRx.cpp \
-		  SquelchVox.cpp SigLevDet.cpp NetRx.cpp Voter.cpp \
+		  SquelchVox.cpp SigLevDetNoise.cpp NetRx.cpp Voter.cpp \
 		  Tx.cpp LocalTx.cpp DtmfEncoder.cpp NetTx.cpp \
 		  NetTrxTcpClient.cpp DtmfDecoder.cpp HwDtmfDecoder.cpp \
-		  S54sDtmfDecoder.cpp PttCtrl.cpp MultiTx.cpp
+		  S54sDtmfDecoder.cpp PttCtrl.cpp MultiTx.cpp \
+		  SigLevDetTone.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
 LIB_LIBS	= -lc

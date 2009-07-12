@@ -1,6 +1,6 @@
 /**
-@file	 SigLevDet.cpp
-@brief   A simple signal level detector
+@file	 SigLevDetNoise.h
+@brief   A simple signal level detector based on noise measurements
 @author  Tobias Blomberg / SM0SVX
 @date	 2006-05-07
 
@@ -24,6 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+#ifndef SIG_LEV_DET_NOISE_INCLUDED
+#define SIG_LEV_DET_NOISE_INCLUDED
 
 
 /****************************************************************************
@@ -32,8 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <cmath>
-//#include <iostream>
+#include <sigc++/sigc++.h>
 
 
 /****************************************************************************
@@ -42,8 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioFilter.h>
-#include <SigCAudioSink.h>
+#include <AsyncAudioSink.h>
 
 
 /****************************************************************************
@@ -55,37 +55,40 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SigLevDet.h"
 
 
-
 /****************************************************************************
  *
- * Namespaces to use
+ * Forward declarations
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+namespace Async
+{
+  class AudioFilter;
+  class SigCAudioSink;
+};
 
 
+/****************************************************************************
+ *
+ * Namespace
+ *
+ ****************************************************************************/
+
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
+
+  
 
 /****************************************************************************
  *
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
  *
  ****************************************************************************/
 
@@ -99,102 +102,73 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
-
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-SigLevDet::SigLevDet(int sample_rate)
-  : slope(1.0), offset(0.0)
+/**
+@brief	A simple signal level detector
+@author Tobias Blomberg / SM0SVX
+@date   2006-05-07
+*/
+class SigLevDetNoise : public SigLevDet
 {
-  if (sample_rate >= 16000)
-  {
-    filter = new AudioFilter("BpBu4/5000-5500", sample_rate);
-  }
-  else
-  {
-    filter = new AudioFilter("HpBu4/3500", sample_rate);
-  }
-  setHandler(filter);
-  sigc_sink = new SigCAudioSink;
-  sigc_sink->sigWriteSamples.connect(slot(*this, &SigLevDet::processSamples));
-  sigc_sink->sigFlushSamples.connect(
-      slot(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
-  sigc_sink->registerSource(filter);
-  reset();
-} /* SigLevDet::SigLevDet */
-
-
-SigLevDet::~SigLevDet(void)
-{
-  clearHandler();
-  delete filter;
-  delete sigc_sink;
-} /* SigLevDet::~SigLevDet */
-
-
-void SigLevDet::reset(void)
-{
-  filter->reset();
-  last_siglev = pow(10, -offset / slope);
-} /* SigLevDet::reset */
-
-
-void SigLevDet::setDetectorSlope(float slope)
-{
-  this->slope = slope;
-  reset();
-} /* SigLevDet::setDetectorSlope  */
-
-
-void SigLevDet::setDetectorOffset(float offset)
-{
-  this->offset = offset;
-  reset();
-} /* SigLevDet::setDetectorOffset  */
-
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
-
-int SigLevDet::processSamples(float *samples, int count)
-{
-  //cout << "SigLevDet::processSamples: count=" << count << "\n";
-  double rms = 0.0;
-  for (int i=0; i<count; ++i)
-  {
-    float sample = samples[i];
-    rms += sample * sample;
-  }
-  last_siglev = sqrt(rms / count);
+  public:
+    /**
+     * @brief 	Default constuctor
+     */
+    explicit SigLevDetNoise(int sample_rate);
   
-  //cout << lastSiglev() << endl;
+    /**
+     * @brief 	Destructor
+     */
+    ~SigLevDetNoise(void);
+    
+    /**
+     * @brief 	Set the detector slope
+     * @param 	slope The detector slope to set
+     */
+    void setDetectorSlope(float slope);
 
-  return count;
+    /**
+     * @brief 	Set the detector offset
+     * @param 	offset The offset to set
+     */
+    void setDetectorOffset(float offset);
   
-} /* SigLevDet::processSamples */
+    /**
+     * @brief 	Read the latest calculated signal level
+     * @return	Returns the latest calculated signal level
+     */
+    double lastSiglev(void) const
+    {
+      return offset - slope * log10(last_siglev);
+    }
+     
+    void reset(void);
+     
+    
+  protected:
+    
+  private:
+    Async::AudioFilter	  *filter;
+    Async::SigCAudioSink  *sigc_sink;
+    double    	      	  last_siglev;
+    float     	      	  slope;
+    float     	      	  offset;
+    
+    SigLevDetNoise(const SigLevDetNoise&);
+    SigLevDetNoise& operator=(const SigLevDetNoise&);
+    int processSamples(float *samples, int count);
+    
+};  /* class SigLevDetNoise */
+
+
+//} /* namespace */
+
+#endif /* SIG_LEV_DET_NOISE_INCLUDED */
 
 
 
