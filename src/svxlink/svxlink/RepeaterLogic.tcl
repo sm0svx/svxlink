@@ -346,6 +346,16 @@ proc voice_logger_already_active {} {
 }
 
 
+#
+# Executed if the repeater opens but the squelch never opens again.
+# This is probably someone who opens the repeater but do not identify.
+#
+proc identify_nag {} {
+  playSilence 500;
+  playMsg "Core" "please_identify";
+  playSilence 500;
+}
+
 
 
 # end of namespace

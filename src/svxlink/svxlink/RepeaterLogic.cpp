@@ -132,7 +132,8 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
     open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false),
     open_on_sql_timer(0), open_sql_flank(SQL_FLANK_CLOSE),
     short_sql_open_cnt(0), sql_flap_sup_min_time(1000),
-    sql_flap_sup_max_cnt(0), rgr_enable(true), open_reason("?")
+    sql_flap_sup_max_cnt(0), rgr_enable(true), open_reason("?"),
+    ident_nag_timeout(0), ident_nag_timer(0)
 {
 } /* RepeaterLogic::RepeaterLogic */
 
@@ -142,6 +143,7 @@ RepeaterLogic::~RepeaterLogic(void)
   delete open_on_sql_timer;
   delete idle_sound_timer;
   delete up_timer;
+  delete ident_nag_timer;
 } /* RepeaterLogic::~RepeaterLogic */
 
 
@@ -227,6 +229,11 @@ bool RepeaterLogic::initialize(void)
   if (cfg().getValue(name(), "SQL_FLAP_SUP_MAX_COUNT", str))
   {
     sql_flap_sup_max_cnt = atoi(str.c_str());
+  }
+  
+  if (cfg().getValue(name(), "IDENT_NAG_TIMEOUT", str))
+  {
+    ident_nag_timeout = atoi(str.c_str());
   }
   
   rx().toneDetected.connect(slot(*this, &RepeaterLogic::detectedTone));
@@ -434,6 +441,13 @@ void RepeaterLogic::setUp(bool up, string reason)
     setIdle(false);
     checkIdle();
     setIdle(isIdle());
+    
+    if ((ident_nag_timeout > 0) && (reason != "MODULE") && (reason != "AUDIO"))
+    {
+      delete ident_nag_timer; // Just to be sure...
+      ident_nag_timer = new Timer(ident_nag_timeout);
+      ident_nag_timer->expired.connect(slot(*this, &RepeaterLogic::identNag));
+    }
   }
   else
   {
@@ -444,6 +458,8 @@ void RepeaterLogic::setUp(bool up, string reason)
     up_timer = 0;
     delete idle_sound_timer;
     idle_sound_timer = 0;
+    delete ident_nag_timer;
+    ident_nag_timer = 0;
     disconnectAllLogics();
     stringstream ss;
     ss << "repeater_down " << reason;
@@ -473,12 +489,13 @@ void RepeaterLogic::squelchOpen(bool is_open)
     }
     else
     {
+      struct timeval now, diff_tv;
+      gettimeofday(&now, NULL);
+      timersub(&now, &sql_up_timestamp, &diff_tv);
+      int diff_ms = diff_tv.tv_sec * 1000 + diff_tv.tv_usec / 1000;
+	
       if (sql_flap_sup_max_cnt > 0)
       {
-	struct timeval now, diff_tv;
-	gettimeofday(&now, NULL);
-	timersub(&now, &sql_up_timestamp, &diff_tv);
-	int diff_ms = diff_tv.tv_sec * 1000 + diff_tv.tv_usec / 1000;
 	if (diff_ms < sql_flap_sup_min_time)
 	{
       	  if (++short_sql_open_cnt >= sql_flap_sup_max_cnt)
@@ -493,6 +510,12 @@ void RepeaterLogic::squelchOpen(bool is_open)
 	{
       	  short_sql_open_cnt = 0;
 	}
+      }
+      
+      if ((ident_nag_timer != 0) && (diff_ms > sql_flap_sup_min_time))
+      {
+	delete ident_nag_timer;
+	ident_nag_timer = 0;
       }
     }
   
@@ -592,6 +615,18 @@ void RepeaterLogic::activateOnOpenOrClose(SqlFlank flank)
     }
   }
 }
+
+
+void RepeaterLogic::identNag(Timer *t)
+{
+  delete ident_nag_timer;
+  ident_nag_timer = 0;
+  
+  if (!rx().squelchIsOpen())
+  {
+    processEvent("identify_nag");
+  }
+} /* RepeaterLogic::identNag */
 
 
 

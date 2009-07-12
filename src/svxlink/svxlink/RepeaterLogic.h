@@ -188,6 +188,8 @@ class RepeaterLogic : public Logic
     int       	    sql_flap_sup_max_cnt;
     bool            rgr_enable;
     std::string     open_reason;
+    int		    ident_nag_timeout;
+    Async::Timer    *ident_nag_timer;
     
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);
@@ -197,6 +199,7 @@ class RepeaterLogic : public Logic
     void playIdleSound(Async::Timer *t);
     void openOnSqlTimerExpired(Async::Timer *t);
     void activateOnOpenOrClose(SqlFlank flank);
+    void identNag(Async::Timer *t);
 
 };  /* class RepeaterLogic */
 
