@@ -237,8 +237,9 @@ proc repeater_down {reason} {
   set repeater_is_up 0;
   
   if {$reason == "SQL_FLAP_SUP"} {
-    playMsg "Core" "interference"
-    playSilence 250;
+    playSilence 500;
+    playMsg "Core" "interference";
+    playSilence 500;
   }
 
   set now [clock seconds];
