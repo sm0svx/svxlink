@@ -132,7 +132,7 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
     open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false),
     open_on_sql_timer(0), open_sql_flank(SQL_FLANK_CLOSE),
     short_sql_open_cnt(0), sql_flap_sup_min_time(1000),
-    sql_flap_sup_max_cnt(0), open_reason("?")
+    sql_flap_sup_max_cnt(0), rgr_enable(true), open_reason("?")
 {
 } /* RepeaterLogic::RepeaterLogic */
 
@@ -260,6 +260,13 @@ bool RepeaterLogic::initialize(void)
 
 void RepeaterLogic::processEvent(const string& event, const Module *module)
 {
+  rgr_enable = true;
+  
+  if ((event == "every_minute") && isIdle())
+  {
+    rgr_enable = false;
+  }
+  
   if ((event == "repeater_idle") || (event == "send_rgr_sound"))
   {
     setReportEventsAsIdle(true);
@@ -276,7 +283,7 @@ void RepeaterLogic::processEvent(const string& event, const Module *module)
 bool RepeaterLogic::activateModule(Module *module)
 {
   open_reason = "MODULE";
-  setUp(true);
+  setUp(true, open_reason);
   return Logic::activateModule(module);
 } /* RepeaterLogic::activateModule */
 
@@ -323,10 +330,12 @@ void RepeaterLogic::allMsgsWritten(void)
 
 void RepeaterLogic::audioStreamStateChange(bool is_active, bool is_idle)
 {
+  rgr_enable = true;
+
   if (!repeater_is_up && !is_idle)
   {
     open_reason = "AUDIO";
-    setUp(true);
+    setUp(true, open_reason);
   }
 
   Logic::audioStreamStateChange(is_active, is_idle);
@@ -360,7 +369,7 @@ bool RepeaterLogic::getIdleState(void) const
 void RepeaterLogic::idleTimeout(Timer *t)
 {
   //printf("RepeaterLogic::idleTimeout\n");
-  setUp(false);
+  setUp(false, "IDLE");
 } /* RepeaterLogic::idleTimeout */
 
 
@@ -395,15 +404,15 @@ void RepeaterLogic::setIdle(bool idle)
     }
   }
 
-  enableRgrSoundTimer(idle);
+  enableRgrSoundTimer(idle && rgr_enable);
   
 } /* RepeaterLogic::setIdle */
 
 
-void RepeaterLogic::setUp(bool up)
+void RepeaterLogic::setUp(bool up, string reason)
 {
   //printf("RepeaterLogic::setUp: up=%s  reason=%s\n",
-  //    	 up ? "true" : "false", open_reason.c_str());
+  //    	 up ? "true" : "false", reason.c_str());
   if (up == repeater_is_up)
   {
     return;
@@ -416,7 +425,7 @@ void RepeaterLogic::setUp(bool up)
 
     stringstream ss;
     //ss << "repeater_up " << (ident ? "1" : "0");
-    ss << "repeater_up " << open_reason;
+    ss << "repeater_up " << reason;
     processEvent(ss.str());
     
     rxValveSetOpen(true);
@@ -436,7 +445,9 @@ void RepeaterLogic::setUp(bool up)
     delete idle_sound_timer;
     idle_sound_timer = 0;
     disconnectAllLogics();
-    processEvent("repeater_down");
+    stringstream ss;
+    ss << "repeater_down " << reason;
+    processEvent(ss.str());
     if (!isWritingMessage())
     {
       tx().setTxCtrlMode(Tx::TX_AUTO);
@@ -451,6 +462,8 @@ void RepeaterLogic::squelchOpen(bool is_open)
   //cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
   //     << endl;
   
+  rgr_enable = true;
+  
   if (repeater_is_up)
   {
     if (is_open)
@@ -460,8 +473,6 @@ void RepeaterLogic::squelchOpen(bool is_open)
     }
     else
     {
-      //tx().flushSamples();
-      
       if (sql_flap_sup_max_cnt > 0)
       {
 	struct timeval now, diff_tv;
@@ -473,7 +484,9 @@ void RepeaterLogic::squelchOpen(bool is_open)
       	  if (++short_sql_open_cnt >= sql_flap_sup_max_cnt)
 	  {
 	    short_sql_open_cnt = 0;
-	    setUp(false);
+	    cout << sql_flap_sup_max_cnt << " squelch openings less than "
+		 << sql_flap_sup_min_time << "ms detected.\n";
+	    setUp(false, "SQL_FLAP_SUP");
 	  }
 	}
 	else
@@ -507,7 +520,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
       if (activate_on_sql_close)
       {
       	activate_on_sql_close = false;
-      	setUp(true);
+      	setUp(true, open_reason);
       }
     }
   }
@@ -557,7 +570,7 @@ void RepeaterLogic::activateOnOpenOrClose(SqlFlank flank)
     {
       open_reason += "_OPEN";
     }
-    setUp(true);
+    setUp(true, open_reason);
     if (rx().squelchIsOpen())
     {
       RepeaterLogic::squelchOpen(true);
@@ -571,7 +584,7 @@ void RepeaterLogic::activateOnOpenOrClose(SqlFlank flank)
     }
     if (!rx().squelchIsOpen())
     {
-      setUp(true);
+      setUp(true, open_reason);
     }
     else
     {

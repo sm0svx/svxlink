@@ -226,13 +226,21 @@ proc repeater_up {reason} {
 
 #
 # Executed when the repeater is deactivated
+#   reason  - The reason why the repeater was deactivated
+#             IDLE         - The idle timeout occured
+#             SQL_FLAP_SUP - Closed due to interference
 #
-proc repeater_down {} {
+proc repeater_down {reason} {
   global mycall;
   variable repeater_is_up;
 
   set repeater_is_up 0;
   
+  if {$reason == "SQL_FLAP_SUP"} {
+    playMsg "Core" "interference"
+    playSilence 250;
+  }
+
   set now [clock seconds];
   if {$now-$Logic::prev_ident < $Logic::min_time_between_ident} {
     playTone 400 900 50
@@ -303,6 +311,39 @@ proc dtmf_cmd_received {cmd} {
   return [Logic::dtmf_cmd_received $cmd];
 }
 
+
+#
+# Executed when the voice logger is being activated
+#
+proc activating_voice_logger {} {
+  Logic::activating_voice_logger;
+}
+
+
+#
+# Executed when the voice logger is being deactivated
+#
+proc deactivating_voice_logger {} {
+  Logic::deactivating_voice_logger;
+}
+
+
+#
+# Executed when trying to deactivate the voice logger even though it's
+# not active
+#
+proc voice_logger_not_active {} {
+  Logic::voice_logger_not_active;
+}
+
+
+#
+# Executed when trying to activate the voice logger even though it's
+# already active
+#
+proc voice_logger_already_active {} {
+  Logic::voice_logger_already_active;
+}
 
 
 

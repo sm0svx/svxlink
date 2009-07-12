@@ -1,11 +1,11 @@
 /**
-@file	 SigLevDet.cpp
-@brief   A simple signal level detector
+@file	 Goertzel.h
+@brief   An implementation of the Gortzel single bin DFT algorithm
 @author  Tobias Blomberg / SM0SVX
-@date	 2006-05-07
+@date	 2009-05-23
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+<A brief description of the program or library this file belongs to>
 Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -25,6 +25,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
+#ifndef GOERTZEL_INCLUDED
+#define GOERTZEL_INCLUDED
+
 
 /****************************************************************************
  *
@@ -33,7 +36,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <cmath>
-//#include <iostream>
 
 
 /****************************************************************************
@@ -42,8 +44,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioFilter.h>
-#include <SigCAudioSink.h>
 
 
 /****************************************************************************
@@ -52,40 +52,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "SigLevDet.h"
+
+
+/****************************************************************************
+ *
+ * Forward declarations
+ *
+ ****************************************************************************/
 
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Namespace
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+//namespace MyNameSpace
+//{
 
 
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
+
+  
 
 /****************************************************************************
  *
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
  *
  ****************************************************************************/
 
@@ -99,102 +96,89 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
-
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-SigLevDet::SigLevDet(int sample_rate)
-  : slope(1.0), offset(0.0)
+/**
+@brief	An implementation of the Gortzel single bin DFT algorithm
+@author Tobias Blomberg / SM0SVX
+@date   2009-05-23
+*/
+class Goertzel
 {
-  if (sample_rate >= 16000)
-  {
-    filter = new AudioFilter("BpBu4/5000-5500", sample_rate);
-  }
-  else
-  {
-    filter = new AudioFilter("HpBu4/3500", sample_rate);
-  }
-  setHandler(filter);
-  sigc_sink = new SigCAudioSink;
-  sigc_sink->sigWriteSamples.connect(slot(*this, &SigLevDet::processSamples));
-  sigc_sink->sigFlushSamples.connect(
-      slot(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
-  sigc_sink->registerSource(filter);
-  reset();
-} /* SigLevDet::SigLevDet */
-
-
-SigLevDet::~SigLevDet(void)
-{
-  clearHandler();
-  delete filter;
-  delete sigc_sink;
-} /* SigLevDet::~SigLevDet */
-
-
-void SigLevDet::reset(void)
-{
-  filter->reset();
-  last_siglev = pow(10, -offset / slope);
-} /* SigLevDet::reset */
-
-
-void SigLevDet::setDetectorSlope(float slope)
-{
-  this->slope = slope;
-  reset();
-} /* SigLevDet::setDetectorSlope  */
-
-
-void SigLevDet::setDetectorOffset(float offset)
-{
-  this->offset = offset;
-  reset();
-} /* SigLevDet::setDetectorOffset  */
-
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
-
-int SigLevDet::processSamples(float *samples, int count)
-{
-  //cout << "SigLevDet::processSamples: count=" << count << "\n";
-  double rms = 0.0;
-  for (int i=0; i<count; ++i)
-  {
-    float sample = samples[i];
-    rms += sample * sample;
-  }
-  last_siglev = sqrt(rms / count);
+  public:
+    /**
+     * @brief 	Default constuctor
+     * @param   freq        The frequency of interest, in Hz
+     * @param   sample_rate The sample rate used
+     */
+    Goertzel(float freq, unsigned sample_rate)
+    {
+      fac = 2.0f * cosf(2.0f * M_PI * (freq / (float)sample_rate));
+      reset();
+    }
   
-  //cout << lastSiglev() << endl;
-
-  return count;
+    /**
+     * @brief 	Destructor
+     */
+    ~Goertzel(void) {}
   
-} /* SigLevDet::processSamples */
+    /**
+     * @brief 	Reset the state variables
+     */
+    void reset(void)
+    {
+      v2 = v3 = 0.0f;
+    }
+    
+    /**
+     * @brief 	Call this function for each sample in a block
+     * @param 	sample A sample
+     */
+    void calc(float sample)
+    {
+      float v1 = v2;
+      v2 = v3;
+      v3 = fac * v2 - v1 + sample;
+    }
+    
+    /**
+     * @brief 	Read back the result after calling "calc" for a whole block
+     * @return	Returns the relative magnitude squared
+     */
+    float result(void)
+    {
+        // Push a zero through the process to finish things off.
+      float v1 = v2;
+      v2 = v3;
+      v3 = fac * v2 - v1;
+      
+        // Now calculate the non-recursive side of the filter.
+        // The result here is not scaled down to allow for the magnification
+        // effect of the filter (the usual DFT magnification effect).
+      return v3 * v3 + v2 * v2 - v2 * v3 * fac;
+    }
+    
+    
+  protected:
+    
+  private:
+    float v2;
+    float v3;
+    float fac;
+    
+    Goertzel(const Goertzel&);
+    Goertzel& operator=(const Goertzel&);
+    
+};  /* class Goertzel */
+
+
+//} /* namespace */
+
+#endif /* GOERTZEL_INCLUDED */
 
 
 

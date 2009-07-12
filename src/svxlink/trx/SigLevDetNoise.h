@@ -1,14 +1,12 @@
 /**
-@file	 Recorder.h
-@brief   A_brief_description_for_this_file
+@file	 SigLevDetNoise.h
+@brief   A simple signal level detector based on noise measurements
 @author  Tobias Blomberg / SM0SVX
-@date	 2005-08-29
-
-A_detailed_description_for_this_file
+@date	 2006-05-07
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,13 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example Recorder_demo.cpp
-An example of how to use the Recorder class
-*/
-
-
-#ifndef RECORDER_INCLUDED
-#define RECORDER_INCLUDED
+#ifndef SIG_LEV_DET_NOISE_INCLUDED
+#define SIG_LEV_DET_NOISE_INCLUDED
 
 
 /****************************************************************************
@@ -41,12 +34,7 @@ An example of how to use the Recorder class
  *
  ****************************************************************************/
 
-#include <stdio.h>
 #include <sigc++/sigc++.h>
-
-#include <string>
-
-#include <AsyncAudioSink.h>
 
 
 /****************************************************************************
@@ -55,6 +43,7 @@ An example of how to use the Recorder class
  *
  ****************************************************************************/
 
+#include <AsyncAudioSink.h>
 
 
 /****************************************************************************
@@ -63,6 +52,7 @@ An example of how to use the Recorder class
  *
  ****************************************************************************/
 
+#include "SigLevDet.h"
 
 
 /****************************************************************************
@@ -71,6 +61,11 @@ An example of how to use the Recorder class
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class AudioFilter;
+  class SigCAudioSink;
+};
 
 
 /****************************************************************************
@@ -114,70 +109,66 @@ An example of how to use the Recorder class
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	A simple signal level detector
 @author Tobias Blomberg / SM0SVX
-@date   2005-08-29
-
-A_detailed_class_description
-
-\include Recorder_demo.cpp
+@date   2006-05-07
 */
-class Recorder : public Async::AudioSink
+class SigLevDetNoise : public SigLevDet
 {
   public:
     /**
      * @brief 	Default constuctor
      */
-    explicit Recorder(const std::string& filename);
+    explicit SigLevDetNoise(int sample_rate);
   
     /**
      * @brief 	Destructor
      */
-    ~Recorder(void);
+    ~SigLevDetNoise(void);
+    
+    /**
+     * @brief 	Set the detector slope
+     * @param 	slope The detector slope to set
+     */
+    void setDetectorSlope(float slope);
+
+    /**
+     * @brief 	Set the detector offset
+     * @param 	offset The offset to set
+     */
+    void setDetectorOffset(float offset);
   
     /**
-     * @brief 	Initialize the recorder
-     * @return	Return \em true if the initialization was successful
+     * @brief 	Read the latest calculated signal level
+     * @return	Returns the latest calculated signal level
      */
-    bool initialize(void);
+    double lastSiglev(void) const
+    {
+      return offset - slope * log10(last_siglev);
+    }
+     
+    void reset(void);
+     
     
-    /**
-     * @brief 	Write samples into this audio sink
-     * @param 	samples The buffer containing the samples
-     * @param 	count The number of samples in the buffer
-     * @return	Returns the number of samples that has been taken care of
-     *
-     * This function is used to write audio into this audio sink. If it
-     * returns 0, no more samples should be written until the resumeOutput
-     * function in the source have been called.
-     * This function is normally only called from a connected source object.
-     */
-    virtual int writeSamples(const float *samples, int count);
-    
-    /**
-     * @brief 	Tell the sink to flush the previously written samples
-     *
-     * This function is used to tell the sink to flush previously written
-     * samples. When done flushing, the sink should call the
-     * sourceAllSamplesFlushed function.
-     * This function is normally only called from a connected source object.
-     */
-    virtual void flushSamples(void);
-
+  protected:
     
   private:
-    std::string filename;
-    FILE      	*file;
+    Async::AudioFilter	  *filter;
+    Async::SigCAudioSink  *sigc_sink;
+    double    	      	  last_siglev;
+    float     	      	  slope;
+    float     	      	  offset;
     
-    Recorder(const Recorder&);
-    Recorder& operator=(const Recorder&);
+    SigLevDetNoise(const SigLevDetNoise&);
+    SigLevDetNoise& operator=(const SigLevDetNoise&);
+    int processSamples(float *samples, int count);
     
-};  /* class Recorder */
+};  /* class SigLevDetNoise */
 
 
 //} /* namespace */
 
-#endif /* RECORDER_INCLUDED */
+#endif /* SIG_LEV_DET_NOISE_INCLUDED */
 
 
 

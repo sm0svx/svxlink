@@ -132,6 +132,7 @@ TRIM_SOUNDS="\
   Core/AM \
   Core/PM \
   Core/the_time_is \
+  Core/voice_logger \
   Help/name \
   Parrot/name \
   EchoLink/connected \

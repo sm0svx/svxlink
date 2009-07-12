@@ -251,6 +251,12 @@ class AudioDevice : public SigC::Object
     void close(void);
     
     /**
+     * @brief 	Get the current operating mode of this audio device
+     * @return	Returns the current mode (See AudioIO::Mode)
+     */
+    Mode mode(void) const { return current_mode; }
+    
+    /**
      * @brief 	Tell the audio device handler that there are audio to be
      *	      	written in the buffer
      */

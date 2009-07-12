@@ -164,6 +164,7 @@ class ToneDetector : public SigC::Object, public Async::AudioSink
     int       	       det_delay_left;
     int       	       undet_delay_left;
     float     	       peak_thresh;
+    float     	       energy_thresh;
 
 };  /* class ToneDetector */
 

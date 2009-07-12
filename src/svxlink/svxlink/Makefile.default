@@ -26,10 +26,9 @@ PROGS		=
 CPPPROGS      	= $(BIN)/svxlink
 
 # Sources other than the main files
-PRGSRC		= MsgHandler.cpp \
-		  Module.cpp Logic.cpp SimplexLogic.cpp RepeaterLogic.cpp \
-		  EventHandler.cpp AudioSwitchMatrix.cpp CmdParser.cpp \
-		  Recorder.cpp
+PRGSRC		= MsgHandler.cpp Module.cpp Logic.cpp SimplexLogic.cpp \
+		  RepeaterLogic.cpp EventHandler.cpp AudioSwitchMatrix.cpp \
+		  CmdParser.cpp VoiceLogger.cpp
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -lasynccpp -lasyncaudio -ltrx
@@ -97,7 +96,8 @@ LIB_UI_FILES	=
 #   Where:   750     = The mode
 #            -       = Preserve owner
 #            mygroup = Set group mygroup
-INC_INSTALL	= $(EXPINC:%=%[644,root,root])
+#INC_INSTALL	= $(EXPINC:%=%[644,root,root])
+INC_INSTALL	= 
 
 # Library to install (just one at the moment).
 # You may optionally specify mode, owner and group if you want to.

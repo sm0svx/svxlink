@@ -14,7 +14,7 @@
 #
 proc playMsg {context msg} {
   global basedir;
-  set candidates [glob -nocomplain "$basedir/$context/$msg.{raw,gsm}" "$basedir/Default/$msg.{raw,gsm}"];
+  set candidates [glob -nocomplain "$basedir/$context/$msg.{wav,raw,gsm}" "$basedir/Default/$msg.{wav,raw,gsm}"];
   if { [llength $candidates] > 0 } {
     playFile [lindex $candidates 0];
   } else {
@@ -41,7 +41,7 @@ proc spellWord {word} {
       playMsg "Default" "slash";
     } elseif {$char == "-"} {
       playMsg "Default" "dash";
-    } else {
+    } elseif {[regexp {[a-z0-9]} $char]} {
       playMsg "Default" "phonetic_$char";
     }
   }
@@ -123,7 +123,13 @@ proc playTime {hour minute} {
 set basedir [file dirname $script_path];
 
 foreach {file} [glob -directory $basedir/events.d *.tcl] {
-  source $file;
+  set filename [file tail $file];
+  set local_file "$basedir/events.d/local/$filename";
+  if [file exists $local_file] {
+    source $local_file;
+  } else {
+    source $file;
+  }
 }
 
 if [info exists is_core_event_handler] {

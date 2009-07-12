@@ -52,6 +52,14 @@ set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.conf";
 
 
 #
+# Default maximum recording times. Set them from config variables if
+# available.
+#
+set max_subj_time 10000
+set max_mesg_time 120000
+
+
+#
 # Read configuration file
 #
 if [file exists $cfg_home] {
@@ -209,6 +217,8 @@ proc squelch_open {is_open} {
   variable mail_msg;
   variable CFG_ID;
   variable ::Logic::CFG_CALLSIGN;
+  variable max_subj_time;
+  variable max_mesg_time;
   
   if {$is_open} {set str "OPEN"} else { set str "CLOSED"};
   #printInfo "The squelch is $str";
@@ -217,9 +227,9 @@ proc squelch_open {is_open} {
     if {$is_open} {
       set rec_rcpt_call [id2var $rec_rcpt call];
       set subj_filename "$recdir/$rec_rcpt_call/$rec_timestamp";
-      append subj_filename "_$userid.subj";
+      append subj_filename "_$userid\_subj.wav";
       printInfo "Recording subject to file: $subj_filename";
-      recordStart $subj_filename;
+      recordStart $subj_filename $max_subj_time;
     } else {
       recordStop;
       playMsg "rec_message";
@@ -228,19 +238,15 @@ proc squelch_open {is_open} {
   } elseif {$state == "rec_message"} {
     set rec_rcpt_call [id2var $rec_rcpt call];
     set subj_filename "$recdir/$rec_rcpt_call/$rec_timestamp";
-    append subj_filename "_$userid.subj";
+    append subj_filename "_$userid\_subj.wav";
     set mesg_filename "$recdir/$rec_rcpt_call/$rec_timestamp";
-    append mesg_filename "_$userid.mesg";
+    append mesg_filename "_$userid\_mesg.wav";
     if {$is_open} {
       printInfo "Recording message to file: $mesg_filename";
-      recordStart $mesg_filename;
+      recordStart $mesg_filename $max_mesg_time;
     } else {
       recordStop;
       playMsg "rec_done";
-      #playFile $subj_filename;
-      #playSilence 1000;
-      #playFile $mesg_filename;
-      #playSilence 1000;
       playSilence 500;
       set email [id2var $rec_rcpt email];
       if {$email != ""} {
@@ -285,7 +291,7 @@ proc status_report {} {
   set user_list {};
   foreach userid [lsort [array names users]] {
     set call [id2var $userid call];
-    if {[llength [glob -nocomplain -directory "$recdir/$call" *.subj]] > 0} {
+    if {[llength [glob -nocomplain -directory "$recdir/$call" *_subj.wav]] > 0} {
       lappend user_list $call;
     }
   }
@@ -359,7 +365,7 @@ proc cmdPlayNextNewMessage {cmd} {
 
   #puts "cmdPlayNextNewMessage";
   set call [id2var $userid call];
-  set subjects [glob -nocomplain -directory "$recdir/$call" *.subj];
+  set subjects [glob -nocomplain -directory "$recdir/$call" *_subj.wav];
   set subjects [lsort -ascii -increasing $subjects];
   if {$state == "logged_in"} {
     set msg_cnt [llength $subjects];
@@ -368,35 +374,35 @@ proc cmdPlayNextNewMessage {cmd} {
     playSilence 500;
     printInfo "$msg_cnt new messages for $call";
     if {$msg_cnt > 0} {
-      set basename [file rootname [lindex $subjects 0]];
-      playFile "$basename.subj";
+      regexp {^(.*)_subj.wav} [lindex $subjects 0] -> basename
+      playFile "$basename\_subj.wav";
       playSilence 1000;
-      playFile "$basename.mesg";
+      playFile "$basename\_mesg.wav";
       playSilence 1000;
       playMsg "pnm_menu";
       setState "pnm_menu";
     }
   } elseif {$state == "pnm_menu"} {
-    set basename [file rootname [lindex $subjects 0]];
+    regexp {^(.*)_subj.wav} [lindex $subjects 0] -> basename
     if {$cmd == "0"} {
       playMsg "pnm_menu";
     } elseif {$cmd == "1"} {
       printInfo "Deleting message $basename";
-      file delete "$basename.subj" "$basename.mesg";
+      file delete "$basename\_subj.wav" "$basename\_mesg.wav";
       playMsg "message_deleted";
       setState "logged_in";
     } elseif {$cmd == "2"} {
       printInfo "Reply to and delete message $basename";
-      file delete "$basename.subj" "$basename.mesg";
+      file delete "$basename\_subj.wav" "$basename\_mesg.wav";
       playMsg "message_deleted";
       regexp {\d{8}_\d{6}_(\d+)$} $basename -> sender;
       setState "rec_reply";
       cmdRecordMessage "x$sender";
     } elseif {$cmd == "3"} {
       printInfo "Replay message $basename";
-      playFile "$basename.subj";
+      playFile "$basename\_subj.wav";
       playSilence 1000;
-      playFile "$basename.mesg";
+      playFile "$basename\_mesg.wav";
       playSilence 1000;
       playMsg "pnm_menu";
     } elseif {$cmd == ""} {
@@ -422,9 +428,9 @@ proc abortRecording {} {
     printInfo "Aborted recording";
     set rec_rcpt_call [id2var $rec_rcpt call];
     set subj_filename "$recdir/$rec_rcpt_call/$rec_timestamp";
-    append subj_filename "_$userid.subj";
+    append subj_filename "_$userid\_subj.wav";
     set mesg_filename "$recdir/$rec_rcpt_call/$rec_timestamp";
-    append mesg_filename "_$userid.mesg";
+    append mesg_filename "_$userid\_mesg.wav";
     file delete $subj_filename $mesg_filename;
     set rec_rcpt "";
   }

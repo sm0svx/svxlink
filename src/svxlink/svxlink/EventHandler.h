@@ -181,8 +181,9 @@ class EventHandler : public SigC::Object
      * @brief 	A signal that is emitted when the TCL script want to start
      *	      	a recording
      * @param 	filename The name of the file to record the audio to
+     * @param   max_time The maximum recording time in milliseconds
      */
-    SigC::Signal1<void, const std::string&> recordStart;
+    SigC::Signal2<void, const std::string&, unsigned> recordStart;
     
     /**
      * @brief 	A signal that is emitted when the TCL script want to stop

@@ -1,6 +1,13 @@
 #ifndef MULTIRATE_FILTER_COEFF_INCLUDED
 #define MULTIRATE_FILTER_COEFF_INCLUDED
 
+/**********************************************************************
+ * The filters in this file have been designed using the filter
+ * designer applet at:
+ *
+ *   http://www.dsptutor.freeuk.com/remez/RemezFIRFilterDesign.html
+ **********************************************************************/
+
 
 /*
 First stage 48kHz <-> 16kHz (3.5kHz cut-off)
@@ -116,6 +123,88 @@ static const float coeff_48_16[coeff_48_16_taps] =
   -0.0046009521986267,
   -0.0023665474931056,
   -0.0006552324784575
+};
+
+
+/*
+48kHz <-> 16kHz (6.5kHz cut-off)
+
+Parks-McClellan FIR Filter Design
+
+Filter type: Low pass
+Passband: 0 - 0.135416666667 (0 - 6500Hz)
+Order: 53
+Passband ripple: 0.1 dB
+Transition band: 0.052083332 (2500Hz)
+Stopband attenuation: 60.0 dB
+
+The cut-off frequency is chosen so that tones used in the SigLevDetTone class
+(5.5-6.4kHz) are let through.
+
+The transition band (6.5 - 9kHz) for this filter is deliberately chosen to be
+a bit too wide for downsampling to 16kHz. The (attenuated) frequencies from
+8-9kHz will be folded down between 7-8kHz but that does not matter since that
+frequency range is not used anyway.
+What is gained by using a wider transition band is that the filter will have
+a lower order which reduce required CPU power and filter delay.
+*/
+static const int coeff_48_16_wide_taps = 54;
+static const float coeff_48_16_wide[coeff_48_16_wide_taps] =
+{
+  5.11059239270262E-4,
+  -8.255590813253409E-4,
+  -0.0022883650051252883,
+  -0.00291284164121095,
+  -0.0012268298491091916,
+  0.0022762075309263855,
+  0.004665122182146708,
+  0.0028373838432406684,
+  -0.0029213363716820875,
+  -0.007788031828919018,
+  -0.006016833804341717,
+  0.002968009107977126,
+  0.01198761593254768,
+  0.011232706838970668,
+  -0.0019206055143741107,
+  -0.017561483250559024,
+  -0.019661897398973553,
+  -0.0011813015957021255,
+  0.025346590995928835,
+  0.034210485687661864,
+  0.008664040822720114,
+  -0.03840386432673845,
+  -0.0655288086799168,
+  -0.030167800561122577,
+  0.07566615695450109,
+  0.21042482376878066,
+  0.3043049697785759,
+  0.3043049697785759,
+  0.21042482376878066,
+  0.07566615695450109,
+  -0.030167800561122577,
+  -0.0655288086799168,
+  -0.03840386432673845,
+  0.008664040822720114,
+  0.034210485687661864,
+  0.025346590995928835,
+  -0.0011813015957021255,
+  -0.019661897398973553,
+  -0.017561483250559024,
+  -0.0019206055143741107,
+  0.011232706838970668,
+  0.01198761593254768,
+  0.002968009107977126,
+  -0.006016833804341717,
+  -0.007788031828919018,
+  -0.0029213363716820875,
+  0.0028373838432406684,
+  0.004665122182146708,
+  0.0022762075309263855,
+  -0.0012268298491091916,
+  -0.00291284164121095,
+  -0.0022883650051252883,
+  -8.255590813253409E-4,
+  5.11059239270262E-4
 };
 
 

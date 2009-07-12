@@ -224,7 +224,7 @@ bool AudioDevice::open(Mode mode)
   fd = ::open(dev_name.c_str(), flags);
   if(fd < 0)
   {
-    perror("open failed");
+    perror("open audio device failed");
     return false;
   }
 

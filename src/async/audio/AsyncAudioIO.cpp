@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <sigc++/sigc++.h>
+#include <stdint.h>
 
 #include <cstdio>
 #include <cassert>
@@ -104,12 +105,24 @@ class Async::AudioIO::InputFifo : public AudioFifo
     virtual int writeSamples(const float *samples, int count)
     {
       do_flush = false;
+      if ((audio_dev->mode() != AudioDevice::MODE_WR) &&
+          (audio_dev->mode() != AudioDevice::MODE_RDWR))
+      {
+        return count;
+      }
       audio_dev->audioToWriteAvailable();
       return AudioFifo::writeSamples(samples, count);
     }
     
     virtual void flushSamples(void)
     {
+      if ((audio_dev->mode() != AudioDevice::MODE_WR) &&
+          (audio_dev->mode() != AudioDevice::MODE_RDWR))
+      {
+        do_flush = false;
+        sourceAllSamplesFlushed();
+        return;
+      }
       do_flush = true;
       if (!empty())
       {

@@ -205,6 +205,12 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
   
   if (con == 0)
   {
+    delete audio_enc;
+    audio_enc = 0;
+    
+    delete audio_dec;
+    audio_dec = 0;
+    
     con = incoming_con;
     con->dataReceived.connect(slot(*this, &NetUplink::tcpDataReceived));
     recv_exp = sizeof(Msg);
@@ -249,19 +255,12 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
   recv_exp = 0;
   state = STATE_DISC;
   rx->reset();
-  if (audio_enc != 0)
-  {
-    delete audio_enc;
-    audio_enc = 0;
-  }
   
   tx->enableCtcss(false);
   fifo->clear();
   if (audio_dec != 0)
   {
     audio_dec->flushEncodedSamples();
-    delete audio_dec;
-    audio_dec = 0;
   }
   tx->setTxCtrlMode(Tx::TX_OFF);
   
@@ -385,6 +384,12 @@ void NetUplink::handleMsg(Msg *msg)
   {
     case MsgHeartbeat::TYPE:
     {
+      break;
+    }
+    
+    case MsgReset::TYPE:
+    {
+      rx->reset();
       break;
     }
     

@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+#include <cstdlib>
 
 
 
@@ -171,6 +172,7 @@ Rx::~Rx(void)
 
 bool Rx::initialize(void)
 {
+  /*
   string value;
   if (m_cfg.getValue(name(), "SQL_TIMEOUT", value))
   {
@@ -179,8 +181,10 @@ bool Rx::initialize(void)
     {
       m_sql_tmo_timer = new Timer(tmo_val);
       m_sql_tmo_timer->expired.connect(slot(*this, &Rx::sqlTimeout));
+      m_sql_tmo_timer->setEnable(false);
     }
   }
+  */
   
   return true;
   

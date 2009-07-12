@@ -67,7 +67,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "SigLevDet.h"
+#include "SigLevDetNoise.h"
+#include "SigLevDetTone.h"
 #include "DtmfDecoder.h"
 #include "ToneDetector.h"
 #include "SquelchVox.h"
@@ -95,7 +96,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define DTMF_MUTING_PRE   50
+#define DTMF_MUTING_PRE   75
 #define DTMF_MUTING_POST  200
 
 
@@ -236,7 +237,7 @@ class PeakMeter : public AudioPassthrough
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), audio_io(0), is_muted(true),
-    squelch_det(0), siglevdet(0), siglev_offset(0.0), siglev_slope(1.0),
+    squelch_det(0), siglevdet(0), /* siglev_offset(0.0), siglev_slope(1.0), */
     tone_dets(0), sql_valve(0), delay(0), mute_dtmf(false), sql_tail_elim(0),
     preamp_gain(0), mute_valve(0)
 {
@@ -245,6 +246,7 @@ LocalRx::LocalRx(Config &cfg, const std::string& name)
 
 LocalRx::~LocalRx(void)
 {
+  clearHandler();
   delete audio_io;  // This will delete the whole chain of audio objects
 } /* LocalRx::~LocalRx */
 
@@ -272,16 +274,6 @@ bool LocalRx::initialize(void)
     return false;
   }
   int audio_channel = atoi(value.c_str());
-  
-  if (cfg.getValue(name(), "SIGLEV_OFFSET", value))
-  {
-    siglev_offset = atof(value.c_str());
-  }
-  
-  if (cfg.getValue(name(), "SIGLEV_SLOPE", value))
-  {
-    siglev_slope = atof(value.c_str());
-  }
   
   bool deemphasis = false;
   if (cfg.getValue(name(), "DEEMPHASIS", value))
@@ -358,12 +350,8 @@ bool LocalRx::initialize(void)
     // decimate it down to 16kHz
   if (audio_io->sampleRate() > 16000)
   {
-#if (INTERNAL_SAMPLE_RATE == 8000)
-    AudioDecimator *d1 = new AudioDecimator(3, coeff_48_16_int,
-      	      	      	      	      	    coeff_48_16_int_taps);
-#else
-    AudioDecimator *d1 = new AudioDecimator(3, coeff_48_16, coeff_48_16_taps);
-#endif
+    AudioDecimator *d1 = new AudioDecimator(3, coeff_48_16_wide,
+					    coeff_48_16_wide_taps);
     prev_src->registerSink(d1, true);
     prev_src = d1;
   }
@@ -431,20 +419,30 @@ bool LocalRx::initialize(void)
 #if (INTERNAL_SAMPLE_RATE != 16000)
   if (rate_16k_splitter != 0)
   {
-    siglevdet = new SigLevDet(16000);
+    siglevdet = createSigLevDet(name(), 16000);
+    if (siglevdet == 0)
+    {
+      return false;
+    }
     rate_16k_splitter->addSink(siglevdet, true);
   }
   else
   {
-    siglevdet = new SigLevDet(8000);
+    siglevdet = createSigLevDet(name(), 8000);
+    if (siglevdet == 0)
+    {
+      return false;
+    }
     splitter->addSink(siglevdet, true);
   }
 #else
-  siglevdet = new SigLevDet(16000);
+  siglevdet = createSigLevDet(name(), 16000);
+  if (siglevdet == 0)
+  {
+    return false;
+  }
   splitter->addSink(siglevdet, true);
 #endif
-  siglevdet->setDetectorSlope(siglev_slope);
-  siglevdet->setDetectorOffset(siglev_offset);
 #endif
   
     // Create the configured squech detector and initialize it. Then connect
@@ -598,6 +596,7 @@ void LocalRx::mute(bool do_mute)
     sql_valve->setOpen(false);
     //mute_valve->setOpen(false);
     //audio_io->close();
+    squelch_det->reset();
     //setSquelchState(false);
   }
   else
@@ -738,6 +737,60 @@ void LocalRx::onSquelchOpen(bool is_open)
     }
   }
 } /* LocalRx::onSquelchOpen */
+
+
+SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
+{
+  string siglev_det_type;
+  if (!cfg.getValue(name, "SIGLEV_DET", siglev_det_type))
+  {
+    siglev_det_type = "NOISE";
+  }
+  
+  SigLevDet *siglevdet = 0;
+  if (siglev_det_type == "TONE")
+  {
+    if (sample_rate != 16000)
+    {
+      cerr << "*** ERROR: The tone signal level detector only work at 16kHz "
+              "sampling rate\n";
+      return 0;
+    }
+    siglevdet = new SigLevDetTone;
+  }
+  else if (siglev_det_type == "NOISE")
+  {
+    SigLevDetNoise *det = new SigLevDetNoise(sample_rate);
+  
+    string value;
+    if (cfg.getValue(name, "SIGLEV_OFFSET", value))
+    {
+      det->setDetectorOffset(atof(value.c_str()));
+    }
+    
+    if (cfg.getValue(name, "SIGLEV_SLOPE", value))
+    {
+      det->setDetectorSlope(atof(value.c_str()));
+    }
+    
+    siglevdet = det;
+  }
+  else
+  {
+    cerr << "*** ERROR: Unknown signal level detector type \""
+         << siglev_det_type << "\" specified in " << name << "/SIGLEV_DET.";
+    return 0;
+  }
+  
+  if (!siglevdet->initialize(cfg, name))
+  {
+    delete siglevdet;
+    siglevdet = 0;
+  }
+  
+  return siglevdet;
+  
+} /* LocalRx::createSigLevDet */
 
 
 

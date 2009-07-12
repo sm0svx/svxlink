@@ -81,6 +81,7 @@ namespace Async
   class AudioSplitter;
   class AudioValve;
   class AudioStreamStateDetector;
+  class AudioRecorder;
 };
 
 
@@ -106,7 +107,7 @@ class MsgHandler;
 class Module;
 class EventHandler;
 class Command;
-class Recorder;
+class VoiceLogger;
   
 
 /****************************************************************************
@@ -170,7 +171,7 @@ class Logic : public SigC::Object
     virtual void playFile(const std::string& path);
     virtual void playSilence(int length);
     virtual void playTone(int fq, int amp, int len);
-    void recordStart(const std::string& filename);
+    void recordStart(const std::string& filename, unsigned max_time);
     void recordStop(void);
 
     virtual bool activateModule(Module *module);
@@ -250,7 +251,7 @@ class Logic : public SigC::Object
     Async::AudioSplitter	    *logic_con_in;
     CmdParser 	      	      	    cmd_parser;
     Async::Timer      	      	    *every_minute_timer;
-    Recorder  	      	      	    *recorder;
+    Async::AudioRecorder  	    *recorder;
     TxCtcssType       	      	    tx_ctcss;
     Async::AudioMixer	      	    *tx_audio_mixer;
     Async::AudioAmp   	      	    *fx_gain_ctrl;
@@ -268,6 +269,7 @@ class Logic : public SigC::Object
     unsigned       	      	    long_cmd_digits;
     std::string       	      	    long_cmd_module;
     bool      	      	      	    report_events_as_idle;
+    VoiceLogger                     *voice_logger;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);

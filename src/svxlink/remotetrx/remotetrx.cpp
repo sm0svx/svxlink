@@ -220,6 +220,13 @@ int main(int argc, char **argv)
     exit(1);
   }
   
+  act.sa_handler = SIG_IGN;
+  if (sigaction(SIGPIPE, &act, NULL) == -1)
+  {
+    perror("sigaction");
+    exit(1);
+  }
+  
   int pipefd[2] = {-1, -1};
   int noclose = 0;
   if (logfile_name != 0)
@@ -266,6 +273,13 @@ int main(int argc, char **argv)
       /* Close stdin */
     close(STDIN_FILENO);
     
+      /* Force stdout to line buffered mode */
+    if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
+    {
+      perror("setlinebuf");
+      exit(1);
+    }
+
       /* Tell the daemon function call not to close the file descriptors */
     noclose = 1;
   }
@@ -383,7 +397,11 @@ int main(int argc, char **argv)
     struct dirent *dirent;
     while ((dirent = readdir(dir)) != NULL)
     {
-      if (dirent->d_name[0] == '.') continue;
+      char *dot = strrchr(dirent->d_name, '.');
+      if ((dot == NULL) || (strcmp(dot, ".conf") != 0))
+      {
+      	continue;
+      }
       cfg_filename = cfg_dir + "/" + dirent->d_name;
       if (!cfg.open(cfg_filename))
        {
@@ -643,15 +661,15 @@ static void write_to_logfile(const char *buf)
 	struct tm *tm = localtime(&epoch);
 	char tstr[256];
 	size_t tlen = strftime(tstr, sizeof(tstr), tstamp_format.c_str(), tm);
-	write(logfd, tstr, tlen);
-	write(logfd, ": ", 2);
+	(void)write(logfd, tstr, tlen);
+	(void)write(logfd, ": ", 2);
 	print_timestamp = false;
       }
 
       if (reopen_log)
       {
 	const char *reopen_txt = "SIGHUP received. Reopening logfile\n";
-	write(logfd, reopen_txt, strlen(reopen_txt));
+	(void)write(logfd, reopen_txt, strlen(reopen_txt));
 	open_logfile();
 	reopen_log = false;
 	print_timestamp = true;
@@ -660,7 +678,7 @@ static void write_to_logfile(const char *buf)
     }
 
     int write_len = 0;
-    char *nl = strchr(ptr, '\n');
+    const char *nl = strchr(ptr, '\n');
     if (nl != 0)
     {
       write_len = nl-ptr+1;
@@ -670,7 +688,7 @@ static void write_to_logfile(const char *buf)
     {
       write_len = strlen(ptr);
     }
-    write(logfd, ptr, write_len);
+    (void)write(logfd, ptr, write_len);
     ptr += write_len;
   }
 } /* write_to_logfile */
@@ -695,11 +713,11 @@ void sighup_handler(int signal)
 {
   if (logfile_name == 0)
   {
-    write(STDOUT_FILENO, "Ignoring SIGHUP\n", 16);
+    (void)write(STDOUT_FILENO, "Ignoring SIGHUP\n", 16);
     return;
   }
   
-  write(STDOUT_FILENO, "SIGHUP received. Logfile reopened\n", 34);
+  (void)write(STDOUT_FILENO, "SIGHUP received. Logfile reopened\n", 34);
   reopen_log = true;
     
 } /* sighup_handler */

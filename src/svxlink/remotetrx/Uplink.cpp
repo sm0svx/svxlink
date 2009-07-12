@@ -141,7 +141,7 @@ Uplink *Uplink::create(Config &cfg, const string &name, Rx *rx, Tx *tx)
   
   return uplink;
   
-} /* Rx::create */
+} /* Uplink::create */
 
 
 

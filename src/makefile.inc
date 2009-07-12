@@ -30,11 +30,7 @@ ifndef CFG_INCLUDED
 endif
 
 ifndef MAKEFILE_CONFIG_INCLUDED
-  -include $(ROOT)/.config
-endif
-
-ifndef MAKEFILE_LOCAL_CONFIG_INCLUDED
-  -include .config
+  include $(ROOT)/.config
 endif
 
 LIB		:= $(ROOT)/$(LIB)
@@ -104,13 +100,11 @@ LIBDEP		:= $(subst -l,$(LIB)/lib,$(PROJLIBS))
 LIBDEP		:= $(LIBDEP:%=%.a)
 
 # Compiler warnings
-CWARNINGS	= -Wstrict-prototypes -Wpointer-arith \
-	  	-DNeedVarargsPrototypes  -fstrength-reduce \
-		-fpcc-struct-return -fno-common -Wall
+CWARNINGS	= -Wall -Wstrict-prototypes -Wpointer-arith
+# -DNeedVarargsPrototypes -fpcc-struct-return -fno-common
 
-CXXWARNINGS	= -Wpointer-arith \
-	  	-DNeedVarargsPrototypes  -fstrength-reduce \
-		-fpcc-struct-return -fno-common -Wall
+CXXWARNINGS	= -Wall -Wpointer-arith
+# -DNeedVarargsPrototypes -fpcc-struct-return -fno-common
 
 
 # Bash-script to find out the relative path from a given directory

@@ -158,7 +158,12 @@ ifdef QT_BIN
 
 #PRE_TARGETS    = pre.txt
 POST_TARGETS   = translations/qtel_sv.qm \
-		 translations/qtel_de.qm
+		 translations/qtel_de.qm \
+		 translations/qtel_tr.qm \
+		 translations/qtel_nl.qm \
+		 translations/qtel_it.qm \
+		 translations/qtel_uk.qm \
+		 translations/qtel_es.qm
 
 
 translations/qtel_%.qm:  translations/qtel_%.ts
@@ -238,6 +243,14 @@ install-extras uninstall-extras rpm-extras:
 	$(FILESPEC) translations/qtel_sv.qm[644,root,root] \
 	      	    /usr/share/qtel/translations
 	$(FILESPEC) translations/qtel_de.qm[644,root,root] \
+	      	    /usr/share/qtel/translations
+	$(FILESPEC) translations/qtel_tr.qm[644,root,root] \
+	      	    /usr/share/qtel/translations
+	$(FILESPEC) translations/qtel_nl.qm[644,root,root] \
+	      	    /usr/share/qtel/translations
+	$(FILESPEC) translations/qtel_uk.qm[644,root,root] \
+	      	    /usr/share/qtel/translations
+	$(FILESPEC) translations/qtel_es.qm[644,root,root] \
 	      	    /usr/share/qtel/translations
 	$(FILESPEC) connect.raw[644,root,root] /usr/share/qtel/sounds
 	$(FILESPEC) qtel.desktop[644,root,root] /usr/share/applications

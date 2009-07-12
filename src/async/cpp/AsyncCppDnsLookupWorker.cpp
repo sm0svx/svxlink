@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/time.h>
 #include <errno.h>
 #include <cstdlib>
+#include <cstdio>
 
 
 /****************************************************************************
@@ -286,7 +287,7 @@ void *CppDnsLookupWorker::workerFunc(void *w)
     worker->result = 0;
   }
   
-  write(worker->notifier_wr, "D", 1);
+  (void)write(worker->notifier_wr, "D", 1);
   
   worker->done = true;
   

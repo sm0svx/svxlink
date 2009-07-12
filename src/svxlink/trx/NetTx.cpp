@@ -158,6 +158,9 @@ bool NetTx::initialize(void)
     audio_enc_name = "RAW";
   }
   
+  string auth_key;
+  cfg.getValue(name, "AUTH_KEY", auth_key);
+  
   pacer = new AudioPacer(INTERNAL_SAMPLE_RATE, 512, 50);
   setHandler(pacer);
   
@@ -190,6 +193,7 @@ bool NetTx::initialize(void)
   pacer->registerSink(audio_enc);
   
   tcp_con = NetTrxTcpClient::instance(host, atoi(tcp_port.c_str()));
+  tcp_con->setAuthKey(auth_key);
   tcp_con->isReady.connect(slot(*this, &NetTx::connectionReady));
   tcp_con->msgReceived.connect(slot(*this, &NetTx::handleMsg));
   tcp_con->connect();

@@ -186,11 +186,12 @@ class RepeaterLogic : public Logic
     int       	    short_sql_open_cnt;
     int       	    sql_flap_sup_min_time;
     int       	    sql_flap_sup_max_cnt;
+    bool            rgr_enable;
     std::string     open_reason;
     
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);
-    void setUp(bool up);
+    void setUp(bool up, std::string reason);
     void squelchOpen(bool is_open);
     void detectedTone(float fq);
     void playIdleSound(Async::Timer *t);

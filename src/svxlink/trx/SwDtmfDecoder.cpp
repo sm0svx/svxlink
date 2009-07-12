@@ -79,18 +79,17 @@ using namespace Async;
 // All values are squared magnitude ratios !
 #define DTMF_NORMAL_TWIST           6.3f   /* 8dB */
 #define DTMF_REVERSE_TWIST          6.3f   /* 8dB */
-#define DTMF_RELATIVE_PEAK          10.0f  /* 10dB */
+#define DTMF_RELATIVE_PEAK          20.0f  /* 13dB */
 
 // The Goertzel algorithm is just a recursive way to evaluate the DFT at a
-// single frequency. The DTMF detection bandwidth of 39Hz was chosen to
-// place the DTMF frequencies near the centers of the DFT's.
-// This is generally an implementation trade-off, since the DFT's binary
-// frequencies are arithmetically spaced, whereas DTMF's frequencies are
-// geometrically spaced.
-#define DTMF_BANDWIDTH              39     /* 39Hz */
-
-#define DTMF_BLOCK_SAMPLES          (INTERNAL_SAMPLE_RATE / DTMF_BANDWIDTH)
-#define DTMF_BLOCK_TIME             (1000000 / DTMF_BANDWIDTH)
+// single frequency. For maximum detection reliability, the bandwidth will
+// be adapted to place the tone frequency near the center of the DFT.
+// As a side effect, the detection bandwidth is slightly narrowed, which
+// however is acceptable for the DTMF decoder. Furthermore, a time slack
+// between the tone detectors is unavoidable, since they use different
+// block lengths.
+#define DTMF_BANDWIDTH              40     /* 40Hz */
+#define DTMF_BLOCK_LENGTH           (INTERNAL_SAMPLE_RATE / 1000)
 
 
 /****************************************************************************
@@ -132,27 +131,37 @@ using namespace Async;
  ****************************************************************************/
 
 SwDtmfDecoder::SwDtmfDecoder(Config &cfg, const string &name)
-  : DtmfDecoder(cfg, name), last_hit(0), last_stable(0),
-    stable_timer(0), active_timer(0),
+  : DtmfDecoder(cfg, name), samples_left(DTMF_BLOCK_LENGTH),
+    last_hit(0), last_stable(0), stable_timer(0), active_timer(0),
     normal_twist(DTMF_NORMAL_TWIST), reverse_twist(DTMF_REVERSE_TWIST)
 {
+    memset(row_energy, 0, sizeof(row_energy));
+    memset(col_energy, 0, sizeof(col_energy));
+    
     /* Init row detectors */
-    goertzelInit(&detector[0].row_out[0], 697.0f, INTERNAL_SAMPLE_RATE);
-    goertzelInit(&detector[0].row_out[1], 770.0f, INTERNAL_SAMPLE_RATE);
-    goertzelInit(&detector[0].row_out[2], 852.0f, INTERNAL_SAMPLE_RATE);
-    goertzelInit(&detector[0].row_out[3], 941.0f, INTERNAL_SAMPLE_RATE);
+    goertzelInit(&row_out[0], 697.0f, DTMF_BANDWIDTH);
+    goertzelInit(&row_out[1], 770.0f, DTMF_BANDWIDTH);
+    goertzelInit(&row_out[2], 852.0f, DTMF_BANDWIDTH);
+    goertzelInit(&row_out[3], 941.0f, DTMF_BANDWIDTH);
 
     /* Init column detectors */
-    goertzelInit(&detector[0].col_out[0], 1209.0f, INTERNAL_SAMPLE_RATE);
-    goertzelInit(&detector[0].col_out[1], 1336.0f, INTERNAL_SAMPLE_RATE);
-    goertzelInit(&detector[0].col_out[2], 1477.0f, INTERNAL_SAMPLE_RATE);
-    goertzelInit(&detector[0].col_out[3], 1633.0f, INTERNAL_SAMPLE_RATE);
-
-    memcpy(&detector[1], &detector[0], sizeof(DtmfState));
+    goertzelInit(&col_out[0], 1209.0f, DTMF_BANDWIDTH);
+    goertzelInit(&col_out[1], 1336.0f, DTMF_BANDWIDTH);
+    goertzelInit(&col_out[2], 1477.0f, DTMF_BANDWIDTH);
+    goertzelInit(&col_out[3], 1633.0f, DTMF_BANDWIDTH);
 
     /* Sliding window Goertzel algorithm */
-    detector[0].current_sample = 0;
-    detector[1].current_sample = DTMF_BLOCK_SAMPLES / 2;
+    memcpy(row_out+4, row_out, 4*sizeof(GoertzelState));
+    row_out[4].samples_left = row_out[4].block_length / 2;
+    row_out[5].samples_left = row_out[5].block_length / 2;
+    row_out[6].samples_left = row_out[6].block_length / 2;
+    row_out[7].samples_left = row_out[7].block_length / 2;
+
+    memcpy(col_out+4, col_out, 4*sizeof(GoertzelState));
+    col_out[4].samples_left = col_out[4].block_length / 2;
+    col_out[5].samples_left = col_out[5].block_length / 2;
+    col_out[6].samples_left = col_out[6].block_length / 2;
+    col_out[7].samples_left = col_out[7].block_length / 2;
 
 } /* SwDtmfDecoder::SwDtmfDecoder */
 
@@ -187,29 +196,120 @@ bool SwDtmfDecoder::initialize(void)
 
 int SwDtmfDecoder::writeSamples(const float *buf, int len)
 {
-  int ret = len;
-  
-  while (len > 0)
-  {
-    int block_len = min(len, DTMF_BLOCK_SAMPLES);
-
-    /* Sliding window Goertzel algorithm */
-    if (detector[0].current_sample > detector[1].current_sample)
+    for (int i = 0; i < len; i++)
     {
-      dtmfReceive(&detector[0], buf, block_len);
-      dtmfReceive(&detector[1], buf, block_len);
-    }
-    else
-    {
-      dtmfReceive(&detector[1], buf, block_len);
-      dtmfReceive(&detector[0], buf, block_len);
-    }
+        float v1;
+        float famp = *(buf++);
 
-    buf += block_len; len -= block_len;
-  }
-  
-  return ret;
-  
+        /* Row detectors */
+        v1 = row_out[0].v2;
+        row_out[0].v2 = row_out[0].v3;
+        row_out[0].v3 = row_out[0].fac * row_out[0].v2 - v1 + famp;
+
+        v1 = row_out[1].v2;
+        row_out[1].v2 = row_out[1].v3;
+        row_out[1].v3 = row_out[1].fac * row_out[1].v2 - v1 + famp;
+        
+        v1 = row_out[2].v2;
+        row_out[2].v2 = row_out[2].v3;
+        row_out[2].v3 = row_out[2].fac * row_out[2].v2 - v1 + famp;
+
+        v1 = row_out[3].v2;
+        row_out[3].v2 = row_out[3].v3;
+        row_out[3].v3 = row_out[3].fac * row_out[3].v2 - v1 + famp;
+
+        v1 = row_out[4].v2;
+        row_out[4].v2 = row_out[4].v3;
+        row_out[4].v3 = row_out[4].fac * row_out[4].v2 - v1 + famp;
+
+        v1 = row_out[5].v2;
+        row_out[5].v2 = row_out[5].v3;
+        row_out[5].v3 = row_out[5].fac * row_out[5].v2 - v1 + famp;
+        
+        v1 = row_out[6].v2;
+        row_out[6].v2 = row_out[6].v3;
+        row_out[6].v3 = row_out[6].fac * row_out[6].v2 - v1 + famp;
+
+        v1 = row_out[7].v2;
+        row_out[7].v2 = row_out[7].v3;
+        row_out[7].v3 = row_out[7].fac * row_out[7].v2 - v1 + famp;
+
+        /* Column detectors */
+        v1 = col_out[0].v2;
+        col_out[0].v2 = col_out[0].v3;
+        col_out[0].v3 = col_out[0].fac * col_out[0].v2 - v1 + famp;
+
+        v1 = col_out[1].v2;
+        col_out[1].v2 = col_out[1].v3;
+        col_out[1].v3 = col_out[1].fac * col_out[1].v2 - v1 + famp;
+
+        v1 = col_out[2].v2;
+        col_out[2].v2 = col_out[2].v3;
+        col_out[2].v3 = col_out[2].fac * col_out[2].v2 - v1 + famp;
+
+        v1 = col_out[3].v2;
+        col_out[3].v2 = col_out[3].v3;
+        col_out[3].v3 = col_out[3].fac * col_out[3].v2 - v1 + famp;
+
+        v1 = col_out[4].v2;
+        col_out[4].v2 = col_out[4].v3;
+        col_out[4].v3 = col_out[4].fac * col_out[4].v2 - v1 + famp;
+
+        v1 = col_out[5].v2;
+        col_out[5].v2 = col_out[5].v3;
+        col_out[5].v3 = col_out[5].fac * col_out[5].v2 - v1 + famp;
+
+        v1 = col_out[6].v2;
+        col_out[6].v2 = col_out[6].v3;
+        col_out[6].v3 = col_out[6].fac * col_out[6].v2 - v1 + famp;
+
+        v1 = col_out[7].v2;
+        col_out[7].v2 = col_out[7].v3;
+        col_out[7].v3 = col_out[7].fac * col_out[7].v2 - v1 + famp;
+
+        /* Row result calculators */
+        if (--row_out[0].samples_left == 0)
+            row_energy[0] = goertzelResult(&row_out[0]);
+        if (--row_out[1].samples_left == 0)
+            row_energy[1] = goertzelResult(&row_out[1]);
+        if (--row_out[2].samples_left == 0)
+            row_energy[2] = goertzelResult(&row_out[2]);
+        if (--row_out[3].samples_left == 0)
+            row_energy[3] = goertzelResult(&row_out[3]);
+        if (--row_out[4].samples_left == 0)
+            row_energy[0] = goertzelResult(&row_out[4]);
+        if (--row_out[5].samples_left == 0)
+            row_energy[1] = goertzelResult(&row_out[5]);
+        if (--row_out[6].samples_left == 0)
+            row_energy[2] = goertzelResult(&row_out[6]);
+        if (--row_out[7].samples_left == 0)
+            row_energy[3] = goertzelResult(&row_out[7]);
+
+        /* Column result calculators */
+        if (--col_out[0].samples_left == 0)
+            col_energy[0] = goertzelResult(&col_out[0]);
+        if (--col_out[1].samples_left == 0)
+            col_energy[1] = goertzelResult(&col_out[1]);
+        if (--col_out[2].samples_left == 0)
+            col_energy[2] = goertzelResult(&col_out[2]);
+        if (--col_out[3].samples_left == 0)
+            col_energy[3] = goertzelResult(&col_out[3]);
+        if (--col_out[4].samples_left == 0)
+            col_energy[0] = goertzelResult(&col_out[4]);
+        if (--col_out[5].samples_left == 0)
+            col_energy[1] = goertzelResult(&col_out[5]);
+        if (--col_out[6].samples_left == 0)
+            col_energy[2] = goertzelResult(&col_out[6]);
+        if (--col_out[7].samples_left == 0)
+            col_energy[3] = goertzelResult(&col_out[7]);
+    
+        /* Now we are at the end of the detection block */
+        if (--samples_left == 0)
+            dtmfReceive();
+    }
+    
+    return len;
+    
 } /* SwDtmfDecoder::writeSamples */
 
 
@@ -226,123 +326,43 @@ int SwDtmfDecoder::writeSamples(const float *buf, int len)
  *
  ****************************************************************************/
 
-void SwDtmfDecoder::dtmfReceive(DtmfState *d, const float *buf, int len)
+void SwDtmfDecoder::dtmfReceive(void)
 {
     const char dtmf_table[] = "123A456B789C*0#D";
-    float row_energy[4];
-    float col_energy[4];
-    float famp;
-    float v1;
-    int best_row;
-    int best_col;
 
-    for (int i = 0; i < len; i++)
+    /* Find the peak row and the peak column */
+    int best_row = findMaxIndex(row_energy);
+    int best_col = findMaxIndex(col_energy);
+
+    uint8_t hit = 0;
+    /* Valid index test */
+    if ((best_row >= 0) && (best_col >= 0))
     {
-        famp = *(buf++);
-
-        /* Row detectors */
-        v1 = d->row_out[0].v2;
-        d->row_out[0].v2 = d->row_out[0].v3;
-        d->row_out[0].v3 = d->row_out[0].fac*d->row_out[0].v2 - v1 + famp;
-
-        v1 = d->row_out[1].v2;
-        d->row_out[1].v2 = d->row_out[1].v3;
-        d->row_out[1].v3 = d->row_out[1].fac*d->row_out[1].v2 - v1 + famp;
-        
-        v1 = d->row_out[2].v2;
-        d->row_out[2].v2 = d->row_out[2].v3;
-        d->row_out[2].v3 = d->row_out[2].fac*d->row_out[2].v2 - v1 + famp;
-
-        v1 = d->row_out[3].v2;
-        d->row_out[3].v2 = d->row_out[3].v3;
-        d->row_out[3].v3 = d->row_out[3].fac*d->row_out[3].v2 - v1 + famp;
-
-        /* Column detectors */
-        v1 = d->col_out[0].v2;
-        d->col_out[0].v2 = d->col_out[0].v3;
-        d->col_out[0].v3 = d->col_out[0].fac*d->col_out[0].v2 - v1 + famp;
-
-        v1 = d->col_out[1].v2;
-        d->col_out[1].v2 = d->col_out[1].v3;
-        d->col_out[1].v3 = d->col_out[1].fac*d->col_out[1].v2 - v1 + famp;
-
-        v1 = d->col_out[2].v2;
-        d->col_out[2].v2 = d->col_out[2].v3;
-        d->col_out[2].v3 = d->col_out[2].fac*d->col_out[2].v2 - v1 + famp;
-
-        v1 = d->col_out[3].v2;
-        d->col_out[3].v2 = d->col_out[3].v3;
-        d->col_out[3].v3 = d->col_out[3].fac*d->col_out[3].v2 - v1 + famp;
-
-        if (++d->current_sample < DTMF_BLOCK_SAMPLES)
-            continue;
-
-        /* We are at the end of a DTMF detection block */
-        row_energy[0] = goertzelResult(&d->row_out[0]);
-        row_energy[1] = goertzelResult(&d->row_out[1]);
-        row_energy[2] = goertzelResult(&d->row_out[2]);
-        row_energy[3] = goertzelResult(&d->row_out[3]);
-
-        col_energy[0] = goertzelResult(&d->col_out[0]);
-        col_energy[1] = goertzelResult(&d->col_out[1]);
-        col_energy[2] = goertzelResult(&d->col_out[2]);
-        col_energy[3] = goertzelResult(&d->col_out[3]);
-
-        /* Find the peak row and the peak column */
-        best_row = findMaxIndex(row_energy);
-        best_col = findMaxIndex(col_energy);
-
-        uint8_t hit = 0;
-        /* Valid index test */
-        if ((best_row >= 0) && (best_col >= 0))
+         /* Twist test */
+        if ((col_energy[best_col] < row_energy[best_row] * reverse_twist) &&
+            (row_energy[best_row] < col_energy[best_col] * normal_twist))
         {
-            /* Twist test */
-            if ((col_energy[best_col] < row_energy[best_row] * reverse_twist) &&
-                (col_energy[best_col] * normal_twist > row_energy[best_row]))
-            {
-                /* Got a hit */
-                hit = dtmf_table[(best_row << 2) + best_col];
-            }
+            /* Got a hit */
+            hit = dtmf_table[(best_row << 2) + best_col];
         }
-
-        /* Call the post-processing function. */
-        dtmfPostProcess(hit);
-
-        /* Reinitialise the detectors for the next block */
-        goertzelReset(&d->row_out[0]);
-        goertzelReset(&d->row_out[1]);            
-        goertzelReset(&d->row_out[2]);
-        goertzelReset(&d->row_out[3]);
-        
-        goertzelReset(&d->col_out[0]);
-        goertzelReset(&d->col_out[1]);
-        goertzelReset(&d->col_out[2]);
-        goertzelReset(&d->col_out[3]);
-
-        d->current_sample = 0;
     }
-    
+
+    /* Call the post-processing function. */
+    dtmfPostProcess(hit);
+
+    /* Reset the sample counter. */
+    samples_left = DTMF_BLOCK_LENGTH;
+
 } /* SwDtmfDecoder::dtmfReceive */
 
 
 void SwDtmfDecoder::dtmfPostProcess(uint8_t hit)
 {
   /* This function is called when a complete block has been received. */
-  /* Since we use a sliding window algorithm, this happens twice in */
-  /* every DTMF_BLOCK_TIME interval. */
-  active_timer += DTMF_BLOCK_TIME / 2;
+  active_timer++; stable_timer++;
   
-  /* The digit has changed. */
-  if (hit != last_stable)
-  {
-    /* Here we check if the digit is stable. */
-    if (hit != last_hit)
-      stable_timer = DTMF_BLOCK_TIME / 2;
-    else
-      stable_timer += DTMF_BLOCK_TIME / 2;
-  }
-  /* We still receive the same digit or space. */
-  else
+  /* The digit has not changed or is not stable. */
+  if ((hit == last_stable) || (hit != last_hit))
   {
     stable_timer = 0;
   }
@@ -351,9 +371,9 @@ void SwDtmfDecoder::dtmfPostProcess(uint8_t hit)
   last_hit = hit;
 
   /* A non-zero digit was stable for at least 50ms. */
-  if (hit && (stable_timer >= 50000))
+  if (hit && (stable_timer >= 50))
   {
-    if (last_stable) digitDeactivated(last_stable, active_timer / 1000);
+    if (last_stable) digitDeactivated(last_stable, active_timer);
     last_stable = hit;
 
     active_timer = 0;
@@ -361,26 +381,35 @@ void SwDtmfDecoder::dtmfPostProcess(uint8_t hit)
   }
 
   /* A zero digit was stable for at least 50ms. */
-  if (!hit && (stable_timer >= 50000 + hangtime() * 1000))
+  if (!hit && (stable_timer >= 50 + hangtime()))
   {
-    digitDeactivated(last_stable, active_timer / 1000);
+    digitDeactivated(last_stable, active_timer);
     last_stable = 0;
   }
   
 } /* SwDtmfDecoder::dtmfPostProcess */
 
 
-void SwDtmfDecoder::goertzelInit(GoertzelState *s, float freq, int sample_rate)
+void SwDtmfDecoder::goertzelInit(GoertzelState *s, float freq, float bw)
 {
-    s->fac = 2.0f * cosf(2.0f * M_PI * (freq / (float)sample_rate));
-    goertzelReset(s);
+    /* Adjust the bandwidth to minimize the DFT error. */
+    float new_bw = freq / ceilf(freq / bw);
+    /* Select a block length with minimized DFT error. */
+    s->block_length = lrintf(INTERNAL_SAMPLE_RATE / new_bw);
+    /* Scale output values to achieve same levels at different block lengths. */
+    s->scale_factor = powf(new_bw / bw, 2);
+    /* Init detector frequency. */
+    s->fac = 2.0f * cosf(2.0f * M_PI * freq / INTERNAL_SAMPLE_RATE);
+    /* Reset the tone detector state. */
+    s->v2 = s->v3 = 0.0f;
+    s->samples_left = s->block_length;
     
 } /* SwDtmfDecoder::goertzelInit */
 
 
 float SwDtmfDecoder::goertzelResult(GoertzelState *s)
 {
-    float v1;
+    float v1, res;
 
     /* Push a zero through the process to finish things off. */
     v1 = s->v2;
@@ -389,7 +418,12 @@ float SwDtmfDecoder::goertzelResult(GoertzelState *s)
     /* Now calculate the non-recursive side of the filter. */
     /* The result here is not scaled down to allow for the magnification
        effect of the filter (the usual DFT magnification effect). */
-    return s->v3*s->v3 + s->v2*s->v2 - s->v2*s->v3*s->fac;
+    res = (s->v3*s->v3 + s->v2*s->v2 - s->v2*s->v3*s->fac) * s->scale_factor;
+    /* Reset the tone detector state. */
+    s->v2 = s->v3 = 0.0f;
+    s->samples_left = s->block_length;
+    /* Return the calculated signal level. */
+    return res;
     
 } /* SwDtmfDecoder::goertzelResult */
 

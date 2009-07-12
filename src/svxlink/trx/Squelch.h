@@ -2,7 +2,7 @@
 @file	 Squelch.h
 @brief   Base class for implementing a squelch detector
 @author  Tobias Blomberg / SM0SVX
-@date	 2005-08-02
+@date	 2009-06-30
 
 This file contains the base class for implementing a squelch detector
 
@@ -127,7 +127,8 @@ class Squelch : public SigC::Object, public Async::AudioSink
      */
     explicit Squelch(void)
       : m_open(false), start_delay(0), start_delay_left(0), delay(0),
-        delay_left(0), hangtime(0), hangtime_left(0) {}
+        delay_left(0), hangtime(0), hangtime_left(0), sql_timeout(0),
+	sql_timeout_left(0) {}
   
     /**
      * @brief 	Destructor
@@ -142,15 +143,17 @@ class Squelch : public SigC::Object, public Async::AudioSink
      */
     virtual bool initialize(Async::Config& cfg, const std::string& rx_name)
     {
+      m_name = rx_name;
+      
       std::string value;
       if (cfg.getValue(rx_name, "SQL_HANGTIME", value))
       {
-      	setHangtime(atoi(value.c_str())*8);
+      	setHangtime(atoi(value.c_str()));
       }
       
       if (cfg.getValue(rx_name, "SQL_DELAY", value))
       {
-      	setDelay(atoi(value.c_str())*8);
+      	setDelay(atoi(value.c_str()));
       }
 
       if (cfg.getValue(rx_name, "SQL_START_DELAY", value))
@@ -158,38 +161,53 @@ class Squelch : public SigC::Object, public Async::AudioSink
 	setStartDelay(atoi(value.c_str()));
       }
       
+      if (cfg.getValue(rx_name, "SQL_TIMEOUT", value))
+      {
+	setSqlTimeout(atoi(value.c_str()));
+      }
+      
       return true;
     }
   
     /**
-     * @brief 	Set the vox start delay
+     * @brief 	Set the squelch start delay
      * @param 	delay The delay in milliseconds to set
      *
-     * Use this function to set the vox startup delay. The delay is specified
-     * in milliseconds. When a value > 0 is specified, the vox will not trigger
-     * within this time after Squelch::reset function has been called.
+     * Use this function to set the squelch startup delay. The delay is
+     * specified in milliseconds. When a value > 0 is specified, the squelch
+     * will not open within this time after the Squelch::reset function has
+     * been called.
      */
     void setStartDelay(int delay)
     {
-      start_delay = delay > 0 ? 8 * delay : 0;
+      start_delay = ((delay > 0) ? (delay * INTERNAL_SAMPLE_RATE / 1000) : 0);
     }
     
     /**
      * @brief 	Set the time the squelch should hang open after squelch close
-     * @param 	hang_samples The number of samples to hang
+     * @param 	hang The number of milliseconds to hang
      */
-    void setHangtime(int hang_samples)
+    void setHangtime(int hang)
     {
-      hangtime = (hang_samples >= 0) ? hang_samples : 0;
+      hangtime = ((hang > 0) ? (hang * INTERNAL_SAMPLE_RATE / 1000) : 0);
     }
     
     /**
      * @brief 	Set the time a squelch open should be delayed
-     * @param 	delay_samples The number of samples to delay
+     * @param 	delay The delay in milliseconds
      */
-    void setDelay(int delay_samples)
+    void setDelay(int delay)
     {
-      delay = (delay_samples >= 0) ? delay_samples : 0;
+      delay = ((delay > 0) ? (delay * INTERNAL_SAMPLE_RATE / 1000) : 0);
+    }
+    
+    /**
+     * @brief 	Set the maximum time the squelch is allowed to stay open
+     * @param 	timeout The squelch timeout in seconds
+     */
+    void setSqlTimeout(int timeout)
+    {
+      sql_timeout = ((timeout > 0) ? (timeout * INTERNAL_SAMPLE_RATE) : 0);
     }
     
     /**
@@ -204,6 +222,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
       hangtime_left = 0;
       start_delay_left = start_delay;
       delay_left = 0;
+      sql_timeout_left = 0;
     }
 
     /**
@@ -215,6 +234,21 @@ class Squelch : public SigC::Object, public Async::AudioSink
     int writeSamples(const float *samples, int count)
     {
       int orig_count = count;
+      
+      if (sql_timeout_left > 0)
+      {
+	sql_timeout_left -= count;
+	//printf("sql_timeout_left=%d\n", sql_timeout_left);
+	if (sql_timeout_left <= 0)
+	{
+	  std::cerr << m_name
+	       << ": *** WARNING: The squelch was open for too long. "
+	       << "Forcing it closed.\n";
+	  hangtime_left = 0;
+	  m_open = false;
+	  squelchOpen(false);
+	}
+      }
       
       if (start_delay_left > 0)
       {
@@ -241,6 +275,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
       	hangtime_left -= ret_count;
 	if (hangtime_left <= 0)
 	{
+	  sql_timeout_left = 0;
 	  m_open = false;
 	  squelchOpen(false);
 	}
@@ -251,6 +286,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
       	delay_left -= ret_count;
 	if (delay_left <= 0)
 	{
+	  sql_timeout_left = sql_timeout;
 	  m_open = true;
 	  squelchOpen(true);
 	}
@@ -305,6 +341,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
 	hangtime_left = 0;
 	if (delay == 0)
 	{
+	  sql_timeout_left = sql_timeout;
       	  if (!m_open)
       	  {
       	    m_open = true;
@@ -324,6 +361,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
       	delay_left = 0;
 	if (hangtime == 0)
 	{
+	  sql_timeout_left = 0;
       	  if (m_open)
       	  {
       	    m_open = false;
@@ -350,6 +388,8 @@ class Squelch : public SigC::Object, public Async::AudioSink
     int       	  delay_left;
     int       	  hangtime;
     int       	  hangtime_left;
+    int           sql_timeout;
+    int           sql_timeout_left;
 
     Squelch(const Squelch&);
     Squelch& operator=(const Squelch&);

@@ -76,7 +76,7 @@ LIBSRC		= EchoLinkDirectory.cpp EchoLinkQso.cpp rtpacket.cpp \
       	      	  EchoLinkDispatcher.cpp EchoLinkStationData.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
-LIB_LIBS	= -lc -lasynccore -lgsm
+LIB_LIBS	= -lc -lgsm -lasynccore -lasyncaudio
 
 # Which STATIC libs should be included in the generated STATIC lib.
 # These libs must be in the $(LIB) directory. Only the name of the
@@ -85,8 +85,9 @@ LIB_LIBS	= -lc -lasynccore -lgsm
 STATIC_LIBS   	= 
 
 # Includefiles to export. A softlink is created in $(INC).
-EXPINC		= EchoLinkDirectory.h EchoLinkDispatcher.h EchoLinkQso.h \
+LIB_INC    	= EchoLinkDirectory.h EchoLinkDispatcher.h EchoLinkQso.h \
       	      	  EchoLinkStationData.h
+EXPINC		= $(LIB_INC) rtp.h
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for libraries).
@@ -101,7 +102,7 @@ LIB_UI_FILES	=
 #   Where:   750     = The mode
 #            -       = Preserve owner
 #            mygroup = Set group mygroup
-INC_INSTALL	= $(EXPINC:%=%[644,root,root])
+INC_INSTALL	= $(LIB_INC:%=%[644,root,root])
 
 # Library to install (just one at the moment).
 # You may optionally specify mode, owner and group if you want to.

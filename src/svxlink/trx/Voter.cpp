@@ -407,6 +407,18 @@ bool Voter::addToneDetector(float fq, int bw, float thresh,
 } /* Voter::addToneDetector */
 
 
+float Voter::signalStrength(void) const
+{
+  if (active_rx != 0)
+  {
+    return active_rx->rx->signalStrength();
+  }
+  
+  return BEST_RX_SIGLEV_RESET;
+  
+} /* Voter::signalStrength */
+
+
 int Voter::sqlRxId(void) const
 {
   return sql_rx_id;
@@ -453,7 +465,7 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
 {
   Rx *rx = srx->rx;
   
-  //cout << "Voter::satSquelchOpen(" << (is_open ? "TRUE" : "FALSE")
+  //cout << name() << "::satSquelchOpen(" << (is_open ? "TRUE" : "FALSE")
   //     << ", " << rx->name() << "): Signal Strength = "
   //     << rx->signalStrength() << "\n";
   
@@ -546,7 +558,7 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
 
 void Voter::chooseBestRx(Timer *t)
 {
-  //cout << "Voter::chooseBestRx\n";
+  //cout << name() << "::chooseBestRx\n";
   
   delete best_rx_timer;
   best_rx_timer = 0;

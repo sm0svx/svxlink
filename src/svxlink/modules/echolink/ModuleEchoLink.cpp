@@ -65,6 +65,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "ModuleEchoLink.h"
+#include "QsoImpl.h"
+#include "LocationInfo.h"
 
 
 /****************************************************************************
@@ -149,7 +151,8 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
   : Module(dl_handle, logic, cfg_name), dir(0), dir_refresh_timer(0),
     remote_activation(false), pending_connect_id(-1), last_message(""),
     max_connections(1), max_qsos(1), talker(0), squelch_is_open(false),
-    state(STATE_NORMAL), cbc_timer(0), splitter(0), listen_only_valve(0)
+    state(STATE_NORMAL), cbc_timer(0), splitter(0), listen_only_valve(0),
+    tinfo(0)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
@@ -331,6 +334,11 @@ bool ModuleEchoLink::initialize(void)
     // stations: (QsoImpl -> ) Selector -> Fifo -> <to core>
   selector = new AudioSelector;
   AudioSource::setHandler(selector);
+
+  if (cfg().getValue(cfgName(), "LOCATION_INFO", value))
+  {
+    tinfo = new LocationInfo(cfg(), value, mycall);
+  }
   
   return true;
   
@@ -646,6 +654,12 @@ void ModuleEchoLink::onStatusChanged(StationData::Status status)
     delete dir_refresh_timer;
     dir_refresh_timer = 0;
   }
+  
+    // Update status at aprs.echolink.org
+  if (tinfo)
+  {
+    tinfo->updateDirectoryStatus(status);
+  }
 } /* onStatusChanged */
 
 
@@ -834,8 +848,15 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   
   qso->accept();
   broadcastTalkerStatus();
-  
   updateDescription();
+
+  if (tinfo != 0)
+  {
+    list<string> call_list;
+    listQsoCallsigns(call_list);
+    
+    tinfo->updateQsoStatus(2, callsign, name, call_list);
+  }
   
   checkIdle();
   
@@ -963,13 +984,15 @@ void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
 void ModuleEchoLink::destroyQsoObject(QsoImpl *qso)
 {
   //cout << qso->remoteCallsign() << ": Destroying QSO object" << endl;
-  
+  string callsign = qso->remoteCallsign();
+
   splitter->removeSink(qso);
   selector->removeSource(qso);
       
   list<QsoImpl*>::iterator it = find(qsos.begin(), qsos.end(), qso);
   assert (it != qsos.end());
   qsos.erase(it);
+
   updateEventVariables();
   delete qso;
   
@@ -987,9 +1010,16 @@ void ModuleEchoLink::destroyQsoObject(QsoImpl *qso)
   qso = 0;
   
   //broadcastTalkerStatus();
-  
   //updateDescription();
-  
+
+  if (tinfo != 0)
+  {
+    list<string> call_list;
+    listQsoCallsigns(call_list);
+    
+    tinfo->updateQsoStatus(0, callsign, "", call_list);
+  }
+
   checkIdle();
   
 } /* ModuleEchoLink::destroyQsoObject */
@@ -1093,6 +1123,17 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
   processEvent(ss.str());
   outgoing_con_pending.push_back(qso);
   
+  if (tinfo != 0)
+  {
+    stringstream info;
+    info << station.id();
+
+    list<string> call_list;
+    listQsoCallsigns(call_list);
+
+    tinfo->updateQsoStatus(1, station.callsign(), info.str(), call_list);
+  }
+    
   checkIdle();
   
 } /* ModuleEchoLink::createOutgoingConnection */
@@ -1354,6 +1395,20 @@ int ModuleEchoLink::numConnectedStations(void)
   return cnt;
   
 } /* ModuleEchoLink::numConnectedStations */
+
+
+int ModuleEchoLink::listQsoCallsigns(list<string>& call_list)
+{
+  call_list.clear();
+  list<QsoImpl*>::iterator it;
+  for (it=qsos.begin(); it!=qsos.end(); ++it)
+  {
+    call_list.push_back((*it)->remoteCallsign());
+  }
+  
+  return call_list.size();
+  
+} /* ModuleEchoLink::listQsoCallsigns */
 
 
 void ModuleEchoLink::handleCommand(const string& cmd)

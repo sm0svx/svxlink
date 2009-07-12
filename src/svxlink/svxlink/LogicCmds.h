@@ -63,6 +63,7 @@ An example of how to use the LogicCmds class
 #include "CmdParser.h"
 #include "Logic.h"
 #include "Module.h"
+#include "VoiceLogger.h"
 
 
 /****************************************************************************
@@ -294,6 +295,71 @@ class LinkCmd : public Command
         
 };  /* class LinkCmd */
 
+
+class VoiceLoggerCmd : public Command
+{
+  public:
+    /**
+     * @brief 	Default constuctor
+     */
+    VoiceLoggerCmd(CmdParser *parser, Logic *logic, VoiceLogger *logger)
+      : Command(parser), logic(logic), logger(logger) {}
+  
+    /**
+     * @brief 	Destructor
+     */
+    ~VoiceLoggerCmd(void) {}
+  
+    /**
+     * @brief 	Initialize the command object
+     * @param 	cmd_str The command base
+     * @return	Returns \em true on success or \em false on failure
+     */
+    bool initialize(const std::string &cmd_str)
+    {
+      setCmd(cmd_str);
+      return true;
+    }
+    
+    void operator ()(const std::string& subcmd)
+    {
+      if (subcmd == "0")
+      {
+        if (logger->isEnabled())
+        {
+          logger->setEnabled(false);
+          logic->processEvent("deactivating_voice_logger");
+        }
+        else
+        {
+          logic->processEvent("voice_logger_not_active");
+        }
+      }
+      else if (subcmd == "1")
+      {
+        if (!logger->isEnabled())
+        {
+          logger->setEnabled(true);
+          logic->processEvent("activating_voice_logger");
+        }
+        else
+        {
+          logic->processEvent("voice_logger_already_active");
+        }
+      }
+      else
+      {
+      	std::stringstream ss;
+	ss << "command_failed " << cmdStr() << subcmd;
+      	logic->processEvent(ss.str());
+      }
+    }
+    
+  private:
+    Logic       *logic;
+    VoiceLogger *logger;
+    
+};  /* class VoiceLoggerCmd */
 
 
 

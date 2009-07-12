@@ -1,8 +1,8 @@
 /**
 @file	 SigLevDet.h
-@brief   A simple signal level detector
+@brief   The base class for a signal level detector
 @author  Tobias Blomberg / SM0SVX
-@date	 2006-05-07
+@date	 2009-05-23
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <sigc++/sigc++.h>
+#include <string>
 
 
 /****************************************************************************
@@ -64,6 +65,7 @@ namespace Async
 {
   class AudioFilter;
   class SigCAudioSink;
+  class Config;
 };
 
 
@@ -118,49 +120,39 @@ class SigLevDet : public SigC::Object, public Async::AudioSink
     /**
      * @brief 	Default constuctor
      */
-    explicit SigLevDet(int sample_rate);
+    SigLevDet(void) {}
   
     /**
      * @brief 	Destructor
      */
-    ~SigLevDet(void);
+    virtual ~SigLevDet(void) {}
     
     /**
-     * @brief 	Set the detector slope
-     * @param 	slope The detector slope to set
+     * @brief 	Initialize the signal detector
+     * @return 	Return \em true on success, or \em false on failure
      */
-    void setDetectorSlope(float slope);
-
-    /**
-     * @brief 	Set the detector offset
-     * @param 	offset The offset to set
-     */
-    void setDetectorOffset(float offset);
-  
-    /**
-     * @brief 	Read the latest calculated signal level
-     * @return	Returns the latest calculated signal level
-     */
-    double lastSiglev(void) const
+    virtual bool initialize(Async::Config &cfg, const std::string& name)
     {
-      return offset - slope * log10(last_siglev);
+      return true;
     }
-     
-    void reset(void);
+    
+    /**
+     * @brief 	Read the latest measured signal level
+     * @return	Returns the latest measured signal level
+     */
+    virtual double lastSiglev(void) const = 0;
+    
+    /**
+     * @brief   Reset the signal level detector
+     */
+    virtual void reset(void) = 0;
      
     
   protected:
     
   private:
-    Async::AudioFilter	  *filter;
-    Async::SigCAudioSink  *sigc_sink;
-    double    	      	  last_siglev;
-    float     	      	  slope;
-    float     	      	  offset;
-    
     SigLevDet(const SigLevDet&);
     SigLevDet& operator=(const SigLevDet&);
-    int processSamples(float *samples, int count);
     
 };  /* class SigLevDet */
 

@@ -1,4 +1,12 @@
- 0.17.0 -- ?? ??? 2008
+ 0.17.1 -- ?? ??? 2009
+-----------------------
+
+* The Async::AudioRecorder can now auto detect the file format from the
+  filename extension.
+
+
+
+ 0.17.0 -- 26 Apr 2009
 -----------------------
 
 * The Async internal sample rate is now configurable by a compile time
@@ -9,8 +17,17 @@
 * Implemented an audio codec framework that is meant to be used when
   streaming audio over a network.
 
-* Bugfix in Async::AudioPacer: Using a prebuf size of zero millisecods
-  did not work.
+* Bugfixes in Async::AudioPacer: Using a prebuf size of zero millisecods
+  did not work. DH1DM: Fixed a buffer calculation error. Gaps could be
+  introduced in some situations.
+
+* Moved the audio recorder class from the SvxLink server application
+  to Async (Async::AudioRecorder).
+
+* The AudioRecorder can now write WAV files.
+
+* Bugfix in AudioFilter: Filters was not properly created under som locales,
+  like german (de_DE).
 
 
 

@@ -81,6 +81,7 @@ using namespace Async;
 #define DEFAULT_PEAK_THRESH	10.0	// 10dB
 #define DEFAULT_DET_DELAY	3
 #define DEFAULT_UNDET_DELAY	3
+#define DEFAULT_ENERGY_THRESH	1.0f
 
 
 /****************************************************************************
@@ -138,7 +139,7 @@ using namespace Async;
 ToneDetector::ToneDetector(float tone_hz, float width_hz)
   : current_sample(0), is_activated(false), tone_fq(tone_hz), block_len(0),
     det_delay_left(DEFAULT_DET_DELAY), undet_delay_left(0),
-    peak_thresh(DEFAULT_PEAK_THRESH)
+    peak_thresh(DEFAULT_PEAK_THRESH), energy_thresh(DEFAULT_ENERGY_THRESH)
 {
   // The Goertzel algorithm is just a recursive way to evaluate the DFT at a
   // single frequency. For maximum detection reliability, the bandwidth will
@@ -146,12 +147,8 @@ ToneDetector::ToneDetector(float tone_hz, float width_hz)
   // As a side effect, the detection bandwidth is slightly narrowed, which
   // however is acceptable for the current use cases (CTCSS, 1750Hz, etc..).
 
-  /* Calculate the DFT center index */
-  float idx = tone_hz / width_hz;
-  /* Adjust the bandwidth to minimize the DFT error */
-  width_hz *= idx / ceilf(idx);
-  /* Block length */
-  block_len = (int)(INTERNAL_SAMPLE_RATE / width_hz);
+  /* Adjust block length to minimize the DFT error */
+  block_len = lrintf(INTERNAL_SAMPLE_RATE * ceilf(tone_hz / width_hz) / tone_hz);
   /* Center frequency */
   goertzelInit(&center, tone_hz, INTERNAL_SAMPLE_RATE);
   /* Lower frequency */
@@ -206,7 +203,8 @@ int ToneDetector::writeSamples(const float *buf, int len)
     /* Upper frequency */
     float res_upper = goertzelResult(&upper);
 
-    if ((res_center > (res_lower * peak_thresh)) &&
+    if ((res_center > energy_thresh) &&
+        (res_center > (res_lower * peak_thresh)) &&
         (res_center > (res_upper * peak_thresh)))
     {
       if (det_delay_left > 0)

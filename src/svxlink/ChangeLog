@@ -1,5 +1,46 @@
- 0.11.0 -- ?? ??? 2008
-----------------------
+ 0.12.0 -- ?? ??? 2009
+-----------------------
+
+* Bugfix in the EchoLink module: Short callsign (<6 chars) was not handled
+  correctly in the APRS code.
+
+* Added a voice logger feature that can record all traffic on the channel.
+  The voice logger can be turned on and off using a DTMF command.
+  New configuration variables: VOICELOGGER_DIR and VOICELOGGER_CMD.
+
+* The voice mail module now store the messages as WAV files. Old messages
+  will have to be removed or converted into WAV files.
+  Old filename format: YYYYMMDD_hhmmss_UUU{.subj,.mesg}
+  New filename format: YYYYMMDD_hhmmss_UUU{_subj,_mesg}.wav
+
+* Voice mail messages are now time limited to a maximum time. Default
+  is 10 seconds for the subject and two minutes for the message.
+
+* Bugfix: The SQL_TIMEOUT function did not work as expected.
+
+* The repeater_down TCL function now have a "reason" argument that
+  can be either "IDLE" or "SQL_FLAP_SUP".
+
+* It is now possible to have a "local" subdirectory in the events.d
+  directory where the TCL files in the "local" directory will override
+  the TCL files in the events.d directory.
+
+* Added a threshold to the tone detector so that it is less prone to
+  trigger on silence. This was a problem when using CTCSS squelch
+  on a radio operated with closed squelch.
+
+* Implemented a signal level transmission mechanism based on multiple
+  tones, one for each signal level step, in the high audio frequency
+  spektrum (5.5 - 6.5kHz). This can be used for linking in remote
+  receivers via RF but still measure the signal strength at the
+  remote receiver site. Only the receiving part have been implemented
+  in SvxLink at the moment. On the remote receiver side an Atmel AVR
+  ATmega8 is used to map the signal level voltage to tone frequencies.
+
+
+
+ 0.11.0 -- 26 Apr 2009
+-----------------------
 
 * The SvxLink internal sample rate is now configurable by a compile time
   define (INTERNAL_SAMPLE_RATE in makefile.cfg).
@@ -47,10 +88,38 @@
   repeater_up event handler function. This make it possible to implement
   different behavior depending on how the repeater was activated.
 
+* Patch from DH1DM: Supressing roger beep after periodic id:s in
+  RepeaterLogic.
+
+* Bugfix: Log lines were not flushed out to the log file immediately since
+  stdout was block buffered by default. Now it's forced to line buffered
+  mode instead.
+
+* Now skipping characters we don't know how to spell in the spellWord TCL
+  function.
+
+* Bugfix: It was not possible to chain two voters together.
+
+* Bugfix: SvxLink would hang if an audio clip was missing.
+
+* APRS and EchoLink location info (link status page) functionality in
+  ModuleEchoLink added, contributed by DH1DM/Steve and DL1HRC/Adi.
+  There is a new configuration section, "LocationInfo" for this
+  and a new config variable LOCATION_INFO in the ModuleEchoLink.conf
+  configuration file.
+
+* SvxLink can now read WAV files. However, only 8k sampling rate,
+  mono, 16 bit signed formated files are supported.
+
+* The config file reader did not enforce a specific file extension which
+  could cause strange effects when using an editor that save backup files
+  in the same directory as the config files reside. Now all, except the
+  main config file, must have the extension ".conf".
+
 
 
  0.10.1 -- 30 Jul 2008
-----------------------
+-----------------------
 
 * Bugfix: Again the NO_REPEAT config variable did not work. It was
   simply ignored.
@@ -71,7 +140,7 @@
 
 
  0.10.0 -- 18 May 2008
-----------------------
+-----------------------
 
 * Bugfix: If SHORT_IDENT_INTERVAL != 0 and LONG_IDENT_INTERVAL == 0 we
   got a division by zero error.

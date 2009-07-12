@@ -1,14 +1,12 @@
 /**
-@file	 Recorder.cpp
-@brief   A_brief_description_for_this_file
+@file	 VoiceLogger.cpp
+@brief   The voice logger is used to write radio traffic to file
 @author  Tobias Blomberg / SM0SVX
-@date	 2005-08-29
-
-A_detailed_description_for_this_file
+@date	 2009-06-06
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -34,7 +32,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <cassert>
+#include <ctime>
+#include <cstdio>
+#include <iostream>
 
 
 /****************************************************************************
@@ -43,6 +43,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncAudioSelector.h>
+#include <AsyncAudioRecorder.h>
 
 
 /****************************************************************************
@@ -51,7 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Recorder.h"
+#include "VoiceLogger.h"
 
 
 
@@ -62,6 +64,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 
 
 
@@ -112,80 +115,68 @@ using namespace std;
  *
  ****************************************************************************/
 
-Recorder::Recorder(const string& filename)
-  : filename(filename), file(NULL)
+VoiceLogger::VoiceLogger(const string &rec_dir)
+  : recorder(0), rec_dir(rec_dir)
 {
-  
-} /* Recorder::Recorder */
+  selector = new AudioSelector;
+} /* VoiceLogger::VoiceLogger */
 
 
-Recorder::~Recorder(void)
+VoiceLogger::~VoiceLogger(void)
 {
-  if (file != NULL)
-  {
-    fclose(file);
-  }
-} /* Recorder::~Recorder */
+  setEnabled(false);
+  delete selector;
+} /* VoiceLogger::~VoiceLogger */
 
 
-bool Recorder::initialize(void)
+void VoiceLogger::addSource(Async::AudioSource *source, int prio)
 {
-  assert(file == NULL);
-  
-  file = fopen(filename.c_str(), "w");
-  if (file == NULL)
-  {
-    perror("*** ERROR fopen");
-    return false;
-  }
-  
-  return true;
-  
-} /* Recorder::initialize */
+  selector->addSource(source);
+  selector->enableAutoSelect(source, prio);
+} /* VoiceLogger::addSource */
 
 
-int Recorder::writeSamples(const float *samples, int count)
+void VoiceLogger::setEnabled(bool enable)
 {
-  if (file == NULL)
+  if (enable && (recorder == 0))
   {
-    return count;
-  }
-  
-  short buf[count];
-  for (int i=0; i<count; ++i)
-  {
-    float sample = samples[i];
-    if (sample > 1)
+    time_t epoch = time(NULL);
+    struct tm *tm = localtime(&epoch);
+    char timestamp[256];
+    strftime(timestamp, sizeof(timestamp), "%y%m%d%H%M%S", tm);
+    rec_timestamp = timestamp;
+    string filename(rec_dir);
+    filename += "/tmp_";
+    filename += rec_timestamp;
+    filename += ".wav";
+    recorder = new AudioRecorder(filename);
+    selector->registerSink(recorder, true);
+    if (!recorder->initialize())
     {
-      buf[i] = 32767;
-    }
-    else if (sample < -1)
-    {
-      buf[i] = -32767;
-    }
-    else
-    {
-      buf[i] = static_cast<short>(32767.0 * sample);
+      cerr << "*** VoiceLogger ERROR: Could not open file for recording: "
+          << filename << endl;
     }
   }
-  
-  int written = fwrite(buf, sizeof(*buf), count, file);
-  if ((written == 0) && ferror(file))
+  else if (recorder != 0)
   {
-    fclose(file);
-    file = NULL;
+    delete recorder;
+    recorder = 0;
+    
+    string oldpath(rec_dir + "/tmp_" + rec_timestamp + ".wav");
+    time_t epoch = time(NULL);
+    struct tm *tm = localtime(&epoch);
+    char timestamp[256];
+    strftime(timestamp, sizeof(timestamp), "%y%m%d%H%M%S", tm);
+    string newpath(rec_dir + "/voicelog_" + rec_timestamp + "_" + timestamp +
+                   ".wav");
+    if (rename(oldpath.c_str(), newpath.c_str()) != 0)
+    {
+      perror("VoiceLogger rename");
+    }
+    
+    rec_timestamp = "";
   }
-  
-  return written;
-
-} /* Recorder::writeSamples */
-
-
-void Recorder::flushSamples(void)
-{
-  sourceAllSamplesFlushed();
-} /* Recorder::flushSamples */
-
+} /* VoiceLogger::enable */
 
 
 
@@ -196,47 +187,12 @@ void Recorder::flushSamples(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
 
 /****************************************************************************
  *
  * Private member functions
  *
  ****************************************************************************/
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-
-
-
-
 
 
 

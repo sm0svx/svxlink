@@ -184,7 +184,7 @@ class AudioPacer : public AudioSink, public AudioSource, public SigC::Object
     bool      	  do_flush;
     bool      	  input_stopped;
     
-    void outputNextBlock(Async::Timer *t);
+    void outputNextBlock(Async::Timer *t=0);
 
 };  /* class AudioPacer */
 

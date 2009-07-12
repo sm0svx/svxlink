@@ -338,15 +338,20 @@ int EventHandler::recordHandler(ClientData cdata, Tcl_Interp *irp,
   //cout << "recordHandler: " << argv[0] << endl;
   if (strcmp(argv[0], "recordStart") == 0)
   {
-    if(argc != 2)
+    if((argc < 2) || (argc > 3))
     {
-      char msg[] = "Usage: recordStart <filename>";
+      char msg[] = "Usage: recordStart <filename> [max_time]";
       Tcl_SetResult(irp, msg, TCL_STATIC);
       return TCL_ERROR;
     }
 
     EventHandler *self = static_cast<EventHandler *>(cdata);
-    self->recordStart(argv[1]);
+    unsigned max_time = 0;
+    if (argc == 3)
+    {
+      max_time = atoi(argv[2]);
+    }
+    self->recordStart(argv[1], max_time);
   }
   else
   {

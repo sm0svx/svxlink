@@ -8,11 +8,9 @@
 
 The Async classes are the base for programming using the asynchronous
 programming paradigm also called event driven programming. It is also a
-good base for platform independent programming.
-
-The implementation is still very basic. There are several peases missing before
-it can be called complete. Only the stuff I needed for the moment are
-implemented.
+good base for platform independent programming. Even though just one
+platform (Linux) is supported at the moment, more platforms may be supported
+in the future.
 
 The main goal of writing asynchronous applications is to get them non-blocking.
 That is, the application should never block to wait for a single event to
@@ -22,6 +20,12 @@ AsyncApplication class (see @ref Async::Application::exec).
 
 The main two events is timer events and file descriptor watches. With these two
 anything can be done.
+
+An important part of Async is the audio pipe framework. It is an audio handling
+framework geared towards single channel audio handling. Audio pipe objects are
+connected together to form a pipe of audio processing stages. Some examples
+of audio processing classes are filter, mixer, compressor, interpolator,
+decimator, audio codecs etc.
 
 The Async classes also make heavy use of the SigC++ callback framework. This is
 a very nice implementation of the signal/slot paradigm, which is also used by

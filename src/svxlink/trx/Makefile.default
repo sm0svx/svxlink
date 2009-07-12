@@ -68,10 +68,11 @@ SHLIB_VERSION	=
 
 # Sources needed to build the library
 LIBSRC		= ToneDetector.cpp SwDtmfDecoder.cpp Rx.cpp LocalRx.cpp \
-		  SquelchVox.cpp SigLevDet.cpp NetRx.cpp Voter.cpp \
+		  SquelchVox.cpp SigLevDetNoise.cpp NetRx.cpp Voter.cpp \
 		  Tx.cpp LocalTx.cpp DtmfEncoder.cpp NetTx.cpp \
 		  NetTrxTcpClient.cpp DtmfDecoder.cpp HwDtmfDecoder.cpp \
-		  S54sDtmfDecoder.cpp PttCtrl.cpp MultiTx.cpp
+		  S54sDtmfDecoder.cpp PttCtrl.cpp MultiTx.cpp \
+		  SigLevDetTone.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
 LIB_LIBS	= -lc
@@ -98,7 +99,8 @@ LIB_UI_FILES	=
 #   Where:   750     = The mode
 #            -       = Preserve owner
 #            mygroup = Set group mygroup
-INC_INSTALL	= $(EXPINC:%=%[644,root,root])
+#INC_INSTALL	= $(EXPINC:%=%[644,root,root])
+INC_INSTALL	= 
 
 # Library to install (just one at the moment).
 # You may optionally specify mode, owner and group if you want to.

@@ -197,6 +197,7 @@ void SquelchVox::reset(void)
   }
   sum = 0;
   head = 0;
+  Squelch::reset();
 } /* SquelchVox::reset */
 
 

@@ -623,7 +623,7 @@ void ComDialog::stateChange(Qso::State state)
       ptt_button->setEnabled(false);
       chat_outgoing->setEnabled(false);
       connect_button->setFocus();
-      chat_incoming->append(trUtf8("Disconnected\n"));
+      chat_incoming->append(trUtf8("Disconnected") + "\n");
       break;
   }
   

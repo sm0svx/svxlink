@@ -19,19 +19,16 @@ realized this fast without his work. EchoLinux can be found at
 http://cqinet.sf.net/.
 
 As a base programming framework, the asynchronous programming library Async is
-used. This library was developed specifically for this project but could be used
-for other projects as well. There are no EchoLink specific details in it. The
-Async library is a framework for writing asynchronous (event driven)
+used. This library was developed specifically for the SvxLink project but
+could be used for other projects as well.
+The Async library is a framework for writing asynchronous (event driven)
 applications. The base for this programming paradigm is that an application
 should never ever block. If some operation takes time to complete, the operation
-should just be initiated and when it is done, an event will be generated. Events
-are represented by SigC++ signals (http://libsigc.sourceforge.net/). RPMS can be
-found at http://www.freshrpms.net/.
+should just be initiated and when it is done, an event should be generated.
+Events are represented by SigC++ signals (http://libsigc.sourceforge.net/).
 The non-blocking approach make the applications responsive and there can be more
 than one pending event at a time. No more a couple of seconds where the GUI goes
-blank. This just look very unprofessional. The aim is to make the Async library
-platform independent (even Windows should be supported). Right now it is only
-known to be working under GNU/Linux (RedHat 7.3 and 9).
+blank. This just look very unprofessional.
 
 There are four API classes in the EchoLib namespace. These are
 EchoLink::StationData, EchoLink::Directory, EchoLink::Dispatcher and

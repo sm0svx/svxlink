@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2007  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2009  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -110,10 +110,8 @@ namespace Async
 @author Tobias Blomberg
 @date   2005-05-05
 
-This class is part of the audio pipe concept. It is used to split one
+This class is part of the audio pipe framework. It is used to split one
 incoming audio source into multiple outgoing sources.
-
-\include AudioSplitter_demo.cpp
 */
 class AudioSplitter : public Async::AudioSink, public SigC::Object
 {
@@ -129,17 +127,53 @@ class AudioSplitter : public Async::AudioSink, public SigC::Object
     ~AudioSplitter(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Add an audio sink to the splitter
+     * @param 	sink  	The sink object to add
+     * @param 	managed If managed is \em true the attached sink will be
+     *                  deleted when the splitter is deleted
      */
     void addSink(AudioSink *sink, bool managed=false);
+  
+    /**
+     * @brief 	Remove an audio sink from the splitter
+     * @param 	sink The sink object to remove
+     */
     void removeSink(AudioSink *sink);
+  
+    /**
+     * @brief 	Remove all audio sinks from this splitter
+     */
     void removeAllSinks(void);
+  
+    /**
+     * @brief 	Enable or disable audio output to the given audio sink
+     * @param 	sink  	The audio sink to enable/disable
+     * @param 	enable  Set to \em true to enable the sink or \em false to
+     *	      	      	disable it
+     */
     void enableSink(AudioSink *sink, bool enable);
 
+    /**
+     * @brief 	Write samples into this audio sink
+     * @param 	samples The buffer containing the samples
+     * @param 	len   	The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
+     *
+     * This function is used to write audio into this audio sink. If it
+     * returns 0, no more samples should be written until the resumeOutput
+     * function in the source have been called.
+     * This function is normally only called from a connected source object.
+     */
     int writeSamples(const float *samples, int len);
     
+    /**
+     * @brief 	Tell the sink to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     * This function is normally only called from a connected source object.
+     */
     void flushSamples(void);
     
     
