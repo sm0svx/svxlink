@@ -233,7 +233,7 @@ bool RepeaterLogic::initialize(void)
   
   if (cfg().getValue(name(), "IDENT_NAG_TIMEOUT", str))
   {
-    ident_nag_timeout = atoi(str.c_str());
+    ident_nag_timeout = 1000 * atoi(str.c_str());
   }
   
   rx().toneDetected.connect(slot(*this, &RepeaterLogic::detectedTone));
@@ -624,6 +624,7 @@ void RepeaterLogic::identNag(Timer *t)
   
   if (!rx().squelchIsOpen())
   {
+    cout << "Nagging user about identifying himself\n";
     processEvent("identify_nag");
   }
 } /* RepeaterLogic::identNag */
