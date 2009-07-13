@@ -45,6 +45,10 @@
   configuration variable. We don't know if it's really an
   identification but it's the best we can do.
 
+* New feature: The repeater can be told to activate again if within
+  a certain time from repeater close. Use the new configuration
+  variable OPEN_ON_SQL_AFTER_RPT_CLOSE to set this up.
+
 
 
  0.11.0 -- 26 Apr 2009

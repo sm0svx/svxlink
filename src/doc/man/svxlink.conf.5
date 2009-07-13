@@ -310,6 +310,10 @@ Use this configuration variable if it should be possible to open the repeater ju
 keeping the squelch open for a while. The value to set is the minimum number of
 milliseconds the squelch must be open for the repeater to open.
 .TP
+.B OPEN_ON_SQL_AFTER_RPT_CLOSE
+Activate the repeater on just a squelch opening if there have been no more
+than the specified number of seconds since the repeater closed.
+.TP
 .B OPEN_SQL_FLANK
 Determines if OPEN_ON_SQL and OPEN_ON_CTCSS should activate the repeater when
 the squelch open or close. If set to OPEN, the repeater will activate and start

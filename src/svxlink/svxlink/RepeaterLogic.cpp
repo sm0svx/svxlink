@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-20089 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -128,13 +128,15 @@ using namespace Async;
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
   : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(30000),
     idle_sound_timer(0), idle_sound_interval(0),
-    required_sql_open_duration(-1),
+    required_sql_open_duration(-1), open_on_sql_after_rpt_close(0),
     open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false),
     open_on_sql_timer(0), open_sql_flank(SQL_FLANK_CLOSE),
     short_sql_open_cnt(0), sql_flap_sup_min_time(1000),
     sql_flap_sup_max_cnt(0), rgr_enable(true), open_reason("?"),
     ident_nag_timeout(0), ident_nag_min_time(2000), ident_nag_timer(0)
 {
+  timerclear(&rpt_close_timestamp);
+  timerclear(&sql_up_timestamp);
 } /* RepeaterLogic::RepeaterLogic */
 
 
@@ -187,6 +189,11 @@ bool RepeaterLogic::initialize(void)
   if (cfg().getValue(name(), "OPEN_ON_SQL", str))
   {
     required_sql_open_duration = atoi(str.c_str());
+  }
+  
+  if (cfg().getValue(name(), "OPEN_ON_SQL_AFTER_RPT_CLOSE", str))
+  {
+    open_on_sql_after_rpt_close = atoi(str.c_str());
   }
   
   if (cfg().getValue(name(), "OPEN_ON_DTMF", str))
@@ -456,6 +463,7 @@ void RepeaterLogic::setUp(bool up, string reason)
   }
   else
   {
+    gettimeofday(&rpt_close_timestamp, NULL);
     open_reason = "?";
     rxValveSetOpen(false);
     repeater_is_up = false;
@@ -485,11 +493,15 @@ void RepeaterLogic::squelchOpen(bool is_open)
   
   rgr_enable = true;
   
+  if (is_open)
+  {
+    gettimeofday(&sql_up_timestamp, NULL);
+  }
+
   if (repeater_is_up)
   {
     if (is_open)
     {
-      gettimeofday(&sql_up_timestamp, NULL);
       setIdle(false);
     }
     else
@@ -535,6 +547,17 @@ void RepeaterLogic::squelchOpen(bool is_open)
       	open_on_sql_timer = new Timer(required_sql_open_duration);
 	open_on_sql_timer->expired.connect(
 	    slot(*this, &RepeaterLogic::openOnSqlTimerExpired));
+      }
+      
+      if (open_on_sql_after_rpt_close > 0)
+      {
+	struct timeval diff_tv;
+	timersub(&sql_up_timestamp, &rpt_close_timestamp, &diff_tv);
+	if (diff_tv.tv_sec < open_on_sql_after_rpt_close)
+	{
+	  open_reason = "SQL";
+	  activateOnOpenOrClose(SQL_FLANK_OPEN);
+	}
       }
     }
     else
