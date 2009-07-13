@@ -328,8 +328,6 @@ interference on the frequency that open the squelch by short bursts.
 This configuration variable is used to specify the minimum time, in
 milliseconds, that a transmission must last to be classified as a real
 transmission. A good value is in between 500-2000ms.
-This configuration variable is also used in cooperation with the
-IDENT_NAG_TIMEOUT functionality.
 .TP
 .B SQL_FLAP_SUP_MAX_COUNT
 Flapping squelch suppression is used to close the repeater down if there is
@@ -358,9 +356,14 @@ Tell repeater users that are not identifying to identify themselvs.
 The number of seconds to wait for an identification, after the
 repeater has been activated, is set using this configuration variable.
 A valid identification is considered to be a transmission longer than the
-time set by the SQL_FLAP_SUP_MIN_TIME configuration variable. We don't know
+time set by the IDENT_NAG_MIN_TIME configuration variable. We don't know
 if it's really an identification but it's the best we can do.
 Setting it to 0 or commenting it out disables the feature.
+.TP
+.B IDENT_NAG_MIN_TIME
+This is the minimum time, in milliseconds, that a transmission must last to
+be considered as an identification. This is used as described in the
+IDENT_NAG_TIMEOUT configuration variable.
 .
 .SS Macros Section
 .

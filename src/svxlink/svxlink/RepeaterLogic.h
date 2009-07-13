@@ -189,6 +189,7 @@ class RepeaterLogic : public Logic
     bool            rgr_enable;
     std::string     open_reason;
     int		    ident_nag_timeout;
+    int		    ident_nag_min_time;
     Async::Timer    *ident_nag_timer;
     
     void idleTimeout(Async::Timer *t);

@@ -41,7 +41,7 @@
   identify themselvs. The time to wait for an identification, after the
   repeater has been activated, is set using the IDENT_NAG_TIMEOUT
   configuration variable. A valid identification is considered to be
-  a transmission longer than the time set by the SQL_FLAP_SUP_MIN_TIME
+  a transmission longer than the time set by the IDENT_NAG_MIN_TIME
   configuration variable. We don't know if it's really an
   identification but it's the best we can do.
 

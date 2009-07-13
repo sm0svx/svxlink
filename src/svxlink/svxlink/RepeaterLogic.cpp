@@ -133,7 +133,7 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
     open_on_sql_timer(0), open_sql_flank(SQL_FLANK_CLOSE),
     short_sql_open_cnt(0), sql_flap_sup_min_time(1000),
     sql_flap_sup_max_cnt(0), rgr_enable(true), open_reason("?"),
-    ident_nag_timeout(0), ident_nag_timer(0)
+    ident_nag_timeout(0), ident_nag_min_time(2000), ident_nag_timer(0)
 {
 } /* RepeaterLogic::RepeaterLogic */
 
@@ -234,6 +234,11 @@ bool RepeaterLogic::initialize(void)
   if (cfg().getValue(name(), "IDENT_NAG_TIMEOUT", str))
   {
     ident_nag_timeout = 1000 * atoi(str.c_str());
+  }
+  
+  if (cfg().getValue(name(), "IDENT_NAG_MIN_TIME", str))
+  {
+    ident_nag_min_time = atoi(str.c_str());
   }
   
   rx().toneDetected.connect(slot(*this, &RepeaterLogic::detectedTone));
@@ -512,7 +517,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
 	}
       }
       
-      if ((ident_nag_timer != 0) && (diff_ms > sql_flap_sup_min_time))
+      if ((ident_nag_timer != 0) && (diff_ms > ident_nag_min_time))
       {
 	delete ident_nag_timer;
 	ident_nag_timer = 0;
