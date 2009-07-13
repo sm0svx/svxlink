@@ -170,19 +170,19 @@ Logic::Logic(Config &cfg, const string& name)
   : m_cfg(cfg),       	      	    m_name(name),
     m_rx(0),  	      	      	    m_tx(0),
     msg_handler(0), 	      	    active_module(0),
-    cmd_tmo_timer(0), 	      	    
-    anti_flutter(false),      	    prev_digit('?'),
-    exec_cmd_on_sql_close(0), 	    exec_cmd_on_sql_close_timer(0),
-    rgr_sound_timer(0),       	    rgr_sound_delay(-1),
-    report_ctcss(0),  	      	    event_handler(0),
-    every_minute_timer(0),    	    recorder(0),
-    tx_ctcss(TX_CTCSS_NEVER), 	    tx_audio_mixer(0),
+    cmd_tmo_timer(0), 	      	    anti_flutter(false),
+    prev_digit('?'),                exec_cmd_on_sql_close(0),
+    exec_cmd_on_sql_close_timer(0), rgr_sound_timer(0),
+    rgr_sound_delay(-1),            report_ctcss(0),
+    event_handler(0),               every_minute_timer(0),
+    recorder(0), 		    tx_audio_mixer(0),
     tx_audio_selector(0),     	    rx_splitter(0),
     audio_from_module_selector(0),  audio_to_module_splitter(0),
     audio_to_module_selector(0),    state_det(0),
     is_idle(true),                  fx_gain_normal(0),
     fx_gain_low(-12), 	      	    long_cmd_digits(100),
-    report_events_as_idle(false),   voice_logger(0)
+    report_events_as_idle(false),   voice_logger(0),
+    tx_ctcss(TX_CTCSS_ALWAYS), 	    tx_ctcss_mask(0)
 {
   logic_con_in = new AudioSplitter;
   logic_con_out = new AudioSelector;
@@ -285,14 +285,44 @@ bool Logic::initialize(void)
   
   if (cfg().getValue(name(), "TX_CTCSS", value))
   {
-    if (value == "ALWAYS")
+    string::iterator comma;
+    string::iterator begin = value.begin();
+    do
     {
-      tx_ctcss = TX_CTCSS_ALWAYS;
-    }
-    else if (value == "SQL_OPEN")
-    {
-      tx_ctcss = TX_CTCSS_SQL_OPEN;
-    }
+      comma = find(begin, value.end(), ',');
+      string tx_ctcss_type;
+      if (comma == value.end())
+      {
+        tx_ctcss_type = string(begin, value.end());
+      }
+      else
+      {
+        tx_ctcss_type = string(begin, comma);
+        begin = comma + 1;
+      }
+
+      if (tx_ctcss_type == "ALWAYS")
+      {
+        tx_ctcss_mask |= TX_CTCSS_ALWAYS;
+      }
+      else if (tx_ctcss_type == "SQL_OPEN")
+      {
+        tx_ctcss_mask |= TX_CTCSS_SQL_OPEN;
+      }
+      else if (tx_ctcss_type == "LOGIC")
+      {
+        tx_ctcss_mask |= TX_CTCSS_LOGIC;
+      }
+      else if (tx_ctcss_type == "MODULE")
+      {
+        tx_ctcss_mask |= TX_CTCSS_MODULE;
+      }
+      else
+      {
+        cerr << "*** WARNING: Unknown value in configuration variable "
+	     << name() << "/TX_CTCSS: " << tx_ctcss_type << endl;
+      }
+    } while (comma != value.end());
   }
 
   if (cfg().getValue(name(), "FX_GAIN_NORMAL", value))
@@ -373,21 +403,29 @@ bool Logic::initialize(void)
   tx_audio_selector->enableAutoSelect(rpt_valve, 20);
   
     // Connect incoming intra logic audio to the TX audio selector
-  passthrough = new AudioPassthrough;
-  logic_con_in->addSink(passthrough, true);
-  tx_audio_selector->addSource(passthrough);
-  tx_audio_selector->enableAutoSelect(passthrough, 10);
+    // through a stream state detector
+  AudioStreamStateDetector *logic_con_in_idle_det =
+	new AudioStreamStateDetector;
+  logic_con_in_idle_det->sigStreamStateChanged.connect(
+	slot(*this, &Logic::logicConInStreamStateChanged));
+  logic_con_in->addSink(logic_con_in_idle_det, true);
+  tx_audio_selector->addSource(logic_con_in_idle_det);
+  tx_audio_selector->enableAutoSelect(logic_con_in_idle_det, 10);
   
     // Create a selector and a splitter to handle audio from modules
   audio_from_module_selector = new AudioSelector;
   AudioSplitter *audio_from_module_splitter = new AudioSplitter;
   audio_from_module_selector->registerSink(audio_from_module_splitter, true);
-  
+
     // Connect audio from modules to the TX audio selector
-  passthrough = new AudioPassthrough;
-  audio_from_module_splitter->addSink(passthrough, true);
-  tx_audio_selector->addSource(passthrough);
-  tx_audio_selector->enableAutoSelect(passthrough, 0);
+    // via an audio stream state detector
+  AudioStreamStateDetector *audio_from_module_idle_det =
+	new AudioStreamStateDetector;
+  audio_from_module_idle_det->sigStreamStateChanged.connect(
+	slot(*this, &Logic::audioFromModuleStreamStateChanged));
+  audio_from_module_splitter->addSink(audio_from_module_idle_det, true);
+  tx_audio_selector->addSource(audio_from_module_idle_det);
+  tx_audio_selector->enableAutoSelect(audio_from_module_idle_det, 0);
   
     // Connect audio from modules to the inter logic audio output
   passthrough = new AudioPassthrough;
@@ -448,23 +486,26 @@ bool Logic::initialize(void)
   tx().transmitterStateChange.connect(
       slot(*this, &Logic::transmitterStateChange));
   prev_tx_src->registerSink(m_tx, true);
+  prev_tx_src = 0;
   
     // Create the message handler
   msg_handler = new MsgHandler(INTERNAL_SAMPLE_RATE);
   msg_handler->allMsgsWritten.connect(slot(*this, &Logic::allMsgsWritten));
+  prev_tx_src = msg_handler;
   
     // This gain control is used to reduce the audio volume of effects
     // and announcements when mixed with normal audio
   fx_gain_ctrl = new AudioAmp;
   fx_gain_ctrl->setGain(fx_gain_normal);
-  msg_handler->registerSink(fx_gain_ctrl, true);
-  //tx_audio_mixer->addSource(fx_gain_ctrl);
+  prev_tx_src->registerSink(fx_gain_ctrl, true);
+  prev_tx_src = fx_gain_ctrl;
   
     // Pace the audio so that we don't fill up the audio output pipe.
   AudioPacer *msg_pacer = new AudioPacer(INTERNAL_SAMPLE_RATE,
       	      	      	      	      	 256 * INTERNAL_SAMPLE_RATE / 8000, 0);
-  fx_gain_ctrl->registerSink(msg_pacer, true);
+  prev_tx_src->registerSink(msg_pacer, true);
   tx_audio_mixer->addSource(msg_pacer);
+  prev_tx_src = 0;
   
   event_handler = new EventHandler(event_handler_str, this);
   event_handler->playFile.connect(slot(*this, &Logic::playFile));
@@ -485,11 +526,8 @@ bool Logic::initialize(void)
   cmd_tmo_timer = new Timer(10000);
   cmd_tmo_timer->expired.connect(slot(*this, &Logic::cmdTimeout));
   cmd_tmo_timer->setEnable(false);
-  
-  if (tx_ctcss == TX_CTCSS_ALWAYS)
-  {
-    tx().enableCtcss(true);
-  }
+
+  updateTxCtcss(true, TX_CTCSS_ALWAYS);
   
   loadModules();
   
@@ -787,7 +825,7 @@ void Logic::squelchOpen(bool is_open)
   
   if (tx_ctcss == TX_CTCSS_SQL_OPEN)
   {
-    tx().enableCtcss(is_open);
+    updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
   }
   
   checkIdle();
@@ -1289,6 +1327,36 @@ void Logic::cleanup(void)
 } /* Logic::cleanup */
 
 
+void Logic::updateTxCtcss(bool do_set, TxCtcssType type)
+{
+  if (do_set)
+  {
+    tx_ctcss |= type;
+  }
+  else
+  {
+    tx_ctcss &= ~type;
+  }
+
+  tx().enableCtcss((tx_ctcss & tx_ctcss_mask) != 0);
+ 
+} /* Logic::updateTxCtcss */
+
+
+void Logic::logicConInStreamStateChanged(bool is_active, bool is_idle)
+{
+  updateTxCtcss(!is_idle, TX_CTCSS_LOGIC);
+} /* Logic::logicConInStreamStateChanged */
+
+
+void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
+{
+  updateTxCtcss(!is_idle, TX_CTCSS_MODULE);
+} /* Logic::audioFromModuleStreamStateChanged */
+
+
+
 /*
  * This file has not been truncated
  */
+

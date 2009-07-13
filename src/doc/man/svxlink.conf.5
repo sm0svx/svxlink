@@ -196,15 +196,28 @@ commenting out (#) this configuration variable.
 .TP
 .B TX_CTCSS
 This configuration variable controls if a CTCSS tone should be transmitted.
-There are two possible values:
-.BR ALWAYS " or " SQL_OPEN .
-The ALWAYS alternative will always add a CTCSS tone as soon as the transmitter
-is turned on. The SQL_OPEN alternative will add a CTCSS tone only when the
-squelch is open.
-For a simplex logic the only sane value is ALWAYS.
+Use a comma separated list (no spaces!) to specify when to transmit a CTCSS
+tone. There are four possible values:
+.BR SQL_OPEN ", " LOGIC ", " MODULE " or " ALWAYS .
 Commenting out this configuration variable will disable CTCSS transmit.
 The tone frequency and level is configured in the transmitter configuration
 section.
+.RS
+.IP \(bu 4
+.BR SQL_OPEN
+will transmit CTCSS tone when the squelch is open. This is only useful on a
+repeater. On a simplex node it doesn't make much sense.
+.IP \(bu 4
+.BR LOGIC
+will transmit CTCSS tone when there is incoming traffic from another logic
+core.
+.IP \(bu 4
+.BR MODULE
+will transmit CTCSS tone when there is incoming traffic from a module.
+.IP \(bu 4
+.BR ALWAYS
+will always transmit a CTCSS tone as soon as the transmitter is turned on.
+.RE
 .TP
 .B MACROS
 Point out a section that contains the macros that should be used by this logic

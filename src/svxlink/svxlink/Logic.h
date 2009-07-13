@@ -224,7 +224,8 @@ class Logic : public SigC::Object
     
     typedef enum
     {
-      TX_CTCSS_NEVER, TX_CTCSS_ALWAYS, TX_CTCSS_SQL_OPEN
+      TX_CTCSS_ALWAYS=1, TX_CTCSS_SQL_OPEN=2, TX_CTCSS_LOGIC=4,
+      TX_CTCSS_MODULE=8
     } TxCtcssType;
     
     Async::Config     	      	    &m_cfg;
@@ -252,7 +253,6 @@ class Logic : public SigC::Object
     CmdParser 	      	      	    cmd_parser;
     Async::Timer      	      	    *every_minute_timer;
     Async::AudioRecorder  	    *recorder;
-    TxCtcssType       	      	    tx_ctcss;
     Async::AudioMixer	      	    *tx_audio_mixer;
     Async::AudioAmp   	      	    *fx_gain_ctrl;
     Async::AudioSelector      	    *tx_audio_selector;
@@ -270,6 +270,8 @@ class Logic : public SigC::Object
     std::string       	      	    long_cmd_module;
     bool      	      	      	    report_events_as_idle;
     VoiceLogger                     *voice_logger;
+    uint8_t			    tx_ctcss;
+    uint8_t			    tx_ctcss_mask;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);
@@ -282,6 +284,9 @@ class Logic : public SigC::Object
     void everyMinute(Async::Timer *t);
     void dtmfDigitDetectedP(char digit, int duration);
     void cleanup(void);
+    void updateTxCtcss(bool do_set, TxCtcssType type);
+    void logicConInStreamStateChanged(bool is_active, bool is_idle);
+    void audioFromModuleStreamStateChanged(bool is_active, bool is_idle);
     
 };  /* class Logic */
 
