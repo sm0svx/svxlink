@@ -37,6 +37,14 @@
   in SvxLink at the moment. On the remote receiver side an Atmel AVR
   ATmega8 is used to map the signal level voltage to tone frequencies.
 
+* New feature: Tell repeater users that are not identifying to
+  identify themselvs. The time to wait for an identification, after the
+  repeater has been activated, is set using the IDENT_NAG_TIMEOUT
+  configuration variable. A valid identification is considered to be
+  a transmission longer than the time set by the SQL_FLAP_SUP_MIN_TIME
+  configuration variable. We don't know if it's really an
+  identification but it's the best we can do.
+
 
 
  0.11.0 -- 26 Apr 2009
