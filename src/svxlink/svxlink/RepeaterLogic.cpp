@@ -454,7 +454,8 @@ void RepeaterLogic::setUp(bool up, string reason)
     checkIdle();
     setIdle(isIdle());
     
-    if ((ident_nag_timeout > 0) && (reason != "MODULE") && (reason != "AUDIO"))
+    if ((ident_nag_timeout > 0) && (reason != "MODULE") &&
+        (reason != "AUDIO") && (reason != "SQL_RPT_REOPEN"))
     {
       delete ident_nag_timer; // Just to be sure...
       ident_nag_timer = new Timer(ident_nag_timeout);
@@ -555,7 +556,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
 	timersub(&sql_up_timestamp, &rpt_close_timestamp, &diff_tv);
 	if (diff_tv.tv_sec < open_on_sql_after_rpt_close)
 	{
-	  open_reason = "SQL";
+	  open_reason = "SQL_RPT_REOPEN";
 	  activateOnOpenOrClose(SQL_FLANK_OPEN);
 	}
       }
