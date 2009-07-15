@@ -464,7 +464,14 @@ void RepeaterLogic::setUp(bool up, string reason)
   }
   else
   {
-    gettimeofday(&rpt_close_timestamp, NULL);
+    if (reason != "SQL_FLAP_SUP")
+    {
+      gettimeofday(&rpt_close_timestamp, NULL);
+    }
+    else
+    {
+      timerclear(&rpt_close_timestamp);
+    }
     open_reason = "?";
     rxValveSetOpen(false);
     repeater_is_up = false;
