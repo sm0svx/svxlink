@@ -61,23 +61,23 @@ int main(void)
   siglev_tone_map[0].fq = 6600;
   siglev_tone_map[1].siglev = sql_thresh;
   siglev_tone_map[1].fq = 6400;
-  siglev_tone_map[2].siglev = 36;
+  siglev_tone_map[2].siglev = 30;
   siglev_tone_map[2].fq = 6300;
-  siglev_tone_map[3].siglev = 42;
+  siglev_tone_map[3].siglev = 36;
   siglev_tone_map[3].fq = 6200;
-  siglev_tone_map[4].siglev = 47;
+  siglev_tone_map[4].siglev = 44;
   siglev_tone_map[4].fq = 6100;
-  siglev_tone_map[5].siglev = 50;
+  siglev_tone_map[5].siglev = 49;
   siglev_tone_map[5].fq = 6000;
-  siglev_tone_map[6].siglev = 54;
+  siglev_tone_map[6].siglev = 53;
   siglev_tone_map[6].fq = 5900;
-  siglev_tone_map[7].siglev = 62;
+  siglev_tone_map[7].siglev = 65;
   siglev_tone_map[7].fq = 5800;
-  siglev_tone_map[8].siglev = 73;
+  siglev_tone_map[8].siglev = 75;
   siglev_tone_map[8].fq = 5700;
-  siglev_tone_map[9].siglev = 96;
+  siglev_tone_map[9].siglev = 98;
   siglev_tone_map[9].fq = 5600;
-  siglev_tone_map[10].siglev = 119;
+  siglev_tone_map[10].siglev = 115;
   siglev_tone_map[10].fq = 5500;
 
   cli();  // Disable interrupts
