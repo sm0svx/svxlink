@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example Template_demo.cpp
-An example of how to use the Template class
-*/
-
 
 #ifndef SETTINGS_INCLUDED
 #define SETTINGS_INCLUDED
@@ -147,18 +142,6 @@ class Settings : public SigC::Object
   public:
     static Settings *instance(void);
   
-    /*
-     *------------------------------------------------------------------------
-     * Method:	
-     * Purpose: 
-     * Input: 	
-     * Output:	None
-     * Author:	
-     * Created: 
-     * Remarks: 
-     * Bugs:  	
-     *------------------------------------------------------------------------
-     */
     ~Settings(void);
     
     void showDialog(void);
@@ -214,38 +197,38 @@ class Settings : public SigC::Object
 	QString language;
     };
 
-    static Settings * the_instance;
+    static Settings *       the_instance;
     
-    SettingsDialog *  dialog;
-    QValueVector<Encoding>	encodings;
+    SettingsDialog *        dialog;
+    QValueVector<Encoding>  encodings;
     
-    QString   	      m_callsign;
-    QString   	      m_password;
-    QString   	      m_name;
-    QString   	      m_location;
-    QString   	      m_info;
+    QString   	            m_callsign;
+    QString   	            m_password;
+    QString   	            m_name;
+    QString   	            m_location;
+    QString   	            m_info;
     
-    QString   	      m_directory_server;
-    int       	      m_list_refresh_time;
-    bool      	      m_start_as_busy;
+    QString   	            m_directory_server;
+    int       	            m_list_refresh_time;
+    bool      	            m_start_as_busy;
 
-    QString   	      m_audio_device;
-    bool      	      m_use_full_duplex;
-    QString   	      m_connect_sound;
+    QString   	            m_audio_device;
+    bool      	            m_use_full_duplex;
+    QString   	            m_connect_sound;
     
-    int		      m_chat_encoding;
+    int		            m_chat_encoding;
 
-    QStringList       m_bookmarks;
+    QStringList             m_bookmarks;
     
-    QSize     	      m_main_window_size;
-    QValueList<int>   m_vsplitter_sizes;
-    QValueList<int>   m_hsplitter_sizes;
+    QSize     	            m_main_window_size;
+    QValueList<int>         m_vsplitter_sizes;
+    QValueList<int>         m_hsplitter_sizes;
     
-    bool      	      m_vox_enabled;
-    int       	      m_vox_threshold;
-    int       	      m_vox_delay;
+    bool      	            m_vox_enabled;
+    int       	            m_vox_threshold;
+    int       	            m_vox_delay;
     
-    QString   	      m_connect_to_ip;
+    QString   	            m_connect_to_ip;
     
     Settings(void);
     

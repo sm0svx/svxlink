@@ -9,7 +9,7 @@ create a fully working EchoLink client.
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2009 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -180,6 +180,9 @@ int main(int argc, char **argv)
   app.setMainWidget(&mainWindow);
   mainWindow.show();
   app.exec();
+  
+  delete EchoLink::Dispatcher::instance();
+  delete Settings::instance();
   
   return 0;
 }

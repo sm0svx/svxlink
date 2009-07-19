@@ -1,12 +1,12 @@
 /**
-@file	 Settings.h
+@file	 Settings.cpp
 @brief   Handle application settings.
 @author  Tobias Blomberg
 @date	 2003-03-30
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -255,7 +255,8 @@ Settings::Settings(void)
 
 Settings::~Settings(void)
 {
-  
+  encodings.clear();
+  the_instance = 0;
 } /* Settings::~Settings */
 
 
