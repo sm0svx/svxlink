@@ -42,6 +42,7 @@ An example of how to use the Template class
 #include <sigc++/sigc++.h>
 
 #include <qstringlist.h>
+#include <qvaluevector.h>
 #include <qsize.h>
 #undef emit
 
@@ -176,6 +177,11 @@ class Settings : public SigC::Object
     bool useFullDuplex(void) const { return m_use_full_duplex; }
     const QString& connectSound(void) const { return m_connect_sound; }
     
+    const QString& chatEncoding(void) const
+    {
+      return encodings[m_chat_encoding].name;
+    }
+    
     void setBookmarks(const QStringList &bookmarks);
     const QStringList& bookmarks(void) const { return m_bookmarks; }
     
@@ -199,9 +205,19 @@ class Settings : public SigC::Object
   protected:
     
   private:
+    class Encoding
+    {
+      public:
+	Encoding(const QString& name="", const QString& language="")
+	  : name(name), language(language) {}
+	QString name;
+	QString language;
+    };
+
     static Settings * the_instance;
     
     SettingsDialog *  dialog;
+    QValueVector<Encoding>	encodings;
     
     QString   	      m_callsign;
     QString   	      m_password;
@@ -216,6 +232,8 @@ class Settings : public SigC::Object
     QString   	      m_audio_device;
     bool      	      m_use_full_duplex;
     QString   	      m_connect_sound;
+    
+    int		      m_chat_encoding;
 
     QStringList       m_bookmarks;
     

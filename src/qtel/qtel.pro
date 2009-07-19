@@ -4,7 +4,8 @@ LANGUAGE	= C++
 CONFIG	+= qt warn_on release
 
 SOURCES	+= MainWindow.cpp \
-	ComDialog.cpp
+	ComDialog.cpp \
+	Settings.cpp
 
 FORMS	= MainWindowBase.ui \
 	ComDialogBase.ui \

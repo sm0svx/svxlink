@@ -75,6 +75,7 @@ namespace Async
 };
 
 class QString;
+class QTextCodec;
 
 
 /****************************************************************************
@@ -165,6 +166,7 @@ class ComDialog : public ComDialogBase, public SigC::Object
     Async::AudioSplitter *  tx_audio_splitter;
     Vox *     	      	    vox;
     Async::DnsLookup *	    dns;
+    QTextCodec		    *chat_codec;
   
     ComDialog(const ComDialog&);
     ComDialog& operator=(const ComDialog&);
@@ -175,6 +177,7 @@ class ComDialog : public ComDialogBase, public SigC::Object
     void onStationListUpdated(void);
     bool openAudioDevice(Async::AudioIO::Mode mode);
     void dnsResultsReady(Async::DnsLookup &);
+    bool isChatText(const QString& msg);
 
   private slots:
     void connectToStation();
