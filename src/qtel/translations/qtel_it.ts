@@ -589,95 +589,95 @@ Message</source>
     </message>
     <message>
         <source>QSO</source>
-        <translation type="unfinished"></translation>
+        <translation>QSO</translation>
     </message>
     <message>
         <source>QSO dialog settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Caratteristica del QSO</translation>
     </message>
     <message>
         <source>Chat encoding:</source>
-        <translation type="unfinished"></translation>
+        <translation>Codice del chat:</translation>
     </message>
     <message>
         <source>Chinese</source>
-        <translation type="unfinished"></translation>
+        <translation>Cinese</translation>
     </message>
     <message>
         <source>Japanese</source>
-        <translation type="unfinished"></translation>
+        <translation>Giapponese </translation>
     </message>
     <message>
         <source>Korean</source>
-        <translation type="unfinished"></translation>
+        <translation>Coreano</translation>
     </message>
     <message>
         <source>Tamil</source>
-        <translation type="unfinished"></translation>
+        <translation>Tamil</translation>
     </message>
     <message>
         <source>Unicode, 8-bit</source>
-        <translation type="unfinished"></translation>
+        <translation>Unicode, 8-bit</translation>
     </message>
     <message>
         <source>Russian</source>
-        <translation type="unfinished"></translation>
+        <translation>Russo</translation>
     </message>
     <message>
         <source>Ukrainian</source>
-        <translation type="unfinished"></translation>
+        <translation>Ucraino</translation>
     </message>
     <message>
         <source>Western</source>
-        <translation type="unfinished"></translation>
+        <translation>Occidentale</translation>
     </message>
     <message>
         <source>Central European</source>
-        <translation type="unfinished"></translation>
+        <translation>Europa centrale</translation>
     </message>
     <message>
         <source>Baltic</source>
-        <translation type="unfinished"></translation>
+        <translation>Baltico</translation>
     </message>
     <message>
         <source>Cyrillic</source>
-        <translation type="unfinished"></translation>
+        <translation>Cirillico</translation>
     </message>
     <message>
         <source>Arabic</source>
-        <translation type="unfinished"></translation>
+        <translation>Arabo</translation>
     </message>
     <message>
         <source>Greek</source>
-        <translation type="unfinished"></translation>
+        <translation>Greco</translation>
     </message>
     <message>
         <source>Hebrew, visually ordered</source>
-        <translation type="unfinished"></translation>
+        <translation>Ebraico, ordinato visuale</translation>
     </message>
     <message>
         <source>Hebrew, logically ordered</source>
-        <translation type="unfinished"></translation>
+        <translation>Ebraico, ordinato logico</translation>
     </message>
     <message>
         <source>Turkish</source>
-        <translation type="unfinished"></translation>
+        <translation>Turco</translation>
     </message>
     <message>
         <source>Hebrew</source>
-        <translation type="unfinished"></translation>
+        <translation>Ebraico</translation>
     </message>
     <message>
         <source>Thai</source>
-        <translation type="unfinished"></translation>
+        <translation>Thai</translation>
     </message>
     <message>
         <source>Qtel: Password mismatch</source>
-        <translation type="unfinished"></translation>
+        <translation>Qtel: password invalido</translation>
     </message>
     <message>
         <source>Passwords do not match</source>
-        <translation type="unfinished"></translation>
+        <translation>Password divercere</translation>
     </message>
 </context>
 </TS>

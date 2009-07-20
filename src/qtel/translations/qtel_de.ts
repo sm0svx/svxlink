@@ -1,4 +1,5 @@
 <!DOCTYPE TS><TS>
+<defaultcodec></defaultcodec>
 <context>
     <name>ComDialog</name>
     <message>
@@ -588,95 +589,95 @@ Message</source>
     </message>
     <message>
         <source>QSO</source>
-        <translation type="unfinished"></translation>
+        <translation>QSO</translation>
     </message>
     <message>
         <source>QSO dialog settings</source>
-        <translation type="unfinished"></translation>
+        <translation>QSO-Einstellungen</translation>
     </message>
     <message>
         <source>Chat encoding:</source>
-        <translation type="unfinished"></translation>
+        <translation>Chat-Sprache</translation>
     </message>
     <message>
         <source>Chinese</source>
-        <translation type="unfinished"></translation>
+        <translation>Chinesisch</translation>
     </message>
     <message>
         <source>Japanese</source>
-        <translation type="unfinished"></translation>
+        <translation>Japanisch</translation>
     </message>
     <message>
         <source>Korean</source>
-        <translation type="unfinished"></translation>
+        <translation>Koreanisch</translation>
     </message>
     <message>
         <source>Tamil</source>
-        <translation type="unfinished"></translation>
+        <translation>Tamilisch</translation>
     </message>
     <message>
         <source>Unicode, 8-bit</source>
-        <translation type="unfinished"></translation>
+        <translation>Unicode, 8-Bit</translation>
     </message>
     <message>
         <source>Russian</source>
-        <translation type="unfinished"></translation>
+        <translation>Russisch</translation>
     </message>
     <message>
         <source>Ukrainian</source>
-        <translation type="unfinished"></translation>
+        <translation>Ukrainisch</translation>
     </message>
     <message>
         <source>Western</source>
-        <translation type="unfinished"></translation>
+        <translation>Westlich</translation>
     </message>
     <message>
         <source>Central European</source>
-        <translation type="unfinished"></translation>
+        <translation>Zentral Europäisch</translation>
     </message>
     <message>
         <source>Baltic</source>
-        <translation type="unfinished"></translation>
+        <translation>Baltisch</translation>
     </message>
     <message>
         <source>Cyrillic</source>
-        <translation type="unfinished"></translation>
+        <translation>Kyrillisch</translation>
     </message>
     <message>
         <source>Arabic</source>
-        <translation type="unfinished"></translation>
+        <translation>Arabisch</translation>
     </message>
     <message>
         <source>Greek</source>
-        <translation type="unfinished"></translation>
+        <translation>Griechisch</translation>
     </message>
     <message>
         <source>Hebrew, visually ordered</source>
-        <translation type="unfinished"></translation>
+        <translation>Hebräisch, visuell angeordnet</translation>
     </message>
     <message>
         <source>Hebrew, logically ordered</source>
-        <translation type="unfinished"></translation>
+        <translation>Hebräisch, logisch angeordnet</translation>
     </message>
     <message>
         <source>Turkish</source>
-        <translation type="unfinished"></translation>
+        <translation>Türkisch</translation>
     </message>
     <message>
         <source>Hebrew</source>
-        <translation type="unfinished"></translation>
+        <translation>Hebräisch</translation>
     </message>
     <message>
         <source>Thai</source>
-        <translation type="unfinished"></translation>
+        <translation>Thailändisch</translation>
     </message>
     <message>
         <source>Qtel: Password mismatch</source>
-        <translation type="unfinished"></translation>
+        <translation>Qtel: falsches Passwort</translation>
     </message>
     <message>
         <source>Passwords do not match</source>
-        <translation type="unfinished"></translation>
+        <translation>Passworte stimmen nicht überein</translation>
     </message>
 </context>
 </TS>

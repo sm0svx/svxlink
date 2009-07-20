@@ -45,7 +45,7 @@ No se puede crear conexion</translation>
     <name>ComDialogBase</name>
     <message>
         <source>Communication Dialog</source>
-        <translation>Dialogo de comunicación</translation>
+        <translation>Diálogo de comunicación</translation>
     </message>
     <message>
         <source>Station Information</source>
@@ -509,7 +509,7 @@ Message</source>
     </message>
     <message>
         <source>Directory Server Settings</source>
-        <translation>Configuracion del directorio del servidor</translation>
+        <translation>Configuración del directorio del servidor</translation>
     </message>
     <message>
         <source>Server</source>
@@ -589,95 +589,95 @@ Message</source>
     </message>
     <message>
         <source>QSO</source>
-        <translation type="unfinished"></translation>
+        <translation>QSO</translation>
     </message>
     <message>
         <source>QSO dialog settings</source>
-        <translation type="unfinished"></translation>
+        <translation>QSO diálogo de configuración</translation>
     </message>
     <message>
         <source>Chat encoding:</source>
-        <translation type="unfinished"></translation>
+        <translation>Chat encoding:</translation>
     </message>
     <message>
         <source>Chinese</source>
-        <translation type="unfinished"></translation>
+        <translation>Chino</translation>
     </message>
     <message>
         <source>Japanese</source>
-        <translation type="unfinished"></translation>
+        <translation>Japonés</translation>
     </message>
     <message>
         <source>Korean</source>
-        <translation type="unfinished"></translation>
+        <translation>Coreano</translation>
     </message>
     <message>
         <source>Tamil</source>
-        <translation type="unfinished"></translation>
+        <translation>Tamil</translation>
     </message>
     <message>
         <source>Unicode, 8-bit</source>
-        <translation type="unfinished"></translation>
+        <translation>Unicode, 8-bit</translation>
     </message>
     <message>
         <source>Russian</source>
-        <translation type="unfinished"></translation>
+        <translation>Ruso</translation>
     </message>
     <message>
         <source>Ukrainian</source>
-        <translation type="unfinished"></translation>
+        <translation>Ucraniano</translation>
     </message>
     <message>
         <source>Western</source>
-        <translation type="unfinished"></translation>
+        <translation>Occidental</translation>
     </message>
     <message>
         <source>Central European</source>
-        <translation type="unfinished"></translation>
+        <translation>Europa Central</translation>
     </message>
     <message>
         <source>Baltic</source>
-        <translation type="unfinished"></translation>
+        <translation>Báltico</translation>
     </message>
     <message>
         <source>Cyrillic</source>
-        <translation type="unfinished"></translation>
+        <translation>Cirílico</translation>
     </message>
     <message>
         <source>Arabic</source>
-        <translation type="unfinished"></translation>
+        <translation>Árabe</translation>
     </message>
     <message>
         <source>Greek</source>
-        <translation type="unfinished"></translation>
+        <translation>Griego</translation>
     </message>
     <message>
         <source>Hebrew, visually ordered</source>
-        <translation type="unfinished"></translation>
+        <translation>Hebreo, arreglado visual</translation>
     </message>
     <message>
         <source>Hebrew, logically ordered</source>
-        <translation type="unfinished"></translation>
+        <translation>Hebreo, arreglado lógico </translation>
     </message>
     <message>
         <source>Turkish</source>
-        <translation type="unfinished"></translation>
+        <translation>Turco</translation>
     </message>
     <message>
         <source>Hebrew</source>
-        <translation type="unfinished"></translation>
+        <translation>Hebreo</translation>
     </message>
     <message>
         <source>Thai</source>
-        <translation type="unfinished"></translation>
+        <translation>Tailandés</translation>
     </message>
     <message>
         <source>Qtel: Password mismatch</source>
-        <translation type="unfinished"></translation>
+        <translation>Qtel: Clave incorrecto</translation>
     </message>
     <message>
         <source>Passwords do not match</source>
-        <translation type="unfinished"></translation>
+        <translation>Las claves no concuerdan</translation>
     </message>
 </context>
 </TS>
