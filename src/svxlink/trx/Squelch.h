@@ -126,9 +126,9 @@ class Squelch : public SigC::Object, public Async::AudioSink
      * @brief 	Default constuctor
      */
     explicit Squelch(void)
-      : m_open(false), start_delay(0), start_delay_left(0), delay(0),
-        delay_left(0), hangtime(0), hangtime_left(0), sql_timeout(0),
-	sql_timeout_left(0) {}
+      : m_open(false), m_start_delay(0), m_start_delay_left(0), m_delay(0),
+        m_delay_left(0), m_hangtime(0), m_hangtime_left(0), m_timeout(0),
+	m_timeout_left(0) {}
   
     /**
      * @brief 	Destructor
@@ -180,7 +180,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
      */
     void setStartDelay(int delay)
     {
-      start_delay = ((delay > 0) ? (delay * INTERNAL_SAMPLE_RATE / 1000) : 0);
+      m_start_delay = (delay > 0) ? (delay * INTERNAL_SAMPLE_RATE / 1000) : 0;
     }
     
     /**
@@ -189,7 +189,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
      */
     void setHangtime(int hang)
     {
-      hangtime = ((hang > 0) ? (hang * INTERNAL_SAMPLE_RATE / 1000) : 0);
+      m_hangtime = (hang > 0) ? (hang * INTERNAL_SAMPLE_RATE / 1000) : 0;
     }
     
     /**
@@ -198,7 +198,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
      */
     void setDelay(int delay)
     {
-      delay = ((delay > 0) ? (delay * INTERNAL_SAMPLE_RATE / 1000) : 0);
+      m_delay = ((delay > 0) ? (delay * INTERNAL_SAMPLE_RATE / 1000) : 0);
     }
     
     /**
@@ -207,7 +207,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
      */
     void setSqlTimeout(int timeout)
     {
-      sql_timeout = ((timeout > 0) ? (timeout * INTERNAL_SAMPLE_RATE) : 0);
+      m_timeout = ((timeout > 0) ? (timeout * INTERNAL_SAMPLE_RATE) : 0);
     }
     
     /**
@@ -219,10 +219,10 @@ class Squelch : public SigC::Object, public Async::AudioSink
     virtual void reset(void)
     {
       m_open = false;
-      hangtime_left = 0;
-      start_delay_left = start_delay;
-      delay_left = 0;
-      sql_timeout_left = 0;
+      m_hangtime_left = 0;
+      m_start_delay_left = m_start_delay;
+      m_delay_left = 0;
+      m_timeout_left = 0;
     }
 
     /**
@@ -235,25 +235,24 @@ class Squelch : public SigC::Object, public Async::AudioSink
     {
       int orig_count = count;
       
-      if (sql_timeout_left > 0)
+      if (m_timeout_left > 0)
       {
-	sql_timeout_left -= count;
-	//printf("sql_timeout_left=%d\n", sql_timeout_left);
-	if (sql_timeout_left <= 0)
+	m_timeout_left -= count;
+	if (m_timeout_left <= 0)
 	{
 	  std::cerr << m_name
 	       << ": *** WARNING: The squelch was open for too long. "
 	       << "Forcing it closed.\n";
-	  hangtime_left = 0;
+	  m_hangtime_left = 0;
 	  m_open = false;
 	  squelchOpen(false);
 	}
       }
       
-      if (start_delay_left > 0)
+      if (m_start_delay_left > 0)
       {
-	int sample_cnt = std::min(count, start_delay_left);
-	start_delay_left -= sample_cnt;
+	int sample_cnt = std::min(count, m_start_delay_left);
+	m_start_delay_left -= sample_cnt;
 	count -= sample_cnt;
 	samples += sample_cnt;
 
@@ -270,23 +269,23 @@ class Squelch : public SigC::Object, public Async::AudioSink
 	      	  << " written to the squelch detctor\n";
       }
       
-      if (hangtime_left > 0)
+      if (m_hangtime_left > 0)
       {
-      	hangtime_left -= ret_count;
-	if (hangtime_left <= 0)
+      	m_hangtime_left -= ret_count;
+	if (m_hangtime_left <= 0)
 	{
-	  sql_timeout_left = 0;
+	  m_timeout_left = 0;
 	  m_open = false;
 	  squelchOpen(false);
 	}
       }
       
-      if (delay_left > 0)
+      if (m_delay_left > 0)
       {
-      	delay_left -= ret_count;
-	if (delay_left <= 0)
+      	m_delay_left -= ret_count;
+	if (m_delay_left <= 0)
 	{
-	  sql_timeout_left = sql_timeout;
+	  m_timeout_left = m_timeout;
 	  m_open = true;
 	  squelchOpen(true);
 	}
@@ -311,7 +310,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
      * @brief 	Get the state of the squelch
      * @return	Return \em true if the squelch is open, or else \em false
      */
-    bool isOpen(void) const { return m_open || (hangtime_left > 0); }
+    bool isOpen(void) const { return m_open || (m_hangtime_left > 0); }
     
     /**
      * @brief 	A signal that indicates when the squelch state changes
@@ -338,10 +337,10 @@ class Squelch : public SigC::Object, public Async::AudioSink
     {
       if (is_open)
       {
-	hangtime_left = 0;
-	if (delay == 0)
+	m_hangtime_left = 0;
+	if (m_delay == 0)
 	{
-	  sql_timeout_left = sql_timeout;
+	  m_timeout_left = m_timeout;
       	  if (!m_open)
       	  {
       	    m_open = true;
@@ -350,18 +349,18 @@ class Squelch : public SigC::Object, public Async::AudioSink
 	}
 	else
 	{
-      	  if (!m_open && (delay_left <= 0))
+      	  if (!m_open && (m_delay_left <= 0))
 	  {
-	    delay_left = delay;
+	    m_delay_left = m_delay;
 	  }
 	}
       }
       else
       {
-      	delay_left = 0;
-	if (hangtime == 0)
+      	m_delay_left = 0;
+	if (m_hangtime == 0)
 	{
-	  sql_timeout_left = 0;
+	  m_timeout_left = 0;
       	  if (m_open)
       	  {
       	    m_open = false;
@@ -370,9 +369,9 @@ class Squelch : public SigC::Object, public Async::AudioSink
 	}
 	else
 	{
-	  if (m_open && (hangtime_left <= 0))
+	  if (m_open && (m_hangtime_left <= 0))
 	  {
-	    hangtime_left = hangtime;
+	    m_hangtime_left = m_hangtime;
 	  }
 	}
       }
@@ -382,14 +381,14 @@ class Squelch : public SigC::Object, public Async::AudioSink
   private:
     std::string   m_name;
     bool      	  m_open;
-    int       	  start_delay;
-    int       	  start_delay_left;
-    int       	  delay;
-    int       	  delay_left;
-    int       	  hangtime;
-    int       	  hangtime_left;
-    int           sql_timeout;
-    int           sql_timeout_left;
+    int       	  m_start_delay;
+    int       	  m_start_delay_left;
+    int       	  m_delay;
+    int       	  m_delay_left;
+    int       	  m_hangtime;
+    int       	  m_hangtime_left;
+    int           m_timeout;
+    int           m_timeout_left;
 
     Squelch(const Squelch&);
     Squelch& operator=(const Squelch&);
@@ -406,4 +405,3 @@ class Squelch : public SigC::Object, public Async::AudioSink
 /*
  * This file has not been truncated
  */
-
