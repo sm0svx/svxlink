@@ -142,9 +142,9 @@ class SigLevDetNoise : public SigLevDet
      * @brief 	Read the latest calculated signal level
      * @return	Returns the latest calculated signal level
      */
-    double lastSiglev(void) const
+    float lastSiglev(void) const
     {
-      return offset - slope * log10(last_siglev);
+      return offset - slope * log10f(last_siglev);
     }
      
     void reset(void);
@@ -155,7 +155,7 @@ class SigLevDetNoise : public SigLevDet
   private:
     Async::AudioFilter	  *filter;
     Async::SigCAudioSink  *sigc_sink;
-    double    	      	  last_siglev;
+    float    	      	  last_siglev;
     float     	      	  slope;
     float     	      	  offset;
     
