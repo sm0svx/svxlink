@@ -242,6 +242,7 @@ proc repeater_down {reason} {
     playSilence 500;
     playMsg "Core" "interference";
     playSilence 500;
+    return;
   }
 
   set now [clock seconds];
