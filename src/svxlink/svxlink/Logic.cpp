@@ -823,10 +823,7 @@ void Logic::squelchOpen(bool is_open)
     exec_cmd_on_sql_close_timer = 0;
   }
   
-  if (tx_ctcss == TX_CTCSS_SQL_OPEN)
-  {
-    updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
-  }
+  updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
   
   checkIdle();
   
