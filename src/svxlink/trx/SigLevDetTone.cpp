@@ -175,6 +175,7 @@ void SigLevDetTone::reset(void)
     det[i]->reset();
     block_idx = 0;
   }
+  last_siglev = 0;
 } /* SigLevDetTone::reset */
 
 
