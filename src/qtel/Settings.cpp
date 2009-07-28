@@ -125,7 +125,7 @@ using namespace std;
 
 #define CONF_CHAT_ENCODING_DEFAULT	"ISO8859-1"
 
-#define CONF_VOX_ENABLED_DEFAULT      	true
+#define CONF_VOX_ENABLED_DEFAULT      	false
 #define CONF_VOX_THRESHOLD_DEFAULT    	-30
 #define CONF_VOX_DELAY_DEFAULT      	1000
 
