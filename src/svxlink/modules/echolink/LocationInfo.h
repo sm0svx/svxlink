@@ -142,14 +142,11 @@ class LocationInfo
       const std::string& name, std::list<std::string>& call_list);
 
   private:
-    typedef std::vector<std::string>  StrList;
     typedef std::list<AprsClient*>    ClientList;
 
     Cfg         loc_cfg;
     ClientList  clients;
 
-    int  splitStr(StrList& L, const std::string& seq,
-                  const std::string& delims);
     bool parseLatitude(Coordinate &lat_pos, const std::string &value);
     bool parseLongitude(Coordinate &lon_pos, const std::string &value);
 

@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <boost/tokenizer.hpp>
 
 
 /****************************************************************************
@@ -69,9 +70,33 @@ using namespace Async;
 using namespace EchoLink;
 
 
+  // Put all locally defined types, functions and variables in an anonymous
+  // namespace to make them file local. The "static" keyword has been
+  // deprecated in C++ so it should not be used.
+namespace
+{
+
 /****************************************************************************
  *
  * Defines & typedefs
+ *
+ ****************************************************************************/
+
+typedef std::vector<std::string> StrVec;
+
+
+/****************************************************************************
+ *
+ * Prototypes for local functions
+ *
+ ****************************************************************************/
+
+int splitStr(StrVec &tokens, const std::string &str, const std::string &delims);
+
+
+/****************************************************************************
+ *
+ * Local Global Variables
  *
  ****************************************************************************/
 
@@ -85,25 +110,11 @@ using namespace EchoLink;
 
 
 
-/****************************************************************************
- *
- * Prototypes
- *
- ****************************************************************************/
-
-
+} // End of anonymous namespace
 
 /****************************************************************************
  *
  * Exported Global Variables
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local Global Variables
  *
  ****************************************************************************/
 
@@ -118,8 +129,8 @@ using namespace EchoLink;
 LocationInfo::LocationInfo(Async::Config &cfg, const std::string &name,
                            const std::string &callsign)
 {
-  StrList aprs_servers;
-  StrList status_servers;
+  StrVec aprs_servers;
+  StrVec status_servers;
   string value;
 
   loc_cfg.mycall = callsign;
@@ -222,10 +233,10 @@ LocationInfo::LocationInfo(Async::Config &cfg, const std::string &name,
   cfg.getValue(name, "COMMENT", loc_cfg.comment);
 
     // Iterate APRS server list
-  for (StrList::const_iterator it = aprs_servers.begin();
+  for (StrVec::const_iterator it = aprs_servers.begin();
        it != aprs_servers.end(); it++)
   {
-    StrList server_args;
+    StrVec server_args;
 
       // Try to split hostname:port
     if (splitStr(server_args, *it, ":") != 2)
@@ -242,10 +253,10 @@ LocationInfo::LocationInfo(Async::Config &cfg, const std::string &name,
   }
   
     // Iterate EchoLink location server list
-  for (StrList::const_iterator it = status_servers.begin();
+  for (StrVec::const_iterator it = status_servers.begin();
        it != status_servers.end(); it++)
   {
-    StrList server_args;
+    StrVec server_args;
 
       // Try to split hostname:port
     if (splitStr(server_args, *it, ":") != 2)
@@ -294,6 +305,7 @@ void LocationInfo::updateQsoStatus(int action, const string& call,
 } /* LocationInfo::updateQsoStatus */
 
 
+
 /****************************************************************************
  *
  * Protected member functions
@@ -307,48 +319,6 @@ void LocationInfo::updateQsoStatus(int action, const string& call,
  * Private member functions
  *
  ****************************************************************************/
-
-int LocationInfo::splitStr(StrList& L, const string& seq, const string& delims)
-{
-  L.clear();
-  
-  string str;
-  string::size_type pos = 0;
-  string::size_type len = seq.size();
-  while (pos < len)
-  {
-      // Init/clear the token buffer
-    str = "";
-    
-      // remove any delimiters including optional (white)spaces
-    while ((delims.find(seq[pos]) != string::npos) && (pos < len))
-    {
-      pos++;
-    }
-    
-      // leave if @eos
-    if (pos == len)
-    {
-      return L.size();
-    }
-    
-      // Save token data
-    while ((delims.find(seq[pos]) == string::npos) && (pos < len))
-    {
-      str += seq[pos++];
-    }
-    
-      // put valid str buffer into the supplied list
-    if (!str.empty())
-    {
-      L.push_back(str);
-    }
-  }
-  
-  return L.size();
-  
-} /* LocationInfo::splitStr */
-
 
 bool LocationInfo::parseLatitude(Coordinate &lat_pos, const string &value)
 {
@@ -407,6 +377,32 @@ bool LocationInfo::parseLongitude(Coordinate &lon_pos, const string &value)
   
 } /* LocationInfo::parseLongitude */
 
+
+
+/****************************************************************************
+ *
+ * Private local functions
+ *
+ ****************************************************************************/
+
+  // Put all locally defined functions in an anonymous namespace to make them
+  // file local. The "static" keyword has been deprecated in C++ so it
+  // should not be used.
+namespace
+{
+
+int splitStr(StrVec &tokens, const std::string &str, const std::string &delims)
+{
+  boost::char_separator<char> tok_func(delims.c_str());
+  boost::tokenizer<boost::char_separator<char> > tok(str, tok_func);
+
+  copy(tok.begin(), tok.end(), back_inserter(tokens));
+
+  return tokens.size();
+}
+
+
+} // End of anonymous namespace
 
 /*
  * This file has not been truncated
