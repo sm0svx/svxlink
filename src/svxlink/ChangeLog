@@ -55,6 +55,12 @@
   to send CTCSS tone when the squelch was open (repeater use)
   or to always do it.
 
+* Bugfix: In the previous release all sound clips were converted
+  to WAV files instead of RAW files. When the EchoLink module
+  announce a conference name it looks for a file called
+  conf-conf_name.wav (e.g. conf-linux.wav). Previously it looked
+  for a file with a ".raw" file extension.
+
 
 
  0.11.0 -- 26 Apr 2009

@@ -105,8 +105,8 @@ proc spellEchoLinkCallsign {call} {
     playMsg "conference";
     playSilence 50;
     set lc_name [string tolower $name];
-    if [file exists "$basedir/EchoLink/conf-$lc_name.raw"] {
-      playFile "$basedir/EchoLink/conf-$lc_name.raw";
+    if [file exists "$basedir/EchoLink/conf-$lc_name.wav"] {
+      playFile "$basedir/EchoLink/conf-$lc_name.wav";
     } else {
       spellEchoLinkCallsign $name;
     }
