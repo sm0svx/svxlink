@@ -49,9 +49,9 @@ proc spellWord {word} {
 
 
 #
-# Spell the specified number
+# Spell the specified number digit for digit
 #
-proc playNumber {number} {
+proc spellNumber {number} {
   for {set i 0} {$i < [string length $number]} {set i [expr $i + 1]} {
     set ch [string index $number $i];
     if {$ch == "."} {
@@ -63,6 +63,9 @@ proc playNumber {number} {
 }
 
 
+#
+# Say the specified two digit number (00 - 99)
+#
 proc playTwoDigitNumber {number} {
   if {[string length $number] != 2} {
     puts "*** WARNING: Function playTwoDigitNumber received a non two digit number: $number";
@@ -84,6 +87,66 @@ proc playTwoDigitNumber {number} {
 }
 
 
+#
+# Say the specified three digit number (000 - 999)
+#
+proc playThreeDigitNumber {number} {
+  if {[string length $number] != 3} {
+    puts "*** WARNING: Function playThreeDigitNumber received a non three digit number: $number";
+    return;
+  }
+  
+  set first [string index $number 0];
+  if {($first == "0") || ($first == "O")} {
+    spellNumber $number
+  } else {
+    append first "00";
+    playMsg "Default" $first;
+    if {[string index $number 1] != "0"} {
+      playMsg "Default" "and"
+      playTwoDigitNumber [string range $number 1 2];
+    } elseif {[string index $number 2] != "0"} {
+      playMsg "Default" "and"
+      playMsg "Default" [string index $number 2];
+    }
+  }
+}
+
+
+#
+# Say a number as intelligent as posible. Examples:
+#
+#	1	- one
+#	24	- twentyfour
+#	245	- twohundred and fourtyfive
+#	1234	- twelve thirtyfour
+#	12345	- onehundred and twentythree fourtyfive
+#	136.5	- onehundred and thirtysix decimal five
+#
+proc playNumber {number} {
+  if {[regexp {(\d+)\.(\d+)?} $number -> integer fraction]} {
+    playNumber $integer;
+    playMsg "Default" "decimal";
+    spellNumber $fraction;
+    return;
+  }
+
+  while {[string length $number] > 0} {
+    set len [string length $number];
+    if {$len == 1} {
+      playMsg "Default" $number;
+      set number "";
+    } elseif {$len % 2 == 0} {
+      playTwoDigitNumber [string range $number 0 1];
+      set number [string range $number 2 end];
+    } else {
+      playThreeDigitNumber [string range $number 0 2];
+      set number [string range $number 3 end];
+    }
+  }
+}
+
+
 proc playTime {hour minute} {
   set hour [string trimleft $hour " "];
   set minute [string trimleft $minute " "];
@@ -100,7 +163,7 @@ proc playTime {hour minute} {
     }
   };
   
-  playMsg "Default" $hour;
+  playMsg "Default" [expr $hour];
 
   if {$minute != 0} {
     if {[string length $minute] == 1} {
