@@ -166,6 +166,8 @@ TRIM_SOUNDS="\
   DtmfRepeater/name \
   "
 
+basedir=$(cd $(dirname $0); pwd)
+
 warning()
 {
   echo -e "\033[31m*** WARNING: $@\033[0m";
@@ -212,13 +214,13 @@ while getopts LBgr: opt; do
 done
 shift $((OPTIND-1))
 
-if [ $# -gt 0 ]; then
-  SRC_DIR=$1
+if [ $# -lt 2 ]; then
+  echo "Usage: $0 <source directory> <destination directory>"
+  exit 1
 fi
 
-if [ $# -gt 1 ]; then
-  DEST_DIR=$2
-fi
+SRC_DIR=$1
+DEST_DIR=$2
 
 
 #for sound in $COPY_SOUNDS; do
@@ -236,7 +238,7 @@ for sound in $MAXIMIZE_SOUNDS; do
   [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
   if [ -r $SRC_DIR/$sound.raw -o -r $SRC_DIR/$sound.wav ]; then
     echo "Maximizing $SRC_DIR/$sound -> $DEST_DIR/$sound.$ext"
-    ./play_sound.sh -f$endian$encoding -r$target_rate $SRC_DIR/$sound | \
+    $basedir/play_sound.sh -f$endian$encoding -r$target_rate $SRC_DIR/$sound | \
 	sox -traw -s2 -r$target_rate - $DEST_DIR/$sound.$ext
   else
     warning "Missing sound: $sound"
@@ -249,7 +251,7 @@ for sound in $TRIM_SOUNDS; do
   [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
   if [ -r $SRC_DIR/$sound.raw -o -r $SRC_DIR/$sound.wav ]; then
     echo "Trimming $SRC_DIR/$sound -> $DEST_DIR/$sound.$ext"
-    ./play_sound.sh -tf$endian$encoding -r$target_rate $SRC_DIR/$sound |
+    $basedir/play_sound.sh -tf$endian$encoding -r$target_rate $SRC_DIR/$sound |
 	sox -traw -s2 -r$target_rate - $DEST_DIR/$sound.$ext
     sox $DEST_DIR/$sound.$ext -r$target_rate -s2 -t raw - >> /tmp/all_trimmed.raw
   else
