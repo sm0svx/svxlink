@@ -1,0 +1,1 @@
+1, delete. 2, reply and delete. 3, play again
