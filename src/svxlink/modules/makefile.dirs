@@ -13,7 +13,7 @@
 
 
 # Subdirectories in the order of compilation.
-SUBDIRS	= help parrot echolink tcl tcl_voice_mail dtmf_repeater
+SUBDIRS	= help parrot echolink tcl tcl_voice_mail dtmf_repeater metarinfo
 
 
 #
