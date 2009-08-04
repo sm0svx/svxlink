@@ -79,6 +79,16 @@ TRIM_SOUNDS="\
   Default/90 \
   Default/9X \
   Default/O \
+  Default/100 \
+  Default/200 \
+  Default/300 \
+  Default/400 \
+  Default/500 \
+  Default/600 \
+  Default/700 \
+  Default/800 \
+  Default/900 \
+  Default/and \
   Default/decimal \
   Default/activating_module \
   Default/deactivating_module \
