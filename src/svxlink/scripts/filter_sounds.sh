@@ -20,6 +20,8 @@ SOFTLINK_SOUNDS="\
 MAXIMIZE_SOUNDS="\
   Default/help \
   Default/press_0_for_help \
+  Core/interference \
+  Core/please_identify \
   Help/help \
   Help/choose_module \
   Parrot/help \
@@ -186,8 +188,9 @@ warning()
 
 endian=""
 encoding=""
-ext="raw"
-while getopts LBg opt; do
+ext="wav"
+target_rate=8000
+while getopts LBgr: opt; do
   case $opt in
     B)
       endian=B
@@ -200,6 +203,10 @@ while getopts LBg opt; do
     g)
       encoding="g"
       ext="gsm"
+      ;;
+
+    r)
+      target_rate=${OPTARG}
       ;;
   esac
 done
@@ -229,7 +236,8 @@ for sound in $MAXIMIZE_SOUNDS; do
   [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
   if [ -r $SRC_DIR/$sound.raw -o -r $SRC_DIR/$sound.wav ]; then
     echo "Maximizing $SRC_DIR/$sound -> $DEST_DIR/$sound.$ext"
-    ./play_sound.sh -f$endian$encoding $SRC_DIR/$sound > $DEST_DIR/$sound.$ext
+    ./play_sound.sh -f$endian$encoding -r$target_rate $SRC_DIR/$sound | \
+	sox -traw -s2 -r$target_rate - $DEST_DIR/$sound.$ext
   else
     warning "Missing sound: $sound"
   fi
@@ -241,8 +249,9 @@ for sound in $TRIM_SOUNDS; do
   [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
   if [ -r $SRC_DIR/$sound.raw -o -r $SRC_DIR/$sound.wav ]; then
     echo "Trimming $SRC_DIR/$sound -> $DEST_DIR/$sound.$ext"
-    ./play_sound.sh -tf$endian$encoding $SRC_DIR/$sound > $DEST_DIR/$sound.$ext
-    cat $DEST_DIR/$sound.$ext >> /tmp/all_trimmed.$ext
+    ./play_sound.sh -tf$endian$encoding -r$target_rate $SRC_DIR/$sound |
+	sox -traw -s2 -r$target_rate - $DEST_DIR/$sound.$ext
+    sox $DEST_DIR/$sound.$ext -r$target_rate -s2 -t raw - >> /tmp/all_trimmed.raw
   else
     warning "Missing sound: $sound"
   fi
