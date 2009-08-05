@@ -232,7 +232,7 @@ proc handle_vhfdx {msg_file} {
       playSilence 500
       playMsg MUF
       playNumber $muf
-      playMsg MHz
+      playMsg unit_MHz
       playSilence 200
       playMsg above
       playSilence 200
