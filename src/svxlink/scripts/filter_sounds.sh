@@ -39,6 +39,9 @@ MAXIMIZE_SOUNDS="\
   TclVoiceMail/login \
   TclVoiceMail/rec_enter_rcpt \
   DtmfRepeater/help \
+  PropagationMonitor/aurora_alert \
+  PropagationMonitor/eskip_alert \
+  PropagationMonitor/help \
   "
 
 TRIM_SOUNDS="\
@@ -174,6 +177,21 @@ TRIM_SOUNDS="\
   TclVoiceMail/rec_message \
   TclVoiceMail/rec_subject \
   DtmfRepeater/name \
+  PropagationMonitor/name \
+  PropagationMonitor/band_open_from \
+  PropagationMonitor/to \
+  PropagationMonitor/unit_m \
+  PropagationMonitor/unit_cm \
+  PropagationMonitor/above \
+  PropagationMonitor/MHz \
+  PropagationMonitor/MUF \
+  PropagationMonitor/multi_hop \
+  PropagationMonitor/sporadic_e_opening \
+  PropagationMonitor/tropo_opening \
+  PropagationMonitor/between \
+  PropagationMonitor/aurora_opening \
+  PropagationMonitor/down_to_lat \
+  PropagationMonitor/unit_deg \
   "
 
 basedir=$(cd $(dirname $0); pwd)
