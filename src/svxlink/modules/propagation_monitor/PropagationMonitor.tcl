@@ -19,7 +19,6 @@ if {![info exists CFG_ID]} {
   return;
 }
 
-package require mime 1.0
 
 #
 # Extract the module name from the current namespace
@@ -137,6 +136,19 @@ proc status_report {} {
 }
 
 
+proc subject_of_msg {msg_file} {
+  set subject ""
+  set chan [open "$msg_file"]
+  while {[gets $chan line] >= 0} {
+    if [regexp {^Subject: (.*)$} $line -> subject] {
+      break
+    }
+  }
+  close $chan
+  return "$subject"
+}
+
+
 proc play_alert_sound {} {
   for {set i 0} {$i < 3} {set i [expr $i + 1]} {
     playTone 440 500 100
@@ -149,10 +161,29 @@ proc play_alert_sound {} {
 }
 
 
+proc say_band {band} {
+  if [regexp {^(\d+)(c?m)$} $band -> number unit] {
+    if {[string length $number] == 2} {
+      playTwoDigitNumber $number
+    } else {
+      playNumber $number
+    }
+    playMsg unit_$unit
+  }
+}
+
+
+proc say_locator {loc} {
+  if [regexp {^(\w\w)(?:(\d\d)(\w\w)?)?$} $loc -> part1 part2 part3] {
+    spellWord $part1
+    playNumber $part2
+    spellWord $part3
+  }
+}
+
+
 proc handle_dxrobot {msg_file} {
-  #puts $msg_file
-  set messageT [mime::initialize -file $msg_file]
-  set subject [lindex [mime::getheader $messageT Subject] 0]
+  set subject [subject_of_msg "$msg_file"]
   #puts $subject
   regexp {^\w+ (.*): (.*?)(?: - (.*))?$} $subject -> time alerttxt info
   set hour [clock format [clock scan $time] -format "%H"]
@@ -191,46 +222,25 @@ proc handle_dxrobot {msg_file} {
 }
 
 
-proc say_band {band} {
-  if [regexp {^(\d+)(c?m)$} $band -> number unit] {
-    if {[string length $number] == 2} {
-      playTwoDigitNumber $number
-    } else {
-      playNumber $number
-    }
-    playMsg unit_$unit
-  }
-}
-
-
-proc say_locator {loc} {
-  if [regexp {^(\w\w)(?:(\d\d)(\w\w)?)?$} $loc -> part1 part2 part3] {
-    spellWord $part1
-    playNumber $part2
-    spellWord $part3
-  }
-}
-
-
 proc handle_vhfdx {msg_file} {
-  set messageT [mime::initialize -file $msg_file]
-  set subject [lindex [mime::getheader $messageT Subject] 0]
-  puts $subject
+  set subject [subject_of_msg "$msg_file"]
+  printInfo $subject
 
   # Example: Sporadic-E opening on 6m. Best estimated MUF 108 MHz above JN66
   set match [regexp \
 	{^Sporadic-E opening on (\d+c?m)\. Best estimated MUF (\d+) MHz above (\w\w\d\d)$} \
 	$subject -> band muf locator]
   if {$match} {
-    puts "band=$band"
-    puts "muf=$muf"
-    puts "locator=$locator"
+    #puts "band=$band"
+    #puts "muf=$muf"
+    #puts "locator=$locator"
     play_alert_sound
     for {set i 0} {$i < 2} {set i [expr $i + 1]} {
       playMsg sporadic_e_opening
       say_band $band
       playSilence 500
       playMsg MUF
+      playSilence 100
       playNumber $muf
       playMsg unit_MHz
       playSilence 200
@@ -247,7 +257,7 @@ proc handle_vhfdx {msg_file} {
 	{^Multi-hop sporadic-E opening on (\d+c?m)\.$} \
 	$subject -> band]
   if {$match} {
-    puts "band=$band"
+    #puts "band=$band"
     play_alert_sound
     for {set i 0} {$i < 2} {set i [expr $i + 1]} {
       playMsg multi_hop
@@ -263,12 +273,12 @@ proc handle_vhfdx {msg_file} {
 	{^Tropo opening on (\d+c?m)\. up to (\d+) km. between (.*?)\((\w\w\d\d(?:\w\w)?)\) and (.*?)\((\w\w\d\d(?:\w\w)?)\)$} \
 	$subject -> band range call1 loc1 call2 loc2]
   if {$match} {
-    puts "band=$band"
-    puts "range=$range"
-    puts "call1=$call1"
-    puts "loc1=$loc1"
-    puts "call2=$call2"
-    puts "loc2=$loc2"
+    #puts "band=$band"
+    #puts "range=$range"
+    #puts "call1=$call1"
+    #puts "loc1=$loc1"
+    #puts "call2=$call2"
+    #puts "loc2=$loc2"
     play_alert_sound
     for {set i 0} {$i < 2} {set i [expr $i + 1]} {
       playMsg tropo_opening
@@ -290,10 +300,10 @@ proc handle_vhfdx {msg_file} {
 	{^Aurora active on (\d+c?m)\. down to (\d+).* of Lat. / (.*?)\((\w\w\d\d\w\w)\)$} \
 	$subject -> band lat call loc]
   if {$match} {
-    puts "band=$band"
-    puts "lat=$lat"
-    puts "call=$call"
-    puts "loc=$loc"
+    #puts "band=$band"
+    #puts "lat=$lat"
+    #puts "call=$call"
+    #puts "loc=$loc"
     play_alert_sound
     for {set i 0} {$i < 2} {set i [expr $i + 1]} {
       playMsg aurora_opening
@@ -307,15 +317,15 @@ proc handle_vhfdx {msg_file} {
     return
   }
 
-  printInfo "*** WARNING: Unknown VHFDX alert encountered: $subject"
+  printInfo "*** WARNING: Unknown VHFDX alert encountered in $msg_file: $subject"
 }
 
 
 proc check_dir {dir} {
   variable CFG_SPOOL_DIR
 
-  foreach msg_file [glob -nocomplain -directory "$CFG_SPOOL_DIR/dir" msg.*] {
-    puts "$msg_file"
+  foreach msg_file [glob -nocomplain -directory "$CFG_SPOOL_DIR/$dir" msg.*] {
+    #puts "$msg_file"
     handle_$dir "$msg_file"
     set target "[file dirname $msg_file]/archive/[file tail $msg_file]"
     file delete "$target"
