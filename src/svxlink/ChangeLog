@@ -61,6 +61,10 @@
   conf-conf_name.wav (e.g. conf-linux.wav). Previously it looked
   for a file with a ".raw" file extension.
 
+* New module, PropagationMonitor. The propagation monitor module
+  receive emails from vhfdx.net (or gooddx.net) and announce
+  propagation alerts on the air using voice messages.
+
 
 
  0.11.0 -- 26 Apr 2009
