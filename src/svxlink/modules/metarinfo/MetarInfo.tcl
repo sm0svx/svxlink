@@ -120,7 +120,7 @@ proc clouds { clouds height } {
 proc airport { icao } {
   global basedir;
   playSilence 200;
-  
+
   if [file exists "$basedir/MetarInfo/$icao.raw"] {
     playFile "$basedir/MetarInfo/$icao.raw";
   } else {
@@ -220,11 +220,19 @@ proc gusts_up { gusts } {
 }
 
 
-proc wind_variable { kts } {
+proc wind_variable_kts { kts } {
   playSilence 200;
   playMsg "wind_variable";
   playNr $kts;
   playMsg "knots";
+}
+
+
+proc wind_variable_mps { mps } {
+  playSilence 200;
+  playMsg "wind_variable";
+  playNr $mps;
+  playMsg "mps";
 }
 
 
@@ -283,10 +291,10 @@ proc rvr_varies_from { id val } {
 proc vertical_view {vv} {
   variable vvh;
   variable diff;
-  
+
   playSilence 200;
   playMsg "vv";
-  
+
   set vvh [expr {int($vv/1000)} ];
   set diff [expr {int($vv-$vvh*1000)} ];
 
@@ -332,7 +340,7 @@ proc runway {rwy} {
 
   playMsg "runway";
   playNr $rwy;
-  
+
   set lrc [string index rwy end];
   if {$lrc == "l"} {
     playMsg "left";
@@ -358,7 +366,7 @@ proc report_cfg {nr icao} {
   global basedir;
   playSilence 100;
 
-  playNr $nr;  
+  playNr $nr;
   playSilence 100;
   if [file exists "$basedir/MetarInfo/$icao.raw"] {
     playFile "$basedir/MetarInfo/$icao.raw";

@@ -101,6 +101,7 @@ using namespace SigC;
 #define VRBKTS 3
 #define CALM 4
 #define MPS 5
+#define VRBMPS 6
 
 #define NOTACTUAL 98
 #define INVALID 99
@@ -598,7 +599,7 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
        // 17005KT -> 170 deg, 5 kts
        // 17011G21KT -> 170 deg, 11kts, gusts 21kts
        // 00000KT -> wind calm
-       // VRB04KT -> wind variabel, 4kts
+       // VRB04KT -> wind variable, 4kts
        case wind:
          switch (isWind(current))
          {
@@ -623,7 +624,14 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
 
            // wind variable and knots
            case VRBKTS:
-             temp << "wind_variable " << current.substr(3,2);
+             temp << "wind_variable_kts " << current.substr(3,2);
+             say(temp);
+             it++;
+           break;
+
+           // wind variable and meter per second
+           case VRBMPS:
+             temp << "wind_variable_mps " << current.substr(3,2);
              say(temp);
              it++;
            break;
@@ -1122,7 +1130,8 @@ int ModuleMetarInfo::isWind(std::string token)
           return INVALID;
 
    if (token == "00000kt") return CALM;
-   if (token.substr(0,3) == "vrb") return VRBKTS;
+   if (token.substr(0,3) == "vrb" && token.find("kt")) return VRBKTS;
+   if (token.substr(0,3) == "vrb" && token.find("mps")) return VRBMPS;
    if (token.find("kt")  != string::npos && token.substr(5,1) == "g")
        return DEGKTSG;
    if (token.find("kt")  != string::npos) return DEGKTS;
