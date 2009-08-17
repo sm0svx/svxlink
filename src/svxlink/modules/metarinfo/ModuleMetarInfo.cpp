@@ -513,7 +513,7 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
    StrList trvr;
    bool is_false = false;
    float temp_view = 0;
-   unsigned int found;
+   string::size_type found;
 
    enum Mtoken {utc, intoken, autom, cor, windvaries, view, actualWX, dewpt,
         pobscurance, skycond, cavok, qnh, wind, rvr, trend, rmk, temperature,
