@@ -267,7 +267,8 @@ bool ModuleEchoLink::initialize(void)
     assert(err_size == msg_size);
     cerr << "*** ERROR: Syntax error in " << cfgName() << "/DROP: "
          << msg << endl;
-    goto init_failed;
+    moduleCleanup();
+    return false;
   }
   
   if (!cfg().getValue(cfgName(), "REJECT", value))
@@ -284,7 +285,8 @@ bool ModuleEchoLink::initialize(void)
     assert(err_size == msg_size);
     cerr << "*** ERROR: Syntax error in " << cfgName() << "/REJECT: "
          << msg << endl;
-    goto init_failed;
+    moduleCleanup();
+    return false;
   }
   
   if (!cfg().getValue(cfgName(), "ACCEPT", value))
@@ -301,7 +303,8 @@ bool ModuleEchoLink::initialize(void)
     assert(err_size == msg_size);
     cerr << "*** ERROR: Syntax error in " << cfgName() << "/ACCEPT: "
          << msg << endl;
-    goto init_failed;
+    moduleCleanup();
+    return false;
   }
   
     // Initialize directory server communication
@@ -317,7 +320,8 @@ bool ModuleEchoLink::initialize(void)
   {
     cerr << "*** ERROR: Could not create EchoLink listener (Dispatcher) "
       	    "object\n";
-    goto init_failed;
+    moduleCleanup();
+    return false;
   }
   Dispatcher::instance()->incomingConnection.connect(
       slot(*this, &ModuleEchoLink::onIncomingConnection));
@@ -337,14 +341,15 @@ bool ModuleEchoLink::initialize(void)
 
   if (cfg().getValue(cfgName(), "LOCATION_INFO", value))
   {
-    tinfo = new LocationInfo(cfg(), value, mycall);
+    tinfo = new LocationInfo();
+    if (!tinfo->initialize(cfg(), value, mycall))
+    {
+      moduleCleanup();
+      return false;
+    }
   }
   
   return true;
-  
-  init_failed:
-    moduleCleanup();
-    return false;
   
 } /* ModuleEchoLink::initialize */
 
@@ -393,6 +398,8 @@ void ModuleEchoLink::moduleCleanup(void)
   regfree(&reject_regex);
   regfree(&drop_regex);
   
+  delete tinfo;
+  tinfo = 0;
   delete dir_refresh_timer;
   dir_refresh_timer = 0;
   delete Dispatcher::instance();

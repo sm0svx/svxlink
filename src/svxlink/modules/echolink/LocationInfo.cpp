@@ -35,7 +35,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
-#include <boost/tokenizer.hpp>
+#include <sstream>
+#include <limits>
+#include <string>
 
 
 /****************************************************************************
@@ -82,8 +84,6 @@ namespace
  *
  ****************************************************************************/
 
-typedef std::vector<std::string> StrVec;
-
 
 /****************************************************************************
  *
@@ -91,7 +91,8 @@ typedef std::vector<std::string> StrVec;
  *
  ****************************************************************************/
 
-int splitStr(StrVec &tokens, const std::string &str, const std::string &delims);
+void print_error(const string &name, const string &variable,
+                 const string &value, const string &example = "");
 
 
 /****************************************************************************
@@ -107,7 +108,6 @@ int splitStr(StrVec &tokens, const std::string &str, const std::string &delims);
  * Local class definitions
  *
  ****************************************************************************/
-
 
 
 } // End of anonymous namespace
@@ -126,154 +126,6 @@ int splitStr(StrVec &tokens, const std::string &str, const std::string &delims);
  *
  ****************************************************************************/
 
-LocationInfo::LocationInfo(Async::Config &cfg, const std::string &name,
-                           const std::string &callsign)
-{
-  StrVec aprs_servers;
-  StrVec status_servers;
-  string value;
-
-  loc_cfg.mycall = callsign;
-
-  if (cfg.getValue(name, "APRS_SERVER_LIST", value))
-  {
-    if (splitStr(aprs_servers, value, " ") == 0)
-    {
-      cerr << "*** ERROR: Illegal format for config variable " << name
-            << "/APRS_SERVER_LIST. Should be host:port\n";
-      return;
-    }
-  }
-
-  if (cfg.getValue(name, "STATUS_SERVER_LIST", value))
-  {
-    if (splitStr(status_servers, value, " ") == 0)
-    {
-      cerr << "*** ERROR: Illegal format for config variable " << name
-            << "/STATUS_SERVER_LIST. Should be host:port\n";
-      return;
-    }
-  }
-
-  if (!cfg.getValue(name, "LAT_POSITION", value) ||
-      !parseLatitude(loc_cfg.lat_pos, value))
-  {
-    cerr << "*** ERROR: Config variable " << name
-         << "/LAT_POSITION not set or wrong, example "
-            "\"LAT_POSITION=51.20.00N\"\n";
-    return;
-  }
-
-  if (!cfg.getValue(name, "LON_POSITION", value) ||
-      !parseLongitude(loc_cfg.lon_pos, value))
-  {
-    cerr << "*** ERROR: Config variable " << name
-         << "/LON_POSITION not set or wrong, example "
-            "\"LON_POSITION=12.10.00E\"\n";
-    return;
-  }
-
-  if (cfg.getValue(name, "FREQUENCY", value))
-  {
-    loc_cfg.frequency = lrintf(atof(value.c_str()) * 1000.0);
-  }
-
-  if (cfg.getValue(name, "TX_POWER", value))
-  {
-    loc_cfg.power = atoi(value.c_str());
-  }
-
-  if (cfg.getValue(name, "ANTENNA_GAIN", value))
-  {
-    loc_cfg.gain = atoi(value.c_str());
-  }
-
-  loc_cfg.range = 0;
-  loc_cfg.range_unit = 'm';
-
-  float range_factor = 1.0;
-  if (cfg.getValue(name, "ANTENNA_HEIGHT", value))
-  {
-    char *suffix;
-    loc_cfg.height = strtoul(value.c_str(), &suffix, 10);
-
-      // Convert metric antenna height into feet
-    if (suffix[0] == 'm' || suffix[0] == 'M')
-    {
-      loc_cfg.height = lrintf(loc_cfg.height * 3.2808);
-      loc_cfg.range_unit = 'k';
-      range_factor = 1.60934;
-    }
-  }
-
-    // range calculation
-  loc_cfg.range =
-      lrintf(sqrt(2.0 * loc_cfg.height * sqrt((loc_cfg.power / 10.0) *
-             pow10(loc_cfg.gain / 10.0) / 2)) * range_factor);
-  
-  loc_cfg.beam_dir = -1;
-  if (cfg.getValue(name, "ANTENNA_DIR", value))
-  {
-    loc_cfg.beam_dir = atoi(value.c_str());
-  }
-
-  loc_cfg.tone = 0;
-  if (cfg.getValue(name, "TONE", value))
-  {
-    loc_cfg.tone = strtoul(value.c_str(), NULL, 10);
-  }
-
-  loc_cfg.interval = 600000;
-  if (cfg.getValue(name, "BEACON_INTERVAL", value))
-  {
-    loc_cfg.interval = strtoul(value.c_str(), NULL, 10) * 1000 * 60;
-  }
-
-  cfg.getValue(name, "PATH", loc_cfg.path);
-  cfg.getValue(name, "COMMENT", loc_cfg.comment);
-
-    // Iterate APRS server list
-  for (StrVec::const_iterator it = aprs_servers.begin();
-       it != aprs_servers.end(); it++)
-  {
-    StrVec server_args;
-
-      // Try to split hostname:port
-    if (splitStr(server_args, *it, ":") != 2)
-    {
-      cerr << "*** WARNING: Illegal format for APRS server configuration: "
-           << *it << endl;
-      continue;
-    }
-    
-    string server = server_args[0];
-    int port = strtoul(server_args[1].c_str(), NULL, 10);
-    AprsTcpClient *client = new AprsTcpClient(loc_cfg, server, port);
-    clients.push_back(client);
-  }
-  
-    // Iterate EchoLink location server list
-  for (StrVec::const_iterator it = status_servers.begin();
-       it != status_servers.end(); it++)
-  {
-    StrVec server_args;
-
-      // Try to split hostname:port
-    if (splitStr(server_args, *it, ":") != 2)
-    {
-      cerr << "*** WARNING: Illegal format for EchoLink status server "
-           << "configuration: " << *it << endl;
-      continue;
-    }
-    
-    string server = server_args[0];
-    int port = strtoul(server_args[1].c_str(), NULL, 10);
-    AprsUdpClient *client = new AprsUdpClient(loc_cfg, server, port);
-    clients.push_back(client);
-  }
-} /* LocationInfo::LocationInfo */
-
-
 LocationInfo::~LocationInfo(void)
 {
   ClientList::const_iterator it;
@@ -282,6 +134,24 @@ LocationInfo::~LocationInfo(void)
     delete *it;
   }
 } /* LocationInfo::~LocationInfo */
+
+
+bool LocationInfo::initialize(const Config &cfg, const string &name,
+			      const string &callsign)
+{
+  bool init_ok = true;
+  
+  loc_cfg.mycall = callsign;
+  loc_cfg.comment = cfg.getValue(name, "COMMENT");
+
+  init_ok &= parsePosition(cfg, name);
+  init_ok &= parseStationHW(cfg, name);
+  init_ok &= parsePath(cfg, name);
+  init_ok &= parseClients(cfg, name);
+  
+  return init_ok;
+  
+} /* LocationInfo::initialize */
 
 
 void LocationInfo::updateDirectoryStatus(StationData::Status status)
@@ -295,7 +165,7 @@ void LocationInfo::updateDirectoryStatus(StationData::Status status)
 
 
 void LocationInfo::updateQsoStatus(int action, const string& call,
-  const std::string& info, list<string>& call_list)
+                                   const string& info, list<string>& call_list)
 {
   ClientList::const_iterator it;
   for (it = clients.begin(); it != clients.end(); it++)
@@ -320,62 +190,306 @@ void LocationInfo::updateQsoStatus(int action, const string& call,
  *
  ****************************************************************************/
 
-bool LocationInfo::parseLatitude(Coordinate &lat_pos, const string &value)
+bool LocationInfo::parsePosition(const Config &cfg, const string &name)
 {
-  char *min, *sec, *end;
-  
-  lat_pos.deg = strtoul(value.c_str(), &min, 10);
-  if ((lat_pos.deg > 89) || (min[0] != '.'))
+  bool success = true;
+
+  string pos_str(cfg.getValue(name,"LAT_POSITION"));
+  if (!parseLatitude(loc_cfg.lat_pos, pos_str))
+  {
+    print_error(name, "LAT_POSITION", pos_str, "LAT_POSITION=51.20.10N");
+    success = false;
+  }
+
+  pos_str = cfg.getValue(name,"LON_POSITION");
+  if (!parseLongitude(loc_cfg.lon_pos, pos_str))
+  {
+    print_error(name, "LON_POSITION", pos_str, "LON_POSITION=12.10.30E");
+    success = false;
+  }
+
+  return success;
+
+} /* LocationInfo::parsePosition */
+
+
+bool LocationInfo::parseLatitude(Coordinate &pos, const string &value)
+{
+  unsigned int deg, min, sec;
+  char dir, sep[2];
+  stringstream ss(value);
+
+  ss >> deg >> sep[0] >> min >> sep[1] >> sec >> dir;
+
+  if (ss.fail() || !ss.eof())
   {
     return false;
   }
-    
-  lat_pos.min = strtoul(min + 1, &sec, 10);
-  if ((lat_pos.min > 59) || (sec[0] != '.'))
+  if (sep[0] != '.'|| sep[1] != '.')
   {
     return false;
   }
-    
-  lat_pos.sec = strtoul(sec + 1, &end, 10);
-  if ((lat_pos.sec > 59) || (end[0] != 'N' && end[0] != 'S'))
+  if ((deg > 90) || (min > 59) || (sec > 59) ||
+      ((deg == 90) && ((min > 0) || (sec > 0))))
   {
     return false;
   }
-    
-  lat_pos.dir = end[0];
-  
+  if ((dir != 'N') && (dir != 'S'))
+  {
+    return false;
+  }
+
+  pos.deg = deg;
+  pos.min = min;
+  pos.sec = sec;
+  pos.dir = dir;
+
   return true;
-  
+
 } /* LocationInfo::parseLatitude */
 
 
-bool LocationInfo::parseLongitude(Coordinate &lon_pos, const string &value)
+bool LocationInfo::parseLongitude(Coordinate &pos, const string &value)
 {
-  char *min, *sec, *end;
-  
-  lon_pos.deg = strtoul(value.c_str(), &min, 10);
-  if ((lon_pos.deg > 179) || (min[0] != '.'))
+  unsigned int deg, min, sec;
+  char dir, sep[2];
+  stringstream ss(value);
+
+  ss >> deg >> sep[0] >> min >> sep[1] >> sec >> dir;
+
+  if (ss.fail() || !ss.eof())
   {
     return false;
   }
-  
-  lon_pos.min = strtoul(min + 1, &sec, 10);
-  if ((lon_pos.min > 59) || (sec[0] != '.'))
+  if (sep[0] != '.'|| sep[1] != '.')
   {
     return false;
   }
-  
-  lon_pos.sec = strtoul(sec + 1, &end, 10);
-  if ((lon_pos.sec > 59) || (end[0] != 'E' && end[0] != 'W'))
+  if ((deg > 180) || (min > 59) || (sec > 59) ||
+      ((deg == 180) && ((min > 0) || (sec > 0))))
   {
     return false;
   }
+  if ((dir != 'E') && (dir != 'W'))
+  {
+    return false;
+  }
+
+  pos.deg = deg;
+  pos.min = min;
+  pos.sec = sec;
+  pos.dir = dir;
+
+  return true;
+
+} /* LocationInfo::parseLongitude */
+
+
+bool LocationInfo::parseStationHW(const Async::Config &cfg, const string &name)
+{
+  float frequency;
+  bool success = true;
+
+  if (!cfg.getValue(name, "FREQUENCY", frequency))
+  {
+    print_error(name, "FREQUENCY", cfg.getValue(name, "FREQUENCY"),
+                "FREQUENCY=438.875");
+    success = false;
+  }
+  else
+  {
+    loc_cfg.frequency = lrintf(1000.0 * frequency);
+  }
+
+  if (!cfg.getValue(name, "TX_POWER", loc_cfg.power, true))
+  {
+    print_error(name, "TX_POWER", cfg.getValue(name, "TX_POWER"),
+                "TX_POWER=8");
+    success = false;
+  }
+
+  if (!cfg.getValue(name, "ANTENNA_GAIN", loc_cfg.gain, true))
+  {
+    print_error(name, "ANTENNA_GAIN", cfg.getValue(name, "ANTENNA_GAIN"),
+                "ANTENNA_GAIN=6");
+    success = false;
+  }
+
+  if (!parseAntennaHeight(loc_cfg, cfg.getValue(name, "ANTENNA_HEIGHT")))
+  {
+    print_error(name, "ANTENNA_HEIGHT", cfg.getValue(name, "ANTENNA_HEIGHT"),
+                "ANTENNA_HEIGHT=10m");
+    success = false;
+  }
+
+  if (!cfg.getValue(name, "ANTENNA_DIR", loc_cfg.beam_dir, true))
+  {
+    print_error(name, "ANTENNA_DIR", cfg.getValue(name, "ANTENNA_DIR"),
+                "ANTENNA_DIR=-1");
+    success = false;
+  }
+
+  if (!cfg.getValue(name, "TONE", loc_cfg.tone, true))
+  {
+    print_error(name, "TONE", cfg.getValue(name, "TONE"), "TONE=0");
+    success = false;
+  }
+
+  int interval, max = numeric_limits<int>::max();
+  if (!cfg.getValue(name, "BEACON_INTERVAL", 10, max, interval, true))
+  {
+    print_error(name, "BEACON_INTERVAL", cfg.getValue(name, "BEACON_INTERVAL"),
+                "BEACON_INTERVAL=10");
+    success = false;
+  }
+  else
+  {
+    loc_cfg.interval = 60 * 1000 * interval;
+  }
+
+  loc_cfg.range = calculateRange(loc_cfg);
+
+  return success;
   
-  lon_pos.dir = end[0];
+} /* LocationInfo::parseStationHW */
+
+
+bool LocationInfo::parsePath(const Async::Config &cfg, const string &name)
+{
+    // FIXME: Verify the path syntax!
+  loc_cfg.path = cfg.getValue(name, "PATH");
+  return true;
+} /* LocationInfo::parsePath */
+
+
+int LocationInfo::calculateRange(const Cfg &cfg)
+{
+  float range_factor(1.0);
+
+  if (cfg.range_unit == 'k')
+  {
+    range_factor = 1.60934;
+  }
+
+  double tmp = sqrt(2.0 * loc_cfg.height * sqrt((loc_cfg.power / 10.0) *
+                        pow10(loc_cfg.gain / 10.0) / 2)) * range_factor;
+
+  return lrintf(tmp);
   
+} /* LocationInfo::calculateRange */
+
+
+bool LocationInfo::parseAntennaHeight(Cfg &cfg, const std::string value)
+{
+  char unit;
+  unsigned int height;
+
+  if (value.empty())
+  {
+    return true;
+  }
+
+  stringstream ss(value);
+  ss >> height >> unit;
+  if (ss.fail() || !ss.eof())
+  {
+    return false;
+  }
+  cfg.height = height;
+
+  if (unit == 'm' || unit == 'M')
+  {
+      // Convert metric antenna height into feet
+    cfg.height = lrintf(loc_cfg.height * 3.2808);
+    cfg.range_unit = 'k';
+  }
+
   return true;
   
-} /* LocationInfo::parseLongitude */
+} /* LocationInfo::parseAntennaHeight */
+
+
+bool LocationInfo::parseClients(const Async::Config &cfg, const string &name)
+{
+  string aprs_server_list(cfg.getValue(name, "APRS_SERVER_LIST"));
+  stringstream clientStream(aprs_server_list);
+  string client, host;
+  int port;
+  bool success = true;
+
+  while (clientStream >> client)
+  {
+    if (!parseClientStr(host, port, client))
+    {
+      print_error(name, "APRS_SERVER_LIST", aprs_server_list,
+                  "APRS_SERVER_LIST=euro.aprs2.net:14580");
+      success = false;
+    }
+    else
+    {
+      AprsTcpClient *client = new AprsTcpClient(loc_cfg, host, port);
+      clients.push_back(client);
+    }
+  }
+
+  clientStream.clear();
+  string status_server_list(cfg.getValue(name, "STATUS_SERVER_LIST"));
+  clientStream.str(status_server_list);
+  while (clientStream >> client)
+  {
+    if (!parseClientStr(host, port, client))
+    {
+      print_error(name, "STATUS_SERVER_LIST", status_server_list,
+                  "STATUS_SERVER_LIST=aprs.echolink.org:5199");
+      success = false;
+    }
+    else
+    {
+      AprsUdpClient *client = new AprsUdpClient(loc_cfg, host, port);
+      clients.push_back(client);
+    }
+  }
+
+  return success;
+
+} /* LocationInfo::parseClients */
+
+
+bool LocationInfo::parseClientStr(string &host, int &port, const string &val)
+{
+  if (val.empty())
+  {
+    return false;
+  }
+
+  int tmpPort;
+  string::size_type hostEnd;
+
+  hostEnd = val.find_last_of(':');
+  if (hostEnd == string::npos)
+  {
+    return false;
+  }
+
+  string portStr(val.substr(hostEnd+1, string::npos));
+  stringstream ssval(portStr);
+  ssval >> tmpPort;
+  if (!ssval)
+  {
+    return false;
+  }
+
+  if (tmpPort < 0 || tmpPort > 0xffff)
+  {
+    return false;
+  }
+
+  host = val.substr(0, hostEnd);
+  port = tmpPort;
+
+  return true;
+  
+} /* LocationInfo::parseClientStr */
 
 
 
@@ -391,18 +505,21 @@ bool LocationInfo::parseLongitude(Coordinate &lon_pos, const string &value)
 namespace
 {
 
-int splitStr(StrVec &tokens, const std::string &str, const std::string &delims)
+void print_error(const string &name, const string &variable,
+                 const string &value, const string &example)
 {
-  boost::char_separator<char> tok_func(delims.c_str());
-  boost::tokenizer<boost::char_separator<char> > tok(str, tok_func);
+  cerr << "*** ERROR: Config variable [" << name << "]/" << variable << "="
+       << value << " wrong or not set.";
 
-  copy(tok.begin(), tok.end(), back_inserter(tokens));
-
-  return tokens.size();
-}
-
+  if (!example.empty())
+  {
+    cerr << "\n*** Example: " <<  example;
+  }
+  cerr << endl;
+} /* print_error */
 
 } // End of anonymous namespace
+
 
 /*
  * This file has not been truncated

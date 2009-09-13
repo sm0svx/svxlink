@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef LOCATION_INFO
-#define LOCATION_INFO
+#ifndef LOCATION_INFO_INCLUDED
+#define LOCATION_INFO_INCLUDED
 
 
 /****************************************************************************
@@ -107,53 +107,70 @@ class AprsClient;
 class LocationInfo
 {
   public:
-    typedef struct
+    struct Coordinate
     {
-      int deg, min, sec;
+      explicit Coordinate(char d = 'N') : deg(0), min(0), sec(0), dir(d) {};
+
+      unsigned int deg, min, sec;
       char dir;
-    } Coordinate;
-
-    typedef struct
+    };
+  
+    struct Cfg
     {
-      int         interval;
-      int         frequency;
-      int         power;
-      int         tone;
-      int         height;
-      int         gain;
-      int         beam_dir;
-      int         range;
-      char        range_unit;
-
+      Cfg() : interval(600000), frequency(0), power(0), tone(0), height(10),
+              gain(0), beam_dir(-1), range(0), range_unit('m'), lat_pos('N'),
+              lon_pos('E') {};
+  
+      unsigned int interval;
+      unsigned int frequency;
+      unsigned int power;
+      unsigned int tone;
+      unsigned int height;
+      unsigned int gain;
+      int          beam_dir;
+      unsigned int range;
+      char         range_unit;
+  
       Coordinate  lat_pos;
-      Coordinate  lon_pos;    
-
+      Coordinate  lon_pos;
+  
       std::string mycall;
       std::string path;
       std::string comment;
-    } Cfg;
-
-    LocationInfo(Async::Config &cfg, const std::string &name,
-                 const std::string &callsign);
+    };
+  
+    LocationInfo(void) {}
     ~LocationInfo(void);
+  
+    bool initialize(const Async::Config &cfg, const std::string &name,
+		    const std::string &callsign);
 
     void updateDirectoryStatus(EchoLink::StationData::Status new_status);
     void updateQsoStatus(int action, const std::string& call,
-      const std::string& name, std::list<std::string>& call_list);
+                         const std::string& name,
+			 std::list<std::string>& call_list);
 
   private:
-    typedef std::list<AprsClient*>    ClientList;
-
+    typedef std::list<AprsClient*> ClientList;
+  
     Cfg         loc_cfg;
     ClientList  clients;
-
-    bool parseLatitude(Coordinate &lat_pos, const std::string &value);
-    bool parseLongitude(Coordinate &lon_pos, const std::string &value);
+  
+    bool parsePosition(const Async::Config &cfg, const std::string &name);
+    bool parseLatitude(Coordinate &pos, const std::string &value);
+    bool parseLongitude(Coordinate &pos, const std::string &value);
+  
+    bool parseStationHW(const Async::Config &cfg, const std::string &name);
+    bool parsePath(const Async::Config &cfg, const std::string &name);
+    int calculateRange(const Cfg &cfg);
+    bool parseAntennaHeight(Cfg &cfg, const std::string value);
+    bool parseClientStr(std::string &host, int &port, const std::string &val);
+    bool parseClients(const Async::Config &cfg, const std::string &name);
 
 };  /* class LocationInfo */
 
 
-#endif /* LOCATION_INFO */
+#endif /* LOCATION_INFO_INCLUDED */
 
 /*
  * This file has not been truncated

@@ -16,14 +16,53 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  string value;
-  if (cfg.getValue("SECTION1", "VALUE2", value))
+    // Read the string value without checking if it exists or not.
+  cout << "value=" << cfg.getValue("SECTION1", "VALUE1") << endl;
+  
+    // Read the string value, returning it in a variable.
+    // The return value will indicate if the variable was found or not.
+  string str_val;
+  if (cfg.getValue("SECTION1", "VALUE2", str_val))
   {
-    cout << ">>> value=" << value << endl;
+    cout << "str_val=" << str_val << endl;
   }
   else
   {
-    cerr << "*** Error: Could not find config variable SECTION1/VALUE2\n";
-    exit(1);
+    cerr << "*** ERROR: Config variable SECTION1/VALUE2 not found.\n";
+  }
+  
+    // Read an integer value.
+  int int_val;
+  if (cfg.getValue("SECTION2", "MY_INT", int_val))
+  {
+    cout << "int_val=" << int_val << endl;
+  }
+  else
+  {
+    cerr << "*** ERROR: Config variable SECTION2/MY_INT malformed or "
+	    "not found.\n";
+  }
+  
+    // Read an integer value. Missing valuie is OK.
+  int_val = 1234;
+  if (cfg.getValue("SECTION1", "NO_VALUE", int_val, true))
+  {
+    cout << "int_val=" << int_val << endl;
+  }
+  else
+  {
+    cerr << "*** ERROR: Config variable SECTION1/NO_VALUE malformed.\n";
+  }
+  
+    // Read a float with min and max limits.
+  float float_val;
+  if (cfg.getValue("SECTION2", "MY_FLOAT", 3.0f, 4.0f, float_val))
+  {
+    cout << "float_val=" << float_val << endl;
+  }
+  else
+  {
+    cerr << "*** ERROR: Config variable SECTION2/MY_FLOAT malformed, "
+	    "not found or out of range.\n";
   }
 }
