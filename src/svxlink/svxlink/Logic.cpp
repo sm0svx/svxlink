@@ -734,7 +734,7 @@ void Logic::dtmfDigitDetected(char digit, int duration)
     received_digits = "D";
     prev_digit = '?';
   }
-  else if (received_digits.size() < 10)
+  else if (received_digits.size() < 20)
   {
     if (digit == 'B')
     {
