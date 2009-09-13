@@ -219,7 +219,7 @@ bool LocationInfo::parseLatitude(Coordinate &pos, const string &value)
   char dir, sep[2];
   stringstream ss(value);
 
-  ss >> deg >> sep[0] >> min >> sep[1] >> sec >> dir;
+  ss >> deg >> sep[0] >> min >> sep[1] >> sec >> dir >> ws;
 
   if (ss.fail() || !ss.eof())
   {
@@ -255,7 +255,7 @@ bool LocationInfo::parseLongitude(Coordinate &pos, const string &value)
   char dir, sep[2];
   stringstream ss(value);
 
-  ss >> deg >> sep[0] >> min >> sep[1] >> sec >> dir;
+  ss >> deg >> sep[0] >> min >> sep[1] >> sec >> dir >> ws;
 
   if (ss.fail() || !ss.eof())
   {
@@ -390,7 +390,7 @@ bool LocationInfo::parseAntennaHeight(Cfg &cfg, const std::string value)
   }
 
   stringstream ss(value);
-  ss >> height >> unit;
+  ss >> height >> unit >> ws;
   if (ss.fail() || !ss.eof())
   {
     return false;
