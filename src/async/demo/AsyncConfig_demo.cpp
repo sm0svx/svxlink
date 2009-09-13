@@ -43,11 +43,11 @@ int main(int argc, char **argv)
 	    "not found.\n";
   }
   
-    // Read an integer value. Missing valuie is OK.
-  int_val = 1234;
-  if (cfg.getValue("SECTION1", "NO_VALUE", int_val, true))
+    // Read a char value. Missing value is OK.
+  char char_val = 'Q';
+  if (cfg.getValue("SECTION1", "NO_VALUE", char_val, true))
   {
-    cout << "int_val=" << int_val << endl;
+    cout << "char_val=" << char_val << endl;
   }
   else
   {

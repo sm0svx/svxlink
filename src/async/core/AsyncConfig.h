@@ -211,7 +211,7 @@ class Config
       }
       std::stringstream ssval(str_val);
       Rsp tmp;
-      ssval >> tmp;
+      ssval >> tmp >> std::ws;
       if (ssval.fail() || !ssval.eof())
       {
 	return false;
@@ -253,7 +253,7 @@ class Config
       }
       std::stringstream ssval(str_val);
       Rsp tmp;
-      ssval >> tmp;
+      ssval >> tmp >> std::ws;
       if (ssval.fail() || !ssval.eof() || (tmp < min) || (tmp > max))
       {
 	return false;
