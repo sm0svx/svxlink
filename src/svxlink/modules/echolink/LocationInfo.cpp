@@ -287,7 +287,7 @@ bool LocationInfo::parseLongitude(Coordinate &pos, const string &value)
 
 bool LocationInfo::parseStationHW(const Async::Config &cfg, const string &name)
 {
-  float frequency;
+  float frequency = 0;
   bool success = true;
 
   if (!cfg.getValue(name, "FREQUENCY", frequency))
@@ -335,7 +335,8 @@ bool LocationInfo::parseStationHW(const Async::Config &cfg, const string &name)
     success = false;
   }
 
-  int interval, max = numeric_limits<int>::max();
+  int interval = 0;
+  int max = numeric_limits<int>::max();
   if (!cfg.getValue(name, "BEACON_INTERVAL", 10, max, interval, true))
   {
     print_error(name, "BEACON_INTERVAL", cfg.getValue(name, "BEACON_INTERVAL"),
