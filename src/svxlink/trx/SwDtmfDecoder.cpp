@@ -88,7 +88,7 @@ using namespace Async;
 // however is acceptable for the DTMF decoder. Furthermore, a time slack
 // between the tone detectors is unavoidable, since they use different
 // block lengths.
-#define DTMF_BANDWIDTH              40     /* 40Hz */
+#define DTMF_BANDWIDTH              35     /* 35Hz */
 #define DTMF_BLOCK_LENGTH           (INTERNAL_SAMPLE_RATE / 1000)
 
 
@@ -392,12 +392,10 @@ void SwDtmfDecoder::dtmfPostProcess(uint8_t hit)
 
 void SwDtmfDecoder::goertzelInit(GoertzelState *s, float freq, float bw)
 {
-    /* Adjust the bandwidth to minimize the DFT error. */
-    float new_bw = freq / ceilf(freq / bw);
-    /* Select a block length with minimized DFT error. */
-    s->block_length = lrintf(INTERNAL_SAMPLE_RATE / new_bw);
+    /* Adjust the block length to minimize the DFT error. */
+    s->block_length = lrintf(ceilf(freq / bw) * INTERNAL_SAMPLE_RATE / freq);
     /* Scale output values to achieve same levels at different block lengths. */
-    s->scale_factor = powf(new_bw / bw, 2);
+    s->scale_factor = 1.0e6f / (s->block_length * s->block_length);
     /* Init detector frequency. */
     s->fac = 2.0f * cosf(2.0f * M_PI * freq / INTERNAL_SAMPLE_RATE);
     /* Reset the tone detector state. */
