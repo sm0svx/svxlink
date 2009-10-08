@@ -186,7 +186,10 @@ proc playTime {hour minute} {
 set basedir [file dirname $script_path];
 
 # Source all tcl files in the events.d directory
-foreach {file} [glob -directory $basedir/events.d *.tcl] {
+# FIXME: This is a dirty fix to make the PropagationMonitor module to
+#        load after Logic.tcl. The "lsort" should not be needed when
+#        TCL module loading have been properly implemented.
+foreach {file} [lsort [glob -directory $basedir/events.d *.tcl]] {
   source $file;
 }
 
