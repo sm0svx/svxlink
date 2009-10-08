@@ -592,8 +592,15 @@ void Qso::handleCtrlInput(unsigned char *buf, int len)
 
 inline void Qso::handleByePacket(unsigned char *buf, int len)
 {
-  setState(STATE_BYE_RECEIVED);
-  disconnect();
+  if (state != STATE_DISCONNECTED)
+  {
+    setState(STATE_BYE_RECEIVED);
+    disconnect();
+  }
+  else
+  {
+    sendByePacket();
+  }
 } /* Qso::handleByePacket */
 
 
