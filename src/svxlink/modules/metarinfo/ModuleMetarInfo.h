@@ -41,6 +41,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <vector>
 #include <list>
+#include <map>
+#include <iostream>
 
 
 /****************************************************************************
@@ -135,6 +137,9 @@ class ModuleMetarInfo : public Module
     std::string icao_default;
     std::string longmsg;
 
+    typedef std::map<std::string,std::string> DescList;
+    DescList shdesig;
+
     typedef std::vector<std::string> StrList;
     StrList  aplist;
 
@@ -153,20 +158,29 @@ class ModuleMetarInfo : public Module
     void onConnected(void);
     void openConnection(void);
     int  onDataReceived(Async::TcpClient::TcpConnection *con, void *buf, int count);
+    std::string splitStrAll(const std::string seq);
+    std::string chNumber(const std::string seq);
+    std::string chHoundr(const std::string seq);
+    std::string flsplitStr(float val);
     int  splitStr(StrList& L, const std::string& seq,
                   const std::string& delims);
-    int isWind(std::string token);
-    int isvalidUTC(std::string token);
-    int isView(std::string token);
-    bool isQnh(std::string token);
-    bool isRVR(std::string token);
-    bool isActualWX(std::string token);
-    bool isIntoken(std::string token);
-    bool validDp(std::string token);
-    bool validTemp(std::string token);
-    bool isWindVaries(std::string token);
-    bool isInInch(std::string token);
-    int ispObscurance(std::string token);
+    int  splitEmptyStr(StrList& L, const std::string& seq);
+    int isWind(std::string &retval, std::string token);
+    bool isvalidUTC(std::string token);
+    int checkToken(std::string token);
+    bool rmatch(std::string tok, std::string token, regex_t *re);
+    bool isTime(std::string &retval, std::string token);
+    bool isRunway(std::string &retval, std::string token);
+    bool isPartofMiles(std::string &retval, std::string token);
+    bool isView(std::string &retval, std::string token);
+    bool isQnh(std::string &retval, std::string token);
+    bool isRVR(std::string &retval, std::string token);
+    bool isActualWX(std::string &retval, std::string token);
+    bool isVerticalView(std::string &retval, std::string token);
+    bool validDp(std::string &tempstr, std::string token);
+    bool validTemp(std::string &tempstr, std::string token);
+    bool isWindVaries(std::string &tempstr, std::string token);
+    bool ispObscurance(std::string &tempstr, std::string token);
     void say(std::stringstream &tmp);
 
 };  /* class ModuleMetarInfo */
