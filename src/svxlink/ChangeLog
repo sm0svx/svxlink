@@ -70,6 +70,10 @@
   air. Usually airports give them out. Module contributed by
   DL1HRC / Adi.
 
+* A hamming window was added to the tone detector and DTMF
+  decoder to improve out-of-band audio rejection. Patch
+  from DH1DM / Steve.
+
 
 
  0.11.0 -- 26 Apr 2009

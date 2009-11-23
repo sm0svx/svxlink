@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <vector>
 #include <stdint.h>
 #include <sigc++/sigc++.h>
 
@@ -113,7 +114,7 @@ class SwDtmfDecoder : public DtmfDecoder
      * @param 	name The name of the receiver configuration section
      */
     SwDtmfDecoder(Async::Config &cfg, const std::string &name);
-    
+
     /**
      * @brief 	Initialize the DTMF decoder
      * @returns Returns \em true if the initialization was successful or
@@ -150,6 +151,8 @@ class SwDtmfDecoder : public DtmfDecoder
       float v3;
       float fac;
       float scale_factor;
+      std::vector<float> window_table;
+      std::vector<float>::const_iterator win;
       int samples_left;
       int block_length;
     } GoertzelState;
@@ -179,7 +182,7 @@ class SwDtmfDecoder : public DtmfDecoder
 
     void dtmfReceive(void);
     void dtmfPostProcess(uint8_t hit);
-    void goertzelInit(GoertzelState *s, float freq, float bw);
+    void goertzelInit(GoertzelState *s, float freq, float bw, float offset);
     float goertzelResult(GoertzelState *s);
     int findMaxIndex(const float f[]);
 
