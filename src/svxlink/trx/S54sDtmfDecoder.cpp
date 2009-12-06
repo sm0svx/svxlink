@@ -192,13 +192,22 @@ void S54sDtmfDecoder::charactersReceived(char *buf, int len)
     int func = (buf[i] >> 4) & 0x07;
     int data = buf[i] & 0x0f;
     printf("event=%02x (func=%d data=%d)\n", (unsigned int)buf[i], func, data);
-    if (func == 0)
+    switch (func)
     {
-      digitIdle();
-    }
-    else if (func == 1)
-    {
-      digitActive(digit_map[data]);
+      case 0:	// DTMF digit deactivated
+        digitIdle();
+        break;
+
+      case 1:	// DTMF digit activated
+        digitActive(digit_map[data]);
+        break;
+
+      case 3:	// Maintenence functions
+        if (data == 0xf)	// '?' received == identify
+        {
+          serial->write("s", 1);
+        }
+        break;
     }
   }
 } /* S54sDtmfDecoder::charactersReceived */
