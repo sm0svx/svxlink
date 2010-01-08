@@ -335,7 +335,7 @@ bool LocationInfo::parseStationHW(const Async::Config &cfg, const string &name)
     success = false;
   }
 
-  int interval = 60;
+  int interval = 10;
   int max = numeric_limits<int>::max();
   if (!cfg.getValue(name, "BEACON_INTERVAL", 10, max, interval, true))
   {
@@ -345,7 +345,7 @@ bool LocationInfo::parseStationHW(const Async::Config &cfg, const string &name)
   }
   else
   {
-    loc_cfg.interval = 1000 * interval;
+    loc_cfg.interval = 60 * 1000 * interval;
   }
 
   loc_cfg.range = calculateRange(loc_cfg);
