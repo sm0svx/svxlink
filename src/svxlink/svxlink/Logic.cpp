@@ -1245,7 +1245,7 @@ void Logic::everyMinute(Timer *t)
 {
   struct timeval tv;
   gettimeofday(&tv, NULL);
-  int msec = (59 - tv.tv_sec % 60) * 1000 + (999999 - tv.tv_usec) / 1000 + 1;
+  int msec = 60000 - (tv.tv_sec % 60) * 1000 - (tv.tv_usec / 1000);
 
   if ((t != 0) && (msec > 1000))
   {
