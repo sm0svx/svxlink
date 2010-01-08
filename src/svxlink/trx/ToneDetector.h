@@ -36,8 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <sigc++/sigc++.h>
-
-#include <string>
+#include <vector>
 
 
 /****************************************************************************
@@ -149,15 +148,15 @@ class ToneDetector : public SigC::Object, public Async::AudioSink
       float fac;
     } GoertzelState;
 
+    void postProcess(void);
     void goertzelInit(GoertzelState *s, float freq, int sample_rate);
-    void goertzelReset(GoertzelState *s) { s->v2 = s->v3 = 0.0; };
     float goertzelResult(GoertzelState *s);
 
     GoertzelState      center;
     GoertzelState      lower;
     GoertzelState      upper;
 
-    int       	       current_sample;
+    int       	       samples_left;
     int       	       is_activated;
     float              tone_fq;
     int       	       block_len;
@@ -165,6 +164,9 @@ class ToneDetector : public SigC::Object, public Async::AudioSink
     int       	       undet_delay_left;
     float     	       peak_thresh;
     float     	       energy_thresh;
+
+    std::vector<float>                 window_table;
+    std::vector<float>::const_iterator win;
 
 };  /* class ToneDetector */
 

@@ -1,4 +1,5 @@
 <!DOCTYPE TS><TS>
+<defaultcodec></defaultcodec>
 <context>
     <name>ComDialog</name>
     <message>
@@ -585,6 +586,98 @@ Message</source>
     <message>
         <source>Choose a connect sound file</source>
         <translation>Audiodatei auswählen</translation>
+    </message>
+    <message>
+        <source>QSO</source>
+        <translation>QSO</translation>
+    </message>
+    <message>
+        <source>QSO dialog settings</source>
+        <translation>QSO-Einstellungen</translation>
+    </message>
+    <message>
+        <source>Chat encoding:</source>
+        <translation>Chat-Sprache</translation>
+    </message>
+    <message>
+        <source>Chinese</source>
+        <translation>Chinesisch</translation>
+    </message>
+    <message>
+        <source>Japanese</source>
+        <translation>Japanisch</translation>
+    </message>
+    <message>
+        <source>Korean</source>
+        <translation>Koreanisch</translation>
+    </message>
+    <message>
+        <source>Tamil</source>
+        <translation>Tamilisch</translation>
+    </message>
+    <message>
+        <source>Unicode, 8-bit</source>
+        <translation>Unicode, 8-Bit</translation>
+    </message>
+    <message>
+        <source>Russian</source>
+        <translation>Russisch</translation>
+    </message>
+    <message>
+        <source>Ukrainian</source>
+        <translation>Ukrainisch</translation>
+    </message>
+    <message>
+        <source>Western</source>
+        <translation>Westlich</translation>
+    </message>
+    <message>
+        <source>Central European</source>
+        <translation>Zentral Europäisch</translation>
+    </message>
+    <message>
+        <source>Baltic</source>
+        <translation>Baltisch</translation>
+    </message>
+    <message>
+        <source>Cyrillic</source>
+        <translation>Kyrillisch</translation>
+    </message>
+    <message>
+        <source>Arabic</source>
+        <translation>Arabisch</translation>
+    </message>
+    <message>
+        <source>Greek</source>
+        <translation>Griechisch</translation>
+    </message>
+    <message>
+        <source>Hebrew, visually ordered</source>
+        <translation>Hebräisch, visuell angeordnet</translation>
+    </message>
+    <message>
+        <source>Hebrew, logically ordered</source>
+        <translation>Hebräisch, logisch angeordnet</translation>
+    </message>
+    <message>
+        <source>Turkish</source>
+        <translation>Türkisch</translation>
+    </message>
+    <message>
+        <source>Hebrew</source>
+        <translation>Hebräisch</translation>
+    </message>
+    <message>
+        <source>Thai</source>
+        <translation>Thailändisch</translation>
+    </message>
+    <message>
+        <source>Qtel: Password mismatch</source>
+        <translation>Qtel: falsches Passwort</translation>
+    </message>
+    <message>
+        <source>Passwords do not match</source>
+        <translation>Passworte stimmen nicht überein</translation>
     </message>
 </context>
 </TS>

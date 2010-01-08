@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 
 #ifndef COMDIALOG_INCLUDED
 #define COMDIALOG_INCLUDED
@@ -75,6 +74,7 @@ namespace Async
 };
 
 class QString;
+class QTextCodec;
 
 
 /****************************************************************************
@@ -165,6 +165,7 @@ class ComDialog : public ComDialogBase, public SigC::Object
     Async::AudioSplitter *  tx_audio_splitter;
     Vox *     	      	    vox;
     Async::DnsLookup *	    dns;
+    QTextCodec		    *chat_codec;
   
     ComDialog(const ComDialog&);
     ComDialog& operator=(const ComDialog&);
@@ -175,6 +176,7 @@ class ComDialog : public ComDialogBase, public SigC::Object
     void onStationListUpdated(void);
     bool openAudioDevice(Async::AudioIO::Mode mode);
     void dnsResultsReady(Async::DnsLookup &);
+    bool isChatText(const QString& msg);
 
   private slots:
     void connectToStation();

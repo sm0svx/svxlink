@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>528</width>
-            <height>539</height>
+            <height>702</height>
         </rect>
     </property>
     <property name="sizePolicy">
@@ -294,6 +294,17 @@
                 <property name="spacing">
                     <number>6</number>
                 </property>
+                <widget class="QTextEdit">
+                    <property name="name">
+                        <cstring>info_incoming</cstring>
+                    </property>
+                    <property name="focusPolicy">
+                        <enum>NoFocus</enum>
+                    </property>
+                    <property name="readOnly">
+                        <bool>true</bool>
+                    </property>
+                </widget>
                 <widget class="QTextEdit">
                     <property name="name">
                         <cstring>chat_incoming</cstring>

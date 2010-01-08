@@ -1,0 +1,122 @@
+Metar information module for SvxLink (based on the latest trunk
+from Aug 2009) by Adi, DL1HRC
+
+VERSION 0.0.2
+
+
+CHANGES:
+- completely rewritten, based on regex.h
+- RVR
+- trends
+
+
+FUNCTION:
+
+Get METAR (weather) information from ICAO locations, usually airports and 
+gives them out. With V0.0.2 you can request a METAR from an
+airport of your interest.
+
+command  function
+0        help
+01       available preconfigured airports
+1...XX   request METARs from preconfigured airports in order to configuration
+
+You have two search functions for not preconfigured airports to request a METAR 
+of an airport of your interest:
+
+1) the svx-like:
+
+20 -> 2
+21 -> A
+22 -> B
+23 -> C
+30 -> 3
+31 -> D
+32 -> E
+...
+90 -> 9
+91 -> W
+92 -> X
+93 -> Y
+94 -> Z
+
+Examples:
+EDDP -> 32313171#
+KLAX -> 52532192#
+
+
+2) the star-method:
+
+dtmf on dialpad   digit
+2                 -> A
+22                -> B
+222               -> C
+3                 -> D
+33                -> E
+333               -> F
+...
+9                 -> W
+99                -> X
+999               -> Y
+9999              -> Z
+
+BTW: a ** repeats the last digit
+
+Examples:
+KLAX ->  55*555*2*99#
+EDDM ->  33*3**6#
+ESSB ->  33*7777**22#
+LEPA ->  555*33*7*2#
+
+
+INSTALL:
+
+- recompile and reinstall the latest trunk of SvxLink
+- edit the /etc/svxlink/ModuleMetarInfo.conf as your own needs
+- create the directory: /usr/share/svxlink/sounds/MetarInfo and copy the raw-files
+  into it
+- to activate the module, you also have to add an entry "ModuleMetarInfo" in
+  the svxlink.conf, for example:
+
+[SimplexLogic]
+...
+MODULES=ModuleHelp,ModuleEchoLink,ModuleMetarInfo
+...
+
+
+CONFIGURATION:
+In /etc/svxlink.d/ModuleMetarInfo.conf
+
+ID=5
+ID-Number of your module, you can activate it by sending 5 and #
+
+TIMEOUT=300
+Time in seconds after that the module is deactivated if nothing happens
+
+AIRPORTS=EDDP,EDDV,EDDF,EDDM,KJFK,...
+Comma separated list of ICAO shortcuts, for that you want to get a METAR
+(weather) information.
+For the example above: To get the METAR info from EDDF (Frankfurt/Main Germany)
+you have to send DTMF-codes 2 and # after the module MetaInfo has been activated.
+Search with google for an airport in your vicinity ( google: "ICAO Amsterdam" )
+
+STARTDEFAULT=EDDP
+You can predefine one ICAO-shortcut, for that MetarInfo is called automatically
+if the module has been activated. Comment out if you don't want it.
+
+LONGMESSAGES=1
+If set to 1, it gives out e.g. "Ceiling and visibility OK" instead of just
+"cavok". Comment out if you don't want it.
+
+
+PROBLEMS AND BUGS:
+cat problems > dl1hrc [at] web.de
+
+
+KNOWN PROBLEMS:
+- not all precipitations and combinations of it could be tested out
+- all after RMK can not be given out
+
+
+ToDo:
+- SIGMET's, NOTAMS ?

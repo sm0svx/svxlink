@@ -147,7 +147,7 @@ SigLevDetNoise::~SigLevDetNoise(void)
 void SigLevDetNoise::reset(void)
 {
   filter->reset();
-  last_siglev = pow(10, -offset / slope);
+  last_siglev = pow10f(-offset / slope);
 } /* SigLevDetNoise::reset */
 
 
@@ -183,13 +183,13 @@ void SigLevDetNoise::setDetectorOffset(float offset)
 int SigLevDetNoise::processSamples(float *samples, int count)
 {
   //cout << "SigLevDet::processSamples: count=" << count << "\n";
-  double rms = 0.0;
+  float rms = 0.0;
   for (int i=0; i<count; ++i)
   {
     float sample = samples[i];
     rms += sample * sample;
   }
-  last_siglev = sqrt(rms / count);
+  last_siglev = sqrtf(rms / count);
   
   //cout << lastSiglev() << endl;
 

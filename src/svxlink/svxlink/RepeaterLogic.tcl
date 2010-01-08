@@ -189,14 +189,15 @@ proc every_minute {} {
 #
 # Executed when the repeater is activated
 #   reason  - The reason why the repeater was activated
-#     	      SQL_CLOSE   - Open on squelch, close flank
-#     	      SQL_OPEN	  - Open on squelch, open flank
-#     	      CTCSS_CLOSE - Open on CTCSS, squelch close flank
-#     	      CTCSS_OPEN  - Open on CTCSS, squelch open flank
-#     	      TONE    	  - Open on tone burst (always on squelch close)
-#     	      DTMF    	  - Open on DTMF digit (always on squelch close)
-#     	      MODULE  	  - Open on module activation
-#     	      AUDIO   	  - Open on incoming audio (module or logic linking)
+#	      SQL_CLOSE	      - Open on squelch, close flank
+#	      SQL_OPEN	      - Open on squelch, open flank
+#	      CTCSS_CLOSE     - Open on CTCSS, squelch close flank
+#	      CTCSS_OPEN      - Open on CTCSS, squelch open flank
+#	      TONE	      - Open on tone burst (always on squelch close)
+#	      DTMF	      - Open on DTMF digit (always on squelch close)
+#	      MODULE	      - Open on module activation
+#	      AUDIO	      - Open on incoming audio (module or logic linking)
+#	      SQL_RPT_REOPEN  - Reopen on squelch after repeater down
 #
 proc repeater_up {reason} {
   global mycall;
@@ -205,7 +206,8 @@ proc repeater_up {reason} {
   
   set repeater_is_up 1;
   
-  if {($reason != "SQL_OPEN") && ($reason != "CTCSS_OPEN")} {
+  if {($reason != "SQL_OPEN") && ($reason != "CTCSS_OPEN") &&
+      ($reason != "SQL_RPT_REOPEN")} {
     set now [clock seconds];
     if {$now-$Logic::prev_ident < $Logic::min_time_between_ident} {
       return;
@@ -237,8 +239,10 @@ proc repeater_down {reason} {
   set repeater_is_up 0;
   
   if {$reason == "SQL_FLAP_SUP"} {
-    playMsg "Core" "interference"
-    playSilence 250;
+    playSilence 500;
+    playMsg "Core" "interference";
+    playSilence 500;
+    return;
   }
 
   set now [clock seconds];
@@ -345,6 +349,16 @@ proc voice_logger_already_active {} {
   Logic::voice_logger_already_active;
 }
 
+
+#
+# Executed if the repeater opens but the squelch never opens again.
+# This is probably someone who opens the repeater but do not identify.
+#
+proc identify_nag {} {
+  playSilence 500;
+  playMsg "Core" "please_identify";
+  playSilence 500;
+}
 
 
 

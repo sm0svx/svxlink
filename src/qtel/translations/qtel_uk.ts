@@ -3,8 +3,7 @@
     <name>ComDialog</name>
     <message>
         <source>Qtel Error</source>
-        <translation>Помилка Qtel
-</translation>
+        <translation>Помилка Qtel</translation>
     </message>
     <message>
         <source>Could not create connection to station</source>
@@ -30,15 +29,14 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Connected to </source>
-        <translation>Приєднався до</translation>
+        <translation>Приєднався до </translation>
     </message>
     <message>
         <source>Connecting to </source>
-        <translation>Приєднуюся до</translation>
+        <translation>Приєднуюся до </translation>
     </message>
     <message>
-        <source>Disconnected
-</source>
+        <source>Disconnected</source>
         <translation>Від&apos;єднався</translation>
     </message>
 </context>
@@ -439,7 +437,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Disconnect</source>
-        <translation>ВІд&apos;єднайся</translation>
+        <translation>Від&apos;єднайся</translation>
     </message>
     <message>
         <source>Add selected to Bookmarks</source>
@@ -447,7 +445,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Qtel v</source>
-        <translation></translation>
+        <translation>Qtel версія </translation>
     </message>
     <message>
         <source>- Qt EchoLink client.
@@ -509,7 +507,7 @@ Message</source>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>Мережове ім&apos;я або IP адреса реєстраційного сервера EchoLink</translation>
+        <translation>Мережне ім&apos;я або IP адреса реєстраційного сервера EchoLink</translation>
     </message>
     <message>
         <source>Server</source>
@@ -586,6 +584,98 @@ Message</source>
     <message>
         <source>Choose a connect sound file</source>
         <translation>Виберіть файл із сигналом про з&apos;єднання</translation>
+    </message>
+    <message>
+        <source>QSO</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>QSO dialog settings</source>
+        <translation>Налаштування QSO</translation>
+    </message>
+    <message>
+        <source>Chat encoding:</source>
+        <translation>Кодування символів: </translation>
+    </message>
+    <message>
+        <source>Chinese</source>
+        <translation>Китайська</translation>
+    </message>
+    <message>
+        <source>Japanese</source>
+        <translation>Японська</translation>
+    </message>
+    <message>
+        <source>Korean</source>
+        <translation>Корейська</translation>
+    </message>
+    <message>
+        <source>Tamil</source>
+        <translation>Тамільська</translation>
+    </message>
+    <message>
+        <source>Unicode, 8-bit</source>
+        <translation>Юнікод, 8-бітний</translation>
+    </message>
+    <message>
+        <source>Russian</source>
+        <translation>Російська</translation>
+    </message>
+    <message>
+        <source>Ukrainian</source>
+        <translation>Українська</translation>
+    </message>
+    <message>
+        <source>Western</source>
+        <translation>західна Європа</translation>
+    </message>
+    <message>
+        <source>Central European</source>
+        <translation>центральна Європа</translation>
+    </message>
+    <message>
+        <source>Baltic</source>
+        <translation>Балтія</translation>
+    </message>
+    <message>
+        <source>Cyrillic</source>
+        <translation>Кирилиця</translation>
+    </message>
+    <message>
+        <source>Arabic</source>
+        <translation>Арабська</translation>
+    </message>
+    <message>
+        <source>Greek</source>
+        <translation>Грецька</translation>
+    </message>
+    <message>
+        <source>Hebrew, visually ordered</source>
+        <translation>Іврит, візуально</translation>
+    </message>
+    <message>
+        <source>Hebrew, logically ordered</source>
+        <translation>Іврит, логічно</translation>
+    </message>
+    <message>
+        <source>Turkish</source>
+        <translation>Турецька</translation>
+    </message>
+    <message>
+        <source>Hebrew</source>
+        <translation>Іврит</translation>
+    </message>
+    <message>
+        <source>Thai</source>
+        <translation>Тайська</translation>
+    </message>
+    <message>
+        <source>Qtel: Password mismatch</source>
+        <translation>Qtel: пароль неправильний</translation>
+    </message>
+    <message>
+        <source>Passwords do not match</source>
+        <translation>Введено різні паролі</translation>
     </message>
 </context>
 </TS>

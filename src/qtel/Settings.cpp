@@ -1,12 +1,12 @@
 /**
-@file	 Settings.h
+@file	 Settings.cpp
 @brief   Handle application settings.
 @author  Tobias Blomberg
 @date	 2003-03-30
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <qspinbox.h>
 #include <qcheckbox.h>
 #include <qstringlist.h>
+#include <qcombobox.h>
 #undef emit
 
 #include <stdlib.h>
@@ -97,6 +98,8 @@ using namespace std;
 #define CONF_USE_FULL_DUPLEX          CONF_APP_NAME "/UseFullDuplex"
 #define CONF_CONNECT_SOUND            CONF_APP_NAME "/ConnectSound"
 
+#define CONF_CHAT_ENCODING	      CONF_APP_NAME "/ChatEncoding"
+
 #define CONF_BOOKMARKS 	      	      CONF_APP_NAME "/Bookmarks"
 #define CONF_MAIN_WINDOW_SIZE_WIDTH   CONF_APP_NAME "/MwWidth"
 #define CONF_MAIN_WINDOW_SIZE_HEIGHT  CONF_APP_NAME "/MwHeight"
@@ -120,7 +123,9 @@ using namespace std;
 #define CONF_USE_FULL_DUPLEX_DEFAULT    false
 #define CONF_CONNECT_SOUND_DEFAULT 	"/usr/share/qtel/sounds/connect.raw"
 
-#define CONF_VOX_ENABLED_DEFAULT      	true
+#define CONF_CHAT_ENCODING_DEFAULT	"ISO8859-1"
+
+#define CONF_VOX_ENABLED_DEFAULT      	false
 #define CONF_VOX_THRESHOLD_DEFAULT    	-30
 #define CONF_VOX_DELAY_DEFAULT      	1000
 
@@ -160,6 +165,7 @@ using namespace std;
 Settings *Settings::the_instance = 0;
 
 
+
 /****************************************************************************
  *
  * Public member functions
@@ -194,13 +200,63 @@ Settings *Settings::instance(void)
 Settings::Settings(void)
   : dialog(0)
 {
-  
+  encodings.push_back(Encoding("Big5", SettingsDialog::trUtf8("Chinese")));
+  encodings.push_back(Encoding("Big5-HKSCS", 
+			       SettingsDialog::trUtf8("Chinese")));
+  encodings.push_back(Encoding("eucJP", SettingsDialog::trUtf8("Japanese")));
+  encodings.push_back(Encoding("eucKR", SettingsDialog::trUtf8("Korean")));
+  encodings.push_back(Encoding("GB2312", SettingsDialog::trUtf8("Chinese")));
+  encodings.push_back(Encoding("GBK", SettingsDialog::trUtf8("Chinese")));
+  encodings.push_back(Encoding("GB18030", SettingsDialog::trUtf8("Chinese")));
+  encodings.push_back(Encoding("JIS7", SettingsDialog::trUtf8("Japanese")));
+  encodings.push_back(Encoding("Shift-JIS",
+			       SettingsDialog::trUtf8("Japanese")));
+  encodings.push_back(Encoding("TSCII", SettingsDialog::trUtf8("Tamil")));
+  encodings.push_back(Encoding("utf8",
+			       SettingsDialog::trUtf8("Unicode, 8-bit")));
+  encodings.push_back(Encoding("KOI8-R", SettingsDialog::trUtf8("Russian")));
+  encodings.push_back(Encoding("KOI8-U", SettingsDialog::trUtf8("Ukrainian")));
+  encodings.push_back(Encoding("ISO8859-1", SettingsDialog::trUtf8("Western")));
+  encodings.push_back(Encoding("ISO8859-2", SettingsDialog::trUtf8("Central European")));
+  encodings.push_back(Encoding("ISO8859-3", SettingsDialog::trUtf8("Central European")));
+  encodings.push_back(Encoding("ISO8859-4", SettingsDialog::trUtf8("Baltic")));
+  encodings.push_back(Encoding("ISO8859-5",
+			       SettingsDialog::trUtf8("Cyrillic")));
+  encodings.push_back(Encoding("ISO8859-6", SettingsDialog::trUtf8("Arabic")));
+  encodings.push_back(Encoding("ISO8859-7", SettingsDialog::trUtf8("Greek")));
+  encodings.push_back(
+    Encoding("ISO8859-8", SettingsDialog::trUtf8("Hebrew, visually ordered")));
+  encodings.push_back(
+    Encoding("ISO8859-8-i",
+	     SettingsDialog::trUtf8("Hebrew, logically ordered")));
+  encodings.push_back(Encoding("ISO8859-9", SettingsDialog::trUtf8("Turkish")));
+  encodings.push_back(Encoding("ISO8859-10"));
+  encodings.push_back(Encoding("ISO8859-13"));
+  encodings.push_back(Encoding("ISO8859-14"));
+  encodings.push_back(Encoding("ISO8859-15",
+			       SettingsDialog::trUtf8("Western")));
+  encodings.push_back(Encoding("IBM850"));
+  encodings.push_back(Encoding("IBM866"));
+  encodings.push_back(Encoding("CP874"));
+  encodings.push_back(Encoding("CP1250",
+			       SettingsDialog::trUtf8("Central European")));
+  encodings.push_back(Encoding("CP1251", SettingsDialog::trUtf8("Cyrillic")));
+  encodings.push_back(Encoding("CP1252", SettingsDialog::trUtf8("Western")));
+  encodings.push_back(Encoding("CP1253", SettingsDialog::trUtf8("Greek")));
+  encodings.push_back(Encoding("CP1254", SettingsDialog::trUtf8("Turkish")));
+  encodings.push_back(Encoding("CP1255", SettingsDialog::trUtf8("Hebrew")));
+  encodings.push_back(Encoding("CP1255", SettingsDialog::trUtf8("Hebrew")));
+  encodings.push_back(Encoding("CP1256", SettingsDialog::trUtf8("Arabic")));
+  encodings.push_back(Encoding("CP1257", SettingsDialog::trUtf8("Baltic")));
+  encodings.push_back(Encoding("CP1258"));
+  encodings.push_back(Encoding("TIS-620", SettingsDialog::trUtf8("Thai")));
 } /* Settings::Settings */
 
 
 Settings::~Settings(void)
 {
-  
+  encodings.clear();
+  the_instance = 0;
 } /* Settings::~Settings */
 
 
@@ -212,6 +268,17 @@ void Settings::showDialog(void)
   }
   
   SettingsDialog settings_dialog;
+
+  for (QValueVector<Encoding>::size_type i = 0; i < encodings.size(); ++i)
+  {
+    QString str(encodings[i].name);
+    if (!encodings[i].language.isEmpty())
+    {
+      str += " -- " + encodings[i].language;
+    }
+    settings_dialog.chat_encoding->insertItem(str);
+  }
+  
   settings_dialog.my_callsign->setText(m_callsign);
   settings_dialog.my_password->setText(m_password);
   settings_dialog.my_vpassword->setText(m_password);
@@ -226,6 +293,8 @@ void Settings::showDialog(void)
   settings_dialog.audio_device->setText(m_audio_device);
   settings_dialog.use_full_duplex->setChecked(m_use_full_duplex);
   settings_dialog.connect_sound->setText(m_connect_sound);
+
+  settings_dialog.chat_encoding->setCurrentItem(m_chat_encoding);
 
   bool cfg_done = false;
   while (!cfg_done)
@@ -256,6 +325,8 @@ void Settings::showDialog(void)
 	m_audio_device = settings_dialog.audio_device->text();
 	m_use_full_duplex = settings_dialog.use_full_duplex->isChecked();
 	m_connect_sound = settings_dialog.connect_sound->text();
+	
+	m_chat_encoding = settings_dialog.chat_encoding->currentItem();
 
 	QSettings qsettings;
 	qsettings.insertSearchPath(QSettings::Windows, CONF_SEARCH_PATH);
@@ -273,6 +344,9 @@ void Settings::showDialog(void)
 	qsettings.writeEntry(CONF_USE_FULL_DUPLEX, m_use_full_duplex);
 	qsettings.writeEntry(CONF_CONNECT_SOUND, m_connect_sound);
       	
+	qsettings.writeEntry(CONF_CHAT_ENCODING,
+			     encodings[m_chat_encoding].name);
+	
 	configurationUpdated();
 	
 	cfg_done = true;
@@ -311,6 +385,18 @@ void Settings::readSettings(void)
   m_connect_sound = qsettings.readEntry(CONF_CONNECT_SOUND,
       CONF_CONNECT_SOUND_DEFAULT);
   
+  m_chat_encoding = 0;
+  QString encoding_name = qsettings.readEntry(CONF_CHAT_ENCODING,
+      CONF_CHAT_ENCODING_DEFAULT);
+  for (QValueVector<Encoding>::size_type i = 0; i < encodings.size(); ++i)
+  {
+    if (encodings[i].name == encoding_name)
+    {
+      m_chat_encoding = i;
+      break;
+    }
+  }
+
   m_bookmarks = qsettings.readListEntry(CONF_BOOKMARKS);
   
   m_main_window_size =

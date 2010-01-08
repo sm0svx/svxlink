@@ -45,7 +45,7 @@ No se puede crear conexion</translation>
     <name>ComDialogBase</name>
     <message>
         <source>Communication Dialog</source>
-        <translation>Dialogo de comunicación</translation>
+        <translation>Diálogo de comunicación</translation>
     </message>
     <message>
         <source>Station Information</source>
@@ -509,7 +509,7 @@ Message</source>
     </message>
     <message>
         <source>Directory Server Settings</source>
-        <translation>Configuracion del directorio del servidor</translation>
+        <translation>Configuración del directorio del servidor</translation>
     </message>
     <message>
         <source>Server</source>
@@ -586,6 +586,98 @@ Message</source>
     <message>
         <source>Choose a connect sound file</source>
         <translation>Seleccione un archivo de sonido</translation>
+    </message>
+    <message>
+        <source>QSO</source>
+        <translation>QSO</translation>
+    </message>
+    <message>
+        <source>QSO dialog settings</source>
+        <translation>QSO diálogo de configuración</translation>
+    </message>
+    <message>
+        <source>Chat encoding:</source>
+        <translation>Chat encoding:</translation>
+    </message>
+    <message>
+        <source>Chinese</source>
+        <translation>Chino</translation>
+    </message>
+    <message>
+        <source>Japanese</source>
+        <translation>Japonés</translation>
+    </message>
+    <message>
+        <source>Korean</source>
+        <translation>Coreano</translation>
+    </message>
+    <message>
+        <source>Tamil</source>
+        <translation>Tamil</translation>
+    </message>
+    <message>
+        <source>Unicode, 8-bit</source>
+        <translation>Unicode, 8-bit</translation>
+    </message>
+    <message>
+        <source>Russian</source>
+        <translation>Ruso</translation>
+    </message>
+    <message>
+        <source>Ukrainian</source>
+        <translation>Ucraniano</translation>
+    </message>
+    <message>
+        <source>Western</source>
+        <translation>Occidental</translation>
+    </message>
+    <message>
+        <source>Central European</source>
+        <translation>Europa Central</translation>
+    </message>
+    <message>
+        <source>Baltic</source>
+        <translation>Báltico</translation>
+    </message>
+    <message>
+        <source>Cyrillic</source>
+        <translation>Cirílico</translation>
+    </message>
+    <message>
+        <source>Arabic</source>
+        <translation>Árabe</translation>
+    </message>
+    <message>
+        <source>Greek</source>
+        <translation>Griego</translation>
+    </message>
+    <message>
+        <source>Hebrew, visually ordered</source>
+        <translation>Hebreo, arreglado visual</translation>
+    </message>
+    <message>
+        <source>Hebrew, logically ordered</source>
+        <translation>Hebreo, arreglado lógico </translation>
+    </message>
+    <message>
+        <source>Turkish</source>
+        <translation>Turco</translation>
+    </message>
+    <message>
+        <source>Hebrew</source>
+        <translation>Hebreo</translation>
+    </message>
+    <message>
+        <source>Thai</source>
+        <translation>Tailandés</translation>
+    </message>
+    <message>
+        <source>Qtel: Password mismatch</source>
+        <translation>Qtel: Clave incorrecto</translation>
+    </message>
+    <message>
+        <source>Passwords do not match</source>
+        <translation>Las claves no concuerdan</translation>
     </message>
 </context>
 </TS>

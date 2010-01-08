@@ -1,10 +1,14 @@
 /**
 @file	 AsyncConfig.cpp
-@brief   A_brief_description_for_this_file
+@brief   A class for reading "INI-foramtted" configuration files
 @author  Tobias Blomberg / SM0SVX
 @date	 2004-03-17
 
-A_detailed_description_for_this_file
+This file contains a class that is used to read configuration files that is
+in the famous MS Windows INI file format. An example of a configuration file
+is shown below.
+
+\include test.cfg
 
 \verbatim
 Async - A library for programming event driven applications
@@ -118,25 +122,6 @@ using namespace Async;
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-Config::Config(void)
-  : file(NULL)
-{
-
-} /* Config::Config */
-
-
 Config::~Config(void)
 {
   //fclose(file);
@@ -173,22 +158,44 @@ bool Config::open(const string& name)
 } /* Config::open */
 
 
-bool Config::getValue(const string& section, const string& tag, string& value)
+bool Config::getValue(const string& section, const string& tag,
+		      string& value) const
 {
-  if (sections.count(section) == 0)
+  Sections::const_iterator sec_it = sections.find(section);
+  if (sec_it == sections.end())
   {
     return false;
   }
-  
-  Values& values = sections[section];
-  if (values.count(tag) == 0)
+
+  Values::const_iterator val_it = sec_it->second.find(tag);
+  if (val_it == sec_it->second.end())
   {
     return false;
   }
-  
-  value = values[tag];
-  
+
+  value = val_it->second;
   return true;
+} /* Config::getValue */
+
+
+const string &Config::getValue(const string& section, const string& tag) const
+{
+  static const string empty_strng;
+  
+  Sections::const_iterator sec_it = sections.find(section);
+  if (sec_it == sections.end())
+  {
+    return empty_strng;
+  }
+
+  Values::const_iterator val_it = sec_it->second.find(tag);
+  if (val_it == sec_it->second.end())
+  {
+    return empty_strng;
+  }
+
+  return val_it->second;
+  
 } /* Config::getValue */
 
 

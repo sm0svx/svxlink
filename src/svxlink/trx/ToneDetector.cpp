@@ -81,7 +81,7 @@ using namespace Async;
 #define DEFAULT_PEAK_THRESH	10.0	// 10dB
 #define DEFAULT_DET_DELAY	3
 #define DEFAULT_UNDET_DELAY	3
-#define DEFAULT_ENERGY_THRESH	1.0f
+#define DEFAULT_ENERGY_THRESH	0.1f
 
 
 /****************************************************************************
@@ -137,7 +137,7 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 ToneDetector::ToneDetector(float tone_hz, float width_hz)
-  : current_sample(0), is_activated(false), tone_fq(tone_hz), block_len(0),
+  : samples_left(0), is_activated(false), tone_fq(tone_hz), block_len(0),
     det_delay_left(DEFAULT_DET_DELAY), undet_delay_left(0),
     peak_thresh(DEFAULT_PEAK_THRESH), energy_thresh(DEFAULT_ENERGY_THRESH)
 {
@@ -155,16 +155,22 @@ ToneDetector::ToneDetector(float tone_hz, float width_hz)
   goertzelInit(&lower, tone_hz - 2 * width_hz, INTERNAL_SAMPLE_RATE);
   /* Upper frequency */
   goertzelInit(&upper, tone_hz + 2 * width_hz, INTERNAL_SAMPLE_RATE);
+  /* Hamming window */  
+  for (int i = 0; i < block_len; i++)
+  {
+    window_table.push_back(
+      0.54 - 0.46 * cosf(2.0f * M_PI * i / (block_len - 1)));
+  }
+  /* Point to the first table entry */
+  win = window_table.begin();
+  /* Load sample counter */
+  samples_left = block_len;
 
 } /* ToneDetector::ToneDetector */
 
 
 void ToneDetector::reset(void)
 {
-  goertzelReset(&center);
-  goertzelReset(&lower);
-  goertzelReset(&upper);
-  current_sample = 0;
   is_activated = false;
   det_delay_left = DEFAULT_DET_DELAY;
   undet_delay_left = 0;
@@ -179,7 +185,7 @@ int ToneDetector::writeSamples(const float *buf, int len)
   /* divide buffer into blocks */
   for (int i = 0;  i < len;  i++)
   {
-    famp = *(buf++);
+    famp = *(buf++) * *(win++);
     /* Center frequency */
     v1 = center.v2;
     center.v2 = center.v3;
@@ -193,58 +199,13 @@ int ToneDetector::writeSamples(const float *buf, int len)
     upper.v2 = upper.v3;
     upper.v3 = upper.fac * upper.v2 - v1 + famp;
 
-    if (++current_sample < block_len)
-      continue;
-
-    /* Center frequency */
-    float res_center = goertzelResult(&center);
-    /* Lower frequency */
-    float res_lower = goertzelResult(&lower);
-    /* Upper frequency */
-    float res_upper = goertzelResult(&upper);
-
-    if ((res_center > energy_thresh) &&
-        (res_center > (res_lower * peak_thresh)) &&
-        (res_center > (res_upper * peak_thresh)))
-    {
-      if (det_delay_left > 0)
-      {
-	if (--det_delay_left == 0)
-	{
-	  is_activated = true;
-	  activated(true);
-        }
-      }
-      if (is_activated)
-      {
-        undet_delay_left = DEFAULT_UNDET_DELAY;
-      }
-    }
-    else
-    {
-      if (undet_delay_left > 0)
-      {
-        if (--undet_delay_left == 0)
-        {
-	  is_activated = false;
-	  activated(false);
-        }
-      }
-      if (!is_activated)
-      {
-        det_delay_left = DEFAULT_DET_DELAY;
-      }
-    }
-
-    goertzelReset(&center);
-    goertzelReset(&lower);
-    goertzelReset(&upper);
-    current_sample = 0;
+    if (--samples_left == 0)
+      postProcess();
   }
     
   return len;
   
-} /* ToneDetector::processSamples */
+} /* ToneDetector::writeSamples */
 
 
 /****************************************************************************
@@ -267,17 +228,65 @@ int ToneDetector::writeSamples(const float *buf, int len)
  *----------------------------------------------------------------------------
  */
 
+void ToneDetector::postProcess(void)
+{
+  /* Center frequency */
+  float res_center = goertzelResult(&center);
+  /* Lower frequency */
+  float res_lower = goertzelResult(&lower);
+  /* Upper frequency */
+  float res_upper = goertzelResult(&upper);
+
+  /* Point to the first table entry */
+  win = window_table.begin();
+  /* Reload sample counter */
+  samples_left = block_len;
+
+  if ((res_center > energy_thresh) &&
+      (res_center > (res_lower * peak_thresh)) &&
+      (res_center > (res_upper * peak_thresh)))
+  {
+    if (det_delay_left > 0)
+    {
+      if (--det_delay_left == 0)
+      {
+	is_activated = true;
+	activated(true);
+      }
+    }
+    if (is_activated)
+    {
+      undet_delay_left = DEFAULT_UNDET_DELAY;
+    }
+  }
+  else
+  {
+    if (undet_delay_left > 0)
+    {
+      if (--undet_delay_left == 0)
+      {
+        is_activated = false;
+	activated(false);
+      }
+    }
+    if (!is_activated)
+    {
+      det_delay_left = DEFAULT_DET_DELAY;
+    }
+  }
+} /* ToneDetector::postProcess */
+
 
 void ToneDetector::goertzelInit(GoertzelState *s, float freq, int sample_rate)
 {
     s->fac = 2.0f * cosf(2.0f * M_PI * (freq / (float)sample_rate));
-    goertzelReset(s);
-}
+    s->v2 = s->v3 = 0.0f;
+} /* ToneDetector::goertzelInit */
 
 
 float ToneDetector::goertzelResult(GoertzelState *s)
 {
-    float v1;
+    float v1, res;
 
     /* Push a zero through the process to finish things off. */
     v1 = s->v2;
@@ -286,8 +295,12 @@ float ToneDetector::goertzelResult(GoertzelState *s)
     /* Now calculate the non-recursive side of the filter. */
     /* The result here is not scaled down to allow for the magnification
        effect of the filter (the usual DFT magnification effect). */
-    return s->v3*s->v3 + s->v2*s->v2 - s->v2*s->v3*s->fac;
-}
+    res = s->v3*s->v3 + s->v2*s->v2 - s->v2*s->v3*s->fac;
+    /* Reset the tone detector state. */
+    s->v2 = s->v3 = 0.0f;
+    /* Return the calculated signal level. */
+    return res;
+} /* ToneDetector::goertzelResult */
 
 /*
  * This file has not been truncated

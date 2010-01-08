@@ -1,3 +1,11 @@
+ 0.13.2 -- ?? ??? 2009
+-----------------------
+
+* Bugfix: When receiving multiple bye packets, the disconnection was announced
+  multiple times.
+
+
+
  0.13.1 -- 26 Apr 2009
 -----------------------
 

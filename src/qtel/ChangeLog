@@ -3,6 +3,14 @@
 
 * Added a Ukrainian translation contributed by Ihor / UR3LCM.
 
+* Info/chat window split in two separate windows.
+  Contribution by Ihor / UR3LCM.
+
+* The charater encoding for chat messages is now possible to
+  set in the settings dialog. (UR3LCM and SM0SVX).
+
+* The VOX is now disabled by default.
+
 
 
  0.11.2 -- 26 Apr 2009

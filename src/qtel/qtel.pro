@@ -4,7 +4,8 @@ LANGUAGE	= C++
 CONFIG	+= qt warn_on release
 
 SOURCES	+= MainWindow.cpp \
-	ComDialog.cpp
+	ComDialog.cpp \
+	Settings.cpp
 
 FORMS	= MainWindowBase.ui \
 	ComDialogBase.ui \
@@ -25,5 +26,6 @@ TRANSLATIONS = translations/qtel_sv.ts \
 	       translations/qtel_nl.ts \
 	       translations/qtel_it.ts \
 	       translations/qtel_uk.ts \
+	       translations/qtel_ru.ts \
 	       translations/qtel_es.ts
 

@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 
 
 
@@ -47,6 +46,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <qprogressbar.h>
 #include <qcheckbox.h>
 #include <qslider.h>
+#include <qtextcodec.h>
+#include <qregexp.h>
 #undef emit
 
 
@@ -169,7 +170,7 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir,
   : callsign(remote_host), con(0), dir(dir), accept_connection(false),
     audio_io(audio_io), audio_full_duplex(false), is_transmitting(false),
     ctrl_pressed(false), rem_audio_fifo(0), ptt_valve(0), tx_audio_splitter(0),
-    vox(0), dns(0)
+    vox(0), dns(0), chat_codec(0)
     
 {
   init();
@@ -221,6 +222,8 @@ void ComDialog::acceptConnection(void)
 
 void ComDialog::init(const QString& remote_name)
 {
+  chat_codec = QTextCodec::codecForName(Settings::instance()->chatEncoding());
+  
   if (callsign.find("-L") != -1)
   {
     setIcon(QPixmap(const_cast<const char **>(link_xpm)));
@@ -560,7 +563,7 @@ void ComDialog::sendChatMsg()
 {
   chat_incoming->append(Settings::instance()->callsign() + "> " +
       chat_outgoing->text());
-  con->sendChatData(chat_outgoing->text().latin1());
+  con->sendChatData(chat_codec->fromUnicode(chat_outgoing->text()).data());
   chat_outgoing->clear();
   ptt_button->setFocus();
 } /* ComDialog::sendChatMsg */
@@ -568,15 +571,24 @@ void ComDialog::sendChatMsg()
 
 void ComDialog::infoMsgReceived(const string& msg)
 {
-  chat_incoming->append("------------ " + trUtf8("INFO") + " ------------");
-  chat_incoming->append(msg.c_str());
-  chat_incoming->append("------------------------------");
+  info_incoming->append("------------ " + trUtf8("INFO") + " ------------");
+  info_incoming->append(msg.c_str());
+  info_incoming->append("------------------------------");
 } /* ComDialog::infoMsgReceived */
 
 
 void ComDialog::chatMsgReceived(const string& msg)
 {
-  chat_incoming->append(msg.c_str());
+  if(isChatText(msg.c_str()))
+  {
+    QString txt(msg);
+    txt.truncate(msg.length() - 1); // Remove NL
+    chat_incoming->append(chat_codec->toUnicode(txt));
+  }
+  else
+  {
+    info_incoming->append(msg.c_str());
+  }
 } /* ComDialog::chatMsgReceived */
 
 
@@ -590,7 +602,7 @@ void ComDialog::stateChange(Qso::State state)
       ptt_button->setEnabled(true);
       chat_outgoing->setEnabled(true);
       ptt_button->setFocus();
-      chat_incoming->append(trUtf8("Connected to ") + call->text() + "\n");
+      info_incoming->append(trUtf8("Connected to ") + call->text() + "\n");
       if (name_label->text() == "?")
       {
 	name_label->setText(con->remoteName().c_str());
@@ -603,7 +615,7 @@ void ComDialog::stateChange(Qso::State state)
       ptt_button->setEnabled(false);
       chat_outgoing->setEnabled(false);
       disconnect_button->setFocus();
-      chat_incoming->append(trUtf8("Connecting to ") + call->text() + "...\n");
+      info_incoming->append(trUtf8("Connecting to ") + call->text() + "...\n");
       break;
       
     case Qso::STATE_BYE_RECEIVED:
@@ -623,7 +635,7 @@ void ComDialog::stateChange(Qso::State state)
       ptt_button->setEnabled(false);
       chat_outgoing->setEnabled(false);
       connect_button->setFocus();
-      chat_incoming->append(trUtf8("Disconnected") + "\n");
+      info_incoming->append(trUtf8("Disconnected") + "\n");
       break;
   }
   
@@ -675,6 +687,46 @@ void ComDialog::checkTransmit(void)
   );
 } /* ComDialog::checkTransmit */
 
+
+bool ComDialog::isChatText(const QString& msg)
+{
+    // Will match callsigns with a mix of letters and digits with a minimum of
+    // three characters and a maximum of seven characters, excluding the
+    // optional "-L" or "-R". To be classified as a chat message a ">" must
+    // directly follow the callsign.
+  QRegExp rexp("^[A-Z0-9]{3,7}(?:-[RL])?>");
+  return (rexp.search(msg) == 0);
+  
+  #if 0
+  string::const_iterator it;
+  it=msg.begin();
+  if(!(((*it >= 'A') && (*it <= 'Z')) || ((*it >= '0') && (*it <= '9')))) return FALSE;
+  it++;
+  if(!(((*it >= 'A') && (*it <= 'Z')) || ((*it >= '0') && (*it <= '9')))) return FALSE;
+  it++;
+  if(!(((*it >= 'A') && (*it <= 'Z')) || ((*it >= '0') && (*it <= '9')))) return FALSE;
+  it++;
+  if(((*it >= 'A') && (*it <= 'Z')) || ((*it >= '0') && (*it <= '9')))
+  {
+    it++;
+    if(((*it >= 'A') && (*it <= 'Z')) || ((*it >= '0') && (*it <= '9')))
+    {
+      it++;
+      if((*it >= 'A') && (*it <= 'Z'))
+      {
+        it++;
+      }
+    }
+  }
+  if(*it == '>') return TRUE;
+  if(*it != '-') return FALSE;
+  it++;
+  if((*it != 'L') && (*it != 'R')) return FALSE;
+  it++;
+  if(*it == '>') return TRUE;
+  return FALSE;
+  #endif
+}
 
 
 /*

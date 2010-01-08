@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,11 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example Template_demo.cpp
-An example of how to use the Template class
-*/
-
-
 #ifndef SETTINGS_INCLUDED
 #define SETTINGS_INCLUDED
 
@@ -42,6 +37,7 @@ An example of how to use the Template class
 #include <sigc++/sigc++.h>
 
 #include <qstringlist.h>
+#include <qvaluevector.h>
 #include <qsize.h>
 #undef emit
 
@@ -146,18 +142,6 @@ class Settings : public SigC::Object
   public:
     static Settings *instance(void);
   
-    /*
-     *------------------------------------------------------------------------
-     * Method:	
-     * Purpose: 
-     * Input: 	
-     * Output:	None
-     * Author:	
-     * Created: 
-     * Remarks: 
-     * Bugs:  	
-     *------------------------------------------------------------------------
-     */
     ~Settings(void);
     
     void showDialog(void);
@@ -175,6 +159,11 @@ class Settings : public SigC::Object
     const QString& audioDevice(void) const { return m_audio_device; }
     bool useFullDuplex(void) const { return m_use_full_duplex; }
     const QString& connectSound(void) const { return m_connect_sound; }
+    
+    const QString& chatEncoding(void) const
+    {
+      return encodings[m_chat_encoding].name;
+    }
     
     void setBookmarks(const QStringList &bookmarks);
     const QStringList& bookmarks(void) const { return m_bookmarks; }
@@ -199,35 +188,47 @@ class Settings : public SigC::Object
   protected:
     
   private:
-    static Settings * the_instance;
-    
-    SettingsDialog *  dialog;
-    
-    QString   	      m_callsign;
-    QString   	      m_password;
-    QString   	      m_name;
-    QString   	      m_location;
-    QString   	      m_info;
-    
-    QString   	      m_directory_server;
-    int       	      m_list_refresh_time;
-    bool      	      m_start_as_busy;
+    class Encoding
+    {
+      public:
+	Encoding(const QString& name="", const QString& language="")
+	  : name(name), language(language) {}
+	QString name;
+	QString language;
+    };
 
-    QString   	      m_audio_device;
-    bool      	      m_use_full_duplex;
-    QString   	      m_connect_sound;
+    static Settings *       the_instance;
+    
+    SettingsDialog *        dialog;
+    QValueVector<Encoding>  encodings;
+    
+    QString   	            m_callsign;
+    QString   	            m_password;
+    QString   	            m_name;
+    QString   	            m_location;
+    QString   	            m_info;
+    
+    QString   	            m_directory_server;
+    int       	            m_list_refresh_time;
+    bool      	            m_start_as_busy;
 
-    QStringList       m_bookmarks;
+    QString   	            m_audio_device;
+    bool      	            m_use_full_duplex;
+    QString   	            m_connect_sound;
     
-    QSize     	      m_main_window_size;
-    QValueList<int>   m_vsplitter_sizes;
-    QValueList<int>   m_hsplitter_sizes;
+    int		            m_chat_encoding;
+
+    QStringList             m_bookmarks;
     
-    bool      	      m_vox_enabled;
-    int       	      m_vox_threshold;
-    int       	      m_vox_delay;
+    QSize     	            m_main_window_size;
+    QValueList<int>         m_vsplitter_sizes;
+    QValueList<int>         m_hsplitter_sizes;
     
-    QString   	      m_connect_to_ip;
+    bool      	            m_vox_enabled;
+    int       	            m_vox_threshold;
+    int       	            m_vox_delay;
+    
+    QString   	            m_connect_to_ip;
     
     Settings(void);
     

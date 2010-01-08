@@ -140,7 +140,7 @@ class SigLevDet : public SigC::Object, public Async::AudioSink
      * @brief 	Read the latest measured signal level
      * @return	Returns the latest measured signal level
      */
-    virtual double lastSiglev(void) const = 0;
+    virtual float lastSiglev(void) const = 0;
     
     /**
      * @brief   Reset the signal level detector

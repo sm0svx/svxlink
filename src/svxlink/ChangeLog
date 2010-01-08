@@ -37,6 +37,43 @@
   in SvxLink at the moment. On the remote receiver side an Atmel AVR
   ATmega8 is used to map the signal level voltage to tone frequencies.
 
+* New feature: Tell repeater users that are not identifying to
+  identify themselvs. The time to wait for an identification, after the
+  repeater has been activated, is set using the IDENT_NAG_TIMEOUT
+  configuration variable. A valid identification is considered to be
+  a transmission longer than the time set by the IDENT_NAG_MIN_TIME
+  configuration variable. We don't know if it's really an
+  identification but it's the best we can do.
+
+* New feature: The repeater can be told to activate again if within
+  a certain time from repeater close. Use the new configuration
+  variable OPEN_ON_SQL_AFTER_RPT_CLOSE to set this up.
+
+* The TX_CTCSS feature have now been extended so that CTCSS tone
+  can be transmitted if there is incoming traffic from another
+  logic core or a module. Previously the were only two choices,
+  to send CTCSS tone when the squelch was open (repeater use)
+  or to always do it.
+
+* Bugfix: In the previous release all sound clips were converted
+  to WAV files instead of RAW files. When the EchoLink module
+  announce a conference name it looks for a file called
+  conf-conf_name.wav (e.g. conf-linux.wav). Previously it looked
+  for a file with a ".raw" file extension.
+
+* New module, PropagationMonitor. The propagation monitor module
+  receive emails from vhfdx.net (or gooddx.net) and announce
+  propagation alerts on the air using voice messages.
+
+* New module, MetarInfo. Get METAR (weather) information from
+  predefined ICAO locations and announce the information on the
+  air. Usually airports give them out. Module contributed by
+  DL1HRC / Adi.
+
+* A hamming window was added to the tone detector and DTMF
+  decoder to improve out-of-band audio rejection. Patch
+  from DH1DM / Steve.
+
 
 
  0.11.0 -- 26 Apr 2009

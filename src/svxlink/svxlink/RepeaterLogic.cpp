@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-20089 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -128,12 +128,15 @@ using namespace Async;
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
   : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(30000),
     idle_sound_timer(0), idle_sound_interval(0),
-    required_sql_open_duration(-1),
+    required_sql_open_duration(-1), open_on_sql_after_rpt_close(0),
     open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false),
     open_on_sql_timer(0), open_sql_flank(SQL_FLANK_CLOSE),
     short_sql_open_cnt(0), sql_flap_sup_min_time(1000),
-    sql_flap_sup_max_cnt(0), rgr_enable(true), open_reason("?")
+    sql_flap_sup_max_cnt(0), rgr_enable(true), open_reason("?"),
+    ident_nag_timeout(0), ident_nag_min_time(2000), ident_nag_timer(0)
 {
+  timerclear(&rpt_close_timestamp);
+  timerclear(&sql_up_timestamp);
 } /* RepeaterLogic::RepeaterLogic */
 
 
@@ -142,6 +145,7 @@ RepeaterLogic::~RepeaterLogic(void)
   delete open_on_sql_timer;
   delete idle_sound_timer;
   delete up_timer;
+  delete ident_nag_timer;
 } /* RepeaterLogic::~RepeaterLogic */
 
 
@@ -187,6 +191,11 @@ bool RepeaterLogic::initialize(void)
     required_sql_open_duration = atoi(str.c_str());
   }
   
+  if (cfg().getValue(name(), "OPEN_ON_SQL_AFTER_RPT_CLOSE", str))
+  {
+    open_on_sql_after_rpt_close = atoi(str.c_str());
+  }
+  
   if (cfg().getValue(name(), "OPEN_ON_DTMF", str))
   {
     open_on_dtmf = str.c_str()[0];
@@ -227,6 +236,16 @@ bool RepeaterLogic::initialize(void)
   if (cfg().getValue(name(), "SQL_FLAP_SUP_MAX_COUNT", str))
   {
     sql_flap_sup_max_cnt = atoi(str.c_str());
+  }
+  
+  if (cfg().getValue(name(), "IDENT_NAG_TIMEOUT", str))
+  {
+    ident_nag_timeout = 1000 * atoi(str.c_str());
+  }
+  
+  if (cfg().getValue(name(), "IDENT_NAG_MIN_TIME", str))
+  {
+    ident_nag_min_time = atoi(str.c_str());
   }
   
   rx().toneDetected.connect(slot(*this, &RepeaterLogic::detectedTone));
@@ -434,9 +453,25 @@ void RepeaterLogic::setUp(bool up, string reason)
     setIdle(false);
     checkIdle();
     setIdle(isIdle());
+    
+    if ((ident_nag_timeout > 0) && (reason != "MODULE") &&
+        (reason != "AUDIO") && (reason != "SQL_RPT_REOPEN"))
+    {
+      delete ident_nag_timer; // Just to be sure...
+      ident_nag_timer = new Timer(ident_nag_timeout);
+      ident_nag_timer->expired.connect(slot(*this, &RepeaterLogic::identNag));
+    }
   }
   else
   {
+    if (reason != "SQL_FLAP_SUP")
+    {
+      gettimeofday(&rpt_close_timestamp, NULL);
+    }
+    else
+    {
+      timerclear(&rpt_close_timestamp);
+    }
     open_reason = "?";
     rxValveSetOpen(false);
     repeater_is_up = false;
@@ -444,6 +479,8 @@ void RepeaterLogic::setUp(bool up, string reason)
     up_timer = 0;
     delete idle_sound_timer;
     idle_sound_timer = 0;
+    delete ident_nag_timer;
+    ident_nag_timer = 0;
     disconnectAllLogics();
     stringstream ss;
     ss << "repeater_down " << reason;
@@ -464,21 +501,26 @@ void RepeaterLogic::squelchOpen(bool is_open)
   
   rgr_enable = true;
   
+  if (is_open)
+  {
+    gettimeofday(&sql_up_timestamp, NULL);
+  }
+
   if (repeater_is_up)
   {
     if (is_open)
     {
-      gettimeofday(&sql_up_timestamp, NULL);
       setIdle(false);
     }
     else
     {
+      struct timeval now, diff_tv;
+      gettimeofday(&now, NULL);
+      timersub(&now, &sql_up_timestamp, &diff_tv);
+      int diff_ms = diff_tv.tv_sec * 1000 + diff_tv.tv_usec / 1000;
+	
       if (sql_flap_sup_max_cnt > 0)
       {
-	struct timeval now, diff_tv;
-	gettimeofday(&now, NULL);
-	timersub(&now, &sql_up_timestamp, &diff_tv);
-	int diff_ms = diff_tv.tv_sec * 1000 + diff_tv.tv_usec / 1000;
 	if (diff_ms < sql_flap_sup_min_time)
 	{
       	  if (++short_sql_open_cnt >= sql_flap_sup_max_cnt)
@@ -494,6 +536,12 @@ void RepeaterLogic::squelchOpen(bool is_open)
       	  short_sql_open_cnt = 0;
 	}
       }
+      
+      if ((ident_nag_timer != 0) && (diff_ms > ident_nag_min_time))
+      {
+	delete ident_nag_timer;
+	ident_nag_timer = 0;
+      }
     }
   
     Logic::squelchOpen(is_open);
@@ -507,6 +555,17 @@ void RepeaterLogic::squelchOpen(bool is_open)
       	open_on_sql_timer = new Timer(required_sql_open_duration);
 	open_on_sql_timer->expired.connect(
 	    slot(*this, &RepeaterLogic::openOnSqlTimerExpired));
+      }
+      
+      if (open_on_sql_after_rpt_close > 0)
+      {
+	struct timeval diff_tv;
+	timersub(&sql_up_timestamp, &rpt_close_timestamp, &diff_tv);
+	if (diff_tv.tv_sec < open_on_sql_after_rpt_close)
+	{
+	  open_reason = "SQL_RPT_REOPEN";
+	  activateOnOpenOrClose(SQL_FLANK_OPEN);
+	}
       }
     }
     else
@@ -592,6 +651,19 @@ void RepeaterLogic::activateOnOpenOrClose(SqlFlank flank)
     }
   }
 }
+
+
+void RepeaterLogic::identNag(Timer *t)
+{
+  delete ident_nag_timer;
+  ident_nag_timer = 0;
+  
+  if (!rx().squelchIsOpen())
+  {
+    cout << "Nagging user about identifying himself\n";
+    processEvent("identify_nag");
+  }
+} /* RepeaterLogic::identNag */
 
 
 

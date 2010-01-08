@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -253,6 +253,8 @@ MainWindow::MainWindow(Directory &dir)
 
 MainWindow::~MainWindow(void)
 {
+  delete msg_handler;
+  msg_handler = 0;
   delete audio_io;
   audio_io = 0;
   delete msg_audio_io;

@@ -1,12 +1,11 @@
 /**
 @file	 AsyncConfig.h
-@brief   A class for reading configuration files that is on the famous
-      	 INI file format
+@brief   A class for reading "INI-foramtted" configuration files
 @author  Tobias Blomberg
 @date	 2004-03-17
 
 This file contains a class that is used to read configuration files that is
-on the famous MS Windows INI file format. An example of a configuration file
+in the famous MS Windows INI file format. An example of a configuration file
 is shown below.
 
 \include test.cfg
@@ -51,6 +50,7 @@ An example of how to use the Config class
 #include <string>
 #include <map>
 #include <list>
+#include <sstream>
 
 
 /****************************************************************************
@@ -118,12 +118,11 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A class for reading configuration files that is on the famous
-      	INI file format
+@brief	A class for reading INI-formatted configuration files
 @author Tobias Blomberg
 @date   2004-03-17
 
-This class is used to read configuration files that is on the famous MS Windows
+This class is used to read configuration files that is in the famous MS Windows
 INI file format. An example of a configuration file and how to use the class
 is shown below.
 
@@ -137,7 +136,7 @@ class Config
     /**
      * @brief 	Default constuctor
      */
-    Config(void);
+    Config(void) : file(NULL) {}
   
     /**
      * @brief 	Destructor
@@ -152,17 +151,117 @@ class Config
     bool open(const std::string& name);
     
     /**
-     * @brief 	Get the value of the given configuration variable
+     * @brief 	Return the string value of the given configuration variable
      * @param 	section The name of the section where the configuration
      *	      	      	variable is located
      * @param 	tag   	The name of the configuration variable to get
-     * @param 	value 	The value is returned in this argument. Any previous
-     *	      	      	contents is wiped
+     * @return	Returns String with content of the configuration variable.
+     *                  If no variable is found an empty string is returned
+     *
+     * This function will return the string value corresponding to the given
+     * configuration variable. If the configuration variable is unset, an
+     * empty sting is returned.
+     */
+    const std::string &getValue(const std::string& section,
+				 const std::string& tag) const;
+
+    /**
+     * @brief 	Get the string value of the given configuration variable
+     * @param 	section    The name of the section where the configuration
+     *	      	      	   variable is located
+     * @param 	tag   	   The name of the configuration variable to get
+     * @param 	value 	   The value is returned in this argument. Any previous
+     *	      	      	   contents is wiped
      * @return	Returns \em true on success or else \em false on failure
+     *
+     * This function is used to get the value for a configuration variable
+     * of type "string".
      */
     bool getValue(const std::string& section, const std::string& tag,
-      	      	  std::string& value);
-    
+      	      	  std::string& value) const;
+
+    /**
+     * @brief 	Get the value of the given configuration variable.
+     * @param 	section    The name of the section where the configuration
+     *	      	      	   variable is located
+     * @param 	tag   	   The name of the configuration variable to get
+     * @param 	rsp 	   The value is returned in this argument.
+     *	      	      	   Successful completion overwrites previous contents
+     * @param	missing_ok If set to \em true, return \em true if the
+     *                     configuration variable is missing
+     * @return	Returns \em true on success or else \em false on failure.
+     *
+     * This function is used to get the value of a configuraiton variable.
+     * It's a template function meaning that it can take any value type
+     * that supports the operator>> function. Note that when the value is of
+     * type string, the overloaded getValue is used rather than this function.
+     * Normally a missing configuration variable is seen as an error and the
+     * function returns \em false. If the missing_ok parameter is set to
+     * \em true, this function returns \em true for a missing variable but
+     * till returns \em false if an illegal value is specified.
+     */
+    template <typename Rsp>
+    bool getValue(const std::string& section, const std::string& tag,
+		  Rsp &rsp, bool missing_ok = false) const
+    {
+      std::string str_val;
+      if (!getValue(section, tag, str_val) && missing_ok)
+      {
+	return true;
+      }
+      std::stringstream ssval(str_val);
+      Rsp tmp;
+      ssval >> tmp >> std::ws;
+      if (ssval.fail() || !ssval.eof())
+      {
+	return false;
+      }
+      rsp = tmp;
+      return true;
+    } /* Config::getValue */
+
+    /**
+     * @brief 	Get a range checked variable value
+     * @param 	section    The name of the section where the configuration
+     *	      	      	   variable is located
+     * @param 	tag   	   The name of the configuration variable to get.
+     * @param 	min   	   Smallest valid value.
+     * @param 	max   	   Largest valid value.
+     * @param 	rsp 	   The value is returned in this argument.
+     *	      	      	   Successful completion overwites prevoius contents.
+     * @param	missing_ok If set to \em true, return \em true if the
+     *                     configuration variable is missing
+     * @return	Returns \em true if value is within range otherwise \em false.
+     *
+     * This function is used to get the value of the given configuration
+     * variable, checking if it is within the given range (min <= value <= max).
+     * Requires operators >>, < and > to be defined in the value object.
+     * Normally a missing configuration variable is seen as an error and the
+     * function returns \em false. If the missing_ok parameter is set to
+     * \em true, this function returns \em true for a missing variable but
+     * till returns \em false if an illegal value is specified.
+     */
+    template <typename Rsp>
+    bool getValue(const std::string& section, const std::string& tag,
+		  const Rsp& min, const Rsp& max, Rsp &rsp,
+		  bool missing_ok = false) const
+    {
+      std::string str_val;
+      if (!getValue(section, tag, str_val) && missing_ok)
+      {
+	return true;
+      }
+      std::stringstream ssval(str_val);
+      Rsp tmp;
+      ssval >> tmp >> std::ws;
+      if (ssval.fail() || !ssval.eof() || (tmp < min) || (tmp > max))
+      {
+	return false;
+      }
+      rsp = tmp;
+      return true;
+    } /* Config::getValue */
+
     /**
      * @brief 	Return the name of all the tags in the given section
      * @param 	section The name of the section where the configuration
@@ -170,11 +269,6 @@ class Config
      * @return	Returns the list of tags in the given section
      */
     std::list<std::string> listSection(const std::string& section);
-    
-    //bool setValue(const std::string& section, const std::string& tag,
-    //  	      	  const std::string& value);
-    
-  protected:
     
   private:
     typedef std::map<std::string, std::string>	Values;

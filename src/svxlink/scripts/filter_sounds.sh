@@ -20,6 +20,8 @@ SOFTLINK_SOUNDS="\
 MAXIMIZE_SOUNDS="\
   Default/help \
   Default/press_0_for_help \
+  Core/interference \
+  Core/please_identify \
   Help/help \
   Help/choose_module \
   Parrot/help \
@@ -37,6 +39,9 @@ MAXIMIZE_SOUNDS="\
   TclVoiceMail/login \
   TclVoiceMail/rec_enter_rcpt \
   DtmfRepeater/help \
+  PropagationMonitor/aurora_alert \
+  PropagationMonitor/eskip_alert \
+  PropagationMonitor/help \
   "
 
 TRIM_SOUNDS="\
@@ -77,6 +82,16 @@ TRIM_SOUNDS="\
   Default/90 \
   Default/9X \
   Default/O \
+  Default/100 \
+  Default/200 \
+  Default/300 \
+  Default/400 \
+  Default/500 \
+  Default/600 \
+  Default/700 \
+  Default/800 \
+  Default/900 \
+  Default/and \
   Default/decimal \
   Default/activating_module \
   Default/deactivating_module \
@@ -162,7 +177,24 @@ TRIM_SOUNDS="\
   TclVoiceMail/rec_message \
   TclVoiceMail/rec_subject \
   DtmfRepeater/name \
+  PropagationMonitor/name \
+  PropagationMonitor/band_open_from \
+  PropagationMonitor/to \
+  PropagationMonitor/unit_m \
+  PropagationMonitor/unit_cm \
+  PropagationMonitor/above \
+  PropagationMonitor/MHz \
+  PropagationMonitor/MUF \
+  PropagationMonitor/multi_hop \
+  PropagationMonitor/sporadic_e_opening \
+  PropagationMonitor/tropo_opening \
+  PropagationMonitor/between \
+  PropagationMonitor/aurora_opening \
+  PropagationMonitor/down_to_lat \
+  PropagationMonitor/unit_deg \
   "
+
+basedir=$(cd $(dirname $0); pwd)
 
 warning()
 {
@@ -186,8 +218,9 @@ warning()
 
 endian=""
 encoding=""
-ext="raw"
-while getopts LBg opt; do
+ext="wav"
+target_rate=8000
+while getopts LBgr: opt; do
   case $opt in
     B)
       endian=B
@@ -201,17 +234,21 @@ while getopts LBg opt; do
       encoding="g"
       ext="gsm"
       ;;
+
+    r)
+      target_rate=${OPTARG}
+      ;;
   esac
 done
 shift $((OPTIND-1))
 
-if [ $# -gt 0 ]; then
-  SRC_DIR=$1
+if [ $# -lt 2 ]; then
+  echo "Usage: $0 <source directory> <destination directory>"
+  exit 1
 fi
 
-if [ $# -gt 1 ]; then
-  DEST_DIR=$2
-fi
+SRC_DIR=$1
+DEST_DIR=$2
 
 
 #for sound in $COPY_SOUNDS; do
@@ -229,7 +266,8 @@ for sound in $MAXIMIZE_SOUNDS; do
   [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
   if [ -r $SRC_DIR/$sound.raw -o -r $SRC_DIR/$sound.wav ]; then
     echo "Maximizing $SRC_DIR/$sound -> $DEST_DIR/$sound.$ext"
-    ./play_sound.sh -f$endian$encoding $SRC_DIR/$sound > $DEST_DIR/$sound.$ext
+    $basedir/play_sound.sh -f$endian$encoding -r$target_rate $SRC_DIR/$sound | \
+	sox -traw -s2 -r$target_rate - $DEST_DIR/$sound.$ext
   else
     warning "Missing sound: $sound"
   fi
@@ -241,8 +279,9 @@ for sound in $TRIM_SOUNDS; do
   [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
   if [ -r $SRC_DIR/$sound.raw -o -r $SRC_DIR/$sound.wav ]; then
     echo "Trimming $SRC_DIR/$sound -> $DEST_DIR/$sound.$ext"
-    ./play_sound.sh -tf$endian$encoding $SRC_DIR/$sound > $DEST_DIR/$sound.$ext
-    cat $DEST_DIR/$sound.$ext >> /tmp/all_trimmed.$ext
+    $basedir/play_sound.sh -tf$endian$encoding -r$target_rate $SRC_DIR/$sound |
+	sox -traw -s2 -r$target_rate - $DEST_DIR/$sound.$ext
+    sox $DEST_DIR/$sound.$ext -r$target_rate -s2 -t raw - >> /tmp/all_trimmed.raw
   else
     warning "Missing sound: $sound"
   fi

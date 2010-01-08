@@ -2,14 +2,19 @@
 
 trim_silence=0
 endian=""
-encoding="-sw -traw"
+encoding="-s2 -traw"
+target_rate=8000
 
 convert()
 {
   if [ -r "$1.wav" ]; then
-    sox "$1.wav" -r8000 -sw -traw -
+    sox "$1.wav" -r$target_rate -s2 -traw -
   elif [ -r "$1.raw" ]; then
-    cat "$1.raw"
+    if [ $target_rate != 8000 ]; then
+      sox -r 8000 -s2 "$1.raw" -r$target_rate -s2 -traw -
+    else
+      cat "$1.raw"
+    fi
   fi
 }
 
@@ -17,18 +22,19 @@ convert()
 process()
 {
   # The format of the audio stream
-  format="-traw -r8000 -sw";
+  format="-traw -r${target_rate} -s2";
   
   # The filter to apply before all other operations
-  filter="highpass 300 highpass 300 highpass 300"
-  filter="highpass 300"
+  #filter="highpass 300 highpass 300 highpass 300"
+  #filter="highpass 300"
+  filter=""
   
   # Front and back levels for silence trimming
-  silence_front_level="-45d"
-  silence_back_level="-45d"
+  silence_front_level="-50d"
+  silence_back_level="-50d"
   
   # Calculate maximum gain without clipping. Leave headroom of about 3dB.
-  gain=$(sox -traw -r8000 -sw $1 -traw /dev/null stat -v 2>&1)
+  gain=$(sox -traw -r${target_rate} -s2 $1 -traw /dev/null stat -v 2>&1)
   gain=$(echo "$gain * 0.7" | bc)
   #echo $gain 1>&2
   
@@ -47,17 +53,8 @@ spell()
   tmp=$(mktemp /tmp/svxlink-XXXXXX)
   ( for letter in $*; do
     process phonetic_$letter
-    #max_vol=$(sox -r8000 -sw phonetic_$letter.raw -t raw /dev/null stat -v 2>&1)
-    #max_vol=1
-    #above_thresh=$(echo 0.2 \* $max_vol | bc)
-    #below_thresh=$(echo 0.1 \* $max_vol | bc)
-    #echo max_vol=$max_vol
-    #sox -r8000 -sw -v $max_vol phonetic_$letter.raw -traw - \
-    #  	    highpass 500 \
-	#    silence 1 50 $above_thresh% 1 200 $below_thresh%
-    #dd if=/dev/zero bs=1 count=800 2> /dev/null
   done ) > $tmp
-  play -r8000 -sw -traw $tmp
+  play -r${target_rate} -s2 -traw $tmp
   rm -f $tmp
 }
 
@@ -65,7 +62,7 @@ spell()
 endian_conv()
 {
   if [ -n "$endian" ]; then
-    sox -r8000 -sw -traw - -r8000 -sw -traw $endian -
+    sox -r${target_rate} -s2 -traw - -r${target_rate} -s2 -traw $endian -
   else
     cat
   fi
@@ -74,14 +71,14 @@ endian_conv()
 
 encode()
 {
-  if [ "$encoding" != "-sw -traw" ]; then
-    sox -r8000 -sw -traw - $encoding -
+  if [ "$encoding" != "-s2 -traw" ]; then
+    sox -r${target_rate} -s2 -traw - $encoding -
   else
     cat
   fi
 }
 
-while getopts spfctBLg opt; do
+while getopts spfctBLgr: opt; do
   case $opt in
     s)
       operation=spell
@@ -114,6 +111,10 @@ while getopts spfctBLg opt; do
     g)
       encoding="-tgsm"
       ;;
+
+    r)
+      target_rate=$OPTARG
+     ;;
       
   esac
 done
@@ -127,8 +128,7 @@ case $operation in
   play)
     tmp=$(mktemp /tmp/svxlink-XXXXXX)
     convert $1 > $tmp
-    #process $tmp | play -r8000 -sw -traw -
-    process $tmp | encode | play -r8000 $encoding -
+    process $tmp | encode | play -r${target_rate} $encoding -
     rm -f $tmp
     ;;
   

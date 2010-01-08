@@ -587,5 +587,97 @@ meddelande</translation>
         <source>Choose a connect sound file</source>
         <translation>Välj ett anslutningsljud</translation>
     </message>
+    <message>
+        <source>QSO</source>
+        <translation>QSO</translation>
+    </message>
+    <message>
+        <source>QSO dialog settings</source>
+        <translation>Inställningar för QSO-dialogen</translation>
+    </message>
+    <message>
+        <source>Chat encoding:</source>
+        <translation>Teckenkodning chat:</translation>
+    </message>
+    <message>
+        <source>Chinese</source>
+        <translation>Kinesisk</translation>
+    </message>
+    <message>
+        <source>Japanese</source>
+        <translation>Japansk</translation>
+    </message>
+    <message>
+        <source>Korean</source>
+        <translation>Koreansk</translation>
+    </message>
+    <message>
+        <source>Tamil</source>
+        <translation>Tamil</translation>
+    </message>
+    <message>
+        <source>Unicode, 8-bit</source>
+        <translation>Unicode, 8-bitar</translation>
+    </message>
+    <message>
+        <source>Russian</source>
+        <translation>Rysk</translation>
+    </message>
+    <message>
+        <source>Ukrainian</source>
+        <translation>Ukrainsk</translation>
+    </message>
+    <message>
+        <source>Western</source>
+        <translation>Västerländsk</translation>
+    </message>
+    <message>
+        <source>Central European</source>
+        <translation>Centraleuropeisk</translation>
+    </message>
+    <message>
+        <source>Baltic</source>
+        <translation>Baltisk</translation>
+    </message>
+    <message>
+        <source>Cyrillic</source>
+        <translation>Kyrillisk</translation>
+    </message>
+    <message>
+        <source>Arabic</source>
+        <translation>Arabisk</translation>
+    </message>
+    <message>
+        <source>Greek</source>
+        <translation>Grekisk</translation>
+    </message>
+    <message>
+        <source>Hebrew, visually ordered</source>
+        <translation>Hebreisk, visuellt ordnad</translation>
+    </message>
+    <message>
+        <source>Hebrew, logically ordered</source>
+        <translation>Hebreisk, logiskt ordnad</translation>
+    </message>
+    <message>
+        <source>Turkish</source>
+        <translation>Turkisk</translation>
+    </message>
+    <message>
+        <source>Hebrew</source>
+        <translation>Hebreisk</translation>
+    </message>
+    <message>
+        <source>Thai</source>
+        <translation>Thailändsk</translation>
+    </message>
+    <message>
+        <source>Qtel: Password mismatch</source>
+        <translation>Qtel: Olika lösenord</translation>
+    </message>
+    <message>
+        <source>Passwords do not match</source>
+        <translation>De två lösenord du angav är ej lika</translation>
+    </message>
 </context>
 </TS>

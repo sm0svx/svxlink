@@ -88,7 +88,7 @@ using namespace Async;
 // however is acceptable for the DTMF decoder. Furthermore, a time slack
 // between the tone detectors is unavoidable, since they use different
 // block lengths.
-#define DTMF_BANDWIDTH              40     /* 40Hz */
+#define DTMF_BANDWIDTH              35     /* 35Hz */
 #define DTMF_BLOCK_LENGTH           (INTERNAL_SAMPLE_RATE / 1000)
 
 
@@ -139,29 +139,28 @@ SwDtmfDecoder::SwDtmfDecoder(Config &cfg, const string &name)
     memset(col_energy, 0, sizeof(col_energy));
     
     /* Init row detectors */
-    goertzelInit(&row_out[0], 697.0f, DTMF_BANDWIDTH);
-    goertzelInit(&row_out[1], 770.0f, DTMF_BANDWIDTH);
-    goertzelInit(&row_out[2], 852.0f, DTMF_BANDWIDTH);
-    goertzelInit(&row_out[3], 941.0f, DTMF_BANDWIDTH);
-
-    /* Init column detectors */
-    goertzelInit(&col_out[0], 1209.0f, DTMF_BANDWIDTH);
-    goertzelInit(&col_out[1], 1336.0f, DTMF_BANDWIDTH);
-    goertzelInit(&col_out[2], 1477.0f, DTMF_BANDWIDTH);
-    goertzelInit(&col_out[3], 1633.0f, DTMF_BANDWIDTH);
+    goertzelInit(&row_out[0], 697.0f, DTMF_BANDWIDTH, 0.0f);
+    goertzelInit(&row_out[1], 770.0f, DTMF_BANDWIDTH, 0.0f);
+    goertzelInit(&row_out[2], 852.0f, DTMF_BANDWIDTH, 0.0f);
+    goertzelInit(&row_out[3], 941.0f, DTMF_BANDWIDTH, 0.0f);
 
     /* Sliding window Goertzel algorithm */
-    memcpy(row_out+4, row_out, 4*sizeof(GoertzelState));
-    row_out[4].samples_left = row_out[4].block_length / 2;
-    row_out[5].samples_left = row_out[5].block_length / 2;
-    row_out[6].samples_left = row_out[6].block_length / 2;
-    row_out[7].samples_left = row_out[7].block_length / 2;
+    goertzelInit(&row_out[4], 697.0f, DTMF_BANDWIDTH, 0.5f);
+    goertzelInit(&row_out[5], 770.0f, DTMF_BANDWIDTH, 0.5f);
+    goertzelInit(&row_out[6], 852.0f, DTMF_BANDWIDTH, 0.5f);
+    goertzelInit(&row_out[7], 941.0f, DTMF_BANDWIDTH, 0.5f);
 
-    memcpy(col_out+4, col_out, 4*sizeof(GoertzelState));
-    col_out[4].samples_left = col_out[4].block_length / 2;
-    col_out[5].samples_left = col_out[5].block_length / 2;
-    col_out[6].samples_left = col_out[6].block_length / 2;
-    col_out[7].samples_left = col_out[7].block_length / 2;
+    /* Init column detectors */
+    goertzelInit(&col_out[0], 1209.0f, DTMF_BANDWIDTH, 0.0f);
+    goertzelInit(&col_out[1], 1336.0f, DTMF_BANDWIDTH, 0.0f);
+    goertzelInit(&col_out[2], 1477.0f, DTMF_BANDWIDTH, 0.0f);
+    goertzelInit(&col_out[3], 1633.0f, DTMF_BANDWIDTH, 0.0f);
+
+    /* Sliding window Goertzel algorithm */
+    goertzelInit(&col_out[4], 1209.0f, DTMF_BANDWIDTH, 0.5f);
+    goertzelInit(&col_out[5], 1336.0f, DTMF_BANDWIDTH, 0.5f);
+    goertzelInit(&col_out[6], 1477.0f, DTMF_BANDWIDTH, 0.5f);
+    goertzelInit(&col_out[7], 1633.0f, DTMF_BANDWIDTH, 0.5f);
 
 } /* SwDtmfDecoder::SwDtmfDecoder */
 
@@ -204,68 +203,68 @@ int SwDtmfDecoder::writeSamples(const float *buf, int len)
         /* Row detectors */
         v1 = row_out[0].v2;
         row_out[0].v2 = row_out[0].v3;
-        row_out[0].v3 = row_out[0].fac * row_out[0].v2 - v1 + famp;
+        row_out[0].v3 = row_out[0].fac * row_out[0].v2 - v1 + famp * *(row_out[0].win++);
 
         v1 = row_out[1].v2;
         row_out[1].v2 = row_out[1].v3;
-        row_out[1].v3 = row_out[1].fac * row_out[1].v2 - v1 + famp;
+        row_out[1].v3 = row_out[1].fac * row_out[1].v2 - v1 + famp * *(row_out[1].win++);
         
         v1 = row_out[2].v2;
         row_out[2].v2 = row_out[2].v3;
-        row_out[2].v3 = row_out[2].fac * row_out[2].v2 - v1 + famp;
+        row_out[2].v3 = row_out[2].fac * row_out[2].v2 - v1 + famp * *(row_out[2].win++);
 
         v1 = row_out[3].v2;
         row_out[3].v2 = row_out[3].v3;
-        row_out[3].v3 = row_out[3].fac * row_out[3].v2 - v1 + famp;
+        row_out[3].v3 = row_out[3].fac * row_out[3].v2 - v1 + famp * *(row_out[3].win++);
 
         v1 = row_out[4].v2;
         row_out[4].v2 = row_out[4].v3;
-        row_out[4].v3 = row_out[4].fac * row_out[4].v2 - v1 + famp;
+        row_out[4].v3 = row_out[4].fac * row_out[4].v2 - v1 + famp * *(row_out[4].win++);
 
         v1 = row_out[5].v2;
         row_out[5].v2 = row_out[5].v3;
-        row_out[5].v3 = row_out[5].fac * row_out[5].v2 - v1 + famp;
+        row_out[5].v3 = row_out[5].fac * row_out[5].v2 - v1 + famp * *(row_out[5].win++);
         
         v1 = row_out[6].v2;
         row_out[6].v2 = row_out[6].v3;
-        row_out[6].v3 = row_out[6].fac * row_out[6].v2 - v1 + famp;
+        row_out[6].v3 = row_out[6].fac * row_out[6].v2 - v1 + famp * *(row_out[6].win++);
 
         v1 = row_out[7].v2;
         row_out[7].v2 = row_out[7].v3;
-        row_out[7].v3 = row_out[7].fac * row_out[7].v2 - v1 + famp;
+        row_out[7].v3 = row_out[7].fac * row_out[7].v2 - v1 + famp * *(row_out[7].win++);
 
         /* Column detectors */
         v1 = col_out[0].v2;
         col_out[0].v2 = col_out[0].v3;
-        col_out[0].v3 = col_out[0].fac * col_out[0].v2 - v1 + famp;
+        col_out[0].v3 = col_out[0].fac * col_out[0].v2 - v1 + famp * *(col_out[0].win++);
 
         v1 = col_out[1].v2;
         col_out[1].v2 = col_out[1].v3;
-        col_out[1].v3 = col_out[1].fac * col_out[1].v2 - v1 + famp;
+        col_out[1].v3 = col_out[1].fac * col_out[1].v2 - v1 + famp * *(col_out[1].win++);
 
         v1 = col_out[2].v2;
         col_out[2].v2 = col_out[2].v3;
-        col_out[2].v3 = col_out[2].fac * col_out[2].v2 - v1 + famp;
+        col_out[2].v3 = col_out[2].fac * col_out[2].v2 - v1 + famp * *(col_out[2].win++);
 
         v1 = col_out[3].v2;
         col_out[3].v2 = col_out[3].v3;
-        col_out[3].v3 = col_out[3].fac * col_out[3].v2 - v1 + famp;
+        col_out[3].v3 = col_out[3].fac * col_out[3].v2 - v1 + famp * *(col_out[3].win++);
 
         v1 = col_out[4].v2;
         col_out[4].v2 = col_out[4].v3;
-        col_out[4].v3 = col_out[4].fac * col_out[4].v2 - v1 + famp;
+        col_out[4].v3 = col_out[4].fac * col_out[4].v2 - v1 + famp * *(col_out[4].win++);
 
         v1 = col_out[5].v2;
         col_out[5].v2 = col_out[5].v3;
-        col_out[5].v3 = col_out[5].fac * col_out[5].v2 - v1 + famp;
+        col_out[5].v3 = col_out[5].fac * col_out[5].v2 - v1 + famp * *(col_out[5].win++);
 
         v1 = col_out[6].v2;
         col_out[6].v2 = col_out[6].v3;
-        col_out[6].v3 = col_out[6].fac * col_out[6].v2 - v1 + famp;
+        col_out[6].v3 = col_out[6].fac * col_out[6].v2 - v1 + famp * *(col_out[6].win++);
 
         v1 = col_out[7].v2;
         col_out[7].v2 = col_out[7].v3;
-        col_out[7].v3 = col_out[7].fac * col_out[7].v2 - v1 + famp;
+        col_out[7].v3 = col_out[7].fac * col_out[7].v2 - v1 + famp * *(col_out[7].win++);
 
         /* Row result calculators */
         if (--row_out[0].samples_left == 0)
@@ -390,20 +389,26 @@ void SwDtmfDecoder::dtmfPostProcess(uint8_t hit)
 } /* SwDtmfDecoder::dtmfPostProcess */
 
 
-void SwDtmfDecoder::goertzelInit(GoertzelState *s, float freq, float bw)
+void SwDtmfDecoder::goertzelInit(GoertzelState *s, float freq, float bw, float offset)
 {
-    /* Adjust the bandwidth to minimize the DFT error. */
-    float new_bw = freq / ceilf(freq / bw);
-    /* Select a block length with minimized DFT error. */
-    s->block_length = lrintf(INTERNAL_SAMPLE_RATE / new_bw);
+    /* Adjust the block length to minimize the DFT error. */
+    s->block_length = lrintf(ceilf(freq / bw) * INTERNAL_SAMPLE_RATE / freq);
     /* Scale output values to achieve same levels at different block lengths. */
-    s->scale_factor = powf(new_bw / bw, 2);
+    s->scale_factor = 1.0e6f / (s->block_length * s->block_length);
     /* Init detector frequency. */
     s->fac = 2.0f * cosf(2.0f * M_PI * freq / INTERNAL_SAMPLE_RATE);
     /* Reset the tone detector state. */
     s->v2 = s->v3 = 0.0f;
-    s->samples_left = s->block_length;
-    
+    s->samples_left = s->block_length * (1.0f - offset);
+    /* Hamming window */
+    for (int i = 0; i < s->block_length; i++)
+    {
+        s->window_table.push_back(
+           0.54 - 0.46 * cosf(2.0f * M_PI * i / (s->block_length - 1)));
+    }
+    /* Point to the first table entry */
+    s->win = s->window_table.begin();
+
 } /* SwDtmfDecoder::goertzelInit */
 
 
@@ -422,6 +427,7 @@ float SwDtmfDecoder::goertzelResult(GoertzelState *s)
     /* Reset the tone detector state. */
     s->v2 = s->v3 = 0.0f;
     s->samples_left = s->block_length;
+    s->win = s->window_table.begin();
     /* Return the calculated signal level. */
     return res;
     

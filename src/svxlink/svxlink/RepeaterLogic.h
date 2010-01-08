@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-20089 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -177,6 +177,8 @@ class RepeaterLogic : public Logic
     Async::Timer    *idle_sound_timer;
     int       	    idle_sound_interval;
     int      	    required_sql_open_duration;
+    struct timeval  rpt_close_timestamp;
+    int		    open_on_sql_after_rpt_close;
     char      	    open_on_dtmf;
     bool      	    activate_on_sql_close;
     bool            no_repeat;
@@ -188,6 +190,9 @@ class RepeaterLogic : public Logic
     int       	    sql_flap_sup_max_cnt;
     bool            rgr_enable;
     std::string     open_reason;
+    int		    ident_nag_timeout;
+    int		    ident_nag_min_time;
+    Async::Timer    *ident_nag_timer;
     
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);
@@ -197,6 +202,7 @@ class RepeaterLogic : public Logic
     void playIdleSound(Async::Timer *t);
     void openOnSqlTimerExpired(Async::Timer *t);
     void activateOnOpenOrClose(SqlFlank flank);
+    void identNag(Async::Timer *t);
 
 };  /* class RepeaterLogic */
 

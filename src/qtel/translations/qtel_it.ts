@@ -587,5 +587,97 @@ Message</source>
         <source>Choose a connect sound file</source>
         <translation>Sceliere file dell&apos;audio</translation>
     </message>
+    <message>
+        <source>QSO</source>
+        <translation>QSO</translation>
+    </message>
+    <message>
+        <source>QSO dialog settings</source>
+        <translation>Caratteristica del QSO</translation>
+    </message>
+    <message>
+        <source>Chat encoding:</source>
+        <translation>Codice del chat:</translation>
+    </message>
+    <message>
+        <source>Chinese</source>
+        <translation>Cinese</translation>
+    </message>
+    <message>
+        <source>Japanese</source>
+        <translation>Giapponese </translation>
+    </message>
+    <message>
+        <source>Korean</source>
+        <translation>Coreano</translation>
+    </message>
+    <message>
+        <source>Tamil</source>
+        <translation>Tamil</translation>
+    </message>
+    <message>
+        <source>Unicode, 8-bit</source>
+        <translation>Unicode, 8-bit</translation>
+    </message>
+    <message>
+        <source>Russian</source>
+        <translation>Russo</translation>
+    </message>
+    <message>
+        <source>Ukrainian</source>
+        <translation>Ucraino</translation>
+    </message>
+    <message>
+        <source>Western</source>
+        <translation>Occidentale</translation>
+    </message>
+    <message>
+        <source>Central European</source>
+        <translation>Europa centrale</translation>
+    </message>
+    <message>
+        <source>Baltic</source>
+        <translation>Baltico</translation>
+    </message>
+    <message>
+        <source>Cyrillic</source>
+        <translation>Cirillico</translation>
+    </message>
+    <message>
+        <source>Arabic</source>
+        <translation>Arabo</translation>
+    </message>
+    <message>
+        <source>Greek</source>
+        <translation>Greco</translation>
+    </message>
+    <message>
+        <source>Hebrew, visually ordered</source>
+        <translation>Ebraico, ordinato visuale</translation>
+    </message>
+    <message>
+        <source>Hebrew, logically ordered</source>
+        <translation>Ebraico, ordinato logico</translation>
+    </message>
+    <message>
+        <source>Turkish</source>
+        <translation>Turco</translation>
+    </message>
+    <message>
+        <source>Hebrew</source>
+        <translation>Ebraico</translation>
+    </message>
+    <message>
+        <source>Thai</source>
+        <translation>Thai</translation>
+    </message>
+    <message>
+        <source>Qtel: Password mismatch</source>
+        <translation>Qtel: password invalido</translation>
+    </message>
+    <message>
+        <source>Passwords do not match</source>
+        <translation>Password divercere</translation>
+    </message>
 </context>
 </TS>
