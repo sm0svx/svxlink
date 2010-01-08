@@ -484,6 +484,21 @@ proc voice_logger_already_active {} {
 }
 
 
+#
+# Executed when a connection between phoneline and RF hs been
+# established
+#
+proc inform_phone {} {
+  playTone 500 900 50;
+  playSilence 50;
+  playTone 500 900 50;
+  playSilence 50;
+  playTone 500 900 50;
+  playSilence 50;
+  playMsg "PhoneLogic" "incoming_phonecall";
+}
+
+
 ##############################################################################
 #
 # Main program

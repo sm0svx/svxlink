@@ -83,6 +83,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "LogicCmds.h"
 #include "Logic.h"
 #include "VoiceLogger.h"
+#include "PhoneCmds.h"
 
 
 /****************************************************************************
@@ -166,6 +167,15 @@ bool Logic::logicsAreConnected(const string& l1, const string& l2)
 } /* Logic::logicsAreConnected */
 
 
+void Logic::connectPhoneline(bool state)
+{
+  cout << "connect phoneline " << (state ? "true" : "false") << endl;
+  if (state) phone_cmd->connectPhoneline();
+  else phone_cmd->disconnectPhoneline();
+} /* connectPhoneline */
+
+
+
 Logic::Logic(Config &cfg, const string& name)
   : m_cfg(cfg),       	      	    m_name(name),
     m_rx(0),  	      	      	    m_tx(0),
@@ -206,6 +216,13 @@ bool Logic::initialize(void)
     link_cmd->initialize(cfg(), value);
   }
   
+  // init the phoneline to RF interface
+  if (cfg().getValue(name(), "PHONELINKS", value))
+  {
+     phone_cmd = new PhoneCmd(&cmd_parser, this);
+     phone_cmd->initialize(cfg(), value);
+  }
+
   string event_handler_str;
   if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
   {

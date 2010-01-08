@@ -179,6 +179,14 @@ class Rx : public SigC::Object, public Async::AudioSource
     }
     
     /**
+    *   
+    */
+    virtual bool addToneTimeDetector(float fq, int bw, float thresh)
+    {
+      return false;
+    }
+    
+    /**
      * @brief 	Read the current signal strength
      * @return	Returns the signal strength
      */
@@ -222,6 +230,13 @@ class Rx : public SigC::Object, public Async::AudioSource
      * @param 	fq The frequency of the tone
      */
     SigC::Signal1<void, float> toneDetected;
+    
+    /**
+    * @brief 	A signal that is emitted when a previously specified tone has
+    *	      	been detected for an predefined duration
+    * @param 
+    */
+    SigC::Signal1<void, long> toneLenDetected;
     
     
   protected:

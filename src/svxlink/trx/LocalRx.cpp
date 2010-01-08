@@ -171,6 +171,55 @@ class ToneDurationDet : public ToneDetector
     }
 };
 
+/* needed for AnalogPhoneLogic */
+class ToneTimeDet : public ToneDetector
+{
+  public:
+    ToneTimeDet(float fq, float bw, float thresh)
+      : ToneDetector(fq, bw)
+    {
+      timerclear(&activation_timestamp);
+      ToneDetector::activated.connect(
+              slot(*this, &ToneTimeDet::toneActivated));
+    }
+
+    ~ToneTimeDet(void)
+    {
+    }
+
+    SigC::Signal1<void, long> detected;
+
+  private:
+    struct timeval  activation_timestamp;
+    long diff;
+
+    void toneActivated(bool is_activated)
+    {
+      //printf("%.1f tone %s...\n", toneFq(),
+      //             is_activated ? "ACTIVATED" : "DEACTIVATED");
+      if (is_activated)
+      {
+          gettimeofday(&activation_timestamp, NULL);
+      }
+      else
+      {
+         assert(timerisset(&activation_timestamp));
+         struct timeval tv, tv_diff;
+         gettimeofday(&tv, NULL);
+         timersub(&tv, &activation_timestamp, &tv_diff);
+         diff = tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000;
+         // printf("The tone was active for %ld milliseconds\n", diff);
+         toneLenDetected(diff);
+         timerclear(&activation_timestamp);
+      }
+    }
+
+    void toneLenDetected(long diff)
+    {
+      detected(diff);
+    }
+};
+
 
 class PeakMeter : public AudioPassthrough
 {
@@ -595,6 +644,19 @@ bool LocalRx::addToneDetector(float fq, int bw, float thresh,
   return true;
 
 } /* LocalRx::addToneDetector */
+
+
+bool LocalRx::addToneTimeDetector(float fq, int bw, float thresh)
+{
+  ToneTimeDet *det = new ToneTimeDet(fq, bw, thresh);
+  assert(det != 0);
+  det->setSnrThresh(thresh);
+  det->detected.connect(toneLenDetected.slot());
+
+  tone_dets->addSink(det, true);
+
+  return true;
+} /* addToneTimeDetector */
 
 
 float LocalRx::signalStrength(void) const

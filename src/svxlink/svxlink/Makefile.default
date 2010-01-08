@@ -28,7 +28,7 @@ CPPPROGS      	= $(BIN)/svxlink
 # Sources other than the main files
 PRGSRC		= MsgHandler.cpp Module.cpp Logic.cpp SimplexLogic.cpp \
 		  RepeaterLogic.cpp EventHandler.cpp AudioSwitchMatrix.cpp \
-		  CmdParser.cpp VoiceLogger.cpp
+		  CmdParser.cpp VoiceLogger.cpp AnalogPhoneLogic.cpp
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -lasynccpp -lasyncaudio -ltrx
@@ -223,6 +223,7 @@ install-extras uninstall-extras rpm-extras:
 	$(FILESPEC) svxlink.conf[644,root,root,config] /etc
 	$(FILESPEC) events.tcl[644,root,root] /usr/share/svxlink/sounds
 	$(FILESPEC) RepeaterLogic.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
+	$(FILESPEC) PhoneLogic.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
 	$(FILESPEC) SimplexLogic.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
 	$(FILESPEC) Module.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
 	$(FILESPEC) Logic.tcl[644,root,root] /usr/share/svxlink/sounds/events.d

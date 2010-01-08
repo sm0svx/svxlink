@@ -77,6 +77,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "MsgHandler.h"
 #include "SimplexLogic.h"
 #include "RepeaterLogic.h"
+#include "AnalogPhoneLogic.h"
 
 
 
@@ -152,6 +153,9 @@ static FdWatch	      	*stdout_watch = 0;
 static string         	tstamp_format;
 static struct sigaction sighup_oldact, sigint_oldact, sigterm_oldact;
 static volatile bool  	reopen_log = false;
+static vector< SimplexLogic * > simplex_logic_vec;
+static vector< RepeaterLogic * > repeater_logic_vec;
+static vector< AnalogPhoneLogic * > analogphone_logic_vec;
 
 
 /****************************************************************************
@@ -735,6 +739,10 @@ static void initialize_logics(Config &cfg)
     {
       logic = new RepeaterLogic(cfg, logic_name);
     }
+    else if (logic_type == "AnalogPhone")
+    {
+       logic = new AnalogPhoneLogic(cfg, logic_name);
+    }
     else
     {
       cerr << "*** ERROR: Unknown logic type \"" << logic_type
@@ -749,6 +757,19 @@ static void initialize_logics(Config &cfg)
       continue;
     }
     
+    if (logic_type == "Simplex")
+    {
+       simplex_logic_vec.push_back( ( SimplexLogic * ) logic );
+    }
+    else if (logic_type == "Repeater")
+    {
+       repeater_logic_vec.push_back( ( RepeaterLogic * ) logic );
+    }
+    else if (logic_type == "AnalogPhone")
+    {
+       analogphone_logic_vec.push_back( ( AnalogPhoneLogic * ) logic);
+    }
+
     logic_vec.push_back(logic);
   } while (comma != logics.end());
   
@@ -817,6 +838,24 @@ bool open_logfile(void)
   return true;
   
 } /* open_logfile */
+
+vector< SimplexLogic * > get_simplex_logics()
+{
+    return simplex_logic_vec;
+} /* get_simplex_logic_vec */
+
+vector< RepeaterLogic * > get_repeater_logics()
+{
+    return repeater_logic_vec;
+} /* get_repeater_logics() */
+
+vector< AnalogPhoneLogic * > get_analogphone_logics()
+{
+    return analogphone_logic_vec;
+} /* get_analogphone_logics() */
+ 
+
+ 
 
 
 /*

@@ -481,7 +481,9 @@ void RepeaterLogic::setUp(bool up, string reason)
     idle_sound_timer = 0;
     delete ident_nag_timer;
     ident_nag_timer = 0;
-    disconnectAllLogics();
+//  we have to comment out this, else you have to authentificate every time
+//  the repeater goes down
+//    disconnectAllLogics();
     stringstream ss;
     ss << "repeater_down " << reason;
     processEvent(ss.str());

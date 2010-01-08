@@ -109,6 +109,7 @@ class Module;
 class EventHandler;
 class Command;
 class VoiceLogger;
+class PhoneCmd;
   
 
 /****************************************************************************
@@ -198,6 +199,9 @@ class Logic : public SigC::Object
     }
     
     bool isIdle(void) const { return is_idle; }
+    void connectPhoneline(bool state);
+    PhoneCmd *phone_cmd;
+    void hangupLine(void);
     
     void setReportEventsAsIdle(bool idle) { report_events_as_idle = idle; }
     

@@ -165,6 +165,9 @@ class LocalRx : public Rx
      */
     bool addToneDetector(float fq, int bw, float thresh, int required_duration);
 
+
+    bool addToneTimeDetector(float fq, int bw, float thresh);
+
     /**
      * @brief 	Read the current signal strength
      * @return	Returns the signal strength
