@@ -301,7 +301,8 @@ bool LocationInfo::parseStationHW(const Async::Config &cfg, const string &name)
     loc_cfg.frequency = lrintf(1000.0 * frequency);
   }
 
-  if (!cfg.getValue(name, "TX_POWER", loc_cfg.power, true))
+  if (!cfg.getValue(name, "TX_POWER", 1U, numeric_limits<unsigned int>::max(),
+		    loc_cfg.power))
   {
     print_error(name, "TX_POWER", cfg.getValue(name, "TX_POWER"),
                 "TX_POWER=8");
