@@ -281,7 +281,7 @@ void ModuleTcl::dtmfCmdReceived(const string& cmd)
 
 /*
  *----------------------------------------------------------------------------
- * Method:    dtmfCmdReceived
+ * Method:    dtmfCmdReceivedWhenIdle
  * Purpose:   This function is called by the logic core when a DTMF command
  *            has been detected on the receiver when the module is idle, that
  *            is it has not been activated. A command is sent to a non-active
