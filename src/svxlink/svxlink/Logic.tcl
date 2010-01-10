@@ -484,6 +484,15 @@ proc voice_logger_already_active {} {
 }
 
 
+#
+# Executed when the user is requesting a language change
+#
+proc set_language {lang_code} {
+  puts "Setting language $lang_code";
+
+}
+
+
 ##############################################################################
 #
 # Main program
