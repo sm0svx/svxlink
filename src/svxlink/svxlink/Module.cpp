@@ -162,6 +162,14 @@ void Module::playHelpMsg(void)
 } /* Module::playHelpMsg */
 
 
+void Module::dtmfCmdReceivedWhenIdle(const std::string &cmd)
+{
+  std::stringstream ss;
+  ss << "command_failed " << id() << cmd;
+  logic()->processEvent(ss.str());
+} /* Module::dtmfCmdReceivedWhenIdle */
+
+
 void Module::processEvent(const string& event)
 {
   logic()->processEvent(event, this);

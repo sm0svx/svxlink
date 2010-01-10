@@ -341,6 +341,21 @@ class Module : public SigC::Object, public Async::AudioSink,
     virtual void dtmfCmdReceived(const std::string& cmd) {}
     
     /**
+     * @brief 	Tell the module that a DTMF command has been received when idle
+     * @param 	cmd The received command
+     *
+     * This function is called by the logic core when a DTMF command has been
+     * detected on the receiver when the module is idle, that is it has not
+     * been activated. A command is sent to a non-active module if a command
+     * is received that start with the module ID but have more digits than just
+     * the module ID. The digits following the module ID is the actual command
+     * sent to this function.
+     * A DTMF command is just a sequence of digits. A-D, *, # is filtered out
+     * and has special meanings to the logic core.
+     */
+    virtual void dtmfCmdReceivedWhenIdle(const std::string &cmd);
+
+    /**
      * @brief 	Tell the module that the squelch has opened/closed
      * @param 	is_open \em True when the squelch is open or else \em false
      *

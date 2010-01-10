@@ -201,6 +201,28 @@ proc dtmf_cmd_received {cmd} {
 }
 
 
+proc dtmf_cmd_received_when_idle {cmd} {
+  variable recdir;
+  variable users;
+
+  #printInfo "DTMF command received when idle: $cmd";
+
+  if {[array names users -exact "$cmd"] == ""} {
+    spellNumber $cmd;
+    playMsg "unknown_userid";
+    return;
+  }
+
+  set call [id2var $cmd call];
+  set subjects [glob -nocomplain -directory "$recdir/$call" *_subj.wav];
+  set msg_cnt [llength $subjects];
+  spellWord $call;
+  playSilence 200;
+  playMsg $msg_cnt;
+  playMsg "new_messages";
+}
+
+
 #
 # Executed when the squelch open or close. If it's open is_open is set to 1,
 # otherwise it's set to 0.

@@ -281,6 +281,36 @@ void ModuleTcl::dtmfCmdReceived(const string& cmd)
 
 /*
  *----------------------------------------------------------------------------
+ * Method:    dtmfCmdReceived
+ * Purpose:   This function is called by the logic core when a DTMF command
+ *            has been detected on the receiver when the module is idle, that
+ *            is it has not been activated. A command is sent to a non-active
+ *            module if a command is received that start with the module ID
+ *            but have more digits than just the module ID. The digits
+ *            following the module ID is the actual command sent to this
+ *            function.
+ *            A DTMF command is just a sequence of digits. A-D, *, # is
+ *            filtered out and has special meanings to the logic core.
+ * Input:     cmd - The received command.
+ * Output:    None
+ * Author:    Tobias Blomberg / SM0SVX
+ * Created:   2010-01-10
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
+void ModuleTcl::dtmfCmdReceivedWhenIdle(const std::string &cmd)
+{
+  //cout << "DTMF command received in inactive module " << name() << ": " << cmd << endl;
+  
+  stringstream ss;
+  ss << "dtmf_cmd_received_when_idle \"" << cmd << "\"";
+  processEvent(ss.str());
+} /* dtmfCmdReceivedWhenIdle  */
+
+
+/*
+ *----------------------------------------------------------------------------
  * Method:    squelchOpen
  * Purpose:   Called by the core system when the squelch open or close.
  * Input:     is_open - Set to \em true if the squelch is open or \em false
@@ -298,7 +328,7 @@ void ModuleTcl::squelchOpen(bool is_open)
   ss << "squelch_open " << (is_open ? 1 : 0);
   processEvent(ss.str());
   //setIdle(!is_open);
-} /* dtmfCmdReceived */
+} /* squelchOpen */
 
 
 /*
