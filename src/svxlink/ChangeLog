@@ -74,6 +74,10 @@
   decoder to improve out-of-band audio rejection. Patch
   from DH1DM / Steve.
 
+* Now users can check if there are any voice mail messages
+  available without first logging in. Idea from Martin
+  Burkhardt.
+
 
 
  0.11.0 -- 26 Apr 2009

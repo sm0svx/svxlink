@@ -1131,6 +1131,13 @@ void Logic::processCommandQueue(void)
     {
       active_module->dtmfCmdReceived(cmd);
     }
+    else if (cmd.substr(0, 2) == "00")
+    {
+      stringstream ss;
+      ss << "set_language ";
+      ss << cmd.substr(2);
+      processEvent(ss.str());
+    }
     else if (!cmd.empty())
     {
       if (cmd.size() >= long_cmd_digits)

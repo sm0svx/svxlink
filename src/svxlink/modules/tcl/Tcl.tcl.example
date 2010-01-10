@@ -94,6 +94,14 @@ proc dtmf_cmd_received {cmd} {
 
 
 #
+# Executed when a DTMF command is received
+#
+proc dtmf_cmd_received_when_idle {cmd} {
+  printInfo "DTMF command received when idle: $cmd";
+}
+
+
+#
 # Executed when the squelch open or close. If it's open is_open is set to 1,
 # otherwise it's set to 0.
 #

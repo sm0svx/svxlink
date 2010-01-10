@@ -143,17 +143,17 @@ class ModuleActivateCmd : public Command
     void operator ()(const std::string& subcmd)
     {
       //std::cout << "cmd=" << cmdStr() << " subcmd=" << subcmd << std::endl;
-      if (!subcmd.empty())
-      {
-      	std::stringstream ss;
-	ss << "command_failed " << cmdStr() << subcmd;
-      	logic->processEvent(ss.str());
-	return;
-      }
       int module_id = atoi(cmdStr().c_str());
       Module *module = logic->findModule(module_id);
       assert(module != 0);
-      logic->activateModule(module);
+      if (!subcmd.empty())
+      {
+	module->dtmfCmdReceivedWhenIdle(subcmd);
+      }
+      else
+      {
+        logic->activateModule(module);
+      }
     }
     
   protected:

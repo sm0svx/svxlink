@@ -361,6 +361,14 @@ proc identify_nag {} {
 }
 
 
+#
+# Executed when the user is requesting a language change
+#
+proc set_language {lang_code} {
+  Logic::set_language "$lang_code";
+}
+
+
 
 # end of namespace
 }
