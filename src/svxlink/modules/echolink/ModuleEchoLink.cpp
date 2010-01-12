@@ -546,7 +546,7 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
     connectByCallsign(cmd);
   }
   */
-  else if (cmd.size() < 4)  // Dispatch to command handling
+  else if ((cmd.size() < 4) || (cmd[1] == '*'))  // Dispatch to command handling
   {
     handleCommand(cmd);
   }
@@ -1269,7 +1269,7 @@ void ModuleEchoLink::connectByCallsign(string cmd)
 {
   stringstream ss;
 
-  if (cmd.length() < 4)
+  if (cmd.length() < 5)
   {
     ss << "cbc_too_short_cmd " << cmd;
     processEvent(ss.str());
@@ -1280,12 +1280,12 @@ void ModuleEchoLink::connectByCallsign(string cmd)
   bool exact;
   if (cmd[cmd.size()-1] == '*')
   {
-    code = cmd.substr(1, cmd.size() - 2);
+    code = cmd.substr(2, cmd.size() - 3);
     exact = false;
   }
   else
   {
-    code = cmd.substr(1);
+    code = cmd.substr(2);
     exact = true;
   }
 
