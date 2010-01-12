@@ -86,7 +86,7 @@
   you want to check if there are any voice mails available the command
   to issue could look like this: *3001#.
 
-* The "connect by callsign" command changed from "*" to "6".
+* The "connect by callsign" command changed from "*" to "6*".
 
 
 
