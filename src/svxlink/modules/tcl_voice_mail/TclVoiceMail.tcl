@@ -220,6 +220,7 @@ proc dtmf_cmd_received_when_idle {cmd} {
   playSilence 200;
   playMsg $msg_cnt;
   playMsg "new_messages";
+  playSilence 500;
 }
 
 
