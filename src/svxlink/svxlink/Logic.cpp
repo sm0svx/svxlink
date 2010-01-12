@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -1102,64 +1102,80 @@ void Logic::processCommandQueue(void)
       continue;
     }
     
-    if (cmd == "*")
-    {
-      processEvent("manual_identification");
-    }
-    else if (cmd[0] == 'D')
-    {
-      processMacroCmd(cmd);
-    }
-    else if (active_module != 0)
-    {
-      active_module->dtmfCmdReceived(cmd);
-    }
-    else if (cmd.substr(0, 2) == "00")
-    {
-      stringstream ss;
-      ss << "set_language ";
-      ss << cmd.substr(2);
-      processEvent(ss.str());
-    }
-    else if (!cmd.empty())
-    {
-      if (cmd.size() >= long_cmd_digits)
-      {
-      	Module *module = findModule(long_cmd_module);
-	if (module != 0)
-	{
-	  activateModule(module);
-	  if (active_module != 0)
-	  {
-      	    active_module->dtmfCmdReceived(cmd);
-	  }
-	}
-	else
-	{
-	  cerr << "*** WARNING: Could not find module \"" << long_cmd_module
-	       << "\" specified in configuration variable "
-	       << "ACTIVATE_MODULE_ON_LONG_CMD.\n";
-	  stringstream ss;
-	  ss << "command_failed " << cmd;
-	  processEvent(ss.str());
-	}
-      }
-      else if (!cmd_parser.processCmd(cmd))
-      {
-      	stringstream ss;
-	ss << "unknown_command " << cmd;
-      	processEvent(ss.str());
-      }
-    }
+    processCommand(cmd);
+    
   }  
 } /* Logic::processCommandQueue */
 
 
-void Logic::processMacroCmd(string& cmd)
+void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
 {
-  cout << "Processing macro command: " << cmd << "...\n";
-  assert(!cmd.empty() && (cmd[0] == 'D'));
-  cmd.erase(0, 1);
+  if (cmd.substr(0, 1) == "*")
+  {
+    string rest(cmd, 1);
+    if (rest.empty())
+    {
+      processEvent("manual_identification");
+    }
+    else
+    {
+      processCommand(rest, true);
+    }
+  }
+  else if (cmd.substr(0, 1) == "D")
+  {
+    processMacroCmd(cmd);
+  }
+  else if ((!force_core_cmd) && (active_module != 0))
+  {
+    active_module->dtmfCmdReceived(cmd);
+  }
+  else if (cmd.substr(0, 2) == "00")
+  {
+    stringstream ss;
+    ss << "set_language ";
+    ss << cmd.substr(2);
+    processEvent(ss.str());
+  }
+  else if (!cmd.empty())
+  {
+    if ((!force_core_cmd) && (cmd.size() >= long_cmd_digits))
+    {
+      Module *module = findModule(long_cmd_module);
+      if (module != 0)
+      {
+	activateModule(module);
+	if (active_module != 0)
+	{
+	  active_module->dtmfCmdReceived(cmd);
+	}
+      }
+      else
+      {
+	cerr << "*** WARNING: Could not find module \"" << long_cmd_module
+	      << "\" specified in configuration variable "
+	      << "ACTIVATE_MODULE_ON_LONG_CMD.\n";
+	stringstream ss;
+	ss << "command_failed " << cmd;
+	processEvent(ss.str());
+      }
+    }
+    else if (!cmd_parser.processCmd(cmd))
+    {
+      stringstream ss;
+      ss << "unknown_command " << cmd;
+      processEvent(ss.str());
+    }
+  }
+  
+} /* Logic::processCommand */
+
+
+void Logic::processMacroCmd(const string& macro_cmd)
+{
+  cout << "Processing macro command: " << macro_cmd << "...\n";
+  assert(!macro_cmd.empty() && (macro_cmd[0] == 'D'));
+  string cmd(macro_cmd, 1);
   if (cmd.empty())
   {
     cerr << "*** Macro error: Empty command.\n";

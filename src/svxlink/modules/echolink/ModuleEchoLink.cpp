@@ -6,7 +6,7 @@
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -540,10 +540,12 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
       deactivateMe();
     }
   }
+  /*
   else if (cmd[0] == '*')   // Connect by callsign
   {
     connectByCallsign(cmd);
   }
+  */
   else if (cmd.size() < 4)  // Dispatch to command handling
   {
     handleCommand(cmd);
@@ -1278,12 +1280,12 @@ void ModuleEchoLink::connectByCallsign(string cmd)
   bool exact;
   if (cmd[cmd.size()-1] == '*')
   {
-    code = string(cmd.begin() + 1, cmd.end() - 1);
+    code = cmd.substr(1, cmd.size() - 2);
     exact = false;
   }
   else
   {
-    code = string(cmd.begin() + 1, cmd.end());
+    code = cmd.substr(1);
     exact = true;
   }
 
@@ -1537,6 +1539,10 @@ void ModuleEchoLink::handleCommand(const string& cmd)
     processEvent(ss.str());
     
     listen_only_valve->setOpen(!activate);
+  }
+  else if (cmd[0] == '6')   // Connect by callsign
+  {
+    connectByCallsign(cmd);
   }
   else
   {

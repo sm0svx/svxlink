@@ -75,8 +75,18 @@
   from DH1DM / Steve.
 
 * Now users can check if there are any voice mail messages
-  available without first logging in. Idea from Martin
-  Burkhardt.
+  available without first logging in. Idea from Martin Burkhardt.
+  The command to use is <module id><user id> so if the module id for
+  voice mail is 3 and your user id is 001, the command to check if
+  there are any voice mails available is 3001#.
+
+* Now possible to issue commands to the core and to other modules even
+  when another module is active. This is achieved by prefixing the
+  command with a "*". If for example the EchoLink module is active and
+  you want to check if there are any voice mails available the command
+  to issue could look like this: *3001#.
+
+* The "connect by callsign" command changed from "*" to "6".
 
 
 

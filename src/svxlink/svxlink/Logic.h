@@ -279,7 +279,8 @@ class Logic : public SigC::Object
     void unloadModules(void);
     void cmdTimeout(Async::Timer *t);
     void processCommandQueue(void);
-    void processMacroCmd(std::string& cmd);
+    void processCommand(const std::string &cmd, bool force_core_cmd=false);
+    void processMacroCmd(const std::string &macro_cmd);
     void putCmdOnQueue(Async::Timer *t=0);
     void sendRgrSound(Async::Timer *t=0);
     void everyMinute(Async::Timer *t);
