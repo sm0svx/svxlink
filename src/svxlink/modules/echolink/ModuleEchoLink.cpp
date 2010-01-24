@@ -557,6 +557,23 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
 } /* dtmfCmdReceived */
 
 
+void ModuleEchoLink::dtmfCmdReceivedWhenIdle(const std::string &cmd)
+{
+  if (cmd == "2")   // Play own node id
+  {
+    stringstream ss;
+    ss << "play_node_id ";
+    const StationData *station = dir->findCall(dir->callsign());
+    ss << (station ? station->id() : 0);
+    processEvent(ss.str());
+  }
+  else
+  {
+    commandFailed(cmd);
+  }
+} /* dtmfCmdReceivedWhenIdle */
+
+
 /*
  *----------------------------------------------------------------------------
  * Method:    squelchOpen

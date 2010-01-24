@@ -131,6 +131,7 @@ class ModuleHelp : public Module
     void deactivateCleanup(void);
     bool dtmfDigitReceived(char digit, int duration);
     void dtmfCmdReceived(const std::string& cmd);
+    void dtmfCmdReceivedWhenIdle(const std::string &cmd);
     void playChooseModuleMsg(void);
 
 };  /* class ModuleHelp */

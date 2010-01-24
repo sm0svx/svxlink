@@ -1,4 +1,4 @@
- 0.12.0 -- ?? ??? 2009
+ 0.12.0 -- ?? ??? 2010
 -----------------------
 
 * Bugfix in the EchoLink module: Short callsign (<6 chars) was not handled
@@ -74,19 +74,47 @@
   decoder to improve out-of-band audio rejection. Patch
   from DH1DM / Steve.
 
+* Now possible to issue commands to the core and to other modules even
+  when another module are active. This is achieved by prefixing the
+  command with a "*". If for example the EchoLink module is active and
+  you want to check if there are any voice mails available the command
+  to issue could look like this: *3001#.
+
+* The "connect by callsign" command changed from "*" to "6*".
+
+* The help module can now accept commands when not active. It will read
+  back help for the given module ID. For example the command 01# will
+  play the help message for the parrot module.
+  
+* The parrot module can now accept commands when not active. The only
+  thing it can do is to read back the entered digits. For example the
+  command 1123# will make the parrot module say "one two three".
+
+* The EchoLink module can now accept commands when not active. The only
+  command supported at the moment is "2", reading back the local node ID.
+  Example: 22#
+
 * Now users can check if there are any voice mail messages
   available without first logging in. Idea from Martin Burkhardt.
   The command to use is <module id><user id> so if the module id for
   voice mail is 3 and your user id is 001, the command to check if
   there are any voice mails available is 3001#.
 
-* Now possible to issue commands to the core and to other modules even
-  when another module is active. This is achieved by prefixing the
-  command with a "*". If for example the EchoLink module is active and
-  you want to check if there are any voice mails available the command
-  to issue could look like this: *3001#.
+* The DTMF repeater module can now accept commands when not active. It
+  will play back the entered digits. For example the command 4123# will
+  play the 1, 2 and 3 DTMF digits.
 
-* The "connect by callsign" command changed from "*" to "6*".
+* A macro command may now be specified without a module name. The colon
+  separator is still required though. If no module name is specified, the
+  command is sent in to the DTMF handler without activating a module first.
+
+* It now is possible to include a hash mark in a macro command by
+  specifying 'H' in the command string. The 'H' will be translated to a '#'
+  by the command parser and not interpreted as "end of command". This can
+  be of use if you for example want to transmit a DTMF # using the
+  DTMF repeater module. The macro specification would look something like
+  this: 10=412345H#. When macro 10 is activated the DTMF sequence 12345#
+  will be transmitted.
 
 
 

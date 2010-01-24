@@ -293,6 +293,25 @@ void ModuleHelp::dtmfCmdReceived(const string& cmd)
 } /* dtmfCmdReceived */
 
 
+void ModuleHelp::dtmfCmdReceivedWhenIdle(const std::string &cmd)
+{
+  stringstream ss(cmd);
+  int module_id;
+  ss >> module_id;
+  Module *module = findModule(module_id);
+  if (module != 0)
+  {
+    module->playHelpMsg();
+  }
+  else
+  {
+    stringstream ss;
+    ss << "no_such_module " << module_id;
+    processEvent(ss.str());
+  }
+} /* dtmfCmdReceivedWhenIdle */
+
+
 void ModuleHelp::playChooseModuleMsg(void)
 {
   stringstream ss;

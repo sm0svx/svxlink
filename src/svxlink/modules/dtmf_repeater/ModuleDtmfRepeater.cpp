@@ -267,6 +267,7 @@ void ModuleDtmfRepeater::deactivateCleanup(void)
   delete repeat_delay_timer;
   repeat_delay_timer = 0;
   sql_is_open = false;
+  deactivate_on_sql_close = false;
 } /* deactivateCleanup */
 
 
@@ -317,6 +318,21 @@ bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
   return true;
   
 } /* dtmfDigitReceived */
+
+
+void ModuleDtmfRepeater::dtmfCmdReceivedWhenIdle(const std::string &cmd)
+{
+  received_digits += cmd;
+  
+  if (repeat_delay == 0)
+  {
+    onRepeatDelayExpired(0);
+  }
+  else if (!sql_is_open)
+  {
+    setupRepeatDelay();
+  }
+} /* dtmfCmdReceivedWhenIdle */
 
 
 /*

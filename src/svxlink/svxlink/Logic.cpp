@@ -736,7 +736,11 @@ void Logic::dtmfDigitDetected(char digit, int duration)
   }
   else if (received_digits.size() < 20)
   {
-    if (digit == 'B')
+    if (digit == 'H')	// Make it possible to include a hash mark in a macro
+    {
+      received_digits += '#';
+    }
+    else if (digit == 'B')
     {
       if (anti_flutter && (prev_digit != '?'))
       {
@@ -1203,30 +1207,34 @@ void Logic::processMacroCmd(const string& macro_cmd)
   
   string module_name(macro.begin(), colon);
   string module_cmd(colon+1, macro.end());
-  Module *module = findModule(module_name);
-  if (module == 0)
-  {
-    cerr << "*** Macro error: Module " << module_name << " not found.\n";
-    processEvent("macro_module_not_found");
-    return;
-  }
   
-  if (active_module == 0)
+  if (!module_name.empty())
   {
-    if (!activateModule(module))
+    Module *module = findModule(module_name);
+    if (module == 0)
     {
-      cerr << "*** Macro error: Activation of module " << module_name
-           << " failed.\n";
-      processEvent("macro_module_activation_failed");
+      cerr << "*** Macro error: Module " << module_name << " not found.\n";
+      processEvent("macro_module_not_found");
       return;
     }
-  }
-  else if (active_module != module)
-  {
-    cerr << "*** Macro error: Another module is active ("
-         << active_module->name() << ").\n";
-    processEvent("macro_another_active_module");
-    return;
+    
+    if (active_module == 0)
+    {
+      if (!activateModule(module))
+      {
+	cerr << "*** Macro error: Activation of module " << module_name
+	    << " failed.\n";
+	processEvent("macro_module_activation_failed");
+	return;
+      }
+    }
+    else if (active_module != module)
+    {
+      cerr << "*** Macro error: Another module is active ("
+	  << active_module->name() << ").\n";
+      processEvent("macro_another_active_module");
+      return;
+    }
   }
   
   for (unsigned i=0; i<module_cmd.size(); ++i)

@@ -201,6 +201,10 @@ proc dtmf_cmd_received {cmd} {
 }
 
 
+#
+# Executed when a DTMF command is received in idle mode. That is, a command is
+# received when this module has not been activated first.
+#
 proc dtmf_cmd_received_when_idle {cmd} {
   variable recdir;
   variable users;
