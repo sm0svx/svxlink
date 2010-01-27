@@ -727,7 +727,7 @@ void AnalogPhoneLogic::detectedTone(long len)
     {
        if ( len > busy_it->first && len < busy_it->second )
        {
-          if (debug) cout "length between the limits -> hangup follows" << endl;
+	  if (debug) cout << "length between the limits -> hangup follows" << endl;
           cnt++;
        }
     }
