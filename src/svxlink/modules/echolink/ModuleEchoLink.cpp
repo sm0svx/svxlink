@@ -6,7 +6,7 @@
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -540,11 +540,13 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
       deactivateMe();
     }
   }
+  /*
   else if (cmd[0] == '*')   // Connect by callsign
   {
     connectByCallsign(cmd);
   }
-  else if (cmd.size() < 4)  // Dispatch to command handling
+  */
+  else if ((cmd.size() < 4) || (cmd[1] == '*'))  // Dispatch to command handling
   {
     handleCommand(cmd);
   }
@@ -553,6 +555,23 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
     connectByNodeId(atoi(cmd.c_str()));
   }
 } /* dtmfCmdReceived */
+
+
+void ModuleEchoLink::dtmfCmdReceivedWhenIdle(const std::string &cmd)
+{
+  if (cmd == "2")   // Play own node id
+  {
+    stringstream ss;
+    ss << "play_node_id ";
+    const StationData *station = dir->findCall(dir->callsign());
+    ss << (station ? station->id() : 0);
+    processEvent(ss.str());
+  }
+  else
+  {
+    commandFailed(cmd);
+  }
+} /* dtmfCmdReceivedWhenIdle */
 
 
 /*
@@ -1267,7 +1286,7 @@ void ModuleEchoLink::connectByCallsign(string cmd)
 {
   stringstream ss;
 
-  if (cmd.length() < 4)
+  if (cmd.length() < 5)
   {
     ss << "cbc_too_short_cmd " << cmd;
     processEvent(ss.str());
@@ -1278,12 +1297,12 @@ void ModuleEchoLink::connectByCallsign(string cmd)
   bool exact;
   if (cmd[cmd.size()-1] == '*')
   {
-    code = string(cmd.begin() + 1, cmd.end() - 1);
+    code = cmd.substr(2, cmd.size() - 3);
     exact = false;
   }
   else
   {
-    code = string(cmd.begin() + 1, cmd.end());
+    code = cmd.substr(2);
     exact = true;
   }
 
@@ -1537,6 +1556,10 @@ void ModuleEchoLink::handleCommand(const string& cmd)
     processEvent(ss.str());
     
     listen_only_valve->setOpen(!activate);
+  }
+  else if (cmd[0] == '6')   // Connect by callsign
+  {
+    connectByCallsign(cmd);
   }
   else
   {

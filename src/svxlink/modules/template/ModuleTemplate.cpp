@@ -299,6 +299,14 @@ void ModuleTemplate::dtmfCmdReceived(const string& cmd)
 } /* dtmfCmdReceived */
 
 
+#if 0
+void ModuleTemplate::dtmfCmdReceivedWhenIdle(const std::string &cmd)
+{
+
+} /* dtmfCmdReceivedWhenIdle */
+#endif
+
+
 /*
  *----------------------------------------------------------------------------
  * Method:    squelchOpen

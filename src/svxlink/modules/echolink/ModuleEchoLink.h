@@ -192,6 +192,7 @@ class ModuleEchoLink : public Module
     void deactivateCleanup(void);
     //bool dtmfDigitReceived(char digit, int duration);
     void dtmfCmdReceived(const std::string& cmd);
+    void dtmfCmdReceivedWhenIdle(const std::string &cmd);
     void squelchOpen(bool is_open);
     int audioFromRx(float *samples, int count);
     void allMsgsWritten(void);

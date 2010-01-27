@@ -366,6 +366,14 @@ void ModuleParrot::dtmfCmdReceived(const string& cmd)
 } /* dtmfCmdReceived */
 
 
+void ModuleParrot::dtmfCmdReceivedWhenIdle(const std::string &cmd)
+{
+  stringstream ss;
+  ss << "spell_digits " << cmd;
+  processEvent(ss.str());
+} /* dtmfCmdReceivedWhenIdle */
+
+
 void ModuleParrot::squelchOpen(bool is_open)
 {
   squelch_is_open = is_open;

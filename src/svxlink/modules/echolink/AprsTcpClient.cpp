@@ -206,6 +206,20 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
   //cout << aprsmsg;
   sendMsg(aprsmsg);
 
+  // APRS status message, connected calls
+  string status = "";
+  for (list<string>::iterator it = call_list.begin(); it != call_list.end();
+                      it++)
+  {
+     status += *it;
+     status += " ";
+  }
+
+  sprintf(aprsmsg, "%s-%s>%s,%s:>%s\r\n",
+           el_prefix.c_str(), el_call.c_str(), destination.c_str(),
+           loc_cfg.path.c_str(), status.substr(0,100).c_str());
+  sendMsg(aprsmsg);
+
 } /* AprsTcpClient::updateQsoStatus */
 
 

@@ -152,7 +152,12 @@ class ModuleActivateCmd : public Command
       }
       else
       {
-        logic->activateModule(module);
+        if (!logic->activateModule(module))
+	{
+	  std::stringstream ss;
+	  ss << "command_failed " << cmdStr() << subcmd;
+	  logic->processEvent(ss.str());
+	}
       }
     }
     

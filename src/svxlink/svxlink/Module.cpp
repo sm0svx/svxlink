@@ -184,19 +184,13 @@ void Module::setEventVariable(const string& name, const string& value)
 
 void Module::playFile(const string& path)
 {
-  if (m_is_active)
-  {
-    logic()->playFile(path);
-  }
+  logic()->playFile(path);
 } /* Module::playFile */
 
 
 void Module::sendDtmf(const std::string& digits)
 {
-  if (m_is_active)
-  {
-    logic()->sendDtmf(digits);
-  }
+  logic()->sendDtmf(digits);
 } /* Module::sendDtmf */
 
 
