@@ -95,7 +95,7 @@ using namespace SigC;
 #define WIND 8
 #define VERTICALVIEW 9
 #define ACTUALWX 10
-#define WINDVARIES 11
+#define VALUEVARIES 11
 #define UTC 12
 #define AUTO 13
 #define QNH 14
@@ -105,8 +105,40 @@ using namespace SigC;
 #define ISPARTOFMILES 18
 #define RUNWAY 19
 #define FORECAST 20
+#define SLP 21
+#define PEAKWIND 22
+#define ALLRWYSTATE 23
 
-#define END 50
+#define SNOWCLOSED 25
+#define WINDSHIFT 26
+#define AUTOTYPE 27
+#define RMKVISIBILITY 28
+#define NOSPECI 29
+#define FROPA 30
+#define LIGHTNING 31
+#define VIRGA 32
+#define RMK 33
+#define DAYTEMPMAX 34
+#define DAYTEMPMIN 35
+#define FLIGHTLEVEL 36
+#define WORDSINRMK 37
+#define TEMPOOBSCURATION 38
+#define TEMPINRMK 39
+#define PRESSURETENDENCY 40
+#define PRECIPITATION1 41
+#define PRECIPITATION6 42
+#define PRECIPITATION24 43
+#define MINMAXTEMP 44
+#define NOSEVEREWX 45
+#define MAXTEMP 46
+#define MINTEMP 47
+#define CEILING 48
+#define MAINTENANCE 49
+#define PRECIPINRMK 50
+#define CLOUDTYPE 51
+#define QFEINRMK 52
+
+#define END 60
 
 #define NOTMEASURED 97
 #define NOTACTUAL 98
@@ -137,13 +169,30 @@ using namespace SigC;
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
  *
  ****************************************************************************/
 
+std::string desc[] = {
+          "vcbldu", "vcblsa", "vcblsn", "bcfg", "vcpo",
+          "bldu", "blsa", "blpy", "blsn", "fzbr",
+          "vcbr", "tsgr", "vcts", "drdu", "drsa",
+          "drsn","fzfg",  "fzdz", "fzra", "prfg",
+          "mifg", "shra","shsn",  "shpe", "shpl",
+          "shgs", "shgr", "vcfg", "vcfc", "vcss",
+          "vcds", "tsra", "tspe", "tspl", "tssn",
+          "vcsh", "br", "du", "dz", "ds",
+          "fg",   "fc", "fu", "gs", "gr",
+          "hz",   "ic", "pe", "pl", "po",
+          "ra",   "fz", "sn", "sg", "sq",
+          "sa",   "ss", "ts", "va", "py",
+          "sh"};
+
+std::string clouds[] = {"acc", "ac", "as", "cbmam", "cb",
+                        "cc", "cf",  "ci", "cs", "cu",
+                        "tcu", "ns", "sc", "sf", "st"};
 
 /****************************************************************************
  *
@@ -256,6 +305,13 @@ bool ModuleMetarInfo::initialize(void)
   StrList apset;
   std::string tp;
 
+  repstr["shra"] = "ra sh ";
+  repstr["shsn"] = "sn sh ";
+  repstr["shpl"] = "pl sh ";
+  repstr["shpe"] = "pe sh ";
+  repstr["shgr"] = "gr sh ";
+  repstr["bcfg"] = "fg bc ";
+
   shdesig["l"] = "left";
   shdesig["r"] = "right";
   shdesig["c"] = "center";
@@ -265,13 +321,15 @@ bool ModuleMetarInfo::initialize(void)
   shdesig["p"] = "more_than";
   shdesig["d"] = "decreasing";
   shdesig["u"] = "increasing";
-  shdesig["n"] = "no_distinct_tendency";
+  shdesig["n"] = "ndt";
   shdesig["vc"]= "vicinity";
   shdesig["re"]= "recent";
   shdesig["-"] = "light";
   shdesig["+"] = "heavy";
   shdesig["fm"]= "from";
   shdesig["tl"]= "until";
+
+
 
   if (!Module::initialize())
   {
@@ -311,6 +369,17 @@ bool ModuleMetarInfo::initialize(void)
              << "/STARTDEFAULT: " << value << " is not valid.\n";
         return false;
      }
+  }
+
+  // still  development
+  if (cfg().getValue(cfgName(), "REMARKS", value))
+  {
+     remarks = true;
+  }
+
+  if (cfg().getValue(cfgName(), "DEBUG", value))
+  {
+     debug = true;
   }
 
   // long messages or short messages
@@ -421,6 +490,7 @@ void ModuleMetarInfo::dtmfCmdReceived(const string& cmd)
   typedef map<char, std::string> Digits;
   Digits mypad;
 
+  mypad['0'] = "0000000000";
   mypad['1'] = "1111111111";
   mypad['2'] = "2ABCCCCCCC";
   mypad['3'] = "3DEFFFFFFF";
@@ -430,6 +500,10 @@ void ModuleMetarInfo::dtmfCmdReceived(const string& cmd)
   mypad['7'] = "7PQRSSSSSS";
   mypad['8'] = "8TUVVVVVVV";
   mypad['9'] = "9WXYZZZZZZ";
+  mypad['A'] = "AAAAAAAAAA";
+  mypad['B'] = "BBBBBBBBBB";
+  mypad['C'] = "CCCCCCCCCC";
+  mypad['D'] = "DDDDDDDDDD";
 
   cout << "DTMF command received in module " << name() << ": " << cmd << endl;
 
@@ -443,21 +517,22 @@ void ModuleMetarInfo::dtmfCmdReceived(const string& cmd)
 
   if (cmd == "0")                       // normal help
   {
-     processEvent("say metarhelp");
+     tosay << "say metarhelp";
+     say(tosay);
      return;
   }
 
   else if (cmd == "01")                 // play configured airports
   {
-     processEvent("say icao_available");
+     tosay << "icao_available";
+     say(tosay);
 
      tosay << "airports ";
      for (StrList::const_iterator it=aplist.begin(); it != aplist.end(); it++)
      {
         tosay << ++a << " " << *it << " ";
      }
-     processEvent(tosay.str());
-     tosay.str("");
+     say(tosay);
      return;
   }
 
@@ -500,12 +575,25 @@ void ModuleMetarInfo::dtmfCmdReceived(const string& cmd)
   // request icao-matarinfo
   if (icao.length() == 4)
   {
-     cout << "icao-code by dtmf-method: " << icao << "\n";
+     if (debug) cout << "icao-code by dtmf-method: " << icao << endl;
      openConnection();
   }
-  else processEvent("say no_airport_defined");
+  else
+  {
+      tosay << "no_airport_defined";
+      say(tosay);
+  }
 
 } /* dtmfCmdReceived */
+
+
+
+void ModuleMetarInfo::dtmfCmdReceivedWhenIdle(const string& cmd)
+{
+  std::cout << "dtmfCmdReceivedWhenIdle\n";
+  dtmfCmdReceived(cmd);
+} /* dtmfCmdReceivedWhenIdle */
+
 
 
 /*
@@ -595,7 +683,7 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
    StrList values;
    bool is_false = false;
    bool endflag = false;
-   bool isrvr = false;
+   bool nceiling = false;
    float temp_view = 0;
    unsigned int found;
    int metartoken;
@@ -616,9 +704,8 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
    // \n -> <SPACE>
    while ((found = html.find('\n')) != string::npos) html[found] = ' ';
 
-   temp << "airport " << icao;
-   processEvent(temp.str());
-   temp.str("");
+   temp << "airports " << icao;
+   say(temp);
 
    if (html.find("404 Not Found") != string::npos)
    {
@@ -628,8 +715,7 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
    }
    else
    {
-      temp << "Airport";
-      say(temp);
+      processEvent("say airport");
    }
 
    // check if METAR is actual
@@ -663,7 +749,8 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
             break;
 
          case UTC:
-            temp << "metreport_time " << splitStrAll(current.substr(2,4));
+            temp << "metreport_time " << current.substr(2,4);
+            say(temp);
             break;
 
          case AUTO:
@@ -671,13 +758,24 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
             break;
 
          case WIND:
-            isWind(tempstr, current);
-            temp << tempstr;
+            if (isWind(tempstr, current))
+            {
+              temp << "wind " << tempstr;
+              say(temp);
+            }
             break;
 
-         case WINDVARIES:
-            isWindVaries(tempstr, current);
-            temp << tempstr;
+         case VALUEVARIES:
+            isValueVaries(tempstr, current);
+            if (!nceiling)
+               temp << "windvaries " << tempstr;
+            else
+            {
+               temp << "ceilingvaries " << tempstr;
+               nceiling = false;
+            }
+            say(temp);
+            nceiling = false;
             break;
 
          case IS1STPARTOFVIEW:
@@ -685,24 +783,28 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
             break;
 
          case ISPARTOFMILES:
-            if (isPartofMiles(tempstr, current))
-            {
+            isPartofMiles(tempstr, current);
               temp_view += atof(tempstr.c_str());
-              temp << " visibility " << flsplitStr(temp_view) << " miles";
-            }
+            temp << "visibility " << temp_view << " unit_miles";
+            say(temp);
             break;
 
          case ISVIEW:
             if (isView(tempstr, current))
+            {
               temp << " visibility " << tempstr;
+              say(temp);
+            }
             break;
 
          case WORDSEXT:
-            temp << " " << current << longmsg;
+            temp << "say " << current << longmsg;
+            say(temp);
             break;
 
          case WORDSNOEXT:
-            temp << " " << current << " ";
+            temp << "say " << current;
+            say(temp);
             break;
 
          case CLOUDSVALID:
@@ -710,64 +812,249 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
             {
               if (!is_false)     // only once
               {
-                 temp << " clouds";
+                 processEvent("say clouds");
                  is_false = true;
               }
-              temp << " " << tempstr;
+              temp << "clouds " << tempstr;
+              say(temp);
             }
             break;
 
          case VERTICALVIEW:
-            if (isVerticalView(tempstr, current))
-               temp << " " << tempstr;
+            isVerticalView(tempstr, current);
+            temp << "ceiling " << tempstr;
+            say(temp);
             break;
 
          case ACTUALWX:
             if (isActualWX(tempstr, current))
-               temp << " " << tempstr;
+            {
+               temp << "actualWX " << tempstr;
+               say(temp);
+            }
             break;
 
          case RVR:
             if (isRVR(tempstr, current))
             {
-              if (!isrvr)
-              {
-                  temp << " rvr";
-                  isrvr = true;
+               temp << "rvr " << tempstr;
+               say(temp);
               }
-              temp << tempstr;
-            }
             break;
 
          case TEMPERATURE:
-            if (validTemp(tempstr, current))
-              temp << " " << tempstr;
-            if (validDp(tempstr, current))
-              temp << " " << tempstr;
+            validTemp(tempstr, current);
+            temp << "temperature " << tempstr;
+            say(temp);
+            validDp(tempstr, current);
+            temp << "dewpoint " << tempstr;
+            say(temp);
             break;
 
          case QNH:
             isQnh(tempstr, current);
             temp << tempstr;
+            say(temp);
             is_false = false;
             break;
 
          case RUNWAY:
             isRunway(tempstr, current);
-            temp << tempstr;
+            temp << "runway " << tempstr;
+            say(temp);
+            break;
+
+         case ALLRWYSTATE:
+            isRwyState(tempstr, current);
+            temp << "runwaystate " << tempstr;
+            say(temp);
             break;
 
          case TIME:
             isTime(tempstr, current);
-            temp << tempstr;
+            temp << "time " << tempstr;
+            say(temp);
             break;
 
          case FORECAST:
-            temp << " trend " << current << "_long ";
+            temp << "trend " << current << longmsg;
+            say(temp);
+            break;
+
+         case RMK:
+            if (!remarks)
+                  endflag = true;
+            else
+            {
+                temp << "remarks";
+                say(temp);
+            }
+            break;
+
+         case SLP:
+            temp << "slp " << getSlp(current);
+            say(temp);
+            break;
+
+         case SNOWCLOSED:
+            processEvent("snowclosed");
+            break;
+
+         case PEAKWIND:
+            it++;
+            current = *it;
+            if (getPeakWind(tempstr, current))
+            {
+               temp << "peakwind " << tempstr;
+               say(temp);
+            }
+            break;
+
+         case NOSPECI:
+            processEvent("nospeci");
+            break;
+
+         case WINDSHIFT:
+            it++;
+            current = *it;
+            temp << "windshift " << current;
+            say(temp);
+            break;
+
+         case AUTOTYPE:
+            temp << "say " << current << longmsg;
+            say(temp);
+            break;
+
+         case RMKVISIBILITY:
+            it++;
+            current = *it;
+/*          temp << "rmk_visibility ";
+            // check if a direction is given?
+            if (checkDirection(tempstr, current))
+            {
+              temp << "dir_" << tempstr << " ";
+              it++;
+              current = *it;
+            }
+
+            if (getRmkVisibility(tempstr, current))
+            {
+               temp << tempstr;
+               say(temp);
+            }
+*/
+            break;
+
+         case FROPA:
+            break;
+
+         case LIGHTNING:
+            temp << "ltg " << getLightning(current);
+            say(temp);
+            break;
+
+         case VIRGA:
+            break;
+
+         case CEILING:
+            nceiling = true;
+            break;
+
+         case DAYTEMPMAX:
+            temp << "max_daytemp " << getTempTime(current);
+            say(temp);
+            break;
+
+         case DAYTEMPMIN:
+            temp << "min_daytemp " << getTempTime(current);
+            say(temp);
+            break;
+
+         case FLIGHTLEVEL:
+            current.erase(0,2);
+            temp << "flightlevel " << current;
+            say(temp);
+            break;
+
+         case WORDSINRMK:
+            temp << "say " << current;
+            say(temp);
+            break;
+
+         case TEMPOOBSCURATION:
+            temp << "tempo_obscuration " << current.substr(-4,2)
+                 << " " << current.substr(-2,2);
+            say(temp);
+            break;
+
+         case TEMPINRMK:
+            temp << "rmk_tempdew " << getTempinRmk(current);
+            say(temp);
+            break;
+
+         case MINMAXTEMP:
+            temp << "rmk_minmaxtemp " << getTempinRmk(current);
+            say(temp);
+            break;
+
+         case MINTEMP:
+            temp << "rmk_mintemp " << getTemp(current);
+            say(temp);
+            break;
+
+         case MAXTEMP:
+            temp << "rmk_maxtemp " << getTemp(current);
+            say(temp);
+            break;
+
+         case PRESSURETENDENCY:
+            temp << "rmk_pressure " << getPressureinRmk(current);
+            say(temp);
+            break;
+
+         case PRECIPITATION1:
+            temp << "rmk_precipitation 1 " << getPrecipitationinRmk(current);
+            say(temp);
+            break;
+
+         case PRECIPITATION6:
+            temp << "rmk_precipitation 6 " << getPrecipitationinRmk(current);
+            say(temp);
+            break;
+
+         case PRECIPITATION24:
+            temp << "rmk_precipitation 24 " << getPrecipitationinRmk(current);
+            say(temp);
+            break;
+
+         case PRECIPINRMK:
+            cout << "PRECIPINRMK\n";
+            temp << "rmk_precip " << getPrecipitation(current);
+            say(temp);
+            break;
+
+         case NOSEVEREWX:
+            temp << "say " << current;
+            say(temp);
+            break;
+
+         case CLOUDTYPE:
+            temp << "cloudtypes" << getCloudType(current);
+            say(temp);
+            break;
+
+         case QFEINRMK:
+            temp << "qfe " << current.erase(0,3);
+            say(temp);
+            break;
+
+         case MAINTENANCE:
+            temp << "say maintenance_needed";
+            say(temp);
             break;
 
          case INVALID:
-           // it++;
             break;
 
          case END:
@@ -775,12 +1062,11 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
             break;
 
          default:
-          //  it++;
             break;
      }
+  //   cout << current << endl;
      it++;
    }
-   say(temp);
    return 1;
 }
 
@@ -802,20 +1088,51 @@ int ModuleMetarInfo::checkToken(std::string token)
     mre["^[0-9]{4}(ndv|n|ne|e|se|s|sw|w|nw)?$"]      = ISVIEW;   // view
     mre["^[0-9]{6}z"]                                = UTC;
     mre["^[0-9]{1,2}sm$"]                            = ISVIEW;
-    mre["^[0-9]{3}v[0-9]{3}$"]                       = WINDVARIES;
+    mre["^[0-9]{3}v[0-9]{3}$"]                         = VALUEVARIES;
     mre["^(m)?(//|[0-9]{2})/(m)?(//|[0-9]{2})$"]     = TEMPERATURE;
-    mre["cavok"]                                     = WORDSEXT;
+    mre["^(cavok|tcu)$"]                               = WORDSEXT;
     mre["(becmg|nosig)"]                             = FORECAST;
-    mre["^(all|ws|clr|rwy|skc|nsc|tempo)$"]          = WORDSNOEXT;
-    mre["^(fm|tl)([0-9]{4})$"]                       = TIME;
-    mre["^((few|sct|bkn|ovc)[0-9]{3})(///)?(cb|tcu)?"] = CLOUDSVALID;
-    mre["r[0-9]{2}(ll|l|c|r|rr)?/(p|m)?([0-9]{4})(v(p|m)[0-9]{4})?(u|d|n)?(ft)?"] = RVR;
+    mre["^(all|ws|clr|rwy|skc|nsc|tempo|ocnl|frq|nsw|cons)$"] = WORDSNOEXT;
+    mre["^(fm|tl|at)([0-9]{4})z$"]                     = TIME;
+    mre["^((few|sct|bkn|ovc)[0-9]{3})(///)?(ac|acc|as|cb|cbmam|cc|cf|ci|cs|cu|tcu|ns|sc|sf|st)?"] = CLOUDSVALID;
+    mre["^r[0-3][0-9](ll|l|c|r|rr)?/(p|m)?([0-9]{4})(v(p|m)[0-9]{4})?(u|d|n)?(ft)?$"] = RVR;
+    mre["^r[0-8][0-9](ll|l|c|r|rr)?/([0-9]|/|c)([1259]|/|l)([0-9]|/|r)([0-9]|/|d)([0-9]|/){2}$"] = ALLRWYSTATE;
     mre["^vv[0-9]{3}$"]                              = VERTICALVIEW;
     mre["^(\\+|\\-|vc|re)?([bdfimprstv][a-z]){1,2}$"]= ACTUALWX;
     mre["^rwy[0-9]{2}(ll|l|c|r|rr)?$"]               = RUNWAY;
+    mre["^cig$"]                                       = CEILING;
     mre["^[1-9]$"]                                   = IS1STPARTOFVIEW;
-    mre["rmk"]                                       = END;
-    mre["auto"]                                      = AUTO;
+    mre["^rmk$"]                                       = RMK;
+    mre["^slp"]                                        = SLP;
+    mre["^snoclo$"]                                    = SNOWCLOSED;
+    mre["^wnd$"]                                       = PEAKWIND;
+    mre["^auto$"]                                      = AUTO;
+    mre["^nospeci$"]                                   = NOSPECI;
+    mre["^ao[1|2]$"]                                   = AUTOTYPE;
+    mre["^wshft$"]                                     = WINDSHIFT;
+    mre["^vis$"]                                       = RMKVISIBILITY;
+    mre["^fropa"]                                      = FROPA;
+    mre["^ltg[ciag]{2,8}$"]                            = LIGHTNING;
+    mre["^virga$"]                                     = VIRGA;
+    mre["^tx(m)?[0-9]{2}/[0-9]{2}z$"]                  = DAYTEMPMAX;
+    mre["^tn(m)?[0-9]{2}/[0-9]{2}z$"]                  = DAYTEMPMIN;
+    mre["^fl[0-9]?[0-9]{2}$"]                          = FLIGHTLEVEL;
+    mre["^tempo[0-9]{4}$"]                             = TEMPOOBSCURATION;
+    mre["^t[0-1][0-9]{3}[0-1][0-9]{3}$"]               = TEMPINRMK;
+    mre["^1[0-9]{4}$"]                                 = MAXTEMP;
+    mre["^2[0-9]{4}$"]                                 = MINTEMP;
+    mre["^4[0-9]{8}$"]                                 = MINMAXTEMP;
+    mre["^5[0-9]{4}$"]                                 = PRESSURETENDENCY;
+    mre["^p(cpn)?[0-9]{4}$"]                           = PRECIPITATION1;
+    mre["^6[0-9]{4}$"]                                 = PRECIPITATION6;
+    mre["^7[0-9]{4}$"]                                 = PRECIPITATION24;
+    mre["^(tsno|fzrano)$"]                             = NOSEVEREWX;
+    mre["^qfe[0-9]{3}\\.[0-9]$"]                       = QFEINRMK;
+    mre["^[\\$]$"]                                     = MAINTENANCE;
+    mre["^[a-z]{2,4}(b|e)([0-9]{2}){1,2}(e[0-9]{2,4})?$"]  = PRECIPINRMK;
+    mre["^((ac|acc|as|cb|cbmam|cc|cf|ci|cs|cu|tcu|ns|sc|sf|st)[1-8]){1,4}$"] = CLOUDTYPE;
+    mre["^(mar|alqds|mod|twr|sfc|dsnt|lan|loc|fir|presrr|presfr|abv|agl|btn|cld|cot|nil|obs|obsc|stnr|turb|valid|wkn|wspd|ltg|wx)$"] = WORDSINRMK;
+
 
     for (rt = mre.begin(); rt != mre.end(); rt++)
     {
@@ -831,43 +1148,377 @@ int ModuleMetarInfo::checkToken(std::string token)
 } /* checkToken */
 
 
+/*
+Cloud-ground 	CG 	Lightning between cloud and ground.
+In-cloud 	IC 	Lightning within the cloud.
+Cloud-cloud 	CC 	Streaks of lightning reaching from one cloud to another.
+Cloud-air 	CA 	Streaks of lightning which pass from a cloud to the air, but do not strike the ground.
+*/
+std::string ModuleMetarInfo::getLightning(std::string token)
+{
+    stringstream ss;
+    unsigned int a;
+
+    for (a=0; a<token.length(); a+=2)
+    {
+       ss << "ltg_" << token.substr(a,2) << " ";
+    }
+
+    return ss.str();
+} /* getLightning */
+
+
+std::string ModuleMetarInfo::getCloudType(std::string token)
+{
+   stringstream ss;
+   int a;
+
+   while (token.length() > 0)
+   {
+     for (a=0; a<15; a++)
+     {
+        if (token.find(clouds[a],0) != string::npos)
+        {
+           ss << " cld_" << clouds[a] << " ";
+           token.erase(0,clouds[a].length());
+           ss << token.substr(0,1);
+           token.erase(0,1);
+        }
+     }
+   }
+
+   return ss.str();
+} /* getCloudType */
+
+
+std::string ModuleMetarInfo::getTempinRmk(std::string token)
+{
+   stringstream ss;
+
+   (token.substr(1,1) == "1") ? ss << "-" :ss << "";
+   ss << atoi(token.substr(2,2).c_str()) << "." << token.substr(4,1);
+   (token.substr(5,1) == "1") ? ss << " -" :ss << " ";
+   ss << atoi(token.substr(6,2).c_str()) << "." << token.substr(8,1);
+
+   return ss.str();
+} /* getTemoinRmk */
+
+
+bool ModuleMetarInfo::getPeakWind(std::string &retval, std::string token)
+{
+   stringstream ss;
+   StrList tlist;
+
+   // Format: PK WND dddff(f)/(hh)mm
+   if (token.length() < 8 || token.length() > 11) return false;
+
+   splitStr(tlist, token, "/");
+   ss << tlist[0].substr(0,3) << " ";   // direction
+   ss << tlist[0].substr(3,2) << " ";   // velocity
+
+   if (tlist[1].length() == 4)
+   {
+       ss << tlist[1].substr(0,2) << " " << tlist[1].substr(2,2);
+   }
+   else
+   {
+       ss << "XX " << tlist[1].substr(0,2);
+   }
+   retval = ss.str();
+
+   return true;
+} /* getPeakWind */
+
+
+bool ModuleMetarInfo::getRmkVisibility(std::string &retval, std::string token)
+{
+   stringstream ss;
+   // to do
+   return true;
+} /* getRmkVisibility */
+
+
+std::string ModuleMetarInfo::getTemp(std::string token)
+{
+   stringstream ss;
+   (token.substr(1,1) == "1") ? ss << "-" :ss << "";
+   ss << atoi(token.substr(2,2).c_str()) << "." << token.substr(4,1);
+
+   return ss.str();
+} /* getTemp */
+
+
+// RMK section, Characteristics of Barometer Tendency
+std::string ModuleMetarInfo::getPressureinRmk(std::string token)
+{
+   stringstream ss;
+   typedef map<char, std::string> Digits;
+   Digits ptrend;
+
+   ptrend['0'] = "increasing then decreasing";
+   ptrend['1'] = "increasing then steady";
+   ptrend['2'] = "increasing steadily or unsteadily";
+   ptrend['3'] = "decreasing or steady then increasing or increasing more_rapidly";
+   ptrend['4'] = "steady";
+   ptrend['5'] = "decreasing then increasing";
+   ptrend['6'] = "decreasing then steady or decreasing slowly";
+   ptrend['7'] = "decreasing steadily or unsteadily";
+   ptrend['8'] = "steady or increasing then decreasing or decreasing more_rapidly";
+   ptrend['9'] = "not reported";
+   ptrend['/'] = "not reported";
+
+   ss << atoi(token.substr(2,2).c_str()) << "." << token.substr(4,1) << " "
+      << ptrend[token.substr(1,1)[0]];
+   return ss.str();
+} /* getPressureinRmk */
+
+
+std::string ModuleMetarInfo::getPrecipitationinRmk(std::string token)
+{
+   stringstream ss;
+   ss << atoi(token.substr(1,2).c_str()) << "." << token.substr(3,2);
+   return ss.str();
+} /* getPrecipitationinRmk */
+
+
+std::string ModuleMetarInfo::getTempTime(std::string token)
+{
+    stringstream ss;
+
+    token.erase(0,2);
+    if (token.substr(0,1) == "m")
+    {
+       ss << "-";
+       token.erase(0,1);
+    }
+    ss << atoi(token.substr(0,2).c_str()) << " "
+       << token.substr(3,2);
+    return ss.str();
+} /* getTempTime */
+
+
+// sea level pressure
+// Format: SLPppp
+std::string ModuleMetarInfo::getSlp(std::string token)
+{
+    stringstream ss;
+
+    (atoi(token.substr(3,1).c_str()) > 6) ? ss << "9" : ss << "10";
+    ss << token.substr(3,2) << "." << token.substr(5,1);
+    return ss.str();
+} /* getSlp */
+
+
+void ModuleMetarInfo::isRwyState(std::string &retval, std::string token)
+{
+   typedef map<char, std::string> Digits;
+   Digits rwydeposit, contamination;
+
+   typedef map<std::string, std::string> Rwydefs;
+   Rwydefs friction, deposit;
+
+   std::map <string, string>::iterator tt;
+   stringstream ss;
+
+   StrList tlist;
+
+   deposit["//"] = "deposit_depth not reported";
+   deposit["92"] = "deposit_depth 10 unit_cms";
+   deposit["93"] = "deposit_depth 15 unit_cms";
+   deposit["94"] = "deposit_depth 20 unit_cms";
+   deposit["95"] = "deposit_depth 25 unit_cms";
+   deposit["96"] = "deposit_depth 30 unit_cms";
+   deposit["97"] = "deposit_depth 35 unit_cms";
+   deposit["98"] = "deposit_depth 40 unit_cms";
+   deposit["99"] = "runways not operational";
+
+   friction["//"] = "breaking_action not reported";
+   friction["91"] = "breaking_action poor";
+   friction["92"] = "breaking_action medium_poor";
+   friction["93"] = "breaking_action medium";
+   friction["94"] = "breaking_action medium_good";
+   friction["95"] = "breaking_action good";
+   friction["96"] = "breaking_action good";
+   friction["97"] = "breaking_action good";
+   friction["98"] = "breaking_action good";
+   friction["99"] = "breaking_action figures_unreliable";
+
+   rwydeposit['0'] = "clear_and_dry";
+   rwydeposit['1'] = "damp";
+   rwydeposit['2'] = "wet_or_water_patches";
+   rwydeposit['3'] = "rime_or_frost_covered";
+   rwydeposit['4'] = "dry sn";
+   rwydeposit['5'] = "wet sn";
+   rwydeposit['6'] = "slush";
+   rwydeposit['7'] = "ic";
+   rwydeposit['8'] = "compacted_or_rolled sn";
+   rwydeposit['9'] = "frozen_ruts_or_ridges";
+   rwydeposit['/'] = "deposit not reported";
+
+   contamination['1'] = "contamination less_or_equal 10 percent";
+   contamination['2'] = "contamination 11 to 25 percent";
+   contamination['5'] = "contamination 26 to 50 percent";
+   contamination['9'] = "contamination 51 to 100 percent";
+   contamination['/'] = "contamination not reported";
+
+   // Runway designator
+   int trwy = atoi(token.substr(1,2).c_str());  //RXXxxxxxx
+   if (trwy < 50)
+   {
+       ss << "runway " << token.substr(1,2);
+       splitStr(tlist, token, "/");
+
+       if (tlist[0].length() > 3)
+       {
+           tlist[0].erase(0,3);
+           ss << " " << shdesig[tlist[0]];
+           token.erase(0, tlist[0].length());
+       }
+   }
+   else if (trwy < 88) ss << "runway " << (trwy-50) << " right ";
+   else if (trwy == 88) ss << "all runways ";
+
+   token.erase(0,3);
+
+   if (token.find("clrd") != string::npos)
+   {
+      ss << " clrd";
+      retval = ss.str();
+      return;
+   }
+
+   // runway deposit type
+   ss << " " << rwydeposit[token.substr(1,1)[0]];
+
+   // runway contamination
+   ss << " " << contamination[token.substr(2,1)[0]];
+
+   // depth of deposit
+   if (atoi(token.substr(3,1).c_str()) > 91 || token.substr(3,2) == "//")
+   {
+      tt = deposit.find(token.substr(3,2));
+      ss << " " << tt->second << " ";
+   }
+   else
+   {
+       ss << " deposit_depth ";
+       if (atoi(token.substr(3,2).c_str()) == 0)
+       {
+           ss << "less_than 1 unit_mm ";
+       }
+       else
+       {
+           ss << " " << atoi(token.substr(3,2).c_str()) << " unit_mms ";
+       }
+   }
+
+   // friction coeffizient
+   if (atoi(token.substr(5,2).c_str()) > 90 || token.substr(5,2) == "//")
+   {
+       tt = friction.find(token.substr(5,2));
+       ss << " " << tt->second;
+   }
+   else
+   {
+       ss << " friction_coefficient 0." << atoi(token.substr(5,2).c_str());
+   }
+
+   retval = ss.str();
+} /* isRwyState */
+
+
+/* beginning an ending of Precipitation */
+std::string ModuleMetarInfo::getPrecipitation(std::string token)
+{
+
+   // example: SHRABO5E30SHSNB20E55
+   stringstream ss;
+   std::string tstr;
+   std::string newstr = "";
+   unsigned int found;
+   string::size_type pos = 0;
+   string::size_type len;
+
+   std::map <string, string>::iterator tt;
+
+   // first detect the type of precipitation and separate it
+   // SHRABO5E30SHSNB20E55 -> SH RA BO5E30 SH SN B20E55
+   for (short a=0; a < 61; a++)
+   {
+      found = token.find(desc[a],0);
+      if (found != string::npos)
+      {
+          tt = repstr.find(desc[a]);
+          if (tt != repstr.end())
+          {
+              tstr = tt->second;
+          }
+          else
+          {
+            tstr = desc[a] + " ";
+          }
+          token.replace(found, desc[a].length(), tstr);
+          tstr = "";
+      }
+   }
+
+
+   // then we catch the rest by detecting the beginning (b) or ending (e) of
+   // precipitation
+   // SH RA BO5E30 SH SN B20E55 -> SH RA began_at 05 endet_at 30 sh sn began_at ...
+   len = token.size();
+   while (pos < len)
+   {
+      if ((token.substr(pos,1)[0] == 'b' || token.substr(pos,1)[0] == 'e') &&
+            token.substr(pos+1,1)[0] >= '0' && token.substr(pos+1,1)[0] <= '9')
+      {
+          (token.substr(pos,1)[0] == 'b') ? newstr += " began_at " : newstr += " ended_at ";
+          newstr += token.substr(pos+1, 2) + " ";
+          pos += 3;
+      }
+      else
+      {
+         newstr += token[pos];
+         pos++;
+      }
+   }
+
+   return newstr;
+} /* getRecipitation */
+
+
 bool ModuleMetarInfo::isActualWX(std::string &retval, std::string token)
 {
   stringstream ss;
-  std::string desc[] = {
-          "bcfg", "bldu", "blsa", "blpy", "blsn", "fzbr",
-          "vcbr", "tsgr", "vcts", "drdu", "drsa", "drsn",
-          "fzfg", "fzdz", "fzra", "prfg", "mifg", "shra",
-          "shsn", "shpe", "shpl", "shgs", "shgr", "vcfg",
-          "vcfc", "vcss", "vcds", "tsra", "tspe", "tspl",
-          "tssn", "vcsh", "vcpo", "vcbldu","vcblsa","vcblsn",
-          "br", "du", "dz", "ds", "fg", "fc", "fu", "gs",
-          "gr", "hz", "ic", "pe", "pl", "po", "ra", "sn",
-          "sg", "sq", "sa", "ss", "ts", "va", "py", "sh"};
+   std::map <string, string>::iterator tt;
 
+   // +SHRA means "heavy rain shower"
    if (token.substr(0,1) == "+")
    {
       ss << "heavy ";
       token.erase(0,1);
    }
+   // -RA means "light rain"
    else if (token.substr(0,1) == "-")
    {
       ss << "light ";
       token.erase(0,1);
    }
+   // vc -> in the vicinity
    else if (token.substr(0,2) == "vc")
    {
       ss << "vicinity ";
       token.erase(0,2);
    }
+   // re -> recent
    else if (token.substr(0,2) == "re")
    {
       ss << "recent ";
       token.erase(0,2);
    }
-   else ss << "moderate ";
+   else ss << "moderate ";  // RA -> moderate rain
 
-   for (short a=0; a < 54; a++)
+   for (short a = 0; a < 61; a++)
    {
       if (token.find(desc[a],0) != string::npos)
       {
@@ -879,8 +1530,10 @@ bool ModuleMetarInfo::isActualWX(std::string &retval, std::string token)
          }
          else  // e.g. SHRA, SHSN ...
          {
-            if (token.find("sh") != string::npos) {
-                ss << token.substr(2,2) << " " << token.substr(0,2);
+            tt = repstr.find(desc[a]);
+            if (tt != repstr.end())
+            {
+                ss << tt->second;
             }
             else
             {
@@ -895,6 +1548,7 @@ bool ModuleMetarInfo::isActualWX(std::string &retval, std::string token)
 } /* isActualWX */
 
 
+// needed by regex
 bool ModuleMetarInfo::rmatch(std::string tok, std::string pattern, regex_t *re)
 {
     int status;
@@ -940,40 +1594,41 @@ bool ModuleMetarInfo::isView(std::string &retval, std::string token)
    // view given in km
    if (token.find("km", 0) != string::npos)
    {
-      ss << splitStrAll(token.substr(0,token.find("km"))) << " km";
+      ss << token.substr(0,token.find("km")) << " unit_kms";
       token.erase(0,token.find("km")+2);
    }
 
    // view more than 10km
    else if (token.substr(0,4) == "9999")  // -> more than 10 km
    {
-      ss << "more_than 1 0 km";
+      ss << "more_than 10 unit_kms";
       token.erase(0,4);
    }
 
-   else if (token.substr(0,4) == "0000")  // not measured
+   else if (token.substr(0,4) == "0000")  // -> less than 50m
    {
+      ss << "less_than 50 unit_meters";
       token.erase(0,4);
-      return false;
    }
 
    else if (token.find("sm",0) != string::npos )  // unit are statue miles
    {
-      ss << splitStrAll(token.substr(0,token.find("sm"))) << " miles";
+      ss << token.substr(0,token.find("sm")) << " unit_mile";
+      if (atoi(token.substr(0,token.find("sm")).c_str()) != 1) ss << "s";
       token.erase(0,token.find("sm")+2);  // deletes all to "sm"
    }
 
-   // if less than 5000 m the visibility will be give out in meters, above
+   // if less than 5000 m the visibility will be give out in meter, above
    // in kilometers
    else if (token.length() >= 4 && atoi(token.substr(0,4).c_str()) > 4999)
    {
-      ss << atoi(token.substr(0,4).c_str())/1000 << " km";
+      ss << atoi(token.substr(0,4).c_str())/1000 << " unit_kms";
       token.erase(0,4);
    }
    else if (token.length() >= 4 && atoi(token.substr(0,4).c_str()) < 5000
                                  && atoi(token.substr(0,4).c_str()) > 1 )
    {
-      ss << atoi(token.substr(0,4).c_str()) << " meters";
+      ss << atoi(token.substr(0,4).c_str()) << " unit_meters";
       token.erase(0,4);
    }
    else return false;
@@ -995,35 +1650,33 @@ bool ModuleMetarInfo::isView(std::string &retval, std::string token)
 } /* isView */
 
 // That's why I love SI-units!
-bool ModuleMetarInfo::isPartofMiles(std::string &retval, std::string token)
+void ModuleMetarInfo::isPartofMiles(std::string &retval, std::string token)
 {
-   stringstream ss;
 
-   if (token.find("1/8",0) != string::npos) ss << "0.125";
-   if (token.find("1/4",0) != string::npos) ss << "0.25";
-   if (token.find("3/8",0) != string::npos) ss << "0.375";
-   if (token.find("1/2",0) != string::npos) ss << "0.5";
-   if (token.find("5/8",0) != string::npos) ss << "0.625";
-   if (token.find("3/4",0) != string::npos) ss << "0.75";
-   if (token.find("7/8",0) != string::npos) ss << "0.875";
+   if (token.find("1/16",0)!= string::npos) retval = "0.0625";
+   if (token.find("1/8",0) != string::npos) retval = "0.125";
+   if (token.find("3/16",0)!= string::npos) retval = "0.1875";
+   if (token.find("1/4",0) != string::npos) retval = "0.25";
+   if (token.find("3/8",0) != string::npos) retval = "0.375";
+   if (token.find("5/16",0)!= string::npos) retval = "0.3125";
+   if (token.find("1/2",0) != string::npos) retval = "0.5";
+   if (token.find("5/8",0) != string::npos) retval = "0.625";
+   if (token.find("3/4",0) != string::npos) retval = "0.75";
+   if (token.find("7/8",0) != string::npos) retval = "0.875";
 
-   retval = ss.str();
-   return true;
 } /* isPartofMile */
 
 
-int ModuleMetarInfo::isWind(std::string &retval, std::string token)
+bool ModuleMetarInfo::isWind(std::string &retval, std::string token)
 {
    stringstream ss;
    std::string unit;
 
-   ss << "wind ";
-
    // detect the unit
-   if (token.substr(token.length()-2,2) == "kt") unit = "kts";
-   else if (token.substr(token.length()-3,3) == "mps") unit = "mps";
-   else if (token.substr(token.length()-3,3) == "mph") unit = "mph";
-   else if (token.substr(token.length()-3,3) == "kph") unit = "kph";
+   if (token.substr(token.length()-2,2) == "kt") unit = "unit_kts";
+   else if (token.substr(token.length()-3,3) == "mps") unit = "unit_mps";
+   else if (token.substr(token.length()-3,3) == "mph") unit = "unit_mph";
+   else if (token.substr(token.length()-3,3) == "kph") unit = "unit_kph";
    else return false;
 
    // wind is calm
@@ -1032,19 +1685,18 @@ int ModuleMetarInfo::isWind(std::string &retval, std::string token)
    // wind is variable
    else if (token.substr(0,3) == "vrb")
    {
-      ss << "variable " << splitStrAll(token.substr(3,2)) << unit;
+      ss << "variable " << token.substr(3,2) << " " << unit;
    }
    // degrees and velocity
    else
    {
-      ss << chHoundr(token.substr(0,3)) << " degrees " <<
-            splitStrAll(token.substr(3,2)) << unit;
+      ss << token.substr(0,3) << " " << token.substr(3,2) << " " << unit;
    }
 
    // do we have gusts?
    if (token.find("g",3) != string::npos)
    {
-      ss << " gusts_up " << splitStrAll(token.substr(token.length()-4,2)) << unit;
+      ss << " " << token.substr(token.length()-4,2) << " " << unit;
    }
 
    retval = ss.str();
@@ -1057,16 +1709,14 @@ bool ModuleMetarInfo::isQnh(std::string &retval, std::string token)
     stringstream ss;
 
     // inches or hPa?
-    ss << " qnh ";
     switch (token.substr(0,1).c_str()[0]) {
 
       case 'q':
-        ss << splitStrAll(token.substr(1,4)) << "hPa";
+        ss << "qnh " << atoi(token.substr(1,4).c_str());
         break;
 
       case 'a':
-        ss << splitStrAll(token.substr(1,2)) << ". "
-           << splitStrAll(token.substr(3,2)) << "inches";
+        ss << "altimeter "<< token.substr(1,2) << "." << token.substr(3,2);
         break;
 
       default:
@@ -1077,64 +1727,64 @@ bool ModuleMetarInfo::isQnh(std::string &retval, std::string token)
 } /* isQnh */
 
 
-bool ModuleMetarInfo::isWindVaries(std::string &retval, std::string token)
+void ModuleMetarInfo::isValueVaries(std::string &retval, std::string token)
 {
    stringstream ss;
 
-   ss << " wind varies_from " << chHoundr(token.substr(0,3))
-      << "degrees to " << chHoundr(token.substr(4,3)) << "degrees ";
-
+   ss << token.substr(0,3) << " " << token.substr(4,3);
    retval = ss.str();
-   return true;
-} /* isWindVaries */
+} /* isValueVaries */
 
 
-bool ModuleMetarInfo::isTime(std::string &retval, std::string token)
+void ModuleMetarInfo::isTime(std::string &retval, std::string token)
 {
    stringstream ss;
    std::map <string, string>::iterator tt;
 
    tt = shdesig.find(token.substr(0,2));  // fm -> from,  tl -> until
    ss << tt->second;
-   ss << " " << splitStrAll(token.substr(2,4));
+   ss << " " << token.substr(2,4);
    retval = ss.str();
-   return true;
 } /* isTime */
 
 
-bool ModuleMetarInfo::validTemp(std::string &retval, std::string token)
+void ModuleMetarInfo::validTemp(std::string &retval, std::string token)
 {
    stringstream ss;
 
    // temp is not measured
-   if (token.substr(0,2) == "//") return false;
-
-   ss << "temperature ";
+   if (token.substr(0,2) == "//")
+   {
+       ss << "not";
+   }
+   else
+   {
    if (token.substr(0,1) == "m")
    {
-      ss << "minus ";
+        ss << "-";
       token.erase(0,1);
    }
-   ss << splitStrAll(chNumber(token.substr(0,2))) << "degrees";
+     ss << atoi(token.substr(0,2).c_str());
+   }
    retval = ss.str();
-   return true;
 } /* validTemp */
 
 
-bool ModuleMetarInfo::validDp(std::string &retval, std::string token)
+void ModuleMetarInfo::validDp(std::string &retval, std::string token)
 {
    stringstream ss;
 
-   // dewpoint is not measured
-   if (token.substr(token.length()-2,2) == "//") return false;
-
-   ss << "dewpoint ";
-   if (token.substr(token.length()-3,1) == "m") ss << "minus ";
-
-   ss << splitStrAll(chNumber(token.substr(token.length()-2,2)))
-      << "degrees";
+   // dewpoint is not reported?
+   if (token.substr(token.length()-2,2) == "//")
+   {
+       ss << "not";
+   }
+   else
+   {
+     if (token.substr(token.length()-3,1) == "m") ss << "-";
+     ss << atoi(token.substr(token.length()-2,2).c_str());
+   }
    retval = ss.str();
-   return true;
 } /* validDp */
 
 
@@ -1143,18 +1793,19 @@ bool ModuleMetarInfo::isRunway(std::string &retval, std::string token)
    stringstream ss;
    std::map <string, string>::iterator it;
 
-   ss << " runway " << splitStrAll(token.substr(3,2));
+   ss << token.substr(3,2);
    token.erase(0,5);
 
    if (token.length() > 0)
    {
      it = shdesig.find(token);
-     ss << it->second << " ";
+     ss << " " << it->second;
    }
 
    retval = ss.str();
    return true;
 }
+
 
 bool ModuleMetarInfo::isRVR(std::string &retval, std::string token)
 {
@@ -1169,22 +1820,22 @@ bool ModuleMetarInfo::isRVR(std::string &retval, std::string token)
    // R32L/M5000         -> RWY 3 2 left less than 5000m
    // R33LL/M5000VP6000N -> RWY 3 3 left out varies from less than 5000m to
    //                       more than 6000m no distinct tendency
-   // R22C/M5000VP7000FTU-> RWY 22 center varies from less than 5000ft to
+   // R22C/M5000VP7000FTU-> RWY 22 central varies from less than 5000ft to
    //                       more than 7000ft upcoming
 
    // check unit, feet or meter
    if (token.find("ft") != string::npos)
-      unit = " feet ";
-   else unit = " meters ";
+      unit = " unit_feet ";
+   else unit = " unit_meters ";
 
-   splitStr(tlist, token, "/");
+   int str_size = splitStr(tlist, token, "/");
 
    // now we have
    // tlist[0]:    R32L
    // tlist[1]:    M5000V6000U
 
    // we handle the first part, the runway
-   ss << " runway " << splitStrAll(tlist[0].substr(1,2));
+   ss << tlist[0].substr(1,2) << " ";
    tlist[0].erase(0,3);
 
    // searches for "ll", "l", "c" ... "rr"
@@ -1194,8 +1845,10 @@ bool ModuleMetarInfo::isRVR(std::string &retval, std::string token)
      ss << it->second << " ";
    }
 
+   ss << "rvr ";
+
    // visibility
-   if (tlist[1].find("v"))  // we have varying visibility?
+   if (tlist[1].find("v") != string::npos)  // we have varying visibility?
    {
       ss << "varies_from ";
       it = shdesig.find(tlist[1].substr(0,1));
@@ -1205,7 +1858,7 @@ bool ModuleMetarInfo::isRVR(std::string &retval, std::string token)
         tlist[1].erase(0,1);
       }
       // visibility in meter
-      ss << chNumber(tlist[1].substr(0,4)) << unit << "to ";
+      ss << atoi(tlist[1].substr(0,4).c_str()) << unit << "to ";
       tlist[1].erase(0,5);
    }
 
@@ -1218,7 +1871,7 @@ bool ModuleMetarInfo::isRVR(std::string &retval, std::string token)
    }
 
    // visibility in meter
-   ss << chNumber(tlist[1].substr(0,4)) << unit;
+   ss << atoi(tlist[1].substr(0,4).c_str()) << unit;
    tlist[1].erase(0,4);
 
    // do we have "u", "d"... ??
@@ -1227,20 +1880,25 @@ bool ModuleMetarInfo::isRVR(std::string &retval, std::string token)
      ss << shdesig[(tlist[1].substr(0,1))];
    }
 
+   // is special cases we have /U or /D
+   // no standard
+   if (str_size == 3)
+   {
+     ss << shdesig[(tlist[2].substr(0,1))];
+   }
+
    retval = ss.str();
    return true;
 } /* isRVR */
 
 
-bool ModuleMetarInfo::isVerticalView(std::string &retval, std::string token)
+void ModuleMetarInfo::isVerticalView(std::string &retval, std::string token)
 {
     stringstream ss;
 
     // VV010  -> vertical view = 1000ft
-    ss << " vertical_view " <<
-          atoi(token.substr(2,3).c_str()) * 100 << " feet ";
+    ss << atoi(token.substr(2,3).c_str()) * 100;
     retval = ss.str();
-    return true;
 } /* isVerticalView */
 
 
@@ -1255,12 +1913,12 @@ bool ModuleMetarInfo::ispObscurance(std::string &retval, std::string token)
   ss << token.substr(0,3) << " ";
   token.erase(0,3);
 
-  ss << atoi(token.substr(0,3).c_str()) * 100 << " feet ";
+  ss << atoi(token.substr(0,3).c_str()) * 100;
   token.erase(0,3);
 
   if (token.length() > 0 && token.find("/") == string::npos)
   {
-     ss << token << longmsg; // cb or tcu
+     ss << " cld_" << token << longmsg; // cb or tcu
   }
 
   retval = ss.str();
@@ -1273,7 +1931,10 @@ void ModuleMetarInfo::onConnected(void)
    char getpath[55];
    sprintf(getpath, "GET /pub/data/observations/metar/stations/%s.TXT\n",
            icao.c_str());
-   if (!con->isConnected()) return;
+   if (!con->isConnected()) {
+      if (debug) cout << "connection to NOAA.gov lost" << endl;
+      return;
+   }
    con->write(getpath, 55);
 } /* onConnected */
 
@@ -1287,49 +1948,10 @@ void ModuleMetarInfo::onDisconnected(TcpConnection *con,
 
 void ModuleMetarInfo::say(stringstream &tmp)
 {
-   std::stringstream tsay;
-   tsay << "say " << tmp.str();
-   cout << tsay.str() << "\n";  // debug
-   processEvent(tsay.str());
+   if (debug) cout << tmp.str() << endl;  // debug
+   processEvent(tmp.str());
    tmp.str("");
 } /* say */
-
-
-string ModuleMetarInfo::splitStrAll(const string seq)
-{
-   std::stringstream outStr;
-   string::size_type pos = 0;
-   while (pos < seq.size())
-   {
-      outStr << seq[pos] << " ";
-      pos++;
-   }
-   return outStr.str();
-} /* splitStrAll */
-
-
-string ModuleMetarInfo::chNumber(const string seq)
-{
-    stringstream ss;
-    ss << atoi(seq.c_str());
-    return ss.str();
-} /* chNumber */
-
-
-string ModuleMetarInfo::chHoundr(const string seq)
-{
-   if (seq.substr(1,2) == "00")
-     return seq + " ";
-   return splitStrAll(seq);
-} /* chHoundr */
-
-
-string ModuleMetarInfo::flsplitStr(float val)
-{
-    stringstream ss;
-    ss << val;
-    return splitStrAll(ss.str());
-} /* flsplitStr */
 
 
 int ModuleMetarInfo::splitStr(StrList& L, const string& seq,
