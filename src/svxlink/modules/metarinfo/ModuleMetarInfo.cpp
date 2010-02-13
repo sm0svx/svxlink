@@ -1550,13 +1550,17 @@ bool ModuleMetarInfo::isActualWX(std::string &retval, std::string token)
 // needed by regex
 bool ModuleMetarInfo::rmatch(std::string tok, std::string pattern, regex_t *re)
 {
-    int status;
+  int status;
 
-    if (( status = regcomp(re, pattern.c_str(), REG_EXTENDED)) != 0 )
-        return false;
+  if (( status = regcomp(re, pattern.c_str(), REG_EXTENDED)) != 0 )
+  {
+    return false;
+  }
 
-    if (regexec(re, tok.c_str(), 0, NULL, 0) == 0) return true;
-    else return false;
+  bool success = (regexec(re, tok.c_str(), 0, NULL, 0) == 0);
+  regfree(re);
+  return success;
+  
 } /* rmatch */
 
 
