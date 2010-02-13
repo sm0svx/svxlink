@@ -1,221 +1,45 @@
 #!/bin/sh
+###############################################################################
+#
+# This is the filter_sounds.sh script which is used to process sound clips for
+# the SvxLink server system. The sound clips are maximized (normalized),
+# trimmed for silence and converted to a file format and sampling rate
+# appropriate for the SvxLink server software.
+#
+#   Usage: filter_sounds.sh <source directory> <destination directory>
+#
+# The script will first read a configuration file, filter_sounds.cfg, from
+# the source directory. That file contain, among other things, a SUBDIRS
+# configuration variable that contains a list of which sound clip directories
+# to process.
+#
+# This script use the play_sound.sh script which have to be placed in the
+# same directory as this script.
+#
+###############################################################################
 
-SRC_DIR="orig-sounds"
-DEST_DIR="sounds"
-
-SOFTLINK_SOUNDS="\
-  Default/phonetic_0|0 \
-  Default/phonetic_1|1 \
-  Default/phonetic_2|2 \
-  Default/phonetic_3|3 \
-  Default/phonetic_4|4 \
-  Default/phonetic_5|5 \
-  Default/phonetic_6|6 \
-  Default/phonetic_7|7 \
-  Default/phonetic_8|8 \
-  Default/phonetic_9|9 \
-  EchoLink/repeater|../Core/repeater \
-  "
-
-MAXIMIZE_SOUNDS="\
-  Default/help \
-  Default/press_0_for_help \
-  Core/interference \
-  Core/please_identify \
-  Help/help \
-  Help/choose_module \
-  Parrot/help \
-  EchoLink/help \
-  EchoLink/greeting \
-  EchoLink/directory_server_offline \
-  EchoLink/reject_connection \
-  EchoLink/please_try_again_later \
-  TclVoiceMail/help \
-  TclVoiceMail/logged_in_menu \
-  TclVoiceMail/message_deleted \
-  TclVoiceMail/pnm_menu \
-  TclVoiceMail/wrong_userid_or_password \
-  TclVoiceMail/rec_done \
-  TclVoiceMail/login \
-  TclVoiceMail/rec_enter_rcpt \
-  DtmfRepeater/help \
-  PropagationMonitor/aurora_alert \
-  PropagationMonitor/eskip_alert \
-  PropagationMonitor/help \
-  "
-
-TRIM_SOUNDS="\
-  Default/0 \
-  Default/1 \
-  Default/2 \
-  Default/3 \
-  Default/4 \
-  Default/5 \
-  Default/6 \
-  Default/7 \
-  Default/8 \
-  Default/9 \
-  Default/10 \
-  Default/11 \
-  Default/12 \
-  Default/13 \
-  Default/14 \
-  Default/15 \
-  Default/16 \
-  Default/17 \
-  Default/18 \
-  Default/19 \
-  Default/20 \
-  Default/2X \
-  Default/30 \
-  Default/3X \
-  Default/40 \
-  Default/4X \
-  Default/50 \
-  Default/5X \
-  Default/60 \
-  Default/6X \
-  Default/70 \
-  Default/7X \
-  Default/80 \
-  Default/8X \
-  Default/90 \
-  Default/9X \
-  Default/O \
-  Default/100 \
-  Default/200 \
-  Default/300 \
-  Default/400 \
-  Default/500 \
-  Default/600 \
-  Default/700 \
-  Default/800 \
-  Default/900 \
-  Default/and \
-  Default/decimal \
-  Default/activating_module \
-  Default/deactivating_module \
-  Default/no_such_module \
-  Default/phonetic_x \
-  Default/phonetic_m \
-  Default/phonetic_s \
-  Default/phonetic_v \
-  Default/phonetic_e \
-  Default/phonetic_c \
-  Default/phonetic_h \
-  Default/phonetic_o \
-  Default/phonetic_t \
-  Default/phonetic_a \
-  Default/phonetic_b \
-  Default/phonetic_d \
-  Default/phonetic_f \
-  Default/phonetic_g \
-  Default/phonetic_i \
-  Default/phonetic_j \
-  Default/phonetic_k \
-  Default/phonetic_l \
-  Default/phonetic_n \
-  Default/phonetic_p \
-  Default/phonetic_q \
-  Default/phonetic_r \
-  Default/phonetic_u \
-  Default/phonetic_w \
-  Default/phonetic_y \
-  Default/phonetic_z \
-  Default/module \
-  Default/timeout \
-  Default/operation_failed \
-  Default/unknown_command \
-  Default/aborted \
-  Default/star \
-  Default/slash \
-  Default/dash \
-  Default/unknown \
-  Default/activating \
-  Default/deactivating \
-  Default/already_active \
-  Default/not_active \
-  Core/online \
-  Core/active_module \
-  Core/repeater \
-  Core/pl_is \
-  Core/hz \
-  Core/activating_link_to \
-  Core/deactivating_link_to \
-  Core/link_already_active_to \
-  Core/link_not_active_to \
-  Core/AM \
-  Core/PM \
-  Core/the_time_is \
-  Core/voice_logger \
-  Help/name \
-  Parrot/name \
-  EchoLink/connected \
-  EchoLink/connecting_to \
-  EchoLink/disconnected \
-  EchoLink/not_found \
-  EchoLink/link_busy \
-  EchoLink/link \
-  EchoLink/name \
-  EchoLink/conference \
-  EchoLink/already_connected_to \
-  EchoLink/connected_stations \
-  EchoLink/choose_station \
-  EchoLink/idx_out_of_range \
-  EchoLink/no_match \
-  EchoLink/too_many_matches \
-  EchoLink/node_id_is \
-  EchoLink/conf-echotest \
-  EchoLink/conf-linux \
-  EchoLink/listen_only \
-  TclVoiceMail/messages_for \
-  TclVoiceMail/new_messages \
-  TclVoiceMail/rec_sending_to \
-  TclVoiceMail/name \
-  TclVoiceMail/unknown_userid \
-  TclVoiceMail/login_ok \
-  TclVoiceMail/rec_message \
-  TclVoiceMail/rec_subject \
-  DtmfRepeater/name \
-  PropagationMonitor/name \
-  PropagationMonitor/band_open_from \
-  PropagationMonitor/to \
-  PropagationMonitor/unit_m \
-  PropagationMonitor/unit_cm \
-  PropagationMonitor/above \
-  PropagationMonitor/MHz \
-  PropagationMonitor/MUF \
-  PropagationMonitor/multi_hop \
-  PropagationMonitor/sporadic_e_opening \
-  PropagationMonitor/tropo_opening \
-  PropagationMonitor/between \
-  PropagationMonitor/aurora_opening \
-  PropagationMonitor/down_to_lat \
-  PropagationMonitor/unit_deg \
-  "
-
-basedir=$(cd $(dirname $0); pwd)
-
+# Print a warning message
 warning()
 {
   echo -e "\033[31m*** WARNING: $@\033[0m";
 }
 
+# Print a usage message and then exit
+print_usage_and_exit()
+{
+  echo
+  echo "Usage: filter_sounds.sh [-BLg -r<target rate>] <source directory> " \
+       "<destination directory>"
+  echo
+  echo "  -B -- Target sound clip files should be big endian"
+  echo "  -L -- Target sound clip files should be little endian (default)"
+  echo "  -g -- Target sound clip files should be GSM encoded"
+  echo "  -r -- Target sound clip file sample rate (default 8000)"
+  echo
+  exit 1
+}
 
-#src_tmp=$(mktemp /tmp/$SRC_DIR-XXXXXX)
-#pushd $SRC_DIR > /dev/null
-#find -name "*.raw" | sort > $src_tmp
-#popd > /dev/null
-
-#dest_tmp=$(mktemp /tmp/$DEST_DIR-XXXXXX)
-#(
-#  for file in $COPY_SOUNDS $MAXIMIZE_SOUNDS $TRIM_SOUNDS; do
-#    echo ./$file
-#  done
-#) | sort > $dest_tmp
-
-#diff $src_tmp $dest_tmp
-
+# Parse command line options
 endian=""
 encoding=""
 ext="wav"
@@ -243,62 +67,77 @@ done
 shift $((OPTIND-1))
 
 if [ $# -lt 2 ]; then
-  echo "Usage: $0 <source directory> <destination directory>"
-  exit 1
+  print_usage_and_exit
 fi
 
 SRC_DIR=$1
 DEST_DIR=$2
+SILENCE_LEVEL=45
 
+# Check if the filter_sounds.cfg config file exists and source it in if it does
+if [ ! -r "${SRC_DIR}/filter_sounds.cfg" ]; then
+  echo "*** ERROR: Configuration file ${SRC_DIR}/filter_sounds.cfg is missing"
+  print_usage_and_exit
+fi
+source "${SRC_DIR}/filter_sounds.cfg"
 
-#for sound in $COPY_SOUNDS; do
-#  [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
-#  if [ -e $SRC_DIR/$sound.raw ]; then
-#    echo "Copying $SRC_DIR/$sound -> $DEST_DIR/$sound"
-#    cp -a $SRC_DIR/$sound.raw $DEST_DIR/$sound.raw
-#  else
-#    warning "Missing sound: $sound"
-#  fi
-#done
+# Check if the SUBDIRS config variable is set
+if [ -z "$SUBDIRS" ]; then
+  echo "*** ERROR: Configuration variable SUBDIRS not set."
+  print_usage_and_exit
+fi
 
+# Find out in which directory this script resides.
+basedir=$(cd $(dirname $0); pwd)
 
-for sound in $MAXIMIZE_SOUNDS; do
-  [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
-  if [ -r $SRC_DIR/$sound.raw -o -r $SRC_DIR/$sound.wav ]; then
-    echo "Maximizing $SRC_DIR/$sound -> $DEST_DIR/$sound.$ext"
-    $basedir/play_sound.sh -f$endian$encoding -r$target_rate $SRC_DIR/$sound | \
-	sox -traw -s2 -r$target_rate - $DEST_DIR/$sound.$ext
-  else
-    warning "Missing sound: $sound"
-  fi
+# Loop through each subdirectory specified in SUBDIRS
+for subdir in $SUBDIRS; do
+  SOFTLINK_SOUNDS=""
+  MAXMIZE_SOUNDS=""
+  TRIM_SOUNDS=""
+  source "${SRC_DIR}/$subdir/subdir.cfg"
+  
+  for clip in $MAXIMIZE_SOUNDS; do
+    dest_clip="$DEST_DIR/$subdir/$clip"
+    src_clip="$SRC_DIR/$subdir/$clip"
+    [ ! -d $(dirname $dest_clip) ] && mkdir -p $(dirname $dest_clip)
+    if [ -r $src_clip.raw -o -r $src_clip.wav ]; then
+      echo "Maximizing $src_clip -> $dest_clip.$ext"
+      $basedir/play_sound.sh -f$endian$encoding -r$target_rate \
+			     -l$SILENCE_LEVEL $src_clip |
+	  sox -traw -s2 -r$target_rate - $dest_clip.$ext
+    else
+      warning "Missing sound clip: $src_clip"
+    fi
+  done
+
+  echo -n > /tmp/all_trimmed.raw
+  for clip in $TRIM_SOUNDS; do
+    dest_clip="$DEST_DIR/$subdir/$clip"
+    src_clip="$SRC_DIR/$subdir/$clip"
+    [ ! -d $(dirname $dest_clip) ] && mkdir -p $(dirname $dest_clip)
+    if [ -r $src_clip.raw -o -r $src_clip.wav ]; then
+      echo "Trimming $src_clip -> $dest_clip.$ext"
+      $basedir/play_sound.sh -tf$endian$encoding -r$target_rate \
+			     -l$SILENCE_LEVEL $src_clip |
+	  sox -traw -s2 -r$target_rate - $dest_clip.$ext
+      sox $dest_clip.$ext -r$target_rate -s2 -t raw - >> /tmp/all_trimmed.raw
+    else
+      warning "Missing sound clip: $src_clip"
+    fi
+  done
+
+  for link_spec in $SOFTLINK_SOUNDS; do
+    link=$(echo $link_spec | cut -d'|' -f1).$ext
+    target=$(echo $link_spec | cut -d'|' -f2).$ext
+    dest_clip="$DEST_DIR/$subdir/$link"
+    [ ! -d $(dirname $dest_clip) ] && mkdir -p $(dirname $dest_clip)
+    if [ -r $(dirname $dest_clip)/$target ]; then
+      echo "Creating symlink $dest_clip -> $DEST_DIR/$subdir/$target"
+      rm -f $dest_clip
+      ln -s $target $dest_clip
+    else
+      warning "Missing sound clip: $(dirname $dest_clip)/$target"
+    fi
+  done
 done
-
-
-echo -n > /tmp/all_trimmed.raw
-for sound in $TRIM_SOUNDS; do
-  [ ! -d $(dirname $DEST_DIR/$sound) ] && mkdir -p $(dirname $DEST_DIR/$sound)
-  if [ -r $SRC_DIR/$sound.raw -o -r $SRC_DIR/$sound.wav ]; then
-    echo "Trimming $SRC_DIR/$sound -> $DEST_DIR/$sound.$ext"
-    $basedir/play_sound.sh -tf$endian$encoding -r$target_rate $SRC_DIR/$sound |
-	sox -traw -s2 -r$target_rate - $DEST_DIR/$sound.$ext
-    sox $DEST_DIR/$sound.$ext -r$target_rate -s2 -t raw - >> /tmp/all_trimmed.raw
-  else
-    warning "Missing sound: $sound"
-  fi
-done
-
-for sound in $SOFTLINK_SOUNDS; do
-  link=$(echo $sound | cut -d'|' -f1).$ext
-  target=$(echo $sound | cut -d'|' -f2).$ext
-  [ ! -d $(dirname $DEST_DIR/$link) ] && mkdir -p $(dirname $DEST_DIR/$link)
-  pushd $(dirname $DEST_DIR/$link) > /dev/null
-  if [ -r $target ]; then
-    echo "Creating symlink $DEST_DIR/$link -> $DEST_DIR/$target"
-    rm -f $(basename $link)
-    ln -s $target $(basename $link)
-  else
-    warning "Missing sound: $(dirname $link)/$target"
-  fi
-  popd > /dev/null
-done
-

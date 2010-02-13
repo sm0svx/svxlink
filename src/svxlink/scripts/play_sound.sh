@@ -4,6 +4,7 @@ trim_silence=0
 endian=""
 encoding="-s2 -traw"
 target_rate=8000
+silence_level=45
 
 convert()
 {
@@ -30,8 +31,8 @@ process()
   filter=""
   
   # Front and back levels for silence trimming
-  silence_front_level="-50d"
-  silence_back_level="-50d"
+  silence_front_level="-${silence_level}d"
+  silence_back_level="-${silence_level}d"
   
   # Calculate maximum gain without clipping. Leave headroom of about 3dB.
   gain=$(sox -traw -r${target_rate} -s2 $1 -traw /dev/null stat -v 2>&1)
@@ -78,7 +79,7 @@ encode()
   fi
 }
 
-while getopts spfctBLgr: opt; do
+while getopts spfctBLgr:l: opt; do
   case $opt in
     s)
       operation=spell
@@ -115,6 +116,10 @@ while getopts spfctBLgr: opt; do
     r)
       target_rate=$OPTARG
      ;;
+     
+    l)
+      silence_level=$OPTARG
+      ;;
       
   esac
 done
