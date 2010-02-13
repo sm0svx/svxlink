@@ -218,7 +218,7 @@ extern "C" {
 
 
 ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic, const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name)
+  : Module(dl_handle, logic, cfg_name), con(0)
 {
   cout << "\tModule MetarInfo v" MODULE_METARINFO_VERSION " starting...\n";
 
@@ -409,13 +409,11 @@ bool ModuleMetarInfo::initialize(void)
  */
 void ModuleMetarInfo::activateInit(void)
 {
-
   if (icao_default.length() == 4)
   {
       icao = icao_default;
       openConnection();
   }
-
 } /* activateInit */
 
 
@@ -434,7 +432,8 @@ void ModuleMetarInfo::activateInit(void)
  */
 void ModuleMetarInfo::deactivateCleanup(void)
 {
-
+  delete con;
+  con = 0;
 } /* deactivateCleanup */
 
 
@@ -792,7 +791,7 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
          case ISVIEW:
             if (isView(tempstr, current))
             {
-              temp << " visibility " << tempstr;
+              temp << "visibility " << tempstr;
               say(temp);
             }
             break;
@@ -1928,21 +1927,20 @@ bool ModuleMetarInfo::ispObscurance(std::string &retval, std::string token)
 
 void ModuleMetarInfo::onConnected(void)
 {
-   char getpath[55];
-   sprintf(getpath, "GET /pub/data/observations/metar/stations/%s.TXT\n",
-           icao.c_str());
-   if (!con->isConnected()) {
-      if (debug) cout << "connection to NOAA.gov lost" << endl;
-      return;
-   }
-   con->write(getpath, 55);
+  assert(con->isConnected());
+  string getpath;
+  getpath = "GET /pub/data/observations/metar/stations/";
+  getpath += icao;
+  getpath += ".TXT\n";
+  con->write(getpath.c_str(), getpath.size());
 } /* onConnected */
 
 
-void ModuleMetarInfo::onDisconnected(TcpConnection *con,
+void ModuleMetarInfo::onDisconnected(TcpConnection * /*con*/,
                      TcpClient::DisconnectReason reason)
 {
-
+  delete con;
+  con = 0;
 } /* onDisconnect */
 
 
