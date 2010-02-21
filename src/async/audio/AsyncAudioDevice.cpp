@@ -169,6 +169,11 @@ AudioDevice *AudioDevice::registerAudioIO(const string& dev_designator,
 void AudioDevice::unregisterAudioIO(AudioIO *audio_io)
 {
   AudioDevice *dev = audio_io->device();
+  if (dev == 0)
+  {
+    return;
+  }
+  
   assert(dev->use_count > 0);
   
   list<AudioIO*>::iterator it =
