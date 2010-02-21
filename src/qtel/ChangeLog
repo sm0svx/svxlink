@@ -1,7 +1,9 @@
- 0.11.3 -- ?? ??? 2009
+ 0.11.3 -- ?? ??? 2010
 -----------------------
 
-* Added a Ukrainian translation contributed by Ihor / UR3LCM.
+* Added Ukrainian translation contributed by Ihor / UR3LCM.
+
+* Added Russian translation contributed by Volodymyr / UR3QJW.
 
 * Info/chat window split in two separate windows.
   Contribution by Ihor / UR3LCM.
@@ -10,6 +12,8 @@
   set in the settings dialog. (UR3LCM and SM0SVX).
 
 * The VOX is now disabled by default.
+
+* The default audio device now is alsa:default.
 
 
 
