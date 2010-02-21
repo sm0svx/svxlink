@@ -324,7 +324,8 @@ void RepeaterLogic::dtmfDigitDetected(char digit, int duration)
     }
     else
     {
-      cout << "Ignoring DTMF digit \"" << digit << "\"\n";
+      cout << "Ignoring DTMF digit \"" << digit
+           << "\" since the repeater is not up\n";
     }
   }
 } /* RepeaterLogic::dtmfDigitDetected */
