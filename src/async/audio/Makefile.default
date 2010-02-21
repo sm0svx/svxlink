@@ -34,6 +34,7 @@
 # Include version information
 -include $(ROOT)/versions
 -include $(ROOT)/.config
+-include $(ROOT)/makefile.cfg
 
 
 ###############################################################################
@@ -100,15 +101,29 @@ LIBSRC		= AsyncAudioSource.cpp AsyncAudioSink.cpp \
 		  AsyncAudioInterpolator.cpp AsyncAudioDecoder.cpp \
 		  AsyncAudioEncoder.cpp AsyncAudioEncoderS16.cpp \
 		  AsyncAudioDecoderS16.cpp AsyncAudioEncoderGsm.cpp \
-		  AsyncAudioDecoderGsm.cpp AsyncAudioRecorder.cpp
+		  AsyncAudioDecoderGsm.cpp AsyncAudioRecorder.cpp \
+		  AsyncAudioDeviceFactory.cpp AsyncAudioJitterFifo.cpp
+		  
 
 ifdef USE_SPEEX
 LIBSRC +=	  AsyncAudioEncoderSpeex.cpp AsyncAudioDecoderSpeex.cpp
 endif
 
+ifeq ($(ASYNC_AUDIO_ALSA_SUPPORT),1)
+LIBSRC +=	  AsyncAudioDeviceAlsa.cpp
+endif
+
+ifeq ($(ASYNC_AUDIO_OSS_SUPPORT),1)
+LIBSRC +=	  AsyncAudioDeviceOSS.cpp
+endif
+
 
 # Which libs are used by the DYNAMIC lib generated.
-LIB_LIBS	= -lasynccore $(SIGC_LIBS) -lgsm $(SPEEX_LIBS)
+LIB_LIBS = -lasynccore $(SIGC_LIBS) -lgsm $(SPEEX_LIBS)
+
+ifeq ($(ASYNC_AUDIO_ALSA_SUPPORT),1)
+LIB_LIBS += -lasound
+endif
 
 # Which STATIC libs should be included in the generated STATIC lib.
 # These libs must be in the $(LIB) directory. Only the name of the
@@ -126,7 +141,8 @@ EXPINC		= AsyncAudioSource.h AsyncAudioSink.h AsyncAudioProcessor.h \
 		  AsyncAudioDebugger.h AsyncAudioPacer.h AsyncAudioReader.h \
 		  AsyncAudioDecimator.h AsyncAudioInterpolator.h \
 		  AsyncAudioStreamStateDetector.h AsyncAudioEncoder.h \
-		  AsyncAudioDecoder.h AsyncAudioRecorder.h
+		  AsyncAudioDecoder.h AsyncAudioRecorder.h \
+		  AsyncAudioJitterFifo.h
 
 
 # Specify Qt header files here that you want to run the

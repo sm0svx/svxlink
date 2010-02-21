@@ -1,10 +1,10 @@
 /**
-@file	 AsyncAudioFifo.h
+@file	 AsyncAudioJitterFifo.h
 @brief   A FIFO for handling audio samples
 @author  Tobias Blomberg / SM0SVX
 @date	 2007-10-06
 
-Implements a FIFO (with some extra functionality) for storing samples.
+Implements a jitter-tolerant FIFO for storing samples.
 
 \verbatim
 Async - A library for programming event driven applications
@@ -27,8 +27,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef ASYNC_AUDIO_FIFO_INCLUDED
-#define ASYNC_AUDIO_FIFO_INCLUDED
+#ifndef ASYNC_AUDIO_JITTER_FIFO_INCLUDED
+#define ASYNC_AUDIO_JITTER_FIFO_INCLUDED
 
 
 /****************************************************************************
@@ -110,13 +110,14 @@ namespace Async
 @author Tobias Blomberg / SM0SVX
 @date   2007-10-06
 
-This class implements a FIFO for handling audio samples. The FIFO also have
-some additional features. Output can be started or stopped and it can be
-instructed to buffer some samples before starting to output audio.
-Samples can be automatically output using the normal audio pipe infrastructure
-or samples could be read on demand using the readSamples method.
+This class implements a jitter-tolerant FIFO for handling audio samples.
+The FIFO is intended to buffer samples that arrive with a certain amount
+of sample rate or packet jitter. Under normal operation, the FIFO is kept
+half full. Varying sample rates or packet rates slowly move the amount of
+samples out of center. When the FIFO reaches a full or empty state, it is
+automatically reset to the half-full state.
 */
-class AudioFifo : public AudioSink, public AudioSource
+class AudioJitterFifo : public AudioSink, public AudioSource
 {
   public:
     /**
@@ -124,12 +125,12 @@ class AudioFifo : public AudioSink, public AudioSource
      * @param   fifo_size This is the size of the fifo expressed in number
      *                    of samples.
      */
-    explicit AudioFifo(unsigned fifo_size);
+    explicit AudioJitterFifo(unsigned fifo_size);
   
     /**
      * @brief 	Destructor
      */
-    virtual ~AudioFifo(void);
+    virtual ~AudioJitterFifo(void);
   
     /**
      * @brief	Set the size of the FIFO
@@ -145,52 +146,13 @@ class AudioFifo : public AudioSink, public AudioSource
      * @brief 	Check if the FIFO is empty
      * @return	Returns \em true if the FIFO is empty or else \em false
      */
-    bool empty(void) const { return !is_full && (tail == head); }
-    
-    /**
-     * @brief 	Check if the FIFO is full
-     * @return	Returns \em true if the FIFO is full or else \em false
-     *
-     * This function is used to check if the FIFO is full or not. The FIFO can
-     * only reach the buffer full condition if overwrite is false. The overwrite
-     * mode is set by the setOverwrite function.
-     */
-    bool full(void) const { return is_full; }
+    bool empty(void) const { return (tail == head); }
     
     /**
      * @brief 	Find out how many samples there are in the FIFO
-     * @param	ignore_prebuf Set to \em true to not report pre-buffered
-		samples.
      * @return	Returns the number of samples in the FIFO
      */
-    unsigned samplesInFifo(bool ignore_prebuf=false) const;
-    
-    /**
-     * @brief 	Set the overwrite mode
-     * @param 	overwrite Set to \em true to overwrite or else \em false
-     *
-     * The FIFO can operate in overwrite or normal mode. When in normal mode,
-     * it will not be possible to add any more samples to the FIFO when it
-     * is full. Samples has to be removed first. When overwrite is set, newly
-     * added samples will overwrite the oldest samples in the buffer so the FIFO
-     * will never get full but instead samples are lost.
-     * Use this function to set the overwrite mode.
-     */
-    void setOverwrite(bool overwrite) { do_overwrite = overwrite; }
-    
-    /**
-     * @brief 	Check the overwrite mode
-     * @return	Returns \em true if overwrite is enabled or else \em false
-     *
-     * The FIFO can operate in overwrite or normal mode. When in normal mode,
-     * it will not be possible to add any more samples to the FIFO when it
-     * is full. Samples has to be removed first. When overwrite is set, newly
-     * added samples will overwrite the oldest samples in the buffer so the FIFO
-     * will never get full but instead samples are lost.
-     * Use this function the check the current overwrite mode. Use the
-     * setOverwrite function to set the overwrite mode.
-     */
-    bool overwrite(void) const { return do_overwrite; }
+    unsigned samplesInFifo(void) const;
     
     /**
      * @brief 	Clear all samples from the FIFO
@@ -200,32 +162,6 @@ class AudioFifo : public AudioSink, public AudioSource
      */
     void clear(void);
 
-    /**
-     * @brief	Set the number of samples that must be in the fifo before
-     *		any samples are written out from it.
-     * @param	prebuf_samples The number of samples
-     */
-    void setPrebufSamples(unsigned prebuf_samples);
-    
-    /**
-     * @brief   Enable/disable the fifo buffer
-     * @param   enable Set to \em true to enable buffering or else \em false
-     *
-     * Use this method to turn buffering on and off. When buffering is off,
-     * no incoming samples will be stored in the fifo. If there are samples
-     * in the fifo at the time when buffering is disabled they will be sent
-     * out in the normal way.
-     * Don't disable buffering when pre-buffering is used. This will get
-     * you into trouble.
-     */
-    void enableBuffering(bool enable);
-    
-    /**
-     * @brief   Check if buffering is enabled or disabled
-     * @return  Returns \em true if buffering is enabled or else \em false
-     */
-    bool bufferingEnabled(void) const { return buffering_enabled; }
-    
     /**
      * @brief 	Write samples into the FIFO
      * @param 	samples The buffer containing the samples
@@ -269,29 +205,23 @@ class AudioFifo : public AudioSink, public AudioSource
     virtual void allSamplesFlushed(void);
     
     
-  private:    
+  private:
     float     	*fifo;
     unsigned    fifo_size;
     unsigned    head, tail;
-    bool      	do_overwrite;
     bool      	output_stopped;
-    unsigned  	prebuf_samples;
     bool      	prebuf;
+    unsigned	prebuf_samples;
     bool      	is_flushing;
-    bool      	is_full;
-    bool        buffering_enabled;
-    bool      	disable_buffering_when_flushed;
-    bool      	is_idle;
-    bool      	input_stopped;
     
     void writeSamplesFromFifo(void);
 
-};  /* class AudioFifo */
+};  /* class AudioJitterFifo */
 
 
 } /* namespace */
 
-#endif /* ASYNC_AUDIO_FIFO_INCLUDED */
+#endif /* ASYNC_AUDIO_JITTER_FIFO_INCLUDED */
 
 
 /*

@@ -1,14 +1,14 @@
 /**
-@file	 Template.cpp
+@file	 AudioDeviceFactory.cpp
 @brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2010-
+@date	 2009-12-26
 
 A_detailed_description_for_this_file
 
 \verbatim
 <A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <iostream>
 
 
 /****************************************************************************
@@ -50,7 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Template.h"
+#include "AsyncAudioDeviceFactory.h"
 
 
 
@@ -61,6 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 
 
 
@@ -103,6 +105,15 @@ using namespace std;
  *
  ****************************************************************************/
 
+AudioDeviceFactory *AudioDeviceFactory::_instance = 0;
+
+
+/****************************************************************************
+ *
+ * Public static functions
+ *
+ ****************************************************************************/
+
 
 
 /****************************************************************************
@@ -111,17 +122,46 @@ using namespace std;
  *
  ****************************************************************************/
 
-Template::Template(void)
+AudioDeviceFactory::~AudioDeviceFactory(void)
 {
-  
-} /* Template::Template */
+  _instance = 0;
+} /* AudioDeviceFactory::~AudioDeviceFactory */
 
 
-Template::~Template(void)
+bool AudioDeviceFactory::registerCreator(const std::string &name,
+                                         CreatorFunc creator)
 {
-  
-} /* Template::~Template */
+  creator_map[name] = creator;
+  return true;
+} /* AudioDeviceFactory::registerCreator */
 
+
+AudioDevice *AudioDeviceFactory::create(const std::string &name,
+                                        const std::string &dev_name)
+{
+  CreatorMap::iterator it = creator_map.find(name);
+  if (it == creator_map.end())
+  {
+    return 0;
+  }
+  return (*it).second(dev_name);
+} /* AudioDeviceFactory::create */
+
+
+std::string AudioDeviceFactory::validDevTypes(void) const
+{
+  string type_list;
+  CreatorMap::const_iterator it;
+  for (it = creator_map.begin(); it != creator_map.end(); ++it)
+  {
+    if (!type_list.empty())
+    {
+      type_list += " ";
+    }
+    type_list += (*it).first;
+  }
+  return type_list;
+} /* AudioDeviceFactory::validDevTypes */
 
 
 
@@ -130,6 +170,11 @@ Template::~Template(void)
  * Protected member functions
  *
  ****************************************************************************/
+
+AudioDeviceFactory::AudioDeviceFactory(void)
+{
+} /* AudioDeviceFactory::AudioDeviceFactory */
+
 
 
 

@@ -1,10 +1,10 @@
 /**
-@file	 AsyncAudioFifo.cpp
+@file	 AsyncAudioJitterFifo.cpp
 @brief   A FIFO for handling audio samples
 @author  Tobias Blomberg / SM0SVX
 @date	 2007-10-06
 
-Implements a FIFO (with some extra functionality) for storing samples.
+Implements a jitter-tolerant FIFO for storing samples.
 
 \verbatim
 Async - A library for programming event driven applications
@@ -54,7 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncAudioFifo.h"
+#include "AsyncAudioJitterFifo.h"
 
 
 
@@ -117,24 +117,23 @@ static const unsigned  MAX_WRITE_SIZE = 800;
  ****************************************************************************/
 
 
-AudioFifo::AudioFifo(unsigned fifo_size)
+AudioJitterFifo::AudioJitterFifo(unsigned fifo_size)
   : fifo_size(fifo_size), head(0), tail(0),
-    do_overwrite(false), output_stopped(false), prebuf_samples(0),
-    prebuf(false), is_flushing(false), is_full(false), buffering_enabled(true),
-    disable_buffering_when_flushed(false), is_idle(true), input_stopped(false)
+    output_stopped(false), prebuf(true), prebuf_samples(0),
+    is_flushing(false)
 {
   assert(fifo_size > 0);
   fifo = new float[fifo_size];
-} /* AudioFifo */
+} /* AudioJitterFifo */
 
 
-AudioFifo::~AudioFifo(void)
+AudioJitterFifo::~AudioJitterFifo(void)
 {
   delete [] fifo;
-} /* ~AudioFifo */
+} /* ~AudioJitterFifo */
 
 
-void AudioFifo::setSize(unsigned new_size)
+void AudioJitterFifo::setSize(unsigned new_size)
 {
   assert(fifo_size > 0);
   if (new_size != fifo_size)
@@ -144,17 +143,16 @@ void AudioFifo::setSize(unsigned new_size)
     fifo = new float[fifo_size];
   }
   clear();
-} /* AudioFifo::setSize */
+} /* AudioJitterFifo::setSize */
 
 
-unsigned AudioFifo::samplesInFifo(bool ignore_prebuf) const
+unsigned AudioJitterFifo::samplesInFifo(void) const
 {
-  unsigned samples_in_buffer =
-      	  is_full ? fifo_size : (head - tail + fifo_size) % fifo_size;
+  unsigned samples_in_buffer = (head - tail + fifo_size) % fifo_size;
 
-  if (!ignore_prebuf && prebuf && !is_flushing)
+  if (prebuf && !is_flushing)
   {
-    if (samples_in_buffer < prebuf_samples)
+    if (samples_in_buffer < (fifo_size >> 1))
     {
       return 0;
     }
@@ -162,16 +160,16 @@ unsigned AudioFifo::samplesInFifo(bool ignore_prebuf) const
 
   return samples_in_buffer;
 
-} /* AudioFifo::samplesInFifo */
+} /* AudioJitterFifo::samplesInFifo */
 
 
-void AudioFifo::clear(void)
+void AudioJitterFifo::clear(void)
 {
   bool was_empty = empty();
   
-  is_full = false;
   tail = head = 0;
-  prebuf = (prebuf_samples > 0);
+  prebuf = true;
+  prebuf_samples = 0;
   output_stopped = false;
   
   if (is_flushing)
@@ -182,144 +180,60 @@ void AudioFifo::clear(void)
       sinkFlushSamples();
     }
   }
-} /* AudioFifo::clear */
+} /* AudioJitterFifo::clear */
 
 
-void AudioFifo::setPrebufSamples(unsigned prebuf_samples)
+int AudioJitterFifo::writeSamples(const float *samples, int count)
 {
-  this->prebuf_samples = min(prebuf_samples, fifo_size-1);
-  if (empty())
-  {
-    prebuf = (prebuf_samples > 0);
-  }
-} /* AudioFifo::setPrebufSamples */
-
-
-void AudioFifo::enableBuffering(bool enable)
-{
-  if (enable)
-  {
-    disable_buffering_when_flushed = false;
-    if (!buffering_enabled)
-    {
-      buffering_enabled = true;
-      if (input_stopped)
-      {
-      	sourceResumeOutput();
-      }
-    }
-  }
-  else
-  {
-    if (buffering_enabled)
-    {
-      if (empty())
-      {
-      	buffering_enabled = false;
-      }
-      else
-      {
-      	disable_buffering_when_flushed = true;
-      }
-    }
-  }
-} /* AudioFifo::enableBuffering */
-
-
-int AudioFifo::writeSamples(const float *samples, int count)
-{
-  /*
-  printf("AudioFifo::writeSamples: count=%d empty=%s  prebuf=%s\n",
-      	  count, empty() ? "true" : "false", prebuf ? "true" : "false");
-  */
-  
   assert(count > 0);
-  
-  is_idle = false;
   is_flushing = false;
   
-  if (is_full)
-  {
-    input_stopped = true;
-    return 0;
-  }
-  
   int samples_written = 0;
-  if (empty() && !prebuf)
+  while (samples_written < count)
   {
-    samples_written = sinkWriteSamples(samples, count);
-    /*
-    printf("AudioFifo::writeSamples: count=%d "
-      	   "samples_written=%d\n", count, samples_written);
-    */
-  }
-  
-  if (buffering_enabled)
-  {
-    while (!is_full && (samples_written < count))
+    fifo[head] = samples[samples_written++];
+    head = (head + 1) % fifo_size;
+    if (head == tail)
     {
-      while (!is_full && (samples_written < count))
-      {
-	fifo[head] = samples[samples_written++];
-	head = (head < fifo_size-1) ? head + 1 : 0;
-	if (head == tail)
-	{
-	  if (do_overwrite)
-	  {
-      	    tail = (tail < fifo_size-1) ? tail + 1 : 0;
-	  }
-	  else
-	  {
-	    is_full = true;
-	  }
-	}
-      }
-      
-      if (prebuf && (samplesInFifo() > 0))
-      {
-      	prebuf = false;
-      }
-
-      writeSamplesFromFifo();
+        // Throw away the first half of the buffer.
+      tail = (tail + (fifo_size >> 1)) % fifo_size;
     }
   }
-  else
-  {
-    output_stopped = (samples_written == 0);
-  }
 
-  input_stopped = (samples_written == 0);
+  if (prebuf)
+  {
+    prebuf_samples += samples_written;
+  }
   
+  if (samplesInFifo() > 0)
+  {
+    prebuf = false;
+  }
+  
+  writeSamplesFromFifo();
+
   return samples_written;
   
 } /* writeSamples */
 
 
-void AudioFifo::flushSamples(void)
+void AudioJitterFifo::flushSamples(void)
 {
-  //printf("AudioFifo::flushSamples\n");
   is_flushing = true;
-  prebuf = (prebuf_samples > 0);
+  prebuf = true;
   if (empty())
   {
     sinkFlushSamples();
   }
-} /* AudioFifo::flushSamples */
+} /* AudioJitterFifo::flushSamples */
 
 
-void AudioFifo::resumeOutput(void)
+void AudioJitterFifo::resumeOutput(void)
 {
   if (output_stopped)
   {
     output_stopped = false;
-    if (buffering_enabled)
-    {
-      writeSamplesFromFifo();
-    }
-    else if (input_stopped)
-    {
-      sourceResumeOutput();
-    }
+    writeSamplesFromFifo();
   }
 } /* resumeOutput */
 
@@ -332,26 +246,18 @@ void AudioFifo::resumeOutput(void)
  ****************************************************************************/
 
 
-void AudioFifo::allSamplesFlushed(void)
+
+void AudioJitterFifo::allSamplesFlushed(void)
 {
   if (empty())
   {
-    if (disable_buffering_when_flushed)
-    {
-      disable_buffering_when_flushed = false;
-      buffering_enabled = false;
-    }
-
     if (is_flushing)
     {
       is_flushing = false;
       sourceAllSamplesFlushed();
     }
   }
-} /* AudioFifo::allSamplesFlushed */
-
-
-
+} /* AudioJitterFifo::allSamplesFlushed */
 
 
 
@@ -362,47 +268,52 @@ void AudioFifo::allSamplesFlushed(void)
  ****************************************************************************/
 
 
-void AudioFifo::writeSamplesFromFifo(void)
+void AudioJitterFifo::writeSamplesFromFifo(void)
 {
-  if (output_stopped || (samplesInFifo() == 0))
+  if (output_stopped)
   {
     return;
   }
   
-  bool was_full = full();
-  
   int samples_written;
-  do
+  if (prebuf_samples)
   {
-    int samples_to_write = min(MAX_WRITE_SIZE, samplesInFifo(true));
-    int to_end_of_fifo = fifo_size - tail;
-    samples_to_write = min(samples_to_write, to_end_of_fifo);
-    samples_written = sinkWriteSamples(fifo+tail, samples_to_write);
-    //printf("AudioFifo::writeSamplesFromFifo(%s): samples_to_write=%d "
-    //  	   "samples_written=%d\n", debug_name.c_str(), samples_to_write,
-	//   samples_written);
-    if (was_full && (samples_written > 0))
+    float silence[MAX_WRITE_SIZE];
+    for (unsigned i=0; i<MAX_WRITE_SIZE; i++)
     {
-      is_full = false;
-      was_full = false;
+      silence[i] = 0;
     }
-    tail = (tail + samples_written) % fifo_size;
-  } while((samples_written > 0) && !empty());
+    do
+    {
+      int samples_to_write = min(MAX_WRITE_SIZE, prebuf_samples);
+      samples_written = sinkWriteSamples(silence, samples_to_write);
+      prebuf_samples -= samples_written;
+    } while ((samples_written > 0) && (prebuf_samples > 0));
+  }
+  else
+  {
+    do
+    {
+      int samples_to_write = min(MAX_WRITE_SIZE, samplesInFifo());
+      int to_end_of_fifo = fifo_size - tail;
+      samples_to_write = min(samples_to_write, to_end_of_fifo);
+      samples_written = sinkWriteSamples(fifo+tail, samples_to_write);
+      tail = (tail + samples_written) % fifo_size;
+    } while((samples_written > 0) && !empty());
+  }
   
   if (samples_written == 0)
   {
     output_stopped = true;
   }
   
-  if (input_stopped && !full())
+  if (empty())
   {
-    input_stopped = false;
-    sourceResumeOutput();
-  }
-  
-  if (is_flushing && empty())
-  {
-    sinkFlushSamples();
+    prebuf = true;
+    if (is_flushing)
+    {
+      sinkFlushSamples();
+    }
   }
   
 } /* writeSamplesFromFifo */

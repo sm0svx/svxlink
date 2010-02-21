@@ -1,8 +1,13 @@
- 0.17.1 -- ?? ??? 2009
+ 0.18.0 -- ?? ??? 2010
 -----------------------
 
 * The Async::AudioRecorder can now auto detect the file format from the
   filename extension.
+
+* Improved audio device handling which makes it easier to add support for
+  different kinds of audio subsystems.
+
+* Added support for the ALSA audio subsystem.
 
 
 

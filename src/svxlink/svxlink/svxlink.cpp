@@ -412,18 +412,18 @@ int main(int argc, char **argv)
     if (rate == 48000)
     {
       AudioIO::setBlocksize(1024);
-      AudioIO::setBufferCount(4);
+      AudioIO::setBlockCount(4);
     }
     else if (rate == 16000)
     {
       AudioIO::setBlocksize(512);
-      AudioIO::setBufferCount(2);
+      AudioIO::setBlockCount(2);
     }
     #if INTERNAL_SAMPLE_RATE <= 8000
     else if (rate == 8000)
     {
       AudioIO::setBlocksize(256);
-      AudioIO::setBufferCount(2);
+      AudioIO::setBlockCount(2);
     }
     #endif
     else

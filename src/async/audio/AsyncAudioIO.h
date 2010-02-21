@@ -159,7 +159,6 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
     /**
      * @brief 	Set the blocksize used when opening audio devices
      * @param 	size  The blocksize, in samples per channel, to use
-     * @return	Returns the blocksize actually set
      *
      * Use this function to set the block size used when opening audio
      * devices. The block size is the size of the blocks used when reading
@@ -170,18 +169,17 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
      * This is a global setting so all sound cards will be affected. Already
      * opened sound cards will not be affected.
      */
-    static int setBlocksize(int size);
+    static void setBlocksize(int size);
 
     /**
      * @brief 	Find out what the blocksize is set to
      * @return	Returns the currently set blocksize in samples per channel
      */
-    static int blocksize(void);
+    int blocksize(void);
     
     /**
-     * @brief 	Set the buffer count used when opening audio devices
-     * @param 	count 	The buffer count to use
-     * @return	Returns the buffer count actually set
+     * @brief 	Set the block count used when opening audio devices
+     * @param 	count 	The block count to use
      *
      * Use this function to set the buffer count used when opening audio
      * devices. The buffer count is the maximum number of blocks the driver
@@ -191,7 +189,7 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
      * This is a global setting so all sound cards will be affected. Already
      * opened sound cards will not be affected.
      */
-    static int setBufferCount(int count);
+    static void setBlockCount(int count);
     
     /**
      * @brief 	Set the number of channels used when doing future opens
