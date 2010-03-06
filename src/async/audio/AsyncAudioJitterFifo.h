@@ -211,7 +211,6 @@ class AudioJitterFifo : public AudioSink, public AudioSource
     unsigned    head, tail;
     bool      	output_stopped;
     bool      	prebuf;
-    unsigned	prebuf_samples;
     bool      	is_flushing;
     
     void writeSamplesFromFifo(void);
