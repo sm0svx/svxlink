@@ -561,7 +561,7 @@ meddelande</translation>
     </message>
     <message>
         <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation>Vilken ljudenhet som skall användas (ex /dev/dsp)</translation>
+        <translation type="obsolete">Vilken ljudenhet som skall användas (ex /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
@@ -678,6 +678,10 @@ meddelande</translation>
     <message>
         <source>Passwords do not match</source>
         <translation>De två lösenord du angav är ej lika</translation>
+    </message>
+    <message>
+        <source>The audio device to use (e.g. alsa:default)</source>
+        <translation>Den ljudenhet som skall användas (ex: alsa:default)</translation>
     </message>
 </context>
 </TS>
