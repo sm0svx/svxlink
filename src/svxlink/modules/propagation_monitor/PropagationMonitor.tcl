@@ -258,6 +258,28 @@ proc handle_vhfdx {msg_file} {
     return
   }
 
+  # Example: Possible Sporadic-E from JO89 on 6m. Try towards LQ28 (13�)
+  set match [regexp \
+	{^Possible Sporadic-E from (\w\w\d\d) on (\d+c?m)\. Try towards (\w\w\d\d) (\d+.)$} \
+	$subject -> from_loc band to_loc direction]
+  if {$match} {
+    play_alert_sound
+    for {set i 0} {$i < 2} {set i [expr $i + 1]} {
+      playMsg possible_sporadic_e_opening
+      say_band $band
+      playSilence 100
+      playMsg between
+      playSilence 200
+      say_locator $from_loc
+      playSilence 200
+      playMsg and
+      playSilence 200
+      say_locator $to_loc
+      playSilence 1000
+    }
+    return
+  }
+
   # Example: Multi-hop sporadic-E opening on 6m.
   set match [regexp \
 	{^Multi-hop sporadic-E opening on (\d+c?m)\.$} \
