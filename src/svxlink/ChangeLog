@@ -116,6 +116,10 @@
   this: 10=412345H#. When macro 10 is activated the DTMF sequence 12345#
   will be transmitted.
 
+* Now possible to link more than one logic core together. The LOGIC1 and
+  LOGIC2 configuration variables have been replaced with one configuration
+  variable called CONNECT_LOGICS.
+
 
 
  0.11.0 -- 26 Apr 2009

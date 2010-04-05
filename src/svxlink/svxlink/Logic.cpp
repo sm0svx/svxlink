@@ -46,6 +46,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <sstream>
 #include <map>
+#include <list>
+#include <vector>
 
 
 /****************************************************************************
@@ -144,20 +146,50 @@ AudioSwitchMatrix Logic::audio_switch_matrix;
  *
  ****************************************************************************/
 
-void Logic::connectLogics(const string& l1, const string& l2, int timeout)
+bool Logic::connectLogics(const vector<string> &link_list, int timeout)
 {
-  cout << "Activating link " << l1 << " <--> " << l2 << endl;
-  audio_switch_matrix.connect(l1, l2);
-  audio_switch_matrix.connect(l2, l1);
+  assert(link_list.size() > 0);
+  bool check_connect = false;
+  vector<string>::const_iterator it;
+  for (it = link_list.begin(); it != link_list.end(); it++)
+  {
+    for (vector<string>::const_iterator it1 = it + 1; it1 != link_list.end();
+	 it1++)
+    {
+      assert(*it != *it1);
+      if (!logicsAreConnected(*it, *it1))
+      {
+	cout << "Activating link " << *it << " --> " << *it1 << endl;
+	audio_switch_matrix.connect(*it, *it1);
+	audio_switch_matrix.connect(*it1, *it);
+	check_connect = true;
+      }
+    }
+  }
+  return check_connect;
 } /* Logic::connectLogics */
 
 
-void Logic::disconnectLogics(const string& l1, const string& l2)
+bool Logic::disconnectLogics(const std::vector<std::string> &link_list)
 {
-  cout << "Deactivating link " << l1 << " <--> " << l2 << endl;
-  audio_switch_matrix.disconnect(l1, l2);
-  audio_switch_matrix.disconnect(l2, l1);
-} /* Logic::connectLogics */
+  assert(link_list.size() > 0);
+  bool check_connect = false;
+  for (vector<string>::const_iterator it = link_list.begin();
+       it != link_list.end(); it++)
+  {
+    for (vector<string>::const_iterator it1 = it + 1; it1 != link_list.end();
+	 it1++)
+    {
+      if (logicsAreConnected(*it, *it1))
+      {
+	cout << "Deactivating link " << *it << " --> " << *it1 << endl;
+	audio_switch_matrix.disconnect(*it, *it1);
+	check_connect = true;
+      }
+    }
+  }
+  return check_connect;
+} /* Logic::disconnectLogics */
 
 
 bool Logic::logicsAreConnected(const string& l1, const string& l2)

@@ -1,14 +1,12 @@
 /**
 @file	 LogicCmds.h
-@brief   A_brief_description_for_this_file
+@brief   This file contains the implemented core logic commands
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-24
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2004-2010  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example LogicCmds_demo.cpp
-An example of how to use the LogicCmds class
-*/
-
 
 #ifndef LOGIC_CMDS_INCLUDED
 #define LOGIC_CMDS_INCLUDED
@@ -52,6 +45,7 @@ An example of how to use the LogicCmds class
  ****************************************************************************/
 
 #include <AsyncConfig.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -115,11 +109,12 @@ An example of how to use the LogicCmds class
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	The module activation command
 @author Tobias Blomberg
 @date   2005-04-24
 
-A_detailed_class_description
+This class implements the core command used to activate a module.
+The subcommand represents the ID of the module to activate.
 */
 class ModuleActivateCmd : public Command
 {
@@ -170,17 +165,23 @@ class ModuleActivateCmd : public Command
 
 
 /**
-@brief	A_brief_class_description
+@brief	The logic linking activation command
 @author Tobias Blomberg
 @date   2005-04-24
 
-A_detailed_class_description
+This class implements the logic linking activation command.
+Each instance of the class represents a group of logics that can be linked
+together.
+Subcommand 0 means disconnect the links and subcommand 1 means connect the
+links.
 */
 class LinkCmd : public Command
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
+     * @param  parser The command parser to associate this command with
+     * @param  logic  The logic core instance the command should operate on
      */
     LinkCmd(CmdParser *parser, Logic *logic)
       : Command(parser), logic(logic), timeout(0) {}
@@ -191,9 +192,10 @@ class LinkCmd : public Command
     ~LinkCmd(void) {}
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Initialize the command object
+     * @param 	cfg A previously initialized configuration object
+     * @param  link_name The name (configuration section) of this link
+     * @return	Returns \em true on success or else \em false.
      */
     bool initialize(Async::Config& cfg, const std::string& link_name)
     {
@@ -211,17 +213,17 @@ class LinkCmd : public Command
       }
       setCmd(cmd_str);
 
-      if (!cfg.getValue(link_name, "LOGIC1", logic1))
+      if (!cfg.getValue(link_name, "CONNECT_LOGICS", logics))
       {
 	std::cerr << "*** ERROR: Config variable " << link_name
-	     << "/LOGIC1 not set\n";
+	     << "/CONNECT_LOGICS not set\n";
 	return false;
       }
-
-      if (!cfg.getValue(link_name, "LOGIC2", logic2))
+      
+      if (SvxLink::splitStr(logic_list, logics, ",") < 2)
       {
-	std::cerr << "*** ERROR: Config variable " << link_name
-	     << "/LOGIC2 not set\n";
+	std::cerr << "*** ERROR: you need at least two LOGICS to connect,"
+	    << "e.g. CONNECT_LOGICS=RepeaterLogic,SimplexLogic" << std::endl;
 	return false;
       }
 
@@ -239,48 +241,12 @@ class LinkCmd : public Command
       //std::cout << "cmd=" << cmdStr() << " subcmd=" << subcmd << std::endl;
       if (subcmd == "0")
       {
-	std::stringstream ss;
-	if (!Logic::logicsAreConnected(logic1, logic2))
-	{
-	  ss << "link_not_active " << name;
-	}
-	else
-	{
-      	  Logic::disconnectLogics(logic1, logic2);
-	  ss << "deactivating_link " << name;
-	}
-      	logic->processEvent(ss.str());
+        disconnectLinks();
       }
       else if (subcmd == "1")
       {
-	std::stringstream ss;
-	if (Logic::logicsAreConnected(logic1, logic2))
-	{
-	  ss << "link_already_active " << name;
-	}
-	else
-	{
-      	  Logic::connectLogics(logic1, logic2, timeout);
-	  ss << "activating_link " << name;
-	}
-      	logic->processEvent(ss.str());
+	connectLinks();
       }
-      /*
-      else if (subcmd == "2")
-      {
-	std::stringstream ss;
-	if (Logic::logicsAreConnected(logic1, logic2))
-	{
-	  ss << "link_already_active " << name;
-	}
-	else
-	{
-      	  Logic::connectLogics(logic1, logic2);
-	  ss << "activating_link " << name;
-	}
-      	logic->processEvent(ss.str());
-      }
-      */
       else
       {
       	std::stringstream ss;
@@ -288,16 +254,49 @@ class LinkCmd : public Command
       	logic->processEvent(ss.str());
       }
     }
+
+    void connectLinks(void)
+    {
+      std::stringstream ss;
+      if (Logic::connectLogics(logic_list, timeout))
+      {
+	ss << "activating_link " << name;
+      }
+      else
+      {
+	ss << "link_already_active " << name;
+      }
+      logic->processEvent(ss.str());
+    } /* connectLinks */
+
+
+    void disconnectLinks(void)
+    {
+      std::stringstream ss;
+      if (Logic::disconnectLogics(logic_list))
+      {
+	ss << "deactivating_link " << name;
+      }
+      else
+      {
+	ss << "link_not_active " << name;
+      }
+      logic->processEvent(ss.str());
+    } /* disconnectLinks */
     
+
   protected:
     
   private:
+    typedef std::vector<std::string> StrList;
+    
     Logic     	*logic;
-    std::string logic1;
-    std::string logic2;
+    std::string logics;
     int       	timeout;
     std::string name;
-        
+    StrList 	logic_list;
+    
+
 };  /* class LinkCmd */
 
 
