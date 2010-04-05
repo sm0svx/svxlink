@@ -105,8 +105,10 @@ puts
 
 mary.locale = 'en_US'
 mary.voice = 'cmu-slt-hsmm'
+mary.enableEffect('Volume', 'amount:2.5;');
 mary.enableEffect('f0Add', 'f0Add:30.0;')
 #mary.enableEffect('f0Scale', 'f0Scale:1.5;')
+mary.enableEffect('FIRFilter', 'type:2;fc1:300.0;')
 #mary.input_type = 'RAWMARYXML'
 
 ARGV.each do |txtfilename|
