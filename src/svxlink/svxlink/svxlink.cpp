@@ -66,6 +66,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <AsyncFdWatch.h>
 #include <AsyncAudioIO.h>
+#include <LocationInfo.h>
 
 
 /****************************************************************************
@@ -440,6 +441,17 @@ int main(int argc, char **argv)
     cout << "--- Using sample rate " << rate << "Hz\n";
   }
   
+  // init locationinfo
+  if (cfg.getValue("GLOBAL", "LOCATION_INFO", value))
+  {
+    if (!LocationInfo::initialize(cfg, value))
+    {
+      cerr << "*** ERROR: Could not init LocationInfo, "
+           << "check configuration section LOCATION_INFO=" << value << "\n";
+      exit(1);
+    }
+  }
+
   initialize_logics(cfg);
 
   struct termios org_termios;

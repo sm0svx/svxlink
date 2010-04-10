@@ -119,8 +119,7 @@ PLUGINS		=
 PLUGINS_CPP   	= $(LIB)/ModuleEchoLink
 
 # Additional C sources to compile.
-PLUGINSRC	= QsoImpl.cpp AprsTcpClient.cpp AprsUdpClient.cpp \
-		  LocationInfo.cpp
+PLUGINSRC	= QsoImpl.cpp
 
 # Libs that the plugins depend on.
 PLUGIN_LIBS	= -lecholib

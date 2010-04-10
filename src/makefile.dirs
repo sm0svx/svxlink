@@ -12,7 +12,7 @@
 #-----------------------------------------------------------------
 
 # Subdirectories in the order of compilation.
-SUBDIRS	= async misc echolib svxlink qtel doc
+SUBDIRS	= async misc echolib locationinfo svxlink qtel doc
 
 
 #

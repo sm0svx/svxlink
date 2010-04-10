@@ -56,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSelector.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkDispatcher.h>
+#include <LocationInfo.h>
 
 
 /****************************************************************************
@@ -66,7 +67,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "ModuleEchoLink.h"
 #include "QsoImpl.h"
-#include "LocationInfo.h"
 
 
 /****************************************************************************
@@ -151,8 +151,7 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
   : Module(dl_handle, logic, cfg_name), dir(0), dir_refresh_timer(0),
     remote_activation(false), pending_connect_id(-1), last_message(""),
     max_connections(1), max_qsos(1), talker(0), squelch_is_open(false),
-    state(STATE_NORMAL), cbc_timer(0), splitter(0), listen_only_valve(0),
-    tinfo(0)
+    state(STATE_NORMAL), cbc_timer(0), splitter(0), listen_only_valve(0)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
@@ -339,15 +338,6 @@ bool ModuleEchoLink::initialize(void)
   selector = new AudioSelector;
   AudioSource::setHandler(selector);
 
-  if (cfg().getValue(cfgName(), "LOCATION_INFO", value))
-  {
-    tinfo = new LocationInfo();
-    if (!tinfo->initialize(cfg(), value, mycall))
-    {
-      moduleCleanup();
-      return false;
-    }
-  }
   
   return true;
   
@@ -398,8 +388,8 @@ void ModuleEchoLink::moduleCleanup(void)
   regfree(&reject_regex);
   regfree(&drop_regex);
   
-  delete tinfo;
-  tinfo = 0;
+  //delete tinfo;
+  //tinfo = 0;
   delete dir_refresh_timer;
   dir_refresh_timer = 0;
   delete Dispatcher::instance();
@@ -682,9 +672,9 @@ void ModuleEchoLink::onStatusChanged(StationData::Status status)
   }
   
     // Update status at aprs.echolink.org
-  if (tinfo)
+  if (LocationInfo::has_instance())
   {
-    tinfo->updateDirectoryStatus(status);
+    LocationInfo::instance()->updateDirectoryStatus(status);
   }
 } /* onStatusChanged */
 
@@ -876,12 +866,12 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   broadcastTalkerStatus();
   updateDescription();
 
-  if (tinfo != 0)
+  if (LocationInfo::has_instance())
   {
     list<string> call_list;
     listQsoCallsigns(call_list);
     
-    tinfo->updateQsoStatus(2, callsign, name, call_list);
+    LocationInfo::instance()->updateQsoStatus(2, callsign, name, call_list);
   }
   
   checkIdle();
@@ -1038,12 +1028,12 @@ void ModuleEchoLink::destroyQsoObject(QsoImpl *qso)
   //broadcastTalkerStatus();
   //updateDescription();
 
-  if (tinfo != 0)
+  if (LocationInfo::has_instance())
   {
     list<string> call_list;
     listQsoCallsigns(call_list);
     
-    tinfo->updateQsoStatus(0, callsign, "", call_list);
+    LocationInfo::instance()->updateQsoStatus(0, callsign, "", call_list);
   }
 
   checkIdle();
@@ -1149,7 +1139,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
   processEvent(ss.str());
   outgoing_con_pending.push_back(qso);
   
-  if (tinfo != 0)
+  if (LocationInfo::has_instance())
   {
     stringstream info;
     info << station.id();
@@ -1157,7 +1147,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     list<string> call_list;
     listQsoCallsigns(call_list);
 
-    tinfo->updateQsoStatus(1, station.callsign(), info.str(), call_list);
+    LocationInfo::instance()->updateQsoStatus(1, station.callsign(), info.str(), call_list);
   }
     
   checkIdle();
