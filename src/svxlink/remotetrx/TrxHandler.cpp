@@ -189,20 +189,7 @@ bool TrxHandler::initialize(void)
       cleanup();
       return false;
     }
-    /*
-    if (rx_type == "NetTrxAdapter")
-    {
-      NetTrxAdapter *adapter = NetTrxAdapter::instance(cfg, rx_name);
-      if (adapter != 0)
-      {
-      	rx = adapter->rx();
-      }
-    }
-    else
-    */
-    {
-      rx = RxFactory::createNamedRx(cfg, rx_name);
-    }
+    rx = RxFactory::createNamedRx(cfg, rx_name);
     if ((rx == 0) || !rx->initialize())
     {
       cerr << "*** ERROR: Could not initialize Rx object \""
@@ -225,20 +212,7 @@ bool TrxHandler::initialize(void)
       cleanup();
       return false;
     }
-    /*
-    if (tx_type == "NetTrxAdapter")
-    {
-      NetTrxAdapter *adapter = NetTrxAdapter::instance(cfg, tx_name);
-      if (adapter != 0)
-      {
-      	tx = adapter->tx();
-      }
-    }
-    else
-    */
-    {
-      tx = TxFactory::createNamedTx(cfg, tx_name);
-    }
+    tx = TxFactory::createNamedTx(cfg, tx_name);
     if ((tx == 0) || !tx->initialize())
     {
       cerr << "*** ERROR: Could not initialize Tx object \""

@@ -122,7 +122,7 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
       	      	     const string& port_str)
   : server(0), con(0), recv_cnt(0), recv_exp(0), rx(rx), tx(tx), fifo(0),
     cfg(cfg), name(name), heartbeat_timer(0), audio_enc(0), audio_dec(0),
-    state(STATE_DISC)
+    state(STATE_DISC), mute_tx_timer(0), tx_muted(false)
 {
   heartbeat_timer = new Timer(10000);
   heartbeat_timer->setEnable(false);
@@ -139,6 +139,7 @@ NetUplink::~NetUplink(void)
   //delete sigc_sink;
   delete server;
   delete heartbeat_timer;
+  delete mute_tx_timer;
 } /* NetUplink::~NetUplink */
 
 
@@ -152,7 +153,16 @@ bool NetUplink::initialize(void)
     return false;
   }
   
-  cfg.getValue(name, "AUTH_KEY", auth_key);
+  cfg.getValue(name, "AUTH_KEY", auth_key, true);
+  
+  int mute_tx_on_rx = -1;
+  cfg.getValue(name, "MUTE_TX_ON_RX", mute_tx_on_rx, true);
+  if (mute_tx_on_rx >= 0)
+  {
+    mute_tx_timer = new Timer(mute_tx_on_rx);
+    mute_tx_timer->setEnable(false);
+    mute_tx_timer->expired.connect(slot(*this, &NetUplink::unmuteTx));
+  }
   
   server = new TcpServer(listen_port);
   server->clientConnected.connect(slot(*this, &NetUplink::clientConnected));
@@ -497,7 +507,7 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgAudio::TYPE:
     {
       //cout << "NetUplink [MsgAudio]\n";
-      if (audio_dec != 0)
+      if (!tx_muted && (audio_dec != 0))
       {
         MsgAudio *audio_msg = reinterpret_cast<MsgAudio*>(msg);
         audio_dec->writeEncodedSamples(audio_msg->buf(), audio_msg->size());
@@ -547,6 +557,19 @@ void NetUplink::sendMsg(Msg *msg)
 
 void NetUplink::squelchOpen(bool is_open)
 {
+  if (mute_tx_timer != 0)
+  {
+    if (is_open)
+    {
+      cout << "### Muting TX\n";
+      tx_muted = true;
+    }
+    else
+    {
+      mute_tx_timer->setEnable(true);
+    }
+  }
+  
   MsgSquelch *msg = new MsgSquelch(is_open, rx->signalStrength(),
       	      	      	      	   rx->sqlRxId());
   sendMsg(msg);
@@ -629,6 +652,14 @@ void NetUplink::heartbeat(Timer *t)
   t->reset();
   
 } /* NetTrxTcpClient::heartbeat */
+
+
+void NetUplink::unmuteTx(Timer *t)
+{
+  mute_tx_timer->setEnable(false);
+  cout << "### Unmuting TX\n";
+  tx_muted = false;
+} /* NetUplink::unmuteTx */
 
 
 
