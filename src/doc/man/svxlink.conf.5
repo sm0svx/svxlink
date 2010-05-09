@@ -989,6 +989,19 @@ encoding/decoding process. In most cases, perceptual enhancement brings the
 sound further from the original objectively (e.g. considering only SNR), but in
 the end it still sounds better (subjective improvement).
 .
+.SS Multi Transmitter Section
+.
+A multi transmitter section is used if one wants to transmit on multiple
+transmitters simulaneously. The name of the section can be anything. Just
+point it out from another transmitter specification like the TX variable in
+a Logic core configuration.
+.TP
+.B TYPE
+Always "Multi" for a multi transmitter section.
+.TP
+.B TRANSMITTERS
+A comma separated list of transmitters.
+.
 .SS Module Section
 .
 A module section contain the configuration for a specific module. It have some general
