@@ -120,6 +120,10 @@
   LOGIC2 configuration variables have been replaced with one configuration
   variable called CONNECT_LOGICS.
 
+* New config variable MUTE_TX_ON_RX for a NetUplink in RemoteTrx. This
+  will stop the transmitter from transmitting if the squelch is open
+  on the receiver.
+
 
 
  0.11.0 -- 26 Apr 2009

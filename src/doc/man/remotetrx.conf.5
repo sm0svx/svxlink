@@ -152,6 +152,13 @@ If no key is specified, all logins will be unauthenticated. A good
 authentication key should be 20 characters long.
 The key will never be transmitted over the network. A HMAC-SHA1
 challenge-response procedure will be used for authentication.
+.TP
+.B MUTE_TX_ON_RX
+If set to a value >= 0, will stop the transmitter from transmitting when the
+squelch is open. The value represents a delay, in milliseconds, after the
+squelch has closed, that the transmitter will be muted. For example, if set
+to 1000, the transmitter will be muted one second after the squelch has closed.
+The default is not to mute the transmitter when the squelch is open.
 .
 .SS Trx uplink section
 .
