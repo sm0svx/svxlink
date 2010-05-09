@@ -212,6 +212,7 @@ class Logic : public SigC::Object
     virtual void audioStreamStateChange(bool is_active, bool is_idle);
     virtual bool getIdleState(void) const;
     virtual void transmitterStateChange(bool is_transmitting);
+    virtual void selcallSequenceDetected(std::string sequence);
     
     void clearPendingSamples(void);
     void enableRgrSoundTimer(bool enable);
@@ -274,6 +275,8 @@ class Logic : public SigC::Object
     VoiceLogger                     *voice_logger;
     uint8_t			    tx_ctcss;
     uint8_t			    tx_ctcss_mask;
+    std::string                     sel5_from;
+    std::string                     sel5_to;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);

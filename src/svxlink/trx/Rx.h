@@ -217,6 +217,14 @@ class Rx : public SigC::Object, public Async::AudioSource
     SigC::Signal2<void, char, int> dtmfDigitDetected;
     
     /**
+     * @brief 	A signal that is emitted when a valid selcall sequence has been
+                detected
+     * @param 	sequence the selcall sequence
+     */
+    SigC::Signal1<void, std::string> selcallSequenceDetected;
+
+
+    /**
      * @brief 	A signal that is emitted when a previously specified tone has
      *	      	been detected for the specified duration
      * @param 	fq The frequency of the tone

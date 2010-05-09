@@ -211,6 +211,13 @@ class NetUplink : public Uplink
      */
     void toneDetected(float tone_fq);
     
+    /**
+     * @brief 	Pass on detected selcall sequence
+     * @param 	sequence received sequence of digits
+    */
+    void selcallSequenceDetected(std::string sequence);
+
+
     void writeEncodedSamples(const void *buf, int size);
     void txTimeout(void);
     void transmitterStateChange(bool is_transmitting);

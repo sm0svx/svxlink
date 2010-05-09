@@ -253,6 +253,15 @@ The voice logger is used to write all received audio to a disk file. Use this
 configuration variable to specify which command to use to activate and
 deactivate the voice logger. For example, if this configuration variable is
 set to 8, 81 will activate the voice logger and 80 will deactivate it.
+.TP
+.B SEL5_MACRO_RANGE
+Define two comma separated values here to map the Sel5 tone call to your macro
+area. E.g. if you have defined:
+SEL5_MACRO_RANGE=03400,03499
+then all incoming Sel5 tone sequences from 03400 to 03499 are mapped to the
+macros section (refer to Macros Section, next chapter). Other sequences but the
+one defined under OPEN_ON_SEL5 are ignored so it can be used to call other
+stations via the repeater without a repeater reaction.
 .
 .SS Simplex Logic Section
 .
@@ -322,6 +331,11 @@ in whole Hz and the minimum tone length is specified in milliseconds. For exampl
 Use this configuration variable if it should be possible to open the repeater with a DTMF
 digit. Only one digit can be specified. DTMF digits pressed when the repeater is down will
 be ignored.
+.TP
+.B OPEN_ON_SEL5
+Use this configuration variable if you want to open your repeater by using a selective tone
+call that is often used in commercial radio networks. Example: OPEN_ON_SEL5=03345 opens your
+repeater only if that sequence has been received. You can use sequence lengths from 4 to 25.
 .TP
 .B OPEN_ON_SQL
 Use this configuration variable if it should be possible to open the repeater just by
@@ -699,6 +713,19 @@ The most common reason for getting reverse twist is a bad de-emphasis filter or
 that none at all is used, like when taking audio directly from the FM
 discriminator. Have a look at the DEEMPHASIS configuration variable before
 starting to modify this configuration variable.
+.TP
+.B SEL5_TYPE
+Define here your selective tone call system. You have the choice of the 
+following types: ZVEI1,ZVEI2,ZVEI3,PZVEI,PDZVEI,DZVEI,CCITT,EEA,CCIR1,CCIR2,
+NATEL,EURO,VDEW,AUTO-A,MODAT,PCCIR and EIA. Only one system can be used at
+the same time. Please take into consideration that some Sel5 standards are
+using the same or similar tones so it may have some unwanted effects if
+you define ZVEI1 for SvxLink and a (e.g.) ZVEI3 sequence is received.
+.TP
+.B SEL5_DEC_TYPE
+At the moment only SEL5_DEC_TYPE=INTERNAL is valid. Maybe we have support for
+some external tone detectors later.
+.TP
 .
 .SS Voter Section
 .

@@ -77,6 +77,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SquelchSigLev.h"
 #include "LocalRx.h"
 #include "multirate_filter_coeff.h"
+#include "Sel5Decoder.h"
 
 
 /****************************************************************************
@@ -479,6 +480,21 @@ bool LocalRx::initialize(void)
       slot(*this, &LocalRx::dtmfDigitDeactivated));
   splitter->addSink(dtmf_dec, true);
   
+   // creates a selective multiple tone detector object
+  string sel5_det_str;
+  if (cfg.getValue(name(), "SEL5_DEC_TYPE", sel5_det_str))
+  {
+    Sel5Decoder *sel5_dec = Sel5Decoder::create(cfg, name());
+    if (sel5_dec == 0 || !sel5_dec->initialize())
+    {
+      cerr << "*** ERROR: Sel5 decoder initialization failed for RX \""
+          << name() << "\"\n";
+      return false;
+    }
+    sel5_dec->sequenceDetected.connect(slot(*this, &LocalRx::sel5Detected));
+    splitter->addSink(sel5_dec, true);
+  }
+
     // Create a new audio splitter to handle tone detectors then add it to
     // the splitter
   tone_dets = new AudioSplitter;
@@ -629,6 +645,12 @@ void LocalRx::reset(void)
  * Private member functions
  *
  ****************************************************************************/
+
+void LocalRx::sel5Detected(std::string sequence)
+{
+  selcallSequenceDetected(sequence);
+} /* LocalRx::sel5Detected */
+
 
 void LocalRx::dtmfDigitActivated(char digit)
 {

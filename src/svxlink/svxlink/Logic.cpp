@@ -315,6 +315,15 @@ bool Logic::initialize(void)
     }
   }
   
+  string sel5_macros;
+  if (cfg().getValue(name(), "SEL5_MACRO_RANGE", sel5_macros))
+  {
+    size_t comma = sel5_macros.find(",");
+    sel5_from = sel5_macros.substr(0, int(comma));
+    sel5_to = sel5_macros.substr(int(comma) + 1, sel5_macros.length());
+    cout << "Sel5 macro range from " << sel5_from << " to " << sel5_to << endl;
+  }
+
   if (cfg().getValue(name(), "TX_CTCSS", value))
   {
     string::iterator comma;
@@ -381,6 +390,8 @@ bool Logic::initialize(void)
   }
   rx().squelchOpen.connect(slot(*this, &Logic::squelchOpen));
   rx().dtmfDigitDetected.connect(slot(*this, &Logic::dtmfDigitDetectedP));
+  rx().selcallSequenceDetected.connect(
+	slot(*this, &Logic::selcallSequenceDetected));
   rx().mute(false);
   prev_rx_src = m_rx;
   
@@ -803,6 +814,20 @@ void Logic::dtmfDigitDetected(char digit, int duration)
   }
     
 } /* Logic::dtmfDigitDetected */
+
+
+void Logic::selcallSequenceDetected(std::string sequence)
+{
+  if ((sequence.compare(sel5_from) >= 0) && (sequence.compare(sel5_to) <= 0))
+  {
+    string s = "D" + sequence + "#";
+    processMacroCmd(s);
+  }
+  else
+  {
+    cout << "Sel5 sequence \"" << sequence << "\" out of defined range\n";
+  }
+} /* Logic::selcallSequenceDetected */
 
 
 void Logic::disconnectAllLogics(void)

@@ -173,7 +173,8 @@ bool NetUplink::initialize(void)
   rx->squelchOpen.connect(slot(*this, &NetUplink::squelchOpen));
   rx->dtmfDigitDetected.connect(slot(*this, &NetUplink::dtmfDigitDetected));
   rx->toneDetected.connect(slot(*this, &NetUplink::toneDetected));
-  
+  rx->selcallSequenceDetected.connect(
+      slot(*this, &NetUplink::selcallSequenceDetected));
   
   fifo = new AudioFifo(16000);
 
@@ -590,6 +591,14 @@ void NetUplink::toneDetected(float tone_fq)
   MsgTone *msg = new MsgTone(tone_fq);
   sendMsg(msg);
 } /* NetUplink::toneDetected */
+
+
+void NetUplink::selcallSequenceDetected(std::string sequence)
+{
+  // cout "Sel5 sequence detected: " << sequence << endl;
+  MsgSel5 *msg = new MsgSel5(sequence);
+  sendMsg(msg);
+} /* NetUplink::selcallSequenceDetected */
 
 
 void NetUplink::writeEncodedSamples(const void *buf, int size)

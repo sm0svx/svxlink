@@ -159,6 +159,12 @@ class RepeaterLogic : public Logic
      */
     virtual void dtmfDigitDetected(char digit, int duration);
 
+    /**
+     * @brief 	Called when a valid selcall sequence has been detected
+     * @param 	sequence The detected sequence
+     */
+    virtual void selcallSequenceDetected(std::string sequence);
+
 
   protected:
     virtual void allMsgsWritten(void);
@@ -180,6 +186,7 @@ class RepeaterLogic : public Logic
     struct timeval  rpt_close_timestamp;
     int		    open_on_sql_after_rpt_close;
     char      	    open_on_dtmf;
+    std::string     open_on_sel5;
     bool      	    activate_on_sql_close;
     bool            no_repeat;
     Async::Timer    *open_on_sql_timer;
