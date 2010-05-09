@@ -561,7 +561,6 @@ void NetUplink::squelchOpen(bool is_open)
   {
     if (is_open)
     {
-      cout << "### Muting TX\n";
       tx_muted = true;
     }
     else
@@ -657,7 +656,6 @@ void NetUplink::heartbeat(Timer *t)
 void NetUplink::unmuteTx(Timer *t)
 {
   mute_tx_timer->setEnable(false);
-  cout << "### Unmuting TX\n";
   tx_muted = false;
 } /* NetUplink::unmuteTx */
 
