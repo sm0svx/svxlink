@@ -123,19 +123,6 @@ class Tx : public SigC::Object, public Async::AudioSink
     } TxCtrlMode;
     
     /**
-     * @brief 	Create the named transmitter object
-     * @param 	cfg   The configuration object to use
-     * @param 	name  The name of the transmitter configuration section
-     * @return	Returns a transmitter object of the specified type on success.
-     *          On failure, 0 is returned.
-     *
-     * This static function is used to create a new transmitter of a certain
-     * type. The type is read from the configuration object "cfg" in the
-     * configuration section given by parameter "name".
-     */
-    static Tx *create(Async::Config& cfg, const std::string& name);
-    
-    /**
      * @brief 	Default constuctor
      */
     Tx(void) {}
@@ -197,6 +184,26 @@ class Tx : public SigC::Object, public Async::AudioSink
     SigC::Signal1<void, bool> transmitterStateChange;
     
 };  /* class Tx */
+
+
+class TxFactory
+{
+  public:
+    static Tx *createNamedTx(Async::Config& cfg, const std::string& name);
+
+    TxFactory(const std::string &name);
+    
+    virtual ~TxFactory(void);
+    
+  protected:
+    virtual Tx *createTx(Async::Config& cfg, const std::string& name) = 0;
+  
+  private:
+    static std::map<std::string, TxFactory*> tx_factories;
+    
+    std::string m_name;
+
+};  /* class TxFactory */
 
 
 //} /* namespace */

@@ -189,6 +189,7 @@ bool TrxHandler::initialize(void)
       cleanup();
       return false;
     }
+    /*
     if (rx_type == "NetTrxAdapter")
     {
       NetTrxAdapter *adapter = NetTrxAdapter::instance(cfg, rx_name);
@@ -198,6 +199,7 @@ bool TrxHandler::initialize(void)
       }
     }
     else
+    */
     {
       rx = RxFactory::createNamedRx(cfg, rx_name);
     }
@@ -223,6 +225,7 @@ bool TrxHandler::initialize(void)
       cleanup();
       return false;
     }
+    /*
     if (tx_type == "NetTrxAdapter")
     {
       NetTrxAdapter *adapter = NetTrxAdapter::instance(cfg, tx_name);
@@ -232,8 +235,9 @@ bool TrxHandler::initialize(void)
       }
     }
     else
+    */
     {
-      tx = Tx::create(cfg, tx_name);
+      tx = TxFactory::createNamedTx(cfg, tx_name);
     }
     if ((tx == 0) || !tx->initialize())
     {

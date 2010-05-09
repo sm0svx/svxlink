@@ -506,7 +506,7 @@ bool Logic::initialize(void)
   prev_tx_src = tx_audio_mixer;
   
     // Create the TX object
-  m_tx = Tx::create(cfg(), tx_name);
+  m_tx = TxFactory::createNamedTx(cfg(), tx_name);
   if ((m_tx == 0) || !tx().initialize())
   {
     delete m_tx;

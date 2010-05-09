@@ -62,6 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncFdWatch.h>
 #include <AsyncAudioIO.h>
 #include <Rx.h>
+#include <Tx.h>
 
 #include <version/REMOTE_TRX.h>
 
@@ -103,10 +104,10 @@ using namespace SigC;
  *
  ****************************************************************************/
 
-class NetTrxAdapterFactory : public RxFactory
+class NetRxAdapterFactory : public RxFactory
 {
   public:
-    NetTrxAdapterFactory(void) : RxFactory("NetTrxAdapter") {}
+    NetRxAdapterFactory(void) : RxFactory("NetTrxAdapter") {}
     
   protected:
     Rx *createRx(Config &cfg, const string& name)
@@ -118,7 +119,25 @@ class NetTrxAdapterFactory : public RxFactory
       }
       return adapter->rx();
     }
-}; /* class TrxAdapterFactory */
+}; /* class NetRxAdapterFactory */
+
+
+class NetTxAdapterFactory : public TxFactory
+{
+  public:
+    NetTxAdapterFactory(void) : TxFactory("NetTrxAdapter") {}
+    
+  protected:
+    Tx *createTx(Config &cfg, const string& name)
+    {
+      NetTrxAdapter *adapter = NetTrxAdapter::instance(cfg, name);
+      if (adapter == 0)
+      {
+      	return 0;
+      }
+      return adapter->tx();
+    }
+}; /* class NetTxAdapterFactory */
 
 
 
@@ -473,7 +492,8 @@ int main(int argc, char **argv)
     stdin_watch->activity.connect(slot(&stdinHandler));
   }
   
-  NetTrxAdapterFactory net_trx_adapter_factory;
+  NetRxAdapterFactory net_rx_adapter_factory;
+  NetTxAdapterFactory net_tx_adapter_factory;
 
   TrxHandler trx_handler(cfg);
   if (trx_handler.initialize())
