@@ -249,22 +249,22 @@ void AudioIO::setSampleRate(int rate)
 } /* AudioIO::setSampleRate */
 
 
-int AudioIO::setBlocksize(int size)
+void AudioIO::setBlocksize(int size)
 {
-  return AudioDevice::setBlocksize(size);
+  AudioDevice::setBlocksize(size);
 } /* AudioIO::setBlocksize */
 
 
 int AudioIO::blocksize(void)
 {
-  return AudioDevice::blocksize();
+  return audio_dev->blocksize();
 } /* AudioIO::blocksize */
 
 
-int AudioIO::setBufferCount(int count)
+void AudioIO::setBlockCount(int count)
 {
-  return AudioDevice::setBufferCount(count);
-} /* AudioIO::setBufferCount */
+  AudioDevice::setBlockCount(count);
+} /* AudioIO::setBlockCount */
 
 
 void AudioIO::setChannels(int channels)
@@ -280,6 +280,11 @@ AudioIO::AudioIO(const string& dev_name, int channel)
     m_channel(channel), input_valve(0), input_fifo(0), audio_reader(0)
 {
   audio_dev = AudioDevice::registerAudioIO(dev_name, this);
+  if (audio_dev == 0)
+  {
+    return;
+  }
+  
   sample_rate = audio_dev->sampleRate();
   
   input_valve = new AudioValve;
@@ -287,8 +292,7 @@ AudioIO::AudioIO(const string& dev_name, int channel)
   AudioSink::setHandler(input_valve);
   AudioSource *prev_src = input_valve;
   
-  input_fifo = new InputFifo(AudioDevice::blocksize() * 2, audio_dev);
-  input_fifo->setPrebufSamples(AudioDevice::blocksize() * 2);
+  input_fifo = new InputFifo(1, audio_dev);
   input_fifo->setOverwrite(false);
   prev_src->registerSink(input_fifo, true);
   prev_src = input_fifo;
@@ -319,6 +323,11 @@ bool AudioIO::isFullDuplexCapable(void)
 
 bool AudioIO::open(Mode mode)
 {
+  if (audio_dev == 0)
+  {
+    return false;
+  }
+  
   if (mode == io_mode)
   {
     return true;
@@ -336,6 +345,8 @@ bool AudioIO::open(Mode mode)
   if (open_ok)
   {
     io_mode = mode;
+    input_fifo->setSize(audio_dev->blocksize() * 2 + 1);
+    input_fifo->setPrebufSamples(audio_dev->blocksize() * 2 + 1);
   }
   
   input_valve->setOpen(true);

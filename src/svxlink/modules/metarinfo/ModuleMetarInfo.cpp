@@ -64,7 +64,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "ModuleMetarInfo.h"
-
+#include "common.h"
 
 
 /****************************************************************************
@@ -76,6 +76,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 using namespace std;
 using namespace Async;
 using namespace SigC;
+using namespace SvxLink;
 
 
 
@@ -1954,49 +1955,6 @@ void ModuleMetarInfo::say(stringstream &tmp)
    processEvent(tmp.str());
    tmp.str("");
 } /* say */
-
-
-int ModuleMetarInfo::splitStr(StrList& L, const string& seq,
-      const string& delims)
-{
-  L.clear();
-
-  string str;
-  string::size_type pos = 0;
-  string::size_type len = seq.size();
-  while (pos < len)
-  {
-      // Init/clear the token buffer
-    str = "";
-
-      // remove any delimiters including optional (white)spaces
-    while ((delims.find(seq[pos]) != string::npos) && (pos < len))
-    {
-      pos++;
-    }
-
-      // leave if @eos
-    if (pos == len)
-    {
-      return L.size();
-    }
-
-      // Save token data
-    while ((delims.find(seq[pos]) == string::npos) && (pos < len))
-    {
-      str += seq[pos++];
-    }
-
-      // put valid str buffer into the supplied list
-    if (!str.empty())
-    {
-      L.push_back(str);
-    }
-  }
-
-  return L.size();
-
-} /* ModuleMetarInfo::splitStr */
 
 
 // special split function

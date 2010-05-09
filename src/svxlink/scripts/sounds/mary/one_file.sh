@@ -9,5 +9,5 @@ file=$1
 text=${2:-$(basename $file)}
 basedir=$(cd $(dirname $0); pwd)
 
-echo "$text" > $file.txt && ruby $basedir/mary_svxlink_sounds.rb $file.txt && aplay $file.wav
+echo "$text" > $file.txt && ruby $basedir/mary4_svxlink_sounds.rb $file.txt && aplay $file.wav
 

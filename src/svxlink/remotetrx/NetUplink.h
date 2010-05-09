@@ -181,6 +181,8 @@ class NetUplink : public Uplink
     State                   state;
     std::string             auth_key;
     unsigned char           auth_challenge[NetTrxMsg::MsgAuthChallenge::CHALLENGE_LEN];
+    Async::Timer	    *mute_tx_timer;
+    bool		    tx_muted;
     
     NetUplink(const NetUplink&);
     NetUplink& operator=(const NetUplink&);
@@ -209,11 +211,19 @@ class NetUplink : public Uplink
      */
     void toneDetected(float tone_fq);
     
+    /**
+     * @brief 	Pass on detected selcall sequence
+     * @param 	sequence received sequence of digits
+    */
+    void selcallSequenceDetected(std::string sequence);
+
+
     void writeEncodedSamples(const void *buf, int size);
     void txTimeout(void);
     void transmitterStateChange(bool is_transmitting);
     void allEncodedSamplesFlushed(void);
     void heartbeat(Async::Timer *t);
+    void unmuteTx(Async::Timer *t);
 
 };  /* class NetUplink */
 

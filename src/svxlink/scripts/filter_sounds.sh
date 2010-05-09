@@ -79,7 +79,7 @@ if [ ! -r "${SRC_DIR}/filter_sounds.cfg" ]; then
   echo "*** ERROR: Configuration file ${SRC_DIR}/filter_sounds.cfg is missing"
   print_usage_and_exit
 fi
-source "${SRC_DIR}/filter_sounds.cfg"
+. "${SRC_DIR}/filter_sounds.cfg"
 
 # Check if the SUBDIRS config variable is set
 if [ -z "$SUBDIRS" ]; then

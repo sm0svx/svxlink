@@ -116,6 +116,19 @@
   this: 10=412345H#. When macro 10 is activated the DTMF sequence 12345#
   will be transmitted.
 
+* Now possible to link more than one logic core together. The LOGIC1 and
+  LOGIC2 configuration variables have been replaced with one configuration
+  variable called CONNECT_LOGICS.
+
+* New config variable MUTE_TX_ON_RX for a NetUplink in RemoteTrx. This
+  will stop the transmitter from transmitting if the squelch is open
+  on the receiver.
+
+* Support for selcall activated functions added. New config variables:
+  Logic/SEL5_MACRO_RANGE, RepeaterLogic/OPEN_ON_SEL5,
+  LocalRx/SEL5_TYPE and LocalRx/SEL5_DEC_TYPE. Have a look in the
+  svxlink.conf (5) manual page for more details.
+
 
 
  0.11.0 -- 26 Apr 2009

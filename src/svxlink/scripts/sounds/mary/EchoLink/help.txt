@@ -10,5 +10,6 @@ Sub-commands are:
 4,  Reconnect to the last disconnected station.
 50, De-activate listen only.
 51, Activate listen only.
+6 star, Connect by callsign feature
 
 To exit the module, press the number sign when not connected.

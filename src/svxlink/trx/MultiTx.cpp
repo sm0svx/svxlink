@@ -155,7 +155,7 @@ bool MultiTx::initialize(void)
     if (!tx_name.empty())
     {
       cout << "Adding transmitter: " << tx_name << endl;
-      Tx *tx = Tx::create(cfg, tx_name);
+      Tx *tx = TxFactory::createNamedTx(cfg, tx_name);
       if ((tx == 0) || !tx->initialize())
       {
       	// FIXME: Cleanup

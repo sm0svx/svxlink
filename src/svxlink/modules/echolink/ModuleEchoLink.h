@@ -185,7 +185,6 @@ class ModuleEchoLink : public Module
     Async::AudioSplitter  *splitter;
     Async::AudioValve 	  *listen_only_valve;
     Async::AudioSelector  *selector;
-    LocationInfo	  *tinfo;
 
     void moduleCleanup(void);
     void activateInit(void);

@@ -8,8 +8,7 @@ Implements a FIFO (with some extra functionality) for storing samples.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2007  Tobias Blomberg / SM0SVX
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2009  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -133,6 +132,19 @@ AudioFifo::~AudioFifo(void)
 {
   delete [] fifo;
 } /* ~AudioFifo */
+
+
+void AudioFifo::setSize(unsigned new_size)
+{
+  assert(fifo_size > 0);
+  if (new_size != fifo_size)
+  {
+    delete [] fifo;
+    fifo_size = new_size;
+    fifo = new float[fifo_size];
+  }
+  clear();
+} /* AudioFifo::setSize */
 
 
 unsigned AudioFifo::samplesInFifo(bool ignore_prebuf) const

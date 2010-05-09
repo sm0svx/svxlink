@@ -81,6 +81,44 @@ using namespace Async;
  *
  ****************************************************************************/
 
+class LocalTxFactory : public TxFactory
+{
+  public:
+    LocalTxFactory(void) : TxFactory("Local") {}
+    
+  protected:
+    Tx *createTx(Config &cfg, const string& name)
+    {
+      return new LocalTx(cfg, name);
+    }
+}; /* class LocalTxFactory */
+
+
+class NetTxFactory : public TxFactory
+{
+  public:
+    NetTxFactory(void) : TxFactory("Net") {}
+    
+  protected:
+    Tx *createTx(Config &cfg, const string& name)
+    {
+      return new NetTx(cfg, name);
+    }
+}; /* class NetTxFactory */
+
+
+class MultiTxFactory : public TxFactory
+{
+  public:
+    MultiTxFactory(void) : TxFactory("Multi") {}
+    
+  protected:
+    Tx *createTx(Config &cfg, const string& name)
+    {
+      return new MultiTx(cfg, name);
+    }
+}; /* class MultiTxFactory */
+
 
 
 /****************************************************************************
@@ -106,6 +144,8 @@ using namespace Async;
  *
  ****************************************************************************/
 
+map<string, TxFactory*> TxFactory::tx_factories;
+
 
 
 /****************************************************************************
@@ -114,9 +154,28 @@ using namespace Async;
  *
  ****************************************************************************/
 
-Tx *Tx::create(Config& cfg, const string& name)
+TxFactory::TxFactory(const string &name)
+  : m_name(name)
 {
-  Tx *tx = 0;
+  tx_factories[name] = this;
+} /* TxFactory::TxFactory */
+
+
+TxFactory::~TxFactory(void)
+{
+  std::map<std::string, TxFactory*>::iterator it;
+  it = tx_factories.find(m_name);
+  assert(it != tx_factories.end());
+  tx_factories.erase(it);
+} /* TxFactory::~TxFactory */
+
+
+Tx *TxFactory::createNamedTx(Config& cfg, const string& name)
+{
+  LocalTxFactory local_tx_factory;
+  NetTxFactory net_tx_factory;
+  MultiTxFactory multi_tx_factory;
+  
   string tx_type;
   if (!cfg.getValue(name, "TYPE", tx_type))
   {
@@ -124,28 +183,23 @@ Tx *Tx::create(Config& cfg, const string& name)
     return 0;
   }
   
-  if (tx_type == "Local")
-  {
-    tx = new LocalTx(cfg, name);
-  }
-  else if (tx_type == "Net")
-  {
-    tx = new NetTx(cfg, name);
-  }
-  else if (tx_type == "Multi")
-  {
-    tx = new MultiTx(cfg, name);
-  }
-  else
+  map<string, TxFactory*>::iterator it;
+  it = tx_factories.find(tx_type);
+  if (it == tx_factories.end())
   {
     cerr << "*** ERROR: Unknown TX type \"" << tx_type << "\". Legal values "
-      	 << "are: Local, Net or Multi\n";
+         << "are: ";
+    for (it=tx_factories.begin(); it!=tx_factories.end(); ++it)
+    {
+      cerr << "\"" << (*it).first << "\" ";
+    }
+    cerr << endl;
     return 0;
   }
   
-  return tx;
-  
-} /* Tx::create */
+  return (*it).second->createTx(cfg, name);
+
+} /* TxFactory::createNamedTx */
 
 
 

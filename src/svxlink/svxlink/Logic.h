@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2010  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <list>
 #include <map>
+#include <vector>
 #include <stdint.h>
 
 #include <sigc++/sigc++.h>
@@ -142,9 +143,9 @@ class PhoneCmd;
 class Logic : public SigC::Object
 {
   public:
-    static void connectLogics(const std::string& l1, const std::string& l2,
+    static bool connectLogics(const std::vector<std::string> &link_list,
       	    int timeout=0);
-    static void disconnectLogics(const std::string& l1, const std::string& l2);
+    static bool disconnectLogics(const std::vector<std::string> &link_list);
     static bool logicsAreConnected(const std::string& l1,
       	    const std::string& l2);
 
@@ -215,6 +216,7 @@ class Logic : public SigC::Object
     virtual void audioStreamStateChange(bool is_active, bool is_idle);
     virtual bool getIdleState(void) const;
     virtual void transmitterStateChange(bool is_transmitting);
+    virtual void selcallSequenceDetected(std::string sequence);
     
     void clearPendingSamples(void);
     void enableRgrSoundTimer(bool enable);
@@ -277,6 +279,8 @@ class Logic : public SigC::Object
     VoiceLogger                     *voice_logger;
     uint8_t			    tx_ctcss;
     uint8_t			    tx_ctcss_mask;
+    std::string                     sel5_from;
+    std::string                     sel5_to;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);

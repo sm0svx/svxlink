@@ -183,7 +183,7 @@ bool TrxUplink::initialize(void)
     prev_src = 0;
   }
   
-  uplink_tx = Tx::create(cfg, uplink_tx_name);
+  uplink_tx = TxFactory::createNamedTx(cfg, uplink_tx_name);
   if ((uplink_tx == 0) || !uplink_tx->initialize())
   {
     cerr << "*** ERROR: Could not initialize uplink transmitter\n";

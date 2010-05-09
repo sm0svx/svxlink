@@ -1,5 +1,5 @@
-This module is used to send voice messages to other ham radio operators.
+The voice mail module is used to send voice messages to other ham radio operators.
 
-You need to ask your sysop for a personal login I D and password before starting to use this service.
+You need to ask your sysop for a personal loggin I D, and password, before starting to use this service.
 
-Context menus will guide you through playing and recording messages. Abort an operation by sending an empty command.
+Context menus will guide you through playing and recording messages. Abort an operation by sending a number sign.

@@ -240,9 +240,6 @@ proc handle_vhfdx {msg_file} {
 	{^Sporadic-E opening on (\d+c?m)\. Best estimated MUF (\d+) MHz above (\w\w\d\d)$} \
 	$subject -> band muf locator]
   if {$match} {
-    #puts "band=$band"
-    #puts "muf=$muf"
-    #puts "locator=$locator"
     play_alert_sound
     for {set i 0} {$i < 2} {set i [expr $i + 1]} {
       playMsg sporadic_e_opening
@@ -261,12 +258,33 @@ proc handle_vhfdx {msg_file} {
     return
   }
 
+  # Example: Possible Sporadic-E from JO89 on 6m. Try towards LQ28 (13�)
+  set match [regexp \
+	{^Possible Sporadic-E from (\w\w\d\d) on (\d+c?m)\. Try towards (\w\w\d\d) (\d+.)$} \
+	$subject -> from_loc band to_loc direction]
+  if {$match} {
+    play_alert_sound
+    for {set i 0} {$i < 2} {set i [expr $i + 1]} {
+      playMsg possible_sporadic_e_opening
+      say_band $band
+      playSilence 100
+      playMsg between
+      playSilence 200
+      say_locator $from_loc
+      playSilence 200
+      playMsg and
+      playSilence 200
+      say_locator $to_loc
+      playSilence 1000
+    }
+    return
+  }
+
   # Example: Multi-hop sporadic-E opening on 6m.
   set match [regexp \
 	{^Multi-hop sporadic-E opening on (\d+c?m)\.$} \
 	$subject -> band]
   if {$match} {
-    #puts "band=$band"
     play_alert_sound
     for {set i 0} {$i < 2} {set i [expr $i + 1]} {
       playMsg multi_hop
@@ -282,12 +300,6 @@ proc handle_vhfdx {msg_file} {
 	{^Tropo opening on (\d+c?m)\. up to (\d+) km. between (.*?)\((\w\w\d\d(?:\w\w)?)\) and (.*?)\((\w\w\d\d(?:\w\w)?)\)$} \
 	$subject -> band range call1 loc1 call2 loc2]
   if {$match} {
-    #puts "band=$band"
-    #puts "range=$range"
-    #puts "call1=$call1"
-    #puts "loc1=$loc1"
-    #puts "call2=$call2"
-    #puts "loc2=$loc2"
     play_alert_sound
     for {set i 0} {$i < 2} {set i [expr $i + 1]} {
       playMsg tropo_opening
@@ -304,15 +316,11 @@ proc handle_vhfdx {msg_file} {
     return
   }
 
-  # Aurora active on 6m. down to 57� of Lat. / SM7GVF(JO77GA)
+  # Example: Aurora active on 6m. down to 57� of Lat. / SM7GVF(JO77GA)
   set match [regexp \
 	{^Aurora active on (\d+c?m)\. down to (\d+).* of Lat. / (.*?)\((\w\w\d\d\w\w)\)$} \
 	$subject -> band lat call loc]
   if {$match} {
-    #puts "band=$band"
-    #puts "lat=$lat"
-    #puts "call=$call"
-    #puts "loc=$loc"
     play_alert_sound
     for {set i 0} {$i < 2} {set i [expr $i + 1]} {
       playMsg aurora_opening
@@ -324,6 +332,13 @@ proc handle_vhfdx {msg_file} {
       playSilence 1000
     }
     return
+  }
+
+  # DX-Sherlock warnings configuration change
+  # DX-Sherlock new password
+  if {($subject == "DX-Sherlock warnings configuration change") ||
+      ($subject == "DX-Sherlock new password")} {
+    return;
   }
 
   printInfo "*** WARNING: Unknown VHFDX alert encountered in $msg_file: $subject"

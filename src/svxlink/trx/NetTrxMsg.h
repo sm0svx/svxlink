@@ -171,7 +171,7 @@ class MsgProtoVer : public Msg
   public:
     static const unsigned TYPE  = 0;
     static const uint16_t MAJOR = 2;
-    static const uint16_t MINOR = 1;
+    static const uint16_t MINOR = 2;
     MsgProtoVer(void)
       : Msg(TYPE, sizeof(MsgProtoVer)), m_major(MAJOR),
         m_minor(MINOR) {}
@@ -554,6 +554,23 @@ class MsgTone : public Msg
 }; /* MsgTone */
 
 
+class MsgSel5 : public Msg
+{
+  public:
+    static const unsigned TYPE = 253;
+    static const int MAX_DIGITS = 25;
+    MsgSel5(std::string digits)
+      : Msg(TYPE, sizeof(MsgSel5))
+    {
+      strncpy(m_digits, digits.c_str(), MAX_DIGITS);
+      m_digits[MAX_DIGITS] = 0;
+      setSize(size() - MAX_DIGITS + strlen(m_digits));
+    }
+    std::string digits(void) const { return m_digits; }
+
+  private:
+    char m_digits[MAX_DIGITS + 1];
+}; /* MsgSel5 */
 
 
 

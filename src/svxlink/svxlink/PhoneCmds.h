@@ -193,7 +193,10 @@ class PhoneCmd : public Command
          // pickup phonelogic
          for( std::vector< AnalogPhoneLogic * >::iterator phone_it = phones.begin();
             phone_it != phones.end(); phone_it++ ) (*phone_it)->pickupRemote("by remote");
-         Logic::connectLogics(phonelogic, rflogic, timeout);
+	 std::vector<std::string> logics;
+	 logics.push_back(phonelogic);
+	 logics.push_back(rflogic);
+         Logic::connectLogics(logics, timeout);
          //logic->processEvent("incoming_phonecall");
 	  }
     } /* connectPhoneline */
@@ -212,7 +215,10 @@ class PhoneCmd : public Command
          // pickup phonelogic
        //  for( std::vector< AnalogPhoneLogic * >::iterator phone_it = phones.begin();
         //    phone_it != phones.end(); phone_it++ ) (*phone_it)->hangupRemote("by_remote");
-         Logic::disconnectLogics(phonelogic, rflogic);
+	 std::vector<std::string> logics;
+	 logics.push_back(phonelogic);
+	 logics.push_back(rflogic);
+         Logic::disconnectLogics(logics);
       }
     } /* disconnectPhoneline */
 

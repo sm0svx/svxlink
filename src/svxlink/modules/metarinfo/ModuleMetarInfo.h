@@ -176,8 +176,6 @@ class ModuleMetarInfo : public Module
     void isRwyState(std::string &retval, std::string token);
     int  onDataReceived(Async::TcpClient::TcpConnection *con, void *buf,
               int count);
-    int  splitStr(StrList& L, const std::string& seq,
-                  const std::string& delims);
     int  splitEmptyStr(StrList& L, const std::string& seq);
     bool isWind(std::string &retval, std::string token);
     bool isvalidUTC(std::string token);

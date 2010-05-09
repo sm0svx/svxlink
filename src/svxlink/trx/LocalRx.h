@@ -198,6 +198,7 @@ class LocalRx : public Rx
     int audioRead(float *samples, int count);
     void dtmfDigitActivated(char digit);
     void dtmfDigitDeactivated(char digit, int duration_ms);
+    void sel5Detected(std::string sequence);
     void audioStreamStateChange(bool is_active, bool is_idle);
     void onSquelchOpen(bool is_open);
     SigLevDet *createSigLevDet(const std::string &name, int sample_rate);

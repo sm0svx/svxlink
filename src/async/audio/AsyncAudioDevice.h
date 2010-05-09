@@ -1,14 +1,12 @@
 /**
 @file	 AsyncAudioDevice.h
-@brief   Handle OSS audio devices
+@brief   Base class for handling audio devices
 @author  Tobias Blomberg / SM0SVX
-@date	 2004-03-20
-
-Implements the low level interface to an OSS audio device.
+@date	 2009-07-18
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2009  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -38,11 +36,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <sigc++/sigc++.h>
+#include <stdint.h>
 
 #include <string>
 #include <map>
 #include <list>
-#include <cmath>
 
 
 /****************************************************************************
@@ -112,11 +110,11 @@ class FdWatch;
  ****************************************************************************/
 
 /**
-@brief	A class that implements the low level interface to an OSS audio device
+@brief	Base class for handling audio devices
 @author Tobias Blomberg / SM0SVX
 @date   2004-03-20
 
-This class implements the low level interface to an OSS audio device. This
+This class implements a base class for supporting different audio devices. This
 class is not intended to be used by the end user of the Async library. It is
 used by the Async::AudioIO class, which is the Async API frontend for using
 audio in an application.
@@ -146,7 +144,7 @@ class AudioDevice : public SigC::Object
      * device, it is returns. If there is no AudioDevice object for the
      * given device, a new one is created.
      */
-    static AudioDevice *registerAudioIO(const std::string& dev_name,
+    static AudioDevice *registerAudioIO(const std::string& dev_designator,
       	    AudioIO *audio_io);
     
     /**
@@ -180,22 +178,16 @@ class AudioDevice : public SigC::Object
      * This is a global setting so all sound cards will be affected. Already
      * opened sound cards will not be affected.
      */
-    static int setBlocksize(int size)
+    static void setBlocksize(int size)
     {
-      size = (size <= 0) ? 1 : size * channels * sizeof(int16_t);
-      frag_size_log2 = static_cast<int>(log2(size));
-      return blocksize();
+      block_size_hint = size;
     }
     
     /**
      * @brief 	Find out what the blocksize is set to
      * @return	Returns the currently set blocksize in samples per channel
      */
-    static int blocksize(void)
-    {
-      return (int)std::pow(2.0, (double)frag_size_log2) /
-      	     (channels * sizeof(int16_t));
-    }
+    virtual int blocksize(void) = 0;
     
     /**
      * @brief 	Set the buffer count used when opening audio devices
@@ -210,10 +202,9 @@ class AudioDevice : public SigC::Object
      * This is a global setting so all sound cards will be affected. Already
      * opened sound cards will not be affected.
      */
-    static int setBufferCount(int count)
+    static void setBlockCount(int count)
     {
-      frag_count = (count <=0) ? 0 : count;
-      return frag_count;
+      block_count_hint = (count <= 0) ? 0 : count;
     }
     
     /**
@@ -236,7 +227,7 @@ class AudioDevice : public SigC::Object
      * @return	Returns \em true if the device has full duplex capability
      *	      	or else \em false
      */
-    bool isFullDuplexCapable(void);
+    virtual bool isFullDuplexCapable(void) = 0;
     
     /**
      * @brief 	Open the audio device
@@ -260,12 +251,12 @@ class AudioDevice : public SigC::Object
      * @brief 	Tell the audio device handler that there are audio to be
      *	      	written in the buffer
      */
-    void audioToWriteAvailable(void);
+    virtual void audioToWriteAvailable(void) = 0;
 
     /*
      * @brief	Tell the audio device to flush its buffers
      */
-    void flushSamples(void);
+    virtual void flushSamples(void) = 0;
     
     /**
      * @brief 	Find out how many samples there are in the output buffer
@@ -277,7 +268,7 @@ class AudioDevice : public SigC::Object
      * to find out how long it will take before the output buffer has
      * been flushed.
      */
-    int samplesToWrite(void) const;
+    virtual int samplesToWrite(void) const = 0;
     
     /**
      * @brief 	Return the sample rate
@@ -293,6 +284,13 @@ class AudioDevice : public SigC::Object
     
     
   protected:
+    static int	      	sample_rate;
+    static int	      	block_size_hint;
+    static int	      	block_count_hint;
+    static int	      	channels;
+
+    std::string       	dev_name;
+    
     /**
      * @brief 	Constuctor
      * @param 	dev_name  The name of the device to associate this object with
@@ -302,40 +300,35 @@ class AudioDevice : public SigC::Object
     /**
      * @brief 	Destructor
      */
-    ~AudioDevice(void);
-  
+    virtual ~AudioDevice(void);
+    
+    /**
+     * @brief 	Open the audio device
+     * @param 	mode The mode to open the audio device in (See AudioIO::Mode)
+     * @return	Returns \em true on success or else \em false
+     */
+    virtual bool openDevice(Mode mode) = 0;
+
+    /**
+     * @brief 	Close the audio device
+     */
+    virtual void closeDevice(void) = 0;
+
+    void putBlocks(int16_t *buf, int frame_cnt);
+    int getBlocks(int16_t *buf, int block_cnt);
+    
     
   private:
     static const int  DEFAULT_SAMPLE_RATE = INTERNAL_SAMPLE_RATE;
     static const int  DEFAULT_CHANNELS = 2;
-    static const int  DEFAULT_FRAG_COUNT = 2;
-    static const int  DEFAULT_FRAG_SIZE_LOG2 = 10; // 512 samples
-    static const int  BUF_FRAG_COUNT = 4;
+    static const int  DEFAULT_BLOCK_COUNT_HINT = 4;
+    static const int  DEFAULT_BLOCK_SIZE_HINT = 256; // Samples/channel/block
     
     static std::map<std::string, AudioDevice*>  devices;
-    static int	      	      	      	      	sample_rate;
-    static int	      	      	      	      	frag_size_log2;
-    static int	      	      	      	      	frag_count;
-    static int	      	      	      	      	channels;
     
-    std::string       	dev_name;
+    Mode      	      	current_mode;
     int       	      	use_count;
     std::list<AudioIO*> aios;
-    Mode      	      	current_mode;
-    int       	      	fd;
-    FdWatch	      	*read_watch;
-    FdWatch	      	*write_watch;
-    int16_t      	*read_buf;
-    int       	      	device_caps;
-    bool      	      	use_trigger;
-    //bool		prebuf;
-    float     	      	*samples;
-    int16_t     	*last_frag;
-    bool      	      	use_fillin;
-    
-    void audioReadHandler(FdWatch *watch);
-    void writeSpaceAvailable(FdWatch *watch);
-    void closeDevice(void);
 
 };  /* class AudioDevice */
 
