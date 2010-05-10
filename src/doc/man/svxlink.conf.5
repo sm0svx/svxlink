@@ -306,7 +306,8 @@ can be used when the received audio is directly coupled by hardware wiring to
 the transmitter. What you win by doing this is that there is zero delay on the
 repeated audio. When the audio is routed through SvxLink there is always an
 amount of delay. What you loose by doing this is the audio processing done by
-SvxLink.
+SvxLink (e.g. filtering, DTMF muting, squelch tail elimination) and the
+ability to use remote receivers.
 .TP
 .B IDLE_TIMEOUT
 The number of seconds the repeater should have been idle before turning the transmitter
