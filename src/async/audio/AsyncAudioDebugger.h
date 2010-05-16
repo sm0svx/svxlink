@@ -172,9 +172,15 @@ class AudioDebugger : public AudioSink, public AudioSource
       uint64_t diff_ms = diff.tv_sec * 1000 + diff.tv_usec / 1000;
 
       std::cout << name << "::writeSamples: count=" << count
-                << " ret=" << ret
-                << " sample_rate=" << sample_count * 1000 / diff_ms
-                << std::endl;
+                << " ret=" << ret << " sample_rate=";
+      if (diff_ms > 0)
+      {
+        std::cout << sample_count * 1000 / diff_ms << std::endl;
+      }
+      else
+      {
+        std::cout << "inf\n";
+      }
       return ret;
     }
     
