@@ -260,7 +260,7 @@ proc handle_vhfdx {msg_file} {
 
   # Example: Possible Sporadic-E from JO89 on 6m. Try towards LQ28 (13�)
   set match [regexp \
-	{^Possible Sporadic-E from (\w\w\d\d) on (\d+c?m)\. Try towards (\w\w\d\d) (\d+.)$} \
+	{^Possible Sporadic-E from (\w\w\d\d) on (\d+c?m)\. Try towards (\w\w\d\d) \((\d+).\)$} \
 	$subject -> from_loc band to_loc direction]
   if {$match} {
     play_alert_sound
