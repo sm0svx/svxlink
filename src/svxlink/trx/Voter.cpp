@@ -1,12 +1,12 @@
 /**
 @file	 Voter.cpp
-@brief   This file contains a class that implement a receiver voter
-@author  Tobias Blomberg / SM0SVX
+@brief  This file contains a class that implement a receiver voter
+@author Tobias Blomberg / SM0SVX
 @date	 2005-04-18
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -105,6 +105,8 @@ class SatRx : public AudioSource, public SigC::Object
       : id(id), rx(rx), fifo(0), sql_open(false)
     {
       rx->dtmfDigitDetected.connect(slot(*this, &SatRx::onDtmfDigitDetected));
+      rx->selcallSequenceDetected.connect(
+	      slot(*this, &SatRx::onSelcallSequenceDetected));
       rx->squelchOpen.connect(slot(*this, &SatRx::rxSquelchOpen));
       AudioSource *prev_src = rx;
 
@@ -137,12 +139,19 @@ class SatRx : public AudioSource, public SigC::Object
       valve.setOpen(!do_stop);
       if (!do_stop)
       {
-      	DtmfBuf::iterator it;
-      	for (it=dtmf_buf.begin(); it!=dtmf_buf.end(); ++it)
+      	DtmfBuf::iterator dit;
+      	for (dit=dtmf_buf.begin(); dit!=dtmf_buf.end(); ++dit)
 	{
-	  dtmfDigitDetected((*it).first, (*it).second);
+	  dtmfDigitDetected((*dit).first, (*dit).second);
 	}
 	dtmf_buf.clear();
+	
+      	SelcallBuf::iterator sit;
+      	for (sit=selcall_buf.begin(); sit!=selcall_buf.end(); ++sit)
+	{
+	  selcallSequenceDetected(*sit);
+	}
+	selcall_buf.clear();
       }
     }
     
@@ -157,6 +166,7 @@ class SatRx : public AudioSource, public SigC::Object
         }
 	setSquelchOpen(false);
 	dtmf_buf.clear();
+	selcall_buf.clear();
       }
     }
     
@@ -165,10 +175,12 @@ class SatRx : public AudioSource, public SigC::Object
     {
       fifo.clear();
       dtmf_buf.clear();
+      selcall_buf.clear();
     }
     */
   
     Signal2<void, char, int>  	dtmfDigitDetected;
+    Signal1<void, string>  	selcallSequenceDetected;
     Signal2<void, bool, SatRx*> squelchOpen;
   
   protected:
@@ -180,10 +192,12 @@ class SatRx : public AudioSource, public SigC::Object
   
   private:
     typedef list<pair<char, int> >  DtmfBuf;
+    typedef list<string>  	     SelcallBuf;
     
     AudioFifo 	*fifo;
     AudioValve	valve;
     DtmfBuf   	dtmf_buf;
+    SelcallBuf	selcall_buf;
     bool      	sql_open;
     
     void onDtmfDigitDetected(char digit, int duration)
@@ -195,6 +209,18 @@ class SatRx : public AudioSource, public SigC::Object
       else
       {
       	dtmfDigitDetected(digit, duration);
+      }
+    }
+    
+    void onSelcallSequenceDetected(string sequence)
+    {
+      if (!valve.isOpen())
+      {
+	selcall_buf.push_back(sequence);
+      }
+      else
+      {
+      	selcallSequenceDetected(sequence);
       }
     }
     
@@ -326,7 +352,7 @@ bool Voter::initialize(void)
       SatRx *srx = new SatRx(rxs.size() + 1, rx, buffer_length);
       srx->squelchOpen.connect(slot(*this, &Voter::satSquelchOpen));
       srx->dtmfDigitDetected.connect(dtmfDigitDetected.slot());
-      //Rx *rx = srx->rx;
+      srx->selcallSequenceDetected.connect(selcallSequenceDetected.slot());
       if ((srx == 0) || !rx->initialize())
       {
       	// FIXME: Cleanup
