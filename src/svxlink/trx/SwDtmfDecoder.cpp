@@ -399,7 +399,7 @@ void SwDtmfDecoder::goertzelInit(GoertzelState *s, float freq, float bw, float o
     s->fac = 2.0f * cosf(2.0f * M_PI * freq / INTERNAL_SAMPLE_RATE);
     /* Reset the tone detector state. */
     s->v2 = s->v3 = 0.0f;
-    s->samples_left = s->block_length * (1.0f - offset);
+    s->samples_left = static_cast<int>(s->block_length * (1.0f - offset));
     /* Hamming window */
     for (int i = 0; i < s->block_length; i++)
     {
