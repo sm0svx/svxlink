@@ -176,8 +176,11 @@ void AudioFifo::clear(void)
   
   if (is_flushing)
   {
-    is_flushing = false;
-    if (!was_empty)
+    if (was_empty)
+    {
+      is_flushing = false;
+    }
+    else
     {
       sinkFlushSamples();
     }
