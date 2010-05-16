@@ -210,14 +210,6 @@ class Rx : public SigC::Object, public Async::AudioSource
     SigC::Signal1<void, bool> squelchOpen;
     
     /**
-     * @brief 	A signal that is emitted when an audio block has been received
-     * @param 	samples The buffer where the samples are stored
-     * @param 	count 	The number of samples in the buffer
-     * @return	The number of samples that the associated slot took care of
-     */
-    //SigC::Signal2<int, float *, int> audioReceived;
-    
-    /**
      * @brief 	A signal that is emitted when a DTMF digit has been detected
      * @param 	digit The detected digit (0-9, A-D, *, #)
      * @param 	duration Tone duration in milliseconds
@@ -274,11 +266,7 @@ class RxFactory
     static Rx *createNamedRx(Async::Config& cfg, const std::string& name);
 
     RxFactory(const std::string &name);
-    
     virtual ~RxFactory(void);
-    
-    //const std::string &name(void) const { return m_name; }
-    
     
   protected:
     virtual Rx *createRx(Async::Config& cfg, const std::string& name) = 0;

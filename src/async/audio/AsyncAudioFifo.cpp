@@ -174,13 +174,9 @@ void AudioFifo::clear(void)
   prebuf = (prebuf_samples > 0);
   output_stopped = false;
   
-  if (is_flushing)
+  if (is_flushing && !was_empty)
   {
-    is_flushing = false;
-    if (!was_empty)
-    {
-      sinkFlushSamples();
-    }
+    sinkFlushSamples();
   }
 } /* AudioFifo::clear */
 
