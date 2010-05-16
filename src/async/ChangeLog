@@ -9,6 +9,10 @@
 
 * Added support for the ALSA audio subsystem.
 
+* Bugfix in AudioFifo: The clear method did not work properly. Under some
+  circumstances, allSamplesFlushed was not called which caused problems
+  upstream.
+
 
 
  0.17.0 -- 26 Apr 2009
