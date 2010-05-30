@@ -383,7 +383,8 @@ void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, pollfd *pfd)
   }  
 
   int frames_avail = snd_pcm_avail_update(rec_handle);
-  if (frames_avail < 0)
+  if ((frames_avail < 0) ||
+      ((frames_avail == 0) && (snd_pcm_state(rec_handle) != SND_PCM_STATE_RUNNING)))
   {
     int err = snd_pcm_prepare(rec_handle);
     if (err < 0)
