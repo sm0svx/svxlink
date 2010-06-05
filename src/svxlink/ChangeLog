@@ -129,6 +129,9 @@
   LocalRx/SEL5_TYPE and LocalRx/SEL5_DEC_TYPE. Have a look in the
   svxlink.conf (5) manual page for more details.
 
+* New module SelCallEnc. This module is used to send selective calling
+  sequences out on the frequency upon user request.
+
 
 
  0.11.0 -- 26 Apr 2009
