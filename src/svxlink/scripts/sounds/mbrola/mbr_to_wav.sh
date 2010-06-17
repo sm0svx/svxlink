@@ -1,6 +1,6 @@
 #!/bin/sh
 
-MBRDIR=~/slask/mbrola
+MBRDIR=~/mbrola
 VOICE=$MBRDIR/us1/us1
 
 for file in "$@"; do
