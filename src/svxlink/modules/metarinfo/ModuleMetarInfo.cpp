@@ -685,7 +685,7 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
    bool endflag = false;
    bool nceiling = false;
    float temp_view = 0;
-   unsigned int found;
+   size_t found;
    int metartoken;
 
    char *metarinput = static_cast<char *>(buf);
