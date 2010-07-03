@@ -127,6 +127,17 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
      * @brief 	Destructor
      */
     ~AudioDelayLine(void);
+
+    /**
+     * @brief   Set the fade in/out time when muting and clearing
+     * @param	The time in milliseconds for the fade in/out
+     *
+     * When a mute or clear is issued the audio stream will not abruptly
+     * go to zero. Instead it will fade in and out smoothly to avoid
+     * popping sounds due to discontinueties in the sample stream.
+     * The default is 10 milliseconds. Set to 0 to turn off.
+     */
+    void setFadeTime(int time_ms);
     
     /**
      * @brief 	Mute audio
@@ -196,6 +207,8 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
   protected:
     
   private:    
+    static const int DEFAULT_FADE_TIME = 10; // 10ms default fade time
+
     float *buf;
     int size;
     int ptr;
@@ -203,11 +216,39 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
     bool is_muted;
     int mute_cnt;
     int last_clear;
+    float *fade_gain;
+    int fade_len;
+    int fade_pos;
+    int fade_dir;
     
     AudioDelayLine(const AudioDelayLine&);
     AudioDelayLine& operator=(const AudioDelayLine&);
     void writeRemainingSamples(void);
-    int writeToSink(int count);
+
+    inline float currentFadeGain(void)
+    {
+      if (fade_gain == 0)
+      {
+        return 1.0f;
+      }
+    
+      float gain = fade_gain[fade_pos];
+      fade_pos += fade_dir;
+    
+      if ((fade_dir > 0) && (fade_pos >= fade_len-1))
+      {
+        fade_dir = 0;
+        fade_pos = fade_len-1;
+      }
+      else if ((fade_dir < 0) && (fade_pos <= 0))
+      {
+        fade_dir = 0;
+        fade_pos = 0;
+      }
+    
+      return gain;
+        
+    } /* AudioDelayLine::currentFadeGain  */
 
 };  /* class AudioDelayLine */
 
