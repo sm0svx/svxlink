@@ -13,6 +13,12 @@
   circumstances, allSamplesFlushed was not called which caused problems
   upstream.
 
+* Bugfix in AudioDelayLine: Mute and clear did not do the right thing
+  with the buffer pointer so it didn't behave properly.
+
+* The AudioDelayLine now fade in and out when muting and clearing to
+  avoid creating pops in the audio stream.
+
 
 
  0.17.0 -- 26 Apr 2009
