@@ -189,7 +189,7 @@ endif
 
 
 #
-# makefiles - Create the makefiel structure (softlinks).
+# makefiles - Create the makefile structure (softlinks).
 #
 .PHONY:	makefiles
 makefiles:
