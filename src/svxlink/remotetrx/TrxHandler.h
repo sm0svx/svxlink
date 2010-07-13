@@ -117,7 +117,7 @@ class TrxHandler : public SigC::Object
     /**
      * @brief 	Default constuctor
      */
-    TrxHandler(Async::Config &cfg);
+    TrxHandler(Async::Config &cfg, const std::string &name);
   
     /**
      * @brief 	Destructor
@@ -133,10 +133,11 @@ class TrxHandler : public SigC::Object
   protected:
     
   private:
-    Async::Config &cfg;
-    Uplink    	  *uplink;
-    Rx	      	  *rx;
-    Tx	      	  *tx;
+    Async::Config &m_cfg;
+    std::string	  m_name;
+    Uplink    	  *m_uplink;
+    Rx	      	  *m_rx;
+    Tx	      	  *m_tx;
     
     TrxHandler(const TrxHandler&);
     TrxHandler& operator=(const TrxHandler&);

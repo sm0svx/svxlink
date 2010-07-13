@@ -1,12 +1,12 @@
 /**
-@file	 TrxUplink.cpp
+@file	 RfUplink.cpp
 @brief   Uplink type that communicates to the SvxLink core through a transceiver
 @author  Tobias Blomberg / SM0SVX
 @date	 2008-03-20
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "TrxUplink.h"
+#include "RfUplink.h"
 
 
 
@@ -119,41 +119,41 @@ using namespace Async;
  *
  ****************************************************************************/
 
-TrxUplink::TrxUplink(Config &cfg, const string &name, Rx *rx, Tx *tx)
+RfUplink::RfUplink(Config &cfg, const string &name, Rx *rx, Tx *tx)
   : cfg(cfg), name(name), rx(rx), tx(tx), uplink_tx(0), uplink_rx(0),
     tx_audio_sel(0)
 {
   
-} /* TrxUplink::TrxUplink */
+} /* RfUplink::RfUplink */
 
 
-TrxUplink::~TrxUplink(void)
+RfUplink::~RfUplink(void)
 {
   delete uplink_tx;
   delete tx_audio_sel;
   delete uplink_rx;
-} /* TrxUplink::~TrxUplink */
+} /* RfUplink::~RfUplink */
 
 
-bool TrxUplink::initialize(void)
+bool RfUplink::initialize(void)
 {
   string uplink_tx_name;
-  if (!cfg.getValue(name, "TX", uplink_tx_name))
+  if (!cfg.getValue(name, "UPLINK_TX", uplink_tx_name))
   {
-    cerr << "*** ERROR: Config variable " << name << "/TX not set.\n";
+    cerr << "*** ERROR: Config variable " << name << "/UPLINK_TX not set.\n";
     return false;
   }
 
   string uplink_rx_name;
-  if (!cfg.getValue(name, "RX", uplink_rx_name))
+  if (!cfg.getValue(name, "UPLINK_RX", uplink_rx_name))
   {
-    cerr << "*** ERROR: Config variable " << name << "/RX not set.\n";
+    cerr << "*** ERROR: Config variable " << name << "/UPLINK_RX not set.\n";
     return false;
   }
 
   string value;
   bool mute_rx_on_tx = false;
-  if (cfg.getValue(name, "MUTE_RX_ON_TX", value))
+  if (cfg.getValue(name, "MUTE_UPLINK_RX_ON_TX", value))
   {
     mute_rx_on_tx = atoi(value.c_str()) != 0;
   }
@@ -164,8 +164,8 @@ bool TrxUplink::initialize(void)
     loop_rx_to_tx = atoi(value.c_str()) != 0;
   }
 
-  rx->squelchOpen.connect(slot(*this, &TrxUplink::rxSquelchOpen));
-  rx->dtmfDigitDetected.connect(slot(*this, &TrxUplink::rxDtmfDigitDetected));
+  rx->squelchOpen.connect(slot(*this, &RfUplink::rxSquelchOpen));
+  rx->dtmfDigitDetected.connect(slot(*this, &RfUplink::rxDtmfDigitDetected));
   rx->reset();
   rx->mute(false);
   AudioSource *prev_src = rx;
@@ -214,7 +214,7 @@ bool TrxUplink::initialize(void)
     return false;
   }
   uplink_rx->dtmfDigitDetected.connect(
-      slot(*this, &TrxUplink::uplinkRxDtmfRcvd));
+      slot(*this, &RfUplink::uplinkRxDtmfRcvd));
   uplink_rx->reset();
   uplink_rx->mute(false);
   if (mute_rx_on_tx)
@@ -240,7 +240,7 @@ bool TrxUplink::initialize(void)
   
   return true;
   
-} /* TrxUplink::initialize */
+} /* RfUplink::initialize */
 
 
 
@@ -259,14 +259,14 @@ bool TrxUplink::initialize(void)
  *
  ****************************************************************************/
 
-void TrxUplink::uplinkRxDtmfRcvd(char digit, int duration)
+void RfUplink::uplinkRxDtmfRcvd(char digit, int duration)
 {
   char digit_str[2] = {digit, 0};
   tx->sendDtmf(digit_str);
-} /* TrxUplink::uplinkRxDtmfRcvd */
+} /* RfUplink::uplinkRxDtmfRcvd */
 
 
-void TrxUplink::rxSquelchOpen(bool is_open)
+void RfUplink::rxSquelchOpen(bool is_open)
 {
   /*
   if (is_open)
@@ -276,15 +276,15 @@ void TrxUplink::rxSquelchOpen(bool is_open)
     uplink_tx->sendDtmf(dtmf_str);
   }
   */
-} /* TrxUplink::rxSquelchOpen  */
+} /* RfUplink::rxSquelchOpen  */
 
 
-void TrxUplink::rxDtmfDigitDetected(char digit, int duration)
+void RfUplink::rxDtmfDigitDetected(char digit, int duration)
 {
     // FIXME: DTMF digits should be retransmitted with the correct duration.
   const char dtmf_str[] = {digit, 0};
   uplink_tx->sendDtmf(dtmf_str);
-} /* TrxUplink::rxDtmfDigitDetected */
+} /* RfUplink::rxDtmfDigitDetected */
 
 
 /*

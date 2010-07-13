@@ -132,6 +132,16 @@
 * New module SelCallEnc. This module is used to send selective calling
   sequences out on the frequency upon user request.
 
+* One RemoteTrx application can now be used to run more than one remote
+  transceiver. Previously two RemoteTrx instances had to be run to
+  support two transceivers. This required two sound cards to be used.
+  Now only one sound card can be used to support two transceivers.
+  Due to this change the configuration have changed a bit. To get everything
+  right, backup your old remotetrx.conf configuration file and use the
+  new default configuration file to start over. Manually move configuration
+  values from your old configuration file to the new file, carefully
+  reading the updated manual page, remotetrx.conf (5), to get everything right.
+
 
 
  0.11.0 -- 26 Apr 2009

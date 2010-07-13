@@ -1,4 +1,4 @@
-.TH REMOTETRX.CONF 5 "APRIL 2008" Linux "File Formats"
+.TH REMOTETRX.CONF 5 "JULY 2010" Linux "File Formats"
 .
 .SH NAME
 .
@@ -10,7 +10,22 @@ remotetrx.conf \- Configuration file for the SvxLink remote transceiver server
 is the SvxLink remote transceiver server. This man-page describe the
 configuration file format for it.
 .P
-Remotetrx look for configuration files in a number of places. First it tries to
+The RemoteTrx application can handle more than one transceiver at a time. You
+may for example want to handle both a 2m and a 70cm receiver on a site. One
+sound card is sufficient for doing this since the left channel can be used for
+one receiver and the right channel can be used for the other receiver.
+The GLOBAL/TRXS configuration variable is used to tell the RemoteTrx
+application which transceivers to set up. Each transceiver have an uplink that
+is used to interface to the main SvxLink server. The most common type is the net
+uplink which link to the main SvxLink server over the Internet using TCP/IP.
+It is also possible to have an uplink via RF but the functionality is then
+limited.
+.P
+The term "uplink" might be a bit confusing for some people. In this case it does
+not refer to any specific direction in which the data or audio is flowing. It's
+just the name for the link up to the main SvxLink server.
+.P
+RemoteTrx look for configuration files in a number of places. First it tries to
 find a user specific configuration file. It will look for a user specific
 configuration file in two places:
 .BR $HOME/.svxlink/remotetrx.conf " or " $HOME/.remotetrxrc .
@@ -55,29 +70,9 @@ understands. The configuration variables are described section for section.
 .
 The GLOBAL section contains application global configuration data.
 .TP
-.B RX
-Point out the receiver configuration section to use. Set to NONE if no RX is
-used. A receiver is configured in the exact same way as in the SvxLink server.
-Have a look at
-.BR svxlink.conf (5)
-for more information on how to configure a receiver.
-.TP
-.B TX
-Point out the transmitter configuration section to use. Set to NONE if no TX is
-used. A transmitter is configured in the exact same way as in the SvxLink
-server. Have a look at
-.BR svxlink.conf (5)
-for more information on how to configure a transmitter.
-.TP
-.B UPLINK
-Point out the uplink configuration section to use. The uplink section specify
-how this remote receiver should be linked to the main SvxLink server. The term
-"uplink" might be a bit confusing for some people. In this case it does not
-refer to any specific direction in which the data or audio is flowing. It's just
-the name for the link up to the main SvxLink server.
-
-Read more about how to configure an uplink in the "Network Uplink Section" or
-"Trx Uplink Section" chapters below.
+.B TRXS
+This configuration variable specify a comma separated list of transceiver
+configuration sections.
 .TP
 .B CFG_DIR
 Specify the path to a directory that contain additional configuration files.
@@ -132,18 +127,33 @@ have the computational power to handle it.
 
 Supported sampling rates are: 8000, 16000 and 48000.
 .
-.SS Network uplink section
+.SS Network uplink transceiver section
 .
-The network uplink section is used to specify the configuration for a network
-link to the main SvxLink server. In the default configuration file there is a
-network uplink section called
-.BR NetUpLink .
+The network uplink tranceiver section is used to specify the configuration for a
+network link to the main SvxLink server. In the default configuration file there
+is a network uplink transceiver section called
+.BR NetUpLinkTrx .
 .TP
 .B TYPE
-Always "Net" for a networked uplink.
+Always "Net" for a network uplink transceiver configuration section.
+.TP
+.B RX
+Point out the receiver configuration section to use. Set to NONE if no RX is
+used. A receiver is configured in the exact same way as in the SvxLink server.
+Have a look at
+.BR svxlink.conf (5)
+for more information on how to configure a receiver.
+.TP
+.B TX
+Point out the transmitter configuration section to use. Set to NONE if no TX is
+used. A transmitter is configured in the exact same way as in the SvxLink
+server. Have a look at
+.BR svxlink.conf (5)
+for more information on how to configure a transmitter.
 .TP
 .B LISTEN_PORT
-The TCP port to listen on. The default is 5210.
+The TCP port to listen on. Make sure to choose a unique port for each
+network uplink transceiver configuration. The default is 5210.
 .TP
 .B AUTH_KEY
 This is the authentication key (password) to use to athenticate incoming
@@ -160,41 +170,55 @@ squelch has closed, that the transmitter will be muted. For example, if set
 to 1000, the transmitter will be muted one second after the squelch has closed.
 The default is not to mute the transmitter when the squelch is open.
 .
-.SS Trx uplink section
+.SS RF uplink transceiver section
 .
-The Trx uplink section is used to specify the configuration for an RF
-link to the main SvxLink server. In the default configuration file there is a
-Trx uplink section called
-.BR TrxUpLink .
-The section name could be anything. It should match the UPLINK configuration
-variable in the GLOBAL section.
-
-The use of Trx uplinks is very EXPERIMENTAL and still have some flaws. Among
+The RF uplink transceiver configuration section is used to specify the
+configuration for an RF link to the main SvxLink server. In the default
+configuration file there is an RF uplink transceiver section called
+.BR RfUpLinkTrx .
+The section name could be anything. It should match what is specified in the
+TRXS configuration variable in the GLOBAL section.
+.P
+The use of Rf uplinks is very EXPERIMENTAL and still have some flaws. Among
 other things, detected tones (like CTCSS or 1750 tone burst) are not relayed and
 all relayed DTMF tones are always 100ms long no matter how long the received
 digit was. Signal level measurements are not relayed either.
-
-Any way, it's used to link remote receivers coming in on the
-Internet to a site that do not have access to Internet.
+.P
+Any way, it's used to link remote receivers coming in on the Internet to a site
+that do not have access to Internet.
 .TP
 .B TYPE
-Always "Trx" for a Trx uplink.
+Always "RF" for an RF uplink transceiver configuration section.
+.TP
+.B RX
+Point out the receiver configuration section to use. Set to NONE if no RX is
+used. A receiver is configured in the exact same way as in the SvxLink server.
+Have a look at
+.BR svxlink.conf (5)
+for more information on how to configure a receiver.
 .TP
 .B TX
+Point out the transmitter configuration section to use. Set to NONE if no TX is
+used. A transmitter is configured in the exact same way as in the SvxLink
+server. Have a look at
+.BR svxlink.conf (5)
+for more information on how to configure a transmitter.
+.TP
+.B UPLINK_TX
 Point out the uplink transmitter configuration section to use. The configuration
 for an uplink transmitter looks exactly the same as for any other transmitter.
 In the default configuration file there is an uplink transmitter configuration
 section called
 .BR UplinkTx .
 .TP
-.B RX
+.B UPLINK_RX
 Point out the uplink receiver configuration section to use. The configuration
 for an uplink receiver looks exactly the same as for any other receiver.
 In the default configuration file there is an uplink receiver configuration
 section called
 .BR UplinkRx .
 .TP
-.B MUTE_RX_ON_TX
+.B MUTE_UPLINK_RX_ON_TX
 Specify if the link receiver should be muted or not when the link transmitter is
 transmitting. Set it to 0 if a full duplex link is desired. Default is 1.
 .TP

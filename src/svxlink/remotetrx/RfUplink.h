@@ -1,12 +1,12 @@
 /**
-@file	 TrxUplink.h
+@file	 RfUplink.h
 @brief   Uplink type that communicates to the SvxLink core through a transceiver
 @author  Tobias Blomberg / SM0SVX
 @date	 2008-03-20
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef TRX_UPLINK_INCLUDED
-#define TRX_UPLINK_INCLUDED
+#ifndef RF_UPLINK_INCLUDED
+#define RF_UPLINK_INCLUDED
 
 
 /****************************************************************************
@@ -116,7 +116,7 @@ namespace Async
 This class is a simple uplink that just retransmit what comes into the
 connected receiver(s).
 */
-class TrxUplink : public Uplink
+class RfUplink : public Uplink
 {
   public:
     /**
@@ -126,12 +126,12 @@ class TrxUplink : public Uplink
      * @param 	rx The receiver
      * @param 	tx The transmitter
      */
-    TrxUplink(Async::Config &cfg, const std::string &name, Rx *rx, Tx *tx);
+    RfUplink(Async::Config &cfg, const std::string &name, Rx *rx, Tx *tx);
   
     /**
      * @brief 	Destructor
      */
-    ~TrxUplink(void);
+    ~RfUplink(void);
   
     /**
      * @brief 	Initialize the uplink
@@ -150,19 +150,19 @@ class TrxUplink : public Uplink
     Rx	      	         *uplink_rx;
     Async::AudioSelector *tx_audio_sel;
     
-    TrxUplink(const TrxUplink&);
-    TrxUplink& operator=(const TrxUplink&);
+    RfUplink(const RfUplink&);
+    RfUplink& operator=(const RfUplink&);
     void uplinkRxDtmfRcvd(char digit, int duration);
     void rxSquelchOpen(bool is_open);
     void rxDtmfDigitDetected(char digit, int duration);
 
 
-};  /* class TrxUplink */
+};  /* class RfUplink */
 
 
 //} /* namespace */
 
-#endif /* TRX_UPLINK_INCLUDED */
+#endif /* RF_UPLINK_INCLUDED */
 
 
 
