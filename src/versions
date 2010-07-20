@@ -21,7 +21,7 @@ MODULE_DTMF_REPEATER=0.1.99rc1
 MODULE_METARINFO=0.0.1.99rc2
 
 # Version for the RemoteTrx application
-REMOTE_TRX=0.2.99rc3
+REMOTE_TRX=0.2.99rc4
 REMOTE_TRX_RELEASE=1
 
 # Version for the signal level calibration utility

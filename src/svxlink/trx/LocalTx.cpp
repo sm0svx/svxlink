@@ -634,6 +634,11 @@ void LocalTx::transmit(bool do_transmit)
     {
       sine_gen->enable(false);
     }
+
+    if (siglev_sine_gen != 0)
+    {
+      siglev_sine_gen->enable(false);
+    }
     
     delete txtot;
     txtot = 0;
