@@ -95,7 +95,7 @@ for subdir in $SUBDIRS; do
   SOFTLINK_SOUNDS=""
   MAXMIZE_SOUNDS=""
   TRIM_SOUNDS=""
-  source "${SRC_DIR}/$subdir/subdir.cfg"
+  . "${SRC_DIR}/$subdir/subdir.cfg"
   
   for clip in $MAXIMIZE_SOUNDS; do
     dest_clip="$DEST_DIR/$subdir/$clip"
