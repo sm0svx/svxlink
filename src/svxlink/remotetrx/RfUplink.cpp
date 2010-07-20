@@ -213,6 +213,7 @@ bool RfUplink::initialize(void)
     uplink_rx = 0;
     return false;
   }
+  uplink_rx->squelchOpen.connect(slot(*this, &RfUplink::uplinkRxSquelchOpen));
   uplink_rx->dtmfDigitDetected.connect(
       slot(*this, &RfUplink::uplinkRxDtmfRcvd));
   uplink_rx->reset();
@@ -259,6 +260,19 @@ bool RfUplink::initialize(void)
  *
  ****************************************************************************/
 
+void RfUplink::uplinkRxSquelchOpen(bool is_open)
+{
+  if (is_open)
+  {
+    tx->setTransmittedSignalStrength(uplink_rx->signalStrength());
+  }
+  else
+  {
+    tx->setTransmittedSignalStrength(0);
+  }
+} /* RfUplink::uplinkRxSquelchOpen */
+
+
 void RfUplink::uplinkRxDtmfRcvd(char digit, int duration)
 {
   char digit_str[2] = {digit, 0};
@@ -268,14 +282,14 @@ void RfUplink::uplinkRxDtmfRcvd(char digit, int duration)
 
 void RfUplink::rxSquelchOpen(bool is_open)
 {
-  /*
   if (is_open)
   {
-    int ss = min(99, max(0, static_cast<int>(rx->signalStrength())));
-    char dtmf_str[] = {'0' + ss / 10, 0};
-    uplink_tx->sendDtmf(dtmf_str);
+    uplink_tx->setTransmittedSignalStrength(rx->signalStrength());
   }
-  */
+  else
+  {
+    uplink_tx->setTransmittedSignalStrength(0);
+  }
 } /* RfUplink::rxSquelchOpen  */
 
 
@@ -285,6 +299,7 @@ void RfUplink::rxDtmfDigitDetected(char digit, int duration)
   const char dtmf_str[] = {digit, 0};
   uplink_tx->sendDtmf(dtmf_str);
 } /* RfUplink::rxDtmfDigitDetected */
+
 
 
 /*

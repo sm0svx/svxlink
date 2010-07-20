@@ -935,6 +935,34 @@ transmitter. 50ms is the default.
 .B DTMF_TONE_AMP
 The amplitude, in dB, of DTMF digits transmitted on this transmitter. Zero
 dB is the maximum amplitude. -18dB is the default.
+.TP
+.B TONE_SIGLEV_MAP
+It is possible to transmit one of ten tones along with the normal transmission
+to indicate a signal strength value to the receiver. This is of most use when
+using a local transmitter as a link transmitter in a RemoteTrx. It is not
+implemented, and probably not useful, in SvxLink Server. Another requirement is
+that SvxLink has been compiled in 16kHz mode. Otherwise this feature is
+disabled.
+
+The TONE_SIGLEV_MAP configuration variable is used to map tones to signal
+level values. It is a comma separated list of exactly ten values in the 0 - 100
+range. The first value map to the 5500Hz tone, the second to the 5600Hz tone
+and so on. The last value map to the 6400Hz tone.
+What levels the tones should be mapped to depends on the tone receiver
+implementation. Typically, if using a SvxLink application as a receiver,
+the TONE_SIGLEV_MAP should be the same in the RX configuration for that node.
+.TP
+.B TONE_SIGLEV_LEVEL
+It is possible to transmit one of ten tones along with the normal transmission
+to indicate a signal strength value to the receiver. This is of most use when
+using a local transmitter as a link transmitter in a RemoteTrx. It is not
+implemented, and probably not useful, in SvxLink Server. Another requirement is
+that SvxLink has been compiled in 16kHz mode. Otherwise this feature is
+disabled.
+
+The TONE_SIGLEV_LEVEL configuration variable is used to set the tone level.
+It is a value in the 1-100 range which indicate the output level in percent
+of the maximum possible level. The default is 10.
 .
 .SS Networked Transmitter Section
 .

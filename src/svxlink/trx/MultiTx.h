@@ -164,6 +164,17 @@ class MultiTx : public Tx
      */
     virtual void sendDtmf(const std::string& digits);
     
+    /**
+     * @brief   Set the signal level value that should be transmitted
+     * @param   siglev The signal level to transmit
+     *
+     * This function does not set the output power of the transmitter but
+     * instead sets a signal level value that is transmitted with the
+     * transmission if the specific Tx object supports it. This can be used
+     * on a link transmitter to transport signal level measurements to the
+     * link receiver.
+     */
+    virtual void setTransmittedSignalStrength(float siglev);
     
   protected:
     

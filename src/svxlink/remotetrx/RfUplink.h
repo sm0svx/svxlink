@@ -152,10 +152,11 @@ class RfUplink : public Uplink
     
     RfUplink(const RfUplink&);
     RfUplink& operator=(const RfUplink&);
+    
+    void uplinkRxSquelchOpen(bool is_open);
     void uplinkRxDtmfRcvd(char digit, int duration);
     void rxSquelchOpen(bool is_open);
     void rxDtmfDigitDetected(char digit, int duration);
-
 
 };  /* class RfUplink */
 

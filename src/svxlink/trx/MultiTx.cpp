@@ -228,6 +228,15 @@ void MultiTx::sendDtmf(const std::string& digits)
 } /* MultiTx::sendDtmf */
 
 
+void MultiTx::setTransmittedSignalStrength(float siglev)
+{
+  list<Tx *>::iterator it;
+  for (it=txs.begin(); it!=txs.end(); ++it)
+  {
+    (*it)->setTransmittedSignalStrength(siglev);
+  }
+} /* MultiTx::setTransmittedSignalStrength */
+
 
 
 /****************************************************************************

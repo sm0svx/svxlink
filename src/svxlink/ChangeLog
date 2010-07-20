@@ -142,6 +142,11 @@
   values from your old configuration file to the new file, carefully
   reading the updated manual page, remotetrx.conf (5), to get everything right.
 
+* Implemented tone signal strength transmission in RemoteTrx that can be used
+  on a link transmitter at a remote receiver linking site to transfer signal
+  strength measurements to the main SvxLink site. This will only work if
+  SvxLink is compiled in 16kHz mode due to the high tone frequencies used.
+
 
 
  0.11.0 -- 26 Apr 2009
