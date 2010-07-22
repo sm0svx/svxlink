@@ -133,7 +133,7 @@ static bool setValueFromString(ValueType &val, const std::string &str)
  * unconditionally ignored.
  */
 template <>
-static bool setValueFromString(std::string &val, const std::string &str)
+bool setValueFromString(std::string &val, const std::string &str)
 {
   val = str;
   return true;
