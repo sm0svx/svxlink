@@ -274,6 +274,12 @@ bool Module::squelchIsOpen(void)
 } /* Module::squelchIsOpen */
 
 
+bool Module::isWritingMessage(void)
+{
+  return logic()->isWritingMessage();
+} /* Module::isWritingMessage */
+
+
 void Module::moduleTimeout(Timer *t)
 {
   cout << "Module timeout: " << name() << endl;

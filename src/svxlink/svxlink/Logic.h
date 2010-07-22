@@ -201,6 +201,8 @@ class Logic : public SigC::Object
     bool isIdle(void) const { return is_idle; }
     
     void setReportEventsAsIdle(bool idle) { report_events_as_idle = idle; }
+
+    bool isWritingMessage(void);
     
     SigC::Signal1<void, bool> idleStateChanged;
     
@@ -216,7 +218,6 @@ class Logic : public SigC::Object
     
     void clearPendingSamples(void);
     void enableRgrSoundTimer(bool enable);
-    bool isWritingMessage(void);
     void rxValveSetOpen(bool do_open);
     void rptValveSetOpen(bool do_open);
     void checkIdle(void);

@@ -153,6 +153,9 @@
   turned off, causing the squelch to close on the other side. Since the
   transmitter keeps transmitting for a while, no squelch tail will be heard.
 
+* The DTMF repeater module now wait until all announcements have been played
+  before retransmitting the digits.
+
 
 
  0.11.0 -- 26 Apr 2009

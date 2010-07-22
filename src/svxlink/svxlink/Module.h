@@ -495,6 +495,13 @@ class Module : public SigC::Object, public Async::AudioSink,
      */
     bool squelchIsOpen(void);
 
+    /**
+     * @brief   Check if the logic core is playing back an announcement
+     * @returns Returns \em true if the playback is active or
+     *          \em false if it's not.
+     */
+    bool isWritingMessage(void);
+
 
   private:
     void      	      *m_dl_handle;
