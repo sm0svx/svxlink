@@ -133,6 +133,9 @@ static bool setValueFromString(ValueType &val, const std::string &str)
  * unconditionally ignored.
  */
 template <>
+#if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR_ < 0430)
+static
+#endif
 bool setValueFromString(std::string &val, const std::string &str)
 {
   val = str;
