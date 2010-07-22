@@ -878,6 +878,17 @@ pin does not provide enough drive power to the circuit. A "!" in front of the pi
 indicates inverted operation. Some of the possible values are RTS, DTRRTS, !DTR!RTS or
 even DTR!RTS.
 .TP
+.B PTT_HANGTIME
+Use this configuration variable to set a PTT hangtime. This can be good
+to have on a transmitter in combination with using a tone squelch. When
+the transmitter is ordered to stop transmitting, the tone is immediately
+turned off, causing the squelch to close on the other side. Since the
+transmitter keeps transmitting for a while, no squelch tail will be heard.
+
+Another use is on a remote receiver link transmitter where you don't want the
+transmitter to turn on and off between transmissions or if the squelch close
+and open quickly due to for example mobile flutter.
+.TP
 .B TIMEOUT
 This is a feature that will prevent the transmitter from getting stuck transmitting.
 Specify the number of seconds before the transmitter is turned off. Note that this is a

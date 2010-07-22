@@ -147,6 +147,12 @@
   strength measurements to the main SvxLink site. This will only work if
   SvxLink is compiled in 16kHz mode due to the high tone frequencies used.
 
+* Now possible to set a PTT hangtime for the local tx type. This can be good
+  to have on a link transmitter in combination with a tone squelch. When
+  the transmitter is ordered to stop transmitting, the tone is immediately
+  turned off, causing the squelch to close on the other side. Since the
+  transmitter keeps transmitting for a while, no squelch tail will be heard.
+
 
 
  0.11.0 -- 26 Apr 2009

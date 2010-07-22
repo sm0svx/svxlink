@@ -212,12 +212,14 @@ class LocalTx : public Tx
     Async::AudioValve 	    *audio_valve;
     SineGenerator           *siglev_sine_gen;
     std::vector<int>        tone_siglev_map;
+    Async::Timer            *ptt_hangtimer;
     
     void txTimeoutOccured(Async::Timer *t);
     int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);
-    bool setPtt(bool tx);
+    bool setPtt(bool tx, bool with_hangtime=false);
     void transmit(bool do_transmit);
     void allDtmfDigitsSent(void);
+    void pttHangtimeExpired(Async::Timer *t);
 
 };  /* class LocalTx */
 
