@@ -218,8 +218,8 @@ int SigLevDetTone::writeSamples(const float *samples, int count)
         if (snr > 10.0f)
         {
           last_siglev = tone_siglev_map[max_idx];
-          printf("fq=%d  max=%.2f  prev_max=%.2f  snr=%.2f  siglev=%d\n",
-                5500 + max_idx * 100, max, prev_max, snr, last_siglev);
+          //printf("fq=%d  max=%.2f  prev_max=%.2f  snr=%.2f  siglev=%d\n",
+          //      5500 + max_idx * 100, max, prev_max, snr, last_siglev);
         }
       }
     }
