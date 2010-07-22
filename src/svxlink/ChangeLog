@@ -156,6 +156,10 @@
 * The DTMF repeater module now wait until all announcements have been played
   before retransmitting the digits.
 
+* The EchoLink module can now use the Speex audio codec on connections
+  between two SvxLink nodes which improves the audio quality a lot.
+  Patch contributed by Steve / DH1DM.
+
 
 
  0.11.0 -- 26 Apr 2009

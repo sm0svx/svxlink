@@ -300,7 +300,8 @@ MainWindow::~MainWindow(void)
 
 
 void MainWindow::incomingConnection(const IpAddress& remote_ip,
-    const string& remote_call, const string& remote_name)
+    const string& remote_call, const string& remote_name,
+    const string& remote_priv)
 {
   time_t t = time(0);
   struct tm *tm = localtime(&t);
@@ -324,6 +325,7 @@ void MainWindow::incomingConnection(const IpAddress& remote_ip,
     item->setText(2, time_str);
   }
   incoming_con_view->setSelected(item, TRUE);
+  incoming_con_param[remote_call] = remote_priv;
   
 } /* MainWindow::incomingConnection */
 
@@ -630,6 +632,7 @@ void MainWindow::acceptIncoming(void)
       item->text(1));
   com_dialog->show();
   com_dialog->acceptConnection();
+  com_dialog->setRemoteParams(incoming_con_param[item->text(0)]);
   incoming_con_view->takeItem(item);
   delete item;
 } /* MainWindow::acceptIncoming */

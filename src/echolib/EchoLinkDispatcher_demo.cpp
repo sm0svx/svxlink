@@ -24,7 +24,7 @@ class MyClass : public SigC::Object
     
   private:
     void onIncomingConnection(const IpAddress& ip, const string& callsign,
-      	      	      	      const string& name)
+      	      	      	      const string& name, const string& priv)
     {
       cerr << "Incoming connection from " << ip << ": " << callsign
       	   << " (" << name << ")\n";

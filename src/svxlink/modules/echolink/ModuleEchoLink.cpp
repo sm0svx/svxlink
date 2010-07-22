@@ -757,6 +757,7 @@ void ModuleEchoLink::onError(const string& msg)
  *    	      connection is coming in.
  * Input:     callsign	- The callsign of the remote station
  *    	      name    	- The name of the remote station
+ *            priv      - A private string for passing connection parameters
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2004-03-07
@@ -766,7 +767,8 @@ void ModuleEchoLink::onError(const string& msg)
  */
 void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
       	      	      	      	      	  const string& callsign,
-      	      	      	      	      	  const string& name)
+      	      	      	      	      	  const string& name,
+      	      	      	      	      	  const string& priv)
 {
   cout << "Incoming EchoLink connection from " << callsign
        << " (" << name << ") at " << ip << "\n";
@@ -824,6 +826,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   updateEventVariables();
   qso->setRemoteCallsign(callsign);
   qso->setRemoteName(name);
+  qso->setRemoteParams(priv);
   qso->stateChange.connect(slot(*this, &ModuleEchoLink::onStateChange));
   qso->chatMsgReceived.connect(slot(*this, &ModuleEchoLink::onChatMsgReceived));
   qso->isReceiving.connect(slot(*this, &ModuleEchoLink::onIsReceiving));
@@ -1155,7 +1158,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
 } /* ModuleEchoLink::createOutgoingConnection */
 
 
-void ModuleEchoLink::audioFromRemoteRaw(Qso::GsmVoicePacket *packet,
+void ModuleEchoLink::audioFromRemoteRaw(Qso::RawPacket *packet,
       	QsoImpl *qso)
 {
   if (!listen_only_valve->isOpen())

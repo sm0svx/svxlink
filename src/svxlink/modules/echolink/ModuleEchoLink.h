@@ -201,7 +201,8 @@ class ModuleEchoLink : public Module
     void onStationListUpdated(void);
     void onError(const std::string& msg);
     void onIncomingConnection(const Async::IpAddress& ip,
-      	    const std::string& callsign, const std::string& name);
+      	    const std::string& callsign, const std::string& name,
+      	    const std::string& priv);
     void onStateChange(QsoImpl *qso, EchoLink::Qso::State qso_state);
     void onChatMsgReceived(QsoImpl *qso, const std::string& msg);
     void onIsReceiving(bool is_receiving, QsoImpl *qso);
@@ -211,7 +212,7 @@ class ModuleEchoLink : public Module
 
     void createOutgoingConnection(const EchoLink::StationData &station);
     int audioFromRemote(float *samples, int count, QsoImpl *qso);
-    void audioFromRemoteRaw(EchoLink::Qso::GsmVoicePacket *packet,
+    void audioFromRemoteRaw(EchoLink::Qso::RawPacket *packet,
       	      	      	    QsoImpl *qso);
     QsoImpl *findFirstTalker(void) const;
     void broadcastTalkerStatus(void);

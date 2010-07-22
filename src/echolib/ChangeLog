@@ -1,8 +1,10 @@
- 0.13.2 -- ?? ??? 2009
+ 0.14.0 -- ?? ??? 2010
 -----------------------
 
 * Bugfix: When receiving multiple bye packets, the disconnection was announced
   multiple times.
+
+* Added Speex codec support to EchoLink connections.
 
 
 

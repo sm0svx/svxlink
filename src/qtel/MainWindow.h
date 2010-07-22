@@ -187,11 +187,14 @@ class MainWindow : public MainWindowBase, public SigC::Object
     Async::AudioIO 	      	  *msg_audio_io;
     EchoLink::StationData::Status prev_status;
     
+    std::map<std::string, std::string> incoming_con_param;
+    
     MainWindow(const MainWindow&);
     MainWindow operator=(const MainWindow&);
     
     void incomingConnection(const Async::IpAddress& remote_address,
-      	const std::string& remote_call, const std::string& remote_name);
+      	const std::string& remote_call, const std::string& remote_name,
+      	const std::string& remote_priv);
     void closeEvent(QCloseEvent *e);
     void serverError(const std::string& msg);
     void statusChanged(EchoLink::StationData::Status status);
