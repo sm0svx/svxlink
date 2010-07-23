@@ -51,9 +51,10 @@
 
 * The TX_CTCSS feature have now been extended so that CTCSS tone
   can be transmitted if there is incoming traffic from another
-  logic core or a module. Previously the were only two choices,
-  to send CTCSS tone when the squelch was open (repeater use)
-  or to always do it.
+  logic core (LOGIC), a module (MODULE) or if an announcement
+  is being played (ANNOUNCEMENT). Previously there were only two
+  choices, to send CTCSS tone when the squelch was open
+  (repeater use) or to always do it.
 
 * Bugfix: In the previous release all sound clips were converted
   to WAV files instead of RAW files. When the EchoLink module

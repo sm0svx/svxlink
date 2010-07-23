@@ -358,6 +358,10 @@ bool Logic::initialize(void)
       {
         tx_ctcss_mask |= TX_CTCSS_MODULE;
       }
+      else if (tx_ctcss_type == "ANNOUNCEMENT")
+      {
+        tx_ctcss_mask |= TX_CTCSS_ANNOUNCEMENT;
+      }
       else
       {
         cerr << "*** WARNING: Unknown value in configuration variable "
@@ -639,6 +643,12 @@ void Logic::setEventVariable(const string& name, const string& value)
 void Logic::playFile(const string& path)
 {
   msg_handler->playFile(path, report_events_as_idle);
+
+  if (!msg_handler->isIdle())
+  {
+    updateTxCtcss(true, TX_CTCSS_ANNOUNCEMENT);
+  }
+
   checkIdle();
 } /* Logic::playFile */
 
@@ -646,6 +656,12 @@ void Logic::playFile(const string& path)
 void Logic::playSilence(int length)
 {
   msg_handler->playSilence(length, report_events_as_idle);
+
+  if (!msg_handler->isIdle())
+  {
+    updateTxCtcss(true, TX_CTCSS_ANNOUNCEMENT);
+  }
+
   checkIdle();
 } /* Logic::playSilence */
 
@@ -653,6 +669,12 @@ void Logic::playSilence(int length)
 void Logic::playTone(int fq, int amp, int len)
 {
   msg_handler->playTone(fq, amp, len, report_events_as_idle);
+
+  if (!msg_handler->isIdle())
+  {
+    updateTxCtcss(true, TX_CTCSS_ANNOUNCEMENT);
+  }
+
   checkIdle();
 } /* Logic::playSilence */
 
@@ -1013,6 +1035,7 @@ void Logic::allMsgsWritten(void)
      active_module->allMsgsWritten();
   }
 
+  updateTxCtcss(false, TX_CTCSS_ANNOUNCEMENT);
   checkIdle();
   
 } /* Logic::allMsgsWritten */
