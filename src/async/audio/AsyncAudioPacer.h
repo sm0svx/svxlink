@@ -35,7 +35,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sys/time.h>
 #include <sigc++/sigc++.h>
+#include <stdint.h>
 
 
 /****************************************************************************
@@ -46,6 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -80,7 +83,6 @@ namespace Async
  *
  ****************************************************************************/
 
-class Timer;
   
 
 /****************************************************************************
@@ -121,7 +123,7 @@ class AudioPacer : public AudioSink, public AudioSource, public SigC::Object
      * @param 	block_size  The size of the audio blocks
      * @param 	prebuf_time The time (ms) to wait before starting to send audio
      */
-    AudioPacer(int sample_rate, int block_size, int prebuf_time);
+    AudioPacer(unsigned sample_rate, unsigned block_size, unsigned prebuf_time);
   
     /**
      * @brief 	Destructor
@@ -135,8 +137,14 @@ class AudioPacer : public AudioSink, public AudioSource, public SigC::Object
      * @return	Returns the number of samples that has been taken care of
      *
      * This function is used to write audio into this audio sink. If it
-     * returns 0, no more samples should be written until the resumeOutput
-     * function in the source have been called.
+     * returns 0, no more samples could be written.
+     * If the returned number of written samples is lower than the count
+     * parameter value, the sink is not ready to accept more samples.
+     * In this case, the audio source requires sample buffering to temporarily
+     * store samples that are not immediately accepted by the sink.
+     * The writeSamples function should be called on source buffer updates
+     * and after a source output request has been received through the
+     * requestSamples function.
      * This function is normally only called from a connected source object.
      */
     virtual int writeSamples(const float *samples, int count);
@@ -152,13 +160,14 @@ class AudioPacer : public AudioSink, public AudioSource, public SigC::Object
     virtual void flushSamples(void);    
     
     /**
-     * @brief Resume audio output to the sink
+     * @brief Request audio samples from this source
+     * @param count
      * 
      * This function will be called when the registered audio sink is ready
      * to accept more samples.
      * This function is normally only called from a connected sink object.
      */
-    virtual void resumeOutput(void);
+    virtual void requestSamples(int count);
     
 
   protected:
@@ -174,18 +183,24 @@ class AudioPacer : public AudioSink, public AudioSource, public SigC::Object
     
     
   private:
-    int       	  sample_rate;
-    int       	  buf_size;
-    int       	  prebuf_time;
-    float     	  *buf;
-    int       	  buf_pos;
-    int       	  prebuf_samples;
-    Async::Timer  *pace_timer;
-    bool      	  do_flush;
-    bool      	  input_stopped;
+    unsigned  	   sample_rate;
+    unsigned   	   buf_size;
+    float     	   *buf;
+    unsigned  	   head, tail;
+    unsigned  	   prebuf_samples;
+    uint64_t	   output_samples;
+    Timer          *pace_timer;
+    bool           is_flushing;
+    bool           is_full;
+    bool           prebuf;
+    struct timeval output_start;
     
-    void outputNextBlock(Async::Timer *t=0);
+    void outputNextBlock(Timer *t);
+    void outputSamplesFromBuffer(int count);
+    int samplesInBuffer(bool ignore_prebuf = false);
 
+    bool empty() const { return (!is_full && (head == tail)); }
+    
 };  /* class AudioPacer */
 
 

@@ -156,13 +156,14 @@ class AudioDecoder : public AudioSource, public SigC::Object
     virtual void flushEncodedSamples(void) { sinkFlushSamples(); }
     
     /**
-     * @brief Resume audio output to the sink
+     * @brief Request audio output from this source
+     * @param count
      * 
      * This function will be called when the registered audio sink is ready to
      * accept more samples.
      * This function is normally only called from a connected sink object.
      */
-    virtual void resumeOutput(void) {}
+    virtual void requestSamples(int count) {}
     
     /**
      * @brief This signal is emitted when all encoded samples have been flushed

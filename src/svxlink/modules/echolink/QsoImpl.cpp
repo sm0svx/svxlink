@@ -51,7 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioPacer.h>
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioPassthrough.h>
-#include <AsyncAudioFifo.h>
+#include <AsyncAudioJitterFifo.h>
 #include <AsyncAudioDecimator.h>
 #include <AsyncAudioInterpolator.h>
 #include <AsyncAudioDebugger.h>
@@ -238,9 +238,7 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   
   prev_src = &m_qso;
   
-  AudioFifo *input_fifo = new AudioFifo(2048);
-  input_fifo->setOverwrite(true);
-  input_fifo->setPrebufSamples(1024);
+  AudioJitterFifo *input_fifo = new AudioJitterFifo(8000, 2048);
   prev_src->registerSink(input_fifo, true);
   prev_src = input_fifo;
   

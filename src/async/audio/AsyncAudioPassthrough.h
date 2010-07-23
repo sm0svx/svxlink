@@ -134,7 +134,7 @@ class AudioPassthrough : public AudioSink, public AudioSource
      * @return	Returns the number of samples that has been taken care of
      *
      * This function is used to write audio into this audio sink. If it
-     * returns 0, no more samples should be written until the resumeOutput
+     * returns 0, no more samples should be written until the requestSamples
      * function in the source have been called.
      * This function is normally only called from a connected source object.
      */
@@ -157,15 +157,15 @@ class AudioPassthrough : public AudioSink, public AudioSource
     }
     
     /**
-     * @brief Resume audio output to the sink
+     * @brief Request audio samples from this source
      * 
      * This function will be called when the registered audio sink is ready
      * to accept more samples.
      * This function is normally only called from a connected sink object.
      */
-    virtual void resumeOutput(void)
+    virtual void requestSamples(int count)
     {
-      sourceResumeOutput();
+      sourceRequestSamples(count);
     }
     
     /**

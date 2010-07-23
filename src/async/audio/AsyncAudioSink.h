@@ -157,8 +157,14 @@ class AudioSink
      * @return	Returns the number of samples that has been taken care of
      *
      * This function is used to write audio into this audio sink. If it
-     * returns 0, no more samples should be written until the resumeOutput
-     * function in the source have been called.
+     * returns 0, no more samples could be written.
+     * If the returned number of written samples is lower than the count
+     * parameter value, the sink is not ready to accept more samples.
+     * In this case, the audio source requires sample buffering to temporarily
+     * store samples that are not immediately accepted by the sink.
+     * The writeSamples function should be called on source buffer updates
+     * and after a source output request has been received through the
+     * requestSamples function.
      * This function is normally only called from a connected source object.
      */
     virtual int writeSamples(const float *samples, int count)
@@ -185,8 +191,10 @@ class AudioSink
   protected:
     /**
      * @brief 	Tell the source that we are ready to accept more samples
+     * @param count FIXME: Document me!
+     *
      */
-    void sourceResumeOutput(void);
+    void sourceRequestSamples(int count);
     
     /**
      * @brief 	Tell the source that all samples have been flushed
@@ -214,7 +222,7 @@ class AudioSink
      */
     void clearHandler(void);
     
-    /*
+    /**
      * @brief 	Return the handler
      * @return	Returns the handler previously set with setHandler or 0
      *          if none have been set

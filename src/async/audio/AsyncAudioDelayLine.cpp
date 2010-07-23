@@ -265,7 +265,7 @@ void AudioDelayLine::flushSamples(void)
 } /* AudioDelayLine::flushSamples */
 
 
-void AudioDelayLine::resumeOutput(void)
+void AudioDelayLine::requestSamples(int count)
 {
   if (flush_cnt > 0)
   {
@@ -273,7 +273,7 @@ void AudioDelayLine::resumeOutput(void)
   }
   else
   {
-    sourceResumeOutput();
+    sourceRequestSamples(count);
   }
 } /* AudioDelayLine::resumeOutput */
 

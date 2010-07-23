@@ -168,8 +168,16 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
      * @param 	count The number of samples in the buffer
      * @return	Returns the number of samples that has been taken care of
      *
-     * This function will write samples into the delay line. It's normally
-     * only called from a connected source object.
+     * This function is used to write audio into the delay line. If it
+     * returns 0, no more samples could be written.
+     * If the returned number of written samples is lower than the count
+     * parameter value, the sink is not ready to accept more samples.
+     * In this case, the audio source requires sample buffering to temporarily
+     * store samples that are not immediately accepted by the sink.
+     * The writeSamples function should be called on source buffer updates
+     * and after a source output request has been received through the
+     * requestSamples function.
+     * This function is normally only called from a connected source object.
      */
     int writeSamples(const float *samples, int count);
     
@@ -184,14 +192,14 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
     void flushSamples(void);
 
     /**
-     * @brief Resume audio output to the sink
+     * @brief Request audio samples from this source
      * 
      * This function must be reimplemented by the inheriting class. It
      * will be called when the registered audio sink is ready to
      * accept more samples.
      * This function is normally only called from a connected sink object.
      */
-    void resumeOutput(void);
+    void requestSamples(int count);
     
     /**
      * @brief The registered sink has flushed all samples

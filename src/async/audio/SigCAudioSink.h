@@ -139,14 +139,6 @@ class SigCAudioSink : public AudioSink, public SigC::Object
       sigFlushSamples();
     }
     
-    void writeBufferFull(bool is_full)
-    {
-      if (!is_full)
-      {
-      	sourceResumeOutput();
-      }
-    }
-    
     void allSamplesFlushed(void)
     {
       sourceAllSamplesFlushed();

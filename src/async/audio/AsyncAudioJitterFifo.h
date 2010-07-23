@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <stdint.h>
 
 
 /****************************************************************************
@@ -55,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sys/time.h>
 
 
 /****************************************************************************
@@ -122,10 +124,11 @@ class AudioJitterFifo : public AudioSink, public AudioSource
   public:
     /**
      * @brief 	Constuctor
+     * @param   sample_rate The sample rate of the incoming samples
      * @param   fifo_size This is the size of the fifo expressed in number
      *                    of samples.
      */
-    explicit AudioJitterFifo(unsigned fifo_size);
+    explicit AudioJitterFifo(unsigned samples_rate, unsigned fifo_size);
   
     /**
      * @brief 	Destructor
@@ -152,7 +155,7 @@ class AudioJitterFifo : public AudioSink, public AudioSource
      * @brief 	Find out how many samples there are in the FIFO
      * @return	Returns the number of samples in the FIFO
      */
-    unsigned samplesInFifo(void) const;
+    unsigned samplesInFifo(bool ignore_prebuf = false) const;
     
     /**
      * @brief 	Clear all samples from the FIFO
@@ -169,8 +172,14 @@ class AudioJitterFifo : public AudioSink, public AudioSource
      * @return	Returns the number of samples that has been taken care of
      *
      * This function is used to write audio into the FIFO. If it
-     * returns 0, no more samples should be written until the resumeOutput
-     * function in the source have been called.
+     * returns 0, no more samples could be written.
+     * If the returned number of written samples is lower than the count
+     * parameter value, the sink is not ready to accept more samples.
+     * In this case, the audio source requires sample buffering to temporarily
+     * store samples that are not immediately accepted by the sink.
+     * The writeSamples function should be called on source buffer updates
+     * and after a source output request has been received through the
+     * requestSamples function.
      * This function is normally only called from a connected source object.
      */
     virtual int writeSamples(const float *samples, int count);
@@ -185,13 +194,13 @@ class AudioJitterFifo : public AudioSink, public AudioSource
     virtual void flushSamples(void);
     
     /**
-     * @brief Resume audio output to the connected sink
+     * @brief Request audio samples from this source
      * 
      * This function will be called when the registered audio sink is ready
      * to accept more samples.
      * This function is normally only called from a connected sink object.
      */
-    virtual void resumeOutput(void);
+    virtual void requestSamples(int count);
     
     
   protected:
@@ -206,14 +215,16 @@ class AudioJitterFifo : public AudioSink, public AudioSource
     
     
   private:
-    float     	*fifo;
-    unsigned    fifo_size;
-    unsigned    head, tail;
-    bool      	output_stopped;
-    bool      	prebuf;
-    bool      	is_flushing;
+    unsigned       sample_rate;
+    float          *fifo;
+    unsigned       fifo_size;
+    unsigned       head, tail;
+    bool      	   prebuf;
+    bool      	   is_flushing;
+    int64_t        output_samples;
+    struct timeval output_start;
     
-    void writeSamplesFromFifo(void);
+    void writeSamplesFromFifo(int count);
 
 };  /* class AudioJitterFifo */
 

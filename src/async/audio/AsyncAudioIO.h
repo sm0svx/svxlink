@@ -92,7 +92,6 @@ namespace Async
 
 class AudioDevice;
 class AudioValve;
-class AudioFifo;
 
 
 /****************************************************************************
@@ -234,34 +233,6 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
      */
     void close(void);
   
-    /**
-     * @brief 	Find out how many samples there are in the output buffer
-     * @return	Returns the number of samples in the output buffer on
-     *          success or -1 on failure.
-     *
-     * This function can be used to find out how many samples there are
-     * in the output buffer at the moment. This can for example be used
-     * to find out how long it will take before the output buffer has
-     * been flushed.
-     */
-    //int samplesToWrite(void) const;
-    
-    /*
-     * @brief 	Call this method to clear all samples in the buffer
-     *
-     * This method is used to clear all the samples that are in the buffer.
-     * That is, all samples in the buffer will be thrown away. Remaining
-     * samples that have already been written to the sound card will be
-     * flushed and when finished, the allSamplesFlushed signal is emitted.
-     */
-    //void clearSamples(void);
-    
-    /*
-     * @brief 	Check if the audio device is busy flushing samples
-     * @return	Returns \em true if flushing the buffer or else \em false
-     */
-    //bool isFlushing(void) const { return is_flushing; }
-    
     /*
      * @brief 	Find out the current IO mode
      * @return	Returns the current IO mode
@@ -298,13 +269,13 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
     int channel(void) const { return m_channel; }
     
     /**
-     * @brief Resume audio output to the sink
+     * @brief Request audio samples from this source
      * 
      * This function will be called when the registered audio sink is
      * ready to accept more samples.
      * This function is normally only called from a connected sink object.
      */
-    void resumeOutput(void) {}
+    void requestSamples(int count) {}
     
     /**
      * @brief The registered sink has flushed all samples
@@ -315,30 +286,8 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
      */
     void allSamplesFlushed(void) {}
 
-#if 0
-    /**
-     * @brief 	Write samples into this audio sink
-     * @param 	samples The buffer containing the samples
-     * @param 	count The number of samples in the buffer
-     * @return	Returns the number of samples that has been taken care of
-     */
-    int writeSamples(const float *samples, int count);
-    
-    /**
-     * @brief 	Tell the sink to flush the previously written samples
-     *
-     * This function is used to tell the sink to flush previously written
-     * samples. When done flushing, the sink should call the
-     * sourceAllSamplesFlushed function.
-     */
-    void flushSamples(void);
-#endif
-
             
-  protected:
-    
   private:
-    class InputFifo;
     class DelayedFlushAudioReader;
     
     Mode      	      	    io_mode;
@@ -347,17 +296,15 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
     int       	      	    sample_rate;
     int       	      	    m_channel;
     AudioValve              *input_valve;
-    InputFifo         	    *input_fifo;
     DelayedFlushAudioReader *audio_reader;
 
       // Methods accessed by the Async::AudioDevice class
     friend class AudioDevice;
     AudioDevice *device(void) const { return audio_dev; }
     int readSamples(float *samples, int count);
-    bool doFlush(void) const;
+    bool isFlushing(void) const;
     bool isIdle(void) const;
     int audioRead(float *samples, int count);
-    unsigned samplesAvailable(void);
 
 };  /* class AudioIO */
 

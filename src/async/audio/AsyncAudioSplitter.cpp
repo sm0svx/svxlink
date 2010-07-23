@@ -53,6 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "AsyncAudioSource.h"
 #include "AsyncAudioSplitter.h"
+#include "AsyncAudioFifo.h"
 
 
 /****************************************************************************
@@ -83,22 +84,15 @@ using namespace Async;
 class Async::AudioSplitter::Branch : public AudioSource
 {
   public:
-    int   current_buf_pos;
-    bool  is_flushed;
-  
     Branch(AudioSplitter *splitter, AudioSink *sink, bool managed)
-      : current_buf_pos(0), is_flushed(true), is_enabled(true),
-	is_stopped(false), is_flushing(false), splitter(splitter)
+      : is_idle(true), is_enabled(true), is_flushing(false),
+        fifo(1024), splitter(splitter)
     {
-      assert(registerSink(sink, managed));
-    }
-    
-    virtual ~Branch(void)
-    {
-      if (is_stopped)
-      {
-      	splitter->branchResumeOutput();
-      }
+      /* Note: The FIFO does not add significant audio latency, as long */
+      /*       as the sample acceptance rates of the splitter branches */
+      /*       do not differ too much. */
+      assert(registerSink(&fifo));
+      assert(fifo.registerSink(sink, managed));
     }
     
     void setEnabled(bool enabled)
@@ -111,40 +105,27 @@ class Async::AudioSplitter::Branch : public AudioSource
       
       if (!enabled)
       {
-	if (is_stopped)
-	{
-	  is_stopped = false;
-	  splitter->branchResumeOutput();
-	}
 	if (is_flushing)
 	{
 	  is_flushing = false;
 	  splitter->branchAllSamplesFlushed();
 	}
-	else if (!is_flushed)
+	else if (!is_idle)
       	{
 	  AudioSource::sinkFlushSamples();
 	}
       }
-    }
+    } /* setEnabled */
     
     int sinkWriteSamples(const float *samples, int len)
     {
-      is_flushed = false;
+      is_idle = false;
       is_flushing = false;
       
       if (is_enabled)
       {
-	if (is_stopped)
-	{
-	  return 0;
-	}
-      
       	len = AudioSource::sinkWriteSamples(samples, len);
-      	is_stopped = (len == 0);
       }
-      
-      current_buf_pos += len;
       
       return len;
       
@@ -159,32 +140,36 @@ class Async::AudioSplitter::Branch : public AudioSource
       }
       else
       {
-      	is_flushed = true;
+      	is_idle = true;
       	splitter->branchAllSamplesFlushed();
       }
     } /* sinkFlushSamples */
-    
+
+    bool enabled() const { return is_enabled; }
+    bool empty() const { return fifo.empty(); }
+    int spaceAvail() const { return fifo.spaceAvail(); }
+
 
   private:
+    bool          is_idle;
     bool      	  is_enabled;
-    bool      	  is_stopped;
     bool      	  is_flushing;
+    AudioFifo     fifo;
     AudioSplitter *splitter;
   
-    virtual void resumeOutput(void)
+    virtual void requestSamples(int count)
     {
-      is_stopped = false;
       if (is_enabled)
       {
-      	splitter->branchResumeOutput();
+      	splitter->branchRequestSamples(count);
       }
-    } /* resumeOutput */
+    } /* requestSamples */
     
     virtual void allSamplesFlushed(void)
     {
       bool was_flushing = is_flushing;
       is_flushing = false;
-      is_flushed = true;
+      is_idle = true;
       if (is_enabled && was_flushing)
       {
       	splitter->branchAllSamplesFlushed();
@@ -227,17 +212,13 @@ class Async::AudioSplitter::Branch : public AudioSource
  ****************************************************************************/
 
 AudioSplitter::AudioSplitter(void)
-  : buf(0), buf_size(0), buf_len(0), do_flush(false), input_stopped(false),
-    flushed_branches(0), cleanup_branches_timer(0)
+  : is_flushing(false), flushed_branches(0)
 {
 } /* AudioSplitter::AudioSplitter */
 
 
 AudioSplitter::~AudioSplitter(void)
 {
-  delete cleanup_branches_timer;
-  cleanup_branches_timer = 0;
-  delete [] buf;
   removeAllSinks();
 } /* AudioSplitter::~AudioSplitter */
 
@@ -246,7 +227,7 @@ void AudioSplitter::addSink(AudioSink *sink, bool managed)
 {
   Branch *branch = new Branch(this, sink, managed);
   branches.push_back(branch);
-  if (do_flush)
+  if (is_flushing)
   {
     branch->sinkFlushSamples();
   }
@@ -255,15 +236,11 @@ void AudioSplitter::addSink(AudioSink *sink, bool managed)
 
 void AudioSplitter::removeSink(AudioSink *sink)
 {
-  list<Branch *>::iterator it;
-  for (it = branches.begin(); it != branches.end(); ++it)
+  list<Branch *>::iterator it = branches.begin();
+  while (it != branches.end())
   {
     if ((*it)->sink() == sink)
     {
-      //Branch *branch = *it;
-      //branches.erase(it);
-      //*it = 0;
-      //delete branch;
       if ((*it)->sinkManaged())
       {
       	delete (*it)->sink();
@@ -272,13 +249,16 @@ void AudioSplitter::removeSink(AudioSink *sink)
       {
       	(*it)->unregisterSink();
       }
-      if (cleanup_branches_timer == 0)
-      {
-      	cleanup_branches_timer = new Timer(0);
-	cleanup_branches_timer->expired.connect(
-	    slot(*this, &AudioSplitter::cleanupBranches));
-      }
+
+      Branch *branch = *it;
+      it = branches.erase(it);
+      delete branch;
+
       break;
+    }
+    else
+    {
+      ++it;
     }
   }
 } /* AudioSplitter::removeSink */
@@ -286,7 +266,7 @@ void AudioSplitter::removeSink(AudioSink *sink)
 
 void AudioSplitter::removeAllSinks(void)
 {
-  list<Branch *>::iterator it;
+  list<Branch *>::const_iterator it;
   for (it = branches.begin(); it != branches.end(); ++it)
   {
     delete (*it);
@@ -297,7 +277,7 @@ void AudioSplitter::removeAllSinks(void)
 
 void AudioSplitter::enableSink(AudioSink *sink, bool enable)
 {
-  list<Branch *>::iterator it;
+  list<Branch *>::const_iterator it;
   for (it = branches.begin(); it != branches.end(); ++it)
   {
     if ((*it)->sink() == sink)
@@ -309,55 +289,55 @@ void AudioSplitter::enableSink(AudioSink *sink, bool enable)
 } /* AudioSplitter::enableSink */
 
 
-int AudioSplitter::writeSamples(const float *samples, int len)
+int AudioSplitter::writeSamples(const float *samples, int count)
 {
-  do_flush = false;
-  
-  if (len == 0)
-  {
-    return 0;
-  }
-  
-  if (buf_len > 0)
-  {
-    input_stopped = true;
-    return 0;
-  }
-  
-  bool samples_written = false;
-  
-  list<Branch *>::iterator it;
+  is_flushing = false;
+ 
+  int enabled = 0;
+  int empty = 0;
+  int len = count;
+
+  list<Branch *>::const_iterator it;
+
+  /* To avoid buffer latency accumulation, at least one branch buffer */
+  /* has to be completely empty. Furthermore, we determine the least */
+  /* available buffer space of all branch buffers. */
   for (it = branches.begin(); it != branches.end(); ++it)
   {
-    (*it)->current_buf_pos = 0;
-    int written = (*it)->sinkWriteSamples(samples, len);
-    if (written != len)
+    Branch *branch = *it;
+    if (branch->enabled())
     {
-      if (buf_len == 0) // Only copy the buffer one time
-      {
-	if (buf_size < len)
-	{
-	  delete [] buf;
-          buf_size = len;
-	  buf = new float[buf_size];
-	}
-	memcpy(buf, samples, len * sizeof(*samples));
-	buf_len = len;
-      }
+      enabled++;
+      empty += branch->empty() ? 1 : 0;
+      len = min(len, branch->spaceAvail());
     }
-    samples_written |= (written > 0);
+  }
+
+  if (enabled == 0)
+  {
+    return count;
+  }
+
+  if ((empty == 0) || (len == 0))
+  {
+    return 0;
+  }
+
+  /* Write samples into all branches, we already assured that */
+  /* there is sufficient branch buffer space available */
+  for (it = branches.begin(); it != branches.end(); ++it)
+  {
+    (*it)->sinkWriteSamples(samples, len);
   }
   
-  writeFromBuffer();
-  
   return len;
-  
+
 } /* AudioSplitter::writeSamples */
 
 
 void AudioSplitter::flushSamples(void)
 {
-  if (do_flush)
+  if (is_flushing)
   {
     return;
   }
@@ -368,14 +348,8 @@ void AudioSplitter::flushSamples(void)
     return;
   }
   
-  do_flush = true;
+  is_flushing = true;
   flushed_branches = 0;
-  
-  if (buf_len > 0)
-  {
-    return;
-  }
-  
   flushAllBranches();
   
 } /* AudioSplitter::flushSamples */
@@ -406,8 +380,6 @@ void AudioSplitter::flushSamples(void)
 
 
 
-
-
 /****************************************************************************
  *
  * Private member functions
@@ -415,60 +387,9 @@ void AudioSplitter::flushSamples(void)
  ****************************************************************************/
 
 
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-void AudioSplitter::writeFromBuffer(void)
-{
-  bool samples_written = true;
-  bool all_written = (buf_len == 0);
-  
-  //cout << "samples_written=" << samples_written << "  all_written="
-    //   << all_written << endl;
-  
-  while (samples_written && !all_written)
-  {
-    samples_written = false;
-    all_written = true;
-    list<Branch *>::iterator it;
-    for (it = branches.begin(); it != branches.end(); ++it)
-    {
-      //cout << "(*it)->current_buf_pos=" << (*it)->current_buf_pos
-	//   << "  buf_len=" << buf_len << endl;
-      if ((*it)->current_buf_pos < buf_len)
-      {
-	int written = (*it)->sinkWriteSamples(buf+(*it)->current_buf_pos,
-	      	      	      	      	      buf_len-(*it)->current_buf_pos);
-	//cout << "written=" << written << endl;
-	samples_written |= (written > 0);
-	all_written &= ((*it)->current_buf_pos == buf_len);
-      }
-    }
-    
-    if (all_written)
-    {
-      buf_len = 0;
-      if (do_flush)
-      {
-	flushAllBranches();
-      }
-    }
-  }
-} /* AudioSplitter::writeFromBuffer */
-
-
 void AudioSplitter::flushAllBranches(void)
 {
-  list<Branch *>::iterator it;
+  list<Branch *>::const_iterator it;
   for (it = branches.begin(); it != branches.end(); ++it)
   {
     (*it)->sinkFlushSamples();
@@ -476,15 +397,10 @@ void AudioSplitter::flushAllBranches(void)
 } /* AudioSplitter::flushAllBranches */
 
 
-void AudioSplitter::branchResumeOutput(void)
+void AudioSplitter::branchRequestSamples(int count)
 {
-  writeFromBuffer();
-  if (input_stopped && (buf_len == 0))
-  {
-    input_stopped = false;
-    sourceResumeOutput();
-  }
-} /* AudioSplitter::branchResumeOutput */
+  sourceRequestSamples(count);
+} /* AudioSplitter::branchRequestSamples */
 
 
 void AudioSplitter::branchAllSamplesFlushed(void)
@@ -494,41 +410,10 @@ void AudioSplitter::branchAllSamplesFlushed(void)
   
   if (static_cast<unsigned>(++flushed_branches) == branches.size())
   {
-    do_flush = false;
+    is_flushing = false;
     sourceAllSamplesFlushed();
   }
 } /* AudioSplitter::branchAllSamplesFlushed */
-
-
-/*
- * @brief: Delete removed branches
- *
- * This functions is called by a zero second timer to cleanup removed branches.
- * Branches cannot be removed directly from the list since that could
- * corrupt iterators when looping through the list.
- */
-void AudioSplitter::cleanupBranches(Timer *t)
-{
-  delete cleanup_branches_timer;
-  cleanup_branches_timer = 0;
-  
-  list<Branch *>::iterator it = branches.begin();
-  while (it != branches.end())
-  {
-    if (!(*it)->isRegistered())
-    {
-      list<Branch *>::iterator delete_it = it;
-      ++it;
-      delete *delete_it;
-      branches.erase(delete_it);
-    }
-    else
-    {
-      ++it;
-    }
-  }
-} /* AudioSplitter::cleanupBranches */
-
 
 
 /*

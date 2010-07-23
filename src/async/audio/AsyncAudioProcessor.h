@@ -130,10 +130,10 @@ class AudioProcessor : public AudioSink, public AudioSource
     /**
      * @brief 	Write audio to the filter
      * @param 	samples The buffer containing the samples
-     * @param 	len   	The number of samples in the buffer
+     * @param 	count	The number of samples in the buffer
      * @return	Return the number of samples processed
      */
-    int writeSamples(const float *samples, int len);
+    int writeSamples(const float *samples, int count);
     
     /**
      * @brief Order a flush of all samples
@@ -141,9 +141,9 @@ class AudioProcessor : public AudioSink, public AudioSource
     void flushSamples(void);
 
     /**
-     * @brief Resume output to the sink if previously stopped
+     * @brief Request samples from this source
      */
-    void resumeOutput(void);
+    void requestSamples(int count);
     
     /**
      * @brief All samples have been flushed by the sink
@@ -174,22 +174,19 @@ class AudioProcessor : public AudioSink, public AudioSource
     
     
   private:
-    static const int BUFSIZE = 256;
-    
-    float     	buf[BUFSIZE];
-    int       	buf_cnt;
-    bool      	do_flush;
-    bool      	input_stopped;
-    bool      	output_stopped;
+    float     	remain_buf[16];
+    int         remain_len;
+    float       *target_buf;
+    float       *target_ptr;
+    int         target_size;
+    int         target_len;
     int       	input_rate;
     int       	output_rate;
-    float     	*input_buf;
-    int       	input_buf_cnt;
-    int       	input_buf_size;
+    bool        is_flushing;
     
     AudioProcessor(const AudioProcessor&);
     AudioProcessor& operator=(const AudioProcessor&);
-    void writeFromBuf(void);
+    bool flushBuffer(void);
 
 };  /* class AudioProcessor */
 

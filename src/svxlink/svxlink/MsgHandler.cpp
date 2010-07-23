@@ -347,11 +347,11 @@ void MsgHandler::end(void)
 } /* MsgHandler::end */
 
 
-void MsgHandler::resumeOutput(void)
+void MsgHandler::requestSamples(int count)
 {
   if (current != 0)
   {
-    writeSamples();
+    writeSamples(count);
   }
 } /* MsgHandler::resumeOutput */
 
@@ -435,48 +435,32 @@ void MsgHandler::playMsg(void)
   }
   else
   {
-    writeSamples();
+    while (writeSamples(WRITE_BLOCK_SIZE));
   }
 } /* MsgHandler::playMsg */
 
 
-void MsgHandler::writeSamples(void)
+bool MsgHandler::writeSamples(int count)
 {
-  float buf[WRITE_BLOCK_SIZE];
+  float buf[count];
 
   assert(current != 0);
     
-  int written;
-  int read_cnt;
-  do
+  int read_cnt = current->readSamples(buf, count);
+  if (read_cnt == 0)
   {
-    read_cnt = current->readSamples(buf, sizeof(buf) / sizeof(*buf));
-    if (read_cnt == 0)
-    {
-      goto done;
-    }
-    
-    written = sinkWriteSamples(buf, read_cnt);
-    if (written == -1)
-    {
-      perror("write in MsgHandler::writeFromFile");
-      goto done;
-    }
-    //printf("Read=%d  Written=%d\n", read_cnt, written);
-    
-    if (written < read_cnt)
-    {
-      current->unreadSamples(read_cnt - written);
-    }
-  } while (written > 0);
-  
-  return;
-    
-  done:
-    //printf("Done...\n");
     deleteQueueItem(current);
     current = 0;
     playMsg();
+    return false;
+  }
+    
+  int written = sinkWriteSamples(buf, read_cnt);
+  //printf("Read=%d  Written=%d\n", read_cnt, written);
+  current->unreadSamples(read_cnt - written);
+
+  return (written == read_cnt);
+
 } /* MsgHandler::writeSamples */
 
 

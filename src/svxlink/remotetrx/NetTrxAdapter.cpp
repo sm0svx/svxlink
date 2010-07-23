@@ -269,9 +269,9 @@ class TxAdapter : public Tx, public AudioSource
       sinkFlushSamples();
     }
     
-    void resumeOutput()
+    void requestSamples(int count)
     {
-      sourceResumeOutput();
+      sourceRequestSamples(count);
     }
     
     void allSamplesFlushed(void)

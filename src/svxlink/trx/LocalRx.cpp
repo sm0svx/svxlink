@@ -57,7 +57,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioDecimator.h>
 #include <AsyncAudioClipper.h>
 #include <AsyncAudioCompressor.h>
-#include <AsyncAudioFifo.h>
 #include <AsyncAudioStreamStateDetector.h>
 
 
@@ -323,12 +322,6 @@ bool LocalRx::initialize(void)
     // Create the audio IO object
   audio_io = new AudioIO(audio_dev, audio_channel);
   AudioSource *prev_src = audio_io;
-  
-    // Create a fifo buffer to handle large audio blocks
-  AudioFifo *input_fifo = new AudioFifo(1024);
-//  input_fifo->setOverwrite(true);
-  prev_src->registerSink(input_fifo, true);
-  prev_src = input_fifo;
   
     // If a preamp was configured, create it
   if (preamp_gain != 0)

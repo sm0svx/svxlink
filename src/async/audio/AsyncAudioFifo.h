@@ -164,6 +164,12 @@ class AudioFifo : public AudioSink, public AudioSource
      * @return	Returns the number of samples in the FIFO
      */
     unsigned samplesInFifo(bool ignore_prebuf=false) const;
+
+    /**
+     * @brief 	Find out how many samples the FIFO can accept
+     * @return	Returns the amount of free space in the FIFO
+     */
+    unsigned spaceAvail(void) const;
     
     /**
      * @brief 	Set the overwrite mode
@@ -233,8 +239,14 @@ class AudioFifo : public AudioSink, public AudioSource
      * @return	Returns the number of samples that has been taken care of
      *
      * This function is used to write audio into the FIFO. If it
-     * returns 0, no more samples should be written until the resumeOutput
-     * function in the source have been called.
+     * returns 0, no more samples could be written.
+     * If the returned number of written samples is lower than the count
+     * parameter value, the sink is not ready to accept more samples.
+     * In this case, the audio source requires sample buffering to temporarily
+     * store samples that are not immediately accepted by the sink.
+     * The writeSamples function should be called on source buffer updates
+     * and after a source output request has been received through the
+     * requestSamples function.
      * This function is normally only called from a connected source object.
      */
     virtual int writeSamples(const float *samples, int count);
@@ -249,13 +261,13 @@ class AudioFifo : public AudioSink, public AudioSource
     virtual void flushSamples(void);
     
     /**
-     * @brief Resume audio output to the connected sink
+     * @brief Request audio samples from this source
      * 
      * This function will be called when the registered audio sink is ready
      * to accept more samples.
      * This function is normally only called from a connected sink object.
      */
-    virtual void resumeOutput(void);
+    virtual void requestSamples(int count);
     
     
   protected:
@@ -274,7 +286,6 @@ class AudioFifo : public AudioSink, public AudioSource
     unsigned    fifo_size;
     unsigned    head, tail;
     bool      	do_overwrite;
-    bool      	output_stopped;
     unsigned  	prebuf_samples;
     bool      	prebuf;
     bool      	is_flushing;
@@ -282,9 +293,9 @@ class AudioFifo : public AudioSink, public AudioSource
     bool        buffering_enabled;
     bool      	disable_buffering_when_flushed;
     bool      	is_idle;
-    bool      	input_stopped;
     
-    void writeSamplesFromFifo(void);
+    int writeSamplesFromFifo(int count);
+    void flushSamplesFromFifo(void);
 
 };  /* class AudioFifo */
 

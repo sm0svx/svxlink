@@ -45,6 +45,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncAudioSource.h>
+#include <AsyncAudioFifo.h>
+#include <SigCAudioSource.h>
 
 
 /****************************************************************************
@@ -130,17 +132,18 @@ class AudioMixer : public SigC::Object, public Async::AudioSource
      */
     void addSource(AudioSource *source);
 
+    
+  protected:
+
     /**
-     * @brief Resume audio output to the sink
+     * @brief Request audio samples from the source
+     * @param count
      * 
      * This function will be called when the registered audio sink is ready
      * to accept more samples.
-     * This function is normally only called from a connected sink object.
      */
-    void resumeOutput(void);
-    
-    
-  protected:
+    void onRequestSamples(int count);
+
     /**
      * @brief The registered sink has flushed all samples
      *
@@ -148,30 +151,23 @@ class AudioMixer : public SigC::Object, public Async::AudioSource
      * registered sink.
      * This function is normally only called from a connected sink object.
      */
-    void allSamplesFlushed(void);
-    
+    void onAllSamplesFlushed(void);
     
   private:
     class MixerSrc;
     
-    static const int OUTBUF_SIZE = 256;
-    
     std::list<MixerSrc *> sources;
-    Timer     	      	  *delayed_exec_timer;
-    float     	      	  outbuf[OUTBUF_SIZE];
-    unsigned       	  outbuf_pos;
-    unsigned  	      	  outbuf_cnt;
-    bool      	      	  is_flushed;
-    bool      	      	  output_stopped;
+    AudioFifo             fifo;
+    SigCAudioSource       sink;
+    bool      	          is_flushed;
+    bool                  is_requesting;
     
     AudioMixer(const AudioMixer&);
     AudioMixer& operator=(const AudioMixer&);
     
     void setAudioAvailable(void);
     void flushSamples(void);
-    void outputHandler(Timer *t);
-    void checkFlush(void);
-
+    
     friend class MixerSrc;
     
 };  /* class AudioMixer */

@@ -66,7 +66,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioSplitter.h>
 #include <AsyncAudioValve.h>
-#include <AsyncAudioFifo.h>
+#include <AsyncAudioJitterFifo.h>
 #include <AsyncAudioStreamStateDetector.h>
 #include <AsyncAudioPacer.h>
 #include <AsyncAudioDebugger.h>
@@ -431,11 +431,16 @@ bool Logic::initialize(void)
   logic_con_out->addSource(passthrough);
   logic_con_out->enableAutoSelect(passthrough, 10);
 
+    // Add a pre-buffered FIFO to avoid underrun
+  AudioJitterFifo *rpt_fifo = new AudioJitterFifo(INTERNAL_SAMPLE_RATE,
+    1024 * INTERNAL_SAMPLE_RATE / 8000);
+  rx_splitter->addSink(rpt_fifo, true);
+
     // A valve that is used to turn direct RX to TX audio on or off.
     // Used by the repeater logic.
   rpt_valve = new AudioValve;
   rpt_valve->setOpen(false);
-  rx_splitter->addSink(rpt_valve, true);
+  rpt_fifo->registerSink(rpt_valve, true);
 
     // This selector is used to select audio source for TX audio
   tx_audio_selector = new AudioSelector;
@@ -505,12 +510,6 @@ bool Logic::initialize(void)
   prev_tx_src->registerSink(state_det, true);
   prev_tx_src = state_det;
   
-    // Add a pre-buffered FIFO to avoid underrun
-  AudioFifo *tx_fifo = new AudioFifo(1024 * INTERNAL_SAMPLE_RATE / 8000);
-  tx_fifo->setPrebufSamples(512 * INTERNAL_SAMPLE_RATE / 8000);
-  prev_tx_src->registerSink(tx_fifo, true);
-  prev_tx_src = tx_fifo;
-  
     // Create the TX audio mixer
   tx_audio_mixer = new AudioMixer;
   tx_audio_mixer->addSource(prev_tx_src);
@@ -541,13 +540,7 @@ bool Logic::initialize(void)
   fx_gain_ctrl = new AudioAmp;
   fx_gain_ctrl->setGain(fx_gain_normal);
   prev_tx_src->registerSink(fx_gain_ctrl, true);
-  prev_tx_src = fx_gain_ctrl;
-  
-    // Pace the audio so that we don't fill up the audio output pipe.
-  AudioPacer *msg_pacer = new AudioPacer(INTERNAL_SAMPLE_RATE,
-      	      	      	      	      	 256 * INTERNAL_SAMPLE_RATE / 8000, 0);
-  prev_tx_src->registerSink(msg_pacer, true);
-  tx_audio_mixer->addSource(msg_pacer);
+  tx_audio_mixer->addSource(fx_gain_ctrl);
   prev_tx_src = 0;
   
   event_handler = new EventHandler(event_handler_str, this);

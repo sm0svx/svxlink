@@ -34,9 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <cstdio>
-#include <cstring>
-#include <algorithm>
+#include <iostream>
 #include <cassert>
 
 
@@ -100,14 +98,12 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
  *
  ****************************************************************************/
 
-static const unsigned  MAX_WRITE_SIZE = 800;
 
 
 /****************************************************************************
@@ -116,13 +112,15 @@ static const unsigned  MAX_WRITE_SIZE = 800;
  *
  ****************************************************************************/
 
-
-AudioJitterFifo::AudioJitterFifo(unsigned fifo_size)
-  : fifo_size(fifo_size), head(0), tail(0),
-    output_stopped(false), prebuf(true), is_flushing(false)
+AudioJitterFifo::AudioJitterFifo(unsigned sample_rate, unsigned fifo_size)
+  : sample_rate(sample_rate), fifo(0), fifo_size(fifo_size), head(0),
+    tail(0), prebuf(true), is_flushing(false), output_samples(0)
 {
+  assert(sample_rate > 0);
+  assert((sample_rate % 1000) == 0);
   assert(fifo_size > 0);
   fifo = new float[fifo_size];
+  timerclear(&output_start);
 } /* AudioJitterFifo */
 
 
@@ -145,11 +143,11 @@ void AudioJitterFifo::setSize(unsigned new_size)
 } /* AudioJitterFifo::setSize */
 
 
-unsigned AudioJitterFifo::samplesInFifo(void) const
+unsigned AudioJitterFifo::samplesInFifo(bool ignore_prebuf) const
 {
   unsigned samples_in_buffer = (head - tail + fifo_size) % fifo_size;
 
-  if (prebuf && !is_flushing)
+  if (!ignore_prebuf && prebuf && !is_flushing)
   {
     if (samples_in_buffer < (fifo_size >> 1))
     {
@@ -168,15 +166,10 @@ void AudioJitterFifo::clear(void)
   
   tail = head = 0;
   prebuf = true;
-  output_stopped = false;
   
-  if (is_flushing)
+  if (is_flushing && !was_empty)
   {
-    is_flushing = false;
-    if (!was_empty)
-    {
-      sinkFlushSamples();
-    }
+    sinkFlushSamples();
   }
 } /* AudioJitterFifo::clear */
 
@@ -184,7 +177,7 @@ void AudioJitterFifo::clear(void)
 int AudioJitterFifo::writeSamples(const float *samples, int count)
 {
   assert(count > 0);
-
+  
   if (is_flushing)
   {
     is_flushing = false;
@@ -203,12 +196,28 @@ int AudioJitterFifo::writeSamples(const float *samples, int count)
     }
   }
 
-  if (samplesInFifo() > 0)
+  if (samplesInFifo() > 0 && prebuf)
   {
+    gettimeofday(&output_start, NULL);
+    output_samples = 0;
     prebuf = false;
   }
+
+  /* When we push samples into the pipe, we have to limit the pushed */
+  /* sample rate. Otherwise, the FIFO space is used inefficiently. */
+  if (!prebuf)
+  {  
+    struct timeval now, diff;
   
-  writeSamplesFromFifo();
+    gettimeofday(&now, NULL);
+    timersub(&now, &output_start, &diff);
+
+    /* elapsed time (ms) since output has been started */  
+    uint64_t diff_ms = diff.tv_sec * 1000 + diff.tv_usec / 1000;
+  
+    /* the output is modeled as a constant rate sample source */
+    writeSamplesFromFifo(sample_rate * diff_ms / 1000 - output_samples);
+  }
 
   return samples_written;
   
@@ -225,14 +234,16 @@ void AudioJitterFifo::flushSamples(void)
 } /* AudioJitterFifo::flushSamples */
 
 
-void AudioJitterFifo::resumeOutput(void)
+void AudioJitterFifo::requestSamples(int count)
 {
-  if (output_stopped)
+  int avail_samples = samplesInFifo(true);
+  if (!is_flushing && (count > avail_samples))
   {
-    output_stopped = false;
-    writeSamplesFromFifo();
+    sourceRequestSamples(prebuf ? (fifo_size >> 1) + count - avail_samples :
+      count - avail_samples);
   }
-} /* resumeOutput */
+  writeSamplesFromFifo(count);
+} /* requestSamples */
 
 
 
@@ -241,7 +252,6 @@ void AudioJitterFifo::resumeOutput(void)
  * Protected member functions
  *
  ****************************************************************************/
-
 
 
 void AudioJitterFifo::allSamplesFlushed(void)
@@ -266,42 +276,26 @@ void AudioJitterFifo::allSamplesFlushed(void)
  ****************************************************************************/
 
 
-void AudioJitterFifo::writeSamplesFromFifo(void)
+void AudioJitterFifo::writeSamplesFromFifo(int count)
 {
-  if (output_stopped)
-  {
-    return;
-  }
+  unsigned samples_from_fifo = min((unsigned)count, samplesInFifo());
 
-  int samples_written;
-  if (prebuf && !empty())
+  //cerr << "samples_from_fifo=" << samples_from_fifo << " " << samplesInFifo() << endl;
+
+  while (samples_from_fifo > 0)
   {
-    float silence[MAX_WRITE_SIZE];
-    for (unsigned i=0; i<MAX_WRITE_SIZE; i++)
+    unsigned to_end_of_fifo = min(samples_from_fifo, fifo_size - tail);
+    unsigned ret = sinkWriteSamples(fifo + tail, to_end_of_fifo);
+      
+    tail += ret;
+    tail %= fifo_size;
+    output_samples += ret;
+    samples_from_fifo -= ret;
+
+    if (ret < to_end_of_fifo)
     {
-      silence[i] = 0;
+      break;
     }
-    unsigned timeout = (fifo_size << 4) / MAX_WRITE_SIZE;
-    do
-    {
-      samples_written = sinkWriteSamples(silence, MAX_WRITE_SIZE);
-    } while ((samples_written > 0) && (--timeout));
-  }
-  else
-  {
-    do
-    {
-      int samples_to_write = min(MAX_WRITE_SIZE, samplesInFifo());
-      int to_end_of_fifo = fifo_size - tail;
-      samples_to_write = min(samples_to_write, to_end_of_fifo);
-      samples_written = sinkWriteSamples(fifo+tail, samples_to_write);
-      tail = (tail + samples_written) % fifo_size;
-    } while((samples_written > 0) && !empty());
-  }
-  
-  if (samples_written == 0)
-  {
-    output_stopped = true;
   }
   
   if (empty())
@@ -310,14 +304,10 @@ void AudioJitterFifo::writeSamplesFromFifo(void)
     {
       sinkFlushSamples();
     }
-    else
-    {
-      prebuf = true;
-    }
+    prebuf = true;
   }
   
 } /* writeSamplesFromFifo */
-
 
 
 /*

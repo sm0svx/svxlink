@@ -117,7 +117,7 @@ class DtmfEncoder : public Async::AudioSource, SigC::Object
     /**
      * @brief 	Default constuctor
      */
-    DtmfEncoder(int sampling_rate);
+    DtmfEncoder(int sample_rate);
   
     /**
      * @brief 	Destructor
@@ -136,14 +136,15 @@ class DtmfEncoder : public Async::AudioSource, SigC::Object
     bool isSending(void) const { return is_sending_digits; }
     
     /**
-     * @brief Resume audio output to the sink
+     * @brief Request audio samples from this source
+     * @param count
      * 
      * This function must be reimplemented by the inheriting class. It
      * will be called when the registered audio sink is ready to accept
      * more samples.
      * This function is normally only called from a connected sink object.
      */
-    void resumeOutput(void);
+    void requestSamples(int count);
     
     /**
      * @brief The registered sink has flushed all samples
@@ -164,7 +165,7 @@ class DtmfEncoder : public Async::AudioSource, SigC::Object
   protected:
     
   private:
-    int       	sampling_rate;
+    int       	sample_rate;
     int       	tone_length;
     int       	tone_spacing;
     float       tone_amp;
@@ -179,7 +180,7 @@ class DtmfEncoder : public Async::AudioSource, SigC::Object
     DtmfEncoder(const DtmfEncoder&);
     DtmfEncoder& operator=(const DtmfEncoder&);
     void playNextDigit(void);
-    void writeAudio(void);
+    bool writeAudio(int count);
     
 };  /* class DtmfEncoder */
 

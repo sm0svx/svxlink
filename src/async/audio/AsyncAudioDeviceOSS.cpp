@@ -145,7 +145,10 @@ bool AudioDeviceOSS::isFullDuplexCapable(void)
 
 void AudioDeviceOSS::audioToWriteAvailable(void)
 {
-  write_watch->setEnabled(true);
+  if (write_watch != 0)
+  {
+    write_watch->setEnabled(true);
+  }
 } /* AudioDeviceOSS::audioToWriteAvailable */
 
 
@@ -441,6 +444,7 @@ void AudioDeviceOSS::writeSpaceAvailable(FdWatch *watch)
     //printf("fragments=%u  frags_read=%u\n", fragments, frags_read);
     if (frags_read == 0)
     {
+      //printf("No blocks available to write\n");
       watch->setEnabled(false);
       return;
     }

@@ -288,6 +288,7 @@ bool AudioDeviceAlsa::openDevice(Mode mode)
     play_watch = new AlsaWatch(play_pfds, play_nfds);
     play_watch->activity.connect(
             slot(*this, &AudioDeviceAlsa::writeSpaceAvailable));
+    play_watch->setEnabled(false);
 
     if (snd_pcm_prepare(play_handle) < 0)
     {
@@ -451,10 +452,12 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, pollfd *pfd)
       // Bail out if there's an error
     if (space_avail < 0)
     {
-      if (snd_pcm_prepare(play_handle) < 0)
+      int err = snd_pcm_prepare(play_handle);
+      if (err < 0)
       {
-        cerr << "*** ERROR: Non-recoverable underrun in" <<
-                "AudioDeviceAlsa::writeSpaceAvailable" << endl;
+        cerr << "*** ERROR: snd_pcm_prepare failed (unrecoverable error): "
+             << snd_strerror(err)
+             << endl;
         watch->setEnabled(false);
         return;
       }
@@ -469,7 +472,7 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, pollfd *pfd)
     }
     
     int blocks_avail = getBlocks(buf, blocks_to_read);
-    if (blocks_avail == 0)
+    if (blocks_avail == 0) 
     {
       //printf("No blocks available to write\n");
       watch->setEnabled(false);
@@ -483,10 +486,12 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, pollfd *pfd)
     //       blocks_gotten, (int)frames_written);
     if (frames_written < 0)
     {
-      if (snd_pcm_prepare(play_handle) < 0)
+      int err = snd_pcm_prepare(play_handle);
+      if (err < 0)
       {
-        cerr << "*** ERROR: Non-recoverable underrun in" <<
-                "AudioDeviceAlsa::writeSpaceAvailable" << endl;
+        cerr << "*** ERROR: snd_pcm_prepare failed (unrecoverable error): "
+             << snd_strerror(err)
+             << endl;
         watch->setEnabled(false);
         return;
       }
@@ -570,9 +575,10 @@ bool AudioDeviceAlsa::initParams(snd_pcm_t *pcm_handle)
     snd_pcm_hw_params_free (hw_params);
     return false;
   }
-                                                                 
+                                                      
   block_size = period_size;
   block_count = block_count_hint * block_size_hint / block_size;
+  if (block_count < 2) block_count = 2;
 
   /* Set number of periods. Periods used to be called fragments. */
   if (snd_pcm_hw_params_set_periods_near(pcm_handle, hw_params,

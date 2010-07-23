@@ -178,15 +178,6 @@ class NetRx : public Rx
      */
     void reset(void);
     
-    /**
-     * @brief Resume audio output to the sink
-     *
-     * This function will be called when the registered audio sink is
-     * ready to accept more samples.
-     * This function is normally only called from a connected sink object.
-     */
-    //virtual void resumeOutput(void) {}
-    
 
   protected:
     

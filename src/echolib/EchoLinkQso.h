@@ -440,13 +440,13 @@ class Qso
     virtual void flushSamples(void);
 
     /**
-     * @brief Resume audio output to the sink
+     * @brief Request audio samples from this source
      * 
      * This function will be called when the registered audio sink is ready
      * to accept more samples.
      * This function is normally only called from a connected sink object.
      */
-    virtual void resumeOutput(void);
+    virtual void requestSamples(int count);
     
 
   protected:

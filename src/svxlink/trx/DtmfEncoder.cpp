@@ -115,9 +115,9 @@ static map<char, pair<int, int> > tone_map;
  *
  ****************************************************************************/
 
-DtmfEncoder::DtmfEncoder(int sampling_rate)
-  : sampling_rate(sampling_rate), tone_length(100 * sampling_rate / 1000),
-    tone_spacing(50 * sampling_rate / 1000), tone_amp(0.5), low_tone(-1),
+DtmfEncoder::DtmfEncoder(int sample_rate)
+  : sample_rate(sample_rate), tone_length(100 * sample_rate / 1000),
+    tone_spacing(50 * sample_rate / 1000), tone_amp(0.5), low_tone(-1),
     is_playing(false), is_sending_digits(false)
 {
   if (tone_map.empty())
@@ -151,13 +151,13 @@ DtmfEncoder::~DtmfEncoder(void)
 
 void DtmfEncoder::setToneLength(int length_ms)
 {
-  tone_length = length_ms * sampling_rate / 1000;
+  tone_length = length_ms * sample_rate / 1000;
 } /* DtmfEncoder::setToneLength */
 
 
 void DtmfEncoder::setToneSpacing(int spacing_ms)
 {
-  tone_spacing = spacing_ms * sampling_rate / 1000;
+  tone_spacing = spacing_ms * sample_rate / 1000;
 } /* DtmfEncoder::setGapLength */
 
 
@@ -176,13 +176,13 @@ void DtmfEncoder::send(const std::string &str)
 } /* DtmfEncoder::send */
 
 
-void DtmfEncoder::resumeOutput(void)
+void DtmfEncoder::requestSamples(int count)
 {
   if (isSending())
   {
-    writeAudio();
+    writeAudio(count);
   }
-} /* DtmfEncoder::resumeOutput */
+} /* DtmfEncoder::requestSamples */
 
 
 void DtmfEncoder::allSamplesFlushed(void)
@@ -257,7 +257,7 @@ void DtmfEncoder::playNextDigit(void)
     pos = 0;
     length = tone_spacing;
     is_playing = true;
-    writeAudio();
+    while (writeAudio(BLOCK_SIZE));
     return;
   }
   
@@ -277,44 +277,44 @@ void DtmfEncoder::playNextDigit(void)
   length = tone_length;
   is_playing = true;
   
-  writeAudio();
+  while (writeAudio(BLOCK_SIZE));
   
 } /* DtmfEncoder::playNextDigit */
 
 
-void DtmfEncoder::writeAudio(void)
+bool DtmfEncoder::writeAudio(int count)
 {
-  float block[BLOCK_SIZE];
-  int ret;
+  float block[count];
   
-  do
+  int block_len = min(count, length - pos);
+  for (int i=0; i<block_len; ++i)
   {
-    int count = min(BLOCK_SIZE, length - pos);
-    for (int i=0; i<count; ++i)
+    if (low_tone > 0)
     {
-      if (low_tone > 0)
-      {
-      	block[i] = tone_amp * sin(2 * M_PI * low_tone * pos / sampling_rate) +
-      		   tone_amp * sin(2 * M_PI * high_tone * pos / sampling_rate);
-      }
-      else
-      {
-      	block[i] = 0;
-      }
-      ++pos;
+      block[i] = tone_amp * sin(2 * M_PI * low_tone * pos / sample_rate) +
+                 tone_amp * sin(2 * M_PI * high_tone * pos / sample_rate);
     }
+    else
+    {
+      block[i] = 0;
+    }
+    ++pos;
+  }
 
-    ret = sinkWriteSamples(block, count);
-    //printf("Wrote %d DTMF samples\n", ret);
-    pos -= (count - ret);
-  } while ((ret > 0) && (pos < length));
+  int written = sinkWriteSamples(block, block_len);
+  //printf("Wrote %d DTMF samples\n", ret);
+  pos -= (block_len - written);
   
-  if (pos == length)
+  if (pos < length)
   {
-    is_playing = false;
-    playNextDigit();
+    return (written == block_len);
   }
   
+  is_playing = false;
+  playNextDigit();
+
+  return (written == block_len);
+
 } /* DtmfEncoder::writeAudio */
 
 

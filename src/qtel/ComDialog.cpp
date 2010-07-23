@@ -61,7 +61,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncDnsLookup.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkQso.h>
-#include <AsyncAudioFifo.h>
+#include <AsyncAudioJitterFifo.h>
 #include <AsyncAudioValve.h>
 #include <AsyncAudioSplitter.h>
 
@@ -255,9 +255,7 @@ void ComDialog::init(const QString& remote_name)
   call->setText(callsign);
   name_label->setText(remote_name);
   
-  rem_audio_fifo = new AudioFifo(8000);
-  rem_audio_fifo->setOverwrite(true);
-  rem_audio_fifo->setPrebufSamples(1280);
+  rem_audio_fifo = new AudioJitterFifo(8000, 2048);
   
   rem_audio_valve = new AudioValve;
   rem_audio_valve->setOpen(false);

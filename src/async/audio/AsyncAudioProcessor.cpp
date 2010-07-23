@@ -32,9 +32,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <cstdlib>
 #include <iostream>
-#include <algorithm>
-
 #include <cstring>
 
 
@@ -115,131 +114,103 @@ using namespace Async;
  ****************************************************************************/
 
 AudioProcessor::AudioProcessor(void)
-  : buf_cnt(0), do_flush(false), input_stopped(false),
-    output_stopped(false), input_rate(1), output_rate(1), input_buf(0),
-    input_buf_cnt(0), input_buf_size(0)
+  : remain_len(0), target_buf(0), target_size(0), target_len(0),
+    input_rate(1), output_rate(1), is_flushing(false)
 {
-  
 } /* AudioProcessor::AudioProcessor */
 
 
 AudioProcessor::~AudioProcessor(void)
 {
-  delete [] input_buf;
+  delete [] target_buf;
 } /* AudioProcessor::~AudioProcessor */
 
 
-int AudioProcessor::writeSamples(const float *samples, int len)
+int AudioProcessor::writeSamples(const float *samples, int count)
 {
-  //cout << "AudioProcessor::writeSamples: len=" << len << endl;
-  
-  if (len <= 0)
+  //cout << "AudioProcessor::writeSamples: len=" << count << endl;
+  is_flushing = false;
+  if (!flushBuffer())
   {
     return 0;
   }
-  
-  do_flush = false;
-  int orig_len = len;
-  
-  writeFromBuf();
 
-    // Calculate the maximum number of samples we are able to process
-  int max_proc = (BUFSIZE - buf_cnt) * input_rate / output_rate;
-  if (max_proc == 0)
-  {
-    input_stopped = true;
-    return 0;
-  }
-  
-    // If we have samples in the input buffer, try to fill it up and process it
-  if (input_buf_cnt > 0)
-  {
-    int copy_cnt = min(input_buf_size-input_buf_cnt, len);
-    memcpy(input_buf + input_buf_cnt, samples, copy_cnt * sizeof(*input_buf));
-    samples += copy_cnt;
-    len -= copy_cnt;
-    input_buf_cnt += copy_cnt;
-    
-    if (input_buf_cnt == input_buf_size)
-    {
-      processSamples(buf + buf_cnt, input_buf, input_buf_size);
-      buf_cnt += 1;
-      max_proc -= input_buf_size;
-      input_buf_cnt = 0;
-    }
-  }
-  
-  int reminder = 0;
-  if (input_buf_size > 0)
-  {
-    reminder = len % input_buf_size;
-  }
-  
-  int proc_cnt = min(max_proc, len-reminder);
-  if (proc_cnt > 0)
-  {
-    processSamples(buf + buf_cnt, samples, proc_cnt);
-    buf_cnt += proc_cnt * output_rate / input_rate;
-    samples += proc_cnt;
-    len -= proc_cnt;
-    writeFromBuf();
-  }
+  int len = count + remain_len;
 
-  if ((len > 0) && (len < input_buf_size))
-  {
-    memcpy(input_buf, samples, len * sizeof(*input_buf));
-    input_buf_cnt = len;
-    len = 0;
-  }
-  
-  int ret_len = orig_len - len;
-  if (ret_len == 0)
-  {
-    input_stopped = true;
-  }
-  
-  return ret_len;
+  // Copy source samples into input buffer
+  float source_buf[len];
+  memcpy(source_buf, remain_buf, remain_len * sizeof(float));
+  memcpy(source_buf + remain_len, samples, count * sizeof(float));
 
+  // Note: The output sample rate may be different to the input rate.
+  div_t ratio = div(len * output_rate, input_rate);
+  target_len = ratio.quot;
+  remain_len = ratio.rem;
+  
+  // Check for sufficient buffer size
+  if (target_size < target_len)
+  {
+    delete [] target_buf;
+    target_size = target_len;
+    target_buf = new float[target_size];
+  }
+  
+  processSamples(target_buf, source_buf, len - remain_len);
+  memcpy(remain_buf, source_buf + len - remain_len, remain_len * sizeof(float));
+
+  target_ptr = target_buf;
+
+  int written = sinkWriteSamples(target_ptr, target_len);
+  target_ptr += written;
+  target_len -= written;
+
+  return count;
 } /* AudioProcessor::writeSamples */
 
 
 void AudioProcessor::flushSamples(void)
 {
   //cout << "AudioProcessor::flushSamples" << endl;
-  
-  do_flush = true;
-  input_stopped = false;
-  if (buf_cnt == 0)
+  is_flushing = true;
+  if (flushBuffer())
   {
-    if (input_buf_cnt > 0)
-    {
-      memset(input_buf + input_buf_cnt, 0,
-      	     (input_buf_size - input_buf_cnt) * sizeof(*input_buf));
-      processSamples(buf, input_buf, input_buf_size);
-      buf_cnt += 1;
-      input_buf_cnt = 0;
-      writeFromBuf();
-    }
-    else
-    {
-      sinkFlushSamples();
-    }
+    sinkFlushSamples();
   }
 } /* AudioProcessor::flushSamples */
 
 
-void AudioProcessor::resumeOutput(void)
+void AudioProcessor::requestSamples(int count)
 {
-  //cout << "AudioProcessor::resumeOutput" << endl;
-  output_stopped = false;
-  writeFromBuf();
-} /* AudioProcessor::resumeOutput */
+  //cout << "AudioProcessor::requestSamples" << endl;
+
+  if (is_flushing)
+  {
+    if (flushBuffer())
+    {
+      sinkFlushSamples();
+    }
+    return;
+  }
+
+  int written = sinkWriteSamples(target_ptr, min(count, target_len));
+  target_ptr += written;
+  target_len -= written;
+
+  int len = count - written;
+  if (len > target_len)
+  {
+    // Note: We request input samples at input sample rate here.
+    div_t ratio = div(len * input_rate, output_rate);
+    sourceRequestSamples(ratio.rem ? ratio.quot + 1 : ratio.quot);
+  }
+
+} /* AudioProcessor::requestSamples */
 
 
 void AudioProcessor::allSamplesFlushed(void)
 {
   //cout << "AudioProcessor::allSamplesFlushed" << endl;
-  do_flush = false;
+  is_flushing = false;
   sourceAllSamplesFlushed();
 } /* AudioProcessor::allSamplesFlushed */
 
@@ -249,44 +220,7 @@ void AudioProcessor::setInputOutputSampleRate(int input_rate, int output_rate)
   assert((input_rate % output_rate == 0) || (output_rate % input_rate == 0));
   this->input_rate = input_rate;
   this->output_rate = output_rate;
-  
-  delete [] input_buf;
-  if (input_rate > output_rate)
-  {
-    input_buf_size = input_rate / output_rate;
-    input_buf = new float[input_buf_size];
-  }
-  else
-  {
-    input_buf_size = 0;
-    input_buf = 0;
-  }
 } /* AudioProcessor::setSampleRateRatio */
-
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
 
 
 
@@ -297,67 +231,13 @@ void AudioProcessor::setInputOutputSampleRate(int input_rate, int output_rate)
  ****************************************************************************/
 
 
-/*
- *----------------------------------------------------------------------------
- * Method:    AudioProcessor::writeFromBuf
- * Purpose:   Write processed samples from the buffer to the connected sink.
- * Input:     None
- * Output:    None
- * Author:    Tobias Blomberg / SM0SVX
- * Created:   2006-04-23
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-void AudioProcessor::writeFromBuf(void)
+bool AudioProcessor::flushBuffer(void)
 {
-  if ((buf_cnt == 0) || output_stopped)
-  {
-    return;
-  }
-  
-  int written;
-  do
-  {
-    written = sinkWriteSamples(buf, buf_cnt);
-    //cout << "buf_cnt=" << buf_cnt << "  written=" << written << endl;
-    buf_cnt -= written;
-    if (buf_cnt > 0)
-    {
-      memmove(buf, buf+written, buf_cnt * sizeof(*buf));
-    }
-
-    if (do_flush && (buf_cnt == 0))
-    {
-      if (input_buf_cnt > 0)
-      {
-	memset(input_buf + input_buf_cnt, 0,
-      	       (input_buf_size - input_buf_cnt) * sizeof(*input_buf));
-	processSamples(buf, input_buf, input_buf_size);
-	buf_cnt += 1;
-	input_buf_cnt = 0;
-      }
-      else
-      {
-	sinkFlushSamples();
-      }
-    }
-  }
-  while ((written > 0) && (buf_cnt > 0));
-    
-  if (input_stopped && (buf_cnt < BUFSIZE))
-  {
-    //cout << "Resume output!\n";
-    input_stopped = false;
-    sourceResumeOutput();
-  }
-  
-  output_stopped = (written == 0);
-  
-} /* AudioProcessor::writeFromBuf */
-
-
-
+  int ret = sinkWriteSamples(target_ptr, target_len);
+  target_ptr += ret;
+  target_len -= ret;
+  return (target_len == 0);
+} /* AudioProcessor::flushBuffer */
 
 
 /*

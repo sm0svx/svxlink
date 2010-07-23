@@ -121,7 +121,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
      */
     explicit AudioValve(void)
       : block_when_closed(false), is_open(true),
-	is_idle(true), is_flushing(false), input_stopped(false)
+        is_idle(true), is_flushing(false), request_count(0)
     {
     }
   
@@ -135,9 +135,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
      * @param 	do_open If \em true the valve is open or else it's closed
      *
      * This function is used to open or close the audio valve. When the valve
-     * is closed, the connected sink is flushed. What is done with the incoming
-     * audio when the valve is closed depends on the block_when_closed
-     * parameter to the constructor.
+     * is closed, the connected sink is flushed.
      */
     void setOpen(bool do_open)
     {
@@ -150,22 +148,13 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       
       if (do_open)
       {
-      	if (input_stopped)
-	{
-	  input_stopped = false;
-      	  sourceResumeOutput();
-	}
+    	sourceRequestSamples(request_count);
       }
       else
       {
 	if (!is_idle && !is_flushing)
 	{
       	  sinkFlushSamples();
-	}
-	if (!block_when_closed && input_stopped)
-	{
-	  input_stopped = false;
-	  sourceResumeOutput();
 	}
 	if (is_flushing)
 	{
@@ -194,10 +183,9 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       
       this->block_when_closed = block_when_closed;
       
-      if (!block_when_closed && input_stopped)
+      if (!block_when_closed)
       {
-      	input_stopped = false;
-      	sourceResumeOutput();
+      	sourceRequestSamples(request_count);
       }
     }
     
@@ -226,8 +214,14 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
      * @return	Returns the number of samples that has been taken care of
      *
      * This function is used to write audio into the valve. If it
-     * returns 0, no more samples should be written until the resumeOutput
-     * function in the source have been called.
+     * returns 0, no more samples could be written.
+     * If the returned number of written samples is lower than the count
+     * parameter value, the sink is not ready to accept more samples.
+     * In this case, the audio source requires sample buffering to temporarily
+     * store samples that are not immediately accepted by the sink.
+     * The writeSamples function should be called on source buffer updates
+     * and after a source output request has been received through the
+     * requestSamples function.
      * This function is normally only called from a connected source object.
      */
     int writeSamples(const float *samples, int count)
@@ -237,16 +231,11 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       is_flushing = false;
       if (is_open)
       {
-      	ret = sinkWriteSamples(samples, count);
+      	return sinkWriteSamples(samples, count);
       }
       else
       {
-      	ret = (block_when_closed ? 0 : count);
-      }
-      
-      if (ret == 0)
-      {
-      	input_stopped = true;
+      	return block_when_closed ? 0 : count;
       }
       
       return ret;
@@ -276,22 +265,23 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     }
     
     /**
-     * @brief Resume audio output to the sink
+     * @brief Request audio samples from this source
+     * @param count
      * 
      * This function must be reimplemented by the inheriting class. It
      * will be called when the registered audio sink is ready to accept
      * more samples.
      * This function is normally only called from a connected sink object.
      */
-    void resumeOutput(void)
+    void requestSamples(int count)
     {
-      if (is_open)
+      if (is_open || !block_when_closed)
       {
-      	if (input_stopped)
-	{
-	  input_stopped = false;
-      	  sourceResumeOutput();
-	}
+      	sourceRequestSamples(count);
+      }
+      else
+      {
+        request_count = count;
       }
     }
     
@@ -319,12 +309,13 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
   private:
     AudioValve(const AudioValve&);
     AudioValve& operator=(const AudioValve&);
-    
+
     bool block_when_closed;
     bool is_open;
     bool is_idle;
     bool is_flushing;
     bool input_stopped;
+    int request_count;
     
 };  /* class AudioValve */
 

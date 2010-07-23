@@ -129,9 +129,9 @@ class SigCAudioSource : public AudioSource, public SigC::Object
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
-    virtual void resumeOutput(void)
+    virtual void requestSamples(int count)
     {
-      sigWriteBufferFull(false);
+      sigRequestSamples(count);
     }
     
     virtual void allSamplesFlushed(void)
@@ -149,13 +149,8 @@ class SigCAudioSource : public AudioSource, public SigC::Object
       sinkFlushSamples();
     }
 
-    SigC::Signal1<void, bool> sigWriteBufferFull;
+    SigC::Signal1<void, int> sigRequestSamples;
     SigC::Signal0<void> sigAllSamplesFlushed;
-    
-    
-  protected:
-    
-  private:
     
 };  /* class SigCAudioSource */
 
@@ -169,4 +164,3 @@ class SigCAudioSource : public AudioSource, public SigC::Object
 /*
  * This file has not been truncated
  */
-

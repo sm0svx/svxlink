@@ -165,15 +165,22 @@ void AudioSource::unregisterSink(void)
  */
 int AudioSource::sinkWriteSamples(const float *samples, int len)
 {
-  assert(len > 0);
-
   is_flushing = false;
   
   if (m_sink != 0)
   {
-    len = m_sink->writeSamples(samples, len);
+    int written = 0;
+    while (written < len)
+    {
+      int ret = m_sink->writeSamples(samples + written, len - written);
+      if (ret <= 0)
+      {
+        return written;
+      }
+      written += ret;
+    }
   }
-  
+
   return len;
   
 } /* AudioSource::sinkWriteSamples */
@@ -321,10 +328,6 @@ void AudioSource::unregisterSinkInternal(bool is_being_destroyed)
     if (is_flushing)
     {
       handleAllSamplesFlushed();
-    }
-    else
-    {
-      resumeOutput();
     }
   }
     

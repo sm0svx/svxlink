@@ -178,17 +178,20 @@ class AudioSource
     }
     
     /**
-     * @brief Resume audio output to the sink
-     * 
+     * @brief Request audio samples from this source
+     * @param count FIXME: Document me!
+     *
      * This function must be reimplemented by the inheriting class. It
      * will be called when the registered audio sink is ready to accept
      * more samples.
      * This function is normally only called from a connected sink object.
+     * If the source object fails to provide the requested sample count,
+     * it can conclude an underrun condition and perform a stream reset.
      */
-    virtual void resumeOutput(void)
+    virtual void requestSamples(int count)
     {
       assert(m_handler != 0);
-      m_handler->resumeOutput();
+      m_handler->requestSamples(count);
     }
     
 
@@ -208,7 +211,7 @@ class AudioSource
       m_handler->handleAllSamplesFlushed();
     }
     
-    /*
+    /**
      * @brief 	Write samples to the connected sink
      * @param 	samples The buffer containing the samples to write
      * @param 	len   	The number of samples in the buffer
@@ -222,7 +225,7 @@ class AudioSource
      */
     int sinkWriteSamples(const float *samples, int len);
     
-    /*
+    /**
      * @brief 	Tell the sink to flush any buffered samples
      *
      * This function is used by the inheriting class to tell the connected
@@ -244,7 +247,7 @@ class AudioSource
      */
     bool setHandler(AudioSource *handler);
     
-    /*
+    /**
      * @brief 	Return the handler
      * @return	Returns the handler previously set with setHandler or 0
      *          if none have been set

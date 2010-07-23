@@ -103,7 +103,7 @@ class DummyRx : public Rx
     virtual bool initialize(void) { return Rx::initialize(); }
     virtual void mute(bool do_mute) {}
     virtual void reset(void) {}
-    virtual void resumeOutput(void) {}
+    virtual void requestSamples(int count) {}
     virtual void allSamplesFlushed(void) {}
   
   private:

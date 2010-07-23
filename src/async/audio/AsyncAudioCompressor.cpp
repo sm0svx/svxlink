@@ -144,30 +144,6 @@ AudioCompressor::~AudioCompressor(void)
 } /* AudioCompressor::~AudioCompressor */
 
 
-#if 0
-void AudioCompressor::setRatio(float ratio)
-{
-  comp_ratio = ratio;
-  attack_step = comp_ratio / (attack * sampling_rate / 1000);
-  decay_step = comp_ratio / (decay * sampling_rate / 1000);
-} /* AudioCompressor::setRatio */
-
-
-void AudioCompressor::setAttack(unsigned attack_ms)
-{
-  attack = attack_ms;
-  attack_step = comp_ratio / (attack * sampling_rate / 1000);
-} /* AudioCompressor::setAttack */
-
-
-void AudioCompressor::setDecay(unsigned decay_ms)
-{
-  decay = decay_ms;
-  decay_step = comp_ratio / (decay * sampling_rate / 1000);
-} /* AudioCompressor::setDecay */
-#endif
-
-
 void AudioCompressor::setOutputGain(float gain)
 {
   if (gain == 0)

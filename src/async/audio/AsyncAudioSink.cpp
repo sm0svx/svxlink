@@ -168,13 +168,13 @@ void AudioSink::unregisterSource(void)
  * Bugs:      
  *------------------------------------------------------------------------
  */
-void AudioSink::sourceResumeOutput(void)
+void AudioSink::sourceRequestSamples(int count)
 {
   if (m_source != 0)
   {
-    m_source->resumeOutput();
+    m_source->requestSamples(count);
   }
-} /* AudioSink::sourceResumeOutput */
+} /* AudioSink::sourceRequestSamples */
 
 
 void AudioSink::sourceAllSamplesFlushed(void)

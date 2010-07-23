@@ -156,15 +156,21 @@ class AudioSplitter : public Async::AudioSink, public SigC::Object
     /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
-     * @param 	len   	The number of samples in the buffer
+     * @param 	count	The number of samples in the buffer
      * @return	Returns the number of samples that has been taken care of
      *
      * This function is used to write audio into this audio sink. If it
-     * returns 0, no more samples should be written until the resumeOutput
-     * function in the source have been called.
+     * returns 0, no more samples could be written.
+     * If the returned number of written samples is lower than the count
+     * parameter value, the sink is not ready to accept more samples.
+     * In this case, the audio source requires sample buffering to temporarily
+     * store samples that are not immediately accepted by the sink.
+     * The writeSamples function should be called on source buffer updates
+     * and after a source output request has been received through the
+     * requestSamples function.
      * This function is normally only called from a connected source object.
      */
-    int writeSamples(const float *samples, int len);
+    int writeSamples(const float *samples, int count);
     
     /**
      * @brief 	Tell the sink to flush the previously written samples
@@ -177,27 +183,18 @@ class AudioSplitter : public Async::AudioSink, public SigC::Object
     void flushSamples(void);
     
     
-  protected:
-    
   private:
     class Branch;
     
     std::list<Branch *> branches;
-    float     	      	*buf;
-    int       	      	buf_size;
-    int       	      	buf_len;
-    bool      	      	do_flush;
-    bool      	      	input_stopped;
+    bool      	      	is_flushing;
     int       	      	flushed_branches;
-    Async::Timer      	*cleanup_branches_timer;
     
-    void writeFromBuffer(void);
     void flushAllBranches(void);
 
     friend class Branch;
-    void branchResumeOutput(void);
+    void branchRequestSamples(int count);
     void branchAllSamplesFlushed(void);
-    void cleanupBranches(Async::Timer *t);
 
 };  /* class AudioSplitter */
 

@@ -169,11 +169,6 @@ AudioDevice *AudioDevice::registerAudioIO(const string& dev_designator,
 void AudioDevice::unregisterAudioIO(AudioIO *audio_io)
 {
   AudioDevice *dev = audio_io->device();
-  if (dev == 0)
-  {
-    return;
-  }
-  
   assert(dev->use_count > 0);
   
   list<AudioIO*>::iterator it =
@@ -298,47 +293,22 @@ int AudioDevice::getBlocks(int16_t *buf, int block_cnt)
   unsigned frames_to_write = block_cnt * block_size;
   memset(buf, 0, channels * frames_to_write * sizeof(*buf));
   
-    // Loop through all AudioIO objects and find out if they have any
-    // samples to write and how many. The non-flushing AudioIO object with
-    // the least number of samples will decide how many samples can be
-    // written in total. If all AudioIO objects are flushing, the AudioIO
-    // object with the most number of samples will decide how many samples
-    // get written.
+  bool is_flushing = true;
+  bool is_idle = true;
   list<AudioIO*>::iterator it;
-  bool do_flush = true;
-  unsigned int max_samples_in_fifo = 0;
   for (it=aios.begin(); it!=aios.end(); ++it)
   {
     if (!(*it)->isIdle())
     {
-      unsigned samples_avail = (*it)->samplesAvailable();
-      if (!(*it)->doFlush())
+      is_idle = false;
+      if (!(*it)->isFlushing())
       {
-	do_flush = false;
-	if (samples_avail < frames_to_write)
-	{
-	  frames_to_write = samples_avail;
-	}
-      }
-
-      if (samples_avail > max_samples_in_fifo)
-      {
-	max_samples_in_fifo = samples_avail;
+        is_flushing = false;
       }
     }
   }
-  do_flush &= (max_samples_in_fifo <= frames_to_write);
-  if (max_samples_in_fifo < frames_to_write)
-  {
-    frames_to_write = max_samples_in_fifo;
-  }
 
-  //printf("### frames_to_write=%d  do_flush=%s  fragsize=%u\n",
-  //	 frames_to_write, do_flush ? "TRUE" : "FALSE", fragsize);
-  
-    // If not flushing, make sure the number of frames to write is an even
-    // multiple of the frag size.
-  if (!do_flush)
+  if (!is_flushing)
   {
     frames_to_write /= block_size;
     frames_to_write *= block_size;
@@ -346,7 +316,7 @@ int AudioDevice::getBlocks(int16_t *buf, int block_cnt)
   
     // If there are no frames to write, bail out and wait for an AudioIO
     // object to provide us with some.
-  if (frames_to_write == 0)
+  if (is_idle || (frames_to_write == 0))
   {
     return 0;
   }
@@ -382,12 +352,12 @@ int AudioDevice::getBlocks(int16_t *buf, int block_cnt)
     // If flushing and the number of frames to write is not an even
     // multiple of the frag size, round the number of frags to write
     // up. The end of the buffer is already zeroed out.
-  if (do_flush && (frames_to_write % block_size > 0))
+  if (is_flushing && (frames_to_write % block_size > 0))
   {
     frames_to_write /= block_size;
     frames_to_write = (frames_to_write + 1) * block_size;
   }
-  
+
   return frames_to_write / block_size;
   
 } /* AudioDevice::getBlocks */

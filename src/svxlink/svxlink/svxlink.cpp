@@ -425,19 +425,19 @@ int main(int argc, char **argv)
     int rate = atoi(value.c_str());
     if (rate == 48000)
     {
-      AudioIO::setBlocksize(1024);
+      AudioIO::setBlocksize(512);
       AudioIO::setBlockCount(4);
     }
     else if (rate == 16000)
     {
-      AudioIO::setBlocksize(512);
-      AudioIO::setBlockCount(2);
+      AudioIO::setBlocksize(256);
+      AudioIO::setBlockCount(4);
     }
     #if INTERNAL_SAMPLE_RATE <= 8000
     else if (rate == 8000)
     {
-      AudioIO::setBlocksize(256);
-      AudioIO::setBlockCount(2);
+      AudioIO::setBlocksize(128);
+      AudioIO::setBlockCount(4);
     }
     #endif
     else

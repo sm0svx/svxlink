@@ -140,16 +140,13 @@ void MsgHandler::end(void)
 } /* MsgHandler::end */
 
 
-void MsgHandler::resumeOutput(void)
+void MsgHandler::requestSamples(int count)
 {
   if (!msg_queue.empty())
   {
-    writeFromFile();
+    writeFromFile(count);
   }
-} /* MsgHandler::resumeOutput */
-
-
-
+} /* MsgHandler::requestSamples */
 
 
 void MsgHandler::playNextMsg(void)
@@ -184,7 +181,7 @@ void MsgHandler::playNextMsg(void)
     }
     if (file != -1)
     {
-      writeFromFile();
+      while (writeFromFile(WRITE_BLOCK_SIZE));
     }
     else
     {
@@ -202,14 +199,14 @@ void MsgHandler::executeCmd(const string& cmd)
   if (strstr(cmd.c_str(), ">SILENCE:") == cmd.c_str())
   {
     silence_left = sample_rate * atoi(cmd.c_str() + 9) / 1000;
-    writeFromFile();
+    while (writeFromFile(WRITE_BLOCK_SIZE));
   }
   else if (strstr(cmd.c_str(), ">FILE:") == cmd.c_str())
   {
     file = ::open(cmd.c_str() + 6, O_RDONLY);
     if (file != -1)
     {
-      writeFromFile();
+      while (writeFromFile(WRITE_BLOCK_SIZE));
     }
     else
     {
@@ -229,43 +226,30 @@ void MsgHandler::executeCmd(const string& cmd)
 } /* MsgHandler::executeCmd */
 
 
-void MsgHandler::writeFromFile(void)
+bool MsgHandler::writeFromFile(int len)
 {
-  float samples[WRITE_BLOCK_SIZE];
+  float samples[len];
   
-  int written;
-  int read_cnt;
-  do
+  int read_cnt = readSamples(samples, len);
+  if (read_cnt == 0)
   {
-    read_cnt = readSamples(samples, WRITE_BLOCK_SIZE);
-    if (read_cnt == 0)
-    {
-      goto done;
-    }
-    
-    written = sinkWriteSamples(samples, read_cnt);
-    if (written == -1)
-    {
-      perror("write in MsgHandler::writeFromFile");
-      goto done;
-    }
-    //printf("Read=%d  Written=%d\n", read_cnt, written);
-  } while (written == read_cnt);
-  
-  unreadSamples(read_cnt - written);
-  
-  return;
-    
-  done:
     //printf("Done...\n");
     if (file != -1)
     {
       ::close(file);
       file = -1;
     }
-    
     msg_queue.pop_front();
     playNextMsg();
+    return false;
+  }
+
+  int written = sinkWriteSamples(samples, read_cnt);
+  //printf("Read=%d  Written=%d\n", read_cnt, written);
+  unreadSamples(read_cnt - written);
+
+  return (written == read_cnt);
+
 } /* MsgHandler::writeFromFile */
 
 

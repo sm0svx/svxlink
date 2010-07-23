@@ -48,7 +48,7 @@ class SineGenerator : public Async::AudioSource
         if (audio_io.open(AudioIO::MODE_WR))
         {
           pos = 0;
-          writeSamples();
+          while (writeSamples(BLOCK_SIZE));
         }
         else
         {
@@ -61,11 +61,11 @@ class SineGenerator : public Async::AudioSource
       }
     }
 
-    void resumeOutput(void)
+    void requestSamples(int count)
     {
       if (audio_io.mode() != AudioIO::MODE_NONE)
       {
-        writeSamples();
+        writeSamples(count);
       }
     }
 
@@ -74,7 +74,7 @@ class SineGenerator : public Async::AudioSource
     }
 
   private:
-    static const int BLOCK_SIZE = 256;
+    static const int BLOCK_SIZE = 128;
 
     AudioIO   audio_io;
     unsigned  pos;
@@ -82,18 +82,16 @@ class SineGenerator : public Async::AudioSource
     double    level;
     int       sample_rate;
 
-    void writeSamples(void)
+    bool writeSamples(int count)
     {
-      int written;
-      do {
-        float buf[BLOCK_SIZE];
-        for (int i=0; i<BLOCK_SIZE; ++i)
-        {
-          buf[i] = level * sin(2 * M_PI * fq * (pos+i) / sample_rate);
-        }
-        written = sinkWriteSamples(buf, BLOCK_SIZE);
-        pos += written;
-      } while (written != 0);
+      float buf[count];
+      for (int i=0; i<count; ++i)
+      {
+        buf[i] = level * sin(2 * M_PI * fq * (pos+i) / sample_rate);
+      }
+      int written = sinkWriteSamples(buf, count);
+      pos += written;
+      return (written == count);
     }
 
 };
@@ -141,9 +139,9 @@ class MyClass : public Async::AudioSink, public Async::AudioSource
     }
 
       // AudioSource functions
-    void resumeOutput(void)
+    void requestSamples(int count)
     {
-      sourceResumeOutput();
+      sourceRequestSamples(count);
     }
     
     void allSamplesFlushed(void)

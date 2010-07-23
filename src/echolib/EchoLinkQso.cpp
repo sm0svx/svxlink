@@ -513,9 +513,9 @@ void Qso::flushSamples(void)
 } /* Qso::flushSamples */
 
 
-void Qso::resumeOutput(void)
+void Qso::requestSamples(int count)
 {
-} /* Qso::resumeOutput */
+} /* Qso::requestSamples */
     
 
 

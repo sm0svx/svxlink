@@ -164,7 +164,7 @@ class Async::AudioSelector::NullBranch : public Async::AudioSelector::Branch
       : Branch(selector, 0)
     {
     }
-    void resumeOutput(void) {}
+    void requestSamples(int count) {}
     void allSamplesFlushed(void) {}
 
 };

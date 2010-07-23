@@ -85,10 +85,8 @@ using namespace Async;
 class Async::AudioMixer::MixerSrc : public AudioSink
 {
   public:
-    static const int FIFO_SIZE = AudioMixer::OUTBUF_SIZE;
-    
     MixerSrc(AudioMixer *mixer)
-      : fifo(FIFO_SIZE), mixer(mixer), is_flushed(true), do_flush(false)
+      : fifo(64), mixer(mixer), is_flushed(true), do_flush(false)
     {
       AudioSink::setHandler(&fifo);
       fifo.registerSink(&reader);
@@ -99,39 +97,37 @@ class Async::AudioMixer::MixerSrc : public AudioSink
       //printf("Async::AudioMixer::MixerSrc::writeSamples: count=%d\n", count);
       is_flushed = false;
       do_flush = false;
+      int ret = fifo.writeSamples(samples, count);
       mixer->setAudioAvailable();
-      return fifo.writeSamples(samples, count);
+      return ret;
     }
     
     void flushSamples(void)
     {
+      //printf("Async::AudioMixer::MixerSrc::flushSamples\n");
       if (is_flushed && !do_flush && fifo.empty())
       {
-      	fifo.flushSamples();
+        fifo.flushSamples();
       }
       
-      //printf("Async::AudioMixer::MixerSrc::flushSamples\n");
       is_flushed = true;
       do_flush = true;
       if (fifo.empty())
       {
-      	mixer->flushSamples();
+        mixer->flushSamples();
       }
     }
     
-    bool isActive(void) const
-    {
-      return !is_flushed || !fifo.empty();
-    }
+    bool isActive(void) const { return !is_flushed || !fifo.empty(); }
     
     void mixerFlushedAllSamples(void)
     {
       //printf("Async::AudioMixer::MixerSrc::mixerFlushedAllSamples\n");
       if (do_flush)
       {
-      	do_flush = false;
-	//printf("\tFlushing FIFO\n");
-	fifo.flushSamples();
+        do_flush = false;
+        //printf("\tFlushing FIFO\n");
+        fifo.flushSamples();
       }
     }
     
@@ -148,8 +144,8 @@ class Async::AudioMixer::MixerSrc : public AudioSink
     AudioFifo 	fifo;
     AudioReader reader;
     AudioMixer  *mixer;
-    bool      	is_flushed;
-    bool      	do_flush;
+    bool        is_flushed;
+    bool        do_flush;
     
 }; /* class Async::AudioMixer::MixerSrc */
 
@@ -188,42 +184,32 @@ class Async::AudioMixer::MixerSrc : public AudioSink
  ****************************************************************************/
 
 AudioMixer::AudioMixer(void)
-  : delayed_exec_timer(0), outbuf_pos(0), outbuf_cnt(0), is_flushed(true),
-    output_stopped(false)
+  : fifo(64), is_flushed(true), is_requesting(false)
 {
-  
+  AudioSource::setHandler(&fifo);
+  sink.registerSink(&fifo);
+  sink.sigRequestSamples.connect(slot(*this, &AudioMixer::onRequestSamples));
+  sink.sigAllSamplesFlushed.connect(slot(*this, &AudioMixer::onAllSamplesFlushed));
 } /* AudioMixer::AudioMixer */
 
 
 AudioMixer::~AudioMixer(void)
 {
-  delete delayed_exec_timer;
-  
   list<MixerSrc *>::iterator it;
   for (it = sources.begin(); it != sources.end(); ++it)
   {
     delete *it;
   }
+  AudioSource::clearHandler();
 } /* AudioMixer::~AudioMixer */
 
 
 void AudioMixer::addSource(AudioSource *source)
 {
   MixerSrc *mixer_src = new MixerSrc(this);
-  //mixer_src->stopOutput(true);
-  //mixer_src->setOverwrite(false);
   mixer_src->registerSource(source);
   sources.push_back(mixer_src);
 } /* AudioMixer::addSource */
-
-
-void AudioMixer::resumeOutput(void)
-{
-  //printf("AudioMixer::resumeOutput\n");
-  output_stopped = false;
-  outputHandler(0);
-} /* AudioMixer::resumeOutput */
-
 
 
 /****************************************************************************
@@ -232,7 +218,48 @@ void AudioMixer::resumeOutput(void)
  *
  ****************************************************************************/
 
-void AudioMixer::allSamplesFlushed(void)
+void AudioMixer::onRequestSamples(int count)
+{
+  is_requesting = true;
+
+  float buf[count];
+  memset(buf, 0, count * sizeof(float));
+
+  int total_samples = 0;
+  list<MixerSrc *>::const_iterator it;
+  for (it = sources.begin(); it != sources.end(); ++it)
+  {
+    MixerSrc *mix_src = *it;
+    if (mix_src->isActive())
+    {
+      float tmp[count];
+      int samples_read = mix_src->readSamples(tmp, count);
+      total_samples += samples_read;
+      /* if (samples_read < count)
+      {
+        printf("underrun: %d %d\n", samples_read, count);
+      } */
+      for (int i=0; i<samples_read; ++i)
+      {
+        buf[i] += tmp[i];
+      }
+    }
+  }
+
+  is_requesting = false;
+  
+  if (is_flushed && (total_samples == 0))
+  {
+    fifo.flushSamples();
+    return;
+  }
+  
+  assert(sink.writeSamples(buf, count) == count);
+  
+} /* AudioMixer::requestSamples */
+
+
+void AudioMixer::onAllSamplesFlushed(void)
 {
   //printf("AudioMixer::allSamplesFlushed\n");
   list<MixerSrc *>::iterator it;
@@ -251,174 +278,31 @@ void AudioMixer::allSamplesFlushed(void)
  ****************************************************************************/
 
 
-/*
- *----------------------------------------------------------------------------
- * Method:    AudioMixer::setAudioAvailable
- * Purpose:   Called by one of the incoming stream handlers when there is
- *            data available. This will trigger a delayed execution of the
- *            outputHandler method. The execution of the real output handler
- *            is delayed so that all input streams have a chance to fill up.
- * Input:     None
- * Output:    None
- * Created:   2007-10-07
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
 void AudioMixer::setAudioAvailable(void)
 {
-  if (delayed_exec_timer == 0)
+  if (is_requesting) return;
+  is_flushed = false;
+  
+  unsigned len = 0;
+  
+  list<MixerSrc *>::const_iterator it;
+  for (it = sources.begin(); it != sources.end(); ++it)
   {
-    delayed_exec_timer = new Timer(0);
-    delayed_exec_timer->expired.connect(
-      	    slot(*this, &AudioMixer::outputHandler));
+    MixerSrc *mix_src = *it;
+    if (mix_src->isActive())
+    {
+      len = max(len, mix_src->samplesInFifo());
+    }
   }
+
+  onRequestSamples(min(len, fifo.spaceAvail()));
+
 } /* AudioMixer::setAudioAvailable */
 
 
-/*
- *----------------------------------------------------------------------------
- * Method:    AudioMixer::flushSamples
- * Purpose:   Used by the input stream handlers to tell the mixer that
- *            they want to flush.
- * Input:     None
- * Output:    None
- * Created:   2007-10-07
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
 void AudioMixer::flushSamples(void)
 {
   //printf("AudioMixer::flushSamples\n");
-
-  if (delayed_exec_timer == 0)
-  {
-    delayed_exec_timer = new Timer(0);
-    delayed_exec_timer->expired.connect(
-      	    slot(*this, &AudioMixer::outputHandler));
-  }
-  
-#if 0
-    // If any input stream is still active we can't flush the output stream
-  list<MixerSrc *>::iterator it;
-  for (it = sources.begin(); it != sources.end(); ++it)
-  {
-    if ((*it)->isActive())
-    {
-      return;
-    }
-  }
-  
-  if (outbuf_pos < outbuf_cnt)
-  {
-    return;
-  }
-  
-  //printf("\tFlushing...\n");
-  sinkFlushSamples();
-#endif
-
-} /* AudioMixer::flushSamples */
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    AudioMixer::outputHandler
- * Purpose:   Handle the output of audio samples. All input streams are read
- *            and mixed together to a single output stream.
- * Input:     t - A pointer to the timer that triggered this function.
- * Output:    None
- * Created:   2007-10-07
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-void AudioMixer::outputHandler(Timer *t)
-{
-  if (t != 0)
-  {
-    delete delayed_exec_timer;
-    delayed_exec_timer = 0;
-  }
-  
-  if (output_stopped)
-  {
-    return;
-  }
-  
-  unsigned samples_written;
-  do
-  {
-      // First empty the outbut buffer
-    samples_written = 1; // Initialize to 1 to enter the loop
-    while ((outbuf_pos < outbuf_cnt) && (samples_written > 0))
-    {
-      //printf("Writing %d samples\n", outbuf_cnt-outbuf_pos);
-      is_flushed = false;
-      samples_written = sinkWriteSamples(outbuf+outbuf_pos,
-                                	 outbuf_cnt-outbuf_pos);
-      outbuf_pos += samples_written;
-    }
-    
-      // If the output buffer is empty, fill it up
-    if (outbuf_pos >= outbuf_cnt)
-    {
-      	// Calculate the maximum number of samples we can read from the FIFOs
-      unsigned samples_to_read = MixerSrc::FIFO_SIZE+1;
-      list<MixerSrc *>::iterator it;
-      for (it = sources.begin(); it != sources.end(); ++it)
-      {
-	if ((*it)->isActive())
-	{
-	  samples_to_read = min(samples_to_read, (*it)->samplesInFifo());
-	}
-      }
-      
-      	// There are no active input streams
-      if (samples_to_read == MixerSrc::FIFO_SIZE+1)
-      {
-      	samples_to_read = 0;
-      }
-      
-      //printf("samples_to_read=%d\n", samples_to_read);
-      
-      	// The output buffer is empty and we have nothing to fill it with
-      if (samples_to_read == 0)
-      {
-      	checkFlush();
-	break;
-      }
-
-      	// Fill the output buffer with samples from all active FIFOs
-      memset(outbuf, 0, sizeof(outbuf));
-      float tmp[OUTBUF_SIZE];
-      for (it = sources.begin(); it != sources.end(); ++it)
-      {
-	if ((*it)->isActive())
-	{
-	  unsigned samples_read = (*it)->readSamples(tmp, samples_to_read);
-	  assert(samples_read == samples_to_read);
-
-	  for (unsigned i=0; i<samples_to_read; ++i)
-	  {
-      	    outbuf[i] += tmp[i];
-	  }
-	}
-      }
-
-      outbuf_pos = 0;
-      outbuf_cnt = samples_to_read;
-    }
-  } while (samples_written > 0);
-  
-  output_stopped = (samples_written == 0);
-  
-} /* AudioMixer::outputHandler */
-
-
-void AudioMixer::checkFlush(void)
-{
   if (is_flushed)
   {
     return;
@@ -435,15 +319,14 @@ void AudioMixer::checkFlush(void)
   
   //printf("AudioMixer::checkFlush: Flushing!\n");
   is_flushed = true;
-  sinkFlushSamples();
-  
-} /* AudioMixer::checkFlush */
+  if (fifo.empty())
+  {
+    fifo.flushSamples();
+  }
 
-
-
+} /* AudioMixer::flushSamples */
 
 
 /*
  * This file has not been truncated
  */
-

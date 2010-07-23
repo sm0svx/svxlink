@@ -193,13 +193,14 @@ class MsgHandler : public SigC::Object, public Async::AudioSource
     SigC::Signal0<void>       	    allMsgsWritten;
     
     /**
-     * @brief Resume audio output to the sink
+     * @brief Request audio samples from this source
+     * @param count
      * 
      * This function will be called when the registered audio sink is ready
      * to accept more samples.
      * This function is normally only called from a connected sink object.
      */
-    virtual void resumeOutput(void);
+    virtual void requestSamples(int count);
     
   protected:
     /**
@@ -224,7 +225,7 @@ class MsgHandler : public SigC::Object, public Async::AudioSource
     MsgHandler& operator=(const MsgHandler&);
     void addItemToQueue(QueueItem *item);
     void playMsg(void);
-    void writeSamples(void);
+    bool writeSamples(int count);
     void deleteQueueItem(QueueItem *item);
 
 }; /* class MsgHandler */

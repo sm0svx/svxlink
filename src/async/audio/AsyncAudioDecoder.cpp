@@ -144,41 +144,6 @@ AudioDecoder *AudioDecoder::create(const std::string &name)
 }
 
 
-#if 0
-AudioDecoder::AudioDecoder(void)
-{
-  
-} /* AudioDecoder::AudioDecoder */
-
-
-AudioDecoder::~AudioDecoder(void)
-{
-  
-} /* AudioDecoder::~AudioDecoder */
-
-
-void AudioDecoder::resumeOutput(void)
-{
-  
-} /* AudioDecoder::resumeOutput */
-#endif
-
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-#if 0
-void AudioDecoder::allSamplesFlushed(void)
-{
-  
-} /* AudioDecoder::allSamplesFlushed */
-#endif
-
-
 
 /****************************************************************************
  *

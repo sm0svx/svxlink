@@ -24,7 +24,7 @@ class MsgHandler : public SigC::Object, public Async::AudioSource
     
     SigC::Signal0<void>       	    allMsgsWritten;
     
-    void resumeOutput(void);
+    void requestSamples(int count);
     
     void allSamplesFlushed(void) {}
     
@@ -51,9 +51,8 @@ class MsgHandler : public SigC::Object, public Async::AudioSource
     
     void playNextMsg(void);
     void executeCmd(const std::string& cmd);
-    void writeFromFile(void);
+    bool writeFromFile(int len);
     int readSamples(float *samples, int len);
     void unreadSamples(int len);
-
 
 };
