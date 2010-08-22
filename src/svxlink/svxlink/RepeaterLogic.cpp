@@ -201,6 +201,19 @@ bool RepeaterLogic::initialize(void)
     open_on_dtmf = str.c_str()[0];
   }
   
+  if (cfg().getValue(name(), "OPEN_ON_SEL5", str))
+  {
+    if (str.length() > 25 || str.length() < 4)
+    {
+      cerr << "*** WARNING: Sel5 sequence to long/short, valid range "
+            "from 4 to 25 digits, ignoring\n";
+    }
+    else
+    {
+      open_on_sel5 = str;
+    }
+  }
+
   if (cfg().getValue(name(), "OPEN_SQL_FLANK", str))
   {
     if (str == "OPEN")
@@ -286,16 +299,17 @@ void RepeaterLogic::processEvent(const string& event, const Module *module)
     rgr_enable = false;
   }
   
-  if ((event == "repeater_idle") || (event == "send_rgr_sound"))
+  if ((event == "repeater_idle") || (event == "send_rgr_sound") /* ||
+      (event.find("repeater_down") == 0) */ )
   {
     setReportEventsAsIdle(true);
     Logic::processEvent(event, module);
     setReportEventsAsIdle(false);
   }
   else
-  {  
+  {
     Logic::processEvent(event, module);
-  }  
+  }
 } /* RepeaterLogic::processEvent */
 
 
@@ -324,11 +338,35 @@ void RepeaterLogic::dtmfDigitDetected(char digit, int duration)
     }
     else
     {
-      cout << "Ignoring DTMF digit \"" << digit << "\"\n";
+      cout << "Ignoring DTMF digit \"" << digit
+           << "\" since the repeater is not up\n";
     }
   }
 } /* RepeaterLogic::dtmfDigitDetected */
 
+
+void RepeaterLogic::selcallSequenceDetected(std::string sequence)
+{
+  if (repeater_is_up)
+  {
+     Logic::selcallSequenceDetected(sequence);
+  }
+  else
+  {
+    if (sequence == open_on_sel5)
+    {
+      cout << "Sel5 digits \"" << sequence << "\" detected. "
+              "Activating repeater...\n";
+      open_reason = "SEL5";
+      activateOnOpenOrClose(SQL_FLANK_CLOSE);
+    }
+    else
+    {
+      cout << "Ignoring Sel5 sequence \"" << sequence
+           << "\" since the repeater is not up\n";
+    }
+  }
+} /* RepeaterLogic::selcallSequenceDetected */
 
 
 /****************************************************************************

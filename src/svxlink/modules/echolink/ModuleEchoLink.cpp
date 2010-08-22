@@ -6,7 +6,7 @@
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -56,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSelector.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkDispatcher.h>
+#include <LocationInfo.h>
 
 
 /****************************************************************************
@@ -66,7 +67,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "ModuleEchoLink.h"
 #include "QsoImpl.h"
-#include "LocationInfo.h"
 
 
 /****************************************************************************
@@ -151,8 +151,7 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
   : Module(dl_handle, logic, cfg_name), dir(0), dir_refresh_timer(0),
     remote_activation(false), pending_connect_id(-1), last_message(""),
     max_connections(1), max_qsos(1), talker(0), squelch_is_open(false),
-    state(STATE_NORMAL), cbc_timer(0), splitter(0), listen_only_valve(0),
-    tinfo(0)
+    state(STATE_NORMAL), cbc_timer(0), splitter(0), listen_only_valve(0)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
@@ -339,15 +338,6 @@ bool ModuleEchoLink::initialize(void)
   selector = new AudioSelector;
   AudioSource::setHandler(selector);
 
-  if (cfg().getValue(cfgName(), "LOCATION_INFO", value))
-  {
-    tinfo = new LocationInfo();
-    if (!tinfo->initialize(cfg(), value, mycall))
-    {
-      moduleCleanup();
-      return false;
-    }
-  }
   
   return true;
   
@@ -398,8 +388,8 @@ void ModuleEchoLink::moduleCleanup(void)
   regfree(&reject_regex);
   regfree(&drop_regex);
   
-  delete tinfo;
-  tinfo = 0;
+  //delete tinfo;
+  //tinfo = 0;
   delete dir_refresh_timer;
   dir_refresh_timer = 0;
   delete Dispatcher::instance();
@@ -540,11 +530,13 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
       deactivateMe();
     }
   }
+  /*
   else if (cmd[0] == '*')   // Connect by callsign
   {
     connectByCallsign(cmd);
   }
-  else if (cmd.size() < 4)  // Dispatch to command handling
+  */
+  else if ((cmd.size() < 4) || (cmd[1] == '*'))  // Dispatch to command handling
   {
     handleCommand(cmd);
   }
@@ -553,6 +545,23 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
     connectByNodeId(atoi(cmd.c_str()));
   }
 } /* dtmfCmdReceived */
+
+
+void ModuleEchoLink::dtmfCmdReceivedWhenIdle(const std::string &cmd)
+{
+  if (cmd == "2")   // Play own node id
+  {
+    stringstream ss;
+    ss << "play_node_id ";
+    const StationData *station = dir->findCall(dir->callsign());
+    ss << (station ? station->id() : 0);
+    processEvent(ss.str());
+  }
+  else
+  {
+    commandFailed(cmd);
+  }
+} /* dtmfCmdReceivedWhenIdle */
 
 
 /*
@@ -663,9 +672,9 @@ void ModuleEchoLink::onStatusChanged(StationData::Status status)
   }
   
     // Update status at aprs.echolink.org
-  if (tinfo)
+  if (LocationInfo::has_instance())
   {
-    tinfo->updateDirectoryStatus(status);
+    LocationInfo::instance()->updateDirectoryStatus(status);
   }
 } /* onStatusChanged */
 
@@ -748,6 +757,7 @@ void ModuleEchoLink::onError(const string& msg)
  *    	      connection is coming in.
  * Input:     callsign	- The callsign of the remote station
  *    	      name    	- The name of the remote station
+ *            priv      - A private string for passing connection parameters
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2004-03-07
@@ -757,7 +767,8 @@ void ModuleEchoLink::onError(const string& msg)
  */
 void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
       	      	      	      	      	  const string& callsign,
-      	      	      	      	      	  const string& name)
+      	      	      	      	      	  const string& name,
+      	      	      	      	      	  const string& priv)
 {
   cout << "Incoming EchoLink connection from " << callsign
        << " (" << name << ") at " << ip << "\n";
@@ -815,6 +826,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   updateEventVariables();
   qso->setRemoteCallsign(callsign);
   qso->setRemoteName(name);
+  qso->setRemoteParams(priv);
   qso->stateChange.connect(slot(*this, &ModuleEchoLink::onStateChange));
   qso->chatMsgReceived.connect(slot(*this, &ModuleEchoLink::onChatMsgReceived));
   qso->isReceiving.connect(slot(*this, &ModuleEchoLink::onIsReceiving));
@@ -857,12 +869,12 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   broadcastTalkerStatus();
   updateDescription();
 
-  if (tinfo != 0)
+  if (LocationInfo::has_instance())
   {
     list<string> call_list;
     listQsoCallsigns(call_list);
     
-    tinfo->updateQsoStatus(2, callsign, name, call_list);
+    LocationInfo::instance()->updateQsoStatus(2, callsign, name, call_list);
   }
   
   checkIdle();
@@ -1019,12 +1031,12 @@ void ModuleEchoLink::destroyQsoObject(QsoImpl *qso)
   //broadcastTalkerStatus();
   //updateDescription();
 
-  if (tinfo != 0)
+  if (LocationInfo::has_instance())
   {
     list<string> call_list;
     listQsoCallsigns(call_list);
     
-    tinfo->updateQsoStatus(0, callsign, "", call_list);
+    LocationInfo::instance()->updateQsoStatus(0, callsign, "", call_list);
   }
 
   checkIdle();
@@ -1130,7 +1142,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
   processEvent(ss.str());
   outgoing_con_pending.push_back(qso);
   
-  if (tinfo != 0)
+  if (LocationInfo::has_instance())
   {
     stringstream info;
     info << station.id();
@@ -1138,7 +1150,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     list<string> call_list;
     listQsoCallsigns(call_list);
 
-    tinfo->updateQsoStatus(1, station.callsign(), info.str(), call_list);
+    LocationInfo::instance()->updateQsoStatus(1, station.callsign(), info.str(), call_list);
   }
     
   checkIdle();
@@ -1146,7 +1158,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
 } /* ModuleEchoLink::createOutgoingConnection */
 
 
-void ModuleEchoLink::audioFromRemoteRaw(Qso::GsmVoicePacket *packet,
+void ModuleEchoLink::audioFromRemoteRaw(Qso::RawPacket *packet,
       	QsoImpl *qso)
 {
   if (!listen_only_valve->isOpen())
@@ -1267,7 +1279,7 @@ void ModuleEchoLink::connectByCallsign(string cmd)
 {
   stringstream ss;
 
-  if (cmd.length() < 4)
+  if (cmd.length() < 5)
   {
     ss << "cbc_too_short_cmd " << cmd;
     processEvent(ss.str());
@@ -1278,12 +1290,12 @@ void ModuleEchoLink::connectByCallsign(string cmd)
   bool exact;
   if (cmd[cmd.size()-1] == '*')
   {
-    code = string(cmd.begin() + 1, cmd.end() - 1);
+    code = cmd.substr(2, cmd.size() - 3);
     exact = false;
   }
   else
   {
-    code = string(cmd.begin() + 1, cmd.end());
+    code = cmd.substr(2);
     exact = true;
   }
 
@@ -1537,6 +1549,10 @@ void ModuleEchoLink::handleCommand(const string& cmd)
     processEvent(ss.str());
     
     listen_only_valve->setOpen(!activate);
+  }
+  else if (cmd[0] == '6')   // Connect by callsign
+  {
+    connectByCallsign(cmd);
   }
   else
   {

@@ -137,11 +137,17 @@ class ModuleMetarInfo : public Module
     std::string icao_default;
     std::string longmsg;
 
+    bool remarks;
+    bool debug;
+
     typedef std::map<std::string,std::string> DescList;
     DescList shdesig;
 
     typedef std::vector<std::string> StrList;
     StrList  aplist;
+
+    typedef std::map<std::string, std::string> Repdefs;
+    Repdefs repstr;
 
     Async::TcpClient *con;
 
@@ -150,6 +156,7 @@ class ModuleMetarInfo : public Module
     void deactivateCleanup(void);
     bool dtmfDigitReceived(char digit, int duration);
     void dtmfCmdReceived(const std::string& cmd);
+    void dtmfCmdReceivedWhenIdle(const std::string& cmd);
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
     void reportState(void);
@@ -157,30 +164,38 @@ class ModuleMetarInfo : public Module
                         Async::TcpClient::DisconnectReason reason);
     void onConnected(void);
     void openConnection(void);
-    int  onDataReceived(Async::TcpClient::TcpConnection *con, void *buf, int count);
-    std::string splitStrAll(const std::string seq);
-    std::string chNumber(const std::string seq);
-    std::string chHoundr(const std::string seq);
-    std::string flsplitStr(float val);
-    int  splitStr(StrList& L, const std::string& seq,
-                  const std::string& delims);
+    std::string getSlp(std::string token);
+    std::string getTempTime(std::string token);
+    std::string getTempinRmk(std::string token);
+    std::string getPressureinRmk(std::string token);
+    std::string getPrecipitationinRmk(std::string token);
+    std::string getTemp(std::string token);
+    std::string getLightning(std::string token);
+    std::string getPrecipitation(std::string token);
+    std::string getCloudType(std::string token);
+    void isRwyState(std::string &retval, std::string token);
+    int  onDataReceived(Async::TcpClient::TcpConnection *con, void *buf,
+              int count);
     int  splitEmptyStr(StrList& L, const std::string& seq);
-    int isWind(std::string &retval, std::string token);
+    bool isWind(std::string &retval, std::string token);
     bool isvalidUTC(std::string token);
     int checkToken(std::string token);
     bool rmatch(std::string tok, std::string token, regex_t *re);
-    bool isTime(std::string &retval, std::string token);
+    bool checkDirection(std::string &retval, std::string token);
+    bool getRmkVisibility(std::string &retval, std::string token);
+    void isTime(std::string &retval, std::string token);
     bool isRunway(std::string &retval, std::string token);
-    bool isPartofMiles(std::string &retval, std::string token);
+    void isPartofMiles(std::string &retval, std::string token);
     bool isView(std::string &retval, std::string token);
     bool isQnh(std::string &retval, std::string token);
     bool isRVR(std::string &retval, std::string token);
     bool isActualWX(std::string &retval, std::string token);
-    bool isVerticalView(std::string &retval, std::string token);
-    bool validDp(std::string &tempstr, std::string token);
-    bool validTemp(std::string &tempstr, std::string token);
-    bool isWindVaries(std::string &tempstr, std::string token);
+    void isVerticalView(std::string &retval, std::string token);
+    void validDp(std::string &tempstr, std::string token);
+    void validTemp(std::string &tempstr, std::string token);
+    void isValueVaries(std::string &tempstr, std::string token);
     bool ispObscurance(std::string &tempstr, std::string token);
+    bool getPeakWind(std::string &retval, std::string token);
     void say(std::stringstream &tmp);
 
 };  /* class ModuleMetarInfo */

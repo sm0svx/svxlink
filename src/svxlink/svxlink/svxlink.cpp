@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <fcntl.h>
 #include <dirent.h>
 #include <pwd.h>
+#include <grp.h>
 
 #include <string>
 #include <iostream>
@@ -66,6 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <AsyncFdWatch.h>
 #include <AsyncAudioIO.h>
+#include <LocationInfo.h>
 
 
 /****************************************************************************
@@ -291,10 +293,22 @@ int main(int argc, char **argv)
 
   if (runasuser != NULL)
   {
+      // Setup supplementary group IDs
+    if (initgroups(runasuser, getgid()))
+    {
+      perror("initgroups");
+      exit(1);
+    }
+
     struct passwd *passwd = getpwnam(runasuser);
     if (passwd == NULL)
     {
       perror("getpwnam");
+      exit(1);
+    }
+    if (setgid(passwd->pw_gid) == -1)
+    {
+      perror("setgid");
       exit(1);
     }
     if (setuid(passwd->pw_uid) == -1)
@@ -412,18 +426,18 @@ int main(int argc, char **argv)
     if (rate == 48000)
     {
       AudioIO::setBlocksize(1024);
-      AudioIO::setBufferCount(4);
+      AudioIO::setBlockCount(4);
     }
     else if (rate == 16000)
     {
       AudioIO::setBlocksize(512);
-      AudioIO::setBufferCount(2);
+      AudioIO::setBlockCount(2);
     }
     #if INTERNAL_SAMPLE_RATE <= 8000
     else if (rate == 8000)
     {
       AudioIO::setBlocksize(256);
-      AudioIO::setBufferCount(2);
+      AudioIO::setBlockCount(2);
     }
     #endif
     else
@@ -440,6 +454,17 @@ int main(int argc, char **argv)
     cout << "--- Using sample rate " << rate << "Hz\n";
   }
   
+  // init locationinfo
+  if (cfg.getValue("GLOBAL", "LOCATION_INFO", value))
+  {
+    if (!LocationInfo::initialize(cfg, value))
+    {
+      cerr << "*** ERROR: Could not init LocationInfo, "
+           << "check configuration section LOCATION_INFO=" << value << "\n";
+      exit(1);
+    }
+  }
+
   initialize_logics(cfg);
 
   struct termios org_termios;
@@ -614,6 +639,7 @@ static void stdinHandler(FdWatch *w)
     case '4': case '5': case '6': case '7':
     case '8': case '9': case 'A': case 'B':
     case 'C': case 'D': case '*': case '#':
+    case 'H':
       logic_vec[0]->injectDtmfDigit(buf[0], 100);
       break;
     

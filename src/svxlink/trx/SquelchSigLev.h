@@ -177,7 +177,7 @@ class SquelchSigLev : public Squelch
      */
     int processSamples(const float *samples, int count)
     {
-      if (!is_open && (sig_lev_det->lastSiglev() > open_thresh))
+      if (!is_open && (sig_lev_det->lastSiglev() >= open_thresh))
       {
       	is_open = true;
       	setOpen(true);

@@ -6,7 +6,7 @@
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "Uplink.h"
 #include "NetUplink.h"
-#include "TrxUplink.h"
+#include "RfUplink.h"
 
 
 
@@ -128,14 +128,14 @@ Uplink *Uplink::create(Config &cfg, const string &name, Rx *rx, Tx *tx)
   {
     uplink = new NetUplink(cfg, name, rx, tx);
   }
-  else if (uplink_type == "Trx")
+  else if (uplink_type == "RF")
   {
-    uplink = new TrxUplink(cfg, name, rx, tx);
+    uplink = new RfUplink(cfg, name, rx, tx);
   }
   else
   {
     cerr << "*** ERROR: Unknown uplink type \"" << uplink_type
-      	 << "\". Legal values are: \"Net\" and \"Trx\"\n";
+      	 << "\". Legal values are: \"Net\" and \"RF\"\n";
     return 0;
   }
   

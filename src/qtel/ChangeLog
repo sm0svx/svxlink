@@ -1,7 +1,9 @@
- 0.11.3 -- ?? ??? 2009
+ 0.11.3 -- ?? ??? 2010
 -----------------------
 
-* Added a Ukrainian translation contributed by Ihor / UR3LCM.
+* Added Ukrainian translation contributed by Ihor / UR3LCM.
+
+* Added Russian translation contributed by Volodymyr / UR3QJW.
 
 * Info/chat window split in two separate windows.
   Contribution by Ihor / UR3LCM.
@@ -10,6 +12,14 @@
   set in the settings dialog. (UR3LCM and SM0SVX).
 
 * The VOX is now disabled by default.
+
+* The default audio device now is alsa:default.
+
+* Added Hungarian translation contributed by Molnár / HG7JUV.
+
+* Added support for using the Speex audio codec over EchoLink connections. This will
+  only, at the moment, work when conneting to other SvxLink applications. For all
+  other connections, the GSM audio codec is used.
 
 
 

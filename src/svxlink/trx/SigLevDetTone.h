@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <vector>
 
 
 /****************************************************************************
@@ -60,7 +61,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-class Goertzel;
 
 
 /****************************************************************************
@@ -173,9 +173,16 @@ class SigLevDetTone : public SigLevDet
   protected:
     
   private:
-    Goertzel  *det[10];
-    int       block_idx;
-    int       last_siglev;
+    class MyGoertzel;
+    class HammingWindow;
+    
+    static const unsigned BLOCK_SIZE = 320;
+
+    std::vector<int>  tone_siglev_map;
+    HammingWindow     *hwin;
+    MyGoertzel        *det[10];
+    unsigned          block_idx;
+    int               last_siglev;
     
     SigLevDetTone(const SigLevDetTone&);
     SigLevDetTone& operator=(const SigLevDetTone&);

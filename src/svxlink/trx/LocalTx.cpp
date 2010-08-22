@@ -67,6 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioInterpolator.h>
 #include <AsyncAudioAmp.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -90,6 +91,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 using namespace std;
 using namespace Async;
 using namespace SigC;
+using namespace SvxLink;
 
 
 
@@ -202,13 +204,11 @@ class SineGenerator : public Async::AudioSource
 
 
 
-
 /****************************************************************************
  *
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 
@@ -232,7 +232,7 @@ LocalTx::LocalTx(Config& cfg, const string& name)
     ptt_pin2(Serial::PIN_NONE), ptt_pin2_rev(false), txtot(0),
     tx_timeout_occured(false), tx_timeout(0), sine_gen(0), ctcss_enable(false),
     dtmf_encoder(0), selector(0), dtmf_valve(0), input_handler(0),
-    audio_valve(0)
+    audio_valve(0), siglev_sine_gen(0), ptt_hangtimer(0)
 {
 
 } /* LocalTx::LocalTx */
@@ -250,6 +250,8 @@ LocalTx::~LocalTx(void)
   delete txtot;
   delete serial;
   delete sine_gen;
+  delete siglev_sine_gen;
+  delete ptt_hangtimer;
 } /* LocalTx::~LocalTx */
 
 
@@ -301,6 +303,14 @@ bool LocalTx::initialize(void)
     }
   }
 
+  int ptt_hangtime;
+  if (cfg.getValue(name, "PTT_HANGTIME", ptt_hangtime))
+  {
+    ptt_hangtimer = new Timer(ptt_hangtime);
+    ptt_hangtimer->expired.connect(slot(*this, &LocalTx::pttHangtimeExpired));
+    ptt_hangtimer->setEnable(false);
+  }
+
   if (cfg.getValue(name, "TIMEOUT", value))
   {
     tx_timeout = 1000 * atoi(value.c_str());
@@ -311,7 +321,7 @@ bool LocalTx::initialize(void)
   {
     tx_delay = atoi(value.c_str());
   }
-  
+
   if (ptt_port != "NONE")
   {
     serial = new Serial(ptt_port.c_str());
@@ -361,7 +371,27 @@ bool LocalTx::initialize(void)
     int level = atoi(value.c_str());
     sine_gen->setLevel(level);
     audio_io->setGain((100.0 - level) / 100.0);
-  }  
+  }
+
+#if INTERNAL_SAMPLE_RATE >= 16000
+  if (cfg.getValue(name, "TONE_SIGLEV_MAP", value))
+  {
+    int siglev_level = 10;
+    cfg.getValue(name, "TONE_SIGLEV_LEVEL", siglev_level, true);
+    size_t list_len = splitStr(tone_siglev_map, value, ", ");
+    if (list_len == 10)
+    {
+      siglev_sine_gen = new SineGenerator(audio_dev, audio_channel);
+      siglev_sine_gen->setLevel(siglev_level);
+      siglev_sine_gen->setFq(5500);
+    }
+    else if (list_len != 0)
+    {
+      cerr << "*** ERROR: Config variable " << name << "/TONE_SIGLEV_MAP must "
+           << "contain exactly ten comma separated siglev values.\n";
+    }
+  }
+#endif
   
   AudioSource *prev_src = 0;
   
@@ -523,6 +553,45 @@ void LocalTx::sendDtmf(const string& digits)
 } /* LocalTx::sendDtmf */
 
 
+void LocalTx::setTransmittedSignalStrength(float siglev)
+{
+#if INTERNAL_SAMPLE_RATE >= 16000
+  if (siglev_sine_gen == 0)
+  {
+    return;
+  }
+  
+  int siglevi = static_cast<int>(siglev);
+  if (tone_siglev_map[0] > tone_siglev_map[9])
+  {
+    for (int i=0; i<10; ++i)
+    {
+      if (tone_siglev_map[i] <= siglevi)
+      {
+        siglev_sine_gen->setFq(5500 + i*100);
+        siglev_sine_gen->enable(true);
+        return;
+      }
+    }
+  }
+  else
+  {
+    for (int i=9; i>=0; --i)
+    {
+      if (tone_siglev_map[i] <= siglevi)
+      {
+        siglev_sine_gen->setFq(5500 + i*100);
+        siglev_sine_gen->enable(true);
+        return;
+      }
+    }
+  }
+  
+  siglev_sine_gen->enable(false);
+#endif
+} /* LocalTx::setTransmittedSignalLevel */
+
+
 
 /****************************************************************************
  *
@@ -574,6 +643,11 @@ void LocalTx::transmit(bool do_transmit)
     {
       sine_gen->enable(false);
     }
+
+    if (siglev_sine_gen != 0)
+    {
+      siglev_sine_gen->enable(false);
+    }
     
     delete txtot;
     txtot = 0;
@@ -582,7 +656,7 @@ void LocalTx::transmit(bool do_transmit)
     transmitterStateChange(false);
   }
   
-  if (!setPtt(is_transmitting && !tx_timeout_occured))
+  if (!setPtt(is_transmitting && !tx_timeout_occured, true))
   {
     perror("setPin");
   }
@@ -655,8 +729,18 @@ int LocalTx::parsePttPin(const char *str, Serial::Pin &pin, bool &rev)
 } /* LocalTx::parsePttPin */
 
 
-bool LocalTx::setPtt(bool tx)
+bool LocalTx::setPtt(bool tx, bool with_hangtime)
 {
+  if (ptt_hangtimer != 0)
+  {
+    if (!tx && with_hangtime)
+    {
+      ptt_hangtimer->setEnable(true);
+      return true;
+    }
+    ptt_hangtimer->setEnable(false);
+  }
+
   if ((serial != 0) && !serial->setPin(ptt_pin1, tx ^ ptt_pin1_rev))
   {
     return false;
@@ -669,7 +753,7 @@ bool LocalTx::setPtt(bool tx)
 
   return true;
 
-} /* LocalTx::setPtt  */
+} /* LocalTx::setPtt */
 
 
 void LocalTx::allDtmfDigitsSent(void)
@@ -678,6 +762,12 @@ void LocalTx::allDtmfDigitsSent(void)
   audio_valve->setOpen(true);
   #endif
 } /* LocalTx::allDtmfDigitsSent  */
+
+
+void LocalTx::pttHangtimeExpired(Timer *t)
+{
+  setPtt(false);
+} /* LocalTx::pttHangtimeExpired */
 
 
 

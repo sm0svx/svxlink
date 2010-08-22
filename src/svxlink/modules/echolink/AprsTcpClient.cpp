@@ -190,21 +190,25 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
 
     // Geographic position
   char pos[20];
-  sprintf(pos, "%02d%02d.%02d%c/%03d%02d.%02d%c",
-               loc_cfg.lat_pos.deg, loc_cfg.lat_pos.min,
-               (loc_cfg.lat_pos.sec * 100) / 60, loc_cfg.lat_pos.dir,
-               loc_cfg.lon_pos.deg, loc_cfg.lon_pos.min,
-               (loc_cfg.lon_pos.sec * 100) / 60, loc_cfg.lon_pos.dir);
+  posStr(pos);
 
     // APRS message
-  char  aprsmsg[200];
-  sprintf(aprsmsg, "%s>%s,%s:;%s-%-6.6s*111111z%s%d%s\r\n",
+  char aprsmsg[200];
+  sprintf(aprsmsg, "%s>%s,%s:;%s-%-6.6s*111111z%s%s\r\n",
           el_call.c_str(), destination.c_str(), loc_cfg.path.c_str(),
-          el_prefix.c_str(), el_call.c_str(), pos,
-          (num_connected < 10) ? num_connected : 9, msg);
-
-  //cout << aprsmsg;
+          el_prefix.c_str(), el_call.c_str(), pos, msg);
   sendMsg(aprsmsg);
+
+  // APRS status message, connected calls
+  string status = el_prefix+"-"+el_call+">"+destination+","+loc_cfg.path+":>";
+
+  list<string>::const_iterator it;
+  for (it = call_list.begin(); it != call_list.end(); ++it)
+  {
+    status += *it + " ";
+  }
+  status += "\r\n";
+  sendMsg(status.c_str());
 
 } /* AprsTcpClient::updateQsoStatus */
 
@@ -223,15 +227,31 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
  *
  ****************************************************************************/
 
+void AprsTcpClient::posStr(char *pos)
+{
+  char num_connected_overlay;
+  if (num_connected > 0)
+  {
+    num_connected_overlay = (num_connected < 10) ? '0' + num_connected : '9';
+  }
+  else
+  {
+    num_connected_overlay = 'E';
+  }
+  sprintf(pos, "%02d%02d.%02d%c%c%03d%02d.%02d%c0",
+               loc_cfg.lat_pos.deg, loc_cfg.lat_pos.min,
+               (loc_cfg.lat_pos.sec * 100) / 60, loc_cfg.lat_pos.dir,
+               num_connected_overlay,
+               loc_cfg.lon_pos.deg, loc_cfg.lon_pos.min,
+               (loc_cfg.lon_pos.sec * 100) / 60, loc_cfg.lon_pos.dir);
+}
+
+
 void AprsTcpClient::sendAprsBeacon(Timer *t)
 {
     // Geographic position
   char pos[20];
-  sprintf(pos, "%02d%02d.%02d%c/%03d%02d.%02d%c",
-               loc_cfg.lat_pos.deg, loc_cfg.lat_pos.min,
-               (loc_cfg.lat_pos.sec * 100) / 60, loc_cfg.lat_pos.dir,
-               loc_cfg.lon_pos.deg, loc_cfg.lon_pos.min,
-               (loc_cfg.lon_pos.sec * 100) / 60, loc_cfg.lon_pos.dir);
+  posStr(pos);
 
     // CTCSS/1750Hz tone
   char tone[5];
@@ -239,12 +259,12 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 
     // APRS message
   char aprsmsg[200];
-  sprintf(aprsmsg, "%s>%s,%s:;%s-%-6.6s*111111z%s%d%03d.%03dMHz %s R%02d%c %s\r\n",
+  sprintf(aprsmsg, "%s>%s,%s:;%s-%-6.6s*111111z%s%03d.%03dMHz %s R%02d%c %s\r\n",
             el_call.c_str(), destination.c_str(), loc_cfg.path.c_str(),
             el_prefix.c_str(), el_call.c_str(), pos,
-            (num_connected < 10) ? num_connected : 9,
             loc_cfg.frequency / 1000, loc_cfg.frequency % 1000,
             tone, loc_cfg.range, loc_cfg.range_unit, loc_cfg.comment.c_str());
+  //cout << aprsmsg;
 
   sendMsg(aprsmsg);
 

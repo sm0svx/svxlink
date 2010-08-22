@@ -119,7 +119,7 @@ using namespace std;
 #define CONF_LIST_REFRESH_TIME_DEFAULT	5
 #define CONF_START_AS_BUSY_DEFAULT    	false
 
-#define CONF_AUDIO_DEVICE_DEFAULT 	"/dev/dsp"
+#define CONF_AUDIO_DEVICE_DEFAULT 	"alsa:default"
 #define CONF_USE_FULL_DUPLEX_DEFAULT    false
 #define CONF_CONNECT_SOUND_DEFAULT 	"/usr/share/qtel/sounds/connect.raw"
 

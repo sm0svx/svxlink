@@ -30,7 +30,7 @@ do this because otherwise you will get into trouble in the future.
 To enable Procmail to write to the spool directory we need to run a couple of
 commands as user root.
 
-semanage fcontext -a -t user_home_dir_t "/var/spool/svxlink/propagation_monitor/.*"
+semanage fcontext -a -t user_home_t "/var/spool/svxlink/propagation_monitor(/.*)?"
 restorecon -r /var/spool/svxlink/propagation_monitor
 
 This was tested on CentOS 5.
@@ -39,6 +39,6 @@ This was tested on CentOS 5.
 Register yourself on the VHFDX (www.vhfdx.net) site so that emails start
 coming. On the site you enter your geographic position and setup what type of
 propagation alerts you want to receive. Start by allowing alerts for lower
-frequencies like 6m and 28m to test the system. You can disable them later
+bands like 6m and 10m to test the system. You can disable them later
 when you know it's working.
 

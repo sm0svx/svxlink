@@ -165,6 +165,8 @@ void AudioSource::unregisterSink(void)
  */
 int AudioSource::sinkWriteSamples(const float *samples, int len)
 {
+  assert(len > 0);
+
   is_flushing = false;
   
   if (m_sink != 0)

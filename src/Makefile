@@ -166,7 +166,10 @@ ifeq ($(OS),)
 		make CURRENT_SUBDIR="$(CURRENT_SUBDIR)$$dir/" -C $$dir $@; \
 	    fi \
 	done
-	$(RM) *~ $(ARCHIVENAME) makefile.root .config
+	$(RM) *~ $(ARCHIVENAME) .config
+	if [ ! -r makefile.inc ]; then \
+	  $(RM) makefile.root; \
+	fi
 else
 	$(MAKE) -f Makefile.win32 $@
 endif
@@ -189,7 +192,7 @@ endif
 
 
 #
-# makefiles - Create the makefiel structure (softlinks).
+# makefiles - Create the makefile structure (softlinks).
 #
 .PHONY:	makefiles
 makefiles:

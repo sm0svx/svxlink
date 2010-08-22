@@ -12,7 +12,8 @@
 
 /*************** RTP_MAKE_SDES *************/
 
-int rtp_make_sdes(unsigned char *p, uint32_t ssrc_i, const char *callsign, const char *name)
+int rtp_make_sdes(unsigned char *p, const char *callsign,
+  const char *name, const char *priv)
 {
     unsigned char *ap;
     unsigned short ver;
@@ -27,10 +28,10 @@ int rtp_make_sdes(unsigned char *p, uint32_t ssrc_i, const char *callsign, const
     *p++ = RTCP_RR;
     *p++ = 0;
     *p++ = 1;
-    *p++ = ssrc_i >> 24;
-    *p++ = ssrc_i >> 16;
-    *p++ = ssrc_i >> 8;
-    *p++ = ssrc_i;
+    *p++ = 0;
+    *p++ = 0;
+    *p++ = 0;
+    *p++ = 0;
 
     /* Set SDES version/misc data. */
     ver = (RTP_VERSION << 14) | RTCP_SDES | (1 << 8);
@@ -38,10 +39,10 @@ int rtp_make_sdes(unsigned char *p, uint32_t ssrc_i, const char *callsign, const
     p[1] = ver;
 
     /* Set SDES source. */
-    p[4] = ssrc_i >> 24;
-    p[5] = ssrc_i >> 16;
-    p[6] = ssrc_i >> 8;
-    p[7] = ssrc_i;
+    p[4] = 0;
+    p[5] = 0;
+    p[6] = 0;
+    p[7] = 0;
 
     /* At this point ap points to the beginning of the first SDES item. */
     ap = p + 8;
@@ -58,6 +59,12 @@ int rtp_make_sdes(unsigned char *p, uint32_t ssrc_i, const char *callsign, const
     
     *ap++ = RTCP_SDES_PHONE;
     addText(ap, "08:30");
+
+    if (priv)
+    {
+      *ap++ = RTCP_SDES_PRIV;
+      addText(ap, priv);
+    }
     
     *ap++ = RTCP_SDES_END;
     *ap++ = 0;
@@ -79,7 +86,7 @@ int rtp_make_sdes(unsigned char *p, uint32_t ssrc_i, const char *callsign, const
 
 /************* RTP_MAKE_BYE ***************/
 
-int rtp_make_bye(unsigned char *p, uint32_t ssrc_i, const char *raison)
+int rtp_make_bye(unsigned char *p)
 {
     unsigned char *ap;
     unsigned short ver;
@@ -93,10 +100,10 @@ int rtp_make_bye(unsigned char *p, uint32_t ssrc_i, const char *raison)
     *p++ = RTCP_RR;
     *p++ = 0;
     *p++ = 1;
-    *p++ = ssrc_i >> 24;
-    *p++ = ssrc_i >> 16;
-    *p++ = ssrc_i >> 8;
-    *p++ = ssrc_i;
+    *p++ = 0;
+    *p++ = 0;
+    *p++ = 0;
+    *p++ = 0;
 
     /* Set BYE version/misc data. */
     ver = (RTP_VERSION << 14) | RTCP_BYE | (1 << 8);
@@ -104,18 +111,16 @@ int rtp_make_bye(unsigned char *p, uint32_t ssrc_i, const char *raison)
     p[1] = ver;
 
     /* Set BYE source. */
-    p[4] = ssrc_i >> 24;
-    p[5] = ssrc_i >> 16;
-    p[6] = ssrc_i >> 8;
-    p[7] = ssrc_i;
+    p[4] = 0;
+    p[5] = 0;
+    p[6] = 0;
+    p[7] = 0;
 
     /* At this point ap points to the beginning of the trailing text. */
     ap = p + 8;
 
-    if (raison != NULL && strlen(raison) > 0)
-    {
-        addText(ap, raison);
-    }
+    /* Add trailing text. */
+    addText(ap, "jan2002");
 
     /* Some data padding for alignment. */
     while ((ap - p) & 3)

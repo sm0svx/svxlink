@@ -145,6 +145,7 @@ class AprsTcpClient : public AprsClient, public SigC::Object
                    const std::string& delims);
 
     void  sendMsg(const char *aprsmsg);
+    void  posStr(char *pos);
     void  sendAprsBeacon(Async::Timer *t);
 
     void  tcpConnected(void);

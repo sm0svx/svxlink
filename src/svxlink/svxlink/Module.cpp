@@ -162,6 +162,14 @@ void Module::playHelpMsg(void)
 } /* Module::playHelpMsg */
 
 
+void Module::dtmfCmdReceivedWhenIdle(const std::string &cmd)
+{
+  std::stringstream ss;
+  ss << "command_failed " << id() << cmd;
+  logic()->processEvent(ss.str());
+} /* Module::dtmfCmdReceivedWhenIdle */
+
+
 void Module::processEvent(const string& event)
 {
   logic()->processEvent(event, this);
@@ -176,19 +184,13 @@ void Module::setEventVariable(const string& name, const string& value)
 
 void Module::playFile(const string& path)
 {
-  if (m_is_active)
-  {
-    logic()->playFile(path);
-  }
+  logic()->playFile(path);
 } /* Module::playFile */
 
 
 void Module::sendDtmf(const std::string& digits)
 {
-  if (m_is_active)
-  {
-    logic()->sendDtmf(digits);
-  }
+  logic()->sendDtmf(digits);
 } /* Module::sendDtmf */
 
 
@@ -270,6 +272,12 @@ bool Module::squelchIsOpen(void)
 {
   return logic()->rx().squelchIsOpen();
 } /* Module::squelchIsOpen */
+
+
+bool Module::isWritingMessage(void)
+{
+  return logic()->isWritingMessage();
+} /* Module::isWritingMessage */
 
 
 void Module::moduleTimeout(Timer *t)

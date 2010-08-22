@@ -1,4 +1,4 @@
-.TH REMOTETRX 1 "APRIL 2008" Linux "User Manuals"
+.TH REMOTETRX 1 "JULY 2010" Linux "User Manuals"
 .
 .SH NAME
 .
@@ -14,6 +14,11 @@ remotetrx \- The SvxLink remote transceiver application
 is the SvxLink remote transceiver application. It is used to connect to a
 receiver and/or transmitter and then the main SvxLink server can connect to the
 remote transceiver server via TCP/IP to get audio to/from it.
+.P
+It is also possible to link via RF instead of via TCP/IP. An example use of the
+latter would be if the repeater is placed in a remote location where there is
+no network. Then networked remote receivers can be linked up to the repeater
+via RF from a link site where network is available.
 .P
 The setup is pretty straight forward. The setup of a receiver or transmitter is
 done in the same way as in the SvxLink server so use the
@@ -44,9 +49,8 @@ Start RemoteTrx as the specified user. The switch to the new user
 will happen after the log and pid files has been opened.
 .TP
 .BI "--logfile=" "log file"
-Specify a log file to put all output into. Both stdout and stderr will be redire
-cted to
-the log file.
+Specify a log file to put all output into. Both stdout and stderr will be
+redirected to the log file.
 .TP
 .BI "--pidfile=" "pid file"
 Specify a pid file to write the process ID into.

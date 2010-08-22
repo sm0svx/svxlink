@@ -433,6 +433,13 @@ void NetRx::handleMsg(Msg *msg)
       break;
     }
     
+    case MsgSel5::TYPE:
+    {
+      MsgSel5 *sel5_msg = reinterpret_cast<MsgSel5*>(msg);
+      selcallSequenceDetected(sel5_msg->digits());
+      break;
+    }
+
     /*
     default:
       cerr << name() << ": *** ERROR: Unknown TCP message received. Type="

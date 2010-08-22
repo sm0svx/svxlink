@@ -1,8 +1,23 @@
- 0.17.1 -- ?? ??? 2009
+ 0.18.0 -- ?? ??? 2010
 -----------------------
 
 * The Async::AudioRecorder can now auto detect the file format from the
   filename extension.
+
+* Improved audio device handling which makes it easier to add support for
+  different kinds of audio subsystems.
+
+* Added support for the ALSA audio subsystem.
+
+* Bugfix in AudioFifo: The clear method did not work properly. Under some
+  circumstances, allSamplesFlushed was not called which caused problems
+  upstream.
+
+* Bugfix in AudioDelayLine: Mute and clear did not do the right thing
+  with the buffer pointer so it didn't behave properly.
+
+* The AudioDelayLine now fade in and out when muting and clearing to
+  avoid creating pops in the audio stream.
 
 
 

@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -46,6 +46,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <sstream>
 #include <map>
+#include <list>
+#include <vector>
 
 
 /****************************************************************************
@@ -144,20 +146,50 @@ AudioSwitchMatrix Logic::audio_switch_matrix;
  *
  ****************************************************************************/
 
-void Logic::connectLogics(const string& l1, const string& l2, int timeout)
+bool Logic::connectLogics(const vector<string> &link_list, int timeout)
 {
-  cout << "Activating link " << l1 << " <--> " << l2 << endl;
-  audio_switch_matrix.connect(l1, l2);
-  audio_switch_matrix.connect(l2, l1);
+  assert(link_list.size() > 0);
+  bool check_connect = false;
+  vector<string>::const_iterator it;
+  for (it = link_list.begin(); it != link_list.end(); it++)
+  {
+    for (vector<string>::const_iterator it1 = it + 1; it1 != link_list.end();
+	 it1++)
+    {
+      assert(*it != *it1);
+      if (!logicsAreConnected(*it, *it1))
+      {
+	cout << "Activating link " << *it << " --> " << *it1 << endl;
+	audio_switch_matrix.connect(*it, *it1);
+	audio_switch_matrix.connect(*it1, *it);
+	check_connect = true;
+      }
+    }
+  }
+  return check_connect;
 } /* Logic::connectLogics */
 
 
-void Logic::disconnectLogics(const string& l1, const string& l2)
+bool Logic::disconnectLogics(const std::vector<std::string> &link_list)
 {
-  cout << "Deactivating link " << l1 << " <--> " << l2 << endl;
-  audio_switch_matrix.disconnect(l1, l2);
-  audio_switch_matrix.disconnect(l2, l1);
-} /* Logic::connectLogics */
+  assert(link_list.size() > 0);
+  bool check_connect = false;
+  for (vector<string>::const_iterator it = link_list.begin();
+       it != link_list.end(); it++)
+  {
+    for (vector<string>::const_iterator it1 = it + 1; it1 != link_list.end();
+	 it1++)
+    {
+      if (logicsAreConnected(*it, *it1))
+      {
+	cout << "Deactivating link " << *it << " --> " << *it1 << endl;
+	audio_switch_matrix.disconnect(*it, *it1);
+	check_connect = true;
+      }
+    }
+  }
+  return check_connect;
+} /* Logic::disconnectLogics */
 
 
 bool Logic::logicsAreConnected(const string& l1, const string& l2)
@@ -283,6 +315,15 @@ bool Logic::initialize(void)
     }
   }
   
+  string sel5_macros;
+  if (cfg().getValue(name(), "SEL5_MACRO_RANGE", sel5_macros))
+  {
+    size_t comma = sel5_macros.find(",");
+    sel5_from = sel5_macros.substr(0, int(comma));
+    sel5_to = sel5_macros.substr(int(comma) + 1, sel5_macros.length());
+    cout << "Sel5 macro range from " << sel5_from << " to " << sel5_to << endl;
+  }
+
   if (cfg().getValue(name(), "TX_CTCSS", value))
   {
     string::iterator comma;
@@ -317,6 +358,10 @@ bool Logic::initialize(void)
       {
         tx_ctcss_mask |= TX_CTCSS_MODULE;
       }
+      else if (tx_ctcss_type == "ANNOUNCEMENT")
+      {
+        tx_ctcss_mask |= TX_CTCSS_ANNOUNCEMENT;
+      }
       else
       {
         cerr << "*** WARNING: Unknown value in configuration variable "
@@ -349,6 +394,8 @@ bool Logic::initialize(void)
   }
   rx().squelchOpen.connect(slot(*this, &Logic::squelchOpen));
   rx().dtmfDigitDetected.connect(slot(*this, &Logic::dtmfDigitDetectedP));
+  rx().selcallSequenceDetected.connect(
+	slot(*this, &Logic::selcallSequenceDetected));
   rx().mute(false);
   prev_rx_src = m_rx;
   
@@ -474,7 +521,7 @@ bool Logic::initialize(void)
   prev_tx_src = tx_audio_mixer;
   
     // Create the TX object
-  m_tx = Tx::create(cfg(), tx_name);
+  m_tx = TxFactory::createNamedTx(cfg(), tx_name);
   if ((m_tx == 0) || !tx().initialize())
   {
     delete m_tx;
@@ -596,6 +643,12 @@ void Logic::setEventVariable(const string& name, const string& value)
 void Logic::playFile(const string& path)
 {
   msg_handler->playFile(path, report_events_as_idle);
+
+  if (!msg_handler->isIdle())
+  {
+    updateTxCtcss(true, TX_CTCSS_ANNOUNCEMENT);
+  }
+
   checkIdle();
 } /* Logic::playFile */
 
@@ -603,6 +656,12 @@ void Logic::playFile(const string& path)
 void Logic::playSilence(int length)
 {
   msg_handler->playSilence(length, report_events_as_idle);
+
+  if (!msg_handler->isIdle())
+  {
+    updateTxCtcss(true, TX_CTCSS_ANNOUNCEMENT);
+  }
+
   checkIdle();
 } /* Logic::playSilence */
 
@@ -610,6 +669,12 @@ void Logic::playSilence(int length)
 void Logic::playTone(int fq, int amp, int len)
 {
   msg_handler->playTone(fq, amp, len, report_events_as_idle);
+
+  if (!msg_handler->isIdle())
+  {
+    updateTxCtcss(true, TX_CTCSS_ANNOUNCEMENT);
+  }
+
   checkIdle();
 } /* Logic::playSilence */
 
@@ -736,7 +801,11 @@ void Logic::dtmfDigitDetected(char digit, int duration)
   }
   else if (received_digits.size() < 20)
   {
-    if (digit == 'B')
+    if (digit == 'H')	// Make it possible to include a hash mark in a macro
+    {
+      received_digits += '#';
+    }
+    else if (digit == 'B')
     {
       if (anti_flutter && (prev_digit != '?'))
       {
@@ -769,6 +838,20 @@ void Logic::dtmfDigitDetected(char digit, int duration)
 } /* Logic::dtmfDigitDetected */
 
 
+void Logic::selcallSequenceDetected(std::string sequence)
+{
+  if ((sequence.compare(sel5_from) >= 0) && (sequence.compare(sel5_to) <= 0))
+  {
+    string s = "D" + sequence + "#";
+    processMacroCmd(s);
+  }
+  else
+  {
+    cout << "Sel5 sequence \"" << sequence << "\" out of defined range\n";
+  }
+} /* Logic::selcallSequenceDetected */
+
+
 void Logic::disconnectAllLogics(void)
 {
   cout << "Deactivating all links to/from \"" << name() << "\"\n";
@@ -784,6 +867,14 @@ void Logic::sendDtmf(const std::string& digits)
     tx().sendDtmf(digits);
   }
 } /* Logic::sendDtmf */
+
+
+bool Logic::isWritingMessage(void)
+{
+  return msg_handler->isWritingMessage();
+} /* Logic::isWritingMessage */
+
+
 
 
 
@@ -878,12 +969,6 @@ void Logic::enableRgrSoundTimer(bool enable)
 } /* Logic::enableRgrSoundTimer */
 
 
-bool Logic::isWritingMessage(void)
-{
-  return msg_handler->isWritingMessage();
-} /* Logic::isWritingMessage */
-
-
 #if 0
 bool Logic::remoteLogicIsTransmitting(void) const
 {
@@ -950,6 +1035,7 @@ void Logic::allMsgsWritten(void)
      active_module->allMsgsWritten();
   }
 
+  updateTxCtcss(false, TX_CTCSS_ANNOUNCEMENT);
   checkIdle();
   
 } /* Logic::allMsgsWritten */
@@ -1102,57 +1188,80 @@ void Logic::processCommandQueue(void)
       continue;
     }
     
-    if (cmd == "*")
-    {
-      processEvent("manual_identification");
-    }
-    else if (cmd[0] == 'D')
-    {
-      processMacroCmd(cmd);
-    }
-    else if (active_module != 0)
-    {
-      active_module->dtmfCmdReceived(cmd);
-    }
-    else if (!cmd.empty())
-    {
-      if (cmd.size() >= long_cmd_digits)
-      {
-      	Module *module = findModule(long_cmd_module);
-	if (module != 0)
-	{
-	  activateModule(module);
-	  if (active_module != 0)
-	  {
-      	    active_module->dtmfCmdReceived(cmd);
-	  }
-	}
-	else
-	{
-	  cerr << "*** WARNING: Could not find module \"" << long_cmd_module
-	       << "\" specified in configuration variable "
-	       << "ACTIVATE_MODULE_ON_LONG_CMD.\n";
-	  stringstream ss;
-	  ss << "command_failed " << cmd;
-	  processEvent(ss.str());
-	}
-      }
-      else if (!cmd_parser.processCmd(cmd))
-      {
-      	stringstream ss;
-	ss << "unknown_command " << cmd;
-      	processEvent(ss.str());
-      }
-    }
+    processCommand(cmd);
+    
   }  
 } /* Logic::processCommandQueue */
 
 
-void Logic::processMacroCmd(string& cmd)
+void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
 {
-  cout << "Processing macro command: " << cmd << "...\n";
-  assert(!cmd.empty() && (cmd[0] == 'D'));
-  cmd.erase(0, 1);
+  if (cmd.substr(0, 1) == "*")
+  {
+    string rest(cmd, 1);
+    if (rest.empty())
+    {
+      processEvent("manual_identification");
+    }
+    else
+    {
+      processCommand(rest, true);
+    }
+  }
+  else if (cmd.substr(0, 1) == "D")
+  {
+    processMacroCmd(cmd);
+  }
+  else if ((!force_core_cmd) && (active_module != 0))
+  {
+    active_module->dtmfCmdReceived(cmd);
+  }
+  else if (cmd.substr(0, 2) == "00")
+  {
+    stringstream ss;
+    ss << "set_language ";
+    ss << cmd.substr(2);
+    processEvent(ss.str());
+  }
+  else if (!cmd.empty())
+  {
+    if ((!force_core_cmd) && (cmd.size() >= long_cmd_digits))
+    {
+      Module *module = findModule(long_cmd_module);
+      if (module != 0)
+      {
+	activateModule(module);
+	if (active_module != 0)
+	{
+	  active_module->dtmfCmdReceived(cmd);
+	}
+      }
+      else
+      {
+	cerr << "*** WARNING: Could not find module \"" << long_cmd_module
+	      << "\" specified in configuration variable "
+	      << "ACTIVATE_MODULE_ON_LONG_CMD.\n";
+	stringstream ss;
+	ss << "command_failed " << cmd;
+	processEvent(ss.str());
+      }
+    }
+    else if (!cmd_parser.processCmd(cmd))
+    {
+      stringstream ss;
+      ss << "unknown_command " << cmd;
+      processEvent(ss.str());
+    }
+  }
+  
+} /* Logic::processCommand */
+
+
+void Logic::processMacroCmd(const string& macro_cmd)
+{
+  cout << "Processing macro command: " << macro_cmd << "...\n";
+  assert(!macro_cmd.empty() && (macro_cmd[0] == 'D'));
+  string cmd(macro_cmd, 1);
   if (cmd.empty())
   {
     cerr << "*** Macro error: Empty command.\n";
@@ -1180,30 +1289,34 @@ void Logic::processMacroCmd(string& cmd)
   
   string module_name(macro.begin(), colon);
   string module_cmd(colon+1, macro.end());
-  Module *module = findModule(module_name);
-  if (module == 0)
-  {
-    cerr << "*** Macro error: Module " << module_name << " not found.\n";
-    processEvent("macro_module_not_found");
-    return;
-  }
   
-  if (active_module == 0)
+  if (!module_name.empty())
   {
-    if (!activateModule(module))
+    Module *module = findModule(module_name);
+    if (module == 0)
     {
-      cerr << "*** Macro error: Activation of module " << module_name
-           << " failed.\n";
-      processEvent("macro_module_activation_failed");
+      cerr << "*** Macro error: Module " << module_name << " not found.\n";
+      processEvent("macro_module_not_found");
       return;
     }
-  }
-  else if (active_module != module)
-  {
-    cerr << "*** Macro error: Another module is active ("
-         << active_module->name() << ").\n";
-    processEvent("macro_another_active_module");
-    return;
+    
+    if (active_module == 0)
+    {
+      if (!activateModule(module))
+      {
+	cerr << "*** Macro error: Activation of module " << module_name
+	    << " failed.\n";
+	processEvent("macro_module_activation_failed");
+	return;
+      }
+    }
+    else if (active_module != module)
+    {
+      cerr << "*** Macro error: Another module is active ("
+	  << active_module->name() << ").\n";
+      processEvent("macro_another_active_module");
+      return;
+    }
   }
   
   for (unsigned i=0; i<module_cmd.size(); ++i)

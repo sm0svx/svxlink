@@ -10,7 +10,7 @@ server core (e.g. via a TCP/IP network).
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
+#include <vector>
 
 
 /****************************************************************************
@@ -62,6 +63,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncFdWatch.h>
 #include <AsyncAudioIO.h>
 #include <Rx.h>
+#include <Tx.h>
+#include <common.h>
 
 #include <version/REMOTE_TRX.h>
 
@@ -85,6 +88,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 using namespace std;
 using namespace Async;
 using namespace SigC;
+using namespace SvxLink;
 
 
 
@@ -103,10 +107,10 @@ using namespace SigC;
  *
  ****************************************************************************/
 
-class NetTrxAdapterFactory : public RxFactory
+class NetRxAdapterFactory : public RxFactory
 {
   public:
-    NetTrxAdapterFactory(void) : RxFactory("NetTrxAdapter") {}
+    NetRxAdapterFactory(void) : RxFactory("NetTrxAdapter") {}
     
   protected:
     Rx *createRx(Config &cfg, const string& name)
@@ -118,7 +122,25 @@ class NetTrxAdapterFactory : public RxFactory
       }
       return adapter->rx();
     }
-}; /* class TrxAdapterFactory */
+}; /* class NetRxAdapterFactory */
+
+
+class NetTxAdapterFactory : public TxFactory
+{
+  public:
+    NetTxAdapterFactory(void) : TxFactory("NetTrxAdapter") {}
+    
+  protected:
+    Tx *createTx(Config &cfg, const string& name)
+    {
+      NetTrxAdapter *adapter = NetTrxAdapter::instance(cfg, name);
+      if (adapter == 0)
+      {
+      	return 0;
+      }
+      return adapter->tx();
+    }
+}; /* class NetTxAdapterFactory */
 
 
 
@@ -432,18 +454,18 @@ int main(int argc, char **argv)
     if (rate == 48000)
     {
       AudioIO::setBlocksize(1024);
-      AudioIO::setBufferCount(4);
+      AudioIO::setBlockCount(4);
     }
     else if (rate == 16000)
     {
       AudioIO::setBlocksize(512);
-      AudioIO::setBufferCount(2);
+      AudioIO::setBlockCount(2);
     }
     #if INTERNAL_SAMPLE_RATE <= 8000
     else if (rate == 8000)
     {
       AudioIO::setBlocksize(256);
-      AudioIO::setBufferCount(2);
+      AudioIO::setBlockCount(2);
     }
     #endif
     else
@@ -473,12 +495,34 @@ int main(int argc, char **argv)
     stdin_watch->activity.connect(slot(&stdinHandler));
   }
   
-  NetTrxAdapterFactory net_trx_adapter_factory;
+  NetRxAdapterFactory net_rx_adapter_factory;
+  NetTxAdapterFactory net_tx_adapter_factory;
 
-  TrxHandler trx_handler(cfg);
-  if (trx_handler.initialize())
+  vector<TrxHandler*> trx_handlers;
+  vector<string> trxs;
+  value = "";
+  cfg.getValue("GLOBAL", "TRXS", value);
+  splitStr(trxs, value, ",");
+  for (unsigned i=0; i<trxs.size(); ++i)
+  {
+    cout << "Setting up trx \"" << trxs[i] << "\"\n";
+    TrxHandler *trx_handler = new TrxHandler(cfg, trxs[i]);
+    if (!trx_handler->initialize())
+    {
+      cerr << "*** ERROR: Failed to setup trx " << trxs[i] << endl;
+      delete trx_handler;
+      continue;
+    }
+    trx_handlers.push_back(trx_handler);
+  }
+  
+  if (!trx_handlers.empty())
   {
     app.exec();
+  }
+  else
+  {
+    cerr << "*** ERROR: No trxs successfully initialized. Bailing out...\n";
   }
   
   if (stdin_watch != 0)

@@ -142,8 +142,8 @@ class DummyRx : public Rx
  *
  ****************************************************************************/
 
-TrxHandler::TrxHandler(Async::Config &cfg)
-  : cfg(cfg), uplink(0), rx(0), tx(0)
+TrxHandler::TrxHandler(Async::Config &cfg, const std::string &name)
+  : m_cfg(cfg), m_name(name), m_uplink(0), m_rx(0), m_tx(0)
 {
   
 } /* TrxHandler::TrxHandler */
@@ -151,108 +151,79 @@ TrxHandler::TrxHandler(Async::Config &cfg)
 
 TrxHandler::~TrxHandler(void)
 {
-  delete uplink;
-  delete rx;
-  delete tx;
+  delete m_uplink;
+  delete m_rx;
+  delete m_tx;
 } /* TrxHandler::~TrxHandler */
 
 
 bool TrxHandler::initialize(void)
 {
   string rx_name;
-  if (!cfg.getValue("GLOBAL", "RX", rx_name))
+  if (!m_cfg.getValue(m_name, "RX", rx_name))
   {
-    cerr << "*** ERROR: Configuration variable GLOBAL/RX not set.\n";
+    cerr << "*** ERROR: Configuration variable " << m_name << "/RX not set.\n";
     return false;
   }
 
   string tx_name;
-  if (!cfg.getValue("GLOBAL", "TX", tx_name))
+  if (!m_cfg.getValue(m_name, "TX", tx_name))
   {
-    cerr << "*** ERROR: Configuration variable GLOBAL/TX not set.\n";
+    cerr << "*** ERROR: Configuration variable " << m_name << "/TX not set.\n";
     return false;
   }
 
-  string uplink_name;
-  if (!cfg.getValue("GLOBAL", "UPLINK", uplink_name))
-  {
-    cerr << "*** ERROR: Configuration variable GLOBAL/UPLINK not set.\n";
-    return false;
-  }
-  
   if (rx_name != "NONE")
   {
     string rx_type;
-    if (!cfg.getValue(rx_name, "TYPE", rx_type))
+    if (!m_cfg.getValue(rx_name, "TYPE", rx_type))
     {
       cerr << "*** ERROR: " << rx_name << "/TYPE not set\n";
       cleanup();
       return false;
     }
-    if (rx_type == "NetTrxAdapter")
+    m_rx = RxFactory::createNamedRx(m_cfg, rx_name);
+    if ((m_rx == 0) || !m_rx->initialize())
     {
-      NetTrxAdapter *adapter = NetTrxAdapter::instance(cfg, rx_name);
-      if (adapter != 0)
-      {
-      	rx = adapter->rx();
-      }
-    }
-    else
-    {
-      rx = RxFactory::createNamedRx(cfg, rx_name);
-    }
-    if ((rx == 0) || !rx->initialize())
-    {
-      cerr << "*** ERROR: Could not initialize Rx object \""
-      	   << rx_name << "\".\n";
+      cerr << "*** ERROR: Could not initialize rx object \""
+      	   << rx_name << "\" for trx \"" << m_name << "\".\n";
       cleanup();
       return false;
     }
   }
   else
   {
-    rx = new DummyRx;
+    m_rx = new DummyRx;
   }
 
   if (tx_name != "NONE")
   {
     string tx_type;
-    if (!cfg.getValue(tx_name, "TYPE", tx_type))
+    if (!m_cfg.getValue(tx_name, "TYPE", tx_type))
     {
       cerr << "*** ERROR: " << tx_name << "/TYPE not set\n";
       cleanup();
       return false;
     }
-    if (tx_type == "NetTrxAdapter")
+    m_tx = TxFactory::createNamedTx(m_cfg, tx_name);
+    if ((m_tx == 0) || !m_tx->initialize())
     {
-      NetTrxAdapter *adapter = NetTrxAdapter::instance(cfg, tx_name);
-      if (adapter != 0)
-      {
-      	tx = adapter->tx();
-      }
-    }
-    else
-    {
-      tx = Tx::create(cfg, tx_name);
-    }
-    if ((tx == 0) || !tx->initialize())
-    {
-      cerr << "*** ERROR: Could not initialize Tx object \""
-      	   << tx_name << "\".\n";
+      cerr << "*** ERROR: Could not initialize tx object \""
+      	   << tx_name << "\" for trx \"" << m_name << "\".\n";
       cleanup();
       return false;
     }
   }
   else
   {
-    tx = new DummyTx;
+    m_tx = new DummyTx;
   }
     
-  uplink = Uplink::create(cfg, uplink_name, rx, tx);
-  if ((uplink == 0) || !uplink->initialize())
+  m_uplink = Uplink::create(m_cfg, m_name, m_rx, m_tx);
+  if ((m_uplink == 0) || !m_uplink->initialize())
   {
-    cerr << "*** ERROR: Could not initialize Uplink object \""
-      	 << uplink_name << "\".\n";
+    cerr << "*** ERROR: Could not initialize uplink object for \""
+      	 << m_name << "\".\n";
     cleanup();
     return false;
   }
@@ -281,12 +252,12 @@ bool TrxHandler::initialize(void)
 
 void TrxHandler::cleanup(void)
 {
-  delete rx;
-  rx = 0;
-  delete tx;
-  tx = 0;
-  delete uplink;
-  uplink = 0;
+  delete m_rx;
+  m_rx = 0;
+  delete m_tx;
+  m_tx = 0;
+  delete m_uplink;
+  m_uplink = 0;
 } /* TrxHandler::cleanup */
 
 

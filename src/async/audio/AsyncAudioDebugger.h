@@ -35,8 +35,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sys/time.h>
 #include <iostream>
 #include <string>
+#include <stdint.h>
 
 
 /****************************************************************************
@@ -121,8 +123,9 @@ class AudioDebugger : public AudioSink, public AudioSource
      * @brief 	Default constuctor
      */
     AudioDebugger(Async::AudioSource *src=0)
-      : name("AudioDebugger")
+      : name("AudioDebugger"), sample_count(0)
     {
+      gettimeofday(&start_time, 0);
       if (src != 0)
       {
       	Async::AudioSink *sink = src->sink();
@@ -160,8 +163,24 @@ class AudioDebugger : public AudioSink, public AudioSource
     virtual int writeSamples(const float *samples, int count)
     {
       int ret = sinkWriteSamples(samples, count);
+      sample_count += ret;
+
+      struct timeval time, diff;
+      gettimeofday(&time, 0);
+
+      timersub(&time, &start_time, &diff);
+      uint64_t diff_ms = diff.tv_sec * 1000 + diff.tv_usec / 1000;
+
       std::cout << name << "::writeSamples: count=" << count
-                << " ret=" << ret << std::endl;
+                << " ret=" << ret << " sample_rate=";
+      if (diff_ms > 0)
+      {
+        std::cout << sample_count * 1000 / diff_ms << std::endl;
+      }
+      else
+      {
+        std::cout << "inf\n";
+      }
       return ret;
     }
     
@@ -209,6 +228,8 @@ class AudioDebugger : public AudioSink, public AudioSource
     
   private:
     std::string name;
+    struct timeval start_time;
+    uint64_t sample_count;
     
     AudioDebugger(const AudioDebugger&);
     AudioDebugger& operator=(const AudioDebugger&);

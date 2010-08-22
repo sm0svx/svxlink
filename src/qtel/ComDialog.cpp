@@ -205,6 +205,14 @@ void ComDialog::acceptConnection(void)
 } /* ComDialog::accept */
 
 
+void ComDialog::setRemoteParams(const QString& priv)
+{
+  if (con != 0)
+  {
+    con->setRemoteParams(priv);
+  }
+} /* ComDialog::setRemoteParams */
+
 
 /****************************************************************************
  *

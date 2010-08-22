@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <vector>
 
 
 /****************************************************************************
@@ -175,6 +176,17 @@ class LocalTx : public Tx
      */
     void sendDtmf(const std::string& digits);
     
+    /**
+     * @brief   Set the signal level value that should be transmitted
+     * @param   siglev The signal level to transmit
+     *
+     * This function does not set the output power of the transmitter but
+     * instead sets a signal level value that is transmitted with the
+     * transmission if the specific Tx object supports it. This can be used
+     * on a link transmitter to transport signal level measurements to the
+     * link receiver.
+     */
+    void setTransmittedSignalStrength(float siglev);
     
   private:
     std::string       	    name;
@@ -198,12 +210,16 @@ class LocalTx : public Tx
     Async::AudioPassthrough *input_handler;
     PttCtrl   	      	    *ptt_ctrl;
     Async::AudioValve 	    *audio_valve;
+    SineGenerator           *siglev_sine_gen;
+    std::vector<int>        tone_siglev_map;
+    Async::Timer            *ptt_hangtimer;
     
     void txTimeoutOccured(Async::Timer *t);
     int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);
-    bool setPtt(bool tx);
+    bool setPtt(bool tx, bool with_hangtime=false);
     void transmit(bool do_transmit);
     void allDtmfDigitsSent(void);
+    void pttHangtimeExpired(Async::Timer *t);
 
 };  /* class LocalTx */
 

@@ -236,12 +236,12 @@ DIRSPEC = \
 	  perm=`echo $$items | cut -d' ' -f2`; \
 	  owner=`echo $$items | cut -d' ' -f3`; \
 	  group=`echo $$items | cut -d' ' -f4`; \
+	  if [ -n "$(INSTALL_ROOT)" ]; then \
+	    target_dir=$(INSTALL_ROOT)$${dir}; \
+	  else \
+	    target_dir=$${dir}; \
+	  fi; \
 	  if [ "$@" = "install-extras" ]; then \
-	    if [ -n "$(INSTALL_ROOT)" ]; then \
-	      target_dir=$(INSTALL_ROOT)$${dir}; \
-	    else \
-	      target_dir=$${dir}; \
-	    fi; \
 	    $(MKDIR) $${target_dir} -p; \
 	    [ -n "$$perm" -a "$$perm" != '-' ] \
 	        && chmod $$perm $${target_dir}; \
@@ -252,6 +252,8 @@ DIRSPEC = \
 	  elif [ "$@" = "rpm-extras" ]; then \
 	    $(ECHO) "%attr($$perm,$$owner,$$group) %dir $$dir" \
 	    		>> $(RPM_DIR)/TMP_SPECS/$(RPM_NAME).spec; \
+	  elif [ "$@" = "uninstall-extras" ]; then \
+	    $(RMDIR) $${target_dir}; \
 	  else \
 	    echo "DIRSPEC macro used in unknown target \"$@\""; \
 	    return 1; \
@@ -344,6 +346,14 @@ MKDIR		= create_directory() { \
 		    $(ECHO) --- Creating directory $(BOLD)$$1$(NBOLD)...; \
                     mkdir $$*; \
                   }; create_directory
+
+# Remove directory
+RMDIR		= remove_directory() { \
+		    if [ -d $$1 ]; then \
+		      $(ECHO) --- Removing directory $(BOLD)$$1$(NBOLD)...; \
+                      rmdir $$*; \
+		    fi \
+                  }; remove_directory
 
 # Rules to make dependency files.
 depend/%.dpp:  	%.cpp

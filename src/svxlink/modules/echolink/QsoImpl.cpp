@@ -291,7 +291,7 @@ void QsoImpl::logicIdleStateChanged(bool is_idle)
 } /* QsoImpl::logicIdleStateChanged */
 
 
-bool QsoImpl::sendAudioRaw(Qso::GsmVoicePacket *packet)
+bool QsoImpl::sendAudioRaw(Qso::RawPacket *packet)
 {
   idle_timer_cnt = 0;
   

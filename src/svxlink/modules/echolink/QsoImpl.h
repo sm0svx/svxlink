@@ -171,7 +171,7 @@ class QsoImpl
      * station. Probably only useful if you received it from the
      * audioReceivedRaw signal.
      */
-    bool sendAudioRaw(EchoLink::Qso::GsmVoicePacket *packet);
+    bool sendAudioRaw(EchoLink::Qso::RawPacket *packet);
     
     /**
      * @brief 	Initiate a connection to the remote station
@@ -224,6 +224,8 @@ class QsoImpl
     {
       return m_qso.currentState();
     }
+
+    void setRemoteParams(const std::string& priv) { m_qso.setRemoteParams(priv); }
 
     void setRemoteName(const std::string& name) { m_qso.setRemoteName(name); }
 
@@ -282,7 +284,7 @@ class QsoImpl
      * @param packet A pointer to the buffer that contains the raw GSM audio
      * @param qso The QSO object
      */
-    SigC::Signal2<void, EchoLink::Qso::GsmVoicePacket*, QsoImpl*> audioReceivedRaw;
+    SigC::Signal2<void, EchoLink::Qso::RawPacket*, QsoImpl*> audioReceivedRaw;
     
     /**
      * @brief 	A signal that is emitted when the qso object should be destroyed

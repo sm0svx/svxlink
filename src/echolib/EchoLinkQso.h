@@ -51,6 +51,9 @@ disconnected the application exits.
 #include <sigc++/sigc++.h>
 #include <stdint.h>
 #include <string>
+#ifdef SPEEX_MAJOR
+#include <speex/speex.h>
+#endif
 
 
 /****************************************************************************
@@ -146,16 +149,24 @@ class Qso
   : public SigC::Object, public Async::AudioSink, public Async::AudioSource
 {
   public:
-    class GsmVoicePacket
+    struct VoicePacket
     {
-      public:
+      struct {
 	uint8_t version;
 	uint8_t pt;
 	uint16_t seqNum;
 	uint32_t time;
 	uint32_t ssrc;
-	uint8_t data[33*4];
+      } header;
+      uint8_t data[1024];
     } __attribute__ ((packed));
+    
+    struct RawPacket
+    {
+      VoicePacket *voice_packet;
+      int length;
+      short *samples;
+    };
 
     /**
      * @brief The type of the connection state
@@ -167,7 +178,7 @@ class Qso
       STATE_BYE_RECEIVED, ///< Received a disconnect request from remote station
       STATE_CONNECTED 	  ///< Connected to remote station
     } State;
-  
+
     /**
      * @brief 	Constructor
      * @param 	ip The    IP-address of the remote station
@@ -296,14 +307,22 @@ class Qso
     }
     
     /**
-     * @brief 	Send a raw GSM audio packet to the remote station
-     * @param 	packet The packet to send
+     * @brief 	Send a GSM/SPEEX audio packet to the remote station
+     * @param 	raw_packet The packet to send
      *
-     * This function can be used to send a raw GSM packet to the remote
+     * This function can be used to send a GSM/SPEEX packet to the remote
      * station. Probably only useful if you received it from the
-     * audioReceivedRaw signal.
+     * audioReceivedRaw signal. The raw_packet contains both the network
+     * packet and the decoded samples, which is beneficial when the audio
+     * frame has to be transcoded (SPEEX -> GSM) prior re-transmission.
      */
-    bool sendAudioRaw(GsmVoicePacket *packet);
+    bool sendAudioRaw(RawPacket *raw_packet);
+
+    /**
+      * @brief Set parameters of the remote station connection
+      * @param priv A private string for passing connection parameters
+      */
+    void setRemoteParams(const std::string& priv);
     
     /**
      * @brief Set the name of the remote station
@@ -346,7 +365,7 @@ class Qso
      *          or else \em false.
      */
     bool receivingAudio(void) const { return receiving_audio; }
-    
+
     /**
      * @brief 	Get the current state of the connection
      * @return	Return the current connection state (@see State)
@@ -384,11 +403,11 @@ class Qso
      * @param data A pointer to the buffer that contains the raw audio packet
      *
      * This signal is emitted whenever an audio packet has been received on
-     * the connection. It gives access to the raw GSM packet. This can be used
+     * the connection. It gives access to the GSM/SPEEX packet. This can be used
      * if the encoded data is going to be retransmitted. In this case it is
      * not good to decode and then encode the data again. It will sound awful.
      */
-    SigC::Signal1<void, GsmVoicePacket*>  audioReceivedRaw;
+    SigC::Signal1<void, RawPacket*>  audioReceivedRaw;
     
 
     /**
@@ -398,8 +417,14 @@ class Qso
      * @return	Returns the number of samples that has been taken care of
      *
      * This function is used to write audio into this audio sink. If it
-     * returns 0, no more samples should be written until the resumeOutput
-     * function in the source have been called.
+     * returns 0, no more samples could be written.
+     * If the returned number of written samples is lower than the count
+     * parameter value, the sink is not ready to accept more samples.
+     * In this case, the audio source requires sample buffering to temporarily
+     * store samples that are not immediately accepted by the sink.
+     * The writeSamples function should be called on source buffer updates
+     * and after a source output request has been received through the
+     * requestSamples function.
      * This function is normally only called from a connected source object.
      */
     virtual int writeSamples(const float *samples, int count);
@@ -441,13 +466,27 @@ class Qso
     static const int  	MAX_CONNECT_RETRY_CNT 	= 5;
     static const int  	CON_TIMEOUT_TIME      	= 50000;
     static const int  	RX_INDICATOR_HANG_TIME  = 200;
-    static const int  	SEND_BUFFER_SIZE      	= 4*160; // Four 20ms GSM frames
-  
+    static const int    FRAME_COUNT             = 4;
+    static const int  	BUFFER_SIZE      	= FRAME_COUNT*160; // 20ms/frame
+
+    typedef enum
+    {
+      CODEC_NONE,
+      CODEC_GSM,
+      CODEC_SPEEX
+    } Codec;
+
     bool      	      	init_ok;
     unsigned char      	sdes_packet[1500];
     int       	      	sdes_length;
     State     	      	state;
     gsm       	      	gsmh;
+#ifdef SPEEX_MAJOR
+    SpeexBits           enc_bits;
+    SpeexBits           dec_bits;
+    void *              enc_state;
+    void *              dec_state;
+#endif
     uint16_t    	next_audio_seq;
     Async::Timer *	keep_alive_timer;
     int       	      	connect_retry_cnt;
@@ -455,13 +494,15 @@ class Qso
     std::string    	callsign;
     std::string    	name;
     std::string    	local_stn_info;
-    gsm_signal      	send_buffer[SEND_BUFFER_SIZE];
+    short		receive_buffer[BUFFER_SIZE];
+    short		send_buffer[BUFFER_SIZE];
     int       	      	send_buffer_cnt;
     Async::IpAddress  	remote_ip;
     Async::Timer *    	rx_indicator_timer;
     struct timeval    	last_audio_packet_received;
     std::string       	remote_name;
     std::string       	remote_call;
+    Codec               remote_codec;
     bool		is_remote_initiated;
     bool      	      	receiving_audio;
 
@@ -481,7 +522,7 @@ class Qso
     void connectionTimeout(Async::Timer *timer);
     bool setupConnection(void);
     void cleanupConnection(void);
-    bool sendGsmPacket(void);
+    bool sendVoicePacket(void);
     void checkRxActivity(Async::Timer *timer);
     bool sendByePacket(void);
 

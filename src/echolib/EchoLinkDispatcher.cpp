@@ -303,7 +303,9 @@ void Dispatcher::ctrlDataReceived(const IpAddress& ip, void *buf, int len)
 	  {
 	    remote_name = "";
 	  }
-	  incomingConnection(ip, remote_call, remote_name);
+	  char priv[256];
+	  parseSDES(priv, recv_buf, RTCP_SDES_PRIV);
+	  incomingConnection(ip, remote_call, remote_name, priv);
 	}
       }
     }

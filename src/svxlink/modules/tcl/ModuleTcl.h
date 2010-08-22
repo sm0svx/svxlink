@@ -130,6 +130,7 @@ class ModuleTcl : public Module
     void deactivateCleanup(void);
     bool dtmfDigitReceived(char digit, int duration);
     void dtmfCmdReceived(const std::string& cmd);
+    void dtmfCmdReceivedWhenIdle(const std::string &cmd);
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
     void reportState(void);

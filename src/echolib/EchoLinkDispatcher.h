@@ -182,12 +182,13 @@ class Dispatcher : public SigC::Object
      * @brief 	A signal that is emitted when someone is trying to connect
      * @param 	callsign  The callsign of the connecting station
      * @param 	name  	  The name of the connecting station
+     * @param   priv      A private string for passing connection parameters
      *
      * This signal is emitted when a remote station tries to connect. It will be
      * emitted every time a connect datagram is received.
      */
-    SigC::Signal3<void, const Async::IpAddress&, const std::string&,
-      	      	  const std::string&> incomingConnection;
+    SigC::Signal4<void, const Async::IpAddress&, const std::string&,
+      	      	  const std::string&, const std::string&> incomingConnection;
     
   protected:
     

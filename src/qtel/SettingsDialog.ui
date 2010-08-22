@@ -344,7 +344,7 @@ Message</string>
                                     <cstring>audio_device</cstring>
                                 </property>
                                 <property name="toolTip" stdset="0">
-                                    <string>The audio device to use (e.g. /dev/dsp)</string>
+                                    <string>The audio device to use (e.g. alsa:default)</string>
                                 </property>
                             </widget>
                             <widget class="QCheckBox" row="1" column="1" rowspan="1" colspan="3">

@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2010  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <list>
 #include <map>
+#include <vector>
 #include <stdint.h>
 
 #include <sigc++/sigc++.h>
@@ -141,9 +142,9 @@ class VoiceLogger;
 class Logic : public SigC::Object
 {
   public:
-    static void connectLogics(const std::string& l1, const std::string& l2,
+    static bool connectLogics(const std::vector<std::string> &link_list,
       	    int timeout=0);
-    static void disconnectLogics(const std::string& l1, const std::string& l2);
+    static bool disconnectLogics(const std::vector<std::string> &link_list);
     static bool logicsAreConnected(const std::string& l1,
       	    const std::string& l2);
 
@@ -200,6 +201,8 @@ class Logic : public SigC::Object
     bool isIdle(void) const { return is_idle; }
     
     void setReportEventsAsIdle(bool idle) { report_events_as_idle = idle; }
+
+    bool isWritingMessage(void);
     
     SigC::Signal1<void, bool> idleStateChanged;
     
@@ -211,10 +214,10 @@ class Logic : public SigC::Object
     virtual void audioStreamStateChange(bool is_active, bool is_idle);
     virtual bool getIdleState(void) const;
     virtual void transmitterStateChange(bool is_transmitting);
+    virtual void selcallSequenceDetected(std::string sequence);
     
     void clearPendingSamples(void);
     void enableRgrSoundTimer(bool enable);
-    bool isWritingMessage(void);
     void rxValveSetOpen(bool do_open);
     void rptValveSetOpen(bool do_open);
     void checkIdle(void);
@@ -226,7 +229,7 @@ class Logic : public SigC::Object
     typedef enum
     {
       TX_CTCSS_ALWAYS=1, TX_CTCSS_SQL_OPEN=2, TX_CTCSS_LOGIC=4,
-      TX_CTCSS_MODULE=8
+      TX_CTCSS_MODULE=8, TX_CTCSS_ANNOUNCEMENT=16
     } TxCtcssType;
     
     Async::Config     	      	    &m_cfg;
@@ -273,13 +276,16 @@ class Logic : public SigC::Object
     VoiceLogger                     *voice_logger;
     uint8_t			    tx_ctcss;
     uint8_t			    tx_ctcss_mask;
+    std::string                     sel5_from;
+    std::string                     sel5_to;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);
     void unloadModules(void);
     void cmdTimeout(Async::Timer *t);
     void processCommandQueue(void);
-    void processMacroCmd(std::string& cmd);
+    void processCommand(const std::string &cmd, bool force_core_cmd=false);
+    void processMacroCmd(const std::string &macro_cmd);
     void putCmdOnQueue(Async::Timer *t=0);
     void sendRgrSound(Async::Timer *t=0);
     void everyMinute(Async::Timer *t);

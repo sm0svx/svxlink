@@ -138,11 +138,11 @@ using namespace EchoLink;
  */
 Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
       	 const string& info)
-  : init_ok(false),   	      	state(STATE_DISCONNECTED),
-    gsmh(0),  	      	      	next_audio_seq(0),    keep_alive_timer(0),
-    con_timeout_timer(0),     	callsign(callsign),   name(name),
-    local_stn_info(info),     	send_buffer_cnt(0),   remote_ip(addr),
-    rx_indicator_timer(0),    	remote_name("?"),     remote_call("?"),
+  : init_ok(false),   	 state(STATE_DISCONNECTED), gsmh(0),
+    next_audio_seq(0),   keep_alive_timer(0),       con_timeout_timer(0),
+    callsign(callsign),  name(name),                local_stn_info(info),
+    send_buffer_cnt(0),  remote_ip(addr),           rx_indicator_timer(0),
+    remote_name("?"),    remote_call("?"),          remote_codec(CODEC_GSM),
     is_remote_initiated(false), receiving_audio(false)
 {
   if (!addr.isUnicast())
@@ -154,6 +154,21 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
   setLocalCallsign(callsign);
       
   gsmh = gsm_create();
+
+#ifdef SPEEX_MAJOR
+  speex_bits_init(&enc_bits);
+  speex_bits_init(&dec_bits);
+    
+  enc_state = speex_encoder_init(&speex_nb_mode);
+  dec_state = speex_decoder_init(&speex_nb_mode);
+
+  int val = 25000;
+  speex_encoder_ctl(enc_state, SPEEX_SET_BITRATE, &val);
+  val = 8;
+  speex_encoder_ctl(enc_state, SPEEX_SET_QUALITY, &val);
+  val = 4;
+  speex_encoder_ctl(enc_state, SPEEX_SET_COMPLEXITY, &val);
+#endif
     
   if (!Dispatcher::instance()->registerConnection(this, &Qso::handleCtrlInput,
       &Qso::handleAudioInput))
@@ -162,7 +177,7 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
       	    "dispatcher object failed for some reason.\n";
     return;
   }
-  
+
   init_ok = true;
   return;
   
@@ -187,6 +202,14 @@ Qso::~Qso(void)
   
   gsm_destroy(gsmh);
   gsmh = 0;
+
+#ifdef SPEEX_MAJOR
+  speex_bits_destroy(&enc_bits);
+  speex_bits_destroy(&dec_bits);
+
+  speex_encoder_destroy(enc_state);
+  speex_decoder_destroy(dec_state);
+#endif
   
   if (init_ok)
   {
@@ -195,14 +218,18 @@ Qso::~Qso(void)
 } /* Qso::~Qso */
 
 
-bool Qso::setLocalCallsign(const std::string& callsign)
+bool Qso::setLocalCallsign(const string& callsign)
 {
-  //this->callsign = callsign;
+#ifdef SPEEX_MAJOR
+  const char *priv = "SPEEX";
+#else
+  const char *priv = 0;
+#endif  
   this->callsign.resize(callsign.size());
   transform(callsign.begin(), callsign.end(), this->callsign.begin(),
       	   ::toupper);
-  sdes_length = rtp_make_sdes(sdes_packet, 0, callsign.c_str(),
-      name.c_str());
+  sdes_length = rtp_make_sdes(sdes_packet, callsign.c_str(),
+      name.c_str(), priv);
   if(sdes_length <= 0)
   {
     cerr << "Could not create SDES packet\n";
@@ -214,11 +241,16 @@ bool Qso::setLocalCallsign(const std::string& callsign)
 } /* Qso::setLocalCallsign */
 
 
-bool Qso::setLocalName(const std::string& name)
+bool Qso::setLocalName(const string& name)
 {
+#ifdef SPEEX_MAJOR
+  const char *priv = "SPEEX";
+#else
+  const char *priv = 0;
+#endif  
   this->name = name;
-  sdes_length = rtp_make_sdes(sdes_packet, 0, callsign.c_str(),
-      name.c_str());
+  sdes_length = rtp_make_sdes(sdes_packet, callsign.c_str(),
+      name.c_str(), priv);
   if(sdes_length <= 0)
   {
     cerr << "Could not create SDES packet\n";
@@ -230,7 +262,7 @@ bool Qso::setLocalName(const std::string& name)
 } /* Qso::setLocalName */
 
 
-void Qso::setLocalInfo(const std::string& info)
+void Qso::setLocalInfo(const string& info)
 {
   local_stn_info = info;
 } /* Qso::setLocalInfo */
@@ -349,70 +381,52 @@ bool Qso::sendChatData(const string& msg)
 } /* Qso::sendChatData */
 
 
-#if 0
-int Qso::sendAudio(float *buf, int len)
+bool Qso::sendAudioRaw(RawPacket *raw_packet)
 {
-  int samples_read = 0;
-  
   if (state != STATE_CONNECTED)
   {
-    return 0;
+    return false;
   }
   
-  while (samples_read < len)
+#ifdef SPEEX_MAJOR
+  if ((raw_packet->voice_packet->header.pt == 0x96) &&
+      (remote_codec == CODEC_GSM))
   {
-    int read_cnt = min(SEND_BUFFER_SIZE - send_buffer_cnt, len-samples_read);
-    for (int i=0; i<read_cnt; ++i)
-    {
-      float sample = buf[samples_read++];
-      if (sample > 1)
-      {
-      	send_buffer[send_buffer_cnt++] = 32767;
-      }
-      else if (sample < -1)
-      {
-      	send_buffer[send_buffer_cnt++] = -32767;
-      }
-      else
-      {
-      	send_buffer[send_buffer_cnt++] = static_cast<int16_t>(32767.0 * sample);
-      }
-    }
+    // transcode SPEEX -> GSM
+    VoicePacket voice_packet;
+    size_t nbytes = 0;
     
-    if (send_buffer_cnt == SEND_BUFFER_SIZE)
+    for(int i=0; i<FRAME_COUNT; i++)
     {
-      bool packet_sent = sendGsmPacket();
-      if (!packet_sent)
-      {
-	break;
-      }
-      send_buffer_cnt = 0;
+      gsm_encode(gsmh, raw_packet->samples + i*160, voice_packet.data + i*33);
+      nbytes += 33;
+    }
+    voice_packet.header.version = 0xc0;
+    voice_packet.header.pt = 0x03;
+    voice_packet.header.time = htonl(0);
+    voice_packet.header.ssrc = htonl(0);
+    voice_packet.header.seqNum = htons(next_audio_seq++);
+    
+    int ret = Dispatcher::instance()->sendAudioMsg(remote_ip, &voice_packet,
+        nbytes + sizeof(voice_packet.header));
+    if (ret == -1)
+    {
+      perror("sendAudioMsg in Qso::sendAudioRaw");
+      return false;
     }
   }
-  
-  //printf("Samples read = %d\n", samples_read);
-  
-  return samples_read;
-  
-} /* Qso::sendAudio */
+  else
 #endif
-
-
-bool Qso::sendAudioRaw(GsmVoicePacket *packet)
-{
-  if (state != STATE_CONNECTED)
   {
-    return false;
-  }
+    raw_packet->voice_packet->header.seqNum = htons(next_audio_seq++);
   
-  packet->seqNum = htons(next_audio_seq++);
-  
-  int ret = Dispatcher::instance()->sendAudioMsg(remote_ip, packet,
-      	      	      	      	      	      	 sizeof(*packet));
-  if (ret == -1)
-  {
-    perror("sendAudioMsg in Qso::sendAudioRaw");
-    return false;
+    int ret = Dispatcher::instance()->sendAudioMsg(remote_ip,
+        raw_packet->voice_packet, raw_packet->length);
+    if (ret == -1)
+    {
+      perror("sendAudioMsg in Qso::sendAudioRaw");
+      return false;
+    }
   }
   
   return true;
@@ -420,30 +434,16 @@ bool Qso::sendAudioRaw(GsmVoicePacket *packet)
 } /* Qso::sendAudioRaw */
 
 
-#if 0
-bool Qso::flushAudioSendBuffer(void)
+void Qso::setRemoteParams(const string& priv)
 {
-  if (state != STATE_CONNECTED)
+#ifdef SPEEX_MAJOR  
+  if ((priv.find("SPEEX") != string::npos) && (remote_codec == CODEC_GSM))
   {
-    return false;
+    cerr << "Switching to SPEEX audio codec." << endl;
+    remote_codec = CODEC_SPEEX;
   }
-  
-  bool success = true;
-  if (send_buffer_cnt > 0)
-  {
-    memset(send_buffer + send_buffer_cnt, 0,
-	sizeof(send_buffer) - sizeof(*send_buffer) * send_buffer_cnt);
-    send_buffer_cnt = SEND_BUFFER_SIZE;
-    success = sendGsmPacket();
-    send_buffer_cnt = 0;
-  }
-  
-  return success;
-  
-} /* Qso::flushAudioSendBuffer */
 #endif
-
-
+} /* Qso::setRemoteParams */
 
 
 int Qso::writeSamples(const float *samples, int count)
@@ -457,7 +457,7 @@ int Qso::writeSamples(const float *samples, int count)
   
   while (samples_read < count)
   {
-    int read_cnt = min(SEND_BUFFER_SIZE - send_buffer_cnt, count-samples_read);
+    int read_cnt = min(BUFFER_SIZE - send_buffer_cnt, count-samples_read);
     for (int i=0; i<read_cnt; ++i)
     {
       float sample = samples[samples_read++];
@@ -475,9 +475,9 @@ int Qso::writeSamples(const float *samples, int count)
       }
     }
     
-    if (send_buffer_cnt == SEND_BUFFER_SIZE)
+    if (send_buffer_cnt == BUFFER_SIZE)
     {
-      bool packet_sent = sendGsmPacket();
+      bool packet_sent = sendVoicePacket();
       if (!packet_sent)
       {
 	break;
@@ -502,8 +502,8 @@ void Qso::flushSamples(void)
     {
       memset(send_buffer + send_buffer_cnt, 0,
 	  sizeof(send_buffer) - sizeof(*send_buffer) * send_buffer_cnt);
-      send_buffer_cnt = SEND_BUFFER_SIZE;
-      success = sendGsmPacket();
+      send_buffer_cnt = BUFFER_SIZE;
+      success = sendVoicePacket();
       send_buffer_cnt = 0;
     }
   }
@@ -515,7 +515,6 @@ void Qso::flushSamples(void)
 
 void Qso::resumeOutput(void)
 {
-
 } /* Qso::resumeOutput */
     
 
@@ -624,6 +623,11 @@ inline void Qso::handleSdesPacket(unsigned char *buf, int len)
       remote_name = remote_name_str;
     }
   }
+  char priv[256];
+  if(parseSDES(priv, buf, RTCP_SDES_PRIV))
+  {
+    setRemoteParams(priv);
+  }
       
   switch (state)
   {
@@ -728,45 +732,92 @@ inline void Qso::handleNonAudioPacket(unsigned char *buf, int len)
 
 inline void Qso::handleAudioPacket(unsigned char *buf, int len)
 {
-  GsmVoicePacket *voice_packet = reinterpret_cast<GsmVoicePacket*>(buf);
-  
-  audioReceivedRaw(voice_packet);
-  
-  /* gsm_signal average = 0; */
-  for(int i=0; i<4; i++)
+  VoicePacket *voice_packet = reinterpret_cast<VoicePacket*>(buf);
+
+  RawPacket raw_packet = { voice_packet, len, receive_buffer };
+  short *sbuff = receive_buffer;
+
+  /* Check that we have received a valid header. */
+  if ((unsigned)len < sizeof(voice_packet->header))
   {
-    gsm_signal sbuff[160];
-    gsm_decode(gsmh, voice_packet->data + i*33, sbuff);
-    if (rx_indicator_timer == 0)
-    {
-      receiving_audio = true;
-      isReceiving(true); 
-      rx_indicator_timer = new Timer(RX_INDICATOR_HANG_TIME);
-      rx_indicator_timer->expired.connect(slot(*this, &Qso::checkRxActivity));
-    }
-    gettimeofday(&last_audio_packet_received, 0);
-    
-    /*
-    for(int j=0; j<640; j+=2)
-    {
-      average += abs(*(sbuff + j));
-    }
-    average /= 320;
-    if(sendStrength)
-    {
-      sprintf(line, "%C %d", STRENGTH, average);
-      puts(line);
-    }
-    */
-    
-    float samples[160];
-    for (int i=0; i<160; ++i)
-    {
-      samples[i] = static_cast<float>(sbuff[i]) / 32768.0;
-    }
-    sinkWriteSamples(samples, 160);
+    cerr << "*** WARNING: Invalid audio packet size." << endl;
+    return;
   }
-  
+
+#ifdef SPEEX_MAJOR
+  if (voice_packet->header.pt == 0x96)
+  {
+    speex_bits_read_from(&dec_bits, (char*)voice_packet->data,
+                         len - sizeof(voice_packet->header));
+          
+    for (int frameno=0; frameno<FRAME_COUNT; ++frameno)
+    {
+      int err = speex_decode_int(dec_state, &dec_bits, sbuff);
+      if (err == -1)
+      {
+        cerr << "*** WARNING: Short frame count. There should be "
+             << FRAME_COUNT << " frames in each audio packet, but only "
+             << frameno << " frames have been received."
+             << endl;
+        return;
+      }
+      if (err == -2)
+      {
+        cerr << "*** WARNING: Corrupt Speex stream in received audio packet."
+             << endl;
+        return;
+      }
+
+      if (rx_indicator_timer == 0)
+      {
+        receiving_audio = true;
+        isReceiving(true);
+        rx_indicator_timer = new Timer(RX_INDICATOR_HANG_TIME);
+        rx_indicator_timer->expired.connect(slot(*this, &Qso::checkRxActivity));
+      }
+      gettimeofday(&last_audio_packet_received, 0);
+      
+      float samples[160];
+      for (int i = 0; i < 160; i++)
+      {
+        samples[i] = static_cast<float>(sbuff[i]) / 32768.0;
+      }
+      sinkWriteSamples(samples, 160);
+      sbuff += 160;
+    }
+  }
+  else
+#endif
+  {
+    if ((unsigned)len < sizeof(voice_packet->header)+FRAME_COUNT*33)
+    {
+      cerr << "*** WARNING: Invalid GSM audio packet size." << endl;
+      return;
+    }
+    for (int frameno=0; frameno<FRAME_COUNT; ++frameno)
+    {
+      gsm_decode(gsmh, voice_packet->data + frameno*33, sbuff);
+      if (rx_indicator_timer == 0)
+      {
+        receiving_audio = true;
+        isReceiving(true); 
+        rx_indicator_timer = new Timer(RX_INDICATOR_HANG_TIME);
+        rx_indicator_timer->expired.connect(slot(*this, &Qso::checkRxActivity));
+      }
+      gettimeofday(&last_audio_packet_received, 0);
+      
+      float samples[160];
+      for (int i=0; i<160; ++i)
+      {
+        samples[i] = static_cast<float>(sbuff[i]) / 32768.0;
+      }
+      sinkWriteSamples(samples, 160);
+      sbuff += 160;
+    }
+  }
+
+  audioReceivedRaw(&raw_packet);
+
 } /* Qso::handleAudioPacket */
 
 
@@ -855,32 +906,60 @@ void Qso::cleanupConnection(void)
 } /* Qso::cleanupConnection */
 
 
-bool Qso::sendGsmPacket(void)
+bool Qso::sendVoicePacket(void)
 {
-  assert(send_buffer_cnt == SEND_BUFFER_SIZE);
+  assert(send_buffer_cnt == BUFFER_SIZE);
 
-  GsmVoicePacket voice_packet;
-  voice_packet.version = 0xc0;
-  voice_packet.pt = 0x03;
-  voice_packet.time = htonl(0);
-  voice_packet.ssrc = htonl(0);
-  for(int i=0; i<SEND_BUFFER_SIZE/160; i++)
+  size_t nbytes = 0;
+  VoicePacket voice_packet;
+  voice_packet.header.version = 0xc0;
+  voice_packet.header.time = htonl(0);
+  voice_packet.header.ssrc = htonl(0);
+  voice_packet.header.seqNum = htons(next_audio_seq++);
+
+#ifdef SPEEX_MAJOR
+  if (remote_codec == CODEC_SPEEX)
   {
-    gsm_encode(gsmh, send_buffer + i*160, voice_packet.data + i*33);
+    for(int i = 0; i < BUFFER_SIZE; i += 160)
+    {
+      speex_encode_int(enc_state, send_buffer + i, &enc_bits);
+    }
+    speex_bits_insert_terminator(&enc_bits);
+    size_t nsize = speex_bits_nbytes(&enc_bits);
+    if (nsize < sizeof(voice_packet.data))
+    {
+      nbytes = speex_bits_write(&enc_bits, (char*)voice_packet.data, nsize);
+    }
+    speex_bits_reset(&enc_bits);
+    voice_packet.header.pt = 0x96;
   }
-  voice_packet.seqNum = htons(next_audio_seq++);
-  
+  else
+#endif
+  {
+    for(int i=0; i<FRAME_COUNT; i++)
+    {
+      gsm_encode(gsmh, send_buffer + i*160, voice_packet.data + i*33);
+      nbytes += 33;
+    }
+    voice_packet.header.pt = 0x03;
+  }
+  if (!nbytes)
+  {
+    perror("audio packet size in Qso::sendVoicePacket");
+    return false;
+  }
+
   int ret = Dispatcher::instance()->sendAudioMsg(remote_ip, &voice_packet,
-      sizeof(voice_packet));
+      nbytes + sizeof(voice_packet.header));
   if (ret == -1)
   {
-    perror("sendAudioMsg in Qso::sendGsmPacket");
+    perror("sendAudioMsg in Qso::sendVoicePacket");
     return false;
   }
   
   return true;
   
-} /* Qso::sendGsmPacket */
+} /* Qso::sendVoicePacket */
 
 
 void Qso::checkRxActivity(Timer *timer)
@@ -908,7 +987,7 @@ void Qso::checkRxActivity(Timer *timer)
 bool Qso::sendByePacket(void)
 {
   unsigned char bye[64];
-  int length = rtp_make_bye(bye, 0, "jan2002");
+  int length = rtp_make_bye(bye);
   int ret = Dispatcher::instance()->sendCtrlMsg(remote_ip, bye, length);
   if (ret == -1)
   {

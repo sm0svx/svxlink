@@ -1,4 +1,4 @@
-.TH MODULEECHOLINK.CONF 5 "APRIL 2009" Linux "File Formats"
+.TH MODULEECHOLINK.CONF 5 "APRIL 2010" Linux "File Formats"
 .
 .SH NAME
 .
@@ -74,11 +74,6 @@ The location of the station. Note: In the default configuration file the value
 of this configuration variable starts with "[Svx]". This is of course not
 necessary but it's fun to see which other stations are running SvxLink. 
 .TP
-.B LOCATION_INFO
-Enter the section name that contains information required for transfering
-positioning data to location servers. Setting this item makes the system
-visible on the EchoLink link status page and the APRS network.
-.TP
 .B MAX_QSOS
 The maximum number of stations that can participate in a conference QSO on this
 node. If more stations try to connect, the connect request will be rejected. 
@@ -100,147 +95,6 @@ this feature by setting this config variable to zero (or comment it out).
 A longer description that is sent to remote stations upon connection. This
 description should typically include detailed station information like QTH,
 transceiver frequency/power, antenna, CTCSS tone frequency etc.
-.
-.SS LocationInfo
-.
-.TP
-.B STATUS_SERVER_LIST
-Enter a space separated list of EchoLink status servers that should be used
-to send node status beacons. Your node information can be found
-on http://www.echolink.org/links.jsp.
-The format is host:port. Host - hostname or IP address, port - UDP port.
-Don't change the default unless you know what you are doing. If you don't
-want to update the EchoLink status server, comment out this configuration
-variable.
-
-Example:
-.br
-STATUS_SERVER_LIST=aprs.echolink.org:5199
-.TP
-.B APRS_SERVER_LIST
-This configuration variable specifies connection parameters for connecting
-to an APRS server network using the TCP protocol. In this case, the positioning
-information is forwarded to the worldwide APRS network. Have a look at
-http://aprs.fi/.
-
-To choose a suitable APRS server from the so called tier 2 network, have a
-look at http://www.aprs2.net/. Either choose a specific server or one of the
-regional addresses. The regional addresses bundle all APRS servers within a
-region so that a random tier 2 server is chosen within the region. There are
-five regions defined: noam.aprs2.net - North America, euro.aprs2.net - Europe,
-asia.aprs2.net - Asia, soam.aprs2.net - South America and Africa,
-aunz.aprs2.net - Austrailia and New Zeeland.
-The format is a space separated list of host:port entries. Host - hostname
-or IP address, port - TCP port.
-
-Example:
-.br
-APRS_SERVER_LIST=euro.aprs2.net:14580
-.TP
-.B LON_POSITION
-The longitude of the station position, entered as "degrees.arcminutes.arcseconds"
-
-Example:
-.br
-LON_POSITION=09.02.20E
-.TP
-.B LAT_POSITION
-The latitude of the station position, entered as "degrees.arcminutes.arcseconds"
-
-Example:
-.br
-LAT_POSITION=51.02.22N
-.TP
-.B FREQUENCY
-The tx-frequency of the link/repeater in MHz. For repeaters, information about
-the RX/TX shift in the COMMENT configuration variable may be useful.
-
-Example:
-.br
-FREQUENCY=430.050     # tx-frequency is 430.050 MHz
-.TP
-.B TX_POWER
-The power of your transmitter in watts.
-
-Example:
-.br
-TX_POWER=10           # tx output is 10 watts
-.TP
-.B ANTENNA_GAIN
-The gain of your antenna in dBd.
-
-Example:
-.br
-ANTENNA_GAIN=5        # antenna gain is 5 dBd
-.TP
-.B ANTENNA_HEIGHT
-The height of the link-/repeater antenna in meters or feet above the terrain, 
-not sealevel.
-
-Example:
-.br
-ANTENNA_HEIGHT=10m    # 10 meters above the ground
-.br
-ANTENNA_HEIGHT=90     # 90 feet
-.TP
-.B ANTENNA_DIR
-Main beam direction of the antenna in degrees. If an omni direction antenna is
-used, specify -1 as the direction.
-
-Example:
-.br
-ANTENNA_DIR=-1        # an omni directional antenna is used
-.br
-ANTENNA_DIR=128       # main beam direction is 128 degrees
-.TP
-.B PATH
-The PATH variable controls the way of forwarding your beacon inside the APRS 
-network if it is gated by a local APRS digipeater. In some cases it has to be 
-changed according to local requirements. Please contact your local APRS sysop
-for further information. Changes should be made only according to the NEWn-N 
-paradigm. Leave this variable untouched if you are unsure of its setting.
-No spaces or control characters are allowed. PATH has no influence on the 
-propagation on non-RF networks.
-
-Examples:
-.br
-PATH=WIDE1-1
-.br
-PATH=WIDE1-1,WIDE2-2
-.TP
-.B BEACON_INTERVAL
-The interval, in minutes, with which beacons will be sent to the APRS network.
-A good value is 10 minutes. If your beacon is gated via RF, please increase 
-the interval a bit to keep the APRS traffic on RF produced by the APRS RF gate
-as low as possible. Intervals shorter than 10 minutes will be changed to 10.
-
-Example:
-.br
-BEACON_INTERVAL=30    # APRS-beacons will be sent every 30 minutes.
-.TP
-.B TONE
-The CTCSS subaudible tone that is to be used for operation over your link or
-repeater. If you don't use tone control set it to 0.
-
-Examples:
-.br
-TONE=136      # we are using a CTCSS-tone of 136.5 Hz
-.br
-TONE=0        # we don't use CTCSS subaudible or call tones
-.br
-TONE=1750     # the link/repeater use a tone burst of 1750 Hz
-.TP
-.B COMMENT
-Specify a short comment here, maybe a link to your website 
-or information that could be interesting for others. The length should not 
-exceed 255 characters and may not have control characters like "Carriage Return"
-(\\r) or "Line Feed" (\\n) inside. Make your comment as short as you can to
-give users with a small display (TH-D7) the chance to display the full comment
-text.
-
-Example:
-.br
-COMMENT=[svx] Running SvxLink by SM0SVX
 .
 .SH REGULAR EXPRESSIONS
 .

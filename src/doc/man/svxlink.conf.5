@@ -116,6 +116,11 @@ more load on the CPU so if you have a very slow machine (<300MHz), it might not
 have the computational power to handle it.
 
 Supported sampling rates are: 8000, 16000 and 48000.
+.TP
+.B LOCATION_INFO
+Enter the section name that contains information required for transfering
+positioning data to location servers. Setting this item makes the system
+visible on the EchoLink link status page and the APRS network.
 .
 .SS Common Logic configuration variables
 .
@@ -197,8 +202,8 @@ commenting out (#) this configuration variable.
 .B TX_CTCSS
 This configuration variable controls if a CTCSS tone should be transmitted.
 Use a comma separated list (no spaces!) to specify when to transmit a CTCSS
-tone. There are four possible values:
-.BR SQL_OPEN ", " LOGIC ", " MODULE " or " ALWAYS .
+tone. These are the possible values:
+.BR SQL_OPEN ", " LOGIC ", " MODULE ", " ANNOUNCEMENT " or " ALWAYS .
 Commenting out this configuration variable will disable CTCSS transmit.
 The tone frequency and level is configured in the transmitter configuration
 section.
@@ -214,6 +219,10 @@ core.
 .IP \(bu 4
 .BR MODULE
 will transmit CTCSS tone when there is incoming traffic from a module.
+.IP \(bu 4
+.BR ANNOUNCEMENT
+will transmit CTCSS tone when an announcement is being played. Repeater idle
+sounds and roger beeps will not have tone sent with them though.
 .IP \(bu 4
 .BR ALWAYS
 will always transmit a CTCSS tone as soon as the transmitter is turned on.
@@ -248,6 +257,15 @@ The voice logger is used to write all received audio to a disk file. Use this
 configuration variable to specify which command to use to activate and
 deactivate the voice logger. For example, if this configuration variable is
 set to 8, 81 will activate the voice logger and 80 will deactivate it.
+.TP
+.B SEL5_MACRO_RANGE
+Define two comma separated values here to map the Sel5 tone call to your macro
+area. E.g. if you have defined:
+SEL5_MACRO_RANGE=03400,03499
+then all incoming Sel5 tone sequences from 03400 to 03499 are mapped to the
+macros section (refer to Macros Section, next chapter). Other sequences but the
+one defined under OPEN_ON_SEL5 are ignored so it can be used to call other
+stations via the repeater without a repeater reaction.
 .
 .SS Simplex Logic Section
 .
@@ -292,7 +310,8 @@ can be used when the received audio is directly coupled by hardware wiring to
 the transmitter. What you win by doing this is that there is zero delay on the
 repeated audio. When the audio is routed through SvxLink there is always an
 amount of delay. What you loose by doing this is the audio processing done by
-SvxLink.
+SvxLink (e.g. filtering, DTMF muting, squelch tail elimination) and the
+ability to use remote receivers.
 .TP
 .B IDLE_TIMEOUT
 The number of seconds the repeater should have been idle before turning the transmitter
@@ -317,6 +336,11 @@ in whole Hz and the minimum tone length is specified in milliseconds. For exampl
 Use this configuration variable if it should be possible to open the repeater with a DTMF
 digit. Only one digit can be specified. DTMF digits pressed when the repeater is down will
 be ignored.
+.TP
+.B OPEN_ON_SEL5
+Use this configuration variable if you want to open your repeater by using a selective tone
+call that is often used in commercial radio networks. Example: OPEN_ON_SEL5=03345 opens your
+repeater only if that sequence has been received. You can use sequence lengths from 4 to 25.
 .TP
 .B OPEN_ON_SQL
 Use this configuration variable if it should be possible to open the repeater just by
@@ -407,31 +431,24 @@ connect to the EchoTest conference node.
 .
 .SS Logic Linking
 A logic linking configuration section is used to specify information for a link between
-two SvxLink logics. Such a link can for example be used to connect a local repeater to a
-remote repeater using a separate link transceiver. The link is activated/deactivated using
-DTMF commands. To be able to define two SvxLink logics, the computer must be equipped with
-two sound cards. When the link is active, all audio received by one logic will be
-transmitted by the other logic.
+two or more SvxLink logic cores. Such a link can for example be used to connect a local
+repeater to a remote repeater using a separate link transceiver. The link is
+activated/deactivated using DTMF commands. When the link is active, all audio received
+by one logic will be transmitted by the other logic.
 .P
 The name of the logic linking section can be chosen freely. In the example configuration
 file there is a section called [LinkToR4]. To use a logic linking section in a logic core
 it must be pointed out by the LINKS configuration variable. So for example,
 RepeaterLogic/LINKS=LinkToR4 would make it possible to connect the RepeaterLogic core to
 the SimplexLogic core using a DTMF command.
-.P
-.B Note:
-At the moment only locally received audio will be transmitted to the other logic.
-EchoLink audio will for example not go through. This will be fixed in a future release.
 .TP
 .B NAME
 The name of the link. The default action on activation/deactivation of the link is to
-spell the value of this variable. In other words, a callsign is a good value.
+spell the value of this variable. In other words, a callsign is a good value if for
+example linking to another repeater.
 .TP
-.B LOGIC1
-The name of the first logic core that should be linked.
-.TP
-.B LOGIC2
-The name of the second logic core that should be linked.
+.B CONNECT_LOGICS
+A comma separated list of names for the logic cores to link together.
 .TP
 .B COMMAND
 The command prefix to use to activate/deactivate this link. The full command consists of
@@ -629,7 +646,7 @@ will be amplified resulting in a very bright (tinny) sound.
 .TP
 .B SQL_TAIL_ELIM
 Squelch tail elimination is used to remove noise from the end of a received
-transmission. This is of most use when using CTCSS or SILEV squelch with
+transmission. This is of most use when using CTCSS or SIGLEV squelch with
 unsquelched input audio. A normal value is a couple of hundred milliseconds.
 Note that the audio will be delayed by the same amount of milliseconds. This
 does not matter much for a simplex link but for a repeater the delay might be
@@ -660,9 +677,12 @@ it to
 .TP
 .B DTMF_MUTING
 Mute the audio during the time when a DTMF digit is being received. Note that
-the audio will be delayed 50ms to give the DTMF detector time to do its work.
+the audio will be delayed 75ms to give the DTMF detector time to do its work.
 This does not matter much on a simplex link but on a repeater it could be
-annoying. Legal values are 0=disabled, 1=enabled.
+annoying since you will hear the last 75 milliseconds of your own transmission.
+To counteract the added delay one can set up the SQL_TAIL_ELIM configuration
+variable to at least 75 milliseconds.
+Legal values for DTMF_MUTING are 0=disabled, 1=enabled.
 .TP
 .B DTMF_HANGTIME
 This configuration variable can be used if the DTMF decoder is too quick to
@@ -701,6 +721,19 @@ The most common reason for getting reverse twist is a bad de-emphasis filter or
 that none at all is used, like when taking audio directly from the FM
 discriminator. Have a look at the DEEMPHASIS configuration variable before
 starting to modify this configuration variable.
+.TP
+.B SEL5_TYPE
+Define here your selective tone call system. You have the choice of the 
+following types: ZVEI1,ZVEI2,ZVEI3,PZVEI,PDZVEI,DZVEI,CCITT,EEA,CCIR1,CCIR2,
+NATEL,EURO,VDEW,AUTO-A,MODAT,PCCIR and EIA. Only one system can be used at
+the same time. Please take into consideration that some Sel5 standards are
+using the same or similar tones so it may have some unwanted effects if
+you define ZVEI1 for SvxLink and a (e.g.) ZVEI3 sequence is received.
+.TP
+.B SEL5_DEC_TYPE
+At the moment only SEL5_DEC_TYPE=INTERNAL is valid. Maybe we have support for
+some external tone detectors later.
+.TP
 .
 .SS Voter Section
 .
@@ -849,6 +882,17 @@ pin does not provide enough drive power to the circuit. A "!" in front of the pi
 indicates inverted operation. Some of the possible values are RTS, DTRRTS, !DTR!RTS or
 even DTR!RTS.
 .TP
+.B PTT_HANGTIME
+Use this configuration variable to set a PTT hangtime. This can be good
+to have on a transmitter in combination with using a tone squelch. When
+the transmitter is ordered to stop transmitting, the tone is immediately
+turned off, causing the squelch to close on the other side. Since the
+transmitter keeps transmitting for a while, no squelch tail will be heard.
+
+Another use is on a remote receiver link transmitter where you don't want the
+transmitter to turn on and off between transmissions or if the squelch close
+and open quickly due to for example mobile flutter.
+.TP
 .B TIMEOUT
 This is a feature that will prevent the transmitter from getting stuck transmitting.
 Specify the number of seconds before the transmitter is turned off. Note that this is a
@@ -906,6 +950,34 @@ transmitter. 50ms is the default.
 .B DTMF_TONE_AMP
 The amplitude, in dB, of DTMF digits transmitted on this transmitter. Zero
 dB is the maximum amplitude. -18dB is the default.
+.TP
+.B TONE_SIGLEV_MAP
+It is possible to transmit one of ten tones along with the normal transmission
+to indicate a signal strength value to the receiver. This is of most use when
+using a local transmitter as a link transmitter in a RemoteTrx. It is not
+implemented, and probably not useful, in SvxLink Server. Another requirement is
+that SvxLink has been compiled in 16kHz mode. Otherwise this feature is
+disabled.
+
+The TONE_SIGLEV_MAP configuration variable is used to map tones to signal
+level values. It is a comma separated list of exactly ten values in the 0 - 100
+range. The first value map to the 5500Hz tone, the second to the 5600Hz tone
+and so on. The last value map to the 6400Hz tone.
+What levels the tones should be mapped to depends on the tone receiver
+implementation. Typically, if using a SvxLink application as a receiver,
+the TONE_SIGLEV_MAP should be the same in the RX configuration for that node.
+.TP
+.B TONE_SIGLEV_LEVEL
+It is possible to transmit one of ten tones along with the normal transmission
+to indicate a signal strength value to the receiver. This is of most use when
+using a local transmitter as a link transmitter in a RemoteTrx. It is not
+implemented, and probably not useful, in SvxLink Server. Another requirement is
+that SvxLink has been compiled in 16kHz mode. Otherwise this feature is
+disabled.
+
+The TONE_SIGLEV_LEVEL configuration variable is used to set the tone level.
+It is a value in the 1-100 range which indicate the output level in percent
+of the maximum possible level. The default is 10.
 .
 .SS Networked Transmitter Section
 .
@@ -991,6 +1063,19 @@ encoding/decoding process. In most cases, perceptual enhancement brings the
 sound further from the original objectively (e.g. considering only SNR), but in
 the end it still sounds better (subjective improvement).
 .
+.SS Multi Transmitter Section
+.
+A multi transmitter section is used if one wants to transmit on multiple
+transmitters simulaneously. The name of the section can be anything. Just
+point it out from another transmitter specification like the TX variable in
+a Logic core configuration.
+.TP
+.B TYPE
+Always "Multi" for a multi transmitter section.
+.TP
+.B TRANSMITTERS
+A comma separated list of transmitters.
+.
 .SS Module Section
 .
 A module section contain the configuration for a specific module. It have some general
@@ -1018,6 +1103,157 @@ Module specific configuration variables are described in the man page for that m
 documentation for the Parrot module can for example be found in the
 .BR ModuleParrot.conf (5)
 manual page.
+.
+.SS LocationInfo
+.
+.TP
+.B STATUS_SERVER_LIST
+Enter a space separated list of EchoLink status servers that should be used
+to send node status beacons. Your node information can be found
+on http://www.echolink.org/links.jsp.
+The format is host:port. Host - hostname or IP address, port - UDP port.
+Don't change the default unless you know what you are doing. If you don't
+want to update the EchoLink status server, comment out this configuration
+variable.
+
+Example:
+.br
+STATUS_SERVER_LIST=aprs.echolink.org:5199
+.TP
+.B APRS_SERVER_LIST
+This configuration variable specifies connection parameters for connecting
+to an APRS server network using the TCP protocol. In this case, the positioning
+information is forwarded to the worldwide APRS network. Have a look at
+http://aprs.fi/.
+
+To choose a suitable APRS server from the so called tier 2 network, have a
+look at http://www.aprs2.net/. Either choose a specific server or one of the
+regional addresses. The regional addresses bundle all APRS servers within a
+region so that a random tier 2 server is chosen within the region. There are
+five regions defined: noam.aprs2.net - North America, euro.aprs2.net - Europe,
+asia.aprs2.net - Asia, soam.aprs2.net - South America and Africa,
+aunz.aprs2.net - Austrailia and New Zeeland.
+The format is a space separated list of host:port entries. Host - hostname
+or IP address, port - TCP port.
+
+Example:
+.br
+APRS_SERVER_LIST=euro.aprs2.net:14580
+.TP
+.B LON_POSITION
+The longitude of the station position, entered as "degrees.arcminutes.arcseconds"
+
+Example:
+.br
+LON_POSITION=09.02.20E
+.TP
+.B LAT_POSITION
+The latitude of the station position, entered as "degrees.arcminutes.arcseconds"
+
+Example:
+.br
+LAT_POSITION=51.02.22N
+.TP
+.B CALLSIGN
+Enter your callsign for the APRS network with a prefix that indicates the type 
+of station, (ER- for repeaters, EL- for links).
+
+Examples:
+.br
+CALLSIGN=EL-DL1ABC    # callsign for a link
+.br
+CALLSIGN=ER-DB0ABC    # callsign for a repeater
+.TP
+.B FREQUENCY
+The tx-frequency of the link/repeater in MHz. For repeaters, information about
+the RX/TX shift in the COMMENT configuration variable may be useful.
+
+Example:
+.br
+FREQUENCY=430.050     # tx-frequency is 430.050 MHz
+.TP
+.B TX_POWER
+The power of your transmitter in watts.
+
+Example:
+.br
+TX_POWER=10           # tx output is 10 watts
+.TP
+.B ANTENNA_GAIN
+The gain of your antenna in dBd.
+
+Example:
+.br
+ANTENNA_GAIN=5        # antenna gain is 5 dBd
+.TP
+.B ANTENNA_HEIGHT
+The height of the link-/repeater antenna in meters or feet above the terrain,
+not sealevel.
+
+Example:
+.br
+ANTENNA_HEIGHT=10m    # 10 meters above the ground
+.br
+ANTENNA_HEIGHT=90     # 90 feet
+.TP
+.B ANTENNA_DIR
+Main beam direction of the antenna in degrees. If an omni direction antenna is
+used, specify -1 as the direction.
+
+Example:
+.br
+ANTENNA_DIR=-1        # an omni directional antenna is used
+.br
+ANTENNA_DIR=128       # main beam direction is 128 degrees
+.TP
+.B PATH
+The PATH variable controls the way of forwarding your beacon inside the APRS
+network if it is gated by a local APRS digipeater. In some cases it has to be
+changed according to local requirements. Please contact your local APRS sysop
+for further information. Changes should be made only according to the NEWn-N
+paradigm. Leave this variable untouched if you are unsure of its setting.
+No spaces or control characters are allowed. PATH has no influence on the
+propagation on non-RF networks.
+
+Examples:
+.br
+PATH=WIDE1-1
+.br
+PATH=WIDE1-1,WIDE2-2
+.TP
+.B BEACON_INTERVAL
+The interval, in minutes, with which beacons will be sent to the APRS network.
+A good value is 10 minutes. If your beacon is gated via RF, please increase
+the interval a bit to keep the APRS traffic on RF produced by the APRS RF gate
+as low as possible. Intervals shorter than 10 minutes will be changed to 10.
+
+Example:
+.br
+BEACON_INTERVAL=30    # APRS-beacons will be sent every 30 minutes.
+.TP
+.B TONE
+The CTCSS subaudible tone that is to be used for operation over your link or
+repeater. If you don't use tone control set it to 0.
+
+Examples:
+.br
+TONE=136      # we are using a CTCSS-tone of 136.5 Hz
+.br
+TONE=0        # we don't use CTCSS subaudible or call tones
+.br
+TONE=1750     # the link/repeater use a tone burst of 1750 Hz
+.TP
+.B COMMENT
+Specify a short comment here, maybe a link to your website
+or information that could be interesting for others. The length should not
+exceed 255 characters and may not have control characters like "Carriage Return"
+(\\r) or "Line Feed" (\\n) inside. Make your comment as short as you can to
+give users with a small display (TH-D7) the chance to display the full comment
+text.
+
+Example:
+.br
+COMMENT=[svx] Running SvxLink by SM0SVX
 .
 .SH CALIBRATING THE SIGNAL LEVEL DETECTOR
 .

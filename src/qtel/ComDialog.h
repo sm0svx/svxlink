@@ -146,25 +146,26 @@ class ComDialog : public ComDialogBase, public SigC::Object
     virtual ~ComDialog(void);
     
     void acceptConnection(void);
+    void setRemoteParams(const QString& priv);
     
   protected:
     
   private:
     QString   	      	    callsign;
-    EchoLink::Qso *   	    con;
-    EchoLink::Directory &   dir;
+    EchoLink::Qso    	    *con;
+    EchoLink::Directory     &dir;
     bool      	      	    accept_connection;
-    Async::AudioIO * 	    audio_io;
+    Async::AudioIO  	    *audio_io;
     bool      	      	    audio_full_duplex;
     bool      	      	    is_transmitting;
     QColor    	      	    orig_background_color;
     bool      	      	    ctrl_pressed;
-    Async::AudioFifo *      rem_audio_fifo;
-    Async::AudioValve *     rem_audio_valve;
-    Async::AudioValve *     ptt_valve;
-    Async::AudioSplitter *  tx_audio_splitter;
-    Vox *     	      	    vox;
-    Async::DnsLookup *	    dns;
+    Async::AudioFifo        *rem_audio_fifo;
+    Async::AudioValve       *rem_audio_valve;
+    Async::AudioValve       *ptt_valve;
+    Async::AudioSplitter    *tx_audio_splitter;
+    Vox      	      	    *vox;
+    Async::DnsLookup 	    *dns;
     QTextCodec		    *chat_codec;
   
     ComDialog(const ComDialog&);
