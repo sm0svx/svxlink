@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -641,16 +642,31 @@ void Voter::checkSiglev(Timer *t)
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
     float siglev = (*it)->rx->signalStrength();
-    cout << siglev << " ";
-    
-    if (((*it) == active_rx) && (*it)->squelchIsOpen())
+    bool sql_is_open = (*it)->squelchIsOpen();
+
+    cout << (*it)->rx->name();
+    if (sql_is_open)
     {
-      active_rx_siglev = siglev;
+      cout << ((*it) == active_rx ? "*" : ":");
     }
-    if ((*it)->squelchIsOpen() && (siglev > best_rx_siglev))
+    else
     {
-      best_rx_siglev = siglev;
-      best_rx = *it;
+      cout << " ";
+    }
+    cout << left << setw(4) << (int)siglev;
+    cout << " ";
+    
+    if (sql_is_open)
+    {
+      if ((*it) == active_rx)
+      {
+        active_rx_siglev = siglev;
+      }
+      if (siglev > best_rx_siglev)
+      {
+        best_rx_siglev = siglev;
+        best_rx = *it;
+      }
     }
   }
   cout << endl;
