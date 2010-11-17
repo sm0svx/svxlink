@@ -90,6 +90,9 @@ fi
 # Find out in which directory this script resides.
 basedir=$(cd $(dirname $0); pwd)
 
+# Clear the file containing all concatenated trimmed sound clips
+echo -n > /tmp/all_trimmed.raw
+
 # Loop through each subdirectory specified in SUBDIRS
 for subdir in $SUBDIRS; do
   SOFTLINK_SOUNDS=""
@@ -104,14 +107,13 @@ for subdir in $SUBDIRS; do
     if [ -r $src_clip.raw -o -r $src_clip.wav ]; then
       echo "Maximizing $src_clip -> $dest_clip.$ext"
       $basedir/play_sound.sh -f$endian$encoding -r$target_rate \
-			     -l$SILENCE_LEVEL $src_clip |
+			     -l$SILENCE_LEVEL -e "$EFFECT" $src_clip |
 	  sox -traw -s2 -r$target_rate - $dest_clip.$ext
     else
       warning "Missing sound clip: $src_clip"
     fi
   done
 
-  echo -n > /tmp/all_trimmed.raw
   for clip in $TRIM_SOUNDS; do
     dest_clip="$DEST_DIR/$subdir/$clip"
     src_clip="$SRC_DIR/$subdir/$clip"
@@ -119,7 +121,7 @@ for subdir in $SUBDIRS; do
     if [ -r $src_clip.raw -o -r $src_clip.wav ]; then
       echo "Trimming $src_clip -> $dest_clip.$ext"
       $basedir/play_sound.sh -tf$endian$encoding -r$target_rate \
-			     -l$SILENCE_LEVEL $src_clip |
+			     -l$SILENCE_LEVEL -e "$EFFECT" $src_clip |
 	  sox -traw -s2 -r$target_rate - $dest_clip.$ext
       sox $dest_clip.$ext -r$target_rate -s2 -t raw - >> /tmp/all_trimmed.raw
     else

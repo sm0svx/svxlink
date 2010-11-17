@@ -299,16 +299,17 @@ void RepeaterLogic::processEvent(const string& event, const Module *module)
     rgr_enable = false;
   }
   
-  if ((event == "repeater_idle") || (event == "send_rgr_sound"))
+  if ((event == "repeater_idle") || (event == "send_rgr_sound") /* ||
+      (event.find("repeater_down") == 0) */ )
   {
     setReportEventsAsIdle(true);
     Logic::processEvent(event, module);
     setReportEventsAsIdle(false);
   }
   else
-  {  
+  {
     Logic::processEvent(event, module);
-  }  
+  }
 } /* RepeaterLogic::processEvent */
 
 

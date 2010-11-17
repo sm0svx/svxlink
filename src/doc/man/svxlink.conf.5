@@ -202,8 +202,8 @@ commenting out (#) this configuration variable.
 .B TX_CTCSS
 This configuration variable controls if a CTCSS tone should be transmitted.
 Use a comma separated list (no spaces!) to specify when to transmit a CTCSS
-tone. There are four possible values:
-.BR SQL_OPEN ", " LOGIC ", " MODULE " or " ALWAYS .
+tone. These are the possible values:
+.BR SQL_OPEN ", " LOGIC ", " MODULE ", " ANNOUNCEMENT " or " ALWAYS .
 Commenting out this configuration variable will disable CTCSS transmit.
 The tone frequency and level is configured in the transmitter configuration
 section.
@@ -219,6 +219,10 @@ core.
 .IP \(bu 4
 .BR MODULE
 will transmit CTCSS tone when there is incoming traffic from a module.
+.IP \(bu 4
+.BR ANNOUNCEMENT
+will transmit CTCSS tone when an announcement is being played. Repeater idle
+sounds and roger beeps will not have tone sent with them though.
 .IP \(bu 4
 .BR ALWAYS
 will always transmit a CTCSS tone as soon as the transmitter is turned on.

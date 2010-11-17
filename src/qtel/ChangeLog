@@ -17,6 +17,10 @@
 
 * Added Hungarian translation contributed by Molnár / HG7JUV.
 
+* Added support for using the Speex audio codec over EchoLink connections. This will
+  only, at the moment, work when conneting to other SvxLink applications. For all
+  other connections, the GSM audio codec is used.
+
 
 
  0.11.2 -- 26 Apr 2009

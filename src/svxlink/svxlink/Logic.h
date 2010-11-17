@@ -229,7 +229,7 @@ class Logic : public SigC::Object
     typedef enum
     {
       TX_CTCSS_ALWAYS=1, TX_CTCSS_SQL_OPEN=2, TX_CTCSS_LOGIC=4,
-      TX_CTCSS_MODULE=8
+      TX_CTCSS_MODULE=8, TX_CTCSS_ANNOUNCEMENT=16
     } TxCtcssType;
     
     Async::Config     	      	    &m_cfg;

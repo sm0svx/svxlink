@@ -291,6 +291,10 @@ void AudioFifo::flushSamples(void)
   {
     sinkFlushSamples();
   }
+  else
+  {
+    writeSamplesFromFifo(fifo_size);
+  }
 } /* AudioFifo::flushSamples */
 
 
