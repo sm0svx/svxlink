@@ -159,7 +159,7 @@ class AudioMixer : public SigC::Object, public Async::AudioSource
     std::list<MixerSrc *> sources;
     AudioFifo             fifo;
     SigCAudioSource       sink;
-    bool      	          is_flushed;
+    bool      	          is_flushing;
     bool                  is_requesting;
     
     AudioMixer(const AudioMixer&);

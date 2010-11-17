@@ -108,7 +108,8 @@ using namespace Async;
 
 AudioDecimator::AudioDecimator(int decimation_factor,
       	      	      	       const float *filter_coeff, int taps)
-  : factor_M(decimation_factor), H_size(taps), p_H(filter_coeff)
+  : processed(0), factor_M(decimation_factor),
+    H_size(taps), p_H(filter_coeff)
 {
   setInputOutputSampleRate(factor_M, 1);
   p_Z = new float[H_size];
@@ -130,41 +131,40 @@ AudioDecimator::~AudioDecimator(void)
  *
  ****************************************************************************/
 
-void AudioDecimator::processSamples(float *dest, const float *src, int count)
+int AudioDecimator::processSamples(float *dest, const float *src, int count)
 {
-  int orig_count = count;
-  
   //printf("count=%d\n", count);
   
-    // this implementation assumes num_inp is a multiple of factor_M
-  assert(count % factor_M == 0);
-
   int num_out = 0;
-  while (count >= factor_M)
+  while (count--)
   {
-      // shift Z delay line up to make room for next samples
-    memmove(p_Z + factor_M, p_Z, (H_size - factor_M) * sizeof(float));
+    // shift Z delay line up to make room for next samples
+    memmove(p_Z + 1, p_Z, (H_size - 1) * sizeof(float));
 
-      // copy next samples from input buffer to bottom of Z delay line
-    for (int tap = factor_M - 1; tap >= 0; tap--)
+    // copy next sample from input buffer to bottom of Z delay line
+    p_Z[0] = *src++;
+    
+    if (++processed == factor_M)
     {
-      p_Z[tap] = *src++;
-    }
-    count -= factor_M;
-
       // calculate FIR sum
-    float sum = 0.0;
-    for (int tap = 0; tap < H_size; tap++)
-    {
-      sum += p_H[tap] * p_Z[tap];
+      float sum = 0.0;
+      for (int tap = 0; tap < H_size; tap++)
+      {
+        sum += p_H[tap] * p_Z[tap];
+      }
+      
+      // store sum and point to next output
+      *dest++ = sum;
+      num_out++;
+      
+      // reset sample counter
+      processed = 0;
     }
-    *dest++ = sum;     /* store sum and point to next output */
-    num_out++;
   }
 
   //printf("num_out=%d  count=%d  factor_M=%d\n", num_out, count, factor_M);
-  assert(num_out == orig_count / factor_M);
-  
+  return num_out;
+    
 } /* AudioDecimator::processSamples */
 
 

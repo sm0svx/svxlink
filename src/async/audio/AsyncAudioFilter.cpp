@@ -183,7 +183,7 @@ void AudioFilter::reset(void)
  ****************************************************************************/
 
 
-void AudioFilter::processSamples(float *dest, const float *src, int count)
+int AudioFilter::processSamples(float *dest, const float *src, int count)
 {
   //cout << "AudioFilter::processSamples: len=" << len << endl;
   
@@ -191,6 +191,7 @@ void AudioFilter::processSamples(float *dest, const float *src, int count)
   {
     dest[i] = output_gain * fv->func(fv->buf, src[i]);
   }
+  return count;
 } /* AudioFilter::writeSamples */
 
 

@@ -138,13 +138,14 @@ class AudioInterpolator : public Async::AudioProcessor
      * @param dest  Destination buffer
      * @param src   Source buffer
      * @param count Number of samples in the source buffer
+     * @return Return number of samples written into destination buffer
      *
      * This function should be reimplemented by the inheriting class to
      * do the actual processing of the incoming samples. All samples must
      * be processed, otherwise they are lost and the output buffer will
      * contain garbage.
      */
-    virtual void processSamples(float *dest, const float *src, int count);
+    virtual int processSamples(float *dest, const float *src, int count);
 
     
   private:

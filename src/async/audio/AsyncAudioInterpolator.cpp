@@ -133,7 +133,7 @@ AudioInterpolator::~AudioInterpolator(void)
  *
  ****************************************************************************/
 
-void AudioInterpolator::processSamples(float *dest, const float *src, int count)
+int AudioInterpolator::processSamples(float *dest, const float *src, int count)
 {
   int orig_count = count;
   int num_taps_per_phase = L_size / factor_L;
@@ -167,6 +167,7 @@ void AudioInterpolator::processSamples(float *dest, const float *src, int count)
 
   //printf("num_out=%d  orig_count=%d\n", num_out, orig_count);
   assert(num_out == orig_count * factor_L);
+  return num_out;
   
 } /* AudioInterpolator::processSamples */
 

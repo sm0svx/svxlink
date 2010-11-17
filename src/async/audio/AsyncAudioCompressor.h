@@ -223,7 +223,7 @@ class AudioCompressor : public AudioProcessor
 
     
   protected:
-    virtual void processSamples(float *dest, const float *src, int count);
+    virtual int processSamples(float *dest, const float *src, int count);
     
     
   private:

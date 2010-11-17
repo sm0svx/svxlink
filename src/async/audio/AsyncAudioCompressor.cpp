@@ -171,7 +171,7 @@ void AudioCompressor::reset(void)
  ****************************************************************************/
 
 
-void AudioCompressor::processSamples(float *dest, const float *src, int count)
+int AudioCompressor::processSamples(float *dest, const float *src, int count)
 {
   //double max_sample = 0.0;
   for (int i=0; i<count; ++i)
@@ -225,6 +225,7 @@ void AudioCompressor::processSamples(float *dest, const float *src, int count)
   }
   
   //cout << "max_sample=" << max_sample << endl;
+  return count;
   
 } /* AudioCompressor::writeSamples */
 

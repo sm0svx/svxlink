@@ -121,7 +121,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
      */
     explicit AudioValve(void)
       : block_when_closed(false), is_open(true),
-        is_idle(true), is_flushing(false), request_count(0)
+        is_idle(true), is_flushing(false), is_blocking(false)
     {
     }
   
@@ -148,7 +148,10 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       
       if (do_open)
       {
-    	sourceRequestSamples(request_count);
+        if (is_blocking)
+        {
+    	  sourceRequestSamples(64);
+        }
       }
       else
       {
@@ -160,6 +163,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
 	{
 	  is_idle = true;
 	  is_flushing = false;
+	  is_blocking = false;
 	  sourceAllSamplesFlushed();
 	}
       }
@@ -183,9 +187,9 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       
       this->block_when_closed = block_when_closed;
       
-      if (!block_when_closed)
+      if (!block_when_closed && is_blocking)
       {
-      	sourceRequestSamples(request_count);
+      	sourceRequestSamples(64);
       }
     }
     
@@ -231,13 +235,13 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       is_flushing = false;
       if (is_open)
       {
-      	return sinkWriteSamples(samples, count);
+      	ret = sinkWriteSamples(samples, count);
       }
       else
       {
-      	return block_when_closed ? 0 : count;
+        ret = block_when_closed ? 0 : count;
       }
-      
+      is_blocking |= (ret < count);
       return ret;
     }
     
@@ -258,8 +262,9 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       }
       else
       {
-	is_flushing = false;
 	is_idle = true;
+	is_flushing = false;
+	is_blocking = false;
       	sourceAllSamplesFlushed();
       }
     }
@@ -279,10 +284,6 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       {
       	sourceRequestSamples(count);
       }
-      else
-      {
-        request_count = count;
-      }
     }
     
     /**
@@ -295,16 +296,15 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     virtual void allSamplesFlushed(void)
     {
       bool was_flushing = is_flushing;
-      is_flushing = false;
       is_idle = true;
+      is_flushing = false;
+      is_blocking = false;
       if (is_open && was_flushing)
       {
       	sourceAllSamplesFlushed();
       }
     }
     
-    
-  protected:
     
   private:
     AudioValve(const AudioValve&);
@@ -314,8 +314,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     bool is_open;
     bool is_idle;
     bool is_flushing;
-    bool input_stopped;
-    int request_count;
+    bool is_blocking;
     
 };  /* class AudioValve */
 

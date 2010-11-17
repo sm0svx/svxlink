@@ -132,7 +132,7 @@ class AudioClipper : public AudioProcessor
 
     
   protected:
-    virtual void processSamples(float *dest, const float *src, int count)
+    virtual int processSamples(float *dest, const float *src, int count)
     {
       for (int i=0; i<count; ++i)
       {
@@ -149,6 +149,7 @@ class AudioClipper : public AudioProcessor
 	  dest[i] = src[i];
 	}
       }
+      return count;
     }
     
     

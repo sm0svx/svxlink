@@ -136,12 +136,13 @@ class AudioAmp : public Async::AudioProcessor
     
     
   protected:
-    void processSamples(float *dest, const float *src, int count)
+    int processSamples(float *dest, const float *src, int count)
     {
       for (int i=0; i<count; ++i)
       {
       	dest[i] = src[i] * m_gain;
       }
+      return count;
     }
     
     

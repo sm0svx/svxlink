@@ -54,6 +54,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncAudioSource.h>
 #include <AsyncAudioSink.h>
+#include <AsyncAudioFifo.h>
+#include <SigCAudioSource.h>
 
 
 
@@ -114,7 +116,7 @@ This class is the base class for an audio processor. An audio processor is
 a class that is both an audio sink and source. It receives samples, process
 them in some way and send them further down the chain. 
 */
-class AudioProcessor : public AudioSink, public AudioSource
+class AudioProcessor : public SigC::Object, public AudioSink, public AudioSource
 {
   public:
     /**
@@ -140,18 +142,19 @@ class AudioProcessor : public AudioSink, public AudioSource
      */
     void flushSamples(void);
 
+
+  protected:
+
     /**
      * @brief Request samples from this source
      */
-    void requestSamples(int count);
-    
+    void onRequestSamples(int count);
+
     /**
      * @brief All samples have been flushed by the sink
      */
-    void allSamplesFlushed(void);
-    
+    void onAllSamplesFlushed(void);
 
-  protected:
     /**
      * @brief Set the input and output sample rates
      * @param input_rate The input sample rate
@@ -164,29 +167,25 @@ class AudioProcessor : public AudioSink, public AudioSource
      * @param dest  Destination buffer
      * @param src   Source buffer
      * @param count Number of samples in the source buffer
+     * @return Return number of samples written into destination buffer
      *
      * This function should be reimplemented by the inheriting class to
      * do the actual processing of the incoming samples. All samples must
      * be processed, otherwise they are lost and the output buffer will
      * contain garbage.
      */
-    virtual void processSamples(float *dest, const float *src, int count) = 0;
+    virtual int processSamples(float *dest, const float *src, int count) = 0;
     
     
   private:
-    float     	remain_buf[16];
-    int         remain_len;
-    float       *target_buf;
-    float       *target_ptr;
-    int         target_size;
-    int         target_len;
-    int       	input_rate;
-    int       	output_rate;
-    bool        is_flushing;
+    AudioFifo       fifo;
+    SigCAudioSource sink;
+    int       	    input_rate;
+    int       	    output_rate;
+    bool            is_flushing;
     
     AudioProcessor(const AudioProcessor&);
     AudioProcessor& operator=(const AudioProcessor&);
-    bool flushBuffer(void);
 
 };  /* class AudioProcessor */
 

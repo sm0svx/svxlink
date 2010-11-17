@@ -184,7 +184,7 @@ class Async::AudioMixer::MixerSrc : public AudioSink
  ****************************************************************************/
 
 AudioMixer::AudioMixer(void)
-  : fifo(64), is_flushed(true), is_requesting(false)
+  : fifo(64), is_flushing(false), is_requesting(false)
 {
   AudioSource::setHandler(&fifo);
   sink.registerSink(&fifo);
@@ -195,7 +195,7 @@ AudioMixer::AudioMixer(void)
 
 AudioMixer::~AudioMixer(void)
 {
-  list<MixerSrc *>::iterator it;
+  list<MixerSrc *>::const_iterator it;
   for (it = sources.begin(); it != sources.end(); ++it)
   {
     delete *it;
@@ -225,7 +225,6 @@ void AudioMixer::onRequestSamples(int count)
   float buf[count];
   memset(buf, 0, count * sizeof(float));
 
-  int total_samples = 0;
   list<MixerSrc *>::const_iterator it;
   for (it = sources.begin(); it != sources.end(); ++it)
   {
@@ -234,7 +233,6 @@ void AudioMixer::onRequestSamples(int count)
     {
       float tmp[count];
       int samples_read = mix_src->readSamples(tmp, count);
-      total_samples += samples_read;
       /* if (samples_read < count)
       {
         printf("underrun: %d %d\n", samples_read, count);
@@ -248,13 +246,10 @@ void AudioMixer::onRequestSamples(int count)
 
   is_requesting = false;
   
-  if (is_flushed && (total_samples == 0))
+  if (!is_flushing)
   {
-    fifo.flushSamples();
-    return;
+    assert(sink.writeSamples(buf, count) == count);
   }
-  
-  assert(sink.writeSamples(buf, count) == count);
   
 } /* AudioMixer::requestSamples */
 
@@ -262,7 +257,8 @@ void AudioMixer::onRequestSamples(int count)
 void AudioMixer::onAllSamplesFlushed(void)
 {
   //printf("AudioMixer::allSamplesFlushed\n");
-  list<MixerSrc *>::iterator it;
+  is_flushing = false;
+  list<MixerSrc *>::const_iterator it;
   for (it = sources.begin(); it != sources.end(); ++it)
   {
     (*it)->mixerFlushedAllSamples();
@@ -281,7 +277,7 @@ void AudioMixer::onAllSamplesFlushed(void)
 void AudioMixer::setAudioAvailable(void)
 {
   if (is_requesting) return;
-  is_flushed = false;
+  is_flushing = false;
   
   unsigned len = 0;
   
@@ -303,12 +299,12 @@ void AudioMixer::setAudioAvailable(void)
 void AudioMixer::flushSamples(void)
 {
   //printf("AudioMixer::flushSamples\n");
-  if (is_flushed)
+  if (is_flushing)
   {
     return;
   }
   
-  list<MixerSrc *>::iterator it;
+  list<MixerSrc *>::const_iterator it;
   for (it = sources.begin(); it != sources.end(); ++it)
   {
     if ((*it)->isActive() && !(*it)->isFlushing())
@@ -318,11 +314,8 @@ void AudioMixer::flushSamples(void)
   }
   
   //printf("AudioMixer::checkFlush: Flushing!\n");
-  is_flushed = true;
-  if (fifo.empty())
-  {
-    fifo.flushSamples();
-  }
+  is_flushing = true;
+  sink.flushSamples();
 
 } /* AudioMixer::flushSamples */
 

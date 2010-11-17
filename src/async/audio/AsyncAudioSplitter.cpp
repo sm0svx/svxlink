@@ -149,6 +149,8 @@ class Async::AudioSplitter::Branch : public AudioSource
     bool empty() const { return fifo.empty(); }
     int spaceAvail() const { return fifo.spaceAvail(); }
 
+    AudioSink *sink(void) const { return fifo.sink(); }
+    bool sinkManaged(void) const { return fifo.sinkManaged(); }
 
   private:
     bool          is_idle;
