@@ -418,7 +418,8 @@ void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, pollfd *pfd)
     int frames_read = snd_pcm_readi(rec_handle, buf, frames_to_read);
     if (frames_read < 0)
     {
-      cerr << "*** ERROR: snd_pcm_readi in AudioDeviceAlsa::audioReadHandler"
+      cerr << "*** ERROR: snd_pcm_readi in AudioDeviceAlsa::audioReadHandler:"
+           << snd_strerror(frames_read)
            << endl;
       return;
     }
