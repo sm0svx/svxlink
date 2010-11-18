@@ -267,10 +267,13 @@ bool AudioDeviceAlsa::openDevice(Mode mode)
 
   if ((mode == MODE_WR) || (mode == MODE_RDWR))
   {
-    if (snd_pcm_open(&play_handle, dev_name.c_str(),
-                     SND_PCM_STREAM_PLAYBACK, 0) < 0)
+    int err = snd_pcm_open(&play_handle, dev_name.c_str(),
+			   SND_PCM_STREAM_PLAYBACK, 0);
+    if (err < 0)
     {
-      cerr << "*** ERROR: Open playback audio device failed" << endl;
+      cerr << "*** ERROR: Open playback audio device failed: "
+	   << snd_strerror(err)
+	   << endl;
       return false;
     }
 
@@ -289,9 +292,12 @@ bool AudioDeviceAlsa::openDevice(Mode mode)
     play_watch->activity.connect(
             slot(*this, &AudioDeviceAlsa::writeSpaceAvailable));
 
-    if (snd_pcm_prepare(play_handle) < 0)
+    err = snd_pcm_prepare(play_handle);
+    if (err < 0)
     {
-      cerr << "*** ERROR: Start playback failed" << endl;
+      cerr << "*** ERROR: Start playback failed: "
+	   << snd_strerror(err)
+	   << endl;
       closeDevice();
       return false;
     }
@@ -299,10 +305,13 @@ bool AudioDeviceAlsa::openDevice(Mode mode)
 
   if ((mode == MODE_RD) || (mode == MODE_RDWR))
   {
-    if (snd_pcm_open (&rec_handle, dev_name.c_str(),
-                      SND_PCM_STREAM_CAPTURE, 0) < 0)
+    int err = snd_pcm_open(&rec_handle, dev_name.c_str(),
+			   SND_PCM_STREAM_CAPTURE, 0);
+    if (err < 0)
     {
-      cerr << "*** ERROR: Open capture audio device failed" << endl;
+      cerr << "*** ERROR: Open capture audio device failed: "
+	   << snd_strerror(err)
+	   << endl;
       return false;
     }
 
@@ -316,21 +325,27 @@ bool AudioDeviceAlsa::openDevice(Mode mode)
 
     pollfd rec_pfds[rec_nfds];
     snd_pcm_poll_descriptors(rec_handle, rec_pfds, rec_nfds);
-            
+
     rec_watch = new AlsaWatch(rec_pfds, rec_nfds);
     rec_watch->activity.connect(
             slot(*this, &AudioDeviceAlsa::audioReadHandler));
 
-    if (snd_pcm_prepare(rec_handle) < 0)
+    err = snd_pcm_prepare(rec_handle);
+    if (err < 0)
     {
-      cerr << "*** ERROR: Start capture failed" << endl;
+      cerr << "*** ERROR: Prepare capture failed: "
+	   << snd_strerror(err)
+	   << endl;
       closeDevice();
       return false;
     }
 
-    if (snd_pcm_start(rec_handle) < 0)
+    err = snd_pcm_start(rec_handle);
+    if (err < 0)
     {
-      cerr << "*** ERROR: Start capture failed" << endl;
+      cerr << "*** ERROR: Start capture failed: "
+	   << snd_strerror(err)
+	   << endl;
       closeDevice();
       return false;
     }
@@ -418,7 +433,7 @@ void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, pollfd *pfd)
     int frames_read = snd_pcm_readi(rec_handle, buf, frames_to_read);
     if (frames_read < 0)
     {
-      cerr << "*** ERROR: snd_pcm_readi in AudioDeviceAlsa::audioReadHandler:"
+      cerr << "*** ERROR: snd_pcm_readi in AudioDeviceAlsa::audioReadHandler: "
            << snd_strerror(frames_read)
            << endl;
       return;
@@ -452,10 +467,13 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, pollfd *pfd)
       // Bail out if there's an error
     if (space_avail < 0)
     {
-      if (snd_pcm_prepare(play_handle) < 0)
+      int err = snd_pcm_prepare(play_handle);
+      if (err < 0)
       {
-        cerr << "*** ERROR: Non-recoverable underrun in" <<
-                "AudioDeviceAlsa::writeSpaceAvailable" << endl;
+        cerr << "*** ERROR: Non-recoverable underrun in "
+                "AudioDeviceAlsa::writeSpaceAvailable: "
+	     << snd_strerror(err)
+	     << endl;
         watch->setEnabled(false);
         return;
       }
@@ -484,10 +502,13 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, pollfd *pfd)
     //       blocks_gotten, (int)frames_written);
     if (frames_written < 0)
     {
-      if (snd_pcm_prepare(play_handle) < 0)
+      int err = snd_pcm_prepare(play_handle);
+      if (err < 0)
       {
-        cerr << "*** ERROR: Non-recoverable underrun in" <<
-                "AudioDeviceAlsa::writeSpaceAvailable" << endl;
+        cerr << "*** ERROR: Non-recoverable underrun in "
+                "AudioDeviceAlsa::writeSpaceAvailable :"
+	     << snd_strerror(err)
+	     << endl;
         watch->setEnabled(false);
         return;
       }
@@ -508,39 +529,54 @@ bool AudioDeviceAlsa::initParams(snd_pcm_t *pcm_handle)
 {
   snd_pcm_hw_params_t *hw_params;
 
-  if (snd_pcm_hw_params_malloc (&hw_params) < 0)
+  int err = snd_pcm_hw_params_malloc(&hw_params);
+  if (err < 0)
   {
-    cerr << "*** ERROR: Allocate hardware parameter structure failed " << endl;
+    cerr << "*** ERROR: Allocate hardware parameter structure failed :"
+	 << snd_strerror(err)
+	 << endl;
     return false;
   }
 
-  if (snd_pcm_hw_params_any (pcm_handle, hw_params) < 0)
+  err = snd_pcm_hw_params_any(pcm_handle, hw_params);
+  if (err < 0)
   {
-    cerr << "*** ERROR: Initialize hardware parameter structure failed" << endl;
+    cerr << "*** ERROR: Initialize hardware parameter structure failed: "
+	 << snd_strerror(err)
+	 << endl;
     snd_pcm_hw_params_free (hw_params);
     return false;
   }
 
-  if (snd_pcm_hw_params_set_access(pcm_handle, hw_params,
-                                   SND_PCM_ACCESS_RW_INTERLEAVED) < 0)
+  err = snd_pcm_hw_params_set_access(pcm_handle, hw_params,
+				     SND_PCM_ACCESS_RW_INTERLEAVED);
+  if (err < 0)
   {
-    cerr << "*** ERROR: Set access type failed" << endl;
+    cerr << "*** ERROR: Set access type failed: "
+	 << snd_strerror(err)
+	 << endl;
     snd_pcm_hw_params_free (hw_params);
     return false;
   }
 
-  if (snd_pcm_hw_params_set_format(pcm_handle, hw_params,
-                                   SND_PCM_FORMAT_S16_LE) < 0)
+  err = snd_pcm_hw_params_set_format(pcm_handle, hw_params,
+				     SND_PCM_FORMAT_S16_LE);
+  if (err < 0)
   {
-    cerr << "*** ERROR: Set sample format failed" << endl;
+    cerr << "*** ERROR: Set sample format failed: "
+	 << snd_strerror(err)
+	 << endl;
     snd_pcm_hw_params_free (hw_params);
     return false;
   }
 
   unsigned int real_rate = sample_rate;
-  if (snd_pcm_hw_params_set_rate_near(pcm_handle, hw_params, &real_rate, 0) < 0)
+  err = snd_pcm_hw_params_set_rate_near(pcm_handle, hw_params, &real_rate, 0);
+  if (err < 0)
   {
-    cerr << "*** ERROR: Set sample rate failed" << endl;
+    cerr << "*** ERROR: Set sample rate failed: "
+	 << snd_strerror(err)
+	 << endl;
     snd_pcm_hw_params_free (hw_params);
     return false;
   }
@@ -556,37 +592,49 @@ bool AudioDeviceAlsa::initParams(snd_pcm_t *pcm_handle)
     return false;
   }
 
-  if (snd_pcm_hw_params_set_channels(pcm_handle, hw_params, channels) < 0)
+  err = snd_pcm_hw_params_set_channels(pcm_handle, hw_params, channels);
+  if (err < 0)
   {
-    cerr << "*** ERROR: Set channel count failed" << endl;
+    cerr << "*** ERROR: Set channel count failed: "
+	 << snd_strerror(err)
+	 << endl;
     snd_pcm_hw_params_free (hw_params);
     return false;
   }
 
   snd_pcm_uframes_t period_size = block_size_hint;
-  if (snd_pcm_hw_params_set_period_size_near(pcm_handle, hw_params,
-                                             &period_size, 0) < 0)
+  err = snd_pcm_hw_params_set_period_size_near(pcm_handle, hw_params,
+					       &period_size, 0);
+  if (err < 0)
   {
-    cerr << "*** ERROR: Set period size failed" << endl;
+    cerr << "*** ERROR: Set period size failed: "
+	 << snd_strerror(err)
+	 << endl;
     snd_pcm_hw_params_free (hw_params);
     return false;
   }
-                                                                 
+
   block_size = period_size;
   block_count = block_count_hint * block_size_hint / block_size;
 
-  /* Set number of periods. Periods used to be called fragments. */
-  if (snd_pcm_hw_params_set_periods_near(pcm_handle, hw_params,
-                                         (uint32_t *)&block_count, 0) < 0)
+    /* Set number of periods. Periods used to be called fragments. */
+  err = snd_pcm_hw_params_set_periods_near(pcm_handle, hw_params,
+					   (uint32_t *)&block_count, 0);
+  if (err < 0)
   {
-     cerr << "*** ERROR: Set periods failed" << endl;
-     snd_pcm_hw_params_free (hw_params);
-     return false;
+    cerr << "*** ERROR: Set periods failed: "
+	 << snd_strerror(err)
+	 << endl;
+    snd_pcm_hw_params_free (hw_params);
+    return false;
   }
   
-  if (snd_pcm_hw_params(pcm_handle, hw_params) < 0)
+  err = snd_pcm_hw_params(pcm_handle, hw_params);
+  if (err < 0)
   {
-    cerr << "*** ERROR: Set hardware parameters failed" << endl;
+    cerr << "*** ERROR: Set hardware parameters failed: "
+	 << snd_strerror(err)
+	 << endl;
     snd_pcm_hw_params_free (hw_params);
     return false;
   }
@@ -596,37 +644,52 @@ bool AudioDeviceAlsa::initParams(snd_pcm_t *pcm_handle)
 
   snd_pcm_sw_params_t *sw_params;
   
-  if (snd_pcm_sw_params_malloc(&sw_params) < 0)
+  err = snd_pcm_sw_params_malloc(&sw_params);
+  if (err < 0)
   {
-    cerr << "*** ERROR: Allocate software parameter structure failed " << endl;
+    cerr << "*** ERROR: Allocate software parameter structure failed: "
+	 << snd_strerror(err)
+	 << endl;
     return false;
   }
 
-  if (snd_pcm_sw_params_current(pcm_handle, sw_params) < 0)
+  err = snd_pcm_sw_params_current(pcm_handle, sw_params);
+  if (err < 0)
   {
-    cerr << "*** ERROR: Initialize software parameter structure failed" << endl;
+    cerr << "*** ERROR: Initialize software parameter structure failed: "
+	 << snd_strerror(err)
+	 << endl;
     snd_pcm_sw_params_free (sw_params);
     return false;
   }
 
-  if (snd_pcm_sw_params_set_start_threshold(pcm_handle, sw_params,
-                            (block_count - 1) * block_size) < 0)
+  err = snd_pcm_sw_params_set_start_threshold(pcm_handle, sw_params,
+					      (block_count - 1) * block_size);
+  if (err < 0)
   {
-    cerr << "*** ERROR: Set start threshold failed" << endl;
+    cerr << "*** ERROR: Set start threshold failed: "
+	 << snd_strerror(err)
+	 << endl;
     snd_pcm_sw_params_free (sw_params);
     return false;
   }
 
-  if (snd_pcm_sw_params_set_avail_min(pcm_handle, sw_params, block_size) < 0)
+  err = snd_pcm_sw_params_set_avail_min(pcm_handle, sw_params, block_size);
+  if (err < 0)
   {
-    cerr << "*** ERROR: Set min_avail threshold failed" << endl;
+    cerr << "*** ERROR: Set min_avail threshold failed: "
+	 << snd_strerror(err)
+	 << endl;
     snd_pcm_sw_params_free(sw_params);
     return false;
   }
 
-  if (snd_pcm_sw_params(pcm_handle, sw_params) < 0)
+  err = snd_pcm_sw_params(pcm_handle, sw_params);
+  if (err < 0)
   {
-    cerr << "*** ERROR: Set software parameters failed" << endl;
+    cerr << "*** ERROR: Set software parameters failed: "
+	 << snd_strerror(err)
+	 << endl;
     snd_pcm_sw_params_free (sw_params);
     return false;
   }
