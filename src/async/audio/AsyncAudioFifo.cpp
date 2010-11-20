@@ -286,14 +286,13 @@ void AudioFifo::flushSamples(void)
 {
   //printf("AudioFifo::flushSamples\n");
   is_flushing = true;
-  prebuf = (prebuf_samples > 0);
   if (empty())
   {
     sinkFlushSamples();
   }
   else
   {
-    writeSamplesFromFifo(fifo_size);
+    flushSamplesFromFifo();
   }
 } /* AudioFifo::flushSamples */
 
@@ -330,6 +329,7 @@ void AudioFifo::allSamplesFlushed(void)
     if (is_flushing)
     {
       is_flushing = false;
+      prebuf = (prebuf_samples > 0);
       sourceAllSamplesFlushed();
     }
   }
