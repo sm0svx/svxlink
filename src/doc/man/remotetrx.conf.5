@@ -225,6 +225,13 @@ transmitting. Set it to 0 if a full duplex link is desired. Default is 1.
 .B LOOP_RX_TO_TX
 Set to 1 to loop incoming RX audio (not link RX) directly to the TX (not link
 TX). You figure out when to use it. Default is 0.
+.TP
+.B FALLBACK_REPEATER
+This function is useful if running RemoteTrx as both RX and TX for a repeater.
+If the connection to the SvxLink base station is lost due to network errors, the
+RemoteTrx provides a very basic repeater function (SQLELCH controlled) until the
+the connection has been established again. Set to 1 to enable this function
+or set to 0 to disable it. Default is 0.
 .
 .SH FILES
 .

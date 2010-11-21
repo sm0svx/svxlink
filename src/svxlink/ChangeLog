@@ -161,6 +161,12 @@
   between two SvxLink nodes which improves the audio quality a lot.
   Patch contributed by Steve / DH1DM.
 
+* Added a fallback repeater mode to the RemoteTrx which can be used
+  if using it as both RX and TX for a repeater. If the network
+  connection is lost to the repeater, the RemoteTrx activates a very
+  basic repeater mode, essentially just connecting the RX to the TX.
+  Idea and original implementation by Adi / DL1HRC.
+
 
 
  0.11.0 -- 26 Apr 2009
