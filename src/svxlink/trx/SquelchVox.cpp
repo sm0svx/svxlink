@@ -206,7 +206,13 @@ void SquelchVox::reset(void)
 
 int SquelchVox::processSamples(const float *samples, int count)
 {
-  for (int i=0; i<count; ++i)
+  int start_pos = 0;
+  if (buf_size < count)
+  {
+    start_pos = count - buf_size;
+  }
+
+  for (int i=start_pos; i<count; ++i)
   {
     sum -= buf[head];
     buf[head] = samples[i] * samples[i];
