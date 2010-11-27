@@ -275,7 +275,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 
 void AprsTcpClient::sendMsg(const char *aprsmsg)
 {
-   cout << aprsmsg << endl;
+   //cout << aprsmsg << endl;
 
   if (!con->isConnected())
   {
