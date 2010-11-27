@@ -115,9 +115,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 This class is used as the base when implementing a squelch detector. The
 detector should implement the \em processSamples function. In that function,
-call \em setOpen to indicate if the squelch is opened or closed.
-
-\include Squelch_demo.cpp
+call \em setSignalDetected to indicate if a signal is detected ot not.
 */
 class Squelch : public SigC::Object, public Async::AudioSink
 {
@@ -128,7 +126,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
     explicit Squelch(void)
       : m_open(false), m_start_delay(0), m_start_delay_left(0), m_delay(0),
         m_delay_left(0), m_hangtime(0), m_hangtime_left(0), m_timeout(0),
-	m_timeout_left(0) {}
+	m_timeout_left(0), m_signal_detected(false) {}
   
     /**
      * @brief 	Destructor
@@ -223,6 +221,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
       m_start_delay_left = m_start_delay;
       m_delay_left = 0;
       m_timeout_left = 0;
+      m_signal_detected = false;
     }
 
     /**
@@ -330,8 +329,48 @@ class Squelch : public SigC::Object, public Async::AudioSink
     virtual int processSamples(const float *samples, int count) = 0;
 
     /**
+     * @brief 	Used by the actual squelch detector to indicate signal presence
+     * @param 	is_detected Set to \em true if a signal is detected
+     */
+    inline void setSignalDetected(bool is_detected)
+    {
+      if (m_signal_detected != is_detected)
+      {
+	m_signal_detected = is_detected;
+	setOpen(is_detected);
+      }
+    }
+    
+    /**
+     * @brief 	Return the state of the signal detector
+     * @return	Return \em true if a signal is detected
+     */
+    bool signalDetected(void)
+    {
+      return m_signal_detected;
+    }
+    
+    
+  private:
+    std::string	m_name;
+    bool      	m_open;
+    int       	m_start_delay;
+    int       	m_start_delay_left;
+    int       	m_delay;
+    int       	m_delay_left;
+    int       	m_hangtime;
+    int       	m_hangtime_left;
+    int         m_timeout;
+    int         m_timeout_left;
+    bool	m_signal_detected;
+
+    Squelch(const Squelch&);
+    Squelch& operator=(const Squelch&);
+    
+    /**
      * @brief 	Set the state of the squelch
-     * @param 	is_open Set to \em true if the squelch is open or else \em false
+     * @param 	is_open Set to \em true if the squelch is open or \em false
+     *			if it's not
      */
     void setOpen(bool is_open)
     {
@@ -376,22 +415,6 @@ class Squelch : public SigC::Object, public Async::AudioSink
 	}
       }
     }
-    
-    
-  private:
-    std::string   m_name;
-    bool      	  m_open;
-    int       	  m_start_delay;
-    int       	  m_start_delay_left;
-    int       	  m_delay;
-    int       	  m_delay_left;
-    int       	  m_hangtime;
-    int       	  m_hangtime_left;
-    int           m_timeout;
-    int           m_timeout_left;
-
-    Squelch(const Squelch&);
-    Squelch& operator=(const Squelch&);
     
 };  /* class Squelch */
 

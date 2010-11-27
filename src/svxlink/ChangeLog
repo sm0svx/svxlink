@@ -167,6 +167,10 @@
   basic repeater mode, essentially just connecting the RX to the TX.
   Idea and original implementation by Adi / DL1HRC.
 
+* Bugfix: The SQL_TIMEOUT feature did not work for all squelch detector types.
+
+* Configuration variable VOX_LIMIT has been renamed to VOX_THRESH.
+
 
 
  0.11.0 -- 26 Apr 2009
