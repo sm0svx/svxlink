@@ -132,10 +132,8 @@ proc send_short_ident {hour minute} {
   variable CFG_TYPE;
 
   spellWord $mycall;
-  if {$CFG_TYPE == "Simplex"} {
-    playMsg "EchoLink" "link";
-  } elseif {$CFG_TYPE == "Repeater"} {
-    playMsg "EchoLink" "repeater";
+  if {$CFG_TYPE == "Repeater"} {
+    playMsg "Core" "repeater";
   }
   playSilence 500;
 }
@@ -153,10 +151,8 @@ proc send_long_ident {hour minute} {
   variable CFG_TYPE;
 
   spellWord $mycall;
-  if {$CFG_TYPE == "Simplex"} {
-    playMsg "EchoLink" "link";
-  } elseif {$CFG_TYPE == "Repeater"} {
-    playMsg "EchoLink" "repeater";
+  if {$CFG_TYPE == "Repeater"} {
+    playMsg "Core" "repeater";
   }
   playSilence 500;
   
