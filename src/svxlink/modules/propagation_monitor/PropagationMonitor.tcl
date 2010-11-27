@@ -265,7 +265,8 @@ proc handle_vhfdx {msg_file} {
   if {$match} {
     play_alert_sound
     for {set i 0} {$i < 2} {set i [expr $i + 1]} {
-      playMsg possible_sporadic_e_opening
+      playMsg possible
+      playMsg sporadic_e_opening
       say_band $band
       playSilence 100
       playMsg between
