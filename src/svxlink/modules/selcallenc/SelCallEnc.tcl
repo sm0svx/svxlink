@@ -25,12 +25,35 @@ if {![info exists CFG_ID]} {
 set module_name [namespace tail [namespace current]];
 
 #
+# Type ID to selcall type name mapping
+#
+array set variants {
+  "01" "ZVEI1"
+  "02" "ZVEI2"
+  "03" "ZVEI3"
+  "04" "PZVEI"
+  "05" "DZVEI"
+  "06" "EEA"
+  "07" "CCIR1"
+  "08" "CCIR2"
+  "09" "VDEW"
+  "10" "CCITT"
+  "11" "NATEL"
+  "12" "EIA"
+  "13" "EURO"
+  "14" "MODAT"
+  "15" "PDZVEI"
+  "16" "PCCIR"
+  "17" "AUTOA"
+}
+
+#
 # An "overloaded" playMsg that eliminiates the need to write the module name
 # as the first argument.
 #
 proc playMsg {msg} {
-  variable module_name;
-  ::playMsg $module_name $msg;
+  variable module_name
+  ::playMsg $module_name $msg
 }
 
 #
@@ -38,82 +61,101 @@ proc playMsg {msg} {
 # module name
 #
 proc printInfo {msg} {
-  variable module_name;
-  puts "$module_name: $msg";
+  variable module_name
+  puts "$module_name: $msg"
 }
 
 #
 # Executed when this module is being activated
 #
 proc activating_module {} {
-  variable module_name;
-  Module::activating_module $module_name;
+  variable module_name
+  Module::activating_module $module_name
 }
 
 #
 # Executed when this module is being deactivated.
 #
 proc deactivating_module {} {
-  variable module_name;
-  Module::deactivating_module $module_name;
+  variable module_name
+  Module::deactivating_module $module_name
 }
 
 #
 # Exectuted when the inactivity timeout for this module has been expired.
 #
 proc timeout {} {
-  variable module_name;
-  Module::timeout $module_name;
+  variable module_name
+  Module::timeout $module_name
 }
 
 #
 # Executed when playing of the help message for this module has been requested.
 #
 proc play_help {} {
-  variable module_name;
-  Module::play_help $module_name;
+  variable module_name
+  variable variants
+
+  Module::play_help $module_name
+
+  foreach variant_id [lsort [array names variants]] {
+    playSilence 300
+    playNumber $variant_id
+    playSilence 100
+    playMsg $variants($variant_id)
+  }
 }
 
 # The amplitude of the selcall audio. Set by function setAmplitude.
-#variable amplitude;
+#variable amplitude
 
 # Tone array for the selected mode. Set by function setMode.
-#variable tones;
+#variable tones
 
 # The length of the tones. Set by function setMode.
-#variable tone_length;
+#variable tone_length
 
 # The length of the first tone in a sequence. Set by function setMode.
-#variable first_tone_length;
+#variable first_tone_length
 
 
 #
 # Executed when a DTMF digit (0-9, A-D, *, #) is received
 #
 proc dtmf_digit_received {char duration} {
-  #printInfo "DTMF digit $char received with duration $duration milliseconds";
+  #printInfo "DTMF digit $char received with duration $duration milliseconds"
 }
 
 #
 # Executed when a DTMF command  is received
 #
 proc dtmf_cmd_received {cmd} {
+  variable variants
+
   printInfo "DTMF command received: $cmd";
+
   if {$cmd == "0"} {
-    playMsg "help";
+    play_help
+  } elseif {[string length $cmd] == 2} {
+    playMsg $variants($cmd)
   } elseif {$cmd != ""} {
-    playSelCall $cmd;
+    playSelCall $cmd
   } else {
-    deactivateModule;
+    deactivateModule
   }
 }
 
 proc dtmf_cmd_received_when_idle {cmd} {
+  variable variants
+
   printInfo "DTMF command received received when idle: $cmd";
+
   if {$cmd == "0"} {
-    playMsg "help";
+    play_help
+  } elseif {[string length $cmd] == 2} {
+    playMsg $variants($cmd)
   } elseif {$cmd != ""} {
-    playSelCall $cmd;
+    playSelCall $cmd
   }
 }
 
@@ -126,32 +168,17 @@ proc status_report {} {
 
 proc squelch_open {is_open} {
   #if {$is_open} {set str "OPEN"} else {set str "CLOSED"};
-  #printInfo "The squelch is $str";
+  #printInfo "The squelch is $str"
 }
 
 proc playSelCall {cmd} {
-  set variant(01) "ZVEI1";
-  set variant(02) "ZVEI2";
-  set variant(03) "ZVEI3";
-  set variant(04) "PZVEI";
-  set variant(05) "DZVEI";
-  set variant(06) "EEA";
-  set variant(07) "CCIR1";
-  set variant(08) "CCIR2";
-  set variant(09) "VDEW";
-  set variant(10) "CCITT";
-  set variant(11) "NATEL";
-  set variant(12) "EIA";
-  set variant(13) "EURO";
-  set variant(14) "MODAT";
-  set variant(15) "PDZVEI";
-  set variant(16) "PCCIR";
-  set variant(17) "AUTOA";
+  variable variants
+
   if {[string range $cmd 0 1] > 16 } {
-    playMsg "operation_failed";
+    playMsg "operation_failed"
   } else {
-    SelCall::setMode $variant([string range $cmd 0 1]);
-    SelCall::play [string range $cmd 2 end];
+    SelCall::setMode $variants([string range $cmd 0 1])
+    SelCall::play [string range $cmd 2 end]
   }
 }
 
