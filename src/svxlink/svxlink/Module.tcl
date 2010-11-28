@@ -45,7 +45,25 @@ proc timeout {module_name} {
 # Executed when playing of the help message for a module has been requested.
 #
 proc play_help {module_name} {
+  global basedir;
+
   playMsg $module_name "help";
+
+  set subcmds [glob -nocomplain "$basedir/$module_name/help_subcmd*.{wav,raw,gsm}"]
+  if {[llength $subcmds] > 0} {
+    playSilence 500
+    playMsg "Core" "sub_commands_are"
+    foreach subcmd [lsort $subcmds] {
+      if [regexp {^.*/help_subcmd(\d+)([ABCD*#]*)\.} $subcmd -> number chars] {
+        puts $subcmd
+        playSilence 200
+        playNumber $number
+        spellWord $chars
+        playSilence 200
+        playFile $subcmd
+      }
+    }
+  }
 }
 
 
