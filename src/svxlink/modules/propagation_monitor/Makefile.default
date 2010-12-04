@@ -217,9 +217,9 @@ LDFLAGS		+=
 # Additional files to install
 install-extras uninstall-extras rpm-extras:
 	$(DIRSPEC) /var/spool/svxlink/propagation_monitor[755,svxlink,daemon]
-	$(FILESPEC) PropagationMonitor.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
-	$(FILESPEC) ModulePropagationMonitor.conf[644,root,root,config] /etc/svxlink.d
-	$(FILESPEC) procmailrc[644,root,root,config] /etc/svxlink/.procmailrc
+	$(FILESPEC) PropagationMonitor.tcl[644,root,root] /usr/share/svxlink/modules.d
+	$(FILESPEC) ModulePropagationMonitor.conf[644,root,root,config] /etc/svxlink/svxlink.d
+	$(FILESPEC) .procmailrc[644,root,root,config] /etc/svxlink
 
 
 #

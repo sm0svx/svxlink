@@ -171,6 +171,17 @@
 
 * Configuration variable VOX_LIMIT has been renamed to VOX_THRESH.
 
+* SvxLink configuration files are now stored in the /etc/svxlink directory.
+
+* New directory layout for event scripts and sound clips. The main event
+  scripts are now stored in /usr/share/svxlink/events.d. The sound clip
+  files are now stored in /usr/share/svxlink/sounds/<langcode>. TCL
+  modules have been separated from the event handlers and are now stored
+  in /usr/share/svxlink/modules.d
+
+* New configuration variable DEFAULT_LANG that points out the default
+  language to use.
+
 
 
  0.11.0 -- 26 Apr 2009

@@ -219,16 +219,17 @@ LDFLAGS		+=
 
 # Additional files to install
 install-extras uninstall-extras rpm-extras:
-	$(DIRSPEC) /etc/svxlink.d[755,root,root]
-	$(FILESPEC) svxlink.conf[644,root,root,config] /etc
-	$(FILESPEC) events.tcl[644,root,root] /usr/share/svxlink/sounds
-	$(FILESPEC) RepeaterLogic.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
-	$(FILESPEC) SimplexLogic.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
-	$(FILESPEC) Module.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
-	$(FILESPEC) Logic.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
-	$(FILESPEC) CW.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
-	$(FILESPEC) SelCall.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
-	$(FILESPEC) event_test.tcl[755,root,root] /usr/share/svxlink
+	$(DIRSPEC) /etc/svxlink/svxlink.d[755,root,root]
+	$(FILESPEC) svxlink.conf[644,root,root,config] /etc/svxlink
+	$(FILESPEC) events.tcl[644,root,root] /usr/share/svxlink
+	$(FILESPEC) RepeaterLogic.tcl[644,root,root] /usr/share/svxlink/events.d
+	$(FILESPEC) SimplexLogic.tcl[644,root,root] /usr/share/svxlink/events.d
+	$(FILESPEC) Module.tcl[644,root,root] /usr/share/svxlink/events.d
+	$(FILESPEC) Logic.tcl[644,root,root] /usr/share/svxlink/events.d
+	$(FILESPEC) CW.tcl[644,root,root] /usr/share/svxlink/events.d
+	$(FILESPEC) SelCall.tcl[644,root,root] /usr/share/svxlink/events.d
+
+#$(FILESPEC) event_test.tcl[755,root,root] /usr/share/svxlink
 
 
 #

@@ -47,7 +47,7 @@ set recdir "/var/spool/svxlink/voice_mail";
 #
 # Configuration file names
 #
-set cfg_etc "/etc/TclVoiceMail.conf";
+set cfg_etc "/etc/svxlink/TclVoiceMail.conf";
 set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.conf";
 
 
@@ -336,7 +336,7 @@ proc setState {new_state} {
   variable state;
   set state $new_state;
   if {$state == "logged_in"} {
-    playMsg "logged_in_menu";
+    playSubcommands "TclVoiceMail" "logged_in_menu";
   }
 }
 
@@ -406,7 +406,7 @@ proc cmdPlayNextNewMessage {cmd} {
       playSilence 1000;
       playFile "$basename\_mesg.wav";
       playSilence 1000;
-      playMsg "pnm_menu";
+      playSubcommands "TclVoiceMail" "pnm_menu";
       setState "pnm_menu";
     }
   } elseif {$state == "pnm_menu"} {
