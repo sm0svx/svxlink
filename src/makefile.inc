@@ -33,6 +33,11 @@ ifndef MAKEFILE_CONFIG_INCLUDED
   include $(ROOT)/.config
 endif
 
+ifdef INSTALL_ROOT
+  $(warning INSTALL_ROOT is deprecated. Use DESTDIR instead)
+  DESTDIR=$(INSTALL_ROOT)
+endif
+
 LIB		:= $(ROOT)/$(LIB)
 INC		:= $(ROOT)/$(INC)
 BIN		:= $(ROOT)/$(BIN)
@@ -144,8 +149,8 @@ INSTALL = install_file() { \
 	    owner=`echo $$items | cut -d' ' -f3`; \
 	    group=`echo $$items | cut -d' ' -f4`; \
 	    modifier="$$(echo $$items | cut -d' ' -f5)"; \
-	    if [ -n "$(INSTALL_ROOT)" ]; then \
-	      target_dir=$(INSTALL_ROOT)$$2; \
+	    if [ -n "$(DESTDIR)" ]; then \
+	      target_dir=$(DESTDIR)$$2; \
 	    else \
 	      target_dir=$$2; \
 	    fi; \
@@ -181,7 +186,7 @@ UNINSTALL = \
 	uninstall_file() { \
 	  local dir file; \
 	  dir=$$1; shift; \
-	  dir="$(INSTALL_ROOT)$${dir}"; \
+	  dir="$(DESTDIR)$${dir}"; \
 	  for file in $$*; do \
 	    file=$$(basename $${file} | cut -d'[' -f1); \
 	    $(RM) $${dir}/$${file}; \
@@ -236,8 +241,8 @@ DIRSPEC = \
 	  perm=`echo $$items | cut -d' ' -f2`; \
 	  owner=`echo $$items | cut -d' ' -f3`; \
 	  group=`echo $$items | cut -d' ' -f4`; \
-	  if [ -n "$(INSTALL_ROOT)" ]; then \
-	    target_dir=$(INSTALL_ROOT)$${dir}; \
+	  if [ -n "$(DESTDIR)" ]; then \
+	    target_dir=$(DESTDIR)$${dir}; \
 	  else \
 	    target_dir=$${dir}; \
 	  fi; \
@@ -709,7 +714,7 @@ rpm-base:
 	            >> $(RPM_DIR)/TMP_SPECS/$(RPM_NAME).spec; \
 	    echo "%files" >> "$(RPM_DIR)/TMP_SPECS/$(RPM_NAME).spec"; \
 	  fi; \
-	  make INSTALL_ROOT=/tmp/rpm-tmp-install NO_CHOWN=1 install; \
+	  make DESTDIR=/tmp/rpm-tmp-install NO_CHOWN=1 install; \
 	  PROGS_INSTALL="$(PROGS_INSTALL)"; \
 	  for file in $${PROGS_INSTALL}; do \
 	    $(GEN_RPM_ROW) $$file $(BIN_INSTALL_DIR) \
