@@ -75,7 +75,7 @@ proc playSubcommands {context basename {header ""}} {
 ###############################################################################
 
 set basedir [file dirname $script_path];
-if [info exists CFG_DEFAULT_LANG] {
+if [info exists Logic::CFG_DEFAULT_LANG] {
   set lang $Logic::CFG_DEFAULT_LANG
 } else {
   set lang "en_US"
