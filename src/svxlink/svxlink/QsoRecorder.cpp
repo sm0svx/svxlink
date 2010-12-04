@@ -1,12 +1,12 @@
 /**
-@file	 VoiceLogger.cpp
-@brief   The voice logger is used to write radio traffic to file
+@file	 QsoRecorder.cpp
+@brief   The QSO recorder is used to write radio traffic to file
 @author  Tobias Blomberg / SM0SVX
 @date	 2009-06-06
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "VoiceLogger.h"
+#include "QsoRecorder.h"
 
 
 
@@ -115,28 +115,28 @@ using namespace Async;
  *
  ****************************************************************************/
 
-VoiceLogger::VoiceLogger(const string &rec_dir)
+QsoRecorder::QsoRecorder(const string &rec_dir)
   : recorder(0), rec_dir(rec_dir)
 {
   selector = new AudioSelector;
-} /* VoiceLogger::VoiceLogger */
+} /* QsoRecorder::QsoRecorder */
 
 
-VoiceLogger::~VoiceLogger(void)
+QsoRecorder::~QsoRecorder(void)
 {
   setEnabled(false);
   delete selector;
-} /* VoiceLogger::~VoiceLogger */
+} /* QsoRecorder::~QsoRecorder */
 
 
-void VoiceLogger::addSource(Async::AudioSource *source, int prio)
+void QsoRecorder::addSource(Async::AudioSource *source, int prio)
 {
   selector->addSource(source);
   selector->enableAutoSelect(source, prio);
-} /* VoiceLogger::addSource */
+} /* QsoRecorder::addSource */
 
 
-void VoiceLogger::setEnabled(bool enable)
+void QsoRecorder::setEnabled(bool enable)
 {
   if (enable && (recorder == 0))
   {
@@ -153,7 +153,7 @@ void VoiceLogger::setEnabled(bool enable)
     selector->registerSink(recorder, true);
     if (!recorder->initialize())
     {
-      cerr << "*** VoiceLogger ERROR: Could not open file for recording: "
+      cerr << "*** QsoRecorder ERROR: Could not open file for recording: "
           << filename << endl;
     }
   }
@@ -161,22 +161,22 @@ void VoiceLogger::setEnabled(bool enable)
   {
     delete recorder;
     recorder = 0;
-    
+
     string oldpath(rec_dir + "/tmp_" + rec_timestamp + ".wav");
     time_t epoch = time(NULL);
     struct tm *tm = localtime(&epoch);
     char timestamp[256];
     strftime(timestamp, sizeof(timestamp), "%y%m%d%H%M%S", tm);
-    string newpath(rec_dir + "/voicelog_" + rec_timestamp + "_" + timestamp +
+    string newpath(rec_dir + "/qsorec_" + rec_timestamp + "_" + timestamp +
                    ".wav");
     if (rename(oldpath.c_str(), newpath.c_str()) != 0)
     {
-      perror("VoiceLogger rename");
+      perror("QsoRecorder rename");
     }
-    
+
     rec_timestamp = "";
   }
-} /* VoiceLogger::enable */
+} /* QsoRecorder::enable */
 
 
 

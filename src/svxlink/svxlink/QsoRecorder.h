@@ -1,12 +1,12 @@
 /**
-@file	 VoiceLogger.h
-@brief   The voice logger is used to write radio traffic to file
+@file	 QsoRecorder.h
+@brief   The QSO recorder is used to write radio traffic to file
 @author  Tobias Blomberg / SM0SVX
 @date	 2009-06-06
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef VOICE_LOGGER_INCLUDED
-#define VOICE_LOGGER_INCLUDED
+#ifndef QSO_RECORDER_INCLUDED
+#define QSO_RECORDER_INCLUDED
 
 
 /****************************************************************************
@@ -82,7 +82,7 @@ namespace Async
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -107,11 +107,11 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	The voice logger is used to write radio traffic to file
+@brief	The QSO recorder is used to write radio traffic to file
 @author Tobias Blomberg / SM0SVX
 @date   2009-06-06
 */
-class VoiceLogger
+class QsoRecorder
 {
   public:
     /**
@@ -119,47 +119,47 @@ class VoiceLogger
      * @param   rec_dir The path to the directory where the recordings
      *                  are placed
      */
-    explicit VoiceLogger(const std::string &rec_path);
+    explicit QsoRecorder(const std::string &rec_path);
 
     /**
      * @brief 	Destructor
      */
-    ~VoiceLogger(void);
+    ~QsoRecorder(void);
 
     /**
-     * @brief   Add an audio source to the voice logger
+     * @brief   Add an audio source to the QSO recorder
      * @param   source The audio source to add
      * @param   prio   The priority to set. Higher numbers give higher priority.
      */
     void addSource(Async::AudioSource *source, int prio);
 
     /**
-     * @brief 	Enable or disable the logger
-     * @param 	enable Set to \em true to enable the logger or \em false to
+     * @brief 	Enable or disable the recorder
+     * @param 	enable Set to \em true to enable the recorder or \em false to
      *                 disable it
      */
     void setEnabled(bool enable);
-    
+
     bool isEnabled(void) const { return (recorder != 0); }
 
 
   protected:
-    
+
   private:
     Async::AudioSelector  *selector;
     Async::AudioRecorder  *recorder;
     std::string           rec_dir;
     std::string           rec_timestamp;
-    
-    VoiceLogger(const VoiceLogger&);
-    VoiceLogger& operator=(const VoiceLogger&);
-    
-};  /* class VoiceLogger */
+
+    QsoRecorder(const QsoRecorder&);
+    QsoRecorder& operator=(const QsoRecorder&);
+
+};  /* class QsoRecorder */
 
 
 //} /* namespace */
 
-#endif /* VOICE_LOGGER_INCLUDED */
+#endif /* QSO_RECORDER_INCLUDED */
 
 
 

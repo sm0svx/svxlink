@@ -21,13 +21,13 @@ if {$logic_name != [namespace tail [namespace current]]} {
 
 #
 # This variable indicates if the repeater is up or not
-# 
+#
 variable repeater_is_up 0;
 
 
 #
 # Executed when the SvxLink software is started
-# 
+#
 proc startup {} {
   global logic_name;
   append func $logic_name "::checkPeriodicIdentify";
@@ -203,9 +203,9 @@ proc repeater_up {reason} {
   global mycall;
   global active_module;
   variable repeater_is_up;
-  
+
   set repeater_is_up 1;
-  
+
   if {($reason != "SQL_OPEN") && ($reason != "CTCSS_OPEN") &&
       ($reason != "SQL_RPT_REOPEN")} {
     set now [clock seconds];
@@ -237,7 +237,7 @@ proc repeater_down {reason} {
   variable repeater_is_up;
 
   set repeater_is_up 0;
-  
+
   if {$reason == "SQL_FLAP_SUP"} {
     playSilence 500;
     playMsg "Core" "interference";
@@ -254,11 +254,11 @@ proc repeater_down {reason} {
     return;
   }
   set Logic::prev_ident $now;
-    
+
   spellWord $mycall;
   playMsg "Core" "repeater";
   playSilence 250;
-  
+
   #playMsg "../extra-sounds" "shutdown";
 }
 
@@ -317,36 +317,36 @@ proc dtmf_cmd_received {cmd} {
 
 
 #
-# Executed when the voice logger is being activated
+# Executed when the QSO recorder is being activated
 #
-proc activating_voice_logger {} {
-  Logic::activating_voice_logger;
+proc activating_qso_recorder {} {
+  Logic::activating_qso_recorder;
 }
 
 
 #
-# Executed when the voice logger is being deactivated
+# Executed when the QSO recorder is being deactivated
 #
-proc deactivating_voice_logger {} {
-  Logic::deactivating_voice_logger;
+proc deactivating_qso_recorder {} {
+  Logic::deactivating_qso_recorder;
 }
 
 
 #
-# Executed when trying to deactivate the voice logger even though it's
+# Executed when trying to deactivate the QSO recorder even though it's
 # not active
 #
-proc voice_logger_not_active {} {
-  Logic::voice_logger_not_active;
+proc qso_recorder_not_active {} {
+  Logic::qso_recorder_not_active;
 }
 
 
 #
-# Executed when trying to activate the voice logger even though it's
+# Executed when trying to activate the QSO recorder even though it's
 # already active
 #
-proc voice_logger_already_active {} {
-  Logic::voice_logger_already_active;
+proc qso_recorder_already_active {} {
+  Logic::qso_recorder_already_active;
 }
 
 

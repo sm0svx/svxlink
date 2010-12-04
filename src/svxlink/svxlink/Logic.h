@@ -109,8 +109,8 @@ class MsgHandler;
 class Module;
 class EventHandler;
 class Command;
-class VoiceLogger;
-  
+class QsoRecorder;
+
 
 /****************************************************************************
  *
@@ -152,22 +152,22 @@ class Logic : public SigC::Object
      * @brief 	Default constuctor
      */
     Logic(Async::Config& cfg, const std::string& name);
-  
+
     /**
      * @brief 	Destructor
      */
     virtual ~Logic(void);
-  
+
     /**
      * @brief 	A_brief_member_function_description
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
-    
+
     virtual bool initialize(void);
-    
+
     const std::string& name(void) const { return m_name; }
-    
+
     virtual void processEvent(const std::string& event, const Module *module=0);
     void setEventVariable(const std::string& name, const std::string& value);
     virtual void playFile(const std::string& path);
@@ -188,26 +188,26 @@ class Logic : public SigC::Object
     Async::Config &cfg(void) const { return m_cfg; }
     Rx &rx(void) const { return *m_rx; }
     Tx &tx(void) const { return *m_tx; }
-    
+
     void disconnectAllLogics(void);
-    
+
     void sendDtmf(const std::string& digits);
-    
+
     void injectDtmfDigit(char digit, int duration_ms)
     {
       dtmfDigitDetectedP(digit, duration_ms);
     }
-    
+
     bool isIdle(void) const { return is_idle; }
-    
+
     void setReportEventsAsIdle(bool idle) { report_events_as_idle = idle; }
 
     bool isWritingMessage(void);
-    
+
     SigC::Signal1<void, bool> idleStateChanged;
-    
-    
-  protected:    
+
+
+  protected:
     virtual void squelchOpen(bool is_open);
     virtual void allMsgsWritten(void);
     virtual void dtmfDigitDetected(char digit, int duration);
@@ -215,23 +215,23 @@ class Logic : public SigC::Object
     virtual bool getIdleState(void) const;
     virtual void transmitterStateChange(bool is_transmitting);
     virtual void selcallSequenceDetected(std::string sequence);
-    
+
     void clearPendingSamples(void);
     void enableRgrSoundTimer(bool enable);
     void rxValveSetOpen(bool do_open);
     void rptValveSetOpen(bool do_open);
     void checkIdle(void);
-    
+
 
   private:
     static AudioSwitchMatrix  	audio_switch_matrix;
-    
+
     typedef enum
     {
       TX_CTCSS_ALWAYS=1, TX_CTCSS_SQL_OPEN=2, TX_CTCSS_LOGIC=4,
       TX_CTCSS_MODULE=8, TX_CTCSS_ANNOUNCEMENT=16
     } TxCtcssType;
-    
+
     Async::Config     	      	    &m_cfg;
     std::string       	      	    m_name;
     Rx	      	      	      	    *m_rx;
@@ -273,7 +273,7 @@ class Logic : public SigC::Object
     unsigned       	      	    long_cmd_digits;
     std::string       	      	    long_cmd_module;
     bool      	      	      	    report_events_as_idle;
-    VoiceLogger                     *voice_logger;
+    QsoRecorder                     *qso_recorder;
     uint8_t			    tx_ctcss;
     uint8_t			    tx_ctcss_mask;
     std::string                     sel5_from;
@@ -294,7 +294,7 @@ class Logic : public SigC::Object
     void updateTxCtcss(bool do_set, TxCtcssType type);
     void logicConInStreamStateChanged(bool is_active, bool is_idle);
     void audioFromModuleStreamStateChanged(bool is_active, bool is_idle);
-    
+
 };  /* class Logic */
 
 
