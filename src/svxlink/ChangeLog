@@ -182,6 +182,16 @@
 * New configuration variable DEFAULT_LANG that points out the default
   language to use.
 
+* All TCL-modules have been split into two parts, the module logic and
+  the event handlers. This has been done to make the process of
+  creating and maintaining translations easier and also to make on the
+  fly language switching easier.
+
+* The ModuleTcl API for TCL modules changed a bit so external TCL
+  modules have to be adapted to the new API. There are no big changes.
+  Just a number of functions that have changed their names. The names
+  have been changed from my_func_name to myFuncName.
+
 
 
  0.11.0 -- 26 Apr 2009

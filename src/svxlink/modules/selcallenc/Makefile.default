@@ -216,7 +216,8 @@ LDFLAGS		+=
 
 # Additional files to install
 install-extras uninstall-extras rpm-extras:
-	$(FILESPEC) SelCallEnc.tcl[644,root,root] /usr/share/svxlink/modules.d
+	$(FILESPEC) ModuleSelCallEnc.tcl[644,root,root] /usr/share/svxlink/modules.d
+	$(FILESPEC) SelCallEnc.tcl[644,root,root] /usr/share/svxlink/events.d
 	$(FILESPEC) ModuleSelCallEnc.conf[644,root,root,config] /etc/svxlink/svxlink.d
 
 

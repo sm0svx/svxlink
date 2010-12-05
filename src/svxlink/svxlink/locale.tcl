@@ -129,8 +129,8 @@ proc playNumber {number} {
 # Say the time specified by function arguments "hour" and "minute".
 #
 proc playTime {hour minute} {
-  set hour [string trimleft $hour " "];
-  set minute [string trimleft $minute " "];
+  set hour [string trimleft $hour " 0"]
+  set minute [string trimleft $minute " 0"]
   
   if {$hour < 12} {
     set ampm "AM";

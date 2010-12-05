@@ -68,6 +68,21 @@ proc playSubcommands {context basename {header ""}} {
 }
 
 
+#
+# Process the given event.
+# All TCL modules should use this function instead of calling playMsg etc
+# directly. The module code should only contain the logic, not the handling
+# of the event.
+#
+#   module - The module to process the event in
+#   ev     - The event to process
+#
+proc processEvent {module ev} {
+  append func $module "::" $ev
+  eval "$func"
+}
+
+
 ###############################################################################
 #
 # Main program

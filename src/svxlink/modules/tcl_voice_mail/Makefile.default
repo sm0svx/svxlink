@@ -217,7 +217,8 @@ LDFLAGS		+=
 # Additional files to install
 install-extras uninstall-extras rpm-extras:
 	$(DIRSPEC) /var/spool/svxlink/voice_mail[755,svxlink,daemon]
-	$(FILESPEC) TclVoiceMail.tcl[644,root,root] /usr/share/svxlink/modules.d
+	$(FILESPEC) ModuleTclVoiceMail.tcl[644,root,root] /usr/share/svxlink/modules.d
+	$(FILESPEC) TclVoiceMail.tcl[644,root,root] /usr/share/svxlink/events.d
 	$(FILESPEC) TclVoiceMail.conf[644,root,root,config] /etc/svxlink
 	$(FILESPEC) ModuleTclVoiceMail.conf[644,root,root,config] /etc/svxlink/svxlink.d
 
