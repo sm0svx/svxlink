@@ -186,10 +186,11 @@ module get activated in the middle of a QSO.
 .B EVENT_HANDLER
 Point out the TCL event handler script to use. The TCL event handler script is
 responsible for playing the correct audio clips when an event occurr.
+The default location is /usr/share/svxlink/events.tcl.
 .TP
 .B DEFAULT_LANG
 Set the default language to use for announcements. It should be set to an ISO
-code (e.g. en_US).
+code (e.g. sv_SE for Swedish). If not set, it defaults to en_US which is US English.
 .TP
 .B RGR_SOUND_DELAY
 The number of milliseconds to wait after the squelch has been closed before a roger beep
@@ -260,7 +261,7 @@ A good place is /var/spool/svxlink/qso_recorder.
 The QSO recorder is used to write all received audio to a disk file. Use this
 configuration variable to specify which command to use to activate and
 deactivate the QSO recorder. For example, if this configuration variable is
-set to 8, 81 will activate the voice logger and 80 will deactivate it.
+set to 8, 81 will activate the QSO recorder and 80 will deactivate it.
 .TP
 .B SEL5_MACRO_RANGE
 Define two comma separated values here to map the Sel5 tone call to your macro
