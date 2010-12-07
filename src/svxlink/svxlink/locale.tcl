@@ -129,8 +129,13 @@ proc playNumber {number} {
 # Say the time specified by function arguments "hour" and "minute".
 #
 proc playTime {hour minute} {
-  set hour [string trimleft $hour " 0"]
-  set minute [string trimleft $minute " 0"]
+  if {[scan $hour "%d" hour] != 1 || $hour < 0 || $hour > 23} {
+    error "playTime: Non digit hour or value out of range: $hour"
+  }
+
+  if {[scan $minute "%d" minute] != 1 || $minute < 0 || $minute > 59} {
+    error "playTime: Non digit minute or value out of range: $hour"
+  }
   
   if {$hour < 12} {
     set ampm "AM";
