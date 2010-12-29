@@ -198,6 +198,7 @@ bool NetUplink::initialize(void)
 
   fifo = new AudioFifo(16000);
   tx_selector->addSource(fifo);
+  tx_selector->selectSource(fifo);
 
   tx_selector->registerSink(tx);
   
