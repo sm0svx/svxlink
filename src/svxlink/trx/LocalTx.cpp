@@ -629,6 +629,11 @@ void LocalTx::transmit(bool do_transmit)
       sine_gen->enable(true);
     }
 
+    if (siglev_sine_gen != 0)
+    {
+      siglev_sine_gen->enable(true);
+    }
+
     if ((txtot == 0) && (tx_timeout > 0))
     {
       txtot = new Timer(tx_timeout);
