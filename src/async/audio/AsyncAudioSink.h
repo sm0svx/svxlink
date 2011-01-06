@@ -190,8 +190,8 @@ class AudioSink
     
   protected:
     /**
-     * @brief 	Tell the source that we are ready to accept more samples
-     * @param count FIXME: Document me!
+     * @brief 	Tell the source that we require more samples to proceed
+     * @param count Number of samples to be requested from a source object
      *
      */
     void sourceRequestSamples(int count);

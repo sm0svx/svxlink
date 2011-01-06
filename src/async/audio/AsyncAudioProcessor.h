@@ -182,7 +182,6 @@ class AudioProcessor : public SigC::Object, public AudioSink, public AudioSource
     SigCAudioSource sink;
     int       	    input_rate;
     int       	    output_rate;
-    bool            is_flushing;
     
     AudioProcessor(const AudioProcessor&);
     AudioProcessor& operator=(const AudioProcessor&);

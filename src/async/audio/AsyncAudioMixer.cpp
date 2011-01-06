@@ -42,7 +42,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -82,73 +81,48 @@ using namespace Async;
  *
  ****************************************************************************/
 
-class Async::AudioMixer::MixerSrc : public AudioSink
+class Async::AudioMixer::MixerSrc : public AudioReader
 {
   public:
     MixerSrc(AudioMixer *mixer)
-      : fifo(64), mixer(mixer), is_flushed(true), do_flush(false)
+      : mixer(mixer), is_active(false), is_flushing(false)
     {
-      AudioSink::setHandler(&fifo);
-      fifo.registerSink(&reader);
     }
     
     int writeSamples(const float *samples, int count)
     {
       //printf("Async::AudioMixer::MixerSrc::writeSamples: count=%d\n", count);
-      is_flushed = false;
-      do_flush = false;
-      int ret = fifo.writeSamples(samples, count);
-      mixer->setAudioAvailable();
-      return ret;
+      is_active = true;
+      is_flushing = false;
+      if (isReading())
+      {
+        return AudioReader::writeSamples(samples, count);
+      }
+      return mixer->writeSamples(this, samples, count);
     }
     
     void flushSamples(void)
     {
       //printf("Async::AudioMixer::MixerSrc::flushSamples\n");
-      if (is_flushed && !do_flush && fifo.empty())
-      {
-        fifo.flushSamples();
-      }
-      
-      is_flushed = true;
-      do_flush = true;
-      if (fifo.empty())
-      {
-        mixer->flushSamples();
-      }
+      is_active = false;
+      is_flushing = true;
     }
-    
-    bool isActive(void) const { return !is_flushed || !fifo.empty(); }
-    
-    void mixerFlushedAllSamples(void)
+
+    void allSamplesFlushed(void)
     {
-      //printf("Async::AudioMixer::MixerSrc::mixerFlushedAllSamples\n");
-      if (do_flush)
-      {
-        do_flush = false;
-        //printf("\tFlushing FIFO\n");
-        fifo.flushSamples();
-      }
+      is_flushing = false;
+      sourceAllSamplesFlushed();
     }
     
-    bool isFlushing(void) const { return do_flush; }
-    
-    int readSamples(float *samples, int count)
-    {
-      return reader.readSamples(samples, count);
-    }
-    
-    unsigned samplesInFifo(void) const { return fifo.samplesInFifo(); }
+    bool isActive(void) const { return is_active; }
+    bool isFlushing(void) const { return is_flushing; }
     
   private:
-    AudioFifo 	fifo;
-    AudioReader reader;
     AudioMixer  *mixer;
-    bool        is_flushed;
-    bool        do_flush;
+    bool        is_active;
+    bool        is_flushing;
     
 }; /* class Async::AudioMixer::MixerSrc */
-
 
 
 
@@ -168,7 +142,6 @@ class Async::AudioMixer::MixerSrc : public AudioSink
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -184,7 +157,7 @@ class Async::AudioMixer::MixerSrc : public AudioSink
  ****************************************************************************/
 
 AudioMixer::AudioMixer(void)
-  : fifo(64), is_flushing(false), is_requesting(false)
+  : fifo(64), is_flushing(false)
 {
   AudioSource::setHandler(&fifo);
   sink.registerSink(&fifo);
@@ -220,11 +193,10 @@ void AudioMixer::addSource(AudioSource *source)
 
 void AudioMixer::onRequestSamples(int count)
 {
-  is_requesting = true;
-
   float buf[count];
   memset(buf, 0, count * sizeof(float));
 
+  // First pass: Read samples from the active sources and mix them
   list<MixerSrc *>::const_iterator it;
   for (it = sources.begin(); it != sources.end(); ++it)
   {
@@ -233,10 +205,6 @@ void AudioMixer::onRequestSamples(int count)
     {
       float tmp[count];
       int samples_read = mix_src->readSamples(tmp, count);
-      /* if (samples_read < count)
-      {
-        printf("underrun: %d %d\n", samples_read, count);
-      } */
       for (int i=0; i<samples_read; ++i)
       {
         buf[i] += tmp[i];
@@ -244,12 +212,11 @@ void AudioMixer::onRequestSamples(int count)
     }
   }
 
-  is_requesting = false;
-  
-  if (!is_flushing)
-  {
-    assert(sink.writeSamples(buf, count) == count);
-  }
+  // Write samples into the sink
+  assert(sink.writeSamples(buf, count) == count);
+
+  // Second pass: Check for flushing sources
+  checkFlushSamples();
   
 } /* AudioMixer::requestSamples */
 
@@ -258,11 +225,7 @@ void AudioMixer::onAllSamplesFlushed(void)
 {
   //printf("AudioMixer::allSamplesFlushed\n");
   is_flushing = false;
-  list<MixerSrc *>::const_iterator it;
-  for (it = sources.begin(); it != sources.end(); ++it)
-  {
-    (*it)->mixerFlushedAllSamples();
-  }
+
 } /* AudioMixer::allSamplesFlushed */
 
 
@@ -274,50 +237,73 @@ void AudioMixer::onAllSamplesFlushed(void)
  ****************************************************************************/
 
 
-void AudioMixer::setAudioAvailable(void)
+int AudioMixer::writeSamples(MixerSrc *src, const float *samples, int count)
 {
-  if (is_requesting) return;
+  int ret = 0;
   is_flushing = false;
-  
-  unsigned len = 0;
-  
+
+  // First pass: Mix the incoming sample block with the other active sources 
+  int len = min((int)fifo.spaceAvail(), count);
+  while (len > 0)
+  {
+    float buf[len];
+    memcpy(buf, samples, len * sizeof(float));
+
+    list<MixerSrc *>::const_iterator it;
+    for (it = sources.begin(); it != sources.end(); ++it)
+    {
+      MixerSrc *mix_src = *it;
+      if ((mix_src != src) && mix_src->isActive())
+      {
+        float tmp[len];
+        int samples_read = mix_src->readSamples(tmp, len);
+        for (int i=0; i<samples_read; ++i)
+        {
+          buf[i] += tmp[i];
+        }
+      }
+    }
+
+    assert(sink.writeSamples(buf, len) == len);
+
+    count -= len;
+    samples += len;
+    ret += len;
+
+    len = min((int)fifo.spaceAvail(), count);
+  }
+
+  // Second pass: Check for flushing sources
+  checkFlushSamples();
+
+  return ret;
+} /* AudioMixer::writeSamples */
+
+
+void AudioMixer::checkFlushSamples(void)
+{
   list<MixerSrc *>::const_iterator it;
   for (it = sources.begin(); it != sources.end(); ++it)
   {
     MixerSrc *mix_src = *it;
-    if (mix_src->isActive())
+    if (mix_src->isFlushing())
     {
-      len = max(len, mix_src->samplesInFifo());
+      mix_src->allSamplesFlushed();
     }
   }
-
-  onRequestSamples(min(len, fifo.spaceAvail()));
-
-} /* AudioMixer::setAudioAvailable */
-
-
-void AudioMixer::flushSamples(void)
-{
-  //printf("AudioMixer::flushSamples\n");
-  if (is_flushing)
-  {
-    return;
-  }
-  
-  list<MixerSrc *>::const_iterator it;
   for (it = sources.begin(); it != sources.end(); ++it)
   {
-    if ((*it)->isActive() && !(*it)->isFlushing())
-    {
-      return;
-    }
+    if ((*it)->isActive()) return;
   }
-  
-  //printf("AudioMixer::checkFlush: Flushing!\n");
-  is_flushing = true;
-  sink.flushSamples();
 
-} /* AudioMixer::flushSamples */
+  if (!is_flushing)
+  {  
+    //printf("AudioMixer::checkFlushSamples: Flushing!\n");
+    is_flushing = true;
+    sink.flushSamples();
+  }
+
+} /* AudioMixer::checkFlushSamples */
 
 
 /*

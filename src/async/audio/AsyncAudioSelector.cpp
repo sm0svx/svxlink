@@ -41,7 +41,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioPassthrough.h>
+#include <AsyncAudioSource.h>
+#include <AsyncAudioSink.h>
 
 
 /****************************************************************************
@@ -79,11 +80,11 @@ using namespace Async;
  *
  ****************************************************************************/
 
-class Async::AudioSelector::Branch : public AudioPassthrough
+class Async::AudioSelector::Branch : public AudioSink, public AudioSource
 {
   public:
     Branch(AudioSelector *selector, AudioSource *source)
-      : selector(selector), auto_select(false), prio(0)
+      : selector(selector), is_active(false), auto_select(false), prio(0)
     {
       if (source != 0)
       {
@@ -127,6 +128,7 @@ class Async::AudioSelector::Branch : public AudioPassthrough
     
     virtual int writeSamples(const float *samples, int count)
     {
+      is_active = true;
       if (auto_select && !isSelected())
       {
 	Branch *selected_branch = dynamic_cast<Branch *>(selector->handler());
@@ -136,21 +138,37 @@ class Async::AudioSelector::Branch : public AudioPassthrough
 	  selector->selectBranch(this);
 	}
       }
-      return AudioPassthrough::writeSamples(samples, count);
+      return sinkWriteSamples(samples, count);
     }    
+
+    virtual void requestSamples(int count)
+    {
+      if (is_active)
+      {
+        sourceRequestSamples(count);
+      }
+    }
+
+    virtual void flushSamples(void)
+    {
+      is_active = false;
+      sinkFlushSamples();
+    }
 
     virtual void allSamplesFlushed(void)
     {
+      is_active = false;
       if (auto_select && isSelected())
       {
       	selector->selectBranch(0);
       }
-      AudioPassthrough::allSamplesFlushed();
+      sourceAllSamplesFlushed();
     }
     
   
   private:
     AudioSelector *selector;
+    bool is_active;
     bool auto_select;
     int prio;
     
@@ -216,10 +234,10 @@ AudioSelector::~AudioSelector(void)
 {
   //selectSource(0);
   clearHandler();
-  BranchMap::iterator it;
+  BranchMap::const_iterator it;
   for (it = branch_map.begin(); it != branch_map.end(); ++it)
   {
-    delete (*it).second;
+    delete it->second;
   }
   delete null_branch;
 } /* AudioSelector::~AudioSelector */
@@ -300,6 +318,15 @@ void AudioSelector::selectSource(AudioSource *source)
   
 } /* AudioSelector::selectSource */
 
+
+void AudioSelector::requestSamples(int count)
+{
+  BranchMap::const_iterator it;
+  for (it = branch_map.begin(); it != branch_map.end(); ++it)
+  {
+    it->second->requestSamples(count);
+  }
+} /* AudioSelector::requestSamples */
 
 
 /****************************************************************************

@@ -225,6 +225,7 @@ class AudioJitterFifo : public AudioSink, public AudioSource
     struct timeval output_start;
     
     void writeSamplesFromFifo(int count);
+    void flushSamplesFromFifo(void);
 
 };  /* class AudioJitterFifo */
 

@@ -123,6 +123,12 @@ class AudioSelector : public AudioSource
      * @brief 	Destructor
      */
     ~AudioSelector(void);
+
+    /**
+     * @brief 	Request audio samples from this source
+     * @param 	count Number of samples requested by a connected sink
+     */
+    virtual void requestSamples(int count);
   
     /**
      * @brief 	Add an audio source to the selector

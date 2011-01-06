@@ -161,6 +161,11 @@ class AudioReader : public AudioSink
      */
     virtual void flushSamples(void);
     
+    /**
+     * @brief 	Check if the reader is currently requesting samples
+     */
+    bool isReading() const { return (buf != 0); }
+                      
   protected:
     
   private:

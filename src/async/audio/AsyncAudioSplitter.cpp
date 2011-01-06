@@ -295,8 +295,8 @@ int AudioSplitter::writeSamples(const float *samples, int count)
 {
   is_flushing = false;
  
-  int enabled = 0;
-  int empty = 0;
+  bool enabled = false;
+  bool empty = false;
   int len = count;
 
   list<Branch *>::const_iterator it;
@@ -309,18 +309,18 @@ int AudioSplitter::writeSamples(const float *samples, int count)
     Branch *branch = *it;
     if (branch->enabled())
     {
-      enabled++;
-      empty += branch->empty() ? 1 : 0;
+      enabled |= true;
+      empty |= branch->empty();
       len = min(len, branch->spaceAvail());
     }
   }
 
-  if (enabled == 0)
+  if (!enabled)
   {
     return count;
   }
 
-  if ((empty == 0) || (len == 0))
+  if ((!empty) || (len == 0))
   {
     return 0;
   }

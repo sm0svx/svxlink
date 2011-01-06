@@ -160,13 +160,12 @@ class AudioMixer : public SigC::Object, public Async::AudioSource
     AudioFifo             fifo;
     SigCAudioSource       sink;
     bool      	          is_flushing;
-    bool                  is_requesting;
     
     AudioMixer(const AudioMixer&);
     AudioMixer& operator=(const AudioMixer&);
     
-    void setAudioAvailable(void);
-    void flushSamples(void);
+    int writeSamples(MixerSrc *src, const float *samples, int count);
+    void checkFlushSamples(void);
     
     friend class MixerSrc;
     

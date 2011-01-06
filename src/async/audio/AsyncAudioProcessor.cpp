@@ -114,7 +114,7 @@ using namespace Async;
  ****************************************************************************/
 
 AudioProcessor::AudioProcessor(void)
-  : fifo(64), input_rate(1), output_rate(1), is_flushing(false)
+  : fifo(64), input_rate(1), output_rate(1)
 {
   AudioSource::setHandler(&fifo);
   sink.registerSink(&fifo);
@@ -132,8 +132,6 @@ AudioProcessor::~AudioProcessor(void)
 int AudioProcessor::writeSamples(const float *samples, int count)
 {
   //cout << "AudioProcessor::writeSamples: len=" << count << endl;
-  is_flushing = false;
-
   int written = 0;
   int space = fifo.spaceAvail();
   int len = min(space * input_rate / output_rate, count);
@@ -159,37 +157,23 @@ int AudioProcessor::writeSamples(const float *samples, int count)
 void AudioProcessor::flushSamples(void)
 {
   //cout << "AudioProcessor::flushSamples" << endl;
-  is_flushing = true;
-  if (fifo.empty())
-  {
-    fifo.flushSamples();
-  }
+  fifo.flushSamples();
 } /* AudioProcessor::flushSamples */
 
 
 void AudioProcessor::onRequestSamples(int count)
 {
   //cout << "AudioProcessor::requestSamples: count=" << count << endl;
-  if (is_flushing)
-  {
-    if (fifo.empty())
-    {
-      fifo.flushSamples();
-    }
-    return;
-  }
 
   // Note: We request input samples at input sample rate here.
   div_t ratio = div(count * input_rate, output_rate);
   sourceRequestSamples(ratio.rem ? ratio.quot + 1 : ratio.quot);
-
 } /* AudioProcessor::requestSamples */
 
 
 void AudioProcessor::onAllSamplesFlushed(void)
 {
   //cout << "AudioProcessor::allSamplesFlushed" << endl;
-  is_flushing = false;
   sourceAllSamplesFlushed();
 } /* AudioProcessor::allSamplesFlushed */
 

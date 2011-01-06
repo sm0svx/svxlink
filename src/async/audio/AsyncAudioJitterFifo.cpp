@@ -231,6 +231,10 @@ void AudioJitterFifo::flushSamples(void)
   {
     sinkFlushSamples();
   }
+  else
+  {
+    flushSamplesFromFifo();
+  }
 } /* AudioJitterFifo::flushSamples */
 
 
@@ -309,6 +313,34 @@ void AudioJitterFifo::writeSamplesFromFifo(int count)
   
 } /* writeSamplesFromFifo */
 
+
+void AudioJitterFifo::flushSamplesFromFifo(void)
+{
+  unsigned samples_from_fifo = samplesInFifo();
+
+  //cerr << "samples_from_fifo=" << samples_from_fifo << endl;
+
+  while (samples_from_fifo > 0)
+  {
+    unsigned to_end_of_fifo = min(samples_from_fifo, fifo_size - tail);
+    unsigned ret = sinkWriteSamples(fifo + tail, to_end_of_fifo);
+    
+    tail += ret;
+    tail %= fifo_size;
+    samples_from_fifo -= ret;
+
+    if (ret < to_end_of_fifo)
+    {
+      break;
+    }
+  }
+
+  if (is_flushing && empty())
+  {
+    sinkFlushSamples();
+  }
+
+} /* flushSamplesFromFifo */
 
 /*
  * This file has not been truncated

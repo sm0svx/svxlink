@@ -179,7 +179,7 @@ class AudioSource
     
     /**
      * @brief Request audio samples from this source
-     * @param count FIXME: Document me!
+     * @param count Number of samples requested by a connected sink
      *
      * This function must be reimplemented by the inheriting class. It
      * will be called when the registered audio sink is ready to accept
