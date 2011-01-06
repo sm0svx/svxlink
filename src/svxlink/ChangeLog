@@ -192,6 +192,9 @@
   Just a number of functions that have changed their names. The names
   have been changed from my_func_name to myFuncName.
 
+* Bugfix in ModuleEchoLink: SvxLink would crash if no stations were
+  found when using the random connect feature.
+
 
 
  0.11.0 -- 26 Apr 2009
