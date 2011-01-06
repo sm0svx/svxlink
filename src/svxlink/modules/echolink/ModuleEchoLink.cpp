@@ -1513,14 +1513,22 @@ void ModuleEchoLink::handleCommand(const string& cmd)
     }
 
     double count = nodes.size();
-    srand(time(NULL));
-    size_t random_idx = (size_t)(count * ((double)rand() / (1.0 + RAND_MAX)));
-    StationData station = nodes[random_idx];
-    
-    cout << "Creating random connection to node:\n";
-    cout << station << endl;
-    
-    createOutgoingConnection(station);
+    if (count > 0)
+    {
+      srand(time(NULL));
+      size_t random_idx = (size_t)(count * ((double)rand() / (1.0 + RAND_MAX)));
+      StationData station = nodes[random_idx];
+      
+      cout << "Creating random connection to node:\n";
+      cout << station << endl;
+      
+      createOutgoingConnection(station);
+    }
+    else
+    {
+      commandFailed(cmd);
+      return;
+    }
   }
   else if (cmd[0] == '4')   // Reconnect to the last disconnected station
   {

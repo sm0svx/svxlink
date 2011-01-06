@@ -1,12 +1,12 @@
 /**
 @file	 SquelchVox.h
-@brief   Implementes a VOX squelch
+@brief   Implementes a voice activated squelch
 @author  Tobias Blomberg
 @date	 2004-02-15
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -104,7 +104,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief	Implements a VOX squelch
+@brief	Implements an audio level triggered squelch
 @author Tobias Blomberg
 @date   2004-02-15
 */
@@ -115,12 +115,12 @@ class SquelchVox : public Squelch
      * @brief 	Default constuctor
      */
     explicit SquelchVox(void);
-  
+
     /**
      * @brief 	Destructor
      */
     ~SquelchVox(void);
-    
+
     /**
      * @brief 	Initialize the VOX
      * @param 	cfg A previously initialize config object
@@ -128,13 +128,13 @@ class SquelchVox : public Squelch
      * @return	Returns \em true on success or else \em false
      */
     bool initialize(Async::Config& cfg, const std::string& rx_name);
-  
+
     /**
      * @brief 	Set the VOX threshold
-     * @param 	limit The limit to set
+     * @param 	thresh The threshold to set
      */
-    void setVoxLimit(short limit);
-    
+    void setVoxThreshold(short thresh);
+
     /**
      * @brief 	Reset the squelch detector
      *
@@ -143,18 +143,17 @@ class SquelchVox : public Squelch
      */
     virtual void reset(void);
 
-    
   protected:
     int processSamples(const float *samples, int count);
-    
+
   private:
     float   *buf;
     int     buf_size;
     int     head;
     double  sum;
-    double  up_limit;
-    double  down_limit;
-    
+    double  up_thresh;
+    double  down_thresh;
+
 };  /* class SquelchVox */
 
 

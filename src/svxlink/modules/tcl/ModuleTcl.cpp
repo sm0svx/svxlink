@@ -1,12 +1,12 @@
 /**
 @file	 ModuleTcl.cpp
-@brief   A_brief_description_of_this_module
+@brief   A module implementing an API so that modules can be written in TCL
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-08-28
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004  Tobias Blomberg
+Copyright (C) 2004-2010 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -205,7 +205,7 @@ void ModuleTcl::flushSamples(void)
  */
 void ModuleTcl::activateInit(void)
 {
-
+  processEvent("activateInit");
 } /* activateInit */
 
 
@@ -224,7 +224,7 @@ void ModuleTcl::activateInit(void)
  */
 void ModuleTcl::deactivateCleanup(void)
 {
-  
+  processEvent("deactivateCleanup");
 } /* deactivateCleanup */
 
 
@@ -244,13 +244,10 @@ void ModuleTcl::deactivateCleanup(void)
  */
 bool ModuleTcl::dtmfDigitReceived(char digit, int duration)
 {
-  //cout << "DTMF digit received in module " << name() << ": " << digit << endl;
   stringstream ss;
-  ss << "dtmf_digit_received " << digit << " " << duration;
+  ss << "dtmfDigitReceived " << digit << " " << duration;
   processEvent(ss.str());
-  
   return false;
-  
 } /* dtmfDigitReceived */
 
 
@@ -271,10 +268,8 @@ bool ModuleTcl::dtmfDigitReceived(char digit, int duration)
  */
 void ModuleTcl::dtmfCmdReceived(const string& cmd)
 {
-  //cout << "DTMF command received in module " << name() << ": " << cmd << endl;
-  
   stringstream ss;
-  ss << "dtmf_cmd_received \"" << cmd << "\"";
+  ss << "dtmfCmdReceived \"" << cmd << "\"";
   processEvent(ss.str());
 } /* dtmfCmdReceived */
 
@@ -301,10 +296,8 @@ void ModuleTcl::dtmfCmdReceived(const string& cmd)
  */
 void ModuleTcl::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
-  //cout << "DTMF command received in inactive module " << name() << ": " << cmd << endl;
-  
   stringstream ss;
-  ss << "dtmf_cmd_received_when_idle \"" << cmd << "\"";
+  ss << "dtmfCmdReceivedWhenIdle \"" << cmd << "\"";
   processEvent(ss.str());
 } /* dtmfCmdReceivedWhenIdle  */
 
@@ -325,9 +318,8 @@ void ModuleTcl::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 void ModuleTcl::squelchOpen(bool is_open)
 {
   stringstream ss;
-  ss << "squelch_open " << (is_open ? 1 : 0);
+  ss << "squelchOpen " << (is_open ? 1 : 0);
   processEvent(ss.str());
-  //setIdle(!is_open);
 } /* squelchOpen */
 
 
@@ -347,30 +339,8 @@ void ModuleTcl::squelchOpen(bool is_open)
  */
 void ModuleTcl::allMsgsWritten(void)
 {
-  processEvent("all_msgs_written");
+  processEvent("allMsgsWritten");
 } /* allMsgsWritten */
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    reportState
- * Purpose:   This function is called by the logic core when it wishes the
- *    	      module to report its state on the radio channel. Typically this
- *    	      is done when a manual identification has been triggered by the
- *    	      user by sending a "*".
- *    	      This function will only be called if this module is active.
- * Input:     None
- * Output:    None
- * Author:    Tobias Blomberg / SM0SVX
- * Created:   2005-08-28
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-void ModuleTcl::reportState(void)
-{
-  //processEvent("report_state");
-} /* reportState */
 
 
 

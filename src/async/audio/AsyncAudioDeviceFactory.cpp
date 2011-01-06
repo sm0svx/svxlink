@@ -144,7 +144,7 @@ AudioDevice *AudioDeviceFactory::create(const std::string &name,
   {
     return 0;
   }
-  return (*it).second(dev_name);
+  return it->second(dev_name);
 } /* AudioDeviceFactory::create */
 
 
@@ -158,7 +158,7 @@ std::string AudioDeviceFactory::validDevTypes(void) const
     {
       type_list += " ";
     }
-    type_list += (*it).first;
+    type_list += it->first;
   }
   return type_list;
 } /* AudioDeviceFactory::validDevTypes */

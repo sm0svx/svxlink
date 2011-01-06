@@ -1,14 +1,12 @@
 /**
 @file	 SquelchVox.cpp
-@brief   A_brief_description_for_this_file
+@brief   Implementes a voice activated squelch
 @author  Tobias Blomberg
 @date	 2004-02-15
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003  Tobias Blomberg
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -117,20 +115,8 @@ using namespace Async;
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
 SquelchVox::SquelchVox(void)
-  : buf(0), buf_size(0), head(0), sum(0), up_limit(0), down_limit(0)
+  : buf(0), buf_size(0), head(0), sum(0), up_thresh(0), down_thresh(0)
 {
 } /* SquelchVox::SquelchVox */
 
@@ -148,7 +134,7 @@ bool SquelchVox::initialize(Config& cfg, const string& rx_name)
   {
     return false;
   }
-  
+
   string value;
   if (!cfg.getValue(rx_name, "VOX_FILTER_DEPTH", value))
   {
@@ -163,12 +149,22 @@ bool SquelchVox::initialize(Config& cfg, const string& rx_name)
     buf[i] = 0;
   }
 
-  if (!cfg.getValue(rx_name, "VOX_LIMIT", value))
+  short vox_thresh;
+  if (!cfg.getValue(rx_name, "VOX_THRESH", vox_thresh))
   {
-    cerr << "*** ERROR: Config variable " << rx_name << "/VOX_LIMIT not set\n";
-    return false;
+    if (cfg.getValue(rx_name, "VOX_LIMIT", vox_thresh))
+    {
+      cerr << "*** WARNING: Configuration variable " << rx_name
+	   << "/VOX_LIMIT is deprecated. Use VOX_THRESH instead.\n";
+    }
+    else
+    {
+      cerr << "*** ERROR: Config variable " << rx_name
+	   << "/VOX_THRESH not set\n";
+      return false;
+    }
   }
-  setVoxLimit(atoi(value.c_str()));
+  setVoxThreshold(vox_thresh);
 
   if (cfg.getValue(rx_name, "VOX_START_DELAY", value))
   {
@@ -178,15 +174,15 @@ bool SquelchVox::initialize(Config& cfg, const string& rx_name)
   }
 
   return true;
-  
+
 } /* SquelchVox::initialize */
 
 
-void SquelchVox::setVoxLimit(short limit)
+void SquelchVox::setVoxThreshold(short thresh)
 {
-  up_limit = pow(limit / 10000.0, 2) * buf_size;
-  down_limit = pow(limit / 10000.0, 2) * buf_size;
-} /* SquelchVox::setVoxLimit */
+  up_thresh = pow(thresh / 10000.0, 2) * buf_size;
+  down_thresh = pow(thresh / 10000.0, 2) * buf_size;
+} /* SquelchVox::setVoxThreshold */
 
 
 void SquelchVox::reset(void)
@@ -208,47 +204,34 @@ void SquelchVox::reset(void)
  *
  ****************************************************************************/
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
 int SquelchVox::processSamples(const float *samples, int count)
 {
-  for (int i=0; i<count; ++i)
+  int start_pos = 0;
+  if (buf_size < count)
+  {
+    start_pos = count - buf_size;
+  }
+
+  for (int i=start_pos; i<count; ++i)
   {
     sum -= buf[head];
     buf[head] = samples[i] * samples[i];
     sum += buf[head];
     head = (head >= buf_size-1) ? 0 : head + 1;
-    if (sum >= up_limit)
-    {
-      //printf("sum=%f\n", sum);
-      setOpen(true);
-    }
-    else if (isOpen() && (sum < down_limit))
-    {
-      setOpen(false);
-    }
   }
 
-  //printf("sum=%f\n", 10000 * sqrt(sum / buf_size));
-  
+  if (signalDetected())
+  {
+    setSignalDetected(sum >= up_thresh);
+  }
+  else
+  {
+    setSignalDetected(sum >= down_thresh);
+  }
+
   return count;
-  
+
 } /* SquelchVox::processSamples */
-
-
-
-
-
 
 
 
@@ -259,26 +242,7 @@ int SquelchVox::processSamples(const float *samples, int count)
  ****************************************************************************/
 
 
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-
-
-
-
-
-
 
 /*
  * This file has not been truncated
  */
-

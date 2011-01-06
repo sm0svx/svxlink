@@ -371,8 +371,7 @@ int main(int argc, char **argv)
     cfg_filename += "/.svxlink/remotetrx.conf";
     if (!cfg.open(cfg_filename))
     {
-      cfg_filename = string(home_dir);
-      cfg_filename += "/.remotetrxrc";
+      cfg_filename = "/etc/svxlink/remotetrx.conf";
       if (!cfg.open(cfg_filename))
       {
 	cfg_filename = "/etc/remotetrx.conf";
@@ -380,7 +379,7 @@ int main(int argc, char **argv)
 	{
 	  cerr << "*** ERROR: Could not open configuration file. Tried:\n"
       	       << "\t" << home_dir << "/.svxlink/remotetrx.conf\n"
-      	       << "\t" << home_dir << "/.remotetrxrc\n"
+      	       << "\t/etc/svxlink/remotetrx.conf\n"
 	       << "\t/etc/remotetrx.conf\n"
 	       << "Possible reasons for failure are: None of the files exist,\n"
 	       << "you do not have permission to read the file or there was a\n"

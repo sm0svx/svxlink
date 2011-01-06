@@ -377,29 +377,6 @@ int AudioIO::readSamples(float *samples, int count)
     }
   }
   
-  /*
-  if (do_flush)
-  {
-    if (write_fifo->samplesInFifo() < 100)
-    {
-      int samples_left = write_fifo->samplesInFifo() + samples_read;
-      int pos = max(0, 100 - samples_left);
-      int start_pos = max(0, samples_left - 100);
-      for (int i=start_pos; i<samples_read; i++)
-      {
-      	float fade_gain = pow(2, (100.0 - pos - (i - start_pos)) / 10.0)
-	      	      / pow(2, 10.0);
-      	samples[i] = fade_gain * samples[i];
-      }
-    }
-  }
-  
-  if (write_fifo->empty() && do_flush)
-  {
-    flushSamplesInDevice(samples_read);
-  }
-  */
-  
   return samples_read;
   
 } /* AudioIO::readSamples */

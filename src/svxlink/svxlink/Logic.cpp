@@ -84,7 +84,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "MsgHandler.h"
 #include "LogicCmds.h"
 #include "Logic.h"
-#include "VoiceLogger.h"
+#include "QsoRecorder.h"
 
 
 /****************************************************************************
@@ -213,7 +213,7 @@ Logic::Logic(Config &cfg, const string& name)
     audio_to_module_selector(0),    state_det(0),
     is_idle(true),                  fx_gain_normal(0),
     fx_gain_low(-12), 	      	    long_cmd_digits(100),
-    report_events_as_idle(false),   voice_logger(0),
+    report_events_as_idle(false),   qso_recorder(0),
     tx_ctcss(TX_CTCSS_ALWAYS), 	    tx_ctcss_mask(0)
 {
   logic_con_in = new AudioSplitter;
@@ -237,7 +237,7 @@ bool Logic::initialize(void)
     LinkCmd *link_cmd = new LinkCmd(&cmd_parser, this);
     link_cmd->initialize(cfg(), value);
   }
-  
+
   string event_handler_str;
   if (!cfg().getValue(name(), "EVENT_HANDLER", event_handler_str))
   {
@@ -254,7 +254,7 @@ bool Logic::initialize(void)
     cleanup();
     return false;
   }
-  
+
   string tx_name;
   if (!cfg().getValue(name(), "TX", tx_name))
   {
@@ -262,29 +262,29 @@ bool Logic::initialize(void)
     cleanup();
     return false;
   }
-  
+
   if (!cfg().getValue(name(), "CALLSIGN", m_callsign))
   {
     cerr << "*** ERROR: Config variable " << name() << "/CALLSIGN not set\n";
     cleanup();
     return false;
   }
-  
+
   if (cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", value))
   {
     exec_cmd_on_sql_close = atoi(value.c_str());
   }
-  
+
   if (cfg().getValue(name(), "RGR_SOUND_DELAY", value))
   {
     rgr_sound_delay = atoi(value.c_str());
   }
-  
+
   if (cfg().getValue(name(), "REPORT_CTCSS", value))
   {
     report_ctcss = atof(value.c_str());
   }
-  
+
   if (cfg().getValue(name(), "ACTIVATE_MODULE_ON_LONG_CMD", value))
   {
     string::iterator colon = find(value.begin(), value.end(), ':');
@@ -302,7 +302,7 @@ bool Logic::initialize(void)
     long_cmd_digits = atoi(digits.c_str());
     long_cmd_module = module;
   }
-  
+
   string macro_section;
   if (cfg().getValue(name(), "MACROS", macro_section))
   {
@@ -314,7 +314,7 @@ bool Logic::initialize(void)
       macros[atoi(mlit->c_str())] = value;
     }
   }
-  
+
   string sel5_macros;
   if (cfg().getValue(name(), "SEL5_MACRO_RANGE", sel5_macros))
   {
@@ -374,14 +374,14 @@ bool Logic::initialize(void)
   {
     fx_gain_normal = atoi(value.c_str());
   }
-  
+
   if (cfg().getValue(name(), "FX_GAIN_LOW", value))
   {
     fx_gain_low = atoi(value.c_str());
   }
-  
+
   AudioSource *prev_rx_src = 0;
-  
+
     // Create the RX object
   m_rx = RxFactory::createNamedRx(cfg(), rx_name);
   if ((m_rx == 0) || !rx().initialize())
@@ -398,18 +398,18 @@ bool Logic::initialize(void)
 	slot(*this, &Logic::selcallSequenceDetected));
   rx().mute(false);
   prev_rx_src = m_rx;
-  
+
     // This valve is used to turn RX audio on/off into the logic core
   rx_valve = new AudioValve;
   rx_valve->setOpen(false);
   prev_rx_src->registerSink(rx_valve, true);
   prev_rx_src = rx_valve;
-  
+
     // Split the RX audio stream to multiple sinks
   rx_splitter = new AudioSplitter;
   prev_rx_src->registerSink(rx_splitter, true);
   prev_rx_src = 0;
-  
+
     // Create a selector for audio to the module
   audio_to_module_selector = new AudioSelector;
 
@@ -418,17 +418,17 @@ bool Logic::initialize(void)
   rx_splitter->addSink(passthrough, true);
   audio_to_module_selector->addSource(passthrough);
   audio_to_module_selector->enableAutoSelect(passthrough, 10);
-    
+
     // Connect inter logic audio input to the modules
   passthrough = new AudioPassthrough;
   logic_con_in->addSink(passthrough, true);
   audio_to_module_selector->addSource(passthrough);
-  audio_to_module_selector->enableAutoSelect(passthrough, 0);  
+  audio_to_module_selector->enableAutoSelect(passthrough, 0);
 
     // Split audio to all modules
   audio_to_module_splitter = new AudioSplitter;
   audio_to_module_selector->registerSink(audio_to_module_splitter, true);
-  
+
     // Connect RX audio to inter logic audio output
   passthrough = new AudioPassthrough;
   rx_splitter->addSink(passthrough, true);
@@ -449,11 +449,11 @@ bool Logic::initialize(void)
     // This selector is used to select audio source for TX audio
   tx_audio_selector = new AudioSelector;
   AudioSource *prev_tx_src = tx_audio_selector;
-  
+
     // Connect the direct RX to TX audio valve to the TX audio selector
   tx_audio_selector->addSource(rpt_valve);
   tx_audio_selector->enableAutoSelect(rpt_valve, 20);
-  
+
     // Connect incoming intra logic audio to the TX audio selector
     // through a stream state detector
   AudioStreamStateDetector *logic_con_in_idle_det =
@@ -463,7 +463,7 @@ bool Logic::initialize(void)
   logic_con_in->addSink(logic_con_in_idle_det, true);
   tx_audio_selector->addSource(logic_con_in_idle_det);
   tx_audio_selector->enableAutoSelect(logic_con_in_idle_det, 10);
-  
+
     // Create a selector and a splitter to handle audio from modules
   audio_from_module_selector = new AudioSelector;
   AudioSplitter *audio_from_module_splitter = new AudioSplitter;
@@ -478,47 +478,47 @@ bool Logic::initialize(void)
   audio_from_module_splitter->addSink(audio_from_module_idle_det, true);
   tx_audio_selector->addSource(audio_from_module_idle_det);
   tx_audio_selector->enableAutoSelect(audio_from_module_idle_det, 0);
-  
+
     // Connect audio from modules to the inter logic audio output
   passthrough = new AudioPassthrough;
   audio_from_module_splitter->addSink(passthrough, true);
   logic_con_out->addSource(passthrough);
   logic_con_out->enableAutoSelect(passthrough, 0);
-  
-  if (cfg().getValue(name(), "VOICELOGGER_DIR", value) && !value.empty())
+
+  if (cfg().getValue(name(), "QSO_RECORDER_DIR", value) && !value.empty())
   {
-      // Create the voice logger
-    voice_logger = new VoiceLogger(value);
-    if (cfg().getValue(name(), "VOICELOGGER_CMD", value))
+      // Create the qso recorder
+    qso_recorder = new QsoRecorder(value);
+    if (cfg().getValue(name(), "QSO_RECORDER_CMD", value))
     {
-      VoiceLoggerCmd *voice_logger_cmd =
-          new VoiceLoggerCmd(&cmd_parser, this, voice_logger);
-      voice_logger_cmd->initialize(value);
+      QsoRecorderCmd *qso_recorder_cmd =
+          new QsoRecorderCmd(&cmd_parser, this, qso_recorder);
+      qso_recorder_cmd->initialize(value);
     }
-    
-      // Connect RX audio and link audio to the voice logger
+
+      // Connect RX audio and link audio to the qso recorder
     passthrough = new AudioPassthrough;
     audio_to_module_splitter->addSink(passthrough, true);
-    voice_logger->addSource(passthrough, 10);
-  
-      // Connect audio from modules to the voice logger
+    qso_recorder->addSource(passthrough, 10);
+
+      // Connect audio from modules to the qso recorder
     passthrough = new AudioPassthrough;
     audio_from_module_splitter->addSink(passthrough, true);
-    voice_logger->addSource(passthrough, 0);
+    qso_recorder->addSource(passthrough, 0);
   }
-  
+
     // Create the state detector
   state_det = new AudioStreamStateDetector;
   state_det->sigStreamStateChanged.connect(
     slot(*this, &Logic::audioStreamStateChange));
   prev_tx_src->registerSink(state_det, true);
   prev_tx_src = state_det;
-  
+
     // Create the TX audio mixer
   tx_audio_mixer = new AudioMixer;
   tx_audio_mixer->addSource(prev_tx_src);
   prev_tx_src = tx_audio_mixer;
-  
+
     // Create the TX object
   m_tx = TxFactory::createNamedTx(cfg(), tx_name);
   if ((m_tx == 0) || !tx().initialize())
@@ -533,12 +533,12 @@ bool Logic::initialize(void)
       slot(*this, &Logic::transmitterStateChange));
   prev_tx_src->registerSink(m_tx, true);
   prev_tx_src = 0;
-  
+
     // Create the message handler
   msg_handler = new MsgHandler(INTERNAL_SAMPLE_RATE);
   msg_handler->allMsgsWritten.connect(slot(*this, &Logic::allMsgsWritten));
   prev_tx_src = msg_handler;
-  
+
     // This gain control is used to reduce the audio volume of effects
     // and announcements when mixed with normal audio
   fx_gain_ctrl = new AudioAmp;
@@ -546,7 +546,7 @@ bool Logic::initialize(void)
   prev_tx_src->registerSink(fx_gain_ctrl, true);
   tx_audio_mixer->addSource(fx_gain_ctrl);
   prev_tx_src = 0;
-  
+
   event_handler = new EventHandler(event_handler_str, this);
   event_handler->playFile.connect(slot(*this, &Logic::playFile));
   event_handler->playSilence.connect(slot(*this, &Logic::playSilence));
@@ -568,9 +568,9 @@ bool Logic::initialize(void)
   cmd_tmo_timer->setEnable(false);
 
   updateTxCtcss(true, TX_CTCSS_ALWAYS);
-  
+
   loadModules();
-  
+
   string loaded_modules;
   list<Module*>::const_iterator mit;
   for (mit=modules.begin(); mit!=modules.end(); ++mit)
@@ -602,13 +602,13 @@ bool Logic::initialize(void)
 
   audio_switch_matrix.addSource(name(), logic_con_out);
   audio_switch_matrix.addSink(name(), logic_con_in);
-  
+
   processEvent("startup");
-  
+
   everyMinute(0);
-  
+
   return true;
-  
+
 } /* Logic::initialize */
 
 
@@ -701,7 +701,7 @@ bool Logic::activateModule(Module *module)
   {
     return true;
   }
-  
+
   if (active_module == 0)
   {
     active_module = module;
@@ -710,9 +710,9 @@ bool Logic::activateModule(Module *module)
     event_handler->setVariable("active_module", module->name());
     return true;
   }
-  
+
   return false;
-  
+
 } /* Logic::activateModule */
 
 
@@ -742,9 +742,9 @@ Module *Logic::findModule(int id)
       return (*it);
     }
   }
-  
+
   return 0;
-  
+
 } /* Logic::findModule */
 
 
@@ -758,9 +758,9 @@ Module *Logic::findModule(const string& name)
       return (*it);
     }
   }
-  
+
   return 0;
-  
+
 } /* Logic::findModule */
 
 
@@ -773,7 +773,7 @@ void Logic::dtmfDigitDetected(char digit, int duration)
       return;
     }
   }
-  
+
   cmd_tmo_timer->reset();
   cmd_tmo_timer->setEnable(true);
 
@@ -822,12 +822,12 @@ void Logic::dtmfDigitDetected(char digit, int duration)
       }
     }
   }
-  
+
   if (!cmd_queue.empty() && !rx().squelchIsOpen())
   {
     processCommandQueue();
   }
-    
+
 } /* Logic::dtmfDigitDetected */
 
 
@@ -885,14 +885,14 @@ void Logic::squelchOpen(bool is_open)
   {
     active_module->squelchOpen(is_open);
   }
-  
+
   stringstream ss;
   ss << "squelch_open " << rx().sqlRxId() << " " << (is_open ? "1" : "0");
   processEvent(ss.str());
 
   if (!is_open)
   {
-    if (((exec_cmd_on_sql_close > 0) || (received_digits == "*")) && 
+    if (((exec_cmd_on_sql_close > 0) || (received_digits == "*")) &&
         !anti_flutter && !received_digits.empty())
     {
       exec_cmd_on_sql_close_timer = new Timer(exec_cmd_on_sql_close);
@@ -906,11 +906,11 @@ void Logic::squelchOpen(bool is_open)
     delete exec_cmd_on_sql_close_timer;
     exec_cmd_on_sql_close_timer = 0;
   }
-  
+
   updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
-  
+
   checkIdle();
-  
+
 } /* Logic::squelchOpen */
 
 
@@ -919,7 +919,7 @@ bool Logic::getIdleState(void) const
   return !rx().squelchIsOpen() &&
       	 state_det->isIdle() &&
       	 msg_handler->isIdle();
-	 
+
 } /* Logic::getIdleState */
 
 
@@ -927,7 +927,7 @@ void Logic::transmitterStateChange(bool is_transmitting)
 {
   stringstream ss;
   ss << "transmit " << (is_transmitting ? "1" : "0");
-  processEvent(ss.str());  
+  processEvent(ss.str());
 } /* Logic::transmitterStateChange */
 
 
@@ -943,7 +943,7 @@ void Logic::enableRgrSoundTimer(bool enable)
   {
     return;
   }
-  
+
   delete rgr_sound_timer;
   rgr_sound_timer = 0;
 
@@ -958,7 +958,7 @@ void Logic::enableRgrSoundTimer(bool enable)
     {
       sendRgrSound();
     }
-  }  
+  }
 } /* Logic::enableRgrSoundTimer */
 
 
@@ -1006,14 +1006,14 @@ void Logic::checkIdle(void)
 
 /*
  *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
+ * Method:
+ * Purpose:
+ * Input:
+ * Output:
+ * Author:
+ * Created:
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 void Logic::allMsgsWritten(void)
@@ -1022,7 +1022,7 @@ void Logic::allMsgsWritten(void)
 
   //sigc_msg_handler->flushSamples();
   //module_tx_fifo->stopOutput(false);
-  
+
   if (active_module != 0)
   {
      active_module->allMsgsWritten();
@@ -1030,7 +1030,7 @@ void Logic::allMsgsWritten(void)
 
   updateTxCtcss(false, TX_CTCSS_ANNOUNCEMENT);
   checkIdle();
-  
+
 } /* Logic::allMsgsWritten */
 
 
@@ -1042,7 +1042,7 @@ void Logic::loadModules(void)
   {
     return;
   }
-  
+
   string::iterator comma;
   string::iterator begin = modules.begin();
   do
@@ -1073,22 +1073,22 @@ void Logic::loadModule(const string& module_cfg_name)
   {
     module_path = "";
   }
-  
+
   string plugin_name = module_cfg_name;
   cfg().getValue(module_cfg_name, "NAME", plugin_name);
-  
+
     // Define the module namespace so that we can set some variables in it
   event_handler->processEvent("namespace eval " + plugin_name + " {}");
-  
+
   cfg().getValue(module_cfg_name, "PLUGIN_NAME", plugin_name);
-  
+
   string plugin_filename;
   if (!module_path.empty())
   {
-    plugin_filename = module_path + "/"; 
+    plugin_filename = module_path + "/";
   }
   plugin_filename +=  "Module" + plugin_name + ".so";
-  
+
   void *handle = dlopen(plugin_filename.c_str(), RTLD_NOW);
   if (handle == NULL)
   {
@@ -1104,7 +1104,7 @@ void Logic::loadModule(const string& module_cfg_name)
     dlclose(handle);
     return;
   }
-  
+
   Module *module = init(handle, this, module_cfg_name.c_str());
   if (module == 0)
   {
@@ -1113,7 +1113,7 @@ void Logic::loadModule(const string& module_cfg_name)
     dlclose(handle);
     return;
   }
-  
+
   if (!module->initialize())
   {
     cerr << "*** ERROR: Initialization failed for module "
@@ -1122,21 +1122,21 @@ void Logic::loadModule(const string& module_cfg_name)
     dlclose(handle);
     return;
   }
-  
+
     // Connect module audio output to the module audio selector
   audio_from_module_selector->addSource(module);
   audio_from_module_selector->enableAutoSelect(module, 0);
-  
+
     // Connect module audio input to the module audio splitter
   audio_to_module_splitter->addSink(module);
   audio_to_module_splitter->enableSink(module, false);
-  
+
   modules.push_back(module);
-  
+
   stringstream ss;
   ss << module->id();
   new ModuleActivateCmd(&cmd_parser, ss.str(), this);
-  
+
 } /* Logic::loadModule */
 
 
@@ -1167,12 +1167,12 @@ void Logic::processCommandQueue(void)
   {
     return;
   }
-  
+
   while (!cmd_queue.empty())
   {
     string cmd(cmd_queue.front());
     cmd_queue.pop_front();
-    
+
     stringstream ss;
     ss << "dtmf_cmd_received \"" << cmd << "\"";
     processEvent(ss.str());
@@ -1180,10 +1180,10 @@ void Logic::processCommandQueue(void)
     {
       continue;
     }
-    
+
     processCommand(cmd);
-    
-  }  
+
+  }
 } /* Logic::processCommandQueue */
 
 
@@ -1246,7 +1246,7 @@ void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
       processEvent(ss.str());
     }
   }
-  
+
 } /* Logic::processCommand */
 
 
@@ -1261,7 +1261,7 @@ void Logic::processMacroCmd(const string& macro_cmd)
     processEvent("macro_empty");
     return;
   }
-  
+
   map<int, string>::iterator it = macros.find(atoi(cmd.c_str()));
   if (it == macros.end())
   {
@@ -1279,10 +1279,10 @@ void Logic::processMacroCmd(const string& macro_cmd)
     processEvent("macro_syntax_error");
     return;
   }
-  
+
   string module_name(macro.begin(), colon);
   string module_cmd(colon+1, macro.end());
-  
+
   if (!module_name.empty())
   {
     Module *module = findModule(module_name);
@@ -1292,7 +1292,7 @@ void Logic::processMacroCmd(const string& macro_cmd)
       processEvent("macro_module_not_found");
       return;
     }
-    
+
     if (active_module == 0)
     {
       if (!activateModule(module))
@@ -1311,7 +1311,7 @@ void Logic::processMacroCmd(const string& macro_cmd)
       return;
     }
   }
-  
+
   for (unsigned i=0; i<module_cmd.size(); ++i)
   {
     dtmfDigitDetected(module_cmd[i], 100);
@@ -1325,7 +1325,7 @@ void Logic::putCmdOnQueue(Timer *t)
 {
   delete exec_cmd_on_sql_close_timer;
   exec_cmd_on_sql_close_timer = 0;
-  
+
   if ((received_digits != "*") ||
       (find(cmd_queue.begin(), cmd_queue.end(), "*") == cmd_queue.end()))
   {
@@ -1334,9 +1334,9 @@ void Logic::putCmdOnQueue(Timer *t)
   received_digits = "";
   cmd_tmo_timer->setEnable(false);
   prev_digit = '?';
-  
+
   processCommandQueue();
-  
+
 } /* Logic::putCmdOnQueue */
 
 
@@ -1358,17 +1358,17 @@ void Logic::everyMinute(Timer *t)
     processEvent("every_minute");
   }
   delete every_minute_timer;
-  
+
   every_minute_timer = new Timer(msec);
   every_minute_timer->expired.connect(slot(*this, &Logic::everyMinute));
-  
+
 } /* Logic::everyMinute */
 
 
 void Logic::dtmfDigitDetectedP(char digit, int duration)
 {
   cout << name() << ": digit=" << digit << endl;
-  
+
   stringstream ss;
   ss << "dtmf_digit_received " << digit << " " << duration;
   processEvent(ss.str());
@@ -1376,9 +1376,9 @@ void Logic::dtmfDigitDetectedP(char digit, int duration)
   {
     return;
   }
-  
+
   dtmfDigitDetected(digit, duration);
-  
+
 } /* Logic::dtmfDigitDetected */
 
 
@@ -1403,14 +1403,14 @@ void Logic::cleanup(void)
   {
     tx().setTxCtrlMode(Tx::TX_OFF);
   }
-  
+
   delete event_handler;       	      event_handler = 0;
   delete cmd_tmo_timer;       	      cmd_tmo_timer = 0;
   unloadModules();
   delete exec_cmd_on_sql_close_timer; exec_cmd_on_sql_close_timer = 0;
   delete rgr_sound_timer;     	      rgr_sound_timer = 0;
   delete every_minute_timer;  	      every_minute_timer = 0;
-  
+
   if (audio_switch_matrix.sourceIsAdded(name()))
   {
     audio_switch_matrix.removeSource(name());
@@ -1419,14 +1419,14 @@ void Logic::cleanup(void)
   {
     audio_switch_matrix.removeSink(name());
   }
-  
+
   delete msg_handler; 	      	      msg_handler = 0;
   delete m_rx;        	      	      m_rx = 0;
   delete audio_to_module_selector;    audio_to_module_selector = 0;
   delete tx_audio_selector;   	      tx_audio_selector = 0;
   delete audio_from_module_selector;  audio_from_module_selector = 0;
   delete tx_audio_mixer;      	      tx_audio_mixer = 0;
-  delete voice_logger;                voice_logger = 0;
+  delete qso_recorder;                qso_recorder = 0;
 } /* Logic::cleanup */
 
 
@@ -1442,7 +1442,7 @@ void Logic::updateTxCtcss(bool do_set, TxCtcssType type)
   }
 
   tx().enableCtcss((tx_ctcss & tx_ctcss_mask) != 0);
- 
+
 } /* Logic::updateTxCtcss */
 
 

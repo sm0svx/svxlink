@@ -1,0 +1,3 @@
+The Echo Link module is used to connect to other Echo Link stations. To connect to
+another station,just send the node number followed buy a number sign. To
+disconnect,send a number sign. To exit the module, send a number sign when not connected.

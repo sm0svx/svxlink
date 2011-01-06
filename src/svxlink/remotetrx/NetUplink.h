@@ -1,12 +1,12 @@
 /**
 @file	 NetUplink.h
-@brief   Contains a class the implements a remote transceiver uplink via IP
+@brief   Contains a class that implements a remote transceiver uplink via IP
 @author  Tobias Blomberg / SM0SVX
 @date	 2006-04-14
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -46,10 +46,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncConfig.h>
 #include <AsyncTcpConnection.h>
 #include <NetTrxMsg.h>
-#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -70,11 +68,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace Async
 {
+  class Config;
   class TcpServer;
   class AudioFifo;
   class Timer;
   class AudioEncoder;
   class AudioDecoder;
+  class AudioSplitter;
+  class AudioSelector;
+  class AudioPassthrough;
 };
 
 namespace NetTrxMsg
@@ -178,11 +180,15 @@ class NetUplink : public Uplink
     Async::Timer      	    *heartbeat_timer;
     Async::AudioEncoder     *audio_enc;
     Async::AudioDecoder     *audio_dec;
+    Async::AudioPassthrough *loopback_con;
+    Async::AudioSplitter    *rx_splitter;
+    Async::AudioSelector    *tx_selector;
     State                   state;
     std::string             auth_key;
     unsigned char           auth_challenge[NetTrxMsg::MsgAuthChallenge::CHALLENGE_LEN];
     Async::Timer	    *mute_tx_timer;
     bool		    tx_muted;
+    bool                    fallback_enabled;
     
     NetUplink(const NetUplink&);
     NetUplink& operator=(const NetUplink&);
@@ -224,6 +230,7 @@ class NetUplink : public Uplink
     void allEncodedSamplesFlushed(void);
     void heartbeat(Async::Timer *t);
     void unmuteTx(Async::Timer *t);
+    void setFallbackActive(bool activate);
 
 };  /* class NetUplink */
 

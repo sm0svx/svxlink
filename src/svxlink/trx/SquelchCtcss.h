@@ -1,14 +1,12 @@
 /**
 @file	 SquelchCtcss.h
-@brief   A_brief_description_for_this_file
+@brief   A CTCSS squelch detector
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-08-02
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2004-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example SquelchCtcss_demo.cpp
-An example of how to use the SquelchCtcss class
-*/
-
 
 #ifndef SQUELCH_CTCSS_INCLUDED
 #define SQUELCH_CTCSS_INCLUDED
@@ -88,7 +81,7 @@ An example of how to use the SquelchCtcss class
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -113,13 +106,12 @@ An example of how to use the SquelchCtcss class
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	A CTCSS squelch detector
 @author Tobias Blomberg / SM0SVX
 @date   2005-08-02
 
-A_detailed_class_description
-
-\include SquelchCtcss_demo.cpp
+This squelch detector use a tone detector to detect the presence of a CTCSS
+squelch tone. The actual tone detector is implemented outside of this class.
 */
 class SquelchCtcss : public Squelch
 {
@@ -128,7 +120,7 @@ class SquelchCtcss : public Squelch
      * @brief 	Default constuctor
      */
     explicit SquelchCtcss(void) {}
-  
+
     /**
      * @brief 	Destructor
      */
@@ -136,12 +128,12 @@ class SquelchCtcss : public Squelch
     {
       delete det;
     }
-  
+
     /**
-     * @brief 	Initialize the CTCSS squelch detector
-     * @param 	cfg The configuration object to use
-     * @param 	rx_name The name of the receiver (config section)
-     * @return	Return_value_of_this_member_function
+     * @brief 	Initialize the squelch detector
+     * @param 	cfg A previsously initialized config object
+     * @param 	rx_name The name of the RX (config section name)
+     * @return	Returns \em true on success or else \em false
      */
     bool initialize(Async::Config& cfg, const std::string& rx_name)
     {
@@ -149,7 +141,7 @@ class SquelchCtcss : public Squelch
       {
       	return false;
       }
-      
+
       std::string value;
       float ctcss_fq = 0;
       if (cfg.getValue(rx_name, "CTCSS_FQ", value))
@@ -162,20 +154,20 @@ class SquelchCtcss : public Squelch
       	     << "/CTCSS_FQ not set or is set to an illegal value\n";
 	return false;
       }
-      
+
       float ctcss_thresh = 10;
       if (cfg.getValue(rx_name, "CTCSS_THRESH", value))
       {
 	ctcss_thresh = atof(value.c_str());
       }
-      
+
       det = new ToneDetector(ctcss_fq, 8.0f);
       det->setSnrThresh(ctcss_thresh);
-      det->activated.connect(slot(*this, &SquelchCtcss::setOpen));
-      
+      det->activated.connect(slot(*this, &SquelchCtcss::setSignalDetected));
+
       return true;
     }
-    
+
     /**
      * @brief 	Reset the squelch detector
      *
@@ -188,7 +180,6 @@ class SquelchCtcss : public Squelch
       Squelch::reset();
     }
 
-    
   protected:
     /**
      * @brief 	Process the incoming samples in the squelch detector
@@ -200,14 +191,13 @@ class SquelchCtcss : public Squelch
     {
       return det->writeSamples(samples, count);
     }
-    
-    
+
   private:
     ToneDetector *det;
-    
+
     SquelchCtcss(const SquelchCtcss&);
     SquelchCtcss& operator=(const SquelchCtcss&);
-    
+
 };  /* class SquelchCtcss */
 
 

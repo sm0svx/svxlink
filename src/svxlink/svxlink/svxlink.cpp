@@ -344,8 +344,7 @@ int main(int argc, char **argv)
     cfg_filename += "/.svxlink/svxlink.conf";
     if (!cfg.open(cfg_filename))
     {
-      cfg_filename = string(home_dir);
-      cfg_filename += "/.svxlinkrc";
+      cfg_filename = "/etc/svxlink/svxlink.conf";
       if (!cfg.open(cfg_filename))
       {
 	cfg_filename = "/etc/svxlink.conf";
@@ -353,7 +352,7 @@ int main(int argc, char **argv)
 	{
 	  cerr << "*** ERROR: Could not open configuration file. Tried:\n"
       	       << "\t" << home_dir << "/.svxlink/svxlink.conf\n"
-      	       << "\t" << home_dir << "/.svxlinkrc\n"
+      	       << "\t/etc/svxlink/svxlink.conf\n"
 	       << "\t/etc/svxlink.conf\n"
 	       << "Possible reasons for failure are: None of the files exist,\n"
 	       << "you do not have permission to read the file or there was a\n"

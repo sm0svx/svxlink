@@ -50,7 +50,7 @@ variable sql_rx_id 0;
 
 #
 # Executed when the SvxLink software is started
-# 
+#
 proc startup {} {
   #global mycall;
   #playMsg "Core" "online";
@@ -78,12 +78,12 @@ proc manual_identification {} {
   global loaded_modules;
   variable CFG_TYPE;
   variable prev_ident;
-  
+
   set epoch [clock seconds];
   set hour [clock format $epoch -format "%k"];
   regexp {([1-5]?\d)$} [clock format $epoch -format "%M"] -> minute;
   set prev_ident $epoch;
-  
+
   playMsg "Core" "online";
   spellWord $mycall;
   if {$CFG_TYPE == "Repeater"} {
@@ -132,10 +132,8 @@ proc send_short_ident {hour minute} {
   variable CFG_TYPE;
 
   spellWord $mycall;
-  if {$CFG_TYPE == "Simplex"} {
-    playMsg "EchoLink" "link";
-  } elseif {$CFG_TYPE == "Repeater"} {
-    playMsg "EchoLink" "repeater";
+  if {$CFG_TYPE == "Repeater"} {
+    playMsg "Core" "repeater";
   }
   playSilence 500;
 }
@@ -153,18 +151,16 @@ proc send_long_ident {hour minute} {
   variable CFG_TYPE;
 
   spellWord $mycall;
-  if {$CFG_TYPE == "Simplex"} {
-    playMsg "EchoLink" "link";
-  } elseif {$CFG_TYPE == "Repeater"} {
-    playMsg "EchoLink" "repeater";
+  if {$CFG_TYPE == "Repeater"} {
+    playMsg "Core" "repeater";
   }
   playSilence 500;
-  
+
   playMsg "Core" "the_time_is";
   playSilence 100;
   playTime $hour $minute;
   playSilence 500;
-  
+
     # Call the "status_report" function in all modules if no module is active
   if {$active_module == ""} {
     foreach module [split $loaded_modules " "] {
@@ -175,7 +171,7 @@ proc send_long_ident {hour minute} {
       }
     }
   }
-  
+
   playSilence 500;
 }
 
@@ -186,10 +182,10 @@ proc send_long_ident {hour minute} {
 #
 proc send_rgr_sound {} {
   variable sql_rx_id;
-  
+
   playTone 440 500 100;
   playSilence 200;
-  
+
   for {set i 0} {$i < $sql_rx_id} {incr i 1} {
     playTone 880 500 50;
     playSilence 50;
@@ -246,7 +242,7 @@ proc macro_module_activation_failed {} {
 #
 proc macro_another_active_module {} {
   global active_module;
-  
+
   playMsg "Core" "operation_failed";
   playMsg "Core" "active_module";
   playMsg $active_module "name";
@@ -406,7 +402,7 @@ proc checkPeriodicIdentify {} {
   variable min_time_between_ident;
   variable ident_only_after_tx;
   variable need_ident;
-  
+
   if {$short_ident_interval == 0} {
     return;
   }
@@ -414,7 +410,7 @@ proc checkPeriodicIdentify {} {
   set now [clock seconds];
   set hour [clock format $now -format "%k"];
   regexp {([1-5]?\d)$} [clock format $now -format "%M"] -> minute;
-  
+
   set short_ident_now \
       	    [expr {($hour * 60 + $minute) % $short_ident_interval == 0}];
   set long_ident_now 0;
@@ -422,7 +418,7 @@ proc checkPeriodicIdentify {} {
     set long_ident_now \
       	    [expr {($hour * 60 + $minute) % $long_ident_interval == 0}];
   }
-  
+
   if {$long_ident_now} {
     puts "Sending long identification...";
     send_long_ident $hour $minute;
@@ -435,7 +431,7 @@ proc checkPeriodicIdentify {} {
     if {$ident_only_after_tx && !$need_ident} {
       return;
     }
-    
+
     if {$short_ident_now} {
       puts "Sending short identification...";
       send_short_ident $hour $minute;
@@ -447,39 +443,39 @@ proc checkPeriodicIdentify {} {
 
 
 #
-# Executed when the voice logger is being activated
+# Executed when the QSO recorder is being activated
 #
-proc activating_voice_logger {} {
+proc activating_qso_recorder {} {
   playMsg "Core" "activating";
-  playMsg "Core" "voice_logger";
+  playMsg "Core" "qso_recorder";
 }
 
 
 #
-# Executed when the voice logger is being deactivated
+# Executed when the QSO recorder is being deactivated
 #
-proc deactivating_voice_logger {} {
+proc deactivating_qso_recorder {} {
   playMsg "Core" "deactivating";
-  playMsg "Core" "voice_logger";
+  playMsg "Core" "qso_recorder";
 }
 
 
 #
-# Executed when trying to deactivate the voice logger even though it's
+# Executed when trying to deactivate the QSO recorder even though it's
 # not active
 #
-proc voice_logger_not_active {} {
-  playMsg "Core" "voice_logger";
+proc qso_recorder_not_active {} {
+  playMsg "Core" "qso_recorder";
   playMsg "Core" "not_active";
 }
 
 
 #
-# Executed when trying to activate the voice logger even though it's
+# Executed when trying to activate the QSO recorder even though it's
 # already active
 #
-proc voice_logger_already_active {} {
-  playMsg "Core" "voice_logger";
+proc qso_recorder_already_active {} {
+  playMsg "Core" "qso_recorder";
   playMsg "Core" "already_active";
 }
 
