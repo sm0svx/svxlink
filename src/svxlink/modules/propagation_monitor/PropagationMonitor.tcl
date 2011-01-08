@@ -169,8 +169,8 @@ proc dxrobot_aurora_alert {hour min} {
   playAlertSound
   playSilence 500
   
-  playTime $hour $min
-  playSilence 200
+  #playTime $hour $min
+  #playSilence 200
   
   playMsg "aurora_opening"
   sayBand "2m"
@@ -187,30 +187,31 @@ proc dxrobot_aurora_alert {hour min} {
 #
 #   hour - The hour of the alert
 #   min  - The minute of the alert
+#   band - The band it occured on. E.g 2m, 4m, 6m.
 #   from - From locator
 #   to   - To locator
 #
-proc dxrobot_eskip_alert {hour min {from ""} {to ""}} {
+proc dxrobot_eskip_alert {hour min band {from ""} {to ""}} {
   playAlertSound
   playSilence 500
   
-  playTime $hour $min
-  playSilence 200
+  #playTime $hour $min
+  #playSilence 200
   
   playMsg "sporadic_e_opening"
-  sayBand "2m"
+  sayBand $band
   playSilence 500
   playMsg "sporadic_e_opening"
-  sayBand "2m"
+  sayBand $band
   
   if {"$from" ne "" && "$to" ne ""} {
     playSilence 500
     playMsg "band_open_from"
-    sayLocator $from
+    spellWord $from
     playSilence 100
     playMsg "to"
     playSilence 100
-    sayLocator $to
+    spellWord $to
   }
   playSilence 200
 }
