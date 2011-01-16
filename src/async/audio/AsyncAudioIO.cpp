@@ -236,7 +236,7 @@ void AudioIO::setChannels(int channels)
 
 AudioIO::AudioIO(const string& dev_name, int channel)
   : io_mode(MODE_NONE), audio_dev(0), m_gain(1.0),
-    m_channel(channel), input_valve(0), audio_reader(0)
+    m_channel(channel), audio_reader(0)
 {
   audio_dev = AudioDevice::registerAudioIO(dev_name, this);
   if (audio_dev == 0)
@@ -245,16 +245,10 @@ AudioIO::AudioIO(const string& dev_name, int channel)
   }
   
   sample_rate = audio_dev->sampleRate();
-  
-  input_valve = new AudioValve;
-  input_valve->setOpen(false);
-  AudioSink::setHandler(input_valve);
-  
-  audio_reader = new DelayedFlushAudioReader(audio_dev);
-  input_valve->registerSink(audio_reader, true);
-  
-  //new AudioDebugger(input_manager);
 
+  audio_reader = new DelayedFlushAudioReader(audio_dev);
+  AudioSink::setHandler(audio_reader);
+  
 } /* AudioIO::AudioIO */
 
 
@@ -262,7 +256,7 @@ AudioIO::~AudioIO(void)
 {
   close();
   AudioSink::clearHandler();
-  delete input_valve;
+  delete audio_reader;
   AudioDevice::unregisterAudioIO(this);
 } /* AudioIO::~AudioIO */
 
@@ -299,8 +293,6 @@ bool AudioIO::open(Mode mode)
     io_mode = mode;
   }
   
-  input_valve->setOpen(true);
-
   return open_ok;
   
 } /* AudioIO::open */
@@ -315,8 +307,6 @@ void AudioIO::close(void)
   
   io_mode = MODE_NONE;
   
-  input_valve->setOpen(false);
-
   audio_dev->close(); 
   
 } /* AudioIO::close */

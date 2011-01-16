@@ -295,7 +295,6 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
     float     	      	    m_gain;
     int       	      	    sample_rate;
     int       	      	    m_channel;
-    AudioValve              *input_valve;
     DelayedFlushAudioReader *audio_reader;
 
       // Methods accessed by the Async::AudioDevice class
