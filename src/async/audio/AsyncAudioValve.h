@@ -187,7 +187,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       
       this->block_when_closed = block_when_closed;
       
-      if (!block_when_closed && is_blocking)
+      if (!block_when_closed && is_blocking && is_open)
       {
       	sourceRequestSamples(64);
       }
