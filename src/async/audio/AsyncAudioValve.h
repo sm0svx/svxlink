@@ -150,21 +150,27 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       {
         if (is_blocking)
         {
-    	  sourceRequestSamples(64);
+          sourceRequestSamples(16);
         }
       }
       else
       {
-	if (!is_idle && !is_flushing)
-	{
-      	  sinkFlushSamples();
-	}
+        if (!block_when_closed)
+        {
+          /* request samples from the source until it is empty */
+          readSourceEmpty();
+        }
 	if (is_flushing)
-	{
+        {
 	  is_idle = true;
 	  is_flushing = false;
 	  is_blocking = false;
 	  sourceAllSamplesFlushed();
+        }
+        else if (!is_idle)
+	{
+	  is_flushing = true;
+      	  sinkFlushSamples();
 	}
       }
     }
@@ -187,9 +193,10 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       
       this->block_when_closed = block_when_closed;
       
-      if (!block_when_closed && is_blocking && is_open)
+      if (!is_open && !block_when_closed)
       {
-      	sourceRequestSamples(64);
+        /* request samples from the source until it is empty */
+        readSourceEmpty();
       }
     }
     
@@ -230,19 +237,18 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
      */
     int writeSamples(const float *samples, int count)
     {
-      int ret = 0;
       is_idle = false;
       is_flushing = false;
       if (is_open)
       {
-      	ret = sinkWriteSamples(samples, count);
+      	written = sinkWriteSamples(samples, count);
       }
       else
       {
-        ret = block_when_closed ? 0 : count;
+        written = block_when_closed ? 0 : count;
       }
-      is_blocking |= (ret < count);
-      return ret;
+      is_blocking |= (written < count);
+      return written;
     }
     
     /**
@@ -280,7 +286,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
      */
     void requestSamples(int count)
     {
-      if (is_open || !block_when_closed)
+      if (is_open)
       {
       	sourceRequestSamples(count);
       }
@@ -310,11 +316,20 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     AudioValve(const AudioValve&);
     AudioValve& operator=(const AudioValve&);
 
+    void readSourceEmpty(void)
+    {
+      do {
+        written = 0;
+        sourceRequestSamples(64);
+      } while ((written > 0) && !is_flushing);
+    }
+
     bool block_when_closed;
     bool is_open;
     bool is_idle;
     bool is_flushing;
     bool is_blocking;
+    int written;
     
 };  /* class AudioValve */
 
