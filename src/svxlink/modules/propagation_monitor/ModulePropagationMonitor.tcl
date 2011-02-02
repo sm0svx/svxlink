@@ -178,8 +178,9 @@ proc handle_vhfdx {msg_file} {
   }
 
   # Example: Possible Sporadic-E from JO89 on 6m. Try towards LQ28 (13�)
+  # Example: Possible Sporadic-E from JO89 on 6m. Try towards JN61 (191 degrees)
   set match [regexp \
-	{^Possible Sporadic-E from (\w\w\d\d) on (\d+c?m)\. Try towards (\w\w\d\d) \((\d+).\)$} \
+	{^Possible Sporadic-E from (\w\w\d\d) on (\d+c?m)\. Try towards (\w\w\d\d) \((\d+) degrees\)$} \
 	$subject -> from_loc band to_loc direction]
   if {$match} {
     processEvent "vhfdx_possible_sporadic_e_opening $band $from_loc $to_loc $direction"
