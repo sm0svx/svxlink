@@ -1,0 +1,67 @@
+.TH QTEL "1" "December  17, 2010"
+.
+.SH NAME
+.
+qtel \- a "QT EchoLink" client
+.
+.SH DESCRIPTION
+.
+Qtel stands for the "QT EchoLink" client. It is only a EchoLink client application.
+There is no "sysop mode". If it is a link you want to run, have a look at the SvxLink
+server application. Qtel is quite a simple application, so most things should be self
+explainatory. There are three windows: the main window, the communications dialog
+and the settings dialog.
+.
+.PP
+.B The Qtel Main Window
+.PP
+The main window consists of four areas. The top-left is where to choose which class of
+staions to view (Conferences, Links, Repeaters and private Stations). All stations in
+a class is shown to the top-right. At left-bottom is a message area that shows the messages
+from the EchoLink directory server. At right-bottom is a list of incoming connections. To
+accept an incoming connection, highligt the station and press "Accept".
+.
+.PP
+.B The Qtel Communications Dialog
+.PP
+The communications dialog is used to perform a Qso to anoher station. To activate it,
+double-click on a station line or just press the enter key when the station is highlighted.
+To connect to the station, press the Connect button. To transmit, press the PTT button.
+To disconnect, press the "Disconnect" button. In the big, white area in the middle of the
+window, info messages from the remote station are shown. Chat messages from the
+remote station is also shown here. In the oneline white area below, chat messages can be
+typed that is sent to the remote station.
+.
+.PP
+.B The Qtel Settings Dialog
+.PP
+The configuration dialog is brought up the first time the application is started.
+Most fields are self explainatory. Location is the short string that is shown in
+the EchoLink directory server listing. The info message is the one that is sent to the
+remote station upon connection. In the Directory Server tab are some settings for the EchoLink directory
+server connection.
+.
+.SH OPTIONS
+There are no options. Start the program within a console - qtel & - or from the menu.
+.
+.SH "SEE ALSO"
+.nh
+.ad l
+For detailed description look at
+.B http://sourceforge.net/apps/trac/svxlink/wiki/QtelUserDocs
+or at
+.B
+/usr/share/doc/svxlink/qteluserdoc.pdf
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
+.
+.SH REPORTING BUGS
+.
+SvxLink Devel <svxlink-devel at lists dot sourceforge dot net>
+.PP
+.nh
+.ad l
+This manual page was written by Michael Vorleiter
+<parsival1609@yahoo.de>
