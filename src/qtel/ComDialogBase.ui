@@ -284,7 +284,7 @@
             <property name="title">
                 <string>Chat/Info</string>
             </property>
-            <vbox>
+            <grid>
                 <property name="name">
                     <cstring>unnamed</cstring>
                 </property>
@@ -294,29 +294,7 @@
                 <property name="spacing">
                     <number>6</number>
                 </property>
-                <widget class="QTextEdit">
-                    <property name="name">
-                        <cstring>info_incoming</cstring>
-                    </property>
-                    <property name="focusPolicy">
-                        <enum>NoFocus</enum>
-                    </property>
-                    <property name="readOnly">
-                        <bool>true</bool>
-                    </property>
-                </widget>
-                <widget class="QTextEdit">
-                    <property name="name">
-                        <cstring>chat_incoming</cstring>
-                    </property>
-                    <property name="focusPolicy">
-                        <enum>NoFocus</enum>
-                    </property>
-                    <property name="readOnly">
-                        <bool>true</bool>
-                    </property>
-                </widget>
-                <widget class="QLineEdit">
+                <widget class="QLineEdit" row="1" column="0">
                     <property name="name">
                         <cstring>chat_outgoing</cstring>
                     </property>
@@ -324,7 +302,45 @@
                         <bool>false</bool>
                     </property>
                 </widget>
-            </vbox>
+                <widget class="QSplitter" row="0" column="0">
+                    <property name="name">
+                        <cstring>splitter2</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="orientation">
+                        <enum>Horizontal</enum>
+                    </property>
+                    <widget class="QTextEdit">
+                        <property name="name">
+                            <cstring>chat_incoming</cstring>
+                        </property>
+                        <property name="focusPolicy">
+                            <enum>NoFocus</enum>
+                        </property>
+                        <property name="readOnly">
+                            <bool>true</bool>
+                        </property>
+                    </widget>
+                    <widget class="QTextEdit">
+                        <property name="name">
+                            <cstring>info_incoming</cstring>
+                        </property>
+                        <property name="focusPolicy">
+                            <enum>NoFocus</enum>
+                        </property>
+                        <property name="readOnly">
+                            <bool>true</bool>
+                        </property>
+                    </widget>
+                </widget>
+            </grid>
         </widget>
         <widget class="QLayoutWidget">
             <property name="name">
@@ -420,9 +436,6 @@
                     </property>
                     <property name="text">
                         <string>&amp;Disconnect</string>
-                    </property>
-                    <property name="accel">
-                        <string>Alt+D</string>
                     </property>
                     <property name="autoDefault">
                         <bool>false</bool>

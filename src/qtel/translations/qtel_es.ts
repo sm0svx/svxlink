@@ -101,7 +101,7 @@ No se puede crear conexion</translation>
     </message>
     <message>
         <source>Alt+D</source>
-        <translation>Alt+D</translation>
+        <translation type="obsolete">Alt+D</translation>
     </message>
     <message>
         <source>VOX</source>
@@ -561,7 +561,7 @@ Message</source>
     </message>
     <message>
         <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation>Aparato de audio a usar (p.e. /dev/dsp)</translation>
+        <translation type="obsolete">Aparato de audio a usar (p.e. /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
@@ -678,6 +678,10 @@ Message</source>
     <message>
         <source>Passwords do not match</source>
         <translation>Las claves no concuerdan</translation>
+    </message>
+    <message>
+        <source>The audio device to use (e.g. alsa:default)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

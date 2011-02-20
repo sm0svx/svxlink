@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="hu_HU" sourcelanguage="en">
+<!DOCTYPE TS><TS>
 <context>
     <name>ComDialog</name>
     <message>
@@ -98,7 +96,7 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
     </message>
     <message>
         <source>Alt+D</source>
-        <translation>ALT+D</translation>
+        <translation type="obsolete">ALT+D</translation>
     </message>
     <message>
         <source>VOX</source>
@@ -554,7 +552,7 @@ Message</source>
     </message>
     <message>
         <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation>A-hasznát-hang-eszköz-(pl.-/dev/dsp)</translation>
+        <translation type="obsolete">A-hasznát-hang-eszköz-(pl.-/dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
@@ -587,6 +585,102 @@ Message</source>
     <message>
         <source>Choose a connect sound file</source>
         <translation>Válaszd-ki-a-kapcsolódási-hangot</translation>
+    </message>
+    <message>
+        <source>The audio device to use (e.g. alsa:default)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QSO</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QSO dialog settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Chat encoding:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Chinese</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Japanese</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Korean</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tamil</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unicode, 8-bit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Russian</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ukrainian</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Western</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Central European</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Baltic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cyrillic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Arabic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Greek</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hebrew, visually ordered</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hebrew, logically ordered</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Turkish</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hebrew</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Thai</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Qtel: Password mismatch</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Passwords do not match</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>
