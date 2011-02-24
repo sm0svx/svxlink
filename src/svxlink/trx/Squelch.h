@@ -323,7 +323,10 @@ class Squelch : public SigC::Object, public Async::AudioSink
      * @param 	count The number of samples in the buffer
      * @return	Return the number of processed samples
      */
-    virtual int processSamples(const float *samples, int count) = 0;
+    virtual int processSamples(const float *samples, int count)
+    {
+      return count;
+    }
 
     /**
      * @brief 	Used by the actual squelch detector to indicate signal presence

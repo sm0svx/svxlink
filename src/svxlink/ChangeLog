@@ -195,6 +195,11 @@
 * Bugfix in ModuleEchoLink: SvxLink would crash if no stations were
   found when using the random connect feature.
 
+* New squelch detector type: EVDEV. This squelch detector read events
+  from a /dev/input/eventX device node. This can for example be of use
+  if you have a USB audio device with some buttons on it. If you're in
+  luck, it generates events when the buttons are pressed.
+
 
 
  0.11.0 -- 26 Apr 2009
