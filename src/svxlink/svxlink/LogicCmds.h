@@ -376,6 +376,34 @@ class QsoRecorderCmd : public Command
 };  /* class QsoRecorderCmd */
 
 
+class ChangeLangCmd : public Command
+{
+  public:
+    ChangeLangCmd(CmdParser *parser, Logic *logic)
+      : Command(parser, "00"), logic(logic)
+    {
+    }
+
+    void operator ()(const std::string& subcmd)
+    {
+      std::stringstream ss;
+      if (subcmd.empty())
+      {
+	ss << "list_languages";
+      }
+      else
+      {
+	ss << "set_language ";
+	ss << subcmd;
+      }
+      logic->processEvent(ss.str());
+    }
+
+  private:
+    Logic       *logic;
+
+};
+
 
 //} /* namespace */
 

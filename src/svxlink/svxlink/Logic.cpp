@@ -231,6 +231,15 @@ Logic::~Logic(void)
 
 bool Logic::initialize(void)
 {
+  ChangeLangCmd *lang_cmd = new ChangeLangCmd(&cmd_parser, this);
+  if (!lang_cmd->addToParser())
+  {
+    cerr << "*** ERROR: Could not add the language change command \""
+	 << lang_cmd->cmdStr() << "\".\n";
+    delete lang_cmd;  // FIXME: Do this in cleanup() instead
+    return false;
+  }
+  
   string value;
   if (cfg().getValue(name(), "LINKS", value))
   {
@@ -1238,13 +1247,6 @@ void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
   else if ((!force_core_cmd) && (active_module != 0))
   {
     active_module->dtmfCmdReceived(cmd);
-  }
-  else if (cmd.substr(0, 2) == "00")
-  {
-    stringstream ss;
-    ss << "set_language ";
-    ss << cmd.substr(2);
-    processEvent(ss.str());
   }
   else if (!cmd.empty())
   {
