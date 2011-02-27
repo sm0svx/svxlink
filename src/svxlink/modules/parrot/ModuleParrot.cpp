@@ -163,8 +163,8 @@ extern "C" {
 
 ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       	      	      	   const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), fifo(0), squelch_is_open(false),
-    repeat_delay(0), repeat_delay_timer(0)
+  : Module(dl_handle, logic, cfg_name), adapter(0), fifo(0),
+    squelch_is_open(false), repeat_delay(0), repeat_delay_timer(0)
 {
   cout << "\tModule Parrot v" MODULE_PARROT_VERSION " starting...\n";
   
