@@ -123,17 +123,25 @@ CmdParser::~CmdParser(void)
 } /* CmdParser::~CmdParser */
 
 
-void CmdParser::addCmd(Command *cmd)
+bool CmdParser::addCmd(Command *cmd)
 {
-  assert(cmds.count(cmd->cmdStr()) == 0);
+  if (cmds.count(cmd->cmdStr()) != 0)
+  {
+    return false;
+  }
   cmds[cmd->cmdStr()] = cmd;
+  return true;
 } /* CmdParser::addCmd */
 
 
-void CmdParser::removeCmd(Command *cmd)
+bool CmdParser::removeCmd(Command *cmd)
 {
-  assert(cmds.count(cmd->cmdStr()) == 1);
-  cmds.erase(cmd->cmdStr());
+  bool cmd_exist = (cmds.count(cmd->cmdStr()) == 1);
+  if (cmd_exist)
+  {
+    cmds.erase(cmd->cmdStr());
+  }
+  return cmd_exist;
 } /* CmdParser::removeCmd */
 
 

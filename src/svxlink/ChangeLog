@@ -200,6 +200,10 @@
   if you have a USB audio device with some buttons on it. If you're in
   luck, it generates events when the buttons are pressed.
 
+* Better error handling for the DTMF command parser. Previously if for
+  example two modules were setup with the same module id, SvxLink would
+  just quit with a cryptic error message.
+
 
 
  0.11.0 -- 26 Apr 2009

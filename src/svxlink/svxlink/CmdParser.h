@@ -136,14 +136,24 @@ class CmdParser
     ~CmdParser(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Add a command to the parser
+     * @param 	cmd The command to add
+     * @return	Returns \em true on success or else \em false
      */
-    void addCmd(Command *cmd);
+    bool addCmd(Command *cmd);
     
-    void removeCmd(Command *cmd);
+    /**
+     * @brief	Remove a command from the parser
+     * @param	cmd The command to remove
+     * @return	Returns \em true on success or else \em false
+     */
+    bool removeCmd(Command *cmd);
     
+    /**
+     * @brief	Process a command string
+     * @param	cmd_str The command string to process
+     * @return	Returns \em true if the command was found or else \em false
+     */
     bool processCmd(const std::string& cmd_str);
     
     
@@ -173,6 +183,16 @@ class Command : public SigC::Object
       parser->removeCmd(this);
     }
     
+    bool addToParser(void)
+    {
+      return parser->addCmd(this);
+    }
+    
+    bool removeFromParser(void)
+    {
+      return parser->addCmd(this);
+    }
+    
     const std::string& cmdStr(void) const { return cmd; }
     
     virtual void operator ()(const std::string& subcmd)
@@ -188,7 +208,6 @@ class Command : public SigC::Object
       assert(!cmd_str.empty());
       assert(cmd.empty());
       cmd = cmd_str;
-      parser->addCmd(this);
     }
     
   private:

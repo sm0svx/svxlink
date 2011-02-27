@@ -212,6 +212,13 @@ class LinkCmd : public Command
 	return false;
       }
       setCmd(cmd_str);
+      if (!addToParser())
+      {
+	std::cerr << "*** ERROR: Could not set up command \"" << cmd_str
+		  << "\" for logic link \"" << name << "\". You probably have "
+		  << "the same command set up in more than one place\n";
+	return false;
+      }
 
       if (!cfg.getValue(link_name, "CONNECT_LOGICS", logics))
       {
@@ -325,7 +332,7 @@ class QsoRecorderCmd : public Command
     bool initialize(const std::string &cmd_str)
     {
       setCmd(cmd_str);
-      return true;
+      return addToParser();
     }
 
     void operator ()(const std::string& subcmd)
