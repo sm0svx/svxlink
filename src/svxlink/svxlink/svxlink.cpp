@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <vector>
 #include <cstring>
+#include <set>
 
 
 /****************************************************************************
@@ -66,6 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncFdWatch.h>
 #include <AsyncAudioIO.h>
 #include <LocationInfo.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -780,6 +782,35 @@ static void initialize_logics(Config &cfg)
   {
     cerr << "*** ERROR: No logics available. Bailing out...\n";
     exit(1);
+  }
+  
+    // Temporary fix for the assertion failure that happens when a link
+    // is activated where a non-existent logic is specified.
+  set<string> logic_set;
+  vector<Logic*>::iterator lit;
+  for (lit=logic_vec.begin(); lit!=logic_vec.end(); lit++)
+  {
+    logic_set.insert((*lit)->name());
+  }
+  for (lit=logic_vec.begin(); lit!=logic_vec.end(); lit++)
+  {
+    string links_str;
+    if (cfg.getValue((*lit)->name(), "LINKS", links_str))
+    {
+      string value;
+      cfg.getValue(links_str, "CONNECT_LOGICS", value);
+      vector<string> links;
+      SvxLink::splitStr(links, value, ",");
+      for (unsigned i=0; i<links.size(); ++i)
+      {
+	if (logic_set.find(links[i]) == logic_set.end())
+	{
+	  cerr << "*** ERROR: Invalid logic specified in "
+	       << links_str << "/CONNECT_LOGICS: " << links[i] << endl;
+	  exit(1);
+	}
+      }
+    }
   }
 } /* initialize_logics */
 
