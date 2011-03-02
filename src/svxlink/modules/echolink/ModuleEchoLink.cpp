@@ -47,8 +47,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/MODULE_ECHOLINK.h>
-
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
 #include <AsyncAudioSplitter.h>
@@ -65,6 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/MODULE_ECHOLINK.h"
 #include "ModuleEchoLink.h"
 #include "QsoImpl.h"
 

@@ -8,7 +8,8 @@
 #			
 # Targets:		all	  -- Make all
 #			clean     -- Cleanup compiler generated files.
-#			realclean -- Cleanup all generated files.
+#			realclean -- Cleanup most generated files.
+#			distclean -- Cleanup all generated files.
 #			linecount -- Count the lines of source code.
 #			tgz       -- Cleanup and create an archive. The
 #				     archive is named 'current subdir'.tgz.
@@ -170,6 +171,20 @@ ifeq ($(OS),)
 	if [ ! -r makefile.inc ]; then \
 	  $(RM) makefile.root; \
 	fi
+else
+	$(MAKE) -f Makefile.win32 $@
+endif
+
+
+#
+# distclean - Remove everything created by the makefiles including
+#             softlinks so that the source tree looks exactly like
+#             when it was first unpacked.
+#
+.PHONY:	distclean
+distclean:	realclean
+ifeq ($(OS),)
+	find . -type l -name Makefile -exec $(RM) {} \;
 else
 	$(MAKE) -f Makefile.win32 $@
 endif

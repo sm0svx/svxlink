@@ -10,8 +10,7 @@
 #include <qinputdialog.h>
 #undef emit
 
-#include <version/QTEL.h>
-
+#include "version/QTEL.h"
 #include "Settings.h"
 #include "MainWindow.h"
 

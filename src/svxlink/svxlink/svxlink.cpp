@@ -60,8 +60,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/SVXLINK.h>
-
 #include <AsyncCppApplication.h>
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
@@ -76,6 +74,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/SVXLINK.h"
 #include "MsgHandler.h"
 #include "SimplexLogic.h"
 #include "RepeaterLogic.h"

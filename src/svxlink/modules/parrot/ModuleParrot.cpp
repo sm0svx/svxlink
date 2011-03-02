@@ -48,7 +48,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/MODULE_PARROT.h>
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioFifo.h>
@@ -62,6 +61,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/MODULE_PARROT.h"
 #include "ModuleParrot.h"
 
 
