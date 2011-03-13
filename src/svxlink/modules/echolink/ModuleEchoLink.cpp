@@ -1128,8 +1128,10 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
       (regexec(&accept_outgoing_regex, station.callsign().c_str(),
 	       0, 0, 0) != 0))
   {
+    cerr << "Rejecting outgoing connection to " << station.callsign() << " ("
+	 << station.id() << ")\n";
     stringstream ss;
-    ss << "not_allowed " << station.callsign();
+    ss << "reject_outgoing_connection " << station.callsign();
     processEvent(ss.str());
     return;
   }
