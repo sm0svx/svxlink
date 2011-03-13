@@ -92,26 +92,26 @@ proc play_help {} {
 # Spell an EchoLink callsign
 #
 proc spellEchoLinkCallsign {call} {
-  global basedir;
+  global langdir
   if [regexp {^(\w+)-L$} $call ignored callsign] {
-    spellWord $callsign;
-    playSilence 50;
-    playMsg "link";
+    spellWord $callsign
+    playSilence 50
+    playMsg "link"
   } elseif [regexp {^(\w+)-R$} $call ignored callsign] {
-    spellWord $callsign;
-    playSilence 50;
-    playMsg "repeater";
+    spellWord $callsign
+    playSilence 50
+    playMsg "repeater"
   } elseif [regexp {^\*(.+)\*$} $call ignored name] {
-    playMsg "conference";
-    playSilence 50;
-    set lc_name [string tolower $name];
-    if [file exists "$basedir/EchoLink/conf-$lc_name.wav"] {
-      playFile "$basedir/EchoLink/conf-$lc_name.wav";
+    playMsg "conference"
+    playSilence 50
+    set lc_name [string tolower $name]
+    if [file exists "$langdir/EchoLink/conf-$lc_name.wav"] {
+      playFile "$langdir/EchoLink/conf-$lc_name.wav"
     } else {
-      spellEchoLinkCallsign $name;
+      spellEchoLinkCallsign $name
     }
   } else {
-    spellWord $call;
+    spellWord $call
   }
 }
 
