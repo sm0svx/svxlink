@@ -384,6 +384,17 @@ proc listen_only {status activate} {
 }
 
 
+#
+# Executed when an outgoing connection is rejected. This can happen if
+# REJECT_OUTGOING and/or ACCEPT_OUTGOING has been setup.
+#
+proc reject_outgoing_connection {call} {
+  spellEchoLinkCallsign $call;
+  playSilence 50;
+  playMsg "reject_connection";
+}
+
+
 
 #-----------------------------------------------------------------------------
 # The events below are for remote EchoLink announcements. Sounds are not

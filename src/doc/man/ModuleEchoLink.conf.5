@@ -31,29 +31,43 @@ will not be checked against the EchoLink directory server. A typical use of this
 is if you want to connect to your own svxlink server and both the server and you
 are behind a IP masquerading firewall. 
 .TP
-.B DROP
-Drop all connections where the remote callsign match this regular expression.
-No message will be sent to the remote station notifying about the drop. The
-connection will just be ignored.
-For more information see the
+.B DROP_INCOMING
+Drop all incoming connections where the remote callsign match this regular
+expression. No message will be sent to the remote station notifying about the
+drop. The connection will just be ignored.
+For more information on the syntax, see the
 .B REGULAR EXPRESSIONS
 chapter below.
 .TP
-.B REJECT
-Reject all connections where the remote callsign match this regular expression.
-A message will be sent to the remote station indicating that the connection was
-rejected.
-The DROP directive will be evaluated before REJECT.
-For more information see the
+.B REJECT_INCOMING
+Reject all incoming connections where the remote callsign match this regular
+expression. A message will be sent to the remote station indicating that the
+connection was rejected.
+The DROP_INCOMING directive will be evaluated before REJECT_INCOMING.
+For more information on the syntax, see the
 .B REGULAR EXPRESSIONS
 chapter below.
 .TP
-.B ACCEPT
-Only accept connections where the remote callsign match this regular expression.
-If the callsign doesn't match, a message will be sent to the remote station
-indicating that the connection was rejected.
-The DROP and REJECT directives will be evaluated before ACCEPT.
-For more information see the
+.B ACCEPT_INCOMING
+Only accept incoming connections where the remote callsign match this regular
+expression. If the callsign doesn't match, a message will be sent to the
+remote station indicating that the connection was rejected.
+The DROP_INCOMING and REJECT_INCOMING directives will be evaluated before
+ACCEPT_INCOMING.
+For more information on the syntax, see the
+.B REGULAR EXPRESSIONS
+chapter below.
+.TP
+.B REJECT_OUTGOING
+Reject all outgoing connections where the remote callsign match this regular
+expression. For more information on the syntax, see the
+.B REGULAR EXPRESSIONS
+chapter below.
+.TP
+.B ACCEPT_OUTGOING
+Only accept outgoing connections where the remote callsign match this regular
+expression. The REJECT_OUTGOING directive will be evaluated before
+ACCEPT_OUTGOING. For more information on the syntax, see the
 .B REGULAR EXPRESSIONS
 chapter below.
 .TP

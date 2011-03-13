@@ -1,4 +1,4 @@
- 0.12.0 -- ?? ??? 2010
+ 0.12.0 -- ?? ??? 2011
 -----------------------
 
 * Bugfix in the EchoLink module: Short callsign (<6 chars) was not handled
@@ -203,6 +203,15 @@
 * Better error handling for the DTMF command parser. Previously if for
   example two modules were setup with the same module id, SvxLink would
   just quit with a cryptic error message.
+
+* Now possible to reject and/or accept outgoing EchoLink connections to
+  specified stations using regular expressions in the same way that incoming
+  connections can be limited. New configuration variables: REJECT_OUTGOING
+  and ACCEPT_OUTGOING.
+
+* Changed the name of some configuration variables in the EchoLink module
+  DROP -> DROP_INCOMING, REJECT -> REJECT_INCOMING and
+  ACCEPT -> ACCET_INCOMING.
 
 
 
