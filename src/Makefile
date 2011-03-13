@@ -8,7 +8,8 @@
 #			
 # Targets:		all	  -- Make all
 #			clean     -- Cleanup compiler generated files.
-#			realclean -- Cleanup all generated files.
+#			realclean -- Cleanup most generated files.
+#			distclean -- Cleanup all generated files.
 #			linecount -- Count the lines of source code.
 #			tgz       -- Cleanup and create an archive. The
 #				     archive is named 'current subdir'.tgz.
@@ -69,9 +70,6 @@ BOLD		= "\033[1m"
 # End bold text
 NBOLD		= "\033[0m"
 
-# Use this macro to print info to the console
-ECHO		= /bin/echo -e
-
 # Create softlink
 MKSOFT		= ln -s
 
@@ -80,6 +78,30 @@ PRINT_DIR     	= \
       	      	print_dir() { \
 		  $(ECHO) $(BOLD)-------------- $$1 --------------$(NBOLD); \
 		}; print_dir
+
+# Remove directory (must be empty)
+RMDIR		= remove_dir() { \
+		    $(ECHO) --- Removing directory $(BOLD)$$*$(NBOLD)...; \
+		    rmdir $$*; \
+		  }; remove_dir
+
+RM = remove_file() { \
+       local options files file; \
+       while [ -n "$$1" ]; do \
+         if echo $$1 | grep -qE "^-"; then \
+           options="$$options $$1"; \
+         else \
+           files="$$files $$1"; \
+         fi; \
+         shift; \
+       done; \
+       for file in $$files; do \
+         if [ -e "$$file" -o -L "$$file" ]; then \
+           $(ECHO) --- Removing $(BOLD)$$file$(NBOLD)...; \
+           rm $$options $$file; \
+         fi \
+       done; \
+     }; remove_file
 
 
 #
@@ -169,6 +191,33 @@ ifeq ($(OS),)
 	$(RM) *~ $(ARCHIVENAME) .config
 	if [ ! -r makefile.inc ]; then \
 	  $(RM) makefile.root; \
+	fi
+else
+	$(MAKE) -f Makefile.win32 $@
+endif
+
+
+#
+# distclean - Remove everything created by the makefiles including
+#             softlinks so that the source tree looks exactly like
+#             when it was first unpacked.
+#
+.PHONY:	distclean
+distclean:	realclean
+ifeq ($(OS),)
+	for file in $$(find . -type l -name Makefile); do \
+	  $(RM) $$file; \
+	done
+	if [ -r makefile.inc ]; then \
+	  if [ -d $(BIN) ] && [ -z "$$(ls -A $(BIN))" ]; then \
+	    $(RMDIR) $(BIN); \
+	  fi; \
+	  if [ -d $(LIB) ] && [ -z "$$(ls -A $(LIB))" ]; then \
+	    $(RMDIR) $(LIB); \
+	  fi; \
+	  if [ -d $(INC) ] && [ -z "$$(ls -A $(INC))" ]; then \
+	    $(RMDIR) $(INC); \
+	  fi \
 	fi
 else
 	$(MAKE) -f Makefile.win32 $@
@@ -284,7 +333,7 @@ makefile.root:
 # Create the .config file if it does not exist
 #
 $(ROOT)/.config:	$(ROOT)/create_config.sh
-	echo -e --- Creating $(BOLD)$@$(NBOLD)...
+	$(ECHO) --- Creating $(BOLD)$@$(NBOLD)...
 	$(ROOT)/create_config.sh $@
 
 

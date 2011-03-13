@@ -1,4 +1,4 @@
- 0.12.0 -- ?? ??? 2010
+ 0.12.0 -- ?? ??? 2011
 -----------------------
 
 * Bugfix in the EchoLink module: Short callsign (<6 chars) was not handled
@@ -194,6 +194,24 @@
 
 * Bugfix in ModuleEchoLink: SvxLink would crash if no stations were
   found when using the random connect feature.
+
+* New squelch detector type: EVDEV. This squelch detector read events
+  from a /dev/input/eventX device node. This can for example be of use
+  if you have a USB audio device with some buttons on it. If you're in
+  luck, it generates events when the buttons are pressed.
+
+* Better error handling for the DTMF command parser. Previously if for
+  example two modules were setup with the same module id, SvxLink would
+  just quit with a cryptic error message.
+
+* Now possible to reject and/or accept outgoing EchoLink connections to
+  specified stations using regular expressions in the same way that incoming
+  connections can be limited. New configuration variables: REJECT_OUTGOING
+  and ACCEPT_OUTGOING.
+
+* Changed the name of some configuration variables in the EchoLink module
+  DROP -> DROP_INCOMING, REJECT -> REJECT_INCOMING and
+  ACCEPT -> ACCET_INCOMING.
 
 
 

@@ -231,11 +231,24 @@ Logic::~Logic(void)
 
 bool Logic::initialize(void)
 {
+  ChangeLangCmd *lang_cmd = new ChangeLangCmd(&cmd_parser, this);
+  if (!lang_cmd->addToParser())
+  {
+    cerr << "*** ERROR: Could not add the language change command \""
+	 << lang_cmd->cmdStr() << "\".\n";
+    delete lang_cmd;  // FIXME: Do this in cleanup() instead
+    return false;
+  }
+  
   string value;
   if (cfg().getValue(name(), "LINKS", value))
   {
     LinkCmd *link_cmd = new LinkCmd(&cmd_parser, this);
-    link_cmd->initialize(cfg(), value);
+    if (!link_cmd->initialize(cfg(), value))
+    {
+      delete link_cmd;  // FIXME: Do this in cleanup() instead
+      return false;
+    }
   }
 
   string event_handler_str;
@@ -493,7 +506,15 @@ bool Logic::initialize(void)
     {
       QsoRecorderCmd *qso_recorder_cmd =
           new QsoRecorderCmd(&cmd_parser, this, qso_recorder);
-      qso_recorder_cmd->initialize(value);
+      if (!qso_recorder_cmd->initialize(value))
+      {
+	cerr << "*** ERROR: Could not add activation command for the QSO "
+	     << "recorder in logic \"" << name() << "\". You probably have "
+	     << "the same command set up in more than one place.\n";
+	delete qso_recorder_cmd;  // FIXME: Do this in cleanup() instead
+	cleanup();
+	return false;
+      }
     }
 
       // Connect RX audio and link audio to the qso recorder
@@ -1123,6 +1144,21 @@ void Logic::loadModule(const string& module_cfg_name)
     return;
   }
 
+  stringstream ss;
+  ss << module->id();
+  ModuleActivateCmd *cmd = new ModuleActivateCmd(&cmd_parser, ss.str(), this);
+  if (!cmd->addToParser())
+  {
+    cerr << "\n*** ERROR: Failed to add module activation command for module \""
+	 << module_cfg_name << "\". This is probably due to having set up two "
+	 << "modules with the same module id or choosing a module id that "
+	 << "is the same as another command.\n\n";
+    delete cmd;
+    delete module;
+    dlclose(handle);
+    return;
+  }
+
     // Connect module audio output to the module audio selector
   audio_from_module_selector->addSource(module);
   audio_from_module_selector->enableAutoSelect(module, 0);
@@ -1132,10 +1168,6 @@ void Logic::loadModule(const string& module_cfg_name)
   audio_to_module_splitter->enableSink(module, false);
 
   modules.push_back(module);
-
-  stringstream ss;
-  ss << module->id();
-  new ModuleActivateCmd(&cmd_parser, ss.str(), this);
 
 } /* Logic::loadModule */
 
@@ -1208,13 +1240,6 @@ void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
   else if ((!force_core_cmd) && (active_module != 0))
   {
     active_module->dtmfCmdReceived(cmd);
-  }
-  else if (cmd.substr(0, 2) == "00")
-  {
-    stringstream ss;
-    ss << "set_language ";
-    ss << cmd.substr(2);
-    processEvent(ss.str());
   }
   else if (!cmd.empty())
   {

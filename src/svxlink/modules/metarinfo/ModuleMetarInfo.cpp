@@ -53,7 +53,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncTcpClient.h>
 #include <AsyncConfig.h>
-#include <version/MODULE_METARINFO.h>
 
 
 
@@ -63,6 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/MODULE_METARINFO.h"
 #include "ModuleMetarInfo.h"
 #include "common.h"
 

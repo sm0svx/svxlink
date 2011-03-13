@@ -46,7 +46,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/MODULE_DTMF_REPEATER.h>
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 
@@ -57,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/MODULE_DTMF_REPEATER.h"
 #include "ModuleDtmfRepeater.h"
 
 

@@ -6,7 +6,7 @@
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2011 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -47,8 +47,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/MODULE_ECHOLINK.h>
-
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
 #include <AsyncAudioSplitter.h>
@@ -65,6 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/MODULE_ECHOLINK.h"
 #include "ModuleEchoLink.h"
 #include "QsoImpl.h"
 
@@ -252,55 +251,91 @@ bool ModuleEchoLink::initialize(void)
   
   cfg().getValue(cfgName(), "ALLOW_IP", allow_ip);
   
-  if (!cfg().getValue(cfgName(), "DROP", value))
+  if (!cfg().getValue(cfgName(), "DROP_INCOMING", value))
   {
     value = "^$";
   }
-  int err = regcomp(&drop_regex, value.c_str(),
+  int err = regcomp(&drop_incoming_regex, value.c_str(),
                     REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
   {
-    size_t msg_size = regerror(err, &drop_regex, 0, 0);
+    size_t msg_size = regerror(err, &drop_incoming_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, &drop_regex, msg, msg_size);
+    size_t err_size = regerror(err, &drop_incoming_regex, msg, msg_size);
     assert(err_size == msg_size);
-    cerr << "*** ERROR: Syntax error in " << cfgName() << "/DROP: "
+    cerr << "*** ERROR: Syntax error in " << cfgName() << "/DROP_INCOMING: "
          << msg << endl;
     moduleCleanup();
     return false;
   }
   
-  if (!cfg().getValue(cfgName(), "REJECT", value))
+  if (!cfg().getValue(cfgName(), "REJECT_INCOMING", value))
   {
     value = "^$";
   }
-  err = regcomp(&reject_regex, value.c_str(),
+  err = regcomp(&reject_incoming_regex, value.c_str(),
                 REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
   {
-    size_t msg_size = regerror(err, &reject_regex, 0, 0);
+    size_t msg_size = regerror(err, &reject_incoming_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, &reject_regex, msg, msg_size);
+    size_t err_size = regerror(err, &reject_incoming_regex, msg, msg_size);
     assert(err_size == msg_size);
-    cerr << "*** ERROR: Syntax error in " << cfgName() << "/REJECT: "
+    cerr << "*** ERROR: Syntax error in " << cfgName() << "/REJECT_INCOMING: "
          << msg << endl;
     moduleCleanup();
     return false;
   }
   
-  if (!cfg().getValue(cfgName(), "ACCEPT", value))
+  if (!cfg().getValue(cfgName(), "ACCEPT_INCOMING", value))
   {
     value = "^.*$";
   }
-  err = regcomp(&accept_regex, value.c_str(),
+  err = regcomp(&accept_incoming_regex, value.c_str(),
                 REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
   {
-    size_t msg_size = regerror(err, &accept_regex, 0, 0);
+    size_t msg_size = regerror(err, &accept_incoming_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, &accept_regex, msg, msg_size);
+    size_t err_size = regerror(err, &accept_incoming_regex, msg, msg_size);
     assert(err_size == msg_size);
-    cerr << "*** ERROR: Syntax error in " << cfgName() << "/ACCEPT: "
+    cerr << "*** ERROR: Syntax error in " << cfgName() << "/ACCEPT_INCOMING: "
+         << msg << endl;
+    moduleCleanup();
+    return false;
+  }
+
+  if (!cfg().getValue(cfgName(), "REJECT_OUTGOING", value))
+  {
+    value = "^$";
+  }
+  err = regcomp(&reject_outgoing_regex, value.c_str(),
+                REG_EXTENDED | REG_NOSUB | REG_ICASE);
+  if (err != 0)
+  {
+    size_t msg_size = regerror(err, &reject_outgoing_regex, 0, 0);
+    char msg[msg_size];
+    size_t err_size = regerror(err, &reject_outgoing_regex, msg, msg_size);
+    assert(err_size == msg_size);
+    cerr << "*** ERROR: Syntax error in " << cfgName() << "/REJECT_OUTGOING: "
+         << msg << endl;
+    moduleCleanup();
+    return false;
+  }
+
+  if (!cfg().getValue(cfgName(), "ACCEPT_OUTGOING", value))
+  {
+    value = "^.*$";
+  }
+  err = regcomp(&accept_outgoing_regex, value.c_str(),
+                REG_EXTENDED | REG_NOSUB | REG_ICASE);
+  if (err != 0)
+  {
+    size_t msg_size = regerror(err, &accept_outgoing_regex, 0, 0);
+    char msg[msg_size];
+    size_t err_size = regerror(err, &accept_outgoing_regex, msg, msg_size);
+    assert(err_size == msg_size);
+    cerr << "*** ERROR: Syntax error in " << cfgName() << "/ACCEPT_OUTGOING: "
          << msg << endl;
     moduleCleanup();
     return false;
@@ -384,9 +419,11 @@ void ModuleEchoLink::moduleCleanup(void)
 {
   //FIXME: Delete qso objects
   
-  regfree(&accept_regex);
-  regfree(&reject_regex);
-  regfree(&drop_regex);
+  regfree(&accept_incoming_regex);
+  regfree(&reject_incoming_regex);
+  regfree(&drop_incoming_regex);
+  regfree(&accept_outgoing_regex);
+  regfree(&reject_outgoing_regex);
   
   //delete tinfo;
   //tinfo = 0;
@@ -773,7 +810,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   cout << "Incoming EchoLink connection from " << callsign
        << " (" << name << ") at " << ip << "\n";
   
-  if (regexec(&drop_regex, callsign.c_str(), 0, 0, 0) == 0)
+  if (regexec(&drop_incoming_regex, callsign.c_str(), 0, 0, 0) == 0)
   {
     cerr << "*** WARNING: Dropping incoming connection due to configuration.\n";
     return;
@@ -844,8 +881,8 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
     return;
   }
   
-  if ((regexec(&reject_regex, callsign.c_str(), 0, 0, 0) == 0) ||
-      (regexec(&accept_regex, callsign.c_str(), 0, 0, 0) != 0))
+  if ((regexec(&reject_incoming_regex, callsign.c_str(), 0, 0, 0) == 0) ||
+      (regexec(&accept_incoming_regex, callsign.c_str(), 0, 0, 0) != 0))
   {
     qso->reject(true);
     return;
@@ -1083,6 +1120,19 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     cerr << "Cannot connect to myself (" << mycall << "/" << station.id()
       	 << ")...\n";
     processEvent("self_connect");
+    return;
+  }
+
+  if ((regexec(&reject_outgoing_regex, station.callsign().c_str(),
+	       0, 0, 0) == 0) ||
+      (regexec(&accept_outgoing_regex, station.callsign().c_str(),
+	       0, 0, 0) != 0))
+  {
+    cerr << "Rejecting outgoing connection to " << station.callsign() << " ("
+	 << station.id() << ")\n";
+    stringstream ss;
+    ss << "reject_outgoing_connection " << station.callsign();
+    processEvent(ss.str());
     return;
   }
 

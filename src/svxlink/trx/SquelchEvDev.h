@@ -1,16 +1,12 @@
 /**
-@file	 ModuleParrot.h
-@brief   A module that implements a "parrot" function.
+@file	 SquelchEvDev.h
+@brief   A squelch detector that read squelch state from /dev/input/eventX.
 @author  Tobias Blomberg / SM0SVX
-@date	 2004-03-21
-
-This module implements a "parrot" function. It plays back everything you say
-to it. This can be used as a simplex repeater or just so you can hear how
-you sound.
+@date	 2011-02-22
 
 \verbatim
-A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2004-2011  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,9 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-#ifndef MODULE_PARROT_INCLUDED
-#define MODULE_PARROT_INCLUDED
+#ifndef SQUELCH_EVDEV_INCLUDED
+#define SQUELCH_EVDEV_INCLUDED
 
 
 /****************************************************************************
@@ -39,8 +34,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <iostream>
 #include <string>
-#include <list>
+#include <vector>
 
 
 /****************************************************************************
@@ -48,8 +44,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Project Includes
  *
  ****************************************************************************/
-
-#include <Module.h>
 
 
 
@@ -59,7 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "version/SVXLINK.h"
+#include "Squelch.h"
 
 
 /****************************************************************************
@@ -70,11 +64,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace Async
 {
-  class Timer;
-  class SampleFifo;
-  class AudioValve;
+  class FdWatch;
 };
-
 
 
 /****************************************************************************
@@ -93,7 +84,7 @@ namespace Async
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -118,60 +109,57 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A module that provides a "parrot" function.h
-@author Tobias Blomberg
-@date   2004-03-07
+@brief	An event input device squelch detector
+@author Tobias Blomberg / SM0SVX
+@date   2011-02-22
+
+This squelch detector read the squelch indicator signal from a event input
+device, that is an /dev/input/eventX device.
 */
-class ModuleParrot : public Module
+class SquelchEvDev : public Squelch
 {
   public:
-    ModuleParrot(void *dl_handle, Logic *logic, const std::string& cfg_name);
-    ~ModuleParrot(void);
-    bool initialize(void);
-    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
+    /**
+     * @brief 	Default constuctor
+     */
+    SquelchEvDev(void);
+
+    /**
+     * @brief 	Destructor
+     */
+    ~SquelchEvDev(void);
+
+    /**
+     * @brief 	Initialize the squelch detector
+     * @param 	cfg A previsously initialized config object
+     * @param 	rx_name The name of the RX (config section name)
+     * @return	Returns \em true on success or else \em false
+     */
+    bool initialize(Async::Config& cfg, const std::string& rx_name);
 
   protected:
-    /**
-     * @brief 	Notify the module that the logic core idle state has changed
-     * @param 	is_idle Set to \em true if the logic core is idle or else
-     *	      	\em false.
-     *
-     * This function is called by the logic core when the idle state changes.
-     */
-    virtual void logicIdleStateChanged(bool is_idle);
-  
+
+
   private:
-    class FifoAdapter;
-    friend class FifoAdapter;
-    
-    FifoAdapter       	    *adapter;
-    Async::AudioFifo	    *fifo;
-    Async::AudioValve 	    *valve;
-    bool      	      	    squelch_is_open;
-    int       	      	    repeat_delay;
-    Async::Timer      	    *repeat_delay_timer;
-    std::list<std::string>  cmd_queue;
-    
-    void activateInit(void);
-    void deactivateCleanup(void);
-    bool dtmfDigitReceived(char digit, int duration);
-    void dtmfCmdReceived(const std::string& cmd);
-    void dtmfCmdReceivedWhenIdle(const std::string &cmd);
-    void squelchOpen(bool is_open);
+    std::vector<int>	open_ev;
+    std::vector<int>	close_ev;
+    int			fd;
+    Async::FdWatch	*watch;
 
-    void allSamplesWritten(void);
-    void onRepeatDelayExpired(Async::Timer *t);
-    void execCmdQueue(void);
+    SquelchEvDev(const SquelchEvDev&);
+    SquelchEvDev& operator=(const SquelchEvDev&);
+    void readEvDevData(Async::FdWatch *w);
 
-};  /* class ModuleParrot */
+};  /* class SquelchEvDev */
 
 
 //} /* namespace */
 
-#endif /* MODULE_PARROT_INCLUDED */
+#endif /* SQUELCH_EVDEV_INCLUDED */
 
 
 
 /*
  * This file has not been truncated
  */
+

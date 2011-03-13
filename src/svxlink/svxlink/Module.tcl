@@ -45,10 +45,7 @@ proc timeout {module_name} {
 # Executed when playing of the help message for a module has been requested.
 #
 proc play_help {module_name} {
-  global basedir;
-  global lang;
-
-  playMsg $module_name "help";
+  playMsg $module_name "help"
   playSubcommands $module_name help_subcmd "sub_commands_are"
 }
 

@@ -484,7 +484,16 @@ proc qso_recorder_already_active {} {
 # Executed when the user is requesting a language change
 #
 proc set_language {lang_code} {
-  puts "Setting language $lang_code";
+  puts "Setting language $lang_code (NOT IMPLEMENTED)";
+
+}
+
+
+#
+# Executed when the user requests a list of available languages
+#
+proc list_languages {} {
+  puts "Available languages: (NOT IMPLEMENTED)";
 
 }
 

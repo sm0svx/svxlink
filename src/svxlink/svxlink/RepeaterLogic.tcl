@@ -369,6 +369,14 @@ proc set_language {lang_code} {
 }
 
 
+#
+# Executed when the user requests a list of available languages
+#
+proc list_languages {} {
+  Logic::list_languages
+}
+
+
 
 # end of namespace
 }

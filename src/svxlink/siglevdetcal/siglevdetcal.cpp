@@ -6,9 +6,10 @@
 #include <AsyncFdWatch.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioIO.h>
-#include <version/SIGLEV_DET_CAL.h>
 
 #include <Rx.h>
+
+#include "version/SIGLEV_DET_CAL.h"
 
 using namespace std;
 using namespace SigC;

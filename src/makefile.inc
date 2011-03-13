@@ -496,7 +496,8 @@ clean::
 		$(notdir $(CPPPROGS:%=%_version.o)) $(notdir $(CPPPROGS:%=%.o)) \
 		$(PROGS) $(CPPPROGS) core $(SHLIBFILE) \
 		$(LIB)/lib$(LIBNAME).so.$(SHLIB_MAJOR).$(SHLIB_MINOR) \
-		$(LIB)/lib$(LIBNAME).so $(PLUGINOBJS) $(PRE_TARGETS)
+		$(LIB)/lib$(LIBNAME).so $(PLUGINOBJS) $(PRE_TARGETS) \
+		$(PLUGINS:%=%.so) $(PLUGINS_CPP:%=%.so)
 	QTFILES="$(QTHEADERS:%.h=moc_%.cpp) $(LIB_QTHEADERS:%.h=moc_%.cpp)"; \
 	for file in $${QTFILES}; do \
 	  if [ -f $$file ] && grep -q "meta object code" $$file; then \
@@ -513,6 +514,7 @@ realclean::	clean
 	$(RM) $(DEP_FILES) $(EXPINC:%=$(INC)/%) *~ ./makefile.root \
 		$(ARCHIVENAME)
 	$(RM) -rf depend
+	$(RM) -rf version
 	$(RM) -f .config
 
 
@@ -815,11 +817,9 @@ $(ROOT)/.config:	$(ROOT)/create_config.sh
 	fi
 
 # Generate version files
-# Different versions of gmake behave differently when including <version/FILE.h>
-# so we need two targets.
-$(INC)/version/%.h version/%.h: $(ROOT)/versions
-	if [ ! -d $(INC)/version ]; then \
-	  $(MKDIR) $(INC)/version -p; \
+version/%.h: $(ROOT)/versions
+	if [ ! -d version ]; then \
+	  $(MKDIR) version -p; \
 	fi; \
 	. $(ROOT)/versions; \
 	if [ -n "$${$*}" ]; then \
@@ -828,7 +828,7 @@ $(INC)/version/%.h version/%.h: $(ROOT)/versions
 	  $(ECHO) "*** WARNING: Version entry missing for \"$*\""; \
 	  VERSION="?.?.?"; \
 	fi; \
-	TARGET="$(INC)/version/$*.h"; \
+	TARGET="version/$*.h"; \
 	if ! grep -q \"$${VERSION}\" $${TARGET} > /dev/null 2>&1; then \
 	  $(ECHO) --- Creating $(BOLD)$${TARGET}$(NBOLD)...; \
 	  echo "#ifndef $*_VERSION" > $${TARGET}; \

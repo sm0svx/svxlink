@@ -95,10 +95,6 @@ Can&apos;t create connection to</source>
         <translation>&amp;Від&apos;єднайся</translation>
     </message>
     <message>
-        <source>Alt+D</source>
-        <translation></translation>
-    </message>
-    <message>
         <source>VOX</source>
         <translation></translation>
     </message>
@@ -551,7 +547,7 @@ Message</source>
     </message>
     <message>
         <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation>Працювити через аудіо пристрій (напр. /dev/dsp)</translation>
+        <translation type="obsolete">Працювити через аудіо пристрій (напр. /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
@@ -676,6 +672,10 @@ Message</source>
     <message>
         <source>Passwords do not match</source>
         <translation>Введено різні паролі</translation>
+    </message>
+    <message>
+        <source>The audio device to use (e.g. alsa:default)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

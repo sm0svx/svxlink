@@ -66,7 +66,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <Tx.h>
 #include <common.h>
 
-#include <version/REMOTE_TRX.h>
 
 
 /****************************************************************************
@@ -75,6 +74,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/REMOTE_TRX.h"
 #include "TrxHandler.h"
 #include "NetTrxAdapter.h"
 

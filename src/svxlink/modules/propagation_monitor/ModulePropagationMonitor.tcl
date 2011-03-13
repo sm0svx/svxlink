@@ -133,25 +133,34 @@ proc handle_dxrobot {msg_file} {
   set subject [subject_of_msg "$msg_file"]
   printInfo $subject
   
-  if {![regexp {^\w+ (.*): (.*?)(?: - (.*))?$} $subject -> time alerttxt info]} {
-    printInfo "*** WARNING: Unknown message format for DXRobot alert in $msg_file"
+  if {![regexp {^(\w{3}) (\d{4}) (\w+): (.*?)(?: - (.*))?$} $subject -> dow time tz alerttxt info]} {
+    printInfo "*** WARNING: Unknown message format for DXRobot alert in $msg_file: $subject"
     return
   }
   
   set hour [clock format [clock scan $time] -format "%H"]
   set min [clock format [clock scan $time] -format "%M"]
   
-  if {$alerttxt == "VHF Aurora Alert"} {
+  # Example: Sat 0237 UTC: VHF AURORA WARNING
+  if {$alerttxt == "VHF AURORA WARNING"} {
     processEvent "dxrobot_aurora_alert $hour $min"
-  } elseif {$alerttxt == "144 MHz E-skip Alert"} {
-    if [regexp {band open from (.+) to (.+)} $info -> from to] {
-      processEvent "dxrobot_eskip_alert $hour $min $from $to"
-    } else {
-      processEvent "dxrobot_eskip_alert $hour $min"
-    }
-  } else {
-    printInfo "*** WARNING: Unknown alert text \"$alerttxt\" in $msg_file"
+    return
   }
+
+  # Example: Wed 1102 UTC: 50 MHz E-skip Alert - 6 m Band open from OE4VIE to LA5YJ
+  set match [regexp {^(\d+) MHz E-skip Alert$} $alerttxt -> fq_band]
+  if {$match} {
+    if [regexp {^(\d+) (\w+) Band open from (.+) to (.+)$} $info -> band_num band_unit from to] {
+      set band "${band_num}${band_unit}"
+      processEvent "dxrobot_eskip_alert $hour $min $band $from $to"
+    } else {
+      set band "[expr {300/$fq_band}]m"
+      processEvent "dxrobot_eskip_alert $hour $min $band"
+    }
+    return
+  }
+
+  printInfo "*** WARNING: Unknown DXRobot alert encountered in $msg_file: $subject"
 }
 
 
@@ -169,8 +178,9 @@ proc handle_vhfdx {msg_file} {
   }
 
   # Example: Possible Sporadic-E from JO89 on 6m. Try towards LQ28 (13�)
+  # Example: Possible Sporadic-E from JO89 on 6m. Try towards JN61 (191 degrees)
   set match [regexp \
-	{^Possible Sporadic-E from (\w\w\d\d) on (\d+c?m)\. Try towards (\w\w\d\d) \((\d+).\)$} \
+	{^Possible Sporadic-E from (\w\w\d\d) on (\d+c?m)\. Try towards (\w\w\d\d) \((\d+) degrees\)$} \
 	$subject -> from_loc band to_loc direction]
   if {$match} {
     processEvent "vhfdx_possible_sporadic_e_opening $band $from_loc $to_loc $direction"

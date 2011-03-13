@@ -99,10 +99,6 @@ Kan ej skapa uppkoppling till</translation>
         <translation>Namn:</translation>
     </message>
     <message>
-        <source>Alt+D</source>
-        <translation></translation>
-    </message>
-    <message>
         <source>VOX</source>
         <translation></translation>
     </message>

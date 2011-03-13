@@ -1,14 +1,12 @@
 /**
 @file	 CmdParser.cpp
-@brief   A_brief_description_for_this_file
+@brief   A command parser for DTMF commands
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-24
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2011 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -123,17 +121,26 @@ CmdParser::~CmdParser(void)
 } /* CmdParser::~CmdParser */
 
 
-void CmdParser::addCmd(Command *cmd)
+bool CmdParser::addCmd(Command *cmd)
 {
-  assert(cmds.count(cmd->cmdStr()) == 0);
-  cmds[cmd->cmdStr()] = cmd;
+  bool cmd_undefined = (cmds.count(cmd->cmdStr()) == 0);
+  if (cmd_undefined)
+  {
+    cmds[cmd->cmdStr()] = cmd;
+  }
+  return cmd_undefined;
 } /* CmdParser::addCmd */
 
 
-void CmdParser::removeCmd(Command *cmd)
+bool CmdParser::removeCmd(Command *cmd)
 {
-  assert(cmds.count(cmd->cmdStr()) == 1);
-  cmds.erase(cmd->cmdStr());
+  CmdMap::iterator cmd_it = cmds.find(cmd->cmdStr());
+  bool cmd_exist = (cmd_it != cmds.end());
+  if (cmd_exist)
+  {
+    cmds.erase(cmd_it);
+  }
+  return cmd_exist;
 } /* CmdParser::removeCmd */
 
 
