@@ -150,7 +150,10 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
   : Module(dl_handle, logic, cfg_name), dir(0), dir_refresh_timer(0),
     remote_activation(false), pending_connect_id(-1), last_message(""),
     max_connections(1), max_qsos(1), talker(0), squelch_is_open(false),
-    state(STATE_NORMAL), cbc_timer(0), splitter(0), listen_only_valve(0)
+    state(STATE_NORMAL), cbc_timer(0), drop_incoming_regex(0),
+    reject_incoming_regex(0), accept_incoming_regex(0),
+    reject_outgoing_regex(0), accept_outgoing_regex(0), splitter(0),
+    listen_only_valve(0), selector(0)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
@@ -255,13 +258,14 @@ bool ModuleEchoLink::initialize(void)
   {
     value = "^$";
   }
-  int err = regcomp(&drop_incoming_regex, value.c_str(),
+  drop_incoming_regex = new regex_t;
+  int err = regcomp(drop_incoming_regex, value.c_str(),
                     REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
   {
-    size_t msg_size = regerror(err, &drop_incoming_regex, 0, 0);
+    size_t msg_size = regerror(err, drop_incoming_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, &drop_incoming_regex, msg, msg_size);
+    size_t err_size = regerror(err, drop_incoming_regex, msg, msg_size);
     assert(err_size == msg_size);
     cerr << "*** ERROR: Syntax error in " << cfgName() << "/DROP_INCOMING: "
          << msg << endl;
@@ -273,13 +277,14 @@ bool ModuleEchoLink::initialize(void)
   {
     value = "^$";
   }
-  err = regcomp(&reject_incoming_regex, value.c_str(),
+  reject_incoming_regex = new regex_t;
+  err = regcomp(reject_incoming_regex, value.c_str(),
                 REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
   {
-    size_t msg_size = regerror(err, &reject_incoming_regex, 0, 0);
+    size_t msg_size = regerror(err, reject_incoming_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, &reject_incoming_regex, msg, msg_size);
+    size_t err_size = regerror(err, reject_incoming_regex, msg, msg_size);
     assert(err_size == msg_size);
     cerr << "*** ERROR: Syntax error in " << cfgName() << "/REJECT_INCOMING: "
          << msg << endl;
@@ -291,13 +296,14 @@ bool ModuleEchoLink::initialize(void)
   {
     value = "^.*$";
   }
-  err = regcomp(&accept_incoming_regex, value.c_str(),
+  accept_incoming_regex = new regex_t;
+  err = regcomp(accept_incoming_regex, value.c_str(),
                 REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
   {
-    size_t msg_size = regerror(err, &accept_incoming_regex, 0, 0);
+    size_t msg_size = regerror(err, accept_incoming_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, &accept_incoming_regex, msg, msg_size);
+    size_t err_size = regerror(err, accept_incoming_regex, msg, msg_size);
     assert(err_size == msg_size);
     cerr << "*** ERROR: Syntax error in " << cfgName() << "/ACCEPT_INCOMING: "
          << msg << endl;
@@ -309,13 +315,14 @@ bool ModuleEchoLink::initialize(void)
   {
     value = "^$";
   }
-  err = regcomp(&reject_outgoing_regex, value.c_str(),
+  reject_outgoing_regex = new regex_t;
+  err = regcomp(reject_outgoing_regex, value.c_str(),
                 REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
   {
-    size_t msg_size = regerror(err, &reject_outgoing_regex, 0, 0);
+    size_t msg_size = regerror(err, reject_outgoing_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, &reject_outgoing_regex, msg, msg_size);
+    size_t err_size = regerror(err, reject_outgoing_regex, msg, msg_size);
     assert(err_size == msg_size);
     cerr << "*** ERROR: Syntax error in " << cfgName() << "/REJECT_OUTGOING: "
          << msg << endl;
@@ -327,13 +334,14 @@ bool ModuleEchoLink::initialize(void)
   {
     value = "^.*$";
   }
-  err = regcomp(&accept_outgoing_regex, value.c_str(),
+  accept_outgoing_regex = new regex_t;
+  err = regcomp(accept_outgoing_regex, value.c_str(),
                 REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
   {
-    size_t msg_size = regerror(err, &accept_outgoing_regex, 0, 0);
+    size_t msg_size = regerror(err, accept_outgoing_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, &accept_outgoing_regex, msg, msg_size);
+    size_t err_size = regerror(err, accept_outgoing_regex, msg, msg_size);
     assert(err_size == msg_size);
     cerr << "*** ERROR: Syntax error in " << cfgName() << "/ACCEPT_OUTGOING: "
          << msg << endl;
@@ -372,7 +380,6 @@ bool ModuleEchoLink::initialize(void)
     // stations: (QsoImpl -> ) Selector -> Fifo -> <to core>
   selector = new AudioSelector;
   AudioSource::setHandler(selector);
-
   
   return true;
   
@@ -419,14 +426,37 @@ void ModuleEchoLink::moduleCleanup(void)
 {
   //FIXME: Delete qso objects
   
-  regfree(&accept_incoming_regex);
-  regfree(&reject_incoming_regex);
-  regfree(&drop_incoming_regex);
-  regfree(&accept_outgoing_regex);
-  regfree(&reject_outgoing_regex);
+  if (accept_incoming_regex != 0)
+  {
+    regfree(accept_incoming_regex);
+    delete accept_incoming_regex;
+    accept_incoming_regex = 0;
+  }
+  if (reject_incoming_regex != 0)
+  {
+    regfree(reject_incoming_regex);
+    delete reject_incoming_regex;
+    reject_incoming_regex = 0;
+  }
+  if (drop_incoming_regex != 0)
+  {
+    regfree(drop_incoming_regex);
+    delete drop_incoming_regex;
+    drop_incoming_regex = 0;
+  }
+  if (accept_outgoing_regex != 0)
+  {
+    regfree(accept_outgoing_regex);
+    delete accept_outgoing_regex;
+    accept_outgoing_regex = 0;
+  }
+  if (reject_outgoing_regex != 0)
+  {
+    regfree(reject_outgoing_regex);
+    delete reject_outgoing_regex;
+    reject_outgoing_regex = 0;
+  }
   
-  //delete tinfo;
-  //tinfo = 0;
   delete dir_refresh_timer;
   dir_refresh_timer = 0;
   delete Dispatcher::instance();
@@ -810,7 +840,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   cout << "Incoming EchoLink connection from " << callsign
        << " (" << name << ") at " << ip << "\n";
   
-  if (regexec(&drop_incoming_regex, callsign.c_str(), 0, 0, 0) == 0)
+  if (regexec(drop_incoming_regex, callsign.c_str(), 0, 0, 0) == 0)
   {
     cerr << "*** WARNING: Dropping incoming connection due to configuration.\n";
     return;
@@ -881,8 +911,8 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
     return;
   }
   
-  if ((regexec(&reject_incoming_regex, callsign.c_str(), 0, 0, 0) == 0) ||
-      (regexec(&accept_incoming_regex, callsign.c_str(), 0, 0, 0) != 0))
+  if ((regexec(reject_incoming_regex, callsign.c_str(), 0, 0, 0) == 0) ||
+      (regexec(accept_incoming_regex, callsign.c_str(), 0, 0, 0) != 0))
   {
     qso->reject(true);
     return;
@@ -1123,9 +1153,9 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     return;
   }
 
-  if ((regexec(&reject_outgoing_regex, station.callsign().c_str(),
+  if ((regexec(reject_outgoing_regex, station.callsign().c_str(),
 	       0, 0, 0) == 0) ||
-      (regexec(&accept_outgoing_regex, station.callsign().c_str(),
+      (regexec(accept_outgoing_regex, station.callsign().c_str(),
 	       0, 0, 0) != 0))
   {
     cerr << "Rejecting outgoing connection to " << station.callsign() << " ("

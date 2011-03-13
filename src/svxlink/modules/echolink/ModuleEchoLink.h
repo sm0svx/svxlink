@@ -177,12 +177,12 @@ class ModuleEchoLink : public Module
     bool      	      	  squelch_is_open;
     State		  state;
     StnList		  cbc_stns;
-    Async::Timer	  *cbc_timer;
-    regex_t   	      	  drop_incoming_regex;
-    regex_t   	      	  reject_incoming_regex;
-    regex_t   	      	  accept_incoming_regex;
-    regex_t   	      	  reject_outgoing_regex;
-    regex_t   	      	  accept_outgoing_regex;
+    Async::Timer	  	  *cbc_timer;
+    regex_t   	      	  *drop_incoming_regex;
+    regex_t   	      	  *reject_incoming_regex;
+    regex_t   	      	  *accept_incoming_regex;
+    regex_t   	      	  *reject_outgoing_regex;
+    regex_t   	      	  *accept_outgoing_regex;
     EchoLink::StationData last_disc_stn;
     Async::AudioSplitter  *splitter;
     Async::AudioValve 	  *listen_only_valve;
