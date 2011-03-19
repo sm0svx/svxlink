@@ -117,9 +117,9 @@ AudioProcessor::AudioProcessor(void)
   : fifo(64), input_rate(1), output_rate(1)
 {
   AudioSource::setHandler(&fifo);
-  sink.registerSink(&fifo);
-  sink.sigRequestSamples.connect(slot(*this, &AudioProcessor::onRequestSamples));
-  sink.sigAllSamplesFlushed.connect(slot(*this, &AudioProcessor::onAllSamplesFlushed));
+  sigsrc.registerSink(&fifo);
+  sigsrc.sigRequestSamples.connect(slot(*this, &AudioProcessor::onRequestSamples));
+  sigsrc.sigAllSamplesFlushed.connect(slot(*this, &AudioProcessor::onAllSamplesFlushed));
 } /* AudioProcessor::AudioProcessor */
 
 
@@ -140,7 +140,7 @@ int AudioProcessor::writeSamples(const float *samples, int count)
   {
     float buf[space];
     int dest_len = processSamples(buf, samples, len);
-    assert(fifo.writeSamples(buf, dest_len) == dest_len);
+    assert(sigsrc.writeSamples(buf, dest_len) == dest_len);
 
     count -= len;
     samples += len;
@@ -157,7 +157,7 @@ int AudioProcessor::writeSamples(const float *samples, int count)
 void AudioProcessor::flushSamples(void)
 {
   //cout << "AudioProcessor::flushSamples" << endl;
-  fifo.flushSamples();
+  sigsrc.flushSamples();
 } /* AudioProcessor::flushSamples */
 
 

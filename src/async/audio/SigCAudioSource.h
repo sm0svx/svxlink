@@ -139,7 +139,7 @@ class SigCAudioSource : public AudioSource, public SigC::Object
       sigAllSamplesFlushed();
     }
     
-    int writeSamples(float *samples, int len)
+    int writeSamples(const float *samples, int len)
     {
       return sinkWriteSamples(samples, len);
     }

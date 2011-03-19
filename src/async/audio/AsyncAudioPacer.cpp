@@ -246,12 +246,16 @@ void AudioPacer::outputNextBlock(Timer *t)
   // cerr << " block: " << count
   //      << " buffer: " << samplesInBuffer()
   //      << endl;
+  bool was_flushing = is_flushing;
 
   /* output the block */
   outputSamplesFromBuffer(count);
 
   /* check amount of available samples */
-  sourceRequestSamples(buf_size - samplesInBuffer());
+  if (!was_flushing)
+  {
+    sourceRequestSamples(buf_size - samplesInBuffer());
+  }
 
 } /* AudioPacer::outputNextBlock */
 

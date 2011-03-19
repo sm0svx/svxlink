@@ -106,6 +106,10 @@ class Async::AudioMixer::MixerSrc : public AudioReader
       //printf("Async::AudioMixer::MixerSrc::flushSamples\n");
       is_active = false;
       is_flushing = true;
+      if (!isReading())
+      {
+        mixer->checkFlushSamples();
+      }
     }
 
     void allSamplesFlushed(void)
@@ -160,9 +164,9 @@ AudioMixer::AudioMixer(void)
   : fifo(64), is_flushing(false)
 {
   AudioSource::setHandler(&fifo);
-  sink.registerSink(&fifo);
-  sink.sigRequestSamples.connect(slot(*this, &AudioMixer::onRequestSamples));
-  sink.sigAllSamplesFlushed.connect(slot(*this, &AudioMixer::onAllSamplesFlushed));
+  sigsrc.registerSink(&fifo);
+  sigsrc.sigRequestSamples.connect(slot(*this, &AudioMixer::onRequestSamples));
+  sigsrc.sigAllSamplesFlushed.connect(slot(*this, &AudioMixer::onAllSamplesFlushed));
 } /* AudioMixer::AudioMixer */
 
 
@@ -213,7 +217,7 @@ void AudioMixer::onRequestSamples(int count)
   }
 
   // Write samples into the sink
-  assert(sink.writeSamples(buf, count) == count);
+  assert(sigsrc.writeSamples(buf, count) == count);
 
   // Second pass: Check for flushing sources
   checkFlushSamples();
@@ -264,7 +268,7 @@ int AudioMixer::writeSamples(MixerSrc *src, const float *samples, int count)
       }
     }
 
-    assert(sink.writeSamples(buf, len) == len);
+    assert(sigsrc.writeSamples(buf, len) == len);
 
     count -= len;
     samples += len;
@@ -300,7 +304,7 @@ void AudioMixer::checkFlushSamples(void)
   {  
     //printf("AudioMixer::checkFlushSamples: Flushing!\n");
     is_flushing = true;
-    sink.flushSamples();
+    sigsrc.flushSamples();
   }
 
 } /* AudioMixer::checkFlushSamples */

@@ -179,7 +179,7 @@ class AudioProcessor : public SigC::Object, public AudioSink, public AudioSource
     
   private:
     AudioFifo       fifo;
-    SigCAudioSource sink;
+    SigCAudioSource sigsrc;
     int       	    input_rate;
     int       	    output_rate;
     
