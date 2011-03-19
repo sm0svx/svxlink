@@ -152,7 +152,7 @@ int PttCtrl::writeSamples(const float *samples, int count)
 
 void PttCtrl::allSamplesFlushed(void)
 {
-  valve.allSamplesFlushed();
+  AudioSource::allSamplesFlushed();
   if ((tx_ctrl_mode == Tx::TX_AUTO) && is_transmitting && valve.isIdle())
   {
     transmit(false);
