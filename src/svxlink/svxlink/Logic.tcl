@@ -52,9 +52,8 @@ variable sql_rx_id 0;
 # Executed when the SvxLink software is started
 #
 proc startup {} {
-  #global mycall;
-  #playMsg "Core" "online";
-  #spellWord $mycall;
+  #playMsg "Core" "online"
+  #send_short_ident
 }
 
 
@@ -127,7 +126,7 @@ proc manual_identification {} {
 #   hour    - The hour on which this identification occur
 #   minute  - The hour on which this identification occur
 #
-proc send_short_ident {hour minute} {
+proc send_short_ident {{hour -1} {minute -1}} {
   global mycall;
   variable CFG_TYPE;
 
