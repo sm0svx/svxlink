@@ -281,9 +281,11 @@ bool RepeaterLogic::initialize(void)
   
   rptValveSetOpen(!no_repeat);
   
+  idleStateChanged.connect(slot(*this, &RepeaterLogic::setIdle));
+  
   tx().setTxCtrlMode(Tx::TX_AUTO);
   
-  idleStateChanged.connect(slot(*this, &RepeaterLogic::setIdle));
+  processEvent("startup");
   
   return true;
   

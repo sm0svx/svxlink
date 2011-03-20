@@ -624,8 +624,6 @@ bool Logic::initialize(void)
   audio_switch_matrix.addSource(name(), logic_con_out);
   audio_switch_matrix.addSink(name(), logic_con_in);
 
-  processEvent("startup");
-
   everyMinute(0);
 
   return true;
