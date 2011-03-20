@@ -213,6 +213,8 @@
   DROP -> DROP_INCOMING, REJECT -> REJECT_INCOMING and
   ACCEPT -> ACCET_INCOMING.
 
+* Bugfix: Playing sound clips in the startup TCL event handler did not work.
+
 
 
  0.11.0 -- 26 Apr 2009

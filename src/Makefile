@@ -333,7 +333,7 @@ makefile.root:
 # Create the .config file if it does not exist
 #
 $(ROOT)/.config:	$(ROOT)/create_config.sh
-	$(ECHO) --- Creating $(BOLD)$@$(NBOLD)...
+	/bin/echo --- Creating $@...
 	$(ROOT)/create_config.sh $@
 
 
