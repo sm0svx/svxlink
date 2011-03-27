@@ -121,9 +121,8 @@ class AudioPacer : public AudioSink, public AudioSource, public SigC::Object
      * @brief 	Constuctor
      * @param 	sample_rate The sample rate of the incoming samples
      * @param 	block_size  The size of the audio blocks
-     * @param 	prebuf_time The time (ms) to wait before starting to send audio
      */
-    AudioPacer(unsigned sample_rate, unsigned block_size, unsigned prebuf_time);
+    AudioPacer(unsigned sample_rate, unsigned block_size);
   
     /**
      * @brief 	Destructor

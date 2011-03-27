@@ -112,7 +112,7 @@ using namespace Async;
  ****************************************************************************/
 
 
-AudioPacer::AudioPacer(unsigned sample_rate, unsigned block_size, unsigned prebuf_time)
+AudioPacer::AudioPacer(unsigned sample_rate, unsigned block_size)
   : sample_rate(sample_rate), buf_size(0), head(0), tail(0),
     output_samples(0), pace_timer(0), is_flushing(false), is_full(false), 
     prebuf(true)
@@ -121,8 +121,8 @@ AudioPacer::AudioPacer(unsigned sample_rate, unsigned block_size, unsigned prebu
   assert((sample_rate % 1000) == 0);
   assert(block_size > 0);
   
-  prebuf_samples = prebuf_time * sample_rate / 1000;
-  buf_size = 2 * block_size + prebuf_samples;
+  buf_size = 3 * block_size;
+  prebuf_samples = 2 * block_size;
   
   buf = new float[buf_size];
   
@@ -190,12 +190,8 @@ void AudioPacer::flushSamples(void)
 
 void AudioPacer::requestSamples(int count)
 {
-  if (!is_flushing)
-  {
-    sourceRequestSamples(buf_size - samplesInBuffer(true));
-  }
+  cerr << "Error: The AudioPacer does not output samples on request" << endl;
   pace_timer->setEnable(true);
-  outputSamplesFromBuffer(count);
 } /* AudioPacer::requestSamples */
     
 
@@ -252,9 +248,10 @@ void AudioPacer::outputNextBlock(Timer *t)
   outputSamplesFromBuffer(count);
 
   /* check amount of available samples */
-  if (!was_flushing)
+  unsigned avail_samples = samplesInBuffer(true);
+  if (!was_flushing && (avail_samples < prebuf_samples))
   {
-    sourceRequestSamples(buf_size - samplesInBuffer());
+    sourceRequestSamples(prebuf_samples - avail_samples);
   }
 
 } /* AudioPacer::outputNextBlock */

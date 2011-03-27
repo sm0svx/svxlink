@@ -193,8 +193,7 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
       	  slot(*this, &QsoImpl::allRemoteMsgsWritten));
 	  
   AudioPacer *msg_pacer = new AudioPacer(INTERNAL_SAMPLE_RATE,
-      	      	                         160*4*(INTERNAL_SAMPLE_RATE / 8000),
-					 500);
+      	      	                         160*4*(INTERNAL_SAMPLE_RATE / 8000));
   msg_handler->registerSink(msg_pacer, true);
   
   output_sel = new AudioSelector;
