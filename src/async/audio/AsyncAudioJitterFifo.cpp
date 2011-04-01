@@ -114,7 +114,7 @@ using namespace Async;
 
 AudioJitterFifo::AudioJitterFifo(unsigned sample_rate, unsigned fifo_size)
   : sample_rate(sample_rate), fifo(0), fifo_size(fifo_size), head(0),
-    tail(0), prebuf(true), is_flushing(false), output_samples(0)
+    tail(0), prebuf(true), stream_state(STREAM_IDLE), output_samples(0)
 {
   assert(sample_rate > 0);
   assert((sample_rate % 1000) == 0);
@@ -147,7 +147,7 @@ unsigned AudioJitterFifo::samplesInFifo(bool ignore_prebuf) const
 {
   unsigned samples_in_buffer = (head - tail + fifo_size) % fifo_size;
 
-  if (!ignore_prebuf && prebuf && !is_flushing)
+  if (!ignore_prebuf && prebuf && (stream_state != STREAM_FLUSHING))
   {
     if (samples_in_buffer < (fifo_size >> 1))
     {
@@ -167,7 +167,7 @@ void AudioJitterFifo::clear(void)
   tail = head = 0;
   prebuf = true;
   
-  if (is_flushing && !was_empty)
+  if ((stream_state == STREAM_FLUSHING) && !was_empty)
   {
     sinkFlushSamples();
   }
@@ -177,12 +177,8 @@ void AudioJitterFifo::clear(void)
 int AudioJitterFifo::writeSamples(const float *samples, int count)
 {
   assert(count > 0);
-  
-  if (is_flushing)
-  {
-    is_flushing = false;
-    prebuf = true;
-  }
+
+  stream_state = STREAM_ACTIVE;
 
   int samples_written = 0;
   while (samples_written < count)
@@ -226,7 +222,7 @@ int AudioJitterFifo::writeSamples(const float *samples, int count)
 
 void AudioJitterFifo::flushSamples(void)
 {
-  is_flushing = true;
+  stream_state = STREAM_FLUSHING;
   if (empty())
   {
     sinkFlushSamples();
@@ -241,7 +237,7 @@ void AudioJitterFifo::flushSamples(void)
 void AudioJitterFifo::requestSamples(int count)
 {
   int avail_samples = samplesInFifo(true);
-  if (!is_flushing && (count > avail_samples))
+  if ((stream_state == STREAM_ACTIVE) && (count > avail_samples))
   {
     sourceRequestSamples(prebuf ? (fifo_size >> 1) + count - avail_samples :
       count - avail_samples);
@@ -262,9 +258,9 @@ void AudioJitterFifo::allSamplesFlushed(void)
 {
   if (empty())
   {
-    if (is_flushing)
+    if (stream_state == STREAM_FLUSHING)
     {
-      is_flushing = false;
+      stream_state = STREAM_IDLE;
       sourceAllSamplesFlushed();
     }
     prebuf = true;
@@ -304,7 +300,7 @@ void AudioJitterFifo::writeSamplesFromFifo(int count)
   
   if (empty())
   {
-    if (is_flushing)
+    if (stream_state == STREAM_FLUSHING)
     {
       sinkFlushSamples();
     }
@@ -335,7 +331,7 @@ void AudioJitterFifo::flushSamplesFromFifo(void)
     }
   }
 
-  if (is_flushing && empty())
+  if ((stream_state == STREAM_FLUSHING) && empty())
   {
     sinkFlushSamples();
   }

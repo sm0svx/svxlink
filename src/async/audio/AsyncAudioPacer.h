@@ -182,6 +182,12 @@ class AudioPacer : public AudioSink, public AudioSource, public SigC::Object
     
     
   private:
+
+    typedef enum
+    {
+      STREAM_IDLE, STREAM_ACTIVE, STREAM_FLUSHING
+    } StreamState;
+                  
     unsigned  	   sample_rate;
     unsigned   	   buf_size;
     float     	   *buf;
@@ -189,7 +195,7 @@ class AudioPacer : public AudioSink, public AudioSource, public SigC::Object
     unsigned  	   prebuf_samples;
     uint64_t	   output_samples;
     Timer          *pace_timer;
-    bool           is_flushing;
+    StreamState    stream_state;
     bool           is_full;
     bool           prebuf;
     struct timeval output_start;

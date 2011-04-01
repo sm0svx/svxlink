@@ -114,8 +114,8 @@ using namespace Async;
 
 AudioPacer::AudioPacer(unsigned sample_rate, unsigned block_size)
   : sample_rate(sample_rate), buf_size(0), head(0), tail(0),
-    output_samples(0), pace_timer(0), is_flushing(false), is_full(false), 
-    prebuf(true)
+    output_samples(0), pace_timer(0), stream_state(STREAM_IDLE),
+    is_full(false), prebuf(true)
 {
   assert(sample_rate > 0);
   assert((sample_rate % 1000) == 0);
@@ -144,11 +144,7 @@ AudioPacer::~AudioPacer(void)
 
 int AudioPacer::writeSamples(const float *samples, int count)
 {
-  if (is_flushing)
-  {
-    is_flushing = false;
-    prebuf = true;
-  }
+  stream_state = STREAM_ACTIVE;
 
   int samples_written = 0;
   while (!is_full && (samples_written < count))
@@ -179,7 +175,7 @@ int AudioPacer::writeSamples(const float *samples, int count)
 
 void AudioPacer::flushSamples(void)
 {
-  is_flushing = true;
+  stream_state = STREAM_FLUSHING;
   
   if (empty())
   {
@@ -206,11 +202,12 @@ void AudioPacer::allSamplesFlushed(void)
 {
   if (empty())
   {
-    if (is_flushing)
+    if (stream_state == STREAM_FLUSHING)
     {
-      is_flushing = false;
+      stream_state = STREAM_IDLE;
       sourceAllSamplesFlushed();
     }
+    
     prebuf = true;
     pace_timer->setEnable(false);
   }
@@ -242,14 +239,13 @@ void AudioPacer::outputNextBlock(Timer *t)
   // cerr << " block: " << count
   //      << " buffer: " << samplesInBuffer()
   //      << endl;
-  bool was_flushing = is_flushing;
 
   /* output the block */
   outputSamplesFromBuffer(count);
 
   /* check amount of available samples */
   unsigned avail_samples = samplesInBuffer(true);
-  if (!was_flushing && (avail_samples < prebuf_samples))
+  if ((stream_state == STREAM_ACTIVE) && (avail_samples < prebuf_samples))
   {
     sourceRequestSamples(prebuf_samples - avail_samples);
   }
@@ -284,7 +280,7 @@ void AudioPacer::outputSamplesFromBuffer(int count)
   {
     pace_timer->setEnable(false);
 
-    if (is_flushing)
+    if (stream_state == STREAM_FLUSHING)
     {
       sinkFlushSamples();
     }
@@ -300,7 +296,7 @@ int AudioPacer::samplesInBuffer(bool ignore_prebuf)
   unsigned samples_in_buffer = is_full ? buf_size :
     (head - tail + buf_size) % buf_size;
 
-  if (!ignore_prebuf && prebuf && !is_flushing)
+  if (!ignore_prebuf && prebuf && (stream_state != STREAM_FLUSHING))
   {
     if (samples_in_buffer < prebuf_samples)
     {

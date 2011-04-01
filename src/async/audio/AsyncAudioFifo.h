@@ -282,17 +282,22 @@ class AudioFifo : public AudioSink, public AudioSource
     
     
   private:    
+
+    typedef enum
+    {
+      STREAM_IDLE, STREAM_ACTIVE, STREAM_FLUSHING
+    } StreamState;
+                  
     float     	*fifo;
     unsigned    fifo_size;
     unsigned    head, tail;
     bool      	do_overwrite;
     unsigned  	prebuf_samples;
     bool      	prebuf;
-    bool      	is_flushing;
+    StreamState stream_state;
     bool      	is_full;
     bool        buffering_enabled;
     bool      	disable_buffering_when_flushed;
-    bool      	is_idle;
     
     int writeSamplesFromFifo(int count);
     void flushSamplesFromFifo(void);
