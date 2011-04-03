@@ -46,7 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioSink.h>
+#include <AsyncAudioReader.h>
 #include <AsyncAudioSource.h>
 #include <AsyncTimer.h>
 
@@ -114,7 +114,7 @@ namespace Async
 
 This class is used in an audio pipe chain to pace audio output.
 */
-class AudioPacer : public AudioSink, public AudioSource, public SigC::Object
+class AudioPacer : public AudioReader, public AudioSource, public SigC::Object
 {
   public:
     /**
@@ -189,22 +189,14 @@ class AudioPacer : public AudioSink, public AudioSource, public SigC::Object
     } StreamState;
                   
     unsigned  	   sample_rate;
-    unsigned   	   buf_size;
+    unsigned       block_size;
     float     	   *buf;
-    unsigned  	   head, tail;
-    unsigned  	   prebuf_samples;
     uint64_t	   output_samples;
     Timer          *pace_timer;
     StreamState    stream_state;
-    bool           is_full;
-    bool           prebuf;
     struct timeval output_start;
     
     void outputNextBlock(Timer *t);
-    void outputSamplesFromBuffer(int count);
-    int samplesInBuffer(bool ignore_prebuf = false);
-
-    bool empty() const { return (!is_full && (head == tail)); }
     
 };  /* class AudioPacer */
 
