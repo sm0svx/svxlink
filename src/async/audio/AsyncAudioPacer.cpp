@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+#include <cstring>
 #include <cassert>
 
 
@@ -160,7 +161,10 @@ int AudioPacer::writeSamples(const float *samples, int count)
 void AudioPacer::flushSamples(void)
 {
   stream_state = STREAM_FLUSHING;
-  sinkFlushSamples();
+  if (!isReading())
+  {
+    sinkFlushSamples();
+  }
 } /* AudioPacer::flushSamples */
 
 
@@ -218,15 +222,19 @@ void AudioPacer::outputNextBlock(Timer *t)
 
   while ((stream_state == STREAM_ACTIVE) && (count > block_size))
   {
+    memset(buf, 0, block_size * sizeof(float));
     /* read the block */
     readSamples(buf, block_size);
     /* output the block */
-    if (stream_state == STREAM_ACTIVE)
-    {
-      sinkWriteSamples(buf, block_size);
-    }
+    sinkWriteSamples(buf, block_size);
+    /* update counters */
     count -= block_size;
     output_samples += block_size;
+  }
+  
+  if (stream_state == STREAM_FLUSHING)
+  {
+    sinkFlushSamples();
   }
 
 } /* AudioPacer::outputNextBlock */
