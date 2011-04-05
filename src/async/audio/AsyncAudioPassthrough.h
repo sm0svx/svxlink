@@ -142,6 +142,18 @@ class AudioPassthrough : public AudioSink, public AudioSource
     {
       return sinkWriteSamples(samples, count);
     }
+
+    /**
+     * @brief 	Tell the sink that there are samples available on request
+     *
+     * This function is used to tell the sink that there are samples available
+     * that can be requested by calling the sourceRequestSamples function.
+     * This function is normally only called from a connected source object.
+     */
+    virtual void availSamples(void)
+    {
+      sinkAvailSamples();
+    }
     
     /**
      * @brief 	Tell the sink to flush the previously written samples

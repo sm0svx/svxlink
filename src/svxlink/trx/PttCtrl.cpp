@@ -134,7 +134,7 @@ void PttCtrl::setTxCtrlMode(Tx::TxCtrlMode mode)
 }
 
 
-int PttCtrl::writeSamples(const float *samples, int count)
+void PttCtrl::availSamples()
 {
   if ((tx_ctrl_mode == Tx::TX_AUTO) && !is_transmitting)
   {
@@ -143,10 +143,10 @@ int PttCtrl::writeSamples(const float *samples, int count)
       
   if (fifo != 0)
   {
-    return fifo->writeSamples(samples, count);
+    return fifo->availSamples();
   }
       
-  return valve.writeSamples(samples, count);
+  return valve.availSamples();
 }
 
 

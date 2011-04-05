@@ -154,6 +154,13 @@ int AudioProcessor::writeSamples(const float *samples, int count)
 } /* AudioProcessor::writeSamples */
 
 
+void AudioProcessor::availSamples(void)
+{
+  //cout << "AudioProcessor::availSamples" << endl;
+  sigsrc.availSamples();
+} /* AudioProcessor::availSamples */
+
+
 void AudioProcessor::flushSamples(void)
 {
   //cout << "AudioProcessor::flushSamples" << endl;

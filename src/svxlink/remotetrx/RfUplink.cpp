@@ -45,7 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <Rx.h>
 #include <Tx.h>
 #include <AsyncAudioDebugger.h>
-#include <AsyncAudioFifo.h>
+#include <AsyncAudioJitterFifo.h>
 #include <AsyncAudioSplitter.h>
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioPassthrough.h>
@@ -170,8 +170,7 @@ bool RfUplink::initialize(void)
   rx->mute(false);
   AudioSource *prev_src = rx;
 
-  AudioFifo *fifo = new AudioFifo(8000);
-  fifo->setPrebufSamples(512);
+  AudioJitterFifo *fifo = new AudioJitterFifo(INTERNAL_SAMPLE_RATE, 2048);
   prev_src->registerSink(fifo);
   prev_src = fifo;
   

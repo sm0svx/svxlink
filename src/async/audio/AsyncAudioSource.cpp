@@ -186,6 +186,16 @@ int AudioSource::sinkWriteSamples(const float *samples, int len)
 } /* AudioSource::sinkWriteSamples */
 
 
+void AudioSource::sinkAvailSamples(void)
+{
+  if (m_sink != 0)
+  {
+    is_flushing = false;
+    m_sink->availSamples();
+  }
+} /* AudioSource::sinkAvailSamples */
+
+
 void AudioSource::sinkFlushSamples(void)
 {
   if (m_sink != 0)

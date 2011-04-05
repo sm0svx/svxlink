@@ -180,7 +180,7 @@ class DtmfEncoder : public Async::AudioSource, SigC::Object
     DtmfEncoder(const DtmfEncoder&);
     DtmfEncoder& operator=(const DtmfEncoder&);
     void playNextDigit(void);
-    bool writeAudio(int count);
+    void writeAudio(int count);
     
 };  /* class DtmfEncoder */
 

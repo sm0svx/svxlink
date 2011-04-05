@@ -168,6 +168,11 @@ int AudioReader::writeSamples(const float *samples, int count)
 } /* AudioReader::writeSamples */
 
 
+void AudioReader::availSamples(void)
+{
+} /* AudioReader::availSamples */
+
+
 void AudioReader::flushSamples(void)
 {
   sourceAllSamplesFlushed();

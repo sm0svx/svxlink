@@ -136,6 +136,11 @@ class AudioProcessor : public SigC::Object, public AudioSink, public AudioSource
      * @return	Return the number of samples processed
      */
     int writeSamples(const float *samples, int count);
+
+    /**
+     * @brief Called when samples are available on request
+     */
+    void availSamples(void);
     
     /**
      * @brief Order a flush of all samples

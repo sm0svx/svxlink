@@ -186,6 +186,19 @@ class AudioDebugger : public AudioSink, public AudioSource
       std::cout << std::endl;
       return ret;
     }
+
+    /**
+     * @brief 	Tell the sink that there are samples available on request
+     *
+     * This function is used to tell the sink that there are samples available
+     * that can be requested by calling the sourceRequestSamples function.
+     * This function is normally only called from a connected source object.
+     */
+    virtual void availSamples(void)
+    {
+      std::cout << name << "::availSamples" << std::endl;
+      sinkAvailSamples();
+    }
     
     /**
      * @brief 	Tell the sink to flush the previously written samples

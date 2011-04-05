@@ -115,17 +115,13 @@ class PttCtrl : public Async::AudioSink, public Async::AudioSource,
     void setTxCtrlMode(Tx::TxCtrlMode mode);
     
     /**
-     * @brief   Write samples into this audio sink
-     * @param   samples The buffer containing the samples
-     * @param   count The number of samples in the buffer
-     * @return  Returns the number of samples that has been taken care of
+     * @brief   Tell the sink that there are samples available on request
      *
-     * This function is used to write audio into this audio sink. If it
-     * returns 0, no more samples should be written until the resumeOutput
-     * function in the source have been called.
+     * This function is used to tell the sink that there are samples available
+     * that can be requested by calling the sourceRequestSamples function.
      * This function is normally only called from a connected source object.
      */
-    int writeSamples(const float *samples, int count);
+    void availSamples(void);
 
     /**
      * @brief   Tell the sink to flush the previously written samples

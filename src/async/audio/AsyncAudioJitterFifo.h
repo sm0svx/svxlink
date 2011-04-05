@@ -183,6 +183,15 @@ class AudioJitterFifo : public AudioSink, public AudioSource
      * This function is normally only called from a connected source object.
      */
     virtual int writeSamples(const float *samples, int count);
+
+    /**
+     * @brief 	Tell the sink that there are samples available on request
+     *
+     * This function is used to tell the sink that there are samples available
+     * that can be requested by calling the sourceRequestSamples function.
+     * This function is normally only called from a connected source object.
+     */
+    virtual void availSamples(void);
     
     /**
      * @brief 	Tell the FIFO to flush the previously written samples
@@ -215,18 +224,12 @@ class AudioJitterFifo : public AudioSink, public AudioSource
     
     
   private:
-  
-    typedef enum
-    {
-      STREAM_IDLE, STREAM_ACTIVE, STREAM_FLUSHING
-    } StreamState;
-
     unsigned       sample_rate;
     float          *fifo;
     unsigned       fifo_size;
     unsigned       head, tail;
     bool      	   prebuf;
-    StreamState	   stream_state;
+    bool           is_flushing;
     int64_t        output_samples;
     struct timeval output_start;
     

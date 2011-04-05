@@ -250,6 +250,12 @@ int AudioDelayLine::writeSamples(const float *samples, int count)
 } /* AudioDelayLine::writeSamples */
 
 
+void AudioDelayLine::availSamples(void)
+{
+  sinkAvailSamples();
+} /* AudioDelayLine::availSamples */
+
+
 void AudioDelayLine::flushSamples(void)
 {
   flush_cnt = size - last_clear;

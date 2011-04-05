@@ -172,6 +172,19 @@ class AudioSink
       assert(m_handler != 0);
       return m_handler->writeSamples(samples, count);
     }
+
+    /**
+     * @brief 	Tell the sink that there are samples available on request
+     *
+     * This function is used to tell the sink that there are samples available
+     * that can be requested by calling the sourceRequestSamples function.
+     * This function is normally only called from a connected source object.
+     */
+    virtual void availSamples(void)
+    {
+      assert(m_handler != 0);
+      m_handler->availSamples();    
+    }
     
     /**
      * @brief 	Tell the sink to flush the previously written samples

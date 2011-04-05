@@ -225,7 +225,7 @@ class MsgHandler : public SigC::Object, public Async::AudioSource
     MsgHandler& operator=(const MsgHandler&);
     void addItemToQueue(QueueItem *item);
     void playMsg(void);
-    bool writeSamples(int count);
+    void writeSamples(int count);
     void deleteQueueItem(QueueItem *item);
 
 }; /* class MsgHandler */

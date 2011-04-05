@@ -224,6 +224,15 @@ class AudioSource
      * normally be written again to the sink.
      */
     int sinkWriteSamples(const float *samples, int len);
+
+    /**
+     * @brief 	Tell the sink that there are samples available on request
+     *
+     * This function is used by the inheriting class to tell the connected
+     * sink that there are samples available that can be requested by calling
+     * the requestSamples function.
+     */
+    void sinkAvailSamples(void);
     
     /**
      * @brief 	Tell the sink to flush any buffered samples

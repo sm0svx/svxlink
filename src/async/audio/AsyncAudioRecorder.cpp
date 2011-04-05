@@ -230,6 +230,11 @@ int AudioRecorder::writeSamples(const float *samples, int count)
 } /* AudioRecorder::writeSamples */
 
 
+void AudioRecorder::availSamples(void)
+{
+} /* AudioRecorder::availSamples */
+
+
 void AudioRecorder::flushSamples(void)
 {
   sourceAllSamplesFlushed();

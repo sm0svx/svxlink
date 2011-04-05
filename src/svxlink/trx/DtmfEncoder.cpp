@@ -71,7 +71,6 @@ using namespace std;
  *
  ****************************************************************************/
 
-#define BLOCK_SIZE  512
 
 
 
@@ -257,7 +256,7 @@ void DtmfEncoder::playNextDigit(void)
     pos = 0;
     length = tone_spacing;
     is_playing = true;
-    while (writeAudio(BLOCK_SIZE));
+    sinkAvailSamples();
     return;
   }
   
@@ -276,13 +275,12 @@ void DtmfEncoder::playNextDigit(void)
   pos = 0;
   length = tone_length;
   is_playing = true;
-  
-  while (writeAudio(BLOCK_SIZE));
+  sinkAvailSamples();
   
 } /* DtmfEncoder::playNextDigit */
 
 
-bool DtmfEncoder::writeAudio(int count)
+void DtmfEncoder::writeAudio(int count)
 {
   float block[count];
   
@@ -307,13 +305,11 @@ bool DtmfEncoder::writeAudio(int count)
   
   if (pos < length)
   {
-    return (written == block_len);
+    return;
   }
   
   is_playing = false;
   playNextDigit();
-
-  return (written == block_len);
 
 } /* DtmfEncoder::writeAudio */
 

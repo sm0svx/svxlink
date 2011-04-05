@@ -133,6 +133,11 @@ class SigCAudioSink : public AudioSink, public SigC::Object
     {
       return sigWriteSamples(const_cast<float *>(samples), len);
     }
+
+    virtual void availSamples(void)
+    {
+      sigAvailSamples();
+    }
     
     virtual void flushSamples(void)
     {
@@ -145,6 +150,7 @@ class SigCAudioSink : public AudioSink, public SigC::Object
     }
     
     SigC::Signal2<int, float *, int>  sigWriteSamples;
+    SigC::Signal0<void>       	      sigAvailSamples;
     SigC::Signal0<void>       	      sigFlushSamples;
     
     

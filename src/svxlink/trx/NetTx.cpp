@@ -161,7 +161,7 @@ bool NetTx::initialize(void)
   string auth_key;
   cfg.getValue(name, "AUTH_KEY", auth_key);
   
-  pacer = new AudioPacer(INTERNAL_SAMPLE_RATE, 256);
+  pacer = new AudioPacer(INTERNAL_SAMPLE_RATE, 512);
   setHandler(pacer);
   
   audio_enc = AudioEncoder::create(audio_enc_name);

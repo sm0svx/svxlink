@@ -144,6 +144,11 @@ class SigCAudioSource : public AudioSource, public SigC::Object
       return sinkWriteSamples(samples, len);
     }
     
+    void availSamples(void)
+    {
+      sinkAvailSamples();
+    }
+    
     void flushSamples(void)
     {
       sinkFlushSamples();

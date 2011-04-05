@@ -180,6 +180,15 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
      * This function is normally only called from a connected source object.
      */
     int writeSamples(const float *samples, int count);
+
+    /**
+     * @brief 	Tell the sink that there are samples available on request
+     *
+     * This function is used to tell the sink that there are samples available
+     * that can be requested by calling the sourceRequestSamples function.
+     * This function is normally only called from a connected source object.
+     */
+    void availSamples(void);
     
     /**
      * @brief 	Tell the sink to flush the previously written samples

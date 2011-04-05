@@ -87,8 +87,6 @@ using namespace std;
  *
  ****************************************************************************/
 
-//#define WRITE_BLOCK_SIZE    4*160
-#define WRITE_BLOCK_SIZE    256
 
 
 
@@ -435,31 +433,27 @@ void MsgHandler::playMsg(void)
   }
   else
   {
-    while (writeSamples(WRITE_BLOCK_SIZE));
+    sinkAvailSamples();
   }
 } /* MsgHandler::playMsg */
 
 
-bool MsgHandler::writeSamples(int count)
+void MsgHandler::writeSamples(int count)
 {
   float buf[count];
 
-  assert(current != 0);
-    
   int read_cnt = current->readSamples(buf, count);
   if (read_cnt == 0)
   {
     deleteQueueItem(current);
     current = 0;
     playMsg();
-    return false;
+    return;
   }
     
   int written = sinkWriteSamples(buf, read_cnt);
   //printf("Read=%d  Written=%d\n", read_cnt, written);
   current->unreadSamples(read_cnt - written);
-
-  return (written == read_cnt);
 
 } /* MsgHandler::writeSamples */
 

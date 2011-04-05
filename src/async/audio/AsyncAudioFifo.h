@@ -163,7 +163,7 @@ class AudioFifo : public AudioSink, public AudioSource
 		samples.
      * @return	Returns the number of samples in the FIFO
      */
-    unsigned samplesInFifo(bool ignore_prebuf=false) const;
+    unsigned samplesInFifo(void) const;
 
     /**
      * @brief 	Find out how many samples the FIFO can accept
@@ -207,13 +207,6 @@ class AudioFifo : public AudioSink, public AudioSource
     void clear(void);
 
     /**
-     * @brief	Set the number of samples that must be in the fifo before
-     *		any samples are written out from it.
-     * @param	prebuf_samples The number of samples
-     */
-    void setPrebufSamples(unsigned prebuf_samples);
-    
-    /**
      * @brief   Enable/disable the fifo buffer
      * @param   enable Set to \em true to enable buffering or else \em false
      *
@@ -221,8 +214,6 @@ class AudioFifo : public AudioSink, public AudioSource
      * no incoming samples will be stored in the fifo. If there are samples
      * in the fifo at the time when buffering is disabled they will be sent
      * out in the normal way.
-     * Don't disable buffering when pre-buffering is used. This will get
-     * you into trouble.
      */
     void enableBuffering(bool enable);
     
@@ -250,6 +241,15 @@ class AudioFifo : public AudioSink, public AudioSource
      * This function is normally only called from a connected source object.
      */
     virtual int writeSamples(const float *samples, int count);
+
+    /**
+     * @brief 	Tell the sink that there are samples available on request
+     *
+     * This function is used to tell the sink that there are samples available
+     * that can be requested by calling the sourceRequestSamples function.
+     * This function is normally only called from a connected source object.
+     */
+    virtual void availSamples(void);
     
     /**
      * @brief 	Tell the FIFO to flush the previously written samples
@@ -292,8 +292,6 @@ class AudioFifo : public AudioSink, public AudioSource
     unsigned    fifo_size;
     unsigned    head, tail;
     bool      	do_overwrite;
-    unsigned  	prebuf_samples;
-    bool      	prebuf;
     StreamState stream_state;
     bool      	is_full;
     bool        buffering_enabled;

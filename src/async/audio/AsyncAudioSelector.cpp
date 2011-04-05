@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <iostream>
 
 
 /****************************************************************************
@@ -141,18 +142,33 @@ class Async::AudioSelector::Branch : public AudioSink, public AudioSource
       return sinkWriteSamples(samples, count);
     }    
 
-    virtual void requestSamples(int count)
+    virtual void availSamples(void)
     {
-      if (is_active)
+      is_active = true;
+      if (auto_select && !isSelected())
       {
-        sourceRequestSamples(count);
+	Branch *selected_branch = dynamic_cast<Branch *>(selector->handler());
+	assert(selected_branch != 0);
+	if (selected_branch->selectionPrio() < prio)
+	{
+	  selector->selectBranch(this);
+	}
       }
+      sinkAvailSamples();
     }
 
     virtual void flushSamples(void)
     {
       is_active = false;
       sinkFlushSamples();
+    }
+
+    virtual void requestSamples(int count)
+    {
+      if (is_active)
+      {
+        sourceRequestSamples(count);
+      }
     }
 
     virtual void allSamplesFlushed(void)

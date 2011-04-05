@@ -110,8 +110,8 @@ class Async::AudioIO::DelayedFlushAudioReader
 
     bool isIdle(void) const { return is_idle; }
     bool isFlushing(void) const { return is_flushing; }
-    
-    virtual int writeSamples(const float *samples, int count)
+
+    virtual void availSamples(void)
     {
       is_idle = false;
       is_flushing = false;
@@ -122,14 +122,11 @@ class Async::AudioIO::DelayedFlushAudioReader
 	flush_timer = 0;
       }
 
-      if ((audio_dev->mode() != AudioDevice::MODE_WR) &&
-          (audio_dev->mode() != AudioDevice::MODE_RDWR))
+      if ((audio_dev->mode() == AudioDevice::MODE_WR) ||
+          (audio_dev->mode() == AudioDevice::MODE_RDWR))
       {
-        return count;
+        audio_dev->audioToWriteAvailable();
       }
-
-      audio_dev->audioToWriteAvailable();
-      return AudioReader::writeSamples(samples, count);
     }
     
     virtual void flushSamples(void)

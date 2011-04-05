@@ -139,13 +139,8 @@ AudioPacer::~AudioPacer(void)
 } /* AudioPacer::~AudioPacer */
 
 
-int AudioPacer::writeSamples(const float *samples, int count)
+void AudioPacer::availSamples(void)
 {
-  if (isReading())
-  {
-    return AudioReader::writeSamples(samples, count);
-  }
-  
   if (stream_state != STREAM_ACTIVE)
   {
     stream_state = STREAM_ACTIVE;
@@ -153,9 +148,7 @@ int AudioPacer::writeSamples(const float *samples, int count)
     output_samples = 0;
     pace_timer->setEnable(true);
   }
-
-  return 0;
-} /* AudioPacer::writeSamples */
+} /* AudioPacer::availSamples */
 
 
 void AudioPacer::flushSamples(void)

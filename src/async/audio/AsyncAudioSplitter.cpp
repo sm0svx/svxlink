@@ -85,7 +85,7 @@ class Async::AudioSplitter::Branch : public AudioSource
 {
   public:
     Branch(AudioSplitter *splitter, AudioSink *sink, bool managed)
-      : is_idle(true), is_enabled(true), is_flushing(false),
+      : stream_state(STREAM_IDLE), is_enabled(true),
         fifo(1024), splitter(splitter)
     {
       /* Note: The FIFO does not add significant audio latency, as long */
@@ -105,22 +105,24 @@ class Async::AudioSplitter::Branch : public AudioSource
       
       if (!enabled)
       {
-	if (is_flushing)
-	{
-	  is_flushing = false;
-	  splitter->branchAllSamplesFlushed();
-	}
-	else if (!is_idle)
-      	{
-	  AudioSource::sinkFlushSamples();
+        switch (stream_state)
+        {
+          case STREAM_FLUSHING:
+	    stream_state = STREAM_IDLE;
+	    splitter->branchAllSamplesFlushed();
+	    break;
+	  case STREAM_ACTIVE:
+	    AudioSource::sinkFlushSamples();
+	    break;
+          case STREAM_IDLE:
+            break;
 	}
       }
     } /* setEnabled */
     
     int sinkWriteSamples(const float *samples, int len)
     {
-      is_idle = false;
-      is_flushing = false;
+      stream_state = STREAM_ACTIVE;
       
       if (is_enabled)
       {
@@ -130,17 +132,27 @@ class Async::AudioSplitter::Branch : public AudioSource
       return len;
       
     } /* sinkWriteSamples */
-    
+
+    void sinkAvailSamples(void)
+    {
+      stream_state = STREAM_ACTIVE;
+      
+      if (is_enabled)
+      {
+      	AudioSource::sinkAvailSamples();
+      }
+    } /* sinkAvailSamples */
+
     void sinkFlushSamples(void)
     {
       if (is_enabled)
       {
-      	is_flushing = true;
+      	stream_state = STREAM_FLUSHING;
       	AudioSource::sinkFlushSamples();
       }
       else
       {
-      	is_idle = true;
+      	stream_state = STREAM_IDLE;
       	splitter->branchAllSamplesFlushed();
       }
     } /* sinkFlushSamples */
@@ -155,9 +167,12 @@ class Async::AudioSplitter::Branch : public AudioSource
     void clearFifo(void) { fifo.clear(); }
 
   private:
-    bool          is_idle;
+    typedef enum
+    {
+      STREAM_IDLE, STREAM_ACTIVE, STREAM_FLUSHING
+    } StreamState;
+    StreamState   stream_state;
     bool      	  is_enabled;
-    bool      	  is_flushing;
     AudioFifo     fifo;
     AudioSplitter *splitter;
   
@@ -171,9 +186,8 @@ class Async::AudioSplitter::Branch : public AudioSource
     
     virtual void allSamplesFlushed(void)
     {
-      bool was_flushing = is_flushing;
-      is_flushing = false;
-      is_idle = true;
+      bool was_flushing = (stream_state == STREAM_FLUSHING);
+      stream_state = STREAM_IDLE;
       if (is_enabled && was_flushing)
       {
       	splitter->branchAllSamplesFlushed();
@@ -356,6 +370,18 @@ int AudioSplitter::writeSamples(const float *samples, int count)
   return len;
 
 } /* AudioSplitter::writeSamples */
+
+
+void AudioSplitter::availSamples(void)
+{
+  is_flushing = false;
+  
+  list<Branch *>::const_iterator it;
+  for (it = branches.begin(); it != branches.end(); ++it)
+  {
+    (*it)->sinkAvailSamples();
+  }
+} /* AudioSplitter::availSamples */
 
 
 void AudioSplitter::flushSamples(void)

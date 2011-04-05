@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <iostream>
 
 
 /****************************************************************************
@@ -45,8 +46,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
-#include <AsyncAudioFifo.h>
-#include <SigCAudioSource.h>
 
 
 
@@ -115,20 +114,15 @@ This class implements a "valve" for audio. That is, the audio stream can be
 turned on or off. It's named "valve" since the whole Async audio concept is
 called audio pipe.
 */
-class AudioValve : public SigC::Object, public Async::AudioSink, public Async::AudioSource
+class AudioValve : public Async::AudioSink, public Async::AudioSource
 {
   public:
     /**
      * @brief 	Default constuctor
      */
     explicit AudioValve(void)
-      : stream_state(STREAM_IDLE), fifo(64), block_when_closed(false),
-        is_open(true), is_blocking(false)
+      : stream_state(STREAM_IDLE), block_when_closed(false), is_open(true)
     {
-      AudioSource::setHandler(&fifo);
-      sigsrc.registerSink(&fifo);
-      sigsrc.sigRequestSamples.connect(slot(*this, &AudioValve::onRequestSamples));
-      sigsrc.sigAllSamplesFlushed.connect(slot(*this, &AudioValve::onAllSamplesFlushed));
     }
   
     /**
@@ -136,7 +130,6 @@ class AudioValve : public SigC::Object, public Async::AudioSink, public Async::A
      */
     ~AudioValve(void)
     {
-      AudioSource::clearHandler();
     }
     
     /**
@@ -157,12 +150,9 @@ class AudioValve : public SigC::Object, public Async::AudioSink, public Async::A
       
       if (do_open)
       {
-        if (is_blocking)
+        if (stream_state == STREAM_ACTIVE)
         {
-          /* When the valve is opened and the source is blocked, we have */
-          /* to request samples from the source to put the sink into     */
-          /* active state.                                               */
-          sourceRequestSamples(fifo.spaceAvail());
+          sinkAvailSamples();
         }
       }
       else
@@ -176,12 +166,11 @@ class AudioValve : public SigC::Object, public Async::AudioSink, public Async::A
         {
         case STREAM_FLUSHING:
 	  stream_state = STREAM_IDLE;
-	  is_blocking = false;
 	  sourceAllSamplesFlushed();
 	  break;
         case STREAM_ACTIVE:
 	  stream_state = STREAM_FLUSHING;
-      	  sigsrc.flushSamples();
+      	  sinkFlushSamples();
       	  break;
         case STREAM_IDLE:
           break;
@@ -254,14 +243,29 @@ class AudioValve : public SigC::Object, public Async::AudioSink, public Async::A
       stream_state = STREAM_ACTIVE;
       if (is_open)
       {
-      	written = sigsrc.writeSamples(samples, count);
+      	written = sinkWriteSamples(samples, count);
       }
       else
       {
         written = block_when_closed ? 0 : count;
       }
-      is_blocking |= (written < count);
       return written;
+    }
+
+    /**
+     * @brief   Tell the sink that there are samples available on request
+     *
+     * This function is used to tell the sink that there are samples available
+     * that can be requested by calling the sourceRequestSamples function.
+     * This function is normally only called from a connected source object.
+     */    
+    void availSamples(void)
+    {
+      stream_state = STREAM_ACTIVE;
+      if (is_open)
+      {
+        sinkAvailSamples();
+      }
     }
     
     /**
@@ -277,18 +281,52 @@ class AudioValve : public SigC::Object, public Async::AudioSink, public Async::A
       if (is_open)
       {
       	stream_state = STREAM_FLUSHING;
-      	sigsrc.flushSamples();
+      	sinkFlushSamples();
       }
       else
       {
 	stream_state = STREAM_IDLE;
-	is_blocking = false;
       	sourceAllSamplesFlushed();
       }
     }
 
+    /**
+     * @brief Request audio samples from this source
+     * @param count Number of samples requested by a connected sink
+     *
+     * This function will be called when the registered audio sink is
+     * ready to accept more samples.
+     * This function is normally only called from a connected sink object.
+     * If the source object fails to provide the requested sample count,
+     * it can conclude an underrun condition and perform a stream reset.
+     */
+    void requestSamples(int count)
+    {
+      if (is_open)
+      {
+      	sourceRequestSamples(count);
+      }
+    }
+
+    /**
+     * @brief The registered sink has flushed all samples
+     *
+     * This function will be called when all samples have been flushed in
+     * the registered sink.
+     * This function is normally only called from a connected sink object.
+     */
+    void allSamplesFlushed(void)
+    {
+      bool was_flushing = (stream_state == STREAM_FLUSHING);
+      stream_state = STREAM_IDLE;
+      if (is_open && was_flushing)
+      {
+      	sourceAllSamplesFlushed();
+      }
+    }
     
   private:
+
     AudioValve(const AudioValve&);
     AudioValve& operator=(const AudioValve&);
 
@@ -302,36 +340,14 @@ class AudioValve : public SigC::Object, public Async::AudioSink, public Async::A
       }
     }
 
-    void onRequestSamples(int count)
-    {
-      if (is_open)
-      {
-      	sourceRequestSamples(count);
-      }
-    }
-    
-    void onAllSamplesFlushed(void)
-    {
-      bool was_flushing = (stream_state == STREAM_FLUSHING);
-      stream_state = STREAM_IDLE;
-      is_blocking = false;
-      if (is_open && was_flushing)
-      {
-      	sourceAllSamplesFlushed();
-      }
-    }
-
     typedef enum
     {
       STREAM_IDLE, STREAM_ACTIVE, STREAM_FLUSHING
     } StreamState;
 
     StreamState stream_state;
-    AudioFifo fifo;
-    SigCAudioSource sigsrc;
     bool block_when_closed;
     bool is_open;
-    bool is_blocking;
     int written;
     
 };  /* class AudioValve */
