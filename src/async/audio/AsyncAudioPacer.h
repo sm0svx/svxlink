@@ -187,6 +187,7 @@ class AudioPacer : public AudioReader, public AudioSource, public SigC::Object
     struct timeval output_start;
     
     void outputNextBlock(Timer *t);
+    int samplesToWrite(void);
     
 };  /* class AudioPacer */
 

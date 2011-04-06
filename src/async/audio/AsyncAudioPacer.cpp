@@ -197,21 +197,7 @@ void AudioPacer::allSamplesFlushed(void)
 
 void AudioPacer::outputNextBlock(Timer *t)
 {
-  //printf("AudioPacer::outputNextBlock\n");
-  struct timeval now, diff;
-  
-  gettimeofday(&now, NULL);
-  timersub(&now, &output_start, &diff);
-
-  /* elapsed time (ms) since output has been started */  
-  uint64_t diff_ms = diff.tv_sec * 1000 + diff.tv_usec / 1000;
-  
-  /* the output is modeled as a constant rate sample source */
-  unsigned count = sample_rate * diff_ms / 1000 - output_samples;
-
-  // cerr << " block: " << count
-  //      << " buffer: " << samplesInBuffer()
-  //      << endl;
+  unsigned count = samplesToWrite();
 
   while ((stream_state == STREAM_ACTIVE) && (count > block_size))
   {
@@ -221,8 +207,8 @@ void AudioPacer::outputNextBlock(Timer *t)
     /* output the block */
     sinkWriteSamples(buf, block_size);
     /* update counters */
-    count -= block_size;
     output_samples += block_size;
+    count = samplesToWrite();
   }
   
   if (stream_state == STREAM_FLUSHING)
@@ -231,6 +217,21 @@ void AudioPacer::outputNextBlock(Timer *t)
   }
 
 } /* AudioPacer::outputNextBlock */
+
+
+int AudioPacer::samplesToWrite(void)
+{
+  struct timeval now, diff;
+  
+  gettimeofday(&now, NULL);
+  timersub(&now, &output_start, &diff);
+
+  /* elapsed time (ms) since output has been started */  
+  uint64_t diff_ms = diff.tv_sec * 1000 + diff.tv_usec / 1000;
+  
+  /* the output is modeled as a constant rate sample source */
+  return sample_rate * diff_ms / 1000 - output_samples;
+} /* AudioPacer::samplesToWrite */
 
 
 /*

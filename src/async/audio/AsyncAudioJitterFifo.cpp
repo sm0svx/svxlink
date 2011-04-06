@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+#include <cstring>
 #include <cassert>
 
 
@@ -114,7 +115,7 @@ using namespace Async;
 
 AudioJitterFifo::AudioJitterFifo(unsigned sample_rate, unsigned fifo_size)
   : sample_rate(sample_rate), fifo(0), fifo_size(fifo_size), head(0),
-    tail(0), prebuf(true), is_flushing(false), output_samples(0)
+    tail(0), prebuf(true), output_samples(0), stream_state(STREAM_IDLE)
 {
   assert(sample_rate > 0);
   assert((sample_rate % 1000) == 0);
@@ -178,8 +179,6 @@ int AudioJitterFifo::writeSamples(const float *samples, int count)
 {
   assert(count > 0);
 
-  is_flushing = false;
-
   int samples_written = 0;
   while (samples_written < count)
   {
@@ -191,29 +190,18 @@ int AudioJitterFifo::writeSamples(const float *samples, int count)
       tail = (tail + (fifo_size >> 1)) % fifo_size;
     }
   }
-
-  if (samplesInFifo() > 0 && prebuf)
+  
+  if (stream_state == STREAM_IDLE)
   {
+    stream_state = STREAM_ACTIVE;
     gettimeofday(&output_start, NULL);
     output_samples = 0;
-    prebuf = false;
     sinkAvailSamples();
   }
 
-  /* When we push samples into the pipe, we have to limit the pushed */
-  /* sample rate. Otherwise, the FIFO space is used inefficiently. */
-  if (!prebuf)
-  {  
-    struct timeval now, diff;
-  
-    gettimeofday(&now, NULL);
-    timersub(&now, &output_start, &diff);
-
-    /* elapsed time (ms) since output has been started */  
-    uint64_t diff_ms = diff.tv_sec * 1000 + diff.tv_usec / 1000;
-  
-    /* the output is modeled as a constant rate sample source */
-    writeSamplesFromFifo(sample_rate * diff_ms / 1000 - output_samples);
+  if (samplesInFifo())
+  {
+    prebuf = false;
   }
 
   return samples_written;
@@ -223,26 +211,40 @@ int AudioJitterFifo::writeSamples(const float *samples, int count)
 
 void AudioJitterFifo::availSamples(void)
 {
+  if (stream_state == STREAM_IDLE)
+  {
+    stream_state = STREAM_ACTIVE;
+    gettimeofday(&output_start, NULL);
+    output_samples = 0;
+    sinkAvailSamples();
+  }
 } /* AudioJitterFifo::availSamples */
 
 
 void AudioJitterFifo::flushSamples(void)
 {
-  is_flushing = true;
+  stream_state = STREAM_FLUSHING;
   if (empty())
   {
     sinkFlushSamples();
   }
   else
   {
-    flushSamplesFromFifo();
+    writeSamplesFromFifo(fifo_size);
   }
 } /* AudioJitterFifo::flushSamples */
 
 
 void AudioJitterFifo::requestSamples(int count)
 {
-  writeSamplesFromFifo(count);
+  if (prebuf)
+  {
+    writeZeroBlock(count);
+  }
+  else
+  {
+    writeSamplesFromFifo(count);
+  }
 } /* requestSamples */
 
 
@@ -258,9 +260,9 @@ void AudioJitterFifo::allSamplesFlushed(void)
 {
   if (empty())
   {
-    if (is_flushing)
+    if (stream_state == STREAM_FLUSHING)
     {
-      is_flushing = false;
+      stream_state = STREAM_IDLE;
       sourceAllSamplesFlushed();
     }
     prebuf = true;
@@ -300,7 +302,7 @@ void AudioJitterFifo::writeSamplesFromFifo(int count)
   
   if (empty())
   {
-    if (is_flushing)
+    if (stream_state == STREAM_FLUSHING)
     {
       sinkFlushSamples();
     }
@@ -310,33 +312,30 @@ void AudioJitterFifo::writeSamplesFromFifo(int count)
 } /* writeSamplesFromFifo */
 
 
-void AudioJitterFifo::flushSamplesFromFifo(void)
+void AudioJitterFifo::writeZeroBlock(int count)
 {
-  unsigned samples_from_fifo = samplesInFifo();
-
-  //cerr << "samples_from_fifo=" << samples_from_fifo << endl;
-
-  while (samples_from_fifo > 0)
+  while (count > 0)
   {
-    unsigned to_end_of_fifo = min(samples_from_fifo, fifo_size - tail);
-    unsigned ret = sinkWriteSamples(fifo + tail, to_end_of_fifo);
-    
-    tail += ret;
-    tail %= fifo_size;
-    samples_from_fifo -= ret;
+    float buf[256];
+    int len = min(count, 256);
+    memset(buf, 0, len * sizeof(float));
 
-    if (ret < to_end_of_fifo)
+    int ret = sinkWriteSamples(buf, len);
+    output_samples += ret;
+    count -= ret;
+
+    if (ret < len)
     {
       break;
     }
   }
 
-  if (is_flushing && empty())
+  if (stream_state == STREAM_FLUSHING)
   {
     sinkFlushSamples();
   }
 
-} /* flushSamplesFromFifo */
+} /* writeZero */
 
 /*
  * This file has not been truncated

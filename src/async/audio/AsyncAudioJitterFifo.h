@@ -224,6 +224,11 @@ class AudioJitterFifo : public AudioSink, public AudioSource
     
     
   private:
+    typedef enum
+    {
+      STREAM_IDLE, STREAM_ACTIVE, STREAM_FLUSHING
+    } StreamState;
+
     unsigned       sample_rate;
     float          *fifo;
     unsigned       fifo_size;
@@ -232,9 +237,10 @@ class AudioJitterFifo : public AudioSink, public AudioSource
     bool           is_flushing;
     int64_t        output_samples;
     struct timeval output_start;
+    StreamState    stream_state;
     
     void writeSamplesFromFifo(int count);
-    void flushSamplesFromFifo(void);
+    void writeZeroBlock(int count);
 
 };  /* class AudioJitterFifo */
 
