@@ -160,11 +160,6 @@ ModuleDtmfRepeater::~ModuleDtmfRepeater(void)
  *
  ****************************************************************************/
 
-void ModuleDtmfRepeater::resumeOutput(void)
-{
-
-} /* ModuleDtmfRepeater::resumeOutput */
-
 
 void ModuleDtmfRepeater::allSamplesFlushed(void)
 {
@@ -176,6 +171,11 @@ int ModuleDtmfRepeater::writeSamples(const float *samples, int count)
 {
   return count;
 } /* ModuleDtmfRepeater::writeSamples */
+
+
+void ModuleDtmfRepeater::availSamples(void)
+{
+} /* ModuleDtmfRepeater::availSamples */
 
 
 void ModuleDtmfRepeater::flushSamples(void)

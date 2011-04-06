@@ -156,12 +156,6 @@ ModuleHelp::~ModuleHelp(void)
  *
  ****************************************************************************/
 
-void ModuleHelp::resumeOutput(void)
-{
-  
-} /* ModuleHelp::resumeOutput */
-
-
 void ModuleHelp::allSamplesFlushed(void)
 {
   
@@ -172,6 +166,11 @@ int ModuleHelp::writeSamples(const float *samples, int count)
 {
   return count;
 } /* ModuleHelp::writeSamples */
+
+
+void ModuleHelp::availSamples(void)
+{
+} /* ModuleHelp::availSamples */
 
 
 void ModuleHelp::flushSamples(void)

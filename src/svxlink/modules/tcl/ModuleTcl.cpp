@@ -155,12 +155,6 @@ ModuleTcl::~ModuleTcl(void)
  ****************************************************************************/
 
 
-void ModuleTcl::resumeOutput(void)
-{
-
-} /* ModuleTcl::resumeOutput */
-
-
 void ModuleTcl::allSamplesFlushed(void)
 {
 
@@ -171,6 +165,11 @@ int ModuleTcl::writeSamples(const float *samples, int count)
 {
   return count;
 } /* ModuleTcl::writeSamples */
+
+
+void ModuleTcl::availSamples(void)
+{
+} /* ModuleTcl::availSamples */
 
 
 void ModuleTcl::flushSamples(void)

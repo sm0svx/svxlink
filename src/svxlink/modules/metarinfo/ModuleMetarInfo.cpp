@@ -253,11 +253,6 @@ ModuleMetarInfo::~ModuleMetarInfo(void)
  *------------------------------------------------------------------------
  */
 
-void ModuleMetarInfo::resumeOutput(void)
-{
-
-} /* ModuleMetarInfo::resumeOutput */
-
 
 void ModuleMetarInfo::allSamplesFlushed(void)
 {
@@ -269,6 +264,11 @@ int ModuleMetarInfo::writeSamples(const float *samples, int count)
 {
   return count;
 } /* ModuleMetarInfo::writeSamples */
+
+
+void ModuleMetarInfo::availSamples(void)
+{
+} /* ModuleMetarInfo::availSamples */ 
 
 
 void ModuleMetarInfo::flushSamples(void)

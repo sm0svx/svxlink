@@ -120,9 +120,9 @@ class ModuleHelp : public Module
 
 
   protected:
-    virtual void resumeOutput(void);
     virtual void allSamplesFlushed(void);
     virtual int writeSamples(const float *samples, int count);
+    virtual void availSamples(void);
     virtual void flushSamples(void);
 
 

@@ -351,7 +351,7 @@ void MsgHandler::requestSamples(int count)
   {
     writeSamples(count);
   }
-} /* MsgHandler::resumeOutput */
+} /* MsgHandler::requestSamples */
 
 
 void MsgHandler::deleteQueueItem(QueueItem *item)

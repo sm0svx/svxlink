@@ -120,9 +120,9 @@ class ModuleTcl : public Module
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
   protected:
-    virtual void resumeOutput(void);
     virtual void allSamplesFlushed(void);
     virtual int writeSamples(const float *samples, int count);
+    virtual void availSamples(void);
     virtual void flushSamples(void);
   
   private:
