@@ -493,6 +493,11 @@ int Qso::writeSamples(const float *samples, int count)
 } /* Qso::writeSamples */
 
 
+void Qso::availSamples(void)
+{
+} /* Qso::availSamples */
+
+
 void Qso::flushSamples(void)
 {
   if (state == STATE_CONNECTED)
