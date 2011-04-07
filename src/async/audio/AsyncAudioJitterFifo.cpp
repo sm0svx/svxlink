@@ -148,7 +148,7 @@ unsigned AudioJitterFifo::samplesInFifo(bool ignore_prebuf) const
 {
   unsigned samples_in_buffer = (head - tail + fifo_size) % fifo_size;
 
-  if (!ignore_prebuf && prebuf && !is_flushing)
+  if (!ignore_prebuf && prebuf && (stream_state != STREAM_FLUSHING))
   {
     if (samples_in_buffer < (fifo_size >> 1))
     {
@@ -168,7 +168,7 @@ void AudioJitterFifo::clear(void)
   tail = head = 0;
   prebuf = true;
   
-  if (is_flushing && !was_empty)
+  if ((stream_state == STREAM_FLUSHING) && !was_empty)
   {
     sinkFlushSamples();
   }
@@ -179,10 +179,18 @@ int AudioJitterFifo::writeSamples(const float *samples, int count)
 {
   assert(count > 0);
 
-  int samples_written = 0;
-  while (samples_written < count)
+  if (stream_state != STREAM_ACTIVE)
   {
-    fifo[head] = samples[samples_written++];
+    stream_state = STREAM_ACTIVE;
+    gettimeofday(&output_start, NULL);
+    output_samples = 0;
+    sinkAvailSamples();
+  }
+
+  int written = 0;
+  while (written < count)
+  {
+    fifo[head] = samples[written++];
     head = (head + 1) % fifo_size;
     if (head == tail)
     {
@@ -191,27 +199,19 @@ int AudioJitterFifo::writeSamples(const float *samples, int count)
     }
   }
   
-  if (stream_state == STREAM_IDLE)
-  {
-    stream_state = STREAM_ACTIVE;
-    gettimeofday(&output_start, NULL);
-    output_samples = 0;
-    sinkAvailSamples();
-  }
-
   if (samplesInFifo())
   {
     prebuf = false;
   }
 
-  return samples_written;
+  return written;
   
 } /* writeSamples */
 
 
 void AudioJitterFifo::availSamples(void)
 {
-  if (stream_state == STREAM_IDLE)
+  if (stream_state != STREAM_ACTIVE)
   {
     stream_state = STREAM_ACTIVE;
     gettimeofday(&output_start, NULL);
@@ -227,10 +227,6 @@ void AudioJitterFifo::flushSamples(void)
   if (empty())
   {
     sinkFlushSamples();
-  }
-  else
-  {
-    writeSamplesFromFifo(fifo_size);
   }
 } /* AudioJitterFifo::flushSamples */
 

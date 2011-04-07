@@ -208,12 +208,10 @@ int AudioFifo::writeSamples(const float *samples, int count)
   */
   stream_state = STREAM_ACTIVE;
 
-  flushSamplesFromFifo();
-  
-  int samples_written = 0;
+  int written = 0;
   if (empty())
   {
-    samples_written = sinkWriteSamples(samples, count);
+    written = sinkWriteSamples(samples, count);
     /*
     printf("AudioFifo::writeSamples: count=%d "
       	   "samples_written=%d\n", count, samples_written);
@@ -222,9 +220,11 @@ int AudioFifo::writeSamples(const float *samples, int count)
 
   if (buffering_enabled)
   {
-    while (!is_full && (samples_written < count))
+    writeSamplesFromFifo(count - written);
+
+    while (!is_full && (written < count))
     {
-      fifo[head] = samples[samples_written++];
+      fifo[head] = samples[written++];
       head = (head + 1) % fifo_size;
         
       /* FIFO is full */
@@ -233,7 +233,7 @@ int AudioFifo::writeSamples(const float *samples, int count)
         is_full = true;
         
         /* First we try to write the FIFO content to the sink. */
-        flushSamplesFromFifo();
+        writeSamplesFromFifo(count - written);
         
         /* If the FIFO is still full, we try to overwrite. */
         if (is_full && do_overwrite)
@@ -242,12 +242,10 @@ int AudioFifo::writeSamples(const float *samples, int count)
       	  is_full = false;
         }
       }
-
-      flushSamplesFromFifo();
     }
   }
 
-  return samples_written;
+  return written;
   
 } /* writeSamples */
 

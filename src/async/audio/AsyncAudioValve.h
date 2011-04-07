@@ -169,7 +169,6 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
 	  sourceAllSamplesFlushed();
 	  break;
         case STREAM_ACTIVE:
-	  stream_state = STREAM_FLUSHING;
       	  sinkFlushSamples();
       	  break;
         case STREAM_IDLE:
@@ -317,10 +316,9 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
      */
     void allSamplesFlushed(void)
     {
-      bool was_flushing = (stream_state == STREAM_FLUSHING);
-      stream_state = STREAM_IDLE;
-      if (is_open && was_flushing)
+      if (is_open && (stream_state == STREAM_FLUSHING))
       {
+        stream_state = STREAM_IDLE;
       	sourceAllSamplesFlushed();
       }
     }

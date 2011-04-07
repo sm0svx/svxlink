@@ -234,7 +234,6 @@ class AudioJitterFifo : public AudioSink, public AudioSource
     unsigned       fifo_size;
     unsigned       head, tail;
     bool      	   prebuf;
-    bool           is_flushing;
     int64_t        output_samples;
     struct timeval output_start;
     StreamState    stream_state;

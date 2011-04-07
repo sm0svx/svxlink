@@ -213,7 +213,7 @@ class AudioFifo : public AudioSink, public AudioSource
      * Use this method to turn buffering on and off. When buffering is off,
      * no incoming samples will be stored in the fifo. If there are samples
      * in the fifo at the time when buffering is disabled they will be sent
-     * out in the normal way.
+     * out in the normal way until the fifo is flushed.
      */
     void enableBuffering(bool enable);
     
