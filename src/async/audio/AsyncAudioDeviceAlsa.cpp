@@ -34,7 +34,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
 #include <poll.h>
 #include <iostream>
 #include <cmath>
@@ -68,7 +67,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-using namespace SigC;
 
 
 

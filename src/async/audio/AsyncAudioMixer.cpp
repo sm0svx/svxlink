@@ -310,7 +310,7 @@ void AudioMixer::checkFlushSamples(void)
     if (mix_src->isFlushing())
     {
       mix_src->allSamplesFlushed();
-      is_flushing |= true;
+      is_flushing = true;
     }
   }
 
