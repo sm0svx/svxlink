@@ -103,7 +103,14 @@ class Async::AudioSplitter::Branch : public AudioSource
       }
       is_enabled = enabled;
       
-      if (!enabled)
+      if (enabled)
+      {
+        if (stream_state == STREAM_ACTIVE)
+        {
+          AudioSource::sinkAvailSamples();
+        }
+      }
+      else
       {
         switch (stream_state)
         {
@@ -186,10 +193,9 @@ class Async::AudioSplitter::Branch : public AudioSource
     
     virtual void allSamplesFlushed(void)
     {
-      bool was_flushing = (stream_state == STREAM_FLUSHING);
-      stream_state = STREAM_IDLE;
-      if (is_enabled && was_flushing)
+      if (is_enabled && (stream_state == STREAM_FLUSHING))
       {
+        stream_state = STREAM_IDLE;
       	splitter->branchAllSamplesFlushed();
       }
     } /* allSamplesFlushed */
