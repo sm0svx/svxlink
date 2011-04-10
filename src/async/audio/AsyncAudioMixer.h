@@ -144,15 +144,6 @@ class AudioMixer : public SigC::Object, public Async::AudioSource
      */
     void onRequestSamples(int count);
 
-    /**
-     * @brief The registered sink has flushed all samples
-     *
-     * This function will be called when all samples have been flushed in the
-     * registered sink.
-     * This function is normally only called from a connected sink object.
-     */
-    void onAllSamplesFlushed(void);
-    
   private:
     class MixerSrc;
     

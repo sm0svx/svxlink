@@ -177,7 +177,6 @@ AudioMixer::AudioMixer(void)
   AudioSource::setHandler(&fifo);
   sigsrc.registerSink(&fifo);
   sigsrc.sigRequestSamples.connect(slot(*this, &AudioMixer::onRequestSamples));
-  sigsrc.sigAllSamplesFlushed.connect(slot(*this, &AudioMixer::onAllSamplesFlushed));
 } /* AudioMixer::AudioMixer */
 
 
@@ -234,13 +233,6 @@ void AudioMixer::onRequestSamples(int count)
   checkFlushSamples();
   
 } /* AudioMixer::requestSamples */
-
-
-void AudioMixer::onAllSamplesFlushed(void)
-{
-  //printf("AudioMixer::allSamplesFlushed\n");
-
-} /* AudioMixer::allSamplesFlushed */
 
 
 
