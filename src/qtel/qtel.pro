@@ -20,7 +20,8 @@ unix {
   OBJECTS_DIR = .obj
 }
 
-TRANSLATIONS = translations/qtel_sv.ts \
+TRANSLATIONS = translations/qtel_tmpl.ts \
+	       translations/qtel_sv.ts \
 	       translations/qtel_de.ts \
 	       translations/qtel_tr.ts \
 	       translations/qtel_nl.ts \
