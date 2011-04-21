@@ -100,10 +100,6 @@ No se puede crear conexion</translation>
         <translation>Nombre:</translation>
     </message>
     <message>
-        <source>Alt+D</source>
-        <translation type="obsolete">Alt+D</translation>
-    </message>
-    <message>
         <source>VOX</source>
         <translation>VOX</translation>
     </message>
@@ -341,16 +337,6 @@ No se puede crear conexion</translation>
         <translation>Qtel v</translation>
     </message>
     <message>
-        <source>- Qt EchoLink client.
-</source>
-        <translation>- Qt Echolink cliente.
-</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>Autor</translation>
-    </message>
-    <message>
         <source>&amp;Directory</source>
         <translation>&amp;Directorio de estación</translation>
     </message>
@@ -458,6 +444,19 @@ No se puede crear conexion</translation>
         <source>Add selected to Bookmarks</source>
         <translation>Agregar a favoritos</translation>
     </message>
+    <message>
+        <source> - Qt EchoLink client.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
+are welcome to redistribute it in accordance with the terms and conditions in
+the GNU GPL (General Public License) version 2 or later.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -558,10 +557,6 @@ Message</source>
     <message>
         <source>Full duplex</source>
         <translation>Full-duplex</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation type="obsolete">Aparato de audio a usar (p.e. /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>

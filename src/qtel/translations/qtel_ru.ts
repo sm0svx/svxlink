@@ -444,14 +444,17 @@ Can&apos;t create connection to</source>
         <translation>Qtel версия </translation>
     </message>
     <message>
-        <source>- Qt EchoLink client.
+        <source> - Qt EchoLink client.
 </source>
-        <translation> - Qt EchoLink программа.
-</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Author</source>
-        <translation>Автор</translation>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
+are welcome to redistribute it in accordance with the terms and conditions in
+the GNU GPL (General Public License) version 2 or later.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -544,10 +547,6 @@ Message</source>
     <message>
         <source>Full duplex</source>
         <translation>Полный дуплекс</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation type="obsolete">Работать через аудио устройство (напр. /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>

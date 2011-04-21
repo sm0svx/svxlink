@@ -15,6 +15,8 @@ using namespace std;
 using namespace SigC;
 using namespace Async;
 
+#define PROGRAM_NAME "SigLevDetCal"
+
 static const int ITERATIONS = 5;
 
 static Config cfg;
@@ -168,9 +170,14 @@ int main(int argc, char **argv)
 {
   CppApplication app;
   
-  cout << "Signal level detector calibrator v" SIGLEV_DET_CAL_VERSION
-       << endl << endl;
-  
+  cout << PROGRAM_NAME " v" SIGLEV_DET_CAL_VERSION " (" __DATE__ 
+          ") Copyright (C) 2011 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
+          "This is free software, and you\n";
+  cout << "are welcome to redistribute it in accordance with the "
+          "terms and conditions in\n";
+  cout << "the GNU GPL (General Public License) version 2 or later.\n\n";
+
   if (argc < 3)
   {
     cerr << "Usage: siglevdetcal <config file> <receiver section>\n";

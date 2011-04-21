@@ -337,16 +337,6 @@ station du vill lägga till</translation>
         <translation></translation>
     </message>
     <message>
-        <source>- Qt EchoLink client.
-</source>
-        <translation>- Qt EchoLink-klient.
-</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>Författare</translation>
-    </message>
-    <message>
         <source>&amp;Directory</source>
         <translation>&amp;Stationslista</translation>
     </message>
@@ -454,6 +444,24 @@ station du vill lägga till</translation>
         <source>Add selected to Bookmarks</source>
         <translation>Lägg till markerad station till bokmärken</translation>
     </message>
+    <message>
+        <source> - Qt EchoLink client.
+</source>
+        <translation> - Qt EchoLink-klient.
+</translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
+are welcome to redistribute it in accordance with the terms and conditions in
+the GNU GPL (General Public License) version 2 or later.</source>
+        <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel levereras HELT UTAN GARANTIER. Det är en fri mjukvara, och du är
+välkommen att återdistribuera den enligt de bestämmelser som anges i
+GNU GPL (General Public License) version 2 eller senare.</translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -554,10 +562,6 @@ meddelande</translation>
     <message>
         <source>Full duplex</source>
         <translation></translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation type="obsolete">Vilken ljudenhet som skall användas (ex /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
