@@ -4,9 +4,9 @@
 * Bugfix in the EchoLink module: Short callsign (<6 chars) was not handled
   correctly in the APRS code.
 
-* Added a voice logger feature that can record all traffic on the channel.
-  The voice logger can be turned on and off using a DTMF command.
-  New configuration variables: VOICELOGGER_DIR and VOICELOGGER_CMD.
+* Added a QSO recorder feature that can record all traffic on the channel.
+  The QSO recorder can be turned on and off using a DTMF command.
+  New configuration variables: QSO_RECORDER_DIR and QSO_RECORDER_CMD.
 
 * The voice mail module now store the messages as WAV files. Old messages
   will have to be removed or converted into WAV files.
