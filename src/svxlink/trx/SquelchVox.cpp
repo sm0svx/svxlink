@@ -149,7 +149,7 @@ bool SquelchVox::initialize(Config& cfg, const string& rx_name)
     buf[i] = 0;
   }
 
-  short vox_thresh;
+  short vox_thresh = 0;
   if (!cfg.getValue(rx_name, "VOX_THRESH", vox_thresh))
   {
     if (cfg.getValue(rx_name, "VOX_LIMIT", vox_thresh))
