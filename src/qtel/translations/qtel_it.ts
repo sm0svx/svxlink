@@ -447,7 +447,8 @@ Can&apos;t create connection to</source>
     <message>
         <source> - Qt EchoLink client.
 </source>
-        <translation type="unfinished"></translation>
+        <translation> - Qt EchoLink cliente.
+</translation>
     </message>
     <message>
         <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
@@ -455,7 +456,9 @@ Can&apos;t create connection to</source>
 Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
 are welcome to redistribute it in accordance with the terms and conditions in
 the GNU GPL (General Public License) version 2 or later.</source>
-        <translation type="unfinished"></translation>
+        <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel è fornite SENZA ALCUNA GARANZIA. Questo è software libero, e voi libero di ridistribuirlo in conformità con i termini e le condizioni di la GNU GPL (General Public License) versione 2 o successiva.</translation>
     </message>
 </context>
 <context>
@@ -676,7 +679,7 @@ Message</source>
     </message>
     <message>
         <source>The audio device to use (e.g. alsa:default)</source>
-        <translation type="unfinished"></translation>
+        <translation>Il dispositivo audio da utilizzare (p.e. alsa:default)</translation>
     </message>
 </context>
 </TS>
