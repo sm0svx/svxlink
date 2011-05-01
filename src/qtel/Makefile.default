@@ -166,6 +166,7 @@ POST_TARGETS   = translations/qtel_tmpl.qm \
 		 translations/qtel_uk.qm \
 		 translations/qtel_ru.qm \
 		 translations/qtel_hu.qm \
+		 translations/qtel_ja.qm \
 		 translations/qtel_es.qm
 
 
@@ -259,6 +260,8 @@ ifdef QT_BIN
 	$(FILESPEC) translations/qtel_hu.qm[644,root,root] \
 	      	    /usr/share/qtel/translations
 	$(FILESPEC) translations/qtel_es.qm[644,root,root] \
+	      	    /usr/share/qtel/translations
+	$(FILESPEC) translations/qtel_ja.qm[644,root,root] \
 	      	    /usr/share/qtel/translations
 	$(FILESPEC) connect.raw[644,root,root] /usr/share/qtel/sounds
 	$(FILESPEC) qtel.desktop[644,root,root] /usr/share/applications
