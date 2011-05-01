@@ -304,7 +304,7 @@ bool LocalTx::initialize(void)
   }
 
   int ptt_hangtime;
-  if (cfg.getValue(name, "PTT_HANGTIME", ptt_hangtime))
+  if (cfg.getValue(name, "PTT_HANGTIME", ptt_hangtime) && (ptt_hangtime > 0))
   {
     ptt_hangtimer = new Timer(ptt_hangtime);
     ptt_hangtimer->expired.connect(slot(*this, &LocalTx::pttHangtimeExpired));
