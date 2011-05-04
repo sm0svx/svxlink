@@ -32,7 +32,7 @@ int main(int argc, char **argv)
   }
   
     // Read an integer value.
-  int int_val;
+  int int_val = 0;
   if (cfg.getValue("SECTION2", "MY_INT", int_val))
   {
     cout << "int_val=" << int_val << endl;
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
   }
   
     // Read a float with min and max limits.
-  float float_val;
+  float float_val = 0.0;
   if (cfg.getValue("SECTION2", "MY_FLOAT", 3.0f, 4.0f, float_val))
   {
     cout << "float_val=" << float_val << endl;

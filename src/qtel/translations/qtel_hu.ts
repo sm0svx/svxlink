@@ -95,10 +95,6 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
         <translation>&amp;Bontás</translation>
     </message>
     <message>
-        <source>Alt+D</source>
-        <translation type="obsolete">ALT+D</translation>
-    </message>
-    <message>
         <source>VOX</source>
         <translation>VOX</translation>
     </message>
@@ -448,14 +444,17 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
         <translation>Qtel v</translation>
     </message>
     <message>
-        <source>- Qt EchoLink client.
+        <source> - Qt EchoLink client.
 </source>
-        <translation>- Qt Echolink kliens.
-</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Author</source>
-        <translation>Szerző</translation>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
+are welcome to redistribute it in accordance with the terms and conditions in
+the GNU GPL (General Public License) version 2 or later.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -549,10 +548,6 @@ Message</source>
     <message>
         <source>Full duplex</source>
         <translation>Full duplex</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation type="obsolete">A-hasznát-hang-eszköz-(pl.-/dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>

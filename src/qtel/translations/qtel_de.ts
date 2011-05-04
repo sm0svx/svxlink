@@ -100,10 +100,6 @@ Can&apos;t create connection to</source>
         <translation>Name:</translation>
     </message>
     <message>
-        <source>Alt+D</source>
-        <translation type="obsolete">Alt+D</translation>
-    </message>
-    <message>
         <source>VOX</source>
         <translation>VOX</translation>
     </message>
@@ -341,16 +337,6 @@ Can&apos;t create connection to</source>
         <translation>Qtel v</translation>
     </message>
     <message>
-        <source>- Qt EchoLink client.
-</source>
-        <translation>- Qt EchoLink-Client.
-</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>Verfasser</translation>
-    </message>
-    <message>
         <source>&amp;Directory</source>
         <translation>&amp;Stationsverzeichnis</translation>
     </message>
@@ -458,6 +444,23 @@ Can&apos;t create connection to</source>
         <source>Add selected to Bookmarks</source>
         <translation>Ausgewählte Station zu Favoriten hinzufügen</translation>
     </message>
+    <message>
+        <source> - Qt EchoLink client.
+</source>
+        <translation> - Qt EchoLink client.
+</translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
+are welcome to redistribute it in accordance with the terms and conditions in
+the GNU GPL (General Public License) version 2 or later.</source>
+        <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel wird OHNE JEGLICHE GARANTIE bereitgestellt. Dies ist freie Software und Du darfst diese unter den Bedingungen der GNU GPL (General Public License, Version 2 oder spätere) weiterverteilen.
+</translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -558,10 +561,6 @@ Message</source>
     <message>
         <source>Full duplex</source>
         <translation>Vollduplex</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation type="obsolete">Verwendetes Audiogerät (z.B. /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
@@ -681,7 +680,7 @@ Message</source>
     </message>
     <message>
         <source>The audio device to use (e.g. alsa:default)</source>
-        <translation type="unfinished"></translation>
+        <translation>Das Audiogerät, welches genutzt werden soll (z.B. alsa:default)</translation>
     </message>
 </context>
 </TS>

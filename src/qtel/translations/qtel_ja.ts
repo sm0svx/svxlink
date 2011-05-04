@@ -3,88 +3,87 @@
     <name>ComDialog</name>
     <message>
         <source>INFO</source>
-        <translation>INFO</translation>
+        <translation>情報</translation>
     </message>
     <message>
         <source>Connected to </source>
-        <translation>Ansluten till </translation>
+        <translation>接続先 </translation>
     </message>
     <message>
         <source>Connecting to </source>
-        <translation>Ansluter till </translation>
+        <translation>接続中 </translation>
     </message>
     <message>
         <source>Qtel Error</source>
-        <translation>Qtel fel</translation>
+        <translation>Qtel エラー</translation>
     </message>
     <message>
         <source>Station data not found in directory server.
 Can&apos;t create connection to</source>
-        <translation>Kunde inte hitta stationsdatan i listservern.
-Kan ej skapa uppkoppling till</translation>
+        <translation>ディレクトリサーバーに接続局データが見つかりませんので、接続できません</translation>
     </message>
     <message>
         <source>Could not create connection to station</source>
-        <translation>Kunde inte ansluta till station</translation>
+        <translation>接続できません</translation>
     </message>
     <message>
         <source>Could not open audio device</source>
-        <translation>Kunde inte komma åt ljudkortet</translation>
+        <translation>オーディオデバイスが見つかりません</translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
-        <translation>Kunde inte ansluta till fjärrdatorn</translation>
+        <translation>ホストに接続できません</translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation>Nedkopplad</translation>
+        <translation>切断</translation>
     </message>
 </context>
 <context>
     <name>ComDialogBase</name>
     <message>
         <source>Communication Dialog</source>
-        <translation>Kommunikationsdialog</translation>
+        <translation>接続設定画面</translation>
     </message>
     <message>
         <source>Station Information</source>
-        <translation>Stationsinformation</translation>
+        <translation>接続先情報</translation>
     </message>
     <message>
         <source>?</source>
-        <translation></translation>
+        <translation>?</translation>
     </message>
     <message>
         <source>Description:</source>
-        <translation>Beskrivning:</translation>
+        <translation>説明:</translation>
     </message>
     <message>
         <source>IP-address:</source>
-        <translation>IP-adress:</translation>
+        <translation>IPアドレス:</translation>
     </message>
     <message>
         <source>Status:</source>
-        <translation>Status:</translation>
+        <translation>状態:</translation>
     </message>
     <message>
         <source>Time:</source>
-        <translation>Tid:</translation>
+        <translation>時間:</translation>
     </message>
     <message>
         <source>PTT</source>
-        <translation></translation>
+        <translation>PTT</translation>
     </message>
     <message>
         <source>Chat/Info</source>
-        <translation></translation>
+        <translation>チャット／情報</translation>
     </message>
     <message>
         <source>&amp;Connect</source>
-        <translation>&amp;Anslut</translation>
+        <translation>&amp;接続</translation>
     </message>
     <message>
         <source>&amp;Disconnect</source>
-        <translation>&amp;Koppla ner</translation>
+        <translation>&amp;切断</translation>
     </message>
     <message>
         <source>RX</source>
@@ -96,63 +95,62 @@ Kan ej skapa uppkoppling till</translation>
     </message>
     <message>
         <source>Name:</source>
-        <translation>Namn:</translation>
+        <translation>名前:</translation>
     </message>
     <message>
         <source>VOX</source>
-        <translation></translation>
+        <translation>VOX</translation>
     </message>
     <message>
         <source>VOX Enabled</source>
-        <translation>VOX aktiverad</translation>
+        <translation>VOX 有効</translation>
     </message>
     <message>
         <source>Threshold:</source>
-        <translation>Tröskel:</translation>
+        <translation>スルーホールド:</translation>
     </message>
     <message>
         <source>Delay:</source>
-        <translation>Fördröjning:</translation>
+        <translation>ディレー:</translation>
     </message>
     <message>
         <source>dB Level:</source>
-        <translation>dB-nivå:</translation>
+        <translation>デシベル:</translation>
     </message>
 </context>
 <context>
     <name>MainWindow</name>
     <message>
         <source>Logging off from directory server...</source>
-        <translation>Loggar ut från listserver...</translation>
+        <translation>ディレクトリサーバーからログオフ...</translation>
     </message>
     <message>
         <source>Station list has been refreshed</source>
-        <translation>Stationslistan har blivit uppdaterad</translation>
+        <translation>ステーションリスト更新終了</translation>
     </message>
     <message>
         <source>Refreshing station list...</source>
-        <translation>Uppdaterar stationslista...</translation>
+        <translation>ステーションリスト更新中...</translation>
     </message>
     <message>
         <source>Add to bookmarks</source>
-        <translation>Lägg till bokmärke</translation>
+        <translation>お気に入りに追加</translation>
     </message>
     <message>
         <source>Remove from bookmarks</source>
-        <translation>Tag bort bokmärke</translation>
+        <translation>お気に入りから削除</translation>
     </message>
     <message>
         <source>Add named station...</source>
-        <translation>Lägg till namngiven station...</translation>
+        <translation>自分で入力してお気に入りに追加...</translation>
     </message>
     <message>
         <source>Qtel - Add station...</source>
-        <translation>Qtel - Lägg till station...</translation>
+        <translation>Qtel - 追加局名...</translation>
     </message>
     <message>
         <source>Enter callsign of the station to add</source>
-        <translation>Mata in anropssignalen för den
-station du vill lägga till</translation>
+        <translation>コールサインを入力</translation>
     </message>
     <message>
         <source>Ctrl+Q</source>
@@ -171,166 +169,166 @@ station du vill lägga till</translation>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
-        <translation>Qtel: Anslut till IP</translation>
+        <translation>Qtel: IPアドレス接続</translation>
     </message>
     <message>
         <source>Enter an IP address or hostname:</source>
-        <translation>Mata in en IP-adress eller datornamn:</translation>
+        <translation>IPアドレスまたはホスト名を入力:</translation>
     </message>
 </context>
 <context>
     <name>MainWindowBase</name>
     <message>
         <source>Explorer</source>
-        <translation>Utforskare</translation>
+        <translation>一覧</translation>
     </message>
     <message>
         <source>Conferences</source>
-        <translation>Konferenser</translation>
+        <translation>カンファレンス</translation>
     </message>
     <message>
         <source>Links</source>
-        <translation>Länkar</translation>
+        <translation>リンク局</translation>
     </message>
     <message>
         <source>Repeaters</source>
-        <translation>Relästationer</translation>
+        <translation>レピータ局</translation>
     </message>
     <message>
         <source>Stations</source>
-        <translation>Stationer</translation>
+        <translation>シングル局</translation>
     </message>
     <message>
         <source>Bookmarks</source>
-        <translation>Bokmärken</translation>
+        <translation>お気に入り</translation>
     </message>
     <message>
         <source>Station</source>
-        <translation>Station</translation>
+        <translation>接続</translation>
     </message>
     <message>
         <source>Location/Description</source>
-        <translation>Plats/Beskrivning</translation>
+        <translation>場所/説明</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation></translation>
+        <translation>状態</translation>
     </message>
     <message>
         <source>Time</source>
-        <translation>Tid</translation>
+        <translation>時間</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Arkiv</translation>
+        <translation>&amp;ファイル</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Inställningar</translation>
+        <translation>&amp;設定</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Hjälp</translation>
+        <translation>&amp;ヘルプ</translation>
     </message>
     <message>
         <source>Undo</source>
-        <translation>Ångra</translation>
+        <translation>Undo</translation>
     </message>
     <message>
         <source>&amp;Undo</source>
-        <translation>&amp;Ångra</translation>
+        <translation>&amp;Undo</translation>
     </message>
     <message>
         <source>Redo</source>
-        <translation>Ångra ångra</translation>
+        <translation>Redo</translation>
     </message>
     <message>
         <source>&amp;Redo</source>
-        <translation>Å&amp;ngra ångra</translation>
+        <translation>&amp;Redo</translation>
     </message>
     <message>
         <source>Cut</source>
-        <translation>Klipp ut</translation>
+        <translation>Cut</translation>
     </message>
     <message>
         <source>&amp;Cut</source>
-        <translation>&amp;Klipp ut</translation>
+        <translation>&amp;Cut</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Kopiera</translation>
+        <translation>Copy</translation>
     </message>
     <message>
         <source>C&amp;opy</source>
-        <translation>K&amp;opiera</translation>
+        <translation>C&amp;opy</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation>Klistra in</translation>
+        <translation>Paste</translation>
     </message>
     <message>
         <source>&amp;Paste</source>
-        <translation>K&amp;listra in</translation>
+        <translation>P&amp;aste</translation>
     </message>
     <message>
         <source>Find</source>
-        <translation>Sök</translation>
+        <translation>Find</translation>
     </message>
     <message>
         <source>&amp;Find...</source>
-        <translation>&amp;Sök</translation>
+        <translation>&amp;Find...</translation>
     </message>
     <message>
         <source>Contents</source>
-        <translation>Innehåll</translation>
+        <translation>コンテンツ</translation>
     </message>
     <message>
         <source>&amp;Contents...</source>
-        <translation>I&amp;nnehåll...</translation>
+        <translation>&amp;コンテンツ...</translation>
     </message>
     <message>
         <source>Index</source>
-        <translation></translation>
+        <translation>インデックス</translation>
     </message>
     <message>
         <source>&amp;Index...</source>
-        <translation>&amp;Index...</translation>
+        <translation>&amp;インデックス...</translation>
     </message>
     <message>
         <source>About</source>
-        <translation>Om</translation>
+        <translation>これは</translation>
     </message>
     <message>
         <source>&amp;About...</source>
-        <translation>&amp;Om...</translation>
+        <translation>&amp;これは...</translation>
     </message>
     <message>
         <source>About Qtel</source>
-        <translation>Om Qtel</translation>
+        <translation>Qtelとは...</translation>
     </message>
     <message>
         <source>Quit</source>
-        <translation>Avsluta</translation>
+        <translation>終了</translation>
     </message>
     <message>
         <source>&amp;Quit</source>
-        <translation>&amp;Avsluta</translation>
+        <translation>&amp;終了</translation>
     </message>
     <message>
         <source>Quit the Qtel application</source>
-        <translation>Avsluta Qtel</translation>
+        <translation>Qtel終了</translation>
     </message>
     <message>
         <source>Qtel Settings...</source>
-        <translation>Inställningar för Qtel...</translation>
+        <translation>Qtelセッティング...</translation>
     </message>
     <message>
         <source>&amp;Qtel Settings...</source>
-        <translation>&amp;Inställningar för Qtel</translation>
+        <translation>&amp;Qtelセッティング...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
-        <translation>Öppna inställningsdialogen för Qtel</translation>
+        <translation>Qtelセッティングを開く</translation>
     </message>
     <message>
         <source>Qtel v</source>
@@ -338,71 +336,71 @@ station du vill lägga till</translation>
     </message>
     <message>
         <source>&amp;Directory</source>
-        <translation>&amp;Stationslista</translation>
+        <translation>&amp;ディレクトリ</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation>Uppdatera</translation>
+        <translation>更新</translation>
     </message>
     <message>
         <source>&amp;Refresh</source>
-        <translation>U&amp;ppdatera</translation>
+        <translation>&amp;更新</translation>
     </message>
     <message>
         <source>Refresh station list</source>
-        <translation>Uppdatera stationslista</translation>
+        <translation>ステーションリスト更新</translation>
     </message>
     <message>
         <source>Qtel - the Qt EchoLink Client</source>
-        <translation>Qtel - Qt EchoLink Klient</translation>
+        <translation>Qtel - Qt EchoLink クライアント</translation>
     </message>
     <message>
         <source>Busy</source>
-        <translation>Upptagen</translation>
+        <translation>ビジー</translation>
     </message>
     <message>
         <source>&amp;Busy</source>
-        <translation>&amp;Upptagen</translation>
+        <translation>&amp;ビジー</translation>
     </message>
     <message>
         <source>View as busy</source>
-        <translation>Visa som upptagen</translation>
+        <translation>ビジー中を見る</translation>
     </message>
     <message>
         <source>View as busy in directory server</source>
-        <translation>Visa som upptagen i listservern</translation>
+        <translation>ビジー状態の変更</translation>
     </message>
     <message>
         <source>Messages</source>
-        <translation>Meddelanden</translation>
+        <translation>メッセージ</translation>
     </message>
     <message>
         <source>Local time</source>
-        <translation>Lokal tid</translation>
+        <translation>ローカルタイム</translation>
     </message>
     <message>
         <source>Incoming connections</source>
-        <translation>Inkommande uppkopplingar</translation>
+        <translation>接続希望局</translation>
     </message>
     <message>
         <source>Accept</source>
-        <translation>Acceptera</translation>
+        <translation>受入</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation>Rensa</translation>
+        <translation>消去</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation>Anropssignal</translation>
+        <translation>コールサイン</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation>Namn</translation>
+        <translation>名前</translation>
     </message>
     <message>
         <source>Node ID</source>
-        <translation>Nod-ID</translation>
+        <translation>ノード ID</translation>
     </message>
     <message>
         <source>Ctrl+Z</source>
@@ -430,25 +428,23 @@ station du vill lägga till</translation>
     </message>
     <message>
         <source>Connect to IP...</source>
-        <translation>Anslut till IP...</translation>
+        <translation>IPアドレスで接続...</translation>
     </message>
     <message>
         <source>Connect to selected...</source>
-        <translation>Anslut till markerad station...</translation>
+        <translation>選択局に接続...</translation>
     </message>
     <message>
         <source>Disconnect</source>
-        <translation>Koppla ner</translation>
+        <translation>切断</translation>
     </message>
     <message>
         <source>Add selected to Bookmarks</source>
-        <translation>Lägg till markerad station till bokmärken</translation>
+        <translation>選択局をお気に入りに追加</translation>
     </message>
     <message>
-        <source> - Qt EchoLink client.
-</source>
-        <translation> - Qt EchoLink-klient.
-</translation>
+        <source> - Qt EchoLink client.</source>
+        <translation> - Qt EchoLink クライアント.</translation>
     </message>
     <message>
         <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
@@ -458,16 +454,15 @@ are welcome to redistribute it in accordance with the terms and conditions in
 the GNU GPL (General Public License) version 2 or later.</source>
         <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
 
-Qtel levereras HELT UTAN GARANTIER. Det är en fri mjukvara, och du är
-välkommen att återdistribuera den enligt de bestämmelser som anges i
-GNU GPL (General Public License) version 2 eller senare.</translation>
+Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Public License)
+version 2以上の条件で再配布することは歓迎します。</translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
     <message>
         <source>Qtel: Settings</source>
-        <translation>Qtel: Inställningar</translation>
+        <translation>Qtel: 設定等</translation>
     </message>
     <message>
         <source>OK</source>
@@ -475,213 +470,213 @@ GNU GPL (General Public License) version 2 eller senare.</translation>
     </message>
     <message>
         <source>User Info</source>
-        <translation>Användarinfo</translation>
+        <translation>ユーザー情報</translation>
     </message>
     <message>
         <source>User Information</source>
-        <translation>Användarinformation</translation>
+        <translation>ユーザー情報</translation>
     </message>
     <message>
         <source>Info
 Message</source>
-        <translation>Informations-
-meddelande</translation>
+        <translation>情報/メッセージ
+</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation>Plats</translation>
+        <translation>場所</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation>Anropssignal</translation>
+        <translation>コールサイン</translation>
     </message>
     <message>
         <source>Password</source>
-        <translation>Lösenord</translation>
+        <translation>パスワード</translation>
     </message>
     <message>
         <source>Retype password</source>
-        <translation>Repetera lösenord</translation>
+        <translation>パスワード再入力</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation>Namn</translation>
+        <translation>名前</translation>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation>Listserver</translation>
+        <translation>ディレクトリサーバー</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
-        <translation>Listserverinställningar</translation>
+        <translation>ディレクトリサーバー設定</translation>
     </message>
     <message>
         <source>Server</source>
-        <translation></translation>
+        <translation>サーバー</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Avbryt</translation>
+        <translation>取り消し</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>Namn eller IP-adress på den EchoLink listserver som skall användas</translation>
+        <translation>エコーリンクディレクトリサーバーのホスト名またはIPアドレスの設定</translation>
     </message>
     <message>
         <source>Refresh time</source>
-        <translation>Uppdateringsintervall</translation>
+        <translation>更新時間</translation>
     </message>
     <message>
         <source>min</source>
-        <translation>min</translation>
+        <translation>分</translation>
     </message>
     <message>
         <source>Time, in minutes, between station list refreshes</source>
-        <translation>Tid, i minuter, mellan uppdatering av stationslistan</translation>
+        <translation>ステーションリストを更新する時間</translation>
     </message>
     <message>
         <source>Register as busy on program startup</source>
-        <translation>Registrera som upptagen vid programstart</translation>
+        <translation>プログラム起動時、ビジーにセット</translation>
     </message>
     <message>
         <source>Start as busy</source>
-        <translation>Starta som upptagen</translation>
+        <translation>起動時にビジー</translation>
     </message>
     <message>
         <source>Sound</source>
-        <translation>Ljud</translation>
+        <translation>サウンド</translation>
     </message>
     <message>
         <source>Sound settings</source>
-        <translation>Ljudinställningar</translation>
+        <translation>サウンド設定</translation>
     </message>
     <message>
         <source>Audio device</source>
-        <translation>Ljudenhet</translation>
+        <translation>オーディオデバイス</translation>
     </message>
     <message>
         <source>Full duplex</source>
-        <translation></translation>
+        <translation>全二重</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
-        <translation>Klicka i denna för att aktivera ljudhantering i full duplex</translation>
+        <translation>セットすると全二重有効</translation>
     </message>
     <message>
         <source>Connect Sound</source>
-        <translation>Anslutningsljud</translation>
+        <translation>接続サウンド</translation>
     </message>
     <message>
         <source>The connect sound to use on incoming EchoLink connections</source>
-        <translation>Ljudfil som skall spelas upp vid inkommande EchoLink-förbindelse</translation>
+        <translation>接続時のサウンドファイル</translation>
     </message>
     <message>
         <source>Browse...</source>
-        <translation>Bläddra...</translation>
+        <translation>ファイルを開く...</translation>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation>16-bit 8kHz ljudfiler (*.raw)</translation>
+        <translation>16-bit 8kHz サウンドファイル (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation>Välj ett anslutningsljud</translation>
+        <translation>コネクトサウンドファイル選択</translation>
     </message>
     <message>
         <source>QSO</source>
-        <translation>QSO</translation>
+        <translation>交信</translation>
     </message>
     <message>
         <source>QSO dialog settings</source>
-        <translation>Inställningar för QSO-dialogen</translation>
+        <translation>交信設定</translation>
     </message>
     <message>
         <source>Chat encoding:</source>
-        <translation>Teckenkodning chat:</translation>
+        <translation>チャットエンコード:</translation>
     </message>
     <message>
         <source>Chinese</source>
-        <translation>Kinesisk</translation>
+        <translation>中国語</translation>
     </message>
     <message>
         <source>Japanese</source>
-        <translation>Japansk</translation>
+        <translation>日本語</translation>
     </message>
     <message>
         <source>Korean</source>
-        <translation>Koreansk</translation>
+        <translation>韓国語</translation>
     </message>
     <message>
         <source>Tamil</source>
-        <translation>Tamil</translation>
+        <translation>タミル語</translation>
     </message>
     <message>
         <source>Unicode, 8-bit</source>
-        <translation>Unicode, 8-bitar</translation>
+        <translation>ユニコード, 8ビット</translation>
     </message>
     <message>
         <source>Russian</source>
-        <translation>Rysk</translation>
+        <translation>ロシア語</translation>
     </message>
     <message>
         <source>Ukrainian</source>
-        <translation>Ukrainsk</translation>
+        <translation>ウクライナ語</translation>
     </message>
     <message>
         <source>Western</source>
-        <translation>Västerländsk</translation>
+        <translation>Western</translation>
     </message>
     <message>
         <source>Central European</source>
-        <translation>Centraleuropeisk</translation>
+        <translation>中央ヨーロッパ</translation>
     </message>
     <message>
         <source>Baltic</source>
-        <translation>Baltisk</translation>
+        <translation>バルト語</translation>
     </message>
     <message>
         <source>Cyrillic</source>
-        <translation>Kyrillisk</translation>
+        <translation>キリル文字</translation>
     </message>
     <message>
         <source>Arabic</source>
-        <translation>Arabisk</translation>
+        <translation>アラビア語</translation>
     </message>
     <message>
         <source>Greek</source>
-        <translation>Grekisk</translation>
+        <translation>ギリシア語</translation>
     </message>
     <message>
         <source>Hebrew, visually ordered</source>
-        <translation>Hebreisk, visuellt ordnad</translation>
+        <translation>ヘブライ語, visually ordered</translation>
     </message>
     <message>
         <source>Hebrew, logically ordered</source>
-        <translation>Hebreisk, logiskt ordnad</translation>
+        <translation>ヘブライ語, logically ordered</translation>
     </message>
     <message>
         <source>Turkish</source>
-        <translation>Turkisk</translation>
+        <translation>トルコ語</translation>
     </message>
     <message>
         <source>Hebrew</source>
-        <translation>Hebreisk</translation>
+        <translation>ヘブライ語</translation>
     </message>
     <message>
         <source>Thai</source>
-        <translation>Thailändsk</translation>
+        <translation>タイ語</translation>
     </message>
     <message>
         <source>Qtel: Password mismatch</source>
-        <translation>Qtel: Olika lösenord</translation>
+        <translation>Qtel: パスワードミスマッチ</translation>
     </message>
     <message>
         <source>Passwords do not match</source>
-        <translation>De två lösenord du angav är ej lika</translation>
+        <translation>パスワードが合っていません</translation>
     </message>
     <message>
         <source>The audio device to use (e.g. alsa:default)</source>
-        <translation>Den ljudenhet som skall användas (ex: alsa:default)</translation>
+        <translation>使用するオーディオデバイス (e.g. alsa:default, ex. alsa:hw:0, alsa:plughw:0, oss:/dev/dsp)</translation>
     </message>
 </context>
 </TS>

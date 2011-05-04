@@ -442,8 +442,14 @@ int main(int argc, char **argv)
   
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
-  cout << PROGRAM_NAME " v" REMOTE_TRX_VERSION " (" __DATE__
-      	  ") starting up...\n";
+  cout << PROGRAM_NAME " v" REMOTE_TRX_VERSION " (" __DATE__ 
+          ") Copyright (C) 2011 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
+          "This is free software, and you are\n";
+  cout << "welcome to redistribute it in accordance with the "
+          "terms and conditions in the\n";
+  cout << "GNU GPL (General Public License) version 2 or later.\n";
+
   cout << "\nUsing configuration file: " << main_cfg_filename << endl;
   
   string value;

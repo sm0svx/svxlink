@@ -58,9 +58,15 @@ void MainWindowBase::helpAbout()
 {
     QMessageBox::about(this, trUtf8("About Qtel"),
              trUtf8("Qtel v") + QTEL_VERSION +
-	trUtf8("- Qt EchoLink client.\n") +
+	trUtf8(" - Qt EchoLink client.\n") +
 	"\n" +
-	trUtf8("Author") + ": SM0SVX - Tobias Blomberg");
+	//trUtf8("Author") + ": SM0SVX - Tobias Blomberg");
+        trUtf8("Copyright (C) 2011 Tobias Blomberg / SM0SVX\n\n"
+        "Qtel comes with ABSOLUTELY NO WARRANTY. "
+          "This is free software, and you\n"
+        "are welcome to redistribute it in accordance with the "
+          "terms and conditions in\n"
+        "the GNU GPL (General Public License) version 2 or later."));
 }
 
 void MainWindowBase::settings()
