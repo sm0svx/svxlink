@@ -142,11 +142,6 @@ class QsoRecorder;
 class Logic : public SigC::Object
 {
   public:
-    static bool connectLogics(const std::vector<std::string> &link_list,
-      	    int timeout=0);
-    static bool disconnectLogics(const std::vector<std::string> &link_list);
-    static bool logicsAreConnected(const std::string& l1,
-      	    const std::string& l2);
 
     /**
      * @brief 	Default constuctor

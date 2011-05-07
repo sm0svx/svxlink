@@ -58,6 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Logic.h"
 #include "Module.h"
 #include "QsoRecorder.h"
+#include "LogicLinking.h"
 
 
 /****************************************************************************
@@ -184,7 +185,7 @@ class LinkCmd : public Command
      * @param  logic  The logic core instance the command should operate on
      */
     LinkCmd(CmdParser *parser, Logic *logic)
-      : Command(parser), logic(logic), timeout(0) {}
+      : Command(parser), logic(logic) {}
 
     /**
      * @brief 	Destructor
@@ -197,49 +198,19 @@ class LinkCmd : public Command
      * @param  link_name The name (configuration section) of this link
      * @return	Returns \em true on success or else \em false.
      */
-    bool initialize(Async::Config& cfg, const std::string& link_name)
+    bool initialize(const std::string& name,
+                          const std::string& command)
     {
-      if (!cfg.getValue(link_name, "NAME", name))
-      {
-      	name = link_name;
-      }
-
-      std::string cmd_str;
-      if (!cfg.getValue(link_name, "COMMAND", cmd_str))
-      {
-	std::cerr << "*** ERROR: Config variable " << link_name
-	     << "/COMMAND not set\n";
-	return false;
-      }
-      setCmd(cmd_str);
+      logic_name = name;
+      cmd = command;
+      setCmd(command);
       if (!addToParser())
       {
-	std::cerr << "*** ERROR: Could not set up command \"" << cmd_str
-		  << "\" for logic link \"" << name << "\". You probably have "
-		  << "the same command set up in more than one place\n";
-	return false;
+             std::cerr << "*** ERROR: Could not set up command \"" << command
+               << "\" for logic link \"" << logic_name << "\". You probably have "
+                   << "the same command set up in more than one places\n";
+             return false;
       }
-
-      if (!cfg.getValue(link_name, "CONNECT_LOGICS", logics))
-      {
-	std::cerr << "*** ERROR: Config variable " << link_name
-	     << "/CONNECT_LOGICS not set\n";
-	return false;
-      }
-
-      if (SvxLink::splitStr(logic_list, logics, ",") < 2)
-      {
-	std::cerr << "*** ERROR: you need at least two LOGICS to connect,"
-	    << "e.g. CONNECT_LOGICS=RepeaterLogic,SimplexLogic" << std::endl;
-	return false;
-      }
-
-      std::string value;
-      if (cfg.getValue(link_name, "TIMEOUT", value))
-      {
-      	timeout = atoi(value.c_str());
-      }
-
       return true;
     }
 
@@ -252,41 +223,40 @@ class LinkCmd : public Command
       }
       else if (subcmd == "1")
       {
-	connectLinks();
+        connectLinks();
       }
       else
       {
-      	std::stringstream ss;
-	ss << "command_failed " << cmdStr() << subcmd;
-      	logic->processEvent(ss.str());
+        std::stringstream ss;
+        ss << "command_failed " << cmdStr() << subcmd;
+        logic->processEvent(ss.str());
       }
     }
 
     void connectLinks(void)
     {
       std::stringstream ss;
-      if (Logic::connectLogics(logic_list, timeout))
+      if (LogicLinking::instance()->connectThisLink(logic_name, cmd, link_name))
       {
-	ss << "activating_link " << name;
+        ss << "activating_link " << link_name;
       }
       else
       {
-	ss << "link_already_active " << name;
+        ss << "link_already_active " << link_name;
       }
       logic->processEvent(ss.str());
     } /* connectLinks */
 
-
     void disconnectLinks(void)
     {
       std::stringstream ss;
-      if (Logic::disconnectLogics(logic_list))
+      if (LogicLinking::instance()->disconnectThisLink(logic_name, cmd, link_name))
       {
-	ss << "deactivating_link " << name;
+        ss << "deactivating_link " << link_name;
       }
       else
       {
-	ss << "link_not_active " << name;
+        ss << "link_not_active " << link_name;
       }
       logic->processEvent(ss.str());
     } /* disconnectLinks */
@@ -295,14 +265,12 @@ class LinkCmd : public Command
   protected:
 
   private:
-    typedef std::vector<std::string> StrList;
-
-    Logic     	*logic;
+    Logic       *logic;
     std::string logics;
-    int       	timeout;
-    std::string name;
-    StrList 	logic_list;
-
+    std::string cmd;
+    std::string logic_name;
+    std::string link_name;
+    std::vector<std::string> cmdList;
 
 };  /* class LinkCmd */
 

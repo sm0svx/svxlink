@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <map>
 #include <string>
+#include <vector>
 
 
 /****************************************************************************
@@ -128,19 +129,19 @@ class AudioSwitchMatrix
      * @brief 	Default constuctor
      */
     AudioSwitchMatrix(void) {}
-  
+
     /**
      * @brief 	Destructor
      */
     ~AudioSwitchMatrix(void) {}
-  
+
     /**
      * @brief 	Add an audio source to the switch matrix
      * @param 	source_name The name of the source to register
      * @param 	source The pointer to the source to register
      */
     void addSource(const std::string& source_name, Async::AudioSource *source);
-  
+
     /**
      * @brief 	Remove an audio source from the switch matrix
      * @param 	source_name The name of the source to remove
@@ -153,14 +154,14 @@ class AudioSwitchMatrix
      * @return  Return \em true if the source is added or \em false if it's not
      */
     bool sourceIsAdded(const std::string& source_name);
-  
+
     /**
      * @brief 	Add an audio sink to the switch matrix
      * @param 	source_name The name of the source to register
      * @param 	sink The pointer to the sink to register
      */
     void addSink(const std::string& sink_name, Async::AudioSink *sink);
-  
+
     /**
      * @brief 	Remove an audio sink from the switch matrix
      * @param 	sink_name The name of the sink to remove
@@ -173,7 +174,7 @@ class AudioSwitchMatrix
      * @return  Return \em true if the sink is added or \em false if it's not
      */
     bool sinkIsAdded(const std::string& sink_name);
-  
+
     /**
      * @brief 	Connect a registered source to one of the registered sinks
      * @param 	source_name The name of the source to connect
@@ -209,9 +210,14 @@ class AudioSwitchMatrix
     bool isConnected(const std::string& source_name,
       	    const std::string& sink_name);
 
-    
+    /**
+     * @brief   Check the sources of the logics to be connected
+     * @param   vectorlist of linknames
+     */
+    bool checkLogics(std::vector<std::string> connectlinks);
+
   protected:
-    
+
   private:
     typedef struct
     {
@@ -226,10 +232,10 @@ class AudioSwitchMatrix
     } SinkInfo;
     typedef std::map<std::string, SourceInfo> SourceMap;
     typedef std::map<std::string, SinkInfo>   SinkMap;
-    
+
     SourceMap sources;
     SinkMap   sinks;
-    
+
 };  /* class AudioSwitchMatrix */
 
 

@@ -128,16 +128,16 @@ void AudioSwitchMatrix::addSource(const string& source_name,
 
   sources[source_name].source = source;
   sources[source_name].splitter = splitter;
-  
+
   SinkMap::iterator it;
   for (it=sinks.begin(); it!=sinks.end(); ++it)
   {
     AudioPassthrough *connector = new AudioPassthrough;
     splitter->addSink(connector);
-    
+
     AudioSelector *sel = (*it).second.selector;
     sel->addSource(connector);
-    
+
     (*it).second.connectors[source_name] = connector;
   }
 } /* AudioSwitchMatrix::addSource */
@@ -146,9 +146,9 @@ void AudioSwitchMatrix::addSource(const string& source_name,
 void AudioSwitchMatrix::removeSource(const string& source_name)
 {
   assert(sources.count(source_name) == 1);
-  
+
   AudioSplitter *splitter = sources[source_name].splitter;
-  
+
   SinkMap::iterator it;
   for (it=sinks.begin(); it!=sinks.end(); ++it)
   {
@@ -175,13 +175,13 @@ bool AudioSwitchMatrix::sourceIsAdded(const std::string& source_name)
 void AudioSwitchMatrix::addSink(const string& sink_name, AudioSink *sink)
 {
   assert(sinks.count(sink_name) == 0);
-  
+
   AudioSelector *selector = new AudioSelector;
   selector->registerSink(sink);
-  
+
   sinks[sink_name].sink = sink;
   sinks[sink_name].selector = selector;
-  
+
   SourceMap::iterator it;
   for (it=sources.begin(); it!=sources.end(); ++it)
   {
@@ -210,10 +210,10 @@ void AudioSwitchMatrix::removeSink(const string& sink_name)
     sources[source_name].splitter->removeSink(connector);
     delete connector;
   }
-  
+
   delete selector;
   sinks.erase(sink_name);
-  
+
 } /* AudioSwitchMatrix::removeSink */
 
 
@@ -229,7 +229,7 @@ void AudioSwitchMatrix::connect(const string& source_name,
   assert(sources.count(source_name) == 1);
   assert(sinks.count(sink_name) == 1);
   assert(sinks[sink_name].connectors.count(source_name) == 1);
-  
+
   AudioPassthrough *connector = sinks[sink_name].connectors[source_name];
   AudioSelector *selector = sinks[sink_name].selector;
   selector->enableAutoSelect(connector, 0);
@@ -242,11 +242,11 @@ void AudioSwitchMatrix::disconnect(const string& source_name,
   assert(sources.count(source_name) == 1);
   assert(sinks.count(sink_name) == 1);
   assert(sinks[sink_name].connectors.count(source_name) == 1);
-  
+
   AudioPassthrough *connector = sinks[sink_name].connectors[source_name];
   AudioSelector *selector = sinks[sink_name].selector;
   selector->disableAutoSelect(connector);
-  
+
 } /* AudioSwitchMatrix::disconnect */
 
 
@@ -289,11 +289,22 @@ bool AudioSwitchMatrix::isConnected(const string& source_name,
 
   AudioPassthrough *connector = sinks[sink_name].connectors[source_name];
   AudioSelector *selector = sinks[sink_name].selector;
-  return selector->autoSelectEnabled(connector);  
-  
+  return selector->autoSelectEnabled(connector);
+
 } /* AudioSwitchMatrix::isConnected */
 
 
+bool AudioSwitchMatrix::checkLogics(std::vector<std::string> connectlinks)
+{
+   if (connectlinks.size() < 2) return false;
+   std::vector<std::string>::iterator it;
+
+   for (it = connectlinks.begin(); it != connectlinks.end(); it++)
+   {
+       if (sources.count(*it) != 1) return false;
+   }
+   return true;
+} /* AudioSwitchMatrix::checkLogics */
 
 /****************************************************************************
  *
