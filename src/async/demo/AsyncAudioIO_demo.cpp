@@ -57,6 +57,8 @@ class SineGenerator : public Async::AudioSource
       }
       else
       {
+
+        sinkFlushSamples();
         audio_io.close();
       }
     }
