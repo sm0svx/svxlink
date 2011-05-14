@@ -276,7 +276,7 @@ void AudioIO::setChannels(int channels)
 
 AudioIO::AudioIO(const string& dev_name, int channel)
   : io_mode(MODE_NONE), audio_dev(0),
-    /* lead_in_pos(0), */ m_gain(1.0),
+    /* lead_in_pos(0), */ m_gain(1.0), sample_rate(-1),
     m_channel(channel), input_valve(0), input_fifo(0), audio_reader(0)
 {
   audio_dev = AudioDevice::registerAudioIO(dev_name, this);

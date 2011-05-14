@@ -358,7 +358,18 @@ bool LocalTx::initialize(void)
   }
   
   audio_io = new AudioIO(audio_dev, audio_channel);
-  
+  // FIXME: Check that the audio device has been correctly initialized
+  //        before continuing.
+#if 0
+  cout << "Sample rate = " << audio_io->sampleRate() << endl;
+  if (audio_io->sampleRate() < 0)
+  {
+    cerr << "*** ERROR: Failed to initialize audio device for transmitter \""
+	 << name << "\".\n";
+    return false;
+  }
+#endif
+
   sine_gen = new SineGenerator(audio_dev, audio_channel);
   
   if (cfg.getValue(name, "CTCSS_FQ", value))
