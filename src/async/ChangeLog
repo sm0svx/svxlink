@@ -1,4 +1,4 @@
- 0.18.0 -- ?? ??? 2010
+ 0.18.0 -- 14 May 2011
 -----------------------
 
 * The Async::AudioRecorder can now auto detect the file format from the

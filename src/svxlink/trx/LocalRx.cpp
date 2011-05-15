@@ -323,6 +323,8 @@ bool LocalRx::initialize(void)
   
     // Create the audio IO object
   audio_io = new AudioIO(audio_dev, audio_channel);
+  //FIXME: Check that the audio device is correctly initialized
+  //       before continuing.
   AudioSource *prev_src = audio_io;
   
     // Create a fifo buffer to handle large audio blocks
@@ -588,7 +590,7 @@ void LocalRx::mute(bool do_mute)
   {
     if (!audio_io->open(AudioIO::MODE_RD))
     {
-      cerr << "*** Error: Could not open audio device for receiver \""
+      cerr << "*** ERROR: Could not open audio device for receiver \""
       	   << name() << "\"\n";
       return;
     }

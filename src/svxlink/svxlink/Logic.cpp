@@ -1420,6 +1420,7 @@ void Logic::cleanup(void)
   }
 
   delete msg_handler; 	      	      msg_handler = 0;
+  delete m_tx;        	      	      m_tx = 0;
   delete m_rx;        	      	      m_rx = 0;
   delete audio_to_module_selector;    audio_to_module_selector = 0;
   delete tx_audio_selector;   	      tx_audio_selector = 0;
