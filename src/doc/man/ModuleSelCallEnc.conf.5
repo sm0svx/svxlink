@@ -1,4 +1,4 @@
-.TH MODULESELCALLENC.CONF 5 "MAY 2010" Linux "File Formats"
+.TH MODULESELCALLENC.CONF 5 "MAY 2011" Linux "File Formats"
 .
 .SH NAME
 .
@@ -12,7 +12,7 @@ is a general purpose voice service system for ham radio use. This man-page
 describe the SvxLink server configuration for the SelCallEnc module.
 .P
 The SelCallEnc module implements the possibility to send Selective Tone
-Sequences like ZVEI or EEA.
+Sequences like CCIR, ZVEI, EEA etc.
 .
 .SH CONFIGURATION VARIABLES
 .
@@ -27,13 +27,13 @@ variables.
 .SH FILES
 .
 .TP
-.I /etc/svxlink.conf
+.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
 The system wide configuration file.
 .TP
-.IR ~/.svxlink/svxlink.conf " or " ~/.svxlinkrc
+.IR ~/.svxlink/svxlink.conf
 Per user configuration file.
 .TP
-.I /etc/svxlink.d/ModuleSelCallEnc.conf
+.I /etc/svxlink/svxlink.d/ModuleSelCallEnc.conf
 Global modularized configuration file. Depends on the CFG_DIR configuration
 variable setting.
 .TP

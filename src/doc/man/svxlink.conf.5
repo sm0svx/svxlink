@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "JULY 2009" Linux "File Formats"
+.TH SVXLINK.CONF 5 "MAY 2011" Linux "File Formats"
 .
 .SH NAME
 .
@@ -10,14 +10,13 @@ svxlink.conf \- Configuration file for the SvxLink server
 is a general purpose voice service system for ham radio use. This man-page
 describe the SvxLink server configuration file format.
 .P
-SvxLink look for configuration files in a number of places. First it try to find a user
-specific configuration file. SvxLink will look for a user specific configuration file in
-two places:
-.BR $HOME/.svxlink/svxlink.conf " or " $HOME/.svxlinkrc .
-The latter is deprecated. Use the one that will best fit your need. If no user
-specific configuration file can be found, SvxLink will look for the system wide
-configuration file
-.BR /etc/svxlink.conf .
+SvxLink look for configuration files in a number of places. First it try to
+find a user specific configuration file. SvxLink will look for a user specific
+configuration file in:
+.BR $HOME/.svxlink/svxlink.conf .
+If no user specific configuration file can be found, SvxLink will look for
+the system wide configuration file
+.BR /etc/svxlink/svxlink.conf .
 The
 .B --config
 command line option may also be used to specify an arbitrary configuration file.
@@ -1352,13 +1351,13 @@ around 0.
 .SH FILES
 .
 .TP
-.I /etc/svxlink.conf
+.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
 The system wide configuration file.
 .TP
-.IR ~/.svxlink/svxlink.conf " or " ~/.svxlinkrc
+.IR ~/.svxlink/svxlink.conf
 Per user configuration file.
 .TP
-.I /etc/svxlink.d/*
+.I /etc/svxlink/svxlink.d/*
 Additional configuration files. Typically one configuration file per module.
 .
 .SH AUTHOR
