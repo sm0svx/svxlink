@@ -2,7 +2,7 @@
 #
 # Generates selcall tone-sequences according
 # the modes: ZVEI1,ZVEI2,ZVEI3,PZVEI,PDZVEI,DZVEI,EEA,EIA,CCITT,
-# CCIR1,CCIR2,EURO,VDEW, MODAT and NATEL
+# CCIR1,CCIR2,EURO,VDEW, MODAT, NATEL and QC2
 # ATTENTION: I have found different tone definitions
 # in the internet, no guarantee!!
 #
@@ -11,7 +11,8 @@
 #        Then use the SelCall::play function to send a sequence.
 #
 # Author: Adi, DL1HRC
-# Rel:    1.0 (2010-04-11) - Adi: checking tones and lengths
+# Rel:    1.0  (2010-04-11) - Adi: checking tones and lengths
+# Rel:    1.01 (2011-04-26) - Adi: added Motorola's Quick Call (QC2)
 ###############################################################################
 
 namespace eval SelCall {
@@ -27,6 +28,9 @@ variable tone_length;
 
 # The length of the first tone in a sequence. Set by function setMode.
 variable first_tone_length;
+
+# the silence after a selcall to separate the sequences
+variable silence;
 
 # Tone definitions for ZVEI1
 array set ZVEI1 {
@@ -351,6 +355,113 @@ array set AUTOA {
   "E" 2188
 }
 
+#
+# Stuff for Motorola's Quick Call II modes
+# matrix for a 3 digits SelCall
+array set qc2_cap_code_matrix {
+  "1" 11
+  "2" 22
+  "3" 12
+  "4" 44
+  "5" 55
+  "6" 21
+  "7" 45
+  "8" 54
+  "9" 24
+  "0" 42
+  "A" 33
+}
+
+array set qc2_tone_matrix {
+  "11" 349.0
+  "12" 368.5
+  "13" 389.0
+  "14" 410.8
+  "15" 433.7
+  "16" 457.9
+  "17" 483.5
+  "18" 510.5
+  "19" 539.0
+  "10" 330.5
+
+  "21" 600.9
+  "22" 634.5
+  "23" 669.9
+  "24" 707.3
+  "25" 746.8
+  "26" 788.5
+  "27" 832.5
+  "28" 879.0
+  "29" 928.1
+  "20" 569.1
+
+  "31" 288.5
+  "32" 296.5
+  "33" 304.7
+  "34" 313.0
+  "35" 953.7
+  "36" 979.9
+  "37" 1006.9
+  "38" 1034.7
+  "39" 1063.2
+  "30" 1092.4
+
+  "41" 339.6
+  "42" 358.6
+  "43" 378.6
+  "44" 399.8
+  "45" 422.1
+  "46" 445.7
+  "47" 470.5
+  "48" 496.8
+  "49" 524.6
+  "40" 321.7
+
+  "51" 584.8
+  "52" 617.4
+  "53" 651.9
+  "54" 688.3
+  "55" 726.8
+  "56" 767.4
+  "57" 810.2
+  "58" 855.5
+  "59" 903.2
+  "50" 553.9
+
+  "61" 1153.4
+  "62" 1185.2
+  "63" 1217.8
+  "64" 1251.4
+  "65" 1285.8
+  "66" 1321.2
+  "67" 1357.6
+  "68" 1395.0
+  "69" 1433.4
+  "60" 1122.5
+
+  "A1" 1472.9
+  "A2" 1513.5
+  "A3" 1555.2
+  "A4" 1598.0
+  "A5" 1642.0
+  "A6" 1687.2
+  "A7" 1733.7
+  "A8" 1781.5
+  "A9" 1830.5
+  "A0" 1881.0
+
+  "B1" 1930.2
+  "B2" 1989.0
+  "B3" 2043.8
+  "B4" 2094.5
+  "B5" 2155.6
+  "B6" 2212.2
+  "B7" 2271.7
+  "B8" 2334.6
+  "B9" 2401.0
+  "B0" 2468.2
+}
+
 
 # Tone length definitions for the supported selcall modes
 array set mode_tone_length {
@@ -371,8 +482,32 @@ array set mode_tone_length {
   "CCITT" 100
   "VDEW"  100
   "EURO"  100
+  "QC2"   1000
 }
 
+#
+# minimal gap between two SelCalls
+#
+array set mode_silence_length {
+  "EIA"    150
+  "EEA"    150
+  "MODAT"  250
+  "ZVEI1"  250
+  "ZVEI2"  250
+  "ZVEI3"  250
+  "DZVEI"  250
+  "PDZVEI" 250
+  "NATEL"  250
+  "AUTOA"  250
+  "CCIR1"  250
+  "CCIR2"  250
+  "PCCIR"  250
+  "PZVEI"  250
+  "CCITT"  250
+  "VDEW"   250
+  "EURO"   250
+  "QC2"   1000
+}
 
 #
 # Set the amplitude in per mille (0-1000) of full amplitude.
@@ -381,15 +516,23 @@ proc setAmplitude {new_amplitude} {
   variable amplitude $new_amplitude;
 }
 
+#
+# Set the silence at the end of a selcall, minimum gap
+# between SelCalls in sequence.
+#
+proc setSilence {silence_at_end} {
+  variable silence $silence_at_end;
+}
 
 #
 # Set the selcall mode to use
-#   mode  - The selcall mode (ZVEI1, ZVEI2, ZVEI3, PZVEI, DZVEI, PDZVEI, EEA,
+#   sel_mode  - The selcall mode (ZVEI1, ZVEI2, ZVEI3, PZVEI, DZVEI, PDZVEI, EEA,
 #     	      	      	      VDEW, CCITT, NATEL, EIA, EURO, MODAT, CCIR1,
-#                             PCCIR, CCIR2, AUTOA)
+#                             PCCIR, CCIR2, AUTOA, QC2)
 #
-proc setMode {mode} {
+proc setMode {sel_mode} {
   variable mode_tone_length;
+  variable mode_silence_length;
   variable tones;
   variable ZVEI1;
   variable ZVEI2;
@@ -408,11 +551,14 @@ proc setMode {mode} {
   variable NATEL;
   variable EIA;
   variable EURO;
-  
-  array set tones [array get $mode];  # copy the arrays depending on
+  variable QC2;
+
+  array set tones [array get $sel_mode];  # copy the arrays depending on
       	      	      	      	      # the requested mode
-  variable tone_length $mode_tone_length($mode);
+  variable tone_length $mode_tone_length($sel_mode);
   setFirstToneLength $tone_length;
+  setSilence $mode_silence_length($sel_mode);
+  variable mode $sel_mode;
 }
 
 
@@ -434,18 +580,76 @@ proc play {selcallnr} {
   variable tones;
   variable tone_length;
   variable first_tone_length;
+  variable mode;
+  variable silence;
 
   set last "";
   set tlen $first_tone_length;
-  
-  foreach tone [split $selcallnr ""] {
-    if {$tone == $last} { # repeat-tone: "34433" -> "34E3E"
-      set tone "E";
+
+  #
+  # Motorola QC2 makes it all really long-winded ;-(
+  #
+  if {$mode == "QC2" } {
+    variable toneA;
+    variable toneB;
+    variable table1;
+
+    #
+    # check if a 3 digit cap code
+    #
+    if {[string length $selcallnr] == 3 } {
+
+      set table1 [string range $selcallnr 0 0];   # is 6
+
+      variable qc2_tone_matrix;
+      variable qc2_cap_code_matrix;
+      variable tonematrix $qc2_cap_code_matrix($table1);
+
+      # e.g. 635
+      set tone1 [string range $selcallnr 1 1];
+      set tone2 [string range $selcallnr 2 2];
+
+
+      # check for a group cap call?
+      if { $tone1 != $tone2 } {
+        # no group call
+        append toneA [string range $tonematrix 0 0] $tone1;
+        append toneB [string range $tonematrix 1 1] $tone2;
+
+        # play tone 3 from group 2 and  -> 669.9 Hz
+        #      tone 5 from group 1      -> 433.7 Hz
+        playTone $qc2_tone_matrix($toneA) $amplitude $tlen; # 1 sec
+        playTone $qc2_tone_matrix($toneB) $amplitude 3000;  # 3 sec
+
+      } else {
+
+        # yes, we have a group call
+        append toneA $table1 $tone1;
+        # group call cap code
+        playTone $qc2_tone_matrix($toneA) $amplitude 8000;
+      }
     }
-    playTone $tones($tone) $amplitude $tlen;
-    set last $tone; # remember last tone
-    set tlen $tone_length;
+
+    # clear the tones
+    set toneA "";
+    set toneB "";
+
+  } else {
+    foreach tone [split $selcallnr ""] {
+      # repeat-tone: "34433" -> "34E3E"
+      if {$tone == "*"} {
+        set tone "A";
+      }
+      if {$tone == $last} {
+        set tone "E";
+      }
+      playTone $tones($tone) $amplitude $tlen;
+      # remember last tone
+      set last $tone;
+      set tlen $tone_length;
+    }
   }
+  playSilence $silence;
 }
 
 
