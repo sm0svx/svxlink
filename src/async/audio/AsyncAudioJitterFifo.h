@@ -240,6 +240,7 @@ class AudioJitterFifo : public AudioSink, public AudioSource
     
     void writeSamplesFromFifo(int count);
     void writeZeroBlock(int count);
+    void flushSamplesFromFifo(void);
 
 };  /* class AudioJitterFifo */
 
