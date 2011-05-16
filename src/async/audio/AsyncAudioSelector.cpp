@@ -126,18 +126,18 @@ class Async::AudioSelector::Branch : public AudioSink, public AudioSource
     {
       return selector->handler() == this;
     }
+
+    bool isActive(void) const
+    {
+      return is_active;
+    }
     
     virtual int writeSamples(const float *samples, int count)
     {
       is_active = true;
       if (auto_select && !isSelected())
       {
-	Branch *selected_branch = dynamic_cast<Branch *>(selector->handler());
-	assert(selected_branch != 0);
-	if (selected_branch->selectionPrio() < prio)
-	{
-	  selector->selectBranch(this);
-	}
+        autoSelect();
       }
       return sinkWriteSamples(samples, count);
     }    
@@ -147,12 +147,7 @@ class Async::AudioSelector::Branch : public AudioSink, public AudioSource
       is_active = true;
       if (auto_select && !isSelected())
       {
-	Branch *selected_branch = dynamic_cast<Branch *>(selector->handler());
-	assert(selected_branch != 0);
-	if (selected_branch->selectionPrio() < prio)
-	{
-	  selector->selectBranch(this);
-	}
+        autoSelect();
       }
       sinkAvailSamples();
     }
@@ -160,7 +155,12 @@ class Async::AudioSelector::Branch : public AudioSink, public AudioSource
     virtual void flushSamples(void)
     {
       is_active = false;
-      sinkFlushSamples();
+      if (auto_select && isSelected())
+      {
+      	selector->selectBranch(0);
+      }
+      sourceAllSamplesFlushed();
+      selector->checkFlushSamples();
     }
 
     virtual void requestSamples(int count)
@@ -171,18 +171,21 @@ class Async::AudioSelector::Branch : public AudioSink, public AudioSource
       }
     }
 
-    virtual void allSamplesFlushed(void)
-    {
-      is_active = false;
-      if (auto_select && isSelected())
-      {
-      	selector->selectBranch(0);
-      }
-      sourceAllSamplesFlushed();
-    }
+    virtual void allSamplesFlushed(void) {}
     
   
   private:
+
+    void autoSelect(void)
+    {
+      Branch *selected_branch = dynamic_cast<Branch *>(selector->handler());
+      assert(selected_branch != 0);
+      if (selected_branch->selectionPrio() < prio)
+      {
+        selector->selectBranch(this);
+      }
+    }
+
     AudioSelector *selector;
     bool is_active;
     bool auto_select;
@@ -199,8 +202,6 @@ class Async::AudioSelector::NullBranch : public Async::AudioSelector::Branch
     {
     }
     void requestSamples(int count) {}
-    void allSamplesFlushed(void) {}
-
 };
 
 
@@ -406,6 +407,17 @@ void AudioSelector::selectBranch(Branch *branch)
 } /* AudioSelector::selectBranch */
 
 
+void AudioSelector::checkFlushSamples(void)
+{
+  BranchMap::const_iterator it;
+  for (it = branch_map.begin(); it != branch_map.end(); ++it)
+  {
+    if (it->second->isActive()) return;
+  }
+
+  sinkFlushSamples();
+
+} /* AudioSelector::checkFlushSamples */
 
 
 

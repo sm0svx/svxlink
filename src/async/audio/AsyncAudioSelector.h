@@ -190,6 +190,7 @@ class AudioSelector : public AudioSource
     AudioSelector(const AudioSelector&);
     AudioSelector& operator=(const AudioSelector&);
     void selectBranch(Branch *branch);
+    void checkFlushSamples(void);
     
     friend class Branch;
     
