@@ -84,58 +84,32 @@ using namespace Async;
 class Async::AudioMixer::MixerSrc : public AudioReader
 {
   public:
-    MixerSrc(AudioMixer *mixer)
-      : stream_state(STREAM_IDLE), mixer(mixer)
-    {
-    }
+    MixerSrc(AudioMixer *mixer) : mixer(mixer), is_active(false) {}
     
-    int writeSamples(const float *samples, int count)
-    {
-      //printf("Async::AudioMixer::MixerSrc::writeSamples: count=%d\n", count);
-      stream_state = STREAM_ACTIVE;
-      if (isReading())
-      {
-        return AudioReader::writeSamples(samples, count);
-      }
-      return mixer->writeSamples(this, samples, count);
-    }
-
     void availSamples(void)
     {
       //printf("Async::AudioMixer::MixerSrc::availSamples\n");
-      stream_state = STREAM_ACTIVE;
-      if (!isReading())
-      {
-        mixer->availSamples();
-      }
+      is_active = true;
+      mixer->availSamples();
     }
     
     void flushSamples(void)
     {
       //printf("Async::AudioMixer::MixerSrc::flushSamples\n");
-      stream_state = STREAM_FLUSHING;
+      is_active = false;
+      sourceAllSamplesFlushed();
       if (!isReading())
       {
         mixer->checkFlushSamples();
       }
     }
 
-    void allSamplesFlushed(void)
-    {
-      stream_state = STREAM_IDLE;
-      sourceAllSamplesFlushed();
-    }
-    
-    bool isActive(void) const { return (stream_state == STREAM_ACTIVE); }
-    bool isFlushing(void) const { return (stream_state == STREAM_FLUSHING); }
+    void allSamplesFlushed(void) {}
+    bool isActive(void) const { return is_active; }
     
   private:
-    typedef enum
-    {
-      STREAM_IDLE, STREAM_ACTIVE, STREAM_FLUSHING
-    } StreamState;
-    StreamState stream_state;
-    AudioMixer  *mixer;
+    AudioMixer *mixer;
+    bool       is_active;
     
 }; /* class Async::AudioMixer::MixerSrc */
 
@@ -229,10 +203,11 @@ void AudioMixer::onRequestSamples(int count)
   // Write samples into the sink
   assert(sigsrc.writeSamples(buf, count) == count);
 
-  // Second pass: Check for flushing sources
+  // Second pass: Check if all sources are inactive now
+  // so we can flush the sink
   checkFlushSamples();
   
-} /* AudioMixer::requestSamples */
+} /* AudioMixer::onRequestSamples */
 
 
 
@@ -243,48 +218,6 @@ void AudioMixer::onRequestSamples(int count)
  ****************************************************************************/
 
 
-int AudioMixer::writeSamples(MixerSrc *src, const float *samples, int count)
-{
-  int ret = 0;
-
-  // First pass: Mix the incoming sample block with the other active sources 
-  int len = min((int)fifo.spaceAvail(), count);
-  while (len > 0)
-  {
-    float buf[len];
-    memcpy(buf, samples, len * sizeof(float));
-
-    list<MixerSrc *>::const_iterator it;
-    for (it = sources.begin(); it != sources.end(); ++it)
-    {
-      MixerSrc *mix_src = *it;
-      if ((mix_src != src) && mix_src->isActive())
-      {
-        float tmp[len];
-        int samples_read = mix_src->readSamples(tmp, len);
-        for (int i=0; i<samples_read; ++i)
-        {
-          buf[i] += tmp[i];
-        }
-      }
-    }
-
-    assert(sigsrc.writeSamples(buf, len) == len);
-
-    count -= len;
-    samples += len;
-    ret += len;
-
-    len = min((int)fifo.spaceAvail(), count);
-  }
-
-  // Second pass: Check for flushing sources
-  checkFlushSamples();
-
-  return ret;
-} /* AudioMixer::writeSamples */
-
-
 void AudioMixer::availSamples(void)
 {
   sigsrc.availSamples();
@@ -293,29 +226,14 @@ void AudioMixer::availSamples(void)
 
 void AudioMixer::checkFlushSamples(void)
 {
-  bool is_flushing = false;
-  
   list<MixerSrc *>::const_iterator it;
-  for (it = sources.begin(); it != sources.end(); ++it)
-  {
-    MixerSrc *mix_src = *it;
-    if (mix_src->isFlushing())
-    {
-      mix_src->allSamplesFlushed();
-      is_flushing = true;
-    }
-  }
-
   for (it = sources.begin(); it != sources.end(); ++it)
   {
     if ((*it)->isActive()) return;
   }
 
-  if (is_flushing)
-  {  
-    //printf("AudioMixer::checkFlushSamples: Flushing!\n");
-    sigsrc.flushSamples();
-  }
+  //printf("AudioMixer::checkFlushSamples: Flushing!\n");
+  sigsrc.flushSamples();
 
 } /* AudioMixer::checkFlushSamples */
 
