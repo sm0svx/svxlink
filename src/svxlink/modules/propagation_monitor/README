@@ -36,7 +36,7 @@ restorecon -r /var/spool/svxlink/propagation_monitor
 This was tested on CentOS 5.
 
 - Register with VHFDX
-Register yourself on the VHFDX (www.vhfdx.net) site so that emails start
+Register yourself on the VHFDX (www.vhfdx.info) site so that emails start
 coming. On the site you enter your geographic position and setup what type of
 propagation alerts you want to receive. Start by allowing alerts for lower
 bands like 6m and 10m to test the system. You can disable them later

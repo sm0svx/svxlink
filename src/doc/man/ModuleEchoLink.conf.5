@@ -1,4 +1,4 @@
-.TH MODULEECHOLINK.CONF 5 "APRIL 2010" Linux "File Formats"
+.TH MODULEECHOLINK.CONF 5 "MAY 2011" Linux "File Formats"
 .
 .SH NAME
 .
@@ -171,13 +171,13 @@ it with ")$" so that the whole callsign will be used in the match.
 .SH FILES
 .
 .TP
-.I /etc/svxlink.conf
+.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
 The system wide configuration file.
 .TP
-.IR ~/.svxlink/svxlink.conf " or " ~/.svxlinkrc
+.IR ~/.svxlink/svxlink.conf
 Per user configuration file.
 .TP
-.I /etc/svxlink.d/ModuleEchoLink.conf
+.I /etc/svxlink/svxlink.d/ModuleEchoLink.conf
 Global modularized configuration file. Depends on the CFG_DIR configuration
 variable setting.
 .TP

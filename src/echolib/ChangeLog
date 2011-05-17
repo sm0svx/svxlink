@@ -1,10 +1,11 @@
- 0.14.0 -- ?? ??? 2010
+ 0.14.0 -- 14 May 2011
 -----------------------
 
-* Bugfix: When receiving multiple bye packets, the disconnection was announced
-  multiple times.
+* Bugfix: When receiving multiple bye packets, the disconnection was
+  announced multiple times.
 
-* Added Speex codec support to EchoLink connections.
+* Added Speex codec support to EchoLink connections. This only work
+  between two SvxLink nodes (or Qtel) at the moment.
 
 
 

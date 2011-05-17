@@ -47,6 +47,7 @@ array set variants {
   "15" "PDZVEI"
   "16" "PCCIR"
   "17" "AUTOA"
+  "18" "QC2"
 }
 
 

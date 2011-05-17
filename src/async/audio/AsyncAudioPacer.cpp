@@ -179,13 +179,9 @@ void AudioPacer::requestSamples(int count)
 
 void AudioPacer::allSamplesFlushed(void)
 {
-  if (stream_state == STREAM_FLUSHING)
-  {
-    stream_state = STREAM_IDLE;
-    AudioReader::flushSamples();
-  }
-    
+  stream_state = STREAM_IDLE;
   pace_timer->setEnable(false);
+  AudioReader::flushSamples();
 } /* AudioPacer::allSamplesFlushed */
 
 
