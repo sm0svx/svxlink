@@ -148,6 +148,8 @@ void AudioPacer::availSamples(void)
     output_samples = 0;
     pace_timer->setEnable(true);
   }
+  
+  AudioReader::availSamples();
 } /* AudioPacer::availSamples */
 
 
@@ -180,7 +182,7 @@ void AudioPacer::allSamplesFlushed(void)
   if (stream_state == STREAM_FLUSHING)
   {
     stream_state = STREAM_IDLE;
-    sourceAllSamplesFlushed();
+    AudioReader::flushSamples();
   }
     
   pace_timer->setEnable(false);

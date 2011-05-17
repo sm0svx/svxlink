@@ -90,6 +90,7 @@ class Async::AudioMixer::MixerSrc : public AudioReader
     {
       //printf("Async::AudioMixer::MixerSrc::availSamples\n");
       is_active = true;
+      AudioReader::availSamples();
       mixer->availSamples();
     }
     
@@ -97,7 +98,7 @@ class Async::AudioMixer::MixerSrc : public AudioReader
     {
       //printf("Async::AudioMixer::MixerSrc::flushSamples\n");
       is_active = false;
-      sourceAllSamplesFlushed();
+      AudioReader::flushSamples();
       if (!isReading())
       {
         mixer->checkFlushSamples();

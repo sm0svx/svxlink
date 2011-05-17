@@ -125,6 +125,7 @@ class Async::AudioIO::DelayedFlushAudioReader
       if ((audio_dev->mode() == AudioDevice::MODE_WR) ||
           (audio_dev->mode() == AudioDevice::MODE_RDWR))
       {
+        AudioReader::availSamples();
         audio_dev->audioToWriteAvailable();
       }
     }

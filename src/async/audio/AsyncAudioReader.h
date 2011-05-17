@@ -184,6 +184,7 @@ class AudioReader : public AudioSink
     float *buf;
     int   buf_size;
     int   samples_in_buf;
+    bool  is_active;
     
 };  /* class AudioReader */
 

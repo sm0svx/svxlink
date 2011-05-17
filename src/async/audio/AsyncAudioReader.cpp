@@ -113,7 +113,7 @@ using namespace Async;
  ****************************************************************************/
 
 AudioReader::AudioReader(void)
-  : buf(0), buf_size(0), samples_in_buf(0)
+  : buf(0), buf_size(0), samples_in_buf(0), is_active(false)
 {
   
 } /* AudioReader::AudioReader */
@@ -127,8 +127,6 @@ AudioReader::~AudioReader(void)
 
 int AudioReader::readSamples(float *samples, int count)
 {
-  int samples_prev_buf;
-  
   if (count == 0)
   {
     return 0;
@@ -138,11 +136,12 @@ int AudioReader::readSamples(float *samples, int count)
   buf_size = count;
   samples_in_buf = 0;
 
-  do
+  while (is_active && (samples_in_buf < count))
   {
-    samples_prev_buf = samples_in_buf;
+    int samples_prev_buf = samples_in_buf;
     sourceRequestSamples(count - samples_in_buf);
-  } while ((samples_in_buf < count) && (samples_in_buf > samples_prev_buf));
+    if (samples_in_buf == samples_prev_buf) break;
+  }
 
   buf = 0;
   buf_size = 0;
@@ -170,11 +169,13 @@ int AudioReader::writeSamples(const float *samples, int count)
 
 void AudioReader::availSamples(void)
 {
+  is_active = true;
 } /* AudioReader::availSamples */
 
 
 void AudioReader::flushSamples(void)
 {
+  is_active = false;
   sourceAllSamplesFlushed();
 } /* AudioReader::flushSamples */
 
