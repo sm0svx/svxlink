@@ -113,7 +113,7 @@ class Timer;
 
 This class is used to mix audio streams together.
 */
-class AudioMixer : public SigC::Object, public Async::AudioSource
+class AudioMixer : public Async::AudioSource
 {
   public:
     /**
@@ -132,9 +132,6 @@ class AudioMixer : public SigC::Object, public Async::AudioSource
      */
     void addSource(AudioSource *source);
 
-    
-  protected:
-
     /**
      * @brief Request audio samples from the source
      * @param count
@@ -142,19 +139,36 @@ class AudioMixer : public SigC::Object, public Async::AudioSource
      * This function will be called when the registered audio sink is ready
      * to accept more samples.
      */
-    void onRequestSamples(int count);
+    void requestSamples(int count);
+
+    /**
+     * @brief 	Tell the sink that there are samples available on request
+     *
+     * This function is used to tell the sink that there are samples available
+     * that can be requested by calling the sourceRequestSamples function.
+     * This function is normally only called from a connected source object.
+     */
+    void availSamples(void);
+
+
+  protected:
+    /**
+     * @brief The registered sink has flushed all samples
+     *
+     * This function will be called when all samples have been flushed in the
+     * registered sink. This function is normally only called from a connected
+     * sink object.
+     */
+    void allSamplesFlushed(void);
+
 
   private:
     class MixerSrc;
-    
     std::list<MixerSrc *> sources;
-    AudioFifo             fifo;
-    SigCAudioSource       sigsrc;
     
     AudioMixer(const AudioMixer&);
     AudioMixer& operator=(const AudioMixer&);
     
-    void availSamples(void);
     void checkFlushSamples(void);
     
     friend class MixerSrc;

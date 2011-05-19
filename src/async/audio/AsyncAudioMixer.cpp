@@ -105,7 +105,6 @@ class Async::AudioMixer::MixerSrc : public AudioReader
       }
     }
 
-    void allSamplesFlushed(void) {}
     bool isActive(void) const { return is_active; }
     
   private:
@@ -147,11 +146,7 @@ class Async::AudioMixer::MixerSrc : public AudioReader
  ****************************************************************************/
 
 AudioMixer::AudioMixer(void)
-  : fifo(64)
 {
-  AudioSource::setHandler(&fifo);
-  sigsrc.registerSink(&fifo);
-  sigsrc.sigRequestSamples.connect(slot(*this, &AudioMixer::onRequestSamples));
 } /* AudioMixer::AudioMixer */
 
 
@@ -174,13 +169,7 @@ void AudioMixer::addSource(AudioSource *source)
 } /* AudioMixer::addSource */
 
 
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-void AudioMixer::onRequestSamples(int count)
+void AudioMixer::requestSamples(int count)
 {
   float buf[count];
   memset(buf, 0, count * sizeof(float));
@@ -202,14 +191,30 @@ void AudioMixer::onRequestSamples(int count)
   }
 
   // Write samples into the sink
-  assert(sigsrc.writeSamples(buf, count) == count);
+  assert(sinkWriteSamples(buf, count) == count);
 
   // Second pass: Check if all sources are inactive now
   // so we can flush the sink
   checkFlushSamples();
   
-} /* AudioMixer::onRequestSamples */
+} /* AudioMixer::requestSamples */
 
+
+void AudioMixer::availSamples(void)
+{
+  sinkAvailSamples();
+} /* AudioMixer::availSamples */
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+void AudioMixer::allSamplesFlushed(void)
+{
+} /* AudioMixer::allSamplesFlushed */
 
 
 /****************************************************************************
@@ -217,13 +222,6 @@ void AudioMixer::onRequestSamples(int count)
  * Private member functions
  *
  ****************************************************************************/
-
-
-void AudioMixer::availSamples(void)
-{
-  sigsrc.availSamples();
-} /* AudioMixer::availSamples */
-
 
 void AudioMixer::checkFlushSamples(void)
 {
@@ -234,7 +232,7 @@ void AudioMixer::checkFlushSamples(void)
   }
 
   //printf("AudioMixer::checkFlushSamples: Flushing!\n");
-  sigsrc.flushSamples();
+  sinkFlushSamples();
 
 } /* AudioMixer::checkFlushSamples */
 
