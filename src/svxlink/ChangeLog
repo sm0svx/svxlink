@@ -3,6 +3,9 @@
 
 * Added selective calling system Motorola QC2.
 
+* Small bugfix in RepeaterLogic: TX down was not always correctly handled
+  on interference shutdown.
+
 
 
  0.12.0 -- 14 May 2011
