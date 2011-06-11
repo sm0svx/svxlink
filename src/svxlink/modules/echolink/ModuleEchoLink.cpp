@@ -975,8 +975,11 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
       qsos.push_front(qso);
       updateEventVariables();
       
-      last_disc_stn = qso->stationData();
-      
+      if (!qso->connectionRejected())
+      {
+        last_disc_stn = qso->stationData();
+      }
+              
       if (remote_activation &&
       	  (qsos.back()->currentState() == Qso::STATE_DISCONNECTED))
       {
