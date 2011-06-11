@@ -6,6 +6,10 @@
 * Small bugfix in RepeaterLogic: TX down was not always correctly handled
   on interference shutdown.
 
+* Bugfix in ModuleEchoLink: The "last disconnected station" variable was
+  updated even if a connection was rejected. This affected the "connect
+  to the last disconnected station" command.
+
 
 
  0.12.0 -- 14 May 2011
