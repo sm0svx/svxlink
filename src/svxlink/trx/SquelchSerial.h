@@ -1,14 +1,12 @@
 /**
 @file	 SquelchSerial.h
-@brief   A_brief_description_for_this_file
+@brief   A squelch detector that read squelch state on a serial port pin
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-08-02
 
-A_detailed_description_for_this_file
-
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2010  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example SquelchSerial_demo.cpp
-An example of how to use the SquelchSerial class
-*/
-
 
 #ifndef SQUELCH_SERIAL_INCLUDED
 #define SQUELCH_SERIAL_INCLUDED
@@ -87,7 +80,7 @@ An example of how to use the SquelchSerial class
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -112,13 +105,12 @@ An example of how to use the SquelchSerial class
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	Serial port pin external squelch detector
 @author Tobias Blomberg / SM0SVX
 @date   2005-08-02
 
-A_detailed_class_description
-
-\include SquelchSerial_demo.cpp
+This squelch detector read the state of an external hardware squelch through
+a pin in the serial port. The pins that can be used are CTS, DSR, DCD and RI.
 */
 class SquelchSerial : public Squelch
 {
@@ -126,8 +118,8 @@ class SquelchSerial : public Squelch
     /**
      * @brief 	Default constuctor
      */
-    SquelchSerial(void) {}
-  
+    SquelchSerial(void) : serial(0) {}
+
     /**
      * @brief 	Destructor
      */
@@ -135,11 +127,12 @@ class SquelchSerial : public Squelch
     {
       delete serial;
     }
-  
+
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Initialize the squelch detector
+     * @param 	cfg A previsously initialized config object
+     * @param 	rx_name The name of the RX (config section name)
+     * @return	Returns \em true on success or else \em false
      */
     bool initialize(Async::Config& cfg, const std::string& rx_name)
     {
@@ -147,7 +140,7 @@ class SquelchSerial : public Squelch
       {
       	return false;
       }
-      
+
       std::string serial_port;
       if (!cfg.getValue(rx_name, "SERIAL_PORT", serial_port))
       {
@@ -218,11 +211,10 @@ class SquelchSerial : public Squelch
 	serial = 0;
 	return false;
       }
-      
+
       return true;
     }
-    
-    
+
   protected:
     /**
      * @brief 	Process the incoming samples in the squelch detector
@@ -238,24 +230,18 @@ class SquelchSerial : public Squelch
 	perror("getPin");
 	return count;
       }
-      bool is_activated = (is_set == sql_pin_act_lvl);
-
-      //printf("Serial squelch %s...\n",
-      	      //is_activated ? "ACTIVATED" : "DEACTIVATED");
-      setOpen(is_activated);
-
+      setSignalDetected(is_set == sql_pin_act_lvl);
       return count;
     }
 
-    
   private:
     Async::Serial     	    *serial;
     Async::Serial::Pin      sql_pin;
     bool      	      	    sql_pin_act_lvl;
-  
+
     SquelchSerial(const SquelchSerial&);
     SquelchSerial& operator=(const SquelchSerial&);
-    
+
 };  /* class SquelchSerial */
 
 

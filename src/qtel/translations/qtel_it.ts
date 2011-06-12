@@ -100,10 +100,6 @@ Can&apos;t create connection to</source>
         <translation>Nome:</translation>
     </message>
     <message>
-        <source>Alt+D</source>
-        <translation>Alt+D</translation>
-    </message>
-    <message>
         <source>VOX</source>
         <translation>VOX</translation>
     </message>
@@ -341,16 +337,6 @@ Can&apos;t create connection to</source>
         <translation>Qtel v</translation>
     </message>
     <message>
-        <source>- Qt EchoLink client.
-</source>
-        <translation>- Il Qt-Cliente del EchoLink.
-</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>Autore</translation>
-    </message>
-    <message>
         <source>&amp;Directory</source>
         <translation>&amp;Catalogo delle stazione</translation>
     </message>
@@ -458,6 +444,22 @@ Can&apos;t create connection to</source>
         <source>Add selected to Bookmarks</source>
         <translation>Aggiungere la staziona a segnalibro</translation>
     </message>
+    <message>
+        <source> - Qt EchoLink client.
+</source>
+        <translation> - Qt EchoLink cliente.
+</translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
+are welcome to redistribute it in accordance with the terms and conditions in
+the GNU GPL (General Public License) version 2 or later.</source>
+        <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel è fornite SENZA ALCUNA GARANZIA. Questo è software libero, e voi libero di ridistribuirlo in conformità con i termini e le condizioni di la GNU GPL (General Public License) versione 2 o successiva.</translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -558,10 +560,6 @@ Message</source>
     <message>
         <source>Full duplex</source>
         <translation>Full duplex</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation>Device audio (per esempio /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
@@ -678,6 +676,10 @@ Message</source>
     <message>
         <source>Passwords do not match</source>
         <translation>Password divercere</translation>
+    </message>
+    <message>
+        <source>The audio device to use (e.g. alsa:default)</source>
+        <translation>Il dispositivo audio da utilizzare (p.e. alsa:default)</translation>
     </message>
 </context>
 </TS>

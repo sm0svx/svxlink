@@ -45,7 +45,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
-#include <version/SVXLINK.h>
 
 
 /****************************************************************************
@@ -54,6 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/SVXLINK.h"
 #include "AprsTcpClient.h"
 #include "common.h"
 
@@ -275,7 +275,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 
 void AprsTcpClient::sendMsg(const char *aprsmsg)
 {
-   cout << aprsmsg << endl;
+   //cout << aprsmsg << endl;
 
   if (!con->isConnected())
   {

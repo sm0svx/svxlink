@@ -66,7 +66,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <Tx.h>
 #include <common.h>
 
-#include <version/REMOTE_TRX.h>
 
 
 /****************************************************************************
@@ -75,6 +74,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/REMOTE_TRX.h"
 #include "TrxHandler.h"
 #include "NetTrxAdapter.h"
 
@@ -371,8 +371,7 @@ int main(int argc, char **argv)
     cfg_filename += "/.svxlink/remotetrx.conf";
     if (!cfg.open(cfg_filename))
     {
-      cfg_filename = string(home_dir);
-      cfg_filename += "/.remotetrxrc";
+      cfg_filename = "/etc/svxlink/remotetrx.conf";
       if (!cfg.open(cfg_filename))
       {
 	cfg_filename = "/etc/remotetrx.conf";
@@ -380,7 +379,7 @@ int main(int argc, char **argv)
 	{
 	  cerr << "*** ERROR: Could not open configuration file. Tried:\n"
       	       << "\t" << home_dir << "/.svxlink/remotetrx.conf\n"
-      	       << "\t" << home_dir << "/.remotetrxrc\n"
+      	       << "\t/etc/svxlink/remotetrx.conf\n"
 	       << "\t/etc/remotetrx.conf\n"
 	       << "Possible reasons for failure are: None of the files exist,\n"
 	       << "you do not have permission to read the file or there was a\n"
@@ -443,8 +442,14 @@ int main(int argc, char **argv)
   
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
-  cout << PROGRAM_NAME " v" REMOTE_TRX_VERSION " (" __DATE__
-      	  ") starting up...\n";
+  cout << PROGRAM_NAME " v" REMOTE_TRX_VERSION " (" __DATE__ 
+          ") Copyright (C) 2011 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
+          "This is free software, and you are\n";
+  cout << "welcome to redistribute it in accordance with the "
+          "terms and conditions in the\n";
+  cout << "GNU GPL (General Public License) version 2 or later.\n";
+
   cout << "\nUsing configuration file: " << main_cfg_filename << endl;
   
   string value;

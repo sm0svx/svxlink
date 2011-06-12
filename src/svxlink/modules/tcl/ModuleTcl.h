@@ -47,7 +47,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <Module.h>
-#include <version/SVXLINK.h>
 
 
 
@@ -57,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/SVXLINK.h"
 
 
 /****************************************************************************
@@ -133,7 +133,6 @@ class ModuleTcl : public Module
     void dtmfCmdReceivedWhenIdle(const std::string &cmd);
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
-    void reportState(void);
 
 };  /* class ModuleTcl */
 

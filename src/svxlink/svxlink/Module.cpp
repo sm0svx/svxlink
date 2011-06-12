@@ -34,10 +34,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
-#include <version/SVXLINK.h>
 
 #include <Rx.h>
 
+#include "version/SVXLINK.h"
 #include "Logic.h"
 #include "Module.h"
 
@@ -74,7 +74,7 @@ bool Module::initialize(void)
   string id_str;
   if (!cfg().getValue(cfgName(), "ID", id_str))
   {
-    cerr << "*** Error: Config variable " << cfgName()
+    cerr << "*** ERROR: Config variable " << cfgName()
       	 << "/ID not set\n";
     return false;
   }

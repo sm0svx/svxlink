@@ -1,4 +1,4 @@
-.TH REMOTETRX 1 "JULY 2010" Linux "User Manuals"
+.TH REMOTETRX 1 "MAY 2011" Linux "User Manuals"
 .
 .SH NAME
 .
@@ -61,17 +61,17 @@ Specify which configuration file to use.
 .SH FILES
 .
 .TP
-.I /etc/remotetrx.conf
+.IR /etc/svxlink/remotetrx.conf " (or deprecated " /etc/remotetrx.conf ")"
 The system wide configuration file. See
 .BR remotetrx.conf (5)
 for further details.
 .TP
-.IR ~/.svxlink/remotetrx.conf " or " ~/.remotetrxrc
+.IR ~/.svxlink/remotetrx.conf
 Per user configuration file. See
 .BR remotetrx.conf (5)
 for further details.
 .TP
-.I /etc/remotetrx.d/*
+.I /etc/svxlink/remotetrx.d/*
 Additional configuration files. This directory is setup by the CFG_DIR
 configuration variable.
 .
@@ -81,7 +81,7 @@ configuration variable.
 ASYNC_AUDIO_NOTRIGGER
 Set this environment variable to 1 if you get an error about
 .B ioctl: Broken pipe
-when the remotetrx server starts.
+during remotetrx server startup when using OSS audio.
 .TP
 HOME
 Used to find the per user configuration file.

@@ -218,6 +218,7 @@ LDFLAGS		+=
 install-extras uninstall-extras rpm-extras:
 	$(DIRSPEC) /var/spool/svxlink[755,svxlink,daemon]
 	$(FILESPEC) etc/logrotate.d/svxlink[644,root,root,config] /etc/logrotate.d
+	$(FILESPEC) etc/logrotate.d/remotetrx[644,root,root,config] /etc/logrotate.d
 	$(FILESPEC) etc/init.d/svxlink[755,root,root] /etc/init.d
 	$(FILESPEC) etc/sysconfig/svxlink[755,root,root,config] /etc/sysconfig
 	$(FILESPEC) etc/10-svxlink.rules[644,root,root,config] /etc/udev/rules.d

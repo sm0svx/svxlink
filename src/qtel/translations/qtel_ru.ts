@@ -14,7 +14,7 @@
       <source>Station data not found in directory server.
 Can't create connection to</source>
       <translation>Нет данных о станции на регистрационном сервере.
-Не могу соединится с</translation>
+Не могу подключится к</translation>
     </message>
     <message>
       <source>Could not open audio device</source>
@@ -77,7 +77,7 @@ Can't create connection to</source>
     </message>
     <message>
       <source>Chat/Info</source>
-      <translation>Разговор/Инфо</translation>
+      <translation>Чат/Инфо</translation>
     </message>
     <message>
       <source>RX</source>
@@ -94,10 +94,6 @@ Can't create connection to</source>
     <message>
       <source>&amp;Disconnect</source>
       <translation>&amp;Отключится</translation>
-    </message>
-    <message>
-      <source>Alt+D</source>
-      <translation type="unfinished" />
     </message>
     <message>
       <source>VOX</source>
@@ -186,7 +182,7 @@ Can't create connection to</source>
     <name>MainWindowBase</name>
     <message>
       <source>Qtel - the Qt EchoLink Client</source>
-      <translation>Qtel - Qt EchoLink программа</translation>
+      <translation>Qtel - Qt EchoLink Клиент</translation>
     </message>
     <message>
       <source>Explorer</source>
@@ -238,7 +234,7 @@ Can't create connection to</source>
     </message>
     <message>
       <source>Incoming connections</source>
-      <translation>Ожидают подключения</translation>
+      <translation>Входящие подключения</translation>
     </message>
     <message>
       <source>Accept</source>
@@ -270,7 +266,7 @@ Can't create connection to</source>
     </message>
     <message>
       <source>&amp;Settings</source>
-      <translation>&amp;Настройка</translation>
+      <translation>&amp;Настройки</translation>
     </message>
     <message>
       <source>&amp;Help</source>
@@ -390,15 +386,15 @@ Can't create connection to</source>
     </message>
     <message>
       <source>Qtel Settings...</source>
-      <translation>Настройки Qtel...</translation>
+      <translation>Qtel Настройки...</translation>
     </message>
     <message>
       <source>&amp;Qtel Settings...</source>
-      <translation>&amp;Настройки Qtel...</translation>
+      <translation>&amp;Qtel Настройки...</translation>
     </message>
     <message>
       <source>Open the Qtel settings dialog</source>
-      <translation>Открой окно настроек Qtel</translation>
+      <translation>Открыть окно настроек Qtel</translation>
     </message>
     <message>
       <source>Refresh</source>
@@ -426,7 +422,7 @@ Can't create connection to</source>
     </message>
     <message>
       <source>View as busy in directory server</source>
-      <translation>На регистрационном сервере установить как &quot;занят&quot;</translation>
+      <translation>Установить как &quot;занят&quot; на регистрационном сервере</translation>
     </message>
     <message>
       <source>Connect to IP...</source>
@@ -449,14 +445,21 @@ Can't create connection to</source>
       <translation>Qtel версия </translation>
     </message>
     <message>
-      <source>- Qt EchoLink client.
+      <source> - Qt EchoLink client.
 </source>
-      <translation> - Qt EchoLink программа.
-</translation>
+      <translation> - Qt EchoLink клиент.</translation>
     </message>
     <message>
-      <source>Author</source>
-      <translation>Автор</translation>
+      <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
+are welcome to redistribute it in accordance with the terms and conditions in
+the GNU GPL (General Public License) version 2 or later.</source>
+      <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel поставляется БЕЗ АБСОЛЮТНО КАКИХ-ЛИБО ГАРАНТИЙ. Это свободное ПО,
+вы можете использовать и распространять его в соответствии с положениями
+и условиями GNU GPL (General Public License) версии 2 или более поздней.</translation>
     </message>
   </context>
   <context>
@@ -467,16 +470,17 @@ Can't create connection to</source>
     </message>
     <message>
       <source>User Info</source>
-      <translation>Данные пользователя</translation>
+      <translation>Данные Пользователя</translation>
     </message>
     <message>
       <source>User Information</source>
-      <translation>Настройки пользователя</translation>
+      <translation>Данные Пользователя</translation>
     </message>
     <message>
       <source>Info
 Message</source>
-      <translation>Описание станции</translation>
+      <translation>Описание
+  Станции</translation>
     </message>
     <message>
       <source>Location</source>
@@ -500,11 +504,11 @@ Message</source>
     </message>
     <message>
       <source>Directory Server</source>
-      <translation>Регистрационный сервер</translation>
+      <translation>Регистрационный Сервер</translation>
     </message>
     <message>
       <source>Directory Server Settings</source>
-      <translation>Настройка регистрационного сервера</translation>
+      <translation>Настройки Регистрационного Сервера</translation>
     </message>
     <message>
       <source>The hostname or IP address of the EchoLink directory server to use</source>
@@ -516,7 +520,7 @@ Message</source>
     </message>
     <message>
       <source>Refresh time</source>
-      <translation>Время между обновлением</translation>
+      <translation>Время обновления</translation>
     </message>
     <message>
       <source>min</source>
@@ -540,7 +544,7 @@ Message</source>
     </message>
     <message>
       <source>Sound settings</source>
-      <translation>Настройки звука</translation>
+      <translation>Настройки Звука</translation>
     </message>
     <message>
       <source>Audio device</source>
@@ -551,12 +555,8 @@ Message</source>
       <translation>Полный дуплекс</translation>
     </message>
     <message>
-      <source>The audio device to use (e.g. /dev/dsp)</source>
-      <translation>Работать через аудио устройство (напр. /dev/dsp)</translation>
-    </message>
-    <message>
       <source>Check this check box to enable full duplex operation</source>
-      <translation>Установить флажок, для включения полного дуплекса</translation>
+      <translation>Установите флажок, чтобы включить полный дуплекс</translation>
     </message>
     <message>
       <source>Connect Sound</source>
@@ -564,7 +564,7 @@ Message</source>
     </message>
     <message>
       <source>The connect sound to use on incoming EchoLink connections</source>
-      <translation>Звуковой сигнал о запросе EchoLink соединения</translation>
+      <translation>Звуковой сигнал при запросе EchoLink соединения</translation>
     </message>
     <message>
       <source>Browse...</source>
@@ -584,7 +584,7 @@ Message</source>
     </message>
     <message>
       <source>Choose a connect sound file</source>
-      <translation>Выберите файл сигнала подключения</translation>
+      <translation>Выберите файл для сигнала подключения</translation>
     </message>
     <message>
       <source>QSO</source>
@@ -592,11 +592,11 @@ Message</source>
     </message>
     <message>
       <source>QSO dialog settings</source>
-      <translation>Настройка QSO</translation>
+      <translation>Настройки QSO</translation>
     </message>
     <message>
       <source>Chat encoding:</source>
-      <translation>Кодировка символов:</translation>
+      <translation>Кодировка символов чата:</translation>
     </message>
     <message>
       <source>Chinese</source>
@@ -672,11 +672,15 @@ Message</source>
     </message>
     <message>
       <source>Qtel: Password mismatch</source>
-      <translation>Qtel: неправильный пароль</translation>
+      <translation>Qtel: Неправильный пароль</translation>
     </message>
     <message>
       <source>Passwords do not match</source>
       <translation>Пароли не совпадают</translation>
+    </message>
+    <message>
+      <source>The audio device to use (e.g. alsa:default)</source>
+      <translation>Использовать аудио устройство (напр. alsa:default)</translation>
     </message>
   </context>
 </TS>

@@ -46,7 +46,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/SVXLINK.h>
 #include <AsyncConfig.h>
 
 
@@ -56,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/SVXLINK.h"
 #include "LocationInfo.h"
 #include "AprsTcpClient.h"
 #include "AprsUdpClient.h"

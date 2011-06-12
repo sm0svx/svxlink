@@ -1,12 +1,19 @@
- 0.12.0 -- ?? ??? 2010
+ 0.12.1 -- ?? ??? 2011
+-----------------------
+
+* Added selective calling system Motorola QC2.
+
+
+
+ 0.12.0 -- 14 May 2011
 -----------------------
 
 * Bugfix in the EchoLink module: Short callsign (<6 chars) was not handled
   correctly in the APRS code.
 
-* Added a voice logger feature that can record all traffic on the channel.
-  The voice logger can be turned on and off using a DTMF command.
-  New configuration variables: VOICELOGGER_DIR and VOICELOGGER_CMD.
+* Added a QSO recorder feature that can record all traffic on the channel.
+  The QSO recorder can be turned on and off using a DTMF command.
+  New configuration variables: QSO_RECORDER_DIR and QSO_RECORDER_CMD.
 
 * The voice mail module now store the messages as WAV files. Old messages
   will have to be removed or converted into WAV files.
@@ -31,11 +38,15 @@
 
 * Implemented a signal level transmission mechanism based on multiple
   tones, one for each signal level step, in the high audio frequency
-  spektrum (5.5 - 6.5kHz). This can be used for linking in remote
+  spectrum (5.5 - 6.5kHz). This can be used for linking in remote
   receivers via RF but still measure the signal strength at the
-  remote receiver site. Only the receiving part have been implemented
-  in SvxLink at the moment. On the remote receiver side an Atmel AVR
-  ATmega8 is used to map the signal level voltage to tone frequencies.
+  remote receiver site. To map the signal level to tone frequencies
+  on the remote receiver side, either RemoteTrx can be used or an
+  Atmel AVR ATmega8 can be used for a more compact solution. The AVR
+  microcontroller solution take a signal level voltage and converts
+  that to one of ten tones which should be overlayed on the link audio.
+  Note: Tone transmission in RemoteTrx will only work if it has been
+  compiled in 16kHz mode. This is due to the high tone frequencies used.
 
 * New feature: Tell repeater users that are not identifying to
   identify themselvs. The time to wait for an identification, after the
@@ -45,9 +56,9 @@
   configuration variable. We don't know if it's really an
   identification but it's the best we can do.
 
-* New feature: The repeater can be told to activate again if within
-  a certain time from repeater close. Use the new configuration
-  variable OPEN_ON_SQL_AFTER_RPT_CLOSE to set this up.
+* New feature: The repeater can be told to activate again if the squelch
+  openes within a specified time from repeater close. Use the new
+  configuration variable OPEN_ON_SQL_AFTER_RPT_CLOSE to set this up.
 
 * The TX_CTCSS feature have now been extended so that CTCSS tone
   can be transmitted if there is incoming traffic from another
@@ -76,7 +87,7 @@
   from DH1DM / Steve.
 
 * Now possible to issue commands to the core and to other modules even
-  when another module are active. This is achieved by prefixing the
+  when another module is active. This is achieved by prefixing the
   command with a "*". If for example the EchoLink module is active and
   you want to check if there are any voice mails available the command
   to issue could look like this: *3001#.
@@ -141,12 +152,8 @@
   right, backup your old remotetrx.conf configuration file and use the
   new default configuration file to start over. Manually move configuration
   values from your old configuration file to the new file, carefully
-  reading the updated manual page, remotetrx.conf (5), to get everything right.
-
-* Implemented tone signal strength transmission in RemoteTrx that can be used
-  on a link transmitter at a remote receiver linking site to transfer signal
-  strength measurements to the main SvxLink site. This will only work if
-  SvxLink is compiled in 16kHz mode due to the high tone frequencies used.
+  reading the updated manual page, remotetrx.conf (5), to get everythin
+  right.
 
 * Now possible to set a PTT hangtime for the local tx type. This can be good
   to have on a link transmitter in combination with a tone squelch. When
@@ -160,6 +167,61 @@
 * The EchoLink module can now use the Speex audio codec on connections
   between two SvxLink nodes which improves the audio quality a lot.
   Patch contributed by Steve / DH1DM.
+
+* Added a fallback repeater mode to the RemoteTrx which can be used
+  if using it as both RX and TX for a repeater. If the network
+  connection is lost to the repeater, the RemoteTrx activates a very
+  basic repeater mode, essentially just connecting the RX to the TX.
+  Idea and original implementation by Adi / DL1HRC.
+
+* Bugfix: The SQL_TIMEOUT feature did not work for all squelch detector types.
+
+* Configuration variable VOX_LIMIT has been renamed to VOX_THRESH.
+
+* SvxLink system global configuration files are now by default stored in
+  the /etc/svxlink directory.
+
+* New directory layout for event scripts and sound clips. The main event
+  scripts are now stored in /usr/share/svxlink/events.d. The sound clip
+  files are now stored in /usr/share/svxlink/sounds/<langcode>. TCL
+  modules have been separated from the event handlers and are now stored
+  in /usr/share/svxlink/modules.d
+
+* New configuration variable DEFAULT_LANG that points out the default
+  language to use.
+
+* All TCL-modules have been split into two parts, the module logic and
+  the event handlers. This has been done to make the process of
+  creating and maintaining translations easier and also to make on the
+  fly language switching easier.
+
+* The ModuleTcl API for TCL modules changed a bit so external TCL
+  modules have to be adapted to the new API. There are no big changes.
+  Just a number of functions that have changed their names. The names
+  have been changed from my_func_name to myFuncName.
+
+* Bugfix in ModuleEchoLink: SvxLink would crash if no stations were
+  found when using the random connect feature.
+
+* New squelch detector type: EVDEV. This squelch detector read events
+  from a /dev/input/eventX device node. This can for example be of use
+  if you have a USB audio device with some buttons on it. If you're in
+  luck, it generates events when the buttons are pressed.
+
+* Better error handling for the DTMF command parser. Previously if for
+  example two modules were setup with the same module id, SvxLink would
+  just quit with a cryptic error message.
+
+* Now possible to reject and/or accept outgoing EchoLink connections to
+  specified stations using regular expressions in the same way that incoming
+  connections can be limited. New configuration variables: REJECT_OUTGOING
+  and ACCEPT_OUTGOING.
+
+* Changed the name of some configuration variables in the EchoLink module
+  DROP -> DROP_INCOMING, REJECT -> REJECT_INCOMING and
+  ACCEPT -> ACCET_INCOMING.
+
+* Bugfix: Playing sound clips in the startup TCL event handler did not work.
 
 
 

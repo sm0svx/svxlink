@@ -75,6 +75,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SquelchCtcss.h"
 #include "SquelchSerial.h"
 #include "SquelchSigLev.h"
+#include "SquelchEvDev.h"
 #include "LocalRx.h"
 #include "multirate_filter_coeff.h"
 #include "Sel5Decoder.h"
@@ -322,6 +323,8 @@ bool LocalRx::initialize(void)
   
     // Create the audio IO object
   audio_io = new AudioIO(audio_dev, audio_channel);
+  //FIXME: Check that the audio device is correctly initialized
+  //       before continuing.
   AudioSource *prev_src = audio_io;
   
     // Create a fifo buffer to handle large audio blocks
@@ -473,11 +476,15 @@ bool LocalRx::initialize(void)
   {
     squelch_det = new SquelchSigLev(siglevdet);
   }
+  else if (sql_det_str == "EVDEV")
+  {
+    squelch_det = new SquelchEvDev;
+  }
   else
   {
     cerr << "*** ERROR: Unknown squelch type specified in config variable "
-      	 << name() << "/SQL_DET. Legal values are: VOX, CTCSS, SIGLEV "
-	 << "and SERIAL\n";
+      	 << name() << "/SQL_DET. Legal values are: VOX, CTCSS, SIGLEV, "
+	 << "EVDEV and SERIAL\n";
     // FIXME: Cleanup
     return false;
   }
@@ -622,7 +629,7 @@ void LocalRx::mute(bool do_mute)
     /*
     if (!audio_io->open(AudioIO::MODE_RD))
     {
-      cerr << "*** Error: Could not open audio device for receiver \""
+      cerr << "*** ERROR: Could not open audio device for receiver \""
       	   << name() << "\"\n";
       return;
     }

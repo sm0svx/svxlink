@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <vector>
 #include <cstring>
+#include <set>
 
 
 /****************************************************************************
@@ -60,14 +61,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/SVXLINK.h>
-
 #include <AsyncCppApplication.h>
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 #include <AsyncFdWatch.h>
 #include <AsyncAudioIO.h>
 #include <LocationInfo.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -76,6 +76,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/SVXLINK.h"
 #include "MsgHandler.h"
 #include "SimplexLogic.h"
 #include "RepeaterLogic.h"
@@ -344,8 +345,7 @@ int main(int argc, char **argv)
     cfg_filename += "/.svxlink/svxlink.conf";
     if (!cfg.open(cfg_filename))
     {
-      cfg_filename = string(home_dir);
-      cfg_filename += "/.svxlinkrc";
+      cfg_filename = "/etc/svxlink/svxlink.conf";
       if (!cfg.open(cfg_filename))
       {
 	cfg_filename = "/etc/svxlink.conf";
@@ -353,7 +353,7 @@ int main(int argc, char **argv)
 	{
 	  cerr << "*** ERROR: Could not open configuration file. Tried:\n"
       	       << "\t" << home_dir << "/.svxlink/svxlink.conf\n"
-      	       << "\t" << home_dir << "/.svxlinkrc\n"
+      	       << "\t/etc/svxlink/svxlink.conf\n"
 	       << "\t/etc/svxlink.conf\n"
 	       << "Possible reasons for failure are: None of the files exist,\n"
 	       << "you do not have permission to read the file or there was a\n"
@@ -416,7 +416,12 @@ int main(int argc, char **argv)
   
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
-  cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__ ") starting up...\n";
+
+  cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__ ") Copyright (C) 2011 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. This is free software, and you are\n";
+  cout << "welcome to redistribute it in accordance with the terms and conditions in the\n";
+  cout << "GNU GPL (General Public License) version 2 or later.\n";
+
   cout << "\nUsing configuration file: " << main_cfg_filename << endl;
   
   string value;
@@ -782,6 +787,35 @@ static void initialize_logics(Config &cfg)
   {
     cerr << "*** ERROR: No logics available. Bailing out...\n";
     exit(1);
+  }
+  
+    // Temporary fix for the assertion failure that happens when a link
+    // is activated where a non-existent logic is specified.
+  set<string> logic_set;
+  vector<Logic*>::iterator lit;
+  for (lit=logic_vec.begin(); lit!=logic_vec.end(); lit++)
+  {
+    logic_set.insert((*lit)->name());
+  }
+  for (lit=logic_vec.begin(); lit!=logic_vec.end(); lit++)
+  {
+    string links_str;
+    if (cfg.getValue((*lit)->name(), "LINKS", links_str))
+    {
+      string value;
+      cfg.getValue(links_str, "CONNECT_LOGICS", value);
+      vector<string> links;
+      SvxLink::splitStr(links, value, ",");
+      for (unsigned i=0; i<links.size(); ++i)
+      {
+	if (logic_set.find(links[i]) == logic_set.end())
+	{
+	  cerr << "*** ERROR: Invalid logic specified in "
+	       << links_str << "/CONNECT_LOGICS: " << links[i] << endl;
+	  exit(1);
+	}
+      }
+    }
   }
 } /* initialize_logics */
 

@@ -34,10 +34,10 @@ CPPPROGS      	= echolib_test EchoLinkDispatcher_demo EchoLinkDirectory_demo \
 PRGSRC		= EchoLinkQsoTest.cpp
 
 # Libraries compiled in the project (in $(LIB)).
-PROJLIBS	= -lecholib -lasynccpp -lasyncaudio
+PROJLIBS	= -lecholib -lasynccpp -lasyncaudio -lasynccore
 
 # Libraries external to the project
-LIBS		= -lpopt
+LIBS		= -lpopt $(SIGC_LIBS)
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).

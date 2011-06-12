@@ -139,18 +139,18 @@ case $operation in
   
   play)
     tmp=$(mktemp /tmp/svxlink-XXXXXX)
-    convert $1 > $tmp
+    convert "$1" > $tmp
     process $tmp | encode | play -r${target_rate} $encoding -
     rm -f $tmp
     ;;
   
   convert)
-    convert $1 | endian_conv | encode
+    convert "$1" | endian_conv | encode
     ;;
     
   filter)
     tmp=$(mktemp /tmp/svxlink-XXXXXX)
-    convert $1 > $tmp
+    convert "$1" > $tmp
     process $tmp | endian_conv | encode
     rm -f $tmp
     ;;

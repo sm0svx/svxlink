@@ -95,10 +95,6 @@ Can&apos;t create connection to</source>
         <translation>&amp;Від&apos;єднайся</translation>
     </message>
     <message>
-        <source>Alt+D</source>
-        <translation></translation>
-    </message>
-    <message>
         <source>VOX</source>
         <translation></translation>
     </message>
@@ -448,14 +444,22 @@ Can&apos;t create connection to</source>
         <translation>Qtel версія </translation>
     </message>
     <message>
-        <source>- Qt EchoLink client.
+        <source> - Qt EchoLink client.
 </source>
-        <translation>- Qt EchoLink програма.
+        <translation> - Qt EchoLink клієнт.
 </translation>
     </message>
     <message>
-        <source>Author</source>
-        <translation>Автор</translation>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
+are welcome to redistribute it in accordance with the terms and conditions in
+the GNU GPL (General Public License) version 2 or later.</source>
+        <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel надається БЕЗ ЖОДНИХ ГАРАНТІЙ. Це безоплатне вільне ПЗ. 
+Ви можете ним користовуватися і його поширювати згідно з умовами
+ліцензії GNU GPL (General Public License) версії 2 або пізнішої.</translation>
     </message>
 </context>
 <context>
@@ -548,10 +552,6 @@ Message</source>
     <message>
         <source>Full duplex</source>
         <translation>Повний дуплекс</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation>Працювити через аудіо пристрій (напр. /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
@@ -676,6 +676,10 @@ Message</source>
     <message>
         <source>Passwords do not match</source>
         <translation>Введено різні паролі</translation>
+    </message>
+    <message>
+        <source>The audio device to use (e.g. alsa:default)</source>
+        <translation>Задіяти аудіо пристрій (напр. alsa:default)</translation>
     </message>
 </context>
 </TS>

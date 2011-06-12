@@ -138,7 +138,6 @@ int AudioDeviceOSS::blocksize(void)
 
 bool AudioDeviceOSS::isFullDuplexCapable(void)
 {
-  assert(fd != -1);
   return (device_caps & DSP_CAP_DUPLEX);
 } /* AudioDeviceOSS::isFullDuplexCapable */
 
@@ -192,6 +191,15 @@ AudioDeviceOSS::AudioDeviceOSS(const string& dev_name)
 {
   char *use_trigger_str = getenv("ASYNC_AUDIO_NOTRIGGER");
   use_trigger = (use_trigger_str != 0) && (atoi(use_trigger_str) == 0);
+
+    // Open the device to check its capabilities
+  int f = ::open(dev_name.c_str(), O_RDWR);
+  if (f > 0)
+  {
+    ioctl(fd, SNDCTL_DSP_SETDUPLEX, 0);
+    ioctl(fd, SNDCTL_DSP_GETCAPS, &device_caps);
+    ::close(f);
+  }
 } /* AudioDeviceOSS::AudioDeviceOSS */
 
 

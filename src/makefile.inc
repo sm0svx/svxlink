@@ -33,6 +33,11 @@ ifndef MAKEFILE_CONFIG_INCLUDED
   include $(ROOT)/.config
 endif
 
+ifdef INSTALL_ROOT
+  $(warning INSTALL_ROOT is deprecated. Use DESTDIR instead)
+  DESTDIR=$(INSTALL_ROOT)
+endif
+
 LIB		:= $(ROOT)/$(LIB)
 INC		:= $(ROOT)/$(INC)
 BIN		:= $(ROOT)/$(BIN)
@@ -144,8 +149,8 @@ INSTALL = install_file() { \
 	    owner=`echo $$items | cut -d' ' -f3`; \
 	    group=`echo $$items | cut -d' ' -f4`; \
 	    modifier="$$(echo $$items | cut -d' ' -f5)"; \
-	    if [ -n "$(INSTALL_ROOT)" ]; then \
-	      target_dir=$(INSTALL_ROOT)$$2; \
+	    if [ -n "$(DESTDIR)" ]; then \
+	      target_dir=$(DESTDIR)$$2; \
 	    else \
 	      target_dir=$$2; \
 	    fi; \
@@ -181,7 +186,7 @@ UNINSTALL = \
 	uninstall_file() { \
 	  local dir file; \
 	  dir=$$1; shift; \
-	  dir="$(INSTALL_ROOT)$${dir}"; \
+	  dir="$(DESTDIR)$${dir}"; \
 	  for file in $$*; do \
 	    file=$$(basename $${file} | cut -d'[' -f1); \
 	    $(RM) $${dir}/$${file}; \
@@ -236,8 +241,8 @@ DIRSPEC = \
 	  perm=`echo $$items | cut -d' ' -f2`; \
 	  owner=`echo $$items | cut -d' ' -f3`; \
 	  group=`echo $$items | cut -d' ' -f4`; \
-	  if [ -n "$(INSTALL_ROOT)" ]; then \
-	    target_dir=$(INSTALL_ROOT)$${dir}; \
+	  if [ -n "$(DESTDIR)" ]; then \
+	    target_dir=$(DESTDIR)$${dir}; \
 	  else \
 	    target_dir=$${dir}; \
 	  fi; \
@@ -491,7 +496,8 @@ clean::
 		$(notdir $(CPPPROGS:%=%_version.o)) $(notdir $(CPPPROGS:%=%.o)) \
 		$(PROGS) $(CPPPROGS) core $(SHLIBFILE) \
 		$(LIB)/lib$(LIBNAME).so.$(SHLIB_MAJOR).$(SHLIB_MINOR) \
-		$(LIB)/lib$(LIBNAME).so $(PLUGINOBJS) $(PRE_TARGETS)
+		$(LIB)/lib$(LIBNAME).so $(PLUGINOBJS) $(PRE_TARGETS) \
+		$(PLUGINS:%=%.so) $(PLUGINS_CPP:%=%.so)
 	QTFILES="$(QTHEADERS:%.h=moc_%.cpp) $(LIB_QTHEADERS:%.h=moc_%.cpp)"; \
 	for file in $${QTFILES}; do \
 	  if [ -f $$file ] && grep -q "meta object code" $$file; then \
@@ -508,6 +514,7 @@ realclean::	clean
 	$(RM) $(DEP_FILES) $(EXPINC:%=$(INC)/%) *~ ./makefile.root \
 		$(ARCHIVENAME)
 	$(RM) -rf depend
+	$(RM) -rf version
 	$(RM) -f .config
 
 
@@ -709,7 +716,7 @@ rpm-base:
 	            >> $(RPM_DIR)/TMP_SPECS/$(RPM_NAME).spec; \
 	    echo "%files" >> "$(RPM_DIR)/TMP_SPECS/$(RPM_NAME).spec"; \
 	  fi; \
-	  make INSTALL_ROOT=/tmp/rpm-tmp-install NO_CHOWN=1 install; \
+	  make DESTDIR=/tmp/rpm-tmp-install NO_CHOWN=1 install; \
 	  PROGS_INSTALL="$(PROGS_INSTALL)"; \
 	  for file in $${PROGS_INSTALL}; do \
 	    $(GEN_RPM_ROW) $$file $(BIN_INSTALL_DIR) \
@@ -810,11 +817,9 @@ $(ROOT)/.config:	$(ROOT)/create_config.sh
 	fi
 
 # Generate version files
-# Different versions of gmake behave differently when including <version/FILE.h>
-# so we need two targets.
-$(INC)/version/%.h version/%.h: $(ROOT)/versions
-	if [ ! -d $(INC)/version ]; then \
-	  $(MKDIR) $(INC)/version -p; \
+version/%.h: $(ROOT)/versions
+	if [ ! -d version ]; then \
+	  $(MKDIR) version -p; \
 	fi; \
 	. $(ROOT)/versions; \
 	if [ -n "$${$*}" ]; then \
@@ -823,7 +828,7 @@ $(INC)/version/%.h version/%.h: $(ROOT)/versions
 	  $(ECHO) "*** WARNING: Version entry missing for \"$*\""; \
 	  VERSION="?.?.?"; \
 	fi; \
-	TARGET="$(INC)/version/$*.h"; \
+	TARGET="version/$*.h"; \
 	if ! grep -q \"$${VERSION}\" $${TARGET} > /dev/null 2>&1; then \
 	  $(ECHO) --- Creating $(BOLD)$${TARGET}$(NBOLD)...; \
 	  echo "#ifndef $*_VERSION" > $${TARGET}; \

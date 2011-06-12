@@ -1,0 +1,3 @@
+The sel call encoder module is used to transmit selective calling tone sequences. To send a sel call sequence,send a DTMF command where the first two digits represent the sel call standard to use,and where the rest of the digits are the actual sequence of digits to send. Available standards are
+
+01,ZVEI1, 02,ZVEI2, 03,ZVEI3, 04,P ZVEI, 05,D ZVEI, 06,E E Eigh, 07,CC IR1, 08,CC IR2, 09,VD E W, 10,CC I TT, 11,NATEL, 12,E I Eigh, 13,EURO, 14,MODAT, 15,PD ZVEI, 16,PCC IR, 17,AUTO Eigh

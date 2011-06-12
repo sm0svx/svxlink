@@ -689,6 +689,7 @@ inline void Qso::handleNonAudioPacket(unsigned char *buf, int len)
       string info_msg(info_buf+7, null);
       replace(info_msg.begin(), info_msg.end(), '\r', '\n');
       infoMsgReceived(info_msg);
+      /*
       if (null+1 < info_buf+len)
       {
       	string trailing_data(null+1, info_buf+len);
@@ -696,6 +697,7 @@ inline void Qso::handleNonAudioPacket(unsigned char *buf, int len)
 	printData(reinterpret_cast<const unsigned char*>(null+1),
 	      	  info_buf+len-(null+1));
       }
+      */
     }
     else  // Chat data
     {

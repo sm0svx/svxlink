@@ -1,4 +1,4 @@
-.TH REMOTETRX.CONF 5 "JULY 2010" Linux "File Formats"
+.TH REMOTETRX.CONF 5 "MAY 2011" Linux "File Formats"
 .
 .SH NAME
 .
@@ -28,11 +28,10 @@ just the name for the link up to the main SvxLink server.
 RemoteTrx look for configuration files in a number of places. First it tries to
 find a user specific configuration file. It will look for a user specific
 configuration file in two places:
-.BR $HOME/.svxlink/remotetrx.conf " or " $HOME/.remotetrxrc .
-The latter is deprecated. Use the one that will best fit your need. If no user
-specific configuration file can be found, remotetrx will look for the system
-wide configuration file
-.BR /etc/remotetrx.conf .
+.BR $HOME/.svxlink/remotetrx.conf .
+If no user specific configuration file can be found, remotetrx will look
+for the system wide configuration file
+.BR /etc/svxlink/remotetrx.conf .
 The
 .B --config
 command line option may also be used to specify an arbitrary configuration file.
@@ -225,17 +224,24 @@ transmitting. Set it to 0 if a full duplex link is desired. Default is 1.
 .B LOOP_RX_TO_TX
 Set to 1 to loop incoming RX audio (not link RX) directly to the TX (not link
 TX). You figure out when to use it. Default is 0.
+.TP
+.B FALLBACK_REPEATER
+This function is useful if running RemoteTrx as both RX and TX for a repeater.
+If the connection to the SvxLink base station is lost due to network errors, the
+RemoteTrx provides a very basic repeater function (SQLELCH controlled) until the
+the connection has been established again. Set to 1 to enable this function
+or set to 0 to disable it. Default is 0.
 .
 .SH FILES
 .
 .TP
-.I /etc/remotetrx.conf
+.IR /etc/svxlink/remotetrx.conf " (or deprecated " /etc/remotetrx.conf ")"
 The system wide configuration file.
 .TP
-.IR ~/.svxlink/remotetrx.conf " or " ~/.remotetrxrc
+.IR ~/.svxlink/remotetrx.conf
 Per user configuration file.
 .TP
-.I /etc/remotetrx.d/*
+.I /etc/svxlink/remotetrx.d/*
 Additional configuration files.
 .
 .SH AUTHOR

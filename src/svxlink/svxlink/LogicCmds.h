@@ -57,7 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "CmdParser.h"
 #include "Logic.h"
 #include "Module.h"
-#include "VoiceLogger.h"
+#include "QsoRecorder.h"
 
 
 /****************************************************************************
@@ -84,7 +84,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -124,12 +124,12 @@ class ModuleActivateCmd : public Command
      */
     ModuleActivateCmd(CmdParser *parser, const std::string& cmd, Logic *logic)
       : Command(parser, cmd), logic(logic) {}
-  
+
     /**
      * @brief 	Destructor
      */
     ~ModuleActivateCmd(void) {}
-  
+
     /**
      * @brief 	A_brief_member_function_description
      * @param 	param1 Description_of_param1
@@ -155,12 +155,12 @@ class ModuleActivateCmd : public Command
 	}
       }
     }
-    
+
   protected:
-    
+
   private:
     Logic *logic;
-    
+
 };  /* class ModuleActivateCmd */
 
 
@@ -185,12 +185,12 @@ class LinkCmd : public Command
      */
     LinkCmd(CmdParser *parser, Logic *logic)
       : Command(parser), logic(logic), timeout(0) {}
-  
+
     /**
      * @brief 	Destructor
      */
     ~LinkCmd(void) {}
-  
+
     /**
      * @brief 	Initialize the command object
      * @param 	cfg A previously initialized configuration object
@@ -203,7 +203,7 @@ class LinkCmd : public Command
       {
       	name = link_name;
       }
-      
+
       std::string cmd_str;
       if (!cfg.getValue(link_name, "COMMAND", cmd_str))
       {
@@ -212,6 +212,13 @@ class LinkCmd : public Command
 	return false;
       }
       setCmd(cmd_str);
+      if (!addToParser())
+      {
+	std::cerr << "*** ERROR: Could not set up command \"" << cmd_str
+		  << "\" for logic link \"" << name << "\". You probably have "
+		  << "the same command set up in more than one place\n";
+	return false;
+      }
 
       if (!cfg.getValue(link_name, "CONNECT_LOGICS", logics))
       {
@@ -219,7 +226,7 @@ class LinkCmd : public Command
 	     << "/CONNECT_LOGICS not set\n";
 	return false;
       }
-      
+
       if (SvxLink::splitStr(logic_list, logics, ",") < 2)
       {
 	std::cerr << "*** ERROR: you need at least two LOGICS to connect,"
@@ -235,7 +242,7 @@ class LinkCmd : public Command
 
       return true;
     }
-    
+
     void operator ()(const std::string& subcmd)
     {
       //std::cout << "cmd=" << cmdStr() << " subcmd=" << subcmd << std::endl;
@@ -283,37 +290,40 @@ class LinkCmd : public Command
       }
       logic->processEvent(ss.str());
     } /* disconnectLinks */
-    
+
 
   protected:
-    
+
   private:
     typedef std::vector<std::string> StrList;
-    
+
     Logic     	*logic;
     std::string logics;
     int       	timeout;
     std::string name;
     StrList 	logic_list;
-    
+
 
 };  /* class LinkCmd */
 
 
-class VoiceLoggerCmd : public Command
+class QsoRecorderCmd : public Command
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
+     * @param  	parser	  The command parser to associate this command with
+     * @param  	logic	  The logic core instance the command should operate on
+     * @param	recorder  A previously created QsoRecorder object
      */
-    VoiceLoggerCmd(CmdParser *parser, Logic *logic, VoiceLogger *logger)
-      : Command(parser), logic(logic), logger(logger) {}
-  
+    QsoRecorderCmd(CmdParser *parser, Logic *logic, QsoRecorder *recorder)
+      : Command(parser), logic(logic), recorder(recorder) {}
+
     /**
      * @brief 	Destructor
      */
-    ~VoiceLoggerCmd(void) {}
-  
+    ~QsoRecorderCmd(void) {}
+
     /**
      * @brief 	Initialize the command object
      * @param 	cmd_str The command base
@@ -322,33 +332,33 @@ class VoiceLoggerCmd : public Command
     bool initialize(const std::string &cmd_str)
     {
       setCmd(cmd_str);
-      return true;
+      return addToParser();
     }
-    
+
     void operator ()(const std::string& subcmd)
     {
       if (subcmd == "0")
       {
-        if (logger->isEnabled())
+        if (recorder->isEnabled())
         {
-          logger->setEnabled(false);
-          logic->processEvent("deactivating_voice_logger");
+          recorder->setEnabled(false);
+          logic->processEvent("deactivating_qso_recorder");
         }
         else
         {
-          logic->processEvent("voice_logger_not_active");
+          logic->processEvent("qso_recorder_not_active");
         }
       }
       else if (subcmd == "1")
       {
-        if (!logger->isEnabled())
+        if (!recorder->isEnabled())
         {
-          logger->setEnabled(true);
-          logic->processEvent("activating_voice_logger");
+          recorder->setEnabled(true);
+          logic->processEvent("activating_qso_recorder");
         }
         else
         {
-          logic->processEvent("voice_logger_already_active");
+          logic->processEvent("qso_recorder_already_active");
         }
       }
       else
@@ -358,13 +368,41 @@ class VoiceLoggerCmd : public Command
       	logic->processEvent(ss.str());
       }
     }
-    
+
   private:
     Logic       *logic;
-    VoiceLogger *logger;
-    
-};  /* class VoiceLoggerCmd */
+    QsoRecorder *recorder;
 
+};  /* class QsoRecorderCmd */
+
+
+class ChangeLangCmd : public Command
+{
+  public:
+    ChangeLangCmd(CmdParser *parser, Logic *logic)
+      : Command(parser, "00"), logic(logic)
+    {
+    }
+
+    void operator ()(const std::string& subcmd)
+    {
+      std::stringstream ss;
+      if (subcmd.empty())
+      {
+	ss << "list_languages";
+      }
+      else
+      {
+	ss << "set_language ";
+	ss << subcmd;
+      }
+      logic->processEvent(ss.str());
+    }
+
+  private:
+    Logic       *logic;
+
+};
 
 
 //} /* namespace */

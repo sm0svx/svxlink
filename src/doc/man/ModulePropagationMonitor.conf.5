@@ -1,0 +1,123 @@
+.TH MODULEPROPAGATIONMONITOR.CONF 5 "MAY 2011" Linux "File Formats"
+.
+.SH NAME
+.
+ModulePropagationMonitor.conf \- Configuration file for the SvxLink server
+PropagationMonitor module
+.
+.SH DESCRIPTION
+.
+.B svxlink
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration for the PropagationMonitor module.
+.P
+The PropagationMonitor module is used to announce propagation alerts
+received from vhfdx.info or gooddx.net. The process of receiving the emails
+is outside of this module and have to be arranged separately. This module
+expect to find new emails under the spool directory. Messages from VHFDX 
+should be put in a
+.I vhfdx
+subdirectory and messages from GoodDX should be put in a
+.I dxrobot
+subdirectory. This module must have write access to the subdirectories under
+the spool directory since it will move processed messages to an archive
+directory.
+.P
+.
+.SH CONFIGURATION VARIABLES
+.
+There are a couple of configuration variables that are common to all modules.
+The documentation for these can be found in the
+.BR svxlink.conf (5)
+manual page.
+.P
+Here is the description of all module specific configuration
+variables that the SvxLink PropagationMonitor module understands.
+.
+.SS ModulePropagationMonitor
+.
+.TP
+.B SPOOL_DIR
+Specify which directory to read incoming emails from. The default is
+.IR /var/spool/svxlink/propagation_monitor .
+.
+.SH RECEIVING THE ALERT EMAILS
+.
+The first step in setting up the flow of alert emails is to actually getting
+them to the computer running SvxLink and, on that computer, to the user
+SvxLink run as. This can be done in two ways. One way is to forward emails
+directly via SMTP to the  computer, if you have that possibility. A more
+common case propably is that you want to fetch alert emails using POP from
+some email account. The latter can be done using the
+.BR fetchmail (1)
+utility for example.
+.P
+The next step is to store incoming emails in files under the propagation
+monitor spool directory. This is done using the
+.BR procmail (1)
+utility. When an incoming email is received, the mail server call procmail
+which look for a configuration file in the destination users home directory.
+For SvxLink, the home directory should be set to
+.IR /etc/svxlink .
+In that directory a procmail configuration file,
+.BR .procmailrc ,
+is installed by default. The syntax is a bit cryptic but the file contains
+some helpful comments to help you understand it. Have a look at the
+.BR procmailrc " (5) and " procmailex (5)
+manual pages for more details.
+.P
+Finally, of course, you need to register with the vhfdx.info and/or gooddx.net
+site and set up for what geographic area and which bands you wish to receive
+alert emails for.
+.
+.SH SELINUX
+.
+Some Linux distributions have the SELinux security framework enabled.
+This is true for RedHat based distributions, like Fedora for example.
+SELinux will by default deny procmail to write the mail files in the
+propagation monitor spool directory. To fix this, run the following commands:
+.PP
+.RS 4
+semanage fcontext -a -t user_home_t \\
+.RS 0
+         "/var/spool/svxlink/propagation_monitor(/.*)?"
+.RS 0
+restorecon -r /var/spool/svxlink/propagation_monitor
+.
+.SH FILES
+.
+.TP
+.IR /etc/svxlink/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
+The system wide configuration file.
+.TP
+.IR ~/.svxlink/svxlink.conf
+Per user configuration file.
+.TP
+.I /etc/svxlink/svxlink.d/ModulePropagationMonitor.conf
+Global modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.TP
+.I ~/.svxlink/svxlink.d/ModulePropagationMonitor.conf
+Per user modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+.TP
+.I /var/spool/svxlink/propagation_monitor
+Spool directory for alert mails. This is the default path. What path is
+actually used is determined by the SPOOL_DIR configuration variable.
+.TP
+.I /etc/svxlink/.procmailrc
+The configuration file for procmail. Procmail is used to write incoming
+alert emails into files in the spool directory.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
+.
+.SH "SEE ALSO"
+.
+.BR svxlink.conf (5),
+.BR procmail (1),
+.BR procmailrc (5),
+.BR procmailex (5),
+.BR fetchmail (1)
+

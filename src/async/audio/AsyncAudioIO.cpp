@@ -276,7 +276,7 @@ void AudioIO::setChannels(int channels)
 
 AudioIO::AudioIO(const string& dev_name, int channel)
   : io_mode(MODE_NONE), audio_dev(0),
-    /* lead_in_pos(0), */ m_gain(1.0),
+    /* lead_in_pos(0), */ m_gain(1.0), sample_rate(-1),
     m_channel(channel), input_valve(0), input_fifo(0), audio_reader(0)
 {
   audio_dev = AudioDevice::registerAudioIO(dev_name, this);
@@ -434,29 +434,6 @@ int AudioIO::readSamples(float *samples, int count)
       samples[i] = m_gain * samples[i];
     }
   }
-  
-  /*
-  if (do_flush)
-  {
-    if (write_fifo->samplesInFifo() < 100)
-    {
-      int samples_left = write_fifo->samplesInFifo() + samples_read;
-      int pos = max(0, 100 - samples_left);
-      int start_pos = max(0, samples_left - 100);
-      for (int i=start_pos; i<samples_read; i++)
-      {
-      	float fade_gain = pow(2, (100.0 - pos - (i - start_pos)) / 10.0)
-	      	      / pow(2, 10.0);
-      	samples[i] = fade_gain * samples[i];
-      }
-    }
-  }
-  
-  if (write_fifo->empty() && do_flush)
-  {
-    flushSamplesInDevice(samples_read);
-  }
-  */
   
   return samples_read;
   

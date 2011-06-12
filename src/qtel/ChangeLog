@@ -1,4 +1,4 @@
- 0.11.3 -- ?? ??? 2010
+ 0.11.3 -- 14 May 2011
 -----------------------
 
 * Added Ukrainian translation contributed by Ihor / UR3LCM.
@@ -17,9 +17,13 @@
 
 * Added Hungarian translation contributed by Molnár / HG7JUV.
 
-* Added support for using the Speex audio codec over EchoLink connections. This will
-  only, at the moment, work when conneting to other SvxLink applications. For all
-  other connections, the GSM audio codec is used.
+* Added support for using the Speex audio codec over EchoLink connections.
+  This will only, at the moment, work when conneting to other SvxLink
+  applications. For all other connections, the GSM audio codec is used.
+
+* Added a manual page for Qtel written by Michael Vorleiter.
+
+* Added Japanese translation contributed by JH1PGO / Masao.
 
 
 

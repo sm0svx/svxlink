@@ -89,8 +89,11 @@ using namespace SigC;
 class AudioDeviceAlsa::AlsaWatch : public SigC::Object
 {
   public:
-    AlsaWatch(pollfd *pfds, int nfds)
+    AlsaWatch(snd_pcm_t *pcm_handle) : pcm_handle(pcm_handle)
     {
+      int nfds = snd_pcm_poll_descriptors_count(pcm_handle);
+      pollfd pfds[nfds];
+      snd_pcm_poll_descriptors(pcm_handle, pfds, nfds);
       for (int i = 0; i < nfds; i++)
       {
         if (pfds[i].events & POLLOUT)
@@ -127,23 +130,28 @@ class AudioDeviceAlsa::AlsaWatch : public SigC::Object
       }
     }
   
-    SigC::Signal2<void, FdWatch*, pollfd*> activity;
+    SigC::Signal2<void, FdWatch*, unsigned short> activity;
 
   private:
     std::map<int, pollfd> pfd_map;
     std::list<FdWatch*> watch_list;
+    snd_pcm_t *pcm_handle;
 
     void writeEvent(FdWatch *watch)
     {
       pollfd pfd = pfd_map[watch->fd()];
       pfd.revents = POLLOUT;
-      activity(watch, &pfd);
+      unsigned short revents;
+      snd_pcm_poll_descriptors_revents(pcm_handle, &pfd, 1, &revents);
+      activity(watch, revents);
     }
     void readEvent(FdWatch *watch)
     {
       pollfd pfd = pfd_map[watch->fd()];
       pfd.revents = POLLIN;
-      activity(watch, &pfd);
+      unsigned short revents;
+      snd_pcm_poll_descriptors_revents(pcm_handle, &pfd, 1, &revents);
+      activity(watch, revents);
     }
 };
 
@@ -283,21 +291,14 @@ bool AudioDeviceAlsa::openDevice(Mode mode)
       return false;
     }
 
-    int play_nfds = snd_pcm_poll_descriptors_count(play_handle);
-
-    pollfd play_pfds[play_nfds];
-    snd_pcm_poll_descriptors(play_handle, play_pfds, play_nfds);
-
-    play_watch = new AlsaWatch(play_pfds, play_nfds);
+    play_watch = new AlsaWatch(play_handle);
     play_watch->activity.connect(
             slot(*this, &AudioDeviceAlsa::writeSpaceAvailable));
+    play_watch->setEnabled(false);
 
-    err = snd_pcm_prepare(play_handle);
-    if (err < 0)
+    if (!startPlayback(play_handle))
     {
-      cerr << "*** ERROR: Start playback failed: "
-	   << snd_strerror(err)
-	   << endl;
+      cerr << "*** ERROR: Start playback failed" << endl;
       closeDevice();
       return false;
     }
@@ -305,8 +306,8 @@ bool AudioDeviceAlsa::openDevice(Mode mode)
 
   if ((mode == MODE_RD) || (mode == MODE_RDWR))
   {
-    int err = snd_pcm_open(&rec_handle, dev_name.c_str(),
-			   SND_PCM_STREAM_CAPTURE, 0);
+    int err = snd_pcm_open (&rec_handle, dev_name.c_str(),
+			    SND_PCM_STREAM_CAPTURE, 0);
     if (err < 0)
     {
       cerr << "*** ERROR: Open capture audio device failed: "
@@ -321,31 +322,13 @@ bool AudioDeviceAlsa::openDevice(Mode mode)
       return false;
     }
 
-    int rec_nfds = snd_pcm_poll_descriptors_count(rec_handle);
-
-    pollfd rec_pfds[rec_nfds];
-    snd_pcm_poll_descriptors(rec_handle, rec_pfds, rec_nfds);
-
-    rec_watch = new AlsaWatch(rec_pfds, rec_nfds);
+    rec_watch = new AlsaWatch(rec_handle);
     rec_watch->activity.connect(
             slot(*this, &AudioDeviceAlsa::audioReadHandler));
 
-    err = snd_pcm_prepare(rec_handle);
-    if (err < 0)
+    if (!startCapture(rec_handle))
     {
-      cerr << "*** ERROR: Prepare capture failed: "
-	   << snd_strerror(err)
-	   << endl;
-      closeDevice();
-      return false;
-    }
-
-    err = snd_pcm_start(rec_handle);
-    if (err < 0)
-    {
-      cerr << "*** ERROR: Start capture failed: "
-	   << snd_strerror(err)
-	   << endl;
+      cerr << "*** ERROR: Start capture failed" << endl;
       closeDevice();
       return false;
     }
@@ -384,38 +367,21 @@ void AudioDeviceAlsa::closeDevice(void)
  ****************************************************************************/
 
 
-void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, pollfd *pfd)
+void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, unsigned short revents)
 {
   assert(rec_handle != 0);
   assert((mode() == MODE_RD) || (mode() == MODE_RDWR));
   
-  unsigned short revents;
-  snd_pcm_poll_descriptors_revents(rec_handle, pfd, 1, &revents);
-   
   if (!(revents & POLLIN))
   {
     return;
   }  
 
   int frames_avail = snd_pcm_avail_update(rec_handle);
-  if ((frames_avail < 0) ||
-      ((frames_avail == 0) && (snd_pcm_state(rec_handle) != SND_PCM_STATE_RUNNING)))
+  if (frames_avail < 0)
   {
-    int err = snd_pcm_prepare(rec_handle);
-    if (err < 0)
+    if (!startCapture(rec_handle))
     {
-      cerr << "*** ERROR: snd_pcm_prepare failed (unrecoverable error): "
-           << snd_strerror(err)
-           << endl;
-      watch->setEnabled(false);
-      return;
-    }
-    err = snd_pcm_start(rec_handle);
-    if (err < 0)
-    {
-      cerr << "*** ERROR: snd_pcm_start failed (unrecoverable error): "
-           << snd_strerror(err)
-           << endl;
       watch->setEnabled(false);
     }
     return;
@@ -425,36 +391,34 @@ void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, pollfd *pfd)
 
   if (frames_avail >= block_size)
   {
-    int frames_to_read = min(frames_avail, 4096 / channels);
+    frames_avail /= block_size;
+    frames_avail *= block_size;
 
-    frames_to_read /= block_size;
-    frames_to_read *= block_size;
+    int16_t buf[frames_avail * channels];
 
-    int frames_read = snd_pcm_readi(rec_handle, buf, frames_to_read);
+    int frames_read = snd_pcm_readi(rec_handle, buf, frames_avail);
     if (frames_read < 0)
     {
-      cerr << "*** ERROR: snd_pcm_readi in AudioDeviceAlsa::audioReadHandler: "
-           << snd_strerror(frames_read)
-           << endl;
+      if (!startCapture(rec_handle))
+      {
+        watch->setEnabled(false);
+      }
       return;
     }
-    assert(frames_read == frames_to_read);
+    assert(frames_read == frames_avail);
 
     putBlocks(buf, frames_read);
   }
 } /* AudioDeviceAlsa::audioReadHandler */
 
 
-void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, pollfd *pfd)
+void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, unsigned short revents)
 {
   //printf("AudioDeviceAlsa::writeSpaceAvailable\n");
   
   assert(play_handle != 0);
   assert((mode() == MODE_WR) || (mode() == MODE_RDWR));
 
-  unsigned short revents;
-  snd_pcm_poll_descriptors_revents(play_handle, pfd, 1, &revents);
-    
   if (!(revents & POLLOUT))
   {
     return;
@@ -467,28 +431,25 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, pollfd *pfd)
       // Bail out if there's an error
     if (space_avail < 0)
     {
-      int err = snd_pcm_prepare(play_handle);
-      if (err < 0)
+      if (!startPlayback(play_handle))
       {
-        cerr << "*** ERROR: Non-recoverable underrun in "
-                "AudioDeviceAlsa::writeSpaceAvailable: "
-	     << snd_strerror(err)
-	     << endl;
         watch->setEnabled(false);
         return;
       }
       continue;
     }
 
-    int blocks_to_read = min(space_avail, 4096 / channels) / block_size;
+    int blocks_to_read = space_avail / block_size;
     if (blocks_to_read == 0)
     {
       //printf("No free blocks available in sound card buffer\n");
       return;
     }
-    
+
+    int16_t buf[space_avail * channels];
+        
     int blocks_avail = getBlocks(buf, blocks_to_read);
-    if (blocks_avail == 0)
+    if (blocks_avail == 0) 
     {
       //printf("No blocks available to write\n");
       watch->setEnabled(false);
@@ -502,13 +463,8 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, pollfd *pfd)
     //       blocks_gotten, (int)frames_written);
     if (frames_written < 0)
     {
-      int err = snd_pcm_prepare(play_handle);
-      if (err < 0)
+      if (!startPlayback(play_handle))
       {
-        cerr << "*** ERROR: Non-recoverable underrun in "
-                "AudioDeviceAlsa::writeSpaceAvailable :"
-	     << snd_strerror(err)
-	     << endl;
         watch->setEnabled(false);
         return;
       }
@@ -529,16 +485,16 @@ bool AudioDeviceAlsa::initParams(snd_pcm_t *pcm_handle)
 {
   snd_pcm_hw_params_t *hw_params;
 
-  int err = snd_pcm_hw_params_malloc(&hw_params);
+  int err = snd_pcm_hw_params_malloc (&hw_params);
   if (err < 0)
   {
-    cerr << "*** ERROR: Allocate hardware parameter structure failed :"
+    cerr << "*** ERROR: Allocate hardware parameter structure failed: "
 	 << snd_strerror(err)
 	 << endl;
     return false;
   }
 
-  err = snd_pcm_hw_params_any(pcm_handle, hw_params);
+  err = snd_pcm_hw_params_any (pcm_handle, hw_params);
   if (err < 0)
   {
     cerr << "*** ERROR: Initialize hardware parameter structure failed: "
@@ -564,7 +520,7 @@ bool AudioDeviceAlsa::initParams(snd_pcm_t *pcm_handle)
   if (err < 0)
   {
     cerr << "*** ERROR: Set sample format failed: "
-	 << snd_strerror(err)
+    	 << snd_strerror(err)
 	 << endl;
     snd_pcm_hw_params_free (hw_params);
     return false;
@@ -613,20 +569,17 @@ bool AudioDeviceAlsa::initParams(snd_pcm_t *pcm_handle)
     snd_pcm_hw_params_free (hw_params);
     return false;
   }
-
-  block_size = period_size;
-  block_count = block_count_hint * block_size_hint / block_size;
-
-    /* Set number of periods. Periods used to be called fragments. */
-  err = snd_pcm_hw_params_set_periods_near(pcm_handle, hw_params,
-					   (uint32_t *)&block_count, 0);
+  
+  snd_pcm_uframes_t buffer_size = block_count_hint * block_size_hint;
+  err = snd_pcm_hw_params_set_buffer_size_near(pcm_handle, hw_params,
+					       &buffer_size);
   if (err < 0)
   {
-    cerr << "*** ERROR: Set periods failed: "
+     cerr << "*** ERROR: Set buffer size failed: "
 	 << snd_strerror(err)
 	 << endl;
-    snd_pcm_hw_params_free (hw_params);
-    return false;
+     snd_pcm_hw_params_free (hw_params);
+     return false;
   }
   
   err = snd_pcm_hw_params(pcm_handle, hw_params);
@@ -638,6 +591,13 @@ bool AudioDeviceAlsa::initParams(snd_pcm_t *pcm_handle)
     snd_pcm_hw_params_free (hw_params);
     return false;
   }
+
+  snd_pcm_uframes_t ret_period_size, ret_buffer_size;
+  snd_pcm_hw_params_get_period_size(hw_params, &ret_period_size, 0);
+  snd_pcm_hw_params_get_buffer_size(hw_params, &ret_buffer_size);
+  
+  block_size = ret_period_size;
+  block_count = ret_buffer_size / ret_period_size;
 
   snd_pcm_hw_params_free(hw_params);
 
@@ -700,8 +660,42 @@ bool AudioDeviceAlsa::initParams(snd_pcm_t *pcm_handle)
 } /* AudioDeviceAlsa::initParams */
 
 
+bool AudioDeviceAlsa::startPlayback(snd_pcm_t *pcm_handle)
+{
+  int err = snd_pcm_prepare(pcm_handle);
+  if (err < 0)
+  {
+    cerr << "*** ERROR: snd_pcm_prepare failed (unrecoverable error): "
+         << snd_strerror(err)
+         << endl;
+    return false;
+  }
+  return true;
+} /* AudioDeviceAlsa::startPlayback */
+
+
+bool AudioDeviceAlsa::startCapture(snd_pcm_t *pcm_handle)
+{
+  int err = snd_pcm_prepare(pcm_handle);
+  if (err < 0)
+  {
+    cerr << "*** ERROR: snd_pcm_prepare failed (unrecoverable error): "
+         << snd_strerror(err)
+         << endl;
+    return false;
+  }
+  err = snd_pcm_start(pcm_handle);
+  if (err < 0)
+  {
+    cerr << "*** ERROR: snd_pcm_start failed (unrecoverable error): "
+         << snd_strerror(err)
+         << endl;
+    return false;
+  }
+  return true;
+} /* AudioDeviceAlsa::startCapture */
+
 
 /*
  * This file has not been truncated
  */
-
