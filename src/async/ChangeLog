@@ -1,3 +1,11 @@
+ 0.18.1 -- ?? ??? 2011
+-----------------------
+
+* Bugfix in Async::AudioDelayLine: Calling "clear" while a "mute" was in
+  effect would cancel the mute.
+
+
+
  0.18.0 -- 14 May 2011
 -----------------------
 
