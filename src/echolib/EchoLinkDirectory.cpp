@@ -624,15 +624,16 @@ int Directory::handleCallList(char *buf, int len)
 	  list<StationData>::const_iterator it;
 	  for (it = get_call_list.begin(); it != get_call_list.end(); ++it)
 	  {
-	    if (strstr(it->callsign().c_str(), "-L"))
+	    const string &callsign = it->callsign();
+	    if (callsign.rfind("-L") == callsign.size()-2)
 	    {
 	      the_links.push_back(*it);
 	    }
-	    else if (strstr(it->callsign().c_str(), "-R"))
+	    else if (callsign.rfind("-R") == callsign.size()-2)
 	    {
 	      the_repeaters.push_back(*it);
 	    }
-	    else if (strstr(it->callsign().c_str(), "*"))
+	    else if (callsign.find("*") == 0)
 	    {
 	      the_conferences.push_back(*it);
 	    }
