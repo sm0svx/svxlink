@@ -103,7 +103,6 @@ class QueueItem
     virtual ~QueueItem(void) {}
     virtual bool initialize(void) { return true; }
     virtual int readSamples(float *samples, int len) = 0;
-    virtual void unreadSamples(int len) = 0;
     
     bool idleMarked(void) const { return idle_marked; }
   
@@ -118,7 +117,6 @@ class SilenceQueueItem : public QueueItem
       : QueueItem(idle_marked), len(len),
       	silence_left(sample_rate * len / 1000) {}
     int readSamples(float *samples, int len);
-    void unreadSamples(int len);
 
   private:
     int len;
@@ -133,7 +131,6 @@ class ToneQueueItem : public QueueItem
       : QueueItem(idle_marked), fq(fq), amp(amp),
       	tone_len(sample_rate * len / 1000), pos(0), sample_rate(sample_rate) {}
     int readSamples(float *samples, int len);
-    void unreadSamples(int len);
 
   private:
     int fq;
@@ -152,11 +149,15 @@ class RawFileQueueItem : public QueueItem
     ~RawFileQueueItem(void);
     bool initialize(void);
     int readSamples(float *samples, int len);
-    void unreadSamples(int len);
 
   private:
+    static const int RAW_BUFSIZE = 4096;
+
     string  filename;
     int     file;
+    int     buf_pos;
+    int     buf_avail;
+    short   buf[RAW_BUFSIZE];
     
 };
 
@@ -168,16 +169,16 @@ class GsmFileQueueItem : public QueueItem
     ~GsmFileQueueItem(void);
     bool initialize(void);
     int readSamples(float *samples, int len);
-    void unreadSamples(int len);
 
   private:
-    static const int BUFSIZE = 160;
+    static const int GSM_BUFSIZE = 160;
     
     string    	filename;
     int       	file;
     gsm       	decoder;
     int       	buf_pos;
-    gsm_signal  buf[BUFSIZE];
+    int         buf_avail;
+    gsm_signal  buf[GSM_BUFSIZE];
 
 };
 
@@ -189,9 +190,10 @@ class WavFileQueueItem : public QueueItem
     ~WavFileQueueItem(void);
     bool initialize(void);
     int readSamples(float *samples, int len);
-    void unreadSamples(int len);
 
   private:
+    static const int WAV_BUFSIZE = 4096;
+  
     string    filename;
     int       file;
     char      chunk_id[4];
@@ -207,6 +209,9 @@ class WavFileQueueItem : public QueueItem
     uint16_t  bits_per_sample;
     char      subchunk2id[4];
     uint32_t  subchunk2size;
+    int       buf_pos;
+    int       buf_avail;
+    short     buf[WAV_BUFSIZE];
     
     int read32bitValue(unsigned char *ptr, uint32_t *val);
     int read16bitValue(unsigned char *ptr, uint16_t *val);
@@ -451,9 +456,7 @@ void MsgHandler::writeSamples(int count)
     return;
   }
     
-  int written = sinkWriteSamples(buf, read_cnt);
-  //printf("Read=%d  Written=%d\n", read_cnt, written);
-  current->unreadSamples(read_cnt - written);
+  sinkWriteSamples(buf, read_cnt);
 
 } /* MsgHandler::writeSamples */
 
@@ -484,6 +487,8 @@ bool RawFileQueueItem::initialize(void)
     cerr << "*** WARNING: Could not find audio file \"" << filename << "\"\n";
     return false;
   }
+  
+  buf_pos = buf_avail = 0;
     
   return true;
   
@@ -492,36 +497,30 @@ bool RawFileQueueItem::initialize(void)
 
 int RawFileQueueItem::readSamples(float *samples, int len)
 {
-  short buf[len];
-  assert(file != -1);
-  int read_cnt = read(file, buf, len * sizeof(*buf));
-  if (read_cnt == -1)
-  {
-    perror("read in FileQueueItem::readSamples");
-    read_cnt = 0;
-  }
-  else
-  {
-    read_cnt /= sizeof(*buf);
-    for (int i=0; i<read_cnt; ++i)
-    {
-      samples[i] = static_cast<float>(buf[i]) / 32768.0;
-    }
-  }
+  int read_cnt = 0;
   
+  //cout << "buf_pos=" << buf_pos << endl;
+  if (buf_pos == buf_avail)
+  {
+    assert(file != -1);
+    int cnt = read(file, buf, RAW_BUFSIZE * sizeof(*buf));
+    if (cnt == -1)
+    {
+      perror("read in FileQueueItem::readSamples");
+      return 0;
+    }
+    buf_pos = 0;
+    buf_avail = cnt / sizeof(*buf);
+  }
+
+  while ((read_cnt < len) && (buf_pos < buf_avail))
+  {
+    samples[read_cnt++] = static_cast<float>(buf[buf_pos++]) / 32768.0;
+  }
+
   return read_cnt;
   
 } /* RawFileQueueItem::readSamples */
-
-
-void RawFileQueueItem::unreadSamples(int len)
-{
-  if (lseek(file, -len * sizeof(short), SEEK_CUR) == -1)
-  {
-    perror("lseek in RawFileQueueItem::unreadSamples");
-  }
-} /* RawFileQueueItem::unreadSamples */
-
 
 
 /****************************************************************************
@@ -559,7 +558,7 @@ bool GsmFileQueueItem::initialize(void)
   
   decoder = gsm_create();
   
-  buf_pos = BUFSIZE;
+  buf_pos = buf_avail = 0;
   
   return true;
   
@@ -571,7 +570,7 @@ int GsmFileQueueItem::readSamples(float *samples, int len)
   int read_cnt = 0;
   
   //cout << "buf_pos=" << buf_pos << endl;
-  if (buf_pos == BUFSIZE)
+  if (buf_pos == buf_avail)
   {
     assert(file != -1);
 
@@ -595,10 +594,11 @@ int GsmFileQueueItem::readSamples(float *samples, int len)
     {
       gsm_decode(decoder, gsm_data, buf);
       buf_pos = 0;
+      buf_avail = GSM_BUFSIZE;
     }
   }
   
-  while ((read_cnt < len) && (buf_pos < BUFSIZE))
+  while ((read_cnt < len) && (buf_pos < buf_avail))
   {
     samples[read_cnt++] = static_cast<float>(buf[buf_pos++]) / 32768.0;
   }
@@ -608,24 +608,6 @@ int GsmFileQueueItem::readSamples(float *samples, int len)
   return read_cnt;
   
 } /* GsmFileQueueItem::readSamples */
-
-
-void GsmFileQueueItem::unreadSamples(int len)
-{
-  //cout << "GsmFileQueueItem::unreadSamples(" << len << ")\n";
-  if (len > buf_pos)
-  {
-    cerr << "*** WARNING: Trying to unread more GSM samples then was "
-            "previously read." << endl;
-    return;
-  }
-  
-  buf_pos -= len;
-  
-  //cout << "GsmFileQueueItem::unreadSamples: buf_pos=" << buf_pos << endl;
-  
-} /* GsmFileQueueItem::unreadSamples */
-
 
 
 /****************************************************************************
@@ -760,6 +742,8 @@ bool WavFileQueueItem::initialize(void)
       	 << filename << "\n";
     return false;
   }
+
+  buf_pos = buf_avail = 0;
   
   return true;
   
@@ -768,35 +752,30 @@ bool WavFileQueueItem::initialize(void)
 
 int WavFileQueueItem::readSamples(float *samples, int len)
 {
-  short buf[len];
-  assert(file != -1);
-  int read_cnt = read(file, buf, len * sizeof(*buf));
-  if (read_cnt == -1)
-  {
-    perror("read in FileQueueItem::readSamples");
-    read_cnt = 0;
-  }
-  else
-  {
-    read_cnt /= sizeof(*buf);
-    for (int i=0; i<read_cnt; ++i)
-    {
-      samples[i] = static_cast<float>(buf[i]) / 32768.0;
-    }
-  }
+  int read_cnt = 0;
   
+  //cout << "buf_pos=" << buf_pos << endl;
+  if (buf_pos == buf_avail)
+  {
+    assert(file != -1);
+    int cnt = read(file, buf, WAV_BUFSIZE * sizeof(*buf));
+    if (cnt == -1)
+    {
+      perror("read in FileQueueItem::readSamples");
+      return 0;
+    }
+    buf_pos = 0;
+    buf_avail = cnt / sizeof(*buf);
+  }
+
+  while ((read_cnt < len) && (buf_pos < buf_avail))
+  {
+    samples[read_cnt++] = static_cast<float>(buf[buf_pos++]) / 32768.0;
+  }
+          
   return read_cnt;
   
 } /* WavFileQueueItem::readSamples */
-
-
-void WavFileQueueItem::unreadSamples(int len)
-{
-  if (lseek(file, -len * sizeof(short), SEEK_CUR) == -1)
-  {
-    perror("lseek in RawFileQueueItem::unreadSamples");
-  }
-} /* WavFileQueueItem::unreadSamples */
 
 
 int WavFileQueueItem::read32bitValue(unsigned char *ptr, uint32_t *val)
@@ -840,14 +819,6 @@ int SilenceQueueItem::readSamples(float *samples, int len)
 } /* SilenceQueueItem::readSamples */
 
 
-void SilenceQueueItem::unreadSamples(int len)
-{
-  silence_left += len;
-} /* SilenceQueueItem::unreadSamples */
-
-
-
-
 /****************************************************************************
  *
  * Private member functions for class ToneQueueItem
@@ -866,13 +837,6 @@ int ToneQueueItem::readSamples(float *samples, int len)
   return read_cnt;
   
 } /* ToneQueueItem::readSamples */
-
-
-void ToneQueueItem::unreadSamples(int len)
-{
-  pos -= len;
-} /* ToneQueueItem::unreadSamples */
-
 
 
 
