@@ -47,6 +47,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
+#include <AsyncAudioValve.h>
+#include <SigCAudioSource.h>
 
 
 /****************************************************************************
@@ -116,7 +118,7 @@ instructed to buffer some samples before starting to output audio.
 Samples can be automatically output using the normal audio pipe infrastructure
 or samples could be read on demand using the readSamples method.
 */
-class AudioFifo : public AudioSink, public AudioSource
+class AudioFifo : public SigC::Object, public AudioSink, public AudioSource
 {
   public:
     /**
@@ -148,16 +150,6 @@ class AudioFifo : public AudioSink, public AudioSource
     bool empty(void) const { return !is_full && (tail == head); }
     
     /**
-     * @brief 	Check if the FIFO is full
-     * @return	Returns \em true if the FIFO is full or else \em false
-     *
-     * This function is used to check if the FIFO is full or not. The FIFO can
-     * only reach the buffer full condition if overwrite is false. The overwrite
-     * mode is set by the setOverwrite function.
-     */
-    bool full(void) const { return is_full; }
-    
-    /**
      * @brief 	Find out how many samples there are in the FIFO
      * @param	ignore_prebuf Set to \em true to not report pre-buffered
 		samples.
@@ -170,33 +162,6 @@ class AudioFifo : public AudioSink, public AudioSource
      * @return	Returns the amount of free space in the FIFO
      */
     unsigned spaceAvail(void) const;
-    
-    /**
-     * @brief 	Set the overwrite mode
-     * @param 	overwrite Set to \em true to overwrite or else \em false
-     *
-     * The FIFO can operate in overwrite or normal mode. When in normal mode,
-     * it will not be possible to add any more samples to the FIFO when it
-     * is full. Samples has to be removed first. When overwrite is set, newly
-     * added samples will overwrite the oldest samples in the buffer so the FIFO
-     * will never get full but instead samples are lost.
-     * Use this function to set the overwrite mode.
-     */
-    void setOverwrite(bool overwrite) { do_overwrite = overwrite; }
-    
-    /**
-     * @brief 	Check the overwrite mode
-     * @return	Returns \em true if overwrite is enabled or else \em false
-     *
-     * The FIFO can operate in overwrite or normal mode. When in normal mode,
-     * it will not be possible to add any more samples to the FIFO when it
-     * is full. Samples has to be removed first. When overwrite is set, newly
-     * added samples will overwrite the oldest samples in the buffer so the FIFO
-     * will never get full but instead samples are lost.
-     * Use this function the check the current overwrite mode. Use the
-     * setOverwrite function to set the overwrite mode.
-     */
-    bool overwrite(void) const { return do_overwrite; }
     
     /**
      * @brief 	Clear all samples from the FIFO
@@ -222,6 +187,21 @@ class AudioFifo : public AudioSink, public AudioSource
      * @return  Returns \em true if buffering is enabled or else \em false
      */
     bool bufferingEnabled(void) const { return buffering_enabled; }
+
+    /**
+     * @brief   Enable/disable the fifo output
+     * @param   enable Set to \em true to enable output or else \em false
+     *
+     * Use this method to turn the output on and off. When buffering is off,
+     * no more samples will be written to the sink.
+     */
+    void enableOutput(bool enable) { valve.setOpen(enable); }
+
+    /**
+     * @brief   Check if output is enabled or disabled
+     * @return  Returns \em true if output is enabled or else \em false
+     */
+    bool outputEnabled(void) const { return valve.isOpen(); }
     
     /**
      * @brief 	Write samples into the FIFO
@@ -259,7 +239,10 @@ class AudioFifo : public AudioSink, public AudioSource
      * This function is normally only called from a connected source object.
      */
     virtual void flushSamples(void);
+
     
+  protected:
+
     /**
      * @brief Request audio samples from this source
      * 
@@ -267,10 +250,8 @@ class AudioFifo : public AudioSink, public AudioSource
      * to accept more samples.
      * This function is normally only called from a connected sink object.
      */
-    virtual void requestSamples(int count);
-    
-    
-  protected:
+    virtual void onRequestSamples(int count);
+  
     /**
      * @brief The registered sink has flushed all samples
      *
@@ -278,24 +259,26 @@ class AudioFifo : public AudioSink, public AudioSource
      * registered sink.
      * This function is normally only called from a connected sink object.
      */
-    virtual void allSamplesFlushed(void);
+    virtual void onAllSamplesFlushed(void);
     
     
-  private:    
+  private:
 
     typedef enum
     {
       STREAM_IDLE, STREAM_ACTIVE, STREAM_FLUSHING
     } StreamState;
+    
+    AudioValve      valve;
+    SigCAudioSource sigsrc;
                   
     float     	*fifo;
     unsigned    fifo_size;
     unsigned    head, tail;
-    bool      	do_overwrite;
     StreamState stream_state;
-    bool      	is_full;
+    bool        is_full;
+    bool        buffering_when_empty;
     bool        buffering_enabled;
-    bool      	disable_buffering_when_flushed;
     
     int writeSamplesFromFifo(int count);
     void flushSamplesFromFifo(void);

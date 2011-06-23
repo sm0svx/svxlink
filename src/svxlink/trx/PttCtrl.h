@@ -43,7 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncAudioIO.h>
-#include <AsyncAudioValve.h>
+#include <AsyncAudioStreamStateDetector.h>
 #include <AsyncAudioFifo.h>
 
 
@@ -147,7 +147,7 @@ class PttCtrl : public Async::AudioSink, public Async::AudioSource,
     Async::Timer     	*tx_delay_timer;
     int       	        tx_delay;
     Async::AudioFifo 	*fifo;
-    Async::AudioValve	valve;
+    Async::AudioStreamStateDetector	state_det;
     
     void transmit(bool do_transmit);
     void txDelayExpired(Async::Timer *t);

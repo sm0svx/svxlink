@@ -108,25 +108,13 @@ class SatRx : public AudioSource, public SigC::Object
       rx->selcallSequenceDetected.connect(
 	      slot(*this, &SatRx::onSelcallSequenceDetected));
       rx->squelchOpen.connect(slot(*this, &SatRx::rxSquelchOpen));
-      AudioSource *prev_src = rx;
 
-      if (fifo_length_ms > 0)
-      {
-        fifo = new AudioFifo(fifo_length_ms * INTERNAL_SAMPLE_RATE / 1000);
-        fifo->setOverwrite(true);
-        prev_src->registerSink(fifo);
-        prev_src = fifo;
-        valve.setBlockWhenClosed(true);
-      }
-      else
-      {
-        valve.setBlockWhenClosed(false);
-      }
-      
-      valve.setOpen(false);
-      prev_src->registerSink(&valve);
-      
-      AudioSource::setHandler(&valve);
+      fifo = new AudioFifo(fifo_length_ms * INTERNAL_SAMPLE_RATE / 1000);
+      fifo->enableOutput(false);
+      fifo->enableBuffering(fifo_length_ms > 0);
+
+      rx->registerSink(fifo);
+      AudioSource::setHandler(fifo);
     }
     
     ~SatRx(void)
@@ -136,7 +124,7 @@ class SatRx : public AudioSource, public SigC::Object
     
     void stopOutput(bool do_stop)
     {
-      valve.setOpen(!do_stop);
+      fifo->enableOutput(!do_stop);
       if (!do_stop)
       {
       	DtmfBuf::iterator dit;
@@ -195,14 +183,13 @@ class SatRx : public AudioSource, public SigC::Object
     typedef list<string>  	     SelcallBuf;
     
     AudioFifo 	*fifo;
-    AudioValve	valve;
     DtmfBuf   	dtmf_buf;
     SelcallBuf	selcall_buf;
     bool      	sql_open;
     
     void onDtmfDigitDetected(char digit, int duration)
     {
-      if (!valve.isOpen())
+      if (!fifo->outputEnabled())
       {
 	dtmf_buf.push_back(pair<char, int>(digit, duration));
       }
@@ -214,7 +201,7 @@ class SatRx : public AudioSource, public SigC::Object
     
     void onSelcallSequenceDetected(string sequence)
     {
-      if (!valve.isOpen())
+      if (!fifo->outputEnabled())
       {
 	selcall_buf.push_back(sequence);
       }

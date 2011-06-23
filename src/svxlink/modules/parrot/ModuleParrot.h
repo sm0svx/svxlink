@@ -71,8 +71,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace Async
 {
   class Timer;
-  class SampleFifo;
-  class AudioValve;
+  class AudioStreamStateDetector;
 };
 
 
@@ -141,12 +140,8 @@ class ModuleParrot : public Module
     virtual void logicIdleStateChanged(bool is_idle);
   
   private:
-    class FifoAdapter;
-    friend class FifoAdapter;
-    
-    FifoAdapter       	    *adapter;
+    Async::AudioStreamStateDetector *state_det;
     Async::AudioFifo	    *fifo;
-    Async::AudioValve 	    *valve;
     bool      	      	    squelch_is_open;
     int       	      	    repeat_delay;
     Async::Timer      	    *repeat_delay_timer;
@@ -159,7 +154,7 @@ class ModuleParrot : public Module
     void dtmfCmdReceivedWhenIdle(const std::string &cmd);
     void squelchOpen(bool is_open);
 
-    void allSamplesWritten(void);
+    void onStreamStateChanged(bool is_active, bool is_idle);
     void onRepeatDelayExpired(Async::Timer *t);
     void execCmdQueue(void);
 

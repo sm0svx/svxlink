@@ -51,8 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioFifo.h>
-#include <AsyncAudioPassthrough.h>
-#include <AsyncAudioValve.h>
+#include <AsyncAudioStreamStateDetector.h>
 
 
 /****************************************************************************
@@ -91,26 +90,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-class ModuleParrot::FifoAdapter : public AudioPassthrough
-{
-  public:
-    FifoAdapter(ModuleParrot *parrot) : parrot(parrot) {}
-    
-    virtual void flushSamples(void)
-    {
-      sourceAllSamplesFlushed();
-      sinkFlushSamples();
-    }
-    
-    virtual void allSamplesFlushed(void)
-    {
-      parrot->allSamplesWritten();
-    }
-  
-  private:
-    ModuleParrot *parrot;
-    
-}; /* class ModuleParrot::FifoAdapter */
 
 
 /****************************************************************************
@@ -163,7 +142,7 @@ extern "C" {
 
 ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       	      	      	   const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), adapter(0), fifo(0),
+  : Module(dl_handle, logic, cfg_name), state_det(0), fifo(0),
     squelch_is_open(false), repeat_delay(0), repeat_delay_timer(0)
 {
   cout << "\tModule Parrot v" MODULE_PARROT_VERSION " starting...\n";
@@ -175,7 +154,7 @@ ModuleParrot::~ModuleParrot(void)
 {
   AudioSink::clearHandler();
   AudioSource::clearHandler();
-  delete adapter; // This will delete all chained audio objects
+  delete state_det; // This will delete all chained audio objects
 } /* ~ModuleParrot */
 
 
@@ -198,19 +177,16 @@ bool ModuleParrot::initialize(void)
     repeat_delay = atoi(value.c_str());
   }
   
-  adapter = new FifoAdapter(this);
-  AudioSink::setHandler(adapter);
+  state_det = new AudioStreamStateDetector;
+  state_det->sigStreamStateChanged.connect(
+     slot(*this, &ModuleParrot::onStreamStateChanged));
+  AudioSink::setHandler(state_det);
   
   fifo = new AudioFifo(atoi(fifo_len.c_str())*INTERNAL_SAMPLE_RATE);
-  fifo->setOverwrite(true);
-  adapter->registerSink(fifo, true);
+  fifo->enableOutput(false);
+  state_det->registerSink(fifo, true);
   
-  valve = new AudioValve;
-  valve->setBlockWhenClosed(true);
-  valve->setOpen(false);
-  fifo->registerSink(valve, true);
-  
-  AudioSource::setHandler(valve);
+  AudioSource::setHandler(fifo);
   
   return true;
   
@@ -290,7 +266,7 @@ void ModuleParrot::activateInit(void)
 {
   fifo->clear();
   cmd_queue.clear();
-  valve->setOpen(false);  
+  fifo->enableOutput(false);
 } /* activateInit */
 
 
@@ -309,7 +285,7 @@ void ModuleParrot::activateInit(void)
  */
 void ModuleParrot::deactivateCleanup(void)
 {
-  valve->setOpen(true);
+  fifo->enableOutput(true);
   fifo->clear();
   delete repeat_delay_timer;
   repeat_delay_timer = 0;
@@ -380,16 +356,20 @@ void ModuleParrot::squelchOpen(bool is_open)
 } /* ModuleParrot::squelchOpen */
 
 
-void ModuleParrot::allSamplesWritten(void)
+void ModuleParrot::onStreamStateChanged(bool is_active, bool is_idle)
 {
-  //cout << "ModuleParrot::allSamplesWritten\n";
+  //cout << "ModuleParrot::onStreamStateChanged\n";
   
-  if (!cmd_queue.empty())
+  if (is_idle)
   {
-    execCmdQueue();
+    if (!cmd_queue.empty())
+    {
+      execCmdQueue();
+    }
+    fifo->enableOutput(false);
   }
-  valve->setOpen(false);
-} /* ModuleParrot::allSamplesWritten */
+  
+} /* ModuleParrot::onStreamStateChanged */
 
 
 void ModuleParrot::onRepeatDelayExpired(Timer *t)
@@ -397,7 +377,7 @@ void ModuleParrot::onRepeatDelayExpired(Timer *t)
   delete repeat_delay_timer;
   repeat_delay_timer = 0;
   
-  valve->setOpen(true);
+  fifo->enableOutput(true);
   
 } /* ModuleParrot::onRepeatDelayExpired */
 

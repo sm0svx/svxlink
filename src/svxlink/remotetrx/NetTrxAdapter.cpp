@@ -91,7 +91,6 @@ class RxAdapter : public Rx, public AudioSink
       : Rx(cfg, name)
     {
       mute_valve.setOpen(false);
-      mute_valve.setBlockWhenClosed(false);
       AudioSink::setHandler(&mute_valve);
       AudioSource::setHandler(&mute_valve);
     }

@@ -454,7 +454,6 @@ bool LocalTx::initialize(void)
     // Create a valve so that we can control when to transmit audio
   #if USE_AUDIO_VALVE
   audio_valve = new AudioValve;
-  audio_valve->setBlockWhenClosed(true);
   audio_valve->setOpen(true);
   prev_src->registerSink(audio_valve, true);
   prev_src = audio_valve;
@@ -476,7 +475,6 @@ bool LocalTx::initialize(void)
   
     // Create a valve so that we can control when to transmit DTMF
   dtmf_valve = new AudioValve;
-  dtmf_valve->setBlockWhenClosed(true);
   dtmf_valve->setOpen(false);
   dtmf_encoder->registerSink(dtmf_valve, true);
   selector->addSource(dtmf_valve);

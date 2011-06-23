@@ -82,21 +82,13 @@ PttCtrl::PttCtrl(int tx_delay)
   : tx_ctrl_mode(Tx::TX_OFF), is_transmitting(false), tx_delay_timer(0),
     tx_delay(tx_delay), fifo(0)
 {
-  valve.setBlockWhenClosed(false);
-  valve.setOpen(false);
-      
-  if (tx_delay > 0)
-  {
-    fifo = new AudioFifo((tx_delay + 500) * INTERNAL_SAMPLE_RATE / 1000);
-    fifo->registerSink(&valve);
-    AudioSink::setHandler(fifo);
-  }
-  else
-  {
-    AudioSink::setHandler(&valve);
-  }
-      
-  AudioSource::setHandler(&valve);
+  fifo = new AudioFifo((tx_delay + 500) * INTERNAL_SAMPLE_RATE / 1000);
+  fifo->enableOutput(false);
+  fifo->enableBuffering(false);
+  fifo->registerSink(&state_det);
+
+  AudioSink::setHandler(fifo);
+  AudioSource::setHandler(&state_det);
 }
 
 
@@ -128,7 +120,7 @@ void PttCtrl::setTxCtrlMode(Tx::TxCtrlMode mode)
       break;
 
     case Tx::TX_AUTO:
-      transmit(!valve.isIdle());
+      transmit(!state_det.isIdle());
       break;
   }
 }
@@ -141,19 +133,14 @@ void PttCtrl::availSamples()
     transmit(true);
   }
       
-  if (fifo != 0)
-  {
-    return fifo->availSamples();
-  }
-      
-  return valve.availSamples();
+  fifo->availSamples();
 }
 
 
 void PttCtrl::allSamplesFlushed(void)
 {
   AudioSource::allSamplesFlushed();
-  if ((tx_ctrl_mode == Tx::TX_AUTO) && is_transmitting && valve.isIdle())
+  if ((tx_ctrl_mode == Tx::TX_AUTO) && is_transmitting && state_det.isIdle())
   {
     transmit(false);
   }
@@ -189,14 +176,15 @@ void PttCtrl::transmit(bool do_transmit)
     if (tx_delay > 0)
     {
       fifo->enableBuffering(true);
-      valve.setBlockWhenClosed(true);
+      fifo->enableOutput(false);
       tx_delay_timer = new Timer(tx_delay);
       tx_delay_timer->expired.connect(
           slot(*this, &PttCtrl::txDelayExpired));
     }
     else
     {
-      valve.setOpen(true);
+      fifo->enableOutput(true);
+      fifo->enableBuffering(false);
     }
   }
   else
@@ -206,8 +194,8 @@ void PttCtrl::transmit(bool do_transmit)
       delete tx_delay_timer;
       tx_delay_timer = 0;
     }
-    valve.setBlockWhenClosed(false);
-    valve.setOpen(false);
+    fifo->enableOutput(false);
+    fifo->enableBuffering(false);
   }
 }
 
@@ -216,9 +204,8 @@ void PttCtrl::txDelayExpired(Timer *t)
 {
   delete tx_delay_timer;
   tx_delay_timer = 0;
-  fifo->enableBuffering(false);
-  valve.setOpen(true);
-  valve.setBlockWhenClosed(false);
+  fifo->enableOutput(true);
+  fifo->enableBuffering(true);
 }
 
 

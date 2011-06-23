@@ -120,8 +120,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     /**
      * @brief 	Default constuctor
      */
-    explicit AudioValve(void)
-      : stream_state(STREAM_IDLE), block_when_closed(false), is_open(true)
+    explicit AudioValve(void) : stream_state(STREAM_IDLE), is_open(true)
     {
     }
   
@@ -157,51 +156,18 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       }
       else
       {
-        if (!block_when_closed)
+        if (stream_state == STREAM_FLUSHING)
         {
-          /* request samples from the source until it is empty */
-          readSourceEmpty();
-        }
-        switch (stream_state)
-        {
-        case STREAM_FLUSHING:
 	  stream_state = STREAM_IDLE;
 	  sourceAllSamplesFlushed();
-	  break;
-        case STREAM_ACTIVE:
+        }
+        else if (stream_state == STREAM_ACTIVE)
+        {
       	  sinkFlushSamples();
-      	  break;
-        case STREAM_IDLE:
-          break;
-	}
+        }
       }
     }
 
-    /**
-     * @brief 	Setup audio stream blocking when valve is closed
-     * @param 	block_when_closed When \em true, block the incoming audio
-     *	      	stream when the valve is closed. When \em false, incoming
-     *	      	audio is thrown away when the valve is closed.
-     *
-     * Use this method to set if the valve should block or drop the incoming
-     * audio stream when the valve is closed.
-     */
-    void setBlockWhenClosed(bool block_when_closed)
-    {
-      if (block_when_closed == this->block_when_closed)
-      {
-      	return;
-      }
-      
-      this->block_when_closed = block_when_closed;
-      
-      if (!is_open && !block_when_closed)
-      {
-        /* request samples from the source until it is empty */
-        readSourceEmpty();
-      }
-    }
-    
     /**
      * @brief 	Check if the valve is open
      * @returns Return \em true if the valve is open or else \em false
@@ -211,15 +177,6 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       return is_open;
     }
     
-    /**
-     * @brief 	Check if the valve is idle
-     * @returns Return \em true if the valve is idle or else \em false
-     */
-    bool isIdle(void) const
-    {
-      return (stream_state == STREAM_IDLE);
-    }
-  
     /**
      * @brief 	Write samples into the valve
      * @param 	samples The buffer containing the samples
@@ -240,15 +197,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     int writeSamples(const float *samples, int count)
     {
       stream_state = STREAM_ACTIVE;
-      if (is_open)
-      {
-      	written = sinkWriteSamples(samples, count);
-      }
-      else
-      {
-        written = block_when_closed ? 0 : count;
-      }
-      return written;
+      return is_open ? sinkWriteSamples(samples, count) : count;
     }
 
     /**
@@ -328,25 +277,13 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     AudioValve(const AudioValve&);
     AudioValve& operator=(const AudioValve&);
 
-    void readSourceEmpty(void)
-    {
-      while (stream_state == STREAM_ACTIVE)
-      {
-        written = 0;
-        sourceRequestSamples(64);
-        if (written == 0) break;
-      }
-    }
-
     typedef enum
     {
       STREAM_IDLE, STREAM_ACTIVE, STREAM_FLUSHING
     } StreamState;
 
     StreamState stream_state;
-    bool block_when_closed;
     bool is_open;
-    int written;
     
 };  /* class AudioValve */
 
