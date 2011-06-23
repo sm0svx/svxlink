@@ -203,7 +203,7 @@ void AudioDelayLine::clear(int time_ms)
     count = min(size, time_ms * INTERNAL_SAMPLE_RATE / 1000);
   }
 
-  fade_pos = 0; // Reset fade gain
+  //fade_pos = 0; // Reset fade gain
   fade_dir = 1; // Fade out
   ptr = (ptr + size - count) % size;
   for (int i=0; i<count; ++i)
@@ -211,8 +211,12 @@ void AudioDelayLine::clear(int time_ms)
     ptr = (ptr < size-1) ? ptr+1 : 0;
     buf[ptr] *= currentFadeGain();
   }
-  fade_dir = -1; // Fade in again when new samples arrive
-  
+
+  if (!is_muted)
+  {
+    fade_dir = -1; // Fade in again when new samples arrive
+  }
+
   last_clear = max(0, count - fade_len);
   
 } /* AudioDelayLine::clear */

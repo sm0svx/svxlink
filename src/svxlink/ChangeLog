@@ -1,7 +1,18 @@
- 0.12.1 -- ?? ??? 2011
+ 0.13.0 -- ?? ??? 2011
 -----------------------
 
 * Added selective calling system Motorola QC2.
+
+* Small bugfix in RepeaterLogic: TX down was not always correctly handled
+  on interference shutdown.
+
+* Bugfix in ModuleEchoLink: The "last disconnected station" variable was
+  updated even if a connection was rejected. This affected the "connect
+  to the last disconnected station" command.
+
+* New feature: 1750Hz tone call muting. Use the 1750_MUTING configuration
+  variable in a local receiver configuration section to enable this new
+  feature. This feature was contributed by Adi / DL1HRC.
 
 
 

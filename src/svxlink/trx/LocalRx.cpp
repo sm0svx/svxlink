@@ -99,6 +99,8 @@ using namespace Async;
 
 #define DTMF_MUTING_PRE   75
 #define DTMF_MUTING_POST  200
+#define TONE_1750_MUTING_PRE 75
+#define TONE_1750_MUTING_POST 100
 
 
 /****************************************************************************
@@ -297,6 +299,12 @@ bool LocalRx::initialize(void)
     delay_line_len = DTMF_MUTING_PRE;
   }
   
+  bool  mute_1750 = false;
+  if (cfg.getValue(name(), "1750_MUTING", mute_1750))
+  {
+    delay_line_len = max(delay_line_len, TONE_1750_MUTING_PRE);
+  }
+
   if (cfg.getValue(name(), "SQL_TAIL_ELIM", value))
   {
     sql_tail_elim = atoi(value.c_str());
@@ -556,6 +564,16 @@ bool LocalRx::initialize(void)
     // the LocalRx class
   setHandler(prev_src);
   
+  if (mute_1750)
+  {
+    ToneDetector *calldet = new ToneDetector(1750, 50);
+    assert(calldet != 0);
+    calldet->setSnrThresh(10);
+    calldet->activated.connect(slot(*this, &LocalRx::tone1750detected));
+    splitter->addSink(calldet, true);
+    cout << "Enabling 1750Hz muting\n";
+  }
+
   return true;
   
 } /* LocalRx:initialize */
@@ -762,6 +780,20 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
   return siglevdet;
   
 } /* LocalRx::createSigLevDet */
+
+
+void LocalRx::tone1750detected(bool detected)
+{
+   cout << "Muting 1750Hz: " << (detected ? "TRUE\n" : "FALSE\n");
+   if (detected)
+   {
+     delay->mute(true, TONE_1750_MUTING_PRE);
+   }
+   else
+   {
+     delay->mute(false, TONE_1750_MUTING_POST);
+   }
+} /* LocalRx::tone1750detected */
 
 
 

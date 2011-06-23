@@ -1,3 +1,11 @@
+ 0.14.1 -- ?? ??? 2011
+-----------------------
+
+* Bugfix: Stations (links, repeaters, conferences etc) was not sorted
+  properly. Entries could end up in the wrong category.
+
+
+
  0.14.0 -- 14 May 2011
 -----------------------
 
