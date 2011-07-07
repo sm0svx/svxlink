@@ -238,7 +238,7 @@ void TcpClient::dnsResultsReady(DnsLookup& dns_lookup)
   delete dns;
   dns = 0;
   
-  if (result.empty() || (result[0].ip4Addr().s_addr == INADDR_NONE))
+  if (result.empty() || result[0].isEmpty())
   {
     disconnect();
     disconnected(this, DR_HOST_NOT_FOUND);
