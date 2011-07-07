@@ -206,7 +206,7 @@ void AprsUdpClient::update3rdState(const string& call, const string& info)
 
 void AprsUdpClient::sendLocationInfo(Timer *t)
 {
-  if (ip_addr.ip4Addr().s_addr == INADDR_NONE)
+  if (ip_addr.isEmpty())
   {
     if (!dns)
     {
