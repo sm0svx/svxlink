@@ -4,6 +4,8 @@
 * Bugfix in Async::AudioDelayLine: Calling "clear" while a "mute" was in
   effect would cancel the mute.
 
+* New methods IpAddress::isEmpty() and IpAddress::clear().
+
 
 
  0.18.0 -- 14 May 2011
