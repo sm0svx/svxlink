@@ -1,0 +1,48 @@
+* Requires Qt but it should be possible to compile SvxLink without Qt.
+
+* Does not require libgsm. Configure checks for it but is not aborted if
+  not found.
+
+* Does not properly handle the Speex dependency. Even if not found during
+  the configure run, compilation is tried causing an error.
+
+* Warning while compiling fidlib:
+
+  CC     fidlib.lo
+fidlib.c:28:0: warning: "VERSION" redefined
+<command-line>:0:0: note: this is the location of the previous definition
+
+* Does not require libpopt. If not present causes a compilation error.
+
+* Does not require tcl-dev. If not present causes a compilation error.
+
+* Does not require pdflatex but errors out if it does not exist. But even
+  if it does exist, qteluserdoc.pdf is not built. Building the PDF docs
+  should be optional.
+
+* The compressed manual pages are not built.
+
+* The qtel language translations are not built.
+
+* The async demo, echolib_test and EchoLinkQso_demo binaries should not
+  be installed. Only svxlink, remotetrx, siglevdetcal and qtel.
+
+* Only include files for Async and EchoLib need to be installed. That is
+  all Async*.h and EchoLib*.h. The other ones are internal.
+
+* liblocationinfo and libtrx is internal libraries and should not be
+  installed. Binaries should be statically linked to these libs.
+
+* The *.la files should not be installed for the SvxLink plugins.
+
+* Uncompressed manual pages are installed instead of compressed ones.
+
+* The events.tcl file and the events.d and modules.d directories should
+  be in <prefix>/share/svxlink/.
+
+* The spool directory is placed directly under <prefix> instead of being
+  placed in <localstatedir> (Usually /var).
+
+* Missing directories: spool/svxlink/propagation_monitor/{vhfdx,dxrobot}.
+
+ 
