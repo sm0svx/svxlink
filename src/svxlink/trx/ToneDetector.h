@@ -132,7 +132,7 @@ class ToneDetector : public SigC::Object, public Async::AudioSink
     ToneDetector(float tone_hz, float width_hz);
     virtual int writeSamples(const float *buf, int len);
 
-    bool isActivated(void) const { return is_activated; }
+    bool isActivated(void) const { return (det_delay_left == 0); }
     float toneFq(void) const { return tone_fq; }
     void setSnrThresh(float thresh) { peak_thresh = exp10f(thresh/10.0f); }
     void reset(void);
@@ -161,9 +161,9 @@ class ToneDetector : public SigC::Object, public Async::AudioSink
     float              tone_fq;
     int       	       block_len;
     int       	       det_delay_left;
-    int       	       gap_delay_left;
+    int       	       undet_delay_left;
     float     	       peak_thresh;
-    float              last_center;
+    float     	       energy_thresh;
 
     std::vector<float>                 window_table;
     std::vector<float>::const_iterator win;

@@ -80,7 +80,7 @@ using namespace Async;
 
 #define DEFAULT_PEAK_THRESH	10.0	// 10dB
 #define DEFAULT_DET_DELAY	3
-#define DEFAULT_GAP_DELAY	3
+#define DEFAULT_UNDET_DELAY	3
 #define DEFAULT_ENERGY_THRESH	0.1f
 
 
@@ -138,8 +138,8 @@ using namespace Async;
  */
 ToneDetector::ToneDetector(float tone_hz, float width_hz)
   : samples_left(0), is_activated(false), tone_fq(tone_hz), block_len(0),
-    det_delay_left(DEFAULT_DET_DELAY), gap_delay_left(0),
-    peak_thresh(DEFAULT_PEAK_THRESH)
+    det_delay_left(DEFAULT_DET_DELAY), undet_delay_left(0),
+    peak_thresh(DEFAULT_PEAK_THRESH), energy_thresh(DEFAULT_ENERGY_THRESH)
 {
   // The Goertzel algorithm is just a recursive way to evaluate the DFT at a
   // single frequency. For maximum detection reliability, the bandwidth will
@@ -173,7 +173,7 @@ void ToneDetector::reset(void)
 {
   is_activated = false;
   det_delay_left = DEFAULT_DET_DELAY;
-  gap_delay_left = 0;
+  undet_delay_left = 0;
 } /* ToneDetector::reset */
 
 
@@ -242,11 +242,9 @@ void ToneDetector::postProcess(void)
   /* Reload sample counter */
   samples_left = block_len;
 
-  if ((res_center > DEFAULT_ENERGY_THRESH) &&
+  if ((res_center > energy_thresh) &&
       (res_center > (res_lower * peak_thresh)) &&
-      (res_center > (res_upper * peak_thresh)) &&
-      (res_center < (last_center * 2)) &&
-      (last_center < (res_center * 2)))
+      (res_center > (res_upper * peak_thresh)))
   {
     if (det_delay_left > 0)
     {
@@ -258,14 +256,14 @@ void ToneDetector::postProcess(void)
     }
     if (is_activated)
     {
-      gap_delay_left = DEFAULT_GAP_DELAY;
+      undet_delay_left = DEFAULT_UNDET_DELAY;
     }
   }
   else
   {
-    if (gap_delay_left > 0)
+    if (undet_delay_left > 0)
     {
-      if (--gap_delay_left == 0)
+      if (--undet_delay_left == 0)
       {
         is_activated = false;
 	activated(false);
@@ -276,9 +274,6 @@ void ToneDetector::postProcess(void)
       det_delay_left = DEFAULT_DET_DELAY;
     }
   }
-  
-  last_center = res_center;
-  
 } /* ToneDetector::postProcess */
 
 
