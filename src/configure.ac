@@ -7,97 +7,166 @@ LT_PREREQ([2.2])
 AC_INIT([svxlink], [snapshot], [svxlink-devel@lists.sourceforge.net])
 
 AC_CONFIG_SRCDIR([svxlink/svxlink/svxlink.cpp])
-#AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
+AC_PREFIX_DEFAULT([/usr])
 
-AM_INIT_AUTOMAKE([tar-ustar silent-rules no-dist-gzip dist-bzip2])
+AM_INIT_AUTOMAKE([no-define silent-rules tar-ustar no-dist-gzip dist-bzip2])
+AM_SILENT_RULES([yes])
 LT_INIT
 AC_SUBST([LIBTOOL_DEPS])
 
+# option to build user documentation for Qtel
+AC_ARG_WITH([qteluserdocs],
+  AS_HELP_STRING([--with-qteluserdocs], [Build Qtel user documentation, too]))
+AM_CONDITIONAL([WITH_QTELUSERDOCS], [test "x$with_qteluserdocs" = "xyes"])
+AM_COND_IF([WITH_QTELUSERDOCS], [
+  # check for pdflatex
+  AC_PATH_PROG([PDFLATEX], [pdflatex])
+  if test -z "${PDFLATEX}" ; then
+    AC_MSG_ERROR(['pdflatex' is required to build the Qtel documentation])
+  fi
+  AC_PATH_PROG([KPSEWHICH], [kpsewhich])
+  if test -z "${KPSEWHICH}" ; then
+    AC_MSG_ERROR(['kpsewhich' is required to build the Qtel documentation])
+  fi
+  RESULT=`${KPSEWHICH} scrartcl.cls`
+  if test -z "${RESULT}" ; then
+    AC_MSG_ERROR(['scrartcl.cls' is required to build the Qtel documentation])
+  fi
+])
+
 # check for required programs
 AC_PROG_CPP
-AC_PROG_CC
-AC_PROG_CXX
-AC_PROG_GREP
-AC_PROG_AWK
-AC_PROG_MKDIR_P
-AC_PATH_PROG([CHOWN], [chown])
-AC_PATH_PROG([RMDIR], [rmdir])
-
 if test -z "${CPP}" ; then
    AC_MSG_ERROR(['cpp' is required])
 fi
+AC_PROG_CC
 if test -z "${CC}" ; then
    AC_MSG_ERROR(['cc' is required])
 fi
+AC_PROG_CXX
 if test -z "${CXX}" ; then
    AC_MSG_ERROR(['cxx' is required])
 fi
+AC_PROG_GREP
 if test -z "${GREP}" ; then
    AC_MSG_ERROR(['grep' is required])
 fi
+AC_PROG_AWK
 if test -z "${AWK}" ; then
    AC_MSG_ERROR(['awk' is required])
 fi
-if test -z "${MKDIR_P}" ; then
-   AC_MSG_ERROR(['mkdir -p' is required])
+AC_PROG_INSTALL
+if test -z "${INSTALL}" ; then
+   AC_MSG_ERROR(['install' is required])
 fi
-if test -z "${CHOWN}" ; then
-   AC_MSG_ERROR(['chown' is required])
-fi
+AC_PATH_PROG([RMDIR], [rmdir])
 if test -z "${RMDIR}" ; then
-   AC_MSG_ERROR(['RMDIR' is required])
+   AC_MSG_ERROR(['rmdir' is required])
+fi
+AC_PATH_PROG([GZIP], [gzip])
+if test -z "${GZIP}" ; then
+   AC_MSG_ERROR(['gzip' is required])
 fi
 
-# check for optional programs
-AC_PATH_PROG([PDFLATEX], [pdflatex])
-AM_CONDITIONAL([HAVE_PDFLATEX], [test -z "${PDFLATEX}"])
+# check for libc and libc-dev
+AC_SEARCH_LIBS([perror], [c], ,
+  AC_MSG_ERROR([perror() is required (presumably in libc)]))
+AC_CHECK_HEADER([stdio.h], ,
+  AC_MSG_ERROR(['stdio.h' not found: need libc development files]))
 
-# check for libraries
-AC_CHECK_LIB([c], [perror])
-AC_CHECK_LIB([dl], [dlsym])
-AC_CHECK_LIB([gsm], [gsm_decode])
-AC_CHECK_LIB([m], [cosf])
-AC_CHECK_LIB([popt], [poptGetArg])
-AC_CHECK_LIB([pthread], [pthread_mutex_lock])
-AC_CHECK_LIB([gcrypt], [gcry_md_setkey])
+# check for libdl and libdl-dev
+AC_SEARCH_LIBS([dlsym], [dl], ,
+  AC_MSG_ERROR([dlsym() is required (presumably in libdl)]))
+AC_CHECK_HEADER([dlfcn.h], ,
+  AC_MSG_ERROR(['dlfcn.h' not found: need libdl development files]))
+
+# check for libgsm and libgsm-dev
+AC_SEARCH_LIBS([gsm_decode], [gsm], ,
+  AC_MSG_ERROR([gsm_decode() is required (presumably in libgsm)]))
+AC_CHECK_HEADER([gsm.h], ,
+  AC_MSG_ERROR(['gsm.h' not found: need libgsm development files]))
+
+# check for libm and libm-dev
+AC_SEARCH_LIBS([cosf], [m], ,
+  AC_MSG_ERROR([cosf() is required (presumably in libm)]))
+AC_CHECK_HEADER([math.h], ,
+  AC_MSG_ERROR(['math.h' not found: need libm development files]))
+
+# check for libpopt and libpopt-dev
+AC_SEARCH_LIBS([poptGetArg], [popt], ,
+  AC_MSG_ERROR([poptGetArg() is required (presumably in libpopt)]))
+AC_CHECK_HEADER([popt.h], ,
+  AC_MSG_ERROR(['popt.h' not found: need libpopt development files]))
+
+# check for libpthread and libpthread-dev
+AC_SEARCH_LIBS([pthread_mutex_lock], [pthread], ,
+  AC_MSG_ERROR([pthread_mutex_lock() is required (presumably in libpthread)]))
+AC_CHECK_HEADER([pthread.h], ,
+  AC_MSG_ERROR(['pthread.h' not found: need libpthread development files]))
+
+# check for libgcrypt and libgcrypt-dev
+AC_SEARCH_LIBS([gcry_md_setkey], [gcrypt], ,
+  AC_MSG_ERROR([gcry_md_setkey() is required (presumably in libgcrypt)]))
+AC_CHECK_HEADER([gcrypt.h], ,
+  AC_MSG_ERROR(['gcrypt.h' not found: need libgcrypt development files]))
 
 # check for ALSA and OSS
-AC_CHECK_LIB([asound], [snd_pcm_readi])
-AM_CONDITIONAL([HAVE_ALSA], [test "${HAVE_LIBASOUND}"])
+AM_CONDITIONAL([HAVE_ALSA], [false])
+AC_SEARCH_LIBS([snd_pcm_readi], [asound],
+  AC_CHECK_HEADER([alsa/version.h], AM_CONDITIONAL([HAVE_ALSA], [true])))
+AM_CONDITIONAL([HAVE_OSS], [false])
 AC_CHECK_HEADERS([sys/soundcard.h soundcard.h machine/soundcard.h],
-    [HAVE_OSS=1], [HAVE_OSS=0])
-AM_CONDITIONAL([HAVE_OSS], [test "${HAVE_OSS}"])
-
-# check for Tcl
-AC_CHECK_LIB([tcl8.4], [Tcl_CreateCommand], [TCL_VERSION=8.4])
-AM_CONDITIONAL([HAVE_TCL], [test -n "${TCL_VERSION}"])
-AM_COND_IF([HAVE_TCL], [
-    AC_SUBST([TCL_CFLAGS], [-I/usr/include/tcl${TCL_VERSION}])
-    AC_SUBST([TCL_LIBS], [-ltcl${TCL_VERSION}])
-])
-
-# look for libsigc++
-PKG_CHECK_MODULES([SIGC], [sigc++-1.2])
+  AM_CONDITIONAL([HAVE_OSS], [true]))
 
 # look for speex and #define USE_SPEEX=1 if found
-PKG_CHECK_MODULES([SPEEX], [speex], [USE_SPEEX=1], [USE_SPEEX=0])
-AM_CONDITIONAL([USE_SPEEX], [test "${USE_SPEEX}"])
-AM_COND_IF([USE_SPEEX], AC_DEFINE([USE_SPEEX], [1], [Use SPEEX]))
+AM_CONDITIONAL([USE_SPEEX], [false])
+PKG_CHECK_MODULES([SPEEX], [speex], [
+  AC_DEFINE([USE_SPEEX], [1], [Use SPEEX])
+  AM_CONDITIONAL([USE_SPEEX], [true])
+  ], [
+  # this override is required to prevent exit (with PKG_CHECK_MODULES only)
+  ]
+)
+
+# look for libsigc++
+PKG_CHECK_MODULES([SIGC], [sigc++-1.2], [],
+  AC_MSG_ERROR(['libsigc++-1.2 is required']))
+
+# check for Tcl
+AC_SEARCH_LIBS([Tcl_CreateCommand], [tcl8.4], [
+  TCL_VERSION=8.4
+  AC_SUBST([TCL_CFLAGS], [-I/usr/include/tcl${TCL_VERSION}])
+  AC_SUBST([TCL_LIBS], [-ltcl${TCL_VERSION}])
+  AC_CHECK_HEADER([tcl${TCL_VERSION}/tcl.h], ,
+    AC_MSG_ERROR(['tcl.h' not found: need libtcl development files]))
+  ], [
+  AC_MSG_ERROR([Tcl_CreateCommand() is required (presumably in libtcl8.4)])
+])
 
 # look for qt-mt, or otherwise just qt; find moc
-PKG_CHECK_MODULES([QT], [qt-mt], [QT_VARIANT=qt-mt],
-    [PKG_CHECK_MODULES([QT], [qt], [QT_VARIANT=qt])])
+PKG_CHECK_MODULES([QT], [qt-mt], [QT_VARIANT=qt-mt], [
+  PKG_CHECK_MODULES([QT], [qt], [QT_VARIANT=qt], [
+    ], [
+    # this override is required to prevent exit (with PKG_CHECK_MODULES only)
+    ]
+  )
+  ], [
+  # this override is required to prevent exit (with PKG_CHECK_MODULES only)
+  ]
+)
 AM_CONDITIONAL([HAVE_QT], [test -n "${QT_VARIANT}"])
 AM_COND_IF([HAVE_QT], [
-    AC_PATH_PROG([QT_MOC], [moc])
-    AC_PATH_PROG([QT_UIC], [uic])
-    AC_PATH_PROG([QT_LRELEASE], [lrelease])
+  AC_PATH_PROG([QT_MOC], [moc])
+  AC_PATH_PROG([QT_UIC], [uic])
+  AC_PATH_PROG([QT_LRELEASE], [lrelease])
 ])
 
 # Check for header files.
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h locale.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termios.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h locale.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termios.h unistd.h], ,
+  AC_MSG_ERROR([required headers not found])
+)
 
 # Check for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -146,10 +215,10 @@ AC_SUBST([VERSIONFILE], [${VERSIONFILE}])
 VERSIONHEADERS=
 while read LINE
 do
-      if `echo ${LINE} | grep -q -e "^.*=.*$" > /dev/null 2>&1`; then 
-          PKGNAME="`echo ${LINE} | ${AWK} -F\= '/^.*=.*$/ {print $1}'`" 
+      if `${ECHO} ${LINE} | ${GREP} -q -e "^.*=.*$" > /dev/null 2>&1`; then 
+          PKGNAME="`${ECHO} ${LINE} | ${AWK} -F\= '/^.*=.*$/ {print $1}'`" 
           PKGVAR="${PKGNAME}_VERSION"
-          PKGVERSION="`echo ${LINE} | ${AWK} -F\= '/^.*=.*$/ {print $2}'`" 
+          PKGVERSION="`${ECHO} ${LINE} | ${AWK} -F\= '/^.*=.*$/ {print $2}'`" 
           VERSIONHEADERS="${VERSIONHEADERS} ${PKGNAME}.h"
           AC_DEFINE_UNQUOTED([${PKGVAR}], ["${PKGVERSION}"])
           export ${PKGVAR}=${PKGVERSION}
@@ -159,23 +228,106 @@ AC_SUBST([VERSIONHEADERS], [${VERSIONHEADERS}])
 
 # export version numbers to Makefiles for library versioning
 shlib_version() {
-  echo $1 | awk -F. '/^.*\..*\..*(\..*)?$/ {print $1 "." $2 "." $3}'
+  ${ECHO} $1 | ${AWK} -F. '/^.*\..*\..*(\..*)?$/ {print $1 "." $2 "." $3}'
 }
-AC_SUBST([LIBASYNC_SHLIB_VERSION], [`shlib_version ${LIBASYNC_VERSION}`])
-AC_SUBST([ECHOLIB_SHLIB_VERSION], [`shlib_version ${ECHOLIB_VERSION}`])
+AC_SUBST([LIBASYNC_SHLIB_VERSION], [`shlib_version "${LIBASYNC_VERSION}"`])
+AC_SUBST([ECHOLIB_SHLIB_VERSION], [`shlib_version "${ECHOLIB_VERSION}"`])
 
-# local definitions
-AC_DEFINE([INTERNAL_SAMPLE_RATE], [8000])
+# program configuration definitions
+AC_DEFINE([INTERNAL_SAMPLE_RATE], [8000], [Audio sample rate in Hz])
+
+# build system definitions
+TOP_SRCDIR='''$(top_srcdir)'''
+TOP_BUILDDIR='''$(top_builddir)'''
+
+# Path to <common.h> and version headers
+COMMON_H="-I${TOP_SRCDIR}/misc -I${TOP_BUILDDIR}"
+# Some general definitions
+LOCAL_DEFS="-DT_LINUX"
+# Set some standard build options
+AC_SUBST([AM_CPPFLAGS], ["${LOCAL_DEFS} ${COMMON_H}"])
+
+# Relative paths for the libasync series from top
+ASYNC_SUBDIR="async"
+ASYNC_CORE="${ASYNC_SUBDIR}/core"
+ASYNC_CPP="${ASYNC_SUBDIR}/cpp"
+ASYNC_AUDIO="${ASYNC_SUBDIR}/audio"
+ASYNC_QT="${ASYNC_SUBDIR}/qt"
+
+# async core
+ASYNC_CORE_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_CORE} ${SIGC_CFLAGS}"
+ASYNC_CORE_LIBS="${TOP_BUILDDIR}/${ASYNC_CORE}/libasynccore.la ${SIGC_LIBS}"
+AC_SUBST([ASYNC_CORE_CFLAGS], [${ASYNC_CORE_CFLAGS}])
+AC_SUBST([ASYNC_CORE_LIBS], [${ASYNC_CORE_LIBS}])
+
+# async cpp
+ASYNC_CPP_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_CPP} ${ASYNC_CORE_CFLAGS}"
+ASYNC_CPP_LIBS="${TOP_BUILDDIR}/${ASYNC_CPP}/libasynccpp.la ${ASYNC_CORE_LIBS}"
+AC_SUBST([ASYNC_CPP_CFLAGS], [${ASYNC_CPP_CFLAGS}])
+AC_SUBST([ASYNC_CPP_LIBS], [${ASYNC_CPP_LIBS}])
+
+# async audio
+ASYNC_AUDIO_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_AUDIO} ${ASYNC_CORE_CFLAGS} ${SPEEX_CFLAGS}"
+ASYNC_AUDIO_LIBS="${TOP_BUILDDIR}/${ASYNC_AUDIO}/libasyncaudio.la ${ASYNC_CORE_LIBS} ${SPEEX_LIBS}"
+AC_SUBST([ASYNC_AUDIO_CFLAGS], [${ASYNC_AUDIO_CFLAGS}])
+AC_SUBST([ASYNC_AUDIO_LIBS], [${ASYNC_AUDIO_LIBS}])
+
+# async qt
+AM_COND_IF([HAVE_QT], [
+    ASYNC_QT_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_QT} ${QT_CFLAGS} ${ASYNC_CORE_CFLAGS}"
+    ASYNC_QT_LIBS="${TOP_BUILDDIR}/${ASYNC_QT}/libasyncqt.la ${QT_LIBS} ${ASYNC_CORE_LIBS}"
+    AC_SUBST([ASYNC_QT_CFLAGS], [${ASYNC_QT_CFLAGS}])
+    AC_SUBST([ASYNC_QT_LIBS], [${ASYNC_QT_LIBS}])
+])
+
+# Paths for libecholib
+ECHOLIB=echolib
+ECHOLIB_CFLAGS="-I${TOP_SRCDIR}/${ECHOLIB} ${ASYNC_AUDIO_CFLAGS} ${ASYNC_CPP_CFLAGS}"
+ECHOLIB_LIBS="${TOP_BUILDDIR}/${ECHOLIB}/libecholib.la ${ASYNC_AUDIO_LIBS} ${ASYNC_CPP_LIBS}"
+AC_SUBST([ECHOLIB_CFLAGS], [${ECHOLIB_CFLAGS}])
+AC_SUBST([ECHOLIB_LIBS], [${ECHOLIB_LIBS}])
+
+# paths for liblocationinfo
+LOCATIONINFO=locationinfo
+LOCATIONINFO_CFLAGS="-I${TOP_SRCDIR}/${LOCATIONINFO}"
+LOCATIONINFO_LIBS="${TOP_BUILDDIR}/${LOCATIONINFO}/liblocationinfo.a"
+AC_SUBST([LOCATIONINFO_CFLAGS], [${LOCATIONINFO_CFLAGS}])
+AC_SUBST([LOCATIONINFO_LIBS], [${LOCATIONINFO_LIBS}])
+
+# paths for libtrx
+TRX=svxlink/trx
+TRX_CFLAGS="-I${TOP_SRCDIR}/${TRX} ${SIGC_CFLAGS} ${ASYNC_AUDIO_CFLAGS}"
+TRX_LIBS="${TOP_BUILDDIR}/${TRX}/libtrx.a ${SIGC_LIBS} ${ASYNC_AUDIO_LIBS}"
+AC_SUBST([TRX_CFLAGS], [${TRX_CFLAGS}])
+AC_SUBST([TRX_LIBS], [${TRX_LIBS}])
+
+# this is needed to compile svxlink
+AC_SUBST([SVXLINK_CFLAGS], ["-I${TOP_SRCDIR}/svxlink/svxlink"])
+
+# libtool options for svxlink modules
+AC_SUBST([LIBTOOL_MODULE_OPTIONS],
+    ["-no-undefined -avoid-version -shared"])
+
+# defaults to -I${srcdir}, important to avoid Tx.h confusion in 'svxlink'
+AC_SUBST([DEFAULT_INCLUDES], [])
 
 # install paths
 AC_SUBST([PLUGINDIR], ['$(libdir)/svxlink'])
 AC_SUBST([SITECONFDIR], ['$(sysconfdir)/svxlink'])
 AC_SUBST([MODULECONFDIR], ['$(SITECONFDIR)/svxlink.d'])
-AC_SUBST([TCLMODULEDIR], ['$(datadir)/modules.d'])
-AC_SUBST([EVENTDIR], ['$(datadir)/events.d'])
-AC_SUBST([SPOOLDIR], ['$(prefix)/spool/svxlink'])
+AC_SUBST([TCLMODULEDIR], ['$(pkgdatadir)/modules.d'])
+AC_SUBST([EVENTDIR], ['$(pkgdatadir)/events.d'])
+AC_SUBST([SPOOLDIR], ['$(localstatedir)/spool/svxlink'])
 AC_SUBST([QSORECORDERDIR], ['$(SPOOLDIR)/qso_recorder'])
 AC_SUBST([VOICEMAILDIR], ['$(SPOOLDIR)/voice_mail'])
+AC_SUBST([PROPAGATIONDIR], ['$(SPOOLDIR)/propagation_monitor'])
+AC_SUBST([VHFDXDIR], ['$(PROPAGATIONDIR)/vhfdx'])
+AC_SUBST([DXROBOTDIR], ['$(PROPAGATIONDIR)/dxrobot'])
+AC_SUBST([DESKTOPDIR], ['$(datadir)/applications'])
+AC_SUBST([ICONDIR], ['$(datadir)/icons'])
+AC_SUBST([QTELSHAREDIR], ['$(datadir)/qtel'])
+AC_SUBST([QTELSOUNDDIR], ['$(QTELSHAREDIR)/sounds'])
+AC_SUBST([QTELMESSAGEDIR], '[$(QTELSHAREDIR)/translations'])
 
 # auxiliary install information
 #AC_SUBST([SVXLINK_USER], [svxlink])

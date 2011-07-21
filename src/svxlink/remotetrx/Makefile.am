@@ -1,5 +1,3 @@
-# Import some general items
-include $(top_srcdir)/common.mk
 
 bin_PROGRAMS = remotetrx
 
@@ -22,8 +20,8 @@ EXTRA_DIST = Makefile.default
 
 remotetrx_SOURCES = $(DIST_CPP) $(DIST_H)
 
-AM_CPPFLAGS += $(ASYNC_CPP_CFLAGS) $(TRX_CFLAGS)
-LDADD = $(ASYNC_CPP_LIBS) $(TRX_LIBS)
+AM_CPPFLAGS += @ASYNC_CPP_CFLAGS@ @TRX_CFLAGS@
+LDADD = @ASYNC_CPP_LIBS@ @TRX_LIBS@
 
 siteconfdir = @SITECONFDIR@
 dist_siteconf_DATA = remotetrx.conf

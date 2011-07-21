@@ -1,6 +1,5 @@
-# Import some general items
-include $(top_srcdir)/common.mk
 
+# required to access local macros in the m4 directory
 ACLOCAL_AMFLAGS = -I m4
 
 BUILD_ALWAYS = \
@@ -41,7 +40,7 @@ EXTRA_DIST = \
 		template.h
 
 
-# this could be used to automatically keep the latest libtool version in-tree
-#LIBTOOL_DEPS = @LIBTOOL_DEPS@
-#libtool: $(LIBTOOL_DEPS)
-#	$(SHELL) ./config.status libtool
+# this automatically keeps the latest libtool version in-tree
+LIBTOOL_DEPS = @LIBTOOL_DEPS@
+libtool: $(LIBTOOL_DEPS)
+	$(SHELL) ./config.status libtool

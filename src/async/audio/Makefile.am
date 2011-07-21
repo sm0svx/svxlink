@@ -1,5 +1,3 @@
-# Import some general items
-include $(top_srcdir)/common.mk
 
 # The name of the library
 lib_LTLIBRARIES = libasyncaudio.la
@@ -114,10 +112,33 @@ EXTRA_libasyncaudio_la_SOURCES = $(SPEEX_CPP) $(SPEEX_H) \
 		$(ALSA_CPP) $(ALSA_H) $(OSS_CPP) $(OSS_H)
 
 # Extra compiler flags
-AM_CPPFLAGS += $(ASYNC_AUDIO_CFLAGS)
+AM_CPPFLAGS += @ASYNC_AUDIO_CFLAGS@
 
-libasyncaudio_la_LDFLAGS = -release @LIBASYNC_SHLIB_VERSION@
+RELEASE = @LIBASYNC_SHLIB_VERSION@
+
+libasyncaudio_la_LDFLAGS = -release $(RELEASE)
 
 # Files that should be packaged with the sources
 EXTRA_DIST = fidlib.txt SampleFifo.cpp SampleFifo.h Makefile.default
 
+
+install-exec-hook:
+	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	for lafile in $(lib_LTLIBRARIES) ; \
+	do \
+	echo "Removing $${lafile} from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${lafile} ; \
+	done
+
+uninstall-hook:
+	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	for lafile in $(lib_LTLIBRARIES) ; \
+	do \
+	LIBBASE=`echo $${lafile} | ${AWK} -F. '/^.*\.la$$/ {print $$1}'` ; \
+	echo "Removing $${LIBBASE}.a from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBBASE}.a ; \
+	echo "Removing $${LIBBASE}.so from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBBASE}.so ; \
+	echo "Removing $${LIBBASE}-$(RELEASE).so from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBBASE}-$(RELEASE).so ; \
+	done

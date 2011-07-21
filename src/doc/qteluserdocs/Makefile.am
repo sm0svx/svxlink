@@ -1,3 +1,4 @@
+
 QTELUSERDOC = $(builddir)/qteluserdoc.pdf
 
 DOCSOURCES = \
@@ -14,16 +15,11 @@ CLEANFILES = $(QTELUSERDOC) \
 		qteluserdoc.lof \
 		qteluserdoc.toc
 
-
-if HAVE_PDFLATEX
-
 BUILT_SOURCES = $(QTELUSERDOC)
 
-# install in $datadir
+# install in $docdir
 doc_DATA = $(QTELUSERDOC)
 
 $(QTELUSERDOC): $(DOCSOURCES)
-	echo Building documentation \'$(QTELUSERDOC)\'.
-	TEXINPUTS="$(srcdir):" @PDFLATEX@ $< > /dev/null
-
-endif
+	$(AM_V_GEN)TEXINPUTS="$(srcdir):" \
+		@PDFLATEX@ -interaction nonstopmode $< > /dev/null

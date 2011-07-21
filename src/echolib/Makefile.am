@@ -1,4 +1,3 @@
-include $(top_srcdir)/common.mk
 
 # The name of the library
 lib_LTLIBRARIES = libecholib.la
@@ -30,7 +29,7 @@ pkginclude_HEADERS = $(ECHOLIB_H_PUBLIC)
 BUILT_SOURCES = libecholib.la
 
 # Programs to compile
-bin_PROGRAMS = \
+noinst_PROGRAMS = \
 		echolib_test \
 		EchoLinkDispatcher_demo \
 		EchoLinkDirectory_demo \
@@ -50,10 +49,34 @@ EchoLinkDirectory_demo_SOURCES = \
 EchoLinkQso_demo_SOURCES = \
 		EchoLinkQso_demo.cpp
 
-AM_CPPFLAGS += $(ECHOLIB_CFLAGS)
-LDADD = $(ECHOLIB_LIBS)
+AM_CPPFLAGS += @ECHOLIB_CFLAGS@
+LDADD = @ECHOLIB_LIBS@
 
-libecholib_la_LDFLAGS = -release @ECHOLIB_SHLIB_VERSION@
+RELEASE = @ECHOLIB_SHLIB_VERSION@
+
+libecholib_la_LDFLAGS = -release $(RELEASE)
 
 EXTRA_DIST = ChangeLog echolib_test.cfg mainpage.dox messages.txt \
 		Makefile.default
+
+
+install-exec-hook:
+	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	for lafile in $(lib_LTLIBRARIES) ; \
+	do \
+	echo "Removing $${lafile} from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${lafile} ; \
+	done
+
+uninstall-hook:
+	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	for lafile in $(lib_LTLIBRARIES) ; \
+	do \
+	LIBBASE=`echo $${lafile} | ${AWK} -F. '/^.*\.la$$/ {print $$1}'` ; \
+	echo "Removing $${LIBBASE}.a from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBBASE}.a ; \
+	echo "Removing $${LIBBASE}.so from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBBASE}.so ; \
+	echo "Removing $${LIBBASE}-$(RELEASE).so from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBBASE}-$(RELEASE).so ; \
+	done

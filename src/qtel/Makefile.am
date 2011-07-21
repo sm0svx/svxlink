@@ -1,5 +1,3 @@
-# Import some general items
-include $(top_srcdir)/common.mk
 
 SUBDIRS = translations
 
@@ -41,8 +39,9 @@ qtel_SOURCES = $(DIST_CPP) $(DIST_H_MOC) $(DIST_H_NO_MOC)
 nodist_qtel_SOURCES = $(MOC_CPP) $(UIC_CPP)
 
 # Set some flags for compilation and linking
-AM_CPPFLAGS += $(ECHOLIB_CFLAGS) $(ASYNC_QT_CFLAGS) -I$(builddir)
-LDADD = $(ECHOLIB_LIBS) $(ASYNC_QT_LIBS)
+# FIXME - why do we need -I$builddir here?
+AM_CPPFLAGS += @ECHOLIB_CFLAGS@ @ASYNC_QT_CFLAGS@ -I$(builddir)
+LDADD = @ECHOLIB_LIBS@ @ASYNC_QT_LIBS@
 
 EXTRA_DIST = \
 		$(FORMS) \
@@ -50,13 +49,27 @@ EXTRA_DIST = \
 		qtel.pro \
 		Makefile.default
 
-sounddir = $(datadir)/sounds
+sounddir = @QTELSOUNDDIR@
 dist_sound_DATA = connect.raw
 
-desktopdir = $(datarootdir)/applications
+desktopdir = @DESKTOPDIR@
 dist_desktop_DATA = qtel.desktop
 
-icondir = $(datarootdir)/icons
+icondir = @ICONDIR@
 dist_icon_DATA = images/link.xpm
 
 
+# rules for QT processing
+.ui.h:
+	$(AM_V_GEN)@QT_UIC@ -o $@ $<
+
+.h.moc.cpp:
+	$(AM_V_GEN)@QT_MOC@ -o $@ $<
+
+.ui.uic.cpp:
+	$(AM_V_GEN)@QT_UIC@ -o $@ -impl $*.h $<
+
+#.h.uic.cpp:
+#	(AM_V_GEN)@QT_UIC@ -o $@ -impl $< $(srcdir)/$(<:.h=.ui)
+
+SUFFIXES = .h .ui .moc.cpp .uic.cpp

@@ -1,4 +1,3 @@
-include $(top_srcdir)/common.mk
 
 BUILD_ALWAYS = \
 		core \

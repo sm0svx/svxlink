@@ -1,5 +1,17 @@
-# Subdirectories in the order of compilation.
-SUBDIRS	= man qteluserdocs
+
+BUILD_ALWAYS = \
+		man
+
+BUILD_WITH_QTELUSERDOCS = \
+		qteluserdocs
+
+if WITH_QTELUSERDOCS
+MAYBE_QTELUSERDOCS = $(BUILD_WITH_QTELUSERDOCS)
+endif
+
+SUBDIRS = $(BUILD_ALWAYS) $(MAYBE_QTELUSERDOCS)
+
+DIST_SUBDIRS = $(BUILD_ALWAYS) $(BUILD_WITH_QTELUSERDOCS)
 
 EXTRA_DIST = \
 		LocalRx.dia \

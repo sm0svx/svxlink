@@ -1,7 +1,3 @@
-# Import some general items
-include $(top_srcdir)/common.mk
-
-all-local: $(TRANSLATIONS)
 
 TRANSLATIONS = \
 		qtel_tmpl.ts \
@@ -16,14 +12,18 @@ TRANSLATIONS = \
 		qtel_ja.ts \
 		qtel_es.ts
 
-LRELEASE_GENERATED = $(TRANSLATIONS:.ts=.qm)
+QT_MESSAGES = $(TRANSLATIONS:.ts=.qm)
+
+BUILT_SOURCES = $(QT_MESSAGES)
+
+CLEANFILES = $(BUILT_SOURCES)
+
+messagedir = @QTELMESSAGEDIR@
+message_DATA = $(QT_MESSAGES)
 
 EXTRA_DIST = $(TRANSLATIONS)
 
-CLEANFILES = $(LRELEASE_GENERATED)
-
-SUFFIXES += .qm .ts
+SUFFIXES = .qm .ts
 
 .ts.qm:
-	echo Creating translation file $@...
-	@QT_LRELEASE@ $<
+	$(AM_V_GEN)@QT_LRELEASE@ $<

@@ -1,8 +1,6 @@
-# Import some general items
-include $(top_srcdir)/common.mk
 
 # The name of the library
-lib_LTLIBRARIES = liblocationinfo.la
+noinst_LIBRARIES = liblocationinfo.a
 
 DIST_CPP = \
 		AprsTcpClient.cpp \
@@ -16,13 +14,13 @@ DIST_H = \
 		LocationInfo.h
 
 # Sources needed to build the library
-liblocationinfo_la_SOURCES = $(DIST_CPP) $(DIST_H)
+liblocationinfo_a_SOURCES = $(DIST_CPP) $(DIST_H)
 
 # Extra compiler flags
-AM_CPPFLAGS += $(ECHOLIB_CFLAGS)
+AM_CPPFLAGS += @ECHOLIB_CFLAGS@
 
 # Headers that define the API of this library
-pkginclude_HEADERS = $(DIST_H)
+#pkginclude_HEADERS = $(DIST_H)
 
 # Files that should be packaged with the sources
 EXTRA_DIST = Makefile.default

@@ -1,7 +1,4 @@
-# Import some general items
-include $(top_srcdir)/common.mk
-
-# The name & location of the plugin library
+# The name and location of the module
 plugindir = @PLUGINDIR@
 plugin_LTLIBRARIES = ModuleTemplate.la
 
@@ -15,10 +12,10 @@ DIST_H = \
 ModuleTemplate_la_SOURCES = $(DIST_CPP) $(DIST_H)
 
 # Extra compiler flags
-AM_CPPFLAGS += $(ASYNC_AUDIO_CFLAGS) $(SVXLINK_CFLAGS)
+AM_CPPFLAGS += @ASYNC_AUDIO_CFLAGS@ @SVXLINK_CFLAGS@
 
-ModuleTemplate_la_LIBADD = $(ASYNC_AUDIO_LIBS)
-ModuleTemplate_la_LDFLAGS = $(LIBTOOL_MODULE_OPTIONS)
+ModuleTemplate_la_LIBADD = @ASYNC_AUDIO_LIBS@
+ModuleTemplate_la_LDFLAGS = -module @LIBTOOL_MODULE_OPTIONS@
 
 # Files that should be packaged with the sources
 EXTRA_DIST = Makefile.default

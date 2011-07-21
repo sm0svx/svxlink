@@ -1,7 +1,5 @@
-# Import some general items
-include $(top_srcdir)/common.mk
 
-lib_LTLIBRARIES = libtrx.la
+noinst_LIBRARIES = libtrx.a
 
 # Sources needed to build the library
 DIST_CPP = \
@@ -64,11 +62,11 @@ DIST_H_PRIVATE = \
 
 DIST_H = $(DIST_H_PUBLIC) $(DIST_H_PRIVATE)
 
-libtrx_la_SOURCES = $(DIST_CPP) $(DIST_H)
+libtrx_a_SOURCES = $(DIST_CPP) $(DIST_H)
 
-AM_CPPFLAGS += $(TRX_CFLAGS)
+AM_CPPFLAGS += @TRX_CFLAGS@
 
-pkginclude_HEADERS = $(DIST_H_PUBLIC)
+#pkginclude_HEADERS = $(DIST_H_PUBLIC)
 
 # SpanDtmfDecoder is distributed but not built
 EXTRA_DIST = \

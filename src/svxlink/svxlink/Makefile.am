@@ -1,5 +1,3 @@
-# Import some general items
-include $(top_srcdir)/common.mk
 
 bin_PROGRAMS = svxlink
 
@@ -35,11 +33,10 @@ EXTRA_DIST = \
 
 svxlink_SOURCES = $(DIST_CPP) $(DIST_H)
 
-AM_CPPFLAGS += $(TCL_CFLAGS) $(ECHOLIB_CFLAGS) $(LOCATIONINFO_CFLAGS) \
-		$(TRX_CFLAGS)
+AM_CPPFLAGS += @TCL_CFLAGS@ @ECHOLIB_CFLAGS@ @LOCATIONINFO_CFLAGS@ @TRX_CFLAGS@
 
 # Libraries external to the project
-svxlink_LDADD = $(TCL_LIBS) $(ECHOLIB_LIBS) $(LOCATIONINFO_LIBS) $(TRX_LIBS)
+svxlink_LDADD = @TCL_LIBS@ @ECHOLIB_LIBS@ @LOCATIONINFO_LIBS@ @TRX_LIBS@
 
 # includefiles to export, going into $(includedir) as defined by automake
 pkginclude_HEADERS = \
@@ -50,10 +47,10 @@ pkginclude_HEADERS = \
 siteconfdir = @SITECONFDIR@
 dist_siteconf_DATA = $(srcdir)/svxlink.conf
 
-# this goes into $(datadir) as defined by automake
-dist_data_DATA = $(srcdir)/events.tcl
+# this goes into $(pkgdatadir) as defined by automake
+dist_pkgdata_DATA = $(srcdir)/events.tcl
 
-eventdir = $(EVENTDIR)
+eventdir = @EVENTDIR@
 dist_event_DATA = \
 		$(srcdir)/RepeaterLogic.tcl \
 		$(srcdir)/SimplexLogic.tcl \
@@ -64,8 +61,8 @@ dist_event_DATA = \
 		$(srcdir)/locale.tcl
 
 install-data-hook:
-	$(MKDIR_P) --mode 755 $(DESTDIR)@QSORECORDERDIR@
-	$(CHOWN) $(SVXLINK_USER).$(SVXLINK_GROUP) $(DESTDIR)@QSORECORDERDIR@
+	$(INSTALL) -d -m 755 -o @SVXLINK_USER@ -g @SVXLINK_GROUP@ \
+		$(DESTDIR)@QSORECORDERDIR@
 
 uninstall-hook:
 	$(RMDIR) $(DESTDIR)@QSORECORDERDIR@

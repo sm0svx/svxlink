@@ -1,5 +1,3 @@
-# Import some general items
-include $(top_srcdir)/common.mk
 
 # The name of the library
 lib_LTLIBRARIES	= libasynccore.la
@@ -41,12 +39,36 @@ DIST_H = $(DIST_H_PUBLIC) $(DIST_H_PRIVATE)
 libasynccore_la_SOURCES	= $(DIST_CPP) $(DIST_H)
 
 # Extra compiler flags
-AM_CPPFLAGS += $(ASYNC_CORE_CFLAGS)
+AM_CPPFLAGS += @ASYNC_CORE_CFLAGS@
 
-libasynccore_la_LDFLAGS = -release @LIBASYNC_SHLIB_VERSION@
+RELEASE = @LIBASYNC_SHLIB_VERSION@
+
+libasynccore_la_LDFLAGS = -release $(RELEASE)
 
 # Headers that define the API of this library
 pkginclude_HEADERS = $(DIST_H)
 
 # Files that should be packaged with the sources
 EXTRA_DIST = Makefile.default
+
+
+install-exec-hook:
+	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	for lafile in $(lib_LTLIBRARIES) ; \
+	do \
+	echo "Removing $${lafile} from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${lafile} ; \
+	done
+
+uninstall-hook:
+	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	for lafile in $(lib_LTLIBRARIES) ; \
+	do \
+	LIBBASE=`echo $${lafile} | ${AWK} -F. '/^.*\.la$$/ {print $$1}'` ; \
+	echo "Removing $${LIBBASE}.a from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBBASE}.a ; \
+	echo "Removing $${LIBBASE}.so from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBBASE}.so ; \
+	echo "Removing $${LIBBASE}-$(RELEASE).so from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBBASE}-$(RELEASE).so ; \
+	done
