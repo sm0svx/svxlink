@@ -158,6 +158,7 @@ class FileReader : public SigC::Object
     int     head, tail;
     int     buf_size;
     bool    is_full;
+    bool    is_eof;
     
     void onDataAvail(FdWatch *watch);
     bool fillBuffer(void);

@@ -118,7 +118,7 @@ using namespace Async;
 
 FileReader::FileReader(int buf_size)
   : fd(-1), rd_watch(0), buffer(0), head(0), tail(0), buf_size(buf_size),
-    is_full(false)
+    is_full(false), is_eof(false)
 {
   buffer = new char [buf_size];
 } /* FileReader::FileReader */
@@ -164,6 +164,7 @@ bool FileReader::close(void)
   fd = -1;
   head = tail = 0;
   is_full = false;
+  is_eof = false;
   
   delete rd_watch;
   return true;
@@ -177,8 +178,15 @@ int FileReader::read(void *buf, int len)
   {
     return -1;
   }
+
+  int avail = bytesInBuffer();
+  if (!is_eof && (avail < len))
+  {
+    cerr << "FileReader: Buffer underrun" << endl;
+    return -1;
+  }
   
-  int bytes_from_buffer = min(len, bytesInBuffer());
+  int bytes_from_buffer = min(avail, len);
   int written = 0;
   while (bytes_from_buffer > 0)
   {
@@ -230,6 +238,7 @@ bool FileReader::fillBuffer(void)
         if ((errno == EIO) || (errno == EBADF) || (errno == EINVAL))
           close();
       }
+      is_eof |= (cnt == 0);
       break;
     }
     
