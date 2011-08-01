@@ -109,7 +109,7 @@ class SatRx : public AudioSource, public SigC::Object
 	      slot(*this, &SatRx::onSelcallSequenceDetected));
       rx->squelchOpen.connect(slot(*this, &SatRx::rxSquelchOpen));
 
-      fifo = new AudioFifo(fifo_length_ms * INTERNAL_SAMPLE_RATE / 1000);
+      fifo = new AudioFifo(max(10, fifo_length_ms) * INTERNAL_SAMPLE_RATE / 1000);
       fifo->enableOutput(false);
       fifo->enableBuffering(fifo_length_ms > 0);
 
@@ -148,10 +148,7 @@ class SatRx : public AudioSource, public SigC::Object
       rx->mute(do_mute);
       if (do_mute)
       {
-      	if (fifo != 0)
-        {
-          fifo->clear();
-        }
+        fifo->clear();
 	setSquelchOpen(false);
 	dtmf_buf.clear();
 	selcall_buf.clear();
@@ -219,7 +216,7 @@ class SatRx : public AudioSource, public SigC::Object
       }
       else
       {
-      	if ((fifo == 0) || fifo->empty())
+      	if (fifo->empty())
 	{
 	  setSquelchOpen(false);
 	}
