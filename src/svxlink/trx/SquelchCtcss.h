@@ -162,7 +162,7 @@ class SquelchCtcss : public Squelch
       }
 
       det = new ToneDetector(ctcss_fq, 8.0f);
-      det->setSnrThresh(ctcss_thresh);
+      det->setPeakThresh(ctcss_thresh);
       det->activated.connect(slot(*this, &SquelchCtcss::setSignalDetected));
 
       return true;

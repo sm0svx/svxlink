@@ -131,13 +131,13 @@ class ToneDetector : public SigC::Object, public Async::AudioSink
 {
   public:
     ToneDetector(float tone_hz, float width_hz, int det_delay_ms = 0);
-    void setDetectionDelay(int new_delay_ms);
+    void setDetectionDelay(int delay_ms);
     int detectionDelay(void) const;
-    void setGapDelay(int new_delay_ms);
+    void setGapDelay(int delay_ms);
     int gapDelay(void) const;
     bool isActivated(void) const { return is_activated; }
     float toneFq(void) const { return tone_fq; }
-    void setSnrThresh(float thresh) { peak_thresh = exp10f(thresh/10.0f); }
+    void setPeakThresh(float thresh) { peak_thresh = exp10f(thresh/10.0f); }
     void reset(void);
     
     virtual int writeSamples(const float *buf, int len);

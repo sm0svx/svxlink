@@ -509,7 +509,7 @@ bool LocalRx::initialize(void)
   {
     ToneDetector *calldet = new ToneDetector(1750, 50, 100);
     assert(calldet != 0);
-    calldet->setSnrThresh(10);
+    calldet->setPeakThresh(13);
     calldet->activated.connect(slot(*this, &LocalRx::tone1750detected));
     splitter->addSink(calldet, true);
     cout << "Enabling 1750Hz muting\n";
@@ -562,7 +562,7 @@ bool LocalRx::addToneDetector(float fq, int bw, float thresh,
   //    	 fq, bw, required_duration);
   ToneDetector *det = new ToneDetector(fq, bw, required_duration);
   assert(det != 0);
-  det->setSnrThresh(thresh);
+  det->setPeakThresh(thresh);
   det->detected.connect(toneDetected.slot());
   
   tone_dets->addSink(det, true);

@@ -37,7 +37,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <cstring>
 #include <cmath>
-#include <cassert>
 #include <iostream>
 #include <algorithm>
 
@@ -79,8 +78,8 @@ using namespace Async;
  ****************************************************************************/
 
 #define DEFAULT_PEAK_THRESH	10.0	// 10dB
-#define DEFAULT_DET_POSITIVES	3
-#define DEFAULT_GAP_NEGATIVES	2
+#define DEFAULT_DET_POSITIVES	4
+#define DEFAULT_GAP_NEGATIVES	4
 #define DEFAULT_ENERGY_THRESH	0.1f
 
 
@@ -137,7 +136,8 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 ToneDetector::ToneDetector(float tone_hz, float width_hz, int det_delay_ms)
-  : tone_fq(tone_hz), block_len(0), samples_left(0),
+  : tone_fq(tone_hz), det_delay(DEFAULT_DET_POSITIVES),
+    gap_delay(DEFAULT_GAP_NEGATIVES), block_len(0), samples_left(0),
     is_activated(false), last_active(false), peak_thresh(DEFAULT_PEAK_THRESH),
     stable_count(0)
 {
@@ -161,7 +161,6 @@ ToneDetector::ToneDetector(float tone_hz, float width_hz, int det_delay_ms)
   }
 
   setDetectionDelay(det_delay_ms);
-  setGapDelay(0);
   reset();
 } /* ToneDetector::ToneDetector */
 
@@ -183,12 +182,11 @@ void ToneDetector::reset(void)
 } /* ToneDetector::reset */
 
 
-void ToneDetector::setDetectionDelay(int new_delay_ms)
+void ToneDetector::setDetectionDelay(int delay_ms)
 {
-  if (new_delay_ms > 0)
+  if (delay_ms > 0)
   {
-    int block_time = block_len * 1000 / INTERNAL_SAMPLE_RATE;
-    det_delay = (new_delay_ms-1) / block_time + 1;
+    det_delay = ceil(delay_ms * INTERNAL_SAMPLE_RATE / (block_len * 1000.0));
   }
   else
   {
@@ -200,15 +198,14 @@ void ToneDetector::setDetectionDelay(int new_delay_ms)
 int ToneDetector::detectionDelay(void) const
 {
   return det_delay * block_len * 1000 / INTERNAL_SAMPLE_RATE;
-}
+} /* ToneDetector::detectionDelay */
 
 
-void ToneDetector::setGapDelay(int new_delay_ms)
+void ToneDetector::setGapDelay(int delay_ms)
 {
-  if (new_delay_ms > 0)
+  if (delay_ms > 0)
   {
-    int block_time = block_len * 1000 / INTERNAL_SAMPLE_RATE;
-    gap_delay = (new_delay_ms-1) / block_time + 1;
+    gap_delay = ceil(delay_ms * INTERNAL_SAMPLE_RATE / (block_len * 1000.0));
   }
   else
   {
@@ -220,7 +217,7 @@ void ToneDetector::setGapDelay(int new_delay_ms)
 int ToneDetector::gapDelay(void) const
 {
   return gap_delay * block_len * 1000 / INTERNAL_SAMPLE_RATE;
-}
+} /* ToneDetector::gapDelay */
 
 
 int ToneDetector::writeSamples(const float *buf, int len)
