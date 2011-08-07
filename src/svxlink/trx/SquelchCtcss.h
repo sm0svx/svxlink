@@ -124,7 +124,7 @@ class SquelchCtcss : public Squelch
     /**
      * @brief 	Destructor
      */
-    ~SquelchCtcss(void)
+    virtual ~SquelchCtcss(void)
     {
       delete det;
     }
@@ -135,13 +135,8 @@ class SquelchCtcss : public Squelch
      * @param 	rx_name The name of the RX (config section name)
      * @return	Returns \em true on success or else \em false
      */
-    bool initialize(Async::Config& cfg, const std::string& rx_name)
+    virtual bool initialize(Async::Config& cfg, const std::string& rx_name)
     {
-      if (!Squelch::initialize(cfg, rx_name))
-      {
-      	return false;
-      }
-
       std::string value;
       float ctcss_fq = 0;
       if (cfg.getValue(rx_name, "CTCSS_FQ", value))
@@ -165,7 +160,7 @@ class SquelchCtcss : public Squelch
       det->setPeakThresh(ctcss_thresh);
       det->activated.connect(slot(*this, &SquelchCtcss::setSignalDetected));
 
-      return true;
+      return Squelch::initialize(cfg, rx_name);
     }
 
     /**
@@ -174,10 +169,28 @@ class SquelchCtcss : public Squelch
      *  Reset the squelch so that the detection process starts from
      *	the beginning again.
      */
-    void reset(void)
+    virtual void reset(void)
     {
       det->reset();
       Squelch::reset();
+    }
+
+    /**
+     * @brief   Set the time the squelch should hang open after squelch close
+     * @param   hang The number of milliseconds to hang
+     */
+    virtual void setHangtime(int hang)
+    {
+      det->setGapDelay(hang);
+    }
+
+    /**
+      * @brief   Set the time a squelch open should be delayed
+      * @param   delay The delay in milliseconds
+      */
+    virtual void setDelay(int delay)
+    {
+      det->setDetectionDelay(delay);
     }
 
   protected:
