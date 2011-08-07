@@ -78,8 +78,8 @@ using namespace Async;
  ****************************************************************************/
 
 #define DEFAULT_PEAK_THRESH	10.0	// 10dB
-#define DEFAULT_DET_POSITIVES	4
-#define DEFAULT_GAP_NEGATIVES	4
+#define DEFAULT_DET_POSITIVES	3
+#define DEFAULT_GAP_NEGATIVES	3
 #define DEFAULT_ENERGY_THRESH	0.1f
 
 
