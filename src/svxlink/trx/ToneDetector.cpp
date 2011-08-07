@@ -186,7 +186,8 @@ void ToneDetector::setDetectionDelay(int delay_ms)
 {
   if (delay_ms > 0)
   {
-    det_delay = ceil(delay_ms * INTERNAL_SAMPLE_RATE / (block_len * 1000.0));
+    det_delay = static_cast<int>(
+		ceil(delay_ms * INTERNAL_SAMPLE_RATE / (block_len * 1000.0)));
   }
   else
   {
@@ -205,7 +206,8 @@ void ToneDetector::setGapDelay(int delay_ms)
 {
   if (delay_ms > 0)
   {
-    gap_delay = ceil(delay_ms * INTERNAL_SAMPLE_RATE / (block_len * 1000.0));
+    gap_delay = static_cast<int>(
+		ceil(delay_ms * INTERNAL_SAMPLE_RATE / (block_len * 1000.0)));
   }
   else
   {
