@@ -90,6 +90,7 @@ class DummyTx : public Tx
     virtual bool initialize(void) { return true; }
     virtual void setTxCtrlMode(TxCtrlMode mode) {}
     virtual bool isTransmitting(void) const { return false; }
+    virtual void availSamples(void) {}
     virtual int writeSamples(const float *samples, int count) { return count; }
     virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
 };
