@@ -124,11 +124,10 @@ class AudioJitterFifo : public AudioSink, public AudioSource
   public:
     /**
      * @brief 	Constuctor
-     * @param   sample_rate The sample rate of the incoming samples
      * @param   fifo_size This is the size of the fifo expressed in number
      *                    of samples.
      */
-    explicit AudioJitterFifo(unsigned samples_rate, unsigned fifo_size);
+    explicit AudioJitterFifo(unsigned fifo_size);
   
     /**
      * @brief 	Destructor
@@ -234,8 +233,6 @@ class AudioJitterFifo : public AudioSink, public AudioSource
     unsigned       fifo_size;
     unsigned       head, tail;
     bool      	   prebuf;
-    int64_t        output_samples;
-    struct timeval output_start;
     StreamState    stream_state;
     
     void writeSamplesFromFifo(int count);

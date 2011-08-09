@@ -113,15 +113,12 @@ using namespace Async;
  *
  ****************************************************************************/
 
-AudioJitterFifo::AudioJitterFifo(unsigned sample_rate, unsigned fifo_size)
-  : sample_rate(sample_rate), fifo(0), fifo_size(fifo_size), head(0),
-    tail(0), prebuf(true), output_samples(0), stream_state(STREAM_IDLE)
+AudioJitterFifo::AudioJitterFifo(unsigned fifo_size)
+  : fifo(0), fifo_size(fifo_size), head(0), tail(0),
+    prebuf(true), stream_state(STREAM_IDLE)
 {
-  assert(sample_rate > 0);
-  assert((sample_rate % 1000) == 0);
   assert(fifo_size > 0);
   fifo = new float[fifo_size];
-  timerclear(&output_start);
 } /* AudioJitterFifo */
 
 
@@ -182,8 +179,6 @@ int AudioJitterFifo::writeSamples(const float *samples, int count)
   if (stream_state != STREAM_ACTIVE)
   {
     stream_state = STREAM_ACTIVE;
-    gettimeofday(&output_start, NULL);
-    output_samples = 0;
     sinkAvailSamples();
   }
 
@@ -214,8 +209,6 @@ void AudioJitterFifo::availSamples(void)
   if (stream_state != STREAM_ACTIVE)
   {
     stream_state = STREAM_ACTIVE;
-    gettimeofday(&output_start, NULL);
-    output_samples = 0;
     sinkAvailSamples();
   }
 } /* AudioJitterFifo::availSamples */
@@ -291,7 +284,6 @@ void AudioJitterFifo::writeSamplesFromFifo(int count)
       
     tail += ret;
     tail %= fifo_size;
-    output_samples += ret;
     samples_from_fifo -= ret;
 
     if (ret < to_end_of_fifo)
@@ -321,7 +313,6 @@ void AudioJitterFifo::writeZeroBlock(int count)
     memset(buf, 0, len * sizeof(float));
 
     int ret = sinkWriteSamples(buf, len);
-    output_samples += ret;
     count -= ret;
 
     if (ret < len)
@@ -332,7 +323,7 @@ void AudioJitterFifo::writeZeroBlock(int count)
 
   if (stream_state == STREAM_FLUSHING)
   {
-    sinkFlushSamples();
+    clear();
   }
 
 } /* writeZero */
@@ -351,7 +342,6 @@ void AudioJitterFifo::flushSamplesFromFifo(void)
     
     tail += ret;
     tail %= fifo_size;
-    output_samples += ret;
     samples_from_fifo -= ret;
 
     if (ret < to_end_of_fifo)

@@ -237,7 +237,7 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   
   prev_src = &m_qso;
   
-  AudioJitterFifo *input_fifo = new AudioJitterFifo(8000, 2048);
+  AudioJitterFifo *input_fifo = new AudioJitterFifo(2048);
   prev_src->registerSink(input_fifo, true);
   prev_src = input_fifo;
   

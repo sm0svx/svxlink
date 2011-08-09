@@ -170,7 +170,8 @@ bool RfUplink::initialize(void)
   rx->mute(false);
   AudioSource *prev_src = rx;
 
-  AudioJitterFifo *fifo = new AudioJitterFifo(INTERNAL_SAMPLE_RATE, 2048);
+  AudioJitterFifo *fifo = new AudioJitterFifo(
+    1024 * INTERNAL_SAMPLE_RATE / 8000);
   prev_src->registerSink(fifo);
   prev_src = fifo;
   

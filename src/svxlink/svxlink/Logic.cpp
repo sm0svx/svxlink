@@ -449,7 +449,7 @@ bool Logic::initialize(void)
   logic_con_out->enableAutoSelect(passthrough, 10);
 
     // Add a pre-buffered FIFO to avoid underrun
-  AudioJitterFifo *rpt_fifo = new AudioJitterFifo(INTERNAL_SAMPLE_RATE,
+  AudioJitterFifo *rpt_fifo = new AudioJitterFifo(
     1024 * INTERNAL_SAMPLE_RATE / 8000);
   rx_splitter->addSink(rpt_fifo, true);
 

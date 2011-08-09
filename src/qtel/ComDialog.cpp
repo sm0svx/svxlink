@@ -255,7 +255,7 @@ void ComDialog::init(const QString& remote_name)
   call->setText(callsign);
   name_label->setText(remote_name);
   
-  rem_audio_fifo = new AudioJitterFifo(8000, 2048);
+  rem_audio_fifo = new AudioJitterFifo(2048);
   
   rem_audio_valve = new AudioValve;
   rem_audio_valve->setOpen(false);
