@@ -334,6 +334,22 @@ proc vhfdx_aurora_opening {band lat call loc} {
 }
 
 
+#
+# Handle FAI activity
+#
+# band - The band the alert is for (e.g. 2m, 70cm etc)
+#
+proc vhfdx_fai_active {band} {
+  playAlertSound
+  for {set i 0} {$i < 2} {set i [expr $i + 1]} {
+    playMsg "fai_active_on"
+    playSilence 200
+    sayBand $band
+    playSilence 1000
+  }
+}
+
+
 # end of namespace
 }
 

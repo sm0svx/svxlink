@@ -14,6 +14,12 @@
   variable in a local receiver configuration section to enable this new
   feature. This feature was contributed by Adi / DL1HRC.
 
+* FAI alerts is now taken care of in the PropagationMonitor module.
+  Patch from Adi / DL1HRC.
+
+* Improved handling of SQL_HANGTIME and SQL_DELAY when using CTCSS. Now
+  the ToneDetector itself handle the delays which is much better.
+
 
 
  0.12.0 -- 14 May 2011
