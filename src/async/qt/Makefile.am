@@ -32,37 +32,15 @@ nodist_libasyncqt_la_SOURCES = $(FORMHEADERS) $(MOC_CPP) $(UIC_CPP)
 # compiler flags
 AM_CPPFLAGS += @QT_CFLAGS@ @ASYNC_CORE_CFLAGS@
 
-RELEASE = @LIBASYNC_SHLIB_VERSION@
+VERSION = @LIBASYNC_SHLIB_VERSION@
 
-libasyncqt_la_LDFLAGS = -release $(RELEASE)
+libasyncqt_la_LDFLAGS = -version-number $(VERSION)
 
 # Headers that define the API of this library
 pkginclude_HEADERS = $(DIST_H_MOC_PUBLIC) $(DIST_H_NO_MOC)
 
 # Files that should be packaged with the sources
 EXTRA_DIST = $(FORMS) Makefile.default
-
-
-install-exec-hook:
-	@INSTDIR="$(DESTDIR)@libdir@" ; \
-	for lafile in $(lib_LTLIBRARIES) ; \
-	do \
-	echo "Removing $${lafile} from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${lafile} ; \
-	done
-
-uninstall-hook:
-	@INSTDIR="$(DESTDIR)@libdir@" ; \
-	for lafile in $(lib_LTLIBRARIES) ; \
-	do \
-	LIBBASE=`echo $${lafile} | ${AWK} -F. '/^.*\.la$$/ {print $$1}'` ; \
-	echo "Removing $${LIBBASE}.a from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBBASE}.a ; \
-	echo "Removing $${LIBBASE}.so from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBBASE}.so ; \
-	echo "Removing $${LIBBASE}-$(RELEASE).so from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBBASE}-$(RELEASE).so ; \
-	done
 
 
 # rules for QT processing
@@ -79,4 +57,30 @@ uninstall-hook:
 #	(AM_V_GEN)@QT_UIC@ -o $@ -impl $< $(srcdir)/$(<:.h=.ui)
 
 SUFFIXES = .h .ui .moc.cpp .uic.cpp
+
+
+# remove the .la file from the installation
+install-exec-hook:
+	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	for lafile in $(lib_LTLIBRARIES) ; \
+	do \
+	echo "Removing $${lafile} from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${lafile} ; \
+	done
+
+# libtool automatically handles uninstalls, unless one removes the .la file
+uninstall-hook:
+	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	SHLIBVER=`echo $(VERSION) | $(AWK) -F\: '{OFS="."; $$1=$$1; print $$0}'` ; \
+	for lafile in $(lib_LTLIBRARIES) ; \
+	do \
+	LIBNAME=`echo $${lafile} | $(AWK) -F. '{NF--; print}'` ; \
+	echo "Removing $${LIBNAME}.a from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBNAME}.a ; \
+	echo "Removing $${LIBNAME}.so from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBNAME}.so ; \
+	echo "Removing $${LIBNAME}.so.$(SHLIBVER) from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBNAME}.so.$${SHLIBVER} ; \
+	done
+
 

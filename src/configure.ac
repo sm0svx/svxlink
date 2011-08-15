@@ -1,19 +1,18 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.67])
-LT_PREREQ([2.2])
-
+AC_PREREQ([2.66])
 AC_INIT([svxlink], [snapshot], [svxlink-devel@lists.sourceforge.net])
 
 AC_CONFIG_SRCDIR([svxlink/svxlink/svxlink.cpp])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
-AC_PREFIX_DEFAULT([/usr])
 
-AM_INIT_AUTOMAKE([no-define silent-rules tar-ustar no-dist-gzip dist-bzip2])
+AM_INIT_AUTOMAKE([1.11 no-define silent-rules tar-ustar no-dist-gzip dist-bzip2])
 AM_SILENT_RULES([yes])
-LT_INIT
+
+LT_PREREQ([2.2])
+LT_INIT([dlopen])
 AC_SUBST([LIBTOOL_DEPS])
 
 # option to build user documentation for Qtel
@@ -119,6 +118,8 @@ AC_SEARCH_LIBS([snd_pcm_readi], [asound],
 AM_CONDITIONAL([HAVE_OSS], [false])
 AC_CHECK_HEADERS([sys/soundcard.h soundcard.h machine/soundcard.h],
   AM_CONDITIONAL([HAVE_OSS], [true]))
+AM_COND_IF([HAVE_ALSA], [], [AM_COND_IF([HAVE_OSS], [],
+  AC_MSG_ERROR([found no way to access sound (neither ALSA nor OSS)]))])
 
 # look for speex and #define USE_SPEEX=1 if found
 AM_CONDITIONAL([USE_SPEEX], [false])
@@ -134,16 +135,18 @@ PKG_CHECK_MODULES([SPEEX], [speex], [
 PKG_CHECK_MODULES([SIGC], [sigc++-1.2], [],
   AC_MSG_ERROR(['libsigc++-1.2 is required']))
 
-# check for Tcl
-AC_SEARCH_LIBS([Tcl_CreateCommand], [tcl8.4], [
-  TCL_VERSION=8.4
-  AC_SUBST([TCL_CFLAGS], [-I/usr/include/tcl${TCL_VERSION}])
-  AC_SUBST([TCL_LIBS], [-ltcl${TCL_VERSION}])
-  AC_CHECK_HEADER([tcl${TCL_VERSION}/tcl.h], ,
-    AC_MSG_ERROR(['tcl.h' not found: need libtcl development files]))
-  ], [
-  AC_MSG_ERROR([Tcl_CreateCommand() is required (presumably in libtcl8.4)])
-])
+# check for Tcl; SC_PATH_TCLCONFIG & SC_LOAD_TCLCONFIG did not work for author
+AC_SEARCH_LIBS([Tcl_CreateCommand], [tcl8.5 tcl8.4],
+  [
+    tcl_version() {
+      ${ECHO} $1 | ${AWK} '{print substr($0, length($0)-2)}'
+    }
+    TCL_VERSION=`tcl_version $ac_cv_search_Tcl_CreateCommand`
+  ],
+  AC_MSG_ERROR([Tcl_CreateCommand() is required (in libtcl8.5 or libtcl8.4)]))
+AC_CHECK_HEADER([tcl${TCL_VERSION}/tcl.h], ,
+  AC_MSG_ERROR(['tcl.h' not found: need libtcl development files]))
+AC_SUBST([TCL_CFLAGS], [-I/usr/include/tcl${TCL_VERSION}])
 
 # look for qt-mt, or otherwise just qt; find moc
 PKG_CHECK_MODULES([QT], [qt-mt], [QT_VARIANT=qt-mt], [
@@ -217,18 +220,18 @@ while read LINE
 do
       if `${ECHO} ${LINE} | ${GREP} -q -e "^.*=.*$" > /dev/null 2>&1`; then 
           PKGNAME="`${ECHO} ${LINE} | ${AWK} -F\= '/^.*=.*$/ {print $1}'`" 
-          PKGVAR="${PKGNAME}_VERSION"
           PKGVERSION="`${ECHO} ${LINE} | ${AWK} -F\= '/^.*=.*$/ {print $2}'`" 
-          VERSIONHEADERS="${VERSIONHEADERS} ${PKGNAME}.h"
+          PKGVAR="${PKGNAME}_VERSION"
           AC_DEFINE_UNQUOTED([${PKGVAR}], ["${PKGVERSION}"])
           export ${PKGVAR}=${PKGVERSION}
+          VERSIONHEADERS="${VERSIONHEADERS} ${PKGNAME}.h"
       fi
 done < "${srcdir}/${VERSIONFILE}"
 AC_SUBST([VERSIONHEADERS], [${VERSIONHEADERS}])
 
 # export version numbers to Makefiles for library versioning
 shlib_version() {
-  ${ECHO} $1 | ${AWK} -F. '/^.*\..*\..*(\..*)?$/ {print $1 "." $2 "." $3}'
+  ${ECHO} $1 | ${AWK} -F. '{OFS=":"; print $1,$2,$3}'
 }
 AC_SUBST([LIBASYNC_SHLIB_VERSION], [`shlib_version "${LIBASYNC_VERSION}"`])
 AC_SUBST([ECHOLIB_SHLIB_VERSION], [`shlib_version "${ECHOLIB_VERSION}"`])
@@ -301,11 +304,11 @@ TRX_LIBS="${TOP_BUILDDIR}/${TRX}/libtrx.a ${SIGC_LIBS} ${ASYNC_AUDIO_LIBS}"
 AC_SUBST([TRX_CFLAGS], [${TRX_CFLAGS}])
 AC_SUBST([TRX_LIBS], [${TRX_LIBS}])
 
-# this is needed to compile svxlink
-AC_SUBST([SVXLINK_CFLAGS], ["-I${TOP_SRCDIR}/svxlink/svxlink"])
+# this is needed to compile svxlink modules
+AC_SUBST([SVXLINK_MODULE_CFLAGS], ["-I${TOP_SRCDIR}/svxlink/svxlink"])
 
 # libtool options for svxlink modules
-AC_SUBST([LIBTOOL_MODULE_OPTIONS],
+AC_SUBST([LIBTOOL_PLUGIN_OPTIONS],
     ["-no-undefined -avoid-version -shared"])
 
 # defaults to -I${srcdir}, important to avoid Tx.h confusion in 'svxlink'

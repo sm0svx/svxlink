@@ -24,10 +24,10 @@ ModuleEchoLink_la_SOURCES = $(DIST_CPP) $(DIST_H)
 
 # Extra compiler flags
 AM_CPPFLAGS += @TCL_CFLAGS@ @ECHOLIB_CFLAGS@ @LOCATIONINFO_CFLAGS@ \
-		@SVXLINK_CFLAGS@
+		@SVXLINK_MODULE_CFLAGS@
 
-ModuleEchoLink_la_LIBADD = @TCL_LIBS@ @ECHOLIB_LIBS@
-ModuleEchoLink_la_LDFLAGS = -module @LIBTOOL_MODULE_OPTIONS@
+ModuleEchoLink_la_LIBADD = @ECHOLIB_LIBS@
+ModuleEchoLink_la_LDFLAGS = -module @LIBTOOL_PLUGIN_OPTIONS@
 
 # Files that should be packaged with the sources
 EXTRA_DIST = \

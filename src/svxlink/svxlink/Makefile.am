@@ -35,14 +35,13 @@ svxlink_SOURCES = $(DIST_CPP) $(DIST_H)
 
 AM_CPPFLAGS += @TCL_CFLAGS@ @ECHOLIB_CFLAGS@ @LOCATIONINFO_CFLAGS@ @TRX_CFLAGS@
 
-# Libraries external to the project
-svxlink_LDADD = @TCL_LIBS@ @ECHOLIB_LIBS@ @LOCATIONINFO_LIBS@ @TRX_LIBS@
+svxlink_LDADD = @ECHOLIB_LIBS@ @LOCATIONINFO_LIBS@ @TRX_LIBS@
 
 # includefiles to export, going into $(includedir) as defined by automake
-pkginclude_HEADERS = \
-		Module.h \
-		MsgHandler.h \
-		EventHandler.h
+# pkginclude_HEADERS = \
+# 		Module.h \
+# 		MsgHandler.h \
+# 		EventHandler.h
 
 siteconfdir = @SITECONFDIR@
 dist_siteconf_DATA = $(srcdir)/svxlink.conf

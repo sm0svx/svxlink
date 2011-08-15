@@ -38,7 +38,7 @@ EXTRA_DIST = $(SECTION_1) $(SECTION_5) Makefile.default
 SUFFIXES = .1 .5 .1.gz .5.gz
 
 .1.1.gz:
-	$(AM_V_GEN)$(GZIP) -c $< > $@
+	$(AM_V_GEN)$(GZIP) -9 -c $< > $@
 
 .5.5.gz:
-	$(AM_V_GEN)$(GZIP) -c $< > $@
+	$(AM_V_GEN)$(GZIP) -9 -c $< > $@

@@ -52,14 +52,15 @@ EchoLinkQso_demo_SOURCES = \
 AM_CPPFLAGS += @ECHOLIB_CFLAGS@
 LDADD = @ECHOLIB_LIBS@
 
-RELEASE = @ECHOLIB_SHLIB_VERSION@
+VERSION = @ECHOLIB_SHLIB_VERSION@
 
-libecholib_la_LDFLAGS = -release $(RELEASE)
+libecholib_la_LDFLAGS = -version-number $(VERSION)
 
 EXTRA_DIST = ChangeLog echolib_test.cfg mainpage.dox messages.txt \
 		Makefile.default
 
 
+# remove the .la file from the installation
 install-exec-hook:
 	@INSTDIR="$(DESTDIR)@libdir@" ; \
 	for lafile in $(lib_LTLIBRARIES) ; \
@@ -68,15 +69,17 @@ install-exec-hook:
 	$(RM) $${INSTDIR}/$${lafile} ; \
 	done
 
+# libtool automatically handles uninstalls, unless one removes the .la file
 uninstall-hook:
 	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	SHLIBVER=`echo $(VERSION) | $(AWK) -F\: '{OFS="."; $$1=$$1; print $$0}'` ; \
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \
-	LIBBASE=`echo $${lafile} | ${AWK} -F. '/^.*\.la$$/ {print $$1}'` ; \
-	echo "Removing $${LIBBASE}.a from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBBASE}.a ; \
-	echo "Removing $${LIBBASE}.so from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBBASE}.so ; \
-	echo "Removing $${LIBBASE}-$(RELEASE).so from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBBASE}-$(RELEASE).so ; \
+	LIBNAME=`echo $${lafile} | $(AWK) -F. '{NF--; print}'` ; \
+	echo "Removing $${LIBNAME}.a from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBNAME}.a ; \
+	echo "Removing $${LIBNAME}.so from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBNAME}.so ; \
+	echo "Removing $${LIBNAME}.so.$(SHLIBVER) from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBNAME}.so.$${SHLIBVER} ; \
 	done

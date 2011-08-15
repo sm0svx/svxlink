@@ -12,10 +12,10 @@ DIST_H = \
 ModuleHelp_la_SOURCES = $(DIST_CPP) $(DIST_H)
 
 # Extra compiler flags
-AM_CPPFLAGS += @ASYNC_AUDIO_CFLAGS@ @SVXLINK_CFLAGS@
+AM_CPPFLAGS += @ASYNC_AUDIO_CFLAGS@ @SVXLINK_MODULE_CFLAGS@
 
 ModuleHelp_la_LIBADD = @ASYNC_AUDIO_LIBS@
-ModuleHelp_la_LDFLAGS = -module @LIBTOOL_MODULE_OPTIONS@
+ModuleHelp_la_LDFLAGS = -module @LIBTOOL_PLUGIN_OPTIONS@
 
 # Files that should be packaged with the sources
 EXTRA_DIST = help.txt help-se.txt Makefile.default

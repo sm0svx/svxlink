@@ -20,9 +20,9 @@ libasynccpp_la_SOURCES = $(DIST_CPP) $(DIST_H)
 # Extra compiler flags
 AM_CPPFLAGS += @ASYNC_CPP_CFLAGS@
 
-RELEASE = @LIBASYNC_SHLIB_VERSION@
+VERSION = @LIBASYNC_SHLIB_VERSION@
 
-libasynccpp_la_LDFLAGS = -release $(RELEASE)
+libasynccpp_la_LDFLAGS = -version-number $(VERSION)
 
 # Headers that define the API of this library
 pkginclude_HEADERS = $(DIST_H_PUBLIC)
@@ -31,6 +31,7 @@ pkginclude_HEADERS = $(DIST_H_PUBLIC)
 EXTRA_DIST = Makefile.default
 
 
+# remove the .la file from the installation
 install-exec-hook:
 	@INSTDIR="$(DESTDIR)@libdir@" ; \
 	for lafile in $(lib_LTLIBRARIES) ; \
@@ -39,15 +40,17 @@ install-exec-hook:
 	$(RM) $${INSTDIR}/$${lafile} ; \
 	done
 
+# libtool automatically handles uninstalls, unless one removes the .la file
 uninstall-hook:
 	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	SHLIBVER=`echo $(VERSION) | $(AWK) -F\: '{OFS="."; $$1=$$1; print $$0}'` ; \
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \
-	LIBBASE=`echo $${lafile} | ${AWK} -F. '/^.*\.la$$/ {print $$1}'` ; \
-	echo "Removing $${LIBBASE}.a from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBBASE}.a ; \
-	echo "Removing $${LIBBASE}.so from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBBASE}.so ; \
-	echo "Removing $${LIBBASE}-$(RELEASE).so from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBBASE}-$(RELEASE).so ; \
+	LIBNAME=`echo $${lafile} | $(AWK) -F. '{NF--; print}'` ; \
+	echo "Removing $${LIBNAME}.a from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBNAME}.a ; \
+	echo "Removing $${LIBNAME}.so from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBNAME}.so ; \
+	echo "Removing $${LIBNAME}.so.$(SHLIBVER) from $${INSTDIR}" ; \
+	$(RM) $${INSTDIR}/$${LIBNAME}.so.$${SHLIBVER} ; \
 	done
