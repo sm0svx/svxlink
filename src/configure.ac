@@ -135,18 +135,41 @@ PKG_CHECK_MODULES([SPEEX], [speex], [
 PKG_CHECK_MODULES([SIGC], [sigc++-1.2], [],
   AC_MSG_ERROR(['libsigc++-1.2 is required']))
 
-# check for Tcl; SC_PATH_TCLCONFIG & SC_LOAD_TCLCONFIG did not work for author
-AC_SEARCH_LIBS([Tcl_CreateCommand], [tcl8.5 tcl8.4],
-  [
-    tcl_version() {
-      ${ECHO} $1 | ${AWK} '{print substr($0, length($0)-2)}'
-    }
-    TCL_VERSION=`tcl_version $ac_cv_search_Tcl_CreateCommand`
-  ],
-  AC_MSG_ERROR([Tcl_CreateCommand() is required (in libtcl8.5 or libtcl8.4)]))
-AC_CHECK_HEADER([tcl${TCL_VERSION}/tcl.h], ,
+# locate Tcl install path
+# we could use SC_PATH_TCLCONFIG if Fedora included tcl.m4 or tclX.X.m4
+for i in `ls -d ${libdir} 2>/dev/null` \
+  `ls -d ${exec_prefix}/lib 2>/dev/null` \
+  `ls -d ${prefix}/lib 2>/dev/null` \
+  `ls -d /usr/local/lib 2>/dev/null` \
+  `ls -d /usr/contrib/lib 2>/dev/null` \
+  `ls -d /usr/lib 2>/dev/null` \
+  `ls -d /usr/share/tcltk/tcl8.5 2>/dev/null` \
+  `ls -d /usr/lib/tcl8.5 2>/dev/null` \
+  `ls -d /usr/share/tcltk/tcl8.4 2>/dev/null` \
+  `ls -d /usr/lib/tcl8.4 2>/dev/null` \
+; do
+  if test -f "$i/tclConfig.sh" ; then
+    TCL_BIN_DIR=`(cd $i; pwd)`
+    break
+  fi
+done
+if test x"${TCL_BIN_DIR}" = x ; then
+  AC_MSG_ERROR([Cannot find Tcl configuration definitions (tclConfig.sh)])
+fi
+AC_SUBST([TCL_CFLAGS], [${TCL_INCLUDE_SPEC}])
+AC_SUBST([TCL_LIBS], [${TCL_LIBS}])
+
+# load Tcl configuration definitions
+source $TCL_BIN_DIR/tclConfig.sh
+
+# check for Tcl library
+AC_SEARCH_LIBS([Tcl_CreateCommand], [tcl${TCL_VERSION}], ,
+  AC_MSG_ERROR([Tcl_CreateCommand() is required (in libtcl${TCL_VERSION})]))
+
+# check for Tcl include file
+CPPFLAGS="$CPPFLAGS $TCL_INCLUDE_SPEC"
+AC_CHECK_HEADER([tcl.h], ,
   AC_MSG_ERROR(['tcl.h' not found: need libtcl development files]))
-AC_SUBST([TCL_CFLAGS], [-I/usr/include/tcl${TCL_VERSION}])
 
 # look for qt-mt, or otherwise just qt; find moc
 PKG_CHECK_MODULES([QT], [qt-mt], [QT_VARIANT=qt-mt], [
