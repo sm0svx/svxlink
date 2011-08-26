@@ -224,7 +224,7 @@ bool FileReader::fillBuffer(void)
 
   int bytes_to_buffer = space;
   int written = 0;
-  while ((bytes_to_buffer > 0) && (fd != -1))
+  while ((bytes_to_buffer > 0) && isOpen())
   {
     int to_end_of_buffer = min(bytes_to_buffer, buf_size - head);
     int cnt = ::read(fd, buffer + head, to_end_of_buffer);
@@ -254,7 +254,7 @@ bool FileReader::fillBuffer(void)
     rd_watch->setEnabled(false);
   }
 
-  return (fd != -1);
+  return isOpen();
 
 } /* FileReader::fillBuffer */
 

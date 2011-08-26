@@ -185,8 +185,6 @@ class WavFileQueueItem : public QueueItem
     int readSamples(float *samples, int len);
 
   private:
-    static const int WAV_BUFSIZE = 512;
-  
     string    filename;
     Async::FileReader reader;
     char      chunk_id[4];

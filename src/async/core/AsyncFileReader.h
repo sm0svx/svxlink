@@ -140,6 +140,14 @@ class FileReader : public SigC::Object
       * @return  Return \em true on success or else \em false on failue.
       */
     bool close(void);
+
+    /**
+     * @brief 	Check if a file is currently opened
+     * @return	Returns \em true if a file is currently opened or
+     *	      	\em false if no file has been opened or if the file
+     *          was already closed.
+     */
+    bool isOpen(void) const { return (fd != -1); }
     
     /**
       * @brief   Read data from a previously opened file
