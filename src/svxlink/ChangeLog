@@ -17,6 +17,13 @@
 * FAI alerts is now taken care of in the PropagationMonitor module.
   Patch from Adi / DL1HRC.
 
+* Improved handling of SQL_HANGTIME and SQL_DELAY when using CTCSS. Now
+  the ToneDetector itself handle the delays which is much better.
+
+* Bugfix in RemoteTrx: Groups was not properly setup so remotetrx
+  could not access stuff that it should have right to do.
+  Patch contributed by Eren / TA1AET.
+
 
 
  0.12.0 -- 14 May 2011

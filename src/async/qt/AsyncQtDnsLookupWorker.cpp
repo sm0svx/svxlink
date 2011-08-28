@@ -10,7 +10,7 @@ used by Async::QtApplication to execute DNS queries.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2010 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -37,8 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <qdns.h>
-#undef emit
+
 
 /****************************************************************************
  *
@@ -130,15 +129,19 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 QtDnsLookupWorker::QtDnsLookupWorker(const string& label)
+  : lookup_id(-1)
 {
-  qdns = new QDns(label.c_str());
-  QObject::connect(qdns, SIGNAL(resultsReady()), this, SLOT(onResultsReady()));
+  lookup_id = QHostInfo::lookupHost(label.c_str(), this,
+				    SLOT(onResultsReady(QHostInfo)));
 } /* QtDnsLookupWorker::QtDnsLookupWorker */
 
 
 QtDnsLookupWorker::~QtDnsLookupWorker(void)
 {
-  delete qdns;
+  if (lookup_id != -1)
+  {
+    QHostInfo::abortHostLookup(lookup_id);
+  }
 } /* QtDnsLookupWorker::~QtDnsLookupWorker */
 
 
@@ -146,13 +149,13 @@ vector<IpAddress> QtDnsLookupWorker::addresses(void)
 {
   vector<IpAddress> addr_list;
   
-  QValueList<QHostAddress> list = qdns->addresses();
-  QValueList<QHostAddress>::Iterator it = list.begin();
+  QList<QHostAddress> list = host_info.addresses();
+  QList<QHostAddress>::Iterator it = list.begin();
   while(it != list.end())
   {
-    if ((*it).isIp4Addr())
+    if ((*it).protocol() == QAbstractSocket::IPv4Protocol)
     {
-      addr_list.push_back(IpAddress((*it).toString().latin1()));
+      addr_list.push_back(IpAddress((*it).toString().toStdString()));
     }
     ++it;
   }
@@ -170,23 +173,6 @@ vector<IpAddress> QtDnsLookupWorker::addresses(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
 
 /****************************************************************************
  *
@@ -194,27 +180,12 @@ vector<IpAddress> QtDnsLookupWorker::addresses(void)
  *
  ****************************************************************************/
 
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-void QtDnsLookupWorker::onResultsReady(void)
+void QtDnsLookupWorker::onResultsReady(const QHostInfo &info)
 {
+  lookup_id = -1;
+  host_info = info;
   resultsReady();
 } /* QtDnsLookupWorker::onResultsReady */
-
-
-
-
 
 
 

@@ -142,7 +142,8 @@ EXPINC		= AsyncAudioSource.h AsyncAudioSink.h AsyncAudioProcessor.h \
 		  AsyncAudioDecimator.h AsyncAudioInterpolator.h \
 		  AsyncAudioStreamStateDetector.h AsyncAudioEncoder.h \
 		  AsyncAudioDecoder.h AsyncAudioRecorder.h \
-		  AsyncAudioJitterFifo.h
+		  AsyncAudioJitterFifo.h AsyncAudioDeviceFactory.h \
+		  AsyncAudioDevice.h
 
 
 # Specify Qt header files here that you want to run the

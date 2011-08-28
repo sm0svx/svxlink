@@ -34,7 +34,7 @@ CPPPROGS      	= $(BIN)/qtel
 
 # Sources other than the main files
 PRGSRC		= MainWindow.cpp ComDialog.cpp Settings.cpp MsgHandler.cpp \
-		  Vox.cpp
+		  Vox.cpp EchoLinkDirectoryModel.cpp qrc_qtel.cpp
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -lecholib -lasyncqt -lasyncaudio -lasynccore
@@ -44,10 +44,11 @@ LIBS		= $(QT_LIBS) $(SIGC_LIBS)
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).
-QTHEADERS	= MainWindow.h ComDialog.h MyMessageBox.h Vox.h
+QTHEADERS	= MainWindow.h ComDialog.h MyMessageBox.h Vox.h \
+		  SettingsDialog.h EchoLinkDirectoryModel.h
 
 # Specify which ui-files to include in the programs we compile.
-UI_FILES	= MainWindowBase.ui ComDialogBase.ui SettingsDialog.ui
+UI_FILES	= MainWindowBase.ui ComDialogBase.ui SettingsDialogBase.ui
 
 # Programs to install. You may optionally specify mode, owner and
 # group if you want to. The syntax is: filename[mode,owner,group].
@@ -173,6 +174,9 @@ POST_TARGETS   = translations/qtel_tmpl.qm \
 translations/qtel_%.qm:  translations/qtel_%.ts
 	$(ECHO) --- Creating translation file $(BOLD)$@$(NBOLD)...
 	${QT_BIN}/lrelease $<
+
+qrc_qtel.cpp:	qtel.qrc
+	${QT_BIN}/rcc -o $@ $<
 
 endif # QT_BIN
 

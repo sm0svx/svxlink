@@ -186,7 +186,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
      * @brief 	Set the time the squelch should hang open after squelch close
      * @param 	hang The number of milliseconds to hang
      */
-    void setHangtime(int hang)
+    virtual void setHangtime(int hang)
     {
       m_hangtime = (hang > 0) ? (hang * INTERNAL_SAMPLE_RATE / 1000) : 0;
     }
@@ -195,7 +195,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
      * @brief 	Set the time a squelch open should be delayed
      * @param 	delay The delay in milliseconds
      */
-    void setDelay(int delay)
+    virtual void setDelay(int delay)
     {
       m_delay = ((delay > 0) ? (delay * INTERNAL_SAMPLE_RATE / 1000) : 0);
     }

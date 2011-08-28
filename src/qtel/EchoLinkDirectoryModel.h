@@ -1,16 +1,14 @@
 /**
-@file	 AsyncQtDnsLookupWorker.h
-@brief   Execute DNS queries in the Qt environment
-@author  Tobias Blomberg
-@date	 2003-04-12
+@file	 EchoLinkDirectoryModel.h
+@brief   A_brief_description_for_this_file
+@author  Tobias Blomberg / SM0SVX
+@date	 2011-06-18
 
-This file contains a class for executing DNS quries in the Qt variant of
-the async environment. This class should never be used directly. It is
-used by Async::QtApplication to execute DNS queries.
+A_detailed_description_for_this_file
 
 \verbatim
-Async - A library for programming event driven applications
-Copyright (C) 2003-2010 Tobias Blomberg
+<A brief description of the program or library this file belongs to>
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,9 +26,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+/** @example EchoLinkDirectoryModel_demo.cpp
+An example of how to use the EchoLinkDirectoryModel class
+*/
 
-#ifndef ASYNC_QT_DNS_LOOKUP_WORKER_INCLUDED
-#define ASYNC_QT_DNS_LOOKUP_WORKER_INCLUDED
+
+#ifndef ECHOLINK_DIRECTORY_MODEL_INCLUDED
+#define ECHOLINK_DIRECTORY_MODEL_INCLUDED
 
 
 /****************************************************************************
@@ -39,9 +41,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <QObject>
-#include <QHostInfo>
-#undef emit
+#include <QList>
+#include <QAbstractItemModel>
 
 
 /****************************************************************************
@@ -50,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <EchoLinkStationData.h>
 
 
 /****************************************************************************
@@ -58,7 +60,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "../core/AsyncDnsLookupWorker.h"
 
 
 /****************************************************************************
@@ -75,8 +76,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
+
+  
 
 /****************************************************************************
  *
@@ -101,55 +111,64 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	DNS lookup worker for the Qt variant of the async environment
-@author Tobias Blomberg
-@date   2003-04-12
+@brief	A_brief_class_description
+@author Tobias Blomberg / SM0SVX
+@date   2011-06-18
 
-This is the DNS lookup worker for the Qt variant of the async environment.
-It is an internal class that should only be used from within the async
-library.
+A_detailed_class_description
+
+\include EchoLinkDirectoryModel_demo.cpp
 */
-class QtDnsLookupWorker : public QObject, public DnsLookupWorker
+class EchoLinkDirectoryModel : public QAbstractItemModel
 {
   Q_OBJECT
-  
+    
   public:
     /**
-     * @brief 	Constructor
-     * @param 	label The label (hostname) to lookup
+     * @brief 	Default constuctor
      */
-    QtDnsLookupWorker(const std::string& label);
+    EchoLinkDirectoryModel(QObject *parent = 0);
   
     /**
      * @brief 	Destructor
      */
-    virtual ~QtDnsLookupWorker(void);
+    ~EchoLinkDirectoryModel(void);
   
     /**
-     * @brief 	Return the addresses for the host in the query
-     * @return	Returns an stl vector which contains all the addresses
-     *	      	associated with the hostname in the query.
-     *
-     * Use this function to retrieve all the IP-addresses associated with
-     * the hostname in the query.
+     * @brief 	A_brief_member_function_description
+     * @param 	param1 Description_of_param1
+     * @return	Return_value_of_this_member_function
      */
-    std::vector<IpAddress> addresses(void);
+    void updateStationList(const std::list<EchoLink::StationData> &stn_list);
     
+    QModelIndex index(int row, int column,
+			      const QModelIndex &parent = QModelIndex()) const;
+    QModelIndex parent(const QModelIndex &index) const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const;
+    QVariant headerData(int section, Qt::Orientation orientation,
+				int role = Qt::DisplayRole) const;
+    
+    QVariant data(const QModelIndex &index,
+			  int role = Qt::DisplayRole) const;
+
+    bool removeRows(int row, int count,
+		    const QModelIndex &parent = QModelIndex());
+
   protected:
     
   private:
-    int lookup_id;
-    QHostInfo host_info;
+    QList<EchoLink::StationData> stations;
     
-  private slots:
-    void onResultsReady(const QHostInfo &info);
+    EchoLinkDirectoryModel(const EchoLinkDirectoryModel&);
+    EchoLinkDirectoryModel& operator=(const EchoLinkDirectoryModel&);
     
-};  /* class QtDnsLookupWorker */
+};  /* class EchoLinkDirectoryModel */
 
 
-} /* namespace */
+//} /* namespace */
 
-#endif /* ASYNC_QT_DNS_LOOKUP_WORKER_INCLUDED */
+#endif /* ECHOLINK_DIRECTORY_MODEL_INCLUDED */
 
 
 
