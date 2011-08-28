@@ -119,7 +119,7 @@ namespace Async
 
 This class is used as the base class for all receivers.
 */
-class Rx : public SigC::Object, public Async::AudioSource
+class Rx : public sigc::trackable, public Async::AudioSource
 {
   public:
     /**
@@ -199,21 +199,21 @@ class Rx : public SigC::Object, public Async::AudioSource
      * @brief 	A signal that indicates if the squelch is open or not
      * @param 	is_open \em True if the squelch is open or \em false if not
      */
-    SigC::Signal1<void, bool> squelchOpen;
+    sigc::signal<void, bool> squelchOpen;
     
     /**
      * @brief 	A signal that is emitted when a DTMF digit has been detected
      * @param 	digit The detected digit (0-9, A-D, *, #)
      * @param 	duration Tone duration in milliseconds
      */
-    SigC::Signal2<void, char, int> dtmfDigitDetected;
+    sigc::signal<void, char, int> dtmfDigitDetected;
     
     /**
      * @brief 	A signal that is emitted when a valid selcall sequence has been
                 detected
      * @param 	sequence the selcall sequence
      */
-    SigC::Signal1<void, std::string> selcallSequenceDetected;
+    sigc::signal<void, std::string> selcallSequenceDetected;
 
 
     /**
@@ -221,7 +221,7 @@ class Rx : public SigC::Object, public Async::AudioSource
      *	      	been detected for the specified duration
      * @param 	fq The frequency of the tone
      */
-    SigC::Signal1<void, float> toneDetected;
+    sigc::signal<void, float> toneDetected;
     
     
   protected:

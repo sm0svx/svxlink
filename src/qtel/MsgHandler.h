@@ -6,7 +6,7 @@
 
 #include <AsyncAudioSource.h>
 
-class MsgHandler : public SigC::Object, public Async::AudioSource
+class MsgHandler : public sigc::trackable, public Async::AudioSource
 {
   public:
     MsgHandler(const std::string& base_dir, int sample_rate);
@@ -22,7 +22,7 @@ class MsgHandler : public SigC::Object, public Async::AudioSource
     void begin(void);
     void end(void);
     
-    SigC::Signal0<void>       	    allMsgsWritten;
+    sigc::signal<void>       	    allMsgsWritten;
     
     void resumeOutput(void);
     

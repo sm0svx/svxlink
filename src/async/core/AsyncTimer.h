@@ -113,7 +113,7 @@ when the specified time has elapsed. An example of how to use it is shown below.
 
 \include AsyncTimer_demo.cpp
 */
-class Timer : public SigC::Object
+class Timer : public sigc::trackable
 {
   public:
     /**
@@ -197,7 +197,7 @@ class Timer : public SigC::Object
      * to delete the timer in the connected slot if it is known to be the
      * only connected slot.
      */
-    SigC::Signal1<void, Timer *> expired;
+    sigc::signal<void, Timer *> expired;
     
     
   protected:

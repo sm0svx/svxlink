@@ -327,7 +327,7 @@ bool Serial::open(void)
     return false;
   }
   fd = dev->desc();
-  dev->charactersReceived.connect(charactersReceived.slot());
+  dev->charactersReceived.connect(charactersReceived.make_slot());
   
   return true;
   

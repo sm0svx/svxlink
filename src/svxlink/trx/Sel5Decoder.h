@@ -129,7 +129,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * @author  Tobias Blomberg, SM0SVX & Adi Bier / DL1HRC
  * @date    2010-03-09
  */
-class Sel5Decoder : public SigC::Object, public Async::AudioSink
+class Sel5Decoder : public sigc::trackable, public Async::AudioSink
 {
   public:
     /**
@@ -194,7 +194,7 @@ class Sel5Decoder : public SigC::Object, public Async::AudioSink
      *          detected
      * @param 	sequence  The detected selcall sequence
     */
-    SigC::Signal1<void, std::string> sequenceDetected;
+    sigc::signal<void, std::string> sequenceDetected;
 
   protected:
     /**

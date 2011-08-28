@@ -112,7 +112,7 @@ namespace EchoLink
  *
  ****************************************************************************/
 
-class AprsUdpClient : public AprsClient, public SigC::Object
+class AprsUdpClient : public AprsClient, public sigc::trackable
 {
   public:
      AprsUdpClient(LocationInfo::Cfg &loc_cfg, const std::string &server,

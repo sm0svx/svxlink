@@ -95,7 +95,7 @@ else
 fi
 
 # Checking for libsigc++
-sigc_version=1.2
+sigc_version=2.0
 info "--- Checking for sigc++ $sigc_version..."
 if which pkg-config > /dev/null 2>&1; then
   if pkg-config sigc++-$sigc_version; then

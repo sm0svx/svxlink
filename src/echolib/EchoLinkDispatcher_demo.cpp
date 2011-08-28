@@ -7,7 +7,7 @@ using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-class MyClass : public SigC::Object
+class MyClass : public sigc::trackable
 {
   public:
     MyClass(void)
@@ -18,7 +18,7 @@ class MyClass : public SigC::Object
 	exit(1);
       }
 
-      Dispatcher::instance()->incomingConnection.connect(slot(*this,
+      Dispatcher::instance()->incomingConnection.connect(mem_fun(*this,
 	  &MyClass::onIncomingConnection));
     }
     

@@ -124,7 +124,8 @@ AprsUdpClient::AprsUdpClient(LocationInfo::Cfg &loc_cfg,
 {
    beacon_timer = new Timer(loc_cfg.interval, Timer::TYPE_PERIODIC);
    beacon_timer->setEnable(false);
-   beacon_timer->expired.connect(slot(*this, &AprsUdpClient::sendLocationInfo));
+   beacon_timer->expired.connect(
+     mem_fun(*this, &AprsUdpClient::sendLocationInfo));
 } /* AprsUdpClient::AprsUdpClient */
 
 
@@ -204,7 +205,7 @@ void AprsUdpClient::sendLocationInfo(Timer *t)
     if (!dns)
     {
       dns = new DnsLookup(server);
-      dns->resultsReady.connect(slot(*this, &AprsUdpClient::dnsResultsReady));
+      dns->resultsReady.connect(mem_fun(*this, &AprsUdpClient::dnsResultsReady));
     }
     return;
   }

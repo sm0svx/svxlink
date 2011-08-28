@@ -114,7 +114,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 This is the base class for transmitters. It is an abstract class so it cannot
 be used standalone. It must be inherited from.
 */
-class Tx : public SigC::Object, public Async::AudioSink
+class Tx : public sigc::trackable, public Async::AudioSink
 {
   public:
     typedef enum
@@ -185,7 +185,7 @@ class Tx : public SigC::Object, public Async::AudioSink
      * for too long. This is to prevent the transmitter from transmitting
      * endlessly if an error occurs.
      */
-    SigC::Signal0<void> txTimeout;
+    sigc::signal<void> txTimeout;
     
     /**
      * @brief 	This signal is emitted when the transmitter starts or stops
@@ -193,7 +193,7 @@ class Tx : public SigC::Object, public Async::AudioSink
      * @param 	is_transmitting Set to \em true if the transmitter
      *          is transmitting or else \em false.
      */
-    SigC::Signal1<void, bool> transmitterStateChange;
+    sigc::signal<void, bool> transmitterStateChange;
     
 };  /* class Tx */
 

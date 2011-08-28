@@ -384,7 +384,7 @@ void ModuleDtmfRepeater::setupRepeatDelay(void)
   {
     repeat_delay_timer = new Timer(repeat_delay);
     repeat_delay_timer->expired.connect(
-	slot(*this, &ModuleDtmfRepeater::onRepeatDelayExpired));
+	mem_fun(*this, &ModuleDtmfRepeater::onRepeatDelayExpired));
   }
 } /* ModuleDtmfRepeater::setupRepeatDelay */
 

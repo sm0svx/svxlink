@@ -62,7 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace SigC;
+using namespace sigc;
 using namespace Async;
 
 
@@ -174,7 +174,7 @@ void HwDtmfDecoder::digitActive(char digit)
   gettimeofday(&det_timestamp, NULL);
   digitActivated(digit);
   timeout_timer = new Timer(MAX_ACTIVE_TIME * 1000);
-  timeout_timer->expired.connect(slot(*this, &HwDtmfDecoder::timeout));
+  timeout_timer->expired.connect(mem_fun(*this, &HwDtmfDecoder::timeout));
 } /* HwDtmfDecoder::digitActive */
 
 
@@ -188,7 +188,7 @@ void HwDtmfDecoder::digitIdle(void)
   if (hangtime() > 0)
   {
     hang_timer = new Timer(hangtime());
-    hang_timer->expired.connect(slot(*this, &HwDtmfDecoder::hangtimeExpired));
+    hang_timer->expired.connect(mem_fun(*this, &HwDtmfDecoder::hangtimeExpired));
     state = STATE_HANG;
   }
   else

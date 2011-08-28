@@ -775,7 +775,7 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
         receiving_audio = true;
         isReceiving(true);
         rx_indicator_timer = new Timer(RX_INDICATOR_HANG_TIME);
-        rx_indicator_timer->expired.connect(slot(*this, &Qso::checkRxActivity));
+        rx_indicator_timer->expired.connect(mem_fun(*this, &Qso::checkRxActivity));
       }
       gettimeofday(&last_audio_packet_received, 0);
       
@@ -804,7 +804,8 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
         receiving_audio = true;
         isReceiving(true); 
         rx_indicator_timer = new Timer(RX_INDICATOR_HANG_TIME);
-        rx_indicator_timer->expired.connect(slot(*this, &Qso::checkRxActivity));
+        rx_indicator_timer->expired.connect(
+            mem_fun(*this, &Qso::checkRxActivity));
       }
       gettimeofday(&last_audio_packet_received, 0);
       
@@ -880,9 +881,9 @@ bool Qso::setupConnection(void)
   if (send_sdes_ok)
   {
     keep_alive_timer = new Timer(KEEP_ALIVE_TIME, Timer::TYPE_PERIODIC);
-    keep_alive_timer->expired.connect(slot(*this, &Qso::sendKeepAlive));
+    keep_alive_timer->expired.connect(mem_fun(*this, &Qso::sendKeepAlive));
     con_timeout_timer = new Timer(CON_TIMEOUT_TIME, Timer::TYPE_PERIODIC);
-    con_timeout_timer->expired.connect(slot(*this, &Qso::connectionTimeout));
+    con_timeout_timer->expired.connect(mem_fun(*this, &Qso::connectionTimeout));
   }
     
   return send_sdes_ok;

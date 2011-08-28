@@ -7,13 +7,13 @@
 using namespace std;
 using namespace Async;
 
-class MyClass : public SigC::Object
+class MyClass : public sigc::trackable
 {
   public:
     MyClass(void)
     {
       stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
-      stdin_watch->activity.connect(slot(*this, &MyClass::onActivity));
+      stdin_watch->activity.connect(mem_fun(*this, &MyClass::onActivity));
     }
     
     ~MyClass(void)

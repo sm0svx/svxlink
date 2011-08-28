@@ -187,17 +187,17 @@ NetTrxTcpClient::NetTrxTcpClient(const std::string& remote_host,
     recv_exp(0), reconnect_timer(0), heartbeat_timer(0), user_cnt(0),
     state(STATE_DISC)
 {
-  connected.connect(slot(*this, &NetTrxTcpClient::tcpConnected));
-  disconnected.connect(slot(*this, &NetTrxTcpClient::tcpDisconnected));
-  dataReceived.connect(slot(*this, &NetTrxTcpClient::tcpDataReceived));
+  connected.connect(mem_fun(*this, &NetTrxTcpClient::tcpConnected));
+  disconnected.connect(mem_fun(*this, &NetTrxTcpClient::tcpDisconnected));
+  dataReceived.connect(mem_fun(*this, &NetTrxTcpClient::tcpDataReceived));
 
   reconnect_timer = new Timer(20000);
   reconnect_timer->setEnable(false);
-  reconnect_timer->expired.connect(slot(*this, &NetTrxTcpClient::reconnect));
+  reconnect_timer->expired.connect(mem_fun(*this, &NetTrxTcpClient::reconnect));
   
   heartbeat_timer = new Timer(10000);
   heartbeat_timer->setEnable(false);
-  heartbeat_timer->expired.connect(slot(*this, &NetTrxTcpClient::heartbeat));
+  heartbeat_timer->expired.connect(mem_fun(*this, &NetTrxTcpClient::heartbeat));
   
 } /* NetTrxTcpClient::NetTrxTcpClient */
 

@@ -116,7 +116,7 @@ class FdWatch;
 @author Tobias Blomberg
 @date   2005-03-10
 */
-class SerialDevice : public SigC::Object
+class SerialDevice : public sigc::trackable
 {
   public:
     /**
@@ -157,7 +157,7 @@ class SerialDevice : public SigC::Object
      * received on the serial port. The buffer is always null-terminated
      * but the null is not included in the count.
      */
-    SigC::Signal2<void, char*, int> charactersReceived;
+    sigc::signal<void, char*, int> charactersReceived;
     
     
   protected:
