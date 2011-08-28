@@ -1,0 +1,13 @@
+Log for qt3to4 on Mon Apr 5 15:04:40 2010. Number of log entries: 10
+No changes made to file /home/blomman/slask/svxlink/async/qt/AsyncQtApplication.h
+In file /home/blomman/slask/svxlink/async/qt/AsyncQtDnsLookupWorker.h at line 38 column 14: qdns.h -> q3dns.h
+In file /home/blomman/slask/svxlink/async/qt/AsyncQtDnsLookupWorker.h at line 88 column 8: QDns -> Q3Dns
+No changes made to file /home/blomman/slask/svxlink/async/qt/AsyncQtTimer.h
+No changes made to file /home/blomman/slask/svxlink/async/qt/AsyncQtApplication.cpp
+In file /home/blomman/slask/svxlink/async/qt/AsyncQtDnsLookupWorker.cpp at line 38 column 14: qdns.h -> q3dns.h
+In file /home/blomman/slask/svxlink/async/qt/AsyncQtDnsLookupWorker.cpp at line 85 column 17: QDns -> Q3Dns
+In file /home/blomman/slask/svxlink/async/qt/AsyncQtDnsLookupWorker.cpp at line 100 column 12: QValueList -> Q3ValueList
+In file /home/blomman/slask/svxlink/async/qt/AsyncQtDnsLookupWorker.cpp at line 101 column 12: QValueList -> Q3ValueList
+In file /home/blomman/slask/svxlink/async/qt/AsyncQtDnsLookupWorker.cpp: Added the following include directives:
+	#include <Q3ValueList> 
+

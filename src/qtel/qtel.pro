@@ -9,7 +9,7 @@ SOURCES	+= MainWindow.cpp \
 
 FORMS	= MainWindowBase.ui \
 	ComDialogBase.ui \
-	SettingsDialog.ui
+	SettingsDialogBase.ui
 
 IMAGES	= images/exit.png \
 	images/configure.png

@@ -17,7 +17,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Could not open audio device</source>
-        <translation>Не можу відкрити аудіо пристрій</translation>
+        <translation type="obsolete">Не можу відкрити аудіо пристрій</translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
@@ -38,6 +38,14 @@ Can&apos;t create connection to</source>
     <message>
         <source>Disconnected</source>
         <translation>Від&apos;єднався</translation>
+    </message>
+    <message>
+        <source>Could not open mic audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not open speaker audio device</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -95,6 +103,10 @@ Can&apos;t create connection to</source>
         <translation>&amp;Від&apos;єднайся</translation>
     </message>
     <message>
+        <source>Alt+D</source>
+        <translation></translation>
+    </message>
+    <message>
         <source>VOX</source>
         <translation></translation>
     </message>
@@ -123,30 +135,15 @@ Can&apos;t create connection to</source>
     <name>MainWindow</name>
     <message>
         <source>Add to bookmarks</source>
-        <translation>Додати у закладки</translation>
+        <translation type="obsolete">Додати у закладки</translation>
     </message>
     <message>
         <source>Remove from bookmarks</source>
-        <translation>Видалити із закладок</translation>
+        <translation type="obsolete">Видалити із закладок</translation>
     </message>
     <message>
         <source>Add named station...</source>
-        <translation>Додати станцію за іменем...</translation>
-    </message>
-    <message>
-        <source>Ctrl+Q</source>
-        <comment>fileQuitAction</comment>
-        <translation></translation>
-    </message>
-    <message>
-        <source>F5</source>
-        <comment>directoryRefreshAction</comment>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+B</source>
-        <comment>directoryBusyAction</comment>
-        <translation></translation>
+        <translation type="obsolete">Додати станцію за іменем...</translation>
     </message>
     <message>
         <source>Logging off from directory server...</source>
@@ -176,6 +173,45 @@ Can&apos;t create connection to</source>
         <source>Enter an IP address or hostname:</source>
         <translation>Введіть IP-адресу або мережове ім&apos;я:</translation>
     </message>
+    <message>
+        <source>Bookmarks</source>
+        <translation type="unfinished">Закладки</translation>
+    </message>
+    <message>
+        <source>Links</source>
+        <translation type="unfinished">Вузли</translation>
+    </message>
+    <message>
+        <source>Repeaters</source>
+        <translation type="unfinished">Репітери</translation>
+    </message>
+    <message>
+        <source>Conferences</source>
+        <translation type="unfinished">Конференції</translation>
+    </message>
+    <message>
+        <source>Stations</source>
+        <translation type="unfinished">Станції</translation>
+    </message>
+    <message>
+        <source>About Qtel</source>
+        <translation type="unfinished">Про Qtel</translation>
+    </message>
+    <message>
+        <source>Qtel v</source>
+        <translation type="unfinished">Qtel версія </translation>
+    </message>
+    <message>
+        <source> - Qt EchoLink client.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it in accordance with the terms and conditions in the GNU GPL (General Public License) version 2 or later.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindowBase</name>
@@ -185,7 +221,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Explorer</source>
-        <translation>Розділи</translation>
+        <translation type="obsolete">Розділи</translation>
     </message>
     <message>
         <source>Conferences</source>
@@ -209,23 +245,23 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Station</source>
-        <translation>Станція</translation>
+        <translation type="obsolete">Станція</translation>
     </message>
     <message>
         <source>Location/Description</source>
-        <translation>Розташування/опис</translation>
+        <translation type="obsolete">Розташування/опис</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation>Стан</translation>
+        <translation type="obsolete">Стан</translation>
     </message>
     <message>
         <source>Local time</source>
-        <translation>Місцевий час</translation>
+        <translation type="obsolete">Місцевий час</translation>
     </message>
     <message>
         <source>Node ID</source>
-        <translation>ID вузла</translation>
+        <translation type="obsolete">ID вузла</translation>
     </message>
     <message>
         <source>Messages</source>
@@ -233,7 +269,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Incoming connections</source>
-        <translation>Просять приєднатися</translation>
+        <translation type="obsolete">Просять приєднатися</translation>
     </message>
     <message>
         <source>Accept</source>
@@ -265,7 +301,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Налаштування</translation>
+        <translation type="obsolete">&amp;Налаштування</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -273,91 +309,67 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Undo</source>
-        <translation>Касуй</translation>
+        <translation type="obsolete">Касуй</translation>
     </message>
     <message>
         <source>&amp;Undo</source>
-        <translation>&amp;Касуй</translation>
-    </message>
-    <message>
-        <source>Ctrl+Z</source>
-        <translation></translation>
+        <translation type="obsolete">&amp;Касуй</translation>
     </message>
     <message>
         <source>Redo</source>
-        <translation>Понови</translation>
+        <translation type="obsolete">Понови</translation>
     </message>
     <message>
         <source>&amp;Redo</source>
-        <translation>&amp;Понови</translation>
-    </message>
-    <message>
-        <source>Ctrl+Y</source>
-        <translation></translation>
+        <translation type="obsolete">&amp;Понови</translation>
     </message>
     <message>
         <source>Cut</source>
-        <translation>Виріж</translation>
+        <translation type="obsolete">Виріж</translation>
     </message>
     <message>
         <source>&amp;Cut</source>
-        <translation>&amp;Виріж</translation>
-    </message>
-    <message>
-        <source>Ctrl+X</source>
-        <translation></translation>
+        <translation type="obsolete">&amp;Виріж</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Скопіюй</translation>
+        <translation type="obsolete">Скопіюй</translation>
     </message>
     <message>
         <source>C&amp;opy</source>
-        <translation>С&amp;копіюй</translation>
-    </message>
-    <message>
-        <source>Ctrl+C</source>
-        <translation></translation>
+        <translation type="obsolete">С&amp;копіюй</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation>Встав</translation>
+        <translation type="obsolete">Встав</translation>
     </message>
     <message>
         <source>&amp;Paste</source>
-        <translation>&amp;Встав</translation>
-    </message>
-    <message>
-        <source>Ctrl+V</source>
-        <translation></translation>
+        <translation type="obsolete">&amp;Встав</translation>
     </message>
     <message>
         <source>Find</source>
-        <translation>Шукай</translation>
+        <translation type="obsolete">Шукай</translation>
     </message>
     <message>
         <source>&amp;Find...</source>
-        <translation>&amp;Шукай...</translation>
-    </message>
-    <message>
-        <source>Ctrl+F</source>
-        <translation></translation>
+        <translation type="obsolete">&amp;Шукай...</translation>
     </message>
     <message>
         <source>Contents</source>
-        <translation>Зміст</translation>
+        <translation type="obsolete">Зміст</translation>
     </message>
     <message>
         <source>&amp;Contents...</source>
-        <translation>&amp;Зміст...</translation>
+        <translation type="obsolete">&amp;Зміст...</translation>
     </message>
     <message>
         <source>Index</source>
-        <translation>Індекси</translation>
+        <translation type="obsolete">Індекси</translation>
     </message>
     <message>
         <source>&amp;Index...</source>
-        <translation>&amp;Індекси...</translation>
+        <translation type="obsolete">&amp;Індекси...</translation>
     </message>
     <message>
         <source>About</source>
@@ -389,7 +401,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>&amp;Qtel Settings...</source>
-        <translation>&amp;Qtel налаштування...</translation>
+        <translation type="obsolete">&amp;Qtel налаштування...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
@@ -433,169 +445,217 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Disconnect</source>
-        <translation>Від&apos;єднайся</translation>
+        <translation type="obsolete">Від&apos;єднайся</translation>
     </message>
     <message>
         <source>Add selected to Bookmarks</source>
-        <translation>Додай вибране у закладки</translation>
+        <translation type="obsolete">Додай вибране у закладки</translation>
     </message>
     <message>
         <source>Qtel v</source>
-        <translation>Qtel версія </translation>
+        <translation type="obsolete">Qtel версія </translation>
     </message>
     <message>
-        <source> - Qt EchoLink client.
+        <source>- Qt EchoLink client.
 </source>
-        <translation> - Qt EchoLink клієнт.
+        <translation type="obsolete">- Qt EchoLink програма.
 </translation>
     </message>
     <message>
-        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
-
-Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
-are welcome to redistribute it in accordance with the terms and conditions in
-the GNU GPL (General Public License) version 2 or later.</source>
-        <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
-
-Qtel надається БЕЗ ЖОДНИХ ГАРАНТІЙ. Це безоплатне вільне ПЗ. 
-Ви можете ним користовуватися і його поширювати згідно з умовами
-ліцензії GNU GPL (General Public License) версії 2 або пізнішої.</translation>
+        <source>Author</source>
+        <translation type="obsolete">Автор</translation>
+    </message>
+    <message>
+        <source>Incoming Connections</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Station</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>S&amp;ettings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect to &amp;selected...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect to &amp;IP...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Qtel &amp;Settings...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>F5</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add Selected To &amp;Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add the selected station in the station list to the bookmarks menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+U</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Remove Selected From Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add &amp;Named Station To Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+Q</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
     <message>
         <source>Qtel: Settings</source>
-        <translation>Qtel: Налаштування</translation>
+        <translation type="unfinished">Qtel: Налаштування</translation>
     </message>
     <message>
         <source>User Info</source>
-        <translation>Дані користувача</translation>
+        <translation type="unfinished">Дані користувача</translation>
     </message>
     <message>
         <source>User Information</source>
-        <translation>Налаштування користувача</translation>
+        <translation type="unfinished">Налаштування користувача</translation>
     </message>
     <message>
         <source>Info
 Message</source>
-        <translation>Опис станції</translation>
+        <translation type="unfinished">Опис станції</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation>Розташування</translation>
+        <translation type="unfinished">Розташування</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation>Кличний знак</translation>
+        <translation type="unfinished">Кличний знак</translation>
     </message>
     <message>
         <source>Password</source>
-        <translation>Пароль</translation>
+        <translation type="unfinished">Пароль</translation>
     </message>
     <message>
         <source>Retype password</source>
-        <translation>Ще раз пароль</translation>
+        <translation type="unfinished">Ще раз пароль</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation>Ім&apos;я</translation>
+        <translation type="unfinished">Ім&apos;я</translation>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation>Реєстраційний сервер</translation>
+        <translation type="unfinished">Реєстраційний сервер</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
-        <translation>Налаштування реєстраційного сервера</translation>
+        <translation type="unfinished">Налаштування реєстраційного сервера</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>Мережне ім&apos;я або IP адреса реєстраційного сервера EchoLink</translation>
+        <translation type="unfinished">Мережне ім&apos;я або IP адреса реєстраційного сервера EchoLink</translation>
     </message>
     <message>
         <source>Server</source>
-        <translation>Сервер</translation>
+        <translation type="unfinished">Сервер</translation>
     </message>
     <message>
         <source>Refresh time</source>
-        <translation>Час між оновленнями</translation>
+        <translation type="unfinished">Час між оновленнями</translation>
     </message>
     <message>
         <source>min</source>
-        <translation>хвилин</translation>
+        <translation type="unfinished">хвилин</translation>
     </message>
     <message>
         <source>Time, in minutes, between station list refreshes</source>
-        <translation>Час у хвилинах між оновленнями переліку станцій</translation>
+        <translation type="unfinished">Час у хвилинах між оновленнями переліку станцій</translation>
     </message>
     <message>
         <source>Register as busy on program startup</source>
-        <translation>Реєструйся як &quot;зайнятий&quot; під час запуску програми</translation>
+        <translation type="unfinished">Реєструйся як &quot;зайнятий&quot; під час запуску програми</translation>
     </message>
     <message>
         <source>Start as busy</source>
-        <translation>Вмикай як &quot;зайнятий&quot;</translation>
+        <translation type="unfinished">Вмикай як &quot;зайнятий&quot;</translation>
     </message>
     <message>
         <source>Sound</source>
-        <translation>Звук</translation>
+        <translation type="unfinished">Звук</translation>
     </message>
     <message>
         <source>Sound settings</source>
-        <translation>Налаштування звуку</translation>
+        <translation type="obsolete">Налаштування звуку</translation>
     </message>
     <message>
         <source>Audio device</source>
-        <translation>Аудіо пристрій</translation>
+        <translation type="obsolete">Аудіо пристрій</translation>
     </message>
     <message>
         <source>Full duplex</source>
-        <translation>Повний дуплекс</translation>
+        <translation type="unfinished">Повний дуплекс</translation>
+    </message>
+    <message>
+        <source>The audio device to use (e.g. /dev/dsp)</source>
+        <translation type="obsolete">Працювити через аудіо пристрій (напр. /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
-        <translation>Встанови цю галочку, щоб увімкнути повнодуплексний режим</translation>
+        <translation type="unfinished">Встанови цю галочку, щоб увімкнути повнодуплексний режим</translation>
     </message>
     <message>
         <source>Connect Sound</source>
-        <translation>Сигнал про приєднання</translation>
+        <translation type="unfinished">Сигнал про приєднання</translation>
     </message>
     <message>
         <source>The connect sound to use on incoming EchoLink connections</source>
-        <translation>Звуковий сигнал про запит EchoLink сполучення</translation>
+        <translation type="unfinished">Звуковий сигнал про запит EchoLink сполучення</translation>
     </message>
     <message>
         <source>Browse...</source>
-        <translation>Покажи...</translation>
+        <translation type="unfinished">Покажи...</translation>
     </message>
     <message>
         <source>OK</source>
-        <translation>Встанови</translation>
+        <translation type="unfinished">Встанови</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Скасуй</translation>
+        <translation type="unfinished">Скасуй</translation>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation>Звуковий файл (*.raw)</translation>
+        <translation type="obsolete">Звуковий файл (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation>Виберіть файл із сигналом про з&apos;єднання</translation>
-    </message>
-    <message>
-        <source>QSO</source>
-        <translation></translation>
+        <translation type="obsolete">Виберіть файл із сигналом про з&apos;єднання</translation>
     </message>
     <message>
         <source>QSO dialog settings</source>
-        <translation>Налаштування QSO</translation>
+        <translation type="obsolete">Налаштування QSO</translation>
     </message>
     <message>
         <source>Chat encoding:</source>
-        <translation>Кодування символів: </translation>
+        <translation type="unfinished">Кодування символів: </translation>
     </message>
     <message>
         <source>Chinese</source>
@@ -678,8 +738,28 @@ Message</source>
         <translation>Введено різні паролі</translation>
     </message>
     <message>
+        <source>Sound Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mic audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>The audio device to use (e.g. alsa:default)</source>
-        <translation>Задіяти аудіо пристрій (напр. alsa:default)</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Speaker audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QSO</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QSO Dialog Settings</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

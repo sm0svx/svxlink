@@ -1,5 +1,4 @@
 <!DOCTYPE TS><TS>
-<defaultcodec></defaultcodec>
 <context>
     <name>ComDialog</name>
     <message>
@@ -34,11 +33,19 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Could not open audio device</source>
-        <translation>Impossibile aprire il device audio </translation>
+        <translation type="obsolete">Impossibile aprire il device audio </translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
         <translation>Impossibile connettere il host</translation>
+    </message>
+    <message>
+        <source>Could not open mic audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not open speaker audio device</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -100,6 +107,10 @@ Can&apos;t create connection to</source>
         <translation>Nome:</translation>
     </message>
     <message>
+        <source>Alt+D</source>
+        <translation>Alt+D</translation>
+    </message>
+    <message>
         <source>VOX</source>
         <translation>VOX</translation>
     </message>
@@ -136,15 +147,15 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Add to bookmarks</source>
-        <translation>Aggiungere a segnalibro</translation>
+        <translation type="obsolete">Aggiungere a segnalibro</translation>
     </message>
     <message>
         <source>Remove from bookmarks</source>
-        <translation>Eliminazione di segnalibro</translation>
+        <translation type="obsolete">Eliminazione di segnalibro</translation>
     </message>
     <message>
         <source>Add named station...</source>
-        <translation>Aggiungere staziona nominata...</translation>
+        <translation type="obsolete">Aggiungere staziona nominata...</translation>
     </message>
     <message>
         <source>Qtel - Add station...</source>
@@ -157,17 +168,17 @@ Can&apos;t create connection to</source>
     <message>
         <source>Ctrl+Q</source>
         <comment>fileQuitAction</comment>
-        <translation>Ctrl+A</translation>
+        <translation type="obsolete">Ctrl+A</translation>
     </message>
     <message>
         <source>Ctrl+B</source>
         <comment>directoryBusyAction</comment>
-        <translation>Ctrl+U</translation>
+        <translation type="obsolete">Ctrl+U</translation>
     </message>
     <message>
         <source>F5</source>
         <comment>directoryRefreshAction</comment>
-        <translation>F5</translation>
+        <translation type="obsolete">F5</translation>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
@@ -177,12 +188,51 @@ Can&apos;t create connection to</source>
         <source>Enter an IP address or hostname:</source>
         <translation>Inserire indirizzo IP o host:</translation>
     </message>
+    <message>
+        <source>Bookmarks</source>
+        <translation type="unfinished">Segnalibro</translation>
+    </message>
+    <message>
+        <source>Links</source>
+        <translation type="unfinished">Links</translation>
+    </message>
+    <message>
+        <source>Repeaters</source>
+        <translation type="unfinished">Relé </translation>
+    </message>
+    <message>
+        <source>Conferences</source>
+        <translation type="unfinished">Conferenze</translation>
+    </message>
+    <message>
+        <source>Stations</source>
+        <translation type="unfinished">Stazioni</translation>
+    </message>
+    <message>
+        <source>About Qtel</source>
+        <translation type="unfinished">Da Qtel</translation>
+    </message>
+    <message>
+        <source>Qtel v</source>
+        <translation type="unfinished">Qtel v</translation>
+    </message>
+    <message>
+        <source> - Qt EchoLink client.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it in accordance with the terms and conditions in the GNU GPL (General Public License) version 2 or later.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindowBase</name>
     <message>
         <source>Explorer</source>
-        <translation>Explorer</translation>
+        <translation type="obsolete">Explorer</translation>
     </message>
     <message>
         <source>Conferences</source>
@@ -206,15 +256,15 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Station</source>
-        <translation>Stazione</translation>
+        <translation type="obsolete">Stazione</translation>
     </message>
     <message>
         <source>Location/Description</source>
-        <translation>Luogo/Descrizione</translation>
+        <translation type="obsolete">Luogo/Descrizione</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation>Stato</translation>
+        <translation type="obsolete">Stato</translation>
     </message>
     <message>
         <source>Time</source>
@@ -226,7 +276,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Impostazioni</translation>
+        <translation type="obsolete">&amp;Impostazioni</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -234,67 +284,67 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Undo</source>
-        <translation>Annullare</translation>
+        <translation type="obsolete">Annullare</translation>
     </message>
     <message>
         <source>&amp;Undo</source>
-        <translation>A&amp;nnullare</translation>
+        <translation type="obsolete">A&amp;nnullare</translation>
     </message>
     <message>
         <source>Redo</source>
-        <translation>Rifare</translation>
+        <translation type="obsolete">Rifare</translation>
     </message>
     <message>
         <source>&amp;Redo</source>
-        <translation>&amp;Rifare</translation>
+        <translation type="obsolete">&amp;Rifare</translation>
     </message>
     <message>
         <source>Cut</source>
-        <translation>Interrompere</translation>
+        <translation type="obsolete">Interrompere</translation>
     </message>
     <message>
         <source>&amp;Cut</source>
-        <translation>&amp;Interrompere</translation>
+        <translation type="obsolete">&amp;Interrompere</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Copiare</translation>
+        <translation type="obsolete">Copiare</translation>
     </message>
     <message>
         <source>C&amp;opy</source>
-        <translation>&amp;Copiare</translation>
+        <translation type="obsolete">&amp;Copiare</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation>Inserire</translation>
+        <translation type="obsolete">Inserire</translation>
     </message>
     <message>
         <source>&amp;Paste</source>
-        <translation>&amp;Iserire</translation>
+        <translation type="obsolete">&amp;Iserire</translation>
     </message>
     <message>
         <source>Find</source>
-        <translation>Cercare</translation>
+        <translation type="obsolete">Cercare</translation>
     </message>
     <message>
         <source>&amp;Find...</source>
-        <translation>C&amp;ercare...</translation>
+        <translation type="obsolete">C&amp;ercare...</translation>
     </message>
     <message>
         <source>Contents</source>
-        <translation>Contenuto</translation>
+        <translation type="obsolete">Contenuto</translation>
     </message>
     <message>
         <source>&amp;Contents...</source>
-        <translation>C&amp;ontenuto...</translation>
+        <translation type="obsolete">C&amp;ontenuto...</translation>
     </message>
     <message>
         <source>Index</source>
-        <translation>Indice</translation>
+        <translation type="obsolete">Indice</translation>
     </message>
     <message>
         <source>&amp;Index...</source>
-        <translation>&amp;Indice....</translation>
+        <translation type="obsolete">&amp;Indice....</translation>
     </message>
     <message>
         <source>About</source>
@@ -326,7 +376,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>&amp;Qtel Settings...</source>
-        <translation>&amp;Impostazione per Qtel...</translation>
+        <translation type="obsolete">&amp;Impostazione per Qtel...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
@@ -334,7 +384,17 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Qtel v</source>
-        <translation>Qtel v</translation>
+        <translation type="obsolete">Qtel v</translation>
+    </message>
+    <message>
+        <source>- Qt EchoLink client.
+</source>
+        <translation type="obsolete">- Il Qt-Cliente del EchoLink.
+</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation type="obsolete">Autore</translation>
     </message>
     <message>
         <source>&amp;Directory</source>
@@ -378,11 +438,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Local time</source>
-        <translation>Tempo locale</translation>
+        <translation type="obsolete">Tempo locale</translation>
     </message>
     <message>
         <source>Incoming connections</source>
-        <translation>Conttati in arrivo</translation>
+        <translation type="obsolete">Conttati in arrivo</translation>
     </message>
     <message>
         <source>Accept</source>
@@ -402,31 +462,31 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Node ID</source>
-        <translation>Numero del nodo</translation>
+        <translation type="obsolete">Numero del nodo</translation>
     </message>
     <message>
         <source>Ctrl+Z</source>
-        <translation>Ctrl+Z</translation>
+        <translation type="obsolete">Ctrl+Z</translation>
     </message>
     <message>
         <source>Ctrl+Y</source>
-        <translation>Ctrl+Y</translation>
+        <translation type="obsolete">Ctrl+Y</translation>
     </message>
     <message>
         <source>Ctrl+X</source>
-        <translation>Ctrl+X</translation>
+        <translation type="obsolete">Ctrl+X</translation>
     </message>
     <message>
         <source>Ctrl+C</source>
-        <translation>Ctrl+C</translation>
+        <translation type="obsolete">Ctrl+C</translation>
     </message>
     <message>
         <source>Ctrl+V</source>
-        <translation>Ctrl+V</translation>
+        <translation type="obsolete">Ctrl+V</translation>
     </message>
     <message>
         <source>Ctrl+F</source>
-        <translation>Ctrl+F</translation>
+        <translation type="obsolete">Ctrl+F</translation>
     </message>
     <message>
         <source>Connect to IP...</source>
@@ -438,164 +498,208 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Disconnect</source>
-        <translation>Disconnesso</translation>
+        <translation type="obsolete">Disconnesso</translation>
     </message>
     <message>
         <source>Add selected to Bookmarks</source>
-        <translation>Aggiungere la staziona a segnalibro</translation>
+        <translation type="obsolete">Aggiungere la staziona a segnalibro</translation>
     </message>
     <message>
-        <source> - Qt EchoLink client.
-</source>
-        <translation> - Qt EchoLink cliente.
-</translation>
+        <source>Incoming Connections</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
-
-Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
-are welcome to redistribute it in accordance with the terms and conditions in
-the GNU GPL (General Public License) version 2 or later.</source>
-        <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
-
-Qtel è fornite SENZA ALCUNA GARANZIA. Questo è software libero, e voi libero di ridistribuirlo in conformità con i termini e le condizioni di la GNU GPL (General Public License) versione 2 o successiva.</translation>
+        <source>&amp;Station</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>S&amp;ettings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect to &amp;selected...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect to &amp;IP...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Qtel &amp;Settings...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>F5</source>
+        <translation type="unfinished">F5</translation>
+    </message>
+    <message>
+        <source>Add Selected To &amp;Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add the selected station in the station list to the bookmarks menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+U</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Remove Selected From Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add &amp;Named Station To Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+Q</source>
+        <translation type="unfinished">Ctrl+A</translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
     <message>
         <source>Qtel: Settings</source>
-        <translation>Qtel: Impostazione</translation>
+        <translation type="unfinished">Qtel: Impostazione</translation>
     </message>
     <message>
         <source>OK</source>
-        <translation>OK</translation>
+        <translation type="unfinished">OK</translation>
     </message>
     <message>
         <source>User Info</source>
-        <translation>Informazioni della stazione</translation>
+        <translation type="unfinished">Informazioni della stazione</translation>
     </message>
     <message>
         <source>User Information</source>
-        <translation>Informazioni della stazione</translation>
+        <translation type="unfinished">Informazioni della stazione</translation>
     </message>
     <message>
         <source>Info
 Message</source>
-        <translation>Informazione/Messagio
+        <translation type="unfinished">Informazione/Messagio
 </translation>
     </message>
     <message>
         <source>Location</source>
-        <translation>Luogo/Posizione</translation>
+        <translation type="unfinished">Luogo/Posizione</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation>Segnale di chiamata</translation>
+        <translation type="unfinished">Segnale di chiamata</translation>
     </message>
     <message>
         <source>Password</source>
-        <translation>Password</translation>
+        <translation type="unfinished">Password</translation>
     </message>
     <message>
         <source>Retype password</source>
-        <translation>Ricrivere il password</translation>
+        <translation type="unfinished">Ricrivere il password</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation>Nome</translation>
+        <translation type="unfinished">Nome</translation>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation>Catalogo</translation>
+        <translation type="unfinished">Catalogo</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
-        <translation>Caratteristica del server catalogo</translation>
+        <translation type="unfinished">Caratteristica del server catalogo</translation>
     </message>
     <message>
         <source>Server</source>
-        <translation>Server</translation>
+        <translation type="unfinished">Server</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Cancellare</translation>
+        <translation type="unfinished">Cancellare</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>Nome o indirizzo IP del server catalogo</translation>
+        <translation type="unfinished">Nome o indirizzo IP del server catalogo</translation>
     </message>
     <message>
         <source>Refresh time</source>
-        <translation>Intervallo attualizzazione</translation>
+        <translation type="unfinished">Intervallo attualizzazione</translation>
     </message>
     <message>
         <source>min</source>
-        <translation>min</translation>
+        <translation type="unfinished">min</translation>
     </message>
     <message>
         <source>Time, in minutes, between station list refreshes</source>
-        <translation>Intervallo mentre attualizzazione (in minuti)</translation>
+        <translation type="unfinished">Intervallo mentre attualizzazione (in minuti)</translation>
     </message>
     <message>
         <source>Register as busy on program startup</source>
-        <translation>Registrare da occupato durante il lancio della programma</translation>
+        <translation type="unfinished">Registrare da occupato durante il lancio della programma</translation>
     </message>
     <message>
         <source>Start as busy</source>
-        <translation>Indicare da occupato durante il lancio della programma</translation>
+        <translation type="unfinished">Indicare da occupato durante il lancio della programma</translation>
     </message>
     <message>
         <source>Sound</source>
-        <translation>Suono</translation>
+        <translation type="unfinished">Suono</translation>
     </message>
     <message>
         <source>Sound settings</source>
-        <translation>Caratteristica del suono</translation>
+        <translation type="obsolete">Caratteristica del suono</translation>
     </message>
     <message>
         <source>Audio device</source>
-        <translation>Audio device</translation>
+        <translation type="obsolete">Audio device</translation>
     </message>
     <message>
         <source>Full duplex</source>
-        <translation>Full duplex</translation>
+        <translation type="unfinished">Full duplex</translation>
+    </message>
+    <message>
+        <source>The audio device to use (e.g. /dev/dsp)</source>
+        <translation type="obsolete">Device audio (per esempio /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
-        <translation>Puntare casella per attivare full duplex modo</translation>
+        <translation type="unfinished">Puntare casella per attivare full duplex modo</translation>
     </message>
     <message>
         <source>Connect Sound</source>
-        <translation>Suono mentre</translation>
+        <translation type="unfinished">Suono mentre</translation>
     </message>
     <message>
         <source>The connect sound to use on incoming EchoLink connections</source>
-        <translation>Suono per un passando contatto</translation>
+        <translation type="unfinished">Suono per un passando contatto</translation>
     </message>
     <message>
         <source>Browse...</source>
-        <translation>Navigare...</translation>
+        <translation type="unfinished">Navigare...</translation>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation>16-bit 8kHz dato del audio (*.raw)</translation>
+        <translation type="obsolete">16-bit 8kHz dato del audio (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation>Sceliere file dell&apos;audio</translation>
+        <translation type="obsolete">Sceliere file dell&apos;audio</translation>
     </message>
     <message>
         <source>QSO</source>
-        <translation>QSO</translation>
+        <translation type="unfinished">QSO</translation>
     </message>
     <message>
         <source>QSO dialog settings</source>
-        <translation>Caratteristica del QSO</translation>
+        <translation type="obsolete">Caratteristica del QSO</translation>
     </message>
     <message>
         <source>Chat encoding:</source>
-        <translation>Codice del chat:</translation>
+        <translation type="unfinished">Codice del chat:</translation>
     </message>
     <message>
         <source>Chinese</source>
@@ -678,8 +782,24 @@ Message</source>
         <translation>Password divercere</translation>
     </message>
     <message>
+        <source>Sound Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mic audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>The audio device to use (e.g. alsa:default)</source>
-        <translation>Il dispositivo audio da utilizzare (p.e. alsa:default)</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Speaker audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QSO Dialog Settings</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

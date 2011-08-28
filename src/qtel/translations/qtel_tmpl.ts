@@ -15,10 +15,6 @@ Can&apos;t create connection to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Could not open audio device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Could not create connection to remote host</source>
         <translation type="unfinished"></translation>
     </message>
@@ -36,6 +32,14 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Disconnected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not open mic audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not open speaker audio device</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -117,36 +121,13 @@ Can&apos;t create connection to</source>
         <source>PTT</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Alt+D</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
-    <message>
-        <source>Add to bookmarks</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Remove from bookmarks</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Add named station...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ctrl+Q</source>
-        <comment>fileQuitAction</comment>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>F5</source>
-        <comment>directoryRefreshAction</comment>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ctrl+B</source>
-        <comment>directoryBusyAction</comment>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Logging off from directory server...</source>
         <translation type="unfinished"></translation>
@@ -175,15 +156,50 @@ Can&apos;t create connection to</source>
         <source>Enter an IP address or hostname:</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Conferences</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Links</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Repeaters</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stations</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>About Qtel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Qtel v</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> - Qt EchoLink client.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it in accordance with the terms and conditions in the GNU GPL (General Public License) version 2 or later.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindowBase</name>
     <message>
         <source>Qtel - the Qt EchoLink Client</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Explorer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -207,31 +223,7 @@ Can&apos;t create connection to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Station</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Location/Description</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Local time</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Node ID</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Messages</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Incoming connections</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -263,99 +255,7 @@ Can&apos;t create connection to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&amp;Settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Undo</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&amp;Undo</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ctrl+Z</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Redo</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&amp;Redo</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ctrl+Y</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cut</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&amp;Cut</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ctrl+X</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>C&amp;opy</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ctrl+C</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&amp;Paste</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ctrl+V</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Find</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&amp;Find...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ctrl+F</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Contents</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&amp;Contents...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Index</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&amp;Index...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -384,10 +284,6 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Qtel Settings...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&amp;Qtel Settings...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -431,170 +327,64 @@ Can&apos;t create connection to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Disconnect</source>
+        <source>Incoming Connections</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add selected to Bookmarks</source>
+        <source>&amp;Station</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Qtel v</source>
+        <source>S&amp;ettings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source> - Qt EchoLink client.
-</source>
+        <source>Connect to &amp;selected...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
-
-Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
-are welcome to redistribute it in accordance with the terms and conditions in
-the GNU GPL (General Public License) version 2 or later.</source>
+        <source>Connect to &amp;IP...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Qtel &amp;Settings...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>F5</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add Selected To &amp;Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add the selected station in the station list to the bookmarks menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+U</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Remove Selected From Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add &amp;Named Station To Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+Q</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
-    <message>
-        <source>Qtel: Settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>User Info</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>User Information</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Info
-Message</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Location</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Callsign</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Password</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Retype password</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Directory Server</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Directory Server Settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Server</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Refresh time</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>min</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Time, in minutes, between station list refreshes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Register as busy on program startup</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Start as busy</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sound</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sound settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Audio device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Full duplex</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. alsa:default)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Check this check box to enable full duplex operation</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Connect Sound</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The connect sound to use on incoming EchoLink connections</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Browse...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>QSO</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>QSO dialog settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Chat encoding:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>OK</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Raw Sound Files (*.raw)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Choose a connect sound file</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Chinese</source>
         <translation type="unfinished"></translation>
@@ -673,6 +463,139 @@ Message</source>
     </message>
     <message>
         <source>Passwords do not match</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Qtel: Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>User Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>User Information</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Callsign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retype password</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Info
+Message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Directory Server</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Directory Server Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Server</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The hostname or IP address of the EchoLink directory server to use</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Time, in minutes, between station list refreshes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Start as busy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Register as busy on program startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sound</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sound Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mic audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The audio device to use (e.g. alsa:default)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Speaker audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Full duplex</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Check this check box to enable full duplex operation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect Sound</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The connect sound to use on incoming EchoLink connections</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Browse...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QSO</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QSO Dialog Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Chat encoding:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

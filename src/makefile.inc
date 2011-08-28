@@ -50,23 +50,21 @@ LIBPATH		= -L$(LIB)
 INCPATH 	+= -I$(INC)
 
 # Complete QTHEADERS/LIB_QT_HEADERS with the ones generated from ".ui" files.
-QTHEADERS	+= $(UI_FILES:%.ui=%.h)
-LIB_QTHEADERS	+=  $(LIB_UI_FILES:%.ui=%.h)
+#QTHEADERS	+= $(UI_FILES:%.ui=%.h)
+#LIB_QTHEADERS	+=  $(LIB_UI_FILES:%.ui=%.h)
 
 # All source files
 SRCS		= $(LIBSRC) $(PRGSRC) $(notdir $(PROGS:%=%.c)) \
       	      	  $(notdir $(CPPPROGS:%=%.cpp)) $(QTHEADERS:%.h=moc_%.cpp) \
 		  $(LIB_QTHEADERS:%.h=moc_%.cpp) $(notdir $(PLUGINS:%=%.c)) \
-		  $(PLUGINSRC) $(UI_FILES:%.ui=%.cpp) \
-		  $(LIB_UI_FILES:%.ui=%.cpp) $(notdir $(PLUGINS_CPP:%=%.cpp))
+		  $(PLUGINSRC) $(notdir $(PLUGINS_CPP:%=%.cpp))
 
 # All object files that should go in the lib
-LIBOBJS		:= $(LIBSRC:.c=.o) $(LIB_QTHEADERS:%.h=moc_%.o) \
-		   $(LIB_UI_FILES:%.ui=%.o)
+LIBOBJS		:= $(LIBSRC:.c=.o) $(LIB_QTHEADERS:%.h=moc_%.o)
 LIBOBJS		:= $(LIBOBJS:.cpp=.o)
 
 # All objects, besides the mainfile, needed to link $(PROGS)
-PRGOBJS		:= $(PRGSRC:.c=.o) $(QTHEADERS:%.h=moc_%.o) $(UI_FILES:%.ui=%.o)
+PRGOBJS		:= $(PRGSRC:.c=.o) $(QTHEADERS:%.h=moc_%.o)
 PRGOBJS		:= $(PRGOBJS:.cpp=.o)
 
 # All binary files compilation of plugins generate.
@@ -401,9 +399,9 @@ moc_%.cpp:	%.h
 	$(QT_UIC) -o $@ $<
 
 
-%.cpp:	%.ui
-	$(ECHO) "--- Generating "$(BOLD)$@$(NBOLD)" from "$(BOLD)$<$(NBOLD)"..."
-	$(QT_UIC) -o $@ -impl $(@:.cpp=.h) $<
+#%.cpp:	%.ui
+#	$(ECHO) "--- Generating "$(BOLD)$@$(NBOLD)" from "$(BOLD)$<$(NBOLD)"..."
+#	$(QT_UIC) -o $@ -impl $(@:.cpp=.h) $<
 
 
 # Rules to make programs
@@ -504,8 +502,7 @@ clean::
 	    $(RM) $$file ;\
 	  fi \
 	done
-	$(RM) $(UI_FILES:%.ui=%.cpp) $(UI_FILES:%.ui=%.h) \
-	      $(LIB_UI_FILES:%.ui=%.cpp) $(LIB_UI_FILES:%.ui=%.h)
+	$(RM) $(UI_FILES:%.ui=%.h) $(LIB_UI_FILES:%.ui=%.h)
 
 
 # Cleanup the dependency files and exported includefiles too.
@@ -786,8 +783,7 @@ $(PLUGINS_CPP:%=%.so):	$(notdir $(PLUGINS_CPP:%=%.o)) $(PLUGIN_ARCHIVE)
 	fi
 
 
-INTERMEDIATE_FILES  = $(UI_FILES:%.ui=%.h) $(UI_FILES:%.ui=%.cpp) \
-		$(LIB_UI_FILES:%.ui=%.h) $(LIB_UI_FILES:%.ui=%.cpp) \
+INTERMEDIATE_FILES  = $(UI_FILES:%.ui=%.h) $(LIB_UI_FILES:%.ui=%.h) \
 		$(QTHEADERS:%.h=moc_%.cpp) $(LIB_QTHEADERS:%.h=moc_%.cpp)
 
 ifneq ($(strip $(INTERMEDIATE_FILES)),)
