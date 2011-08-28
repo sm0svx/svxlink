@@ -5,7 +5,8 @@ CONFIG	+= qt warn_on release
 
 SOURCES	+= MainWindow.cpp \
 	ComDialog.cpp \
-	Settings.cpp
+	Settings.cpp \
+	EchoLinkDirectoryModel.cpp
 
 FORMS	= MainWindowBase.ui \
 	ComDialogBase.ui \

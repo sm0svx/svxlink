@@ -1,4 +1,6 @@
-<!DOCTYPE TS><TS>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.0">
 <context>
     <name>ComDialog</name>
     <message>
@@ -129,6 +131,33 @@ No se puede crear conexion</translation>
     <message>
         <source>dB Level:</source>
         <translation>Nivel de dB:</translation>
+    </message>
+</context>
+<context>
+    <name>EchoLinkDirectoryModel</name>
+    <message>
+        <source>Callsign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Location/Description</source>
+        <translation type="unfinished">Localización/Descripción</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation type="unfinished">Estado</translation>
+    </message>
+    <message>
+        <source>Local Time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Node ID</source>
+        <translation type="unfinished">Nodo ID</translation>
+    </message>
+    <message>
+        <source>IP Address</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -559,6 +588,34 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     <message>
         <source>Ctrl+Q</source>
         <translation type="unfinished">Ctrl+Q</translation>
+    </message>
+    <message>
+        <source>Connect to the selected station</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect to local station using IP address or hostname</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Immediately refresh the station list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add selected station to the bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add a station to the bookmarks by entering a callsign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show the about dialog</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

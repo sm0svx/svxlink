@@ -134,6 +134,33 @@ Kan ej skapa uppkoppling till</translation>
     </message>
 </context>
 <context>
+    <name>EchoLinkDirectoryModel</name>
+    <message>
+        <source>Callsign</source>
+        <translation>Anropssignal</translation>
+    </message>
+    <message>
+        <source>Location/Description</source>
+        <translation>Plats/Beskrivning</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <source>Local Time</source>
+        <translation>Lokal tid</translation>
+    </message>
+    <message>
+        <source>Node ID</source>
+        <translation>Nod-ID</translation>
+    </message>
+    <message>
+        <source>IP Address</source>
+        <translation>IP-adress</translation>
+    </message>
+</context>
+<context>
     <name>MainWindow</name>
     <message>
         <source>Logging off from directory server...</source>
@@ -189,7 +216,7 @@ station du vill lägga till</translation>
     </message>
     <message>
         <source>Enter an IP address or hostname:</source>
-        <translation>Mata in en IP-adress eller datornamn:</translation>
+        <translation>Mata in en IP-adress eller ett datornamn:</translation>
     </message>
     <message>
         <source>Bookmarks</source>
@@ -541,6 +568,34 @@ Qtel erbjuds HELT UTAN GARANTIER. Detta är fri mjukvara och du är välkommen a
     <message>
         <source>Ctrl+Q</source>
         <translation>Ctrl+A</translation>
+    </message>
+    <message>
+        <source>Connect to the selected station</source>
+        <translation>Anslut till den markerade stationen</translation>
+    </message>
+    <message>
+        <source>Connect to local station using IP address or hostname</source>
+        <translation>Anslut till en lokal station genom att ange en IP-adress eller ett datornamn</translation>
+    </message>
+    <message>
+        <source>Immediately refresh the station list</source>
+        <translation>Ladda om stationslistan omedelbart</translation>
+    </message>
+    <message>
+        <source>Add selected station to the bookmarks</source>
+        <translation>Lägg till den markerade stationen till bokmärken</translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks</source>
+        <translation>Tag bort den markerade stationen från bokmärken</translation>
+    </message>
+    <message>
+        <source>Add a station to the bookmarks by entering a callsign</source>
+        <translation>Lägg till en station till bokmärken genom att ange en anropssignal</translation>
+    </message>
+    <message>
+        <source>Show the about dialog</source>
+        <translation>Visa version och licensinformation för Qtel</translation>
     </message>
 </context>
 <context>

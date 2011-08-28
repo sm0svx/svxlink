@@ -1,4 +1,6 @@
-<!DOCTYPE TS><TS>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.0">
 <context>
     <name>ComDialog</name>
     <message>
@@ -25,7 +27,7 @@
         <source>Station data not found in directory server.
 Can&apos;t create connection to</source>
         <translation>Date della staziona non trovato al server. 
-<byte value="x9"/>Non e possibile collegare a</translation>
+	Non e possibile collegare a</translation>
     </message>
     <message>
         <source>Could not create connection to station</source>
@@ -129,6 +131,33 @@ Can&apos;t create connection to</source>
     <message>
         <source>dB Level:</source>
         <translation>Valore [dB]:</translation>
+    </message>
+</context>
+<context>
+    <name>EchoLinkDirectoryModel</name>
+    <message>
+        <source>Callsign</source>
+        <translation type="unfinished">Segnale di chiamata</translation>
+    </message>
+    <message>
+        <source>Location/Description</source>
+        <translation type="unfinished">Luogo/Descrizione</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation type="unfinished">Stato</translation>
+    </message>
+    <message>
+        <source>Local Time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Node ID</source>
+        <translation type="unfinished">Numero del nodo</translation>
+    </message>
+    <message>
+        <source>IP Address</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -559,6 +588,34 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     <message>
         <source>Ctrl+Q</source>
         <translation type="unfinished">Ctrl+A</translation>
+    </message>
+    <message>
+        <source>Connect to the selected station</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect to local station using IP address or hostname</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Immediately refresh the station list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add selected station to the bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add a station to the bookmarks by entering a callsign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show the about dialog</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

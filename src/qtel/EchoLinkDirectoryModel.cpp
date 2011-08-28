@@ -262,17 +262,17 @@ QVariant EchoLinkDirectoryModel::headerData(int section,
     switch (section)
     {
       case 0:
-	return tr("Callsign");
+	return trUtf8("Callsign");
       case 1:
-	return tr("Location/Description");
+	return trUtf8("Location/Description");
       case 2:
-	return tr("Status");
+	return trUtf8("Status");
       case 3:
-	return tr("Local Time");
+	return trUtf8("Local Time");
       case 4:
-	return tr("Node ID");
+	return trUtf8("Node ID");
       case 5:
-	return tr("IP Address");
+	return trUtf8("IP Address");
       default:
 	return QVariant();
     }
