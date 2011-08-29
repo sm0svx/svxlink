@@ -1,16 +1,12 @@
 /**
-@file	 AsyncQtDnsLookupWorker.h
-@brief   Execute DNS queries in the Qt environment
-@author  Tobias Blomberg
-@date	 2003-04-12
-
-This file contains a class for executing DNS quries in the Qt variant of
-the async environment. This class should never be used directly. It is
-used by Async::QtApplication to execute DNS queries.
+@file	 SettingsDialog.h
+@brief   Wrapper for the SettingsDialog
+@author  Tobias Blomberg / SM0SVX
+@date	 2010-05-01
 
 \verbatim
-Async - A library for programming event driven applications
-Copyright (C) 2003-2010 Tobias Blomberg
+Qtel - The Qt EchoLink client
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,9 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-#ifndef ASYNC_QT_DNS_LOOKUP_WORKER_INCLUDED
-#define ASYNC_QT_DNS_LOOKUP_WORKER_INCLUDED
+#ifndef SETTINGS_DIALOG_INCLUDED
+#define SETTINGS_DIALOG_INCLUDED
 
 
 /****************************************************************************
@@ -39,9 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <QObject>
-#include <QHostInfo>
-#undef emit
+#include <QFileDialog>
 
 
 /****************************************************************************
@@ -50,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <EchoLinkStationData.h>
 
 
 /****************************************************************************
@@ -58,7 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "../core/AsyncDnsLookupWorker.h"
+#include "SettingsDialogBase.h"
 
 
 /****************************************************************************
@@ -75,8 +69,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
+
+  
 
 /****************************************************************************
  *
@@ -101,55 +104,45 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	DNS lookup worker for the Qt variant of the async environment
-@author Tobias Blomberg
-@date   2003-04-12
+@brief	A_brief_class_description
+@author Tobias Blomberg / SM0SVX
+@date   2008-
 
-This is the DNS lookup worker for the Qt variant of the async environment.
-It is an internal class that should only be used from within the async
-library.
+A_detailed_class_description
+
+\include Template_demo.cpp
 */
-class QtDnsLookupWorker : public QObject, public DnsLookupWorker
+class SettingsDialog : public QDialog, public Ui::SettingsDialog
 {
   Q_OBJECT
   
   public:
-    /**
-     * @brief 	Constructor
-     * @param 	label The label (hostname) to lookup
-     */
-    QtDnsLookupWorker(const std::string& label);
-  
-    /**
-     * @brief 	Destructor
-     */
-    virtual ~QtDnsLookupWorker(void);
-  
-    /**
-     * @brief 	Return the addresses for the host in the query
-     * @return	Returns an stl vector which contains all the addresses
-     *	      	associated with the hostname in the query.
-     *
-     * Use this function to retrieve all the IP-addresses associated with
-     * the hostname in the query.
-     */
-    std::vector<IpAddress> addresses(void);
-    
-  protected:
-    
-  private:
-    int lookup_id;
-    QHostInfo host_info;
-    
+    SettingsDialog(void) 
+    { 
+      setupUi(this);
+      my_callsign->setMaxLength(EchoLink::StationData::MAXCALL);
+      my_location->setMaxLength(EchoLink::StationData::MAXDESC);
+    }
+
   private slots:
-    void onResultsReady(const QHostInfo &info);
-    
-};  /* class QtDnsLookupWorker */
+    void browseConnectSound(void)
+    {
+      QString s = QFileDialog::getOpenFileName(
+			this,
+			tr("Choose a connect sound file"),
+			connect_sound->text(),
+			tr("Raw Sound Files (*.raw)"));
+      if (!s.isNull())
+      {
+	connect_sound->setText(s);
+      }
+    }
+};
 
 
-} /* namespace */
+//} /* namespace */
 
-#endif /* ASYNC_QT_DNS_LOOKUP_WORKER_INCLUDED */
+#endif /* SETTINGS_DIALOG_INCLUDED */
 
 
 

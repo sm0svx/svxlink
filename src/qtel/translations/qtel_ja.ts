@@ -1,4 +1,6 @@
-<!DOCTYPE TS><TS>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.0">
 <context>
     <name>ComDialog</name>
     <message>
@@ -28,7 +30,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Could not open audio device</source>
-        <translation>オーディオデバイスが見つかりません</translation>
+        <translation type="obsolete">オーディオデバイスが見つかりません</translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
@@ -37,6 +39,14 @@ Can&apos;t create connection to</source>
     <message>
         <source>Disconnected</source>
         <translation>切断</translation>
+    </message>
+    <message>
+        <source>Could not open mic audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not open speaker audio device</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -117,6 +127,37 @@ Can&apos;t create connection to</source>
         <source>dB Level:</source>
         <translation>デシベル:</translation>
     </message>
+    <message>
+        <source>Alt+D</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>EchoLinkDirectoryModel</name>
+    <message>
+        <source>Callsign</source>
+        <translation type="unfinished">コールサイン</translation>
+    </message>
+    <message>
+        <source>Location/Description</source>
+        <translation type="unfinished">場所/説明</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation type="unfinished">状態</translation>
+    </message>
+    <message>
+        <source>Local Time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Node ID</source>
+        <translation type="unfinished">ノード ID</translation>
+    </message>
+    <message>
+        <source>IP Address</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -134,15 +175,15 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Add to bookmarks</source>
-        <translation>お気に入りに追加</translation>
+        <translation type="obsolete">お気に入りに追加</translation>
     </message>
     <message>
         <source>Remove from bookmarks</source>
-        <translation>お気に入りから削除</translation>
+        <translation type="obsolete">お気に入りから削除</translation>
     </message>
     <message>
         <source>Add named station...</source>
-        <translation>自分で入力してお気に入りに追加...</translation>
+        <translation type="obsolete">自分で入力してお気に入りに追加...</translation>
     </message>
     <message>
         <source>Qtel - Add station...</source>
@@ -155,17 +196,17 @@ Can&apos;t create connection to</source>
     <message>
         <source>Ctrl+Q</source>
         <comment>fileQuitAction</comment>
-        <translation>Ctrl+A</translation>
+        <translation type="obsolete">Ctrl+A</translation>
     </message>
     <message>
         <source>Ctrl+B</source>
         <comment>directoryBusyAction</comment>
-        <translation>Ctrl+U</translation>
+        <translation type="obsolete">Ctrl+U</translation>
     </message>
     <message>
         <source>F5</source>
         <comment>directoryRefreshAction</comment>
-        <translation>F5</translation>
+        <translation type="obsolete">F5</translation>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
@@ -175,12 +216,62 @@ Can&apos;t create connection to</source>
         <source>Enter an IP address or hostname:</source>
         <translation>IPアドレスまたはホスト名を入力:</translation>
     </message>
+    <message>
+        <source>Bookmarks</source>
+        <translation type="unfinished">お気に入り</translation>
+    </message>
+    <message>
+        <source>Conferences</source>
+        <translation type="unfinished">カンファレンス</translation>
+    </message>
+    <message>
+        <source>Links</source>
+        <translation type="unfinished">リンク局</translation>
+    </message>
+    <message>
+        <source>Repeaters</source>
+        <translation type="unfinished">レピータ局</translation>
+    </message>
+    <message>
+        <source>Stations</source>
+        <translation type="unfinished">シングル局</translation>
+    </message>
+    <message>
+        <source>About Qtel</source>
+        <translation type="unfinished">Qtelとは...</translation>
+    </message>
+    <message>
+        <source>Qtel v</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> - Qt EchoLink client.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
+are welcome to redistribute it in accordance with the terms and conditions in
+the GNU GPL (General Public License) version 2 or later.</source>
+        <translation type="obsolete">Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Public License)
+version 2以上の条件で再配布することは歓迎します。</translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it in accordance with the terms and conditions in the GNU GPL (General Public License) version 2 or later.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindowBase</name>
     <message>
         <source>Explorer</source>
-        <translation>一覧</translation>
+        <translation type="obsolete">一覧</translation>
     </message>
     <message>
         <source>Conferences</source>
@@ -204,15 +295,15 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Station</source>
-        <translation>接続</translation>
+        <translation type="obsolete">接続</translation>
     </message>
     <message>
         <source>Location/Description</source>
-        <translation>場所/説明</translation>
+        <translation type="obsolete">場所/説明</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation>状態</translation>
+        <translation type="obsolete">状態</translation>
     </message>
     <message>
         <source>Time</source>
@@ -224,7 +315,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;設定</translation>
+        <translation type="obsolete">&amp;設定</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -232,67 +323,67 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Undo</source>
-        <translation>Undo</translation>
+        <translation type="obsolete">Undo</translation>
     </message>
     <message>
         <source>&amp;Undo</source>
-        <translation>&amp;Undo</translation>
+        <translation type="obsolete">&amp;Undo</translation>
     </message>
     <message>
         <source>Redo</source>
-        <translation>Redo</translation>
+        <translation type="obsolete">Redo</translation>
     </message>
     <message>
         <source>&amp;Redo</source>
-        <translation>&amp;Redo</translation>
+        <translation type="obsolete">&amp;Redo</translation>
     </message>
     <message>
         <source>Cut</source>
-        <translation>Cut</translation>
+        <translation type="obsolete">Cut</translation>
     </message>
     <message>
         <source>&amp;Cut</source>
-        <translation>&amp;Cut</translation>
+        <translation type="obsolete">&amp;Cut</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Copy</translation>
+        <translation type="obsolete">Copy</translation>
     </message>
     <message>
         <source>C&amp;opy</source>
-        <translation>C&amp;opy</translation>
+        <translation type="obsolete">C&amp;opy</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation>Paste</translation>
+        <translation type="obsolete">Paste</translation>
     </message>
     <message>
         <source>&amp;Paste</source>
-        <translation>P&amp;aste</translation>
+        <translation type="obsolete">P&amp;aste</translation>
     </message>
     <message>
         <source>Find</source>
-        <translation>Find</translation>
+        <translation type="obsolete">Find</translation>
     </message>
     <message>
         <source>&amp;Find...</source>
-        <translation>&amp;Find...</translation>
+        <translation type="obsolete">&amp;Find...</translation>
     </message>
     <message>
         <source>Contents</source>
-        <translation>コンテンツ</translation>
+        <translation type="obsolete">コンテンツ</translation>
     </message>
     <message>
         <source>&amp;Contents...</source>
-        <translation>&amp;コンテンツ...</translation>
+        <translation type="obsolete">&amp;コンテンツ...</translation>
     </message>
     <message>
         <source>Index</source>
-        <translation>インデックス</translation>
+        <translation type="obsolete">インデックス</translation>
     </message>
     <message>
         <source>&amp;Index...</source>
-        <translation>&amp;インデックス...</translation>
+        <translation type="obsolete">&amp;インデックス...</translation>
     </message>
     <message>
         <source>About</source>
@@ -324,15 +415,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>&amp;Qtel Settings...</source>
-        <translation>&amp;Qtelセッティング...</translation>
+        <translation type="obsolete">&amp;Qtelセッティング...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
         <translation>Qtelセッティングを開く</translation>
-    </message>
-    <message>
-        <source>Qtel v</source>
-        <translation></translation>
     </message>
     <message>
         <source>&amp;Directory</source>
@@ -376,11 +463,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Local time</source>
-        <translation>ローカルタイム</translation>
+        <translation type="obsolete">ローカルタイム</translation>
     </message>
     <message>
         <source>Incoming connections</source>
-        <translation>接続希望局</translation>
+        <translation type="obsolete">接続希望局</translation>
     </message>
     <message>
         <source>Accept</source>
@@ -400,31 +487,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Node ID</source>
-        <translation>ノード ID</translation>
-    </message>
-    <message>
-        <source>Ctrl+Z</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+Y</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+X</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+C</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+V</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+F</source>
-        <translation></translation>
+        <translation type="obsolete">ノード ID</translation>
     </message>
     <message>
         <source>Connect to IP...</source>
@@ -436,15 +499,15 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Disconnect</source>
-        <translation>切断</translation>
+        <translation type="obsolete">切断</translation>
     </message>
     <message>
         <source>Add selected to Bookmarks</source>
-        <translation>選択局をお気に入りに追加</translation>
+        <translation type="obsolete">選択局をお気に入りに追加</translation>
     </message>
     <message>
         <source> - Qt EchoLink client.</source>
-        <translation> - Qt EchoLink クライアント.</translation>
+        <translation type="obsolete"> - Qt EchoLink クライアント.</translation>
     </message>
     <message>
         <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
@@ -452,147 +515,227 @@ Can&apos;t create connection to</source>
 Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
 are welcome to redistribute it in accordance with the terms and conditions in
 the GNU GPL (General Public License) version 2 or later.</source>
-        <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+        <translation type="obsolete">Copyright (C) 2011 Tobias Blomberg / SM0SVX
 
 Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Public License)
 version 2以上の条件で再配布することは歓迎します。</translation>
+    </message>
+    <message>
+        <source>Incoming Connections</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Station</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>S&amp;ettings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect to &amp;selected...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect to &amp;IP...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Qtel &amp;Settings...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>F5</source>
+        <translation type="unfinished">F5</translation>
+    </message>
+    <message>
+        <source>Add Selected To &amp;Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add the selected station in the station list to the bookmarks menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+U</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Remove Selected From Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add &amp;Named Station To Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+Q</source>
+        <translation type="unfinished">Ctrl+A</translation>
+    </message>
+    <message>
+        <source>Connect to the selected station</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect to local station using IP address or hostname</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Immediately refresh the station list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add selected station to the bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add a station to the bookmarks by entering a callsign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show the about dialog</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
     <message>
         <source>Qtel: Settings</source>
-        <translation>Qtel: 設定等</translation>
-    </message>
-    <message>
-        <source>OK</source>
-        <translation></translation>
+        <translation type="unfinished">Qtel: 設定等</translation>
     </message>
     <message>
         <source>User Info</source>
-        <translation>ユーザー情報</translation>
+        <translation type="unfinished">ユーザー情報</translation>
     </message>
     <message>
         <source>User Information</source>
-        <translation>ユーザー情報</translation>
+        <translation type="unfinished">ユーザー情報</translation>
     </message>
     <message>
         <source>Info
 Message</source>
-        <translation>情報/メッセージ
+        <translation type="unfinished">情報/メッセージ
 </translation>
     </message>
     <message>
         <source>Location</source>
-        <translation>場所</translation>
+        <translation type="unfinished">場所</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation>コールサイン</translation>
+        <translation type="unfinished">コールサイン</translation>
     </message>
     <message>
         <source>Password</source>
-        <translation>パスワード</translation>
+        <translation type="unfinished">パスワード</translation>
     </message>
     <message>
         <source>Retype password</source>
-        <translation>パスワード再入力</translation>
+        <translation type="unfinished">パスワード再入力</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation>名前</translation>
+        <translation type="unfinished">名前</translation>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation>ディレクトリサーバー</translation>
+        <translation type="unfinished">ディレクトリサーバー</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
-        <translation>ディレクトリサーバー設定</translation>
+        <translation type="unfinished">ディレクトリサーバー設定</translation>
     </message>
     <message>
         <source>Server</source>
-        <translation>サーバー</translation>
+        <translation type="unfinished">サーバー</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>取り消し</translation>
+        <translation type="unfinished">取り消し</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>エコーリンクディレクトリサーバーのホスト名またはIPアドレスの設定</translation>
+        <translation type="unfinished">エコーリンクディレクトリサーバーのホスト名またはIPアドレスの設定</translation>
     </message>
     <message>
         <source>Refresh time</source>
-        <translation>更新時間</translation>
+        <translation type="unfinished">更新時間</translation>
     </message>
     <message>
         <source>min</source>
-        <translation>分</translation>
+        <translation type="unfinished">分</translation>
     </message>
     <message>
         <source>Time, in minutes, between station list refreshes</source>
-        <translation>ステーションリストを更新する時間</translation>
+        <translation type="unfinished">ステーションリストを更新する時間</translation>
     </message>
     <message>
         <source>Register as busy on program startup</source>
-        <translation>プログラム起動時、ビジーにセット</translation>
+        <translation type="unfinished">プログラム起動時、ビジーにセット</translation>
     </message>
     <message>
         <source>Start as busy</source>
-        <translation>起動時にビジー</translation>
+        <translation type="unfinished">起動時にビジー</translation>
     </message>
     <message>
         <source>Sound</source>
-        <translation>サウンド</translation>
+        <translation type="unfinished">サウンド</translation>
     </message>
     <message>
         <source>Sound settings</source>
-        <translation>サウンド設定</translation>
+        <translation type="obsolete">サウンド設定</translation>
     </message>
     <message>
         <source>Audio device</source>
-        <translation>オーディオデバイス</translation>
+        <translation type="obsolete">オーディオデバイス</translation>
     </message>
     <message>
         <source>Full duplex</source>
-        <translation>全二重</translation>
+        <translation type="unfinished">全二重</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
-        <translation>セットすると全二重有効</translation>
+        <translation type="unfinished">セットすると全二重有効</translation>
     </message>
     <message>
         <source>Connect Sound</source>
-        <translation>接続サウンド</translation>
+        <translation type="unfinished">接続サウンド</translation>
     </message>
     <message>
         <source>The connect sound to use on incoming EchoLink connections</source>
-        <translation>接続時のサウンドファイル</translation>
+        <translation type="unfinished">接続時のサウンドファイル</translation>
     </message>
     <message>
         <source>Browse...</source>
-        <translation>ファイルを開く...</translation>
+        <translation type="unfinished">ファイルを開く...</translation>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation>16-bit 8kHz サウンドファイル (*.raw)</translation>
+        <translation type="obsolete">16-bit 8kHz サウンドファイル (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation>コネクトサウンドファイル選択</translation>
+        <translation type="obsolete">コネクトサウンドファイル選択</translation>
     </message>
     <message>
         <source>QSO</source>
-        <translation>交信</translation>
+        <translation type="unfinished">交信</translation>
     </message>
     <message>
         <source>QSO dialog settings</source>
-        <translation>交信設定</translation>
+        <translation type="obsolete">交信設定</translation>
     </message>
     <message>
         <source>Chat encoding:</source>
-        <translation>チャットエンコード:</translation>
+        <translation type="unfinished">チャットエンコード:</translation>
     </message>
     <message>
         <source>Chinese</source>
@@ -676,7 +819,27 @@ Message</source>
     </message>
     <message>
         <source>The audio device to use (e.g. alsa:default)</source>
-        <translation>使用するオーディオデバイス (e.g. alsa:default, ex. alsa:hw:0, alsa:plughw:0, oss:/dev/dsp)</translation>
+        <translation type="unfinished">使用するオーディオデバイス (e.g. alsa:default, ex. alsa:hw:0, alsa:plughw:0, oss:/dev/dsp)</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sound Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mic audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Speaker audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QSO Dialog Settings</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

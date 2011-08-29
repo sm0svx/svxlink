@@ -1,4 +1,6 @@
-<!DOCTYPE TS><TS>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.0">
 <context>
     <name>ComDialog</name>
     <message>
@@ -17,7 +19,7 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
     </message>
     <message>
         <source>Could not open audio device</source>
-        <translation>A-hangeszköz-nem-nyitható-meg</translation>
+        <translation type="obsolete">A-hangeszköz-nem-nyitható-meg</translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
@@ -38,6 +40,14 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
     <message>
         <source>Disconnected</source>
         <translation>Kapcsolat-bontva</translation>
+    </message>
+    <message>
+        <source>Could not open mic audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not open speaker audio device</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -95,6 +105,10 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
         <translation>&amp;Bontás</translation>
     </message>
     <message>
+        <source>Alt+D</source>
+        <translation>ALT+D</translation>
+    </message>
+    <message>
         <source>VOX</source>
         <translation>VOX</translation>
     </message>
@@ -120,33 +134,60 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
     </message>
 </context>
 <context>
+    <name>EchoLinkDirectoryModel</name>
+    <message>
+        <source>Callsign</source>
+        <translation type="unfinished">Hívójel</translation>
+    </message>
+    <message>
+        <source>Location/Description</source>
+        <translation type="unfinished">Hely/Leírás</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation type="unfinished">Állapot</translation>
+    </message>
+    <message>
+        <source>Local Time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Node ID</source>
+        <translation type="unfinished">Csomópont-szám</translation>
+    </message>
+    <message>
+        <source>IP Address</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MainWindow</name>
     <message>
         <source>Add to bookmarks</source>
-        <translation>Hozzáad-a-kedvencekhez</translation>
+        <translation type="obsolete">Hozzáad-a-kedvencekhez</translation>
     </message>
     <message>
         <source>Remove from bookmarks</source>
-        <translation>Eltávolít-a-kedvencekből</translation>
+        <translation type="obsolete">Eltávolít-a-kedvencekből</translation>
     </message>
     <message>
         <source>Add named station...</source>
-        <translation>Elnevezett-állomást-hozzáad...</translation>
+        <translation type="obsolete">Elnevezett-állomást-hozzáad...</translation>
     </message>
     <message>
         <source>Ctrl+Q</source>
         <comment>fileQuitAction</comment>
-        <translation>CTRL+Q</translation>
+        <translation type="obsolete">CTRL+Q</translation>
     </message>
     <message>
         <source>F5</source>
         <comment>directoryRefreshAction</comment>
-        <translation>F5</translation>
+        <translation type="obsolete">F5</translation>
     </message>
     <message>
         <source>Ctrl+B</source>
         <comment>directoryBusyAction</comment>
-        <translation>CTRL+B</translation>
+        <translation type="obsolete">CTRL+B</translation>
     </message>
     <message>
         <source>Logging off from directory server...</source>
@@ -176,6 +217,45 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
         <source>Enter an IP address or hostname:</source>
         <translation>IP-cím-vagy-hosztnév-bevitele:</translation>
     </message>
+    <message>
+        <source>Bookmarks</source>
+        <translation type="unfinished">Kedvencek</translation>
+    </message>
+    <message>
+        <source>Links</source>
+        <translation type="unfinished">Linkek</translation>
+    </message>
+    <message>
+        <source>Repeaters</source>
+        <translation type="unfinished">Átjátszók</translation>
+    </message>
+    <message>
+        <source>Conferences</source>
+        <translation type="unfinished">Konferencia</translation>
+    </message>
+    <message>
+        <source>Stations</source>
+        <translation type="unfinished">Állomások</translation>
+    </message>
+    <message>
+        <source>About Qtel</source>
+        <translation type="unfinished">Over Qtel</translation>
+    </message>
+    <message>
+        <source>Qtel v</source>
+        <translation type="unfinished">Qtel v</translation>
+    </message>
+    <message>
+        <source> - Qt EchoLink client.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it in accordance with the terms and conditions in the GNU GPL (General Public License) version 2 or later.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindowBase</name>
@@ -185,7 +265,7 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
     </message>
     <message>
         <source>Explorer</source>
-        <translation>Böngésző</translation>
+        <translation type="obsolete">Böngésző</translation>
     </message>
     <message>
         <source>Conferences</source>
@@ -209,23 +289,23 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
     </message>
     <message>
         <source>Station</source>
-        <translation>Állomás</translation>
+        <translation type="obsolete">Állomás</translation>
     </message>
     <message>
         <source>Location/Description</source>
-        <translation>Hely/Leírás</translation>
+        <translation type="obsolete">Hely/Leírás</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation>Állapot</translation>
+        <translation type="obsolete">Állapot</translation>
     </message>
     <message>
         <source>Local time</source>
-        <translation>Helyi-idő</translation>
+        <translation type="obsolete">Helyi-idő</translation>
     </message>
     <message>
         <source>Node ID</source>
-        <translation>Csomópont-szám</translation>
+        <translation type="obsolete">Csomópont-szám</translation>
     </message>
     <message>
         <source>Messages</source>
@@ -233,7 +313,7 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
     </message>
     <message>
         <source>Incoming connections</source>
-        <translation>Bejövő-kapcsolatok</translation>
+        <translation type="obsolete">Bejövő-kapcsolatok</translation>
     </message>
     <message>
         <source>Accept</source>
@@ -265,7 +345,7 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Beállítások</translation>
+        <translation type="obsolete">&amp;Beállítások</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -273,91 +353,91 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
     </message>
     <message>
         <source>Undo</source>
-        <translation>Visszavon</translation>
+        <translation type="obsolete">Visszavon</translation>
     </message>
     <message>
         <source>&amp;Undo</source>
-        <translation>&amp;Visszavon</translation>
+        <translation type="obsolete">&amp;Visszavon</translation>
     </message>
     <message>
         <source>Ctrl+Z</source>
-        <translation>CTRL+Z</translation>
+        <translation type="obsolete">CTRL+Z</translation>
     </message>
     <message>
         <source>Redo</source>
-        <translation>Ismét</translation>
+        <translation type="obsolete">Ismét</translation>
     </message>
     <message>
         <source>&amp;Redo</source>
-        <translation>&amp;Ismét</translation>
+        <translation type="obsolete">&amp;Ismét</translation>
     </message>
     <message>
         <source>Ctrl+Y</source>
-        <translation>CTRL+Y</translation>
+        <translation type="obsolete">CTRL+Y</translation>
     </message>
     <message>
         <source>Cut</source>
-        <translation>Kivág</translation>
+        <translation type="obsolete">Kivág</translation>
     </message>
     <message>
         <source>&amp;Cut</source>
-        <translation>&amp;Kivág</translation>
+        <translation type="obsolete">&amp;Kivág</translation>
     </message>
     <message>
         <source>Ctrl+X</source>
-        <translation>CTRL+X</translation>
+        <translation type="obsolete">CTRL+X</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Másol</translation>
+        <translation type="obsolete">Másol</translation>
     </message>
     <message>
         <source>C&amp;opy</source>
-        <translation>&amp;Másol</translation>
+        <translation type="obsolete">&amp;Másol</translation>
     </message>
     <message>
         <source>Ctrl+C</source>
-        <translation>CTRL+C</translation>
+        <translation type="obsolete">CTRL+C</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation>Beilleszt</translation>
+        <translation type="obsolete">Beilleszt</translation>
     </message>
     <message>
         <source>&amp;Paste</source>
-        <translation>&amp;Beilleszt</translation>
+        <translation type="obsolete">&amp;Beilleszt</translation>
     </message>
     <message>
         <source>Ctrl+V</source>
-        <translation>CTRL+V</translation>
+        <translation type="obsolete">CTRL+V</translation>
     </message>
     <message>
         <source>Find</source>
-        <translation>Keres</translation>
+        <translation type="obsolete">Keres</translation>
     </message>
     <message>
         <source>&amp;Find...</source>
-        <translation>&amp;Keres...</translation>
+        <translation type="obsolete">&amp;Keres...</translation>
     </message>
     <message>
         <source>Ctrl+F</source>
-        <translation>CTRL+F</translation>
+        <translation type="obsolete">CTRL+F</translation>
     </message>
     <message>
         <source>Contents</source>
-        <translation>Tartalom</translation>
+        <translation type="obsolete">Tartalom</translation>
     </message>
     <message>
         <source>&amp;Contents...</source>
-        <translation>&amp;Tartalom...</translation>
+        <translation type="obsolete">&amp;Tartalom...</translation>
     </message>
     <message>
         <source>Index</source>
-        <translation>Index</translation>
+        <translation type="obsolete">Index</translation>
     </message>
     <message>
         <source>&amp;Index...</source>
-        <translation>&amp;Index...</translation>
+        <translation type="obsolete">&amp;Index...</translation>
     </message>
     <message>
         <source>About</source>
@@ -389,7 +469,7 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
     </message>
     <message>
         <source>&amp;Qtel Settings...</source>
-        <translation>&amp;Qtel beállítások...</translation>
+        <translation type="obsolete">&amp;Qtel beállítások...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
@@ -433,27 +513,108 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
     </message>
     <message>
         <source>Disconnect</source>
-        <translation>Kapcsolat-bontása</translation>
+        <translation type="obsolete">Kapcsolat-bontása</translation>
     </message>
     <message>
         <source>Add selected to Bookmarks</source>
-        <translation>A-kiválasztott-hozzáadása-a-kedvencekhez</translation>
+        <translation type="obsolete">A-kiválasztott-hozzáadása-a-kedvencekhez</translation>
     </message>
     <message>
         <source>Qtel v</source>
-        <translation>Qtel v</translation>
+        <translation type="obsolete">Qtel v</translation>
     </message>
     <message>
-        <source> - Qt EchoLink client.
+        <source>- Qt EchoLink client.
 </source>
+        <translation type="obsolete">- Qt Echolink kliens.
+</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation type="obsolete">Szerző</translation>
+    </message>
+    <message>
+        <source>Incoming Connections</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
-
-Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
-are welcome to redistribute it in accordance with the terms and conditions in
-the GNU GPL (General Public License) version 2 or later.</source>
+        <source>&amp;Station</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>S&amp;ettings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect to &amp;selected...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect to &amp;IP...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Qtel &amp;Settings...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>F5</source>
+        <translation type="unfinished">F5</translation>
+    </message>
+    <message>
+        <source>Add Selected To &amp;Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add the selected station in the station list to the bookmarks menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+U</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Remove Selected From Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add &amp;Named Station To Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+Q</source>
+        <translation type="unfinished">CTRL+Q</translation>
+    </message>
+    <message>
+        <source>Connect to the selected station</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect to local station using IP address or hostname</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Immediately refresh the station list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add selected station to the bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add a station to the bookmarks by entering a callsign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show the about dialog</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -461,141 +622,129 @@ the GNU GPL (General Public License) version 2 or later.</source>
     <name>SettingsDialog</name>
     <message>
         <source>Qtel: Settings</source>
-        <translation>Qtel: Beállítások</translation>
+        <translation type="unfinished">Qtel: Beállítások</translation>
     </message>
     <message>
         <source>User Info</source>
-        <translation>Felhasználó-infó</translation>
+        <translation type="unfinished">Felhasználó-infó</translation>
     </message>
     <message>
         <source>User Information</source>
-        <translation>Felhasználó-információ</translation>
+        <translation type="unfinished">Felhasználó-információ</translation>
     </message>
     <message>
         <source>Info
 Message</source>
-        <translation>Info
+        <translation type="unfinished">Info
 Üzenet</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation>Hely</translation>
+        <translation type="unfinished">Hely</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation>Hívójel</translation>
+        <translation type="unfinished">Hívójel</translation>
     </message>
     <message>
         <source>Password</source>
-        <translation>Jelszó</translation>
+        <translation type="unfinished">Jelszó</translation>
     </message>
     <message>
         <source>Retype password</source>
-        <translation>Jelszó-újra</translation>
+        <translation type="unfinished">Jelszó-újra</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation>Név</translation>
+        <translation type="unfinished">Név</translation>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation>Könyvtár-szerver</translation>
+        <translation type="unfinished">Könyvtár-szerver</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
-        <translation>Könyvtár-szerver-beállítása</translation>
+        <translation type="unfinished">Könyvtár-szerver-beállítása</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>A-hosztnév-vagy-IP-cím-használja-az-Echolink-könyvtár-szervert</translation>
+        <translation type="unfinished">A-hosztnév-vagy-IP-cím-használja-az-Echolink-könyvtár-szervert</translation>
     </message>
     <message>
         <source>Server</source>
-        <translation>Szerver</translation>
+        <translation type="unfinished">Szerver</translation>
     </message>
     <message>
         <source>Refresh time</source>
-        <translation>Frissítési-idő</translation>
+        <translation type="unfinished">Frissítési-idő</translation>
     </message>
     <message>
         <source>min</source>
-        <translation>perc</translation>
+        <translation type="unfinished">perc</translation>
     </message>
     <message>
         <source>Time, in minutes, between station list refreshes</source>
-        <translation>Az-idő-percekben-mielőtt-az-állomáslista-frissítésre-kerül</translation>
+        <translation type="unfinished">Az-idő-percekben-mielőtt-az-állomáslista-frissítésre-kerül</translation>
     </message>
     <message>
         <source>Register as busy on program startup</source>
-        <translation>Regisztráljon-foglaltkén-a-program-indulásakor</translation>
+        <translation type="unfinished">Regisztráljon-foglaltkén-a-program-indulásakor</translation>
     </message>
     <message>
         <source>Start as busy</source>
-        <translation>Indítás-foglaltként</translation>
+        <translation type="unfinished">Indítás-foglaltként</translation>
     </message>
     <message>
         <source>Sound</source>
-        <translation>Hang</translation>
+        <translation type="unfinished">Hang</translation>
     </message>
     <message>
         <source>Sound settings</source>
-        <translation>Hang-beállítás</translation>
+        <translation type="obsolete">Hang-beállítás</translation>
     </message>
     <message>
         <source>Audio device</source>
-        <translation>Hang-eszköz</translation>
+        <translation type="obsolete">Hang-eszköz</translation>
     </message>
     <message>
         <source>Full duplex</source>
-        <translation>Full duplex</translation>
+        <translation type="unfinished">Full duplex</translation>
+    </message>
+    <message>
+        <source>The audio device to use (e.g. /dev/dsp)</source>
+        <translation type="obsolete">A-hasznát-hang-eszköz-(pl.-/dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
-        <translation>Jelöld-be-a-full-duplex-használathoz</translation>
+        <translation type="unfinished">Jelöld-be-a-full-duplex-használathoz</translation>
     </message>
     <message>
         <source>Connect Sound</source>
-        <translation>Kapcsolódás-hang</translation>
+        <translation type="unfinished">Kapcsolódás-hang</translation>
     </message>
     <message>
         <source>The connect sound to use on incoming EchoLink connections</source>
-        <translation>Bejövő-kapcsolódás-hangja-Echolink-kapcsolatnál</translation>
+        <translation type="unfinished">Bejövő-kapcsolódás-hangja-Echolink-kapcsolatnál</translation>
     </message>
     <message>
         <source>Browse...</source>
-        <translation>Megnéz...</translation>
+        <translation type="unfinished">Megnéz...</translation>
     </message>
     <message>
         <source>OK</source>
-        <translation>OK</translation>
+        <translation type="unfinished">OK</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Megszakít</translation>
+        <translation type="unfinished">Megszakít</translation>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation>Raw hang-fájl (*.raw)</translation>
+        <translation type="obsolete">Raw hang-fájl (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation>Válaszd-ki-a-kapcsolódási-hangot</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. alsa:default)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>QSO</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>QSO dialog settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Chat encoding:</source>
-        <translation type="unfinished"></translation>
+        <translation type="obsolete">Válaszd-ki-a-kapcsolódási-hangot</translation>
     </message>
     <message>
         <source>Chinese</source>
@@ -675,6 +824,34 @@ Message</source>
     </message>
     <message>
         <source>Passwords do not match</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sound Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mic audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The audio device to use (e.g. alsa:default)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Speaker audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QSO</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QSO Dialog Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Chat encoding:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
