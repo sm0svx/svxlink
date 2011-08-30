@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,19 +36,19 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 
-#include <qlistview.h>
-#include <qtextbrowser.h>
-#include <qstatusbar.h>
-#include <qtimer.h>
-#include <qmessagebox.h>
-#include <qaction.h>
-#include <qpixmap.h>
-#include <qlabel.h>
-#include <qtooltip.h>
-#include <qpushbutton.h>
-#include <qinputdialog.h>
-#include <qsplitter.h>
+#include <QStatusBar>
+#include <QTimer>
+#include <QMessageBox>
+#include <QAction>
+#include <QPixmap>
+#include <QLabel>
+#include <QToolTip>
+#include <QPushButton>
+#include <QInputDialog>
+#include <QSplitter>
+#include <QCloseEvent>
 #undef emit
+
 
 /****************************************************************************
  *
@@ -66,15 +66,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "images/offline_icon.xpm"
-#include "images/online_icon.xpm"
-#include "images/busy_icon.xpm"
-
+#include "version/QTEL.h"
 #include "Settings.h"
 #include "EchoLinkDispatcher.h"
 #include "ComDialog.h"
 #include "MainWindow.h"
 #include "MsgHandler.h"
+#include "EchoLinkDirectoryModel.h"
 
 
 /****************************************************************************
@@ -149,33 +147,53 @@ using namespace EchoLink;
  *------------------------------------------------------------------------
  */
 MainWindow::MainWindow(Directory &dir)
-  : dir(dir), refresh_call_list_timer(0), is_busy(false), audio_io(0),
-    prev_status(StationData::STAT_UNKNOWN)
+  : dir(dir), refresh_call_list_timer(0), is_busy(false), msg_handler(0),
+    msg_audio_io(0), prev_status(StationData::STAT_UNKNOWN)
 {
-  connect(explorerView, SIGNAL(currentChanged(QListViewItem*)),
-      	  this, SLOT(explorerViewClicked(QListViewItem*)));
-  connect(stationView, SIGNAL(doubleClicked(QListViewItem*)),
-      	  this, SLOT(stationViewDoubleClicked(QListViewItem*)));
-  connect(stationView, SIGNAL(selectionChanged(void)),
-      	  this, SLOT(stationViewSelectionChanged(void)));
-  connect(stationView, SIGNAL(returnPressed(QListViewItem*)),
-      	  this, SLOT(stationViewDoubleClicked(QListViewItem*)));
+  setupUi(this);
+  
+  station_view->addAction(connectionConnectToSelectedAction);
+  QAction *separator = new QAction(this);
+  separator->setSeparator(true);
+  station_view->addAction(separator);
+  station_view->addAction(addNamedStationToBookmarksAction);
+  station_view->addAction(addSelectedToBookmarksAction);
+  station_view->addAction(removeSelectedFromBookmarksAction);
+
   connect(directoryRefreshAction, SIGNAL(activated()),
       	  this, SLOT(refreshCallList()));
-  connect(incoming_con_view, SIGNAL(selectionChanged(QListViewItem*)),
-      	  this, SLOT(incomingSelectionChanged(QListViewItem*)));
-  connect(incoming_con_view, SIGNAL(doubleClicked(QListViewItem*)),
-      	  this, SLOT(acceptIncoming()));
-  connect(incoming_con_view, SIGNAL(returnPressed(QListViewItem*)),
+  connect(connectionConnectToSelectedAction, SIGNAL(activated()),
+      	  this, SLOT(connectionConnectToSelectedActionActivated()));
+  connect(connectionConnectToIpAction, SIGNAL(activated()),
+      	  this, SLOT(connectionConnectToIpActionActivated()));
+  connect(addSelectedToBookmarksAction, SIGNAL(triggered()),
+	  this, SLOT(addSelectedToBookmarks()));
+  connect(removeSelectedFromBookmarksAction, SIGNAL(triggered()),
+	  this, SLOT(removeSelectedFromBookmarks()));
+  connect(addNamedStationToBookmarksAction, SIGNAL(triggered()),
+	  this, SLOT(addNamedStationToBookmarks()));
+  connect(settingsConfigureAction, SIGNAL(activated()),
+      	  this, SLOT(settings()));
+  connect(helpAboutAction, SIGNAL(activated()),
+      	  this, SLOT(helpAbout()));
+
+  connect(station_view_selector, SIGNAL(currentItemChanged(QListWidgetItem*,
+						           QListWidgetItem*)),
+	  this, SLOT(stationViewSelectorCurrentItemChanged(QListWidgetItem*,
+						           QListWidgetItem*)));
+  connect(station_view, SIGNAL(activated(const QModelIndex&)),
+	  this, SLOT(stationViewDoubleClicked(const QModelIndex&)));
+  connect(incoming_con_view, SIGNAL(itemSelectionChanged()),
+      	  this, SLOT(incomingSelectionChanged()));
+  connect(incoming_con_view, SIGNAL(itemActivated(QTreeWidgetItem*,int)),
       	  this, SLOT(acceptIncoming()));
   connect(incoming_clear_button, SIGNAL(clicked()),
       	  this, SLOT(clearIncomingList()));
   connect(incoming_accept_button, SIGNAL(clicked()),
       	  this, SLOT(acceptIncoming()));
   
+
   AudioIO::setChannels(1);
-  
-  audio_io = new AudioIO(Settings::instance()->audioDevice().latin1(), 0);
   
   dir.error.connect(slot(*this, &MainWindow::serverError));
   dir.statusChanged.connect(slot(*this, &MainWindow::statusChanged));
@@ -186,48 +204,24 @@ MainWindow::MainWindow(Directory &dir)
   disp->incomingConnection.connect(slot(*this, &MainWindow::incomingConnection));
 
   status_indicator = new QLabel(statusBar());
-  status_indicator->setPixmap(QPixmap(offline_icon));
-  statusBar()->addWidget(status_indicator, 0, TRUE);
+  status_indicator->setPixmap(QPixmap(":/icons/images/offline_icon.xpm"));
+  statusBar()->addPermanentWidget(status_indicator);
     
   is_busy = Settings::instance()->startAsBusy();
-  directoryBusyAction->setOn(is_busy);
+  directoryBusyAction->setChecked(is_busy);
   updateRegistration();
-  connect(reinterpret_cast<QObject *>(directoryBusyAction),
-      	  SIGNAL(toggled(bool)),
+  connect(directoryBusyAction, SIGNAL(toggled(bool)),
       	  this, SLOT(setBusy(bool)));
   
   //statusBar()->message(trUtf8("Getting calls from directory server..."));
   //dir.getCalls();
-  refresh_call_list_timer = new QTimer(this, "refresh_call_list_timer");
+  refresh_call_list_timer = new QTimer(this);
   refresh_call_list_timer->start(
       1000 * 60 * Settings::instance()->listRefreshTime());
-  QObject::connect(refresh_call_list_timer, SIGNAL(timeout()),
+  connect(refresh_call_list_timer, SIGNAL(timeout()),
       this, SLOT(refreshCallList()));
-  
-  QListViewItem *item = explorerView->findItem(
-      MainWindowBase::trUtf8("Bookmarks"), 0);
-  assert(item != 0);
-  explorerView->setSelected(item, TRUE);
-  
-  incoming_con_view->setSorting(-1);
-  
-  station_view_popup = new QPopupMenu(stationView);
-  station_view_popup_add =
-      station_view_popup->insertItem(trUtf8("Add to bookmarks"), this,
-      SLOT(addSelectedToBookmarks()));
-  station_view_popup_remove =
-      station_view_popup->insertItem(trUtf8("Remove from bookmarks"), this,
-      SLOT(removeSelectedFromBookmarks()));
-  station_view_popup_add_named =
-      station_view_popup->insertItem(trUtf8("Add named station..."), this,
-      SLOT(addNamedStationToBookmarks()));
-  connect(
-      stationView,
-      SIGNAL(rightButtonClicked(QListViewItem*, const QPoint&, int)),
-      this,
-      SLOT(stationViewRightClicked(QListViewItem*, const QPoint&, int)));
-  
-  if (!Settings::instance()->mainWindowSize().isNull())
+
+  if (Settings::instance()->mainWindowSize().isValid())
   {
     resize(Settings::instance()->mainWindowSize());
     vsplitter->setSizes(Settings::instance()->vSplitterSizes());
@@ -237,17 +231,15 @@ MainWindow::MainWindow(Directory &dir)
   Settings::instance()->configurationUpdated.connect(
       slot(*this, &MainWindow::configurationUpdated));
   
-  fileQuitAction->setAccel(
-      QKeySequence(trUtf8("Ctrl+Q", "fileQuitAction")));
-  directoryRefreshAction->setAccel(
-      QKeySequence(trUtf8("F5", "directoryRefreshAction")));
-  directoryBusyAction->setAccel(
-      QKeySequence(trUtf8("Ctrl+B", "directoryBusyAction")));
+  bookmark_model = new EchoLinkDirectoryModel(this);
+  conf_model = new EchoLinkDirectoryModel(this);
+  link_model = new EchoLinkDirectoryModel(this);
+  repeater_model = new EchoLinkDirectoryModel(this);
+  station_model = new EchoLinkDirectoryModel(this);
+  updateBookmarkModel();
+  station_view_selector->setCurrentRow(0);
   
-  msg_audio_io = new AudioIO(Settings::instance()->audioDevice().latin1(), 0);  
-  msg_handler = new MsgHandler("/", msg_audio_io->sampleRate());
-  msg_handler->allMsgsWritten.connect(slot(*this, &MainWindow::allMsgsWritten));
-  msg_audio_io->registerSource(msg_handler);
+  initMsgAudioIo();
 } /* MainWindow::MainWindow */
 
 
@@ -255,8 +247,6 @@ MainWindow::~MainWindow(void)
 {
   delete msg_handler;
   msg_handler = 0;
-  delete audio_io;
-  audio_io = 0;
   delete msg_audio_io;
   msg_audio_io = 0;
   Settings::instance()->setMainWindowSize(size());
@@ -308,24 +298,33 @@ void MainWindow::incomingConnection(const IpAddress& remote_ip,
   char time_str[16];
   strftime(time_str, sizeof(time_str), "%H:%M", tm);
   
-  QListViewItem *item = incoming_con_view->findItem(remote_call.c_str(), 0);
-  if (item == 0)
+  QList<QTreeWidgetItem*> items = incoming_con_view->findItems(
+		QString::fromStdString(remote_call),
+		Qt::MatchExactly);
+  QTreeWidgetItem *item = 0;
+  if (items.size() == 0)
   {
-    item = new QListViewItem(incoming_con_view, remote_call.c_str(),
-	remote_name.c_str(), time_str);
-    
+    QStringList values;
+    values << QString::fromStdString(remote_call)
+           << QString::fromStdString(remote_name)
+           << QString(time_str);
+    item = new QTreeWidgetItem(values);
     msg_audio_io->open(AudioIO::MODE_WR);
-      // FIXME: Hard coded filename
-    msg_handler->playFile(Settings::instance()->connectSound().latin1());
+    msg_handler->playFile(Settings::instance()->connectSound().toStdString());
   }
   else
   {
-    incoming_con_view->takeItem(item);
-    incoming_con_view->insertItem(item);
+    Q_ASSERT(items.size() == 1);
+    item = items.at(0);
+    int item_index = incoming_con_view->indexOfTopLevelItem(item);
+    Q_ASSERT(item_index >= 0);
+    incoming_con_view->takeTopLevelItem(item_index);
     item->setText(2, time_str);
   }
-  incoming_con_view->setSelected(item, TRUE);
-  incoming_con_param[remote_call] = remote_priv;
+  incoming_con_view->insertTopLevelItem(0, item);
+  incoming_con_view->setCurrentItem(item);
+  incoming_con_param[QString::fromStdString(remote_call)] =
+      QString::fromStdString(remote_priv);
   
 } /* MainWindow::incomingConnection */
 
@@ -336,7 +335,7 @@ void MainWindow::closeEvent(QCloseEvent *e)
   
   if ((dir.status() != StationData::STAT_OFFLINE) && (close_count++ == 0))
   {
-    statusBar()->message(trUtf8("Logging off from directory server..."));
+    statusBar()->showMessage(trUtf8("Logging off from directory server..."));
     dir.makeOffline();
     QTimer::singleShot(5000, this, SLOT(forceQuit()));
     e->ignore();
@@ -351,7 +350,7 @@ void MainWindow::closeEvent(QCloseEvent *e)
 void MainWindow::serverError(const string& msg)
 {
   cout << msg << endl;
-  statusBar()->message(msg.c_str(), 5000);
+  statusBar()->showMessage(msg.c_str(), 5000);
   server_msg_view->append(msg.c_str());
 } /* MainWindow::serverError */
 
@@ -362,7 +361,7 @@ void MainWindow::statusChanged(StationData::Status status)
   {
     case StationData::STAT_ONLINE:
       status_indicator->setPixmap(
-	  QPixmap(const_cast<const char **>(online_icon)));
+	  QPixmap(":/icons/images/online_icon.xpm"));
       if (prev_status != StationData::STAT_BUSY)
       {
       	refreshCallList();
@@ -370,7 +369,7 @@ void MainWindow::statusChanged(StationData::Status status)
       break;
       
     case StationData::STAT_BUSY:
-      status_indicator->setPixmap(QPixmap(busy_icon));
+      status_indicator->setPixmap(QPixmap(":/icons/images/busy_icon.xpm"));
       if (prev_status != StationData::STAT_ONLINE)
       {
       	refreshCallList();
@@ -378,12 +377,12 @@ void MainWindow::statusChanged(StationData::Status status)
       break;
       
     case StationData::STAT_OFFLINE:
-      status_indicator->setPixmap(QPixmap(offline_icon));
+      status_indicator->setPixmap(QPixmap(":/icons/images/offline_icon.xpm"));
       close();
       break;
       
     case StationData::STAT_UNKNOWN:
-      status_indicator->setPixmap(QPixmap(offline_icon));
+      status_indicator->setPixmap(QPixmap(":/icons/images/offline_icon.xpm"));
       break;
       
   }
@@ -395,177 +394,145 @@ void MainWindow::statusChanged(StationData::Status status)
 
 void MainWindow::allMsgsWritten(void)
 {
-  cout << "MainWindow::allMsgsWritten\n";
+  //cout << "MainWindow::allMsgsWritten\n";
   msg_audio_io->flushSamples();
 } /* MainWindow::allMsgsWritten */
 
 
 void MainWindow::allSamplesFlushed(void)
 {
-  cout << "MainWindow::allSamplesFlushed\n";
+  //cout << "MainWindow::allSamplesFlushed\n";
   msg_audio_io->close();  
 } /* MainWindow::allSamplesFlushed */
 
 
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-void MainWindow::initialize(void)
+void MainWindow::initMsgAudioIo(void)
 {
-} /* MainWindow::initialize */
+  delete msg_audio_io;
+  delete msg_handler;
+  
+  msg_audio_io =
+      new AudioIO(Settings::instance()->spkrAudioDevice().toStdString(), 0);
+  msg_handler = new MsgHandler("/", msg_audio_io->sampleRate());
+  msg_handler->allMsgsWritten.connect(slot(*this, &MainWindow::allMsgsWritten));
+  msg_audio_io->registerSource(msg_handler);
+  
+} /* MainWindow::initMsgAudioIo */
 
 
-void MainWindow::explorerViewClicked(QListViewItem* item)
+void MainWindow::updateBookmarkModel(void)
 {
-  list<StationData> station_list;
-  
-  //stationView->setUpdatesEnabled(FALSE);
-  
-  if (item == 0)
+  list<StationData> bookmarks;
+  QStringList callsigns = Settings::instance()->bookmarks();
+  QStringList::iterator it;
+  foreach (QString callsign, callsigns)
   {
-    //stationView->clear();
-  }
-  else if (item->text(0) == MainWindowBase::trUtf8("Bookmarks"))
-  {
-    //stationView->clear();
-    QStringList bookmarks = Settings::instance()->bookmarks();
-    QStringList::iterator it;
-    for (it = bookmarks.begin(); it != bookmarks.end(); ++it)
+    const StationData *station = dir.findCall(callsign.toStdString());
+    if (station != 0)
     {
-      const StationData *station = dir.findCall((*it).latin1());
-      if (station != 0)
-      {
-	station_list.push_back(*station);
-      }
-      else
-      {
-	StationData stn;
-	stn.setCallsign((*it).latin1());
-	stn.setStatus(StationData::STAT_OFFLINE);
-	stn.setIp(Async::IpAddress("0.0.0.0"));
-	station_list.push_back(stn);
-      }
+      bookmarks.push_back(*station);
+    }
+    else
+    {
+      StationData stn;
+      stn.setCallsign(callsign.toStdString());
+      stn.setStatus(StationData::STAT_OFFLINE);
+      stn.setIp(Async::IpAddress("0.0.0.0"));
+      bookmarks.push_back(stn);
     }
   }
-  else if (item->text(0) == MainWindowBase::trUtf8("Links"))
-  {
-    station_list = dir.links();
-  }
-  else if (item->text(0) == MainWindowBase::trUtf8("Repeaters"))
-  {
-    station_list = dir.repeaters();
-  }
-  else if (item->text(0) == MainWindowBase::trUtf8("Conferences"))
-  {
-    station_list = dir.conferences();
-  }
-  else if (item->text(0) == MainWindowBase::trUtf8("Stations"))
-  {
-    station_list = dir.stations();
-  }
+  bookmark_model->updateStationList(bookmarks);
   
-  stationView->clear();
-  list<StationData>::const_iterator iter;
-  for (iter=station_list.begin(); iter!=station_list.end(); ++iter)
-  {
-    char id_str[256] = "";
-    if (iter->id() != -1)
-    {
-      sprintf(id_str, "%d", iter->id());
-    }
-    new QListViewItem(stationView, iter->callsign().c_str(),
-	      	      iter->description().c_str(), iter->statusStr().c_str(),
-	      	      iter->time().c_str(), id_str);
-  }
-  
-  if (stationView->firstChild() != 0)
-  {
-    QListViewItem *selected_item = stationView->findItem(select_map[item], 0);
-    if (selected_item == 0)
-    {
-      selected_item = stationView->firstChild();
-      select_map[item] = selected_item->text(0);
-    }
-    if (selected_item != 0)
-    {
-      stationView->setSelected(selected_item, true);
-      stationView->ensureItemVisible(selected_item);
-      QRect rect = stationView->itemRect(selected_item);
-      int target_top = stationView->viewport()->height() / 2 -
-	  selected_item->height() / 2;
-      if (rect.top() > target_top)
-      {
-	stationView->scrollBy(0, rect.top() - target_top);
-      }
-    }
-  }
-  
-  //stationView->setUpdatesEnabled(TRUE);
-  //stationView->update();
-  
-} /* MainWindow::explorerViewClicked */
+} /* MainWindow::updateBookmarkModel */
 
 
-void MainWindow::stationViewDoubleClicked(QListViewItem *item)
+
+void MainWindow::stationViewSelectorCurrentItemChanged(QListWidgetItem *current,
+						       QListWidgetItem *previous
+						      )
 {
-  ComDialog *com_dialog = new ComDialog(audio_io, dir, item->text(0), "?");
+  Q_UNUSED(previous);
+  
+  if (current == 0)
+  {
+    return;
+  }
+  
+  QAbstractItemModel *model = 0;
+  QItemSelectionModel *m = station_view->selectionModel();
+  if (current->text() == trUtf8("Bookmarks"))
+  {
+    model = bookmark_model;
+  }
+  else if (current->text() == trUtf8("Conferences"))
+  {
+    model = conf_model;
+  }
+  else if (current->text() == trUtf8("Links"))
+  {
+    model = link_model;
+  }
+  else if (current->text() == trUtf8("Repeaters"))
+  {
+    model = repeater_model;
+  }
+  else if (current->text() == trUtf8("Stations"))
+  {
+    model = station_model;
+  }
+  
+  station_view->setModel(model);
+  if (m != 0)
+  {
+    m->clear();
+    delete m;
+  }
+  
+  QItemSelectionModel *sm = station_view->selectionModel();
+  if (sm != 0)
+  {
+    connect(sm, SIGNAL(selectionChanged(const QItemSelection&,
+					const QItemSelection&)),
+	    this, SLOT(stationViewSelectionChanged(const QItemSelection&,
+						   const QItemSelection&)));
+  }
+
+} /* MainWindow::stationViewSelectorCurrentItemChanged */
+
+
+void MainWindow::stationViewDoubleClicked(const QModelIndex &index)
+{
+  ComDialog *com_dialog = new ComDialog(dir, index.data(0).toString(), "?");
   com_dialog->show();
 } /* MainWindow::stationViewDoubleClicked */
 
 
-void MainWindow::stationViewSelectionChanged(void)
+void MainWindow::stationViewSelectionChanged(const QItemSelection &current,
+					     const QItemSelection &previous)
 {
-  QListViewItem *explorer_item = explorerView->selectedItem();
-  QListViewItem *item = stationView->selectedItem();
-  if (explorer_item != 0)
-  {
-    select_map[explorer_item] = (item != 0) ? item->text(0) : "";
-  }
-  connectionConnectToSelectedAction->setEnabled(item != 0);
+  Q_UNUSED(previous);
+  
+  QModelIndexList indexes = current.indexes();
+  bool item_selected = ((indexes.count() > 0) && indexes.at(0).isValid() &&
+                        (indexes.at(0).column() == 0));
+  
+  connectionConnectToSelectedAction->setEnabled(item_selected);
+  addSelectedToBookmarksAction->setEnabled(item_selected);
+  removeSelectedFromBookmarksAction->setEnabled(item_selected);
+  
 } /* MainWindow::stationViewSelectionChanged */
 
 
 void MainWindow::callsignListUpdated(void)
 {
-  /*
-  QString selected_callsign;
-  QListViewItem *item = stationView->selectedItem();
-  if (item != 0)
-  {
-    selected_callsign = item->text(0);
-  }
-  */
+  updateBookmarkModel();
   
-  QListViewItem *item = explorerView->selectedItem();
-  if (item != 0)
-  {
-    explorerViewClicked(item);
-  }
+  conf_model->updateStationList(dir.conferences());
+  link_model->updateStationList(dir.links());
+  repeater_model->updateStationList(dir.repeaters());
+  station_model->updateStationList(dir.stations());
   
-  /*
-  if (!selected_callsign.isEmpty())
-  {
-    item = stationView->findItem(selected_callsign, 0);
-    if (item != 0)
-    {
-      stationView->setSelected(item, true);
-      stationView->ensureItemVisible(item);
-    }
-  }
-  */
-  
-  statusBar()->message(trUtf8("Station list has been refreshed"), 5000);
+  statusBar()->showMessage(trUtf8("Station list has been refreshed"), 5000);
   
   const string &msg = dir.message();
   if (msg != old_server_msg)
@@ -579,7 +546,7 @@ void MainWindow::callsignListUpdated(void)
 
 void MainWindow::refreshCallList(void)
 {
-  statusBar()->message(trUtf8("Refreshing station list..."));
+  statusBar()->showMessage(trUtf8("Refreshing station list..."));
   dir.getCalls();
 } /* MainWindow::refreshCallList */
 
@@ -610,9 +577,9 @@ void MainWindow::forceQuit(void)
 } /* MainWindow::forceQuit */
 
 
-void MainWindow::incomingSelectionChanged(QListViewItem *item)
+void MainWindow::incomingSelectionChanged(void)
 {
-  incoming_accept_button->setEnabled(item != 0);
+  incoming_accept_button->setEnabled(incoming_con_view->selectedItems().size() > 0);
 } /* MainWindow::incomingSelectionChanged */
 
 
@@ -625,92 +592,75 @@ void MainWindow::clearIncomingList(void)
 
 void MainWindow::acceptIncoming(void)
 {
-  QListViewItem *item = incoming_con_view->selectedItem();
-  assert(item != 0);
+  QList<QTreeWidgetItem*> items = incoming_con_view->selectedItems();
+  Q_ASSERT(items.size() == 1);
+  QTreeWidgetItem *item = items.at(0);
   incoming_accept_button->setEnabled(FALSE);
-  ComDialog *com_dialog = new ComDialog(audio_io, dir, item->text(0),
-      item->text(1));
+  ComDialog *com_dialog = new ComDialog(dir, item->text(0), item->text(1));
   com_dialog->show();
   com_dialog->acceptConnection();
   com_dialog->setRemoteParams(incoming_con_param[item->text(0)]);
-  incoming_con_view->takeItem(item);
+  int item_index = incoming_con_view->indexOfTopLevelItem(item);
+  Q_ASSERT(item_index >= 0);
+  incoming_con_view->takeTopLevelItem(item_index);
   delete item;
 } /* MainWindow::acceptIncoming */
 
 
-void MainWindow::stationViewRightClicked(QListViewItem *item,
-    const QPoint &point, int column)    
-{
-  item = explorerView->selectedItem();
-  if ((item == 0) || (stationView->selectedItem() == 0))
-  {
-    station_view_popup->setItemEnabled(station_view_popup_add, FALSE);
-    station_view_popup->setItemEnabled(station_view_popup_remove, FALSE);
-  }
-  else if (item->text(0) == MainWindowBase::trUtf8("Bookmarks"))
-  {
-    station_view_popup->setItemEnabled(station_view_popup_add, FALSE);
-    station_view_popup->setItemEnabled(station_view_popup_remove, TRUE);
-  }
-  else
-  {
-    station_view_popup->setItemEnabled(station_view_popup_add, TRUE);
-    station_view_popup->setItemEnabled(station_view_popup_remove, FALSE);
-  }
-  station_view_popup->popup(point);
-} /* MainWindow::stationViewRightClicked */
-
-
 void MainWindow::addSelectedToBookmarks(void)
 {
-  QListViewItem *item = stationView->selectedItem();
-  assert(item != 0);
-  QStringList bookmarks = Settings::instance()->bookmarks();
-  if (bookmarks.find(item->text(0)) == bookmarks.end())
+  QModelIndexList indexes = station_view->selectionModel()->selectedIndexes();
+  if ((indexes.count() <= 0) || (indexes.at(0).column() != 0))
   {
-    bookmarks.append(item->text(0));
+    return;
+  }
+  
+  QString callsign = indexes.at(0).data().toString();
+  QStringList bookmarks = Settings::instance()->bookmarks();
+  if (!callsign.isEmpty() && !bookmarks.contains(callsign))
+  {
+    bookmarks.append(callsign);
     Settings::instance()->setBookmarks(bookmarks);
   }
+  updateBookmarkModel();
+
 } /* MainWindow::addSelectedToBookmarks */
 
 
 void MainWindow::removeSelectedFromBookmarks(void)
 {
-  QListViewItem *item = stationView->selectedItem();
-  assert(item != 0);
-  QStringList bookmarks = Settings::instance()->bookmarks();
-  QStringList::iterator it = bookmarks.find(item->text(0));
-  if (it != bookmarks.end())
+  QModelIndexList indexes = station_view->selectionModel()->selectedIndexes();
+  if ((indexes.count() <= 0) || !indexes.at(0).isValid() ||
+      (indexes.at(0).column() != 0))
   {
-    bookmarks.remove(it);
+    return;
+  }
+  
+  QString callsign = indexes.at(0).data().toString();
+  QStringList bookmarks = Settings::instance()->bookmarks();
+  if (!callsign.isEmpty() && bookmarks.contains(callsign))
+  {
+    bookmarks.removeAll(callsign);
     Settings::instance()->setBookmarks(bookmarks);
-    item = explorerView->selectedItem();
-    if (item != 0)
-    {
-      explorerViewClicked(item);
-    }    
+    updateBookmarkModel();
   }
 } /* MainWindow::removeSelectedFromBookmarks */
 
 
 void MainWindow::addNamedStationToBookmarks(void)
 {
-  QString call = QInputDialog::getText(trUtf8("Qtel - Add station..."),
+  QString call = QInputDialog::getText(this, trUtf8("Qtel - Add station..."),
       trUtf8("Enter callsign of the station to add"));
   
   if (!call.isEmpty())
   {
-    call = call.upper();
+    call = call.toUpper();
     QStringList bookmarks = Settings::instance()->bookmarks();
-    if (bookmarks.find(call) == bookmarks.end())
+    if (!bookmarks.contains(call))
     {
       bookmarks.append(call);
       Settings::instance()->setBookmarks(bookmarks);
-      QListViewItem *item = explorerView->selectedItem();
-      if ((item != 0) && (item->text(0) == MainWindowBase::trUtf8("Bookmarks")))
-      {
-	explorerViewClicked(item);
-      }
+      updateBookmarkModel();
     }
   }
   
@@ -719,18 +669,16 @@ void MainWindow::addNamedStationToBookmarks(void)
 
 void MainWindow::configurationUpdated(void)
 {
-  dir.setServer(Settings::instance()->directoryServer().latin1());
-  dir.setCallsign(Settings::instance()->callsign().latin1());
-  dir.setPassword(Settings::instance()->password().latin1());
-  dir.setDescription(Settings::instance()->location().latin1());
+  dir.setServer(Settings::instance()->directoryServer().toStdString());
+  dir.setCallsign(Settings::instance()->callsign().toStdString());
+  dir.setPassword(Settings::instance()->password().toStdString());
+  dir.setDescription(Settings::instance()->location().toStdString());
   updateRegistration();
   
-  refresh_call_list_timer->changeInterval(
+  refresh_call_list_timer->setInterval(
       1000 * 60 * Settings::instance()->listRefreshTime());
   
-  delete audio_io;
-  audio_io = new AudioIO(Settings::instance()->audioDevice().latin1(), 0);
-
+  initMsgAudioIo();
 } /* MainWindow::configurationChanged */
 
 
@@ -738,15 +686,16 @@ void MainWindow::connectionConnectToIpActionActivated(void)
 {
   bool ok;
   QString remote_host = QInputDialog::getText(
+	    this,
 	    trUtf8("Qtel: Connect to IP"),
 	    trUtf8("Enter an IP address or hostname:"),
-	    QLineEdit::Normal, Settings::instance()->connectToIp(), &ok, this);
+	    QLineEdit::Normal, Settings::instance()->connectToIp(), &ok);
   if (ok)
   {
     Settings::instance()->setConnectToIp(remote_host);
     if (!remote_host.isEmpty())
     {
-      ComDialog *com_dialog = new ComDialog(audio_io, dir, remote_host);
+      ComDialog *com_dialog = new ComDialog(dir, remote_host);
       com_dialog->show();
     }
   }
@@ -755,13 +704,40 @@ void MainWindow::connectionConnectToIpActionActivated(void)
 
 void MainWindow::connectionConnectToSelectedActionActivated(void)
 {
-  QListViewItem *item = stationView->selectedItem();
-  if (item != 0)
+  QModelIndexList indexes = station_view->selectionModel()->selectedIndexes();
+  if ((indexes.count() <= 0) || (indexes.at(0).column() != 0))
   {
-    ComDialog *com_dialog = new ComDialog(audio_io, dir, item->text(0), "?");
+    return;
+  }
+  
+  QString callsign = indexes.at(0).data().toString();
+  if (!callsign.isEmpty())
+  {
+    ComDialog *com_dialog = new ComDialog(dir, callsign, "?");
     com_dialog->show();
   }
 } /* MainWindow::connectionConnectToSelectedActionActivated */
+
+
+void MainWindow::settings(void)
+{
+  Settings::instance()->showDialog();
+} /* MainWindow::settings */
+
+
+void MainWindow::helpAbout(void)
+{
+    QMessageBox::about(this, trUtf8("About Qtel"),
+        trUtf8("Qtel v") + QTEL_VERSION +
+        trUtf8(" - Qt EchoLink client.\n") +
+        "\n" +
+        trUtf8("Copyright (C) 2011 Tobias Blomberg / SM0SVX\n\n"
+               "Qtel comes with ABSOLUTELY NO WARRANTY. "
+               "This is free software, and you "
+               "are welcome to redistribute it in accordance with the "
+               "terms and conditions in "
+               "the GNU GPL (General Public License) version 2 or later."));
+} /* MainWindow::helpAbout */
 
 
 

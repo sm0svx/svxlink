@@ -10,7 +10,7 @@ used by Async::QtApplication to execute DNS queries.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2010 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -39,7 +39,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <qdns.h>
+#include <QObject>
+#include <QHostInfo>
 #undef emit
 
 
@@ -137,10 +138,11 @@ class QtDnsLookupWorker : public QObject, public DnsLookupWorker
   protected:
     
   private:
-    QDns  *qdns;
+    int lookup_id;
+    QHostInfo host_info;
     
   private slots:
-    void onResultsReady(void);
+    void onResultsReady(const QHostInfo &info);
     
 };  /* class QtDnsLookupWorker */
 

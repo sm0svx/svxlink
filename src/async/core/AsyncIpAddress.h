@@ -158,6 +158,18 @@ class IpAddress
      *	      	if it is not.
      */
     bool isWithinSubet(const std::string& subnet) const;
+
+    /**
+     * @brief	Check if an invalid IP address has been assigned
+     * @return	Return \em true if this is an invalid address or \em false
+     *		if a valid address has been assigned.
+     */
+    bool isEmpty(void) const { return (m_addr.s_addr == INADDR_NONE); }
+
+    /**
+     * @brief	Invalidate the IP address value
+     */    
+    void clear(void) { m_addr.s_addr = INADDR_NONE; }
     
     /**
      * @brief 	Return the string representation of the IP address.

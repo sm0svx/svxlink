@@ -58,7 +58,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Logic.h"
 #include "Module.h"
 #include "QsoRecorder.h"
-#include "LogicLinking.h"
 
 
 /****************************************************************************
@@ -198,79 +197,31 @@ class LinkCmd : public Command
      * @param  link_name The name (configuration section) of this link
      * @return	Returns \em true on success or else \em false.
      */
-    bool initialize(const std::string& name,
-                          const std::string& command)
+    bool initialize(const std::string& command)
     {
-      logic_name = name;
       cmd = command;
       setCmd(command);
       if (!addToParser())
       {
-             std::cerr << "*** ERROR: Could not set up command \"" << command
-               << "\" for logic link \"" << logic_name << "\". You probably have "
-                   << "the same command set up in more than one places\n";
-             return false;
+        std::cerr << "*** ERROR: Could not set up command \"" << command
+           << "\" for logic link \"" << name << "\". You probably have "
+           << "the same command set up in more than one places\n";
+        return false;
       }
       return true;
     }
 
     void operator ()(const std::string& subcmd)
     {
-      //std::cout << "cmd=" << cmdStr() << " subcmd=" << subcmd << std::endl;
-      if (subcmd == "0")
-      {
-        disconnectLinks();
-      }
-      else if (subcmd == "1")
-      {
-        connectLinks();
-      }
-      else
-      {
-        std::stringstream ss;
-        ss << "command_failed " << cmdStr() << subcmd;
-        logic->processEvent(ss.str());
-      }
+      logic->commandReceived(cmd, subcmd);
     }
-
-    void connectLinks(void)
-    {
-      std::stringstream ss;
-      if (LogicLinking::instance()->connectThisLink(logic_name, cmd, link_name))
-      {
-        ss << "activating_link " << link_name;
-      }
-      else
-      {
-        ss << "link_already_active " << link_name;
-      }
-      logic->processEvent(ss.str());
-    } /* connectLinks */
-
-    void disconnectLinks(void)
-    {
-      std::stringstream ss;
-      if (LogicLinking::instance()->disconnectThisLink(logic_name, cmd, link_name))
-      {
-        ss << "deactivating_link " << link_name;
-      }
-      else
-      {
-        ss << "link_not_active " << link_name;
-      }
-      logic->processEvent(ss.str());
-    } /* disconnectLinks */
-
 
   protected:
 
   private:
     Logic       *logic;
-    std::string logics;
     std::string cmd;
-    std::string logic_name;
-    std::string link_name;
-    std::vector<std::string> cmdList;
+    std::string name;
 
 };  /* class LinkCmd */
 

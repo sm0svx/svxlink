@@ -248,6 +248,9 @@ class QsoImpl
 
     bool receivingAudio(void) const { return m_qso.receivingAudio(); }
 
+
+    bool connectionRejected(void) const { return reject_qso; }
+    
     
     /**
      * @brief 	Return the StationData object associated with this QSO

@@ -63,39 +63,21 @@ fi
 # Checking for QT
 info "--- Checking for QT..."
 if which pkg-config > /dev/null 2>&1; then
-  if pkg-config qt; then
-    info "yes (pkg-config qt)\n"
-    output "QT_LIBPATH=$(pkg-config qt --libs-only-L)"
-    output "QT_LIBS=$(pkg-config qt --libs-only-l)"
-    output "QT_INCPATH=$(pkg-config qt --cflags-only-I)"
-    output "QT_CFLAGS=$(pkg-config qt --cflags-only-other)"
-    QT_PREFIX=$(pkg-config qt --variable=prefix)
-  elif pkg-config qt-mt; then
-    info "yes (pkg-config qt-mt)\n"
-    output "QT_LIBPATH=$(pkg-config qt-mt --libs-only-L)"
-    output "QT_LIBS=$(pkg-config qt-mt --libs-only-l)"
-    output "QT_INCPATH=$(pkg-config qt-mt --cflags-only-I)"
-    output "QT_CFLAGS=$(pkg-config qt-mt --cflags-only-other)"
-    QT_PREFIX=$(pkg-config qt-mt --variable=prefix)
-  fi
-fi
-if [ -z "$QT_PREFIX" -a -n "$QTDIR" ]; then
-  info "yes (QTDIR)\n"
-  output "QT_LIBPATH=-L${QTDIR}/lib"
-  if [ -n "$(ls ${QTDIR}/lib/libqt-mt* 2> /dev/null)" ]; then
-    output "QT_LIBS=-lqt-mt"
+  if pkg-config QtCore; then
+    QT_MODULES="QtCore QtGui QtNetwork"
+    info "yes (pkg-config QtCore)\n"
+    output "QT_LIBPATH=$(pkg-config $QT_MODULES --libs-only-L)"
+    output "QT_LIBS=$(pkg-config $QT_MODULES --libs-only-l)"
+    output "QT_INCPATH=$(pkg-config $QT_MODULES --cflags-only-I)"
+    output "QT_CFLAGS=$(pkg-config $QT_MODULES --cflags-only-other)"
+    QT_PREFIX=$(pkg-config QtCore --variable=prefix)
+    QT_BIN="${QT_PREFIX}/bin"
+    output "QT_BIN=${QT_BIN}"
+    output "QT_MOC=${QT_BIN}/moc"
+    output "QT_UIC=${QT_BIN}/uic"
   else
-    output "QT_LIBS=-lqt"
+    info "no (optional)\n"
   fi
-  output "QT_INCPATH=-I${QTDIR}/include"
-  output "QT_CFLAGS="
-  QT_PREFIX=${QTDIR}
-fi
-if [ -n "$QT_PREFIX" ]; then
-  QT_BIN="${QT_PREFIX}/bin"
-  output "QT_BIN=${QT_BIN}"
-  output "QT_MOC=${QT_BIN}/moc"
-  output "QT_UIC=${QT_BIN}/uic"
 else
   info "no (optional)\n"
 fi

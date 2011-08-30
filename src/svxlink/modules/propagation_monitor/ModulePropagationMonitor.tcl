@@ -214,6 +214,15 @@ proc handle_vhfdx {msg_file} {
     return
   }
 
+  # Example: FAI active on 2m.
+  set match [regexp \
+	{^FAI active on (\d+c?m)\.$} \
+	$subject -> band ]
+  if {$match} {
+    processEvent "vhfdx_fai_active $band"
+    return;
+  }
+
   # DX-Sherlock warnings configuration change
   # DX-Sherlock new password
   if {($subject == "DX-Sherlock warnings configuration change") ||

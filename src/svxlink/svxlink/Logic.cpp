@@ -85,7 +85,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "LogicCmds.h"
 #include "Logic.h"
 #include "QsoRecorder.h"
-#include "LogicLinking.h"
+#include "LinkManager.h"
 
 
 /****************************************************************************
@@ -567,33 +567,33 @@ bool Logic::initialize(void)
     return false;
   }
 
-  if (LogicLinking::instance())
+  if (LinkManager::instance())
   {
-     vector<std::string> cmdList = LogicLinking::instance()->getCommands(name());
-     vector<std::string>::iterator it;
+     // register audio source and audio sinks
+    LinkManager::instance()->addSource(name(), logic_con_out);
+    LinkManager::instance()->addSink(name(), logic_con_in);
 
-     for (it = cmdList.begin(); it != cmdList.end(); it++)
-     {
-       value = *(it);
-       LinkCmd *tlink = new LinkCmd(&cmd_parser, this);
-        // name() is the name of the logic that init the linkcmd,
-        // e.g. Repeaterlogic,...
-       if (!tlink->initialize(name(), value))
+     // returns a list of commands
+    cmdList = LinkManager::instance()->getCommands(name());
+
+     // crate the cmd-objects
+    vector<std::string>::iterator cit;
+
+    for (cit = cmdList.begin(); cit != cmdList.end(); cit++)
+    {
+       cout << "Logic cmdList " << (*cit) << endl;
+
+       LinkCmd *tlink_cmd = new LinkCmd(&cmd_parser, this);
+       if (!tlink_cmd->initialize(*cit))
        {
-          cout << "**** ERROR: could not initialize LogicLinking-instance " <<
-               name() << " " << value << "\n";
-          delete tlink;  // FIXME: Do this in cleanup() instead
+          cout << "*** ERROR: Can not setup command " << (*cit) <<
+                  " for the logic " << name() << endl;
           return false;
        }
-       link_cmd.push_back(tlink);
-     }
+    }
 
-      // register audio source and audio sinks
-     LogicLinking::instance()->addSource(name(), logic_con_out);
-     LogicLinking::instance()->addSink(name(), logic_con_in);
-
-      // check if the logics should be connected on startup
-     LogicLinking::instance()->checkConnectOnStartup(name());
+     // check if the logics should be connected on startup
+    LinkManager::instance()->logicIsUp(name());
   }
 
   everyMinute(0);
@@ -838,9 +838,9 @@ void Logic::selcallSequenceDetected(std::string sequence)
 
 void Logic::disconnectAllLogics(void)
 {
-  cout << "Deactivating all links to/from \"" << name() << "\"\n";
-  LogicLinking::instance()->disconnectSource(name());
-  LogicLinking::instance()->disconnectSink(name());
+//  cout << "Deactivating all links to/from \"" << name() << "\"\n";
+//  LinkManager::instance()->disconnectSource(name());
+//  LinkManager::instance()->disconnectSink(name());
 } /* Logic::disconnectAllLogics */
 
 
@@ -859,6 +859,15 @@ bool Logic::isWritingMessage(void)
 } /* Logic::isWritingMessage */
 
 
+void Logic::commandReceived(string cmd, string subcmd)
+{
+   // cout << "name()=" << name() << endl;
+  if (LinkManager::instance())
+  {
+    string ss = LinkManager::instance()->cmdReceived(name(), cmd, subcmd);
+    processEvent(ss);
+  }
+} /* Logic::commandReceived */
 
 
 
@@ -896,6 +905,10 @@ void Logic::squelchOpen(bool is_open)
   {
     delete exec_cmd_on_sql_close_timer;
     exec_cmd_on_sql_close_timer = 0;
+    if (LinkManager::instance())
+    {
+      LinkManager::instance()->resetTimers(name());
+    }
   }
 
   updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
@@ -981,9 +994,9 @@ void Logic::checkIdle(void)
     is_idle = new_idle_state;
     //printf("Logic::checkIdle: is_idle=%s\n", is_idle ? "TRUE" : "FALSE");
     idleStateChanged(is_idle);
-    if (LogicLinking::instance())
+    if (LinkManager::instance() && is_idle)
     {
-        LogicLinking::instance()->resetTimers(m_name);
+      LinkManager::instance()->enableTimers(name());
     }
   }
 } /* Logic::checkIdle */
@@ -1410,13 +1423,10 @@ void Logic::cleanup(void)
   delete rgr_sound_timer;     	      rgr_sound_timer = 0;
   delete every_minute_timer;  	      every_minute_timer = 0;
 
-  if (LogicLinking::instance()->sourceIsAdded(name()))
+  if (LinkManager::instance())
   {
-    LogicLinking::instance()->removeSource(name());
-  }
-  if (LogicLinking::instance()->sinkIsAdded(name()))
-  {
-    LogicLinking::instance()->removeSink(name());
+    LinkManager::instance()->deleteSource(name());
+    LinkManager::instance()->deleteSink(name());
   }
 
   delete msg_handler; 	      	      msg_handler = 0;

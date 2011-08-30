@@ -1,8 +1,9 @@
 /**
-@file	 LogicLinking.h
-@brief   Contains a linking logic implementation as singleton
+@file	 LinkManager.h
+@brief   Contains the manager to link different logics together
+         implemented as singleton
 @author  Adi Bier (DL1HRC) / Christian Stussak (University of Halle)
-@date	 2011-04-24
+@date	 2011-08-24
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -25,8 +26,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef LOGIC_LINKING_INCLUDED
-#define LOGIC_LINKING_INCLUDED
+#ifndef LINK_MANAGER_INCLUDED
+#define LINK_MANAGER_INCLUDED
 
 
 /****************************************************************************
@@ -38,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <vector>
 #include <list>
+#include <set>
 
 
 /****************************************************************************
@@ -50,7 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioSplitter.h>
-//#include <common.h>
+#include <AsyncAudioPassthrough.h>
 
 
 /****************************************************************************
@@ -59,7 +61,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AudioSwitchMatrix.h"
+#include "CmdParser.h"
 
 
 /****************************************************************************
@@ -84,6 +86,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+class Command;
 
 
 
@@ -108,10 +111,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-class LogicLinking : public SigC::Object
+class LinkManager : public SigC::Object
 {
   public:
-    static LogicLinking* instance()
+    static LinkManager* instance()
     {
        static CGuard g;
        if (!_instance)
@@ -128,69 +131,50 @@ class LogicLinking : public SigC::Object
     static bool initialize(const Async::Config &cfg,
                                              const std::string &cfg_name);
     typedef std::vector<std::string> StrList;
+    typedef std::map<std::string, std::vector<std::string> > CommandLinkList;
+    CommandLinkList    cmd_link_list;
 
-    std::vector<std::string> getLinkName(std::string linkname);
-    std::vector<std::string> getCommands(std::string name);
-    bool connectLogics(std::string logicname);
-    bool disconnectLogics(std::string logicname);
-    void resetTimers(std::string logicname);
-    bool connectThisLink(std::string logicname, std::string cmd,
-                                 std::string &link_name);
-    bool disconnectThisLink(std::string logicname, std::string cmd,
-                                 std::string &link_name);
-    void addSource(const std::string name, Async::AudioSelector *logic_con_out)
-    {
-       audio_switch_matrix.addSource(name, logic_con_out);
-    }
-    void addSink(const std::string name, Async::AudioSplitter *logic_con_in)
-    {
-       audio_switch_matrix.addSink(name, logic_con_in);
-    }
-    void disconnectSource(const std::string& source_name)
-    {
-        audio_switch_matrix.disconnectSource(source_name);
-    }
-    void disconnectSink(const std::string& source_name)
-    {
-        audio_switch_matrix.disconnectSink(source_name);
-    }
-    bool sourceIsAdded(const std::string& source_name)
-    {
-        return audio_switch_matrix.sourceIsAdded(source_name);
-    }
-    void removeSource(const std::string& source_name)
-    {
-        audio_switch_matrix.removeSource(source_name);
-    }
-    bool sinkIsAdded(const std::string& sink_name)
-    {
-        return audio_switch_matrix.sinkIsAdded(sink_name);
-    }
-    void removeSink(const std::string& sink_name)
-    {
-        audio_switch_matrix.removeSink(sink_name);
-    }
+    std::vector<std::string> logiclist;
 
-    bool checkConnectOnStartup(std::string name);
-
-    struct Cfg
+    struct linkSet
     {
-      Cfg() : timeout(0) {};
+      std::string  linkname;
+      std::map<std::string, std::string>  logic_cmd; // logicname : command
+      std::vector<std::string> auto_connect;
       int          timeout;
-      StrList      conn_logics;
-      std::string  name;
-      std::string  command;
+      bool         default_connect;
+      bool         no_disconnect;
+      bool         is_connected;
     };
+
+    typedef std::map<std::string, linkSet> linkC;
+    linkC    linkCfg;
+
+    typedef std::set<std::pair<std::string, std::string> > LogicConSet;
+    typedef std::map<std::string, std::set<std::string> > LogicConMap;
+    LogicConMap con_map;
+   // LogicConSet is;
+
+    void addSource(const std::string& logicname, Async::AudioSelector *logic_con_out);
+    void addSink(const std::string& logicname, Async::AudioSplitter *logic_con_in);
+    void deleteSource(const std::string& source_name);
+    void deleteSink(const std::string& sink_name);
+    void logicIsUp(std::string name);
+    void resetTimers(const std::string& logicname);
+    void enableTimers(const std::string& logicname);
+    std::string cmdReceived(const std::string& logicname, std::string cmd, std::string subcmd);
+    std::vector<std::string> getCommands(std::string logicname);
+
 
     class CGuard
     {
       public:
         ~CGuard()
         {
-          if(NULL != LogicLinking::_instance)
+          if(NULL != LinkManager::_instance)
           {
-             delete LogicLinking::_instance;
-             LogicLinking::_instance = NULL;
+             delete LinkManager::_instance;
+             LinkManager::_instance = NULL;
           }
         }
     };
@@ -198,44 +182,48 @@ class LogicLinking : public SigC::Object
 
 
   private:
-    static LogicLinking* _instance;
-    LogicLinking() {};
-    LogicLinking(const LogicLinking&);
-    ~LogicLinking() {};
+    static LinkManager* _instance;
+    LinkManager() {};
+    LinkManager(const LinkManager&);
+    ~LinkManager() {};
 
-
-    static AudioSwitchMatrix  	audio_switch_matrix;
-
-    struct LogicSet
-    {
-      std::string   linksection;     // the section in the svxlink.conf
-      std::string   name;            // the name of the defined link
-      std::vector<std::string> linklogics; // the logics to be dis-/connected
-      int           timeout;         // timoeout in seconds
-      std::string   command;         // the command,e.g.64 (without subcommand)
-      bool          on_startup;      // TRUE=connect during startup of svxlink
-      bool          persistent;      // TRUE=no disconnect possible
-    };
-
-    //        <link name, logic definitions>
-    std::map<std::string, LogicSet> linkset;
-
-    struct SourceSinkSet
-    {
-       std::string logicname;
-       Async::AudioSelector *logic_con_out;
-       Async::AudioSplitter *logic_con_in;
-    } sourcesinkset;
-
-    StrList logicset;
     std::map<std::string, Async::Timer*> timeoutTimerset;
 
-    bool logicsAreConnected(const std::string& l1, const std::string& l2);
-    void linkTimeoutExpired(Async::Timer *t);
+    std::vector<std::string>getLinks(std::string logicname);
+    Async::Timer    *up_timer;
 
-};  /* class LogicLinking */
+    typedef struct
+    {
+      Async::AudioSource      *source;
+      Async::AudioSplitter    *splitter;
+    } SourceInfo;
+    typedef struct
+    {
+      Async::AudioSink       	      	      	      	*sink;
+      Async::AudioSelector   	      	      	      	*selector;
+      std::map<std::string, Async::AudioPassthrough *>	connectors;
+    } SinkInfo;
 
-#endif /* LOGIC_LINKING_INCLUDED */
+    typedef std::map<std::string, SourceInfo> SourceMap;
+    typedef std::map<std::string, SinkInfo>   SinkMap;
+
+    SourceMap sources;
+    SinkMap   sinks;
+
+    bool sourceIsAdded(const std::string &logicname);
+    bool sinkIsAdded(const std::string &logicname);
+    std::vector<std::string> getLinkNames(const std::string& logicname);
+    bool connectLinks(const std::string& linkname);
+    bool disconnectLinks(const std::string& linkname);
+    bool isConnected(const std::string& source_name, const std::string& sink_name);
+    void upTimeout(Async::Timer *t);
+    std::set<std::pair<std::string, std::string> > getmatrix(const std::string& linkname);
+    std::set<std::pair<std::string, std::string> > getdifference(LogicConSet is, LogicConSet want);
+    std::set<std::pair<std::string, std::string> > gettodisconnect(const std::string& linkname);
+    std::set<std::pair<std::string, std::string> > getisconnected(void);
+};  /* class LinkManager */
+
+#endif /* LINK_MANAGER_INCLUDED */
 
 /*
  * This file has not been truncated

@@ -9,7 +9,7 @@ application that use the Async classes in a Qt application.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2010 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -42,7 +42,8 @@ An example of how to use the Async::QtApplication class
  *
  ****************************************************************************/
 
-#include <qapplication.h>
+#include <QObject>
+#include <QApplication>
 #undef emit
 
 #include <utility>
@@ -162,7 +163,7 @@ class QtApplication : public QApplication, public Application
      * @param argc  The number of command line arguments + 1
      * @param argv  An array containing the commandline arguments
      */
-    QtApplication(int argc, char **argv);
+    QtApplication(int &argc, char **argv);
 
     /**
      * @brief Destructor
@@ -178,6 +179,7 @@ class QtApplication : public QApplication, public Application
      */
     void exec(void);
     
+  public slots:
     /**
      * @brief Exit the application main loop
      *

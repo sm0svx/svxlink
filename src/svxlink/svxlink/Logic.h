@@ -62,7 +62,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AudioSwitchMatrix.h"
 #include "CmdParser.h"
 
 
@@ -201,6 +200,8 @@ class Logic : public SigC::Object
 
     SigC::Signal1<void, bool> idleStateChanged;
 
+    void commandReceived(std::string cmd, std::string subcmd);
+
 
   protected:
     virtual void squelchOpen(bool is_open);
@@ -219,7 +220,6 @@ class Logic : public SigC::Object
 
 
   private:
-    static AudioSwitchMatrix  	audio_switch_matrix;
 
     typedef enum
     {
@@ -273,6 +273,7 @@ class Logic : public SigC::Object
     uint8_t			    tx_ctcss_mask;
     std::string                     sel5_from;
     std::string                     sel5_to;
+    std::vector<std::string>	    cmdList;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);

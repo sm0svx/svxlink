@@ -391,7 +391,7 @@ void RepeaterLogic::audioStreamStateChange(bool is_active, bool is_idle)
 {
   rgr_enable = true;
 
-  if (!repeater_is_up && !is_idle)
+  if (!repeater_is_up && is_active)
   {
     open_reason = "AUDIO";
     setUp(true, open_reason);

@@ -80,7 +80,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "MsgHandler.h"
 #include "SimplexLogic.h"
 #include "RepeaterLogic.h"
-#include "LogicLinking.h"
+#include "LinkManager.h"
 
 
 
@@ -474,10 +474,10 @@ int main(int argc, char **argv)
     // init Logiclinking
   if (cfg.getValue("GLOBAL", "LINKS", value))
   {
-    if (!LogicLinking::initialize(cfg, value))
+    if (!LinkManager::initialize(cfg, value))
     {
-       cerr << "*** ERROR: Could not init LogicLinking, "
-            << "check configuration section LINKS=" << value << "\n";
+       cerr << "*** ERROR: Could not init LinkManager, "
+            << "check configuration [GLOBAL] section LINKS=" << value << "\n";
        exit(1);
     }
   }

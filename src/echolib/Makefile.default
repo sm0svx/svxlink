@@ -176,7 +176,7 @@ INCPATH 	+= $(SIGC_INCPATH) -I/usr/include/gsm
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.
-LIBPATH 	+= 
+LIBPATH 	+= $(SIGC_LIBPATH)
 
 # Additional warnings to use. If you want to override the default
 # warnings, change the "+=" to "=".

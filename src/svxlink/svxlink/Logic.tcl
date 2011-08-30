@@ -279,12 +279,47 @@ proc activating_link {name} {
 
 
 #
+# Executed when a link to another logic core is activated.
+#   name  - The name of the link
+#
+proc activating_link_failed {name} {
+  playMsg "Core" "activating_link_to";
+  spellWord $name;
+  playMsg "Core" "failed";
+}
+
+
+#
 # Executed when a link to another logic core is deactivated
 #   name  - The name of the link
 #
 proc deactivating_link {name} {
   playMsg "Core" "deactivating_link_to";
   spellWord $name;
+}
+
+
+#
+# Executed when a link to another logic core shall beeing
+# deactivated but the action failed for some reason
+#   name  - The name of the link
+#
+proc deactivating_link_failed {name} {
+  playMsg "Core" "deactivating_link_to";
+  spellWord $name;
+  playMsg "Core" "failed";
+}
+
+
+#
+# Executed when a link to another logic core shall beeing
+# deactivated but the action failed due to configuration
+#   name  - The name of the link
+#
+proc deactivating_link_not_possible {name} {
+  playMsg "Core" "deactivating_link_to";
+  spellWord $name;
+  playMsg "Core" "not_possible";
 }
 
 
