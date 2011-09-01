@@ -1,6 +1,36 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
+# macro definitions
+
+# find location for a particular Qt4 executable
+AC_DEFUN([QT4_PATH_PROG], [
+  # zero out return value
+  unset $1
+
+  # make sure we have 'pkg-config'
+  if test -z "${PKG_CONFIG}" ; then
+    PKG_PROG_PKG_CONFIG()
+    if test -z "${PKG_CONFIG}" ; then
+      AC_MSG_ERROR(['pkg-config' is required])
+    fi
+  fi
+
+  # actual check
+  AC_MSG_CHECKING([for $2])
+  PROG=`"${PKG_CONFIG}" --variable="$2"_location QtCore`
+  if test -z "${PROG}" -o ! -f "${PROG}" -o ! -x "${PROG}"
+  then
+    AC_MSG_RESULT([no])
+  else
+    AC_MSG_RESULT([${PROG}])
+    $1="${PROG}"
+    AC_SUBST([$1])
+  fi
+])
+
+# execution starts here
+
 AC_PREREQ([2.66])
 AC_INIT([svxlink], [snapshot], [svxlink-devel@lists.sourceforge.net])
 
@@ -69,6 +99,11 @@ if test -z "${GZIP}" ; then
    AC_MSG_ERROR(['gzip' is required])
 fi
 
+PKG_PROG_PKG_CONFIG()
+if test -z "${PKG_CONFIG}" ; then
+   AC_MSG_ERROR(['pkg-config' is required])
+fi
+
 # check for libc and libc-dev
 AC_SEARCH_LIBS([perror], [c], ,
   AC_MSG_ERROR([perror() is required (presumably in libc)]))
@@ -83,10 +118,16 @@ AC_CHECK_HEADER([dlfcn.h], ,
 
 # check for libgsm and libgsm-dev
 AC_SEARCH_LIBS([gsm_decode], [gsm], [],
-  AC_MSG_ERROR([gsm_decode() is required (presumably in libgsm)])
-)
+  AC_MSG_ERROR([gsm_decode() is required (presumably in libgsm)]))
 AC_CHECK_HEADER([gsm.h], ,
-  AC_MSG_ERROR(['gsm.h' not found: need libgsm development files]))
+  AC_CHECK_HEADER([gsm/gsm.h],
+    [
+      GSM_CFLAGS=-Igsm
+      AC_SUBST([GSM_CFLAGS])
+    ], 
+    AC_MSG_ERROR(['gsm.h' not found: need libgsm development files])
+  )
+)
 
 # check for libm and libm-dev
 AC_SEARCH_LIBS([cosf], [m], ,
@@ -135,7 +176,7 @@ fi
 
 # look for speex and #define USE_SPEEX=1 if found
 PKG_CHECK_MODULES([SPEEX], [speex], [AC_DEFINE([USE_SPEEX], [1])]
-  [] # this override is required to prevent exit (PKG_CHECK_MODULES only)
+  [] # this is required to prevent exit (PKG_CHECK_MODULES only)
 )
 AM_CONDITIONAL([USE_SPEEX], [test ${USE_SPEEX}])
 
@@ -145,9 +186,9 @@ PKG_CHECK_MODULES([SIGC], [sigc++-1.2], [],
 
 # locate Tcl install path
 # we could use SC_PATH_TCLCONFIG if Fedora included tcl.m4 or tclX.X.m4
-for i in `ls -d ${libdir} 2>/dev/null` \
-  `ls -d ${exec_prefix}/lib 2>/dev/null` \
-  `ls -d ${prefix}/lib 2>/dev/null` \
+for i in `ls -d "${libdir}" 2>/dev/null` \
+  `ls -d "${exec_prefix}"/lib 2>/dev/null` \
+  `ls -d "${prefix}"/lib 2>/dev/null` \
   `ls -d /usr/local/lib 2>/dev/null` \
   `ls -d /usr/contrib/lib 2>/dev/null` \
   `ls -d /usr/lib 2>/dev/null` \
@@ -157,50 +198,53 @@ for i in `ls -d ${libdir} 2>/dev/null` \
   `ls -d /usr/lib/tcl8.4 2>/dev/null` \
 ; do
   if test -f "$i/tclConfig.sh" ; then
-    TCL_BIN_DIR=`(cd $i; pwd)`
+    TCL_BIN_DIR=`(cd "$i"; pwd)`
     break
   fi
 done
 if test x"${TCL_BIN_DIR}" = x ; then
   AC_MSG_ERROR([Cannot find Tcl configuration definitions (tclConfig.sh)])
 fi
-AC_SUBST([TCL_CFLAGS], [${TCL_INCLUDE_SPEC}])
+AC_SUBST([TCL_CFLAGS], ["${TCL_INCLUDE_SPEC}"])
 AC_SUBST([TCL_LIBS])
 
 # load Tcl configuration definitions
 source $TCL_BIN_DIR/tclConfig.sh
 
 # check for Tcl library
-AC_SEARCH_LIBS([Tcl_CreateCommand], [tcl${TCL_VERSION}], ,
-  AC_MSG_ERROR([Tcl_CreateCommand() is required (in libtcl${TCL_VERSION})]))
+AC_SEARCH_LIBS([Tcl_CreateCommand], ["tcl${TCL_VERSION}"], ,
+  AC_MSG_ERROR([Tcl_CreateCommand() is required (in libtcl"${TCL_VERSION}")]))
 
 # check for Tcl include file
 CPPFLAGS="$CPPFLAGS $TCL_INCLUDE_SPEC"
 AC_CHECK_HEADER([tcl.h], ,
   AC_MSG_ERROR(['tcl.h' not found: need libtcl development files]))
 
-# look for optional Qt; find moc & friends
-PKG_CHECK_MODULES([QTCORE], [QtCore], [HAVE_QTCORE=1],
-  [] # this override is required to prevent exit (PKG_CHECK_MODULES only)
+# check for Qt, also sets QT_CFLAGS and QT_LIBS via AC_SUBST
+PKG_CHECK_MODULES([QT], [QtCore QtGui QtNetwork],
+  [
+    HAVE_QT=1
+
+    QT4_PATH_PROG([QT_MOC], [moc])
+    if test -z "${QT_MOC}" ; then
+      AC_MSG_ERROR(['moc' is required])
+    fi
+    QT4_PATH_PROG([QT_UIC], [uic])
+    if test -z "${QT_UIC}" ; then
+      AC_MSG_ERROR(['uic' is required])
+    fi
+    QT4_PATH_PROG([QT_RCC], [rcc])
+    if test -z "${QT_RCC}" ; then
+      AC_MSG_ERROR(['rcc' is required])
+    fi
+    QT4_PATH_PROG([QT_LRELEASE], [lrelease])
+    if test -z "${QT_LRELEASE}" ; then
+      AC_MSG_ERROR(['lrelease' is required])
+    fi
+  ],
+  [] # this is required to prevent exit (PKG_CHECK_MODULES only)
 )
-PKG_CHECK_MODULES([QTGUI], [QtGui], [HAVE_QTGUI=1],
-  [] # this override is required to prevent exit (PKG_CHECK_MODULES only)
-)
-PKG_CHECK_MODULES([QTNETWORK], [QtNetwork], [HAVE_QTNETWORK=1],
-  [] # this override is required to prevent exit (PKG_CHECK_MODULES only)
-)
-AM_CONDITIONAL([HAVE_QT],
-  [test "${HAVE_QTCORE}" -a "${HAVE_QTGUI}" -a "${HAVE_QTNETWORK}"])
-AM_COND_IF([HAVE_QT], [
-  QT_CFLAGS="${QTCORE_CFLAGS} ${QTGUI_CFLAGS} ${QTNETWORK_CFLAGS}"
-  AC_SUBST([QT_CFLAGS])
-  QT_LIBS="${QTCORE_LIBS} ${QTGUI_LIBS} ${QTNETWORK_LIBS}"
-  AC_SUBST([QT_LIBS])
-  AC_PATH_PROG([QT_MOC], [moc])
-  AC_PATH_PROG([QT_UIC], [uic])
-  AC_PATH_PROG([QT_RCC], [rcc])
-  AC_PATH_PROG([QT_LRELEASE], [lrelease])
-])
+AM_CONDITIONAL([HAVE_QT], [test ${HAVE_QT}])
 
 # Check for header files.
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h locale.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termios.h unistd.h], ,
@@ -316,7 +360,7 @@ AC_SUBST([ASYNC_CPP_CFLAGS])
 AC_SUBST([ASYNC_CPP_LIBS])
 
 # async audio
-ASYNC_AUDIO_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_AUDIO} ${ASYNC_CORE_CFLAGS} ${SPEEX_CFLAGS}"
+ASYNC_AUDIO_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_AUDIO} ${ASYNC_CORE_CFLAGS} ${SPEEX_CFLAGS} ${GSM_CFLAGS}"
 ASYNC_AUDIO_LIBS="${TOP_BUILDDIR}/${ASYNC_AUDIO}/libasyncaudio.la ${ASYNC_CORE_LIBS} ${SPEEX_LIBS}"
 AC_SUBST([ASYNC_AUDIO_CFLAGS])
 AC_SUBST([ASYNC_AUDIO_LIBS])
@@ -331,7 +375,7 @@ AM_COND_IF([HAVE_QT], [
 
 # Paths for libecholib
 ECHOLIB=echolib
-ECHOLIB_CFLAGS="-I${TOP_SRCDIR}/${ECHOLIB} ${ASYNC_AUDIO_CFLAGS} ${ASYNC_CPP_CFLAGS}"
+ECHOLIB_CFLAGS="-I${TOP_SRCDIR}/${ECHOLIB} ${ASYNC_AUDIO_CFLAGS} ${ASYNC_CPP_CFLAGS} ${GSM_CFLAGS}"
 ECHOLIB_LIBS="${TOP_BUILDDIR}/${ECHOLIB}/libecholib.la ${ASYNC_AUDIO_LIBS} ${ASYNC_CPP_LIBS}"
 AC_SUBST([ECHOLIB_CFLAGS])
 AC_SUBST([ECHOLIB_LIBS])
