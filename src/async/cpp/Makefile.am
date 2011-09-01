@@ -17,12 +17,12 @@ DIST_H = $(DIST_H_PUBLIC) $(DIST_H_PRIVATE)
 # Sources needed to build the library
 libasynccpp_la_SOURCES = $(DIST_CPP) $(DIST_H)
 
-# Extra compiler flags
-AM_CPPFLAGS += @ASYNC_CPP_CFLAGS@
-
 VERSION = @LIBASYNC_SHLIB_VERSION@
 
-libasynccpp_la_LDFLAGS = -version-number $(VERSION)
+# Extra compiler & linker flags
+libasynccpp_la_CPPFLAGS = @AM_CPPFLAGS@ @ASYNC_CPP_CFLAGS@
+libasynccpp_la_LIBADD = @ASYNC_CORE_LIBS@ @PTHREAD_LIBS@
+libasynccpp_la_LDFLAGS = @AM_LDFLAGS@ -version-number $(VERSION)
 
 # Headers that define the API of this library
 pkginclude_HEADERS = $(DIST_H_PUBLIC)
@@ -33,7 +33,7 @@ EXTRA_DIST = Makefile.default
 
 # remove the .la file from the installation
 install-exec-hook:
-	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	$(AM_V_at)INSTDIR="$(DESTDIR)@libdir@" ; \
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \
 	echo "Removing $${lafile} from $${INSTDIR}" ; \
@@ -42,7 +42,7 @@ install-exec-hook:
 
 # libtool automatically handles uninstalls, unless one removes the .la file
 uninstall-hook:
-	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	-$(AM_V_at)INSTDIR="$(DESTDIR)@libdir@" ; \
 	SHLIBVER=`echo $(VERSION) | $(AWK) -F\: '{OFS="."; $$1=$$1; print $$0}'` ; \
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \

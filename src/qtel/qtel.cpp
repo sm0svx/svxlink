@@ -142,7 +142,7 @@ int main(int argc, char **argv)
   
   QTranslator translator;
   translator.load(QString("qtel_%1").arg(QLocale::system().name()),
-      "/usr/share/qtel/translations");
+      QTELMESSAGEDIR);
   app.installTranslator(&translator);
 
   QCoreApplication::setOrganizationName("SvxLink");

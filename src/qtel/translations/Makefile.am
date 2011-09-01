@@ -1,6 +1,5 @@
 
 TRANSLATIONS = \
-		qtel_tmpl.ts \
 		qtel_sv.ts \
 		qtel_de.ts \
 		qtel_tr.ts \
@@ -21,9 +20,9 @@ CLEANFILES = $(BUILT_SOURCES)
 messagedir = @QTELMESSAGEDIR@
 message_DATA = $(QT_MESSAGES)
 
-EXTRA_DIST = $(TRANSLATIONS)
+EXTRA_DIST = $(TRANSLATIONS) qtel_tmpl.ts 
 
 SUFFIXES = .qm .ts
 
 .ts.qm:
-	$(AM_V_GEN)@QT_LRELEASE@ $<
+	$(AM_V_GEN)@QT_LRELEASE@ $(srcdir)/$< -qm $(builddir)/$@

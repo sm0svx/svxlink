@@ -49,12 +49,14 @@ EchoLinkDirectory_demo_SOURCES = \
 EchoLinkQso_demo_SOURCES = \
 		EchoLinkQso_demo.cpp
 
-AM_CPPFLAGS += @ECHOLIB_CFLAGS@
-LDADD = @ECHOLIB_LIBS@
-
 VERSION = @ECHOLIB_SHLIB_VERSION@
 
-libecholib_la_LDFLAGS = -version-number $(VERSION)
+# the next three lines work for the programs
+AM_CPPFLAGS = @AM_CPPFLAGS@ @ECHOLIB_CFLAGS@
+AM_LDFLAGS = @AM_LDFLAGS@
+LDADD = @ECHOLIB_LIBS@
+libecholib_la_LIBADD = @ASYNC_CPP_LIBS@ @ASYNC_AUDIO_LIBS@
+libecholib_la_LDFLAGS = @AM_LDFLAGS@ -version-number $(VERSION)
 
 EXTRA_DIST = ChangeLog echolib_test.cfg mainpage.dox messages.txt \
 		Makefile.default
@@ -62,7 +64,7 @@ EXTRA_DIST = ChangeLog echolib_test.cfg mainpage.dox messages.txt \
 
 # remove the .la file from the installation
 install-exec-hook:
-	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	$(AM_V_at)INSTDIR="$(DESTDIR)@libdir@" ; \
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \
 	echo "Removing $${lafile} from $${INSTDIR}" ; \
@@ -71,7 +73,7 @@ install-exec-hook:
 
 # libtool automatically handles uninstalls, unless one removes the .la file
 uninstall-hook:
-	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	-$(AM_V_at)INSTDIR="$(DESTDIR)@libdir@" ; \
 	SHLIBVER=`echo $(VERSION) | $(AWK) -F\: '{OFS="."; $$1=$$1; print $$0}'` ; \
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \

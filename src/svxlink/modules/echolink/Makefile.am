@@ -23,11 +23,11 @@ DIST_H = \
 ModuleEchoLink_la_SOURCES = $(DIST_CPP) $(DIST_H)
 
 # Extra compiler flags
-AM_CPPFLAGS += @TCL_CFLAGS@ @ECHOLIB_CFLAGS@ @LOCATIONINFO_CFLAGS@ \
-		@SVXLINK_MODULE_CFLAGS@
+ModuleEchoLink_la_CPPFLAGS = @AM_CPPFLAGS@ @TCL_CFLAGS@ @ECHOLIB_CFLAGS@ \
+		@LOCATIONINFO_CFLAGS@ @SVXLINK_MODULE_CFLAGS@
 
 ModuleEchoLink_la_LIBADD = @ECHOLIB_LIBS@
-ModuleEchoLink_la_LDFLAGS = -module @LIBTOOL_PLUGIN_OPTIONS@
+ModuleEchoLink_la_LDFLAGS = @AM_LDFLAGS@ -module @LIBTOOL_PLUGIN_OPTIONS@
 
 # Files that should be packaged with the sources
 EXTRA_DIST = \
@@ -45,7 +45,7 @@ dist_moduleconf_DATA = $(srcdir)/ModuleEchoLink.conf
 
 # this must be the 'data' hook (based on install path)
 install-data-hook:
-	@INSTDIR="$(DESTDIR)$(plugindir)" ; \
+	$(AM_V_at)INSTDIR="$(DESTDIR)$(plugindir)" ; \
 	for lafile in $(plugin_LTLIBRARIES) ; \
 	do \
 	echo "Removing $${lafile} from $${INSTDIR}" ; \
@@ -53,7 +53,7 @@ install-data-hook:
 	done
 
 uninstall-hook:
-	@INSTDIR="$(DESTDIR)$(plugindir)" ; \
+	-$(AM_V_at)INSTDIR="$(DESTDIR)$(plugindir)" ; \
 	for lafile in $(plugin_LTLIBRARIES) ; \
 	do \
 	LIBBASE=`echo $${lafile} | ${AWK} -F. '/^.*\.la$$/ {print $$1}'` ; \

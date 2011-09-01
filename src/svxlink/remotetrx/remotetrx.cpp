@@ -384,6 +384,9 @@ int main(int argc, char **argv)
     cfg_filename += "/.svxlink/remotetrx.conf";
     if (!cfg.open(cfg_filename))
     {
+      cfg_filename = SITECONFDIR "/remotetrx.conf";
+      if (!cfg.open(cfg_filename))
+      {
       cfg_filename = "/etc/svxlink/remotetrx.conf";
       if (!cfg.open(cfg_filename))
       {
@@ -399,6 +402,7 @@ int main(int argc, char **argv)
 	       << "syntax error in the file\n";
 	  exit(1);
 	}
+      }
       }
     }
   }

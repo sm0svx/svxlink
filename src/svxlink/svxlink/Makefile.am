@@ -26,16 +26,19 @@ DIST_H = \
 		SimplexLogic.h
 
 EXTRA_DIST = \
-		Tx.cpp \
-		Tx.h \
+		svxlink.conf.in \
 		event_test.tcl \
 		Makefile.default
 
 svxlink_SOURCES = $(DIST_CPP) $(DIST_H)
 
-AM_CPPFLAGS += @TCL_CFLAGS@ @ECHOLIB_CFLAGS@ @LOCATIONINFO_CFLAGS@ @TRX_CFLAGS@
+DEFINES = -DSITECONFDIR='"@SITECONFDIR@"'
+
+AM_CPPFLAGS += @TCL_CFLAGS@ @ECHOLIB_CFLAGS@ @LOCATIONINFO_CFLAGS@ \
+	@TRX_CFLAGS@ $(DEFINES)
 
 svxlink_LDADD = @ECHOLIB_LIBS@ @LOCATIONINFO_LIBS@ @TRX_LIBS@
+svxlink_LDFLAGS = @AM_LDFLAGS@ -export-dynamic
 
 # includefiles to export, going into $(includedir) as defined by automake
 # pkginclude_HEADERS = \
@@ -44,7 +47,7 @@ svxlink_LDADD = @ECHOLIB_LIBS@ @LOCATIONINFO_LIBS@ @TRX_LIBS@
 # 		EventHandler.h
 
 siteconfdir = @SITECONFDIR@
-dist_siteconf_DATA = $(srcdir)/svxlink.conf
+nodist_siteconf_DATA = $(builddir)/svxlink.conf
 
 # this goes into $(pkgdatadir) as defined by automake
 dist_pkgdata_DATA = $(srcdir)/events.tcl
@@ -59,10 +62,27 @@ dist_event_DATA = \
 		$(srcdir)/SelCall.tcl \
 		$(srcdir)/locale.tcl
 
+BUILT_SOURCES = $(builddir)/svxlink.conf
+CLEANFILES = $(BUILT_SOURCES)
+
+$(builddir)/svxlink.conf: $(srcdir)/Makefile
+
+substitute_vars = $(SED) \
+		-e 's|@PLUGINDIR[@]|@PLUGINDIR@|g' \
+		-e 's|@PKGDATADIR[@]|$(pkgdatadir)|g' \
+		-e 's|@QSORECORDERDIR[@]|@QSORECORDERDIR@|g'
+
+.in:
+	$(AM_V_at)rm -f $(builddir)/$(@F) $(builddir)/$(@F).tmp
+	$(AM_V_GEN)$(substitute_vars) $(srcdir)/$< > $(builddir)/$(@F).tmp
+	$(AM_V_at)mv $(builddir)/$(@F).tmp $(builddir)/$(@F)
+
+SUFFIXES = .in
+
 install-data-hook:
-	$(INSTALL) -d -m 755 -o @SVXLINK_USER@ -g @SVXLINK_GROUP@ \
+	-$(INSTALL) -d -m 755 -o @SVXLINK_USER@ -g @SVXLINK_GROUP@ \
 		$(DESTDIR)@QSORECORDERDIR@
 
 uninstall-hook:
-	$(RMDIR) $(DESTDIR)@QSORECORDERDIR@
+	-$(RMDIR) $(DESTDIR)@QSORECORDERDIR@
 

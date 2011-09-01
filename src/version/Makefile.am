@@ -13,7 +13,7 @@ SUFFIXES = .h
 
 @VERSIONHEADERS@: $(top_srcdir)/@VERSIONFILE@
 	@echo Creating "$(builddir)/$@"
-	@while read LINE ; \
+	$(AM_V_at)while read LINE ; \
 	do \
 	PACKAGE="`echo $${LINE} | $(AWK) -F\= '/^.*=.*$$/ {print $$1}'`" ; \
 	if [ \"$${PACKAGE}\" = \"$*\" ] ; then \

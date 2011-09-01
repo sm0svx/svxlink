@@ -82,8 +82,9 @@ AC_CHECK_HEADER([dlfcn.h], ,
   AC_MSG_ERROR(['dlfcn.h' not found: need libdl development files]))
 
 # check for libgsm and libgsm-dev
-AC_SEARCH_LIBS([gsm_decode], [gsm], ,
-  AC_MSG_ERROR([gsm_decode() is required (presumably in libgsm)]))
+AC_SEARCH_LIBS([gsm_decode], [gsm], [],
+  AC_MSG_ERROR([gsm_decode() is required (presumably in libgsm)])
+)
 AC_CHECK_HEADER([gsm.h], ,
   AC_MSG_ERROR(['gsm.h' not found: need libgsm development files]))
 
@@ -100,8 +101,15 @@ AC_CHECK_HEADER([popt.h], ,
   AC_MSG_ERROR(['popt.h' not found: need libpopt development files]))
 
 # check for libpthread and libpthread-dev
-AC_SEARCH_LIBS([pthread_mutex_lock], [pthread], ,
-  AC_MSG_ERROR([pthread_mutex_lock() is required (presumably in libpthread)]))
+AC_SEARCH_LIBS([pthread_mutex_lock], [pthread],
+  [
+    PTHREAD_CFLAGS="-pthread"
+    AC_SUBST([PTHREAD_CFLAGS])
+    PTHREAD_LIBS="-pthread -lpthread"
+    AC_SUBST([PTHREAD_LIBS])
+  ],
+  AC_MSG_ERROR([pthread_mutex_lock() is required (presumably in libpthread)])
+)
 AC_CHECK_HEADER([pthread.h], ,
   AC_MSG_ERROR(['pthread.h' not found: need libpthread development files]))
 
@@ -112,24 +120,24 @@ AC_CHECK_HEADER([gcrypt.h], ,
   AC_MSG_ERROR(['gcrypt.h' not found: need libgcrypt development files]))
 
 # check for ALSA and OSS
-AM_CONDITIONAL([HAVE_ALSA], [false])
 AC_SEARCH_LIBS([snd_pcm_readi], [asound],
-  AC_CHECK_HEADER([alsa/version.h], AM_CONDITIONAL([HAVE_ALSA], [true])))
-AM_CONDITIONAL([HAVE_OSS], [false])
+  AC_CHECK_HEADER([alsa/version.h], [HAVE_ALSA=1]))
+AM_CONDITIONAL([HAVE_ALSA], [test ${HAVE_ALSA}])
+
 AC_CHECK_HEADERS([sys/soundcard.h soundcard.h machine/soundcard.h],
-  AM_CONDITIONAL([HAVE_OSS], [true]))
-AM_COND_IF([HAVE_ALSA], [], [AM_COND_IF([HAVE_OSS], [],
-  AC_MSG_ERROR([found no way to access sound (neither ALSA nor OSS)]))])
+  [HAVE_OSS=1])
+AM_CONDITIONAL([HAVE_OSS], [test ${HAVE_OSS}])
+
+if test ! "${HAVE_ALSA}" -a ! "${HAVE_OSS}"
+then
+  AC_MSG_ERROR([found no way to access sound (neither ALSA nor OSS)])
+fi
 
 # look for speex and #define USE_SPEEX=1 if found
-AM_CONDITIONAL([USE_SPEEX], [false])
-PKG_CHECK_MODULES([SPEEX], [speex], [
-  AC_DEFINE([USE_SPEEX], [1], [Use SPEEX])
-  AM_CONDITIONAL([USE_SPEEX], [true])
-  ], [
-  # this override is required to prevent exit (with PKG_CHECK_MODULES only)
-  ]
+PKG_CHECK_MODULES([SPEEX], [speex], [AC_DEFINE([USE_SPEEX], [1])]
+  [] # this override is required to prevent exit (PKG_CHECK_MODULES only)
 )
+AM_CONDITIONAL([USE_SPEEX], [test ${USE_SPEEX}])
 
 # look for libsigc++
 PKG_CHECK_MODULES([SIGC], [sigc++-1.2], [],
@@ -157,7 +165,7 @@ if test x"${TCL_BIN_DIR}" = x ; then
   AC_MSG_ERROR([Cannot find Tcl configuration definitions (tclConfig.sh)])
 fi
 AC_SUBST([TCL_CFLAGS], [${TCL_INCLUDE_SPEC}])
-AC_SUBST([TCL_LIBS], [${TCL_LIBS}])
+AC_SUBST([TCL_LIBS])
 
 # load Tcl configuration definitions
 source $TCL_BIN_DIR/tclConfig.sh
@@ -171,21 +179,26 @@ CPPFLAGS="$CPPFLAGS $TCL_INCLUDE_SPEC"
 AC_CHECK_HEADER([tcl.h], ,
   AC_MSG_ERROR(['tcl.h' not found: need libtcl development files]))
 
-# look for qt-mt, or otherwise just qt; find moc
-PKG_CHECK_MODULES([QT], [qt-mt], [QT_VARIANT=qt-mt], [
-  PKG_CHECK_MODULES([QT], [qt], [QT_VARIANT=qt], [
-    ], [
-    # this override is required to prevent exit (with PKG_CHECK_MODULES only)
-    ]
-  )
-  ], [
-  # this override is required to prevent exit (with PKG_CHECK_MODULES only)
-  ]
+# look for optional Qt; find moc & friends
+PKG_CHECK_MODULES([QTCORE], [QtCore], [HAVE_QTCORE=1],
+  [] # this override is required to prevent exit (PKG_CHECK_MODULES only)
 )
-AM_CONDITIONAL([HAVE_QT], [test -n "${QT_VARIANT}"])
+PKG_CHECK_MODULES([QTGUI], [QtGui], [HAVE_QTGUI=1],
+  [] # this override is required to prevent exit (PKG_CHECK_MODULES only)
+)
+PKG_CHECK_MODULES([QTNETWORK], [QtNetwork], [HAVE_QTNETWORK=1],
+  [] # this override is required to prevent exit (PKG_CHECK_MODULES only)
+)
+AM_CONDITIONAL([HAVE_QT],
+  [test "${HAVE_QTCORE}" -a "${HAVE_QTGUI}" -a "${HAVE_QTNETWORK}"])
 AM_COND_IF([HAVE_QT], [
+  QT_CFLAGS="${QTCORE_CFLAGS} ${QTGUI_CFLAGS} ${QTNETWORK_CFLAGS}"
+  AC_SUBST([QT_CFLAGS])
+  QT_LIBS="${QTCORE_LIBS} ${QTGUI_LIBS} ${QTNETWORK_LIBS}"
+  AC_SUBST([QT_LIBS])
   AC_PATH_PROG([QT_MOC], [moc])
   AC_PATH_PROG([QT_UIC], [uic])
+  AC_PATH_PROG([QT_RCC], [rcc])
   AC_PATH_PROG([QT_LRELEASE], [lrelease])
 ])
 
@@ -234,7 +247,7 @@ AC_CHECK_FUNCS([dup2 floor gettimeofday inet_ntoa memchr memmove memset pow regc
 
 # file name with version information
 VERSIONFILE="versions"
-AC_SUBST([VERSIONFILE], [${VERSIONFILE}])
+AC_SUBST([VERSIONFILE])
 
 # read version information and export as preprocessor defines
 # generate list of version header files for make, as well
@@ -250,11 +263,11 @@ do
           VERSIONHEADERS="${VERSIONHEADERS} ${PKGNAME}.h"
       fi
 done < "${srcdir}/${VERSIONFILE}"
-AC_SUBST([VERSIONHEADERS], [${VERSIONHEADERS}])
+AC_SUBST([VERSIONHEADERS])
 
 # export version numbers to Makefiles for library versioning
 shlib_version() {
-  ${ECHO} $1 | ${AWK} -F. '{OFS=":"; print $1,$2,$3}'
+  ${ECHO} "$1" | ${AWK} -F. '{OFS=":"; print $1,$2,$3}'
 }
 AC_SUBST([LIBASYNC_SHLIB_VERSION], [`shlib_version "${LIBASYNC_VERSION}"`])
 AC_SUBST([ECHOLIB_SHLIB_VERSION], [`shlib_version "${ECHOLIB_VERSION}"`])
@@ -270,8 +283,18 @@ TOP_BUILDDIR='''$(top_builddir)'''
 COMMON_H="-I${TOP_SRCDIR}/misc -I${TOP_BUILDDIR}"
 # Some general definitions
 LOCAL_DEFS="-DT_LINUX"
-# Set some standard build options
+# Set some standard cpp flags and export to make
 AC_SUBST([AM_CPPFLAGS], ["${LOCAL_DEFS} ${COMMON_H}"])
+
+# Set some standard linker flags and export to make
+AC_SUBST([AM_LDFLAGS], [-Wl,--as-needed])
+
+# this is needed to compile svxlink modules
+AC_SUBST([SVXLINK_MODULE_CFLAGS], ["-fPIC -I${TOP_SRCDIR}/svxlink/svxlink"])
+
+# libtool options for svxlink modules
+AC_SUBST([LIBTOOL_PLUGIN_OPTIONS],
+  ["-shared -export-dynamic -avoid-version -no-undefined"]) 
 
 # Relative paths for the libasync series from top
 ASYNC_SUBDIR="async"
@@ -283,58 +306,51 @@ ASYNC_QT="${ASYNC_SUBDIR}/qt"
 # async core
 ASYNC_CORE_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_CORE} ${SIGC_CFLAGS}"
 ASYNC_CORE_LIBS="${TOP_BUILDDIR}/${ASYNC_CORE}/libasynccore.la ${SIGC_LIBS}"
-AC_SUBST([ASYNC_CORE_CFLAGS], [${ASYNC_CORE_CFLAGS}])
-AC_SUBST([ASYNC_CORE_LIBS], [${ASYNC_CORE_LIBS}])
+AC_SUBST([ASYNC_CORE_CFLAGS])
+AC_SUBST([ASYNC_CORE_LIBS])
 
 # async cpp
-ASYNC_CPP_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_CPP} ${ASYNC_CORE_CFLAGS} -pthread"
-ASYNC_CPP_LIBS="${TOP_BUILDDIR}/${ASYNC_CPP}/libasynccpp.la ${ASYNC_CORE_LIBS} -pthread"
-AC_SUBST([ASYNC_CPP_CFLAGS], [${ASYNC_CPP_CFLAGS}])
-AC_SUBST([ASYNC_CPP_LIBS], [${ASYNC_CPP_LIBS}])
+ASYNC_CPP_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_CPP} ${ASYNC_CORE_CFLAGS} ${PTHREAD_CFLAGS}"
+ASYNC_CPP_LIBS="${TOP_BUILDDIR}/${ASYNC_CPP}/libasynccpp.la ${ASYNC_CORE_LIBS} ${PTHREAD_LIBS}"
+AC_SUBST([ASYNC_CPP_CFLAGS])
+AC_SUBST([ASYNC_CPP_LIBS])
 
 # async audio
 ASYNC_AUDIO_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_AUDIO} ${ASYNC_CORE_CFLAGS} ${SPEEX_CFLAGS}"
 ASYNC_AUDIO_LIBS="${TOP_BUILDDIR}/${ASYNC_AUDIO}/libasyncaudio.la ${ASYNC_CORE_LIBS} ${SPEEX_LIBS}"
-AC_SUBST([ASYNC_AUDIO_CFLAGS], [${ASYNC_AUDIO_CFLAGS}])
-AC_SUBST([ASYNC_AUDIO_LIBS], [${ASYNC_AUDIO_LIBS}])
+AC_SUBST([ASYNC_AUDIO_CFLAGS])
+AC_SUBST([ASYNC_AUDIO_LIBS])
 
 # async qt
 AM_COND_IF([HAVE_QT], [
     ASYNC_QT_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_QT} ${QT_CFLAGS} ${ASYNC_CORE_CFLAGS}"
     ASYNC_QT_LIBS="${TOP_BUILDDIR}/${ASYNC_QT}/libasyncqt.la ${QT_LIBS} ${ASYNC_CORE_LIBS}"
-    AC_SUBST([ASYNC_QT_CFLAGS], [${ASYNC_QT_CFLAGS}])
-    AC_SUBST([ASYNC_QT_LIBS], [${ASYNC_QT_LIBS}])
+    AC_SUBST([ASYNC_QT_CFLAGS])
+    AC_SUBST([ASYNC_QT_LIBS])
 ])
 
 # Paths for libecholib
 ECHOLIB=echolib
 ECHOLIB_CFLAGS="-I${TOP_SRCDIR}/${ECHOLIB} ${ASYNC_AUDIO_CFLAGS} ${ASYNC_CPP_CFLAGS}"
 ECHOLIB_LIBS="${TOP_BUILDDIR}/${ECHOLIB}/libecholib.la ${ASYNC_AUDIO_LIBS} ${ASYNC_CPP_LIBS}"
-AC_SUBST([ECHOLIB_CFLAGS], [${ECHOLIB_CFLAGS}])
-AC_SUBST([ECHOLIB_LIBS], [${ECHOLIB_LIBS}])
+AC_SUBST([ECHOLIB_CFLAGS])
+AC_SUBST([ECHOLIB_LIBS])
 
 # paths for liblocationinfo
 LOCATIONINFO=locationinfo
 LOCATIONINFO_CFLAGS="-I${TOP_SRCDIR}/${LOCATIONINFO}"
 LOCATIONINFO_LIBS="${TOP_BUILDDIR}/${LOCATIONINFO}/liblocationinfo.a"
-AC_SUBST([LOCATIONINFO_CFLAGS], [${LOCATIONINFO_CFLAGS}])
-AC_SUBST([LOCATIONINFO_LIBS], [${LOCATIONINFO_LIBS}])
+AC_SUBST([LOCATIONINFO_CFLAGS])
+AC_SUBST([LOCATIONINFO_LIBS])
 
 # paths for libtrx
 TRX=svxlink/trx
 TRX_CFLAGS="-I${TOP_SRCDIR}/${TRX} ${SIGC_CFLAGS} ${ASYNC_AUDIO_CFLAGS}"
 TRX_LIBS="${TOP_BUILDDIR}/${TRX}/libtrx.a ${SIGC_LIBS} ${ASYNC_AUDIO_LIBS}"
-AC_SUBST([TRX_CFLAGS], [${TRX_CFLAGS}])
-AC_SUBST([TRX_LIBS], [${TRX_LIBS}])
+AC_SUBST([TRX_CFLAGS])
+AC_SUBST([TRX_LIBS])
 
-# this is needed to compile svxlink modules
-AC_SUBST([SVXLINK_MODULE_CFLAGS], ["-I${TOP_SRCDIR}/svxlink/svxlink"])
-
-# libtool options for svxlink modules
-AC_SUBST([LIBTOOL_PLUGIN_OPTIONS],
-    ["-no-undefined -avoid-version -shared"])
-
-# defaults to -I${srcdir}, important to avoid Tx.h confusion in 'svxlink'
+# otherwise defaults to -I${srcdir}, needed to avoid Tx.h confusion in 'svxlink'
 AC_SUBST([DEFAULT_INCLUDES], [])
 
 # install paths

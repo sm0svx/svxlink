@@ -16,9 +16,9 @@ EXTRA_DIST = help.txt help-se.txt Makefile.default
 
 
 install-data-hook:
-	$(INSTALL) -d -m 755 -o @SVXLINK_USER@ -g @SVXLINK_GROUP@ \
+	-$(INSTALL) -d -m 755 -o @SVXLINK_USER@ -g @SVXLINK_GROUP@ \
 		$(DESTDIR)@VOICEMAILDIR@
 
 uninstall-hook:
-	@RMDIR@ $(DESTDIR)@VOICEMAILDIR@
+	-$(RMDIR) $(DESTDIR)@VOICEMAILDIR@
 

@@ -111,20 +111,21 @@ pkginclude_HEADERS = $(DIST_H_PUBLIC)
 EXTRA_libasyncaudio_la_SOURCES = $(SPEEX_CPP) $(SPEEX_H) \
 		$(ALSA_CPP) $(ALSA_H) $(OSS_CPP) $(OSS_H)
 
-# Extra compiler flags
-AM_CPPFLAGS += @ASYNC_AUDIO_CFLAGS@
 
 VERSION = @LIBASYNC_SHLIB_VERSION@
 
-libasyncaudio_la_LDFLAGS = -version-number $(VERSION)
+# Extra compiler & linker flags
+libasyncaudio_la_CPPFLAGS = @AM_CPPFLAGS@ @ASYNC_AUDIO_CFLAGS@
+libasyncaudio_la_LIBADD = @ASYNC_CORE_LIBS@ @SPEEX_LIBS@
+libasyncaudio_la_LDFLAGS = @AM_LDFLAGS@ -version-number $(VERSION)
 
 # Files that should be packaged with the sources
-EXTRA_DIST = fidlib.txt SampleFifo.cpp SampleFifo.h Makefile.default
+EXTRA_DIST = fidlib.txt Makefile.default
 
 
 # remove the .la file from the installation
 install-exec-hook:
-	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	$(AM_V_at)INSTDIR="$(DESTDIR)@libdir@" ; \
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \
 	echo "Removing $${lafile} from $${INSTDIR}" ; \
@@ -133,7 +134,7 @@ install-exec-hook:
 
 # libtool automatically handles uninstalls, unless one removes the .la file
 uninstall-hook:
-	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	-$(AM_V_at)INSTDIR="$(DESTDIR)@libdir@" ; \
 	SHLIBVER=`echo $(VERSION) | $(AWK) -F\: '{OFS="."; $$1=$$1; print $$0}'` ; \
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \

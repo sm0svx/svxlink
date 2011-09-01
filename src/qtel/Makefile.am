@@ -9,42 +9,51 @@ DIST_CPP = \
 		MainWindow.cpp \
 		ComDialog.cpp \
 		Settings.cpp \
+		EchoLinkDirectoryModel.cpp \
 		MsgHandler.cpp \
 		Vox.cpp
 
 DIST_H_MOC = \
 		MainWindow.h \
 		ComDialog.h \
+		SettingsDialog.h \
+		EchoLinkDirectoryModel.h \
 		MyMessageBox.h \
 		Vox.h
 
 DIST_H_NO_MOC = \
-		MainWindowBase.ui.h \
-		SettingsDialog.ui.h \
 		MsgHandler.h \
 		Settings.h
 
-FORMS = 	MainWindowBase.ui \
+DIST_QRC =	qtel.qrc
+
+DIST_FORMS = 	MainWindowBase.ui \
 		ComDialogBase.ui \
-		SettingsDialog.ui
+		SettingsDialogBase.ui
 
-FORMHEADERS = $(FORMS:.ui=.h)
-MOC_CPP = $(FORMS:.ui=.moc.cpp) $(DIST_H_MOC:.h=.moc.cpp)
-UIC_CPP = $(FORMS:.ui=.uic.cpp)
+UIC_H = $(DIST_FORMS:.ui=.h)
+MOC_CPP = $(DIST_H_MOC:.h=.moc.cpp)
+RCC_CPP = $(DIST_QRC:.qrc=.qrc.cpp)
 
-BUILT_SOURCES = $(FORMHEADERS) $(UIC_CPP) $(MOC_CPP)
+BUILT_SOURCES = $(UIC_H) $(MOC_CPP) $(RCC_CPP)
 CLEANFILES = $(BUILT_SOURCES)
 
-qtel_SOURCES = $(DIST_CPP) $(DIST_H_MOC) $(DIST_H_NO_MOC)
-nodist_qtel_SOURCES = $(MOC_CPP) $(UIC_CPP)
+qtel_SOURCES = $(DIST_CPP) $(DIST_H_MOC) $(DIST_H_NO_MOC) $(DIST_QRC)
+nodist_qtel_SOURCES = $(MOC_CPP) $(RCC_CPP)
+
+# symbol definitions
+DEFINES = -DQTELMESSAGEDIR='"@QTELMESSAGEDIR@"' \
+		-DQTELSOUNDDIR='"@QTELSOUNDDIR@"'
 
 # Set some flags for compilation and linking
-# FIXME - why do we need -I$builddir here?
-AM_CPPFLAGS += @ECHOLIB_CFLAGS@ @ASYNC_QT_CFLAGS@ -I$(builddir)
-LDADD = @ECHOLIB_LIBS@ @ASYNC_QT_LIBS@
+# FIXME - why do we need -I$builddir?
+qtel_CPPFLAGS = @AM_CPPFLAGS@ @ECHOLIB_CFLAGS@ @ASYNC_QT_CFLAGS@ \
+		$(DEFINES) -I$(builddir)
+qtel_LDADD = @ECHOLIB_LIBS@ @ASYNC_QT_LIBS@
+qtel_LDFLAGS = @AM_LDFLAGS@
 
 EXTRA_DIST = \
-		$(FORMS) \
+		$(DIST_FORMS) \
 		images \
 		qtel.pro \
 		Makefile.default
@@ -61,15 +70,12 @@ dist_icon_DATA = images/link.xpm
 
 # rules for QT processing
 .ui.h:
-	$(AM_V_GEN)@QT_UIC@ -o $@ $<
+	$(AM_V_GEN)@QT_UIC@ -o $(builddir)/$@ $(srcdir)/$<
 
 .h.moc.cpp:
-	$(AM_V_GEN)@QT_MOC@ -o $@ $<
+	$(AM_V_GEN)@QT_MOC@ -o $(builddir)/$@ $(srcdir)/$<
 
-.ui.uic.cpp:
-	$(AM_V_GEN)@QT_UIC@ -o $@ -impl $*.h $<
+.qrc.qrc.cpp:
+	$(AM_V_GEN)@QT_RCC@ -o $(builddir)/$@ $(srcdir)/$<
 
-#.h.uic.cpp:
-#	(AM_V_GEN)@QT_UIC@ -o $@ -impl $< $(srcdir)/$(<:.h=.ui)
-
-SUFFIXES = .h .ui .moc.cpp .uic.cpp
+SUFFIXES = .h .ui .qrc .moc.cpp .qrc.cpp

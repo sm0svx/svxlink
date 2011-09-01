@@ -345,6 +345,9 @@ int main(int argc, char **argv)
     cfg_filename += "/.svxlink/svxlink.conf";
     if (!cfg.open(cfg_filename))
     {
+      cfg_filename = SITECONFDIR "/svxlink.conf";
+      if (!cfg.open(cfg_filename))
+      {
       cfg_filename = "/etc/svxlink/svxlink.conf";
       if (!cfg.open(cfg_filename))
       {
@@ -360,6 +363,7 @@ int main(int argc, char **argv)
 	       << "syntax error in the file\n";
 	  exit(1);
 	}
+      }
       }
     }
   }

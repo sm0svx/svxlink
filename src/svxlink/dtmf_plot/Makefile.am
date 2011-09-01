@@ -11,37 +11,35 @@ DIST_H_MOC =
 DIST_H_NO_MOC = \
 		DtmfDecoder.h
 
-FORMS = 	\
+DIST_QRC =
+
+DIST_FORMS = 	\
 		DtmfPlot.ui
 
-FORMHEADERS = $(FORMS:.ui=.h)
-MOC_CPP = $(FORMS:.ui=.moc.cpp) $(DIST_H_MOC:.h=.moc.cpp)
-UIC_CPP = $(FORMS:.ui=.uic.cpp)
+UIC_H = $(DIST_FORMS:.ui=.h)
+MOC_CPP = $(DIST_H_MOC:.h=.moc.cpp)
+RCC_CPP = $(DIST_QRC:.qrc=.qrc.cpp)
 
-BUILT_SOURCES = $(FORMHEADERS) $(UIC_CPP) $(MOC_CPP)
+BUILT_SOURCES = $(UIC_H) $(MOC_CPP) $(RCC_CPP)
 CLEANFILES = $(BUILT_SOURCES)
 
-dtmf_plot_SOURCES = $(DIST_CPP) $(DIST_H_MOC) $(DIST_H_NO_MOC)
-nodist_dtmf_plot_SOURCES = $(MOC_CPP) $(UIC_CPP)
+dtmf_plot_SOURCES = $(DIST_CPP) $(DIST_H_MOC) $(DIST_H_NO_MOC) $(DIST_QRC)
+nodist_dtmf_plot_SOURCES = $(MOC_CPP) $(RCC_CPP)
 
-EXTRA_DIST = $(FORMS) Makefile.default
+EXTRA_DIST = $(DIST_FORMS) Makefile.default
 
 # Set some flags for compilation and linking
 AM_CPPFLAGS += @ASYNC_AUDIO_CFLAGS@ @ASYNC_QT_CFLAGS@
 LDADD = @ASYNC_AUDIO_LIBS@ @ASYNC_QT_LIBS@
 
-
 # rules for QT processing
 .ui.h:
-	$(AM_V_GEN)@QT_UIC@ -o $@ $<
+	$(AM_V_GEN)@QT_UIC@ -o $(builddir)/$@ $(srcdir)/$<
 
 .h.moc.cpp:
-	$(AM_V_GEN)@QT_MOC@ -o $@ $<
+	$(AM_V_GEN)@QT_MOC@ -o $(builddir)/$@ $(srcdir)/$<
 
-.ui.uic.cpp:
-	$(AM_V_GEN)@QT_UIC@ -o $@ -impl $*.h $<
+.qrc.qrc.cpp:
+	$(AM_V_GEN)@QT_RCC@ -o $(builddir)/$@ $(srcdir)/$<
 
-#.h.uic.cpp:
-#	(AM_V_GEN)@QT_UIC@ -o $@ -impl $< $(srcdir)/$(<:.h=.ui)
-
-SUFFIXES = .h .ui .moc.cpp .uic.cpp
+SUFFIXES = .h .ui .qrc .moc.cpp .qrc.cpp

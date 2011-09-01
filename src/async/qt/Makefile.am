@@ -17,51 +17,50 @@ DIST_H_MOC = $(DIST_H_MOC_PUBLIC) $(DIST_H_MOC_PRIVATE)
 
 DIST_H_NO_MOC = 
 
-FORMS =
+DIST_QRC =
 
-FORMHEADERS = $(FORMS:.ui=.h)
-MOC_CPP = $(FORMS:.ui=.moc.cpp) $(DIST_H_MOC:.h=.moc.cpp)
-UIC_CPP = $(FORMS:.ui=.uic.cpp)
+DIST_FORMS =
 
-BUILT_SOURCES = $(FORMHEADERS) $(MOC_CPP) $(UIC_CPP)
+UIC_H = $(DIST_FORMS:.ui=.h)
+MOC_CPP = $(DIST_H_MOC:.h=.moc.cpp)
+RCC_CPP = $(DIST_QRC:.qrc=.qrc.cpp)
+
+BUILT_SOURCES = $(UIC_H) $(MOC_CPP) $(RCC_CPP)
 CLEANFILES = $(BUILT_SOURCES)
 
-libasyncqt_la_SOURCES = $(DIST_CPP) $(DIST_H_MOC) $(DIST_H_NO_MOC)
-nodist_libasyncqt_la_SOURCES = $(FORMHEADERS) $(MOC_CPP) $(UIC_CPP)
-
-# compiler flags
-AM_CPPFLAGS += @QT_CFLAGS@ @ASYNC_CORE_CFLAGS@
+libasyncqt_la_SOURCES = $(DIST_CPP) $(DIST_H_MOC) $(DIST_H_NO_MOC) $(DIST_QRC)
+nodist_libasyncqt_la_SOURCES = $(UIC_H) $(MOC_CPP) $(RCC_CPP)
 
 VERSION = @LIBASYNC_SHLIB_VERSION@
 
-libasyncqt_la_LDFLAGS = -version-number $(VERSION)
+# compiler flags
+libasyncqt_la_CPPFLAGS = @AM_CPPFLAGS@ @ASYNC_QT_CFLAGS@
+libasyncqt_la_LIBADD = @ASYNC_CORE_LIBS@ @QT_LIBS@
+libasyncqt_la_LDFLAGS = @AM_LDFLAGS@ -version-number $(VERSION)
 
 # Headers that define the API of this library
 pkginclude_HEADERS = $(DIST_H_MOC_PUBLIC) $(DIST_H_NO_MOC)
 
 # Files that should be packaged with the sources
-EXTRA_DIST = $(FORMS) Makefile.default
+EXTRA_DIST = $(DIST_FORMS) Makefile.default
 
 
 # rules for QT processing
 .ui.h:
-	$(AM_V_GEN)@QT_UIC@ -o $@ $<
+	$(AM_V_GEN)@QT_UIC@ -o $(builddir)/$@ $(srcdir)/$<
 
 .h.moc.cpp:
-	$(AM_V_GEN)@QT_MOC@ -o $@ $<
+	$(AM_V_GEN)@QT_MOC@ -o $(builddir)/$@ $(srcdir)/$<
 
-.ui.uic.cpp:
-	$(AM_V_GEN)@QT_UIC@ -o $@ -impl $*.h $<
+.qrc.qrc.cpp:
+	$(AM_V_GEN)@QT_RCC@ -o $(builddir)/$@ $(srcdir)/$<
 
-#.h.uic.cpp:
-#	(AM_V_GEN)@QT_UIC@ -o $@ -impl $< $(srcdir)/$(<:.h=.ui)
-
-SUFFIXES = .h .ui .moc.cpp .uic.cpp
+SUFFIXES = .h .ui .qrc .moc.cpp .qrc.cpp
 
 
 # remove the .la file from the installation
 install-exec-hook:
-	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	$(AM_V_at)INSTDIR="$(DESTDIR)@libdir@" ; \
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \
 	echo "Removing $${lafile} from $${INSTDIR}" ; \
@@ -70,7 +69,7 @@ install-exec-hook:
 
 # libtool automatically handles uninstalls, unless one removes the .la file
 uninstall-hook:
-	@INSTDIR="$(DESTDIR)@libdir@" ; \
+	-$(AM_V_at)INSTDIR="$(DESTDIR)@libdir@" ; \
 	SHLIBVER=`echo $(VERSION) | $(AWK) -F\: '{OFS="."; $$1=$$1; print $$0}'` ; \
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \

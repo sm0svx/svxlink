@@ -118,7 +118,7 @@ using namespace std;
 
 #define CONF_AUDIO_DEVICE_DEFAULT 	"alsa:default"
 #define CONF_USE_FULL_DUPLEX_DEFAULT    false
-#define CONF_CONNECT_SOUND_DEFAULT 	"/usr/share/qtel/sounds/connect.raw"
+#define CONF_CONNECT_SOUND_DEFAULT 	QTELSOUNDDIR "/connect.raw"
 
 #define CONF_CHAT_ENCODING_DEFAULT	"ISO8859-1"
 
