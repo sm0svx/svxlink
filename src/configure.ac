@@ -21,6 +21,10 @@ AC_DEFUN([QT4_PATH_PROG], [
   PROG=`"${PKG_CONFIG}" --variable="$2"_location QtCore`
   if test -z "${PROG}" -o ! -f "${PROG}" -o ! -x "${PROG}"
   then
+    PROG=`"${PKG_CONFIG}" --variable=libdir QtCore`"/qt4/bin/$2"
+  fi
+  if test -z "${PROG}" -o ! -f "${PROG}" -o ! -x "${PROG}"
+  then
     AC_MSG_RESULT([no])
   else
     AC_MSG_RESULT([${PROG}])
@@ -192,6 +196,7 @@ for i in `ls -d "${libdir}" 2>/dev/null` \
   `ls -d /usr/local/lib 2>/dev/null` \
   `ls -d /usr/contrib/lib 2>/dev/null` \
   `ls -d /usr/lib 2>/dev/null` \
+  `ls -d /usr/lib64 2>/dev/null` \
   `ls -d /usr/share/tcltk/tcl8.5 2>/dev/null` \
   `ls -d /usr/lib/tcl8.5 2>/dev/null` \
   `ls -d /usr/share/tcltk/tcl8.4 2>/dev/null` \
