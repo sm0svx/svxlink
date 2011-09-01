@@ -122,7 +122,7 @@ AC_SEARCH_LIBS([gsm_decode], [gsm], [],
 AC_CHECK_HEADER([gsm.h], ,
   AC_CHECK_HEADER([gsm/gsm.h],
     [
-      GSM_CFLAGS=-Igsm
+      GSM_CFLAGS="-I/usr/include/gsm"
       AC_SUBST([GSM_CFLAGS])
     ], 
     AC_MSG_ERROR(['gsm.h' not found: need libgsm development files])
