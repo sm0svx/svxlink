@@ -361,7 +361,7 @@ void LinkManager::logicIsUp(std::string logicname)
    bool conn = false;
 
     // collecting names of logics that already are up
-   logiclist.push_back(logicname);
+   logiclist.insert(logicname);
 
     // 1st we need all LINK's in that this Logic is involved
    vector<string> ln = LinkManager::instance()->getLinkNames(logicname);
@@ -681,7 +681,18 @@ set<pair<string, string> > LinkManager::getmatrix(const string& linkname)
      {
        if (xj->first != xi->first)
        {
-         ret.insert(pair<string, string>(xi->first, xj->first));
+          if (logiclist.find(xj->first) != logiclist.end() &&
+                    logiclist.find(xi->first) != logiclist.end())
+         {
+           ret.insert(pair<string, string>(xi->first, xj->first));
+         }
+         else
+         {
+           cout << "*** WARNING: One of this logics: "<< xj->first << ", " <<
+                xi->first << " isn't up an can not beeing connected.\n" <<
+                "**** Missing entry in your configuration " <<
+                "[GLOBAL]/LINKS=???" << endl;
+         }
        }
      }
    }
@@ -731,10 +742,19 @@ bool LinkManager::disconnectLinks(const string& linkname)
 
    for (it = diff.begin(); it != diff.end(); it++)
    {
-      cout << "disconnect " << it->first << " -X-> " << it->second << endl;
-      sinks[it->first].selector->
-         disableAutoSelect(sinks[it->first].connectors[it->second]);
-      check = true;
+      if (logiclist.find(it->first) != logiclist.end() &&
+           logiclist.find(it->second) != logiclist.end())
+      {
+         cout << "disconnect " << it->first << " -X-> " << it->second << endl;
+         sinks[it->first].selector->
+          disableAutoSelect(sinks[it->first].connectors[it->second]);
+         check = true;
+      }
+      else
+      {
+         cout << "*** WARNING: Missing logics entry in [GLOBAL]/LINKS=???, " <<
+              "check your configuration." << endl;
+      }
    }
 
     // reset the connected flag

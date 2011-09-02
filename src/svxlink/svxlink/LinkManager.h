@@ -134,7 +134,7 @@ class LinkManager : public SigC::Object
     typedef std::map<std::string, std::vector<std::string> > CommandLinkList;
     CommandLinkList    cmd_link_list;
 
-    std::vector<std::string> logiclist;
+    std::set<std::string> logiclist;
 
     struct linkSet
     {
