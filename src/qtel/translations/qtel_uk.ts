@@ -43,7 +43,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Could not open mic audio device</source>
-        <translation>Не можу відкрити пристрій запису звуку/translation>
+        <translation>Не можу відкрити пристрій запису звуку</translation>
     </message>
     <message>
         <source>Could not open speaker audio device</source>
