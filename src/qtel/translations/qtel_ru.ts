@@ -704,11 +704,11 @@ Message</source>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation type="obsolete">Звуковой файл (*.raw)</translation>
+        <translation>Звуковой файл (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation type="obsolete">Выберите файл сигнала подключения</translation>
+        <translation>Выберите файл сигнала подключения</translation>
     </message>
     <message>
         <source>QSO dialog settings</source>

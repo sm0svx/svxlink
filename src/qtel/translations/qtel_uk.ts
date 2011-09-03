@@ -703,11 +703,11 @@ Message</source>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation type="obsolete">Звуковий файл (*.raw)</translation>
+        <translation>Звуковий файл (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation type="obsolete">Виберіть файл із сигналом про з&apos;єднання</translation>
+        <translation>Виберіть файл із сигналом про з&apos;єднання</translation>
     </message>
     <message>
         <source>QSO dialog settings</source>

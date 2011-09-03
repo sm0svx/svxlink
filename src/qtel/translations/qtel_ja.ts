@@ -30,7 +30,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Could not open audio device</source>
-        <translation>オーディオデバイスが見つかりません</translation>
+        <translation type="obsolete">オーディオデバイスが見つかりません</translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
@@ -175,15 +175,15 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Add to bookmarks</source>
-        <translation>お気に入りに追加</translation>
+        <translation type="obsolete">お気に入りに追加</translation>
     </message>
     <message>
         <source>Remove from bookmarks</source>
-        <translation>お気に入りから削除</translation>
+        <translation type="obsolete">お気に入りから削除</translation>
     </message>
     <message>
         <source>Add named station...</source>
-        <translation>自分で入力してお気に入りに追加...</translation>
+        <translation type="obsolete">自分で入力してお気に入りに追加...</translation>
     </message>
     <message>
         <source>Qtel - Add station...</source>
@@ -196,18 +196,18 @@ Can&apos;t create connection to</source>
     <message>
         <source>Ctrl+Q</source>
         <comment>fileQuitAction</comment>
-        <translation>Ctrl+A</translation>
+        <translation type="obsolete">Ctrl+A</translation>
     </message>
     <message>
         <source>Ctrl+B</source>
         <comment>directoryBusyAction</comment>
-        <translation>Ctrl+U</translation>
+        <translation type="obsolete">Ctrl+U</translation>
     </message>
     <message>
         <source>F5</source>
         <comment>directoryRefreshAction</comment>
         <translatorcomment>リスト更新動作</translatorcomment>
-        <translation>F5</translation>
+        <translation type="obsolete">F5</translation>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
@@ -263,7 +263,7 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     <name>MainWindowBase</name>
     <message>
         <source>Explorer</source>
-        <translation>一覧</translation>
+        <translation type="obsolete">一覧</translation>
     </message>
     <message>
         <source>Conferences</source>
@@ -287,15 +287,15 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>Station</source>
-        <translation>接続局</translation>
+        <translation type="obsolete">接続局</translation>
     </message>
     <message>
         <source>Location/Description</source>
-        <translation>場所/説明</translation>
+        <translation type="obsolete">場所/説明</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation>状態</translation>
+        <translation type="obsolete">状態</translation>
     </message>
     <message>
         <source>Time</source>
@@ -307,7 +307,7 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;設定</translation>
+        <translation type="obsolete">&amp;設定</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -315,67 +315,67 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>Undo</source>
-        <translation>Undo</translation>
+        <translation type="obsolete">Undo</translation>
     </message>
     <message>
         <source>&amp;Undo</source>
-        <translation>&amp;Undo</translation>
+        <translation type="obsolete">&amp;Undo</translation>
     </message>
     <message>
         <source>Redo</source>
-        <translation>Redo</translation>
+        <translation type="obsolete">Redo</translation>
     </message>
     <message>
         <source>&amp;Redo</source>
-        <translation>&amp;Redo</translation>
+        <translation type="obsolete">&amp;Redo</translation>
     </message>
     <message>
         <source>Cut</source>
-        <translation>Cut</translation>
+        <translation type="obsolete">Cut</translation>
     </message>
     <message>
         <source>&amp;Cut</source>
-        <translation>&amp;Cut</translation>
+        <translation type="obsolete">&amp;Cut</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Copy</translation>
+        <translation type="obsolete">Copy</translation>
     </message>
     <message>
         <source>C&amp;opy</source>
-        <translation>C&amp;opy</translation>
+        <translation type="obsolete">C&amp;opy</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation>Paste</translation>
+        <translation type="obsolete">Paste</translation>
     </message>
     <message>
         <source>&amp;Paste</source>
-        <translation>P&amp;aste</translation>
+        <translation type="obsolete">P&amp;aste</translation>
     </message>
     <message>
         <source>Find</source>
-        <translation>Find</translation>
+        <translation type="obsolete">Find</translation>
     </message>
     <message>
         <source>&amp;Find...</source>
-        <translation>&amp;Find...</translation>
+        <translation type="obsolete">&amp;Find...</translation>
     </message>
     <message>
         <source>Contents</source>
-        <translation>コンテンツ</translation>
+        <translation type="obsolete">コンテンツ</translation>
     </message>
     <message>
         <source>&amp;Contents...</source>
-        <translation>&amp;コンテンツ...</translation>
+        <translation type="obsolete">&amp;コンテンツ...</translation>
     </message>
     <message>
         <source>Index</source>
-        <translation>インデックス</translation>
+        <translation type="obsolete">インデックス</translation>
     </message>
     <message>
         <source>&amp;Index...</source>
-        <translation>&amp;インデックス...</translation>
+        <translation type="obsolete">&amp;インデックス...</translation>
     </message>
     <message>
         <source>About</source>
@@ -407,7 +407,7 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>&amp;Qtel Settings...</source>
-        <translation>&amp;Qtelセッティング...</translation>
+        <translation type="obsolete">&amp;Qtelセッティング...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
@@ -455,11 +455,11 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>Local time</source>
-        <translation>ローカルタイム</translation>
+        <translation type="obsolete">ローカルタイム</translation>
     </message>
     <message>
         <source>Incoming connections</source>
-        <translation>接続希望局</translation>
+        <translation type="obsolete">接続希望局</translation>
     </message>
     <message>
         <source>Accept</source>
@@ -479,7 +479,7 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>Node ID</source>
-        <translation>ノード ID</translation>
+        <translation type="obsolete">ノード ID</translation>
     </message>
     <message>
         <source>Connect to IP...</source>
@@ -491,15 +491,15 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>Disconnect</source>
-        <translation>切断</translation>
+        <translation type="obsolete">切断</translation>
     </message>
     <message>
         <source>Add selected to Bookmarks</source>
-        <translation>選択局をお気に入りに追加</translation>
+        <translation type="obsolete">選択局をお気に入りに追加</translation>
     </message>
     <message>
         <source> - Qt EchoLink client.</source>
-        <translation> - Qt EchoLink クライアント.</translation>
+        <translation type="obsolete"> - Qt EchoLink クライアント.</translation>
     </message>
     <message>
         <source>Incoming Connections</source>
@@ -672,11 +672,11 @@ Message</source>
     </message>
     <message>
         <source>Sound settings</source>
-        <translation>サウンド設定</translation>
+        <translation type="obsolete">サウンド設定</translation>
     </message>
     <message>
         <source>Audio device</source>
-        <translation>オーディオデバイス</translation>
+        <translation type="obsolete">オーディオデバイス</translation>
     </message>
     <message>
         <source>Full duplex</source>
@@ -712,7 +712,7 @@ Message</source>
     </message>
     <message>
         <source>QSO dialog settings</source>
-        <translation>交信設定</translation>
+        <translation type="obsolete">交信設定</translation>
     </message>
     <message>
         <source>Chat encoding:</source>

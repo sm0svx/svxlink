@@ -743,11 +743,11 @@ Message</source>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation type="obsolete">16-bit 8kHz Audio-Datei (*.raw)</translation>
+        <translation>16-bit 8kHz Audio-Datei (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation type="obsolete">Audiodatei auswählen</translation>
+        <translation>Audiodatei auswählen</translation>
     </message>
     <message>
         <source>QSO</source>

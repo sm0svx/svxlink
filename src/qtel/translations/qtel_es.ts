@@ -740,11 +740,11 @@ Message</source>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation type="obsolete">Archivos Raw (*.raw)</translation>
+        <translation type="unfinished">Archivos Raw (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation type="obsolete">Seleccione un archivo de sonido</translation>
+        <translation type="unfinished">Seleccione un archivo de sonido</translation>
     </message>
     <message>
         <source>QSO</source>
