@@ -19,7 +19,7 @@ set users(002) "call=SM0BBB pass=456";
 #
 # The directory where the voice mails are stored
 #
-set recdir "/var/spool/svxlink/voice_mail";
+set recdir "@VOICEMAILDIR@";
 
 #
 # Maximum recording times in milliseconds

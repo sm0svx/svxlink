@@ -4,33 +4,32 @@
 # macro definitions
 
 # find location for a particular Qt4 executable
-AC_DEFUN([QT4_PATH_PROG], [
+AC_DEFUN([QT4_PATH_PROG],
+[
   # zero out return value
-  unset $1
+  AS_UNSET([$1])
 
   # make sure we have 'pkg-config'
-  if test -z "${PKG_CONFIG}" ; then
+  AS_IF([test -z "${PKG_CONFIG}"],
+  [
     PKG_PROG_PKG_CONFIG()
-    if test -z "${PKG_CONFIG}" ; then
-      AC_MSG_ERROR(['pkg-config' is required])
-    fi
-  fi
+    AS_IF([test -z "${PKG_CONFIG}"],
+      [AC_MSG_ERROR(['pkg-config' is required])])
+  ])
 
   # actual check
   AC_MSG_CHECKING([for $2])
   PROG=`"${PKG_CONFIG}" --variable="$2"_location QtCore`
-  if test -z "${PROG}" -o ! -f "${PROG}" -o ! -x "${PROG}"
-  then
-    PROG=`"${PKG_CONFIG}" --variable=libdir QtCore`"/qt4/bin/$2"
-  fi
-  if test -z "${PROG}" -o ! -f "${PROG}" -o ! -x "${PROG}"
-  then
+  AS_IF([test -z "${PROG}" -o ! -f "${PROG}" -o ! -x "${PROG}"],
+    [PROG=`"${PKG_CONFIG}" --variable=libdir QtCore`"/qt4/bin/$2"])
+  AS_IF([test -z "${PROG}" -o ! -f "${PROG}" -o ! -x "${PROG}"],
+  [
     AC_MSG_RESULT([no])
-  else
+  ], [
     AC_MSG_RESULT([${PROG}])
     $1="${PROG}"
     AC_SUBST([$1])
-  fi
+  ])
 ])
 
 # execution starts here
@@ -51,142 +50,126 @@ AC_SUBST([LIBTOOL_DEPS])
 
 # option to build user documentation for Qtel
 AC_ARG_WITH([qteluserdocs],
-  AS_HELP_STRING([--with-qteluserdocs], [Build Qtel user documentation, too]))
+  [AS_HELP_STRING([--with-qteluserdocs], [Build Qtel user documentation, too])])
 AM_CONDITIONAL([WITH_QTELUSERDOCS], [test "x$with_qteluserdocs" = "xyes"])
-AM_COND_IF([WITH_QTELUSERDOCS], [
+AM_COND_IF([WITH_QTELUSERDOCS],
+[
   # check for pdflatex
   AC_PATH_PROG([PDFLATEX], [pdflatex])
-  if test -z "${PDFLATEX}" ; then
-    AC_MSG_ERROR(['pdflatex' is required to build the Qtel documentation])
-  fi
+  AS_IF([test -z "${PDFLATEX}"],
+    [AC_MSG_ERROR(['pdflatex' is required for Qtel documentation])])
+  
   AC_PATH_PROG([KPSEWHICH], [kpsewhich])
-  if test -z "${KPSEWHICH}" ; then
-    AC_MSG_ERROR(['kpsewhich' is required to build the Qtel documentation])
-  fi
+  AS_IF([test -z "${KPSEWHICH}"],
+    [AC_MSG_ERROR(['kpsewhich' is required for Qtel documentation])])
+
   RESULT=`${KPSEWHICH} scrartcl.cls`
-  if test -z "${RESULT}" ; then
-    AC_MSG_ERROR(['scrartcl.cls' is required to build the Qtel documentation])
-  fi
+  AS_IF([test -z "${RESULT}"],
+    [AC_MSG_ERROR(['scrartcl.cls' is required for Qtel documentation])])
 ])
 
 # check for required programs
 AC_PROG_CPP
-if test -z "${CPP}" ; then
-   AC_MSG_ERROR(['cpp' is required])
-fi
+AS_IF([test -z "${CPP}"], [AC_MSG_ERROR(['cpp' is required])])
+
 AC_PROG_CC
-if test -z "${CC}" ; then
-   AC_MSG_ERROR(['cc' is required])
-fi
+AS_IF([test -z "${CC}"], [AC_MSG_ERROR(['cc' is required])])
+
 AC_PROG_CXX
-if test -z "${CXX}" ; then
-   AC_MSG_ERROR(['cxx' is required])
-fi
+AS_IF([test -z "${CXX}"], [AC_MSG_ERROR(['cxx' is required])])
+
 AC_PROG_GREP
-if test -z "${GREP}" ; then
-   AC_MSG_ERROR(['grep' is required])
-fi
+AS_IF([test -z "${GREP}"], [AC_MSG_ERROR(['grep' is required])])
+
 AC_PROG_AWK
-if test -z "${AWK}" ; then
-   AC_MSG_ERROR(['awk' is required])
-fi
+AS_IF([test -z "${AWK}"], [AC_MSG_ERROR(['awk' is required])])
+
 AC_PROG_INSTALL
-if test -z "${INSTALL}" ; then
-   AC_MSG_ERROR(['install' is required])
-fi
+AS_IF([test -z "${INSTALL}"], [AC_MSG_ERROR(['install' is required])])
+
 AC_PATH_PROG([RMDIR], [rmdir])
-if test -z "${RMDIR}" ; then
-   AC_MSG_ERROR(['rmdir' is required])
-fi
+AS_IF([test -z "${RMDIR}"], [AC_MSG_ERROR(['rmdir' is required])])
+
 AC_PATH_PROG([GZIP], [gzip])
-if test -z "${GZIP}" ; then
-   AC_MSG_ERROR(['gzip' is required])
-fi
+AS_IF([test -z "${GZIP}"], [AC_MSG_ERROR(['gzip' is required])])
 
 PKG_PROG_PKG_CONFIG()
-if test -z "${PKG_CONFIG}" ; then
-   AC_MSG_ERROR(['pkg-config' is required])
-fi
+AS_IF([test -z "${PKG_CONFIG}"], [AC_MSG_ERROR(['pkg-config' is required])])
 
 # check for libc and libc-dev
-AC_SEARCH_LIBS([perror], [c], ,
-  AC_MSG_ERROR([perror() is required (presumably in libc)]))
-AC_CHECK_HEADER([stdio.h], ,
-  AC_MSG_ERROR(['stdio.h' not found: need libc development files]))
+AC_SEARCH_LIBS([perror], [c], [],
+  [AC_MSG_ERROR([perror() is required (presumably in libc)])])
+AC_CHECK_HEADER([stdio.h], [],
+  [AC_MSG_ERROR(['stdio.h' not found: need libc development files])])
 
 # check for libdl and libdl-dev
-AC_SEARCH_LIBS([dlsym], [dl], ,
-  AC_MSG_ERROR([dlsym() is required (presumably in libdl)]))
-AC_CHECK_HEADER([dlfcn.h], ,
-  AC_MSG_ERROR(['dlfcn.h' not found: need libdl development files]))
+AC_SEARCH_LIBS([dlsym], [dl], [],
+  [AC_MSG_ERROR([dlsym() is required (presumably in libdl)])])
+AC_CHECK_HEADER([dlfcn.h], [],
+  [AC_MSG_ERROR(['dlfcn.h' not found: need libdl development files])])
 
 # check for libgsm and libgsm-dev
 AC_SEARCH_LIBS([gsm_decode], [gsm], [],
-  AC_MSG_ERROR([gsm_decode() is required (presumably in libgsm)]))
-AC_CHECK_HEADER([gsm.h], ,
-  AC_CHECK_HEADER([gsm/gsm.h],
-    [
-      GSM_CFLAGS="-I/usr/include/gsm"
-      AC_SUBST([GSM_CFLAGS])
-    ], 
-    AC_MSG_ERROR(['gsm.h' not found: need libgsm development files])
-  )
-)
+  [AC_MSG_ERROR([gsm_decode() is required (presumably in libgsm)])])
+AC_CHECK_HEADER([gsm/gsm.h], [],
+  [AC_MSG_ERROR(['gsm/gsm.h' not found: need libgsm development files])])
 
 # check for libm and libm-dev
-AC_SEARCH_LIBS([cosf], [m], ,
-  AC_MSG_ERROR([cosf() is required (presumably in libm)]))
-AC_CHECK_HEADER([math.h], ,
-  AC_MSG_ERROR(['math.h' not found: need libm development files]))
+AC_SEARCH_LIBS([cosf], [m], [],
+  [AC_MSG_ERROR([cosf() is required (presumably in libm)])])
+AC_CHECK_HEADER([math.h], [],
+  [AC_MSG_ERROR(['math.h' not found: need libm development files])])
 
 # check for libpopt and libpopt-dev
-AC_SEARCH_LIBS([poptGetArg], [popt], ,
-  AC_MSG_ERROR([poptGetArg() is required (presumably in libpopt)]))
-AC_CHECK_HEADER([popt.h], ,
-  AC_MSG_ERROR(['popt.h' not found: need libpopt development files]))
+AC_SEARCH_LIBS([poptGetArg], [popt], [],
+  [AC_MSG_ERROR([poptGetArg() is required (presumably in libpopt)])])
+AC_CHECK_HEADER([popt.h], [],
+  [AC_MSG_ERROR(['popt.h' not found: need libpopt development files])])
 
 # check for libpthread and libpthread-dev
 AC_SEARCH_LIBS([pthread_mutex_lock], [pthread],
-  [
-    PTHREAD_CFLAGS="-pthread"
-    AC_SUBST([PTHREAD_CFLAGS])
-    PTHREAD_LIBS="-pthread -lpthread"
-    AC_SUBST([PTHREAD_LIBS])
-  ],
+[
+  PTHREAD_CFLAGS="-pthread"
+  AC_SUBST([PTHREAD_CFLAGS])
+  PTHREAD_LIBS="-pthread -lpthread"
+  AC_SUBST([PTHREAD_LIBS])
+], [
   AC_MSG_ERROR([pthread_mutex_lock() is required (presumably in libpthread)])
-)
-AC_CHECK_HEADER([pthread.h], ,
-  AC_MSG_ERROR(['pthread.h' not found: need libpthread development files]))
+])
+
+AC_CHECK_HEADER([pthread.h], [],
+  [AC_MSG_ERROR(['pthread.h' not found: need libpthread development files])])
 
 # check for libgcrypt and libgcrypt-dev
-AC_SEARCH_LIBS([gcry_md_setkey], [gcrypt], ,
-  AC_MSG_ERROR([gcry_md_setkey() is required (presumably in libgcrypt)]))
-AC_CHECK_HEADER([gcrypt.h], ,
-  AC_MSG_ERROR(['gcrypt.h' not found: need libgcrypt development files]))
+AC_SEARCH_LIBS([gcry_md_setkey], [gcrypt], [],
+  [AC_MSG_ERROR([gcry_md_setkey() is required (presumably in libgcrypt)])])
+AC_CHECK_HEADER([gcrypt.h], [],
+  [AC_MSG_ERROR(['gcrypt.h' not found: need libgcrypt development files])])
 
 # check for ALSA and OSS
 AC_SEARCH_LIBS([snd_pcm_readi], [asound],
-  AC_CHECK_HEADER([alsa/version.h], [HAVE_ALSA=1]))
+  [AC_CHECK_HEADER([alsa/version.h], [HAVE_ALSA=1])])
 AM_CONDITIONAL([HAVE_ALSA], [test ${HAVE_ALSA}])
 
 AC_CHECK_HEADERS([sys/soundcard.h soundcard.h machine/soundcard.h],
   [HAVE_OSS=1])
 AM_CONDITIONAL([HAVE_OSS], [test ${HAVE_OSS}])
 
-if test ! "${HAVE_ALSA}" -a ! "${HAVE_OSS}"
-then
-  AC_MSG_ERROR([found no way to access sound (neither ALSA nor OSS)])
-fi
+AS_IF([test ! "${HAVE_ALSA}" -a ! "${HAVE_OSS}"],
+  [AC_MSG_ERROR([found no way to access sound (neither ALSA nor OSS)])])
 
 # look for speex and #define USE_SPEEX=1 if found
-PKG_CHECK_MODULES([SPEEX], [speex], [AC_DEFINE([USE_SPEEX], [1])]
-  [] # this is required to prevent exit (PKG_CHECK_MODULES only)
+PKG_CHECK_MODULES([SPEEX], [speex],
+  [AC_DEFINE([USE_SPEEX], [1])],
+  [] # required to prevent exit for PKG_CHECK_MODULES
 )
 AM_CONDITIONAL([USE_SPEEX], [test ${USE_SPEEX}])
 
 # look for libsigc++
-PKG_CHECK_MODULES([SIGC], [sigc++-1.2], [],
-  AC_MSG_ERROR(['libsigc++-1.2 is required']))
+PKG_CHECK_MODULES([SIGC], [sigc++-1.2],
+  [],
+  [AC_MSG_ERROR(['libsigc++-1.2 is required'])]
+)
 
 # locate Tcl install path
 # we could use SC_PATH_TCLCONFIG if Fedora included tcl.m4 or tclX.X.m4
@@ -202,14 +185,14 @@ for i in `ls -d "${libdir}" 2>/dev/null` \
   `ls -d /usr/share/tcltk/tcl8.4 2>/dev/null` \
   `ls -d /usr/lib/tcl8.4 2>/dev/null` \
 ; do
-  if test -f "$i/tclConfig.sh" ; then
+  AS_IF([test -f "$i/tclConfig.sh"],
+  [
     TCL_BIN_DIR=`(cd "$i"; pwd)`
     break
-  fi
+  ])
 done
-if test x"${TCL_BIN_DIR}" = x ; then
-  AC_MSG_ERROR([Cannot find Tcl configuration definitions (tclConfig.sh)])
-fi
+AS_IF([test x"${TCL_BIN_DIR}" = x],
+  [AC_MSG_ERROR([Cannot find Tcl configuration definitions (tclConfig.sh)])])
 AC_SUBST([TCL_CFLAGS], ["${TCL_INCLUDE_SPEC}"])
 AC_SUBST([TCL_LIBS])
 
@@ -218,42 +201,37 @@ source $TCL_BIN_DIR/tclConfig.sh
 
 # check for Tcl library
 AC_SEARCH_LIBS([Tcl_CreateCommand], ["tcl${TCL_VERSION}"], ,
-  AC_MSG_ERROR([Tcl_CreateCommand() is required (in libtcl"${TCL_VERSION}")]))
+  [AC_MSG_ERROR([Tcl_CreateCommand() is required (in libtcl"${TCL_VERSION}")])])
 
 # check for Tcl include file
 CPPFLAGS="$CPPFLAGS $TCL_INCLUDE_SPEC"
 AC_CHECK_HEADER([tcl.h], ,
-  AC_MSG_ERROR(['tcl.h' not found: need libtcl development files]))
+  [AC_MSG_ERROR(['tcl.h' not found: need libtcl development files])])
 
 # check for Qt, also sets QT_CFLAGS and QT_LIBS via AC_SUBST
 PKG_CHECK_MODULES([QT], [QtCore QtGui QtNetwork],
-  [
-    HAVE_QT=1
+[
+  HAVE_QT=1
 
-    QT4_PATH_PROG([QT_MOC], [moc])
-    if test -z "${QT_MOC}" ; then
-      AC_MSG_ERROR(['moc' is required])
-    fi
-    QT4_PATH_PROG([QT_UIC], [uic])
-    if test -z "${QT_UIC}" ; then
-      AC_MSG_ERROR(['uic' is required])
-    fi
-    QT4_PATH_PROG([QT_RCC], [rcc])
-    if test -z "${QT_RCC}" ; then
-      AC_MSG_ERROR(['rcc' is required])
-    fi
-    QT4_PATH_PROG([QT_LRELEASE], [lrelease])
-    if test -z "${QT_LRELEASE}" ; then
-      AC_MSG_ERROR(['lrelease' is required])
-    fi
-  ],
-  [] # this is required to prevent exit (PKG_CHECK_MODULES only)
-)
+  QT4_PATH_PROG([QT_MOC], [moc])
+  AS_IF([test -z "${QT_MOC}"], [AC_MSG_ERROR(['moc' is required])])
+
+  QT4_PATH_PROG([QT_UIC], [uic])
+  AS_IF([test -z "${QT_UIC}"], [AC_MSG_ERROR(['uic' is required])])
+
+  QT4_PATH_PROG([QT_RCC], [rcc])
+  AS_IF([test -z "${QT_RCC}"], [AC_MSG_ERROR(['rcc' is required])])
+
+  QT4_PATH_PROG([QT_LRELEASE], [lrelease])
+  AS_IF([test -z "${QT_LRELEASE}"], [AC_MSG_ERROR(['lrelease' is required])])
+],[
+  # required to prevent exit for PKG_CHECK_MODULES
+])
 AM_CONDITIONAL([HAVE_QT], [test ${HAVE_QT}])
 
 # Check for header files.
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h locale.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termios.h unistd.h], ,
-  AC_MSG_ERROR([required headers not found])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h locale.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termios.h unistd.h], [],
+  [AC_MSG_ERROR([required headers not found])]
 )
 
 # Check for typedefs, structures, and compiler characteristics.
@@ -303,14 +281,15 @@ AC_SUBST([VERSIONFILE])
 VERSIONHEADERS=
 while read LINE
 do
-      if `${ECHO} ${LINE} | ${GREP} -q -e "^.*=.*$" > /dev/null 2>&1`; then 
-          PKGNAME="`${ECHO} ${LINE} | ${AWK} -F\= '/^.*=.*$/ {print $1}'`" 
-          PKGVERSION="`${ECHO} ${LINE} | ${AWK} -F\= '/^.*=.*$/ {print $2}'`" 
-          PKGVAR="${PKGNAME}_VERSION"
-          AC_DEFINE_UNQUOTED([${PKGVAR}], ["${PKGVERSION}"])
-          export ${PKGVAR}=${PKGVERSION}
-          VERSIONHEADERS="${VERSIONHEADERS} ${PKGNAME}.h"
-      fi
+  AS_IF([`${ECHO} ${LINE} | ${GREP} -q -e "^.*=.*$" > /dev/null 2>&1`],
+  [
+    PKGNAME="`${ECHO} ${LINE} | ${AWK} -F\= '/^.*=.*$/ {print $1}'`" 
+    PKGVERSION="`${ECHO} ${LINE} | ${AWK} -F\= '/^.*=.*$/ {print $2}'`" 
+    PKGVAR="${PKGNAME}_VERSION"
+    AC_DEFINE_UNQUOTED([${PKGVAR}], ["${PKGVERSION}"])
+    export ${PKGVAR}=${PKGVERSION}
+    VERSIONHEADERS="${VERSIONHEADERS} ${PKGNAME}.h"
+  ])
 done < "${srcdir}/${VERSIONFILE}"
 AC_SUBST([VERSIONHEADERS])
 
@@ -365,22 +344,22 @@ AC_SUBST([ASYNC_CPP_CFLAGS])
 AC_SUBST([ASYNC_CPP_LIBS])
 
 # async audio
-ASYNC_AUDIO_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_AUDIO} ${ASYNC_CORE_CFLAGS} ${SPEEX_CFLAGS} ${GSM_CFLAGS}"
+ASYNC_AUDIO_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_AUDIO} ${ASYNC_CORE_CFLAGS} ${SPEEX_CFLAGS}"
 ASYNC_AUDIO_LIBS="${TOP_BUILDDIR}/${ASYNC_AUDIO}/libasyncaudio.la ${ASYNC_CORE_LIBS} ${SPEEX_LIBS}"
 AC_SUBST([ASYNC_AUDIO_CFLAGS])
 AC_SUBST([ASYNC_AUDIO_LIBS])
 
 # async qt
 AM_COND_IF([HAVE_QT], [
-    ASYNC_QT_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_QT} ${QT_CFLAGS} ${ASYNC_CORE_CFLAGS}"
-    ASYNC_QT_LIBS="${TOP_BUILDDIR}/${ASYNC_QT}/libasyncqt.la ${QT_LIBS} ${ASYNC_CORE_LIBS}"
-    AC_SUBST([ASYNC_QT_CFLAGS])
-    AC_SUBST([ASYNC_QT_LIBS])
+  ASYNC_QT_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_QT} ${QT_CFLAGS} ${ASYNC_CORE_CFLAGS}"
+  ASYNC_QT_LIBS="${TOP_BUILDDIR}/${ASYNC_QT}/libasyncqt.la ${QT_LIBS} ${ASYNC_CORE_LIBS}"
+  AC_SUBST([ASYNC_QT_CFLAGS])
+  AC_SUBST([ASYNC_QT_LIBS])
 ])
 
 # Paths for libecholib
 ECHOLIB=echolib
-ECHOLIB_CFLAGS="-I${TOP_SRCDIR}/${ECHOLIB} ${ASYNC_AUDIO_CFLAGS} ${ASYNC_CPP_CFLAGS} ${GSM_CFLAGS}"
+ECHOLIB_CFLAGS="-I${TOP_SRCDIR}/${ECHOLIB} ${ASYNC_AUDIO_CFLAGS} ${ASYNC_CPP_CFLAGS}"
 ECHOLIB_LIBS="${TOP_BUILDDIR}/${ECHOLIB}/libecholib.la ${ASYNC_AUDIO_LIBS} ${ASYNC_CPP_LIBS}"
 AC_SUBST([ECHOLIB_CFLAGS])
 AC_SUBST([ECHOLIB_LIBS])
