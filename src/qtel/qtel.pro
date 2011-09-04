@@ -3,6 +3,9 @@ LANGUAGE	= C++
 
 CONFIG	+= qt warn_on release
 
+HEADERS += ComDialog.h MainWindow.h MyMessageBox.h Settings.h \
+	EchoLinkDirectoryModel.h MsgHandler.h SettingsDialog.h Vox.h
+
 SOURCES	+= MainWindow.cpp \
 	ComDialog.cpp \
 	Settings.cpp \

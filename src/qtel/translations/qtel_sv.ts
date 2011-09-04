@@ -708,11 +708,11 @@ meddelande</translation>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation type="obsolete">16-bit 8kHz ljudfiler (*.raw)</translation>
+        <translation>16-bit 8kHz ljudfiler (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation type="obsolete">Välj ett anslutningsljud</translation>
+        <translation>Välj ett anslutningsljud</translation>
     </message>
     <message>
         <source>QSO</source>

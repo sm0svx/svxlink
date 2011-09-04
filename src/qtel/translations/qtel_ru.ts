@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0">
+<TS version="2.0" language="ru_RU">
 <context>
     <name>ComDialog</name>
     <message>
         <source>Qtel Error</source>
-        <translation>Ошибка Qtel</translation>
+        <translation>Qtel Ошибка</translation>
     </message>
     <message>
         <source>Could not create connection to station</source>
@@ -15,7 +15,7 @@
         <source>Station data not found in directory server.
 Can&apos;t create connection to</source>
         <translation>Нет данных о станции на регистрационном сервере.
-Не могу соединится с</translation>
+Не могу подключится к</translation>
     </message>
     <message>
         <source>Could not open audio device</source>
@@ -23,11 +23,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
-        <translation>Не могу подключится к удаленному компьютеру</translation>
+        <translation>Не могу подключится к удаленному узлу</translation>
     </message>
     <message>
         <source>INFO</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Connected to </source>
@@ -43,22 +43,22 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Could not open mic audio device</source>
-        <translation type="unfinished"></translation>
+        <translation>Не могу открыть устройство аудио входа</translation>
     </message>
     <message>
         <source>Could not open speaker audio device</source>
-        <translation type="unfinished"></translation>
+        <translation>Не могу открыть устройство аудио выхода</translation>
     </message>
 </context>
 <context>
     <name>ComDialogBase</name>
     <message>
         <source>Communication Dialog</source>
-        <translation>Окно связи</translation>
+        <translation>Окно Связи</translation>
     </message>
     <message>
         <source>Station Information</source>
-        <translation>Информация о станции</translation>
+        <translation>Информация О Станции</translation>
     </message>
     <message>
         <source>Description:</source>
@@ -66,7 +66,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>?</source>
-        <translation>?</translation>
+        <translation></translation>
     </message>
     <message>
         <source>IP-address:</source>
@@ -82,19 +82,19 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Status:</source>
-        <translation>Состояние:</translation>
+        <translation>Статус:</translation>
     </message>
     <message>
         <source>Chat/Info</source>
-        <translation>Разговор/Инфо</translation>
+        <translation>Чат/Инфо</translation>
     </message>
     <message>
         <source>RX</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>TX</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>&amp;Connect</source>
@@ -106,11 +106,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Alt+D</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>VOX</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>VOX Enabled</source>
@@ -130,34 +130,34 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>PTT</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 <context>
     <name>EchoLinkDirectoryModel</name>
     <message>
         <source>Callsign</source>
-        <translation type="unfinished">Позывной</translation>
+        <translation>Позывной</translation>
     </message>
     <message>
         <source>Location/Description</source>
-        <translation type="unfinished">Расположение/Описание</translation>
+        <translation>Расположение/Описание</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation type="unfinished">Состояние</translation>
+        <translation>Статус</translation>
     </message>
     <message>
         <source>Local Time</source>
-        <translation type="unfinished"></translation>
+        <translation>Локальное Время</translation>
     </message>
     <message>
         <source>Node ID</source>
-        <translation type="unfinished">ID Узла</translation>
+        <translation>ID Узла</translation>
     </message>
     <message>
         <source>IP Address</source>
-        <translation type="unfinished"></translation>
+        <translation>IP Адрес</translation>
     </message>
 </context>
 <context>
@@ -184,7 +184,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Refreshing station list...</source>
-        <translation>Обновляю список станций...</translation>
+        <translation>Обновление списка станций...</translation>
     </message>
     <message>
         <source>Qtel - Add station...</source>
@@ -200,53 +200,56 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Enter an IP address or hostname:</source>
-        <translation>Ведите IP-адрес или сетевое имя:</translation>
+        <translation>Ведите IP адрес или сетевое имя:</translation>
     </message>
     <message>
         <source>Bookmarks</source>
-        <translation type="unfinished">Закладки</translation>
+        <translation>Закладки</translation>
     </message>
     <message>
         <source>Links</source>
-        <translation type="unfinished">Узлы</translation>
+        <translation>Узлы</translation>
     </message>
     <message>
         <source>Repeaters</source>
-        <translation type="unfinished">Репитеры</translation>
+        <translation>Репитеры</translation>
     </message>
     <message>
         <source>Conferences</source>
-        <translation type="unfinished">Конференции</translation>
+        <translation>Конференции</translation>
     </message>
     <message>
         <source>Stations</source>
-        <translation type="unfinished">Станции</translation>
+        <translation>Станции</translation>
     </message>
     <message>
         <source>About Qtel</source>
-        <translation type="unfinished">О Qtel</translation>
+        <translation>О Qtel</translation>
     </message>
     <message>
         <source>Qtel v</source>
-        <translation type="unfinished">Qtel версия </translation>
+        <translation>Qtel версия </translation>
     </message>
     <message>
         <source> - Qt EchoLink client.
 </source>
-        <translation type="unfinished"></translation>
+        <translation> - Qt EchoLink Клиент.
+</translation>
     </message>
     <message>
         <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
 
 Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it in accordance with the terms and conditions in the GNU GPL (General Public License) version 2 or later.</source>
-        <translation type="unfinished"></translation>
+        <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel поставляется АБСОЛЮТНО БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ. Это свободное программное обеспечение, вы можете распространять его в соответствии с положениями и условиями лицензии GNU GPL (General Public License) версии 2 или более поздней.</translation>
     </message>
 </context>
 <context>
     <name>MainWindowBase</name>
     <message>
         <source>Qtel - the Qt EchoLink Client</source>
-        <translation>Qtel - Qt EchoLink программа</translation>
+        <translation>Qtel - Qt EchoLink Клиент</translation>
     </message>
     <message>
         <source>Explorer</source>
@@ -402,11 +405,11 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     </message>
     <message>
         <source>About</source>
-        <translation>О</translation>
+        <translation>О Qtel</translation>
     </message>
     <message>
         <source>&amp;About...</source>
-        <translation>&amp;О...</translation>
+        <translation>О &amp;Qtel...</translation>
     </message>
     <message>
         <source>About Qtel</source>
@@ -426,7 +429,7 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     </message>
     <message>
         <source>Qtel Settings...</source>
-        <translation>Настройки Qtel...</translation>
+        <translation>Qtel Настройки...</translation>
     </message>
     <message>
         <source>&amp;Qtel Settings...</source>
@@ -434,7 +437,7 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
-        <translation>Открой окно настроек Qtel</translation>
+        <translation>Открыть окно настроек Qtel</translation>
     </message>
     <message>
         <source>Refresh</source>
@@ -458,11 +461,11 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     </message>
     <message>
         <source>View as busy</source>
-        <translation>Установить как &quot;занят&quot;</translation>
+        <translation>Режим &quot;занят&quot;</translation>
     </message>
     <message>
         <source>View as busy in directory server</source>
-        <translation>На регистрационном сервере установить как &quot;занят&quot;</translation>
+        <translation>Включить режим &quot;занят&quot; на регистрационном сервере</translation>
     </message>
     <message>
         <source>Connect to IP...</source>
@@ -496,167 +499,168 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     </message>
     <message>
         <source>Incoming Connections</source>
-        <translation type="unfinished"></translation>
+        <translation>Входящие Подключения</translation>
     </message>
     <message>
         <source>&amp;Station</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Станции</translation>
     </message>
     <message>
         <source>S&amp;ettings</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Настройки</translation>
     </message>
     <message>
         <source>Connect to &amp;selected...</source>
-        <translation type="unfinished"></translation>
+        <translation>Подключиться к &amp;выбранному...</translation>
     </message>
     <message>
         <source>Connect to &amp;IP...</source>
-        <translation type="unfinished"></translation>
+        <translation>Подключиться к &amp;IP...</translation>
     </message>
     <message>
         <source>Qtel &amp;Settings...</source>
-        <translation type="unfinished"></translation>
+        <translation>Qtel &amp;Настройки...</translation>
     </message>
     <message>
         <source>F5</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Add Selected To &amp;Bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Добавить Выбранное в Закладки</translation>
     </message>
     <message>
         <source>Add the selected station in the station list to the bookmarks menu</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить выбранную станцию ​​в список станций в меню закладки</translation>
     </message>
     <message>
         <source>Ctrl+U</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>&amp;Remove Selected From Bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Удалить Выбранное из Закладок</translation>
     </message>
     <message>
         <source>Remove the selected station from the bookmarks list</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить выбранную станцию из закладок</translation>
     </message>
     <message>
         <source>Add &amp;Named Station To Bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить Станцию по &amp;Имени в Закладки</translation>
     </message>
     <message>
         <source>Ctrl+Q</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Connect to the selected station</source>
-        <translation type="unfinished"></translation>
+        <translation>Подключиться к выбранной станции</translation>
     </message>
     <message>
         <source>Connect to local station using IP address or hostname</source>
-        <translation type="unfinished"></translation>
+        <translation>Подключиться к локальной станции с помощью IP-адреса или сетевого имени</translation>
     </message>
     <message>
         <source>Immediately refresh the station list</source>
-        <translation type="unfinished"></translation>
+        <translation>Немедленное обновление списка станций</translation>
     </message>
     <message>
         <source>Add selected station to the bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить выбранную станцию в закладки</translation>
     </message>
     <message>
         <source>Remove the selected station from the bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить выбранную станцию из закладок</translation>
     </message>
     <message>
         <source>Add a station to the bookmarks by entering a callsign</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить станцию в закладки, введя позывной</translation>
     </message>
     <message>
         <source>Show the about dialog</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать информацию о программе</translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
     <message>
         <source>Qtel: Settings</source>
-        <translation type="unfinished">Qtel: Настройки</translation>
+        <translation>Qtel: Настройки</translation>
     </message>
     <message>
         <source>User Info</source>
-        <translation type="unfinished">Данные пользователя</translation>
+        <translation>Данные Пользователя</translation>
     </message>
     <message>
         <source>User Information</source>
-        <translation type="unfinished">Настройки пользователя</translation>
+        <translation>Настройки Пользователя</translation>
     </message>
     <message>
         <source>Info
 Message</source>
-        <translation type="unfinished">Описание станции</translation>
+        <translation>Описание
+Станции</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation type="unfinished">Расположение</translation>
+        <translation>Расположение</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation type="unfinished">Позывной</translation>
+        <translation>Позывной</translation>
     </message>
     <message>
         <source>Password</source>
-        <translation type="unfinished">Пароль</translation>
+        <translation>Пароль</translation>
     </message>
     <message>
         <source>Retype password</source>
-        <translation type="unfinished">Повторите пароль</translation>
+        <translation>Повторите пароль</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">Имя</translation>
+        <translation>Имя</translation>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation type="unfinished">Регистрационный сервер</translation>
+        <translation>Регистрационный Сервер</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
-        <translation type="unfinished">Настройка регистрационного сервера</translation>
+        <translation>Настройки Регистрационного Сервера</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation type="unfinished">Сетевое имя или IP адрес регистрационного сервера EchoLink</translation>
+        <translation>Сетевое имя или IP адрес регистрационного сервера EchoLink</translation>
     </message>
     <message>
         <source>Server</source>
-        <translation type="unfinished">Сервер</translation>
+        <translation>Сервер</translation>
     </message>
     <message>
         <source>Refresh time</source>
-        <translation type="unfinished">Время между обновлением</translation>
+        <translation>Время обновления</translation>
     </message>
     <message>
         <source>min</source>
-        <translation type="unfinished">мин</translation>
+        <translation>мин</translation>
     </message>
     <message>
         <source>Time, in minutes, between station list refreshes</source>
-        <translation type="unfinished">Время в минутах, между обновлением списка станций</translation>
+        <translation>Время в минутах, между обновлением списка станций</translation>
     </message>
     <message>
         <source>Register as busy on program startup</source>
-        <translation type="unfinished">Зарегистрироваться как &quot;занят&quot; во время запуска программы</translation>
+        <translation>Включить режим &quot;занят&quot; во время запуска программы</translation>
     </message>
     <message>
         <source>Start as busy</source>
-        <translation type="unfinished">Включить как &quot;занят&quot;</translation>
+        <translation>Вкл. режим &quot;занят&quot;</translation>
     </message>
     <message>
         <source>Sound</source>
-        <translation type="unfinished">Звук</translation>
+        <translation>Звук</translation>
     </message>
     <message>
         <source>Sound settings</source>
@@ -668,7 +672,7 @@ Message</source>
     </message>
     <message>
         <source>Full duplex</source>
-        <translation type="unfinished">Полный дуплекс</translation>
+        <translation>Полный дуплекс</translation>
     </message>
     <message>
         <source>The audio device to use (e.g. /dev/dsp)</source>
@@ -676,35 +680,35 @@ Message</source>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
-        <translation type="unfinished">Установить флажок, для включения полного дуплекса</translation>
+        <translation>Установите флажок, для включения полного дуплекса</translation>
     </message>
     <message>
         <source>Connect Sound</source>
-        <translation type="unfinished">Сигнал подключения</translation>
+        <translation>Сигнал подключения</translation>
     </message>
     <message>
         <source>The connect sound to use on incoming EchoLink connections</source>
-        <translation type="unfinished">Звуковой сигнал о запросе EchoLink соединения</translation>
+        <translation>Звуковой сигнал при входящем EchoLink подключении</translation>
     </message>
     <message>
         <source>Browse...</source>
-        <translation type="unfinished">Обзор...</translation>
+        <translation>Обзор...</translation>
     </message>
     <message>
         <source>OK</source>
-        <translation type="unfinished">Применить</translation>
+        <translation>Применить</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Отмена</translation>
+        <translation>Отмена</translation>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation type="obsolete">Звуковой файл (*.raw)</translation>
+        <translation>Звуковой файл (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation type="obsolete">Выберите файл сигнала подключения</translation>
+        <translation>Выберите файл сигнала подключения</translation>
     </message>
     <message>
         <source>QSO dialog settings</source>
@@ -712,7 +716,7 @@ Message</source>
     </message>
     <message>
         <source>Chat encoding:</source>
-        <translation type="unfinished">Кодировка символов:</translation>
+        <translation>Кодировка чата:</translation>
     </message>
     <message>
         <source>Chinese</source>
@@ -752,7 +756,7 @@ Message</source>
     </message>
     <message>
         <source>Baltic</source>
-        <translation>Балтия</translation>
+        <translation>Балтийская</translation>
     </message>
     <message>
         <source>Cyrillic</source>
@@ -788,7 +792,7 @@ Message</source>
     </message>
     <message>
         <source>Qtel: Password mismatch</source>
-        <translation>Qtel: неправильный пароль</translation>
+        <translation>Qtel: Неправильный пароль</translation>
     </message>
     <message>
         <source>Passwords do not match</source>
@@ -796,27 +800,27 @@ Message</source>
     </message>
     <message>
         <source>Sound Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки Звука</translation>
     </message>
     <message>
         <source>Mic audio device</source>
-        <translation type="unfinished"></translation>
+        <translation>Аудио вход</translation>
     </message>
     <message>
         <source>The audio device to use (e.g. alsa:default)</source>
-        <translation type="unfinished"></translation>
+        <translation>Используемое аудио устройство (напр. alsa:default)</translation>
     </message>
     <message>
         <source>Speaker audio device</source>
-        <translation type="unfinished"></translation>
+        <translation>Аудио выход</translation>
     </message>
     <message>
         <source>QSO</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>QSO Dialog Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки Окна QSO</translation>
     </message>
 </context>
 </TS>

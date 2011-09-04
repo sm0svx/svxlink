@@ -655,5 +655,13 @@ Message</source>
         <source>Chat encoding:</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Choose a connect sound file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Raw Sound Files (*.raw)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 </TS>
