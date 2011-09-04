@@ -413,7 +413,7 @@ void MainWindow::initMsgAudioIo(void)
   
   msg_audio_io =
       new AudioIO(Settings::instance()->spkrAudioDevice().toStdString(), 0);
-  msg_handler = new MsgHandler("/", msg_audio_io->sampleRate());
+  msg_handler = new MsgHandler(msg_audio_io->sampleRate());
   msg_handler->allMsgsWritten.connect(slot(*this, &MainWindow::allMsgsWritten));
   msg_audio_io->registerSource(msg_handler);
   
