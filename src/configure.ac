@@ -23,6 +23,8 @@ AC_DEFUN([QT4_PATH_PROG],
   AS_IF([test -z "${PROG}" -o ! -f "${PROG}" -o ! -x "${PROG}"],
     [PROG=`"${PKG_CONFIG}" --variable=libdir QtCore`"/qt4/bin/$2"])
   AS_IF([test -z "${PROG}" -o ! -f "${PROG}" -o ! -x "${PROG}"],
+    [PROG=`"${PKG_CONFIG}" --variable=libdir QtCore`"/../bin/$2"])
+  AS_IF([test -z "${PROG}" -o ! -f "${PROG}" -o ! -x "${PROG}"],
   [
     AC_MSG_RESULT([no])
   ], [
