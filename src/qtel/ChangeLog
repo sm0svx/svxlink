@@ -7,6 +7,9 @@
   the configuration will be lost. Otherwise everything should be
   pretty much the same.
 
+* Bugfix: Incoming audio stopped being played back when a new incoming
+  connection was received.
+
 
 
  0.11.3 -- 14 May 2011
