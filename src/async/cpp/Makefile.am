@@ -17,12 +17,14 @@ DIST_H = $(DIST_H_PUBLIC) $(DIST_H_PRIVATE)
 # Sources needed to build the library
 libasynccpp_la_SOURCES = $(DIST_CPP) $(DIST_H)
 
-VERSION = @LIBASYNC_SHLIB_VERSION@
+SHLIB_RELEASE = @LIBASYNC_SHLIB_RELEASE@
+SHLIB_INTERFACE = @LIBASYNC_SHLIB_INTERFACE@
 
 # Extra compiler & linker flags
 libasynccpp_la_CPPFLAGS = @AM_CPPFLAGS@ @ASYNC_CPP_CFLAGS@
 libasynccpp_la_LIBADD = @ASYNC_CORE_LIBS@ @PTHREAD_LIBS@
-libasynccpp_la_LDFLAGS = @AM_LDFLAGS@ -version-number $(VERSION)
+libasynccpp_la_LDFLAGS = @AM_LDFLAGS@ -release $(SHLIB_RELEASE) \
+		-version-info $(SHLIB_INTERFACE)
 
 # Headers that define the API of this library
 pkginclude_HEADERS = $(DIST_H_PUBLIC)
@@ -43,14 +45,14 @@ install-exec-hook:
 # libtool automatically handles uninstalls, unless one removes the .la file
 uninstall-hook:
 	-$(AM_V_at)INSTDIR="$(DESTDIR)@libdir@" ; \
-	SHLIBVER=`echo $(VERSION) | $(AWK) -F\: '{OFS="."; $$1=$$1; print $$0}'` ; \
+	SHLIBREL=`echo $(SHLIB_RELEASE) | $(AWK) -F\: '{OFS="."; $$1=$$1; print $$0}'` ; \
+	SHLIBIFC=`echo $(SHLIB_INTERFACE) | $(AWK) -F\: '{OFS="."; $$1=$$1; print $$0}'` ; \
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \
 	LIBNAME=`echo $${lafile} | $(AWK) -F. '{NF--; print}'` ; \
-	echo "Removing $${LIBNAME}.a from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBNAME}.a ; \
-	echo "Removing $${LIBNAME}.so from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBNAME}.so ; \
-	echo "Removing $${LIBNAME}.so.$(SHLIBVER) from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBNAME}.so.$${SHLIBVER} ; \
+	for binary in $${INSTDIR}/$${LIBNAME}.a $${INSTDIR}/$${LIBNAME}-$${SHLIBREL}.so $${INSTDIR}/$${LIBNAME}-$${SHLIBREL}.so.$${SHLIBIFC} ; \
+	do \
+	echo "Removing $${binary}" ; \
+	$(RM) $${binary} ; \
+	done ; \
 	done

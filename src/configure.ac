@@ -43,8 +43,8 @@ AC_CONFIG_SRCDIR([svxlink/svxlink/svxlink.cpp])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 
-AM_INIT_AUTOMAKE([1.11 no-define silent-rules tar-ustar no-dist-gzip dist-bzip2])
-AM_SILENT_RULES([yes])
+AM_INIT_AUTOMAKE([1.11 no-define tar-ustar no-dist-gzip dist-bzip2])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 LT_PREREQ([2.2])
 LT_INIT([dlopen])
@@ -53,9 +53,14 @@ AC_SUBST([LIBTOOL_DEPS])
 # option to build user documentation for Qtel
 AC_ARG_WITH([qteluserdocs],
   [AS_HELP_STRING([--with-qteluserdocs], [Build Qtel user documentation, too])])
-AM_CONDITIONAL([WITH_QTELUSERDOCS], [test "x$with_qteluserdocs" = "xyes"])
-AM_COND_IF([WITH_QTELUSERDOCS],
+if test "x$with_qteluserdocs" = "xyes" ;
+then
+  WITH_QTELUSERDOCS=1
+fi
+AM_CONDITIONAL([WITH_QTELUSERDOCS], [test "${WITH_QTELUSERDOCS}"])
+AS_IF([test "${WITH_QTELUSERDOCS}"],
 [
+  AC_MSG_NOTICE([Building Qtel user documentation.])
   # check for pdflatex
   AC_PATH_PROG([PDFLATEX], [pdflatex])
   AS_IF([test -z "${PDFLATEX}"],
@@ -65,9 +70,14 @@ AM_COND_IF([WITH_QTELUSERDOCS],
   AS_IF([test -z "${KPSEWHICH}"],
     [AC_MSG_ERROR(['kpsewhich' is required for Qtel documentation])])
 
+  AC_MSG_CHECKING([for scrartcl.cls])
   RESULT=`${KPSEWHICH} scrartcl.cls`
   AS_IF([test -z "${RESULT}"],
-    [AC_MSG_ERROR(['scrartcl.cls' is required for Qtel documentation])])
+  [
+    AC_MSG_RESULT([no])
+    AC_MSG_ERROR(['scrartcl.cls' is required for Qtel documentation])
+  ])
+  AC_MSG_RESULT([yes])
 ])
 
 # check for required programs
@@ -296,11 +306,16 @@ done < "${srcdir}/${VERSIONFILE}"
 AC_SUBST([VERSIONHEADERS])
 
 # export version numbers to Makefiles for library versioning
-shlib_version() {
-  ${ECHO} "$1" | ${AWK} -F. '{OFS=":"; print $1,$2,$3}'
+shlib_release() {
+  ${ECHO} "$1" | ${AWK} -F. '{OFS=":"; print $1}'
 }
-AC_SUBST([LIBASYNC_SHLIB_VERSION], [`shlib_version "${LIBASYNC_VERSION}"`])
-AC_SUBST([ECHOLIB_SHLIB_VERSION], [`shlib_version "${ECHOLIB_VERSION}"`])
+AC_SUBST([LIBASYNC_SHLIB_RELEASE], [`shlib_release "${LIBASYNC_VERSION}"`])
+AC_SUBST([ECHOLIB_SHLIB_RELEASE], [`shlib_release "${ECHOLIB_VERSION}"`])
+shlib_interface() {
+  ${ECHO} "$1" | ${AWK} -F. '{OFS=":"; print $2,$3,0}'
+}
+AC_SUBST([LIBASYNC_SHLIB_INTERFACE], [`shlib_interface "${LIBASYNC_VERSION}"`])
+AC_SUBST([ECHOLIB_SHLIB_INTERFACE], [`shlib_interface "${ECHOLIB_VERSION}"`])
 
 # program configuration definitions
 AC_DEFINE([INTERNAL_SAMPLE_RATE], [8000], [Audio sample rate in Hz])
@@ -313,8 +328,11 @@ TOP_BUILDDIR='''$(top_builddir)'''
 COMMON_H="-I${TOP_SRCDIR}/misc -I${TOP_BUILDDIR}"
 # Some general definitions
 LOCAL_DEFS="-DT_LINUX"
+# undefine PACKAGE and friends to avoid conflicts on some systems
+LOCAL_UNDEFS="-UPACKAGE -UPACKAGE_BUGREPORT -UPACKAGE_NAME -UPACKAGE_STRING -UPACKAGE_TARNAME -UPACKAGE_URL -UPACKAGE_VERSION"
+
 # Set some standard cpp flags and export to make
-AC_SUBST([AM_CPPFLAGS], ["${LOCAL_DEFS} ${COMMON_H}"])
+AC_SUBST([AM_CPPFLAGS], ["${LOCAL_DEFS} ${LOCAL_UNDEFS} ${COMMON_H}"])
 
 # Set some standard linker flags and export to make
 AC_SUBST([AM_LDFLAGS], [-Wl,--as-needed])
@@ -352,7 +370,7 @@ AC_SUBST([ASYNC_AUDIO_CFLAGS])
 AC_SUBST([ASYNC_AUDIO_LIBS])
 
 # async qt
-AM_COND_IF([HAVE_QT], [
+AS_IF([test ${HAVE_QT}], [
   ASYNC_QT_CFLAGS="-I${TOP_SRCDIR}/${ASYNC_QT} ${QT_CFLAGS} ${ASYNC_CORE_CFLAGS}"
   ASYNC_QT_LIBS="${TOP_BUILDDIR}/${ASYNC_QT}/libasyncqt.la ${QT_LIBS} ${ASYNC_CORE_LIBS}"
   AC_SUBST([ASYNC_QT_CFLAGS])

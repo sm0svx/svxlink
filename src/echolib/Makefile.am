@@ -49,14 +49,16 @@ EchoLinkDirectory_demo_SOURCES = \
 EchoLinkQso_demo_SOURCES = \
 		EchoLinkQso_demo.cpp
 
-VERSION = @ECHOLIB_SHLIB_VERSION@
+SHLIB_RELEASE = @ECHOLIB_SHLIB_RELEASE@
+SHLIB_INTERFACE = @ECHOLIB_SHLIB_INTERFACE@
 
 # the next three lines work for the programs
 AM_CPPFLAGS = @AM_CPPFLAGS@ @ECHOLIB_CFLAGS@
 AM_LDFLAGS = @AM_LDFLAGS@
 LDADD = @ECHOLIB_LIBS@
 libecholib_la_LIBADD = @ASYNC_CPP_LIBS@ @ASYNC_AUDIO_LIBS@
-libecholib_la_LDFLAGS = @AM_LDFLAGS@ -version-number $(VERSION)
+libecholib_la_LDFLAGS = @AM_LDFLAGS@ -release $(SHLIB_RELEASE) \
+		-version-info $(SHLIB_INTERFACE)
 
 EXTRA_DIST = ChangeLog echolib_test.cfg mainpage.dox messages.txt \
 		Makefile.default
@@ -74,14 +76,14 @@ install-exec-hook:
 # libtool automatically handles uninstalls, unless one removes the .la file
 uninstall-hook:
 	-$(AM_V_at)INSTDIR="$(DESTDIR)@libdir@" ; \
-	SHLIBVER=`echo $(VERSION) | $(AWK) -F\: '{OFS="."; $$1=$$1; print $$0}'` ; \
+	SHLIBREL=`echo $(SHLIB_RELEASE) | $(AWK) -F\: '{OFS="."; $$1=$$1; print $$0}'` ; \
+	SHLIBIFC=`echo $(SHLIB_INTERFACE) | $(AWK) -F\: '{OFS="."; $$1=$$1; print $$0}'` ; \
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \
 	LIBNAME=`echo $${lafile} | $(AWK) -F. '{NF--; print}'` ; \
-	echo "Removing $${LIBNAME}.a from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBNAME}.a ; \
-	echo "Removing $${LIBNAME}.so from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBNAME}.so ; \
-	echo "Removing $${LIBNAME}.so.$(SHLIBVER) from $${INSTDIR}" ; \
-	$(RM) $${INSTDIR}/$${LIBNAME}.so.$${SHLIBVER} ; \
+	for binary in $${INSTDIR}/$${LIBNAME}.a $${INSTDIR}/$${LIBNAME}-$${SHLIBREL}.so $${INSTDIR}/$${LIBNAME}-$${SHLIBREL}.so.$${SHLIBIFC} ; \
+	do \
+	echo "Removing $${binary}" ; \
+	$(RM) $${binary} ; \
+	done ; \
 	done
