@@ -194,7 +194,7 @@ AudioDeviceOSS::AudioDeviceOSS(const string& dev_name)
 
     // Open the device to check its capabilities
   int f = ::open(dev_name.c_str(), O_RDWR);
-  if (f > 0)
+  if (f >= 0)
   {
     ioctl(fd, SNDCTL_DSP_SETDUPLEX, 0);
     ioctl(fd, SNDCTL_DSP_GETCAPS, &device_caps);
