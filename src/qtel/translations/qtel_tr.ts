@@ -738,11 +738,11 @@ Message</source>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation type="obsolete">Raw ses dosyası (*.raw)</translation>
+        <translation type="unfinished">Raw ses dosyası (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation type="obsolete">Bağlandı bilgisi ses dosyası seçin</translation>
+        <translation type="unfinished">Bağlandı bilgisi ses dosyası seçin</translation>
     </message>
     <message>
         <source>Chinese</source>

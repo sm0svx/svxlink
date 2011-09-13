@@ -6,6 +6,10 @@
 
 * New methods IpAddress::isEmpty() and IpAddress::clear().
 
+* Bugfix in the OSS code: The audio device would not open when not using stdout as
+  output due to an obscure bug in the OSS code. When not using stdout, the audio
+  device would open with fd 0, which was interpreted as and error.
+
 
 
  0.18.0 -- 14 May 2011

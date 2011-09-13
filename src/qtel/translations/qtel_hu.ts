@@ -740,11 +740,11 @@ Message</source>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation type="obsolete">Raw hang-fájl (*.raw)</translation>
+        <translation type="unfinished">Raw hang-fájl (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation type="obsolete">Válaszd-ki-a-kapcsolódási-hangot</translation>
+        <translation type="unfinished">Válaszd-ki-a-kapcsolódási-hangot</translation>
     </message>
     <message>
         <source>Chinese</source>

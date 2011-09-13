@@ -740,11 +740,11 @@ Bericht</translation>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation type="obsolete">Raw geluid bestanden (*.raw)</translation>
+        <translation type="unfinished">Raw geluid bestanden (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation type="obsolete">Kies een geluid bestand voor verbinding</translation>
+        <translation type="unfinished">Kies een geluid bestand voor verbinding</translation>
     </message>
     <message>
         <source>Chinese</source>

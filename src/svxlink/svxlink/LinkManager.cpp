@@ -221,6 +221,7 @@ bool LinkManager::initialize(const Async::Config &cfg,
 
      tlCmd.default_connect = false;
      tlCmd.no_disconnect = false;
+     tlCmd.is_connected = false;
 
       // checking OPTIONS ( on_startup?, ... )
      if (cfg.getValue((*linkname), "OPTIONS", tvalue))
