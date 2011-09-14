@@ -109,9 +109,8 @@ class SatRx : public AudioSource, public SigC::Object
 	      slot(*this, &SatRx::onSelcallSequenceDetected));
       rx->squelchOpen.connect(slot(*this, &SatRx::rxSquelchOpen));
 
-      fifo = new AudioFifo(max(10, fifo_length_ms) * INTERNAL_SAMPLE_RATE / 1000);
+      fifo = new AudioFifo(fifo_length_ms * INTERNAL_SAMPLE_RATE / 1000);
       fifo->enableOutput(false);
-      fifo->enableBuffering(fifo_length_ms > 0);
 
       rx->registerSink(fifo);
       AudioSource::setHandler(fifo);

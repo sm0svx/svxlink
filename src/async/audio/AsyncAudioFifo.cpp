@@ -119,8 +119,7 @@ AudioFifo::AudioFifo(unsigned fifo_size)
   : fifo_size(fifo_size), head(0), tail(0), stream_state(STREAM_IDLE),
     is_full(false), buffering_when_empty(true), buffering_enabled(true)
 {
-  assert(fifo_size > 0);
-  fifo = new float[fifo_size];
+  fifo = (fifo_size > 0) ? new float[fifo_size] : 0;
 
   AudioSource::setHandler(&valve);
   sigsrc.registerSink(&valve);
@@ -138,12 +137,11 @@ AudioFifo::~AudioFifo(void)
 
 void AudioFifo::setSize(unsigned new_size)
 {
-  assert(fifo_size > 0);
   if (new_size != fifo_size)
   {
     delete [] fifo;
     fifo_size = new_size;
-    fifo = new float[fifo_size];
+    fifo = (fifo_size > 0) ? new float[fifo_size] : 0;
   }
   clear();
 } /* AudioFifo::setSize */
@@ -151,6 +149,7 @@ void AudioFifo::setSize(unsigned new_size)
 
 unsigned AudioFifo::samplesInFifo() const
 {
+  if (fifo_size == 0) return 0;
   return is_full ? fifo_size : (head - tail + fifo_size) % fifo_size;
 
 } /* AudioFifo::samplesInFifo */
@@ -205,13 +204,13 @@ int AudioFifo::writeSamples(const float *samples, int count)
     {
       written = sigsrc.writeSamples(samples, count);
     }
-    else if (!buffering_enabled)
+    else if (!buffering_enabled || (fifo_size == 0))
     {
       return count;
     }
   }
 
-  if (buffering_enabled)
+  if (buffering_enabled && (fifo_size > 0))
   {  
     if (valve.isOpen())
     {
