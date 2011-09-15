@@ -119,8 +119,7 @@ AudioFifo::AudioFifo(unsigned fifo_size)
   : fifo_size(fifo_size), head(0), tail(0), stream_state(STREAM_IDLE),
     is_full(false), buffering_when_empty(true), buffering_enabled(true)
 {
-  fifo = (fifo_size > 0) ? new float[fifo_size] : 0;
-
+  fifo = new float[fifo_size];
   AudioSource::setHandler(&valve);
   sigsrc.registerSink(&valve);
   sigsrc.sigRequestSamples.connect(slot(*this, &AudioFifo::onRequestSamples));
@@ -141,7 +140,7 @@ void AudioFifo::setSize(unsigned new_size)
   {
     delete [] fifo;
     fifo_size = new_size;
-    fifo = (fifo_size > 0) ? new float[fifo_size] : 0;
+    fifo = new float[fifo_size];
   }
   clear();
 } /* AudioFifo::setSize */
