@@ -410,7 +410,7 @@ vector<string> LinkManager::getCommands(string logicname)
    for (it = linkCfg.begin(); it != linkCfg.end(); it++)
    {
      lc = (it->second).logic_cmd.find(logicname);
-     if (lc != (it->second).logic_cmd.end())
+     if (lc != (it->second).logic_cmd.end() && atoi((lc->second).c_str()) > 0 )
      {
         tcmds.push_back(lc->second);
      }
@@ -503,28 +503,42 @@ string LinkManager::cmdReceived(const string& logicname, string cmd, string subc
           case 0:      // disconnecting links
             if ((it->second).no_disconnect)
             {
-              ss = "deactivating_link_not_possible " + (it->second).linkname;
+              ss = "deactivating_link_not_possible ";
               break;
             }
-            if (!disconnectLinks((it->second).linkname))
+            if (!(it->second).is_connected)
             {
-              ss = "deactivating_link_failed " + (it->second).linkname;
+              ss = "link_not_active ";
             }
-            else
+            else 
             {
-              ss = "deactivating_link " + (it->second).linkname;
+              if (!disconnectLinks((it->second).linkname))
+              {
+                ss = "deactivating_link_failed ";
+              }
+              else
+              {
+                ss = "deactivating_link ";
+              }
             }
+            ss += (it->second).linkname;
             break;
 
           case 1:      // connecting links
+            if ((it->second).is_connected)
+            {
+              ss = "link_already_active ";
+              break;
+            }
             if (!connectLinks((it->second).linkname))
             {
-              ss = "activating_link_failed " + (it->second).linkname;
+              ss = "activating_link_failed ";
             }
             else
             {
-              ss = "activating_link " + (it->second).linkname;
+              ss = "activating_link ";
             }
+            ss += (it->second).linkname;
             break;
 
            case 2:
