@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pwd.h>
+#include <grp.h>
 
 #include <iostream>
 #include <cstring>
@@ -332,10 +333,22 @@ int main(int argc, char **argv)
 
   if (runasuser != NULL)
   {
+      // Setup supplementary group IDs
+    if (initgroups(runasuser, getgid()))
+    {
+      perror("initgroups");
+      exit(1);
+    }
+
     struct passwd *passwd = getpwnam(runasuser);
     if (passwd == NULL)
     {
       perror("getpwnam");
+      exit(1);
+    }
+    if (setgid(passwd->pw_gid) == -1)
+    {
+      perror("setgid");
       exit(1);
     }
     if (setuid(passwd->pw_uid) == -1)

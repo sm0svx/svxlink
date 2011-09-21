@@ -1,4 +1,6 @@
-<!DOCTYPE TS><TS>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.0" language="ja_JP">
 <context>
     <name>ComDialog</name>
     <message>
@@ -7,7 +9,7 @@
     </message>
     <message>
         <source>Connected to </source>
-        <translation>接続先 </translation>
+        <translation>接続 </translation>
     </message>
     <message>
         <source>Connecting to </source>
@@ -28,7 +30,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Could not open audio device</source>
-        <translation>オーディオデバイスが見つかりません</translation>
+        <translation type="obsolete">オーディオデバイスが見つかりません</translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
@@ -37,6 +39,14 @@ Can&apos;t create connection to</source>
     <message>
         <source>Disconnected</source>
         <translation>切断</translation>
+    </message>
+    <message>
+        <source>Could not open mic audio device</source>
+        <translation>マイクオーディオデバイスがオープンできません</translation>
+    </message>
+    <message>
+        <source>Could not open speaker audio device</source>
+        <translation>スピーカオーディオデバイスがオープンできません</translation>
     </message>
 </context>
 <context>
@@ -87,11 +97,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>RX</source>
-        <translation>RX</translation>
+        <translation>受信</translation>
     </message>
     <message>
         <source>TX</source>
-        <translation>TX</translation>
+        <translation>送信</translation>
     </message>
     <message>
         <source>Name:</source>
@@ -117,6 +127,37 @@ Can&apos;t create connection to</source>
         <source>dB Level:</source>
         <translation>デシベル:</translation>
     </message>
+    <message>
+        <source>Alt+D</source>
+        <translation>Alt+D</translation>
+    </message>
+</context>
+<context>
+    <name>EchoLinkDirectoryModel</name>
+    <message>
+        <source>Callsign</source>
+        <translation>コールサイン</translation>
+    </message>
+    <message>
+        <source>Location/Description</source>
+        <translation>場所/説明</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>状態</translation>
+    </message>
+    <message>
+        <source>Local Time</source>
+        <translation>ローカルタイム</translation>
+    </message>
+    <message>
+        <source>Node ID</source>
+        <translation>ノード ID</translation>
+    </message>
+    <message>
+        <source>IP Address</source>
+        <translation>IPアドレス</translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -134,19 +175,19 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Add to bookmarks</source>
-        <translation>お気に入りに追加</translation>
+        <translation type="obsolete">お気に入りに追加</translation>
     </message>
     <message>
         <source>Remove from bookmarks</source>
-        <translation>お気に入りから削除</translation>
+        <translation type="obsolete">お気に入りから削除</translation>
     </message>
     <message>
         <source>Add named station...</source>
-        <translation>自分で入力してお気に入りに追加...</translation>
+        <translation type="obsolete">自分で入力してお気に入りに追加...</translation>
     </message>
     <message>
         <source>Qtel - Add station...</source>
-        <translation>Qtel - 追加局名...</translation>
+        <translation>Qtel - お気に入りに追加...</translation>
     </message>
     <message>
         <source>Enter callsign of the station to add</source>
@@ -155,17 +196,18 @@ Can&apos;t create connection to</source>
     <message>
         <source>Ctrl+Q</source>
         <comment>fileQuitAction</comment>
-        <translation>Ctrl+A</translation>
+        <translation type="obsolete">Ctrl+A</translation>
     </message>
     <message>
         <source>Ctrl+B</source>
         <comment>directoryBusyAction</comment>
-        <translation>Ctrl+U</translation>
+        <translation type="obsolete">Ctrl+U</translation>
     </message>
     <message>
         <source>F5</source>
         <comment>directoryRefreshAction</comment>
-        <translation>F5</translation>
+        <translatorcomment>リスト更新動作</translatorcomment>
+        <translation type="obsolete">F5</translation>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
@@ -175,12 +217,53 @@ Can&apos;t create connection to</source>
         <source>Enter an IP address or hostname:</source>
         <translation>IPアドレスまたはホスト名を入力:</translation>
     </message>
+    <message>
+        <source>Bookmarks</source>
+        <translation>お気に入り</translation>
+    </message>
+    <message>
+        <source>Conferences</source>
+        <translation>カンファレンス</translation>
+    </message>
+    <message>
+        <source>Links</source>
+        <translation>リンク局</translation>
+    </message>
+    <message>
+        <source>Repeaters</source>
+        <translation>レピータ局</translation>
+    </message>
+    <message>
+        <source>Stations</source>
+        <translation>シングル局</translation>
+    </message>
+    <message>
+        <source>About Qtel</source>
+        <translation>Qtelとは...</translation>
+    </message>
+    <message>
+        <source>Qtel v</source>
+        <translation>Qtel v</translation>
+    </message>
+    <message>
+        <source> - Qt EchoLink client.
+</source>
+        <translation> - Qt エコーリンククライアント.</translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it in accordance with the terms and conditions in the GNU GPL (General Public License) version 2 or later.</source>
+        <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Public License) version 2以上の条件で再配布することは歓迎します。</translation>
+    </message>
 </context>
 <context>
     <name>MainWindowBase</name>
     <message>
         <source>Explorer</source>
-        <translation>一覧</translation>
+        <translation type="obsolete">一覧</translation>
     </message>
     <message>
         <source>Conferences</source>
@@ -204,15 +287,15 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Station</source>
-        <translation>接続</translation>
+        <translation type="obsolete">接続局</translation>
     </message>
     <message>
         <source>Location/Description</source>
-        <translation>場所/説明</translation>
+        <translation type="obsolete">場所/説明</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation>状態</translation>
+        <translation type="obsolete">状態</translation>
     </message>
     <message>
         <source>Time</source>
@@ -224,7 +307,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;設定</translation>
+        <translation type="obsolete">&amp;設定</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -232,67 +315,67 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Undo</source>
-        <translation>Undo</translation>
+        <translation type="obsolete">Undo</translation>
     </message>
     <message>
         <source>&amp;Undo</source>
-        <translation>&amp;Undo</translation>
+        <translation type="obsolete">&amp;Undo</translation>
     </message>
     <message>
         <source>Redo</source>
-        <translation>Redo</translation>
+        <translation type="obsolete">Redo</translation>
     </message>
     <message>
         <source>&amp;Redo</source>
-        <translation>&amp;Redo</translation>
+        <translation type="obsolete">&amp;Redo</translation>
     </message>
     <message>
         <source>Cut</source>
-        <translation>Cut</translation>
+        <translation type="obsolete">Cut</translation>
     </message>
     <message>
         <source>&amp;Cut</source>
-        <translation>&amp;Cut</translation>
+        <translation type="obsolete">&amp;Cut</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Copy</translation>
+        <translation type="obsolete">Copy</translation>
     </message>
     <message>
         <source>C&amp;opy</source>
-        <translation>C&amp;opy</translation>
+        <translation type="obsolete">C&amp;opy</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation>Paste</translation>
+        <translation type="obsolete">Paste</translation>
     </message>
     <message>
         <source>&amp;Paste</source>
-        <translation>P&amp;aste</translation>
+        <translation type="obsolete">P&amp;aste</translation>
     </message>
     <message>
         <source>Find</source>
-        <translation>Find</translation>
+        <translation type="obsolete">Find</translation>
     </message>
     <message>
         <source>&amp;Find...</source>
-        <translation>&amp;Find...</translation>
+        <translation type="obsolete">&amp;Find...</translation>
     </message>
     <message>
         <source>Contents</source>
-        <translation>コンテンツ</translation>
+        <translation type="obsolete">コンテンツ</translation>
     </message>
     <message>
         <source>&amp;Contents...</source>
-        <translation>&amp;コンテンツ...</translation>
+        <translation type="obsolete">&amp;コンテンツ...</translation>
     </message>
     <message>
         <source>Index</source>
-        <translation>インデックス</translation>
+        <translation type="obsolete">インデックス</translation>
     </message>
     <message>
         <source>&amp;Index...</source>
-        <translation>&amp;インデックス...</translation>
+        <translation type="obsolete">&amp;インデックス...</translation>
     </message>
     <message>
         <source>About</source>
@@ -324,15 +407,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>&amp;Qtel Settings...</source>
-        <translation>&amp;Qtelセッティング...</translation>
+        <translation type="obsolete">&amp;Qtelセッティング...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
         <translation>Qtelセッティングを開く</translation>
-    </message>
-    <message>
-        <source>Qtel v</source>
-        <translation></translation>
     </message>
     <message>
         <source>&amp;Directory</source>
@@ -376,11 +455,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Local time</source>
-        <translation>ローカルタイム</translation>
+        <translation type="obsolete">ローカルタイム</translation>
     </message>
     <message>
         <source>Incoming connections</source>
-        <translation>接続希望局</translation>
+        <translation type="obsolete">接続希望局</translation>
     </message>
     <message>
         <source>Accept</source>
@@ -400,31 +479,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Node ID</source>
-        <translation>ノード ID</translation>
-    </message>
-    <message>
-        <source>Ctrl+Z</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+Y</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+X</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+C</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+V</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+F</source>
-        <translation></translation>
+        <translation type="obsolete">ノード ID</translation>
     </message>
     <message>
         <source>Connect to IP...</source>
@@ -436,37 +491,106 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Disconnect</source>
-        <translation>切断</translation>
+        <translation type="obsolete">切断</translation>
     </message>
     <message>
         <source>Add selected to Bookmarks</source>
-        <translation>選択局をお気に入りに追加</translation>
+        <translation type="obsolete">選択局をお気に入りに追加</translation>
     </message>
     <message>
         <source> - Qt EchoLink client.</source>
-        <translation> - Qt EchoLink クライアント.</translation>
+        <translation type="obsolete"> - Qt EchoLink クライアント.</translation>
     </message>
     <message>
-        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
-
-Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
-are welcome to redistribute it in accordance with the terms and conditions in
-the GNU GPL (General Public License) version 2 or later.</source>
-        <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
-
-Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Public License)
-version 2以上の条件で再配布することは歓迎します。</translation>
+        <source>Incoming Connections</source>
+        <translation>接続希望局</translation>
+    </message>
+    <message>
+        <source>&amp;Station</source>
+        <translation>&amp;ステーション</translation>
+    </message>
+    <message>
+        <source>S&amp;ettings</source>
+        <translation>設定</translation>
+    </message>
+    <message>
+        <source>Connect to &amp;selected...</source>
+        <translation>選択局に接続...</translation>
+    </message>
+    <message>
+        <source>Connect to &amp;IP...</source>
+        <translation>IPアドレスで接続...</translation>
+    </message>
+    <message>
+        <source>Qtel &amp;Settings...</source>
+        <translation>Qtel設定...</translation>
+    </message>
+    <message>
+        <source>F5</source>
+        <translation>F5</translation>
+    </message>
+    <message>
+        <source>Add Selected To &amp;Bookmarks</source>
+        <translation>選択局をお気に入りに追加</translation>
+    </message>
+    <message>
+        <source>Add the selected station in the station list to the bookmarks menu</source>
+        <translation>選択局をお気に入りメニューリストに追加</translation>
+    </message>
+    <message>
+        <source>Ctrl+U</source>
+        <translation>Ctrl+U</translation>
+    </message>
+    <message>
+        <source>&amp;Remove Selected From Bookmarks</source>
+        <translation>選択局をお気に入りから削除</translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks list</source>
+        <translation>お気に入りリストから選択局を削除</translation>
+    </message>
+    <message>
+        <source>Add &amp;Named Station To Bookmarks</source>
+        <translation>お気に入りに追加</translation>
+    </message>
+    <message>
+        <source>Ctrl+Q</source>
+        <translation>Ctrl+A</translation>
+    </message>
+    <message>
+        <source>Connect to the selected station</source>
+        <translation>選択局に接続</translation>
+    </message>
+    <message>
+        <source>Connect to local station using IP address or hostname</source>
+        <translation>IPアドレスまたはホスト名を入力して接続</translation>
+    </message>
+    <message>
+        <source>Immediately refresh the station list</source>
+        <translation>接続局更新</translation>
+    </message>
+    <message>
+        <source>Add selected station to the bookmarks</source>
+        <translation>選択局をお気に入りに追加</translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks</source>
+        <translation>選択局をお気に入りから削除</translation>
+    </message>
+    <message>
+        <source>Add a station to the bookmarks by entering a callsign</source>
+        <translation>コールサインを入力してお気に入りに追加</translation>
+    </message>
+    <message>
+        <source>Show the about dialog</source>
+        <translation>メッセージを確認</translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
     <message>
         <source>Qtel: Settings</source>
-        <translation>Qtel: 設定等</translation>
-    </message>
-    <message>
-        <source>OK</source>
-        <translation></translation>
+        <translation>Qtel: 交信設定</translation>
     </message>
     <message>
         <source>User Info</source>
@@ -548,11 +672,11 @@ Message</source>
     </message>
     <message>
         <source>Sound settings</source>
-        <translation>サウンド設定</translation>
+        <translation type="obsolete">サウンド設定</translation>
     </message>
     <message>
         <source>Audio device</source>
-        <translation>オーディオデバイス</translation>
+        <translation type="obsolete">オーディオデバイス</translation>
     </message>
     <message>
         <source>Full duplex</source>
@@ -560,7 +684,7 @@ Message</source>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
-        <translation>セットすると全二重有効</translation>
+        <translation>チェックすれば全二重有効</translation>
     </message>
     <message>
         <source>Connect Sound</source>
@@ -588,7 +712,7 @@ Message</source>
     </message>
     <message>
         <source>QSO dialog settings</source>
-        <translation>交信設定</translation>
+        <translation type="obsolete">交信設定</translation>
     </message>
     <message>
         <source>Chat encoding:</source>
@@ -677,6 +801,26 @@ Message</source>
     <message>
         <source>The audio device to use (e.g. alsa:default)</source>
         <translation>使用するオーディオデバイス (e.g. alsa:default, ex. alsa:hw:0, alsa:plughw:0, oss:/dev/dsp)</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>設定</translation>
+    </message>
+    <message>
+        <source>Sound Settings</source>
+        <translation>サウンド設定</translation>
+    </message>
+    <message>
+        <source>Mic audio device</source>
+        <translation>マイクデバイス</translation>
+    </message>
+    <message>
+        <source>Speaker audio device</source>
+        <translation>スピーカデバイス</translation>
+    </message>
+    <message>
+        <source>QSO Dialog Settings</source>
+        <translation>&amp;Qtelセッティング...</translation>
     </message>
 </context>
 </TS>

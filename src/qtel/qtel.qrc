@@ -1,0 +1,18 @@
+<RCC>
+  <qresource prefix="icons">
+    <file alias="network-connect.png">images/network-connect.png</file>
+    <file alias="network-disconnect.png">images/network-disconnect.png</file>
+    <file alias="list-add.png">images/list-add.png</file>
+    <file alias="list-remove.png">images/list-remove.png</file>
+    <file>images/view-refresh.png</file>
+    <file>images/bookmarks.png</file>
+    <file>images/link.xpm</file>
+    <file>images/conference.xpm</file>
+    <file>images/exit.png</file>
+    <file>images/busy_icon.xpm</file>
+    <file>images/configure.png</file>
+    <file>images/offline_icon.xpm</file>
+    <file>images/online_icon.xpm</file>
+    <file>images/repeater.xpm</file>
+  </qresource>
+</RCC>

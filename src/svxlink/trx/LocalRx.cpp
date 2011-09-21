@@ -100,6 +100,8 @@ using namespace Async;
 
 #define DTMF_MUTING_PRE   75
 #define DTMF_MUTING_POST  200
+#define TONE_1750_MUTING_PRE 75
+#define TONE_1750_MUTING_POST 100
 
 
 /****************************************************************************
@@ -107,72 +109,6 @@ using namespace Async;
  * Local class definitions
  *
  ****************************************************************************/
-
-class ToneDurationDet : public ToneDetector
-{
-  public:
-    ToneDurationDet(float fq, float bw, int duration)
-      : ToneDetector(fq, bw),
-      	required_duration(duration), duration_timer(0)
-    {
-      //timerclear(&activation_timestamp);
-      ToneDetector::activated.connect(
-      	      slot(*this, &ToneDurationDet::toneActivated));
-    }
-    
-    ~ToneDurationDet(void)
-    {
-      delete duration_timer;
-    }
-    
-    SigC::Signal1<void, float> detected;
-    
-  private:
-    int     	    required_duration;
-    //struct timeval  activation_timestamp;
-    Timer     	    *duration_timer;
-    
-    void toneActivated(bool is_activated)
-    {
-      //printf("%.1f tone %s...\n", toneFq(),
-      //	     is_activated ? "ACTIVATED" : "DEACTIVATED");
-      if (is_activated)
-      {
-	//gettimeofday(&activation_timestamp, NULL);
-	duration_timer = new Timer(required_duration);
-	duration_timer->expired.connect(
-	    slot(*this, &ToneDurationDet::toneDetected));
-      }
-      else
-      {
-      	/*
-      	assert(timerisset(&activation_timestamp));
-	struct timeval tv, tv_diff;
-	gettimeofday(&tv, NULL);
-	timersub(&tv, &activation_timestamp, &tv_diff);
-	long diff = tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000;
-	//printf("The %d tone was active for %ld milliseconds\n",
-	//      	 toneFq(), diff);
-	if (diff >= required_duration)
-	{
-	  detected(toneFq());
-	}
-      	timerclear(&activation_timestamp);
-	*/
-	
-	delete duration_timer;
-	duration_timer = 0;
-      }
-    }
-    
-    void toneDetected(Timer *t)
-    {
-      delete duration_timer;
-      duration_timer = 0;
-      detected(toneFq());
-    }
-};
-
 
 class PeakMeter : public AudioPassthrough
 {
@@ -298,6 +234,12 @@ bool LocalRx::initialize(void)
     delay_line_len = DTMF_MUTING_PRE;
   }
   
+  bool  mute_1750 = false;
+  if (cfg.getValue(name(), "1750_MUTING", mute_1750))
+  {
+    delay_line_len = max(delay_line_len, TONE_1750_MUTING_PRE);
+  }
+
   if (cfg.getValue(name(), "SQL_TAIL_ELIM", value))
   {
     sql_tail_elim = atoi(value.c_str());
@@ -600,6 +542,16 @@ bool LocalRx::initialize(void)
     return false;
   }
   
+  if (mute_1750)
+  {
+    ToneDetector *calldet = new ToneDetector(1750, 50, 100);
+    assert(calldet != 0);
+    calldet->setPeakThresh(13);
+    calldet->activated.connect(slot(*this, &LocalRx::tone1750detected));
+    splitter->addSink(calldet, true);
+    cout << "Enabling 1750Hz muting\n";
+  }
+
   return true;
   
 } /* LocalRx:initialize */
@@ -654,9 +606,9 @@ bool LocalRx::addToneDetector(float fq, int bw, float thresh,
 {
   //printf("Adding tone detector with fq=%d  bw=%d  req_dur=%d\n",
   //    	 fq, bw, required_duration);
-  ToneDurationDet *det = new ToneDurationDet(fq, bw, required_duration);
+  ToneDetector *det = new ToneDetector(fq, bw, required_duration);
   assert(det != 0);
-  det->setSnrThresh(thresh);
+  det->setPeakThresh(thresh);
   det->detected.connect(toneDetected.slot());
   
   tone_dets->addSink(det, true);
@@ -822,6 +774,20 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
   return siglevdet;
   
 } /* LocalRx::createSigLevDet */
+
+
+void LocalRx::tone1750detected(bool detected)
+{
+   cout << "Muting 1750Hz: " << (detected ? "TRUE\n" : "FALSE\n");
+   if (detected)
+   {
+     delay->mute(true, TONE_1750_MUTING_PRE);
+   }
+   else
+   {
+     delay->mute(false, TONE_1750_MUTING_POST);
+   }
+} /* LocalRx::tone1750detected */
 
 
 

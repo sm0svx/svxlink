@@ -758,6 +758,15 @@ that none at all is used, like when taking audio directly from the FM
 discriminator. Have a look at the DEEMPHASIS configuration variable before
 starting to modify this configuration variable.
 .TP
+.B 1750_MUTING
+Mute the audio during a call tone of 1750Hz is received. Note that
+the audio will be delayed 75ms to give the tone detector time to do its work.
+This does not matter much on a simplex link but on a repeater it could be
+annoying since you will hear the last 75 milliseconds of your own transmission.
+To counteract the added delay one can set up the SQL_TAIL_ELIM configuration
+variable to at least 75 milliseconds.
+Legal values for 1750_MUTING are 0=disabled, 1=enabled.
+.TP
 .B SEL5_TYPE
 Define here your selective tone call system. You have the choice of the 
 following types: ZVEI1, ZVEI2, ZVEI3, PZVEI, PDZVEI, DZVEI, CCITT, EEA, CCIR1,

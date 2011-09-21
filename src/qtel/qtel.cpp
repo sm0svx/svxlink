@@ -39,10 +39,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdio>
 #include <cstdlib>
 
-#include <qapplication.h>
-#include <qmessagebox.h>
-#include <qtranslator.h>
-#include <qtextcodec.h>
+#include <QApplication>
+#include <QMessageBox>
+#include <QTranslator>
+#include <QTextCodec>
+#include <QLocale>
 
 
 /****************************************************************************
@@ -139,10 +140,14 @@ int main(int argc, char **argv)
 {
   QtApplication app(argc, argv);
   
-  QTranslator translator(0);
-  translator.load(QString("qtel_") + QTextCodec::locale(),
+  QTranslator translator;
+  translator.load(QString("qtel_%1").arg(QLocale::system().name()),
       "/usr/share/qtel/translations");
   app.installTranslator(&translator);
+
+  QCoreApplication::setOrganizationName("SvxLink");
+  QCoreApplication::setOrganizationDomain("svxlink.org");
+  QCoreApplication::setApplicationName("Qtel");
 	
   Settings *settings = Settings::instance();
   bool cfg_ok = false;
@@ -167,9 +172,10 @@ int main(int argc, char **argv)
     }
   }
     
-  Directory dir(settings->directoryServer().latin1(),
-      settings->callsign().latin1(), settings->password().latin1(),
-      settings->location().latin1());
+  Directory dir(settings->directoryServer().toStdString(),
+                settings->callsign().toStdString(),
+                settings->password().toStdString(),
+                settings->location().toStdString());
   if (EchoLink::Dispatcher::instance() == 0)
   {
     fprintf(stderr, "Could not initalize network listen ports\n");
@@ -177,7 +183,7 @@ int main(int argc, char **argv)
   }
   MainWindow mainWindow(dir);
   
-  app.setMainWidget(&mainWindow);
+  //app.setMainWidget(&mainWindow);
   mainWindow.show();
   app.exec();
   
