@@ -238,6 +238,18 @@ MainWindow::MainWindow(Directory &dir)
   station_model = new EchoLinkDirectoryModel(this);
   updateBookmarkModel();
   station_view_selector->setCurrentRow(0);
+
+  QList<int> sizes = Settings::instance()->stationViewColSizes();
+  for (int i=0; i<sizes.size(); ++i)
+  {
+    station_view->setColumnWidth(i, sizes.at(i));
+  }
+  
+  sizes = Settings::instance()->incomingViewColSizes();
+  for (int i=0; i<sizes.size(); ++i)
+  {
+    incoming_con_view->setColumnWidth(i, sizes.at(i));
+  }
   
   initMsgAudioIo();
 } /* MainWindow::MainWindow */
@@ -252,6 +264,22 @@ MainWindow::~MainWindow(void)
   Settings::instance()->setMainWindowSize(size());
   Settings::instance()->setHSplitterSizes(hsplitter->sizes());
   Settings::instance()->setVSplitterSizes(vsplitter->sizes());
+  
+  QList<int> sizes;
+  int size;
+  for (int i=0; (size = station_view->columnWidth(i)) > 0; ++i)
+  {
+    sizes << size;
+  }
+  Settings::instance()->setStationViewColSizes(sizes);
+
+  sizes.clear();
+  for (int i=0; (size = incoming_con_view->columnWidth(i)) > 0; ++i)
+  {
+    sizes << size;
+  }
+  Settings::instance()->setIncomingViewColSizes(sizes);
+  
   dir.makeOffline();
 } /* MainWindow::~MainWindow */
 
