@@ -187,10 +187,13 @@ ComDialog::ComDialog(Directory& dir, const QString& remote_host)
 
 ComDialog::~ComDialog(void)
 {
-  Settings::instance()->setVoxParams(vox->enabled(), vox->threshold(),
-      	      	      	      	     vox->delay());
-				     
-  delete vox;
+  delete con;
+  if (vox != 0)
+  {
+    Settings::instance()->setVoxParams(vox->enabled(), vox->threshold(),
+      	      	      	      	       vox->delay());
+    delete vox;
+  }
   delete dns;
   delete ptt_valve;
   delete tx_audio_splitter;
@@ -198,7 +201,6 @@ ComDialog::~ComDialog(void)
   delete rem_audio_fifo;
   delete mic_audio_io;
   delete spkr_audio_io;
-  delete con;
 } /* ComDialog::~ComDialog */
 
 
@@ -221,11 +223,46 @@ void ComDialog::setRemoteParams(const QString& priv)
 } /* ComDialog::setRemoteParams */
 
 
+
 /****************************************************************************
  *
  * Protected member functions
  *
  ****************************************************************************/
+
+void ComDialog::keyPressEvent(QKeyEvent *ke)
+{
+  if (!ctrl_pressed && !ke->text().isEmpty() &&
+      (ke->key() != Qt::Key_Space) && (ke->key() != Qt::Key_Tab) &&
+      (ke->key() != Qt::Key_Escape) && chat_outgoing->isEnabled())
+  {
+    chat_outgoing->setFocus();
+  }
+  
+  if (ke->key() == Qt::Key_Control)
+  {
+    ptt_button->setCheckable(true);
+    ctrl_pressed = true;
+  }
+
+  ke->ignore();
+  QDialog::keyPressEvent(ke);
+} /* ComDialog::keyPressEvent */
+
+
+void ComDialog::keyReleaseEvent(QKeyEvent *ke)
+{
+  if (ke->key() == Qt::Key_Control)
+  {
+    if (!is_transmitting)
+    {
+      ptt_button->setCheckable(false);
+    }
+    ctrl_pressed = false;
+  }
+  ke->ignore();
+  QDialog::keyReleaseEvent(ke);
+} /* ComDialog::keyReleaseEvent */
 
 
 
@@ -341,42 +378,6 @@ void ComDialog::init(const QString& remote_name)
   
   orig_background_color = rx_indicator->palette().color(QPalette::Window);
 } /* ComDialog::init */
-
-
-bool ComDialog::eventFilter(QObject *watched, QEvent *e)
-{
-  if (e->type() == QEvent::KeyPress)
-  {
-    QKeyEvent *ke = (QKeyEvent*)e;
-    if (!ke->text().isEmpty() && (ke->key() != Qt::Key_Space) &&
-	(ke->key() != Qt::Key_Tab) && (ke->key() != Qt::Key_Escape))
-    {
-      chat_outgoing->setFocus();
-      chat_outgoing->insert(ke->text());
-      return TRUE;
-    }
-    
-    if (ke->key() == Qt::Key_Control)
-    {
-      ptt_button->setCheckable(true);
-      ctrl_pressed = true;
-    }
-  } 
-  else if (e->type() == QEvent::KeyRelease)
-  {
-    QKeyEvent *ke = (QKeyEvent*)e;
-    if (ke->key() == Qt::Key_Control)
-    {
-      if (!is_transmitting)
-      {
-      	ptt_button->setCheckable(false);
-      }
-      ctrl_pressed = false;
-    }
-  }
-  
-  return FALSE;
-}
 
 
 void ComDialog::updateStationData(const StationData *station)

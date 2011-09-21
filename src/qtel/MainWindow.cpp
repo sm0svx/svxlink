@@ -530,8 +530,7 @@ void MainWindow::stationViewSelectorCurrentItemChanged(QListWidgetItem *current,
 
 void MainWindow::stationViewDoubleClicked(const QModelIndex &index)
 {
-  ComDialog *com_dialog = new ComDialog(dir, index.data(0).toString(), "?");
-  com_dialog->show();
+  connectionConnectToSelectedActionActivated();
 } /* MainWindow::stationViewDoubleClicked */
 
 
