@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <vector>
+#include <deque>
 
 
 /****************************************************************************
@@ -158,7 +159,7 @@ class SigLevDetTone : public SigLevDet
      * @brief 	Read the latest measured signal level
      * @return	Returns the latest measured signal level
      */
-    virtual float lastSiglev(void) const { return last_siglev; }
+    virtual float lastSiglev(void) const;
 
     /**
      * @brief   Reset the signal level detector
@@ -202,6 +203,8 @@ class SigLevDetTone : public SigLevDet
     MyGoertzel        *det[10];
     unsigned          block_idx;
     int               last_siglev;
+    unsigned	      integration_time;
+    std::deque<int>   siglev_values;
     
     SigLevDetTone(const SigLevDetTone&);
     SigLevDetTone& operator=(const SigLevDetTone&);
