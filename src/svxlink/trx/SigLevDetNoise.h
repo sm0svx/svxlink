@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <deque>
 #include <sigc++/sigc++.h>
 
 
@@ -109,7 +110,7 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A simple signal level detector
+@brief	A simple noise measuring signal level detector
 @author Tobias Blomberg / SM0SVX
 @date   2006-05-07
 */
@@ -139,25 +140,49 @@ class SigLevDetNoise : public SigLevDet
     void setDetectorOffset(float offset);
   
     /**
+     * @brief	Set the interval for continuous updates
+     * @param	interval_ms The update interval, in milliseconds, to use.
+     * 
+     * This function will set up how often the signal level detector will
+     * report the signal strength.
+     */
+    virtual void setContinuousUpdateInterval(int interval_ms);
+    
+    /**
+     * @brief	Set the integration time to use
+     * @param	time_ms The integration time in milliseconds
+     * 
+     * This function will set up the integration time for the signal level
+     * detector. That is, the detector will build a mean value of the
+     * detected signal strengths over the given integration time.
+     */
+    virtual void setIntegrationTime(int time_ms);
+    
+    /**
      * @brief 	Read the latest calculated signal level
      * @return	Returns the latest calculated signal level
      */
-    float lastSiglev(void) const
-    {
-      return offset - slope * log10f(last_siglev);
-    }
+    virtual float lastSiglev(void) const;
      
-    void reset(void);
+    /**
+     * @brief   Reset the signal level detector
+     */
+    virtual void reset(void);
      
     
   protected:
     
   private:
+    const int		  sample_rate;
     Async::AudioFilter	  *filter;
     Async::SigCAudioSink  *sigc_sink;
     float    	      	  last_siglev;
     float     	      	  slope;
     float     	      	  offset;
+    int			  update_interval;
+    int			  update_counter;
+    unsigned		  integration_time;
+    std::deque<double>	  ss_values;
     
     SigLevDetNoise(const SigLevDetNoise&);
     SigLevDetNoise& operator=(const SigLevDetNoise&);

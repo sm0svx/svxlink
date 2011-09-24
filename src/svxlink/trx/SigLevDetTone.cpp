@@ -279,6 +279,18 @@ void SigLevDetTone::reset(void)
 } /* SigLevDetTone::reset */
 
 
+void SigLevDetTone::setContinuousUpdateInterval(int interval_ms)
+{
+  
+} /* SigLevDetTone::setContinuousUpdateInterval */
+
+
+void SigLevDetTone::setIntegrationTime(int time_ms)
+{
+  
+} /* SigLevDetTone::setIntegrationTime */
+
+
 int SigLevDetTone::writeSamples(const float *samples, int count)
 {
   for (int i=0; i<count; ++i)

@@ -115,7 +115,8 @@ using namespace Async;
  ****************************************************************************/
 
 SigLevDetNoise::SigLevDetNoise(int sample_rate)
-  : slope(1.0), offset(0.0)
+  : sample_rate(sample_rate), slope(1.0), offset(0.0), update_interval(0),
+    update_counter(0), integration_time(0)
 {
   if (sample_rate >= 16000)
   {
@@ -132,6 +133,7 @@ SigLevDetNoise::SigLevDetNoise(int sample_rate)
   sigc_sink->sigFlushSamples.connect(
       slot(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
   sigc_sink->registerSource(filter);
+  setIntegrationTime(0);
   reset();
 } /* SigLevDetNoise::SigLevDetNoise */
 
@@ -142,13 +144,6 @@ SigLevDetNoise::~SigLevDetNoise(void)
   delete filter;
   delete sigc_sink;
 } /* SigLevDetNoise::~SigLevDetNoise */
-
-
-void SigLevDetNoise::reset(void)
-{
-  filter->reset();
-  last_siglev = pow10f(-offset / slope);
-} /* SigLevDetNoise::reset */
 
 
 void SigLevDetNoise::setDetectorSlope(float slope)
@@ -163,6 +158,44 @@ void SigLevDetNoise::setDetectorOffset(float offset)
   this->offset = offset;
   reset();
 } /* SigLevDetNoise::setDetectorOffset  */
+
+
+void SigLevDetNoise::setContinuousUpdateInterval(int interval_ms)
+{
+  update_interval = interval_ms * sample_rate / 1000;
+  update_counter = 0;
+} /* SigLevDetNoise::setContinuousUpdateInterval */
+
+
+void SigLevDetNoise::setIntegrationTime(int time_ms)
+{
+  if (time_ms < 20)
+  {
+    time_ms = 20;
+  }
+  integration_time = time_ms * sample_rate / 1000;
+} /* SigLevDetNoise::setIntegrationTime */
+
+
+float SigLevDetNoise::lastSiglev(void) const
+{
+  double ss = 0.0;
+  deque<double>::const_iterator it;
+  for (it=ss_values.begin(); it!=ss_values.end(); ++it)
+  {
+    ss += *it;
+  }
+  return offset - slope * log10(sqrt(ss / ss_values.size()));
+} /* SigLevDetNoise::lastSiglev */
+
+
+void SigLevDetNoise::reset(void)
+{
+  filter->reset();
+  last_siglev = pow10f(-offset / slope);
+  update_counter = 0;
+  ss_values.clear();
+} /* SigLevDetNoise::reset */
 
 
 
@@ -182,17 +215,28 @@ void SigLevDetNoise::setDetectorOffset(float offset)
 
 int SigLevDetNoise::processSamples(float *samples, int count)
 {
-  //cout << "SigLevDet::processSamples: count=" << count << "\n";
-  float rms = 0.0;
   for (int i=0; i<count; ++i)
   {
     float sample = samples[i];
-    rms += sample * sample;
+    ss_values.push_back(sample * sample);
   }
-  last_siglev = sqrtf(rms / count);
   
-  //cout << lastSiglev() << endl;
+  if (ss_values.size() > integration_time)
+  {
+    ss_values.erase(ss_values.begin(),
+		    ss_values.begin()+ss_values.size()-integration_time);
+  }
 
+  if (update_interval > 0)
+  {
+    update_counter += count;
+    if (update_counter >= update_interval)
+    {
+      signalLevelUpdated(lastSiglev());
+      update_counter = 0;
+    }
+  }
+  
   return count;
   
 } /* SigLevDetNoise::processSamples */

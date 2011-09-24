@@ -311,15 +311,20 @@ bool LocalRx::initialize(void)
   if (audio_io->sampleRate() > 8000)
   {
     siglevdet = createSigLevDet(name(), 16000);
+    siglevdet->setIntegrationTime(512 * 1000 / INTERNAL_SAMPLE_RATE);
   }
   else
   {
     siglevdet = createSigLevDet(name(), 8000);
+    siglevdet->setIntegrationTime(256 * 1000 / INTERNAL_SAMPLE_RATE);
   }
   if (siglevdet == 0)
   {
     return false;
   }
+  siglevdet->setContinuousUpdateInterval(1000);
+  siglevdet->signalLevelUpdated.connect(
+    slot(*this, &LocalRx::signalLevelUpdated));
   siglevdet_splitter->addSink(siglevdet, true);
   
     // Create a mute valve
@@ -789,6 +794,11 @@ void LocalRx::tone1750detected(bool detected)
    }
 } /* LocalRx::tone1750detected */
 
+
+void LocalRx::signalLevelUpdated(float siglev)
+{
+  cout << "Signal level=" << siglev << endl;
+} /* LocalRx::signalLevelUpdated */
 
 
 /*

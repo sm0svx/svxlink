@@ -110,9 +110,14 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A simple signal level detector
+@brief	The base class for a signal level detector
 @author Tobias Blomberg / SM0SVX
 @date   2006-05-07
+
+This is the base class for all signal level detectors. The calculated signal
+level value is in the range of approximately 0 to 100 where 0 is the weakest
+signal strength measurement and where 100 is the strongest. The minimun and
+maximum values are approximate so higher and lower values may be reported.
 */
 class SigLevDet : public SigC::Object, public Async::AudioSink
 {
@@ -137,6 +142,25 @@ class SigLevDet : public SigC::Object, public Async::AudioSink
     }
     
     /**
+     * @brief	Set the interval for continuous updates
+     * @param	interval_ms The update interval, in milliseconds, to use.
+     * 
+     * This function will set up how often the signal level detector will
+     * report the signal strength.
+     */
+    virtual void setContinuousUpdateInterval(int interval_ms) = 0;
+    
+    /**
+     * @brief	Set the integration time to use
+     * @param	time_ms The integration time in milliseconds
+     * 
+     * This function will set up the integration time for the signal level
+     * detector. That is, the detector will build a mean value of the
+     * detected signal strengths over the given integration time.
+     */
+    virtual void setIntegrationTime(int time_ms) = 0;
+    
+    /**
      * @brief 	Read the latest measured signal level
      * @return	Returns the latest measured signal level
      */
@@ -146,7 +170,16 @@ class SigLevDet : public SigC::Object, public Async::AudioSink
      * @brief   Reset the signal level detector
      */
     virtual void reset(void) = 0;
-     
+    
+    /**
+     * @brief	A signal that is emitted when the signal strength is updated
+     * @param	siglev The updated siglev measurement
+     * 
+     * This signal is emitted when the detector have calculated a new signal
+     * level measurement. How often the signal is emitted is set up by calling
+     * the setCountiuousUpdateInterval function.
+     */
+    SigC::Signal1<void, float> signalLevelUpdated;
     
   protected:
     
