@@ -311,18 +311,17 @@ bool LocalRx::initialize(void)
   if (audio_io->sampleRate() > 8000)
   {
     siglevdet = createSigLevDet(name(), 16000);
-    siglevdet->setIntegrationTime(512 * 1000 / INTERNAL_SAMPLE_RATE);
   }
   else
   {
     siglevdet = createSigLevDet(name(), 8000);
-    siglevdet->setIntegrationTime(256 * 1000 / INTERNAL_SAMPLE_RATE);
   }
   if (siglevdet == 0)
   {
     return false;
   }
-  siglevdet->setContinuousUpdateInterval(1000);
+  siglevdet->setIntegrationTime(32);
+  //siglevdet->setContinuousUpdateInterval(1000);
   siglevdet->signalLevelUpdated.connect(
     slot(*this, &LocalRx::signalLevelUpdated));
   siglevdet_splitter->addSink(siglevdet, true);
@@ -708,6 +707,7 @@ void LocalRx::onSquelchOpen(bool is_open)
     {
       sql_valve->setOpen(true);
     }
+    siglevdet->setIntegrationTime(8000);
   }
   else
   {
@@ -723,6 +723,7 @@ void LocalRx::onSquelchOpen(bool is_open)
     {
       sql_valve->setOpen(false);
     }
+    siglevdet->setIntegrationTime(32);
   }
 } /* LocalRx::onSquelchOpen */
 
