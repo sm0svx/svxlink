@@ -295,18 +295,23 @@ void SigLevDetTone::setIntegrationTime(int time_ms)
   {
     integration_time = 1;
   }
+  cout << "### SigLevDetTone::lastSiglev: integration_time=" << integration_time << endl;
 } /* SigLevDetTone::setIntegrationTime */
 
 
 float SigLevDetTone::lastSiglev(void) const
 {
-  int sum;
-  deque<int>::const_iterator it;
-  for (it=siglev_values.begin(); it!=siglev_values.end(); ++it)
+  if (siglev_values.size() > 0)
   {
-    sum += *it;
+    int sum = 0;
+    deque<int>::const_iterator it;
+    for (it=siglev_values.begin(); it!=siglev_values.end(); ++it)
+    {
+      sum += *it;
+    }
+    return sum / siglev_values.size();
   }
-  return sum / siglev_values.size();
+  return 0;
 } /* SigLevDetTone::lastSiglev */
 
 
