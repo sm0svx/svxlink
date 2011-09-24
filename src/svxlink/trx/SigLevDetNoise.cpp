@@ -179,6 +179,25 @@ void SigLevDetNoise::setIntegrationTime(int time_ms)
 
 float SigLevDetNoise::lastSiglev(void) const
 {
+  int begin_ofs = 0;
+  unsigned min_integration_time = 20 * sample_rate / 1000;
+  if (ss_values.size() > min_integration_time)
+  {
+    begin_ofs = ss_values.size() - min_integration_time;
+  }
+
+  double ss = 0.0;
+  deque<double>::const_iterator it;
+  for (it=ss_values.begin()+begin_ofs; it!=ss_values.end(); ++it)
+  {
+    ss += *it;
+  }
+  return offset - slope * log10(sqrt(ss / (ss_values.size()-begin_ofs)));
+} /* SigLevDetNoise::lastSiglev */
+
+
+float SigLevDetNoise::siglevIntegrated(void) const
+{
   double ss = 0.0;
   deque<double>::const_iterator it;
   for (it=ss_values.begin(); it!=ss_values.end(); ++it)
@@ -186,7 +205,7 @@ float SigLevDetNoise::lastSiglev(void) const
     ss += *it;
   }
   return offset - slope * log10(sqrt(ss / ss_values.size()));
-} /* SigLevDetNoise::lastSiglev */
+} /* SigLevDetNoise::siglevIntegrated */
 
 
 void SigLevDetNoise::reset(void)

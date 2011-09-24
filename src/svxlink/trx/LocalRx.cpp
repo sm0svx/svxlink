@@ -624,8 +624,7 @@ bool LocalRx::addToneDetector(float fq, int bw, float thresh,
 
 float LocalRx::signalStrength(void) const
 {
-  //return siglev_offset - siglev_slope * log10(siglevdet->lastSiglev());
-  return siglevdet->lastSiglev();
+  return siglevdet->siglevIntegrated();
 } /* LocalRx::signalStrength */
     
 
@@ -707,7 +706,7 @@ void LocalRx::onSquelchOpen(bool is_open)
     {
       sql_valve->setOpen(true);
     }
-    siglevdet->setIntegrationTime(8000);
+    siglevdet->setIntegrationTime(1000);
   }
   else
   {

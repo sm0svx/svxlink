@@ -295,11 +295,10 @@ void SigLevDetTone::setIntegrationTime(int time_ms)
   {
     integration_time = 1;
   }
-  cout << "### SigLevDetTone::lastSiglev: integration_time=" << integration_time << endl;
 } /* SigLevDetTone::setIntegrationTime */
 
 
-float SigLevDetTone::lastSiglev(void) const
+float SigLevDetTone::siglevIntegrated(void) const
 {
   if (siglev_values.size() > 0)
   {
@@ -312,7 +311,7 @@ float SigLevDetTone::lastSiglev(void) const
     return sum / siglev_values.size();
   }
   return 0;
-} /* SigLevDetTone::lastSiglev */
+} /* SigLevDetTone::siglevIntegrated */
 
 
 int SigLevDetTone::writeSamples(const float *samples, int count)

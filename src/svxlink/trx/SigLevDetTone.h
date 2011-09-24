@@ -159,7 +159,13 @@ class SigLevDetTone : public SigLevDet
      * @brief 	Read the latest measured signal level
      * @return	Returns the latest measured signal level
      */
-    virtual float lastSiglev(void) const;
+    virtual float lastSiglev(void) const { return last_siglev; }
+
+    /**
+     * @brief   Read the integrated siglev value
+     * @return  Returns the integrated siglev value
+     */
+    virtual float siglevIntegrated(void) const;
 
     /**
      * @brief   Reset the signal level detector

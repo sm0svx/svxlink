@@ -165,6 +165,12 @@ class SigLevDetNoise : public SigLevDet
     virtual float lastSiglev(void) const;
      
     /**
+     * @brief   Read the integrated siglev value
+     * @return  Returns the integrated siglev value
+     */
+    virtual float siglevIntegrated(void) const;
+    
+    /**
      * @brief   Reset the signal level detector
      */
     virtual void reset(void);
