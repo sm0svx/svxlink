@@ -291,7 +291,7 @@ Voter::Voter(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), active_rx(0), is_muted(true), m_verbose(true),
     best_rx(0), best_rx_siglev(BEST_RX_SIGLEV_RESET), best_rx_timer(0),
     voting_delay(0), sql_rx_id(0), selector(0), buffer_length(0),
-    check_siglev_timer(0)
+    check_siglev_timer(0), hysteresis(0)
 {
   Rx::setVerbose(false);
   check_siglev_timer = new Timer(1000, Timer::TYPE_PERIODIC);
@@ -330,16 +330,13 @@ bool Voter::initialize(void)
   }
 
   string value;
-  if (cfg.getValue(name(), "VOTING_DELAY", value))
+  if (cfg.getValue(name(), "VOTING_DELAY", voting_delay))
   {
-    voting_delay = atoi(value.c_str());
     buffer_length = voting_delay;
   }
   
-  if (cfg.getValue(name(), "BUFFER_LENGTH", value))
-  {
-    buffer_length = atoi(value.c_str());
-  }
+  cfg.getValue(name(), "BUFFER_LENGTH", buffer_length);
+  cfg.getValue(name(), "HYSTERESIS", hysteresis);
 
   selector = new AudioSelector;
   setHandler(selector);
@@ -662,7 +659,7 @@ void Voter::checkSiglev(Timer *t)
       {
         active_rx_siglev = siglev;
       }
-      if (siglev > best_rx_siglev)
+      if (siglev > best_rx_siglev+hysteresis)
       {
         best_rx_siglev = siglev;
         best_rx = *it;

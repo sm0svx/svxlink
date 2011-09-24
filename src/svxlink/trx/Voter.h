@@ -197,6 +197,7 @@ class Voter : public Rx
     Async::AudioSelector  *selector;
     int                   buffer_length;
     Async::Timer      	  *check_siglev_timer;
+    int			  hysteresis;
     
     void satSquelchOpen(bool is_open, SatRx *rx);
     void chooseBestRx(Async::Timer *t);

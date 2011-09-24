@@ -116,7 +116,7 @@ using namespace Async;
 
 SigLevDetNoise::SigLevDetNoise(int sample_rate)
   : sample_rate(sample_rate), slope(1.0), offset(0.0), update_interval(0),
-    update_counter(0), integration_time(0)
+    update_counter(0), integration_time(0), ss(0.0)
 {
   if (sample_rate >= 16000)
   {
@@ -198,12 +198,14 @@ float SigLevDetNoise::lastSiglev(void) const
 
 float SigLevDetNoise::siglevIntegrated(void) const
 {
+  /*
   double ss = 0.0;
   deque<double>::const_iterator it;
   for (it=ss_values.begin(); it!=ss_values.end(); ++it)
   {
     ss += *it;
   }
+  */
   return offset - slope * log10(sqrt(ss / ss_values.size()));
 } /* SigLevDetNoise::siglevIntegrated */
 
@@ -214,6 +216,7 @@ void SigLevDetNoise::reset(void)
   last_siglev = pow10f(-offset / slope);
   update_counter = 0;
   ss_values.clear();
+  ss = 0.0;
 } /* SigLevDetNoise::reset */
 
 
@@ -237,13 +240,19 @@ int SigLevDetNoise::processSamples(float *samples, int count)
   for (int i=0; i<count; ++i)
   {
     float sample = samples[i];
-    ss_values.push_back(sample * sample);
+    double square = sample * sample;
+    ss += square;
+    ss_values.push_back(square);
   }
   
-  if (ss_values.size() > integration_time)
+  while (ss_values.size() > integration_time)
   {
+    ss -= ss_values.front();
+    ss_values.pop_front();
+    /*
     ss_values.erase(ss_values.begin(),
 		    ss_values.begin()+ss_values.size()-integration_time);
+    */
   }
 
   if (update_interval > 0)

@@ -706,7 +706,7 @@ void LocalRx::onSquelchOpen(bool is_open)
     {
       sql_valve->setOpen(true);
     }
-    siglevdet->setIntegrationTime(1000);
+    siglevdet->setIntegrationTime(3000);
   }
   else
   {

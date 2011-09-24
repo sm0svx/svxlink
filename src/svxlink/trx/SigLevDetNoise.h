@@ -189,6 +189,7 @@ class SigLevDetNoise : public SigLevDet
     int			  update_counter;
     unsigned		  integration_time;
     std::deque<double>	  ss_values;
+    double		  ss;
     
     SigLevDetNoise(const SigLevDetNoise&);
     SigLevDetNoise& operator=(const SigLevDetNoise&);
