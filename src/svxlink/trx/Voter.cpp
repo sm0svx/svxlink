@@ -659,7 +659,7 @@ void Voter::checkSiglev(Timer *t)
       {
         active_rx_siglev = siglev;
       }
-      if (siglev > best_rx_siglev+hysteresis)
+      if (siglev > best_rx_siglev)
       {
         best_rx_siglev = siglev;
         best_rx = *it;
@@ -668,7 +668,7 @@ void Voter::checkSiglev(Timer *t)
   }
   cout << endl;
   
-  if (best_rx != active_rx)
+  if ((best_rx != active_rx) && (best_rx_siglev > active_rx_siglev+hysteresis))
   {
     if (m_verbose)
     {
