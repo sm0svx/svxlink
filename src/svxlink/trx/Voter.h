@@ -199,12 +199,15 @@ class Voter : public Rx
     Async::Timer      	  *check_siglev_timer;
     int			  hysteresis;
     Async::Timer	  *squelch_close_delay_timer;
+    SatRx		  *switch_to_rx;
+    Async::Timer	  *rx_switch_timer;
     
     void satSquelchOpen(bool is_open, SatRx *rx);
     void squelchCloseDelayExpired(Async::Timer *t);
     void satSignalLevelUpdated(float siglev, SatRx *srx);
     void chooseBestRx(Async::Timer *t);
     void checkSiglev(Async::Timer *t);
+    void rxSwitchTimerExpired(Async::Timer *t);
 
 };  /* class Voter */
 

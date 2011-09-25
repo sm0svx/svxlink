@@ -301,7 +301,8 @@ Voter::Voter(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), active_rx(0), is_muted(true), m_verbose(true),
     best_rx(0), best_rx_siglev(BEST_RX_SIGLEV_RESET), best_rx_timer(0),
     voting_delay(0), sql_rx_id(0), selector(0), buffer_length(0),
-    check_siglev_timer(0), hysteresis(0), squelch_close_delay_timer(0)
+    check_siglev_timer(0), hysteresis(0), squelch_close_delay_timer(0),
+    switch_to_rx(0), rx_switch_timer(0)
 {
   Rx::setVerbose(false);
   check_siglev_timer = new Timer(1000, Timer::TYPE_PERIODIC);
@@ -314,6 +315,8 @@ Voter::~Voter(void)
 {
   delete selector;
   delete best_rx_timer;
+  delete squelch_close_delay_timer;
+  delete rx_switch_timer;
   
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
@@ -355,6 +358,12 @@ bool Voter::initialize(void)
   squelch_close_delay_timer->setEnable(false);
   squelch_close_delay_timer->expired.connect(
 	  slot(*this, &Voter::squelchCloseDelayExpired));
+  
+  int rx_switch_delay = 500;
+  cfg.getValue(name(), "RX_SWITCH_DELAY", rx_switch_delay);
+  rx_switch_timer = new Timer(rx_switch_delay, Timer::TYPE_ONESHOT);
+  rx_switch_timer->setEnable(false);
+  rx_switch_timer->expired.connect(slot(*this, &Voter::rxSwitchTimerExpired));
   
   selector = new AudioSelector;
   setHandler(selector);
@@ -437,6 +446,10 @@ void Voter::mute(bool do_mute)
   {
     (*it)->mute(do_mute);
   }
+  
+  squelch_close_delay_timer->setEnable(false);
+  rx_switch_timer->setEnable(false);
+  switch_to_rx = 0;
     
   is_muted = do_mute;
   
@@ -493,6 +506,9 @@ void Voter::reset(void)
   delete best_rx_timer;
   best_rx_timer = 0;
   sql_rx_id = 0;
+  switch_to_rx = 0;
+  rx_switch_timer->setEnable(false);
+  squelch_close_delay_timer->setEnable(false);
   
 } /* Voter::reset */
 
@@ -637,14 +653,12 @@ void Voter::squelchCloseDelayExpired(Timer *t)
     }
   }
   
-  SatRx *old_active_rx = active_rx;
-  
   checkSiglev(0);
   
-  if (active_rx == old_active_rx)
+  if (switch_to_rx == 0)
   {
+    active_rx->stopOutput(true);
     active_rx = 0;
-    old_active_rx->stopOutput(true);
   }
 } /* Voter::squelchCloseDelayExpired */
 
@@ -701,6 +715,12 @@ void Voter::checkSiglev(Timer *t)
 {
   assert(active_rx != 0);
   
+  if (switch_to_rx != 0)
+  {
+    switch_to_rx = 0;
+    rx_switch_timer->setEnable(false);
+  }
+  
   float active_rx_siglev = BEST_RX_SIGLEV_RESET;
   float best_rx_siglev = BEST_RX_SIGLEV_RESET;
   SatRx *best_rx = active_rx;
@@ -740,6 +760,11 @@ void Voter::checkSiglev(Timer *t)
   
   if ((best_rx != active_rx) && (best_rx_siglev > active_rx_siglev+hysteresis))
   {
+    switch_to_rx = best_rx;
+    rx_switch_timer->setEnable(true);
+    best_rx->stopOutput(false);
+    best_rx->mute(false);
+    /*
     if (m_verbose)
     {
       cout << name() << ": Switching from \"" << active_rx->rx->name()
@@ -755,9 +780,49 @@ void Voter::checkSiglev(Timer *t)
     active_rx->mute(false);
     
     sql_rx_id = best_rx->id;
+    */
   }
   
 } /* Voter::checkSiglev */
+
+
+void Voter::rxSwitchTimerExpired(Timer *t)
+{
+  cout << "Voter::rxSwitchTimerExpired\n";
+  
+  t->setEnable(false);
+  
+  assert(switch_to_rx != 0);
+  
+  float active_rx_siglev = active_rx->rx->signalStrength();
+  float switch_to_rx_siglev = switch_to_rx->rx->signalStrength();
+  if ((switch_to_rx != active_rx) && switch_to_rx->rx->squelchIsOpen() &&
+      (switch_to_rx_siglev > active_rx_siglev+hysteresis))
+  {
+    if (m_verbose)
+    {
+      cout << name() << ": Switching from \"" << active_rx->rx->name()
+      	   << "\" (" << active_rx_siglev << ") to \""
+	   << switch_to_rx->rx->name()
+	   << "\" (" << switch_to_rx_siglev << ")\n";
+    }
+    
+    squelch_close_delay_timer->setEnable(false);
+    
+    active_rx->stopOutput(true);
+    active_rx->mute(true);
+    
+    active_rx = switch_to_rx;
+    
+    sql_rx_id = best_rx->id;
+  }
+  else
+  {
+    switch_to_rx->stopOutput(true);
+    switch_to_rx->mute(true);
+  }
+  switch_to_rx = 0;
+} /* Voter::rxSwitchTimerExpired */
 
 
 
