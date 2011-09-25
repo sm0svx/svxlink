@@ -1,5 +1,5 @@
 # Version for the Qtel application
-QTEL=0.11.99rc10
+QTEL=0.11.99rc12
 QTEL_RPM_RELEASE=1
 
 # Version for the EchoLib library
@@ -7,7 +7,7 @@ ECHOLIB=0.14.0.99rc1
 ECHOLIB_RPM_RELEASE=1
 
 # Version for the Async library
-LIBASYNC=0.18.0.99rc2
+LIBASYNC=0.18.0.99rc3
 LIBASYNC_RPM_RELEASE=1
 
 # SvxLink versions
