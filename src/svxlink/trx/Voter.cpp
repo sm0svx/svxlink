@@ -301,7 +301,7 @@ Voter::Voter(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), active_rx(0), is_muted(true), m_verbose(true),
     best_rx(0), best_rx_siglev(BEST_RX_SIGLEV_RESET), best_rx_timer(0),
     voting_delay(0), sql_rx_id(0), selector(0), buffer_length(0),
-    check_siglev_timer(0), hysteresis(0)
+    check_siglev_timer(0), hysteresis(0), squelch_close_delay_timer(0)
 {
   Rx::setVerbose(false);
   check_siglev_timer = new Timer(1000, Timer::TYPE_PERIODIC);
@@ -348,6 +348,14 @@ bool Voter::initialize(void)
   cfg.getValue(name(), "BUFFER_LENGTH", buffer_length);
   cfg.getValue(name(), "HYSTERESIS", hysteresis);
 
+  int sql_close_revote_delay = 500;
+  cfg.getValue(name(), "SQL_CLOSE_REVOTE_DELAY", sql_close_revote_delay);
+  squelch_close_delay_timer = new Timer(sql_close_revote_delay,
+					Timer::TYPE_ONESHOT);
+  squelch_close_delay_timer->setEnable(false);
+  squelch_close_delay_timer->expired.connect(
+	  slot(*this, &Voter::squelchCloseDelayExpired));
+  
   selector = new AudioSelector;
   setHandler(selector);
   
@@ -517,6 +525,18 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
   {
     if (active_rx != 0)
     {
+      if (srx == active_rx)
+      {
+	if (m_verbose)
+	{
+	  cout << name() << ": The squelch is OPEN"
+	      << " (" << rx->name() << "="
+	      << rx->signalStrength() << ")" << endl;
+	}
+	squelch_close_delay_timer->setEnable(false);
+	setSquelchState(true);
+	check_siglev_timer->setEnable(true);
+      }
       return;
     }
     
@@ -546,6 +566,9 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
       
       assert(best_rx == 0);
       
+      squelch_close_delay_timer->setEnable(true);
+      
+      /*
       list<SatRx *>::iterator it;
       for (it=rxs.begin(); it!=rxs.end(); ++it)
       {
@@ -556,7 +579,7 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
       }
       
       checkSiglev(0);
-      
+      */
       if (active_rx == srx)
       {
 	if (m_verbose)
@@ -566,9 +589,10 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
 	       << active_rx->rx->signalStrength() << ")" << endl;
 	}
 
+	/*
 	active_rx = 0;
-
 	srx->stopOutput(true);
+	*/
 	sql_rx_id = srx->id;
 	setSquelchState(false);
 	check_siglev_timer->setEnable(false);
@@ -595,8 +619,34 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
       }
     }
   }
-
 } /* Voter::satSquelchOpen */
+
+
+void Voter::squelchCloseDelayExpired(Timer *t)
+{
+  cout << "Voter::squelchCloseDelayExpired\n";
+  
+  t->setEnable(false);
+
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    if (*it != active_rx)
+    {
+      (*it)->mute(false);
+    }
+  }
+  
+  SatRx *old_active_rx = active_rx;
+  
+  checkSiglev(0);
+  
+  if (active_rx == old_active_rx)
+  {
+    active_rx = 0;
+    old_active_rx->stopOutput(true);
+  }
+} /* Voter::squelchCloseDelayExpired */
 
 
 void Voter::satSignalLevelUpdated(float siglev, SatRx *srx)
