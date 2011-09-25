@@ -121,9 +121,10 @@ class SigLevDetTone : public SigLevDet
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
+     * @param	sample_rate The rate with which samples enter the detector
      */
-    SigLevDetTone(void);
+    explicit SigLevDetTone(int sample_rate);
   
     /**
      * @brief 	Destructor
@@ -204,6 +205,7 @@ class SigLevDetTone : public SigLevDet
     
     static const unsigned BLOCK_SIZE = 320;
 
+    const int	      sample_rate;
     std::vector<int>  tone_siglev_map;
     HammingWindow     *hwin;
     MyGoertzel        *det[10];
@@ -211,6 +213,8 @@ class SigLevDetTone : public SigLevDet
     int               last_siglev;
     unsigned	      integration_time;
     std::deque<int>   siglev_values;
+    int		      update_interval;
+    int		      update_counter;
     
     SigLevDetTone(const SigLevDetTone&);
     SigLevDetTone& operator=(const SigLevDetTone&);

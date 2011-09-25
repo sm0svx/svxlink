@@ -226,8 +226,9 @@ class SigLevDetTone::HammingWindow
  *
  ****************************************************************************/
 
-SigLevDetTone::SigLevDetTone(void)
-  : tone_siglev_map(10), block_idx(0), last_siglev(0), integration_time(1)
+SigLevDetTone::SigLevDetTone(int sample_rate)
+  : sample_rate(sample_rate), tone_siglev_map(10), block_idx(0), last_siglev(0),
+    integration_time(1), update_interval(0), update_counter(0)
 {
   hwin = new HammingWindow(BLOCK_SIZE);
   for (int i=0; i<10; ++i)
@@ -276,13 +277,15 @@ void SigLevDetTone::reset(void)
   hwin->reset();
   block_idx = 0;
   last_siglev = 0;
+  update_counter = 0;
   siglev_values.clear();
 } /* SigLevDetTone::reset */
 
 
 void SigLevDetTone::setContinuousUpdateInterval(int interval_ms)
 {
-  
+  update_interval = interval_ms * sample_rate / 1000;
+  update_counter = 0;  
 } /* SigLevDetTone::setContinuousUpdateInterval */
 
 
@@ -361,6 +364,16 @@ int SigLevDetTone::writeSamples(const float *samples, int count)
       {
 	siglev_values.erase(siglev_values.begin(),
 		siglev_values.begin()+siglev_values.size()-integration_time);
+      }
+      
+      if (update_interval > 0)
+      {
+	update_counter += BLOCK_SIZE;
+	if (update_counter >= update_interval)
+	{
+	  signalLevelUpdated(lastSiglev());
+	  update_counter = 0;
+	}
       }
     }
   }

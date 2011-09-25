@@ -233,6 +233,7 @@ class NetUplink : public Uplink
     void checkSiglev(Async::Timer *t);
     void unmuteTx(Async::Timer *t);
     void setFallbackActive(bool activate);
+    void signalLevelUpdated(float siglev);
 
 };  /* class NetUplink */
 

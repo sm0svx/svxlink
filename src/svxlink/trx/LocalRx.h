@@ -201,7 +201,6 @@ class LocalRx : public Rx
     void onSquelchOpen(bool is_open);
     SigLevDet *createSigLevDet(const std::string &name, int sample_rate);
     void tone1750detected(bool detected);
-    void signalLevelUpdated(float siglev);
 
 };  /* class LocalRx */
 

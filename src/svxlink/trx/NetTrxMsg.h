@@ -171,7 +171,7 @@ class MsgProtoVer : public Msg
   public:
     static const unsigned TYPE  = 0;
     static const uint16_t MAJOR = 2;
-    static const uint16_t MINOR = 2;
+    static const uint16_t MINOR = 3;
     MsgProtoVer(void)
       : Msg(TYPE, sizeof(MsgProtoVer)), m_major(MAJOR),
         m_minor(MINOR) {}
@@ -571,6 +571,23 @@ class MsgSel5 : public Msg
   private:
     char m_digits[MAX_DIGITS + 1];
 }; /* MsgSel5 */
+
+
+class MsgSiglevUpdate : public Msg
+{
+  public:
+    static const unsigned TYPE = 254;
+    MsgSiglevUpdate(float signal_strength, int sql_rx_id)
+      : Msg(TYPE, sizeof(MsgSiglevUpdate)), m_signal_strength(signal_strength),
+        m_sql_rx_id(sql_rx_id) {}
+    float signalStrength(void) const { return m_signal_strength; }
+    int sqlRxId(void) const { return m_sql_rx_id; }
+  
+  private:
+    float m_signal_strength;
+    int   m_sql_rx_id;
+    
+}; /* MsgSiglevUpdate */
 
 
 

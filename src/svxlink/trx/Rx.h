@@ -215,13 +215,18 @@ class Rx : public SigC::Object, public Async::AudioSource
      */
     SigC::Signal1<void, std::string> selcallSequenceDetected;
 
-
     /**
      * @brief 	A signal that is emitted when a previously specified tone has
      *	      	been detected for the specified duration
      * @param 	fq The frequency of the tone
      */
     SigC::Signal1<void, float> toneDetected;
+    
+    /**
+     * @brief	A signal that is emitted when the signal level is updated
+     * @param	siglev The new signal level
+     */
+    SigC::Signal1<void, float> signalLevelUpdated;
     
     
   protected:

@@ -321,9 +321,7 @@ bool LocalRx::initialize(void)
     return false;
   }
   siglevdet->setIntegrationTime(32);
-  //siglevdet->setContinuousUpdateInterval(1000);
-  siglevdet->signalLevelUpdated.connect(
-    slot(*this, &LocalRx::signalLevelUpdated));
+  siglevdet->signalLevelUpdated.connect(signalLevelUpdated.slot());
   siglevdet_splitter->addSink(siglevdet, true);
   
     // Create a mute valve
@@ -707,6 +705,7 @@ void LocalRx::onSquelchOpen(bool is_open)
       sql_valve->setOpen(true);
     }
     siglevdet->setIntegrationTime(3000);
+    siglevdet->setContinuousUpdateInterval(1000);
   }
   else
   {
@@ -723,6 +722,7 @@ void LocalRx::onSquelchOpen(bool is_open)
       sql_valve->setOpen(false);
     }
     siglevdet->setIntegrationTime(32);
+    siglevdet->setContinuousUpdateInterval(0);
   }
 } /* LocalRx::onSquelchOpen */
 
@@ -744,7 +744,7 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
               "sampling rate\n";
       return 0;
     }
-    siglevdet = new SigLevDetTone;
+    siglevdet = new SigLevDetTone(sample_rate);
   }
   else if (siglev_det_type == "NOISE")
   {
@@ -794,11 +794,6 @@ void LocalRx::tone1750detected(bool detected)
    }
 } /* LocalRx::tone1750detected */
 
-
-void LocalRx::signalLevelUpdated(float siglev)
-{
-  cout << "Signal level=" << siglev << endl;
-} /* LocalRx::signalLevelUpdated */
 
 
 /*

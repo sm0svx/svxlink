@@ -165,6 +165,7 @@ bool RfUplink::initialize(void)
   }
 
   rx->squelchOpen.connect(slot(*this, &RfUplink::rxSquelchOpen));
+  rx->signalLevelUpdated.connect(slot(*this, &RfUplink::rxSignalLevelUpdated));
   rx->dtmfDigitDetected.connect(slot(*this, &RfUplink::rxDtmfDigitDetected));
   rx->reset();
   rx->mute(false);
@@ -291,6 +292,16 @@ void RfUplink::rxSquelchOpen(bool is_open)
     uplink_tx->setTransmittedSignalStrength(0);
   }
 } /* RfUplink::rxSquelchOpen  */
+
+
+void RfUplink::rxSignalLevelUpdated(float siglev)
+{
+  cout << "RfUplink::rxSignalLevelUpdated: siglev=" << siglev << endl;
+  if (rx->squelchIsOpen())
+  {
+    uplink_tx->setTransmittedSignalStrength(siglev);
+  }
+} /* RfUplink::rxSignalLevelUpdated */
 
 
 void RfUplink::rxDtmfDigitDetected(char digit, int duration)

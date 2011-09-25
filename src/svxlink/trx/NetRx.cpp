@@ -402,6 +402,15 @@ void NetRx::handleMsg(Msg *msg)
       break;
     }
     
+    case MsgSiglevUpdate::TYPE:
+    {
+      MsgSiglevUpdate *sql_msg = reinterpret_cast<MsgSiglevUpdate*>(msg);
+      last_signal_strength = sql_msg->signalStrength();
+      last_sql_rx_id = sql_msg->sqlRxId();
+      signalLevelUpdated(last_signal_strength);
+      break;
+    }
+    
     case MsgDtmf::TYPE:
     {
       if (!is_muted)

@@ -181,6 +181,7 @@ bool NetUplink::initialize(void)
   
   rx->reset();
   rx->squelchOpen.connect(slot(*this, &NetUplink::squelchOpen));
+  rx->signalLevelUpdated.connect(slot(*this, &NetUplink::signalLevelUpdated));
   rx->dtmfDigitDetected.connect(slot(*this, &NetUplink::dtmfDigitDetected));
   rx->toneDetected.connect(slot(*this, &NetUplink::toneDetected));
   rx->selcallSequenceDetected.connect(
@@ -738,6 +739,15 @@ void NetUplink::setFallbackActive(bool activate)
     tx_selector->selectSource(fifo);
   }
 } /* NetUplink::setFallbackActive */
+
+
+void NetUplink::signalLevelUpdated(float siglev)
+{
+  cout << "NetUplink::signalLevelUpdated: siglev=" << siglev << endl;
+  MsgSiglevUpdate *msg = new MsgSiglevUpdate(rx->signalStrength(),
+					     rx->sqlRxId());
+  sendMsg(msg);  
+} /* NetUplink::signalLevelUpdated */
 
 
 
