@@ -109,6 +109,7 @@ class SatRx : public AudioSource, public SigC::Object
       rx->selcallSequenceDetected.connect(
 	      slot(*this, &SatRx::onSelcallSequenceDetected));
       rx->squelchOpen.connect(slot(*this, &SatRx::rxSquelchOpen));
+      rx->signalLevelUpdated.connect(slot(*this, &SatRx::rxSignalLevelUpdated));
       AudioSource *prev_src = rx;
 
       if (fifo_length_ms > 0)
@@ -182,9 +183,10 @@ class SatRx : public AudioSource, public SigC::Object
     }
     */
   
-    Signal2<void, char, int>  	dtmfDigitDetected;
-    Signal1<void, string>  	selcallSequenceDetected;
-    Signal2<void, bool, SatRx*> squelchOpen;
+    Signal2<void, char, int>  	  dtmfDigitDetected;
+    Signal1<void, string>  	  selcallSequenceDetected;
+    Signal2<void, bool, SatRx*>   squelchOpen;
+    Signal2<void, float, SatRx*>  signalLevelUpdated;
   
   
   protected:
@@ -241,6 +243,14 @@ class SatRx : public AudioSource, public SigC::Object
 	{
 	  setSquelchOpen(false);
 	}
+      }
+    }
+    
+    void rxSignalLevelUpdated(float siglev)
+    {
+      if (sql_open)
+      {
+	signalLevelUpdated(siglev, this);
       }
     }
     
@@ -357,6 +367,8 @@ bool Voter::initialize(void)
       }
       SatRx *srx = new SatRx(rxs.size() + 1, rx, buffer_length);
       srx->squelchOpen.connect(slot(*this, &Voter::satSquelchOpen));
+      srx->signalLevelUpdated.connect(
+	      slot(*this, &Voter::satSignalLevelUpdated));
       srx->dtmfDigitDetected.connect(dtmfDigitDetected.slot());
       srx->selcallSequenceDetected.connect(selcallSequenceDetected.slot());
       if ((srx == 0) || !rx->initialize())
@@ -533,7 +545,6 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
       }
       
       assert(best_rx == 0);
-      //assert(srx == active_rx);
       
       list<SatRx *>::iterator it;
       for (it=rxs.begin(); it!=rxs.end(); ++it)
@@ -586,6 +597,15 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
   }
 
 } /* Voter::satSquelchOpen */
+
+
+void Voter::satSignalLevelUpdated(float siglev, SatRx *srx)
+{
+  if (srx == active_rx)
+  {
+    signalLevelUpdated(siglev);
+  }
+} /* Voter::satSignalLevelUpdated */
 
 
 void Voter::chooseBestRx(Timer *t)

@@ -200,6 +200,7 @@ class Voter : public Rx
     int			  hysteresis;
     
     void satSquelchOpen(bool is_open, SatRx *rx);
+    void satSignalLevelUpdated(float siglev, SatRx *srx);
     void chooseBestRx(Async::Timer *t);
     void checkSiglev(Async::Timer *t);
 
