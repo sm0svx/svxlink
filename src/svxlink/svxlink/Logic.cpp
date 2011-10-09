@@ -864,7 +864,8 @@ void Logic::commandReceived(string cmd, string subcmd)
    // cout << "name()=" << name() << endl;
   if (LinkManager::instance())
   {
-    string ss = LinkManager::instance()->cmdReceived(name(), cmd, subcmd);
+    string ss = LinkManager::instance()->cmdReceived(name(), cmd, subcmd)
+         + " " + name();
     processEvent(ss);
   }
 } /* Logic::commandReceived */
