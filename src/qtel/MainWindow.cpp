@@ -245,7 +245,7 @@ MainWindow::MainWindow(Directory &dir)
       QKeySequence(trUtf8("Ctrl+B", "directoryBusyAction")));
   
   msg_audio_io = new AudioIO(Settings::instance()->audioDevice().latin1(), 0);  
-  msg_handler = new MsgHandler("/", msg_audio_io->sampleRate());
+  msg_handler = new MsgHandler(msg_audio_io->sampleRate());
   msg_handler->allMsgsWritten.connect(slot(*this, &MainWindow::allMsgsWritten));
   msg_audio_io->registerSource(msg_handler);
 } /* MainWindow::MainWindow */
