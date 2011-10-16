@@ -18,10 +18,6 @@ Can&apos;t create connection to</source>
 Bağlantı kurulamadı</translation>
     </message>
     <message>
-        <source>Could not open audio device</source>
-        <translation type="obsolete">Ses cihazı açılamadı</translation>
-    </message>
-    <message>
         <source>Could not create connection to remote host</source>
         <translation>Uzak sunucuya bağlantı kurulamadı</translation>
     </message>
@@ -163,33 +159,6 @@ Bağlantı kurulamadı</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <source>Add to bookmarks</source>
-        <translation type="obsolete">Sık Kullanılanlara Ekle</translation>
-    </message>
-    <message>
-        <source>Remove from bookmarks</source>
-        <translation type="obsolete">Sık Kullanılanlardan Sil</translation>
-    </message>
-    <message>
-        <source>Add named station...</source>
-        <translation type="obsolete">Sık Kullanılanlara İstasyon Ekle...</translation>
-    </message>
-    <message>
-        <source>Ctrl+Q</source>
-        <comment>fileQuitAction</comment>
-        <translation type="obsolete">Ctrl+Q</translation>
-    </message>
-    <message>
-        <source>F5</source>
-        <comment>directoryRefreshAction</comment>
-        <translation type="obsolete">F5</translation>
-    </message>
-    <message>
-        <source>Ctrl+B</source>
-        <comment>directoryBusyAction</comment>
-        <translation type="obsolete">Ctrl+B</translation>
-    </message>
-    <message>
         <source>Logging off from directory server...</source>
         <translation>Dizin Sunucusundan Çıkılıyor...</translation>
     </message>
@@ -264,10 +233,6 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
         <translation>Qtel - EchoLink İstemci</translation>
     </message>
     <message>
-        <source>Explorer</source>
-        <translation type="obsolete">Gezgin</translation>
-    </message>
-    <message>
         <source>Conferences</source>
         <translation>Konferanslar</translation>
     </message>
@@ -288,32 +253,8 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
         <translation>Sık Kullanılanlar</translation>
     </message>
     <message>
-        <source>Station</source>
-        <translation type="obsolete">İstasyon</translation>
-    </message>
-    <message>
-        <source>Location/Description</source>
-        <translation type="obsolete">Konum/Tanım</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation type="obsolete">Durum</translation>
-    </message>
-    <message>
-        <source>Local time</source>
-        <translation type="obsolete">Yerel Zaman</translation>
-    </message>
-    <message>
-        <source>Node ID</source>
-        <translation type="obsolete">Node Numarası</translation>
-    </message>
-    <message>
         <source>Messages</source>
         <translation>Mesajlar</translation>
-    </message>
-    <message>
-        <source>Incoming connections</source>
-        <translation type="obsolete">Gelen bağlantılar</translation>
     </message>
     <message>
         <source>Accept</source>
@@ -344,100 +285,8 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
         <translation>&amp;Dizin</translation>
     </message>
     <message>
-        <source>&amp;Settings</source>
-        <translation type="obsolete">&amp;Ayarlar</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Yardım</translation>
-    </message>
-    <message>
-        <source>Undo</source>
-        <translation type="obsolete">Geri Al</translation>
-    </message>
-    <message>
-        <source>&amp;Undo</source>
-        <translation type="obsolete">&amp;Geri Al</translation>
-    </message>
-    <message>
-        <source>Ctrl+Z</source>
-        <translation type="obsolete">Ctrl+Z</translation>
-    </message>
-    <message>
-        <source>Redo</source>
-        <translation type="obsolete">Tekrarla</translation>
-    </message>
-    <message>
-        <source>&amp;Redo</source>
-        <translation type="obsolete">&amp;Tekrarla</translation>
-    </message>
-    <message>
-        <source>Ctrl+Y</source>
-        <translation type="obsolete">Ctrl+Y</translation>
-    </message>
-    <message>
-        <source>Cut</source>
-        <translation type="obsolete">Kes</translation>
-    </message>
-    <message>
-        <source>&amp;Cut</source>
-        <translation type="obsolete">&amp;Kes</translation>
-    </message>
-    <message>
-        <source>Ctrl+X</source>
-        <translation type="obsolete">Ctrl+X</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation type="obsolete">Kopyala</translation>
-    </message>
-    <message>
-        <source>C&amp;opy</source>
-        <translation type="obsolete">K&amp;opyala</translation>
-    </message>
-    <message>
-        <source>Ctrl+C</source>
-        <translation type="obsolete">Ctrl+C</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation type="obsolete">Yapıştır</translation>
-    </message>
-    <message>
-        <source>&amp;Paste</source>
-        <translation type="obsolete">Ya&amp;pıştır</translation>
-    </message>
-    <message>
-        <source>Ctrl+V</source>
-        <translation type="obsolete">Ctrl+V</translation>
-    </message>
-    <message>
-        <source>Find</source>
-        <translation type="obsolete">Bul</translation>
-    </message>
-    <message>
-        <source>&amp;Find...</source>
-        <translation type="obsolete">&amp;Bul...</translation>
-    </message>
-    <message>
-        <source>Ctrl+F</source>
-        <translation type="obsolete">Ctrl+F</translation>
-    </message>
-    <message>
-        <source>Contents</source>
-        <translation type="obsolete">İçerik</translation>
-    </message>
-    <message>
-        <source>&amp;Contents...</source>
-        <translation type="obsolete">&amp;İçerik...</translation>
-    </message>
-    <message>
-        <source>Index</source>
-        <translation type="obsolete">İndeks</translation>
-    </message>
-    <message>
-        <source>&amp;Index...</source>
-        <translation type="obsolete">&amp;İndeks...</translation>
     </message>
     <message>
         <source>About</source>
@@ -466,10 +315,6 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     <message>
         <source>Qtel Settings...</source>
         <translation>Qtel Ayarları...</translation>
-    </message>
-    <message>
-        <source>&amp;Qtel Settings...</source>
-        <translation type="obsolete">&amp;Qtel Ayarları...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
@@ -510,27 +355,6 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     <message>
         <source>Connect to selected...</source>
         <translation>Seçili olana bağlan...</translation>
-    </message>
-    <message>
-        <source>Disconnect</source>
-        <translation type="obsolete">Bağlantıyı kes</translation>
-    </message>
-    <message>
-        <source>Add selected to Bookmarks</source>
-        <translation type="obsolete">Seçili olanı sık kullanılanlara ekle</translation>
-    </message>
-    <message>
-        <source>Qtel v</source>
-        <translation type="obsolete">Qtel v</translation>
-    </message>
-    <message>
-        <source>- Qt EchoLink client.
-</source>
-        <translation type="obsolete">- Qt EchoLink istemci.</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation type="obsolete">Yazar</translation>
     </message>
     <message>
         <source>Incoming Connections</source>
@@ -697,20 +521,8 @@ Message</source>
         <translation type="unfinished">Ses</translation>
     </message>
     <message>
-        <source>Sound settings</source>
-        <translation type="obsolete">Ses Ayarları</translation>
-    </message>
-    <message>
-        <source>Audio device</source>
-        <translation type="obsolete">Ses aygıtı</translation>
-    </message>
-    <message>
         <source>Full duplex</source>
         <translation type="unfinished">Çift yönlü</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation type="obsolete">Kullanılacak ses aygıtı (Örneğin /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>

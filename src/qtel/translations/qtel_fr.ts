@@ -18,10 +18,6 @@ Can&apos;t create connection to</source>
 Impossible de créer la connexion à </translation>
     </message>
     <message>
-        <source>Could not open audio device</source>
-        <translation type="obsolete">Impossible d&apos;ouvrir le périphérique audio</translation>
-    </message>
-    <message>
         <source>Could not create connection to remote host</source>
         <translation>Impossible de créer une connexion avec un hôte distant</translation>
     </message>
@@ -148,10 +144,6 @@ Impossible de créer la connexion à </translation>
         <translation>Status</translation>
     </message>
     <message>
-        <source>Local time</source>
-        <translation type="obsolete">heure locale</translation>
-    </message>
-    <message>
         <source>Node ID</source>
         <translation>ID du node</translation>
     </message>
@@ -166,33 +158,6 @@ Impossible de créer la connexion à </translation>
 </context>
 <context>
     <name>MainWindow</name>
-    <message>
-        <source>Add to bookmarks</source>
-        <translation type="obsolete">Ajouter aux favoris</translation>
-    </message>
-    <message>
-        <source>Remove from bookmarks</source>
-        <translation type="obsolete">Retirer des favoris</translation>
-    </message>
-    <message>
-        <source>Add named station...</source>
-        <translation type="obsolete">Ajouter la station nommée ...</translation>
-    </message>
-    <message>
-        <source>Ctrl+Q</source>
-        <comment>fileQuitAction</comment>
-        <translation type="obsolete">CTRL+Q</translation>
-    </message>
-    <message>
-        <source>F5</source>
-        <comment>directoryRefreshAction</comment>
-        <translation type="obsolete">F5</translation>
-    </message>
-    <message>
-        <source>Ctrl+B</source>
-        <comment>directoryBusyAction</comment>
-        <translation type="obsolete">CTRL+B</translation>
-    </message>
     <message>
         <source>Logging off from directory server...</source>
         <translation>Déconnexion du serveur d&apos;annuaire ...</translation>
@@ -248,10 +213,6 @@ Impossible de créer la connexion à </translation>
     <message>
         <source>Qtel v</source>
         <translation>Qtel v</translation>
-    </message>
-    <message>
-        <source> - Qt EchoLink client.</source>
-        <translation type="obsolete"> - Qt EchoLink client.</translation>
     </message>
     <message>
         <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
@@ -316,20 +277,12 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
         <translation>Heure locale</translation>
     </message>
     <message>
-        <source>&amp;Settings</source>
-        <translation type="obsolete">&amp;Paramètre</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Fichier</translation>
     </message>
     <message>
         <source>&amp;Directory</source>
         <translation>&amp;Répertoire</translation>
-    </message>
-    <message>
-        <source>Station</source>
-        <translation type="obsolete">&amp;Station</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -358,10 +311,6 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     <message>
         <source>Quit the Qtel application</source>
         <translation>Quittez l&apos;application Qtel</translation>
-    </message>
-    <message>
-        <source>&amp;Qtel Settings...</source>
-        <translation type="obsolete">Réglages Qtel ...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
@@ -402,10 +351,6 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     <message>
         <source>Connect to selected...</source>
         <translation>Connectez-vous à ... sélectionnés</translation>
-    </message>
-    <message>
-        <source>Incoming connections</source>
-        <translation type="obsolete">les connexions entrantes</translation>
     </message>
     <message>
         <source>&amp;Station</source>
@@ -579,10 +524,6 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
         <translation>Le mot de passe ne correspondent pas</translation>
     </message>
     <message>
-        <source>Qtel Settings...</source>
-        <translation type="obsolete">Paramètres de Qtel...</translation>
-    </message>
-    <message>
         <source>OK</source>
         <translation>OK</translation>
     </message>
@@ -664,10 +605,6 @@ Message</source>
         <translation>Audio</translation>
     </message>
     <message>
-        <source>Sound settings</source>
-        <translation type="obsolete">Paramètres audio</translation>
-    </message>
-    <message>
         <source>Mic audio device</source>
         <translation>Paramètres audio</translation>
     </message>
@@ -702,10 +639,6 @@ Message</source>
     <message>
         <source>QSO</source>
         <translation>QSO</translation>
-    </message>
-    <message>
-        <source>QSO dialog settings</source>
-        <translation type="obsolete">Paramètres de la Boîte à dialogue QSO</translation>
     </message>
     <message>
         <source>Chat encoding:</source>
