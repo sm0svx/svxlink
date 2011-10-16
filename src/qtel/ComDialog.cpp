@@ -743,7 +743,7 @@ bool ComDialog::isChatText(const QString& msg)
     // optional "-L" or "-R". To be classified as a chat message a ">" must
     // directly follow the callsign.
   QRegExp rexp("^[A-Z0-9]{3,7}(?:-[RL])?>");
-  return (rexp.exactMatch(msg) == 0);
+  return msg.contains(rexp);
 }
 
 
