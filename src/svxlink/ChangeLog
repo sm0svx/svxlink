@@ -24,6 +24,9 @@
   could not access stuff that it should have right to do.
   Patch contributed by Eren / TA1AET.
 
+* TEP and F2 alerts are now taken care of in the PropagationMonitor module.
+  Patch from Adi / DL1HRC.
+
 
 
  0.12.0 -- 14 May 2011

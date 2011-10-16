@@ -223,6 +223,24 @@ proc handle_vhfdx {msg_file} {
     return;
   }
 
+  # Example: TEP opening on 6m.
+  set match [regexp \
+	{^TEP opening on (\d+c?m)\.$} \
+	$subject -> band ]
+  if {$match} {
+    processEvent "vhfdx_tep_opening $band"
+    return;
+  }
+
+  # Example: F2 opening on 6m.
+  set match [regexp \
+	{^F2 opening on (\d+c?m)\.$} \
+	$subject -> band ]
+  if {$match} {
+    processEvent "vhfdx_f2_opening $band"
+    return;
+  }
+
   # DX-Sherlock warnings configuration change
   # DX-Sherlock new password
   if {($subject == "DX-Sherlock warnings configuration change") ||
