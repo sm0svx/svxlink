@@ -838,9 +838,9 @@ void Logic::selcallSequenceDetected(std::string sequence)
 
 void Logic::disconnectAllLogics(void)
 {
-//  cout << "Deactivating all links to/from \"" << name() << "\"\n";
-//  LinkManager::instance()->disconnectSource(name());
-//  LinkManager::instance()->disconnectSink(name());
+ // cout << "Deactivating all links to/from \"" << name() << "\"\n";
+ // LinkManager::instance()->disconnectSource(name());
+ // LinkManager::instance()->disconnectSink(name());
 } /* Logic::disconnectAllLogics */
 
 
@@ -864,8 +864,7 @@ void Logic::commandReceived(string cmd, string subcmd)
    // cout << "name()=" << name() << endl;
   if (LinkManager::instance())
   {
-    string ss = LinkManager::instance()->cmdReceived(name(), cmd, subcmd)
-         + " " + name();
+    string ss = LinkManager::instance()->cmdReceived(name(), cmd, subcmd);
     processEvent(ss);
   }
 } /* Logic::commandReceived */

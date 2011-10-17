@@ -157,7 +157,7 @@ CppDnsLookupWorker::~CppDnsLookupWorker(void)
     ret = pthread_join(worker, &ud);
     if (ret != 0)
     {
-      cerr << "pthread_cancel: error " << ret << endl;
+      cerr << "pthread_join: error " << ret << endl;
     }
   }
   

@@ -354,7 +354,7 @@ void LinkManager::deleteSink(const string& logicname)
 
 
  // trigger from the logic, now check if DEFAULT_CONNECT is set
- // and the all logics inside al link definition can be connected
+ // and the all logics inside the link definition can be connected
 void LinkManager::logicIsUp(std::string logicname)
 {
    map<std::string, linkSet>::iterator it;
@@ -460,7 +460,7 @@ void LinkManager::resetTimers(const string& logicname)
 } /* LinkManager::resetTimers */
 
 
-// restart the run of a timer
+// restart the to-timer
 void LinkManager::enableTimers(const string& logicname)
 {
    std::vector<string>::iterator vt;
@@ -481,6 +481,7 @@ void LinkManager::enableTimers(const string& logicname)
 } /* LinkManager::enableTimers */
 
 
+// called from the Logic if a command has been received
 string LinkManager::cmdReceived(const string& logicname, string cmd, string subcmd)
 {
   string ss;
@@ -503,14 +504,16 @@ string LinkManager::cmdReceived(const string& logicname, string cmd, string subc
           case 0:      // disconnecting links
             if ((it->second).no_disconnect)
             {
+               // not possible due to configuration
               ss = "deactivating_link_not_possible ";
+              ss += (it->second).linkname;
               break;
             }
             if (!(it->second).is_connected)
             {
               ss = "link_not_active ";
             }
-            else 
+            else
             {
               if (!disconnectLinks((it->second).linkname))
               {
@@ -528,6 +531,7 @@ string LinkManager::cmdReceived(const string& logicname, string cmd, string subc
             if ((it->second).is_connected)
             {
               ss = "link_already_active ";
+              ss += (it->second).linkname;
               break;
             }
             if (!connectLinks((it->second).linkname))
@@ -541,6 +545,7 @@ string LinkManager::cmdReceived(const string& logicname, string cmd, string subc
             ss += (it->second).linkname;
             break;
 
+            // will be done later
            case 2:
             break;
         }
@@ -636,6 +641,7 @@ bool LinkManager::connectLinks(const string& linkname)
 } /* LinkManager::connectLinks */
 
 
+// returns a set of actual connected logics
 set<pair<string, string> > LinkManager::getisconnected(void)
 {
   map<std::string, linkSet>::iterator it;
@@ -663,6 +669,7 @@ set<pair<string, string> > LinkManager::getisconnected(void)
   }
   return ret;
 } /* LinkManager::isconnected */
+
 
 
 set<pair<string, string> > LinkManager::getdifference(LogicConSet is,LogicConSet want)

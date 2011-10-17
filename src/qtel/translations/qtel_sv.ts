@@ -30,10 +30,6 @@ Kan ej skapa uppkoppling till</translation>
         <translation>Kunde inte ansluta till station</translation>
     </message>
     <message>
-        <source>Could not open audio device</source>
-        <translation type="obsolete">Kunde inte komma åt ljudkortet</translation>
-    </message>
-    <message>
         <source>Could not create connection to remote host</source>
         <translation>Kunde inte ansluta till fjärrdatorn</translation>
     </message>
@@ -175,18 +171,6 @@ Kan ej skapa uppkoppling till</translation>
         <translation>Uppdaterar stationslista...</translation>
     </message>
     <message>
-        <source>Add to bookmarks</source>
-        <translation type="obsolete">Lägg till bokmärke</translation>
-    </message>
-    <message>
-        <source>Remove from bookmarks</source>
-        <translation type="obsolete">Tag bort bokmärke</translation>
-    </message>
-    <message>
-        <source>Add named station...</source>
-        <translation type="obsolete">Lägg till namngiven station...</translation>
-    </message>
-    <message>
         <source>Qtel - Add station...</source>
         <translation>Qtel - Lägg till station...</translation>
     </message>
@@ -194,21 +178,6 @@ Kan ej skapa uppkoppling till</translation>
         <source>Enter callsign of the station to add</source>
         <translation>Mata in anropssignalen för den
 station du vill lägga till</translation>
-    </message>
-    <message>
-        <source>Ctrl+Q</source>
-        <comment>fileQuitAction</comment>
-        <translation type="obsolete">Ctrl+A</translation>
-    </message>
-    <message>
-        <source>Ctrl+B</source>
-        <comment>directoryBusyAction</comment>
-        <translation type="obsolete">Ctrl+U</translation>
-    </message>
-    <message>
-        <source>F5</source>
-        <comment>directoryRefreshAction</comment>
-        <translation type="obsolete">F5</translation>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
@@ -255,18 +224,6 @@ station du vill lägga till</translation>
     <message>
         <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
 
-Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you
-are welcome to redistribute it in accordance with the terms and conditions in
-the GNU GPL (General Public License) version 2 or later.</source>
-        <translation type="obsolete">Copyright (C) 2011 Tobias Blomberg / SM0SVX
-
-Qtel erbjuds HELT UTAN GARANTIER. Detta är fri mjukvara och du
-är välkommen att återdistribuera den i enlighet med de bestämmelser
-som återfinns i GNU GPL (General Public License) version 2 eller senare.</translation>
-    </message>
-    <message>
-        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
-
 Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it in accordance with the terms and conditions in the GNU GPL (General Public License) version 2 or later.</source>
         <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
 
@@ -275,10 +232,6 @@ Qtel erbjuds HELT UTAN GARANTIER. Detta är fri mjukvara och du är välkommen a
 </context>
 <context>
     <name>MainWindowBase</name>
-    <message>
-        <source>Explorer</source>
-        <translation type="obsolete">Utforskare</translation>
-    </message>
     <message>
         <source>Conferences</source>
         <translation>Konferenser</translation>
@@ -300,14 +253,6 @@ Qtel erbjuds HELT UTAN GARANTIER. Detta är fri mjukvara och du är välkommen a
         <translation>Bokmärken</translation>
     </message>
     <message>
-        <source>Station</source>
-        <translation type="obsolete">Station</translation>
-    </message>
-    <message>
-        <source>Location/Description</source>
-        <translation type="obsolete">Plats/Beskrivning</translation>
-    </message>
-    <message>
         <source>Time</source>
         <translation>Tid</translation>
     </message>
@@ -316,72 +261,8 @@ Qtel erbjuds HELT UTAN GARANTIER. Detta är fri mjukvara och du är välkommen a
         <translation>&amp;Arkiv</translation>
     </message>
     <message>
-        <source>&amp;Settings</source>
-        <translation type="obsolete">&amp;Inställningar</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Hjälp</translation>
-    </message>
-    <message>
-        <source>Undo</source>
-        <translation type="obsolete">Ångra</translation>
-    </message>
-    <message>
-        <source>&amp;Undo</source>
-        <translation type="obsolete">&amp;Ångra</translation>
-    </message>
-    <message>
-        <source>Redo</source>
-        <translation type="obsolete">Ångra ångra</translation>
-    </message>
-    <message>
-        <source>&amp;Redo</source>
-        <translation type="obsolete">Å&amp;ngra ångra</translation>
-    </message>
-    <message>
-        <source>Cut</source>
-        <translation type="obsolete">Klipp ut</translation>
-    </message>
-    <message>
-        <source>&amp;Cut</source>
-        <translation type="obsolete">&amp;Klipp ut</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation type="obsolete">Kopiera</translation>
-    </message>
-    <message>
-        <source>C&amp;opy</source>
-        <translation type="obsolete">K&amp;opiera</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation type="obsolete">Klistra in</translation>
-    </message>
-    <message>
-        <source>&amp;Paste</source>
-        <translation type="obsolete">K&amp;listra in</translation>
-    </message>
-    <message>
-        <source>Find</source>
-        <translation type="obsolete">Sök</translation>
-    </message>
-    <message>
-        <source>&amp;Find...</source>
-        <translation type="obsolete">&amp;Sök</translation>
-    </message>
-    <message>
-        <source>Contents</source>
-        <translation type="obsolete">Innehåll</translation>
-    </message>
-    <message>
-        <source>&amp;Contents...</source>
-        <translation type="obsolete">I&amp;nnehåll...</translation>
-    </message>
-    <message>
-        <source>&amp;Index...</source>
-        <translation type="obsolete">&amp;Index...</translation>
     </message>
     <message>
         <source>About</source>
@@ -412,22 +293,8 @@ Qtel erbjuds HELT UTAN GARANTIER. Detta är fri mjukvara och du är välkommen a
         <translation>Inställningar för Qtel...</translation>
     </message>
     <message>
-        <source>&amp;Qtel Settings...</source>
-        <translation type="obsolete">&amp;Inställningar för Qtel</translation>
-    </message>
-    <message>
         <source>Open the Qtel settings dialog</source>
         <translation>Öppna inställningsdialogen för Qtel</translation>
-    </message>
-    <message>
-        <source>- Qt EchoLink client.
-</source>
-        <translation type="obsolete">- Qt EchoLink-klient.
-</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation type="obsolete">Författare</translation>
     </message>
     <message>
         <source>&amp;Directory</source>
@@ -470,14 +337,6 @@ Qtel erbjuds HELT UTAN GARANTIER. Detta är fri mjukvara och du är välkommen a
         <translation>Meddelanden</translation>
     </message>
     <message>
-        <source>Local time</source>
-        <translation type="obsolete">Lokal tid</translation>
-    </message>
-    <message>
-        <source>Incoming connections</source>
-        <translation type="obsolete">Inkommande uppkopplingar</translation>
-    </message>
-    <message>
         <source>Accept</source>
         <translation>Acceptera</translation>
     </message>
@@ -494,24 +353,12 @@ Qtel erbjuds HELT UTAN GARANTIER. Detta är fri mjukvara och du är välkommen a
         <translation>Namn</translation>
     </message>
     <message>
-        <source>Node ID</source>
-        <translation type="obsolete">Nod-ID</translation>
-    </message>
-    <message>
         <source>Connect to IP...</source>
         <translation>Anslut till IP...</translation>
     </message>
     <message>
         <source>Connect to selected...</source>
         <translation>Anslut till markerad station...</translation>
-    </message>
-    <message>
-        <source>Disconnect</source>
-        <translation type="obsolete">Koppla ner</translation>
-    </message>
-    <message>
-        <source>Add selected to Bookmarks</source>
-        <translation type="obsolete">Lägg till markerad station till bokmärken</translation>
     </message>
     <message>
         <source>Incoming Connections</source>
@@ -679,18 +526,6 @@ meddelande</translation>
         <translation>Ljud</translation>
     </message>
     <message>
-        <source>Sound settings</source>
-        <translation type="obsolete">Ljudinställningar</translation>
-    </message>
-    <message>
-        <source>Audio device</source>
-        <translation type="obsolete">Ljudenhet</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation type="obsolete">Vilken ljudenhet som skall användas (ex /dev/dsp)</translation>
-    </message>
-    <message>
         <source>Check this check box to enable full duplex operation</source>
         <translation>Klicka i denna för att aktivera ljudhantering i full duplex</translation>
     </message>
@@ -717,10 +552,6 @@ meddelande</translation>
     <message>
         <source>QSO</source>
         <translation>QSO</translation>
-    </message>
-    <message>
-        <source>QSO dialog settings</source>
-        <translation type="obsolete">Inställningar för QSO-dialogen</translation>
     </message>
     <message>
         <source>Chat encoding:</source>

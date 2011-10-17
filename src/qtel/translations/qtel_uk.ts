@@ -18,10 +18,6 @@ Can&apos;t create connection to</source>
 Не можу приєднатися до</translation>
     </message>
     <message>
-        <source>Could not open audio device</source>
-        <translation type="obsolete">Не можу відкрити звуковий пристрій</translation>
-    </message>
-    <message>
         <source>Could not create connection to remote host</source>
         <translation>Не можу приєднатися до віддаленого комп&apos;ютера</translation>
     </message>
@@ -163,18 +159,6 @@ Can&apos;t create connection to</source>
 <context>
     <name>MainWindow</name>
     <message>
-        <source>Add to bookmarks</source>
-        <translation type="obsolete">Додати у закладки</translation>
-    </message>
-    <message>
-        <source>Remove from bookmarks</source>
-        <translation type="obsolete">Видалити із закладок</translation>
-    </message>
-    <message>
-        <source>Add named station...</source>
-        <translation type="obsolete">Додати станцію за іменем...</translation>
-    </message>
-    <message>
         <source>Logging off from directory server...</source>
         <translation>Розреєструватися на реєстраційному сервері...</translation>
     </message>
@@ -252,10 +236,6 @@ Qtel надається БЕЗ ЖОДНИХ ҐАРАНТІЙ. Це вільне 
         <translation>Qtel - Qt EchoLink програма</translation>
     </message>
     <message>
-        <source>Explorer</source>
-        <translation type="obsolete">Розділи</translation>
-    </message>
-    <message>
         <source>Conferences</source>
         <translation>Конференції</translation>
     </message>
@@ -276,32 +256,8 @@ Qtel надається БЕЗ ЖОДНИХ ҐАРАНТІЙ. Це вільне 
         <translation>Закладки</translation>
     </message>
     <message>
-        <source>Station</source>
-        <translation type="obsolete">Станція</translation>
-    </message>
-    <message>
-        <source>Location/Description</source>
-        <translation type="obsolete">Розташування/Опис</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation type="obsolete">Стан</translation>
-    </message>
-    <message>
-        <source>Local time</source>
-        <translation type="obsolete">Місцевий час</translation>
-    </message>
-    <message>
-        <source>Node ID</source>
-        <translation type="obsolete">ID вузла</translation>
-    </message>
-    <message>
         <source>Messages</source>
         <translation>Повідомлення</translation>
-    </message>
-    <message>
-        <source>Incoming connections</source>
-        <translation type="obsolete">Просять приєднатися</translation>
     </message>
     <message>
         <source>Accept</source>
@@ -332,76 +288,8 @@ Qtel надається БЕЗ ЖОДНИХ ҐАРАНТІЙ. Це вільне 
         <translation>&amp;Реєстрація</translation>
     </message>
     <message>
-        <source>&amp;Settings</source>
-        <translation type="obsolete">&amp;Налаштування</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Довідка</translation>
-    </message>
-    <message>
-        <source>Undo</source>
-        <translation type="obsolete">Касуй</translation>
-    </message>
-    <message>
-        <source>&amp;Undo</source>
-        <translation type="obsolete">&amp;Касуй</translation>
-    </message>
-    <message>
-        <source>Redo</source>
-        <translation type="obsolete">Понови</translation>
-    </message>
-    <message>
-        <source>&amp;Redo</source>
-        <translation type="obsolete">&amp;Понови</translation>
-    </message>
-    <message>
-        <source>Cut</source>
-        <translation type="obsolete">Виріж</translation>
-    </message>
-    <message>
-        <source>&amp;Cut</source>
-        <translation type="obsolete">&amp;Виріж</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation type="obsolete">Скопіюй</translation>
-    </message>
-    <message>
-        <source>C&amp;opy</source>
-        <translation type="obsolete">С&amp;копіюй</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation type="obsolete">Встав</translation>
-    </message>
-    <message>
-        <source>&amp;Paste</source>
-        <translation type="obsolete">&amp;Встав</translation>
-    </message>
-    <message>
-        <source>Find</source>
-        <translation type="obsolete">Шукай</translation>
-    </message>
-    <message>
-        <source>&amp;Find...</source>
-        <translation type="obsolete">&amp;Шукай...</translation>
-    </message>
-    <message>
-        <source>Contents</source>
-        <translation type="obsolete">Зміст</translation>
-    </message>
-    <message>
-        <source>&amp;Contents...</source>
-        <translation type="obsolete">&amp;Зміст...</translation>
-    </message>
-    <message>
-        <source>Index</source>
-        <translation type="obsolete">Індекси</translation>
-    </message>
-    <message>
-        <source>&amp;Index...</source>
-        <translation type="obsolete">&amp;Індекси...</translation>
     </message>
     <message>
         <source>About</source>
@@ -430,10 +318,6 @@ Qtel надається БЕЗ ЖОДНИХ ҐАРАНТІЙ. Це вільне 
     <message>
         <source>Qtel Settings...</source>
         <translation>Qtel налаштування...</translation>
-    </message>
-    <message>
-        <source>&amp;Qtel Settings...</source>
-        <translation type="obsolete">&amp;Qtel налаштування...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
@@ -474,28 +358,6 @@ Qtel надається БЕЗ ЖОДНИХ ҐАРАНТІЙ. Це вільне 
     <message>
         <source>Connect to selected...</source>
         <translation>Приєднайся до вибраного...</translation>
-    </message>
-    <message>
-        <source>Disconnect</source>
-        <translation type="obsolete">Від&apos;єднайся</translation>
-    </message>
-    <message>
-        <source>Add selected to Bookmarks</source>
-        <translation type="obsolete">Додай вибране у закладки</translation>
-    </message>
-    <message>
-        <source>Qtel v</source>
-        <translation type="obsolete">Qtel версія </translation>
-    </message>
-    <message>
-        <source>- Qt EchoLink client.
-</source>
-        <translation type="obsolete">- Qt EchoLink програма.
-</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation type="obsolete">Автор</translation>
     </message>
     <message>
         <source>Incoming Connections</source>
@@ -662,20 +524,8 @@ Message</source>
         <translation>Звук</translation>
     </message>
     <message>
-        <source>Sound settings</source>
-        <translation type="obsolete">Налаштування звуку</translation>
-    </message>
-    <message>
-        <source>Audio device</source>
-        <translation type="obsolete">Звуковий пристрій</translation>
-    </message>
-    <message>
         <source>Full duplex</source>
         <translation>Повний дуплекс</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation type="obsolete">Працювити через звуковий пристрій (напр. /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
@@ -708,10 +558,6 @@ Message</source>
     <message>
         <source>Choose a connect sound file</source>
         <translation>Виберіть файл із сигналом про з&apos;єднання</translation>
-    </message>
-    <message>
-        <source>QSO dialog settings</source>
-        <translation type="obsolete">Налаштування вікна QSO</translation>
     </message>
     <message>
         <source>Chat encoding:</source>
