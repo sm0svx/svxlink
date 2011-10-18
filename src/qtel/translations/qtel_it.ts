@@ -34,10 +34,6 @@ Can&apos;t create connection to</source>
         <translation>Impossibile connettere la stazione </translation>
     </message>
     <message>
-        <source>Could not open audio device</source>
-        <translation type="obsolete">Impossibile aprire il device audio </translation>
-    </message>
-    <message>
         <source>Could not create connection to remote host</source>
         <translation>Impossibile connettere il host</translation>
     </message>
@@ -175,39 +171,12 @@ Can&apos;t create connection to</source>
         <translation>Aggiornare la lista delle stazione...</translation>
     </message>
     <message>
-        <source>Add to bookmarks</source>
-        <translation type="obsolete">Aggiungere a segnalibro</translation>
-    </message>
-    <message>
-        <source>Remove from bookmarks</source>
-        <translation type="obsolete">Eliminazione di segnalibro</translation>
-    </message>
-    <message>
-        <source>Add named station...</source>
-        <translation type="obsolete">Aggiungere staziona nominata...</translation>
-    </message>
-    <message>
         <source>Qtel - Add station...</source>
         <translation>Qtel - Aggiungere stazione da...</translation>
     </message>
     <message>
         <source>Enter callsign of the station to add</source>
         <translation>Segnale di chiamata della stazione d&apos;aggiungere</translation>
-    </message>
-    <message>
-        <source>Ctrl+Q</source>
-        <comment>fileQuitAction</comment>
-        <translation type="obsolete">Ctrl+A</translation>
-    </message>
-    <message>
-        <source>Ctrl+B</source>
-        <comment>directoryBusyAction</comment>
-        <translation type="obsolete">Ctrl+U</translation>
-    </message>
-    <message>
-        <source>F5</source>
-        <comment>directoryRefreshAction</comment>
-        <translation type="obsolete">F5</translation>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
@@ -263,10 +232,6 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
 <context>
     <name>MainWindowBase</name>
     <message>
-        <source>Explorer</source>
-        <translation type="obsolete">Explorer</translation>
-    </message>
-    <message>
         <source>Conferences</source>
         <translation>Conferenze</translation>
     </message>
@@ -287,18 +252,6 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
         <translation>Segnalibro</translation>
     </message>
     <message>
-        <source>Station</source>
-        <translation type="obsolete">Stazione</translation>
-    </message>
-    <message>
-        <source>Location/Description</source>
-        <translation type="obsolete">Luogo/Descrizione</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation type="obsolete">Stato</translation>
-    </message>
-    <message>
         <source>Time</source>
         <translation>Tempo</translation>
     </message>
@@ -307,76 +260,8 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
         <translation>&amp;File</translation>
     </message>
     <message>
-        <source>&amp;Settings</source>
-        <translation type="obsolete">&amp;Impostazioni</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Aiuto</translation>
-    </message>
-    <message>
-        <source>Undo</source>
-        <translation type="obsolete">Annullare</translation>
-    </message>
-    <message>
-        <source>&amp;Undo</source>
-        <translation type="obsolete">A&amp;nnullare</translation>
-    </message>
-    <message>
-        <source>Redo</source>
-        <translation type="obsolete">Rifare</translation>
-    </message>
-    <message>
-        <source>&amp;Redo</source>
-        <translation type="obsolete">&amp;Rifare</translation>
-    </message>
-    <message>
-        <source>Cut</source>
-        <translation type="obsolete">Interrompere</translation>
-    </message>
-    <message>
-        <source>&amp;Cut</source>
-        <translation type="obsolete">&amp;Interrompere</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation type="obsolete">Copiare</translation>
-    </message>
-    <message>
-        <source>C&amp;opy</source>
-        <translation type="obsolete">&amp;Copiare</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation type="obsolete">Inserire</translation>
-    </message>
-    <message>
-        <source>&amp;Paste</source>
-        <translation type="obsolete">&amp;Iserire</translation>
-    </message>
-    <message>
-        <source>Find</source>
-        <translation type="obsolete">Cercare</translation>
-    </message>
-    <message>
-        <source>&amp;Find...</source>
-        <translation type="obsolete">C&amp;ercare...</translation>
-    </message>
-    <message>
-        <source>Contents</source>
-        <translation type="obsolete">Contenuto</translation>
-    </message>
-    <message>
-        <source>&amp;Contents...</source>
-        <translation type="obsolete">C&amp;ontenuto...</translation>
-    </message>
-    <message>
-        <source>Index</source>
-        <translation type="obsolete">Indice</translation>
-    </message>
-    <message>
-        <source>&amp;Index...</source>
-        <translation type="obsolete">&amp;Indice....</translation>
     </message>
     <message>
         <source>About</source>
@@ -407,26 +292,8 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
         <translation>Impostazione per Qtel...</translation>
     </message>
     <message>
-        <source>&amp;Qtel Settings...</source>
-        <translation type="obsolete">&amp;Impostazione per Qtel...</translation>
-    </message>
-    <message>
         <source>Open the Qtel settings dialog</source>
         <translation>Aprire il dialogo delle impostazioni per Qtel</translation>
-    </message>
-    <message>
-        <source>Qtel v</source>
-        <translation type="obsolete">Qtel v</translation>
-    </message>
-    <message>
-        <source>- Qt EchoLink client.
-</source>
-        <translation type="obsolete">- Il Qt-Cliente del EchoLink.
-</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation type="obsolete">Autore</translation>
     </message>
     <message>
         <source>&amp;Directory</source>
@@ -469,14 +336,6 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
         <translation>Messaggi</translation>
     </message>
     <message>
-        <source>Local time</source>
-        <translation type="obsolete">Tempo locale</translation>
-    </message>
-    <message>
-        <source>Incoming connections</source>
-        <translation type="obsolete">Conttati in arrivo</translation>
-    </message>
-    <message>
         <source>Accept</source>
         <translation>Accettare</translation>
     </message>
@@ -493,48 +352,12 @@ Qtel viene fornito con ASSOLUTAMENTE NESSUNA GARANZIA. Questo è software libero
         <translation>Nome</translation>
     </message>
     <message>
-        <source>Node ID</source>
-        <translation type="obsolete">Numero del nodo</translation>
-    </message>
-    <message>
-        <source>Ctrl+Z</source>
-        <translation type="obsolete">Ctrl+Z</translation>
-    </message>
-    <message>
-        <source>Ctrl+Y</source>
-        <translation type="obsolete">Ctrl+Y</translation>
-    </message>
-    <message>
-        <source>Ctrl+X</source>
-        <translation type="obsolete">Ctrl+X</translation>
-    </message>
-    <message>
-        <source>Ctrl+C</source>
-        <translation type="obsolete">Ctrl+C</translation>
-    </message>
-    <message>
-        <source>Ctrl+V</source>
-        <translation type="obsolete">Ctrl+V</translation>
-    </message>
-    <message>
-        <source>Ctrl+F</source>
-        <translation type="obsolete">Ctrl+F</translation>
-    </message>
-    <message>
         <source>Connect to IP...</source>
         <translation>Collegare con indirizzo IP...</translation>
     </message>
     <message>
         <source>Connect to selected...</source>
         <translation>Collegare con la stazione...</translation>
-    </message>
-    <message>
-        <source>Disconnect</source>
-        <translation type="obsolete">Disconnesso</translation>
-    </message>
-    <message>
-        <source>Add selected to Bookmarks</source>
-        <translation type="obsolete">Aggiungere la staziona a segnalibro</translation>
     </message>
     <message>
         <source>Incoming Connections</source>
@@ -710,20 +533,8 @@ Message</source>
         <translation>Suono</translation>
     </message>
     <message>
-        <source>Sound settings</source>
-        <translation type="obsolete">Caratteristica del suono</translation>
-    </message>
-    <message>
-        <source>Audio device</source>
-        <translation type="obsolete">Audio device</translation>
-    </message>
-    <message>
         <source>Full duplex</source>
         <translation>Full duplex</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation type="obsolete">Device audio (per esempio /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
@@ -752,10 +563,6 @@ Message</source>
     <message>
         <source>QSO</source>
         <translation>QSO</translation>
-    </message>
-    <message>
-        <source>QSO dialog settings</source>
-        <translation type="obsolete">Caratteristica del QSO</translation>
     </message>
     <message>
         <source>Chat encoding:</source>
