@@ -141,14 +141,14 @@ AudioPacer::~AudioPacer(void)
 
 void AudioPacer::availSamples(void)
 {
-  if (stream_state != STREAM_ACTIVE)
+  if (stream_state == STREAM_IDLE)
   {
-    stream_state = STREAM_ACTIVE;
     gettimeofday(&output_start, NULL);
     output_samples = 0;
     pace_timer->setEnable(true);
   }
   
+  stream_state = STREAM_ACTIVE;
   AudioReader::availSamples();
 } /* AudioPacer::availSamples */
 
@@ -179,8 +179,12 @@ void AudioPacer::requestSamples(int count)
 
 void AudioPacer::allSamplesFlushed(void)
 {
-  stream_state = STREAM_IDLE;
-  pace_timer->setEnable(false);
+  if (stream_state == STREAM_FLUSHING)
+  {
+    stream_state = STREAM_IDLE;
+    pace_timer->setEnable(false);
+  }
+
   AudioReader::flushSamples();
 } /* AudioPacer::allSamplesFlushed */
 

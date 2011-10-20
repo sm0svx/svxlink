@@ -194,7 +194,7 @@ bool NetUplink::initialize(void)
   tx_selector = new AudioSelector;
   tx_selector->addSource(loopback_con);
 
-  fifo = new AudioJitterFifo(4096 * INTERNAL_SAMPLE_RATE / 8000);
+  fifo = new AudioJitterFifo(2048 * INTERNAL_SAMPLE_RATE / 8000);
   tx_selector->addSource(fifo);
   tx_selector->selectSource(fifo);
 
