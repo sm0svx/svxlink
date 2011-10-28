@@ -175,7 +175,7 @@ class AudioPacer : public AudioReader, public AudioSource, public SigC::Object
 
     typedef enum
     {
-      STREAM_IDLE, STREAM_ACTIVE, STREAM_FLUSHING
+      STREAM_IDLE, STREAM_ACTIVE, STREAM_WAITING, STREAM_FLUSHING
     } StreamState;
                   
     unsigned  	   sample_rate;

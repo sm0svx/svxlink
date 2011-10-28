@@ -206,11 +206,8 @@ int AudioJitterFifo::writeSamples(const float *samples, int count)
 
 void AudioJitterFifo::availSamples(void)
 {
-  if (stream_state != STREAM_ACTIVE)
-  {
-    stream_state = STREAM_ACTIVE;
-    sinkAvailSamples();
-  }
+  stream_state = STREAM_ACTIVE;
+  sinkAvailSamples();
 } /* AudioJitterFifo::availSamples */
 
 

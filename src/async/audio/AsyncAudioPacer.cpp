@@ -155,9 +155,10 @@ void AudioPacer::availSamples(void)
 
 void AudioPacer::flushSamples(void)
 {
-  stream_state = STREAM_FLUSHING;
+  stream_state = STREAM_WAITING;
   if (!isReading())
   {
+    stream_state = STREAM_FLUSHING;
     sinkFlushSamples();
   }
 } /* AudioPacer::flushSamples */
@@ -213,8 +214,9 @@ void AudioPacer::outputNextBlock(Timer *t)
     count = samplesToWrite();
   }
   
-  if (stream_state == STREAM_FLUSHING)
+  if (stream_state == STREAM_WAITING)
   {
+    stream_state = STREAM_FLUSHING;
     sinkFlushSamples();
   }
 

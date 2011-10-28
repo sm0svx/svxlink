@@ -86,7 +86,7 @@ class Async::AudioSplitter::Branch : public AudioSource
   public:
     Branch(AudioSplitter *splitter, AudioSink *sink, bool managed)
       : stream_state(STREAM_IDLE), is_enabled(true),
-        fifo(1024), splitter(splitter)
+        fifo(1536), splitter(splitter)
     {
       /* Note: The FIFO does not add significant audio latency, as long */
       /*       as the sample acceptance rates of the splitter branches */
@@ -317,63 +317,72 @@ int AudioSplitter::writeSamples(const float *samples, int count)
 {
   is_flushing = false;
  
-  bool enabled = false;
-  bool empty = false;
+  int written = 0;
   int len = count;
 
-  list<Branch *>::const_iterator it;
-
-  /* To avoid buffer latency accumulation, at least one branch buffer */
-  /* has to be completely empty. */
-  for (it = branches.begin(); it != branches.end(); ++it)
+  while (len > 0)
   {
-    Branch *branch = *it;
-    if (branch->enabled())
+    bool enabled = false;
+    bool empty = false;
+    int block_len = len;
+
+    /* To avoid buffer latency accumulation, at least one branch buffer */
+    /* has to be completely empty. */
+    list<Branch *>::const_iterator it;
+    for (it = branches.begin(); it != branches.end(); ++it)
     {
-      enabled = true;
-      empty |= branch->empty();
-    }
-  }
-
-  /* No branch is enabled. */
-  if (!enabled)
-  {
-    return count;
-  }
-
-  /* No enabled branch FIFO is empty. */
-  if (!empty)
-  {
-    return 0;
-  }
-
-  /* Determine the least common available buffer space */
-  /* of all branch buffers. */
-  for (it = branches.begin(); it != branches.end(); ++it)
-  {
-    Branch *branch = *it;
-    if (branch->enabled())
-    {
-      if (branch->spaceAvail() == 0)
+      Branch *branch = *it;
+      if (branch->enabled())
       {
-        /* There's at least one empty and one full branch FIFO. */
-        /* This indicates that the maximum allowed sample rate */
-        /* unbalance has been reached. The only thing we can do now */
-        /* is to throw away all samples from the full branch FIFO. */
-        branch->clearFifo();
+        enabled = true;
+        empty |= branch->empty();
       }
-      len = min(len, branch->spaceAvail());
     }
-  }
 
-  /* Write samples into all branches, we already assured that */
-  /* there is sufficient branch buffer space available */
-  for (it = branches.begin(); it != branches.end(); ++it)
-  {
-    (*it)->sinkWriteSamples(samples, len);
+    /* No branch is enabled. */
+    if (!enabled)
+    {
+      return count;
+    }
+
+    /* No enabled branch FIFO is empty. */
+    if (!empty)
+    {
+      return written;
+    }
+
+    /* Determine the least common available buffer space */
+    /* of all branch buffers. */
+    for (it = branches.begin(); it != branches.end(); ++it)
+    {
+      Branch *branch = *it;
+      if (branch->enabled())
+      {
+        if (branch->spaceAvail() == 0)
+        {
+          /* There's at least one empty and one full branch FIFO. */
+          /* This indicates that the maximum allowed sample rate */
+          /* unbalance has been reached. The only thing we can do now */
+          /* is to throw away all samples from the full branch FIFO. */
+          branch->clearFifo();
+        }
+        block_len = min(block_len, branch->spaceAvail());
+      }
+    }
+
+    /* Write samples into all branches, we already assured that */
+    /* there is sufficient branch buffer space available */
+    for (it = branches.begin(); it != branches.end(); ++it)
+    {
+      (*it)->sinkWriteSamples(samples, block_len);
+    }
+
+    written += block_len;
+    samples += block_len;
+    len -= block_len;
   }
   
-  return len;
+  return written;
 
 } /* AudioSplitter::writeSamples */
 
