@@ -126,7 +126,8 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
   : server(0), con(0), recv_cnt(0), recv_exp(0), rx(rx), tx(tx), fifo(0),
     cfg(cfg), name(name), heartbeat_timer(0), audio_enc(0), audio_dec(0),
     loopback_con(0), rx_splitter(0), tx_selector(0), state(STATE_DISC),
-    mute_tx_timer(0), tx_muted(false), fallback_enabled(false)
+    mute_tx_timer(0), tx_muted(false), fallback_enabled(false),
+    tx_ctrl_mode(Tx::TX_OFF)
 {
   heartbeat_timer = new Timer(10000);
   heartbeat_timer->setEnable(false);
@@ -305,6 +306,10 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
   tx->setTxCtrlMode(Tx::TX_OFF);
   heartbeat_timer->setEnable(false);
   
+  mute_tx_timer->setEnable(false);
+  tx_muted = false;
+  tx_ctrl_mode = Tx::TX_OFF;
+    
   if (fallback_enabled)
   {
     setFallbackActive(true);
@@ -459,7 +464,11 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSetTxCtrlMode::TYPE:
     {
       MsgSetTxCtrlMode *mode_msg = reinterpret_cast<MsgSetTxCtrlMode *>(msg);
-      tx->setTxCtrlMode(mode_msg->mode());
+      tx_ctrl_mode = mode_msg->mode();
+      if (!tx_muted)
+      {
+	tx->setTxCtrlMode(tx_ctrl_mode);
+      }
       break;
     }
      
@@ -604,6 +613,7 @@ void NetUplink::squelchOpen(bool is_open)
     if (is_open)
     {
       tx_muted = true;
+      tx->setTxCtrlMode(Tx::TX_OFF);
     }
     else
     {
@@ -707,6 +717,7 @@ void NetUplink::unmuteTx(Timer *t)
 {
   mute_tx_timer->setEnable(false);
   tx_muted = false;
+  tx->setTxCtrlMode(tx_ctrl_mode);
 } /* NetUplink::unmuteTx */
 
 
