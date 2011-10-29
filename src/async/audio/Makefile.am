@@ -118,8 +118,7 @@ SHLIB_INTERFACE = @LIBASYNC_SHLIB_INTERFACE@
 # Extra compiler & linker flags
 libasyncaudio_la_CPPFLAGS = @AM_CPPFLAGS@ @ASYNC_AUDIO_CFLAGS@
 libasyncaudio_la_LIBADD = @ASYNC_CORE_LIBS@ @SPEEX_LIBS@
-libasyncaudio_la_LDFLAGS = @AM_LDFLAGS@ -release $(SHLIB_RELEASE) \
-		-version-info $(SHLIB_INTERFACE)
+libasyncaudio_la_LDFLAGS = @AM_LDFLAGS@ -version-info $(SHLIB_INTERFACE)
 
 # Files that should be packaged with the sources
 EXTRA_DIST = fidlib.txt Makefile.default
@@ -142,7 +141,7 @@ uninstall-hook:
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \
 	LIBNAME=`echo $${lafile} | $(AWK) -F. '{NF--; print}'` ; \
-	for binary in $${INSTDIR}/$${LIBNAME}.a $${INSTDIR}/$${LIBNAME}-$${SHLIBREL}.so $${INSTDIR}/$${LIBNAME}-$${SHLIBREL}.so.$${SHLIBIFC} ; \
+	for binary in $${INSTDIR}/$${LIBNAME}.a $${INSTDIR}/$${LIBNAME}.so $${INSTDIR}/$${LIBNAME}.so.$${SHLIBIFC} ; \
 	do \
 	echo "Removing $${binary}" ; \
 	$(RM) $${binary} ; \

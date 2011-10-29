@@ -312,7 +312,7 @@ shlib_release() {
 AC_SUBST([LIBASYNC_SHLIB_RELEASE], [`shlib_release "${LIBASYNC_VERSION}"`])
 AC_SUBST([ECHOLIB_SHLIB_RELEASE], [`shlib_release "${ECHOLIB_VERSION}"`])
 shlib_interface() {
-  ${ECHO} "$1" | ${AWK} -F. '{OFS=":"; print $2,$3,0}'
+  ${ECHO} "$1" | ${AWK} -F. '{OFS=":"; print (100*$1)+$2,$3,0}'
 }
 AC_SUBST([LIBASYNC_SHLIB_INTERFACE], [`shlib_interface "${LIBASYNC_VERSION}"`])
 AC_SUBST([ECHOLIB_SHLIB_INTERFACE], [`shlib_interface "${ECHOLIB_VERSION}"`])

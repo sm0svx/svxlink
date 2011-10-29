@@ -57,8 +57,7 @@ AM_CPPFLAGS = @AM_CPPFLAGS@ @ECHOLIB_CFLAGS@
 AM_LDFLAGS = @AM_LDFLAGS@
 LDADD = @ECHOLIB_LIBS@
 libecholib_la_LIBADD = @ASYNC_CPP_LIBS@ @ASYNC_AUDIO_LIBS@
-libecholib_la_LDFLAGS = @AM_LDFLAGS@ -release $(SHLIB_RELEASE) \
-		-version-info $(SHLIB_INTERFACE)
+libecholib_la_LDFLAGS = @AM_LDFLAGS@ -version-info $(SHLIB_INTERFACE)
 
 EXTRA_DIST = ChangeLog echolib_test.cfg mainpage.dox messages.txt \
 		Makefile.default
@@ -81,7 +80,7 @@ uninstall-hook:
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \
 	LIBNAME=`echo $${lafile} | $(AWK) -F. '{NF--; print}'` ; \
-	for binary in $${INSTDIR}/$${LIBNAME}.a $${INSTDIR}/$${LIBNAME}-$${SHLIBREL}.so $${INSTDIR}/$${LIBNAME}-$${SHLIBREL}.so.$${SHLIBIFC} ; \
+	for binary in $${INSTDIR}/$${LIBNAME}.a $${INSTDIR}/$${LIBNAME}.so $${INSTDIR}/$${LIBNAME}.so.$${SHLIBIFC} ; \
 	do \
 	echo "Removing $${binary}" ; \
 	$(RM) $${binary} ; \

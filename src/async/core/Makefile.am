@@ -44,8 +44,7 @@ SHLIB_INTERFACE = @LIBASYNC_SHLIB_INTERFACE@
 # Extra compiler & linker flags
 libasynccore_la_CPPFLAGS = @AM_CPPFLAGS@ @ASYNC_CORE_CFLAGS@
 libasynccore_la_LIBADD = @SIGC_LIBS@
-libasynccore_la_LDFLAGS = @AM_LDFLAGS@ -release $(SHLIB_RELEASE) \
-		-version-info $(SHLIB_INTERFACE)
+libasynccore_la_LDFLAGS = @AM_LDFLAGS@ -version-info $(SHLIB_INTERFACE)
 
 # Headers that define the API of this library
 pkginclude_HEADERS = $(DIST_H_PUBLIC)
@@ -71,7 +70,7 @@ uninstall-hook:
 	for lafile in $(lib_LTLIBRARIES) ; \
 	do \
 	LIBNAME=`echo $${lafile} | $(AWK) -F. '{NF--; print}'` ; \
-	for binary in $${INSTDIR}/$${LIBNAME}.a $${INSTDIR}/$${LIBNAME}-$${SHLIBREL}.so $${INSTDIR}/$${LIBNAME}-$${SHLIBREL}.so.$${SHLIBIFC} ; \
+	for binary in $${INSTDIR}/$${LIBNAME}.a $${INSTDIR}/$${LIBNAME}.so $${INSTDIR}/$${LIBNAME}.so.$${SHLIBIFC} ; \
 	do \
 	echo "Removing $${binary}" ; \
 	$(RM) $${binary} ; \
