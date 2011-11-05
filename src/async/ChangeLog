@@ -1,4 +1,4 @@
- 0.18.1 -- ?? ??? 2011
+ 0.18.1 -- 05 nov 2011
 -----------------------
 
 * Bugfix in Async::AudioDelayLine: Calling "clear" while a "mute" was in
@@ -7,8 +7,8 @@
 * New methods IpAddress::isEmpty() and IpAddress::clear().
 
 * Bugfix in the OSS code: The audio device would not open when not using stdout as
-  output due to an obscure bug in the OSS code. When not using stdout, the audio
-  device would open with fd 0, which was interpreted as and error.
+  the logging output due to an obscure bug in the OSS code. When not using stdout,
+  the audio device would open with fd 0, which was interpreted as and error.
 
 
 
