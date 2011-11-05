@@ -257,11 +257,13 @@ bool LocalRx::initialize(void)
     peak_meter = (atoi(value.c_str()) != 0);
   }
   
+  /*
   int dtmf_hangtime = 100;
   if (cfg.getValue(name(), "DTMF_HANGTIME", value))
   {
     dtmf_hangtime = atoi(value.c_str());
   }
+  */
   
     // Create the audio IO object
   audio_io = new AudioIO(audio_dev, audio_channel);

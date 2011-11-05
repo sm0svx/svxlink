@@ -108,7 +108,8 @@ tclConfig=$(ls /usr/lib/tclConfig.sh /usr/lib/tcl8.*/tclConfig.sh \
 if [ -n "$tclConfig" -a -r "$tclConfig" ]; then
   . $tclConfig
   info "${TCL_VERSION}\n"
-  output "TCL_LIBS=-ltcl${TCL_VERSION}"
+  output "TCL_LIBS=${TCL_LIB_FLAG}"
+  output "TCL_INCPATH=${TCL_INCLUDE_SPEC}"
 else
   info "no (required)\n"
   exit_error
