@@ -18,10 +18,6 @@ Can&apos;t create connection to</source>
 Nem-tudom-a kapcsolatot-létrehozni</translation>
     </message>
     <message>
-        <source>Could not open audio device</source>
-        <translation type="obsolete">A-hangeszköz-nem-nyitható-meg</translation>
-    </message>
-    <message>
         <source>Could not create connection to remote host</source>
         <translation>Nem-lehet-kapcsolódni-a-távoli-hoszthoz</translation>
     </message>
@@ -163,33 +159,6 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <source>Add to bookmarks</source>
-        <translation type="obsolete">Hozzáad-a-kedvencekhez</translation>
-    </message>
-    <message>
-        <source>Remove from bookmarks</source>
-        <translation type="obsolete">Eltávolít-a-kedvencekből</translation>
-    </message>
-    <message>
-        <source>Add named station...</source>
-        <translation type="obsolete">Elnevezett-állomást-hozzáad...</translation>
-    </message>
-    <message>
-        <source>Ctrl+Q</source>
-        <comment>fileQuitAction</comment>
-        <translation type="obsolete">CTRL+Q</translation>
-    </message>
-    <message>
-        <source>F5</source>
-        <comment>directoryRefreshAction</comment>
-        <translation type="obsolete">F5</translation>
-    </message>
-    <message>
-        <source>Ctrl+B</source>
-        <comment>directoryBusyAction</comment>
-        <translation type="obsolete">CTRL+B</translation>
-    </message>
-    <message>
         <source>Logging off from directory server...</source>
         <translation>Kijelentkezés-a-könyvtár-szerverről...</translation>
     </message>
@@ -264,10 +233,6 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
         <translation>Qtel - az-Echolink-Kliens</translation>
     </message>
     <message>
-        <source>Explorer</source>
-        <translation type="obsolete">Böngésző</translation>
-    </message>
-    <message>
         <source>Conferences</source>
         <translation>Konferencia</translation>
     </message>
@@ -288,32 +253,8 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
         <translation>Kedvencek</translation>
     </message>
     <message>
-        <source>Station</source>
-        <translation type="obsolete">Állomás</translation>
-    </message>
-    <message>
-        <source>Location/Description</source>
-        <translation type="obsolete">Hely/Leírás</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation type="obsolete">Állapot</translation>
-    </message>
-    <message>
-        <source>Local time</source>
-        <translation type="obsolete">Helyi-idő</translation>
-    </message>
-    <message>
-        <source>Node ID</source>
-        <translation type="obsolete">Csomópont-szám</translation>
-    </message>
-    <message>
         <source>Messages</source>
         <translation>Üzenetek</translation>
-    </message>
-    <message>
-        <source>Incoming connections</source>
-        <translation type="obsolete">Bejövő-kapcsolatok</translation>
     </message>
     <message>
         <source>Accept</source>
@@ -344,100 +285,8 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
         <translation>&amp;Könyvtár</translation>
     </message>
     <message>
-        <source>&amp;Settings</source>
-        <translation type="obsolete">&amp;Beállítások</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Segítség</translation>
-    </message>
-    <message>
-        <source>Undo</source>
-        <translation type="obsolete">Visszavon</translation>
-    </message>
-    <message>
-        <source>&amp;Undo</source>
-        <translation type="obsolete">&amp;Visszavon</translation>
-    </message>
-    <message>
-        <source>Ctrl+Z</source>
-        <translation type="obsolete">CTRL+Z</translation>
-    </message>
-    <message>
-        <source>Redo</source>
-        <translation type="obsolete">Ismét</translation>
-    </message>
-    <message>
-        <source>&amp;Redo</source>
-        <translation type="obsolete">&amp;Ismét</translation>
-    </message>
-    <message>
-        <source>Ctrl+Y</source>
-        <translation type="obsolete">CTRL+Y</translation>
-    </message>
-    <message>
-        <source>Cut</source>
-        <translation type="obsolete">Kivág</translation>
-    </message>
-    <message>
-        <source>&amp;Cut</source>
-        <translation type="obsolete">&amp;Kivág</translation>
-    </message>
-    <message>
-        <source>Ctrl+X</source>
-        <translation type="obsolete">CTRL+X</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation type="obsolete">Másol</translation>
-    </message>
-    <message>
-        <source>C&amp;opy</source>
-        <translation type="obsolete">&amp;Másol</translation>
-    </message>
-    <message>
-        <source>Ctrl+C</source>
-        <translation type="obsolete">CTRL+C</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation type="obsolete">Beilleszt</translation>
-    </message>
-    <message>
-        <source>&amp;Paste</source>
-        <translation type="obsolete">&amp;Beilleszt</translation>
-    </message>
-    <message>
-        <source>Ctrl+V</source>
-        <translation type="obsolete">CTRL+V</translation>
-    </message>
-    <message>
-        <source>Find</source>
-        <translation type="obsolete">Keres</translation>
-    </message>
-    <message>
-        <source>&amp;Find...</source>
-        <translation type="obsolete">&amp;Keres...</translation>
-    </message>
-    <message>
-        <source>Ctrl+F</source>
-        <translation type="obsolete">CTRL+F</translation>
-    </message>
-    <message>
-        <source>Contents</source>
-        <translation type="obsolete">Tartalom</translation>
-    </message>
-    <message>
-        <source>&amp;Contents...</source>
-        <translation type="obsolete">&amp;Tartalom...</translation>
-    </message>
-    <message>
-        <source>Index</source>
-        <translation type="obsolete">Index</translation>
-    </message>
-    <message>
-        <source>&amp;Index...</source>
-        <translation type="obsolete">&amp;Index...</translation>
     </message>
     <message>
         <source>About</source>
@@ -466,10 +315,6 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     <message>
         <source>Qtel Settings...</source>
         <translation>Qtel Beállítások</translation>
-    </message>
-    <message>
-        <source>&amp;Qtel Settings...</source>
-        <translation type="obsolete">&amp;Qtel beállítások...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
@@ -510,28 +355,6 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     <message>
         <source>Connect to selected...</source>
         <translation>Csatlakozás-a-kiválasztotthoz...</translation>
-    </message>
-    <message>
-        <source>Disconnect</source>
-        <translation type="obsolete">Kapcsolat-bontása</translation>
-    </message>
-    <message>
-        <source>Add selected to Bookmarks</source>
-        <translation type="obsolete">A-kiválasztott-hozzáadása-a-kedvencekhez</translation>
-    </message>
-    <message>
-        <source>Qtel v</source>
-        <translation type="obsolete">Qtel v</translation>
-    </message>
-    <message>
-        <source>- Qt EchoLink client.
-</source>
-        <translation type="obsolete">- Qt Echolink kliens.
-</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation type="obsolete">Szerző</translation>
     </message>
     <message>
         <source>Incoming Connections</source>
@@ -699,20 +522,8 @@ Message</source>
         <translation type="unfinished">Hang</translation>
     </message>
     <message>
-        <source>Sound settings</source>
-        <translation type="obsolete">Hang-beállítás</translation>
-    </message>
-    <message>
-        <source>Audio device</source>
-        <translation type="obsolete">Hang-eszköz</translation>
-    </message>
-    <message>
         <source>Full duplex</source>
         <translation type="unfinished">Full duplex</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation type="obsolete">A-hasznát-hang-eszköz-(pl.-/dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
@@ -740,11 +551,11 @@ Message</source>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation type="obsolete">Raw hang-fájl (*.raw)</translation>
+        <translation type="unfinished">Raw hang-fájl (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation type="obsolete">Válaszd-ki-a-kapcsolódási-hangot</translation>
+        <translation type="unfinished">Válaszd-ki-a-kapcsolódási-hangot</translation>
     </message>
     <message>
         <source>Chinese</source>

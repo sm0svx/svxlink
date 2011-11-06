@@ -1,4 +1,4 @@
- 0.13.0 -- ?? ??? 2011
+ 0.13.0 -- 05 Nov 2011
 -----------------------
 
 * Added selective calling system Motorola QC2.
@@ -23,6 +23,12 @@
 * Bugfix in RemoteTrx: Groups was not properly setup so remotetrx
   could not access stuff that it should have right to do.
   Patch contributed by Eren / TA1AET.
+
+* TEP and F2 alerts are now taken care of in the PropagationMonitor module.
+  Patch from Adi / DL1HRC.
+
+* Bugfix in the MUTE_TX_ON_RX feature in RemoteTrx. The PTT would activate
+  even if muted.
 
 
 

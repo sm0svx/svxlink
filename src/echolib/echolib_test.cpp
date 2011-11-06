@@ -203,19 +203,24 @@ int main( int argc, const char **argv )
     exit(1);
   }
   
-  (void)fgets(my_callsign, sizeof(my_callsign), cfg);
+  char *ret = fgets(my_callsign, sizeof(my_callsign), cfg);
+  assert(ret != NULL);
   my_callsign[strlen(my_callsign)-1] = 0;
   
-  (void)fgets(my_password, sizeof(my_password), cfg);
+  ret = fgets(my_password, sizeof(my_password), cfg);
+  assert(ret != NULL);
   my_password[strlen(my_password)-1] = 0;
   
-  (void)fgets(my_name, sizeof(my_name), cfg);
+  ret = fgets(my_name, sizeof(my_name), cfg);
+  assert(ret != NULL);
   my_name[strlen(my_name)-1] = 0;
   
-  (void)fgets(my_location, sizeof(my_location), cfg);
+  ret = fgets(my_location, sizeof(my_location), cfg);
+  assert(ret != NULL);
   my_location[strlen(my_location)-1] = 0;
   
-  (void)fgets(my_info, sizeof(my_info), cfg);
+  ret = fgets(my_info, sizeof(my_info), cfg);
+  assert(ret != NULL);
   my_info[strlen(my_info)-1] = 0;
   
   fclose(cfg);

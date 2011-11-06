@@ -670,6 +670,7 @@ static void write_to_logfile(const char *buf)
   while (*ptr != 0)
   {
     static bool print_timestamp = true;
+    ssize_t ret;
     
     if (print_timestamp)
     {
@@ -679,15 +680,19 @@ static void write_to_logfile(const char *buf)
 	struct tm *tm = localtime(&epoch);
 	char tstr[256];
 	size_t tlen = strftime(tstr, sizeof(tstr), tstamp_format.c_str(), tm);
-	(void)write(logfd, tstr, tlen);
-	(void)write(logfd, ": ", 2);
+	ret = write(logfd, tstr, tlen);
+        assert(ret == static_cast<ssize_t>(tlen));
+	ret = write(logfd, ": ", 2);
+        assert(ret == 2);
 	print_timestamp = false;
       }
 
       if (reopen_log)
       {
 	const char *reopen_txt = "SIGHUP received. Reopening logfile\n";
-	(void)write(logfd, reopen_txt, strlen(reopen_txt));
+        const size_t reopen_txt_len = strlen(reopen_txt);
+	ret = write(logfd, reopen_txt, reopen_txt_len);
+        assert(ret == static_cast<ssize_t>(reopen_txt_len));
 	open_logfile();
 	reopen_log = false;
 	print_timestamp = true;
@@ -695,7 +700,7 @@ static void write_to_logfile(const char *buf)
       }
     }
 
-    int write_len = 0;
+    size_t write_len = 0;
     const char *nl = strchr(ptr, '\n');
     if (nl != 0)
     {
@@ -706,7 +711,8 @@ static void write_to_logfile(const char *buf)
     {
       write_len = strlen(ptr);
     }
-    (void)write(logfd, ptr, write_len);
+    ret = write(logfd, ptr, write_len);
+    assert(ret == static_cast<ssize_t>(write_len));
     ptr += write_len;
   }
 } /* write_to_logfile */
@@ -828,11 +834,13 @@ void sighup_handler(int signal)
 {
   if (logfile_name == 0)
   {
-    (void)write(STDOUT_FILENO, "Ignoring SIGHUP\n", 16);
+    ssize_t ret = write(STDOUT_FILENO, "Ignoring SIGHUP\n", 16);
+    assert(ret == 16);
     return;
   }
   
-  (void)write(STDOUT_FILENO, "SIGHUP received. Logfile reopened\n", 34);
+  ssize_t ret = write(STDOUT_FILENO, "SIGHUP received. Logfile reopened\n", 34);
+  assert(ret == 34);
   reopen_log = true;
     
 } /* sighup_handler */

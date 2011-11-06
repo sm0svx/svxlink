@@ -123,6 +123,8 @@ MultiTx::MultiTx(Config& cfg, const string& name)
 
 MultiTx::~MultiTx(void)
 {
+  clearHandler();
+
   list<Tx *>::iterator it;
   for (it=txs.begin(); it!=txs.end(); ++it)
   {

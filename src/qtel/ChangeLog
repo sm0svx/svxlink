@@ -1,4 +1,4 @@
- 0.12.0 -- ?? ??? 2011
+ 0.12.0 -- 05 Nov 2011
 -----------------------
 
 * Now possible to specify the mic and speaker audio devices separately.
@@ -6,6 +6,11 @@
 * Qtel have now been ported to Qt4. One thing you will notice is that
   the configuration will be lost. Otherwise everything should be
   pretty much the same.
+
+* Bugfix: Incoming audio stopped being played back when a new incoming
+  connection was received.
+
+* Added French translation contributed by Patrick / F1SMF.
 
 
 
