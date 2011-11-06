@@ -116,7 +116,7 @@ be read. Otherwise the handler function will be called over and over again.
 
 \include AsyncFdWatch_demo.cpp
 */   
-class FdWatch : public SigC::Object
+class FdWatch : public sigc::trackable
 {
   public:
     /**
@@ -173,7 +173,7 @@ class FdWatch : public SigC::Object
      * @brief Signal to indicate that the descriptor is active
      * @param watch Pointer to the watch object
      */
-    SigC::Signal1<void, FdWatch*> activity;
+    sigc::signal<void, FdWatch*> activity;
     
     
   protected:

@@ -40,7 +40,7 @@ PRGSRC		= MainWindow.cpp ComDialog.cpp Settings.cpp MsgHandler.cpp \
 PROJLIBS	= -lecholib -lasyncqt -lasyncaudio -lasynccore
 
 # Libraries external to the project
-LIBS		= $(QT_LIBS) $(SIGC_LIBS)
+LIBS		= $(QT_LIBS) $(SIGC_LIBS) -lgsm
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).
@@ -168,6 +168,7 @@ POST_TARGETS   = translations/qtel_tmpl.qm \
 		 translations/qtel_ru.qm \
 		 translations/qtel_hu.qm \
 		 translations/qtel_ja.qm \
+		 translations/qtel_fr.qm \
 		 translations/qtel_es.qm
 
 
@@ -266,6 +267,8 @@ ifdef QT_BIN
 	$(FILESPEC) translations/qtel_es.qm[644,root,root] \
 	      	    /usr/share/qtel/translations
 	$(FILESPEC) translations/qtel_ja.qm[644,root,root] \
+	      	    /usr/share/qtel/translations
+	$(FILESPEC) translations/qtel_fr.qm[644,root,root] \
 	      	    /usr/share/qtel/translations
 	$(FILESPEC) connect.raw[644,root,root] /usr/share/qtel/sounds
 	$(FILESPEC) qtel.desktop[644,root,root] /usr/share/applications

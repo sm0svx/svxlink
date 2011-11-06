@@ -193,7 +193,7 @@ bool NetRx::initialize(void)
     return false;
   }
   audio_dec->allEncodedSamplesFlushed.connect(
-          slot(*this, &NetRx::allEncodedSamplesFlushed));
+          mem_fun(*this, &NetRx::allEncodedSamplesFlushed));
   string opt_prefix(audio_dec->name());
   opt_prefix += "_DEC_";
   list<string> names = cfg.listSection(name());
@@ -213,8 +213,8 @@ bool NetRx::initialize(void)
   
   tcp_con = NetTrxTcpClient::instance(host, atoi(tcp_port.c_str()));
   tcp_con->setAuthKey(auth_key);
-  tcp_con->isReady.connect(slot(*this, &NetRx::connectionReady));
-  tcp_con->msgReceived.connect(slot(*this, &NetRx::handleMsg));
+  tcp_con->isReady.connect(mem_fun(*this, &NetRx::connectionReady));
+  tcp_con->msgReceived.connect(mem_fun(*this, &NetRx::handleMsg));
   tcp_con->connect();
   
   return true;

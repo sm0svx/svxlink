@@ -129,9 +129,9 @@ SigLevDetNoise::SigLevDetNoise(int sample_rate)
   setHandler(filter);
   sigc_sink = new SigCAudioSink;
   sigc_sink->sigWriteSamples.connect(
-      slot(*this, &SigLevDetNoise::processSamples));
+      mem_fun(*this, &SigLevDetNoise::processSamples));
   sigc_sink->sigFlushSamples.connect(
-      slot(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
+      mem_fun(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
   sigc_sink->registerSource(filter);
   setIntegrationTime(0);
   reset();

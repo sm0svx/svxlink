@@ -136,7 +136,7 @@ class QTextCodec;
  ****************************************************************************/
 
 class ComDialog : public QDialog, private Ui::ComDialogBase,
-		  public SigC::Object
+		  public sigc::trackable
 {
   Q_OBJECT
       
@@ -150,6 +150,8 @@ class ComDialog : public QDialog, private Ui::ComDialogBase,
     void setRemoteParams(const QString& priv);
     
   protected:
+    void keyPressEvent(QKeyEvent *event);
+    void keyReleaseEvent(QKeyEvent *event);
     
   private:
     QString   	      	    callsign;
@@ -173,7 +175,6 @@ class ComDialog : public QDialog, private Ui::ComDialogBase,
     ComDialog(const ComDialog&);
     ComDialog& operator=(const ComDialog&);
     void init(const QString& remote_name="?");
-    bool eventFilter(QObject *watched, QEvent *e);
     void updateStationData(const EchoLink::StationData *station);
     void createConnection(const EchoLink::StationData *station);
     void onStationListUpdated(void);

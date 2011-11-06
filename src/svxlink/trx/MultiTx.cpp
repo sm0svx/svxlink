@@ -123,6 +123,8 @@ MultiTx::MultiTx(Config& cfg, const string& name)
 
 MultiTx::~MultiTx(void)
 {
+  clearHandler();
+
   list<Tx *>::iterator it;
   for (it=txs.begin(); it!=txs.end(); ++it)
   {
@@ -161,9 +163,9 @@ bool MultiTx::initialize(void)
       	// FIXME: Cleanup
       	return false;
       }
-      tx->txTimeout.connect(txTimeout.slot());
+      tx->txTimeout.connect(txTimeout.make_slot());
       tx->transmitterStateChange.connect(
-      	      slot(*this, &MultiTx::onTransmitterStateChange));
+      	      mem_fun(*this, &MultiTx::onTransmitterStateChange));
       
       splitter->addSink(tx);
       

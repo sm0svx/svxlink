@@ -1,5 +1,5 @@
 /**
-@file	 Voter.cpp
+@File	 Voter.cpp
 @brief  This file contains a class that implement a receiver voter
 @author Tobias Blomberg / SM0SVX
 @date	 2005-04-18
@@ -72,7 +72,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace SigC;
+using namespace sigc;
 using namespace Async;
 
 
@@ -96,7 +96,7 @@ using namespace Async;
 /**
  * @brief A class that represents a satellite receiver
  */
-class SatRx : public AudioSource, public SigC::Object
+class SatRx : public AudioSource, public sigc::trackable
 {
   public:
     int id;
@@ -105,11 +105,11 @@ class SatRx : public AudioSource, public SigC::Object
     SatRx(int id, Rx *rx, int fifo_length_ms)
       : id(id), rx(rx), fifo(0), sql_open(false)
     {
-      rx->dtmfDigitDetected.connect(slot(*this, &SatRx::onDtmfDigitDetected));
+      rx->dtmfDigitDetected.connect(mem_fun(*this, &SatRx::onDtmfDigitDetected));
       rx->selcallSequenceDetected.connect(
-	      slot(*this, &SatRx::onSelcallSequenceDetected));
-      rx->squelchOpen.connect(slot(*this, &SatRx::rxSquelchOpen));
-      rx->signalLevelUpdated.connect(slot(*this, &SatRx::rxSignalLevelUpdated));
+	      mem_fun(*this, &SatRx::onSelcallSequenceDetected));
+      rx->squelchOpen.connect(mem_fun(*this, &SatRx::rxSquelchOpen));
+      rx->signalLevelUpdated.connect(mem_fun(*this, &SatRx::rxSignalLevelUpdated));
       AudioSource *prev_src = rx;
 
       if (fifo_length_ms > 0)
@@ -183,10 +183,10 @@ class SatRx : public AudioSource, public SigC::Object
     }
     */
   
-    Signal2<void, char, int>  	  dtmfDigitDetected;
-    Signal1<void, string>  	  selcallSequenceDetected;
-    Signal2<void, bool, SatRx*>   squelchOpen;
-    Signal2<void, float, SatRx*>  signalLevelUpdated;
+    signal<void, char, int>  	dtmfDigitDetected;
+    signal<void, string>  	selcallSequenceDetected;
+    signal<void, bool, SatRx*> squelchOpen;
+    signal<void, float, SatRx*>  signalLevelUpdated;
   
   
   protected:
@@ -307,7 +307,7 @@ Voter::Voter(Config &cfg, const std::string& name)
   Rx::setVerbose(false);
   check_siglev_timer = new Timer(1000, Timer::TYPE_PERIODIC);
   check_siglev_timer->setEnable(false);
-  check_siglev_timer->expired.connect(slot(*this, &Voter::checkSiglev));
+  check_siglev_timer->expired.connect(mem_fun(*this, &Voter::checkSiglev));
 } /* Voter::Voter */
 
 
@@ -357,13 +357,13 @@ bool Voter::initialize(void)
 					Timer::TYPE_ONESHOT);
   squelch_close_delay_timer->setEnable(false);
   squelch_close_delay_timer->expired.connect(
-	  slot(*this, &Voter::squelchCloseDelayExpired));
+	  mem_fun(*this, &Voter::squelchCloseDelayExpired));
   
   int rx_switch_delay = 500;
   cfg.getValue(name(), "RX_SWITCH_DELAY", rx_switch_delay);
   rx_switch_timer = new Timer(rx_switch_delay, Timer::TYPE_ONESHOT);
   rx_switch_timer->setEnable(false);
-  rx_switch_timer->expired.connect(slot(*this, &Voter::rxSwitchTimerExpired));
+  rx_switch_timer->expired.connect(mem_fun(*this, &Voter::rxSwitchTimerExpired));
   
   selector = new AudioSelector;
   setHandler(selector);
@@ -383,11 +383,11 @@ bool Voter::initialize(void)
       	return false;
       }
       SatRx *srx = new SatRx(rxs.size() + 1, rx, buffer_length);
-      srx->squelchOpen.connect(slot(*this, &Voter::satSquelchOpen));
+      srx->squelchOpen.connect(mem_fun(*this, &Voter::satSquelchOpen));
       srx->signalLevelUpdated.connect(
-	      slot(*this, &Voter::satSignalLevelUpdated));
-      srx->dtmfDigitDetected.connect(dtmfDigitDetected.slot());
-      srx->selcallSequenceDetected.connect(selcallSequenceDetected.slot());
+	      mem_fun(*this, &Voter::satSignalLevelUpdated));
+      srx->dtmfDigitDetected.connect(dtmfDigitDetected.make_slot());
+      srx->selcallSequenceDetected.connect(selcallSequenceDetected.make_slot());
       if ((srx == 0) || !rx->initialize())
       {
       	// FIXME: Cleanup
@@ -395,7 +395,7 @@ bool Voter::initialize(void)
       }
       srx->mute(true);
       rx->setVerbose(false);
-      rx->toneDetected.connect(toneDetected.slot());
+      rx->toneDetected.connect(toneDetected.make_slot());
       selector->addSource(srx);
       selector->enableAutoSelect(srx, 0);
       
@@ -560,7 +560,7 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
     {
       delete best_rx_timer;
       best_rx_timer = new Timer(voting_delay);
-      best_rx_timer->expired.connect(slot(*this, &Voter::chooseBestRx));
+      best_rx_timer->expired.connect(mem_fun(*this, &Voter::chooseBestRx));
     }
     
     if (rx->signalStrength() > best_rx_siglev)

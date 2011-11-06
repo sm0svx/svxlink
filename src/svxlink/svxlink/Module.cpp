@@ -87,7 +87,7 @@ bool Module::initialize(void)
   {
     m_tmo_timer = new Timer(1000 * atoi(timeout_str.c_str()));
     m_tmo_timer->setEnable(false);
-    m_tmo_timer->expired.connect(slot(*this, &Module::moduleTimeout));
+    m_tmo_timer->expired.connect(mem_fun(*this, &Module::moduleTimeout));
   }
   
   list<string> vars = cfg().listSection(cfgName());
@@ -115,11 +115,11 @@ void Module::activate(void)
   
   /*
   m_audio_con = logic()->rx().audioReceived.connect(
-      	  slot(*this, &Module::audioFromRx));
+      	  mem_fun(*this, &Module::audioFromRx));
   */
 
   m_logic_idle_con = logic()->idleStateChanged.connect(
-      slot(*this, &Module::logicIdleStateChanged));
+      mem_fun(*this, &Module::logicIdleStateChanged));
   
   setIdle(logic()->isIdle());
   activateInit();

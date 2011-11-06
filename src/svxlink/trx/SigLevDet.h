@@ -119,7 +119,7 @@ level value is in the range of approximately 0 to 100 where 0 is the weakest
 signal strength measurement and where 100 is the strongest. The minimun and
 maximum values are approximate so higher and lower values may be reported.
 */
-class SigLevDet : public SigC::Object, public Async::AudioSink
+class SigLevDet : public sigc::trackable, public Async::AudioSink
 {
   public:
     /**
@@ -185,7 +185,7 @@ class SigLevDet : public SigC::Object, public Async::AudioSink
      * level measurement. How often the signal is emitted is set up by calling
      * the setCountiuousUpdateInterval function.
      */
-    SigC::Signal1<void, float> signalLevelUpdated;
+    sigc::signal<void, float> signalLevelUpdated;
     
   protected:
     

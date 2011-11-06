@@ -115,7 +115,7 @@ class DnsLookupWorker;
  * class and so it must be inherited from to create a class that can be
  * instantiated.
  */   
-class Application : public SigC::Object
+class Application : public sigc::trackable
 {
   public:
     /**

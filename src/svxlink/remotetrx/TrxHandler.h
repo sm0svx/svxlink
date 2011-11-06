@@ -111,7 +111,7 @@ class Tx;
 @author Tobias Blomberg / SM0SVX
 @date   2006-04-14
 */
-class TrxHandler : public SigC::Object
+class TrxHandler : public sigc::trackable
 {
   public:
     /**

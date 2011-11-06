@@ -164,9 +164,9 @@ bool RfUplink::initialize(void)
     loop_rx_to_tx = atoi(value.c_str()) != 0;
   }
 
-  rx->squelchOpen.connect(slot(*this, &RfUplink::rxSquelchOpen));
-  rx->signalLevelUpdated.connect(slot(*this, &RfUplink::rxSignalLevelUpdated));
-  rx->dtmfDigitDetected.connect(slot(*this, &RfUplink::rxDtmfDigitDetected));
+  rx->squelchOpen.connect(mem_fun(*this, &RfUplink::rxSquelchOpen));
+  rx->signalLevelUpdated.connect(mem_fun(*this, &RfUplink::rxSignalLevelUpdated));
+  rx->dtmfDigitDetected.connect(mem_fun(*this, &RfUplink::rxDtmfDigitDetected));
   rx->reset();
   rx->mute(false);
   AudioSource *prev_src = rx;
@@ -214,14 +214,14 @@ bool RfUplink::initialize(void)
     uplink_rx = 0;
     return false;
   }
-  uplink_rx->squelchOpen.connect(slot(*this, &RfUplink::uplinkRxSquelchOpen));
+  uplink_rx->squelchOpen.connect(mem_fun(*this, &RfUplink::uplinkRxSquelchOpen));
   uplink_rx->dtmfDigitDetected.connect(
-      slot(*this, &RfUplink::uplinkRxDtmfRcvd));
+      mem_fun(*this, &RfUplink::uplinkRxDtmfRcvd));
   uplink_rx->reset();
   uplink_rx->mute(false);
   if (mute_rx_on_tx)
   {
-    uplink_tx->transmitterStateChange.connect(slot(*uplink_rx, &Rx::mute));
+    uplink_tx->transmitterStateChange.connect(mem_fun(*uplink_rx, &Rx::mute));
   }
   prev_src = uplink_rx;
   

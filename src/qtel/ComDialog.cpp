@@ -35,6 +35,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 
+#include <sigc++/sigc++.h>
+
 #include <QString>
 #include <QLabel>
 #include <QPushButton>
@@ -85,7 +87,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace SigC;
+using namespace sigc;
 using namespace Async;
 using namespace EchoLink;
 
@@ -181,16 +183,19 @@ ComDialog::ComDialog(Directory& dir, const QString& remote_host)
   
   init();
   dns = new DnsLookup(remote_host.toStdString());
-  dns->resultsReady.connect(slot(*this, &ComDialog::dnsResultsReady));
+  dns->resultsReady.connect(mem_fun(*this, &ComDialog::dnsResultsReady));
 } /* ComDialog::ComDialog */
 
 
 ComDialog::~ComDialog(void)
 {
-  Settings::instance()->setVoxParams(vox->enabled(), vox->threshold(),
-      	      	      	      	     vox->delay());
-				     
-  delete vox;
+  delete con;
+  if (vox != 0)
+  {
+    Settings::instance()->setVoxParams(vox->enabled(), vox->threshold(),
+      	      	      	      	       vox->delay());
+    delete vox;
+  }
   delete dns;
   delete ptt_valve;
   delete tx_audio_splitter;
@@ -198,7 +203,6 @@ ComDialog::~ComDialog(void)
   delete rem_audio_fifo;
   delete mic_audio_io;
   delete spkr_audio_io;
-  delete con;
 } /* ComDialog::~ComDialog */
 
 
@@ -221,11 +225,46 @@ void ComDialog::setRemoteParams(const QString& priv)
 } /* ComDialog::setRemoteParams */
 
 
+
 /****************************************************************************
  *
  * Protected member functions
  *
  ****************************************************************************/
+
+void ComDialog::keyPressEvent(QKeyEvent *ke)
+{
+  if (!ctrl_pressed && !ke->text().isEmpty() &&
+      (ke->key() != Qt::Key_Space) && (ke->key() != Qt::Key_Tab) &&
+      (ke->key() != Qt::Key_Escape) && chat_outgoing->isEnabled())
+  {
+    chat_outgoing->setFocus();
+  }
+  
+  if (ke->key() == Qt::Key_Control)
+  {
+    ptt_button->setCheckable(true);
+    ctrl_pressed = true;
+  }
+
+  ke->ignore();
+  QDialog::keyPressEvent(ke);
+} /* ComDialog::keyPressEvent */
+
+
+void ComDialog::keyReleaseEvent(QKeyEvent *ke)
+{
+  if (ke->key() == Qt::Key_Control)
+  {
+    if (!is_transmitting)
+    {
+      ptt_button->setCheckable(false);
+    }
+    ctrl_pressed = false;
+  }
+  ke->ignore();
+  QDialog::keyReleaseEvent(ke);
+} /* ComDialog::keyReleaseEvent */
 
 
 
@@ -337,46 +376,11 @@ void ComDialog::init(const QString& remote_name)
   
   ptt_button->installEventFilter(this);
   
-  dir.stationListUpdated.connect(slot(*this, &ComDialog::onStationListUpdated));
+  dir.stationListUpdated.connect(mem_fun
+    (*this, &ComDialog::onStationListUpdated));
   
   orig_background_color = rx_indicator->palette().color(QPalette::Window);
 } /* ComDialog::init */
-
-
-bool ComDialog::eventFilter(QObject *watched, QEvent *e)
-{
-  if (e->type() == QEvent::KeyPress)
-  {
-    QKeyEvent *ke = (QKeyEvent*)e;
-    if (!ke->text().isEmpty() && (ke->key() != Qt::Key_Space) &&
-	(ke->key() != Qt::Key_Tab) && (ke->key() != Qt::Key_Escape))
-    {
-      chat_outgoing->setFocus();
-      chat_outgoing->insert(ke->text());
-      return TRUE;
-    }
-    
-    if (ke->key() == Qt::Key_Control)
-    {
-      ptt_button->setCheckable(true);
-      ctrl_pressed = true;
-    }
-  } 
-  else if (e->type() == QEvent::KeyRelease)
-  {
-    QKeyEvent *ke = (QKeyEvent*)e;
-    if (ke->key() == Qt::Key_Control)
-    {
-      if (!is_transmitting)
-      {
-      	ptt_button->setCheckable(false);
-      }
-      ctrl_pressed = false;
-    }
-  }
-  
-  return FALSE;
-}
 
 
 void ComDialog::updateStationData(const StationData *station)
@@ -414,10 +418,10 @@ void ComDialog::createConnection(const StationData *station)
     return;
   }
   
-  con->infoMsgReceived.connect(slot(*this, &ComDialog::infoMsgReceived));
-  con->chatMsgReceived.connect(slot(*this, &ComDialog::chatMsgReceived));
-  con->stateChange.connect(slot(*this, &ComDialog::stateChange));
-  con->isReceiving.connect(slot(*this, &ComDialog::isReceiving));
+  con->infoMsgReceived.connect(mem_fun(*this, &ComDialog::infoMsgReceived));
+  con->chatMsgReceived.connect(mem_fun(*this, &ComDialog::chatMsgReceived));
+  con->stateChange.connect(mem_fun(*this, &ComDialog::stateChange));
+  con->isReceiving.connect(mem_fun(*this, &ComDialog::isReceiving));
   con->registerSink(rem_audio_fifo);
   ptt_valve->registerSink(con);
   
@@ -742,7 +746,7 @@ bool ComDialog::isChatText(const QString& msg)
     // optional "-L" or "-R". To be classified as a chat message a ">" must
     // directly follow the callsign.
   QRegExp rexp("^[A-Z0-9]{3,7}(?:-[RL])?>");
-  return (rexp.exactMatch(msg) == 0);
+  return msg.contains(rexp);
 }
 
 

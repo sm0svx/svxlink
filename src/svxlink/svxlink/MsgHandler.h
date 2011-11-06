@@ -120,7 +120,7 @@ class QueueItem;
 
 This class handles the playback of audio clips.
 */
-class MsgHandler : public SigC::Object, public Async::AudioSource
+class MsgHandler : public sigc::trackable, public Async::AudioSource
 {
   public:
     /**
@@ -206,7 +206,7 @@ class MsgHandler : public SigC::Object, public Async::AudioSource
     /**
      * @brief 	A signal that is emitted when all messages has been written
      */
-    SigC::Signal0<void>       	    allMsgsWritten;
+    sigc::signal<void>       	    allMsgsWritten;
     
     /**
      * @brief Resume audio output to the sink

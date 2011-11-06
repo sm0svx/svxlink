@@ -327,7 +327,8 @@ bool AudioDeviceOSS::openDevice(Mode mode)
   {
     read_watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
     assert(read_watch != 0);
-    read_watch->activity.connect(slot(*this, &AudioDeviceOSS::audioReadHandler));
+    read_watch->activity.connect(
+        mem_fun(*this, &AudioDeviceOSS::audioReadHandler));
     arg |= PCM_ENABLE_INPUT;
   }
   
@@ -336,7 +337,7 @@ bool AudioDeviceOSS::openDevice(Mode mode)
     write_watch = new FdWatch(fd, FdWatch::FD_WATCH_WR);
     assert(write_watch != 0);
     write_watch->activity.connect(
-      	    slot(*this, &AudioDeviceOSS::writeSpaceAvailable));
+      	mem_fun(*this, &AudioDeviceOSS::writeSpaceAvailable));
     arg |= PCM_ENABLE_OUTPUT;
   }
   

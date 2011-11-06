@@ -91,7 +91,7 @@ using namespace SigC;
  *
  ****************************************************************************/
 
-class DtmfToneDetector : public SigC::Object
+class DtmfToneDetector : public sigc::trackable
 {
   public:
     DtmfToneDetector(bool is_row, int pos, int fq)
@@ -132,7 +132,7 @@ class DtmfToneDetector : public SigC::Object
       return count;
     }
     
-    SigC::Signal3<void, bool, int, bool>  activated;
+    sigc::signal<void, bool, int, bool>  activated;
     
   private:
     bool      	  is_row;
