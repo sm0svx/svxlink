@@ -110,7 +110,7 @@ namespace Async
 
 This is the base class for implementing an audio encoder.
 */
-class AudioEncoder : public AudioSink, public SigC::Object
+class AudioEncoder : public AudioSink, public sigc::trackable
 {
   public:
     static AudioEncoder *create(const std::string &name);
@@ -163,12 +163,12 @@ class AudioEncoder : public AudioSink, public SigC::Object
      * @param 	buf  Buffer containing encoded samples
      * @param 	size The size of the buffer
      */
-    SigC::Signal2<void,const void *,int> writeEncodedSamples;
+    sigc::signal<void,const void *,int> writeEncodedSamples;
     
     /**
      * @brief This signal is emitted when the source calls flushSamples
      */
-    SigC::Signal0<void> flushEncodedSamples;
+    sigc::signal<void> flushEncodedSamples;
     
   
   protected:

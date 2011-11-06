@@ -415,7 +415,7 @@ bool LocalRx::initialize(void)
     return false;
   }
   
-  squelch_det->squelchOpen.connect(slot(*this, &LocalRx::onSquelchOpen));
+  squelch_det->squelchOpen.connect(mem_fun(*this, &LocalRx::onSquelchOpen));
   splitter->addSink(squelch_det, true);
 
     // Create the configured type of DTMF decoder and add it to the splitter
@@ -426,9 +426,9 @@ bool LocalRx::initialize(void)
     return false;
   }
 
-  dtmf_dec->digitActivated.connect(slot(*this, &LocalRx::dtmfDigitActivated));
+  dtmf_dec->digitActivated.connect(mem_fun(*this, &LocalRx::dtmfDigitActivated));
   dtmf_dec->digitDeactivated.connect(
-      slot(*this, &LocalRx::dtmfDigitDeactivated));
+      mem_fun(*this, &LocalRx::dtmfDigitDeactivated));
   splitter->addSink(dtmf_dec, true);
   
    // creates a selective multiple tone detector object
@@ -442,7 +442,7 @@ bool LocalRx::initialize(void)
           << name() << "\"\n";
       return false;
     }
-    sel5_dec->sequenceDetected.connect(slot(*this, &LocalRx::sel5Detected));
+    sel5_dec->sequenceDetected.connect(mem_fun(*this, &LocalRx::sel5Detected));
     splitter->addSink(sel5_dec, true);
   }
 
@@ -460,7 +460,7 @@ bool LocalRx::initialize(void)
     // Create the state detector
   AudioStreamStateDetector *state_det = new AudioStreamStateDetector;
   state_det->sigStreamStateChanged.connect(
-            slot(*this, &LocalRx::audioStreamStateChange));
+            mem_fun(*this, &LocalRx::audioStreamStateChange));
   prev_src->registerSink(state_det, true);
   prev_src = state_det;
 
@@ -512,7 +512,7 @@ bool LocalRx::initialize(void)
     ToneDetector *calldet = new ToneDetector(1750, 50, 100);
     assert(calldet != 0);
     calldet->setPeakThresh(13);
-    calldet->activated.connect(slot(*this, &LocalRx::tone1750detected));
+    calldet->activated.connect(mem_fun(*this, &LocalRx::tone1750detected));
     splitter->addSink(calldet, true);
     cout << "Enabling 1750Hz muting\n";
   }
@@ -565,7 +565,7 @@ bool LocalRx::addToneDetector(float fq, int bw, float thresh,
   ToneDetector *det = new ToneDetector(fq, bw, required_duration);
   assert(det != 0);
   det->setPeakThresh(thresh);
-  det->detected.connect(toneDetected.slot());
+  det->detected.connect(toneDetected.make_slot());
   
   tone_dets->addSink(det, true);
   

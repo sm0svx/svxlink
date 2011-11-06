@@ -120,7 +120,7 @@ This class is used to handle an existing TCP connection. It is not meant to
 be used directly but could be. It it mainly created to handle connections
 for Async::TcpClient and Async::TcpServer.
 */
-class TcpConnection : public SigC::Object
+class TcpConnection : public sigc::trackable
 {
   public:
     /**
@@ -210,7 +210,7 @@ class TcpConnection : public SigC::Object
      * @param 	con   	The connection object
      * @param 	reason  The reason for the disconnect
      */
-    SigC::Signal2<void, TcpConnection *, DisconnectReason> disconnected;
+    sigc::signal<void, TcpConnection *, DisconnectReason> disconnected;
     
     /**
      * @brief 	A signal that is emitted when data has been received on the
@@ -226,14 +226,14 @@ class TcpConnection : public SigC::Object
      * and presented again to the slot when more data arrives. The new data
      * will be appended to the old data.
      */
-    SigC::Signal3<int, TcpConnection *, void *, int> dataReceived;
+    sigc::signal<int, TcpConnection *, void *, int> dataReceived;
     
     /**
      * @brief 	A signal that is emitted when the send buffer status changes
      * @param 	is_full Set to \em true if the buffer is full or \em false
      *	      	      	if a buffer full condition has been cleared
      */
-    SigC::Signal1<void, bool> sendBufferFull;
+    sigc::signal<void, bool> sendBufferFull;
 
         
   protected:

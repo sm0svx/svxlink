@@ -141,7 +141,7 @@ your application would be something like the code below.
 
 \include EchoLinkDispatcher_demo.cpp
 */
-class Dispatcher : public SigC::Object
+class Dispatcher : public sigc::trackable
 {
   public:
     /**
@@ -187,7 +187,7 @@ class Dispatcher : public SigC::Object
      * This signal is emitted when a remote station tries to connect. It will be
      * emitted every time a connect datagram is received.
      */
-    SigC::Signal4<void, const Async::IpAddress&, const std::string&,
+    sigc::signal<void, const Async::IpAddress&, const std::string&,
       	      	  const std::string&, const std::string&> incomingConnection;
     
   protected:

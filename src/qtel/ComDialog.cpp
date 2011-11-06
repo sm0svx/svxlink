@@ -35,6 +35,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 
+#include <sigc++/sigc++.h>
+
 #include <QString>
 #include <QLabel>
 #include <QPushButton>
@@ -85,7 +87,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace SigC;
+using namespace sigc;
 using namespace Async;
 using namespace EchoLink;
 
@@ -181,7 +183,7 @@ ComDialog::ComDialog(Directory& dir, const QString& remote_host)
   
   init();
   dns = new DnsLookup(remote_host.toStdString());
-  dns->resultsReady.connect(slot(*this, &ComDialog::dnsResultsReady));
+  dns->resultsReady.connect(mem_fun(*this, &ComDialog::dnsResultsReady));
 } /* ComDialog::ComDialog */
 
 
@@ -374,7 +376,8 @@ void ComDialog::init(const QString& remote_name)
   
   ptt_button->installEventFilter(this);
   
-  dir.stationListUpdated.connect(slot(*this, &ComDialog::onStationListUpdated));
+  dir.stationListUpdated.connect(mem_fun
+    (*this, &ComDialog::onStationListUpdated));
   
   orig_background_color = rx_indicator->palette().color(QPalette::Window);
 } /* ComDialog::init */
@@ -415,10 +418,10 @@ void ComDialog::createConnection(const StationData *station)
     return;
   }
   
-  con->infoMsgReceived.connect(slot(*this, &ComDialog::infoMsgReceived));
-  con->chatMsgReceived.connect(slot(*this, &ComDialog::chatMsgReceived));
-  con->stateChange.connect(slot(*this, &ComDialog::stateChange));
-  con->isReceiving.connect(slot(*this, &ComDialog::isReceiving));
+  con->infoMsgReceived.connect(mem_fun(*this, &ComDialog::infoMsgReceived));
+  con->chatMsgReceived.connect(mem_fun(*this, &ComDialog::chatMsgReceived));
+  con->stateChange.connect(mem_fun(*this, &ComDialog::stateChange));
+  con->isReceiving.connect(mem_fun(*this, &ComDialog::isReceiving));
   con->registerSink(rem_audio_fifo);
   ptt_valve->registerSink(con);
   

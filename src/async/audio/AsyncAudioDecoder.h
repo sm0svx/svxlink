@@ -110,7 +110,7 @@ namespace Async
 
 This is the base class for an audio decoder.
 */
-class AudioDecoder : public AudioSource, public SigC::Object
+class AudioDecoder : public AudioSource, public sigc::trackable
 {
   public:
     static AudioDecoder *create(const std::string &name);
@@ -167,7 +167,7 @@ class AudioDecoder : public AudioSource, public SigC::Object
     /**
      * @brief This signal is emitted when all encoded samples have been flushed
      */
-    SigC::Signal0<void> allEncodedSamplesFlushed;
+    sigc::signal<void> allEncodedSamplesFlushed;
     
 
   protected:

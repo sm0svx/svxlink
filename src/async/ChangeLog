@@ -1,3 +1,11 @@
+ 0.19.0 -- ?? ??? 2011
+-----------------------
+
+* Moved from sigc++ version 1.2 to version 2.
+  Patch contributed by Felix/WU8K.
+
+
+
  0.18.1 -- 05 nov 2011
 -----------------------
 

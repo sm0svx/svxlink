@@ -88,7 +88,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-using namespace SigC;
+using namespace sigc;
 using namespace SvxLink;
 
 
@@ -267,7 +267,9 @@ int main(int argc, char **argv)
       exit(1);
     }
     stdout_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
-    stdout_watch->activity.connect(slot(&stdout_handler));
+    // must explicitly specify name space for ptr_fun() to avoid conflict
+    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
+    stdout_watch->activity.connect(sigc::ptr_fun(&stdout_handler));
 
       /* Redirect stdout to the logpipe */
     if (close(STDOUT_FILENO) == -1)
@@ -510,7 +512,9 @@ int main(int argc, char **argv)
     tcsetattr(STDIN_FILENO, TCSANOW, &termios);
 
     stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
-    stdin_watch->activity.connect(slot(&stdinHandler));
+    // must explicitly specify name space for ptr_fun() to avoid conflict
+    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
+    stdin_watch->activity.connect(sigc::ptr_fun(&stdinHandler));
   }
   
   NetRxAdapterFactory net_rx_adapter_factory;

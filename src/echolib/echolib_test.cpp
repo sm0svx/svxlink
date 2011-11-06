@@ -228,9 +228,9 @@ int main( int argc, const char **argv )
   CppApplication app;
     
   dir = new Directory(SERVER_NAME, my_callsign, my_password, my_location);
-  dir->error.connect(SigC::slot(&on_error_msg));
-  dir->statusChanged.connect(SigC::slot(&on_status_changed));
-  dir->stationListUpdated.connect(SigC::slot(&on_station_list_updated));
+  dir->error.connect(sigc::ptr_fun(&on_error_msg));
+  dir->statusChanged.connect(sigc::ptr_fun(&on_status_changed));
+  dir->stationListUpdated.connect(sigc::ptr_fun(&on_station_list_updated));
     
   process_next_stage();
   
@@ -376,7 +376,7 @@ static void process_next_stage(void)
 	  break;
 	}
 	echolink_qso->setVoxLimit(vox_limit);
-	echolink_qso->done.connect(SigC::slot(&echolink_qso_done));
+	echolink_qso->done.connect(sigc::ptr_fun(&echolink_qso_done));
       }
       else
       {
@@ -494,7 +494,7 @@ static void on_station_list_updated(void)
 	  process_next_stage();
 	  break;
 	}
-	echolink_qso->done.connect(SigC::slot(&echolink_qso_done));
+	echolink_qso->done.connect(sigc::ptr_fun(&echolink_qso_done));
       }
       else
       {

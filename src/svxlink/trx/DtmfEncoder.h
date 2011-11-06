@@ -111,7 +111,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 A_detailed_class_description
 */
-class DtmfEncoder : public Async::AudioSource, SigC::Object
+class DtmfEncoder : public Async::AudioSource, sigc::trackable
 {
   public:
     /**
@@ -158,7 +158,7 @@ class DtmfEncoder : public Async::AudioSource, SigC::Object
     /*
      * @brief A signal that is emitted when all digits have been sent.
      */
-    SigC::Signal0<void> allDigitsSent;
+    sigc::signal<void> allDigitsSent;
 
 
   protected:

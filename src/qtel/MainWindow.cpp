@@ -36,6 +36,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 
+#include <sigc++/sigc++.h>
+
 #include <QStatusBar>
 #include <QTimer>
 #include <QMessageBox>
@@ -195,13 +197,14 @@ MainWindow::MainWindow(Directory &dir)
 
   AudioIO::setChannels(1);
   
-  dir.error.connect(slot(*this, &MainWindow::serverError));
-  dir.statusChanged.connect(slot(*this, &MainWindow::statusChanged));
+  dir.error.connect(mem_fun(*this, &MainWindow::serverError));
+  dir.statusChanged.connect(mem_fun(*this, &MainWindow::statusChanged));
   dir.stationListUpdated.connect(
-      slot(*this, &MainWindow::callsignListUpdated));
+      mem_fun(*this, &MainWindow::callsignListUpdated));
   
   EchoLink::Dispatcher *disp = EchoLink::Dispatcher::instance();
-  disp->incomingConnection.connect(slot(*this, &MainWindow::incomingConnection));
+  disp->incomingConnection.connect(
+    mem_fun(*this, &MainWindow::incomingConnection));
 
   status_indicator = new QLabel(statusBar());
   status_indicator->setPixmap(QPixmap(":/icons/images/offline_icon.xpm"));
@@ -229,7 +232,7 @@ MainWindow::MainWindow(Directory &dir)
   }
   
   Settings::instance()->configurationUpdated.connect(
-      slot(*this, &MainWindow::configurationUpdated));
+      mem_fun(*this, &MainWindow::configurationUpdated));
   
   bookmark_model = new EchoLinkDirectoryModel(this);
   conf_model = new EchoLinkDirectoryModel(this);
@@ -442,7 +445,8 @@ void MainWindow::initMsgAudioIo(void)
   msg_audio_io =
       new AudioIO(Settings::instance()->spkrAudioDevice().toStdString(), 0);
   msg_handler = new MsgHandler(msg_audio_io->sampleRate());
-  msg_handler->allMsgsWritten.connect(slot(*this, &MainWindow::allMsgsWritten));
+  msg_handler->allMsgsWritten.connect(
+    mem_fun(*this, &MainWindow::allMsgsWritten));
   msg_audio_io->registerSource(msg_handler);
   
 } /* MainWindow::initMsgAudioIo */

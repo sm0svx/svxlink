@@ -131,7 +131,7 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
 {
   heartbeat_timer = new Timer(10000);
   heartbeat_timer->setEnable(false);
-  heartbeat_timer->expired.connect(slot(*this, &NetUplink::heartbeat));
+  heartbeat_timer->expired.connect(mem_fun(*this, &NetUplink::heartbeat));
 } /* NetUplink::NetUplink */
 
 
@@ -168,24 +168,24 @@ bool NetUplink::initialize(void)
   {
     mute_tx_timer = new Timer(mute_tx_on_rx);
     mute_tx_timer->setEnable(false);
-    mute_tx_timer->expired.connect(slot(*this, &NetUplink::unmuteTx));
+    mute_tx_timer->expired.connect(mem_fun(*this, &NetUplink::unmuteTx));
   }
   
   server = new TcpServer(listen_port);
-  server->clientConnected.connect(slot(*this, &NetUplink::clientConnected));
+  server->clientConnected.connect(mem_fun(*this, &NetUplink::clientConnected));
   server->clientDisconnected.connect(
-      slot(*this, &NetUplink::clientDisconnected));
+      mem_fun(*this, &NetUplink::clientDisconnected));
   
   rx->reset();
-  rx->squelchOpen.connect(slot(*this, &NetUplink::squelchOpen));
-  rx->dtmfDigitDetected.connect(slot(*this, &NetUplink::dtmfDigitDetected));
-  rx->toneDetected.connect(slot(*this, &NetUplink::toneDetected));
+  rx->squelchOpen.connect(mem_fun(*this, &NetUplink::squelchOpen));
+  rx->dtmfDigitDetected.connect(mem_fun(*this, &NetUplink::dtmfDigitDetected));
+  rx->toneDetected.connect(mem_fun(*this, &NetUplink::toneDetected));
   rx->selcallSequenceDetected.connect(
-      slot(*this, &NetUplink::selcallSequenceDetected));
+      mem_fun(*this, &NetUplink::selcallSequenceDetected));
   
-  tx->txTimeout.connect(slot(*this, &NetUplink::txTimeout));
+  tx->txTimeout.connect(mem_fun(*this, &NetUplink::txTimeout));
   tx->transmitterStateChange.connect(
-      slot(*this, &NetUplink::transmitterStateChange));
+      mem_fun(*this, &NetUplink::transmitterStateChange));
   
   rx_splitter = new AudioSplitter;
   rx->registerSink(rx_splitter);
@@ -253,7 +253,7 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
     audio_dec = 0;
     
     con = incoming_con;
-    con->dataReceived.connect(slot(*this, &NetUplink::tcpDataReceived));
+    con->dataReceived.connect(mem_fun(*this, &NetUplink::tcpDataReceived));
     recv_exp = sizeof(Msg);
     recv_cnt = 0;
     heartbeat_timer->setEnable(true);
@@ -499,9 +499,9 @@ void NetUplink::handleMsg(Msg *msg)
       if (audio_enc != 0)
       {
         audio_enc->writeEncodedSamples.connect(
-                slot(*this, &NetUplink::writeEncodedSamples));
+                mem_fun(*this, &NetUplink::writeEncodedSamples));
         audio_enc->flushEncodedSamples.connect(
-                slot(*audio_enc, &AudioEncoder::allEncodedSamplesFlushed));
+                mem_fun(*audio_enc, &AudioEncoder::allEncodedSamplesFlushed));
         //audio_enc->registerSource(rx);
 	rx_splitter->addSink(audio_enc);
         cout << name << ": Using CODEC \"" << audio_enc->name()
@@ -534,7 +534,7 @@ void NetUplink::handleMsg(Msg *msg)
       {
         audio_dec->registerSink(fifo);
         audio_dec->allEncodedSamplesFlushed.connect(
-            slot(*this, &NetUplink::allEncodedSamplesFlushed));
+            mem_fun(*this, &NetUplink::allEncodedSamplesFlushed));
         cout << name << ": Using CODEC \"" << audio_dec->name()
              << "\" to decode TX audio\n";
 	

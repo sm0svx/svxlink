@@ -271,7 +271,7 @@ void AudioMixer::setAudioAvailable(void)
   {
     delayed_exec_timer = new Timer(0);
     delayed_exec_timer->expired.connect(
-      	    slot(*this, &AudioMixer::outputHandler));
+      	    mem_fun(*this, &AudioMixer::outputHandler));
   }
 } /* AudioMixer::setAudioAvailable */
 
@@ -296,7 +296,7 @@ void AudioMixer::flushSamples(void)
   {
     delayed_exec_timer = new Timer(0);
     delayed_exec_timer->expired.connect(
-      	    slot(*this, &AudioMixer::outputHandler));
+      	    mem_fun(*this, &AudioMixer::outputHandler));
   }
   
 #if 0

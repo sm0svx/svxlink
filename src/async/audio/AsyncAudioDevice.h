@@ -119,7 +119,7 @@ class is not intended to be used by the end user of the Async library. It is
 used by the Async::AudioIO class, which is the Async API frontend for using
 audio in an application.
 */
-class AudioDevice : public SigC::Object
+class AudioDevice : public sigc::trackable
 {
   public:
     /**

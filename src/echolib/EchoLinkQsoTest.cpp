@@ -70,7 +70,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace SigC;
+using namespace sigc;
 using namespace Async;
 using namespace EchoLink;
 
@@ -155,7 +155,7 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
   tcsetattr(STDIN_FILENO, TCSANOW, &termios);
   
   stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
-  stdin_watch->activity.connect(slot(*this, &EchoLinkQsoTest::stdinHandler));
+  stdin_watch->activity.connect(mem_fun(*this, &EchoLinkQsoTest::stdinHandler));
   
   //sigc_src = new SigCAudioSource;
   
@@ -174,10 +174,10 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
   sigc_sink = new SigCAudioSink;
   audio_io->registerSink(sigc_sink);
   sigc_sink->sigWriteSamples.connect(
-      slot(*this, &EchoLinkQsoTest::micAudioRead));
+      mem_fun(*this, &EchoLinkQsoTest::micAudioRead));
   
-  chatMsgReceived.connect(slot(*this, &EchoLinkQsoTest::chatMsg));
-  //audioReceived.connect(slot(*sigc_src, &SigCAudioSource::writeSamples));
+  chatMsgReceived.connect(mem_fun(*this, &EchoLinkQsoTest::chatMsg));
+  //audioReceived.connect(mem_fun(*sigc_src, &SigCAudioSource::writeSamples));
   
   cout << string("Audio device is ") << (full_duplex ? "" : "NOT ")
       << "full duplex capable\n";

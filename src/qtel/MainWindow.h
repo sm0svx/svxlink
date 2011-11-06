@@ -149,7 +149,7 @@ class EchoLinkDirectoryModel;
  *----------------------------------------------------------------------------
  */   
 class MainWindow : public QMainWindow, private Ui::MainWindowBase,
-		   public SigC::Object
+		   public sigc::trackable
 {
   Q_OBJECT
   

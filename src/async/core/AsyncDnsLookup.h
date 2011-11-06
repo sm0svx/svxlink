@@ -117,7 +117,7 @@ below.
 
 \include AsyncDnsLookup_demo.cpp
 */
-class DnsLookup : public SigC::Object
+class DnsLookup : public sigc::trackable
 {
   public:
     /**
@@ -153,7 +153,7 @@ class DnsLookup : public SigC::Object
      * @brief 	A signal to indicate that the query has been completed
      * @param 	dns A reference to the DNS object associated with the query
      */
-    SigC::Signal1<void, DnsLookup&> resultsReady;
+    sigc::signal<void, DnsLookup&> resultsReady;
     
     
   protected:
