@@ -178,9 +178,9 @@ PKG_CHECK_MODULES([SPEEX], [speex],
 AM_CONDITIONAL([USE_SPEEX], [test ${USE_SPEEX}])
 
 # look for libsigc++
-PKG_CHECK_MODULES([SIGC], [sigc++-1.2],
+PKG_CHECK_MODULES([SIGC], [sigc++-2.0],
   [],
-  [AC_MSG_ERROR(['libsigc++-1.2 is required'])]
+  [AC_MSG_ERROR(['libsigc++-2.0 is required'])]
 )
 
 # locate Tcl install path

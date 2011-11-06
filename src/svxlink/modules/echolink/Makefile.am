@@ -4,17 +4,10 @@ plugindir = @PLUGINDIR@
 plugin_LTLIBRARIES = ModuleEchoLink.la
 
 DIST_CPP = \
-		AprsTcpClient.cpp \
-		AprsUdpClient.cpp \
-		LocationInfo.cpp \
 		ModuleEchoLink.cpp \
 		QsoImpl.cpp
 
 DIST_H = \
-		AprsClient.h \
-		AprsTcpClient.h \
-		AprsUdpClient.h \
-		LocationInfo.h \
 		ModuleEchoLink.h \
 		multirate_filter_coeff.h \
 		QsoImpl.h
