@@ -349,6 +349,38 @@ proc vhfdx_fai_active {band} {
   }
 }
 
+#
+# Handle TEP opening
+#
+# band - The band the alert is for (e.g. 2m, 70cm etc)
+#
+proc vhfdx_tep_opening {band} {
+  playAlertSound
+  for {set i 0} {$i < 2} {set i [expr $i + 1]} {
+    playMsg "tep"
+    playMsg "opening_on"
+    playSilence 200
+    sayBand $band
+    playSilence 1000
+  }
+}
+
+#
+# Handle F2 opening
+#
+# band - The band the alert is for (e.g. 2m, 70cm etc)
+#
+proc vhfdx_f2_opening {band} {
+  playAlertSound
+  for {set i 0} {$i < 2} {set i [expr $i + 1]} {
+    playMsg "f2"
+    playMsg "opening_on"
+    playSilence 200
+    sayBand $band
+    playSilence 1000
+  }
+}
+
 
 # end of namespace
 }

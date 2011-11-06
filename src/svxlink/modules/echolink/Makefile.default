@@ -189,7 +189,7 @@ RPM_NAME := svxlink
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= $(SIGC_INCPATH) -I/usr/include/gsm -I/usr/include/tcl8.4
+INCPATH 	+= $(SIGC_INCPATH) -I/usr/include/gsm $(TCL_INCPATH)
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.

@@ -108,7 +108,7 @@ namespace Async
  * @brief A class that just passes the audio through and fires an event when
  *    	  the stream state changes.
  */
-class AudioStreamStateDetector : public AudioPassthrough, public SigC::Object
+class AudioStreamStateDetector : public AudioPassthrough, public sigc::trackable
 {
   public:
     /**
@@ -202,7 +202,7 @@ class AudioStreamStateDetector : public AudioPassthrough, public SigC::Object
      * @param is_active Is \em true if the stream is active
      * @param is_idle 	Is \em  true if the stream is idle
      */
-    SigC::Signal2<void, bool, bool> sigStreamStateChanged;
+    sigc::signal<void, bool, bool> sigStreamStateChanged;
     
     
   private:

@@ -1,10 +1,22 @@
- 0.18.1 -- ?? ??? 2011
+ 0.19.0 -- ?? ??? 2011
+-----------------------
+
+* Moved from sigc++ version 1.2 to version 2.
+  Patch contributed by Felix/WU8K.
+
+
+
+ 0.18.1 -- 05 nov 2011
 -----------------------
 
 * Bugfix in Async::AudioDelayLine: Calling "clear" while a "mute" was in
   effect would cancel the mute.
 
 * New methods IpAddress::isEmpty() and IpAddress::clear().
+
+* Bugfix in the OSS code: The audio device would not open when not using stdout as
+  the logging output due to an obscure bug in the OSS code. When not using stdout,
+  the audio device would open with fd 0, which was interpreted as and error.
 
 
 

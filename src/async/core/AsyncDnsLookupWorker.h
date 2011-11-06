@@ -141,7 +141,7 @@ class DnsLookupWorker
     /**
      * @brief 	A signal to indicate that the query has been completed
      */
-    SigC::Signal0<void> resultsReady;
+    sigc::signal<void> resultsReady;
     
   protected:
     

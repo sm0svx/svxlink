@@ -170,7 +170,7 @@ class TcpClient : public TcpConnection
     /**
      * @brief 	A signal that is emitted when a connection has been established
      */
-    SigC::Signal0<void>       	      	  connected;
+    sigc::signal<void>       	      	  connected;
     
         
   protected:

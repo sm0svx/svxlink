@@ -71,31 +71,19 @@ if which pkg-config > /dev/null 2>&1; then
     output "QT_INCPATH=$(pkg-config $QT_MODULES --cflags-only-I)"
     output "QT_CFLAGS=$(pkg-config $QT_MODULES --cflags-only-other)"
     QT_PREFIX=$(pkg-config QtCore --variable=prefix)
-  fi
-fi
-if [ -z "$QT_PREFIX" -a -n "$QTDIR" ]; then
-  info "yes (QTDIR)\n"
-  output "QT_LIBPATH=-L${QTDIR}/lib"
-  if [ -n "$(ls ${QTDIR}/lib/libqt-mt* 2> /dev/null)" ]; then
-    output "QT_LIBS=-lqt-mt"
+    QT_BIN="${QT_PREFIX}/bin"
+    output "QT_BIN=${QT_BIN}"
+    output "QT_MOC=${QT_BIN}/moc"
+    output "QT_UIC=${QT_BIN}/uic"
   else
-    output "QT_LIBS=-lqt"
+    info "no (optional)\n"
   fi
-  output "QT_INCPATH=-I${QTDIR}/include"
-  output "QT_CFLAGS="
-  QT_PREFIX=${QTDIR}
-fi
-if [ -n "$QT_PREFIX" ]; then
-  QT_BIN="${QT_PREFIX}/bin"
-  output "QT_BIN=${QT_BIN}"
-  output "QT_MOC=${QT_BIN}/moc"
-  output "QT_UIC=${QT_BIN}/uic"
 else
   info "no (optional)\n"
 fi
 
 # Checking for libsigc++
-sigc_version=1.2
+sigc_version=2.0
 info "--- Checking for sigc++ $sigc_version..."
 if which pkg-config > /dev/null 2>&1; then
   if pkg-config sigc++-$sigc_version; then
@@ -120,7 +108,8 @@ tclConfig=$(ls /usr/lib/tclConfig.sh /usr/lib/tcl8.*/tclConfig.sh \
 if [ -n "$tclConfig" -a -r "$tclConfig" ]; then
   . $tclConfig
   info "${TCL_VERSION}\n"
-  output "TCL_LIBS=-ltcl${TCL_VERSION}"
+  output "TCL_LIBS=${TCL_LIB_FLAG}"
+  output "TCL_INCPATH=${TCL_INCLUDE_SPEC}"
 else
   info "no (required)\n"
   exit_error

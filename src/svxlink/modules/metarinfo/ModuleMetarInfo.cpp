@@ -75,7 +75,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-using namespace SigC;
+using namespace sigc;
 using namespace SvxLink;
 
 
@@ -667,9 +667,9 @@ void ModuleMetarInfo::openConnection(void)
   std::string server = "weather.noaa.gov";
 
   con = new TcpClient(server, 80);
-  con->connected.connect(slot(*this, &ModuleMetarInfo::onConnected));
-  con->disconnected.connect(slot(*this, &ModuleMetarInfo::onDisconnected));
-  con->dataReceived.connect(slot(*this, &ModuleMetarInfo::onDataReceived));
+  con->connected.connect(mem_fun(*this, &ModuleMetarInfo::onConnected));
+  con->disconnected.connect(mem_fun(*this, &ModuleMetarInfo::onDisconnected));
+  con->dataReceived.connect(mem_fun(*this, &ModuleMetarInfo::onDataReceived));
   con->connect();
 
 } /* openConnection */

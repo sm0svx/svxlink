@@ -75,7 +75,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace SigC;
+using namespace sigc;
 using namespace Async;
 using namespace EchoLink;
 
@@ -351,10 +351,10 @@ bool ModuleEchoLink::initialize(void)
   
     // Initialize directory server communication
   dir = new Directory(server, mycall, password, location);
-  dir->statusChanged.connect(slot(*this, &ModuleEchoLink::onStatusChanged));
+  dir->statusChanged.connect(mem_fun(*this, &ModuleEchoLink::onStatusChanged));
   dir->stationListUpdated.connect(
-      	  slot(*this, &ModuleEchoLink::onStationListUpdated));
-  dir->error.connect(slot(*this, &ModuleEchoLink::onError));
+      	  mem_fun(*this, &ModuleEchoLink::onStationListUpdated));
+  dir->error.connect(mem_fun(*this, &ModuleEchoLink::onError));
   dir->makeOnline();
   
     // Start listening to the EchoLink UDP ports
@@ -366,7 +366,7 @@ bool ModuleEchoLink::initialize(void)
     return false;
   }
   Dispatcher::instance()->incomingConnection.connect(
-      slot(*this, &ModuleEchoLink::onIncomingConnection));
+      mem_fun(*this, &ModuleEchoLink::onIncomingConnection));
 
     // Create audio pipe chain for audio transmitted to the remote EchoLink
     // stations: <from core> -> Valve -> Splitter (-> QsoImpl ...)
@@ -894,12 +894,13 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->setRemoteCallsign(callsign);
   qso->setRemoteName(name);
   qso->setRemoteParams(priv);
-  qso->stateChange.connect(slot(*this, &ModuleEchoLink::onStateChange));
-  qso->chatMsgReceived.connect(slot(*this, &ModuleEchoLink::onChatMsgReceived));
-  qso->isReceiving.connect(slot(*this, &ModuleEchoLink::onIsReceiving));
+  qso->stateChange.connect(mem_fun(*this, &ModuleEchoLink::onStateChange));
+  qso->chatMsgReceived.connect(
+          mem_fun(*this, &ModuleEchoLink::onChatMsgReceived));
+  qso->isReceiving.connect(mem_fun(*this, &ModuleEchoLink::onIsReceiving));
   qso->audioReceivedRaw.connect(
-      	  slot(*this, &ModuleEchoLink::audioFromRemoteRaw));
-  qso->destroyMe.connect(slot(*this, &ModuleEchoLink::destroyQsoObject));
+      	  mem_fun(*this, &ModuleEchoLink::audioFromRemoteRaw));
+  qso->destroyMe.connect(mem_fun(*this, &ModuleEchoLink::destroyQsoObject));
 
   splitter->addSink(qso);
   selector->addSource(qso);
@@ -1141,7 +1142,7 @@ void ModuleEchoLink::getDirectoryList(Timer *timer)
       /* FIXME: Do we really need periodic updates of the directory list ? */
     dir_refresh_timer = new Timer(600000);
     dir_refresh_timer->expired.connect(
-      	    slot(*this, &ModuleEchoLink::getDirectoryList));
+      	    mem_fun(*this, &ModuleEchoLink::getDirectoryList));
   }
 } /* ModuleEchoLink::getDirectoryList */
 
@@ -1208,12 +1209,13 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     qsos.push_back(qso);
     updateEventVariables();    
     qso->setRemoteCallsign(station.callsign());
-    qso->stateChange.connect(slot(*this, &ModuleEchoLink::onStateChange));
-    qso->chatMsgReceived.connect(slot(*this, &ModuleEchoLink::onChatMsgReceived));
-    qso->isReceiving.connect(slot(*this, &ModuleEchoLink::onIsReceiving));
+    qso->stateChange.connect(mem_fun(*this, &ModuleEchoLink::onStateChange));
+    qso->chatMsgReceived.connect(
+        mem_fun(*this, &ModuleEchoLink::onChatMsgReceived));
+    qso->isReceiving.connect(mem_fun(*this, &ModuleEchoLink::onIsReceiving));
     qso->audioReceivedRaw.connect(
-      	    slot(*this, &ModuleEchoLink::audioFromRemoteRaw));
-    qso->destroyMe.connect(slot(*this, &ModuleEchoLink::destroyQsoObject));
+      	    mem_fun(*this, &ModuleEchoLink::audioFromRemoteRaw));
+    qso->destroyMe.connect(mem_fun(*this, &ModuleEchoLink::destroyQsoObject));
 
     splitter->addSink(qso);
     selector->addSource(qso);
@@ -1421,7 +1423,7 @@ void ModuleEchoLink::connectByCallsign(string cmd)
   state = STATE_CONNECT_BY_CALL;
   delete cbc_timer;
   cbc_timer = new Timer(60000);
-  cbc_timer->expired.connect(slot(*this, &ModuleEchoLink::cbcTimeout));
+  cbc_timer->expired.connect(mem_fun(*this, &ModuleEchoLink::cbcTimeout));
 
 } /* ModuleEchoLink::connectByCallsign */
 

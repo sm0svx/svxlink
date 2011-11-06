@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <errno.h>
 #include <cstdlib>
 #include <cstdio>
+#include <cassert>
 
 
 /****************************************************************************
@@ -157,7 +158,7 @@ CppDnsLookupWorker::~CppDnsLookupWorker(void)
     ret = pthread_join(worker, &ud);
     if (ret != 0)
     {
-      cerr << "pthread_cancel: error " << ret << endl;
+      cerr << "pthread_join: error " << ret << endl;
     }
   }
   
@@ -200,7 +201,7 @@ bool CppDnsLookupWorker::doLookup(void)
   notifier_wr = fd[1];
   notifier_watch = new FdWatch(notifier_rd, FdWatch::FD_WATCH_RD);
   notifier_watch->activity.connect(
-      	  slot(*this, &CppDnsLookupWorker::notificationReceived));
+      	  mem_fun(*this, &CppDnsLookupWorker::notificationReceived));
   ret = pthread_create(&worker, NULL, workerFunc, this);
   if (ret != 0)
   {
@@ -287,7 +288,8 @@ void *CppDnsLookupWorker::workerFunc(void *w)
     worker->result = 0;
   }
   
-  (void)write(worker->notifier_wr, "D", 1);
+  ret = write(worker->notifier_wr, "D", 1);
+  assert(ret == 1);
   
   worker->done = true;
   

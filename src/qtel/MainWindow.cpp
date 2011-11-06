@@ -36,6 +36,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 
+#include <sigc++/sigc++.h>
+
 #include <QStatusBar>
 #include <QTimer>
 #include <QMessageBox>
@@ -195,13 +197,14 @@ MainWindow::MainWindow(Directory &dir)
 
   AudioIO::setChannels(1);
   
-  dir.error.connect(slot(*this, &MainWindow::serverError));
-  dir.statusChanged.connect(slot(*this, &MainWindow::statusChanged));
+  dir.error.connect(mem_fun(*this, &MainWindow::serverError));
+  dir.statusChanged.connect(mem_fun(*this, &MainWindow::statusChanged));
   dir.stationListUpdated.connect(
-      slot(*this, &MainWindow::callsignListUpdated));
+      mem_fun(*this, &MainWindow::callsignListUpdated));
   
   EchoLink::Dispatcher *disp = EchoLink::Dispatcher::instance();
-  disp->incomingConnection.connect(slot(*this, &MainWindow::incomingConnection));
+  disp->incomingConnection.connect(
+    mem_fun(*this, &MainWindow::incomingConnection));
 
   status_indicator = new QLabel(statusBar());
   status_indicator->setPixmap(QPixmap(":/icons/images/offline_icon.xpm"));
@@ -229,7 +232,7 @@ MainWindow::MainWindow(Directory &dir)
   }
   
   Settings::instance()->configurationUpdated.connect(
-      slot(*this, &MainWindow::configurationUpdated));
+      mem_fun(*this, &MainWindow::configurationUpdated));
   
   bookmark_model = new EchoLinkDirectoryModel(this);
   conf_model = new EchoLinkDirectoryModel(this);
@@ -238,6 +241,18 @@ MainWindow::MainWindow(Directory &dir)
   station_model = new EchoLinkDirectoryModel(this);
   updateBookmarkModel();
   station_view_selector->setCurrentRow(0);
+
+  QList<int> sizes = Settings::instance()->stationViewColSizes();
+  for (int i=0; i<sizes.size(); ++i)
+  {
+    station_view->setColumnWidth(i, sizes.at(i));
+  }
+  
+  sizes = Settings::instance()->incomingViewColSizes();
+  for (int i=0; i<sizes.size(); ++i)
+  {
+    incoming_con_view->setColumnWidth(i, sizes.at(i));
+  }
   
   initMsgAudioIo();
 } /* MainWindow::MainWindow */
@@ -252,6 +267,22 @@ MainWindow::~MainWindow(void)
   Settings::instance()->setMainWindowSize(size());
   Settings::instance()->setHSplitterSizes(hsplitter->sizes());
   Settings::instance()->setVSplitterSizes(vsplitter->sizes());
+  
+  QList<int> sizes;
+  int size;
+  for (int i=0; (size = station_view->columnWidth(i)) > 0; ++i)
+  {
+    sizes << size;
+  }
+  Settings::instance()->setStationViewColSizes(sizes);
+
+  sizes.clear();
+  for (int i=0; (size = incoming_con_view->columnWidth(i)) > 0; ++i)
+  {
+    sizes << size;
+  }
+  Settings::instance()->setIncomingViewColSizes(sizes);
+  
   dir.makeOffline();
 } /* MainWindow::~MainWindow */
 
@@ -413,8 +444,9 @@ void MainWindow::initMsgAudioIo(void)
   
   msg_audio_io =
       new AudioIO(Settings::instance()->spkrAudioDevice().toStdString(), 0);
-  msg_handler = new MsgHandler("/", msg_audio_io->sampleRate());
-  msg_handler->allMsgsWritten.connect(slot(*this, &MainWindow::allMsgsWritten));
+  msg_handler = new MsgHandler(msg_audio_io->sampleRate());
+  msg_handler->allMsgsWritten.connect(
+    mem_fun(*this, &MainWindow::allMsgsWritten));
   msg_audio_io->registerSource(msg_handler);
   
 } /* MainWindow::initMsgAudioIo */
@@ -502,8 +534,7 @@ void MainWindow::stationViewSelectorCurrentItemChanged(QListWidgetItem *current,
 
 void MainWindow::stationViewDoubleClicked(const QModelIndex &index)
 {
-  ComDialog *com_dialog = new ComDialog(dir, index.data(0).toString(), "?");
-  com_dialog->show();
+  connectionConnectToSelectedActionActivated();
 } /* MainWindow::stationViewDoubleClicked */
 
 

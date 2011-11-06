@@ -33,6 +33,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sigc++/sigc++.h>
+
 #include <QSettings>
 #include <QLineEdit>
 #include <QMessageBox>
@@ -102,6 +104,8 @@ using namespace std;
 #define CONF_MAIN_WINDOW_SIZE         "MainWindowSize"
 #define CONF_VSPLITTER_SIZES  	      "VSplitterSizes"
 #define CONF_HSPLITTER_SIZES  	      "HSplitterSizes"
+#define CONF_STN_VIEW_COL_SIZES	      "StationViewColumnSizes"
+#define CONF_INCM_VIEW_COL_SIZES      "IncomingViewColumnSizes"
 
 #define CONF_VOX_ENABLED      	      "VoxEnabled"
 #define CONF_VOX_THRESHOLD            "VoxThreshold"
@@ -424,6 +428,18 @@ void Settings::readSettings(void)
     m_hsplitter_sizes.push_back(130);
     m_hsplitter_sizes.push_back(540);
   }
+  m_stn_view_col_sizes.clear();
+  str_list = qsettings.value(CONF_STN_VIEW_COL_SIZES).toStringList();
+  foreach (QString size_str, str_list)
+  {
+    m_stn_view_col_sizes.push_back(atoi(size_str.toStdString().c_str()));
+  }
+  m_incm_view_col_sizes.clear();
+  str_list = qsettings.value(CONF_INCM_VIEW_COL_SIZES).toStringList();
+  foreach (QString size_str, str_list)
+  {
+    m_incm_view_col_sizes.push_back(atoi(size_str.toStdString().c_str()));
+  }
   
   m_vox_enabled = qsettings.value(CONF_VOX_ENABLED,
       CONF_VOX_ENABLED_DEFAULT).toBool();
@@ -482,6 +498,32 @@ void Settings::setHSplitterSizes(QList<int> sizes)
   QSettings qsettings;
   qsettings.setValue(CONF_HSPLITTER_SIZES, str_list);
 } /* Settings::setHSplitterSizes */
+
+
+void Settings::setStationViewColSizes(QList<int> sizes)
+{
+  m_stn_view_col_sizes = sizes;
+  QStringList str_list;
+  foreach (int size, sizes)
+  {
+    str_list.push_back(QString("%1").arg(size));
+  }
+  QSettings qsettings;
+  qsettings.setValue(CONF_STN_VIEW_COL_SIZES, str_list);
+} /* Settings::setStationViewColSizes */
+
+
+void Settings::setIncomingViewColSizes(QList<int> sizes)
+{
+  m_incm_view_col_sizes = sizes;
+  QStringList str_list;
+  foreach (int size, sizes)
+  {
+    str_list.push_back(QString("%1").arg(size));
+  }
+  QSettings qsettings;
+  qsettings.setValue(CONF_INCM_VIEW_COL_SIZES, str_list);
+} /* Settings::setStationViewColSizes */
 
 
 void Settings::setVoxParams(bool enabled, int threshold_db, int delay_ms)

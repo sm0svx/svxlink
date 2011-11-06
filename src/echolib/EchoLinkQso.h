@@ -146,7 +146,7 @@ exits.
 \include EchoLinkQso_demo.cpp
 */
 class Qso
-  : public SigC::Object, public Async::AudioSink, public Async::AudioSource
+  : public sigc::trackable, public Async::AudioSink, public Async::AudioSource
 {
   public:
     struct VoicePacket
@@ -376,19 +376,19 @@ class Qso
      * @brief A signal that is emitted when a station info message is received
      * @param msg The received message
      */
-    SigC::Signal1<void, const std::string&> infoMsgReceived;
+    sigc::signal<void, const std::string&> infoMsgReceived;
     
     /**
      * @brief A signal that is emitted when a chat message is received
      * @param msg The received chat message
      */
-    SigC::Signal1<void, const std::string&> chatMsgReceived;
+    sigc::signal<void, const std::string&> chatMsgReceived;
     
     /**
      * @brief A signal that is emitted when the connection state changes
      * @param state The new connection state
      */
-    SigC::Signal1<void, State> stateChange;
+    sigc::signal<void, State> stateChange;
     
     /**
      * @brief A signal that is emitted when the audio receive state changes
@@ -396,7 +396,7 @@ class Qso
      *	      	      	    \em false when not
      * @note This signal can be used to control a reception indicator
      */
-    SigC::Signal1<void, bool> isReceiving;
+    sigc::signal<void, bool> isReceiving;
     
     /**
      * @brief A signal that is emitted when an audio datagram has been received
@@ -407,7 +407,7 @@ class Qso
      * if the encoded data is going to be retransmitted. In this case it is
      * not good to decode and then encode the data again. It will sound awful.
      */
-    SigC::Signal1<void, RawPacket*>  audioReceivedRaw;
+    sigc::signal<void, RawPacket*>  audioReceivedRaw;
     
 
     /**

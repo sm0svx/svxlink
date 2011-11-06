@@ -1615,7 +1615,7 @@ fid_design_coef(double *coef, int n_coef, char *spec, double rate,
    int a, len;
    int cnt= 0;
    double gain= 1.0;
-   double *iir, *fir, iir_adj;
+   double *iir, *fir, iir_adj = 1.0;
    static double const_one= 1;
    int n_iir, n_fir;
    int iir_cbm, fir_cbm;

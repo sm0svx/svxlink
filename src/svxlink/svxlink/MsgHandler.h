@@ -7,8 +7,8 @@
 This file contains an object that handles the playback of audio clips.
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2004-2011  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -120,7 +120,7 @@ class QueueItem;
 
 This class handles the playback of audio clips.
 */
-class MsgHandler : public SigC::Object, public Async::AudioSource
+class MsgHandler : public sigc::trackable, public Async::AudioSource
 {
   public:
     /**
@@ -137,22 +137,38 @@ class MsgHandler : public SigC::Object, public Async::AudioSource
     /**
      * @brief 	Play a file
      * @param 	path The full path to the file to play
+     * @param   idle_marked Choose if the playback should be idle marked or not
+     *
+     * Use this function to play a file.
+     * If idle_marked is true, the isIdle function will return true when
+     * the file is being played.
      */
-    void playFile(const std::string& path, bool idle_marked);
+    void playFile(const std::string& path, bool idle_marked=false);
     
     /**
      * @brief 	Play the given number of milliseconds of silence
      * @param 	length The length in milliseconds of the silence
+     * @param   idle_marked Choose if the playback should be idle marked or not
+     *
+     * Use this function to play a given milliseconds of silence.
+     * If idle_marked is true, the isIdle function will return true when
+     * the silence is being played.
      */
-    void playSilence(int length, bool idle_marked);
+    void playSilence(int length, bool idle_marked=false);
     
     /**
      * @brief 	Play a sinus tone
      * @param 	fq The frequency of the tone to play
-     * @param 	amp The amplitude of the tone to play
+     * @param 	amp The amplitude of the tone to play (0-1000)
      * @param 	length The length in milliseconds of the tone to play
+     * @param   idle_marked Choose if the playback should be idle marked or not
+     *
+     * Use this function to play a sinus tone with the given frequency,
+     * amplitude and length.
+     * If idle_marked is true, the isIdle function will return true when
+     * the silence is being played.
      */
-    void playTone(int fq, int amp, int length, bool idle_marked);
+    void playTone(int fq, int amp, int length, bool idle_marked=false);
     
     /**
      * @brief 	Check if a message is beeing written
@@ -190,7 +206,7 @@ class MsgHandler : public SigC::Object, public Async::AudioSource
     /**
      * @brief 	A signal that is emitted when all messages has been written
      */
-    SigC::Signal0<void>       	    allMsgsWritten;
+    sigc::signal<void>       	    allMsgsWritten;
     
     /**
      * @brief Resume audio output to the sink

@@ -158,7 +158,7 @@ class CmdParser
 };  /* class CmdParser */
 
 
-class Command : public SigC::Object
+class Command : public sigc::trackable
 {
   public:
     /**
@@ -225,7 +225,7 @@ class Command : public SigC::Object
      *
      * This signal is emitted unless the operator() is reimplemented.
      */
-    SigC::Signal2<void, Command *, const std::string&> handleCmd;
+    sigc::signal<void, Command *, const std::string&> handleCmd;
 
   protected:
     /**

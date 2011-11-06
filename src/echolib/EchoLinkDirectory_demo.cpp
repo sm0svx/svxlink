@@ -8,16 +8,16 @@ using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-class MyClass : public SigC::Object
+class MyClass : public sigc::trackable
 {
   public:
     MyClass(const string& mycall, const string& mypass) : mycall(mycall)
     {
       dir = new Directory("server1.echolink.org", mycall, mypass, "Testing...");
-      dir->statusChanged.connect(slot(*this, &MyClass::onStatusChanged));
+      dir->statusChanged.connect(mem_fun(*this, &MyClass::onStatusChanged));
       dir->stationListUpdated.connect(
-	  slot(*this, &MyClass::onStationListUpdated));
-      dir->error.connect(slot(*this, &MyClass::onError));
+	  mem_fun(*this, &MyClass::onStationListUpdated));
+      dir->error.connect(mem_fun(*this, &MyClass::onError));
       dir->makeBusy();	// Set status busy so noone think we are really online
     }
     

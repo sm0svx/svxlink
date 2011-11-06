@@ -18,10 +18,6 @@ Can&apos;t create connection to</source>
 Kan verbinding niet maken naar</translation>
     </message>
     <message>
-        <source>Could not open audio device</source>
-        <translation type="obsolete">Kan audio device niet openen</translation>
-    </message>
-    <message>
         <source>Could not create connection to remote host</source>
         <translation>Kan geen verbinding maken naar remote host</translation>
     </message>
@@ -163,33 +159,6 @@ Kan verbinding niet maken naar</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <source>Add to bookmarks</source>
-        <translation type="obsolete">Favoriet toevoegen</translation>
-    </message>
-    <message>
-        <source>Remove from bookmarks</source>
-        <translation type="obsolete">Favoriet verwijderen</translation>
-    </message>
-    <message>
-        <source>Add named station...</source>
-        <translation type="obsolete">Roepnaam toevoegen...</translation>
-    </message>
-    <message>
-        <source>Ctrl+Q</source>
-        <comment>fileQuitAction</comment>
-        <translation type="obsolete">CTRL+Q</translation>
-    </message>
-    <message>
-        <source>F5</source>
-        <comment>directoryRefreshAction</comment>
-        <translation type="obsolete">F5</translation>
-    </message>
-    <message>
-        <source>Ctrl+B</source>
-        <comment>directoryBusyAction</comment>
-        <translation type="obsolete">CTRL+B</translation>
-    </message>
-    <message>
         <source>Logging off from directory server...</source>
         <translation>Uitloggen van directory server...</translation>
     </message>
@@ -264,10 +233,6 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
         <translation>Qtel - de Qt Echolink Client</translation>
     </message>
     <message>
-        <source>Explorer</source>
-        <translation type="obsolete">Verkenner</translation>
-    </message>
-    <message>
         <source>Conferences</source>
         <translation>Conferencies</translation>
     </message>
@@ -288,32 +253,8 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
         <translation>Favorieten</translation>
     </message>
     <message>
-        <source>Station</source>
-        <translation type="obsolete">Station</translation>
-    </message>
-    <message>
-        <source>Location/Description</source>
-        <translation type="obsolete">Locatie/Omschrijving</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation type="obsolete">Status</translation>
-    </message>
-    <message>
-        <source>Local time</source>
-        <translation type="obsolete">Lokale tijd</translation>
-    </message>
-    <message>
-        <source>Node ID</source>
-        <translation type="obsolete">Node nummer</translation>
-    </message>
-    <message>
         <source>Messages</source>
         <translation>Berichten</translation>
-    </message>
-    <message>
-        <source>Incoming connections</source>
-        <translation type="obsolete">Inkomende verbindingen</translation>
     </message>
     <message>
         <source>Accept</source>
@@ -344,100 +285,8 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
         <translation>&amp;Directory</translation>
     </message>
     <message>
-        <source>&amp;Settings</source>
-        <translation type="obsolete">&amp;Instellingen</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Help</translation>
-    </message>
-    <message>
-        <source>Undo</source>
-        <translation type="obsolete">Herstel</translation>
-    </message>
-    <message>
-        <source>&amp;Undo</source>
-        <translation type="obsolete">&amp;Herstel</translation>
-    </message>
-    <message>
-        <source>Ctrl+Z</source>
-        <translation type="obsolete">CTRL+Z</translation>
-    </message>
-    <message>
-        <source>Redo</source>
-        <translation type="obsolete">Opnieuw</translation>
-    </message>
-    <message>
-        <source>&amp;Redo</source>
-        <translation type="obsolete">&amp;Opnieuw</translation>
-    </message>
-    <message>
-        <source>Ctrl+Y</source>
-        <translation type="obsolete">CTRL+Y</translation>
-    </message>
-    <message>
-        <source>Cut</source>
-        <translation type="obsolete">Knippen</translation>
-    </message>
-    <message>
-        <source>&amp;Cut</source>
-        <translation type="obsolete">&amp;Knippen</translation>
-    </message>
-    <message>
-        <source>Ctrl+X</source>
-        <translation type="obsolete">CTRL+X</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation type="obsolete">Copieer</translation>
-    </message>
-    <message>
-        <source>C&amp;opy</source>
-        <translation type="obsolete">&amp;Copieer</translation>
-    </message>
-    <message>
-        <source>Ctrl+C</source>
-        <translation type="obsolete">CTRL+C</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation type="obsolete">Plakken</translation>
-    </message>
-    <message>
-        <source>&amp;Paste</source>
-        <translation type="obsolete">&amp;Plakken</translation>
-    </message>
-    <message>
-        <source>Ctrl+V</source>
-        <translation type="obsolete">CTRL+V</translation>
-    </message>
-    <message>
-        <source>Find</source>
-        <translation type="obsolete">Zoeken</translation>
-    </message>
-    <message>
-        <source>&amp;Find...</source>
-        <translation type="obsolete">&amp;Zoeken...</translation>
-    </message>
-    <message>
-        <source>Ctrl+F</source>
-        <translation type="obsolete">CTRL+F</translation>
-    </message>
-    <message>
-        <source>Contents</source>
-        <translation type="obsolete">Inhoud</translation>
-    </message>
-    <message>
-        <source>&amp;Contents...</source>
-        <translation type="obsolete">&amp;Inhoud...</translation>
-    </message>
-    <message>
-        <source>Index</source>
-        <translation type="obsolete">Index</translation>
-    </message>
-    <message>
-        <source>&amp;Index...</source>
-        <translation type="obsolete">&amp;Index...</translation>
     </message>
     <message>
         <source>About</source>
@@ -466,10 +315,6 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     <message>
         <source>Qtel Settings...</source>
         <translation>Qtel Instellingen...</translation>
-    </message>
-    <message>
-        <source>&amp;Qtel Settings...</source>
-        <translation type="obsolete">&amp;Qtel Instellingen...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
@@ -510,28 +355,6 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
     <message>
         <source>Connect to selected...</source>
         <translation>Verbinden met geselecteerd station...</translation>
-    </message>
-    <message>
-        <source>Disconnect</source>
-        <translation type="obsolete">Verbreek verbinding</translation>
-    </message>
-    <message>
-        <source>Add selected to Bookmarks</source>
-        <translation type="obsolete">Voeg geselecteerde toe aan favorieten</translation>
-    </message>
-    <message>
-        <source>Qtel v</source>
-        <translation type="obsolete">Qtel v</translation>
-    </message>
-    <message>
-        <source>- Qt EchoLink client.
-</source>
-        <translation type="obsolete">- Qt Echolink cient.
-</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation type="obsolete">Auteur</translation>
     </message>
     <message>
         <source>Incoming Connections</source>
@@ -699,20 +522,8 @@ Bericht</translation>
         <translation type="unfinished">Geluid</translation>
     </message>
     <message>
-        <source>Sound settings</source>
-        <translation type="obsolete">Geluid instellingen</translation>
-    </message>
-    <message>
-        <source>Audio device</source>
-        <translation type="obsolete">Geluidskaart</translation>
-    </message>
-    <message>
         <source>Full duplex</source>
         <translation type="unfinished">Full duplex</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation type="obsolete">De geluidskaart (b.v. /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
@@ -740,11 +551,11 @@ Bericht</translation>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation type="obsolete">Raw geluid bestanden (*.raw)</translation>
+        <translation type="unfinished">Raw geluid bestanden (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation type="obsolete">Kies een geluid bestand voor verbinding</translation>
+        <translation type="unfinished">Kies een geluid bestand voor verbinding</translation>
     </message>
     <message>
         <source>Chinese</source>

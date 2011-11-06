@@ -138,7 +138,7 @@ class SettingsDialog;
  * Bugs:      
  *----------------------------------------------------------------------------
  */   
-class Settings : public SigC::Object
+class Settings : public sigc::trackable
 {
   public:
     static Settings *instance(void);
@@ -176,6 +176,10 @@ class Settings : public SigC::Object
     void setVSplitterSizes(QList<int> sizes);
     QList<int> hSplitterSizes() const { return m_hsplitter_sizes; }
     void setHSplitterSizes(QList<int> sizes);
+    QList<int> stationViewColSizes() const { return m_stn_view_col_sizes; }
+    void setStationViewColSizes(QList<int> sizes);
+    QList<int> incomingViewColSizes() const { return m_incm_view_col_sizes; }
+    void setIncomingViewColSizes(QList<int> sizes);
     
     void setVoxParams(bool enabled, int threshold_db, int delay_ms);
     bool voxEnabled(void) const { return m_vox_enabled; }
@@ -185,7 +189,7 @@ class Settings : public SigC::Object
     void setConnectToIp(const QString &host);
     const QString& connectToIp(void) const { return m_connect_to_ip; }
     
-    SigC::Signal0<void> configurationUpdated;
+    sigc::signal<void> configurationUpdated;
     
   protected:
     
@@ -226,6 +230,8 @@ class Settings : public SigC::Object
     QSize     	            m_main_window_size;
     QList<int>              m_vsplitter_sizes;
     QList<int>              m_hsplitter_sizes;
+    QList<int>		    m_stn_view_col_sizes;
+    QList<int>		    m_incm_view_col_sizes;
     
     bool      	            m_vox_enabled;
     int       	            m_vox_threshold;

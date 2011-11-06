@@ -129,9 +129,9 @@ class SettingsDialog : public QDialog, public Ui::SettingsDialog
     {
       QString s = QFileDialog::getOpenFileName(
 			this,
-			tr("Choose a connect sound file"),
+			trUtf8("Choose a connect sound file"),
 			connect_sound->text(),
-			tr("Raw Sound Files (*.raw)"));
+			trUtf8("Raw Sound Files (*.raw)"));
       if (!s.isNull())
       {
 	connect_sound->setText(s);

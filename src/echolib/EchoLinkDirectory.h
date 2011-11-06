@@ -122,7 +122,7 @@ connected stations is shown below.
 
 \include EchoLinkDirectory_demo.cpp
 */
-class Directory : public SigC::Object
+class Directory : public sigc::trackable
 {
   public:
     static const unsigned MAX_DESCRIPTION_SIZE = 27;
@@ -338,18 +338,18 @@ class Directory : public SigC::Object
      * @brief A signal that is emitted when the registration status changes
      * @param status The new status
      */
-    SigC::Signal1<void, StationData::Status> statusChanged;
+    sigc::signal<void, StationData::Status> statusChanged;
     
     /**
      * @brief A signal that is emitted when the station list has been updated
      */
-    SigC::Signal0<void> stationListUpdated;
+    sigc::signal<void> stationListUpdated;
     
     /**
      * @brief A signal that is emitted when an error occurs
      * @param msg The error message
      */
-    SigC::Signal1<void, const std::string&> error;
+    sigc::signal<void, const std::string&> error;
     
   protected:
     

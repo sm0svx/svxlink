@@ -115,7 +115,7 @@ namespace Async
 @author Tobias Blomberg
 @date   2005-04-09
 */
-class EventHandler : public SigC::Object
+class EventHandler : public sigc::trackable
 {
   public:
     /**
@@ -159,14 +159,14 @@ class EventHandler : public SigC::Object
      *	      	back an audio file
      * @param 	filename The name of the file to plat
      */
-    SigC::Signal1<void, const std::string&> playFile;
+    sigc::signal<void, const std::string&> playFile;
     
     /**
      * @brief 	A signal that is emitted when the TCL script want to play
      *	      	back silence
      * @param 	duration  The duration of the silence in milliseconds
      */
-    SigC::Signal1<void, int>   	      	    playSilence;
+    sigc::signal<void, int>   	      	    playSilence;
 
     /**
      * @brief 	A signal that is emitted when the TCL script want to play
@@ -175,7 +175,7 @@ class EventHandler : public SigC::Object
      * @param 	amp   	  The tone amplitude to use (0-1000)
      * @param 	duration  The duration of the tone in milliseconds
      */
-    SigC::Signal3<void, int, int, int>      playTone;
+    sigc::signal<void, int, int, int>      playTone;
     
     /**
      * @brief 	A signal that is emitted when the TCL script want to start
@@ -183,19 +183,19 @@ class EventHandler : public SigC::Object
      * @param 	filename The name of the file to record the audio to
      * @param   max_time The maximum recording time in milliseconds
      */
-    SigC::Signal2<void, const std::string&, unsigned> recordStart;
+    sigc::signal<void, const std::string&, unsigned> recordStart;
     
     /**
      * @brief 	A signal that is emitted when the TCL script want to stop
      *	      	the current recording
      */
-    SigC::Signal0<void>       	      	    recordStop;
+    sigc::signal<void>       	      	    recordStop;
     
     /**
      * @brief 	A signal that is emitted when the TCL script want to deactivate
      *	      	the currently active module
      */
-    SigC::Signal0<void>       	      	    deactivateModule;
+    sigc::signal<void>       	      	    deactivateModule;
     
     
   protected:

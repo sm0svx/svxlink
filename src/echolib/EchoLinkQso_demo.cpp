@@ -6,7 +6,7 @@ using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-class MyClass : public SigC::Object
+class MyClass : public sigc::trackable
 {
   public:
     MyClass(void)
@@ -19,8 +19,8 @@ class MyClass : public SigC::Object
 	Application::app().quit();
 	return;
       }
-      qso->infoMsgReceived.connect(slot(*this, &MyClass::onInfoMsgReceived));
-      qso->stateChange.connect(slot(*this, &MyClass::onStateChange));
+      qso->infoMsgReceived.connect(mem_fun(*this, &MyClass::onInfoMsgReceived));
+      qso->stateChange.connect(mem_fun(*this, &MyClass::onStateChange));
       qso->connect();
     }
     

@@ -127,7 +127,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 @author Tobias Blomberg / SM0SVX
 @date   2003-04-15
 */
-class ToneDetector : public SigC::Object, public Async::AudioSink
+class ToneDetector : public sigc::trackable, public Async::AudioSink
 {
   public:
     ToneDetector(float tone_hz, float width_hz, int det_delay_ms = 0);
@@ -142,8 +142,8 @@ class ToneDetector : public SigC::Object, public Async::AudioSink
     
     virtual int writeSamples(const float *buf, int len);
 
-    SigC::Signal1<void, bool> activated;
-    SigC::Signal1<void, float> detected;
+    sigc::signal<void, bool> activated;
+    sigc::signal<void, float> detected;
     
   private:
 

@@ -245,7 +245,7 @@ void ModuleParrot::logicIdleStateChanged(bool is_idle)
       {
       	repeat_delay_timer = new Timer(repeat_delay);
 	repeat_delay_timer->expired.connect(
-	    slot(*this, &ModuleParrot::onRepeatDelayExpired));
+	    mem_fun(*this, &ModuleParrot::onRepeatDelayExpired));
       }
       else
       {
