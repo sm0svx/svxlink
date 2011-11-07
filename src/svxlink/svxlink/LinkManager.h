@@ -111,7 +111,7 @@ class Command;
  *
  ****************************************************************************/
 
-class LinkManager : public SigC::Object
+class LinkManager : public sigc::trackable
 {
   public:
     static LinkManager* instance()

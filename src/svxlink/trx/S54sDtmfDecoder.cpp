@@ -62,7 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace SigC;
+using namespace sigc;
 using namespace Async;
 
 
@@ -161,7 +161,7 @@ bool S54sDtmfDecoder::initialize(void)
     return false;
   }
   serial->charactersReceived.connect(
-      slot(*this, &S54sDtmfDecoder::charactersReceived));
+      mem_fun(*this, &S54sDtmfDecoder::charactersReceived));
   
   return true;
   

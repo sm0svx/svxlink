@@ -117,7 +117,7 @@ This class is used as the base when implementing a squelch detector. The
 detector should implement the \em processSamples function. In that function,
 call \em setSignalDetected to indicate if a signal is detected ot not.
 */
-class Squelch : public SigC::Object, public Async::AudioSink
+class Squelch : public sigc::trackable, public Async::AudioSink
 {
   public:
     /**
@@ -314,7 +314,7 @@ class Squelch : public SigC::Object, public Async::AudioSink
      * @param 	is_open Is set to \em true if the squelch is open or else
      *	      	\em false
      */
-    SigC::Signal1<void, bool> squelchOpen;
+    sigc::signal<void, bool> squelchOpen;
 
   protected:
     /**

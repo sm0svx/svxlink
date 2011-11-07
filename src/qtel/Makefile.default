@@ -40,7 +40,7 @@ PRGSRC		= MainWindow.cpp ComDialog.cpp Settings.cpp MsgHandler.cpp \
 PROJLIBS	= -lecholib -lasyncqt -lasyncaudio -lasynccore
 
 # Libraries external to the project
-LIBS		= $(QT_LIBS) $(SIGC_LIBS)
+LIBS		= $(QT_LIBS) $(SIGC_LIBS) -lgsm
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).

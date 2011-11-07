@@ -126,7 +126,7 @@ This class is used to communicate over an asynchronous serial link
 
 \include AsyncSerial_demo.cpp
 */
-class Serial : public SigC::Object
+class Serial : public sigc::trackable
 {
   public:
     /**
@@ -311,7 +311,7 @@ class Serial : public SigC::Object
      * received on the serial port. The buffer is always null-terminated
      * but the null is not included in the count.
      */
-    SigC::Signal2<void, char*, int> charactersReceived;
+    sigc::signal<void, char*, int> charactersReceived;
     
       
   protected:

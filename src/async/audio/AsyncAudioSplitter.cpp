@@ -276,7 +276,7 @@ void AudioSplitter::removeSink(AudioSink *sink)
       {
       	cleanup_branches_timer = new Timer(0);
 	cleanup_branches_timer->expired.connect(
-	    slot(*this, &AudioSplitter::cleanupBranches));
+	    mem_fun(*this, &AudioSplitter::cleanupBranches));
       }
       break;
     }

@@ -5,15 +5,15 @@
 using namespace std;
 using namespace Async;
 
-class MyClass : public SigC::Object
+class MyClass : public sigc::trackable
 {
   public:
     MyClass(void)
     {
       con = new TcpClient("www.linux.org", 80);
-      con->connected.connect(slot(*this, &MyClass::onConnected));
-      con->disconnected.connect(slot(*this, &MyClass::onDisconnected));
-      con->dataReceived.connect(slot(*this, &MyClass::onDataReceived));
+      con->connected.connect(mem_fun(*this, &MyClass::onConnected));
+      con->disconnected.connect(mem_fun(*this, &MyClass::onDisconnected));
+      con->dataReceived.connect(mem_fun(*this, &MyClass::onDataReceived));
       con->connect();
     }
     

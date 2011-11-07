@@ -197,7 +197,7 @@ bool SquelchEvDev::initialize(Async::Config& cfg, const std::string& rx_name)
   
   watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
   assert(watch != 0);
-  watch->activity.connect(slot(*this, &SquelchEvDev::readEvDevData));
+  watch->activity.connect(mem_fun(*this, &SquelchEvDev::readEvDevData));
   
     // Print Device Name
   char name[256] = "Unknown";

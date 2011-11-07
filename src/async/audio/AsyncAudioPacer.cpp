@@ -130,7 +130,7 @@ AudioPacer::AudioPacer(int sample_rate, int block_size, int prebuf_time)
   
   pace_timer = new Timer(buf_size * 1000 / sample_rate,
        	      	      	 Timer::TYPE_PERIODIC);
-  pace_timer->expired.connect(slot(*this, &AudioPacer::outputNextBlock));
+  pace_timer->expired.connect(mem_fun(*this, &AudioPacer::outputNextBlock));
   
   if (prebuf_samples > 0)
   {

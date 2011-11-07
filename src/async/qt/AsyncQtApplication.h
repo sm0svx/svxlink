@@ -42,6 +42,8 @@ An example of how to use the Async::QtApplication class
  *
  ****************************************************************************/
 
+#include <sigc++/sigc++.h>
+
 #include <QObject>
 #include <QApplication>
 #undef emit

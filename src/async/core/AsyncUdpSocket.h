@@ -121,7 +121,7 @@ This class is used to work with UDP sockets. An example usage is shown below.
 
 \include AsyncUdpSocket_demo.cpp
 */
-class UdpSocket : public SigC::Object
+class UdpSocket : public sigc::trackable
 {
   public:
     /**
@@ -163,14 +163,14 @@ class UdpSocket : public SigC::Object
      * @param 	buf   The buffer containing the read data
      * @param 	count The number of bytes read
      */
-    SigC::Signal3<void, const IpAddress&, void *, int> dataReceived;
+    sigc::signal<void, const IpAddress&, void *, int> dataReceived;
     
     /**
      * @brief 	A signal that is emitted when the send buffer is full
      * @param 	is_full Set to \em true if the buffer is full or \em false
      *	      	      	if the buffer full condition has been cleared
      */
-    SigC::Signal1<void, bool> sendBufferFull;
+    sigc::signal<void, bool> sendBufferFull;
     
   protected:
     

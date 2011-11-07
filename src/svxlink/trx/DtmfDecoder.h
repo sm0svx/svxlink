@@ -128,7 +128,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * @author  Tobias Blomberg, SM0SVX
  * @date    2008-02-06
  */   
-class DtmfDecoder : public SigC::Object, public Async::AudioSink
+class DtmfDecoder : public sigc::trackable, public Async::AudioSink
 {
   public:
     /**
@@ -196,14 +196,14 @@ class DtmfDecoder : public SigC::Object, public Async::AudioSink
      * @brief 	A signal that is emitted when a DTMF digit is first detected
      * @param 	digit The detected digit
      */
-    SigC::Signal1<void, char> digitActivated;
+    sigc::signal<void, char> digitActivated;
 
     /*
      * @brief 	A signal that is emitted when a DTMF digit is no longer present
      * @param 	digit 	  The detected digit
      * @param 	duration  The time that the digit was active
      */
-    SigC::Signal2<void, char, int> digitDeactivated;
+    sigc::signal<void, char, int> digitDeactivated;
     
     
   protected:

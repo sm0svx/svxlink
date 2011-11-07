@@ -113,7 +113,7 @@ namespace Async
 This class is part of the audio pipe framework. It is used to split one
 incoming audio source into multiple outgoing sources.
 */
-class AudioSplitter : public Async::AudioSink, public SigC::Object
+class AudioSplitter : public Async::AudioSink, public sigc::trackable
 {
   public:
     /**

@@ -203,19 +203,24 @@ int main( int argc, const char **argv )
     exit(1);
   }
   
-  (void)fgets(my_callsign, sizeof(my_callsign), cfg);
+  char *ret = fgets(my_callsign, sizeof(my_callsign), cfg);
+  assert(ret != NULL);
   my_callsign[strlen(my_callsign)-1] = 0;
   
-  (void)fgets(my_password, sizeof(my_password), cfg);
+  ret = fgets(my_password, sizeof(my_password), cfg);
+  assert(ret != NULL);
   my_password[strlen(my_password)-1] = 0;
   
-  (void)fgets(my_name, sizeof(my_name), cfg);
+  ret = fgets(my_name, sizeof(my_name), cfg);
+  assert(ret != NULL);
   my_name[strlen(my_name)-1] = 0;
   
-  (void)fgets(my_location, sizeof(my_location), cfg);
+  ret = fgets(my_location, sizeof(my_location), cfg);
+  assert(ret != NULL);
   my_location[strlen(my_location)-1] = 0;
   
-  (void)fgets(my_info, sizeof(my_info), cfg);
+  ret = fgets(my_info, sizeof(my_info), cfg);
+  assert(ret != NULL);
   my_info[strlen(my_info)-1] = 0;
   
   fclose(cfg);
@@ -223,9 +228,9 @@ int main( int argc, const char **argv )
   CppApplication app;
     
   dir = new Directory(SERVER_NAME, my_callsign, my_password, my_location);
-  dir->error.connect(SigC::slot(&on_error_msg));
-  dir->statusChanged.connect(SigC::slot(&on_status_changed));
-  dir->stationListUpdated.connect(SigC::slot(&on_station_list_updated));
+  dir->error.connect(sigc::ptr_fun(&on_error_msg));
+  dir->statusChanged.connect(sigc::ptr_fun(&on_status_changed));
+  dir->stationListUpdated.connect(sigc::ptr_fun(&on_station_list_updated));
     
   process_next_stage();
   
@@ -371,7 +376,7 @@ static void process_next_stage(void)
 	  break;
 	}
 	echolink_qso->setVoxLimit(vox_limit);
-	echolink_qso->done.connect(SigC::slot(&echolink_qso_done));
+	echolink_qso->done.connect(sigc::ptr_fun(&echolink_qso_done));
       }
       else
       {
@@ -489,7 +494,7 @@ static void on_station_list_updated(void)
 	  process_next_stage();
 	  break;
 	}
-	echolink_qso->done.connect(SigC::slot(&echolink_qso_done));
+	echolink_qso->done.connect(sigc::ptr_fun(&echolink_qso_done));
       }
       else
       {

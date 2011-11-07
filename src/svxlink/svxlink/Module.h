@@ -130,7 +130,7 @@ to the SvxLink core is done through this class.
 
 \include Template_demo.cpp
 */
-class Module : public SigC::Object, public Async::AudioSink,
+class Module : public sigc::trackable, public Async::AudioSink,
       	       public Async::AudioSource
 {
   public:
@@ -509,7 +509,7 @@ class Module : public SigC::Object, public Async::AudioSink,
     int       	      m_id;
     std::string       m_name;
     bool      	      m_is_transmitting;
-    SigC::Connection  m_logic_idle_con;
+    sigc::connection  m_logic_idle_con;
     bool      	      m_is_active;
     std::string	      m_cfg_name;
     Async::Timer      *m_tmo_timer;

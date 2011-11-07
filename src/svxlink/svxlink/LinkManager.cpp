@@ -632,7 +632,7 @@ bool LinkManager::connectLinks(const string& linkname)
       timeoutTimerset.insert(pair<string, Async::Timer*>
                            (linkname, new Timer((linkCfg[linkname]).timeout)));
       (timeoutTimerset[linkname])->
-                         expired.connect(slot(*this, &LinkManager::upTimeout));
+                         expired.connect(mem_fun(*this, &LinkManager::upTimeout));
    }
    linkCfg[linkname].is_connected = check;
 
