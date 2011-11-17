@@ -138,7 +138,6 @@ LinkManager* LinkManager::_instance = 0;
 bool LinkManager::initialize(const Async::Config &cfg,
                                              const std::string &cfg_name)
 {
-
    // check if already initialized
   if (LinkManager::_instance->has_instance()) return false;
   LinkManager::_instance = new LinkManager();
@@ -151,52 +150,71 @@ bool LinkManager::initialize(const Async::Config &cfg,
   StrList linklist;
   SvxLink::splitStr(linklist, cfg_name, ",");
 
-  vector<string>::const_iterator linkname;
-  string tname;  // linkname
+  vector<string>::const_iterator name;
+  string tname;  // temp linkname
   string tvalue;
   linkSet tlCmd;
   vector<string> tlogiclist;
+  vector<string> tnamelist;
   size_t found;
+  size_t found2;
   vector<string> tauto_connect;
-  map<string, string> tlc; // -> ("Link1", "73")
+  t_cname tlc;         // -> ("Link1", <"73","Name2">)
+  link_properties tln; // -> ("Link1", "NameOfConnection")
+  string tlogic;
 
    // loop to create a link object for each single linkdefinition
    // in the "LINKS=Link1, Link2, Link3" set
-  for (linkname = linklist.begin(); linkname != linklist.end(); linkname++)
+  for (name = linklist.begin(); name != linklist.end(); name++)
   {
       // each link set must have a name
-     if (!cfg.getValue((*linkname), "LINKNAME", tname))
+     if (!cfg.getValue((*name), "NAME", tname))
      {
-        cerr << "*** ERROR: each LinkManager must have an unique name.\n" <<
-              "e.g. " << (*linkname) << "/LINKNAME=Test\n";
+        cerr << "*** ERROR: each Linkdefinition must have an unique name.\n"
+             << "           e.g. " << (*name) << "/NAME=Test" << endl;
         init_ok = false;
      }
-     tlCmd.linkname = tname;
+     tlCmd.name = tname;
 
       // check the connect_logics
-     if (!cfg.getValue((*linkname), "CONNECT_LOGICS", tvalue))
+     if (!cfg.getValue((*name), "CONNECT_LOGICS", tvalue))
      {
-       cerr << "*** ERROR: " << (*linkname) << "/CONNECT_LOGICS=? You must "
-            << "have at least two logics to connect.\n";
+       cerr << "*** ERROR: " << (*name) << "/CONNECT_LOGICS=? You must "
+            << "have at least two logics to connect." << endl;
        init_ok = false;
      }
 
-     SvxLink::splitStr(tlogiclist, tvalue, ","); // Logic1:70    Logic2:71 ...
+      // Logic1:70:name1  Logic2:71:name2 ...
+     SvxLink::splitStr(tlogiclist, tvalue, ",");
+
       // configure the list of logics to connect
-      // CONNECT_LOGICS=Logic1:70,Logic2:71,Logic3:72
+      // CONNECT_LOGICS=Logic1:70:Name1,Logic2:71,Logic3:72:Name2
      for(vector<string>::iterator it = tlogiclist.begin();
-              it != tlogiclist.end(); it++)
+                                  it != tlogiclist.end(); it++)
      {
-        found = it->find(":");    // map <"Logic1", "73">
-        tlc.insert(pair<string, string>((*it).substr(0, found),
-                                (*it).substr(found + 1, (*it).length())));
+        found = it->find(":", 0);    // (Logic -> <cmd, Name>)
+        found2 = it->find(":", found + 1);
+        if (found2 != string::npos)
+        {
+          tlogic = (*it).substr(0, found);
+          tln.logic_cmd =  (*it).substr(found + 1, found2-found-1);
+          tln.logic_name = (*it).substr(found2 + 1, (*it).length()-found2);
+          tlc.insert(pair<string, link_properties>(tlogic, tln));
+        }
+        else
+        {
+          cout << "*** ERROR: wrong configuration in section CONNECT_LOGICS="
+               << tvalue << endl
+               << "           e.g. CONNECT_LOGICS=Logicname:Command:Linkname\n";
+          init_ok = false;
+        }
      }
 
-     tlCmd.logic_cmd = tlc;
+     tlCmd.link_cname = tlc;
      tlCmd.timeout = 0;
 
       // check timeout settings
-     if (cfg.getValue((*linkname), "TIMEOUT", tvalue))
+     if (cfg.getValue((*name), "TIMEOUT", tvalue))
      {
        tlCmd.timeout = atoi(tvalue.c_str()) * 1000;
      }
@@ -205,7 +223,7 @@ bool LinkManager::initialize(const Async::Config &cfg,
 
       // connects automatically the links, if the one (or more) links
       // has/have activity for timeout
-     if (cfg.getValue((*linkname), "AUTOCONNECT_ON_SQL", tvalue))
+     if (cfg.getValue((*name), "AUTOCONNECT_ON_SQL", tvalue))
      {
        SvxLink::splitStr(tauto_connect, tvalue, ",");
        tlCmd.auto_connect = tauto_connect;
@@ -213,7 +231,7 @@ bool LinkManager::initialize(const Async::Config &cfg,
         // Autoconnect shoul be disconnected after a while
        if (tlCmd.timeout == 0)
        {
-          cout << "*** missing param " << (*linkname)
+          cout << "*** WARNING: missing param " << (*name)
                << "/TIMEOUT=??, set to default (30 sec)" << endl;
           tlCmd.timeout = 30000;
        }
@@ -224,23 +242,11 @@ bool LinkManager::initialize(const Async::Config &cfg,
      tlCmd.is_connected = false;
 
       // checking OPTIONS ( on_startup?, ... )
-     if (cfg.getValue((*linkname), "OPTIONS", tvalue))
-     {
-         // transform to upper case
-        transform(tvalue.begin(), tvalue.end(), tvalue.begin(), ::toupper);
+     cfg.getValue( *name, "DEFAULT_CONNECT", tlCmd.default_connect);
 
-         // logics should be connected on startup
-        if (tvalue.find("DEFAULT_CONNECT") != string::npos)
-        {
-          tlCmd.default_connect = true;
-        }
+      // persistent connected?
+     cfg.getValue( *name, "NO_DISCONNECT", tlCmd.no_disconnect);
 
-         // persistent connected?
-        if (tvalue.find("NO_DISCONNECT") != string::npos)
-        {
-          tlCmd.no_disconnect = true;
-        }
-     }
      LinkManager::instance()->linkCfg.insert(pair<string,linkSet>(tname,tlCmd));
      tlc.clear();
   }
@@ -358,7 +364,7 @@ void LinkManager::deleteSink(const string& logicname)
 void LinkManager::logicIsUp(std::string logicname)
 {
    map<std::string, linkSet>::iterator it;
-   map<std::string, std::string>::iterator lit;
+   map<std::string, link_properties>::iterator lit;
    bool conn = false;
 
     // collecting names of logics that already are up
@@ -372,11 +378,11 @@ void LinkManager::logicIsUp(std::string logicname)
       // 2nd we have to proof, if the Logics should beeing connected on startup
       // and if the involved logics are already up
      if ((it = LinkManager::instance()->linkCfg.find(*vt)) !=
-              LinkManager::instance()->linkCfg.end())
+               LinkManager::instance()->linkCfg.end())
      {
        conn = true;
-       for (lit = (it->second).logic_cmd.begin();
-                         lit != (it->second).logic_cmd.end(); lit++)
+       for (lit = (it->second).link_cname.begin();
+                           lit != (it->second).link_cname.end(); lit++)
        {
          if (find(logiclist.begin(), logiclist.end(), lit->first) ==
                                               logiclist.end())
@@ -388,13 +394,10 @@ void LinkManager::logicIsUp(std::string logicname)
        }
      }
 
-     if (conn && it != linkCfg.end())
+     if (conn && it != linkCfg.end() && (it->second).default_connect)
      {
-       if ((it->second).default_connect)
-       {
-          // if DEFAULT_CONNECT is true, connect the logics together
-         connectLinks((it->second).linkname);
-       }
+        // if DEFAULT_CONNECT is true, connect the logics together
+       connectLinks((it->second).name);
      }
    }
 } /* LinkManager::checkConnectOnStartup */
@@ -405,14 +408,16 @@ vector<string> LinkManager::getCommands(string logicname)
 {
    vector<string> tcmds;
    map<std::string, linkSet>::iterator it;
-   map<string, string>::iterator lc;
+   map<string, link_properties>::iterator lc;
 
    for (it = linkCfg.begin(); it != linkCfg.end(); it++)
    {
-     lc = (it->second).logic_cmd.find(logicname);
-     if (lc != (it->second).logic_cmd.end() && atoi((lc->second).c_str()) > 0 )
+     lc = (it->second).link_cname.find(logicname);
+
+     if (lc != (it->second).link_cname.end() &&
+                              atoi((lc->second).logic_cmd.c_str()) > 0 )
      {
-        tcmds.push_back(lc->second);
+        tcmds.push_back((lc->second).logic_cmd);
      }
    }
    return tcmds;
@@ -422,7 +427,6 @@ vector<string> LinkManager::getCommands(string logicname)
 // reset the timeout timers for the links, that are connected
 void LinkManager::resetTimers(const string& logicname)
 {
-
     // here we have only the "logicname" but no idea in how many LINKS
     // this logic is involved so we have to check all LINKS entries
     // to reset each single timeout timer in each "linkname"
@@ -431,7 +435,7 @@ void LinkManager::resetTimers(const string& logicname)
    vector<string>::iterator tauto_connect;
 
     // we need all "linknames" where the "logicname" is included in
-   vector<string> t_linknames = LinkManager::instance()->getLinkNames(logicname);
+   vector<string> t_linknames=LinkManager::instance()->getLinkNames(logicname);
 
    for (vt = t_linknames.begin(); vt != t_linknames.end(); ++vt)
    {
@@ -486,7 +490,7 @@ string LinkManager::cmdReceived(const string& logicname, string cmd, string subc
 {
   string ss;
   map<std::string, linkSet>::iterator it;
-  map<string, string>::iterator lcx;
+  map<string, link_properties>::iterator lcx;
 
   int isubcmd = atoi(subcmd.c_str());
 
@@ -494,19 +498,20 @@ string LinkManager::cmdReceived(const string& logicname, string cmd, string subc
        << subcmd << endl << flush;
   for (it = linkCfg.begin(); it != linkCfg.end(); it++)
   {
-    lcx = ((it->second).logic_cmd).find(logicname);
-    if (lcx != ((it->second).logic_cmd).end())
+    lcx = ((it->second).link_cname).find(logicname);
+    if (lcx != ((it->second).link_cname).end())
     {
-      if (lcx->second == cmd)
+      if ((lcx->second).logic_cmd == cmd)
       {
         switch(isubcmd)
         {
-          case 0:      // disconnecting links
+           // disconnecting Link1 <-X-> Link2
+          case 0:
             if ((it->second).no_disconnect)
             {
                // not possible due to configuration
               ss = "deactivating_link_not_possible ";
-              ss += (it->second).linkname;
+              ss += (lcx->second).logic_name;
               break;
             }
             if (!(it->second).is_connected)
@@ -515,7 +520,7 @@ string LinkManager::cmdReceived(const string& logicname, string cmd, string subc
             }
             else
             {
-              if (!disconnectLinks((it->second).linkname))
+              if (!disconnectLinks((it->second).name))
               {
                 ss = "deactivating_link_failed ";
               }
@@ -524,17 +529,18 @@ string LinkManager::cmdReceived(const string& logicname, string cmd, string subc
                 ss = "deactivating_link ";
               }
             }
-            ss += (it->second).linkname;
+            ss += (lcx->second).logic_name;
             break;
 
-          case 1:      // connecting links
+           // connecting Logic1 <---> Logic2 (two ways)
+          case 1:
             if ((it->second).is_connected)
             {
               ss = "link_already_active ";
-              ss += (it->second).linkname;
+              ss += (lcx->second).logic_name;
               break;
             }
-            if (!connectLinks((it->second).linkname))
+            if (!connectLinks((it->second).name))
             {
               ss = "activating_link_failed ";
             }
@@ -542,12 +548,12 @@ string LinkManager::cmdReceived(const string& logicname, string cmd, string subc
             {
               ss = "activating_link ";
             }
-            ss += (it->second).linkname;
+            ss += (lcx->second).logic_name;
             break;
 
-            // will be done later
-           case 2:
-            break;
+          default:
+            ss = "unknown_command " + cmd;
+            ss += isubcmd;
         }
       }
     }
@@ -571,7 +577,6 @@ string LinkManager::cmdReceived(const string& logicname, string cmd, string subc
  ****************************************************************************/
 
 
-
 bool LinkManager::sourceIsAdded(const string& logicname)
 {
    return sources.count(logicname) > 0;
@@ -585,7 +590,7 @@ bool LinkManager::sinkIsAdded(const string &logicname)
 
 
 // connects the logics by checking the connect state before
-bool LinkManager::connectLinks(const string& linkname)
+bool LinkManager::connectLinks(const string& name)
 {
    bool check = false;
 
@@ -596,8 +601,7 @@ bool LinkManager::connectLinks(const string& linkname)
     // <SimplexLogic, MicSpkrLogic>
     // <MicSpkrLogic, RepeaterLogic>
     // <MicSpkrLogic, SimplexLogic>
-   LogicConSet want = LinkManager::instance()->getmatrix(linkname);
-
+   LogicConSet want = LinkManager::instance()->getmatrix(name);
 
     // get the actual state of connections (all active links)
    LogicConSet is   = LinkManager::instance()->getisconnected();
@@ -616,28 +620,29 @@ bool LinkManager::connectLinks(const string& linkname)
    LogicConSet::iterator it;
    for (it=diff.begin(); it!= diff.end(); it++)
    {
-      cout << "connecting " << it->first << " ===> " << it->second << endl;
+      cout << "connecting " << it->first << " ===> "
+               << it->second << endl;
       sinks[it->first].selector->
-            enableAutoSelect(sinks[it->first].connectors[it->second], 0);
+           enableAutoSelect(sinks[it->first].connectors[it->second], 0);
       check = true;
    }
 
    // setting up the timers if configured
-   if ((linkCfg[linkname]).timeout > 0 &&
-       (linkCfg[linkname]).no_disconnect != true &&
-      !(timeoutTimerset.find(linkname) != timeoutTimerset.end()) )
+   if ((linkCfg[name]).timeout > 0 &&
+       (linkCfg[name]).no_disconnect == false &&
+       (linkCfg[name]).default_connect == false &&
+      !(timeoutTimerset.find(name) != timeoutTimerset.end()) )
    {
        // timeouttimerset contains all running expiration timers for each
        // logics
       timeoutTimerset.insert(pair<string, Async::Timer*>
-                           (linkname, new Timer((linkCfg[linkname]).timeout)));
-      (timeoutTimerset[linkname])->
-                         expired.connect(mem_fun(*this, &LinkManager::upTimeout));
+                           (name, new Timer((linkCfg[name]).timeout)));
+      (timeoutTimerset[name])->
+                      expired.connect(mem_fun(*this, &LinkManager::upTimeout));
    }
-   linkCfg[linkname].is_connected = check;
+   linkCfg[name].is_connected = check;
 
    return check;
-
 } /* LinkManager::connectLinks */
 
 
@@ -645,19 +650,19 @@ bool LinkManager::connectLinks(const string& linkname)
 set<pair<string, string> > LinkManager::getisconnected(void)
 {
   map<std::string, linkSet>::iterator it;
-  map<string,string>::iterator xi;
-  map<string,string>::iterator xj;
+  map<string, link_properties>::iterator xi;
+  map<string, link_properties>::iterator xj;
   set<pair<string, string> > ret;
 
   for (it = linkCfg.begin(); it != linkCfg.end(); it++)
   {
     if ((it->second).is_connected)
     {
-      for(xi = (it->second).logic_cmd.begin(); xi !=
-                                           (it->second).logic_cmd.end(); ++xi)
+      for(xi = (it->second).link_cname.begin(); xi !=
+                                           (it->second).link_cname.end(); ++xi)
       {
-        for (xj = (it->second).logic_cmd.begin(); xj !=
-                                           (it->second).logic_cmd.end(); ++xj)
+        for (xj = (it->second).link_cname.begin(); xj !=
+                                           (it->second).link_cname.end(); ++xj)
         {
           if (xj->first != xi->first)
           {
@@ -692,27 +697,27 @@ set<pair<string, string> > LinkManager::getmatrix(const string& linkname)
 {
    set<pair<string, string> > ret;
    map<std::string, linkSet>::iterator it =linkCfg.find(linkname);
-   map<string,string>::iterator xi;
-   map<string,string>::iterator xj;
+   map<string, link_properties>::iterator xi;
+   map<string, link_properties>::iterator xj;
 
-   for (xi = (it->second).logic_cmd.begin(); xi !=
-                                            (it->second).logic_cmd.end(); xi++)
+   for (xi = (it->second).link_cname.begin(); xi !=
+                                  (it->second).link_cname.end(); xi++)
    {
-     for (xj = (it->second).logic_cmd.begin(); xj !=
-                                            (it->second).logic_cmd.end(); xj++)
+     for (xj = (it->second).link_cname.begin(); xj !=
+                                  (it->second).link_cname.end(); xj++)
      {
        if (xj->first != xi->first)
        {
-          if (logiclist.find(xj->first) != logiclist.end() &&
+         if (logiclist.find(xj->first) != logiclist.end() &&
                     logiclist.find(xi->first) != logiclist.end())
          {
            ret.insert(pair<string, string>(xi->first, xj->first));
          }
          else
          {
-           cout << "*** WARNING: One of this logics: "<< xj->first << ", " <<
-                xi->first << " isn't up an can not beeing connected.\n" <<
-                "**** Missing entry in your configuration " <<
+           cout << "*** WARNING: One of this logics: "<< xj->first << ", "
+                << xi->first << " isn't up an can not beeing connected.\n"
+                << "**** Missing entry in your configuration " <<
                 "[GLOBAL]/LINKS=???" << endl;
          }
        }
@@ -723,22 +728,22 @@ set<pair<string, string> > LinkManager::getmatrix(const string& linkname)
 
 
 
-set<pair<string, string> > LinkManager::gettodisconnect(const string& linkname)
+set<pair<string, string> > LinkManager::gettodisconnect(const string& name)
 {
   map<string, linkSet>::iterator it;
-  map<string,string>::iterator xi;
-  map<string,string>::iterator xj;
+  map<string, link_properties>::iterator xi;
+  map<string, link_properties>::iterator xj;
   set<pair<string, string> > ret = getisconnected();
 
   for (it = linkCfg.begin(); it != linkCfg.end(); it++)
   {
-    if ((it->second).is_connected && (it->second).linkname != linkname)
+    if ((it->second).is_connected && (it->second).name != name)
     {
-      for(xi = (it->second).logic_cmd.begin(); xi !=
-                                            (it->second).logic_cmd.end(); ++xi)
+      for(xi = (it->second).link_cname.begin(); xi !=
+                                        (it->second).link_cname.end(); ++xi)
       {
-        for (xj = (it->second).logic_cmd.begin(); xj !=
-                                            (it->second).logic_cmd.end(); ++xj)
+        for (xj = (it->second).link_cname.begin(); xj !=
+                                        (it->second).link_cname.end(); ++xj)
         {
           if (xj->first != xi->first)
           {
@@ -753,13 +758,19 @@ set<pair<string, string> > LinkManager::gettodisconnect(const string& linkname)
 
 
 
-bool LinkManager::disconnectLinks(const string& linkname)
+bool LinkManager::disconnectLinks(const string& name)
 {
    bool check = false;
+
+   if (linkCfg.find(name) == linkCfg.end())
+   {
+      return check;
+   }
+
    assert(LinkManager::instance()->sources.size() > 0);
    assert(LinkManager::instance()->sinks.size() > 0);
 
-   LogicConSet diff = gettodisconnect(linkname);
+   LogicConSet diff = gettodisconnect(name);
    LogicConSet::iterator it;
 
    for (it = diff.begin(); it != diff.end(); it++)
@@ -769,26 +780,39 @@ bool LinkManager::disconnectLinks(const string& linkname)
       {
          cout << "disconnect " << it->first << " -X-> " << it->second << endl;
          sinks[it->first].selector->
-          disableAutoSelect(sinks[it->first].connectors[it->second]);
+                disableAutoSelect(sinks[it->first].connectors[it->second]);
          check = true;
       }
       else
       {
-         cout << "*** WARNING: Missing logics entry in [GLOBAL]/LINKS=???, " <<
-              "check your configuration." << endl;
+         cout << "*** WARNING: Missing logics entry in [GLOBAL]/LINKS=???, "
+              << "check your configuration." << endl;
       }
    }
 
     // reset the connected flag
-   (linkCfg.find(linkname)->second).is_connected = false;
+   (linkCfg[name]).is_connected = false;
 
     // clear the timer
    map<string, Async::Timer*>::iterator ti;
-   if ((ti = timeoutTimerset.find(linkname)) != timeoutTimerset.end())
+   if ((ti = timeoutTimerset.find(name)) != timeoutTimerset.end())
    {
       ti->second = 0;
       delete ti->second;  // delete the timer
       timeoutTimerset.erase(ti); // delete the entry
+   }
+
+    // now check if default_connect && timeout are set
+    // and start a reconnect timer in this case
+   if ((linkCfg[name]).default_connect &&
+       (linkCfg[name]).timeout > 0 )
+   {
+      // timeoutTimerset contains all running expiration timers for each
+      // logics
+      timeoutTimerset.insert(pair<string, Async::Timer*>
+                           (name, new Timer((linkCfg[name]).timeout)));
+      (timeoutTimerset[name])->
+                         expired.connect(mem_fun(*this, &LinkManager::upTimeout));
    }
 
    return check;
@@ -818,7 +842,7 @@ vector<string> LinkManager::getLinkNames(const string& logicname)
 
    for (it=linkCfg.begin(); it!=linkCfg.end(); it++ )
    {
-     if ((it->second).logic_cmd.find(logicname) !=(it->second).logic_cmd.end())
+     if ((it->second).link_cname.find(logicname)!=(it->second).link_cname.end())
      {
        t_linknames.push_back(it->first);
      }
@@ -830,16 +854,29 @@ vector<string> LinkManager::getLinkNames(const string& logicname)
 
 void LinkManager::upTimeout(Async::Timer *t)
 {
-   map<string, Async::Timer*>::iterator it;
+   map<string, Async::Timer*>::iterator it_ts;
+   map<string, linkSet>::iterator it;
 
-   for (it = timeoutTimerset.begin(); it != timeoutTimerset.end(); it++)
+   for (it_ts=timeoutTimerset.begin(); it_ts!=timeoutTimerset.end(); it_ts++)
    {
-     if ((it->second) == t)
+     if ((it_ts->second) == t)
      {
-        disconnectLinks(it->first);
+       it = linkCfg.find(it_ts->first);
+
+       if ((it->second).is_connected && !(it->second).default_connect
+                          && !(it->second).no_disconnect)
+       {
+          disconnectLinks(it_ts->first);
+       }
+
+       if (!(it->second).is_connected && (it->second).default_connect)
+       {
+          connectLinks(it_ts->first);
+       }
      }
    }
 } /* LinkManager::upTimeout */
+
 
 
 /****************************************************************************

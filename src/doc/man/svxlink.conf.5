@@ -457,20 +457,20 @@ value if for example linking to another repeater.
 .TP
 .B CONNECT_LOGICS
 A comma separated list of names for the logic cores to link together followed by 
-the commands, e.g.
-CONNECT_LOGICS=RepeaterLogic_2m:78,RepeaterLogic_70cm:79,SimplexLogic_23cm:80
+the command and the name:
+CONNECT_LOGICS=RepeaterLogic_2m:78:from_2m,RepeaterLogic_70cm:79:from_70cm
 .TP
 .B TIMEOUT
 Enter here the number of seconds to disconnect automatically after the link when 
 no activity was detected.
 .TP
-.B OPTIONS
-Using the OPTIONS parameter can control the behavior of linking. You can enter 
-none, one or more parameters separated by commas. The following params are 
-possible:
-DEFAULT_CONNECT - The relevant links will be connected automatically checking 
-during startup of SvxLink.
-NO_DISCONNECT - After connected once, no disconnect is possible anymore.
+.B DEFAULT_CONNECT
+The relevant links will be connected automatically during startup of SvxLink or
+reconnected automatically after the links has been disconnected for 
+TIMEOUT and the timer has expired.
+.TP
+.B NO_DISCONNECT 
+After connected once, no disconnect of a linkset is possible anymore.
 .TP
 .B AUTOCONNECT_ON_SQL
 Enter one or more logic(s), which should automatically connected with the 

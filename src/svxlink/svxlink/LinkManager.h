@@ -136,10 +136,17 @@ class LinkManager : public sigc::trackable
 
     std::set<std::string> logiclist;
 
+    struct link_properties
+    {
+        std::string logic_name;
+        std::string logic_cmd;
+    };
+    typedef std::map<std::string, link_properties> t_cname;
+
     struct linkSet
     {
-      std::string  linkname;
-      std::map<std::string, std::string>  logic_cmd; // logicname : command
+      std::string  name;
+      t_cname      link_cname;
       std::vector<std::string> auto_connect;
       int          timeout;
       bool         default_connect;
@@ -153,7 +160,6 @@ class LinkManager : public sigc::trackable
     typedef std::set<std::pair<std::string, std::string> > LogicConSet;
     typedef std::map<std::string, std::set<std::string> > LogicConMap;
     LogicConMap con_map;
-   // LogicConSet is;
 
     void addSource(const std::string& logicname, Async::AudioSelector *logic_con_out);
     void addSink(const std::string& logicname, Async::AudioSplitter *logic_con_in);
@@ -213,13 +219,13 @@ class LinkManager : public sigc::trackable
     bool sourceIsAdded(const std::string &logicname);
     bool sinkIsAdded(const std::string &logicname);
     std::vector<std::string> getLinkNames(const std::string& logicname);
-    bool connectLinks(const std::string& linkname);
-    bool disconnectLinks(const std::string& linkname);
+    bool connectLinks(const std::string& name);
+    bool disconnectLinks(const std::string& name);
     bool isConnected(const std::string& source_name, const std::string& sink_name);
     void upTimeout(Async::Timer *t);
-    std::set<std::pair<std::string, std::string> > getmatrix(const std::string& linkname);
+    std::set<std::pair<std::string, std::string> > getmatrix(const std::string& name);
     std::set<std::pair<std::string, std::string> > getdifference(LogicConSet is, LogicConSet want);
-    std::set<std::pair<std::string, std::string> > gettodisconnect(const std::string& linkname);
+    std::set<std::pair<std::string, std::string> > gettodisconnect(const std::string& name);
     std::set<std::pair<std::string, std::string> > getisconnected(void);
 };  /* class LinkManager */
 

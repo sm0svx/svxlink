@@ -581,7 +581,7 @@ bool Logic::initialize(void)
 
     for (cit = cmdList.begin(); cit != cmdList.end(); cit++)
     {
-       cout << "Logic cmdList " << (*cit) << endl;
+       //cout << "Logic cmdList " << (*cit) << endl;
 
        LinkCmd *tlink_cmd = new LinkCmd(&cmd_parser, this);
        if (!tlink_cmd->initialize(*cit))
