@@ -138,7 +138,7 @@ class SettingsDialog;
  * Bugs:      
  *----------------------------------------------------------------------------
  */   
-class Settings : public SigC::Object
+class Settings : public sigc::trackable
 {
   public:
     static Settings *instance(void);
@@ -189,7 +189,7 @@ class Settings : public SigC::Object
     void setConnectToIp(const QString &host);
     const QString& connectToIp(void) const { return m_connect_to_ip; }
     
-    SigC::Signal0<void> configurationUpdated;
+    sigc::signal<void> configurationUpdated;
     
   protected:
     

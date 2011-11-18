@@ -115,7 +115,7 @@ class Tx;
 This is the base class for implementing a remote trx uplink. That is,
 the link to the SvxLink core.
 */
-class Uplink : public SigC::Object
+class Uplink : public sigc::trackable
 {
   public:
     static Uplink *create(Async::Config &cfg, const std::string &name,

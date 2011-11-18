@@ -118,7 +118,7 @@ instructed to buffer some samples before starting to output audio.
 Samples can be automatically output using the normal audio pipe infrastructure
 or samples could be read on demand using the readSamples method.
 */
-class AudioFifo : public SigC::Object, public AudioSink, public AudioSource
+class AudioFifo : public sigc::trackable, public AudioSink, public AudioSource
 {
   public:
     /**

@@ -5,13 +5,13 @@
 using namespace std;
 using namespace Async;
 
-class MyClass : public SigC::Object
+class MyClass : public sigc::trackable
 {
   public:
     MyClass(void) : count(0)
     {
       timer = new Timer(1000, Timer::TYPE_PERIODIC);
-      timer->expired.connect(slot(*this, &MyClass::onTimerExpired));
+      timer->expired.connect(mem_fun(*this, &MyClass::onTimerExpired));
     }
     
     ~MyClass(void)

@@ -139,7 +139,7 @@ class QsoRecorder;
 @author Tobias Blomberg
 @date   2004-03-23
 */
-class Logic : public SigC::Object
+class Logic : public sigc::trackable
 {
   public:
     static bool connectLogics(const std::vector<std::string> &link_list,
@@ -204,7 +204,7 @@ class Logic : public SigC::Object
 
     bool isWritingMessage(void);
 
-    SigC::Signal1<void, bool> idleStateChanged;
+    sigc::signal<void, bool> idleStateChanged;
 
 
   protected:

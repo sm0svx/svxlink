@@ -1,4 +1,12 @@
- 0.13.0 -- ?? ??? 2011
+ 0.13.1 -- ?? ??? 2011
+-----------------------
+
+* Moved from sigc++ version 1.2 to version 2.
+  Patch contributed by Felix/WU8K.
+
+
+
+ 0.13.0 -- 05 Nov 2011
 -----------------------
 
 * Added selective calling system Motorola QC2.
@@ -26,6 +34,9 @@
 
 * TEP and F2 alerts are now taken care of in the PropagationMonitor module.
   Patch from Adi / DL1HRC.
+
+* Bugfix in the MUTE_TX_ON_RX feature in RemoteTrx. The PTT would activate
+  even if muted.
 
 
 

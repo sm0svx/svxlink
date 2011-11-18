@@ -132,7 +132,7 @@ class ModuleEchoLink;
 A class that implementes the things needed for one EchoLink Qso.
 */
 class QsoImpl
-  : public Async::AudioSink, public Async::AudioSource, public SigC::Object
+  : public Async::AudioSink, public Async::AudioSource, public sigc::trackable
 {
   public:
     /**
@@ -264,14 +264,14 @@ class QsoImpl
      * @param qso The QSO object
      * @param state The new connection state
      */
-    SigC::Signal2<void, QsoImpl*, EchoLink::Qso::State> stateChange;
+    sigc::signal<void, QsoImpl*, EchoLink::Qso::State> stateChange;
     
     /**
      * @brief A signal that is emitted when a chat message is received
      * @param qso The QSO object
      * @param msg The received chat message
      */
-    SigC::Signal2<void, QsoImpl*, const std::string&> chatMsgReceived;
+    sigc::signal<void, QsoImpl*, const std::string&> chatMsgReceived;
     
     /**
      * @brief A signal that is emitted when the audio receive state changes
@@ -280,20 +280,20 @@ class QsoImpl
      * @param qso The QSO object
      * @note This signal can be used to control a reception indicator
      */
-    SigC::Signal2<void, bool, QsoImpl*> isReceiving;
+    sigc::signal<void, bool, QsoImpl*> isReceiving;
     
     /**
      * @brief A signal that is emitted when an audio datagram has been received
      * @param packet A pointer to the buffer that contains the raw GSM audio
      * @param qso The QSO object
      */
-    SigC::Signal2<void, EchoLink::Qso::RawPacket*, QsoImpl*> audioReceivedRaw;
+    sigc::signal<void, EchoLink::Qso::RawPacket*, QsoImpl*> audioReceivedRaw;
     
     /**
      * @brief 	A signal that is emitted when the qso object should be destroyed
      * @param 	qso The QSO object
      */
-    SigC::Signal1<void, QsoImpl*> destroyMe;
+    sigc::signal<void, QsoImpl*> destroyMe;
     
         
   protected:

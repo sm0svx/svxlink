@@ -189,6 +189,7 @@ class NetUplink : public Uplink
     Async::Timer	    *mute_tx_timer;
     bool		    tx_muted;
     bool                    fallback_enabled;
+    Tx::TxCtrlMode	    tx_ctrl_mode;
     
     NetUplink(const NetUplink&);
     NetUplink& operator=(const NetUplink&);

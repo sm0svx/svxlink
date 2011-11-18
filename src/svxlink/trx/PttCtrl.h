@@ -82,7 +82,7 @@ mode, the PTT is triggered as long as there are incoming audio.
 This class also implements the TX delay feature.
 */
 class PttCtrl : public Async::AudioSink, public Async::AudioSource,
-      	      	public SigC::Object
+      	      	public sigc::trackable
 {
   public:
     /**
@@ -138,7 +138,7 @@ class PttCtrl : public Async::AudioSink, public Async::AudioSource,
      * @param do_transmit Turn the transmitter on if \em true or else
      *	      	      	  turn it off
      */
-    SigC::Signal1<void, bool> transmitterStateChange;
+    sigc::signal<void, bool> transmitterStateChange;
     
     
   private:

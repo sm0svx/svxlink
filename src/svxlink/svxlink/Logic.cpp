@@ -95,7 +95,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-using namespace SigC;
+using namespace sigc;
 
 
 
@@ -405,10 +405,10 @@ bool Logic::initialize(void)
     cleanup();
     return false;
   }
-  rx().squelchOpen.connect(slot(*this, &Logic::squelchOpen));
-  rx().dtmfDigitDetected.connect(slot(*this, &Logic::dtmfDigitDetectedP));
+  rx().squelchOpen.connect(mem_fun(*this, &Logic::squelchOpen));
+  rx().dtmfDigitDetected.connect(mem_fun(*this, &Logic::dtmfDigitDetectedP));
   rx().selcallSequenceDetected.connect(
-	slot(*this, &Logic::selcallSequenceDetected));
+	mem_fun(*this, &Logic::selcallSequenceDetected));
   rx().mute(false);
   prev_rx_src = m_rx;
 
@@ -472,7 +472,7 @@ bool Logic::initialize(void)
   AudioStreamStateDetector *logic_con_in_idle_det =
 	new AudioStreamStateDetector;
   logic_con_in_idle_det->sigStreamStateChanged.connect(
-	slot(*this, &Logic::logicConInStreamStateChanged));
+	mem_fun(*this, &Logic::logicConInStreamStateChanged));
   logic_con_in->addSink(logic_con_in_idle_det, true);
   tx_audio_selector->addSource(logic_con_in_idle_det);
   tx_audio_selector->enableAutoSelect(logic_con_in_idle_det, 10);
@@ -487,7 +487,7 @@ bool Logic::initialize(void)
   AudioStreamStateDetector *audio_from_module_idle_det =
 	new AudioStreamStateDetector;
   audio_from_module_idle_det->sigStreamStateChanged.connect(
-	slot(*this, &Logic::audioFromModuleStreamStateChanged));
+	mem_fun(*this, &Logic::audioFromModuleStreamStateChanged));
   audio_from_module_splitter->addSink(audio_from_module_idle_det, true);
   tx_audio_selector->addSource(audio_from_module_idle_det);
   tx_audio_selector->enableAutoSelect(audio_from_module_idle_det, 0);
@@ -531,7 +531,7 @@ bool Logic::initialize(void)
     // Create the state detector
   state_det = new AudioStreamStateDetector;
   state_det->sigStreamStateChanged.connect(
-    slot(*this, &Logic::audioStreamStateChange));
+    mem_fun(*this, &Logic::audioStreamStateChange));
   prev_tx_src->registerSink(state_det, true);
   prev_tx_src = state_det;
 
@@ -551,13 +551,13 @@ bool Logic::initialize(void)
     return false;
   }
   tx().transmitterStateChange.connect(
-      slot(*this, &Logic::transmitterStateChange));
+      mem_fun(*this, &Logic::transmitterStateChange));
   prev_tx_src->registerSink(m_tx, true);
   prev_tx_src = 0;
 
     // Create the message handler
   msg_handler = new MsgHandler(INTERNAL_SAMPLE_RATE);
-  msg_handler->allMsgsWritten.connect(slot(*this, &Logic::allMsgsWritten));
+  msg_handler->allMsgsWritten.connect(mem_fun(*this, &Logic::allMsgsWritten));
   prev_tx_src = msg_handler;
 
     // This gain control is used to reduce the audio volume of effects
@@ -569,13 +569,13 @@ bool Logic::initialize(void)
   prev_tx_src = 0;
 
   event_handler = new EventHandler(event_handler_str, this);
-  event_handler->playFile.connect(slot(*this, &Logic::playFile));
-  event_handler->playSilence.connect(slot(*this, &Logic::playSilence));
-  event_handler->playTone.connect(slot(*this, &Logic::playTone));
-  event_handler->recordStart.connect(slot(*this, &Logic::recordStart));
-  event_handler->recordStop.connect(slot(*this, &Logic::recordStop));
+  event_handler->playFile.connect(mem_fun(*this, &Logic::playFile));
+  event_handler->playSilence.connect(mem_fun(*this, &Logic::playSilence));
+  event_handler->playTone.connect(mem_fun(*this, &Logic::playTone));
+  event_handler->recordStart.connect(mem_fun(*this, &Logic::recordStart));
+  event_handler->recordStop.connect(mem_fun(*this, &Logic::recordStop));
   event_handler->deactivateModule.connect(
-          bind(slot(*this, &Logic::deactivateModule), (Module *)0));
+          bind(mem_fun(*this, &Logic::deactivateModule), (Module *)0));
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
@@ -585,7 +585,7 @@ bool Logic::initialize(void)
   event_handler->setVariable("logic_name", name().c_str());
 
   cmd_tmo_timer = new Timer(10000);
-  cmd_tmo_timer->expired.connect(slot(*this, &Logic::cmdTimeout));
+  cmd_tmo_timer->expired.connect(mem_fun(*this, &Logic::cmdTimeout));
   cmd_tmo_timer->setEnable(false);
 
   updateTxCtcss(true, TX_CTCSS_ALWAYS);
@@ -916,7 +916,7 @@ void Logic::squelchOpen(bool is_open)
     {
       exec_cmd_on_sql_close_timer = new Timer(exec_cmd_on_sql_close);
       exec_cmd_on_sql_close_timer->expired.connect(
-	  slot(*this, &Logic::putCmdOnQueue));
+	  mem_fun(*this, &Logic::putCmdOnQueue));
     }
     processCommandQueue();
   }
@@ -971,7 +971,7 @@ void Logic::enableRgrSoundTimer(bool enable)
     if (rgr_sound_delay > 0)
     {
       rgr_sound_timer = new Timer(rgr_sound_delay);
-      rgr_sound_timer->expired.connect(slot(*this, &Logic::sendRgrSound));
+      rgr_sound_timer->expired.connect(mem_fun(*this, &Logic::sendRgrSound));
     }
     else
     {
@@ -1383,7 +1383,7 @@ void Logic::everyMinute(Timer *t)
   delete every_minute_timer;
 
   every_minute_timer = new Timer(msec);
-  every_minute_timer->expired.connect(slot(*this, &Logic::everyMinute));
+  every_minute_timer->expired.connect(mem_fun(*this, &Logic::everyMinute));
 
 } /* Logic::everyMinute */
 

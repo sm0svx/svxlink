@@ -118,8 +118,8 @@ AudioProcessor::AudioProcessor(void)
 {
   AudioSource::setHandler(&fifo);
   sigsrc.registerSink(&fifo);
-  sigsrc.sigRequestSamples.connect(slot(*this, &AudioProcessor::onRequestSamples));
-  sigsrc.sigAllSamplesFlushed.connect(slot(*this, &AudioProcessor::onAllSamplesFlushed));
+  sigsrc.sigRequestSamples.connect(mem_fun(*this, &AudioProcessor::onRequestSamples));
+  sigsrc.sigAllSamplesFlushed.connect(mem_fun(*this, &AudioProcessor::onAllSamplesFlushed));
 } /* AudioProcessor::AudioProcessor */
 
 

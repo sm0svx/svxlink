@@ -12,7 +12,7 @@
 #include "version/SIGLEV_DET_CAL.h"
 
 using namespace std;
-using namespace SigC;
+using namespace sigc;
 using namespace Async;
 
 #define PROGRAM_NAME "SigLevDetCal"
@@ -118,7 +118,9 @@ void start_squelch_close_measurement(FdWatch *w)
     cout << "--- Starting squelch close measurement\n";
     delete w;
     Timer *timer = new Timer(1000);
-    timer->expired.connect(slot(&sample_squelch_close));
+    // must explicitly specify name space for ptr_fun() to avoid conflict
+    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
+    timer->expired.connect(sigc::ptr_fun(&sample_squelch_close));
   }
 } /* start_squelch_close_measurement */
 
@@ -135,7 +137,9 @@ void sample_squelch_open(Timer *t)
     delete t;
     
     FdWatch *w = new FdWatch(0, FdWatch::FD_WATCH_RD);
-    w->activity.connect(slot(&start_squelch_close_measurement));
+    // must explicitly specify name space for ptr_fun() to avoid conflict
+    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
+    w->activity.connect(sigc::ptr_fun(&start_squelch_close_measurement));
     
     cout << endl;
     cout << "--- Release the PTT.\n";
@@ -160,7 +164,9 @@ void start_squelch_open_measurement(FdWatch *w)
     cout << "--- Starting squelch open measurement\n";
     delete w;
     Timer *timer = new Timer(1000);
-    timer->expired.connect(slot(&sample_squelch_open));
+    // must explicitly specify name space for ptr_fun() to avoid conflict
+    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
+    timer->expired.connect(sigc::ptr_fun(&sample_squelch_open));
   }
   
 } /* start_squelch_open_measurement */
@@ -247,7 +253,9 @@ int main(int argc, char **argv)
     cerr << "*** ERROR: Could not initialize receiver \"" << rx_name << "\"\n";
     exit(1);
   }
-  //rx->squelchOpen.connect(slot(&squelchOpen));
+  // must explicitly specify name space for ptr_fun() to avoid conflict
+  // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
+  //rx->squelchOpen.connect(sigc::ptr_fun(&squelchOpen));
   rx->mute(false);
   rx->setVerbose(false);
   
@@ -261,7 +269,9 @@ int main(int argc, char **argv)
   }
   
   FdWatch *w = new FdWatch(0, FdWatch::FD_WATCH_RD);
-  w->activity.connect(slot(&start_squelch_open_measurement));
+  // must explicitly specify name space for ptr_fun() to avoid conflict
+  // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
+  w->activity.connect(sigc::ptr_fun(&start_squelch_open_measurement));
   
   //cout << "--- Press the PTT (" << ITERATIONS << " more times)\n";
   

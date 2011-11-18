@@ -94,7 +94,7 @@ using namespace Async;
  ****************************************************************************/
 
 class Async::AudioIO::DelayedFlushAudioReader
-  : public AudioReader, public SigC::Object
+  : public AudioReader, public sigc::trackable
 {
   public:
     DelayedFlushAudioReader(AudioDevice *audio_dev)
@@ -149,7 +149,7 @@ class Async::AudioIO::DelayedFlushAudioReader
       delete flush_timer;
       flush_timer = new Timer(flushtime);
       flush_timer->expired.connect(
-      	  slot(*this, &DelayedFlushAudioReader::flushDone));
+      	  mem_fun(*this, &DelayedFlushAudioReader::flushDone));
     }
     
   private:

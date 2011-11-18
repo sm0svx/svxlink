@@ -116,7 +116,7 @@ This class is the base class for an audio processor. An audio processor is
 a class that is both an audio sink and source. It receives samples, process
 them in some way and send them further down the chain. 
 */
-class AudioProcessor : public SigC::Object, public AudioSink, public AudioSource
+class AudioProcessor : public sigc::trackable, public AudioSink, public AudioSource
 {
   public:
     /**

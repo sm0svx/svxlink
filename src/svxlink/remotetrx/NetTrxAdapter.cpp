@@ -65,7 +65,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace SigC;
+using namespace sigc;
 using namespace Async;
 
 
@@ -284,8 +284,8 @@ class TxAdapter : public Tx, public AudioSource
       }
     }
     
-    Signal1<void, bool> sigTransmit;
-    Signal2<void, char, int> sendDtmfDigit;
+    signal<void, bool> sigTransmit;
+    signal<void, char, int> sendDtmfDigit;
     
     
     
@@ -427,10 +427,10 @@ bool NetTrxAdapter::initialize(void)
   prev_src = 0;
 
 
-  txa1->sigTransmit.connect(slot(*rxa1, &RxAdapter::setSquelchState));
-  txa1->sendDtmfDigit.connect(rxa1->dtmfDigitDetected.slot());
-  txa2->sigTransmit.connect(slot(*rxa2, &RxAdapter::setSquelchState));
-  txa2->sendDtmfDigit.connect(rxa2->dtmfDigitDetected.slot());
+  txa1->sigTransmit.connect(mem_fun(*rxa1, &RxAdapter::setSquelchState));
+  txa1->sendDtmfDigit.connect(rxa1->dtmfDigitDetected.make_slot());
+  txa2->sigTransmit.connect(mem_fun(*rxa2, &RxAdapter::setSquelchState));
+  txa2->sendDtmfDigit.connect(rxa2->dtmfDigitDetected.make_slot());
   
 
   ul = new NetUplink(cfg, net_uplink_name, rxa2, txa1);

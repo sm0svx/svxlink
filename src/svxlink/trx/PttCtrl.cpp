@@ -59,7 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace Async;
-using namespace SigC;
+using namespace sigc;
 
 
 
@@ -179,7 +179,7 @@ void PttCtrl::transmit(bool do_transmit)
       fifo->enableOutput(false);
       tx_delay_timer = new Timer(tx_delay);
       tx_delay_timer->expired.connect(
-          slot(*this, &PttCtrl::txDelayExpired));
+          mem_fun(*this, &PttCtrl::txDelayExpired));
     }
     else
     {

@@ -383,7 +383,7 @@ int EventHandler::deactivateModuleHandler(ClientData cdata, Tcl_Interp *irp,
 
   EventHandler *self = static_cast<EventHandler *>(cdata);
   Timer *t = new Timer(0);
-  t->expired.connect(slot(*self, &EventHandler::doDeactivateModule));
+  t->expired.connect(mem_fun(*self, &EventHandler::doDeactivateModule));
 
   return TCL_OK;
 }

@@ -113,7 +113,7 @@ namespace Async
 @author Adi Bier / DL1HRC
 @date   2008-11-01
 */
-class AprsTcpClient : public AprsClient, public SigC::Object
+class AprsTcpClient : public AprsClient, public sigc::trackable
 {
   public:
      AprsTcpClient(LocationInfo::Cfg &loc_cfg, const std::string &server,

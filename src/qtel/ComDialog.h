@@ -136,7 +136,7 @@ class QTextCodec;
  ****************************************************************************/
 
 class ComDialog : public QDialog, private Ui::ComDialogBase,
-		  public SigC::Object
+		  public sigc::trackable
 {
   Q_OBJECT
       

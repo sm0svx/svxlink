@@ -89,7 +89,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-using namespace SigC;
+using namespace sigc;
 using namespace SvxLink;
 
 
@@ -301,7 +301,7 @@ bool LocalTx::initialize(void)
   if (cfg.getValue(name, "PTT_HANGTIME", ptt_hangtime) && (ptt_hangtime > 0))
   {
     ptt_hangtimer = new Timer(ptt_hangtime);
-    ptt_hangtimer->expired.connect(slot(*this, &LocalTx::pttHangtimeExpired));
+    ptt_hangtimer->expired.connect(mem_fun(*this, &LocalTx::pttHangtimeExpired));
     ptt_hangtimer->setEnable(false);
   }
 
@@ -468,7 +468,7 @@ bool LocalTx::initialize(void)
   
     // Create the DTMF encoder
   dtmf_encoder = new DtmfEncoder(INTERNAL_SAMPLE_RATE);
-  dtmf_encoder->allDigitsSent.connect(slot(*this, &LocalTx::allDtmfDigitsSent));
+  dtmf_encoder->allDigitsSent.connect(mem_fun(*this, &LocalTx::allDtmfDigitsSent));
   dtmf_encoder->setToneLength(dtmf_tone_length);
   dtmf_encoder->setToneSpacing(dtmf_tone_spacing);
   dtmf_encoder->setToneAmplitude(dtmf_tone_amp);
@@ -482,7 +482,7 @@ bool LocalTx::initialize(void)
   
     // Cteate the PTT controller
   ptt_ctrl = new PttCtrl(tx_delay);
-  ptt_ctrl->transmitterStateChange.connect(slot(*this, &LocalTx::transmit));
+  ptt_ctrl->transmitterStateChange.connect(mem_fun(*this, &LocalTx::transmit));
   prev_src->registerSink(ptt_ctrl, true);
   prev_src = ptt_ctrl;
 
@@ -640,7 +640,7 @@ void LocalTx::transmit(bool do_transmit)
     if ((txtot == 0) && (tx_timeout > 0))
     {
       txtot = new Timer(tx_timeout);
-      txtot->expired.connect(slot(*this, &LocalTx::txTimeoutOccured));
+      txtot->expired.connect(mem_fun(*this, &LocalTx::txTimeoutOccured));
     }
   }
   else

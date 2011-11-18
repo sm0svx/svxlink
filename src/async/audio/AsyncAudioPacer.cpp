@@ -124,7 +124,7 @@ AudioPacer::AudioPacer(unsigned sample_rate, unsigned block_size)
   buf = new float[block_size];
   
   pace_timer = new Timer(block_size * 1000 / sample_rate, Timer::TYPE_PERIODIC);
-  pace_timer->expired.connect(slot(*this, &AudioPacer::outputNextBlock));
+  pace_timer->expired.connect(mem_fun(*this, &AudioPacer::outputNextBlock));
   pace_timer->setEnable(false);
   
   timerclear(&output_start);

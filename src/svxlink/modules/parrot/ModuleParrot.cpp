@@ -179,7 +179,7 @@ bool ModuleParrot::initialize(void)
   
   state_det = new AudioStreamStateDetector;
   state_det->sigStreamStateChanged.connect(
-     slot(*this, &ModuleParrot::onStreamStateChanged));
+     mem_fun(*this, &ModuleParrot::onStreamStateChanged));
   AudioSink::setHandler(state_det);
   
   fifo = new AudioFifo(atoi(fifo_len.c_str())*INTERNAL_SAMPLE_RATE);
@@ -221,7 +221,7 @@ void ModuleParrot::logicIdleStateChanged(bool is_idle)
       {
       	repeat_delay_timer = new Timer(repeat_delay);
 	repeat_delay_timer->expired.connect(
-	    slot(*this, &ModuleParrot::onRepeatDelayExpired));
+	    mem_fun(*this, &ModuleParrot::onRepeatDelayExpired));
       }
       else
       {

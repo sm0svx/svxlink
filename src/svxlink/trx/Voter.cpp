@@ -1,5 +1,5 @@
 /**
-@file	 Voter.cpp
+@File	 Voter.cpp
 @brief  This file contains a class that implement a receiver voter
 @author Tobias Blomberg / SM0SVX
 @date	 2005-04-18
@@ -71,7 +71,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace SigC;
+using namespace sigc;
 using namespace Async;
 
 
@@ -95,7 +95,7 @@ using namespace Async;
 /**
  * @brief A class that represents a satellite receiver
  */
-class SatRx : public AudioSource, public SigC::Object
+class SatRx : public AudioSource, public sigc::trackable
 {
   public:
     int id;
@@ -104,10 +104,10 @@ class SatRx : public AudioSource, public SigC::Object
     SatRx(int id, Rx *rx, int fifo_length_ms)
       : id(id), rx(rx), fifo(0), sql_open(false)
     {
-      rx->dtmfDigitDetected.connect(slot(*this, &SatRx::onDtmfDigitDetected));
+      rx->dtmfDigitDetected.connect(mem_fun(*this, &SatRx::onDtmfDigitDetected));
       rx->selcallSequenceDetected.connect(
-	      slot(*this, &SatRx::onSelcallSequenceDetected));
-      rx->squelchOpen.connect(slot(*this, &SatRx::rxSquelchOpen));
+	      mem_fun(*this, &SatRx::onSelcallSequenceDetected));
+      rx->squelchOpen.connect(mem_fun(*this, &SatRx::rxSquelchOpen));
 
       fifo = new AudioFifo(fifo_length_ms * INTERNAL_SAMPLE_RATE / 1000);
       fifo->enableOutput(false);
@@ -163,9 +163,9 @@ class SatRx : public AudioSource, public SigC::Object
     }
     */
   
-    Signal2<void, char, int>  	dtmfDigitDetected;
-    Signal1<void, string>  	selcallSequenceDetected;
-    Signal2<void, bool, SatRx*> squelchOpen;
+    signal<void, char, int>  	dtmfDigitDetected;
+    signal<void, string>  	selcallSequenceDetected;
+    signal<void, bool, SatRx*> squelchOpen;
   
   protected:
     virtual void allSamplesFlushed(void)
@@ -333,9 +333,9 @@ bool Voter::initialize(void)
       	return false;
       }
       SatRx *srx = new SatRx(rxs.size() + 1, rx, buffer_length);
-      srx->squelchOpen.connect(slot(*this, &Voter::satSquelchOpen));
-      srx->dtmfDigitDetected.connect(dtmfDigitDetected.slot());
-      srx->selcallSequenceDetected.connect(selcallSequenceDetected.slot());
+      srx->squelchOpen.connect(mem_fun(*this, &Voter::satSquelchOpen));
+      srx->dtmfDigitDetected.connect(dtmfDigitDetected.make_slot());
+      srx->selcallSequenceDetected.connect(selcallSequenceDetected.make_slot());
       if ((srx == 0) || !rx->initialize())
       {
       	// FIXME: Cleanup
@@ -343,7 +343,7 @@ bool Voter::initialize(void)
       }
       srx->mute(true);
       rx->setVerbose(false);
-      rx->toneDetected.connect(toneDetected.slot());
+      rx->toneDetected.connect(toneDetected.make_slot());
       selector->addSource(srx);
       selector->enableAutoSelect(srx, 0);
       
@@ -482,7 +482,7 @@ void Voter::satSquelchOpen(bool is_open, SatRx *srx)
     {
       delete best_rx_timer;
       best_rx_timer = new Timer(voting_delay);
-      best_rx_timer->expired.connect(slot(*this, &Voter::chooseBestRx));
+      best_rx_timer->expired.connect(mem_fun(*this, &Voter::chooseBestRx));
     }
     
     if (rx->signalStrength() > best_rx_siglev)

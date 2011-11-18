@@ -111,7 +111,7 @@ namespace Async
 This is an adapter class that can be used to interact with an AudioSink
 class using SigC signals and slots.
 */
-class SigCAudioSource : public AudioSource, public SigC::Object
+class SigCAudioSource : public AudioSource, public sigc::trackable
 {
   public:
     /**
@@ -154,8 +154,8 @@ class SigCAudioSource : public AudioSource, public SigC::Object
       sinkFlushSamples();
     }
 
-    SigC::Signal1<void, int> sigRequestSamples;
-    SigC::Signal0<void> sigAllSamplesFlushed;
+    sigc::signal<void, int> sigRequestSamples;
+    sigc::signal<void> sigAllSamplesFlushed;
     
 };  /* class SigCAudioSource */
 

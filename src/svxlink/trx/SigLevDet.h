@@ -114,7 +114,7 @@ namespace Async
 @author Tobias Blomberg / SM0SVX
 @date   2006-05-07
 */
-class SigLevDet : public SigC::Object, public Async::AudioSink
+class SigLevDet : public sigc::trackable, public Async::AudioSink
 {
   public:
     /**

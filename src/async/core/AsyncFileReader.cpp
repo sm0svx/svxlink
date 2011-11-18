@@ -142,7 +142,7 @@ bool FileReader::open(const string& name)
   }
   
   rd_watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
-  rd_watch->activity.connect(slot(*this, &FileReader::onDataAvail));
+  rd_watch->activity.connect(mem_fun(*this, &FileReader::onDataAvail));
 
   return fillBuffer();
   

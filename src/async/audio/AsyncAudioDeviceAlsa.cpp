@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sigc++/sigc++.h>
 #include <poll.h>
 #include <iostream>
 #include <cmath>
@@ -67,6 +68,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
+using namespace sigc;
 
 
 
@@ -84,7 +86,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-class AudioDeviceAlsa::AlsaWatch : public SigC::Object
+class AudioDeviceAlsa::AlsaWatch : public sigc::trackable
 {
   public:
     AlsaWatch(snd_pcm_t *pcm_handle) : pcm_handle(pcm_handle)
@@ -97,13 +99,13 @@ class AudioDeviceAlsa::AlsaWatch : public SigC::Object
         if (pfds[i].events & POLLOUT)
         {
           FdWatch *watch = new FdWatch(pfds[i].fd, FdWatch::FD_WATCH_WR);
-          watch->activity.connect(slot(*this, &AlsaWatch::writeEvent));
+          watch->activity.connect(mem_fun(*this, &AlsaWatch::writeEvent));
           watch_list.push_back(watch);
         }
         if (pfds[i].events & POLLIN)
         {
           FdWatch *watch = new FdWatch(pfds[i].fd, FdWatch::FD_WATCH_RD);
-          watch->activity.connect(slot(*this, &AlsaWatch::readEvent));
+          watch->activity.connect(mem_fun(*this, &AlsaWatch::readEvent));
           watch_list.push_back(watch);
         }
         pfd_map[pfds[i].fd] = pfds[i];
@@ -128,7 +130,7 @@ class AudioDeviceAlsa::AlsaWatch : public SigC::Object
       }
     }
   
-    SigC::Signal2<void, FdWatch*, unsigned short> activity;
+    sigc::signal<void, FdWatch*, unsigned short> activity;
 
   private:
     std::map<int, pollfd> pfd_map;
@@ -291,7 +293,7 @@ bool AudioDeviceAlsa::openDevice(Mode mode)
 
     play_watch = new AlsaWatch(play_handle);
     play_watch->activity.connect(
-            slot(*this, &AudioDeviceAlsa::writeSpaceAvailable));
+            mem_fun(*this, &AudioDeviceAlsa::writeSpaceAvailable));
     play_watch->setEnabled(false);
 
     if (!startPlayback(play_handle))
@@ -322,7 +324,7 @@ bool AudioDeviceAlsa::openDevice(Mode mode)
 
     rec_watch = new AlsaWatch(rec_handle);
     rec_watch->activity.connect(
-            slot(*this, &AudioDeviceAlsa::audioReadHandler));
+            mem_fun(*this, &AudioDeviceAlsa::audioReadHandler));
 
     if (!startCapture(rec_handle))
     {

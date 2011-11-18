@@ -122,8 +122,8 @@ AudioFifo::AudioFifo(unsigned fifo_size)
   fifo = new float[fifo_size];
   AudioSource::setHandler(&valve);
   sigsrc.registerSink(&valve);
-  sigsrc.sigRequestSamples.connect(slot(*this, &AudioFifo::onRequestSamples));
-  sigsrc.sigAllSamplesFlushed.connect(slot(*this, &AudioFifo::onAllSamplesFlushed));
+  sigsrc.sigRequestSamples.connect(mem_fun(*this, &AudioFifo::onRequestSamples));
+  sigsrc.sigAllSamplesFlushed.connect(mem_fun(*this, &AudioFifo::onAllSamplesFlushed));
 } /* AudioFifo */
 
 

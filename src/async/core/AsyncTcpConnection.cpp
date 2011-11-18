@@ -258,10 +258,10 @@ void TcpConnection::setSocket(int sock)
   this->sock = sock;
   
   rd_watch = new FdWatch(sock, FdWatch::FD_WATCH_RD);
-  rd_watch->activity.connect(slot(*this, &TcpConnection::recvHandler));
+  rd_watch->activity.connect(mem_fun(*this, &TcpConnection::recvHandler));
   
   wr_watch = new FdWatch(sock, FdWatch::FD_WATCH_WR);
-  wr_watch->activity.connect(slot(*this, &TcpConnection::writeHandler));
+  wr_watch->activity.connect(mem_fun(*this, &TcpConnection::writeHandler));
   wr_watch->setEnabled(false);
 } /* TcpConnection::setSocket */
 

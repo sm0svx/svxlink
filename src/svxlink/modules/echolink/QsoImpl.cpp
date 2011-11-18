@@ -80,7 +80,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
-using namespace SigC;
+using namespace sigc;
 
 
 
@@ -182,7 +182,7 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   {
     idle_timeout = atoi(idle_timeout_str.c_str());
     idle_timer = new Timer(1000, Timer::TYPE_PERIODIC);
-    idle_timer->expired.connect(slot(*this, &QsoImpl::idleTimeoutCheck));
+    idle_timer->expired.connect(mem_fun(*this, &QsoImpl::idleTimeoutCheck));
   }
   
   sink_handler = new AudioPassthrough;
@@ -190,7 +190,7 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
 
   msg_handler = new MsgHandler(INTERNAL_SAMPLE_RATE);
   msg_handler->allMsgsWritten.connect(
-      	  slot(*this, &QsoImpl::allRemoteMsgsWritten));
+      	  mem_fun(*this, &QsoImpl::allRemoteMsgsWritten));
 	  
   AudioPacer *msg_pacer = new AudioPacer(INTERNAL_SAMPLE_RATE,
       	      	                         160*4*(INTERNAL_SAMPLE_RATE / 8000));
@@ -215,11 +215,11 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   
   event_handler = new EventHandler(event_handler_script, 0);
   event_handler->playFile.connect(
-      	  bind(slot(*msg_handler, &MsgHandler::playFile), false));
+      	  bind(mem_fun(*msg_handler, &MsgHandler::playFile), false));
   event_handler->playSilence.connect(
-      	  bind(slot(*msg_handler, &MsgHandler::playSilence), false));
+      	  bind(mem_fun(*msg_handler, &MsgHandler::playSilence), false));
   event_handler->playTone.connect(
-      	  bind(slot(*msg_handler, &MsgHandler::playTone), false));
+      	  bind(mem_fun(*msg_handler, &MsgHandler::playTone), false));
 
     // Workaround: Need to set the ID config variable and "logic_name"
     // variable to load the TCL script.
@@ -229,11 +229,11 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   
   event_handler->initialize();
   
-  m_qso.infoMsgReceived.connect(slot(*this, &QsoImpl::onInfoMsgReceived));
-  m_qso.chatMsgReceived.connect(slot(*this, &QsoImpl::onChatMsgReceived));
-  m_qso.stateChange.connect(slot(*this, &QsoImpl::onStateChange));
-  m_qso.isReceiving.connect(bind(isReceiving.slot(), this));
-  m_qso.audioReceivedRaw.connect(bind(audioReceivedRaw.slot(), this));
+  m_qso.infoMsgReceived.connect(mem_fun(*this, &QsoImpl::onInfoMsgReceived));
+  m_qso.chatMsgReceived.connect(mem_fun(*this, &QsoImpl::onChatMsgReceived));
+  m_qso.stateChange.connect(mem_fun(*this, &QsoImpl::onStateChange));
+  m_qso.isReceiving.connect(bind(isReceiving.make_slot(), this));
+  m_qso.audioReceivedRaw.connect(bind(audioReceivedRaw.make_slot(), this));
   
   prev_src = &m_qso;
   
@@ -460,7 +460,7 @@ void QsoImpl::onStateChange(Qso::State state)
       	module->processEvent(ss.str());
       }
       destroy_timer = new Timer(5000);
-      destroy_timer->expired.connect(slot(*this, &QsoImpl::destroyMeNow));
+      destroy_timer->expired.connect(mem_fun(*this, &QsoImpl::destroyMeNow));
       break;
     case Qso::STATE_CONNECTING:
       cout << "CONNECTING\n";

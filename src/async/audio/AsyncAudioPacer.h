@@ -114,7 +114,7 @@ namespace Async
 
 This class is used in an audio pipe chain to pace audio output.
 */
-class AudioPacer : public AudioReader, public AudioSource, public SigC::Object
+class AudioPacer : public AudioReader, public AudioSource, public sigc::trackable
 {
   public:
     /**

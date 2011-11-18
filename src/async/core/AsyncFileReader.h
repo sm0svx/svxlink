@@ -109,7 +109,7 @@ class FdWatch;
  *
  ****************************************************************************/
 
-class FileReader : public SigC::Object
+class FileReader : public sigc::trackable
 {
   public:
 
