@@ -79,7 +79,7 @@ if which pkg-config > /dev/null 2>&1; then
     fi
     QT_UIC=$(pkg-config QtCore --variable=uic_location)
     if [ ! -x "$QT_UIC" ]; then
-      QT_UIC="QT_BIN/uic"
+      QT_UIC="$QT_BIN/uic"
     fi
     output "QT_MOC=${QT_MOC}"
     output "QT_UIC=${QT_UIC}"
