@@ -73,8 +73,16 @@ if which pkg-config > /dev/null 2>&1; then
     QT_PREFIX=$(pkg-config QtCore --variable=prefix)
     QT_BIN="${QT_PREFIX}/bin"
     output "QT_BIN=${QT_BIN}"
-    output "QT_MOC=${QT_BIN}/moc"
-    output "QT_UIC=${QT_BIN}/uic"
+    QT_MOC=$(pkg-config QtCore --variable=moc_location)
+    if [ ! -x "$QT_MOC" ]; then
+      QT_MOC="$QT_BIN/moc"
+    fi
+    QT_UIC=$(pkg-config QtCore --variable=uic_location)
+    if [ ! -x "$QT_UIC" ]; then
+      QT_UIC="QT_BIN/uic"
+    fi
+    output "QT_MOC=${QT_MOC}"
+    output "QT_UIC=${QT_UIC}"
   else
     info "no (optional)\n"
   fi
