@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
+#include <AsyncAudioFilter.h>
 
 
 /****************************************************************************
@@ -119,7 +120,7 @@ class SquelchCtcss : public Squelch
     /**
      * @brief 	Default constuctor
      */
-    explicit SquelchCtcss(void) {}
+    explicit SquelchCtcss(void) : det(0), filter(0), sink(0) {}
 
     /**
      * @brief 	Destructor
@@ -127,6 +128,7 @@ class SquelchCtcss : public Squelch
     virtual ~SquelchCtcss(void)
     {
       delete det;
+      delete filter;
     }
 
     /**
@@ -156,9 +158,62 @@ class SquelchCtcss : public Squelch
 	ctcss_thresh = atof(value.c_str());
       }
 
+      int ctcss_mode = 1;
+      cfg.getValue(rx_name, "CTCSS_MODE", ctcss_mode);
+
       det = new ToneDetector(ctcss_fq, 8.0f);
       det->setPeakThresh(ctcss_thresh);
       det->activated.connect(mem_fun(*this, &SquelchCtcss::setSignalDetected));
+      sink = det;
+
+      switch (ctcss_mode)
+      {
+        case 2:
+          std::cout << "### CTCSS mode: Center to total passband power\n";
+          //det->setDetectBw(6.0f);
+          det->setDetectUseWindowing(false);
+          det->setDetectPeakThresh(0.0f);
+          det->setDetectPeakToTotPwrThresh(0.6f);
+          det->setDetectStableCountThresh(1);
+
+          //det->setUndetectBw(8.0f);
+          det->setUndetectUseWindowing(false);
+          det->setUndetectPeakThresh(0.0f);
+          det->setUndetectPeakToTotPwrThresh(0.3f);
+          det->setUndetectStableCountThresh(2);
+
+            // Set up CTCSS band pass filter
+          filter = new Async::AudioFilter("BpBu8/60-270");
+          filter->registerSink(det);
+          sink = filter;
+          break;
+
+        case 3:
+          std::cout << "### CTCSS mode: Phase\n";
+          //det->setDetectUseWindowing(false);
+          det->setDetectBw(16.0f);
+          det->setDetectPeakThresh(0.0f);
+          det->setDetectPeakToTotPwrThresh(0.6f);
+          det->setDetectStableCountThresh(1);
+          det->setDetectPhaseBwThresh(2.0f, 2.0f);
+
+          //det->setUndetectBw(8.0f);
+          det->setUndetectUseWindowing(false);
+          det->setUndetectPeakThresh(0.0f);
+          det->setUndetectPeakToTotPwrThresh(0.3f);
+          det->setUndetectStableCountThresh(2);
+          //det->setUndetectPhaseBwThresh(4.0f, 16.0f);
+
+            // Set up CTCSS band pass filter
+          filter = new Async::AudioFilter("BpBu8/60-270");
+          filter->registerSink(det);
+          sink = filter;
+          break;
+
+        default:
+          std::cout << "### CTCSS mode: Neighbour bins\n";
+          break;
+      }
 
       return Squelch::initialize(cfg, rx_name);
     }
@@ -181,7 +236,7 @@ class SquelchCtcss : public Squelch
      */
     virtual void setHangtime(int hang)
     {
-      det->setGapDelay(hang);
+      det->setUndetectDelay(hang);
     }
 
     /**
@@ -190,7 +245,7 @@ class SquelchCtcss : public Squelch
       */
     virtual void setDelay(int delay)
     {
-      det->setDetectionDelay(delay);
+      det->setDetectDelay(delay);
     }
 
   protected:
@@ -202,11 +257,13 @@ class SquelchCtcss : public Squelch
      */
     int processSamples(const float *samples, int count)
     {
-      return det->writeSamples(samples, count);
+      return sink->writeSamples(samples, count);
     }
 
   private:
-    ToneDetector *det;
+    ToneDetector	*det;
+    Async::AudioFilter	*filter;
+    Async::AudioSink	*sink;
 
     SquelchCtcss(const SquelchCtcss&);
     SquelchCtcss& operator=(const SquelchCtcss&);
