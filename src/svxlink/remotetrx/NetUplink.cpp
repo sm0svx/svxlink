@@ -306,7 +306,11 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
   tx->setTxCtrlMode(Tx::TX_OFF);
   heartbeat_timer->setEnable(false);
 
-  mute_tx_timer->setEnable(false);
+  if (mute_tx_timer != 0)
+  {
+    mute_tx_timer->setEnable(false);
+  }
+
   tx_muted = false;
   tx_ctrl_mode = Tx::TX_OFF;
     
