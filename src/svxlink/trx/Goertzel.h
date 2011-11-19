@@ -108,6 +108,71 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 @brief	An implementation of the Gortzel single bin DFT algorithm
 @author Tobias Blomberg / SM0SVX
 @date   2009-05-23
+
+The Goertzel algorithm is used to calculate the DFT for a single
+bin. This is much more efficient than for example using an FFT to
+calculate all bins.
+
+Create and initialize a new object either using the default constructor
+and then calling the "initialize" method or use the constuctor that
+initialize the object upon construction. The information needed for
+initialization is the center frequency of the bin to calculate and the
+sampling frequency used.
+
+Now you need to choose a block length. There are two things to consider
+to choose a good block length. The first thing is the wanted bin width.
+The bin width, in Hz, get more narrow with increasing block length. The
+bin width can be calculated using the following formula:
+
+  sampling_rate / block_len
+
+So, if you are using a sampling frequency of 8000 Hz and a block length of
+100 samples, the bin width will become 80Hz.
+
+Reset the object by calling the "reset" method. Now call the "calc" method
+for each sample in the block. When block_len samples have been processed,
+the result is ready to be read. If only the magnitude is interesting, use
+the "relativeMagnitudeSquared" function since it's more efective than using
+the "result" function. The "result" function give a complex value from
+which both phase and magnitude can be calculated.
+
+The relative magnitude squared value can be used directly to compare it
+against other relative magnitude squared values. If you want to compare it
+to other measured values, it will probably be necessary to recalculate it
+to an absolute magnitude value. For example, an input signal containing a
+sinus with amplitude 1.0 will produce magnitude 0.5 in the frequency plane.
+The reason it's 0.5 is because the peak in the frequency plane is mirrored
+around zero so it's actually two peaks with magnitude 0.5. So to get the
+magnitude for the relative magnitude squared value, we do the following:
+
+  2 * sqrt(rel_mag_sqr) / block_len
+
+Now we will get magnitude one for the case described above. However, the
+magnitude may not be what you need. The mean power in the signal during
+the block may be more interesting. We calculate this by first converting
+the magnitude (peak) value to a RMS value. This is easily done by dividing
+by sqrt(2). We then square the whole thing to get the mean power. This
+calculation can be simplified to:
+
+  2 * rel_mag_sqr / (block_len * block_len)
+
+If using Goertzel to find one or more tones, one way to determine if a
+tone is present or not is to compare the power given by Goertzel to the
+power in the whole passband. The passband power is easily calculated by
+squaring each sample in the block and adding them together. Then divide
+this with the block length. This will give the mean power in the passband
+during the block, including the tone power of course. We will see later
+that what we actually need is the passband_energy, which we get by simply
+not dividing the summed squares with the block lenth. Now the result from
+Goertzel and the passband power can be compared to give a measure if a
+tone is present or not. Dividing the tone power with the passband power
+will give a value between 0.0 and 1.0. If it's close to one, almost all
+power is in the tone. If close to zero, we probably just have broad band
+noise. After some simplification, the relation can be computed using:
+
+  2 * rel_mag_sqr / (block_len * passband_energy)
+
+When finished with the block, call "reset" again and start over.
 */
 class Goertzel
 {
@@ -161,7 +226,7 @@ class Goertzel
      */
     void reset(void)
     {
-      v2 = v3 = 0.0f;
+      q0 = q1 = 0.0f;
     }
     
     /**
@@ -170,9 +235,9 @@ class Goertzel
      */
     inline void calc(float sample)
     {
-      float v1 = v2;
-      v2 = v3;
-      v3 = fac * v2 - v1 + sample;
+      float q2 = q1;
+      q1 = q0;
+      q0 = fac * q1 - q2 + sample;
     }
     
     /**
@@ -187,8 +252,8 @@ class Goertzel
      */
     std::complex<float> result(void)
     {
-      float real = v3 - v2 * cosw;
-      float imag = v2 * sinw;
+      float real = q0 - q1 * cosw;
+      float imag = q1 * sinw;
       return std::complex<float>(real, imag);
     }
 
@@ -209,14 +274,8 @@ class Goertzel
      * @brief 	Calculate the relative magnitude squared from a complex result
      * @return	Returns the relative magnitude squared
      *
-     * This function returns the relative magnitude squared. To convert
-     * it to a power measure, use the formula:
-     *
-     *   2*rel_mag_sqr / (block_len*block_len)
-     *
-     * Converting to power may be useful if you are going to compare the
-     * result to some other measure, like the total passband power,
-     * for example calculated in the time domain.
+     * See the class documentation for information on how to use the
+     * returned value.
      */
     float relativeMagnitudeSquared(const std::complex<float> &res)
     {
@@ -227,27 +286,19 @@ class Goertzel
      * @brief 	Read back the result after calling "calc" for a whole block
      * @return	Returns the relative magnitude squared
      *
-     * This function returns the relative magnitude squared. To convert
-     * it to a power measure, use the formula:
-     *
-     *   2*rel_mag_sqr / (block_len*block_len)
-     *
-     * Converting to power may be useful if you are going to compare the
-     * result to some other measure, like the total passband power,
-     * for example calculated in the time domain.
+     * See the class documentation for information on how to use the
+     * returned value.
      */
     float relativeMagnitudeSquared(void)
     {
         // Push a zero through the process to finish things off.
-        // FIXME: Shoule we really do this?
-      //float v1 = v2;
-      //v2 = v3;
-      //v3 = fac * v2 - v1;
+        // FIXME: Should we really do this?  Why?
+      //calc(0.0f);
       
         // Now calculate the non-recursive side of the filter.
         // The result here is not scaled down to allow for the magnification
         // effect of the filter (the usual DFT magnification effect).
-      return v3 * v3 + v2 * v2 - v2 * v3 * fac;
+      return q0 * q0 + q1 * q1 - q0 * q1 * fac;
     }
 
   protected:
@@ -257,8 +308,8 @@ class Goertzel
     float cosw;
     float sinw;
     float fac;
-    float v2;
-    float v3;
+    float q0;
+    float q1;
     
     //Goertzel(const Goertzel&);
     //Goertzel& operator=(const Goertzel&);
