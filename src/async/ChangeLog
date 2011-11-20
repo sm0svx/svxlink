@@ -6,6 +6,15 @@
 
 
 
+ 0.18.2 -- ?? ??? 2011
+-----------------------
+
+* Bugfix in Async::AudioDeviceAlsa: There were problems when reopening
+  the audio device in another mode, like when going from WR to RDWR.
+  In some cases the audio output would hang.
+
+
+
  0.18.1 -- 05 nov 2011
 -----------------------
 
