@@ -77,12 +77,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define DEFAULT_USE_WINDOWING		true
-#define DEFAULT_PASSBAND_POWER_THRESH	3.0E-9
-#define DEFAULT_PEAK_THRESH		10.0	// 10dB
-#define DEFAULT_PHASE_MEAN_THRESH	0.0f
-#define DEFAULT_PHASE_VAR_THRESH	0.0f
-#define DEFAULT_STABLE_COUNT_THRESH	3
 
 
 /****************************************************************************

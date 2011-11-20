@@ -5,8 +5,8 @@
 @date	 2009-05-23
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2011 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
