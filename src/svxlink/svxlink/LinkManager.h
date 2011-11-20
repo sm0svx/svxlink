@@ -168,7 +168,8 @@ class LinkManager : public sigc::trackable
     void logicIsUp(std::string name);
     void resetTimers(const std::string& logicname);
     void enableTimers(const std::string& logicname);
-    std::string cmdReceived(const std::string& logicname, std::string cmd, std::string subcmd);
+    std::string cmdReceived(const std::string& logicname, std::string cmd,
+                                                      std::string subcmd);
     std::vector<std::string> getCommands(std::string logicname);
 
 
@@ -221,11 +222,16 @@ class LinkManager : public sigc::trackable
     std::vector<std::string> getLinkNames(const std::string& logicname);
     bool connectLinks(const std::string& name);
     bool disconnectLinks(const std::string& name);
-    bool isConnected(const std::string& source_name, const std::string& sink_name);
+    bool isConnected(const std::string& source_name,
+                               const std::string& sink_name);
     void upTimeout(Async::Timer *t);
-    std::set<std::pair<std::string, std::string> > getmatrix(const std::string& name);
-    std::set<std::pair<std::string, std::string> > getdifference(LogicConSet is, LogicConSet want);
-    std::set<std::pair<std::string, std::string> > gettodisconnect(const std::string& name);
+    std::set<std::pair<std::string, std::string> >
+                         getmatrix(const std::string& name);
+    std::set<std::pair<std::string, std::string> >
+                         getdifference(LogicConSet is, LogicConSet want);
+    std::set<std::pair<std::string, std::string> >
+                         gettodisconnect(const std::string& name);
+  //  std::set<std::pair<std::string, std::string> > gettodisconnect1(const std::string& name);
     std::set<std::pair<std::string, std::string> > getisconnected(void);
 };  /* class LinkManager */
 

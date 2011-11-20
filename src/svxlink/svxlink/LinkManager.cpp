@@ -693,42 +693,83 @@ set<pair<string, string> > LinkManager::getdifference(LogicConSet is,LogicConSet
 } /* Linkmanager::getdifference */
 
 
+
 set<pair<string, string> > LinkManager::getmatrix(const string& linkname)
 {
-   set<pair<string, string> > ret;
-   map<std::string, linkSet>::iterator it =linkCfg.find(linkname);
-   map<string, link_properties>::iterator xi;
-   map<string, link_properties>::iterator xj;
+  set<pair<string, string> > ret;
+  linkC::iterator it = linkCfg.find(linkname);
 
-   for (xi = (it->second).link_cname.begin(); xi !=
+  map<string, link_properties>::iterator xi;
+  map<string, link_properties>::iterator xj;
+
+  for (xi = (it->second).link_cname.begin(); xi !=
                                   (it->second).link_cname.end(); xi++)
-   {
-     for (xj = (it->second).link_cname.begin(); xj !=
-                                  (it->second).link_cname.end(); xj++)
-     {
-       if (xj->first != xi->first)
-       {
-         if (logiclist.find(xj->first) != logiclist.end() &&
-                    logiclist.find(xi->first) != logiclist.end())
-         {
-           ret.insert(pair<string, string>(xi->first, xj->first));
-         }
-         else
-         {
-           cout << "*** WARNING: One of this logics: "<< xj->first << ", "
-                << xi->first << " isn't up an can not beeing connected.\n"
-                << "**** Missing entry in your configuration " <<
-                "[GLOBAL]/LINKS=???" << endl;
-         }
-       }
-     }
-   }
-   return ret;
+  {
+    for (xj = (it->second).link_cname.begin(); xj !=
+                                 (it->second).link_cname.end(); xj++)
+    {
+      if (xj->first != xi->first)
+      {
+        if (logiclist.find(xj->first) != logiclist.end() &&
+                   logiclist.find(xi->first) != logiclist.end())
+        {
+          ret.insert(pair<string, string>(xi->first, xj->first));
+        }
+        else
+        {
+          cout << "*** WARNING: One of this logics: "<< xj->first << ", "
+               << xi->first << " isn't up an can not beeing connected.\n"
+               << "**** Missing entry in your configuration " <<
+               "[GLOBAL]/LINKS=???" << endl;
+        }
+      }
+    }
+  }
+
+   // look for the logics in other linkdefinition, if the affected logics
+   // are already connected
+  linkC::iterator iu;
+  t_cname::iterator cn;
+  t_cname::iterator dn;
+  for (iu = linkCfg.begin(); iu != linkCfg.end(); iu++)
+  {
+    if ((iu->second).is_connected)
+    {
+      for (xj = (it->second).link_cname.begin();
+                     xj != (it->second).link_cname.end(); xj++)
+      {
+         // look in the actual connected linkset if there is a logicname
+         // that occours in a other already linked link definition
+        cn = (iu->second).link_cname.find(xj->first);
+        if (cn != (iu->second).link_cname.end())
+        {
+          for (dn=(iu->second).link_cname.begin();
+                        dn!=(iu->second).link_cname.end(); dn++)
+          {
+            if (dn->first != cn->first)
+            {
+              for (xi = (it->second).link_cname.begin();
+                   xi != (it->second).link_cname.end(); xi++)
+              {
+                if (cn->first != xi->first)
+                {
+                   ret.insert(pair<string, string>(dn->first, xi->first));
+                   ret.insert(pair<string, string>(xi->first, dn->first));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return ret;
 } /* LinkManager::getmatrix */
 
 
 
-set<pair<string, string> > LinkManager::gettodisconnect(const string& name)
+/*set<pair<string, string> > LinkManager::gettodisconnect1(const string& name)
 {
   map<string, linkSet>::iterator it;
   map<string, link_properties>::iterator xi;
@@ -747,6 +788,7 @@ set<pair<string, string> > LinkManager::gettodisconnect(const string& name)
         {
           if (xj->first != xi->first)
           {
+            cout << "entferne " << xi->first << " X " << xj->first << endl;
             ret.erase(pair<string, string>(xi->first, xj->first));
           }
         }
@@ -754,7 +796,34 @@ set<pair<string, string> > LinkManager::gettodisconnect(const string& name)
     }
   }
   return ret;
-} /* LinkManager::getupremaining */
+} *//* LinkManager::gettodisconnect1 */
+
+
+  // returns the logics that must be disconnected
+set<pair<string, string> > LinkManager::gettodisconnect(const string& name)
+{
+  map<string, linkSet>::iterator it;
+  set<pair<string, string> > ret = getisconnected();
+  set<pair<string, string> > t_ret;
+  set<pair<string, string> >::iterator s_it;
+
+  for (it = linkCfg.begin(); it != linkCfg.end(); it++)
+  {
+    if ((it->second).is_connected && name != (it->second).name)
+    {
+      t_ret = LinkManager::instance()->getmatrix((it->second).name);
+      for (s_it = t_ret.begin(); s_it != t_ret.end(); s_it++)
+      {
+        if (ret.find(*s_it) != ret.end())
+        {
+          ret.erase(*s_it);
+        }
+      }
+    }
+  }
+
+  return ret;
+} /* LinkManager::gettodisconnect */
 
 
 
@@ -812,7 +881,7 @@ bool LinkManager::disconnectLinks(const string& name)
       timeoutTimerset.insert(pair<string, Async::Timer*>
                            (name, new Timer((linkCfg[name]).timeout)));
       (timeoutTimerset[name])->
-                         expired.connect(mem_fun(*this, &LinkManager::upTimeout));
+                      expired.connect(mem_fun(*this, &LinkManager::upTimeout));
    }
 
    return check;
