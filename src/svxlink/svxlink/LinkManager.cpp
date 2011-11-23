@@ -228,7 +228,7 @@ bool LinkManager::initialize(const Async::Config &cfg,
        SvxLink::splitStr(tauto_connect, tvalue, ",");
        tlCmd.auto_connect = tauto_connect;
 
-        // Autoconnect shoul be disconnected after a while
+        // Autoconnect should be disconnected after a while
        if (tlCmd.timeout == 0)
        {
           cout << "*** WARNING: missing param " << (*name)
@@ -237,9 +237,10 @@ bool LinkManager::initialize(const Async::Config &cfg,
        }
      }
 
+     tlCmd.is_connected = false;
      tlCmd.default_connect = false;
      tlCmd.no_disconnect = false;
-     tlCmd.is_connected = false;
+
 
       // checking OPTIONS ( on_startup?, ... )
      cfg.getValue( *name, "DEFAULT_CONNECT", tlCmd.default_connect);
@@ -478,7 +479,7 @@ void LinkManager::enableTimers(const string& logicname)
       it = timeoutTimerset.find(*vt);
       if ( it != timeoutTimerset.end() )
       {
-        // reset each Timer connected with the specified logic
+        // enable each Timer connected with the specified logic
         (it->second)->setEnable(true);
       }
    }
@@ -496,6 +497,7 @@ string LinkManager::cmdReceived(const string& logicname, string cmd, string subc
 
   cout << "cmdReceived " << logicname << ": " << cmd << " subcmd:"
        << subcmd << endl << flush;
+
   for (it = linkCfg.begin(); it != linkCfg.end(); it++)
   {
     lcx = ((it->second).link_cname).find(logicname);
@@ -601,10 +603,7 @@ bool LinkManager::connectLinks(const string& name)
     // <SimplexLogic, MicSpkrLogic>
     // <MicSpkrLogic, RepeaterLogic>
     // <MicSpkrLogic, SimplexLogic>
-   LogicConSet want = LinkManager::instance()->getmatrix(name);
-
-    // get the actual state of connections (all active links)
-   LogicConSet is   = LinkManager::instance()->getisconnected();
+   LogicConSet want = LinkManager::instance()->getMatrix(name);
 
     // gets the difference of both, the result is the matrix to be connected
     // "is" contains the actual state of the connected logics, e.g.
@@ -618,12 +617,15 @@ bool LinkManager::connectLinks(const string& name)
     // <MicSpkrLogic, RepeaterLogic>
     // <MicSpkrLogic, SimplexLogic>
    LogicConSet::iterator it;
-   for (it=diff.begin(); it!= diff.end(); it++)
+   for (it = diff.begin(); it != diff.end(); it++)
    {
       cout << "connecting " << it->first << " ===> "
                << it->second << endl;
       sinks[it->first].selector->
            enableAutoSelect(sinks[it->first].connectors[it->second], 0);
+
+       // store all connections in "is"
+      is.insert(pair<string, string>(it->first, it->second));
       check = true;
    }
 
@@ -646,41 +648,12 @@ bool LinkManager::connectLinks(const string& name)
 } /* LinkManager::connectLinks */
 
 
-// returns a set of actual connected logics
-set<pair<string, string> > LinkManager::getisconnected(void)
-{
-  map<std::string, linkSet>::iterator it;
-  map<string, link_properties>::iterator xi;
-  map<string, link_properties>::iterator xj;
-  set<pair<string, string> > ret;
-
-  for (it = linkCfg.begin(); it != linkCfg.end(); it++)
-  {
-    if ((it->second).is_connected)
-    {
-      for(xi = (it->second).link_cname.begin(); xi !=
-                                           (it->second).link_cname.end(); ++xi)
-      {
-        for (xj = (it->second).link_cname.begin(); xj !=
-                                           (it->second).link_cname.end(); ++xj)
-        {
-          if (xj->first != xi->first)
-          {
-            ret.insert(pair<string, string>(xi->first, xj->first));
-          }
-        }
-      }
-    }
-  }
-  return ret;
-} /* LinkManager::isconnected */
-
-
 
 set<pair<string, string> > LinkManager::getdifference(LogicConSet is,LogicConSet want)
 {
    set<pair<string, string> > ret = want;
    set<pair<string, string> >::iterator it;
+
    for (it = want.begin(); it != want.end(); it++)
    {
      if (is.find(*it) != is.end())
@@ -693,14 +666,12 @@ set<pair<string, string> > LinkManager::getdifference(LogicConSet is,LogicConSet
 } /* Linkmanager::getdifference */
 
 
-
-set<pair<string, string> > LinkManager::getmatrix(const string& linkname)
+// returns a set of logics to be connected
+set<pair<string, string> > LinkManager::getLogics(const string& linkname)
 {
   set<pair<string, string> > ret;
   linkC::iterator it = linkCfg.find(linkname);
-
-  map<string, link_properties>::iterator xi;
-  map<string, link_properties>::iterator xj;
+  map<string, link_properties>::iterator xi, xj;
 
   for (xi = (it->second).link_cname.begin(); xi !=
                                   (it->second).link_cname.end(); xi++)
@@ -725,12 +696,19 @@ set<pair<string, string> > LinkManager::getmatrix(const string& linkname)
       }
     }
   }
+  return ret;
+} /* LinkManager::getLogics */
 
-   // look for the logics in other linkdefinition, if the affected logics
-   // are already connected
+
+set<pair<string, string> > LinkManager::getMatrix(const string& linkname)
+{
+
+  linkC::iterator it = linkCfg.find(linkname);
+  set<pair<string, string> > ret = LinkManager::instance()->getLogics(linkname);
+  map<string, link_properties>::iterator xi, xj;
   linkC::iterator iu;
-  t_cname::iterator cn;
-  t_cname::iterator dn;
+  t_cname::iterator cn, dn;
+
   for (iu = linkCfg.begin(); iu != linkCfg.end(); iu++)
   {
     if ((iu->second).is_connected)
@@ -739,7 +717,7 @@ set<pair<string, string> > LinkManager::getmatrix(const string& linkname)
                      xj != (it->second).link_cname.end(); xj++)
       {
          // look in the actual connected linkset if there is a logicname
-         // that occours in a other already linked link definition
+         // that exists in another already connected link definition
         cn = (iu->second).link_cname.find(xj->first);
         if (cn != (iu->second).link_cname.end())
         {
@@ -751,7 +729,7 @@ set<pair<string, string> > LinkManager::getmatrix(const string& linkname)
               for (xi = (it->second).link_cname.begin();
                    xi != (it->second).link_cname.end(); xi++)
               {
-                if (cn->first != xi->first)
+                if (dn->first != xi->first)
                 {
                    ret.insert(pair<string, string>(dn->first, xi->first));
                    ret.insert(pair<string, string>(xi->first, dn->first));
@@ -765,38 +743,36 @@ set<pair<string, string> > LinkManager::getmatrix(const string& linkname)
   }
 
   return ret;
-} /* LinkManager::getmatrix */
+} /* LinkManager::getMatrix */
 
 
 
-/*set<pair<string, string> > LinkManager::gettodisconnect1(const string& name)
+  // returns the logics that must be disconnected
+set<pair<string, string> > LinkManager::gettodisconnect(const string& name)
 {
   map<string, linkSet>::iterator it;
-  map<string, link_properties>::iterator xi;
-  map<string, link_properties>::iterator xj;
-  set<pair<string, string> > ret = getisconnected();
+  set<pair<string, string> > ret = is;  // get all actual connections
+  set<pair<string, string> > t_ret;
+  set<pair<string, string> >::iterator s_it;
 
+   // go through all linkdefinitions and check if these are connected
   for (it = linkCfg.begin(); it != linkCfg.end(); it++)
   {
-    if ((it->second).is_connected && (it->second).name != name)
+    if ((it->second).is_connected && name != (it->second).name)
     {
-      for(xi = (it->second).link_cname.begin(); xi !=
-                                        (it->second).link_cname.end(); ++xi)
+      t_ret = LinkManager::instance()->getLogics((it->second).name);
+      for (s_it = t_ret.begin(); s_it != t_ret.end(); s_it++)
       {
-        for (xj = (it->second).link_cname.begin(); xj !=
-                                        (it->second).link_cname.end(); ++xj)
+        if (ret.find(*s_it) != ret.end())
         {
-          if (xj->first != xi->first)
-          {
-            cout << "entferne " << xi->first << " X " << xj->first << endl;
-            ret.erase(pair<string, string>(xi->first, xj->first));
-          }
+          ret.erase(*s_it);
         }
       }
     }
   }
+
   return ret;
-} *//* LinkManager::gettodisconnect1 */
+} /* LinkManager::gettodisconnect */
 
 
   // returns the logics that must be disconnected
@@ -850,12 +826,15 @@ bool LinkManager::disconnectLinks(const string& name)
          cout << "disconnect " << it->first << " -X-> " << it->second << endl;
          sinks[it->first].selector->
                 disableAutoSelect(sinks[it->first].connectors[it->second]);
+
+          // delete the link-connect information
+         is.erase(pair<string, string>(it->first, it->second));
          check = true;
       }
       else
       {
          cout << "*** WARNING: Missing logics entry in [GLOBAL]/LINKS=???, "
-              << "check your configuration." << endl;
+              << "             check your configuration." << endl;
       }
    }
 
@@ -873,8 +852,7 @@ bool LinkManager::disconnectLinks(const string& name)
 
     // now check if default_connect && timeout are set
     // and start a reconnect timer in this case
-   if ((linkCfg[name]).default_connect &&
-       (linkCfg[name]).timeout > 0 )
+   if ((linkCfg[name]).default_connect && (linkCfg[name]).timeout > 0 )
    {
       // timeoutTimerset contains all running expiration timers for each
       // logics
@@ -909,9 +887,10 @@ vector<string> LinkManager::getLinkNames(const string& logicname)
    vector<string> t_linknames;
    map<string, linkSet>::iterator it;
 
-   for (it=linkCfg.begin(); it!=linkCfg.end(); it++ )
+   for (it=linkCfg.begin(); it!=linkCfg.end(); it++)
    {
-     if ((it->second).link_cname.find(logicname)!=(it->second).link_cname.end())
+     if ((it->second).link_cname.find(logicname)
+                                 != (it->second).link_cname.end())
      {
        t_linknames.push_back(it->first);
      }

@@ -198,6 +198,7 @@ class LinkManager : public sigc::trackable
 
     std::vector<std::string>getLinks(std::string logicname);
     Async::Timer    *up_timer;
+    LogicConSet     is;
 
     typedef struct
     {
@@ -226,13 +227,15 @@ class LinkManager : public sigc::trackable
                                const std::string& sink_name);
     void upTimeout(Async::Timer *t);
     std::set<std::pair<std::string, std::string> >
-                         getmatrix(const std::string& name);
+                         getMatrix(const std::string& name);
     std::set<std::pair<std::string, std::string> >
                          getdifference(LogicConSet is, LogicConSet want);
     std::set<std::pair<std::string, std::string> >
                          gettodisconnect(const std::string& name);
+    std::set<std::pair<std::string, std::string> >
+                         getLogics(const std::string& linkname);
   //  std::set<std::pair<std::string, std::string> > gettodisconnect1(const std::string& name);
-    std::set<std::pair<std::string, std::string> > getisconnected(void);
+    //std::set<std::pair<std::string, std::string> > getisconnected(void);
 };  /* class LinkManager */
 
 #endif /* LINK_MANAGER_INCLUDED */
