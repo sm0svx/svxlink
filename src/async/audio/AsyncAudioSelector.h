@@ -129,6 +129,11 @@ class AudioSelector : public AudioSource
      * @param 	count Number of samples requested by a connected sink
      */
     virtual void requestSamples(int count);
+
+    /**
+     * @brief   Discard all audio samples from this source
+     */
+    virtual void discardSamples(void);
   
     /**
      * @brief 	Add an audio source to the selector

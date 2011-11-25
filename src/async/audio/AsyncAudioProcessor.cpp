@@ -119,6 +119,7 @@ AudioProcessor::AudioProcessor(void)
   AudioSource::setHandler(&fifo);
   sigsrc.registerSink(&fifo);
   sigsrc.sigRequestSamples.connect(mem_fun(*this, &AudioProcessor::onRequestSamples));
+  sigsrc.sigDiscardSamples.connect(mem_fun(*this, &AudioProcessor::onDiscardSamples));
   sigsrc.sigAllSamplesFlushed.connect(mem_fun(*this, &AudioProcessor::onAllSamplesFlushed));
 } /* AudioProcessor::AudioProcessor */
 
@@ -176,6 +177,13 @@ void AudioProcessor::onRequestSamples(int count)
   div_t ratio = div(count * input_rate, output_rate);
   sourceRequestSamples(ratio.rem ? ratio.quot + 1 : ratio.quot);
 } /* AudioProcessor::requestSamples */
+
+
+void AudioProcessor::onDiscardSamples(void)
+{
+  //cout << "AudioProcessor::discardSamples" << endl;
+  sourceDiscardSamples();
+} /* AudioProcessor::discardSamples */
 
 
 void AudioProcessor::onAllSamplesFlushed(void)

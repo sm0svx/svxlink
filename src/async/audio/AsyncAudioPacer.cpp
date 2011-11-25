@@ -171,6 +171,12 @@ void AudioPacer::requestSamples(int count)
 } /* AudioPacer::requestSamples */
     
 
+void AudioPacer::discardSamples(void)
+{
+  cerr << "Error: The AudioPacer does not discard samples on request" << endl;
+  pace_timer->setEnable(false);
+} /* AudioPacer::discardSamples */
+
 
 /****************************************************************************
  *

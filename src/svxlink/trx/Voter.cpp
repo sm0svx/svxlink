@@ -108,12 +108,25 @@ class SatRx : public AudioSource, public sigc::trackable
       rx->selcallSequenceDetected.connect(
 	      mem_fun(*this, &SatRx::onSelcallSequenceDetected));
       rx->squelchOpen.connect(mem_fun(*this, &SatRx::rxSquelchOpen));
+      AudioSource *prev_src = rx;
 
-      fifo = new AudioFifo(fifo_length_ms * INTERNAL_SAMPLE_RATE / 1000);
-      fifo->enableOutput(false);
-
-      rx->registerSink(fifo);
-      AudioSource::setHandler(fifo);
+      if (fifo_length_ms > 0)
+      {
+        fifo = new AudioFifo(fifo_length_ms * INTERNAL_SAMPLE_RATE / 1000);
+        fifo->setOverwrite(true);
+        prev_src->registerSink(fifo);
+        prev_src = fifo;
+        valve.setBlockWhenClosed(true);
+      }
+      else
+      {
+        valve.setBlockWhenClosed(false);
+      }
+      
+      valve.setOpen(false);
+      prev_src->registerSink(&valve);
+      
+      AudioSource::setHandler(&valve);
     }
     
     ~SatRx(void)
@@ -123,7 +136,7 @@ class SatRx : public AudioSource, public sigc::trackable
     
     void stopOutput(bool do_stop)
     {
-      fifo->enableOutput(!do_stop);
+      valve.setOpen(!do_stop);
       if (!do_stop)
       {
       	DtmfBuf::iterator dit;
@@ -147,7 +160,10 @@ class SatRx : public AudioSource, public sigc::trackable
       rx->mute(do_mute);
       if (do_mute)
       {
-        fifo->clear();
+      	if (fifo != 0)
+        {
+          fifo->clear();
+        }
 	setSquelchOpen(false);
 	dtmf_buf.clear();
 	selcall_buf.clear();
@@ -179,13 +195,14 @@ class SatRx : public AudioSource, public sigc::trackable
     typedef list<string>  	     SelcallBuf;
     
     AudioFifo 	*fifo;
+    AudioValve	valve;
     DtmfBuf   	dtmf_buf;
     SelcallBuf	selcall_buf;
     bool      	sql_open;
     
     void onDtmfDigitDetected(char digit, int duration)
     {
-      if (!fifo->outputEnabled())
+      if (!valve.isOpen())
       {
 	dtmf_buf.push_back(pair<char, int>(digit, duration));
       }
@@ -197,7 +214,7 @@ class SatRx : public AudioSource, public sigc::trackable
     
     void onSelcallSequenceDetected(string sequence)
     {
-      if (!fifo->outputEnabled())
+      if (!valve.isOpen())
       {
 	selcall_buf.push_back(sequence);
       }
@@ -215,7 +232,7 @@ class SatRx : public AudioSource, public sigc::trackable
       }
       else
       {
-      	if (fifo->empty())
+      	if ((fifo == 0) || fifo->empty())
 	{
 	  setSquelchOpen(false);
 	}

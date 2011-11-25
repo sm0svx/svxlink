@@ -133,6 +133,11 @@ class SigCAudioSource : public AudioSource, public sigc::trackable
     {
       sigRequestSamples(count);
     }
+
+    virtual void discardSamples(void)
+    {
+      sigDiscardSamples();
+    }
     
     virtual void allSamplesFlushed(void)
     {
@@ -155,6 +160,7 @@ class SigCAudioSource : public AudioSource, public sigc::trackable
     }
 
     sigc::signal<void, int> sigRequestSamples;
+    sigc::signal<void> sigDiscardSamples;
     sigc::signal<void> sigAllSamplesFlushed;
     
 };  /* class SigCAudioSource */

@@ -164,7 +164,7 @@ class AudioStreamStateDetector : public AudioPassthrough, public sigc::trackable
       }
       AudioPassthrough::availSamples();
     }
-    
+
     /**
      * @brief 	Tell the sink to flush the previously written samples
      *

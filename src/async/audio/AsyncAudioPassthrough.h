@@ -179,6 +179,17 @@ class AudioPassthrough : public AudioSink, public AudioSource
     {
       sourceRequestSamples(count);
     }
+
+    /**
+     * @brief Discard all audio samples from this source
+     *
+     * Use this method to discard all available samples from the
+     * remaining audio stream.
+     */
+    virtual void discardSamples(void)
+    {
+      sourceDiscardSamples();
+    }
     
     /**
      * @brief The registered sink has flushed all samples

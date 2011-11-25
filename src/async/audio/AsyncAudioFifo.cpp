@@ -117,19 +117,15 @@ using namespace Async;
 
 AudioFifo::AudioFifo(unsigned fifo_size)
   : fifo_size(fifo_size), head(0), tail(0), stream_state(STREAM_IDLE),
-    is_full(false), buffering_when_empty(true), buffering_enabled(true)
+    is_full(false), buffering_when_empty(true), buffering_enabled(true),
+    do_overwrite(false)
 {
   fifo = new float[fifo_size];
-  AudioSource::setHandler(&valve);
-  sigsrc.registerSink(&valve);
-  sigsrc.sigRequestSamples.connect(mem_fun(*this, &AudioFifo::onRequestSamples));
-  sigsrc.sigAllSamplesFlushed.connect(mem_fun(*this, &AudioFifo::onAllSamplesFlushed));
 } /* AudioFifo */
 
 
 AudioFifo::~AudioFifo(void)
 {
-  AudioSource::clearHandler();
   delete [] fifo;
 } /* ~AudioFifo */
 
@@ -170,7 +166,7 @@ void AudioFifo::clear(void)
   
   if ((stream_state == STREAM_FLUSHING) && !was_empty)
   {
-    sigsrc.flushSamples();
+    sinkFlushSamples();
   }
 
 } /* AudioFifo::clear */
@@ -199,22 +195,12 @@ int AudioFifo::writeSamples(const float *samples, int count)
   int written = 0;
   if (empty())
   {
-    if (valve.isOpen())
-    {
-      written = sigsrc.writeSamples(samples, count);
-    }
-    else if (!buffering_enabled || (fifo_size == 0))
-    {
-      return count;
-    }
+    written = sinkWriteSamples(samples, count);
   }
 
   if (buffering_enabled && (fifo_size > 0))
   {  
-    if (valve.isOpen())
-    {
-      writeSamplesFromFifo(count - written);
-    }
+    writeSamplesFromFifo(count - written);
 
     while (written < count)
     {
@@ -226,16 +212,13 @@ int AudioFifo::writeSamples(const float *samples, int count)
       {
         is_full = true;
         
-        if (valve.isOpen())
+        /* First we try to write the FIFO content to the sink. */
+        writeSamplesFromFifo(count - written);
+
+        /* If this fails, we have to overwrite. */
+        if (is_full && do_overwrite)
         {
-          /* If output is enabled, we try to write */
-          /* the FIFO content to the sink. */
-          writeSamplesFromFifo(count - written);
-        }
-        else
-        {
-          /* If output is disabled, we try to overwrite. */
-          tail = (tail + 1) % fifo_size;
+          tail = (tail + count - written) % fifo_size;
           is_full = false;
         }
       }
@@ -250,7 +233,7 @@ int AudioFifo::writeSamples(const float *samples, int count)
 void AudioFifo::availSamples(void)
 {
   stream_state = STREAM_ACTIVE;
-  sigsrc.availSamples();
+  sinkAvailSamples();
 } /* AudioFifo::availSamples */
 
 
@@ -260,9 +243,9 @@ void AudioFifo::flushSamples(void)
   stream_state = STREAM_FLUSHING;
   if (empty())
   {
-    sigsrc.flushSamples();
+    sinkFlushSamples();
   }
-  else if (valve.isOpen())
+  else
   {
     flushSamplesFromFifo();
   }
@@ -276,7 +259,7 @@ void AudioFifo::flushSamples(void)
  *
  ****************************************************************************/
 
-void AudioFifo::onRequestSamples(int count)
+void AudioFifo::requestSamples(int count)
 {
   int written = writeSamplesFromFifo(count);
   if ((stream_state == STREAM_ACTIVE) && (written < count))
@@ -284,10 +267,15 @@ void AudioFifo::onRequestSamples(int count)
     sourceRequestSamples(count - written);
   }
 
-} /* AudioFifo::onRequestSamples */
+} /* AudioFifo::requestSamples */
 
+void AudioFifo::discardSamples(void)
+{
+  clear();
+  sourceDiscardSamples();
+} /* AudioFifo::discardSamples */
 
-void AudioFifo::onAllSamplesFlushed(void)
+void AudioFifo::allSamplesFlushed(void)
 {
   if (stream_state == STREAM_FLUSHING)
   {
@@ -295,7 +283,7 @@ void AudioFifo::onAllSamplesFlushed(void)
     sourceAllSamplesFlushed();
   }
 
-} /* AudioFifo::onAllSamplesFlushed */
+} /* AudioFifo::allSamplesFlushed */
 
 
 
@@ -316,7 +304,7 @@ int AudioFifo::writeSamplesFromFifo(int count)
   while (samples_from_fifo > 0)
   {
     unsigned to_end_of_fifo = min(samples_from_fifo, fifo_size - tail);
-    unsigned ret = sigsrc.writeSamples(fifo + tail, to_end_of_fifo);
+    unsigned ret = sinkWriteSamples(fifo + tail, to_end_of_fifo);
     
     tail += ret;
     tail %= fifo_size;
@@ -335,7 +323,7 @@ int AudioFifo::writeSamplesFromFifo(int count)
     buffering_enabled = buffering_when_empty;
     if (stream_state == STREAM_FLUSHING)
     {
-      sigsrc.flushSamples();
+      sinkFlushSamples();
     }
   }
 
@@ -352,7 +340,7 @@ void AudioFifo::flushSamplesFromFifo(void)
   while (samples_from_fifo > 0)
   {
     unsigned to_end_of_fifo = min(samples_from_fifo, fifo_size - tail);
-    unsigned ret = sigsrc.writeSamples(fifo + tail, to_end_of_fifo);
+    unsigned ret = sinkWriteSamples(fifo + tail, to_end_of_fifo);
     
     tail += ret;
     tail %= fifo_size;
@@ -370,7 +358,7 @@ void AudioFifo::flushSamplesFromFifo(void)
     buffering_enabled = buffering_when_empty;
     if (stream_state == STREAM_FLUSHING)
     {
-      sigsrc.flushSamples();
+      sinkFlushSamples();
     }
   }
 

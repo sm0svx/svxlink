@@ -120,7 +120,8 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     /**
      * @brief 	Default constuctor
      */
-    explicit AudioValve(void) : stream_state(STREAM_IDLE), is_open(true)
+    explicit AudioValve(void) :
+      stream_state(STREAM_IDLE), is_open(true), block_when_closed(false)
     {
     }
   
@@ -163,8 +164,36 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
         }
         else if (stream_state == STREAM_ACTIVE)
         {
+      	  if (!block_when_closed)
+      	  {
+      	    sourceDiscardSamples();
+      	  }
       	  sinkFlushSamples();
         }
+      }
+    }
+
+    /**
+     * @brief 	Setup audio stream blocking when valve is closed
+     * @param 	block_when_closed When \em true, block the incoming audio
+     *	      	stream when the valve is closed. When \em false, incoming
+     *	      	audio is thrown away when the valve is closed.
+     *
+     * Use this method to set if the valve should block or drop the incoming
+     * audio stream when the valve is closed.
+     */
+    void setBlockWhenClosed(bool block_when_closed)
+    {
+      if (block_when_closed == this->block_when_closed)
+      {
+      	return;
+      }
+      
+      this->block_when_closed = block_when_closed;
+      
+      if (!is_open && !block_when_closed && (stream_state == STREAM_ACTIVE))
+      {
+        sourceDiscardSamples();
       }
     }
 
@@ -197,7 +226,11 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     int writeSamples(const float *samples, int count)
     {
       stream_state = STREAM_ACTIVE;
-      return is_open ? sinkWriteSamples(samples, count) : count;
+      if (is_open)
+      {
+        return sinkWriteSamples(samples, count);
+      }
+      return block_when_closed ? 0 : count;
     }
 
     /**
@@ -213,6 +246,10 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
       if (is_open)
       {
         sinkAvailSamples();
+      }
+      else if (!block_when_closed)
+      {
+        sourceDiscardSamples();
       }
     }
     
@@ -257,6 +294,20 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
     }
 
     /**
+     * @brief Discard all audio samples from this source
+     *
+     * Use this method to discard all available samples from the
+     * remaining audio stream.
+     */
+    void discardSamples(void)
+    {
+      if (is_open)
+      {
+        sourceDiscardSamples();
+      }
+    }
+
+    /**
      * @brief The registered sink has flushed all samples
      *
      * This function will be called when all samples have been flushed in
@@ -284,6 +335,7 @@ class AudioValve : public Async::AudioSink, public Async::AudioSource
 
     StreamState stream_state;
     bool is_open;
+    bool block_when_closed;
     
 };  /* class AudioValve */
 

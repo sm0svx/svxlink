@@ -193,7 +193,19 @@ class AudioSource
       assert(m_handler != 0);
       m_handler->requestSamples(count);
     }
-    
+
+    /**
+     * @brief Discard all audio samples from this source
+     *
+     * Use this method to discard all available samples from the
+     * remaining audio stream.
+     */
+    virtual void discardSamples(void)
+    {
+      assert(m_handler != 0);
+      m_handler->discardSamples();
+    }
+
 
   protected:
     /**

@@ -218,6 +218,15 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
      */
     virtual void requestSamples(int count);
     
+    /**
+     * @brief Discard all audio samples from this source
+     *
+     * Use this method to discard all available samples from the
+     * remaining audio stream.
+     */
+    virtual void discardSamples(void);
+
+    
   protected:
     /**
      * @brief The registered sink has flushed all samples

@@ -199,6 +199,21 @@ void AudioMixer::requestSamples(int count)
 } /* AudioMixer::requestSamples */
 
 
+void AudioMixer::discardSamples(void)
+{
+  list<MixerSrc *>::const_iterator it;
+  for (it = sources.begin(); it != sources.end(); ++it)
+  {
+    MixerSrc *mix_src = *it;
+    if (mix_src->isActive())
+    {
+      mix_src->discardSamples();
+    }
+  }
+
+} /* AudioMixer::discardSamples */
+
+
 void AudioMixer::availSamples(void)
 {
   sinkAvailSamples();

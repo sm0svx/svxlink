@@ -82,12 +82,21 @@ PttCtrl::PttCtrl(int tx_delay)
   : tx_ctrl_mode(Tx::TX_OFF), is_transmitting(false), tx_delay_timer(0),
     tx_delay(tx_delay), fifo(0)
 {
-  fifo = new AudioFifo((tx_delay + 500) * INTERNAL_SAMPLE_RATE / 1000);
-  fifo->enableOutput(false);
-  fifo->enableBuffering(false);
-  fifo->registerSink(&state_det);
-
-  AudioSink::setHandler(fifo);
+  valve.setBlockWhenClosed(false);
+  valve.setOpen(false);
+      
+  if (tx_delay > 0)
+  {
+    fifo = new AudioFifo((tx_delay + 500) * INTERNAL_SAMPLE_RATE / 1000);
+    fifo->registerSink(&valve);
+    AudioSink::setHandler(fifo);
+  }
+  else
+  {
+    AudioSink::setHandler(&valve);
+  }
+  
+  valve.registerSink(&state_det);
   AudioSource::setHandler(&state_det);
 }
 
@@ -126,14 +135,21 @@ void PttCtrl::setTxCtrlMode(Tx::TxCtrlMode mode)
 }
 
 
-void PttCtrl::availSamples()
+void PttCtrl::availSamples(void)
 {
   if ((tx_ctrl_mode == Tx::TX_AUTO) && !is_transmitting)
   {
     transmit(true);
   }
       
-  fifo->availSamples();
+  if (fifo != 0)
+  {
+    fifo->availSamples();
+  }
+  else
+  {
+    valve.availSamples();
+  }
 }
 
 
@@ -176,15 +192,14 @@ void PttCtrl::transmit(bool do_transmit)
     if (tx_delay > 0)
     {
       fifo->enableBuffering(true);
-      fifo->enableOutput(false);
+      valve.setBlockWhenClosed(true);
       tx_delay_timer = new Timer(tx_delay);
       tx_delay_timer->expired.connect(
           mem_fun(*this, &PttCtrl::txDelayExpired));
     }
     else
     {
-      fifo->enableOutput(true);
-      fifo->enableBuffering(false);
+      valve.setOpen(true);
     }
   }
   else
@@ -194,8 +209,8 @@ void PttCtrl::transmit(bool do_transmit)
       delete tx_delay_timer;
       tx_delay_timer = 0;
     }
-    fifo->enableOutput(false);
-    fifo->enableBuffering(false);
+    valve.setBlockWhenClosed(false);
+    valve.setOpen(false);
   }
 }
 
@@ -204,8 +219,9 @@ void PttCtrl::txDelayExpired(Timer *t)
 {
   delete tx_delay_timer;
   tx_delay_timer = 0;
-  fifo->enableOutput(true);
-  fifo->enableBuffering(true);
+  fifo->enableBuffering(false);
+  valve.setOpen(true);
+  valve.setBlockWhenClosed(false);
 }
 
 

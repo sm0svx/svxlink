@@ -208,6 +208,11 @@ class AudioSink
      *
      */
     void sourceRequestSamples(int count);
+
+    /**
+     * @brief 	Tell the source that we don't want receive any more samples
+     */
+    void sourceDiscardSamples(void);
     
     /**
      * @brief 	Tell the source that all samples have been flushed

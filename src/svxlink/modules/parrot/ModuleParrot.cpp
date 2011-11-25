@@ -51,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioFifo.h>
+#include <AsyncAudioValve.h>
 #include <AsyncAudioStreamStateDetector.h>
 
 
@@ -142,7 +143,7 @@ extern "C" {
 
 ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       	      	      	   const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), state_det(0), fifo(0),
+  : Module(dl_handle, logic, cfg_name), fifo(0), valve(0), state_det(0),
     squelch_is_open(false), repeat_delay(0), repeat_delay_timer(0)
 {
   cout << "\tModule Parrot v" MODULE_PARROT_VERSION " starting...\n";
@@ -177,16 +178,21 @@ bool ModuleParrot::initialize(void)
     repeat_delay = atoi(value.c_str());
   }
   
+  valve = new AudioValve;
+  valve->setBlockWhenClosed(true);
+  valve->setOpen(false);
+
+  fifo = new AudioFifo(atoi(fifo_len.c_str())*INTERNAL_SAMPLE_RATE);
+  fifo->setOverwrite(true);
+  fifo->registerSink(valve, true);
+
   state_det = new AudioStreamStateDetector;
   state_det->sigStreamStateChanged.connect(
      mem_fun(*this, &ModuleParrot::onStreamStateChanged));
-  AudioSink::setHandler(state_det);
-  
-  fifo = new AudioFifo(atoi(fifo_len.c_str())*INTERNAL_SAMPLE_RATE);
-  fifo->enableOutput(false);
   state_det->registerSink(fifo, true);
   
-  AudioSource::setHandler(fifo);
+  AudioSink::setHandler(state_det);
+  AudioSource::setHandler(valve);
   
   return true;
   
@@ -266,7 +272,7 @@ void ModuleParrot::activateInit(void)
 {
   fifo->clear();
   cmd_queue.clear();
-  fifo->enableOutput(false);
+  valve->setOpen(false);
 } /* activateInit */
 
 
@@ -285,7 +291,7 @@ void ModuleParrot::activateInit(void)
  */
 void ModuleParrot::deactivateCleanup(void)
 {
-  fifo->enableOutput(true);
+  valve->setOpen(true);
   fifo->clear();
   delete repeat_delay_timer;
   repeat_delay_timer = 0;
@@ -366,7 +372,7 @@ void ModuleParrot::onStreamStateChanged(bool is_active, bool is_idle)
     {
       execCmdQueue();
     }
-    fifo->enableOutput(false);
+    valve->setOpen(false);
   }
   
 } /* ModuleParrot::onStreamStateChanged */
@@ -377,7 +383,7 @@ void ModuleParrot::onRepeatDelayExpired(Timer *t)
   delete repeat_delay_timer;
   repeat_delay_timer = 0;
   
-  fifo->enableOutput(true);
+  valve->setOpen(true);
   
 } /* ModuleParrot::onRepeatDelayExpired */
 

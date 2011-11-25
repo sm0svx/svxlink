@@ -147,6 +147,14 @@ class AudioMixer : public Async::AudioSource
      */
     void availSamples(void);
 
+    /**
+     * @brief Discard all audio samples from this source
+     *
+     * Use this method to discard all available samples from the
+     * remaining audio stream.
+     */
+    void discardSamples(void);
+
 
   protected:
     /**

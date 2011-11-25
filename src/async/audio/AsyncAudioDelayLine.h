@@ -209,6 +209,14 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
      * This function is normally only called from a connected sink object.
      */
     void requestSamples(int count);
+
+    /**
+     * @brief Discard all audio samples from this source
+     *
+     * Use this method to discard all available samples from the
+     * remaining audio stream.
+     */
+    virtual void discardSamples(void);
     
     /**
      * @brief The registered sink has flushed all samples

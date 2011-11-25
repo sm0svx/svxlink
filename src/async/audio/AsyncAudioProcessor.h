@@ -156,6 +156,11 @@ class AudioProcessor : public sigc::trackable, public AudioSink, public AudioSou
     void onRequestSamples(int count);
 
     /**
+     * @brief Discard all audio samples from this source
+     */
+    void onDiscardSamples(void);
+
+    /**
      * @brief All samples have been flushed by the sink
      */
     void onAllSamplesFlushed(void);

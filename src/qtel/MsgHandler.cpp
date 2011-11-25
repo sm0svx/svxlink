@@ -347,6 +347,12 @@ void MsgHandler::requestSamples(int count)
 } /* MsgHandler::requestSamples */
 
 
+void MsgHandler::discardSamples(void)
+{
+  clear();
+} /* MsgHandler::discardSamples */
+
+
 void MsgHandler::deleteQueueItem(QueueItem *item)
 {
   if (!item->idleMarked())

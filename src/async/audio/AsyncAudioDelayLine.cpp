@@ -285,7 +285,14 @@ void AudioDelayLine::requestSamples(int count)
   {
     sourceRequestSamples(count);
   }
-} /* AudioDelayLine::resumeOutput */
+} /* AudioDelayLine::requestSamples */
+
+
+void AudioDelayLine::discardSamples(void)
+{
+  clear();
+  sourceDiscardSamples();
+} /* AudioDelayLine::discardSamples */
 
 
 void AudioDelayLine::allSamplesFlushed(void)

@@ -235,8 +235,14 @@ void AudioJitterFifo::requestSamples(int count)
   {
     writeSamplesFromFifo(count);
   }
-} /* requestSamples */
+} /* AudioJitterFifo::requestSamples */
 
+
+void AudioJitterFifo::discardSamples(void)
+{
+  clear();
+  sourceDiscardSamples();
+} /* AudioJitterFifo::discardSamples */
 
 
 /****************************************************************************

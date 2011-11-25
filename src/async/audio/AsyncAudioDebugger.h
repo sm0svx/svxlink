@@ -226,7 +226,19 @@ class AudioDebugger : public AudioSink, public AudioSource
       std::cout << name << "::requestSamples: count=" << count << std::endl;
       sourceRequestSamples(count);
     }
-    
+
+    /**
+     * @brief Discard all audio samples from this source
+     *
+     * Use this method to discard all available samples from the
+     * remaining audio stream.
+     */
+    virtual void discardSamples(void)
+    {
+      std::cout << name << "::discardSamples" << std::endl;
+      sourceDiscardSamples();
+    }
+                                                   
     /**
      * @brief The registered sink has flushed all samples
      *

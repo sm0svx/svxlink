@@ -43,8 +43,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncAudioIO.h>
-#include <AsyncAudioStreamStateDetector.h>
+#include <AsyncAudioValve.h>
 #include <AsyncAudioFifo.h>
+#include <AsyncAudioStreamStateDetector.h>
 
 
 /****************************************************************************
@@ -113,14 +114,14 @@ class PttCtrl : public Async::AudioSink, public Async::AudioSource,
      * trigger the PTT for as long as there are incoming audio.
      */
     void setTxCtrlMode(Tx::TxCtrlMode mode);
-    
-    /**
-     * @brief   Tell the sink that there are samples available on request
-     *
-     * This function is used to tell the sink that there are samples available
-     * that can be requested by calling the sourceRequestSamples function.
-     * This function is normally only called from a connected source object.
-     */
+
+   /**
+    * @brief   Tell the sink that there are samples available on request
+    *
+    * This function is used to tell the sink that there are samples available
+    * that can be requested by calling the sourceRequestSamples function.
+    * This function is normally only called from a connected source object.
+    */
     void availSamples(void);
 
     /**
@@ -147,7 +148,8 @@ class PttCtrl : public Async::AudioSink, public Async::AudioSource,
     Async::Timer     	*tx_delay_timer;
     int       	        tx_delay;
     Async::AudioFifo 	*fifo;
-    Async::AudioStreamStateDetector	state_det;
+    Async::AudioValve	valve;
+    Async::AudioStreamStateDetector     state_det;
     
     void transmit(bool do_transmit);
     void txDelayExpired(Async::Timer *t);

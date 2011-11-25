@@ -174,9 +174,13 @@ class AudioReader : public AudioSink
      * @brief 	Check if the reader is currently requesting samples
      */
     bool isReading() const { return (buf != 0); }
+
+    /**
+     * @brief   Tell the source to drop all audio samples
+     */
+    virtual void discardSamples(void) { sourceDiscardSamples(); }
+
                       
-  protected:
-    
   private:
     AudioReader(const AudioReader&);
     AudioReader& operator=(const AudioReader&);

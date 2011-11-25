@@ -177,6 +177,15 @@ void AudioSink::sourceRequestSamples(int count)
 } /* AudioSink::sourceRequestSamples */
 
 
+void AudioSink::sourceDiscardSamples(void)
+{
+  if (m_source != 0)
+  {
+    m_source->discardSamples();
+  }
+} /* AudioSink::sourceDiscardSamples */
+
+
 void AudioSink::sourceAllSamplesFlushed(void)
 {
   if (m_source != 0)

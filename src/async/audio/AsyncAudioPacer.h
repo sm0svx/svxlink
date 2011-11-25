@@ -157,6 +157,14 @@ class AudioPacer : public AudioReader, public AudioSource, public sigc::trackabl
      * This function is normally only called from a connected sink object.
      */
     virtual void requestSamples(int count);
+
+    /**
+     * @brief Discard all audio samples from this source
+     *
+     * Use this method to discard all available samples from the
+     * remaining audio stream.
+     */
+    virtual void discardSamples(void);
     
 
   protected:

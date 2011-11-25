@@ -170,6 +170,14 @@ class Async::AudioSelector::Branch : public AudioSink, public AudioSource
         sourceRequestSamples(count);
       }
     }
+    
+    virtual void discardSamples(void)
+    {
+      if (is_active)
+      {
+        sourceDiscardSamples();
+      }
+    }
 
     virtual void allSamplesFlushed(void) {}
     
@@ -202,6 +210,7 @@ class Async::AudioSelector::NullBranch : public Async::AudioSelector::Branch
     {
     }
     void requestSamples(int count) {}
+    void discardSamples(void) {}
 };
 
 
@@ -330,7 +339,7 @@ void AudioSelector::selectSource(AudioSource *source)
       return;
     }
   }
-  
+
   selectBranch(branch);
   
 } /* AudioSelector::selectSource */
@@ -344,6 +353,17 @@ void AudioSelector::requestSamples(int count)
     it->second->requestSamples(count);
   }
 } /* AudioSelector::requestSamples */
+
+
+void AudioSelector::discardSamples(void)
+{
+  BranchMap::const_iterator it;
+  for (it = branch_map.begin(); it != branch_map.end(); ++it)
+  {
+    it->second->discardSamples();
+  }
+
+} /* AudioSelector::discardSamples */
 
 
 /****************************************************************************
@@ -393,7 +413,7 @@ void AudioSelector::requestSamples(int count)
 void AudioSelector::selectBranch(Branch *branch)
 {
   //printf("AudioSelector::selectBranch: branch=%p\n", branch);
-  
+
   clearHandler();
 
   if (branch == 0)
@@ -418,8 +438,6 @@ void AudioSelector::checkFlushSamples(void)
   sinkFlushSamples();
 
 } /* AudioSelector::checkFlushSamples */
-
-
 
 
 /*

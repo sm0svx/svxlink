@@ -191,6 +191,11 @@ class Async::AudioSplitter::Branch : public AudioSource
       }
     } /* requestSamples */
     
+    virtual void discardSamples(void)
+    {
+      cerr << "AudioSplitter: discardSamples currently not supported." << endl;
+    } /* discardSamples() */
+    
     virtual void allSamplesFlushed(void)
     {
       if (is_enabled && (stream_state == STREAM_FLUSHING))
@@ -217,7 +222,6 @@ class Async::AudioSplitter::Branch : public AudioSource
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 

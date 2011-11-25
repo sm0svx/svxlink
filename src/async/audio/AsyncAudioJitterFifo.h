@@ -200,7 +200,7 @@ class AudioJitterFifo : public AudioSink, public AudioSource
      * This function is normally only called from a connected source object.
      */
     virtual void flushSamples(void);
-    
+
     /**
      * @brief Request audio samples from this source
      * 
@@ -210,8 +210,17 @@ class AudioJitterFifo : public AudioSink, public AudioSource
      */
     virtual void requestSamples(int count);
     
-    
+    /**
+     * @brief Discard all audio samples from this source
+     *
+     * Use this method to discard all available samples from the
+     * remaining audio stream.
+     */
+    virtual void discardSamples(void);
+
+
   protected:
+      
     /**
      * @brief The registered sink has flushed all samples
      *
