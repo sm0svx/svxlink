@@ -221,8 +221,8 @@ class LinkManager : public sigc::trackable
     bool sourceIsAdded(const std::string &logicname);
     bool sinkIsAdded(const std::string &logicname);
     std::vector<std::string> getLinkNames(const std::string& logicname);
-    bool connectLinks(const std::string& name);
-    bool disconnectLinks(const std::string& name);
+    int connectLinks(const std::string& name);
+    int disconnectLinks(const std::string& name);
     bool isConnected(const std::string& source_name,
                                const std::string& sink_name);
     void upTimeout(Async::Timer *t);
@@ -234,8 +234,6 @@ class LinkManager : public sigc::trackable
                          gettodisconnect(const std::string& name);
     std::set<std::pair<std::string, std::string> >
                          getLogics(const std::string& linkname);
-  //  std::set<std::pair<std::string, std::string> > gettodisconnect1(const std::string& name);
-    //std::set<std::pair<std::string, std::string> > getisconnected(void);
 };  /* class LinkManager */
 
 #endif /* LINK_MANAGER_INCLUDED */

@@ -290,6 +290,19 @@ proc activating_link_failed {name} {
 
 
 #
+# Executed when a link to another logic cound not be
+# activated because the link already exists
+#   name  - The name of the link
+#
+proc activating_link_failed_other_connection {name} {
+  playMsg "Core" "activating_link_to";
+  spellWord $name;
+  playMsg "Core" "failed";
+  playMsg "Core" "other_connection";
+}
+
+
+#
 # Executed when a link to another logic core is deactivated
 #   name  - The name of the link
 #
@@ -308,6 +321,20 @@ proc deactivating_link_failed {name} {
   playMsg "Core" "deactivating_link_to";
   spellWord $name;
   playMsg "Core" "failed";
+}
+
+
+#
+# Executed when a link to another logic core shall beeing
+# deactivated but the action failed because the link is
+# still activated by other linkdefinitions
+#   name  - The name of the link
+#
+proc deactivating_link_failed_other_connection {name} {
+  playMsg "Core" "deactivating_link_to";
+  spellWord $name;
+  playMsg "Core" "failed";
+  playMsg "Core" "other_connection";
 }
 
 

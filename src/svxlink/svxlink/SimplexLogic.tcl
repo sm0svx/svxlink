@@ -131,11 +131,21 @@ proc activating_link {name} {
 
 
 #
-# Executed when a link to another logic core shall beeing 
+# Executed when a link to another logic core shall beeing
 # activated but failed for some reason.
 #
 proc activating_link_failed {name} {
   Logic::activating_link_failed $name;
+}
+
+
+#
+# Executed when a link to another logic core shall beeing
+# activated but failed because another link with the same
+# logics is established
+#
+proc activating_link_failed_other_connection {name} {
+  Logic::activating_link_failed_other_connection $name;
 }
 
 
@@ -148,11 +158,21 @@ proc deactivating_link {name} {
 
 
 #
-# Executed when a disconnect for a link from another 
+# Executed when a disconnect for a link from another
 # logic core has failed for some reason
 #
 proc deactivating_link_failed {name} {
   Logic::deactivating_link_failed $name;
+}
+
+
+#
+# Executed when a disconnect for a link from another
+# logic core has failed because another link with the same
+# logics is still established
+#
+proc deactivating_link_failed_other_connection {name} {
+  Logic::deactivating_link_failed_other_connection $name;
 }
 
 
