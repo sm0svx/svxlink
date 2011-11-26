@@ -293,6 +293,46 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
     void setUndetectPeakToTotPwrThresh(float thresh);
 
     /**
+     * @brief  Set the peak to noise floor SNR threshold when inactive
+     * @param  thresh_db 	The threshold in dB
+     * @param  passband_bw_hz	Passband bandwidth in Hz
+     *
+     * This function is used to set the signal to noise ratio
+     * threshold when the tone detector is in its inactive state, that is
+     * when a tone is not being detected.
+     * This will compare the narrow band Goertzel tone detector power to
+     * an estimated noise floor. The noise floor estimation is deduced from
+     * the total passband power where the tone has been removed. This will
+     * be a mean value of the noise floor for the whole passband. If the
+     * amplitude response for the passband is not flat, the noise floor will
+     * have an offset and so will the tone. This will mean that the SNR will
+     * also have an offset. So, for example, if the part of the passband where
+     * the tone is expected to appear is attenuated by 6dB in comparision to
+     * the mean passband gain, the threshold need to also be lowered by 6dB.
+     */
+    void setDetectSnrThresh(float thresh_db, float passband_bw_hz);
+
+    /**
+     * @brief  Set the peak to noise floor SNR threshold when active
+     * @param  thresh_db	The threshold in dB
+     * @param  passband_bw_hz	Passband bandwidth in Hz
+     *
+     * This function is used to set the signal to noise ratio
+     * threshold when the tone detector is in its active state, that is
+     * when a tone is being detected.
+     * This will compare the narrow band Goertzel tone detector power to
+     * an estimated noise floor. The noise floor estimation is deduced from
+     * the total passband power where the tone has been removed. This will
+     * be a mean value of the noise floor for the whole passband. If the
+     * amplitude response for the passband is not flat, the noise floor will
+     * have an offset and so will the tone. This will mean that the SNR will
+     * also have an offset. So, for example, if the part of the passband where
+     * the tone is expected to appear is attenuated by 6dB in comparision to
+     * the mean passband gain, the threshold need to also be lowered by 6dB.
+     */
+    void setUndetectSnrThresh(float thresh_db, float passband_bw_hz);
+
+    /**
      * @brief  Set the phase detector bandwidth when inactive
      * @param  bw_hz The phase detector bandwidth in Hz
      * @param  stddev_hz The phase detector standard deviation in Hz

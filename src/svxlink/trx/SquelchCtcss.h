@@ -160,6 +160,12 @@ class SquelchCtcss : public Squelch
 
       int ctcss_mode = 1;
       cfg.getValue(rx_name, "CTCSS_MODE", ctcss_mode);
+      
+      float snr_open_thresh = 16;
+      cfg.getValue(rx_name, "CTCSS_SNR_OPEN_THRESH", snr_open_thresh);
+
+      float snr_close_thresh = 10;
+      cfg.getValue(rx_name, "CTCSS_SNR_CLOSE_THRESH", snr_close_thresh);
 
       det = new ToneDetector(ctcss_fq, 8.0f);
       det->setPeakThresh(ctcss_thresh);
@@ -169,17 +175,19 @@ class SquelchCtcss : public Squelch
       switch (ctcss_mode)
       {
         case 2:
-          std::cout << "### CTCSS mode: Center to total passband power\n";
+          std::cout << "### CTCSS mode: Estimated SNR\n";
           //det->setDetectBw(6.0f);
           det->setDetectUseWindowing(false);
           det->setDetectPeakThresh(0.0f);
-          det->setDetectPeakToTotPwrThresh(0.6f);
+          //det->setDetectPeakToTotPwrThresh(0.6f);
+          det->setDetectSnrThresh(snr_open_thresh, 210.0f);
           det->setDetectStableCountThresh(1);
 
           //det->setUndetectBw(8.0f);
           det->setUndetectUseWindowing(false);
           det->setUndetectPeakThresh(0.0f);
-          det->setUndetectPeakToTotPwrThresh(0.3f);
+          //det->setUndetectPeakToTotPwrThresh(0.3f);
+          det->setUndetectSnrThresh(snr_close_thresh, 210.0f);
           det->setUndetectStableCountThresh(2);
 
             // Set up CTCSS band pass filter
@@ -189,18 +197,20 @@ class SquelchCtcss : public Squelch
           break;
 
         case 3:
-          std::cout << "### CTCSS mode: Phase\n";
+          std::cout << "### CTCSS mode: Estimated SNR + Phase\n";
           //det->setDetectUseWindowing(false);
           det->setDetectBw(16.0f);
           det->setDetectPeakThresh(0.0f);
-          det->setDetectPeakToTotPwrThresh(0.6f);
+          //det->setDetectPeakToTotPwrThresh(0.6f);
+          det->setDetectSnrThresh(snr_open_thresh, 210.0f);
           det->setDetectStableCountThresh(1);
           det->setDetectPhaseBwThresh(2.0f, 2.0f);
 
           //det->setUndetectBw(8.0f);
           det->setUndetectUseWindowing(false);
           det->setUndetectPeakThresh(0.0f);
-          det->setUndetectPeakToTotPwrThresh(0.3f);
+          //det->setUndetectPeakToTotPwrThresh(0.3f);
+          det->setUndetectSnrThresh(snr_close_thresh, 210.0f);
           det->setUndetectStableCountThresh(2);
           //det->setUndetectPhaseBwThresh(4.0f, 16.0f);
 

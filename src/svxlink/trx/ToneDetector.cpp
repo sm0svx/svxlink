@@ -103,6 +103,8 @@ struct ToneDetector::DetectorParams
   bool		      use_windowing;
   float		      peak_to_tot_pwr_thresh;
   float		      passband_energy_thresh;
+  float		      snr_thresh;
+  float		      passband_bw;
 };
 
 
@@ -155,6 +157,8 @@ ToneDetector::ToneDetector(float tone_hz, float width_hz, int det_delay_ms)
   det_par->use_windowing = DEFAULT_USE_WINDOWING;
   det_par->peak_to_tot_pwr_thresh = 0.0f;
   det_par->passband_energy_thresh = 0.0f;
+  det_par->snr_thresh = 0.0f;
+  det_par->passband_bw = 0.0f;
 
   setDetectBw(width_hz);
 
@@ -375,6 +379,20 @@ void ToneDetector::setUndetectPeakToTotPwrThresh(float thresh)
 } /* ToneDetector::setUndetectPeakToTotPwrThresh */
 
 
+void ToneDetector::setDetectSnrThresh(float thresh_db, float passband_bw_hz)
+{
+  det_par->snr_thresh = thresh_db;
+  det_par->passband_bw = passband_bw_hz;
+} /* ToneDetector::setDetectSnrThresh */
+
+
+void ToneDetector::setUndetectSnrThresh(float thresh_db, float passband_bw_hz)
+{
+  undet_par->snr_thresh = thresh_db;  
+  undet_par->passband_bw = passband_bw_hz;
+} /* ToneDetector::setUndetectSnrThresh */
+
+
 void ToneDetector::setDetectPhaseBwThresh(float bw_hz, float stddev_hz)
 {
   if ((bw_hz > 0.0f) && (stddev_hz > 0.0f))
@@ -555,7 +573,7 @@ void ToneDetector::postProcess(void)
       // The calculation below is a bit optimized but this is what
       // are doing:
       //
-      //    float Ptone = res_center / ((par->block_len*par->block_len) / 2);
+      //    float Ptone = 2.0f * res_center / (par->block_len*par->block_len);
       //    float Ppassband = passband_energy / par->block_len;
       //    float peak_to_tot_pwr = Ptone / Ppassband;
     float peak_to_tot_pwr =
@@ -564,6 +582,24 @@ void ToneDetector::postProcess(void)
 	(peak_to_tot_pwr > par->peak_to_tot_pwr_thresh);
   }
 
+  if (par->passband_bw > 0.0f)
+  {
+      // Calculate mean tone power
+    float Ptone = 2.0f * res_center / (par->block_len*par->block_len);
+    
+      // Calculate mean passband power
+    float Ppassband = passband_energy / par->block_len;
+    
+      // Estimate the mean noise floor over the whole passband
+    float Pnoise = (Ppassband - Ptone) / ((par->passband_bw-par->bw) / par->bw);
+    
+      // Calculate the signal to noise ratio
+    float snr = 10 * log10(Ptone / Pnoise);
+    
+      // Check if the SNR is over the threshold
+    active = active && (snr > par->snr_thresh);
+  }
+  
     // If phase checking is active, check the phase
   if (phase_check_left > 0)
   {
