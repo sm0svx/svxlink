@@ -120,6 +120,7 @@ AudioFifo::AudioFifo(unsigned fifo_size)
     is_full(false), buffering_when_empty(true), buffering_enabled(true),
     do_overwrite(false)
 {
+  assert(fifo_size > 0);
   fifo = new float[fifo_size];
 } /* AudioFifo */
 
@@ -132,6 +133,7 @@ AudioFifo::~AudioFifo(void)
 
 void AudioFifo::setSize(unsigned new_size)
 {
+  assert(new_size > 0);
   if (new_size != fifo_size)
   {
     delete [] fifo;
@@ -144,7 +146,6 @@ void AudioFifo::setSize(unsigned new_size)
 
 unsigned AudioFifo::samplesInFifo() const
 {
-  if (fifo_size == 0) return 0;
   return is_full ? fifo_size : (head - tail + fifo_size) % fifo_size;
 
 } /* AudioFifo::samplesInFifo */
@@ -198,7 +199,7 @@ int AudioFifo::writeSamples(const float *samples, int count)
     written = sinkWriteSamples(samples, count);
   }
 
-  if (buffering_enabled && (fifo_size > 0))
+  if (buffering_enabled)
   {  
     writeSamplesFromFifo(count - written);
 
