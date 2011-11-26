@@ -294,7 +294,7 @@ bool AudioDeviceAlsa::openDevice(Mode mode)
     play_watch = new AlsaWatch(play_handle);
     play_watch->activity.connect(
             mem_fun(*this, &AudioDeviceAlsa::writeSpaceAvailable));
-    play_watch->setEnabled(false);
+    play_watch->setEnabled(true);
 
     if (!startPlayback(play_handle))
     {
