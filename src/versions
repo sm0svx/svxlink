@@ -7,7 +7,7 @@ ECHOLIB=0.14.1
 ECHOLIB_RPM_RELEASE=1
 
 # Version for the Async library
-LIBASYNC=0.18.1.99.0
+LIBASYNC=0.18.2
 LIBASYNC_RPM_RELEASE=1
 
 # SvxLink versions
@@ -24,7 +24,7 @@ MODULE_DTMF_REPEATER=0.2.0
 MODULE_METARINFO=0.0.2
 
 # Version for the RemoteTrx application
-REMOTE_TRX=0.3.1.99.0
+REMOTE_TRX=0.3.2
 REMOTE_TRX_RELEASE=1
 
 # Version for the signal level calibration utility
