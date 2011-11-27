@@ -162,10 +162,14 @@ class SquelchCtcss : public Squelch
       cfg.getValue(rx_name, "CTCSS_MODE", ctcss_mode);
       
       float snr_open_thresh = 16;
-      cfg.getValue(rx_name, "CTCSS_SNR_OPEN_THRESH", snr_open_thresh);
-
       float snr_close_thresh = 10;
-      cfg.getValue(rx_name, "CTCSS_SNR_CLOSE_THRESH", snr_close_thresh);
+      if (cfg.getValue(rx_name, "CTCSS_SNR_OPEN_THRESH", snr_open_thresh))
+      {
+        if (!cfg.getValue(rx_name, "CTCSS_SNR_CLOSE_THRESH", snr_close_thresh))
+        {
+          snr_close_thresh = snr_open_thresh;
+        }
+      }
 
       det = new ToneDetector(ctcss_fq, 8.0f);
       det->setPeakThresh(ctcss_thresh);
