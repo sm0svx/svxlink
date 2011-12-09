@@ -193,7 +193,7 @@ class Async::AudioSplitter::Branch : public AudioSource
     
     virtual void discardSamples(void)
     {
-      cerr << "AudioSplitter: discardSamples currently not supported." << endl;
+      // cerr << "AudioSplitter: discardSamples currently not supported." << endl;
     } /* discardSamples() */
     
     virtual void allSamplesFlushed(void)
