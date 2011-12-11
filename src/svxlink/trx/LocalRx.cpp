@@ -656,7 +656,10 @@ void LocalRx::reset(void)
 
 void LocalRx::sel5Detected(std::string sequence)
 {
-  selcallSequenceDetected(sequence);
+  if (!is_muted)
+  {
+    selcallSequenceDetected(sequence);
+  }
 } /* LocalRx::sel5Detected */
 
 

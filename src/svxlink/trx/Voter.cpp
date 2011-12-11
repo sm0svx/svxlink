@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2011 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -83,8 +83,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define BEST_RX_SIGLEV_RESET  -100.0
-#define MAX_VOTING_DELAY      5000
 
 
 /****************************************************************************
@@ -95,46 +93,102 @@ using namespace Async;
 
 /**
  * @brief A class that represents a satellite receiver
+ * 
+ * The main purpose of this class is to handle the voter delay buffer.
+ * During a voter delay, the content (audio, dtmf, selcall etc) received for
+ * each receiver should be buffered until we know which receiver is going to
+ * be chosen. When a receiver has been chosen, it's content is released to
+ * its "subscribers".
+ * When the receiver close its squelch, the squelch signal is delayed until
+ * all audio has been flushed.
  */
-class SatRx : public AudioSource, public sigc::trackable
+class Voter::SatRx : public AudioSource, public sigc::trackable
 {
   public:
-    int id;
-    Rx *rx;
-    
-    SatRx(int id, Rx *rx, int fifo_length_ms)
-      : id(id), rx(rx), fifo(0), sql_open(false)
+    SatRx(Config &cfg, const string &rx_name, int id, int fifo_length_ms)
+      : rx_id(id), rx(0), fifo(0), sql_open(false)
     {
-      rx->dtmfDigitDetected.connect(mem_fun(*this, &SatRx::onDtmfDigitDetected));
-      rx->selcallSequenceDetected.connect(
-	      mem_fun(*this, &SatRx::onSelcallSequenceDetected));
-      rx->squelchOpen.connect(mem_fun(*this, &SatRx::rxSquelchOpen));
-      rx->signalLevelUpdated.connect(mem_fun(*this, &SatRx::rxSignalLevelUpdated));
-      AudioSource *prev_src = rx;
+      rx = RxFactory::createNamedRx(cfg, rx_name);
+      if (rx != 0)
+      {
+	rx->dtmfDigitDetected.connect(
+		mem_fun(*this, &SatRx::onDtmfDigitDetected));
+	rx->selcallSequenceDetected.connect(
+		mem_fun(*this, &SatRx::onSelcallSequenceDetected));
+	rx->squelchOpen.connect(
+		mem_fun(*this, &SatRx::rxSquelchOpen));
+	rx->signalLevelUpdated.connect(
+		mem_fun(*this, &SatRx::rxSignalLevelUpdated));
+	
+	// FIXME: Should be buffer the tone detector output like we do with
+	// DTMF and selcall?
+	rx->toneDetected.connect(toneDetected.make_slot());
 
-      if (fifo_length_ms > 0)
-      {
-        fifo = new AudioFifo(fifo_length_ms * INTERNAL_SAMPLE_RATE / 1000);
-        fifo->setOverwrite(true);
-        prev_src->registerSink(fifo);
-        prev_src = fifo;
-        valve.setBlockWhenClosed(true);
+	AudioSource *prev_src = rx;
+
+	if (fifo_length_ms > 0)
+	{
+	  fifo = new AudioFifo(fifo_length_ms * INTERNAL_SAMPLE_RATE / 1000);
+	  fifo->setOverwrite(true);
+	  prev_src->registerSink(fifo);
+	  prev_src = fifo;
+	  valve.setBlockWhenClosed(true);
+	}
+	else
+	{
+	  valve.setBlockWhenClosed(false);
+	}
+	
+	valve.setOpen(false);
+	prev_src->registerSink(&valve);
+	
+	AudioSource::setHandler(&valve);
       }
-      else
-      {
-        valve.setBlockWhenClosed(false);
-      }
-      
-      valve.setOpen(false);
-      prev_src->registerSink(&valve);
-      
-      AudioSource::setHandler(&valve);
     }
     
     ~SatRx(void)
     {
       delete fifo;
+      delete rx;
     }
+    
+    bool initialize(void)
+    {
+      if ((rx == 0) || !rx->initialize())
+      {
+      	return false;
+      }
+      rx->setVerbose(false);
+      return true;
+    }
+    
+    const std::string& name(void) const { return rx->name(); }
+    
+    bool addToneDetector(float fq, int bw, float thresh, int required_duration)
+    {
+      return rx->addToneDetector(fq, bw, thresh, required_duration);
+    }
+    
+    float signalStrength(void) const { return rx->signalStrength(); }
+
+    void mute(bool do_mute)
+    {
+      rx->mute(do_mute);
+      if (do_mute)
+      {
+      	if (fifo != 0)
+        {
+          fifo->clear();
+        }
+	//setSquelchOpen(false);
+	dtmf_buf.clear();
+	selcall_buf.clear();
+      }
+    }
+    
+    void reset(void) { rx->reset(); }
+    
+    bool squelchIsOpen(void) const { return sql_open; }
     
     void stopOutput(bool do_stop)
     {
@@ -157,22 +211,7 @@ class SatRx : public AudioSource, public sigc::trackable
       }
     }
     
-    void mute(bool do_mute)
-    {
-      rx->mute(do_mute);
-      if (do_mute)
-      {
-      	if (fifo != 0)
-        {
-          fifo->clear();
-        }
-	//setSquelchOpen(false);
-	dtmf_buf.clear();
-	selcall_buf.clear();
-      }
-    }
-    
-    bool squelchIsOpen(void) const { return sql_open; }
+    int id(void) const { return rx_id; }
     
     /*
     void clear(void)
@@ -185,10 +224,11 @@ class SatRx : public AudioSource, public sigc::trackable
   
     signal<void, char, int>  	dtmfDigitDetected;
     signal<void, string>  	selcallSequenceDetected;
-    signal<void, bool, SatRx*> squelchOpen;
-    signal<void, float, SatRx*>  signalLevelUpdated;
-  
-  
+    signal<void, bool, SatRx*> 	squelchOpen;
+    signal<void, float, SatRx*>	signalLevelUpdated;
+    signal<void, float>		toneDetected;
+
+    
   protected:
     virtual void allSamplesFlushed(void)
     {
@@ -198,9 +238,11 @@ class SatRx : public AudioSource, public sigc::trackable
   
   
   private:
-    typedef list<pair<char, int> >  DtmfBuf;
-    typedef list<string>  	     SelcallBuf;
+    typedef list<pair<char, int> >	DtmfBuf;
+    typedef list<string>		SelcallBuf;
     
+    int		rx_id;    
+    Rx		*rx;
     AudioFifo 	*fifo;
     AudioValve	valve;
     DtmfBuf   	dtmf_buf;
@@ -298,30 +340,20 @@ class SatRx : public AudioSource, public sigc::trackable
  ****************************************************************************/
 
 Voter::Voter(Config &cfg, const std::string& name)
-  : Rx(cfg, name), cfg(cfg), active_rx(0), is_muted(true), m_verbose(true),
-    best_rx(0), best_rx_siglev(BEST_RX_SIGLEV_RESET), best_rx_timer(0),
-    voting_delay(0), sql_rx_id(0), selector(0), buffer_length(0),
-    check_siglev_timer(0), hysteresis(0), squelch_close_delay_timer(0),
-    switch_to_rx(0), rx_switch_timer(0)
+  : Rx(cfg, name), cfg(cfg), m_verbose(true), selector(0),
+    sm(Macho::State<Top>(this)), is_processing_event(false)
 {
   Rx::setVerbose(false);
-  check_siglev_timer = new Timer(1000, Timer::TYPE_PERIODIC);
-  check_siglev_timer->setEnable(false);
-  check_siglev_timer->expired.connect(mem_fun(*this, &Voter::checkSiglev));
 } /* Voter::Voter */
 
 
 Voter::~Voter(void)
 {
   delete selector;
-  delete best_rx_timer;
-  delete squelch_close_delay_timer;
-  delete rx_switch_timer;
   
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    delete (*it)->rx;
     delete *it;
   }
   rxs.clear();
@@ -342,28 +374,92 @@ bool Voter::initialize(void)
     return false;
   }
 
-  string value;
-  if (cfg.getValue(name(), "VOTING_DELAY", voting_delay))
+  int voting_delay = DEFAULT_VOTING_DEALAY;
+  cfg.getValue(name(), "VOTING_DELAY", voting_delay);
+  if ((voting_delay < 0) || (voting_delay > MAX_VOTING_DELAY))
   {
-    buffer_length = voting_delay;
+    cerr << "*** ERROR: Config variable " << name() << "/VOTING_DELAY out "
+            "of range (" << voting_delay << "). Valid range is 0 to "
+	 << MAX_VOTING_DELAY << ".\n";
+    return false;
+  }
+  sm->setVotingDelay(voting_delay);
+  
+  int buffer_length = voting_delay;
+  cfg.getValue(name(), "BUFFER_LENGTH", buffer_length);
+  if ((buffer_length < 0) || (buffer_length > MAX_BUFFER_LENGTH))
+  {
+    cerr << "*** ERROR: Config variable " << name() << "/BUFFER_LENGTH out "
+            "of range (" << buffer_length << "). Valid range is 0 to "
+	 << MAX_BUFFER_LENGTH << ".\n";
+    return false;
   }
   
-  cfg.getValue(name(), "BUFFER_LENGTH", buffer_length);
+  float hysteresis = DEFAULT_HYSTERESIS;
   cfg.getValue(name(), "HYSTERESIS", hysteresis);
+  if ((hysteresis < 0.0f) || (hysteresis > MAX_HYSTERESIS))
+  {
+    cerr << "*** ERROR: Config variable " << name() << "/HYSTERESIS out "
+            "of range (" << hysteresis << "). Valid range is 0 to "
+	 << MAX_HYSTERESIS << ".\n";
+    return false;
+  }
+  sm->setHysteresis(hysteresis);
 
-  int sql_close_revote_delay = 500;
+  int sql_close_revote_delay = DEFAULT_SQL_CLOSE_REVOTE_DELAY;
   cfg.getValue(name(), "SQL_CLOSE_REVOTE_DELAY", sql_close_revote_delay);
-  squelch_close_delay_timer = new Timer(sql_close_revote_delay,
-					Timer::TYPE_ONESHOT);
-  squelch_close_delay_timer->setEnable(false);
-  squelch_close_delay_timer->expired.connect(
-	  mem_fun(*this, &Voter::squelchCloseDelayExpired));
+  if ((sql_close_revote_delay < 0) ||
+      (sql_close_revote_delay > MAX_SQL_CLOSE_REVOTE_DELAY))
+  {
+    cerr << "*** ERROR: Config variable " << name()
+         << "/SQL_CLOSE_REVOTE_DELAY out of range ("
+	 << sql_close_revote_delay << "). Valid range is 0 to "
+	 << MAX_SQL_CLOSE_REVOTE_DELAY << ".\n";
+    return false;
+  }
+  sm->setSqlCloseRevoteDelay(sql_close_revote_delay);
   
-  int rx_switch_delay = 500;
+  int revote_interval = DEFAULT_REVOTE_INTERVAL;
+  cfg.getValue(name(), "REVOTE_INTERVAL", revote_interval);
+  if (revote_interval != 0)
+  {
+    if ((revote_interval < MIN_REVOTE_INTERVAL) ||
+	(revote_interval > MAX_REVOTE_INTERVAL))
+    {
+      cerr << "*** ERROR: Config variable " << name() << "/REVOTE_INTERVAL out "
+	      "of range (" << revote_interval << "). Valid range is "
+	  << MIN_REVOTE_INTERVAL << " to "
+	  << MAX_REVOTE_INTERVAL << ".\n";
+      return false;
+    }
+  }
+  sm->setRevoteInterval(revote_interval);
+  
+  int rx_switch_delay = DEFAULT_RX_SWITCH_DELAY;
   cfg.getValue(name(), "RX_SWITCH_DELAY", rx_switch_delay);
-  rx_switch_timer = new Timer(rx_switch_delay, Timer::TYPE_ONESHOT);
-  rx_switch_timer->setEnable(false);
-  rx_switch_timer->expired.connect(mem_fun(*this, &Voter::rxSwitchTimerExpired));
+  if ((rx_switch_delay < 0) || (rx_switch_delay > MAX_RX_SWITCH_DELAY))
+  {
+    cerr << "*** ERROR: Config variable " << name()
+         << "/RX_SWITCH_DELAY out of range ("
+	 << rx_switch_delay << "). Valid range is 0 to "
+	 << MAX_RX_SWITCH_DELAY << ".\n";
+    return false;
+  }
+  sm->setRxSwitchDelay(rx_switch_delay);
+  
+  float no_vote_above_siglev = DEFAULT_NO_VOTE_ABOVE_SIGLEV;
+  cfg.getValue(name(), "NO_VOTE_ABOVE_SIGLEV", no_vote_above_siglev);
+  if ((no_vote_above_siglev < MIN_NO_VOTE_ABOVE_SIGLEV) ||
+      (no_vote_above_siglev > MAX_NO_VOTE_ABOVE_SIGLEV))
+  {
+    cerr << "*** ERROR: Config variable " << name()
+         << "/NO_VOTE_ABOVE_SIGLEV out of range ("
+	 << no_vote_above_siglev << "). Valid range is "
+	 << MIN_NO_VOTE_ABOVE_SIGLEV << " to "
+	 << MAX_NO_VOTE_ABOVE_SIGLEV << ".\n";
+    return false;
+  }
+  sm->setNoVoteAboveSiglev(no_vote_above_siglev);
   
   selector = new AudioSelector;
   setHandler(selector);
@@ -376,26 +472,19 @@ bool Voter::initialize(void)
     if (!rx_name.empty())
     {
       cout << "Adding receiver to Voter: " << rx_name << endl;
-      Rx *rx = RxFactory::createNamedRx(cfg, rx_name);
-      if (rx == 0)
-      {
-      	// FIXME: Cleanup
-      	return false;
-      }
-      SatRx *srx = new SatRx(rxs.size() + 1, rx, buffer_length);
+      SatRx *srx = new SatRx(cfg, rx_name, rxs.size() + 1, buffer_length);
       srx->squelchOpen.connect(mem_fun(*this, &Voter::satSquelchOpen));
       srx->signalLevelUpdated.connect(
 	      mem_fun(*this, &Voter::satSignalLevelUpdated));
       srx->dtmfDigitDetected.connect(dtmfDigitDetected.make_slot());
       srx->selcallSequenceDetected.connect(selcallSequenceDetected.make_slot());
-      if ((srx == 0) || !rx->initialize())
+      
+      if ((srx == 0) || !srx->initialize())
       {
-      	// FIXME: Cleanup
       	return false;
       }
       srx->mute(true);
-      rx->setVerbose(false);
-      rx->toneDetected.connect(toneDetected.make_slot());
+      srx->toneDetected.connect(toneDetected.make_slot());
       selector->addSource(srx);
       selector->enableAutoSelect(srx, 0);
       
@@ -409,8 +498,6 @@ bool Voter::initialize(void)
     ++start;
   }
   
-  
-  
   return true;
   
 } /* Voter::initialize */
@@ -419,40 +506,15 @@ bool Voter::initialize(void)
 void Voter::mute(bool do_mute)
 {
   //cout << "Voter::mute: do_mute=" << (do_mute ? "TRUE" : "FALSE") << endl;
-  
-  if (do_mute == is_muted)
+  assert(!is_processing_event);
+  if (do_mute)
   {
-    return;
+    dispatchEvent(Macho::Event(&Top::mute, true));
   }
-  
-  /*
-  if (active_rx != 0)
+  else
   {
-    assert(!is_muted);
-    active_rx = 0;
+    dispatchEvent(Macho::Event(&Top::unmute));
   }
-  else if (best_rx_timer != 0)
-  {
-    assert(!is_muted);
-    delete best_rx_timer;
-    best_rx_timer = 0;
-    best_rx = 0;
-    best_rx_siglev = BEST_RX_SIGLEV_RESET;
-  }
-  */
-  
-  list<SatRx *>::iterator it;
-  for (it=rxs.begin(); it!=rxs.end(); ++it)
-  {
-    (*it)->mute(do_mute);
-  }
-  
-  squelch_close_delay_timer->setEnable(false);
-  rx_switch_timer->setEnable(false);
-  switch_to_rx = 0;
-    
-  is_muted = do_mute;
-  
 } /* Voter::mute */
 
 
@@ -463,8 +525,7 @@ bool Voter::addToneDetector(float fq, int bw, float thresh,
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    Rx *rx = (*it)->rx;
-    success &= rx->addToneDetector(fq, bw, thresh, required_duration);
+    success &= (*it)->addToneDetector(fq, bw, thresh, required_duration);
   }
   
   return success;
@@ -474,42 +535,22 @@ bool Voter::addToneDetector(float fq, int bw, float thresh,
 
 float Voter::signalStrength(void) const
 {
-  if (active_rx != 0)
-  {
-    return active_rx->rx->signalStrength();
-  }
-  
-  return BEST_RX_SIGLEV_RESET;
-  
+    // Const cast needed since we cannot declare the signalStrength
+    // method const due to how the state machine is implemented.
+  return const_cast<Macho::Machine<Top>&>(sm)->signalStrength();
 } /* Voter::signalStrength */
 
 
 int Voter::sqlRxId(void) const
 {
-  return sql_rx_id;
+  return const_cast<Macho::Machine<Top>&>(sm)->sqlRxId();
 } /* Voter::sqlRxId */
 
 
 void Voter::reset(void)
 {
-  list<SatRx *>::iterator it;
-  for (it=rxs.begin(); it!=rxs.end(); ++it)
-  {
-    Rx *rx = (*it)->rx;
-    rx->reset();
-  }
-  
-  is_muted = true;
-  active_rx = 0;
-  best_rx = 0;
-  best_rx_siglev = BEST_RX_SIGLEV_RESET;
-  delete best_rx_timer;
-  best_rx_timer = 0;
-  sql_rx_id = 0;
-  switch_to_rx = 0;
-  rx_switch_timer->setEnable(false);
-  squelch_close_delay_timer->setEnable(false);
-  
+  assert(!is_processing_event);
+  dispatchEvent(Macho::Event(&Top::reset));
 } /* Voter::reset */
 
 
@@ -529,212 +570,83 @@ void Voter::reset(void)
  *
  ****************************************************************************/
 
-void Voter::satSquelchOpen(bool is_open, SatRx *srx)
+void Voter::dispatchEvent(Macho::IEvent<Top> *event)
 {
-  Rx *rx = srx->rx;
-  
-  //cout << name() << "::satSquelchOpen(" << (is_open ? "TRUE" : "FALSE")
-  //     << ", " << rx->name() << "): Signal Strength = "
-  //     << rx->signalStrength() << "\n";
-  
-  if (is_open)
+  if (!is_processing_event)
   {
-    if (active_rx != 0)
+    is_processing_event = true;
+    sm.dispatch(event);
+    EventQueue::iterator it;
+    for (it=event_queue.begin(); it!=event_queue.end(); ++it)
     {
-      if (srx == active_rx)
-      {
-	if (m_verbose)
-	{
-	  cout << name() << ": The squelch is OPEN"
-	      << " (" << rx->name() << "="
-	      << rx->signalStrength() << ")" << endl;
-	}
-	squelch_close_delay_timer->setEnable(false);
-	setSquelchState(true);
-	check_siglev_timer->setEnable(true);
-      }
-      return;
+      sm.dispatch(*it);
     }
-    
-    if (best_rx == 0)
-    {
-      delete best_rx_timer;
-      best_rx_timer = new Timer(voting_delay);
-      best_rx_timer->expired.connect(mem_fun(*this, &Voter::chooseBestRx));
-    }
-    
-    if (rx->signalStrength() > best_rx_siglev)
-    {
-      best_rx_siglev = rx->signalStrength();
-      best_rx = srx;
-    }
-    
-    //srx->clear();
+    event_queue.clear();
+    is_processing_event = false;
   }
   else
   {
-    if (active_rx != 0)
-    {
-      if (srx != active_rx)
-      {
-      	return;
-      }
-      
-      assert(best_rx == 0);
-      
-      squelch_close_delay_timer->setEnable(true);
-      
-      /*
-      list<SatRx *>::iterator it;
-      for (it=rxs.begin(); it!=rxs.end(); ++it)
-      {
-	if (*it != active_rx)
-	{
-	  (*it)->mute(false);
-	}
-      }
-      
-      checkSiglev(0);
-      */
-      if (active_rx == srx)
-      {
-	if (m_verbose)
-	{
-      	  cout << name() << ": The squelch is CLOSED"
-               << " (" << active_rx->rx->name() << "="
-	       << active_rx->rx->signalStrength() << ")" << endl;
-	}
-
-	/*
-	active_rx = 0;
-	srx->stopOutput(true);
-	*/
-	sql_rx_id = srx->id;
-	setSquelchState(false);
-	check_siglev_timer->setEnable(false);
-      }
-    }
-    else if (srx == best_rx)
-    {
-      best_rx = 0;
-      best_rx_siglev = BEST_RX_SIGLEV_RESET;
-      list<SatRx *>::iterator it;
-      for (it=rxs.begin(); it!=rxs.end(); ++it)
-      {
-	if ((*it)->squelchIsOpen() &&
-	    ((*it)->rx->signalStrength() > best_rx_siglev))
-	{
-	  best_rx = *it;
-	  best_rx_siglev = (*it)->rx->signalStrength();
-	}
-      }
-      if (best_rx == 0)
-      {
-      	delete best_rx_timer;
-	best_rx_timer = 0;
-      }
-    }
+    event_queue.push_back(event);
   }
-} /* Voter::satSquelchOpen */
+} /* Voter::dispatchEvent */
 
 
-void Voter::squelchCloseDelayExpired(Timer *t)
+void Voter::satSquelchOpen(bool is_open, SatRx *srx)
 {
-  cout << "Voter::squelchCloseDelayExpired\n";
-  
-  t->setEnable(false);
-
-  list<SatRx *>::iterator it;
-  for (it=rxs.begin(); it!=rxs.end(); ++it)
-  {
-    if (*it != active_rx)
-    {
-      (*it)->mute(false);
-    }
-  }
-  
-  checkSiglev(0);
-  
-  if (switch_to_rx == 0)
-  {
-    active_rx->stopOutput(true);
-    active_rx = 0;
-  }
-} /* Voter::squelchCloseDelayExpired */
+  cout << "Voter::satSquelchOpen: is_open=" << (is_open ? "TRUE" : "FALSE")
+       << " srx=" << srx->name() << endl;
+  dispatchEvent(Macho::Event(&Top::satSquelchOpen, srx, is_open));
+} /* Voter::satSquelchOpen */
 
 
 void Voter::satSignalLevelUpdated(float siglev, SatRx *srx)
 {
-  if (srx == active_rx)
-  {
-    signalLevelUpdated(siglev);
-  }
+  dispatchEvent(Macho::Event(&Top::satSignalLevelUpdated, srx, siglev));
 } /* Voter::satSignalLevelUpdated */
 
 
-void Voter::chooseBestRx(Timer *t)
+void Voter::muteAllBut(SatRx *srx)
 {
-  //cout << name() << "::chooseBestRx\n";
-  
-  delete best_rx_timer;
-  best_rx_timer = 0;
-  
-  if (best_rx != 0)
-  {
-    list<SatRx *>::iterator it;
-    for (it=rxs.begin(); it!=rxs.end(); ++it)
-    {
-      if (*it != best_rx)
-      {
-	(*it)->mute(true);
-      }
-    }
-    
-    if (m_verbose)
-    {
-      cout << name() << ": The squelch is OPEN"
-           << " (" << best_rx->rx->name() << "=" << best_rx_siglev << ")"
-	   << endl;
-    }
-    
-    active_rx = best_rx;
-    best_rx = 0;
-    best_rx_siglev = BEST_RX_SIGLEV_RESET;
-
-    sql_rx_id = active_rx->id;
-    setSquelchState(true);
-    active_rx->stopOutput(false);
-    
-    check_siglev_timer->setEnable(true);
-  }
-  
-} /* Voter::chooseBestRx */
-
-
-void Voter::checkSiglev(Timer *t)
-{
-  assert(active_rx != 0);
-  
-  if (switch_to_rx != 0)
-  {
-    switch_to_rx = 0;
-    rx_switch_timer->setEnable(false);
-  }
-  
-  float active_rx_siglev = BEST_RX_SIGLEV_RESET;
-  float best_rx_siglev = BEST_RX_SIGLEV_RESET;
-  SatRx *best_rx = active_rx;
-  
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    float siglev = (*it)->rx->signalStrength();
+    (*it)->mute(*it != srx);
+  }
+} /* Voter::muteAllBut */
+
+
+void Voter::unmuteAll(void)
+{
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    (*it)->mute(false);
+  }
+} /* Voter::unmuteAll */
+
+
+void Voter::resetAll(void)
+{
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    (*it)->reset();
+  }
+} /* Voter::resetAll */
+
+
+void Voter::printSquelchState(void)
+{
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    float siglev = (*it)->signalStrength();
     bool sql_is_open = (*it)->squelchIsOpen();
 
-    cout << (*it)->rx->name();
+    cout << (*it)->name();
     if (sql_is_open)
     {
-      cout << ((*it) == active_rx ? "*" : ":");
+      cout << ((*it) == sm->activeSrx() ? "*" : ":");
     }
     else
     {
@@ -742,91 +654,571 @@ void Voter::checkSiglev(Timer *t)
     }
     cout << left << setw(4) << (int)siglev;
     cout << " ";
-    
-    if (sql_is_open)
-    {
-      if ((*it) == active_rx)
-      {
-        active_rx_siglev = siglev;
-      }
-      if (siglev > best_rx_siglev)
-      {
-        best_rx_siglev = siglev;
-        best_rx = *it;
-      }
-    }
   }
   cout << endl;
-  
-  if ((best_rx != active_rx) && (best_rx_siglev > active_rx_siglev+hysteresis))
+} /* Voter::printSquelchState */
+
+
+Voter::SatRx *Voter::findBestRx(void) const
+{
+  float best_rx_siglev = BEST_RX_SIGLEV_RESET;
+  SatRx *best_rx = 0;
+  list<SatRx *>::const_iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    switch_to_rx = best_rx;
-    rx_switch_timer->setEnable(true);
-    best_rx->stopOutput(false);
-    best_rx->mute(false);
-    /*
-    if (m_verbose)
+    if ((*it)->squelchIsOpen() &&
+	((*it)->signalStrength() > best_rx_siglev))
     {
-      cout << name() << ": Switching from \"" << active_rx->rx->name()
-      	   << "\" (" << active_rx_siglev << ") to \"" << best_rx->rx->name()
-	   << "\" (" << best_rx_siglev << ")\n";
+      best_rx = *it;
+      best_rx_siglev = (*it)->signalStrength();
     }
-    
-    active_rx->stopOutput(true);
-    active_rx->mute(true);
-    
-    active_rx = best_rx;
-    active_rx->stopOutput(false);
-    active_rx->mute(false);
-    
-    sql_rx_id = best_rx->id;
-    */
   }
   
-} /* Voter::checkSiglev */
+  return best_rx;
+  
+} /* Voter::findBestRx */
 
 
-void Voter::rxSwitchTimerExpired(Timer *t)
+
+/****************************************************************************
+ *
+ * Top state event handlers
+ *
+ ****************************************************************************/
+
+void Voter::Top::init(Voter *voter)
 {
-  cout << "Voter::rxSwitchTimerExpired\n";
-  
-  t->setEnable(false);
-  
-  assert(switch_to_rx != 0);
-  
-  float active_rx_siglev = active_rx->rx->signalStrength();
-  float switch_to_rx_siglev = switch_to_rx->rx->signalStrength();
-  if ((switch_to_rx != active_rx) && switch_to_rx->rx->squelchIsOpen() &&
-      (switch_to_rx_siglev > active_rx_siglev+hysteresis))
+  box().voter = voter;
+  box().event_timer.expired.connect(mem_fun(*this, &Top::eventTimerExpired));
+  setState<Muted>();
+} /* Voter::Top::init */
+
+
+void Voter::Top::exit(void)
+{
+  delete box().task_timer;
+  box().task_timer = 0;
+} /* Voter::Top::exit */
+
+
+void Voter::Top::reset(void)
+{
+  voter().resetAll();
+  setState<Muted>();
+} /* Voter::Top::reset */
+
+
+void Voter::Top::mute(bool content_only)
+{
+  if (!content_only)
   {
-    if (m_verbose)
+    setState<Muted>();
+  }
+  else if (!muteContentOnly())
+  {
+    voter().muteAll();
+  }
+  box().mute_content_only = content_only;
+} /* Voter::Top::mute */
+
+
+void Voter::Top::unmute(void)
+{
+  if (muteContentOnly())
+  {
+    voter().unmuteAll();
+  }
+  box().mute_content_only = false;
+} /* Voter::Top::unmute */
+
+
+void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
+{
+  assert(srx != 0);
+  
+  if (box().best_srx == 0)
+  {
+    box().best_srx = srx;
+  }
+  else if (srx == box().best_srx)
+  {
+    if (!is_open)
     {
-      cout << name() << ": Switching from \"" << active_rx->rx->name()
-      	   << "\" (" << active_rx_siglev << ") to \""
-	   << switch_to_rx->rx->name()
-	   << "\" (" << switch_to_rx_siglev << ")\n";
+      box().best_srx = voter().findBestRx();
     }
-    
-    squelch_close_delay_timer->setEnable(false);
-    
-    active_rx->stopOutput(true);
-    active_rx->mute(true);
-    
-    active_rx = switch_to_rx;
-    
-    sql_rx_id = best_rx->id;
   }
   else
   {
-    switch_to_rx->stopOutput(true);
-    switch_to_rx->mute(true);
+    if (is_open &&
+        (srx->signalStrength() > box().best_srx->signalStrength()))
+    {
+      box().best_srx = srx;
+    }
   }
-  switch_to_rx = 0;
-} /* Voter::rxSwitchTimerExpired */
+} /* Voter::Top::satSquelchOpen */
+
+
+void Voter::Top::satSignalLevelUpdated(SatRx *srx, float siglev)
+{
+  assert(box().best_srx != 0);
+  
+  if (box().best_srx->squelchIsOpen() &&
+      (siglev > box().best_srx->signalStrength()))
+  {
+    box().best_srx = srx;
+  }
+} /* Voter::Top::satSignalLevelUpdated */
+
+
+void Voter::Top::runTask(sigc::slot<void> task)
+{
+  box().task_list.push_back(task);
+  
+  if (box().task_timer == 0)
+  {
+    Timer *t = new Timer(0);
+    t->expired.connect(mem_fun(*this, &Voter::Top::taskTimerExpired));
+  }
+} /* Voter::Top::runTask */
+
+
+void Voter::Top::taskTimerExpired(Timer *t)
+{
+  SlotList::iterator it;
+  for (it=box().task_list.begin(); it!=box().task_list.end(); ++it)
+  {
+    (*it)();
+  }
+  box().task_list.clear();
+  
+  delete box().task_timer;
+  box().task_timer = 0;
+} /* Voter::Top::taskTimerExpired */
+
+
+void Voter::Top::startTimer(int time_ms)
+{
+  box().event_timer.setTimeout(time_ms);
+  box().event_timer.setEnable(true);
+} /* Voter::Top::startTimer */
+
+
+void Voter::Top::stopTimer(void)
+{
+  box().event_timer.setEnable(false);
+} /* Voter::Top::stopTimer */
+
+
+void Voter::Top::eventTimerExpired(Timer *t)
+{ 
+  Macho::Machine<Top> &m(static_cast<Macho::Machine<Top>&>(machine()));
+  m.dispatch(Macho::Event(&Top::timerExpired));
+} /* Voter::Top::eventTimerExpired */
+
+
+
+/****************************************************************************
+ *
+ * Muted state event handlers
+ *
+ ****************************************************************************/
+
+void Voter::Muted::entry(void)
+{
+  cout << "### Muted::entry\n";
+  voter().muteAll();
+} /* Voter::Muted::entry */
+
+
+void Voter::Muted::mute(bool content_only)
+{
+  if (content_only)
+  {
+    doUnmute();
+  }
+  TOP::box().mute_content_only = content_only;
+} /* Voter::Muted::mute */
+
+
+void Voter::Muted::unmute(void)
+{
+  doUnmute();
+  TOP::box().mute_content_only = false;
+} /* Voter::Muted::unmute */
+
+
+void Voter::Muted::doUnmute(void)
+{
+  if (bestSrx() != 0)
+  {
+    assert(bestSrx()->squelchIsOpen());
+    setState<ActiveRxSelected>(bestSrx());
+  }
+  else
+  {
+    setState<Idle>();
+  }
+} /* Voter::Muted::doUnmute */
+
+
+
+/****************************************************************************
+ *
+ * Idle state event handlers
+ *
+ ****************************************************************************/
+
+void Voter::Idle::entry(void)
+{
+  cout << "### Idle::entry\n";
+  if (!muteContentOnly())
+  {
+    voter().unmuteAll();
+  }
+} /* Voter::Idle::entry */
+
+
+void Voter::Idle::satSquelchOpen(SatRx *srx, bool is_open)
+{
+  SUPER::satSquelchOpen(srx, is_open);
+  if (is_open)
+  {
+    setState<VotingDelay>();
+  }
+} /* Voter::Idle::satSquelchOpen */
+
+
+
+/****************************************************************************
+ *
+ * VotingDelay state event handlers
+ *
+ ****************************************************************************/
+
+void Voter::VotingDelay::entry(void)
+{
+  cout << "### VotingDelay::entry\n";
+  startTimer(votingDelay());
+} /* Voter::VotingDelay::entry */
+
+
+void Voter::VotingDelay::exit(void)
+{
+  cout << "### VotingDelay::exit\n";
+  stopTimer();
+} /* Voter::VotingDelay::exit */
+
+
+void Voter::VotingDelay::satSquelchOpen(SatRx *srx, bool is_open)
+{
+  SUPER::satSquelchOpen(srx, is_open);
+  if (!is_open && (bestSrx() == 0))
+  {
+    setState<Idle>();
+  }
+} /* Voter::VotingDelay::satSquelchOpen */
+
+
+void Voter::VotingDelay::timerExpired(void)
+{
+  assert(bestSrx() != 0);
+  assert(bestSrx()->squelchIsOpen());
+  setState<ActiveRxSelected>(bestSrx());
+} /* Voter::VotingDelay::timerExpired */
+
+
+
+/****************************************************************************
+ *
+ * ActiveRxSelected state event handlers
+ *
+ ****************************************************************************/
+
+void Voter::ActiveRxSelected::init(SatRx *srx)
+{
+  cout << "### ActiveRxSelected::init\n";
+  assert(srx != 0);
+  box().active_srx = srx;
+  if (muteContentOnly())
+  {
+    voter().muteAll();
+  }
+  else
+  {
+    //runTask(bind(mem_fun(voter(), &Voter::muteAllBut), srx));
+    voter().muteAllBut(srx);
+  }
+  setState<SquelchOpen>();
+} /* Voter::ActiveRxSelected::init */
+
+
+void Voter::ActiveRxSelected::exit(void)
+{
+  runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), true));  
+} /* Voter::ActiveRxSelected::exit */
+
+
+void Voter::ActiveRxSelected::unmute(void)
+{
+  activeSrx()->mute(false);
+  TOP::box().mute_content_only = false;
+} /* Voter::ActiveRxSelected::unmute */
+
+
+int Voter::ActiveRxSelected::sqlRxId(void)
+{
+  return box().active_srx->id();
+} /* Voter::ActiveRxSelected::sqlRxId */
+
+
+void Voter::ActiveRxSelected::changeActiveSrx(SatRx *srx)
+{
+  //runTask(bind(mem_fun(activeSrx(), &SatRx::mute), true));
+  activeSrx()->mute(true);
+  box().active_srx = srx;
+  if (!muteContentOnly())
+  {
+    //runTask(bind(mem_fun(activeSrx(), &SatRx::mute), false));
+    activeSrx()->mute(false);
+  }
+} /* Voter::ActiveRxSelected::changeActiveSrx */
+
+
+
+/****************************************************************************
+ *
+ * SquelchOpen state event handlers
+ *
+ ****************************************************************************/
+
+void Voter::SquelchOpen::entry(void)
+{
+  if (voter().m_verbose)
+  {
+    SatRx *srx = activeSrx();
+    cout << voter().name() << ": The squelch is OPEN"
+	 << " (" << srx->name() << "=" << srx->signalStrength() << ")"
+	 << endl;
+  }
+  
+  runTask(bind(mem_fun(voter(), &Voter::setSquelchState), true));
+  runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), false));
+} /* Voter::SquelchOpen::entry */
+
+
+void Voter::SquelchOpen::init(void)
+{
+  setState<Receiving>();
+} /* Voter::SquelchOpen::init */
+
+
+void Voter::SquelchOpen::exit(void)
+{
+  if (voter().m_verbose)
+  {
+    SatRx *srx = activeSrx();
+    cout << voter().name() << ": The squelch is CLOSED"
+	 << " (" << srx->name() << "=" << srx->signalStrength() << ")"
+	 << endl;
+  }
+  
+  runTask(bind(mem_fun(voter(), &Voter::setSquelchState), false));
+} /* Voter::SquelchOpen::exit */
+
+
+void Voter::SquelchOpen::satSquelchOpen(SatRx *srx, bool is_open)
+{
+  SUPER::satSquelchOpen(srx, is_open);
+  if (!is_open && (srx == activeSrx()))
+  {
+    setState<SqlCloseWait>();
+  }
+} /* Voter::SquelchOpen::satSquelchOpen */
+
+
+float Voter::SquelchOpen::signalStrength(void)
+{
+  return activeSrx()->signalStrength();
+} /* Voter::SquelchOpen::signalStrength */
+
+
+void Voter::SquelchOpen::changeActiveSrx(SatRx *srx)
+{
+  runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), true));
+  SUPER::changeActiveSrx(srx);
+  runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), false));  
+} /* Voter::SquelchOpen::changeActiveSrx */
+
+
+
+/****************************************************************************
+ *
+ * SqlCloseWait state event handlers
+ *
+ ****************************************************************************/
+
+void Voter::SqlCloseWait::entry(void)
+{
+  cout << "### SqlCloseWait::entry\n";
+  startTimer(sqlCloseRevoteDelay());
+} /* Voter::SqlCloseWait::entry */
+
+
+void Voter::SqlCloseWait::exit(void)
+{
+  cout << "### SqlCloseWait::exit\n";
+  stopTimer();
+} /* Voter::SqlCloseWait::exit */
+
+
+void Voter::SqlCloseWait::satSquelchOpen(SatRx *srx, bool is_open)
+{
+  SUPER::satSquelchOpen(srx, is_open);
+  if (is_open && (srx == activeSrx()))
+  {
+    setState<SquelchOpen>();
+  }
+} /* Voter::SqlCloseWait::satSquelchOpen */
+
+
+void Voter::SqlCloseWait::timerExpired(void)
+{
+  if (bestSrx() != 0)
+  {
+    changeActiveSrx(bestSrx());
+    setState<SquelchOpen>();
+  }
+  else
+  {
+    setState<Idle>();
+  }
+} /* Voter::SqlCloseWait::timerExpired */
+
+
+
+/****************************************************************************
+ *
+ * Receiving state event handlers
+ *
+ ****************************************************************************/
+
+void Voter::Receiving::entry(void)
+{
+  cout << "### Receiving::entry\n";
+  if (revoteInterval() >= MIN_REVOTE_INTERVAL)
+  {
+    startTimer(revoteInterval());
+  }
+} /* Voter::Receiving::entry */
+
+
+void Voter::Receiving::exit(void)
+{
+  cout << "### Receiving::exit\n";
+  stopTimer();
+} /* Voter::Receiving::exit */
+
+
+void Voter::Receiving::timerExpired(void)
+{
+  voter().printSquelchState();
+  
+  assert(activeSrx() != 0);
+  assert(bestSrx() != 0);
+  
+  if ((bestSrx() != activeSrx()) &&
+      (activeSrx()->signalStrength() <= noVoteAboveSiglev()))
+  {
+    float best_srx_siglev = bestSrx()->signalStrength();
+    float active_srx_siglev = activeSrx()->signalStrength();
+    if (best_srx_siglev > active_srx_siglev+hysteresis())
+    {
+      setState<SwitchActiveRx>(bestSrx());
+      return;
+    }
+  }
+  if (revoteInterval() >= MIN_REVOTE_INTERVAL)
+  {
+    startTimer(revoteInterval());
+  }
+} /* Voter::Receiving::timerExpired */
+
+
+
+/****************************************************************************
+ *
+ * SwitchActiveRx state event handlers
+ *
+ ****************************************************************************/
+
+void Voter::SwitchActiveRx::entry(void)
+{
+  cout << "### SwitchActiveRx::entry\n";
+  startTimer(rxSwitchDelay());
+} /* Voter::SwitchActiveRx::entry */
+
+
+void Voter::SwitchActiveRx::init(SatRx *srx)
+{
+  box().switch_to_srx = srx;
+  if (!muteContentOnly())
+  {
+    //runTask(bind(mem_fun(*srx, &SatRx::mute), false));
+    srx->mute(false);
+  }
+} /* Voter::SwitchActiveRx::init */
+
+
+void Voter::SwitchActiveRx::exit(void)
+{
+  cout << "### SwitchActiveRx::exit\n";
+  if (box().switch_to_srx != 0)
+  {
+    //runTask(bind(mem_fun(*box().switch_to_srx, &SatRx::mute), true));
+    box().switch_to_srx->mute(true);
+  }
+
+  stopTimer();
+} /* Voter::SwitchActiveRx::exit */
+
+
+void Voter::SwitchActiveRx::unmute(void)
+{
+  activeSrx()->mute(false);
+  box().switch_to_srx->mute(false);
+  TOP::box().mute_content_only = false;
+} /* Voter::SwitchActiveRx::unmute */
+
+
+void Voter::SwitchActiveRx::timerExpired(void)
+{
+  SatRx *switch_to_srx = box().switch_to_srx;
+  
+  assert(activeSrx() != 0);
+  assert(switch_to_srx != 0);
+  assert (switch_to_srx != activeSrx());
+  
+  float switch_to_srx_siglev = switch_to_srx->signalStrength();
+  float active_srx_siglev = activeSrx()->signalStrength();
+  if (switch_to_srx->squelchIsOpen() &&
+      (switch_to_srx_siglev > active_srx_siglev+hysteresis()))
+  {
+    if (voter().m_verbose)
+    {
+      cout << voter().name() << ": Switching from \"" << activeSrx()->name()
+	   << "\" (" << active_srx_siglev << ") to \""
+	   << switch_to_srx->name()
+	   << "\" (" << switch_to_srx_siglev << ")\n";
+    }
+    
+    changeActiveSrx(switch_to_srx);
+    box().switch_to_srx = 0;
+  }
+  setState<Receiving>();
+} /* Voter::SwitchActiveRx::timerExpired */
 
 
 
 /*
  * This file has not been truncated
  */
-
