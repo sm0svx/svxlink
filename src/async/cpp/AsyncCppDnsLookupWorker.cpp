@@ -42,8 +42,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
+#include <sys/errno.h>
 #include <unistd.h>
-#include <errno.h>
 #include <cstdlib>
 #include <cstdio>
 #include <cassert>

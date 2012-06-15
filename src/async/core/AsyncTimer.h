@@ -44,7 +44,6 @@ An example of how to use the Async::Timer class
  *
  ****************************************************************************/
 
-#include <cstddef>
 #include <sigc++/sigc++.h>
 
 
