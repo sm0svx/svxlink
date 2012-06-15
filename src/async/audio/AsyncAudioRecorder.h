@@ -34,11 +34,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <stdio.h>
-#include <stdint.h>
+#include <string>
+#include <cstddef>
 #include <sigc++/sigc++.h>
 
-#include <string>
+#include <stdio.h>
+#include <stdint.h>
 
 #include <AsyncAudioSink.h>
 

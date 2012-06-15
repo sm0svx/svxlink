@@ -42,6 +42,7 @@ An example of how to use the  Async::FdWatch class
  *
  ****************************************************************************/
 
+#include <cstddef>
 #include <sigc++/sigc++.h>
 
 
