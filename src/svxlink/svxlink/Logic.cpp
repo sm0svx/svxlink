@@ -66,7 +66,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioSplitter.h>
 #include <AsyncAudioValve.h>
-#include <AsyncAudioJitterFifo.h>
+#include <AsyncAudioElasticFifo.h>
 #include <AsyncAudioStreamStateDetector.h>
 #include <AsyncAudioPacer.h>
 #include <AsyncAudioDebugger.h>
@@ -449,7 +449,7 @@ bool Logic::initialize(void)
   logic_con_out->enableAutoSelect(passthrough, 10);
 
     // Add a pre-buffered FIFO to avoid underrun
-  AudioJitterFifo *rpt_fifo = new AudioJitterFifo(
+  AudioElasticFifo *rpt_fifo = new AudioElasticFifo(
     1024 * INTERNAL_SAMPLE_RATE / 8000);
   rx_splitter->addSink(rpt_fifo, true);
 

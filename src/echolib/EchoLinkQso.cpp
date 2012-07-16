@@ -166,7 +166,7 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
   speex_encoder_ctl(enc_state, SPEEX_SET_BITRATE, &val);
   val = 8;
   speex_encoder_ctl(enc_state, SPEEX_SET_QUALITY, &val);
-  val = 4;
+  val = 10;
   speex_encoder_ctl(enc_state, SPEEX_SET_COMPLEXITY, &val);
 #endif
     

@@ -1,5 +1,5 @@
 /**
-@file	 AsyncAudioJitterFifo.h
+@file	 AsyncAudioElasticFifo.h
 @brief   A FIFO for handling audio samples
 @author  Tobias Blomberg / SM0SVX
 @date	 2007-10-06
@@ -27,8 +27,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef ASYNC_AUDIO_JITTER_FIFO_INCLUDED
-#define ASYNC_AUDIO_JITTER_FIFO_INCLUDED
+#ifndef ASYNC_AUDIO_ELASTIC_FIFO_INCLUDED
+#define ASYNC_AUDIO_ELASTIC_FIFO_INCLUDED
 
 
 /****************************************************************************
@@ -119,7 +119,7 @@ half full. Varying sample rates or packet rates slowly move the amount of
 samples out of center. When the FIFO reaches a full or empty state, it is
 automatically reset to the half-full state.
 */
-class AudioJitterFifo : public AudioSink, public AudioSource
+class AudioElasticFifo : public AudioSink, public AudioSource
 {
   public:
     /**
@@ -127,12 +127,12 @@ class AudioJitterFifo : public AudioSink, public AudioSource
      * @param   fifo_size This is the size of the fifo expressed in number
      *                    of samples.
      */
-    explicit AudioJitterFifo(unsigned fifo_size);
+    explicit AudioElasticFifo(unsigned fifo_size);
   
     /**
      * @brief 	Destructor
      */
-    virtual ~AudioJitterFifo(void);
+    virtual ~AudioElasticFifo(void);
   
     /**
      * @brief	Set the size of the FIFO
@@ -248,12 +248,12 @@ class AudioJitterFifo : public AudioSink, public AudioSource
     void writeZeroBlock(int count);
     void flushSamplesFromFifo(void);
 
-};  /* class AudioJitterFifo */
+};  /* class AudioElasticFifo */
 
 
 } /* namespace */
 
-#endif /* ASYNC_AUDIO_JITTER_FIFO_INCLUDED */
+#endif /* ASYNC_AUDIO_ELASTIC_FIFO_INCLUDED */
 
 
 /*

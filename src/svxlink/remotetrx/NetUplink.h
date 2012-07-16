@@ -70,7 +70,7 @@ namespace Async
 {
   class Config;
   class TcpServer;
-  class AudioJitterFifo;
+  class AudioElasticFifo;
   class Timer;
   class AudioEncoder;
   class AudioDecoder;
@@ -173,14 +173,14 @@ class NetUplink : public Uplink
     unsigned       	    recv_exp;
     Rx	      	      	    *rx;
     Tx	      	      	    *tx;
-    Async::AudioJitterFifo  *fifo;
+    Async::AudioElasticFifo *fifo;
     Async::Config     	    &cfg;
     std::string       	    name;
     struct timeval    	    last_msg_timestamp;
     Async::Timer      	    *heartbeat_timer;
     Async::AudioEncoder     *audio_enc;
     Async::AudioDecoder     *audio_dec;
-    Async::AudioJitterFifo  *loopback_con;
+    Async::AudioElasticFifo *loopback_con;
     Async::AudioSplitter    *rx_splitter;
     Async::AudioSelector    *tx_selector;
     State                   state;

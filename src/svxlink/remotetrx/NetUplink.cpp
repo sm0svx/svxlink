@@ -43,7 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncTcpServer.h>
-#include <AsyncAudioJitterFifo.h>
+#include <AsyncAudioElasticFifo.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioEncoder.h>
 #include <AsyncAudioDecoder.h>
@@ -189,13 +189,13 @@ bool NetUplink::initialize(void)
   rx_splitter = new AudioSplitter;
   rx->registerSink(rx_splitter);
 
-  loopback_con = new AudioJitterFifo(1024 * INTERNAL_SAMPLE_RATE / 8000);
+  loopback_con = new AudioElasticFifo(1024 * INTERNAL_SAMPLE_RATE / 8000);
   rx_splitter->addSink(loopback_con);
 
   tx_selector = new AudioSelector;
   tx_selector->addSource(loopback_con);
 
-  fifo = new AudioJitterFifo(2048 * INTERNAL_SAMPLE_RATE / 8000);
+  fifo = new AudioElasticFifo(2048 * INTERNAL_SAMPLE_RATE / 8000);
   tx_selector->addSource(fifo);
   tx_selector->selectSource(fifo);
 

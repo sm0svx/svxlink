@@ -102,7 +102,7 @@ LIBSRC		= AsyncAudioSource.cpp AsyncAudioSink.cpp \
 		  AsyncAudioEncoder.cpp AsyncAudioEncoderS16.cpp \
 		  AsyncAudioDecoderS16.cpp AsyncAudioEncoderGsm.cpp \
 		  AsyncAudioDecoderGsm.cpp AsyncAudioRecorder.cpp \
-		  AsyncAudioDeviceFactory.cpp AsyncAudioJitterFifo.cpp
+		  AsyncAudioDeviceFactory.cpp AsyncAudioElasticFifo.cpp
 		  
 
 ifdef USE_SPEEX
@@ -142,7 +142,7 @@ EXPINC		= AsyncAudioSource.h AsyncAudioSink.h AsyncAudioProcessor.h \
 		  AsyncAudioDecimator.h AsyncAudioInterpolator.h \
 		  AsyncAudioStreamStateDetector.h AsyncAudioEncoder.h \
 		  AsyncAudioDecoder.h AsyncAudioRecorder.h \
-		  AsyncAudioJitterFifo.h AsyncAudioDeviceFactory.h \
+		  AsyncAudioElasticFifo.h AsyncAudioDeviceFactory.h \
 		  AsyncAudioDevice.h
 
 

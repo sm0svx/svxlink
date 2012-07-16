@@ -43,7 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <Rx.h>
 #include <Tx.h>
 #include <AsyncAudioValve.h>
-#include <AsyncAudioJitterFifo.h>
+#include <AsyncAudioElasticFifo.h>
 #include <AsyncAudioDebugger.h>
 
 
@@ -391,7 +391,7 @@ bool NetTrxAdapter::initialize(void)
   }
   prev_src = txa1;
   
-  AudioJitterFifo *fifo1 = new AudioJitterFifo(
+  AudioElasticFifo *fifo1 = new AudioElasticFifo(
     1024 * INTERNAL_SAMPLE_RATE / 8000);
   prev_src->registerSink(fifo1, true);
   prev_src = fifo1;
@@ -413,7 +413,7 @@ bool NetTrxAdapter::initialize(void)
   }
   prev_src = txa2;
   
-  AudioJitterFifo *fifo2 = new AudioJitterFifo(
+  AudioElasticFifo *fifo2 = new AudioElasticFifo(
     1024 * INTERNAL_SAMPLE_RATE / 8000);
   prev_src->registerSink(fifo2, true);
   prev_src = fifo2;

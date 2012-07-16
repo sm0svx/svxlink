@@ -69,7 +69,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace Async
 {
   class DnsLookup;
-  class AudioJitterFifo;
+  class AudioElasticFifo;
   class AudioValve;
   class AudioSplitter;
 };
@@ -164,7 +164,7 @@ class ComDialog : public QDialog, private Ui::ComDialogBase,
     bool      	      	    is_transmitting;
     QColor    	      	    orig_background_color;
     bool      	      	    ctrl_pressed;
-    Async::AudioJitterFifo  *rem_audio_fifo;
+    Async::AudioElasticFifo *rem_audio_fifo;
     Async::AudioValve       *rem_audio_valve;
     Async::AudioValve       *ptt_valve;
     Async::AudioSplitter    *tx_audio_splitter;

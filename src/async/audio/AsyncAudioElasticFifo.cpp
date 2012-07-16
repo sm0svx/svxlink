@@ -1,5 +1,5 @@
 /**
-@file	 AsyncAudioJitterFifo.cpp
+@file	 AsyncAudioElasticFifo.cpp
 @brief   A FIFO for handling audio samples
 @author  Tobias Blomberg / SM0SVX
 @date	 2007-10-06
@@ -53,7 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncAudioJitterFifo.h"
+#include "AsyncAudioElasticFifo.h"
 
 
 
@@ -113,22 +113,22 @@ using namespace Async;
  *
  ****************************************************************************/
 
-AudioJitterFifo::AudioJitterFifo(unsigned fifo_size)
+AudioElasticFifo::AudioElasticFifo(unsigned fifo_size)
   : fifo(0), fifo_size(fifo_size), head(0), tail(0),
     prebuf(true), stream_state(STREAM_IDLE)
 {
   assert(fifo_size > 0);
   fifo = new float[fifo_size];
-} /* AudioJitterFifo */
+} /* AudioElasticFifo */
 
 
-AudioJitterFifo::~AudioJitterFifo(void)
+AudioElasticFifo::~AudioElasticFifo(void)
 {
   delete [] fifo;
-} /* ~AudioJitterFifo */
+} /* ~AudioElasticFifo */
 
 
-void AudioJitterFifo::setSize(unsigned new_size)
+void AudioElasticFifo::setSize(unsigned new_size)
 {
   assert(fifo_size > 0);
   if (new_size != fifo_size)
@@ -138,10 +138,10 @@ void AudioJitterFifo::setSize(unsigned new_size)
     fifo = new float[fifo_size];
   }
   clear();
-} /* AudioJitterFifo::setSize */
+} /* AudioElasticFifo::setSize */
 
 
-unsigned AudioJitterFifo::samplesInFifo(bool ignore_prebuf) const
+unsigned AudioElasticFifo::samplesInFifo(bool ignore_prebuf) const
 {
   unsigned samples_in_buffer = (head - tail + fifo_size) % fifo_size;
 
@@ -155,10 +155,10 @@ unsigned AudioJitterFifo::samplesInFifo(bool ignore_prebuf) const
 
   return samples_in_buffer;
 
-} /* AudioJitterFifo::samplesInFifo */
+} /* AudioElasticFifo::samplesInFifo */
 
 
-void AudioJitterFifo::clear(void)
+void AudioElasticFifo::clear(void)
 {
   bool was_empty = empty();
   
@@ -169,10 +169,10 @@ void AudioJitterFifo::clear(void)
   {
     sinkFlushSamples();
   }
-} /* AudioJitterFifo::clear */
+} /* AudioElasticFifo::clear */
 
 
-int AudioJitterFifo::writeSamples(const float *samples, int count)
+int AudioElasticFifo::writeSamples(const float *samples, int count)
 {
   assert(count > 0);
 
@@ -204,14 +204,14 @@ int AudioJitterFifo::writeSamples(const float *samples, int count)
 } /* writeSamples */
 
 
-void AudioJitterFifo::availSamples(void)
+void AudioElasticFifo::availSamples(void)
 {
   stream_state = STREAM_ACTIVE;
   sinkAvailSamples();
-} /* AudioJitterFifo::availSamples */
+} /* AudioElasticFifo::availSamples */
 
 
-void AudioJitterFifo::flushSamples(void)
+void AudioElasticFifo::flushSamples(void)
 {
   stream_state = STREAM_FLUSHING;
   if (empty())
@@ -222,10 +222,10 @@ void AudioJitterFifo::flushSamples(void)
   {
     flushSamplesFromFifo();
   }
-} /* AudioJitterFifo::flushSamples */
+} /* AudioElasticFifo::flushSamples */
 
 
-void AudioJitterFifo::requestSamples(int count)
+void AudioElasticFifo::requestSamples(int count)
 {
   if (prebuf)
   {
@@ -235,14 +235,14 @@ void AudioJitterFifo::requestSamples(int count)
   {
     writeSamplesFromFifo(count);
   }
-} /* AudioJitterFifo::requestSamples */
+} /* AudioElasticFifo::requestSamples */
 
 
-void AudioJitterFifo::discardSamples(void)
+void AudioElasticFifo::discardSamples(void)
 {
   clear();
   sourceDiscardSamples();
-} /* AudioJitterFifo::discardSamples */
+} /* AudioElasticFifo::discardSamples */
 
 
 /****************************************************************************
@@ -252,7 +252,7 @@ void AudioJitterFifo::discardSamples(void)
  ****************************************************************************/
 
 
-void AudioJitterFifo::allSamplesFlushed(void)
+void AudioElasticFifo::allSamplesFlushed(void)
 {
   if (empty())
   {
@@ -263,7 +263,7 @@ void AudioJitterFifo::allSamplesFlushed(void)
     }
     prebuf = true;
   }
-} /* AudioJitterFifo::allSamplesFlushed */
+} /* AudioElasticFifo::allSamplesFlushed */
 
 
 
@@ -274,7 +274,7 @@ void AudioJitterFifo::allSamplesFlushed(void)
  ****************************************************************************/
 
 
-void AudioJitterFifo::writeSamplesFromFifo(int count)
+void AudioElasticFifo::writeSamplesFromFifo(int count)
 {
   unsigned samples_from_fifo = min((unsigned)count, samplesInFifo());
 
@@ -307,7 +307,7 @@ void AudioJitterFifo::writeSamplesFromFifo(int count)
 } /* writeSamplesFromFifo */
 
 
-void AudioJitterFifo::writeZeroBlock(int count)
+void AudioElasticFifo::writeZeroBlock(int count)
 {
   while (count > 0)
   {
@@ -332,7 +332,7 @@ void AudioJitterFifo::writeZeroBlock(int count)
 } /* writeZero */
 
 
-void AudioJitterFifo::flushSamplesFromFifo(void)
+void AudioElasticFifo::flushSamplesFromFifo(void)
 {
   unsigned samples_from_fifo = samplesInFifo();
 
