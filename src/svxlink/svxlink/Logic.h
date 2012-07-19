@@ -199,10 +199,16 @@ class Logic : public sigc::trackable
     }
 
     bool isIdle(void) const { return is_idle; }
+    
+    void setMessageFlags(int flags) { msg_flags |= flags; }
 
-    void setReportEventsAsIdle(bool idle) { report_events_as_idle = idle; }
+    void clearMessageFlags(int flags) { msg_flags &= ~flags; }
 
     bool isWritingMessage(void);
+
+    void skipCurrentMessage(void);
+
+    int getCurrentMessageFlags(void);
 
     sigc::signal<void, bool> idleStateChanged;
 
@@ -216,7 +222,6 @@ class Logic : public sigc::trackable
     virtual void transmitterStateChange(bool is_transmitting);
     virtual void selcallSequenceDetected(std::string sequence);
 
-    void clearPendingSamples(void);
     void enableRgrSoundTimer(bool enable);
     void rxValveSetOpen(bool do_open);
     void rptValveSetOpen(bool do_open);
@@ -272,7 +277,7 @@ class Logic : public sigc::trackable
     int                             fx_gain_low;
     unsigned       	      	    long_cmd_digits;
     std::string       	      	    long_cmd_module;
-    bool      	      	      	    report_events_as_idle;
+    int      	      	      	    msg_flags;
     QsoRecorder                     *qso_recorder;
     uint8_t			    tx_ctcss;
     uint8_t			    tx_ctcss_mask;

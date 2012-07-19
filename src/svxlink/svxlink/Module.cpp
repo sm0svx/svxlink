@@ -173,19 +173,13 @@ void Module::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 void Module::processEvent(const string& event)
 {
   logic()->processEvent(event, this);
-} /* Module::playFile */
+} /* Module::processEvent */
 
 
 void Module::setEventVariable(const string& name, const string& value)
 {
   logic()->setEventVariable(name, value);
 } /* Module::setEventVariable */
-
-
-void Module::playFile(const string& path)
-{
-  logic()->playFile(path);
-} /* Module::playFile */
 
 
 void Module::sendDtmf(const std::string& digits)

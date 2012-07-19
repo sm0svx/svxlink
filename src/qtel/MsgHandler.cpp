@@ -99,22 +99,22 @@ using namespace std;
 class QueueItem
 {
   public:
-    QueueItem(bool idle_marked) : idle_marked(idle_marked) {}
+    QueueItem(int flags) : flags(flags) {}
     virtual ~QueueItem(void) {}
     virtual bool initialize(void) { return true; }
     virtual int readSamples(float *samples, int len) = 0;
     
-    bool idleMarked(void) const { return idle_marked; }
+    int getFlags(void) const { return flags; }
   
   private:
-    bool  idle_marked;
+    int flags;
 };
 
 class SilenceQueueItem : public QueueItem
 {
   public:
-    SilenceQueueItem(int len, int sample_rate, bool idle_marked)
-      : QueueItem(idle_marked), len(len),
+    SilenceQueueItem(int len, int sample_rate, int flags)
+      : QueueItem(flags), len(len),
       	silence_left(sample_rate * len / 1000) {}
     int readSamples(float *samples, int len);
 
@@ -127,8 +127,8 @@ class SilenceQueueItem : public QueueItem
 class ToneQueueItem : public QueueItem
 {
   public:
-    ToneQueueItem(int fq, int amp, int len, int sample_rate, bool idle_marked)
-      : QueueItem(idle_marked), fq(fq), amp(amp),
+    ToneQueueItem(int fq, int amp, int len, int sample_rate, int flags)
+      : QueueItem(flags), fq(fq), amp(amp),
       	tone_len(sample_rate * len / 1000), pos(0), sample_rate(sample_rate) {}
     int readSamples(float *samples, int len);
 
@@ -144,8 +144,8 @@ class ToneQueueItem : public QueueItem
 class RawFileQueueItem : public QueueItem
 {
   public:
-    RawFileQueueItem(const std::string& filename, bool idle_marked)
-      : QueueItem(idle_marked), filename(filename), reader(16384) {}
+    RawFileQueueItem(const std::string& filename, int flags)
+      : QueueItem(flags), filename(filename), reader(16384) {}
     bool initialize(void);
     int readSamples(float *samples, int len);
 
@@ -158,8 +158,8 @@ class RawFileQueueItem : public QueueItem
 class GsmFileQueueItem : public QueueItem
 {
   public:
-    GsmFileQueueItem(const std::string& filename, bool idle_marked)
-      : QueueItem(idle_marked), filename(filename), reader(4096), decoder(0) {}
+    GsmFileQueueItem(const std::string& filename, int flags)
+      : QueueItem(flags), filename(filename), reader(4096), decoder(0) {}
     ~GsmFileQueueItem(void);
     bool initialize(void);
     int readSamples(float *samples, int len);
@@ -179,8 +179,8 @@ class GsmFileQueueItem : public QueueItem
 class WavFileQueueItem : public QueueItem
 {
   public:
-    WavFileQueueItem(const std::string& filename, bool idle_marked)
-      : QueueItem(idle_marked), filename(filename), reader(16384) {}
+    WavFileQueueItem(const std::string& filename, int flags)
+      : QueueItem(flags), filename(filename), reader(16384) {}
     bool initialize(void);
     int readSamples(float *samples, int len);
 
@@ -252,37 +252,36 @@ MsgHandler::~MsgHandler(void)
 } /* MsgHandler::~MsgHandler */
 
 
-void MsgHandler::playFile(const string& path, bool idle_marked)
+void MsgHandler::playFile(const string& path, int flags)
 {
   QueueItem *item = 0;
   const char *ext = strrchr(path.c_str(), '.');
   if (strcmp(ext, ".gsm") == 0)
   {
-    item = new GsmFileQueueItem(path, idle_marked);
+    item = new GsmFileQueueItem(path, flags);
   }
   else if (strcmp(ext, ".wav") == 0)
   {
-    item = new WavFileQueueItem(path, idle_marked);
+    item = new WavFileQueueItem(path, flags);
   }
   else
   {
-    item = new RawFileQueueItem(path, idle_marked);
+    item = new RawFileQueueItem(path, flags);
   }
   addItemToQueue(item);
 } /* MsgHandler::playFile */
 
 
-void MsgHandler::playSilence(int length, bool idle_marked)
+void MsgHandler::playSilence(int length, int flags)
 {
-  QueueItem *item = new SilenceQueueItem(length, sample_rate, idle_marked);
+  QueueItem *item = new SilenceQueueItem(length, sample_rate, flags);
   addItemToQueue(item);
 } /* MsgHandler::playSilence */
 
 
-void MsgHandler::playTone(int fq, int amp, int length, bool idle_marked)
+void MsgHandler::playTone(int fq, int amp, int length, int flags)
 {
-  QueueItem *item = new ToneQueueItem(fq, amp, length, sample_rate,
-      	      	      	      	      idle_marked);
+  QueueItem *item = new ToneQueueItem(fq, amp, length, sample_rate, flags);
   addItemToQueue(item);
 } /* MsgHandler::playSilence */
 
@@ -353,9 +352,26 @@ void MsgHandler::discardSamples(void)
 } /* MsgHandler::discardSamples */
 
 
+void MsgHandler::skipCurrentMessage(void)
+{
+  if (current)
+  {
+    deleteQueueItem(current);
+    current = 0;
+    playMsg();
+  }
+} /* MsgHandler::skipCurrentMessage */
+
+
+int MsgHandler::getCurrentMessageFlags(void)
+{
+  return current ? current->getFlags() : 0;
+} /* MsgHandler::getCurrentMessageFlags */
+
+
 void MsgHandler::deleteQueueItem(QueueItem *item)
 {
-  if (!item->idleMarked())
+  if (!(item->getFlags() & MSG_IDLE_MARKED))
   {
     non_idle_cnt -= 1;
     assert(non_idle_cnt >= 0);
@@ -391,7 +407,7 @@ void MsgHandler::allSamplesFlushed(void)
 void MsgHandler::addItemToQueue(QueueItem *item)
 {
   is_writing_message = true;
-  if (!item->idleMarked())
+  if (!(item->getFlags() & MSG_IDLE_MARKED))
   {
     non_idle_cnt += 1;
   }

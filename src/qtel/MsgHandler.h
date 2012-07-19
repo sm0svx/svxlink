@@ -97,6 +97,8 @@ class QueueItem;
  *
  ****************************************************************************/
 
+#define MSG_IDLE_MARKED		1
+#define MSG_HELP_MARKED		2
 
 
 /****************************************************************************
@@ -143,7 +145,7 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
      * If idle_marked is true, the isIdle function will return true when
      * the file is being played.
      */
-    void playFile(const std::string& path, bool idle_marked=false);
+    void playFile(const std::string& path, int flags = 0);
     
     /**
      * @brief 	Play the given number of milliseconds of silence
@@ -154,7 +156,7 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
      * If idle_marked is true, the isIdle function will return true when
      * the silence is being played.
      */
-    void playSilence(int length, bool idle_marked=false);
+    void playSilence(int length, int flags = 0);
     
     /**
      * @brief 	Play a sinus tone
@@ -168,7 +170,7 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
      * If idle_marked is true, the isIdle function will return true when
      * the silence is being played.
      */
-    void playTone(int fq, int amp, int length, bool idle_marked=false);
+    void playTone(int fq, int amp, int length, int flags = 0);
     
     /**
      * @brief 	Check if a message is beeing written
@@ -181,11 +183,6 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
      * @return	Returns \em true if the idle or else \em false
      */
     bool isIdle(void) const { return non_idle_cnt == 0; }
-    
-    /**
-     * @brief 	Clear all messages
-     */
-    void clear(void);
     
     /**
      * @brief 	Mark the beginning of a block of messages
@@ -226,6 +223,17 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
      */
     virtual void discardSamples(void);
 
+    /**
+     * @brief Skip the current message 
+     */
+    void skipCurrentMessage(void);
+
+    /**
+     * @brief Read the option flags of the current message
+     * @return Bit field according to the MSG_XXX_MARKED constants
+     */
+    int getCurrentMessageFlags(void);
+
     
   protected:
     /**
@@ -252,6 +260,7 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
     void playMsg(void);
     void writeSamples(int count);
     void deleteQueueItem(QueueItem *item);
+    void clear(void);
 
 }; /* class MsgHandler */
 

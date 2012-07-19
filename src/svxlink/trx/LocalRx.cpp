@@ -507,7 +507,6 @@ bool LocalRx::initialize(void)
     calldet->setPeakThresh(13);
     calldet->activated.connect(mem_fun(*this, &LocalRx::tone1750detected));
     splitter->addSink(calldet, true);
-    cout << "Enabling 1750Hz muting\n";
   }
 
   return true;

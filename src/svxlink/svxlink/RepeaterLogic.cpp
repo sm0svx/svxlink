@@ -63,7 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "RepeaterLogic.h"
-
+#include "MsgHandler.h"
 
 
 /****************************************************************************
@@ -304,9 +304,15 @@ void RepeaterLogic::processEvent(const string& event, const Module *module)
   if ((event == "repeater_idle") || (event == "send_rgr_sound") /* ||
       (event.find("repeater_down") == 0) */ )
   {
-    setReportEventsAsIdle(true);
+    setMessageFlags(MSG_IDLE_MARKED);
     Logic::processEvent(event, module);
-    setReportEventsAsIdle(false);
+    clearMessageFlags(MSG_IDLE_MARKED);
+  }
+  else if (event == "play_help")
+  {
+    setMessageFlags(MSG_HELP_MARKED);
+    Logic::processEvent(event, module);
+    clearMessageFlags(MSG_HELP_MARKED);
   }
   else
   {
@@ -327,6 +333,11 @@ void RepeaterLogic::dtmfDigitDetected(char digit, int duration)
 {
   if (repeater_is_up)
   {
+    if ((digit == '#') && (getCurrentMessageFlags() & MSG_HELP_MARKED))
+    {
+      skipCurrentMessage();
+      return;
+    }
     Logic::dtmfDigitDetected(digit, duration);
   }
   else

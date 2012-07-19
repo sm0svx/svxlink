@@ -202,8 +202,7 @@ Logic::Logic(Config &cfg, const string& name)
   : m_cfg(cfg),       	      	    m_name(name),
     m_rx(0),  	      	      	    m_tx(0),
     msg_handler(0), 	      	    active_module(0),
-    cmd_tmo_timer(0), 	      	    anti_flutter(false),
-    prev_digit('?'),                exec_cmd_on_sql_close(0),
+    cmd_tmo_timer(0), 	      	    exec_cmd_on_sql_close(0),
     exec_cmd_on_sql_close_timer(0), rgr_sound_timer(0),
     rgr_sound_delay(-1),            report_ctcss(0),
     event_handler(0),               every_minute_timer(0),
@@ -213,7 +212,7 @@ Logic::Logic(Config &cfg, const string& name)
     audio_to_module_selector(0),    state_det(0),
     is_idle(true),                  fx_gain_normal(0),
     fx_gain_low(-12), 	      	    long_cmd_digits(100),
-    report_events_as_idle(false),   qso_recorder(0),
+    msg_flags(0),                   qso_recorder(0),
     tx_ctcss(TX_CTCSS_ALWAYS), 	    tx_ctcss_mask(0)
 {
   logic_con_in = new AudioSplitter;
@@ -450,7 +449,7 @@ bool Logic::initialize(void)
 
     // Add a pre-buffered FIFO to avoid underrun
   AudioElasticFifo *rpt_fifo = new AudioElasticFifo(
-    1024 * INTERNAL_SAMPLE_RATE / 8000);
+    512 * INTERNAL_SAMPLE_RATE / 8000);
   rx_splitter->addSink(rpt_fifo, true);
 
     // A valve that is used to turn direct RX to TX audio on or off.
@@ -654,7 +653,7 @@ void Logic::setEventVariable(const string& name, const string& value)
 
 void Logic::playFile(const string& path)
 {
-  msg_handler->playFile(path, report_events_as_idle);
+  msg_handler->playFile(path, msg_flags);
 
   if (!msg_handler->isIdle())
   {
@@ -667,7 +666,7 @@ void Logic::playFile(const string& path)
 
 void Logic::playSilence(int length)
 {
-  msg_handler->playSilence(length, report_events_as_idle);
+  msg_handler->playSilence(length, msg_flags);
 
   if (!msg_handler->isIdle())
   {
@@ -680,7 +679,7 @@ void Logic::playSilence(int length)
 
 void Logic::playTone(int fq, int amp, int len)
 {
-  msg_handler->playTone(fq, amp, len, report_events_as_idle);
+  msg_handler->playTone(fq, amp, len, msg_flags);
 
   if (!msg_handler->isIdle())
   {
@@ -796,20 +795,13 @@ void Logic::dtmfDigitDetected(char digit, int duration)
   cmd_tmo_timer->reset();
   cmd_tmo_timer->setEnable(true);
 
-  if ((digit == '#') || (anti_flutter && (digit == 'C')))
+  if (digit == '#')
   {
     putCmdOnQueue();
-    anti_flutter = false;
-  }
-  else if (digit == 'A')
-  {
-    anti_flutter = true;
-    prev_digit = '?';
   }
   else if (digit == 'D')
   {
     received_digits = "D";
-    prev_digit = '?';
   }
   else if (received_digits.size() < 20)
   {
@@ -817,28 +809,9 @@ void Logic::dtmfDigitDetected(char digit, int duration)
     {
       received_digits += '#';
     }
-    else if (digit == 'B')
-    {
-      if (anti_flutter && (prev_digit != '?'))
-      {
-        received_digits += prev_digit;
-        prev_digit = '?';
-      }
-    }
     else if (isdigit(digit) || ((digit == '*') && (received_digits != "*")))
     {
-      if (anti_flutter)
-      {
-        if (digit != prev_digit)
-        {
-          received_digits += digit;
-	  prev_digit = digit;
-        }
-      }
-      else
-      {
-        received_digits += digit;
-      }
+      received_digits += digit;
     }
   }
 
@@ -887,7 +860,16 @@ bool Logic::isWritingMessage(void)
 } /* Logic::isWritingMessage */
 
 
+void Logic::skipCurrentMessage(void)
+{
+  msg_handler->skipCurrentMessage();
+} /* Logic::skipCurrentMessage */
 
+
+int Logic::getCurrentMessageFlags(void)
+{
+  return msg_handler->getCurrentMessageFlags();
+} /* Logic::getCurrentMessageFlags */
 
 
 
@@ -912,7 +894,7 @@ void Logic::squelchOpen(bool is_open)
   if (!is_open)
   {
     if (((exec_cmd_on_sql_close > 0) || (received_digits == "*")) &&
-        !anti_flutter && !received_digits.empty())
+        !received_digits.empty())
     {
       exec_cmd_on_sql_close_timer = new Timer(exec_cmd_on_sql_close);
       exec_cmd_on_sql_close_timer->expired.connect(
@@ -948,12 +930,6 @@ void Logic::transmitterStateChange(bool is_transmitting)
   ss << "transmit " << (is_transmitting ? "1" : "0");
   processEvent(ss.str());
 } /* Logic::transmitterStateChange */
-
-
-void Logic::clearPendingSamples(void)
-{
-  msg_handler->clear();
-} /* Logic::clearPendingSamples */
 
 
 void Logic::enableRgrSoundTimer(bool enable)
@@ -1186,8 +1162,6 @@ void Logic::unloadModules(void)
 void Logic::cmdTimeout(Timer *t)
 {
   received_digits = "";
-  anti_flutter = false;
-  prev_digit = '?';
 } /* Logic::cmdTimeout */
 
 
@@ -1356,7 +1330,6 @@ void Logic::putCmdOnQueue(Timer *t)
   }
   received_digits = "";
   cmd_tmo_timer->setEnable(false);
-  prev_digit = '?';
 
   processCommandQueue();
 

@@ -412,16 +412,13 @@ class Module : public sigc::trackable, public Async::AudioSink,
     void setEventVariable(const std::string& name, const std::string& value);
     
     /**
-     * @brief 	Order the logic core to play an audio file over the transmitter
-     * @param 	path The full path to an audio file
+     * @brief 	Order the logic core to send DTMF digits over the transmitter
+     * @param 	digits The DTMF digits to be sent
      *
-     * This function is called by the module when it wishes to play an audio
-     * file over the transmitter. The file must be in raw 16 bit signed word
-     * format.
+     * This function is called by the module when it wishes to send DTMF
+     * digits over the transmitter.
      * The module must be active for this function to do anything.
      */
-    void playFile(const std::string& path);
-    
     void sendDtmf(const std::string& digits);
     
     
