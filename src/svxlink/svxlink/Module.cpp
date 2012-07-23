@@ -48,8 +48,7 @@ using namespace Async;
 
 Module::Module(void *dl_handle, Logic *logic, const string& cfg_name)
   : m_dl_handle(dl_handle), m_logic(logic), m_id(-1), m_name(cfg_name),
-    m_is_transmitting(false), m_is_active(false), m_cfg_name(cfg_name),
-    m_tmo_timer(0)
+    m_is_active(false), m_cfg_name(cfg_name), m_tmo_timer(0)
 {
   
 } /* Module::Module */
@@ -186,28 +185,6 @@ void Module::sendDtmf(const std::string& digits)
 {
   logic()->sendDtmf(digits);
 } /* Module::sendDtmf */
-
-
-#if 0
-int Module::audioFromModule(float *samples, int count)
-{
-  if (m_is_active)
-  {
-    logic()->audioFromModule(samples, count);
-  }
-  return count;
-}
-
-
-void Module::transmit(bool tx)
-{
-  if (m_is_active && (tx != m_is_transmitting))
-  {
-    m_is_transmitting = tx;
-    logic()->moduleTransmitRequest(tx);
-  }
-} /* transmit */
-#endif
 
 
 bool Module::activateMe(void)

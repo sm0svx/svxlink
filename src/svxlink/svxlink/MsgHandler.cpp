@@ -240,7 +240,7 @@ class WavFileQueueItem : public QueueItem
 
 MsgHandler::MsgHandler(int sample_rate)
   : sample_rate(sample_rate), nesting_level(0), pending_play_next(false),
-    current(0), is_writing_message(false), non_idle_cnt(0)
+    current(0), is_writing_message(false)
 {
   
 }
@@ -286,18 +286,38 @@ void MsgHandler::playTone(int fq, int amp, int length, int flags)
 } /* MsgHandler::playSilence */
 
 
+bool MsgHandler::hasEnqueuedMsgsMatch(int flags)
+{
+  if (current && (current->getFlags() & flags))
+    return true;
+  list<QueueItem*>::const_iterator it;
+  for (it = msg_queue.begin(); it != msg_queue.end(); ++it)
+    if ((*it)->getFlags() & flags) return true;
+  return false;
+} /* MsgHandler::hasEnqueuedMsgMatch */
+
+
+bool MsgHandler::hasEnqueuedMsgsNotMatch(int flags)
+{
+  if (current && !(current->getFlags() & flags))
+    return true;
+  list<QueueItem*>::const_iterator it;
+  for (it = msg_queue.begin(); it != msg_queue.end(); ++it)
+    if (!((*it)->getFlags() & flags)) return true;
+  return false;
+} /* MsgHandler::hasEnqueuedMsgsMotMatch */
+
+
 void MsgHandler::clear(void)
 {
-  deleteQueueItem(current);
+  delete current;
   current = 0;
   
   list<QueueItem*>::iterator it;
   for (it=msg_queue.begin(); it!=msg_queue.end(); ++it)
   {
-    deleteQueueItem(*it);
+    delete *it;
   }
-  
-  non_idle_cnt = 0;
   
   msg_queue.clear();
   sinkFlushSamples();
@@ -339,7 +359,7 @@ void MsgHandler::end(void)
 
 void MsgHandler::requestSamples(int count)
 {
-  if (current != 0)
+  if (current)
   {
     writeSamples(count);
   }
@@ -356,7 +376,7 @@ void MsgHandler::skipCurrentMessage(void)
 {
   if (current)
   {
-    deleteQueueItem(current);
+    delete current;
     current = 0;
     playMsg();
   }
@@ -367,17 +387,6 @@ int MsgHandler::getCurrentMessageFlags(void)
 {
   return current ? current->getFlags() : 0;
 } /* MsgHandler::getCurrentMessageFlags */
-
-
-void MsgHandler::deleteQueueItem(QueueItem *item)
-{
-  if (!(item->getFlags() & MSG_IDLE_MARKED))
-  {
-    non_idle_cnt -= 1;
-    assert(non_idle_cnt >= 0);
-  }
-  delete item;
-} /* MsgHandler::deleteQueueItem */
 
 
 
@@ -407,10 +416,6 @@ void MsgHandler::allSamplesFlushed(void)
 void MsgHandler::addItemToQueue(QueueItem *item)
 {
   is_writing_message = true;
-  if (!(item->getFlags() & MSG_IDLE_MARKED))
-  {
-    non_idle_cnt += 1;
-  }
   msg_queue.push_back(item);
   if (msg_queue.size() == 1)
   {
@@ -433,7 +438,7 @@ void MsgHandler::playMsg(void)
     return;
   }
   
-  if (current != 0)
+  if (current)
   {
     return;
   }
@@ -442,7 +447,7 @@ void MsgHandler::playMsg(void)
   msg_queue.pop_front();
   if (!current->initialize())
   {
-    deleteQueueItem(current);
+    delete current;
     current = 0;
     playMsg();
   }
@@ -460,7 +465,7 @@ void MsgHandler::writeSamples(int count)
   int read_cnt = current->readSamples(buf, count);
   if (read_cnt == 0)
   {
-    deleteQueueItem(current);
+    delete current;
     current = 0;
     playMsg();
     return;

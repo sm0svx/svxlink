@@ -253,15 +253,6 @@ class Module : public sigc::trackable, public Async::AudioSink,
     bool isActive(void) const { return m_is_active; }
 
     /**
-     * @brief 	Check if the module is transmitting
-     * @return	Return \em true if the module is transmitting or else \em false
-     *
-     * This function is used to check if the module has requested that the
-     * the transmitter should be on or off.
-     */
-    //bool isTransmitting(void) const { return m_is_transmitting; }
-
-    /**
      * @brief 	Retrieve the config file object
      * @return	Returns a reference to the config file object
      *
@@ -505,7 +496,6 @@ class Module : public sigc::trackable, public Async::AudioSink,
     Logic     	      *m_logic;
     int       	      m_id;
     std::string       m_name;
-    bool      	      m_is_transmitting;
     sigc::connection  m_logic_idle_con;
     bool      	      m_is_active;
     std::string	      m_cfg_name;

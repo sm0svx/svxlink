@@ -97,8 +97,6 @@ class QueueItem;
  *
  ****************************************************************************/
 
-#define MSG_IDLE_MARKED		1
-#define MSG_HELP_MARKED		2
 
 
 /****************************************************************************
@@ -179,10 +177,20 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
     bool isWritingMessage(void) const { return is_writing_message; }
     
     /**
-     * @brief 	Check if the message writer is idle (ignoring idle marked items)
-     * @return	Returns \em true if the idle or else \em false
+     * @brief 	Check if messages that match the flags mask are stored
+     *          in the processing queue
+     * @param   flags
+     * @return	Returns \em true if messages are enqueued or else \em false
      */
-    bool isIdle(void) const { return non_idle_cnt == 0; }
+    bool hasEnqueuedMsgsMatch(int flags);
+
+    /**
+     * @brief 	Check if messages that do not match the flags mask are stored
+     *          in the processing queue
+     * @param   flags
+     * @return	Returns \em true if messages are enqueued or else \em false
+     */
+    bool hasEnqueuedMsgsNotMatch(int flags);
     
     /**
      * @brief 	Mark the beginning of a block of messages
@@ -252,14 +260,12 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
     bool      	      	    pending_play_next;
     QueueItem 	      	    *current;
     bool      	      	    is_writing_message;
-    int       	      	    non_idle_cnt;
     
     MsgHandler(const MsgHandler&);
     MsgHandler& operator=(const MsgHandler&);
     void addItemToQueue(QueueItem *item);
     void playMsg(void);
     void writeSamples(int count);
-    void deleteQueueItem(QueueItem *item);
     void clear(void);
 
 }; /* class MsgHandler */
