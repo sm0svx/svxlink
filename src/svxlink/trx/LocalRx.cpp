@@ -577,7 +577,7 @@ void LocalRx::mute(bool do_mute)
     sql_valve->setOpen(false);
     //mute_valve->setOpen(false);
     //audio_io->close();
-    squelch_det->reset();
+    //squelch_det->reset();
     //setSquelchState(false);
   }
   else
