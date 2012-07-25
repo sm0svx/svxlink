@@ -132,29 +132,41 @@ So, if you are using a sampling frequency of 8000 Hz and a block length of
 Reset the object by calling the "reset" method. Now call the "calc" method
 for each sample in the block. When block_len samples have been processed,
 the result is ready to be read. If only the magnitude is interesting, use
-the "relativeMagnitudeSquared" function since it's more efective than using
+the "relativeMagnitudeSquared" function since it's more efficient than using
 the "result" function. The "result" function give a complex value from
 which both phase and magnitude can be calculated.
 
 The relative magnitude squared value can be used directly to compare it
-against other relative magnitude squared values. If you want to compare it
-to other measured values, it will probably be necessary to recalculate it
+against other relative magnitude squared values. If you want to calculate
+the power difference in dB between two bins, just do this:
+
+  diff_db = 10 * log10(rel_mag_sqr / other_rel_mag_sqr)
+
+Why the expression above works will be explained below.
+
+If you want to compare the relative magnitude squared value to values
+calculated in another way, it will probably be necessary to recalculate it
 to an absolute magnitude value. For example, an input signal containing a
 sinus with amplitude 1.0 will produce magnitude 0.5 in the frequency plane.
 The reason it's 0.5 is because the peak in the frequency plane is mirrored
 around zero so it's actually two peaks with magnitude 0.5. So to get the
 magnitude for the relative magnitude squared value, we do the following:
 
-  2 * sqrt(rel_mag_sqr) / block_len
+  mag = 2 * sqrt(rel_mag_sqr) / block_len
 
 Now we will get magnitude one for the case described above. However, the
 magnitude may not be what you need. The mean power in the signal during
 the block may be more interesting. We calculate this by first converting
 the magnitude (peak) value to a RMS value. This is easily done by dividing
-by sqrt(2). We then square the whole thing to get the mean power. This
-calculation can be simplified to:
+the expression above by sqrt(2). We then square the whole thing to get the
+mean power. This calculation can be simplified to:
 
-  2 * rel_mag_sqr / (block_len * block_len)
+  pwr = 2 * rel_mag_sqr / (block_len * block_len)
+
+Now we can understand how the first calculation works, where the power
+difference between two bins in dB were calculated. If you divide two of the
+power expressions above with each other, only the two relative magnitude
+squared values will remain.
 
 If using Goertzel to find one or more tones, one way to determine if a
 tone is present or not is to compare the power given by Goertzel to the
@@ -170,7 +182,20 @@ will give a value between 0.0 and 1.0. If it's close to one, almost all
 power is in the tone. If close to zero, we probably just have broad band
 noise. After some simplification, the relation can be computed using:
 
-  2 * rel_mag_sqr / (block_len * passband_energy)
+  rel = 2 * rel_mag_sqr / (block_len * passband_energy)
+
+If you instead want a dB value for the difference between the tone power and
+the passband power, you need to first subtract the tone power from the passband
+power and then make the values bandwidth equivalent. For example, if the
+Goertzel detector bandwidth is 100Hz and the passband bandwidth is 3000Hz, you
+need to divide the passband power with 30 (3000/100) before calculating the dB
+value. Note that the recalculated passband power will be the mean power over
+the whole passband. This is not a problem if the frequency spectrum is flat.
+If it is tilted or uneven over the passband, you will get an offset in your
+dB calulation. This offset can easily be calibrated away though by just
+inputting noise to to detector and calibrate the output to 0dB. Now you have a
+measure for the tone SNR (Signal to Noise Ratio), provided that the selected
+passband only contain the tone and noise.
 
 When finished with the block, call "reset" again and start over.
 */
