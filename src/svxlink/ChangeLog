@@ -6,7 +6,7 @@
 
 
 
- 0.13.1 -- ?? ??? 2011
+ 0.13.1 -- 27 Nov 2011
 -----------------------
 
 * Bugfix in RemoteTrx: Could crash when a Net uplink was disconnected.
