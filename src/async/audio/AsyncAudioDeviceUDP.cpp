@@ -53,7 +53,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncUdpSocket.h>
 #include <AsyncIpAddress.h>
-#include <common.h>
 
 
 /****************************************************************************
@@ -75,7 +74,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-using namespace SvxLink;
 
 
 /****************************************************************************
@@ -194,24 +192,33 @@ AudioDeviceUDP::~AudioDeviceUDP(void)
 
 bool AudioDeviceUDP::openDevice(Mode mode)
 {
-  vector<string> args;
-  vector<string>::size_type cnt = splitStr(args, devName(), ":");
-  if (cnt != 2)
+  if (sock != 0)
+  {
+    closeDevice();
+  }
+
+  const string &dev_name = devName();
+  size_t colon = dev_name.find(':');
+  if (colon == string::npos)
+  {
+    cerr << "*** ERROR: Illegal UDP audio device specification (" << devName()
+         << "). Should be udp:ip-addr:port\n";
+    return false;
+  }
+  
+  string ip_addr_str = dev_name.substr(0, colon);
+  string port_str = dev_name.substr(colon+1);
+  if (ip_addr_str.empty() || port_str.empty())
   {
     cerr << "*** ERROR: Illegal UDP audio device specification (" << devName()
          << "). Should be udp:ip-addr:port\n";
     return false;
   }
 
-  ip_addr = IpAddress(args[0]);
+  ip_addr = IpAddress(ip_addr_str);
   port = 0;
-  stringstream ss(args[1]);
+  stringstream ss(port_str);
   ss >> port;
-
-  if (sock != 0)
-  {
-    closeDevice();
-  }
 
   switch (mode)
   {
