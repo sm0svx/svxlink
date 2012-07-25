@@ -4,6 +4,8 @@
 * Moved from sigc++ version 1.2 to version 2.
   Patch contributed by Felix/WU8K.
 
+* Now possible to bind an UDP socket to a given interface.
+
 
 
  0.18.2 -- 27 Nov 2011
