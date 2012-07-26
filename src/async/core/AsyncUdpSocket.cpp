@@ -153,7 +153,7 @@ class UdpPacket
  * Bugs:      
  *------------------------------------------------------------------------
  */
-UdpSocket::UdpSocket(uint16_t local_port)
+UdpSocket::UdpSocket(uint16_t local_port, const IpAddress &bind_ip)
   : sock(-1), rd_watch(0), wr_watch(0), send_buf(0)
 {
   struct sockaddr_in addr;
@@ -181,7 +181,14 @@ UdpSocket::UdpSocket(uint16_t local_port)
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(local_port);
-    addr.sin_addr.s_addr = INADDR_ANY;
+    if (bind_ip.isEmpty())
+    {
+      addr.sin_addr.s_addr = INADDR_ANY;
+    }
+    else
+    {
+      addr.sin_addr = bind_ip.ip4Addr();
+    }
     if(bind(sock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr))
 	== -1)
     {

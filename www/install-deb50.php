@@ -5,7 +5,7 @@
   $rel="090426";
 ?>
 
-<H2>Installation instructions for Debian 4.0</H2>
+<H2>Installation instructions for Debian 5.0</H2>
 This instruction was written for the <?php echo $rel ?> release of SvxLink.
 <p/>
 There are no binary packages for Debian but it is quite easy
@@ -15,7 +15,7 @@ following commands as user 'root'.
 
 <pre>
 apt-get update
-apt-get install alsa-utils g++ make libsigc++-1.2-dev libgsm-dev libpopt-dev libgcrypt-dev tcl8.4-dev libspeex-dev
+apt-get install g++ make libsigc++-1.2-dev libgsm-dev libpopt-dev tcl8.4-dev libgcrypt-dev libspeex-dev alsa-utils
 </pre>
 If you need Qtel you also need the QT development libraries.
 <pre>

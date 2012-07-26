@@ -4,9 +4,14 @@
 * Moved from sigc++ version 1.2 to version 2.
   Patch contributed by Felix/WU8K.
 
+* Now possible to bind a UDP socket to a given interface.
+
+* New "audio device" which read and write audio from a UDP socket.
+  This can for example be used to stream audio to/from GNU Radio.
 
 
- 0.18.2 -- ?? ??? 2011
+
+ 0.18.2 -- 27 Nov 2011
 -----------------------
 
 * Bugfix in Async::AudioDeviceAlsa: There were problems when reopening
@@ -15,7 +20,7 @@
 
 
 
- 0.18.1 -- 05 nov 2011
+ 0.18.1 -- 05 Nov 2011
 -----------------------
 
 * Bugfix in Async::AudioDelayLine: Calling "clear" while a "mute" was in
@@ -23,9 +28,10 @@
 
 * New methods IpAddress::isEmpty() and IpAddress::clear().
 
-* Bugfix in the OSS code: The audio device would not open when not using stdout as
-  the logging output due to an obscure bug in the OSS code. When not using stdout,
-  the audio device would open with fd 0, which was interpreted as and error.
+* Bugfix in the OSS code: The audio device would not open when not using stdout
+  as the logging output due to an obscure bug in the OSS code. When not using
+  stdout, the audio device would open with fd 0, which was interpreted as and
+  error.
 
 
 

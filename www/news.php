@@ -7,6 +7,32 @@
 <H2>Project News</H2>
 <TABLE width="95%" align="center">
   <TR><TD bgcolor="<?php echo $headercolor; ?>">
+    <B>26 Apr 2009: <I>Version 090426 released</I></B>
+  <TD/></TR>
+  <TR><TD>
+    SvxLink Server now have a new DTMF decoder and also a new
+    tone detector. The SpanDSP library is no longer required.
+    The RemoteTrx protocol have been improved with audio
+    compression and authentication.
+    <P/>
+    The EchoLink module is now able to register itself on the
+    EchoLink "link status" page. APRS functionality have been
+    added so that position and other useful info can be sent to
+    the APRS network.
+    <P/>
+    Qtel have three new translations: German, Spanish and
+    Italian.
+    <P/>
+    A number of bugs have been fixed.
+    <P/>
+    As usual, be sure to check out the
+    <A href="http://sourceforge.net/project/shownotes.php?release_id=678472">ChangeLog</A>
+    for more detailed information.
+  </TD></TR>
+  
+  <TR><TD><BR/></TD></TR>
+
+  <TR><TD bgcolor="<?php echo $headercolor; ?>">
     <B>31 Jul 2008: <I>Version 080730 released</I></B>
   <TD/></TR>
   <TR><TD>
