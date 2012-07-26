@@ -1,8 +1,8 @@
 /**
-@File	 Voter.cpp
+@File	Voter.cpp
 @brief  This file contains a class that implement a receiver voter
 @author Tobias Blomberg / SM0SVX
-@date	 2005-04-18
+@date	2005-04-18
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -738,6 +738,7 @@ void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
   
   if (box().best_srx == 0)
   {
+    assert(is_open);
     box().best_srx = srx;
   }
   else if (srx == box().best_srx)
@@ -761,11 +762,17 @@ void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
 void Voter::Top::satSignalLevelUpdated(SatRx *srx, float siglev)
 {
   assert(box().best_srx != 0);
+  assert(srx->squelchIsOpen());
   
-  if (box().best_srx->squelchIsOpen() &&
+  if (!box().best_srx->squelchIsOpen() ||
       (siglev > box().best_srx->signalStrength()))
   {
     box().best_srx = srx;
+  }
+
+  if (srx == activeSrx())
+  {
+    runTask(bind(voter().signalLevelUpdated.make_slot(), siglev));
   }
 } /* Voter::Top::satSignalLevelUpdated */
 
