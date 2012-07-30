@@ -153,7 +153,7 @@ class UdpPacket
  * Bugs:      
  *------------------------------------------------------------------------
  */
-UdpSocket::UdpSocket(uint16_t local_port)
+UdpSocket::UdpSocket(uint16_t local_port, const IpAddress &bind_ip)
   : sock(-1), rd_watch(0), wr_watch(0), send_buf(0)
 {
   struct sockaddr_in addr;
@@ -181,7 +181,14 @@ UdpSocket::UdpSocket(uint16_t local_port)
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(local_port);
-    addr.sin_addr.s_addr = INADDR_ANY;
+    if (bind_ip.isEmpty())
+    {
+      addr.sin_addr.s_addr = INADDR_ANY;
+    }
+    else
+    {
+      addr.sin_addr = bind_ip.ip4Addr();
+    }
     if(bind(sock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr))
 	== -1)
     {
@@ -194,13 +201,13 @@ UdpSocket::UdpSocket(uint16_t local_port)
     // Setup a watch for incoming data
   rd_watch = new FdWatch(sock, FdWatch::FD_WATCH_RD);
   assert(rd_watch != 0);
-  rd_watch->activity.connect(slot(*this, &UdpSocket::handleInput));
+  rd_watch->activity.connect(mem_fun(*this, &UdpSocket::handleInput));
 
     // Setup a watch for outgoing data (signals activity when a buffer full
     // condition occurs)
   wr_watch = new FdWatch(sock, FdWatch::FD_WATCH_WR);
   assert(wr_watch != 0);
-  wr_watch->activity.connect(slot(*this, &UdpSocket::sendRest));
+  wr_watch->activity.connect(mem_fun(*this, &UdpSocket::sendRest));
   wr_watch->setEnabled(false);
   
 } /* UdpSocket::UdpSocket */

@@ -217,8 +217,8 @@ LDFLAGS		+=
 # Additional files to install
 install-extras uninstall-extras rpm-extras:
 #	$(DIRSPEC) /var/spool/myprog[755,root,root]
-	$(FILESPEC) DtmfRepeater.tcl[644,root,root] /usr/share/svxlink/sounds/events.d
-	$(FILESPEC) ModuleDtmfRepeater.conf[644,root,root,config] /etc/svxlink.d
+	$(FILESPEC) DtmfRepeater.tcl[644,root,root] /usr/share/svxlink/events.d
+	$(FILESPEC) ModuleDtmfRepeater.conf[644,root,root,config] /etc/svxlink/svxlink.d
 
 
 

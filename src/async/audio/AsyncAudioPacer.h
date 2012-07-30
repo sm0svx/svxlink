@@ -112,7 +112,7 @@ class Timer;
 
 This class is used in an audio pipe chain to pace audio output.
 */
-class AudioPacer : public AudioSink, public AudioSource, public SigC::Object
+class AudioPacer : public AudioSink, public AudioSource, public sigc::trackable
 {
   public:
     /**

@@ -1,8 +1,8 @@
 /**
 @file	 AnalogPhoneLogic.cpp
 @brief   Contains a class that implements a repeater controller
-@author  Tobias Blomberg / SM0SVX
-@date	 2004-04-24
+@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@date	 2012-07-20
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -76,7 +76,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-using namespace SigC;
+using namespace sigc;
 
 
 
@@ -405,9 +405,9 @@ bool AnalogPhoneLogic::initialize(void)
   rptValveSetOpen(false);
   tx().setTxCtrlMode(Tx::TX_AUTO);
 
-  idleStateChanged.connect(slot(*this, &AnalogPhoneLogic::setIdle));
+  idleStateChanged.connect(mem_fun(*this, &AnalogPhoneLogic::setIdle));
 
-  rx().toneLenDetected.connect(slot(*this, &AnalogPhoneLogic::detectedTone));
+  rx().toneLenDetected.connect(mem_fun(*this, &AnalogPhoneLogic::detectedTone));
   if (!rx().addToneTimeDetector(busy_tone_freq, 70, 9))
   {
      cerr << "*** WARNING: Could not setup tone detector" << endl;
@@ -417,7 +417,7 @@ bool AnalogPhoneLogic::initialize(void)
   // init modem
   modem = new Serial(modem_port);
   modem->charactersReceived.connect(
-      	  slot(*this, &AnalogPhoneLogic::onModemDataReceived));
+      	  mem_fun(*this, &AnalogPhoneLogic::onModemDataReceived));
 
   if (!modem->open())
   {
@@ -468,7 +468,7 @@ void AnalogPhoneLogic::requestAuth(std::string reason)
    processEvent(ss.str());
 
    auth_timer = new Timer(auth_timeout);
-   auth_timer->expired.connect(slot(*this, &AnalogPhoneLogic::authTimeout));
+   auth_timer->expired.connect(mem_fun(*this, &AnalogPhoneLogic::authTimeout));
 } /* requAuth */
 
 
@@ -523,7 +523,7 @@ void AnalogPhoneLogic::dtmfDigitDetected(char digit, int duration)
             auth = true;  // authentificated
 
             wait_phone_connection_timer = new Timer(1500);
-            wait_phone_connection_timer->expired.connect(slot(*this,
+            wait_phone_connection_timer->expired.connect(mem_fun(*this,
                          &AnalogPhoneLogic::waitPhoneConnection));
         }
         else   // Pin is wrong
@@ -646,13 +646,13 @@ void AnalogPhoneLogic::setIdle(bool idle)
   if (idle)
   {
     up_timer = new Timer(idle_timeout);
-    up_timer->expired.connect(slot(*this, &AnalogPhoneLogic::idleTimeout));
+    up_timer->expired.connect(mem_fun(*this, &AnalogPhoneLogic::idleTimeout));
 
     if (idle_sound_interval > 0)
     {
    //  idle_sound_timer = new Timer(idle_sound_interval, Timer::TYPE_PERIODIC);
    //  idle_sound_timer->expired.connect(
-    //     slot(*this, &AnalogPhoneLogic::playIdleSound));
+    //     mem_fun(*this, &AnalogPhoneLogic::playIdleSound));
     }
   }
 
@@ -750,7 +750,7 @@ void AnalogPhoneLogic::initModem(int extime, int ser)
     writeModem(mstr);
 
     modem_to_timer = new Timer(extime);
-    modem_to_timer->expired.connect(slot(*this,
+    modem_to_timer->expired.connect(mem_fun(*this,
                       &AnalogPhoneLogic::modemInitTimeout));
 
 } /* AnalaogPhoneLogic::checkModem */
@@ -782,7 +782,7 @@ void AnalogPhoneLogic::dialPhoneNumber(std::string dialnr)
     writeModem(mstr);
 
     modem_dial_timer = new Timer(vcon_timeout);
-    modem_dial_timer->expired.connect(slot(*this,
+    modem_dial_timer->expired.connect(mem_fun(*this,
                          &AnalogPhoneLogic::modemDialTimeout));
 
 } /* AnalogPhoneLogic::dialPhoneNumber */
@@ -812,7 +812,7 @@ void AnalogPhoneLogic::resetModem(void)
     writeModem(mstr);
 
     modem_reset_timer = new Timer(modem_response_timeout);
-    modem_reset_timer->expired.connect(slot(*this,
+    modem_reset_timer->expired.connect(mem_fun(*this,
                          &AnalogPhoneLogic::modemResetTimeout));
 } /* AnalogPhoneLogic::resetModem */
 
@@ -842,7 +842,7 @@ void AnalogPhoneLogic::pickupLocal(std::string reason)
     writeModem(mstr);
 
     modem_voicecmd_timer = new Timer(modem_response_timeout);
-    modem_voicecmd_timer->expired.connect(slot(*this,
+    modem_voicecmd_timer->expired.connect(mem_fun(*this,
                          &AnalogPhoneLogic::pickupTimeout));
 
 } /* AnalogPhoneLogic::pickupLocal */
@@ -884,7 +884,7 @@ void AnalogPhoneLogic::hangupLocal(std::string reason)
     }
 
     modem_hangup_timer = new Timer(modem_response_timeout);
-    modem_hangup_timer->expired.connect(slot(*this,
+    modem_hangup_timer->expired.connect(mem_fun(*this,
                          &AnalogPhoneLogic::modemHangupTimeout));
 
 } /* AnalogPhoneLogic::hangupLocal */

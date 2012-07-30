@@ -10,7 +10,7 @@ server core (e.g. via a TCP/IP network).
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -45,10 +45,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pwd.h>
+#include <grp.h>
 
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
+#include <vector>
 
 
 /****************************************************************************
@@ -63,8 +65,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioIO.h>
 #include <Rx.h>
 #include <Tx.h>
+#include <common.h>
 
-#include <version/REMOTE_TRX.h>
 
 
 /****************************************************************************
@@ -73,6 +75,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/REMOTE_TRX.h"
 #include "TrxHandler.h"
 #include "NetTrxAdapter.h"
 
@@ -85,7 +88,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-using namespace SigC;
+using namespace sigc;
+using namespace SvxLink;
 
 
 
@@ -263,7 +267,9 @@ int main(int argc, char **argv)
       exit(1);
     }
     stdout_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
-    stdout_watch->activity.connect(slot(&stdout_handler));
+    // must explicitly specify name space for ptr_fun() to avoid conflict
+    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
+    stdout_watch->activity.connect(sigc::ptr_fun(&stdout_handler));
 
       /* Redirect stdout to the logpipe */
     if (close(STDOUT_FILENO) == -1)
@@ -329,10 +335,22 @@ int main(int argc, char **argv)
 
   if (runasuser != NULL)
   {
+      // Setup supplementary group IDs
+    if (initgroups(runasuser, getgid()))
+    {
+      perror("initgroups");
+      exit(1);
+    }
+
     struct passwd *passwd = getpwnam(runasuser);
     if (passwd == NULL)
     {
       perror("getpwnam");
+      exit(1);
+    }
+    if (setgid(passwd->pw_gid) == -1)
+    {
+      perror("setgid");
       exit(1);
     }
     if (setuid(passwd->pw_uid) == -1)
@@ -368,8 +386,7 @@ int main(int argc, char **argv)
     cfg_filename += "/.svxlink/remotetrx.conf";
     if (!cfg.open(cfg_filename))
     {
-      cfg_filename = string(home_dir);
-      cfg_filename += "/.remotetrxrc";
+      cfg_filename = "/etc/svxlink/remotetrx.conf";
       if (!cfg.open(cfg_filename))
       {
 	cfg_filename = "/etc/remotetrx.conf";
@@ -377,7 +394,7 @@ int main(int argc, char **argv)
 	{
 	  cerr << "*** ERROR: Could not open configuration file. Tried:\n"
       	       << "\t" << home_dir << "/.svxlink/remotetrx.conf\n"
-      	       << "\t" << home_dir << "/.remotetrxrc\n"
+      	       << "\t/etc/svxlink/remotetrx.conf\n"
 	       << "\t/etc/remotetrx.conf\n"
 	       << "Possible reasons for failure are: None of the files exist,\n"
 	       << "you do not have permission to read the file or there was a\n"
@@ -440,8 +457,14 @@ int main(int argc, char **argv)
   
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
-  cout << PROGRAM_NAME " v" REMOTE_TRX_VERSION " (" __DATE__
-      	  ") starting up...\n";
+  cout << PROGRAM_NAME " v" REMOTE_TRX_VERSION " (" __DATE__ 
+          ") Copyright (C) 2011 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
+          "This is free software, and you are\n";
+  cout << "welcome to redistribute it in accordance with the "
+          "terms and conditions in the\n";
+  cout << "GNU GPL (General Public License) version 2 or later.\n";
+
   cout << "\nUsing configuration file: " << main_cfg_filename << endl;
   
   string value;
@@ -489,16 +512,39 @@ int main(int argc, char **argv)
     tcsetattr(STDIN_FILENO, TCSANOW, &termios);
 
     stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
-    stdin_watch->activity.connect(slot(&stdinHandler));
+    // must explicitly specify name space for ptr_fun() to avoid conflict
+    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
+    stdin_watch->activity.connect(sigc::ptr_fun(&stdinHandler));
   }
   
   NetRxAdapterFactory net_rx_adapter_factory;
   NetTxAdapterFactory net_tx_adapter_factory;
 
-  TrxHandler trx_handler(cfg);
-  if (trx_handler.initialize())
+  vector<TrxHandler*> trx_handlers;
+  vector<string> trxs;
+  value = "";
+  cfg.getValue("GLOBAL", "TRXS", value);
+  splitStr(trxs, value, ",");
+  for (unsigned i=0; i<trxs.size(); ++i)
+  {
+    cout << "Setting up trx \"" << trxs[i] << "\"\n";
+    TrxHandler *trx_handler = new TrxHandler(cfg, trxs[i]);
+    if (!trx_handler->initialize())
+    {
+      cerr << "*** ERROR: Failed to setup trx " << trxs[i] << endl;
+      delete trx_handler;
+      continue;
+    }
+    trx_handlers.push_back(trx_handler);
+  }
+  
+  if (!trx_handlers.empty())
   {
     app.exec();
+  }
+  else
+  {
+    cerr << "*** ERROR: No trxs successfully initialized. Bailing out...\n";
   }
   
   if (stdin_watch != 0)
@@ -669,6 +715,7 @@ static void write_to_logfile(const char *buf)
   }
   
   const char *ptr = buf;
+  ssize_t ret;
   while (*ptr != 0)
   {
     static bool print_timestamp = true;
@@ -681,15 +728,19 @@ static void write_to_logfile(const char *buf)
 	struct tm *tm = localtime(&epoch);
 	char tstr[256];
 	size_t tlen = strftime(tstr, sizeof(tstr), tstamp_format.c_str(), tm);
-	(void)write(logfd, tstr, tlen);
-	(void)write(logfd, ": ", 2);
+	ret = write(logfd, tstr, tlen);
+        assert(ret == static_cast<ssize_t>(tlen));
+	ret = write(logfd, ": ", 2);
+        assert(ret == 2);
 	print_timestamp = false;
       }
 
       if (reopen_log)
       {
 	const char *reopen_txt = "SIGHUP received. Reopening logfile\n";
-	(void)write(logfd, reopen_txt, strlen(reopen_txt));
+        const size_t reopen_txt_len = strlen(reopen_txt);
+	ret = write(logfd, reopen_txt, reopen_txt_len);
+        assert(ret == static_cast<ssize_t>(reopen_txt_len));
 	open_logfile();
 	reopen_log = false;
 	print_timestamp = true;
@@ -697,7 +748,7 @@ static void write_to_logfile(const char *buf)
       }
     }
 
-    int write_len = 0;
+    size_t write_len = 0;
     const char *nl = strchr(ptr, '\n');
     if (nl != 0)
     {
@@ -708,7 +759,8 @@ static void write_to_logfile(const char *buf)
     {
       write_len = strlen(ptr);
     }
-    (void)write(logfd, ptr, write_len);
+    ret = write(logfd, ptr, write_len);
+    assert(ret == static_cast<ssize_t>(write_len));
     ptr += write_len;
   }
 } /* write_to_logfile */
@@ -731,13 +783,17 @@ static void stdout_handler(FdWatch *w)
 
 void sighup_handler(int signal)
 {
+  ssize_t ret;
+
   if (logfile_name == 0)
   {
-    (void)write(STDOUT_FILENO, "Ignoring SIGHUP\n", 16);
+    ret = write(STDOUT_FILENO, "Ignoring SIGHUP\n", 16);
+    assert(ret == 16);
     return;
   }
   
-  (void)write(STDOUT_FILENO, "SIGHUP received. Logfile reopened\n", 34);
+  ret = write(STDOUT_FILENO, "SIGHUP received. Logfile reopened\n", 34);
+  assert(ret == 34);
   reopen_log = true;
     
 } /* sighup_handler */

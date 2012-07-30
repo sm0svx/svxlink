@@ -1,0 +1,2 @@
+The parrot module plays back everything you say. This can be used as a simplex
+repeater or just to hear how your modjulation sounds. If sending a DTMF command to the Parrot module,it will read back the received digits. Exit the module by sending a number sign.

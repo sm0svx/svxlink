@@ -45,7 +45,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/SVXLINK.h>
 #include <AsyncTimer.h>
 #include <rtp.h>
 
@@ -56,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/SVXLINK.h"
 #include "AprsUdpClient.h"
 
 
@@ -124,7 +124,8 @@ AprsUdpClient::AprsUdpClient(LocationInfo::Cfg &loc_cfg,
 {
    beacon_timer = new Timer(loc_cfg.interval, Timer::TYPE_PERIODIC);
    beacon_timer->setEnable(false);
-   beacon_timer->expired.connect(slot(*this, &AprsUdpClient::sendLocationInfo));
+   beacon_timer->expired.connect(
+     mem_fun(*this, &AprsUdpClient::sendLocationInfo));
 } /* AprsUdpClient::AprsUdpClient */
 
 
@@ -206,12 +207,12 @@ void AprsUdpClient::update3rdState(const string& call, const string& info)
 
 void AprsUdpClient::sendLocationInfo(Timer *t)
 {
-  if (ip_addr.ip4Addr().s_addr == INADDR_NONE)
+  if (ip_addr.isEmpty())
   {
     if (!dns)
     {
       dns = new DnsLookup(server);
-      dns->resultsReady.connect(slot(*this, &AprsUdpClient::dnsResultsReady));
+      dns->resultsReady.connect(mem_fun(*this, &AprsUdpClient::dnsResultsReady));
     }
     return;
   }
@@ -233,9 +234,9 @@ void AprsUdpClient::dnsResultsReady(DnsLookup& dns_lookup)
   delete dns;
   dns = 0;
 
-  if (result.empty() || (result[0].ip4Addr().s_addr == INADDR_NONE))
+  if (result.empty() || result[0].isEmpty())
   {
-    ip_addr.ip4Addr().s_addr = INADDR_NONE;
+    ip_addr.clear();
     return;
   }
 

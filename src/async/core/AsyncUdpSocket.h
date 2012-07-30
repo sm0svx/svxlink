@@ -51,6 +51,7 @@ An example of how to use the Async::UdpSocket class
  *
  ****************************************************************************/
 
+#include <AsyncIpAddress.h>
 
 
 /****************************************************************************
@@ -87,7 +88,6 @@ namespace Async
  ****************************************************************************/
 
 class FdWatch;
-class IpAddress;
 
 
 /****************************************************************************
@@ -121,7 +121,7 @@ This class is used to work with UDP sockets. An example usage is shown below.
 
 \include AsyncUdpSocket_demo.cpp
 */
-class UdpSocket : public SigC::Object
+class UdpSocket : public sigc::trackable
 {
   public:
     /**
@@ -129,7 +129,7 @@ class UdpSocket : public SigC::Object
      * @param 	local_port  The local port to use. If not specified, a random
      *	      	      	    local port will be used.
      */
-    UdpSocket(uint16_t local_port=0);
+    UdpSocket(uint16_t local_port=0, const IpAddress &bind_ip=IpAddress());
   
     /**
      * @brief 	Destructor
@@ -145,7 +145,7 @@ class UdpSocket : public SigC::Object
      * see if everything went fine.
      */
     bool initOk(void) const { return (sock != -1); }
-    
+
     /**
      * @brief 	Write data to the remote host
      * @param 	remote_ip   The IP-address of the remote host
@@ -156,6 +156,13 @@ class UdpSocket : public SigC::Object
      */
     bool write(const IpAddress& remote_ip, int remote_port, const void *buf,
 	int count);
+
+    /**
+     * @brief   Get the file descriptor for the UDP socket
+     * @return  Returns the file descriptor associated with the socket or
+     *          -1 on error
+     */
+    int fd(void) const { return sock; }
     
     /**
      * @brief 	A signal that is emitted when data has been received
@@ -163,14 +170,14 @@ class UdpSocket : public SigC::Object
      * @param 	buf   The buffer containing the read data
      * @param 	count The number of bytes read
      */
-    SigC::Signal3<void, const IpAddress&, void *, int> dataReceived;
+    sigc::signal<void, const IpAddress&, void *, int> dataReceived;
     
     /**
      * @brief 	A signal that is emitted when the send buffer is full
      * @param 	is_full Set to \em true if the buffer is full or \em false
      *	      	      	if the buffer full condition has been cleared
      */
-    SigC::Signal1<void, bool> sendBufferFull;
+    sigc::signal<void, bool> sendBufferFull;
     
   protected:
     

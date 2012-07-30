@@ -1,14 +1,12 @@
 /**
-@file	 AsyncAudioDelayLine.cpp
-@brief   A_brief_description_for_this_file
-@author  Tobias Blomberg / SM0SVX
-@date	 2006-07-08
-
-A_detailed_description_for_this_file
+@file	  AsyncAudioDelayLine.cpp
+@brief	  An audio pipe component to create a delay used for muting
+@author	  Tobias Blomberg / SM0SVX
+@date	  2006-07-08
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -35,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <cstring>
+#include <cmath>
 #include <algorithm>
 
 
@@ -115,42 +114,78 @@ using namespace Async;
  ****************************************************************************/
 
 AudioDelayLine::AudioDelayLine(int length_ms)
-  : size(length_ms * INTERNAL_SAMPLE_RATE / 1000), ptr(0), flush_cnt(0), is_muted(false),
-    mute_cnt(0), last_clear(0)
+  : size(length_ms * INTERNAL_SAMPLE_RATE / 1000), ptr(0), flush_cnt(0),
+    is_muted(false), mute_cnt(0), last_clear(0), fade_gain(0), fade_len(0),
+    fade_pos(0), fade_dir(0)
 {
   buf = new float[size];
   clear();
+  setFadeTime(DEFAULT_FADE_TIME);
 } /* AudioDelayLine::AudioDelayLine */
 
 
 AudioDelayLine::~AudioDelayLine(void)
 {
+  delete [] fade_gain;
   delete [] buf;
 } /* AudioDelayLine::~AudioDelayLine */
 
 
+void AudioDelayLine::setFadeTime(int time_ms)
+{
+  delete [] fade_gain;
+  fade_gain = 0;
+  
+  if (time_ms <= 0)
+  {
+    fade_len = 0;
+    fade_pos = 0;
+    fade_dir = 0;
+    return;
+  }
+
+  fade_len = time_ms * INTERNAL_SAMPLE_RATE / 1000;
+  fade_pos = min(fade_pos, fade_len-1);
+  fade_gain = new float[fade_len];
+  for (int i=0; i<fade_len-1; ++i)
+  {
+    fade_gain[i] = pow(2.0f, -15.0f * (static_cast<float>(i) / fade_len));
+  }
+  fade_gain[fade_len-1] = 0;
+} /* AudioDelayLine::setFadeTime  */
+
+
 void AudioDelayLine::mute(bool do_mute, int time_ms)
 {
+  int mute_ext = 0;
+  if (time_ms > 0)
+  {
+    mute_ext = min(size, time_ms * INTERNAL_SAMPLE_RATE / 1000);
+  }
+
   if (do_mute)
   {
-    int count = min(size, time_ms * INTERNAL_SAMPLE_RATE / 1000);
-    for (int i=0; i<count; ++i)
+    fade_pos = 0; // Reset fade gain
+    fade_dir = 1; // Fade out
+    ptr = (ptr + size - mute_ext) % size;
+    for (int i=0; i<mute_ext; ++i)
     {
-      ptr = (ptr > 0) ? ptr-1 : size-1;
-      buf[ptr] = 0;
+      ptr = (ptr < size-1) ? ptr+1 : 0;
+      buf[ptr] *= currentFadeGain();
     }
     is_muted = true;
     mute_cnt = 0;
   }
   else
   {
-    if (time_ms == 0)
+    if (mute_ext == 0)
     {
+      fade_dir = -1; // Fade in
       is_muted = false;
     }
     else
     {
-      mute_cnt = time_ms * INTERNAL_SAMPLE_RATE / 1000;
+      mute_cnt = mute_ext;
     }
   }
 } /* AudioDelayLine::mute */
@@ -159,71 +194,68 @@ void AudioDelayLine::mute(bool do_mute, int time_ms)
 void AudioDelayLine::clear(int time_ms)
 {
   int count;
-  
-  if (time_ms == -1)
+  if (time_ms < 0)
   {
-    memset(buf, 0, size * sizeof(*buf));
-    ptr = 0;
     count = size;
   }
   else
   {
     count = min(size, time_ms * INTERNAL_SAMPLE_RATE / 1000);
-    for (int i=0; i<count; ++i)
-    {
-      ptr = (ptr > 0) ? ptr-1 : size-1;
-      buf[ptr] = 0;
-    }
   }
-  
-  last_clear = count;
+
+  //fade_pos = 0; // Reset fade gain
+  fade_dir = 1; // Fade out
+  ptr = (ptr + size - count) % size;
+  for (int i=0; i<count; ++i)
+  {
+    ptr = (ptr < size-1) ? ptr+1 : 0;
+    buf[ptr] *= currentFadeGain();
+  }
+
+  if (!is_muted)
+  {
+    fade_dir = -1; // Fade in again when new samples arrive
+  }
+
+  last_clear = max(0, count - fade_len);
   
 } /* AudioDelayLine::clear */
 
 
 int AudioDelayLine::writeSamples(const float *samples, int count)
 {
-  float output[count];
-  
   flush_cnt = 0;
   last_clear = 0;
   
+  count = min(count, size);
+  float output[count];
+  int out_ptr = ptr;
   for (int i=0; i<count; ++i)
   {
-    output[i] = buf[ptr];
-    if (!is_muted)
+    output[i] = buf[out_ptr];
+    out_ptr = (out_ptr < size-1) ? out_ptr+1 : 0;
+  }
+
+  int written = sinkWriteSamples(output, count);
+
+  for (int i=0; i<written; ++i)
+  {
+    buf[ptr] = samples[i] * currentFadeGain();
+    if (is_muted && (mute_cnt > 0) && (--mute_cnt == 0))
     {
-      buf[ptr] = samples[i];
-    }
-    else
-    {
-      buf[ptr] = 0;
-      if (mute_cnt > 0)
-      {
-      	if (--mute_cnt == 0)
-	{
-	  is_muted = false;
-	}
-      }
+      fade_dir = -1; // Fade in
+      is_muted = false;
     }
     ptr = (ptr < size-1) ? ptr+1 : 0;
   }
   
-  int ret = sinkWriteSamples(output, count);
+  return written;
   
-  for (int i=count; i>ret; --i)
-  {
-    ptr = (ptr > 0) ? ptr-1 : size-1;
-    buf[ptr] = output[i-1];
-  }
-  
-  return ret;
-}
+} /* AudioDelayLine::writeSamples */
 
 
 void AudioDelayLine::flushSamples(void)
 {
-  //printf("AudioDelayLine::flushSamples\n");
   flush_cnt = size - last_clear;
   
   if (flush_cnt > 0)
@@ -234,12 +266,11 @@ void AudioDelayLine::flushSamples(void)
   {
     sinkFlushSamples();
   }
-}
+} /* AudioDelayLine::flushSamples */
 
 
 void AudioDelayLine::resumeOutput(void)
 {
-  //printf("AudioDelayLine::resumeOutput\n");
   if (flush_cnt > 0)
   {
     writeRemainingSamples();
@@ -248,14 +279,13 @@ void AudioDelayLine::resumeOutput(void)
   {
     sourceResumeOutput();
   }
-}
+} /* AudioDelayLine::resumeOutput */
 
 
 void AudioDelayLine::allSamplesFlushed(void)
 {
-  //printf("AudioDelayLine::allSamplesFlushed\n");
   sourceAllSamplesFlushed();
-}
+} /* AudioDelayLine::allSamplesFlushed */
 
 
 
@@ -266,23 +296,6 @@ void AudioDelayLine::allSamplesFlushed(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
 
 /****************************************************************************
  *
@@ -290,55 +303,38 @@ void AudioDelayLine::allSamplesFlushed(void)
  *
  ****************************************************************************/
 
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
 void AudioDelayLine::writeRemainingSamples(void)
 {
   float output[512];
-  int ret;
+  int written = 1; // Set to 1 so that we enter the loop the first time around
 
-  do
+  while ((written > 0) && (flush_cnt > 0))
   {
     int count = min(512, flush_cnt);
     
+    int out_ptr = ptr;
     for (int i=0; i<count; ++i)
     {
-      output[i] = buf[ptr];
+      output[i] = buf[out_ptr];
+      out_ptr = (out_ptr < size-1) ? out_ptr+1 : 0;
+    }
+
+    written = sinkWriteSamples(output, count);
+
+    for (int i=0; i<written; ++i)
+    {
       buf[ptr] = 0;
       ptr = (ptr < size-1) ? ptr+1 : 0;
     }
 
-    ret = sinkWriteSamples(output, count);
-    //printf("%d samples flushed\n", ret);
-
-    for (int i=count; i>ret; --i)
-    {
-      ptr = (ptr > 0) ? ptr-1 : size-1;
-      buf[ptr] = output[i-1];
-    }
-
-    flush_cnt -= ret;
-  } while ((ret > 0) && (flush_cnt > 0));
+    flush_cnt -= written;
+  }
   
   if (flush_cnt == 0)
   {
     sinkFlushSamples();
   }
-  
 } /* AudioDelayLine::writeRemainingSamples */
-
-
 
 
 

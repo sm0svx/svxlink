@@ -1,4 +1,6 @@
-<!DOCTYPE TS><TS>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.0" language="sv_SE" sourcelanguage="en_US">
 <context>
     <name>ComDialog</name>
     <message>
@@ -28,16 +30,20 @@ Kan ej skapa uppkoppling till</translation>
         <translation>Kunde inte ansluta till station</translation>
     </message>
     <message>
-        <source>Could not open audio device</source>
-        <translation>Kunde inte komma åt ljudkortet</translation>
-    </message>
-    <message>
         <source>Could not create connection to remote host</source>
         <translation>Kunde inte ansluta till fjärrdatorn</translation>
     </message>
     <message>
         <source>Disconnected</source>
         <translation>Nedkopplad</translation>
+    </message>
+    <message>
+        <source>Could not open mic audio device</source>
+        <translation>Kunde ej öppna ljudenhet för mikrofon</translation>
+    </message>
+    <message>
+        <source>Could not open speaker audio device</source>
+        <translation>Kunde ej öppna ljudenhet för högtalare</translation>
     </message>
 </context>
 <context>
@@ -124,6 +130,33 @@ Kan ej skapa uppkoppling till</translation>
     </message>
 </context>
 <context>
+    <name>EchoLinkDirectoryModel</name>
+    <message>
+        <source>Callsign</source>
+        <translation>Anropssignal</translation>
+    </message>
+    <message>
+        <source>Location/Description</source>
+        <translation>Plats/Beskrivning</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <source>Local Time</source>
+        <translation>Lokal tid</translation>
+    </message>
+    <message>
+        <source>Node ID</source>
+        <translation>Nod-ID</translation>
+    </message>
+    <message>
+        <source>IP Address</source>
+        <translation>IP-adress</translation>
+    </message>
+</context>
+<context>
     <name>MainWindow</name>
     <message>
         <source>Logging off from directory server...</source>
@@ -138,18 +171,6 @@ Kan ej skapa uppkoppling till</translation>
         <translation>Uppdaterar stationslista...</translation>
     </message>
     <message>
-        <source>Add to bookmarks</source>
-        <translation>Lägg till bokmärke</translation>
-    </message>
-    <message>
-        <source>Remove from bookmarks</source>
-        <translation>Tag bort bokmärke</translation>
-    </message>
-    <message>
-        <source>Add named station...</source>
-        <translation>Lägg till namngiven station...</translation>
-    </message>
-    <message>
         <source>Qtel - Add station...</source>
         <translation>Qtel - Lägg till station...</translation>
     </message>
@@ -159,35 +180,58 @@ Kan ej skapa uppkoppling till</translation>
 station du vill lägga till</translation>
     </message>
     <message>
-        <source>Ctrl+Q</source>
-        <comment>fileQuitAction</comment>
-        <translation>Ctrl+A</translation>
-    </message>
-    <message>
-        <source>Ctrl+B</source>
-        <comment>directoryBusyAction</comment>
-        <translation>Ctrl+U</translation>
-    </message>
-    <message>
-        <source>F5</source>
-        <comment>directoryRefreshAction</comment>
-        <translation>F5</translation>
-    </message>
-    <message>
         <source>Qtel: Connect to IP</source>
         <translation>Qtel: Anslut till IP</translation>
     </message>
     <message>
         <source>Enter an IP address or hostname:</source>
-        <translation>Mata in en IP-adress eller datornamn:</translation>
+        <translation>Mata in en IP-adress eller ett datornamn:</translation>
+    </message>
+    <message>
+        <source>Bookmarks</source>
+        <translation>Bokmärken</translation>
+    </message>
+    <message>
+        <source>Links</source>
+        <translation>Länkar</translation>
+    </message>
+    <message>
+        <source>Repeaters</source>
+        <translation>Relästationer</translation>
+    </message>
+    <message>
+        <source>Conferences</source>
+        <translation>Konferenser</translation>
+    </message>
+    <message>
+        <source>Stations</source>
+        <translation>Stationer</translation>
+    </message>
+    <message>
+        <source>About Qtel</source>
+        <translation>Om Qtel</translation>
+    </message>
+    <message>
+        <source>Qtel v</source>
+        <translation>Qtel v</translation>
+    </message>
+    <message>
+        <source> - Qt EchoLink client.
+</source>
+        <translation> - Qt EchoLink-klient.
+</translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it in accordance with the terms and conditions in the GNU GPL (General Public License) version 2 or later.</source>
+        <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel erbjuds HELT UTAN GARANTIER. Detta är fri mjukvara och du är välkommen att återdistribuera den i enlighet med de bestämmelser som återfinns i GNU GPL (General Public License) version 2 eller senare.</translation>
     </message>
 </context>
 <context>
     <name>MainWindowBase</name>
-    <message>
-        <source>Explorer</source>
-        <translation>Utforskare</translation>
-    </message>
     <message>
         <source>Conferences</source>
         <translation>Konferenser</translation>
@@ -209,18 +253,6 @@ station du vill lägga till</translation>
         <translation>Bokmärken</translation>
     </message>
     <message>
-        <source>Station</source>
-        <translation>Station</translation>
-    </message>
-    <message>
-        <source>Location/Description</source>
-        <translation>Plats/Beskrivning</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation></translation>
-    </message>
-    <message>
         <source>Time</source>
         <translation>Tid</translation>
     </message>
@@ -229,76 +261,8 @@ station du vill lägga till</translation>
         <translation>&amp;Arkiv</translation>
     </message>
     <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Inställningar</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Hjälp</translation>
-    </message>
-    <message>
-        <source>Undo</source>
-        <translation>Ångra</translation>
-    </message>
-    <message>
-        <source>&amp;Undo</source>
-        <translation>&amp;Ångra</translation>
-    </message>
-    <message>
-        <source>Redo</source>
-        <translation>Ångra ångra</translation>
-    </message>
-    <message>
-        <source>&amp;Redo</source>
-        <translation>Å&amp;ngra ångra</translation>
-    </message>
-    <message>
-        <source>Cut</source>
-        <translation>Klipp ut</translation>
-    </message>
-    <message>
-        <source>&amp;Cut</source>
-        <translation>&amp;Klipp ut</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Kopiera</translation>
-    </message>
-    <message>
-        <source>C&amp;opy</source>
-        <translation>K&amp;opiera</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation>Klistra in</translation>
-    </message>
-    <message>
-        <source>&amp;Paste</source>
-        <translation>K&amp;listra in</translation>
-    </message>
-    <message>
-        <source>Find</source>
-        <translation>Sök</translation>
-    </message>
-    <message>
-        <source>&amp;Find...</source>
-        <translation>&amp;Sök</translation>
-    </message>
-    <message>
-        <source>Contents</source>
-        <translation>Innehåll</translation>
-    </message>
-    <message>
-        <source>&amp;Contents...</source>
-        <translation>I&amp;nnehåll...</translation>
-    </message>
-    <message>
-        <source>Index</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>&amp;Index...</source>
-        <translation>&amp;Index...</translation>
     </message>
     <message>
         <source>About</source>
@@ -329,30 +293,12 @@ station du vill lägga till</translation>
         <translation>Inställningar för Qtel...</translation>
     </message>
     <message>
-        <source>&amp;Qtel Settings...</source>
-        <translation>&amp;Inställningar för Qtel</translation>
-    </message>
-    <message>
         <source>Open the Qtel settings dialog</source>
         <translation>Öppna inställningsdialogen för Qtel</translation>
     </message>
     <message>
-        <source>Qtel v</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>- Qt EchoLink client.
-</source>
-        <translation>- Qt EchoLink-klient.
-</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>Författare</translation>
-    </message>
-    <message>
         <source>&amp;Directory</source>
-        <translation>&amp;Stationslista</translation>
+        <translation>Stations&amp;lista</translation>
     </message>
     <message>
         <source>Refresh</source>
@@ -368,7 +314,7 @@ station du vill lägga till</translation>
     </message>
     <message>
         <source>Qtel - the Qt EchoLink Client</source>
-        <translation>Qtel - Qt EchoLink Klient</translation>
+        <translation>Qtel - Qt EchoLink-klient</translation>
     </message>
     <message>
         <source>Busy</source>
@@ -391,14 +337,6 @@ station du vill lägga till</translation>
         <translation>Meddelanden</translation>
     </message>
     <message>
-        <source>Local time</source>
-        <translation>Lokal tid</translation>
-    </message>
-    <message>
-        <source>Incoming connections</source>
-        <translation>Inkommande uppkopplingar</translation>
-    </message>
-    <message>
         <source>Accept</source>
         <translation>Acceptera</translation>
     </message>
@@ -415,34 +353,6 @@ station du vill lägga till</translation>
         <translation>Namn</translation>
     </message>
     <message>
-        <source>Node ID</source>
-        <translation>Nod-ID</translation>
-    </message>
-    <message>
-        <source>Ctrl+Z</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+Y</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+X</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+C</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+V</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Ctrl+F</source>
-        <translation></translation>
-    </message>
-    <message>
         <source>Connect to IP...</source>
         <translation>Anslut till IP...</translation>
     </message>
@@ -451,12 +361,88 @@ station du vill lägga till</translation>
         <translation>Anslut till markerad station...</translation>
     </message>
     <message>
-        <source>Disconnect</source>
-        <translation>Koppla ner</translation>
+        <source>Incoming Connections</source>
+        <translation>Inkommande anslutningar</translation>
     </message>
     <message>
-        <source>Add selected to Bookmarks</source>
-        <translation>Lägg till markerad station till bokmärken</translation>
+        <source>&amp;Station</source>
+        <translation>&amp;Station</translation>
+    </message>
+    <message>
+        <source>S&amp;ettings</source>
+        <translation>&amp;Inställningar</translation>
+    </message>
+    <message>
+        <source>Connect to &amp;selected...</source>
+        <translation>Anslut till &amp;markerad station...</translation>
+    </message>
+    <message>
+        <source>Connect to &amp;IP...</source>
+        <translation>Anslut till &amp;IP...</translation>
+    </message>
+    <message>
+        <source>Qtel &amp;Settings...</source>
+        <translation>&amp;Inställningar för Qtel...</translation>
+    </message>
+    <message>
+        <source>F5</source>
+        <translation>F5</translation>
+    </message>
+    <message>
+        <source>Add Selected To &amp;Bookmarks</source>
+        <translation>Lägg till markerad station till &amp;bokmärken</translation>
+    </message>
+    <message>
+        <source>Add the selected station in the station list to the bookmarks menu</source>
+        <translation>Lägg till den markerade stationen till bokmärken</translation>
+    </message>
+    <message>
+        <source>Ctrl+U</source>
+        <translation>Ctrl+U</translation>
+    </message>
+    <message>
+        <source>&amp;Remove Selected From Bookmarks</source>
+        <translation>&amp;Tag bort vald station från bokmärken</translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks list</source>
+        <translation>Tag bort den markerade stationen från listan av bokmärken</translation>
+    </message>
+    <message>
+        <source>Add &amp;Named Station To Bookmarks</source>
+        <translation>Lägg till &amp;namngiven station till bokmärken</translation>
+    </message>
+    <message>
+        <source>Ctrl+Q</source>
+        <translation>Ctrl+A</translation>
+    </message>
+    <message>
+        <source>Connect to the selected station</source>
+        <translation>Anslut till den markerade stationen</translation>
+    </message>
+    <message>
+        <source>Connect to local station using IP address or hostname</source>
+        <translation>Anslut till en lokal station genom att ange en IP-adress eller ett datornamn</translation>
+    </message>
+    <message>
+        <source>Immediately refresh the station list</source>
+        <translation>Ladda om stationslistan omedelbart</translation>
+    </message>
+    <message>
+        <source>Add selected station to the bookmarks</source>
+        <translation>Lägg till den markerade stationen till bokmärken</translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks</source>
+        <translation>Tag bort den markerade stationen från bokmärken</translation>
+    </message>
+    <message>
+        <source>Add a station to the bookmarks by entering a callsign</source>
+        <translation>Lägg till en station till bokmärken genom att ange en anropssignal</translation>
+    </message>
+    <message>
+        <source>Show the about dialog</source>
+        <translation>Visa version och licensinformation för Qtel</translation>
     </message>
 </context>
 <context>
@@ -464,10 +450,6 @@ station du vill lägga till</translation>
     <message>
         <source>Qtel: Settings</source>
         <translation>Qtel: Inställningar</translation>
-    </message>
-    <message>
-        <source>OK</source>
-        <translation></translation>
     </message>
     <message>
         <source>User Info</source>
@@ -512,10 +494,6 @@ meddelande</translation>
         <translation>Listserverinställningar</translation>
     </message>
     <message>
-        <source>Server</source>
-        <translation></translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>Avbryt</translation>
     </message>
@@ -548,22 +526,6 @@ meddelande</translation>
         <translation>Ljud</translation>
     </message>
     <message>
-        <source>Sound settings</source>
-        <translation>Ljudinställningar</translation>
-    </message>
-    <message>
-        <source>Audio device</source>
-        <translation>Ljudenhet</translation>
-    </message>
-    <message>
-        <source>Full duplex</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation type="obsolete">Vilken ljudenhet som skall användas (ex /dev/dsp)</translation>
-    </message>
-    <message>
         <source>Check this check box to enable full duplex operation</source>
         <translation>Klicka i denna för att aktivera ljudhantering i full duplex</translation>
     </message>
@@ -590,10 +552,6 @@ meddelande</translation>
     <message>
         <source>QSO</source>
         <translation>QSO</translation>
-    </message>
-    <message>
-        <source>QSO dialog settings</source>
-        <translation>Inställningar för QSO-dialogen</translation>
     </message>
     <message>
         <source>Chat encoding:</source>
@@ -682,6 +640,34 @@ meddelande</translation>
     <message>
         <source>The audio device to use (e.g. alsa:default)</source>
         <translation>Den ljudenhet som skall användas (ex: alsa:default)</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
+    <message>
+        <source>Server</source>
+        <translation>Server</translation>
+    </message>
+    <message>
+        <source>Sound Settings</source>
+        <translation>Ljudinställningar</translation>
+    </message>
+    <message>
+        <source>Mic audio device</source>
+        <translation>Ljudenhet för mikrofon</translation>
+    </message>
+    <message>
+        <source>Speaker audio device</source>
+        <translation>Ljudenhet för högtalare</translation>
+    </message>
+    <message>
+        <source>Full duplex</source>
+        <translation>Full duplex</translation>
+    </message>
+    <message>
+        <source>QSO Dialog Settings</source>
+        <translation>Inställningar för QSO-dialog</translation>
     </message>
 </context>
 </TS>

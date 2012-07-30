@@ -143,6 +143,8 @@ bool SimplexLogic::initialize(void)
   rxValveSetOpen(true);
   tx().setTxCtrlMode(Tx::TX_AUTO);
   
+  processEvent("startup");
+  
   return true;
   
 } /* SimplexLogic::initialize */

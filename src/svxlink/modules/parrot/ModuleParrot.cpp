@@ -48,7 +48,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/MODULE_PARROT.h>
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioFifo.h>
@@ -62,6 +61,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/MODULE_PARROT.h"
 #include "ModuleParrot.h"
 
 
@@ -163,8 +163,8 @@ extern "C" {
 
 ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       	      	      	   const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), fifo(0), squelch_is_open(false),
-    repeat_delay(0), repeat_delay_timer(0)
+  : Module(dl_handle, logic, cfg_name), adapter(0), fifo(0),
+    squelch_is_open(false), repeat_delay(0), repeat_delay_timer(0)
 {
   cout << "\tModule Parrot v" MODULE_PARROT_VERSION " starting...\n";
   
@@ -245,7 +245,7 @@ void ModuleParrot::logicIdleStateChanged(bool is_idle)
       {
       	repeat_delay_timer = new Timer(repeat_delay);
 	repeat_delay_timer->expired.connect(
-	    slot(*this, &ModuleParrot::onRepeatDelayExpired));
+	    mem_fun(*this, &ModuleParrot::onRepeatDelayExpired));
       }
       else
       {

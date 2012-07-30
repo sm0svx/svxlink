@@ -6,7 +6,7 @@
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2011 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -47,8 +47,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/MODULE_ECHOLINK.h>
-
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
 #include <AsyncAudioSplitter.h>
@@ -65,6 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/MODULE_ECHOLINK.h"
 #include "ModuleEchoLink.h"
 #include "QsoImpl.h"
 
@@ -76,7 +75,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace SigC;
+using namespace sigc;
 using namespace Async;
 using namespace EchoLink;
 
@@ -151,7 +150,10 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
   : Module(dl_handle, logic, cfg_name), dir(0), dir_refresh_timer(0),
     remote_activation(false), pending_connect_id(-1), last_message(""),
     max_connections(1), max_qsos(1), talker(0), squelch_is_open(false),
-    state(STATE_NORMAL), cbc_timer(0), splitter(0), listen_only_valve(0)
+    state(STATE_NORMAL), cbc_timer(0), drop_incoming_regex(0),
+    reject_incoming_regex(0), accept_incoming_regex(0),
+    reject_outgoing_regex(0), accept_outgoing_regex(0), splitter(0),
+    listen_only_valve(0), selector(0)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
@@ -252,55 +254,96 @@ bool ModuleEchoLink::initialize(void)
   
   cfg().getValue(cfgName(), "ALLOW_IP", allow_ip);
   
-  if (!cfg().getValue(cfgName(), "DROP", value))
+  if (!cfg().getValue(cfgName(), "DROP_INCOMING", value))
   {
     value = "^$";
   }
-  int err = regcomp(&drop_regex, value.c_str(),
+  drop_incoming_regex = new regex_t;
+  int err = regcomp(drop_incoming_regex, value.c_str(),
                     REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
   {
-    size_t msg_size = regerror(err, &drop_regex, 0, 0);
+    size_t msg_size = regerror(err, drop_incoming_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, &drop_regex, msg, msg_size);
+    size_t err_size = regerror(err, drop_incoming_regex, msg, msg_size);
     assert(err_size == msg_size);
-    cerr << "*** ERROR: Syntax error in " << cfgName() << "/DROP: "
+    cerr << "*** ERROR: Syntax error in " << cfgName() << "/DROP_INCOMING: "
          << msg << endl;
     moduleCleanup();
     return false;
   }
   
-  if (!cfg().getValue(cfgName(), "REJECT", value))
+  if (!cfg().getValue(cfgName(), "REJECT_INCOMING", value))
   {
     value = "^$";
   }
-  err = regcomp(&reject_regex, value.c_str(),
+  reject_incoming_regex = new regex_t;
+  err = regcomp(reject_incoming_regex, value.c_str(),
                 REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
   {
-    size_t msg_size = regerror(err, &reject_regex, 0, 0);
+    size_t msg_size = regerror(err, reject_incoming_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, &reject_regex, msg, msg_size);
+    size_t err_size = regerror(err, reject_incoming_regex, msg, msg_size);
     assert(err_size == msg_size);
-    cerr << "*** ERROR: Syntax error in " << cfgName() << "/REJECT: "
+    cerr << "*** ERROR: Syntax error in " << cfgName() << "/REJECT_INCOMING: "
          << msg << endl;
     moduleCleanup();
     return false;
   }
   
-  if (!cfg().getValue(cfgName(), "ACCEPT", value))
+  if (!cfg().getValue(cfgName(), "ACCEPT_INCOMING", value))
   {
     value = "^.*$";
   }
-  err = regcomp(&accept_regex, value.c_str(),
+  accept_incoming_regex = new regex_t;
+  err = regcomp(accept_incoming_regex, value.c_str(),
                 REG_EXTENDED | REG_NOSUB | REG_ICASE);
   if (err != 0)
   {
-    size_t msg_size = regerror(err, &accept_regex, 0, 0);
+    size_t msg_size = regerror(err, accept_incoming_regex, 0, 0);
     char msg[msg_size];
-    size_t err_size = regerror(err, &accept_regex, msg, msg_size);
+    size_t err_size = regerror(err, accept_incoming_regex, msg, msg_size);
     assert(err_size == msg_size);
-    cerr << "*** ERROR: Syntax error in " << cfgName() << "/ACCEPT: "
+    cerr << "*** ERROR: Syntax error in " << cfgName() << "/ACCEPT_INCOMING: "
+         << msg << endl;
+    moduleCleanup();
+    return false;
+  }
+
+  if (!cfg().getValue(cfgName(), "REJECT_OUTGOING", value))
+  {
+    value = "^$";
+  }
+  reject_outgoing_regex = new regex_t;
+  err = regcomp(reject_outgoing_regex, value.c_str(),
+                REG_EXTENDED | REG_NOSUB | REG_ICASE);
+  if (err != 0)
+  {
+    size_t msg_size = regerror(err, reject_outgoing_regex, 0, 0);
+    char msg[msg_size];
+    size_t err_size = regerror(err, reject_outgoing_regex, msg, msg_size);
+    assert(err_size == msg_size);
+    cerr << "*** ERROR: Syntax error in " << cfgName() << "/REJECT_OUTGOING: "
+         << msg << endl;
+    moduleCleanup();
+    return false;
+  }
+
+  if (!cfg().getValue(cfgName(), "ACCEPT_OUTGOING", value))
+  {
+    value = "^.*$";
+  }
+  accept_outgoing_regex = new regex_t;
+  err = regcomp(accept_outgoing_regex, value.c_str(),
+                REG_EXTENDED | REG_NOSUB | REG_ICASE);
+  if (err != 0)
+  {
+    size_t msg_size = regerror(err, accept_outgoing_regex, 0, 0);
+    char msg[msg_size];
+    size_t err_size = regerror(err, accept_outgoing_regex, msg, msg_size);
+    assert(err_size == msg_size);
+    cerr << "*** ERROR: Syntax error in " << cfgName() << "/ACCEPT_OUTGOING: "
          << msg << endl;
     moduleCleanup();
     return false;
@@ -308,10 +351,10 @@ bool ModuleEchoLink::initialize(void)
   
     // Initialize directory server communication
   dir = new Directory(server, mycall, password, location);
-  dir->statusChanged.connect(slot(*this, &ModuleEchoLink::onStatusChanged));
+  dir->statusChanged.connect(mem_fun(*this, &ModuleEchoLink::onStatusChanged));
   dir->stationListUpdated.connect(
-      	  slot(*this, &ModuleEchoLink::onStationListUpdated));
-  dir->error.connect(slot(*this, &ModuleEchoLink::onError));
+      	  mem_fun(*this, &ModuleEchoLink::onStationListUpdated));
+  dir->error.connect(mem_fun(*this, &ModuleEchoLink::onError));
   dir->makeOnline();
   
     // Start listening to the EchoLink UDP ports
@@ -323,7 +366,7 @@ bool ModuleEchoLink::initialize(void)
     return false;
   }
   Dispatcher::instance()->incomingConnection.connect(
-      slot(*this, &ModuleEchoLink::onIncomingConnection));
+      mem_fun(*this, &ModuleEchoLink::onIncomingConnection));
 
     // Create audio pipe chain for audio transmitted to the remote EchoLink
     // stations: <from core> -> Valve -> Splitter (-> QsoImpl ...)
@@ -337,7 +380,6 @@ bool ModuleEchoLink::initialize(void)
     // stations: (QsoImpl -> ) Selector -> Fifo -> <to core>
   selector = new AudioSelector;
   AudioSource::setHandler(selector);
-
   
   return true;
   
@@ -384,12 +426,37 @@ void ModuleEchoLink::moduleCleanup(void)
 {
   //FIXME: Delete qso objects
   
-  regfree(&accept_regex);
-  regfree(&reject_regex);
-  regfree(&drop_regex);
+  if (accept_incoming_regex != 0)
+  {
+    regfree(accept_incoming_regex);
+    delete accept_incoming_regex;
+    accept_incoming_regex = 0;
+  }
+  if (reject_incoming_regex != 0)
+  {
+    regfree(reject_incoming_regex);
+    delete reject_incoming_regex;
+    reject_incoming_regex = 0;
+  }
+  if (drop_incoming_regex != 0)
+  {
+    regfree(drop_incoming_regex);
+    delete drop_incoming_regex;
+    drop_incoming_regex = 0;
+  }
+  if (accept_outgoing_regex != 0)
+  {
+    regfree(accept_outgoing_regex);
+    delete accept_outgoing_regex;
+    accept_outgoing_regex = 0;
+  }
+  if (reject_outgoing_regex != 0)
+  {
+    regfree(reject_outgoing_regex);
+    delete reject_outgoing_regex;
+    reject_outgoing_regex = 0;
+  }
   
-  //delete tinfo;
-  //tinfo = 0;
   delete dir_refresh_timer;
   dir_refresh_timer = 0;
   delete Dispatcher::instance();
@@ -757,6 +824,7 @@ void ModuleEchoLink::onError(const string& msg)
  *    	      connection is coming in.
  * Input:     callsign	- The callsign of the remote station
  *    	      name    	- The name of the remote station
+ *            priv      - A private string for passing connection parameters
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2004-03-07
@@ -766,12 +834,13 @@ void ModuleEchoLink::onError(const string& msg)
  */
 void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
       	      	      	      	      	  const string& callsign,
-      	      	      	      	      	  const string& name)
+      	      	      	      	      	  const string& name,
+      	      	      	      	      	  const string& priv)
 {
   cout << "Incoming EchoLink connection from " << callsign
        << " (" << name << ") at " << ip << "\n";
   
-  if (regexec(&drop_regex, callsign.c_str(), 0, 0, 0) == 0)
+  if (regexec(drop_incoming_regex, callsign.c_str(), 0, 0, 0) == 0)
   {
     cerr << "*** WARNING: Dropping incoming connection due to configuration.\n";
     return;
@@ -824,12 +893,14 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   updateEventVariables();
   qso->setRemoteCallsign(callsign);
   qso->setRemoteName(name);
-  qso->stateChange.connect(slot(*this, &ModuleEchoLink::onStateChange));
-  qso->chatMsgReceived.connect(slot(*this, &ModuleEchoLink::onChatMsgReceived));
-  qso->isReceiving.connect(slot(*this, &ModuleEchoLink::onIsReceiving));
+  qso->setRemoteParams(priv);
+  qso->stateChange.connect(mem_fun(*this, &ModuleEchoLink::onStateChange));
+  qso->chatMsgReceived.connect(
+          mem_fun(*this, &ModuleEchoLink::onChatMsgReceived));
+  qso->isReceiving.connect(mem_fun(*this, &ModuleEchoLink::onIsReceiving));
   qso->audioReceivedRaw.connect(
-      	  slot(*this, &ModuleEchoLink::audioFromRemoteRaw));
-  qso->destroyMe.connect(slot(*this, &ModuleEchoLink::destroyQsoObject));
+      	  mem_fun(*this, &ModuleEchoLink::audioFromRemoteRaw));
+  qso->destroyMe.connect(mem_fun(*this, &ModuleEchoLink::destroyQsoObject));
 
   splitter->addSink(qso);
   selector->addSource(qso);
@@ -841,8 +912,8 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
     return;
   }
   
-  if ((regexec(&reject_regex, callsign.c_str(), 0, 0, 0) == 0) ||
-      (regexec(&accept_regex, callsign.c_str(), 0, 0, 0) != 0))
+  if ((regexec(reject_incoming_regex, callsign.c_str(), 0, 0, 0) == 0) ||
+      (regexec(accept_incoming_regex, callsign.c_str(), 0, 0, 0) != 0))
   {
     qso->reject(true);
     return;
@@ -905,8 +976,11 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
       qsos.push_front(qso);
       updateEventVariables();
       
-      last_disc_stn = qso->stationData();
-      
+      if (!qso->connectionRejected())
+      {
+        last_disc_stn = qso->stationData();
+      }
+              
       if (remote_activation &&
       	  (qsos.back()->currentState() == Qso::STATE_DISCONNECTED))
       {
@@ -1068,7 +1142,7 @@ void ModuleEchoLink::getDirectoryList(Timer *timer)
       /* FIXME: Do we really need periodic updates of the directory list ? */
     dir_refresh_timer = new Timer(600000);
     dir_refresh_timer->expired.connect(
-      	    slot(*this, &ModuleEchoLink::getDirectoryList));
+      	    mem_fun(*this, &ModuleEchoLink::getDirectoryList));
   }
 } /* ModuleEchoLink::getDirectoryList */
 
@@ -1080,6 +1154,19 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     cerr << "Cannot connect to myself (" << mycall << "/" << station.id()
       	 << ")...\n";
     processEvent("self_connect");
+    return;
+  }
+
+  if ((regexec(reject_outgoing_regex, station.callsign().c_str(),
+	       0, 0, 0) == 0) ||
+      (regexec(accept_outgoing_regex, station.callsign().c_str(),
+	       0, 0, 0) != 0))
+  {
+    cerr << "Rejecting outgoing connection to " << station.callsign() << " ("
+	 << station.id() << ")\n";
+    stringstream ss;
+    ss << "reject_outgoing_connection " << station.callsign();
+    processEvent(ss.str());
     return;
   }
 
@@ -1122,12 +1209,13 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     qsos.push_back(qso);
     updateEventVariables();    
     qso->setRemoteCallsign(station.callsign());
-    qso->stateChange.connect(slot(*this, &ModuleEchoLink::onStateChange));
-    qso->chatMsgReceived.connect(slot(*this, &ModuleEchoLink::onChatMsgReceived));
-    qso->isReceiving.connect(slot(*this, &ModuleEchoLink::onIsReceiving));
+    qso->stateChange.connect(mem_fun(*this, &ModuleEchoLink::onStateChange));
+    qso->chatMsgReceived.connect(
+        mem_fun(*this, &ModuleEchoLink::onChatMsgReceived));
+    qso->isReceiving.connect(mem_fun(*this, &ModuleEchoLink::onIsReceiving));
     qso->audioReceivedRaw.connect(
-      	    slot(*this, &ModuleEchoLink::audioFromRemoteRaw));
-    qso->destroyMe.connect(slot(*this, &ModuleEchoLink::destroyQsoObject));
+      	    mem_fun(*this, &ModuleEchoLink::audioFromRemoteRaw));
+    qso->destroyMe.connect(mem_fun(*this, &ModuleEchoLink::destroyQsoObject));
 
     splitter->addSink(qso);
     selector->addSource(qso);
@@ -1155,7 +1243,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
 } /* ModuleEchoLink::createOutgoingConnection */
 
 
-void ModuleEchoLink::audioFromRemoteRaw(Qso::GsmVoicePacket *packet,
+void ModuleEchoLink::audioFromRemoteRaw(Qso::RawPacket *packet,
       	QsoImpl *qso)
 {
   if (!listen_only_valve->isOpen())
@@ -1335,7 +1423,7 @@ void ModuleEchoLink::connectByCallsign(string cmd)
   state = STATE_CONNECT_BY_CALL;
   delete cbc_timer;
   cbc_timer = new Timer(60000);
-  cbc_timer->expired.connect(slot(*this, &ModuleEchoLink::cbcTimeout));
+  cbc_timer->expired.connect(mem_fun(*this, &ModuleEchoLink::cbcTimeout));
 
 } /* ModuleEchoLink::connectByCallsign */
 
@@ -1510,14 +1598,22 @@ void ModuleEchoLink::handleCommand(const string& cmd)
     }
 
     double count = nodes.size();
-    srand(time(NULL));
-    size_t random_idx = (size_t)(count * ((double)rand() / (1.0 + RAND_MAX)));
-    StationData station = nodes[random_idx];
-    
-    cout << "Creating random connection to node:\n";
-    cout << station << endl;
-    
-    createOutgoingConnection(station);
+    if (count > 0)
+    {
+      srand(time(NULL));
+      size_t random_idx = (size_t)(count * ((double)rand() / (1.0 + RAND_MAX)));
+      StationData station = nodes[random_idx];
+      
+      cout << "Creating random connection to node:\n";
+      cout << station << endl;
+      
+      createOutgoingConnection(station);
+    }
+    else
+    {
+      commandFailed(cmd);
+      return;
+    }
   }
   else if (cmd[0] == '4')   // Reconnect to the last disconnected station
   {

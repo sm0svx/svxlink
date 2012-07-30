@@ -66,7 +66,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace SigC;
 using namespace Async;
 
 
@@ -310,7 +309,7 @@ bool SwSel5Decoder::initialize(void)
   sel5_table = new char[arr_len + 1];
   strcpy(sel5_table, tonedef.c_str());
 
-  cout << "--- Starting " << value << " decoder" << endl;
+  cout << "Starting " << value << " decoder" << endl;
 
   memset(row_energy, 0, sizeof(row_energy));
 

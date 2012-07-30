@@ -118,7 +118,7 @@ This is the DNS lookup worker for the Cpp variant of the async environment.
 It is an internal class that should only be used from within the async
 library.
 */
-class CppDnsLookupWorker : public DnsLookupWorker, public SigC::Object
+class CppDnsLookupWorker : public DnsLookupWorker, public sigc::trackable
 {
   public:
     /**

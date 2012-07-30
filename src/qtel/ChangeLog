@@ -1,4 +1,28 @@
- 0.11.3 -- ?? ??? 2010
+ 0.12.1 -- ?? ??? 2011
+-----------------------
+
+* Moved from sigc++ version 1.2 to version 2.
+  Patch contributed by Felix/WU8K.
+
+
+
+ 0.12.0 -- 05 Nov 2011
+-----------------------
+
+* Now possible to specify the mic and speaker audio devices separately.
+
+* Qtel have now been ported to Qt4. One thing you will notice is that
+  the configuration will be lost. Otherwise everything should be
+  pretty much the same.
+
+* Bugfix: Incoming audio stopped being played back when a new incoming
+  connection was received.
+
+* Added French translation contributed by Patrick / F1SMF.
+
+
+
+ 0.11.3 -- 14 May 2011
 -----------------------
 
 * Added Ukrainian translation contributed by Ihor / UR3LCM.
@@ -16,6 +40,14 @@
 * The default audio device now is alsa:default.
 
 * Added Hungarian translation contributed by Molnár / HG7JUV.
+
+* Added support for using the Speex audio codec over EchoLink connections.
+  This will only, at the moment, work when conneting to other SvxLink
+  applications. For all other connections, the GSM audio codec is used.
+
+* Added a manual page for Qtel written by Michael Vorleiter.
+
+* Added Japanese translation contributed by JH1PGO / Masao.
 
 
 

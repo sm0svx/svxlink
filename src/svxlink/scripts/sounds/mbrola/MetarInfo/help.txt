@@ -1,0 +1,10 @@
+With the Metar information module, you are able to request worldwide weather
+information from I C eigh O weather stations provided by the american weather
+service N O eigh eigh.
+
+To get a list of pre-defined stations send 0 1, followed by the number sign.
+
+Please ask your local svixlink sysop to add stations of your interest, or
+use one of the available search functions.
+
+Send a single number sign to leave the module.

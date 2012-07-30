@@ -1,12 +1,12 @@
 /**
 @file	 NetUplink.cpp
-@brief   Contains a class the implements a remote transceiver uplink via IP
+@brief   Contains a class that implements a remote transceiver uplink via IP
 @author  Tobias Blomberg / SM0SVX
 @date	 2006-04-14
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -47,6 +47,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <AsyncAudioEncoder.h>
 #include <AsyncAudioDecoder.h>
+#include <AsyncAudioSplitter.h>
+#include <AsyncAudioSelector.h>
+#include <AsyncAudioPassthrough.h>
 
 
 /****************************************************************************
@@ -122,12 +125,13 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
       	      	     const string& port_str)
   : server(0), con(0), recv_cnt(0), recv_exp(0), rx(rx), tx(tx), fifo(0),
     cfg(cfg), name(name), heartbeat_timer(0), audio_enc(0), audio_dec(0),
-    state(STATE_DISC), mute_tx_timer(0), tx_muted(false)
+    loopback_con(0), rx_splitter(0), tx_selector(0), state(STATE_DISC),
+    mute_tx_timer(0), tx_muted(false), fallback_enabled(false),
+    tx_ctrl_mode(Tx::TX_OFF)
 {
   heartbeat_timer = new Timer(10000);
   heartbeat_timer->setEnable(false);
-  heartbeat_timer->expired.connect(slot(*this, &NetUplink::heartbeat));
-  
+  heartbeat_timer->expired.connect(mem_fun(*this, &NetUplink::heartbeat));
 } /* NetUplink::NetUplink */
 
 
@@ -136,7 +140,9 @@ NetUplink::~NetUplink(void)
   delete audio_enc;
   delete audio_dec;
   delete fifo;
-  //delete sigc_sink;
+  delete tx_selector;
+  delete rx_splitter;
+  delete loopback_con;
   delete server;
   delete heartbeat_timer;
   delete mute_tx_timer;
@@ -153,6 +159,7 @@ bool NetUplink::initialize(void)
     return false;
   }
   
+  cfg.getValue(name, "FALLBACK_REPEATER", fallback_enabled, true);
   cfg.getValue(name, "AUTH_KEY", auth_key, true);
   
   int mute_tx_on_rx = -1;
@@ -161,28 +168,46 @@ bool NetUplink::initialize(void)
   {
     mute_tx_timer = new Timer(mute_tx_on_rx);
     mute_tx_timer->setEnable(false);
-    mute_tx_timer->expired.connect(slot(*this, &NetUplink::unmuteTx));
+    mute_tx_timer->expired.connect(mem_fun(*this, &NetUplink::unmuteTx));
   }
   
   server = new TcpServer(listen_port);
-  server->clientConnected.connect(slot(*this, &NetUplink::clientConnected));
+  server->clientConnected.connect(mem_fun(*this, &NetUplink::clientConnected));
   server->clientDisconnected.connect(
-      slot(*this, &NetUplink::clientDisconnected));
+      mem_fun(*this, &NetUplink::clientDisconnected));
   
   rx->reset();
-  rx->squelchOpen.connect(slot(*this, &NetUplink::squelchOpen));
-  rx->dtmfDigitDetected.connect(slot(*this, &NetUplink::dtmfDigitDetected));
-  rx->toneDetected.connect(slot(*this, &NetUplink::toneDetected));
+  rx->squelchOpen.connect(mem_fun(*this, &NetUplink::squelchOpen));
+  rx->dtmfDigitDetected.connect(mem_fun(*this, &NetUplink::dtmfDigitDetected));
+  rx->toneDetected.connect(mem_fun(*this, &NetUplink::toneDetected));
   rx->selcallSequenceDetected.connect(
-      slot(*this, &NetUplink::selcallSequenceDetected));
+      mem_fun(*this, &NetUplink::selcallSequenceDetected));
   
-  fifo = new AudioFifo(16000);
-
-  tx->txTimeout.connect(slot(*this, &NetUplink::txTimeout));
+  tx->txTimeout.connect(mem_fun(*this, &NetUplink::txTimeout));
   tx->transmitterStateChange.connect(
-      slot(*this, &NetUplink::transmitterStateChange));
-  fifo->registerSink(tx);
-    
+      mem_fun(*this, &NetUplink::transmitterStateChange));
+  
+  rx_splitter = new AudioSplitter;
+  rx->registerSink(rx_splitter);
+
+  loopback_con = new AudioPassthrough;
+  
+  rx_splitter->addSink(loopback_con);
+
+  tx_selector = new AudioSelector;
+  tx_selector->addSource(loopback_con);
+
+  fifo = new AudioFifo(16000);
+  tx_selector->addSource(fifo);
+  tx_selector->selectSource(fifo);
+
+  tx_selector->registerSink(tx);
+  
+  if (fallback_enabled)
+  {
+    setFallbackActive(true);
+  }
+
   return true;
   
 } /* NetUplink::initialize */
@@ -212,14 +237,23 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
   
   if (con == 0)
   {
-    delete audio_enc;
-    audio_enc = 0;
+    if (fallback_enabled) // Deactivate fallback repeater mode
+    {
+      setFallbackActive(false);
+    }
+    
+    if (audio_enc != 0)
+    {
+      rx_splitter->removeSink(audio_enc);
+      delete audio_enc;
+      audio_enc = 0;
+    }
     
     delete audio_dec;
     audio_dec = 0;
     
     con = incoming_con;
-    con->dataReceived.connect(slot(*this, &NetUplink::tcpDataReceived));
+    con->dataReceived.connect(mem_fun(*this, &NetUplink::tcpDataReceived));
     recv_exp = sizeof(Msg);
     recv_cnt = 0;
     heartbeat_timer->setEnable(true);
@@ -257,12 +291,12 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
   cout << "Client disconnected: " << con->remoteHost() << ":"
        << con->remotePort() << endl;
 
-  assert(the_con == con);  
+  assert(the_con == con);
   con = 0;
   recv_exp = 0;
   state = STATE_DISC;
+
   rx->reset();
-  
   tx->enableCtcss(false);
   fifo->clear();
   if (audio_dec != 0)
@@ -270,9 +304,20 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
     audio_dec->flushEncodedSamples();
   }
   tx->setTxCtrlMode(Tx::TX_OFF);
-  
   heartbeat_timer->setEnable(false);
-  
+
+  if (mute_tx_timer != 0)
+  {
+    mute_tx_timer->setEnable(false);
+  }
+
+  tx_muted = false;
+  tx_ctrl_mode = Tx::TX_OFF;
+    
+  if (fallback_enabled)
+  {
+    setFallbackActive(true);
+  }
 } /* NetUplink::clientDisconnected */
 
 
@@ -423,7 +468,11 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSetTxCtrlMode::TYPE:
     {
       MsgSetTxCtrlMode *mode_msg = reinterpret_cast<MsgSetTxCtrlMode *>(msg);
-      tx->setTxCtrlMode(mode_msg->mode());
+      tx_ctrl_mode = mode_msg->mode();
+      if (!tx_muted)
+      {
+	tx->setTxCtrlMode(tx_ctrl_mode);
+      }
       break;
     }
      
@@ -445,15 +494,20 @@ void NetUplink::handleMsg(Msg *msg)
     {
       MsgRxAudioCodecSelect *codec_msg = 
           reinterpret_cast<MsgRxAudioCodecSelect *>(msg);
-      delete audio_enc;
+      if (audio_enc != 0)
+      {
+	rx_splitter->removeSink(audio_enc);
+	delete audio_enc;
+      }
       audio_enc = AudioEncoder::create(codec_msg->name());
       if (audio_enc != 0)
       {
         audio_enc->writeEncodedSamples.connect(
-                slot(*this, &NetUplink::writeEncodedSamples));
+                mem_fun(*this, &NetUplink::writeEncodedSamples));
         audio_enc->flushEncodedSamples.connect(
-                slot(*audio_enc, &AudioEncoder::allEncodedSamplesFlushed));
-        audio_enc->registerSource(rx);
+                mem_fun(*audio_enc, &AudioEncoder::allEncodedSamplesFlushed));
+        //audio_enc->registerSource(rx);
+	rx_splitter->addSink(audio_enc);
         cout << name << ": Using CODEC \"" << audio_enc->name()
              << "\" to encode RX audio\n";
 	
@@ -484,7 +538,7 @@ void NetUplink::handleMsg(Msg *msg)
       {
         audio_dec->registerSink(fifo);
         audio_dec->allEncodedSamplesFlushed.connect(
-            slot(*this, &NetUplink::allEncodedSamplesFlushed));
+            mem_fun(*this, &NetUplink::allEncodedSamplesFlushed));
         cout << name << ": Using CODEC \"" << audio_dec->name()
              << "\" to decode TX audio\n";
 	
@@ -563,6 +617,7 @@ void NetUplink::squelchOpen(bool is_open)
     if (is_open)
     {
       tx_muted = true;
+      tx->setTxCtrlMode(Tx::TX_OFF);
     }
     else
     {
@@ -666,7 +721,28 @@ void NetUplink::unmuteTx(Timer *t)
 {
   mute_tx_timer->setEnable(false);
   tx_muted = false;
+  tx->setTxCtrlMode(tx_ctrl_mode);
 } /* NetUplink::unmuteTx */
+
+
+void NetUplink::setFallbackActive(bool activate)
+{
+  if (activate)
+  {
+    cout << name << ": Activating fallback repeater mode\n";
+    rx->reset();
+    tx->setTxCtrlMode(Tx::TX_AUTO);
+    tx_selector->selectSource(loopback_con);
+    rx->mute(false);
+  }
+  else
+  {
+    cout << name << ": Deactivating fallback repeater mode\n";
+    rx->reset();
+    tx->setTxCtrlMode(Tx::TX_OFF);
+    tx_selector->selectSource(fifo);
+  }
+} /* NetUplink::setFallbackActive */
 
 
 

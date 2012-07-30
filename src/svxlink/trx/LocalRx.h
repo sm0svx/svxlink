@@ -202,6 +202,7 @@ class LocalRx : public Rx
     void audioStreamStateChange(bool is_active, bool is_idle);
     void onSquelchOpen(bool is_open);
     SigLevDet *createSigLevDet(const std::string &name, int sample_rate);
+    void tone1750detected(bool detected);
 
 };  /* class LocalRx */
 

@@ -90,52 +90,54 @@ fi
 # Find out in which directory this script resides.
 basedir=$(cd $(dirname $0); pwd)
 
+# Clear the file containing all concatenated trimmed sound clips
+echo -n > /tmp/all_trimmed.raw
+
 # Loop through each subdirectory specified in SUBDIRS
 for subdir in $SUBDIRS; do
   SOFTLINK_SOUNDS=""
   MAXMIZE_SOUNDS=""
   TRIM_SOUNDS=""
-  source "${SRC_DIR}/$subdir/subdir.cfg"
+  . "${SRC_DIR}/$subdir/subdir.cfg"
   
   for clip in $MAXIMIZE_SOUNDS; do
     dest_clip="$DEST_DIR/$subdir/$clip"
     src_clip="$SRC_DIR/$subdir/$clip"
     [ ! -d $(dirname $dest_clip) ] && mkdir -p $(dirname $dest_clip)
-    if [ -r $src_clip.raw -o -r $src_clip.wav ]; then
+    if [ -r "$src_clip.raw" -o -r "$src_clip.wav" ]; then
       echo "Maximizing $src_clip -> $dest_clip.$ext"
       $basedir/play_sound.sh -f$endian$encoding -r$target_rate \
-			     -l$SILENCE_LEVEL $src_clip |
-	  sox -traw -s2 -r$target_rate - $dest_clip.$ext
+			     -l$SILENCE_LEVEL -e "$EFFECT" "$src_clip" |
+	  sox -traw -s2 -r$target_rate - "$dest_clip.$ext"
     else
       warning "Missing sound clip: $src_clip"
     fi
   done
 
-  echo -n > /tmp/all_trimmed.raw
   for clip in $TRIM_SOUNDS; do
     dest_clip="$DEST_DIR/$subdir/$clip"
     src_clip="$SRC_DIR/$subdir/$clip"
-    [ ! -d $(dirname $dest_clip) ] && mkdir -p $(dirname $dest_clip)
-    if [ -r $src_clip.raw -o -r $src_clip.wav ]; then
+    [ ! -d $(dirname "$dest_clip") ] && mkdir -p $(dirname "$dest_clip")
+    if [ -r "$src_clip.raw" -o -r "$src_clip.wav" ]; then
       echo "Trimming $src_clip -> $dest_clip.$ext"
       $basedir/play_sound.sh -tf$endian$encoding -r$target_rate \
-			     -l$SILENCE_LEVEL $src_clip |
-	  sox -traw -s2 -r$target_rate - $dest_clip.$ext
-      sox $dest_clip.$ext -r$target_rate -s2 -t raw - >> /tmp/all_trimmed.raw
+			     -l$SILENCE_LEVEL -e "$EFFECT" "$src_clip" |
+	  sox -traw -s2 -r$target_rate - "$dest_clip.$ext"
+      sox "$dest_clip.$ext" -r$target_rate -s2 -t raw - >> /tmp/all_trimmed.raw
     else
       warning "Missing sound clip: $src_clip"
     fi
   done
 
   for link_spec in $SOFTLINK_SOUNDS; do
-    link=$(echo $link_spec | cut -d'|' -f1).$ext
-    target=$(echo $link_spec | cut -d'|' -f2).$ext
+    link=$(echo "$link_spec" | cut -d'|' -f1).$ext
+    target=$(echo "$link_spec" | cut -d'|' -f2).$ext
     dest_clip="$DEST_DIR/$subdir/$link"
-    [ ! -d $(dirname $dest_clip) ] && mkdir -p $(dirname $dest_clip)
-    if [ -r $(dirname $dest_clip)/$target ]; then
+    [ ! -d $(dirname "$dest_clip") ] && mkdir -p $(dirname "$dest_clip")
+    if [ -r $(dirname "$dest_clip")/"$target" ]; then
       echo "Creating symlink $dest_clip -> $DEST_DIR/$subdir/$target"
-      rm -f $dest_clip
-      ln -s $target $dest_clip
+      rm -f "$dest_clip"
+      ln -s "$target" "$dest_clip"
     else
       warning "Missing sound clip: $(dirname $dest_clip)/$target"
     fi

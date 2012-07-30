@@ -138,7 +138,6 @@ int AudioDeviceOSS::blocksize(void)
 
 bool AudioDeviceOSS::isFullDuplexCapable(void)
 {
-  assert(fd != -1);
   return (device_caps & DSP_CAP_DUPLEX);
 } /* AudioDeviceOSS::isFullDuplexCapable */
 
@@ -192,6 +191,15 @@ AudioDeviceOSS::AudioDeviceOSS(const string& dev_name)
 {
   char *use_trigger_str = getenv("ASYNC_AUDIO_NOTRIGGER");
   use_trigger = (use_trigger_str != 0) && (atoi(use_trigger_str) == 0);
+
+    // Open the device to check its capabilities
+  int f = ::open(dev_name.c_str(), O_RDWR);
+  if (f >= 0)
+  {
+    ioctl(fd, SNDCTL_DSP_SETDUPLEX, 0);
+    ioctl(fd, SNDCTL_DSP_GETCAPS, &device_caps);
+    ::close(f);
+  }
 } /* AudioDeviceOSS::AudioDeviceOSS */
 
 
@@ -319,7 +327,8 @@ bool AudioDeviceOSS::openDevice(Mode mode)
   {
     read_watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
     assert(read_watch != 0);
-    read_watch->activity.connect(slot(*this, &AudioDeviceOSS::audioReadHandler));
+    read_watch->activity.connect(
+        mem_fun(*this, &AudioDeviceOSS::audioReadHandler));
     arg |= PCM_ENABLE_INPUT;
   }
   
@@ -328,7 +337,7 @@ bool AudioDeviceOSS::openDevice(Mode mode)
     write_watch = new FdWatch(fd, FdWatch::FD_WATCH_WR);
     assert(write_watch != 0);
     write_watch->activity.connect(
-      	    slot(*this, &AudioDeviceOSS::writeSpaceAvailable));
+      	mem_fun(*this, &AudioDeviceOSS::writeSpaceAvailable));
     arg |= PCM_ENABLE_OUTPUT;
   }
   

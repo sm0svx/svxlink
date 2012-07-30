@@ -163,7 +163,7 @@ void TcpClient::connect(void)
   assert(dns == 0);
   
   dns = new DnsLookup(remote_host);
-  dns->resultsReady.connect(slot(*this, &TcpClient::dnsResultsReady));
+  dns->resultsReady.connect(mem_fun(*this, &TcpClient::dnsResultsReady));
 } /* TcpClient::connect */
 
 
@@ -238,7 +238,7 @@ void TcpClient::dnsResultsReady(DnsLookup& dns_lookup)
   delete dns;
   dns = 0;
   
-  if (result.empty() || (result[0].ip4Addr().s_addr == INADDR_NONE))
+  if (result.empty() || result[0].isEmpty())
   {
     disconnect();
     disconnected(this, DR_HOST_NOT_FOUND);
@@ -289,7 +289,7 @@ void TcpClient::connectToRemote(const IpAddress& ip_addr)
     if (errno == EINPROGRESS)
     {
       wr_watch = new FdWatch(sock, FdWatch::FD_WATCH_WR);
-      wr_watch->activity.connect(slot(*this, &TcpClient::connectHandler));
+      wr_watch->activity.connect(mem_fun(*this, &TcpClient::connectHandler));
     }
     else
     {

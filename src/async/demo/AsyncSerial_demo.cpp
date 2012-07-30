@@ -8,14 +8,14 @@
 using namespace std;
 using namespace Async;
 
-class MyClass : public SigC::Object
+class MyClass : public sigc::trackable
 {
   public:
     MyClass(void)
     {
       serial = new Serial("/dev/ttyS0");
       serial->charactersReceived.connect(
-      	  slot(*this, &MyClass::onCharactersReceived));
+      	  mem_fun(*this, &MyClass::onCharactersReceived));
 
       if (!serial->open())
       {

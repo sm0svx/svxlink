@@ -261,7 +261,7 @@ bool RepeaterLogic::initialize(void)
     ident_nag_min_time = atoi(str.c_str());
   }
   
-  rx().toneDetected.connect(slot(*this, &RepeaterLogic::detectedTone));
+  rx().toneDetected.connect(mem_fun(*this, &RepeaterLogic::detectedTone));
   
   if (required_1750_duration > 0)
   {
@@ -281,9 +281,11 @@ bool RepeaterLogic::initialize(void)
   
   rptValveSetOpen(!no_repeat);
   
+  idleStateChanged.connect(mem_fun(*this, &RepeaterLogic::setIdle));
+  
   tx().setTxCtrlMode(Tx::TX_AUTO);
   
-  idleStateChanged.connect(slot(*this, &RepeaterLogic::setIdle));
+  processEvent("startup");
   
   return true;
   
@@ -299,16 +301,17 @@ void RepeaterLogic::processEvent(const string& event, const Module *module)
     rgr_enable = false;
   }
   
-  if ((event == "repeater_idle") || (event == "send_rgr_sound"))
+  if ((event == "repeater_idle") || (event == "send_rgr_sound") /* ||
+      (event.find("repeater_down") == 0) */ )
   {
     setReportEventsAsIdle(true);
     Logic::processEvent(event, module);
     setReportEventsAsIdle(false);
   }
   else
-  {  
+  {
     Logic::processEvent(event, module);
-  }  
+  }
 } /* RepeaterLogic::processEvent */
 
 
@@ -388,7 +391,7 @@ void RepeaterLogic::audioStreamStateChange(bool is_active, bool is_idle)
 {
   rgr_enable = true;
 
-  if (!repeater_is_up && !is_idle)
+  if (!repeater_is_up && is_active)
   {
     open_reason = "AUDIO";
     setUp(true, open_reason);
@@ -450,13 +453,13 @@ void RepeaterLogic::setIdle(bool idle)
   if (idle)
   {
     up_timer = new Timer(idle_timeout);
-    up_timer->expired.connect(slot(*this, &RepeaterLogic::idleTimeout));
+    up_timer->expired.connect(mem_fun(*this, &RepeaterLogic::idleTimeout));
     
     if (idle_sound_interval > 0)
     {
       idle_sound_timer = new Timer(idle_sound_interval, Timer::TYPE_PERIODIC);
       idle_sound_timer->expired.connect(
-      	  slot(*this, &RepeaterLogic::playIdleSound));
+      	  mem_fun(*this, &RepeaterLogic::playIdleSound));
     }
   }
 
@@ -496,7 +499,7 @@ void RepeaterLogic::setUp(bool up, string reason)
     {
       delete ident_nag_timer; // Just to be sure...
       ident_nag_timer = new Timer(ident_nag_timeout);
-      ident_nag_timer->expired.connect(slot(*this, &RepeaterLogic::identNag));
+      ident_nag_timer->expired.connect(mem_fun(*this, &RepeaterLogic::identNag));
     }
   }
   else
@@ -593,7 +596,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
       {
       	open_on_sql_timer = new Timer(required_sql_open_duration);
 	open_on_sql_timer->expired.connect(
-	    slot(*this, &RepeaterLogic::openOnSqlTimerExpired));
+	    mem_fun(*this, &RepeaterLogic::openOnSqlTimerExpired));
       }
       
       if (open_on_sql_after_rpt_close > 0)

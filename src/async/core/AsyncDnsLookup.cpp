@@ -68,7 +68,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace SigC;
+using namespace sigc;
 using namespace Async;
 
 
@@ -137,7 +137,7 @@ DnsLookup::DnsLookup(const string& label)
   : worker(0), m_label(label)
 {
   worker = Application::app().newDnsLookupWorker(label);
-  worker->resultsReady.connect(slot(*this, &DnsLookup::onResultsReady));
+  worker->resultsReady.connect(mem_fun(*this, &DnsLookup::onResultsReady));
   assert(worker->doLookup());
 } /* DnsLookup::DnsLookup */
 

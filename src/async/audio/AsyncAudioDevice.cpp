@@ -151,12 +151,6 @@ AudioDevice *AudioDevice::registerAudioIO(const string& dev_designator,
     }
 
     devices[dev_designator] = dev;
-    
-      // Open the device once to read out the device capabilities
-    if (dev->open(MODE_RDWR))
-    {
-      dev->close();
-    }
   }
   dev = devices[dev_designator];
   ++dev->use_count;

@@ -265,6 +265,11 @@ class StationData
      */
     StationData& operator=(const StationData& rhs);
     
+    bool operator<(const StationData &rhs) const
+    {
+      return m_callsign < rhs.m_callsign;
+    }
+
     /**
      * @brief Output stream operator
      * @param os The stream to output data to

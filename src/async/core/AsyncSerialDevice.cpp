@@ -259,7 +259,7 @@ bool SerialDevice::openPort(void)
   }
 
   rd_watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
-  rd_watch->activity.connect(slot(*this, &SerialDevice::onIncomingData));
+  rd_watch->activity.connect(mem_fun(*this, &SerialDevice::onIncomingData));
   
   return true;
   

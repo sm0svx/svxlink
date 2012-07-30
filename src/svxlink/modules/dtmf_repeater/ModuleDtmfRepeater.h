@@ -1,13 +1,13 @@
 /**
 @file	 ModuleDtmfRepeater.h
-@brief   A_brief_description_of_this_module
+@brief   The DTMF repeater module main file
 @author  Tobias Blomberg / SM0SVX
 @date	 2006-08-05
 
 \verbatim
 A module (plugin) for the svxlink server, a multi purpose tranciever
 frontend system.
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -47,7 +47,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <Module.h>
-#include <version/SVXLINK.h>
 
 
 
@@ -57,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/SVXLINK.h"
 
 
 /****************************************************************************
@@ -142,9 +142,11 @@ class ModuleDtmfRepeater : public Module
     bool dtmfDigitReceived(char digit, int duration);
     void dtmfCmdReceivedWhenIdle(const std::string &cmd);
     void squelchOpen(bool is_open);
-    
+    void allMsgsWritten(void);
+
     void onRepeatDelayExpired(Async::Timer *t);
     void setupRepeatDelay(void);
+    void sendStoredDigits(void);
 
 };  /* class ModuleDtmfRepeater */
 

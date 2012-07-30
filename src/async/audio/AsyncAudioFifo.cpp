@@ -300,6 +300,10 @@ void AudioFifo::flushSamples(void)
   {
     sinkFlushSamples();
   }
+  else
+  {
+    writeSamplesFromFifo();
+  }
 } /* AudioFifo::flushSamples */
 
 

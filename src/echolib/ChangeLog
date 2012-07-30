@@ -1,8 +1,27 @@
- 0.13.2 -- ?? ??? 2009
+ 0.15.0 -- ?? ??? 2011
 -----------------------
 
-* Bugfix: When receiving multiple bye packets, the disconnection was announced
-  multiple times.
+* Moved from sigc++ version 1.2 to version 2.
+  Patch contributed by Felix/WU8K.
+
+
+
+ 0.14.1 -- 05 Nov 2011
+-----------------------
+
+* Bugfix: Stations (links, repeaters, conferences etc) was not sorted
+  properly. Entries could end up in the wrong category.
+
+
+
+ 0.14.0 -- 14 May 2011
+-----------------------
+
+* Bugfix: When receiving multiple bye packets, the disconnection was
+  announced multiple times.
+
+* Added Speex codec support to EchoLink connections. This only work
+  between two SvxLink nodes (or Qtel) at the moment.
 
 
 

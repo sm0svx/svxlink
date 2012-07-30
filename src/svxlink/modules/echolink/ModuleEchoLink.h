@@ -48,7 +48,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/SVXLINK.h>
 #include <Module.h>
 #include <EchoLinkQso.h>
 #include <EchoLinkStationData.h>
@@ -60,6 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/SVXLINK.h"
 
 
 
@@ -177,10 +177,12 @@ class ModuleEchoLink : public Module
     bool      	      	  squelch_is_open;
     State		  state;
     StnList		  cbc_stns;
-    Async::Timer	  *cbc_timer;
-    regex_t   	      	  drop_regex;
-    regex_t   	      	  reject_regex;
-    regex_t   	      	  accept_regex;
+    Async::Timer	  	  *cbc_timer;
+    regex_t   	      	  *drop_incoming_regex;
+    regex_t   	      	  *reject_incoming_regex;
+    regex_t   	      	  *accept_incoming_regex;
+    regex_t   	      	  *reject_outgoing_regex;
+    regex_t   	      	  *accept_outgoing_regex;
     EchoLink::StationData last_disc_stn;
     Async::AudioSplitter  *splitter;
     Async::AudioValve 	  *listen_only_valve;
@@ -201,7 +203,8 @@ class ModuleEchoLink : public Module
     void onStationListUpdated(void);
     void onError(const std::string& msg);
     void onIncomingConnection(const Async::IpAddress& ip,
-      	    const std::string& callsign, const std::string& name);
+      	    const std::string& callsign, const std::string& name,
+      	    const std::string& priv);
     void onStateChange(QsoImpl *qso, EchoLink::Qso::State qso_state);
     void onChatMsgReceived(QsoImpl *qso, const std::string& msg);
     void onIsReceiving(bool is_receiving, QsoImpl *qso);
@@ -211,7 +214,7 @@ class ModuleEchoLink : public Module
 
     void createOutgoingConnection(const EchoLink::StationData &station);
     int audioFromRemote(float *samples, int count, QsoImpl *qso);
-    void audioFromRemoteRaw(EchoLink::Qso::GsmVoicePacket *packet,
+    void audioFromRemoteRaw(EchoLink::Qso::RawPacket *packet,
       	      	      	    QsoImpl *qso);
     QsoImpl *findFirstTalker(void) const;
     void broadcastTalkerStatus(void);

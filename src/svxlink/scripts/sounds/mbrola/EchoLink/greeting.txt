@@ -1,0 +1,5 @@
+You have connected to a SvixLink node, an EchoLink implementation
+for the Linuks operating system.
+
+For more information, have a look at s v x link dot
+Source-Forge dot net.

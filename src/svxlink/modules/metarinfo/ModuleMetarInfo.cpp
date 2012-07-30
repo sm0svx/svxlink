@@ -53,7 +53,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncTcpClient.h>
 #include <AsyncConfig.h>
-#include <version/MODULE_METARINFO.h>
 
 
 
@@ -63,6 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/MODULE_METARINFO.h"
 #include "ModuleMetarInfo.h"
 #include "common.h"
 
@@ -75,7 +75,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-using namespace SigC;
+using namespace sigc;
 using namespace SvxLink;
 
 
@@ -667,9 +667,9 @@ void ModuleMetarInfo::openConnection(void)
   std::string server = "weather.noaa.gov";
 
   con = new TcpClient(server, 80);
-  con->connected.connect(slot(*this, &ModuleMetarInfo::onConnected));
-  con->disconnected.connect(slot(*this, &ModuleMetarInfo::onDisconnected));
-  con->dataReceived.connect(slot(*this, &ModuleMetarInfo::onDataReceived));
+  con->connected.connect(mem_fun(*this, &ModuleMetarInfo::onConnected));
+  con->disconnected.connect(mem_fun(*this, &ModuleMetarInfo::onDisconnected));
+  con->dataReceived.connect(mem_fun(*this, &ModuleMetarInfo::onDataReceived));
   con->connect();
 
 } /* openConnection */
@@ -685,7 +685,7 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
    bool endflag = false;
    bool nceiling = false;
    float temp_view = 0;
-   unsigned int found;
+   size_t found;
    int metartoken;
 
    char *metarinput = static_cast<char *>(buf);
@@ -699,38 +699,46 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
    // FBJW 071300Z 09013KT 9999 FEW030 29/15 Q1023 RMK ...
    //
    // don't worry, it's always the same structure...
-   cout << html; // debug
-
-   // \n -> <SPACE>
-   while ((found = html.find('\n')) != string::npos) html[found] = ' ';
 
    temp << "airports " << icao;
    say(temp);
 
+   // put each single line into a StringList
+   // only the last 2 lines are interesting for uns
+   //
+   // 2009/04/07 13:20
+   // FBJW 071300Z 09013KT 9999 FEW030 29/15 Q1023 RMK ...
+   //
+   splitStr(values, html, "\n");
+   std::string met = values.back();  // contains the METAR
+   values.pop_back();
+   std::string metartime = values.back();  // and the time at UTC
+
+   // split \n -> <SPACE>
+   while ((found = html.find('\n')) != string::npos) html[found] = ' ';
+
    if (html.find("404 Not Found") != string::npos)
    {
+      cout << "ERROR 404 from webserver -> no such airport\n";
       temp << "no_such_airport";
       say(temp);
       return -1;
    }
-   else
-   {
-      processEvent("say airport");
-   }
 
    // check if METAR is actual
-   if (!isvalidUTC(html.substr(0,16)))
+   if (!isvalidUTC(metartime.substr(0,16)))
    {
       temp << "metar_not_valid";
       say(temp);
       return -1;
    }
 
-   splitStr(values, html, " ");
-   StrList::const_iterator it = values.begin();
-   it++;
-   it++;
-   it++;
+   processEvent("say airport");
+
+   splitStr(values, met, " ");
+   StrList::iterator it = values.begin();
+
+   cout << "METAR: " << met << "\n";
 
    while (it != values.end() && !endflag) {
 
@@ -1561,7 +1569,7 @@ bool ModuleMetarInfo::rmatch(std::string tok, std::string pattern, regex_t *re)
   bool success = (regexec(re, tok.c_str(), 0, NULL, 0) == 0);
   regfree(re);
   return success;
-  
+
 } /* rmatch */
 
 
@@ -1934,9 +1942,9 @@ void ModuleMetarInfo::onConnected(void)
 {
   assert(con->isConnected());
   string getpath;
-  getpath = "GET /pub/data/observations/metar/stations/";
+  getpath = "GET http://weather.noaa.gov/pub/data/observations/metar/stations/";
   getpath += icao;
-  getpath += ".TXT\n";
+  getpath += ".TXT HTTP/1.0\015\012\015\012";
   con->write(getpath.c_str(), getpath.size());
 } /* onConnected */
 

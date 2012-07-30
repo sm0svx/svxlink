@@ -114,7 +114,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 This is the base class for transmitters. It is an abstract class so it cannot
 be used standalone. It must be inherited from.
 */
-class Tx : public SigC::Object, public Async::AudioSink
+class Tx : public sigc::trackable, public Async::AudioSink
 {
   public:
     typedef enum
@@ -165,6 +165,18 @@ class Tx : public SigC::Object, public Async::AudioSink
      * @param 	digits	The digits to send
      */
     virtual void sendDtmf(const std::string& digits) {}
+
+    /**
+     * @brief   Set the signal level value that should be transmitted
+     * @param   siglev The signal level to transmit
+     *
+     * This function does not set the output power of the transmitter but
+     * instead sets a signal level value that is transmitted with the
+     * transmission if the specific Tx object supports it. This can be used
+     * on a link transmitter to transport signal level measurements to the
+     * link receiver.
+     */
+    virtual void setTransmittedSignalStrength(float siglev) {}
     
     /**
      * @brief 	This signal is emitted when the tx timeout timer expires
@@ -173,7 +185,7 @@ class Tx : public SigC::Object, public Async::AudioSink
      * for too long. This is to prevent the transmitter from transmitting
      * endlessly if an error occurs.
      */
-    SigC::Signal0<void> txTimeout;
+    sigc::signal<void> txTimeout;
     
     /**
      * @brief 	This signal is emitted when the transmitter starts or stops
@@ -181,21 +193,71 @@ class Tx : public SigC::Object, public Async::AudioSink
      * @param 	is_transmitting Set to \em true if the transmitter
      *          is transmitting or else \em false.
      */
-    SigC::Signal1<void, bool> transmitterStateChange;
+    sigc::signal<void, bool> transmitterStateChange;
     
 };  /* class Tx */
 
 
+/**
+ * @brief   An abstract factory class for creating Tx objects
+ * @author  Tobias Blomberg
+ * @date    2010-05-09
+ *
+ * This is the base class for a Tx object factory. When adding a new Tx type,
+ * a TxFactory must be added along with it so that an instance of that new
+ * Tx type can be created using the static method TxFactory::createNamedTx.
+ * A typical factory class may look something like this:
+ *
+ * class MyTxFactory : public TxFactory
+ * {
+ *   public:
+ *     MyTxFactory(void) : TxFactory("My") {}
+ *
+ *   protected:
+ *     Tx *createTx(Config &cfg, const string& name)
+ *     {
+ *       return new MyTx(cfg, name);
+ *     }
+ * };
+ */
 class TxFactory
 {
   public:
+    /**
+     * @brief   Create a new Tx object of a specific type
+     * @param   cfg   A previously initialized config object to read data from
+     * @param   name  The name of the config section to read data from
+     * @returns Returns a newly created Tx object or 0 on failure
+     *
+     * Use this static function to create a new Tx object. It should be given
+     * a config object and a name of the config section to read configuration
+     * data from. The configuration section should then contain a config
+     * variable TYPE that describe which type of Tx object that should be
+     * created.
+     */
     static Tx *createNamedTx(Async::Config& cfg, const std::string& name);
 
+    /**
+     * @brief Constructor
+     * @param name The type name of the Tx object
+     */
     TxFactory(const std::string &name);
-    
+
+    /**
+     * Destructor
+     */
     virtual ~TxFactory(void);
     
   protected:
+    /**
+     * @brief Virtual method to create the Tx object
+     * @param   cfg   A previously initialized config object to read data from
+     * @param   name  The name of the config section to read data from
+     * @returns Returns a newly created Tx object or 0 on failure
+     *
+     * This function must be implemented by the inheriting class. It's in this
+     * function that the specific Tx object get created.
+     */
     virtual Tx *createTx(Async::Config& cfg, const std::string& name) = 0;
   
   private:

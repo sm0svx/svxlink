@@ -9,7 +9,7 @@ application that use the Async classes in a Qt application.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2010 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,14 +36,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <qsocketnotifier.h>
-#include <qtimer.h>
+#include <sigc++/sigc++.h>
+
+#include <QSocketNotifier>
 #undef emit
 
 #include <cassert>
 #include <cstdlib>
 #include <algorithm>
-
+#include <iostream>
 
 
 /****************************************************************************
@@ -138,7 +139,7 @@ using namespace Async;
  * Bugs:      
  *------------------------------------------------------------------------
  */
-QtApplication::QtApplication(int argc, char **argv)
+QtApplication::QtApplication(int &argc, char **argv)
   : QApplication(argc, argv)
 {
   

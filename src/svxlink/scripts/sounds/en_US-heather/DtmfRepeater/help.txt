@@ -1,0 +1,3 @@
+The DTMF repeater module is used to ree-transmit received DTMF digits. This can
+be used to control other remote stations that are also DTMF controlled. All
+received DTMF digits will be retransmitted and ignored completely by SvixLink. Dee activate the module by sending the number sign for at least three seconds

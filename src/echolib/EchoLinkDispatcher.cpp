@@ -255,8 +255,9 @@ Dispatcher::Dispatcher(void)
     return;
   }
   
-  ctrl_sock->dataReceived.connect(slot(*this, &Dispatcher::ctrlDataReceived));
-  audio_sock->dataReceived.connect(slot(*this, &Dispatcher::audioDataReceived));
+  ctrl_sock->dataReceived.connect(mem_fun(*this, &Dispatcher::ctrlDataReceived));
+  audio_sock->dataReceived.connect(
+      mem_fun(*this, &Dispatcher::audioDataReceived));
   
   return;
   
@@ -303,7 +304,9 @@ void Dispatcher::ctrlDataReceived(const IpAddress& ip, void *buf, int len)
 	  {
 	    remote_name = "";
 	  }
-	  incomingConnection(ip, remote_call, remote_name);
+	  char priv[256];
+	  parseSDES(priv, recv_buf, RTCP_SDES_PRIV);
+	  incomingConnection(ip, remote_call, remote_name, priv);
 	}
       }
     }

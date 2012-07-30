@@ -45,12 +45,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <fcntl.h>
 #include <dirent.h>
 #include <pwd.h>
+#include <grp.h>
 
 #include <string>
 #include <iostream>
 #include <algorithm>
 #include <vector>
 #include <cstring>
+#include <set>
 
 
 /****************************************************************************
@@ -59,14 +61,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <version/SVXLINK.h>
-
 #include <AsyncCppApplication.h>
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 #include <AsyncFdWatch.h>
 #include <AsyncAudioIO.h>
 #include <LocationInfo.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -75,6 +76,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/SVXLINK.h"
 #include "MsgHandler.h"
 #include "SimplexLogic.h"
 #include "RepeaterLogic.h"
@@ -90,7 +92,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-using namespace SigC;
+using namespace sigc;
 
 
 
@@ -230,7 +232,9 @@ int main(int argc, char **argv)
       exit(1);
     }
     stdout_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
-    stdout_watch->activity.connect(slot(&stdout_handler));
+    // must explicitly specify name space for ptr_fun() to avoid conflict
+    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
+    stdout_watch->activity.connect(sigc::ptr_fun(&stdout_handler));
 
       /* Redirect stdout to the logpipe */
     if (close(STDOUT_FILENO) == -1)
@@ -296,10 +300,22 @@ int main(int argc, char **argv)
 
   if (runasuser != NULL)
   {
+      // Setup supplementary group IDs
+    if (initgroups(runasuser, getgid()))
+    {
+      perror("initgroups");
+      exit(1);
+    }
+
     struct passwd *passwd = getpwnam(runasuser);
     if (passwd == NULL)
     {
       perror("getpwnam");
+      exit(1);
+    }
+    if (setgid(passwd->pw_gid) == -1)
+    {
+      perror("setgid");
       exit(1);
     }
     if (setuid(passwd->pw_uid) == -1)
@@ -335,8 +351,7 @@ int main(int argc, char **argv)
     cfg_filename += "/.svxlink/svxlink.conf";
     if (!cfg.open(cfg_filename))
     {
-      cfg_filename = string(home_dir);
-      cfg_filename += "/.svxlinkrc";
+      cfg_filename = "/etc/svxlink/svxlink.conf";
       if (!cfg.open(cfg_filename))
       {
 	cfg_filename = "/etc/svxlink.conf";
@@ -344,7 +359,7 @@ int main(int argc, char **argv)
 	{
 	  cerr << "*** ERROR: Could not open configuration file. Tried:\n"
       	       << "\t" << home_dir << "/.svxlink/svxlink.conf\n"
-      	       << "\t" << home_dir << "/.svxlinkrc\n"
+      	       << "\t/etc/svxlink/svxlink.conf\n"
 	       << "\t/etc/svxlink.conf\n"
 	       << "Possible reasons for failure are: None of the files exist,\n"
 	       << "you do not have permission to read the file or there was a\n"
@@ -407,7 +422,12 @@ int main(int argc, char **argv)
   
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
-  cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__ ") starting up...\n";
+
+  cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__ ") Copyright (C) 2011 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. This is free software, and you are\n";
+  cout << "welcome to redistribute it in accordance with the terms and conditions in the\n";
+  cout << "GNU GPL (General Public License) version 2 or later.\n";
+
   cout << "\nUsing configuration file: " << main_cfg_filename << endl;
   
   string value;
@@ -468,7 +488,9 @@ int main(int argc, char **argv)
     tcsetattr(STDIN_FILENO, TCSANOW, &termios);
 
     stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
-    stdin_watch->activity.connect(slot(&stdinHandler));
+    // must explicitly specify name space for ptr_fun() to avoid conflict
+    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
+    stdin_watch->activity.connect(sigc::ptr_fun(&stdinHandler));
   }
 
   app.exec();
@@ -652,6 +674,7 @@ static void write_to_logfile(const char *buf)
   while (*ptr != 0)
   {
     static bool print_timestamp = true;
+    ssize_t ret;
     
     if (print_timestamp)
     {
@@ -661,15 +684,19 @@ static void write_to_logfile(const char *buf)
 	struct tm *tm = localtime(&epoch);
 	char tstr[256];
 	size_t tlen = strftime(tstr, sizeof(tstr), tstamp_format.c_str(), tm);
-	(void)write(logfd, tstr, tlen);
-	(void)write(logfd, ": ", 2);
+	ret = write(logfd, tstr, tlen);
+        assert(ret == static_cast<ssize_t>(tlen));
+	ret = write(logfd, ": ", 2);
+        assert(ret == 2);
 	print_timestamp = false;
       }
 
       if (reopen_log)
       {
 	const char *reopen_txt = "SIGHUP received. Reopening logfile\n";
-	(void)write(logfd, reopen_txt, strlen(reopen_txt));
+        const size_t reopen_txt_len = strlen(reopen_txt);
+	ret = write(logfd, reopen_txt, reopen_txt_len);
+        assert(ret == static_cast<ssize_t>(reopen_txt_len));
 	open_logfile();
 	reopen_log = false;
 	print_timestamp = true;
@@ -677,7 +704,7 @@ static void write_to_logfile(const char *buf)
       }
     }
 
-    int write_len = 0;
+    size_t write_len = 0;
     const char *nl = strchr(ptr, '\n');
     if (nl != 0)
     {
@@ -688,7 +715,8 @@ static void write_to_logfile(const char *buf)
     {
       write_len = strlen(ptr);
     }
-    (void)write(logfd, ptr, write_len);
+    ret = write(logfd, ptr, write_len);
+    assert(ret == static_cast<ssize_t>(write_len));
     ptr += write_len;
   }
 } /* write_to_logfile */
@@ -791,6 +819,35 @@ static void initialize_logics(Config &cfg)
     cerr << "*** ERROR: No logics available. Bailing out...\n";
     exit(1);
   }
+  
+    // Temporary fix for the assertion failure that happens when a link
+    // is activated where a non-existent logic is specified.
+  set<string> logic_set;
+  vector<Logic*>::iterator lit;
+  for (lit=logic_vec.begin(); lit!=logic_vec.end(); lit++)
+  {
+    logic_set.insert((*lit)->name());
+  }
+  for (lit=logic_vec.begin(); lit!=logic_vec.end(); lit++)
+  {
+    string links_str;
+    if (cfg.getValue((*lit)->name(), "LINKS", links_str))
+    {
+      string value;
+      cfg.getValue(links_str, "CONNECT_LOGICS", value);
+      vector<string> links;
+      SvxLink::splitStr(links, value, ",");
+      for (unsigned i=0; i<links.size(); ++i)
+      {
+	if (logic_set.find(links[i]) == logic_set.end())
+	{
+	  cerr << "*** ERROR: Invalid logic specified in "
+	       << links_str << "/CONNECT_LOGICS: " << links[i] << endl;
+	  exit(1);
+	}
+      }
+    }
+  }
 } /* initialize_logics */
 
 
@@ -798,11 +855,13 @@ void sighup_handler(int signal)
 {
   if (logfile_name == 0)
   {
-    (void)write(STDOUT_FILENO, "Ignoring SIGHUP\n", 16);
+    ssize_t ret = write(STDOUT_FILENO, "Ignoring SIGHUP\n", 16);
+    assert(ret == 16);
     return;
   }
   
-  (void)write(STDOUT_FILENO, "SIGHUP received. Logfile reopened\n", 34);
+  ssize_t ret = write(STDOUT_FILENO, "SIGHUP received. Logfile reopened\n", 34);
+  assert(ret == 34);
   reopen_log = true;
     
 } /* sighup_handler */

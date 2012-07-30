@@ -1,12 +1,12 @@
 /**
-@file	 AsyncAudioDelayLine.h
-@brief   A_brief_description_for_this_file
-@author  Tobias Blomberg / SM0SVX
-@date	 2006-07-08
+@file	  AsyncAudioDelayLine.h
+@brief	  An audio pipe component to create a delay used for muting
+@author	  Tobias Blomberg / SM0SVX
+@date	  2006-07-08
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -108,7 +108,7 @@ namespace Async
 @author Tobias Blomberg / SM0SVX
 @date   2006-07-08
 
-This class implements an audio delay line. It simple delays the audio with
+This class implements an audio delay line. It simply delays the audio with
 the specified amount of time. This can be useful if you want to mute audio
 based on a slow detector. With a delay line you have the possibility to
 mute audio that have passed the detector but have not yet passed through the
@@ -127,6 +127,17 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
      * @brief 	Destructor
      */
     ~AudioDelayLine(void);
+
+    /**
+     * @brief   Set the fade in/out time when muting and clearing
+     * @param	time_ms The time in milliseconds for the fade in/out
+     *
+     * When a mute or clear is issued the audio stream will not abruptly
+     * go to zero. Instead it will fade in and out smoothly to avoid
+     * popping sounds due to discontinueties in the sample stream.
+     * The default is 10 milliseconds. Set to 0 to turn off.
+     */
+    void setFadeTime(int time_ms);
     
     /**
      * @brief 	Mute audio
@@ -143,11 +154,11 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
     
     /**
      * @brief 	Clear samples in the delay line
-     * @param 	time_ms How long time in milliseconds to clear
+     * @param 	time_ms How much time in milliseconds to clear
      *
      * Will clear the specified amount of samples in the delay line. If a
      * clear is issued right before the delay line is flushed, the cleared
-     * samles will not be flushed. They will be thrown away.
+     * samples will not be flushed. They will be thrown away.
      */
     void clear(int time_ms=-1);
   
@@ -195,19 +206,49 @@ class AudioDelayLine : public Async::AudioSink, public Async::AudioSource
     
   protected:
     
-  private:    
-    float *buf;
-    int size;
-    int ptr;
-    int flush_cnt;
-    bool is_muted;
-    int mute_cnt;
-    int last_clear;
+  private:
+    static const int DEFAULT_FADE_TIME = 10; // 10ms default fade time
+
+    float	*buf;
+    int		size;
+    int		ptr;
+    int		flush_cnt;
+    bool	is_muted;
+    int		mute_cnt;
+    int		last_clear;
+    float	*fade_gain;
+    int		fade_len;
+    int		fade_pos;
+    int		fade_dir;
     
     AudioDelayLine(const AudioDelayLine&);
     AudioDelayLine& operator=(const AudioDelayLine&);
     void writeRemainingSamples(void);
-    int writeToSink(int count);
+
+    inline float currentFadeGain(void)
+    {
+      if (fade_gain == 0)
+      {
+        return 1.0f;
+      }
+      
+      float gain = fade_gain[fade_pos];
+      fade_pos += fade_dir;
+      
+      if ((fade_dir > 0) && (fade_pos >= fade_len-1))
+      {
+        fade_dir = 0;
+        fade_pos = fade_len-1;
+      }
+      else if ((fade_dir < 0) && (fade_pos <= 0))
+      {
+        fade_dir = 0;
+        fade_pos = 0;
+      }
+      
+      return gain;
+      
+    } /* AudioDelayLine::currentFadeGain  */
 
 };  /* class AudioDelayLine */
 

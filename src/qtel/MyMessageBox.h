@@ -36,7 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <qmessagebox.h>
+#include <QMessageBox>
 
 
 /****************************************************************************
@@ -140,9 +140,9 @@ class MyMessageBox : public QMessageBox
   public:
     MyMessageBox(const QString& caption, const QString& text)
       : QMessageBox(caption, text, QMessageBox::Critical, QMessageBox::Ok,
-      	      	    QMessageBox::NoButton, QMessageBox::NoButton)
+      	      	    Qt::NoButton, Qt::NoButton)
     {
-      setWFlags(getWFlags() | Qt::WDestructiveClose);
+      setAttribute(Qt::WA_DeleteOnClose);
     }
     
     virtual ~MyMessageBox(void)

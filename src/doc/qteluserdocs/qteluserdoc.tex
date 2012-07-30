@@ -1,0 +1,92 @@
+\documentclass[paper=a4,fontsize=12pt]{scrartcl}
+\usepackage[automark]{scrpage2}
+\clearscrheadfoot                                  % clear head and foot
+\chead{\pagemark}
+\ihead{Qtel User Documentation}
+\ohead{\headmark}
+\setheadsepline{1pt}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}                            % char output
+\usepackage[utf8]{inputenc}                         % char input
+\usepackage{graphicx}
+\usepackage{float}
+             
+\begin{document}                                    % begin of document
+\titlehead{
+  \vspace*{1\baselineskip}
+  \begin{center}
+    \large SvxLink Project\\
+    \normalsize http://svxlink.org/
+  \end{center}
+  \vspace{5,1\baselineskip}}
+\subject{Qtel}
+\title{User Documentation}
+\author{Tobias Blomberg\\SM0SVX}
+\date{\today}
+\maketitle
+\thispagestyle{empty}
+\newpage
+                                     
+\pagestyle{scrheadings}
+\tableofcontents
+\listoffigures
+\pagebreak
+
+   
+   \noindent{Qtel stands for the ``QT EchoLink'' client.{\kern3.5pt}It is only a EchoLink client application.{\kern2pt}There is no
+   ``sysop mode''.{\kern3.5pt}If it is a link you want to run, have a look at the SvxLink server application.{\kern2pt}Qtel is quite
+   a simple application, so most things should be self explainatory. There are three windows: the main window, the communications
+   dialog and the settings dialog.}
+
+\section{The Qtel Main Window}
+   \begin{figure}[H]
+      \centering
+      \includegraphics[height=80mm]{qtel-mainwindow.pdf}
+      \caption[The Qtel Main Window]{Main Window}
+   \end{figure}
+
+   The main window consists of four areas.{\kern2pt}The top-left is where to choose which class of stations to view.{\kern2.5pt}All stations
+   in a class is shown to the top-right.{\kern3pt}There are four station classes:{\kern2.5pt}Conferences, Links, Repeaters and (private)
+   Stations.{\kern2.5pt}There also is a bookmark class which isn't a real class. It's a collection of your favorite stations. Just 
+   right-click on a station in any of the other views to add it to the bookmark list. At left-bottom is a message area that shows the
+   messages from the EchoLink directory server. At right-bottom is a list of incoming connections.{\kern2pt}To accept an incoming 
+   connection, highligt the station and press ``Accept''.
+
+\section{The Qtel Communications Dialog}
+   \begin{figure}[H]
+      \centering
+      \includegraphics[height=80mm]{qtel-comdialog.pdf}
+      \caption[The Qtel Communications Dialog]{Communication Dialog}
+   \end{figure}
+
+   The communications dialog is used to perform a Qso to anoher station.{\kern2.5pt}To activate it, double-click on a station line or just 
+   press the enter key when the station is highlighted.{\kern2.5pt}To connect to the station, press the Connect button. When audio is coming 
+   in from the remote station, the green RX indicator will light up.{\kern2.5pt}To transmit, press the PTT button.{\kern3pt}The red TX 
+   indicator will light up.{\kern2.5pt}To lock the PTT in transmit, first press and hold the Ctrl-key and then press the PTT
+   button.{\kern2.5pt}To disconnect, press the ``Disconnect'' button.{\kern3pt}The VOX is used to automatic activate the PTT when speaking
+   into the microphone.{\kern2.5pt}To enable the VOX, check the ``VOX Enabled'' check box. Then set a suitable level for ``Threshold'' so 
+   that the VOX does not trigger by mistake on noise. Adjust the ``Delay'' slider so that the hangtime is long enough to allow speech pauses 
+   without the PTT getting released. In the big, white area in the middle of the window, info messages from the remote station are 
+   shown.{\kern3pt}Chat messages from the remote station is also shown here. In the oneline white area below, chat messages can be typed 
+   that is sent to the remote station.
+
+\section{The Qtel Settings Dialog}
+   \begin{figure}[H]
+      \centering
+      \includegraphics[height=80mm]{qtel-settings.pdf}
+      \caption[The Qtel Settings Dialog]{Settings Dialog}
+   \end{figure}
+
+   The configuration dialog is brought up the first time the application is started.{\kern2pt}After that it can be brought up again by 
+   choosing the Qtel settings menu.{\kern3pt}Most fields are self explainatory. Location is the short string that is shown in the EchoLink 
+   directory server listing.{\kern3pt}The info message is the one that is sent to the remote station upon connection.{\kern2pt}In the
+   Directory Server tab are some settings for the EchoLink directory server connection. Hover the mouse cursor above each field to get help 
+   about it.{\kern2.5pt}That is about everything there is to say about the Qtel application. It's quite simple.
+
+\section{Copyright}
+   Copyright \textcopyright \,\,by Tobias Blomberg, SM0SVX.\\
+   You are free to distribute this software under the terms of the\\
+   GNU General Public License. The original ``Qtel User Documentation'' is found at\\
+   \textbf{http://sourceforge.net/apps/trac/svxlink/wiki/QtelUserDocs}.\\
+
+\end{document}                                      % end of document

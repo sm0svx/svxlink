@@ -1,0 +1,1 @@
+The propagation monitor receive propagation alerts from VHF DX.net,and good DX.net. These are announced by voice messages as soon as they are received. Examples of messages announced are:sporadic e,traupo,and au-rora openings

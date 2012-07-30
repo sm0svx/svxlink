@@ -1,5 +1,6 @@
-<!DOCTYPE TS><TS>
-<defaultcodec></defaultcodec>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.0" language="de_DE">
 <context>
     <name>ComDialog</name>
     <message>
@@ -26,19 +27,23 @@
         <source>Station data not found in directory server.
 Can&apos;t create connection to</source>
         <translation>Stationsdaten nicht im Echolink-Verzeichnisserver gefunden. 
-<byte value="x9"/>Es kann keine Verbindung aufgebaut werden zu</translation>
+	Es kann keine Verbindung aufgebaut werden zu</translation>
     </message>
     <message>
         <source>Could not create connection to station</source>
         <translation>Es kann keine Verbindung aufgebaut werden zur Station</translation>
     </message>
     <message>
-        <source>Could not open audio device</source>
-        <translation>Das Audiogerät kann nicht geöffnet werden</translation>
-    </message>
-    <message>
         <source>Could not create connection to remote host</source>
         <translation>Es kann keine Verbindung aufgebaut werden zum Host</translation>
+    </message>
+    <message>
+        <source>Could not open mic audio device</source>
+        <translation>Das Eingabegerät (Mikrofoneingang) kann nicht geöffnet werden</translation>
+    </message>
+    <message>
+        <source>Could not open speaker audio device</source>
+        <translation>Das Ausgabegerät (Lautsprecherausgang) kann nicht geöffnet werden</translation>
     </message>
 </context>
 <context>
@@ -125,6 +130,33 @@ Can&apos;t create connection to</source>
     </message>
 </context>
 <context>
+    <name>EchoLinkDirectoryModel</name>
+    <message>
+        <source>Callsign</source>
+        <translation>Rufzeichen</translation>
+    </message>
+    <message>
+        <source>Location/Description</source>
+        <translation>Ort/Beschreibung</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <source>Local Time</source>
+        <translation>Lokalzeit</translation>
+    </message>
+    <message>
+        <source>Node ID</source>
+        <translation>Knotennummer</translation>
+    </message>
+    <message>
+        <source>IP Address</source>
+        <translation>IP-Adresse</translation>
+    </message>
+</context>
+<context>
     <name>MainWindow</name>
     <message>
         <source>Logging off from directory server...</source>
@@ -139,39 +171,12 @@ Can&apos;t create connection to</source>
         <translation>Aktualisiere Stationsliste...</translation>
     </message>
     <message>
-        <source>Add to bookmarks</source>
-        <translation>Zu Favoriten hinzufügen</translation>
-    </message>
-    <message>
-        <source>Remove from bookmarks</source>
-        <translation>Aus den Favoriten entfernen</translation>
-    </message>
-    <message>
-        <source>Add named station...</source>
-        <translation>Bekannte Station hinzufügen...</translation>
-    </message>
-    <message>
         <source>Qtel - Add station...</source>
         <translation>Qtel - Station hinzufügen...</translation>
     </message>
     <message>
         <source>Enter callsign of the station to add</source>
         <translation>Rufzeichen der Station, die hinzugefügt werden soll</translation>
-    </message>
-    <message>
-        <source>Ctrl+Q</source>
-        <comment>fileQuitAction</comment>
-        <translation>Ctrl+A</translation>
-    </message>
-    <message>
-        <source>Ctrl+B</source>
-        <comment>directoryBusyAction</comment>
-        <translation>Ctrl+U</translation>
-    </message>
-    <message>
-        <source>F5</source>
-        <comment>directoryRefreshAction</comment>
-        <translation>F5</translation>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
@@ -181,13 +186,51 @@ Can&apos;t create connection to</source>
         <source>Enter an IP address or hostname:</source>
         <translation>IP-Adresse oder Hostnamen eingeben:</translation>
     </message>
+    <message>
+        <source>Bookmarks</source>
+        <translation>Favoriten</translation>
+    </message>
+    <message>
+        <source>Links</source>
+        <translation>Links</translation>
+    </message>
+    <message>
+        <source>Repeaters</source>
+        <translation>Relais</translation>
+    </message>
+    <message>
+        <source>Conferences</source>
+        <translation>Konferenzen</translation>
+    </message>
+    <message>
+        <source>Stations</source>
+        <translation>Stationen</translation>
+    </message>
+    <message>
+        <source>About Qtel</source>
+        <translation>über Qtel</translation>
+    </message>
+    <message>
+        <source>Qtel v</source>
+        <translation>Qtel v</translation>
+    </message>
+    <message>
+        <source> - Qt EchoLink client.
+</source>
+        <translation>- QT EchoLink Programm.
+</translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it in accordance with the terms and conditions in the GNU GPL (General Public License) version 2 or later.</source>
+        <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel wird OHNE JEGLICHE GARANTIE veröffentlicht. Dies ist freie Software und Sie sind berechtigt diese unter Beachtung der Bedingungen und Konditionen der GNU GPL (General Public License) version 2 oder neuer zu nutzen und weiterzuverbreiten.</translation>
+    </message>
 </context>
 <context>
     <name>MainWindowBase</name>
-    <message>
-        <source>Explorer</source>
-        <translation>Explorer</translation>
-    </message>
     <message>
         <source>Conferences</source>
         <translation>Konferenzen</translation>
@@ -209,18 +252,6 @@ Can&apos;t create connection to</source>
         <translation>Favoriten</translation>
     </message>
     <message>
-        <source>Station</source>
-        <translation>Station</translation>
-    </message>
-    <message>
-        <source>Location/Description</source>
-        <translation>Ort/Beschreibung</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>Status</translation>
-    </message>
-    <message>
         <source>Time</source>
         <translation>Zeit</translation>
     </message>
@@ -229,76 +260,8 @@ Can&apos;t create connection to</source>
         <translation>&amp;Datei</translation>
     </message>
     <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Einstellungen</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Hilfe</translation>
-    </message>
-    <message>
-        <source>Undo</source>
-        <translation>Rückgängig</translation>
-    </message>
-    <message>
-        <source>&amp;Undo</source>
-        <translation>&amp;Rückgängig</translation>
-    </message>
-    <message>
-        <source>Redo</source>
-        <translation>Wiederholen</translation>
-    </message>
-    <message>
-        <source>&amp;Redo</source>
-        <translation>Å&amp;Wiederholen</translation>
-    </message>
-    <message>
-        <source>Cut</source>
-        <translation>Ausschneiden</translation>
-    </message>
-    <message>
-        <source>&amp;Cut</source>
-        <translation>&amp;Ausschneiden</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Kopieren</translation>
-    </message>
-    <message>
-        <source>C&amp;opy</source>
-        <translation>K&amp;opieren</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation>Einfügen</translation>
-    </message>
-    <message>
-        <source>&amp;Paste</source>
-        <translation>E&amp;infügen</translation>
-    </message>
-    <message>
-        <source>Find</source>
-        <translation>Suchen</translation>
-    </message>
-    <message>
-        <source>&amp;Find...</source>
-        <translation>&amp;Suchen...</translation>
-    </message>
-    <message>
-        <source>Contents</source>
-        <translation>Inhalt</translation>
-    </message>
-    <message>
-        <source>&amp;Contents...</source>
-        <translation>I&amp;nhalt...</translation>
-    </message>
-    <message>
-        <source>Index</source>
-        <translation>Index</translation>
-    </message>
-    <message>
-        <source>&amp;Index...</source>
-        <translation>&amp;Index...</translation>
     </message>
     <message>
         <source>About</source>
@@ -329,26 +292,8 @@ Can&apos;t create connection to</source>
         <translation>Einstellungen für Qtel...</translation>
     </message>
     <message>
-        <source>&amp;Qtel Settings...</source>
-        <translation>&amp;Einstellungen für Qtel...</translation>
-    </message>
-    <message>
         <source>Open the Qtel settings dialog</source>
         <translation>Einstellungen für Qtel öffnen</translation>
-    </message>
-    <message>
-        <source>Qtel v</source>
-        <translation>Qtel v</translation>
-    </message>
-    <message>
-        <source>- Qt EchoLink client.
-</source>
-        <translation>- Qt EchoLink-Client.
-</translation>
-    </message>
-    <message>
-        <source>Author</source>
-        <translation>Verfasser</translation>
     </message>
     <message>
         <source>&amp;Directory</source>
@@ -391,14 +336,6 @@ Can&apos;t create connection to</source>
         <translation>Mitteilungen</translation>
     </message>
     <message>
-        <source>Local time</source>
-        <translation>Lokalzeit</translation>
-    </message>
-    <message>
-        <source>Incoming connections</source>
-        <translation>Eingehende Verbindungen</translation>
-    </message>
-    <message>
         <source>Accept</source>
         <translation>Akzeptieren</translation>
     </message>
@@ -415,34 +352,6 @@ Can&apos;t create connection to</source>
         <translation>Name</translation>
     </message>
     <message>
-        <source>Node ID</source>
-        <translation>Knotennummer</translation>
-    </message>
-    <message>
-        <source>Ctrl+Z</source>
-        <translation>Ctrl+Z</translation>
-    </message>
-    <message>
-        <source>Ctrl+Y</source>
-        <translation>Ctrl+Y</translation>
-    </message>
-    <message>
-        <source>Ctrl+X</source>
-        <translation>Ctrl+X</translation>
-    </message>
-    <message>
-        <source>Ctrl+C</source>
-        <translation>Ctrl+C</translation>
-    </message>
-    <message>
-        <source>Ctrl+V</source>
-        <translation>Ctrl+V</translation>
-    </message>
-    <message>
-        <source>Ctrl+F</source>
-        <translation>Ctrl+F</translation>
-    </message>
-    <message>
         <source>Connect to IP...</source>
         <translation>Verbinde mit IP...</translation>
     </message>
@@ -451,12 +360,88 @@ Can&apos;t create connection to</source>
         <translation>Mit ausgewählter Station verbinden...</translation>
     </message>
     <message>
-        <source>Disconnect</source>
-        <translation>Verbindung trennen</translation>
+        <source>Incoming Connections</source>
+        <translation>Eingehende Verbindungen</translation>
     </message>
     <message>
-        <source>Add selected to Bookmarks</source>
-        <translation>Ausgewählte Station zu Favoriten hinzufügen</translation>
+        <source>&amp;Station</source>
+        <translation>&amp;Station</translation>
+    </message>
+    <message>
+        <source>S&amp;ettings</source>
+        <translation>&amp;Einstellungen</translation>
+    </message>
+    <message>
+        <source>Connect to &amp;selected...</source>
+        <translation>Verbinde zur ausgewählten &amp;Station...</translation>
+    </message>
+    <message>
+        <source>Connect to &amp;IP...</source>
+        <translation>Verbinde mit &amp;IP...</translation>
+    </message>
+    <message>
+        <source>Qtel &amp;Settings...</source>
+        <translation>QTel Ein&amp;stellungen...</translation>
+    </message>
+    <message>
+        <source>F5</source>
+        <translation>F5</translation>
+    </message>
+    <message>
+        <source>Add Selected To &amp;Bookmarks</source>
+        <translation>Füge die ausgewählte Station zu den &amp;Favoriten hinzu</translation>
+    </message>
+    <message>
+        <source>Add the selected station in the station list to the bookmarks menu</source>
+        <translation>Füge die ausgewählte Station der Stationsliste unter Favoriten hinzu</translation>
+    </message>
+    <message>
+        <source>Ctrl+U</source>
+        <translation>Ctrl+U</translation>
+    </message>
+    <message>
+        <source>&amp;Remove Selected From Bookmarks</source>
+        <translation>&amp;Entferne das Ausgewählte aus der Liste der Favoriten</translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks list</source>
+        <translation>Entferne die ausgewählte Station aus der Liste der Favoriten</translation>
+    </message>
+    <message>
+        <source>Add &amp;Named Station To Bookmarks</source>
+        <translation>Be&amp;nannte Station der Favoritenliste hinzufügen</translation>
+    </message>
+    <message>
+        <source>Ctrl+Q</source>
+        <translation>Ctrl+Q</translation>
+    </message>
+    <message>
+        <source>Connect to the selected station</source>
+        <translation>Mit der ausgewählten Station verbinden</translation>
+    </message>
+    <message>
+        <source>Connect to local station using IP address or hostname</source>
+        <translation>Mit der Lokalstation über die IP-Adresse oder Hostnamen verbinden</translation>
+    </message>
+    <message>
+        <source>Immediately refresh the station list</source>
+        <translation>Sofortiges Auffrischen der Stationsliste</translation>
+    </message>
+    <message>
+        <source>Add selected station to the bookmarks</source>
+        <translation>Ausgewählte Station der Favoritenliste hinzufügen</translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks</source>
+        <translation>Ausgewählte Station aus der Liste der Favoriten entfernen</translation>
+    </message>
+    <message>
+        <source>Add a station to the bookmarks by entering a callsign</source>
+        <translation>Eine neue Station durch Eingabe eines Rufzeichens hinzufügen</translation>
+    </message>
+    <message>
+        <source>Show the about dialog</source>
+        <translation>Über QTel</translation>
     </message>
 </context>
 <context>
@@ -548,20 +533,8 @@ Message</source>
         <translation>Audio</translation>
     </message>
     <message>
-        <source>Sound settings</source>
-        <translation>Audioeigenschaften</translation>
-    </message>
-    <message>
-        <source>Audio device</source>
-        <translation>Audiogerät</translation>
-    </message>
-    <message>
         <source>Full duplex</source>
         <translation>Vollduplex</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation>Verwendetes Audiogerät (z.B. /dev/dsp)</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
@@ -592,12 +565,8 @@ Message</source>
         <translation>QSO</translation>
     </message>
     <message>
-        <source>QSO dialog settings</source>
-        <translation>QSO-Einstellungen</translation>
-    </message>
-    <message>
         <source>Chat encoding:</source>
-        <translation>Chat-Sprache</translation>
+        <translation>Chat-Sprache:</translation>
     </message>
     <message>
         <source>Chinese</source>
@@ -678,6 +647,26 @@ Message</source>
     <message>
         <source>Passwords do not match</source>
         <translation>Passworte stimmen nicht überein</translation>
+    </message>
+    <message>
+        <source>Sound Settings</source>
+        <translation>Audioeinstellungen</translation>
+    </message>
+    <message>
+        <source>Mic audio device</source>
+        <translation>Audio Eingabegerät</translation>
+    </message>
+    <message>
+        <source>The audio device to use (e.g. alsa:default)</source>
+        <translation>Verwendetes Audio Gerät (z.B. alsa:default)</translation>
+    </message>
+    <message>
+        <source>Speaker audio device</source>
+        <translation>Audio Ausgabegerät</translation>
+    </message>
+    <message>
+        <source>QSO Dialog Settings</source>
+        <translation>QSO Dialog Einstellungen</translation>
     </message>
 </context>
 </TS>

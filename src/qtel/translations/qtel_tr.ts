@@ -1,4 +1,6 @@
-<!DOCTYPE TS><TS>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.0">
 <context>
     <name>ComDialog</name>
     <message>
@@ -14,10 +16,6 @@
 Can&apos;t create connection to</source>
         <translation>Dizin sunucusunda istasyon bilgisi bulunamadı. 
 Bağlantı kurulamadı</translation>
-    </message>
-    <message>
-        <source>Could not open audio device</source>
-        <translation>Ses cihazı açılamadı</translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
@@ -38,6 +36,14 @@ Bağlantı kurulamadı</translation>
     <message>
         <source>Disconnected</source>
         <translation>Bağlantı Kesildi</translation>
+    </message>
+    <message>
+        <source>Could not open mic audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not open speaker audio device</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -124,34 +130,34 @@ Bağlantı kurulamadı</translation>
     </message>
 </context>
 <context>
+    <name>EchoLinkDirectoryModel</name>
+    <message>
+        <source>Callsign</source>
+        <translation type="unfinished">Çağrı İşareti</translation>
+    </message>
+    <message>
+        <source>Location/Description</source>
+        <translation type="unfinished">Konum/Tanım</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation type="unfinished">Durum</translation>
+    </message>
+    <message>
+        <source>Local Time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Node ID</source>
+        <translation type="unfinished">Node Numarası</translation>
+    </message>
+    <message>
+        <source>IP Address</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MainWindow</name>
-    <message>
-        <source>Add to bookmarks</source>
-        <translation>Sık Kullanılanlara Ekle</translation>
-    </message>
-    <message>
-        <source>Remove from bookmarks</source>
-        <translation>Sık Kullanılanlardan Sil</translation>
-    </message>
-    <message>
-        <source>Add named station...</source>
-        <translation>Sık Kullanılanlara İstasyon Ekle...</translation>
-    </message>
-    <message>
-        <source>Ctrl+Q</source>
-        <comment>fileQuitAction</comment>
-        <translation>Ctrl+Q</translation>
-    </message>
-    <message>
-        <source>F5</source>
-        <comment>directoryRefreshAction</comment>
-        <translation>F5</translation>
-    </message>
-    <message>
-        <source>Ctrl+B</source>
-        <comment>directoryBusyAction</comment>
-        <translation>Ctrl+B</translation>
-    </message>
     <message>
         <source>Logging off from directory server...</source>
         <translation>Dizin Sunucusundan Çıkılıyor...</translation>
@@ -180,16 +186,51 @@ Bağlantı kurulamadı</translation>
         <source>Enter an IP address or hostname:</source>
         <translation>IP adresi veya sunucu adı giriniz:</translation>
     </message>
+    <message>
+        <source>Bookmarks</source>
+        <translation type="unfinished">Sık Kullanılanlar</translation>
+    </message>
+    <message>
+        <source>Links</source>
+        <translation type="unfinished">Linkler</translation>
+    </message>
+    <message>
+        <source>Repeaters</source>
+        <translation type="unfinished">Röleler</translation>
+    </message>
+    <message>
+        <source>Conferences</source>
+        <translation type="unfinished">Konferanslar</translation>
+    </message>
+    <message>
+        <source>Stations</source>
+        <translation type="unfinished">İstasyonlar</translation>
+    </message>
+    <message>
+        <source>About Qtel</source>
+        <translation type="unfinished">Qtel Hakkında</translation>
+    </message>
+    <message>
+        <source>Qtel v</source>
+        <translation type="unfinished">Qtel v</translation>
+    </message>
+    <message>
+        <source> - Qt EchoLink client.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
+
+Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it in accordance with the terms and conditions in the GNU GPL (General Public License) version 2 or later.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindowBase</name>
     <message>
         <source>Qtel - the Qt EchoLink Client</source>
         <translation>Qtel - EchoLink İstemci</translation>
-    </message>
-    <message>
-        <source>Explorer</source>
-        <translation>Gezgin</translation>
     </message>
     <message>
         <source>Conferences</source>
@@ -212,32 +253,8 @@ Bağlantı kurulamadı</translation>
         <translation>Sık Kullanılanlar</translation>
     </message>
     <message>
-        <source>Station</source>
-        <translation>İstasyon</translation>
-    </message>
-    <message>
-        <source>Location/Description</source>
-        <translation>Konum/Tanım</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>Durum</translation>
-    </message>
-    <message>
-        <source>Local time</source>
-        <translation>Yerel Zaman</translation>
-    </message>
-    <message>
-        <source>Node ID</source>
-        <translation>Node Numarası</translation>
-    </message>
-    <message>
         <source>Messages</source>
         <translation>Mesajlar</translation>
-    </message>
-    <message>
-        <source>Incoming connections</source>
-        <translation>Gelen bağlantılar</translation>
     </message>
     <message>
         <source>Accept</source>
@@ -268,100 +285,8 @@ Bağlantı kurulamadı</translation>
         <translation>&amp;Dizin</translation>
     </message>
     <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Ayarlar</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Yardım</translation>
-    </message>
-    <message>
-        <source>Undo</source>
-        <translation>Geri Al</translation>
-    </message>
-    <message>
-        <source>&amp;Undo</source>
-        <translation>&amp;Geri Al</translation>
-    </message>
-    <message>
-        <source>Ctrl+Z</source>
-        <translation>Ctrl+Z</translation>
-    </message>
-    <message>
-        <source>Redo</source>
-        <translation>Tekrarla</translation>
-    </message>
-    <message>
-        <source>&amp;Redo</source>
-        <translation>&amp;Tekrarla</translation>
-    </message>
-    <message>
-        <source>Ctrl+Y</source>
-        <translation>Ctrl+Y</translation>
-    </message>
-    <message>
-        <source>Cut</source>
-        <translation>Kes</translation>
-    </message>
-    <message>
-        <source>&amp;Cut</source>
-        <translation>&amp;Kes</translation>
-    </message>
-    <message>
-        <source>Ctrl+X</source>
-        <translation>Ctrl+X</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Kopyala</translation>
-    </message>
-    <message>
-        <source>C&amp;opy</source>
-        <translation>K&amp;opyala</translation>
-    </message>
-    <message>
-        <source>Ctrl+C</source>
-        <translation>Ctrl+C</translation>
-    </message>
-    <message>
-        <source>Paste</source>
-        <translation>Yapıştır</translation>
-    </message>
-    <message>
-        <source>&amp;Paste</source>
-        <translation>Ya&amp;pıştır</translation>
-    </message>
-    <message>
-        <source>Ctrl+V</source>
-        <translation>Ctrl+V</translation>
-    </message>
-    <message>
-        <source>Find</source>
-        <translation>Bul</translation>
-    </message>
-    <message>
-        <source>&amp;Find...</source>
-        <translation>&amp;Bul...</translation>
-    </message>
-    <message>
-        <source>Ctrl+F</source>
-        <translation>Ctrl+F</translation>
-    </message>
-    <message>
-        <source>Contents</source>
-        <translation>İçerik</translation>
-    </message>
-    <message>
-        <source>&amp;Contents...</source>
-        <translation>&amp;İçerik...</translation>
-    </message>
-    <message>
-        <source>Index</source>
-        <translation>İndeks</translation>
-    </message>
-    <message>
-        <source>&amp;Index...</source>
-        <translation>&amp;İndeks...</translation>
     </message>
     <message>
         <source>About</source>
@@ -390,10 +315,6 @@ Bağlantı kurulamadı</translation>
     <message>
         <source>Qtel Settings...</source>
         <translation>Qtel Ayarları...</translation>
-    </message>
-    <message>
-        <source>&amp;Qtel Settings...</source>
-        <translation>&amp;Qtel Ayarları...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
@@ -436,165 +357,204 @@ Bağlantı kurulamadı</translation>
         <translation>Seçili olana bağlan...</translation>
     </message>
     <message>
-        <source>Disconnect</source>
-        <translation>Bağlantıyı kes</translation>
+        <source>Incoming Connections</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add selected to Bookmarks</source>
-        <translation>Seçili olanı sık kullanılanlara ekle</translation>
+        <source>&amp;Station</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Qtel v</source>
-        <translation>Qtel v</translation>
+        <source>S&amp;ettings</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>- Qt EchoLink client.
-</source>
-        <translation>- Qt EchoLink istemci.</translation>
+        <source>Connect to &amp;selected...</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Author</source>
-        <translation>Yazar</translation>
+        <source>Connect to &amp;IP...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Qtel &amp;Settings...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>F5</source>
+        <translation type="unfinished">F5</translation>
+    </message>
+    <message>
+        <source>Add Selected To &amp;Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add the selected station in the station list to the bookmarks menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+U</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Remove Selected From Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add &amp;Named Station To Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+Q</source>
+        <translation type="unfinished">Ctrl+Q</translation>
+    </message>
+    <message>
+        <source>Connect to the selected station</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect to local station using IP address or hostname</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Immediately refresh the station list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add selected station to the bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove the selected station from the bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add a station to the bookmarks by entering a callsign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show the about dialog</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
     <message>
         <source>Qtel: Settings</source>
-        <translation>Qtel: Ayarlar</translation>
+        <translation type="unfinished">Qtel: Ayarlar</translation>
     </message>
     <message>
         <source>User Info</source>
-        <translation>Kullanıcı Bilgisi</translation>
+        <translation type="unfinished">Kullanıcı Bilgisi</translation>
     </message>
     <message>
         <source>User Information</source>
-        <translation>Kullanıcı Bilgileri</translation>
+        <translation type="unfinished">Kullanıcı Bilgileri</translation>
     </message>
     <message>
         <source>Info
 Message</source>
-        <translation>Bilgi Mesajı</translation>
+        <translation type="unfinished">Bilgi Mesajı</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation>Konum</translation>
+        <translation type="unfinished">Konum</translation>
     </message>
     <message>
         <source>Callsign</source>
-        <translation>Çağrı İşareti</translation>
+        <translation type="unfinished">Çağrı İşareti</translation>
     </message>
     <message>
         <source>Password</source>
-        <translation>Parola</translation>
+        <translation type="unfinished">Parola</translation>
     </message>
     <message>
         <source>Retype password</source>
-        <translation>Parola Tekrarı</translation>
+        <translation type="unfinished">Parola Tekrarı</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation>Ad</translation>
+        <translation type="unfinished">Ad</translation>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation>Dizin sunucusu</translation>
+        <translation type="unfinished">Dizin sunucusu</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
-        <translation>Dizin Sunucusu Ayarları</translation>
+        <translation type="unfinished">Dizin Sunucusu Ayarları</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>Kullanılacak EchoLink dizin sunucusu ana bilgisayar adı veya IP adresi</translation>
+        <translation type="unfinished">Kullanılacak EchoLink dizin sunucusu ana bilgisayar adı veya IP adresi</translation>
     </message>
     <message>
         <source>Server</source>
-        <translation>Sunucu</translation>
+        <translation type="unfinished">Sunucu</translation>
     </message>
     <message>
         <source>Refresh time</source>
-        <translation>Tazeleme Süresi</translation>
+        <translation type="unfinished">Tazeleme Süresi</translation>
     </message>
     <message>
         <source>min</source>
-        <translation>min</translation>
+        <translation type="unfinished">min</translation>
     </message>
     <message>
         <source>Time, in minutes, between station list refreshes</source>
-        <translation>Dakika olarak istasyon listesi tazeleme süresi</translation>
+        <translation type="unfinished">Dakika olarak istasyon listesi tazeleme süresi</translation>
     </message>
     <message>
         <source>Register as busy on program startup</source>
-        <translation>Program başladığında meşgul olarak kaydol</translation>
+        <translation type="unfinished">Program başladığında meşgul olarak kaydol</translation>
     </message>
     <message>
         <source>Start as busy</source>
-        <translation>Meşgul Olarak Başlat</translation>
+        <translation type="unfinished">Meşgul Olarak Başlat</translation>
     </message>
     <message>
         <source>Sound</source>
-        <translation>Ses</translation>
-    </message>
-    <message>
-        <source>Sound settings</source>
-        <translation>Ses Ayarları</translation>
-    </message>
-    <message>
-        <source>Audio device</source>
-        <translation>Ses aygıtı</translation>
+        <translation type="unfinished">Ses</translation>
     </message>
     <message>
         <source>Full duplex</source>
-        <translation>Çift yönlü</translation>
-    </message>
-    <message>
-        <source>The audio device to use (e.g. /dev/dsp)</source>
-        <translation>Kullanılacak ses aygıtı (Örneğin /dev/dsp)</translation>
+        <translation type="unfinished">Çift yönlü</translation>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
-        <translation>Çift yönlü aktarım için bu kutuyu seçin</translation>
+        <translation type="unfinished">Çift yönlü aktarım için bu kutuyu seçin</translation>
     </message>
     <message>
         <source>Connect Sound</source>
-        <translation>Bağlandı bilgisi ses dosyası</translation>
+        <translation type="unfinished">Bağlandı bilgisi ses dosyası</translation>
     </message>
     <message>
         <source>The connect sound to use on incoming EchoLink connections</source>
-        <translation>Gelen EchoLink bağlantılarında kullanılacak ses dosyası</translation>
+        <translation type="unfinished">Gelen EchoLink bağlantılarında kullanılacak ses dosyası</translation>
     </message>
     <message>
         <source>Browse...</source>
-        <translation>Gözat...</translation>
+        <translation type="unfinished">Gözat...</translation>
     </message>
     <message>
         <source>OK</source>
-        <translation>Tamam</translation>
+        <translation type="unfinished">Tamam</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>İptal</translation>
+        <translation type="unfinished">İptal</translation>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation>Raw ses dosyası (*.raw)</translation>
+        <translation type="unfinished">Raw ses dosyası (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation>Bağlandı bilgisi ses dosyası seçin</translation>
-    </message>
-    <message>
-        <source>QSO</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>QSO dialog settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Chat encoding:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Bağlandı bilgisi ses dosyası seçin</translation>
     </message>
     <message>
         <source>Chinese</source>
@@ -674,6 +634,34 @@ Message</source>
     </message>
     <message>
         <source>Passwords do not match</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sound Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mic audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The audio device to use (e.g. alsa:default)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Speaker audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QSO</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QSO Dialog Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Chat encoding:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

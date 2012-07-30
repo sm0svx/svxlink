@@ -188,13 +188,14 @@ class AudioDeviceAlsa : public AudioDevice
     AlsaWatch   *play_watch;
     AlsaWatch   *rec_watch;
     bool        duplex;
-    int16_t     buf[4096];
 
     AudioDeviceAlsa(const AudioDeviceAlsa&);
     AudioDeviceAlsa& operator=(const AudioDeviceAlsa&);
-    void audioReadHandler(FdWatch *watch, pollfd *pfd);
-    void writeSpaceAvailable(FdWatch *watch, pollfd *pfd);
+    void audioReadHandler(FdWatch *watch, unsigned short revents);
+    void writeSpaceAvailable(FdWatch *watch, unsigned short revents);
     bool initParams(snd_pcm_t *pcm_handle);
+    bool startPlayback(snd_pcm_t *pcm_handle);
+    bool startCapture(snd_pcm_t *pcm_handle);
     
 };  /* class AudioDeviceAlsa */
 

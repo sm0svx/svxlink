@@ -732,7 +732,7 @@ proc icao_available {} {
 
 # say preconfigured airports
 proc airports args {
-  global basedir;
+  global langdir;
 #  global lang;
   variable tval;
 
@@ -743,8 +743,8 @@ proc airports args {
      if {[regexp {(\d+)} $item tval]} {
        sayNumber $tval;
      } else {
-       if [file exists "$basedir/MetarInfo/$item.wav"] {
-         playFile "$basedir/MetarInfo/$item.wav";
+       if [file exists "$langdir/MetarInfo/$item.wav"] {
+         playFile "$langdir/MetarInfo/$item.wav";
        } else {
          spellWord $item;
        }

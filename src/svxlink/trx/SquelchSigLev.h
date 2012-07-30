@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2010  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -109,6 +109,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 @brief	A signal level based squelch detector
 @author Tobias Blomberg / SM0SVX
 @date   2008-04-10
+
+This squelch detector use a signal level detector to determine if the squelch
+is open or not. The actual signal level detector is implemented outside this
+class. This class only implements the squelch logic associated with a signal
+level squelch.
 */
 class SquelchSigLev : public Squelch
 {
@@ -116,17 +121,18 @@ class SquelchSigLev : public Squelch
     /**
      * @brief 	Default constuctor
      */
-    SquelchSigLev(SigLevDet *det) : sig_lev_det(det), is_open(false) {}
-  
+    SquelchSigLev(SigLevDet *det) : sig_lev_det(det) {}
+
     /**
      * @brief 	Destructor
      */
     ~SquelchSigLev(void) {}
-  
+
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Initialize the squelch detector
+     * @param 	cfg A previsously initialized config object
+     * @param 	rx_name The name of the RX (config section name)
+     * @return	Returns \em true on success or else \em false
      */
     bool initialize(Async::Config& cfg, const std::string& rx_name)
     {
@@ -134,7 +140,7 @@ class SquelchSigLev : public Squelch
       {
       	return false;
       }
-      
+
       std::string value;
       if (!cfg.getValue(rx_name, "SIGLEV_OPEN_THRESH", value))
       {
@@ -151,23 +157,10 @@ class SquelchSigLev : public Squelch
 	return false;
       }
       close_thresh = atoi(value.c_str());
-      
+
       return true;
     }
-    
-    /**
-     * @brief 	Reset the squelch detector
-     *
-     *  Reset the squelch so that the detection process starts from
-     *	the beginning again.
-     */
-    virtual void reset(void)
-    {
-      Squelch::reset();
-      is_open = false;
-    }
 
-    
   protected:
     /**
      * @brief 	Process the incoming samples in the squelch detector
@@ -177,30 +170,26 @@ class SquelchSigLev : public Squelch
      */
     int processSamples(const float *samples, int count)
     {
-      if (!is_open && (sig_lev_det->lastSiglev() > open_thresh))
+      if (signalDetected())
       {
-      	is_open = true;
-      	setOpen(true);
+      	setSignalDetected(sig_lev_det->lastSiglev() >= close_thresh);
       }
-      else if (is_open && (sig_lev_det->lastSiglev() < close_thresh))
+      else
       {
-      	is_open = false;
-      	setOpen(false);
+      	setSignalDetected(sig_lev_det->lastSiglev() >= open_thresh);
       }
-      
+
       return count;
     }
 
-    
   private:
     SigLevDet *sig_lev_det;
     int       open_thresh;
     int       close_thresh;
-    bool      is_open;
-    
+
     SquelchSigLev(const SquelchSigLev&);
     SquelchSigLev& operator=(const SquelchSigLev&);
-    
+
 };  /* class SquelchSigLev */
 
 

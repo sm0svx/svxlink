@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,9 +36,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sigc++/sigc++.h>
 
-#include <qstringlist.h>
-#include <qvaluevector.h>
-#include <qsize.h>
+#include <QStringList>
+#include <QSize>
+#include <QVector>
+#include <QList>
 #undef emit
 
 
@@ -137,7 +138,7 @@ class SettingsDialog;
  * Bugs:      
  *----------------------------------------------------------------------------
  */   
-class Settings : public SigC::Object
+class Settings : public sigc::trackable
 {
   public:
     static Settings *instance(void);
@@ -156,7 +157,8 @@ class Settings : public SigC::Object
     int listRefreshTime(void) const { return m_list_refresh_time; }
     bool startAsBusy(void) const { return m_start_as_busy; }
     
-    const QString& audioDevice(void) const { return m_audio_device; }
+    const QString& micAudioDevice(void) const { return m_mic_audio_device; }
+    const QString& spkrAudioDevice(void) const { return m_spkr_audio_device; }
     bool useFullDuplex(void) const { return m_use_full_duplex; }
     const QString& connectSound(void) const { return m_connect_sound; }
     
@@ -170,10 +172,14 @@ class Settings : public SigC::Object
     
     QSize mainWindowSize(void) const { return m_main_window_size; }
     void setMainWindowSize(QSize size);
-    QValueList<int> vSplitterSizes() const { return m_vsplitter_sizes; }
-    void setVSplitterSizes(QValueList<int> sizes);
-    QValueList<int> hSplitterSizes() const { return m_hsplitter_sizes; }
-    void setHSplitterSizes(QValueList<int> sizes);
+    QList<int> vSplitterSizes() const { return m_vsplitter_sizes; }
+    void setVSplitterSizes(QList<int> sizes);
+    QList<int> hSplitterSizes() const { return m_hsplitter_sizes; }
+    void setHSplitterSizes(QList<int> sizes);
+    QList<int> stationViewColSizes() const { return m_stn_view_col_sizes; }
+    void setStationViewColSizes(QList<int> sizes);
+    QList<int> incomingViewColSizes() const { return m_incm_view_col_sizes; }
+    void setIncomingViewColSizes(QList<int> sizes);
     
     void setVoxParams(bool enabled, int threshold_db, int delay_ms);
     bool voxEnabled(void) const { return m_vox_enabled; }
@@ -183,7 +189,7 @@ class Settings : public SigC::Object
     void setConnectToIp(const QString &host);
     const QString& connectToIp(void) const { return m_connect_to_ip; }
     
-    SigC::Signal0<void> configurationUpdated;
+    sigc::signal<void> configurationUpdated;
     
   protected:
     
@@ -200,7 +206,7 @@ class Settings : public SigC::Object
     static Settings *       the_instance;
     
     SettingsDialog *        dialog;
-    QValueVector<Encoding>  encodings;
+    QVector<Encoding>       encodings;
     
     QString   	            m_callsign;
     QString   	            m_password;
@@ -212,7 +218,8 @@ class Settings : public SigC::Object
     int       	            m_list_refresh_time;
     bool      	            m_start_as_busy;
 
-    QString   	            m_audio_device;
+    QString   	            m_mic_audio_device;
+    QString   	            m_spkr_audio_device;
     bool      	            m_use_full_duplex;
     QString   	            m_connect_sound;
     
@@ -221,8 +228,10 @@ class Settings : public SigC::Object
     QStringList             m_bookmarks;
     
     QSize     	            m_main_window_size;
-    QValueList<int>         m_vsplitter_sizes;
-    QValueList<int>         m_hsplitter_sizes;
+    QList<int>              m_vsplitter_sizes;
+    QList<int>              m_hsplitter_sizes;
+    QList<int>		    m_stn_view_col_sizes;
+    QList<int>		    m_incm_view_col_sizes;
     
     bool      	            m_vox_enabled;
     int       	            m_vox_threshold;

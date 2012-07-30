@@ -111,7 +111,7 @@ class Timer;
 
 This class is used to mix audio streams together.
 */
-class AudioMixer : public SigC::Object, public Async::AudioSource
+class AudioMixer : public sigc::trackable, public Async::AudioSource
 {
   public:
     /**

@@ -165,7 +165,7 @@ Directory::Directory(const string& server, const string& callsign,
   reg_refresh_timer = new Timer(REGISTRATION_REFRESH_TIME,
       Timer::TYPE_PERIODIC);
   reg_refresh_timer->expired.connect(
-      slot(*this, &Directory::onRefreshRegistration));
+      mem_fun(*this, &Directory::onRefreshRegistration));
 
 } /* Directory::Directory */
 
@@ -624,15 +624,16 @@ int Directory::handleCallList(char *buf, int len)
 	  list<StationData>::const_iterator it;
 	  for (it = get_call_list.begin(); it != get_call_list.end(); ++it)
 	  {
-	    if (strstr(it->callsign().c_str(), "-L"))
+	    const string &callsign = it->callsign();
+	    if (callsign.rfind("-L") == callsign.size()-2)
 	    {
 	      the_links.push_back(*it);
 	    }
-	    else if (strstr(it->callsign().c_str(), "-R"))
+	    else if (callsign.rfind("-R") == callsign.size()-2)
 	    {
 	      the_repeaters.push_back(*it);
 	    }
-	    else if (strstr(it->callsign().c_str(), "*"))
+	    else if (callsign.find("*") == 0)
 	    {
 	      the_conferences.push_back(*it);
 	    }
@@ -869,7 +870,7 @@ void Directory::sendNextCmd(void)
   }
   
   cmd_timer = new Timer(CMD_TIMEOUT);
-  cmd_timer->expired.connect(slot(*this, &Directory::onCmdTimeout));
+  cmd_timer->expired.connect(mem_fun(*this, &Directory::onCmdTimeout));
 
   if (cmd_queue.front().type == Cmd::GET_CALLS)
   {
@@ -916,9 +917,11 @@ void Directory::setStatus(StationData::Status new_status)
 void Directory::createClientObject(void)
 {
   ctrl_con = new Async::TcpClient(the_server, DIRECTORY_SERVER_PORT);
-  ctrl_con->connected.connect(slot(*this, &Directory::ctrlSockConnected));
-  ctrl_con->dataReceived.connect(slot(*this, &Directory::ctrlSockDataReceived));
-  ctrl_con->disconnected.connect(slot(*this, &Directory::ctrlSockDisconnected));
+  ctrl_con->connected.connect(mem_fun(*this, &Directory::ctrlSockConnected));
+  ctrl_con->dataReceived.connect(
+      mem_fun(*this, &Directory::ctrlSockDataReceived));
+  ctrl_con->disconnected.connect(
+      mem_fun(*this, &Directory::ctrlSockDisconnected));
 } /* Directory::createClientObject */
 
 

@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -35,19 +35,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 
-#include <qstring.h>
-#include <qlabel.h>
-#include <qpushbutton.h>
-#include <qlineedit.h>
-#include <qtextbrowser.h>
-#include <qevent.h>
-#include <qapplication.h>
-#include <qmessagebox.h>
-#include <qprogressbar.h>
-#include <qcheckbox.h>
-#include <qslider.h>
-#include <qtextcodec.h>
-#include <qregexp.h>
+#include <sigc++/sigc++.h>
+
+#include <QString>
+#include <QLabel>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QEvent>
+#include <QApplication>
+#include <QMessageBox>
+#include <QCheckBox>
+#include <QSlider>
+#include <QTextCodec>
+#include <QRegExp>
+#include <QPixmap>
+#include <QKeyEvent>
 #undef emit
 
 
@@ -73,10 +75,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "MyMessageBox.h"
-#include "images/link.xpm"
-#include "images/repeater.xpm"
-#include "images/conference.xpm"
-#include "images/online_icon.xpm"
 #include "Settings.h"
 #include "ComDialog.h"
 
@@ -89,7 +87,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace SigC;
+using namespace sigc;
 using namespace Async;
 using namespace EchoLink;
 
@@ -142,17 +140,22 @@ using namespace EchoLink;
  ****************************************************************************/
 
 
-ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
-    const QString& remote_name)
+ComDialog::ComDialog(Directory& dir, const QString& callsign,
+		     const QString& remote_name)
   : callsign(callsign), con(0), dir(dir), accept_connection(false),
-    audio_io(audio_io), audio_full_duplex(false), is_transmitting(false),
-    ctrl_pressed(false), rem_audio_fifo(0), ptt_valve(0), tx_audio_splitter(0),
-    vox(0), dns(0)
-    
+    audio_full_duplex(false), is_transmitting(false), ctrl_pressed(false),
+    rem_audio_fifo(0), ptt_valve(0), tx_audio_splitter(0), vox(0), dns(0)
 {
+  setupUi(this);
+
+  mic_audio_io =
+      new AudioIO(Settings::instance()->micAudioDevice().toStdString(), 0);
+  spkr_audio_io =
+      new AudioIO(Settings::instance()->spkrAudioDevice().toStdString(), 0);
+
   init(remote_name);
 
-  const StationData *station = dir.findCall(callsign.latin1());
+  const StationData *station = dir.findCall(callsign.toStdString());
   updateStationData(station);
   if (station != 0)
   {
@@ -165,33 +168,41 @@ ComDialog::ComDialog(AudioIO *audio_io, Directory& dir, const QString& callsign,
 } /* ComDialog::ComDialog */
 
 
-ComDialog::ComDialog(AudioIO *audio_io, Directory& dir,
-      	      	     const QString& remote_host)
+ComDialog::ComDialog(Directory& dir, const QString& remote_host)
   : callsign(remote_host), con(0), dir(dir), accept_connection(false),
-    audio_io(audio_io), audio_full_duplex(false), is_transmitting(false),
-    ctrl_pressed(false), rem_audio_fifo(0), ptt_valve(0), tx_audio_splitter(0),
-    vox(0), dns(0), chat_codec(0)
-    
+    audio_full_duplex(false), is_transmitting(false), ctrl_pressed(false),
+    rem_audio_fifo(0), ptt_valve(0), tx_audio_splitter(0), vox(0), dns(0),
+    chat_codec(0)
 {
+  setupUi(this);
+  
+  mic_audio_io =
+      new AudioIO(Settings::instance()->micAudioDevice().toStdString(), 0);
+  spkr_audio_io =
+      new AudioIO(Settings::instance()->spkrAudioDevice().toStdString(), 0);
+  
   init();
-  dns = new DnsLookup(remote_host.latin1());
-  dns->resultsReady.connect(slot(*this, &ComDialog::dnsResultsReady));
+  dns = new DnsLookup(remote_host.toStdString());
+  dns->resultsReady.connect(mem_fun(*this, &ComDialog::dnsResultsReady));
 } /* ComDialog::ComDialog */
 
 
 ComDialog::~ComDialog(void)
 {
-  Settings::instance()->setVoxParams(vox->enabled(), vox->threshold(),
-      	      	      	      	     vox->delay());
-				     
-  delete vox;
+  delete con;
+  if (vox != 0)
+  {
+    Settings::instance()->setVoxParams(vox->enabled(), vox->threshold(),
+      	      	      	      	       vox->delay());
+    delete vox;
+  }
   delete dns;
   delete ptt_valve;
   delete tx_audio_splitter;
   delete rem_audio_valve;
   delete rem_audio_fifo;
-  audio_io->close();
-  delete con;
+  delete mic_audio_io;
+  delete spkr_audio_io;
 } /* ComDialog::~ComDialog */
 
 
@@ -205,12 +216,55 @@ void ComDialog::acceptConnection(void)
 } /* ComDialog::accept */
 
 
+void ComDialog::setRemoteParams(const QString& priv)
+{
+  if (con != 0)
+  {
+    con->setRemoteParams(priv.toStdString());
+  }
+} /* ComDialog::setRemoteParams */
+
+
 
 /****************************************************************************
  *
  * Protected member functions
  *
  ****************************************************************************/
+
+void ComDialog::keyPressEvent(QKeyEvent *ke)
+{
+  if (!ctrl_pressed && !ke->text().isEmpty() &&
+      (ke->key() != Qt::Key_Space) && (ke->key() != Qt::Key_Tab) &&
+      (ke->key() != Qt::Key_Escape) && chat_outgoing->isEnabled())
+  {
+    chat_outgoing->setFocus();
+  }
+  
+  if (ke->key() == Qt::Key_Control)
+  {
+    ptt_button->setCheckable(true);
+    ctrl_pressed = true;
+  }
+
+  ke->ignore();
+  QDialog::keyPressEvent(ke);
+} /* ComDialog::keyPressEvent */
+
+
+void ComDialog::keyReleaseEvent(QKeyEvent *ke)
+{
+  if (ke->key() == Qt::Key_Control)
+  {
+    if (!is_transmitting)
+    {
+      ptt_button->setCheckable(false);
+    }
+    ctrl_pressed = false;
+  }
+  ke->ignore();
+  QDialog::keyReleaseEvent(ke);
+} /* ComDialog::keyReleaseEvent */
 
 
 
@@ -222,28 +276,28 @@ void ComDialog::acceptConnection(void)
 
 void ComDialog::init(const QString& remote_name)
 {
-  chat_codec = QTextCodec::codecForName(Settings::instance()->chatEncoding());
+  chat_codec = QTextCodec::codecForName(Settings::instance()->chatEncoding().toUtf8());
   
-  if (callsign.find("-L") != -1)
+  if (callsign.contains(QRegExp("-L$")))
   {
-    setIcon(QPixmap(const_cast<const char **>(link_xpm)));
+    setWindowIcon(QPixmap(":/icons/images/link.xpm"));
   }
-  else if (callsign.find("-R") != -1)
+  else if (callsign.contains(QRegExp("-R$")))
   {
-    setIcon(QPixmap(const_cast<const char **>(repeater_xpm)));
+    setWindowIcon(QPixmap(":/icons/images/repeater.xpm"));
   }
-  else if (callsign.find("*") == 0)
+  else if (callsign.indexOf("*") == 0)
   {
-    setIcon(QPixmap(const_cast<const char **>(conference_xpm)));
+    setWindowIcon(QPixmap(":/icons/images/conference.xpm"));
   }
   else
   {
-    setIcon(QPixmap(const_cast<const char **>(online_icon)));
+    setWindowIcon(QPixmap(":/icons/images/online_icon.xpm"));
   }
   
-  setWFlags(getWFlags() | Qt::WDestructiveClose);
+  setAttribute(Qt::WA_DeleteOnClose);
   
-  setCaption(QString("EchoLink QSO: ") + callsign);
+  setWindowTitle(QString("EchoLink QSO: ") + callsign);
   call->setText(callsign);
   name_label->setText(remote_name);
   
@@ -255,12 +309,12 @@ void ComDialog::init(const QString& remote_name)
   rem_audio_valve->setOpen(false);
   rem_audio_fifo->registerSink(rem_audio_valve);
 
-  rem_audio_valve->registerSink(audio_io);
+  rem_audio_valve->registerSink(spkr_audio_io);
 
   tx_audio_splitter = new AudioSplitter;
-  audio_io->registerSink(tx_audio_splitter);
+  mic_audio_io->registerSink(tx_audio_splitter);
   
-  Settings *settings = Settings::instance();  
+  Settings *settings = Settings::instance();
 
   vox = new Vox;
   vox->setEnabled(settings->voxEnabled());
@@ -281,11 +335,11 @@ void ComDialog::init(const QString& remote_name)
   vox_enabled_checkbox->setChecked(vox->enabled());
   vox_threshold->setValue(vox->threshold());
   vox_delay->setValue(vox->delay());
-     
+  
   ptt_valve = new AudioValve;
   tx_audio_splitter->addSink(ptt_valve);
   
-  if (settings->useFullDuplex() && audio_io->isFullDuplexCapable())
+  if (settings->useFullDuplex())
   {
     audio_full_duplex = true;
     if (!openAudioDevice(AudioIO::MODE_RDWR))
@@ -314,55 +368,19 @@ void ComDialog::init(const QString& remote_name)
       reinterpret_cast<QObject *>(ptt_button), SIGNAL(released()),
       this, SLOT(pttButtonPressedReleased()));
   QObject::connect(
-      reinterpret_cast<QObject *>(ptt_button), SIGNAL(stateChanged(int)),
-      this, SLOT(pttButtonToggleStateChanged(int)));
+      reinterpret_cast<QObject *>(ptt_button), SIGNAL(toggled(bool)),
+      this, SLOT(pttButtonToggleStateChanged(bool)));
   QObject::connect(
       reinterpret_cast<QObject *>(chat_outgoing), SIGNAL(returnPressed()),
       this, SLOT(sendChatMsg()));
   
   ptt_button->installEventFilter(this);
   
-  dir.stationListUpdated.connect(slot(*this, &ComDialog::onStationListUpdated));
+  dir.stationListUpdated.connect(mem_fun
+    (*this, &ComDialog::onStationListUpdated));
   
-  orig_background_color = rx_indicator->paletteBackgroundColor(); 
-  
+  orig_background_color = rx_indicator->palette().color(QPalette::Window);
 } /* ComDialog::init */
-
-
-bool ComDialog::eventFilter(QObject *watched, QEvent *e)
-{
-  if (e->type() == QEvent::KeyPress )
-  {
-    QKeyEvent * ke = (QKeyEvent*)e;
-    if (!ke->text().isEmpty() && (ke->key() != Key_Space) &&
-	(ke->key() != Key_Tab) && (ke->key() != Key_Escape))
-    {
-      chat_outgoing->setFocus();
-      chat_outgoing->insert(ke->text());
-      return TRUE;
-    }
-    
-    if (ke->key() == Key_Control)
-    {
-      ptt_button->setToggleButton(true);
-      ctrl_pressed = true;
-    }
-  } 
-  else if (e->type() == QEvent::KeyRelease)
-  {
-    QKeyEvent * ke = (QKeyEvent*)e;
-    if (ke->key() == Key_Control)
-    {
-      if (!is_transmitting)
-      {
-      	ptt_button->setToggleButton(false);
-      }
-      ctrl_pressed = false;
-    }
-  }
-  
-  return FALSE;
-}
 
 
 void ComDialog::updateStationData(const StationData *station)
@@ -387,8 +405,8 @@ void ComDialog::updateStationData(const StationData *station)
 void ComDialog::createConnection(const StationData *station)
 {
   Settings *settings = Settings::instance();  
-  con = new Qso(station->ip(), settings->callsign().latin1(),
-      settings->name().latin1(), settings->info().latin1());
+  con = new Qso(station->ip(), settings->callsign().toStdString(),
+      settings->name().toStdString(), settings->info().toStdString());
   if (!con->initOk())
   {
     MyMessageBox *mb = new MyMessageBox(trUtf8("Qtel Error"),
@@ -400,10 +418,10 @@ void ComDialog::createConnection(const StationData *station)
     return;
   }
   
-  con->infoMsgReceived.connect(slot(*this, &ComDialog::infoMsgReceived));
-  con->chatMsgReceived.connect(slot(*this, &ComDialog::chatMsgReceived));
-  con->stateChange.connect(slot(*this, &ComDialog::stateChange));
-  con->isReceiving.connect(slot(*this, &ComDialog::isReceiving));
+  con->infoMsgReceived.connect(mem_fun(*this, &ComDialog::infoMsgReceived));
+  con->chatMsgReceived.connect(mem_fun(*this, &ComDialog::chatMsgReceived));
+  con->stateChange.connect(mem_fun(*this, &ComDialog::stateChange));
+  con->isReceiving.connect(mem_fun(*this, &ComDialog::isReceiving));
   con->registerSink(rem_audio_fifo);
   ptt_valve->registerSink(con);
   
@@ -422,7 +440,7 @@ void ComDialog::createConnection(const StationData *station)
 
 void ComDialog::onStationListUpdated(void)
 {
-  const StationData *station = dir.findCall(callsign.latin1());
+  const StationData *station = dir.findCall(callsign.toStdString());
   //station = 0;
   updateStationData(station);
   if (con == 0)
@@ -445,16 +463,34 @@ void ComDialog::onStationListUpdated(void)
 
 bool ComDialog::openAudioDevice(AudioIO::Mode mode)
 {
-  bool open_ok = audio_io->open(mode);
-  if (!open_ok)
+  bool mic_open_ok = true;
+  bool spkr_open_ok = true;
+  
+  if ((mode == AudioIO::MODE_RD) || (mode == AudioIO::MODE_RDWR))
   {
-    MyMessageBox *mb = new MyMessageBox(trUtf8("Qtel Error"),
-	trUtf8("Could not open audio device"));
-    mb->show();
-    connect(mb, SIGNAL(closed()), this, SLOT(close()));
+    mic_open_ok = mic_audio_io->open(AudioIO::MODE_RD);
+    if (!mic_open_ok)
+    {
+      MyMessageBox *mb = new MyMessageBox(trUtf8("Qtel Error"),
+	  trUtf8("Could not open mic audio device"));
+      mb->show();
+      connect(mb, SIGNAL(closed()), this, SLOT(close()));
+    }
   }
   
-  return open_ok;
+  if ((mode == AudioIO::MODE_WR) || (mode == AudioIO::MODE_RDWR))
+  {
+    spkr_open_ok = spkr_audio_io->open(AudioIO::MODE_WR);
+    if (!spkr_open_ok)
+    {
+      MyMessageBox *mb = new MyMessageBox(trUtf8("Qtel Error"),
+	  trUtf8("Could not open speaker audio device"));
+      mb->show();
+      connect(mb, SIGNAL(closed()), this, SLOT(close()));
+    }
+  }
+  
+  return mic_open_ok && spkr_open_ok;
   
 } /* ComDialog::openAudioDevice */
 
@@ -503,7 +539,8 @@ void ComDialog::setIsTransmitting(bool transmit)
     if (!audio_full_duplex)
     {
       rem_audio_valve->setOpen(false);
-      audio_io->close();
+      mic_audio_io->close();
+      spkr_audio_io->close();
       if (!openAudioDevice(AudioIO::MODE_RD))
       {
 	disconnect();
@@ -511,7 +548,9 @@ void ComDialog::setIsTransmitting(bool transmit)
       }
     }
     is_transmitting = true;
-    tx_indicator->setPaletteBackgroundColor("red");
+    QPalette palette = tx_indicator->palette();
+    palette.setColor(QPalette::Window, Qt::red);
+    tx_indicator->setPalette(palette);
     ptt_valve->setOpen(true);
   }
   else
@@ -519,7 +558,8 @@ void ComDialog::setIsTransmitting(bool transmit)
     ptt_valve->setOpen(false);
     if (!audio_full_duplex)
     {
-      audio_io->close();
+      mic_audio_io->close();
+      spkr_audio_io->close();
       if (!openAudioDevice(AudioIO::MODE_WR))
       {
 	disconnect();
@@ -528,11 +568,13 @@ void ComDialog::setIsTransmitting(bool transmit)
       rem_audio_valve->setOpen(true);
     }
     is_transmitting = false;
-    tx_indicator->setPaletteBackgroundColor(orig_background_color);
+    QPalette palette = tx_indicator->palette();
+    palette.setColor(QPalette::Window, orig_background_color);
+    tx_indicator->setPalette(palette);
     
     if (!ctrl_pressed)
     {
-      ptt_button->setToggleButton(false);
+      ptt_button->setCheckable(false);
     }
   }
 } /* ComDialog::setIsTransmitting */
@@ -543,7 +585,7 @@ void ComDialog::pttButtonPressedReleased(void)
   ptt_button->setFocus();
   
     /* Ignore press and release events if toggle mode is enabled */
-  if (ptt_button->isToggleButton())
+  if (ptt_button->isCheckable())
   {
     return;
   }
@@ -553,7 +595,7 @@ void ComDialog::pttButtonPressedReleased(void)
 } /* ComDialog::pttButtonPressedReleased */
 
 
-void ComDialog::pttButtonToggleStateChanged(int state)
+void ComDialog::pttButtonToggleStateChanged(bool checked)
 {
   checkTransmit();
 } /* ComDialog::pttButtonToggleStateChanged */
@@ -581,9 +623,8 @@ void ComDialog::chatMsgReceived(const string& msg)
 {
   if(isChatText(msg.c_str()))
   {
-    QString txt(msg);
-    txt.truncate(msg.length() - 1); // Remove NL
-    chat_incoming->append(chat_codec->toUnicode(txt));
+    string txt(msg.substr(0, msg.size()-1));
+    chat_incoming->append(chat_codec->toUnicode(txt.c_str()));
   }
   else
   {
@@ -620,7 +661,7 @@ void ComDialog::stateChange(Qso::State state)
       
     case Qso::STATE_BYE_RECEIVED:
       ctrl_pressed = false;
-      ptt_button->setOn(false);
+      ptt_button->setChecked(false);
       connect_button->setEnabled(false);
       disconnect_button->setEnabled(false);
       ptt_button->setEnabled(false);
@@ -629,7 +670,7 @@ void ComDialog::stateChange(Qso::State state)
       
     case Qso::STATE_DISCONNECTED:
       ctrl_pressed = false;
-      ptt_button->setOn(false);
+      ptt_button->setChecked(false);
       connect_button->setEnabled(true);
       disconnect_button->setEnabled(false);
       ptt_button->setEnabled(false);
@@ -646,31 +687,41 @@ void ComDialog::stateChange(Qso::State state)
 
 void ComDialog::isReceiving(bool is_receiving)
 {
-  rx_indicator->setPaletteBackgroundColor(
-      is_receiving ? QColor("green") : orig_background_color);
+  QPalette palette = rx_indicator->palette();
+  if (is_receiving)
+  {
+    palette.setColor(QPalette::Window, QColor(Qt::green));
+  }
+  else
+  {
+    palette.setColor(QPalette::Window, orig_background_color);
+  }
+  rx_indicator->setPalette(palette);
 } /* ComDialog::isReceiving */
 
 
 void ComDialog::meterLevelChanged(int level_db)
 {
-  vox_meter->setProgress(vox_meter->totalSteps() + level_db);
+  vox_meter->setValue(vox_meter->maximum() + level_db);
 } /* ComDialog::meterLevelChanged */
 
 
 void ComDialog::voxStateChanged(Vox::State state)
 {
+  QPalette palette = vox_indicator->palette();
   switch (state)
   {
     case Vox::IDLE:
-      vox_indicator->setPaletteBackgroundColor(orig_background_color);
+      palette.setColor(QPalette::Window, orig_background_color);
       break;
     case Vox::ACTIVE:
-      vox_indicator->setPaletteBackgroundColor("red");
+      palette.setColor(QPalette::Window, Qt::red);
       break;
     case Vox::HANG:
-      vox_indicator->setPaletteBackgroundColor("yellow");
+      palette.setColor(QPalette::Window, Qt::yellow);
       break;
   }
+  vox_indicator->setPalette(palette);
   checkTransmit();
 } /* ComDialog::voxStateChanged */
 
@@ -682,7 +733,7 @@ void ComDialog::checkTransmit(void)
       ((con != 0) && (con->currentState() == Qso::STATE_CONNECTED)) &&
       
       	// Either the PTT or the VOX must be active to transmit
-      ((ptt_button->isOn()) || ptt_button->isDown() ||
+      ((ptt_button->isChecked()) || ptt_button->isDown() ||
        (vox->state() != Vox::IDLE))
   );
 } /* ComDialog::checkTransmit */
@@ -695,38 +746,9 @@ bool ComDialog::isChatText(const QString& msg)
     // optional "-L" or "-R". To be classified as a chat message a ">" must
     // directly follow the callsign.
   QRegExp rexp("^[A-Z0-9]{3,7}(?:-[RL])?>");
-  return (rexp.search(msg) == 0);
-  
-  #if 0
-  string::const_iterator it;
-  it=msg.begin();
-  if(!(((*it >= 'A') && (*it <= 'Z')) || ((*it >= '0') && (*it <= '9')))) return FALSE;
-  it++;
-  if(!(((*it >= 'A') && (*it <= 'Z')) || ((*it >= '0') && (*it <= '9')))) return FALSE;
-  it++;
-  if(!(((*it >= 'A') && (*it <= 'Z')) || ((*it >= '0') && (*it <= '9')))) return FALSE;
-  it++;
-  if(((*it >= 'A') && (*it <= 'Z')) || ((*it >= '0') && (*it <= '9')))
-  {
-    it++;
-    if(((*it >= 'A') && (*it <= 'Z')) || ((*it >= '0') && (*it <= '9')))
-    {
-      it++;
-      if((*it >= 'A') && (*it <= 'Z'))
-      {
-        it++;
-      }
-    }
-  }
-  if(*it == '>') return TRUE;
-  if(*it != '-') return FALSE;
-  it++;
-  if((*it != 'L') && (*it != 'R')) return FALSE;
-  it++;
-  if(*it == '>') return TRUE;
-  return FALSE;
-  #endif
+  return msg.contains(rexp);
 }
+
 
 
 /*

@@ -9,7 +9,7 @@ when creating timers in a Qt application.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2010 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sigc++/sigc++.h>
 
 
 /****************************************************************************
@@ -47,7 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <qtimer.h>
+#include <QTimer>
 #undef emit
 
 
@@ -123,13 +124,10 @@ class AsyncQtTimer : public QObject
      */
     AsyncQtTimer(Timer *timer) : timer(timer), qtimer(0)
     {
-      qtimer = new QTimer(this, "AsyncTimer");
-      qtimer->start(timer->timeout(), timer->type() == Timer::TYPE_ONESHOT);
-      
-      	/* For some reason, connect do not understand that the qtimer object
-	 * actuallt is a QObject, without doing the strange pointer operations
-	 */
-      QObject::connect(&(*qtimer), SIGNAL(timeout()),
+      qtimer = new QTimer(this);
+      qtimer->setSingleShot(timer->type() == Timer::TYPE_ONESHOT);
+      qtimer->start(timer->timeout());
+      QObject::connect(qtimer, SIGNAL(timeout()),
                        this, SLOT(timerExpired()));
       
     }
@@ -142,8 +140,8 @@ class AsyncQtTimer : public QObject
   protected:
     
   private:
-    Timer *   timer;
-    QTimer *  qtimer;
+    Timer  *timer;
+    QTimer *qtimer;
     
   private slots:
     void timerExpired(void)

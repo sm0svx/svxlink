@@ -45,7 +45,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
-#include <version/SVXLINK.h>
 
 
 /****************************************************************************
@@ -54,6 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/SVXLINK.h"
 #include "AprsTcpClient.h"
 #include "common.h"
 
@@ -129,23 +129,23 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
    el_prefix = "E" + loc_cfg.prefix + "-"; // the EchoLink prefix ER- od EL-
 
    con = new TcpClient(server, port);
-   con->connected.connect(slot(*this, &AprsTcpClient::tcpConnected));
-   con->disconnected.connect(slot(*this, &AprsTcpClient::tcpDisconnected));
-   con->dataReceived.connect(slot(*this, &AprsTcpClient::tcpDataReceived));
+   con->connected.connect(mem_fun(*this, &AprsTcpClient::tcpConnected));
+   con->disconnected.connect(mem_fun(*this, &AprsTcpClient::tcpDisconnected));
+   con->dataReceived.connect(mem_fun(*this, &AprsTcpClient::tcpDataReceived));
    con->connect();
 
    beacon_timer = new Timer(loc_cfg.interval, Timer::TYPE_PERIODIC);
    beacon_timer->setEnable(false);
-   beacon_timer->expired.connect(slot(*this, &AprsTcpClient::sendAprsBeacon));
+   beacon_timer->expired.connect(mem_fun(*this, &AprsTcpClient::sendAprsBeacon));
 
    offset_timer = new Timer(10000, Timer::TYPE_ONESHOT);
    offset_timer->setEnable(false);
-   offset_timer->expired.connect(slot(*this,
+   offset_timer->expired.connect(mem_fun(*this,
                  &AprsTcpClient::startNormalSequence));
 
    reconnect_timer = new Timer(5000);
    reconnect_timer->setEnable(false);
-   reconnect_timer->expired.connect(slot(*this,
+   reconnect_timer->expired.connect(mem_fun(*this,
                  &AprsTcpClient::reconnectAprsServer));
 } /* AprsTcpClient::AprsTcpClient */
 
@@ -275,7 +275,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 
 void AprsTcpClient::sendMsg(const char *aprsmsg)
 {
-   cout << aprsmsg << endl;
+   //cout << aprsmsg << endl;
 
   if (!con->isConnected())
   {

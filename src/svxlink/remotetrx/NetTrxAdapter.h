@@ -106,9 +106,9 @@ class RxAdapter;
  ****************************************************************************/
 
 /**
-@brief	Make it possible to connect a remote NetTx/NetRx as a Rx/Tx
-@author Tobias Blomberg / SM0SVX
-@date   2008-04-15
+@brief	 Make it possible to connect a remote NetTx/NetRx as a Rx/Tx
+@author	 Tobias Blomberg / SM0SVX
+@date	 2008-04-15
 
 This is a bit of a strange and backwards class. It is used to make it possible
 to connect a remote NetTx to a remotetrx Rx and also the other way around,
@@ -118,10 +118,13 @@ An example of when this comes handy is when running the following setup:
 
   - A remotetrx application is running on the local computer
   - One or more remote receivers are linked in through the Internet
-  - A TrxUplink is used to link to the main system through a transceiver
-  - The svxlink server application is running on the same computer (e.g. to
+  - An RfUplink is used to link to the main system through a transceiver
+  - The SvxLink server application is running on the same computer (e.g. to
     provide EchoLink to the main system) as remotetrx and want to use the
-    same transceiver as the TrxUplink is using.
+    same transceiver as the RfUplink is using. When SvxLink is transmitting
+    it will appear to the RemoteTrx as if it is traffic coming in on one of
+    its receivers. When the RemoteTrx is transmitting it will appear to SvxLink
+    as if it's traffic coming in on its receiver.
 */
 class NetTrxAdapter
 {

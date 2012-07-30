@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sigc++/sigc++.h>
 #include <vector>
+#include <cmath>
 
 
 /****************************************************************************
@@ -126,18 +127,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 @author Tobias Blomberg / SM0SVX
 @date   2003-04-15
 */
-class ToneDetector : public SigC::Object, public Async::AudioSink
+class ToneDetector : public sigc::trackable, public Async::AudioSink
 {
   public:
-    ToneDetector(float tone_hz, float width_hz);
-    virtual int writeSamples(const float *buf, int len);
-
-    bool isActivated(void) const { return (det_delay_left == 0); }
+    ToneDetector(float tone_hz, float width_hz, int det_delay_ms = 0);
+    void setDetectionDelay(int delay_ms);
+    int detectionDelay(void) const;
+    void setGapDelay(int delay_ms);
+    int gapDelay(void) const;
+    bool isActivated(void) const { return is_activated; }
     float toneFq(void) const { return tone_fq; }
-    void setSnrThresh(float thresh) { peak_thresh = exp10f(thresh/10.0f); }
+    void setPeakThresh(float thresh) { peak_thresh = exp10f(thresh/10.0f); }
     void reset(void);
     
-    SigC::Signal1<void, bool> activated;
+    virtual int writeSamples(const float *buf, int len);
+
+    sigc::signal<void, bool> activated;
+    sigc::signal<void, float> detected;
     
   private:
 
@@ -156,14 +162,15 @@ class ToneDetector : public SigC::Object, public Async::AudioSink
     GoertzelState      lower;
     GoertzelState      upper;
 
-    int       	       samples_left;
-    int       	       is_activated;
     float              tone_fq;
-    int       	       block_len;
-    int       	       det_delay_left;
-    int       	       undet_delay_left;
+    int       	       det_delay;
+    int       	       gap_delay;
+    int                block_len;
+    int                samples_left;
+    bool               is_activated;
+    bool               last_active;
     float     	       peak_thresh;
-    float     	       energy_thresh;
+    int                stable_count;
 
     std::vector<float>                 window_table;
     std::vector<float>::const_iterator win;

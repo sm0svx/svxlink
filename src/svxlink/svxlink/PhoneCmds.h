@@ -1,8 +1,8 @@
 /**
 @file	 PhoneCmds.h
 @brief   A_brief_description_for_this_file
-@author  Tobias Blomberg / SM0SVX
-@date	 2005-04-24
+@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@date	 2012-07-20
 
 A_detailed_description_for_this_file
 

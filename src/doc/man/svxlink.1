@@ -1,4 +1,4 @@
-.TH SVXLINK 1 "APRIL 2006" Linux "User Manuals"
+.TH SVXLINK 1 "MAY 2011" Linux "User Manuals"
 .
 .SH NAME
 .
@@ -41,17 +41,17 @@ Specify which configuration file to use.
 .SH FILES
 .
 .TP
-.I /etc/svxlink.conf
+.IR /etc/svxlink.conf " (or deprecated " /etc/svxlink.conf ")"
 The system wide configuration file. See
 .BR svxlink.conf (5)
 for further details.
 .TP
-.IR ~/.svxlink/svxlink.conf " or " ~/.svxlinkrc
+.IR ~/.svxlink/svxlink.conf
 Per user configuration file. See
 .BR svxlink.conf (5)
 for further details.
 .TP
-.I /etc/svxlink.d/*
+.I /etc/svxlink/svxlink.d/*
 Additional configuration files. Typically one configuration file per module.
 .
 .SH ENVIRONMENT
@@ -60,7 +60,7 @@ Additional configuration files. Typically one configuration file per module.
 ASYNC_AUDIO_NOTRIGGER
 Set this environment variable to 1 if you get an error about
 .B ioctl: Broken pipe
-when the SvxLink server starts.
+during startup of the SvxLink server when using OSS audio.
 .TP
 HOME
 Used to find the per user configuration file.

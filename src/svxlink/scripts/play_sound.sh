@@ -5,6 +5,7 @@ endian=""
 encoding="-s2 -traw"
 target_rate=8000
 silence_level=45
+effect=""
 
 convert()
 {
@@ -28,23 +29,25 @@ process()
   # The filter to apply before all other operations
   #filter="highpass 300 highpass 300 highpass 300"
   #filter="highpass 300"
-  filter=""
+  #filter=""
   
   # Front and back levels for silence trimming
   silence_front_level="-${silence_level}d"
   silence_back_level="-${silence_level}d"
   
   # Calculate maximum gain without clipping. Leave headroom of about 3dB.
-  gain=$(sox -traw -r${target_rate} -s2 $1 -traw /dev/null stat -v 2>&1)
-  gain=$(echo "$gain * 0.7" | bc)
+  #gain=$(sox -traw -r${target_rate} -s2 $1 -traw /dev/null stat -v 2>&1)
+  #gain=$(echo "$gain * 0.7" | bc)
   #echo $gain 1>&2
   
   if [ $trim_silence -gt 0 ]; then
-    sox $format $1 $format - vol $gain $filter \
+    sox $format $1 $format - \
         silence 1 0:0:0.01 $silence_front_level reverse \
-	silence 1 0:0:0.01 $silence_back_level reverse
+	silence 1 0:0:0.01 $silence_back_level reverse \
+	$effect \
+	norm -3
   else
-    sox $format $1 $format - vol $gain $filter
+    sox $format $1 $format - $effect norm -3
   fi
 }
 
@@ -79,7 +82,7 @@ encode()
   fi
 }
 
-while getopts spfctBLgr:l: opt; do
+while getopts spfctBLgr:l:e: opt; do
   case $opt in
     s)
       operation=spell
@@ -115,10 +118,14 @@ while getopts spfctBLgr:l: opt; do
 
     r)
       target_rate=$OPTARG
-     ;;
+      ;;
      
     l)
       silence_level=$OPTARG
+      ;;
+      
+    e)
+      effect=$OPTARG
       ;;
       
   esac
@@ -132,18 +139,18 @@ case $operation in
   
   play)
     tmp=$(mktemp /tmp/svxlink-XXXXXX)
-    convert $1 > $tmp
+    convert "$1" > $tmp
     process $tmp | encode | play -r${target_rate} $encoding -
     rm -f $tmp
     ;;
   
   convert)
-    convert $1 | endian_conv | encode
+    convert "$1" | endian_conv | encode
     ;;
     
   filter)
     tmp=$(mktemp /tmp/svxlink-XXXXXX)
-    convert $1 > $tmp
+    convert "$1" > $tmp
     process $tmp | endian_conv | encode
     rm -f $tmp
     ;;

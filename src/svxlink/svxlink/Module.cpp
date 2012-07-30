@@ -34,10 +34,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
-#include <version/SVXLINK.h>
 
 #include <Rx.h>
 
+#include "version/SVXLINK.h"
 #include "Logic.h"
 #include "Module.h"
 
@@ -74,7 +74,7 @@ bool Module::initialize(void)
   string id_str;
   if (!cfg().getValue(cfgName(), "ID", id_str))
   {
-    cerr << "*** Error: Config variable " << cfgName()
+    cerr << "*** ERROR: Config variable " << cfgName()
       	 << "/ID not set\n";
     return false;
   }
@@ -87,7 +87,7 @@ bool Module::initialize(void)
   {
     m_tmo_timer = new Timer(1000 * atoi(timeout_str.c_str()));
     m_tmo_timer->setEnable(false);
-    m_tmo_timer->expired.connect(slot(*this, &Module::moduleTimeout));
+    m_tmo_timer->expired.connect(mem_fun(*this, &Module::moduleTimeout));
   }
   
   list<string> vars = cfg().listSection(cfgName());
@@ -115,11 +115,11 @@ void Module::activate(void)
   
   /*
   m_audio_con = logic()->rx().audioReceived.connect(
-      	  slot(*this, &Module::audioFromRx));
+      	  mem_fun(*this, &Module::audioFromRx));
   */
 
   m_logic_idle_con = logic()->idleStateChanged.connect(
-      slot(*this, &Module::logicIdleStateChanged));
+      mem_fun(*this, &Module::logicIdleStateChanged));
   
   setIdle(logic()->isIdle());
   activateInit();
@@ -272,6 +272,12 @@ bool Module::squelchIsOpen(void)
 {
   return logic()->rx().squelchIsOpen();
 } /* Module::squelchIsOpen */
+
+
+bool Module::isWritingMessage(void)
+{
+  return logic()->isWritingMessage();
+} /* Module::isWritingMessage */
 
 
 void Module::moduleTimeout(Timer *t)
