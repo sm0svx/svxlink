@@ -496,7 +496,8 @@ configuration variables are described below.
 Always "Local" for a local receiver.
 .TP
 .B AUDIO_DEV
-Specify the audio device to use. Normally /dev/dsp.
+Specify the audio device to use. Normally alsa:plughw:0. Have a look at the
+AUDIO DEVICE SPECIFICATIONS chapter for more information.
 .TP
 .B AUDIO_CHANNEL
 Specify the audio channel to use. SvxLink can use the left/right stereo
@@ -933,7 +934,8 @@ configuration variables are described below.
 Always "Local" for a local transmitter.
 .TP
 .B AUDIO_DEV
-Specify the audio device to use. Normally /dev/dsp. 
+Specify the audio device to use. Normally alsa:plughw:0. Have a look at the
+AUDIO DEVICE SPECIFICATIONS chapter for more information.
 .TP
 .B AUDIO_CHANNEL
 Specify the audio channel to use. SvxLink can use the left/right stereo
@@ -1322,6 +1324,29 @@ text.
 Example:
 .br
 COMMENT=[svx] Running SvxLink by SM0SVX
+.
+.SH AUDIO DEVICE SPECIFICATIONS
+.
+The AUDIO_DEV configuration variables specify which audio device to use for
+a receiver or transmitter. SvxLink support a number of different audio
+input and output devices. The format of the configuration variable is
+"type:dev_spec". There are three different types of audio devices
+supported, "alsa", "oss" and "udp".
+
+The "alsa" type will use the specified Alsa
+device. Example: "alsa:plughw:0". Describing the format of Alsa device names
+is outside the scope for this document.
+
+The "oss" type will use the specified OSS audio device. Example "oss:/dev/dsp".
+OSS is the old sound system used by Linux. Alsa should be used when possible.
+
+The "udp" type is not really an audio device but instead will read and write
+audio from/to a UDP socket. This can be used to interface SvxLink to all
+sorts of audio sources/sinks capable of streaming raw audio through UDP. One
+example usage is to interface SvxLink with GNU Radio.
+Example: "udp:127.0.0.1:10000". Note however that the only supported format
+is raw 16 bit signed samples, two interleved channels. Sampling frequency can
+be chosen using the CARD_SAMPLE_RATE config variable as usual.
 .
 .SH CALIBRATING THE SIGNAL LEVEL DETECTOR
 .
