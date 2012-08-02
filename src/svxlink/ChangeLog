@@ -13,6 +13,9 @@
   CTCSS_SNR_OFFSET, CTCSS_BPF_LOW and CTCSS_BPF_HIGH. The CTCSS_THRESH
   configuration variable is obsolete.
 
+* The RTS and DTR pins are now always initialized to "false" so that we always
+  have them in a known state.
+
 
 
  0.13.1 -- 27 Nov 2011

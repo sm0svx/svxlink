@@ -330,7 +330,10 @@ bool LocalTx::initialize(void)
       perror("open serial port");
       return false;
     }
+    serial->setPin(Serial::PIN_DTR, false);
+    serial->setPin(Serial::PIN_RTS, false);
   }
+
   if (!setPtt(false))
   {
     perror("setPin");
