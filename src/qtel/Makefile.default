@@ -179,6 +179,9 @@ translations/qtel_%.qm:  translations/qtel_%.ts
 qrc_qtel.cpp:	qtel.qrc
 	${QT_BIN}/rcc -o $@ $<
 
+clean::
+	$(RM) qrc_qtel.cpp
+
 endif # QT_BIN
 
 #pre.txt:       nisse.txt
