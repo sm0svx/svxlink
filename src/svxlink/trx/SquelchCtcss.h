@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2011 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
+#include <AsyncAudioFilter.h>
 
 
 /****************************************************************************
@@ -119,7 +120,7 @@ class SquelchCtcss : public Squelch
     /**
      * @brief 	Default constuctor
      */
-    explicit SquelchCtcss(void) {}
+    explicit SquelchCtcss(void) : det(0), filter(0), sink(0) {}
 
     /**
      * @brief 	Destructor
@@ -127,6 +128,7 @@ class SquelchCtcss : public Squelch
     virtual ~SquelchCtcss(void)
     {
       delete det;
+      delete filter;
     }
 
     /**
@@ -137,28 +139,142 @@ class SquelchCtcss : public Squelch
      */
     virtual bool initialize(Async::Config& cfg, const std::string& rx_name)
     {
-      std::string value;
-      float ctcss_fq = 0;
-      if (cfg.getValue(rx_name, "CTCSS_FQ", value))
-      {
-	ctcss_fq = atof(value.c_str());
-      }
+      float ctcss_fq = 0.0f;
+      cfg.getValue(rx_name, "CTCSS_FQ", ctcss_fq);
       if (ctcss_fq <= 0)
       {
 	std::cerr << "*** ERROR: Config variable " << rx_name
-      	     << "/CTCSS_FQ not set or is set to an illegal value\n";
+      	     << "/CTCSS_FQ (" << ctcss_fq
+      	     << ") not set or is set to an illegal value.\n";
 	return false;
       }
 
-      float ctcss_thresh = 10;
-      if (cfg.getValue(rx_name, "CTCSS_THRESH", value))
+      int ctcss_mode = 0;
+      cfg.getValue(rx_name, "CTCSS_MODE", ctcss_mode);
+      
+      float ctcss_snr_offset = 0.0f;
+      cfg.getValue(rx_name, "CTCSS_SNR_OFFSET", ctcss_snr_offset);
+      
+      float open_thresh = 15.0f;
+      float close_thresh = 9.0f;
+      if (cfg.getValue(rx_name, "CTCSS_THRESH", open_thresh))
       {
-	ctcss_thresh = atof(value.c_str());
+	close_thresh = open_thresh;
+	std::cerr << "*** WARNING: Config variable " << rx_name
+		  << "/CTCSS_THRESH is deprecated. Use the "
+		  << "CTCSS_OPEN_THRESH and CTCSS_CLOSE_THRESH "
+		  << "config variables instead.\n";
       }
 
+      if (cfg.getValue(rx_name, "CTCSS_OPEN_THRESH", open_thresh))
+      {
+	close_thresh = open_thresh;
+	cfg.getValue(rx_name, "CTCSS_CLOSE_THRESH", close_thresh);
+      }
+
+      open_thresh += ctcss_snr_offset;
+      close_thresh += ctcss_snr_offset;
+      
+      unsigned bpf_low = 60;
+      cfg.getValue(rx_name, "CTCSS_BPF_LOW", bpf_low);
+      if ((bpf_low < 50) || (bpf_low > 300))
+      {
+	std::cerr << "*** ERROR: "
+		  << rx_name << "/CTCSS_BPF_LOW out of range ("
+		  << bpf_low << "). Valid range is 50 to 300\n";
+	return false;
+      }
+      
+      unsigned bpf_high = 270;
+      cfg.getValue(rx_name, "CTCSS_BPF_HIGH", bpf_high);
+      if ((bpf_high < 50) || (bpf_high > 300))
+      {
+	std::cerr << "*** ERROR: "
+		  << rx_name << "/CTCSS_BPF_HIGH out of range ("
+		  << bpf_high << "). Valid range is 50 to 300\n";
+	return false;
+      }
+      
+      if (bpf_low >= bpf_high)
+      {
+	std::cerr << "*** ERROR: CTCSS_BPF_LOW (" << bpf_low << ") cannot be "
+		  << "larger than or equal to CTCSS_BPF_HIGH ("
+		  << bpf_high << ") for receiver " << rx_name << ".\n";
+	return false;
+      }
+      
+#if 0
+      std::cout << "### mode=" << ctcss_mode
+		<< " open=" << open_thresh
+		<< " close=" << close_thresh
+		<< " low=" << bpf_low
+		<< " high=" << bpf_high
+		<< std::endl;
+#endif
+		
       det = new ToneDetector(ctcss_fq, 8.0f);
-      det->setPeakThresh(ctcss_thresh);
       det->activated.connect(mem_fun(*this, &SquelchCtcss::setSignalDetected));
+      det->snrUpdated.connect(snrUpdated.make_slot());
+      sink = det;
+
+      std::stringstream filter_spec;
+      filter_spec << "BpBu8/" << bpf_low << "-" << bpf_high;
+	  
+      switch (ctcss_mode)
+      {
+        case 1:
+          //std::cout << "### CTCSS mode: Neighbour bins\n";
+	  det->setDetectPeakThresh(open_thresh);
+	  det->setUndetectPeakThresh(close_thresh);
+          break;
+
+        case 3:
+          //std::cout << "### CTCSS mode: Estimated SNR + Phase\n";
+          //det->setDetectUseWindowing(false);
+          det->setDetectBw(16.0f);
+          det->setDetectPeakThresh(0.0f);
+          //det->setDetectPeakToTotPwrThresh(0.6f);
+          det->setDetectSnrThresh(open_thresh, bpf_high - bpf_low);
+          det->setDetectStableCountThresh(1);
+          det->setDetectPhaseBwThresh(2.0f, 2.0f);
+
+          //det->setUndetectBw(8.0f);
+          det->setUndetectUseWindowing(false);
+          det->setUndetectPeakThresh(0.0f);
+          //det->setUndetectPeakToTotPwrThresh(0.3f);
+          det->setUndetectSnrThresh(close_thresh, bpf_high - bpf_low);
+          det->setUndetectStableCountThresh(2);
+          //det->setUndetectPhaseBwThresh(4.0f, 16.0f);
+
+            // Set up CTCSS band pass filter
+          filter = new Async::AudioFilter(filter_spec.str());
+          filter->registerSink(det);
+          sink = filter;
+          break;
+
+        case 2:
+        default:
+          //std::cout << "### CTCSS mode: Estimated SNR\n";
+          //det->setDetectBw(6.0f);
+          det->setDetectUseWindowing(false);
+          det->setDetectPeakThresh(0.0f);
+          //det->setDetectPeakToTotPwrThresh(0.6f);
+          det->setDetectSnrThresh(open_thresh, bpf_high - bpf_low);
+          det->setDetectStableCountThresh(1);
+
+          //det->setUndetectBw(8.0f);
+          det->setUndetectUseWindowing(false);
+          det->setUndetectPeakThresh(0.0f);
+          //det->setUndetectPeakToTotPwrThresh(0.3f);
+          det->setUndetectSnrThresh(close_thresh, bpf_high - bpf_low);
+          det->setUndetectStableCountThresh(2);
+
+            // Set up CTCSS band pass filter
+          filter = new Async::AudioFilter(filter_spec.str());
+          filter->registerSink(det);
+          sink = filter;
+          break;
+      }
 
       return Squelch::initialize(cfg, rx_name);
     }
@@ -181,7 +297,7 @@ class SquelchCtcss : public Squelch
      */
     virtual void setHangtime(int hang)
     {
-      det->setGapDelay(hang);
+      det->setUndetectDelay(hang);
     }
 
     /**
@@ -190,8 +306,18 @@ class SquelchCtcss : public Squelch
       */
     virtual void setDelay(int delay)
     {
-      det->setDetectionDelay(delay);
+      det->setDetectDelay(delay);
     }
+
+    /**
+     * @brief  A signal that is emitted when the tone SNR has been recalculated
+     * @param  snr The current SNR
+     *
+     * This signal will be emitted as soon as a new SNR value for the CTCSS
+     * tone has been calculated. The signal will only be emitted when
+     * CTCSS_MODE is set to 2 or 3.
+     */
+    sigc::signal<void, float> snrUpdated;
 
   protected:
     /**
@@ -202,11 +328,13 @@ class SquelchCtcss : public Squelch
      */
     int processSamples(const float *samples, int count)
     {
-      return det->writeSamples(samples, count);
+      return sink->writeSamples(samples, count);
     }
 
   private:
-    ToneDetector *det;
+    ToneDetector	*det;
+    Async::AudioFilter	*filter;
+    Async::AudioSink	*sink;
 
     SquelchCtcss(const SquelchCtcss&);
     SquelchCtcss& operator=(const SquelchCtcss&);
