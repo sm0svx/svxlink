@@ -7,7 +7,7 @@
 #include <AsyncTimer.h>
 #include <AsyncAudioIO.h>
 
-#include <Rx.h>
+#include <LocalRx.h>
 
 #include "version/SIGLEV_DET_CAL.h"
 
@@ -17,10 +17,10 @@ using namespace Async;
 
 #define PROGRAM_NAME "SigLevDetCal"
 
-static const int ITERATIONS = 5;
+static const int ITERATIONS = 15;
 
 static Config cfg;
-static Rx *rx;
+static LocalRx *rx;
 static float open_sum = 0.0f;
 //static float open_close_sum = 0.0f;
 //static float last_open_siglev = 0.0f;
@@ -28,6 +28,10 @@ static float close_sum = 0.0f;
 //static int open_close_cnt = 0;
 static float siglev_slope = 1.0;
 static float siglev_offset = 0.0;
+static double ctcss_snr_sum = 0.0;
+static unsigned ctcss_snr_cnt = 0;
+static float ctcss_open_snr = 0.0f;
+static float ctcss_close_snr = 0.0f;
 
 
 #if 0
@@ -90,12 +94,21 @@ void sample_squelch_close(Timer *t)
 
     float new_siglev_slope = 100.0 / open_close_mean;
     float new_siglev_offset = -close_mean * new_siglev_slope;
+    if (ctcss_snr_cnt > 0)
+    {
+      ctcss_close_snr = ctcss_snr_sum / ctcss_snr_cnt;
+    }
+
+    cout << endl;
+    cout << "--- Results\n";
+    printf("The mean SNR for the CTCSS tone was %.1fdB\n", ctcss_open_snr - ctcss_close_snr);
 
     cout << endl;
     cout << "--- Put the config variables below in the configuration file\n";
-    cout << "--- section for the receiver.\n";
+    cout << "--- section for " << rx->name() << ".\n";
     printf("SIGLEV_SLOPE=%.2f\n", new_siglev_slope);
     printf("SIGLEV_OFFSET=%.2f\n", new_siglev_offset);
+    printf("CTCSS_SNR_OFFSET=%.2f\n", ctcss_close_snr);
     cout << endl;
     
     //rx->setVerbose(true);
@@ -117,6 +130,10 @@ void start_squelch_close_measurement(FdWatch *w)
   {
     cout << "--- Starting squelch close measurement\n";
     delete w;
+
+    ctcss_snr_sum = 0.0;
+    ctcss_snr_cnt = 0;
+
     Timer *timer = new Timer(1000);
     // must explicitly specify name space for ptr_fun() to avoid conflict
     // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
@@ -136,6 +153,11 @@ void sample_squelch_open(Timer *t)
   {
     delete t;
     
+    if (ctcss_snr_cnt > 0)
+    {
+      ctcss_open_snr = ctcss_snr_sum / ctcss_snr_cnt;
+    }
+
     FdWatch *w = new FdWatch(0, FdWatch::FD_WATCH_RD);
     // must explicitly specify name space for ptr_fun() to avoid conflict
     // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
@@ -163,6 +185,8 @@ void start_squelch_open_measurement(FdWatch *w)
   {
     cout << "--- Starting squelch open measurement\n";
     delete w;
+    ctcss_snr_sum = 0.0;
+    ctcss_snr_cnt = 0;
     Timer *timer = new Timer(1000);
     // must explicitly specify name space for ptr_fun() to avoid conflict
     // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
@@ -170,6 +194,13 @@ void start_squelch_open_measurement(FdWatch *w)
   }
   
 } /* start_squelch_open_measurement */
+
+
+void ctcss_snr_updated(float snr)
+{
+  ctcss_snr_sum += snr;
+  ctcss_snr_cnt += 1;
+}
 
 
 int main(int argc, char **argv)
@@ -247,7 +278,7 @@ int main(int argc, char **argv)
          << "local receiver. You are on your own...\n";
   }
   
-  rx = RxFactory::createNamedRx(cfg, rx_name);
+  rx = dynamic_cast<LocalRx*>(RxFactory::createNamedRx(cfg, rx_name));
   if ((rx == 0) || !rx->initialize())
   {
     cerr << "*** ERROR: Could not initialize receiver \"" << rx_name << "\"\n";
@@ -256,6 +287,7 @@ int main(int argc, char **argv)
   // must explicitly specify name space for ptr_fun() to avoid conflict
   // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
   //rx->squelchOpen.connect(sigc::ptr_fun(&squelchOpen));
+  rx->ctcssSnrUpdated.connect(sigc::ptr_fun(&ctcss_snr_updated));
   rx->mute(false);
   rx->setVerbose(false);
   

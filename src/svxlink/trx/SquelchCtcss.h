@@ -149,11 +149,14 @@ class SquelchCtcss : public Squelch
 	return false;
       }
 
-      int ctcss_mode = 2;
+      int ctcss_mode = 0;
       cfg.getValue(rx_name, "CTCSS_MODE", ctcss_mode);
       
-      float open_thresh = 12.0f;
-      float close_thresh = 6.0f;
+      float ctcss_snr_offset = 0.0f;
+      cfg.getValue(rx_name, "CTCSS_SNR_OFFSET", ctcss_snr_offset);
+      
+      float open_thresh = 15.0f;
+      float close_thresh = 9.0f;
       if (cfg.getValue(rx_name, "CTCSS_THRESH", open_thresh))
       {
 	close_thresh = open_thresh;
@@ -168,6 +171,9 @@ class SquelchCtcss : public Squelch
 	close_thresh = open_thresh;
 	cfg.getValue(rx_name, "CTCSS_CLOSE_THRESH", close_thresh);
       }
+
+      open_thresh += ctcss_snr_offset;
+      close_thresh += ctcss_snr_offset;
       
       unsigned bpf_low = 60;
       cfg.getValue(rx_name, "CTCSS_BPF_LOW", bpf_low);
@@ -208,6 +214,7 @@ class SquelchCtcss : public Squelch
 		
       det = new ToneDetector(ctcss_fq, 8.0f);
       det->activated.connect(mem_fun(*this, &SquelchCtcss::setSignalDetected));
+      det->snrUpdated.connect(snrUpdated.make_slot());
       sink = det;
 
       std::stringstream filter_spec;
@@ -215,30 +222,14 @@ class SquelchCtcss : public Squelch
 	  
       switch (ctcss_mode)
       {
-        case 2:
-          std::cout << "### CTCSS mode: Estimated SNR\n";
-          //det->setDetectBw(6.0f);
-          det->setDetectUseWindowing(false);
-          det->setDetectPeakThresh(0.0f);
-          //det->setDetectPeakToTotPwrThresh(0.6f);
-          det->setDetectSnrThresh(open_thresh, bpf_high - bpf_low);
-          det->setDetectStableCountThresh(1);
-
-          //det->setUndetectBw(8.0f);
-          det->setUndetectUseWindowing(false);
-          det->setUndetectPeakThresh(0.0f);
-          //det->setUndetectPeakToTotPwrThresh(0.3f);
-          det->setUndetectSnrThresh(close_thresh, bpf_high - bpf_low);
-          det->setUndetectStableCountThresh(2);
-
-            // Set up CTCSS band pass filter
-          filter = new Async::AudioFilter(filter_spec.str());
-          filter->registerSink(det);
-          sink = filter;
+        case 1:
+          //std::cout << "### CTCSS mode: Neighbour bins\n";
+	  det->setDetectPeakThresh(open_thresh);
+	  det->setUndetectPeakThresh(close_thresh);
           break;
 
         case 3:
-          std::cout << "### CTCSS mode: Estimated SNR + Phase\n";
+          //std::cout << "### CTCSS mode: Estimated SNR + Phase\n";
           //det->setDetectUseWindowing(false);
           det->setDetectBw(16.0f);
           det->setDetectPeakThresh(0.0f);
@@ -261,10 +252,27 @@ class SquelchCtcss : public Squelch
           sink = filter;
           break;
 
+        case 2:
         default:
-          std::cout << "### CTCSS mode: Neighbour bins\n";
-	  det->setDetectPeakThresh(open_thresh);
-	  det->setUndetectPeakThresh(close_thresh);
+          //std::cout << "### CTCSS mode: Estimated SNR\n";
+          //det->setDetectBw(6.0f);
+          det->setDetectUseWindowing(false);
+          det->setDetectPeakThresh(0.0f);
+          //det->setDetectPeakToTotPwrThresh(0.6f);
+          det->setDetectSnrThresh(open_thresh, bpf_high - bpf_low);
+          det->setDetectStableCountThresh(1);
+
+          //det->setUndetectBw(8.0f);
+          det->setUndetectUseWindowing(false);
+          det->setUndetectPeakThresh(0.0f);
+          //det->setUndetectPeakToTotPwrThresh(0.3f);
+          det->setUndetectSnrThresh(close_thresh, bpf_high - bpf_low);
+          det->setUndetectStableCountThresh(2);
+
+            // Set up CTCSS band pass filter
+          filter = new Async::AudioFilter(filter_spec.str());
+          filter->registerSink(det);
+          sink = filter;
           break;
       }
 
@@ -300,6 +308,16 @@ class SquelchCtcss : public Squelch
     {
       det->setDetectDelay(delay);
     }
+
+    /**
+     * @brief  A signal that is emitted when the tone SNR has been recalculated
+     * @param  snr The current SNR
+     *
+     * This signal will be emitted as soon as a new SNR value for the CTCSS
+     * tone has been calculated. The signal will only be emitted when
+     * CTCSS_MODE is set to 2 or 3.
+     */
+    sigc::signal<void, float> snrUpdated;
 
   protected:
     /**

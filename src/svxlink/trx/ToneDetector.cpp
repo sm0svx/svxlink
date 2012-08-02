@@ -545,7 +545,7 @@ void ToneDetector::postProcess(void)
     // Now determine if the tone is active or not. We start by checking
     // if the passband energy exceed the energy threshold. This check
     // is necessary to not give false detections on silent input, like when
-    // the squelch is closed.
+    // the hardware squelch is closed on the receiver.
   active = active && (passband_energy > par->passband_energy_thresh);
 
     // Calculate the magnitude for the center bin
@@ -554,12 +554,12 @@ void ToneDetector::postProcess(void)
   if (par->peak_thresh > 0.0f)
   {
       // Check if the center fq is above the lower fq bin by the peak threshold.
-      // This is part of the "SNR" check.
+      // This is part of the "neighbour bin SNR" check.
     float res_lower = par->lower.relativeMagnitudeSquared();
     active = active && (res_center > (res_lower * par->peak_thresh));
 
       // Check if the center fq is above the upper fq bin by the peak threshold.
-      // This is part of the "SNR" check.
+      // This is part of the "neighbour bin SNR" check.
     float res_upper = par->upper.relativeMagnitudeSquared();
     active = active && (res_center > (res_upper * par->peak_thresh));
   }
@@ -567,10 +567,10 @@ void ToneDetector::postProcess(void)
   if (par->peak_to_tot_pwr_thresh > 0.0f)
   {
       // Calculate the relation between the center bin power and the total
-      // passband power. If all power withing the passband is in the tone
+      // passband power. If all power within the passband is in the tone
       // we will get a value of 1.0. If none of the passband power is in
       // the tone we will get a value of 0.0.
-      // The calculation below is a bit optimized but this is what
+      // The calculation below is a bit optimized but this is what we
       // are doing:
       //
       //    float Ptone = 2.0f * res_center / (par->block_len*par->block_len);
@@ -594,10 +594,13 @@ void ToneDetector::postProcess(void)
     float Pnoise = (Ppassband - Ptone) / ((par->passband_bw-par->bw) / par->bw);
     
       // Calculate the signal to noise ratio
-    float snr = 10 * log10(Ptone / Pnoise);
+    float snr = 10.0f * log10f(Ptone / Pnoise);
     
       // Check if the SNR is over the threshold
     active = active && (snr > par->snr_thresh);
+
+      // Tell subscribers that the SNR changed
+    snrUpdated(snr);
   }
   
     // If phase checking is active, check the phase

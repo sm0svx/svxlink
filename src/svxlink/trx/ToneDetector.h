@@ -235,7 +235,7 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
      * the tone detector is in its inactive state, that is when a tone
      * is not being detected.
      * The peak threshold is the value in dB that the tone must be over
-     * its adjacent channels to be considered as present.
+     * its adjacent bins to be considered as present.
      */
     void setDetectPeakThresh(float thresh);
 
@@ -247,7 +247,7 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
      * the tone detector is in its active state, that is when a tone
      * is being detected.
      * The peak threshold is the value in dB that the tone must be over
-     * its adjacent channels to be considered as present.
+     * its adjacent bins to be considered as present.
      */
     void setUndetectPeakThresh(float thresh);
 
@@ -435,6 +435,17 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
      * the detector during construction.
      */
     sigc::signal<void, float> detected;
+
+    /**
+     * @brief  A signal that is emitted when the tone SNR has been recalculated
+     * @param  snr The current SNR
+     *
+     * This signal will be emitted as soon as a new SNR value for the tone
+     * has been calculated. The signal will only be emitted if the functions
+     * setDetectSnrThresh and/or setUndetectSnrThresh have been used to setup
+     * a threshold.
+     */
+    sigc::signal<void, float> snrUpdated;
     
   private:
     struct DetectorParams;
