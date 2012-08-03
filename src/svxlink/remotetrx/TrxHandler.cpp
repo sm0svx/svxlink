@@ -101,7 +101,7 @@ class DummyRx : public Rx
     DummyRx(void) : Rx(cfg, "DummyRx") {}
     virtual ~DummyRx(void) {}
     virtual bool initialize(void) { return Rx::initialize(); }
-    virtual void mute(bool do_mute) {}
+    virtual void setMuteState(Rx::MuteState new_mute_state) {}
     virtual void reset(void) {}
     virtual void resumeOutput(void) {}
     virtual void allSamplesFlushed(void) {}

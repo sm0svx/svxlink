@@ -191,7 +191,7 @@ void SimplexLogic::transmitterStateChange(bool is_transmitting)
 {
   if (mute_rx_on_tx)
   {
-    rx().mute(is_transmitting);
+    rx().setMuteState(is_transmitting ? Rx::MUTE_ALL : Rx::MUTE_NONE);
   }
   Logic::transmitterStateChange(is_transmitting);
 } /* SimplexLogic::transmitterStateChange */

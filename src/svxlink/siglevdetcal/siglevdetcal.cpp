@@ -288,7 +288,7 @@ int main(int argc, char **argv)
   // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
   //rx->squelchOpen.connect(sigc::ptr_fun(&squelchOpen));
   rx->ctcssSnrUpdated.connect(sigc::ptr_fun(&ctcss_snr_updated));
-  rx->mute(false);
+  rx->setMuteState(Rx::MUTE_NONE);
   rx->setVerbose(false);
   
   if (cfg.getValue(rx_name, "SIGLEV_SLOPE", value))

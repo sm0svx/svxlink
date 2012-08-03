@@ -450,12 +450,13 @@ void NetUplink::handleMsg(Msg *msg)
       break;
     }
     
-    case MsgMute::TYPE:
+    case MsgSetMuteState::TYPE:
     {
-      MsgMute *mute_msg = reinterpret_cast<MsgMute*>(msg);
-      cout << rx->name() << ": Mute(" << (mute_msg->doMute() ? "true" : "false")
+      MsgSetMuteState *mute_msg = reinterpret_cast<MsgSetMuteState*>(msg);
+      cout << rx->name() << ": SetMuteState("
+           << Rx::muteStateToString(mute_msg->muteState())
       	   << ")\n";
-      rx->mute(mute_msg->doMute());
+      rx->setMuteState(mute_msg->muteState());
       break;
     }
     
@@ -744,7 +745,7 @@ void NetUplink::setFallbackActive(bool activate)
     rx->reset();
     tx->setTxCtrlMode(Tx::TX_AUTO);
     tx_selector->selectSource(loopback_con);
-    rx->mute(false);
+    rx->setMuteState(Rx::MUTE_NONE);
   }
   else
   {

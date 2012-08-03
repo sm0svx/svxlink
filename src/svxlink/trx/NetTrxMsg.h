@@ -51,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <Tx.h>
+#include <Rx.h>
 
 
 /****************************************************************************
@@ -171,7 +172,7 @@ class MsgProtoVer : public Msg
   public:
     static const unsigned TYPE  = 0;
     static const uint16_t MAJOR = 2;
-    static const uint16_t MINOR = 3;
+    static const uint16_t MINOR = 4;
     MsgProtoVer(void)
       : Msg(TYPE, sizeof(MsgProtoVer)), m_major(MAJOR),
         m_minor(MINOR) {}
@@ -459,18 +460,18 @@ class MsgAudio : public Msg
 
 /******************************** RX Messages ********************************/
 
-class MsgMute : public Msg
+class MsgSetMuteState : public Msg
 {
   public:
     static const unsigned TYPE = 200;
-    MsgMute(bool do_mute)
-      : Msg(TYPE, sizeof(MsgMute)), m_do_mute(do_mute) {}
-    int doMute(void) const { return m_do_mute; }
+    MsgSetMuteState(Rx::MuteState new_mute_state)
+      : Msg(TYPE, sizeof(MsgSetMuteState)), m_mute_state(new_mute_state) {}
+    Rx::MuteState muteState(void) const { return m_mute_state; }
   
   private:
-    char  m_do_mute;
+    Rx::MuteState  m_mute_state;
     
-}; /* MsgMute */
+}; /* MsgSetMuteState */
 
 
 class MsgAddToneDetector : public Msg

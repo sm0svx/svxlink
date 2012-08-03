@@ -174,7 +174,7 @@ class PeakMeter : public AudioPassthrough
  ****************************************************************************/
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
-  : Rx(cfg, name), cfg(cfg), audio_io(0), is_muted(true),
+  : Rx(cfg, name), cfg(cfg), audio_io(0), mute_state(MUTE_ALL),
     squelch_det(0), siglevdet(0), /* siglev_offset(0.0), siglev_slope(1.0), */
     tone_dets(0), sql_valve(0), delay(0), mute_dtmf(false), sql_tail_elim(0),
     preamp_gain(0), mute_valve(0)
@@ -563,48 +563,63 @@ bool LocalRx::initialize(void)
 } /* LocalRx:initialize */
 
 
-void LocalRx::mute(bool do_mute)
+void LocalRx::setMuteState(MuteState new_mute_state)
 {
-  if (do_mute == is_muted)
+  while (mute_state != new_mute_state)
   {
-    return;
-  }
-  
-  if (do_mute)
-  {
-    if (delay != 0)
-    {
-      delay->clear();
-    }
-    sql_valve->setOpen(false);
-    //mute_valve->setOpen(false);
-    //audio_io->close();
-    //squelch_det->reset();
-    //setSquelchState(false);
-  }
-  else
-  {
-    /*
-    if (!audio_io->open(AudioIO::MODE_RD))
-    {
-      cerr << "*** ERROR: Could not open audio device for receiver \""
-      	   << name() << "\"\n";
-      return;
-    }
-    */
-    
-    //mute_valve->setOpen(true);
-    //squelch_det->reset();
-    
-    if (squelchIsOpen())
-    {
-      sql_valve->setOpen(true);
-    }
-  }
+    assert((mute_state >= MUTE_NONE) && (mute_state <= MUTE_ALL));
 
-  is_muted = do_mute;
+    if (new_mute_state > mute_state)  // Muting requested
+    {
+      mute_state = static_cast<MuteState>(mute_state + 1);
+      switch (mute_state)
+      {
+        case MUTE_CONTENT:  // MUTE_NONE -> MUTE_CONTENT
+          if (delay != 0)
+          {
+            delay->clear();
+          }
+          sql_valve->setOpen(false);
+          break;
 
-} /* LocalRx::mute */
+        case MUTE_ALL:  // MUTE_CONTENT -> MUTE_ALL
+          audio_io->close();
+          squelch_det->reset();
+          setSquelchState(false);
+          break;
+         
+        default:
+          break;
+      }
+    }
+    else                              // Unmuting requested
+    {
+      mute_state = static_cast<MuteState>(mute_state - 1);
+      switch (mute_state)
+      {
+        case MUTE_CONTENT:  // MUTE_ALL -> MUTE_CONTENT
+          if (!audio_io->open(AudioIO::MODE_RD))
+          {
+            cerr << "*** ERROR: Could not open audio device for receiver \""
+                 << name() << "\"\n";
+            return;
+          }
+          squelch_det->reset();
+          break;
+
+        case MUTE_NONE:   // MUTE_CONTENT -> MUTE_NONE
+          if (squelchIsOpen())
+          {
+            sql_valve->setOpen(true);
+          }
+          break;
+         
+        default:
+          break;
+      }
+    }
+  }
+} /* LocalRx::setMuteState */
 
 
 bool LocalRx::addToneDetector(float fq, int bw, float thresh,
@@ -632,7 +647,7 @@ float LocalRx::signalStrength(void) const
 
 void LocalRx::reset(void)
 {
-  mute(true);
+  setMuteState(Rx::MUTE_ALL);
   tone_dets->removeAllSinks();
   if (delay != 0)
   {
@@ -658,7 +673,7 @@ void LocalRx::reset(void)
 
 void LocalRx::sel5Detected(std::string sequence)
 {
-  if (!is_muted)
+  if (mute_state == MUTE_NONE)
   {
     selcallSequenceDetected(sequence);
   }
@@ -678,7 +693,7 @@ void LocalRx::dtmfDigitActivated(char digit)
 void LocalRx::dtmfDigitDeactivated(char digit, int duration_ms)
 {
   //printf("DTMF digit %c deactivated. Duration = %d ms\n", digit, duration_ms);
-  if (!is_muted)
+  if (mute_state == MUTE_NONE)
   {
     dtmfDigitDetected(digit, duration_ms);
   }
@@ -707,7 +722,7 @@ void LocalRx::onSquelchOpen(bool is_open)
       delay->clear();
     }
     setSquelchState(true);
-    if (!is_muted)
+    if (mute_state == MUTE_NONE)
     {
       sql_valve->setOpen(true);
     }

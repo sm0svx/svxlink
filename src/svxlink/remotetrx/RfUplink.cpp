@@ -168,7 +168,7 @@ bool RfUplink::initialize(void)
   rx->signalLevelUpdated.connect(mem_fun(*this, &RfUplink::rxSignalLevelUpdated));
   rx->dtmfDigitDetected.connect(mem_fun(*this, &RfUplink::rxDtmfDigitDetected));
   rx->reset();
-  rx->mute(false);
+  rx->setMuteState(Rx::MUTE_NONE);
   AudioSource *prev_src = rx;
 
   AudioFifo *fifo = new AudioFifo(8000);
@@ -218,10 +218,11 @@ bool RfUplink::initialize(void)
   uplink_rx->dtmfDigitDetected.connect(
       mem_fun(*this, &RfUplink::uplinkRxDtmfRcvd));
   uplink_rx->reset();
-  uplink_rx->mute(false);
+  uplink_rx->setMuteState(Rx::MUTE_NONE);
   if (mute_rx_on_tx)
   {
-    uplink_tx->transmitterStateChange.connect(mem_fun(*uplink_rx, &Rx::mute));
+    uplink_tx->transmitterStateChange.connect(
+        mem_fun(*this, &RfUplink::uplinkTxTransmitterStateChange));
   }
   prev_src = uplink_rx;
   
@@ -310,6 +311,12 @@ void RfUplink::rxDtmfDigitDetected(char digit, int duration)
   const char dtmf_str[] = {digit, 0};
   uplink_tx->sendDtmf(dtmf_str);
 } /* RfUplink::rxDtmfDigitDetected */
+
+
+void RfUplink::uplinkTxTransmitterStateChange(bool is_transmitting)
+{
+  uplink_rx->setMuteState(is_transmitting ? Rx::MUTE_ALL : Rx::MUTE_NONE);
+} /* RfUplink::uplinkTxTransmitterStateChange */
 
 
 

@@ -147,10 +147,10 @@ class Voter : public Rx
     void setVerbose(bool verbose) { m_verbose = verbose; }
 
     /**
-     * @brief 	Mute the receiver
-     * @param 	do_mute Set to \em true to mute or \em false to unmute
+     * @brief 	Set the mute state for this receiver
+     * @param 	mute_state The mute state to set for this receiver
      */
-    void mute(bool do_mute);
+    void setMuteState(MuteState new_mute_state);
     
     /**
      * @brief 	Call this function to add a tone detector to the RX
@@ -215,7 +215,7 @@ class Voter : public Rx
 	    sql_close_revote_delay(DEFAULT_SQL_CLOSE_REVOTE_DELAY),
 	    rx_switch_delay(DEFAULT_RX_SWITCH_DELAY),
 	    revote_interval(DEFAULT_REVOTE_INTERVAL), voter(0), best_srx(0),
-	    mute_content_only(false), task_timer(0), event_timer(0)
+	    mute_state(MUTE_ALL), task_timer(0), event_timer(0)
 	{
 	  event_timer.setEnable(false);
 	}
@@ -228,7 +228,7 @@ class Voter : public Rx
 	float		no_vote_above_siglev;
 	Voter		*voter;
 	SatRx		*best_srx;
-	bool		mute_content_only;
+        Rx::MuteState   mute_state;
 	Async::Timer	*task_timer;
 	SlotList	task_list;
 	Async::Timer	event_timer;
@@ -260,8 +260,7 @@ class Voter : public Rx
       
 	// Machine's event protocol
       virtual void timerExpired(void) { }
-      virtual void mute(bool content_only);
-      virtual void unmute(void);
+      virtual void setMuteState(Rx::MuteState new_mute_state);
       virtual void reset(void);
       virtual void satSquelchOpen(SatRx *srx, bool is_open);
       virtual void satSignalLevelUpdated(SatRx *srx, float siglev);
@@ -272,7 +271,7 @@ class Voter : public Rx
       protected:
 	Voter &voter(void) { return *box().voter; }
 	SatRx *bestSrx(void) { return box().best_srx; }
-	bool muteContentOnly(void) { return box().mute_content_only; }
+	bool muteState(void) { return box().mute_state; }
 	void runTask(sigc::slot<void> task);
 	void taskTimerExpired(Async::Timer *t);
 	void startTimer(int time_ms);
@@ -290,8 +289,7 @@ class Voter : public Rx
     {
       STATE(Muted)
       
-      virtual void mute(bool content_only);
-      virtual void unmute(void);
+      virtual void setMuteState(Rx::MuteState new_mute_state);
       
       private:
 	void entry(void);
@@ -331,7 +329,7 @@ class Voter : public Rx
       
       STATE(ActiveRxSelected)
 
-      virtual void unmute(void);
+      virtual void setMuteState(Rx::MuteState new_mute_state);
       virtual int sqlRxId(void);
       virtual SatRx *activeSrx(void) { return box().active_srx; }
 
@@ -391,7 +389,7 @@ class Voter : public Rx
       
       STATE(SwitchActiveRx)
 
-      virtual void unmute(void);
+      virtual void setMuteState(Rx::MuteState new_mute_state);
 
       protected:
 	virtual void timerExpired(void);
@@ -415,8 +413,8 @@ class Voter : public Rx
     void dispatchEvent(Macho::IEvent<Top> *event);
     void satSquelchOpen(bool is_open, SatRx *rx);
     void satSignalLevelUpdated(float siglev, SatRx *srx);
-    void muteAllBut(SatRx *srx);
-    void muteAll(void) { muteAllBut(0); }
+    void muteAllBut(SatRx *srx, Rx::MuteState mute_state);
+    void muteAll(Rx::MuteState mute_state) { muteAllBut(0, mute_state); }
     void unmuteAll(void);
     void resetAll(void);
     void printSquelchState(void);

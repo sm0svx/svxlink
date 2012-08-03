@@ -171,16 +171,16 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     
     float signalStrength(void) const { return rx->signalStrength(); }
 
-    void mute(bool do_mute)
+    void setMuteState(Rx::MuteState new_mute_state)
     {
-      rx->mute(do_mute);
-      if (do_mute)
+      rx->setMuteState(new_mute_state);
+      if (new_mute_state != Rx::MUTE_NONE)
       {
       	if (fifo != 0)
         {
           fifo->clear();
         }
-	//setSquelchOpen(false);
+	//setSquelchOpen(false);  // FIXME: Do we need this?
 	dtmf_buf.clear();
 	selcall_buf.clear();
       }
@@ -483,7 +483,7 @@ bool Voter::initialize(void)
       {
       	return false;
       }
-      srx->mute(true);
+      srx->setMuteState(MUTE_ALL);
       srx->toneDetected.connect(toneDetected.make_slot());
       selector->addSource(srx);
       selector->enableAutoSelect(srx, 0);
@@ -503,19 +503,12 @@ bool Voter::initialize(void)
 } /* Voter::initialize */
 
 
-void Voter::mute(bool do_mute)
+void Voter::setMuteState(MuteState new_mute_state)
 {
   //cout << "Voter::mute: do_mute=" << (do_mute ? "TRUE" : "FALSE") << endl;
   assert(!is_processing_event);
-  if (do_mute)
-  {
-    dispatchEvent(Macho::Event(&Top::mute, true));
-  }
-  else
-  {
-    dispatchEvent(Macho::Event(&Top::unmute));
-  }
-} /* Voter::mute */
+  dispatchEvent(Macho::Event(&Top::setMuteState, new_mute_state));
+} /* Voter::setMuteState */
 
 
 bool Voter::addToneDetector(float fq, int bw, float thresh,
@@ -605,12 +598,12 @@ void Voter::satSignalLevelUpdated(float siglev, SatRx *srx)
 } /* Voter::satSignalLevelUpdated */
 
 
-void Voter::muteAllBut(SatRx *srx)
+void Voter::muteAllBut(SatRx *srx, Rx::MuteState mute_state)
 {
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    (*it)->mute(*it != srx);
+    (*it)->setMuteState(*it == srx ? MUTE_NONE : mute_state);
   }
 } /* Voter::muteAllBut */
 
@@ -620,7 +613,7 @@ void Voter::unmuteAll(void)
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    (*it)->mute(false);
+    (*it)->setMuteState(MUTE_NONE);
   }
 } /* Voter::unmuteAll */
 
@@ -708,28 +701,29 @@ void Voter::Top::reset(void)
 } /* Voter::Top::reset */
 
 
-void Voter::Top::mute(bool content_only)
+void Voter::Top::setMuteState(Rx::MuteState new_mute_state)
 {
-  if (!content_only)
+  if (new_mute_state == muteState())
   {
-    setState<Muted>();
+    return;
   }
-  else if (!muteContentOnly())
+
+  switch (new_mute_state)
   {
-    voter().muteAll();
+    case MUTE_NONE:
+      voter().unmuteAll();
+      break;
+
+    case MUTE_CONTENT:
+      voter().muteAll(MUTE_CONTENT);
+      break;
+
+    case MUTE_ALL:
+      setState<Muted>();
+      break;
   }
-  box().mute_content_only = content_only;
+  box().mute_state = new_mute_state;
 } /* Voter::Top::mute */
-
-
-void Voter::Top::unmute(void)
-{
-  if (muteContentOnly())
-  {
-    voter().unmuteAll();
-  }
-  box().mute_content_only = false;
-} /* Voter::Top::unmute */
 
 
 void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
@@ -833,25 +827,19 @@ void Voter::Top::eventTimerExpired(Timer *t)
 void Voter::Muted::entry(void)
 {
   cout << "### Muted::entry\n";
-  voter().muteAll();
+  voter().muteAll(MUTE_ALL);
 } /* Voter::Muted::entry */
 
 
-void Voter::Muted::mute(bool content_only)
+void Voter::Muted::setMuteState(Rx::MuteState new_mute_state)
 {
-  if (content_only)
+  if ((new_mute_state == Rx::MUTE_NONE)
+      || (new_mute_state == Rx::MUTE_CONTENT))
   {
     doUnmute();
   }
-  TOP::box().mute_content_only = content_only;
-} /* Voter::Muted::mute */
-
-
-void Voter::Muted::unmute(void)
-{
-  doUnmute();
-  TOP::box().mute_content_only = false;
-} /* Voter::Muted::unmute */
+  TOP::box().mute_state = new_mute_state;
+} /* Voter::Muted::setMuteState */
 
 
 void Voter::Muted::doUnmute(void)
@@ -878,7 +866,7 @@ void Voter::Muted::doUnmute(void)
 void Voter::Idle::entry(void)
 {
   cout << "### Idle::entry\n";
-  if (!muteContentOnly())
+  if (muteState() == Rx::MUTE_NONE)
   {
     voter().unmuteAll();
   }
@@ -946,14 +934,14 @@ void Voter::ActiveRxSelected::init(SatRx *srx)
   cout << "### ActiveRxSelected::init\n";
   assert(srx != 0);
   box().active_srx = srx;
-  if (muteContentOnly())
+  if (muteState() == MUTE_CONTENT)
   {
-    voter().muteAll();
+    voter().muteAll(MUTE_CONTENT);
   }
   else
   {
     //runTask(bind(mem_fun(voter(), &Voter::muteAllBut), srx));
-    voter().muteAllBut(srx);
+    voter().muteAllBut(srx, MUTE_CONTENT);
   }
   setState<SquelchOpen>();
 } /* Voter::ActiveRxSelected::init */
@@ -965,11 +953,16 @@ void Voter::ActiveRxSelected::exit(void)
 } /* Voter::ActiveRxSelected::exit */
 
 
-void Voter::ActiveRxSelected::unmute(void)
+void Voter::ActiveRxSelected::setMuteState(Rx::MuteState new_mute_state)
 {
-  activeSrx()->mute(false);
-  TOP::box().mute_content_only = false;
-} /* Voter::ActiveRxSelected::unmute */
+  if (new_mute_state != Rx::MUTE_NONE)
+  {
+    SUPER::setMuteState(new_mute_state);
+    return;
+  }
+  activeSrx()->setMuteState(MUTE_NONE);
+  TOP::box().mute_state = Rx::MUTE_NONE;
+} /* Voter::ActiveRxSelected::setMuteState */
 
 
 int Voter::ActiveRxSelected::sqlRxId(void)
@@ -981,12 +974,12 @@ int Voter::ActiveRxSelected::sqlRxId(void)
 void Voter::ActiveRxSelected::changeActiveSrx(SatRx *srx)
 {
   //runTask(bind(mem_fun(activeSrx(), &SatRx::mute), true));
-  activeSrx()->mute(true);
+  activeSrx()->setMuteState(MUTE_CONTENT);
   box().active_srx = srx;
-  if (!muteContentOnly())
+  if (muteState() == Rx::MUTE_NONE)
   {
     //runTask(bind(mem_fun(activeSrx(), &SatRx::mute), false));
-    activeSrx()->mute(false);
+    activeSrx()->setMuteState(MUTE_NONE);
   }
 } /* Voter::ActiveRxSelected::changeActiveSrx */
 
@@ -1168,10 +1161,10 @@ void Voter::SwitchActiveRx::entry(void)
 void Voter::SwitchActiveRx::init(SatRx *srx)
 {
   box().switch_to_srx = srx;
-  if (!muteContentOnly())
+  if (muteState() == Rx::MUTE_NONE)
   {
     //runTask(bind(mem_fun(*srx, &SatRx::mute), false));
-    srx->mute(false);
+    srx->setMuteState(MUTE_NONE);
   }
 } /* Voter::SwitchActiveRx::init */
 
@@ -1182,19 +1175,24 @@ void Voter::SwitchActiveRx::exit(void)
   if (box().switch_to_srx != 0)
   {
     //runTask(bind(mem_fun(*box().switch_to_srx, &SatRx::mute), true));
-    box().switch_to_srx->mute(true);
+    box().switch_to_srx->setMuteState(MUTE_CONTENT);
   }
 
   stopTimer();
 } /* Voter::SwitchActiveRx::exit */
 
 
-void Voter::SwitchActiveRx::unmute(void)
+void Voter::SwitchActiveRx::setMuteState(Rx::MuteState new_mute_state)
 {
-  activeSrx()->mute(false);
-  box().switch_to_srx->mute(false);
-  TOP::box().mute_content_only = false;
-} /* Voter::SwitchActiveRx::unmute */
+  if (new_mute_state != Rx::MUTE_NONE)
+  {
+    SUPER::setMuteState(new_mute_state);
+    return;
+  }
+  activeSrx()->setMuteState(MUTE_NONE);
+  box().switch_to_srx->setMuteState(MUTE_NONE);
+  TOP::box().mute_state = Rx::MUTE_NONE;
+} /* Voter::SwitchActiveRx::setMuteState */
 
 
 void Voter::SwitchActiveRx::timerExpired(void)
