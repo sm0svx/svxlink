@@ -1,8 +1,28 @@
- 0.13.1 -- ?? ??? 2011
+ 0.14.0 -- ?? ??? 2012
 -----------------------
 
 * Moved from sigc++ version 1.2 to version 2.
   Patch contributed by Felix/WU8K.
+
+* The CTCSS detector has been improved. It is now much faster and have
+  a lower false trigger rate in its default configuration. The mean
+  detection time is now about 200ms where it previously was about 450ms.
+  Previous configurations will have to be changed to adapt to the new
+  detector. Have a look in the manual page at the new configuration
+  variables: CTCSS_MODE, CTCSS_OPEN_THRESH, CTCSS_CLOSE_THRESH,
+  CTCSS_SNR_OFFSET, CTCSS_BPF_LOW and CTCSS_BPF_HIGH. The CTCSS_THRESH
+  configuration variable is obsolete.
+
+* Now possible to set RTS and/or DTR to a static state by configuration
+  if needed. Have a look at the SERIAL_SET_PINS config variable for the
+  LocalRx and LocalTx sections in the svxlink.conf.5 manual page.
+
+
+
+ 0.13.1 -- 27 Nov 2011
+-----------------------
+
+* Bugfix in RemoteTrx: Could crash when a Net uplink was disconnected.
 
 
 

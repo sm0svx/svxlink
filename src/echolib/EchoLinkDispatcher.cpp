@@ -246,7 +246,7 @@ Dispatcher::Dispatcher(void)
 {
   ctrl_sock = new UdpSocket(CTRL_PORT);
   audio_sock = new UdpSocket(AUDIO_PORT);
-  if (!ctrl_sock->initOk() || !ctrl_sock->initOk())
+  if (!ctrl_sock->initOk() || !audio_sock->initOk())
   {
     delete ctrl_sock;
     ctrl_sock = 0;

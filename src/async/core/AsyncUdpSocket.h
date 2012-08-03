@@ -51,6 +51,7 @@ An example of how to use the Async::UdpSocket class
  *
  ****************************************************************************/
 
+#include <AsyncIpAddress.h>
 
 
 /****************************************************************************
@@ -87,7 +88,6 @@ namespace Async
  ****************************************************************************/
 
 class FdWatch;
-class IpAddress;
 
 
 /****************************************************************************
@@ -129,7 +129,7 @@ class UdpSocket : public sigc::trackable
      * @param 	local_port  The local port to use. If not specified, a random
      *	      	      	    local port will be used.
      */
-    UdpSocket(uint16_t local_port=0);
+    UdpSocket(uint16_t local_port=0, const IpAddress &bind_ip=IpAddress());
   
     /**
      * @brief 	Destructor
@@ -145,7 +145,7 @@ class UdpSocket : public sigc::trackable
      * see if everything went fine.
      */
     bool initOk(void) const { return (sock != -1); }
-    
+
     /**
      * @brief 	Write data to the remote host
      * @param 	remote_ip   The IP-address of the remote host
@@ -156,6 +156,13 @@ class UdpSocket : public sigc::trackable
      */
     bool write(const IpAddress& remote_ip, int remote_port, const void *buf,
 	int count);
+
+    /**
+     * @brief   Get the file descriptor for the UDP socket
+     * @return  Returns the file descriptor associated with the socket or
+     *          -1 on error
+     */
+    int fd(void) const { return sock; }
     
     /**
      * @brief 	A signal that is emitted when data has been received
