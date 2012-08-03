@@ -178,6 +178,16 @@ class LocalRx : public Rx
      * @brief 	Reset the receiver object to its default settings
      */
     void reset(void);
+
+    /**
+     * @brief  A signal that is emitted when the CTCSS tone SNR has changed
+     * @param  snr The current SNR
+     *
+     * This signal will be emitted as soon as a new SNR value for the CTCSS
+     * tone has been calculated. The signal will only be emitted when
+     * CTCSS_MODE is set to 2 or 3.
+     */
+    sigc::signal<void, float> ctcssSnrUpdated;
     
 
   protected:

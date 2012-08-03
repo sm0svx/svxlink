@@ -5,8 +5,8 @@
 @date	 2009-05-23
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2011 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,6 +36,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <cmath>
+#include <utility>
+#include <complex>
 
 
 /****************************************************************************
@@ -106,19 +108,120 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 @brief	An implementation of the Gortzel single bin DFT algorithm
 @author Tobias Blomberg / SM0SVX
 @date   2009-05-23
+
+The Goertzel algorithm is used to calculate the DFT for a single
+bin. This is much more efficient than for example using an FFT to
+calculate all bins.
+
+Create and initialize a new object either using the default constructor
+and then calling the "initialize" method or use the constuctor that
+initialize the object upon construction. The information needed for
+initialization is the center frequency of the bin to calculate and the
+sampling frequency used.
+
+Now you need to choose a block length. There are two things to consider
+to choose a good block length. The first thing is the wanted bin width.
+The bin width, in Hz, get more narrow with increasing block length. The
+bin width can be calculated using the following formula:
+
+  sampling_rate / block_len
+
+So, if you are using a sampling frequency of 8000 Hz and a block length of
+100 samples, the bin width will become 80Hz.
+
+Reset the object by calling the "reset" method. Now call the "calc" method
+for each sample in the block. When block_len samples have been processed,
+the result is ready to be read. If only the magnitude is interesting, use
+the "relativeMagnitudeSquared" function since it's more efficient than using
+the "result" function. The "result" function give a complex value from
+which both phase and magnitude can be calculated.
+
+The relative magnitude squared value can be used directly to compare it
+against other relative magnitude squared values. If you want to calculate
+the power difference in dB between two bins, just do this:
+
+  diff_db = 10 * log10(rel_mag_sqr / other_rel_mag_sqr)
+
+Why the expression above works will be explained below.
+
+If you want to compare the relative magnitude squared value to values
+calculated in another way, it will probably be necessary to recalculate it
+to an absolute magnitude value. For example, an input signal containing a
+sinus with amplitude 1.0 will produce magnitude 0.5 in the frequency plane.
+The reason it's 0.5 is because the peak in the frequency plane is mirrored
+around zero so it's actually two peaks with magnitude 0.5. So to get the
+magnitude for the relative magnitude squared value, we do the following:
+
+  mag = 2 * sqrt(rel_mag_sqr) / block_len
+
+Now we will get magnitude one for the case described above. However, the
+magnitude may not be what you need. The mean power in the signal during
+the block may be more interesting. We calculate this by first converting
+the magnitude (peak) value to a RMS value. This is easily done by dividing
+the expression above by sqrt(2). We then square the whole thing to get the
+mean power. This calculation can be simplified to:
+
+  pwr = 2 * rel_mag_sqr / (block_len * block_len)
+
+Now we can understand how the first calculation works, where the power
+difference between two bins in dB were calculated. If you divide two of the
+power expressions above with each other, only the two relative magnitude
+squared values will remain.
+
+If using Goertzel to find one or more tones, one way to determine if a
+tone is present or not is to compare the power given by Goertzel to the
+power in the whole passband. The passband power is easily calculated by
+squaring each sample in the block and adding them together. Then divide
+this with the block length. This will give the mean power in the passband
+during the block, including the tone power of course. We will see later
+that what we actually need is the passband_energy, which we get by simply
+not dividing the summed squares with the block lenth. Now the result from
+Goertzel and the passband power can be compared to give a measure if a
+tone is present or not. Dividing the tone power with the passband power
+will give a value between 0.0 and 1.0. If it's close to one, almost all
+power is in the tone. If close to zero, we probably just have broad band
+noise. After some simplification, the relation can be computed using:
+
+  rel = 2 * rel_mag_sqr / (block_len * passband_energy)
+
+If you instead want a dB value for the difference between the tone power and
+the passband power, you need to first subtract the tone power from the passband
+power and then make the values bandwidth equivalent. For example, if the
+Goertzel detector bandwidth is 100Hz and the passband bandwidth is 3000Hz, you
+need to divide the passband power with 30 (3000/100) before calculating the dB
+value. Note that the recalculated passband power will be the mean power over
+the whole passband. This is not a problem if the frequency spectrum is flat.
+If it is tilted or uneven over the passband, you will get an offset in your
+dB calulation. This offset can easily be calibrated away though by just
+inputting noise to to detector and calibrate the output to 0dB. Now you have a
+measure for the tone SNR (Signal to Noise Ratio), provided that the selected
+passband only contain the tone and noise.
+
+When finished with the block, call "reset" again and start over.
 */
 class Goertzel
 {
   public:
     /**
      * @brief 	Default constuctor
+     *
+     * This constructor will create an uninitialized object. Use the
+     * initialize method to initialize it later.
+     */
+    Goertzel(void) { }
+
+    /**
+     * @brief 	Constuctor
      * @param   freq        The frequency of interest, in Hz
      * @param   sample_rate The sample rate used
+     *
+     * This constructor will create an initialized object. You do not need
+     * to call the initialize method unless you want to change something
+     * after construction.
      */
     Goertzel(float freq, unsigned sample_rate)
     {
-      fac = 2.0f * cosf(2.0f * M_PI * (freq / (float)sample_rate));
-      reset();
+      initialize(freq, sample_rate);
     }
   
     /**
@@ -127,51 +230,114 @@ class Goertzel
     ~Goertzel(void) {}
   
     /**
+     * @brief  Initialize the object
+     * @param  freq The frequency of interest, in Hz
+     * @param  sample_rate The sample rate used
+     *
+     * This method will initialize the object. It may be called more than
+     * once if something need to be changed.
+     */
+    void initialize(float freq, unsigned sample_rate)
+    {
+      w = 2.0f * M_PI * (freq / (float)sample_rate);
+      cosw = cosf(w);
+      sinw = sinf(w);
+      fac = 2.0f * cosw;
+      reset();
+    }
+
+    /**
      * @brief 	Reset the state variables
      */
     void reset(void)
     {
-      v2 = v3 = 0.0f;
+      q0 = q1 = 0.0f;
     }
     
     /**
      * @brief 	Call this function for each sample in a block
-     * @param 	sample A sample
+     * @param 	sample The sample to process
      */
-    void calc(float sample)
+    inline void calc(float sample)
     {
-      float v1 = v2;
-      v2 = v3;
-      v3 = fac * v2 - v1 + sample;
+      float q2 = q1;
+      q1 = q0;
+      q0 = fac * q1 - q2 + sample;
+    }
+    
+    /**
+     * @brief  Calculate the final result in complex form
+     * @return Returns the final result in complex form
+     *
+     * This function will calculate and return the final result of
+     * one block. The result is returned in complex form. The magnitude
+     * and phase can be calculated from the complex value.
+     * If only the magnitude is required, use the relativeMagnitudeSquared
+     * function instead which is more efficient.
+     */
+    std::complex<float> result(void)
+    {
+      float real = q0 - q1 * cosw;
+      float imag = q1 * sinw;
+      return std::complex<float>(real, imag);
+    }
+
+    /**
+     * @brief  Calculate the phase using a previously calculated complex result
+     * @param  res The complex result as returned by the "result" function
+     * @return Returns the phase of the signal
+     */
+    float phase(const std::complex<float> &res) { return std::arg(res); }
+
+    /**
+     * @brief  Calculate the phase
+     * @return Returns the phase of the signal
+     */
+    float phase(void) { return std::arg(result()); }
+
+    /**
+     * @brief 	Calculate the relative magnitude squared from a complex result
+     * @return	Returns the relative magnitude squared
+     *
+     * See the class documentation for information on how to use the
+     * returned value.
+     */
+    float relativeMagnitudeSquared(const std::complex<float> &res)
+    {
+      return std::norm(res);
     }
     
     /**
      * @brief 	Read back the result after calling "calc" for a whole block
      * @return	Returns the relative magnitude squared
+     *
+     * See the class documentation for information on how to use the
+     * returned value.
      */
-    float result(void)
+    float relativeMagnitudeSquared(void)
     {
         // Push a zero through the process to finish things off.
-      float v1 = v2;
-      v2 = v3;
-      v3 = fac * v2 - v1;
+        // FIXME: Should we really do this?  Why?
+      //calc(0.0f);
       
         // Now calculate the non-recursive side of the filter.
         // The result here is not scaled down to allow for the magnification
         // effect of the filter (the usual DFT magnification effect).
-      return v3 * v3 + v2 * v2 - v2 * v3 * fac;
+      return q0 * q0 + q1 * q1 - q0 * q1 * fac;
     }
-    
-    
+
   protected:
     
   private:
-    float v2;
-    float v3;
+    float w;
+    float cosw;
+    float sinw;
     float fac;
+    float q0;
+    float q1;
     
-    Goertzel(const Goertzel&);
-    Goertzel& operator=(const Goertzel&);
+    //Goertzel(const Goertzel&);
+    //Goertzel& operator=(const Goertzel&);
     
 };  /* class Goertzel */
 

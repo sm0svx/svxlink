@@ -470,7 +470,9 @@ bool LocalRx::initialize(void)
   }
   else if (sql_det_str == "CTCSS")
   {
-    squelch_det = new SquelchCtcss;
+    SquelchCtcss *squelch_ctcss = new SquelchCtcss;
+    squelch_ctcss->snrUpdated.connect(ctcssSnrUpdated.make_slot());
+    squelch_det = squelch_ctcss;
   }
   else if (sql_det_str == "SERIAL")
   {
