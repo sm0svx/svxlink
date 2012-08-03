@@ -212,6 +212,11 @@ class SquelchSerial : public Squelch
 	return false;
       }
 
+      if (!setPins(cfg, rx_name))
+      {
+        return false;
+      }
+
       return true;
     }
 
@@ -241,6 +246,43 @@ class SquelchSerial : public Squelch
 
     SquelchSerial(const SquelchSerial&);
     SquelchSerial& operator=(const SquelchSerial&);
+
+    bool setPins(const Async::Config &cfg, const std::string &rx_name)
+    {
+      std::string pins;
+      if (!cfg.getValue(rx_name, "SERIAL_SET_PINS", pins))
+      {
+        return true;
+      }
+      std::string::iterator it(pins.begin());
+      while (it != pins.end())
+      {
+        bool do_set = true;
+        if (*it == '!')
+        {
+          do_set = false;
+          ++it;
+        }
+        std::string pin_name(it, it+3);
+        it += 3;
+        if (pin_name == "RTS")
+        {
+          serial->setPin(Async::Serial::PIN_RTS, do_set);
+        }
+        else if (pin_name == "DTR")
+        {
+          serial->setPin(Async::Serial::PIN_DTR, do_set);
+        }
+        else
+        {
+          std::cerr << "*** ERROR: Illegal pin name \"" << pin_name << "\" for the "
+                    << rx_name << "/SERIAL_SET_PINS configuration variable. "
+                    << "Accepted values are \"[!]RTS\" and/or \"[!]DTR\".\n";
+          return false;
+        }
+      }
+      return true;
+    }
 
 };  /* class SquelchSerial */
 

@@ -13,6 +13,10 @@
   CTCSS_SNR_OFFSET, CTCSS_BPF_LOW and CTCSS_BPF_HIGH. The CTCSS_THRESH
   configuration variable is obsolete.
 
+* Now possible to set RTS and/or DTR to a static state by configuration
+  if needed. Have a look at the SERIAL_SET_PINS config variable for the
+  LocalRx and LocalTx sections in the svxlink.conf.5 manual page.
+
 
 
  0.13.1 -- 27 Nov 2011

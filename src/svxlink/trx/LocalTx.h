@@ -217,6 +217,7 @@ class LocalTx : public Tx
     void txTimeoutOccured(Async::Timer *t);
     int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);
     bool setPtt(bool tx, bool with_hangtime=false);
+    bool setPins(const Async::Config &cfg, const std::string &name);
     void transmit(bool do_transmit);
     void allDtmfDigitsSent(void);
     void pttHangtimeExpired(Async::Timer *t);

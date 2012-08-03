@@ -37,7 +37,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <cstdio>
@@ -243,39 +242,27 @@ bool SerialDevice::openPort(void)
   
   if (tcflush(fd, TCIOFLUSH) == -1)
   {
-    goto failed;
-  }
-  
-  if(tcgetattr(fd, &old_port_settings) == -1)
-  {
-    goto failed;
-  }
-
-    // Clear the DTR and RTS pins so that they are in a known state
-  int the_pin;
-  the_pin = TIOCM_DTR;
-  if (ioctl(fd, TIOCMBIC, &the_pin) == -1)
-  {
-    goto failed;
-  }
-  the_pin = TIOCM_RTS;
-  if (ioctl(fd, TIOCMBIC, &the_pin) == -1)
-  {
-    goto failed;
-  }
-      
-  rd_watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
-  rd_watch->activity.connect(mem_fun(*this, &SerialDevice::onIncomingData));
-  
-  return true;
-  
-  failed:
     int errno_tmp = errno;
     ::close(fd);
     fd = -1;
     errno = errno_tmp;
     return false;
+  }
+  
+  if(tcgetattr(fd, &old_port_settings) == -1)
+  {
+    int errno_tmp = errno;
+    ::close(fd);
+    fd = -1;
+    errno = errno_tmp;
+    return false;
+  }
 
+  rd_watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
+  rd_watch->activity.connect(mem_fun(*this, &SerialDevice::onIncomingData));
+  
+  return true;
+  
 } /* SerialDevice::openPort */
 
 
@@ -318,6 +305,8 @@ void SerialDevice::onIncomingData(FdWatch *watch)
   charactersReceived(buf, cnt);
   
 } /* SerialDevice::onIncomingData */
+
+
 
 
 
