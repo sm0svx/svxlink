@@ -1,8 +1,11 @@
- 0.15.0 -- ?? ??? 2011
+ 0.15.0 -- ?? ??? 2012
 -----------------------
 
 * Moved from sigc++ version 1.2 to version 2.
   Patch contributed by Felix/WU8K.
+
+* Fixed a small bug which could cause a crash in a very strange and
+  probably unusual case.
 
 
 
