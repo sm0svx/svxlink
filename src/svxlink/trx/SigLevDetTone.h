@@ -61,6 +61,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class AudioFilter;
+};
+
+class Goertzel;
 
 
 /****************************************************************************
@@ -104,7 +110,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief	A signal level detector using tones in the 5.5 to 6.5kHz band
+@brief	A signal level detector using tones in the 5.5 to 6.4kHz band
 @author Tobias Blomberg / SM0SVX
 @date   2009-05-23
 
@@ -146,46 +152,23 @@ class SigLevDetTone : public SigLevDet
      */
     virtual void reset(void);
     
-    /**
-     * @brief 	Write samples into this audio sink
-     * @param 	samples The buffer containing the samples
-     * @param 	count The number of samples in the buffer
-     * @return	Returns the number of samples that has been taken care of
-     *
-     * This function is used to write audio into this audio sink. If it
-     * returns 0, no more samples should be written until the resumeOutput
-     * function in the source have been called.
-     * This function is normally only called from a connected source object.
-     */
-    virtual int writeSamples(const float *samples, int count);
-    
-    /**
-     * @brief 	Tell the sink to flush the previously written samples
-     *
-     * This function is used to tell the sink to flush previously written
-     * samples. When done flushing, the sink should call the
-     * sourceAllSamplesFlushed function.
-     * This function is normally only called from a connected source object.
-     */
-    virtual void flushSamples(void);
-    
-    
   protected:
     
   private:
-    class MyGoertzel;
     class HammingWindow;
     
-    static const unsigned BLOCK_SIZE = 320;
+    static const unsigned BLOCK_SIZE = 640;
 
-    std::vector<int>  tone_siglev_map;
-    HammingWindow     *hwin;
-    MyGoertzel        *det[10];
-    unsigned          block_idx;
-    int               last_siglev;
+    std::vector<int>    tone_siglev_map;
+    Goertzel            *det[10];
+    unsigned            block_idx;
+    int                 last_siglev;
+    float               passband_energy;
+    Async::AudioFilter  *filter;
     
     SigLevDetTone(const SigLevDetTone&);
     SigLevDetTone& operator=(const SigLevDetTone&);
+    int processSamples(const float *samples, int count);
     
 };  /* class SigLevDetTone */
 
