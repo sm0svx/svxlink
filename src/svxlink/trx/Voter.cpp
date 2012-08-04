@@ -586,8 +586,8 @@ void Voter::dispatchEvent(Macho::IEvent<Top> *event)
 
 void Voter::satSquelchOpen(bool is_open, SatRx *srx)
 {
-  cout << "Voter::satSquelchOpen: is_open=" << (is_open ? "TRUE" : "FALSE")
-       << " srx=" << srx->name() << endl;
+  //cout << "Voter::satSquelchOpen: is_open=" << (is_open ? "TRUE" : "FALSE")
+  //     << " srx=" << srx->name() << endl;
   dispatchEvent(Macho::Event(&Top::satSquelchOpen, srx, is_open));
 } /* Voter::satSquelchOpen */
 
@@ -826,7 +826,7 @@ void Voter::Top::eventTimerExpired(Timer *t)
 
 void Voter::Muted::entry(void)
 {
-  cout << "### Muted::entry\n";
+  //cout << "### Muted::entry\n";
   voter().muteAll(MUTE_ALL);
 } /* Voter::Muted::entry */
 
@@ -865,7 +865,7 @@ void Voter::Muted::doUnmute(void)
 
 void Voter::Idle::entry(void)
 {
-  cout << "### Idle::entry\n";
+  //cout << "### Idle::entry\n";
   if (muteState() == Rx::MUTE_NONE)
   {
     voter().unmuteAll();
@@ -892,14 +892,14 @@ void Voter::Idle::satSquelchOpen(SatRx *srx, bool is_open)
 
 void Voter::VotingDelay::entry(void)
 {
-  cout << "### VotingDelay::entry\n";
+  //cout << "### VotingDelay::entry\n";
   startTimer(votingDelay());
 } /* Voter::VotingDelay::entry */
 
 
 void Voter::VotingDelay::exit(void)
 {
-  cout << "### VotingDelay::exit\n";
+  //cout << "### VotingDelay::exit\n";
   stopTimer();
 } /* Voter::VotingDelay::exit */
 
@@ -931,7 +931,7 @@ void Voter::VotingDelay::timerExpired(void)
 
 void Voter::ActiveRxSelected::init(SatRx *srx)
 {
-  cout << "### ActiveRxSelected::init\n";
+  //cout << "### ActiveRxSelected::init\n";
   assert(srx != 0);
   box().active_srx = srx;
   if (muteState() == MUTE_CONTENT)
@@ -1059,14 +1059,14 @@ void Voter::SquelchOpen::changeActiveSrx(SatRx *srx)
 
 void Voter::SqlCloseWait::entry(void)
 {
-  cout << "### SqlCloseWait::entry\n";
+  //cout << "### SqlCloseWait::entry\n";
   startTimer(sqlCloseRevoteDelay());
 } /* Voter::SqlCloseWait::entry */
 
 
 void Voter::SqlCloseWait::exit(void)
 {
-  cout << "### SqlCloseWait::exit\n";
+  //cout << "### SqlCloseWait::exit\n";
   stopTimer();
 } /* Voter::SqlCloseWait::exit */
 
@@ -1104,7 +1104,7 @@ void Voter::SqlCloseWait::timerExpired(void)
 
 void Voter::Receiving::entry(void)
 {
-  cout << "### Receiving::entry\n";
+  //cout << "### Receiving::entry\n";
   if (revoteInterval() >= MIN_REVOTE_INTERVAL)
   {
     startTimer(revoteInterval());
@@ -1114,7 +1114,7 @@ void Voter::Receiving::entry(void)
 
 void Voter::Receiving::exit(void)
 {
-  cout << "### Receiving::exit\n";
+  //cout << "### Receiving::exit\n";
   stopTimer();
 } /* Voter::Receiving::exit */
 
@@ -1153,7 +1153,7 @@ void Voter::Receiving::timerExpired(void)
 
 void Voter::SwitchActiveRx::entry(void)
 {
-  cout << "### SwitchActiveRx::entry\n";
+  //cout << "### SwitchActiveRx::entry\n";
   startTimer(rxSwitchDelay());
 } /* Voter::SwitchActiveRx::entry */
 
@@ -1171,7 +1171,7 @@ void Voter::SwitchActiveRx::init(SatRx *srx)
 
 void Voter::SwitchActiveRx::exit(void)
 {
-  cout << "### SwitchActiveRx::exit\n";
+  //cout << "### SwitchActiveRx::exit\n";
   if (box().switch_to_srx != 0)
   {
     //runTask(bind(mem_fun(*box().switch_to_srx, &SatRx::mute), true));
