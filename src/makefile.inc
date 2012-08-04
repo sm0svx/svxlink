@@ -498,7 +498,7 @@ clean::
 		$(PLUGINS:%=%.so) $(PLUGINS_CPP:%=%.so)
 	QTFILES="$(QTHEADERS:%.h=moc_%.cpp) $(LIB_QTHEADERS:%.h=moc_%.cpp)"; \
 	for file in $${QTFILES}; do \
-	  if [ -f $$file ] && grep -q "meta object code" $$file; then \
+	  if [ -f $$file ] && grep -qi "meta object code" $$file; then \
 	    $(RM) $$file ;\
 	  fi \
 	done

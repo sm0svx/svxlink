@@ -102,7 +102,6 @@ struct ToneDetector::DetectorParams
   std::vector<float>  window_table;
   bool		      use_windowing;
   float		      peak_to_tot_pwr_thresh;
-  float		      passband_energy_thresh;
   float		      snr_thresh;
   float		      passband_bw;
 };
@@ -156,7 +155,6 @@ ToneDetector::ToneDetector(float tone_hz, float width_hz, int det_delay_ms)
   det_par->phase_actual_fq = 0.0f;
   det_par->use_windowing = DEFAULT_USE_WINDOWING;
   det_par->peak_to_tot_pwr_thresh = 0.0f;
-  det_par->passband_energy_thresh = 0.0f;
   det_par->snr_thresh = 0.0f;
   det_par->passband_bw = 0.0f;
 
@@ -297,10 +295,6 @@ void ToneDetector::setDetectBw(float bw_hz)
   det_par->lower.initialize(tone_fq - 2 * bw_hz, INTERNAL_SAMPLE_RATE);
   det_par->upper.initialize(tone_fq + 2 * bw_hz, INTERNAL_SAMPLE_RATE);
   
-    // Calculate the passband energy threshold
-  det_par->passband_energy_thresh =
-      DEFAULT_PASSBAND_POWER_THRESH * det_par->block_len;
-
 } /* ToneDetector::setDetectBw */
 
 
@@ -326,10 +320,6 @@ void ToneDetector::setUndetectBw(float bw_hz)
   undet_par->center.initialize(tone_fq, INTERNAL_SAMPLE_RATE);
   undet_par->lower.initialize(tone_fq - 2 * bw_hz, INTERNAL_SAMPLE_RATE);
   undet_par->upper.initialize(tone_fq + 2 * bw_hz, INTERNAL_SAMPLE_RATE);
-
-    // Calculate the passband energy threshold
-  undet_par->passband_energy_thresh =
-      DEFAULT_PASSBAND_POWER_THRESH * undet_par->block_len;
 
 } /* ToneDetector::setUndetectBw */
 
@@ -542,14 +532,14 @@ void ToneDetector::postProcess(void)
 {
   bool active = true;
 
-    // Now determine if the tone is active or not. We start by checking
-    // if the passband energy exceed the energy threshold. This check
-    // is necessary to not give false detections on silent input, like when
-    // the hardware squelch is closed on the receiver.
-  active = active && (passband_energy > par->passband_energy_thresh);
-
     // Calculate the magnitude for the center bin
   float res_center = par->center.relativeMagnitudeSquared();
+
+    // Now determine if the tone is active or not. We start by checking
+    // if the tone energy exceed the energy threshold. This check
+    // is necessary to not give false detections on silent input, like when
+    // the hardware squelch is closed on the receiver.
+  active = active && (res_center > DEFAULT_TONE_ENERGY_THRESH);
 
   if (par->peak_thresh > 0.0f)
   {
@@ -593,8 +583,16 @@ void ToneDetector::postProcess(void)
       // Estimate the mean noise floor over the whole passband
     float Pnoise = (Ppassband - Ptone) / ((par->passband_bw-par->bw) / par->bw);
     
-      // Calculate the signal to noise ratio
-    float snr = 10.0f * log10f(Ptone / Pnoise);
+      // Calculate the signal to noise ratio.
+      // Pnoise may turn negative, probably due to rounding errors, so we
+      // arbitrarily set the SNR to a constant in that case. This typically
+      // happens on signals with extremely little noise in them. Probably we
+      // will only see this in constructed scenarious like in simulation.
+    float snr = 70.0f;
+    if (Pnoise > 0.0f)
+    {
+      snr = 10.0f * log10f(Ptone / Pnoise);
+    }
     
       // Check if the SNR is over the threshold
     active = active && (snr > par->snr_thresh);

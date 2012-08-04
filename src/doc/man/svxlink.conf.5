@@ -661,6 +661,15 @@ specified. This is done using the syntax SQL_PIN=PIN:LEVEL, where PIN is one of 
 above and LEVEL is either SET or CLEAR.
 Example: SQL_PIN=CTS:SET
 .TP
+.B SERIAL_SET_PINS
+Set the specified serial port pins to a static state. This can be good if using
+a pin for reference voltage or if a pin have to be in a certain state to not
+interfere with the operation of some equipment. There are two pins that are
+possible to use, RTS and DTR. If prefixed with an exclamation mark (!), the
+pin will be cleared and if not it will be set.
+
+Example: SERIAL_SET_PINS=RTS!DTR will set RTS and clear DTR.
+.TP
 .B EVDEV_DEVNAME
 Specify which /dev/input device node to use for the EVDEV squelch detector.
 To find out which device node and event codes to use, install the evtest
@@ -1001,6 +1010,15 @@ specify one or two pins. Some interface boards require that you specify two pins
 pin does not provide enough drive power to the circuit. A "!" in front of the pin name
 indicates inverted operation. Some of the possible values are RTS, DTRRTS, !DTR!RTS or
 even DTR!RTS.
+.TP
+.B SERIAL_SET_PINS
+Set the specified serial port pins to a static state. This can be good if using
+a pin for reference voltage or if a pin have to be in a certain state to not
+interfere with the operation of some equipment. There are two pins that are
+possible to use, RTS and DTR. If prefixed with an exclamation mark (!), the
+pin will be cleared and if not it will be set.
+
+Example: SERIAL_SET_PINS=RTS!DTR will set RTS and clear DTR.
 .TP
 .B PTT_HANGTIME
 Use this configuration variable to set a PTT hangtime. This can be good
