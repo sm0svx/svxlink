@@ -297,7 +297,6 @@ void RfUplink::rxSquelchOpen(bool is_open)
 
 void RfUplink::rxSignalLevelUpdated(float siglev)
 {
-  cout << "RfUplink::rxSignalLevelUpdated: siglev=" << siglev << endl;
   if (rx->squelchIsOpen())
   {
     uplink_tx->setTransmittedSignalStrength(siglev);

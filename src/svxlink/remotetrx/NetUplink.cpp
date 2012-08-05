@@ -759,7 +759,6 @@ void NetUplink::setFallbackActive(bool activate)
 
 void NetUplink::signalLevelUpdated(float siglev)
 {
-  cout << "NetUplink::signalLevelUpdated: siglev=" << siglev << endl;
   MsgSiglevUpdate *msg = new MsgSiglevUpdate(rx->signalStrength(),
 					     rx->sqlRxId());
   sendMsg(msg);  
