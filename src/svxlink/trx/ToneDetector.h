@@ -451,7 +451,7 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
     struct DetectorParams;
 
     static const bool   DEFAULT_USE_WINDOWING		= true;
-    static const float  DEFAULT_PASSBAND_POWER_THRESH	= 3.0E-9;
+    static const float  DEFAULT_TONE_ENERGY_THRESH	= 0.1f;
     static const float  DEFAULT_PEAK_THRESH		= 10.0;
     static const float  DEFAULT_PHASE_MEAN_THRESH	= 0.0f;
     static const float  DEFAULT_PHASE_VAR_THRESH	= 0.0f;
