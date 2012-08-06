@@ -17,6 +17,9 @@
   if needed. Have a look at the SERIAL_SET_PINS config variable for the
   LocalRx and LocalTx sections in the svxlink.conf.5 manual page.
 
+* Improved the SigLevTone detector using the same techniques that was
+  used to improve the CTCSS decoder.
+
 
 
  0.13.1 -- 27 Nov 2011
