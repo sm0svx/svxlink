@@ -139,33 +139,33 @@ class NetUplink : public Uplink
      */
     NetUplink(Async::Config &cfg, const std::string &name, Rx *rx, Tx *tx,
       	      const std::string& port_str = NET_TRX_DEFAULT_TCP_PORT);
-  
+
     /**
      * @brief 	Destructor
      */
     ~NetUplink(void);
-  
+
     /**
      * @brief 	Initialize the uplink
      * @return	Return \em true on success or \em false on failure
      */
     bool initialize(void);
-    
+
     /**
      * @brief Setup the authentication key
      * @param key The autentication key to use
      */
     void setAuthKey(const std::string &key) { auth_key = key; }
-    
+
 
   protected:
-    
+
   private:
     typedef enum
     {
       STATE_DISC, STATE_AUTH_WAIT, STATE_READY
     } State;
-    
+
     Async::TcpServer  	    *server;
     Async::TcpConnection    *con;
     char      	      	    recv_buf[4096];
@@ -190,7 +190,7 @@ class NetUplink : public Uplink
     bool		    tx_muted;
     bool                    fallback_enabled;
     Tx::TxCtrlMode	    tx_ctrl_mode;
-    
+
     NetUplink(const NetUplink&);
     NetUplink& operator=(const NetUplink&);
     void clientConnected(Async::TcpConnection *con);
@@ -205,24 +205,30 @@ class NetUplink : public Uplink
      * @param 	is_open Set to \em true if open or \em false if closed
      */
     void squelchOpen(bool is_open);
-    
+
     /**
      * @brief 	Pass on received DTMF digit
      * @param 	digit The received digit
      */
     void dtmfDigitDetected(char digit, int duration);
-    
+
     /**
      * @brief 	Pass on detected tone
      * @param 	tone_fq The frequency of the received tone
      */
     void toneDetected(float tone_fq);
-    
+
     /**
      * @brief 	Pass on detected selcall sequence
      * @param 	sequence received sequence of digits
     */
     void selcallSequenceDetected(std::string sequence);
+
+    /**
+     * @brief   Pass on detected afsk message
+     * @param   received afsk message
+    */
+    void afskMessageDetected(std::string aprs_message, std::string payload);
 
 
     void writeEncodedSamples(const void *buf, int size);
