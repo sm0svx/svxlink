@@ -884,6 +884,10 @@ void Logic::afskMessageDetected(std::string aprs_message, std::string payload)
                         + ":" + payload;
        LocationInfo::instance()->igateMessage(message);
        cout << "igate: " << message;
+
+       stringstream ss;
+       ss << "aprs_message_received";
+       processEvent(ss.str());
    }
 } /* Logic::afskMessageDetected */
 
