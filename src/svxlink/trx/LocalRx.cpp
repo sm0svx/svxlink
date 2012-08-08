@@ -79,6 +79,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "LocalRx.h"
 #include "multirate_filter_coeff.h"
 #include "Sel5Decoder.h"
+#include "AfskDecoder.h"
 
 
 /****************************************************************************
@@ -114,11 +115,11 @@ class PeakMeter : public AudioPassthrough
 {
   public:
     PeakMeter(const string& name) : name(name) {}
-    
+
     int writeSamples(const float *samples, int count)
     {
       int ret = sinkWriteSamples(samples, count);
-      
+
       int i;
       for (i=0; i<ret; ++i)
       {
@@ -127,19 +128,19 @@ class PeakMeter : public AudioPassthrough
 	  break;
 	}
       }
-      
+
       if (i < ret)
       {
       	cout << name
 	     << ": Distorsion detected! Please lower the input volume!\n";
       }
-      
+
       return ret;
     }
-  
+
   private:
     string name;
-    
+
 };
 
 
@@ -195,7 +196,7 @@ bool LocalRx::initialize(void)
   {
     return false;
   }
-  
+
   string value;
 
   string audio_dev;
@@ -204,7 +205,7 @@ bool LocalRx::initialize(void)
     cerr << "*** ERROR: Config variable " << name() << "/AUDIO_DEV not set\n";
     return false;
   }
-  
+
   if (!cfg.getValue(name(), "AUDIO_CHANNEL", value))
   {
     cerr << "*** ERROR: Config variable " << name()
@@ -212,13 +213,13 @@ bool LocalRx::initialize(void)
     return false;
   }
   int audio_channel = atoi(value.c_str());
-  
+
   bool deemphasis = false;
   if (cfg.getValue(name(), "DEEMPHASIS", value))
   {
     deemphasis = (atoi(value.c_str()) != 0);
   }
-  
+
   int delay_line_len = 0;
   if (cfg.getValue(name(), "MUTE_DTMF", value))
   {
@@ -227,13 +228,13 @@ bool LocalRx::initialize(void)
 	 << "           section \"" << name() << "\".\n";
     return false;
   }
-  
+
   if (cfg.getValue(name(), "DTMF_MUTING", value))
   {
     mute_dtmf = (atoi(value.c_str()) != 0);
     delay_line_len = DTMF_MUTING_PRE;
   }
-  
+
   bool  mute_1750 = false;
   if (cfg.getValue(name(), "1750_MUTING", mute_1750))
   {
@@ -245,18 +246,18 @@ bool LocalRx::initialize(void)
     sql_tail_elim = atoi(value.c_str());
     delay_line_len = max(delay_line_len, sql_tail_elim);
   }
-  
+
   if (cfg.getValue(name(), "PREAMP", value))
   {
     preamp_gain = atoi(value.c_str());
   }
-  
+
   bool peak_meter = false;
   if (cfg.getValue(name(), "PEAK_METER", value))
   {
     peak_meter = (atoi(value.c_str()) != 0);
   }
-  
+
   /*
   int dtmf_hangtime = 100;
   if (cfg.getValue(name(), "DTMF_HANGTIME", value))
@@ -264,19 +265,19 @@ bool LocalRx::initialize(void)
     dtmf_hangtime = atoi(value.c_str());
   }
   */
-  
+
     // Create the audio IO object
   audio_io = new AudioIO(audio_dev, audio_channel);
   //FIXME: Check that the audio device is correctly initialized
   //       before continuing.
   AudioSource *prev_src = audio_io;
-  
+
     // Create a fifo buffer to handle large audio blocks
   AudioFifo *input_fifo = new AudioFifo(1024);
 //  input_fifo->setOverwrite(true);
   prev_src->registerSink(input_fifo, true);
   prev_src = input_fifo;
-  
+
     // If a preamp was configured, create it
   if (preamp_gain != 0)
   {
@@ -285,7 +286,7 @@ bool LocalRx::initialize(void)
     prev_src->registerSink(preamp, true);
     prev_src = preamp;
   }
-  
+
     // If a peak meter was configured, create it
   if (peak_meter)
   {
@@ -293,7 +294,7 @@ bool LocalRx::initialize(void)
     prev_src->registerSink(peak_meter, true);
     prev_src = peak_meter;
   }
-  
+
     // If the sound card sample rate is higher than 16kHz (48kHz assumed),
     // decimate it down to 16kHz
   if (audio_io->sampleRate() > 16000)
@@ -303,7 +304,7 @@ bool LocalRx::initialize(void)
     prev_src->registerSink(d1, true);
     prev_src = d1;
   }
-  
+
     // If the sound card sample rate is higher than 8kHz (16 or 48kHz assumed)
     // decimate it down to 8kHz. Also create a splitter to distribute the
     // 16kHz audio to other consumers.
@@ -331,12 +332,12 @@ bool LocalRx::initialize(void)
     prev_src->registerSink(deemph_filt, true);
     prev_src = deemph_filt;
   }
-  
+
     // Create an audio splitter to distribute the 8kHz audio to all consumers
   AudioSplitter *splitter = new AudioSplitter;
   prev_src->registerSink(splitter, true);
   prev_src = 0;
-  
+
     // Create the signal level detector. Connect it to the 16 or 8kHz splitter
     // depending on how the sound card sample rate is setup.
 #if (INTERNAL_SAMPLE_RATE != 16000)
@@ -366,7 +367,7 @@ bool LocalRx::initialize(void)
   }
   splitter->addSink(siglevdet, true);
 #endif
-  
+
     // Create the configured squech detector and initialize it. Then connect
     // it to the 8kHz audio splitter
   string sql_det_str;
@@ -406,7 +407,7 @@ bool LocalRx::initialize(void)
     // FIXME: Cleanup
     return false;
   }
-  
+
   if (!squelch_det->initialize(cfg, name()))
   {
     cerr << "*** ERROR: Squelch detector initialization failed for RX \""
@@ -416,7 +417,7 @@ bool LocalRx::initialize(void)
     // FIXME: Cleanup
     return false;
   }
-  
+
   squelch_det->squelchOpen.connect(mem_fun(*this, &LocalRx::onSquelchOpen));
   splitter->addSink(squelch_det, true);
 
@@ -432,7 +433,7 @@ bool LocalRx::initialize(void)
   dtmf_dec->digitDeactivated.connect(
       mem_fun(*this, &LocalRx::dtmfDigitDeactivated));
   splitter->addSink(dtmf_dec, true);
-  
+
    // creates a selective multiple tone detector object
   string sel5_det_str;
   if (cfg.getValue(name(), "SEL5_DEC_TYPE", sel5_det_str))
@@ -448,11 +449,26 @@ bool LocalRx::initialize(void)
     splitter->addSink(sel5_dec, true);
   }
 
+  string afsk_det_str;
+  if (cfg.getValue(name(), "AFSK_DEC_TYPE", afsk_det_str))
+  {
+    AfskDecoder *afsk_dec = AfskDecoder::create(cfg, name());
+    if (afsk_dec == 0 || !afsk_dec->initialize())
+    {
+      cerr << "*** ERROR: Afsk decoder initialization failed for RX \""
+          << name() << "\"\n";
+      return false;
+    }
+    afsk_dec->afskDetected.connect(mem_fun(*this, &LocalRx::afskDetected));
+    splitter->addSink(afsk_dec, true);
+ //   delay_line_len += 200;
+  }
+
     // Create a new audio splitter to handle tone detectors then add it to
     // the splitter
   tone_dets = new AudioSplitter;
   splitter->addSink(tone_dets, true);
-  
+
     // Create an audio valve to use as squelch and connect it to the splitter
   sql_valve = new AudioValve;
   sql_valve->setOpen(false);
@@ -470,7 +486,7 @@ bool LocalRx::initialize(void)
   AudioFilter *ctcss_filt = new AudioFilter("HpBu20/300");
   prev_src->registerSink(ctcss_filt, true);
   prev_src = ctcss_filt;
-  
+
     // If we need a delay line (e.g. for DTMF muting and/or squelch tail
     // elimination), create it
   if (delay_line_len > 0)
@@ -479,7 +495,7 @@ bool LocalRx::initialize(void)
     prev_src->registerSink(delay, true);
     prev_src = delay;
   }
-  
+
     // Add a limiter to smoothly limiting the audio before hard clipping it
   AudioCompressor *limit = new AudioCompressor;
   limit->setThreshold(-1);
@@ -504,11 +520,11 @@ bool LocalRx::initialize(void)
 #endif
   prev_src->registerSink(splatter_filter, true);
   prev_src = splatter_filter;
-  
+
     // Set the previous audio pipe object to handle audio distribution for
     // the LocalRx class
   setHandler(prev_src);
-  
+
   if (mute_1750)
   {
     ToneDetector *calldet = new ToneDetector(1750, 50, 100);
@@ -520,7 +536,7 @@ bool LocalRx::initialize(void)
   }
 
   return true;
-  
+
 } /* LocalRx:initialize */
 
 
@@ -530,7 +546,7 @@ void LocalRx::mute(bool do_mute)
   {
     return;
   }
-  
+
   if (do_mute)
   {
     if (delay != 0)
@@ -550,7 +566,7 @@ void LocalRx::mute(bool do_mute)
       	   << name() << "\"\n";
       return;
     }
-    
+
     squelch_det->reset();
   }
 
@@ -568,9 +584,9 @@ bool LocalRx::addToneDetector(float fq, int bw, float thresh,
   assert(det != 0);
   det->setPeakThresh(thresh);
   det->detected.connect(toneDetected.make_slot());
-  
+
   tone_dets->addSink(det, true);
-  
+
   return true;
 
 } /* LocalRx::addToneDetector */
@@ -581,7 +597,7 @@ float LocalRx::signalStrength(void) const
   //return siglev_offset - siglev_slope * log10(siglevdet->lastSiglev());
   return siglevdet->lastSiglev();
 } /* LocalRx::signalStrength */
-    
+
 
 void LocalRx::reset(void)
 {
@@ -608,6 +624,12 @@ void LocalRx::reset(void)
  * Private member functions
  *
  ****************************************************************************/
+
+void LocalRx::afskDetected(string aprs_message, string payload)
+{
+  afskMessageDetected(aprs_message, payload);
+} /* LocalRx::afskDetected */
+
 
 void LocalRx::sel5Detected(std::string sequence)
 {
@@ -680,7 +702,7 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
   {
     siglev_det_type = "NOISE";
   }
-  
+
   SigLevDet *siglevdet = 0;
   if (siglev_det_type == "TONE")
   {
@@ -695,18 +717,18 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
   else if (siglev_det_type == "NOISE")
   {
     SigLevDetNoise *det = new SigLevDetNoise(sample_rate);
-  
+
     string value;
     if (cfg.getValue(name, "SIGLEV_OFFSET", value))
     {
       det->setDetectorOffset(atof(value.c_str()));
     }
-    
+
     if (cfg.getValue(name, "SIGLEV_SLOPE", value))
     {
       det->setDetectorSlope(atof(value.c_str()));
     }
-    
+
     siglevdet = det;
   }
   else
@@ -715,15 +737,15 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
          << siglev_det_type << "\" specified in " << name << "/SIGLEV_DET.";
     return 0;
   }
-  
+
   if (!siglevdet->initialize(cfg, name))
   {
     delete siglevdet;
     siglevdet = 0;
   }
-  
+
   return siglevdet;
-  
+
 } /* LocalRx::createSigLevDet */
 
 

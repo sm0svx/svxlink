@@ -135,24 +135,24 @@ class LocalRx : public Rx
      * @brief 	Default constuctor
      */
     explicit LocalRx(Async::Config &cfg, const std::string& name);
-  
+
     /**
      * @brief 	Destructor
      */
     ~LocalRx(void);
-  
+
     /**
      * @brief 	Initialize the receiver object
      * @return 	Return \em true on success, or \em false on failure
      */
     bool initialize(void);
-    
+
     /**
      * @brief 	Mute the receiver
      * @param 	do_mute Set to \em true to mute or \em false to unmute
      */
     void mute(bool do_mute);
-    
+
     /**
      * @brief 	Call this function to add a tone detector to the RX
      * @param 	fq The tone frequency to detect
@@ -170,7 +170,7 @@ class LocalRx : public Rx
      * @return	Returns the signal strength
      */
     float signalStrength(void) const;
-    
+
     /**
      * @brief 	Reset the receiver object to its default settings
      */
@@ -185,10 +185,10 @@ class LocalRx : public Rx
      * CTCSS_MODE is set to 2 or 3.
      */
     sigc::signal<void, float> ctcssSnrUpdated;
-    
+
 
   protected:
-    
+
   private:
     Async::Config     	      	&cfg;
     Async::AudioIO    	      	*audio_io;
@@ -201,7 +201,7 @@ class LocalRx : public Rx
     bool      	      	      	mute_dtmf;
     int       	      	      	sql_tail_elim;
     int       	      	      	preamp_gain;
-    
+
     int audioRead(float *samples, int count);
     void dtmfDigitActivated(char digit);
     void dtmfDigitDeactivated(char digit, int duration_ms);
@@ -210,6 +210,7 @@ class LocalRx : public Rx
     void onSquelchOpen(bool is_open);
     SigLevDet *createSigLevDet(const std::string &name, int sample_rate);
     void tone1750detected(bool detected);
+    void afskDetected(std::string aprs_message, std::string payload);
 
 };  /* class LocalRx */
 

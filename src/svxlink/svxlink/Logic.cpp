@@ -71,6 +71,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioPacer.h>
 #include <AsyncAudioDebugger.h>
 #include <AsyncAudioRecorder.h>
+#include <LocationInfo.h>
 
 
 /****************************************************************************
@@ -239,7 +240,7 @@ bool Logic::initialize(void)
     delete lang_cmd;  // FIXME: Do this in cleanup() instead
     return false;
   }
-  
+
   string value;
   if (cfg().getValue(name(), "LINKS", value))
   {
@@ -409,6 +410,8 @@ bool Logic::initialize(void)
   rx().dtmfDigitDetected.connect(mem_fun(*this, &Logic::dtmfDigitDetectedP));
   rx().selcallSequenceDetected.connect(
 	mem_fun(*this, &Logic::selcallSequenceDetected));
+  rx().afskMessageDetected.connect(
+    mem_fun(*this, &Logic::afskMessageDetected));
   rx().mute(false);
   prev_rx_src = m_rx;
 
@@ -869,6 +872,20 @@ void Logic::selcallSequenceDetected(std::string sequence)
     cout << "Sel5 sequence \"" << sequence << "\" out of defined range\n";
   }
 } /* Logic::selcallSequenceDetected */
+
+
+void Logic::afskMessageDetected(std::string aprs_message, std::string payload)
+{
+
+   if (LocationInfo::has_instance())
+   {
+       string mycall = LocationInfo::instance()->get_callsign();
+       string message= aprs_message + "," + mycall
+                        + ":" + payload;
+       LocationInfo::instance()->igateMessage(message);
+       cout << "igate: " << message;
+   }
+} /* Logic::afskMessageDetected */
 
 
 void Logic::disconnectAllLogics(void)

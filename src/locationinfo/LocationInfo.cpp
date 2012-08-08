@@ -214,6 +214,22 @@ void LocationInfo::update3rdState(const string& call, const string& info)
 } /* LocationInfo::update3rdState */
 
 
+void LocationInfo::igateMessage(const std::string& info)
+{
+  ClientList::const_iterator it;
+  for (it = clients.begin(); it != clients.end(); it++)
+  {
+    (*it)->igateMessage(info);
+  }
+} /* LocationInfo::igateMessage */
+
+
+string LocationInfo::get_callsign(void)
+{
+    return LocationInfo::_instance->loc_cfg.mycall;
+} /* LocationInfo::get_callsign */
+
+
 /****************************************************************************
  *
  * Protected member functions

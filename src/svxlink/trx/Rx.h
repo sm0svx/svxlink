@@ -88,7 +88,7 @@ namespace Async
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -126,24 +126,24 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @brief 	Default constuctor
      */
     explicit Rx(Async::Config &cfg, const std::string& name);
-  
+
     /**
      * @brief 	Destructor
      */
     virtual ~Rx(void);
-  
+
     /**
      * @brief 	Initialize the receiver object
      * @return 	Return \em true on success, or \em false on failure
      */
     virtual bool initialize(void);
-    
+
     /**
      * @brief 	Return the name of the receiver
      * @return	Return the name of the receiver
      */
     const std::string& name(void) const { return m_name; }
-    
+
     /**
      * @brief 	Set the verbosity level of the receiver
      * @param	verbose Set to \em false to keep the rx from printing things
@@ -155,13 +155,13 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @param 	do_mute Set to \em true to mute or \em false to unmute
      */
     virtual void mute(bool do_mute) = 0;
-    
+
     /**
      * @brief 	Check the squelch status
      * @return	Return \em true if the squelch is open or else \em false
      */
     bool squelchIsOpen(void) const { return m_sql_open; }
-    
+
     /**
      * @brief 	Call this function to add a tone detector to the RX
      * @param 	fq The tone frequency to detect
@@ -177,37 +177,37 @@ class Rx : public sigc::trackable, public Async::AudioSource
     {
       return false;
     }
-    
+
     /**
      * @brief 	Read the current signal strength
      * @return	Returns the signal strength
      */
     virtual float signalStrength(void) const { return 0; }
-    
+
     /**
      * @brief 	Find out RX ID of last receiver with squelch activity
      * @returns Returns the RX ID
      */
     virtual int sqlRxId(void) const { return 0; }
-    
+
     /**
      * @brief 	Reset the receiver object to its default settings
      */
     virtual void reset(void) = 0;
-    
+
     /**
      * @brief 	A signal that indicates if the squelch is open or not
      * @param 	is_open \em True if the squelch is open or \em false if not
      */
     sigc::signal<void, bool> squelchOpen;
-    
+
     /**
      * @brief 	A signal that is emitted when a DTMF digit has been detected
      * @param 	digit The detected digit (0-9, A-D, *, #)
      * @param 	duration Tone duration in milliseconds
      */
     sigc::signal<void, char, int> dtmfDigitDetected;
-    
+
     /**
      * @brief 	A signal that is emitted when a valid selcall sequence has been
                 detected
@@ -217,13 +217,21 @@ class Rx : public sigc::trackable, public Async::AudioSource
 
 
     /**
+     * @brief   A signal that is emitted when a valid Afsk message has been
+                detected
+     * @param   sequence the Afsk message
+     */
+    sigc::signal<void, std::string, std::string> afskMessageDetected;
+
+
+    /**
      * @brief 	A signal that is emitted when a previously specified tone has
      *	      	been detected for the specified duration
      * @param 	fq The frequency of the tone
      */
     sigc::signal<void, float> toneDetected;
-    
-    
+
+
   protected:
     /**
      * @brief 	Set the state of the squelch
@@ -231,17 +239,17 @@ class Rx : public sigc::trackable, public Async::AudioSource
      *	      	      	\em false if it is closed.
      */
     void setSquelchState(bool is_open);
-    
-    
+
+
   private:
     std::string   m_name;
     bool          m_verbose;
     bool      	  m_sql_open;
     Async::Config m_cfg;
     Async::Timer  *m_sql_tmo_timer;
-    
+
     void sqlTimeout(Async::Timer *t);
-    
+
 };  /* class Rx */
 
 
@@ -252,13 +260,13 @@ class RxFactory
 
     RxFactory(const std::string &name);
     virtual ~RxFactory(void);
-    
+
   protected:
     virtual Rx *createRx(Async::Config& cfg, const std::string& name) = 0;
-  
+
   private:
     static std::map<std::string, RxFactory*> rx_factories;
-    
+
     std::string m_name;
 
 };  /* class RxFactory */

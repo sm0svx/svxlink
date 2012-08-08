@@ -107,6 +107,7 @@ class AprsClient
     virtual void updateQsoStatus(int action, const std::string& call,
       const std::string& info, std::list<std::string>& call_list) = 0;
     virtual void update3rdState(const std::string& call, const std::string& info) = 0;
+    virtual void igateMessage(const std::string& info) = 0;
 };  /* class AprsClient */
 
 

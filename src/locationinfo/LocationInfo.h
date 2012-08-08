@@ -161,6 +161,9 @@ class LocationInfo
     void updateQsoStatus(int action, const std::string& call,
                          const std::string& name,
 			 std::list<std::string>& call_list);
+    void igateMessage(const std::string& info);
+    std::string get_callsign();
+
 
     class CGuard
     {

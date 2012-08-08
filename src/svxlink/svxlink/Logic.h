@@ -215,6 +215,8 @@ class Logic : public sigc::trackable
     virtual bool getIdleState(void) const;
     virtual void transmitterStateChange(bool is_transmitting);
     virtual void selcallSequenceDetected(std::string sequence);
+    virtual void afskMessageDetected(std::string aprs_message,
+                                       std::string payload);
 
     void clearPendingSamples(void);
     void enableRgrSoundTimer(bool enable);

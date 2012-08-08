@@ -861,6 +861,14 @@ you define ZVEI1 for SvxLink and a (e.g.) ZVEI3 sequence is received.
 At the moment only SEL5_DEC_TYPE=INTERNAL is valid. Maybe we have support for
 some external tone detectors later.
 .TP
+.B AFSK_DEC_TYPE
+At the moment only AFSK_DEC_TYPE=INTERNAL is valid. Maybe we have support for
+some external Afsk detectors later. Please note that the activation of
+LocationInfo is mandatory to use this feature!
+.TP
+.B AFSK_DEC_BAUDRATE
+Set the baudrate of the Afsk decoder, valid values are 1200 and 2400.
+.TP
 .
 .SS Voter Section
 .

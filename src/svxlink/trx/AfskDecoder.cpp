@@ -1,12 +1,13 @@
 /**
-@file	 AprsUdpClient.h
-@brief   Contains an implementation of APRS updates via UDP
-@author  Adi/DL1HRC and Steve/DH1DM
-@date	 2009-03-12
+@file	 AfskDecoder.cpp
+@brief   This file contains the base class for implementing an Afsk decoder
+@author  Tobias Blomberg / SM0SVX & Christian Stussak (University of Halle)
+         & Adi Bier / DL1HRC
+@date	 2012-07-20
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2012  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,8 +26,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef APRS_UDP_CLIENT
-#define APRS_UDP_CLIENT
 
 
 /****************************************************************************
@@ -35,8 +34,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <iostream>
+#include <cstdlib>
+#include <algorithm>
 #include <string>
-
 
 /****************************************************************************
  *
@@ -44,8 +45,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncUdpSocket.h>
-#include <AsyncDnsLookup.h>
 
 
 /****************************************************************************
@@ -54,41 +53,19 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "LocationInfo.h"
-#include "AprsClient.h"
-
-
-/****************************************************************************
- *
- * Forward declarations
- *
- ****************************************************************************/
-
-namespace Async
-{
-  class Config;
-  class Timer;
-  class DnsLookup;
-};
-namespace EchoLink
-{
-  class StationData;
-};
-
-/****************************************************************************
- *
- * Namespace
- *
- ****************************************************************************/
+#include "AfskDecoder.h"
+#include "SwAfskDecoder.h"
 
 
 
 /****************************************************************************
  *
- * Forward declarations of classes inside of the declared namespace
+ * Namespaces to use
  *
  ****************************************************************************/
 
+using namespace std;
+using namespace Async;
 
 
 /****************************************************************************
@@ -96,6 +73,23 @@ namespace EchoLink
  * Defines & typedefs
  *
  ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Local class definitions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Prototypes
+ *
+ ****************************************************************************/
+
 
 
 /****************************************************************************
@@ -106,57 +100,76 @@ namespace EchoLink
 
 
 
+
 /****************************************************************************
  *
- * Class definitions
+ * Local Global Variables
  *
  ****************************************************************************/
 
-class AprsUdpClient : public AprsClient, public sigc::trackable
+
+
+/****************************************************************************
+ *
+ * Public member functions
+ *
+ ****************************************************************************/
+
+AfskDecoder *AfskDecoder::create(Config &cfg, const string& name)
 {
-  public:
-     AprsUdpClient(LocationInfo::Cfg &loc_cfg, const std::string &server,
-                   int port);
-     ~AprsUdpClient(void);
+  AfskDecoder *dec = 0;
+  string type;
 
-     void updateDirectoryStatus(EchoLink::StationData::Status status);
-     void updateQsoStatus(int action, const std::string& call,
-       const std::string& info, std::list<std::string>& call_list);
-     void update3rdState(const std::string& call, const std::string& info);
-     void igateMessage(const std::string& info);
+    // For later extensions we take the same structure from the dtmf stuff
+    // to have the chance to connect a e.g. Afsk hardware detector like TNC2
+  if (!cfg.getValue(name, "AFSK_DEC_TYPE", type))
+  {
+    cerr << "*** ERROR: Config variable " << name << "/AFSK_DEC_TYPE not "
+      	 << "specified.\n";
+    return 0;
+  }
 
-  private:
-    LocationInfo::Cfg	&loc_cfg;
-    std::string		server;
-    int			port;
-    Async::UdpSocket	sock;
-    Async::IpAddress	ip_addr;
-    Async::DnsLookup	*dns;
-    Async::Timer        *beacon_timer;
+  std::transform(type.begin(), type.end(), type.begin(), ::toupper);
 
-    EchoLink::StationData::Status	curr_status;
+  if (type == "INTERNAL")
+  {
+    dec = new SwAfskDecoder(cfg, name);
+  }
+  else
+  {
+    cerr << "*** ERROR: Unknown Afsk decoder type \"" << type << "\". "
+      	 << "Legal values at the moment are: \"INTERNAL\"\n";
+  }
 
-    int			num_connected;
-    std::string		curr_call;
+  return dec;
 
-    void  sendLocationInfo(Async::Timer *t = 0);
-    void  dnsResultsReady(Async::DnsLookup &dns_lookup);
-
-    int   buildSdesPacket(char *p);
-
-    short getPasswd(const std::string& call);
-
-    int   getToneParam();
-    int   getPowerParam();
-    int   getHeightParam();
-    int   getGainParam();
-    int   getDirectionParam();
-
-};  /* class LocationInfoClient */
+} /* AfskDecoder::create */
 
 
-#endif /* APRS_UDP_CLIENT */
+bool AfskDecoder::initialize(void)
+{
+  return true;
+
+} /* AfskDecoder::initialize */
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
+
 
 /*
  * This file has not been truncated
  */
+
