@@ -665,6 +665,13 @@ void NetUplink::afskMessageDetected(std::string aprs_message, std::string payloa
 } /* NetUplink::afskDetected */
 
 
+void NetUplink::fmsMessageDetected(std::string fms_message)
+{
+  MsgFms *msg = new MsgFms(fms_message);
+  sendMsg(msg);
+} /* NetUplink::fmsMessageDetected */
+
+
 void NetUplink::writeEncodedSamples(const void *buf, int size)
 {
   //cout << "NetUplink::writeEncodedSamples: size=" << size << endl;

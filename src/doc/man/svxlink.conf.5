@@ -31,7 +31,7 @@ file might look like is shown below.
   VALUE2="TWO "
   VAULE3="Multi "
          "line"
-  
+
   [SECTION2]
   VALUE1=2
 
@@ -54,7 +54,7 @@ configuration variables are described section for section.
 The GLOBAL section contains application global configuration data.
 .TP
 .B MODULE_PATH
-Specify where the SvxLink modules can be found. The default is /usr/lib/svxlink 
+Specify where the SvxLink modules can be found. The default is /usr/lib/svxlink
 .TP
 .B LOGICS
 Specify a comma separated list of logic cores that should be created. The logic core is
@@ -155,13 +155,13 @@ identification is to just announce that the station is on the air. Typically jus
 callsign is transmitted. For a repeater a good value is ten minutes and for a simplex node
 one time every 60 minutes is probably enough. The LONG_IDENT_INTERVAL must be an even
 multiple of the SHORT_IDENT_INTERVAL so if LONG_IDENT_INTERVAL is 60 then the
-legal values for SHORT_IDENT_INTERVAL are: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60. 
+legal values for SHORT_IDENT_INTERVAL are: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60.
 If unset or set to 0, disable short identifications.
 .TP
 .B LONG_IDENT_INTERVAL
 The number of minutes between long identifications. The purpose of the long identification
 is to transmit some more information about the station status (new voice mails etc). The time of
-day is also transmitted. A good value here is 60 minutes. 
+day is also transmitted. A good value here is 60 minutes.
 If unset or set to 0, disable long identifications.
 .TP
 .B IDENT_ONLY_AFTER_TX
@@ -172,7 +172,7 @@ using an RF link to provide echolink to a repeater. Often, in this situation, it
 desirable for the link to identify unless legally necessary. Note that
 SHORT_IDENT_INTERVAL still have to be set for this feature to work. That config variable
 will then be interpreted as the minimum number of seconds between identifications. The
-LONG_IDENT_INTERVAL will not be affected by this parameter.   
+LONG_IDENT_INTERVAL will not be affected by this parameter.
 .TP
 .B EXEC_CMD_ON_SQL_CLOSE
 Specify a time, in milliseconds, after squelch close after which entered DTMF digits will
@@ -196,12 +196,12 @@ The number of milliseconds to wait after the squelch has been closed before a ro
 is played. The beep can be disabled by specifying a value of -1 or commenting out this
 line. Often it is best to use the SQL_HANGTIME receiver configuration variable to specify
 a delay instead of specifying a delay here. This configuration variable should then be set
-to 0. 
+to 0.
 .TP
 .B REPORT_CTCSS
 If set, will report the specified CTCSS frequency upon manual identification (* pressed).
 It is possible to specify fractions using "." as decimal comma. Disable this feature by
-commenting out (#) this configuration variable. 
+commenting out (#) this configuration variable.
 .TP
 .B TX_CTCSS
 This configuration variable controls if a CTCSS tone should be transmitted.
@@ -345,6 +345,12 @@ be ignored.
 Use this configuration variable if you want to open your repeater by using a selective tone
 call that is often used in commercial radio networks. Example: OPEN_ON_SEL5=03345 opens your
 repeater only if that sequence has been received. You can use sequence lengths from 4 to 25.
+.TP
+.B OPEN_ON_FMS
+Use this configuration variable if you want to open your repeater by using a Fms sequence
+or a part of it. A completely Fms string consist of the following space separated params
+"bos land ort kfz stat bst dir tki", e.g. "3 d 34 2334 1 1 1 2"
+For more information take a look at http://de.wikipedia.org/wiki/Funkmeldesystem (German)
 .TP
 .B OPEN_ON_SQL
 Use this configuration variable if it should be possible to open the repeater just by
@@ -530,7 +536,7 @@ the transceiver makes a noise when the transmitter is turned off, that might
 trigger the VOX and cause an infinite loop of squelch open/close transmitter
 on/off.
 Specify the number of milliseconds that the squelch should be "deaf" after
-the transmitter has been turned off. 
+the transmitter has been turned off.
 .TP
 .B SQL_DELAY
 Specify a delay in milliseconds that a squelch open indication will be delayed.
@@ -542,7 +548,7 @@ multiple receivers. A normal value could be somewhere in between 20-100ms.
 .TP
 .B SQL_HANGTIME
 How long, in milliseconds, the squelch will stay open after the detector has indicated
-that it is closed. This configuration variable will affect all squelch detector types. 
+that it is closed. This configuration variable will affect all squelch detector types.
 .TP
 .B SQL_TIMEOUT
 Use this configuration variable to set an upper limiti, in seconds, for how
@@ -555,12 +561,12 @@ the system indefinitly.
 .B VOX_FILTER_DEPTH
 The number of milliseconds to create the mean value over. A small value will make the vox
 react quicker (<200) and larger values will make it a little bit more sluggish. A small
-value is often better. 
+value is often better.
 .TP
 .B VOX_THRESH
 The threshold that the mean value of the samples must exceed for the squlech to be
 considered open. It's hard to say what is a good value. Something around 1000 is probably
-a good value. Set it as low as possible without getting the vox to false trigger. 
+a good value. Set it as low as possible without getting the vox to false trigger.
 .TP
 .B CTCSS_MODE
 This configuration variable set the CTCSS detection method used. These are the
@@ -651,7 +657,7 @@ If SQL_DET is set to SERIAL, this config variable determines which serial port s
 used for hardware squelch input (COS - Carrier Operated Squelch).
 Note: If the same serial port is used for the PTT, make sure you specify exactly the same
 device name. Otherwise the RX and TX will not be able to share the port.
-Example: SQL_PORT=/dev/ttyS0 
+Example: SQL_PORT=/dev/ttyS0
 .TP
 .B SERIAL_PIN
 If SQL_DET is set to SERIAL, this config variable determines which pin in the serial port
@@ -714,7 +720,7 @@ frequency spektrum (5.5 - 6.4kHz, 100Hz step) to indicate one of ten signal
 levels.  Only the receiving part have been implemented in SvxLink at the
 moment. On the remote receiver side an Atmel AVR ATmega8 is used to map the
 signal level voltage to tone frequencies.
-Use the TONE_SIGLEV_MAP configuration variable to map each tone to a 
+Use the TONE_SIGLEV_MAP configuration variable to map each tone to a
 corresponding signal level value in between 0 - 100.
 .TP
 .B SIGLEV_SLOPE
@@ -737,7 +743,7 @@ The Atmel AVR processor used by the author have a reverse mapping so
 that the first tone (5500Hz) indicate the highest signal strength and the
 last tone (6400Hz) indicate the lowest signal strength. It is also not linear
 since it's more important to have fine measurement granularity in the lower
-signal strength range. This is how the mapping look for the AVR: 
+signal strength range. This is how the mapping look for the AVR:
 100,84,60,50,37,32,28,23,19,8.
 .TP
 .B SIGLEV_OPEN_THRESH
@@ -850,7 +856,7 @@ variable to at least 75 milliseconds.
 Legal values for 1750_MUTING are 0=disabled, 1=enabled.
 .TP
 .B SEL5_TYPE
-Define here your selective tone call system. You have the choice of the 
+Define here your selective tone call system. You have the choice of the
 following types: ZVEI1, ZVEI2, ZVEI3, PZVEI, PDZVEI, DZVEI, CCITT, EEA, CCIR1,
 CCIR2, NATEL, EURO, VDEW, AUTO-A, MODAT, PCCIR and EIA. Only one system can be
 used at the same time. Please take into consideration that some Sel5 standards
@@ -868,6 +874,11 @@ LocationInfo is mandatory to use this feature!
 .TP
 .B AFSK_DEC_BAUDRATE
 Set the baudrate of the Afsk decoder, valid values are 1200 and 2400.
+.TP
+.B FMS_DEC_TYPE
+Enables an internal FMS decoder. At the moment only FMS_DEC_TYPE=INTERNAL is
+valid. Maybe we have support for some external Fms detectors later.
+See http://de.wikipedia.org/wiki/Funkmeldesystem
 .TP
 .
 .SS Voter Section
@@ -1044,7 +1055,7 @@ This is a feature that will prevent the transmitter from getting stuck transmitt
 Specify the number of seconds before the transmitter is turned off. Note that this is a
 low level security mechanism that is meant to only kick in if there is a software bug in
 SvxLink. Just so that the transmitter will not transmit indefinately. It is not meant to
-be used to keep people from talking too long. 
+be used to keep people from talking too long.
 .TP
 .B TX_DELAY
 The number of milliseconds (0-1000) to wait after the transmitter has been turned on until
@@ -1230,16 +1241,16 @@ configuration variables are listed below.
 .TP
 .B NAME
 The name of the module. This name must match the namespace used in the TCL event handling
-script. If not set, NAME will be set to the section name. 
+script. If not set, NAME will be set to the section name.
 .TP
 .B PLUGIN_NAME
 The base name of the plugin. For example if this configuration variable is set to Foo, the
 core will look for a plugin called ModuleFoo.so. If not set, PLUGIN_NAME will be set to
-the same value as NAME. 
+the same value as NAME.
 .TP
 .B ID
 Specify the module identification number. This is the number used to access the module
-from the radio interface. 
+from the radio interface.
 .TP
 .B TIMEOUT
 Specify the timeout time, in seconds, after which a module will be automatically
@@ -1301,7 +1312,7 @@ Example:
 LAT_POSITION=51.02.22N
 .TP
 .B CALLSIGN
-Enter your callsign for the APRS network with a prefix that indicates the type 
+Enter your callsign for the APRS network with a prefix that indicates the type
 of station, (ER- for repeaters, EL- for links).
 
 Examples:
@@ -1471,7 +1482,7 @@ Open the squelch so that there is only noise coming into SvxLink.
 Use a second transceiver to make a short, unmodulated transmission. Release the
 PTT when the "Squech OPEN" message is printed. Repeat this for about five times.
 .IP 5 4
-Calculate the mean diff (open level - close level) and the mean lower 
+Calculate the mean diff (open level - close level) and the mean lower
 (squelch close) value. Make sure to use at least four significant digits in your
 calculations.
 .IP 6 4

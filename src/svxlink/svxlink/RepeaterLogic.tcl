@@ -377,6 +377,25 @@ proc list_languages {} {
 }
 
 
+#
+# Executed when a valid aprs message has been received
+#
+proc aprs_message_received {} {
+  playSilence 300;
+  playTone 440 500 30;
+  playTone 540 500 30;
+}
+
+
+#
+# Executed when a valid fms message has been received
+#
+proc fms_message_received {bos land ort kfz stat bst dir tki} {
+  playSilence 300;
+  playTone 440 500 30;
+  playTone 540 500 30;
+}
+
 
 # end of namespace
 }

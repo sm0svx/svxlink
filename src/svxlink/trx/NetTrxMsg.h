@@ -612,7 +612,23 @@ class MsgAfsk : public Msg
 }; /* MsgAfsk */
 
 
+class MsgFms : public Msg
+{
+  public:
+    static const unsigned TYPE = 255;
+    static const int MAX_DIGITS = 50;
+    MsgFms(std::string fms_message)
+      : Msg(TYPE, sizeof(MsgFms))
+    {
+      strncpy(m_message, fms_message.c_str(), MAX_DIGITS);
+      m_message[MAX_DIGITS] = 0;
+      setSize(size() - MAX_DIGITS + strlen(m_message));
+    }
+    std::string fms_message(void) const { return m_message; }
 
+  private:
+    char m_message[MAX_DIGITS + 1];
+}; /* MsgFms */
 
 /******************************** TX Messages ********************************/
 

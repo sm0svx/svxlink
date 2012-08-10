@@ -155,22 +155,22 @@ bool RepeaterLogic::initialize(void)
   {
     return false;
   }
-  
+
   float open_on_ctcss_fq = 0;
   int open_on_ctcss_duration = 0;
   int required_1750_duration = 0;
-  
+
   string str;
   if (cfg().getValue(name(), "IDLE_TIMEOUT", str))
   {
     idle_timeout = atoi(str.c_str()) * 1000;
   }
-  
+
   if (cfg().getValue(name(), "OPEN_ON_1750", str))
   {
     required_1750_duration = atoi(str.c_str());
   }
-  
+
   if (cfg().getValue(name(), "OPEN_ON_CTCSS", str))
   {
     string::iterator it;
@@ -190,17 +190,17 @@ bool RepeaterLogic::initialize(void)
   {
     required_sql_open_duration = atoi(str.c_str());
   }
-  
+
   if (cfg().getValue(name(), "OPEN_ON_SQL_AFTER_RPT_CLOSE", str))
   {
     open_on_sql_after_rpt_close = atoi(str.c_str());
   }
-  
+
   if (cfg().getValue(name(), "OPEN_ON_DTMF", str))
   {
     open_on_dtmf = str.c_str()[0];
   }
-  
+
   if (cfg().getValue(name(), "OPEN_ON_SEL5", str))
   {
     if (str.length() > 25 || str.length() < 4)
@@ -212,6 +212,11 @@ bool RepeaterLogic::initialize(void)
     {
       open_on_sel5 = str;
     }
+  }
+
+  if (cfg().getValue(name(), "OPEN_ON_FMS", str))
+  {
+     open_on_fms = str;
   }
 
   if (cfg().getValue(name(), "OPEN_SQL_FLANK", str))
@@ -230,39 +235,39 @@ bool RepeaterLogic::initialize(void)
       	   << "OPEN_SQL_FLANK are OPEN and CLOSE.\n";
     }
   }
-  
+
   if (cfg().getValue(name(), "IDLE_SOUND_INTERVAL", str))
   {
     idle_sound_interval = atoi(str.c_str());
   }
-  
+
   if (cfg().getValue(name(), "NO_REPEAT", str))
   {
     no_repeat = atoi(str.c_str()) != 0;
   }
-  
+
   if (cfg().getValue(name(), "SQL_FLAP_SUP_MIN_TIME", str))
   {
     sql_flap_sup_min_time = atoi(str.c_str());
   }
-  
+
   if (cfg().getValue(name(), "SQL_FLAP_SUP_MAX_COUNT", str))
   {
     sql_flap_sup_max_cnt = atoi(str.c_str());
   }
-  
+
   if (cfg().getValue(name(), "IDENT_NAG_TIMEOUT", str))
   {
     ident_nag_timeout = 1000 * atoi(str.c_str());
   }
-  
+
   if (cfg().getValue(name(), "IDENT_NAG_MIN_TIME", str))
   {
     ident_nag_min_time = atoi(str.c_str());
   }
-  
+
   rx().toneDetected.connect(mem_fun(*this, &RepeaterLogic::detectedTone));
-  
+
   if (required_1750_duration > 0)
   {
     if (!rx().addToneDetector(1750, 50, 10, required_1750_duration))
@@ -270,7 +275,7 @@ bool RepeaterLogic::initialize(void)
       cerr << "*** WARNING: Could not setup 1750 detection\n";
     }
   }
-  
+
   if ((open_on_ctcss_fq > 0) && (open_on_ctcss_duration > 0))
   {
     if (!rx().addToneDetector(open_on_ctcss_fq, 4, 10, open_on_ctcss_duration))
@@ -278,29 +283,29 @@ bool RepeaterLogic::initialize(void)
       cerr << "*** WARNING: Could not setup CTCSS tone detection\n";
     }
   }
-  
+
   rptValveSetOpen(!no_repeat);
-  
+
   idleStateChanged.connect(mem_fun(*this, &RepeaterLogic::setIdle));
-  
+
   tx().setTxCtrlMode(Tx::TX_AUTO);
-  
+
   processEvent("startup");
-  
+
   return true;
-  
+
 } /* RepeaterLogic::initialize */
 
 
 void RepeaterLogic::processEvent(const string& event, const Module *module)
 {
   rgr_enable = true;
-  
+
   if ((event == "every_minute") && isIdle())
   {
     rgr_enable = false;
   }
-  
+
   if ((event == "repeater_idle") || (event == "send_rgr_sound") /* ||
       (event.find("repeater_down") == 0) */ )
   {
@@ -371,6 +376,31 @@ void RepeaterLogic::selcallSequenceDetected(std::string sequence)
 } /* RepeaterLogic::selcallSequenceDetected */
 
 
+void RepeaterLogic::fmsSequenceDetected(std::string fms_sequence)
+{
+  size_t found;
+  if (repeater_is_up)
+  {
+     Logic::fmsMessageDetected(fms_sequence);
+  }
+  else
+  {
+    if ((found = fms_sequence.find(open_on_fms)) != string::npos)
+    {
+       cout << "fms digits \"" << fms_sequence << "\" detected. "
+               "Activating repeater...\n";
+       open_reason = "FMS";
+       activateOnOpenOrClose(SQL_FLANK_CLOSE);
+    }
+    else
+    {
+       cout << "Ignoring Fms sequence \"" << fms_sequence
+            << "\" since the repeater is not up\n";
+    }
+  }
+} /* RepeaterLogic::fmsSequenceDetected */
+
+
 /****************************************************************************
  *
  * Protected member functions
@@ -398,7 +428,7 @@ void RepeaterLogic::audioStreamStateChange(bool is_active, bool is_idle)
   }
 
   Logic::audioStreamStateChange(is_active, is_idle);
-  
+
 } /* Logic::audioStreamStateChange */
 
 
@@ -440,12 +470,12 @@ void RepeaterLogic::setIdle(bool idle)
   {
     return;
   }
-  
+
   if ((idle && (up_timer != 0)) || (!idle && (up_timer == 0)))
   {
     return;
   }
-  
+
   delete up_timer;
   up_timer = 0;
   delete idle_sound_timer;
@@ -454,7 +484,7 @@ void RepeaterLogic::setIdle(bool idle)
   {
     up_timer = new Timer(idle_timeout);
     up_timer->expired.connect(mem_fun(*this, &RepeaterLogic::idleTimeout));
-    
+
     if (idle_sound_interval > 0)
     {
       idle_sound_timer = new Timer(idle_sound_interval, Timer::TYPE_PERIODIC);
@@ -464,7 +494,7 @@ void RepeaterLogic::setIdle(bool idle)
   }
 
   enableRgrSoundTimer(idle && rgr_enable);
-  
+
 } /* RepeaterLogic::setIdle */
 
 
@@ -476,7 +506,7 @@ void RepeaterLogic::setUp(bool up, string reason)
   {
     return;
   }
-  
+
   if (up)
   {
     short_sql_open_cnt = 0;
@@ -486,14 +516,14 @@ void RepeaterLogic::setUp(bool up, string reason)
     //ss << "repeater_up " << (ident ? "1" : "0");
     ss << "repeater_up " << reason;
     processEvent(ss.str());
-    
+
     rxValveSetOpen(true);
     tx().setTxCtrlMode(Tx::TX_ON);
-    
+
     setIdle(false);
     checkIdle();
     setIdle(isIdle());
-    
+
     if ((ident_nag_timeout > 0) && (reason != "MODULE") &&
         (reason != "AUDIO") && (reason != "SQL_RPT_REOPEN"))
     {
@@ -530,7 +560,7 @@ void RepeaterLogic::setUp(bool up, string reason)
       tx().setTxCtrlMode(Tx::TX_AUTO);
     }
   }
-  
+
 } /* RepeaterLogic::setUp */
 
 
@@ -538,9 +568,9 @@ void RepeaterLogic::squelchOpen(bool is_open)
 {
   //cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
   //     << endl;
-  
+
   rgr_enable = true;
-  
+
   if (is_open)
   {
     gettimeofday(&sql_up_timestamp, NULL);
@@ -558,7 +588,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
       gettimeofday(&now, NULL);
       timersub(&now, &sql_up_timestamp, &diff_tv);
       int diff_ms = diff_tv.tv_sec * 1000 + diff_tv.tv_usec / 1000;
-	
+
       if (sql_flap_sup_max_cnt > 0)
       {
 	if (diff_ms < sql_flap_sup_min_time)
@@ -576,14 +606,14 @@ void RepeaterLogic::squelchOpen(bool is_open)
       	  short_sql_open_cnt = 0;
 	}
       }
-      
+
       if ((ident_nag_timer != 0) && (diff_ms > ident_nag_min_time))
       {
 	delete ident_nag_timer;
 	ident_nag_timer = 0;
       }
     }
-  
+
     Logic::squelchOpen(is_open);
   }
   else
@@ -596,7 +626,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
 	open_on_sql_timer->expired.connect(
 	    mem_fun(*this, &RepeaterLogic::openOnSqlTimerExpired));
       }
-      
+
       if (open_on_sql_after_rpt_close > 0)
       {
 	struct timeval diff_tv;
@@ -615,7 +645,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
       	delete open_on_sql_timer;
       	open_on_sql_timer = 0;
       }
-      
+
       if (activate_on_sql_close)
       {
       	activate_on_sql_close = false;
@@ -631,7 +661,7 @@ void RepeaterLogic::detectedTone(float fq)
   if (!repeater_is_up && !activate_on_sql_close)
   {
     cout << fq << " Hz tone call detected" << endl;
-    
+
     if (fq < 300.0)
     {
       open_reason = "CTCSS";
@@ -697,7 +727,7 @@ void RepeaterLogic::identNag(Timer *t)
 {
   delete ident_nag_timer;
   ident_nag_timer = 0;
-  
+
   if (!rx().squelchIsOpen())
   {
     cout << "Nagging user about identifying himself\n";

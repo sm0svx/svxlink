@@ -229,7 +229,7 @@ int SwAfskDecoder::writeSamples(const float *samples, int count)
 {
     int i=0;
 
-    while (i++ <= count)
+    while (i++ < count)
     {
        if (fbuf_cnt>0)
        {
@@ -307,7 +307,6 @@ void SwAfskDecoder::demod(float *buffer, int length)
 			state->afsk.lasts |= state->afsk.dcd_shreg & 1;
 			curbit = (state->afsk.lasts ^
 				  (state->afsk.lasts >> 1) ^ 1) & 1;
-
 			hdlc_rxbit(state, curbit);
 		}
 	}

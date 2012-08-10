@@ -450,6 +450,13 @@ void NetRx::handleMsg(Msg *msg)
       break;
     }
 
+    case MsgFms::TYPE:
+    {
+      MsgFms *fms_msg = reinterpret_cast<MsgFms*>(msg);
+      fmsMessageDetected(fms_msg->fms_message());
+      break;
+    }
+
 
     /*
     default:

@@ -80,6 +80,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "multirate_filter_coeff.h"
 #include "Sel5Decoder.h"
 #include "AfskDecoder.h"
+#include "FmsDecoder.h"
 
 
 /****************************************************************************
@@ -464,6 +465,21 @@ bool LocalRx::initialize(void)
  //   delay_line_len += 200;
   }
 
+  string fms_det_str;
+  if (cfg.getValue(name(), "FMS_DEC_TYPE", fms_det_str))
+  {
+    FmsDecoder *fms_dec = FmsDecoder::create(cfg, name());
+    if (fms_dec == 0 || !fms_dec->initialize())
+    {
+      cerr << "*** ERROR: Fms decoder initialization failed for RX \""
+          << name() << "\"\n";
+      return false;
+    }
+    fms_dec->fmsDetected.connect(mem_fun(*this, &LocalRx::fmsDetected));
+    splitter->addSink(fms_dec, true);
+  }
+
+
     // Create a new audio splitter to handle tone detectors then add it to
     // the splitter
   tone_dets = new AudioSplitter;
@@ -624,6 +640,12 @@ void LocalRx::reset(void)
  * Private member functions
  *
  ****************************************************************************/
+
+void LocalRx::fmsDetected(string fms_message)
+{
+  fmsMessageDetected(fms_message);
+} /* LocalRx::fmsDetected */
+
 
 void LocalRx::afskDetected(string aprs_message, string payload)
 {

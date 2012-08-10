@@ -211,6 +211,7 @@ class LocalRx : public Rx
     SigLevDet *createSigLevDet(const std::string &name, int sample_rate);
     void tone1750detected(bool detected);
     void afskDetected(std::string aprs_message, std::string payload);
+    void fmsDetected(std::string fms_message);
 
 };  /* class LocalRx */
 

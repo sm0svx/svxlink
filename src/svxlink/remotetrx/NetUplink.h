@@ -230,6 +230,12 @@ class NetUplink : public Uplink
     */
     void afskMessageDetected(std::string aprs_message, std::string payload);
 
+    /**
+     * @brief   Pass on detected fms message
+     * @param   received fms message
+    */
+    void fmsMessageDetected(std::string fms_message);
+
 
     void writeEncodedSamples(const void *buf, int size);
     void txTimeout(void);

@@ -85,7 +85,7 @@ namespace Async
  ****************************************************************************/
 
 class Module;
-  
+
 
 /****************************************************************************
  *
@@ -126,32 +126,32 @@ class RepeaterLogic : public Logic
      * @param 	name The name of this logic
      */
     RepeaterLogic(Async::Config& cfg, const std::string& name);
-  
+
     /**
      * @brief 	Destructor
      */
     ~RepeaterLogic(void);
-  
+
     /**
      * @brief 	Initialize this logic
      * @return	Returns \em true on success or \em false on failure
      */
     bool initialize(void);
-    
+
     /**
      * @brief 	Process an event
      * @param 	event Event string
      * @param 	module The calling module or 0 if it's a core event
      */
     virtual void processEvent(const std::string& event, const Module *module=0);
-    
+
     /**
      * @brief 	Called when a module is activated
      * @param 	module The module to activate
      * @return	Returns \em true if the activation went well or \em false if not
      */
     virtual bool activateModule(Module *module);
-    
+
     /**
      * @brief 	Called when a DTMF digit has been detected
      * @param 	digit The detected digit
@@ -161,9 +161,16 @@ class RepeaterLogic : public Logic
 
     /**
      * @brief 	Called when a valid selcall sequence has been detected
-     * @param 	sequence The detected sequence
+     * @param 	The detected selcall sequence
      */
     virtual void selcallSequenceDetected(std::string sequence);
+
+    /**
+     * @brief 	Called when a valid fms sequence has been detected
+     * @param 	The detected fms sequence
+     */
+    virtual void fmsSequenceDetected(std::string fms_sequence);
+
 
 
   protected:
@@ -176,7 +183,7 @@ class RepeaterLogic : public Logic
     {
       SQL_FLANK_OPEN, SQL_FLANK_CLOSE
     } SqlFlank;
-    
+
     bool      	    repeater_is_up;
     Async::Timer    *up_timer;
     int      	    idle_timeout;
@@ -187,6 +194,7 @@ class RepeaterLogic : public Logic
     int		    open_on_sql_after_rpt_close;
     char      	    open_on_dtmf;
     std::string     open_on_sel5;
+    std::string     open_on_fms;
     bool      	    activate_on_sql_close;
     bool            no_repeat;
     Async::Timer    *open_on_sql_timer;
@@ -200,7 +208,7 @@ class RepeaterLogic : public Logic
     int		    ident_nag_timeout;
     int		    ident_nag_min_time;
     Async::Timer    *ident_nag_timer;
-    
+
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);
     void setUp(bool up, std::string reason);

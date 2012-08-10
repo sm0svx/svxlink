@@ -217,6 +217,7 @@ class Logic : public sigc::trackable
     virtual void selcallSequenceDetected(std::string sequence);
     virtual void afskMessageDetected(std::string aprs_message,
                                        std::string payload);
+    virtual void fmsMessageDetected(std::string fms_message);
 
     void clearPendingSamples(void);
     void enableRgrSoundTimer(bool enable);

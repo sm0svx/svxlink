@@ -412,6 +412,7 @@ bool Logic::initialize(void)
 	mem_fun(*this, &Logic::selcallSequenceDetected));
   rx().afskMessageDetected.connect(
     mem_fun(*this, &Logic::afskMessageDetected));
+  rx().fmsMessageDetected.connect(mem_fun(*this, &Logic::fmsMessageDetected));
   rx().mute(false);
   prev_rx_src = m_rx;
 
@@ -890,6 +891,14 @@ void Logic::afskMessageDetected(std::string aprs_message, std::string payload)
        processEvent(ss.str());
    }
 } /* Logic::afskMessageDetected */
+
+
+void Logic::fmsMessageDetected(std::string fms_message)
+{
+   stringstream ss;
+   ss << "fms_message_received " << fms_message;
+   processEvent(ss.str());
+} /* Logic::fmsMessageDetected */
 
 
 void Logic::disconnectAllLogics(void)
