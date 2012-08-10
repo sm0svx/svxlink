@@ -236,8 +236,15 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   m_qso.audioReceivedRaw.connect(bind(audioReceivedRaw.make_slot(), this));
   
   prev_src = &m_qso;
-  
-  AudioElasticFifo *input_fifo = new AudioElasticFifo(2048);
+
+  // Normally, a buffer size of 2600 samples is more than sufficient
+  // for connections to almost any type of EchoLink system, but the
+  // iPhone EchoLink-App sends audio data packets in burst blocks.
+  // Hence, we need a larger input buffer to support this particular case.
+  // Unfortunately, this increases the audio transfer latency significantly.
+  // If the EchoLink-App's developers eventually fix this problem, we could
+  // reduce the buffer size later again.
+  AudioElasticFifo *input_fifo = new AudioElasticFifo(5200);
   prev_src->registerSink(input_fifo, true);
   prev_src = input_fifo;
   

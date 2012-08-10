@@ -474,8 +474,8 @@ class Qso
     static const int  	KEEP_ALIVE_TIME       	= 10000;
     static const int  	MAX_CONNECT_RETRY_CNT 	= 5;
     static const int  	CON_TIMEOUT_TIME      	= 50000;
-    static const int  	RX_INDICATOR_HANG_TIME  = 200;
-    static const int    FRAME_COUNT             = 4;
+    static const int  	RX_INDICATOR_HANG_TIME  = 500;
+    static const int  	FRAME_COUNT             = 4;
     static const int  	BUFFER_SIZE      	= FRAME_COUNT*160; // 20ms/frame
 
     typedef enum
