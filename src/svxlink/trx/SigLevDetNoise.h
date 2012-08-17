@@ -34,7 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <deque>
+#include <list>
+#include <set>
 #include <sigc++/sigc++.h>
 
 
@@ -179,17 +180,25 @@ class SigLevDetNoise : public SigLevDet
   protected:
     
   private:
-    const int		  sample_rate;
-    Async::AudioFilter	  *filter;
-    Async::SigCAudioSink  *sigc_sink;
-    float    	      	  last_siglev;
-    float     	      	  slope;
-    float     	      	  offset;
-    int			  update_interval;
-    int			  update_counter;
-    unsigned		  integration_time;
-    std::deque<double>	  ss_values;
-    double		  ss;
+    typedef std::multiset<double> SsSet;
+    typedef SsSet::const_iterator SsSetIter;
+    typedef std::list<SsSetIter>  SsIndexList;
+
+    static const unsigned BLOCK_TIME = 25;  // 25ms
+
+    const unsigned            sample_rate;
+    const unsigned            block_len;
+    Async::AudioFilter	      *filter;
+    Async::SigCAudioSink      *sigc_sink;
+    float     	      	      slope;
+    float     	      	      offset;
+    int			      update_interval;
+    int			      update_counter;
+    unsigned		      integration_time;
+    SsSet                     ss_values;
+    SsIndexList               ss_idx;
+    double                    ss;
+    unsigned                  ss_cnt;
     
     SigLevDetNoise(const SigLevDetNoise&);
     SigLevDetNoise& operator=(const SigLevDetNoise&);

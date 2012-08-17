@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <cmath>
+#include <limits>
 //#include <iostream>
 
 
@@ -115,8 +116,9 @@ using namespace Async;
  ****************************************************************************/
 
 SigLevDetNoise::SigLevDetNoise(int sample_rate)
-  : sample_rate(sample_rate), slope(1.0), offset(0.0), update_interval(0),
-    update_counter(0), integration_time(0), ss(0.0)
+  : sample_rate(sample_rate), block_len(BLOCK_TIME * sample_rate / 1000),
+    slope(10.0), offset(0.0), update_interval(0), update_counter(0),
+    integration_time(0), ss(0.0), ss_cnt(0)
 {
   if (sample_rate >= 16000)
   {
@@ -169,9 +171,9 @@ void SigLevDetNoise::setContinuousUpdateInterval(int interval_ms)
 
 void SigLevDetNoise::setIntegrationTime(int time_ms)
 {
-  if (time_ms < 20)
+  if (time_ms < static_cast<int>(BLOCK_TIME))
   {
-    time_ms = 20;
+    time_ms = BLOCK_TIME;
   }
   integration_time = time_ms * sample_rate / 1000;
 } /* SigLevDetNoise::setIntegrationTime */
@@ -179,43 +181,36 @@ void SigLevDetNoise::setIntegrationTime(int time_ms)
 
 float SigLevDetNoise::lastSiglev(void) const
 {
-  int begin_ofs = 0;
-  unsigned min_integration_time = 20 * sample_rate / 1000;
-  if (ss_values.size() > min_integration_time)
+  if (ss_idx.empty())
   {
-    begin_ofs = ss_values.size() - min_integration_time;
+    return 0.0f;
   }
 
-  double ss = 0.0;
-  deque<double>::const_iterator it;
-  for (it=ss_values.begin()+begin_ofs; it!=ss_values.end(); ++it)
-  {
-    ss += *it;
-  }
-  return offset - slope * log10(sqrt(ss / (ss_values.size()-begin_ofs)));
+  return offset - slope * log10(*ss_idx.back());
 } /* SigLevDetNoise::lastSiglev */
 
 
 float SigLevDetNoise::siglevIntegrated(void) const
 {
-  /*
-  double ss = 0.0;
-  deque<double>::const_iterator it;
-  for (it=ss_values.begin(); it!=ss_values.end(); ++it)
+  if (ss_values.empty())
   {
-    ss += *it;
+    return 0.0f;
   }
-  */
-  return offset - slope * log10(sqrt(ss / ss_values.size()));
+
+    // Compensate for the over estimation of the siglev value caused by
+    // using the minimum value over the "integration time". The over
+    // estimation seems to be about 9%.
+  return 0.91f * (offset - slope * log10(*ss_values.begin()));
 } /* SigLevDetNoise::siglevIntegrated */
 
 
 void SigLevDetNoise::reset(void)
 {
   filter->reset();
-  last_siglev = pow10f(-offset / slope);
   update_counter = 0;
   ss_values.clear();
+  ss_idx.clear();
+  ss_cnt = 0;
   ss = 0.0;
 } /* SigLevDetNoise::reset */
 
@@ -239,20 +234,22 @@ int SigLevDetNoise::processSamples(float *samples, int count)
 {
   for (int i=0; i<count; ++i)
   {
-    float sample = samples[i];
-    double square = sample * sample;
+    const float &sample = samples[i];
+    const double square = sample * sample;
     ss += square;
-    ss_values.push_back(square);
-  }
-  
-  while (ss_values.size() > integration_time)
-  {
-    ss -= ss_values.front();
-    ss_values.pop_front();
-    /*
-    ss_values.erase(ss_values.begin(),
-		    ss_values.begin()+ss_values.size()-integration_time);
-    */
+    if (++ss_cnt >= block_len)
+    {
+      SsSetIter it = ss_values.insert(ss);
+      ss_idx.push_back(it);
+      if (ss_idx.size() > integration_time / block_len)
+      {
+        ss_values.erase(*ss_idx.begin());
+        ss_idx.pop_front();
+      }
+
+      ss = 0.0;
+      ss_cnt = 0;
+    }
   }
 
   if (update_interval > 0)
@@ -260,7 +257,7 @@ int SigLevDetNoise::processSamples(float *samples, int count)
     update_counter += count;
     if (update_counter >= update_interval)
     {
-      signalLevelUpdated(lastSiglev());
+      signalLevelUpdated(siglevIntegrated());
       update_counter = 0;
     }
   }

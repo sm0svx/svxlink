@@ -641,7 +641,11 @@ bool LocalRx::addToneDetector(float fq, int bw, float thresh,
 
 float LocalRx::signalStrength(void) const
 {
-  return siglevdet->siglevIntegrated();
+  if (squelchIsOpen())
+  {
+    return siglevdet->siglevIntegrated();
+  }
+  return siglevdet->lastSiglev();
 } /* LocalRx::signalStrength */
     
 
@@ -726,7 +730,7 @@ void LocalRx::onSquelchOpen(bool is_open)
     {
       sql_valve->setOpen(true);
     }
-    siglevdet->setIntegrationTime(3000);
+    siglevdet->setIntegrationTime(1000);
     siglevdet->setContinuousUpdateInterval(1000);
   }
   else
@@ -743,7 +747,7 @@ void LocalRx::onSquelchOpen(bool is_open)
     {
       sql_valve->setOpen(false);
     }
-    siglevdet->setIntegrationTime(32);
+    siglevdet->setIntegrationTime(0);
     siglevdet->setContinuousUpdateInterval(0);
   }
 } /* LocalRx::onSquelchOpen */
