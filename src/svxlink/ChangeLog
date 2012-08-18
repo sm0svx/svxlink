@@ -27,6 +27,9 @@
 * Bugfix in Metar information module: SvxLink could crash if two
   requests were made in rapid succession.
 
+* Now possible to have personal greetings on incoming EchoLink connections,
+  if desired. Some TCL coding is neccessary to enable it though.
+
 
 
  0.13.1 -- 27 Nov 2011
