@@ -158,6 +158,14 @@ class ModuleEchoLink : public Module
       STATE_CONNECT_BY_CALL
     } State;
     typedef std::vector<EchoLink::StationData> StnList;
+    struct NumConStn
+    {
+      unsigned        num_con;
+      struct timeval  last_con;
+
+      NumConStn(unsigned num, struct timeval &t) : num_con(num), last_con(t) {}
+    };
+    typedef std::map<const std::string, NumConStn> NumConMap;
 
     EchoLink::Directory   *dir;
     Async::Timer      	  *dir_refresh_timer;
@@ -177,7 +185,7 @@ class ModuleEchoLink : public Module
     bool      	      	  squelch_is_open;
     State		  state;
     StnList		  cbc_stns;
-    Async::Timer	  	  *cbc_timer;
+    Async::Timer          *cbc_timer;
     regex_t   	      	  *drop_incoming_regex;
     regex_t   	      	  *reject_incoming_regex;
     regex_t   	      	  *accept_incoming_regex;
@@ -187,6 +195,11 @@ class ModuleEchoLink : public Module
     Async::AudioSplitter  *splitter;
     Async::AudioValve 	  *listen_only_valve;
     Async::AudioSelector  *selector;
+    unsigned              num_con_max;
+    time_t                num_con_ttl;
+    time_t                num_con_block_time;
+    NumConMap             num_con_map;
+    Async::Timer          *num_con_update_timer;
 
     void moduleCleanup(void);
     void activateInit(void);
@@ -229,6 +242,8 @@ class ModuleEchoLink : public Module
     void commandFailed(const std::string& cmd);
     void connectByNodeId(int node_id);
     void checkIdle(void);
+    bool numConCheck(const std::string &callsign);
+    void numConUpdate(void);
 
 };  /* class ModuleEchoLink */
 
