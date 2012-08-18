@@ -176,6 +176,12 @@ void SigLevDetNoise::setIntegrationTime(int time_ms)
     time_ms = BLOCK_TIME;
   }
   integration_time = time_ms * sample_rate / 1000;
+
+  while (ss_idx.size() > integration_time / block_len)
+  {
+    ss_values.erase(*ss_idx.begin());
+    ss_idx.pop_front();
+  }
 } /* SigLevDetNoise::setIntegrationTime */
 
 
@@ -187,6 +193,7 @@ float SigLevDetNoise::lastSiglev(void) const
   }
 
   return offset - slope * log10(*ss_idx.back());
+
 } /* SigLevDetNoise::lastSiglev */
 
 
@@ -199,8 +206,15 @@ float SigLevDetNoise::siglevIntegrated(void) const
 
     // Compensate for the over estimation of the siglev value caused by
     // using the minimum value over the "integration time". The over
-    // estimation seems to be about 9%.
-  return 0.91f * (offset - slope * log10(*ss_values.begin()));
+    // estimation seems to be about 5%.
+  float siglev = 0.95f * (offset - slope * log10(*ss_values.begin()));
+  if (siglev > 110.0f)
+  {
+    return 0.0f;
+  }
+
+  return siglev;
+
 } /* SigLevDetNoise::siglevIntegrated */
 
 
