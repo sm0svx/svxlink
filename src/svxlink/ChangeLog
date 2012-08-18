@@ -24,6 +24,9 @@
   connect too often. New config variable: CHECK_NR_CONNECTS.
   Patch from Adi/DL1HRC, reworked by SM0SVX/Tobias.
 
+* Bugfix in Metar information module: SvxLink could crash if two
+  requests were made in rapid succession.
+
 
 
  0.13.1 -- 27 Nov 2011
