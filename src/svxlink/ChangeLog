@@ -20,6 +20,16 @@
 * Improved the SigLevTone detector using the same techniques that was
   used to improve the CTCSS decoder.
 
+* Now possible to block incoming Echolink connects from stations if they
+  connect too often. New config variable: CHECK_NR_CONNECTS.
+  Patch from Adi/DL1HRC, reworked by SM0SVX/Tobias.
+
+* Bugfix in Metar information module: SvxLink could crash if two
+  requests were made in rapid succession.
+
+* Now possible to have personal greetings on incoming EchoLink connections,
+  if desired. Some TCL coding is neccessary to enable it though.
+
 
 
  0.13.1 -- 27 Nov 2011

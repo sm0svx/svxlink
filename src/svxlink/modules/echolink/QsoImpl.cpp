@@ -324,7 +324,8 @@ bool QsoImpl::accept(void)
   if (success)
   {
     msg_handler->begin();
-    event_handler->processEvent(string(module->name()) + "::remote_greeting");
+    event_handler->processEvent(string(module->name()) + "::remote_greeting " +
+                                remoteCallsign());
     msg_handler->end();
   }
   
