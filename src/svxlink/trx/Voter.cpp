@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2011 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2012 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -120,7 +120,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
 	rx->signalLevelUpdated.connect(
 		mem_fun(*this, &SatRx::rxSignalLevelUpdated));
 	
-	// FIXME: Should be buffer the tone detector output like we do with
+	// FIXME: Should we buffer the tone detector output like we do with
 	// DTMF and selcall?
 	rx->toneDetected.connect(toneDetected.make_slot());
 
@@ -149,6 +149,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     ~SatRx(void)
     {
       delete fifo;
+      rx->reset();
       delete rx;
     }
     
@@ -180,7 +181,6 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
         {
           fifo->clear();
         }
-	//setSquelchOpen(false);  // FIXME: Do we need this?
 	dtmf_buf.clear();
 	selcall_buf.clear();
       }
@@ -213,15 +213,6 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     
     int id(void) const { return rx_id; }
     
-    /*
-    void clear(void)
-    {
-      fifo.clear();
-      dtmf_buf.clear();
-      selcall_buf.clear();
-    }
-    */
-  
     signal<void, char, int>  	dtmfDigitDetected;
     signal<void, string>  	selcallSequenceDetected;
     signal<void, bool, SatRx*> 	squelchOpen;
@@ -374,9 +365,9 @@ bool Voter::initialize(void)
     return false;
   }
 
-  int voting_delay = DEFAULT_VOTING_DEALAY;
+  unsigned voting_delay = DEFAULT_VOTING_DEALAY;
   cfg.getValue(name(), "VOTING_DELAY", voting_delay);
-  if ((voting_delay < 0) || (voting_delay > MAX_VOTING_DELAY))
+  if (voting_delay > MAX_VOTING_DELAY)
   {
     cerr << "*** ERROR: Config variable " << name() << "/VOTING_DELAY out "
             "of range (" << voting_delay << "). Valid range is 0 to "
@@ -385,9 +376,9 @@ bool Voter::initialize(void)
   }
   sm->setVotingDelay(voting_delay);
   
-  int buffer_length = voting_delay;
+  unsigned buffer_length = voting_delay;
   cfg.getValue(name(), "BUFFER_LENGTH", buffer_length);
-  if ((buffer_length < 0) || (buffer_length > MAX_BUFFER_LENGTH))
+  if (buffer_length > MAX_BUFFER_LENGTH)
   {
     cerr << "*** ERROR: Config variable " << name() << "/BUFFER_LENGTH out "
             "of range (" << buffer_length << "). Valid range is 0 to "
@@ -407,10 +398,9 @@ bool Voter::initialize(void)
   }
   sm->setHysteresis(hysteresis / 100.0f + 1.0f);
 
-  int sql_close_revote_delay = DEFAULT_SQL_CLOSE_REVOTE_DELAY;
+  unsigned sql_close_revote_delay = DEFAULT_SQL_CLOSE_REVOTE_DELAY;
   cfg.getValue(name(), "SQL_CLOSE_REVOTE_DELAY", sql_close_revote_delay);
-  if ((sql_close_revote_delay < 0) ||
-      (sql_close_revote_delay > MAX_SQL_CLOSE_REVOTE_DELAY))
+  if (sql_close_revote_delay > MAX_SQL_CLOSE_REVOTE_DELAY)
   {
     cerr << "*** ERROR: Config variable " << name()
          << "/SQL_CLOSE_REVOTE_DELAY out of range ("
@@ -420,7 +410,7 @@ bool Voter::initialize(void)
   }
   sm->setSqlCloseRevoteDelay(sql_close_revote_delay);
   
-  int revote_interval = DEFAULT_REVOTE_INTERVAL;
+  unsigned revote_interval = DEFAULT_REVOTE_INTERVAL;
   cfg.getValue(name(), "REVOTE_INTERVAL", revote_interval);
   if (revote_interval != 0)
   {
@@ -436,9 +426,9 @@ bool Voter::initialize(void)
   }
   sm->setRevoteInterval(revote_interval);
   
-  int rx_switch_delay = DEFAULT_RX_SWITCH_DELAY;
+  unsigned rx_switch_delay = DEFAULT_RX_SWITCH_DELAY;
   cfg.getValue(name(), "RX_SWITCH_DELAY", rx_switch_delay);
-  if ((rx_switch_delay < 0) || (rx_switch_delay > MAX_RX_SWITCH_DELAY))
+  if (rx_switch_delay > MAX_RX_SWITCH_DELAY)
   {
     cerr << "*** ERROR: Config variable " << name()
          << "/RX_SWITCH_DELAY out of range ("
@@ -447,22 +437,6 @@ bool Voter::initialize(void)
     return false;
   }
   sm->setRxSwitchDelay(rx_switch_delay);
-  
-#if 0
-  float no_vote_above_siglev = DEFAULT_NO_VOTE_ABOVE_SIGLEV;
-  cfg.getValue(name(), "NO_VOTE_ABOVE_SIGLEV", no_vote_above_siglev);
-  if ((no_vote_above_siglev < MIN_NO_VOTE_ABOVE_SIGLEV) ||
-      (no_vote_above_siglev > MAX_NO_VOTE_ABOVE_SIGLEV))
-  {
-    cerr << "*** ERROR: Config variable " << name()
-         << "/NO_VOTE_ABOVE_SIGLEV out of range ("
-	 << no_vote_above_siglev << "). Valid range is "
-	 << MIN_NO_VOTE_ABOVE_SIGLEV << " to "
-	 << MAX_NO_VOTE_ABOVE_SIGLEV << ".\n";
-    return false;
-  }
-  sm->setNoVoteAboveSiglev(no_vote_above_siglev);
-#endif
   
   selector = new AudioSelector;
   setHandler(selector);
@@ -648,7 +622,7 @@ void Voter::printSquelchState(void)
     {
       cout << " ";
     }
-    cout << left << setw(4) << (int)siglev;
+    cout << left << setw(4) << static_cast<int>(siglev);
     cout << " ";
   }
   cout << endl;
@@ -800,7 +774,7 @@ void Voter::Top::taskTimerExpired(Timer *t)
 } /* Voter::Top::taskTimerExpired */
 
 
-void Voter::Top::startTimer(int time_ms)
+void Voter::Top::startTimer(unsigned time_ms)
 {
   box().event_timer.setTimeout(time_ms);
   box().event_timer.setEnable(true);
@@ -960,7 +934,6 @@ void Voter::ActiveRxSelected::init(SatRx *srx)
   }
   else
   {
-    //runTask(bind(mem_fun(voter(), &Voter::muteAllBut), srx));
     voter().muteAllBut(srx, MUTE_CONTENT);
   }
   setState<SquelchOpen>();
@@ -993,12 +966,10 @@ int Voter::ActiveRxSelected::sqlRxId(void)
 
 void Voter::ActiveRxSelected::changeActiveSrx(SatRx *srx)
 {
-  //runTask(bind(mem_fun(activeSrx(), &SatRx::mute), true));
   activeSrx()->setMuteState(MUTE_CONTENT);
   box().active_srx = srx;
   if (muteState() == Rx::MUTE_NONE)
   {
-    //runTask(bind(mem_fun(activeSrx(), &SatRx::mute), false));
     activeSrx()->setMuteState(MUTE_NONE);
   }
 } /* Voter::ActiveRxSelected::changeActiveSrx */
@@ -1182,7 +1153,6 @@ void Voter::SwitchActiveRx::init(SatRx *srx)
   box().switch_to_srx = srx;
   if (muteState() == Rx::MUTE_NONE)
   {
-    //runTask(bind(mem_fun(*srx, &SatRx::mute), false));
     srx->setMuteState(MUTE_NONE);
   }
 } /* Voter::SwitchActiveRx::init */
@@ -1193,7 +1163,6 @@ void Voter::SwitchActiveRx::exit(void)
   //cout << "### SwitchActiveRx::exit\n";
   if (box().switch_to_srx != 0)
   {
-    //runTask(bind(mem_fun(*box().switch_to_srx, &SatRx::mute), true));
     box().switch_to_srx->setMuteState(MUTE_CONTENT);
   }
 

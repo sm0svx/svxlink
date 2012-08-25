@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2011 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2012 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -184,23 +184,20 @@ class Voter : public Rx
   protected:
     
   private:
-    static const float	DEFAULT_HYSTERESIS		= 1.5f;
-    static const int	DEFAULT_VOTING_DEALAY		= 0;
-    static const int	DEFAULT_SQL_CLOSE_REVOTE_DELAY	= 500;
-    static const int	DEFAULT_REVOTE_INTERVAL		= 1000;
-    static const int	DEFAULT_RX_SWITCH_DELAY		= 500;
-    //static const float	DEFAULT_NO_VOTE_ABOVE_SIGLEV	= 70.0f;
+    static const float	  DEFAULT_HYSTERESIS              = 1.5f;
+    static const unsigned DEFAULT_VOTING_DEALAY           = 0;
+    static const unsigned DEFAULT_SQL_CLOSE_REVOTE_DELAY  = 500;
+    static const unsigned DEFAULT_REVOTE_INTERVAL         = 1000;
+    static const unsigned DEFAULT_RX_SWITCH_DELAY         = 500;
     
-    static const float	BEST_RX_SIGLEV_RESET		= -100.0f;
-    static const int	MAX_VOTING_DELAY		= 5000;
-    static const int	MAX_BUFFER_LENGTH		= MAX_VOTING_DELAY;
-    static const float	MAX_HYSTERESIS			= 2.0f;
-    static const int	MAX_SQL_CLOSE_REVOTE_DELAY	= 3000;
-    static const int	MIN_REVOTE_INTERVAL		= 100;
-    static const int	MAX_REVOTE_INTERVAL		= 60000;
-    static const int	MAX_RX_SWITCH_DELAY		= 3000;
-    //static const float	MIN_NO_VOTE_ABOVE_SIGLEV	= 0.0f;
-    //static const float	MAX_NO_VOTE_ABOVE_SIGLEV	= 100.0f;
+    static const float	  BEST_RX_SIGLEV_RESET            = -100.0f;
+    static const unsigned MAX_VOTING_DELAY                = 5000;
+    static const unsigned MAX_BUFFER_LENGTH               = MAX_VOTING_DELAY;
+    static const float	  MAX_HYSTERESIS                  = 2.0f;
+    static const unsigned MAX_SQL_CLOSE_REVOTE_DELAY      = 3000;
+    static const unsigned MIN_REVOTE_INTERVAL             = 100;
+    static const unsigned MAX_REVOTE_INTERVAL             = 60000;
+    static const unsigned MAX_RX_SWITCH_DELAY             = 3000;
     
     class SatRx;
 
@@ -220,12 +217,11 @@ class Voter : public Rx
 	  event_timer.setEnable(false);
 	}
 	
-	int		voting_delay;
+	unsigned	voting_delay;
 	float		hysteresis;
-	int		sql_close_revote_delay;
-	int		rx_switch_delay;
-	int		revote_interval;
-	//float		no_vote_above_siglev;
+	unsigned	sql_close_revote_delay;
+	unsigned	rx_switch_delay;
+	unsigned	revote_interval;
 	Voter		*voter;
 	SatRx		*best_srx;
         Rx::MuteState   mute_state;
@@ -236,29 +232,31 @@ class Voter : public Rx
 
       STATE(Top)
 
-      void setVotingDelay(int delay_ms) { box().voting_delay = delay_ms; }
-      int votingDelay(void) { return box().voting_delay; }
+      void setVotingDelay(unsigned delay_ms)
+      {
+        box().voting_delay = delay_ms;
+      }
+      unsigned votingDelay(void) { return box().voting_delay; }
       void setHysteresis(float hysteresis) { box().hysteresis = hysteresis; }
       float hysteresis(void) { return box().hysteresis; }
-      void setSqlCloseRevoteDelay(int delay_ms)
+      void setSqlCloseRevoteDelay(unsigned delay_ms)
       {
 	box().sql_close_revote_delay = delay_ms;
       }
-      int sqlCloseRevoteDelay(void) { return box().sql_close_revote_delay; }
-      void setRxSwitchDelay(int delay_ms) { box().rx_switch_delay = delay_ms; }
-      int rxSwitchDelay(void) { return box().rx_switch_delay; }
-      void setRevoteInterval(int interval_ms)
+      unsigned sqlCloseRevoteDelay(void)
+      {
+        return box().sql_close_revote_delay;
+      }
+      void setRxSwitchDelay(unsigned delay_ms)
+      {
+        box().rx_switch_delay = delay_ms;
+      }
+      unsigned rxSwitchDelay(void) { return box().rx_switch_delay; }
+      void setRevoteInterval(unsigned interval_ms)
       {
 	box().revote_interval = interval_ms;
       }
-      int revoteInterval(void) { return box().revote_interval; }
-#if 0
-      void setNoVoteAboveSiglev(float no_vote_above_siglev)
-      {
-	box().no_vote_above_siglev = no_vote_above_siglev;
-      }
-      float noVoteAboveSiglev() { return box().no_vote_above_siglev; }
-#endif
+      unsigned revoteInterval(void) { return box().revote_interval; }
       
 	// Machine's event protocol
       virtual void timerExpired(void) { }
@@ -276,7 +274,7 @@ class Voter : public Rx
 	bool muteState(void) { return box().mute_state; }
 	void runTask(sigc::slot<void> task);
 	void taskTimerExpired(Async::Timer *t);
-	void startTimer(int time_ms);
+	void startTimer(unsigned time_ms);
 	void stopTimer(void);
 	
       private:
