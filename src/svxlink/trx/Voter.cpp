@@ -395,16 +395,17 @@ bool Voter::initialize(void)
     return false;
   }
   
-  float hysteresis = DEFAULT_HYSTERESIS;
+  float hysteresis = 100.0f * (DEFAULT_HYSTERESIS - 1.0f);
   cfg.getValue(name(), "HYSTERESIS", hysteresis);
-  if ((hysteresis < 0.0f) || (hysteresis > MAX_HYSTERESIS))
+  if ((hysteresis < 0.0f)
+      || (hysteresis > 100.0f * (MAX_HYSTERESIS - 1.0f)))
   {
     cerr << "*** ERROR: Config variable " << name() << "/HYSTERESIS out "
             "of range (" << hysteresis << "). Valid range is 0 to "
-	 << MAX_HYSTERESIS << ".\n";
+	 << (100.0f * (MAX_HYSTERESIS - 1.0f)) << ".\n";
     return false;
   }
-  sm->setHysteresis(hysteresis);
+  sm->setHysteresis(hysteresis / 100.0f + 1.0f);
 
   int sql_close_revote_delay = DEFAULT_SQL_CLOSE_REVOTE_DELAY;
   cfg.getValue(name(), "SQL_CLOSE_REVOTE_DELAY", sql_close_revote_delay);
@@ -447,6 +448,7 @@ bool Voter::initialize(void)
   }
   sm->setRxSwitchDelay(rx_switch_delay);
   
+#if 0
   float no_vote_above_siglev = DEFAULT_NO_VOTE_ABOVE_SIGLEV;
   cfg.getValue(name(), "NO_VOTE_ABOVE_SIGLEV", no_vote_above_siglev);
   if ((no_vote_above_siglev < MIN_NO_VOTE_ABOVE_SIGLEV) ||
@@ -460,6 +462,7 @@ bool Voter::initialize(void)
     return false;
   }
   sm->setNoVoteAboveSiglev(no_vote_above_siglev);
+#endif
   
   selector = new AudioSelector;
   setHandler(selector);
@@ -878,7 +881,14 @@ void Voter::Idle::satSquelchOpen(SatRx *srx, bool is_open)
   SUPER::satSquelchOpen(srx, is_open);
   if (is_open)
   {
-    setState<VotingDelay>();
+    if (srx->signalStrength() * hysteresis() > 100.0f)
+    {
+      setState<ActiveRxSelected>(bestSrx());
+    }
+    else
+    {
+      setState<VotingDelay>();
+    }
   }
 } /* Voter::Idle::satSquelchOpen */
 
@@ -907,9 +917,19 @@ void Voter::VotingDelay::exit(void)
 void Voter::VotingDelay::satSquelchOpen(SatRx *srx, bool is_open)
 {
   SUPER::satSquelchOpen(srx, is_open);
-  if (!is_open && (bestSrx() == 0))
+  if (is_open)
   {
-    setState<Idle>();
+    if (srx->signalStrength() * hysteresis() > 100.0f)
+    {
+      setState<ActiveRxSelected>(bestSrx());
+    }
+  }
+  else
+  {
+    if (bestSrx() == 0)
+    {
+      setState<Idle>();
+    }
   }
 } /* Voter::VotingDelay::satSquelchOpen */
 
@@ -1126,12 +1146,11 @@ void Voter::Receiving::timerExpired(void)
   assert(activeSrx() != 0);
   assert(bestSrx() != 0);
   
-  if ((bestSrx() != activeSrx()) &&
-      (activeSrx()->signalStrength() <= noVoteAboveSiglev()))
+  if (bestSrx() != activeSrx())
   {
     float best_srx_siglev = bestSrx()->signalStrength();
     float active_srx_siglev = activeSrx()->signalStrength();
-    if (best_srx_siglev > active_srx_siglev+hysteresis())
+    if (best_srx_siglev > active_srx_siglev*hysteresis())
     {
       setState<SwitchActiveRx>(bestSrx());
       return;
@@ -1206,7 +1225,7 @@ void Voter::SwitchActiveRx::timerExpired(void)
   float switch_to_srx_siglev = switch_to_srx->signalStrength();
   float active_srx_siglev = activeSrx()->signalStrength();
   if (switch_to_srx->squelchIsOpen() &&
-      (switch_to_srx_siglev > active_srx_siglev+hysteresis()))
+      (switch_to_srx_siglev > active_srx_siglev*hysteresis()))
   {
     if (voter().m_verbose)
     {

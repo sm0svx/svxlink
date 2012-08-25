@@ -11,7 +11,7 @@ LIBASYNC=0.18.99.6
 LIBASYNC_RPM_RELEASE=1
 
 # SvxLink versions
-SVXLINK=0.13.99.10-improved_voter
+SVXLINK=0.13.99.11-improved_voter
 SVXLINK_RPM_RELEASE=1
 MODULE_HELP=0.7.0.99.0
 MODULE_PARROT=0.7.0.99.0
@@ -24,7 +24,7 @@ MODULE_DTMF_REPEATER=0.2.0.99.0
 MODULE_METARINFO=0.0.2.99.1
 
 # Version for the RemoteTrx application
-REMOTE_TRX=0.3.2.99.8-improved_voter
+REMOTE_TRX=0.3.2.99.9-improved_voter
 REMOTE_TRX_RELEASE=1
 
 # Version for the signal level calibration utility
