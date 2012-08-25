@@ -157,7 +157,10 @@ class SigLevDetTone : public SigLevDet
   private:
     class HammingWindow;
     
-    static const unsigned BLOCK_SIZE = 640;
+    static const float    ALPHA         = 0.1f; // Time constant for IIR filter
+    static const unsigned BLOCK_SIZE    = 100;  // 160Hz bandwidth, 6.25ms
+    static const float    ENERGY_THRESH = 1.0e-6f;
+    static const float    DET_THRESH    = 0.7f; // Detection threshold
 
     std::vector<int>    tone_siglev_map;
     Goertzel            *det[10];
@@ -165,6 +168,7 @@ class SigLevDetTone : public SigLevDet
     int                 last_siglev;
     float               passband_energy;
     Async::AudioFilter  *filter;
+    float               prev_peak_to_tot_pwr;
     
     SigLevDetTone(const SigLevDetTone&);
     SigLevDetTone& operator=(const SigLevDetTone&);

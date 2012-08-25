@@ -161,7 +161,8 @@ class SigLevDetTone::HammingWindow
  ****************************************************************************/
 
 SigLevDetTone::SigLevDetTone(void)
-  : tone_siglev_map(10), block_idx(0), last_siglev(0), passband_energy(0.0f)
+  : tone_siglev_map(10), block_idx(0), last_siglev(0), passband_energy(0.0f),
+    prev_peak_to_tot_pwr(0.0f)
 {
   filter = new AudioFilter("BpBu8/5400-6500");
   setHandler(filter);
@@ -221,6 +222,7 @@ void SigLevDetTone::reset(void)
   block_idx = 0;
   last_siglev = 0;
   passband_energy = 0.0f;
+  prev_peak_to_tot_pwr = 0.0f;
 } /* SigLevDetTone::reset */
 
 
@@ -268,14 +270,50 @@ int SigLevDetTone::processSamples(const float *samples, int count)
       }
 
       last_siglev = 0;
-      if (max > 1.0e-6f)
+
+        // Check that we have enough energy in the tone to do a
+        // proper detection
+      if (max > ENERGY_THRESH)
       {
-        float peak_to_tot_pwr = 2.0f * max / (BLOCK_SIZE * passband_energy);
-        if ((peak_to_tot_pwr < 1.5f) && (peak_to_tot_pwr > 0.5f))
+          // Calculate the coefficient used to get from relative magnitude
+          // squared to the "peak to total power" relation.
+        float coeff = 2.0f / (BLOCK_SIZE * passband_energy);
+
+          // Calculate the peak to total bandpass power relation
+        float peak_to_tot_pwr = coeff * max;
+        
+          // Filter it using a first order IIR filter.
+        peak_to_tot_pwr = prev_peak_to_tot_pwr
+                          + ALPHA * (peak_to_tot_pwr - prev_peak_to_tot_pwr);
+        prev_peak_to_tot_pwr = peak_to_tot_pwr;
+
+          // If the relation value is larger than 1.5 it's probably a bogus
+          // value. In theory, the relation value should never exceed 1.0.
+        if (peak_to_tot_pwr < 1.5f)
         {
-          last_siglev = tone_siglev_map[max_idx];
-          //printf("fq=%d  max=%f  siglev=%d  quality=%.1f\n",
-          //       5500 + max_idx * 100, max, last_siglev, peak_to_tot_pwr);
+#if 0
+            // The tone frequency may be offset so that energy spill into
+            // neighbouring bins. Check the bin above and below to see if
+            // adding the energy from either bin will get us above the
+            // threshold. Subtract the other bin to compensate a bit.
+          float lo_peak_to_tot_pwr = 0.0f, hi_peak_to_tot_pwr = 0.0f;
+          if (max_idx > 0)
+          {
+            lo_peak_to_tot_pwr = coeff * det[max_idx-1];
+          }
+          if (max_idx < 9)
+          {
+            hi_peak_to_tot_pwr = coeff * det[max_idx+1];
+          }
+          peak_to_tot_pwr += max(lo_peak_to_tot_pwr - hi_peak_to_tot_pwr,
+                                 hi_peak_to_tot_pwr - lo_peak_to_tot_pwr);
+#endif
+          if (peak_to_tot_pwr > DET_THRESH)
+          {
+            last_siglev = tone_siglev_map[max_idx];
+            //printf("fq=%d  max=%f  siglev=%d  quality=%.1f\n",
+            //       5500 + max_idx * 100, max, last_siglev, peak_to_tot_pwr);
+          }
         }
       }
       passband_energy = 0.0f;
