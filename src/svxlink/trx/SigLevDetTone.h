@@ -184,7 +184,10 @@ class SigLevDetTone : public SigLevDet
   private:
     class HammingWindow;
     
-    static const unsigned BLOCK_SIZE = 640;
+    static const float    ALPHA         = 0.1f; // Time constant for IIR filter
+    static const unsigned BLOCK_SIZE    = 100;  // 160Hz bandwidth, 6.25ms
+    static const float    ENERGY_THRESH = 1.0e-6f;
+    static const float    DET_THRESH    = 0.7f; // Detection threshold
 
     const int	        sample_rate;
     std::vector<int>    tone_siglev_map;
@@ -193,10 +196,11 @@ class SigLevDetTone : public SigLevDet
     int                 last_siglev;
     float               passband_energy;
     Async::AudioFilter  *filter;
-    unsigned	      integration_time;
-    std::deque<int>   siglev_values;
-    int		      update_interval;
-    int		      update_counter;
+    float               prev_peak_to_tot_pwr;
+    unsigned            integration_time;
+    std::deque<int>     siglev_values;
+    int                 update_interval;
+    int                 update_counter;
     
     SigLevDetTone(const SigLevDetTone&);
     SigLevDetTone& operator=(const SigLevDetTone&);
