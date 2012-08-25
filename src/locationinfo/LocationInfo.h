@@ -129,6 +129,8 @@ class LocationInfo
         char dir;
     };
 
+    std::string get_callsign();
+
     struct Cfg
     {
       Cfg() : interval(600000), frequency(0), power(0), tone(0), height(10),
@@ -157,6 +159,7 @@ class LocationInfo
     static bool initialize(const Async::Config &cfg, const std::string &cfg_name);
 
     void updateDirectoryStatus(EchoLink::StationData::Status new_status);
+    void igateMessage(const std::string& info);
     void update3rdState(const std::string& call, const std::string& info);
     void updateQsoStatus(int action, const std::string& call,
                          const std::string& name,
