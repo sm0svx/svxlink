@@ -34,6 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <list>
+#include <set>
 #include <sigc++/sigc++.h>
 
 
@@ -109,7 +111,7 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A simple signal level detector
+@brief	A simple noise measuring signal level detector
 @author Tobias Blomberg / SM0SVX
 @date   2006-05-07
 */
@@ -139,25 +141,65 @@ class SigLevDetNoise : public SigLevDet
     void setDetectorOffset(float offset);
   
     /**
+     * @brief	Set the interval for continuous updates
+     * @param	interval_ms The update interval, in milliseconds, to use.
+     * 
+     * This function will set up how often the signal level detector will
+     * report the signal strength.
+     */
+    virtual void setContinuousUpdateInterval(int interval_ms);
+    
+    /**
+     * @brief	Set the integration time to use
+     * @param	time_ms The integration time in milliseconds
+     * 
+     * This function will set up the integration time for the signal level
+     * detector. That is, the detector will build a mean value of the
+     * detected signal strengths over the given integration time.
+     */
+    virtual void setIntegrationTime(int time_ms);
+    
+    /**
      * @brief 	Read the latest calculated signal level
      * @return	Returns the latest calculated signal level
      */
-    float lastSiglev(void) const
-    {
-      return offset - slope * log10f(last_siglev);
-    }
+    virtual float lastSiglev(void) const;
      
-    void reset(void);
+    /**
+     * @brief   Read the integrated siglev value
+     * @return  Returns the integrated siglev value
+     */
+    virtual float siglevIntegrated(void) const;
+    
+    /**
+     * @brief   Reset the signal level detector
+     */
+    virtual void reset(void);
      
     
   protected:
     
   private:
-    Async::AudioFilter	  *filter;
-    Async::SigCAudioSink  *sigc_sink;
-    float    	      	  last_siglev;
-    float     	      	  slope;
-    float     	      	  offset;
+    typedef std::multiset<double> SsSet;
+    typedef SsSet::const_iterator SsSetIter;
+    typedef std::list<SsSetIter>  SsIndexList;
+
+    static const unsigned BLOCK_TIME          = 25;     // milliseconds
+    static const float    BOGUS_ABOVE_SIGLEV  = 120.0f;
+
+    const unsigned            sample_rate;
+    const unsigned            block_len;
+    Async::AudioFilter	      *filter;
+    Async::SigCAudioSink      *sigc_sink;
+    float     	      	      slope;
+    float     	      	      offset;
+    int			      update_interval;
+    int			      update_counter;
+    unsigned		      integration_time;
+    SsSet                     ss_values;
+    SsIndexList               ss_idx;
+    double                    ss;
+    unsigned                  ss_cnt;
     
     SigLevDetNoise(const SigLevDetNoise&);
     SigLevDetNoise& operator=(const SigLevDetNoise&);

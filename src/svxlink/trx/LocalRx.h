@@ -148,10 +148,10 @@ class LocalRx : public Rx
     bool initialize(void);
     
     /**
-     * @brief 	Mute the receiver
-     * @param 	do_mute Set to \em true to mute or \em false to unmute
+     * @brief 	Set the mute state for this receiver
+     * @param 	mute_state The mute state to set for this receiver
      */
-    void mute(bool do_mute);
+    void setMuteState(MuteState new_mute_state);
     
     /**
      * @brief 	Call this function to add a tone detector to the RX
@@ -186,13 +186,12 @@ class LocalRx : public Rx
      */
     sigc::signal<void, float> ctcssSnrUpdated;
     
-
   protected:
     
   private:
     Async::Config     	      	&cfg;
     Async::AudioIO    	      	*audio_io;
-    bool      	      	      	is_muted;
+    MuteState      	      	mute_state;
     Squelch   	      	      	*squelch_det;
     SigLevDet 	      	        *siglevdet;
     Async::AudioSplitter      	*tone_dets;
@@ -201,6 +200,7 @@ class LocalRx : public Rx
     bool      	      	      	mute_dtmf;
     int       	      	      	sql_tail_elim;
     int       	      	      	preamp_gain;
+    Async::AudioValve 	      	*mute_valve;
     
     int audioRead(float *samples, int count);
     void dtmfDigitActivated(char digit);

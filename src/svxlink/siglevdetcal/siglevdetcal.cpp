@@ -17,16 +17,14 @@ using namespace Async;
 
 #define PROGRAM_NAME "SigLevDetCal"
 
-static const int ITERATIONS = 15;
+static const int INTERVAL = 100;
+static const int ITERATIONS = 150;
 
 static Config cfg;
 static LocalRx *rx;
-static float open_sum = 0.0f;
-//static float open_close_sum = 0.0f;
-//static float last_open_siglev = 0.0f;
-static float close_sum = 0.0f;
-//static int open_close_cnt = 0;
-static float siglev_slope = 1.0;
+static double open_sum = 0.0f;
+static double close_sum = 0.0f;
+static float siglev_slope = 10.0;
 static float siglev_offset = 0.0;
 static double ctcss_snr_sum = 0.0;
 static unsigned ctcss_snr_cnt = 0;
@@ -77,7 +75,8 @@ void squelchOpen(bool is_open)
 void sample_squelch_close(Timer *t)
 {
   static int count = 0;
-  printf("Signal strength=%.3f\n", rx->signalStrength());
+  printf("Signal strength=%.3f\n",
+         siglev_offset + siglev_slope * rx->signalStrength());
   
   close_sum += rx->signalStrength();
   
@@ -88,10 +87,6 @@ void sample_squelch_close(Timer *t)
     float open_close_mean = (open_sum - close_sum) / ITERATIONS;
     float close_mean = close_sum / ITERATIONS;
 
-    open_close_mean /= siglev_slope;
-    close_mean -= siglev_offset;
-    close_mean /= siglev_slope;
-
     float new_siglev_slope = 100.0 / open_close_mean;
     float new_siglev_offset = -close_mean * new_siglev_slope;
     if (ctcss_snr_cnt > 0)
@@ -101,14 +96,28 @@ void sample_squelch_close(Timer *t)
 
     cout << endl;
     cout << "--- Results\n";
-    printf("The mean SNR for the CTCSS tone was %.1fdB\n", ctcss_open_snr - ctcss_close_snr);
+    printf("Mean SNR for the CTCSS tone              : ");
+    if (ctcss_snr_cnt > 0)
+    {
+      printf("%.1fdB\n",
+             ctcss_open_snr - ctcss_close_snr);
+    }
+    else
+    {
+      printf("N/A (CTCSS not enabled)\n");
+    }
+    printf("Dynamic range for the siglev measurement : %.1fdB\n",
+           10.0 * open_close_mean);
 
     cout << endl;
     cout << "--- Put the config variables below in the configuration file\n";
     cout << "--- section for " << rx->name() << ".\n";
     printf("SIGLEV_SLOPE=%.2f\n", new_siglev_slope);
     printf("SIGLEV_OFFSET=%.2f\n", new_siglev_offset);
-    printf("CTCSS_SNR_OFFSET=%.2f\n", ctcss_close_snr);
+    if (ctcss_snr_cnt > 0)
+    {
+      printf("CTCSS_SNR_OFFSET=%.2f\n", ctcss_close_snr);
+    }
     cout << endl;
     
     //rx->setVerbose(true);
@@ -134,7 +143,7 @@ void start_squelch_close_measurement(FdWatch *w)
     ctcss_snr_sum = 0.0;
     ctcss_snr_cnt = 0;
 
-    Timer *timer = new Timer(1000);
+    Timer *timer = new Timer(INTERVAL);
     // must explicitly specify name space for ptr_fun() to avoid conflict
     // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
     timer->expired.connect(sigc::ptr_fun(&sample_squelch_close));
@@ -145,7 +154,8 @@ void start_squelch_close_measurement(FdWatch *w)
 void sample_squelch_open(Timer *t)
 {
   static int count = 0;
-  printf("Signal strength=%.3f\n", rx->signalStrength());
+  printf("Signal strength=%.3f\n",
+      siglev_offset + siglev_slope * rx->signalStrength());
   
   open_sum += rx->signalStrength();
   
@@ -187,7 +197,7 @@ void start_squelch_open_measurement(FdWatch *w)
     delete w;
     ctcss_snr_sum = 0.0;
     ctcss_snr_cnt = 0;
-    Timer *timer = new Timer(1000);
+    Timer *timer = new Timer(INTERVAL);
     // must explicitly specify name space for ptr_fun() to avoid conflict
     // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
     timer->expired.connect(sigc::ptr_fun(&sample_squelch_open));
@@ -277,6 +287,22 @@ int main(int argc, char **argv)
     cerr << "*** WARNING: The given receiver config section is not for a "
          << "local receiver. You are on your own...\n";
   }
+
+    // Make sure we have CTCSS squelch enabled
+  cfg.setValue(rx_name, "SQL_DET", "CTCSS");
+
+    // Make sure that the squelch will not open during calibration
+  cfg.setValue(rx_name, "CTCSS_OPEN_THRESH", "100");
+  
+    // Make sure we are using the "Noise" siglev detector
+  cfg.setValue(rx_name, "SIGLEV_DET", "NOISE");
+
+    // Read the configured siglev slope and offset, then clear them so that
+    // they cannot affect the measurement.
+  cfg.getValue(rx_name, "SIGLEV_SLOPE", siglev_slope);
+  cfg.setValue(rx_name, "SIGLEV_SLOPE", "1.0");
+  cfg.getValue(rx_name, "SIGLEV_OFFSET", siglev_offset);
+  cfg.setValue(rx_name, "SIGLEV_OFFSET", "0.0");
   
   rx = dynamic_cast<LocalRx*>(RxFactory::createNamedRx(cfg, rx_name));
   if ((rx == 0) || !rx->initialize())
@@ -288,17 +314,8 @@ int main(int argc, char **argv)
   // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
   //rx->squelchOpen.connect(sigc::ptr_fun(&squelchOpen));
   rx->ctcssSnrUpdated.connect(sigc::ptr_fun(&ctcss_snr_updated));
-  rx->mute(false);
+  rx->setMuteState(Rx::MUTE_NONE);
   rx->setVerbose(false);
-  
-  if (cfg.getValue(rx_name, "SIGLEV_SLOPE", value))
-  {
-    siglev_slope = atof(value.c_str());
-  }
-  if (cfg.getValue(rx_name, "SIGLEV_OFFSET", value))
-  {
-    siglev_offset = atof(value.c_str());
-  }
   
   FdWatch *w = new FdWatch(0, FdWatch::FD_WATCH_RD);
   // must explicitly specify name space for ptr_fun() to avoid conflict

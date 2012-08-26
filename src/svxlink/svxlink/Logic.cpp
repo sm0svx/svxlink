@@ -409,7 +409,7 @@ bool Logic::initialize(void)
   rx().dtmfDigitDetected.connect(mem_fun(*this, &Logic::dtmfDigitDetectedP));
   rx().selcallSequenceDetected.connect(
 	mem_fun(*this, &Logic::selcallSequenceDetected));
-  rx().mute(false);
+  rx().setMuteState(Rx::MUTE_NONE);
   prev_rx_src = m_rx;
 
     // This valve is used to turn RX audio on/off into the logic core

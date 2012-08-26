@@ -866,9 +866,12 @@ some external tone detectors later.
 .
 Receiver type "Voter" is a "receiver" that combines multiple receivers and
 selects one of them to take audio from when the squelch opens. Which receiver to
-use is selected directly after squelch open. Another selection is not done until
-the selected receivers squelch is closed and another receivers squelch is
-opened. In the default configuration file there is a voter section called
+use is selected directly after squelch open. It is possible to set up a voting
+delay which will make the voter wait a while before choosing which RX to use.
+This will give all receivers some time to report their signal strengths.
+After the initial choice have been made a periodic check is done to see if any
+of the other receivers receive a stronger signal.
+In the default configuration file there is a voter section called
 .BR Voter .
 .TP
 .B TYPE
@@ -883,10 +886,11 @@ Specify the delay in milliseconds that the voter will wait after the first
 sqeulch open detection until the decision of which receiver to use is made. This
 time must be set sufficiently high to allow all receivers to calculate and
 report the signal level. Incoming audio and DTMF digits will be buffered for all
-receivers during the delay time so nothing will be lost. But of course the audio
+receivers during the delay time so nothing will be lost, but of course the audio
 will be delayed the specified amount of time. This is most noticeble when using
 a repeater logic. Use the BUFFER_LENGTH configuration variable to adjust the
 buffer length.
+The default voting delay is 0.
 .TP
 .B BUFFER_LENGTH
 Use this configuration variable to adjust the length of the voting delay buffer.
@@ -894,6 +898,43 @@ If not specified, the buffer length will be the same as the voting delay. When
 using the voter with a repeater logic, try to keep this variable at 0 to reduce
 the latency. Only increase it if you feel audio is lost in the beginning of
 transmissions.
+.TP
+.B REVOTE_INTERVAL
+This is the interval time in milliseconds with which the voter will check if
+another receiver is receiving a stronger signal. If that is the case, a
+receiver switch will be initiated.
+Default is 1000 milliseconds.
+.TP
+.B HYSTERESIS
+The hysteresis setting will prevent the voter from switching back and forth
+between two receivers that are equal in signal strength. For a switch to occur,
+the other receivers signal strength must exceed the current receivers signal
+strength by the percent specified in this configuration variable. So if the
+hysteresis is set to 50% and the received signal strength on the current
+receiver is 40, a signal strength of 40*1.5=60 is required on another receiver
+to initiate a switch. At squelch open, if the received signal strength plus
+hysteresis is larger than 100, the voting delay will be skipped.
+The default hysteresis is 50 percent.
+.TP
+.B RX_SWITCH_DELAY
+When a receiver switch is initiated by the voter, it will wait the number of
+milliseconds specified in this configuration variable before actually
+performing the switch. The switch will only occur if the other receivers
+signal strength is still higher.
+Default is 500 milliseconds.
+.TP
+.B SQL_CLOSE_REVOTE_DELAY
+The voter will wait the number of milliseconds specified in this config
+variable after a squelch close before voting in another receiver. There are two
+reasons for using this delay. The first is to prevent the voter from going into
+idle state immediately when the squelch close for a fluttery signal. If it goes
+to idle, the procedure with voting delay may cause longer dropouts than
+necessary.  The second reason to use this config variable is if different
+receivers have different hang times (explicitly or implicitly). If both a slow
+and fast receiver is receiving the same signal and the faster is currently
+chosen, when the PTT is released the slower receiver will be voted before
+closing.  This will cause a double squelch tail and double roger beep.
+Default is 500 milliseconds.
 .
 .SS Networked Receiver Section
 .
