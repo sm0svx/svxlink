@@ -75,7 +75,8 @@ void squelchOpen(bool is_open)
 void sample_squelch_close(Timer *t)
 {
   static int count = 0;
-  printf("Signal strength=%.3f\n", rx->signalStrength());
+  printf("Signal strength=%.3f\n",
+         siglev_offset + siglev_slope * rx->signalStrength());
   
   close_sum += rx->signalStrength();
   
@@ -85,10 +86,6 @@ void sample_squelch_close(Timer *t)
 
     float open_close_mean = (open_sum - close_sum) / ITERATIONS;
     float close_mean = close_sum / ITERATIONS;
-
-    open_close_mean /= siglev_slope;
-    close_mean -= siglev_offset;
-    close_mean /= siglev_slope;
 
     float new_siglev_slope = 100.0 / open_close_mean;
     float new_siglev_offset = -close_mean * new_siglev_slope;
@@ -157,7 +154,8 @@ void start_squelch_close_measurement(FdWatch *w)
 void sample_squelch_open(Timer *t)
 {
   static int count = 0;
-  printf("Signal strength=%.3f\n", rx->signalStrength());
+  printf("Signal strength=%.3f\n",
+      siglev_offset + siglev_slope * rx->signalStrength());
   
   open_sum += rx->signalStrength();
   
@@ -299,6 +297,13 @@ int main(int argc, char **argv)
     // Make sure we are using the "Noise" siglev detector
   cfg.setValue(rx_name, "SIGLEV_DET", "NOISE");
 
+    // Read the configured siglev slope and offset, then clear them so that
+    // they cannot affect the measurement.
+  cfg.getValue(rx_name, "SIGLEV_SLOPE", siglev_slope);
+  cfg.setValue(rx_name, "SIGLEV_SLOPE", "1.0");
+  cfg.getValue(rx_name, "SIGLEV_OFFSET", siglev_offset);
+  cfg.setValue(rx_name, "SIGLEV_OFFSET", "0.0");
+  
   rx = dynamic_cast<LocalRx*>(RxFactory::createNamedRx(cfg, rx_name));
   if ((rx == 0) || !rx->initialize())
   {
@@ -311,15 +316,6 @@ int main(int argc, char **argv)
   rx->ctcssSnrUpdated.connect(sigc::ptr_fun(&ctcss_snr_updated));
   rx->setMuteState(Rx::MUTE_NONE);
   rx->setVerbose(false);
-  
-  if (cfg.getValue(rx_name, "SIGLEV_SLOPE", value))
-  {
-    siglev_slope = atof(value.c_str());
-  }
-  if (cfg.getValue(rx_name, "SIGLEV_OFFSET", value))
-  {
-    siglev_offset = atof(value.c_str());
-  }
   
   FdWatch *w = new FdWatch(0, FdWatch::FD_WATCH_RD);
   // must explicitly specify name space for ptr_fun() to avoid conflict

@@ -192,6 +192,17 @@ float SigLevDetNoise::lastSiglev(void) const
     return 0.0f;
   }
 
+    // Calculate the siglev value
+  float siglev = offset - slope * log10(*ss_idx.back());
+
+    // If the siglev value is way above 100, it's probably bogus. It's likely
+    // that this is caused by a closed squelch on the receiver or that
+    // it has been turned off.
+  if (siglev > BOGUS_ABOVE_SIGLEV)
+  {
+    return 0.0f;
+  }
+
   return offset - slope * log10(*ss_idx.back());
 
 } /* SigLevDetNoise::lastSiglev */
@@ -204,11 +215,21 @@ float SigLevDetNoise::siglevIntegrated(void) const
     return 0.0f;
   }
 
+    // Calculate the siglev value.
     // Compensate for the over estimation of the siglev value caused by
-    // using the minimum value over the "integration time". The over
-    // estimation seems to be about 5%.
-  float siglev = 0.95f * (offset - slope * log10(*ss_values.begin()));
-  if (siglev > 110.0f)
+    // using the minimum value over the "integration time".
+    // The over estimation have been determined by a small number of
+    // experiments so it may be wrong for some receivers.
+    // The compensation may have to be determined for each receiver using
+    // calibration but we'll try to have it hard coded for now.
+    // If the BLOCK_TIME is changed, the compensation probably will have to
+    // be changed too.
+  float siglev = offset - slope * (log10(*ss_values.begin()) + 0.25);
+
+    // If the siglev value is over 120, it's probably bogus. It's likely
+    // that this is caused by a closed squelch on the receiver or that
+    // it has been turned off.
+  if (siglev > BOGUS_ABOVE_SIGLEV)
   {
     return 0.0f;
   }

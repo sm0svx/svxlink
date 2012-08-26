@@ -184,7 +184,8 @@ class SigLevDetNoise : public SigLevDet
     typedef SsSet::const_iterator SsSetIter;
     typedef std::list<SsSetIter>  SsIndexList;
 
-    static const unsigned BLOCK_TIME = 25;  // 25ms
+    static const unsigned BLOCK_TIME          = 25;     // milliseconds
+    static const float    BOGUS_ABOVE_SIGLEV  = 120.0f;
 
     const unsigned            sample_rate;
     const unsigned            block_len;
