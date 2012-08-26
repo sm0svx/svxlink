@@ -13,6 +13,9 @@
   function. It is not possible to write the change back to the config
   file though.
 
+* New class FileReader to read a file in non blocking mode. Contributed
+  by Steve / DH1DM.
+
 
 
  0.18.2 -- 27 Nov 2011
