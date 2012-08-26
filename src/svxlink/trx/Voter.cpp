@@ -1112,7 +1112,7 @@ void Voter::Receiving::exit(void)
 
 void Voter::Receiving::timerExpired(void)
 {
-  voter().printSquelchState();
+  //voter().printSquelchState();
   
   assert(activeSrx() != 0);
   assert(bestSrx() != 0);
