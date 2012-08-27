@@ -36,6 +36,9 @@
   difference is large enough. New config variables: REVOTE_INTERVAL,
   HYSTERESIS, SQL_CLOSE_REVOTE_DELAY, RX_SWITCH_DELAY.
 
+* ModuleEchoLink: The text "[listen only] is now prepended to the sysop name
+  if listen only mode is active.
+
 
 
  0.13.1 -- 27 Nov 2011

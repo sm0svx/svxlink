@@ -682,7 +682,10 @@ void ModuleEchoLink::squelchOpen(bool is_open)
   //printf("RX squelch is %s...\n", is_open ? "open" : "closed");
   
   squelch_is_open = is_open;
-  broadcastTalkerStatus();  
+  if (listen_only_valve->isOpen())
+  {
+    broadcastTalkerStatus();  
+  }
 } /* squelchOpen */
 
 
@@ -926,6 +929,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->setRemoteCallsign(callsign);
   qso->setRemoteName(name);
   qso->setRemoteParams(priv);
+  qso->setListenOnly(!listen_only_valve->isOpen());
   qso->stateChange.connect(mem_fun(*this, &ModuleEchoLink::onStateChange));
   qso->chatMsgReceived.connect(
           mem_fun(*this, &ModuleEchoLink::onChatMsgReceived));
@@ -1247,6 +1251,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     qsos.push_back(qso);
     updateEventVariables();    
     qso->setRemoteCallsign(station.callsign());
+    qso->setListenOnly(!listen_only_valve->isOpen());
     qso->stateChange.connect(mem_fun(*this, &ModuleEchoLink::onStateChange));
     qso->chatMsgReceived.connect(
         mem_fun(*this, &ModuleEchoLink::onChatMsgReceived));
@@ -1330,7 +1335,7 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
   msg << "SvxLink " << SVXLINK_VERSION << " - " << mycall
       << " (" << numConnectedStations() << ")\n\n";
 
-  if (squelch_is_open)
+  if (squelch_is_open && listen_only_valve->isOpen())
   {
     msg << "> " << mycall << "         " << sysop_name << "\n\n";
   }
@@ -1341,7 +1346,12 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
       msg << "> " << talker->remoteCallsign() << "         "
       	  << talker->remoteName() << "\n\n";
     }
-    msg << mycall << "         " << sysop_name << "\n";
+    msg << mycall << "         ";
+    if (!listen_only_valve->isOpen())
+    {
+      msg << "[listen only] ";
+    }
+    msg << sysop_name << "\n";
   }
   
   list<QsoImpl*>::const_iterator it;
@@ -1674,6 +1684,12 @@ void ModuleEchoLink::handleCommand(const string& cmd)
     
     bool activate = (cmd[1] != '0');
     
+    list<QsoImpl*>::iterator it;
+    for (it=qsos.begin(); it!=qsos.end(); ++it)
+    {
+      (*it)->setListenOnly(activate);
+    }
+
     stringstream ss;
     ss << "listen_only " << (!listen_only_valve->isOpen() ? "1 " : "0 ")
        << (activate ? "1" : "0");
