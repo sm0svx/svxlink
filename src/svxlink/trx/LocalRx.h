@@ -201,6 +201,9 @@ class LocalRx : public Rx
     int       	      	      	sql_tail_elim;
     int       	      	      	preamp_gain;
     Async::AudioValve 	      	*mute_valve;
+    unsigned                    sql_hangtime;
+    unsigned                    sql_extended_hangtime;
+    unsigned                    sql_extended_hangtime_thresh;
     
     int audioRead(float *samples, int count);
     void dtmfDigitActivated(char digit);
@@ -210,6 +213,8 @@ class LocalRx : public Rx
     void onSquelchOpen(bool is_open);
     SigLevDet *createSigLevDet(const std::string &name, int sample_rate);
     void tone1750detected(bool detected);
+    void onSignalLevelUpdated(float siglev);
+    void setSqlHangtimeFromSiglev(float siglev);
 
 };  /* class LocalRx */
 

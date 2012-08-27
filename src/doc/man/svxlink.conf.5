@@ -541,8 +541,27 @@ logic core. A delay might be needed when using the voter to choose among
 multiple receivers. A normal value could be somewhere in between 20-100ms.
 .TP
 .B SQL_HANGTIME
-How long, in milliseconds, the squelch will stay open after the detector has indicated
-that it is closed. This configuration variable will affect all squelch detector types. 
+How long, in milliseconds, the squelch will stay open after the detector has
+indicated that it is closed. This configuration variable will affect all
+squelch detector types. 
+.TP
+.B SQL_EXTENDED_HANGTIME
+At low signal strengths it can be beneficial to use a longer squelch hangtime
+so that it is less likely for the squelch to close. This configuration variable
+is unset by default. A value of 1000 milliseconds may be a good value to start
+out with. To enable the extended squelch hangtime feature, set up the
+SQL_EXTENDED_HANGTIME_THRESH variable.
+.TP
+.B SQL_EXTENDED_HANGTIME_THRESH
+At low signal strengths it can be beneficial to use a longer squelch hangtime
+so that it is less likely for the squelch to close. This configuration variable
+is unset by default. When set to a signal level it will activate the extended
+squelch hangtime feature. When the signal strength during a transmission fall
+below the set threshold, the extended hangtime will be used. Start out with a
+value between 10 to 15. The SQL_EXTENDED_HANGTIME variable is used to set how
+long the extended squelch hangtime should be. Make sure that you have
+calibrated the signal level detector before turning this feature on. Otherwise
+it will not work as expected.
 .TP
 .B SQL_TIMEOUT
 Use this configuration variable to set an upper limiti, in seconds, for how

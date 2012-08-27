@@ -177,7 +177,8 @@ LocalRx::LocalRx(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), audio_io(0), mute_state(MUTE_ALL),
     squelch_det(0), siglevdet(0), /* siglev_offset(0.0), siglev_slope(1.0), */
     tone_dets(0), sql_valve(0), delay(0), mute_dtmf(false), sql_tail_elim(0),
-    preamp_gain(0), mute_valve(0)
+    preamp_gain(0), mute_valve(0), sql_hangtime(0), sql_extended_hangtime(0),
+    sql_extended_hangtime_thresh(0)
 {
 } /* LocalRx::LocalRx */
 
@@ -323,7 +324,8 @@ bool LocalRx::initialize(void)
     return false;
   }
   siglevdet->setIntegrationTime(0);
-  siglevdet->signalLevelUpdated.connect(signalLevelUpdated.make_slot());
+  siglevdet->signalLevelUpdated.connect(
+      mem_fun(*this, &LocalRx::onSignalLevelUpdated));
   siglevdet_splitter->addSink(siglevdet, true);
   
     // Create a mute valve
@@ -446,6 +448,14 @@ bool LocalRx::initialize(void)
     // FIXME: Cleanup
     return false;
   }
+
+  if (cfg.getValue(name(), "SQL_HANGTIME", sql_hangtime))
+  {
+    squelch_det->setHangtime(sql_hangtime);
+  }
+  cfg.getValue(name(), "SQL_EXTENDED_HANGTIME", sql_extended_hangtime);
+  cfg.getValue(name(), "SQL_EXTENDED_HANGTIME_THRESH",
+      sql_extended_hangtime_thresh);
   
   squelch_det->squelchOpen.connect(mem_fun(*this, &LocalRx::onSquelchOpen));
   splitter->addSink(squelch_det, true);
@@ -730,6 +740,7 @@ void LocalRx::onSquelchOpen(bool is_open)
     {
       sql_valve->setOpen(true);
     }
+    setSqlHangtimeFromSiglev(siglevdet->lastSiglev());
     siglevdet->setIntegrationTime(1000);
     siglevdet->setContinuousUpdateInterval(1000);
   }
@@ -819,6 +830,29 @@ void LocalRx::tone1750detected(bool detected)
      delay->mute(false, TONE_1750_MUTING_POST);
    }
 } /* LocalRx::tone1750detected */
+
+
+void LocalRx::onSignalLevelUpdated(float siglev)
+{
+  setSqlHangtimeFromSiglev(siglev);
+  signalLevelUpdated(siglev);
+} /* LocalRx::onSignalLevelUpdated */
+
+
+void LocalRx::setSqlHangtimeFromSiglev(float siglev)
+{
+  if (sql_extended_hangtime_thresh > 0)
+  {
+    if (siglev > sql_extended_hangtime_thresh)
+    {
+      squelch_det->setHangtime(sql_hangtime);
+    }
+    else
+    {
+      squelch_det->setHangtime(sql_extended_hangtime);
+    }
+  }
+} /* LocalRx::setSqlHangtime */
 
 
 

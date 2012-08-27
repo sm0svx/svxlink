@@ -39,6 +39,10 @@
 * ModuleEchoLink: The text "[listen only] is now prepended to the sysop name
   if listen only mode is active.
 
+* New feature "extended squelch hangtimne" added. It is now possible to
+  configure an extended squelch hangtime that is activated when the
+  signal strength fall below a given threshold.
+
 
 
  0.13.1 -- 27 Nov 2011
