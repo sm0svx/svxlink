@@ -843,7 +843,7 @@ void LocalRx::setSqlHangtimeFromSiglev(float siglev)
 {
   if (sql_extended_hangtime_thresh > 0)
   {
-    if (siglev > sql_extended_hangtime_thresh)
+    if ((siglev > sql_extended_hangtime_thresh) || (mute_state != MUTE_NONE))
     {
       squelch_det->setHangtime(sql_hangtime);
     }
