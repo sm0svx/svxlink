@@ -43,6 +43,10 @@
   configure an extended squelch hangtime that is activated when the
   signal strength fall below a given threshold.
 
+* Now SvxLink can send APRS statistics about RX squelch open count,
+  TX on count, RX squelch open time and TX on time.
+  Patch from Adi / DL1HRC.
+
 
 
  0.13.1 -- 27 Nov 2011

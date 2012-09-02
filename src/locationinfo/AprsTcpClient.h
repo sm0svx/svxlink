@@ -125,6 +125,7 @@ class AprsTcpClient : public AprsClient, public sigc::trackable
        const std::string& info, std::list<std::string>& call_list);
       void update3rdState(const std::string& call, const std::string& info);
      void igateMessage(const std::string& info);
+     void sendAprsStatistics(const LocationInfo::AprsStatistics& aprs_stats) {}
 
 
   private:
