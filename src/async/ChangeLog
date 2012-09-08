@@ -9,6 +9,13 @@
 * New "audio device" which read and write audio from a UDP socket.
   This can for example be used to stream audio to/from GNU Radio.
 
+* Now possible to set config variables in memory using the Config::setValue
+  function. It is not possible to write the change back to the config
+  file though.
+
+* New class FileReader to read a file in non blocking mode. Contributed
+  by Steve / DH1DM.
+
 
 
  0.18.2 -- 27 Nov 2011

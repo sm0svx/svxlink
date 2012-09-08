@@ -129,6 +129,28 @@ class LocationInfo
         char dir;
     };
 
+    std::string get_callsign();
+
+    struct AprsStatistics
+    {
+      std::string logic_name;
+      unsigned    rx_on_nr;
+      unsigned    tx_on_nr;
+      time_t      rx_sec;
+      time_t      tx_sec;
+
+      AprsStatistics(void) : rx_on_nr(0),tx_on_nr(0), rx_sec(0), tx_sec(0) {}
+      void reset(void)
+      {
+        rx_on_nr = 0;
+        tx_on_nr = 0;
+        rx_sec = 0;
+        tx_sec = 0;
+      }
+    };
+
+    void sendAprsStatistics(const AprsStatistics &aprs_stats);
+
     struct Cfg
     {
       Cfg() : interval(600000), frequency(0), power(0), tone(0), height(10),
@@ -157,6 +179,7 @@ class LocationInfo
     static bool initialize(const Async::Config &cfg, const std::string &cfg_name);
 
     void updateDirectoryStatus(EchoLink::StationData::Status new_status);
+    void igateMessage(const std::string& info);
     void update3rdState(const std::string& call, const std::string& info);
     void updateQsoStatus(int action, const std::string& call,
                          const std::string& name,
@@ -181,7 +204,7 @@ class LocationInfo
 
   private:
     static LocationInfo* _instance;
-    LocationInfo() {};
+    LocationInfo() : sequence(0) {}
     LocationInfo(const LocationInfo&);
     ~LocationInfo(void) {};
 
@@ -189,6 +212,7 @@ class LocationInfo
 
     Cfg         loc_cfg; // weshalb?
     ClientList  clients;
+    int         sequence;
 
     bool parsePosition(const Async::Config &cfg, const std::string &name);
     bool parseLatitude(Coordinate &pos, const std::string &value);

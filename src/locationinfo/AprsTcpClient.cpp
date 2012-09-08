@@ -217,8 +217,9 @@ void AprsTcpClient::update3rdState(const string& call, const string& info)
 
 void AprsTcpClient::igateMessage(const string& info)
 {
-   // do nothing
-} /* AprsUdpClient::igateMessage */
+  sendMsg(info.c_str());
+} /* AprsTcpClient::igateMessage */
+
 
 
 /****************************************************************************

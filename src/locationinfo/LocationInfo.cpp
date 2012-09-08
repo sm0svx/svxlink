@@ -226,8 +226,41 @@ void LocationInfo::igateMessage(const std::string& info)
 
 string LocationInfo::get_callsign(void)
 {
-    return LocationInfo::_instance->loc_cfg.mycall;
+  return LocationInfo::_instance->loc_cfg.mycall;
 } /* LocationInfo::get_callsign */
+
+
+void LocationInfo::sendAprsStatistics(const AprsStatistics &aprs_stats)
+{
+  char info[255];
+  info[0] ='\0';
+  string head ="UNIT.RX Erlang,TX Erlang,count/10m,count/10m,none1,none2,logic";
+
+  sprintf(info, "E%s-%s>RXTLM-1,TCPIP,qAR,%s::E%s-%s:%s\n",
+       loc_cfg.prefix.c_str(), loc_cfg.mycall.c_str(), loc_cfg.mycall.c_str(),
+       loc_cfg.prefix.c_str(), loc_cfg.mycall.c_str(), head.c_str());
+
+   // sends the Aprs stats header
+  string message = info;
+  igateMessage(message);
+
+  info[0] = '\0';
+  sprintf(info,
+     "E%s-%s>RXTLM-1,TCPIP,qAR,%s:T#%03d,%3.2f,%3.2f,%u,%u,0.0,00000000,%s\n",
+       loc_cfg.prefix.c_str(), loc_cfg.mycall.c_str(), loc_cfg.mycall.c_str(),
+       sequence, (aprs_stats.rx_sec/600.0), (aprs_stats.tx_sec/600.0),
+       aprs_stats.rx_on_nr, aprs_stats.tx_on_nr, aprs_stats.logic_name.c_str());
+
+   // sends the Aprs stats information
+  message = info;
+  igateMessage(message);
+
+  if (sequence++ > 999)
+  {
+    sequence = 0;
+  }
+
+} /* LocationInfo::sendAprsStatistics */
 
 
 /****************************************************************************

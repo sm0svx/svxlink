@@ -123,6 +123,18 @@ class Rx : public sigc::trackable, public Async::AudioSource
 {
   public:
     /**
+     * Muting state for the receiver
+     */
+    typedef enum
+    {
+      MUTE_NONE,    //! Nothing muted.
+      MUTE_CONTENT, //! Mute only the content (audio, dtmf etc).
+      MUTE_ALL      //! Mute everything. Also close the audio device.
+    } MuteState;
+
+    static std::string muteStateToString(MuteState mute_state);
+
+    /**
      * @brief 	Default constuctor
      */
     explicit Rx(Async::Config &cfg, const std::string& name);
@@ -151,10 +163,10 @@ class Rx : public sigc::trackable, public Async::AudioSource
     virtual void setVerbose(bool verbose) { m_verbose = verbose; }
 
     /**
-     * @brief 	Mute the receiver
-     * @param 	do_mute Set to \em true to mute or \em false to unmute
+     * @brief 	Set the mute state for this receiver
+     * @param 	mute_state The mute state to set for this receiver
      */
-    virtual void mute(bool do_mute) = 0;
+    virtual void setMuteState(MuteState new_mute_state) = 0;
 
     /**
      * @brief 	Check the squelch status
@@ -220,13 +232,6 @@ class Rx : public sigc::trackable, public Async::AudioSource
                 detected
      * @param   sequence the Afsk message
      */
-    sigc::signal<void, std::string, std::string> afskMessageDetected;
-
-    /**
-     * @brief   A signal that is emitted when a valid Afsk message has been
-                detected
-     * @param   sequence the Afsk message
-     */
     sigc::signal<void, std::string> fmsMessageDetected;
 
     /**
@@ -235,8 +240,14 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @param 	fq The frequency of the tone
      */
     sigc::signal<void, float> toneDetected;
-
-
+    
+    /**
+     * @brief	A signal that is emitted when the signal level is updated
+     * @param	siglev The new signal level
+     */
+    sigc::signal<void, float> signalLevelUpdated;
+    
+    
   protected:
     /**
      * @brief 	Set the state of the squelch

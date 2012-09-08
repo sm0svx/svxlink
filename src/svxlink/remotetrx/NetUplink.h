@@ -186,6 +186,7 @@ class NetUplink : public Uplink
     State                   state;
     std::string             auth_key;
     unsigned char           auth_challenge[NetTrxMsg::MsgAuthChallenge::CHALLENGE_LEN];
+    Async::Timer      	    *siglev_check_timer;
     Async::Timer	    *mute_tx_timer;
     bool		    tx_muted;
     bool                    fallback_enabled;
@@ -242,8 +243,10 @@ class NetUplink : public Uplink
     void transmitterStateChange(bool is_transmitting);
     void allEncodedSamplesFlushed(void);
     void heartbeat(Async::Timer *t);
+    void checkSiglev(Async::Timer *t);
     void unmuteTx(Async::Timer *t);
     void setFallbackActive(bool activate);
+    void signalLevelUpdated(float siglev);
 
 };  /* class NetUplink */
 

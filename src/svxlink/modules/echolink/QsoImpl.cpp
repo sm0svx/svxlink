@@ -151,7 +151,6 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   }
   m_qso.setLocalCallsign(local_callsign);
   
-  string sysop_name;
   if (!cfg.getValue(cfg_name, "SYSOPNAME", sysop_name))
   {
     cerr << "*** ERROR: Config variable " << cfg_name
@@ -351,6 +350,21 @@ void QsoImpl::reject(bool perm)
     msg_handler->end();
   }
 } /* QsoImpl::reject */
+
+
+void QsoImpl::setListenOnly(bool enable)
+{
+  if (enable)
+  {
+    string str("[listen only] ");
+    str += sysop_name;
+    m_qso.setLocalName(str);
+  }
+  else
+  {
+    m_qso.setLocalName(sysop_name);
+  }
+} /* QsoImpl::setListenOnly */
 
 
 

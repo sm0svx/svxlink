@@ -176,10 +176,11 @@ class PeakMeter : public AudioPassthrough
  ****************************************************************************/
 
 LocalRx::LocalRx(Config &cfg, const std::string& name)
-  : Rx(cfg, name), cfg(cfg), audio_io(0), is_muted(true),
+  : Rx(cfg, name), cfg(cfg), audio_io(0), mute_state(MUTE_ALL),
     squelch_det(0), siglevdet(0), /* siglev_offset(0.0), siglev_slope(1.0), */
     tone_dets(0), sql_valve(0), delay(0), mute_dtmf(false), sql_tail_elim(0),
-    preamp_gain(0)
+    preamp_gain(0), mute_valve(0), sql_hangtime(0), sql_extended_hangtime(0),
+    sql_extended_hangtime_thresh(0)
 {
 } /* LocalRx::LocalRx */
 
@@ -306,19 +307,48 @@ bool LocalRx::initialize(void)
     prev_src = d1;
   }
 
+  AudioSplitter *siglevdet_splitter = 0;
+  siglevdet_splitter = new AudioSplitter;
+  prev_src->registerSink(siglevdet_splitter, true);
+
+    // Create the signal level detector. Connect it to the 16 or 8kHz splitter
+    // depending on how the sound card sample rate is setup.
+  if (audio_io->sampleRate() > 8000)
+  {
+    siglevdet = createSigLevDet(name(), 16000);
+  }
+  else
+  {
+    siglevdet = createSigLevDet(name(), 8000);
+  }
+  if (siglevdet == 0)
+  {
+    return false;
+  }
+  siglevdet->setIntegrationTime(0);
+  siglevdet->signalLevelUpdated.connect(
+      mem_fun(*this, &LocalRx::onSignalLevelUpdated));
+  siglevdet_splitter->addSink(siglevdet, true);
+  
+    // Create a mute valve
+  mute_valve = new AudioValve;
+  mute_valve->setOpen(true);
+  siglevdet_splitter->addSink(mute_valve, true);
+  prev_src = mute_valve;
+  
     // If the sound card sample rate is higher than 8kHz (16 or 48kHz assumed)
     // decimate it down to 8kHz. Also create a splitter to distribute the
     // 16kHz audio to other consumers.
 #if (INTERNAL_SAMPLE_RATE != 16000)
-  AudioSplitter *rate_16k_splitter = 0;
+  //AudioSplitter *rate_16k_splitter = 0;
   if (audio_io->sampleRate() > 8000)
   {
-    rate_16k_splitter = new AudioSplitter;
-    prev_src->registerSink(rate_16k_splitter, true);
+    //rate_16k_splitter = new AudioSplitter;
+    //prev_src->registerSink(rate_16k_splitter, true);
 
     AudioDecimator *d2 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
-    //prev_src->registerSink(d2, true);
-    rate_16k_splitter->addSink(d2, true);
+    prev_src->registerSink(d2, true);
+    //rate_16k_splitter->addSink(d2, true);
     prev_src = d2;
   }
 #endif
@@ -339,6 +369,7 @@ bool LocalRx::initialize(void)
   prev_src->registerSink(splitter, true);
   prev_src = 0;
 
+#if 0  
     // Create the signal level detector. Connect it to the 16 or 8kHz splitter
     // depending on how the sound card sample rate is setup.
 #if (INTERNAL_SAMPLE_RATE != 16000)
@@ -368,7 +399,8 @@ bool LocalRx::initialize(void)
   }
   splitter->addSink(siglevdet, true);
 #endif
-
+#endif
+  
     // Create the configured squech detector and initialize it. Then connect
     // it to the 8kHz audio splitter
   string sql_det_str;
@@ -419,6 +451,14 @@ bool LocalRx::initialize(void)
     return false;
   }
 
+  if (cfg.getValue(name(), "SQL_HANGTIME", sql_hangtime))
+  {
+    squelch_det->setHangtime(sql_hangtime);
+  }
+  cfg.getValue(name(), "SQL_EXTENDED_HANGTIME", sql_extended_hangtime);
+  cfg.getValue(name(), "SQL_EXTENDED_HANGTIME_THRESH",
+      sql_extended_hangtime_thresh);
+  
   squelch_det->squelchOpen.connect(mem_fun(*this, &LocalRx::onSquelchOpen));
   splitter->addSink(squelch_det, true);
 
@@ -541,6 +581,15 @@ bool LocalRx::initialize(void)
     // the LocalRx class
   setHandler(prev_src);
 
+    // Open the audio device for reading
+  if (!audio_io->open(AudioIO::MODE_RD))
+  {
+    cerr << "*** Error: Could not open audio device for receiver \""
+      	 << name() << "\"\n";
+    // FIXME: Cleanup?
+    return false;
+  }
+  
   if (mute_1750)
   {
     ToneDetector *calldet = new ToneDetector(1750, 50, 100);
@@ -556,39 +605,63 @@ bool LocalRx::initialize(void)
 } /* LocalRx:initialize */
 
 
-void LocalRx::mute(bool do_mute)
+void LocalRx::setMuteState(MuteState new_mute_state)
 {
-  if (do_mute == is_muted)
+  while (mute_state != new_mute_state)
   {
-    return;
-  }
+    assert((mute_state >= MUTE_NONE) && (mute_state <= MUTE_ALL));
 
-  if (do_mute)
-  {
-    if (delay != 0)
+    if (new_mute_state > mute_state)  // Muting requested
     {
-      delay->clear();
+      mute_state = static_cast<MuteState>(mute_state + 1);
+      switch (mute_state)
+      {
+        case MUTE_CONTENT:  // MUTE_NONE -> MUTE_CONTENT
+          if (delay != 0)
+          {
+            delay->clear();
+          }
+          sql_valve->setOpen(false);
+          break;
+
+        case MUTE_ALL:  // MUTE_CONTENT -> MUTE_ALL
+          audio_io->close();
+          squelch_det->reset();
+          setSquelchState(false);
+          break;
+         
+        default:
+          break;
+      }
     }
-    sql_valve->setOpen(false);
-    audio_io->close();
-    squelch_det->reset();
-    setSquelchState(false);
-  }
-  else
-  {
-    if (!audio_io->open(AudioIO::MODE_RD))
+    else                              // Unmuting requested
     {
-      cerr << "*** ERROR: Could not open audio device for receiver \""
-      	   << name() << "\"\n";
-      return;
+      mute_state = static_cast<MuteState>(mute_state - 1);
+      switch (mute_state)
+      {
+        case MUTE_CONTENT:  // MUTE_ALL -> MUTE_CONTENT
+          if (!audio_io->open(AudioIO::MODE_RD))
+          {
+            cerr << "*** ERROR: Could not open audio device for receiver \""
+                 << name() << "\"\n";
+            return;
+          }
+          squelch_det->reset();
+          break;
+
+        case MUTE_NONE:   // MUTE_CONTENT -> MUTE_NONE
+          if (squelchIsOpen())
+          {
+            sql_valve->setOpen(true);
+          }
+          break;
+         
+        default:
+          break;
+      }
     }
-
-    squelch_det->reset();
   }
-
-  is_muted = do_mute;
-
-} /* LocalRx::mute */
+} /* LocalRx::setMuteState */
 
 
 bool LocalRx::addToneDetector(float fq, int bw, float thresh,
@@ -610,14 +683,17 @@ bool LocalRx::addToneDetector(float fq, int bw, float thresh,
 
 float LocalRx::signalStrength(void) const
 {
-  //return siglev_offset - siglev_slope * log10(siglevdet->lastSiglev());
+  if (squelchIsOpen())
+  {
+    return siglevdet->siglevIntegrated();
+  }
   return siglevdet->lastSiglev();
 } /* LocalRx::signalStrength */
 
 
 void LocalRx::reset(void)
 {
-  mute(true);
+  setMuteState(Rx::MUTE_ALL);
   tone_dets->removeAllSinks();
   if (delay != 0)
   {
@@ -655,7 +731,10 @@ void LocalRx::afskDetected(string aprs_message, string payload)
 
 void LocalRx::sel5Detected(std::string sequence)
 {
-  selcallSequenceDetected(sequence);
+  if (mute_state == MUTE_NONE)
+  {
+    selcallSequenceDetected(sequence);
+  }
 } /* LocalRx::sel5Detected */
 
 
@@ -672,7 +751,7 @@ void LocalRx::dtmfDigitActivated(char digit)
 void LocalRx::dtmfDigitDeactivated(char digit, int duration_ms)
 {
   //printf("DTMF digit %c deactivated. Duration = %d ms\n", digit, duration_ms);
-  if (!is_muted)
+  if (mute_state == MUTE_NONE)
   {
     dtmfDigitDetected(digit, duration_ms);
   }
@@ -685,7 +764,7 @@ void LocalRx::dtmfDigitDeactivated(char digit, int duration_ms)
 
 void LocalRx::audioStreamStateChange(bool is_active, bool is_idle)
 {
-  if (is_idle)
+  if (is_idle && !squelch_det->isOpen())
   {
     setSquelchState(false);
   }
@@ -700,11 +779,14 @@ void LocalRx::onSquelchOpen(bool is_open)
     {
       delay->clear();
     }
-    if (!is_muted)
+    setSquelchState(true);
+    if (mute_state == MUTE_NONE)
     {
-      setSquelchState(true);
       sql_valve->setOpen(true);
     }
+    setSqlHangtimeFromSiglev(siglevdet->lastSiglev());
+    siglevdet->setIntegrationTime(1000);
+    siglevdet->setContinuousUpdateInterval(1000);
   }
   else
   {
@@ -712,7 +794,16 @@ void LocalRx::onSquelchOpen(bool is_open)
     {
       delay->clear(sql_tail_elim);
     }
-    sql_valve->setOpen(false);
+    if (!sql_valve->isOpen())
+    {
+      setSquelchState(false);
+    }
+    else
+    {
+      sql_valve->setOpen(false);
+    }
+    siglevdet->setIntegrationTime(0);
+    siglevdet->setContinuousUpdateInterval(0);
   }
 } /* LocalRx::onSquelchOpen */
 
@@ -734,7 +825,7 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
               "sampling rate\n";
       return 0;
     }
-    siglevdet = new SigLevDetTone;
+    siglevdet = new SigLevDetTone(sample_rate);
   }
   else if (siglev_det_type == "NOISE")
   {
@@ -783,6 +874,29 @@ void LocalRx::tone1750detected(bool detected)
      delay->mute(false, TONE_1750_MUTING_POST);
    }
 } /* LocalRx::tone1750detected */
+
+
+void LocalRx::onSignalLevelUpdated(float siglev)
+{
+  setSqlHangtimeFromSiglev(siglev);
+  signalLevelUpdated(siglev);
+} /* LocalRx::onSignalLevelUpdated */
+
+
+void LocalRx::setSqlHangtimeFromSiglev(float siglev)
+{
+  if (sql_extended_hangtime_thresh > 0)
+  {
+    if ((siglev > sql_extended_hangtime_thresh) || (mute_state != MUTE_NONE))
+    {
+      squelch_det->setHangtime(sql_hangtime);
+    }
+    else
+    {
+      squelch_det->setHangtime(sql_extended_hangtime);
+    }
+  }
+} /* LocalRx::setSqlHangtime */
 
 
 

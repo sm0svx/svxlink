@@ -144,10 +144,10 @@ class NetRx : public Rx
     bool initialize(void);
     
     /**
-     * @brief 	Mute the receiver
-     * @param 	do_mute Set to \em true to mute or \em false to unmute
+     * @brief 	Set the mute state for this receiver
+     * @param 	mute_state The mute state to set for this receiver
      */
-    void mute(bool do_mute);
+    void setMuteState(MuteState new_mute_state);
     
     /**
      * @brief 	Call this function to add a tone detector to the RX
@@ -193,7 +193,7 @@ class NetRx : public Rx
 
   private:
     Async::Config     	&cfg;
-    bool      	      	is_muted;
+    Rx::MuteState       mute_state;
     NetTrxTcpClient  	*tcp_con;
     float     	      	last_signal_strength;
     int       	      	last_sql_rx_id;

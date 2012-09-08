@@ -1,12 +1,15 @@
 /**
-@file	 SimplexLogic.cpp
-@brief   Contains a simplex logic SvxLink core implementation
+@file	 AsyncFileReader.cpp
+@brief   A class for asynchronous reading from binary files
 @author  Tobias Blomberg / SM0SVX
-@date	 2004-03-23
+@date	 2011-07-20
+
+This file contains a class that is used for buffered reading
+from binary files in a completely non-blocking way.
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,16 +27,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
 
-#include <cstdio>
-#include <cstdlib>
+#include <fcntl.h>
+#include <errno.h>
+#include <cstring>
 #include <iostream>
 
 
@@ -43,8 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <Rx.h>
-#include <Tx.h>
+#include <AsyncFdWatch.h>
 
 
 /****************************************************************************
@@ -53,7 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "SimplexLogic.h"
+#include "AsyncFileReader.h"
 
 
 
@@ -115,93 +116,93 @@ using namespace Async;
  *
  ****************************************************************************/
 
-
-SimplexLogic::SimplexLogic(Async::Config& cfg, const string& name)
-  : Logic(cfg, name), mute_rx_on_tx(true)
+FileReader::FileReader(int buf_size)
+  : fd(-1), rd_watch(0), buffer(0), head(0), tail(0), buf_size(buf_size),
+    is_full(false), is_eof(false)
 {
-} /* SimplexLogic::SimplexLogic */
+  buffer = new char [buf_size];
+} /* FileReader::FileReader */
 
 
-SimplexLogic::~SimplexLogic(void)
+FileReader::~FileReader(void)
 {
-} /* SimplexLogic::~SimplexLogic */
+  close();
+  delete [] buffer;
+} /* FileReader::~FileReader */
 
 
-bool SimplexLogic::initialize(void)
+bool FileReader::open(const string& name)
 {
-  if (!Logic::initialize())
+  close();
+  
+  fd = ::open(name.c_str(), O_RDONLY | O_NONBLOCK);
+  if (fd == -1)
   {
     return false;
   }
   
-  string value;
-  if (cfg().getValue(name(), "MUTE_RX_ON_TX", value))
+  rd_watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
+  rd_watch->activity.connect(mem_fun(*this, &FileReader::onDataAvail));
+
+  return fillBuffer();
+  
+} /* FileReader::openPort */
+
+
+bool FileReader::close(void)
+{
+  if (fd == -1)
   {
-    mute_rx_on_tx = (atoi(value.c_str()) > 0);
+    return true;
   }
   
-  rxValveSetOpen(true);
-  tx().setTxCtrlMode(Tx::TX_AUTO);
+  if (::close(fd) < 0)
+  {
+    return false;
+  }
   
-  processEvent("startup");
+  fd = -1;
+  head = tail = 0;
+  is_full = false;
+  is_eof = false;
   
+  delete rd_watch;
   return true;
   
-} /* SimplexLogic::initialize */
+} /* FileReader::close */
 
 
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-void SimplexLogic::squelchOpen(bool is_open)
+int FileReader::read(void *buf, int len)
 {
-  //cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
-  //     << endl;
+  if (!fillBuffer())
+  {
+    return -1;
+  }
+
+  int avail = bytesInBuffer();
+  if (!is_eof && (avail < len))
+  {
+    cerr << "FileReader: Buffer underrun" << endl;
+    return -1;
+  }
   
-    // FIXME: A squelch open should not be possible to receive while
-    // transmitting unless mute_rx_on_tx is false, in which case it
-    // should be allowed. Commenting out the statements below.
-#if 0
-  if (tx().isTransmitting())
+  int bytes_from_buffer = min(avail, len);
+  int written = 0;
+  while (bytes_from_buffer > 0)
   {
-    return;
+    int to_end_of_buffer = min(bytes_from_buffer, buf_size - tail);
+    memcpy((char *)buf + written, buffer + tail, to_end_of_buffer);
+      
+    tail += to_end_of_buffer;
+    tail %= buf_size;
+    bytes_from_buffer -= to_end_of_buffer;
+    written += to_end_of_buffer;
   }
-#endif
-  
-  if (!is_open)
-  {
-    if (activeModule() != 0)
-    {
-      enableRgrSoundTimer(true);
-    }
-    
-    tx().setTxCtrlMode(Tx::TX_AUTO);
-  }
-  else
-  {
-    enableRgrSoundTimer(false);
-    tx().setTxCtrlMode(Tx::TX_OFF);
-  }
-    
-  Logic::squelchOpen(is_open);
-  
-} /* SimplexLogic::squelchOpen */
 
+  is_full &= (written == 0);
 
-void SimplexLogic::transmitterStateChange(bool is_transmitting)
-{
-  if (mute_rx_on_tx)
-  {
-    rx().setMuteState(is_transmitting ? Rx::MUTE_ALL : Rx::MUTE_NONE);
-  }
-  Logic::transmitterStateChange(is_transmitting);
-} /* SimplexLogic::transmitterStateChange */
-
-
+  return written;
+}
 
 
 /****************************************************************************
@@ -210,9 +211,61 @@ void SimplexLogic::transmitterStateChange(bool is_transmitting)
  *
  ****************************************************************************/
 
+void FileReader::onDataAvail(FdWatch *watch)
+{
+  fillBuffer();
+
+} /* FileReader::onDataAvail */
+
+
+bool FileReader::fillBuffer(void)
+{
+  int space = buf_size - bytesInBuffer();
+
+  int bytes_to_buffer = space;
+  int written = 0;
+  while ((bytes_to_buffer > 0) && isOpen())
+  {
+    int to_end_of_buffer = min(bytes_to_buffer, buf_size - head);
+    int cnt = ::read(fd, buffer + head, to_end_of_buffer);
+
+    if (cnt <= 0)
+    {
+      if (cnt < 0)
+      {
+        if (errno == EAGAIN)
+          rd_watch->setEnabled(true);
+        if ((errno == EIO) || (errno == EBADF) || (errno == EINVAL))
+          close();
+      }
+      is_eof |= (cnt == 0);
+      break;
+    }
+    
+    head += cnt;
+    head %= buf_size;
+    bytes_to_buffer -= cnt;
+    written += cnt;
+  }
+  
+  if (written == space)
+  {
+    is_full = true;
+    rd_watch->setEnabled(false);
+  }
+
+  return isOpen();
+
+} /* FileReader::fillBuffer */
+
+
+int FileReader::bytesInBuffer(void) const
+{
+  return is_full ? buf_size : (head - tail + buf_size) % buf_size;
+  
+} /* FileReader::bytesInBuffer */
 
 
 /*
  * This file has not been truncated
  */
-

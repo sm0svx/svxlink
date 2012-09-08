@@ -1,12 +1,15 @@
 /**
-@file	 AprsUdpClient.h
-@brief   Contains an implementation of APRS updates via UDP
-@author  Adi/DL1HRC and Steve/DH1DM
-@date	 2009-03-12
+@file	 AsyncFileReader.h
+@brief   A class for asynchronous reading from binary files
+@author  Tobias Blomberg / SM0SVX
+@date	 2011-07-20
+
+This file contains a class that is used for buffered reading
+from binary files in a completely non-blocking way.
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,8 +28,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef APRS_UDP_CLIENT
-#define APRS_UDP_CLIENT
+#ifndef FILE_READER_INCLUDED
+#define FILE_READER_INCLUDED
 
 
 /****************************************************************************
@@ -34,6 +37,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * System Includes
  *
  ****************************************************************************/
+
+#include <sigc++/sigc++.h>
+#include <unistd.h>
 
 #include <string>
 
@@ -44,8 +50,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncUdpSocket.h>
-#include <AsyncDnsLookup.h>
 
 
 /****************************************************************************
@@ -54,8 +58,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "LocationInfo.h"
-#include "AprsClient.h"
 
 
 /****************************************************************************
@@ -64,16 +66,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class Config;
-  class Timer;
-  class DnsLookup;
-};
-namespace EchoLink
-{
-  class StationData;
-};
+
 
 /****************************************************************************
  *
@@ -81,6 +74,8 @@ namespace EchoLink
  *
  ****************************************************************************/
 
+namespace Async
+{
 
 
 /****************************************************************************
@@ -89,13 +84,15 @@ namespace EchoLink
  *
  ****************************************************************************/
 
-
+class FdWatch;
+  
 
 /****************************************************************************
  *
  * Defines & typedefs
  *
  ****************************************************************************/
+
 
 
 /****************************************************************************
@@ -112,52 +109,79 @@ namespace EchoLink
  *
  ****************************************************************************/
 
-class AprsUdpClient : public AprsClient, public sigc::trackable
+class FileReader : public sigc::trackable
 {
   public:
-     AprsUdpClient(LocationInfo::Cfg &loc_cfg, const std::string &server,
-                   int port);
-     ~AprsUdpClient(void);
 
-     void updateDirectoryStatus(EchoLink::StationData::Status status);
-     void updateQsoStatus(int action, const std::string& call,
-       const std::string& info, std::list<std::string>& call_list);
-     void update3rdState(const std::string& call, const std::string& info);
-     void igateMessage(const std::string& info) {}
-     void sendAprsStatistics(const LocationInfo::AprsStatistics& aprs_stats) {}
+    /**
+      * @brief   Constuctor
+      * @param   buf_size The device name of the serial port to use
+      *
+      * This is the constructor for the file reader class. The buffer size
+      * should be assigned at least twice as large as the maximum block size
+      * to be read.
+      */
+    FileReader(int buf_size);
 
+    /**
+      * @brief   Destructor
+      */
+    ~FileReader(void);
+
+    /**
+      * @brief   Open a file for binary reading
+      * @param   name The file name to be opened
+      * @return  Return \em true on success or else \em false on failue.
+      */
+    bool open(const std::string& name);
+    
+    /**
+      * @brief   Close a previously opened file
+      * @return  Return \em true on success or else \em false on failue.
+      */
+    bool close(void);
+
+    /**
+     * @brief 	Check if a file is currently opened
+     * @return	Returns \em true if a file is currently opened or
+     *	      	\em false if no file has been opened or if the file
+     *          was already closed.
+     */
+    bool isOpen(void) const { return (fd != -1); }
+    
+    /**
+      * @brief   Read data from a previously opened file
+      * @param   buf  A read target data buffer
+      * @param   len  The number of bytes to be read
+      * @return  The number of read bytes is returned on success. If an error
+      *          occurs, -1 is returned.
+      */
+    int read(void *buf, int len);
+
+      
   private:
-    LocationInfo::Cfg	&loc_cfg;
-    std::string		server;
-    int			port;
-    Async::UdpSocket	sock;
-    Async::IpAddress	ip_addr;
-    Async::DnsLookup	*dns;
-    Async::Timer        *beacon_timer;
-
-    EchoLink::StationData::Status	curr_status;
-
-    int			num_connected;
-    std::string		curr_call;
-
-    void  sendLocationInfo(Async::Timer *t = 0);
-    void  dnsResultsReady(Async::DnsLookup &dns_lookup);
-
-    int   buildSdesPacket(char *p);
-
-    short getPasswd(const std::string& call);
-
-    int   getToneParam();
-    int   getPowerParam();
-    int   getHeightParam();
-    int   getGainParam();
-    int   getDirectionParam();
-
-};  /* class LocationInfoClient */
+    int     fd;
+    FdWatch *rd_watch;
+    char    *buffer;
+    int     head, tail;
+    int     buf_size;
+    bool    is_full;
+    bool    is_eof;
+    
+    void onDataAvail(FdWatch *watch);
+    bool fillBuffer(void);
+    int bytesInBuffer(void) const;
+    
+};  /* class FileReader */
 
 
-#endif /* APRS_UDP_CLIENT */
+} /* namespace */
+
+#endif /* FILE_READER_INCLUDED */
+
+
 
 /*
  * This file has not been truncated
  */
+

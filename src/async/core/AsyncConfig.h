@@ -269,6 +269,22 @@ class Config
      * @return	Returns the list of tags in the given section
      */
     std::list<std::string> listSection(const std::string& section);
+
+    /**
+     * @brief   Set the value of a configuration variable
+     * @param 	section   The name of the section where the configuration
+     *	      	      	  variable is located
+     * @param 	tag   	  The name of the configuration variable to set.
+     * @param   value     The value to set
+     *
+     * This function is used to set the value of a configuration variable.
+     * If the given configuration section or variable does not exist, it
+     * is created.
+     * Note that this function will not write anything back to the
+     * associated configuration file. It will only set the value in memory.
+     */
+    void setValue(const std::string& section, const std::string& tag,
+      	      	  const std::string& value);
     
   private:
     typedef std::map<std::string, std::string>	Values;

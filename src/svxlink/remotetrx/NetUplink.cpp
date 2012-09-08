@@ -132,6 +132,12 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
   heartbeat_timer = new Timer(10000);
   heartbeat_timer->setEnable(false);
   heartbeat_timer->expired.connect(mem_fun(*this, &NetUplink::heartbeat));
+
+    // FIXME: Shouldn't we use the updates directly from the receiver instead?
+  siglev_check_timer = new Timer(1000, Timer::TYPE_PERIODIC);
+  siglev_check_timer->setEnable(true);
+  siglev_check_timer->expired.connect(mem_fun(*this, &NetUplink::checkSiglev));
+  
 } /* NetUplink::NetUplink */
 
 
@@ -178,6 +184,7 @@ bool NetUplink::initialize(void)
 
   rx->reset();
   rx->squelchOpen.connect(mem_fun(*this, &NetUplink::squelchOpen));
+  rx->signalLevelUpdated.connect(mem_fun(*this, &NetUplink::signalLevelUpdated));
   rx->dtmfDigitDetected.connect(mem_fun(*this, &NetUplink::dtmfDigitDetected));
   rx->toneDetected.connect(mem_fun(*this, &NetUplink::toneDetected));
   rx->selcallSequenceDetected.connect(
@@ -447,12 +454,13 @@ void NetUplink::handleMsg(Msg *msg)
       break;
     }
 
-    case MsgMute::TYPE:
+    case MsgSetMuteState::TYPE:
     {
-      MsgMute *mute_msg = reinterpret_cast<MsgMute*>(msg);
-      cout << rx->name() << ": Mute(" << (mute_msg->doMute() ? "true" : "false")
+      MsgSetMuteState *mute_msg = reinterpret_cast<MsgSetMuteState*>(msg);
+      cout << rx->name() << ": SetMuteState("
+           << Rx::muteStateToString(mute_msg->muteState())
       	   << ")\n";
-      rx->mute(mute_msg->doMute());
+      rx->setMuteState(mute_msg->muteState());
       break;
     }
 
@@ -733,6 +741,12 @@ void NetUplink::heartbeat(Timer *t)
 } /* NetTrxTcpClient::heartbeat */
 
 
+void NetUplink::checkSiglev(Timer *t)
+{
+  squelchOpen(rx->squelchIsOpen());
+} /* NetUplink::checkSiglev */
+
+
 void NetUplink::unmuteTx(Timer *t)
 {
   mute_tx_timer->setEnable(false);
@@ -749,7 +763,7 @@ void NetUplink::setFallbackActive(bool activate)
     rx->reset();
     tx->setTxCtrlMode(Tx::TX_AUTO);
     tx_selector->selectSource(loopback_con);
-    rx->mute(false);
+    rx->setMuteState(Rx::MUTE_NONE);
   }
   else
   {
@@ -759,6 +773,14 @@ void NetUplink::setFallbackActive(bool activate)
     tx_selector->selectSource(fifo);
   }
 } /* NetUplink::setFallbackActive */
+
+
+void NetUplink::signalLevelUpdated(float siglev)
+{
+  MsgSiglevUpdate *msg = new MsgSiglevUpdate(rx->signalStrength(),
+					     rx->sqlRxId());
+  sendMsg(msg);  
+} /* NetUplink::signalLevelUpdated */
 
 
 

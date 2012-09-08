@@ -100,7 +100,7 @@ endif
 
 # Dependency list created from the PROJLIBS list
 LIBDEP		:= $(subst -l,$(LIB)/lib,$(PROJLIBS))
-LIBDEP		:= $(LIBDEP:%=%.a)
+LIBDEP		:= $(LIBDEP:%=%.a) $(SHLIBFILE)
 
 # Compiler warnings
 CWARNINGS	= -Wall -Wstrict-prototypes -Wpointer-arith

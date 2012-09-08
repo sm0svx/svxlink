@@ -1,0 +1,1573 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- vim:set noexpandtab: -->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<meta content="text/html; charset=us-ascii" http-equiv="content-type" />
+		<meta name="description" content="Hierarchical state machines for C++" />
+		<meta name="keywords" content="C++, statechart, state machine, statemachine,
+		state, hierarchical state machine" />
+		<meta name="author" content="Eduard Hiti" />
+		<link rel="alternate" type="application/atom+xml" title="C++ Machine Objects" href="http://ehiti.de/machine_objects/atom.xml" />
+		<title>Machine Objects - Hierarchical state machines in C++</title>
+		<style type="text/css">
+			/*<![CDATA[*/
+
+			body {
+				font-family: Georgia, "New York", Times, serif;
+				font-size: 14px;
+				line-height: 150%;
+				margin: 0;
+
+				text-align: center; /* for IE */
+				color: #000000;
+				background-color: #8f8f8f;
+			}
+
+			#border {
+				border-left: 2px black solid;
+				border-right: 2px black solid;
+				border-top: 1px black solid;
+				border-bottom: 1px black solid;
+				background-color: white;
+				margin: auto;
+				width: 58em;
+			}
+
+			#container {
+				width: 50em;
+				text-align: justify;
+				margin: 2em auto;
+			}
+
+			em {
+				font-style: italic;
+			}
+
+			h1 {
+				font-family: Fixedsys, System, "Courier New", Courier, monospace;
+				font-size: 300%;
+				margin-top: 1em;
+				margin-bottom: 1em;
+				color: #802800;
+				text-align: center;
+			}
+
+			h2, h3, h4 {
+				margin-top: 30px;
+				color: #802800;
+			}
+
+			table {
+				line-height: 150%;
+				font-size: 14px; /* for IE */
+			}
+
+			a:link, a:visited {
+				color: blue;
+			}
+
+			pre {
+				overflow: auto;
+				background-color: #efefef;
+				color: #000099;
+				font-family: "Lucida Console", monospace;
+				line-height: 150%;
+				border: 1px black solid;
+				padding: 9px;
+				margin-left: 2em ;
+				margin-right: 2em ;
+			}
+
+			code {
+				color: #000099;
+				font-family: "Lucida Console", monospace;
+			}
+
+			.toc {
+				font-family: Verdana, Geneva, Arial, sans-serif;
+				font-size: 80%;
+				line-height: 150%;
+				width: 72%;
+			}
+
+			.toc a {
+				text-decoration: none;
+			}
+
+			.toc .level1 {
+				font-weight: bold;
+			}
+
+			.toc .level2 {
+			}
+
+			.toc .level3 {
+				font-size: 90%;
+				line-height: 150%;
+				font-style: italic;
+			}
+
+			.indent {
+				margin-left: 3em;
+			}
+
+			.boring, .note, .warning {
+				font-family: Verdana, Geneva, Arial, sans-serif;
+				border-top: 1px dotted;
+				border-bottom: 1px dotted;
+				border-color: silver;
+				line-height: normal;
+				font-size: 80%;
+				line-height: 150%;
+				text-align: left;
+				padding-top: 0.5em;
+				padding-bottom: 0.5em;
+			}
+
+			.boring {
+				margin-left: 1em;
+				margin-right: 1em;
+			}
+
+			.note, .warning {
+				margin-left: 1em;
+				margin-right: 1em;
+			}
+
+			.nl, .warning_label {
+				float: left;
+				color: gray;
+				margin-right: 0.5em;
+				font-weight: bold;
+				font-style: italic;
+			}
+
+			.bold {
+				font-weight: bold;
+			}
+
+			.de {
+				color: #6f6f6f;
+			}
+
+			.faq {
+				text-align: justify;
+				vertical-align: top;
+				font-weight: bold;
+			}
+
+			.versions {
+				font-size: 80%;
+				line-height: 150%;
+				font-family: Verdana, Geneva, Arial, sans-serif;
+			}
+
+			.versions > ul > li {
+				margin-bottom: 15px;
+			}
+
+			.versions > ul {
+				list-style-type: none;
+			}
+
+
+
+			/*]]>*/
+		</style>
+	</head>
+
+	<body>
+		<div id="border">
+			<div id="container">
+
+				<h1>C++ Machine Objects</h1>
+
+				<table summary="">
+					<tbody>
+						<tr>
+							<td class="toc">
+								<p><span class="bold" style="font-style: italic">Table of Contents</span></p>
+								<a class="level1" href="#Intro">1&nbsp;&nbsp;&nbsp;Introduction</a><br />
+								<a class="level1" href="#Motivation">2&nbsp;&nbsp;&nbsp;Motivation</a><br />
+								<a class="level1" href="#Installation">3&nbsp;&nbsp;&nbsp;Installation</a><br />
+								<a class="level1" href="#Design">4&nbsp;&nbsp;&nbsp;Design</a><br />
+								<a class="level1" href="#Doku">5&nbsp;&nbsp;&nbsp;Using Machine Objects</a><br />
+								<div class="indent">
+									<a class="level2" href="#StateDefs">5.1&nbsp;&nbsp;&nbsp;State Definitions</a><br />
+									<a class="level2" href="#Entry">5.2&nbsp;&nbsp;&nbsp;Entry and Exit</a><br />
+									<a class="level2" href="#StateVars">5.3&nbsp;&nbsp;&nbsp;State Variables</a><br />
+									<a class="level2" href="#Handlers">5.4&nbsp;&nbsp;&nbsp;Event Handlers</a><br />
+									<a class="level2" href="#Transitions">5.5&nbsp;&nbsp;&nbsp;State Transitions</a><br />
+									<div class="indent">
+										<a class="level3" href="#Aliases">5.5.1&nbsp;&nbsp;&nbsp;Parametrized State Transitions</a><br />
+									</div>
+									<div class="indent">
+										<a class="level3" href="#Reflection">5.5.2&nbsp;&nbsp;&nbsp;Reflection</a><br />
+									</div>
+									<a class="level2" href="#History">5.6&nbsp;&nbsp;&nbsp;History</a><br />
+									<a class="level2" href="#Machine">5.7&nbsp;&nbsp;&nbsp;Machine Creation</a><br />
+									<div class="indent">
+										<a class="level3" href="#MManaging">5.7.1&nbsp;&nbsp;&nbsp;Managing Machines</a><br />
+										<a class="level3" href="#Snapshots">5.7.2&nbsp;&nbsp;&nbsp;Machine Snapshots</a><br />
+									</div>
+									<a class="level2" href="#Dispatch">5.8&nbsp;&nbsp;&nbsp;Event Dispatch</a><br />
+									<div class="indent">
+										<a class="level3" href="#Internal">5.8.1&nbsp;&nbsp;&nbsp;Internal Event Dispatch</a><br />
+									</div>
+									<a class="level2"
+										href="#Advanced">5.9&nbsp;&nbsp;&nbsp;Advanced Topics</a><br />
+									<div class="indent">
+										<a class="level3"
+											href="#Templates">5.9.1&nbsp;&nbsp;&nbsp;Template States</a><br />
+									</div>
+								</div>
+								<a class="level1" href="#Conclusion">6&nbsp;&nbsp;&nbsp;Conclusion</a><br />
+								<a class="level1" href="#FAQ">7&nbsp;&nbsp;&nbsp;FAQ</a><br />
+								<a class="level1" href="#Version">8&nbsp;&nbsp;&nbsp;Version History</a><br />
+
+						</tr>
+					</tbody>
+				</table>
+
+				<h2 id="Intro">1&nbsp;&nbsp;&nbsp;Introduction</h2>
+
+				<p>The <em>Machine Objects</em> class library allows the creation of state
+				machines based on the "State" design pattern in plain C++. It extends the
+				pattern with the option to create hierarchical state machines, making it
+				possible to convert the popular UML statechart notation to working code in a
+				straightforward way. Other features are entry and exit actions, state
+				histories and state variables.</p>
+
+				<p>The <i>"just show me code"</i> link to an example state machine:
+				<a href="Microwave.cpp" >Microwave</a></p>
+
+				<div class="boring">
+					For license information please see the <a href=
+						"http://www.opensource.org/licenses/mit-license.php">MIT License</a> or
+					the header in file <a href="Macho.hpp" >Macho.hpp</a>.
+
+					<p>Homepage is at &nbsp;<a href="http://ehiti.de/machine_objects" >http://ehiti.de/machine_objects</a>
+
+					<br />
+					Feedback goes to &nbsp;<a href="mailto:macho@ehiti.de" >macho@ehiti.de</a></p>
+
+					<p>Copyright 2005 by Eduard Hiti.</p>
+
+					You are encouraged to provide any changes, extensions and
+					corrections for this software to the author for inclusion into future
+					versions.
+				</div>
+
+				<h2 id="Motivation">2&nbsp;&nbsp;&nbsp;Motivation</h2>
+
+				<p>In my experience as software developer I have found the
+				<a href="http://home.earthlink.net/%7Ehuston2/dp/state.html">State</a>
+				design pattern to be very useful. It enables implementing the important
+				concept of state machines with common programming language features. By
+				using only basic language mechanisms it is easy to apply in real-life
+				software development.</p>
+
+				<p>Another important property that stems from this simplicity is
+				orthogonality: the pattern can be combined with other design
+				elements, patterns and idioms in arbitrary ways.</p>
+
+				<p>In contrast stand tool supported approaches to state machine
+				creation (of which there is no shortage). Based on code generators and
+				graphical editors, they tend to generate incomprehensible code as product
+				and forfeit orthogonality by necessarily being outside the domain of the
+				programming language.</p>
+
+				<p>Unfortunately the "State" pattern is limited in scope because it does
+				not allow for hierarchical state machines. This is regrettable because
+				flat state machines tend to become unwieldy when getting more elaborate,
+				for the sheer number of states they produce.</p>
+
+				<p>Hierarchical state machines as defined by the statechart notation
+				alleviate this problem by providing an additional structural element with
+				the grouping of states into hierarchies, thereby facilitating the sharing
+				of common logic between states.</p>
+
+				<p>The "State" pattern in its original form is not capable of modeling state
+				hierarchies. The <em>Machine Objects</em> class library (in short
+				<em>Macho</em>) extends the concept with this possibility, while keeping the
+				properties of simplicity (where possible) and tool independence from its
+				inspiration.</p>
+
+				<h2 id="Installation">3&nbsp;&nbsp;&nbsp;Installation</h2>
+
+				<p>The class library as such does not need to be installed.
+				Just include the header file <a href="Macho.hpp" >Macho.hpp</a>
+				and add the file <a href="Macho.cpp" >Macho.cpp </a> to your make
+				file or project definition.</p>
+
+				<p>Prerequisite however is a C++ compiler with sane support for templates
+				(like gcc 2.95+ or MSVC7+). For the obsolete but inexplicably popular
+				compiler MSVC6 a special version of the library is provided.</p>
+
+				<p>Included are the example state machines <em>HelloWorld</em>,
+				<em>Example</em>, <em>Microwave</em> and <em>Test</em>. To make the
+				examples run just compile them in the directory they are in, for
+				example:</p>
+
+<pre>
+# GCC
+g++ -o microwave Microwave.cpp Macho.cpp
+&#13;# MSVC7
+cl /EHsc Microwave.cpp Macho.cpp
+</pre>
+
+				<h2 id="Design">4&nbsp;&nbsp;&nbsp;Design</h2>
+
+				<p>The following descriptions assume some knowledge of the statechart
+				notation. For more information see
+				<a href= "http://wikipedia.org/wiki/Statechart">Wikipedia</a>
+				.</p>
+
+				<p>Starting point is the "State" design pattern. The essence of the
+				pattern is to represent states by classes. State transitions are
+				performed by instantiating objects of these classes.</p>
+
+				<p>From this perspective the constructors and destructors of state classes can
+				be seen as taking on the role of entry and exit actions. Object
+				attributes then constitute state variables. Events are dispatched by
+				calling methods on state objects which implement the guards, actions and
+				transitions of states.</p>
+
+				<p>For states to compose a hierarchy, substates must be able to take over
+				the event handling logic of superstates, selectively redefining it where
+				necessary. There exists a mechanism in C++ allowing redefinition of
+				behaviour on the level of methods: polymorphism through class
+				inheritance.</p>
+
+				<p>Modeling the substate/superstate relation with class inheritance is
+				problematic however: the use of constructors and destructors as entry and
+				exit actions is not possible anymore, neither is keeping state variables
+				in objects.</p>
+
+				<p>The reason is that base classes are constituent parts of deriving
+				classes, meaning object construction or destruction will trigger all
+				involved class constructors or destructors and initialize or destroy all
+				data members.</p>
+
+				<p>This runs counter to the semantics of entry/exit actions and state
+				variables, where a transition between sibling substates should not
+				trigger superstate entry/exit actions nor destroy superstate state
+				variables.</p>
+
+				<p>Our solution to this problem is to use explicit methods for state
+				entry and exit, being called in the correct sequence on state
+				transitions. State variables are kept in separate state specific data
+				structures which have a life cycle consistent with the hierarchy of
+				states.</p>
+
+				<h2 id="Doku">5&nbsp;&nbsp;&nbsp;Using Machine Objects</h2>
+
+				<p>Before diving into implementation details we first define some
+				terminology to be used from here on.</p>
+
+				<p>By <em>state class</em> we mean the class defined to represent a
+				particular state.  A <em>state machine</em> is a partially ordered set
+				of states having a common top state class. A <em>state machine instance</em>
+				maintains an element of that set as current state to which events can be
+				dispatched. A state machine's <em>event protocol</em> is the set of
+				events that are understood by the machine.</p>
+
+				<p>Furthermore extracts from the simple state machine defined in the
+				file <a href="Example.cpp" >Example.cpp</a> will be used
+				for illustration. It is a good idea to have a look at this file now if
+				you are reading this for the first time. It contains a state machine
+				with four states: a top state, a superstate <code>Super</code>, two
+				substates <code>StateA</code> and <code>StateB</code>, and a small test
+				run. Each state has entry/exit actions, the top state and
+				<code>StateA</code> have state variables and the event protocol consist
+				of two events, <code>event1</code> and <code>event2</code>.</p>
+
+				<h3 id="StateDefs">5.1&nbsp;&nbsp;&nbsp;State Definitions</h3>
+
+				<p>A top state is defined by the macro
+				<code>TOPSTATE</code>:</p>
+
+<pre>
+TOPSTATE(Top) {
+    <span class="de">...</span>
+};
+</pre>
+
+				<p>Every state machine must have a top state. The top state's interface
+				defines the machine's event protocol: only the public virtual methods of
+				the top state can be event handlers.</p>
+
+				<div class="note">
+					<span class="nl">Note:</span>The default visibility in states is
+					<code>public</code>.
+				</div>
+
+				<p>The top state is representative for the whole state machine. All
+				other states of a machine are direct or indirect substates of the top
+				state.</p>
+
+				<div class="note">
+					<span class="nl">Note:</span> The top state has a <code>typedef</code> alias
+					<code>TOP</code> available to all states of the machine.
+				</div>
+
+				<p>Substates are defined by the <code>SUBSTATE</code> macro:</p>
+
+<pre>
+SUBSTATE(Super, Top) {
+    <span class="de">...</span>
+};
+</pre>
+
+				<p>This statement defines the class <code>Super</code> as substate of class
+				<code>Top</code>. The macro parameters are the substate's name and
+				the name of its superstate. The superstate can be the top state or any
+				other substate.</p>
+
+				<div class="note"><span class="nl">Note:</span>
+					A <code>typedef</code> alias <code>SUPER</code> will point to the
+					superstate within the substate class.
+				</div>
+
+				<p>Why are macros used for <em>Machine Objects</em>? The reason being
+				convenience only, you'll most likely agree with their use if you look at
+				the definitions of the macros <code>TOPSTATE</code> and
+				<code>SUBSTATE</code>:</p>
+
+<pre>
+#define TOPSTATE(TOP) \
+    struct TOP : public Macho::Link&lt; TOP, Macho::TopBase&lt; TOP &gt;  &gt;
+#define SUBSTATE(STATE, SUPERSTATE) \
+    struct STATE : public Macho::Link&lt; STATE, SUPERSTATE &gt;
+</pre>
+
+				<p>The code is more readable and actually less error-prone (notice the
+				multiple use of the same macro parameter in <code>TOPSTATE</code> and
+				<code>SUBSTATE</code>) by using macro expansion.</p>
+
+				<p>Another macro is <code>STATE(S)</code> which MUST be invoked in every
+				state body:</p>
+
+<pre>
+SUBSTATE(Super, Top) {
+    STATE(Super)
+    <span class="de">...</span>
+};
+</pre>
+
+				<p>The macro parameter is the state's name again. With this macro some
+				definitions are provided in the class body (a constructor for instance).
+				For more details look up the macro's definition.</p>
+
+				<div class="note"><span class="nl">Note:<br/>&nbsp;</span>
+					Every state class must be instantiable (the top state as well).
+					This means states must not have pure virtual methods!</div>
+
+			<h3 id="Entry">5.2&nbsp;&nbsp;&nbsp;Entry and Exit</h3>
+
+			<p>A state's (optional) entry and exit actions are defined this way:</p>
+
+<pre>
+<span class="de">TOPSTATE(Top) {</span>
+    <span class="de">...</span>
+<span class="de">private:</span>
+    void entry();
+    void exit();
+    void init();
+<span class="de">};</span>
+
+void Top::entry() { <span class="de">...</span> }
+void Top::exit() { <span class="de">...</span> }
+void Top::init() { <span class="de">...</span> }
+</pre>
+
+			<p>The methods <code>entry</code> and <code>exit</code> of a state are
+			called upon transitioning into or out of it. The sequence of calls for a
+			state transition is as follows:</p>
+
+			<ul>
+				<li>
+				<p>First the exit action of the current state is called and then
+				those of its superstates (in bottom up order), up to and excluding
+				the first superstate that is also superstate of the new state.</p>
+				</li>
+
+				<li>
+				<p>Then entry actions of superstates of the new state are called, top
+				down from the first superstate that is not also a superstate of the
+				previous state. Finally the entry action of the new state is
+				called.</p>
+				</li>
+			</ul>
+
+			<div class="note"><span class="nl">Note:<br/>&nbsp;</span>
+				From this follows that self transitions (where the new state is the
+				same state as the current state) will trigger that state's exit and entry
+				actions.
+			</div>
+
+			<p>Entries and exits may NOT initiate new state transitions (doing otherwise
+			will cause an assertion).</p>
+
+			<p>The method <code>init</code> defines a special kind of entry action:
+			Upon state transition, entry actions of the new state and its superstates
+			are triggered; <code>init</code> however is called only on the one state
+			the transition actually goes to (after its entry action is performed).</p>
+
+			<p>With <code>init</code> initial transitions of states can be
+			implemented, where a superstate immediately enters a substate on
+			entry (like the top state in <em>Example</em>). This implies that init
+			actions ARE in fact allowed to initiate state transitions (but only to
+			substates). Transitioning to a state in <code>init</code> will trigger that
+			new state's <code>init</code> method in turn.</p>
+
+			<p>Constructors or destructors can not be used for state classes: if you
+			need to make initializations, do them in entry actions or box
+			constructors.</p>
+
+			<div class="note"><span class="nl">Note:<br/>&nbsp;</span>
+				It is recommended that you put the methods <code>exit</code>,
+				<code>entry</code> and <code>init</code> into the <code>private</code>
+				section of your classes, at least for the top state, so that they are
+				not part of the event protocol.
+			</div>
+
+
+			<h3 id="StateVars">5.3&nbsp;&nbsp;&nbsp;State Variables</h3>
+
+			<p>State variables allow states to accumulate information from the events
+			they have received in the past. This information is maintained in the scope
+			of the associated state: the variables of a superstate are accessible to that
+			state or any of its substates. Substates have full access to state
+			variables of their superstates.</p>
+
+			<div class="note"><span class="nl">Note:<br/>&nbsp;</span>
+				Since every state is a substate of the top state, top state variables
+				are accessible to all states of a machine.
+			</div>
+
+			<p>This is how state variables are defined:</p>
+
+<pre>
+<span class="de">TOPSTATE(Top) {</span>
+    struct Box {
+        Box() : data(0) {}
+        long data;
+    };
+    <span class="de">STATE(Top)</span>
+    <span class="de">...</span>
+<span class="de">};</span>
+</pre>
+
+			<p>State variables are contained in a data type named <code>Box</code>
+			nested into the state class (the type name <code>Box</code> is
+			mandatory).</p>
+
+			<div class="note"><span class="nl">Note:<br/>&nbsp;</span>
+				The box definition must appear BEFORE the use of the
+				<code>STATE</code> macro.
+			</div>
+
+			<p>The box type must be default constructable (means: has a default
+			constructor). Apart from this requirement the box type can be any regular
+			C++ type. It could even be a simple typedef:</p>
+
+<pre>
+<span class="de">TOPSTATE(Top) {</span>
+    typedef int Box;
+    <span class="de">STATE(Top)</span>
+    <span class="de">...</span>
+<span class="de">};</span>
+</pre>
+
+			<p id="Persistent">A box is created before its state is entered (before
+			the call to <code>entry</code>) and by default destroyed after the state
+			is left (after the call to <code>exit</code>). By marking a state class
+			with the <code>PERSISTENT</code> macro, you can override this default
+			behaviour and have boxes survive state transitions:</p>
+
+<pre>
+<span class="de">SUBSTATE(StateA, Top)
+    struct Box {
+        ...
+    };
+    STATE(StateA)</span>
+    PERSISTENT()
+    <span class="de">...
+};
+</span>
+</pre>
+
+			<p>Persistent boxes are created once at first entry of their state and
+			exist for as long as the state machine instance itself exists.</p>
+
+			<p>A state's box is accessed by calling the method <code>box</code>,
+			which returns a reference to the state's box object:</p>
+
+<pre>
+<span class="de">void StateA::event1(int i) {</span>
+    <span class="de">...</span>
+    cout &lt;&lt; box().data;
+    <span class="de">...</span>
+<span class="de">}</span>
+</pre>
+
+			<p>Superstate boxes are available by qualifying the <code>box</code>
+			method with the superstate's name:</p>
+
+<pre>
+<span class="de">void StateB::event2(long l) {</span>
+    <span class="de">...</span>
+    cout &lt;&lt; TOP::box().data;
+    <span class="de">...</span>
+<span class="de">}</span>
+</pre>
+
+			<p>In this example the top state's box is accessed.</p>
+
+			<h3 id="Handlers">5.4&nbsp;&nbsp;&nbsp;Event Handlers</h3>
+
+			<p>As mentioned the event protocol of a state machine is defined by its
+			top state public interface:</p>
+
+<pre>
+TOPSTATE(Top) {
+    <span class="de">...</span>
+    virtual void event1(int i) {}
+    virtual void event2(long l) {}
+    <span class="de">...</span>
+};
+</pre>
+
+			<p>The <em>Example</em> state machine understands the events
+			<code>event1</code> and <code>event2</code>: events are named like their
+			event handler methods.</p>
+
+			<p>Event handlers are simple C++ methods and may have arbitrary parameters:</p>
+
+<pre>
+<span class="de">SUBSTATE(StateA, Super) {</span>
+    <span class="de">...</span>
+    void event1(int i);
+    <span class="de">...</span>
+<span class="de">};</span>
+&#13;void StateA::event1(int i) { <span class="de">...</span> }
+</pre>
+
+			<p>This example defines the event handler for <code>event1</code> in
+			<code>StateA</code>. The method should implement all the logic to handle the
+			event.</p>
+
+			<div class="note"><span class="nl">Note:<br/>&nbsp;</span>
+				Event handlers may have return values.
+			</div>
+
+			<p>The top state event handlers define the default behaviour for the
+			whole state machine. If there is no meaningful implementation for an
+			event handler at top level, the handler could either</p>
+
+			<ul>
+				<li>be implemented empty: no reaction to event is then default.</li>
+
+				<li>signal some error (for example with <code>assert(false)</code>):
+				not handling the event will be a runtime error now.</li>
+			</ul>
+
+			<h3 id="Transitions">5.5&nbsp;&nbsp;&nbsp;State Transitions</h3>
+
+			<p>State transitions are made by calling the method <code>setState</code>
+			inside an event handler:</p>
+
+<pre>
+<span class="de">void StateA::event1(int i) {</span>
+    <span class="de">...</span>
+    setState&lt;StateB&gt;();
+<span class="de">}</span>
+</pre>
+
+			<p>The template parameter to <code>setState</code> is the new state to be
+			entered.</p>
+
+			<div class="note"><span class="nl">Note:<br/>&nbsp;<br/>&nbsp;</span>
+				We recommend that you do not define event handlers inline to your
+				state class definitions.<br/>The reason is that C++ needs a complete
+				definition of a class to be used as template parameter, and that may not
+				be the case for the classes you want to <code>setState</code> to in
+				inline event handlers.
+			</div>
+
+			<p>The state transition takes place AFTER control flow leaves the event
+			handler. It is therefore possible to do meaningful work even after
+			calling <code>setState</code> (all involved objects are still alive). It
+			is however not allowed to call <code>setState</code> multiple times with
+			different states in a single event handler run: this will assert on
+			you!</p>
+
+			<p>To allow for parametrization of target states <code>setState</code> can
+			take up to six parameters of arbitrary type:</p>
+
+<pre>
+setState&lt;StateB&gt;("Some text", 42, true);
+</pre>
+
+			<p>The arguments provided to <code>setState</code> are used to
+			invoke an <code>init</code> method of the target state with matching
+			signature:</p>
+
+<pre>
+<span class="de">void StateB::init(</span>const char *, int, bool<span class="de">) { ... }</span>
+</pre>
+
+			<p>If no matching <code>init</code> method is provided a (template
+			mess) compile time error will result.</p>
+
+			<div class="note">
+			<span class="nl">Note:<br/>&nbsp;</span>
+			The <code>setState</code> method uses type inference to determine the types of
+			its parameters. Since type inference is somewhat limited in C++ you must
+			sometimes disambiguate arguments by casting to avoid type errors.
+			</div>
+
+			<h4 id="Aliases">5.5.1&nbsp;&nbsp;&nbsp;Parametrized State Transitions</h4>
+
+			<p>The target of a state transition can also be provided as a runtime
+			value:</p>
+
+<pre>
+<span class="de">setState(</span>State&lt;StateA&gt;()<span class="de">);</span>
+</pre>
+
+			<p>or alternatively</p>
+
+<pre>
+<span class="de">setState(</span>StateA::alias()<span class="de">);</span>
+</pre>
+
+			<p>These examples create objects of type <code>Alias</code> to represent the
+			state given as template parameter. Objects of this type can also be stored for
+			later use:</p>
+
+<pre>
+Alias state = State&lt;StateA&gt;();
+<span class="de">...</span>
+setState(state);
+</pre>
+
+			<p>The ability to pass around and store state aliases makes it possible to
+			create reusable code by parametrizing state relationships.</p>
+
+			<p>State aliases can also be provided with arguments for initialization of
+			the target state on transition:</p>
+
+<pre>
+<span class="de">Alias s = </span>State&lt;StateA&gt;("Some text", 42, true)<span
+class="de">;</span>
+</pre>
+
+			<p>For these arguments the same specifics as for <code>setState</code> above
+			apply.</p>
+
+			<h4 id="Reflection">5.5.2&nbsp;&nbsp;&nbsp;Reflection</h4>
+
+			<p>To allow for runtime decisions on state relationships these can be
+			inspected at runtime:</p>
+
+<pre>
+<span class="de">// Read like this: StateA "is child of" Super</span>
+<span class="de">assert(</span>StateA::isChild(Super::alias())<span class="de">);</span>
+
+<span class="de">// Read like this: Super "is parent of" StateA</span>
+<span class="de">assert(</span>Super::isParent(StateA::alias())<span class="de">);</span>
+</pre>
+
+			<p>The same can be done with state aliases:</p>
+
+<pre>
+<span class="de">Alias stateA = StateA::alias();
+Alias super = Super::alias();</span>
+
+<span class="de">assert(</span>stateA.isChild(super)<span class="de">);</span>
+<span class="de">assert(</span>super.isParent(stateA)<span class="de">);</span>
+</pre>
+
+			<div class="note">
+				<span class="nl">Note:</span>A state is both child and parent of itself.
+			</div>
+
+			<p>State equality is determined as expected:</p>
+
+<pre>
+<span class="de">assert(</span>Super::alias() == Super::alias()<span class="de">);</span>
+<span class="de">assert(</span>stateA != super<span class="de">);</span>
+</pre>
+
+			<div class="note">
+				<span class="nl">Note:</span>Transition parameters are not considered then
+				testing for equality.
+			</div>
+
+			<h3 id="History">5.6&nbsp;&nbsp;&nbsp;History</h3>
+
+			<p>It is possible for a superstate to remember a previously entered
+			substate. This history state can be reentered later with a special state
+			transition.</p>
+
+			<p>History for a state is enabled by invoking the macro
+			<code>HISTORY</code> or <code>DEEPHISTORY</code> in the state
+			definition:</p>
+
+<pre>
+<span class="de">SUBSTATE(Super, Top) {</span>
+    <span class="de">STATE(Super)</span>
+    HISTORY()
+    <span class="de">...</span>
+<span class="de">};</span>
+</pre>
+
+			<p>Use of <code>HISTORY</code> selects the shallow history strategy,
+			whereby only direct substates of a superstate are remembered.
+			<code>DEEPHISTORY</code> remembers even the substates of substates.</p>
+
+			<div class="note"><span class="nl">Note:<br/>&nbsp;</span>
+				Keep in mind that by default state boxes are not saved but rather
+				instantiated anew for reentered history states (to override use the
+				<a href="#Persistent"><code>PERSISTENT</code></a> macro)!
+			</div>
+
+			<p>The history of a state can be specified as target of a state
+			transition:</p>
+<pre>
+setStateHistory&lt;Super&gt;();
+</pre>
+
+			<p>This example will enter the history state of <code>Super</code>. Entry
+			actions of all involved states will be invoked, with a final call to
+			the parameterless <code>init</code> method of the actual history state. If
+			no history information is available (because the state has not been entered
+			yet or history was not enabled), <code>Super</code> itself is the target of
+			the transition.</p>
+
+			<div class="note"><span class="nl">Note:<br/>&nbsp;</span>
+				It is not possible to provide transition parameters to
+				<code>setStateHistory</code> because the exact target of the transition
+				is not determinable at compile time.
+			</div>
+
+			<p>History information can also be inspected directly:</p>
+
+<pre>
+Alias s = Super::history(machine);
+</pre>
+
+			<p>A call to a state's static method <code>history</code> with a machine
+			instance as argument will return the current history of the specified state
+			at the moment of the call for the specified machine instance. If the state
+			has no history information available an alias of the state itself is
+			returned.</p>
+
+			<div class="note"><span class="nl">Note:<br/>&nbsp;</span>
+				To get the current machine instance in an event handler call the
+				method <code>machine()</code>.
+			</div>
+
+			<p>Similar but slightly different is this special alias:
+
+<pre>
+Alias h = StateHistory&lt;Super&gt;(machine());
+</pre>
+
+			<p>This alias will keep pointing to the history of <code>Super</code>, not
+			just the history state at the moment of alias creation. This means that the
+			alias can represent different states in its life, depending on the changes
+			to the history of <code>Super</code>.</p>
+
+			<p>Consequently the statement</p>
+
+<pre>
+setStateHistory&lt;Super&gt;();
+</pre>
+
+			<p>and this statement:</p>
+
+<pre>
+Alias state = StateHistory&lt;Super&gt;(machine());
+<span class="de">...</span>
+setState(state);
+</pre>
+
+			<p>are equivalent.</p>
+
+			<div class="note"><span class="nl">Note:<br/>&nbsp;</span>
+				The <code>StateHistory</code> alias becomes invalid when the
+				associated machine instance has shutdown.
+			</div>
+
+			<h3 id="Machine">5.7&nbsp;&nbsp;&nbsp;Machine Creation</h3>
+
+			<p>A state machine instance is created by instantiating a machine
+			object:</p>
+
+<pre>
+Macho::Machine&lt;Example::Top&gt; m();
+</pre>
+
+			<p>The class <code>Machine</code> is a template class in namespace
+			<code>Macho</code>; its template parameter is the top state of the state
+			machine to be run.</p>
+
+			<p>The top state is immediately entered and initialized upon machine
+			creation (<code>entry</code> and <code>init</code> are called).</p>
+
+			<p>The <code>Machine</code> constructor takes as optional parameter a box
+			for the top state:</p>
+
+<pre>
+<span class="de">Macho::Machine&lt;Example::Top&gt; m(</span>new Example::Top::Box(42)<span class="de">);</span>
+</pre>
+
+			<p>This allows parametrization of a state machine on startup.</p>
+
+			<p>An alias can be used to specify a different start state:</p>
+
+<pre>
+Machine&lt;Top&gt; m(State&lt;Example::StateA&gt;());
+</pre>
+
+			<p>The machine instance will enter the argument state with all appropriate
+			entry and init actions being executed.</p>
+
+			<p id="shutdown_">Upon destruction of the machine object the current sub- and
+			superstates up to and including the top state are exited correctly and
+			their boxes destroyed.</p>
+
+			<div class="note"><span class="nl">Note:<br/>&nbsp;</span>
+				You can override this behaviour by implementing the predefined
+				event handler <code>_shutdown</code> as empty method.<br />
+				Boxes are still destroyed of course.
+			</div>
+
+			<p>It is also possible to read the top state box of a running machine by
+			calling the <code>box</code> method of <code>Machine</code>:</p>
+
+<pre>
+cout &lt;&lt; m.box().data;
+</pre>
+
+			<div class="note"><span class="nl">Note:<br/>&nbsp;</span>
+				The method <code>box</code> of class <code>Machine</code> returns a
+				<code>const</code> reference to the top state box. It is therefore not
+				possible to change box data (you should really do this from INSIDE your
+				machine)!
+			</div>
+
+			<p>An alias of the machine's current state can be obtained by calling the
+			method <code>currentState</code>:</p>
+
+<pre>
+<span class="de">assert(</span>m.currentState()<span class="de"> == StateA::alias());</span>
+</pre>
+
+			<h4 id="MManaging">5.7.1&nbsp;&nbsp;&nbsp;Managing Machines</h4>
+
+			<p>A state's history for a particular machine instance can be cleared by
+			calling the state's static method <code>clearHistory</code> with the
+			machine object as argument:</p>
+
+<pre>
+Super::clearHistory(m);
+</pre>
+
+			<p id="clearHistoryDeep">This statement resets history information for
+			<code>Super</code> inside machine <code>m</code>, without affecting substate
+			history however (use <code>clearHistoryDeep</code> for this).</p>
+
+			<p>Another static method of state classes allows testing for the current
+			state of a machine object:</p>
+
+<pre>
+<span class="de">assert(</span>StateA::isCurrent(m)<span class="de">);</span>
+</pre>
+
+			<p>The method <code>isCurrent</code> returns <code>true</code> if the
+			given machine object is in the specified state or any of its substates at
+			that moment.</p>
+
+			<div class="note">
+				<span class="nl">Note:</span><code>StateA::alias() == m.currentState()</code>
+				checks if the machine is exactly in <code>StateA</code>.
+			</div>
+
+			<p id="machine_method">To use these methods in event handlers you have to
+			retrieve the current state machine instance by calling the
+			<code>machine</code> method:</p>
+
+<pre>
+<span class="de">void StateA::event1(int i) {</span> StateA::clearHistory(machine()); <span class="de">}</span>
+</pre>
+
+			<h4 id="Snapshots">5.7.2&nbsp;&nbsp;&nbsp;Machine Snapshots</h4>
+
+			<p>It's possible to create "snapshots" of machine objects:</p>
+
+<pre>
+<span class="de">Machine&lt;Example::Top&gt; machine;</span>
+Snapshot&lt;Example::Top&gt; snapshot(machine);
+</pre>
+
+			<p>A snapshot object stores the entire configuration of a machine at the time
+			the object is created. This includes box contents, history information and the
+			current state of the machine instance.</p>
+
+			<div class="note">
+				<span class="nl">Note:</span>
+				Snapshot functionality is not available in event handlers.
+			</div>
+
+			<p>The snapshot object can then be used to backtrack machine objects to the
+			stored configuration.</p>
+
+			<p>To create snapshots ALL box types of a state machine must have a copy
+			constructor. Because of this additional requirement snapshot functionality must be
+			explicitly enabled by defining the symbol <code>MACHO_SNAPSHOTS</code> at
+			compile time:</p>
+
+			<pre><span class="de">g++</span> -D MACHO_SNAPSHOTS <span class="de">Example.cpp Macho.cpp</span></pre>
+
+			<p>To restore a machine object to a previous configuration simply assign
+			the snapshot object to it:</p>
+
+<pre>
+<span class="de">Machine&lt;Example::Top&gt; machine;
+Snapshot&lt;Example::Top&gt; snapshot(machine);</span>
+machine = snapshot;
+</pre>
+
+			<p>This will first shutdown the current machine instance (see this <a
+				href="#shutdown_">note</a> though), consequently exiting all states and
+			deleting all boxes, and then assigns the snapshot's configuration to the
+			machine object. The snapshot object itself is unaffected by this
+			operation.</p>
+
+			<div class="note"><span class="nl">Note:<br/>&nbsp;</span>
+				By default no entry actions of restored states are called. To override
+				implement the predefined event handler <code>_restore</code> like this:
+				<code>void _restore(Macho::_StateInfo &amp; current) { setState(current); }</code>
+			</div>
+
+			<p>Destroying a snapshot object will not execute any exit or entry
+			actions, but will delete all box objects contained by the
+			snapshot, executing their destructors.</p>
+
+			<h3 id="Dispatch">5.8&nbsp;&nbsp;&nbsp;Event Dispatch</h3>
+
+			<p>The simplest way to dispatch events (synchronously) to a state machine
+			is by calling event handlers through the machine object's arrow operator,
+			a technique commonly found with C++ smart pointers:</p>
+
+<pre>
+m-&gt;event1(42);
+m-&gt;event2(43);
+</pre>
+
+			<p>Another possibility is to create explicit <a name="event_objects" id=
+				"event_objects"></a>event objects that are then used as arguments to a
+			machine's <code>dispatch</code> method:</p>
+
+<pre>
+IEvent&lt;Example::Top&gt; * event = Event(&amp;Example::Top::event1, 42);
+m.dispatch(event);
+
+IEvent&lt;Example::Top&gt; * event = Event(&amp;Example::Top::event2, (long) 43);
+m.dispatch(event);
+</pre>
+
+			<div class="note">
+				<span class="nl">Note:</span>Return values of event handlers are not
+				available when dispatching this way.
+			</div>
+
+			<p>The <code>Event</code> function takes as arguments a pointer-to-member to
+			an event handler and all arguments needed to invoke that event handler. Of
+			course the event parameters must be consistent with the event handler's
+			signature.</p>
+
+			<div class="note"><span class="nl">Note:<br/>&nbsp;</span>
+				Currently the number of event parameters for <code>Event</code> is
+				limited to six, but this limit can easily be raised.
+			</div>
+
+			<p>The result of an <code>Event</code> call is a pointer to an object
+			with the interface <code>IEvent&lt;T&gt;</code> created on the heap (with
+			<code>T</code> being the top state of the state machine to dispatch to).
+			This pointer can then be queued for later asynchronous dispatching:</p>
+
+<pre>
+typedef vector&lt;IEvent&lt;Example::Top&gt; *&gt; EventQueue;
+EventQueue q;
+q.push_back(Event(&amp;Example::Top::event1, 42));
+<span class="de">...</span>
+for (EventQueue::iterator it = q.begin(); it != q.end(); ++it)
+    m.dispatch(*it);
+</pre>
+
+			<p>Event objects are by default deleted after being dispatched to a
+			machine and cannot be reused afterwards. To avoid memory leaks you should
+			delete undispatched event objects explicitly.</p>
+
+			<p>The <code>Event</code> function, too, uses type inference to determine the
+			types of event parameters. The same specifics as for
+			<a href="#Transitions">setState</a> above apply.</p>
+
+			<p>For compilers not supporting <a href=
+				"http://en.wikipedia.org/wiki/Koenig_lookup">"Koenig lookup"</a> name
+			resolution you will have to call <code>Event</code> fully qualified:</p>
+
+<pre>
+Macho::Event<span class="de">(&amp;Example::Top::event1, 42);</span>
+</pre>
+
+			<h4 id="Internal">5.8.1&nbsp;&nbsp;&nbsp;Internal Event Dispatch</h4>
+
+			<p>Event objects can also be dispatched inside an event handler:</p>
+
+<pre>
+<span class="de">void StateA::event1(int i) {</span>
+    <span class="de">...</span>
+    dispatch(Event(&amp;Top::event2, (long) 43));
+<span class="de">}</span>
+</pre>
+
+			<p>The difference to calling the event handler directly is that the event
+			object is dispatched after control flow has left the event handler, and
+			then also not until a pending state transition has been performed. Therefore
+			the following code fragment:</p>
+
+<pre>
+<span class="de">void StateA::event1(int i) {</span>
+    setState&lt;StateB&gt;();
+    dispatch(Event(&amp;Top::event1, i));
+<span class="de">}</span>
+</pre>
+
+			<p>is equivalent to:</p>
+
+<pre>
+<span class="de">void StateA::event1(int i) {</span>
+    dispatch(Event(&amp;Top::event1, i));
+    setState&lt;StateB&gt;();
+<span class="de">}</span>
+</pre>
+
+			<p>The consequence in both examples is that the event object will be
+			dispatched in the context of a new state.</p>
+
+			<p>The main intended use of this feature is indeed the "forwarding" of
+			events to a new state better suited to handle a particular event.</p>
+
+			<p>There are similarities to the concept of "deferred" events in the UML
+			specification, although these have conceptual problems (to be discussed
+			in a later version of this document) which prohibit their implementation
+			in the <em>Machine Objects</em> library.</p>
+
+			<p>Please note that only a single event can be dispatched inside an event
+			handler. This is not a technical limitation, but rather an aesthetical:
+			Event chains are hard to follow (since any event could change state) and
+			make the state machine brittle to changes in structure.</p>
+
+			<p>Since event chains can be coalesced into a single new event having the
+			same side effects (the state machine is deterministic after all), there
+			seems to be no good reason to allow internal dispatching of more than one
+			event.</p>
+
+			<p>For similar reasons it is also not possible to dispatch events in
+			<code>entry</code>, <code>exit</code> or <code>init</code>.</p>
+
+			<h3 id="Advanced">5.9&nbsp;&nbsp;&nbsp;Advanced Topics</h3>
+
+			<p>The following sections focus on topics not essential for effective use
+			of the <em>Machine Objects</em> library and can therefore be omitted on first
+			reading.</p>
+
+			<h4 id="Templates">5.9.1&nbsp;&nbsp;&nbsp;Template States</h4>
+
+			<p>On occasion considerable amounts of logic are repeatedly being used in
+			different parts of a state machine design, whenever similar processes are to be
+			followed in different contexts (error handling for example).<p>
+
+			<p>To achieve a better factoring of this kind of common behaviour so called
+			<em>template states</em> can be used. Template states allow the implementation
+			of fragments of state machine logic that can be plugged into an actual state machine
+			where appropriate.</p>
+
+			<p>A template state is defined similarly to ordinary states:</p>
+
+<pre>
+template&lt;class T&gt;
+TSUBSTATE(Template, T) {
+    TSTATE(Template)
+};
+</pre>
+
+			<p>This example defines a template state named <code>Template</code>.
+			The difference to previous state definitions is in the use of the
+			<code>TSUBSTATE</code> and <code>TSTATE</code> macros instead of
+			<code>SUBSTATE</code> and <code>STATE</code>, the parameter to these macros
+			being again the name and the superstate of the template state.
+			</p>
+
+			<p>As is apparent by the occurence of the <code>template</code> keyword, a
+			template state really is a C++ template class behind the curtains.
+			</p>
+
+			<p>The single template parameter to be provided is called the <em>anchor</em>
+			of the template state. The anchor must always be an ordinary, non-template state.
+			It is the state where the template state will hook into the state machine, with
+			the anchor being a direct or indirect superstate of the template state.</p>
+
+			<p>The following statement</p>
+
+<pre>
+<span class="de">setState&lt;</span>Template&lt;StateA&gt;<span class="de"> &gt;();</span>
+</pre>
+
+			<p>consequentally means that the state machine will enter an instance of the
+			template state <code>Template</code> with the anchor state <code>StateA</code>
+			being the direct superstate of that template instance, which therefore inherits all
+			event handlers of <code>StateA</code>.
+			</p>
+
+			<p>Template states can themselves form hierarchies, when template states are
+			substates of other template states:
+			</p>
+
+<pre>
+template&lt;class T&gt;
+TSUBSTATE(TemplateSub, Template&lt;T&gt;) {
+    TSTATE(TemplateSub)
+};
+</pre>
+
+			<p>
+			In this example the second parameter to the <code>TSUBSTATE</code> macro is
+			another template state, making it the superstate of <code>TemplateSub</code>.
+			The result is a <em>state machine fragment</em> that can be reused repeatedly
+			in a regular state machine simply by providing an anchor state:
+			</p>
+
+<pre>
+<span class="de">setState&lt;</span>TemplateSub&lt;StateB&gt;<span class="de"> &gt;();</span>
+</pre>
+
+			<p>
+			This statement will put a state machine into state
+			<code>TemplateSub&lt;StateB&gt;</code>, which as defined is a substate of
+			<code>Template&lt;StateB&gt;</code>, which in turn is a substate of anchor
+			<code>StateB</code>. The template parameter to all the template states is
+			the non-template state that is the anchor to the whole state machine
+			fragment.
+			</p>
+
+
+			<br /><p class="bold">For more detailed information about <em>Machine Objects</em>
+			please consult the implementation source code and included examples
+			or contact the author.</p><br />
+
+			<h2 id="Conclusion">6&nbsp;&nbsp;&nbsp;Conclusion</h2>
+
+			<p>The <em>Machine Objects</em> library supports the creation of complex state
+			machines in C++ with the well known mechanisms of class inheritance and
+			object polymorphism. But let's look again: there is something else going on.
+			With state machines stripped of their predominant graphical notation, a
+			different concept seems to shine through: type migration.</p>
+
+			<p>In implementation and behaviour it is conceivable to view <em>Machine
+				Objects</em> as objects changing their type within a single-rooted
+			multi-level inheritance tree at runtime.</p>
+
+			<p>This could be used as an approach to tackle a long standing problem in
+			object-oriented programming: the combination of mutable values with
+			static taxonomies. The issue thereby is that values of specific type
+			could change at runtime in such ways that their type's invariant property
+			does not hold anymore.</p>
+
+			<p>The classic example of this problem is the case of Rectangle/Square: a
+			type <em>Square</em> can reasonably be viewed as a subtype of
+			<em>Rectangle</em>. By changing a <em>Square</em> object's width
+			independently from its height (an operation quite conceivable for the
+			supertype <em>Rectangle</em>), the object looses its characteristic
+			property of having a width equal to its height and effectively becomes a
+			<em>Rectangle</em>.</p>
+
+			<p>Currently there are no convincing solutions in standard
+			object-oriented programming languages for more difficult problems of this
+			kind. <em>Machine Objects</em> cope with the Rectangle/Square case
+			easily, and can be used for more complex situations.</p>
+
+			<h2 id="FAQ">7&nbsp;&nbsp;&nbsp;FAQ</h2>
+
+			<table summary="">
+				<tbody>
+					<tr>
+						<td class="bold">Q:</td>
+
+						<td>I'm getting weird compiler errors...</td>
+					</tr>
+
+					<tr>
+						<td class="faq">A:</td>
+
+						<td>
+							Check if you have
+							<ul>
+								<li>used the <code>STATE</code> macro in your state class
+								bodies</li>
+
+								<li>defined your boxes before using the <code>STATE</code>
+								macro</li>
+
+								<li>declared your top state with the <code>TOPSTATE</code>
+								macro</li>
+
+								<li>disambiguated inferred argument types by casting</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<table summary="">
+				<tbody>
+					<tr>
+						<td class="bold">Q:</td>
+
+						<td>How fast is this stuff?</td>
+					</tr>
+
+					<tr>
+						<td class="faq">A:</td>
+
+						<td>Benchmarking the nontrivial state machine
+							<em>Test</em> (without printing to console) gives me around
+							1.000.000 state transitions per second on my 2.4 GHz P4
+							machine.</td>
+					</tr>
+				</tbody>
+			</table><br />
+
+			<table summary="">
+				<tbody>
+					<tr>
+						<td class="bold">Q:</td>
+
+						<td>Does it work with the Visual Studio 6 compiler?</td>
+					</tr>
+
+					<tr>
+						<td class="faq">A:</td>
+
+						<td>You'll find a variant version of <em>Machine Objects</em> for
+							this compiler in the "msvc6" directory. Please consult the
+							contained "Readme" file for differences!</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<h2 id="Version">8&nbsp;&nbsp;&nbsp;Version History</h2>
+
+			<div class="versions">
+				<ul>
+
+					<li>
+					<a class="bold" href="http://ehiti.de/machine_objects/macho_0_9_7.zip">
+						0.9.7
+						</a>
+					released 2007-12-1:
+					<ul>
+
+						<li>
+						Introduction of <a href="#Templates">template states</a>.
+						</li>
+
+						<li>
+						fixed rare memory leak.
+						</li>
+
+					</ul>
+					</li>
+
+					<li>
+					<a class="bold" href="http://ehiti.de/machine_objects/macho_0_9_6.zip">
+						0.9.6
+						</a>
+					released 2007-09-01:
+					<ul>
+
+						<li>
+						Changes to state transition semantics.<br /> This version may require changes to client code.<br /> For more information see this <a href="http://ehiti.de/machine_objects/changes_0_9_6.txt">file</a>.
+						</li>
+
+						<li>
+						New mechanism for <a href="#Transitions">state initialization</a>.
+						</li>
+
+						<li>
+						Runtime <a href="#Reflection">reflection</a> on state relationships now possible.
+						</li>
+
+					</ul>
+					</li>
+
+					<li>
+					<a class="bold" href="http://ehiti.de/machine_objects/macho_0_9_5.zip">
+						0.9.5
+						</a>
+					released 2007-05-01:
+					<ul>
+
+						<li>
+						Introduction of <a href="#Aliases">parametrized state transitions</a>.
+						</li>
+
+					</ul>
+					</li>
+
+					<li>
+					<a class="bold" href="http://ehiti.de/machine_objects/macho_0_9_4.zip">
+						0.9.4
+						</a>
+					released 2006-06-01:
+					<ul>
+
+						<li>
+						<a href="#Snapshots">Snapshot</a> functionality added.
+						</li>
+
+					</ul>
+					</li>
+
+					<li>
+					<a class="bold" href="http://ehiti.de/machine_objects/macho_0_9_3.zip">
+						0.9.3
+						</a>
+					released 2006-04-20:
+					<ul>
+
+						<li>
+						<a href="#Installation">Code reorganization</a> (file Macho.cpp added).
+						</li>
+
+					</ul>
+					</li>
+
+					<li>
+					<a class="bold" href="http://ehiti.de/machine_objects/macho_0_9_2.zip">
+						0.9.2
+						</a>
+					released 2006-04-10:
+					<ul>
+
+						<li>
+						Memory leak plugged.
+						</li>
+
+						<li>
+						MSVC6 version updated.
+						</li>
+
+					</ul>
+					</li>
+
+					<li>
+					<a class="bold" href="http://ehiti.de/machine_objects/macho_0_9_1.zip">
+						0.9.1
+						</a>
+					released 2006-03-30:
+					<ul>
+
+						<li>
+						Introduction of <a href="#Persistent">persistent</a> boxes.
+						</li>
+
+						<li>
+						Speed and size optimizations.
+						</li>
+
+						<li>
+						Machine instance can be accessed in event handlers with <code><a href="#machine_method">machine</a></code>.
+						</li>
+
+					</ul>
+					</li>
+
+					<li>
+					<a class="bold" href="http://ehiti.de/machine_objects/macho_0_9.zip">
+						0.9
+						</a>
+					released 2006-01-15:
+					<ul>
+
+						<li>
+						Introduction of queuable <a href="#event_objects">event type</a>.
+						</li>
+
+					</ul>
+					</li>
+
+					<li>
+					<a class="bold" href="http://ehiti.de/machine_objects/macho_0_8_2.zip">
+						0.8.2
+						</a>
+					released 2005-12-15:
+					<ul>
+
+						<li>
+						Code size reduction by minimizing use of template classes.
+						</li>
+
+					</ul>
+					</li>
+
+					<li>
+					<a class="bold" href="http://ehiti.de/machine_objects/macho_0_8_1.zip">
+						0.8.1
+						</a>
+					released 2005-12-01:
+					<ul>
+
+						<li>
+						Added MSVC6 variant (see directory "msvc6").
+						</li>
+
+						<li>
+						Added method <code><a href="#clearHistoryDeep">clearHistoryDeep</a></code> to state classes.
+						</li>
+
+					</ul>
+					</li>
+
+					<li>
+					<a class="bold" href="http://ehiti.de/machine_objects/macho_0_8.zip">
+						0.8
+						</a>
+					released 2005-11-01:
+					<ul>
+
+						<li>
+						Initial release.
+						</li>
+
+					</ul>
+					</li>
+
+				</ul><br />
+				<br />
+			</div>
+
+
+
+		</div>
+	</div>
+
+</body>
+</html>

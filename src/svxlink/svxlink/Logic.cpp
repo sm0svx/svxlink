@@ -215,7 +215,8 @@ Logic::Logic(Config &cfg, const string& name)
     is_idle(true),                  fx_gain_normal(0),
     fx_gain_low(-12), 	      	    long_cmd_digits(100),
     report_events_as_idle(false),   qso_recorder(0),
-    tx_ctcss(TX_CTCSS_ALWAYS), 	    tx_ctcss_mask(0)
+    tx_ctcss(TX_CTCSS_ALWAYS), 	    tx_ctcss_mask(0),
+    aprs_stats_timer(0)
 {
   logic_con_in = new AudioSplitter;
   logic_con_out = new AudioSelector;
@@ -227,6 +228,7 @@ Logic::~Logic(void)
   cleanup();
   delete logic_con_out;
   delete logic_con_in;
+  delete aprs_stats_timer;
 } /* Logic::~Logic */
 
 
@@ -410,10 +412,7 @@ bool Logic::initialize(void)
   rx().dtmfDigitDetected.connect(mem_fun(*this, &Logic::dtmfDigitDetectedP));
   rx().selcallSequenceDetected.connect(
 	mem_fun(*this, &Logic::selcallSequenceDetected));
-  rx().afskMessageDetected.connect(
-    mem_fun(*this, &Logic::afskMessageDetected));
-  rx().fmsMessageDetected.connect(mem_fun(*this, &Logic::fmsMessageDetected));
-  rx().mute(false);
+  rx().setMuteState(Rx::MUTE_NONE);
   prev_rx_src = m_rx;
 
     // This valve is used to turn RX audio on/off into the logic core
@@ -595,6 +594,16 @@ bool Logic::initialize(void)
   event_handler->setVariable("is_core_event_handler", "1");
   event_handler->setVariable("logic_name", name().c_str());
 
+  if (LocationInfo::has_instance())
+  {
+      // start the aprs_stats_timer - 10 minutes
+    aprs_stats.reset();
+    aprs_stats.logic_name = name();
+    aprs_stats_timer = new Timer(600000);
+    aprs_stats_timer->expired.connect(mem_fun(*this, &Logic::aprsStatsTimeout));
+    aprs_stats_timer->setEnable(true);
+  }
+  
   cmd_tmo_timer = new Timer(10000);
   cmd_tmo_timer->expired.connect(mem_fun(*this, &Logic::cmdTimeout));
   cmd_tmo_timer->setEnable(false);
@@ -942,6 +951,9 @@ void Logic::squelchOpen(bool is_open)
     active_module->squelchOpen(is_open);
   }
 
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  time_t sec = tv.tv_sec;
   stringstream ss;
   ss << "squelch_open " << rx().sqlRxId() << " " << (is_open ? "1" : "0");
   processEvent(ss.str());
@@ -956,11 +968,14 @@ void Logic::squelchOpen(bool is_open)
 	  mem_fun(*this, &Logic::putCmdOnQueue));
     }
     processCommandQueue();
+    aprs_stats.rx_sec += (sec - aprs_stats.last_rx_sec);
   }
   else
   {
     delete exec_cmd_on_sql_close_timer;
     exec_cmd_on_sql_close_timer = 0;
+    aprs_stats.rx_on_nr++;
+    aprs_stats.last_rx_sec = sec;
   }
 
   updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
@@ -981,8 +996,24 @@ bool Logic::getIdleState(void) const
 
 void Logic::transmitterStateChange(bool is_transmitting)
 {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  time_t sec = tv.tv_sec;
   stringstream ss;
-  ss << "transmit " << (is_transmitting ? "1" : "0");
+  ss << "transmit ";
+
+  if (is_transmitting)
+  {
+    aprs_stats.tx_on_nr++;
+    aprs_stats.last_tx_sec = sec;
+    ss << "1";
+  } 
+  else
+  {
+    aprs_stats.tx_sec = (sec - aprs_stats.last_tx_sec);
+    ss << "0";
+  }
+
   processEvent(ss.str());
 } /* Logic::transmitterStateChange */
 
@@ -1517,6 +1548,17 @@ void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 {
   updateTxCtcss(!is_idle, TX_CTCSS_MODULE);
 } /* Logic::audioFromModuleStreamStateChanged */
+
+
+void Logic::aprsStatsTimeout(Timer *t)
+{
+  if (LocationInfo::has_instance())
+  {
+     LocationInfo::instance()->sendAprsStatistics(aprs_stats);
+     aprs_stats.reset();
+     t->reset();
+  }
+} /* Logic::aprsStatsTimeout */
 
 
 

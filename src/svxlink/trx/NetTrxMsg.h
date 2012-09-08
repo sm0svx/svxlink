@@ -51,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <Tx.h>
+#include <Rx.h>
 
 
 /****************************************************************************
@@ -171,7 +172,7 @@ class MsgProtoVer : public Msg
   public:
     static const unsigned TYPE  = 0;
     static const uint16_t MAJOR = 2;
-    static const uint16_t MINOR = 2;
+    static const uint16_t MINOR = 4;
     MsgProtoVer(void)
       : Msg(TYPE, sizeof(MsgProtoVer)), m_major(MAJOR),
         m_minor(MINOR) {}
@@ -459,18 +460,18 @@ class MsgAudio : public Msg
 
 /******************************** RX Messages ********************************/
 
-class MsgMute : public Msg
+class MsgSetMuteState : public Msg
 {
   public:
     static const unsigned TYPE = 200;
-    MsgMute(bool do_mute)
-      : Msg(TYPE, sizeof(MsgMute)), m_do_mute(do_mute) {}
-    int doMute(void) const { return m_do_mute; }
+    MsgSetMuteState(Rx::MuteState new_mute_state)
+      : Msg(TYPE, sizeof(MsgSetMuteState)), m_mute_state(new_mute_state) {}
+    Rx::MuteState muteState(void) const { return m_mute_state; }
 
   private:
-    char  m_do_mute;
+    Rx::MuteState  m_mute_state;
 
-}; /* MsgMute */
+}; /* MsgSetMuteState */
 
 
 class MsgAddToneDetector : public Msg
@@ -573,62 +574,23 @@ class MsgSel5 : public Msg
 }; /* MsgSel5 */
 
 
-class MsgAfsk : public Msg
+class MsgSiglevUpdate : public Msg
 {
   public:
-      static const unsigned TYPE = 254;
-      int path_len;
-      int payload_len;
-      static const int ADR_DIGITS = 128; // address fields
-      static const int PAYLOAD_DIGITS = 256; // max frame length
-
-    MsgAfsk(std::string aprs_message, std::string payload)
-          : Msg(TYPE, sizeof(MsgAfsk))
-    {
-       if ((path_len = aprs_message.length()) > ADR_DIGITS)
-       {
-         path_len = ADR_DIGITS;
-       }
-
-       strncpy(m_adr_digits, aprs_message.c_str(), path_len);
-       m_adr_digits[path_len] = '\0';
-
-       if ((payload_len = payload.length()) > PAYLOAD_DIGITS)
-       {
-         payload_len = PAYLOAD_DIGITS;
-       }
-       strncpy(m_payload, payload.c_str(), payload_len);
-       m_payload[payload_len] = '\0';
-       setSize(size() - payload_len - path_len +
-                       strlen(m_adr_digits) + strlen(m_payload));
-    }
-    std::string aprs_digits(void) const { return m_adr_digits; }
-    std::string payload(void) const { return m_payload; }
-
+    static const unsigned TYPE = 254;
+    MsgSiglevUpdate(float signal_strength, int sql_rx_id)
+      : Msg(TYPE, sizeof(MsgSiglevUpdate)), m_signal_strength(signal_strength),
+        m_sql_rx_id(sql_rx_id) {}
+    float signalStrength(void) const { return m_signal_strength; }
+    int sqlRxId(void) const { return m_sql_rx_id; }
+  
   private:
-    char m_adr_digits[ADR_DIGITS + 1];
-    char m_payload[PAYLOAD_DIGITS + 1];
+    float m_signal_strength;
+    int   m_sql_rx_id;
+    
+}; /* MsgSiglevUpdate */
 
-}; /* MsgAfsk */
 
-
-class MsgFms : public Msg
-{
-  public:
-    static const unsigned TYPE = 255;
-    static const int MAX_DIGITS = 50;
-    MsgFms(std::string fms_message)
-      : Msg(TYPE, sizeof(MsgFms))
-    {
-      strncpy(m_message, fms_message.c_str(), MAX_DIGITS);
-      m_message[MAX_DIGITS] = 0;
-      setSize(size() - MAX_DIGITS + strlen(m_message));
-    }
-    std::string fms_message(void) const { return m_message; }
-
-  private:
-    char m_message[MAX_DIGITS + 1];
-}; /* MsgFms */
 
 /******************************** TX Messages ********************************/
 

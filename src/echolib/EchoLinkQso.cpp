@@ -607,7 +607,8 @@ inline void Qso::handleSdesPacket(unsigned char *buf, int len)
   char remote_id[256];
   if(parseSDES(remote_id, buf, RTCP_SDES_NAME))
   {
-    //printData(remote_id, strlen(remote_id));
+    //printData(reinterpret_cast<unsigned char*>(remote_id), strlen(remote_id));
+#if 0
     char strtok_buf[256];
     char *strtok_buf_ptr = strtok_buf;
     char *remote_call_str = strtok_r(remote_id, " \t\n\r", &strtok_buf_ptr);
@@ -620,6 +621,18 @@ inline void Qso::handleSdesPacket(unsigned char *buf, int len)
       }
       remote_call = remote_call_str;
       remote_name = remote_name_str;
+    }
+#endif
+    string str(remote_id);
+    size_t pos = str.find_first_of(" \t\n\r");
+    if (pos != string::npos)
+    {
+      remote_call = str.substr(0, pos);
+      pos = str.find_first_not_of(" \t\n\r", pos);
+      if (pos != string::npos)
+      {
+        remote_name = str.substr(pos);
+      }
     }
   }
   char priv[256];

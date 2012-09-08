@@ -30,6 +30,23 @@
 * Now possible to have personal greetings on incoming EchoLink connections,
   if desired. Some TCL coding is neccessary to enable it though.
 
+* Improved voter implementation that can vote continously and not only at the
+  start of a transmission. By default it will check the signal strength for
+  all receivers once per second and switch to the strongest one if the
+  difference is large enough. New config variables: REVOTE_INTERVAL,
+  HYSTERESIS, SQL_CLOSE_REVOTE_DELAY, RX_SWITCH_DELAY.
+
+* ModuleEchoLink: The text "[listen only] is now prepended to the sysop name
+  if listen only mode is active.
+
+* New feature "extended squelch hangtimne" added. It is now possible to
+  configure an extended squelch hangtime that is activated when the
+  signal strength fall below a given threshold.
+
+* Now SvxLink can send APRS statistics about RX squelch open count,
+  TX on count, RX squelch open time and TX on time.
+  Patch from Adi / DL1HRC.
+
 
 
  0.13.1 -- 27 Nov 2011
