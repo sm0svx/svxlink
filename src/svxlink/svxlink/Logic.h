@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <LocationInfo.h>
 
 
 /****************************************************************************
@@ -227,6 +228,12 @@ class Logic : public sigc::trackable
       TX_CTCSS_MODULE=8, TX_CTCSS_ANNOUNCEMENT=16
     } TxCtcssType;
 
+    struct AprsStatistics : public LocationInfo::AprsStatistics
+    {
+      time_t last_rx_sec;
+      time_t last_tx_sec;
+    };
+
     Async::Config     	      	    &m_cfg;
     std::string       	      	    m_name;
     Rx	      	      	      	    *m_rx;
@@ -273,7 +280,8 @@ class Logic : public sigc::trackable
     uint8_t			    tx_ctcss_mask;
     std::string                     sel5_from;
     std::string                     sel5_to;
-    std::vector<std::string>	    cmdList;
+    AprsStatistics                  aprs_stats;
+    Async::Timer		    *aprs_stats_timer;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);
@@ -290,7 +298,8 @@ class Logic : public sigc::trackable
     void updateTxCtcss(bool do_set, TxCtcssType type);
     void logicConInStreamStateChanged(bool is_active, bool is_idle);
     void audioFromModuleStreamStateChanged(bool is_active, bool is_idle);
-
+    void aprsStatsTimeout(Async::Timer *t);
+    void resetAprsStats(void);
 };  /* class Logic */
 
 

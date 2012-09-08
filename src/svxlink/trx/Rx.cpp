@@ -157,6 +157,21 @@ map<string, RxFactory*> RxFactory::rx_factories;
  *
  ****************************************************************************/
 
+std::string Rx::muteStateToString(MuteState mute_state)
+{
+  switch (mute_state)
+  {
+    case MUTE_NONE:
+      return "NONE";
+    case MUTE_CONTENT:
+      return "CONTENT";
+    case MUTE_ALL:
+      return "ALL";
+  }
+  return "?";
+} /* Rx::muteStateToString */
+
+
 Rx::Rx(Config &cfg, const string& name)
   : m_name(name), m_verbose(true), m_sql_open(false), m_cfg(cfg),
     m_sql_tmo_timer(0)

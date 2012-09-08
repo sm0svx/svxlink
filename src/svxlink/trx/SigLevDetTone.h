@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <vector>
+#include <deque>
 
 
 /****************************************************************************
@@ -126,9 +127,10 @@ class SigLevDetTone : public SigLevDet
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
+     * @param	sample_rate The rate with which samples enter the detector
      */
-    SigLevDetTone(void);
+    explicit SigLevDetTone(int sample_rate);
   
     /**
      * @brief 	Destructor
@@ -142,10 +144,35 @@ class SigLevDetTone : public SigLevDet
     virtual bool initialize(Async::Config &cfg, const std::string& name);
     
     /**
+     * @brief	Set the interval for continuous updates
+     * @param	interval_ms The update interval, in milliseconds, to use.
+     * 
+     * This function will set up how often the signal level detector will
+     * report the signal strength.
+     */
+    virtual void setContinuousUpdateInterval(int interval_ms);
+    
+    /**
+     * @brief	Set the integration time to use
+     * @param	time_ms The integration time in milliseconds
+     * 
+     * This function will set up the integration time for the signal level
+     * detector. That is, the detector will build a mean value of the
+     * detected signal strengths over the given integration time.
+     */
+    virtual void setIntegrationTime(int time_ms);
+
+    /**
      * @brief 	Read the latest measured signal level
      * @return	Returns the latest measured signal level
      */
     virtual float lastSiglev(void) const { return last_siglev; }
+
+    /**
+     * @brief   Read the integrated siglev value
+     * @return  Returns the integrated siglev value
+     */
+    virtual float siglevIntegrated(void) const;
 
     /**
      * @brief   Reset the signal level detector
@@ -162,6 +189,7 @@ class SigLevDetTone : public SigLevDet
     static const float    ENERGY_THRESH = 1.0e-6f;
     static const float    DET_THRESH    = 0.7f; // Detection threshold
 
+    const int	        sample_rate;
     std::vector<int>    tone_siglev_map;
     Goertzel            *det[10];
     unsigned            block_idx;
@@ -169,6 +197,10 @@ class SigLevDetTone : public SigLevDet
     float               passband_energy;
     Async::AudioFilter  *filter;
     float               prev_peak_to_tot_pwr;
+    unsigned            integration_time;
+    std::deque<int>     siglev_values;
+    int                 update_interval;
+    int                 update_counter;
     
     SigLevDetTone(const SigLevDetTone&);
     SigLevDetTone& operator=(const SigLevDetTone&);

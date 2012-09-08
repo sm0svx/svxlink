@@ -220,6 +220,13 @@ list<string> Config::listSection(const string& section)
 } /* Config::listSection */
 
 
+void Config::setValue(const std::string& section, const std::string& tag,
+      	      	      const std::string& value)
+{
+  Values &values = sections[section];
+  values[tag] = value;
+} /* Config::setValue */
+
 
 
 /****************************************************************************

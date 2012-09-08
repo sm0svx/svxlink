@@ -162,6 +162,16 @@ void SimplexLogic::squelchOpen(bool is_open)
   //cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
   //     << endl;
   
+    // FIXME: A squelch open should not be possible to receive while
+    // transmitting unless mute_rx_on_tx is false, in which case it
+    // should be allowed. Commenting out the statements below.
+#if 0
+  if (tx().isTransmitting())
+  {
+    return;
+  }
+#endif
+  
   if (!is_open)
   {
     if (activeModule() != 0)
@@ -186,7 +196,7 @@ void SimplexLogic::transmitterStateChange(bool is_transmitting)
 {
   if (mute_rx_on_tx)
   {
-    rx().mute(is_transmitting);
+    rx().setMuteState(is_transmitting ? Rx::MUTE_ALL : Rx::MUTE_NONE);
   }
   Logic::transmitterStateChange(is_transmitting);
 } /* SimplexLogic::transmitterStateChange */

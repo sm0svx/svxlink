@@ -160,9 +160,10 @@ class SigLevDetTone::HammingWindow
  *
  ****************************************************************************/
 
-SigLevDetTone::SigLevDetTone(void)
-  : tone_siglev_map(10), block_idx(0), last_siglev(0), passband_energy(0.0f),
-    prev_peak_to_tot_pwr(0.0f)
+SigLevDetTone::SigLevDetTone(int sample_rate)
+  : sample_rate(sample_rate), tone_siglev_map(10), block_idx(0), last_siglev(0),
+    passband_energy(0.0f), prev_peak_to_tot_pwr(0.0f), integration_time(1),
+    update_interval(0), update_counter(0)
 {
   filter = new AudioFilter("BpBu8/5400-6500");
   setHandler(filter);
@@ -223,7 +224,44 @@ void SigLevDetTone::reset(void)
   last_siglev = 0;
   passband_energy = 0.0f;
   prev_peak_to_tot_pwr = 0.0f;
+  update_counter = 0;
+  siglev_values.clear();
 } /* SigLevDetTone::reset */
+
+
+void SigLevDetTone::setContinuousUpdateInterval(int interval_ms)
+{
+  update_interval = interval_ms * sample_rate / 1000;
+  update_counter = 0;  
+} /* SigLevDetTone::setContinuousUpdateInterval */
+
+
+void SigLevDetTone::setIntegrationTime(int time_ms)
+{
+    // Calculate the integration time expressed as the
+    // number of processing blocks.
+  integration_time = time_ms * 16000 / 1000 / BLOCK_SIZE;
+  if (integration_time <= 0)
+  {
+    integration_time = 1;
+  }
+} /* SigLevDetTone::setIntegrationTime */
+
+
+float SigLevDetTone::siglevIntegrated(void) const
+{
+  if (siglev_values.size() > 0)
+  {
+    int sum = 0;
+    deque<int>::const_iterator it;
+    for (it=siglev_values.begin(); it!=siglev_values.end(); ++it)
+    {
+      sum += *it;
+    }
+    return sum / siglev_values.size();
+  }
+  return 0;
+} /* SigLevDetTone::siglevIntegrated */
 
 
 
@@ -316,6 +354,24 @@ int SigLevDetTone::processSamples(const float *samples, int count)
           }
         }
       }
+
+      siglev_values.push_back(last_siglev);
+      if (siglev_values.size() > integration_time)
+      {
+	siglev_values.erase(siglev_values.begin(),
+		siglev_values.begin()+siglev_values.size()-integration_time);
+      }
+      
+      if (update_interval > 0)
+      {
+	update_counter += BLOCK_SIZE;
+	if (update_counter >= update_interval)
+	{
+	  signalLevelUpdated(lastSiglev());
+	  update_counter = 0;
+	}
+      }
+
       passband_energy = 0.0f;
       block_idx = 0;
     }

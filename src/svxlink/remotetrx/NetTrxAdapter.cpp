@@ -108,13 +108,13 @@ class RxAdapter : public Rx, public AudioSink
     }
     
     /**
-     * @brief 	Mute the receiver
-     * @param 	do_mute Set to \em true to mute or \em false to unmute
+     * @brief 	Set the mute state for this receiver
+     * @param 	mute_state The mute state to set for this receiver
      */
-    virtual void mute(bool do_mute)
+    virtual void setMuteState(MuteState new_mute_state)
     {
       //cout << name() << ": RxAdapter::mute: do_mute=" << do_mute << endl;
-      mute_valve.setOpen(!do_mute);
+      mute_valve.setOpen(new_mute_state == MUTE_NONE);
     }
     
     /**

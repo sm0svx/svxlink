@@ -258,6 +258,17 @@ class QsoImpl
      */
     const EchoLink::StationData& stationData(void) const { return station; }
 
+    /**
+     * @brief Tell the QSO object if "listen only" is enabled or not
+     * @param enable Set to \em true if enabled or \em false otherwise
+     *
+     * This function is used to inform the QSO object if "listen only" is
+     * enabled or not. It does not block the audio. This have to be done
+     * outside the QSO object. It only affects info data sent to the remote
+     * station.
+     */
+    void setListenOnly(bool enable);
+
 
     /**
      * @brief A signal that is emitted when the connection state changes
@@ -315,6 +326,7 @@ class QsoImpl
     Async::Timer	    *destroy_timer;
     EchoLink::StationData   station;
     Async::AudioPassthrough *sink_handler;
+    std::string             sysop_name;
     
     void allRemoteMsgsWritten(void);
     void onInfoMsgReceived(const std::string& msg);
