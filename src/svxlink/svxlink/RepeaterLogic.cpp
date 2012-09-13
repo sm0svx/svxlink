@@ -219,6 +219,11 @@ bool RepeaterLogic::initialize(void)
      open_on_fms = str;
   }
 
+  if (cfg().getValue(name(), "OPEN_ON_MDC", str))
+  {
+     open_on_mdc = str;
+  }
+
   if (cfg().getValue(name(), "OPEN_SQL_FLANK", str))
   {
     if (str == "OPEN")
@@ -376,7 +381,7 @@ void RepeaterLogic::selcallSequenceDetected(std::string sequence)
 } /* RepeaterLogic::selcallSequenceDetected */
 
 
-void RepeaterLogic::fmsSequenceDetected(std::string fms_sequence)
+void RepeaterLogic::fmsMessageDetected(std::string fms_sequence)
 {
   size_t found;
   if (repeater_is_up)
@@ -399,6 +404,31 @@ void RepeaterLogic::fmsSequenceDetected(std::string fms_sequence)
     }
   }
 } /* RepeaterLogic::fmsSequenceDetected */
+
+
+void RepeaterLogic::mdcMessageDetected(std::string mdc_sequence)
+{
+  size_t found;
+  if (repeater_is_up)
+  {
+     Logic::mdcMessageDetected(mdc_sequence);
+  }
+  else
+  {
+    if ((found = mdc_sequence.find(open_on_mdc)) != string::npos)
+    {
+       cout << "mdc digits \"" << mdc_sequence << "\" detected. "
+               "Activating repeater...\n";
+       open_reason = "MDC";
+       activateOnOpenOrClose(SQL_FLANK_CLOSE);
+    }
+    else
+    {
+       cout << "Ignoring Mdc sequence \"" << mdc_sequence
+            << "\" since the repeater is not up\n";
+    }
+  }
+} /* RepeaterLogic::mdcSequenceDetected */
 
 
 /****************************************************************************

@@ -204,7 +204,7 @@ class LocalRx : public Rx
     unsigned                    sql_hangtime;
     unsigned                    sql_extended_hangtime;
     unsigned                    sql_extended_hangtime_thresh;
-    
+
     int audioRead(float *samples, int count);
     void dtmfDigitActivated(char digit);
     void dtmfDigitDeactivated(char digit, int duration_ms);
@@ -215,6 +215,9 @@ class LocalRx : public Rx
     void tone1750detected(bool detected);
     void onSignalLevelUpdated(float siglev);
     void setSqlHangtimeFromSiglev(float siglev);
+    void afskDetected(std::string aprs_message, std::string payload);
+    void mdcDetected(std::string mdc_message);
+    void fmsDetected(std::string fms_message);
 
 };  /* class LocalRx */
 

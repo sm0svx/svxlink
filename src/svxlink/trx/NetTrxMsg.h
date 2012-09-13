@@ -591,6 +591,83 @@ class MsgSiglevUpdate : public Msg
 }; /* MsgSiglevUpdate */
 
 
+class MsgAfsk : public Msg
+{
+  public:
+      static const unsigned TYPE = 255;
+      int path_len;
+      int payload_len;
+      static const int ADR_DIGITS = 128; // address fields
+      static const int PAYLOAD_DIGITS = 256; // max frame length
+
+    MsgAfsk(std::string aprs_message, std::string payload)
+          : Msg(TYPE, sizeof(MsgAfsk))
+    {
+       if ((path_len = aprs_message.length()) > ADR_DIGITS)
+       {
+         path_len = ADR_DIGITS;
+       }
+
+       strncpy(m_adr_digits, aprs_message.c_str(), path_len);
+       m_adr_digits[path_len] = '\0';
+
+       if ((payload_len = payload.length()) > PAYLOAD_DIGITS)
+       {
+         payload_len = PAYLOAD_DIGITS;
+       }
+       strncpy(m_payload, payload.c_str(), payload_len);
+       m_payload[payload_len] = '\0';
+       setSize(size() - payload_len - path_len +
+                       strlen(m_adr_digits) + strlen(m_payload));
+    }
+    std::string aprs_digits(void) const { return m_adr_digits; }
+    std::string payload(void) const { return m_payload; }
+
+  private:
+    char m_adr_digits[ADR_DIGITS + 1];
+    char m_payload[PAYLOAD_DIGITS + 1];
+
+}; /* MsgAfsk */
+
+
+class MsgFms : public Msg
+{
+  public:
+    static const unsigned TYPE = 256;
+    static const int MAX_DIGITS = 50;
+    MsgFms(std::string fms_message)
+      : Msg(TYPE, sizeof(MsgFms))
+    {
+      strncpy(m_message, fms_message.c_str(), MAX_DIGITS);
+      m_message[MAX_DIGITS] = 0;
+      setSize(size() - MAX_DIGITS + strlen(m_message));
+    }
+    std::string fms_message(void) const { return m_message; }
+
+  private:
+    char m_message[MAX_DIGITS + 1];
+}; /* MsgFms */
+
+
+class MsgMdc : public Msg
+{
+  public:
+    static const unsigned TYPE = 257;
+    static const int MAX_DIGITS = 50;
+    MsgMdc(std::string mdc_message)
+      : Msg(TYPE, sizeof(MsgMdc))
+    {
+      strncpy(m_message, mdc_message.c_str(), MAX_DIGITS);
+      m_message[MAX_DIGITS] = 0;
+      setSize(size() - MAX_DIGITS + strlen(m_message));
+    }
+    std::string mdc_message(void) const { return m_message; }
+
+  private:
+    char m_message[MAX_DIGITS + 1];
+}; /* MsgMdc */
+
+
 
 /******************************** TX Messages ********************************/
 
@@ -700,4 +777,3 @@ class MsgAllSamplesFlushed : public Msg
 /*
  * This file has not been truncated
  */
-

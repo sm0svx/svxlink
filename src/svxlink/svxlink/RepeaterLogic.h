@@ -169,7 +169,13 @@ class RepeaterLogic : public Logic
      * @brief 	Called when a valid fms sequence has been detected
      * @param 	The detected fms sequence
      */
-    virtual void fmsSequenceDetected(std::string fms_sequence);
+    virtual void fmsMessageDetected(std::string fms_message);
+
+    /**
+     * @brief 	Called when a valid mdc sequence has been detected
+     * @param 	The detected mdc sequence
+     */
+    virtual void mdcMessageDetected(std::string mdc_message);
 
 
 
@@ -195,6 +201,7 @@ class RepeaterLogic : public Logic
     char      	    open_on_dtmf;
     std::string     open_on_sel5;
     std::string     open_on_fms;
+    std::string     open_on_mdc;
     bool      	    activate_on_sql_close;
     bool            no_repeat;
     Async::Timer    *open_on_sql_timer;

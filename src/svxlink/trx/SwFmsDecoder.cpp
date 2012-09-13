@@ -138,8 +138,16 @@ const unsigned short crc_table[] = {
 
 SwFmsDecoder::SwFmsDecoder(Config &cfg, const string &name)
   : FmsDecoder(cfg, name), fbuf_cnt(0), baudrate(1200), frequ_mark(1200),
-    frequ_space(1800), corrlen(26), sphaseinc(9830.4), subsamp(2)
+    frequ_space(1800), corrlen(26), sphaseinc(9830.4), subsamp(2),
+    debug(false)
 {
+
+    string value;
+    if (cfg.getValue(name, "DIGI_DEBUG", value))
+    {
+       debug = true;
+    }
+
     corrlen      = (int)(2*INTERNAL_SAMPLE_RATE/baudrate);
     sphaseinc    = 0x10000u*baudrate*subsamp/(2*INTERNAL_SAMPLE_RATE);
     corr_mark_i  = new float[corrlen+1];
@@ -344,6 +352,17 @@ void SwFmsDecoder::rxbit(struct demod_state *s, int bit)
                << fms.bst[0] << " " << fms.dir[0] << " " << fms.tki[0];
 
             fmsDetected(ss.str());
+            if (debug)
+            {
+               cout << ss.str() << endl;
+            }
+          }
+          else
+          {
+             if (debug)
+             {
+               cout << "*** Fms CRC error" << endl;
+             }
           }
           s->hdlc.rxstate = -1;
           return;

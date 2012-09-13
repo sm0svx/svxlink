@@ -191,6 +191,10 @@ bool NetUplink::initialize(void)
       mem_fun(*this, &NetUplink::selcallSequenceDetected));
   rx->afskMessageDetected.connect(
       mem_fun(*this, &NetUplink::afskMessageDetected));
+  rx->fmsMessageDetected.connect(
+      mem_fun(*this, &NetUplink::fmsMessageDetected));
+  rx->mdcMessageDetected.connect(
+      mem_fun(*this, &NetUplink::mdcMessageDetected));
 
   tx->txTimeout.connect(mem_fun(*this, &NetUplink::txTimeout));
   tx->transmitterStateChange.connect(
@@ -678,6 +682,13 @@ void NetUplink::fmsMessageDetected(std::string fms_message)
   MsgFms *msg = new MsgFms(fms_message);
   sendMsg(msg);
 } /* NetUplink::fmsMessageDetected */
+
+
+void NetUplink::mdcMessageDetected(std::string mdc_message)
+{
+  MsgMdc *msg = new MsgMdc(mdc_message);
+  sendMsg(msg);
+} /* NetUplink::mdcMessageDetected */
 
 
 void NetUplink::writeEncodedSamples(const void *buf, int size)

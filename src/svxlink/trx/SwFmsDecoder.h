@@ -188,6 +188,7 @@ class SwFmsDecoder : public FmsDecoder
     float sphaseinc;
     int subsamp;
     float fbuf[1060];
+    bool debug;
 
     void demod(float *buffer, int length);
     int crc_check(struct demod_state *s, int offset);

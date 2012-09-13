@@ -603,7 +603,7 @@ bool Logic::initialize(void)
     aprs_stats_timer->expired.connect(mem_fun(*this, &Logic::aprsStatsTimeout));
     aprs_stats_timer->setEnable(true);
   }
-  
+
   cmd_tmo_timer = new Timer(10000);
   cmd_tmo_timer->expired.connect(mem_fun(*this, &Logic::cmdTimeout));
   cmd_tmo_timer->setEnable(false);
@@ -910,6 +910,14 @@ void Logic::fmsMessageDetected(std::string fms_message)
 } /* Logic::fmsMessageDetected */
 
 
+void Logic::mdcMessageDetected(std::string mdc_message)
+{
+   stringstream ss;
+   ss << "mdc_message_received " << mdc_message;
+   processEvent(ss.str());
+} /* Logic::mdcMessageDetected */
+
+
 void Logic::disconnectAllLogics(void)
 {
   cout << "Deactivating all links to/from \"" << name() << "\"\n";
@@ -1007,7 +1015,7 @@ void Logic::transmitterStateChange(bool is_transmitting)
     aprs_stats.tx_on_nr++;
     aprs_stats.last_tx_sec = sec;
     ss << "1";
-  } 
+  }
   else
   {
     aprs_stats.tx_sec = (sec - aprs_stats.last_tx_sec);

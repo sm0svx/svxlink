@@ -81,6 +81,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Sel5Decoder.h"
 #include "AfskDecoder.h"
 #include "FmsDecoder.h"
+#include "MdcDecoder.h"
 
 
 /****************************************************************************
@@ -329,13 +330,13 @@ bool LocalRx::initialize(void)
   siglevdet->signalLevelUpdated.connect(
       mem_fun(*this, &LocalRx::onSignalLevelUpdated));
   siglevdet_splitter->addSink(siglevdet, true);
-  
+
     // Create a mute valve
   mute_valve = new AudioValve;
   mute_valve->setOpen(true);
   siglevdet_splitter->addSink(mute_valve, true);
   prev_src = mute_valve;
-  
+
     // If the sound card sample rate is higher than 8kHz (16 or 48kHz assumed)
     // decimate it down to 8kHz. Also create a splitter to distribute the
     // 16kHz audio to other consumers.
@@ -369,7 +370,7 @@ bool LocalRx::initialize(void)
   prev_src->registerSink(splitter, true);
   prev_src = 0;
 
-#if 0  
+#if 0
     // Create the signal level detector. Connect it to the 16 or 8kHz splitter
     // depending on how the sound card sample rate is setup.
 #if (INTERNAL_SAMPLE_RATE != 16000)
@@ -400,7 +401,7 @@ bool LocalRx::initialize(void)
   splitter->addSink(siglevdet, true);
 #endif
 #endif
-  
+
     // Create the configured squech detector and initialize it. Then connect
     // it to the 8kHz audio splitter
   string sql_det_str;
@@ -458,7 +459,7 @@ bool LocalRx::initialize(void)
   cfg.getValue(name(), "SQL_EXTENDED_HANGTIME", sql_extended_hangtime);
   cfg.getValue(name(), "SQL_EXTENDED_HANGTIME_THRESH",
       sql_extended_hangtime_thresh);
-  
+
   squelch_det->squelchOpen.connect(mem_fun(*this, &LocalRx::onSquelchOpen));
   splitter->addSink(squelch_det, true);
 
@@ -519,6 +520,19 @@ bool LocalRx::initialize(void)
     splitter->addSink(fms_dec, true);
   }
 
+  string mdc_det_str;
+  if (cfg.getValue(name(), "MDC_DEC_TYPE", mdc_det_str))
+  {
+    MdcDecoder *mdc_dec = MdcDecoder::create(cfg, name());
+    if (mdc_dec == 0 || !mdc_dec->initialize())
+    {
+      cerr << "*** ERROR: Mdc decoder initialization failed for RX \""
+          << name() << "\"\n";
+      return false;
+    }
+    mdc_dec->mdcDetected.connect(mem_fun(*this, &LocalRx::mdcDetected));
+    splitter->addSink(mdc_dec, true);
+  }
 
     // Create a new audio splitter to handle tone detectors then add it to
     // the splitter
@@ -589,7 +603,7 @@ bool LocalRx::initialize(void)
     // FIXME: Cleanup?
     return false;
   }
-  
+
   if (mute_1750)
   {
     ToneDetector *calldet = new ToneDetector(1750, 50, 100);
@@ -629,7 +643,7 @@ void LocalRx::setMuteState(MuteState new_mute_state)
           squelch_det->reset();
           setSquelchState(false);
           break;
-         
+
         default:
           break;
       }
@@ -655,7 +669,7 @@ void LocalRx::setMuteState(MuteState new_mute_state)
             sql_valve->setOpen(true);
           }
           break;
-         
+
         default:
           break;
       }
@@ -721,6 +735,12 @@ void LocalRx::fmsDetected(string fms_message)
 {
   fmsMessageDetected(fms_message);
 } /* LocalRx::fmsDetected */
+
+
+void LocalRx::mdcDetected(string mdc_message)
+{
+  mdcMessageDetected(mdc_message);
+} /* LocalRx::mdcDetected */
 
 
 void LocalRx::afskDetected(string aprs_message, string payload)

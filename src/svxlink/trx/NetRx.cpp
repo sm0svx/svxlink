@@ -484,6 +484,12 @@ void NetRx::handleMsg(Msg *msg)
       break;
     }
 
+    case MsgMdc::TYPE:
+    {
+      MsgMdc *mdc_msg = reinterpret_cast<MsgMdc*>(msg);
+      mdcMessageDetected(mdc_msg->mdc_message());
+      break;
+    }
 
     /*
     default:

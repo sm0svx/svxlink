@@ -895,9 +895,23 @@ LocationInfo is mandatory to use this feature!
 Set the baudrate of the Afsk decoder, valid values are 1200 and 2400.
 .TP
 .B FMS_DEC_TYPE
-Enables an internal FMS decoder. At the moment only FMS_DEC_TYPE=INTERNAL is
-valid. Maybe we have support for some external Fms detectors later.
+Enable an internal FMS decoder a protocol used by German officials 
+(police, rescue service, fire departments). At the moment only 
+FMS_DEC_TYPE=INTERNAL is valid. Maybe we have support for some external 
+Fms detectors later.
 See http://de.wikipedia.org/wiki/Funkmeldesystem
+.TP
+.B MDC_DEC_TYPE
+Enable an internal MDC600/1200 decoder for some Motorola radio stuff. 
+At the moment only MDC_DEC_TYPE=INTERNAL is valid. Maybe we have 
+support for some external Mdc detectors later.
+See http://de.wikipedia.org/wiki/MDC-1200
+.TP
+.B MDC_DEC_BAUDRATE
+Set the baudrate of the Mdc decoder, valid values are 600 and 1200.
+.TP
+.B DIGI_DEBUG
+If set, some debug messages could be found in the logfile (CRC, messages).
 .TP
 .
 .SS Voter Section

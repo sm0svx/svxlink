@@ -1,8 +1,8 @@
 /**
-@file	 SwAfskDecoder.h
-@brief   This file contains a class that implements a sw Afsk decoder
+@file	 SwMdcDecoder.h
+@brief   This file contains a class that implements a sw Mdc decoder
 @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
-@date	 2012-07-20
+@date	 2012-09-10
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef SW_AFSK_DECODER_INCLUDED
-#define SW_AFSK_DECODER_INCLUDED
+#ifndef SW_MDC_DECODER_INCLUDED
+#define SW_MDC_DECODER_INCLUDED
 
 
 /****************************************************************************
@@ -53,7 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AfskDecoder.h"
+#include "MdcDecoder.h"
 
 
 /****************************************************************************
@@ -96,13 +96,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
- * @brief   This class implements a software Afsk decoder
+ * @brief   This class implements a software Mdc decoder
  * @author  Tobias Blomberg, SM0SVX & Adi / DL1HRC
- * @date    2012-07-10
+ * @date    2012-09-10
  *
- * This class implements a software Afsk decoder
+ * This class implements a software Mdc decoder
  */
-class SwAfskDecoder : public AfskDecoder
+class SwMdcDecoder : public MdcDecoder
 {
   public:
     /**
@@ -110,20 +110,20 @@ class SwAfskDecoder : public AfskDecoder
      * @param 	cfg A previously initialised configuration object
      * @param 	name The name of the receiver configuration section
      */
-    SwAfskDecoder(Async::Config &cfg, const std::string &name);
+    SwMdcDecoder(Async::Config &cfg, const std::string &name);
 
     /**
-     * @brief 	Initialize the Afsk decoder
+     * @brief 	Initialize the Mdc decoder
      * @returns Returns \em true if the initialization was successful or
      *          else \em false.
      *
-     * Call this function to initialize the Afsk decoder. It must be called
+     * Call this function to initialize the Mdc decoder. It must be called
      * before using it.
      */
     virtual bool initialize(void);
 
     /**
-     * @brief 	Write samples into the Afsk decoder
+     * @brief 	Write samples into the Mdc decoder
      * @param 	samples The buffer containing the samples
      * @param 	count The number of samples in the buffer
      * @return	Returns the number of samples that has been taken care of
@@ -135,19 +135,25 @@ class SwAfskDecoder : public AfskDecoder
     struct demod_state {
       const struct demod_param *dem_par;
       struct l2_state_hdlc {
-              unsigned char rxbuf[1024];
-              unsigned char *rxptr;
-              unsigned int rxstate;
-              unsigned int rxbitstream;
-              unsigned int rxbitbuf;
-          } hdlc;
-      struct l1_state_afsk {
+            int rxstate;
+            unsigned int rxptr[256];
+            unsigned int rxbitstream;
+            unsigned int func;
+            unsigned int arg;
+            unsigned int unitID;
+            unsigned int remID;
+            unsigned short b;
+            bool inv;
+      } hdlc;
+      struct l1_state_Mdc12 {
             unsigned int dcd_shreg;
             unsigned int sphase;
             unsigned int lasts;
+            unsigned int last;
             unsigned int subsamp;
-          } afsk;
+      } mdc;
     };
+
 
     float *corr_mark_i;
     float *corr_mark_q;
@@ -166,17 +172,17 @@ class SwAfskDecoder : public AfskDecoder
     bool debug;
 
     void demod(float *buffer, int length);
-    int check_crc_ccitt(const unsigned char *bp, unsigned int cnt);
-    float mac(const float *a, const float *b, unsigned int size);
+	float mac(const float *a, const float *b, unsigned int size);
     float fsqr(float f);
-    void hdlc_rxbit(struct demod_state *s, int bit);
-    void ax25_disp_packet(unsigned char *bp, unsigned int len);
+	void hdlc_rxbit(struct demod_state *s, int bit);
+	unsigned short docrc(int *p, int len);
+	unsigned short flip(unsigned short crc, int bitnum);
 
-};  /* class SwAfskDecoder */
+};  /* class SwMdcDecoder */
 
 //} /* namespace */
 
-#endif /* SW_AFSK_DECODER_INCLUDED */
+#endif /* SW_MDC_DECODER_INCLUDED */
 
 /*
  * This file has not been truncated

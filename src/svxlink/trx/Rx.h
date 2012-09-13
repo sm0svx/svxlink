@@ -223,16 +223,30 @@ class Rx : public sigc::trackable, public Async::AudioSource
     /**
      * @brief 	A signal that is emitted when a valid selcall sequence has been
                 detected
-     * @param 	sequence the selcall sequence
+     * @param 	sequence of the selcall sequence
      */
     sigc::signal<void, std::string> selcallSequenceDetected;
 
     /**
      * @brief   A signal that is emitted when a valid Afsk message has been
                 detected
-     * @param   sequence the Afsk message
+     * @param   sequence of the Afsk path, payload
+     */
+    sigc::signal<void, std::string, std::string> afskMessageDetected;
+
+    /**
+     * @brief   A signal that is emitted when a valid Fms message has been
+                detected
+     * @param   Fms message
      */
     sigc::signal<void, std::string> fmsMessageDetected;
+
+    /**
+     * @brief   A signal that is emitted when a valid Mdc message has been
+                detected
+     * @param   Mdc message
+     */
+    sigc::signal<void, std::string> mdcMessageDetected;
 
     /**
      * @brief 	A signal that is emitted when a previously specified tone has
@@ -240,14 +254,14 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @param 	fq The frequency of the tone
      */
     sigc::signal<void, float> toneDetected;
-    
+
     /**
      * @brief	A signal that is emitted when the signal level is updated
      * @param	siglev The new signal level
      */
     sigc::signal<void, float> signalLevelUpdated;
-    
-    
+
+
   protected:
     /**
      * @brief 	Set the state of the squelch

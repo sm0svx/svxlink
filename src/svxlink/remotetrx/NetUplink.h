@@ -237,6 +237,12 @@ class NetUplink : public Uplink
     */
     void fmsMessageDetected(std::string fms_message);
 
+    /**
+     * @brief   Pass on detected mdc message
+     * @param   received mdc message
+    */
+    void mdcMessageDetected(std::string mdc_message);
+
 
     void writeEncodedSamples(const void *buf, int size);
     void txTimeout(void);

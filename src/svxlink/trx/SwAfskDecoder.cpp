@@ -152,9 +152,14 @@ static const unsigned short crc_ccitt_table[256] = {
 
 SwAfskDecoder::SwAfskDecoder(Config &cfg, const string &name)
   : AfskDecoder(cfg, name), fbuf_cnt(0), baudrate(1200), frequ_mark(1200),
-    frequ_space(2200), corrlen(26), sphaseinc(9830.4), subsamp(2)
+    frequ_space(2200), corrlen(26), sphaseinc(9830.4), subsamp(2), debug(false)
 {
     string value;
+
+    if (cfg.getValue(name, "DIGI_DEBUG", value))
+    {
+       debug = true;
+    }
 
     if (cfg.getValue(name, "AFSK_DEC_BAUDRATE", value))
     {
@@ -283,7 +288,7 @@ void SwAfskDecoder::demod(float *buffer, int length)
 
      // the non-coherent fsk detector
      // http://en.wikipedia.org/wiki/Frequency-shift_keying
-    for (; length>subsamp; length-=subsamp, buffer+=subsamp ) {
+    for (; length>0; length-=subsamp, buffer+=subsamp ) {
 		f = fsqr(mac(buffer, corr_mark_i, corrlen)) +
 			fsqr(mac(buffer, corr_mark_q, corrlen)) -
 			fsqr(mac(buffer, corr_space_i, corrlen)) -
@@ -365,7 +370,10 @@ void SwAfskDecoder::hdlc_rxbit(struct demod_state *s, int bit)
 	   if (s->hdlc.rxptr >= s->hdlc.rxbuf+sizeof(s->hdlc.rxbuf))
 	   {
 		  s->hdlc.rxstate = 0;
-		  cout << "*** Error: SwAfskDecoder: packet size too large" << endl;
+		  if (debug)
+		  {
+		    cout << "*** Error: SwAfskDecoder: packet size too large" << endl;
+		  }
           return;
 	   }
 	   *s->hdlc.rxptr++ = s->hdlc.rxbitbuf >> 1;
@@ -390,7 +398,10 @@ void SwAfskDecoder::ax25_disp_packet(unsigned char *bp, unsigned int len)
 
    if (!check_crc_ccitt(bp, len))
    {
-	 cout << "*** WARNING: SwAfskDecoder: wrong crc" << endl;
+	 if (debug)
+	 {
+	   cout << "*** WARNING: SwAfskDecoder: wrong crc" << endl;
+	 }
 	 return;
    }
 
@@ -512,6 +523,10 @@ void SwAfskDecoder::ax25_disp_packet(unsigned char *bp, unsigned int len)
       // provide the detected data to the aprs network
       string aprs_message = src_call + ">" + dest_call + "," + path;
       afskDetected(aprs_message, payload);
+      if (debug)
+      {
+         cout << " Aprs message received: " << aprs_message << endl;
+      }
 
 } /* SwAfskDecoder::ax25_disp_packet */
 
