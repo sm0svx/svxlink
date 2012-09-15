@@ -2,6 +2,7 @@
 @file	SwMdcDecoder.cpp
 @brief  This file contains a class that implements a sw Mdc decoder
 @author Tobias Blomberg / SM0SVX & Thomas Sailer / HB9JNX &
+        Matthew Kaufman (matthew@eeph.com) &
         Christian Stussak (University of Halle) & Adi Bier / DL1HRC
 @date	2012-09-10
 
@@ -397,7 +398,7 @@ void SwMdcDecoder::hdlc_rxbit(struct demod_state *s, int bit)
        {
          if (debug)
          {
-           cout << "*** Mdc_detector: crc error" << endl;
+           cout << "*** Mdc detector CRC error" << endl;
          }
        }
        else

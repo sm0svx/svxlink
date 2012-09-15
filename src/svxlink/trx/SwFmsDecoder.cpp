@@ -299,24 +299,58 @@ void SwFmsDecoder::demod(float *buffer, int length)
 
 void SwFmsDecoder::rxbit(struct demod_state *s, int bit)
 {
+	bool crc = true;
 	s->hdlc.rxbitstream <<= 1;
 	s->hdlc.rxbitstream |= !!bit;
 
-     // the 0x3ff1a signals the beginning of the fms frame
-	if ((s->hdlc.rxbitstream & 0xffff) == 0xff1a && s->hdlc.rxstate == -1)
+     // the 0xfff1a signals the beginning of the fms frame
+	if ((s->hdlc.rxbitstream & 0xfffff) == 0xfff1a && s->hdlc.rxstate == -1)
 	{
-       s->hdlc.rxstate = 0;  // set rx = on
+	    // set rx to "on"
+       s->hdlc.rxstate = 0;
        return;
 	}
 
+     // if s->hdlc.rxstate > -1 -> RX mode
     if (s->hdlc.rxstate > -1)
     {
-       stringstream ss;
        s->hdlc.rxptr[s->hdlc.rxstate] = !!bit;
 
-       if (s->hdlc.rxstate++ > 48)
+       if (s->hdlc.rxstate++ > 47)
        {
-          if (!crc_check(s,0))
+            // an error occurred
+          if (crc_check(s,0))
+          {
+             crc = false;
+             int i=0;
+
+             if (debug)
+             {
+                cout << "*** Fms decoder CRC error, trying to fix it\n";
+             }
+
+             do {
+                 // toggle just one bit, check if crc is ok
+                s->hdlc.rxptr[i] = !s->hdlc.rxptr[i];
+
+                if (!crc_check(s,0))
+                {
+                    // caught it ;-)
+                   if (debug)
+                   {
+                      cout << "*** Fms decoder CRC ok now\n";
+                   }
+                   crc = true;
+                   break;
+                }
+                  // re-toggle one bit, another one is erroneous
+                s->hdlc.rxptr[i] = !s->hdlc.rxptr[i];
+                i++;
+             } while (i < 47);
+          }
+
+           // crc os ok, gib out received data
+          if (crc)
           {
             fms.bos[0]  = s->hdlc.rxptr[3] << 3 | s->hdlc.rxptr[2] << 2 |
                           s->hdlc.rxptr[1] << 1 | s->hdlc.rxptr[0];
@@ -340,12 +374,13 @@ void SwFmsDecoder::rxbit(struct demod_state *s, int bit)
 		    fms.dir[0]  = s->hdlc.rxptr[37];
 		    fms.tki[0]  = s->hdlc.rxptr[38] << 1 | s->hdlc.rxptr[39];
 
-		    // CRC check?
+		     // CRC check?
 		    for (int i = 0; i < 7; i++)
 		    {
 		       fms.crc[i] = s->hdlc.rxptr[40 + i];
 		    }
 
+            stringstream ss;
             ss << fms.bos[0] << " " << fms.land[0] << " " << fms.ort[0]
                << fms.ort[1] << " " << fms.kfz[0] << fms.kfz[1]
                << fms.kfz[2] << fms.kfz[3] << " " << fms.stat[0] << " "
@@ -361,9 +396,10 @@ void SwFmsDecoder::rxbit(struct demod_state *s, int bit)
           {
              if (debug)
              {
-               cout << "*** Fms CRC error" << endl;
+               cout << "*** Fms decoder CRC error" << endl;
              }
           }
+           // set rx to "off"
           s->hdlc.rxstate = -1;
           return;
        }
