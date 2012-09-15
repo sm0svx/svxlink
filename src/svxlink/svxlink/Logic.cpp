@@ -412,6 +412,9 @@ bool Logic::initialize(void)
   rx().dtmfDigitDetected.connect(mem_fun(*this, &Logic::dtmfDigitDetectedP));
   rx().selcallSequenceDetected.connect(
 	mem_fun(*this, &Logic::selcallSequenceDetected));
+  rx().fmsMessageDetected.connect(mem_fun(*this, &Logic::fmsMessageDetected));
+  rx().mdcMessageDetected.connect(mem_fun(*this, &Logic::mdcMessageDetected));
+  rx().afskMessageDetected.connect(mem_fun(*this, &Logic::afskMessageDetected));
   rx().setMuteState(Rx::MUTE_NONE);
   prev_rx_src = m_rx;
 
