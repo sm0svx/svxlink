@@ -81,13 +81,11 @@ using namespace Async;
 #define DTMF_RELATIVE_PEAK          20.0f  /* 13dB */
 
 // The Goertzel algorithm is just a recursive way to evaluate the DFT at a
-// single frequency. For maximum detection reliability, the bandwidth will
-// be adapted to place the tone frequency near the center of the DFT.
-// As a side effect, the detection bandwidth is slightly narrowed, which
-// however is acceptable for the DTMF decoder. Furthermore, a time slack
-// between the tone detectors is unavoidable, since they use different
-// block lengths.
-#define DTMF_BANDWIDTH              35     /* 35Hz */
+// single frequency. According to ITU-T Q.23 und Q.24, the bandwidth of
+// each detector has to be set to 3% of its center frequency for maximum
+// detection reliability. To achieve this, the detectors use individual
+// block lengths resulting in different decision periods. The detection
+// process itself involves scaling and sampling of the tone detector results.
 #define DTMF_BLOCK_LENGTH           (INTERNAL_SAMPLE_RATE / 1000)
 
 
@@ -138,28 +136,28 @@ SwDtmfDecoder::SwDtmfDecoder(Config &cfg, const string &name)
     memset(col_energy, 0, sizeof(col_energy));
     
     /* Init row detectors */
-    goertzelInit(&row_out[0], 697.0f, DTMF_BANDWIDTH, 0.0f);
-    goertzelInit(&row_out[1], 770.0f, DTMF_BANDWIDTH, 0.0f);
-    goertzelInit(&row_out[2], 852.0f, DTMF_BANDWIDTH, 0.0f);
-    goertzelInit(&row_out[3], 941.0f, DTMF_BANDWIDTH, 0.0f);
+    goertzelInit(&row_out[0], 697.0f, 0.0f);
+    goertzelInit(&row_out[1], 770.0f, 0.0f);
+    goertzelInit(&row_out[2], 852.0f, 0.0f);
+    goertzelInit(&row_out[3], 941.0f, 0.0f);
 
     /* Sliding window Goertzel algorithm */
-    goertzelInit(&row_out[4], 697.0f, DTMF_BANDWIDTH, 0.5f);
-    goertzelInit(&row_out[5], 770.0f, DTMF_BANDWIDTH, 0.5f);
-    goertzelInit(&row_out[6], 852.0f, DTMF_BANDWIDTH, 0.5f);
-    goertzelInit(&row_out[7], 941.0f, DTMF_BANDWIDTH, 0.5f);
+    goertzelInit(&row_out[4], 697.0f, 0.5f);
+    goertzelInit(&row_out[5], 770.0f, 0.5f);
+    goertzelInit(&row_out[6], 852.0f, 0.5f);
+    goertzelInit(&row_out[7], 941.0f, 0.5f);
 
     /* Init column detectors */
-    goertzelInit(&col_out[0], 1209.0f, DTMF_BANDWIDTH, 0.0f);
-    goertzelInit(&col_out[1], 1336.0f, DTMF_BANDWIDTH, 0.0f);
-    goertzelInit(&col_out[2], 1477.0f, DTMF_BANDWIDTH, 0.0f);
-    goertzelInit(&col_out[3], 1633.0f, DTMF_BANDWIDTH, 0.0f);
+    goertzelInit(&col_out[0], 1209.0f, 0.0f);
+    goertzelInit(&col_out[1], 1336.0f, 0.0f);
+    goertzelInit(&col_out[2], 1477.0f, 0.0f);
+    goertzelInit(&col_out[3], 1633.0f, 0.0f);
 
     /* Sliding window Goertzel algorithm */
-    goertzelInit(&col_out[4], 1209.0f, DTMF_BANDWIDTH, 0.5f);
-    goertzelInit(&col_out[5], 1336.0f, DTMF_BANDWIDTH, 0.5f);
-    goertzelInit(&col_out[6], 1477.0f, DTMF_BANDWIDTH, 0.5f);
-    goertzelInit(&col_out[7], 1633.0f, DTMF_BANDWIDTH, 0.5f);
+    goertzelInit(&col_out[4], 1209.0f, 0.5f);
+    goertzelInit(&col_out[5], 1336.0f, 0.5f);
+    goertzelInit(&col_out[6], 1477.0f, 0.5f);
+    goertzelInit(&col_out[7], 1633.0f, 0.5f);
 
 } /* SwDtmfDecoder::SwDtmfDecoder */
 
@@ -388,10 +386,11 @@ void SwDtmfDecoder::dtmfPostProcess(uint8_t hit)
 } /* SwDtmfDecoder::dtmfPostProcess */
 
 
-void SwDtmfDecoder::goertzelInit(GoertzelState *s, float freq, float bw, float offset)
+void SwDtmfDecoder::goertzelInit(GoertzelState *s, float freq, float offset)
 {
-    /* Adjust the block length to minimize the DFT error. */
-    s->block_length = lrintf(ceilf(freq / bw) * INTERNAL_SAMPLE_RATE / freq);
+    /* Adjust the block length for 2.5% bandwidth. The real bandwidth will */
+    /* be approx. 3% because we apply a Hamming window. */
+    s->block_length = lrintf(40.0f * INTERNAL_SAMPLE_RATE / freq);
     /* Scale output values to achieve same levels at different block lengths. */
     s->scale_factor = 1.0e6f / (s->block_length * s->block_length);
     /* Init detector frequency. */
