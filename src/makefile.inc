@@ -408,7 +408,7 @@ moc_%.cpp:	%.h
 ifdef PROGS
 $(PROGS):	$(notdir $(PROGS:%=%.o)) $(PRGOBJS) $(LIBDEP)
 	if [ -n "$(BIN)" -a ! -d "$(BIN)" ]; then \
-	  $(MKDIR) -p $(BIN); \
+	  $(MKDIR) $(BIN) -p; \
 	fi
 	BASENAME=`basename $@`_version; \
 	if [ -r $${BASENAME}.h -a -r $${BASENAME}.c ]; then \
@@ -429,7 +429,7 @@ endif
 ifdef CPPPROGS
 $(CPPPROGS):	$(notdir $(CPPPROGS:%=%.o)) $(PRGOBJS) $(LIBDEP)
 	if [ -n "$(BIN)" -a ! -d "$(BIN)" ]; then \
-	  $(MKDIR) -p $(BIN); \
+	  $(MKDIR) $(BIN) -p; \
 	fi
 	BASENAME=`basename $@`_version; \
 	if [ -r $${BASENAME}.h -a -r $${BASENAME}.c ]; then \
@@ -535,7 +535,7 @@ $(LIBFILE):	$(LIBOBJS) $(STATIC_LIBS:%=$(LIB)/lib%.a)
 	$(RM) $(LIBFILE)
 	$(ECHO) --- Creating archive $(BOLD)$@$(NBOLD)...
 	if [ -n "$(LIB)" -a ! -d "$(LIB)" ]; then \
-	  $(MKDIR) -p $(LIB); \
+	  $(MKDIR) $(LIB) -p; \
       	fi
 	$(AR) cq $(LIBFILE) $(LIBOBJS)
 	if [ -n "$(STATIC_LIBS)" ]; then \
