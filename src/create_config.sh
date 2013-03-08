@@ -87,7 +87,7 @@ if which pkg-config > /dev/null 2>&1; then
     fi
     QT_LRELEASE=$(pkg-config QtCore --variable=lrelease_location)
     if [ ! -x "$QT_LRELEASE" ]; then
-      QT_RCC="$QT_BIN/lrelease"
+      QT_LRELEASE="$QT_BIN/lrelease"
     fi
     output "QT_MOC=${QT_MOC}"
     output "QT_UIC=${QT_UIC}"
