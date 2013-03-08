@@ -6,8 +6,8 @@ version numbers have been set to 1.0.0. This release also mark 10 years of
 SvxLink development.
 
 The CTCSS detector have been improved so that it is much quicker and also
-more reliable. The receiver voter implementation have also been greately
-improved. An experimental implemetation for APRS statistics has been added.
+more reliable. The receiver voter implementation have also been greatly
+improved. An experimental implementation for APRS statistics has been added.
 Another useful new feature is an UDP "audio device" which for example can
 be used to interface with GNU Radio.
 
