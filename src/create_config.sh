@@ -81,8 +81,18 @@ if which pkg-config > /dev/null 2>&1; then
     if [ ! -x "$QT_UIC" ]; then
       QT_UIC="$QT_BIN/uic"
     fi
+    QT_RCC=$(pkg-config QtCore --variable=rcc_location)
+    if [ ! -x "$QT_RCC" ]; then
+      QT_RCC="$QT_BIN/rcc"
+    fi
+    QT_LRELEASE=$(pkg-config QtCore --variable=lrelease_location)
+    if [ ! -x "$QT_LRELEASE" ]; then
+      QT_RCC="$QT_BIN/lrelease"
+    fi
     output "QT_MOC=${QT_MOC}"
     output "QT_UIC=${QT_UIC}"
+    output "QT_RCC=${QT_RCC}"
+    output "QT_LRELEASE=${QT_LRELEASE}"
   else
     info "no (optional)\n"
   fi
