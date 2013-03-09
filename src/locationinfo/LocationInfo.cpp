@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <limits>
 #include <string>
+#include <sys/time.h>
 
 
 /****************************************************************************
@@ -47,6 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -172,6 +174,15 @@ bool LocationInfo::initialize(const Async::Config &cfg, const std::string &cfg_n
   init_ok &= LocationInfo::_instance->parsePath(cfg, cfg_name);
   init_ok &= LocationInfo::_instance->parseClients(cfg, cfg_name);
 
+  unsigned int iv = atoi(cfg.getValue(cfg_name, "STATISTICS_INTERVAL").c_str());
+
+  if (iv < 5 || iv > 60)
+  {
+    iv = 10;
+  }
+  LocationInfo::_instance->sinterval = iv;
+  LocationInfo::_instance->startStatisticsTimer(iv*60000);
+
   if( !init_ok )
   {
     delete LocationInfo::_instance;
@@ -226,41 +237,8 @@ void LocationInfo::igateMessage(const std::string& info)
 
 string LocationInfo::get_callsign(void)
 {
-  return LocationInfo::_instance->loc_cfg.mycall;
+  return loc_cfg.mycall;
 } /* LocationInfo::get_callsign */
-
-
-void LocationInfo::sendAprsStatistics(const AprsStatistics &aprs_stats)
-{
-  char info[255];
-  info[0] ='\0';
-  string head ="UNIT.RX Erlang,TX Erlang,count/10m,count/10m,none1,none2,logic";
-
-  sprintf(info, "E%s-%s>RXTLM-1,TCPIP,qAR,%s::E%s-%s:%s\n",
-       loc_cfg.prefix.c_str(), loc_cfg.mycall.c_str(), loc_cfg.mycall.c_str(),
-       loc_cfg.prefix.c_str(), loc_cfg.mycall.c_str(), head.c_str());
-
-   // sends the Aprs stats header
-  string message = info;
-  igateMessage(message);
-
-  info[0] = '\0';
-  sprintf(info,
-     "E%s-%s>RXTLM-1,TCPIP,qAR,%s:T#%03d,%3.2f,%3.2f,%u,%u,0.0,00000000,%s\n",
-       loc_cfg.prefix.c_str(), loc_cfg.mycall.c_str(), loc_cfg.mycall.c_str(),
-       sequence, (aprs_stats.rx_sec/600.0), (aprs_stats.tx_sec/600.0),
-       aprs_stats.rx_on_nr, aprs_stats.tx_on_nr, aprs_stats.logic_name.c_str());
-
-   // sends the Aprs stats information
-  message = info;
-  igateMessage(message);
-
-  if (sequence++ > 999)
-  {
-    sequence = 0;
-  }
-
-} /* LocationInfo::sendAprsStatistics */
 
 
 /****************************************************************************
@@ -579,6 +557,85 @@ bool LocationInfo::parseClientStr(string &host, int &port, const string &val)
   return true;
 
 } /* LocationInfo::parseClientStr */
+
+
+void LocationInfo::startStatisticsTimer(int interval) {
+  aprs_stats_timer = new Timer(interval, Timer::TYPE_PERIODIC);
+  aprs_stats_timer->setEnable(true);
+  aprs_stats_timer->expired.connect(mem_fun(*this, &LocationInfo::sendAprsStatistics));
+} /* LocationInfo::statStatisticsTimer */
+
+
+void LocationInfo::sendAprsStatistics(Timer *t)
+{
+  char info[255];
+  info[0] ='\0';
+  string head ="UNIT.RX Erlang,TX Erlang,RXcount/10m,TXcount/10m,none1,STxxxxxx,logic";
+
+  sprintf(info, "E%s-%s>RXTLM-1,TCPIP,qAR,%s::E%s-%s:%s\n",
+       loc_cfg.prefix.c_str(), loc_cfg.mycall.c_str(), loc_cfg.mycall.c_str(),
+       loc_cfg.prefix.c_str(), loc_cfg.mycall.c_str(), head.c_str());
+
+   // sends the Aprs stats header
+  string message = info;
+  igateMessage(message);
+
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+
+   // loop for each logic
+  std::map<string, AprsStatistics>::iterator it;
+
+  for (it = LocationInfo::instance()->aprs_stats.begin();
+           it != LocationInfo::instance()->aprs_stats.end(); it++)
+  {
+
+    if ((*it).second.squelch_on)
+    {
+      (*it).second.rx_sec += ((tv.tv_sec - (*it).second.last_rx_sec.tv_sec) +
+                             (tv.tv_usec - (*it).second.last_rx_sec.tv_usec)/1000000.0);
+    }
+    if ((*it).second.tx_on)
+    {
+      (*it).second.tx_sec += ((tv.tv_sec - (*it).second.last_tx_sec.tv_sec) +
+                             (tv.tv_usec - (*it).second.last_tx_sec.tv_usec)/1000000.0 );
+    }
+
+    info[0] = '\0';
+    sprintf(info,
+     "E%s-%s>RXTLM-1,TCPIP,qAR,%s:T#%03d,%3.2f,%3.2f,%d,%d,0.0,%d%d000000,%s\n",
+      loc_cfg.prefix.c_str(), loc_cfg.mycall.c_str(), loc_cfg.mycall.c_str(),
+      sequence, (*it).second.rx_sec/(60*sinterval),
+      (*it).second.tx_sec/(60*sinterval), (*it).second.rx_on_nr,
+      (*it).second.tx_on_nr, ((*it).second.squelch_on ? 1 : 0),
+      ((*it).second.tx_on ? 1 : 0), (*it).first.c_str());
+
+    // sends the Aprs stats information
+    message = info;
+    cout << message;
+    igateMessage(message);
+
+     // reset statistics if needed
+    (*it).second.reset();
+
+    if ((*it).second.squelch_on)
+    {
+      (*it).second.rx_on_nr = 1;
+      (*it).second.last_rx_sec = tv;
+    }
+
+    if ((*it).second.tx_on)
+    {
+      (*it).second.tx_on_nr = 1;
+      (*it).second.last_tx_sec = tv;
+    }
+
+    if (++sequence > 999)
+    {
+      sequence = 0;
+    }
+  }
+} /* LocationInfo::sendAprsStatistics */
 
 
 
