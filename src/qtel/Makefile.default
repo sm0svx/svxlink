@@ -174,10 +174,10 @@ POST_TARGETS   = translations/qtel_tmpl.qm \
 
 translations/qtel_%.qm:  translations/qtel_%.ts
 	$(ECHO) --- Creating translation file $(BOLD)$@$(NBOLD)...
-	${QT_BIN}/lrelease $<
+	${QT_LRELEASE} $<
 
 qrc_qtel.cpp:	qtel.qrc
-	${QT_BIN}/rcc -o $@ $<
+	${QT_RCC} -o $@ $<
 
 clean::
 	$(RM) qrc_qtel.cpp
