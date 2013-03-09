@@ -1,4 +1,4 @@
- 1.0.1 -- ?? ??? 2013
+ 1.1.0 -- ?? ??? 2013
 ----------------------
 
 * Bugfixes in APRS statistcs.
@@ -6,6 +6,10 @@
 * Modified DTMF-decoder's bandwidth to be more tolerant against voice audio
   and to comply with the ITU-T Q.23 und Q.24 standards.
   Patch from Steve / DH1DM.
+
+* ModuleParrot: A new event handler has been added which make it possible to
+  play a sound, for example a roger beep, when the recorded audio has been
+  played back.
 
 
 

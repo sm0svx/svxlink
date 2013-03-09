@@ -389,6 +389,8 @@ void ModuleParrot::allSamplesWritten(void)
     execCmdQueue();
   }
   valve->setOpen(false);
+
+  processEvent("all_played");
 } /* ModuleParrot::allSamplesWritten */
 
 

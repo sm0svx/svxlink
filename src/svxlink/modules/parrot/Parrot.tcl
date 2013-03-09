@@ -91,6 +91,16 @@ proc spell_digits {digits} {
 }
 
 
+#
+# Executed when all recorded audio has been played back
+#
+proc all_played {} {
+  #playSilence 500
+  #playTone 440 500 100
+  #playSilence 100
+}
+
+
 # end of namespace
 }
 
