@@ -182,7 +182,7 @@ class SwDtmfDecoder : public DtmfDecoder
 
     void dtmfReceive(void);
     void dtmfPostProcess(uint8_t hit);
-    void goertzelInit(GoertzelState *s, float freq, float bw, float offset);
+    void goertzelInit(GoertzelState *s, float freq, float offset);
     float goertzelResult(GoertzelState *s);
     int findMaxIndex(const float f[]);
 
