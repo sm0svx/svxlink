@@ -3,6 +3,10 @@
 
 * Bugfixes in APRS statistcs.
 
+* Modified DTMF-decoder's bandwidth to be more tolerant against voice audio
+  and to comply with the ITU-T Q.23 und Q.24 standards.
+  Patch from Steve / DH1DM.
+
 
 
  1.0.0 -- 08 Mar 2013
