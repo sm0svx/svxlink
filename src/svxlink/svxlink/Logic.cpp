@@ -922,9 +922,6 @@ void Logic::squelchOpen(bool is_open)
     active_module->squelchOpen(is_open);
   }
 
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-
   stringstream ss;
   ss << "squelch_open " << rx().sqlRxId() << " " << (is_open ? "1" : "0");
   processEvent(ss.str());
@@ -939,24 +936,18 @@ void Logic::squelchOpen(bool is_open)
 	  mem_fun(*this, &Logic::putCmdOnQueue));
     }
     processCommandQueue();
-    if (LocationInfo::has_instance())
-    {
-      LocationInfo::instance()->aprs_stats[name()].rx_sec
-         +=((tv.tv_sec - LocationInfo::instance()->aprs_stats[name()].last_rx_sec.tv_sec) +
-            (tv.tv_usec - LocationInfo::instance()->aprs_stats[name()].last_rx_sec.tv_usec)/1000000.0);
-      LocationInfo::instance()->aprs_stats[name()].squelch_on = false;
-  }
   }
   else
   {
     delete exec_cmd_on_sql_close_timer;
     exec_cmd_on_sql_close_timer = 0;
-    if (LocationInfo::has_instance())
-    {
-       LocationInfo::instance()->aprs_stats[name()].squelch_on = true;
-       LocationInfo::instance()->aprs_stats[name()].rx_on_nr++;
-       LocationInfo::instance()->aprs_stats[name()].last_rx_sec = tv;
   }
+
+  if (LocationInfo::has_instance())
+  {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    LocationInfo::instance()->setReceiving(name(), tv, is_open);
   }
 
   updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
@@ -977,33 +968,16 @@ bool Logic::getIdleState(void) const
 
 void Logic::transmitterStateChange(bool is_transmitting)
 {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
+  if (LocationInfo::has_instance() &&
+      (LocationInfo::instance()->getTransmitting(name()) != is_transmitting))
+  {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    LocationInfo::instance()->setTransmitting(name(), tv, is_transmitting);
+  }
 
   stringstream ss;
   ss << "transmit " << (is_transmitting ? "1" : "0");
-
-  if (LocationInfo::has_instance())
-  {
-  if (is_transmitting)
-  {
-        // count only if the transmitter isn't already on
-      if (!LocationInfo::instance()->aprs_stats[name()].tx_on)
-      {
-        LocationInfo::instance()->aprs_stats[name()].tx_on = true;
-        LocationInfo::instance()->aprs_stats[name()].tx_on_nr++;
-        LocationInfo::instance()->aprs_stats[name()].last_tx_sec = tv;
-  } 
-    }
-  else
-  {
-       LocationInfo::instance()->aprs_stats[name()].tx_on = false;
-       LocationInfo::instance()->aprs_stats[name()].tx_sec
-          += ((tv.tv_sec - LocationInfo::instance()->aprs_stats[name()].last_tx_sec.tv_sec) +
-          ((tv.tv_usec - LocationInfo::instance()->aprs_stats[name()].last_tx_sec.tv_usec))/1000000.0);
-  }
-  }
-
   processEvent(ss.str());
 } /* Logic::transmitterStateChange */
 

@@ -129,7 +129,7 @@ class LocationInfo
         char dir;
     };
 
-    std::string get_callsign();
+    std::string getCallsign();
 
     struct AprsStatistics
     {
@@ -194,6 +194,9 @@ class LocationInfo
     void updateQsoStatus(int action, const std::string& call,
                          const std::string& name,
 			 std::list<std::string>& call_list);
+    bool getTransmitting(const std::string &name);
+    void setTransmitting(const std::string &name, struct timeval tv, bool state);
+    void setReceiving(const std::string &name, struct timeval tv, bool state);
 
     class CGuard
     {

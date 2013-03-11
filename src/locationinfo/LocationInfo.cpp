@@ -235,11 +235,52 @@ void LocationInfo::igateMessage(const std::string& info)
 } /* LocationInfo::igateMessage */
 
 
-string LocationInfo::get_callsign(void)
+string LocationInfo::getCallsign(void)
 {
   return loc_cfg.mycall;
-} /* LocationInfo::get_callsign */
+} /* LocationInfo::getCallsign */
 
+
+bool LocationInfo::getTransmitting(const std::string &name)
+{
+   return aprs_stats[name].tx_on;
+} /* LocationInfo::getTransmitting */
+
+
+void LocationInfo::setTransmitting(const std::string &name, struct timeval tv,
+                                     bool state)
+{
+   aprs_stats[name].tx_on = state;
+   if (state)
+   {
+      aprs_stats[name].tx_on_nr++;
+      aprs_stats[name].last_tx_sec = tv;
+   }
+   else
+   {
+      aprs_stats[name].tx_sec += ((tv.tv_sec -
+                aprs_stats[name].last_tx_sec.tv_sec) +
+            (tv.tv_usec - aprs_stats[name].last_tx_sec.tv_usec)/1000000.0);
+   }
+} /* LocationInfo::isTransmitting */
+
+
+void LocationInfo::setReceiving(const std::string &name, struct timeval tv,
+                                 bool state)
+{
+   aprs_stats[name].squelch_on = state;
+   if (state)
+   {
+      aprs_stats[name].rx_on_nr++;
+      aprs_stats[name].last_rx_sec = tv;
+   }
+   else
+   {
+      aprs_stats[name].rx_sec += ((tv.tv_sec -
+                aprs_stats[name].last_rx_sec.tv_sec) +
+           (tv.tv_usec - aprs_stats[name].last_rx_sec.tv_usec)/1000000.0);
+   }
+} /* LocationInfo::isReceiving */
 
 /****************************************************************************
  *
