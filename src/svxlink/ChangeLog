@@ -11,6 +11,10 @@
   play a sound, for example a roger beep, when the recorded audio has been
   played back.
 
+* ModuleEchoLink: Added an autoconnect feature where one EchoLink ID can be
+  set up for auto connection. SvxLink will try to connect whenever idle.
+  Original patch by Robbie / ON4SAX and Volodymyr / UR3QJW.
+
 
 
  1.0.0 -- 08 Mar 2013
