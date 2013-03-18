@@ -154,7 +154,7 @@ proc sayLocator {loc} {
   if [regexp {^(\w\w)(?:(\d\d)(\w\w)?)?$} $loc -> part1 part2 part3] {
     spellWord $part1
     playNumber $part2
-    spellWord $part3
+    #spellWord $part3
   }
 }
 

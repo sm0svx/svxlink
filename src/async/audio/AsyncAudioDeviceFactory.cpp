@@ -1,14 +1,12 @@
 /**
-@file	 AudioDeviceFactory.cpp
-@brief   A_brief_description_for_this_file
+@file	 AsyncAudioDeviceFactory.cpp
+@brief   A class for handling audio device types
 @author  Tobias Blomberg / SM0SVX
 @date	 2009-12-26
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

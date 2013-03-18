@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <stdio.h>
+#include <time.h>
 
 #include <algorithm>
 #include <cassert>
@@ -55,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <EchoLinkDirectory.h>
 #include <EchoLinkDispatcher.h>
 #include <LocationInfo.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -153,7 +155,10 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
     state(STATE_NORMAL), cbc_timer(0), drop_incoming_regex(0),
     reject_incoming_regex(0), accept_incoming_regex(0),
     reject_outgoing_regex(0), accept_outgoing_regex(0), splitter(0),
-    listen_only_valve(0), selector(0)
+    listen_only_valve(0), selector(0), num_con_max(0), num_con_ttl(5*60),
+    num_con_block_time(120*60), num_con_update_timer(0),
+    autocon_echolink_id(0), autocon_time(DEFAULT_AUTOCON_TIME),
+    autocon_timer(0)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
@@ -273,6 +278,25 @@ bool ModuleEchoLink::initialize(void)
     return false;
   }
   
+    // To reduce the number of senseless connects
+  if (cfg().getValue(cfgName(), "CHECK_NR_CONNECTS", value))
+  {
+    vector<unsigned> params;
+    if (SvxLink::splitStr(params, value, ",") != 3)
+    {
+       cerr << "*** ERROR: Syntax error in " << cfgName()
+            << "/CHECK_NR_CONNECTS\n"
+            << "Example: CHECK_NR_CONNECTS=3,300,60 where\n"
+            << "  3   = max number of connects\n"
+            << "  300 = time in seconds that a connection is remembered\n"
+            << "  60  = time in minutes that the party is blocked\n";
+       return false;
+    }
+    num_con_max = params[0];
+    num_con_ttl = params[1];
+    num_con_block_time = params[2] * 60;
+  }
+
   if (!cfg().getValue(cfgName(), "REJECT_INCOMING", value))
   {
     value = "^$";
@@ -349,6 +373,11 @@ bool ModuleEchoLink::initialize(void)
     return false;
   }
   
+  cfg().getValue(cfgName(), "AUTOCON_ECHOLINK_ID", autocon_echolink_id);
+  int autocon_time_secs = autocon_time / 1000;
+  cfg().getValue(cfgName(), "AUTOCON_TIME", autocon_time_secs);
+  autocon_time = 1000 * max(autocon_time_secs, 5); // At least five seconds
+  
     // Initialize directory server communication
   dir = new Directory(server, mycall, password, location);
   dir->statusChanged.connect(mem_fun(*this, &ModuleEchoLink::onStatusChanged));
@@ -381,6 +410,22 @@ bool ModuleEchoLink::initialize(void)
   selector = new AudioSelector;
   AudioSource::setHandler(selector);
   
+    // Periodic updates of the "watch num connects" list
+  if (num_con_max > 0)
+  {
+    num_con_update_timer = new Timer(6000000); // One hour
+    num_con_update_timer->expired.connect(sigc::hide(
+        mem_fun(*this, &ModuleEchoLink::numConUpdate)));
+  }
+
+  if (autocon_echolink_id > 0)
+  {
+      // Initially set the timer to 15 seconds for quick activation on statup
+    autocon_timer = new Timer(15000, Timer::TYPE_PERIODIC);
+    autocon_timer->expired.connect(
+        mem_fun(*this, &ModuleEchoLink::checkAutoCon));
+  }
+
   return true;
   
 } /* ModuleEchoLink::initialize */
@@ -426,6 +471,9 @@ void ModuleEchoLink::moduleCleanup(void)
 {
   //FIXME: Delete qso objects
   
+  delete num_con_update_timer;
+  num_con_update_timer = 0;
+
   if (accept_incoming_regex != 0)
   {
     regfree(accept_incoming_regex);
@@ -465,6 +513,8 @@ void ModuleEchoLink::moduleCleanup(void)
   delete cbc_timer;
   cbc_timer = 0;
   state = STATE_NORMAL;
+  delete autocon_timer;
+  autocon_timer = 0;
   
   AudioSink::clearHandler();
   delete splitter;
@@ -649,7 +699,10 @@ void ModuleEchoLink::squelchOpen(bool is_open)
   //printf("RX squelch is %s...\n", is_open ? "open" : "closed");
   
   squelch_is_open = is_open;
-  broadcastTalkerStatus();  
+  if (listen_only_valve->isOpen())
+  {
+    broadcastTalkerStatus();  
+  }
 } /* squelchOpen */
 
 
@@ -785,7 +838,6 @@ void ModuleEchoLink::onStationListUpdated(void)
     cout << dir->message() << endl;
     last_message = dir->message();
   }
-  
 } /* onStationListUpdated */
 
 
@@ -894,6 +946,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->setRemoteCallsign(callsign);
   qso->setRemoteName(name);
   qso->setRemoteParams(priv);
+  qso->setListenOnly(!listen_only_valve->isOpen());
   qso->stateChange.connect(mem_fun(*this, &ModuleEchoLink::onStateChange));
   qso->chatMsgReceived.connect(
           mem_fun(*this, &ModuleEchoLink::onChatMsgReceived));
@@ -912,6 +965,13 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
     return;
   }
   
+    // Check if it is a station that connects very often senselessly
+  if ((num_con_max > 0) && !numConCheck(callsign))
+  {
+    qso->reject(false);
+    return;
+  }
+
   if ((regexec(reject_incoming_regex, callsign.c_str(), 0, 0, 0) == 0) ||
       (regexec(accept_incoming_regex, callsign.c_str(), 0, 0, 0) != 0))
   {
@@ -985,6 +1045,11 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
       	  (qsos.back()->currentState() == Qso::STATE_DISCONNECTED))
       {
       	deactivateMe();
+      }
+
+      if (autocon_timer != 0)
+      {
+        autocon_timer->setTimeout(autocon_time);
       }
 
       broadcastTalkerStatus();
@@ -1139,7 +1204,6 @@ void ModuleEchoLink::getDirectoryList(Timer *timer)
   {
     dir->getCalls();
 
-      /* FIXME: Do we really need periodic updates of the directory list ? */
     dir_refresh_timer = new Timer(600000);
     dir_refresh_timer->expired.connect(
       	    mem_fun(*this, &ModuleEchoLink::getDirectoryList));
@@ -1209,6 +1273,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     qsos.push_back(qso);
     updateEventVariables();    
     qso->setRemoteCallsign(station.callsign());
+    qso->setListenOnly(!listen_only_valve->isOpen());
     qso->stateChange.connect(mem_fun(*this, &ModuleEchoLink::onStateChange));
     qso->chatMsgReceived.connect(
         mem_fun(*this, &ModuleEchoLink::onChatMsgReceived));
@@ -1292,7 +1357,7 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
   msg << "SvxLink " << SVXLINK_VERSION << " - " << mycall
       << " (" << numConnectedStations() << ")\n\n";
 
-  if (squelch_is_open)
+  if (squelch_is_open && listen_only_valve->isOpen())
   {
     msg << "> " << mycall << "         " << sysop_name << "\n\n";
   }
@@ -1303,7 +1368,12 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
       msg << "> " << talker->remoteCallsign() << "         "
       	  << talker->remoteName() << "\n\n";
     }
-    msg << mycall << "         " << sysop_name << "\n";
+    msg << mycall << "         ";
+    if (!listen_only_valve->isOpen())
+    {
+      msg << "[listen only] ";
+    }
+    msg << sysop_name << "\n";
   }
   
   list<QsoImpl*>::const_iterator it;
@@ -1636,6 +1706,12 @@ void ModuleEchoLink::handleCommand(const string& cmd)
     
     bool activate = (cmd[1] != '0');
     
+    list<QsoImpl*>::iterator it;
+    for (it=qsos.begin(); it!=qsos.end(); ++it)
+    {
+      (*it)->setListenOnly(activate);
+    }
+
     stringstream ss;
     ss << "listen_only " << (!listen_only_valve->isOpen() ? "1 " : "0 ")
        << (activate ? "1" : "0");
@@ -1704,6 +1780,135 @@ void ModuleEchoLink::checkIdle(void)
       	  logicIsIdle() &&
 	  (state == STATE_NORMAL));
 } /* ModuleEchoLink::checkIdle */
+
+
+/*
+ *----------------------------------------------------------------------------
+ * Method:    checkAutoCon
+ * Purpose:   Initiate the process of connecting to autocon_echolink_id
+ * Input:     timer - the timer instance (not used)
+ * Output:    None
+ * Author:    Robbie De Lise / ON4SAX
+ * Created:   2010-07-30
+ * Remarks:
+ * Bugs:
+ *----------------------------------------------------------------------------
+ */
+void ModuleEchoLink::checkAutoCon(Timer *) 
+{
+    // Only try to activate the link if we are online and not
+    // currently connected to any station. A connection will only be attempted
+    // if module activation is successful.
+  if ((dir->status() == StationData::STAT_ONLINE)
+      && (numConnectedStations() == 0)
+      && activateMe())
+  {
+    cout << "ModuleEchoLink: Trying autoconnect to "
+         << autocon_echolink_id << "\n";
+    connectByNodeId(autocon_echolink_id);
+  }
+} /* ModuleEchoLink::checkAutoCon */
+
+
+bool ModuleEchoLink::numConCheck(const std::string &callsign)
+{
+    // Get current time
+  struct timeval con_time;
+  gettimeofday(&con_time, NULL);
+
+    // Refresh connect watch list
+  numConUpdate();
+
+  NumConMap::iterator cit = num_con_map.find(callsign);
+  if (cit != num_con_map.end())
+  {
+      // Get an alias (reference) to the callsign and NumConStn objects
+    const string &t_callsign = (*cit).first;
+    NumConStn &stn = (*cit).second;
+
+      // Calculate time difference from last connection
+    struct timeval diff_tv;
+    timersub(&con_time, &stn.last_con, &diff_tv);
+
+      // Bug in Win-Echolink? Number of connect requests up to 5/sec
+      // do not count stations if it's requesting 3-5/seconds
+    if (diff_tv.tv_sec > 3)
+    {
+      ++stn.num_con;
+      stn.last_con = con_time;
+      cout << "### Station " << t_callsign << ", count " << stn.num_con << " of "
+           << num_con_max << " possible number of connects" << endl;
+    }
+
+      // Number of connects are too high
+    if (stn.num_con > num_con_max)
+    {
+      time_t next = con_time.tv_sec + num_con_block_time;
+      char time_str[64];
+      strftime(time_str, sizeof(time_str), "%c", localtime(&next));
+      cerr << "*** WARNING: Ingnoring incoming connection because "
+           << "the station (" << callsign << ") has connected " 
+           << "to often (" << stn.num_con << " times). " 
+           << "Next connect is possible after " << time_str << ".\n";
+      return false;
+    }
+  }
+  else
+  {
+      // Insert initial entry on first connect
+    cout << "### Register incoming station, count 1 of " << num_con_max
+         << " possible number of connects" << endl;
+    num_con_map.insert(make_pair(callsign, NumConStn(1, con_time)));
+  }
+
+  return true;
+
+} /* ModuleEchoLink::numConCheck */
+
+
+void ModuleEchoLink::numConUpdate(void)
+{
+    // Get current time
+  struct timeval now;
+  gettimeofday(&now, NULL);
+
+  NumConMap::iterator cit = num_con_map.begin();
+  while (cit != num_con_map.end())
+  {
+      // Get an alias (reference) to the callsign and NumConStn objects
+    const string &t_callsign = (*cit).first;
+    const NumConStn &stn = (*cit).second;
+
+    struct timeval remove_at = stn.last_con;
+    if (stn.num_con > num_con_max)
+    {
+      remove_at.tv_sec += num_con_block_time;
+    }
+    else
+    {
+      remove_at.tv_sec += num_con_ttl;
+    }
+
+      // If the entry have timed out, delete it
+    if (timercmp(&remove_at, &now, <))
+    {
+      cout << "### Delete " << t_callsign << " from watchlist" << endl;
+      num_con_map.erase(cit++);
+    }
+    else
+    {
+      if (stn.num_con > num_con_max)
+      {
+        cout << "### " << t_callsign << " is blocked" << endl;
+      }
+      ++cit;
+    }
+  }
+
+  num_con_update_timer->reset();
+
+} /* ModuleEchoLink::numConUpdate */
+
 
 
 /*

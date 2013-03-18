@@ -64,6 +64,13 @@ expression. For more information on the syntax, see the
 .B REGULAR EXPRESSIONS
 chapter below.
 .TP
+.B CHECK_NR_CONNECTS
+If a station connects to often it can be blocked for a configurable time
+span. Example:
+CHECK_NR_CONNECTS=3,300,120
+If a station connects more than 3 times with less than 300 seconds in between
+each connect, that station will be rejected for 120 minutes.
+.TP
 .B ACCEPT_OUTGOING
 Only accept outgoing connections where the remote callsign match this regular
 expression. The REJECT_OUTGOING directive will be evaluated before
@@ -104,6 +111,13 @@ using a large number for MAX_QSOS.
 The number of seconds that a connection is idle before disconnection will occur.
 This is to prevent a link to stay open if someone forget to disconnect. Disable
 this feature by setting this config variable to zero (or comment it out). 
+.TP
+.B AUTOCON_ECHOLINK_ID
+Set this variable to an EchoLink ID that you want to automatically connect to.
+SvxLink will autoconnect only when no other station is connected.
+.TP
+.B AUTOCON_TIME
+Set this to the time in seconds that you want in between autoconnect tries.
 .TP
 .B DESCRIPTION
 A longer description that is sent to remote stations upon connection. This

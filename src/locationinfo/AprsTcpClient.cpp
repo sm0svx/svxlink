@@ -215,6 +215,13 @@ void AprsTcpClient::update3rdState(const string& call, const string& info)
 } /* AprsTcpClient::update3rdState */
 
 
+void AprsTcpClient::igateMessage(const string& info)
+{
+  sendMsg(info.c_str());
+} /* AprsTcpClient::igateMessage */
+
+
+
 /****************************************************************************
  *
  * Protected member functions

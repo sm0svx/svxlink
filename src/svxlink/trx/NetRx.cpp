@@ -131,7 +131,7 @@ class ToneDet
  ****************************************************************************/
 
 NetRx::NetRx(Config &cfg, const string& name)
-  : Rx(cfg, name), cfg(cfg), is_muted(true), tcp_con(0),
+  : Rx(cfg, name), cfg(cfg), mute_state(Rx::MUTE_ALL), tcp_con(0),
     last_signal_strength(0.0), last_sql_rx_id(0), unflushed_samples(false),
     sql_is_open(false), audio_dec(0)
 {
@@ -222,35 +222,48 @@ bool NetRx::initialize(void)
 } /* NetRx:initialize */
 
 
-void NetRx::mute(bool do_mute)
+void NetRx::setMuteState(Rx::MuteState new_mute_state)
 {
-  if (do_mute == is_muted)
+  while (mute_state != new_mute_state)
   {
-    return;
-  }
-  
-  is_muted = do_mute;
-  
-  if (do_mute)
-  {
-    last_signal_strength = 0.0;
-    last_sql_rx_id = 0;
-    sql_is_open = false;
-    
-    if (unflushed_samples)
+    assert((mute_state >= MUTE_NONE) && (mute_state <= MUTE_ALL));
+
+    if (new_mute_state > mute_state)  // Muting requested
     {
-      audio_dec->flushEncodedSamples();
+      mute_state = static_cast<MuteState>(mute_state + 1);
+      switch (mute_state)
+      {
+        case MUTE_CONTENT:  // MUTE_NONE -> MUTE_CONTENT
+          if (unflushed_samples)
+          {
+            audio_dec->flushEncodedSamples();
+          }
+          break;
+
+        case MUTE_ALL:  // MUTE_CONTENT -> MUTE_ALL
+          last_signal_strength = 0.0;
+          last_sql_rx_id = 0;
+          sql_is_open = false;
+          if (!unflushed_samples)
+          {
+            setSquelchState(false);
+          }
+          break;
+
+        default:
+          break;
+      }
     }
-    else
+    else                              // Unmuting requested
     {
-      setSquelchState(false);
+      mute_state = new_mute_state;
     }
   }
-    
-  MsgMute *msg = new MsgMute(do_mute);
+   
+  MsgSetMuteState *msg = new MsgSetMuteState(mute_state);
   sendMsg(msg);
   
-} /* NetRx::mute */
+} /* NetRx::setMuteState */
 
 
 bool NetRx::addToneDetector(float fq, int bw, float thresh,
@@ -277,7 +290,7 @@ void NetRx::reset(void)
   }
   tone_detectors.clear();
   
-  is_muted = true;
+  mute_state = Rx::MUTE_ALL;
   last_signal_strength = 0;
   last_sql_rx_id = 0;
   sql_is_open = false;
@@ -319,9 +332,9 @@ void NetRx::connectionReady(bool is_ready)
     cout << name() << ": Connected to remote receiver at "
         << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << "\n";
     
-    if (!is_muted)
+    if (mute_state != Rx::MUTE_ALL)
     {
-      MsgMute *msg = new MsgMute(false);
+      MsgSetMuteState *msg = new MsgSetMuteState(mute_state);
       sendMsg(msg);
     }
     
@@ -378,35 +391,46 @@ void NetRx::handleMsg(Msg *msg)
   {
     case MsgSquelch::TYPE:
     {
-      if (!is_muted)
+      if (mute_state != Rx::MUTE_ALL)
       {
-	MsgSquelch *sql_msg = reinterpret_cast<MsgSquelch*>(msg);
-	last_signal_strength = sql_msg->signalStrength();
-	last_sql_rx_id = sql_msg->sqlRxId();
-	sql_is_open = sql_msg->isOpen();
-	
-	if (sql_msg->isOpen())
-	{
-	  setSquelchState(true);
-	}
-	else
-	{
-	  if (unflushed_samples)
-	  {
+        MsgSquelch *sql_msg = reinterpret_cast<MsgSquelch*>(msg);
+        last_signal_strength = sql_msg->signalStrength();
+        last_sql_rx_id = sql_msg->sqlRxId();
+        sql_is_open = sql_msg->isOpen();
+        if (sql_msg->isOpen())
+        {
+          setSquelchState(true);
+        }
+        else
+        {
+          if (unflushed_samples)
+          {
             audio_dec->flushEncodedSamples();
-	  }
-	  else
-	  {
-	    setSquelchState(false);
-	  }
-	}
+          }
+          else
+          {
+            setSquelchState(false);
+          }
+        }
+      }
+      break;
+    }
+    
+    case MsgSiglevUpdate::TYPE:
+    {
+      if (mute_state != Rx::MUTE_ALL)
+      {
+        MsgSiglevUpdate *sql_msg = reinterpret_cast<MsgSiglevUpdate*>(msg);
+        last_signal_strength = sql_msg->signalStrength();
+        last_sql_rx_id = sql_msg->sqlRxId();
+        signalLevelUpdated(last_signal_strength);
       }
       break;
     }
     
     case MsgDtmf::TYPE:
     {
-      if (!is_muted)
+      if (mute_state == Rx::MUTE_NONE)
       {
       	MsgDtmf *dtmf_msg = reinterpret_cast<MsgDtmf*>(msg);
       	dtmfDigitDetected(dtmf_msg->digit(), dtmf_msg->duration());
@@ -416,7 +440,7 @@ void NetRx::handleMsg(Msg *msg)
     
     case MsgTone::TYPE:
     {
-      if (!is_muted)
+      if (mute_state == Rx::MUTE_NONE)
       {
 	MsgTone *tone_msg = reinterpret_cast<MsgTone*>(msg);
 	toneDetected(tone_msg->toneFq());
@@ -426,7 +450,7 @@ void NetRx::handleMsg(Msg *msg)
     
     case MsgAudio::TYPE:
     {
-      if (!is_muted && sql_is_open)
+      if ((mute_state == Rx::MUTE_NONE) && sql_is_open)
       {
 	MsgAudio *audio_msg = reinterpret_cast<MsgAudio*>(msg);
 	unflushed_samples = true;
@@ -437,8 +461,11 @@ void NetRx::handleMsg(Msg *msg)
     
     case MsgSel5::TYPE:
     {
-      MsgSel5 *sel5_msg = reinterpret_cast<MsgSel5*>(msg);
-      selcallSequenceDetected(sel5_msg->digits());
+      if (mute_state == Rx::MUTE_NONE)
+      {
+        MsgSel5 *sel5_msg = reinterpret_cast<MsgSel5*>(msg);
+        selcallSequenceDetected(sel5_msg->digits());
+      }
       break;
     }
 

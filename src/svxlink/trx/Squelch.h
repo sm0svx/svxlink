@@ -144,25 +144,22 @@ class Squelch : public sigc::trackable, public Async::AudioSink
     {
       m_name = rx_name;
 
-      std::string value;
-      if (cfg.getValue(rx_name, "SQL_HANGTIME", value))
+      unsigned delay = 0;
+      if (cfg.getValue(rx_name, "SQL_DELAY", delay))
       {
-      	setHangtime(atoi(value.c_str()));
+      	setDelay(delay);
       }
 
-      if (cfg.getValue(rx_name, "SQL_DELAY", value))
+      unsigned start_delay = 0;
+      if (cfg.getValue(rx_name, "SQL_START_DELAY", start_delay))
       {
-      	setDelay(atoi(value.c_str()));
+	setStartDelay(start_delay);
       }
 
-      if (cfg.getValue(rx_name, "SQL_START_DELAY", value))
+      unsigned timeout = 0;
+      if (cfg.getValue(rx_name, "SQL_TIMEOUT", timeout))
       {
-	setStartDelay(atoi(value.c_str()));
-      }
-
-      if (cfg.getValue(rx_name, "SQL_TIMEOUT", value))
-      {
-	setSqlTimeout(atoi(value.c_str()));
+	setSqlTimeout(timeout);
       }
 
       return true;

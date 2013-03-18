@@ -1,12 +1,12 @@
 /**
 @file	 SigLevDetTone.cpp
-@brief   A signal level detector using tone in the 5.5 to 6.5kHz band
+@brief   A signal level detector using tone in the 5.5 to 6.4kHz band
 @author  Tobias Blomberg / SM0SVX
 @date	 2009-05-23
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2012 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,10 +33,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
-//#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
-#include <cmath>
 
 
 /****************************************************************************
@@ -46,6 +44,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
+#include <SigCAudioSink.h>
+#include <AsyncAudioFilter.h>
 #include <common.h>
 
 
@@ -56,7 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "SigLevDetTone.h"
-//#include "Goertzel.h"
+#include "Goertzel.h"
 
 
 
@@ -67,6 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 using namespace SvxLink;
 
 
@@ -85,72 +86,7 @@ using namespace SvxLink;
  *
  ****************************************************************************/
 
-/**
-@brief  An implementation of the Goertzel single bin DFT algorithm
-@author Tobias Blomberg / SM0SVX
-@date   2009-05-23
-*/
-class SigLevDetTone::MyGoertzel
-{
-  public:
-    /**
-     * @brief   Default constuctor
-     * @param   freq        The frequency of interest, in Hz
-     * @param   sample_rate The sample rate used
-     */
-    MyGoertzel(float freq, unsigned sample_rate)
-    {
-      coeff = 2.0f * cosf(2.0f * M_PI * (freq / (float)sample_rate));
-      reset();
-    }
-
-    /**
-     * @brief   Destructor
-     */
-    ~MyGoertzel(void) {}
-
-    /**
-     * @brief   Reset the state variables
-     */
-    void reset(void)
-    {
-      q1 = q2 = 0.0f;
-    }
-
-    /**
-     * @brief   Call this function for each sample in a block
-     * @param   sample A sample
-     */
-    void calc(float sample)
-    {
-      float q0 = coeff * q1 - q2 + sample;
-      q2 = q1;
-      q1 = q0;
-    }
-
-    /**
-     * @brief   Read back the result after calling "calc" for a whole block
-     * @return  Returns the relative magnitude squared
-     */
-    float magnitudeSquared(void)
-    {
-      return q1*q1 + q2*q2 - q1*q2*coeff;
-    }
-
-
-  protected:
-
-  private:
-    float q1;
-    float q2;
-    float coeff;
-
-    MyGoertzel(const MyGoertzel&);
-    MyGoertzel& operator=(const MyGoertzel&);
-
-};  /* class MyGoertzel */
-
-
+#if 0
 class SigLevDetTone::HammingWindow
 {
   public:
@@ -191,8 +127,7 @@ class SigLevDetTone::HammingWindow
     HammingWindow& operator=(const HammingWindow&);
     
 };  /* HammingWindow */
-
-
+#endif
 
 
 /****************************************************************************
@@ -211,7 +146,6 @@ class SigLevDetTone::HammingWindow
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -226,25 +160,38 @@ class SigLevDetTone::HammingWindow
  *
  ****************************************************************************/
 
-SigLevDetTone::SigLevDetTone(void)
-  : tone_siglev_map(10), block_idx(0), last_siglev(0) 
+SigLevDetTone::SigLevDetTone(int sample_rate)
+  : sample_rate(sample_rate), tone_siglev_map(10), block_idx(0), last_siglev(0),
+    passband_energy(0.0f), prev_peak_to_tot_pwr(0.0f), integration_time(1),
+    update_interval(0), update_counter(0)
 {
-  hwin = new HammingWindow(BLOCK_SIZE);
+  filter = new AudioFilter("BpBu8/5400-6500");
+  setHandler(filter);
+
+  SigCAudioSink *sigc_sink = new SigCAudioSink;
+  sigc_sink->sigWriteSamples.connect(
+      mem_fun(*this, &SigLevDetTone::processSamples));
+  sigc_sink->sigFlushSamples.connect(
+      mem_fun(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
+  filter->registerSink(sigc_sink, true);
+
   for (int i=0; i<10; ++i)
   {
-    det[i] = new MyGoertzel(5500 + i * 100, 16000);
+    det[i] = new Goertzel(5500 + i * 100, 16000);
     tone_siglev_map[i] = 100 - i * 10;
   }
+  reset();
 } /* SigLevDetTone::SigLevDetTone */
 
 
 SigLevDetTone::~SigLevDetTone(void)
 {
+  delete filter;
+
   for (int i=0; i<10; ++i)
   {
     delete det[i];
   }
-  delete hwin;
 } /* SigLevDetTone::~SigLevDetTone */
 
 
@@ -273,66 +220,48 @@ void SigLevDetTone::reset(void)
   {
     det[i]->reset();
   }
-  hwin->reset();
   block_idx = 0;
   last_siglev = 0;
+  passband_energy = 0.0f;
+  prev_peak_to_tot_pwr = 0.0f;
+  update_counter = 0;
+  siglev_values.clear();
 } /* SigLevDetTone::reset */
 
 
-int SigLevDetTone::writeSamples(const float *samples, int count)
+void SigLevDetTone::setContinuousUpdateInterval(int interval_ms)
 {
-  for (int i=0; i<count; ++i)
+  update_interval = interval_ms * sample_rate / 1000;
+  update_counter = 0;  
+} /* SigLevDetTone::setContinuousUpdateInterval */
+
+
+void SigLevDetTone::setIntegrationTime(int time_ms)
+{
+    // Calculate the integration time expressed as the
+    // number of processing blocks.
+  integration_time = time_ms * 16000 / 1000 / BLOCK_SIZE;
+  if (integration_time <= 0)
   {
-    float sample = hwin->calc(samples[i]);
-    for (int detno=0; detno < 10; ++detno)
-    {
-      det[detno]->calc(sample);
-    }
-    
-    if (++block_idx == BLOCK_SIZE)
-    {
-      block_idx = 0;
-      hwin->reset();
-      
-      float max = 0.0f;
-      float sum = 0.0f;
-      int max_idx = -1;
-      for (int detno=0; detno < 10; ++detno)
-      {
-        float res = det[detno]->magnitudeSquared();
-        det[detno]->reset();
-        if (res >= max)
-        {
-          max = res;
-          max_idx = detno;
-        }
-        sum += res;
-      }
-      float mean = (sum - max) / 9.0f;
-
-      last_siglev = 0;
-      if (max > 0.1f)
-      {
-        float snr = 5.0f * log10f(max / mean);
-        if (snr > 8.0f)
-        {
-          last_siglev = tone_siglev_map[max_idx];
-          //printf("fq=%d  max=%.2f  mean=%.2f  snr=%.2f  siglev=%d\n",
-          //      5500 + max_idx * 100, max, mean, snr, last_siglev);
-        }
-      }
-    }
+    integration_time = 1;
   }
-  
-  return count;
-  
-} /* SigLevDetTone::writeSamples */
+} /* SigLevDetTone::setIntegrationTime */
 
 
-void SigLevDetTone::flushSamples(void)
+float SigLevDetTone::siglevIntegrated(void) const
 {
-  sourceAllSamplesFlushed();
-} /* SigLevDetTone::flushSamples */
+  if (siglev_values.size() > 0)
+  {
+    int sum = 0;
+    deque<int>::const_iterator it;
+    for (it=siglev_values.begin(); it!=siglev_values.end(); ++it)
+    {
+      sum += *it;
+    }
+    return sum / siglev_values.size();
+  }
+  return 0;
+} /* SigLevDetTone::siglevIntegrated */
 
 
 
@@ -349,6 +278,108 @@ void SigLevDetTone::flushSamples(void)
  * Private member functions
  *
  ****************************************************************************/
+
+int SigLevDetTone::processSamples(const float *samples, int count)
+{
+  for (int i=0; i<count; ++i)
+  {
+    const float &sample = samples[i];
+
+    passband_energy += sample * sample;
+
+    for (int detno=0; detno < 10; ++detno)
+    {
+      det[detno]->calc(sample);
+    }
+    
+    if (++block_idx == BLOCK_SIZE)
+    {
+      float max = 0.0f;
+      int max_idx = -1;
+      for (int detno=0; detno < 10; ++detno)
+      {
+        float res = det[detno]->relativeMagnitudeSquared();
+        det[detno]->reset();
+        if (res > max)
+        {
+          max = res;
+          max_idx = detno;
+        }
+      }
+
+      last_siglev = 0;
+
+        // Check that we have enough energy in the tone to do a
+        // proper detection
+      if (max > ENERGY_THRESH)
+      {
+          // Calculate the coefficient used to get from relative magnitude
+          // squared to the "peak to total power" relation.
+        float coeff = 2.0f / (BLOCK_SIZE * passband_energy);
+
+          // Calculate the peak to total bandpass power relation
+        float peak_to_tot_pwr = coeff * max;
+        
+          // Filter it using a first order IIR filter.
+        peak_to_tot_pwr = prev_peak_to_tot_pwr
+                          + ALPHA * (peak_to_tot_pwr - prev_peak_to_tot_pwr);
+        prev_peak_to_tot_pwr = peak_to_tot_pwr;
+
+          // If the relation value is larger than 1.5 it's probably a bogus
+          // value. In theory, the relation value should never exceed 1.0.
+        if (peak_to_tot_pwr < 1.5f)
+        {
+#if 0
+            // The tone frequency may be offset so that energy spill into
+            // neighbouring bins. Check the bin above and below to see if
+            // adding the energy from either bin will get us above the
+            // threshold. Subtract the other bin to compensate a bit.
+          float lo_peak_to_tot_pwr = 0.0f, hi_peak_to_tot_pwr = 0.0f;
+          if (max_idx > 0)
+          {
+            lo_peak_to_tot_pwr = coeff * det[max_idx-1];
+          }
+          if (max_idx < 9)
+          {
+            hi_peak_to_tot_pwr = coeff * det[max_idx+1];
+          }
+          peak_to_tot_pwr += max(lo_peak_to_tot_pwr - hi_peak_to_tot_pwr,
+                                 hi_peak_to_tot_pwr - lo_peak_to_tot_pwr);
+#endif
+          if (peak_to_tot_pwr > DET_THRESH)
+          {
+            last_siglev = tone_siglev_map[max_idx];
+            //printf("fq=%d  max=%f  siglev=%d  quality=%.1f\n",
+            //       5500 + max_idx * 100, max, last_siglev, peak_to_tot_pwr);
+          }
+        }
+      }
+
+      siglev_values.push_back(last_siglev);
+      if (siglev_values.size() > integration_time)
+      {
+	siglev_values.erase(siglev_values.begin(),
+		siglev_values.begin()+siglev_values.size()-integration_time);
+      }
+      
+      if (update_interval > 0)
+      {
+	update_counter += BLOCK_SIZE;
+	if (update_counter >= update_interval)
+	{
+	  signalLevelUpdated(lastSiglev());
+	  update_counter = 0;
+	}
+      }
+
+      passband_energy = 0.0f;
+      block_idx = 0;
+    }
+  }
+  
+  return count;
+  
+} /* SigLevDetTone::processSamples */
 
 
 

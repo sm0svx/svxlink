@@ -14,7 +14,8 @@ DIST_CPP = \
 		AsyncTcpConnection.cpp \
 		AsyncTcpServer.cpp \
 		AsyncTimer.cpp \
-		AsyncUdpSocket.cpp
+		AsyncUdpSocket.cpp \
+		AsyncFileReader.cpp
 
 DIST_H_PUBLIC = \
 		AsyncApplication.h \
@@ -27,7 +28,8 @@ DIST_H_PUBLIC = \
 		AsyncTcpConnection.h \
 		AsyncTcpServer.h \
 		AsyncTimer.h \
-		AsyncUdpSocket.h
+		AsyncUdpSocket.h \
+		AsyncFileReader.h
 
 DIST_H_PRIVATE = \
 		AsyncDnsLookupWorker.h \

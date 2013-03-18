@@ -128,6 +128,8 @@ class UdpSocket : public sigc::trackable
      * @brief 	Constructor
      * @param 	local_port  The local port to use. If not specified, a random
      *	      	      	    local port will be used.
+     * @param  	bind_ip     Bind to the interface with the given IP address.
+     *	      	            If left empty, bind to all interfaces.
      */
     UdpSocket(uint16_t local_port=0, const IpAddress &bind_ip=IpAddress());
   

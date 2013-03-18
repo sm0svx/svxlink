@@ -24,7 +24,8 @@ DIST_CPP = \
 		SwSel5Decoder.cpp \
 		ToneDetector.cpp \
 		Tx.cpp \
-		Voter.cpp
+		Voter.cpp \
+		Macho.cpp
 
 DIST_H_PUBLIC = \
 		NetTrxMsg.h \
@@ -58,7 +59,8 @@ DIST_H_PRIVATE = \
 		SwDtmfDecoder.h \
 		SwSel5Decoder.h \
 		ToneDetector.h \
-		Voter.h
+		Voter.h \
+		Macho.h
 
 DIST_H = $(DIST_H_PUBLIC) $(DIST_H_PRIVATE)
 

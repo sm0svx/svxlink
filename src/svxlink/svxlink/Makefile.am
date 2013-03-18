@@ -82,7 +82,9 @@ SUFFIXES = .in
 install-data-hook:
 	-$(INSTALL) -d -m 755 -o @SVXLINK_USER@ -g @SVXLINK_GROUP@ \
 		$(DESTDIR)@QSORECORDERDIR@
+	-$(INSTALL) -d -m 755 $(DESTDIR)@SOUNDSDIR@
 
 uninstall-hook:
 	-$(RMDIR) $(DESTDIR)@QSORECORDERDIR@
+	-$(RMDIR) $(DESTDIR)@SOUNDSDIR@
 

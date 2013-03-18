@@ -214,7 +214,8 @@ Logic::Logic(Config &cfg, const string& name)
     is_idle(true),                  fx_gain_normal(0),
     fx_gain_low(-12), 	      	    long_cmd_digits(100),
     report_events_as_idle(false),   qso_recorder(0),
-    tx_ctcss(TX_CTCSS_ALWAYS), 	    tx_ctcss_mask(0)
+    tx_ctcss(TX_CTCSS_ALWAYS), 	    tx_ctcss_mask(0),
+    aprs_stats_timer(0)
 {
   logic_con_in = new AudioSplitter;
   logic_con_out = new AudioSelector;
@@ -226,6 +227,7 @@ Logic::~Logic(void)
   cleanup();
   delete logic_con_out;
   delete logic_con_in;
+  delete aprs_stats_timer;
 } /* Logic::~Logic */
 
 
@@ -409,7 +411,7 @@ bool Logic::initialize(void)
   rx().dtmfDigitDetected.connect(mem_fun(*this, &Logic::dtmfDigitDetectedP));
   rx().selcallSequenceDetected.connect(
 	mem_fun(*this, &Logic::selcallSequenceDetected));
-  rx().mute(false);
+  rx().setMuteState(Rx::MUTE_NONE);
   prev_rx_src = m_rx;
 
     // This valve is used to turn RX audio on/off into the logic core
@@ -630,6 +632,14 @@ bool Logic::initialize(void)
 
   audio_switch_matrix.addSource(name(), logic_con_out);
   audio_switch_matrix.addSink(name(), logic_con_in);
+
+
+  if (LocationInfo::has_instance())
+  {
+     LocationInfo::AprsStatistics lis;
+     LocationInfo::instance()->aprs_stats.insert(pair<string,LocationInfo::AprsStatistics>(name(), lis));
+     LocationInfo::instance()->aprs_stats[name()].reset();
+  }
 
   everyMinute(0);
 
@@ -933,6 +943,13 @@ void Logic::squelchOpen(bool is_open)
     exec_cmd_on_sql_close_timer = 0;
   }
 
+  if (LocationInfo::has_instance())
+  {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    LocationInfo::instance()->setReceiving(name(), tv, is_open);
+  }
+
   updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
 
   checkIdle();
@@ -951,6 +968,14 @@ bool Logic::getIdleState(void) const
 
 void Logic::transmitterStateChange(bool is_transmitting)
 {
+  if (LocationInfo::has_instance() &&
+      (LocationInfo::instance()->getTransmitting(name()) != is_transmitting))
+  {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    LocationInfo::instance()->setTransmitting(name(), tv, is_transmitting);
+  }
+
   stringstream ss;
   ss << "transmit " << (is_transmitting ? "1" : "0");
   processEvent(ss.str());
@@ -1487,7 +1512,6 @@ void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 {
   updateTxCtcss(!is_idle, TX_CTCSS_MODULE);
 } /* Logic::audioFromModuleStreamStateChanged */
-
 
 
 /*

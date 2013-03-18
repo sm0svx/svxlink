@@ -16,9 +16,9 @@ MAILDIR=/var/spool/svxlink/propagation_monitor
 * ^From.*DXrobot
 dxrobot
 
-# Put e-mails from VHFDX (vhfdx.net) in the folder below
+# Put e-mails from DXMAPS (dxmaps.com) in the folder below
 :0
-* ^From.*DX.Sherlock
+* ^From.*DXMAPS
 vhfdx
 
 # Send all other, non matching e-mails, to user root.

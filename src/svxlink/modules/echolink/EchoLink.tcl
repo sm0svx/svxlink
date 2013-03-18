@@ -404,7 +404,7 @@ proc reject_outgoing_connection {call} {
 #
 # Executed when an incoming connection is accepted
 #
-proc remote_greeting {} {
+proc remote_greeting {call} {
   playSilence 1000;
   playMsg "greeting";
 }

@@ -1,5 +1,24 @@
- 0.14.0 -- ?? ??? 2012
------------------------
+ 1.1.0 -- ?? ??? 2013
+----------------------
+
+* Bugfixes in APRS statistcs.
+
+* Modified DTMF-decoder's bandwidth to be more tolerant against voice audio
+  and to comply with the ITU-T Q.23 und Q.24 standards.
+  Patch from Steve / DH1DM.
+
+* ModuleParrot: A new event handler has been added which make it possible to
+  play a sound, for example a roger beep, when the recorded audio has been
+  played back.
+
+* ModuleEchoLink: Added an autoconnect feature where one EchoLink ID can be
+  set up for auto connection. SvxLink will try to connect whenever idle.
+  Original patch by Robbie / ON4SAX and Volodymyr / UR3QJW.
+
+
+
+ 1.0.0 -- 08 Mar 2013
+----------------------
 
 * Moved from sigc++ version 1.2 to version 2.
   Patch contributed by Felix/WU8K.
@@ -16,6 +35,36 @@
 * Now possible to set RTS and/or DTR to a static state by configuration
   if needed. Have a look at the SERIAL_SET_PINS config variable for the
   LocalRx and LocalTx sections in the svxlink.conf.5 manual page.
+
+* Improved the SigLevTone detector using the same techniques that was
+  used to improve the CTCSS decoder.
+
+* Now possible to block incoming Echolink connects from stations if they
+  connect too often. New config variable: CHECK_NR_CONNECTS.
+  Patch from Adi/DL1HRC, reworked by SM0SVX/Tobias.
+
+* Bugfix in Metar information module: SvxLink could crash if two
+  requests were made in rapid succession.
+
+* Now possible to have personal greetings on incoming EchoLink connections,
+  if desired. Some TCL coding is neccessary to enable it though.
+
+* Improved voter implementation that can vote continously and not only at the
+  start of a transmission. By default it will check the signal strength for
+  all receivers once per second and switch to the strongest one if the
+  difference is large enough. New config variables: REVOTE_INTERVAL,
+  HYSTERESIS, SQL_CLOSE_REVOTE_DELAY, RX_SWITCH_DELAY.
+
+* ModuleEchoLink: The text "[listen only] is now prepended to the sysop name
+  if listen only mode is active.
+
+* New feature "extended squelch hangtimne" added. It is now possible to
+  configure an extended squelch hangtime that is activated when the
+  signal strength fall below a given threshold.
+
+* Now SvxLink can send APRS statistics about RX squelch open count,
+  TX on count, RX squelch open time and TX on time.
+  Patch from Adi / DL1HRC.
 
 
 
