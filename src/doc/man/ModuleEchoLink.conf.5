@@ -112,6 +112,13 @@ The number of seconds that a connection is idle before disconnection will occur.
 This is to prevent a link to stay open if someone forget to disconnect. Disable
 this feature by setting this config variable to zero (or comment it out). 
 .TP
+.B AUTOCON_ECHOLINK_ID
+Set this variable to an EchoLink ID that you want to automatically connect to.
+SvxLink will autoconnect only when no other station is connected.
+.TP
+.B AUTOCON_TIME
+Set this to the time in seconds that you want in between autoconnect tries.
+.TP
 .B DESCRIPTION
 A longer description that is sent to remote stations upon connection. This
 description should typically include detailed station information like QTH,

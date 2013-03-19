@@ -135,13 +135,13 @@ class AudioDevice : public sigc::trackable
   
     /**
      * @brief 	Register an AudioIO object with the given device name
-     * @param 	dev_name  The name of the audio device
+     * @param 	dev_designator The name of the audio device
      * @param 	audio_io  A previously created AudioIO object
      * @return	Returns an AudioDevice object associated with the given device
      *
      * This function is used to register an AudioIO object with the given
      * audio device. If an AudioDevice object already exist for the given
-     * device, it is returns. If there is no AudioDevice object for the
+     * device, it is returned. If there is no AudioDevice object for the
      * given device, a new one is created.
      */
     static AudioDevice *registerAudioIO(const std::string& dev_designator,

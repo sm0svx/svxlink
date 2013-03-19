@@ -597,16 +597,6 @@ bool Logic::initialize(void)
   event_handler->setVariable("is_core_event_handler", "1");
   event_handler->setVariable("logic_name", name().c_str());
 
-  if (LocationInfo::has_instance())
-  {
-      // start the aprs_stats_timer - 10 minutes
-    aprs_stats.reset();
-    aprs_stats.logic_name = name();
-    aprs_stats_timer = new Timer(600000);
-    aprs_stats_timer->expired.connect(mem_fun(*this, &Logic::aprsStatsTimeout));
-    aprs_stats_timer->setEnable(true);
-  }
-
   cmd_tmo_timer = new Timer(10000);
   cmd_tmo_timer->expired.connect(mem_fun(*this, &Logic::cmdTimeout));
   cmd_tmo_timer->setEnable(false);
@@ -646,6 +636,14 @@ bool Logic::initialize(void)
 
   audio_switch_matrix.addSource(name(), logic_con_out);
   audio_switch_matrix.addSink(name(), logic_con_in);
+
+
+  if (LocationInfo::has_instance())
+  {
+     LocationInfo::AprsStatistics lis;
+     LocationInfo::instance()->aprs_stats.insert(pair<string,LocationInfo::AprsStatistics>(name(), lis));
+     LocationInfo::instance()->aprs_stats[name()].reset();
+  }
 
   everyMinute(0);
 
@@ -892,15 +890,15 @@ void Logic::afskMessageDetected(std::string aprs_message, std::string payload)
 
    if (LocationInfo::has_instance())
    {
-       string mycall = LocationInfo::instance()->get_callsign();
-       string message= aprs_message + "," + mycall
+      string mycall = LocationInfo::instance()->getCallsign();
+      string message= aprs_message + "," + mycall
                         + ":" + payload;
-       LocationInfo::instance()->igateMessage(message);
-       cout << "igate: " << message;
+      LocationInfo::instance()->igateMessage(message);
+      cout << "igate: " << message;
 
-       stringstream ss;
-       ss << "aprs_message_received";
-       processEvent(ss.str());
+      stringstream ss;
+      ss << "aprs_message_received";
+      processEvent(ss.str());
    }
 } /* Logic::afskMessageDetected */
 
@@ -962,9 +960,6 @@ void Logic::squelchOpen(bool is_open)
     active_module->squelchOpen(is_open);
   }
 
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  time_t sec = tv.tv_sec;
   stringstream ss;
   ss << "squelch_open " << rx().sqlRxId() << " " << (is_open ? "1" : "0");
   processEvent(ss.str());
@@ -979,14 +974,18 @@ void Logic::squelchOpen(bool is_open)
 	  mem_fun(*this, &Logic::putCmdOnQueue));
     }
     processCommandQueue();
-    aprs_stats.rx_sec += (sec - aprs_stats.last_rx_sec);
   }
   else
   {
     delete exec_cmd_on_sql_close_timer;
     exec_cmd_on_sql_close_timer = 0;
-    aprs_stats.rx_on_nr++;
-    aprs_stats.last_rx_sec = sec;
+  }
+
+  if (LocationInfo::has_instance())
+  {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    LocationInfo::instance()->setReceiving(name(), tv, is_open);
   }
 
   updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
@@ -1007,24 +1006,16 @@ bool Logic::getIdleState(void) const
 
 void Logic::transmitterStateChange(bool is_transmitting)
 {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  time_t sec = tv.tv_sec;
+  if (LocationInfo::has_instance() &&
+      (LocationInfo::instance()->getTransmitting(name()) != is_transmitting))
+  {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    LocationInfo::instance()->setTransmitting(name(), tv, is_transmitting);
+  }
+
   stringstream ss;
-  ss << "transmit ";
-
-  if (is_transmitting)
-  {
-    aprs_stats.tx_on_nr++;
-    aprs_stats.last_tx_sec = sec;
-    ss << "1";
-  }
-  else
-  {
-    aprs_stats.tx_sec = (sec - aprs_stats.last_tx_sec);
-    ss << "0";
-  }
-
+  ss << "transmit " << (is_transmitting ? "1" : "0");
   processEvent(ss.str());
 } /* Logic::transmitterStateChange */
 
@@ -1559,18 +1550,6 @@ void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 {
   updateTxCtcss(!is_idle, TX_CTCSS_MODULE);
 } /* Logic::audioFromModuleStreamStateChanged */
-
-
-void Logic::aprsStatsTimeout(Timer *t)
-{
-  if (LocationInfo::has_instance())
-  {
-     LocationInfo::instance()->sendAprsStatistics(aprs_stats);
-     aprs_stats.reset();
-     t->reset();
-  }
-} /* Logic::aprsStatsTimeout */
-
 
 
 /*

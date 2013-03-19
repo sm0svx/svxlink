@@ -1,3 +1,22 @@
+ 1.1.0 -- ?? ??? 2013
+----------------------
+
+* Bugfixes in APRS statistcs.
+
+* Modified DTMF-decoder's bandwidth to be more tolerant against voice audio
+  and to comply with the ITU-T Q.23 und Q.24 standards.
+  Patch from Steve / DH1DM.
+
+* ModuleParrot: A new event handler has been added which make it possible to
+  play a sound, for example a roger beep, when the recorded audio has been
+  played back.
+
+* ModuleEchoLink: Added an autoconnect feature where one EchoLink ID can be
+  set up for auto connection. SvxLink will try to connect whenever idle.
+  Original patch by Robbie / ON4SAX and Volodymyr / UR3QJW.
+
+
+
  1.0.0 -- 08 Mar 2013
 ----------------------
 

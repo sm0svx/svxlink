@@ -1,14 +1,12 @@
 /**
 @file	 AsyncAudioDeviceFactory.h
-@brief   A_brief_description_for_this_file
+@brief   A class for handling audio device types
 @author  Tobias Blomberg / SM0SVX
 @date	 2009-12-26
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,10 +22,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
-*/
-
-/** @example AudioDeviceFactory_demo.cpp
-An example of how to use the AudioDeviceFactory class
 */
 
 
@@ -94,6 +88,11 @@ class AudioDevice;
  *
  ****************************************************************************/
 
+/**
+ * @brief   Register a new audio device type
+ * @param   _name The name of the audio device type
+ * @param   _class The name of the class that handle the new audio device type
+ */
 #define REGISTER_AUDIO_DEVICE_TYPE(_name, _class) \
   AudioDevice *create_ ## _class(const string& dev_name) \
           { return new _class(dev_name); } \
@@ -118,19 +117,23 @@ class AudioDevice;
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	A factory class for audio devices
 @author Tobias Blomberg / SM0SVX
-@date   2008-
+@date   2009-12-26
 
-A_detailed_class_description
-
-\include AudioDeviceFactory_demo.cpp
+This class is a factory class for creating audio devices. Use the
+REGISTER_AUDIO_DEVICE_TYPE macro to register a new audio device type.
+New audio device instances are created using the create method.
 */
 class AudioDeviceFactory
 {
   public:
     typedef AudioDevice* (*CreatorFunc)(const std::string &dev_designator);
     
+    /**
+     * @brief 	Get the factory singleton instance
+     * @return  Returns the factory instance
+     */
     static AudioDeviceFactory *instance(void)
     {
       if (_instance == 0)
@@ -146,14 +149,25 @@ class AudioDeviceFactory
     ~AudioDeviceFactory(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Register a new audio device type
+     * @param 	name The name of the audio device type (e.g. alsa, oss etc)
+     * @param	creator A function that create the AudioDevice object
+     * @return	Return \em true on success or else \em false
      */
     bool registerCreator(const std::string &name, CreatorFunc creator);
 
+    /**
+     * @brief 	Create a new instance of the specified audio device type
+     * @param 	name The audio device type (e.g. alsa, oss etc)
+     * @param	dev_name The audio device name (e.g. plughw:0, /dev/dsp etc)
+     * @return	Returns an AudioDevice object
+     */
     AudioDevice *create(const std::string &name, const std::string &dev_name);
 
+    /**
+     * @brief 	List valid device types
+     * @return	Returns a space separated list of valid device type names
+     */
     std::string validDevTypes(void) const;
     
   protected:
