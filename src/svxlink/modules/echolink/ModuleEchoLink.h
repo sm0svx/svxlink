@@ -167,6 +167,8 @@ class ModuleEchoLink : public Module
     };
     typedef std::map<const std::string, NumConStn> NumConMap;
 
+    static const int	  DEFAULT_AUTOCON_TIME = 3*60*1000; // Three minutes
+
     EchoLink::Directory   *dir;
     Async::Timer      	  *dir_refresh_timer;
     std::string       	  mycall;
@@ -200,6 +202,9 @@ class ModuleEchoLink : public Module
     time_t                num_con_block_time;
     NumConMap             num_con_map;
     Async::Timer          *num_con_update_timer;
+    int   	      	  autocon_echolink_id;
+    int   	      	  autocon_time;
+    Async::Timer	  *autocon_timer;
 
     void moduleCleanup(void);
     void activateInit(void);
@@ -242,6 +247,7 @@ class ModuleEchoLink : public Module
     void commandFailed(const std::string& cmd);
     void connectByNodeId(int node_id);
     void checkIdle(void);
+    void checkAutoCon(Async::Timer *timer=0);
     bool numConCheck(const std::string &callsign);
     void numConUpdate(void);
 

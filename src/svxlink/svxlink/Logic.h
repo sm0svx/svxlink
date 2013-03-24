@@ -299,8 +299,6 @@ class Logic : public sigc::trackable
     void updateTxCtcss(bool do_set, TxCtcssType type);
     void logicConInStreamStateChanged(bool is_active, bool is_idle);
     void audioFromModuleStreamStateChanged(bool is_active, bool is_idle);
-    void aprsStatsTimeout(Async::Timer *t);
-    void resetAprsStats(void);
 };  /* class Logic */
 
 

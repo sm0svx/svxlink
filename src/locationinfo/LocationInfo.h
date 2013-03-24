@@ -129,27 +129,37 @@ class LocationInfo
         char dir;
     };
 
-    std::string get_callsign();
+    std::string getCallsign();
 
     struct AprsStatistics
     {
       std::string logic_name;
       unsigned    rx_on_nr;
       unsigned    tx_on_nr;
-      time_t      rx_sec;
-      time_t      tx_sec;
+      float       rx_sec;
+      float       tx_sec;
+      struct timeval last_rx_sec;
+      struct timeval last_tx_sec;
+      bool tx_on;
+      bool squelch_on;
 
-      AprsStatistics(void) : rx_on_nr(0),tx_on_nr(0), rx_sec(0), tx_sec(0) {}
+      AprsStatistics(void) : rx_on_nr(0), tx_on_nr(0), rx_sec(0), tx_sec(0),
+                             tx_on(false), squelch_on(false) {}
       void reset(void)
       {
         rx_on_nr = 0;
         tx_on_nr = 0;
         rx_sec = 0;
         tx_sec = 0;
+        last_tx_sec.tv_sec = 0;
+        last_rx_sec.tv_sec = 0;
+        last_tx_sec.tv_usec = 0;
+        last_rx_sec.tv_usec = 0;
       }
     };
 
-    void sendAprsStatistics(const AprsStatistics &aprs_stats);
+    typedef std::map<std::string, AprsStatistics> aprs_struct;
+    aprs_struct aprs_stats;
 
     struct Cfg
     {
@@ -184,6 +194,9 @@ class LocationInfo
     void updateQsoStatus(int action, const std::string& call,
                          const std::string& name,
 			 std::list<std::string>& call_list);
+    bool getTransmitting(const std::string &name);
+    void setTransmitting(const std::string &name, struct timeval tv, bool state);
+    void setReceiving(const std::string &name, struct timeval tv, bool state);
 
     class CGuard
     {
@@ -210,6 +223,8 @@ class LocationInfo
     Cfg         loc_cfg; // weshalb?
     ClientList  clients;
     int         sequence;
+    Async::Timer *aprs_stats_timer;
+    unsigned int sinterval;
 
     bool parsePosition(const Async::Config &cfg, const std::string &name);
     bool parseLatitude(Coordinate &pos, const std::string &value);
@@ -221,6 +236,8 @@ class LocationInfo
     bool parseAntennaHeight(Cfg &cfg, const std::string value);
     bool parseClientStr(std::string &host, int &port, const std::string &val);
     bool parseClients(const Async::Config &cfg, const std::string &name);
+    void startStatisticsTimer(int interval);
+    void sendAprsStatistics(Async::Timer *t);
 
 };  /* class LocationInfo */
 

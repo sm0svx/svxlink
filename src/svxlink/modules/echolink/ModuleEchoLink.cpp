@@ -156,7 +156,9 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
     reject_incoming_regex(0), accept_incoming_regex(0),
     reject_outgoing_regex(0), accept_outgoing_regex(0), splitter(0),
     listen_only_valve(0), selector(0), num_con_max(0), num_con_ttl(5*60),
-    num_con_block_time(120*60), num_con_update_timer(0)
+    num_con_block_time(120*60), num_con_update_timer(0),
+    autocon_echolink_id(0), autocon_time(DEFAULT_AUTOCON_TIME),
+    autocon_timer(0)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
@@ -371,6 +373,11 @@ bool ModuleEchoLink::initialize(void)
     return false;
   }
   
+  cfg().getValue(cfgName(), "AUTOCON_ECHOLINK_ID", autocon_echolink_id);
+  int autocon_time_secs = autocon_time / 1000;
+  cfg().getValue(cfgName(), "AUTOCON_TIME", autocon_time_secs);
+  autocon_time = 1000 * max(autocon_time_secs, 5); // At least five seconds
+  
     // Initialize directory server communication
   dir = new Directory(server, mycall, password, location);
   dir->statusChanged.connect(mem_fun(*this, &ModuleEchoLink::onStatusChanged));
@@ -409,6 +416,14 @@ bool ModuleEchoLink::initialize(void)
     num_con_update_timer = new Timer(6000000); // One hour
     num_con_update_timer->expired.connect(sigc::hide(
         mem_fun(*this, &ModuleEchoLink::numConUpdate)));
+  }
+
+  if (autocon_echolink_id > 0)
+  {
+      // Initially set the timer to 15 seconds for quick activation on statup
+    autocon_timer = new Timer(15000, Timer::TYPE_PERIODIC);
+    autocon_timer->expired.connect(
+        mem_fun(*this, &ModuleEchoLink::checkAutoCon));
   }
 
   return true;
@@ -498,6 +513,8 @@ void ModuleEchoLink::moduleCleanup(void)
   delete cbc_timer;
   cbc_timer = 0;
   state = STATE_NORMAL;
+  delete autocon_timer;
+  autocon_timer = 0;
   
   AudioSink::clearHandler();
   delete splitter;
@@ -1028,6 +1045,11 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
       	  (qsos.back()->currentState() == Qso::STATE_DISCONNECTED))
       {
       	deactivateMe();
+      }
+
+      if (autocon_timer != 0)
+      {
+        autocon_timer->setTimeout(autocon_time);
       }
 
       broadcastTalkerStatus();
@@ -1758,6 +1780,34 @@ void ModuleEchoLink::checkIdle(void)
       	  logicIsIdle() &&
 	  (state == STATE_NORMAL));
 } /* ModuleEchoLink::checkIdle */
+
+
+/*
+ *----------------------------------------------------------------------------
+ * Method:    checkAutoCon
+ * Purpose:   Initiate the process of connecting to autocon_echolink_id
+ * Input:     timer - the timer instance (not used)
+ * Output:    None
+ * Author:    Robbie De Lise / ON4SAX
+ * Created:   2010-07-30
+ * Remarks:
+ * Bugs:
+ *----------------------------------------------------------------------------
+ */
+void ModuleEchoLink::checkAutoCon(Timer *) 
+{
+    // Only try to activate the link if we are online and not
+    // currently connected to any station. A connection will only be attempted
+    // if module activation is successful.
+  if ((dir->status() == StationData::STAT_ONLINE)
+      && (numConnectedStations() == 0)
+      && activateMe())
+  {
+    cout << "ModuleEchoLink: Trying autoconnect to "
+         << autocon_echolink_id << "\n";
+    connectByNodeId(autocon_echolink_id);
+  }
+} /* ModuleEchoLink::checkAutoCon */
 
 
 bool ModuleEchoLink::numConCheck(const std::string &callsign)
