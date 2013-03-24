@@ -15,6 +15,12 @@
   set up for auto connection. SvxLink will try to connect whenever idle.
   Original patch by Robbie / ON4SAX and Volodymyr / UR3QJW.
 
+* 16kHz internal sampling frequency is now the default. This will increase
+  the theoretical audio bandwidth from 4kHz to 8kHz. In reality the frequency
+  response starts falling off after 5.5kHz due to filtering.
+
+* Improved pre/de-emphasis filters.
+
 
 
  1.0.0 -- 08 Mar 2013
