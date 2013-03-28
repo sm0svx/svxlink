@@ -399,6 +399,7 @@ bool Logic::initialize(void)
   AudioSource *prev_rx_src = 0;
 
     // Create the RX object
+  cout << "Loading RX: " << rx_name << endl;
   m_rx = RxFactory::createNamedRx(cfg(), rx_name);
   if ((m_rx == 0) || !rx().initialize())
   {
@@ -548,6 +549,7 @@ bool Logic::initialize(void)
   prev_tx_src = tx_audio_mixer;
 
     // Create the TX object
+  cout << "Loading TX: " << tx_name << endl;
   m_tx = TxFactory::createNamedTx(cfg(), tx_name);
   if ((m_tx == 0) || !tx().initialize())
   {

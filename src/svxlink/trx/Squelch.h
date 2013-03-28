@@ -145,22 +145,31 @@ class Squelch : public sigc::trackable, public Async::AudioSink
       m_name = rx_name;
 
       unsigned delay = 0;
-      if (cfg.getValue(rx_name, "SQL_DELAY", delay))
+      if (!cfg.getValue(rx_name, "SQL_DELAY", delay, true))
       {
-      	setDelay(delay);
+        std::cerr << "*** ERROR: Error reading config variable "
+                  << rx_name << "/SQL_DELAY\n";
+        return false;
       }
+      setDelay(delay);
 
       unsigned start_delay = 0;
-      if (cfg.getValue(rx_name, "SQL_START_DELAY", start_delay))
+      if (!cfg.getValue(rx_name, "SQL_START_DELAY", start_delay, true))
       {
-	setStartDelay(start_delay);
+        std::cerr << "*** ERROR: Error reading config variable "
+                  << rx_name << "/SQL_START_DELAY\n";
+        return false;
       }
+      setStartDelay(start_delay);
 
       unsigned timeout = 0;
-      if (cfg.getValue(rx_name, "SQL_TIMEOUT", timeout))
+      if (!cfg.getValue(rx_name, "SQL_TIMEOUT", timeout, true))
       {
-	setSqlTimeout(timeout);
+        std::cerr << "*** ERROR: Error reading config variable "
+                  << rx_name << "/SQL_TIMEOUT\n";
+        return false;
       }
+      setSqlTimeout(timeout);
 
       return true;
     }

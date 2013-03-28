@@ -448,7 +448,7 @@ bool Voter::initialize(void)
     string rx_name(start, comma);
     if (!rx_name.empty())
     {
-      cout << "Adding receiver to Voter: " << rx_name << endl;
+      cout << "\tAdding receiver: " << rx_name << endl;
       SatRx *srx = new SatRx(cfg, rx_name, rxs.size() + 1, buffer_length);
       srx->squelchOpen.connect(mem_fun(*this, &Voter::satSquelchOpen));
       srx->signalLevelUpdated.connect(

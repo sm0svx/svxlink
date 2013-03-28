@@ -129,7 +129,7 @@ foreach {file} [glob -directory $basedir/modules.d *.tcl] {
 }
 
 if [info exists is_core_event_handler] {
-  puts "Event handler script successfully loaded.";
+  puts "$logic_name: Event handler script successfully loaded.";
 }
 
 

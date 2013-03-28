@@ -21,6 +21,30 @@
 
 * Improved pre/de-emphasis filters.
 
+* The QSO recorder now print out when being activated and deactivated.
+
+* ModuleEchoLink: Now possible to disable use of Speex for EchoLink. This can
+  be of use when running SvxLink on a system that have a less powerful CPU.
+  New config variable: USE_GSM_ONLY. Have a look at the ModuleEchoLink (5)
+  manual page for more information.
+  Patch from Adi / DL1HRC.
+
+* Improved error handling when reading the SQL_DELAY, SQL_START_DELAY and
+  SQL_TIMEOUT config variables.
+
+* Bugfix: There were an audio stuttering problem at the end of the long ident
+  when using 16k internal sampling rate on slower hardware. This has now
+  been fixed.
+
+* ModuleEchoLink: The language for remote announcements were always the
+  default. The DEFAULT_LANG config variable were ignored. Now it is possible
+  to set a DEFAULT_LANG config variable in the ModuleEchoLink.conf file which
+  only affect remote announcements.
+
+* Improved printouts so that it's easier to see which part of SvxLink (logic,
+  module etc) that made the printout. Also added a printout for receiver and
+  transmitter creation.
+
 
 
  1.0.0 -- 08 Mar 2013

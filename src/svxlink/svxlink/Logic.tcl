@@ -401,6 +401,7 @@ proc checkPeriodicIdentify {} {
   variable min_time_between_ident;
   variable ident_only_after_tx;
   variable need_ident;
+  global logic_name;
 
   if {$short_ident_interval == 0} {
     return;
@@ -419,7 +420,7 @@ proc checkPeriodicIdentify {} {
   }
 
   if {$long_ident_now} {
-    puts "Sending long identification...";
+    puts "$logic_name: Sending long identification...";
     send_long_ident $hour $minute;
     set prev_ident $now;
     set need_ident 0;
@@ -432,7 +433,7 @@ proc checkPeriodicIdentify {} {
     }
 
     if {$short_ident_now} {
-      puts "Sending short identification...";
+      puts "$logic_name: Sending short identification...";
       send_short_ident $hour $minute;
       set prev_ident $now;
       set need_ident 0;
@@ -483,7 +484,8 @@ proc qso_recorder_already_active {} {
 # Executed when the user is requesting a language change
 #
 proc set_language {lang_code} {
-  puts "Setting language $lang_code (NOT IMPLEMENTED)";
+  global logic_name;
+  puts "$logic_name: Setting language $lang_code (NOT IMPLEMENTED)";
 
 }
 
@@ -492,7 +494,8 @@ proc set_language {lang_code} {
 # Executed when the user requests a list of available languages
 #
 proc list_languages {} {
-  puts "Available languages: (NOT IMPLEMENTED)";
+  global logic_name;
+  puts "$logic_name: Available languages: (NOT IMPLEMENTED)";
 
 }
 

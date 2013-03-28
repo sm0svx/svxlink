@@ -161,6 +161,7 @@ class Settings : public sigc::trackable
     const QString& spkrAudioDevice(void) const { return m_spkr_audio_device; }
     bool useFullDuplex(void) const { return m_use_full_duplex; }
     const QString& connectSound(void) const { return m_connect_sound; }
+    int cardSampleRate(void) const { return m_card_sample_rate; }
     
     const QString& chatEncoding(void) const
     {
@@ -222,6 +223,7 @@ class Settings : public sigc::trackable
     QString   	            m_spkr_audio_device;
     bool      	            m_use_full_duplex;
     QString   	            m_connect_sound;
+    int                     m_card_sample_rate;
     
     int		            m_chat_encoding;
 

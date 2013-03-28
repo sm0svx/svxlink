@@ -97,6 +97,7 @@ using namespace std;
 #define CONF_SPKR_AUDIO_DEVICE        "SpkrAudioDevice"
 #define CONF_USE_FULL_DUPLEX          "UseFullDuplex"
 #define CONF_CONNECT_SOUND            "ConnectSound"
+#define CONF_CARD_SAMPLE_RATE         "CardSampleRate"
 
 #define CONF_CHAT_ENCODING	      "ChatEncoding"
 
@@ -123,6 +124,7 @@ using namespace std;
 #define CONF_AUDIO_DEVICE_DEFAULT 	"alsa:default"
 #define CONF_USE_FULL_DUPLEX_DEFAULT    false
 #define CONF_CONNECT_SOUND_DEFAULT 	"/usr/share/qtel/sounds/connect.raw"
+#define CONF_CARD_SAMPLE_RATE_DEFAULT   48000
 
 #define CONF_CHAT_ENCODING_DEFAULT	"ISO8859-1"
 
@@ -288,6 +290,13 @@ void Settings::showDialog(void)
   settings_dialog.spkr_audio_device->setText(m_spkr_audio_device);
   settings_dialog.use_full_duplex->setChecked(m_use_full_duplex);
   settings_dialog.connect_sound->setText(m_connect_sound);
+  QString card_sample_rate_str = QString::number(m_card_sample_rate);
+  int card_sample_rate_idx =
+          settings_dialog.card_sample_rate->findText(card_sample_rate_str);
+  if (card_sample_rate_idx != -1)
+  {
+    settings_dialog.card_sample_rate->setCurrentIndex(card_sample_rate_idx);
+  }
 
   settings_dialog.chat_encoding->setCurrentIndex(m_chat_encoding);
 
@@ -321,6 +330,8 @@ void Settings::showDialog(void)
 	m_spkr_audio_device = settings_dialog.spkr_audio_device->text();
 	m_use_full_duplex = settings_dialog.use_full_duplex->isChecked();
 	m_connect_sound = settings_dialog.connect_sound->text();
+        m_card_sample_rate =
+                settings_dialog.card_sample_rate->currentText().toInt();
 	
 	m_chat_encoding = settings_dialog.chat_encoding->currentIndex();
 
@@ -339,6 +350,7 @@ void Settings::showDialog(void)
 	qsettings.setValue(CONF_SPKR_AUDIO_DEVICE, m_spkr_audio_device);
 	qsettings.setValue(CONF_USE_FULL_DUPLEX, m_use_full_duplex);
 	qsettings.setValue(CONF_CONNECT_SOUND, m_connect_sound);
+	qsettings.setValue(CONF_CARD_SAMPLE_RATE, m_card_sample_rate);
       	
 	qsettings.setValue(CONF_CHAT_ENCODING,
 			     encodings[m_chat_encoding].name);
@@ -381,6 +393,8 @@ void Settings::readSettings(void)
       CONF_USE_FULL_DUPLEX_DEFAULT).toBool();
   m_connect_sound = qsettings.value(CONF_CONNECT_SOUND,
       CONF_CONNECT_SOUND_DEFAULT).toString();
+  m_card_sample_rate = qsettings.value(CONF_CARD_SAMPLE_RATE,
+      CONF_CARD_SAMPLE_RATE_DEFAULT).toInt();
   
   m_chat_encoding = 0;
   QString encoding_name = qsettings.value(CONF_CHAT_ENCODING,

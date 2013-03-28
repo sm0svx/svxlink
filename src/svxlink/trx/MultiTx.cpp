@@ -156,7 +156,7 @@ bool MultiTx::initialize(void)
     string tx_name(start, comma);
     if (!tx_name.empty())
     {
-      cout << "Adding transmitter: " << tx_name << endl;
+      cout << "\tAdding transmitter: " << tx_name << endl;
       Tx *tx = TxFactory::createNamedTx(cfg, tx_name);
       if ((tx == 0) || !tx->initialize())
       {
