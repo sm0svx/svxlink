@@ -188,6 +188,7 @@ class MainWindow : public QMainWindow, private Ui::MainWindowBase,
     void allMsgsWritten(void);
     void allSamplesFlushed(void);
     void initMsgAudioIo(void);
+    void setupAudioParams(void);
     void updateBookmarkModel(void);
     
   private slots:

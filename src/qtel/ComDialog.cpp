@@ -66,6 +66,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioValve.h>
 #include <AsyncAudioSplitter.h>
+#include <AsyncAudioInterpolator.h>
+#include <AsyncAudioDecimator.h>
 
 
 /****************************************************************************
@@ -77,6 +79,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "MyMessageBox.h"
 #include "Settings.h"
 #include "ComDialog.h"
+#include "multirate_filter_coeff.h"
 
 
 
@@ -301,18 +304,77 @@ void ComDialog::init(const QString& remote_name)
   call->setText(callsign);
   name_label->setText(remote_name);
   
-  rem_audio_fifo = new AudioFifo(8000);
+  AudioSource *prev_src = 0;
+  rem_audio_fifo = new AudioFifo(INTERNAL_SAMPLE_RATE);
   rem_audio_fifo->setOverwrite(true);
-  rem_audio_fifo->setPrebufSamples(1280);
+  rem_audio_fifo->setPrebufSamples(1280 * INTERNAL_SAMPLE_RATE / 8000);
+  prev_src = rem_audio_fifo;
   
   rem_audio_valve = new AudioValve;
   rem_audio_valve->setOpen(false);
-  rem_audio_fifo->registerSink(rem_audio_valve);
+  prev_src->registerSink(rem_audio_valve);
+  prev_src = rem_audio_valve;
 
-  rem_audio_valve->registerSink(spkr_audio_io);
+#if (INTERNAL_SAMPLE_RATE == 8000)  
+  if (spkr_audio_io->sampleRate() > 8000)
+#endif
+  {
+      // Interpolate sample rate to 16kHz
+    AudioInterpolator *i1 = new AudioInterpolator(2, coeff_16_8,
+                                                  coeff_16_8_taps);
+    prev_src->registerSink(i1, true);
+    prev_src = i1;
+  }
+
+  if (spkr_audio_io->sampleRate() > 16000)
+  {
+      // Interpolate sample rate to 48kHz
+#if (INTERNAL_SAMPLE_RATE == 8000)
+    AudioInterpolator *i2 = new AudioInterpolator(3, coeff_48_16_int,
+                                                  coeff_48_16_int_taps);
+#else
+    AudioInterpolator *i2 = new AudioInterpolator(3, coeff_48_16,
+                                                  coeff_48_16_taps);
+#endif
+    prev_src->registerSink(i2, true);
+    prev_src = i2;
+  }
+  
+  prev_src->registerSink(spkr_audio_io);
+  prev_src = 0;
+
+    // Mic audio audio pipe starts here
+  prev_src = mic_audio_io;
+
+    // We need a buffer before the Decimators
+  AudioFifo *mic_fifo = new AudioFifo(2048);
+  prev_src->registerSink(mic_fifo, true);
+  prev_src = mic_fifo;
+
+    // If the sound card sample rate is higher than 16kHz (48kHz assumed),
+    // decimate it down to 16kHz
+  if (mic_audio_io->sampleRate() > 16000)
+  {
+    AudioDecimator *d1 = new AudioDecimator(3, coeff_48_16_wide,
+					    coeff_48_16_wide_taps);
+    prev_src->registerSink(d1, true);
+    prev_src = d1;
+  }
+
+#if (INTERNAL_SAMPLE_RATE < 16000)
+    // If the sound card sample rate is higher than 8kHz (16 or 48kHz assumed)
+    // decimate it down to 8kHz.
+  if (mic_audio_io->sampleRate() > 8000)
+  {
+    AudioDecimator *d2 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
+    prev_src->registerSink(d2, true);
+    prev_src = d2;
+  }
+#endif
 
   tx_audio_splitter = new AudioSplitter;
-  mic_audio_io->registerSink(tx_audio_splitter);
+  prev_src->registerSink(tx_audio_splitter);
+  prev_src = 0;
   
   Settings *settings = Settings::instance();
 
@@ -336,8 +398,16 @@ void ComDialog::init(const QString& remote_name)
   vox_threshold->setValue(vox->threshold());
   vox_delay->setValue(vox->delay());
   
+#if INTERNAL_SAMPLE_RATE == 16000
+  AudioDecimator *down_sampler = new AudioDecimator(
+          2, coeff_16_8, coeff_16_8_taps);
+  tx_audio_splitter->addSink(down_sampler, true);
+  ptt_valve = new AudioValve;
+  down_sampler->registerSink(ptt_valve);
+#else
   ptt_valve = new AudioValve;
   tx_audio_splitter->addSink(ptt_valve);
+#endif
   
   if (settings->useFullDuplex())
   {
@@ -404,6 +474,8 @@ void ComDialog::updateStationData(const StationData *station)
 
 void ComDialog::createConnection(const StationData *station)
 {
+  AudioSource *prev_src = ptt_valve;
+
   Settings *settings = Settings::instance();  
   con = new Qso(station->ip(), settings->callsign().toStdString(),
       settings->name().toStdString(), settings->info().toStdString());
@@ -417,13 +489,14 @@ void ComDialog::createConnection(const StationData *station)
     con = 0;
     return;
   }
-  
   con->infoMsgReceived.connect(mem_fun(*this, &ComDialog::infoMsgReceived));
   con->chatMsgReceived.connect(mem_fun(*this, &ComDialog::chatMsgReceived));
   con->stateChange.connect(mem_fun(*this, &ComDialog::stateChange));
   con->isReceiving.connect(mem_fun(*this, &ComDialog::isReceiving));
-  con->registerSink(rem_audio_fifo);
-  ptt_valve->registerSink(con);
+  prev_src->registerSink(con);
+  prev_src = con;
+  
+  prev_src->registerSink(rem_audio_fifo);
   
   connect_button->setEnabled(TRUE);
   connect_button->setFocus();

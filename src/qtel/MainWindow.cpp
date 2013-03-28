@@ -59,6 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncIpAddress.h>
+#include <AsyncAudioInterpolator.h>
 #include <EchoLinkDirectory.h>
 
 
@@ -75,6 +76,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "MainWindow.h"
 #include "MsgHandler.h"
 #include "EchoLinkDirectoryModel.h"
+#include "multirate_filter_coeff.h"
 
 
 /****************************************************************************
@@ -194,9 +196,8 @@ MainWindow::MainWindow(Directory &dir)
   connect(incoming_accept_button, SIGNAL(clicked()),
       	  this, SLOT(acceptIncoming()));
   
+  setupAudioParams();
 
-  AudioIO::setChannels(1);
-  
   dir.error.connect(mem_fun(*this, &MainWindow::serverError));
   dir.statusChanged.connect(mem_fun(*this, &MainWindow::statusChanged));
   dir.stationListUpdated.connect(
@@ -444,12 +445,65 @@ void MainWindow::initMsgAudioIo(void)
   
   msg_audio_io =
       new AudioIO(Settings::instance()->spkrAudioDevice().toStdString(), 0);
-  msg_handler = new MsgHandler(msg_audio_io->sampleRate());
+
+  msg_handler = new MsgHandler(INTERNAL_SAMPLE_RATE);
   msg_handler->allMsgsWritten.connect(
     mem_fun(*this, &MainWindow::allMsgsWritten));
-  msg_audio_io->registerSource(msg_handler);
+  AudioSource *prev_src = msg_handler;
+
+#if (INTERNAL_SAMPLE_RATE == 8000)  
+  if (msg_audio_io->sampleRate() > 8000)
+  {
+      // Interpolate sample rate to 16kHz
+    AudioInterpolator *i1 = new AudioInterpolator(2, coeff_16_8,
+                                                  coeff_16_8_taps);
+    prev_src->registerSink(i1, true);
+    prev_src = i1;
+  }
+#endif
+
+  if (msg_audio_io->sampleRate() > 16000)
+  {
+      // Interpolate sample rate to 48kHz
+#if (INTERNAL_SAMPLE_RATE == 8000)
+    AudioInterpolator *i2 = new AudioInterpolator(3, coeff_48_16_int,
+                                                  coeff_48_16_int_taps);
+#else
+    AudioInterpolator *i2 = new AudioInterpolator(3, coeff_48_16,
+                                                  coeff_48_16_taps);
+#endif
+    prev_src->registerSink(i2, true);
+    prev_src = i2;
+  }
+
+  prev_src->registerSink(msg_audio_io);
   
 } /* MainWindow::initMsgAudioIo */
+
+
+void MainWindow::setupAudioParams(void)
+{
+  int rate = Settings::instance()->cardSampleRate();
+  if (rate == 48000)
+  {
+    AudioIO::setBlocksize(1024);
+    AudioIO::setBlockCount(4);
+  }
+  else if (rate == 16000)
+  {
+    AudioIO::setBlocksize(512);
+    AudioIO::setBlockCount(2);
+  }
+#if INTERNAL_SAMPLE_RATE <= 8000
+  else if (rate == 8000)
+  {
+    AudioIO::setBlocksize(256);
+    AudioIO::setBlockCount(2);
+  }
+#endif
+  AudioIO::setSampleRate(rate);
+  AudioIO::setChannels(1);
+} /* MainWindow::setupAudioParams */
 
 
 void MainWindow::updateBookmarkModel(void)
@@ -708,7 +762,8 @@ void MainWindow::configurationUpdated(void)
   
   refresh_call_list_timer->setInterval(
       1000 * 60 * Settings::instance()->listRefreshTime());
-  
+
+  setupAudioParams();
   initMsgAudioIo();
 } /* MainWindow::configurationChanged */
 
