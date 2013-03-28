@@ -21,6 +21,8 @@
 
 * Improved pre/de-emphasis filters.
 
+* The QSO recorder now print out when being activated and deactivated.
+
 
 
  1.0.0 -- 08 Mar 2013

@@ -176,7 +176,7 @@ void QsoRecorder::setEnabled(bool enable)
 
     rec_timestamp = "";
   }
-} /* QsoRecorder::enable */
+} /* QsoRecorder::setEnabled */
 
 
 
