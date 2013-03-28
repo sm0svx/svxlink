@@ -99,6 +99,12 @@ necessary but it's fun to see which other stations are running SvxLink.
 The maximum number of stations that can participate in a conference QSO on this
 node. If more stations try to connect, the connect request will be rejected. 
 .TP
+.B USE_GSM_ONLY
+On smaller systems with a less powerful CPU it is a good idea to prevent
+SvxLink from switching into the Speex codec when another SvxLink station is
+connecting via EchoLink.
+If this param is set to 1 SvxLink remains in the default codec (GSM).
+.TP
 .B MAX_CONNECTIONS
 When more stations than specified in MAX_QSOS try to connect, a connection will
 temporarily be established long enough to play a message telling the remote

@@ -448,6 +448,13 @@ class Qso
      */
     virtual void resumeOutput(void);
     
+    /**
+     * @brief Setting GSM as only codec for echolink connections
+     *
+     * This function can be called when SvxLink is installed and running
+     * on a system with smaller cpu to keep the load low.
+     */
+    void setUseGsmOnly(void);
 
   protected:
     /**
@@ -505,6 +512,7 @@ class Qso
     Codec               remote_codec;
     bool		is_remote_initiated;
     bool      	      	receiving_audio;
+    bool                use_gsm_only;
 
     Qso(const Qso&);
     Qso& operator=(const Qso&);
