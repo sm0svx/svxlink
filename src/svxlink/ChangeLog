@@ -36,6 +36,11 @@
   when using 16k internal sampling rate on slower hardware. This has now
   been fixed.
 
+* ModuleEchoLink: The language for remote announcements were always the
+  default. The DEFAULT_LANG config variable were ignored. Now it is possible
+  to set a DEFAULT_LANG config variable in the ModuleEchoLink.conf file which
+  only affect remote announcements.
+
 
 
  1.0.0 -- 08 Mar 2013
