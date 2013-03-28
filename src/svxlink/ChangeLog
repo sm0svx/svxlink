@@ -41,6 +41,10 @@
   to set a DEFAULT_LANG config variable in the ModuleEchoLink.conf file which
   only affect remote announcements.
 
+* Improved printouts so that it's easier to see which part of SvxLink (logic,
+  module etc) that made the printout. Also added a printout for receiver and
+  transmitter creation.
+
 
 
  1.0.0 -- 08 Mar 2013
