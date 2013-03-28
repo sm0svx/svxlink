@@ -29,6 +29,9 @@
   manual page for more information.
   Patch from Adi / DL1HRC.
 
+* Improved error handling when reading the SQL_DELAY, SQL_START_DELAY and
+  SQL_TIMEOUT config variables.
+
 
 
  1.0.0 -- 08 Mar 2013
