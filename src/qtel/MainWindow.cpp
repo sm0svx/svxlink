@@ -427,15 +427,8 @@ void MainWindow::statusChanged(StationData::Status status)
 void MainWindow::allMsgsWritten(void)
 {
   //cout << "MainWindow::allMsgsWritten\n";
-  msg_audio_io->flushSamples();
-} /* MainWindow::allMsgsWritten */
-
-
-void MainWindow::allSamplesFlushed(void)
-{
-  //cout << "MainWindow::allSamplesFlushed\n";
   msg_audio_io->close();  
-} /* MainWindow::allSamplesFlushed */
+} /* MainWindow::allMsgsWritten */
 
 
 void MainWindow::initMsgAudioIo(void)

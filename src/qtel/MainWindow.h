@@ -186,7 +186,6 @@ class MainWindow : public QMainWindow, private Ui::MainWindowBase,
     void serverError(const std::string& msg);
     void statusChanged(EchoLink::StationData::Status status);
     void allMsgsWritten(void);
-    void allSamplesFlushed(void);
     void initMsgAudioIo(void);
     void setupAudioParams(void);
     void updateBookmarkModel(void);
