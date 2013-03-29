@@ -187,8 +187,8 @@ Tx *TxFactory::createNamedTx(Config& cfg, const string& name)
   it = tx_factories.find(tx_type);
   if (it == tx_factories.end())
   {
-    cerr << "*** ERROR: Unknown TX type \"" << tx_type << "\". Legal values "
-         << "are: ";
+    cerr << "*** ERROR: Unknown TX type \"" << tx_type << "\" for transmitter "
+         << name << ". Legal values " << "are: ";
     for (it=tx_factories.begin(); it!=tx_factories.end(); ++it)
     {
       cerr << "\"" << (*it).first << "\" ";

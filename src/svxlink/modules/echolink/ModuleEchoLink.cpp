@@ -579,7 +579,7 @@ void ModuleEchoLink::deactivateCleanup(void)
   delete cbc_timer;
   cbc_timer = 0;
   state = STATE_NORMAL;
-  listen_only_valve->setOpen(false);
+  listen_only_valve->setOpen(true);
 } /* deactivateCleanup */
 
 

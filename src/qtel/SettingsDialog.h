@@ -122,6 +122,11 @@ class SettingsDialog : public QDialog, public Ui::SettingsDialog
       setupUi(this);
       my_callsign->setMaxLength(EchoLink::StationData::MAXCALL);
       my_location->setMaxLength(EchoLink::StationData::MAXDESC);
+#if INTERNAL_SAMPLE_RATE == 8000
+      card_sample_rate->addItem("8000");
+#endif
+      card_sample_rate->addItem("16000");
+      card_sample_rate->addItem("48000");
     }
 
   private slots:

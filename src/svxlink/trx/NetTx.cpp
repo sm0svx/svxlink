@@ -167,8 +167,8 @@ bool NetTx::initialize(void)
   audio_enc = AudioEncoder::create(audio_enc_name);
   if (audio_enc == 0)
   {
-    cerr << name << ": *** ERROR: Illegal audio codec (" << audio_enc_name
-          << ") specified\n";
+    cerr << "*** ERROR: Illegal audio codec (" << audio_enc_name
+          << ") specified for transmitter " << name << "\n";
     return false;
   }
   audio_enc->writeEncodedSamples.connect(

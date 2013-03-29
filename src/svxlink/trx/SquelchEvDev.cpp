@@ -190,8 +190,8 @@ bool SquelchEvDev::initialize(Async::Config& cfg, const std::string& rx_name)
   if ((fd = open(devname.c_str(), O_RDONLY)) == -1)
   {
     cerr << "*** ERROR: Could not open event device " << devname
-	 << ": " << strerror(errno)
-	 << endl;
+	 << " specified in " << rx_name << "/EVDEV_DEVNAME: "
+         << strerror(errno) << endl;
     return false;
   }
   
@@ -229,8 +229,8 @@ void SquelchEvDev::readEvDevData(FdWatch *w)
   int rd = read(fd, ev, sizeof(ev));
   if (rd < 0)
   {
-    cerr << "*** WARNING: SquelchEvDev::readEvDevData read: "
-	 << strerror(errno) << endl;
+    cerr << "*** WARNING: SquelchEvDev::readEvDevData read for receiver "
+         << rxName() << ": " << strerror(errno) << endl;
     return;
   }
 
@@ -238,7 +238,8 @@ void SquelchEvDev::readEvDevData(FdWatch *w)
   {
     if (rd < (int)sizeof(ev[0]))
     {
-      cerr << "*** WARNING: SquelchEvDev::readEvDevData: Short read\n";
+      cerr << "*** WARNING: SquelchEvDev::readEvDevData for receiver "
+           << rxName() << ": Short read\n";
       return;
     }
     

@@ -1,3 +1,14 @@
+ 1.1.0 -- ?? ??? 2013
+-----------------------
+
+* Qtel now support 16k internal sample rate.
+
+* The sound card sample rate can now be set in the configuration dialog.
+
+* The "100% CPU load after incoming connect" bug in Qtel has been resolved.
+
+
+
  1.0.0 -- 08 Mar 2013
 -----------------------
 

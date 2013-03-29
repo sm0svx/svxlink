@@ -143,7 +143,7 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
     callsign(callsign),  name(name),                local_stn_info(info),
     send_buffer_cnt(0),  remote_ip(addr),           rx_indicator_timer(0),
     remote_name("?"),    remote_call("?"),          remote_codec(CODEC_GSM),
-    is_remote_initiated(false), receiving_audio(false)
+    is_remote_initiated(false), receiving_audio(false), use_gsm_only(false)
 {
   if (!addr.isUnicast())
   {
@@ -243,11 +243,14 @@ bool Qso::setLocalCallsign(const string& callsign)
 
 bool Qso::setLocalName(const string& name)
 {
-#ifdef SPEEX_MAJOR
-  const char *priv = "SPEEX";
-#else
   const char *priv = 0;
+#ifdef SPEEX_MAJOR
+  if (!use_gsm_only)
+  {
+    priv = "SPEEX";
+  }
 #endif  
+
   this->name = name;
   sdes_length = rtp_make_sdes(sdes_packet, callsign.c_str(),
       name.c_str(), priv);
@@ -437,9 +440,10 @@ bool Qso::sendAudioRaw(RawPacket *raw_packet)
 void Qso::setRemoteParams(const string& priv)
 {
 #ifdef SPEEX_MAJOR  
-  if ((priv.find("SPEEX") != string::npos) && (remote_codec == CODEC_GSM))
+  if ((priv.find("SPEEX") != string::npos) && (remote_codec == CODEC_GSM)
+      && !use_gsm_only)
   {
-    cerr << "Switching to SPEEX audio codec." << endl;
+    cerr << "Switching to SPEEX audio codec for EchoLink Qso." << endl;
     remote_codec = CODEC_SPEEX;
   }
 #endif
@@ -516,6 +520,11 @@ void Qso::resumeOutput(void)
 {
 } /* Qso::resumeOutput */
     
+
+void Qso::setUseGsmOnly(void)
+{
+  use_gsm_only = true;
+} /* Qso::setGsmCodec */
 
 
 /****************************************************************************

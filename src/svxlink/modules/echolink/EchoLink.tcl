@@ -372,12 +372,14 @@ proc unknown_command {cmd} {
 #               (0=deactivate, 1=activate)
 #
 proc listen_only {status activate} {
+  variable module_name;
+
   if {$status == $activate} {
     playMsg "listen_only";
     playMsg [expr {$status ? "already_active" : "not_active"}];
   } else {
-    puts "[expr {$activate ? "Activating" : "Deactivating"}]\
-          EchoLink listen only mode.";
+    puts "$module_name: [expr {$activate ? "Activating" : "Deactivating"}]\
+          listen only mode.";
     playMsg [expr {$activate ? "activating" : "deactivating"}];
     playMsg "listen_only";
   }
