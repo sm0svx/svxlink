@@ -177,6 +177,8 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
       mem_fun(*this, &EchoLinkQsoTest::micAudioRead));
   
   chatMsgReceived.connect(mem_fun(*this, &EchoLinkQsoTest::chatMsg));
+  infoMsgReceived.connect(mem_fun(*this, &EchoLinkQsoTest::infoMsg));
+  stateChange.connect(mem_fun(*this, &EchoLinkQsoTest::onStateChange));
   //audioReceived.connect(mem_fun(*sigc_src, &SigCAudioSource::writeSamples));
   
   cout << string("Audio device is ") << (full_duplex ? "" : "NOT ")
@@ -350,6 +352,39 @@ void EchoLinkQsoTest::chatMsg(const string& msg)
 {
   cout << msg << endl;
 } /* EchoLinkQsoTest::chatMsg */
+
+
+void EchoLinkQsoTest::infoMsg(const string& msg)
+{
+  cout << "------------ INFO ------------\n";
+  cout << msg << endl;
+  cout << "------------------------------\n";
+} /* EchoLinkQsoTest::infoMsg */
+
+
+void EchoLinkQsoTest::onStateChange(Qso::State state)
+{
+  cout << "EchoLoink QSO state changed to ";  
+  switch (state)
+  {
+    case Qso::STATE_DISCONNECTED:
+      cout << "DISCONNECTED\n";
+      break;
+    case Qso::STATE_CONNECTING:
+      cout << "CONNECTING\n";
+      break;
+    case Qso::STATE_CONNECTED:
+      cout << "CONNECTED: ";
+      cout << remoteCallsign() << " " << remoteName() << endl;
+      break;
+    case Qso::STATE_BYE_RECEIVED:
+      cout << "BYE_RECEIVED\n";
+      break;
+    default:
+      cout << "?\n";
+      break;
+  }
+} /* EchoLinkQsoTest::onStateChange */
 
 
 int EchoLinkQsoTest::micAudioRead(float *buf, int len)
