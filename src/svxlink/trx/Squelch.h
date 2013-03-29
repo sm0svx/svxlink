@@ -247,9 +247,8 @@ class Squelch : public sigc::trackable, public Async::AudioSink
 	m_timeout_left -= count;
 	if (m_timeout_left <= 0)
 	{
-	  std::cerr << m_name
-	       << ": *** WARNING: The squelch was open for too long. "
-	       << "Forcing it closed.\n";
+	  std::cerr << "*** WARNING: The squelch was open for too long for "
+                    << "receiver " << m_name << ". " << "Forcing it closed.\n";
 	  setOpen(false);
 	}
       }
@@ -354,6 +353,12 @@ class Squelch : public sigc::trackable, public Async::AudioSink
     {
       return m_signal_detected;
     }
+
+    /**
+     * @brief   Return the name of the associated receiver
+     * @return  Returns the name of the associated receiver
+     */
+    const std::string &rxName(void) const { return m_name; }
 
   private:
     std::string	m_name;

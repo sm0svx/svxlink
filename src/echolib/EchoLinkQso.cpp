@@ -245,7 +245,7 @@ bool Qso::setLocalName(const string& name)
 {
   const char *priv = 0;
 #ifdef SPEEX_MAJOR
-  if (use_gsm_only)
+  if (!use_gsm_only)
   {
     priv = "SPEEX";
   }

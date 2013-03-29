@@ -107,7 +107,7 @@ bool Module::initialize(void)
 
 void Module::activate(void)
 {
-  cout << "Activating module " << name() << "...\n";
+  cout << logic()->name() << ": Activating module " << name() << "...\n";
   
   m_is_active = true;
   
@@ -128,7 +128,7 @@ void Module::activate(void)
 
 void Module::deactivate(void)
 {
-  cout << "Deactivating module " << name() << "...\n";
+  cout << logic()->name() << ": Deactivating module " << name() << "...\n";
   
   deactivateCleanup();
   //transmit(false);
@@ -282,7 +282,7 @@ bool Module::isWritingMessage(void)
 
 void Module::moduleTimeout(Timer *t)
 {
-  cout << "Module timeout: " << name() << endl;
+  cout << logic()->name() << ": Module timeout: " << name() << endl;
   processEvent("timeout");
   deactivateMe();
 } /* ModuleParrot::moduleTimeout */

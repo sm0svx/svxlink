@@ -536,6 +536,7 @@ int main(int argc, char **argv)
       continue;
     }
     trx_handlers.push_back(trx_handler);
+    cout << endl;
   }
   
   if (!trx_handlers.empty())

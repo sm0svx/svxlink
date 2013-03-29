@@ -245,7 +245,7 @@ bool NetUplink::initialize(void)
 
 void NetUplink::clientConnected(TcpConnection *incoming_con)
 {
-  cout << "Client connected: " << incoming_con->remoteHost() << ":"
+  cout << name << ": Client connected: " << incoming_con->remoteHost() << ":"
        << incoming_con->remotePort() << endl;
 
   if (con == 0)
@@ -292,7 +292,7 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
   }
   else
   {
-    cout << "Only one client allowed. Disconnecting...\n";
+    cout << name << ": Only one client allowed. Disconnecting...\n";
     incoming_con->disconnect();
   }
 } /* NetUplink::clientConnected */
@@ -301,7 +301,7 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
 void NetUplink::clientDisconnected(TcpConnection *the_con,
       	      	      	      	   TcpConnection::DisconnectReason reason)
 {
-  cout << "Client disconnected: " << con->remoteHost() << ":"
+  cout << name << ": Client disconnected: " << con->remoteHost() << ":"
        << con->remotePort() << endl;
 
   assert(the_con == con);
@@ -344,7 +344,8 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
 
   if (recv_exp == 0)
   {
-    cerr << "*** ERROR: Unexpected TCP data received. Throwing it away...\n";
+    cerr << "*** ERROR: Unexpected TCP data received in NetUplink "
+         << name << ". Throwing it away...\n";
     return size;
   }
 
@@ -356,7 +357,8 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
     unsigned read_cnt = min(static_cast<unsigned>(size), recv_exp-recv_cnt);
     if (recv_cnt+read_cnt > sizeof(recv_buf))
     {
-      cerr << "*** ERROR: TCP receive buffer overflow. Disconnecting...\n";
+      cerr << "*** ERROR: TCP receive buffer overflow in NetUplink "
+           << name << ". Disconnecting...\n";
       con->disconnect();
       clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
       return orig_size;
@@ -383,8 +385,9 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
 	}
 	else
 	{
-	  cerr << "*** ERROR: Illegal message header received. Header length "
-	       << "too small (" << msg->size() << ")\n";
+	  cerr << "*** ERROR: Illegal message header received in NetUplink "
+               << name << ". Header length too small (" << msg->size()
+               << ")\n";
 	  con->disconnect();
 	  clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
 	  return orig_size;
@@ -419,7 +422,8 @@ void NetUplink::handleMsg(Msg *msg)
         MsgAuthResponse *resp_msg = reinterpret_cast<MsgAuthResponse *>(msg);
         if (!resp_msg->verify(auth_key, auth_challenge))
         {
-          cerr << "*** ERROR: Authentication error.\n";
+          cerr << "*** ERROR: Authentication error in NetUplink "
+               << name << ".\n";
           con->disconnect();
           clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
           return;
@@ -433,7 +437,7 @@ void NetUplink::handleMsg(Msg *msg)
       }
       else
       {
-        cerr << "*** ERROR: Protocol error.\n";
+        cerr << "*** ERROR: Protocol error in NetUplink " << name << ".\n";
         con->disconnect();
         clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
       }
@@ -537,7 +541,7 @@ void NetUplink::handleMsg(Msg *msg)
       else
       {
         cerr << "*** ERROR: Received request for unknown RX audio codec ("
-             << codec_msg->name() << ")\n";
+             << codec_msg->name() << ") in NetUplink " << name << "\n";
       }
       break;
     }
@@ -568,7 +572,7 @@ void NetUplink::handleMsg(Msg *msg)
       else
       {
         cerr << "*** ERROR: Received request for unknown TX audio codec ("
-             << codec_msg->name() << ")\n";
+             << codec_msg->name() << ") in NetUplink " << name << "\n";
       }
       break;
     }
@@ -594,8 +598,9 @@ void NetUplink::handleMsg(Msg *msg)
     }
 
     default:
-      cerr << "*** ERROR: Unknown TCP message received. type="
-      	   << msg->type() << ", tize=" << msg->size() << endl;
+      cerr << "*** ERROR: Unknown TCP message received in NetUplink "
+           << name << ". type=" << msg->type() << ", tize="
+           << msg->size() << endl;
       break;
   }
 
@@ -609,11 +614,12 @@ void NetUplink::sendMsg(Msg *msg)
     int written = con->write(msg, msg->size());
     if (written == -1)
     {
-      cerr << "*** ERROR: TCP transmit error.\n";
+      cerr << "*** ERROR: TCP transmit error in NetUplink " << name << ".\n";
     }
     else if (written != static_cast<int>(msg->size()))
     {
-      cerr << "*** ERROR: TCP transmit buffer overflow.\n";
+      cerr << "*** ERROR: TCP transmit buffer overflow in NetUplink "
+           << name << ".\n";
       con->disconnect();
       clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
     }
@@ -647,7 +653,7 @@ void NetUplink::squelchOpen(bool is_open)
 
 void NetUplink::dtmfDigitDetected(char digit, int duration)
 {
-  cout << "DTMF digit detected: " << digit << " with duration " << duration
+  cout << name << ": DTMF digit detected: " << digit << " with duration " << duration
        << " milliseconds" << endl;
   MsgDtmf *msg = new MsgDtmf(digit, duration);
   sendMsg(msg);
@@ -656,7 +662,7 @@ void NetUplink::dtmfDigitDetected(char digit, int duration)
 
 void NetUplink::toneDetected(float tone_fq)
 {
-  cout << "Tone detected: " << tone_fq << endl;
+  cout << name << ": Tone detected: " << tone_fq << endl;
   MsgTone *msg = new MsgTone(tone_fq);
   sendMsg(msg);
 } /* NetUplink::toneDetected */
@@ -742,7 +748,7 @@ void NetUplink::heartbeat(Timer *t)
 
   if (diff_ms > 15000)
   {
-    cerr << "*** ERROR: Heartbeat timeout\n";
+    cerr << "*** ERROR: Heartbeat timeout in NetUplink " << name << "\n";
     con->disconnect();
     clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
   }

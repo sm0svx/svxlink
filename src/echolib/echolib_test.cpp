@@ -232,6 +232,13 @@ int main( int argc, const char **argv )
   dir->statusChanged.connect(sigc::ptr_fun(&on_status_changed));
   dir->stationListUpdated.connect(sigc::ptr_fun(&on_station_list_updated));
     
+  if (Dispatcher::instance() == 0)
+  {
+    cerr << "*** ERROR: Could not create EchoLink listener (Dispatcher)\n";
+    exit(1);
+  }
+  // Handle incoming connections
+
   process_next_stage();
   
   app.exec();

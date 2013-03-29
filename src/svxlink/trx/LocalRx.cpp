@@ -613,7 +613,7 @@ bool LocalRx::initialize(void)
     calldet->setPeakThresh(13);
     calldet->activated.connect(mem_fun(*this, &LocalRx::tone1750detected));
     splitter->addSink(calldet, true);
-    cout << "Enabling 1750Hz muting\n";
+    //cout << "### Enabling 1750Hz muting\n";
   }
 
   return true;
@@ -843,8 +843,8 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
   {
     if (sample_rate != 16000)
     {
-      cerr << "*** ERROR: The tone signal level detector only work at 16kHz "
-              "sampling rate\n";
+      cerr << "*** ERROR: Tone signal level detector specified for receiver "
+           << name << ". It only works at 16kHz internal sampling rate\n";
       return 0;
     }
     siglevdet = new SigLevDetTone(sample_rate);
@@ -886,7 +886,7 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
 
 void LocalRx::tone1750detected(bool detected)
 {
-   cout << "Muting 1750Hz: " << (detected ? "TRUE\n" : "FALSE\n");
+   //cout << "### Muting 1750Hz: " << (detected ? "TRUE\n" : "FALSE\n");
    if (detected)
    {
      delay->mute(true, TONE_1750_MUTING_PRE);

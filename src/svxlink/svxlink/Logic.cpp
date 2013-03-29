@@ -238,7 +238,7 @@ bool Logic::initialize(void)
   if (!lang_cmd->addToParser())
   {
     cerr << "*** ERROR: Could not add the language change command \""
-	 << lang_cmd->cmdStr() << "\".\n";
+	 << lang_cmd->cmdStr() << "\" for logic " << name() << ".\n";
     delete lang_cmd;  // FIXME: Do this in cleanup() instead
     return false;
   }
@@ -720,8 +720,8 @@ void Logic::recordStart(const string& filename, unsigned max_time)
   recorder = new AudioRecorder(filename);
   if (!recorder->initialize())
   {
-    cerr << "*** ERROR: Could not open file for recording: "
-      	 << filename << endl;
+    cerr << "*** ERROR: Could not open file for recording in logic "
+         << name() << ": " << filename << endl;
     recordStop();
     return;
   }
@@ -882,7 +882,8 @@ void Logic::selcallSequenceDetected(std::string sequence)
   }
   else
   {
-    cout << "Sel5 sequence \"" << sequence << "\" out of defined range\n";
+    cout << name() << ": Sel5 sequence \"" << sequence
+         << "\" out of defined range\n";
   }
 } /* Logic::selcallSequenceDetected */
 
@@ -1184,14 +1185,16 @@ void Logic::loadModule(const string& module_cfg_name)
   if (handle == NULL)
   {
     cerr << "*** ERROR: Failed to load module "
-      	 << module_cfg_name.c_str() << ": " << dlerror() << endl;
+      	 << module_cfg_name.c_str() << " into logic " << name() << ": "
+         << dlerror() << endl;
     return;
   }
   Module::InitFunc init = (Module::InitFunc)dlsym(handle, "module_init");
   if (init == NULL)
   {
     cerr << "*** ERROR: Could not find init func for module "
-      	 << module_cfg_name.c_str() << ": " << dlerror() << endl;
+      	 << module_cfg_name.c_str() << " in logic " << name() << ": "
+         << dlerror() << endl;
     dlclose(handle);
     return;
   }
@@ -1200,7 +1203,7 @@ void Logic::loadModule(const string& module_cfg_name)
   if (module == 0)
   {
     cerr << "*** ERROR: Creation failed for module "
-      	 << module_cfg_name.c_str() << endl;
+      	 << module_cfg_name.c_str() << " in logic " << name() << endl;
     dlclose(handle);
     return;
   }
@@ -1208,7 +1211,7 @@ void Logic::loadModule(const string& module_cfg_name)
   if (!module->initialize())
   {
     cerr << "*** ERROR: Initialization failed for module "
-      	 << module_cfg_name.c_str() << endl;
+      	 << module_cfg_name.c_str() << " in logic " << name() << endl;
     delete module;
     dlclose(handle);
     return;
@@ -1220,9 +1223,10 @@ void Logic::loadModule(const string& module_cfg_name)
   if (!cmd->addToParser())
   {
     cerr << "\n*** ERROR: Failed to add module activation command for module \""
-	 << module_cfg_name << "\". This is probably due to having set up two "
-	 << "modules with the same module id or choosing a module id that "
-	 << "is the same as another command.\n\n";
+	 << module_cfg_name << "\" in logic \"" << name() << "\". "
+         << "This is probably due to having set up two modules with the same "
+         << "module id or choosing a module id that is the same as another "
+         << "command.\n\n";
     delete cmd;
     delete module;
     dlclose(handle);
@@ -1327,8 +1331,8 @@ void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
       else
       {
 	cerr << "*** WARNING: Could not find module \"" << long_cmd_module
-	      << "\" specified in configuration variable "
-	      << "ACTIVATE_MODULE_ON_LONG_CMD.\n";
+	      << "\" in logic \"" << name() << "\" specified in configuration "
+	      << "variable ACTIVATE_MODULE_ON_LONG_CMD.\n";
 	stringstream ss;
 	ss << "command_failed " << cmd;
 	processEvent(ss.str());
@@ -1347,12 +1351,12 @@ void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
 
 void Logic::processMacroCmd(const string& macro_cmd)
 {
-  cout << "Processing macro command: " << macro_cmd << "...\n";
+  cout << name() << ": Processing macro command: " << macro_cmd << "...\n";
   assert(!macro_cmd.empty() && (macro_cmd[0] == 'D'));
   string cmd(macro_cmd, 1);
   if (cmd.empty())
   {
-    cerr << "*** Macro error: Empty command.\n";
+    cerr << "*** Macro error in logic " << name() << ": Empty command.\n";
     processEvent("macro_empty");
     return;
   }
@@ -1360,17 +1364,19 @@ void Logic::processMacroCmd(const string& macro_cmd)
   map<int, string>::iterator it = macros.find(atoi(cmd.c_str()));
   if (it == macros.end())
   {
-    cerr << "*** Macro error: Macro " << cmd << " not found.\n";
+    cerr << "*** Macro error in logic " << name() << ": Macro "
+         << cmd << " not found.\n";
     processEvent("macro_not_found");
     return;
   }
   string macro(it->second);
-  cout << "Macro command found: \"" << macro << "\"\n";
+  cout << name() << ": Macro command found: \"" << macro << "\"\n";
 
   string::iterator colon = find(macro.begin(), macro.end(), ':');
   if (colon == macro.end())
   {
-    cerr << "*** Macro error: No colon found in macro (" << macro << ").\n";
+    cerr << "*** Macro error in logic " << name()
+         << ": No colon found in macro (" << macro << ").\n";
     processEvent("macro_syntax_error");
     return;
   }
@@ -1383,7 +1389,8 @@ void Logic::processMacroCmd(const string& macro_cmd)
     Module *module = findModule(module_name);
     if (module == 0)
     {
-      cerr << "*** Macro error: Module " << module_name << " not found.\n";
+      cerr << "*** Macro error in logic " << name() << ": Module "
+           << module_name << " not found.\n";
       processEvent("macro_module_not_found");
       return;
     }
@@ -1392,16 +1399,17 @@ void Logic::processMacroCmd(const string& macro_cmd)
     {
       if (!activateModule(module))
       {
-	cerr << "*** Macro error: Activation of module " << module_name
-	    << " failed.\n";
+	cerr << "*** Macro error in logic " << name()
+             << ": Activation of module " << module_name << " failed.\n";
 	processEvent("macro_module_activation_failed");
 	return;
       }
     }
     else if (active_module != module)
     {
-      cerr << "*** Macro error: Another module is active ("
-	  << active_module->name() << ").\n";
+      cerr << "*** Macro error in logic " << name()
+           << ": Another module is active (" << active_module->name()
+           << ").\n";
       processEvent("macro_another_active_module");
       return;
     }

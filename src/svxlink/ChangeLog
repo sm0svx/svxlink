@@ -45,6 +45,9 @@
   module etc) that made the printout. Also added a printout for receiver and
   transmitter creation.
 
+* ModuleEchoLink: Listen only was falsely indicated when the EchoLink module
+  was remotely activated.
+
 
 
  1.0.0 -- 08 Mar 2013
