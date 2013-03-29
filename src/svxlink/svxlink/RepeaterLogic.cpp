@@ -205,8 +205,8 @@ bool RepeaterLogic::initialize(void)
   {
     if (str.length() > 25 || str.length() < 4)
     {
-      cerr << "*** WARNING: Sel5 sequence to long/short, valid range "
-            "from 4 to 25 digits, ignoring\n";
+      cerr << "*** WARNING: Sel5 sequence to long/short in logic " << name()
+           << ", valid range from 4 to 25 digits, ignoring\n";
     }
     else
     {
@@ -227,7 +227,7 @@ bool RepeaterLogic::initialize(void)
     else
     {
       cerr << "*** ERROR: Valid values for configuration variable "
-      	   << "OPEN_SQL_FLANK are OPEN and CLOSE.\n";
+      	   << name() << "/OPEN_SQL_FLANK are OPEN and CLOSE.\n";
     }
   }
   
@@ -267,7 +267,8 @@ bool RepeaterLogic::initialize(void)
   {
     if (!rx().addToneDetector(1750, 50, 10, required_1750_duration))
     {
-      cerr << "*** WARNING: Could not setup 1750 detection\n";
+      cerr << "*** WARNING: Could not setup 1750 detection in logic "
+           << name() << "\n";
     }
   }
   
@@ -275,7 +276,8 @@ bool RepeaterLogic::initialize(void)
   {
     if (!rx().addToneDetector(open_on_ctcss_fq, 4, 10, open_on_ctcss_duration))
     {
-      cerr << "*** WARNING: Could not setup CTCSS tone detection\n";
+      cerr << "*** WARNING: Could not setup CTCSS tone detection in logic "
+           << name() << "\n";
     }
   }
   
@@ -333,14 +335,14 @@ void RepeaterLogic::dtmfDigitDetected(char digit, int duration)
   {
     if (digit == open_on_dtmf)
     {
-      cout << "DTMF digit \"" << digit << "\" detected. "
+      cout << name() << ": DTMF digit \"" << digit << "\" detected. "
       	      "Activating repeater...\n";
       open_reason = "DTMF";
       activateOnOpenOrClose(SQL_FLANK_CLOSE);
     }
     else
     {
-      cout << "Ignoring DTMF digit \"" << digit
+      cout << name() << ": Ignoring DTMF digit \"" << digit
            << "\" since the repeater is not up\n";
     }
   }
@@ -357,14 +359,14 @@ void RepeaterLogic::selcallSequenceDetected(std::string sequence)
   {
     if (sequence == open_on_sel5)
     {
-      cout << "Sel5 digits \"" << sequence << "\" detected. "
+      cout << name() << ": Sel5 digits \"" << sequence << "\" detected. "
               "Activating repeater...\n";
       open_reason = "SEL5";
       activateOnOpenOrClose(SQL_FLANK_CLOSE);
     }
     else
     {
-      cout << "Ignoring Sel5 sequence \"" << sequence
+      cout << name() << ": Ignoring Sel5 sequence \"" << sequence
            << "\" since the repeater is not up\n";
     }
   }
@@ -566,8 +568,9 @@ void RepeaterLogic::squelchOpen(bool is_open)
       	  if (++short_sql_open_cnt >= sql_flap_sup_max_cnt)
 	  {
 	    short_sql_open_cnt = 0;
-	    cout << sql_flap_sup_max_cnt << " squelch openings less than "
-		 << sql_flap_sup_min_time << "ms detected.\n";
+	    cout << name() << ": Interference detected: "
+                 << sql_flap_sup_max_cnt << " squelch openings less than "
+		 << sql_flap_sup_min_time << "ms in length detected.\n";
 	    setUp(false, "SQL_FLAP_SUP");
 	  }
 	}
@@ -630,7 +633,7 @@ void RepeaterLogic::detectedTone(float fq)
 {
   if (!repeater_is_up && !activate_on_sql_close)
   {
-    cout << fq << " Hz tone call detected" << endl;
+    cout << name() << ": " << fq << " Hz tone call detected" << endl;
     
     if (fq < 300.0)
     {
@@ -700,7 +703,7 @@ void RepeaterLogic::identNag(Timer *t)
   
   if (!rx().squelchIsOpen())
   {
-    cout << "Nagging user about identifying himself\n";
+    cout << name() << ": Nagging user about identifying himself\n";
     processEvent("identify_nag");
   }
 } /* RepeaterLogic::identNag */

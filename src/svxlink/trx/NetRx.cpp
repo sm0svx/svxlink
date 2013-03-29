@@ -189,7 +189,7 @@ bool NetRx::initialize(void)
   if (audio_dec == 0)
   {
     cerr << name() << ": *** ERROR: Illegal audio codec (" << audio_dec_name
-          << ") specified\n";
+          << ") specified for receiver " << name() << "\n";
     return false;
   }
   audio_dec->allEncodedSamplesFlushed.connect(

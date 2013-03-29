@@ -187,7 +187,8 @@ bool RfUplink::initialize(void)
   uplink_tx = TxFactory::createNamedTx(cfg, uplink_tx_name);
   if ((uplink_tx == 0) || !uplink_tx->initialize())
   {
-    cerr << "*** ERROR: Could not initialize uplink transmitter\n";
+    cerr << "*** ERROR: Could not initialize uplink transmitter for RfUplink "
+         << name << "\n";
     delete uplink_tx;
     uplink_tx = 0;
     return false;

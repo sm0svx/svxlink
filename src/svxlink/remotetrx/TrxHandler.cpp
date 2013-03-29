@@ -173,6 +173,7 @@ bool TrxHandler::initialize(void)
     return false;
   }
 
+  cout << "RX: " << rx_name << endl;
   if (rx_name != "NONE")
   {
     string rx_type;
@@ -196,6 +197,7 @@ bool TrxHandler::initialize(void)
     m_rx = new DummyRx;
   }
 
+  cout << "TX: " << tx_name << endl;
   if (tx_name != "NONE")
   {
     string tx_type;

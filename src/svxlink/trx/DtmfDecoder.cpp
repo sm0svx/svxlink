@@ -135,7 +135,8 @@ DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
   }
   else
   {
-    cerr << "*** ERROR: Unknown DTMF decoder type \"" << type << "\". "
+    cerr << "*** ERROR: Unknown DTMF decoder type \"" << type << "\" "
+         << "specified for " << name << "/DTMF_DEC_TYPE. "
       	 << "Legal values are: \"INTERNAL\" or \"S54S\"\n";
   }
   

@@ -214,7 +214,8 @@ void HwDtmfDecoder::hangtimeExpired(Timer *t)
 void HwDtmfDecoder::timeout(Timer *t)
 {
   cerr << "*** WARNING: No DTMF idle indication received within "
-       << MAX_ACTIVE_TIME << " seconds after activation indication.\n";
+       << MAX_ACTIVE_TIME << " seconds after activation indication "
+       << "for receiver " << name() << ".\n";
   setIdle();  
 } /* HwDtmfDecoder::timeout */
 

@@ -711,8 +711,8 @@ void LocalTx::txTimeoutOccured(Timer *t)
     return;
   }
   
-  cerr << "*** ERROR: The transmitter have been active for too long. Turning "
-      	  "it off...\n";
+  cerr << "*** ERROR: Transmitter " << name
+       << " have been active for too long. Turning it off...\n";
   
   if (!setPtt(false))
   {
