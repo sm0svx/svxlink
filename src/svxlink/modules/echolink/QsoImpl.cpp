@@ -151,6 +151,13 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   }
   m_qso.setLocalCallsign(local_callsign);
   
+  bool use_gsm_only = false;
+  if (cfg.getValue(cfg_name, "USE_GSM_ONLY", use_gsm_only) && use_gsm_only)
+  {
+    cout << module->name() << ": Using GSM codec only\n";
+    m_qso.setUseGsmOnly();
+  }
+
   if (!cfg.getValue(cfg_name, "SYSOPNAME", sysop_name))
   {
     cerr << "*** ERROR: Config variable " << cfg_name
@@ -226,6 +233,13 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   event_handler->processEvent("namespace eval EchoLink {}");
   event_handler->setVariable("EchoLink::CFG_ID", "0");
   event_handler->setVariable("logic_name", "Default");
+
+  event_handler->processEvent("namespace eval Logic {}");
+  string default_lang;
+  if (cfg.getValue(cfg_name, "DEFAULT_LANG", default_lang))
+  {
+    event_handler->setVariable("Logic::CFG_DEFAULT_LANG", default_lang);
+  }
   
   event_handler->initialize();
   

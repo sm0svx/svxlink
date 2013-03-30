@@ -239,8 +239,8 @@ Rx *RxFactory::createNamedRx(Config& cfg, const string& name)
   it = rx_factories.find(rx_type);
   if (it == rx_factories.end())
   {
-    cerr << "*** ERROR: Unknown RX type \"" << rx_type << "\". Legal values "
-         << "are: ";
+    cerr << "*** ERROR: Unknown RX type \"" << rx_type << "\" specified for "
+         << "receiver " << name << ". Legal values are: ";
     for (it=rx_factories.begin(); it!=rx_factories.end(); ++it)
     {
       cerr << "\"" << (*it).first << "\" ";
@@ -284,8 +284,6 @@ void Rx::setSquelchState(bool is_open)
 
 
 
-
-
 /****************************************************************************
  *
  * Private member functions
@@ -294,11 +292,10 @@ void Rx::setSquelchState(bool is_open)
 
 void Rx::sqlTimeout(Timer *t)
 {
-  cerr << name() << ": *** WARNING: The squelch was open for too long. "
-       << "Forcing it closed.\n";
+  cerr << "*** WARNING: The squelch was open for too long for receiver "
+       << name() << ". Forcing it closed.\n";
   setSquelchState(false);
 } /* Rx::sqlTimeout */
-
 
 
 

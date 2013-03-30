@@ -435,7 +435,8 @@ bool NetTrxAdapter::initialize(void)
   ul = new NetUplink(cfg, net_uplink_name, rxa2, txa1);
   if (!ul->initialize())
   {
-    cerr << "*** ERROR: Could not initialize uplink object\n";
+    cerr << "*** ERROR: Could not initialize uplink object for uplink "
+         << net_uplink_name << "\n";
     delete ul;
     ul = 0;
     return false;

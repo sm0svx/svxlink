@@ -356,8 +356,10 @@ bool LocalRx::initialize(void)
   {
     //AudioFilter *deemph_filt = new AudioFilter("LpBu1/300");
     //AudioFilter *deemph_filt = new AudioFilter("HsBq1/0.01/-18/3500");
-    AudioFilter *deemph_filt = new AudioFilter("HsBq1/0.05/-36/3500");
-    deemph_filt->setOutputGain(2.88);
+    //AudioFilter *deemph_filt = new AudioFilter("HsBq1/0.05/-36/3500");
+    //deemph_filt->setOutputGain(2.88);
+    AudioFilter *deemph_filt = new AudioFilter("HpBu1/50 x LpBu1/150");
+    deemph_filt->setOutputGain(2.27);
     prev_src->registerSink(deemph_filt, true);
     prev_src = deemph_filt;
   }
@@ -565,7 +567,7 @@ bool LocalRx::initialize(void)
     calldet->setPeakThresh(13);
     calldet->activated.connect(mem_fun(*this, &LocalRx::tone1750detected));
     splitter->addSink(calldet, true);
-    cout << "Enabling 1750Hz muting\n";
+    //cout << "### Enabling 1750Hz muting\n";
   }
 
   return true;
@@ -777,8 +779,8 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
   {
     if (sample_rate != 16000)
     {
-      cerr << "*** ERROR: The tone signal level detector only work at 16kHz "
-              "sampling rate\n";
+      cerr << "*** ERROR: Tone signal level detector specified for receiver "
+           << name << ". It only works at 16kHz internal sampling rate\n";
       return 0;
     }
     siglevdet = new SigLevDetTone(sample_rate);
@@ -820,7 +822,7 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
 
 void LocalRx::tone1750detected(bool detected)
 {
-   cout << "Muting 1750Hz: " << (detected ? "TRUE\n" : "FALSE\n");
+   //cout << "### Muting 1750Hz: " << (detected ? "TRUE\n" : "FALSE\n");
    if (detected)
    {
      delay->mute(true, TONE_1750_MUTING_PRE);

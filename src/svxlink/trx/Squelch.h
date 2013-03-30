@@ -145,22 +145,31 @@ class Squelch : public sigc::trackable, public Async::AudioSink
       m_name = rx_name;
 
       unsigned delay = 0;
-      if (cfg.getValue(rx_name, "SQL_DELAY", delay))
+      if (!cfg.getValue(rx_name, "SQL_DELAY", delay, true))
       {
-      	setDelay(delay);
+        std::cerr << "*** ERROR: Error reading config variable "
+                  << rx_name << "/SQL_DELAY\n";
+        return false;
       }
+      setDelay(delay);
 
       unsigned start_delay = 0;
-      if (cfg.getValue(rx_name, "SQL_START_DELAY", start_delay))
+      if (!cfg.getValue(rx_name, "SQL_START_DELAY", start_delay, true))
       {
-	setStartDelay(start_delay);
+        std::cerr << "*** ERROR: Error reading config variable "
+                  << rx_name << "/SQL_START_DELAY\n";
+        return false;
       }
+      setStartDelay(start_delay);
 
       unsigned timeout = 0;
-      if (cfg.getValue(rx_name, "SQL_TIMEOUT", timeout))
+      if (!cfg.getValue(rx_name, "SQL_TIMEOUT", timeout, true))
       {
-	setSqlTimeout(timeout);
+        std::cerr << "*** ERROR: Error reading config variable "
+                  << rx_name << "/SQL_TIMEOUT\n";
+        return false;
       }
+      setSqlTimeout(timeout);
 
       return true;
     }
@@ -238,9 +247,8 @@ class Squelch : public sigc::trackable, public Async::AudioSink
 	m_timeout_left -= count;
 	if (m_timeout_left <= 0)
 	{
-	  std::cerr << m_name
-	       << ": *** WARNING: The squelch was open for too long. "
-	       << "Forcing it closed.\n";
+	  std::cerr << "*** WARNING: The squelch was open for too long for "
+                    << "receiver " << m_name << ". " << "Forcing it closed.\n";
 	  setOpen(false);
 	}
       }
@@ -345,6 +353,12 @@ class Squelch : public sigc::trackable, public Async::AudioSink
     {
       return m_signal_detected;
     }
+
+    /**
+     * @brief   Return the name of the associated receiver
+     * @return  Returns the name of the associated receiver
+     */
+    const std::string &rxName(void) const { return m_name; }
 
   private:
     std::string	m_name;

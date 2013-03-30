@@ -23,7 +23,8 @@ DIST_H_MOC = \
 
 DIST_H_NO_MOC = \
 		MsgHandler.h \
-		Settings.h
+		Settings.h \
+		multirate_filter_coeff.h
 
 DIST_QRC =	qtel.qrc
 

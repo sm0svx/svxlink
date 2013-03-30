@@ -132,6 +132,8 @@ class EchoLinkQsoTest : public EchoLink::Qso
     void printPrompt(void);
     void handleChatMode(void);
     void chatMsg(const std::string& msg);
+    void infoMsg(const std::string& msg);
+    void onStateChange(Qso::State state);
     int micAudioRead(float *buf, int len);
     
 };  /* class EchoLinkQsoTest */

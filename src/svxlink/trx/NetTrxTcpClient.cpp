@@ -256,7 +256,8 @@ int NetTrxTcpClient::tcpDataReceived(TcpConnection *con, void *data, int size)
     unsigned read_cnt = min(static_cast<unsigned>(size), recv_exp-recv_cnt);
     if (recv_cnt+read_cnt > sizeof(recv_buf))
     {
-      cerr << "*** ERROR: TCP receive buffer overflow. Disconnecting...\n";
+      cerr << "*** ERROR: TCP receive buffer overflow. Disconnecting from "
+           << remoteHost().toString() << ":" << remotePort() << "...\n";
       con->disconnect();
       disconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
       return orig_size;
@@ -284,7 +285,8 @@ int NetTrxTcpClient::tcpDataReceived(TcpConnection *con, void *data, int size)
 	else
 	{
 	  cerr << "*** ERROR: Illegal message header received. Header length "
-	       << "too small (" << msg->size() << ")\n";
+	       << "too small (" << msg->size() << "). Disconnecting from "
+               << remoteHost().toString() << ":" << remotePort() << "...\n";
 	  con->disconnect();
 	  disconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
 	  return orig_size;
@@ -329,17 +331,20 @@ void NetTrxTcpClient::handleMsg(Msg *msg)
             (ver_msg->major() != MsgProtoVer::MAJOR) ||
             (ver_msg->minor() != MsgProtoVer::MINOR))
         {
-          cerr << "*** ERROR: Incompatible protocol version. Disconnecting.\n";
+          cerr << "*** ERROR: Incompatible protocol version. Disconnecting from "
+               << remoteHost().toString() << ":" << remotePort() << "...\n";
           localDisconnect();
           return;
         }
-        cout << "RemoteTrx protocol version " << ver_msg->major() << "."
+        cout << remoteHost().toString() << ":" << remotePort()
+             << ": RemoteTrx protocol version " << ver_msg->major() << "."
              << ver_msg->minor() << endl;
         state = STATE_AUTH_WAIT;
       }
       else
       {
-        cerr << "*** ERROR: No protocol version received. Disconnecting.\n";
+        cerr << "*** ERROR: No protocol version received. Disconnecting from "
+               << remoteHost().toString() << ":" << remotePort() << "...\n";
         localDisconnect();
       }
       return;
@@ -350,7 +355,8 @@ void NetTrxTcpClient::handleMsg(Msg *msg)
         if (msg->size() != sizeof(MsgAuthChallenge))
         {
           cerr << "*** ERROR: Protocol error. Wrong length of "
-                  "MsgAuthChallenge message. Disconnecting.\n";
+                  "MsgAuthChallenge message. Disconnecting from "
+               << remoteHost().toString() << ":" << remotePort() << "...\n";
           localDisconnect();
           return;
         }
@@ -364,7 +370,8 @@ void NetTrxTcpClient::handleMsg(Msg *msg)
         if (msg->size() != sizeof(MsgAuthOk))
         {
           cerr << "*** ERROR: Protocol error. Wrong length of "
-                  "MsgAuthOk message. Disconnecting.\n";
+                  "MsgAuthOk message. Disconnecting from "
+               << remoteHost().toString() << ":" << remotePort() << "...\n";
           localDisconnect();
           return;
         }
@@ -390,7 +397,8 @@ void NetTrxTcpClient::handleMsg(Msg *msg)
     case MsgAuthChallenge::TYPE:
     case MsgAuthOk::TYPE:
       cerr << "*** ERROR: Message type " << msg->type()
-           << " received in the wrong state. Disconnecting\n";
+           << " received in the wrong state. Disconnecting from "
+               << remoteHost().toString() << ":" << remotePort() << "...\n";
       localDisconnect();
       break;
     
@@ -416,7 +424,8 @@ void NetTrxTcpClient::heartbeat(Timer *t)
   
   if (diff_ms > 15000)
   {
-    cerr << "*** ERROR: Heartbeat timeout\n";
+    cerr << "*** ERROR: Heartbeat timeout. Disconnecting from "
+         << remoteHost().toString() << ":" << remotePort() << "...\n";
     localDisconnect();
   }
   
@@ -445,7 +454,8 @@ void NetTrxTcpClient::sendMsgP(Msg *msg)
     }
     else
     {
-      cerr << "*** ERROR: TCP transmit buffer overflow.\n";
+      cerr << "*** ERROR: TCP transmit buffer overflow. Disconnecting from "
+         << remoteHost().toString() << ":" << remotePort() << "...\n";
       disconnect();
       disconnected(this, TcpConnection::DR_ORDERED_DISCONNECT);
     }

@@ -133,8 +133,9 @@ Sel5Decoder *Sel5Decoder::create(Config &cfg, const string& name)
   }
   else
   {
-    cerr << "*** ERROR: Unknown Sel5 decoder type \"" << type << "\". "
-      	 << "Legal values at the moment are: \"INTERNAL\"\n";
+    cerr << "*** ERROR: Unknown Sel5 decoder type \"" << type
+         << "\" specified for " << name << "/SEL5_DEC_TYPE. "
+      	 << "Legal values are: \"INTERNAL\"\n";
   }
 
   return dec;

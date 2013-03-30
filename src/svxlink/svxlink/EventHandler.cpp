@@ -125,13 +125,15 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
   interp = Tcl_CreateInterp();
   if (interp == 0)
   {
-    cerr << "*** ERROR: Could not create TCL interpreter\n";
+    cerr << "*** ERROR: Could not create TCL interpreter for logic "
+         << logic->name() << "\n";
     return;
   }
   
   if (Tcl_Init(interp) != TCL_OK)
   {
-    cerr << event_script << ": " << Tcl_GetStringResult(interp) << endl;
+    cerr << event_script << " in logic " << logic->name() << ": "
+         << Tcl_GetStringResult(interp) << endl;
     Tcl_DeleteInterp(interp);
     interp = 0;
     return;
@@ -173,7 +175,8 @@ bool EventHandler::initialize(void)
   
   if (Tcl_EvalFile(interp, event_script.c_str()) != TCL_OK)
   {
-    cerr << event_script << ": " << Tcl_GetStringResult(interp) << endl;
+    cerr << event_script << " in logic " << logic->name() << ": "
+         << Tcl_GetStringResult(interp) << endl;
     return false;
   }
   
@@ -193,7 +196,8 @@ void EventHandler::setVariable(const string& name, const string& value)
   if (Tcl_SetVar(interp, name.c_str(), value.c_str(), TCL_LEAVE_ERR_MSG)
   	== NULL)
   {
-    cerr << event_script << ": " << Tcl_GetStringResult(interp) << endl;
+    cerr << event_script << " in logic " << logic->name() << ": "
+         << Tcl_GetStringResult(interp) << endl;
   }
   Tcl_Release(interp);
 } /* EventHandler::setVariable */
@@ -210,7 +214,8 @@ bool EventHandler::processEvent(const string& event)
   if (Tcl_Eval(interp, (event + ";").c_str()) != TCL_OK)
   {
     cerr << "*** ERROR: Unable to handle event: " << event
-      	 << " (" << Tcl_GetStringResult(interp) << ")" << endl;
+      	 << " in logic " << logic->name() << " ("
+         << Tcl_GetStringResult(interp) << ")" << endl;
     return false;
   }
   Tcl_Release(interp);

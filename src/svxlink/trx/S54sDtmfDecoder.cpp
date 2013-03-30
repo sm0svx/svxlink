@@ -121,7 +121,7 @@ static const char digit_map[16] =
 S54sDtmfDecoder::S54sDtmfDecoder(Config &cfg, const string &name)
   : HwDtmfDecoder(cfg, name), serial(0)
 {
-  cout << "S54S DTMF decoder loaded...\n";
+  //cout << "### S54S DTMF decoder loaded...\n";
   
 } /* S54sDtmfDecoder::S54sDtmfDecoder */
 
@@ -150,13 +150,14 @@ bool S54sDtmfDecoder::initialize(void)
   serial = new Serial(serial_dev);
   if (!serial->open())
   {
-    cerr << "*** ERROR: Could not open serial port " << serial_dev << "\n";
+    cerr << "*** ERROR: Could not open the serial port " << serial_dev
+         << " specified in " << name() << "/DTMF_SERIAL\n";
     return false;
   }
   if (!serial->setParams(9600, Serial::PARITY_NONE, 8, 1, Serial::FLOW_NONE))
   {
     cerr << "*** ERROR: Could not setup serial port parameters for "
-      	 << serial_dev << "\n";
+      	 << serial_dev << " specified in " << name() << "/DTMF_DERIAL\n";
     serial->close();
     return false;
   }
