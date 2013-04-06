@@ -230,7 +230,7 @@ int AtTimer::msecToTimeout(void)
   timersub(&m_expire_at, &now, &diff);
 
   long long msec = static_cast<long long>(diff.tv_sec) * 1000
-                   + diff.tv_usec / 1000 + m_expire_offset;
+                   + diff.tv_usec / 1000 + m_expire_offset + 1;
   if (msec < 0)
   {
     msec = 0;
