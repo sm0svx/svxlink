@@ -48,6 +48,9 @@
 * ModuleEchoLink: Listen only was falsely indicated when the EchoLink module
   was remotely activated.
 
+* Periodic identifications were missing now and then under some conditions.
+  This should be fixed now.
+
 
 
  1.0.0 -- 08 Mar 2013
