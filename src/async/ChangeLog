@@ -1,3 +1,10 @@
+ 1.1.0 -- ?? ??? 2013
+----------------------
+
+* New class AtTimer to set a timer that expires at the specified time of day.
+
+
+
  1.0.0 -- 08 Mar 2013
 -----------------------
 
