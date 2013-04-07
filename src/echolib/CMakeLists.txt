@@ -31,8 +31,8 @@ endforeach(incfile)
 
 # Build both a shared and a static library
 add_library(${LIBNAME} SHARED ${LIBSRC})
-set_target_properties(${LIBNAME} PROPERTIES VERSION ${VER_LIBASYNC}
-                      SOVERSION ${VER_LIBASYNC_SOVERSION})
+set_target_properties(${LIBNAME} PROPERTIES VERSION ${VER_LIBECHOLIB}
+  SOVERSION ${VER_LIBECHOLIB_SOVERSION})
 target_link_libraries(${LIBNAME} ${LIBS})
 add_library(${LIBNAME}_static STATIC ${LIBSRC})
 set_target_properties(${LIBNAME}_static PROPERTIES OUTPUT_NAME ${LIBNAME})
