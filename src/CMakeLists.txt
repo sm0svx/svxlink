@@ -4,6 +4,12 @@ project(svxlink C CXX)
 # The path to the project global include directory
 set(PROJECT_INCLUDE_DIR ${PROJECT_BINARY_DIR}/include)
 
+# Where to put library files
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+
+# Where to put executable files
+set(RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+
 # Create an include file under the global include directory
 function(expinc filename)
   #  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${filename}
@@ -76,7 +82,7 @@ add_subdirectory(async)
 add_subdirectory(misc)
 add_subdirectory(echolib)
 add_subdirectory(locationinfo)
-#add_subdirectory(svxlink)
+add_subdirectory(svxlink)
 #add_subdirectory(qtel)
 #add_subdirectory(doc)
 
