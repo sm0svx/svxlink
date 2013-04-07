@@ -46,4 +46,6 @@ add_definitions(-DINTERNAL_SAMPLE_RATE=16000)
 
 # Add directories to build
 add_subdirectory(async)
+add_subdirectory(misc)
+add_subdirectory(echolib)
 
