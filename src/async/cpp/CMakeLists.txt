@@ -12,12 +12,16 @@ foreach(incfile ${EXPINC})
 endforeach(incfile)
 
 # Find pthreads
-# FIXME: Do we need this?
 find_package(Threads)
 set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 # Set up additional defines
+# FIXME: Do we need this?
 add_definitions(-D_REENTRANT)
+
+# Find librt
+find_package(RT REQUIRED)
+set(LIBS ${LIBS} ${RT_LIBRARIES})
 
 # Build both a shared and a static library
 add_library(${LIBNAME} SHARED ${LIBSRC})

@@ -2,13 +2,15 @@ set(LIBNAME asynccore)
 
 set(EXPINC AsyncApplication.h AsyncFdWatch.h AsyncTimer.h AsyncIpAddress.h
            AsyncTcpClient.h AsyncDnsLookup.h AsyncUdpSocket.h AsyncTcpServer.h
-           AsyncTcpConnection.h AsyncConfig.h AsyncSerial.h AsyncFileReader.h)
+           AsyncTcpConnection.h AsyncConfig.h AsyncSerial.h AsyncFileReader.h
+           AsyncAtTimer.h)
 
 set(LIBSRC AsyncApplication.cpp AsyncFdWatch.cpp AsyncTimer.cpp
            AsyncIpAddress.cpp AsyncDnsLookup.cpp AsyncTcpClient.cpp
            AsyncUdpSocket.cpp AsyncTcpServer.cpp
            AsyncTcpConnection.cpp AsyncConfig.cpp AsyncSerial.cpp
-           AsyncSerialDevice.cpp AsyncFileReader.cpp)
+           AsyncSerialDevice.cpp AsyncFileReader.cpp
+           AsyncAtTimer.cpp)
 
 # Copy exported include files to the global include directory
 foreach(incfile ${EXPINC})

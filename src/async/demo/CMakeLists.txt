@@ -1,6 +1,6 @@
 set(CPPPROGS AsyncAudioIO_demo AsyncDnsLookup_demo AsyncFdWatch_demo AsyncTimer_demo
              AsyncTcpClient_demo AsyncUdpSocket_demo AsyncCppApplication_demo
-             AsyncTcpServer_demo AsyncConfig_demo AsyncSerial_demo)
+             AsyncTcpServer_demo AsyncConfig_demo AsyncSerial_demo AsyncAtTimer_demo)
 
 
 foreach(prog ${CPPPROGS})
@@ -16,7 +16,7 @@ if(USE_QT)
   #QT4_WRAP_CPP(QTHEADERS_MOC ${QTHEADERS})
 
   add_executable(AsyncQtApplication_demo AsyncQtApplication_demo.cpp)
-  target_link_libraries(AsyncQtApplication_demo ${LIBS} asynccpp asyncaudio
+  target_link_libraries(AsyncQtApplication_demo ${LIBS} asyncaudio
                         asynccore asyncqt)
 endif(USE_QT)
 

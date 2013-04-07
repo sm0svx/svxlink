@@ -206,16 +206,15 @@ Logic::Logic(Config &cfg, const string& name)
     prev_digit('?'),                exec_cmd_on_sql_close(0),
     exec_cmd_on_sql_close_timer(0), rgr_sound_timer(0),
     rgr_sound_delay(-1),            report_ctcss(0),
-    event_handler(0),               every_minute_timer(0),
-    recorder(0), 		    tx_audio_mixer(0),
-    tx_audio_selector(0),     	    rx_splitter(0),
-    audio_from_module_selector(0),  audio_to_module_splitter(0),
-    audio_to_module_selector(0),    state_det(0),
-    is_idle(true),                  fx_gain_normal(0),
-    fx_gain_low(-12), 	      	    long_cmd_digits(100),
-    report_events_as_idle(false),   qso_recorder(0),
-    tx_ctcss(TX_CTCSS_ALWAYS), 	    tx_ctcss_mask(0),
-    aprs_stats_timer(0)
+    event_handler(0),               recorder(0),
+    tx_audio_mixer(0),              tx_audio_selector(0),
+    rx_splitter(0),                 audio_from_module_selector(0),
+    audio_to_module_splitter(0),    audio_to_module_selector(0),
+    state_det(0),                   is_idle(true),
+    fx_gain_normal(0),              fx_gain_low(-12),
+    long_cmd_digits(100),           report_events_as_idle(false),
+    qso_recorder(0),                tx_ctcss(TX_CTCSS_ALWAYS),
+    tx_ctcss_mask(0),               aprs_stats_timer(0)
 {
   logic_con_in = new AudioSplitter;
   logic_con_out = new AudioSelector;
@@ -643,7 +642,10 @@ bool Logic::initialize(void)
      LocationInfo::instance()->aprs_stats[name()].reset();
   }
 
-  everyMinute(0);
+  every_minute_timer.setExpireOffset(100);
+  every_minute_timer.expired.connect(mem_fun(*this, &Logic::everyMinute));
+  timeoutNextMinute();
+  every_minute_timer.start();
 
   return true;
 
@@ -1412,21 +1414,21 @@ void Logic::sendRgrSound(Timer *t)
 } /* Logic::sendRogerSound */
 
 
-void Logic::everyMinute(Timer *t)
+void Logic::timeoutNextMinute(void)
 {
   struct timeval tv;
   gettimeofday(&tv, NULL);
-  int msec = 60000 - (tv.tv_sec % 60) * 1000 - (tv.tv_usec / 1000);
+  struct tm *tm = localtime(&tv.tv_sec);
+  tm->tm_min += 1;
+  tm->tm_sec = 0;
+  every_minute_timer.setTimeout(*tm);
+} /* Logic::timeoutNextMinute */
 
-  if ((t != 0) && (msec > 1000))
-  {
-    processEvent("every_minute");
-  }
-  delete every_minute_timer;
 
-  every_minute_timer = new Timer(msec);
-  every_minute_timer->expired.connect(mem_fun(*this, &Logic::everyMinute));
-
+void Logic::everyMinute(AtTimer *t)
+{
+  processEvent("every_minute");
+  timeoutNextMinute();
 } /* Logic::everyMinute */
 
 
@@ -1474,7 +1476,7 @@ void Logic::cleanup(void)
   unloadModules();
   delete exec_cmd_on_sql_close_timer; exec_cmd_on_sql_close_timer = 0;
   delete rgr_sound_timer;     	      rgr_sound_timer = 0;
-  delete every_minute_timer;  	      every_minute_timer = 0;
+  every_minute_timer.stop();
 
   if (audio_switch_matrix.sourceIsAdded(name()))
   {

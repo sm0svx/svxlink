@@ -1,3 +1,14 @@
+ 1.1.0 -- ?? ??? 2013
+----------------------
+
+* New class AtTimer to set a timer that expires at the specified time of day.
+
+* Now using clock_gettime instead of gettimeofday to get the time for timers
+  since the former provides monotonically increasing time which the
+  latter don't.
+
+
+
  1.0.0 -- 08 Mar 2013
 -----------------------
 
