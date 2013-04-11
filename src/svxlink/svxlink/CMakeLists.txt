@@ -1,6 +1,3 @@
-# Where to put executable files
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-
 # Find the popt library
 find_package(Popt REQUIRED)
 set(LIBS ${LIBS} ${POPT_LIBRARIES})

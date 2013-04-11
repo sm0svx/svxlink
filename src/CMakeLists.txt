@@ -83,6 +83,6 @@ add_subdirectory(misc)
 add_subdirectory(echolib)
 add_subdirectory(locationinfo)
 add_subdirectory(svxlink)
-#add_subdirectory(qtel)
+add_subdirectory(qtel)
 #add_subdirectory(doc)
 
