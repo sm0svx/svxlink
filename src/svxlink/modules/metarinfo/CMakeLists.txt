@@ -19,5 +19,10 @@ add_library(Module${MODNAME} MODULE Module${MODNAME}.cpp ${MODSRC}
 )
 set_target_properties(Module${MODNAME} PROPERTIES PREFIX "")
 target_link_libraries(Module${MODNAME} ${LIBS})
-add_version_target(${VERNAME} ${VER_${VERNAME}})
-add_version_target(SVXLINK ${VER_SVXLINK})
+add_version_target(${VERNAME})
+add_version_target(SVXLINK)
+
+# Install targets
+install(TARGETS Module${MODNAME} DESTINATION ${SVX_MODULE_INSTALL_DIR})
+install(FILES ${MODNAME}.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d)
+install(FILES Module${MODNAME}.conf DESTINATION ${SVX_SYSCONF_INSTALL_DIR}/svxlink.d)

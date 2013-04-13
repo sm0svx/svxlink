@@ -33,3 +33,7 @@ target_link_libraries(${LIBNAME} ${LIBS})
 add_library(${LIBNAME}_static STATIC ${LIBSRC})
 set_target_properties(${LIBNAME}_static PROPERTIES OUTPUT_NAME ${LIBNAME})
 target_link_libraries(${LIBNAME}_static ${LIBS})
+
+# Install files
+install(TARGETS ${LIBNAME} ${LIBNAME}_static DESTINATION ${LIB_INSTALL_DIR})
+install(FILES ${EXPINC} DESTINATION ${SVX_INCLUDE_INSTALL_DIR})

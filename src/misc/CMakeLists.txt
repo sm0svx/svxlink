@@ -5,3 +5,5 @@ foreach(incfile ${EXPINC})
   expinc(${incfile})
 endforeach(incfile)
 
+# Install targets
+install(FILES ${EXPINC} DESTINATION ${SVX_INCLUDE_INSTALL_DIR})

@@ -33,5 +33,7 @@ add_definitions(${GCRYPT_DEFINITIONS})
 add_library(${LIBNAME} STATIC ${LIBSRC}
             ${CMAKE_CURRENT_BINARY_DIR}/version/SVXLINK.h)
 target_link_libraries(${LIBNAME} ${LIBS})
-add_version_target(SVXLINK ${VER_SVXLINK})
+add_version_target(SVXLINK)
 
+# Install targets
+install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})

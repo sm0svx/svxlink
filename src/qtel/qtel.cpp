@@ -54,6 +54,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <config.h>
+
 #include <AsyncQtApplication.h>
 #include <AsyncTcpClient.h>
 
@@ -144,7 +146,7 @@ int main(int argc, char **argv)
   
   QTranslator translator;
   translator.load(QString("qtel_%1").arg(QLocale::system().name()),
-      "/usr/share/qtel/translations");
+      SHARE_INSTALL_PREFIX "/qtel/translations");
   app.installTranslator(&translator);
 
   QCoreApplication::setOrganizationName("SvxLink");

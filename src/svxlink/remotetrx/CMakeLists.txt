@@ -23,5 +23,8 @@ target_link_libraries(remotetrx ${LIBS})
 set_target_properties(remotetrx PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
-add_version_target(REMOTE_TRX ${VER_REMOTE_TRX})
+add_version_target(REMOTE_TRX)
 
+# Install targets
+install(TARGETS remotetrx DESTINATION ${BIN_INSTALL_DIR})
+install(FILES remotetrx.conf DESTINATION ${SVX_SYSCONF_INSTALL_DIR})

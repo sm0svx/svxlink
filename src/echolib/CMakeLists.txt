@@ -12,9 +12,8 @@ set(LIBS ${LIBS} ${GSM_LIBRARY})
 
 set(LIBNAME echolib)
 
-set(LIBINC EchoLinkDirectory.h EchoLinkDispatcher.h EchoLinkQso.h
+set(EXPINC EchoLinkDirectory.h EchoLinkDispatcher.h EchoLinkQso.h
            EchoLinkStationData.h)
-         set(EXPINC ${LIBINC} rtp.h)
 
 set(LIBSRC EchoLinkDirectory.cpp EchoLinkQso.cpp rtpacket.cpp
            EchoLinkDispatcher.cpp EchoLinkStationData.cpp)
@@ -52,3 +51,7 @@ endforeach(exe)
 add_executable(echolib_test echolib_test.cpp EchoLinkQsoTest.cpp)
 target_link_libraries(echolib_test ${LIBS} ${POPT_LIBRARIES} echolib asynccpp
                         asyncaudio asynccore)
+
+# Install files
+install(TARGETS ${LIBNAME} ${LIBNAME}_static DESTINATION ${LIB_INSTALL_DIR})
+install(FILES ${EXPINC} DESTINATION ${SVX_INCLUDE_INSTALL_DIR})

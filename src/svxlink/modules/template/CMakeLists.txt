@@ -1,23 +1,16 @@
 # The name of the module without the Module prefix
-set(MODNAME EchoLink)
+set(MODNAME Template)
 
 # Module source code
-set(MODSRC QsoImpl.cpp)
+#set(MODSRC xyz.cpp)
 
 # Project libraries to link to
-set(LIBS ${LIBS} echolib)
+#set(LIBS ${LIBS} echolib)
 
-# Find the TCL library
-find_package(TCL)
-if(NOT TCL_FOUND)
-  message("--- TCL not found")
-  return(1)
-endif(NOT TCL_FOUND)
-set(LIBS ${LIBS} ${TCL_LIBRARY})
-include_directories(${TCL_INCLUDE_PATH})
-
-
-string(TOUPPER MODULE_${MODNAME} VERNAME)
+# The version tag name without the VER_ prefix
+set(VERNAME ${MODNAME})
+string(REGEX REPLACE \(.\)\([A-Z]\) \\1_\\2 VERNAME ${VERNAME})
+string(TOUPPER MODULE_${VERNAME} VERNAME)
 
 # Build the plugin
 add_library(Module${MODNAME} MODULE Module${MODNAME}.cpp ${MODSRC}

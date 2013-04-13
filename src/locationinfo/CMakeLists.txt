@@ -21,3 +21,5 @@ add_library(${LIBNAME} STATIC ${LIBSRC}
 target_link_libraries(${LIBNAME} ${LIBS})
 add_version_target(SVXLINK ${VER_SVXLINK})
 
+# Install targets
+install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
