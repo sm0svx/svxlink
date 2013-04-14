@@ -20,9 +20,10 @@ if (SPEEX_LIBRARIES AND SPEEX_INCLUDE_DIRS)
 else (SPEEX_LIBRARIES AND SPEEX_INCLUDE_DIRS)
   # use pkg-config to get the directories and then use these values
   # in the FIND_PATH() and FIND_LIBRARY() calls
-  include(UsePkgConfig)
+  include(FindPkgConfig)
 
-  pkgconfig(speex _SpeexIncDir _SpeexLinkDir _SpeexLinkFlags _SpeexCflags)
+  #pkgconfig(speex _SpeexIncDir _SpeexLinkDir _SpeexLinkFlags _SpeexCflags)
+  pkg_check_modules(SPEEX speex)
 
   set(SPEEX_DEFINITIONS ${_SpeexCflags})
 
@@ -30,7 +31,7 @@ else (SPEEX_LIBRARIES AND SPEEX_INCLUDE_DIRS)
     NAMES
       speex/speex.h
     PATHS
-      ${_SpeexIncDir}
+      ${SPEEX_INCLUDE_DIRS}
       /usr/include
       /usr/local/include
       /opt/local/include
@@ -41,7 +42,7 @@ else (SPEEX_LIBRARIES AND SPEEX_INCLUDE_DIRS)
     NAMES
       speex
     PATHS
-      ${_SpeexLinkDir}
+      ${SPEEX_LIBRARY_DIRS}
       /usr/lib
       /usr/local/lib
       /opt/local/lib

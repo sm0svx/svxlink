@@ -7,9 +7,9 @@
 
 set( GSM_FOUND "NO" )
 
-find_path( GSM_INCLUDE_DIR gsm/gsm.h
+find_path( GSM_INCLUDE_DIR gsm.h
   HINTS
-  PATH_SUFFIXES include
+  PATH_SUFFIXES gsm
   PATHS
   ~/Library/Frameworks
   /Library/Frameworks

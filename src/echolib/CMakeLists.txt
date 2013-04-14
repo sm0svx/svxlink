@@ -1,3 +1,8 @@
+# Find the GSM codec library and include directory
+find_package(GSM REQUIRED)
+include_directories(${GSM_INCLUDE_DIR})
+set(LIBS ${LIBS} ${GSM_LIBRARY})
+
 # Find Speex
 find_package(Speex)
 if(SPEEX_FOUND)
@@ -5,10 +10,6 @@ if(SPEEX_FOUND)
   add_definitions(${SPEEX_DEFINITIONS})
   set(LIBS ${LIBS} ${SPEEX_LIBRARIES})
 endif(SPEEX_FOUND)
-
-find_package(GSM REQUIRED)
-include_directories(${GSM_INCLUDE_DIR})
-set(LIBS ${LIBS} ${GSM_LIBRARY})
 
 set(LIBNAME echolib)
 
