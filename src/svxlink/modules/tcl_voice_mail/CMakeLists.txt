@@ -8,7 +8,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/TclVoiceMail.conf
   )
 
 # Install targets
-install_mkdir(${SVX_SPOOL_INSTALL_DIR}/voice_mail)
+install_mkdir(${SVX_SPOOL_INSTALL_DIR}/voice_mail svxlink.daemon)
 install(FILES Module${MODNAME}.tcl
   DESTINATION ${SVX_SHARE_INSTALL_DIR}/modules.d
   )

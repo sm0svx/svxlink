@@ -60,7 +60,7 @@ include_directories(
 
 
 ##############################################################################
-# Install directories setup
+# Install targets properties setup
 ##############################################################################
 
 # Where to install include files
@@ -178,12 +178,54 @@ function(read_versions_file filename)
   endforeach(version)
 endfunction(read_versions_file)
 
+# Create a post install target to change the owner of an installed file.
+# If DO_INSTALL_CHOWN is set to YES, the owner will be changed during
+# installation.
+# If DO_INSTALL_CHOWN is unset, the DESTDIR environment variable will be
+# examined. If it is set, no chown operations will be performed since we are
+# probably not running as a user with administrative rights. If DESTDIR is
+# unset, chown operations are performed.
+function(install_chown filename owner)
+  if(owner)
+    set(chown_commands "
+      set(CHOWN_TOOL ${CHOWN_TOOL})
+      if(NOT CHOWN_TOOL)
+        MESSAGE(FATAL_ERROR \"Unable to find the 'chown' utility\")
+      endif(NOT CHOWN_TOOL)
+      set(full_filename \"\$ENV{DESTDIR}${filename}\")
+      message(\"-- Setting owner of \${full_filename} to ${owner}...\")
+      execute_process(
+        COMMAND ${CHOWN_TOOL} ${owner} \"\${full_filename}\"
+        RESULT_VARIABLE cmd_result
+        )
+      if(NOT \${cmd_result} EQUAL 0)
+        MESSAGE(FATAL_ERROR
+          \"Error while changing owner of file \${full_filename}\"
+          )
+      endif(NOT \${cmd_result} EQUAL 0)
+      ")
+    if(DEFINED DO_INSTALL_CHOWN)
+      if(DO_INSTALL_CHOWN)
+        install(CODE "${chown_commands}")
+      endif(DO_INSTALL_CHOWN)
+    else(DEFINED DO_INSTALL_CHOWN)
+      install(CODE "
+        if(\"\$ENV{DESTDIR}\" STREQUAL \"\")
+          ${chown_commands}
+        endif(\"\$ENV{DESTDIR}\" STREQUAL \"\")
+        ")
+    endif(DEFINED DO_INSTALL_CHOWN)
+  endif(owner)
+endfunction(install_chown)
+
 # Create the given directory during installation
+#   install_mkdir(directory [owner])
 function(install_mkdir dir)
+  set(owner ${ARGV1})
   get_filename_component(parent ${dir} PATH)
   file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${dir})
-  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${dir}
-        DESTINATION ${parent})
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${dir} DESTINATION ${parent})
+  install_chown(${dir} "${owner}")
 endfunction(install_mkdir)
 
 
@@ -203,6 +245,9 @@ configure_file(${CMAKE_SOURCE_DIR}/config.h.in
 find_package(SIGC REQUIRED)
 include_directories(${SIGC_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${SIGC_LIBRARIES})
+
+# Find the chown utility
+include(FindCHOWN)
 
 # Add directories to build
 add_subdirectory(async)

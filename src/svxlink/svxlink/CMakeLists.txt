@@ -54,7 +54,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf
 # Install targets
 install(TARGETS svxlink DESTINATION ${BIN_INSTALL_DIR})
 install_mkdir(${SVX_SYSCONF_INSTALL_DIR}/svxlink.d)
-install_mkdir(${SVX_SPOOL_INSTALL_DIR}/qso_recorder)
+install_mkdir(${SVX_SPOOL_INSTALL_DIR}/qso_recorder svxlink.daemon)
 install_mkdir(${SVX_SHARE_INSTALL_DIR}/sounds)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
   DESTINATION ${SVX_SYSCONF_INSTALL_DIR}

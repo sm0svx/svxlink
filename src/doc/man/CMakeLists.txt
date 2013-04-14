@@ -5,13 +5,17 @@ set(MAN_PAGES svxlink.1 remotetrx.1 siglevdetcal.1 svxlink.conf.5
   ModulePropagationMonitor.conf.5 ModuleSelCallEnc.conf.5 qtel.1
 )
 
+# Search for gzip program. Error out if not found.
+include(FindGZIP)
+
 # Set up a target for compressing each manual page. Also add an install
 # target for it.
 set(TARGETS)
 foreach(man ${MAN_PAGES})
   add_custom_command(OUTPUT ${man}.gz
     DEPENDS ${man}
-    COMMAND gzip -c ${CMAKE_CURRENT_SOURCE_DIR}/${man} > ${man}.gz
+    COMMAND ${GZIP_TOOL} -c ${CMAKE_CURRENT_SOURCE_DIR}/${man} > ${man}.gz
+    COMMENT "Compressing maual page ${man}.gz..."
   )
   string(REGEX REPLACE ^.*\([1-9]\)\$ \\1 sec ${man})
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${man}.gz
