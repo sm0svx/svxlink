@@ -13,8 +13,9 @@ endif(SPEEX_FOUND)
 
 set(LIBNAME echolib)
 
-set(EXPINC EchoLinkDirectory.h EchoLinkDispatcher.h EchoLinkQso.h
-           EchoLinkStationData.h)
+set(INSTALL_INC EchoLinkDirectory.h EchoLinkDispatcher.h EchoLinkQso.h
+                EchoLinkStationData.h)
+set(EXPINC ${INSTALL_INC} rtp.h)
 
 set(LIBSRC EchoLinkDirectory.cpp EchoLinkQso.cpp rtpacket.cpp
            EchoLinkDispatcher.cpp EchoLinkStationData.cpp)
@@ -55,4 +56,4 @@ target_link_libraries(echolib_test ${LIBS} ${POPT_LIBRARIES} echolib asynccpp
 
 # Install files
 install(TARGETS ${LIBNAME} ${LIBNAME}_static DESTINATION ${LIB_INSTALL_DIR})
-install(FILES ${EXPINC} DESTINATION ${SVX_INCLUDE_INSTALL_DIR})
+install(FILES ${INSTALL_INC} DESTINATION ${SVX_INCLUDE_INSTALL_DIR})

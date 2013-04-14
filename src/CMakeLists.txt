@@ -47,14 +47,7 @@ add_definitions(-DINTERNAL_SAMPLE_RATE=${INTERNAL_SAMPLE_RATE})
 
 # Set up include directories
 include_directories(
-  #${PROJECT_INCLUDE_DIR}
-  ${CMAKE_SOURCE_DIR}/misc
-  ${CMAKE_SOURCE_DIR}/async/core
-  ${CMAKE_SOURCE_DIR}/async/cpp
-  ${CMAKE_SOURCE_DIR}/async/audio
-  ${CMAKE_SOURCE_DIR}/async/qt
-  ${CMAKE_SOURCE_DIR}/echolib
-  ${CMAKE_SOURCE_DIR}/locationinfo
+  ${PROJECT_INCLUDE_DIR}
   ${CMAKE_BINARY_DIR}
 )
 
@@ -135,10 +128,10 @@ endif(NOT DEFINED SVX_MODULE_INSTALL_DIR)
 
 # Create an include file under the global include directory
 function(expinc filename)
-  #  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${filename}
-  #  ${PROJECT_INCLUDE_DIR}/${filename}
-  #  COPYONLY
-  #  )
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${filename}
+    ${PROJECT_INCLUDE_DIR}/${filename}
+    COPYONLY
+    )
 endfunction(expinc)
 
 # Add a target for building a version/xyz.h file
@@ -151,7 +144,7 @@ function(add_version_target name)
 
   add_custom_command(
     OUTPUT version/${name}.h
-    #WORKING_DIRECTORY ${PROJECT_INCLUDE_DIR}
+    WORKING_DIRECTORY ${PROJECT_INCLUDE_DIR}
     COMMAND ${CMAKE_SOURCE_DIR}/create_version_include.sh ${name} ${ver}
     DEPENDS ${CMAKE_SOURCE_DIR}/versions
             ${CMAKE_SOURCE_DIR}/create_version_include.sh
