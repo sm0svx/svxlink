@@ -15,11 +15,13 @@ foreach(incfile ${EXPINC})
   expinc(${incfile})
 endforeach(incfile)
 
+# Add targets for version files
+set(VERSION_DEPENDS)
+add_version_target(SVXLINK VERSION_DEPENDS)
+
 # Build only a static library
-add_library(${LIBNAME} STATIC ${LIBSRC}
-            ${CMAKE_CURRENT_BINARY_DIR}/version/SVXLINK.h)
+add_library(${LIBNAME} STATIC ${LIBSRC} ${VERSION_DEPENDS})
 target_link_libraries(${LIBNAME} ${LIBS})
-add_version_target(SVXLINK ${VER_SVXLINK})
 
 # Install targets
 install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})

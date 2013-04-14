@@ -32,18 +32,21 @@ include_directories(${DL_INCLUDES})
 # Add project libraries
 set(LIBS ${LIBS} trx locationinfo asynccpp asyncaudio asynccore)
 
+# Add targets for version files
+set(VERSION_DEPENDS)
+add_version_target(SVXLINK VERSION_DEPENDS)
+
 # Build the executable
 add_executable(svxlink
   MsgHandler.cpp Module.cpp Logic.cpp SimplexLogic.cpp
   RepeaterLogic.cpp EventHandler.cpp AudioSwitchMatrix.cpp
   CmdParser.cpp QsoRecorder.cpp svxlink.cpp
-  ${CMAKE_CURRENT_BINARY_DIR}/version/SVXLINK.h
+  ${VERSION_DEPENDS}
 )
 target_link_libraries(svxlink ${LIBS})
 set_target_properties(svxlink PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
-add_version_target(SVXLINK)
 
 # Generate config file with correct paths
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf

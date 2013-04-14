@@ -33,17 +33,19 @@ QT4_WRAP_CPP(QTHEADERS_MOC ${QTHEADERS})
 QT4_WRAP_UI(FORMS_HEADERS ${FORMS})
 QT4_ADD_RESOURCES(RESOURCES_RCC ${RESOURCES})
 
-# Compile the application
+# Add targets for version files
+set(VERSION_DEPENDS)
 string(TOUPPER ${PROG} PROG_VERNAME)
+add_version_target(${PROG_VERNAME} VERSION_DEPENDS)
+
+# Compile the application
 add_executable(${PROG} ${PRGSRC} ${QTHEADERS_MOC} ${FORMS_HEADERS}
-  ${RESOURCES_RCC}
-  ${CMAKE_CURRENT_BINARY_DIR}/version/${PROG_VERNAME}.h
+  ${RESOURCES_RCC} ${VERSION_DEPENDS}
   )
 target_link_libraries(${PROG} ${LIBS})
 set_target_properties(${PROG} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}  
   )
-add_version_target(${PROG_VERNAME})
 
 # Install targets
 install(TARGETS ${PROG} DESTINATION ${BIN_INSTALL_DIR})

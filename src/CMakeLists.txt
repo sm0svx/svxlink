@@ -135,24 +135,41 @@ function(expinc filename)
 endfunction(expinc)
 
 # Add a target for building a version/xyz.h file
+#
+#   add_version_target(name [depends_var])
+#
+# The name of the version variable should be VER_name and the versions file
+# will be named versions/name.h.
+# If depends_var is given it will be set to a list of dependencies that the
+# target using the versions file should add to its dependency list.
 function(add_version_target name)
-  if(${VER_${name}})
-    set(ver ${VER_${name}})
-  else(${VER_${name}})
-    set(ver "?.?.?")
-  endif(${VER_${name}})
+  set(depends_var ${ARGV1})
+  if(DEFINED depends_var)
+    set(${depends_var} ${${depends_var}}
+      "${PROJECT_INCLUDE_DIR}/version/${name}.h"
+      PARENT_SCOPE
+      )
+  endif(DEFINED depends_var)
+
+  if(VER_${name})
+    set(VERSION ${VER_${name}})
+  else(VER_${name})
+    set(VERSION "?.?.?")
+  endif(VER_${name})
 
   add_custom_command(
-    OUTPUT version/${name}.h
+    OUTPUT ${PROJECT_INCLUDE_DIR}/version/${name}.h
     WORKING_DIRECTORY ${PROJECT_INCLUDE_DIR}
-    COMMAND ${CMAKE_SOURCE_DIR}/create_version_include.sh ${name} ${ver}
+    #COMMAND ${CMAKE_SOURCE_DIR}/create_version_include.sh ${name} ${VERSION}
+    COMMAND ${CMAKE_COMMAND} -DVER_NAME=${name} -DVER_VALUE=${VERSION} 
+                     -P ${CMAKE_SOURCE_DIR}/cmake/create_version_include.cmake
     DEPENDS ${CMAKE_SOURCE_DIR}/versions
-            ${CMAKE_SOURCE_DIR}/create_version_include.sh
+            ${CMAKE_SOURCE_DIR}/cmake/create_version_include.cmake
   )
   #set(VER_VAR_NAME ${name})
   #configure_file(${CMAKE_SOURCE_DIR}/version.h.in
-  #               version/${name}.h)
-  include_directories(${CMAKE_CURRENT_BINARY_DIR})
+  #  ${PROJECT_INCLUDE_DIR}/version/${name}.h
+  #  )
 endfunction(add_version_target)
 
 # Read a versions file and set up CMake variables for each entry

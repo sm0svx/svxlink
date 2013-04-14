@@ -25,15 +25,17 @@ set(LIBS ${LIBS} ${GSM_LIBRARY})
 
 string(TOUPPER MODULE_${MODNAME} VERNAME)
 
+# Add targets for version files
+set(VERSION_DEPENDS)
+add_version_target(${VERNAME} VERSION_DEPENDS)
+add_version_target(SVXLINK VERSION_DEPENDS)
+
 # Build the plugin
 add_library(Module${MODNAME} MODULE Module${MODNAME}.cpp ${MODSRC}
-  ${CMAKE_CURRENT_BINARY_DIR}/version/${VERNAME}.h
-  ${CMAKE_CURRENT_BINARY_DIR}/version/SVXLINK.h
+  ${VERSION_DEPENDS}
 )
 set_target_properties(Module${MODNAME} PROPERTIES PREFIX "")
 target_link_libraries(Module${MODNAME} ${LIBS})
-add_version_target(${VERNAME})
-add_version_target(SVXLINK)
 
 # Install targets
 install(TARGETS Module${MODNAME} DESTINATION ${SVX_MODULE_INSTALL_DIR})
