@@ -1,6 +1,7 @@
 FIND_PROGRAM(GZIP_TOOL
   NAMES gzip
   PATHS /bin /usr/bin /usr/local/bin
+  DOC "The path to the gzip file compression tool"
   )
 
 

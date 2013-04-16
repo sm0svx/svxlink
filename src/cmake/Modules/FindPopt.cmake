@@ -83,7 +83,7 @@ else (POPT_LIBRARIES AND POPT_INCLUDE_DIRS)
     endif (Popt_FIND_REQUIRED)
   endif (POPT_FOUND)
 
-  # show the POPT_INCLUDE_DIRS and POPT_LIBRARIES variables only in the advanced view
-  mark_as_advanced(POPT_INCLUDE_DIRS POPT_LIBRARIES)
+  # show the POPT_INCLUDE_DIR and POPT_LIBRARY variables only in the advanced view
+  mark_as_advanced(POPT_INCLUDE_DIR POPT_LIBRARY)
 
 endif (POPT_LIBRARIES AND POPT_INCLUDE_DIRS)

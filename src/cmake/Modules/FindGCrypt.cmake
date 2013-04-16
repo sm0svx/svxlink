@@ -56,8 +56,8 @@ else (GCRYPT_LIBRARIES AND GCRYPT_INCLUDE_DIRS)
   include(FindPackageHandleStandardArgs)
   find_package_handle_standard_args(GCrypt DEFAULT_MSG GCRYPT_LIBRARIES GCRYPT_INCLUDE_DIRS)
 
-  # show the GCRYPT_INCLUDE_DIRS and GCRYPT_LIBRARIES variables only in the advanced view
-  mark_as_advanced(GCRYPT_INCLUDE_DIRS GCRYPT_LIBRARIES)
+  # show the GCRYPT_INCLUDE_DIR and GCRYPT_LIBRARY variables only in the advanced view
+  mark_as_advanced(GCRYPT_INCLUDE_DIR GCRYPT_LIBRARY)
 
 endif (GCRYPT_LIBRARIES AND GCRYPT_INCLUDE_DIRS)
 

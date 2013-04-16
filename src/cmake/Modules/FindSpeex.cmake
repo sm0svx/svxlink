@@ -78,7 +78,7 @@ else (SPEEX_LIBRARIES AND SPEEX_INCLUDE_DIRS)
     endif (Speex_FIND_REQUIRED)
   endif (SPEEX_FOUND)
 
-  # show the SPEEX_INCLUDE_DIRS and SPEEX_LIBRARIES variables only in the advanced view
-  mark_as_advanced(SPEEX_INCLUDE_DIRS SPEEX_LIBRARIES)
+  # show the SPEEX_INCLUDE_DIR and SPEEX_LIBRARY variables only in the advanced view
+  mark_as_advanced(SPEEX_INCLUDE_DIR SPEEX_LIBRARY)
 
 endif (SPEEX_LIBRARIES AND SPEEX_INCLUDE_DIRS)
