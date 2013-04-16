@@ -33,6 +33,10 @@ QT4_WRAP_CPP(QTHEADERS_MOC ${QTHEADERS})
 QT4_WRAP_UI(FORMS_HEADERS ${FORMS})
 QT4_ADD_RESOURCES(RESOURCES_RCC ${RESOURCES})
 
+# We also need to add the current build directory to the include search path
+# to find automatically generated h-files.
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 # Add targets for version files
 set(VERSION_DEPENDS)
 string(TOUPPER ${PROG} PROG_VERNAME)
