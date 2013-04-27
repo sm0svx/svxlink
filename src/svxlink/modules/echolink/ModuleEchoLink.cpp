@@ -1234,6 +1234,15 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     return;
   }
 
+  if (qsos.size() >= max_qsos)
+  {
+    cerr << "Couldn't connect to " << station.callsign() << " due to the "
+         << "number of active connections (" << qsos.size() << " > "
+         << max_qsos << ")" << endl;
+    processEvent("no_more_connections_allowed");
+    return;
+  }
+
   cout << "Connecting to " << station.callsign() << " (" << station.id()
        << ")\n";
   
@@ -1300,7 +1309,8 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     list<string> call_list;
     listQsoCallsigns(call_list);
 
-    LocationInfo::instance()->updateQsoStatus(1, station.callsign(), info.str(), call_list);
+    LocationInfo::instance()->updateQsoStatus(1, station.callsign(),
+                                              info.str(), call_list);
   }
     
   checkIdle();
@@ -1743,33 +1753,26 @@ void ModuleEchoLink::commandFailed(const string& cmd)
 
 void ModuleEchoLink::connectByNodeId(int node_id)
 {
-  if (qsos.size() < max_qsos)
+  if ((dir->status() == StationData::STAT_OFFLINE) ||
+      (dir->status() == StationData::STAT_UNKNOWN))
   {
-    if ((dir->status() == StationData::STAT_OFFLINE) ||
-      	(dir->status() == StationData::STAT_UNKNOWN))
-    {
-      cout << "*** ERROR: Directory server offline (status="
-      	   << dir->statusStr() << "). Can't create outgoing connection.\n";
-      processEvent("directory_server_offline");
-      return;
-    }
-    
-    const StationData *station = dir->findStation(node_id);
-    if (station != 0)
-    {
-      createOutgoingConnection(*station);
-    }
-    else
-    {
-      cout << "EchoLink ID " << node_id << " is not in the list. "
-      	      "Refreshing the list...\n";
-      getDirectoryList();
-      pending_connect_id = node_id;
-    }
+    cout << "*** ERROR: Directory server offline (status="
+         << dir->statusStr() << "). Can't create outgoing connection.\n";
+    processEvent("directory_server_offline");
+    return;
+  }
+  
+  const StationData *station = dir->findStation(node_id);
+  if (station != 0)
+  {
+    createOutgoingConnection(*station);
   }
   else
   {
-    processEvent("no_more_connections_allowed");
+    cout << "EchoLink ID " << node_id << " is not in the list. "
+            "Refreshing the list...\n";
+    getDirectoryList();
+    pending_connect_id = node_id;
   }
 } /* ModuleEchoLink::connectByNodeId */
 

@@ -51,6 +51,9 @@
 * Periodic identifications were missing now and then under some conditions.
   This should be fixed now.
 
+* The maximum QSO limit (MAX_QSOS) did not work for outgoing connections for
+  all use cases.
+
 
 
  1.0.0 -- 08 Mar 2013
