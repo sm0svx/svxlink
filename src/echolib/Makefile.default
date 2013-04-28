@@ -28,7 +28,8 @@ PROGS		=
 
 # C++ programs to compile
 CPPPROGS      	= echolib_test EchoLinkDispatcher_demo EchoLinkDirectory_demo \
-      	      	  EchoLinkQso_demo EchoLinkProxy_demo
+      	      	  EchoLinkQso_demo
+# EchoLinkProxy_demo
 
 # Sources other than the main files
 PRGSRC		= EchoLinkQsoTest.cpp
