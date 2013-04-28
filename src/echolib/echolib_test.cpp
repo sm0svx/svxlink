@@ -66,6 +66,7 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include "EchoLinkProxy.h"
 #include "EchoLinkDirectory.h"
 #include "EchoLinkDispatcher.h"
 #include "EchoLinkQsoTest.h"
@@ -140,10 +141,13 @@ int print_repeaters = 0;
 int print_conferences = 0;
 int print_stations = 0;
 char *filter = 0;
-char *connect_to_call = 0;
-char *connect_to_ip = 0;
+const char *connect_to_call = 0;
+const char *connect_to_ip = 0;
 long vox_limit = -1;
 int portbase = -1;
+const char *proxy_host = 0;
+int proxy_port = 8100;
+const char *proxy_password = "";
 
 Directory *dir = 0;
 ProcessingStage processing_stage = PS_START;
@@ -183,11 +187,6 @@ int main( int argc, const char **argv )
   openlog(PROGRAM_NAME, LOG_PID, LOG_USER);
   parse_arguments(argc, argv);
   
-  if (portbase != -1)
-  {
-    Dispatcher::setPortBase(portbase);
-  }
-  
   const char *home = getenv("HOME");
   if (home == 0)
   {
@@ -226,7 +225,19 @@ int main( int argc, const char **argv )
   fclose(cfg);
 
   CppApplication app;
-    
+   
+  if (proxy_host != 0)
+  {
+    Proxy *proxy = new Proxy(proxy_host, proxy_port, my_callsign,
+                             proxy_password);
+    proxy->connect();
+  }
+
+  if (portbase != -1)
+  {
+    Dispatcher::setPortBase(portbase);
+  }
+  
   dir = new Directory(SERVER_NAME, my_callsign, my_password, my_location);
   dir->error.connect(sigc::ptr_fun(&on_error_msg));
   dir->statusChanged.connect(sigc::ptr_fun(&on_status_changed));
@@ -269,6 +280,10 @@ static void process_next_stage(void)
   
   switch (processing_stage)
   {
+    case PS_START:
+      process_next_stage();
+      break;
+
     case PS_LOGON:
       if (logon)
       {
@@ -407,12 +422,14 @@ static void process_next_stage(void)
       Application::app().quit();
       break;
     
+    /*
     default:
       process_next_stage();
       break;
+    */
   }
   
-} /* process_stage */
+} /* process_next_stage */
 
 
 static void on_error_msg(const string& msg)
@@ -588,10 +605,16 @@ static void parse_arguments( int argc, const char **argv )
 	    "Get and print all conferences", NULL},
     {"stations", 0, POPT_ARG_NONE, &print_stations, 0,
 	    "Get and print all stations", NULL},
-    {"vox", 'v', POPT_ARG_INT, &vox_limit, 0,
+    {"vox", 0, POPT_ARG_INT, &vox_limit, 0,
 	    "The VOX limit to use", "<limit>"},
     {"portbase", 0, POPT_ARG_INT, &portbase, 0,
 	    "The UDP port base to use", "<port base>"},
+    {"proxyhost", 'p', POPT_ARG_STRING, &proxy_host, 0,
+            "Use EchoLink Proxy server", "<hostname>"},
+    {"proxyport", 0, POPT_ARG_INT, &proxy_port, 0,
+	    "Use EchoLink proxy TCP port (default 8100)", "<port>"},
+    {"proxypasswd", 'p', POPT_ARG_STRING, &proxy_password, 0,
+            "Use EchoLink Proxy server password", "<password>"},
     {NULL, 0, 0, NULL, 0}
   };
   int err;

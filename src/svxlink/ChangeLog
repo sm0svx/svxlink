@@ -54,6 +54,8 @@
 * The maximum QSO limit (MAX_QSOS) did not work for outgoing connections for
   all use cases.
 
+* Added support for EchoLink proxy.
+
 
 
  1.0.0 -- 08 Mar 2013

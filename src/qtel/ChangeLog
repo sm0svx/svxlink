@@ -7,6 +7,8 @@
 
 * The "100% CPU load after incoming connect" bug in Qtel has been resolved.
 
+* Added support for EchoLink proxy.
+
 
 
  1.0.0 -- 08 Mar 2013

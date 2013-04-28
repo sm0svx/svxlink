@@ -78,6 +78,11 @@ An example of how to use the EchoLink::Directory class
 
 class Cmd;
 
+namespace EchoLink
+{
+  class DirectoryCon;
+};
+
 
 /****************************************************************************
  *
@@ -381,7 +386,7 @@ class Directory : public sigc::trackable
     StationData       	    get_call_entry;
     std::list<StationData>  get_call_list;
     
-    Async::TcpClient *      ctrl_con;
+    DirectoryCon *          ctrl_con;
     std::list<Cmd>    	    cmd_queue;
     StationData::Status     the_status;
     Async::Timer *    	    reg_refresh_timer;
@@ -395,10 +400,10 @@ class Directory : public sigc::trackable
     void printBuf(const unsigned char *buf, int len);
     int handleCallList(char *buf, int len);
     
+    void ctrlSockReady(bool is_ready);
     void ctrlSockConnected(void);
-    void ctrlSockDisconnected(Async::TcpConnection *con,
-      	    Async::TcpClient::DisconnectReason reason);
-    int ctrlSockDataReceived(Async::TcpConnection *con, void *ptr, int len);
+    void ctrlSockDisconnected(void);
+    int ctrlSockDataReceived(void *ptr, unsigned len);
     void sendNextCmd(void);
     void addCmdToQueue(Cmd cmd);
     void setStatus(StationData::Status new_status);

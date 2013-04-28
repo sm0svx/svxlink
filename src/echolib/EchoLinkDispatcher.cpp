@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "EchoLinkProxy.h"
 #include "rtp.h"
 #include "rtpacket.h"
 #include "EchoLinkQso.h"
@@ -150,7 +151,7 @@ Dispatcher *Dispatcher::instance(void)
   if (the_instance == 0)
   {
     the_instance = new Dispatcher;
-    if (the_instance->ctrl_sock == 0)
+    if ((the_instance->ctrl_sock == 0) && (Proxy::instance() == 0))
     {
       delete the_instance;
     }
@@ -159,6 +160,13 @@ Dispatcher *Dispatcher::instance(void)
   return the_instance;
   
 } /* Dispatcher::instance */
+
+
+void Dispatcher::deleteInstance(void)
+{
+  delete the_instance;
+  the_instance = 0;
+} /* Dispatcher::deleteInstance */
 
 
 Dispatcher::~Dispatcher(void)
@@ -199,13 +207,29 @@ void Dispatcher::unregisterConnection(Qso *con)
 
 bool Dispatcher::sendCtrlMsg(const IpAddress& to, const void *buf, int len)
 {
-  return ctrl_sock->write(to, CTRL_PORT, buf, len);
+  Proxy *proxy = Proxy::instance();
+  if (proxy == 0)
+  {
+    return ctrl_sock->write(to, CTRL_PORT, buf, len);
+  }
+  else
+  {
+    return proxy->udpCtrl(to, buf, len);
+  }
 } /* Dispatcher::sendCtrlMsg */
 
 
 bool Dispatcher::sendAudioMsg(const IpAddress& to, const void *buf, int len)
 {
-  return audio_sock->write(to, AUDIO_PORT, buf, len);
+  Proxy *proxy = Proxy::instance();
+  if (proxy == 0)
+  {
+    return audio_sock->write(to, AUDIO_PORT, buf, len);
+  }
+  else
+  {
+    return proxy->udpData(to, buf, len);
+  }
 } /* Dispatcher::sendCtrlMsg */
 
 
@@ -243,24 +267,34 @@ bool Dispatcher::sendAudioMsg(const IpAddress& to, const void *buf, int len)
 
 
 Dispatcher::Dispatcher(void)
+  : ctrl_sock(0), audio_sock(0)
 {
-  ctrl_sock = new UdpSocket(CTRL_PORT);
-  audio_sock = new UdpSocket(AUDIO_PORT);
-  if (!ctrl_sock->initOk() || !audio_sock->initOk())
+  Proxy *proxy = Proxy::instance();
+  if (proxy == 0)
   {
-    delete ctrl_sock;
-    ctrl_sock = 0;
-    delete audio_sock;
-    audio_sock = 0;
-    return;
+    ctrl_sock = new UdpSocket(CTRL_PORT);
+    audio_sock = new UdpSocket(AUDIO_PORT);
+    if (!ctrl_sock->initOk() || !audio_sock->initOk())
+    {
+      delete ctrl_sock;
+      ctrl_sock = 0;
+      delete audio_sock;
+      audio_sock = 0;
+      return;
+    }
+    
+    ctrl_sock->dataReceived.connect(
+        mem_fun(*this, &Dispatcher::ctrlDataReceived));
+    audio_sock->dataReceived.connect(
+        mem_fun(*this, &Dispatcher::audioDataReceived));
   }
-  
-  ctrl_sock->dataReceived.connect(mem_fun(*this, &Dispatcher::ctrlDataReceived));
-  audio_sock->dataReceived.connect(
-      mem_fun(*this, &Dispatcher::audioDataReceived));
-  
-  return;
-  
+  else
+  {
+    proxy->udpCtrlReceived.connect(
+        mem_fun(*this, &Dispatcher::ctrlDataReceived));
+    proxy->udpDataReceived.connect(
+        mem_fun(*this, &Dispatcher::audioDataReceived));
+  }
 } /* Dispatcher::Dispatcher */
 
 

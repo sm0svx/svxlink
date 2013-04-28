@@ -7,6 +7,14 @@
   since the former provides monotonically increasing time which the
   latter don't.
 
+* Async::DnsLookup: New method resultsAreReady with which it is possible
+  to check if the DNS lookup is done or if it's still pending.
+
+* Async::TcpClient: Added two new constructors, one which take an IpAddress
+  object instead of a host name which is good if you already have the IP
+  address. The other only take an optional buffer size. The hostname or ip
+  address is given later to the new connect method.
+
 
 
  1.0.0 -- 08 Mar 2013
