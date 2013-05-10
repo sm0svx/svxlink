@@ -82,33 +82,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-class DummyTx : public Tx
-{
-  public:
-    DummyTx(void) {}
-    virtual ~DummyTx(void) {}
-    virtual bool initialize(void) { return true; }
-    virtual void setTxCtrlMode(TxCtrlMode mode) {}
-    virtual bool isTransmitting(void) const { return false; }
-    virtual int writeSamples(const float *samples, int count) { return count; }
-    virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
-};
-
-
-class DummyRx : public Rx
-{
-  public:
-    DummyRx(void) : Rx(cfg, "DummyRx") {}
-    virtual ~DummyRx(void) {}
-    virtual bool initialize(void) { return Rx::initialize(); }
-    virtual void setMuteState(Rx::MuteState new_mute_state) {}
-    virtual void reset(void) {}
-    virtual void resumeOutput(void) {}
-    virtual void allSamplesFlushed(void) {}
-  
-  private:
-    Config  cfg;
-};
 
 
 /****************************************************************************
@@ -174,53 +147,25 @@ bool TrxHandler::initialize(void)
   }
 
   cout << "RX: " << rx_name << endl;
-  if (rx_name != "NONE")
+  m_rx = RxFactory::createNamedRx(m_cfg, rx_name);
+  if ((m_rx == 0) || !m_rx->initialize())
   {
-    string rx_type;
-    if (!m_cfg.getValue(rx_name, "TYPE", rx_type))
-    {
-      cerr << "*** ERROR: " << rx_name << "/TYPE not set\n";
-      cleanup();
-      return false;
-    }
-    m_rx = RxFactory::createNamedRx(m_cfg, rx_name);
-    if ((m_rx == 0) || !m_rx->initialize())
-    {
-      cerr << "*** ERROR: Could not initialize rx object \""
-      	   << rx_name << "\" for trx \"" << m_name << "\".\n";
-      cleanup();
-      return false;
-    }
-  }
-  else
-  {
-    m_rx = new DummyRx;
+    cerr << "*** ERROR: Could not initialize rx object \""
+         << rx_name << "\" for trx \"" << m_name << "\".\n";
+    cleanup();
+    return false;
   }
 
   cout << "TX: " << tx_name << endl;
-  if (tx_name != "NONE")
+  m_tx = TxFactory::createNamedTx(m_cfg, tx_name);
+  if ((m_tx == 0) || !m_tx->initialize())
   {
-    string tx_type;
-    if (!m_cfg.getValue(tx_name, "TYPE", tx_type))
-    {
-      cerr << "*** ERROR: " << tx_name << "/TYPE not set\n";
-      cleanup();
-      return false;
-    }
-    m_tx = TxFactory::createNamedTx(m_cfg, tx_name);
-    if ((m_tx == 0) || !m_tx->initialize())
-    {
-      cerr << "*** ERROR: Could not initialize tx object \""
-      	   << tx_name << "\" for trx \"" << m_name << "\".\n";
-      cleanup();
-      return false;
-    }
+    cerr << "*** ERROR: Could not initialize tx object \""
+         << tx_name << "\" for trx \"" << m_name << "\".\n";
+    cleanup();
+    return false;
   }
-  else
-  {
-    m_tx = new DummyTx;
-  }
-    
+   
   m_uplink = Uplink::create(m_cfg, m_name, m_rx, m_tx);
   if ((m_uplink == 0) || !m_uplink->initialize())
   {

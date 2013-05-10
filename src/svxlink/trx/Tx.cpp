@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "LocalTx.h"
 #include "NetTx.h"
 #include "MultiTx.h"
+#include "DummyRxTx.h"
 
 
 
@@ -120,6 +121,19 @@ class MultiTxFactory : public TxFactory
 }; /* class MultiTxFactory */
 
 
+class DummyTxFactory : public TxFactory
+{
+  public:
+    DummyTxFactory(void) : TxFactory("Dummy") {}
+    
+  protected:
+    Tx *createTx(Config &cfg, const string& name)
+    {
+      return new DummyTx;
+    }
+}; /* class MultiTxFactory */
+
+
 
 /****************************************************************************
  *
@@ -175,12 +189,20 @@ Tx *TxFactory::createNamedTx(Config& cfg, const string& name)
   LocalTxFactory local_tx_factory;
   NetTxFactory net_tx_factory;
   MultiTxFactory multi_tx_factory;
+  DummyTxFactory dummy_tx_factory;
   
   string tx_type;
-  if (!cfg.getValue(name, "TYPE", tx_type))
+  if (name != "NONE")
   {
-    cerr << "*** ERROR: Config variable " << name << "/TYPE not set\n";
-    return 0;
+    if (!cfg.getValue(name, "TYPE", tx_type))
+    {
+      cerr << "*** ERROR: Config variable " << name << "/TYPE not set\n";
+      return 0;
+    }
+  }
+  else
+  {
+    tx_type = "Dummy";
   }
   
   map<string, TxFactory*>::iterator it;

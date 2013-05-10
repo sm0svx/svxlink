@@ -54,6 +54,10 @@
 * The maximum QSO limit (MAX_QSOS) did not work for outgoing connections for
   all use cases.
 
+* Now possible to specify NONE for RX and TX in all configs. For example,
+  previously it was not possible to specify NONE for uplink RX or TX in
+  RemoteTrx.
+
 
 
  1.0.0 -- 08 Mar 2013
