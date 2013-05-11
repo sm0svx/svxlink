@@ -7,6 +7,8 @@
   since the former provides monotonically increasing time which the
   latter don't.
 
+* Fixed a buffer overflow bug in the AudioInterpolator.
+
 
 
  1.0.0 -- 08 Mar 2013
