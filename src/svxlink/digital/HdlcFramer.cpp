@@ -1,12 +1,14 @@
 /**
-@file	 DtmfDecoder.cpp
-@brief   This file contains the base class for implementing a DTMF decoder
+@file	 HdlcFramer.cpp
+@brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-02-04
+@date	 2010-
+
+A_detailed_description_for_this_file
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+<A brief description of the program or library this file belongs to>
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,15 +28,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
 
-#include <iostream>
-#include <cstdlib>
 
 
 /****************************************************************************
@@ -51,11 +50,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "DtmfDecoder.h"
-#include "SwDtmfDecoder.h"
-#include "S54sDtmfDecoder.h"
-#include "AfskDtmfDecoder.h"
-
+#include "HdlcFramer.h"
+#include "Fcs.h"
 
 
 /****************************************************************************
@@ -65,7 +61,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace Async;
+
 
 
 /****************************************************************************
@@ -115,52 +111,60 @@ using namespace Async;
  *
  ****************************************************************************/
 
-DtmfDecoder *DtmfDecoder::create(Rx *rx, Config &cfg, const string& name)
+HdlcFramer::HdlcFramer(void)
+  : ones(0), prev_was_mark(false)
 {
-  DtmfDecoder *dec = 0;
-  string type;
-  if (!cfg.getValue(name, "DTMF_DEC_TYPE", type))
-  {
-    cerr << "*** ERROR: Config variable " << name << "/DTMF_DEC_TYPE not "
-      	 << "specified.\n";
-    return 0;
-  }
   
-  if (type == "INTERNAL")
-  {
-    dec = new SwDtmfDecoder(cfg, name);
-  }
-  else if (type == "S54S")
-  {
-    dec = new S54sDtmfDecoder(cfg, name);
-  }
-  else if (type == "AFSK")
-  {
-    dec = new AfskDtmfDecoder(rx, cfg, name);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown DTMF decoder type \"" << type << "\" "
-         << "specified for " << name << "/DTMF_DEC_TYPE. "
-      	 << "Legal values are: \"INTERNAL\" or \"S54S\"\n";
-  }
-  
-  return dec;
-  
-} /* DtmfDecoder::create */
+} /* HdlcFramer::HdlcFramer */
 
 
-bool DtmfDecoder::initialize(void)
+HdlcFramer::~HdlcFramer(void)
 {
-  string value;
-  if (cfg().getValue(name(), "DTMF_HANGTIME", value))
+  
+} /* HdlcFramer::~HdlcFramer */
+
+
+void HdlcFramer::sendBytes(const vector<uint8_t> &frame)
+{
+  vector<bool> bitbuf;
+
+    // Store frame start flags
+  for (size_t i=0; i<start_flag_cnt; ++i)
   {
-    m_hangtime = atoi(value.c_str());
+    bitbuf.push_back(!prev_was_mark);
+    bitbuf.push_back(!prev_was_mark);
+    bitbuf.push_back(!prev_was_mark);
+    bitbuf.push_back(!prev_was_mark);
+    bitbuf.push_back(!prev_was_mark);
+    bitbuf.push_back(!prev_was_mark);
+    bitbuf.push_back(!prev_was_mark);
+    bitbuf.push_back(prev_was_mark);
   }
-  
-  return true;
-  
-} /* DtmfDecoder::initialize */
+
+    // Store frame data
+  for (size_t i=0; i<frame.size(); ++i)
+  {
+    encodeByte(bitbuf, frame[i]);
+  }
+
+    // Calculate and store CRC (FCS)
+  uint32_t crc = fcsCalc(frame);
+  encodeByte(bitbuf, crc & 0xff);
+  encodeByte(bitbuf, crc >> 8);
+
+    // Store frame end flag
+  bitbuf.push_back(!prev_was_mark);
+  bitbuf.push_back(!prev_was_mark);
+  bitbuf.push_back(!prev_was_mark);
+  bitbuf.push_back(!prev_was_mark);
+  bitbuf.push_back(!prev_was_mark);
+  bitbuf.push_back(!prev_was_mark);
+  bitbuf.push_back(!prev_was_mark);
+  bitbuf.push_back(prev_was_mark);
+
+  sendBits(bitbuf);
+} /* HdlcFramer::sendBytes */
+    
 
 
 /****************************************************************************
@@ -178,8 +182,36 @@ bool DtmfDecoder::initialize(void)
  ****************************************************************************/
 
 
+void HdlcFramer::encodeByte(vector<bool> &bitbuf, uint8_t data)
+{
+  for (size_t bit=0; bit<8; ++bit)
+  {
+    bool is_one = (data & 0x01);
+    data >>= 1;
+
+    bool is_mark = is_one ? prev_was_mark : !prev_was_mark;
+    bitbuf.push_back(is_mark);
+
+    if (is_one)
+    {
+      if (++ones == 5)
+      {
+        bitbuf.push_back(!prev_was_mark);
+        is_mark = !prev_was_mark;
+        ones = 0;
+      }
+    }
+    else
+    {
+      ones = 0;
+    }
+
+    prev_was_mark = is_mark;
+  }
+} /* HdlcFramer::encodeByte */
+
+
 
 /*
  * This file has not been truncated
  */
-

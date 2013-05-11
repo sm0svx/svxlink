@@ -1,12 +1,12 @@
 /**
-@file	 PttCtrl.cpp
-@brief   Implements the PTT controller
+@file	 AfskDtmfDecoder.cpp
+@brief   This file contains a class that read DTMF digits from the data stream
 @author  Tobias Blomberg / SM0SVX
-@date	 2004-03-21
+@date	 2013-05-10
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,15 +24,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
+#include <iostream>
+//#include <algorithm>
+//#include <cstring>
+//#include <cmath>
+//#include <cstdlib>
+
+//#include <stdint.h>
+
 
 
 /****************************************************************************
@@ -49,7 +54,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "PttCtrl.h"
+#include "AfskDtmfDecoder.h"
+#include "Rx.h"
+#include "Tx.h"
+
 
 
 /****************************************************************************
@@ -58,8 +66,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+using namespace std;
 using namespace Async;
-using namespace sigc;
 
 
 
@@ -78,89 +86,60 @@ using namespace sigc;
  ****************************************************************************/
 
 
-PttCtrl::PttCtrl(int tx_delay)
-  : tx_ctrl_mode(Tx::TX_OFF), is_transmitting(false), tx_delay_timer(0),
-    tx_delay(tx_delay), fifo(0)
+
+/****************************************************************************
+ *
+ * Prototypes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Exported Global Variables
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Local Global Variables
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Public member functions
+ *
+ ****************************************************************************/
+
+AfskDtmfDecoder::AfskDtmfDecoder(Rx *rx, Config &cfg, const string &name)
+  : DtmfDecoder(cfg, name)
 {
-  valve.setBlockWhenClosed(false);
-  valve.setOpen(false);
-      
-  if (tx_delay > 0)
-  {
-    fifo = new AudioFifo((tx_delay + 500) * INTERNAL_SAMPLE_RATE / 1000);
-    fifo->registerSink(&valve);
-    AudioSink::setHandler(fifo);
-  }
-  else
-  {
-    AudioSink::setHandler(&valve);
-  }
-      
-  AudioSource::setHandler(&valve);
-}
+  rx->dataReceived.connect(mem_fun(*this, &AfskDtmfDecoder::dataReceived));
+} /* AfskDtmfDecoder::AfskDtmfDecoder */
 
 
-PttCtrl::~PttCtrl(void)
+bool AfskDtmfDecoder::initialize(void)
 {
-  AudioSink::clearHandler();
-  AudioSource::clearHandler();
-  delete fifo;
-  delete tx_delay_timer;
-}
+  if (!DtmfDecoder::initialize())
+  {
+    return false;
+  }
+  
+  return true;
+  
+} /* AfskDtmfDecoder::initialize */
 
 
-void PttCtrl::setTxCtrlMode(Tx::TxCtrlMode mode)
+int AfskDtmfDecoder::writeSamples(const float *buf, int len)
 {
-  if (mode == tx_ctrl_mode)
-  {
-    return;
-  }
-  tx_ctrl_mode = mode;
-      
-  switch (mode)
-  {
-    case Tx::TX_OFF:
-      transmit(false);
-      break;
-
-    case Tx::TX_ON:
-      transmit(true);
-      break;
-
-    case Tx::TX_AUTO:
-      transmit(!valve.isIdle());
-      break;
-  }
-}
-
-
-int PttCtrl::writeSamples(const float *samples, int count)
-{
-  if ((tx_ctrl_mode == Tx::TX_AUTO) && !is_transmitting)
-  {
-    transmit(true);
-  }
-      
-  if (fifo != 0)
-  {
-    return fifo->writeSamples(samples, count);
-  }
-      
-  return valve.writeSamples(samples, count);
-}
-
-
-void PttCtrl::allSamplesFlushed(void)
-{
-  valve.allSamplesFlushed();
-  if ((tx_ctrl_mode == Tx::TX_AUTO) && is_transmitting && valve.isIdle())
-  {
-    if (!preTransmitterStateChange(false))
-    {
-      transmit(false);
-    }
-  }
-}
+  return len;
+} /* AfskDtmfDecoder::writeSamples */
 
 
 
@@ -178,54 +157,37 @@ void PttCtrl::allSamplesFlushed(void)
  *
  ****************************************************************************/
 
-void PttCtrl::transmit(bool do_transmit)
+void AfskDtmfDecoder::dataReceived(const vector<uint8_t> &frame)
 {
-  if (do_transmit == is_transmitting)
+  uint8_t cmd = frame[0];
+  if (cmd != Tx::DATA_CMD_DTMF)
   {
     return;
   }
-      
-  is_transmitting = do_transmit;
-  transmitterStateChange(do_transmit);
-  if (do_transmit)
+  if (frame.size() < 3)
   {
-    if (tx_delay > 0)
-    {
-      fifo->enableBuffering(true);
-      valve.setBlockWhenClosed(true);
-      tx_delay_timer = new Timer(tx_delay);
-      tx_delay_timer->expired.connect(
-          mem_fun(*this, &PttCtrl::txDelayExpired));
-    }
-    else
-    {
-      valve.setOpen(true);
-    }
+    cerr << "*** WARNING: Illegal DTMF frame received\n";
+    return;
   }
-  else
+  uint16_t duration = frame[1];
+  duration |= static_cast<uint16_t>(frame[2]) << 8;
+
+  cout << "AfskDtmfDecoder::frameReceived:"
+       << " cmd=" << (int)cmd
+       << " duration=" << duration
+       << " digits=";
+  cout << endl;
+
+  for (size_t i=3; i<frame.size(); ++i)
   {
-    if (tx_delay_timer != 0)
-    {
-      delete tx_delay_timer;
-      tx_delay_timer = 0;
-    }
-    valve.setBlockWhenClosed(false);
-    valve.setOpen(false);
+    uint8_t digit = frame[i];
+    //cout << digit;
+    digitDeactivated(digit, duration);
   }
-}
+} /* AfskDtmfDecoder::dataReceived */
 
-
-void PttCtrl::txDelayExpired(Timer *t)
-{
-  delete tx_delay_timer;
-  tx_delay_timer = 0;
-  fifo->enableBuffering(false);
-  valve.setOpen(true);
-  valve.setBlockWhenClosed(false);
-}
 
 
 /*
  * This file has not been truncated
  */
-

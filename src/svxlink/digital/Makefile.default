@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
-# Filename:             Makefile.default
+# Filename:             Makefile.template
 # Author:               Tobias Blomberg
-# Created:              2006-04-14
+# Created:              2000-10-17
 # Description:          There should be one copy of this file in
 #			each leaf sub-directory. It is here you specify
 #			which files you want to compile and which
@@ -23,17 +23,16 @@
 PROGS		= 
 
 # C++ programs to compile
-CPPPROGS      	= $(BIN)/remotetrx
+CPPPROGS      	= afsk_test cal_sound_card
 
 # Sources other than the main files
-PRGSRC		= TrxHandler.cpp Uplink.cpp NetUplink.cpp RfUplink.cpp \
-		  NetTrxAdapter.cpp
+PRGSRC		= 
 
 # Libraries compiled in the project (in $(LIB)).
-PROJLIBS	= -ltrx -ldigital -lasynccpp -lasyncaudio -lasynccore
+PROJLIBS	= -lasyncaudio -lasynccpp -lasynccore -ldigital
 
 # Libraries external to the project
-LIBS		= -lpopt $(GCRYPT_LIBS) $(SIGC_LIBS)
+LIBS		= $(SIGC_LIBS)
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for programs).
@@ -61,17 +60,18 @@ DAEMONS_INSTALL	=
 ###############################################################################
 
 # The name of the library (without the preceeding "lib").
-LIBNAME		= 
+LIBNAME		= digital
 
 # The version of the produced shared library. Most often specified like
 # $(LIBXXX). LIBXXX is then specified in the "versions" file.
 SHLIB_VERSION	= 
 
 # Sources needed to build the library
-LIBSRC		= 
+LIBSRC		= AfskDemodulator.cpp Synchronizer.cpp HdlcDeframer.cpp \
+		  AfskModulator.cpp HdlcFramer.cpp Fcs.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
-LIB_LIBS	= -lc
+LIB_LIBS	= -lc -lasyncaudio
 
 # Which STATIC libs should be included in the generated STATIC lib.
 # These libs must be in the $(LIB) directory. Only the name of the
@@ -80,7 +80,8 @@ LIB_LIBS	= -lc
 STATIC_LIBS   	= 
 
 # Includefiles to export. A softlink is created in $(INC).
-EXPINC		= 
+EXPINC		= AfskDemodulator.h Synchronizer.h HdlcDeframer.h \
+		  AfskModulator.h HdlcFramer.h
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for libraries).
@@ -194,16 +195,15 @@ INCPATH 	+= $(SIGC_INCPATH)
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.
-LIBPATH 	+= 
+LIBPATH 	+= $(SIGC_LIBPATH)
 
 # Additional warnings to use. If you want to override the default
 # warnings, change the "+=" to "=".
-WARNINGS	+= -Wno-deprecated
+WARNINGS	+= 
 
 # Extra commandline switches to the compiler. For example "-g" to
 # add debug information, "-O2" to add optimizations etc.
 CFLAGS		+=
-CXXFLAGS      	+= 
 
 # Extra commandline switches to the linker
 LDFLAGS		+=
@@ -219,7 +219,7 @@ LDFLAGS		+=
 # Additional files to install
 install-extras uninstall-extras rpm-extras:
 #	$(DIRSPEC) /var/spool/myprog[755,root,root]
-	$(FILESPEC) remotetrx.conf[644,root,root,config] /etc/svxlink
+#	$(FILESPEC) install-extras/myprog.conf[644,root,root] /etc
 
 
 #

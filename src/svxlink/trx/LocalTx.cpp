@@ -8,7 +8,7 @@ This file contains a class that implements a local transmitter.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 #include <sigc++/sigc++.h>
 
@@ -67,7 +68,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioInterpolator.h>
 #include <AsyncAudioAmp.h>
+#include <AsyncAudioMixer.h>
+#include <AsyncAudioDebugger.h>
+#include <AsyncAudioPacer.h>
 #include <common.h>
+#include <HdlcFramer.h>
+#include <AfskModulator.h>
 
 
 /****************************************************************************
@@ -80,6 +86,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "DtmfEncoder.h"
 #include "multirate_filter_coeff.h"
 #include "PttCtrl.h"
+#include "SigLevDetAfsk.h"
 
 
 /****************************************************************************
@@ -231,8 +238,9 @@ LocalTx::LocalTx(Config& cfg, const string& name)
     serial(0), ptt_pin1(Serial::PIN_NONE), ptt_pin1_rev(false),
     ptt_pin2(Serial::PIN_NONE), ptt_pin2_rev(false), txtot(0),
     tx_timeout_occured(false), tx_timeout(0), sine_gen(0), ctcss_enable(false),
-    dtmf_encoder(0), selector(0), dtmf_valve(0), input_handler(0),
-    audio_valve(0), siglev_sine_gen(0), ptt_hangtimer(0)
+    dtmf_encoder(0), selector(0), dtmf_valve(0), mixer(0), hdlc_framer(0),
+    fsk_mod(0), fsk_valve(0), input_handler(0), audio_valve(0),
+    siglev_sine_gen(0), ptt_hangtimer(0)
 {
 
 } /* LocalTx::LocalTx */
@@ -246,6 +254,9 @@ LocalTx::~LocalTx(void)
   delete input_handler;
   delete selector;
   delete dtmf_encoder;
+  delete fsk_mod;
+  delete hdlc_framer;
+  delete mixer;
   
   delete txtot;
   delete serial;
@@ -500,9 +511,62 @@ bool LocalTx::initialize(void)
   selector->addSource(dtmf_valve);
   selector->enableAutoSelect(dtmf_valve, 10);
   
-    // Cteate the PTT controller
+  bool fsk_enable = false;
+  cfg.getValue(name, "OB_AFSK_ENABLE", fsk_enable);
+  if (fsk_enable)
+  {
+    unsigned fc = 5500;
+    cfg.getValue(name, "OB_AFSK_CENTER_FQ", fc);
+    unsigned shift = 170;
+    cfg.getValue(name, "OB_AFSK_SHIFT", shift);
+    unsigned baudrate = 300;
+    cfg.getValue(name, "OB_AFSK_BAUDRATE", baudrate);
+
+    AudioFilter *voice_filter = new AudioFilter("LpCh9/-0.5/4500");
+    prev_src->registerSink(voice_filter);
+    prev_src = voice_filter;
+
+      // Create a mixer so that we can mix other audio with the voice audio
+    mixer = new AudioMixer;
+    mixer->addSource(prev_src);
+    prev_src = mixer;
+
+      // Create the HDLC framer
+    hdlc_framer = new HdlcFramer;
+
+      // Create the AFSK modulator
+    fsk_mod = new AfskModulator(fc - shift / 2, fc + shift / 2, baudrate);
+    hdlc_framer->sendBits.connect(mem_fun(fsk_mod, &AfskModulator::sendBits));
+    mixer->addSource(fsk_mod);
+
+    /*
+    AudioPacer *fsk_pacer = new AudioPacer(INTERNAL_SAMPLE_RATE, 256, 20);
+    fsk_mod->registerSink(fsk_pacer, true);
+    mixer->addSource(fsk_pacer);
+    */
+
+      // Create a valve so that we can control when to transmit AFSK
+    /*
+    fsk_valve = new AudioValve;
+    fsk_valve->setBlockWhenClosed(true);
+    fsk_valve->setOpen(false);
+    fsk_valve->registerSink(fsk_valve, true);
+    selector->addSource(fsk_valve);
+    selector->enableAutoSelect(fsk_valve, 20);
+    */
+  }
+  
+  /*
+  AudioDebugger *d1 = new AudioDebugger;
+  prev_src->registerSink(d1, true);
+  prev_src = d1;
+  */
+
+    // Create the PTT controller
   ptt_ctrl = new PttCtrl(tx_delay);
   ptt_ctrl->transmitterStateChange.connect(mem_fun(*this, &LocalTx::transmit));
+  ptt_ctrl->preTransmitterStateChange.connect(
+      mem_fun(*this, &LocalTx::preTransmitterStateChange));
   prev_src->registerSink(ptt_ctrl, true);
   prev_src = ptt_ctrl;
 
@@ -567,50 +631,66 @@ void LocalTx::enableCtcss(bool enable)
 } /* LocalTx::enableCtcss */
 
 
-void LocalTx::sendDtmf(const string& digits)
+void LocalTx::sendDtmf(const string& digits, unsigned duration)
 {
-  #if USE_AUDIO_VALVE
-  audio_valve->setOpen(false);
-  #endif
-  dtmf_encoder->send(digits);
+  if (fsk_mod != 0)
+  {
+    if (duration == 0)
+    {
+      duration = dtmf_encoder->toneLength();
+    }
+    sendFskDtmf(digits, duration);
+  }
+  else
+  {
+    #if USE_AUDIO_VALVE
+    audio_valve->setOpen(false);
+    #endif
+    dtmf_encoder->send(digits, duration);
+  }
 } /* LocalTx::sendDtmf */
 
 
 void LocalTx::setTransmittedSignalStrength(float siglev)
 {
+  //cout << "LocalTx::setTransmittedSignalStrength: siglev=" << siglev << endl;
+
 #if INTERNAL_SAMPLE_RATE >= 16000
-  if (siglev_sine_gen == 0)
+  if (siglev_sine_gen != 0)
   {
-    return;
-  }
-  
-  int siglevi = static_cast<int>(siglev);
-  if (tone_siglev_map[0] > tone_siglev_map[9])
-  {
-    for (int i=0; i<10; ++i)
+    int siglevi = static_cast<int>(siglev);
+    if (tone_siglev_map[0] > tone_siglev_map[9])
     {
-      if (tone_siglev_map[i] <= siglevi)
+      for (int i=0; i<10; ++i)
       {
-        siglev_sine_gen->setFq(5500 + i*100);
-        siglev_sine_gen->enable(true);
-        return;
+        if (tone_siglev_map[i] <= siglevi)
+        {
+          siglev_sine_gen->setFq(5500 + i*100);
+          siglev_sine_gen->enable(true);
+          return;
+        }
       }
     }
-  }
-  else
-  {
-    for (int i=9; i>=0; --i)
+    else
     {
-      if (tone_siglev_map[i] <= siglevi)
+      for (int i=9; i>=0; --i)
       {
-        siglev_sine_gen->setFq(5500 + i*100);
-        siglev_sine_gen->enable(true);
-        return;
+        if (tone_siglev_map[i] <= siglevi)
+        {
+          siglev_sine_gen->setFq(5500 + i*100);
+          siglev_sine_gen->enable(true);
+          return;
+        }
       }
     }
+    
+    siglev_sine_gen->enable(false);
+  }
+  else if (hdlc_framer != 0)
+  {
+    sendFskSiglev(0, static_cast<uint8_t>(siglev));
   }
   
-  siglev_sine_gen->enable(false);
 #endif
 } /* LocalTx::setTransmittedSignalLevel */
 
@@ -637,6 +717,8 @@ void LocalTx::transmit(bool do_transmit)
   
   if (do_transmit)
   {
+    fsk_trailer_transmitted = false;
+
     transmitterStateChange(true);
 
     if (!audio_io->open(AudioIO::MODE_WR))
@@ -836,8 +918,62 @@ void LocalTx::pttHangtimeExpired(Timer *t)
 } /* LocalTx::pttHangtimeExpired */
 
 
+bool LocalTx::preTransmitterStateChange(bool do_transmit)
+{
+  /*
+  cout << name << ": LocalTx::preTransmitterStateChange: do_transmit="
+       << do_transmit << endl;
+  */
+
+  if (do_transmit)
+  {
+    return false;
+  }
+
+  if ((fsk_mod != 0) && !fsk_trailer_transmitted)
+  {
+    //cout << "  Sending AFSK trailer\n";
+    fsk_trailer_transmitted = true;
+    sendFskSiglev(0, 0);
+    sendFskSiglev(0, 0);
+    return true;
+  }
+
+  return false;
+
+} /* LocalTx::preTransmitterStateChange */
+
+
+void LocalTx::sendFskSiglev(uint8_t rxid, uint8_t siglev)
+{
+  vector<uint8_t> frame;
+  frame.push_back(DATA_CMD_SIGLEV);
+  frame.push_back(rxid);
+  frame.push_back(siglev);
+  hdlc_framer->sendBytes(frame);
+} /* LocalTx::sendFskSiglev */
+
+
+void LocalTx::sendFskDtmf(const string &digits, unsigned duration)
+{
+  if (duration > numeric_limits<uint16_t>::max())
+  {
+    duration = numeric_limits<uint16_t>::max();
+  }
+
+  vector<uint8_t> frame;
+  frame.push_back(DATA_CMD_DTMF);
+  frame.push_back(duration & 0xff);
+  frame.push_back(duration >> 8);
+  for (size_t i=0; i<digits.size(); ++i)
+  {
+    frame.push_back(digits[i]);
+  }
+  hdlc_framer->sendBytes(frame);
+} /* LocalTx::sendFskDtmf */
+
+
 
 /*
  * This file has not been truncated
  */
-

@@ -121,6 +121,12 @@ class Tx : public sigc::trackable, public Async::AudioSink
     {
       TX_OFF, TX_ON, TX_AUTO
     } TxCtrlMode;
+
+    typedef enum
+    {
+      DATA_CMD_SIGLEV, DATA_CMD_DTMF
+    } DataCmd;
+
     
     /**
      * @brief 	Default constuctor
@@ -164,7 +170,7 @@ class Tx : public sigc::trackable, public Async::AudioSink
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send
      */
-    virtual void sendDtmf(const std::string& digits) {}
+    virtual void sendDtmf(const std::string& digits, unsigned duration=0) {}
 
     /**
      * @brief   Set the signal level value that should be transmitted

@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <stdint.h>
 #include <vector>
 
 
@@ -74,10 +75,13 @@ namespace Async
   class AudioSource;
   class AudioValve;
   class AudioPassthrough;
+  class AudioMixer;
 };
 
 class DtmfEncoder;
 class PttCtrl;
+class HdlcFramer;
+class AfskModulator;
 
 
 /****************************************************************************
@@ -173,8 +177,9 @@ class LocalTx : public Tx
     /**
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send
+     * @param   duration The tone duration in milliseconds
      */
-    void sendDtmf(const std::string& digits);
+    void sendDtmf(const std::string& digits, unsigned duration=0);
     
     /**
      * @brief   Set the signal level value that should be transmitted
@@ -207,12 +212,17 @@ class LocalTx : public Tx
     DtmfEncoder       	    *dtmf_encoder;
     Async::AudioSelector    *selector;
     Async::AudioValve 	    *dtmf_valve;
+    Async::AudioMixer       *mixer;
+    HdlcFramer              *hdlc_framer;
+    AfskModulator           *fsk_mod;
+    Async::AudioValve 	    *fsk_valve;
     Async::AudioPassthrough *input_handler;
     PttCtrl   	      	    *ptt_ctrl;
     Async::AudioValve 	    *audio_valve;
     SineGenerator           *siglev_sine_gen;
     std::vector<int>        tone_siglev_map;
     Async::Timer            *ptt_hangtimer;
+    bool                    fsk_trailer_transmitted;
     
     void txTimeoutOccured(Async::Timer *t);
     int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);
@@ -221,6 +231,9 @@ class LocalTx : public Tx
     void transmit(bool do_transmit);
     void allDtmfDigitsSent(void);
     void pttHangtimeExpired(Async::Timer *t);
+    bool preTransmitterStateChange(bool do_transmit);
+    void sendFskSiglev(uint8_t rxid, uint8_t siglev);
+    void sendFskDtmf(const std::string &digits, unsigned duration);
 
 };  /* class LocalTx */
 

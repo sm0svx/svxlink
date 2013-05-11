@@ -1,12 +1,14 @@
 /**
-@file	 DtmfEncoder.h
-@brief   This file contains a class that implements a DTMF encoder.
+@file	 AfskDemodulator.h
+@brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2006-07-09
+@date	 2013-05-09
+
+A_detailed_description_for_this_file
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+<A brief description of the program or library this file belongs to>
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,9 +26,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+/** @example AfskDemodulator_demo.cpp
+An example of how to use the AfskDemodulator class
+*/
 
-#ifndef DTMF_ENCODER_INCLUDED
-#define DTMF_ENCODER_INCLUDED
+
+#ifndef AFSK_DEMODULATOR_INCLUDED
+#define AFSK_DEMODULATOR_INCLUDED
 
 
 /****************************************************************************
@@ -35,9 +41,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <string>
-#include <deque>
-#include <sigc++/sigc++.h>
 
 
 /****************************************************************************
@@ -46,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
 
@@ -106,111 +110,50 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief	This class implements a DTMF encoder
+@brief	A_brief_class_description
 @author Tobias Blomberg / SM0SVX
-@date   2006-07-09
+@date   2013-05-09
 
 A_detailed_class_description
+
+\include AfskDemodulator_demo.cpp
 */
-class DtmfEncoder : public Async::AudioSource, sigc::trackable
+class AfskDemodulator : public Async::AudioSink, public Async::AudioSource
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
      */
-    DtmfEncoder(int sampling_rate);
+    AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
+                   unsigned sample_rate=INTERNAL_SAMPLE_RATE);
   
     /**
      * @brief 	Destructor
      */
-    ~DtmfEncoder(void);
+    ~AfskDemodulator(void);
   
     /**
      * @brief 	A_brief_member_function_description
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
-    void setToneLength(int length_ms);
-
-    unsigned toneLength(void) const { return tone_length; }
-
-    void setToneSpacing(int spacing_ms);
-
-    unsigned toneSpacing(void) const { return tone_spacing; }
-
-    void setToneAmplitude(int amp_db);
-
-    unsigned toneAmplitude(void) const { return tone_amp; }
-
-    void send(const std::string &str, unsigned duration=0);
-
-    bool isSending(void) const { return is_sending_digits; }
     
-    /**
-     * @brief Resume audio output to the sink
-     * 
-     * This function must be reimplemented by the inheriting class. It
-     * will be called when the registered audio sink is ready to accept
-     * more samples.
-     * This function is normally only called from a connected sink object.
-     */
-    void resumeOutput(void);
-    
-    /**
-     * @brief The registered sink has flushed all samples
-     *
-     * This function must be implemented by the inheriting class. It
-     * will be called when all samples have been flushed in the
-     * registered sink.
-     * This function is normally only called from a connected sink object.
-     */
-    void allSamplesFlushed(void);
-    
-    /*
-     * @brief A signal that is emitted when all digits have been sent.
-     */
-    sigc::signal<void> allDigitsSent;
-
-
   protected:
     
   private:
-    struct SendQueueItem
-    {
-      char      digit;
-      unsigned  duration;
+    const unsigned f0;
+    const unsigned f1;
+    const unsigned baudrate;
 
-      SendQueueItem(char digit, unsigned duration)
-        : digit(digit), duration(duration)
-      {
-      }
-    };
-    typedef std::deque<SendQueueItem> SendQueue;
-
-    unsigned    sampling_rate;
-    unsigned    tone_length;
-    unsigned    tone_spacing;
-    float       tone_amp;
-    //std::string current_str;
-    SendQueue   send_queue;
-    unsigned    low_tone;
-    unsigned    high_tone;
-    unsigned    pos;
-    unsigned    length;
-    bool      	is_playing;
-    bool      	is_sending_digits;
-
-    DtmfEncoder(const DtmfEncoder&);
-    DtmfEncoder& operator=(const DtmfEncoder&);
-    void playNextDigit(void);
-    void writeAudio(void);
+    AfskDemodulator(const AfskDemodulator&);
+    AfskDemodulator& operator=(const AfskDemodulator&);
     
-};  /* class DtmfEncoder */
+};  /* class AfskDemodulator */
 
 
 //} /* namespace */
 
-#endif /* DTMF_ENCODER_INCLUDED */
+#endif /* AFSK_DEMODULATOR_INCLUDED */
 
 
 

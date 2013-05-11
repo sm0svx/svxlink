@@ -309,7 +309,7 @@ void RfUplink::rxDtmfDigitDetected(char digit, int duration)
 {
     // FIXME: DTMF digits should be retransmitted with the correct duration.
   const char dtmf_str[] = {digit, 0};
-  uplink_tx->sendDtmf(dtmf_str);
+  uplink_tx->sendDtmf(dtmf_str, duration);
 } /* RfUplink::rxDtmfDigitDetected */
 
 

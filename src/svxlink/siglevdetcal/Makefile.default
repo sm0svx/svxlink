@@ -29,7 +29,7 @@ CPPPROGS      	= $(BIN)/siglevdetcal
 PRGSRC		= 
 
 # Libraries compiled in the project (in $(LIB)).
-PROJLIBS	= -ltrx -lasynccpp -lasyncaudio -lasynccore
+PROJLIBS	= -ltrx -ldigital -lasynccpp -lasyncaudio -lasynccore
 
 # Libraries external to the project
 LIBS		= $(SIGC_LIBS) $(GCRYPT_LIBS)

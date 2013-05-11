@@ -1,12 +1,14 @@
 /**
-@file	 DtmfDecoder.cpp
-@brief   This file contains the base class for implementing a DTMF decoder
+@file	 AfskDemodulator.cpp
+@brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-02-04
+@date	 2013-05-09
+
+A_detailed_description_for_this_file
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+<A brief description of the program or library this file belongs to>
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,15 +28,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
 
+#include <cstring>
+#include <cmath>
 #include <iostream>
-#include <cstdlib>
+#include <sstream>
 
 
 /****************************************************************************
@@ -43,6 +46,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncAudioProcessor.h>
+#include <AsyncAudioClipper.h>
+#include <AsyncAudioFilter.h>
 
 
 /****************************************************************************
@@ -51,10 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "DtmfDecoder.h"
-#include "SwDtmfDecoder.h"
-#include "S54sDtmfDecoder.h"
-#include "AfskDtmfDecoder.h"
+#include "AfskDemodulator.h"
 
 
 
@@ -66,6 +69,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
+
 
 
 /****************************************************************************
@@ -82,6 +86,51 @@ using namespace Async;
  *
  ****************************************************************************/
 
+namespace {
+  class Correlator : public AudioProcessor
+  {
+    public:
+      Correlator(float f0, float f1, unsigned baudrate,
+          unsigned sample_rate=INTERNAL_SAMPLE_RATE)
+        : delay(0), head(0)
+      {
+        // Calculate the optimum value for the delay
+        unsigned samples_per_symbol = sample_rate / baudrate;
+        double max_k_val = 0.0;
+        for (unsigned k=0; k<samples_per_symbol; ++k)
+        {
+          double k_val = abs(cos(2.0 * M_PI * f0 * k / sample_rate)
+              - cos(2.0 * M_PI * f1 * k / sample_rate));
+          if (k_val > max_k_val)
+          {
+            max_k_val = k_val;
+            delay = k;
+          }
+        }
+        cout << "Delay: " << delay << endl;
+
+        buf = new float[delay];
+        memset(buf, 0, sizeof(float) * delay);
+      }
+
+    protected:
+      void processSamples(float *out, const float *in, int len)
+      {
+        //cout << "processSamples: len=" << len << endl;
+        for (int i=0; i<len; ++i)
+        {
+          out[i] = in[i] * buf[head];
+          buf[head] = in[i];
+          head = (head+1) % delay;
+        }
+      }
+
+    private:
+      unsigned delay;
+      float *buf;
+      unsigned head;
+  };
+};
 
 
 /****************************************************************************
@@ -115,52 +164,50 @@ using namespace Async;
  *
  ****************************************************************************/
 
-DtmfDecoder *DtmfDecoder::create(Rx *rx, Config &cfg, const string& name)
+AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
+                               unsigned sample_rate)
+  : f0(f0), f1(f1), baudrate(baudrate)
 {
-  DtmfDecoder *dec = 0;
-  string type;
-  if (!cfg.getValue(name, "DTMF_DEC_TYPE", type))
-  {
-    cerr << "*** ERROR: Config variable " << name << "/DTMF_DEC_TYPE not "
-      	 << "specified.\n";
-    return 0;
-  }
-  
-  if (type == "INTERNAL")
-  {
-    dec = new SwDtmfDecoder(cfg, name);
-  }
-  else if (type == "S54S")
-  {
-    dec = new S54sDtmfDecoder(cfg, name);
-  }
-  else if (type == "AFSK")
-  {
-    dec = new AfskDtmfDecoder(rx, cfg, name);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown DTMF decoder type \"" << type << "\" "
-         << "specified for " << name << "/DTMF_DEC_TYPE. "
-      	 << "Legal values are: \"INTERNAL\" or \"S54S\"\n";
-  }
-  
-  return dec;
-  
-} /* DtmfDecoder::create */
+  AudioSource *prev_src = 0;
+
+    // Clip the signal to eliminate level differences
+  AudioClipper *clipper = new AudioClipper(0.05);
+  AudioSink::setHandler(clipper);
+  prev_src = clipper;
+
+    // Apply a bandpass filter to filter out the FSK signal
+  stringstream ss;
+  ss << "BpBu3/" << (f0 - baudrate/2) << "-" << (f1 + baudrate/2);
+  cout << "Passband filter: " << ss.str() << endl;
+  AudioFilter *passband_filter = new AudioFilter(ss.str(), sample_rate);
+  prev_src->registerSink(passband_filter, true);
+  prev_src = passband_filter;
+
+    // Run the sample stream through the correlator
+  Correlator *corr = new Correlator(f0, f1, baudrate, sample_rate);
+  prev_src->registerSink(corr, true);
+  prev_src = corr;
+
+    // Low pass out the constant component from the correlator
+  ss.str("");
+  ss << "LpBu6/" << baudrate;
+  cout << "Correlator filter: " << ss.str() << endl;
+  AudioFilter *corr_filter = new AudioFilter(ss.str(), sample_rate);
+  corr_filter->setOutputGain(10);
+  prev_src->registerSink(corr_filter, true);
+  prev_src = corr_filter;
+
+  AudioSource::setHandler(prev_src);
+} /* AfskDemodulator::AfskDemodulator */
 
 
-bool DtmfDecoder::initialize(void)
+AfskDemodulator::~AfskDemodulator(void)
 {
-  string value;
-  if (cfg().getValue(name(), "DTMF_HANGTIME", value))
-  {
-    m_hangtime = atoi(value.c_str());
-  }
-  
-  return true;
-  
-} /* DtmfDecoder::initialize */
+  AudioSink *handler = AudioSink::handler();
+  AudioSink::clearHandler();
+  delete handler;
+} /* AfskDemodulator::~AfskDemodulator */
+
 
 
 /****************************************************************************

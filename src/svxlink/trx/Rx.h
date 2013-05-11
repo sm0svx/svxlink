@@ -34,11 +34,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <stdint.h>
 #include <sigc++/sigc++.h>
 
 #include <string>
 #include <map>
 #include <cassert>
+#include <vector>
 
 
 /****************************************************************************
@@ -239,6 +241,12 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @param	siglev The new signal level
      */
     sigc::signal<void, float> signalLevelUpdated;
+
+    /**
+     * @brief   A signal that is emitted when digital data have been received
+     * @param   frame The data frame that was received
+     */
+    sigc::signal<void, std::vector<uint8_t>&> dataReceived;
     
     
   protected:

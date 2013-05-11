@@ -1,12 +1,12 @@
 /**
-@file	 DtmfEncoder.h
-@brief   This file contains a class that implements a DTMF encoder.
+@file	 SigLevDetAfsk.h
+@brief   A signal level detector using tones in the 5.5 to 6.5kHz band
 @author  Tobias Blomberg / SM0SVX
-@date	 2006-07-09
+@date	 2009-05-23
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef DTMF_ENCODER_INCLUDED
-#define DTMF_ENCODER_INCLUDED
+#ifndef SIG_LEV_DET_AFSK_INCLUDED
+#define SIG_LEV_DET_AFSK_INCLUDED
 
 
 /****************************************************************************
@@ -35,9 +35,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <string>
+#include <stdint.h>
+#include <vector>
 #include <deque>
-#include <sigc++/sigc++.h>
 
 
 /****************************************************************************
@@ -46,7 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioSource.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -55,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "SigLevDet.h"
 
 
 /****************************************************************************
@@ -62,7 +63,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Forward declarations
  *
  ****************************************************************************/
+/*
+namespace Async
+{
+  class AudioFilter;
+};
 
+class Goertzel;
+*/
+
+class HdlcDeframer;
+class Rx;
 
 
 /****************************************************************************
@@ -106,111 +117,92 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief	This class implements a DTMF encoder
+@brief	A signal level detector using AFSK transport
 @author Tobias Blomberg / SM0SVX
-@date   2006-07-09
+@date   2013-05-09
 
-A_detailed_class_description
+This is not a signal level detector on its own but rather a transport mechanism
+to transfer signal level measurements from a remote receiver site that is
+linked in using RF.
+The signal level measurements are transported using AFSK modulation
+superimposed on the audio signal.
 */
-class DtmfEncoder : public Async::AudioSource, sigc::trackable
+class SigLevDetAfsk : public SigLevDet
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
+     * @param	sample_rate The rate with which samples enter the detector
      */
-    DtmfEncoder(int sampling_rate);
+    explicit SigLevDetAfsk(Rx *rx);
   
     /**
      * @brief 	Destructor
      */
-    ~DtmfEncoder(void);
-  
-    /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
-     */
-    void setToneLength(int length_ms);
-
-    unsigned toneLength(void) const { return tone_length; }
-
-    void setToneSpacing(int spacing_ms);
-
-    unsigned toneSpacing(void) const { return tone_spacing; }
-
-    void setToneAmplitude(int amp_db);
-
-    unsigned toneAmplitude(void) const { return tone_amp; }
-
-    void send(const std::string &str, unsigned duration=0);
-
-    bool isSending(void) const { return is_sending_digits; }
+    ~SigLevDetAfsk(void);
     
     /**
-     * @brief Resume audio output to the sink
+     * @brief 	Initialize the signal detector
+     * @return 	Return \em true on success, or \em false on failure
+     */
+    virtual bool initialize(Async::Config &cfg, const std::string& name);
+    
+    /**
+     * @brief	Set the interval for continuous updates
+     * @param	interval_ms The update interval, in milliseconds, to use.
      * 
-     * This function must be reimplemented by the inheriting class. It
-     * will be called when the registered audio sink is ready to accept
-     * more samples.
-     * This function is normally only called from a connected sink object.
+     * This function will set up how often the signal level detector will
+     * report the signal strength.
      */
-    void resumeOutput(void);
+    virtual void setContinuousUpdateInterval(int interval_ms);
     
     /**
-     * @brief The registered sink has flushed all samples
-     *
-     * This function must be implemented by the inheriting class. It
-     * will be called when all samples have been flushed in the
-     * registered sink.
-     * This function is normally only called from a connected sink object.
+     * @brief	Set the integration time to use
+     * @param	time_ms The integration time in milliseconds
+     * 
+     * This function will set up the integration time for the signal level
+     * detector. That is, the detector will build a mean value of the
+     * detected signal strengths over the given integration time.
      */
-    void allSamplesFlushed(void);
-    
-    /*
-     * @brief A signal that is emitted when all digits have been sent.
-     */
-    sigc::signal<void> allDigitsSent;
+    virtual void setIntegrationTime(int time_ms);
 
+    /**
+     * @brief 	Read the latest measured signal level
+     * @return	Returns the latest measured signal level
+     */
+    virtual float lastSiglev(void) const { return last_siglev; }
+
+    /**
+     * @brief   Read the integrated siglev value
+     * @return  Returns the integrated siglev value
+     */
+    virtual float siglevIntegrated(void) const;
+
+    /**
+     * @brief   Reset the signal level detector
+     */
+    virtual void reset(void);
+    
+    virtual int writeSamples(const float *samples, int len);
+    virtual void flushSamples(void);
 
   protected:
     
   private:
-    struct SendQueueItem
-    {
-      char      digit;
-      unsigned  duration;
-
-      SendQueueItem(char digit, unsigned duration)
-        : digit(digit), duration(duration)
-      {
-      }
-    };
-    typedef std::deque<SendQueueItem> SendQueue;
-
-    unsigned    sampling_rate;
-    unsigned    tone_length;
-    unsigned    tone_spacing;
-    float       tone_amp;
-    //std::string current_str;
-    SendQueue   send_queue;
-    unsigned    low_tone;
-    unsigned    high_tone;
-    unsigned    pos;
-    unsigned    length;
-    bool      	is_playing;
-    bool      	is_sending_digits;
-
-    DtmfEncoder(const DtmfEncoder&);
-    DtmfEncoder& operator=(const DtmfEncoder&);
-    void playNextDigit(void);
-    void writeAudio(void);
+    int                 last_siglev;
+    Async::Timer        timeout_timer;
     
-};  /* class DtmfEncoder */
+    SigLevDetAfsk(const SigLevDetAfsk&);
+    SigLevDetAfsk& operator=(const SigLevDetAfsk&);
+    void frameReceived(std::vector<uint8_t> frame);
+    void timeout(Async::Timer *t);
+    
+};  /* class SigLevDetAfsk */
 
 
 //} /* namespace */
 
-#endif /* DTMF_ENCODER_INCLUDED */
+#endif /* SIG_LEV_DET_AFSK_INCLUDED */
 
 
 

@@ -31,7 +31,8 @@ PRGSRC		= MsgHandler.cpp Module.cpp Logic.cpp SimplexLogic.cpp \
 		  CmdParser.cpp QsoRecorder.cpp
 
 # Libraries compiled in the project (in $(LIB)).
-PROJLIBS	= -ltrx -llocationinfo -lasynccpp -lasyncaudio -lasynccore
+PROJLIBS	= -ltrx -ldigital -llocationinfo -lasynccpp -lasyncaudio \
+		  -lasynccore
 
 # Libraries external to the project
 LIBS		= -ldl -lpopt -lgsm $(TCL_LIBS) $(GCRYPT_LIBS) $(SIGC_LIBS)

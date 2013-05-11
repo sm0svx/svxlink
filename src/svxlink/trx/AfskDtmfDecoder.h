@@ -1,12 +1,12 @@
 /**
-@file	 DtmfDecoder.h
-@brief   This file contains the base class for implementing a DTMF decoder
+@file	 AfskDtmfDecoder.h
+@brief   This file contains a class that read DTMF digits from the data stream
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-02-06
+@date	 2013-05-10
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,9 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-#ifndef DTMF_DECODER_INCLUDED
-#define DTMF_DECODER_INCLUDED
+#ifndef AFSK_DTMF_DECODER_INCLUDED
+#define AFSK_DTMF_DECODER_INCLUDED
 
 
 /****************************************************************************
@@ -35,8 +34,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
-#include <string>
+#include <vector>
+#include <stdint.h>
+//#include <sigc++/sigc++.h>
 
 
 /****************************************************************************
@@ -45,8 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioSink.h>
-#include <AsyncConfig.h>
+//#include <AsyncAudioSink.h>
 
 
 /****************************************************************************
@@ -55,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "DtmfDecoder.h"
 
 
 /****************************************************************************
@@ -63,7 +63,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-class Rx;
 
 
 /****************************************************************************
@@ -80,7 +79,7 @@ class Rx;
  * Defines & typedefs
  *
  ****************************************************************************/
-
+    
 
 
 /****************************************************************************
@@ -98,33 +97,24 @@ class Rx;
  ****************************************************************************/
 
 /**
- * @brief   This is the base class for implementing a DTMF decoder
+ * @brief   This class read DTMF frames from the incoming data stream
  * @author  Tobias Blomberg, SM0SVX
- * @date    2008-02-06
+ * @date    2013-05-10
+ *
+ * This is not precisely a DTMF decoder. It listens to the incoming data
+ * for DATA_CMD_DTMF frames, decodes them and emits DTMF signals.
  */   
-class DtmfDecoder : public sigc::trackable, public Async::AudioSink
+class AfskDtmfDecoder : public DtmfDecoder
 {
   public:
     /**
-     * @brief 	Create a new DTMF decoder object
+     * @brief 	Constructor
      * @param   rx The receiver object that own this DTMF decoder
      * @param 	cfg A previously initialised configuration object
      * @param 	name The name of the receiver configuration section
-     * @returns Returns a new DTMF object or 0 on failure
-     *
-     * Use this function to create new DTMF decoder objects. What DTMF
-     * decoder type to create is determined by the configuration pointed
-     * out by the arguments to this function. The section pointed out should
-     * contain a configuration variable DTMF_DEC_TYPE that points out the
-     * decoder type to use. Valid values are: INTERNAL, S54S
      */
-    static DtmfDecoder *create(Rx *rx, Async::Config &cfg, const std::string& name);
-    
-    /**
-     * @brief 	Destructor
-     */
-    virtual ~DtmfDecoder(void) {}
-    
+    AfskDtmfDecoder(Rx *rx, Async::Config &cfg, const std::string &name);
+
     /**
      * @brief 	Initialize the DTMF decoder
      * @returns Returns \em true if the initialization was successful or
@@ -136,79 +126,38 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
     virtual bool initialize(void);
     
     /**
-     * @brief 	Find out what the configured hangtime is
-     * @returns Returns the configured hangtime in milliseconds
-     */
-    int hangtime(void) const { return m_hangtime; }
-    
-    /**
      * @brief 	Write samples into the DTMF decoder
      * @param 	samples The buffer containing the samples
      * @param 	count The number of samples in the buffer
      * @return	Returns the number of samples that has been taken care of
      */
-    virtual int writeSamples(const float *samples, int count) { return count; }
-    
-    /**
-     * @brief 	Tell the DTMF decoder to flush the previously written samples
-     *
-     * This function is used to tell the sink to flush previously written
-     * samples. When done flushing, the sink should call the
-     * sourceAllSamplesFlushed function.
-     */
-    virtual void flushSamples(void)
-    {
-      sourceAllSamplesFlushed();
-    }
+    virtual int writeSamples(const float *samples, int count);
     
     /**
      * @brief 	Return the active digit
      * @return	Return the active digit if any or a '?' if none.
      */
-    virtual char activeDigit(void) const = 0;
+    char activeDigit(void) const
+    {
+      return '?';
+    }
 
-    /*
-     * @brief 	A signal that is emitted when a DTMF digit is first detected
-     * @param 	digit The detected digit
-     */
-    sigc::signal<void, char> digitActivated;
-
-    /*
-     * @brief 	A signal that is emitted when a DTMF digit is no longer present
-     * @param 	digit 	  The detected digit
-     * @param 	duration  The time that the digit was active
-     */
-    sigc::signal<void, char, int> digitDeactivated;
-    
-    
-  protected:
-    /**
-     * @brief 	Constructor
-     * @param 	cfg A previously initialised configuration object
-     * @param 	name The name of the receiver configuration section
-     *
-     * DtmfDecoder objects are created by calling DtmfDecoder::create.
-     */
-    DtmfDecoder(Async::Config &cfg, const std::string &name)
-      : m_cfg(cfg), m_name(name), m_hangtime(DEFAULT_HANGTIME) {}
-    
-    Async::Config &cfg(void) { return m_cfg; }
-    const std::string &name(void) const { return m_name; }
-    
-    
   private:
-    static const int DEFAULT_HANGTIME = 0;
-    
-    Async::Config   m_cfg;
-    std::string     m_name;
-    int       	    m_hangtime;
-    
-};  /* class DtmfDecoder */
+    /**
+     * @brief   This function is called when a data frame has been received
+     *
+     * This function will be called when a data frame has been received from
+     * the remote station. This will happen if the receiver is a link RX and
+     * are using AFSK to communicate data frames.
+     */
+    void dataReceived(const std::vector<uint8_t> &frame);
+
+};  /* class AfskDtmfDecoder */
 
 
 //} /* namespace */
 
-#endif /* DTMF_DECODER_INCLUDED */
+#endif /* AFSK_DTMF_DECODER_INCLUDED */
 
 
 

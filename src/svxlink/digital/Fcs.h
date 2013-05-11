@@ -1,12 +1,14 @@
 /**
-@file	 DtmfDecoder.cpp
-@brief   This file contains the base class for implementing a DTMF decoder
+@file	 Fcs.h
+@brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-02-04
+@date	 2010-
+
+A_detailed_description_for_this_file
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+<A brief description of the program or library this file belongs to>
+Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,7 +26,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+/** @example Fcs_demo.cpp
+An example of how to use the Fcs class
+*/
 
+
+#ifndef FCS_INCLUDED
+#define FCS_INCLUDED
 
 
 /****************************************************************************
@@ -33,8 +41,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
-#include <cstdlib>
+#include <stdint.h>
+#include <vector>
 
 
 /****************************************************************************
@@ -51,42 +59,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "DtmfDecoder.h"
-#include "SwDtmfDecoder.h"
-#include "S54sDtmfDecoder.h"
-#include "AfskDtmfDecoder.h"
+
+
+/****************************************************************************
+ *
+ * Forward declarations
+ *
+ ****************************************************************************/
 
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Namespace
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+//namespace MyNameSpace
+//{
 
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
+
+  
 
 /****************************************************************************
  *
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
  *
  ****************************************************************************/
 
@@ -100,82 +103,24 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
- * Local Global Variables
+ * Public functions
  *
  ****************************************************************************/
 
+/**
+ * @brief   A_brief_member_function_description
+ * @param   param1 Description_of_param1
+ * @return  Return_value_of_this_member_function
+ */
+uint32_t fcsCalc(const std::vector<uint8_t> buf);
+bool fcsOk(const std::vector<uint8_t> buf);
 
 
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
+//} /* namespace */
 
-DtmfDecoder *DtmfDecoder::create(Rx *rx, Config &cfg, const string& name)
-{
-  DtmfDecoder *dec = 0;
-  string type;
-  if (!cfg.getValue(name, "DTMF_DEC_TYPE", type))
-  {
-    cerr << "*** ERROR: Config variable " << name << "/DTMF_DEC_TYPE not "
-      	 << "specified.\n";
-    return 0;
-  }
-  
-  if (type == "INTERNAL")
-  {
-    dec = new SwDtmfDecoder(cfg, name);
-  }
-  else if (type == "S54S")
-  {
-    dec = new S54sDtmfDecoder(cfg, name);
-  }
-  else if (type == "AFSK")
-  {
-    dec = new AfskDtmfDecoder(rx, cfg, name);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown DTMF decoder type \"" << type << "\" "
-         << "specified for " << name << "/DTMF_DEC_TYPE. "
-      	 << "Legal values are: \"INTERNAL\" or \"S54S\"\n";
-  }
-  
-  return dec;
-  
-} /* DtmfDecoder::create */
-
-
-bool DtmfDecoder::initialize(void)
-{
-  string value;
-  if (cfg().getValue(name(), "DTMF_HANGTIME", value))
-  {
-    m_hangtime = atoi(value.c_str());
-  }
-  
-  return true;
-  
-} /* DtmfDecoder::initialize */
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
+#endif /* FCS_INCLUDED */
 
 
 
