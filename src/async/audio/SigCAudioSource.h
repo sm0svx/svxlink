@@ -1,12 +1,12 @@
 /**
-@file	 SigCAsyncAudioSource.h
+@file	 SigCAudioSource.h
 @brief   Contains an adapter class to connect to an AudioSink using SigC
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-17
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003-2013  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -125,37 +125,69 @@ class SigCAudioSource : public AudioSource, public sigc::trackable
     ~SigCAudioSource(void) {}
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief Resume audio output to the sink
+     * 
+     * This function will be called when the registered audio sink is ready
+     * to accept more samples. It will then emit the sigResumeOutput signal.
      */
     virtual void resumeOutput(void)
     {
-      sigWriteBufferFull(false);
+      sigResumeOutput();
     }
     
+    /**
+     * @brief The registered sink has flushed all samples
+     *
+     * This function will be called when all samples have been flushed in the
+     * registered sink. It will then emit the sigAllSamplesFlushed signal.
+     */
     virtual void allSamplesFlushed(void)
     {
       sigAllSamplesFlushed();
     }
-    
+
+    /**
+     * @brief   Write samples into this audio sink
+     * @param   samples The buffer containing the samples
+     * @param   count The number of samples in the buffer
+     * @return  Returns the number of samples that has been taken care of
+     *
+     * This function is used to write audio into this object. If it
+     * returns 0, no more samples should be written until the sigResumeOutput
+     * signal have been emitted.
+     */
     int writeSamples(float *samples, int len)
     {
       return sinkWriteSamples(samples, len);
     }
-    
+
+    /**
+     * @brief   Tell the sink to flush the previously written samples
+     *
+     * This function is used to tell this object to flush previously written
+     * samples. When done flushing, the sigAllSamplesFlushed signal will be
+     * emitted.
+     */
     void flushSamples(void)
     {
       sinkFlushSamples();
     }
 
-    sigc::signal<void, bool> sigWriteBufferFull;
+    /**
+     * @brief A signal that is emitted when more samples can be written
+     * 
+     * This signal will be emitted when the registered audio sink is ready
+     * to accept more samples.
+     */
+    sigc::signal<void> sigResumeOutput;
+
+    /**
+     * @brief Signal that is emitted when the connected sink is done flushing
+     *
+     * This signal will be emitted when all samples have been flushed in the
+     * registered sink.
+     */
     sigc::signal<void> sigAllSamplesFlushed;
-    
-    
-  protected:
-    
-  private:
     
 };  /* class SigCAudioSource */
 
