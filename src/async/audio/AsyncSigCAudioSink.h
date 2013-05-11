@@ -1,12 +1,12 @@
 /**
-@file	 SigCAudioSink.h
+@file	 AsyncSigCAudioSink.h
 @brief   Contains an adapter class to connect to an AudioSource using SigC
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-17
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003-2013  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef SIGC_AUDIO_SINK_INCLUDED
-#define SIGC_AUDIO_SINK_INCLUDED
+#ifndef ASYNC_SIGC_AUDIO_SINK_INCLUDED
+#define ASYNC_SIGC_AUDIO_SINK_INCLUDED
 
 
 /****************************************************************************
@@ -125,51 +125,92 @@ class SigCAudioSink : public AudioSink, public sigc::trackable
     ~SigCAudioSink(void) {}
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Write samples into this audio sink
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
+     *
+     * This function is used to write audio into this audio sink. If it
+     * returns 0, no more samples should be written until the resumeOutput
+     * function in the source have been called.
+     * This function is normally only called from a connected source object.
+     * When called by the source, the sigWriteSamples function will be
+     * emitted.
      */
     virtual int writeSamples(const float *samples, int len)
     {
       return sigWriteSamples(const_cast<float *>(samples), len);
     }
     
+    /**
+     * @brief 	Tell the sink to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     * This function is normally only called from a connected source object.
+     * When called by the conected source, the sigFlushSamples signal will
+     * be emitted.
+     */
     virtual void flushSamples(void)
     {
       sigFlushSamples();
     }
     
-    void writeBufferFull(bool is_full)
+    /**
+     * @brief 	Tell the source that we are ready to accept more samples
+     *
+     * This function should be called by the object user to indicate to the
+     * connected source that we are now ready to accept more samples.
+     */
+    void resumeOutput(void)
     {
-      if (!is_full)
-      {
-      	sourceResumeOutput();
-      }
+      sourceResumeOutput();
     }
     
+    /**
+     * @brief 	Tell the source that all samples have been flushed
+     *
+     * This function is called by the object user to indicate that
+     * all samples have been flushed. It may only be called after a
+     * flushSamples call has been received and no more samples has been
+     * written to the sink.
+     */
     void allSamplesFlushed(void)
     {
       sourceAllSamplesFlushed();
     }
     
-    sigc::signal<int, float *, int>  sigWriteSamples;
-    sigc::signal<void>       	      sigFlushSamples;
-    
-    
-  protected:
-    
-  private:
+    /**
+     * @brief 	Signal that is emitted when the source write samples
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
+     *
+     * This signal is emitted when the connected source object write samples.
+     * If 0 is returned, the source should write no more samples until the
+     * resumeOutput function in the source have been called.
+     */
+    sigc::signal<int, float *, int> sigWriteSamples;
+
+    /**
+     * @brief 	Signal emitted when the source are finished writing samples
+     *
+     * This signal is emitted when the connected source object have finished
+     * writing samples. When done flushing, the allSamplesFlushed function
+     * should be called.
+     */
+    sigc::signal<void>       	    sigFlushSamples;
     
 };  /* class SigCAudioSink */
 
 
 } /* namespace */
 
-#endif /* SIGC_AUDIO_SINK_INCLUDED */
+#endif /* ASYNC_SIGC_AUDIO_SINK_INCLUDED */
 
 
 
 /*
  * This file has not been truncated
  */
-

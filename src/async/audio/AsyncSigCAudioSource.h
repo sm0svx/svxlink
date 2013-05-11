@@ -1,5 +1,5 @@
 /**
-@file	 SigCAudioSource.h
+@file	 AsyncSigCAudioSource.h
 @brief   Contains an adapter class to connect to an AudioSink using SigC
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-17
@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef SIGC_AUDIO_SOURCE_INCLUDED
-#define SIGC_AUDIO_SOURCE_INCLUDED
+#ifndef ASYNC_SIGC_AUDIO_SOURCE_INCLUDED
+#define ASYNC_SIGC_AUDIO_SOURCE_INCLUDED
 
 
 /****************************************************************************
@@ -194,7 +194,7 @@ class SigCAudioSource : public AudioSource, public sigc::trackable
 
 } /* namespace */
 
-#endif /* SIGC_AUDIO_SOURCE_INCLUDED */
+#endif /* ASYNC_SIGC_AUDIO_SOURCE_INCLUDED */
 
 
 

@@ -49,8 +49,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncFdWatch.h>
 #include <AsyncCppApplication.h>
-#include <SigCAudioSink.h>
-#include <SigCAudioSource.h>
+#include <AsyncSigCAudioSink.h>
+#include <AsyncSigCAudioSource.h>
 
 
 /****************************************************************************
