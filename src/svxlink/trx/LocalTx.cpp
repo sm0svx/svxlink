@@ -656,7 +656,11 @@ void LocalTx::setTransmittedSignalStrength(float siglev)
   //cout << "LocalTx::setTransmittedSignalStrength: siglev=" << siglev << endl;
 
 #if INTERNAL_SAMPLE_RATE >= 16000
-  if (siglev_sine_gen != 0)
+  if (hdlc_framer != 0)
+  {
+    sendFskSiglev(0, static_cast<uint8_t>(siglev));
+  }
+  else if (siglev_sine_gen != 0)
   {
     int siglevi = static_cast<int>(siglev);
     if (tone_siglev_map[0] > tone_siglev_map[9])
@@ -686,11 +690,6 @@ void LocalTx::setTransmittedSignalStrength(float siglev)
     
     siglev_sine_gen->enable(false);
   }
-  else if (hdlc_framer != 0)
-  {
-    sendFskSiglev(0, static_cast<uint8_t>(siglev));
-  }
-  
 #endif
 } /* LocalTx::setTransmittedSignalLevel */
 
