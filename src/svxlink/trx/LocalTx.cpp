@@ -418,6 +418,18 @@ bool LocalTx::initialize(void)
     }
   }
 #endif
+
+  bool fsk_enable = false;
+  cfg.getValue(name, "OB_AFSK_ENABLE", fsk_enable);
+  if (fsk_enable && (siglev_sine_gen != 0))
+  {
+    cerr << "*** ERROR: Cannot have both siglev tone (TONE_SIGLEV_MAP) and "
+            "AFSK (OB_AFSK_ENABLE) enabled at the same time for receiver "
+         << name << ".\n";
+      // FIXME: Should we bother to clean up or do we trust that the
+      // creator of this object will delete it if the initialization fail?
+    return false;
+  }
   
   AudioSource *prev_src = 0;
   
@@ -511,8 +523,6 @@ bool LocalTx::initialize(void)
   selector->addSource(dtmf_valve);
   selector->enableAutoSelect(dtmf_valve, 10);
   
-  bool fsk_enable = false;
-  cfg.getValue(name, "OB_AFSK_ENABLE", fsk_enable);
   if (fsk_enable)
   {
     unsigned fc = 5500;
@@ -523,7 +533,7 @@ bool LocalTx::initialize(void)
     cfg.getValue(name, "OB_AFSK_BAUDRATE", baudrate);
 
     AudioFilter *voice_filter = new AudioFilter("LpCh9/-0.5/4500");
-    prev_src->registerSink(voice_filter);
+    prev_src->registerSink(voice_filter, true);
     prev_src = voice_filter;
 
       // Create a mixer so that we can mix other audio with the voice audio

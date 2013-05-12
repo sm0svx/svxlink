@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioValve.h>
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioDebugger.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -88,12 +89,14 @@ class RxAdapter : public Rx, public AudioSink
 {
   public:
     RxAdapter(const string &name)
-      : Rx(cfg, name)
+      : Rx(cfg, name), siglev_timer(1000, Timer::TYPE_PERIODIC)
     {
       mute_valve.setOpen(false);
       mute_valve.setBlockWhenClosed(false);
       AudioSink::setHandler(&mute_valve);
       AudioSource::setHandler(&mute_valve);
+      siglev_timer.setEnable(false);
+      siglev_timer.expired.connect(mem_fun(*this, &RxAdapter::reportSiglev));
     }
     
     virtual ~RxAdapter(void) {}
@@ -159,13 +162,19 @@ class RxAdapter : public Rx, public AudioSink
       {
       	Rx::setSquelchState(is_open);
       }
+      siglev_timer.setEnable(squelchIsOpen());
     }
     
    
   private:
     AudioValve  mute_valve;
     Config    	cfg;
-    
+    Timer       siglev_timer;
+
+    void reportSiglev(Timer *t)
+    {
+      signalLevelUpdated(1);
+    }
     
 }; /* class RxAdapter */
 
