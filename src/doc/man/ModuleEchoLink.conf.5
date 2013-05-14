@@ -95,6 +95,18 @@ The location of the station. Note: In the default configuration file the value
 of this configuration variable starts with "[Svx]". This is of course not
 necessary but it's fun to see which other stations are running SvxLink. 
 .TP
+.B PROXY_SERVER
+If set, connect to the given EchoLink proxy server host. All EchoLink
+connections, both incoming and outgoing, will then go through the proxy.
+.TP
+.B PROXY_PORT
+Set the TCP port used for connecing to an EchoLink proxy server. Default is
+8100.
+.TP
+.B PROXY_PASSWORD
+Set the EchoLink proxy password used when connecting to an EchoLink proxy
+server. Use the password PUBLIC for public proxy servers.
+.TP
 .B MAX_QSOS
 The maximum number of stations that can participate in a conference QSO on this
 node. If more stations try to connect, the connect request will be rejected. 

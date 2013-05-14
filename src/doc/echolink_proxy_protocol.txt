@@ -1,8 +1,8 @@
 EchoLink Proxy Protocol Documentation
 =====================================
 :Author:    Jonathan Taylor/K1RFD and Tobias Blomberg/SM0SVX
-:RevNumber: PA1
-:RevDate:   28 apr 2013
+:RevNumber: A
+:RevDate:   12 may 2013
 
 
 == Introduction ==
@@ -58,7 +58,8 @@ When the client wishes to establish a remote TCP connection, it constructs and
 sends a TCP_OPEN message, containing the IP address of the remote server. When
 the connection is established or rejected, the proxy server will respond with a
 TCP_STATUS message. All four data bytes will be set to zero if the connection
-succeeded.
+succeeded. When any of the data bytes are non-zero, that indicate a connection
+failure.
 
 If and when the connection is established, the server expects to receive
 TCP_DATA messages from the client, and constructs TCP_DATA messages to send to
