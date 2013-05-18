@@ -752,14 +752,15 @@ void LocalRx::dtmfDigitDeactivated(char digit, int duration_ms)
 
 void LocalRx::dataFrameReceived(vector<uint8_t> frame)
 {
-  if ((frame.size() == 5) && (frame[0] == Tx::DATA_CMD_TONE_DETECTED))
+  vector<uint8_t>::const_iterator it = frame.begin();
+  if ((frame.size() == 5) && (*it++ == Tx::DATA_CMD_TONE_DETECTED))
   {
-    float fq;
-    uint32_t *fq_ptr = reinterpret_cast<uint32_t*>(&fq);
-    *fq_ptr = frame[1];
-    *fq_ptr |= static_cast<uint32_t>(frame[2]) << 8;
-    *fq_ptr |= static_cast<uint32_t>(frame[3]) << 16;
-    *fq_ptr |= static_cast<uint32_t>(frame[4]) << 24;
+    float fq = 0.0f;
+    uint8_t *fq_ptr = reinterpret_cast<uint8_t*>(&fq);
+    *fq_ptr++ = *it++;
+    *fq_ptr++ = *it++;
+    *fq_ptr++ = *it++;
+    *fq_ptr++ = *it++;
     toneDetected(fq);
   }
   dataReceived(frame);

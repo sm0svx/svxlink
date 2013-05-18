@@ -90,9 +90,9 @@ using namespace Async;
 struct CtcssDetPar
 {
   float fq;
-  float duration;
+  unsigned duration;
 
-  CtcssDetPar(void) : fq(-1.0), duration(-1.0) {}
+  CtcssDetPar(void) : fq(0.0f), duration(0) {}
 
   friend istream &operator>>(istream &input, CtcssDetPar &par)
   {
@@ -360,11 +360,11 @@ void RfUplink::rxToneDetected(float fq)
 {
   vector<uint8_t> msg;
   msg.push_back(Tx::DATA_CMD_TONE_DETECTED);
-  uint32_t *fq_ptr = reinterpret_cast<uint32_t*>(&fq);
-  msg.push_back(*fq_ptr & 0xff);
-  msg.push_back((*fq_ptr >> 8) & 0xff);
-  msg.push_back((*fq_ptr >> 16) & 0xff);
-  msg.push_back((*fq_ptr >> 24) & 0xff);
+  uint8_t *fq_ptr = reinterpret_cast<uint8_t*>(&fq);
+  msg.push_back(*fq_ptr++);
+  msg.push_back(*fq_ptr++);
+  msg.push_back(*fq_ptr++);
+  msg.push_back(*fq_ptr++);
   uplink_tx->sendData(msg);
 } /* RfUplink::rxToneDetected */
 
