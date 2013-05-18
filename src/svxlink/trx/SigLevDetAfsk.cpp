@@ -178,7 +178,7 @@ float SigLevDetAfsk::siglevIntegrated(void) const
     return sum / siglev_values.size();
   }
   */
-  return 0;
+  return last_siglev;
 } /* SigLevDetAfsk::siglevIntegrated */
 
 

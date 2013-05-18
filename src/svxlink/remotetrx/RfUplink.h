@@ -158,6 +158,7 @@ class RfUplink : public Uplink
     void rxSquelchOpen(bool is_open);
     void rxSignalLevelUpdated(float siglev);
     void rxDtmfDigitDetected(char digit, int duration);
+    void rxToneDetected(float fq);
     void uplinkTxTransmitterStateChange(bool is_transmitting);
 
 };  /* class RfUplink */

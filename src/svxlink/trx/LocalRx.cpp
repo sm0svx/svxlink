@@ -82,6 +82,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AfskDemodulator.h"
 #include "Synchronizer.h"
 #include "HdlcDeframer.h"
+#include "Tx.h"
 
 
 /****************************************************************************
@@ -514,8 +515,9 @@ bool LocalRx::initialize(void)
     prev_src = 0;
 
     HdlcDeframer *deframer = new HdlcDeframer;
+    deframer->frameReceived.connect(
+        mem_fun(*this, &LocalRx::dataFrameReceived));
     sync->bitsReceived.connect(mem_fun(deframer, &HdlcDeframer::bitsReceived));
-    deframer->frameReceived.connect(dataReceived.make_slot());
   }
 
     // Create a new audio splitter to handle tone detectors then add it to
@@ -746,6 +748,22 @@ void LocalRx::dtmfDigitDeactivated(char digit, int duration_ms)
     delay->mute(false, DTMF_MUTING_POST);
   }
 } /* LocalRx::dtmfDigitActivated */
+
+
+void LocalRx::dataFrameReceived(vector<uint8_t> frame)
+{
+  if ((frame.size() == 5) && (frame[0] == Tx::DATA_CMD_TONE_DETECTED))
+  {
+    float fq;
+    uint32_t *fq_ptr = reinterpret_cast<uint32_t*>(&fq);
+    *fq_ptr = frame[1];
+    *fq_ptr |= static_cast<uint32_t>(frame[2]) << 8;
+    *fq_ptr |= static_cast<uint32_t>(frame[3]) << 16;
+    *fq_ptr |= static_cast<uint32_t>(frame[4]) << 24;
+    toneDetected(fq);
+  }
+  dataReceived(frame);
+} /* LocalRx::dataFrameReceived */
 
 
 void LocalRx::audioStreamStateChange(bool is_active, bool is_idle)

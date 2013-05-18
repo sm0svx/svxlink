@@ -661,6 +661,15 @@ void LocalTx::sendDtmf(const string& digits, unsigned duration)
 } /* LocalTx::sendDtmf */
 
 
+void LocalTx::sendData(const std::vector<uint8_t> &msg)
+{
+  if (hdlc_framer != 0)
+  {
+    hdlc_framer->sendBytes(msg);
+  }
+} /* LocalTx::sendData */
+
+
 void LocalTx::setTransmittedSignalStrength(float siglev)
 {
   //cout << "LocalTx::setTransmittedSignalStrength: siglev=" << siglev << endl;

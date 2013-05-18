@@ -35,9 +35,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <stdint.h>
 #include <sigc++/sigc++.h>
 
 #include <string>
+#include <vector>
 
 
 /****************************************************************************
@@ -124,7 +126,7 @@ class Tx : public sigc::trackable, public Async::AudioSink
 
     typedef enum
     {
-      DATA_CMD_SIGLEV, DATA_CMD_DTMF
+      DATA_CMD_SIGLEV, DATA_CMD_DTMF, DATA_CMD_TONE_DETECTED
     } DataCmd;
 
     
@@ -183,6 +185,12 @@ class Tx : public sigc::trackable, public Async::AudioSink
      * link receiver.
      */
     virtual void setTransmittedSignalStrength(float siglev) {}
+
+    /**
+     * @brief 	Send a data frame
+     * @param 	msg The frame data
+     */
+    virtual void sendData(const std::vector<uint8_t> &msg) {}
     
     /**
      * @brief 	This signal is emitted when the tx timeout timer expires

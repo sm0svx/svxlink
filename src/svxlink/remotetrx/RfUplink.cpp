@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <algorithm>
+#include <vector>
 
 
 /****************************************************************************
@@ -86,6 +87,24 @@ using namespace Async;
  *
  ****************************************************************************/
 
+struct CtcssDetPar
+{
+  float fq;
+  float duration;
+
+  CtcssDetPar(void) : fq(-1.0), duration(-1.0) {}
+
+  friend istream &operator>>(istream &input, CtcssDetPar &par)
+  {
+    char colon;
+    input >> par.fq >> colon >> par.duration >> std::ws;
+    if (colon != ':')
+    {
+      input.setstate(ios_base::failbit);
+    }
+    return input;
+  }
+};
 
 
 /****************************************************************************
@@ -164,11 +183,36 @@ bool RfUplink::initialize(void)
     loop_rx_to_tx = atoi(value.c_str()) != 0;
   }
 
-  rx->squelchOpen.connect(mem_fun(*this, &RfUplink::rxSquelchOpen));
-  rx->signalLevelUpdated.connect(mem_fun(*this, &RfUplink::rxSignalLevelUpdated));
-  rx->dtmfDigitDetected.connect(mem_fun(*this, &RfUplink::rxDtmfDigitDetected));
+  CtcssDetPar ctcss_det_par;
+  if (!cfg.getValue(name, "DETECT_CTCSS", ctcss_det_par, true))
+  {
+    cerr << "*** ERROR: Format error for config variable "
+         << name << "/DETECT_CTCSS. Valid format: "
+         << "tone_fq:min_duration\n";
+    return false;
+  }
+
+  unsigned det_1750_duration = 0;
+  cfg.getValue(name, "DETECT_1750", det_1750_duration);
+
+  rx->squelchOpen.connect(
+      mem_fun(*this, &RfUplink::rxSquelchOpen));
+  rx->signalLevelUpdated.connect(
+      mem_fun(*this, &RfUplink::rxSignalLevelUpdated));
+  rx->dtmfDigitDetected.connect(
+      mem_fun(*this, &RfUplink::rxDtmfDigitDetected));
+  rx->toneDetected.connect(
+      mem_fun(*this, &RfUplink::rxToneDetected));
   rx->reset();
   rx->setMuteState(Rx::MUTE_NONE);
+  if ((ctcss_det_par.fq > 0) && (ctcss_det_par.duration > 0))
+  {
+    rx->addToneDetector(ctcss_det_par.fq, 4, 10, ctcss_det_par.duration);
+  }
+  if (det_1750_duration > 0)
+  {
+    rx->addToneDetector(1750, 50, 10, det_1750_duration);
+  }
   AudioSource *prev_src = rx;
 
   AudioFifo *fifo = new AudioFifo(8000);
@@ -310,6 +354,19 @@ void RfUplink::rxDtmfDigitDetected(char digit, int duration)
   const char dtmf_str[] = {digit, 0};
   uplink_tx->sendDtmf(dtmf_str, duration);
 } /* RfUplink::rxDtmfDigitDetected */
+
+
+void RfUplink::rxToneDetected(float fq)
+{
+  vector<uint8_t> msg;
+  msg.push_back(Tx::DATA_CMD_TONE_DETECTED);
+  uint32_t *fq_ptr = reinterpret_cast<uint32_t*>(&fq);
+  msg.push_back(*fq_ptr & 0xff);
+  msg.push_back((*fq_ptr >> 8) & 0xff);
+  msg.push_back((*fq_ptr >> 16) & 0xff);
+  msg.push_back((*fq_ptr >> 24) & 0xff);
+  uplink_tx->sendData(msg);
+} /* RfUplink::rxToneDetected */
 
 
 void RfUplink::uplinkTxTransmitterStateChange(bool is_transmitting)

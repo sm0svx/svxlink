@@ -180,6 +180,12 @@ class LocalTx : public Tx
      * @param   duration The tone duration in milliseconds
      */
     void sendDtmf(const std::string& digits, unsigned duration=0);
+
+    /**
+     * @brief 	Send a data frame
+     * @param 	msg The frame data
+     */
+    void sendData(const std::vector<uint8_t> &msg);
     
     /**
      * @brief   Set the signal level value that should be transmitted
