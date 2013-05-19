@@ -133,6 +133,12 @@ class RxAdapter : public Rx, public AudioSink
     virtual bool addToneDetector(float fq, int bw, float thresh,
       	      	      	      	 int required_duration)
     {
+      //cout << "### RxAdapter::addToneDetector: fq=" << fq << endl;
+      if (fq < 300.0f)
+      {
+        ctcssDetectorFqChanged(fq);
+        return true;
+      }
       return false;
     }
     
@@ -165,6 +171,7 @@ class RxAdapter : public Rx, public AudioSink
       siglev_timer.setEnable(squelchIsOpen());
     }
     
+    sigc::signal<void, float> ctcssDetectorFqChanged;
    
   private:
     AudioValve  mute_valve;
@@ -408,21 +415,12 @@ bool NetTrxAdapter::initialize(void)
 {
   AudioSource *prev_src = 0;
 
-  float ctcss_fq = 0.0f;
-  if (!cfg.getValue(net_uplink_name, "CTCSS_FQ", ctcss_fq, true))
-  {
-    cerr << "*** ERROR: Illegal value for config variable "
-         << net_uplink_name << "/CTCSS_FQ.\n";
-    return false;
-  }
-
     // NetTx audio chain
   txa1 = new TxAdapter;
   if (!txa1->initialize())
   {
     return false;
   }
-  txa1->setCtcssFq(ctcss_fq);
   prev_src = txa1;
   
   AudioFifo *fifo1 = new AudioFifo(8000);
@@ -440,6 +438,7 @@ bool NetTrxAdapter::initialize(void)
   txa1->sigTransmit.connect(mem_fun(*rxa1, &RxAdapter::setSquelchState));
   txa1->sendDtmfDigit.connect(rxa1->dtmfDigitDetected.make_slot());
   txa1->sendTone.connect(rxa1->toneDetected.make_slot());
+  rxa1->ctcssDetectorFqChanged.connect(mem_fun(*txa1, &TxAdapter::setCtcssFq));
 
     
     // NetRx audio chain
@@ -448,7 +447,6 @@ bool NetTrxAdapter::initialize(void)
   {
     return false;
   }
-  txa2->setCtcssFq(ctcss_fq);
   prev_src = txa2;
   
   AudioFifo *fifo2 = new AudioFifo(8000);
@@ -466,6 +464,7 @@ bool NetTrxAdapter::initialize(void)
   txa2->sigTransmit.connect(mem_fun(*rxa2, &RxAdapter::setSquelchState));
   txa2->sendDtmfDigit.connect(rxa2->dtmfDigitDetected.make_slot());
   txa2->sendTone.connect(rxa2->toneDetected.make_slot());
+  rxa2->ctcssDetectorFqChanged.connect(mem_fun(*txa2, &TxAdapter::setCtcssFq));
   
     // Create a NetUplink connected to the TX and RX adapters
   ul = new NetUplink(cfg, net_uplink_name, rxa2, txa1);
