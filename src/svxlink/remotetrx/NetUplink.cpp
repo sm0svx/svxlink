@@ -593,7 +593,7 @@ void NetUplink::handleMsg(Msg *msg)
     
     default:
       cerr << "*** ERROR: Unknown TCP message received in NetUplink "
-           << name << ". type=" << msg->type() << ", tize="
+           << name << ". type=" << msg->type() << ", size="
            << msg->size() << endl;
       break;
   }

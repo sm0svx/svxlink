@@ -183,11 +183,18 @@ class TxAdapter : public Tx, public AudioSource
 {
   public:
     TxAdapter(void)
-      : tx_ctrl_mode(Tx::TX_OFF), is_transmitting(false), is_idle(true)
+      : tx_ctrl_mode(Tx::TX_OFF), is_transmitting(false), is_idle(true),
+        ctcss_enabled(false), ctcss_fq(0.0f)
     {
     }
 
     ~TxAdapter(void) {}
+
+    /**
+     * @brief   Set the CTCSS frequency used when reporting detection
+     * @param   fq The frequency in Hz
+     */
+    void setCtcssFq(float fq) { ctcss_fq = fq; }
 
     /**
      * @brief 	Initialize the receiver object
@@ -244,7 +251,11 @@ class TxAdapter : public Tx, public AudioSource
      * @brief 	Enable/disable CTCSS on TX
      * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
      */
-    virtual void enableCtcss(bool enable) { }
+    virtual void enableCtcss(bool enable)
+    {
+      //cout << "### TxAdapter::enableCtcss: enable=" << enable << "\n";
+      ctcss_enabled = enable;
+    }
     
     /**
      * @brief 	Send a string of DTMF digits
@@ -257,8 +268,6 @@ class TxAdapter : public Tx, public AudioSource
       	sendDtmfDigit(digits[i], duration);
       }
     }
-    
-
 
     int writeSamples(const float *samples, int count)
     {
@@ -294,15 +303,16 @@ class TxAdapter : public Tx, public AudioSource
       }
     }
     
-    signal<void, bool> sigTransmit;
+    signal<void, bool>      sigTransmit;
     signal<void, char, int> sendDtmfDigit;
-    
-    
+    signal<void, float>     sendTone;
     
   private:
     Tx::TxCtrlMode  tx_ctrl_mode;
     bool      	    is_transmitting;
     bool      	    is_idle;
+    bool            ctcss_enabled;
+    float           ctcss_fq;
 
     void transmit(bool do_transmit)
     {
@@ -315,6 +325,11 @@ class TxAdapter : public Tx, public AudioSource
       is_transmitting = do_transmit;
       sigTransmit(do_transmit);
       transmitterStateChange(do_transmit);
+      if (ctcss_enabled && do_transmit && (ctcss_fq > 0.0f))
+      {
+        //cout << "### TxAdapter::transmit: Sending tone\n";
+        sendTone(ctcss_fq);
+      } 
     }
     
 }; /* class TxAdapter */
@@ -393,12 +408,21 @@ bool NetTrxAdapter::initialize(void)
 {
   AudioSource *prev_src = 0;
 
+  float ctcss_fq = 0.0f;
+  if (!cfg.getValue(net_uplink_name, "CTCSS_FQ", ctcss_fq, true))
+  {
+    cerr << "*** ERROR: Illegal value for config variable "
+         << net_uplink_name << "/CTCSS_FQ.\n";
+    return false;
+  }
+
     // NetTx audio chain
   txa1 = new TxAdapter;
   if (!txa1->initialize())
   {
     return false;
   }
+  txa1->setCtcssFq(ctcss_fq);
   prev_src = txa1;
   
   AudioFifo *fifo1 = new AudioFifo(8000);
@@ -413,6 +437,10 @@ bool NetTrxAdapter::initialize(void)
   prev_src->registerSink(rxa1, true);
   prev_src = 0;
 
+  txa1->sigTransmit.connect(mem_fun(*rxa1, &RxAdapter::setSquelchState));
+  txa1->sendDtmfDigit.connect(rxa1->dtmfDigitDetected.make_slot());
+  txa1->sendTone.connect(rxa1->toneDetected.make_slot());
+
     
     // NetRx audio chain
   txa2 = new TxAdapter;
@@ -420,6 +448,7 @@ bool NetTrxAdapter::initialize(void)
   {
     return false;
   }
+  txa2->setCtcssFq(ctcss_fq);
   prev_src = txa2;
   
   AudioFifo *fifo2 = new AudioFifo(8000);
@@ -434,13 +463,11 @@ bool NetTrxAdapter::initialize(void)
   prev_src->registerSink(rxa2, true);
   prev_src = 0;
 
-
-  txa1->sigTransmit.connect(mem_fun(*rxa1, &RxAdapter::setSquelchState));
-  txa1->sendDtmfDigit.connect(rxa1->dtmfDigitDetected.make_slot());
   txa2->sigTransmit.connect(mem_fun(*rxa2, &RxAdapter::setSquelchState));
   txa2->sendDtmfDigit.connect(rxa2->dtmfDigitDetected.make_slot());
+  txa2->sendTone.connect(rxa2->toneDetected.make_slot());
   
-
+    // Create a NetUplink connected to the TX and RX adapters
   ul = new NetUplink(cfg, net_uplink_name, rxa2, txa1);
   if (!ul->initialize())
   {
