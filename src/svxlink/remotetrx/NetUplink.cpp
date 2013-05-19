@@ -498,7 +498,7 @@ void NetUplink::handleMsg(Msg *msg)
     case MsgSendDtmf::TYPE:
     {
       MsgSendDtmf *dtmf_msg = reinterpret_cast<MsgSendDtmf *>(msg);
-      tx->sendDtmf(dtmf_msg->digits());
+      tx->sendDtmf(dtmf_msg->digits(), dtmf_msg->duration());
       break;
     }
     

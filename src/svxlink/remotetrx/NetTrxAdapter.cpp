@@ -250,11 +250,11 @@ class TxAdapter : public Tx, public AudioSource
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send
      */
-    virtual void sendDtmf(const std::string& digits)
+    virtual void sendDtmf(const std::string& digits, unsigned duration)
     {
       for (unsigned i=0; i<digits.size(); ++i)
       {
-      	sendDtmfDigit(digits[i], 100);
+      	sendDtmfDigit(digits[i], duration);
       }
     }
     

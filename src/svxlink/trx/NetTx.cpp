@@ -241,9 +241,9 @@ void NetTx::enableCtcss(bool enable)
 } /* NetTx::enableCtcss */
 
 
-void NetTx::sendDtmf(const std::string& digits)
+void NetTx::sendDtmf(const std::string& digits, unsigned duration)
 {
-  MsgSendDtmf *msg = new MsgSendDtmf(digits);
+  MsgSendDtmf *msg = new MsgSendDtmf(digits, duration);
   sendMsg(msg);
 } /* NetTx::sendDtmf */
 

@@ -170,8 +170,9 @@ class NetTx : public Tx
     /**
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send
+     * @param   duration The tone duration in milliseconds
      */
-    virtual void sendDtmf(const std::string& digits);
+    virtual void sendDtmf(const std::string& digits, unsigned duration);
     
 
   protected:
