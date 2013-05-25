@@ -153,4 +153,3 @@ class Template
 /*
  * This file has not been truncated
  */
-

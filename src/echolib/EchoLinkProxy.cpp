@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <openssl/md5.h>
 
+#include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -98,15 +99,6 @@ enum
  *
  ****************************************************************************/
 
-void print_hex(const unsigned char *buf, int len, char direction)
-{
-  printf("%2d%c ", len, direction);
-  for (int i=0; i<len; ++i)
-  {
-    printf("%02x ", buf[i]);
-  }
-  putchar('\n');
-}
 
 
 /****************************************************************************
@@ -114,7 +106,6 @@ void print_hex(const unsigned char *buf, int len, char direction)
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 
@@ -263,7 +254,7 @@ bool Proxy::sendMsgBlock(MsgBlockType type, const IpAddress &remote_ip,
     // Store the message type
   *msg_ptr++ = static_cast<uint8_t>(type);
 
-    // Store the proxied remote IP address
+    // Store the proxied remote IP address if set
   in_addr_t remote_ip_addr = 0;
   if (!remote_ip.isEmpty())
   {
@@ -284,17 +275,19 @@ bool Proxy::sendMsgBlock(MsgBlockType type, const IpAddress &remote_ip,
   memcpy(msg_ptr, data, len);
 
     // Send the message
-  //print_hex(msg_buf, msg_len, '>');
-  //FIXME: We probably need a message FIFO here?
   int ret = con.write(msg_buf, msg_len);
   if (ret == -1)
   {
-    cerr << "*** ERROR: Error while writing message to proxy\n";
+    char errstr[256];
+    errstr[0] = 0;
+    strerror_r(errno, errstr, sizeof(errstr));
+    cerr << "*** ERROR: Error while writing message to EchoLink proxy: "
+         << errstr << endl;
     disconnect();
   }
   else if (static_cast<unsigned>(ret) != msg_len)
   {
-    cerr << "*** ERROR: Could not write all data to proxy\n";
+    cerr << "*** ERROR: Could not write all data to EchoLink proxy\n";
     disconnect();
   }
   return true;
@@ -312,27 +305,21 @@ void Proxy::onConnected(void)
 int Proxy::onDataReceived(TcpConnection *con, void *data, int len)
 {
   unsigned char *buf = reinterpret_cast<unsigned char*>(data);
-
-  //print_hex(buf, len, '<');
-  //cout << "### raw data len=" << len << endl;
-
   switch (state)
   {
     case STATE_WAITING_FOR_DIGEST:
       return handleAuthentication(buf, len);
-      break;
 
     case STATE_CONNECTED:
       return parseProxyMessageBlock(buf, len);
-      break;
 
     case STATE_DISCONNECTED:
-      cerr << "*** ERROR: Data received in disconnected state\n";
+      cerr << "*** ERROR: EchoLink proxy data received in disconnected state\n";
       disconnect();
       break;
 
     default:
-      cerr << "*** ERROR: Data received in unknown state\n";
+      cerr << "*** ERROR: EchoLink proxy data received in unknown state\n";
       disconnect();
       break;
   }
@@ -376,6 +363,7 @@ int Proxy::handleAuthentication(const unsigned char *buf, int len)
 {
   if (len >= NONCE_SIZE)
   {
+      // Insert the callsign and newline in the buffer
     unsigned auth_msg_len = callsign.size() + 1 + MD5_DIGEST_LENGTH;
     unsigned char auth_msg[auth_msg_len+1];
     unsigned char *auth_msg_ptr = auth_msg;
@@ -384,6 +372,7 @@ int Proxy::handleAuthentication(const unsigned char *buf, int len)
     *auth_msg_ptr = '\n';
     auth_msg_ptr += 1;
 
+      // Calculate and insert the MD5 digest into the buffer
     unsigned auth_str_len = password.size() + NONCE_SIZE;
     unsigned char auth_str[auth_str_len + 1];
     unsigned char *auth_str_ptr = auth_str;
@@ -391,13 +380,12 @@ int Proxy::handleAuthentication(const unsigned char *buf, int len)
     auth_str_ptr += password.size();
     memcpy(auth_str_ptr, buf, NONCE_SIZE);
     auth_str[auth_str_len] = 0;
-    //cout << auth_str << endl;
     MD5(auth_str, auth_str_len, auth_msg_ptr);
     auth_msg[auth_msg_len] = 0;
 
-    //print_hex(auth_msg, auth_msg_len, '>');
-
+      // Send the authentication message
     con.write(auth_msg, auth_msg_len);
+
     state = STATE_CONNECTED;
     proxyReady(true);
     return NONCE_SIZE;
@@ -449,12 +437,9 @@ int Proxy::parseProxyMessageBlock(unsigned char *buf, int len)
 void Proxy::handleProxyMessageBlock(MsgBlockType type,
     const IpAddress &remote_ip, uint32_t len, unsigned char *data)
 {
-  //cout << "< type=" << (unsigned)type << " len=" << len
-  //     << " remote_ip=" << remote_ip << endl;
-
   if (state != STATE_CONNECTED)
   {
-    cerr << "*** ERROR: Received message block while not "
+    cerr << "*** ERROR: Received EchoLink proxy message block while not "
             "connected/authenticated\n";
     disconnect();
     return;
@@ -498,7 +483,7 @@ void Proxy::handleProxyMessageBlock(MsgBlockType type,
       disconnect();
       break;
   }
-} /* handleProxyMessageBlock */
+} /* Proxy::handleProxyMessageBlock */
 
 
 void Proxy::handleTcpDataMsg(uint8_t *buf, int len)
@@ -507,46 +492,41 @@ void Proxy::handleTcpDataMsg(uint8_t *buf, int len)
   {
     cerr << "*** ERROR: TCP data received from EchoLink proxy but no TCP "
             "connection should be open at the moment.\n";
+    disconnect();
     return;
   }
 
   if (len > 0)
   {
-    //cout << "### len=" << len;
     if (recv_buf_cnt > 0)
     {
       if (recv_buf_cnt + len > recv_buf_size)
       {
-        //cerr << "*** ERROR: Data buffer overflow in EchoLink proxy for "
-        //        "TCP data\n";
         disconnect();
         return;
       }
       memcpy(recv_buf + recv_buf_cnt, buf, len);
       recv_buf_cnt += len;
       int processed = tcpDataReceived(recv_buf, recv_buf_cnt);
-      //cout << "  processed from buffer=" << processed;
       if (processed >= recv_buf_cnt)
       {
         recv_buf_cnt = 0;
       }
       else
       {
-        recv_buf_cnt = recv_buf_cnt - processed;
+        recv_buf_cnt -= processed;
         memmove(recv_buf, recv_buf + processed, recv_buf_cnt);
       }
     }
     else
     {
       int processed = tcpDataReceived(buf, len);
-      //cout << "  processed directly=" << processed;
       if (processed < len)
       {
         recv_buf_cnt = len - processed;
         memcpy(recv_buf, buf + processed, recv_buf_cnt);
       }
     }
-    //cout << "  recv_buf_cnt=" << recv_buf_cnt << endl;
   }
 } /* Proxy::handleTcpDataMsg */
 
@@ -555,7 +535,7 @@ void Proxy::handleTcpCloseMsg(const uint8_t *buf, int len)
 {
   if (len != 0)
   {
-    cerr << "*** ERROR: Wrong size for TCP_CLOSE message\n";
+    cerr << "*** ERROR: Wrong size for EchoLink proxy TCP_CLOSE message\n";
     disconnect();
     return;
   }
@@ -629,14 +609,15 @@ void Proxy::handleSystemMsg(const unsigned char *buf, int len)
 {
   if (state != STATE_CONNECTED)
   {
-    cerr << "*** ERROR: SYSTEM message received in wrong state\n";
+    cerr << "*** ERROR: EchoLink proxy SYSTEM message received in "
+            "wrong state\n";
     disconnect();
     return;
   }
 
   if (len != 1)
   {
-    cerr << "*** ERROR: Malformed SYSTEM message block\n";
+    cerr << "*** ERROR: Malformed EchoLink proxy SYSTEM message block\n";
     disconnect();
     return;
   }
