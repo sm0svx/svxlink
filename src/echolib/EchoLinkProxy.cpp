@@ -1,14 +1,12 @@
 /**
 @file	 EchoLinkProxy.cpp
-@brief   A_brief_description_for_this_file
+@brief   A class implementing the EchoLink Proxy protocol
 @author  Tobias Blomberg / SM0SVX
-@date	 2010-
-
-A_detailed_description_for_this_file
+@date	 2013-04-28
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+EchoLib - A library for EchoLink communication
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -324,7 +322,6 @@ int Proxy::onDataReceived(TcpConnection *con, void *data, int len)
       return handleAuthentication(buf, len);
       break;
 
-    case STATE_WAITING_FOR_FIRST_MSG:
     case STATE_CONNECTED:
       return parseProxyMessageBlock(buf, len);
       break;
@@ -401,7 +398,6 @@ int Proxy::handleAuthentication(const unsigned char *buf, int len)
     //print_hex(auth_msg, auth_msg_len, '>');
 
     con.write(auth_msg, auth_msg_len);
-    //state = STATE_WAITING_FOR_FIRST_MSG;
     state = STATE_CONNECTED;
     proxyReady(true);
     return NONCE_SIZE;
@@ -456,21 +452,12 @@ void Proxy::handleProxyMessageBlock(MsgBlockType type,
   //cout << "< type=" << (unsigned)type << " len=" << len
   //     << " remote_ip=" << remote_ip << endl;
 
-  switch (state)
+  if (state != STATE_CONNECTED)
   {
-    case STATE_WAITING_FOR_DIGEST:
-      cerr << "*** ERROR: Received message block while waiting for nonce\n";
-      disconnect();
-      return;
-
-    case STATE_WAITING_FOR_FIRST_MSG:
-      if (type != MSG_TYPE_SYSTEM)
-      {
-        state = STATE_CONNECTED;
-      }
-
-    default:
-      break;
+    cerr << "*** ERROR: Received message block while not "
+            "connected/authenticated\n";
+    disconnect();
+    return;
   }
 
   switch (type)
@@ -640,7 +627,6 @@ void Proxy::handleUdpCtrlMsg(const IpAddress &remote_ip, uint8_t *buf, int len)
 
 void Proxy::handleSystemMsg(const unsigned char *buf, int len)
 {
-  //if (state != STATE_WAITING_FOR_FIRST_MSG)
   if (state != STATE_CONNECTED)
   {
     cerr << "*** ERROR: SYSTEM message received in wrong state\n";

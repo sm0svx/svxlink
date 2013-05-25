@@ -1,14 +1,12 @@
 /**
 @file	 EchoLinkProxy.h
-@brief   A_brief_description_for_this_file
+@brief   A class implementing the EchoLink Proxy protocol
 @author  Tobias Blomberg / SM0SVX
-@date	 2010-
-
-A_detailed_description_for_this_file
+@date	 2013-04-28
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+EchoLib - A library for EchoLink communication
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -111,11 +109,18 @@ namespace EchoLink
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	Implements the EchoLink Proxy protocol
 @author Tobias Blomberg / SM0SVX
-@date   2013-
+@date   2013-04-28
 
-A_detailed_class_description
+This class implements the EchoLink Proxy protocol. This protocol is used to
+wrap all EchoLink protocol connections in one TCP connection. Both the two
+UDP connections (port 5198 and 5199) and the TCP connection to the EchoLink
+directory server will be wrapped inside the TCP connection to the EchoLink
+proxy server. This is of most use when the two UDP ports cannot be forwarded
+to your local EchoLink computer for one or the other reason, like when being
+on a public network. Instead of your computer listening directly to the two
+UDP ports, the EchoLink proxy server will do it for you.
 
 \include EchoLinkProxy_demo.cpp
 */
@@ -124,8 +129,7 @@ class Proxy : public sigc::trackable
   public:
     typedef enum
     {
-      STATE_DISCONNECTED, STATE_WAITING_FOR_DIGEST, STATE_WAITING_FOR_FIRST_MSG,
-      STATE_CONNECTED
+      STATE_DISCONNECTED, STATE_WAITING_FOR_DIGEST, STATE_CONNECTED
     } ProxyState;
 
     typedef enum
@@ -140,7 +144,7 @@ class Proxy : public sigc::trackable
      * @brief 	Default constuctor
      */
     Proxy(const std::string &host, uint16_t port, const std::string &callsign,
-        const std::string &password);
+          const std::string &password);
   
     /**
      * @brief 	Destructor
@@ -148,32 +152,175 @@ class Proxy : public sigc::trackable
     ~Proxy(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Connect to the proxy server
      */
     void connect(void);
+
+    /**
+     * @brief   Disconnect from the proxy server
+     */
     void disconnect(void);
     
+    /**
+     * @brief   Open a TCP connection to port 5200 to the specified host
+     * @param   remote_ip The remote IP address to open the TCP connection to
+     * @return  Returns \em true on success or else \em false.
+     *
+     * This function is used to initialize the connection to the EchoLink
+     * directory server. It will indicate success if the connection request
+     * was successfully sent tot he proxy server. Success does not mean that
+     * the connection to the directory server has been established. That is
+     * indicated by the emission of the tcpConnected signal. If the connection
+     * fail, the tcpDisconnected signal will be emitted instead.
+     */
     bool tcpOpen(const Async::IpAddress &remote_ip);
+
+    /**
+     * @brief   Close an active TCP connection
+     * @return  Return \em true on success or else \em false
+     *
+     * This function is used to close a previously established TCP connection
+     * to an EchoLink directory server. The function will indicate success if
+     * the disconnect is successfully sent to the EchoLink proxy server.
+     * Success does not mean that the connection has been closed. This is
+     * indicated by the emission of the tcpDisconnected signal
+     * If no connection is established at the moment, the function will
+     * indicate success.
+     */
     bool tcpClose(void);
+
+    /**
+     * @brief   Read back the current TCP connection state
+     * @return  Returns the current TCP connection state (@see TcpState)
+     */
     TcpState tcpState(void) { return tcp_state; }
+
+    /**
+     * @brief   Send TCP data through an established TCP connection
+     * @param   data Pointer to a buffer containing the data to send
+     * @param   len The size of the data buffer
+     * @return  Returns \em true on success or else \em false
+     *
+     * Use this function to send data to the EchoLink directory server through
+     * an already established connection through the proxy server. Before
+     * calling this function, tcpOpen should have been called to open the
+     * connection.
+     */
     bool tcpData(const void *data, unsigned len);
+
+    /**
+     * @brief   Send UDP data to the specified remote IP
+     * @param   addr The remote IP address to send to
+     * @param   data Pointer to a buffer containing the data to send
+     * @param   len The size of the data buffer
+     * @return  Returns \em true on success or else \em false
+     *
+     * Use this function to send UDP frames to the specified remote IP address.
+     * The UDP frames should contain data, like audio.
+     */
     bool udpData(const Async::IpAddress &addr, const void *data, unsigned len);
+
+    /**
+     * @brief   Send UDP control data to the specified remote IP
+     * @param   addr The remote IP address to send to
+     * @param   data Pointer to a buffer containing the data to send
+     * @param   len The size of the data buffer
+     * @return  Returns \em true on success or else \em false
+     *
+     * Use this function to send UDP frames to the specified remote IP address.
+     * The UDP frames should contain control data.
+     */
     bool udpCtrl(const Async::IpAddress &addr, const void *data, unsigned len);
 
+    /**
+     * @brief   A signal that is emitted when the proxy is ready for operation
+     * @param   is_ready Set to true if the proxy is ready or false if it's not
+     *
+     * Beofre calling any communication functions in this class one should wait
+     * for this signal to be emitted with a \em true argument. The user of this
+     * class should first call the connect method and then wait for this
+     * signal.
+     */
     sigc::signal<void, bool> proxyReady;
 
-    sigc::signal<void, uint32_t> tcpStatusReceived;
-    sigc::signal<int, void*, unsigned> tcpDataReceived;
-    sigc::signal<void> tcpCloseReceived;
+    /**
+     * @brief   Signal that is emitted when a TCP connection is established
+     *
+     * This signal will be emitted when a TCP connection to the EchoLink
+     * directory server has been established through the proxy server.
+     */
     sigc::signal<void> tcpConnected;
+
+    /**
+     * @brief   Signal that is emitted when a TCP connection is closed
+     *
+     * This signal will be emitted when a TCP connection to the EchoLink
+     * directory server has been closed.
+     */
     sigc::signal<void> tcpDisconnected;
 
+    /**
+     * @brief   Signal emitted when TCP data has been received
+     * @param   data Pointer to a buffer containing the data to send
+     * @param   len The size of the data buffer
+     * @return  Return the number of bytes that was processed
+     *
+     * This signal will be emitted when TCP data has been received from the
+     * EchoLink directory server via the proxy. The receiver of the signal
+     * must indicate with the return value how many bytes of the received
+     * data was processed. Any unprocessed data will be present in the next
+     * emission of this signal. The signal will not be emitted again until
+     * more data have been received. This behaviour will make it easy to
+     * handle the data stream in suitable chunks.
+     */
+    sigc::signal<int, void*, unsigned> tcpDataReceived;
+
+    /**
+     * @brief   Signal emitted when UDP data has been received
+     * @param   addr The remote IP address
+     * @param   data Pointer to a buffer containing the data to send
+     * @param   len The size of the data buffer
+     *
+     * This signal will be emitted when UDP data, like audio, have been
+     * received through the EchoLink proxy server.
+     */
     sigc::signal<void, const Async::IpAddress&, void*,
                  unsigned> udpDataReceived;
+
+    /**
+     * @brief   Signal emitted when UDP control data has been received
+     * @param   addr The remote IP address
+     * @param   data Pointer to a buffer containing the data to send
+     * @param   len The size of the data buffer
+     *
+     * This signal will be emitted when UDP control data have been
+     * received through the EchoLink proxy server.
+     */
     sigc::signal<void, const Async::IpAddress&, void*,
                  unsigned> udpCtrlReceived;
+
+    /**
+     * @brief   Signal emitted when the TCP_STATUS proxy message is received
+     * @param   status The status word
+     *
+     * This signal will be emitted when a TCP_STATUS message has been
+     * received from the EchoLink proxy server. The user of this class should
+     * not need to use this raw protocol message signal since it's easier to
+     * use the tcpConnected signal.
+     * A status word set to zero will indicate a successful connection. A
+     * non zero status word does not mean anything special other than that the
+     * connection failed.
+     */
+    sigc::signal<void, uint32_t> tcpStatusReceived;
+
+    /**
+     * @brief   Signal emitted when the TCP_CLOSE proxy message is received
+     *
+     * This signal will be emitted when a TCP_CLOSE proxy protocol message
+     * is received. This signal should normally not be used since it's better
+     * to use the tcpDisconnected signal.
+     */
+    sigc::signal<void> tcpCloseReceived;
 
   protected:
     
@@ -185,18 +332,19 @@ class Proxy : public sigc::trackable
       MSG_TYPE_SYSTEM
     } MsgBlockType;
 
-    static const int NONCE_SIZE = 8;
-    static const int MSG_HEADER_SIZE = 1 + 4 + 4;
-    static const int recv_buf_size = 16384;
+    static const int NONCE_SIZE       = 8;
+    static const int MSG_HEADER_SIZE  = 1 + 4 + 4;
+    static const int recv_buf_size    = 16384;
+
     static Proxy *the_instance;
 
-    Async::TcpClient con;
+    Async::TcpClient  con;
     const std::string callsign;
-    std::string password;
-    ProxyState state;
-    TcpState tcp_state;
-    uint8_t recv_buf[recv_buf_size];
-    int recv_buf_cnt;
+    std::string       password;
+    ProxyState        state;
+    TcpState          tcp_state;
+    uint8_t           recv_buf[recv_buf_size];
+    int               recv_buf_cnt;
 
     Proxy(const Proxy&);
     Proxy& operator=(const Proxy&);
@@ -233,4 +381,3 @@ class Proxy : public sigc::trackable
 /*
  * This file has not been truncated
  */
-
