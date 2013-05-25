@@ -206,9 +206,9 @@ class Config
 		  Rsp &rsp, bool missing_ok = false) const
     {
       std::string str_val;
-      if (!getValue(section, tag, str_val) && missing_ok)
+      if (!getValue(section, tag, str_val))
       {
-	return true;
+	return missing_ok;
       }
       std::stringstream ssval(str_val);
       Rsp tmp;
@@ -248,9 +248,9 @@ class Config
                   bool missing_ok = false) const
     {
       std::string str_val;
-      if (!getValue(section, tag, str_val) && missing_ok)
+      if (!getValue(section, tag, str_val))
       {
-	return true;
+	return missing_ok;
       }
       if (str_val.empty())
       {
@@ -298,9 +298,9 @@ class Config
 		  bool missing_ok = false) const
     {
       std::string str_val;
-      if (!getValue(section, tag, str_val) && missing_ok)
+      if (!getValue(section, tag, str_val))
       {
-	return true;
+	return missing_ok;
       }
       std::stringstream ssval(str_val);
       Rsp tmp;
