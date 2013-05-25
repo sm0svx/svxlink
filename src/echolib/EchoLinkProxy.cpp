@@ -301,7 +301,7 @@ bool Proxy::sendMsgBlock(MsgBlockType type, const IpAddress &remote_ip,
          << errstr << endl;
     reset();
   }
-  else if (static_cast<unsigned>(ret) != msg_len)
+  else if (ret != msg_len)
   {
     cerr << "*** ERROR: Could not write all data to EchoLink proxy\n";
     reset();
