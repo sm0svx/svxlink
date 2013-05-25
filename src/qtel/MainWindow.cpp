@@ -666,8 +666,11 @@ void MainWindow::callsignListUpdated(void)
 
 void MainWindow::refreshCallList(void)
 {
-  statusBar()->showMessage(trUtf8("Refreshing station list..."));
-  dir->getCalls();
+  if (dir->status() >= StationData::STAT_ONLINE)
+  {
+    statusBar()->showMessage(trUtf8("Refreshing station list..."));
+    dir->getCalls();
+  }
 } /* MainWindow::refreshCallList */
 
 

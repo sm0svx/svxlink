@@ -128,7 +128,7 @@ Proxy::Proxy(const string &host, uint16_t port, const string &callsign,
              const string &password)
   : con(host, port, recv_buf_size), callsign(callsign), password(password),
     state(STATE_DISCONNECTED), tcp_state(TCP_STATE_DISCONNECTED),
-    recv_buf_cnt(0)
+    recv_buf_cnt(0), reconnect_timer(RECONNECT_INTERVAL, Timer::TYPE_PERIODIC)
 {
   delete the_instance;
   the_instance = this;
@@ -148,6 +148,9 @@ Proxy::Proxy(const string &host, uint16_t port, const string &callsign,
   con.connected.connect(mem_fun(*this, &Proxy::onConnected));
   con.dataReceived.connect(mem_fun(*this, &Proxy::onDataReceived));
   con.disconnected.connect(mem_fun(*this, &Proxy::onDisconnected));
+
+  reconnect_timer.setEnable(false);
+  reconnect_timer.expired.connect(hide(mem_fun(con, &TcpClient::connect)));
 } /* Proxy::Proxy */
 
 
@@ -165,9 +168,18 @@ void Proxy::connect(void)
 
 void Proxy::disconnect(void)
 {
+  reconnect_timer.setEnable(false);
   con.disconnect();
-  onDisconnected(&con, TcpClient::DR_ORDERED_DISCONNECT);
+  disconnectHandler();
 } /* Proxy::disconnect */
+
+
+void Proxy::reset(void)
+{
+  reconnect_timer.setEnable(true);
+  con.disconnect();
+  disconnectHandler();
+} /* Proxy::reset */
 
 
 bool Proxy::tcpOpen(const IpAddress &remote_ip)
@@ -283,12 +295,12 @@ bool Proxy::sendMsgBlock(MsgBlockType type, const IpAddress &remote_ip,
     strerror_r(errno, errstr, sizeof(errstr));
     cerr << "*** ERROR: Error while writing message to EchoLink proxy: "
          << errstr << endl;
-    disconnect();
+    reset();
   }
   else if (static_cast<unsigned>(ret) != msg_len)
   {
     cerr << "*** ERROR: Could not write all data to EchoLink proxy\n";
-    disconnect();
+    reset();
   }
   return true;
 } /* Proxy::sendMsgBlock */
@@ -299,6 +311,7 @@ void Proxy::onConnected(void)
   state = STATE_WAITING_FOR_DIGEST;
   cout << "Connected to EchoLink proxy "
        << con.remoteHost() << ":" << con.remotePort() << endl;
+  reconnect_timer.setEnable(false);
 } /* Proxy::onConnected */
 
 
@@ -315,12 +328,12 @@ int Proxy::onDataReceived(TcpConnection *con, void *data, int len)
 
     case STATE_DISCONNECTED:
       cerr << "*** ERROR: EchoLink proxy data received in disconnected state\n";
-      disconnect();
+      reset();
       break;
 
     default:
       cerr << "*** ERROR: EchoLink proxy data received in unknown state\n";
-      disconnect();
+      reset();
       break;
   }
 
@@ -332,8 +345,16 @@ int Proxy::onDataReceived(TcpConnection *con, void *data, int len)
 void Proxy::onDisconnected(TcpConnection *con,
                            Async::TcpClient::DisconnectReason reason)
 {
+  reconnect_timer.setEnable(true);
+  disconnectHandler();
+} /* Proxy::onDisconnected */
+
+
+void Proxy::disconnectHandler(void)
+{
   cout << "Disconnected from EchoLink proxy "
-       << con->remoteHost() << ":" << con->remotePort() << endl;
+       << con.remoteHost() << ":" << con.remotePort() << endl;
+
   state = STATE_DISCONNECTED;
   proxyReady(false);
 
@@ -343,7 +364,7 @@ void Proxy::onDisconnected(TcpConnection *con,
     recv_buf_cnt = 0;
     tcpDisconnected();
   }
-} /* Proxy::onDisconnected */
+} /* Proxy::disconnectHandler */
 
 
 /**
@@ -441,7 +462,7 @@ void Proxy::handleProxyMessageBlock(MsgBlockType type,
   {
     cerr << "*** ERROR: Received EchoLink proxy message block while not "
             "connected/authenticated\n";
-    disconnect();
+    reset();
     return;
   }
 
@@ -450,7 +471,7 @@ void Proxy::handleProxyMessageBlock(MsgBlockType type,
     case MSG_TYPE_TCP_OPEN:
       cerr << "*** ERROR: TCP_OPEN EchoLink proxy message received. "
               "This is not a message that the proxy should send.\n";
-      disconnect();
+      reset();
       break;
 
     case MSG_TYPE_TCP_DATA:
@@ -480,7 +501,7 @@ void Proxy::handleProxyMessageBlock(MsgBlockType type,
     default:
       cerr << "*** ERROR: Unknown EchoLink proxy message type received: "
            << type << "\n";
-      disconnect();
+      reset();
       break;
   }
 } /* Proxy::handleProxyMessageBlock */
@@ -492,7 +513,7 @@ void Proxy::handleTcpDataMsg(uint8_t *buf, int len)
   {
     cerr << "*** ERROR: TCP data received from EchoLink proxy but no TCP "
             "connection should be open at the moment.\n";
-    disconnect();
+    reset();
     return;
   }
 
@@ -502,7 +523,7 @@ void Proxy::handleTcpDataMsg(uint8_t *buf, int len)
     {
       if (recv_buf_cnt + len > recv_buf_size)
       {
-        disconnect();
+        reset();
         return;
       }
       memcpy(recv_buf + recv_buf_cnt, buf, len);
@@ -536,7 +557,7 @@ void Proxy::handleTcpCloseMsg(const uint8_t *buf, int len)
   if (len != 0)
   {
     cerr << "*** ERROR: Wrong size for EchoLink proxy TCP_CLOSE message\n";
-    disconnect();
+    reset();
     return;
   }
 
@@ -557,7 +578,7 @@ void Proxy::handleTcpStatusMsg(const uint8_t *buf, int len)
   if (len != 4)
   {
     cerr << "*** ERROR: Wrong size for TCP_STATUS message\n";
-    disconnect();
+    reset();
     return;
   }
 
@@ -611,14 +632,14 @@ void Proxy::handleSystemMsg(const unsigned char *buf, int len)
   {
     cerr << "*** ERROR: EchoLink proxy SYSTEM message received in "
             "wrong state\n";
-    disconnect();
+    reset();
     return;
   }
 
   if (len != 1)
   {
     cerr << "*** ERROR: Malformed EchoLink proxy SYSTEM message block\n";
-    disconnect();
+    reset();
     return;
   }
 
@@ -626,18 +647,18 @@ void Proxy::handleSystemMsg(const unsigned char *buf, int len)
   {
     case MSG_SYSTEM_BAD_PASSWORD:
       cerr << "*** ERROR: Bad EchoLink proxy password\n";
-      disconnect();
+      reset();
       break;
 
     case MSG_SYSTEM_ACCESS_DENIED:
       cerr << "*** ERROR: Access denied to EchoLink proxy\n";
-      disconnect();
+      reset();
       break;
 
     default:
       cerr << "*** ERROR: Unknown SYSTEM message: "
            << (unsigned)*buf << "\n";
-      disconnect();
+      reset();
       break;
   }
 } /* Proxy::handleSystemMsgBlock */

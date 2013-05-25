@@ -889,13 +889,18 @@ void Directory::sendNextCmd(void)
   //cout << "ctrl_con->isIdle()=" << ctrl_con->isIdle() << endl;
   //cout << "com_state=" << com_state << endl;
 
-  if (cmd_queue.empty() || !ctrl_con->isIdle() || (com_state != CS_IDLE))
+  if (cmd_queue.empty())
   {
     return;
   }
   
   cmd_timer = new Timer(CMD_TIMEOUT);
   cmd_timer->expired.connect(mem_fun(*this, &Directory::onCmdTimeout));
+
+  if (!ctrl_con->isIdle() || (com_state != CS_IDLE))
+  {
+    return;
+  }
 
   if (cmd_queue.front().type == Cmd::GET_CALLS)
   {

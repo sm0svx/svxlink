@@ -50,6 +50,7 @@ An example of how to use the EchoLinkProxy class
  ****************************************************************************/
 
 #include <AsyncTcpClient.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -161,6 +162,11 @@ class Proxy : public sigc::trackable
      */
     void disconnect(void);
     
+    /**
+     * @brief   Disconnect from proxy server then connect again after a delay
+     */
+    void reset(void);
+
     /**
      * @brief   Open a TCP connection to port 5200 to the specified host
      * @param   remote_ip The remote IP address to open the TCP connection to
@@ -332,9 +338,10 @@ class Proxy : public sigc::trackable
       MSG_TYPE_SYSTEM
     } MsgBlockType;
 
-    static const int NONCE_SIZE       = 8;
-    static const int MSG_HEADER_SIZE  = 1 + 4 + 4;
-    static const int recv_buf_size    = 16384;
+    static const int NONCE_SIZE         = 8;
+    static const int MSG_HEADER_SIZE    = 1 + 4 + 4;
+    static const int RECONNECT_INTERVAL = 10000;
+    static const int recv_buf_size      = 16384;
 
     static Proxy *the_instance;
 
@@ -345,6 +352,7 @@ class Proxy : public sigc::trackable
     TcpState          tcp_state;
     uint8_t           recv_buf[recv_buf_size];
     int               recv_buf_cnt;
+    Async::Timer      reconnect_timer;
 
     Proxy(const Proxy&);
     Proxy& operator=(const Proxy&);
@@ -355,6 +363,7 @@ class Proxy : public sigc::trackable
     int onDataReceived(Async::TcpConnection *con, void *data, int len);
     void onDisconnected(Async::TcpConnection *con,
         Async::TcpClient::DisconnectReason reason);
+    void disconnectHandler(void);
     int handleAuthentication(const unsigned char *buf, int len);
     int parseProxyMessageBlock(unsigned char *buf, int len);
     void handleProxyMessageBlock(MsgBlockType type,
