@@ -44,7 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
-#include <SigCAudioSink.h>
+#include <AsyncSigCAudioSink.h>
 #include <AsyncAudioFilter.h>
 #include <common.h>
 

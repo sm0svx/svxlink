@@ -114,8 +114,11 @@ AudioInterpolator::AudioInterpolator(int interpolation_factor,
   //memcpy(p_H, filter_coeff, taps * sizeof(*p_H));
   
   setInputOutputSampleRate(1, factor_L);
-  p_Z = new float[L_size / factor_L];
-  memset(p_Z, 0, sizeof(*p_Z) * L_size / factor_L);
+
+    // FIXME: What if L_size does not divide evenly with factor_L?
+  size_t p_Z_size = L_size / factor_L;
+  p_Z = new float[p_Z_size];
+  memset(p_Z, 0, sizeof(*p_Z) * p_Z_size);
 } /* AudioInterpolator::AudioInterpolator */
 
 
