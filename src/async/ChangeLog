@@ -9,6 +9,10 @@
 
 * Fixed a buffer overflow bug in the AudioInterpolator.
 
+* There now is an overloaded Config::getValue function which can take a
+  container, like an std::vector, to read in a number of space separated values
+  from a configuration variable.
+
 
 
  1.0.0 -- 08 Mar 2013
