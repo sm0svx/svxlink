@@ -341,6 +341,7 @@ class Proxy : public sigc::trackable
     static const int NONCE_SIZE         = 8;
     static const int MSG_HEADER_SIZE    = 1 + 4 + 4;
     static const int RECONNECT_INTERVAL = 10000;
+    static const int CMD_TIMEOUT        = 10000;
     static const int recv_buf_size      = 16384;
 
     static Proxy *the_instance;
@@ -353,6 +354,7 @@ class Proxy : public sigc::trackable
     uint8_t           recv_buf[recv_buf_size];
     int               recv_buf_cnt;
     Async::Timer      reconnect_timer;
+    Async::Timer      cmd_timer;
 
     Proxy(const Proxy&);
     Proxy& operator=(const Proxy&);
@@ -377,6 +379,7 @@ class Proxy : public sigc::trackable
     void handleUdpCtrlMsg(const Async::IpAddress &remote_ip, uint8_t *buf,
                           int len);
     void handleSystemMsg(const unsigned char *buf, int len);
+    void cmdTimeout(void);
     
 };  /* class Proxy */
 

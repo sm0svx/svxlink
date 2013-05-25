@@ -128,7 +128,8 @@ Proxy::Proxy(const string &host, uint16_t port, const string &callsign,
              const string &password)
   : con(host, port, recv_buf_size), callsign(callsign), password(password),
     state(STATE_DISCONNECTED), tcp_state(TCP_STATE_DISCONNECTED),
-    recv_buf_cnt(0), reconnect_timer(RECONNECT_INTERVAL, Timer::TYPE_PERIODIC)
+    recv_buf_cnt(0), reconnect_timer(RECONNECT_INTERVAL, Timer::TYPE_PERIODIC),
+    cmd_timer(CMD_TIMEOUT)
 {
   delete the_instance;
   the_instance = this;
@@ -151,6 +152,9 @@ Proxy::Proxy(const string &host, uint16_t port, const string &callsign,
 
   reconnect_timer.setEnable(false);
   reconnect_timer.expired.connect(hide(mem_fun(con, &TcpClient::connect)));
+
+  cmd_timer.setEnable(false);
+  cmd_timer.expired.connect(hide(mem_fun(*this, &Proxy::cmdTimeout)));
 } /* Proxy::Proxy */
 
 
@@ -312,6 +316,7 @@ void Proxy::onConnected(void)
   cout << "Connected to EchoLink proxy "
        << con.remoteHost() << ":" << con.remotePort() << endl;
   reconnect_timer.setEnable(false);
+  cmd_timer.setEnable(true);
 } /* Proxy::onConnected */
 
 
@@ -354,6 +359,8 @@ void Proxy::disconnectHandler(void)
 {
   cout << "Disconnected from EchoLink proxy "
        << con.remoteHost() << ":" << con.remotePort() << endl;
+
+  cmd_timer.setEnable(false);
 
   state = STATE_DISCONNECTED;
   proxyReady(false);
@@ -407,6 +414,7 @@ int Proxy::handleAuthentication(const unsigned char *buf, int len)
       // Send the authentication message
     con.write(auth_msg, auth_msg_len);
 
+    cmd_timer.setEnable(false);
     state = STATE_CONNECTED;
     proxyReady(true);
     return NONCE_SIZE;
@@ -662,6 +670,13 @@ void Proxy::handleSystemMsg(const unsigned char *buf, int len)
       break;
   }
 } /* Proxy::handleSystemMsgBlock */
+
+
+void Proxy::cmdTimeout(void)
+{
+  cerr << "*** ERROR: EchoLink proxy command timeout\n";
+  reset();
+} /* Proxy::cmdTimeout */
 
 
 
