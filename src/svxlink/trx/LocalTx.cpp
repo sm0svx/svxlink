@@ -677,7 +677,20 @@ void LocalTx::setTransmittedSignalStrength(float siglev)
 #if INTERNAL_SAMPLE_RATE >= 16000
   if (hdlc_framer != 0)
   {
-    sendFskSiglev(0, static_cast<uint8_t>(siglev));
+    uint8_t siglevui;
+    if (siglev < 0.0f)
+    {
+      siglevui = 0;
+    }
+    else if (siglev > 255.0f)
+    {
+      siglevui = 255;
+    }
+    else
+    {
+      siglevui = static_cast<uint8_t>(siglev);
+    }
+    sendFskSiglev(0, siglevui);
   }
   else if (siglev_sine_gen != 0)
   {
