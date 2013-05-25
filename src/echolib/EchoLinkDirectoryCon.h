@@ -1,14 +1,12 @@
 /**
 @file	 EchoLinkDirectoryCon.h
-@brief   A_brief_description_for_this_file
+@brief   EchoLink directory server connection
 @author  Tobias Blomberg / SM0SVX
-@date	 2010-
-
-A_detailed_description_for_this_file
+@date	 2013-04-27
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+EchoLib - A library for EchoLink communication
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example EchoLinkDirectoryCon_demo.cpp
-An example of how to use the EchoLinkDirectoryCon class
-*/
-
 
 #ifndef ECHOLINK_DIRECTORY_CON_INCLUDED
 #define ECHOLINK_DIRECTORY_CON_INCLUDED
@@ -118,19 +111,22 @@ class Proxy;
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	Representation of the connection to the EchoLink directory server
 @author Tobias Blomberg / SM0SVX
 @date   2013-04-27
 
-A_detailed_class_description
-
-\include EchoLinkDirectoryCon_demo.cpp
+This class represents the connection to the EchoLink directory server.
+There are two ways to connect, either directly or via an EchoLink proxy
+server. The API is the same, no matter how the connection is made so the
+user class does not have to bother with details about if the connection
+goes directly or through a proxy.
 */
 class DirectoryCon : public sigc::trackable
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constructor
+     * @param   servers A list of possible directory servers to use
      */
     DirectoryCon(const std::vector<std::string> &servers);
   
@@ -140,20 +136,76 @@ class DirectoryCon : public sigc::trackable
     ~DirectoryCon(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Initiate a connection to the directory server
      */
     void connect(void);
+
+    /**
+     * @brief   Disconnect from the directory server
+     */
     void disconnect(void);
+
+    /**
+     * @brief   Get the reason for the last disconnect
+     * @return  Returns the reason for the last disconnect
+     */
     int lastDisconnectReason(void) { return last_disconnect_reason; }
+
+    /**
+     * @brief   Write data to the directory server
+     * @param   data Pointer to the buffer where data to send is stored
+     * @param   len The size of the data to write
+     * @returns Returns the number of bytes written
+     */
     int write(const void *data, unsigned len);
+
+    /**
+     * @brief   Check if the connection object is ready
+     * @return  Returns \em true if the connection is ready or else \em false
+     *
+     * The connection object is considered ready if it is prepared to process
+     * connections to the directory server. When using a direct connection,
+     * the connection object will always be ready. When using a proxy, the
+     * connection will be considered ready when connected to the proxy.
+     */
     bool isReady(void) const { return is_ready; }
+
+    /**
+     * @brief   Check if the connection object is idle
+     * @return  Returns \em if the connection object is idle
+     *
+     * The connection object is considered to be idle when ready but not
+     * connected, that is, it is not busy doing something and ready to
+     * process new connections.
+     */
     bool isIdle(void) const;
 
+    /**
+     * @brief Signal emitted when the ready status changes
+     * @param is_ready Set to \em true if ready
+     *
+     * This signal will be emitted when the ready status changes. For an
+     * explaination of what ready mean, have a look att the documentation for
+     * the isReady function.
+     */
     sigc::signal<void, bool> ready;
+
+    /**
+     * @brief Signal emitted when the connection has been established
+     */
     sigc::signal<void> connected;
+
+    /**
+     * @brief Signal emitted when the connection has been closed
+     */
     sigc::signal<void> disconnected;
+
+    /**
+     * @brief   Signal emitted when data has been received
+     * @param   data Pointer to the buffer where data to send is stored
+     * @param   len The size of the data to write
+     * @returns Return the number of bytes processed in the handler
+     */
     sigc::signal<int, void *, unsigned> dataReceived;
     
   protected:
@@ -174,15 +226,10 @@ class DirectoryCon : public sigc::trackable
     void doDnsLookup(void);
     void onDnsLookupResultsReady(Async::DnsLookup &dns);
     void doConnect(void);
-
     void onDisconnected(Async::TcpConnection *con,
                         Async::TcpClient::DisconnectReason reason);
     int onDataReceived(Async::TcpConnection *con, void *data, int len);
-
-    //void proxyTcpStatusReceived(uint32_t status);
     void proxyReady(bool is_ready);
-    //int proxyTcpDataReceived(void *data, unsigned len);
-    //void proxyTcpCloseReceived(void);
     
 };  /* class DirectoryCon */
 

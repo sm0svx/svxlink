@@ -145,7 +145,7 @@ Message</string>
           <item row="0" column="0">
            <widget class="QLabel" name="TextLabel7">
             <property name="text">
-             <string>Server</string>
+             <string>Servers</string>
             </property>
             <property name="wordWrap">
              <bool>false</bool>
@@ -153,9 +153,9 @@ Message</string>
            </widget>
           </item>
           <item row="0" column="1" colspan="3">
-           <widget class="QLineEdit" name="directory_server">
+           <widget class="QLineEdit" name="directory_servers">
             <property name="toolTip">
-             <string>The hostname or IP address of the EchoLink directory server to use</string>
+             <string>A space separated list of the hostname or IP address of the EchoLink directory servers to use</string>
             </property>
            </widget>
           </item>
@@ -594,7 +594,7 @@ Message</string>
   <tabstop>TabWidget2</tabstop>
   <tabstop>ok_button</tabstop>
   <tabstop>cancel_button</tabstop>
-  <tabstop>directory_server</tabstop>
+  <tabstop>directory_servers</tabstop>
   <tabstop>list_refresh_time</tabstop>
   <tabstop>start_as_busy_checkbox</tabstop>
   <tabstop>mic_audio_device</tabstop>

@@ -60,6 +60,14 @@
   previously it was not possible to specify NONE for uplink RX or TX in
   RemoteTrx.
 
+* ModuleEchoLink: Now possible to configure multiple servers for the directory
+  server. The servers will be tried in order until a working one is found.
+  The SERVER config variable has been replaced by the SERVERS config variable
+  which is a space separated list of servers. Host names that resolve
+  to multiple IP addresses, like servers.echolink.org, will also be correctly
+  handled so that each resolved IP address will be tried in order until a
+  working one is found.
+
 
 
  1.0.0 -- 08 Mar 2013

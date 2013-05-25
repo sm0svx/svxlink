@@ -62,6 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioInterpolator.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkProxy.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -516,8 +517,10 @@ void MainWindow::initEchoLink(void)
     proxy->connect();
   }
 
+  vector<string> servers;
+  SvxLink::splitStr(servers, settings->directoryServers().toStdString(), " ");
   dir = new Directory(
-      settings->directoryServer().toStdString(),
+      servers,
       settings->callsign().toStdString(),
       settings->password().toStdString(),
       settings->location().toStdString());
@@ -786,7 +789,11 @@ void MainWindow::addNamedStationToBookmarks(void)
 
 void MainWindow::configurationUpdated(void)
 {
-  dir->setServer(Settings::instance()->directoryServer().toStdString());
+  vector<string> servers;
+  SvxLink::splitStr(servers,
+                    Settings::instance()->directoryServers().toStdString(),
+                    " ");
+  dir->setServers(servers);
   dir->setCallsign(Settings::instance()->callsign().toStdString());
   dir->setPassword(Settings::instance()->password().toStdString());
   dir->setDescription(Settings::instance()->location().toStdString());

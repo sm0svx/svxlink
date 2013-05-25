@@ -10,7 +10,7 @@ EchoLink::Directory.
 
 \verbatim
 EchoLib - A library for EchoLink communication
-Copyright (C) 2003  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -135,21 +135,9 @@ struct Cmd
  *
  ****************************************************************************/
 
-/*
- *------------------------------------------------------------------------
- * Method:    Directory::Directory
- * Purpose:   Constructor
- * Input:     
- * Output:    None
- * Author:    Tobias Blomberg
- * Created:   2003-03-08
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-Directory::Directory(const string& server, const string& callsign,
+Directory::Directory(const vector<string>& servers, const string& callsign,
     const string& password, const string& description)
-  : com_state(CS_IDLE),       	      	      the_server(server),
+  : com_state(CS_IDLE),       	      	      the_servers(servers),
     the_password(password),   	      	      the_description(""),
     error_str(""),    	      	      	      ctrl_con(0),
     the_status(StationData::STAT_OFFLINE),    reg_refresh_timer(0),
@@ -228,10 +216,10 @@ void Directory::getCalls(void)
 } /* Directory::getCalls */
 
 
-void Directory::setServer(const string& server)
+void Directory::setServers(const vector<string>& servers)
 {
   server_changed = true;
-  the_server = server;
+  the_servers = servers;
 } /* Directory::setServer */
 
 
@@ -837,14 +825,14 @@ void Directory::ctrlSockDisconnected(void)
   switch (reason)
   {
     case Async::TcpClient::DR_HOST_NOT_FOUND:
-      error("Directory server host \"" + the_server + "\" not found\n");
+      error("EchoLink directory server DNS lookup failed\n");
       break;
     
     case Async::TcpClient::DR_REMOTE_DISCONNECTED:
       if (com_state != CS_IDLE)
       {
         error("The directory server closed the connection before all data was "
-            "received\n");
+              "received\n");
       }
       break;
       
@@ -951,9 +939,7 @@ void Directory::setStatus(StationData::Status new_status)
 
 void Directory::createClientObject(void)
 {
-  vector<string> servers;
-  servers.push_back(the_server);
-  ctrl_con = new DirectoryCon(servers);
+  ctrl_con = new DirectoryCon(the_servers);
   ctrl_con->ready.connect(mem_fun(*this, &Directory::ctrlSockReady));
   ctrl_con->connected.connect(mem_fun(*this, &Directory::ctrlSockConnected));
   ctrl_con->dataReceived.connect(

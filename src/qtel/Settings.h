@@ -153,7 +153,7 @@ class Settings : public sigc::trackable
     const QString& location(void) const { return m_location; }
     const QString& info(void) const { return m_info; }
     
-    const QString& directoryServer(void) const { return m_directory_server; }
+    const QString& directoryServers(void) const { return m_directory_servers; }
     int listRefreshTime(void) const { return m_list_refresh_time; }
     bool startAsBusy(void) const { return m_start_as_busy; }
     bool proxyEnabled(void) const { return m_proxy_enabled; }
@@ -219,7 +219,7 @@ class Settings : public sigc::trackable
     QString   	            m_location;
     QString   	            m_info;
     
-    QString   	            m_directory_server;
+    QString   	            m_directory_servers;
     int       	            m_list_refresh_time;
     bool      	            m_start_as_busy;
     bool                    m_proxy_enabled;

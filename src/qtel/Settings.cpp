@@ -89,7 +89,7 @@ using namespace std;
 #define CONF_LOCATION 	      	      "Location"
 #define CONF_INFO     	      	      "Info"
 
-#define CONF_DIRECTORY_SERVER 	      "DirectoryServer"
+#define CONF_DIRECTORY_SERVER 	      "DirectoryServers"
 #define CONF_LIST_REFRESH_TIME        "ListRefreshTime"
 #define CONF_START_AS_BUSY            "StartAsBusy"
 #define CONF_PROXY_ENABLED            "ProxyEnabled"
@@ -290,7 +290,7 @@ void Settings::showDialog(void)
   settings_dialog.my_location->setText(m_location);
   settings_dialog.my_info->setText(m_info);
   
-  settings_dialog.directory_server->setText(m_directory_server);
+  settings_dialog.directory_servers->setText(m_directory_servers);
   settings_dialog.list_refresh_time->setValue(m_list_refresh_time);
   settings_dialog.start_as_busy_checkbox->setChecked(m_start_as_busy);
   settings_dialog.proxy_enabled->setChecked(m_proxy_enabled);
@@ -342,7 +342,7 @@ void Settings::showDialog(void)
 	m_location = settings_dialog.my_location->text();
 	m_info = settings_dialog.my_info->toPlainText();
 	
-	m_directory_server = settings_dialog.directory_server->text();
+	m_directory_servers = settings_dialog.directory_servers->text();
 	m_list_refresh_time = settings_dialog.list_refresh_time->value();
 	m_start_as_busy = settings_dialog.start_as_busy_checkbox->isChecked();
 	m_proxy_enabled = settings_dialog.proxy_enabled->isChecked();
@@ -366,7 +366,7 @@ void Settings::showDialog(void)
 	qsettings.setValue(CONF_LOCATION, m_location);
 	qsettings.setValue(CONF_INFO, m_info);
 	
-	qsettings.setValue(CONF_DIRECTORY_SERVER, m_directory_server);
+	qsettings.setValue(CONF_DIRECTORY_SERVER, m_directory_servers);
 	qsettings.setValue(CONF_LIST_REFRESH_TIME, m_list_refresh_time);
 	qsettings.setValue(CONF_START_AS_BUSY, m_start_as_busy);
 	qsettings.setValue(CONF_PROXY_ENABLED, m_proxy_enabled);
@@ -406,7 +406,7 @@ void Settings::readSettings(void)
   m_location = qsettings.value(CONF_LOCATION).toString();
   m_info = qsettings.value(CONF_INFO, CONF_INFO_DEFAULT).toString();
   
-  m_directory_server = qsettings.value(CONF_DIRECTORY_SERVER,
+  m_directory_servers = qsettings.value(CONF_DIRECTORY_SERVER,
       CONF_DIRECTORY_SERVER_DEFAULT).toString();
   m_list_refresh_time = qsettings.value(CONF_LIST_REFRESH_TIME,
       CONF_LIST_REFRESH_TIME_DEFAULT).toInt();

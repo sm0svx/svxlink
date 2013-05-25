@@ -179,10 +179,21 @@ bool ModuleEchoLink::initialize(void)
     return false;
   }
   
-  string server;
-  if (!cfg().getValue(cfgName(), "SERVER", server))
+  vector<string> servers;
+  if (!cfg().getValue(cfgName(), "SERVERS", servers))
   {
-    cerr << "*** ERROR: Config variable " << cfgName() << "/SERVER not set\n";
+    string server;
+    if (cfg().getValue(cfgName(), "SERVER", server))
+    {
+      cerr << "*** WARNING: Config variable " << cfgName()
+           << "/SERVER is deprecated. Use SERVERS instead.\n";
+      servers.push_back(server);
+    }
+  }
+  if (servers.empty())
+  {
+    cerr << "*** ERROR: Config variable " << cfgName() << "/SERVERS not set "
+            "or empty\n";
     return false;
   }
   
@@ -393,7 +404,7 @@ bool ModuleEchoLink::initialize(void)
   }
 
     // Initialize directory server communication
-  dir = new Directory(server, mycall, password, location);
+  dir = new Directory(servers, mycall, password, location);
   dir->statusChanged.connect(mem_fun(*this, &ModuleEchoLink::onStatusChanged));
   dir->stationListUpdated.connect(
       	  mem_fun(*this, &ModuleEchoLink::onStationListUpdated));

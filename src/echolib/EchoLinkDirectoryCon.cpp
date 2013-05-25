@@ -1,14 +1,12 @@
 /**
 @file	 EchoLinkDirectoryCon.cpp
-@brief   A_brief_description_for_this_file
+@brief   EchoLink directory server connection
 @author  Tobias Blomberg / SM0SVX
-@date	 2010-
-
-A_detailed_description_for_this_file
+@date	 2013-04-27
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+EchoLib - A library for EchoLink communication
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -121,12 +119,6 @@ DirectoryCon::DirectoryCon(const vector<string> &servers)
   Proxy *proxy = Proxy::instance();
   if (proxy != 0)
   {
-    /*
-    proxy->tcpStatusReceived.connect(
-        mem_fun(*this, &DirectoryCon::proxyTcpStatusReceived));
-    proxy->tcpCloseReceived.connect(
-        mem_fun(*this, &DirectoryCon::proxyTcpCloseReceived));
-    */
     proxy->proxyReady.connect(mem_fun(*this, &DirectoryCon::proxyReady));
     proxy->tcpConnected.connect(connected.make_slot());
     proxy->tcpDisconnected.connect(disconnected.make_slot());
@@ -139,7 +131,7 @@ DirectoryCon::DirectoryCon(const vector<string> &servers)
     client->disconnected.connect(mem_fun(*this, &DirectoryCon::onDisconnected));
     client->dataReceived.connect(mem_fun(*this, &DirectoryCon::onDataReceived));
     is_ready = true;
-    ready(is_ready);
+    ready(true);
   }
 } /* DirectoryCon::DirectoryCon */
 
@@ -167,17 +159,19 @@ void DirectoryCon::connect(void)
 
 void DirectoryCon::disconnect(void)
 {
+    // Remove all pending DNS queries, if any
+  vector<DnsLookup*>::iterator it;
+  for (it = dns_lookups.begin(); it != dns_lookups.end(); ++it)
+  {
+    delete *it;
+  }
+  dns_lookups.clear();
+
   Proxy *proxy = Proxy::instance();
   if (proxy == 0)
   {
     bool was_connected = client->isConnected();
     client->disconnect();
-    vector<DnsLookup*>::iterator it;
-    for (it = dns_lookups.begin(); it != dns_lookups.end(); ++it)
-    {
-      delete *it;
-    }
-    dns_lookups.clear();
     if (was_connected)
     {
       last_disconnect_reason = TcpClient::DR_ORDERED_DISCONNECT;
@@ -210,6 +204,7 @@ int DirectoryCon::write(const void *data, unsigned len)
     }
     else
     {
+      errno = ECOMM;
       return -1;
     }
   }
@@ -285,7 +280,7 @@ void DirectoryCon::onDnsLookupResultsReady(DnsLookup &dns)
   }
   dns_lookups.clear();
 
-  cout << "DNS lookup done: ";
+  cout << "### DNS lookup done: ";
   vector<IpAddress>::const_iterator ait;
   for (ait = addresses.begin(); ait != addresses.end(); ++ait)
   {
@@ -295,8 +290,10 @@ void DirectoryCon::onDnsLookupResultsReady(DnsLookup &dns)
 
   if (addresses.empty())
   {
-    cerr << "*** ERROR: No IP addresses were returned for the EchoLink DNS "
-            "query\n";
+    cerr << "*** ERROR: No IP addresses were returned for the EchoLink "
+            "directory server DNS query\n";
+    last_disconnect_reason = TcpConnection::DR_HOST_NOT_FOUND;
+    disconnected();
     return;
   }
 
@@ -307,17 +304,10 @@ void DirectoryCon::onDnsLookupResultsReady(DnsLookup &dns)
 
 void DirectoryCon::doConnect(void)
 {
-  /*
-  if (current_server == addresses.end())
-  {
-    current_server = addresses.begin();
-  }
-  */
-
   Proxy *proxy = Proxy::instance();
   if (proxy == 0)
   {
-    cout << "Connecting to " << *current_server << endl;
+    cout << "### Connecting to " << *current_server << endl;
     client->connect(*current_server, DIRECTORY_SERVER_PORT);
   }
   else
@@ -338,6 +328,10 @@ void DirectoryCon::doConnect(void)
 void DirectoryCon::onDisconnected(TcpConnection *con,
                                   TcpClient::DisconnectReason reason)
 {
+  if (++current_server == addresses.end())
+  {
+    addresses.clear();
+  }
   last_disconnect_reason = static_cast<int>(reason);
   disconnected();
 } /* DirectoryCon::onDisconnected */
@@ -349,45 +343,12 @@ int DirectoryCon::onDataReceived(TcpConnection *con, void *data, int len)
 } /* DirectoryCon::onDataReceived */
 
 
-#if 0
-void DirectoryCon::proxyTcpStatusReceived(uint32_t status)
-{
-  cout << "Proxy TCP status: " << status << endl;
-  if (status == 0)
-  {
-    connected();
-  }
-  else
-  {
-    // FIXME: Set disconnect reason
-    disconnected();
-  }
-} /* DirectoryCon::proxyTcpStatusReceived */
-#endif
-
-
 void DirectoryCon::proxyReady(bool is_ready)
 {
   this->is_ready = is_ready;
   ready(is_ready);
 } /* DirectoryCon::proxyReady */
 
-
-#if 0
-int DirectoryCon::proxyTcpDataReceived(void *data, unsigned len)
-{
-  return dataReceived(data, len);
-} /* DirectoryCon::proxyTcpDataReceived */
-#endif
-
-
-#if 0
-void DirectoryCon::proxyTcpCloseReceived(void)
-{
-  //FIXME: Set disconnect reason
-  disconnected();
-} /* DirectoryCon::proxyTcpCloseReceived */
-#endif
 
 
 /*

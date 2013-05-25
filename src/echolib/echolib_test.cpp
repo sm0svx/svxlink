@@ -238,7 +238,9 @@ int main( int argc, const char **argv )
     Dispatcher::setPortBase(portbase);
   }
   
-  dir = new Directory(SERVER_NAME, my_callsign, my_password, my_location);
+  vector<string> servers;
+  servers.push_back(SERVER_NAME);
+  dir = new Directory(servers, my_callsign, my_password, my_location);
   dir->error.connect(sigc::ptr_fun(&on_error_msg));
   dir->statusChanged.connect(sigc::ptr_fun(&on_status_changed));
   dir->stationListUpdated.connect(sigc::ptr_fun(&on_station_list_updated));
