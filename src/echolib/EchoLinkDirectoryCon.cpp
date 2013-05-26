@@ -280,14 +280,6 @@ void DirectoryCon::onDnsLookupResultsReady(DnsLookup &dns)
   }
   dns_lookups.clear();
 
-  //cout << "### DNS lookup done: ";
-  vector<IpAddress>::const_iterator ait;
-  for (ait = addresses.begin(); ait != addresses.end(); ++ait)
-  {
-    cout << *ait << " ";
-  }
-  cout << endl;
-
   if (addresses.empty())
   {
     cerr << "*** ERROR: No IP addresses were returned for the EchoLink "
