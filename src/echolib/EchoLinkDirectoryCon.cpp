@@ -280,7 +280,7 @@ void DirectoryCon::onDnsLookupResultsReady(DnsLookup &dns)
   }
   dns_lookups.clear();
 
-  cout << "### DNS lookup done: ";
+  //cout << "### DNS lookup done: ";
   vector<IpAddress>::const_iterator ait;
   for (ait = addresses.begin(); ait != addresses.end(); ++ait)
   {
@@ -307,7 +307,7 @@ void DirectoryCon::doConnect(void)
   Proxy *proxy = Proxy::instance();
   if (proxy == 0)
   {
-    cout << "### Connecting to " << *current_server << endl;
+    //cout << "### Connecting to " << *current_server << endl;
     client->connect(*current_server, DIRECTORY_SERVER_PORT);
   }
   else

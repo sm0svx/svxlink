@@ -669,7 +669,7 @@ void Directory::ctrlSockReady(bool is_ready)
 
 void Directory::ctrlSockConnected(void)
 {
-  cout << "### Connected to EchoLink directory server\n";
+  //cout << "### Connected to EchoLink directory server\n";
 
   assert(!cmd_queue.empty());
   
@@ -814,8 +814,8 @@ int Directory::ctrlSockDataReceived(void *ptr, unsigned len)
 void Directory::ctrlSockDisconnected(void)
 {
   int reason = ctrl_con->lastDisconnectReason();
-  cout << "### ctrlSockDisconnected: com_state=" << com_state
-       << " reason=" << reason << "\n";
+  //cout << "### ctrlSockDisconnected: com_state=" << com_state
+  //     << " reason=" << reason << "\n";
   if (com_state == CS_IDLE)
   {
     sendNextCmd();
@@ -926,7 +926,7 @@ void Directory::sendNextCmd(void)
 
 void Directory::addCmdToQueue(Cmd cmd)
 {
-  cout << "### Adding cmd to queue: " << cmd.type << endl;
+  //cout << "### Adding cmd to queue: " << cmd.type << endl;
   cmd_queue.push_back(cmd);
   sendNextCmd();
 } /* Directory::addCmdToQueue */

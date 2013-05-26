@@ -78,8 +78,15 @@ ACCEPT_OUTGOING. For more information on the syntax, see the
 .B REGULAR EXPRESSIONS
 chapter below.
 .TP
-.B SERVER
-The IP address or name of the EchoLink directory server to use. 
+.B SERVERS
+A space separated list of IP addresses or names of the EchoLink directory
+servers to use. The specified servers will be tried in order until one is
+found that works. SvxLink will then stick to that server. If that server fail,
+SvxLink will again try the next server in the list and when the end of the list
+has been reached, the search start from the beginning again.
+Hostnames that resolve to multiple IP addresses, like servers.echolink.org,
+will also be correctly handled so that all returned IP addresses will be tried
+if necessary.
 .TP
 .B CALLSIGN
 The callsign to use to login to the EchoLink directory server. 
