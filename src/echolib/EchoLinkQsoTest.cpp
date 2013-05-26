@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncFdWatch.h>
 #include <AsyncCppApplication.h>
+#include <AsyncAudioDevice.h>
 #include <AsyncSigCAudioSink.h>
 #include <AsyncSigCAudioSource.h>
 
@@ -159,6 +160,7 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
   
   //sigc_src = new SigCAudioSource;
   
+  AudioDevice::setSampleRate(8000);
   audio_io = new AudioIO("alsa:default", 0);
   full_duplex = audio_io->isFullDuplexCapable();
   if (full_duplex)

@@ -55,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSelector.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkDispatcher.h>
+#include <EchoLinkProxy.h>
 #include <LocationInfo.h>
 #include <common.h>
 
@@ -158,7 +159,7 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
     listen_only_valve(0), selector(0), num_con_max(0), num_con_ttl(5*60),
     num_con_block_time(120*60), num_con_update_timer(0),
     autocon_echolink_id(0), autocon_time(DEFAULT_AUTOCON_TIME),
-    autocon_timer(0)
+    autocon_timer(0), proxy(0)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
@@ -178,10 +179,21 @@ bool ModuleEchoLink::initialize(void)
     return false;
   }
   
-  string server;
-  if (!cfg().getValue(cfgName(), "SERVER", server))
+  vector<string> servers;
+  if (!cfg().getValue(cfgName(), "SERVERS", servers))
   {
-    cerr << "*** ERROR: Config variable " << cfgName() << "/SERVER not set\n";
+    string server;
+    if (cfg().getValue(cfgName(), "SERVER", server))
+    {
+      cerr << "*** WARNING: Config variable " << cfgName()
+           << "/SERVER is deprecated. Use SERVERS instead.\n";
+      servers.push_back(server);
+    }
+  }
+  if (servers.empty())
+  {
+    cerr << "*** ERROR: Config variable " << cfgName() << "/SERVERS not set "
+            "or empty\n";
     return false;
   }
   
@@ -377,9 +389,22 @@ bool ModuleEchoLink::initialize(void)
   int autocon_time_secs = autocon_time / 1000;
   cfg().getValue(cfgName(), "AUTOCON_TIME", autocon_time_secs);
   autocon_time = 1000 * max(autocon_time_secs, 5); // At least five seconds
+
+  string proxy_server;
+  cfg().getValue(cfgName(), "PROXY_SERVER", proxy_server);
+  uint16_t proxy_port = 8100;
+  cfg().getValue(cfgName(), "PROXY_PORT", proxy_port);
+  string proxy_password;
+  cfg().getValue(cfgName(), "PROXY_PASSWORD", proxy_password);
   
+  if (!proxy_server.empty())
+  {
+    proxy = new Proxy(proxy_server, proxy_port, mycall, proxy_password);
+    proxy->connect();
+  }
+
     // Initialize directory server communication
-  dir = new Directory(server, mycall, password, location);
+  dir = new Directory(servers, mycall, password, location);
   dir->statusChanged.connect(mem_fun(*this, &ModuleEchoLink::onStatusChanged));
   dir->stationListUpdated.connect(
       	  mem_fun(*this, &ModuleEchoLink::onStationListUpdated));
@@ -507,9 +532,11 @@ void ModuleEchoLink::moduleCleanup(void)
   
   delete dir_refresh_timer;
   dir_refresh_timer = 0;
-  delete Dispatcher::instance();
+  Dispatcher::deleteInstance();
   delete dir;
   dir = 0;
+  delete proxy;
+  proxy = 0;
   delete cbc_timer;
   cbc_timer = 0;
   state = STATE_NORMAL;

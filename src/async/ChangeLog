@@ -7,7 +7,15 @@
   since the former provides monotonically increasing time which the
   latter don't.
 
+* Async::DnsLookup: New method resultsAreReady with which it is possible
+  to check if the DNS lookup is done or if it's still pending.
+
 * Fixed a buffer overflow bug in the AudioInterpolator.
+
+* Async::TcpClient: Added two new constructors, one which take an IpAddress
+  object instead of a host name which is good if you already have the IP
+  address. The other only take an optional buffer size. The hostname or ip
+  address is given later to the new connect method.
 
 * There now is an overloaded Config::getValue function which can take a
   container, like an std::vector, to read in a number of space separated values

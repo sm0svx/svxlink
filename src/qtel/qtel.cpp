@@ -27,8 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-	
-	
+
 
 /****************************************************************************
  *
@@ -115,13 +114,11 @@ using namespace EchoLink;
 
 
 
-
 /****************************************************************************
  *
  * MAIN
  *
  ****************************************************************************/
-
 
 /*
  *----------------------------------------------------------------------------
@@ -173,31 +170,15 @@ int main(int argc, char **argv)
       cfg_ok = true;
     }
   }
-    
-  Directory dir(settings->directoryServer().toStdString(),
-                settings->callsign().toStdString(),
-                settings->password().toStdString(),
-                settings->location().toStdString());
-  if (EchoLink::Dispatcher::instance() == 0)
-  {
-    fprintf(stderr, "Could not initalize network listen ports\n");
-    exit(1);
-  }
-  MainWindow mainWindow(dir);
-  
-  //app.setMainWidget(&mainWindow);
+   
+  MainWindow mainWindow;
   mainWindow.show();
   app.exec();
   
-  delete EchoLink::Dispatcher::instance();
   delete Settings::instance();
   
   return 0;
 }
-
-
-
-
 
 
 
@@ -208,24 +189,7 @@ int main(int argc, char **argv)
  ****************************************************************************/
 
 
-/*
- *----------------------------------------------------------------------------
- * Function:  
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-
-
-
-
 
 /*
  * This file has not been truncated
  */
-

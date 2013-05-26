@@ -7,6 +7,14 @@
 
 * The "100% CPU load after incoming connect" bug in Qtel has been resolved.
 
+* Added support for EchoLink proxy.
+
+* Now possible to configure multiple servers for the directory server. The
+  servers will be tried in order until a working one is found. Servers are
+  specified as a space separated list. Host names that resolve to multiple IP
+  addresses, like servers.echolink.org, will also be correctly handled so that
+  each resolved IP address will be tried in order until a working one is found.
+
 
 
  1.0.0 -- 08 Mar 2013

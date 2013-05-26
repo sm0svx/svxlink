@@ -80,6 +80,7 @@ namespace EchoLink
 {
   class Directory;
   class StationData;
+  class Proxy;
 };
 
 
@@ -205,6 +206,7 @@ class ModuleEchoLink : public Module
     int   	      	  autocon_echolink_id;
     int   	      	  autocon_time;
     Async::Timer	  *autocon_timer;
+    EchoLink::Proxy       *proxy;
 
     void moduleCleanup(void);
     void activateInit(void);

@@ -10,7 +10,7 @@ for usage instructions.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2013  Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -134,23 +134,23 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 DnsLookup::DnsLookup(const string& label)
-  : worker(0), m_label(label)
+  : m_worker(0), m_label(label), m_results_ready(false)
 {
-  worker = Application::app().newDnsLookupWorker(label);
-  worker->resultsReady.connect(mem_fun(*this, &DnsLookup::onResultsReady));
-  assert(worker->doLookup());
+  m_worker = Application::app().newDnsLookupWorker(label);
+  m_worker->resultsReady.connect(mem_fun(*this, &DnsLookup::onResultsReady));
+  assert(m_worker->doLookup());
 } /* DnsLookup::DnsLookup */
 
 
 DnsLookup::~DnsLookup(void)
 {
-  delete worker;
+  delete m_worker;
 } /* DnsLookup::~DnsLookup */
 
 
 vector<IpAddress> DnsLookup::addresses(void)
 {
-  return worker->addresses();
+  return m_worker->addresses();
 } /* DnsLookup::addresses */
 
 
@@ -162,30 +162,12 @@ vector<IpAddress> DnsLookup::addresses(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
 
 /****************************************************************************
  *
  * Private member functions
  *
  ****************************************************************************/
-
 
 /*
  *----------------------------------------------------------------------------
@@ -201,15 +183,12 @@ vector<IpAddress> DnsLookup::addresses(void)
  */
 void DnsLookup::onResultsReady(void)
 {
+  m_results_ready = true;
   resultsReady(*this);
 } /* DnsLookup::onResultsReady */
-
-
-
 
 
 
 /*
  * This file has not been truncated
  */
-
