@@ -261,6 +261,8 @@ ifdef QT_BIN
 	      	    /usr/share/qtel/translations
 	$(FILESPEC) translations/qtel_nl.qm[644,root,root] \
 	      	    /usr/share/qtel/translations
+	$(FILESPEC) translations/qtel_it.qm[644,root,root] \
+	      	    /usr/share/qtel/translations
 	$(FILESPEC) translations/qtel_uk.qm[644,root,root] \
 	      	    /usr/share/qtel/translations
 	$(FILESPEC) translations/qtel_ru.qm[644,root,root] \

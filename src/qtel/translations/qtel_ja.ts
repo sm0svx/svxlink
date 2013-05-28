@@ -527,6 +527,38 @@ Message</source>
         <translation>サウンド</translation>
     </message>
     <message>
+        <source>Sampling Rate</source>
+        <translation>サンプリングレート</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation>ネットワーク</translation>
+    </message>
+    <message>
+        <source>EchoLink Proxy Settings</source>
+        <translation>エコーリンクプロキシ設定</translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation>有効</translation>
+    </message>
+    <message>
+        <source>If enabling EchoLink proxy you must supply a proxy server hostname or IP address.</source>
+        <translation>エコーリンクプロキシを有効にする場合は、以下のホスト名またはIPアドレスの設定が必要</translation>
+    </message>
+    <message>
+        <source>The hostname or IP address of the EchoLink proxy server to use</source>
+        <translation>利用するエコーリンクプロキシサーバーのホスト名またはIPアドレス</translation>
+    </message>
+    <message>
+        <source>The TCP port to connect to on the EchoLink proxy server, default 8100</source>
+        <translation>利用するエコーリンクプロキシサーバーのTCPポート, 既定値は8100</translation>
+    </message>
+    <message>
+        <source>The EchoLink PROXY password, not your normal EchoLink password. Leave empty for public proxy.</source>
+        <translation>通常のエコーリンクパスワードではなく、プロキシサーバーのパスワード, 空欄でパブリック</translation>
+    </message>
+    <message>
         <source>Full duplex</source>
         <translation>全二重</translation>
     </message>

@@ -50,7 +50,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 #include <AsyncAudioIO.h>
 #include <AsyncAudioFilter.h>
-#include <SigCAudioSink.h>
 #include <AsyncAudioSplitter.h>
 #include <AsyncAudioAmp.h>
 #include <AsyncAudioPassthrough.h>

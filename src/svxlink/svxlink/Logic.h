@@ -55,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <LocationInfo.h>
+#include <AsyncAtTimer.h>
 
 
 /****************************************************************************
@@ -266,7 +267,7 @@ class Logic : public sigc::trackable
     Async::AudioSelector      	    *logic_con_out;
     Async::AudioSplitter	    *logic_con_in;
     CmdParser 	      	      	    cmd_parser;
-    Async::Timer      	      	    *every_minute_timer;
+    Async::AtTimer      	    every_minute_timer;
     Async::AudioRecorder  	    *recorder;
     Async::AudioMixer	      	    *tx_audio_mixer;
     Async::AudioAmp   	      	    *fx_gain_ctrl;
@@ -301,7 +302,8 @@ class Logic : public sigc::trackable
     void processMacroCmd(const std::string &macro_cmd);
     void putCmdOnQueue(Async::Timer *t=0);
     void sendRgrSound(Async::Timer *t=0);
-    void everyMinute(Async::Timer *t);
+    void timeoutNextMinute(void);
+    void everyMinute(Async::AtTimer *t);
     void dtmfDigitDetectedP(char digit, int duration);
     void cleanup(void);
     void updateTxCtcss(bool do_set, TxCtcssType type);

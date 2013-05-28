@@ -1,11 +1,15 @@
 /**
-@file	 Tx.cpp
-@brief   The base class for a transmitter
+@file	 AsyncAtTimer.cpp
+@brief   A timer that times out at a specified absolute time
 @author  Tobias Blomberg / SM0SVX
-@date	 2006-08-01
+@date	 2013-04-06
+
+This class is used to get a timeout at a specified absolute time. That is,
+you can specify a time of day, like 2013-04-06 12:43:00, when you would
+like the timer to expire.
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Async - A library for programming event driven applications
 Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -32,8 +36,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sys/time.h>
 #include <iostream>
-
+#include <cstdio>
 
 
 /****************************************************************************
@@ -50,12 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Tx.h"
-#include "LocalTx.h"
-#include "NetTx.h"
-#include "MultiTx.h"
-#include "DummyRxTx.h"
-
+#include "AsyncAtTimer.h"
 
 
 /****************************************************************************
@@ -66,6 +66,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
+
 
 
 /****************************************************************************
@@ -81,57 +82,6 @@ using namespace Async;
  * Local class definitions
  *
  ****************************************************************************/
-
-class LocalTxFactory : public TxFactory
-{
-  public:
-    LocalTxFactory(void) : TxFactory("Local") {}
-    
-  protected:
-    Tx *createTx(Config &cfg, const string& name)
-    {
-      return new LocalTx(cfg, name);
-    }
-}; /* class LocalTxFactory */
-
-
-class NetTxFactory : public TxFactory
-{
-  public:
-    NetTxFactory(void) : TxFactory("Net") {}
-    
-  protected:
-    Tx *createTx(Config &cfg, const string& name)
-    {
-      return new NetTx(cfg, name);
-    }
-}; /* class NetTxFactory */
-
-
-class MultiTxFactory : public TxFactory
-{
-  public:
-    MultiTxFactory(void) : TxFactory("Multi") {}
-    
-  protected:
-    Tx *createTx(Config &cfg, const string& name)
-    {
-      return new MultiTx(cfg, name);
-    }
-}; /* class MultiTxFactory */
-
-
-class DummyTxFactory : public TxFactory
-{
-  public:
-    DummyTxFactory(void) : TxFactory("Dummy") {}
-    
-  protected:
-    Tx *createTx(Config &cfg, const string& name)
-    {
-      return new DummyTx;
-    }
-}; /* class MultiTxFactory */
 
 
 
@@ -158,8 +108,6 @@ class DummyTxFactory : public TxFactory
  *
  ****************************************************************************/
 
-map<string, TxFactory*> TxFactory::tx_factories;
-
 
 
 /****************************************************************************
@@ -168,60 +116,80 @@ map<string, TxFactory*> TxFactory::tx_factories;
  *
  ****************************************************************************/
 
-TxFactory::TxFactory(const string &name)
-  : m_name(name)
+AtTimer::AtTimer(void)
+  : m_expire_offset(0)
 {
-  tx_factories[name] = this;
-} /* TxFactory::TxFactory */
+  timerclear(&m_expire_at);
+  m_timer.expired.connect(mem_fun(*this, &AtTimer::onTimerExpired));
+} /* AtTimer::AtTimer */
 
 
-TxFactory::~TxFactory(void)
+AtTimer::AtTimer(struct tm &tm, bool do_start)
+  : m_expire_offset(0)
 {
-  std::map<std::string, TxFactory*>::iterator it;
-  it = tx_factories.find(m_name);
-  assert(it != tx_factories.end());
-  tx_factories.erase(it);
-} /* TxFactory::~TxFactory */
+  timerclear(&m_expire_at);
+  m_timer.expired.connect(mem_fun(*this, &AtTimer::onTimerExpired));
+  setTimeout(tm);
+  if (do_start)
+  {
+    start();
+  }
+} /* AtTimer::AtTimer */
 
 
-Tx *TxFactory::createNamedTx(Config& cfg, const string& name)
+AtTimer::~AtTimer(void)
 {
-  LocalTxFactory local_tx_factory;
-  NetTxFactory net_tx_factory;
-  MultiTxFactory multi_tx_factory;
-  DummyTxFactory dummy_tx_factory;
-  
-  string tx_type;
-  if (name != "NONE")
-  {
-    if (!cfg.getValue(name, "TYPE", tx_type))
-    {
-      cerr << "*** ERROR: Config variable " << name << "/TYPE not set\n";
-      return 0;
-    }
-  }
-  else
-  {
-    tx_type = "Dummy";
-  }
-  
-  map<string, TxFactory*>::iterator it;
-  it = tx_factories.find(tx_type);
-  if (it == tx_factories.end())
-  {
-    cerr << "*** ERROR: Unknown TX type \"" << tx_type << "\" for transmitter "
-         << name << ". Legal values " << "are: ";
-    for (it=tx_factories.begin(); it!=tx_factories.end(); ++it)
-    {
-      cerr << "\"" << (*it).first << "\" ";
-    }
-    cerr << endl;
-    return 0;
-  }
-  
-  return (*it).second->createTx(cfg, name);
 
-} /* TxFactory::createNamedTx */
+} /* AtTimer::~AtTimer */
+
+
+bool AtTimer::setTimeout(time_t t)
+{
+  m_expire_at.tv_sec = t;
+  if (m_timer.isEnabled())
+  {
+    return start();
+  }
+  return true;
+} /* AtTimer::setTimeout */
+
+
+bool AtTimer::setTimeout(struct tm &tm)
+{
+  time_t t = mktime(&tm);
+  if (t == -1)
+  {
+    cerr << "mktime[AtTimer::setTimeout]: Could not set the timeout due to "
+            "an invalid time format\n";
+    return false;
+  }
+  return setTimeout(t);
+} /* AtTimer::setTimeout */
+
+
+void AtTimer::setExpireOffset(int offset_ms)
+{
+  m_expire_offset = offset_ms;
+} /* AtTimer::setExpireOffset */
+
+
+bool AtTimer::start(void)
+{
+  int msec = msecToTimeout();
+  if (msec == -1)
+  {
+    return false;
+  }
+  m_timer.setTimeout(msec);
+  m_timer.setEnable(true);
+  return true;
+} /* AtTimer::start */
+
+
+void AtTimer::stop(void)
+{
+  m_timer.setEnable(false);
+} /* AtTimer::stop */
 
 
 
@@ -239,8 +207,70 @@ Tx *TxFactory::createNamedTx(Config& cfg, const string& name)
  *
  ****************************************************************************/
 
+/**
+ * @brief   This function will calculate what to set the timer to
+ * @return  Returns the number of milliseconds to set the timer to
+ *
+ * This function will calculate how many milliseconds there is left to the
+ * wanted timeout time. If the time is larger than one minute it will be
+ * chopped up in 59 second chunks so as to not loose precision.
+ * One second before the wanted timeout time occurrs, a last timer is
+ * schedules so as to obtain good precision for the final timeout.
+ */
+int AtTimer::msecToTimeout(void)
+{
+  struct timeval now;
+  if (gettimeofday(&now, 0) == -1)
+  {
+    perror("gettimeofday[AtTimer::msecToTimeout]");
+    return -1;
+  }
+
+  struct timeval diff;
+  timersub(&m_expire_at, &now, &diff);
+
+  long long msec = static_cast<long long>(diff.tv_sec) * 1000
+                   + diff.tv_usec / 1000 + m_expire_offset + 1;
+  if (msec < 0)
+  {
+    msec = 0;
+  }
+  else if (msec > 60000)
+  {
+    msec = 59000;
+  }
+  else if (msec > 1500)
+  {
+    msec -= 1000;
+  }
+
+  return static_cast<int>(msec);
+} /* AtTimer::msecToTimeout */
+
+
+/**
+ * @brief Called by the timer when it expires
+ * @param t The timer object
+ *
+ * This function will be called by the timer when it expires. If the specified
+ * time of day have not been reached, the timer will be restarted.
+ */
+void AtTimer::onTimerExpired(Timer *t)
+{
+  int msec = msecToTimeout();
+  if (msec > 0)
+  {
+    m_timer.setTimeout(msec);
+  }
+  else
+  {
+    expired(this);
+  }
+} /* AtTimer::onTimerExpired */
+
 
 
 /*
  * This file has not been truncated
  */
+

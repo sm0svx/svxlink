@@ -61,6 +61,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncIpAddress.h>
 #include <AsyncAudioInterpolator.h>
 #include <EchoLinkDirectory.h>
+#include <EchoLinkProxy.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -150,9 +152,9 @@ using namespace EchoLink;
  * Bugs:      
  *------------------------------------------------------------------------
  */
-MainWindow::MainWindow(Directory &dir)
-  : dir(dir), refresh_call_list_timer(0), is_busy(false), msg_handler(0),
-    msg_audio_io(0), prev_status(StationData::STAT_UNKNOWN)
+MainWindow::MainWindow(void)
+  : dir(0), refresh_call_list_timer(0), is_busy(false), msg_handler(0),
+    msg_audio_io(0), prev_status(StationData::STAT_UNKNOWN), proxy(0)
 {
   setupUi(this);
   
@@ -197,15 +199,7 @@ MainWindow::MainWindow(Directory &dir)
       	  this, SLOT(acceptIncoming()));
   
   setupAudioParams();
-
-  dir.error.connect(mem_fun(*this, &MainWindow::serverError));
-  dir.statusChanged.connect(mem_fun(*this, &MainWindow::statusChanged));
-  dir.stationListUpdated.connect(
-      mem_fun(*this, &MainWindow::callsignListUpdated));
-  
-  EchoLink::Dispatcher *disp = EchoLink::Dispatcher::instance();
-  disp->incomingConnection.connect(
-    mem_fun(*this, &MainWindow::incomingConnection));
+  initEchoLink();
 
   status_indicator = new QLabel(statusBar());
   status_indicator->setPixmap(QPixmap(":/icons/images/offline_icon.xpm"));
@@ -218,7 +212,7 @@ MainWindow::MainWindow(Directory &dir)
       	  this, SLOT(setBusy(bool)));
   
   //statusBar()->message(trUtf8("Getting calls from directory server..."));
-  //dir.getCalls();
+  //dir->getCalls();
   refresh_call_list_timer = new QTimer(this);
   refresh_call_list_timer->start(
       1000 * 60 * Settings::instance()->listRefreshTime());
@@ -284,7 +278,10 @@ MainWindow::~MainWindow(void)
   }
   Settings::instance()->setIncomingViewColSizes(sizes);
   
-  dir.makeOffline();
+  dir->makeOffline(); // FIXME: Unneccessary?
+  delete dir;
+
+  Dispatcher::deleteInstance();
 } /* MainWindow::~MainWindow */
 
 
@@ -365,10 +362,10 @@ void MainWindow::closeEvent(QCloseEvent *e)
 {
   static int close_count = 0;
   
-  if ((dir.status() != StationData::STAT_OFFLINE) && (close_count++ == 0))
+  if ((dir->status() != StationData::STAT_OFFLINE) && (close_count++ == 0))
   {
     statusBar()->showMessage(trUtf8("Logging off from directory server..."));
-    dir.makeOffline();
+    dir->makeOffline();
     QTimer::singleShot(5000, this, SLOT(forceQuit()));
     e->ignore();
   }
@@ -499,6 +496,51 @@ void MainWindow::setupAudioParams(void)
 } /* MainWindow::setupAudioParams */
 
 
+void MainWindow::initEchoLink(void)
+{
+  Settings *settings = Settings::instance();
+
+    // First clean up any old instances
+  Dispatcher::deleteInstance();
+  delete dir;
+  dir = 0;
+  delete proxy;
+  proxy = 0;
+
+  if (settings->proxyEnabled())
+  {
+    proxy = new Proxy(
+        settings->proxyServer().toStdString(),
+        settings->proxyPort(),
+        settings->callsign().toStdString(),
+        settings->proxyPassword().toStdString());
+    proxy->connect();
+  }
+
+  vector<string> servers;
+  SvxLink::splitStr(servers, settings->directoryServers().toStdString(), " ");
+  dir = new Directory(
+      servers,
+      settings->callsign().toStdString(),
+      settings->password().toStdString(),
+      settings->location().toStdString());
+  dir->error.connect(mem_fun(*this, &MainWindow::serverError));
+  dir->statusChanged.connect(mem_fun(*this, &MainWindow::statusChanged));
+  dir->stationListUpdated.connect(
+      mem_fun(*this, &MainWindow::callsignListUpdated));
+
+  Dispatcher *disp = Dispatcher::instance();
+  if (disp == 0)
+  {
+    //FIXME: Better error handling!
+    fprintf(stderr, "Could not initalize network listen ports\n");
+    exit(1);
+  }
+  disp->incomingConnection.connect(
+      mem_fun(*this, &MainWindow::incomingConnection));
+} /* MainWindow::initEchoLink */
+
+
 void MainWindow::updateBookmarkModel(void)
 {
   list<StationData> bookmarks;
@@ -506,7 +548,7 @@ void MainWindow::updateBookmarkModel(void)
   QStringList::iterator it;
   foreach (QString callsign, callsigns)
   {
-    const StationData *station = dir.findCall(callsign.toStdString());
+    const StationData *station = dir->findCall(callsign.toStdString());
     if (station != 0)
     {
       bookmarks.push_back(*station);
@@ -605,14 +647,14 @@ void MainWindow::callsignListUpdated(void)
 {
   updateBookmarkModel();
   
-  conf_model->updateStationList(dir.conferences());
-  link_model->updateStationList(dir.links());
-  repeater_model->updateStationList(dir.repeaters());
-  station_model->updateStationList(dir.stations());
+  conf_model->updateStationList(dir->conferences());
+  link_model->updateStationList(dir->links());
+  repeater_model->updateStationList(dir->repeaters());
+  station_model->updateStationList(dir->stations());
   
   statusBar()->showMessage(trUtf8("Station list has been refreshed"), 5000);
   
-  const string &msg = dir.message();
+  const string &msg = dir->message();
   if (msg != old_server_msg)
   {
     server_msg_view->append(msg.c_str());
@@ -624,8 +666,11 @@ void MainWindow::callsignListUpdated(void)
 
 void MainWindow::refreshCallList(void)
 {
-  statusBar()->showMessage(trUtf8("Refreshing station list..."));
-  dir.getCalls();
+  if (dir->status() >= StationData::STAT_ONLINE)
+  {
+    statusBar()->showMessage(trUtf8("Refreshing station list..."));
+    dir->getCalls();
+  }
 } /* MainWindow::refreshCallList */
 
 
@@ -633,11 +678,11 @@ void MainWindow::updateRegistration(void)
 {
   if (is_busy)
   {
-    dir.makeBusy();
+    dir->makeBusy();
   }
   else
   {
-    dir.makeOnline();
+    dir->makeOnline();
   }
 } /* MainWindow::updateRegistration */
 
@@ -674,7 +719,7 @@ void MainWindow::acceptIncoming(void)
   Q_ASSERT(items.size() == 1);
   QTreeWidgetItem *item = items.at(0);
   incoming_accept_button->setEnabled(FALSE);
-  ComDialog *com_dialog = new ComDialog(dir, item->text(0), item->text(1));
+  ComDialog *com_dialog = new ComDialog(*dir, item->text(0), item->text(1));
   com_dialog->show();
   com_dialog->acceptConnection();
   com_dialog->setRemoteParams(incoming_con_param[item->text(0)]);
@@ -747,17 +792,22 @@ void MainWindow::addNamedStationToBookmarks(void)
 
 void MainWindow::configurationUpdated(void)
 {
-  dir.setServer(Settings::instance()->directoryServer().toStdString());
-  dir.setCallsign(Settings::instance()->callsign().toStdString());
-  dir.setPassword(Settings::instance()->password().toStdString());
-  dir.setDescription(Settings::instance()->location().toStdString());
-  updateRegistration();
+  vector<string> servers;
+  SvxLink::splitStr(servers,
+                    Settings::instance()->directoryServers().toStdString(),
+                    " ");
+  dir->setServers(servers);
+  dir->setCallsign(Settings::instance()->callsign().toStdString());
+  dir->setPassword(Settings::instance()->password().toStdString());
+  dir->setDescription(Settings::instance()->location().toStdString());
   
   refresh_call_list_timer->setInterval(
       1000 * 60 * Settings::instance()->listRefreshTime());
 
   setupAudioParams();
   initMsgAudioIo();
+  initEchoLink();
+  updateRegistration();
 } /* MainWindow::configurationChanged */
 
 
@@ -774,7 +824,7 @@ void MainWindow::connectionConnectToIpActionActivated(void)
     Settings::instance()->setConnectToIp(remote_host);
     if (!remote_host.isEmpty())
     {
-      ComDialog *com_dialog = new ComDialog(dir, remote_host);
+      ComDialog *com_dialog = new ComDialog(*dir, remote_host);
       com_dialog->show();
     }
   }
@@ -792,7 +842,7 @@ void MainWindow::connectionConnectToSelectedActionActivated(void)
   QString callsign = indexes.at(0).data().toString();
   if (!callsign.isEmpty())
   {
-    ComDialog *com_dialog = new ComDialog(dir, callsign, "?");
+    ComDialog *com_dialog = new ComDialog(*dir, callsign, "?");
     com_dialog->show();
   }
 } /* MainWindow::connectionConnectToSelectedActionActivated */

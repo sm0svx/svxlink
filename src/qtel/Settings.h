@@ -153,9 +153,13 @@ class Settings : public sigc::trackable
     const QString& location(void) const { return m_location; }
     const QString& info(void) const { return m_info; }
     
-    const QString& directoryServer(void) const { return m_directory_server; }
+    const QString& directoryServers(void) const { return m_directory_servers; }
     int listRefreshTime(void) const { return m_list_refresh_time; }
     bool startAsBusy(void) const { return m_start_as_busy; }
+    bool proxyEnabled(void) const { return m_proxy_enabled; }
+    const QString& proxyServer(void) const { return m_proxy_server; }
+    uint16_t proxyPort(void) const { return m_proxy_port; }
+    const QString& proxyPassword(void) const { return m_proxy_password; }
     
     const QString& micAudioDevice(void) const { return m_mic_audio_device; }
     const QString& spkrAudioDevice(void) const { return m_spkr_audio_device; }
@@ -215,9 +219,13 @@ class Settings : public sigc::trackable
     QString   	            m_location;
     QString   	            m_info;
     
-    QString   	            m_directory_server;
+    QString   	            m_directory_servers;
     int       	            m_list_refresh_time;
     bool      	            m_start_as_busy;
+    bool                    m_proxy_enabled;
+    QString                 m_proxy_server;
+    uint16_t                m_proxy_port;
+    QString                 m_proxy_password;
 
     QString   	            m_mic_audio_device;
     QString   	            m_spkr_audio_device;

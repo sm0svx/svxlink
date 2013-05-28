@@ -85,6 +85,28 @@ using namespace Async;
  *
  ****************************************************************************/
 
+# define clock_timeradd(a, b, result)                                         \
+  do {                                                                        \
+    (result)->tv_sec = (a)->tv_sec + (b)->tv_sec;                             \
+    (result)->tv_nsec = (a)->tv_nsec + (b)->tv_nsec;                          \
+    if ((result)->tv_nsec >= 1000000000)                                      \
+      {                                                                       \
+        ++(result)->tv_sec;                                                   \
+        (result)->tv_nsec -= 1000000000;                                      \
+      }                                                                       \
+  } while (0)
+
+# define clock_timersub(a, b, result)                                         \
+  do {                                                                        \
+    (result)->tv_sec = (a)->tv_sec - (b)->tv_sec;                             \
+    (result)->tv_nsec = (a)->tv_nsec - (b)->tv_nsec;                          \
+    if ((result)->tv_nsec < 0) {                                              \
+      --(result)->tv_sec;                                                     \
+      (result)->tv_nsec += 1000000000;                                        \
+    }                                                                         \
+  } while (0)
+
+
 
 
 /****************************************************************************
@@ -157,20 +179,20 @@ void CppApplication::exec(void)
 {
   while (!do_quit)
   {
-    struct timeval *timeout_ptr = 0;
-    struct timeval timeout;
+    struct timespec *timeout_ptr = 0;
+    struct timespec timeout;
     TimerMap::iterator titer = timer_map.begin();
     while (titer != timer_map.end())
     {
       if (titer->second != 0)
       {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	timersub(&titer->first, &tv, &timeout);
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	clock_timersub(&titer->first, &ts, &timeout);
 	if (timeout.tv_sec < 0)
 	{
 	  timeout.tv_sec = 0;
-	  timeout.tv_usec = 0;
+	  timeout.tv_nsec = 0;
 	}
 	timeout_ptr = &timeout;
 	break;
@@ -184,8 +206,8 @@ void CppApplication::exec(void)
     
     fd_set local_rd_set = rd_set;
     fd_set local_wr_set = wr_set;
-    int dcnt = select(max_desc, &local_rd_set, &local_wr_set, NULL,
-	timeout_ptr);
+    int dcnt = pselect(max_desc, &local_rd_set, &local_wr_set, NULL,
+	timeout_ptr, NULL);
     if (dcnt == -1)
     {
       if (errno == EINTR)
@@ -199,8 +221,11 @@ void CppApplication::exec(void)
       }
     }
     
-    if ((timeout_ptr != 0) && (timeout_ptr->tv_sec == 0) &&
-	(timeout_ptr->tv_usec == 0))
+    if ((timeout_ptr != 0)
+        && ((dcnt == 0)
+            || ((timeout_ptr->tv_sec == 0) && (timeout_ptr->tv_nsec == 0))
+           )
+       )
     {
       titer->second->expired(titer->second);
       if ((titer->second != 0) &&
@@ -390,23 +415,23 @@ void CppApplication::delFdWatch(FdWatch *fd_watch)
 
 void CppApplication::addTimer(Timer *timer)
 {
-  struct timeval current;
-  gettimeofday(&current, NULL);
+  struct timespec current;
+  clock_gettime(CLOCK_MONOTONIC, &current);
   addTimerP(timer, current);
 } /* CppApplication::addTimer */
 
 
-void CppApplication::addTimerP(Timer *timer, const struct timeval& current)
+void CppApplication::addTimerP(Timer *timer, const struct timespec& current)
 {
-  struct timeval add;
-  struct timeval expiration;
+  struct timespec add;
+  struct timespec expiration;
   int timeout = timer->timeout();
   add.tv_sec = timeout / 1000;
   timeout -= add.tv_sec * 1000;
-  add.tv_usec = timeout * 1000;
-  timeradd(&current, &add, &expiration);
+  add.tv_nsec = timeout * 1000000;
+  clock_timeradd(&current, &add, &expiration);
   
-  timer_map.insert(pair<struct timeval, Timer *>(expiration, timer));
+  timer_map.insert(pair<struct timespec, Timer *>(expiration, timer));
 } /* CppApplication::addTimerP */
 
 

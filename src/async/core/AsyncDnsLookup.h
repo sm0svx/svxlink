@@ -138,6 +138,12 @@ class DnsLookup : public sigc::trackable
     const std::string &label(void) const { return m_label; }
 
     /**
+     * @brief  Check if the DNS lookup is done or not
+     * @return Returns \em true if results are ready or \em false if not
+     */
+    bool resultsAreReady(void) { return m_results_ready; }
+
+    /**
      * @brief 	Return the addresses for the host in the query
      * @return	Return a stl vector which contains all the addresses
      *	      	associated with the hostname in the query.
@@ -159,8 +165,9 @@ class DnsLookup : public sigc::trackable
   protected:
     
   private:
-    DnsLookupWorker  *worker;
-    std::string      m_label;
+    DnsLookupWorker * m_worker;
+    std::string       m_label;
+    bool              m_results_ready;
     
     void onResultsReady(void);
 

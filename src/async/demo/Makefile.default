@@ -48,6 +48,7 @@ CPPPROGS        += AsyncAudioIO_demo
 CPPPROGS        += AsyncDnsLookup_demo
 CPPPROGS        += AsyncFdWatch_demo
 CPPPROGS        += AsyncTimer_demo
+CPPPROGS        += AsyncAtTimer_demo
 CPPPROGS        += AsyncTcpClient_demo
 CPPPROGS        += AsyncUdpSocket_demo
 CPPPROGS        += AsyncCppApplication_demo
