@@ -13,7 +13,9 @@ class MyClass : public sigc::trackable
   public:
     MyClass(const string& mycall, const string& mypass) : mycall(mycall)
     {
-      dir = new Directory("server1.echolink.org", mycall, mypass, "Testing...");
+      vector<string> servers;
+      servers.push_back("servers.echolink.org");
+      dir = new Directory(servers, mycall, mypass, "Testing...");
       dir->statusChanged.connect(mem_fun(*this, &MyClass::onStatusChanged));
       dir->stationListUpdated.connect(
 	  mem_fun(*this, &MyClass::onStationListUpdated));

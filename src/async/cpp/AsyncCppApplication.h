@@ -164,15 +164,17 @@ class CppApplication : public Application
   protected:
     
   private:
-    struct lttimeval
+    struct lttimespec
     {
-      bool operator()(const struct timeval& t1, const struct timeval& t2) const
+      bool operator()(const struct timespec& t1, const struct timespec& t2) const
       {
-	return timercmp(&t1, &t2, <);
+        return ((t1.tv_sec == t2.tv_sec)
+                ? (t1.tv_nsec < t2.tv_nsec)
+                : (t1.tv_sec < t2.tv_sec));
       }
     };
-    typedef std::map<int, FdWatch*>   	      	      	      WatchMap;
-    typedef std::multimap<struct timeval, Timer *, lttimeval> TimerMap;
+    typedef std::map<int, FdWatch*>   	      	      	        WatchMap;
+    typedef std::multimap<struct timespec, Timer *, lttimespec> TimerMap;
     
     bool      	      	do_quit;
     int       	      	max_desc;
@@ -185,7 +187,7 @@ class CppApplication : public Application
     void addFdWatch(FdWatch *fd_watch);
     void delFdWatch(FdWatch *fd_watch);
     void addTimer(Timer *timer);
-    void addTimerP(Timer *timer, const struct timeval& current);
+    void addTimerP(Timer *timer, const struct timespec& current);
     void delTimer(Timer *timer);    
     DnsLookupWorker *newDnsLookupWorker(const std::string& label);
     

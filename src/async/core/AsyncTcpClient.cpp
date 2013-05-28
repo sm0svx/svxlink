@@ -126,24 +126,29 @@ using namespace Async;
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
+TcpClient::TcpClient(size_t recv_buf_len)
+  : TcpConnection(recv_buf_len), dns(0), sock(-1), wr_watch(0)
+{
+  
+} /* TcpClient::TcpClient */
+
+
 TcpClient::TcpClient(const string& remote_host, uint16_t remote_port,
     size_t recv_buf_len)
   : TcpConnection(recv_buf_len), dns(0), remote_host(remote_host),
-    remote_port(remote_port), sock(-1), wr_watch(0)
+    sock(-1), wr_watch(0)
 {
-  
+  setRemotePort(remote_port);
+} /* TcpClient::TcpClient */
+
+
+TcpClient::TcpClient(const IpAddress& remote_ip, uint16_t remote_port,
+    size_t recv_buf_len)
+  : TcpConnection(recv_buf_len), dns(0), remote_host(remote_ip.toString()),
+    sock(-1), wr_watch(0)
+{
+  setRemoteAddr(remote_ip);
+  setRemotePort(remote_port);
 } /* TcpClient::TcpClient */
 
 
@@ -153,17 +158,42 @@ TcpClient::~TcpClient(void)
 } /* TcpClient::~TcpClient */
 
 
+void TcpClient::connect(const string &remote_host, uint16_t remote_port)
+{
+  this->remote_host = remote_host;
+  setRemotePort(remote_port);
+  connect();
+} /* TcpClient::connect */
+
+
+void TcpClient::connect(const IpAddress& remote_ip, uint16_t remote_port)
+{
+  setRemoteAddr(remote_ip);
+  remote_host = remote_ip.toString();
+  setRemotePort(remote_port);
+  connect();
+} /* TcpClient::connect */
+
+
 void TcpClient::connect(void)
 {
-  if ((dns != 0) || (sock != -1) || (socket() != -1))
+  if (remoteHost().isEmpty())
   {
-    return;
+    if ((dns != 0) || (sock != -1) || (socket() != -1))
+    {
+      return;
+    }
+    
+    assert(dns == 0);
+    assert(!remote_host.empty());
+    
+    dns = new DnsLookup(remote_host);
+    dns->resultsReady.connect(mem_fun(*this, &TcpClient::dnsResultsReady));
   }
-  
-  assert(dns == 0);
-  
-  dns = new DnsLookup(remote_host);
-  dns->resultsReady.connect(mem_fun(*this, &TcpClient::dnsResultsReady));
+  else
+  {
+    connectToRemote();
+  }
 } /* TcpClient::connect */
 
 
@@ -245,23 +275,22 @@ void TcpClient::dnsResultsReady(DnsLookup& dns_lookup)
     return;
   }
   
-  connectToRemote(result[0]);
+  setRemoteAddr(result[0]);
+  
+  connectToRemote();
   
 } /* TcpClient::dnsResultsReady */
 
 
-void TcpClient::connectToRemote(const IpAddress& ip_addr)
+void TcpClient::connectToRemote(void)
 {
-  setRemoteAddr(ip_addr);
-  setRemotePort(remote_port);
-  
   assert(sock == -1);
   
   struct sockaddr_in addr;
   memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(remote_port);
-  addr.sin_addr = ip_addr.ip4Addr();
+  addr.sin_port = htons(remotePort());
+  addr.sin_addr = remoteHost().ip4Addr();
 
     /* Create a TCP/IP socket to use */
   sock = ::socket(PF_INET, SOCK_STREAM, 0);

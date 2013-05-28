@@ -78,6 +78,11 @@ An example of how to use the EchoLink::Directory class
 
 class Cmd;
 
+namespace EchoLink
+{
+  class DirectoryCon;
+};
+
 
 /****************************************************************************
  *
@@ -129,13 +134,14 @@ class Directory : public sigc::trackable
     
     /**
      * @brief 	Constructor
-     * @param 	server      The EchoLink directory server to connect to
+     * @param 	servers     The EchoLink directory servers to connect to
      * @param 	callsign    The callsign to register in the server
      * @param 	password    The password for the given callsign
      * @param 	description A description/location string
      */
-    Directory(const std::string& server, const std::string& callsign,
-      	  const std::string& password, const std::string& description="");
+    Directory(const std::vector<std::string>& servers,
+              const std::string& callsign,
+      	      const std::string& password, const std::string& description="");
   
     /**
      * @brief 	Destructor
@@ -201,16 +207,16 @@ class Directory : public sigc::trackable
     void getCalls(void);
     
     /**
-     * @brief Set the hostname or IP-address of the EchoLink server to use
-     * @param server The new server to use
+     * @brief Set the hostname or IP-address of the EchoLink servers to use
+     * @param servers The new servers to use
      */
-    void setServer(const std::string& server);
+    void setServers(const std::vector<std::string>& servers);
     
     /**
      * @brief 	Get the name of the remote host
      * @return	Returns the name of the remote host
      */
-    const std::string& server(void) const { return the_server; }
+    const std::vector<std::string>& servers(void) const { return the_servers; }
     
     /**
      * @brief Set the callsign to use when logging in to the server
@@ -365,29 +371,29 @@ class Directory : public sigc::trackable
     static const int REGISTRATION_REFRESH_TIME  = 5 * 60 * 1000; // 5 minutes
     static const int CMD_TIMEOUT                = 120 * 1000; // 2 minutes
     
-    ComState      	    com_state;
-    std::string       	    the_server;
-    std::string       	    the_callsign;
-    std::string       	    the_password;
-    std::string       	    the_description;
-    std::list<StationData>  the_links;
-    std::list<StationData>  the_repeaters;
-    std::list<StationData>  the_stations;
-    std::list<StationData>  the_conferences;
-    std::string       	    the_message;
-    std::string       	    error_str;
+    ComState      	      com_state;
+    std::vector<std::string>  the_servers;
+    std::string       	      the_callsign;
+    std::string       	      the_password;
+    std::string       	      the_description;
+    std::list<StationData>    the_links;
+    std::list<StationData>    the_repeaters;
+    std::list<StationData>    the_stations;
+    std::list<StationData>    the_conferences;
+    std::string       	      the_message;
+    std::string       	      error_str;
     
-    int       	      	    get_call_cnt;
-    StationData       	    get_call_entry;
-    std::list<StationData>  get_call_list;
+    int       	      	      get_call_cnt;
+    StationData       	      get_call_entry;
+    std::list<StationData>    get_call_list;
     
-    Async::TcpClient *      ctrl_con;
-    std::list<Cmd>    	    cmd_queue;
-    StationData::Status     the_status;
-    Async::Timer *    	    reg_refresh_timer;
-    StationData::Status     current_status;
-    bool      	      	    server_changed;
-    Async::Timer *          cmd_timer;
+    DirectoryCon *            ctrl_con;
+    std::list<Cmd>    	      cmd_queue;
+    StationData::Status       the_status;
+    Async::Timer *    	      reg_refresh_timer;
+    StationData::Status       current_status;
+    bool      	      	      server_changed;
+    Async::Timer *            cmd_timer;
     
     Directory(const Directory&);
     Directory& operator =(const Directory&);
@@ -395,10 +401,10 @@ class Directory : public sigc::trackable
     void printBuf(const unsigned char *buf, int len);
     int handleCallList(char *buf, int len);
     
+    void ctrlSockReady(bool is_ready);
     void ctrlSockConnected(void);
-    void ctrlSockDisconnected(Async::TcpConnection *con,
-      	    Async::TcpClient::DisconnectReason reason);
-    int ctrlSockDataReceived(Async::TcpConnection *con, void *ptr, int len);
+    void ctrlSockDisconnected(void);
+    int ctrlSockDataReceived(void *ptr, unsigned len);
     void sendNextCmd(void);
     void addCmdToQueue(Cmd cmd);
     void setStatus(StationData::Status new_status);
