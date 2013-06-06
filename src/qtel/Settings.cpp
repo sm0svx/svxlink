@@ -90,9 +90,13 @@ using namespace std;
 #define CONF_LOCATION 	      	      "Location"
 #define CONF_INFO     	      	      "Info"
 
-#define CONF_DIRECTORY_SERVER 	      "DirectoryServer"
+#define CONF_DIRECTORY_SERVER 	      "DirectoryServers"
 #define CONF_LIST_REFRESH_TIME        "ListRefreshTime"
 #define CONF_START_AS_BUSY            "StartAsBusy"
+#define CONF_PROXY_ENABLED            "ProxyEnabled"
+#define CONF_PROXY_SERVER             "ProxyServer"
+#define CONF_PROXY_PORT               "ProxyPort"
+#define CONF_PROXY_PASSWORD           "ProxyPassword"
 
 #define CONF_MIC_AUDIO_DEVICE         "MicAudioDevice"
 #define CONF_SPKR_AUDIO_DEVICE        "SpkrAudioDevice"
@@ -121,6 +125,10 @@ using namespace std;
 #define CONF_DIRECTORY_SERVER_DEFAULT 	"server1.echolink.org"
 #define CONF_LIST_REFRESH_TIME_DEFAULT	5
 #define CONF_START_AS_BUSY_DEFAULT    	false
+#define CONF_PROXY_ENABLED_DEFAULT 	false
+#define CONF_PROXY_SERVER_DEFAULT 	""
+#define CONF_PROXY_PORT_DEFAULT 	8100
+#define CONF_PROXY_PASSWORD_DEFAULT 	""
 
 #define CONF_AUDIO_DEVICE_DEFAULT 	"alsa:default"
 #define CONF_USE_FULL_DUPLEX_DEFAULT    false
@@ -284,9 +292,13 @@ void Settings::showDialog(void)
   settings_dialog.my_location->setText(m_location);
   settings_dialog.my_info->setText(m_info);
   
-  settings_dialog.directory_server->setText(m_directory_server);
+  settings_dialog.directory_servers->setText(m_directory_servers);
   settings_dialog.list_refresh_time->setValue(m_list_refresh_time);
   settings_dialog.start_as_busy_checkbox->setChecked(m_start_as_busy);
+  settings_dialog.proxy_enabled->setChecked(m_proxy_enabled);
+  settings_dialog.proxy_server->setText(m_proxy_server);
+  settings_dialog.proxy_port->setValue(m_proxy_port);
+  settings_dialog.proxy_password->setText(m_proxy_password);
 
   settings_dialog.mic_audio_device->setText(m_mic_audio_device);
   settings_dialog.spkr_audio_device->setText(m_spkr_audio_device);
@@ -316,6 +328,14 @@ void Settings::showDialog(void)
       	settings_dialog.my_password->setText("");
       	settings_dialog.my_vpassword->setText("");
       }
+      else if (settings_dialog.proxy_enabled->isChecked() &&
+               (settings_dialog.proxy_server->text().isEmpty()))
+      {
+        QMessageBox::critical(&settings_dialog,
+            SettingsDialog::trUtf8("EchoLink proxy configuration problem"),
+            SettingsDialog::trUtf8(
+              "EchoLink proxy enabled but no server given"));
+      }
       else
       {
 	m_callsign = settings_dialog.my_callsign->text().toUpper();
@@ -324,9 +344,13 @@ void Settings::showDialog(void)
 	m_location = settings_dialog.my_location->text();
 	m_info = settings_dialog.my_info->toPlainText();
 	
-	m_directory_server = settings_dialog.directory_server->text();
+	m_directory_servers = settings_dialog.directory_servers->text();
 	m_list_refresh_time = settings_dialog.list_refresh_time->value();
 	m_start_as_busy = settings_dialog.start_as_busy_checkbox->isChecked();
+	m_proxy_enabled = settings_dialog.proxy_enabled->isChecked();
+	m_proxy_server = settings_dialog.proxy_server->text();
+	m_proxy_port = settings_dialog.proxy_port->value();
+	m_proxy_password = settings_dialog.proxy_password->text();
 
 	m_mic_audio_device = settings_dialog.mic_audio_device->text();
 	m_spkr_audio_device = settings_dialog.spkr_audio_device->text();
@@ -344,9 +368,13 @@ void Settings::showDialog(void)
 	qsettings.setValue(CONF_LOCATION, m_location);
 	qsettings.setValue(CONF_INFO, m_info);
 	
-	qsettings.setValue(CONF_DIRECTORY_SERVER, m_directory_server);
+	qsettings.setValue(CONF_DIRECTORY_SERVER, m_directory_servers);
 	qsettings.setValue(CONF_LIST_REFRESH_TIME, m_list_refresh_time);
 	qsettings.setValue(CONF_START_AS_BUSY, m_start_as_busy);
+	qsettings.setValue(CONF_PROXY_ENABLED, m_proxy_enabled);
+	qsettings.setValue(CONF_PROXY_SERVER, m_proxy_server);
+	qsettings.setValue(CONF_PROXY_PORT, m_proxy_port);
+	qsettings.setValue(CONF_PROXY_PASSWORD, m_proxy_password);
       	
 	qsettings.setValue(CONF_MIC_AUDIO_DEVICE, m_mic_audio_device);
 	qsettings.setValue(CONF_SPKR_AUDIO_DEVICE, m_spkr_audio_device);
@@ -380,12 +408,20 @@ void Settings::readSettings(void)
   m_location = qsettings.value(CONF_LOCATION).toString();
   m_info = qsettings.value(CONF_INFO, CONF_INFO_DEFAULT).toString();
   
-  m_directory_server = qsettings.value(CONF_DIRECTORY_SERVER,
+  m_directory_servers = qsettings.value(CONF_DIRECTORY_SERVER,
       CONF_DIRECTORY_SERVER_DEFAULT).toString();
   m_list_refresh_time = qsettings.value(CONF_LIST_REFRESH_TIME,
       CONF_LIST_REFRESH_TIME_DEFAULT).toInt();
   m_start_as_busy = qsettings.value(CONF_START_AS_BUSY,
       CONF_START_AS_BUSY_DEFAULT).toBool();
+  m_proxy_enabled = qsettings.value(CONF_PROXY_ENABLED,
+      CONF_PROXY_ENABLED_DEFAULT).toBool();
+  m_proxy_server = qsettings.value(CONF_PROXY_SERVER,
+      CONF_PROXY_SERVER_DEFAULT).toString();
+  m_proxy_port = qsettings.value(CONF_PROXY_PORT,
+      CONF_PROXY_PORT_DEFAULT).toUInt();
+  m_proxy_password = qsettings.value(CONF_PROXY_PASSWORD,
+      CONF_PROXY_PASSWORD_DEFAULT).toString();
   
   m_mic_audio_device = qsettings.value(CONF_MIC_AUDIO_DEVICE,
       CONF_AUDIO_DEVICE_DEFAULT).toString();

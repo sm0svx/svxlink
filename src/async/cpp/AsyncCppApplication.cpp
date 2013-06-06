@@ -36,14 +36,12 @@
  *
  ****************************************************************************/
 
-#include <assert.h>
-#include <sys/types.h>
 #include <sys/select.h>
-#include <sys/time.h>
-#include <sys/errno.h>
 
 #include <cstdlib>
 #include <cstdio>
+#include <cerrno>
+#include <cassert>
 #include <algorithm>
 
 

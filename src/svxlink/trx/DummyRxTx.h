@@ -1,12 +1,12 @@
 /**
-@file	 SigCAudioSink.h
-@brief   Contains an adapter class to connect to an AudioSource using SigC
+@file	 DummyRxTx.h
+@brief   Dummy RX and TX classes
 @author  Tobias Blomberg / SM0SVX
-@date	 2005-04-17
+@date	 2013-05-10
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,9 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-#ifndef SIGC_AUDIO_SINK_INCLUDED
-#define SIGC_AUDIO_SINK_INCLUDED
+#ifndef DUMMY_RX_TX_INCLUDED
+#define DUMMY_RX_TX_INCLUDED
 
 
 /****************************************************************************
@@ -35,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
+#include <string>
 
 
 /****************************************************************************
@@ -44,7 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioSink.h>
+#include <AsyncConfig.h>
 
 
 /****************************************************************************
@@ -53,6 +52,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "Rx.h"
+#include "Tx.h"
 
 
 /****************************************************************************
@@ -69,8 +70,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
+//namespace MyNameSpace
+//{
 
 
 /****************************************************************************
@@ -104,72 +105,58 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	An adapter class to connect to an AudioSource class using SigC
-@author Tobias Blomberg
-@date   2005-04-17
+@brief	A dummy transmitter
+@author Tobias Blomberg / SM0SVX
+@date   2013-05-10
 
-This is an adapter class that can be used to interact with an AudioSource
-class using SigC signals and slots.
+This dummy transmitter can be used instead of a real transmitter object if
+a real transmitter is not needed. Using a dummy object instead of using a
+NULL pointer may make the code simpler since checks for NULL pointer can
+be omitted.
 */
-class SigCAudioSink : public AudioSink, public sigc::trackable
+class DummyTx : public Tx
 {
   public:
-    /**
-     * @brief 	Default constuctor
-     */
-    SigCAudioSink(void) {}
-  
-    /**
-     * @brief 	Destructor
-     */
-    ~SigCAudioSink(void) {}
-  
-    /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
-     */
-    virtual int writeSamples(const float *samples, int len)
-    {
-      return sigWriteSamples(const_cast<float *>(samples), len);
-    }
-    
-    virtual void flushSamples(void)
-    {
-      sigFlushSamples();
-    }
-    
-    void writeBufferFull(bool is_full)
-    {
-      if (!is_full)
-      {
-      	sourceResumeOutput();
-      }
-    }
-    
-    void allSamplesFlushed(void)
-    {
-      sourceAllSamplesFlushed();
-    }
-    
-    sigc::signal<int, float *, int>  sigWriteSamples;
-    sigc::signal<void>       	      sigFlushSamples;
-    
-    
-  protected:
-    
-  private:
-    
-};  /* class SigCAudioSink */
+    DummyTx(void) {}
+    virtual ~DummyTx(void) {}
+    virtual bool initialize(void) { return true; }
+    virtual void setTxCtrlMode(TxCtrlMode mode) {}
+    virtual bool isTransmitting(void) const { return false; }
+    virtual int writeSamples(const float *samples, int count) { return count; }
+    virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
+};
 
 
-} /* namespace */
+/**
+@brief	A dummy receiver
+@author Tobias Blomberg / SM0SVX
+@date   2013-05-10
 
-#endif /* SIGC_AUDIO_SINK_INCLUDED */
+This dummy receiver can be used instead of a real receiver object if
+a real receiver is not needed. Using a dummy object instead of using a
+NULL pointer may make the code simpler since checks for NULL pointer can
+be omitted.
+*/
+class DummyRx : public Rx
+{
+  public:
+    DummyRx(Async::Config &cfg, const std::string &name) : Rx(cfg, name) {}
+    virtual ~DummyRx(void) {}
+    virtual bool initialize(void) { return Rx::initialize(); }
+    virtual void setMuteState(Rx::MuteState new_mute_state) {}
+    virtual void reset(void) {}
+    virtual void resumeOutput(void) {}
+    virtual void allSamplesFlushed(void) {}
+};
+
+
+
+//} /* namespace */
+
+#endif /* DUMMY_RX_TX_INCLUDED */
 
 
 
 /*
  * This file has not been truncated
  */
-

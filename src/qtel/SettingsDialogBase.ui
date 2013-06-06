@@ -6,50 +6,17 @@
     <x>0</x>
     <y>0</y>
     <width>588</width>
-    <height>412</height>
+    <height>393</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Qtel: Settings</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
-   <item row="1" column="0">
-    <spacer name="Spacer3">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Expanding</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="1" column="1">
-    <widget class="QPushButton" name="ok_button">
-     <property name="text">
-      <string>OK</string>
-     </property>
-     <property name="default">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="2">
-    <widget class="QPushButton" name="cancel_button">
-     <property name="text">
-      <string>Cancel</string>
-     </property>
-    </widget>
-   </item>
    <item row="0" column="0" colspan="3">
     <widget class="QTabWidget" name="TabWidget2">
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="user_info_tab">
       <attribute name="title">
@@ -165,7 +132,7 @@ Message</string>
      </widget>
      <widget class="QWidget" name="directory_server_tab">
       <attribute name="title">
-       <string>Directory Server</string>
+       <string>Network</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
@@ -177,7 +144,7 @@ Message</string>
           <item row="0" column="0">
            <widget class="QLabel" name="TextLabel7">
             <property name="text">
-             <string>Server</string>
+             <string>Servers</string>
             </property>
             <property name="wordWrap">
              <bool>false</bool>
@@ -185,9 +152,9 @@ Message</string>
            </widget>
           </item>
           <item row="0" column="1" colspan="3">
-           <widget class="QLineEdit" name="directory_server">
+           <widget class="QLineEdit" name="directory_servers">
             <property name="toolTip">
-             <string>The hostname or IP address of the EchoLink directory server to use</string>
+             <string>A space separated list of the hostname or IP address of the EchoLink directory servers to use</string>
             </property>
            </widget>
           </item>
@@ -269,21 +236,108 @@ Message</string>
             </property>
            </spacer>
           </item>
-          <item row="3" column="3">
-           <spacer name="verticalSpacer">
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_5">
+         <property name="title">
+          <string>EchoLink Proxy Settings</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="0" column="0">
+           <widget class="QLabel" name="proxy_enabled_label">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QCheckBox" name="proxy_enabled">
+            <property name="toolTip">
+             <string>If enabling EchoLink proxy you must supply a proxy server hostname or IP address.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="proxy_server_label">
+            <property name="text">
+             <string>Server</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" colspan="2">
+           <widget class="QLineEdit" name="proxy_server">
+            <property name="toolTip">
+             <string>The hostname or IP address of the EchoLink proxy server to use</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="proxy_port_label">
+            <property name="text">
+             <string>TCP Port</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="proxy_port">
+            <property name="toolTip">
+             <string>The TCP port to connect to on the EchoLink proxy server, default 8100</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>65535</number>
+            </property>
+            <property name="value">
+             <number>8100</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <spacer name="horizontalSpacer_5">
             <property name="orientation">
-             <enum>Qt::Vertical</enum>
+             <enum>Qt::Horizontal</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>20</width>
-              <height>156</height>
+              <width>425</width>
+              <height>20</height>
              </size>
             </property>
            </spacer>
           </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="proxy_password_label">
+            <property name="text">
+             <string>Password</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1" colspan="2">
+           <widget class="QLineEdit" name="proxy_password">
+            <property name="toolTip">
+             <string>The EchoLink PROXY password, not your normal EchoLink password. Leave empty for public proxy.</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>42</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -493,6 +547,39 @@ Message</string>
      </widget>
     </widget>
    </item>
+   <item row="1" column="0">
+    <spacer name="Spacer3">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Expanding</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="1" column="1">
+    <widget class="QPushButton" name="ok_button">
+     <property name="text">
+      <string>OK</string>
+     </property>
+     <property name="default">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QPushButton" name="cancel_button">
+     <property name="text">
+      <string>Cancel</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
@@ -506,7 +593,7 @@ Message</string>
   <tabstop>TabWidget2</tabstop>
   <tabstop>ok_button</tabstop>
   <tabstop>cancel_button</tabstop>
-  <tabstop>directory_server</tabstop>
+  <tabstop>directory_servers</tabstop>
   <tabstop>list_refresh_time</tabstop>
   <tabstop>start_as_busy_checkbox</tabstop>
   <tabstop>mic_audio_device</tabstop>

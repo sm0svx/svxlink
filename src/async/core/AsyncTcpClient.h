@@ -131,6 +131,18 @@ class TcpClient : public TcpConnection
 {
   public:
     /**
+     * @brief   Constructor
+     * @param 	recv_buf_len  The length of the receiver buffer to use
+     *
+     * The object will be constructed and variables will be initialized but
+     * no connection will be created until the connect function
+     * (see @ref TcpClient::connect) is called.
+     * When using this variant of the constructor the connect method which
+     * take host and port must be used.
+     */
+    explicit TcpClient(size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
+    
+    /**
      * @brief 	Constructor
      * @param 	remote_host   The hostname of the remote host
      * @param 	remote_port   The port on the remote host to connect to
@@ -144,9 +156,46 @@ class TcpClient : public TcpConnection
       	      size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
     
     /**
+     * @brief 	Constructor
+     * @param 	remote_ip     The IP address of the remote host
+     * @param 	remote_port   The port on the remote host to connect to
+     * @param 	recv_buf_len  The length of the receiver buffer to use
+     *
+     * The object will be constructed and variables will be initialized but
+     * no connection will be created until the connect function
+     * (see @ref TcpClient::connect) is called.
+     */
+    TcpClient(const IpAddress& remote_ip, uint16_t remote_port,
+      	      size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
+    
+    /**
      * @brief 	Destructor
      */
     ~TcpClient(void);
+    
+    /**
+     * @brief 	Connect to the remote host
+     * @param 	remote_host   The hostname of the remote host
+     * @param 	remote_port   The port on the remote host to connect to
+     *
+     * This function will initiate a connection to the remote host. The
+     * connection must not be written to before the connected signal
+     * (see @ref TcpClient::connected) has been emitted. If the connection is
+     * already established or pending, nothing will be done.
+     */
+    void connect(const std::string &remote_host, uint16_t remote_port);
+    
+    /**
+     * @brief 	Connect to the remote host
+     * @param 	remote_ip     The IP address of the remote host
+     * @param 	remote_port   The port on the remote host to connect to
+     *
+     * This function will initiate a connection to the remote host. The
+     * connection must not be written to before the connected signal
+     * (see @ref TcpClient::connected) has been emitted. If the connection is
+     * already established or pending, nothing will be done.
+     */
+    void connect(const Async::IpAddress& remote_ip, uint16_t remote_port);
     
     /**
      * @brief 	Connect to the remote host
@@ -176,14 +225,13 @@ class TcpClient : public TcpConnection
   protected:
     
   private:
-    DnsLookup 	*dns;
-    std::string remote_host;
-    uint16_t    remote_port;
-    int       	sock;
-    FdWatch   	*wr_watch;
+    DnsLookup *       dns;
+    std::string       remote_host;
+    int       	      sock;
+    FdWatch *         wr_watch;
     
     void dnsResultsReady(DnsLookup& dns_lookup);
-    void connectToRemote(const IpAddress& ip_addr);
+    void connectToRemote(void);
     void connectHandler(FdWatch *watch);
 
 };  /* class TcpClient */

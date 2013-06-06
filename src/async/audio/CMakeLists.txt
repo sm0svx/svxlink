@@ -17,7 +17,7 @@ set(LIBNAME asyncaudio)
 
 set(EXPINC AsyncAudioSource.h AsyncAudioSink.h AsyncAudioProcessor.h
            AsyncAudioClipper.h AsyncAudioCompressor.h
-           AsyncAudioFilter.h SigCAudioSink.h  SigCAudioSource.h
+           AsyncAudioFilter.h AsyncSigCAudioSink.h  AsyncSigCAudioSource.h
            AsyncAudioIO.h AsyncAudioSplitter.h AsyncAudioDelayLine.h
            AsyncAudioValve.h AsyncAudioAmp.h AsyncAudioSelector.h
            AsyncAudioPassthrough.h AsyncAudioMixer.h AsyncAudioFifo.h

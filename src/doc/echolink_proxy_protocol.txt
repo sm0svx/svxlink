@@ -1,0 +1,152 @@
+EchoLink Proxy Protocol Documentation
+=====================================
+:Author:    Jonathan Taylor/K1RFD and Tobias Blomberg/SM0SVX
+:RevNumber: A
+:RevDate:   12 may 2013
+
+
+== Introduction ==
+The http://www.echolink.org/[EchoLink] footnote:[EchoLink® is a registered
+trademark of Synergenics, LLC] Proxy provides a way to move the TCP port 5200
+and UDP port 5198/5199 traffic used by EchoLink to a remote server, and tunnel
+it from the EchoLink client to the proxy over a single TCP connection. This is
+useful in situations where port forwarding of the two EchoLink UDP ports cannot
+be set up like when on a hotel LAN or something like that.
+
+For more information about EchoLink proxy, have a look at the description at
+http://www.echolink.org/proxy.htm.
+
+
+== Protocol Description ==
+In the following sections we will describe how the EchoLink proxy protocol is
+used. All messages are described in detail in <<proxy_message_specification>>.
+
+=== Connect and Authenticate ===
+This chapter explains how to connect to the proxy and authenticaticate. After
+the authentication has secceeded, messages are exchanged in the format
+described in <<proxy_message_specification>>.
+
+. The proxy server listens for a TCP connection from a proxy client.
+  The default port is 8100 but this may be changed in the configuration.
+
+. The client establishes a TCP connection.
+
+. The server accepts the connection and sends a credentials challenge, which is
+  an 8-byte random "nonce". Each byte is a printable character.
+
+. The client reads this 8-byte nonce, then calculates a 16-byte digest, which
+  is the MD5 hash of: the uppercased password followed by the nonce.
+
+. The client responds by sending the newline-terminated callsign, followed by
+  the 16-byte digest. This is the raw bytes of the digest, not encoded.
+
+. The server confirms the digest.
+
+  * If the digest is correct and the client is authorized, the server proceeds
+    with setting up the UDP ports and proxying TCP and UDP to and from the
+    client, as described below.
+
+  * If the digest is incorrect, the server responds with a SYSTEM message with
+    a one-byte data block, the data byte being 1 (BAD_PASSWORD).  If the digest
+    is correct but the server rejects the callsign due to its ACL, a SYSTEM
+    message with a data byte 2 is sent (ACCESS_DENIED).
+
+
+[[tcp_traffic]]
+=== TCP Traffic ===
+When the client wishes to establish a remote TCP connection, it constructs and
+sends a TCP_OPEN message, containing the IP address of the remote server. When
+the connection is established or rejected, the proxy server will respond with a
+TCP_STATUS message. All four data bytes will be set to zero if the connection
+succeeded. When any of the data bytes are non-zero, that indicate a connection
+failure.
+
+If and when the connection is established, the server expects to receive
+TCP_DATA messages from the client, and constructs TCP_DATA messages to send to
+the client for each block of TCP data received from the remote server. When the
+proxy receives a TCP_CLOSE message from the client, it closes the remote TCP
+connection. If the remote server close the connection, the proxy server sends a
+TCP_CLOSE message to the client.
+
+
+[[udp_traffic]]
+=== UDP Traffic ===
+The proxy listens on UDP ports 5198 and 5199.  Whenever a packet of UDP data is
+received on either port from a remote host, the server wraps it in a UDP_DATA
+or UDP_CONTROL message as appropriate and relays it to the client, with the
+remote host's IP address in the address field. Conversely, when the client
+wishes to send a block of UDP data to the remote host, it wraps it in either a
+UDP_DATA or UDP_CONTROL message and sends it to the client, again with the
+remote host's IP address in the address field.
+
+
+=== Shutdown ===
+At any time, the client can disconnect from the proxy by closing the TCP
+connection. At this point the server is again made available for use by closing
+its socket to the client and setting itself up to accept a new one.
+
+
+[[proxy_message_specification]]
+== Proxy Message Specification ==
+After a proxy session has been set up and authenticated, each block of
+data that moves between client and server is encapsulated as a
+ProxyMessage. Each ProxyMessage has the format described below.
+
+.Proxy Message Block Format
+[cols="1,1^,4",options="header",width="95%"]
+|============================================================================
+| Field   | Size [octets] | Description
+| type    | 1             | The message type (see below)
+| address | 4             | Remote peer's IP address in network byte order
+| size    | 4             | Size of the data payload portion, little-endian
+| data    | 0-            | Sequence of bytes (payload). May be zero octets.
+|============================================================================
+
+The 'type' field indicates what type of message it is. The available message
+types are listed below. The "sender" column indicate which of the sides,
+client (c), server (s) or both (c/s) that can send the message.
+
+.Protocol Message Specifications
+[cols="2,1^,1^,1^,5a",options="header",width="95%"]
+|============================================================================
+| Name        | Type code | Sender | Data size | Description
+| TCP_OPEN    | 1         | c      | 0         |
+Open a TCP connection to the IP address specified in the address field of the
+header.
+
+| TCP_DATA    | 2         | c/s    | 1-        |
+Send TCP data to a previously opened connection. The data field have variable
+size and contains the TCP data to send.
+
+| TCP_CLOSE   | 3         | c/s    | 0         |
+Close a previously opened TCP connection. The data field should have length 0.
+When the server receives the TCP_CLOSE message, it will reply back with a
+TCP_CLOSE message when the connection have been closed. The server may also
+send a TCP_CLOSE if the remote server close the connection.
+
+| TCP_STATUS  | 4         | s      | 4         |
+Status report for the TCP connection. The server will send a TCP_STATUS message
+after the connection have been established. If the connection succeeds, all
+four data bytes will be set to 0.
+
+| UDP_DATA    | 5         | c/s    | 1-        |
+Send a UDP data message. UDP data messages are used for example to carry
+EchoLink audio.
+
+| UDP_CONTROL | 6         | c/s    | 1-        |
+Send a UDP control message. UDP control messages are for example used to
+control EchoLink connection establishment and maintenance.
+
+| SYSTEM      | 7         | s      | 1         |
+System event information message. This message is used to indicate
+authentication or authorization failure. There are two valid values for the
+single data byte.
+
+* *1: BAD_PASSWORD* - The client provided the wrong authentication password.
+* *2: ACCESS_DENIED* - The client is not authorized to access this proxy.
+
+|============================================================================
+
+
+
+// vim: syntax=asciidoc:

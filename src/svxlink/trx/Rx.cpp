@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "LocalRx.h"
 #include "Voter.h"
 #include "NetRx.h"
+#include "DummyRxTx.h"
 
 
 
@@ -120,6 +121,19 @@ class NetRxFactory : public RxFactory
     Rx *createRx(Config &cfg, const string& name)
     {
       return new NetRx(cfg, name);
+    }
+}; /* class NetRxFactory */
+
+
+class DummyRxFactory : public RxFactory
+{
+  public:
+    DummyRxFactory(void) : RxFactory("Dummy") {}
+    
+  protected:
+    Rx *createRx(Config &cfg, const string& name)
+    {
+      return new DummyRx(cfg, name);
     }
 }; /* class NetRxFactory */
 
@@ -227,12 +241,20 @@ Rx *RxFactory::createNamedRx(Config& cfg, const string& name)
   LocalRxFactory local_rx_factory;
   VoterFactory voter_factory;
   NetRxFactory net_rx_factory;
+  DummyRxFactory dummy_rx_factory;
   
   string rx_type;
-  if (!cfg.getValue(name, "TYPE", rx_type))
+  if (name != "NONE")
   {
-    cerr << "*** ERROR: Config variable " << name << "/TYPE not set\n";
-    return 0;
+    if (!cfg.getValue(name, "TYPE", rx_type))
+    {
+      cerr << "*** ERROR: Config variable " << name << "/TYPE not set\n";
+      return 0;
+    }
+  }
+  else
+  {
+    rx_type = "Dummy";
   }
   
   map<string, RxFactory*>::iterator it;

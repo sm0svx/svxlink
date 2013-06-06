@@ -77,6 +77,11 @@ class IncomingConnection;
 class MsgHandler;
 class EchoLinkDirectoryModel;
 
+namespace EchoLink
+{
+  class Proxy;
+};
+
 
 /****************************************************************************
  *
@@ -154,13 +159,13 @@ class MainWindow : public QMainWindow, private Ui::MainWindowBase,
   Q_OBJECT
   
   public:
-    MainWindow(EchoLink::Directory& dir);
+    MainWindow(void);
     virtual ~MainWindow(void);
     
   protected:
     
   private:    
-    EchoLink::Directory &     	  dir;
+    EchoLink::Directory      	  *dir;
     QTimer *  	      	      	  refresh_call_list_timer;
     bool      	      	      	  is_busy;
     QLabel *  	      	      	  status_indicator;
@@ -173,6 +178,7 @@ class MainWindow : public QMainWindow, private Ui::MainWindowBase,
     EchoLinkDirectoryModel	  *link_model;
     EchoLinkDirectoryModel	  *repeater_model;
     EchoLinkDirectoryModel	  *station_model;
+    EchoLink::Proxy               *proxy;
     
     QMap<QString, QString> incoming_con_param;
     
@@ -188,6 +194,7 @@ class MainWindow : public QMainWindow, private Ui::MainWindowBase,
     void allMsgsWritten(void);
     void initMsgAudioIo(void);
     void setupAudioParams(void);
+    void initEchoLink(void);
     void updateBookmarkModel(void);
     
   private slots:
