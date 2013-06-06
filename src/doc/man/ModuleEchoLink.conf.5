@@ -105,6 +105,12 @@ SvxLink from switching into the Speex codec when another SvxLink station is
 connecting via EchoLink.
 If this param is set to 1 SvxLink remains in the default codec (GSM).
 .TP
+.B DEFAULT_LANG
+Set the language to use for announcements sent to remote EchoLink stations.
+If not set, it will be the same as the one chosen for the logic core. The
+reason for setting this up may be that you want one language for the core
+and another language for annoncements sent to remote EchoLink stations.
+.TP
 .B MAX_CONNECTIONS
 When more stations than specified in MAX_QSOS try to connect, a connection will
 temporarily be established long enough to play a message telling the remote
