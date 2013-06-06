@@ -9,17 +9,17 @@
     </message>
     <message>
         <source>Could not create connection to station</source>
-        <translation>Не могу подключится к</translation>
+        <translation>Не могу подключиться к</translation>
     </message>
     <message>
         <source>Station data not found in directory server.
 Can&apos;t create connection to</source>
         <translation>Нет данных о станции на регистрационном сервере.
-Не могу подключится к</translation>
+Не могу подключиться к</translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
-        <translation>Не могу подключится к удаленному узлу</translation>
+        <translation>Не могу подключиться к удаленному узлу</translation>
     </message>
     <message>
         <source>INFO</source>
@@ -94,11 +94,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>&amp;Connect</source>
-        <translation>&amp;Подключится</translation>
+        <translation>&amp;Подключиться</translation>
     </message>
     <message>
         <source>&amp;Disconnect</source>
-        <translation>&amp;Отключится</translation>
+        <translation>&amp;Отключиться</translation>
     </message>
     <message>
         <source>Alt+D</source>
@@ -180,7 +180,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
-        <translation>Qtel: Подключится к IP</translation>
+        <translation>Qtel: Подключиться к IP</translation>
     </message>
     <message>
         <source>Enter an IP address or hostname:</source>
@@ -353,11 +353,11 @@ Qtel поставляется АБСОЛЮТНО БЕЗ КАКИХ-ЛИБО ГА
     </message>
     <message>
         <source>Connect to IP...</source>
-        <translation>Подключится к IP...</translation>
+        <translation>Подключиться к IP...</translation>
     </message>
     <message>
         <source>Connect to selected...</source>
-        <translation>Подключится к выбранному...</translation>
+        <translation>Подключиться к выбранному...</translation>
     </message>
     <message>
         <source>Incoming Connections</source>
@@ -373,11 +373,11 @@ Qtel поставляется АБСОЛЮТНО БЕЗ КАКИХ-ЛИБО ГА
     </message>
     <message>
         <source>Connect to &amp;selected...</source>
-        <translation>Подключится к &amp;выбранному...</translation>
+        <translation>Подключиться к &amp;выбранному...</translation>
     </message>
     <message>
         <source>Connect to &amp;IP...</source>
-        <translation>Подключится к &amp;IP...</translation>
+        <translation>Подключиться к &amp;IP...</translation>
     </message>
     <message>
         <source>Qtel &amp;Settings...</source>
@@ -417,11 +417,11 @@ Qtel поставляется АБСОЛЮТНО БЕЗ КАКИХ-ЛИБО ГА
     </message>
     <message>
         <source>Connect to the selected station</source>
-        <translation>Подключится к выбранной станции</translation>
+        <translation>Подключиться к выбранной станции</translation>
     </message>
     <message>
         <source>Connect to local station using IP address or hostname</source>
-        <translation>Подключится к локальной станции с помощью IP-адреса или сетевого имени</translation>
+        <translation>Подключиться к локальной станции с помощью IP-адреса или сетевого имени</translation>
     </message>
     <message>
         <source>Immediately refresh the station list</source>
@@ -718,7 +718,7 @@ Message</source>
     </message>
     <message>
         <source>EchoLink proxy enabled but no server given</source>
-        <translation>EchoLink proxy включен, но данного сервера нет</translation>
+        <translation>EchoLink proxy включен, но сервер не указан</translation>
     </message>
 </context>
 </TS>
