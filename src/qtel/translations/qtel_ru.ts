@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>Could not create connection to station</source>
-        <translation>Не могу подключится к станции</translation>
+        <translation>Не могу подключится к</translation>
     </message>
     <message>
         <source>Station data not found in directory server.
@@ -180,11 +180,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Qtel: Connect to IP</source>
-        <translation>Qtel: Подключится к IP-адресу</translation>
+        <translation>Qtel: Подключится к IP</translation>
     </message>
     <message>
         <source>Enter an IP address or hostname:</source>
-        <translation>Ведите IP адрес или сетевое имя:</translation>
+        <translation>Введите IP-адрес или сетевое имя:</translation>
     </message>
     <message>
         <source>Bookmarks</source>
@@ -345,11 +345,11 @@ Qtel поставляется АБСОЛЮТНО БЕЗ КАКИХ-ЛИБО ГА
     </message>
     <message>
         <source>View as busy</source>
-        <translation>Режим &quot;занят&quot;</translation>
+        <translation>Отобразить как &quot;Занят&quot;</translation>
     </message>
     <message>
         <source>View as busy in directory server</source>
-        <translation>Включить режим &quot;занят&quot; на регистрационном сервере</translation>
+        <translation>Отобразить статус как &quot;Занят&quot;</translation>
     </message>
     <message>
         <source>Connect to IP...</source>
@@ -373,11 +373,11 @@ Qtel поставляется АБСОЛЮТНО БЕЗ КАКИХ-ЛИБО ГА
     </message>
     <message>
         <source>Connect to &amp;selected...</source>
-        <translation>Подключиться к &amp;выбранному...</translation>
+        <translation>Подключится к &amp;выбранному...</translation>
     </message>
     <message>
         <source>Connect to &amp;IP...</source>
-        <translation>Подключиться к &amp;IP...</translation>
+        <translation>Подключится к &amp;IP...</translation>
     </message>
     <message>
         <source>Qtel &amp;Settings...</source>
@@ -393,7 +393,7 @@ Qtel поставляется АБСОЛЮТНО БЕЗ КАКИХ-ЛИБО ГА
     </message>
     <message>
         <source>Add the selected station in the station list to the bookmarks menu</source>
-        <translation>Добавить выбранную станцию ​​в список станций в меню закладки</translation>
+        <translation>Добавить выбранную станцию в список станций в меню закладки</translation>
     </message>
     <message>
         <source>Ctrl+U</source>
@@ -417,15 +417,15 @@ Qtel поставляется АБСОЛЮТНО БЕЗ КАКИХ-ЛИБО ГА
     </message>
     <message>
         <source>Connect to the selected station</source>
-        <translation>Подключиться к выбранной станции</translation>
+        <translation>Подключится к выбранной станции</translation>
     </message>
     <message>
         <source>Connect to local station using IP address or hostname</source>
-        <translation>Подключиться к локальной станции с помощью IP-адреса или сетевого имени</translation>
+        <translation>Подключится к локальной станции с помощью IP-адреса или сетевого имени</translation>
     </message>
     <message>
         <source>Immediately refresh the station list</source>
-        <translation>Немедленное обновление списка станций</translation>
+        <translation>Обновить список станций</translation>
     </message>
     <message>
         <source>Add selected station to the bookmarks</source>
@@ -486,7 +486,7 @@ Message</source>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation>Регистрационный Сервер</translation>
+        <translation type="obsolete">Регистрационный Сервер</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
@@ -494,7 +494,7 @@ Message</source>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>Сетевое имя или IP адрес регистрационного сервера EchoLink</translation>
+        <translation type="obsolete">Сетевое имя или IP-адрес регистрационного сервера EchoLink</translation>
     </message>
     <message>
         <source>Server</source>
@@ -502,7 +502,7 @@ Message</source>
     </message>
     <message>
         <source>Refresh time</source>
-        <translation>Время обновления</translation>
+        <translation>Обновление</translation>
     </message>
     <message>
         <source>min</source>
@@ -514,11 +514,11 @@ Message</source>
     </message>
     <message>
         <source>Register as busy on program startup</source>
-        <translation>Включить режим &quot;занят&quot; во время запуска программы</translation>
+        <translation>Отображать статус как &quot;Занят&quot; при запуске программы</translation>
     </message>
     <message>
         <source>Start as busy</source>
-        <translation>Вкл. режим &quot;занят&quot;</translation>
+        <translation>Вкл. &quot;Занят&quot;</translation>
     </message>
     <message>
         <source>Sound</source>
@@ -667,6 +667,58 @@ Message</source>
     <message>
         <source>QSO Dialog Settings</source>
         <translation>Настройки Окна QSO</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation>Сеть</translation>
+    </message>
+    <message>
+        <source>Servers</source>
+        <translation>Серверы</translation>
+    </message>
+    <message>
+        <source>A space separated list of the hostname or IP address of the EchoLink directory servers to use</source>
+        <translation>Разделенный пробелом список, сетевых имен или IP-адресов, регистрационных серверов EchoLink</translation>
+    </message>
+    <message>
+        <source>EchoLink Proxy Settings</source>
+        <translation>Настройки EchoLink Proxy</translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation>Включить</translation>
+    </message>
+    <message>
+        <source>If enabling EchoLink proxy you must supply a proxy server hostname or IP address.</source>
+        <translation>Если включить EchoLink proxy, необходимо указать сетевое имя или IP-адрес proxy сервера.</translation>
+    </message>
+    <message>
+        <source>The hostname or IP address of the EchoLink proxy server to use</source>
+        <translation>Сетевое имя или IP-адрес, используемого proxy сервера EchoLink</translation>
+    </message>
+    <message>
+        <source>TCP Port</source>
+        <translation>TCP Порт</translation>
+    </message>
+    <message>
+        <source>The TCP port to connect to on the EchoLink proxy server, default 8100</source>
+        <translation>TCP порт для подключения к EchoLink proxy серверу, по умолчанию 8100</translation>
+    </message>
+    <message>
+        <source>The EchoLink PROXY password, not your normal EchoLink password. Leave empty for public proxy.</source>
+        <translation>Пароль EchoLink PROXY, не ваш обычный EchoLink пароль. Оставьте пустым для публичного proxy.</translation>
+    </message>
+    <message>
+        <source>Sampling Rate</source>
+        <translation>Дискретизация</translation>
+    </message>
+    <message>
+        <source>EchoLink proxy configuration problem</source>
+        <translation>Проблема конфигурации EchoLink proxy</translation>
+    </message>
+    <message>
+        <source>EchoLink proxy enabled but no server given</source>
+        <translation>EchoLink proxy включен, но данного сервера нет</translation>
     </message>
 </context>
 </TS>
