@@ -495,6 +495,18 @@ Message</source>
         <translation>サーバー</translation>
     </message>
     <message>
+        <source>Servers</source>
+        <translation>サーバー</translation>
+    </message>
+    <message>
+        <source>A space separated list of the hostname or IP address of the EchoLink directory servers to use</source>
+        <translation>使用するエコーリンクディレクトリーサーバーのホスト名か、IPアドレスのリストをスペースで区切る</translation>
+    </message>
+    <message>
+        <source>TCP Port</source>
+        <translation>TCPポート</translation>
+    </message>
+    <message>
         <source>Cancel</source>
         <translation>取り消し</translation>
     </message>
