@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>Could not create connection to station</source>
-        <translation>Не могу подключиться к</translation>
+        <translation type="obsolete">Не могу подключиться к</translation>
     </message>
     <message>
         <source>Station data not found in directory server.
@@ -44,6 +44,10 @@ Can&apos;t create connection to</source>
     <message>
         <source>Could not open speaker audio device</source>
         <translation>Не могу открыть устройство аудио выхода</translation>
+    </message>
+    <message>
+        <source>Could not create connection to</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
