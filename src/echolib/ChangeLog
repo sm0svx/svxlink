@@ -1,4 +1,4 @@
- 1.1.0 -- ?? ??? 2013
+ 1.2.0 -- ?? ??? 2013
 ----------------------
 
 * Added support for EchoLink proxy.
@@ -8,6 +8,14 @@
   Host names that resolve to multiple IP addresses, like servers.echolink.org,
   will also be correctly handled so that each resolved IP address will be
   tried in order until a working one is found.
+
+
+
+ 1.1.0 -- 06 Jun 2013
+----------------------
+
+* Now possible to force use of GSM codec only. This may be necessary on
+  less powerful systems.
 
 
 

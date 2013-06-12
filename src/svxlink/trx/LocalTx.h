@@ -213,6 +213,7 @@ class LocalTx : public Tx
     SineGenerator           *siglev_sine_gen;
     std::vector<int>        tone_siglev_map;
     Async::Timer            *ptt_hangtimer;
+    int                     gpio_pin;
     
     void txTimeoutOccured(Async::Timer *t);
     int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);

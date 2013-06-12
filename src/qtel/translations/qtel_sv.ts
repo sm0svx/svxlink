@@ -27,7 +27,7 @@ Kan ej skapa uppkoppling till</translation>
     </message>
     <message>
         <source>Could not create connection to station</source>
-        <translation>Kunde inte ansluta till station</translation>
+        <translation type="obsolete">Kunde inte ansluta till station</translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
@@ -44,6 +44,14 @@ Kan ej skapa uppkoppling till</translation>
     <message>
         <source>Could not open speaker audio device</source>
         <translation>Kunde ej öppna ljudenhet för högtalare</translation>
+    </message>
+    <message>
+        <source>Could not create connection to </source>
+        <translation type="obsolete">Kunde inte koppla upp till </translation>
+    </message>
+    <message>
+        <source>Could not create connection to</source>
+        <translation>Kunde inte koppla upp till</translation>
     </message>
 </context>
 <context>
@@ -487,7 +495,7 @@ meddelande</translation>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation>Listserver</translation>
+        <translation type="obsolete">Listserver</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
@@ -499,7 +507,7 @@ meddelande</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>Namn eller IP-adress på den EchoLink listserver som skall användas</translation>
+        <translation type="obsolete">Namn eller IP-adress på den EchoLink listserver som skall användas</translation>
     </message>
     <message>
         <source>Refresh time</source>
@@ -668,6 +676,58 @@ meddelande</translation>
     <message>
         <source>QSO Dialog Settings</source>
         <translation>Inställningar för QSO-dialog</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation>Nätverk</translation>
+    </message>
+    <message>
+        <source>Servers</source>
+        <translation>Servrar</translation>
+    </message>
+    <message>
+        <source>A space separated list of the hostname or IP address of the EchoLink directory servers to use</source>
+        <translation>En mellanslagseparerad lista med värdnamn eller IP-adresser för EchoLink-listservrar som skall användas</translation>
+    </message>
+    <message>
+        <source>EchoLink Proxy Settings</source>
+        <translation>Inställningar för EchoLink Proxy</translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation>Aktivera</translation>
+    </message>
+    <message>
+        <source>If enabling EchoLink proxy you must supply a proxy server hostname or IP address.</source>
+        <translation>Om EchoLink proxy aktiveras måste också en IP-adress eller värdnamn för en proxy-server anges.</translation>
+    </message>
+    <message>
+        <source>The hostname or IP address of the EchoLink proxy server to use</source>
+        <translation>Värdnamn eller IP-adress för den EchoLink proxy-server som skall användas</translation>
+    </message>
+    <message>
+        <source>TCP Port</source>
+        <translation>TCP-port</translation>
+    </message>
+    <message>
+        <source>The TCP port to connect to on the EchoLink proxy server, default 8100</source>
+        <translation>Den TCP-port som skall användas för att koppla upp mot proxy-servern, normalt 8100</translation>
+    </message>
+    <message>
+        <source>The EchoLink PROXY password, not your normal EchoLink password. Leave empty for public proxy.</source>
+        <translation>Lösenordet för PROXY-servern, alltså inte ditt normala EchoLink-lösenord. Lämna tomt för publik proxy.</translation>
+    </message>
+    <message>
+        <source>Sampling Rate</source>
+        <translation>Samplingshastighet</translation>
+    </message>
+    <message>
+        <source>EchoLink proxy configuration problem</source>
+        <translation>Problem med konfiguration av EchoLink proxy</translation>
+    </message>
+    <message>
+        <source>EchoLink proxy enabled but no server given</source>
+        <translation>EchoLink proxy aktiverad men ingen server angiven</translation>
     </message>
 </context>
 </TS>

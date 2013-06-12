@@ -1,11 +1,8 @@
- 1.1.0 -- ?? ??? 2013
------------------------
+ 1.2.0 -- ?? ??? 2013
+----------------------
 
-* Qtel now support 16k internal sample rate.
-
-* The sound card sample rate can now be set in the configuration dialog.
-
-* The "100% CPU load after incoming connect" bug in Qtel has been resolved.
+* Updated language translations: Russian (UR3QJW / Volodymyr),
+  Japanese (JH1PGO / Masao).
 
 * Added support for EchoLink proxy.
 
@@ -17,8 +14,19 @@
 
 
 
+ 1.1.0 -- 06 Jun 2013
+----------------------
+
+* Qtel now support 16k internal sample rate.
+
+* The sound card sample rate can now be set in the configuration dialog.
+
+* The "100% CPU load after incoming connect" bug in Qtel has been resolved.
+
+
+
  1.0.0 -- 08 Mar 2013
------------------------
+----------------------
 
 * Moved from sigc++ version 1.2 to version 2.
   Patch contributed by Felix/WU8K.

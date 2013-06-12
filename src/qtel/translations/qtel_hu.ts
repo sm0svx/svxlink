@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>Could not create connection to station</source>
-        <translation>Nem-tudok-kapcsolatot-létrehozni-az-állomással</translation>
+        <translation type="obsolete">Nem-tudok-kapcsolatot-létrehozni-az-állomással</translation>
     </message>
     <message>
         <source>Station data not found in directory server.
@@ -43,6 +43,10 @@ Nem-tudom-a kapcsolatot-létrehozni</translation>
     </message>
     <message>
         <source>Could not open speaker audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not create connection to</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -483,7 +487,7 @@ Message</source>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation type="unfinished">Könyvtár-szerver</translation>
+        <translation type="obsolete">Könyvtár-szerver</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
@@ -491,7 +495,7 @@ Message</source>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation type="unfinished">A-hosztnév-vagy-IP-cím-használja-az-Echolink-könyvtár-szervert</translation>
+        <translation type="obsolete">A-hosztnév-vagy-IP-cím-használja-az-Echolink-könyvtár-szervert</translation>
     </message>
     <message>
         <source>Server</source>
@@ -663,6 +667,58 @@ Message</source>
     </message>
     <message>
         <source>Chat encoding:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Servers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A space separated list of the hostname or IP address of the EchoLink directory servers to use</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>EchoLink Proxy Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If enabling EchoLink proxy you must supply a proxy server hostname or IP address.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The hostname or IP address of the EchoLink proxy server to use</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>TCP Port</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The TCP port to connect to on the EchoLink proxy server, default 8100</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The EchoLink PROXY password, not your normal EchoLink password. Leave empty for public proxy.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sampling Rate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>EchoLink proxy configuration problem</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>EchoLink proxy enabled but no server given</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

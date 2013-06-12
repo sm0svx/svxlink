@@ -1,4 +1,24 @@
- 1.1.0 -- ?? ??? 2013
+ 1.2.0 -- ?? ??? 2013
+----------------------
+
+* Added support for EchoLink proxy.
+
+* ModuleEchoLink: Now possible to configure multiple servers for the directory
+  server. The servers will be tried in order until a working one is found.
+  The SERVER config variable has been replaced by the SERVERS config variable
+  which is a space separated list of servers. Host names that resolve
+  to multiple IP addresses, like servers.echolink.org, will also be correctly
+  handled so that each resolved IP address will be tried in order until a
+  working one is found.
+
+* Added support for PTT on GPIO. This is for example good for embedded
+  systems like the Raspberry Pi where GPIO pins are readily available. Using
+  GPIO will eliminate the need for a USB to serial converter.
+  Patch contributed by K1FSY / David.
+
+
+
+ 1.1.0 -- 06 Jun 2013
 ----------------------
 
 * Bugfixes in APRS statistcs.
@@ -54,19 +74,9 @@
 * The maximum QSO limit (MAX_QSOS) did not work for outgoing connections for
   all use cases.
 
-* Added support for EchoLink proxy.
-
 * Now possible to specify NONE for RX and TX in all configs. For example,
   previously it was not possible to specify NONE for uplink RX or TX in
   RemoteTrx.
-
-* ModuleEchoLink: Now possible to configure multiple servers for the directory
-  server. The servers will be tried in order until a working one is found.
-  The SERVER config variable has been replaced by the SERVERS config variable
-  which is a space separated list of servers. Host names that resolve
-  to multiple IP addresses, like servers.echolink.org, will also be correctly
-  handled so that each resolved IP address will be tried in order until a
-  working one is found.
 
 
 

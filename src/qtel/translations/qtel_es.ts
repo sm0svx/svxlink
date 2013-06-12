@@ -35,7 +35,7 @@ No se puede crear una conexión</translation>
     </message>
     <message>
         <source>Could not create connection to station</source>
-        <translation>No se puede crear conexión con la estación</translation>
+        <translation type="obsolete">No se puede crear conexión con la estación</translation>
     </message>
     <message>
         <source>Could not open mic audio device</source>
@@ -44,6 +44,10 @@ No se puede crear una conexión</translation>
     <message>
         <source>Could not open speaker audio device</source>
         <translation>No se puede abril el dispositivo de salida de audio</translation>
+    </message>
+    <message>
+        <source>Could not create connection to</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -490,7 +494,7 @@ Message</source>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation>Servidor de directorio</translation>
+        <translation type="obsolete">Servidor de directorio</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
@@ -506,7 +510,7 @@ Message</source>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>El nombre del equipo o dirección IP del servidor de directorio de Echolink a utilizar</translation>
+        <translation type="obsolete">El nombre del equipo o dirección IP del servidor de directorio de Echolink a utilizar</translation>
     </message>
     <message>
         <source>Refresh time</source>
@@ -667,6 +671,58 @@ Message</source>
     <message>
         <source>QSO Dialog Settings</source>
         <translation>Ajustes del Diálogo QSO</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Servers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A space separated list of the hostname or IP address of the EchoLink directory servers to use</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>EchoLink Proxy Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If enabling EchoLink proxy you must supply a proxy server hostname or IP address.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The hostname or IP address of the EchoLink proxy server to use</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>TCP Port</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The TCP port to connect to on the EchoLink proxy server, default 8100</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The EchoLink PROXY password, not your normal EchoLink password. Leave empty for public proxy.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sampling Rate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>EchoLink proxy configuration problem</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>EchoLink proxy enabled but no server given</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

@@ -26,7 +26,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Could not create connection to station</source>
-        <translation>接続できません</translation>
+        <translation type="obsolete">接続できません</translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
@@ -43,6 +43,10 @@ Can&apos;t create connection to</source>
     <message>
         <source>Could not open speaker audio device</source>
         <translation>スピーカオーディオデバイスがオープンできません</translation>
+    </message>
+    <message>
+        <source>Could not create connection to</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -484,7 +488,7 @@ Message</source>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation>ディレクトリサーバー</translation>
+        <translation type="obsolete">ディレクトリサーバー</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
@@ -495,12 +499,24 @@ Message</source>
         <translation>サーバー</translation>
     </message>
     <message>
+        <source>Servers</source>
+        <translation>サーバー</translation>
+    </message>
+    <message>
+        <source>A space separated list of the hostname or IP address of the EchoLink directory servers to use</source>
+        <translation>使用するエコーリンクディレクトリーサーバーのホスト名か、IPアドレスのリストをスペースで区切る</translation>
+    </message>
+    <message>
+        <source>TCP Port</source>
+        <translation>TCPポート</translation>
+    </message>
+    <message>
         <source>Cancel</source>
         <translation>取り消し</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>エコーリンクディレクトリサーバーのホスト名またはIPアドレスの設定</translation>
+        <translation type="obsolete">エコーリンクディレクトリサーバーのホスト名またはIPアドレスの設定</translation>
     </message>
     <message>
         <source>Refresh time</source>
@@ -697,6 +713,14 @@ Message</source>
     <message>
         <source>QSO Dialog Settings</source>
         <translation>&amp;Qtelセッティング...</translation>
+    </message>
+    <message>
+        <source>EchoLink proxy configuration problem</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>EchoLink proxy enabled but no server given</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

@@ -482,7 +482,7 @@ void ComDialog::createConnection(const StationData *station)
   if (!con->initOk())
   {
     MyMessageBox *mb = new MyMessageBox(trUtf8("Qtel Error"),
-	trUtf8("Could not create connection to station") + " " + callsign);
+	trUtf8("Could not create connection to") + " " + callsign);
     mb->show();
     connect(mb, SIGNAL(closed()), this, SLOT(close()));
     delete con;
