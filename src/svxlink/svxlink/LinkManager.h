@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <vector>
 #include <list>
 #include <set>
+#include <stdint.h>
 
 
 /****************************************************************************
@@ -157,6 +158,15 @@ class LinkManager : public sigc::trackable
     typedef std::map<std::string, linkSet> linkC;
     linkC    linkCfg;
 
+    struct stateSet
+    {
+      int *tx_ctcss_state;
+      bool *state;
+    };
+
+    typedef std::map<std::string, stateSet> logicS;
+    logicS logicState;
+
     typedef std::set<std::pair<std::string, std::string> > LogicConSet;
     typedef std::map<std::string, std::set<std::string> > LogicConMap;
     LogicConMap con_map;
@@ -171,7 +181,9 @@ class LinkManager : public sigc::trackable
     std::string cmdReceived(const std::string& logicname, std::string cmd,
                                                       std::string subcmd);
     std::vector<std::string> getCommands(std::string logicname);
+    //void stateChanged(const std::string& logicname, int state, bool is_on);
 
+    sigc::signal<void, uint8_t, bool> logicStateChanged();
 
     class CGuard
     {
@@ -218,6 +230,11 @@ class LinkManager : public sigc::trackable
     SourceMap sources;
     SinkMap   sinks;
 
+    typedef enum
+    {
+      ERROR = 0, OK = 1, ALREADY_CONNECTED = 3
+    } connectType;
+
     bool sourceIsAdded(const std::string &logicname);
     bool sinkIsAdded(const std::string &logicname);
     std::vector<std::string> getLinkNames(const std::string& logicname);
@@ -234,6 +251,8 @@ class LinkManager : public sigc::trackable
                          gettodisconnect(const std::string& name);
     std::set<std::pair<std::string, std::string> >
                          getLogics(const std::string& linkname);
+    protected:
+        sigc::signal<void, uint8_t, bool> m_logicStateChanged;
 };  /* class LinkManager */
 
 #endif /* LINK_MANAGER_INCLUDED */

@@ -584,19 +584,20 @@ bool Logic::initialize(void)
 
     for (cit = cmdList.begin(); cit != cmdList.end(); cit++)
     {
-       //cout << "Logic cmdList " << (*cit) << endl;
+      //cout << "Logic cmdList " << (*cit) << endl;
 
-       LinkCmd *tlink_cmd = new LinkCmd(&cmd_parser, this);
-       if (!tlink_cmd->initialize(*cit))
-       {
-          cout << "*** ERROR: Can not setup command " << (*cit) <<
-                  " for the logic " << name() << endl;
-          return false;
-       }
+      LinkCmd *tlink_cmd = new LinkCmd(&cmd_parser, this);
+      if (!tlink_cmd->initialize(*cit))
+      {
+        cout << "*** ERROR: Can not setup command " << (*cit) <<
+                " for the logic " << name() << endl;
+        return false;
+      }
     }
 
      // check if the logics should be connected on startup
     LinkManager::instance()->logicIsUp(name());
+    LinkManager::instance()->logicStateChanged().connect(mem_fun(*this, &Logic::stateChanged));
   }
 
   if (LocationInfo::has_instance())
@@ -928,6 +929,12 @@ void Logic::squelchOpen(bool is_open)
     LocationInfo::instance()->setReceiving(name(), tv, is_open);
   }
 
+  if (LinkManager::has_instance())
+  {
+    state = is_open;
+    LinkManager::instance()->logicStateChanged().emit(TX_CTCSS_SQL_OPEN, is_open);
+  }
+
   updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
 
   checkIdle();
@@ -1062,6 +1069,11 @@ void Logic::allMsgsWritten(void)
   }
 
   updateTxCtcss(false, TX_CTCSS_ANNOUNCEMENT);
+
+  if (LinkManager::has_instance())
+  {
+    LinkManager::instance()->logicStateChanged().emit(TX_CTCSS_ANNOUNCEMENT, false);
+  }
   checkIdle();
 
 } /* Logic::allMsgsWritten */
@@ -1491,14 +1503,44 @@ void Logic::updateTxCtcss(bool do_set, TxCtcssType type)
 void Logic::logicConInStreamStateChanged(bool is_active, bool is_idle)
 {
   updateTxCtcss(!is_idle, TX_CTCSS_LOGIC);
+
+  if (LinkManager::has_instance())
+  {
+    cout << "logicConInStreamStateChanged" << endl;
+    LinkManager::instance()->logicStateChanged().emit(TX_CTCSS_LOGIC, !is_idle);
+  }
 } /* Logic::logicConInStreamStateChanged */
 
 
 void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 {
   updateTxCtcss(!is_idle, TX_CTCSS_MODULE);
+
+  if (LinkManager::has_instance())
+  {
+    cout << "audioFromModuleStreamStateChanged" << endl;
+    LinkManager::instance()->logicStateChanged().emit(TX_CTCSS_MODULE, !is_idle);
+  }
 } /* Logic::audioFromModuleStreamStateChanged */
 
+
+void Logic::stateChanged(uint8_t tx_ctcss, bool state)
+{
+  // cout << name() << ": external state changed!! "
+  //     << tx_ctcss << ", " << state << endl;
+
+  TxCtcssType t_ctcss = TxCtcssType(tx_ctcss);
+
+  if (this->tx_ctcss != tx_ctcss || this->state != state )
+  {
+    /* debug output:
+     cout << "changeing TxCtcss, this->tx_ctcss:"
+         << hex << int(this->tx_ctcss) << "  tx_ctcss:" << hex << int(tx_ctcss) << ","
+         << (this->state ? "1" : "0") << " " << (state ? "1" : "0") << endl;
+    */
+    updateTxCtcss(state, t_ctcss);
+  }
+} /* Logic::stateChanged */
 
 /*
  * This file has not been truncated
