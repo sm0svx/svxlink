@@ -397,6 +397,15 @@ proc reject_outgoing_connection {call} {
 }
 
 
+#
+# Executed when a transmission from an EchoLink station is starting
+# or stopping
+#
+proc is_receiving {rx} {
+  if {$rx == 0} {
+    playTone 1000 100 100;
+  }
+}
 
 #-----------------------------------------------------------------------------
 # The events below are for remote EchoLink announcements. Sounds are not

@@ -16,6 +16,11 @@
   GPIO will eliminate the need for a USB to serial converter.
   Patch contributed by K1FSY / David.
 
+* ModuleEchoLink: New TCL function "is_receiving" that is called when a remote
+  EchoLink transmission is started or stopped. The default implementation will
+  send a beep over the local transmitter.
+  Patch from DL1HRC / Adi.
+
 
 
  1.1.0 -- 06 Jun 2013
