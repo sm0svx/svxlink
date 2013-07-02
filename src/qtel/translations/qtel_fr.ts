@@ -1,4 +1,6 @@
-<!DOCTYPE TS><TS>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.0">
 <context>
     <name>ComDialog</name>
     <message>
@@ -7,7 +9,7 @@
     </message>
     <message>
         <source>Could not create connection to station</source>
-        <translation>Impossible de créer la connexion avec la station</translation>
+        <translation type="obsolete">Impossible de créer la connexion avec la station</translation>
     </message>
     <message>
         <source>Station data not found in directory server.
@@ -42,6 +44,10 @@ Impossible de créer la connexion à </translation>
     <message>
         <source>Could not open speaker audio device</source>
         <translation>Impossible d&apos;ouvrir le device audio (haut-parleur)</translation>
+    </message>
+    <message>
+        <source>Could not create connection to</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -214,7 +220,7 @@ Impossible de créer la connexion à </translation>
     </message>
     <message>
         <source> - Qt EchoLink client.</source>
-        <translation> - Qt EchoLink client.</translation>
+        <translation type="obsolete"> - Qt EchoLink client.</translation>
     </message>
     <message>
         <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
@@ -223,6 +229,11 @@ Qtel comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welco
         <translation>Copyright (C) 2011 Tobias Blomberg / SM0SVX
 
 Qtel est livré avec ABSOLUMENT AUCUNE GARANTIE. Ce logiciel est gratuit, et vous êtes invité à le redistribuer conformément aux termes et conditions de la licence GNU GPL (General Public License) version 2 ou ultérieure.</translation>
+    </message>
+    <message>
+        <source> - Qt EchoLink client.
+</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -481,7 +492,7 @@ Message</source>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation>Serveur d&apos;annuaire</translation>
+        <translation type="obsolete">Serveur d&apos;annuaire</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
@@ -489,7 +500,7 @@ Message</source>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>utiliser l&apos;adresse Internet ou IP du serveur d&apos;annuaire EchoLink</translation>
+        <translation type="obsolete">utiliser l&apos;adresse Internet ou IP du serveur d&apos;annuaire EchoLink</translation>
     </message>
     <message>
         <source>Server</source>
@@ -662,6 +673,58 @@ Message</source>
     <message>
         <source>QSO Dialog Settings</source>
         <translation>Boîte de dialogue Paramètres QSO</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Servers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A space separated list of the hostname or IP address of the EchoLink directory servers to use</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>EchoLink Proxy Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If enabling EchoLink proxy you must supply a proxy server hostname or IP address.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The hostname or IP address of the EchoLink proxy server to use</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>TCP Port</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The TCP port to connect to on the EchoLink proxy server, default 8100</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The EchoLink PROXY password, not your normal EchoLink password. Leave empty for public proxy.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sampling Rate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>EchoLink proxy configuration problem</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>EchoLink proxy enabled but no server given</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

@@ -1063,13 +1063,22 @@ channels as two mono channels. Legal values are 0 or 1.
 .B PTT_PORT
 Specify the serial port that the PTT is connected to. E.g. /dev/ttyS0 for COM1.
 Set it to NONE if no PTT is desired for some reason.
+
+If PTT_PORT is set to GPIO, any available GPIO (General Purpose IO) pin may be
+used. The pin to use is specified using the PTT_PIN config variable. Have a
+look at the USING GPIO section for information on how to set up the operating
+system.
 .TP
 .B PTT_PIN
-Specify the pin(s) in the serial port that the PTT is connected to. It is possible to
-specify one or two pins. Some interface boards require that you specify two pins since one
-pin does not provide enough drive power to the circuit. A "!" in front of the pin name
-indicates inverted operation. Some of the possible values are RTS, DTRRTS, !DTR!RTS or
-even DTR!RTS.
+Specify the pin(s) in the serial port that the PTT is connected to. It is
+possible to specify one or two serial port pins. Some interface boards require
+that you specify two pins since one pin does not provide enough drive power to
+the circuit. A "!" in front of the pin name indicates inverted operation. Some
+of the possible values are RTS, DTRRTS, !DTR!RTS or even DTR!RTS.
+
+If GPIO was specified for PTT_PORT, set the PTT_PIN config variable to the
+number of the GPIO-pin to use. Have a look at the USING GPIO section for
+information on how to set up the operating system.
 .TP
 .B SERIAL_SET_PINS
 Set the specified serial port pins to a static state. This can be good if using
@@ -1479,6 +1488,26 @@ example usage is to interface SvxLink with GNU Radio.
 Example: "udp:127.0.0.1:10000". Note however that the only supported format
 is raw 16 bit signed samples, two interleved channels. Sampling frequency can
 be chosen using the CARD_SAMPLE_RATE config variable as usual.
+.
+.SH USING GPIO
+.
+GPIO (General Purpose IO) is used to access hardware pins that are made
+available for example on an embedded system. Before starting to use a pin in
+SvxLink some setup need to be done in the operating system. The example below
+will set up pin 31 as an output for PTT use. Make sure that the commands are
+run as user root.
+
+  Enable the pin for GPIO:
+  echo 31 > /sys/class/gpio/export
+
+  Set the direction to output for the pin:
+  echo out > /sys/class/gpio/gpio31/direction
+
+  Make sure that the svxlink user can write to the GPIO pin:
+  chown svxlink /sys/class/gpio31/value
+
+These steps have to be performed whenever the system is rebooted. Putting the
+commands in a script is recommended.
 .
 .SH CALIBRATING THE SIGNAL LEVEL DETECTOR
 .
