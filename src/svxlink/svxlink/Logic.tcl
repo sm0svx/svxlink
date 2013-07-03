@@ -279,7 +279,7 @@ proc activating_link {name} {
 
 
 #
-# Executed when a link to another logic core is activated.
+# Executed when a link activation to another logic core fails.
 #   name  - The name of the link
 #
 proc activating_link_failed {name} {
@@ -290,8 +290,9 @@ proc activating_link_failed {name} {
 
 
 #
-# Executed when a link to another logic cound not be
-# activated because the link already exists
+# Executed when a link to another logic core is beeing
+# activated but fails because another link with the same
+# logics is established
 #   name  - The name of the link
 #
 proc activating_link_failed_other_connection {name} {
@@ -303,7 +304,7 @@ proc activating_link_failed_other_connection {name} {
 
 
 #
-# Executed when a link to another logic core is deactivated
+# Executed when a link to another logic core is deactivated.
 #   name  - The name of the link
 #
 proc deactivating_link {name} {
@@ -313,8 +314,8 @@ proc deactivating_link {name} {
 
 
 #
-# Executed when a link to another logic core shall beeing
-# deactivated but the action failed for some reason
+# Executed when a link to another logic core is beeing
+# deactivated but the action failed for some reason.
 #   name  - The name of the link
 #
 proc deactivating_link_failed {name} {
@@ -325,9 +326,9 @@ proc deactivating_link_failed {name} {
 
 
 #
-# Executed when a link to another logic core shall beeing
+# Executed when a link to another logic core is beeing
 # deactivated but the action failed because the link is
-# still activated by other linkdefinitions
+# still activated by other link definitions
 #   name  - The name of the link
 #
 proc deactivating_link_failed_other_connection {name} {
@@ -339,8 +340,8 @@ proc deactivating_link_failed_other_connection {name} {
 
 
 #
-# Executed when a link to another logic core shall beeing
-# deactivated but the action failed due to configuration
+# Executed when a link to another logic core is beeing
+# deactivated but the action failed due to configuration.
 #   name  - The name of the link
 #
 proc deactivating_link_not_possible {name} {

@@ -176,8 +176,8 @@ static volatile bool  	reopen_log = false;
  * Output:    Return 0 on success, else non-zero.
  * Author:    Tobias Blomberg, SM0SVX
  * Created:   2004-03-28
- * Remarks:
- * Bugs:
+ * Remarks:   
+ * Bugs:      
  *----------------------------------------------------------------------------
  */
 int main(int argc, char **argv)
@@ -204,14 +204,14 @@ int main(int argc, char **argv)
     perror("sigaction");
     exit(1);
   }
-
+  
   act.sa_handler = sigterm_handler;
   if (sigaction(SIGINT, &act, &sigint_oldact) == -1)
   {
     perror("sigaction");
     exit(1);
   }
-
+  
   int pipefd[2] = {-1, -1};
   int noclose = 0;
   if (logfile_name != 0)
@@ -259,14 +259,14 @@ int main(int argc, char **argv)
 
       /* Close stdin */
     close(STDIN_FILENO);
-
+    
       /* Force stdout to line buffered mode */
     if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
     {
       perror("setlinebuf");
       exit(1);
-    }
-
+    }    
+    
       /* Tell the daemon function call not to close the file descriptors */
     noclose = 1;
   }
@@ -327,7 +327,7 @@ int main(int argc, char **argv)
   {
     home_dir = ".";
   }
-
+  
   tstamp_format = "%c";
 
   Config cfg;
@@ -367,7 +367,7 @@ int main(int argc, char **argv)
     }
   }
   string main_cfg_filename(cfg_filename);
-
+  
   string cfg_dir;
   if (cfg.getValue("GLOBAL", "CFG_DIR", cfg_dir))
   {
@@ -383,7 +383,7 @@ int main(int argc, char **argv)
       	cfg_dir = string("./") + cfg_dir;
       }
     }
-
+    
     DIR *dir = opendir(cfg_dir.c_str());
     if (dir == NULL)
     {
@@ -391,7 +391,7 @@ int main(int argc, char **argv)
       	   << "configuration variable GLOBAL/CFG_DIR=" << cfg_dir << endl;
       exit(1);
     }
-
+    
     struct dirent *dirent;
     while ((dirent = readdir(dir)) != NULL)
     {
@@ -408,7 +408,7 @@ int main(int argc, char **argv)
 	 exit(1);
        }
     }
-
+    
     if (closedir(dir) == -1)
     {
       cerr << "*** ERROR: Error closing directory specified by"
@@ -416,17 +416,19 @@ int main(int argc, char **argv)
       exit(1);
     }
   }
-
+  
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
-
-
-  cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__ ") Copyright (C) 2011 Tobias Blomberg / SM0SVX\n\n";
-  cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. This is free software, and you are\n";
-  cout << "welcome to redistribute it in accordance with the terms and conditions in the\n";
+  
+  cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__
+          ") Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
+          "This is free software, and you are\n";
+  cout << "welcome to redistribute it in accordance with the terms "
+          "and conditions in the\n";
   cout << "GNU GPL (General Public License) version 2 or later.\n";
 
   cout << "\nUsing configuration file: " << main_cfg_filename << endl;
-
+  
   string value;
   if (cfg.getValue("GLOBAL", "CARD_SAMPLE_RATE", value))
   {
@@ -461,7 +463,7 @@ int main(int argc, char **argv)
     AudioIO::setSampleRate(rate);
     cout << "--- Using sample rate " << rate << "Hz\n";
   }
-
+  
   // init locationinfo
   if (cfg.getValue("GLOBAL", "LOCATION_INFO", value))
   {
@@ -522,29 +524,29 @@ int main(int argc, char **argv)
     delete *lit;
   }
   logic_vec.clear();
-
+  
   if (logfd != -1)
   {
     close(logfd);
   }
-
+  
   if (sigaction(SIGHUP, &sighup_oldact, NULL) == -1)
   {
     perror("sigaction");
   }
-
+  
   if (sigaction(SIGHUP, &sigterm_oldact, NULL) == -1)
   {
     perror("sigaction");
   }
-
+  
   if (sigaction(SIGHUP, &sigint_oldact, NULL) == -1)
   {
     perror("sigaction");
   }
-
+  
   return 0;
-
+  
 } /* main */
 
 
@@ -565,8 +567,8 @@ int main(int argc, char **argv)
  * Output:    Returns 0 if all is ok, otherwise -1.
  * Author:    Tobias Blomberg, SM0SVX
  * Created:   2000-06-13
- * Remarks:
- * Bugs:
+ * Remarks:   
+ * Bugs:      
  *----------------------------------------------------------------------------
  */
 static void parse_arguments(int argc, const char **argv)
@@ -594,10 +596,10 @@ static void parse_arguments(int argc, const char **argv)
   int err;
   //const char *arg = NULL;
   //int argcnt = 0;
-
+  
   optCon = poptGetContext(PROGRAM_NAME, argc, argv, optionsTable, 0);
   poptReadDefaultConfig(optCon, 0);
-
+  
   err = poptGetNextOpt(optCon);
   if (err != -1)
   {
@@ -612,7 +614,7 @@ static void parse_arguments(int argc, const char **argv)
   printf("int_arg     = %d\n", int_arg);
   printf("bool_arg    = %d\n", bool_arg);
   */
-
+  
     /* Parse arguments that do not begin with '-' (leftovers) */
   /*
   arg = poptGetArg(optCon);
@@ -645,17 +647,17 @@ static void stdinHandler(FdWatch *w)
     stdin_watch = 0;
     return;
   }
-
+  
   switch (toupper(buf[0]))
   {
     case 'Q':
       Application::app().quit();
       break;
-
+    
     case '\n':
       putchar('\n');
       break;
-
+    
     case '0': case '1': case '2': case '3':
     case '4': case '5': case '6': case '7':
     case '8': case '9': case 'A': case 'B':
@@ -663,7 +665,7 @@ static void stdinHandler(FdWatch *w)
     case 'H':
       logic_vec[0]->injectDtmfDigit(buf[0], 100);
       break;
-
+    
     default:
       break;
   }
@@ -677,7 +679,7 @@ static void write_to_logfile(const char *buf)
     cout << buf;
     return;
   }
-
+  
   const char *ptr = buf;
   while (*ptr != 0)
   {
@@ -739,9 +741,9 @@ static void stdout_handler(FdWatch *w)
     return;
   }
   buf[len] = 0;
-
+  
   write_to_logfile(buf);
-
+  
 } /* stdout_handler  */
 
 
@@ -769,9 +771,9 @@ static void initialize_logics(Config &cfg)
       logic_name = string(begin, comma);
       begin = comma + 1;
     }
-
+    
     cout << "\nStarting logic: " << logic_name << endl;
-
+    
     string logic_type;
     if (!cfg.getValue(logic_name, "TYPE", logic_type) || logic_type.empty())
     {
@@ -801,16 +803,16 @@ static void initialize_logics(Config &cfg)
       delete logic;
       continue;
     }
-
+    
     logic_vec.push_back(logic);
   } while (comma != logics.end());
-
+  
   if (logic_vec.size() == 0)
   {
     cerr << "*** ERROR: No logics available. Bailing out...\n";
     exit(1);
   }
-
+  
     // Temporary fix for the assertion failure that happens when a link
     // is activated where a non-existent logic is specified.
  /* set<string> logic_set;
@@ -850,11 +852,11 @@ void sighup_handler(int signal)
     assert(ret == 16);
     return;
   }
-
+  
   ssize_t ret = write(STDOUT_FILENO, "SIGHUP received. Logfile reopened\n", 34);
   assert(ret == 34);
   reopen_log = true;
-
+    
 } /* sighup_handler */
 
 
@@ -887,7 +889,7 @@ bool open_logfile(void)
   {
     close(logfd);
   }
-
+  
   logfd = open(logfile_name, O_WRONLY | O_APPEND | O_CREAT, 00644);
   if (logfd == -1)
   {
@@ -899,7 +901,7 @@ bool open_logfile(void)
   }
 
   return true;
-
+  
 } /* open_logfile */
 
 

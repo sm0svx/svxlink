@@ -122,8 +122,8 @@ positioning data to location servers. Setting this item makes the system
 visible on the EchoLink link status page and the APRS network.
 .TP
 .B LINKS
-Enter here a comma separated list of section name that contains the 
-configuration information for linking different logics (see Logic Linking).
+Enter here a comma separated list of section names that contains the 
+configuration information for linking logics together (see Logic Linking).
 .
 .SS Common Logic configuration variables
 .
@@ -435,7 +435,7 @@ connect to the EchoTest conference node.
 .SS Logic Linking
 A logic linking configuration section is used to specify information for a link 
 between two or more SvxLink logic cores. Such a link can for example be used to 
-connect a local repeater to a remote repeater using a separate link transceiver. 
+connect a local repeater to a remote repeater using a separate link transceiver.
 The link is activated/deactivated using DTMF commands and/or automatically 
 depending on your configuration. 
 When the link is active, all audio received by one logic will be transmitted by 
@@ -456,18 +456,19 @@ is to spell the value of this variable. In other words, a callsign is a good
 value if for example linking to another repeater.
 .TP
 .B CONNECT_LOGICS
-A comma separated list of names for the logic cores to link together followed by 
+A comma separated list of names for the logic cores to link together followed by
 the command and the name:
 CONNECT_LOGICS=RepeaterLogic_2m:78:from_2m,RepeaterLogic_70cm:79:from_70cm
 .TP
 .B TIMEOUT
-Enter here the number of seconds to disconnect automatically after the link when 
-no activity was detected.
+The number of seconds after which the link will be automatically disconnected
+if there have been no activity.
 .TP
 .B DEFAULT_CONNECT
-The relevant links will be connected automatically during startup of SvxLink or
-reconnected automatically after the links has been disconnected for 
-TIMEOUT and the timer has expired.
+The link will be connected automatically during startup of SvxLink if this
+configuration variable is set to 1. Also, if a link is manually disconnected by
+a user it will be automatically reconnected after some time of inactivity. The
+time is specified by setting the TIMEOUT configuration variable.
 .TP
 .B NO_DISCONNECT 
 After connected once, no disconnect of a linkset is possible anymore.
