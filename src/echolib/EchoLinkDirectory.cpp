@@ -888,8 +888,18 @@ void Directory::sendNextCmd(void)
     cmd_queue.pop_front();
   }
 
-    // Check if there is any command to send and if we are allowed to send it
-  if (cmd_queue.empty() || !ctrl_con->isIdle() || (com_state != CS_IDLE))
+    // Check if there is any command to send and
+  if (cmd_queue.empty())
+  {
+    return;
+  }
+
+    // Set up command timeout timer
+  cmd_timer = new Timer(CMD_TIMEOUT);
+  cmd_timer->expired.connect(mem_fun(*this, &Directory::onCmdTimeout));
+  
+    // Check if we can send the command
+  if (!ctrl_con->isIdle() || (com_state != CS_IDLE))
   {
     return;
   }
@@ -918,10 +928,6 @@ void Directory::sendNextCmd(void)
     // Connect
   ctrl_con->connect();
 
-    // Set up command timeout timer
-  cmd_timer = new Timer(CMD_TIMEOUT);
-  cmd_timer->expired.connect(mem_fun(*this, &Directory::onCmdTimeout));
-  
 } /* Directory::sendNextCmd */
 
 
@@ -974,9 +980,9 @@ void Directory::onRefreshRegistration(Timer *timer)
 void Directory::onCmdTimeout(Timer *timer)
 {
   error("Command timeout while communicating to the directory server");
-  //cerr << "Directory::onCmdTimeout: Disconnecting...\n";
   ctrl_con->disconnect();
 
+  /*
   assert(!cmd_queue.empty());
 
   switch (cmd_queue.front().type)
@@ -995,6 +1001,7 @@ void Directory::onCmdTimeout(Timer *timer)
   cmd_queue.front().done = true;
   com_state = CS_IDLE;
   sendNextCmd();
+  */
 } /* Directory::onCmdTimeout */
 
 
