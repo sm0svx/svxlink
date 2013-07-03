@@ -877,31 +877,34 @@ void Directory::ctrlSockDisconnected(void)
 void Directory::sendNextCmd(void)
 {
   //cerr << "Directory::sendNextCmd\n";
+  
+    // Delete any active command timeout timer
   delete cmd_timer;
   cmd_timer = 0;
 
+    // Remove commands that are marked done from the queue
   while (!cmd_queue.empty() && (cmd_queue.front().done))
   {
     cmd_queue.pop_front();
   }
 
-  //cout << "cmd_queue.empty()=" << cmd_queue.empty() << endl;
-  //cout << "ctrl_con->isIdle()=" << ctrl_con->isIdle() << endl;
-  //cout << "com_state=" << com_state << endl;
-
+    // Check if there is any command to send and
   if (cmd_queue.empty())
   {
     return;
   }
-  
+
+    // Set up command timeout timer
   cmd_timer = new Timer(CMD_TIMEOUT);
   cmd_timer->expired.connect(mem_fun(*this, &Directory::onCmdTimeout));
-
+  
+    // Check if we can send the command
   if (!ctrl_con->isIdle() || (com_state != CS_IDLE))
   {
     return;
   }
 
+    // Set the com state depending on the command type
   if (cmd_queue.front().type == Cmd::GET_CALLS)
   {
     error_str = "";
@@ -911,6 +914,9 @@ void Directory::sendNextCmd(void)
   {
     com_state = CS_WAITING_FOR_OK;
   }
+
+    // If the server information (e.g. IP/hostname) changed, create a new
+    // client object before trying to connect
   if (server_changed)
   {
     server_changed = false;
@@ -918,9 +924,10 @@ void Directory::sendNextCmd(void)
     ctrl_con = 0;
     createClientObject();
   }
-  //cerr << "Connecting...\n";
+
+    // Connect
   ctrl_con->connect();
-  
+
 } /* Directory::sendNextCmd */
 
 
@@ -973,9 +980,9 @@ void Directory::onRefreshRegistration(Timer *timer)
 void Directory::onCmdTimeout(Timer *timer)
 {
   error("Command timeout while communicating to the directory server");
-  //cerr << "Directory::onCmdTimeout: Disconnecting...\n";
   ctrl_con->disconnect();
 
+  /*
   assert(!cmd_queue.empty());
 
   switch (cmd_queue.front().type)
@@ -994,6 +1001,7 @@ void Directory::onCmdTimeout(Timer *timer)
   cmd_queue.front().done = true;
   com_state = CS_IDLE;
   sendNextCmd();
+  */
 } /* Directory::onCmdTimeout */
 
 

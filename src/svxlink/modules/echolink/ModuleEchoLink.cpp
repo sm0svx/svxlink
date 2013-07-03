@@ -1142,6 +1142,10 @@ void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
   //cerr << qso->remoteCallsign() << ": EchoLink receiving: "
   //     << (is_receiving ? "TRUE" : "FALSE") << endl;
   
+  stringstream ss;
+  ss << "is_receiving " << (is_receiving ? "1" : "0");
+  processEvent(ss.str());
+
   if ((talker == 0) && is_receiving)
   {
     talker = qso;
