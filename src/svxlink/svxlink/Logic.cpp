@@ -572,14 +572,14 @@ bool Logic::initialize(void)
 
   if (LinkManager::instance())
   {
-     // register audio source and audio sinks
+      // Register audio source and audio sinks
     LinkManager::instance()->addSource(name(), logic_con_out);
     LinkManager::instance()->addSink(name(), logic_con_in);
 
-     // returns a list of commands
+      // Returns a list of commands
     cmdList = LinkManager::instance()->getCommands(name());
 
-     // crate the cmd-objects
+      // Create the cmd-objects
     vector<std::string>::iterator cit;
 
     for (cit = cmdList.begin(); cit != cmdList.end(); cit++)
@@ -595,15 +595,17 @@ bool Logic::initialize(void)
       }
     }
 
-     // check if the logics should be connected on startup
+      // Check if the logics should be connected on startup
     LinkManager::instance()->logicIsUp(name());
-    LinkManager::instance()->logicStateChanged().connect(mem_fun(*this, &Logic::stateChanged));
+    LinkManager::instance()->logicStateChanged.connect(
+        mem_fun(*this, &Logic::stateChanged));
   }
 
   if (LocationInfo::has_instance())
   {
      LocationInfo::AprsStatistics lis;
-     LocationInfo::instance()->aprs_stats.insert(pair<string,LocationInfo::AprsStatistics>(name(), lis));
+     LocationInfo::instance()->aprs_stats.insert(
+         pair<string,LocationInfo::AprsStatistics>(name(), lis));
      LocationInfo::instance()->aprs_stats[name()].reset();
   }
 
@@ -851,12 +853,14 @@ void Logic::selcallSequenceDetected(std::string sequence)
 } /* Logic::selcallSequenceDetected */
 
 
+#if 0
 void Logic::disconnectAllLogics(void)
 {
  // cout << "Deactivating all links to/from \"" << name() << "\"\n";
  // LinkManager::instance()->disconnectSource(name());
  // LinkManager::instance()->disconnectSink(name());
 } /* Logic::disconnectAllLogics */
+#endif
 
 
 void Logic::sendDtmf(const std::string& digits)
@@ -932,7 +936,7 @@ void Logic::squelchOpen(bool is_open)
   if (LinkManager::has_instance())
   {
     state = is_open;
-    LinkManager::instance()->logicStateChanged().emit(TX_CTCSS_SQL_OPEN, is_open);
+    LinkManager::instance()->logicStateChanged(TX_CTCSS_SQL_OPEN, is_open);
   }
 
   updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
@@ -1072,7 +1076,7 @@ void Logic::allMsgsWritten(void)
 
   if (LinkManager::has_instance())
   {
-    LinkManager::instance()->logicStateChanged().emit(TX_CTCSS_ANNOUNCEMENT, false);
+    LinkManager::instance()->logicStateChanged(TX_CTCSS_ANNOUNCEMENT, false);
   }
   checkIdle();
 
@@ -1507,7 +1511,7 @@ void Logic::logicConInStreamStateChanged(bool is_active, bool is_idle)
   if (LinkManager::has_instance())
   {
     cout << "logicConInStreamStateChanged" << endl;
-    LinkManager::instance()->logicStateChanged().emit(TX_CTCSS_LOGIC, !is_idle);
+    LinkManager::instance()->logicStateChanged(TX_CTCSS_LOGIC, !is_idle);
   }
 } /* Logic::logicConInStreamStateChanged */
 
@@ -1519,7 +1523,7 @@ void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
   if (LinkManager::has_instance())
   {
     cout << "audioFromModuleStreamStateChanged" << endl;
-    LinkManager::instance()->logicStateChanged().emit(TX_CTCSS_MODULE, !is_idle);
+    LinkManager::instance()->logicStateChanged(TX_CTCSS_MODULE, !is_idle);
   }
 } /* Logic::audioFromModuleStreamStateChanged */
 
@@ -1534,15 +1538,17 @@ void Logic::stateChanged(uint8_t tx_ctcss, bool state)
   if (this->tx_ctcss != tx_ctcss || this->state != state )
   {
     /* debug output:
-     cout << "changeing TxCtcss, this->tx_ctcss:"
-         << hex << int(this->tx_ctcss) << "  tx_ctcss:" << hex << int(tx_ctcss) << ","
-         << (this->state ? "1" : "0") << " " << (state ? "1" : "0") << endl;
+    cout << "changeing TxCtcss, this->tx_ctcss:"
+         << hex << int(this->tx_ctcss) << "  tx_ctcss:" << hex << int(tx_ctcss)
+         << "," << (this->state ? "1" : "0") << " " << (state ? "1" : "0")
+         << endl;
     */
     updateTxCtcss(state, t_ctcss);
   }
 } /* Logic::stateChanged */
 
+
+
 /*
  * This file has not been truncated
  */
-

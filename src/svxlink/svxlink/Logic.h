@@ -185,7 +185,7 @@ class Logic : public sigc::trackable
     Rx &rx(void) const { return *m_rx; }
     Tx &tx(void) const { return *m_tx; }
 
-    void disconnectAllLogics(void);
+    //void disconnectAllLogics(void);
 
     void sendDtmf(const std::string& digits);
 

@@ -115,22 +115,24 @@ class Command;
 class LinkManager : public sigc::trackable
 {
   public:
-    static LinkManager* instance()
+    static LinkManager* instance(void)
     {
-       static CGuard g;
-       if (!_instance)
-        return NULL; // illegal pointer, if not initialized
-       return _instance;
+      static CGuard g;
+      if (!_instance)
+      {
+        return 0; // illegal pointer, if not initialized
+      }
+      return _instance;
     }
 
-    static bool has_instance()
+    static bool has_instance(void)
     {
-       return _instance;
+      return _instance;
     }
 
 
     static bool initialize(const Async::Config &cfg,
-                                             const std::string &cfg_name);
+                           const std::string &cfg_name);
     typedef std::vector<std::string> StrList;
     typedef std::map<std::string, std::vector<std::string> > CommandLinkList;
     CommandLinkList    cmd_link_list;
@@ -139,8 +141,8 @@ class LinkManager : public sigc::trackable
 
     struct link_properties
     {
-        std::string logic_name;
-        std::string logic_cmd;
+      std::string logic_name;
+      std::string logic_cmd;
     };
     typedef std::map<std::string, link_properties> t_cname;
 
@@ -171,69 +173,68 @@ class LinkManager : public sigc::trackable
     typedef std::map<std::string, std::set<std::string> > LogicConMap;
     LogicConMap con_map;
 
-    void addSource(const std::string& logicname, Async::AudioSelector *logic_con_out);
-    void addSink(const std::string& logicname, Async::AudioSplitter *logic_con_in);
+    void addSource(const std::string& logicname,
+                   Async::AudioSelector *logic_con_out);
+    void addSink(const std::string& logicname,
+                 Async::AudioSplitter *logic_con_in);
     void deleteSource(const std::string& source_name);
     void deleteSink(const std::string& sink_name);
     void logicIsUp(std::string name);
     void resetTimers(const std::string& logicname);
     void enableTimers(const std::string& logicname);
     std::string cmdReceived(const std::string& logicname, std::string cmd,
-                                                      std::string subcmd);
+                            std::string subcmd);
     std::vector<std::string> getCommands(std::string logicname);
     //void stateChanged(const std::string& logicname, int state, bool is_on);
 
-    sigc::signal<void, uint8_t, bool> logicStateChanged();
+    sigc::signal<void, uint8_t, bool> logicStateChanged;
 
     class CGuard
     {
       public:
         ~CGuard()
         {
-          if(NULL != LinkManager::_instance)
+          if(0 != LinkManager::_instance)
           {
-             delete LinkManager::_instance;
-             LinkManager::_instance = NULL;
+            delete LinkManager::_instance;
+            LinkManager::_instance = 0;
           }
         }
     };
     friend class CGuard;
 
-
   private:
-    static LinkManager* _instance;
-    LinkManager() {};
-    LinkManager(const LinkManager&);
-    ~LinkManager() {};
-
-    std::map<std::string, Async::Timer*> timeoutTimerset;
-
-    std::vector<std::string>getLinks(std::string logicname);
-    Async::Timer    *up_timer;
-    LogicConSet     is;
-
-    typedef struct
+    struct SourceInfo
     {
       Async::AudioSource      *source;
       Async::AudioSplitter    *splitter;
-    } SourceInfo;
-    typedef struct
+    };
+    struct SinkInfo
     {
       Async::AudioSink       	      	      	      	*sink;
       Async::AudioSelector   	      	      	      	*selector;
       std::map<std::string, Async::AudioPassthrough *>	connectors;
-    } SinkInfo;
+    };
 
     typedef std::map<std::string, SourceInfo> SourceMap;
     typedef std::map<std::string, SinkInfo>   SinkMap;
-
-    SourceMap sources;
-    SinkMap   sinks;
 
     typedef enum
     {
       ERROR = 0, OK = 1, ALREADY_CONNECTED = 3
     } connectType;
+
+    static LinkManager* _instance;
+
+    std::map<std::string, Async::Timer*> timeoutTimerset;
+    Async::Timer                         *up_timer;
+    LogicConSet                          is;
+    SourceMap                            sources;
+    SinkMap                              sinks;
+
+    LinkManager(void) {};
+    LinkManager(const LinkManager&);
+    ~LinkManager(void) {};
 
     bool sourceIsAdded(const std::string &logicname);
     bool sinkIsAdded(const std::string &logicname);
@@ -246,14 +247,13 @@ class LinkManager : public sigc::trackable
     std::set<std::pair<std::string, std::string> >
                          getMatrix(const std::string& name);
     std::set<std::pair<std::string, std::string> >
-                         getdifference(LogicConSet is, LogicConSet want);
+                         getDifference(LogicConSet is, LogicConSet want);
     std::set<std::pair<std::string, std::string> >
-                         gettodisconnect(const std::string& name);
+                         getToDisconnect(const std::string& name);
     std::set<std::pair<std::string, std::string> >
                          getLogics(const std::string& linkname);
-    protected:
-        sigc::signal<void, uint8_t, bool> m_logicStateChanged;
 };  /* class LinkManager */
+
 
 #endif /* LINK_MANAGER_INCLUDED */
 
