@@ -161,18 +161,18 @@ bool LinkManager::initialize(const Async::Config &cfg,
       // The link name is the same as the config section name
     tl_cmd.name = *name;
 
-      // Check the connect_logics
+      // Logic1:70:name1,Logic2:71:name2,...
     string connect_logics;
-    if (!cfg.getValue(*name, "CONNECT_LOGICS", connect_logics))
+    cfg.getValue(*name, "CONNECT_LOGICS", connect_logics);
+
+    vector<string> logic_list;
+    SvxLink::splitStr(logic_list, connect_logics, ",");
+    if (logic_list.size() < 2)
     {
       cerr << "*** ERROR: " << *name << "/CONNECT_LOGICS=? You must "
            << "have at least two logics to connect.\n";
       init_ok = false;
     }
-
-      // Logic1:70:name1,Logic2:71:name2,...
-    vector<string> logic_list;
-    SvxLink::splitStr(logic_list, connect_logics, ",");
 
       // Configure the list of logics to connect
       // CONNECT_LOGICS=Logic1:70:Name1,Logic2:71,Logic3:72:Name2,...
@@ -180,21 +180,22 @@ bool LinkManager::initialize(const Async::Config &cfg,
         it != logic_list.end();
         ++it)
     {
-      size_t found = it->find(":", 0);    // (Logic -> <cmd, Name>)
-      size_t found2 = it->find(":", found + 1);
-      if (found2 != string::npos)
+      vector<string> logic_spec;
+      SvxLink::splitStr(logic_spec, *it, ":");
+      logic_spec.resize(3);
+      if (logic_spec.at(0).size() > 0)
       {
-        string logic_name = (*it).substr(0, found);
-        LinkProperties tln;
-        tln.logic_cmd =  (*it).substr(found + 1, found2-found-1);
-        tln.logic_name = (*it).substr(found2 + 1, (*it).length()-found2);
-        tl_cmd.link_cname.insert(make_pair(logic_name, tln));
+        string logic_name = logic_spec.at(0);
+        LinkProperties link_props;
+        link_props.logic_cmd =  logic_spec.at(1);
+        link_props.announcement_name = logic_spec.at(2);
+        tl_cmd.link_cname.insert(make_pair(logic_name, link_props));
       }
       else
       {
-        cout << "*** ERROR: wrong configuration in section CONNECT_LOGICS="
-             << connect_logics << endl
-             << "           e.g. CONNECT_LOGICS=Logicname:Command:Linkname\n";
+        cout << "*** ERROR: Bad configuration for " << *name
+             << "/CONNECT_LOGICS=" << connect_logics << ". Legal format: "
+             << "<logic name>:<command>:<announcement name>,...\n";
         init_ok = false;
       }
     }
@@ -469,7 +470,7 @@ void LinkManager::enableTimers(const string& logicname)
 string LinkManager::cmdReceived(const string &logicname, const string &cmd,
                                 const string &subcmd)
 {
-  string ss;
+  stringstream ss;
   int isubcmd = atoi(subcmd.c_str());
 
   cout << "cmdReceived " << logicname << ": " << cmd << " subcmd:"
@@ -490,14 +491,14 @@ string LinkManager::cmdReceived(const string &logicname, const string &cmd,
             if (it->second.no_disconnect)
             {
                 // Not possible due to configuration
-              ss = "deactivating_link_not_possible ";
-              ss += lcx->second.logic_name;
+              ss << "deactivating_link_not_possible \""
+                 << lcx->second.announcement_name << "\"";
               break;
             }
             if (!it->second.is_connected)
             {
-              ss = "link_not_active ";
-              ss += lcx->second.logic_name;
+              ss << "link_not_active \"";
+              ss << lcx->second.announcement_name << "\"";
               break;
             }
 
@@ -505,15 +506,15 @@ string LinkManager::cmdReceived(const string &logicname, const string &cmd,
             switch (tconnect)
             {
               case ERROR:
-                ss = "deactivating_link_failed ";
+                ss << "deactivating_link_failed \"";
                 break;
               case OK:
-                ss = "deactivating_link ";
+                ss << "deactivating_link \"";
                 break;
               case ALREADY_CONNECTED:
-                ss = "deactivating_link_failed_other_connection ";
+                ss << "deactivating_link_failed_other_connection \"";
             }
-            ss += lcx->second.logic_name;
+            ss << lcx->second.announcement_name << "\"";
             break;
           }
 
@@ -522,8 +523,8 @@ string LinkManager::cmdReceived(const string &logicname, const string &cmd,
           {
             if ((it->second).is_connected)
             {
-              ss = "link_already_active ";
-              ss += lcx->second.logic_name;
+              ss << "link_already_active \"";
+              ss << lcx->second.announcement_name << "\"";
               break;
             }
 
@@ -531,29 +532,28 @@ string LinkManager::cmdReceived(const string &logicname, const string &cmd,
             switch (tconnect)
             {
               case ERROR:
-                ss = "activating_link_failed ";
+                ss << "activating_link_failed \"";
                 break;
               case OK:
-                ss = "activating_link ";
+                ss << "activating_link \"";
                 break;
               case ALREADY_CONNECTED:
-                ss = "activating_link_failed_other_connection ";
+                ss << "activating_link_failed_other_connection \"";
                 break;
             }
-            ss += lcx->second.logic_name;
+            ss << lcx->second.announcement_name + "\"";
             break;
           }
 
           default:
           {
-            ss = "unknown_command " + cmd;
-            ss += isubcmd;
+            ss << "unknown_command " << cmd << subcmd;
           }
         }
       }
     }
   }
-  return ss;
+  return ss.str();
 } /* LinkManager::cmdReceived */
 
 

@@ -273,8 +273,10 @@ proc command_failed {cmd} {
 #   name  - The name of the link
 #
 proc activating_link {name} {
-  playMsg "Core" "activating_link_to";
-  spellWord $name;
+  if {[string length $name] > 0} {
+    playMsg "Core" "activating_link_to";
+    spellWord $name;
+  }
 }
 
 
@@ -283,9 +285,11 @@ proc activating_link {name} {
 #   name  - The name of the link
 #
 proc activating_link_failed {name} {
-  playMsg "Core" "activating_link_to";
-  spellWord $name;
-  playMsg "Core" "failed";
+  if {[string length $name] > 0} {
+    playMsg "Core" "activating_link_to";
+    spellWord $name;
+    playMsg "Core" "failed";
+  }
 }
 
 
@@ -296,10 +300,12 @@ proc activating_link_failed {name} {
 #   name  - The name of the link
 #
 proc activating_link_failed_other_connection {name} {
-  playMsg "Core" "activating_link_to";
-  spellWord $name;
-  playMsg "Core" "failed";
-  playMsg "Core" "other_connection";
+  if {[string length $name] > 0} {
+    playMsg "Core" "activating_link_to";
+    spellWord $name;
+    playMsg "Core" "failed";
+    playMsg "Core" "other_connection";
+  }
 }
 
 
@@ -308,8 +314,10 @@ proc activating_link_failed_other_connection {name} {
 #   name  - The name of the link
 #
 proc deactivating_link {name} {
-  playMsg "Core" "deactivating_link_to";
-  spellWord $name;
+  if {[string length $name] > 0} {
+    playMsg "Core" "deactivating_link_to";
+    spellWord $name;
+  }
 }
 
 
@@ -319,9 +327,11 @@ proc deactivating_link {name} {
 #   name  - The name of the link
 #
 proc deactivating_link_failed {name} {
-  playMsg "Core" "deactivating_link_to";
-  spellWord $name;
-  playMsg "Core" "failed";
+  if {[string length $name] > 0} {
+    playMsg "Core" "deactivating_link_to";
+    spellWord $name;
+    playMsg "Core" "failed";
+  }
 }
 
 
@@ -332,10 +342,12 @@ proc deactivating_link_failed {name} {
 #   name  - The name of the link
 #
 proc deactivating_link_failed_other_connection {name} {
-  playMsg "Core" "deactivating_link_to";
-  spellWord $name;
-  playMsg "Core" "failed";
-  playMsg "Core" "other_connection";
+  if {[string length $name] > 0} {
+    playMsg "Core" "deactivating_link_to";
+    spellWord $name;
+    playMsg "Core" "failed";
+    playMsg "Core" "other_connection";
+  }
 }
 
 
@@ -345,9 +357,11 @@ proc deactivating_link_failed_other_connection {name} {
 #   name  - The name of the link
 #
 proc deactivating_link_not_possible {name} {
-  playMsg "Core" "deactivating_link_to";
-  spellWord $name;
-  playMsg "Core" "not_possible";
+  if {[string length $name] > 0} {
+    playMsg "Core" "deactivating_link_to";
+    spellWord $name;
+    playMsg "Core" "not_possible";
+  }
 }
 
 
@@ -357,8 +371,10 @@ proc deactivating_link_not_possible {name} {
 #   name  - The name of the link
 #
 proc link_not_active {name} {
-  playMsg "Core" "link_not_active_to";
-  spellWord $name;
+  if {[string length $name] > 0} {
+    playMsg "Core" "link_not_active_to";
+    spellWord $name;
+  }
 }
 
 
@@ -368,8 +384,10 @@ proc link_not_active {name} {
 #   name  - The name of the link
 #
 proc link_already_active {name} {
-  playMsg "Core" "link_already_active_to";
-  spellWord $name;
+  if {[string length $name] > 0} {
+    playMsg "Core" "link_already_active_to";
+    spellWord $name;
+  }
 }
 
 

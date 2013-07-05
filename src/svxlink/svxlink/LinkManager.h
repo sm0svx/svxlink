@@ -161,8 +161,8 @@ class LinkManager : public sigc::trackable
     };
     struct LinkProperties
     {
-      std::string logic_name;
       std::string logic_cmd;
+      std::string announcement_name;
     };
     typedef std::map<std::string, LinkProperties> CName;
     typedef std::vector<std::string> StrList;

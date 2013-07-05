@@ -480,8 +480,8 @@ int main(int argc, char **argv)
   {
     if (!LinkManager::initialize(cfg, value))
     {
-      cerr << "*** ERROR: Could not init LinkManager, "
-           << "check configuration [GLOBAL] section LINKS=" << value << "\n";
+      cerr << "*** ERROR: Could not initialize link manager. "
+           << "GLOBAL/LINKS=" << value << ".\n";
       exit(1);
     }
   }
