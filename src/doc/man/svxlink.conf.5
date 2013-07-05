@@ -474,14 +474,12 @@ time is specified by setting the TIMEOUT configuration variable.
 After connected once, no disconnect of a linkset is possible anymore.
 .TP
 .B AUTOCONNECT_ON_SQL
-Enter one or more logic(s), which should automatically connected with the 
-rest of the logic(s) for TIMEOUT seconds if it is found that logic(s) activity 
-(squelch). One possible application is for example to make the connection 
-of a microphone/speaker combination (without DTMF encoder) to brief 
-announcements regardless of the relay input frequency to the radio traffic 
-without having to constantly listen in. Or another possibility is (if connected 
-to a radio) to provide a second channel when the input repeater frequency 
-is blocked, e.g. AUTOCONNECT_ON_SQL=MicSpkrLogic
+Enter a comma separated list of logic(s), which should automatically be
+connected with the rest of the logic(s) if there is activity (e.g. squelch
+open) in it. One possible application is for example to make the connection of
+a microphone/speaker combination (without DTMF encoder) for brief announcements
+but without having to constantly listen in.
+Example: AUTOCONNECT_ON_SQL=MicSpkrLogic
 .
 .SS Local Receiver Section
 .

@@ -464,7 +464,7 @@ int main(int argc, char **argv)
     cout << "--- Using sample rate " << rate << "Hz\n";
   }
   
-  // init locationinfo
+    // Init locationinfo
   if (cfg.getValue("GLOBAL", "LOCATION_INFO", value))
   {
     if (!LocationInfo::initialize(cfg, value))
@@ -475,14 +475,14 @@ int main(int argc, char **argv)
     }
   }
 
-    // init Logiclinking
+    // Init Logiclinking
   if (cfg.getValue("GLOBAL", "LINKS", value))
   {
     if (!LinkManager::initialize(cfg, value))
     {
-       cerr << "*** ERROR: Could not init LinkManager, "
-            << "check configuration [GLOBAL] section LINKS=" << value << "\n";
-       exit(1);
+      cerr << "*** ERROR: Could not init LinkManager, "
+           << "check configuration [GLOBAL] section LINKS=" << value << "\n";
+      exit(1);
     }
   }
 
