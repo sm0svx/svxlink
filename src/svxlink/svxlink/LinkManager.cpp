@@ -158,13 +158,8 @@ bool LinkManager::initialize(const Async::Config &cfg,
   {
     LinkSet tl_cmd;
 
-      // Each link set must have a name
-    if (!cfg.getValue(*name, "NAME", tl_cmd.name))
-    {
-      cerr << "*** ERROR: each link definition must have an unique name.\n"
-           << "           e.g. " << *name << "/NAME=Test\n";
-      init_ok = false;
-    }
+      // The link name is the same as the config section name
+    tl_cmd.name = *name;
 
       // Check the connect_logics
     string connect_logics;

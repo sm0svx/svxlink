@@ -437,32 +437,33 @@ A logic linking configuration section is used to specify information for a link
 between two or more SvxLink logic cores. Such a link can for example be used to 
 connect a local repeater to a remote repeater using a separate link transceiver.
 The link is activated/deactivated using DTMF commands and/or automatically 
-depending on your configuration. 
-When the link is active, all audio received by one logic will be transmitted by 
-the other logic(s).
+depending on your configuration.  When the link is active, all audio received
+by one logic will be transmitted by the other logic(s).
 .P
 The name of the logic linking section can be chosen freely. In the example 
 configuration file, there is a section [LinkToR4]. To use a logic linking 
 section in a logic core it must be pointed out by the LINKS configuration 
 variable in the [GLOBAL] section.
-So for example, [GLOBAL]/LINKS=Repeater_2m:68,Repeater_70cm:69 would make it 
-possible to link both logics by sending DTMF commands "681#" from the 
-Repeater_2m side or "691" from the Repeater_70cm side. The commands 
-"680#" or "690#" will disconnect the links.
-.TP
-.B NAME
-The name of the link. The default action on activation/deactivation of the link 
-is to spell the value of this variable. In other words, a callsign is a good 
-value if for example linking to another repeater.
+Example: [GLOBAL]/LINKS=LinkToR4
 .TP
 .B CONNECT_LOGICS
-A comma separated list of names for the logic cores to link together followed by
-the command and the name:
-CONNECT_LOGICS=RepeaterLogic_2m:78:from_2m,RepeaterLogic_70cm:79:from_70cm
-.TP
-.B TIMEOUT
-The number of seconds after which the link will be automatically disconnected
-if there have been no activity.
+A comma separated list of logic specifications for the logic cores to link
+together. Each logic specification has three parts separated by colons:
+<logic name>:<command>:<announcement name>. The "logic name" is the name of
+the logic to include in the link. To manually activate or deactivate the link
+from the just specified logic, "command" is used. The "announcement name" is
+used when announcing link related activities like activation or deactivation.
+An example may look like this:
+
+RepeaterLogic_2m:99:SK3GW,RepeaterLogic_70cm:94:SK3GK
+
+It will include two logics in the link, RepeaterLogic_2m and
+RepeaterLogic_70cm. From the 2m side, the link will be activated when the user
+send command 991 and deactivated when the user send command 990. Upon
+activation, an announcement like "activating link to SK3GW" will be played
+back. From the 70cm side the command will be 941 and 940 respectively. The
+announcement when activating the link from the 70cm side will be something like
+"activating link to SK3GK".
 .TP
 .B DEFAULT_CONNECT
 The link will be connected automatically during startup of SvxLink if this
@@ -470,8 +471,14 @@ configuration variable is set to 1. Also, if a link is manually disconnected by
 a user it will be automatically reconnected after some time of inactivity. The
 time is specified by setting the TIMEOUT configuration variable.
 .TP
+.B TIMEOUT
+The number of seconds after which the link will be automatically disconnected
+if there have been no activity. If 1 have been specified for DEFAULT_CONNECT,
+this configuration variable will specify after how many seconds the link will
+be reactivated after being manually deactivated.
+.TP
 .B NO_DISCONNECT 
-After connected once, no disconnect of a linkset is possible anymore.
+After once being connected, no disconnect of a linkset is possible anymore.
 .TP
 .B AUTOCONNECT_ON_SQL
 Enter a comma separated list of logic(s), which should automatically be
