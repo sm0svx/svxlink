@@ -595,8 +595,10 @@ bool Logic::initialize(void)
       }
     }
 
+    /*
     LinkManager::instance()->logicStateChanged.connect(
         mem_fun(*this, &Logic::stateChanged));
+    */
   }
 
   if (LocationInfo::has_instance())

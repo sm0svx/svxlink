@@ -144,14 +144,23 @@ class LinkManager : public sigc::trackable
      *
      * Before calling this function, the initialize function must be called.
      * Otherwise an assertion will be thrown.
-     * The link manager object will be deleted upon program exit by the
-     * SingletonDeleter object.
      */
     static LinkManager* instance(void)
     {
-      static SingletonDeleter sd;
       assert(_instance != 0);
       return _instance;
+    }
+
+    /**
+     * @brief Delete singleton instance
+     *
+     * Call this function when you want to deallocate all memory that the
+     * link manager has allocated, typically before program exit.
+     */
+    static void deleteInstance(void)
+    {
+      delete _instance;
+      _instance = 0;
     }
 
 
@@ -185,18 +194,6 @@ class LinkManager : public sigc::trackable
     sigc::signal<void, int, bool> logicStateChanged;
 
   private:
-    class SingletonDeleter
-    {
-      public:
-        ~SingletonDeleter(void)
-        {
-          if (LinkManager::_instance != 0)
-          {
-            delete LinkManager::_instance;
-            LinkManager::_instance = 0;
-          }
-        }
-    };
     struct LinkProperties
     {
       std::string logic_cmd;

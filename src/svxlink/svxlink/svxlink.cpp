@@ -530,6 +530,8 @@ int main(int argc, char **argv)
   }
   logic_vec.clear();
   
+  LinkManager::deleteInstance();
+
   if (logfd != -1)
   {
     close(logfd);

@@ -235,8 +235,7 @@ bool LinkManager::initialize(const Async::Config &cfg,
 
   if(!init_ok)
   {
-    delete LinkManager::_instance;
-    LinkManager::_instance = 0;
+    deleteInstance();
   }
 
   return init_ok;
