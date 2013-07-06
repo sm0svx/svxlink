@@ -488,6 +488,11 @@ int main(int argc, char **argv)
 
   initialize_logics(cfg);
 
+  if (LinkManager::hasInstance())
+  {
+    LinkManager::instance()->allLogicsStarted();
+  }
+
   struct termios org_termios;
   if (logfile_name == 0)
   {

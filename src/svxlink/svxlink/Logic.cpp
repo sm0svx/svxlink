@@ -570,33 +570,32 @@ bool Logic::initialize(void)
     return false;
   }
 
-  if (LinkManager::instance())
+  if (LinkManager::hasInstance())
   {
       // Register audio source and audio sinks
     LinkManager::instance()->addSource(name(), logic_con_out);
     LinkManager::instance()->addSink(name(), logic_con_in);
 
-      // Returns a list of commands
-    cmdList = LinkManager::instance()->getCommands(name());
+      // Get the list of commands
+    std::vector<std::string> cmd_list
+        = LinkManager::instance()->getCommands(name());
 
-      // Create the cmd-objects
-    vector<std::string>::iterator cit;
-
-    for (cit = cmdList.begin(); cit != cmdList.end(); cit++)
+      // Create the command objects
+    for (vector<std::string>::iterator cit = cmd_list.begin();
+         cit != cmd_list.end();
+         ++cit)
     {
-      //cout << "Logic cmdList " << (*cit) << endl;
+      //cout << "Logic cmd_list " << (*cit) << endl;
 
-      LinkCmd *tlink_cmd = new LinkCmd(&cmd_parser, this);
-      if (!tlink_cmd->initialize(*cit))
+      LinkCmd *link_cmd = new LinkCmd(&cmd_parser, this);
+      if (!link_cmd->initialize(*cit))
       {
-        cout << "*** ERROR: Can not setup command " << (*cit) <<
+        cout << "*** ERROR: Can not setup command " << *cit <<
                 " for the logic " << name() << endl;
         return false;
       }
     }
 
-      // Check if the logics should be connected on startup
-    LinkManager::instance()->logicIsUp(name());
     LinkManager::instance()->logicStateChanged.connect(
         mem_fun(*this, &Logic::stateChanged));
   }
@@ -933,7 +932,7 @@ void Logic::squelchOpen(bool is_open)
     LocationInfo::instance()->setReceiving(name(), tv, is_open);
   }
 
-  if (LinkManager::has_instance())
+  if (LinkManager::hasInstance())
   {
     state = is_open;
     LinkManager::instance()->logicStateChanged(TX_CTCSS_SQL_OPEN, is_open);
@@ -1074,7 +1073,7 @@ void Logic::allMsgsWritten(void)
 
   updateTxCtcss(false, TX_CTCSS_ANNOUNCEMENT);
 
-  if (LinkManager::has_instance())
+  if (LinkManager::hasInstance())
   {
     LinkManager::instance()->logicStateChanged(TX_CTCSS_ANNOUNCEMENT, false);
   }
@@ -1508,7 +1507,7 @@ void Logic::logicConInStreamStateChanged(bool is_active, bool is_idle)
 {
   updateTxCtcss(!is_idle, TX_CTCSS_LOGIC);
 
-  if (LinkManager::has_instance())
+  if (LinkManager::hasInstance())
   {
     cout << "logicConInStreamStateChanged" << endl;
     LinkManager::instance()->logicStateChanged(TX_CTCSS_LOGIC, !is_idle);
@@ -1520,7 +1519,7 @@ void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 {
   updateTxCtcss(!is_idle, TX_CTCSS_MODULE);
 
-  if (LinkManager::has_instance())
+  if (LinkManager::hasInstance())
   {
     cout << "audioFromModuleStreamStateChanged" << endl;
     LinkManager::instance()->logicStateChanged(TX_CTCSS_MODULE, !is_idle);

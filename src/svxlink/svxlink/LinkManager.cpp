@@ -136,7 +136,7 @@ bool LinkManager::initialize(const Async::Config &cfg,
                              const std::string &cfg_name)
 {
     // Check if already initialized
-  if (LinkManager::_instance->has_instance())
+  if (LinkManager::_instance->hasInstance())
   {
     return false;
   }
@@ -165,9 +165,9 @@ bool LinkManager::initialize(const Async::Config &cfg,
     string connect_logics;
     cfg.getValue(*name, "CONNECT_LOGICS", connect_logics);
 
-    vector<string> logic_list;
-    SvxLink::splitStr(logic_list, connect_logics, ",");
-    if (logic_list.size() < 2)
+    vector<string> logic_specs;
+    SvxLink::splitStr(logic_specs, connect_logics, ",");
+    if (logic_specs.size() < 2)
     {
       cerr << "*** ERROR: " << *name << "/CONNECT_LOGICS=? You must "
            << "have at least two logics to connect.\n";
@@ -176,8 +176,8 @@ bool LinkManager::initialize(const Async::Config &cfg,
 
       // Configure the list of logics to connect
       // CONNECT_LOGICS=Logic1:70:Name1,Logic2:71,Logic3:72:Name2,...
-    for(vector<string>::iterator it = logic_list.begin();
-        it != logic_list.end();
+    for(vector<string>::iterator it = logic_specs.begin();
+        it != logic_specs.end();
         ++it)
     {
       vector<string> logic_spec;
@@ -262,6 +262,7 @@ void LinkManager::addSource(const string& source_name,
     sel->addSource(connector);
     (*it).second.connectors[source_name] = connector;
   }
+  logic_list.insert(source_name);
 } /* LinkManager::addSource */
 
 
@@ -285,6 +286,7 @@ void LinkManager::addSink(const string &sink_name, AudioSink *logic_con_in)
     selector->addSource(connector);
     sinks[sink_name].connectors[(*it).first] = connector;
   }
+  logic_list.insert(sink_name);
 } /* LinkManager::addSink */
 
 
@@ -331,49 +333,22 @@ void LinkManager::deleteSink(const string& sink_name)
 
 
 /**
- * @brief Called by the logic when its operational
+ * @brief Should be called after all logics have been initialized
  *
- * Trigger from the logic, now check if DEFAULT_CONNECT is set
- * and all the logics inside the link definition can be connected
+ * Check if DEFAULT_CONNECT is set for a link and if so, the logics inside
+ * that link is connected
  */
-void LinkManager::logicIsUp(const std::string &logicname)
+void LinkManager::allLogicsStarted(void)
 {
-   bool conn = false;
+  for (LinkCfg::iterator it = link_cfg.begin(); it != link_cfg.end(); ++it)
+  {
+    const LinkSet &link_set = it->second;
 
-     // collecting names of logics that already are up
-   logic_list.insert(logicname);
-
-     // 1st we need all LINK's in that this Logic is involved
-   vector<string> ln = getLinkNames(logicname);
-
-   for (vector<string>::iterator vt = ln.begin(); vt != ln.end(); ++vt)
-   {
-       // 2nd we have to proof, if the Logics should beeing connected on startup
-       // and if the involved logics are already up
-     LinkCfg::iterator it = link_cfg.find(*vt);
-     if (it != link_cfg.end())
-     {
-       conn = true;
-       for (CName::iterator lit = (it->second).link_cname.begin();
-            lit != (it->second).link_cname.end();
-            ++lit)
-       {
-         if (find(logic_list.begin(), logic_list.end(), lit->first)
-             == logic_list.end())
-         {
-             // one affected logic isn't already up so we skip connecting,
-             // it will be called up with the next logic again
-           conn = false;
-         }
-       }
-     }
-
-     if (conn && (it != link_cfg.end()) && (it->second.default_connect))
-     {
-         // if DEFAULT_CONNECT is true, connect the logics together
-       connectLinks(it->second.name);
-     }
-   }
+    if (link_set.default_connect)
+    {
+      connectLinks(link_set.name);
+    }
+  }
 } /* LinkManager::logicIsUp */
 
 
@@ -693,10 +668,8 @@ LinkManager::LogicConSet LinkManager::getLogics(const string& linkname)
         }
         else
         {
-          cout << "*** WARNING: One of these logics: "<< xj->first << ", "
-               << xi->first << " isn't up an can not be connected.\n"
-               << "**** Missing entry in your configuration " <<
-               "[GLOBAL]/LINKS=???\n";
+          cout << "*** WARNING: One of the logics " << xj->first << " or "
+               << xi->first << " is missing in link " << linkname << endl;
         }
       }
     }
@@ -901,14 +874,6 @@ void LinkManager::upTimeout(Async::Timer *t)
     }
   }
 } /* LinkManager::upTimeout */
-
-
-
-/****************************************************************************
- *
- * Private local functions
- *
- ****************************************************************************/
 
 
 

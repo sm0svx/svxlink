@@ -280,7 +280,6 @@ class Logic : public sigc::trackable
     uint8_t			    tx_ctcss_mask;
     std::string                     sel5_from;
     std::string                     sel5_to;
-    std::vector<std::string>	    cmdList;
     AprsStatistics                  aprs_stats;
     Async::Timer		    *aprs_stats_timer;
     int                             tx_ctcss_state;

@@ -115,19 +115,20 @@ class Command;
 class LinkManager : public sigc::trackable
 {
   public:
-    static LinkManager* instance(void)
-    {
-      static CGuard g;
-      return _instance;
-    }
+    static bool initialize(const Async::Config &cfg,
+                           const std::string &cfg_name);
 
-    static bool has_instance(void)
+    static bool hasInstance(void)
     {
       return (_instance != 0);
     }
 
-    static bool initialize(const Async::Config &cfg,
-                           const std::string &cfg_name);
+    static LinkManager* instance(void)
+    {
+      static CGuard g;
+      assert(_instance != 0);
+      return _instance;
+    }
 
 
     void addSource(const std::string &source_name,
@@ -136,7 +137,7 @@ class LinkManager : public sigc::trackable
                  Async::AudioSink *logic_con_in);
     void deleteSource(const std::string &source_name);
     void deleteSink(const std::string &sink_name);
-    void logicIsUp(const std::string &name);
+    void allLogicsStarted(void);
     void resetTimers(const std::string &logicname);
     void enableTimers(const std::string &logicname);
     std::string cmdReceived(const std::string &logicname,
