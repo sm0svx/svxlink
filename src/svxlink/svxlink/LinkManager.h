@@ -177,10 +177,6 @@ class LinkManager : public sigc::trackable
      */
     void allLogicsStarted(void);
 
-    /*
-    void resetTimers(const std::string &logicname);
-    void enableTimers(const std::string &logicname);
-    */
     std::string cmdReceived(const std::string &logicname,
                             const std::string &cmd,
                             const std::string &subcmd);
@@ -214,6 +210,7 @@ class LinkManager : public sigc::trackable
         : timeout(0), default_connect(false), no_disconnect(false),
           is_connected(false), timeout_timer(0)
       {}
+      ~LinkSet(void) { delete timeout_timer; }
 
       std::string  name;
       LinkPropMap  properties;

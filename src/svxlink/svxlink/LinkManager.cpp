@@ -380,75 +380,6 @@ vector<string> LinkManager::getCommands(string logicname) const
 } /* LinkManager::getCommands */
 
 
-#if 0
-/**
- * @brief Reset the timeout timers for the links, that are connected
- */
-void LinkManager::resetTimers(const string& logicname)
-{
-  /*
-   * Here we have only the "logicname" but no idea in how many LINKS
-   * this logic is involved so we have to check all LINKS entries
-   * to reset each single timeout timer in each "linkname"
-   */
-
-    // We need all "linknames" where the "logicname" is included in
-  vector<string> t_linknames = getLinkNames(logicname);
-
-  for (vector<string>::iterator vt = t_linknames.begin();
-      vt != t_linknames.end();
-      ++vt)
-  {
-    map<string, Async::Timer*>::iterator it = timeout_timers.find(*vt);
-    if (it != timeout_timers.end())
-    {
-        // Reset each Timer connected with the specified logic
-      it->second->reset();
-      it->second->setEnable(false);
-    }
-
-      // Check if a logic has sent a trigger that is defined as a
-      // "auto_connect" logic, in this case all logics of a link shall
-      // be connected if they are disconnected before
-    vector<string>::iterator tauto_connect;
-    for (tauto_connect = link_cfg[*vt].auto_connect.begin();
-         tauto_connect != link_cfg[*vt].auto_connect.end();
-         ++tauto_connect)
-    {
-      if (*tauto_connect == logicname)
-      {
-        cout << "connecting link " << *vt <<
-          " due to AUTOCONNECT_ON_SQL from " << logicname << endl;
-        connectLinks(*vt);
-      }
-    }
-  }
-} /* LinkManager::resetTimers */
-
-
-/**
- * @brief Restart the to-timer
- */
-void LinkManager::enableTimers(const string& logicname)
-{
-    // We need all "linknames" where the "logicname" is included in
-  vector<string> t_linknames = getLinkNames(logicname);
-
-  for (std::vector<string>::iterator vt = t_linknames.begin();
-       vt != t_linknames.end();
-       ++vt)
-  {
-    TimerMap::iterator it = timeout_timers.find(*vt);
-    if (it != timeout_timers.end())
-    {
-        // Enable each Timer connected with the specified logic
-      it->second->setEnable(true);
-    }
-  }
-} /* LinkManager::enableTimers */
-#endif
-
-
 /**
  * @brief Called from the Logic if a command has been received
  */
@@ -872,6 +803,27 @@ void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
     LinkCfg::iterator lcit = link_cfg.find(link_name);
     assert(lcit != link_cfg.end());
     LinkSet &link = (*lcit).second;
+    
+      // Check if the logic that updated its idle state is defined as a
+      // "auto_connect" logic. If not idle, all logics of the link shall
+      // be connected if they were disconnected before.
+      // FIXME: We now activate the link even on announcements since that
+      // changes the idle status of a logic core. Probably not what we want.
+    if (!is_idle && !link.is_connected)
+    {
+      for (StrList::iterator acit = link.auto_connect.begin();
+           acit != link.auto_connect.end();
+           ++acit)
+      {
+        if (*acit == logic->name())
+        {
+          cout << "connecting link " << link_name <<
+            " due to AUTOCONNECT_ON_SQL from " << logic->name() << endl;
+          connectLinks(link_name);
+        }
+      }
+    }
+
     checkTimeoutTimer(link);
   }
 } /* LinkManager::logicIdleStateChanged */
