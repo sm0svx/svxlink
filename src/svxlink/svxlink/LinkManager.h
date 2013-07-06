@@ -3,6 +3,7 @@
 @brief   Contains the manager to link different logics together
          implemented as singleton
 @author  Adi Bier (DL1HRC) / Christian Stussak (University of Halle)
+         Tobias Blomberg / SM0SVX
 @date	 2011-08-24
 
 \verbatim
@@ -53,7 +54,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioSplitter.h>
-#include <AsyncAudioPassthrough.h>
 
 
 /****************************************************************************
@@ -71,6 +71,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class AudioPassthrough;
+};
+class Logic;
 
 
 /****************************************************************************
@@ -86,8 +91,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Forward declarations of classes inside of the declared namespace
  *
  ****************************************************************************/
-
-class Command;
 
 
 
@@ -131,15 +134,32 @@ class LinkManager : public sigc::trackable
     }
 
 
-    void addSource(const std::string &source_name,
-                   Async::AudioSource *logic_con_out);
-    void addSink(const std::string &sink_name,
-                 Async::AudioSink *logic_con_in);
-    void deleteSource(const std::string &source_name);
-    void deleteSink(const std::string &sink_name);
+    /**
+     * @brief Add a logic core to the link manager
+     * @param logic The logic core to add
+     *
+     * This function should be called by each logic core upon creation.
+     */
+    void addLogic(Logic *logic);
+
+    /**
+     * @brief Delete a logic core from the link manager
+     * @param logic The logic to delete
+     */
+    void deleteLogic(Logic *logic);
+
+    /**
+     * @brief Should be called after all logics have been initialized
+     *
+     * Check if DEFAULT_CONNECT is set for a link and if so, the logics
+     * configured for that link is connected.
+     */
     void allLogicsStarted(void);
+
+    /*
     void resetTimers(const std::string &logicname);
     void enableTimers(const std::string &logicname);
+    */
     std::string cmdReceived(const std::string &logicname,
                             const std::string &cmd,
                             const std::string &subcmd);
@@ -203,11 +223,17 @@ class LinkManager : public sigc::trackable
       ERROR = 0, OK = 1, ALREADY_CONNECTED = 3
     } ConnectResult;
     typedef std::map<std::string, Async::Timer*> TimerMap;
+    struct LogicInfo
+    {
+      Logic             *logic;
+      sigc::connection  idle_state_changed_con;
+    };
+    typedef std::map<std::string, LogicInfo>        LogicMap;
 
     static LinkManager *_instance;
 
     LinkCfg               link_cfg;
-    std::set<std::string> logic_list;
+    LogicMap              logic_map;
     TimerMap              timeout_timers;
     LogicConSet           current_cons;
     SourceMap             sources;
@@ -229,6 +255,8 @@ class LinkManager : public sigc::trackable
     LogicConSet getLogics(const std::string& linkname);
     LogicConSet getMatrix(const std::string& name);
     LogicConSet getToDisconnect(const std::string& name);
+    void logicIdleStateChanged(bool is_idle, const Logic *logic);
+
 };  /* class LinkManager */
 
 

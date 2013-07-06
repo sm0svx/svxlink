@@ -3,6 +3,7 @@
 @brief   Contains the manager to link different logics together
          implemented as singleton
 @author  Adi Bier (DL1HRC) / Christian Stussak (University of Halle/Saale)
+         Tobias Blomberg / SM0SVX
 @date	 2011-11-24
 
 \verbatim
@@ -66,6 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "LinkManager.h"
 #include "CmdParser.h"
+#include "Logic.h"
 
 
 /****************************************************************************
@@ -136,7 +138,7 @@ bool LinkManager::initialize(const Async::Config &cfg,
                              const std::string &cfg_name)
 {
     // Check if already initialized
-  if (LinkManager::_instance->hasInstance())
+  if (LinkManager::hasInstance())
   {
     return false;
   }
@@ -237,113 +239,108 @@ bool LinkManager::initialize(const Async::Config &cfg,
 } /* LinkManager::initialize */
 
 
-/**
- * @brief Register the audio source (source_name , audioname)
- */
-void LinkManager::addSource(const string& source_name,
-                            AudioSource *logic_con_out)
+void LinkManager::addLogic(Logic *logic)
 {
-  if (sourceIsAdded(source_name))
-  {
-    return;
-  }
-
+    // Create a splitter to split the source audio from the logic being added
+    // to all other logics.
   AudioSplitter *splitter = new AudioSplitter;
-  logic_con_out->registerSink(splitter);
+  logic->logicConOut()->registerSink(splitter);
 
-  sources[source_name].source = logic_con_out;
-  sources[source_name].splitter = splitter;
+    // Register the new logic source
+  sources[logic->name()].source = logic->logicConOut();
+  sources[logic->name()].splitter = splitter;
 
+    // Create a selector for the logic being added to receive audio from all
+    // other sinks.
+  AudioSelector *selector = new AudioSelector;
+  selector->registerSink(logic->logicConIn());
+
+    // Register the new logic sink
+  sinks[logic->name()].sink = logic->logicConIn();
+  sinks[logic->name()].selector = selector;
+
+    // Now create a connection from the new logic source to each sink.
   for (SinkMap::iterator it=sinks.begin(); it != sinks.end(); ++it)
   {
     AudioPassthrough *connector = new AudioPassthrough;
     splitter->addSink(connector);
-    AudioSelector *sel = (*it).second.selector;
-    sel->addSource(connector);
-    (*it).second.connectors[source_name] = connector;
-  }
-  logic_list.insert(source_name);
-} /* LinkManager::addSource */
-
-
-void LinkManager::addSink(const string &sink_name, AudioSink *logic_con_in)
-{
-  if (sinkIsAdded(sink_name))
-  {
-    return;
+    AudioSelector *other_selector = (*it).second.selector;
+    other_selector->addSource(connector);
+    (*it).second.connectors[logic->name()] = connector;
   }
 
-  AudioSelector *selector = new AudioSelector;
-  selector->registerSink(logic_con_in);
-
-  sinks[sink_name].sink = logic_con_in;
-  sinks[sink_name].selector = selector;
-
+    // Now create a connection from each existing logic source to the new sink.
   for (SourceMap::iterator it=sources.begin(); it!=sources.end(); ++it)
   {
     AudioPassthrough *connector = new AudioPassthrough;
     (*it).second.splitter->addSink(connector);
     selector->addSource(connector);
-    sinks[sink_name].connectors[(*it).first] = connector;
+    sinks[logic->name()].connectors[(*it).first] = connector;
   }
-  logic_list.insert(sink_name);
-} /* LinkManager::addSink */
+
+  LogicInfo logic_info;
+  logic_info.logic = logic;
+
+    // Keep track of the newly added logics idle state so that we can start
+    // and stop timeout timers.
+  logic_info.idle_state_changed_con = logic->idleStateChanged.connect(
+      bind(mem_fun(*this, &LinkManager::logicIdleStateChanged), logic));
+
+  logic_map[logic->name()] = logic_info;
+
+} /* LinkManager::addLogic */
 
 
-void LinkManager::deleteSource(const string& source_name)
+void LinkManager::deleteLogic(Logic *logic)
 {
-  assert(sources.size() > 0);
+    // Verify that the logic has been previously added
+  LogicMap::iterator lmit = logic_map.find(logic->name());
+  assert(lmit != logic_map.end());
+  LogicInfo &logic_info = (*lmit).second;
+  assert(logic_info.logic == logic);
+  assert(sources.find(logic->name()) != sources.end());
+  assert(sinks.find(logic->name()) != sinks.end());
 
-  AudioSplitter *splitter = sources[source_name].splitter;
+    // Disconnect the idleStateChanged signal that was connected when the
+    // logic was first registered.
+  logic_info.idle_state_changed_con.disconnect();
 
-  for (SinkMap::iterator it=sinks.begin(); it!=sinks.end(); ++it)
+    // Delete the logic source splitter and all connections associated with it
+  AudioSplitter *splitter = sources[logic->name()].splitter;
+  for (SinkMap::iterator smit=sinks.begin(); smit!=sinks.end(); ++smit)
   {
-    assert((*it).second.connectors.size() > 0);
-    AudioPassthrough *connector = (*it).second.connectors[source_name];
-    (*it).second.selector->removeSource(connector);
-    (*it).second.connectors.erase(source_name);
+    SinkInfo &sink_info = (*smit).second;
+    ConMap::iterator cmit = sink_info.connectors.find(logic->name());
+    assert(cmit != sink_info.connectors.end());
+    AudioPassthrough *connector = (*cmit).second;
+    sink_info.selector->removeSource(connector);
+    sink_info.connectors.erase(logic->name());
     splitter->removeSink(connector);
     delete connector;
   }
-
   delete splitter;
-  sources.erase(source_name);
-
-  // FIXME: The source name should be removed from logic_list if appropriate
+  sources.erase(logic->name());
   
-} /* LinkManager::deleteSource */
-
-
-void LinkManager::deleteSink(const string& sink_name)
-{
-  assert(sinks.size() > 0);
-  AudioSelector *selector = sinks[sink_name].selector;
-
-  ConMap &cons = sinks[sink_name].connectors;
-  for (ConMap::iterator it = cons.begin(); it != cons.end(); ++it)
+    // Delete the logic sink and all connections associated with it
+  AudioSelector *selector = sinks[logic->name()].selector;
+  ConMap &cons = sinks[logic->name()].connectors;
+  for (ConMap::iterator cmit = cons.begin(); cmit != cons.end(); ++cmit)
   {
-    string source_name = (*it).first;
-    AudioPassthrough *connector = (*it).second;
+    AudioPassthrough *connector = (*cmit).second;
     selector->removeSource(connector);
-    assert(sources.size() >= 1);
+    const string &source_name = (*cmit).first;
     sources[source_name].splitter->removeSink(connector);
     delete connector;
   }
-
   delete selector;
-  sinks.erase(sink_name);
-  
-  // FIXME: The sink name should be removed from logic_list if appropriate
+  sinks.erase(logic->name());
 
-} /* LinkManager::deleteSink */
+    // Finally remove the logic from the logic_map
+  logic_map.erase(logic->name());
+
+} /* LinkManager::deleteLogic */
 
 
-/**
- * @brief Should be called after all logics have been initialized
- *
- * Check if DEFAULT_CONNECT is set for a link and if so, the logics inside
- * that link is connected
- */
 void LinkManager::allLogicsStarted(void)
 {
   for (LinkCfg::iterator it = link_cfg.begin(); it != link_cfg.end(); ++it)
@@ -378,6 +375,7 @@ vector<string> LinkManager::getCommands(string logicname) const
 } /* LinkManager::getCommands */
 
 
+#if 0
 /**
  * @brief Reset the timeout timers for the links, that are connected
  */
@@ -443,6 +441,7 @@ void LinkManager::enableTimers(const string& logicname)
     }
   }
 } /* LinkManager::enableTimers */
+#endif
 
 
 /**
@@ -667,8 +666,8 @@ LinkManager::LogicConSet LinkManager::getLogics(const string& linkname)
     {
       if (xj->first != xi->first)
       {
-        if ((logic_list.find(xj->first) != logic_list.end()) &&
-            (logic_list.find(xi->first) != logic_list.end()))
+        if ((logic_map.find(xj->first) != logic_map.end()) &&
+            (logic_map.find(xi->first) != logic_map.end()))
         {
           ret.insert(make_pair(xi->first, xj->first));
         }
@@ -778,8 +777,8 @@ LinkManager::ConnectResult LinkManager::disconnectLinks(const string& name)
 
    for (LogicConSet::iterator it = diff.begin(); it != diff.end(); ++it)
    {
-     if ((logic_list.find(it->first) != logic_list.end()) &&
-         (logic_list.find(it->second) != logic_list.end()))
+     if ((logic_map.find(it->first) != logic_map.end()) &&
+         (logic_map.find(it->second) != logic_map.end()))
      {
        cout << "disconnect " << it->first << " -X-> " << it->second << endl;
        sinks[it->first].selector->
@@ -880,6 +879,63 @@ void LinkManager::upTimeout(Async::Timer *t)
     }
   }
 } /* LinkManager::upTimeout */
+
+
+void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
+{
+  /*
+  cout << "### LinkManager::logicIdleStateChanged:"
+       << " is_idle=" << is_idle
+       << " logic_name=" << logic->name()
+       << endl;
+  */
+
+    // We need all "linknames" where the "logic_name" is included in
+  vector<string> link_names = getLinkNames(logic->name());
+
+    // Loop through all links associated with the logic to see if we should
+    // enable or disable any timeout timers.
+  for (std::vector<string>::iterator lnit = link_names.begin();
+       lnit != link_names.end();
+       ++lnit)
+  {
+    const string &link_name = *lnit;
+
+    TimerMap::iterator it = timeout_timers.find(link_name);
+    if (it == timeout_timers.end())
+    {
+      continue;
+    }
+    Timer *timer = (*it).second;
+
+    LinkCfg::iterator lcit = link_cfg.find(link_name);
+    assert(lcit != link_cfg.end());
+    LinkSet &link = (*lcit).second;
+
+    bool all_logics_idle = true;
+    for (CName::iterator cnit = link.link_cname.begin();
+         cnit != link.link_cname.end();
+         ++cnit)
+    {
+      const string &cname_logic_name = (*cnit).first;
+      LogicMap::iterator lmit = logic_map.find(cname_logic_name);
+      assert(lmit != logic_map.end());
+      Logic *other_logic = (*lmit).second.logic;
+      all_logics_idle &= other_logic->isIdle();
+    }
+
+    if (all_logics_idle && (link.is_connected != link.default_connect))
+    {
+      //cout << "### Enabling timeout timer for link " << link_name << endl;
+      timer->setEnable(true);
+    }
+    else
+    {
+      //cout << "### Disabling timeout timer for link " << link_name << endl;
+      timer->setEnable(false);
+    }
+  }
+} /* LinkManager::logicIdleStateChanged */
 
 
 

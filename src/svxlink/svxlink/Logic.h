@@ -85,6 +85,8 @@ namespace Async
   class AudioValve;
   class AudioStreamStateDetector;
   class AudioRecorder;
+  class AudioSource;
+  class AudioSink;
 };
 
 
@@ -185,8 +187,6 @@ class Logic : public sigc::trackable
     Rx &rx(void) const { return *m_rx; }
     Tx &tx(void) const { return *m_tx; }
 
-    //void disconnectAllLogics(void);
-
     void sendDtmf(const std::string& digits);
 
     void injectDtmfDigit(char digit, int duration_ms)
@@ -200,9 +200,11 @@ class Logic : public sigc::trackable
 
     bool isWritingMessage(void);
 
-    sigc::signal<void, bool> idleStateChanged;
-
     void commandReceived(std::string cmd, std::string subcmd);
+    Async::AudioSink *logicConIn(void);
+    Async::AudioSource *logicConOut(void);
+
+    sigc::signal<void, bool> idleStateChanged;
 
   protected:
     virtual void squelchOpen(bool is_open);
@@ -218,7 +220,6 @@ class Logic : public sigc::trackable
     void rxValveSetOpen(bool do_open);
     void rptValveSetOpen(bool do_open);
     void checkIdle(void);
-
 
   private:
 

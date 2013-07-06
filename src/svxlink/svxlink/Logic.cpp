@@ -572,9 +572,8 @@ bool Logic::initialize(void)
 
   if (LinkManager::hasInstance())
   {
-      // Register audio source and audio sinks
-    LinkManager::instance()->addSource(name(), logic_con_out);
-    LinkManager::instance()->addSink(name(), logic_con_in);
+      // Register this logic in the link manager
+    LinkManager::instance()->addLogic(this);
 
       // Get the list of commands
     std::vector<std::string> cmd_list
@@ -852,16 +851,6 @@ void Logic::selcallSequenceDetected(std::string sequence)
 } /* Logic::selcallSequenceDetected */
 
 
-#if 0
-void Logic::disconnectAllLogics(void)
-{
- // cout << "Deactivating all links to/from \"" << name() << "\"\n";
- // LinkManager::instance()->disconnectSource(name());
- // LinkManager::instance()->disconnectSink(name());
-} /* Logic::disconnectAllLogics */
-#endif
-
-
 void Logic::sendDtmf(const std::string& digits)
 {
   if (!digits.empty())
@@ -888,6 +877,16 @@ void Logic::commandReceived(string cmd, string subcmd)
 } /* Logic::commandReceived */
 
 
+Async::AudioSink *Logic::logicConIn(void)
+{
+  return logic_con_in;
+} /* Logic::logicConIn */
+
+
+Async::AudioSource *Logic::logicConOut(void)
+{
+  return logic_con_out;
+} /* Logic::logicConOut */
 
 
 /****************************************************************************
@@ -1029,10 +1028,6 @@ void Logic::checkIdle(void)
     is_idle = new_idle_state;
     //printf("Logic::checkIdle: is_idle=%s\n", is_idle ? "TRUE" : "FALSE");
     idleStateChanged(is_idle);
-    if (LinkManager::hasInstance() && is_idle)
-    {
-      LinkManager::instance()->enableTimers(name());
-    }
   }
 } /* Logic::checkIdle */
 
@@ -1472,8 +1467,7 @@ void Logic::cleanup(void)
 
   if (LinkManager::instance())
   {
-    LinkManager::instance()->deleteSource(name());
-    LinkManager::instance()->deleteSink(name());
+    LinkManager::instance()->deleteLogic(this);
   }
 
   delete msg_handler; 	      	      msg_handler = 0;
@@ -1509,7 +1503,7 @@ void Logic::logicConInStreamStateChanged(bool is_active, bool is_idle)
 
   if (LinkManager::hasInstance())
   {
-    cout << "logicConInStreamStateChanged" << endl;
+    //cout << "### logicConInStreamStateChanged" << endl;
     LinkManager::instance()->logicStateChanged(TX_CTCSS_LOGIC, !is_idle);
   }
 } /* Logic::logicConInStreamStateChanged */
