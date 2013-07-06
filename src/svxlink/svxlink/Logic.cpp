@@ -1029,7 +1029,7 @@ void Logic::checkIdle(void)
     is_idle = new_idle_state;
     //printf("Logic::checkIdle: is_idle=%s\n", is_idle ? "TRUE" : "FALSE");
     idleStateChanged(is_idle);
-    if (LinkManager::instance() && is_idle)
+    if (LinkManager::hasInstance() && is_idle)
     {
       LinkManager::instance()->enableTimers(name());
     }
@@ -1527,7 +1527,7 @@ void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 } /* Logic::audioFromModuleStreamStateChanged */
 
 
-void Logic::stateChanged(uint8_t tx_ctcss, bool state)
+void Logic::stateChanged(int tx_ctcss, bool state)
 {
   // cout << name() << ": external state changed!! "
   //     << tx_ctcss << ", " << state << endl;

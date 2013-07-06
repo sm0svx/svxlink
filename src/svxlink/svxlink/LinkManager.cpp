@@ -308,6 +308,9 @@ void LinkManager::deleteSource(const string& source_name)
 
   delete splitter;
   sources.erase(source_name);
+
+  // FIXME: The source name should be removed from logic_list if appropriate
+  
 } /* LinkManager::deleteSource */
 
 
@@ -329,6 +332,9 @@ void LinkManager::deleteSink(const string& sink_name)
 
   delete selector;
   sinks.erase(sink_name);
+  
+  // FIXME: The sink name should be removed from logic_list if appropriate
+
 } /* LinkManager::deleteSink */
 
 

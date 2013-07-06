@@ -145,7 +145,7 @@ class LinkManager : public sigc::trackable
                             const std::string &subcmd);
     std::vector<std::string> getCommands(std::string logicname) const;
 
-    sigc::signal<void, uint8_t, bool> logicStateChanged;
+    sigc::signal<void, int, bool> logicStateChanged;
 
   private:
     class CGuard
