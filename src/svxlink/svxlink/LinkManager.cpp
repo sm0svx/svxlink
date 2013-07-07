@@ -68,6 +68,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "LinkManager.h"
 #include "CmdParser.h"
 #include "Logic.h"
+#include "LogicCmds.h"
 
 
 /****************************************************************************
@@ -157,7 +158,7 @@ bool LinkManager::initialize(const Async::Config &cfg,
        name != linklist.end();
        name++)
   {
-    LinkSet &link = LinkManager::instance()->link_cfg[*name];
+    Link &link = LinkManager::instance()->links[*name];
 
       // The link name is the same as the config section name
     link.name = *name;
@@ -187,10 +188,10 @@ bool LinkManager::initialize(const Async::Config &cfg,
       if (logic_spec.at(0).size() > 0)
       {
         string logic_name = logic_spec.at(0);
-        LinkProperties properties;
-        properties.logic_cmd =  logic_spec.at(1);
-        properties.announcement_name = logic_spec.at(2);
-        link.properties.insert(make_pair(logic_name, properties));
+        CmdProperties cmd_props;
+        cmd_props.logic_cmd =  logic_spec.at(1);
+        cmd_props.announcement_name = logic_spec.at(2);
+        link.cmd_props.insert(make_pair(logic_name, cmd_props));
       }
       else
       {
@@ -290,8 +291,28 @@ void LinkManager::addLogic(Logic *logic)
   logic_info.idle_state_changed_con = logic->idleStateChanged.connect(
       bind(mem_fun(*this, &LinkManager::logicIdleStateChanged), logic));
 
+    // Add the logic to the logic map
   logic_map[logic->name()] = logic_info;
 
+    // Create command objects associated with this logic
+  for (LinkMap::iterator it = links.begin(); it != links.end(); ++it)
+  {
+    Link &link = it->second;
+    CmdPropMap::const_iterator cpmit(link.cmd_props.find(logic->name()));
+    if (cpmit != link.cmd_props.end())
+    {
+      const CmdProperties &cmd_props = cpmit->second;
+      if (atoi(cmd_props.logic_cmd.c_str()) > 0)
+      {
+        LinkCmd *link_cmd = new LinkCmd(logic, link);
+        if (!link_cmd->initialize(cmd_props.logic_cmd))
+        {
+          cout << "*** WARNING: Can not setup command " << cmd_props.logic_cmd
+               << " for the logic " << logic->name() << endl;
+        }
+      }
+    }
+  }
 } /* LinkManager::addLogic */
 
 
@@ -347,9 +368,9 @@ void LinkManager::deleteLogic(Logic *logic)
 
 void LinkManager::allLogicsStarted(void)
 {
-  for (LinkCfg::iterator it = link_cfg.begin(); it != link_cfg.end(); ++it)
+  for (LinkMap::iterator it = links.begin(); it != links.end(); ++it)
   {
-    const LinkSet &link = it->second;
+    const Link &link = it->second;
 
     if (link.default_connect)
     {
@@ -359,114 +380,74 @@ void LinkManager::allLogicsStarted(void)
 } /* LinkManager::allLogicsStarted */
 
 
-/**
- * @brief Returns all commands specific for the specified logic
- */
-vector<string> LinkManager::getCommands(string logicname) const
-{
-  vector<string> cmds;
-
-  for (LinkCfg::const_iterator it = link_cfg.begin(); it != link_cfg.end(); ++it)
-  {
-    LinkPropMap::const_iterator lpmit(it->second.properties.find(logicname));
-    if ((lpmit != it->second.properties.end()) &&
-        (atoi(lpmit->second.logic_cmd.c_str()) > 0))
-    {
-      cmds.push_back(lpmit->second.logic_cmd);
-    }
-  }
-  return cmds;
-} /* LinkManager::getCommands */
-
-
-/**
- * @brief Called from the Logic if a command has been received
- */
-string LinkManager::cmdReceived(const string &logicname, const string &cmd,
+string LinkManager::cmdReceived(LinkRef link, Logic *logic,
                                 const string &subcmd)
 {
+  cout << "### LinkManager::cmdReceived: link=" << link.name
+       << " logic=" << logic->name()
+       << " subcmd=" << subcmd << endl;
+
   stringstream ss;
-  int isubcmd = atoi(subcmd.c_str());
 
-  cout << "cmdReceived " << logicname << ": " << cmd << " subcmd:"
-       << subcmd << endl << flush;
-
-  for (LinkCfg::iterator it = link_cfg.begin(); it != link_cfg.end(); ++it)
+  CmdPropMap::iterator cpmit = link.cmd_props.find(logic->name());
+  assert(cpmit != link.cmd_props.end());
+  CmdProperties &cmd_props = cpmit->second;
+  if (subcmd == "0") // Disconnecting Link1 <-X-> Link2
   {
-    LinkPropMap::iterator lcx = it->second.properties.find(logicname);
-    if (lcx != it->second.properties.end())
+    if (link.no_disconnect)
     {
-      if (lcx->second.logic_cmd == cmd)
+        // Not possible due to configuration
+      ss << "deactivating_link_not_possible \"";
+    }
+    else if (!link.is_connected)
+    {
+      ss << "link_not_active \"";
+    }
+    else
+    {
+      ConnectResult tconnect = disconnectLinks(link.name);
+      switch (tconnect)
       {
-        switch(isubcmd)
-        {
-            // Disconnecting Link1 <-X-> Link2
-          case 0:
-          {
-            if (it->second.no_disconnect)
-            {
-                // Not possible due to configuration
-              ss << "deactivating_link_not_possible \""
-                 << lcx->second.announcement_name << "\"";
-              break;
-            }
-            if (!it->second.is_connected)
-            {
-              ss << "link_not_active \"";
-              ss << lcx->second.announcement_name << "\"";
-              break;
-            }
-
-            ConnectResult tconnect = disconnectLinks(it->second.name);
-            switch (tconnect)
-            {
-              case ERROR:
-                ss << "deactivating_link_failed \"";
-                break;
-              case OK:
-                ss << "deactivating_link \"";
-                break;
-              case ALREADY_CONNECTED:
-                ss << "deactivating_link_failed_other_connection \"";
-            }
-            ss << lcx->second.announcement_name << "\"";
-            break;
-          }
-
-            // Connecting Logic1 <---> Logic2 (two ways)
-          case 1:
-          {
-            if ((it->second).is_connected)
-            {
-              ss << "link_already_active \"";
-              ss << lcx->second.announcement_name << "\"";
-              break;
-            }
-
-            ConnectResult tconnect = connectLinks(it->second.name);
-            switch (tconnect)
-            {
-              case ERROR:
-                ss << "activating_link_failed \"";
-                break;
-              case OK:
-                ss << "activating_link \"";
-                break;
-              case ALREADY_CONNECTED:
-                ss << "activating_link_failed_other_connection \"";
-                break;
-            }
-            ss << lcx->second.announcement_name + "\"";
-            break;
-          }
-
-          default:
-          {
-            ss << "unknown_command " << cmd << subcmd;
-          }
-        }
+        case ERROR:
+          ss << "deactivating_link_failed \"";
+          break;
+        case OK:
+          ss << "deactivating_link \"";
+          break;
+        case ALREADY_CONNECTED:
+          ss << "deactivating_link_failed_other_connection \"";
+          break;
       }
     }
+    ss << cmd_props.announcement_name << "\"";
+  }
+  else if (subcmd == "1") // Connecting Logic1 <---> Logic2 (two ways)
+  {
+    if (link.is_connected)
+    {
+      ss << "link_already_active \"";
+    }
+    else
+    {
+      ConnectResult tconnect = connectLinks(link.name);
+      switch (tconnect)
+      {
+        case ERROR:
+          ss << "activating_link_failed \"";
+          break;
+        case OK:
+          ss << "activating_link \"";
+          break;
+        case ALREADY_CONNECTED:
+          ss << "activating_link_failed_other_connection \"";
+          break;
+      }
+    }
+    ss << cmd_props.announcement_name + "\"";
+  }
+  else
+  {
+    ss << "unknown_command " << cmd_props.logic_cmd << subcmd;
   }
   return ss.str();
 } /* LinkManager::cmdReceived */
@@ -516,7 +497,7 @@ LinkManager::ConnectResult LinkManager::connectLinks(const string& name)
   LogicConSet want = getMatrix(name);
 
     // Gets the difference of both, the result is the matrix to be connected
-    // "is" contains the actual state of the connected logics, e.g.
+    // "current_cons" contains the actual state of the connected logics, e.g.
     // <RepeaterLogic, SimplexLogic>
     // <SimplexLogic, RepeaterLogic>
   LogicConSet diff = getDifference(current_cons, want);
@@ -549,7 +530,7 @@ LinkManager::ConnectResult LinkManager::connectLinks(const string& name)
   }
 
 
-  LinkSet &link = link_cfg[name];
+  Link &link = links[name];
   link.is_connected = true;
 
     // Check if the timeout timer should be enabled or disabled
@@ -582,14 +563,14 @@ LinkManager::LogicConSet LinkManager::getDifference(LogicConSet is,
 LinkManager::LogicConSet LinkManager::getLogics(const string& linkname)
 {
   LogicConSet ret;
-  LinkCfg::iterator it = link_cfg.find(linkname);
+  LinkMap::iterator it = links.find(linkname);
 
-  for (LinkPropMap::iterator xi = it->second.properties.begin();
-       xi != it->second.properties.end();
+  for (CmdPropMap::iterator xi = it->second.cmd_props.begin();
+       xi != it->second.cmd_props.end();
        ++xi)
   {
-    for (LinkPropMap::iterator xj = it->second.properties.begin();
-         xj != it->second.properties.end();
+    for (CmdPropMap::iterator xj = it->second.cmd_props.begin();
+         xj != it->second.cmd_props.end();
          ++xj)
     {
       if (xj->first != xi->first)
@@ -613,30 +594,30 @@ LinkManager::LogicConSet LinkManager::getLogics(const string& linkname)
 
 LinkManager::LogicConSet LinkManager::getMatrix(const string& linkname)
 {
-  LinkCfg::iterator it = link_cfg.find(linkname);
+  LinkMap::iterator it = links.find(linkname);
   LogicConSet ret = getLogics(linkname);
 
-  for (LinkCfg::iterator iu = link_cfg.begin(); iu != link_cfg.end(); ++iu)
+  for (LinkMap::iterator iu = links.begin(); iu != links.end(); ++iu)
   {
     if (iu->second.is_connected)
     {
-      for (LinkPropMap::iterator xj = it->second.properties.begin();
-           xj != it->second.properties.end();
+      for (CmdPropMap::iterator xj = it->second.cmd_props.begin();
+           xj != it->second.cmd_props.end();
            ++xj)
       {
           // look in the actual connected linkset if there is a logicname
           // that exists in another already connected link definition
-        LinkPropMap::iterator cn = iu->second.properties.find(xj->first);
-        if (cn != iu->second.properties.end())
+        CmdPropMap::iterator cn = iu->second.cmd_props.find(xj->first);
+        if (cn != iu->second.cmd_props.end())
         {
-          for (LinkPropMap::iterator dn = iu->second.properties.begin();
-               dn != iu->second.properties.end();
+          for (CmdPropMap::iterator dn = iu->second.cmd_props.begin();
+               dn != iu->second.cmd_props.end();
                ++dn)
           {
             if (dn->first != cn->first)
             {
-              for (LinkPropMap::iterator xi = it->second.properties.begin();
-                   xi != it->second.properties.end(); xi++)
+              for (CmdPropMap::iterator xi = it->second.cmd_props.begin();
+                   xi != it->second.cmd_props.end(); xi++)
               {
                 if (dn->first != xi->first)
                 {
@@ -663,7 +644,7 @@ LinkManager::LogicConSet LinkManager::getToDisconnect(const string& name)
   LogicConSet ret = current_cons;  // Get all current connections
 
     // Go through all link definitions and check if they are connected
-  for (LinkCfg::iterator it = link_cfg.begin(); it != link_cfg.end(); ++it)
+  for (LinkMap::iterator it = links.begin(); it != links.end(); ++it)
   {
     if (it->second.is_connected && (name != it->second.name))
     {
@@ -688,7 +669,7 @@ LinkManager::ConnectResult LinkManager::disconnectLinks(const string& name)
 {
   ConnectResult check = ERROR;
 
-  if (link_cfg.find(name) == link_cfg.end())
+  if (links.find(name) == links.end())
   {
     return check;
   }
@@ -724,7 +705,7 @@ LinkManager::ConnectResult LinkManager::disconnectLinks(const string& name)
   }
 
     // Reset the connected flag
-  LinkSet &link = link_cfg[name];
+  Link &link = links[name];
   link.is_connected = false;
 
     // Check if the timeout timer should be enabled or disabled
@@ -753,11 +734,11 @@ bool LinkManager::isConnected(const string& source_name,
 vector<string> LinkManager::getLinkNames(const string& logicname)
 {
   vector<string> t_linknames;
-  LinkCfg::iterator it;
+  LinkMap::iterator it;
 
-  for (LinkCfg::iterator it=link_cfg.begin(); it!=link_cfg.end(); ++it)
+  for (LinkMap::iterator it=links.begin(); it!=links.end(); ++it)
   {
-    if (it->second.properties.find(logicname) != it->second.properties.end())
+    if (it->second.cmd_props.find(logicname) != it->second.cmd_props.end())
     {
       t_linknames.push_back(it->first);
     }
@@ -766,7 +747,7 @@ vector<string> LinkManager::getLinkNames(const string& logicname)
 } /* LinkManager::getLinkNames */
 
 
-void LinkManager::linkTimeout(Async::Timer *t, LinkSet *link)
+void LinkManager::linkTimeout(Async::Timer *t, Link *link)
 {
   if (link->is_connected && !link->default_connect && !link->no_disconnect)
   {
@@ -799,9 +780,9 @@ void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
        ++lnit)
   {
     const string &link_name = *lnit;
-    LinkCfg::iterator lcit = link_cfg.find(link_name);
-    assert(lcit != link_cfg.end());
-    LinkSet &link = (*lcit).second;
+    LinkMap::iterator lcit = links.find(link_name);
+    assert(lcit != links.end());
+    Link &link = (*lcit).second;
     
       // Check if the logic that updated its idle state is defined as a
       // "auto_connect" logic. If not idle, all logics of the link shall
@@ -828,7 +809,7 @@ void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
 } /* LinkManager::logicIdleStateChanged */
 
 
-void LinkManager::checkTimeoutTimer(LinkSet &link)
+void LinkManager::checkTimeoutTimer(Link &link)
 {
   if (link.timeout_timer == 0)
   {
@@ -836,8 +817,8 @@ void LinkManager::checkTimeoutTimer(LinkSet &link)
   }
 
   bool all_logics_idle = true;
-  for (LinkPropMap::iterator cnit = link.properties.begin();
-       cnit != link.properties.end();
+  for (CmdPropMap::iterator cnit = link.cmd_props.begin();
+       cnit != link.cmd_props.end();
        ++cnit)
   {
     const string &logic_name = (*cnit).first;

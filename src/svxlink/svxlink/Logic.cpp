@@ -575,26 +575,6 @@ bool Logic::initialize(void)
       // Register this logic in the link manager
     LinkManager::instance()->addLogic(this);
 
-      // Get the list of commands
-    std::vector<std::string> cmd_list
-        = LinkManager::instance()->getCommands(name());
-
-      // Create the command objects
-    for (vector<std::string>::iterator cit = cmd_list.begin();
-         cit != cmd_list.end();
-         ++cit)
-    {
-      //cout << "Logic cmd_list " << (*cit) << endl;
-
-      LinkCmd *link_cmd = new LinkCmd(&cmd_parser, this);
-      if (!link_cmd->initialize(*cit))
-      {
-        cout << "*** ERROR: Can not setup command " << *cit <<
-                " for the logic " << name() << endl;
-        return false;
-      }
-    }
-
     /*
     LinkManager::instance()->logicStateChanged.connect(
         mem_fun(*this, &Logic::stateChanged));
@@ -866,17 +846,6 @@ bool Logic::isWritingMessage(void)
 {
   return msg_handler->isWritingMessage();
 } /* Logic::isWritingMessage */
-
-
-void Logic::commandReceived(string cmd, string subcmd)
-{
-   // cout << "name()=" << name() << endl;
-  if (LinkManager::instance())
-  {
-    string ss = LinkManager::instance()->cmdReceived(name(), cmd, subcmd);
-    processEvent(ss);
-  }
-} /* Logic::commandReceived */
 
 
 Async::AudioSink *Logic::logicConIn(void)

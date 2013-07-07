@@ -58,6 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Logic.h"
 #include "Module.h"
 #include "QsoRecorder.h"
+#include "LinkManager.h"
 
 
 /****************************************************************************
@@ -172,19 +173,23 @@ class ModuleActivateCmd : public Command
 This class implements the logic linking activation command.
 Each instance of the class represents a group of logics that can be linked
 together.
+
 Subcommand 0 means disconnect the links and subcommand 1 means connect the
 links.
+
+The LinkCmd objects are created from the LinkManager class when a logic
+core register itself.
 */
 class LinkCmd : public Command
 {
   public:
     /**
-     * @brief 	Constuctor
-     * @param  parser The command parser to associate this command with
-     * @param  logic  The logic core instance the command should operate on
+     * @brief   Constuctor
+     * @param   logic The logic core instance the command should operate on
+     * @param   link  The link instance the command should operate on
      */
-    LinkCmd(CmdParser *parser, Logic *logic)
-      : Command(parser), logic(logic) {}
+    LinkCmd(Logic *logic, LinkManager::LinkRef link)
+      : Command(logic->cmdParser()), logic(logic), link(link) {}
 
     /**
      * @brief 	Destructor
@@ -192,36 +197,40 @@ class LinkCmd : public Command
     ~LinkCmd(void) {}
 
     /**
-     * @brief 	Initialize the command object
-     * @param 	cfg A previously initialized configuration object
-     * @param  link_name The name (configuration section) of this link
-     * @return	Returns \em true on success or else \em false.
+     * @brief   Initialize the command object
+     * @param   command The base command to use to control the link
+     * @return  Returns \em true on success or else \em false.
      */
     bool initialize(const std::string& command)
     {
-      cmd = command;
       setCmd(command);
       if (!addToParser())
       {
-        std::cerr << "*** ERROR: Could not set up command \"" << command
-           << "\" for logic link \"" << name << "\". You probably have "
-           << "the same command set up in more than one places\n";
+        std::cerr << "*** ERROR: Could not set up logic linking command \""
+           << command << "\" for logic \"" << logic->name()
+           << "\". You probably have the same command set up in more than "
+           << "one places\n";
         return false;
       }
       return true;
     }
 
+    /**
+     * @brief	Execute this command
+     * @param	subcmd The sub command of the executed command
+     */
     void operator ()(const std::string& subcmd)
     {
-      logic->commandReceived(cmd, subcmd);
+      std::string event =
+          LinkManager::instance()->cmdReceived(link, logic, subcmd);
+      logic->processEvent(event);
     }
 
   protected:
 
   private:
-    Logic       *logic;
-    std::string cmd;
-    std::string name;
+    Logic                 *logic;
+    LinkManager::LinkRef  link;
 
 };  /* class LinkCmd */
 

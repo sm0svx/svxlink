@@ -200,9 +200,10 @@ class Logic : public sigc::trackable
 
     bool isWritingMessage(void);
 
-    void commandReceived(std::string cmd, std::string subcmd);
     Async::AudioSink *logicConIn(void);
     Async::AudioSource *logicConOut(void);
+
+    CmdParser *cmdParser(void) { return &cmd_parser; }
 
     sigc::signal<void, bool> idleStateChanged;
 

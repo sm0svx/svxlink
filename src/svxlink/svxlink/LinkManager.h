@@ -117,7 +117,12 @@ class Logic;
 
 class LinkManager : public sigc::trackable
 {
+  private:
+    struct Link;
+
   public:
+    typedef Link& LinkRef;
+
     /**
      * @brief Initialize the link manager
      * @param cfg An initialized config object
@@ -186,31 +191,36 @@ class LinkManager : public sigc::trackable
      */
     void allLogicsStarted(void);
 
-    std::string cmdReceived(const std::string &logicname,
-                            const std::string &cmd,
+    /**
+     * @brief   Called by the DTMF command handler upon command reception
+     * @param   link The link object associated with this command
+     * @param   logic The logic core associated with this command
+     * @param   subcmd The subcommand
+     * @return  Returns an event handler command to be executed by the logic
+     */
+    std::string cmdReceived(LinkRef link, Logic *logic,
                             const std::string &subcmd);
-    std::vector<std::string> getCommands(std::string logicname) const;
 
     sigc::signal<void, int, bool> logicStateChanged;
 
   private:
-    struct LinkProperties
+    struct CmdProperties
     {
       std::string logic_cmd;
       std::string announcement_name;
     };
-    typedef std::map<std::string, LinkProperties> LinkPropMap;
+    typedef std::map<std::string, CmdProperties> CmdPropMap;
     typedef std::vector<std::string> StrList;
-    struct LinkSet
+    struct Link
     {
-      LinkSet(void)
+      Link(void)
         : timeout(0), default_connect(false), no_disconnect(false),
           is_connected(false), timeout_timer(0)
       {}
-      ~LinkSet(void) { delete timeout_timer; }
+      ~Link(void) { delete timeout_timer; }
 
       std::string  name;
-      LinkPropMap  properties;
+      CmdPropMap   cmd_props;
       StrList      auto_connect;
       unsigned     timeout;
       bool         default_connect;
@@ -218,7 +228,7 @@ class LinkManager : public sigc::trackable
       bool         is_connected;
       Async::Timer *timeout_timer;
     };
-    typedef std::map<std::string, LinkSet> LinkCfg;
+    typedef std::map<std::string, Link> LinkMap;
     typedef std::set<std::pair<std::string, std::string> > LogicConSet;
     struct SourceInfo
     {
@@ -243,15 +253,15 @@ class LinkManager : public sigc::trackable
       Logic             *logic;
       sigc::connection  idle_state_changed_con;
     };
-    typedef std::map<std::string, LogicInfo>        LogicMap;
+    typedef std::map<std::string, LogicInfo> LogicMap;
 
     static LinkManager *_instance;
 
-    LinkCfg               link_cfg;
-    LogicMap              logic_map;
-    LogicConSet           current_cons;
-    SourceMap             sources;
-    SinkMap               sinks;
+    LinkMap     links;
+    LogicMap    logic_map;
+    LogicConSet current_cons;
+    SourceMap   sources;
+    SinkMap     sinks;
 
     LinkManager(void) {};
     LinkManager(const LinkManager&);
@@ -264,13 +274,13 @@ class LinkManager : public sigc::trackable
     ConnectResult disconnectLinks(const std::string& name);
     bool isConnected(const std::string& source_name,
                      const std::string& sink_name);
-    void linkTimeout(Async::Timer *t, LinkSet *link);
+    void linkTimeout(Async::Timer *t, Link *link);
     LogicConSet getDifference(LogicConSet is, LogicConSet want);
     LogicConSet getLogics(const std::string& linkname);
     LogicConSet getMatrix(const std::string& name);
     LogicConSet getToDisconnect(const std::string& name);
     void logicIdleStateChanged(bool is_idle, const Logic *logic);
-    void checkTimeoutTimer(LinkSet &link);
+    void checkTimeoutTimer(Link &link);
 
 };  /* class LinkManager */
 
