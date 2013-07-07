@@ -238,8 +238,8 @@ class LinkManager : public sigc::trackable
     struct Link
     {
       Link(void)
-        : timeout(0), default_connect(false), no_disconnect(false),
-          is_connected(false), timeout_timer(0)
+        : timeout(0), default_active(false), no_deactivate(false),
+          is_activated(false), timeout_timer(0)
       {}
       ~Link(void) { delete timeout_timer; }
 
@@ -247,9 +247,9 @@ class LinkManager : public sigc::trackable
       CmdPropMap   cmd_props;
       StrSet       auto_connect;
       unsigned     timeout;
-      bool         default_connect;
-      bool         no_disconnect;
-      bool         is_connected;
+      bool         default_active;
+      bool         no_deactivate;
+      bool         is_activated;
       Async::Timer *timeout_timer;
     };
     typedef std::map<std::string, Link> LinkMap;
@@ -268,10 +268,6 @@ class LinkManager : public sigc::trackable
     };
     typedef std::map<std::string, SourceInfo> SourceMap;
     typedef std::map<std::string, SinkInfo>   SinkMap;
-    typedef enum
-    {
-      ERROR = 0, OK = 1, ALREADY_CONNECTED = 3
-    } ConnectResult;
     struct LogicInfo
     {
       Logic             *logic;
@@ -291,18 +287,15 @@ class LinkManager : public sigc::trackable
     LinkManager(const LinkManager&);
     ~LinkManager(void) {};
 
-    bool sourceIsAdded(const std::string &logicname);
-    bool sinkIsAdded(const std::string &logicname);
     std::vector<std::string> getLinkNames(const std::string& logicname);
-    ConnectResult activateLink(Link &link);
-    ConnectResult deactivateLink(Link &link);
+    LogicConSet wantedConnections(void);
+    void activateLink(Link &link);
+    void deactivateLink(Link &link);
+    /*
     bool isConnected(const std::string& source_name,
                      const std::string& sink_name);
+    */
     void linkTimeout(Async::Timer *t, Link *link);
-    LogicConSet getDifference(LogicConSet is, LogicConSet want);
-    LogicConSet getLogics(const std::string& linkname);
-    LogicConSet getMatrix(const std::string& name);
-    LogicConSet getToDisconnect(const std::string& name);
     void logicIdleStateChanged(bool is_idle, const Logic *logic);
     void checkTimeoutTimer(Link &link);
 
