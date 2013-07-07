@@ -115,6 +115,30 @@ class Logic;
  *
  ****************************************************************************/
 
+/**
+ * @brief A class that handle logic linking
+ *
+ * This class handle connections between two or more logic cores. A group of
+ * connections between two or more logic cores is called a \em link. A link
+ * can be controlled (activated/deactivated) by DTMF commands. It can also be
+ * setup to be connected by default.
+ *
+ * A link configuration section may look like this:
+ *
+ *   [LinkToR4]
+ *   CONNECT_LOGICS=RepeaterLogic:94:SK3AB,SimplexLogic
+ *   DEFAULT_CONNECT=1
+ *   TIMEOUT=300
+ *
+ * The setup above will define a link called "LinkToR4". When activated, it
+ * will connect RepeaterLogic and SimplexLogic. The link will be activated by
+ * default. To disconnect the link, a user may send DTMF command 940 from the
+ * RepeaterLogic side. When there have been no activity for 300 seconds
+ * (5 minutes), the link will be automatically connected again. It can also be
+ * manually connected again using DTMF command 941 from the RepeaterLogic side.
+ * It is not possible to control the link from the SimplexLogic side since no
+ * command has been specified.
+ */
 class LinkManager : public sigc::trackable
 {
   private:
@@ -210,7 +234,7 @@ class LinkManager : public sigc::trackable
       std::string announcement_name;
     };
     typedef std::map<std::string, CmdProperties> CmdPropMap;
-    typedef std::vector<std::string> StrList;
+    typedef std::set<std::string> StrSet;
     struct Link
     {
       Link(void)
@@ -221,7 +245,7 @@ class LinkManager : public sigc::trackable
 
       std::string  name;
       CmdPropMap   cmd_props;
-      StrList      auto_connect;
+      StrSet       auto_connect;
       unsigned     timeout;
       bool         default_connect;
       bool         no_disconnect;
@@ -270,8 +294,8 @@ class LinkManager : public sigc::trackable
     bool sourceIsAdded(const std::string &logicname);
     bool sinkIsAdded(const std::string &logicname);
     std::vector<std::string> getLinkNames(const std::string& logicname);
-    ConnectResult connectLinks(const std::string& name);
-    ConnectResult disconnectLinks(const std::string& name);
+    ConnectResult activateLink(Link &link);
+    ConnectResult deactivateLink(Link &link);
     bool isConnected(const std::string& source_name,
                      const std::string& sink_name);
     void linkTimeout(Async::Timer *t, Link *link);

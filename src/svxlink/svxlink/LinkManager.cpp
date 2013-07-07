@@ -41,6 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <limits>
 #include <string>
 #include <algorithm>
+#include <iterator>
 
 
 /****************************************************************************
@@ -138,23 +139,19 @@ LinkManager* LinkManager::_instance = 0;
 bool LinkManager::initialize(const Async::Config &cfg,
                              const std::string &link_names)
 {
-    // Check if already initialized
-  if (LinkManager::hasInstance())
-  {
-    return false;
-  }
+  assert(!LinkManager::hasInstance());
   LinkManager::_instance = new LinkManager;
 
   bool init_ok = true;
 
     // Split the line into an array of section names
     // GLOBAL/LINKS=Link1,Link2,Link3,...
-  StrList linklist;
+  vector<string> linklist;
   SvxLink::splitStr(linklist, link_names, ",");
 
     // Loop to create a link object for each single linkdefinition
     // in the "LINKS=Link1, Link2, Link3" set
-  for (StrList::const_iterator name = linklist.begin();
+  for (vector<string>::const_iterator name = linklist.begin();
        name != linklist.end();
        name++)
   {
@@ -370,11 +367,10 @@ void LinkManager::allLogicsStarted(void)
 {
   for (LinkMap::iterator it = links.begin(); it != links.end(); ++it)
   {
-    const Link &link = it->second;
-
+    Link &link = it->second;
     if (link.default_connect)
     {
-      connectLinks(link.name);
+      activateLink(link);
     }
   }
 } /* LinkManager::allLogicsStarted */
@@ -383,9 +379,11 @@ void LinkManager::allLogicsStarted(void)
 string LinkManager::cmdReceived(LinkRef link, Logic *logic,
                                 const string &subcmd)
 {
+  /*
   cout << "### LinkManager::cmdReceived: link=" << link.name
        << " logic=" << logic->name()
        << " subcmd=" << subcmd << endl;
+  */
 
   stringstream ss;
 
@@ -405,7 +403,7 @@ string LinkManager::cmdReceived(LinkRef link, Logic *logic,
     }
     else
     {
-      ConnectResult tconnect = disconnectLinks(link.name);
+      ConnectResult tconnect = deactivateLink(link);
       switch (tconnect)
       {
         case ERROR:
@@ -429,7 +427,7 @@ string LinkManager::cmdReceived(LinkRef link, Logic *logic,
     }
     else
     {
-      ConnectResult tconnect = connectLinks(link.name);
+      ConnectResult tconnect = activateLink(link);
       switch (tconnect)
       {
         case ERROR:
@@ -483,8 +481,10 @@ bool LinkManager::sinkIsAdded(const string &logicname)
 /**
  * @brief Connects the logics by checking the connect state before
  */
-LinkManager::ConnectResult LinkManager::connectLinks(const string& name)
+LinkManager::ConnectResult LinkManager::activateLink(Link &link)
 {
+  cout << "Activating link " << link.name << endl;
+
   ConnectResult check = ERROR;
 
     // Get the wanted connect matrix depending from the linkname, e.g.
@@ -494,7 +494,7 @@ LinkManager::ConnectResult LinkManager::connectLinks(const string& name)
     // <SimplexLogic, MicSpkrLogic>
     // <MicSpkrLogic, RepeaterLogic>
     // <MicSpkrLogic, SimplexLogic>
-  LogicConSet want = getMatrix(name);
+  LogicConSet want = getMatrix(link.name);
 
     // Gets the difference of both, the result is the matrix to be connected
     // "current_cons" contains the actual state of the connected logics, e.g.
@@ -520,7 +520,7 @@ LinkManager::ConnectResult LinkManager::connectLinks(const string& name)
     // <MicSpkrLogic, SimplexLogic>
   for (LogicConSet::iterator it = diff.begin(); it != diff.end(); ++it)
   {
-    cout << "connecting " << it->first << " ===> " << it->second << endl;
+    cout << "### " << it->first << " ===> " << it->second << endl;
     sinks[it->first].selector->
         enableAutoSelect(sinks[it->first].connectors[it->second], 0);
 
@@ -529,15 +529,14 @@ LinkManager::ConnectResult LinkManager::connectLinks(const string& name)
     check = OK;
   }
 
-
-  Link &link = links[name];
+    // Mark link as connected
   link.is_connected = true;
 
     // Check if the timeout timer should be enabled or disabled
   checkTimeoutTimer(link);
 
   return check;
-} /* LinkManager::connectLinks */
+} /* LinkManager::activateLink */
 
 
 LinkManager::LogicConSet LinkManager::getDifference(LogicConSet is,
@@ -665,19 +664,16 @@ LinkManager::LogicConSet LinkManager::getToDisconnect(const string& name)
 } /* LinkManager::getToDisconnect */
 
 
-LinkManager::ConnectResult LinkManager::disconnectLinks(const string& name)
+LinkManager::ConnectResult LinkManager::deactivateLink(Link &link)
 {
-  ConnectResult check = ERROR;
+  cout << "Deactivating link " << link.name << endl;
 
-  if (links.find(name) == links.end())
-  {
-    return check;
-  }
+  ConnectResult check = ERROR;
 
   assert(sources.size() > 0);
   assert(sinks.size() > 0);
 
-  LogicConSet diff = getToDisconnect(name);
+  LogicConSet diff = getToDisconnect(link.name);
 
   if (diff.size() == 0)
   {
@@ -689,7 +685,8 @@ LinkManager::ConnectResult LinkManager::disconnectLinks(const string& name)
     if ((logic_map.find(it->first) != logic_map.end()) &&
         (logic_map.find(it->second) != logic_map.end()))
     {
-      cout << "disconnect " << it->first << " -X-> " << it->second << endl;
+      cout << "### " << it->first << " =X=> " << it->second
+           << endl;
       sinks[it->first].selector->
         disableAutoSelect(sinks[it->first].connectors[it->second]);
 
@@ -700,19 +697,18 @@ LinkManager::ConnectResult LinkManager::disconnectLinks(const string& name)
     else
     {
       cout << "*** WARNING: Missing logics entry in [GLOBAL]/LINKS=???, "
-        << "             check your configuration." << endl;
+           << "             check your configuration." << endl;
     }
   }
 
     // Reset the connected flag
-  Link &link = links[name];
   link.is_connected = false;
 
     // Check if the timeout timer should be enabled or disabled
   checkTimeoutTimer(link);
 
   return check;
-} /* LinkManager::disconnectLinks */
+} /* LinkManager::deactivateLink */
 
 
 bool LinkManager::isConnected(const string& source_name,
@@ -751,12 +747,12 @@ void LinkManager::linkTimeout(Async::Timer *t, Link *link)
 {
   if (link->is_connected && !link->default_connect && !link->no_disconnect)
   {
-    disconnectLinks(link->name);
+    deactivateLink(*link);
   }
 
   if (!link->is_connected && link->default_connect)
   {
-    connectLinks(link->name);
+    activateLink(*link);
   }
 } /* LinkManager::linkTimeout */
 
@@ -791,16 +787,12 @@ void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
       // changes the idle status of a logic core. Probably not what we want.
     if (!is_idle && !link.is_connected)
     {
-      for (StrList::iterator acit = link.auto_connect.begin();
-           acit != link.auto_connect.end();
-           ++acit)
+      StrSet::iterator acit = link.auto_connect.find(logic->name());
+      if (acit != link.auto_connect.end())
       {
-        if (*acit == logic->name())
-        {
-          cout << "connecting link " << link_name <<
-            " due to AUTOCONNECT_ON_SQL from " << logic->name() << endl;
-          connectLinks(link_name);
-        }
+        cout << "### Activating link " << link_name <<
+          " due to AUTOCONNECT_ON_SQL from " << logic->name() << endl;
+        activateLink(link);
       }
     }
 
