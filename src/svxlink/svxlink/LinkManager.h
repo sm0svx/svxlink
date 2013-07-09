@@ -212,6 +212,9 @@ class LinkManager : public sigc::trackable
      *
      * Check if DEFAULT_CONNECT is set for a link and if so, the logics
      * configured for that link is connected.
+     * This function will also go through all links and check if all specified
+     * logics are present. If not, a warning will be printed and the missing
+     * logic will be removed from the link.
      */
     void allLogicsStarted(void);
 
@@ -228,12 +231,12 @@ class LinkManager : public sigc::trackable
     sigc::signal<void, int, bool> logicStateChanged;
 
   private:
-    struct CmdProperties
+    struct LogicProperties
     {
-      std::string logic_cmd;
+      std::string cmd;
       std::string announcement_name;
     };
-    typedef std::map<std::string, CmdProperties> CmdPropMap;
+    typedef std::map<std::string, LogicProperties> LogicPropMap;
     typedef std::set<std::string> StrSet;
     struct Link
     {
@@ -244,7 +247,7 @@ class LinkManager : public sigc::trackable
       ~Link(void) { delete timeout_timer; }
 
       std::string  name;
-      CmdPropMap   cmd_props;
+      LogicPropMap logic_props;
       StrSet       auto_activate;
       unsigned     timeout;
       bool         default_active;
@@ -288,7 +291,7 @@ class LinkManager : public sigc::trackable
     ~LinkManager(void) {};
 
     std::vector<std::string> getLinkNames(const std::string& logicname);
-    LogicConSet wantedConnections(void);
+    void wantedConnections(LogicConSet &want);
     void activateLink(Link &link);
     void deactivateLink(Link &link);
     /*

@@ -171,12 +171,6 @@ bool LinkManager::initialize(const Async::Config &cfg,
 
     vector<string> logic_specs;
     SvxLink::splitStr(logic_specs, connect_logics, ",");
-    if (logic_specs.size() < 2)
-    {
-      cerr << "*** ERROR: " << link.name << "/CONNECT_LOGICS=? You must "
-           << "have at least two logics to connect.\n";
-      init_ok = false;
-    }
 
       // Configure the list of logics to connect
       // CONNECT_LOGICS=Logic1:70:Name1,Logic2:71,Logic3:72:Name2,...
@@ -190,10 +184,17 @@ bool LinkManager::initialize(const Async::Config &cfg,
       string logic_name = logic_spec.at(0);
       if (!logic_name.empty())
       {
-        CmdProperties cmd_props;
-        cmd_props.logic_cmd =  logic_spec.at(1);
-        cmd_props.announcement_name = logic_spec.at(2);
-        link.cmd_props.insert(make_pair(logic_name, cmd_props));
+        LogicProperties logic_props;
+        logic_props.cmd =  logic_spec.at(1);
+        logic_props.announcement_name = logic_spec.at(2);
+        pair<LogicPropMap::iterator, bool> ret =
+            link.logic_props.insert(make_pair(logic_name, logic_props));
+        if (!ret.second)
+        {
+          cout << "*** ERROR: Duplicate logic \"" << logic_name
+               << "\" specified in link \"" << link.name << "\".\n";
+          init_ok = false;
+        }
       }
       else
       {
@@ -202,6 +203,13 @@ bool LinkManager::initialize(const Async::Config &cfg,
              << "<logic name>:<command>:<announcement name>,...\n";
         init_ok = false;
       }
+    }
+
+    if (link.logic_props.size() < 2)
+    {
+      cerr << "*** ERROR: " << link.name << "/CONNECT_LOGICS=? You must "
+           << "have at least two logics to connect.\n";
+      init_ok = false;
     }
 
     cfg.getValue(link.name, "TIMEOUT", link.timeout);
@@ -303,16 +311,16 @@ void LinkManager::addLogic(Logic *logic)
   for (LinkMap::iterator it = links.begin(); it != links.end(); ++it)
   {
     Link &link = it->second;
-    CmdPropMap::const_iterator cpmit(link.cmd_props.find(logic->name()));
-    if (cpmit != link.cmd_props.end())
+    LogicPropMap::const_iterator prop_it(link.logic_props.find(logic->name()));
+    if (prop_it != link.logic_props.end())
     {
-      const CmdProperties &cmd_props = cpmit->second;
-      if (atoi(cmd_props.logic_cmd.c_str()) > 0)
+      const LogicProperties &logic_props = prop_it->second;
+      if (atoi(logic_props.cmd.c_str()) > 0)
       {
         LinkCmd *link_cmd = new LinkCmd(logic, link);
-        if (!link_cmd->initialize(cmd_props.logic_cmd))
+        if (!link_cmd->initialize(logic_props.cmd))
         {
-          cout << "*** WARNING: Can not setup command " << cmd_props.logic_cmd
+          cout << "*** WARNING: Can not setup command " << logic_props.cmd
                << " for the logic " << logic->name() << endl;
         }
       }
@@ -376,6 +384,28 @@ void LinkManager::allLogicsStarted(void)
   for (LinkMap::iterator it = links.begin(); it != links.end(); ++it)
   {
     Link &link = it->second;
+
+      // Check that all logics that are specified for this link has been
+      // registered
+    LogicPropMap::iterator prop_it = link.logic_props.begin();
+    while (prop_it != link.logic_props.end())
+    {
+      const string &logic_name = (*prop_it).first;
+      if (logic_map.find(logic_name) == logic_map.end())
+      {
+        cout << "*** WARNING: Logic " << logic_name
+             << " has been specified in logic link " << link.name
+             << " but that logic is missing. Removing logic from link.\n";
+        LogicPropMap::iterator remove_it = prop_it++;
+        link.logic_props.erase(remove_it);
+      }
+      else
+      {
+        ++prop_it;
+      }
+    }
+
+      // If default active, activate the link
     if (link.default_active)
     {
       activateLink(link);
@@ -395,9 +425,9 @@ string LinkManager::cmdReceived(LinkRef link, Logic *logic,
 
   stringstream ss;
 
-  CmdPropMap::iterator cpmit = link.cmd_props.find(logic->name());
-  assert(cpmit != link.cmd_props.end());
-  CmdProperties &cmd_props = cpmit->second;
+  LogicPropMap::iterator prop_it = link.logic_props.find(logic->name());
+  assert(prop_it != link.logic_props.end());
+  LogicProperties &logic_props = prop_it->second;
   if (subcmd == "0") // Disconnecting Link1 <-X-> Link2
   {
     if (link.no_deactivate)
@@ -414,7 +444,7 @@ string LinkManager::cmdReceived(LinkRef link, Logic *logic,
       deactivateLink(link);
       ss << "deactivating_link \"";
     }
-    ss << cmd_props.announcement_name << "\"";
+    ss << logic_props.announcement_name << "\"";
   }
   else if (subcmd == "1") // Connecting Logic1 <---> Logic2 (two ways)
   {
@@ -427,11 +457,11 @@ string LinkManager::cmdReceived(LinkRef link, Logic *logic,
     {
       ss << "link_already_active \"";
     }
-    ss << cmd_props.announcement_name + "\"";
+    ss << logic_props.announcement_name + "\"";
   }
   else
   {
-    ss << "unknown_command " << cmd_props.logic_cmd << subcmd;
+    ss << "unknown_command " << logic_props.cmd << subcmd;
   }
   return ss.str();
 } /* LinkManager::cmdReceived */
@@ -452,11 +482,19 @@ string LinkManager::cmdReceived(LinkRef link, Logic *logic,
  *
  ****************************************************************************/
 
-LinkManager::LogicConSet LinkManager::wantedConnections(void)
+/**
+ * @brief Find out which logics that should be connected
+ * @param want The connections we want
+ *
+ * This function will calculate which logic connections that should currently
+ * be established to get the correct audio flow in the currently activated
+ * logic links. It will not set up the logic connections though so the caller
+ * have to figure out which currently active connections to break and which to
+ * establish to get to the set of connections reported by this function.
+ */
+void LinkManager::wantedConnections(LogicConSet &want)
 {
-  LogicConSet conns;
-
-    // Fill "conns" with the base set of connections that are explicitly
+    // Fill "want" with the base set of connections that are explicitly
     // specified in the link configuration for active links. The connection
     // graph will not be complete if two links share one or more logics. This
     // will be solved in the next step below.
@@ -465,29 +503,19 @@ LinkManager::LogicConSet LinkManager::wantedConnections(void)
     Link &link = (*lit).second;
     if (link.is_activated)
     {
-      for (CmdPropMap::iterator sit = link.cmd_props.begin();
-           sit != link.cmd_props.end();
-           ++sit)
+        // oit=outer iterator
+      for (LogicPropMap::iterator oit = link.logic_props.begin();
+           oit != link.logic_props.end();
+           ++oit)
       {
-        CmdPropMap::iterator dit = sit;
-        for (++dit; dit != link.cmd_props.end(); ++dit)
+          // iit=inner iterator
+        LogicPropMap::iterator iit = oit;
+        for (++iit; iit != link.logic_props.end(); ++iit)
         {
-          if (logic_map.find((*sit).first) == logic_map.end())
+          if ((*oit).first != (*iit).first)
           {
-            cout << "*** WARNING: Logic " << (*sit).first
-                 << " has been specified in logic link " << link.name
-                 << " but that logic is missing.\n";
-          }
-          else if (logic_map.find((*dit).first) == logic_map.end())
-          {
-            cout << "*** WARNING: Logic " << (*dit).first
-                 << " has been specified in logic link " << link.name
-                 << " but that logic is missing.\n";
-          }
-          else if ((*sit).first != (*dit).first)
-          {
-            conns.insert(make_pair((*sit).first, (*dit).first));
-            conns.insert(make_pair((*dit).first, (*sit).first));
+            want.insert(make_pair((*oit).first, (*iit).first));
+            want.insert(make_pair((*iit).first, (*oit).first));
           }
         }
       }
@@ -511,16 +539,16 @@ LinkManager::LogicConSet LinkManager::wantedConnections(void)
   {
       // Store the current size of the connection set so that we can check
       // later if new connections have been added.
-    prev_size = conns.size();
+    prev_size = want.size();
 
       // Now compare all connections to each other. This requires two loops,
       // an outer (oit=outer iterator) and an inner (iit=inner iterator).
-    for (LogicConSet::iterator oit = conns.begin();
-         oit != conns.end();
+    for (LogicConSet::iterator oit = want.begin();
+         oit != want.end();
          ++oit)
     {
-      for (LogicConSet::iterator iit = conns.begin();
-           iit != conns.end();
+      for (LogicConSet::iterator iit = want.begin();
+           iit != want.end();
            ++iit)
       {
           // If the sink of the outer connection belongs to the same logic
@@ -535,13 +563,11 @@ LinkManager::LogicConSet LinkManager::wantedConnections(void)
           // not connect <L1,L1>.
         if ((oit->second == iit->first) && (oit->first != iit->second))
         {
-          conns.insert(make_pair(oit->first, iit->second));
+          want.insert(make_pair(oit->first, iit->second));
         }
       }
     }
-  } while (conns.size() > prev_size);
-
-  return conns;
+  } while (want.size() > prev_size);
 } /* LinkManager::wantedConnections */
 
 
@@ -561,7 +587,8 @@ void LinkManager::activateLink(Link &link)
   link.is_activated = true;
 
     // Get the wanted logic connections based on which links that are activated
-  LogicConSet want = wantedConnections();
+  LogicConSet want;
+  wantedConnections(want);
 
     // Calculate the difference between the wanted connection set and the
     // current connection set. This is easily done using the difference set
@@ -606,7 +633,8 @@ void LinkManager::deactivateLink(Link &link)
   link.is_activated = false;
 
     // Get the wanted connections
-  LogicConSet want = wantedConnections();
+  LogicConSet want;
+  wantedConnections(want);
 
     // Calculate which of the current connections should be broken.
     // This is easily done with a simple difference set operation.
@@ -664,7 +692,7 @@ vector<string> LinkManager::getLinkNames(const string& logicname)
   for (LinkMap::iterator it=links.begin(); it!=links.end(); ++it)
   {
     Link &link = (*it).second;
-    if (link.cmd_props.find(logicname) != link.cmd_props.end())
+    if (link.logic_props.find(logicname) != link.logic_props.end())
     {
       linknames.push_back(link.name);
     }
@@ -739,8 +767,8 @@ void LinkManager::checkTimeoutTimer(Link &link)
   }
 
   bool all_logics_idle = true;
-  for (CmdPropMap::iterator cpit = link.cmd_props.begin();
-       cpit != link.cmd_props.end();
+  for (LogicPropMap::iterator cpit = link.logic_props.begin();
+       cpit != link.logic_props.end();
        ++cpit)
   {
     const string &logic_name = (*cpit).first;
