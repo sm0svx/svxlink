@@ -217,10 +217,10 @@ bool LinkManager::initialize(const Async::Config &cfg,
 
       // Automatically activate the link, if one (or more) logics
       // has activity, e.g. squelch open.
-    string autoconnect_on_sql;
-    if (cfg.getValue(link.name, "AUTOCONNECT_ON_SQL", autoconnect_on_sql))
+    string autoactivate_on_sql;
+    if (cfg.getValue(link.name, "AUTOACTIVATE_ON_SQL", autoactivate_on_sql))
     {
-      SvxLink::splitStr(link.auto_connect, autoconnect_on_sql, ",");
+      SvxLink::splitStr(link.auto_activate, autoactivate_on_sql, ",");
 
         // An automatically connected link should be disconnected after a
         // while so the TIMEOUT configuration variable must be set.
@@ -232,8 +232,8 @@ bool LinkManager::initialize(const Async::Config &cfg,
       }
     }
 
-    cfg.getValue(link.name, "DEFAULT_CONNECT", link.default_active);
-    cfg.getValue(link.name, "NO_DISCONNECT", link.no_deactivate);
+    cfg.getValue(link.name, "DEFAULT_ACTIVE", link.default_active);
+    cfg.getValue(link.name, "NO_DEACTIVATE", link.no_deactivate);
   }
 
   if(!init_ok)
@@ -457,7 +457,9 @@ LinkManager::LogicConSet LinkManager::wantedConnections(void)
   LogicConSet conns;
 
     // Fill "conns" with the base set of connections that are explicitly
-    // specified in the link configuration for active links.
+    // specified in the link configuration for active links. The connection
+    // graph will not be complete if two links share one or more logics. This
+    // will be solved in the next step below.
   for (LinkMap::iterator lit = links.begin(); lit != links.end(); ++lit)
   {
     Link &link = (*lit).second;
@@ -492,23 +494,52 @@ LinkManager::LogicConSet LinkManager::wantedConnections(void)
     }
   }
 
-  typedef vector<pair<string, string> > LogicConVec;
-  LogicConVec conns_vec(conns.size());
-  copy(conns.begin(), conns.end(), inserter(conns_vec, conns_vec.end()));
-  for (LogicConVec::iterator sit = conns_vec.begin();
-       sit != conns_vec.end();
-       ++sit)
+    // Now we need to complete the graph with connections between logics that
+    // are implicitly connected. That is, logics that are connected to each
+    // other via other logics.
+    //
+    // The algoritm below is not very optimized but that should not be needed
+    // since SvxLink most often just have a few logics defined. If a lot of
+    // logics is used, the code below may have to be optimized.
+    //
+    // The outer loop (do {} while) is needed since new connections may be
+    // added and then new implicit connections may appear. We are done when
+    // all connections have been gone through and no new connections was
+    // added.
+  size_t prev_size;
+  do
   {
-    for (LogicConVec::iterator dit = conns_vec.begin();
-         dit != conns_vec.end();
-         ++dit)
+      // Store the current size of the connection set so that we can check
+      // later if new connections have been added.
+    prev_size = conns.size();
+
+      // Now compare all connections to each other. This requires two loops,
+      // an outer (oit=outer iterator) and an inner (iit=inner iterator).
+    for (LogicConSet::iterator oit = conns.begin();
+         oit != conns.end();
+         ++oit)
     {
-      if ((dit->first == sit->second) && (dit->second != sit->first))
+      for (LogicConSet::iterator iit = conns.begin();
+           iit != conns.end();
+           ++iit)
       {
-        conns.insert(make_pair(sit->first, dit->second));
+          // If the sink of the outer connection belongs to the same logic
+          // as the source of the inner connection, then we need to also
+          // connect the source of the outer connection to the sink of the
+          // inner connection. To exemplify, if the set contains the
+          // connections: <L1,L2>,<L2,L3> we also need to add <L1,L3> since
+          // L1 is implicitly connected to L3 via L2.
+          // The comparison below also make sure that a connection is not
+          // added which connect back to the same logic. To exemplify this,
+          // if the set contains the connections: <L1,L2>,<L2,L1> we should
+          // not connect <L1,L1>.
+        if ((oit->second == iit->first) && (oit->first != iit->second))
+        {
+          conns.insert(make_pair(oit->first, iit->second));
+        }
       }
     }
-  }
+  } while (conns.size() > prev_size);
 
   return conns;
 } /* LinkManager::wantedConnections */
@@ -680,14 +711,14 @@ void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
     Link &link = (*lmit).second;
     
       // Check if the logic that updated its idle state is defined as a
-      // "auto_connect" logic. If not idle, all logics of the link shall
+      // "auto_activate" logic. If not idle, all logics of the link shall
       // be connected if they were disconnected before.
       // FIXME: We now activate the link even on announcements since that
       // changes the idle status of a logic core. Probably not what we want.
     if (!is_idle && !link.is_activated)
     {
-      StrSet::iterator acit = link.auto_connect.find(logic->name());
-      if (acit != link.auto_connect.end())
+      StrSet::iterator acit = link.auto_activate.find(logic->name());
+      if (acit != link.auto_activate.end())
       {
         cout << "### Activating link " << link_name
              << " due to AUTOCONNECT_ON_SQL from " << logic->name() << endl;

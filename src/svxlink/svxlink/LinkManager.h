@@ -245,7 +245,7 @@ class LinkManager : public sigc::trackable
 
       std::string  name;
       CmdPropMap   cmd_props;
-      StrSet       auto_connect;
+      StrSet       auto_activate;
       unsigned     timeout;
       bool         default_active;
       bool         no_deactivate;
