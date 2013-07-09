@@ -443,11 +443,11 @@ by one logic will be transmitted by the other logic(s).
 The name of the logic linking section can be chosen freely. In the example 
 configuration file, there is a section [LinkToR4]. To use a logic linking 
 section in a logic core it must be pointed out by the LINKS configuration 
-variable in the [GLOBAL] section.
-Example: [GLOBAL]/LINKS=LinkToR4
+variable in the GLOBAL section.
+Example: GLOBAL/LINKS=LinkToR4
 .TP
 .B CONNECT_LOGICS
-A comma separated list of logic specifications for the logic cores to link
+A comma separated list of logic specifications for the logic cores to connect
 together. Each logic specification has three parts separated by colons:
 <logic name>:<command>:<announcement name>. The "logic name" is the name of
 the logic to include in the link. To manually activate or deactivate the link
@@ -467,28 +467,30 @@ back. From the 70cm side the command will be 941 and 940 respectively. The
 announcement when activating the link from the 70cm side will be something like
 "activating link to SK3GK".
 .TP
-.B DEFAULT_CONNECT
+.B DEFAULT_ACTIVE
 The link will be connected automatically during startup of SvxLink if this
 configuration variable is set to 1. Also, if a link is manually disconnected by
 a user it will be automatically reconnected after some time of inactivity. The
-time is specified by setting the TIMEOUT configuration variable.
+time is specified by setting the TIMEOUT configuration variable. If the
+TIMEOUT variable is not set, no automatic reactivation will be done.
 .TP
 .B TIMEOUT
-The number of seconds after which the link will be automatically disconnected
-if there have been no activity. If 1 have been specified for DEFAULT_CONNECT,
+The number of seconds after which the link will be automatically deactivated
+if there have been no activity. If 1 have been specified for DEFAULT_ACTIVE,
 this configuration variable will specify after how many seconds the link will
 be reactivated after being manually deactivated.
 .TP
-.B NO_DISCONNECT 
-After once being connected, no disconnect of a linkset is possible anymore.
+.B NO_DEACTIVATE 
+After the link has been activated, no deactivation is allowed if this
+configuration variable is set to 1.
 .TP
-.B AUTOCONNECT_ON_SQL
-Enter a comma separated list of logic(s), which should automatically be
-connected with the rest of the logic(s) if there is activity (e.g. squelch
-open) in it. One possible application is for example to make the connection of
-a microphone/speaker combination (without DTMF encoder) for brief announcements
+.B AUTOACTIVATE_ON_SQL
+Enter a comma separated list of logics, which should automatically activate
+the link if there is activity (e.g. squelch open) in it. One possible
+application for this is for example to make the connection of a
+microphone/speaker combination (without DTMF encoder) for brief announcements
 but without having to constantly listen in.
-Example: AUTOCONNECT_ON_SQL=MicSpkrLogic
+Example: AUTOACTIVATE_ON_SQL=MicSpkrLogic
 .
 .SS Local Receiver Section
 .
