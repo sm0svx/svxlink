@@ -352,20 +352,6 @@ proc deactivating_link {name} {
 
 
 #
-# Executed when a link to another logic core is beeing
-# deactivated but the action failed due to configuration.
-#   name  - The name of the link
-#
-proc deactivating_link_not_possible {name} {
-  if {[string length $name] > 0} {
-    playMsg "Core" "deactivating_link_to";
-    spellWord $name;
-    playMsg "Core" "not_possible";
-  }
-}
-
-
-#
 # Executed when trying to deactivate a link to another logic core but the
 # link is not currently active.
 #   name  - The name of the link

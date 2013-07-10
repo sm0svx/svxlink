@@ -182,16 +182,6 @@ proc deactivating_link_failed_other_connection {name} {
 
 
 #
-# Executed when a link to another logic core is beeing
-# deactivated but the action failed due to configuration.
-#   name  - The name of the link
-#
-proc deactivating_link_not_possible {name} {
-  Logic::deactivating_link_not_possible $name;
-}
-
-
-#
 # Executed when trying to deactivate a link to another logic core but the
 # link is not currently active.
 #   name  - The name of the link

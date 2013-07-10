@@ -241,7 +241,6 @@ bool LinkManager::initialize(const Async::Config &cfg,
     }
 
     cfg.getValue(link.name, "DEFAULT_ACTIVE", link.default_active);
-    cfg.getValue(link.name, "NO_DEACTIVATE", link.no_deactivate);
   }
 
   if(!init_ok)
@@ -430,12 +429,7 @@ string LinkManager::cmdReceived(LinkRef link, Logic *logic,
   LogicProperties &logic_props = prop_it->second;
   if (subcmd == "0") // Disconnecting Link1 <-X-> Link2
   {
-    if (link.no_deactivate)
-    {
-        // Not possible due to configuration
-      ss << "deactivating_link_not_possible \"";
-    }
-    else if (!link.is_activated)
+    if (!link.is_activated)
     {
       ss << "link_not_active \"";
     }
@@ -703,7 +697,7 @@ vector<string> LinkManager::getLinkNames(const string& logicname)
 
 void LinkManager::linkTimeout(Async::Timer *t, Link *link)
 {
-  if (link->is_activated && !link->default_active && !link->no_deactivate)
+  if (link->is_activated && !link->default_active)
   {
     deactivateLink(*link);
   }

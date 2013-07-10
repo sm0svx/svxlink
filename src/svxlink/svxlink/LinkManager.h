@@ -241,8 +241,8 @@ class LinkManager : public sigc::trackable
     struct Link
     {
       Link(void)
-        : timeout(0), default_active(false), no_deactivate(false),
-          is_activated(false), timeout_timer(0)
+        : timeout(0), default_active(false), is_activated(false),
+          timeout_timer(0)
       {}
       ~Link(void) { delete timeout_timer; }
 
@@ -251,7 +251,6 @@ class LinkManager : public sigc::trackable
       StrSet       auto_activate;
       unsigned     timeout;
       bool         default_active;
-      bool         no_deactivate;
       bool         is_activated;
       Async::Timer *timeout_timer;
     };
