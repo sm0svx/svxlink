@@ -270,6 +270,15 @@ then all incoming Sel5 tone sequences from 03400 to 03499 are mapped to the
 macros section (refer to Macros Section, next chapter). Other sequences but the
 one defined under OPEN_ON_SEL5 are ignored so it can be used to call other
 stations via the repeater without a repeater reaction.
+.TP
+.B SHUTDOWN_CMD
+Define a DTMF command that is used to force the transmitter off. When in the
+off-state, the transmitter will not be turned on by any event. The node will
+continue to run as usual though so if a DTMF command is received, the node will
+act on it. The only difference is that the transmitter will not be turned on.
+
+If the command for example is set to 998877 then 9988771 will enable the
+transmitter and 9988770 will disable it.
 .
 .SS Simplex Logic Section
 .

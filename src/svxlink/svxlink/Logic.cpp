@@ -199,22 +199,23 @@ bool Logic::logicsAreConnected(const string& l1, const string& l2)
 
 
 Logic::Logic(Config &cfg, const string& name)
-  : m_cfg(cfg),       	      	    m_name(name),
-    m_rx(0),  	      	      	    m_tx(0),
-    msg_handler(0), 	      	    active_module(0),
-    cmd_tmo_timer(0), 	      	    anti_flutter(false),
-    prev_digit('?'),                exec_cmd_on_sql_close(0),
-    exec_cmd_on_sql_close_timer(0), rgr_sound_timer(0),
-    rgr_sound_delay(-1),            report_ctcss(0),
-    event_handler(0),               recorder(0),
-    tx_audio_mixer(0),              tx_audio_selector(0),
-    rx_splitter(0),                 audio_from_module_selector(0),
-    audio_to_module_splitter(0),    audio_to_module_selector(0),
-    state_det(0),                   is_idle(true),
-    fx_gain_normal(0),              fx_gain_low(-12),
-    long_cmd_digits(100),           report_events_as_idle(false),
-    qso_recorder(0),                tx_ctcss(TX_CTCSS_ALWAYS),
-    tx_ctcss_mask(0),               aprs_stats_timer(0)
+  : m_cfg(cfg),       	      	            m_name(name),
+    m_rx(0),  	      	      	            m_tx(0),
+    msg_handler(0), 	      	            active_module(0),
+    cmd_tmo_timer(0), 	      	            anti_flutter(false),
+    prev_digit('?'),                        exec_cmd_on_sql_close(0),
+    exec_cmd_on_sql_close_timer(0),         rgr_sound_timer(0),
+    rgr_sound_delay(-1),                    report_ctcss(0),
+    event_handler(0),                       recorder(0),
+    tx_audio_mixer(0),                      tx_audio_selector(0),
+    rx_splitter(0),                         audio_from_module_selector(0),
+    audio_to_module_splitter(0),            audio_to_module_selector(0),
+    state_det(0),                           is_idle(true),
+    fx_gain_normal(0),                      fx_gain_low(-12),
+    long_cmd_digits(100),                   report_events_as_idle(false),
+    qso_recorder(0),                        tx_ctcss(TX_CTCSS_ALWAYS),
+    tx_ctcss_mask(0),                       aprs_stats_timer(0),
+    currently_set_tx_ctrl_mode(Tx::TX_OFF), is_shut_down(false)
 {
   logic_con_in = new AudioSplitter;
   logic_con_out = new AudioSelector;
@@ -232,6 +233,19 @@ Logic::~Logic(void)
 
 bool Logic::initialize(void)
 {
+  string value;
+  if (cfg().getValue(name(), "SHUTDOWN_CMD", value))
+  {
+    ShutdownCmd *shutdown_cmd = new ShutdownCmd(&cmd_parser, this, value);
+    if (!shutdown_cmd->addToParser())
+    {
+      cerr << "*** ERROR: Could not add the logic shutdown command \""
+           << shutdown_cmd->cmdStr() << "\" for logic " << name() << ".\n";
+      delete shutdown_cmd;  // FIXME: Do this in cleanup() instead
+      return false;
+    }
+  }
+
   ChangeLangCmd *lang_cmd = new ChangeLangCmd(&cmd_parser, this);
   if (!lang_cmd->addToParser())
   {
@@ -241,7 +255,6 @@ bool Logic::initialize(void)
     return false;
   }
   
-  string value;
   if (cfg().getValue(name(), "LINKS", value))
   {
     LinkCmd *link_cmd = new LinkCmd(&cmd_parser, this);
@@ -909,7 +922,18 @@ bool Logic::isWritingMessage(void)
 } /* Logic::isWritingMessage */
 
 
-
+void Logic::setShutdown(bool shut_down)
+{
+  if (shut_down)
+  {
+    tx().setTxCtrlMode(Tx::TX_OFF);
+  }
+  else
+  {
+    tx().setTxCtrlMode(currently_set_tx_ctrl_mode);
+  }
+  is_shut_down = shut_down;
+} /* Logic::setShutdown */
 
 
 
@@ -1050,6 +1074,14 @@ void Logic::checkIdle(void)
 } /* Logic::checkIdle */
 
 
+void Logic::setTxCtrlMode(Tx::TxCtrlMode mode)
+{
+  currently_set_tx_ctrl_mode = mode;
+  if (!is_shut_down)
+  {
+    tx().setTxCtrlMode(mode);
+  }
+} /* Logic::setTxCtrlMode */
 
 
 
