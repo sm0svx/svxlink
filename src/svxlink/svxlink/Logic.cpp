@@ -1436,7 +1436,7 @@ void Logic::cleanup(void)
   delete rgr_sound_timer;     	      rgr_sound_timer = 0;
   every_minute_timer.stop();
 
-  if (LinkManager::instance())
+  if (LinkManager::hasInstance())
   {
     LinkManager::instance()->deleteLogic(this);
   }
