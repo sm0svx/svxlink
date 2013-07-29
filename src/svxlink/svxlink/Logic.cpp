@@ -138,7 +138,6 @@ using namespace sigc;
  *
  ****************************************************************************/
 
-vector<LinkCmd *> link_cmd;
 
 
 /****************************************************************************
@@ -587,11 +586,6 @@ bool Logic::initialize(void)
   {
       // Register this logic in the link manager
     LinkManager::instance()->addLogic(this);
-
-    /*
-    LinkManager::instance()->logicStateChanged.connect(
-        mem_fun(*this, &Logic::stateChanged));
-    */
   }
 
   if (LocationInfo::has_instance())
@@ -928,12 +922,6 @@ void Logic::squelchOpen(bool is_open)
     LocationInfo::instance()->setReceiving(name(), tv, is_open);
   }
 
-  if (LinkManager::hasInstance())
-  {
-    state = is_open;
-    LinkManager::instance()->logicStateChanged(TX_CTCSS_SQL_OPEN, is_open);
-  }
-
   updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
 
   checkIdle();
@@ -1072,11 +1060,6 @@ void Logic::allMsgsWritten(void)
   }
 
   updateTxCtcss(false, TX_CTCSS_ANNOUNCEMENT);
-
-  if (LinkManager::hasInstance())
-  {
-    LinkManager::instance()->logicStateChanged(TX_CTCSS_ANNOUNCEMENT, false);
-  }
   checkIdle();
 
 } /* Logic::allMsgsWritten */
@@ -1505,45 +1488,13 @@ void Logic::updateTxCtcss(bool do_set, TxCtcssType type)
 void Logic::logicConInStreamStateChanged(bool is_active, bool is_idle)
 {
   updateTxCtcss(!is_idle, TX_CTCSS_LOGIC);
-
-  if (LinkManager::hasInstance())
-  {
-    //cout << "### logicConInStreamStateChanged" << endl;
-    LinkManager::instance()->logicStateChanged(TX_CTCSS_LOGIC, !is_idle);
-  }
 } /* Logic::logicConInStreamStateChanged */
 
 
 void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 {
   updateTxCtcss(!is_idle, TX_CTCSS_MODULE);
-
-  if (LinkManager::hasInstance())
-  {
-    cout << "audioFromModuleStreamStateChanged" << endl;
-    LinkManager::instance()->logicStateChanged(TX_CTCSS_MODULE, !is_idle);
-  }
 } /* Logic::audioFromModuleStreamStateChanged */
-
-
-void Logic::stateChanged(int tx_ctcss, bool state)
-{
-  // cout << name() << ": external state changed!! "
-  //     << tx_ctcss << ", " << state << endl;
-
-  TxCtcssType t_ctcss = TxCtcssType(tx_ctcss);
-
-  if (this->tx_ctcss != tx_ctcss || this->state != state )
-  {
-    /* debug output:
-    cout << "changeing TxCtcss, this->tx_ctcss:"
-         << hex << int(this->tx_ctcss) << "  tx_ctcss:" << hex << int(tx_ctcss)
-         << "," << (this->state ? "1" : "0") << " " << (state ? "1" : "0")
-         << endl;
-    */
-    updateTxCtcss(state, t_ctcss);
-  }
-} /* Logic::stateChanged */
 
 
 

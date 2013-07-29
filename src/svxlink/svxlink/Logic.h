@@ -286,8 +286,6 @@ class Logic : public sigc::trackable
     std::string                     sel5_to;
     AprsStatistics                  aprs_stats;
     Async::Timer		    *aprs_stats_timer;
-    int                             tx_ctcss_state;
-    bool                            state;
     Tx::TxCtrlMode                  currently_set_tx_ctrl_mode;
     bool                            is_shut_down;
 
@@ -307,7 +305,6 @@ class Logic : public sigc::trackable
     void updateTxCtcss(bool do_set, TxCtcssType type);
     void logicConInStreamStateChanged(bool is_active, bool is_idle);
     void audioFromModuleStreamStateChanged(bool is_active, bool is_idle);
-    virtual void stateChanged(int tx_ctcss, bool state);
 
 };  /* class Logic */
 

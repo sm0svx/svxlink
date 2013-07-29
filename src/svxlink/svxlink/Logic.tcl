@@ -281,35 +281,6 @@ proc activating_link {name} {
 
 
 #
-# Executed when a link activation to another logic core fails.
-#   name  - The name of the link
-#
-#proc activating_link_failed {name} {
-#  if {[string length $name] > 0} {
-#    playMsg "Core" "activating_link_to";
-#    spellWord $name;
-#    playMsg "Core" "failed";
-#  }
-#}
-
-
-#
-# Executed when a link to another logic core is beeing
-# activated but fails because another link with the same
-# logics is established
-#   name  - The name of the link
-#
-#proc activating_link_failed_other_connection {name} {
-#  if {[string length $name] > 0} {
-#    playMsg "Core" "activating_link_to";
-#    spellWord $name;
-#    playMsg "Core" "failed";
-#    playMsg "Core" "other_connection";
-#  }
-#}
-
-
-#
 # Executed when a link to another logic core is deactivated.
 #   name  - The name of the link
 #
@@ -319,36 +290,6 @@ proc deactivating_link {name} {
     spellWord $name;
   }
 }
-
-
-#
-# Executed when a link to another logic core is beeing
-# deactivated but the action failed for some reason.
-#   name  - The name of the link
-#
-#proc deactivating_link_failed {name} {
-#  if {[string length $name] > 0} {
-#    playMsg "Core" "deactivating_link_to";
-#    spellWord $name;
-#    playMsg "Core" "failed";
-#  }
-#}
-
-
-#
-# Executed when a link to another logic core is beeing
-# deactivated but the action failed because the link is
-# still activated by other link definitions
-#   name  - The name of the link
-#
-#proc deactivating_link_failed_other_connection {name} {
-#  if {[string length $name] > 0} {
-#    playMsg "Core" "deactivating_link_to";
-#    spellWord $name;
-#    playMsg "Core" "failed";
-#    playMsg "Core" "other_connection";
-#  }
-#}
 
 
 #

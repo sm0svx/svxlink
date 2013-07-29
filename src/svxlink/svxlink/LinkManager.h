@@ -228,8 +228,6 @@ class LinkManager : public sigc::trackable
     std::string cmdReceived(LinkRef link, Logic *logic,
                             const std::string &subcmd);
 
-    sigc::signal<void, int, bool> logicStateChanged;
-
   private:
     struct LogicProperties
     {
