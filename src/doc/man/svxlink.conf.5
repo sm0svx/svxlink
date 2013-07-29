@@ -120,6 +120,10 @@ Supported sampling rates are: 8000, 16000 and 48000.
 Enter the section name that contains information required for transfering
 positioning data to location servers. Setting this item makes the system
 visible on the EchoLink link status page and the APRS network.
+.TP
+.B LINKS
+Enter here a comma separated list of section names that contains the 
+configuration information for linking logics together (see Logic Linking).
 .
 .SS Common Logic configuration variables
 .
@@ -236,12 +240,6 @@ will always transmit a CTCSS tone as soon as the transmitter is turned on.
 Point out a section that contains the macros that should be used by this logic
 core. See the section description for macros below for more information.
 .TP
-.B LINKS
-Specify the name of a configuration section that contains logic linking infomation. There
-is an example section in the default configuration file called [LinkToR4]. Right now only
-one link can be specified. A LINKS variable is only needed in the logic that the link
-should be activated from.
-.TP
 .B FX_GAIN_NORMAL
 The gain (dB) to use for audio effects and announcements when there is no other traffic.
 This gain is normally set to 0dB which means no gain or attenuation.
@@ -327,33 +325,34 @@ SvxLink (e.g. filtering, DTMF muting, squelch tail elimination) and the
 ability to use remote receivers.
 .TP
 .B IDLE_TIMEOUT
-The number of seconds the repeater should have been idle before turning the transmitter
-off.
+The number of seconds the repeater should have been idle before turning the 
+transmitter off.
 .TP
 .B OPEN_ON_1750
 Use this configuration variable if it should be possible to open the repeater with a
-1750Hz tone burst. Specify the number of milliseconds the tone must be asserted before the
-repeater is opened. Make sure that the time specified is long enough for the
-squelch to have time to open. Otherwise the repeater will open "too soon" and
+1750Hz tone burst. Specify the number of milliseconds the tone must be asserted 
+before the repeater is opened. Make sure that the time specified is long enough for 
+the squelch to have time to open. Otherwise the repeater will open "too soon" and
 you will hear an ugly 1750Hz beep as the first thing.
 A value of 0 will disable 1750 Hz repeater opening.
 .TP
 .B OPEN_ON_CTCSS
-Use this configuration variable if it should be possible to open the repeater with a CTCSS
-tone (PL). The syntax of the value is tone_fq:min_length. The tone frequency is specified
-in whole Hz and the minimum tone length is specified in milliseconds. For examples if a
-136.5 Hz tone must be asserted for two seconds for the repeater to open, the value
-136:2000 should be specified.
+Use this configuration variable if it should be possible to open the repeater with 
+a CTCSS tone (PL). The syntax of the value is tone_fq:min_length. The tone 
+frequency is specified in whole Hz and the minimum tone length is specified in 
+milliseconds. For examples if a 136.5 Hz tone must be asserted for two seconds for 
+the repeater to open, the value 136:2000 should be specified.
 .TP
 .B OPEN_ON_DTMF
-Use this configuration variable if it should be possible to open the repeater with a DTMF
-digit. Only one digit can be specified. DTMF digits pressed when the repeater is down will
-be ignored.
+Use this configuration variable if it should be possible to open the repeater with 
+a DTMF digit. Only one digit can be specified. DTMF digits pressed when the repeater 
+is down will be ignored.
 .TP
 .B OPEN_ON_SEL5
-Use this configuration variable if you want to open your repeater by using a selective tone
-call that is often used in commercial radio networks. Example: OPEN_ON_SEL5=03345 opens your
-repeater only if that sequence has been received. You can use sequence lengths from 4 to 25.
+Use this configuration variable if you want to open your repeater by using a 
+selective tone call that is often used in commercial radio networks. 
+Example: OPEN_ON_SEL5=03345 opens your repeater only if that sequence has been 
+received. You can use sequence lengths from 4 to 25.
 .TP
 .B OPEN_ON_SQL
 Use this configuration variable if it should be possible to open the repeater just by
@@ -443,31 +442,60 @@ For example, pressing DTMF sequence "D1#" will activate the EchoLink module and
 connect to the EchoTest conference node.
 .
 .SS Logic Linking
-A logic linking configuration section is used to specify information for a link between
-two or more SvxLink logic cores. Such a link can for example be used to connect a local
-repeater to a remote repeater using a separate link transceiver. The link is
-activated/deactivated using DTMF commands. When the link is active, all audio received
-by one logic will be transmitted by the other logic.
+A logic linking configuration section is used to specify information for a link 
+between two or more SvxLink logic cores. Such a link can for example be used to 
+connect a local repeater to a remote repeater using a separate link transceiver.
+The link is activated/deactivated using DTMF commands and/or automatically 
+depending on your configuration.  When the link is active, all audio received
+by one logic will be transmitted by the other logic(s).
 .P
-The name of the logic linking section can be chosen freely. In the example configuration
-file there is a section called [LinkToR4]. To use a logic linking section in a logic core
-it must be pointed out by the LINKS configuration variable. So for example,
-RepeaterLogic/LINKS=LinkToR4 would make it possible to connect the RepeaterLogic core to
-the SimplexLogic core using a DTMF command.
-.TP
-.B NAME
-The name of the link. The default action on activation/deactivation of the link is to
-spell the value of this variable. In other words, a callsign is a good value if for
-example linking to another repeater.
+The name of the logic linking section can be chosen freely. In the example 
+configuration file, there is a section [LinkToR4]. To use a logic linking 
+section in a logic core it must be pointed out by the LINKS configuration 
+variable in the GLOBAL section.
+Example: GLOBAL/LINKS=LinkToR4
 .TP
 .B CONNECT_LOGICS
-A comma separated list of names for the logic cores to link together.
+A comma separated list of logic specifications for the logic cores to connect
+together. Each logic specification has three parts separated by colons:
+<logic name>:<command>:<announcement name>. The "logic name" is the name of
+the logic to include in the link. To manually activate or deactivate the link
+from the just specified logic, "command" is used. The "announcement name" is
+used when announcing link related activities like activation or deactivation.
+Both "command" and "announcement name" may be left empty if no manual control
+is wanted.
+An example config line may look like this:
+
+RepeaterLogic_2m:99:SK3GW,RepeaterLogic_70cm:94:SK3GK
+
+It will include two logics in the link, RepeaterLogic_2m and
+RepeaterLogic_70cm. From the 2m side, the link will be activated when the user
+send command 991 and deactivated when the user send command 990. Upon
+activation, an announcement like "activating link to SK3GW" will be played
+back. From the 70cm side the command will be 941 and 940 respectively. The
+announcement when activating the link from the 70cm side will be something like
+"activating link to SK3GK".
 .TP
-.B COMMAND
-The command prefix to use to activate/deactivate this link. The full command consists of
-one more digit that is either 0 or 1 where 0 means "deactivate" and 1 means "activate". If
-you for example set COMMAND=94, the received DTMF command "941#" will activate the link
-and "940#" will deactivate the link.
+.B DEFAULT_ACTIVE
+The link will be connected automatically during startup of SvxLink if this
+configuration variable is set to 1. Also, if a link is manually disconnected by
+a user it will be automatically reconnected after some time of inactivity. The
+time is specified by setting the TIMEOUT configuration variable. If the
+TIMEOUT variable is not set, no automatic reactivation will be done.
+.TP
+.B TIMEOUT
+The number of seconds after which the link will be automatically deactivated
+if there have been no activity. If 1 have been specified for DEFAULT_ACTIVE,
+this configuration variable will specify after how many seconds the link will
+be reactivated after being manually deactivated.
+.TP
+.B AUTOACTIVATE_ON_SQL
+Enter a comma separated list of logics, which should automatically activate
+the link if there is activity (e.g. squelch open) in it. One possible
+application for this is for example to make the connection of a
+microphone/speaker combination (without DTMF encoder) for brief announcements
+but without having to constantly listen in.
+Example: AUTOACTIVATE_ON_SQL=MicSpkrLogic
 .
 .SS Local Receiver Section
 .

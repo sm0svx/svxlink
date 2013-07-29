@@ -85,6 +85,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "LogicCmds.h"
 #include "Logic.h"
 #include "QsoRecorder.h"
+#include "LinkManager.h"
 
 
 /****************************************************************************
@@ -137,7 +138,6 @@ using namespace sigc;
  *
  ****************************************************************************/
 
-AudioSwitchMatrix Logic::audio_switch_matrix;
 
 
 /****************************************************************************
@@ -145,58 +145,6 @@ AudioSwitchMatrix Logic::audio_switch_matrix;
  * Public member functions
  *
  ****************************************************************************/
-
-bool Logic::connectLogics(const vector<string> &link_list, int timeout)
-{
-  assert(link_list.size() > 0);
-  bool check_connect = false;
-  vector<string>::const_iterator it;
-  for (it = link_list.begin(); it != link_list.end(); it++)
-  {
-    for (vector<string>::const_iterator it1 = it + 1; it1 != link_list.end();
-	 it1++)
-    {
-      assert(*it != *it1);
-      if (!logicsAreConnected(*it, *it1))
-      {
-	cout << "Activating link " << *it << " --> " << *it1 << endl;
-	audio_switch_matrix.connect(*it, *it1);
-	audio_switch_matrix.connect(*it1, *it);
-	check_connect = true;
-      }
-    }
-  }
-  return check_connect;
-} /* Logic::connectLogics */
-
-
-bool Logic::disconnectLogics(const std::vector<std::string> &link_list)
-{
-  assert(link_list.size() > 0);
-  bool check_connect = false;
-  for (vector<string>::const_iterator it = link_list.begin();
-       it != link_list.end(); it++)
-  {
-    for (vector<string>::const_iterator it1 = it + 1; it1 != link_list.end();
-	 it1++)
-    {
-      if (logicsAreConnected(*it, *it1))
-      {
-	cout << "Deactivating link " << *it << " --> " << *it1 << endl;
-	audio_switch_matrix.disconnect(*it, *it1);
-	check_connect = true;
-      }
-    }
-  }
-  return check_connect;
-} /* Logic::disconnectLogics */
-
-
-bool Logic::logicsAreConnected(const string& l1, const string& l2)
-{
-  return audio_switch_matrix.isConnected(l1, l2);
-} /* Logic::logicsAreConnected */
-
 
 Logic::Logic(Config &cfg, const string& name)
   : m_cfg(cfg),       	      	            m_name(name),
@@ -253,16 +201,6 @@ bool Logic::initialize(void)
 	 << lang_cmd->cmdStr() << "\" for logic " << name() << ".\n";
     delete lang_cmd;  // FIXME: Do this in cleanup() instead
     return false;
-  }
-  
-  if (cfg().getValue(name(), "LINKS", value))
-  {
-    LinkCmd *link_cmd = new LinkCmd(&cmd_parser, this);
-    if (!link_cmd->initialize(cfg(), value))
-    {
-      delete link_cmd;  // FIXME: Do this in cleanup() instead
-      return false;
-    }
   }
 
   string event_handler_str;
@@ -644,14 +582,17 @@ bool Logic::initialize(void)
     return false;
   }
 
-  audio_switch_matrix.addSource(name(), logic_con_out);
-  audio_switch_matrix.addSink(name(), logic_con_in);
-
+  if (LinkManager::hasInstance())
+  {
+      // Register this logic in the link manager
+    LinkManager::instance()->addLogic(this);
+  }
 
   if (LocationInfo::has_instance())
   {
      LocationInfo::AprsStatistics lis;
-     LocationInfo::instance()->aprs_stats.insert(pair<string,LocationInfo::AprsStatistics>(name(), lis));
+     LocationInfo::instance()->aprs_stats.insert(
+         pair<string,LocationInfo::AprsStatistics>(name(), lis));
      LocationInfo::instance()->aprs_stats[name()].reset();
   }
 
@@ -899,14 +840,6 @@ void Logic::selcallSequenceDetected(std::string sequence)
 } /* Logic::selcallSequenceDetected */
 
 
-void Logic::disconnectAllLogics(void)
-{
-  cout << "Deactivating all links to/from \"" << name() << "\"\n";
-  audio_switch_matrix.disconnectSource(name());
-  audio_switch_matrix.disconnectSink(name());
-} /* Logic::disconnectAllLogics */
-
-
 void Logic::sendDtmf(const std::string& digits)
 {
   if (!digits.empty())
@@ -920,6 +853,12 @@ bool Logic::isWritingMessage(void)
 {
   return msg_handler->isWritingMessage();
 } /* Logic::isWritingMessage */
+
+
+Async::AudioSink *Logic::logicConIn(void)
+{
+  return logic_con_in;
+} /* Logic::logicConIn */
 
 
 void Logic::setShutdown(bool shut_down)
@@ -936,6 +875,10 @@ void Logic::setShutdown(bool shut_down)
 } /* Logic::setShutdown */
 
 
+Async::AudioSource *Logic::logicConOut(void)
+{
+  return logic_con_out;
+} /* Logic::logicConOut */
 
 /****************************************************************************
  *
@@ -1510,13 +1453,9 @@ void Logic::cleanup(void)
   delete rgr_sound_timer;     	      rgr_sound_timer = 0;
   every_minute_timer.stop();
 
-  if (audio_switch_matrix.sourceIsAdded(name()))
+  if (LinkManager::hasInstance())
   {
-    audio_switch_matrix.removeSource(name());
-  }
-  if (audio_switch_matrix.sinkIsAdded(name()))
-  {
-    audio_switch_matrix.removeSink(name());
+    LinkManager::instance()->deleteLogic(this);
   }
 
   delete msg_handler; 	      	      msg_handler = 0;
@@ -1558,7 +1497,7 @@ void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 } /* Logic::audioFromModuleStreamStateChanged */
 
 
+
 /*
  * This file has not been truncated
  */
-

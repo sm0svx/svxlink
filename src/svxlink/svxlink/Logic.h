@@ -65,7 +65,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AudioSwitchMatrix.h"
 #include "CmdParser.h"
 
 
@@ -87,6 +86,8 @@ namespace Async
   class AudioValve;
   class AudioStreamStateDetector;
   class AudioRecorder;
+  class AudioSource;
+  class AudioSink;
 };
 
 
@@ -144,11 +145,6 @@ class QsoRecorder;
 class Logic : public sigc::trackable
 {
   public:
-    static bool connectLogics(const std::vector<std::string> &link_list,
-      	    int timeout=0);
-    static bool disconnectLogics(const std::vector<std::string> &link_list);
-    static bool logicsAreConnected(const std::string& l1,
-      	    const std::string& l2);
 
     /**
      * @brief 	Default constuctor
@@ -191,8 +187,6 @@ class Logic : public sigc::trackable
     Rx &rx(void) const { return *m_rx; }
     Tx &tx(void) const { return *m_tx; }
 
-    void disconnectAllLogics(void);
-
     void sendDtmf(const std::string& digits);
 
     void injectDtmfDigit(char digit, int duration_ms)
@@ -207,8 +201,12 @@ class Logic : public sigc::trackable
     bool isWritingMessage(void);
     void setShutdown(bool shut_down);
 
-    sigc::signal<void, bool> idleStateChanged;
+    Async::AudioSink *logicConIn(void);
+    Async::AudioSource *logicConOut(void);
 
+    CmdParser *cmdParser(void) { return &cmd_parser; }
+
+    sigc::signal<void, bool> idleStateChanged;
 
   protected:
     virtual void squelchOpen(bool is_open);
@@ -226,9 +224,7 @@ class Logic : public sigc::trackable
     void checkIdle(void);
     void setTxCtrlMode(Tx::TxCtrlMode mode);
 
-
   private:
-    static AudioSwitchMatrix  	audio_switch_matrix;
 
     typedef enum
     {
@@ -309,6 +305,7 @@ class Logic : public sigc::trackable
     void updateTxCtcss(bool do_set, TxCtcssType type);
     void logicConInStreamStateChanged(bool is_active, bool is_idle);
     void audioFromModuleStreamStateChanged(bool is_active, bool is_idle);
+
 };  /* class Logic */
 
 
