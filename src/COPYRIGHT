@@ -5,6 +5,9 @@ WOL (Wide Open License):
 	async/audio/AudioDecimator.*
 	async/audio/AudioInterpolator.*
 
+Custom license (Aladdin Enterprises):
+        echolib/md5.{c,h}
+
 
 
 		    GNU GENERAL PUBLIC LICENSE
