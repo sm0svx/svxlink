@@ -1,4 +1,15 @@
- 1.2.0 -- ?? ??? 2013
+ 1.3.0 -- ?? ??? 2013
+----------------------
+
+* Improved support for linking logics together. It's now possible to have
+  multiple links active at the same time for a logic. A link can be set to
+  be default active. This mean that the link will be activated as soon as the
+  application starts and also that the link can be automatically reactivated,
+  after a timeout, if manually deactivated.
+
+
+
+ 1.2.0 -- 29 Jul 2013
 ----------------------
 
 * Added support for EchoLink proxy.
@@ -20,6 +31,12 @@
   EchoLink transmission is started or stopped. The default implementation will
   send a beep over the local transmitter.
   Patch from DL1HRC / Adi.
+
+* Now possible to force the transmitter off using a DTMF command. The new
+  configuration variable SHUTDOWN_CMD is used in a logic configuration
+  section to set the command that should be used. The node will continue
+  to operate as usual with the only difference that the transmitter will
+  not be turned on for any event.
 
 
 

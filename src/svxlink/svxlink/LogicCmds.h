@@ -58,6 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Logic.h"
 #include "Module.h"
 #include "QsoRecorder.h"
+#include "LinkManager.h"
 
 
 /****************************************************************************
@@ -172,19 +173,23 @@ class ModuleActivateCmd : public Command
 This class implements the logic linking activation command.
 Each instance of the class represents a group of logics that can be linked
 together.
+
 Subcommand 0 means disconnect the links and subcommand 1 means connect the
 links.
+
+The LinkCmd objects are created from the LinkManager class when a logic
+core register itself.
 */
 class LinkCmd : public Command
 {
   public:
     /**
-     * @brief 	Constuctor
-     * @param  parser The command parser to associate this command with
-     * @param  logic  The logic core instance the command should operate on
+     * @brief   Constuctor
+     * @param   logic The logic core instance the command should operate on
+     * @param   link  The link instance the command should operate on
      */
-    LinkCmd(CmdParser *parser, Logic *logic)
-      : Command(parser), logic(logic), timeout(0) {}
+    LinkCmd(Logic *logic, LinkManager::LinkRef link)
+      : Command(logic->cmdParser()), logic(logic), link(link) {}
 
     /**
      * @brief 	Destructor
@@ -192,117 +197,40 @@ class LinkCmd : public Command
     ~LinkCmd(void) {}
 
     /**
-     * @brief 	Initialize the command object
-     * @param 	cfg A previously initialized configuration object
-     * @param  link_name The name (configuration section) of this link
-     * @return	Returns \em true on success or else \em false.
+     * @brief   Initialize the command object
+     * @param   command The base command to use to control the link
+     * @return  Returns \em true on success or else \em false.
      */
-    bool initialize(Async::Config& cfg, const std::string& link_name)
+    bool initialize(const std::string& command)
     {
-      if (!cfg.getValue(link_name, "NAME", name))
-      {
-      	name = link_name;
-      }
-
-      std::string cmd_str;
-      if (!cfg.getValue(link_name, "COMMAND", cmd_str))
-      {
-	std::cerr << "*** ERROR: Config variable " << link_name
-	     << "/COMMAND not set\n";
-	return false;
-      }
-      setCmd(cmd_str);
+      setCmd(command);
       if (!addToParser())
       {
-	std::cerr << "*** ERROR: Could not set up command \"" << cmd_str
-		  << "\" for logic link \"" << name << "\". You probably have "
-		  << "the same command set up in more than one place\n";
-	return false;
+        std::cerr << "*** ERROR: Could not set up logic linking command \""
+           << command << "\" for logic \"" << logic->name()
+           << "\". You probably have the same command set up in more than "
+           << "one places\n";
+        return false;
       }
-
-      if (!cfg.getValue(link_name, "CONNECT_LOGICS", logics))
-      {
-	std::cerr << "*** ERROR: Config variable " << link_name
-	     << "/CONNECT_LOGICS not set\n";
-	return false;
-      }
-
-      if (SvxLink::splitStr(logic_list, logics, ",") < 2)
-      {
-	std::cerr << "*** ERROR: you need at least two LOGICS to connect,"
-	    << "e.g. CONNECT_LOGICS=RepeaterLogic,SimplexLogic" << std::endl;
-	return false;
-      }
-
-      std::string value;
-      if (cfg.getValue(link_name, "TIMEOUT", value))
-      {
-      	timeout = atoi(value.c_str());
-      }
-
       return true;
     }
 
+    /**
+     * @brief	Execute this command
+     * @param	subcmd The sub command of the executed command
+     */
     void operator ()(const std::string& subcmd)
     {
-      //std::cout << "cmd=" << cmdStr() << " subcmd=" << subcmd << std::endl;
-      if (subcmd == "0")
-      {
-        disconnectLinks();
-      }
-      else if (subcmd == "1")
-      {
-	connectLinks();
-      }
-      else
-      {
-      	std::stringstream ss;
-	ss << "command_failed " << cmdStr() << subcmd;
-      	logic->processEvent(ss.str());
-      }
+      std::string event =
+          LinkManager::instance()->cmdReceived(link, logic, subcmd);
+      logic->processEvent(event);
     }
-
-    void connectLinks(void)
-    {
-      std::stringstream ss;
-      if (Logic::connectLogics(logic_list, timeout))
-      {
-	ss << "activating_link " << name;
-      }
-      else
-      {
-	ss << "link_already_active " << name;
-      }
-      logic->processEvent(ss.str());
-    } /* connectLinks */
-
-
-    void disconnectLinks(void)
-    {
-      std::stringstream ss;
-      if (Logic::disconnectLogics(logic_list))
-      {
-	ss << "deactivating_link " << name;
-      }
-      else
-      {
-	ss << "link_not_active " << name;
-      }
-      logic->processEvent(ss.str());
-    } /* disconnectLinks */
-
 
   protected:
 
   private:
-    typedef std::vector<std::string> StrList;
-
-    Logic     	*logic;
-    std::string logics;
-    int       	timeout;
-    std::string name;
-    StrList 	logic_list;
-
+    Logic                 *logic;
+    LinkManager::LinkRef  link;
 
 };  /* class LinkCmd */
 
@@ -399,6 +327,40 @@ class ChangeLangCmd : public Command
 	ss << subcmd;
       }
       logic->processEvent(ss.str());
+    }
+
+  private:
+    Logic       *logic;
+
+};
+
+
+class ShutdownCmd : public Command
+{
+  public:
+    ShutdownCmd(CmdParser *parser, Logic *logic, const std::string &cmd)
+      : Command(parser, cmd), logic(logic)
+    {
+    }
+
+    void operator ()(const std::string& subcmd)
+    {
+      if (subcmd == "1")
+      {
+        std::cout << logic->name() << ": Activating logic\n";
+        logic->setShutdown(false);
+      }
+      else if (subcmd == "0")
+      {
+        std::cout << logic->name() << ": Shutting down logic\n";
+        logic->setShutdown(true);
+      }
+      else
+      {
+        std::stringstream ss;
+        ss << "command_failed " << cmdStr() << subcmd;
+        logic->processEvent(ss.str());
+      }
     }
 
   private:

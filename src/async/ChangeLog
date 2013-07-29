@@ -1,7 +1,11 @@
- 1.1.1 -- ?? ??? 2013
+ 1.1.1 -- 29 Jul 2013
 ----------------------
 
 * Fixed some include directives for Async::CppApplication.
+
+* The Async::TcpClient class now always do a name lookup before trying to
+  connect. Previously, when the old lookup was cached, IP addresses that
+  changed over time was not handled.
 
 
 

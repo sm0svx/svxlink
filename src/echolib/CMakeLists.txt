@@ -11,11 +11,6 @@ if(SPEEX_FOUND)
   set(LIBS ${LIBS} ${SPEEX_LIBRARIES})
 endif(SPEEX_FOUND)
 
-# Find the OpenSSL library
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
-set(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
-
 set(LIBNAME echolib)
 
 set(INSTALL_INC EchoLinkDirectory.h EchoLinkDispatcher.h EchoLinkQso.h
@@ -24,7 +19,7 @@ set(EXPINC ${INSTALL_INC} rtp.h)
 
 set(LIBSRC EchoLinkDirectory.cpp EchoLinkQso.cpp rtpacket.cpp
   EchoLinkDispatcher.cpp EchoLinkStationData.cpp EchoLinkProxy.cpp
-  EchoLinkDirectoryCon.cpp)
+  EchoLinkDirectoryCon.cpp md5.c)
 
 set(LIBS ${LIBS} asynccore asyncaudio)
 

@@ -32,8 +32,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <openssl/md5.h>
-
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
@@ -57,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "EchoLinkProxy.h"
+#include "md5.h"
 
 
 
@@ -392,7 +391,7 @@ int Proxy::handleAuthentication(const unsigned char *buf, int len)
   if (len >= NONCE_SIZE)
   {
       // Insert the callsign and newline in the buffer
-    unsigned auth_msg_len = callsign.size() + 1 + MD5_DIGEST_LENGTH;
+    unsigned auth_msg_len = callsign.size() + 1 + 16;
     unsigned char auth_msg[auth_msg_len+1];
     unsigned char *auth_msg_ptr = auth_msg;
     memcpy(auth_msg_ptr, callsign.c_str(), callsign.size());
@@ -400,7 +399,7 @@ int Proxy::handleAuthentication(const unsigned char *buf, int len)
     *auth_msg_ptr = '\n';
     auth_msg_ptr += 1;
 
-      // Calculate and insert the MD5 digest into the buffer
+      // Create the MD5 string to digest (password + nonce)
     unsigned auth_str_len = password.size() + NONCE_SIZE;
     unsigned char auth_str[auth_str_len + 1];
     unsigned char *auth_str_ptr = auth_str;
@@ -408,7 +407,13 @@ int Proxy::handleAuthentication(const unsigned char *buf, int len)
     auth_str_ptr += password.size();
     memcpy(auth_str_ptr, buf, NONCE_SIZE);
     auth_str[auth_str_len] = 0;
-    MD5(auth_str, auth_str_len, auth_msg_ptr);
+
+      // Calculate the MD5 digest of the message and insert it into the
+      // message buffer
+    md5_state_t md5_state;
+    md5_init(&md5_state);
+    md5_append(&md5_state, auth_str, auth_str_len);
+    md5_finish(&md5_state, auth_msg_ptr);
     auth_msg[auth_msg_len] = 0;
 
       // Send the authentication message

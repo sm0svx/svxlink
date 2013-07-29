@@ -141,7 +141,7 @@ bool SimplexLogic::initialize(void)
   }
   
   rxValveSetOpen(true);
-  tx().setTxCtrlMode(Tx::TX_AUTO);
+  setTxCtrlMode(Tx::TX_AUTO);
   
   processEvent("startup");
   
@@ -179,12 +179,12 @@ void SimplexLogic::squelchOpen(bool is_open)
       enableRgrSoundTimer(true);
     }
     
-    tx().setTxCtrlMode(Tx::TX_AUTO);
+    setTxCtrlMode(Tx::TX_AUTO);
   }
   else
   {
     enableRgrSoundTimer(false);
-    tx().setTxCtrlMode(Tx::TX_OFF);
+    setTxCtrlMode(Tx::TX_OFF);
   }
     
   Logic::squelchOpen(is_open);

@@ -177,14 +177,13 @@ void TcpClient::connect(const IpAddress& remote_ip, uint16_t remote_port)
 
 void TcpClient::connect(void)
 {
-  if (remoteHost().isEmpty())
+  if (remoteHost().isEmpty() || (dns == 0))
   {
     if ((dns != 0) || (sock != -1) || (socket() != -1))
     {
       return;
     }
     
-    assert(dns == 0);
     assert(!remote_host.empty());
     
     dns = new DnsLookup(remote_host);
