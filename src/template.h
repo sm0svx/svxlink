@@ -120,7 +120,7 @@ class Template
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Default constructor
      */
     Template(void);
   
