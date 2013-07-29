@@ -56,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <LocationInfo.h>
 #include <AsyncAtTimer.h>
+#include <Tx.h>
 
 
 /****************************************************************************
@@ -107,7 +108,6 @@ namespace Async
  ****************************************************************************/
 
 class Rx;
-class Tx;
 class MsgHandler;
 class Module;
 class EventHandler;
@@ -199,6 +199,7 @@ class Logic : public sigc::trackable
     void setReportEventsAsIdle(bool idle) { report_events_as_idle = idle; }
 
     bool isWritingMessage(void);
+    void setShutdown(bool shut_down);
 
     Async::AudioSink *logicConIn(void);
     Async::AudioSource *logicConOut(void);
@@ -221,6 +222,7 @@ class Logic : public sigc::trackable
     void rxValveSetOpen(bool do_open);
     void rptValveSetOpen(bool do_open);
     void checkIdle(void);
+    void setTxCtrlMode(Tx::TxCtrlMode mode);
 
   private:
 
@@ -286,6 +288,8 @@ class Logic : public sigc::trackable
     Async::Timer		    *aprs_stats_timer;
     int                             tx_ctcss_state;
     bool                            state;
+    Tx::TxCtrlMode                  currently_set_tx_ctrl_mode;
+    bool                            is_shut_down;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);

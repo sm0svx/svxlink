@@ -335,6 +335,40 @@ class ChangeLangCmd : public Command
 };
 
 
+class ShutdownCmd : public Command
+{
+  public:
+    ShutdownCmd(CmdParser *parser, Logic *logic, const std::string &cmd)
+      : Command(parser, cmd), logic(logic)
+    {
+    }
+
+    void operator ()(const std::string& subcmd)
+    {
+      if (subcmd == "1")
+      {
+        std::cout << logic->name() << ": Activating logic\n";
+        logic->setShutdown(false);
+      }
+      else if (subcmd == "0")
+      {
+        std::cout << logic->name() << ": Shutting down logic\n";
+        logic->setShutdown(true);
+      }
+      else
+      {
+        std::stringstream ss;
+        ss << "command_failed " << cmdStr() << subcmd;
+        logic->processEvent(ss.str());
+      }
+    }
+
+  private:
+    Logic       *logic;
+
+};
+
+
 //} /* namespace */
 
 #endif /* LOGIC_CMDS_INCLUDED */

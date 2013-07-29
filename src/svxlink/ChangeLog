@@ -21,6 +21,12 @@
   send a beep over the local transmitter.
   Patch from DL1HRC / Adi.
 
+* Now possible to force the transmitter off using a DTMF command. The new
+  configuration variable SHUTDOWN_CMD is used in a logic configuration
+  section to set the command that should be used. The node will continue
+  to operate as usual with the only difference that the transmitter will
+  not be turned on for any event.
+
 
 
  1.1.0 -- 06 Jun 2013

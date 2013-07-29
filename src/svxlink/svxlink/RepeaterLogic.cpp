@@ -285,7 +285,7 @@ bool RepeaterLogic::initialize(void)
   
   idleStateChanged.connect(mem_fun(*this, &RepeaterLogic::setIdle));
   
-  tx().setTxCtrlMode(Tx::TX_AUTO);
+  setTxCtrlMode(Tx::TX_AUTO);
   
   processEvent("startup");
   
@@ -384,7 +384,7 @@ void RepeaterLogic::allMsgsWritten(void)
   Logic::allMsgsWritten();
   if (!repeater_is_up)
   {
-    tx().setTxCtrlMode(Tx::TX_AUTO);
+    setTxCtrlMode(Tx::TX_AUTO);
   }
 } /* RepeaterLogic::allMsgsWritten */
 
@@ -490,7 +490,7 @@ void RepeaterLogic::setUp(bool up, string reason)
     processEvent(ss.str());
     
     rxValveSetOpen(true);
-    tx().setTxCtrlMode(Tx::TX_ON);
+    setTxCtrlMode(Tx::TX_ON);
     
     setIdle(false);
     checkIdle();
@@ -529,7 +529,7 @@ void RepeaterLogic::setUp(bool up, string reason)
     processEvent(ss.str());
     if (!isWritingMessage())
     {
-      tx().setTxCtrlMode(Tx::TX_AUTO);
+      setTxCtrlMode(Tx::TX_AUTO);
     }
   }
   
