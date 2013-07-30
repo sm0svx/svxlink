@@ -47,6 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <fstream>
 
 #include <sigc++/sigc++.h>
 
@@ -241,7 +242,8 @@ LocalTx::LocalTx(Config& cfg, const string& name)
     tx_timeout_occured(false), tx_timeout(0), sine_gen(0), ctcss_enable(false),
     dtmf_encoder(0), selector(0), dtmf_valve(0), mixer(0), hdlc_framer(0),
     fsk_mod(0), fsk_valve(0), input_handler(0), audio_valve(0),
-    siglev_sine_gen(0), ptt_hangtimer(0), last_rx_id(Rx::ID_UNKNOWN)
+    siglev_sine_gen(0), ptt_hangtimer(0), last_rx_id(Rx::ID_UNKNOWN),
+    gpio_pin(-1)
 {
 
 } /* LocalTx::LocalTx */
@@ -292,26 +294,38 @@ bool LocalTx::initialize(void)
     cerr << "*** ERROR: Config variable " << name << "/PTT_PORT not set\n";
     return false;
   }
-  
-  string ptt_pin_str;
-  if (!cfg.getValue(name, "PTT_PIN", ptt_pin_str))
+
+  if (ptt_port == "GPIO")
   {
-    cerr << "*** ERROR: Config variable " << name << "/PTT_PIN not set\n";
-    return false;
+    if (!cfg.getValue(name, "PTT_PIN", gpio_pin) || (gpio_pin < 0))
+    {
+      cerr << "*** ERROR: Config variable " << name << "/PTT_PIN not set "
+              "or invalid\n";
+      return false;
+    }
   }
-  const char *ptr = ptt_pin_str.c_str();
-  int cnt;
-  cnt = parsePttPin(ptr, ptt_pin1, ptt_pin1_rev);
-  if (cnt == 0)
+  else if (ptt_port != "NONE")
   {
-    return false;
-  }
-  ptr += cnt;
-  if (*ptr != 0)
-  {
-    if (parsePttPin(ptr, ptt_pin2, ptt_pin2_rev) == 0)
+    string ptt_pin_str;
+    if (!cfg.getValue(name, "PTT_PIN", ptt_pin_str))
+    {
+      cerr << "*** ERROR: Config variable " << name << "/PTT_PIN not set\n";
+      return false;
+    }
+    const char *ptr = ptt_pin_str.c_str();
+    int cnt;
+    cnt = parsePttPin(ptr, ptt_pin1, ptt_pin1_rev);
+    if (cnt == 0)
     {
       return false;
+    }
+    ptr += cnt;
+    if (*ptr != 0)
+    {
+      if (parsePttPin(ptr, ptt_pin2, ptt_pin2_rev) == 0)
+      {
+        return false;
+      }
     }
   }
 
@@ -334,7 +348,20 @@ bool LocalTx::initialize(void)
     tx_delay = atoi(value.c_str());
   }
 
-  if (ptt_port != "NONE")
+  if (ptt_port == "GPIO")
+  {
+    stringstream ss;
+    ss << "/sys/class/gpio/gpio" << gpio_pin << "/value";
+    ofstream gpioval(ss.str().c_str());
+    if (gpioval.fail())
+    {
+      cerr << "*** ERROR: Could not open GPIO " << ss.str()
+           << " for writing.\n";
+      return false;
+    }
+    gpioval.close();
+  }
+  else if (ptt_port != "NONE")
   {
     serial = new Serial(ptt_port.c_str());
     if (!serial->open())
@@ -896,6 +923,19 @@ bool LocalTx::setPtt(bool tx, bool with_hangtime)
   if ((serial != 0) && !serial->setPin(ptt_pin2, tx ^ ptt_pin2_rev))
   {
     return false;
+  }
+
+  if(gpio_pin > 0)
+  {
+    stringstream ss;
+    ss << "/sys/class/gpio/gpio" << gpio_pin << "/value";
+    ofstream gpioval(ss.str().c_str());
+    if (gpioval.fail())
+    {
+      return false;
+    }
+    gpioval << (tx ? 1 : 0);
+    gpioval.close();
   }
 
   return true;

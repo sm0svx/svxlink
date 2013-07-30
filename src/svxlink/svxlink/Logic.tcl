@@ -274,18 +274,22 @@ proc command_failed {cmd} {
 #   name  - The name of the link
 #
 proc activating_link {name} {
-  playMsg "Core" "activating_link_to";
-  spellWord $name;
+  if {[string length $name] > 0} {
+    playMsg "Core" "activating_link_to";
+    spellWord $name;
+  }
 }
 
 
 #
-# Executed when a link to another logic core is deactivated
+# Executed when a link to another logic core is deactivated.
 #   name  - The name of the link
 #
 proc deactivating_link {name} {
-  playMsg "Core" "deactivating_link_to";
-  spellWord $name;
+  if {[string length $name] > 0} {
+    playMsg "Core" "deactivating_link_to";
+    spellWord $name;
+  }
 }
 
 
@@ -295,8 +299,10 @@ proc deactivating_link {name} {
 #   name  - The name of the link
 #
 proc link_not_active {name} {
-  playMsg "Core" "link_not_active_to";
-  spellWord $name;
+  if {[string length $name] > 0} {
+    playMsg "Core" "link_not_active_to";
+    spellWord $name;
+  }
 }
 
 
@@ -306,8 +312,10 @@ proc link_not_active {name} {
 #   name  - The name of the link
 #
 proc link_already_active {name} {
-  playMsg "Core" "link_already_active_to";
-  spellWord $name;
+  if {[string length $name] > 0} {
+    playMsg "Core" "link_already_active_to";
+    spellWord $name;
+  }
 }
 
 

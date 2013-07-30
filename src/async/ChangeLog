@@ -1,4 +1,15 @@
- 1.1.0 -- ?? ??? 2013
+ 1.1.1 -- 29 Jul 2013
+----------------------
+
+* Fixed some include directives for Async::CppApplication.
+
+* The Async::TcpClient class now always do a name lookup before trying to
+  connect. Previously, when the old lookup was cached, IP addresses that
+  changed over time was not handled.
+
+
+
+ 1.1.0 -- 06 Jun 2013
 ----------------------
 
 * New class AtTimer to set a timer that expires at the specified time of day.
@@ -7,7 +18,19 @@
   since the former provides monotonically increasing time which the
   latter don't.
 
+* Async::DnsLookup: New method resultsAreReady with which it is possible
+  to check if the DNS lookup is done or if it's still pending.
+
 * Fixed a buffer overflow bug in the AudioInterpolator.
+
+* Async::TcpClient: Added two new constructors, one which take an IpAddress
+  object instead of a host name which is good if you already have the IP
+  address. The other only take an optional buffer size. The hostname or ip
+  address is given later to the new connect method.
+
+* There now is an overloaded Config::getValue function which can take a
+  container, like an std::vector, to read in a number of space separated values
+  from a configuration variable.
 
 
 

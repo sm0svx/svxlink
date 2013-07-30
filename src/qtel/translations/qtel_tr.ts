@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>Could not create connection to station</source>
-        <translation>Istasyona bağlantı sağlanamadı</translation>
+        <translation type="obsolete">Istasyona bağlantı sağlanamadı</translation>
     </message>
     <message>
         <source>Station data not found in directory server.
@@ -43,6 +43,10 @@ Bağlantı kurulamadı</translation>
     </message>
     <message>
         <source>Could not open speaker audio device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not create connection to</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -482,7 +486,7 @@ Message</source>
     </message>
     <message>
         <source>Directory Server</source>
-        <translation type="unfinished">Dizin sunucusu</translation>
+        <translation type="obsolete">Dizin sunucusu</translation>
     </message>
     <message>
         <source>Directory Server Settings</source>
@@ -490,7 +494,7 @@ Message</source>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation type="unfinished">Kullanılacak EchoLink dizin sunucusu ana bilgisayar adı veya IP adresi</translation>
+        <translation type="obsolete">Kullanılacak EchoLink dizin sunucusu ana bilgisayar adı veya IP adresi</translation>
     </message>
     <message>
         <source>Server</source>
@@ -662,6 +666,58 @@ Message</source>
     </message>
     <message>
         <source>Chat encoding:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Servers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A space separated list of the hostname or IP address of the EchoLink directory servers to use</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>EchoLink Proxy Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If enabling EchoLink proxy you must supply a proxy server hostname or IP address.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The hostname or IP address of the EchoLink proxy server to use</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>TCP Port</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The TCP port to connect to on the EchoLink proxy server, default 8100</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The EchoLink PROXY password, not your normal EchoLink password. Leave empty for public proxy.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sampling Rate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>EchoLink proxy configuration problem</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>EchoLink proxy enabled but no server given</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

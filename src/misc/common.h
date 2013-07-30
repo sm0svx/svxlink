@@ -155,7 +155,8 @@ bool setValueFromString(std::string &val, const std::string &str)
  *
  * This is a template function that is used to split strings into tokens,
  * storing the tokens into a container. The container can be of any type that
- * supports the clear, size and push_back methods (e.g. vector, list, deque).
+ * supports the clear, size and insert methods (e.g. vector, list, deque,
+ * set etc). Insertions will be done at the end of the container.
  *
  * The container value type may be any that supports setting a value by
  * streaming to it (e.g. std::string, int, float, char etc).
@@ -196,7 +197,7 @@ static typename Container::size_type splitStr(Container &L,
       typename Container::value_type val;
       if (setValueFromString(val, str))
       {
-        L.push_back(val);
+        L.insert(L.end(), val);
       }
     }
   }

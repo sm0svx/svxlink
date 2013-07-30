@@ -130,6 +130,7 @@ proc command_failed {cmd} {
 
 #
 # Executed when a link to another logic core is activated.
+#   name  - The name of the link
 #
 proc activating_link {name} {
   Logic::activating_link $name;
@@ -137,7 +138,8 @@ proc activating_link {name} {
 
 
 #
-# Executed when a link to another logic core is deactivated
+# Executed when a link to another logic core is deactivated.
+#   name  - The name of the link
 #
 proc deactivating_link {name} {
   Logic::deactivating_link $name;
@@ -147,6 +149,7 @@ proc deactivating_link {name} {
 #
 # Executed when trying to deactivate a link to another logic core but the
 # link is not currently active.
+#   name  - The name of the link
 #
 proc link_not_active {name} {
   Logic::link_not_active $name;
@@ -156,6 +159,7 @@ proc link_not_active {name} {
 #
 # Executed when trying to activate a link to another logic core but the
 # link is already active.
+#   name  - The name of the link
 #
 proc link_already_active {name} {
   Logic::link_already_active $name;

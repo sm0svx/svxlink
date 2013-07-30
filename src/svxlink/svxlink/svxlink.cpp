@@ -80,6 +80,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "MsgHandler.h"
 #include "SimplexLogic.h"
 #include "RepeaterLogic.h"
+#include "LinkManager.h"
 
 
 
@@ -418,7 +419,6 @@ int main(int argc, char **argv)
   
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
-
   cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__
           ") Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
@@ -464,7 +464,7 @@ int main(int argc, char **argv)
     cout << "--- Using sample rate " << rate << "Hz\n";
   }
   
-  // init locationinfo
+    // Init locationinfo
   if (cfg.getValue("GLOBAL", "LOCATION_INFO", value))
   {
     if (!LocationInfo::initialize(cfg, value))
@@ -475,7 +475,23 @@ int main(int argc, char **argv)
     }
   }
 
+    // Init Logiclinking
+  if (cfg.getValue("GLOBAL", "LINKS", value))
+  {
+    if (!LinkManager::initialize(cfg, value))
+    {
+      cerr << "*** ERROR: Could not initialize link manager. "
+           << "GLOBAL/LINKS=" << value << ".\n";
+      exit(1);
+    }
+  }
+
   initialize_logics(cfg);
+
+  if (LinkManager::hasInstance())
+  {
+    LinkManager::instance()->allLogicsStarted();
+  }
 
   struct termios org_termios;
   if (logfile_name == 0)
@@ -514,6 +530,8 @@ int main(int argc, char **argv)
   }
   logic_vec.clear();
   
+  LinkManager::deleteInstance();
+
   if (logfd != -1)
   {
     close(logfd);
@@ -800,35 +818,6 @@ static void initialize_logics(Config &cfg)
   {
     cerr << "*** ERROR: No logics available. Bailing out...\n";
     exit(1);
-  }
-  
-    // Temporary fix for the assertion failure that happens when a link
-    // is activated where a non-existent logic is specified.
-  set<string> logic_set;
-  vector<Logic*>::iterator lit;
-  for (lit=logic_vec.begin(); lit!=logic_vec.end(); lit++)
-  {
-    logic_set.insert((*lit)->name());
-  }
-  for (lit=logic_vec.begin(); lit!=logic_vec.end(); lit++)
-  {
-    string links_str;
-    if (cfg.getValue((*lit)->name(), "LINKS", links_str))
-    {
-      string value;
-      cfg.getValue(links_str, "CONNECT_LOGICS", value);
-      vector<string> links;
-      SvxLink::splitStr(links, value, ",");
-      for (unsigned i=0; i<links.size(); ++i)
-      {
-	if (logic_set.find(links[i]) == logic_set.end())
-	{
-	  cerr << "*** ERROR: Invalid logic specified in "
-	       << links_str << "/CONNECT_LOGICS: " << links[i] << endl;
-	  exit(1);
-	}
-      }
-    }
   }
 } /* initialize_logics */
 

@@ -172,6 +172,11 @@ class Dispatcher : public sigc::trackable
      * that access the dispatcher.
      */
     static Dispatcher *instance(void);
+
+    /**
+     * @brief  Delete the singleton object if it exists
+     */
+    static void deleteInstance(void);
     
     /**
      * @brief 	Destructor

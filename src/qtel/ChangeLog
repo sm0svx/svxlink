@@ -1,5 +1,21 @@
- 1.1.0 -- ?? ??? 2013
------------------------
+ 1.2.0 -- 29 Jul 2013
+----------------------
+
+* Updated language translations: Russian (UR3QJW / Volodymyr),
+  Japanese (JH1PGO / Masao).
+
+* Added support for EchoLink proxy.
+
+* Now possible to configure multiple servers for the directory server. The
+  servers will be tried in order until a working one is found. Servers are
+  specified as a space separated list. Host names that resolve to multiple IP
+  addresses, like servers.echolink.org, will also be correctly handled so that
+  each resolved IP address will be tried in order until a working one is found.
+
+
+
+ 1.1.0 -- 06 Jun 2013
+----------------------
 
 * Qtel now support 16k internal sample rate.
 
@@ -10,7 +26,7 @@
 
 
  1.0.0 -- 08 Mar 2013
------------------------
+----------------------
 
 * Moved from sigc++ version 1.2 to version 2.
   Patch contributed by Felix/WU8K.

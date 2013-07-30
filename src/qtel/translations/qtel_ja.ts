@@ -26,7 +26,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Could not create connection to station</source>
-        <translation>接続できません</translation>
+        <translation type="obsolete">接続できません</translation>
     </message>
     <message>
         <source>Could not create connection to remote host</source>
@@ -43,6 +43,10 @@ Can&apos;t create connection to</source>
     <message>
         <source>Could not open speaker audio device</source>
         <translation>スピーカオーディオデバイスがオープンできません</translation>
+    </message>
+    <message>
+        <source>Could not create connection to</source>
+        <translation>接続できません</translation>
     </message>
 </context>
 <context>
@@ -85,11 +89,11 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>&amp;Connect</source>
-        <translation>&amp;接続</translation>
+        <translation>接続(&amp;C)</translation>
     </message>
     <message>
         <source>&amp;Disconnect</source>
-        <translation>&amp;切断</translation>
+        <translation>切断(&amp;D)</translation>
     </message>
     <message>
         <source>RX</source>
@@ -109,7 +113,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>VOX Enabled</source>
-        <translation>VOX 有効</translation>
+        <translation>VOX有効</translation>
     </message>
     <message>
         <source>Threshold:</source>
@@ -148,7 +152,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Node ID</source>
-        <translation>ノード ID</translation>
+        <translation>ノードID</translation>
     </message>
     <message>
         <source>IP Address</source>
@@ -255,11 +259,11 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;ファイル</translation>
+        <translation>ファイル(&amp;F)</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;ヘルプ</translation>
+        <translation>ヘルプ(&amp;H)</translation>
     </message>
     <message>
         <source>About</source>
@@ -267,7 +271,7 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>&amp;About...</source>
-        <translation>&amp;これは...</translation>
+        <translation>これは(&amp;A)...</translation>
     </message>
     <message>
         <source>About Qtel</source>
@@ -279,7 +283,7 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>&amp;Quit</source>
-        <translation>&amp;終了</translation>
+        <translation>終了(&amp;Q)</translation>
     </message>
     <message>
         <source>Quit the Qtel application</source>
@@ -295,7 +299,7 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>&amp;Directory</source>
-        <translation>&amp;ディレクトリ</translation>
+        <translation>ディレクトリ(&amp;D)</translation>
     </message>
     <message>
         <source>Refresh</source>
@@ -303,7 +307,7 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>&amp;Refresh</source>
-        <translation>&amp;更新</translation>
+        <translation>更新(&amp;R)</translation>
     </message>
     <message>
         <source>Refresh station list</source>
@@ -319,7 +323,7 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>&amp;Busy</source>
-        <translation>&amp;ビジー</translation>
+        <translation>ビジー(&amp;B)</translation>
     </message>
     <message>
         <source>View as busy</source>
@@ -363,23 +367,23 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>&amp;Station</source>
-        <translation>&amp;ステーション</translation>
+        <translation>ステーション(&amp;S)</translation>
     </message>
     <message>
         <source>S&amp;ettings</source>
-        <translation>設定</translation>
+        <translation>設定(&amp;e)</translation>
     </message>
     <message>
         <source>Connect to &amp;selected...</source>
-        <translation>選択局に接続...</translation>
+        <translation>選択局に接続(&amp;s)...</translation>
     </message>
     <message>
         <source>Connect to &amp;IP...</source>
-        <translation>IPアドレスで接続...</translation>
+        <translation>IPアドレスで接続(&amp;I)...</translation>
     </message>
     <message>
         <source>Qtel &amp;Settings...</source>
-        <translation>Qtel設定...</translation>
+        <translation>Qtel設定(&amp;S)...</translation>
     </message>
     <message>
         <source>F5</source>
@@ -387,7 +391,7 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>Add Selected To &amp;Bookmarks</source>
-        <translation>選択局をお気に入りに追加</translation>
+        <translation>選択局をお気に入りに追加(&amp;B)</translation>
     </message>
     <message>
         <source>Add the selected station in the station list to the bookmarks menu</source>
@@ -399,7 +403,7 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>&amp;Remove Selected From Bookmarks</source>
-        <translation>選択局をお気に入りから削除</translation>
+        <translation>選択局をお気に入りから削除(&amp;R)</translation>
     </message>
     <message>
         <source>Remove the selected station from the bookmarks list</source>
@@ -407,11 +411,11 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>Add &amp;Named Station To Bookmarks</source>
-        <translation>お気に入りに追加</translation>
+        <translation>お気に入りに追加(&amp;N)</translation>
     </message>
     <message>
         <source>Ctrl+Q</source>
-        <translation>Ctrl+A</translation>
+        <translation>Ctrl+Q</translation>
     </message>
     <message>
         <source>Connect to the selected station</source>
@@ -423,7 +427,7 @@ Qtelはフリーソフトウェアで無保証ですが、GNU GPL (General Publi
     </message>
     <message>
         <source>Immediately refresh the station list</source>
-        <translation>接続局更新</translation>
+        <translation>今すぐに接続局リストを更新</translation>
     </message>
     <message>
         <source>Add selected station to the bookmarks</source>
@@ -495,6 +499,18 @@ Message</source>
         <translation>サーバー</translation>
     </message>
     <message>
+        <source>Servers</source>
+        <translation>サーバー</translation>
+    </message>
+    <message>
+        <source>A space separated list of the hostname or IP address of the EchoLink directory servers to use</source>
+        <translation>使用するエコーリンクディレクトリーサーバーのホスト名か、IPアドレスのリストをスペースで区切る</translation>
+    </message>
+    <message>
+        <source>TCP Port</source>
+        <translation>TCPポート</translation>
+    </message>
+    <message>
         <source>Cancel</source>
         <translation>取り消し</translation>
     </message>
@@ -527,6 +543,38 @@ Message</source>
         <translation>サウンド</translation>
     </message>
     <message>
+        <source>Sampling Rate</source>
+        <translation>サンプリングレート</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation>ネットワーク</translation>
+    </message>
+    <message>
+        <source>EchoLink Proxy Settings</source>
+        <translation>エコーリンクプロキシ設定</translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation>有効</translation>
+    </message>
+    <message>
+        <source>If enabling EchoLink proxy you must supply a proxy server hostname or IP address.</source>
+        <translation>エコーリンクプロキシを有効にする場合は、以下のホスト名またはIPアドレスの設定が必要</translation>
+    </message>
+    <message>
+        <source>The hostname or IP address of the EchoLink proxy server to use</source>
+        <translation>利用するエコーリンクプロキシサーバーのホスト名またはIPアドレス</translation>
+    </message>
+    <message>
+        <source>The TCP port to connect to on the EchoLink proxy server, default 8100</source>
+        <translation>利用するエコーリンクプロキシサーバーのTCPポート, 既定値は8100</translation>
+    </message>
+    <message>
+        <source>The EchoLink PROXY password, not your normal EchoLink password. Leave empty for public proxy.</source>
+        <translation>通常のエコーリンクパスワードではなく、プロキシサーバーのパスワード, 空欄でPUBLICに設定</translation>
+    </message>
+    <message>
         <source>Full duplex</source>
         <translation>全二重</translation>
     </message>
@@ -548,7 +596,7 @@ Message</source>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation>16-bit 8kHz サウンドファイル (*.raw)</translation>
+        <translation>サウンドファイル (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
@@ -592,11 +640,11 @@ Message</source>
     </message>
     <message>
         <source>Western</source>
-        <translation>Western</translation>
+        <translation>西ヨーロッパ言語</translation>
     </message>
     <message>
         <source>Central European</source>
-        <translation>中央ヨーロッパ</translation>
+        <translation>中央ヨーロッパ言語</translation>
     </message>
     <message>
         <source>Baltic</source>
@@ -616,11 +664,11 @@ Message</source>
     </message>
     <message>
         <source>Hebrew, visually ordered</source>
-        <translation>ヘブライ語, visually ordered</translation>
+        <translation>ヘブライ語, 表示順序</translation>
     </message>
     <message>
         <source>Hebrew, logically ordered</source>
-        <translation>ヘブライ語, logically ordered</translation>
+        <translation>ヘブライ語, 論理順序</translation>
     </message>
     <message>
         <source>Turkish</source>
@@ -664,7 +712,15 @@ Message</source>
     </message>
     <message>
         <source>QSO Dialog Settings</source>
-        <translation>&amp;Qtelセッティング...</translation>
+        <translation>Qtelセッティング</translation>
+    </message>
+    <message>
+        <source>EchoLink proxy configuration problem</source>
+        <translation>問題のあるエコーリンクプロキシ設定</translation>
+    </message>
+    <message>
+        <source>EchoLink proxy enabled but no server given</source>
+        <translation>エコーリンクプロキシ設定は有効だが、サーバー側が問題</translation>
     </message>
 </context>
 </TS>

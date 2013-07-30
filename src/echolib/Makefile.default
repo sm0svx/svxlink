@@ -29,6 +29,7 @@ PROGS		=
 # C++ programs to compile
 CPPPROGS      	= echolib_test EchoLinkDispatcher_demo EchoLinkDirectory_demo \
       	      	  EchoLinkQso_demo
+# EchoLinkProxy_demo
 
 # Sources other than the main files
 PRGSRC		= EchoLinkQsoTest.cpp
@@ -73,7 +74,8 @@ SHLIB_VERSION	= $(ECHOLIB)
 
 # Sources needed to build the library
 LIBSRC		= EchoLinkDirectory.cpp EchoLinkQso.cpp rtpacket.cpp \
-      	      	  EchoLinkDispatcher.cpp EchoLinkStationData.cpp
+      	      	  EchoLinkDispatcher.cpp EchoLinkStationData.cpp \
+		  EchoLinkProxy.cpp EchoLinkDirectoryCon.cpp md5.c
 
 # Which libs are used by the DYNAMIC lib generated.
 LIB_LIBS	= -lc -lgsm -lasynccore -lasyncaudio
@@ -86,7 +88,7 @@ STATIC_LIBS   	=
 
 # Includefiles to export. A softlink is created in $(INC).
 LIB_INC    	= EchoLinkDirectory.h EchoLinkDispatcher.h EchoLinkQso.h \
-      	      	  EchoLinkStationData.h
+      	      	  EchoLinkStationData.h EchoLinkProxy.h
 EXPINC		= $(LIB_INC) rtp.h
 
 # Specify Qt header files here that you want to run the

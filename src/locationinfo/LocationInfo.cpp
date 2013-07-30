@@ -653,7 +653,7 @@ void LocationInfo::sendAprsStatistics(Timer *t)
 
     // sends the Aprs stats information
     message = info;
-    cout << message;
+    //cout << message;
     igateMessage(message);
 
      // reset statistics if needed

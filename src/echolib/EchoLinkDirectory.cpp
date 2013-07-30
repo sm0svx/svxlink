@@ -10,7 +10,7 @@ EchoLink::Directory.
 
 \verbatim
 EchoLib - A library for EchoLink communication
-Copyright (C) 2003  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -64,6 +64,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "EchoLinkDirectory.h"
+#include "EchoLinkDirectoryCon.h"
 
 
 
@@ -92,13 +93,13 @@ using namespace EchoLink;
  *
  ****************************************************************************/
 
-class Cmd
+struct Cmd
 {
-  public:
-    typedef enum { OFFLINE, ONLINE, BUSY, GET_CALLS } Type;
-    Type type;
-    
-    Cmd(Type type) : type(type) {}
+  typedef enum { OFFLINE, ONLINE, BUSY, GET_CALLS } Type;
+  Type type;
+  bool done;
+  
+  Cmd(Type type) : type(type), done(false) {}
 };
 
 
@@ -134,21 +135,9 @@ class Cmd
  *
  ****************************************************************************/
 
-/*
- *------------------------------------------------------------------------
- * Method:    Directory::Directory
- * Purpose:   Constructor
- * Input:     
- * Output:    None
- * Author:    Tobias Blomberg
- * Created:   2003-03-08
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-Directory::Directory(const string& server, const string& callsign,
+Directory::Directory(const vector<string>& servers, const string& callsign,
     const string& password, const string& description)
-  : com_state(CS_IDLE),       	      	      the_server(server),
+  : com_state(CS_IDLE),       	      	      the_servers(servers),
     the_password(password),   	      	      the_description(""),
     error_str(""),    	      	      	      ctrl_con(0),
     the_status(StationData::STAT_OFFLINE),    reg_refresh_timer(0),
@@ -227,10 +216,10 @@ void Directory::getCalls(void)
 } /* Directory::getCalls */
 
 
-void Directory::setServer(const string& server)
+void Directory::setServers(const vector<string>& servers)
 {
   server_changed = true;
-  the_server = server;
+  the_servers = servers;
 } /* Directory::setServer */
 
 
@@ -669,8 +658,19 @@ int Directory::handleCallList(char *buf, int len)
 } /* Directory::handleCallList */
 
 
+void Directory::ctrlSockReady(bool is_ready)
+{
+  if (is_ready)
+  {
+    sendNextCmd();
+  }
+} /* Directory::ctrlSockReady */
+
+
 void Directory::ctrlSockConnected(void)
 {
+  //cout << "### Connected to EchoLink directory server\n";
+
   assert(!cmd_queue.empty());
   
   Cmd cmd = cmd_queue.front();
@@ -722,7 +722,7 @@ void Directory::ctrlSockConnected(void)
 } /* Directory::ctrlSockConnected */
 
 
-int Directory::ctrlSockDataReceived(TcpConnection *con, void *ptr, int len)
+int Directory::ctrlSockDataReceived(void *ptr, unsigned len)
 {
   char *buf = static_cast<char *>(ptr);
   size_t tot_read_len = 0;
@@ -769,9 +769,9 @@ int Directory::ctrlSockDataReceived(TcpConnection *con, void *ptr, int len)
 	}
 	//printBuf(reinterpret_cast<unsigned char *>(buf), len);
 	read_len = len;
-	ctrl_con->disconnect();
-	cmd_queue.pop_front();
+	cmd_queue.front().done = true;
 	com_state = CS_IDLE;
+	ctrl_con->disconnect();
 	sendNextCmd();
       }
     }
@@ -787,6 +787,7 @@ int Directory::ctrlSockDataReceived(TcpConnection *con, void *ptr, int len)
 	  //printBuf(reinterpret_cast<unsigned char *>(buf), len);
 	//}
 	read_len = len;
+	cmd_queue.front().done = true;
 	ctrl_con->disconnect();
 	if (!error_str.empty())
 	{
@@ -796,7 +797,6 @@ int Directory::ctrlSockDataReceived(TcpConnection *con, void *ptr, int len)
 	{
 	  stationListUpdated();
 	}
-	cmd_queue.pop_front();
 	sendNextCmd();
       }
     }
@@ -811,22 +811,34 @@ int Directory::ctrlSockDataReceived(TcpConnection *con, void *ptr, int len)
 } /* Directory::ctrlSockDataReceived */
 
 
-void Directory::ctrlSockDisconnected(TcpConnection *con,
-      	Async::TcpClient::DisconnectReason reason)
+void Directory::ctrlSockDisconnected(void)
 {
+  int reason = ctrl_con->lastDisconnectReason();
+  //cout << "### ctrlSockDisconnected: com_state=" << com_state
+  //     << " reason=" << reason << "\n";
+  if (com_state == CS_IDLE)
+  {
+    sendNextCmd();
+    return;
+  }
+
   switch (reason)
   {
     case Async::TcpClient::DR_HOST_NOT_FOUND:
-      error("Directory server host \"" + the_server + "\" not found\n");
+      error("EchoLink directory server DNS lookup failed\n");
       break;
     
     case Async::TcpClient::DR_REMOTE_DISCONNECTED:
-      error("The directory server closed the connection before all data was "
-	  "received\n");
+      if (com_state != CS_IDLE)
+      {
+        error("The directory server closed the connection before all data was "
+              "received\n");
+      }
       break;
       
     case Async::TcpClient::DR_SYSTEM_ERROR:
-      error(string("Directory server communications error: ") + strerror(errno));
+      error(string("Directory server communications error: ")
+            + strerror(errno));
       break;
       
     case Async::TcpClient::DR_RECV_BUFFER_OVERFLOW:
@@ -851,7 +863,11 @@ void Directory::ctrlSockDisconnected(TcpConnection *con,
       break;
   }
   
-  cmd_queue.pop_front();
+  //cmd_queue.pop_front();
+  if (com_state != CS_IDLE)
+  {
+    cmd_queue.front().done = true;
+  }
   com_state = CS_IDLE;
   sendNextCmd();
   
@@ -861,17 +877,34 @@ void Directory::ctrlSockDisconnected(TcpConnection *con,
 void Directory::sendNextCmd(void)
 {
   //cerr << "Directory::sendNextCmd\n";
+  
+    // Delete any active command timeout timer
   delete cmd_timer;
   cmd_timer = 0;
 
+    // Remove commands that are marked done from the queue
+  while (!cmd_queue.empty() && (cmd_queue.front().done))
+  {
+    cmd_queue.pop_front();
+  }
+
+    // Check if there is any command to send and
   if (cmd_queue.empty())
   {
     return;
   }
-  
+
+    // Set up command timeout timer
   cmd_timer = new Timer(CMD_TIMEOUT);
   cmd_timer->expired.connect(mem_fun(*this, &Directory::onCmdTimeout));
+  
+    // Check if we can send the command
+  if (!ctrl_con->isIdle() || (com_state != CS_IDLE))
+  {
+    return;
+  }
 
+    // Set the com state depending on the command type
   if (cmd_queue.front().type == Cmd::GET_CALLS)
   {
     error_str = "";
@@ -881,6 +914,9 @@ void Directory::sendNextCmd(void)
   {
     com_state = CS_WAITING_FOR_OK;
   }
+
+    // If the server information (e.g. IP/hostname) changed, create a new
+    // client object before trying to connect
   if (server_changed)
   {
     server_changed = false;
@@ -888,19 +924,18 @@ void Directory::sendNextCmd(void)
     ctrl_con = 0;
     createClientObject();
   }
-  //cerr << "Connecting...\n";
+
+    // Connect
   ctrl_con->connect();
-  
+
 } /* Directory::sendNextCmd */
 
 
 void Directory::addCmdToQueue(Cmd cmd)
 {
+  //cout << "### Adding cmd to queue: " << cmd.type << endl;
   cmd_queue.push_back(cmd);
-  if (com_state == CS_IDLE)
-  {
-    sendNextCmd();
-  }
+  sendNextCmd();
 } /* Directory::addCmdToQueue */
 
 
@@ -916,7 +951,8 @@ void Directory::setStatus(StationData::Status new_status)
 
 void Directory::createClientObject(void)
 {
-  ctrl_con = new Async::TcpClient(the_server, DIRECTORY_SERVER_PORT);
+  ctrl_con = new DirectoryCon(the_servers);
+  ctrl_con->ready.connect(mem_fun(*this, &Directory::ctrlSockReady));
   ctrl_con->connected.connect(mem_fun(*this, &Directory::ctrlSockConnected));
   ctrl_con->dataReceived.connect(
       mem_fun(*this, &Directory::ctrlSockDataReceived));
@@ -944,9 +980,9 @@ void Directory::onRefreshRegistration(Timer *timer)
 void Directory::onCmdTimeout(Timer *timer)
 {
   error("Command timeout while communicating to the directory server");
-  //cerr << "Directory::onCmdTimeout: Disconnecting...\n";
   ctrl_con->disconnect();
 
+  /*
   assert(!cmd_queue.empty());
 
   switch (cmd_queue.front().type)
@@ -961,9 +997,11 @@ void Directory::onCmdTimeout(Timer *timer)
       break;
   }
 
-  cmd_queue.pop_front();
+  //cmd_queue.pop_front();
+  cmd_queue.front().done = true;
   com_state = CS_IDLE;
   sendNextCmd();
+  */
 } /* Directory::onCmdTimeout */
 
 

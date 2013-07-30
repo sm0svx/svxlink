@@ -85,6 +85,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "LogicCmds.h"
 #include "Logic.h"
 #include "QsoRecorder.h"
+#include "LinkManager.h"
 
 
 /****************************************************************************
@@ -137,7 +138,6 @@ using namespace sigc;
  *
  ****************************************************************************/
 
-AudioSwitchMatrix Logic::audio_switch_matrix;
 
 
 /****************************************************************************
@@ -146,75 +146,24 @@ AudioSwitchMatrix Logic::audio_switch_matrix;
  *
  ****************************************************************************/
 
-bool Logic::connectLogics(const vector<string> &link_list, int timeout)
-{
-  assert(link_list.size() > 0);
-  bool check_connect = false;
-  vector<string>::const_iterator it;
-  for (it = link_list.begin(); it != link_list.end(); it++)
-  {
-    for (vector<string>::const_iterator it1 = it + 1; it1 != link_list.end();
-	 it1++)
-    {
-      assert(*it != *it1);
-      if (!logicsAreConnected(*it, *it1))
-      {
-	cout << "Activating link " << *it << " --> " << *it1 << endl;
-	audio_switch_matrix.connect(*it, *it1);
-	audio_switch_matrix.connect(*it1, *it);
-	check_connect = true;
-      }
-    }
-  }
-  return check_connect;
-} /* Logic::connectLogics */
-
-
-bool Logic::disconnectLogics(const std::vector<std::string> &link_list)
-{
-  assert(link_list.size() > 0);
-  bool check_connect = false;
-  for (vector<string>::const_iterator it = link_list.begin();
-       it != link_list.end(); it++)
-  {
-    for (vector<string>::const_iterator it1 = it + 1; it1 != link_list.end();
-	 it1++)
-    {
-      if (logicsAreConnected(*it, *it1))
-      {
-	cout << "Deactivating link " << *it << " --> " << *it1 << endl;
-	audio_switch_matrix.disconnect(*it, *it1);
-	check_connect = true;
-      }
-    }
-  }
-  return check_connect;
-} /* Logic::disconnectLogics */
-
-
-bool Logic::logicsAreConnected(const string& l1, const string& l2)
-{
-  return audio_switch_matrix.isConnected(l1, l2);
-} /* Logic::logicsAreConnected */
-
-
 Logic::Logic(Config &cfg, const string& name)
-  : m_cfg(cfg),       	      	    m_name(name),
-    m_rx(0),  	      	      	    m_tx(0),
-    msg_handler(0), 	      	    active_module(0),
-    cmd_tmo_timer(0), 	      	    anti_flutter(false),
-    prev_digit('?'),                exec_cmd_on_sql_close(0),
-    exec_cmd_on_sql_close_timer(0), rgr_sound_timer(0),
-    rgr_sound_delay(-1),            report_ctcss(0),
-    event_handler(0),               recorder(0),
-    tx_audio_mixer(0),              tx_audio_selector(0),
-    rx_splitter(0),                 audio_from_module_selector(0),
-    audio_to_module_splitter(0),    audio_to_module_selector(0),
-    state_det(0),                   is_idle(true),
-    fx_gain_normal(0),              fx_gain_low(-12),
-    long_cmd_digits(100),           report_events_as_idle(false),
-    qso_recorder(0),                tx_ctcss(TX_CTCSS_ALWAYS),
-    tx_ctcss_mask(0),               aprs_stats_timer(0)
+  : m_cfg(cfg),       	      	            m_name(name),
+    m_rx(0),  	      	      	            m_tx(0),
+    msg_handler(0), 	      	            active_module(0),
+    cmd_tmo_timer(0), 	      	            anti_flutter(false),
+    prev_digit('?'),                        exec_cmd_on_sql_close(0),
+    exec_cmd_on_sql_close_timer(0),         rgr_sound_timer(0),
+    rgr_sound_delay(-1),                    report_ctcss(0),
+    event_handler(0),                       recorder(0),
+    tx_audio_mixer(0),                      tx_audio_selector(0),
+    rx_splitter(0),                         audio_from_module_selector(0),
+    audio_to_module_splitter(0),            audio_to_module_selector(0),
+    state_det(0),                           is_idle(true),
+    fx_gain_normal(0),                      fx_gain_low(-12),
+    long_cmd_digits(100),                   report_events_as_idle(false),
+    qso_recorder(0),                        tx_ctcss(TX_CTCSS_ALWAYS),
+    tx_ctcss_mask(0),                       aprs_stats_timer(0),
+    currently_set_tx_ctrl_mode(Tx::TX_OFF), is_shut_down(false)
 {
   logic_con_in = new AudioSplitter;
   logic_con_out = new AudioSelector;
@@ -232,6 +181,19 @@ Logic::~Logic(void)
 
 bool Logic::initialize(void)
 {
+  string value;
+  if (cfg().getValue(name(), "SHUTDOWN_CMD", value))
+  {
+    ShutdownCmd *shutdown_cmd = new ShutdownCmd(&cmd_parser, this, value);
+    if (!shutdown_cmd->addToParser())
+    {
+      cerr << "*** ERROR: Could not add the logic shutdown command \""
+           << shutdown_cmd->cmdStr() << "\" for logic " << name() << ".\n";
+      delete shutdown_cmd;  // FIXME: Do this in cleanup() instead
+      return false;
+    }
+  }
+
   ChangeLangCmd *lang_cmd = new ChangeLangCmd(&cmd_parser, this);
   if (!lang_cmd->addToParser())
   {
@@ -239,17 +201,6 @@ bool Logic::initialize(void)
 	 << lang_cmd->cmdStr() << "\" for logic " << name() << ".\n";
     delete lang_cmd;  // FIXME: Do this in cleanup() instead
     return false;
-  }
-  
-  string value;
-  if (cfg().getValue(name(), "LINKS", value))
-  {
-    LinkCmd *link_cmd = new LinkCmd(&cmd_parser, this);
-    if (!link_cmd->initialize(cfg(), value))
-    {
-      delete link_cmd;  // FIXME: Do this in cleanup() instead
-      return false;
-    }
   }
 
   string event_handler_str;
@@ -631,14 +582,17 @@ bool Logic::initialize(void)
     return false;
   }
 
-  audio_switch_matrix.addSource(name(), logic_con_out);
-  audio_switch_matrix.addSink(name(), logic_con_in);
-
+  if (LinkManager::hasInstance())
+  {
+      // Register this logic in the link manager
+    LinkManager::instance()->addLogic(this);
+  }
 
   if (LocationInfo::has_instance())
   {
      LocationInfo::AprsStatistics lis;
-     LocationInfo::instance()->aprs_stats.insert(pair<string,LocationInfo::AprsStatistics>(name(), lis));
+     LocationInfo::instance()->aprs_stats.insert(
+         pair<string,LocationInfo::AprsStatistics>(name(), lis));
      LocationInfo::instance()->aprs_stats[name()].reset();
   }
 
@@ -886,14 +840,6 @@ void Logic::selcallSequenceDetected(std::string sequence)
 } /* Logic::selcallSequenceDetected */
 
 
-void Logic::disconnectAllLogics(void)
-{
-  cout << "Deactivating all links to/from \"" << name() << "\"\n";
-  audio_switch_matrix.disconnectSource(name());
-  audio_switch_matrix.disconnectSink(name());
-} /* Logic::disconnectAllLogics */
-
-
 void Logic::sendDtmf(const std::string& digits)
 {
   if (!digits.empty())
@@ -909,9 +855,30 @@ bool Logic::isWritingMessage(void)
 } /* Logic::isWritingMessage */
 
 
+Async::AudioSink *Logic::logicConIn(void)
+{
+  return logic_con_in;
+} /* Logic::logicConIn */
 
 
+void Logic::setShutdown(bool shut_down)
+{
+  if (shut_down)
+  {
+    tx().setTxCtrlMode(Tx::TX_OFF);
+  }
+  else
+  {
+    tx().setTxCtrlMode(currently_set_tx_ctrl_mode);
+  }
+  is_shut_down = shut_down;
+} /* Logic::setShutdown */
 
+
+Async::AudioSource *Logic::logicConOut(void)
+{
+  return logic_con_out;
+} /* Logic::logicConOut */
 
 /****************************************************************************
  *
@@ -1050,6 +1017,14 @@ void Logic::checkIdle(void)
 } /* Logic::checkIdle */
 
 
+void Logic::setTxCtrlMode(Tx::TxCtrlMode mode)
+{
+  currently_set_tx_ctrl_mode = mode;
+  if (!is_shut_down)
+  {
+    tx().setTxCtrlMode(mode);
+  }
+} /* Logic::setTxCtrlMode */
 
 
 
@@ -1478,13 +1453,9 @@ void Logic::cleanup(void)
   delete rgr_sound_timer;     	      rgr_sound_timer = 0;
   every_minute_timer.stop();
 
-  if (audio_switch_matrix.sourceIsAdded(name()))
+  if (LinkManager::hasInstance())
   {
-    audio_switch_matrix.removeSource(name());
-  }
-  if (audio_switch_matrix.sinkIsAdded(name()))
-  {
-    audio_switch_matrix.removeSink(name());
+    LinkManager::instance()->deleteLogic(this);
   }
 
   delete msg_handler; 	      	      msg_handler = 0;
@@ -1526,7 +1497,7 @@ void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 } /* Logic::audioFromModuleStreamStateChanged */
 
 
+
 /*
  * This file has not been truncated
  */
-
