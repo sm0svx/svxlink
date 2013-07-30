@@ -10,7 +10,7 @@ the SvxLink core is running.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -102,9 +102,9 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define DTMF_MUTING_PRE   75
-#define DTMF_MUTING_POST  200
-#define TONE_1750_MUTING_PRE 75
+#define DTMF_MUTING_PRE       75
+#define DTMF_MUTING_POST      200
+#define TONE_1750_MUTING_PRE  75
 #define TONE_1750_MUTING_POST 100
 
 
@@ -261,7 +261,7 @@ bool LocalRx::initialize(void)
   {
     peak_meter = (atoi(value.c_str()) != 0);
   }
-  
+
   /*
   int dtmf_hangtime = 100;
   if (cfg.getValue(name(), "DTMF_HANGTIME", value))
@@ -690,6 +690,12 @@ float LocalRx::signalStrength(void) const
   return siglevdet->lastSiglev();
 } /* LocalRx::signalStrength */
     
+
+char LocalRx::sqlRxId(void) const
+{
+  return siglevdet->lastRxId();
+} /* LocalRx::sqlRxId */
+
 
 void LocalRx::reset(void)
 {

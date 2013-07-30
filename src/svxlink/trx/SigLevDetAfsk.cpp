@@ -129,12 +129,6 @@ SigLevDetAfsk::~SigLevDetAfsk(void)
 } /* SigLevDetAfsk::~SigLevDetAfsk */
 
 
-bool SigLevDetAfsk::initialize(Async::Config &cfg, const std::string& name)
-{
-  return true;
-} /* SigLevDetAfsk::initialize */
-
-
 void SigLevDetAfsk::reset(void)
 {
   last_siglev = 0;
@@ -223,14 +217,20 @@ void SigLevDetAfsk::frameReceived(vector<uint8_t> frame)
     return;
   }
 
-  uint8_t rxid = frame[1];
+  char rxid = frame[1] & 0x7f;
+  if ((rxid < '!') || (rxid > '~'))
+  {
+    rxid = Rx::ID_UNKNOWN;
+  }
+
   uint8_t siglev = frame[2];
-  cout << "SigLevDetAfsk::frameReceived: len=" << frame.size()
+  cout << "### SigLevDetAfsk::frameReceived: len=" << frame.size()
        << " cmd=" << (int)cmd
-       << " rxid=" << (int)rxid
+       << " rxid=" << rxid
        << " siglev=" << (int)siglev
        << endl;
   last_siglev = siglev;
+  updateRxId(rxid);
   signalLevelUpdated(siglev);
 
   if (timeout_timer.isEnabled())

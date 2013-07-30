@@ -178,6 +178,7 @@ class Tx : public sigc::trackable, public Async::AudioSink
     /**
      * @brief   Set the signal level value that should be transmitted
      * @param   siglev The signal level to transmit
+     * @param   rx_id  The id of the receiver that received the signal
      *
      * This function does not set the output power of the transmitter but
      * instead sets a signal level value that is transmitted with the
@@ -185,7 +186,7 @@ class Tx : public sigc::trackable, public Async::AudioSink
      * on a link transmitter to transport signal level measurements to the
      * link receiver.
      */
-    virtual void setTransmittedSignalStrength(float siglev) {}
+    virtual void setTransmittedSignalStrength(char rx_id, float siglev) {}
 
     /**
      * @brief 	Send a data frame

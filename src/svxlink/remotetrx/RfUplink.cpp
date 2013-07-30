@@ -311,11 +311,12 @@ void RfUplink::uplinkRxSquelchOpen(bool is_open)
 {
   if (is_open)
   {
-    tx->setTransmittedSignalStrength(uplink_rx->signalStrength());
+    tx->setTransmittedSignalStrength(uplink_rx->sqlRxId(),
+                                     uplink_rx->signalStrength());
   }
   else
   {
-    tx->setTransmittedSignalStrength(0);
+    tx->setTransmittedSignalStrength(uplink_rx->sqlRxId(), 0);
   }
 } /* RfUplink::uplinkRxSquelchOpen */
 
@@ -331,20 +332,22 @@ void RfUplink::rxSquelchOpen(bool is_open)
 {
   if (is_open)
   {
-    uplink_tx->setTransmittedSignalStrength(rx->signalStrength());
+    uplink_tx->setTransmittedSignalStrength(rx->sqlRxId(),
+                                            rx->signalStrength());
   }
   else
   {
-    uplink_tx->setTransmittedSignalStrength(0);
+    uplink_tx->setTransmittedSignalStrength(rx->sqlRxId(), 0);
   }
 } /* RfUplink::rxSquelchOpen  */
 
 
 void RfUplink::rxSignalLevelUpdated(float siglev)
 {
+  //cout << "### RfUplink::rxSignalLevelUpdated: siglev=" << siglev << endl;
   if (rx->squelchIsOpen())
   {
-    uplink_tx->setTransmittedSignalStrength(siglev);
+    uplink_tx->setTransmittedSignalStrength(rx->sqlRxId(), siglev);
   }
 } /* RfUplink::rxSignalLevelUpdated */
 

@@ -105,8 +105,8 @@ using namespace Async;
 class Voter::SatRx : public AudioSource, public sigc::trackable
 {
   public:
-    SatRx(Config &cfg, const string &rx_name, int id, int fifo_length_ms)
-      : rx_id(id), rx(0), fifo(0), sql_open(false)
+    SatRx(Config &cfg, const string &rx_name, int fifo_length_ms)
+      : rx(0), fifo(0), sql_open(false)
     {
       rx = RxFactory::createNamedRx(cfg, rx_name);
       if (rx != 0)
@@ -211,7 +211,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
       }
     }
     
-    int id(void) const { return rx_id; }
+    char id(void) const { return rx->sqlRxId(); }
     
     signal<void, char, int>  	dtmfDigitDetected;
     signal<void, string>  	selcallSequenceDetected;
@@ -232,7 +232,6 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     typedef list<pair<char, int> >	DtmfBuf;
     typedef list<string>		SelcallBuf;
     
-    int		rx_id;    
     Rx		*rx;
     AudioFifo 	*fifo;
     AudioValve	valve;
@@ -449,7 +448,7 @@ bool Voter::initialize(void)
     if (!rx_name.empty())
     {
       cout << "\tAdding receiver: " << rx_name << endl;
-      SatRx *srx = new SatRx(cfg, rx_name, rxs.size() + 1, buffer_length);
+      SatRx *srx = new SatRx(cfg, rx_name, buffer_length);
       srx->squelchOpen.connect(mem_fun(*this, &Voter::satSquelchOpen));
       srx->signalLevelUpdated.connect(
 	      mem_fun(*this, &Voter::satSignalLevelUpdated));
@@ -511,7 +510,7 @@ float Voter::signalStrength(void) const
 } /* Voter::signalStrength */
 
 
-int Voter::sqlRxId(void) const
+char Voter::sqlRxId(void) const
 {
   return const_cast<Macho::Machine<Top>&>(sm)->sqlRxId();
 } /* Voter::sqlRxId */
@@ -958,7 +957,7 @@ void Voter::ActiveRxSelected::setMuteState(Rx::MuteState new_mute_state)
 } /* Voter::ActiveRxSelected::setMuteState */
 
 
-int Voter::ActiveRxSelected::sqlRxId(void)
+char Voter::ActiveRxSelected::sqlRxId(void)
 {
   return box().active_srx->id();
 } /* Voter::ActiveRxSelected::sqlRxId */

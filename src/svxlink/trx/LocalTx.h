@@ -189,6 +189,7 @@ class LocalTx : public Tx
     
     /**
      * @brief   Set the signal level value that should be transmitted
+     * @param   rx_id  The id of the RX that the signal was received on
      * @param   siglev The signal level to transmit
      *
      * This function does not set the output power of the transmitter but
@@ -197,7 +198,7 @@ class LocalTx : public Tx
      * on a link transmitter to transport signal level measurements to the
      * link receiver.
      */
-    void setTransmittedSignalStrength(float siglev);
+    void setTransmittedSignalStrength(char rx_id, float siglev);
     
   private:
     std::string       	    name;
@@ -229,6 +230,7 @@ class LocalTx : public Tx
     std::vector<int>        tone_siglev_map;
     Async::Timer            *ptt_hangtimer;
     bool                    fsk_trailer_transmitted;
+    char                    last_rx_id;
     
     void txTimeoutOccured(Async::Timer *t);
     int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);
@@ -238,7 +240,7 @@ class LocalTx : public Tx
     void allDtmfDigitsSent(void);
     void pttHangtimeExpired(Async::Timer *t);
     bool preTransmitterStateChange(bool do_transmit);
-    void sendFskSiglev(uint8_t rxid, uint8_t siglev);
+    void sendFskSiglev(char rxid, uint8_t siglev);
     void sendFskDtmf(const std::string &digits, unsigned duration);
 
 };  /* class LocalTx */

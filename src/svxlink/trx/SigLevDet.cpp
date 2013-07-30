@@ -1,12 +1,12 @@
 /**
-@file	 MultiTx.cpp
-@brief   Make it possible to use multiple transmitters for one logic
+@file	 SigLevDet.cpp
+@brief   The base class for a signal level detector
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-07-08
+@date	 2013-07-30
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,8 +32,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
-#include <algorithm>
 
 
 /****************************************************************************
@@ -42,8 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioSplitter.h>
-
+#include <AsyncConfig.h>
 
 
 /****************************************************************************
@@ -52,7 +49,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "MultiTx.h"
+#include "SigLevDet.h"
+#include "Rx.h"
 
 
 
@@ -63,7 +61,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace Async;
 
 
 
@@ -114,130 +111,29 @@ using namespace Async;
  *
  ****************************************************************************/
 
-MultiTx::MultiTx(Config& cfg, const string& name)
-  : cfg(cfg), m_name(name), splitter(0)
+SigLevDet::SigLevDet(void)
+  : last_rx_id(Rx::ID_UNKNOWN)
 {
   
-} /* MultiTx::MultiTx */
+} /* SigLevDet::SigLevDet */
 
 
-MultiTx::~MultiTx(void)
+#if 0
+SigLevDet::~SigLevDet(void)
 {
-  clearHandler();
-
-  list<Tx *>::iterator it;
-  for (it=txs.begin(); it!=txs.end(); ++it)
-  {
-    delete *it;
-  }
-  txs.clear();
   
-  delete splitter;
-  
-} /* MultiTx::~MultiTx */
+} /* SigLevDet::~SigLevDet */
+#endif
 
 
-bool MultiTx::initialize(void)
+bool SigLevDet::initialize(Async::Config &cfg, const std::string& name)
 {
-  string transmitters;
-  if (!cfg.getValue(m_name, "TRANSMITTERS", transmitters))
+  if (cfg.getValue(name, "RX_ID", last_rx_id))
   {
-    cerr << "*** ERROR: Config variable " << m_name
-      	 << "/TRANSMITTERS not set\n";
-    return false;
+    force_rx_id = true;
   }
-  
-  splitter = new AudioSplitter;
-  
-  string::iterator start(transmitters.begin());
-  for (;;)
-  {
-    string::iterator comma = find(start, transmitters.end(), ',');
-    string tx_name(start, comma);
-    if (!tx_name.empty())
-    {
-      cout << "\tAdding transmitter: " << tx_name << endl;
-      Tx *tx = TxFactory::createNamedTx(cfg, tx_name);
-      if ((tx == 0) || !tx->initialize())
-      {
-      	// FIXME: Cleanup
-      	return false;
-      }
-      tx->txTimeout.connect(txTimeout.make_slot());
-      tx->transmitterStateChange.connect(
-      	      mem_fun(*this, &MultiTx::onTransmitterStateChange));
-      
-      splitter->addSink(tx);
-      
-      txs.push_back(tx);
-    }
-    if (comma == transmitters.end())
-    {
-      break;
-    }
-    start = comma;
-    ++start;
-  }
-  
-  setHandler(splitter);
-  
   return true;
-  
-} /* MultiTx::initialize */
-
-
-void MultiTx::setTxCtrlMode(TxCtrlMode mode)
-{
-  list<Tx *>::iterator it;
-  for (it=txs.begin(); it!=txs.end(); ++it)
-  {
-    (*it)->setTxCtrlMode(mode);
-  }  
-} /* MultiTx::setTxCtrlMode */
-
-
-bool MultiTx::isTransmitting(void) const
-{
-  bool is_transmitting = false;
-  list<Tx *>::const_iterator it;
-  for (it=txs.begin(); it!=txs.end(); ++it)
-  {
-    is_transmitting |= (*it)->isTransmitting();
-  }
-  
-  return is_transmitting;
-  
-} /* MultiTx::isTransmitting */
-
-
-void MultiTx::enableCtcss(bool enable)
-{
-  list<Tx *>::iterator it;
-  for (it=txs.begin(); it!=txs.end(); ++it)
-  {
-    (*it)->enableCtcss(enable);
-  }
-} /* MultiTx::enableCtcss */
-
-
-void MultiTx::sendDtmf(const std::string& digits, unsigned duration)
-{
-  list<Tx *>::iterator it;
-  for (it=txs.begin(); it!=txs.end(); ++it)
-  {
-    (*it)->sendDtmf(digits, duration);
-  }
-} /* MultiTx::sendDtmf */
-
-
-void MultiTx::setTransmittedSignalStrength(char rx_id, float siglev)
-{
-  list<Tx *>::iterator it;
-  for (it=txs.begin(); it!=txs.end(); ++it)
-  {
-    (*it)->setTransmittedSignalStrength(rx_id, siglev);
-  }
-} /* MultiTx::setTransmittedSignalStrength */
+}
 
 
 
@@ -247,6 +143,14 @@ void MultiTx::setTransmittedSignalStrength(char rx_id, float siglev)
  *
  ****************************************************************************/
 
+void SigLevDet::updateRxId(char rx_id)
+{
+  if (!force_rx_id)
+  {
+    last_rx_id = rx_id;
+  }
+} /* SigLevDet::updateRxId */
+
 
 
 /****************************************************************************
@@ -254,14 +158,6 @@ void MultiTx::setTransmittedSignalStrength(char rx_id, float siglev)
  * Private member functions
  *
  ****************************************************************************/
-
-void MultiTx::onTransmitterStateChange(bool is_transmitting)
-{
-  if (is_transmitting == isTransmitting())
-  {
-    transmitterStateChange(is_transmitting);
-  }
-} /* MultiTx::onTransmitterStateChange */
 
 
 

@@ -88,8 +88,9 @@ using namespace Async;
 class RxAdapter : public Rx, public AudioSink
 {
   public:
-    RxAdapter(const string &name)
-      : Rx(cfg, name), siglev_timer(1000, Timer::TYPE_PERIODIC)
+    RxAdapter(const string &name, char rx_id=Rx::ID_UNKNOWN)
+      : Rx(cfg, name), cfg(cfg), siglev_timer(1000, Timer::TYPE_PERIODIC),
+        rx_id(rx_id)
     {
       mute_valve.setOpen(false);
       mute_valve.setBlockWhenClosed(false);
@@ -152,7 +153,7 @@ class RxAdapter : public Rx, public AudioSink
      * @brief 	Find out RX ID of last receiver with squelch activity
      * @returns Returns the RX ID
      */
-    virtual int sqlRxId(void) const { return 0; }
+    virtual char sqlRxId(void) const { return rx_id; }
     
     /**
      * @brief 	Reset the receiver object to its default settings
@@ -177,6 +178,7 @@ class RxAdapter : public Rx, public AudioSink
     AudioValve  mute_valve;
     Config    	cfg;
     Timer       siglev_timer;
+    char        rx_id;
 
     void reportSiglev(Timer *t)
     {
@@ -413,6 +415,14 @@ NetTrxAdapter::~NetTrxAdapter(void)
 
 bool NetTrxAdapter::initialize(void)
 {
+  char rx_id = Rx::ID_UNKNOWN;
+  if (!cfg.getValue(net_uplink_name, "RX_ID", rx_id, true))
+  {
+    cerr << "*** ERROR: Invalid RX id specified for RX "
+         << net_uplink_name << endl;
+    return false;
+  }
+  
   AudioSource *prev_src = 0;
 
     // NetTx audio chain
@@ -427,7 +437,7 @@ bool NetTrxAdapter::initialize(void)
   prev_src->registerSink(fifo1, true);
   prev_src = fifo1;
   
-  rxa1 = new RxAdapter("NetTxAdapter");
+  rxa1 = new RxAdapter("NetTxAdapter", rx_id);
   if (!rxa1->initialize())
   {
     return false;

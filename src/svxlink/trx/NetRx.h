@@ -171,7 +171,7 @@ class NetRx : public Rx
      * @brief 	Find out RX ID of last receiver with squelch activity
      * @returns Returns the RX ID
      */
-    int sqlRxId(void) const { return last_sql_rx_id; }
+    char sqlRxId(void) const { return last_sql_rx_id; }
         
     /**
      * @brief 	Reset the receiver object to its default settings
@@ -196,7 +196,7 @@ class NetRx : public Rx
     Rx::MuteState       mute_state;
     NetTrxTcpClient  	*tcp_con;
     float     	      	last_signal_strength;
-    int       	      	last_sql_rx_id;
+    char       	      	last_sql_rx_id;
     std::list<ToneDet*> tone_detectors;
     bool      	      	unflushed_samples;
     bool      	      	sql_is_open;

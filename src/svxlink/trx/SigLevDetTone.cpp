@@ -197,6 +197,11 @@ SigLevDetTone::~SigLevDetTone(void)
 
 bool SigLevDetTone::initialize(Async::Config &cfg, const std::string& name)
 {
+  if (!SigLevDet::initialize(cfg, name))
+  {
+    return false;
+  }
+
   string mapstr;
   if (cfg.getValue(name, "TONE_SIGLEV_MAP", mapstr))
   {

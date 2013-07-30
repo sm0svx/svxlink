@@ -142,12 +142,6 @@ class SigLevDetAfsk : public SigLevDet
     ~SigLevDetAfsk(void);
     
     /**
-     * @brief 	Initialize the signal detector
-     * @return 	Return \em true on success, or \em false on failure
-     */
-    virtual bool initialize(Async::Config &cfg, const std::string& name);
-    
-    /**
      * @brief	Set the interval for continuous updates
      * @param	interval_ms The update interval, in milliseconds, to use.
      * 

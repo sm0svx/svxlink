@@ -174,7 +174,7 @@ class Voter : public Rx
      * @brief 	Find out RX ID of last receiver with squelch activity
      * @returns Returns the RX ID
      */
-    int sqlRxId(void) const;
+    char sqlRxId(void) const;
     
     /**
      * @brief 	Reset the receiver object to its default settings
@@ -265,7 +265,7 @@ class Voter : public Rx
       virtual void satSquelchOpen(SatRx *srx, bool is_open);
       virtual void satSignalLevelUpdated(SatRx *srx, float siglev);
       virtual float signalStrength(void) { return -100.0; }
-      virtual int sqlRxId(void) { return 0; }
+      virtual char sqlRxId(void) { return Rx::ID_UNKNOWN; }
       virtual SatRx *activeSrx(void) { return 0; }
       
       protected:
@@ -330,7 +330,7 @@ class Voter : public Rx
       STATE(ActiveRxSelected)
 
       virtual void setMuteState(Rx::MuteState new_mute_state);
-      virtual int sqlRxId(void);
+      virtual char sqlRxId(void);
       virtual SatRx *activeSrx(void) { return box().active_srx; }
 
       protected:

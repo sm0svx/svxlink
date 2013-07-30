@@ -10,7 +10,7 @@ the SvxLink core is running.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -172,6 +172,12 @@ class LocalRx : public Rx
      * @return	Returns the signal strength
      */
     float signalStrength(void) const;
+    
+    /**
+     * @brief 	Find out RX ID of last receiver with squelch activity
+     * @returns Returns the RX ID
+     */
+    char sqlRxId(void) const;
     
     /**
      * @brief 	Reset the receiver object to its default settings

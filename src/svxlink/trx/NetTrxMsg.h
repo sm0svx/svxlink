@@ -172,7 +172,7 @@ class MsgProtoVer : public Msg
   public:
     static const unsigned TYPE  = 0;
     static const uint16_t MAJOR = 2;
-    static const uint16_t MINOR = 5;
+    static const uint16_t MINOR = 6;
     MsgProtoVer(void)
       : Msg(TYPE, sizeof(MsgProtoVer)), m_major(MAJOR),
         m_minor(MINOR) {}
@@ -510,17 +510,17 @@ class MsgSquelch : public Msg
 {
   public:
     static const unsigned TYPE = 250;
-    MsgSquelch(bool is_open, float signal_strength, int sql_rx_id)
+    MsgSquelch(bool is_open, float signal_strength, char sql_rx_id)
       : Msg(TYPE, sizeof(MsgSquelch)), m_is_open(is_open),
       	m_signal_strength(signal_strength), m_sql_rx_id(sql_rx_id) {}
     bool isOpen(void) const { return m_is_open; }
     float signalStrength(void) const { return m_signal_strength; }
-    int sqlRxId(void) const { return m_sql_rx_id; }
+    char sqlRxId(void) const { return m_sql_rx_id; }
   
   private:
     bool  m_is_open;
     float m_signal_strength;
-    int   m_sql_rx_id;
+    char  m_sql_rx_id;
     
 }; /* MsgSquelch */
 
@@ -578,15 +578,15 @@ class MsgSiglevUpdate : public Msg
 {
   public:
     static const unsigned TYPE = 254;
-    MsgSiglevUpdate(float signal_strength, int sql_rx_id)
+    MsgSiglevUpdate(float signal_strength, char sql_rx_id)
       : Msg(TYPE, sizeof(MsgSiglevUpdate)), m_signal_strength(signal_strength),
         m_sql_rx_id(sql_rx_id) {}
     float signalStrength(void) const { return m_signal_strength; }
-    int sqlRxId(void) const { return m_sql_rx_id; }
+    char sqlRxId(void) const { return m_sql_rx_id; }
   
   private:
     float m_signal_strength;
-    int   m_sql_rx_id;
+    char  m_sql_rx_id;
     
 }; /* MsgSiglevUpdate */
 

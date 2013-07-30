@@ -87,6 +87,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "multirate_filter_coeff.h"
 #include "PttCtrl.h"
 #include "SigLevDetAfsk.h"
+#include "Rx.h"
 
 
 /****************************************************************************
@@ -240,7 +241,7 @@ LocalTx::LocalTx(Config& cfg, const string& name)
     tx_timeout_occured(false), tx_timeout(0), sine_gen(0), ctcss_enable(false),
     dtmf_encoder(0), selector(0), dtmf_valve(0), mixer(0), hdlc_framer(0),
     fsk_mod(0), fsk_valve(0), input_handler(0), audio_valve(0),
-    siglev_sine_gen(0), ptt_hangtimer(0)
+    siglev_sine_gen(0), ptt_hangtimer(0), last_rx_id(Rx::ID_UNKNOWN)
 {
 
 } /* LocalTx::LocalTx */
@@ -670,9 +671,13 @@ void LocalTx::sendData(const std::vector<uint8_t> &msg)
 } /* LocalTx::sendData */
 
 
-void LocalTx::setTransmittedSignalStrength(float siglev)
+void LocalTx::setTransmittedSignalStrength(char rx_id, float siglev)
 {
-  //cout << "LocalTx::setTransmittedSignalStrength: siglev=" << siglev << endl;
+  /*
+  cout << "### LocalTx::setTransmittedSignalStrength: rx_id=" << rx_id
+       << " siglev=" << siglev
+       << endl;
+  */
 
 #if INTERNAL_SAMPLE_RATE >= 16000
   if (hdlc_framer != 0)
@@ -690,7 +695,8 @@ void LocalTx::setTransmittedSignalStrength(float siglev)
     {
       siglevui = static_cast<uint8_t>(siglev);
     }
-    sendFskSiglev(0, siglevui);
+    sendFskSiglev(rx_id, siglevui);
+    last_rx_id = rx_id;
   }
   else if (siglev_sine_gen != 0)
   {
@@ -965,8 +971,9 @@ bool LocalTx::preTransmitterStateChange(bool do_transmit)
   {
     //cout << "  Sending AFSK trailer\n";
     fsk_trailer_transmitted = true;
-    sendFskSiglev(0, 0);
-    sendFskSiglev(0, 0);
+    sendFskSiglev(last_rx_id, 0);
+    sendFskSiglev(last_rx_id, 0);
+    last_rx_id = Rx::ID_UNKNOWN;
     return true;
   }
 
@@ -975,11 +982,16 @@ bool LocalTx::preTransmitterStateChange(bool do_transmit)
 } /* LocalTx::preTransmitterStateChange */
 
 
-void LocalTx::sendFskSiglev(uint8_t rxid, uint8_t siglev)
+void LocalTx::sendFskSiglev(char rxid, uint8_t siglev)
 {
+  if ((rxid < '!') || (rxid > '~'))
+  {
+    rxid = Rx::ID_UNKNOWN;
+  }
+
   vector<uint8_t> frame;
   frame.push_back(DATA_CMD_SIGLEV);
-  frame.push_back(rxid);
+  frame.push_back(static_cast<uint8_t>(rxid));
   frame.push_back(siglev);
   hdlc_framer->sendBytes(frame);
 } /* LocalTx::sendFskSiglev */

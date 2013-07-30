@@ -125,7 +125,7 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
     /**
      * @brief 	Default constuctor
      */
-    SigLevDet(void) {}
+    SigLevDet(void);
   
     /**
      * @brief 	Destructor
@@ -136,10 +136,7 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
      * @brief 	Initialize the signal detector
      * @return 	Return \em true on success, or \em false on failure
      */
-    virtual bool initialize(Async::Config &cfg, const std::string& name)
-    {
-      return true;
-    }
+    virtual bool initialize(Async::Config &cfg, const std::string& name);
     
     /**
      * @brief	Set the interval for continuous updates
@@ -173,6 +170,12 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
     virtual float siglevIntegrated(void) const = 0;
     
     /**
+     * @brief   Read the receiver id for the last signal report
+     * @returns Returns the receiver id for the last signal report
+     */
+    char lastRxId(void) const { return last_rx_id; }
+
+    /**
      * @brief   Reset the signal level detector
      */
     virtual void reset(void) = 0;
@@ -188,8 +191,20 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
     sigc::signal<void, float> signalLevelUpdated;
     
   protected:
+    /**
+     * @brief   Update the receiver id
+     * @param   The receiver id to update with
+     *
+     * The class inheriting from this class may update the receiver id by
+     * calling this function. If the receiver id have been set in the config
+     * file, the update request will be ignored.
+     */
+    void updateRxId(char rx_id);
     
   private:
+    bool  force_rx_id;
+    char  last_rx_id;
+
     SigLevDet(const SigLevDet&);
     SigLevDet& operator=(const SigLevDet&);
     
