@@ -174,7 +174,7 @@ endfunction(add_version_target)
 
 # Read a versions file and set up CMake variables for each entry
 function(read_versions_file filename)
-  message("-- Reading versions file...")
+  message(STATUS "Reading versions file...")
   file(STRINGS ${filename} versions REGEX .*=.*)
   foreach(version ${versions})
     string(REGEX REPLACE \(.*\)=\(.*\) "VER_\\1;\\2" version ${version})
@@ -203,7 +203,7 @@ function(install_chown filename owner)
         MESSAGE(FATAL_ERROR \"Unable to find the 'chown' utility\")
       endif(NOT CHOWN_TOOL)
       set(full_filename \"\$ENV{DESTDIR}${filename}\")
-      message(\"-- Setting owner of \${full_filename} to ${owner}...\")
+      message(STATUS \"Setting owner of \${full_filename} to ${owner}...\")
       execute_process(
         COMMAND ${CHOWN_TOOL} ${owner} \"\${full_filename}\"
         RESULT_VARIABLE cmd_result
@@ -252,11 +252,16 @@ function(install_if_not_exists src dest)
   install(CODE "
     if(NOT EXISTS \"\$ENV{DESTDIR}${dest}/${src_name}\")
       #file(INSTALL \"${src}\" DESTINATION \"${dest}\")
-      message(\"-- Installing: \$ENV{DESTDIR}${dest}/${src_name}\")
+      message(STATUS \"Installing: \$ENV{DESTDIR}${dest}/${src_name}\")
       execute_process(COMMAND \${CMAKE_COMMAND} -E copy \"${src}\"
-                      \"\$ENV{DESTDIR}${dest}\")
+                      \"\$ENV{DESTDIR}${dest}/${src_name}\"
+                      RESULT_VARIABLE copy_result
+                      ERROR_VARIABLE error_output)
+      if(copy_result)
+        message(FATAL_ERROR \${error_output})
+      endif()
     else()
-      message(\"-- Skipping  : \$ENV{DESTDIR}${dest}/${src_name}\")
+      message(STATUS \"Skipping  : \$ENV{DESTDIR}${dest}/${src_name}\")
     endif()
   ")
 endfunction(install_if_not_exists)
