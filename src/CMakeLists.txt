@@ -251,7 +251,10 @@ function(install_if_not_exists src dest)
   endif()
   install(CODE "
     if(NOT EXISTS \"\$ENV{DESTDIR}${dest}/${src_name}\")
-      file(INSTALL \"${src}\" DESTINATION \"${dest}\")
+      #file(INSTALL \"${src}\" DESTINATION \"${dest}\")
+      message(\"-- Installing: \$ENV{DESTDIR}${dest}/${src_name}\")
+      execute_process(COMMAND \${CMAKE_COMMAND} -E copy \"${src}\"
+                      \"\$ENV{DESTDIR}${dest}\")
     else()
       message(\"-- Skipping  : \$ENV{DESTDIR}${dest}/${src_name}\")
     endif()
