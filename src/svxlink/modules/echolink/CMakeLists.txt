@@ -40,4 +40,6 @@ target_link_libraries(Module${MODNAME} ${LIBS})
 # Install targets
 install(TARGETS Module${MODNAME} DESTINATION ${SVX_MODULE_INSTALL_DIR})
 install(FILES ${MODNAME}.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR}/events.d)
-install(FILES Module${MODNAME}.conf DESTINATION ${SVX_SYSCONF_INSTALL_DIR}/svxlink.d)
+install_if_not_exists(Module${MODNAME}.conf
+  ${SVX_SYSCONF_INSTALL_DIR}/svxlink.d
+  )

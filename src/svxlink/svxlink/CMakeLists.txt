@@ -59,8 +59,8 @@ install(TARGETS svxlink DESTINATION ${BIN_INSTALL_DIR})
 install_mkdir(${SVX_SYSCONF_INSTALL_DIR}/svxlink.d)
 install_mkdir(${SVX_SPOOL_INSTALL_DIR}/qso_recorder svxlink.daemon)
 install_mkdir(${SVX_SHARE_INSTALL_DIR}/sounds)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
-  DESTINATION ${SVX_SYSCONF_INSTALL_DIR}
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
+  ${SVX_SYSCONF_INSTALL_DIR}
   )
 install(FILES events.tcl DESTINATION ${SVX_SHARE_INSTALL_DIR})
 install(FILES RepeaterLogic.tcl SimplexLogic.tcl Module.tcl Logic.tcl CW.tcl

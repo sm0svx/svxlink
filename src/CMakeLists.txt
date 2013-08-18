@@ -238,6 +238,24 @@ function(install_mkdir dir)
   install_chown(${dir} "${owner}")
 endfunction(install_mkdir)
 
+# Before installing the file, check if it exists. If it does, don't
+# overwrite it.
+#   install_if_not_exists(source_file destination_directory)
+function(install_if_not_exists src destdir)
+  get_filename_component(src_path "${src}" PATH)
+  if(NOT src_path)
+    set(src "${CMAKE_CURRENT_SOURCE_DIR}/${src}")
+  endif(NOT src_path)
+  get_filename_component(src_name "${src}" NAME)
+  install(CODE "
+    if(NOT EXISTS \"${destdir}/${src_name}\")
+      file(INSTALL \"${src}\" DESTINATION \"${destdir}\")
+    else()
+      message(\"-- Skipping  : ${destdir}/${src_name}\")
+    endif()
+  ")
+endfunction(install_if_not_exists)
+
 
 ##############################################################################
 # Main execution starts here

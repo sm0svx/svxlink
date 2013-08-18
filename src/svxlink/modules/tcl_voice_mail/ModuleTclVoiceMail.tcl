@@ -42,12 +42,12 @@ set state "idle";
 #
 # The directory where the voice mails are stored
 #
-set recdir "/var/spool/svxlink/voice_mail";
+set recdir "@SVX_SPOOL_INSTALL_DIR@/voice_mail";
 
 #
 # Configuration file names
 #
-set cfg_etc "/etc/svxlink/TclVoiceMail.conf";
+set cfg_etc "@SVX_SYSCONF_INSTALL_DIR@/TclVoiceMail.conf";
 set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.conf";
 
 

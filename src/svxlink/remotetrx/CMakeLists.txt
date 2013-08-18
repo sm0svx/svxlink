@@ -30,4 +30,4 @@ set_target_properties(remotetrx PROPERTIES
 
 # Install targets
 install(TARGETS remotetrx DESTINATION ${BIN_INSTALL_DIR})
-install(FILES remotetrx.conf DESTINATION ${SVX_SYSCONF_INSTALL_DIR})
+install_if_not_exists(remotetrx.conf ${SVX_SYSCONF_INSTALL_DIR})
