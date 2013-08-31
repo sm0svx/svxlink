@@ -553,7 +553,7 @@ bool LocalRx::initialize(void)
     // Open the audio device for reading
   if (!audio_io->open(AudioIO::MODE_RD))
   {
-    cerr << "*** Error: Could not open audio device for receiver \""
+    cerr << "*** ERROR: Could not open audio device for receiver \""
       	 << name() << "\"\n";
     // FIXME: Cleanup?
     return false;
@@ -804,7 +804,7 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
   else
   {
     cerr << "*** ERROR: Unknown signal level detector type \""
-         << siglev_det_type << "\" specified in " << name << "/SIGLEV_DET.";
+         << siglev_det_type << "\" specified in " << name << "/SIGLEV_DET.\n";
     return 0;
   }
   
