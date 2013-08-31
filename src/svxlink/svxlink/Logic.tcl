@@ -508,6 +508,23 @@ proc list_languages {} {
 }
 
 
+#
+# Executed when the node is being brought online or offline
+#
+proc logic_online {online} {
+  global mycall
+  variable CFG_TYPE
+
+  if {$online} {
+    playMsg "Core" "online";
+    spellWord $mycall;
+    if {$CFG_TYPE == "Repeater"} {
+      playMsg "Core" "repeater";
+    }
+  }
+}
+
+
 ##############################################################################
 #
 # Main program

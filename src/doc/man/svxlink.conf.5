@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "AUGUST 2012" Linux "File Formats"
+.TH SVXLINK.CONF 5 "AUGUST 2013" Linux "File Formats"
 .
 .SH NAME
 .
@@ -269,14 +269,17 @@ macros section (refer to Macros Section, next chapter). Other sequences but the
 one defined under OPEN_ON_SEL5 are ignored so it can be used to call other
 stations via the repeater without a repeater reaction.
 .TP
-.B SHUTDOWN_CMD
-Define a DTMF command that is used to force the transmitter off. When in the
-off-state, the transmitter will not be turned on by any event. The node will
-continue to run as usual though so if a DTMF command is received, the node will
-act on it. The only difference is that the transmitter will not be turned on.
+.B ONLINE_CMD
+Define a DTMF command that is used to switch the node between online and
+offline mode. When in the off-state, the transmitter will not be turned on by
+any event. If a module is active when the node is brought offline, it will be
+deactivated and no module activation will be allowed in offline mode. No other
+commands than the online command will be accepted in the offline state.
 
-If the command for example is set to 998877 then 9988771 will enable the
-transmitter and 9988770 will disable it.
+If the command for example is set to 998877 then 9988771 will set the node
+online and 9988770 will set it offline. If a module is active or if the
+ACTIVATE_MODULE_ON_LONG_CMD is used, the command must be prefixed with a star
+to work as expected. The star means "force core command".
 .
 .SS Simplex Logic Section
 .

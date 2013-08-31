@@ -86,6 +86,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Logic.h"
 #include "QsoRecorder.h"
 #include "LinkManager.h"
+#include "DtmfDigitHandler.h"
 
 
 /****************************************************************************
@@ -150,8 +151,7 @@ Logic::Logic(Config &cfg, const string& name)
   : m_cfg(cfg),       	      	            m_name(name),
     m_rx(0),  	      	      	            m_tx(0),
     msg_handler(0), 	      	            active_module(0),
-    cmd_tmo_timer(0), 	      	            anti_flutter(false),
-    prev_digit('?'),                        exec_cmd_on_sql_close(0),
+    exec_cmd_on_sql_close(0),
     exec_cmd_on_sql_close_timer(0),         rgr_sound_timer(0),
     rgr_sound_delay(-1),                    report_ctcss(0),
     event_handler(0),                       recorder(0),
@@ -163,7 +163,8 @@ Logic::Logic(Config &cfg, const string& name)
     long_cmd_digits(100),                   report_events_as_idle(false),
     qso_recorder(0),                        tx_ctcss(TX_CTCSS_ALWAYS),
     tx_ctcss_mask(0),                       aprs_stats_timer(0),
-    currently_set_tx_ctrl_mode(Tx::TX_OFF), is_shut_down(false)
+    currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
+    dtmf_digit_handler(0)
 {
   logic_con_in = new AudioSplitter;
   logic_con_out = new AudioSelector;
@@ -176,20 +177,20 @@ Logic::~Logic(void)
   delete logic_con_out;
   delete logic_con_in;
   delete aprs_stats_timer;
+  delete dtmf_digit_handler;
 } /* Logic::~Logic */
 
 
 bool Logic::initialize(void)
 {
-  string value;
-  if (cfg().getValue(name(), "SHUTDOWN_CMD", value))
+  if (cfg().getValue(name(), "ONLINE_CMD", online_cmd))
   {
-    ShutdownCmd *shutdown_cmd = new ShutdownCmd(&cmd_parser, this, value);
-    if (!shutdown_cmd->addToParser())
+    OnlineCmd *cmd = new OnlineCmd(&cmd_parser, this, online_cmd);
+    if (!cmd->addToParser())
     {
-      cerr << "*** ERROR: Could not add the logic shutdown command \""
-           << shutdown_cmd->cmdStr() << "\" for logic " << name() << ".\n";
-      delete shutdown_cmd;  // FIXME: Do this in cleanup() instead
+      cerr << "*** ERROR: Could not add the logic online command \""
+           << cmd->cmdStr() << "\" for logic " << name() << ".\n";
+      delete cmd;
       return false;
     }
   }
@@ -199,7 +200,7 @@ bool Logic::initialize(void)
   {
     cerr << "*** ERROR: Could not add the language change command \""
 	 << lang_cmd->cmdStr() << "\" for logic " << name() << ".\n";
-    delete lang_cmd;  // FIXME: Do this in cleanup() instead
+    delete lang_cmd;
     return false;
   }
 
@@ -235,6 +236,7 @@ bool Logic::initialize(void)
     return false;
   }
 
+  string value;
   if (cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", value))
   {
     exec_cmd_on_sql_close = atoi(value.c_str());
@@ -545,10 +547,6 @@ bool Logic::initialize(void)
   event_handler->setVariable("is_core_event_handler", "1");
   event_handler->setVariable("logic_name", name().c_str());
 
-  cmd_tmo_timer = new Timer(10000);
-  cmd_tmo_timer->expired.connect(mem_fun(*this, &Logic::cmdTimeout));
-  cmd_tmo_timer->setEnable(false);
-
   updateTxCtcss(true, TX_CTCSS_ALWAYS);
 
   loadModules();
@@ -600,6 +598,10 @@ bool Logic::initialize(void)
   every_minute_timer.expired.connect(mem_fun(*this, &Logic::everyMinute));
   timeoutNextMinute();
   every_minute_timer.start();
+
+  dtmf_digit_handler = new DtmfDigitHandler;
+  dtmf_digit_handler->commandComplete.connect(
+      mem_fun(*this, &Logic::putCmdOnQueue));
 
   return true;
 
@@ -696,7 +698,7 @@ bool Logic::activateModule(Module *module)
     return true;
   }
 
-  if (active_module == 0)
+  if ((active_module == 0) && is_online)
   {
     active_module = module;
     audio_to_module_splitter->enableSink(module, true);
@@ -768,54 +770,7 @@ void Logic::dtmfDigitDetected(char digit, int duration)
     }
   }
 
-  cmd_tmo_timer->reset();
-  cmd_tmo_timer->setEnable(true);
-
-  if ((digit == '#') || (anti_flutter && (digit == 'C')))
-  {
-    putCmdOnQueue();
-    anti_flutter = false;
-  }
-  else if (digit == 'A')
-  {
-    anti_flutter = true;
-    prev_digit = '?';
-  }
-  else if (digit == 'D')
-  {
-    received_digits = "D";
-    prev_digit = '?';
-  }
-  else if (received_digits.size() < 20)
-  {
-    if (digit == 'H')	// Make it possible to include a hash mark in a macro
-    {
-      received_digits += '#';
-    }
-    else if (digit == 'B')
-    {
-      if (anti_flutter && (prev_digit != '?'))
-      {
-        received_digits += prev_digit;
-        prev_digit = '?';
-      }
-    }
-    else if (isdigit(digit) || ((digit == '*') && (received_digits != "*")))
-    {
-      if (anti_flutter)
-      {
-        if (digit != prev_digit)
-        {
-          received_digits += digit;
-	  prev_digit = digit;
-        }
-      }
-      else
-      {
-        received_digits += digit;
-      }
-    }
-  }
+  dtmf_digit_handler->digitReceived(digit);
 
   if (!cmd_queue.empty() && !rx().squelchIsOpen())
   {
@@ -861,18 +816,23 @@ Async::AudioSink *Logic::logicConIn(void)
 } /* Logic::logicConIn */
 
 
-void Logic::setShutdown(bool shut_down)
+void Logic::setOnline(bool online)
 {
-  if (shut_down)
-  {
-    tx().setTxCtrlMode(Tx::TX_OFF);
-  }
-  else
+  is_online = online;
+  if (online)
   {
     tx().setTxCtrlMode(currently_set_tx_ctrl_mode);
   }
-  is_shut_down = shut_down;
-} /* Logic::setShutdown */
+  else
+  {
+    tx().setTxCtrlMode(Tx::TX_OFF);
+    deactivateModule(0);
+  }
+  stringstream ss;
+  ss << "logic_online ";
+  ss << (is_online ? 1 : 0);
+  processEvent(ss.str());
+} /* Logic::setOnline */
 
 
 Async::AudioSource *Logic::logicConOut(void)
@@ -880,12 +840,13 @@ Async::AudioSource *Logic::logicConOut(void)
   return logic_con_out;
 } /* Logic::logicConOut */
 
+
+
 /****************************************************************************
  *
  * Protected member functions
  *
  ****************************************************************************/
-
 
 void Logic::squelchOpen(bool is_open)
 {
@@ -900,12 +861,14 @@ void Logic::squelchOpen(bool is_open)
 
   if (!is_open)
   {
+    const string &received_digits = dtmf_digit_handler->command();
     if (((exec_cmd_on_sql_close > 0) || (received_digits == "*")) &&
-        !anti_flutter && !received_digits.empty())
+        !dtmf_digit_handler->antiFlutterActive() && !received_digits.empty())
     {
       exec_cmd_on_sql_close_timer = new Timer(exec_cmd_on_sql_close);
-      exec_cmd_on_sql_close_timer->expired.connect(
-	  mem_fun(*this, &Logic::putCmdOnQueue));
+      exec_cmd_on_sql_close_timer->expired.connect(hide(mem_fun(
+              dtmf_digit_handler, &DtmfDigitHandler::forceCommandComplete
+              )));
     }
     processCommandQueue();
   }
@@ -1020,7 +983,7 @@ void Logic::checkIdle(void)
 void Logic::setTxCtrlMode(Tx::TxCtrlMode mode)
 {
   currently_set_tx_ctrl_mode = mode;
-  if (!is_shut_down)
+  if (is_online)
   {
     tx().setTxCtrlMode(mode);
   }
@@ -1198,14 +1161,6 @@ void Logic::unloadModules(void)
 } /* logic::unloadModules */
 
 
-void Logic::cmdTimeout(Timer *t)
-{
-  received_digits = "";
-  anti_flutter = false;
-  prev_digit = '?';
-} /* Logic::cmdTimeout */
-
-
 void Logic::processCommandQueue(void)
 {
   if (rx().squelchIsOpen() || cmd_queue.empty())
@@ -1234,7 +1189,7 @@ void Logic::processCommandQueue(void)
 
 void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
 {
-  if (cmd.substr(0, 1) == "*")
+  if (cmd[0] == '*')
   {
     string rest(cmd, 1);
     if (rest.empty())
@@ -1246,7 +1201,7 @@ void Logic::processCommand(const std::string &cmd, bool force_core_cmd)
       processCommand(rest, true);
     }
   }
-  else if (cmd.substr(0, 1) == "D")
+  else if (cmd[0] == 'D')
   {
     processMacroCmd(cmd);
   }
@@ -1358,24 +1313,38 @@ void Logic::processMacroCmd(const string& macro_cmd)
   {
     dtmfDigitDetected(module_cmd[i], 100);
   }
-  //module->dtmfCmdReceived(module_cmd);
-
 } /* Logic::processMacroCmd */
 
 
-void Logic::putCmdOnQueue(Timer *t)
+void Logic::checkIfOnlineCmd(void)
+{
+  if (dtmf_digit_handler->command() == (online_cmd + "1"))
+  {
+    cout << name() << ": Setting logic online\n";
+    setOnline(true);
+  }
+} /* Logic::checkIfOnlineCmd */
+
+
+void Logic::putCmdOnQueue(void)
 {
   delete exec_cmd_on_sql_close_timer;
   exec_cmd_on_sql_close_timer = 0;
 
+  if (!is_online)
+  {
+    checkIfOnlineCmd();
+    return;
+  }
+
+  string received_digits = dtmf_digit_handler->command();
   if ((received_digits != "*") ||
       (find(cmd_queue.begin(), cmd_queue.end(), "*") == cmd_queue.end()))
   {
     cmd_queue.push_back(received_digits);
   }
-  received_digits = "";
-  cmd_tmo_timer->setEnable(false);
-  prev_digit = '?';
+
+  dtmf_digit_handler->reset();
 
   processCommandQueue();
 
@@ -1411,6 +1380,12 @@ void Logic::dtmfDigitDetectedP(char digit, int duration)
 {
   cout << name() << ": digit=" << digit << endl;
 
+  if (!is_online)
+  {
+    dtmf_digit_handler->digitReceived(digit);
+    return;
+  }
+
   stringstream ss;
   ss << "dtmf_digit_received " << digit << " " << duration;
   processEvent(ss.str());
@@ -1421,7 +1396,7 @@ void Logic::dtmfDigitDetectedP(char digit, int duration)
 
   dtmfDigitDetected(digit, duration);
 
-} /* Logic::dtmfDigitDetected */
+} /* Logic::dtmfDigitDetectedP */
 
 
 void Logic::audioStreamStateChange(bool is_active, bool is_idle)
@@ -1447,7 +1422,6 @@ void Logic::cleanup(void)
   }
 
   delete event_handler;       	      event_handler = 0;
-  delete cmd_tmo_timer;       	      cmd_tmo_timer = 0;
   unloadModules();
   delete exec_cmd_on_sql_close_timer; exec_cmd_on_sql_close_timer = 0;
   delete rgr_sound_timer;     	      rgr_sound_timer = 0;

@@ -381,6 +381,13 @@ proc list_languages {} {
 }
 
 
+#
+# Executed when the node is being brought online or offline
+#
+proc logic_online {online} {
+  Logic::logic_online $online
+}
+
 
 # end of namespace
 }

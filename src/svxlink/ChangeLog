@@ -7,6 +7,17 @@
   application starts and also that the link can be automatically reactivated,
   after a timeout, if manually deactivated.
 
+* Improved the logic shutdown feature. Upon shutdown, any active module is
+  deactivated immediately and module activation is not allowed until
+  the logic is activated again. This for example means that if the logic is
+  shut down and an EchoLink connection comes in, that connection will be
+  rejected. Also, no other DTMF commands than the logic activation command
+  is allowed when the logic is shut down.
+  The command was also renamed to ONLINE_CMD since everything became more
+  logical. Calling it SHUTDOWN_CMD was a bit confusing. Should subcommand 1
+  mean that the logic is shut down or brought back online?  Naming the command
+  ONLINE_CMD make everything clear: 1=online, 0=offline.
+
 
 
  1.2.0 -- 29 Jul 2013

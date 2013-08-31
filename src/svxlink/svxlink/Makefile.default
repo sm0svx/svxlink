@@ -28,7 +28,7 @@ CPPPROGS      	= $(BIN)/svxlink
 # Sources other than the main files
 PRGSRC		= MsgHandler.cpp Module.cpp Logic.cpp SimplexLogic.cpp \
 		  RepeaterLogic.cpp EventHandler.cpp LinkManager.cpp \
-		  CmdParser.cpp QsoRecorder.cpp
+		  CmdParser.cpp QsoRecorder.cpp DtmfDigitHandler.cpp
 
 # Libraries compiled in the project (in $(LIB)).
 PROJLIBS	= -ltrx -llocationinfo -lasynccpp -lasyncaudio -lasynccore
