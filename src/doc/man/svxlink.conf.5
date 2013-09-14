@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "AUGUST 2013" Linux "File Formats"
+.TH SVXLINK.CONF 5 "SEPTEMBER 2013" Linux "File Formats"
 .
 .SH NAME
 .
@@ -249,10 +249,19 @@ The gain (dB) to use for audio effects and announcements when there is other tra
 This gain is normally set to something like -12dB so that announcements and audio effects
 are attenuated when there is other traffic present.
 .TP
-.B QSO_RECORDER_DIR
-The QSO recorder is used to write all received audio to a disk file. Use this
-configuration variable to specify in which directory to write the audio files.
-A good place is /var/spool/svxlink/qso_recorder.
+.B QSO_RECORDER
+The QSO recorder is used to write all received audio to files on disk. The
+format for this configuration variable is <command>:<config section>. The
+specified command is used to activate or deactivate the QSO recorder. If the
+command for example is set to 8, 81 will activate the recorder and 80 will
+deactivate it.  The command may also be left out. It will then not be possible
+to control the QSO recorder using DTMF commands. Even if the command is left
+out the colon must always be specified.
+The config section point out a section in the configuration file that holds
+configuration for the QSO recorder.
+Have a look at the QSO Recorder Section documentation for more information.
+
+Example: QSO_RECORDER=8:QsoRecorder
 .TP
 .B QSO_RECORDER_CMD
 The QSO recorder is used to write all received audio to a disk file. Use this
@@ -420,6 +429,48 @@ Setting it to 0 or commenting it out disables the feature.
 This is the minimum time, in milliseconds, that a transmission must last to
 be considered as an identification. This is used as described in the
 IDENT_NAG_TIMEOUT configuration variable.
+.
+.SS QSO Recorder Section
+.
+The QSO recorder is used to record all received audio to files on disk. All
+audio from receivers, modules and logic links are recorded. Announcements are
+not recorded.
+.TP
+.B REC_DIR
+Use this configuration variable to specify in which directory to write the
+audio files. A good place is /var/spool/svxlink/qso_recorder.
+.TP
+.B MAX_TIME
+The maximum time in seconds to record to a file. When the maximum time have
+been reached, the file is closed and another file is created. Default: 0 (no
+limit)
+.TP
+.B SOFT_TIME
+To not get abrupt breaks in recordings it is possible to set a soft break time.
+Let's say that MAX_TIME is set to 3600 seconds (one hour). If we set SOFT_TIME
+to 300 seconds (five minutes) the QSO recorder try to close the file on a
+squelch close somewhere between 55 and 60 minutes. In this way we may avoid
+getting transmissions splitted between files. Default: 0 (no limit)
+.TP
+.B MAX_DIRSIZE
+Specify the maximum total size in megabytes of the files in the recording
+directory. If the limit is exceeded, the oldest files are deleted. The
+directory size is checked upon file close so the size may grow temporarily past
+the limit with at most the size of one recorded file. Default: 0 (no limit)
+.TP
+.B DEFAULT_ACTIVE
+If this configuration variable is set to 1, the QSO recorder will be activated
+by default when SvxLink start. Default: 0 (default inactive)
+.TP
+.B TIMEOUT
+If a timeout is specified, the activation state of the QSO recorder will return
+to the value specified in the DEFAULT_ACTIVE configuration variable when the
+node has been idle for the specified amount of time. When DEFAULT_ACTIVE is
+unset or 0, if the QSO recorder is manually activated it will be automatically
+deactivated after the specified amount of time of inactivity.  When
+DEFAULT_ACTIVE is set to 1, if the QSO recorder is manually deactivated it will
+be automatically activated after the specified amount of time of inactivity.
+The time is specified in seconds. Default: 0 (no timeout)
 .
 .SS Macros Section
 .
@@ -919,7 +970,6 @@ you define ZVEI1 for SvxLink and a (e.g.) ZVEI3 sequence is received.
 .B SEL5_DEC_TYPE
 At the moment only SEL5_DEC_TYPE=INTERNAL is valid. Maybe we have support for
 some external tone detectors later.
-.TP
 .
 .SS Voter Section
 .

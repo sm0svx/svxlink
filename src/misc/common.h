@@ -34,7 +34,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <utility>
 #include <sstream>
+#include <istream>
+#include <ostream>
 
 
 /****************************************************************************
@@ -205,6 +208,44 @@ static typename Container::size_type splitStr(Container &L,
   return L.size();
 
 } /* splitStr */
+
+
+/**
+ * @brief A pair type with separator which can be streamed
+ * @param a The first type in the pair
+ * @param b The second type in the pair
+ * @param sep The character used to separate the two values (default colon)
+ * @param endmark The character used to end the pair (default space)
+ *
+ * This class was created to make it easy to stream a pair type in or out.
+ * For example, if we read the string "100.5:1000" from an input stream and
+ * we declare the variable "SepPair<float, unsigned> my_pair", we can write
+ * "input >> my_pair". Then we have my_pair.first == 100.5 and
+ * my_pair.second == 1000.
+ */
+template <typename a, typename b, char sep=':', char endmark=' '>
+class SepPair : public std::pair<a, b>
+{
+  public:
+    friend std::istream &operator>>(std::istream &input, SepPair &cp)
+    {
+      std::string first, second;
+      getline(input, first, sep);
+      getline(input, second, endmark);
+      if (!setValueFromString(cp.first, first)
+          || !setValueFromString(cp.second, second))
+      {
+        input.setstate(std::ios_base::failbit);
+      }
+      return input;            
+    }   
+
+    friend std::ostream &operator<<(std::ostream &output, SepPair &cp)
+    {
+      output << cp.first << sep << cp.second;
+      return output;
+    }
+};
 
 
 } /* namespace */

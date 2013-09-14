@@ -71,6 +71,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioPacer.h>
 #include <AsyncAudioDebugger.h>
 #include <AsyncAudioRecorder.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -98,6 +99,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 using namespace std;
 using namespace Async;
 using namespace sigc;
+using namespace SvxLink;
 
 
 
@@ -448,22 +450,35 @@ bool Logic::initialize(void)
   logic_con_out->addSource(passthrough);
   logic_con_out->enableAutoSelect(passthrough, 0);
 
-  if (cfg().getValue(name(), "QSO_RECORDER_DIR", value) && !value.empty())
+    // Create the qso recorder if QSO_RECORDER is properly set
+  SepPair<string, string> qso_rec_cfg;
+  if (!cfg().getValue(name(), "QSO_RECORDER", qso_rec_cfg, true))
   {
-      // Create the qso recorder
-    qso_recorder = new QsoRecorder(value);
-    if (cfg().getValue(name(), "QSO_RECORDER_CMD", value))
+    cerr << "*** ERROR: Bad format for config variable QSO_RECORDER. "
+         << "Valid format for value is command:config_section.\n";
+    cleanup();
+    return false;
+  }
+  if (!qso_rec_cfg.second.empty())
+  {
+    qso_recorder = new QsoRecorder(this);
+    if (!qso_recorder->initialize(cfg(), qso_rec_cfg.second))
+    {
+      cleanup();
+      return false;
+    }
+    if (!qso_rec_cfg.first.empty())
     {
       QsoRecorderCmd *qso_recorder_cmd =
           new QsoRecorderCmd(&cmd_parser, this, qso_recorder);
-      if (!qso_recorder_cmd->initialize(value))
+      if (!qso_recorder_cmd->initialize(qso_rec_cfg.first))
       {
-	cerr << "*** ERROR: Could not add activation command for the QSO "
-	     << "recorder in logic \"" << name() << "\". You probably have "
-	     << "the same command set up in more than one place.\n";
-	delete qso_recorder_cmd;  // FIXME: Do this in cleanup() instead
-	cleanup();
-	return false;
+        cerr << "*** ERROR: Could not add activation command for the QSO "
+             << "recorder in logic \"" << name() << "\". You probably have "
+             << "the same command set up in more than one place.\n";
+        delete qso_recorder_cmd;
+        cleanup();
+        return false;
       }
     }
 

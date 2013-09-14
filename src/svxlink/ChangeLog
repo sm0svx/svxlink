@@ -18,6 +18,25 @@
   mean that the logic is shut down or brought back online?  Naming the command
   ONLINE_CMD make everything clear: 1=online, 0=offline.
 
+* Improved QSO recorder. There now is only one configuration variable,
+  QSO_RECORDER, in a logic configuration section. This configuration variable
+  is used to set the DTMF command and to point out a configuration section
+  where the rest of the QSO recorder configuration is specified.
+  The QSO recorder can now close a recording after a configurable recording
+  time and start a new one. The maximum time is specified using the MAX_TIME
+  config variable. The SOFT_TIME config variable is used to specify an
+  interval where the file will be closed on the first detected squelch close.
+  This will give more natural cuts between recordings.
+  It is now also possible to specify a maximum total size for all files in the
+  recording directory. This is done using the MAX_DIRSIZE config variable.
+  When the limit have been reached, the oldest file(s) will be deleted.
+  The DEFAULT_ACTIVE config variable is used to set the default activation
+  state of the QSO recorder. If set to 1, the recorder will be activated upon
+  SvxLink startup. If the TIMEOUT variable is set, the activation state will
+  return to the one set in DEFAULT_ACTIVE if manually activated/deactivated.
+  If no audio has been recorded when a file is closed, the file will be
+  deleted.
+
 
 
  1.2.0 -- 29 Jul 2013

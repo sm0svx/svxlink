@@ -489,6 +489,26 @@ proc qso_recorder_already_active {} {
 
 
 #
+# Executed when the timeout kicks in to activate the QSO recorder
+#
+proc qso_recorder_timeout_activate {} {
+  playMsg "Core" "timeout"
+  playMsg "Core" "activating";
+  playMsg "Core" "qso_recorder";
+}
+
+
+#
+# Executed when the timeout kicks in to deactivate the QSO recorder
+#
+proc qso_recorder_timeout_deactivate {} {
+  playMsg "Core" "timeout"
+  playMsg "Core" "deactivating";
+  playMsg "Core" "qso_recorder";
+}
+
+
+#
 # Executed when the user is requesting a language change
 #
 proc set_language {lang_code} {

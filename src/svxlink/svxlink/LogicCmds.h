@@ -279,7 +279,7 @@ class QsoRecorderCmd : public Command
       {
         if (recorder->isEnabled())
         {
-          std::cout << logic->name() << ": Deactivating QSO recorder\n";
+          //std::cout << logic->name() << ": Deactivating QSO recorder\n";
           recorder->setEnabled(false);
           logic->processEvent("deactivating_qso_recorder");
         }
@@ -292,7 +292,7 @@ class QsoRecorderCmd : public Command
       {
         if (!recorder->isEnabled())
         {
-          std::cout << logic->name() << ": Activating QSO recorder\n";
+          //std::cout << logic->name() << ": Activating QSO recorder\n";
           recorder->setEnabled(true);
           logic->processEvent("activating_qso_recorder");
         }
