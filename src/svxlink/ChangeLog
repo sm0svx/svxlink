@@ -37,6 +37,9 @@
   If no audio has been recorded when a file is closed, the file will be
   deleted.
 
+* Added support for Squelch on GPIO. Use SQL_DET=GPIO and GPIO_SQL_PIN=30
+  in your config for GPIO support.
+  Patch contributed by DG9OAA / Jonny.
 
 
  1.2.0 -- 29 Jul 2013

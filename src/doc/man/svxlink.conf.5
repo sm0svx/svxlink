@@ -574,7 +574,7 @@ channels as two mono channels. Legal values are 0 or 1.
 .TP
 .B SQL_DET
 Specify the type of squelch detector to use. Possible values are: VOX, CTCSS,
-SERIAL, EVDEV or SIGLEV.
+SERIAL, EVDEV, SIGLEV or GPIO.
 
 The VOX squelch detector determines if there is a signal
 present by calculating a mean value of the sound samples. The VOX squelch
@@ -600,6 +600,11 @@ some buttons on it. Some of these devices generate key press events, much like
 a keyboard. Specify which /dev/input device node to use using the EVDEV_DEVNAME
 config variable. Set which events that should open and close the squelch using
 the EVDEV_OPEN and EVDEV_CLOSE config variables.
+
+The GPIO squelch detector read a pin on the GPIO Port. Depending on the level
+of the pin, the squelch is switched. A HIGH (3.3V) at the pin set the squelch
+to open and a LOW (GND) level will set the squelch to closed.
+Specify which squelch pin to use with the GPIO_SQL_PIN configuration variable.
 
 The SIGLEV squelch detector use signal level measurements to determine if the
 squelch is open or not. Which signal level detector to use is determined by the
@@ -799,6 +804,10 @@ value for the event you want to use to close the squelch. For example if
 type is 1, code is 163 and value is 0, set this config variable to
 1,163,0. If you set the same type,code,value combination for both
 EVDEV_OPEN and EVDEV_CLOSE, that event will toggle the squelch.
+.TP
+.B GPIO_SQL_PIN
+If SQL_DET is set to GPIO this configuration variable is used to choose which
+GPIO pin to use for squelch input. Example: GPIO_SQL_PIN=4
 .TP
 .B SIGLEV_DET
 Choose which type of signal level detector to use. There are two choices,
@@ -1584,10 +1593,10 @@ be chosen using the CARD_SAMPLE_RATE config variable as usual.
 GPIO (General Purpose IO) is used to access hardware pins that are made
 available for example on an embedded system. Before starting to use a pin in
 SvxLink some setup need to be done in the operating system. The example below
-will set up pin 31 as an output for PTT use. Make sure that the commands are
-run as user root.
+will set up pin 31 as an output for PTT use and pin 30 is used as input for
+squelch. Make sure that the commands are run as user root.
 
-  Enable the pin for GPIO:
+  Enable the PTT pin for GPIO:
   echo 31 > /sys/class/gpio/export
 
   Set the direction to output for the pin:
@@ -1595,6 +1604,15 @@ run as user root.
 
   Make sure that the svxlink user can write to the GPIO pin:
   chown svxlink /sys/class/gpio31/value
+
+  Enable the squelch pin for GPIO:
+  echo 30 > /sys/class/gpio/export
+
+  Set the direction to input for the pin:
+  echo in > /sys/class/gpio/gpio30/direction
+
+  Make sure that the svxlink user can read from the GPIO pin:
+  chown svxlink /sys/class/gpio30/value
 
 These steps have to be performed whenever the system is rebooted. Putting the
 commands in a script is recommended.
