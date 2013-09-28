@@ -911,6 +911,9 @@ to use the internal software
 DTMF decoder. To use the S54S interface featuring a hardware DTMF decoder, set
 it to
 .B S54S.
+Setting it to
+.B NONE
+or commenting it out will disable DTMF detection.
 .TP
 .B DTMF_MUTING
 Mute the audio during the time when a DTMF digit is being received. Note that
@@ -978,7 +981,8 @@ you define ZVEI1 for SvxLink and a (e.g.) ZVEI3 sequence is received.
 .TP
 .B SEL5_DEC_TYPE
 At the moment only SEL5_DEC_TYPE=INTERNAL is valid. Maybe we have support for
-some external tone detectors later.
+some external tone detectors later. To disable SEL5 tone decoding, specify
+NONE or just comment the configuration variable out.
 .
 .SS Voter Section
 .

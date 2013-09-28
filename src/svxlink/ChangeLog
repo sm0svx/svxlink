@@ -46,6 +46,10 @@
   filters have been designed to be each others complement so that they will
   exactly cancel each other out.
 
+* Now possible to specify DTMF_DEC_TYPE=NONE (or just comment it out) if no
+  DTMF decoder is required for a certain receiver. Also made it possible to
+  specify NONE for SEL5_DEC_TYPE to make them behave in the same way.
+
 
 
  1.2.0 -- 29 Jul 2013

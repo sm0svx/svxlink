@@ -507,21 +507,28 @@ bool LocalRx::initialize(void)
   splitter->addSink(squelch_det, true);
 
     // Create the configured type of DTMF decoder and add it to the splitter
-  DtmfDecoder *dtmf_dec = DtmfDecoder::create(cfg, name());
-  if ((dtmf_dec == 0) || !dtmf_dec->initialize())
+  string dtmf_dec_type("NONE");
+  cfg.getValue(name(), "DTMF_DEC_TYPE", dtmf_dec_type);
+  if (dtmf_dec_type != "NONE")
   {
-    // FIXME: Cleanup?
-    return false;
+    DtmfDecoder *dtmf_dec = DtmfDecoder::create(cfg, name());
+    if ((dtmf_dec == 0) || !dtmf_dec->initialize())
+    {
+      // FIXME: Cleanup?
+      delete dtmf_dec;
+      return false;
+    }
+    dtmf_dec->digitActivated.connect(
+        mem_fun(*this, &LocalRx::dtmfDigitActivated));
+    dtmf_dec->digitDeactivated.connect(
+        mem_fun(*this, &LocalRx::dtmfDigitDeactivated));
+    splitter->addSink(dtmf_dec, true);
   }
-
-  dtmf_dec->digitActivated.connect(mem_fun(*this, &LocalRx::dtmfDigitActivated));
-  dtmf_dec->digitDeactivated.connect(
-      mem_fun(*this, &LocalRx::dtmfDigitDeactivated));
-  splitter->addSink(dtmf_dec, true);
   
-   // creates a selective multiple tone detector object
-  string sel5_det_str;
-  if (cfg.getValue(name(), "SEL5_DEC_TYPE", sel5_det_str))
+    // Create a selective multiple tone detector object
+  string sel5_dec_type("NONE");
+  cfg.getValue(name(), "SEL5_DEC_TYPE", sel5_dec_type);
+  if (sel5_dec_type != "NONE")
   {
     Sel5Decoder *sel5_dec = Sel5Decoder::create(cfg, name());
     if (sel5_dec == 0 || !sel5_dec->initialize())

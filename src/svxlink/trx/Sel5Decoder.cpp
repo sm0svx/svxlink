@@ -116,17 +116,11 @@ using namespace Async;
 Sel5Decoder *Sel5Decoder::create(Config &cfg, const string& name)
 {
   Sel5Decoder *dec = 0;
-  string type;
 
     // For later extensions we take the same structure from the dtmf stuff
     // to have the chance to connect a e.g. ZVEI1 hardware detector
-  if (!cfg.getValue(name, "SEL5_DEC_TYPE", type))
-  {
-    cerr << "*** ERROR: Config variable " << name << "/SEL5_DEC_TYPE not "
-      	 << "specified.\n";
-    return 0;
-  }
-
+  string type;
+  cfg.getValue(name, "SEL5_DEC_TYPE", type);
   if (type == "INTERNAL")
   {
     dec = new SwSel5Decoder(cfg, name);
@@ -135,7 +129,7 @@ Sel5Decoder *Sel5Decoder::create(Config &cfg, const string& name)
   {
     cerr << "*** ERROR: Unknown Sel5 decoder type \"" << type
          << "\" specified for " << name << "/SEL5_DEC_TYPE. "
-      	 << "Legal values are: \"INTERNAL\"\n";
+      	 << "Legal values are: \"NONE\" or \"INTERNAL\"\n";
   }
 
   return dec;

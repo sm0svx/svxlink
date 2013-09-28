@@ -118,13 +118,7 @@ DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
 {
   DtmfDecoder *dec = 0;
   string type;
-  if (!cfg.getValue(name, "DTMF_DEC_TYPE", type))
-  {
-    cerr << "*** ERROR: Config variable " << name << "/DTMF_DEC_TYPE not "
-      	 << "specified.\n";
-    return 0;
-  }
-  
+  cfg.getValue(name, "DTMF_DEC_TYPE", type);
   if (type == "INTERNAL")
   {
     dec = new SwDtmfDecoder(cfg, name);
@@ -137,7 +131,7 @@ DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
   {
     cerr << "*** ERROR: Unknown DTMF decoder type \"" << type << "\" "
          << "specified for " << name << "/DTMF_DEC_TYPE. "
-      	 << "Legal values are: \"INTERNAL\" or \"S54S\"\n";
+      	 << "Legal values are: \"NONE\", \"INTERNAL\" or \"S54S\"\n";
   }
   
   return dec;
