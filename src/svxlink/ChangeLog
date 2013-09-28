@@ -34,8 +34,10 @@
   state of the QSO recorder. If set to 1, the recorder will be activated upon
   SvxLink startup. If the TIMEOUT variable is set, the activation state will
   return to the one set in DEFAULT_ACTIVE if manually activated/deactivated.
-  If no audio has been recorded when a file is closed, the file will be
-  deleted.
+  If less than MIN_TIME milliseconds of audio has been recorded when a file is
+  closed, the file will be deleted.
+  If the node is idle for more than QSO_TIMEOUT seconds, the file will be
+  closed.
 
 * Added support for Squelch on GPIO. Use SQL_DET=GPIO and GPIO_SQL_PIN=30
   in your config for GPIO support.

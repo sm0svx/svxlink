@@ -131,7 +131,8 @@ namespace {
 
 QsoRecorder::QsoRecorder(Logic *logic)
   : recorder(0), hard_chunk_limit(0), soft_chunk_limit(0), max_dirsize(0),
-    default_active(false), tmo_timer(0), logic(logic)
+    default_active(false), tmo_timer(0), logic(logic), qso_tmo_timer(0),
+    min_samples(0)
 {
   selector = new AudioSelector;
 } /* QsoRecorder::QsoRecorder */
@@ -142,6 +143,7 @@ QsoRecorder::~QsoRecorder(void)
   setEnabled(false);
   delete selector;
   delete tmo_timer;
+  delete qso_tmo_timer;
 } /* QsoRecorder::~QsoRecorder */
 
 
@@ -174,9 +176,24 @@ bool QsoRecorder::initialize(const Config &cfg, const string &name)
     tmo_timer->setEnable(false);
     tmo_timer->expired.connect(
         hide(mem_fun(*this, &QsoRecorder::timerExpired)));
-    logic->idleStateChanged.connect(
-        hide(mem_fun(*this, &QsoRecorder::checkTimeoutTimer)));
   }
+
+  unsigned qso_timeout = 0;
+  cfg.getValue(name, "QSO_TIMEOUT", qso_timeout);
+  if (qso_timeout > 0)
+  {
+    qso_tmo_timer = new Timer(1000 * qso_timeout);
+    qso_tmo_timer->setEnable(false);
+    qso_tmo_timer->expired.connect(
+        hide(mem_fun(*this, &QsoRecorder::openNewFile)));
+  }
+
+  unsigned min_time = 0;
+  cfg.getValue(name, "MIN_TIME", min_time);
+  min_samples = min_time * INTERNAL_SAMPLE_RATE / 1000;
+
+  logic->idleStateChanged.connect(
+      hide(mem_fun(*this, &QsoRecorder::checkTimeoutTimers)));
 
   return true;
 } /* QsoRecorder::initialize */
@@ -202,7 +219,7 @@ void QsoRecorder::setEnabled(bool enable)
     closeFile();
   }
 
-  checkTimeoutTimer();
+  checkTimeoutTimers();
 } /* QsoRecorder::setEnabled */
 
 
@@ -237,30 +254,25 @@ void QsoRecorder::setMaxRecDirSize(unsigned max_size)
  *
  ****************************************************************************/
 
-void QsoRecorder::maxRecordingTimeReached(void)
+void QsoRecorder::openNewFile(void)
 {
   closeFile();
   openFile();
-} /* QsoRecorder::maxRecordingTimeReached */
+} /* QsoRecorder::openNewFile */
 
 
 void QsoRecorder::openFile(void)
 {
   if (recorder == 0)
   {
-    time_t epoch = time(NULL);
-    struct tm *tm = localtime(&epoch);
-    char timestamp[256];
-    strftime(timestamp, sizeof(timestamp), "%y%m%d%H%M%S", tm);
-    rec_timestamp = timestamp;
     string filename(rec_dir);
-    filename += "/tmp_";
-    filename += rec_timestamp;
+    filename += "/.qsorec_";
+    filename += logic->name();
     filename += ".wav";
     recorder = new AudioRecorder(filename);
     recorder->setMaxRecordingTime(hard_chunk_limit, soft_chunk_limit);
     recorder->maxRecordingTimeReached.connect(
-        mem_fun(*this, &QsoRecorder::maxRecordingTimeReached));
+        mem_fun(*this, &QsoRecorder::openNewFile));
     selector->registerSink(recorder, true);
     if (!recorder->initialize())
     {
@@ -277,15 +289,25 @@ void QsoRecorder::closeFile(void)
   {
     recorder->closeFile();
 
-    string oldpath(rec_dir + "/tmp_" + rec_timestamp + ".wav");
-    if (recorder->samplesWritten() > 0)
+    string oldpath(rec_dir + "/.qsorec_" + logic->name() + ".wav");
+    if (recorder->samplesWritten() > min_samples)
     {
-      time_t epoch = time(NULL);
-      struct tm *tm = localtime(&epoch);
+      string newpath(rec_dir + "/qsorec_" + logic->name() + "_");
+
+      const struct timeval &begin_time = recorder->beginTimestamp();
+      struct tm tm;
+      localtime_r(&begin_time.tv_sec, &tm);
       char timestamp[256];
-      strftime(timestamp, sizeof(timestamp), "%y%m%d%H%M%S", tm);
-      string newpath(rec_dir + "/qsorec_" + rec_timestamp + "_" + timestamp +
-                     ".wav");
+      strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H%M%S", &tm);
+      newpath += timestamp;
+
+      newpath += "_";
+
+      const struct timeval &end_time = recorder->endTimestamp();
+      localtime_r(&end_time.tv_sec, &tm);
+      strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H%M%S", &tm);
+      newpath += timestamp;
+      newpath += ".wav";
       if (rename(oldpath.c_str(), newpath.c_str()) != 0)
       {
         perror("QsoRecorder rename");
@@ -301,7 +323,6 @@ void QsoRecorder::closeFile(void)
 
     delete recorder;
     recorder = 0;
-    rec_timestamp = "";
 
     cleanupDirectory();
   }
@@ -365,14 +386,21 @@ void QsoRecorder::timerExpired(void)
 } /* QsoRecorder::timerExpired */
 
 
-void QsoRecorder::checkTimeoutTimer(void)
+void QsoRecorder::checkTimeoutTimers(void)
 {
   if (tmo_timer != 0)
   {
     tmo_timer->setEnable((recorderIsActive() != default_active)
                          && logic->isIdle());
   }
-} /* QsoRecorder::checkTimeoutTimer */
+
+  if (qso_tmo_timer != 0)
+  {
+    qso_tmo_timer->setEnable(recorderIsActive()
+                             && (recorder->samplesWritten() > 0)
+                             && logic->isIdle());
+  }
+} /* QsoRecorder::checkTimeoutTimers */
 
 
 

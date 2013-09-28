@@ -179,22 +179,23 @@ class QsoRecorder
     Async::AudioSelector  *selector;
     Async::AudioRecorder  *recorder;
     std::string           rec_dir;
-    std::string           rec_timestamp;
     unsigned              hard_chunk_limit;
     unsigned              soft_chunk_limit;
     unsigned              max_dirsize;
     bool                  default_active;
     Async::Timer          *tmo_timer;
     Logic                 *logic;
+    Async::Timer          *qso_tmo_timer;
+    unsigned              min_samples;
 
     QsoRecorder(const QsoRecorder&);
     QsoRecorder& operator=(const QsoRecorder&);
-    void maxRecordingTimeReached(void);
+    void openNewFile(void);
     void openFile(void);
     void closeFile(void);
     void cleanupDirectory(void);
     void timerExpired(void);
-    void checkTimeoutTimer(void);
+    void checkTimeoutTimers(void);
 
 };  /* class QsoRecorder */
 

@@ -263,12 +263,6 @@ Have a look at the QSO Recorder Section documentation for more information.
 
 Example: QSO_RECORDER=8:QsoRecorder
 .TP
-.B QSO_RECORDER_CMD
-The QSO recorder is used to write all received audio to a disk file. Use this
-configuration variable to specify which command to use to activate and
-deactivate the QSO recorder. For example, if this configuration variable is
-set to 8, 81 will activate the QSO recorder and 80 will deactivate it.
-.TP
 .B SEL5_MACRO_RANGE
 Define two comma separated values here to map the Sel5 tone call to your macro
 area. E.g. if you have defined:
@@ -440,6 +434,11 @@ not recorded.
 Use this configuration variable to specify in which directory to write the
 audio files. A good place is /var/spool/svxlink/qso_recorder.
 .TP
+.B MIN_TIME
+If the duration of the recorded content for a file is less then MIN_TIME
+milliseconds, the file will be deleted when the file is closed. Default: 0
+(empty files will be deleted).
+.TP
 .B MAX_TIME
 The maximum time in seconds to record to a file. When the maximum time have
 been reached, the file is closed and another file is created. Default: 0 (no
@@ -465,12 +464,17 @@ by default when SvxLink start. Default: 0 (default inactive)
 .B TIMEOUT
 If a timeout is specified, the activation state of the QSO recorder will return
 to the value specified in the DEFAULT_ACTIVE configuration variable when the
-node has been idle for the specified amount of time. When DEFAULT_ACTIVE is
+node has been idle for the specified number of seconds. When DEFAULT_ACTIVE is
 unset or 0, if the QSO recorder is manually activated it will be automatically
 deactivated after the specified amount of time of inactivity.  When
 DEFAULT_ACTIVE is set to 1, if the QSO recorder is manually deactivated it will
 be automatically activated after the specified amount of time of inactivity.
-The time is specified in seconds. Default: 0 (no timeout)
+Default: 0 (no timeout)
+.TP
+.B QSO_TIMEOUT
+Set this configuration variable if you want to close the currently opened file
+and open a new one after each QSO. The number of seconds the node should be
+idle before closing the file should be specified.
 .
 .SS Macros Section
 .
