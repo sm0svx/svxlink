@@ -457,6 +457,7 @@ bool LocalTx::initialize(void)
   {
     //AudioFilter *preemph = new AudioFilter("HsBq1/0.05/36/3500");
     //preemph->setOutputGain(0.3459);
+    /*
 #if INTERNAL_SAMPLE_RATE < 16000
     AudioFilter *preemph = new AudioFilter("LpBu1/3000 x HpBu1/3000");
     preemph->setOutputGain(20);
@@ -464,6 +465,31 @@ bool LocalTx::initialize(void)
     AudioFilter *preemph = new AudioFilter("LpBu3/5500 x HpBu1/3000");
     preemph->setOutputGain(11.5);
 #endif
+    */
+
+      // This pre-emphasis filter is designed in MATLAB. We simply invert the
+      // filter used in the de-emphasis stage to cancel that out. Have a
+      // look in LocalRx.cpp where the de-emphais filter is created for more
+      // information.
+      // In the 16kHz sampling rate case we prefix the pre-emphasis filter with
+      // a lowpass filter to limit the amplification on higher frequencies.
+    stringstream ss;
+#if INTERNAL_SAMPLE_RATE == 16000
+    const double b0 = 1;
+    const double b1 = -0.88874380625776361330991903741960413754;
+    const double a0 = 0.165032924968427058276532193303864914924;
+    const double a1 = 0.148529632472143124921615253697382286191;
+    ss << "LpBu2/5000 x ";
+#elif INTERNAL_SAMPLE_RATE == 8000
+    const double b0 = 1;
+    const double b1 = -0.789213276774273331248821250483160838485;
+    const double a0 = 0.312672475197891541753847377549391239882;
+    const double a1 = 0.281405227678661162826756481081247329712;
+#else
+#error "Only 16 and 8kHz sampling rate is supported by the pre-emphasis filter"
+#endif
+    ss << b0 << " " << b1 << " / " << a0 << " " << a1;
+    AudioFilter *preemph = new AudioFilter(ss.str());
     prev_src->registerSink(preemph, true);
     prev_src = preemph;
   }

@@ -41,6 +41,12 @@
   in your config for GPIO support.
   Patch contributed by DG9OAA / Jonny.
 
+* Improved pre- and de-emphasis filters. They were not good at all in the
+  previous relese. Now the filters should behave as expected. Also, the
+  filters have been designed to be each others complement so that they will
+  exactly cancel each other out.
+
+
 
  1.2.0 -- 29 Jul 2013
 ----------------------

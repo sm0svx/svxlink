@@ -358,8 +358,48 @@ bool LocalRx::initialize(void)
     //AudioFilter *deemph_filt = new AudioFilter("HsBq1/0.01/-18/3500");
     //AudioFilter *deemph_filt = new AudioFilter("HsBq1/0.05/-36/3500");
     //deemph_filt->setOutputGain(2.88);
-    AudioFilter *deemph_filt = new AudioFilter("HpBu1/50 x LpBu1/150");
-    deemph_filt->setOutputGain(2.27);
+    //AudioFilter *deemph_filt = new AudioFilter("HpBu1/50 x LpBu1/150");
+    //deemph_filt->setOutputGain(2.27);
+
+      // This filter is based on a simple RC filter commonly used in real
+      // receivers. The Transfer function for the filter is 1/(1+sRC).
+      // This transfer function can be converted to time discrete form
+      // using MATLAB.
+      //
+      //   fs=16000;         % Sampling rate
+      //   f1=300;           % 3dB point of filter
+      //   z1=0.9;           % Where we should put the filter zero
+      //   G=9;              % The passband gain in dB
+      //   [b, a]=bilinear([1], [1 2*pi*f1], fs); % Map S-plane to Z-plane
+      //   b=2*pi*f1*b;      % Gain compensation
+      //   k=(a(1)+a(2))/(b(1)+z1*b(2)); % Gain compensation for zero moving
+      //   b(2)=z1*b(2);     % Move the zero
+      //   b=k*b;            % Use the compensation factor calculated above
+      //   b=10.^(G/20)*k*b; % Apply passband gain
+      //   fvtool(b, a)      % Plot the result
+      //
+      // The "b" (nominator) terms are adjusted for 0dB gain in the passband
+      // by multiplying them with 2*pi*f1. Furthermore, we move the filter
+      // zero that is on the unit circle so that we can invert the filter in
+      // the pre-emphasis stage without getting an unstable filter.
+      //
+      // fvtool will give the filter coefficients below.
+#if INTERNAL_SAMPLE_RATE == 16000
+    const double b0 = 0.165032924968427058276532193303864914924;
+    const double b1 = 0.148529632472143124921615253697382286191;
+    const double a0 = 1;
+    const double a1 = -0.88874380625776361330991903741960413754;
+#elif INTERNAL_SAMPLE_RATE == 8000
+    const double b0 = 0.312672475197891541753847377549391239882;
+    const double b1 = 0.281405227678661162826756481081247329712;
+    const double a0 = 1;
+    const double a1 = -0.789213276774273331248821250483160838485;
+#else
+#error "Only 16 and 8kHz sampling rate is supported by the de-emphasis filter"
+#endif
+    stringstream ss;
+    ss << b0 << " " << b1 << " / " << a0 << " " << a1;
+    AudioFilter *deemph_filt = new AudioFilter(ss.str());
     prev_src->registerSink(deemph_filt, true);
     prev_src = deemph_filt;
   }
