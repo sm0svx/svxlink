@@ -190,7 +190,6 @@ class EmphasisBase : public Async::AudioFilter
     static const double a0 = 1.0;
     static const double a1 = -0.88874380625776361330991903741960413754;
 #endif
-    static const float OUTPUT_GAIN = 13.0f;
 #elif INTERNAL_SAMPLE_RATE == 8000
       // 0dB gain
     static const double b0 = 0.110940380645014949334559162252844544128 ;
@@ -200,6 +199,8 @@ class EmphasisBase : public Async::AudioFilter
 #else
 #error "Only 16 and 8kHz sampling rate is supported by the pre- and de-emphasis filters."
 #endif
+
+    static float outputGain(void) { return 13.0f; }
 
   private:
     double output_gain;
@@ -237,7 +238,7 @@ class PreemphasisFilter : public EmphasisBase
                   << errorString() << std::endl;
         std::exit(1);
       }
-      setOutputGain(-OUTPUT_GAIN);
+      setOutputGain(-outputGain());
     }
 
   private:
@@ -272,7 +273,7 @@ class DeemphasisFilter : public EmphasisBase
                   << errorString() << std::endl;
         exit(1);
       }
-      setOutputGain(OUTPUT_GAIN);
+      setOutputGain(outputGain());
     }
 
   private:
