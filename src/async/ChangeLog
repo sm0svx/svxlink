@@ -7,6 +7,8 @@
   when either of the limits are hit. Also, begin and end timestamps now are
   available.
 
+* The Async::AudioFilter setOutputGain method now take a dB value as argument.
+
 
 
  1.1.1 -- 29 Jul 2013
