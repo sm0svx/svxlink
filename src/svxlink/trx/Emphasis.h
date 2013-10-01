@@ -177,21 +177,13 @@ class EmphasisBase : public Async::AudioFilter
     
   protected:
 #if INTERNAL_SAMPLE_RATE == 16000
-#if 1
-      // 0dB gain
+      // 0dB gain, f1=300Hz, fs=16kHz
     static const double b0 = 0.058555891443177958410881700501704472117;
     static const double b1 = 0.052700302299058421340305358171463012695;
     static const double a0 = 1.0;
     static const double a1 = -0.88874380625776361330991903741960413754;
-#else
-      // 9dB gain
-    static const double b0 = 0.165032924968427058276532193303864914924;
-    static const double b1 = 0.148529632472143124921615253697382286191;
-    static const double a0 = 1.0;
-    static const double a1 = -0.88874380625776361330991903741960413754;
-#endif
 #elif INTERNAL_SAMPLE_RATE == 8000
-      // 0dB gain
+      // 0dB gain, f1=300Hz, fs=8kHz
     static const double b0 = 0.110940380645014949334559162252844544128 ;
     static const double b1 = 0.099846342580711719416619587263994617388 ;
     static const double a0 = 1.0;
@@ -200,7 +192,7 @@ class EmphasisBase : public Async::AudioFilter
 #error "Only 16 and 8kHz sampling rate is supported by the pre- and de-emphasis filters."
 #endif
 
-    static float outputGain(void) { return 13.0f; }
+    static float outputGain(void) { return 12.0f; }
 
   private:
     double output_gain;
@@ -223,9 +215,11 @@ class PreemphasisFilter : public EmphasisBase
     {
       std::stringstream ss;
 
+#if INTERNAL_SAMPLE_RATE >= 16000
         // First we low pass filter the signal to get rid of high frequency
         // components.
       ss << "LpBu2/5000 x ";
+#endif
 
         // Create the filter spec with inverted transfer function to cancel
         // out the de-emphasis filter. Also we need to normalize on b0 so that
