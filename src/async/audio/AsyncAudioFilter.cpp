@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cstring>
 #include <cstdlib>
+#include <cmath>
 #include <locale>
 
 
@@ -132,9 +133,34 @@ namespace Async
  *
  ****************************************************************************/
 
-AudioFilter::AudioFilter(const string &filter_spec, int sample_rate)
-  : fv(0), output_gain(1)
+AudioFilter::AudioFilter(int sample_rate)
+  : sample_rate(sample_rate), fv(0), output_gain(1.0f)
 {
+
+} /* AudioFilter::AudioFilter */
+
+
+AudioFilter::AudioFilter(const string &filter_spec, int sample_rate)
+  : sample_rate(sample_rate), fv(0), output_gain(1.0f)
+{
+  if (!parseFilterSpec(filter_spec))
+  {
+    cerr << "***ERROR: Filter creation error: " << error_str << endl;
+    exit(1);
+  }
+} /* AudioFilter::AudioFilter */
+
+
+AudioFilter::~AudioFilter(void)
+{
+  deleteFilter();
+} /* AudioFilter::~AudioFilter */
+
+
+bool AudioFilter::parseFilterSpec(const std::string &filter_spec)
+{
+  deleteFilter();
+
   fv = new FidVars;
   
   char spec_buf[256];
@@ -146,27 +172,21 @@ AudioFilter::AudioFilter(const string &filter_spec, int sample_rate)
   setlocale(LC_ALL, old_locale);
   if (fferr != 0)
   {
-    cerr << "***ERROR: Filter creation error: " << fferr << endl;
-    exit(1);
+    error_str = fferr;
+    free(fferr);
+    deleteFilter();
+    return false;
   }
   fv->run = fid_run_new(fv->ff, &fv->func);
   fv->buf = fid_run_newbuf(fv->run);
-  
-} /* AudioFilter::AudioFilter */
+  return true;
+} /* AudioFilter::parseFilterSpec */
 
 
-AudioFilter::~AudioFilter(void)
+void AudioFilter::setOutputGain(float gain_db)
 {
-  if (fv->ff != 0)
-  {
-    fid_run_freebuf(fv->buf);
-    fid_run_free(fv->run);
-    free(fv->ff);
-  }
-  
-  delete fv;
-  
-} /* AudioFilter::~AudioFilter */
+  output_gain = powf(10.0f, gain_db / 20.0f);
+} /* AudioFilter::setOutputGain */
 
 
 void AudioFilter::reset(void)
@@ -202,6 +222,19 @@ void AudioFilter::processSamples(float *dest, const float *src, int count)
  *
  ****************************************************************************/
 
+void AudioFilter::deleteFilter(void)
+{
+  if (fv != 0)
+  {
+    if (fv->ff != 0)
+    {
+      fid_run_freebuf(fv->buf);
+      fid_run_free(fv->run);
+      free(fv->ff);
+    }
+    delete fv;
+  }
+} /* AudioFilter::deleteFilter */
 
 
 

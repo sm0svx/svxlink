@@ -76,6 +76,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SquelchSerial.h"
 #include "SquelchSigLev.h"
 #include "SquelchEvDev.h"
+#include "SquelchGpio.h"
 #include "LocalRx.h"
 #include "multirate_filter_coeff.h"
 #include "Sel5Decoder.h"
@@ -83,6 +84,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Synchronizer.h"
 #include "HdlcDeframer.h"
 #include "Tx.h"
+#include "Emphasis.h"
 
 
 /****************************************************************************
@@ -361,9 +363,11 @@ bool LocalRx::initialize(void)
     //AudioFilter *deemph_filt = new AudioFilter("LpBu1/300");
     //AudioFilter *deemph_filt = new AudioFilter("HsBq1/0.01/-18/3500");
     //AudioFilter *deemph_filt = new AudioFilter("HsBq1/0.05/-36/3500");
-    //deemph_filt->setOutputGain(2.88);
-    AudioFilter *deemph_filt = new AudioFilter("HpBu1/50 x LpBu1/150");
-    deemph_filt->setOutputGain(2.27);
+    //deemph_filt->setOutputGain(9.0f);
+    //AudioFilter *deemph_filt = new AudioFilter("HpBu1/50 x LpBu1/150");
+    //deemph_filt->setOutputGain(7.0f);
+
+    DeemphasisFilter *deemph_filt = new DeemphasisFilter;
     prev_src->registerSink(deemph_filt, true);
     prev_src = deemph_filt;
   }
@@ -436,11 +440,15 @@ bool LocalRx::initialize(void)
   {
     squelch_det = new SquelchEvDev;
   }
+  else if (sql_det_str == "GPIO")
+  {
+    squelch_det = new SquelchGpio;
+  }
   else
   {
     cerr << "*** ERROR: Unknown squelch type specified in config variable "
       	 << name() << "/SQL_DET. Legal values are: VOX, CTCSS, SIGLEV, "
-	 << "EVDEV and SERIAL\n";
+	 << "EVDEV, GPIO and SERIAL\n";
     // FIXME: Cleanup
     return false;
   }
@@ -467,21 +475,28 @@ bool LocalRx::initialize(void)
   splitter->addSink(squelch_det, true);
 
     // Create the configured type of DTMF decoder and add it to the splitter
-  DtmfDecoder *dtmf_dec = DtmfDecoder::create(this, cfg, name());
-  if ((dtmf_dec == 0) || !dtmf_dec->initialize())
+  string dtmf_dec_type("NONE");
+  cfg.getValue(name(), "DTMF_DEC_TYPE", dtmf_dec_type);
+  if (dtmf_dec_type != "NONE")
   {
-    // FIXME: Cleanup?
-    return false;
+    DtmfDecoder *dtmf_dec = DtmfDecoder::create(this, cfg, name());
+    if ((dtmf_dec == 0) || !dtmf_dec->initialize())
+    {
+      // FIXME: Cleanup?
+      delete dtmf_dec;
+      return false;
+    }
+    dtmf_dec->digitActivated.connect(
+        mem_fun(*this, &LocalRx::dtmfDigitActivated));
+    dtmf_dec->digitDeactivated.connect(
+        mem_fun(*this, &LocalRx::dtmfDigitDeactivated));
+    splitter->addSink(dtmf_dec, true);
   }
-
-  dtmf_dec->digitActivated.connect(mem_fun(*this, &LocalRx::dtmfDigitActivated));
-  dtmf_dec->digitDeactivated.connect(
-      mem_fun(*this, &LocalRx::dtmfDigitDeactivated));
-  splitter->addSink(dtmf_dec, true);
   
-   // creates a selective multiple tone detector object
-  string sel5_det_str;
-  if (cfg.getValue(name(), "SEL5_DEC_TYPE", sel5_det_str))
+    // Create a selective multiple tone detector object
+  string sel5_dec_type("NONE");
+  cfg.getValue(name(), "SEL5_DEC_TYPE", sel5_dec_type);
+  if (sel5_dec_type != "NONE")
   {
     Sel5Decoder *sel5_dec = Sel5Decoder::create(cfg, name());
     if (sel5_dec == 0 || !sel5_dec->initialize())
@@ -584,7 +599,7 @@ bool LocalRx::initialize(void)
     // Open the audio device for reading
   if (!audio_io->open(AudioIO::MODE_RD))
   {
-    cerr << "*** Error: Could not open audio device for receiver \""
+    cerr << "*** ERROR: Could not open audio device for receiver \""
       	 << name() << "\"\n";
     // FIXME: Cleanup?
     return false;
@@ -868,7 +883,7 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
   else
   {
     cerr << "*** ERROR: Unknown signal level detector type \""
-         << siglev_det_type << "\" specified in " << name << "/SIGLEV_DET.";
+         << siglev_det_type << "\" specified in " << name << "/SIGLEV_DET.\n";
     return 0;
   }
   

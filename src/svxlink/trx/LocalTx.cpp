@@ -89,6 +89,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "PttCtrl.h"
 #include "SigLevDetAfsk.h"
 #include "Rx.h"
+#include "Emphasis.h"
 
 
 /****************************************************************************
@@ -481,14 +482,18 @@ bool LocalTx::initialize(void)
   if (cfg.getValue(name, "PREEMPHASIS", value) && (atoi(value.c_str()) != 0))
   {
     //AudioFilter *preemph = new AudioFilter("HsBq1/0.05/36/3500");
-    //preemph->setOutputGain(0.3459);
+    //preemph->setOutputGain(-9.0f);
+    /*
 #if INTERNAL_SAMPLE_RATE < 16000
     AudioFilter *preemph = new AudioFilter("LpBu1/3000 x HpBu1/3000");
-    preemph->setOutputGain(20);
+    preemph->setOutputGain(26);
 #else
     AudioFilter *preemph = new AudioFilter("LpBu3/5500 x HpBu1/3000");
-    preemph->setOutputGain(11.5);
+    preemph->setOutputGain(21);
 #endif
+    */
+
+    PreemphasisFilter *preemph = new PreemphasisFilter;
     prev_src->registerSink(preemph, true);
     prev_src = preemph;
   }

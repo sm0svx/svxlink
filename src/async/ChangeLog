@@ -1,3 +1,16 @@
+ 1.2.0 -- ?? ??? 2013
+----------------------
+
+* The Async::AudioRecorder class now have some added features. In addition to
+  the hard filesize limit there now is a soft limit at which the file will be
+  closed when the audio source call flushSamples. A signal will be emitted
+  when either of the limits are hit. Also, begin and end timestamps now are
+  available.
+
+* The Async::AudioFilter setOutputGain method now take a dB value as argument.
+
+
+
  1.1.1 -- 29 Jul 2013
 ----------------------
 

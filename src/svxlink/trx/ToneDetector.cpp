@@ -533,7 +533,7 @@ void ToneDetector::postProcess(void)
   bool active = true;
 
     // Calculate the magnitude for the center bin
-  float res_center = par->center.relativeMagnitudeSquared();
+  float res_center = par->center.magnitudeSquared();
 
     // Now determine if the tone is active or not. We start by checking
     // if the tone energy exceed the energy threshold. This check
@@ -545,12 +545,12 @@ void ToneDetector::postProcess(void)
   {
       // Check if the center fq is above the lower fq bin by the peak threshold.
       // This is part of the "neighbour bin SNR" check.
-    float res_lower = par->lower.relativeMagnitudeSquared();
+    float res_lower = par->lower.magnitudeSquared();
     active = active && (res_center > (res_lower * par->peak_thresh));
 
       // Check if the center fq is above the upper fq bin by the peak threshold.
       // This is part of the "neighbour bin SNR" check.
-    float res_upper = par->upper.relativeMagnitudeSquared();
+    float res_upper = par->upper.magnitudeSquared();
     active = active && (res_center > (res_upper * par->peak_thresh));
   }
 

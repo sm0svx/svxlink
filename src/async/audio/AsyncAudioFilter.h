@@ -115,8 +115,18 @@ class AudioFilter : public AudioProcessor
   public:
     /**
      * @brief 	Constuctor
+     * @param 	sample_rate The sampling rate
+     */
+    explicit AudioFilter(int sample_rate = INTERNAL_SAMPLE_RATE);
+  
+    /**
+     * @brief 	Constuctor
      * @param 	filter_spec The filter specification
      * @param 	sample_rate The sampling rate
+     *
+     * Use this constructor to set up at filter and call parseFilterSpec on
+     * the given filter specification. If the filter creation fails, this
+     * function will do an "exit(1)".
      */
     explicit AudioFilter(const std::string &filter_spec,
       	      	      	 int sample_rate = INTERNAL_SAMPLE_RATE);
@@ -127,10 +137,35 @@ class AudioFilter : public AudioProcessor
     ~AudioFilter(void);
   
     /**
-     * @brief 	Set the output gain of the filter
-     * @param 	gain The gain to set
+     * @brief   Create the filter from the given filter specification
+     * @param 	filter_spec The filter specification
+     * @return  Returns \em true on success or else \em false
+     *
+     * If using the constructor where a filter specification string is not
+     * given, use this function to set up the filter.
+     * This function may be called multiple times to change the filter without
+     * creating a new filter object.
      */
-    void setOutputGain(float gain) { output_gain = gain; }
+    bool parseFilterSpec(const std::string &filter_spec);
+
+    /**
+     * @brief   Get the latest filter creation error
+     * @return  Returns an error string if an error has occured previously
+     *
+     * If the parseFilterSpec function return \em false, this function can be
+     * used to retrieve an error text describing the error.
+     */
+    std::string errorString(void) const { return error_str; }
+
+    /**
+     * @brief 	Set the output gain of the filter
+     * @param 	gain The gain to set in dB
+     *
+     * Use this function to apply a gain (positive) or attenuation (negative)
+     * after the filter output. A gain of 6dB will amplify the signal with
+     * a factor of two.
+     */
+    void setOutputGain(float gain_db);
     
     /**
      * @brief Reset the filter state
@@ -154,11 +189,14 @@ class AudioFilter : public AudioProcessor
 
 
   private:
+    int         sample_rate;
     FidVars   	*fv;
     float     	output_gain;
+    std::string error_str;
     
     AudioFilter(const AudioFilter&);
     AudioFilter& operator=(const AudioFilter&);
+    void deleteFilter(void);
 
 };  /* class AudioFilter */
 

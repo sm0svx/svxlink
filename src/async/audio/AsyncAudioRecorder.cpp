@@ -119,8 +119,12 @@ AudioRecorder::AudioRecorder(const string& filename,
       	      	      	     AudioRecorder::Format fmt,
 			     int sample_rate)
   : filename(filename), file(NULL), samples_written(0), format(fmt),
-    sample_rate(sample_rate), max_samples(0)
+    sample_rate(sample_rate), max_samples(0), high_water_mark(0),
+    high_water_mark_reached(false)
 {
+  timerclear(&begin_timestamp);
+  timerclear(&end_timestamp);
+
   if (format == FMT_AUTO)
   {
     format = FMT_RAW;
@@ -140,14 +144,7 @@ AudioRecorder::AudioRecorder(const string& filename,
 
 AudioRecorder::~AudioRecorder(void)
 {
-  if (file != NULL)
-  {
-    if (format == FMT_WAV)
-    {
-      writeWaveHeader();
-    }
-    fclose(file);
-  }
+  closeFile();
 } /* AudioRecorder::~AudioRecorder */
 
 
@@ -176,14 +173,31 @@ bool AudioRecorder::initialize(void)
 } /* AudioRecorder::initialize */
 
 
-void AudioRecorder::setMaxRecordingTime(unsigned time_ms)
+void AudioRecorder::setMaxRecordingTime(unsigned time_ms, unsigned hw_time_ms)
 {
   max_samples = time_ms * (sample_rate / 1000);
+  high_water_mark = hw_time_ms * (sample_rate / 1000);
 } /* AudioRecorder::setMaxRecordingTime */
+
+
+void AudioRecorder::closeFile(void)
+{
+  if (file != NULL)
+  {
+    if (format == FMT_WAV)
+    {
+      writeWaveHeader();
+    }
+    fclose(file);
+    file = NULL;
+  }
+} /* AudioRecorder::closeFile */
 
 
 int AudioRecorder::writeSamples(const float *samples, int count)
 {
+  assert(count > 0);
+
   if (file == NULL)
   {
     return count;
@@ -196,6 +210,14 @@ int AudioRecorder::writeSamples(const float *samples, int count)
       return count;
     }
     count = min(static_cast<unsigned>(count), max_samples - samples_written);
+  }
+
+  gettimeofday(&end_timestamp, NULL);
+  if (!timerisset(&begin_timestamp))
+  {
+    long long usec = 1000000L * count / sample_rate;
+    struct timeval block_time = { 0,  usec };
+    timersub(&end_timestamp, &block_time, &begin_timestamp);
   }
   
   short buf[count];
@@ -225,6 +247,18 @@ int AudioRecorder::writeSamples(const float *samples, int count)
   
   samples_written += written;
   
+  if ((high_water_mark > 0) && (samples_written >= high_water_mark))
+  {
+    high_water_mark = 0;
+    high_water_mark_reached = true;
+  }
+
+  if ((max_samples > 0) && (samples_written >= max_samples))
+  {
+    closeFile();
+    maxRecordingTimeReached();
+  }
+
   return written;
 
 } /* AudioRecorder::writeSamples */
@@ -232,7 +266,16 @@ int AudioRecorder::writeSamples(const float *samples, int count)
 
 void AudioRecorder::flushSamples(void)
 {
-  sourceAllSamplesFlushed();
+  if (high_water_mark_reached)
+  {
+    closeFile();
+    sourceAllSamplesFlushed();
+    maxRecordingTimeReached();
+  }
+  else
+  {
+    sourceAllSamplesFlushed();
+  }
 } /* AudioRecorder::flushSamples */
 
 

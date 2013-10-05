@@ -490,6 +490,26 @@ proc qso_recorder_already_active {} {
 
 
 #
+# Executed when the timeout kicks in to activate the QSO recorder
+#
+proc qso_recorder_timeout_activate {} {
+  playMsg "Core" "timeout"
+  playMsg "Core" "activating";
+  playMsg "Core" "qso_recorder";
+}
+
+
+#
+# Executed when the timeout kicks in to deactivate the QSO recorder
+#
+proc qso_recorder_timeout_deactivate {} {
+  playMsg "Core" "timeout"
+  playMsg "Core" "deactivating";
+  playMsg "Core" "qso_recorder";
+}
+
+
+#
 # Executed when the user is requesting a language change
 #
 proc set_language {lang_code} {
@@ -506,6 +526,23 @@ proc list_languages {} {
   global logic_name;
   puts "$logic_name: Available languages: (NOT IMPLEMENTED)";
 
+}
+
+
+#
+# Executed when the node is being brought online or offline
+#
+proc logic_online {online} {
+  global mycall
+  variable CFG_TYPE
+
+  if {$online} {
+    playMsg "Core" "online";
+    spellWord $mycall;
+    if {$CFG_TYPE == "Repeater"} {
+      playMsg "Core" "repeater";
+    }
+  }
 }
 
 

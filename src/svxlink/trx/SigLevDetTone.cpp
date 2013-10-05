@@ -303,7 +303,7 @@ int SigLevDetTone::processSamples(const float *samples, int count)
       int max_idx = -1;
       for (int detno=0; detno < 10; ++detno)
       {
-        float res = det[detno]->relativeMagnitudeSquared();
+        float res = det[detno]->magnitudeSquared();
         det[detno]->reset();
         if (res > max)
         {

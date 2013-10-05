@@ -1,12 +1,12 @@
 /**
-@file	 QsoRecorder.h
-@brief   The QSO recorder is used to write radio traffic to file
+@file	 DtmfDigitHandler.h
+@brief   Handle incoming DTMF digits to form commands
 @author  Tobias Blomberg / SM0SVX
-@date	 2009-06-06
+@date	 2013-08-20
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef QSO_RECORDER_INCLUDED
-#define QSO_RECORDER_INCLUDED
+#ifndef DTMF_DIGIT_HANDLER_INCLUDED
+#define DTMF_DIGIT_HANDLER_INCLUDED
 
 
 /****************************************************************************
@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <string>
+#include <sigc++/sigc++.h>
 
 
 /****************************************************************************
@@ -43,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -59,15 +61,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class AudioSelector;
-  class AudioRecorder;
-  class Config;
-  class Timer;
-};
-
-class Logic;
 
 
 /****************************************************************************
@@ -86,7 +79,7 @@ class Logic;
  *
  ****************************************************************************/
 
-
+  
 
 /****************************************************************************
  *
@@ -111,102 +104,97 @@ class Logic;
  ****************************************************************************/
 
 /**
-@brief	The QSO recorder is used to write radio traffic to file
+@brief	Keep track of received DTMF digits to form commands
 @author Tobias Blomberg / SM0SVX
-@date   2009-06-06
+@date   2013-08-20
+
+This class will keep track of received DTMF digits and put them together into a
+command. A complete command is considered to be received when a # is received.
+The maximum command length is 20 digits. If the maximum length is exceeded,
+no more digits will be added to the digit buffer.
+If no digits are entered for 10 seconds, the command will time out and the
+digit buffer will be cleared.
 */
-class QsoRecorder
+class DtmfDigitHandler : public sigc::trackable
 {
   public:
     /**
-     * @brief 	Constuctor
-     * @param   rec_dir The path to the directory where the recordings
-     *                  are placed
+     * @brief 	Default constructor
      */
-    QsoRecorder(Logic *logic);
+    DtmfDigitHandler(void);
 
     /**
      * @brief 	Destructor
      */
-    ~QsoRecorder(void);
+    ~DtmfDigitHandler(void);
 
     /**
-     * @brief   Initialize the qso recorder
-     * @param   cfg An already initialize config object
-     * @param   name The name of the config section tp read config from
-     * @return  Returns \rm true on success or else \em false
+     * @brief 	Call this funtion to add new digits
+     * @param 	digit The DTMF digit to add (0-9, A-D, * and #)
      */
-    bool initialize(const Async::Config &cfg, const std::string &name);
+    void digitReceived(char digit);
 
     /**
-     * @brief   Add an audio source to the QSO recorder
-     * @param   source The audio source to add
-     * @param   prio   The priority to set. Higher numbers give higher priority.
-     */
-    void addSource(Async::AudioSource *source, int prio);
-
-    /**
-     * @brief 	Enable or disable the recorder
-     * @param 	enable Set to \em true to enable the recorder or \em false to
-     *                 disable it
-     */
-    void setEnabled(bool enable);
-
-    /**
-     * @brief   Check if the recorder is enabled or not
-     * @returns Returns \em true if the recorder is enabled or else \em false
-     */
-    bool isEnabled(void) const { return (recorder != 0); }
-
-    /**
-     * @brief   Set the maximum size of ech recorded file
-     * @param   max_time 
-     * @param   soft_time
+     * @brief   Reset the digit handler
      *
-     * Use this function to limit the file size of the recordings. When the
-     * soft limit is reached, the next flushSamples (e.g. squelch close) will
-     * close the file
+     * When resetting the digit handler the digit buffer will be cleard,
+     * the timeout timer will be stopped and anti flutter mode will be
+     * disabled if it's enabled.
      */
-    void setMaxChunkTime(unsigned max_time, unsigned soft_time=0);
+    void reset(void);
 
-    void setMaxRecDirSize(unsigned max_size);
+    /**
+     * @brief   Return the contents of the DTMF digit buffer
+     * @returns Returns the DTMF digits received so far
+     *
+     * Use this function to read the digits that are stored in the buffer.
+     * The buffer will not be cleared when reading. To clear it, use the reset
+     * function. The buffer will however be automatically cleared whenever
+     * the commandComplete signal is emitted so if this functions is called
+     * as a response to that, reset() does not have to be called.
+     */
+    std::string command(void) const { return received_digits; } 
 
-    bool recorderIsActive(void) const { return (recorder != 0); }
+    /**
+     * @brief   Force command complete
+     *
+     * Normally a DTMF command is considered complete when a # is received.
+     * Sometimes one might like to force a command complete event. This
+     * function is used to do just that.
+     * If the digit buffer is empty, no event will be generated.
+     */
+    void forceCommandComplete(void);
 
-  protected:
+    /**
+     * @brief   Find out if anti flutter is active or not
+     * @returns Returns \em true if anti flutter is active or else \em false.
+     */
+    bool antiFlutterActive(void) const { return anti_flutter; }
+
+    /**
+     * @brief   Signal that is emitted when a complete command has been received
+     */
+    sigc::signal<void> commandComplete;
 
   private:
-    Async::AudioSelector  *selector;
-    Async::AudioRecorder  *recorder;
-    std::string           rec_dir;
-    unsigned              hard_chunk_limit;
-    unsigned              soft_chunk_limit;
-    unsigned              max_dirsize;
-    bool                  default_active;
-    Async::Timer          *tmo_timer;
-    Logic                 *logic;
-    Async::Timer          *qso_tmo_timer;
-    unsigned              min_samples;
+    Async::Timer  cmd_tmo_timer;
+    std::string   received_digits;
+    bool          anti_flutter;
+    char          prev_digit;
 
-    QsoRecorder(const QsoRecorder&);
-    QsoRecorder& operator=(const QsoRecorder&);
-    void openNewFile(void);
-    void openFile(void);
-    void closeFile(void);
-    void cleanupDirectory(void);
-    void timerExpired(void);
-    void checkTimeoutTimers(void);
-
-};  /* class QsoRecorder */
+    DtmfDigitHandler(const DtmfDigitHandler&);
+    DtmfDigitHandler& operator=(const DtmfDigitHandler&);
+    void cmdTimeout(void);
+    
+};  /* class DtmfDigitHandler */
 
 
 //} /* namespace */
 
-#endif /* QSO_RECORDER_INCLUDED */
+#endif /* DTMF_DIGIT_HANDLER_INCLUDED */
 
 
 
 /*
  * This file has not been truncated
  */
-

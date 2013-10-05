@@ -1,12 +1,12 @@
 /**
-@file	 Sel5Decoder.cpp
-@brief   This file contains the base class for implementing a Sel5 decoder
-@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
-@date	 2010-03-09
+@file	 SquelchGpio.h
+@brief   A squelch detector that read squelch state from a GPIO port pin
+@author  Jonny Roeker / DG9OAA
+@date	 2013-09-09
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2010  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,7 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
+#ifndef SQUELCH_GPIO_INCLUDED
+#define SQUELCH_GPIO_INCLUDED
 
 
 /****************************************************************************
@@ -33,8 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
-#include <cstdlib>
+#include <string>
 
 
 /****************************************************************************
@@ -51,40 +51,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Sel5Decoder.h"
-#include "SwSel5Decoder.h"
-
+#include "Squelch.h"
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Forward declarations
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+namespace Async
+{
+  class Timer;
+};
+
+
+/****************************************************************************
+ *
+ * Namespace
+ *
+ ****************************************************************************/
+
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
+
 
 
 /****************************************************************************
  *
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
  *
  ****************************************************************************/
 
@@ -98,64 +100,59 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
+/**
+@brief	A squelch detector that read squelch state from a GPIO port
+@author Jonny Roeker / DG9OAA
+@date   2013-09-09
 
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-Sel5Decoder *Sel5Decoder::create(Config &cfg, const string& name)
+This squelch detector read the squelch indicator signal from a GPIO input pin.
+A high level (3.3V) will be interpreted as squelch open and a low level (GND)
+will be interpreted as squelch close.
+*/
+class SquelchGpio : public Squelch
 {
-  Sel5Decoder *dec = 0;
+  public:
+    /**
+     * @brief 	Default constuctor
+     */
+    SquelchGpio(void);
 
-    // For later extensions we take the same structure from the dtmf stuff
-    // to have the chance to connect a e.g. ZVEI1 hardware detector
-  string type;
-  cfg.getValue(name, "SEL5_DEC_TYPE", type);
-  if (type == "INTERNAL")
-  {
-    dec = new SwSel5Decoder(cfg, name);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown Sel5 decoder type \"" << type
-         << "\" specified for " << name << "/SEL5_DEC_TYPE. "
-      	 << "Legal values are: \"NONE\" or \"INTERNAL\"\n";
-  }
+    /**
+     * @brief 	Destructor
+     */
+    ~SquelchGpio(void);
 
-  return dec;
+    /**
+     * @brief 	Initialize the squelch detector
+     * @param 	cfg A previsously initialized config object
+     * @param 	rx_name The name of the RX (config section name)
+     * @return	Returns \em true on success or else \em false
+     */
+    bool initialize(Async::Config& cfg, const std::string& rx_name);
 
-} /* Sel5Decoder::create */
-
-
-bool Sel5Decoder::initialize(void)
-{
-  return true;
-} /* Sel5Decoder::initialize */
+  protected:
 
 
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
+  private:
+    int                 fd;
+    Async::Timer        *timer;
+
+    SquelchGpio(const SquelchGpio&);
+    SquelchGpio& operator=(const SquelchGpio&);
+    void readGpioValueData(void);
+
+};  /* class SquelchGpio */
 
 
+//} /* namespace */
 
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
+#endif /* SQUELCH_GPIO_INCLUDED */
 
 
 

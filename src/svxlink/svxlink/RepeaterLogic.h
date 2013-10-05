@@ -153,6 +153,12 @@ class RepeaterLogic : public Logic
     virtual bool activateModule(Module *module);
     
     /**
+     * @brief   Set the node to offline or online
+     * @param   online Set to \em true to set the node online
+     */
+    virtual void setOnline(bool online);
+
+    /**
      * @brief 	Called when a DTMF digit has been detected
      * @param 	digit The detected digit
      * @param 	duration The duration of the detected digit

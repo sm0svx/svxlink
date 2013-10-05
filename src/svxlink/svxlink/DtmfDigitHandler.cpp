@@ -1,12 +1,12 @@
 /**
-@file	 Sel5Decoder.cpp
-@brief   This file contains the base class for implementing a Sel5 decoder
-@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
-@date	 2010-03-09
+@file	 DtmfDigitHandler.cpp
+@brief   Handle incoming DTMF digits to form commands
+@author  Tobias Blomberg / SM0SVX
+@date	 2013-08-20
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2010  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,15 +26,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
 
-#include <iostream>
-#include <cstdlib>
 
 
 /****************************************************************************
@@ -51,8 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Sel5Decoder.h"
-#include "SwSel5Decoder.h"
+#include "DtmfDigitHandler.h"
 
 
 
@@ -63,7 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace Async;
+
 
 
 /****************************************************************************
@@ -113,34 +109,101 @@ using namespace Async;
  *
  ****************************************************************************/
 
-Sel5Decoder *Sel5Decoder::create(Config &cfg, const string& name)
+DtmfDigitHandler::DtmfDigitHandler(void)
+  : anti_flutter(false), prev_digit('?')
 {
-  Sel5Decoder *dec = 0;
-
-    // For later extensions we take the same structure from the dtmf stuff
-    // to have the chance to connect a e.g. ZVEI1 hardware detector
-  string type;
-  cfg.getValue(name, "SEL5_DEC_TYPE", type);
-  if (type == "INTERNAL")
-  {
-    dec = new SwSel5Decoder(cfg, name);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown Sel5 decoder type \"" << type
-         << "\" specified for " << name << "/SEL5_DEC_TYPE. "
-      	 << "Legal values are: \"NONE\" or \"INTERNAL\"\n";
-  }
-
-  return dec;
-
-} /* Sel5Decoder::create */
+  cmd_tmo_timer.expired.connect(
+      hide(mem_fun(*this, &DtmfDigitHandler::cmdTimeout)));
+  cmd_tmo_timer.setTimeout(10000);
+  cmd_tmo_timer.setEnable(false);
+} /* DtmfDigitHandler::DtmfDigitHandler */
 
 
-bool Sel5Decoder::initialize(void)
+DtmfDigitHandler::~DtmfDigitHandler(void)
 {
-  return true;
-} /* Sel5Decoder::initialize */
+  
+} /* DtmfDigitHandler::~DtmfDigitHandler */
+
+
+void DtmfDigitHandler::digitReceived(char digit)
+{
+  cmd_tmo_timer.reset();
+  cmd_tmo_timer.setEnable(true);
+
+  if ((digit == '#') || (anti_flutter && (digit == 'C')))
+  {
+    commandComplete();
+    reset();
+  }
+  else if (digit == 'A')
+  {
+    anti_flutter = true;
+    prev_digit = '?';
+  }
+  else if (digit == 'D')
+  {
+    received_digits = "D";
+    prev_digit = '?';
+  }
+  else if (received_digits.size() < 20)
+  {
+    // FIXME: The "H"-trick may have outlived its purpose. Check this!
+    if (digit == 'H') // Make it possible to type a hash mark in a macro
+    {
+      received_digits += '#';
+    }
+    else if (digit == 'B')
+    {
+      if (anti_flutter && (prev_digit != '?'))
+      {
+        received_digits += prev_digit;
+        prev_digit = '?';
+      }
+    }
+    else if (isdigit(digit)
+        || ((digit == '*') && (received_digits != "*")))
+    {
+      if (anti_flutter)
+      {
+        if (digit != prev_digit)
+        {
+          received_digits += digit;
+          prev_digit = digit;
+        }
+      }
+      else
+      {
+        received_digits += digit;
+      }
+    }
+  }
+}
+
+void DtmfDigitHandler::reset(void)
+{
+  cmd_tmo_timer.setEnable(false);
+  received_digits = "";
+  anti_flutter = false;
+  prev_digit = '?';
+}
+
+
+void DtmfDigitHandler::forceCommandComplete()
+{
+  if (!received_digits.empty())
+  {
+    commandComplete();
+    reset();
+  }
+}
+
+
+void DtmfDigitHandler::cmdTimeout(void)
+{
+  received_digits = "";
+  anti_flutter = false;
+  prev_digit = '?';
+}
 
 
 /****************************************************************************
