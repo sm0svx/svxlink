@@ -440,9 +440,13 @@ milliseconds, the file will be deleted when the file is closed. Default: 0
 (empty files will be deleted).
 .TP
 .B MAX_TIME
-The maximum time in seconds to record to a file. When the maximum time have
-been reached, the file is closed and another file is created. Default: 0 (no
-limit)
+Setting this configuration variable will set an upper limit for the file size
+of a recording. No more than MAX_TIME seconds of content will be recorded to a
+single file. When the maximum time have been reached, the file is closed and
+another file is created. Note that it is not the maximum time that the
+recording has been active that we are setting a limit for but rather how much
+content that have been recorded to the file. If nothing is recorded, the file
+can stay open indefinitely. Default: 0 (no limit)
 .TP
 .B SOFT_TIME
 To not get abrupt breaks in recordings it is possible to set a soft break time.
@@ -474,7 +478,7 @@ Default: 0 (no timeout)
 .B QSO_TIMEOUT
 Set this configuration variable if you want to close the currently opened file
 and open a new one after each QSO. The number of seconds the node should be
-idle before closing the file should be specified.
+idle before closing the file should be specified. Default: 0 (no QSO timeout)
 .
 .SS Macros Section
 .
