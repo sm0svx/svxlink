@@ -52,6 +52,10 @@
   DTMF decoder is required for a certain receiver. Also made it possible to
   specify NONE for SEL5_DEC_TYPE to make them behave in the same way.
 
+* Bugfix for the REPORT_CTCSS config variable. Depending on the locale
+  settings (e.g. the LC_NUMERIC environment variable) the wrong CTCSS
+  frequency could be announced.
+
 
 
  1.2.0 -- 29 Jul 2013
