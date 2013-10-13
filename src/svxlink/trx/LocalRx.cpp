@@ -198,8 +198,6 @@ bool LocalRx::initialize(void)
     return false;
   }
   
-  string value;
-
   string audio_dev;
   if (!cfg.getValue(name(), "AUDIO_DEV", audio_dev))
   {
@@ -207,33 +205,30 @@ bool LocalRx::initialize(void)
     return false;
   }
   
-  if (!cfg.getValue(name(), "AUDIO_CHANNEL", value))
+  int audio_channel = 0;
+  if (!cfg.getValue(name(), "AUDIO_CHANNEL", audio_channel))
   {
     cerr << "*** ERROR: Config variable " << name()
          << "/AUDIO_CHANNEL not set\n";
     return false;
   }
-  int audio_channel = atoi(value.c_str());
   
   bool deemphasis = false;
-  if (cfg.getValue(name(), "DEEMPHASIS", value))
-  {
-    deemphasis = (atoi(value.c_str()) != 0);
-  }
+  cfg.getValue(name(), "DEEMPHASIS", deemphasis);
   
-  int delay_line_len = 0;
-  if (cfg.getValue(name(), "MUTE_DTMF", value))
+  if (cfg.getValue(name(), "MUTE_DTMF", mute_dtmf))
   {
     cerr << "*** ERROR: The MUTE_DTMF configuration variable has been\n"
       	 << "           renamed to DTMF_MUTING. Change this in configuration\n"
 	 << "           section \"" << name() << "\".\n";
     return false;
   }
-  
-  if (cfg.getValue(name(), "DTMF_MUTING", value))
+
+  int delay_line_len = 0;
+  cfg.getValue(name(), "DTMF_MUTING", mute_dtmf);
+  if (mute_dtmf)
   {
-    mute_dtmf = (atoi(value.c_str()) != 0);
-    delay_line_len = DTMF_MUTING_PRE;
+    delay_line_len = max(delay_line_len, DTMF_MUTING_PRE);
   }
   
   bool  mute_1750 = false;
@@ -242,22 +237,16 @@ bool LocalRx::initialize(void)
     delay_line_len = max(delay_line_len, TONE_1750_MUTING_PRE);
   }
 
-  if (cfg.getValue(name(), "SQL_TAIL_ELIM", value))
+  cfg.getValue(name(), "SQL_TAIL_ELIM", sql_tail_elim);
+  if (sql_tail_elim > 0)
   {
-    sql_tail_elim = atoi(value.c_str());
     delay_line_len = max(delay_line_len, sql_tail_elim);
   }
   
-  if (cfg.getValue(name(), "PREAMP", value))
-  {
-    preamp_gain = atoi(value.c_str());
-  }
+  cfg.getValue(name(), "PREAMP", preamp_gain);
   
   bool peak_meter = false;
-  if (cfg.getValue(name(), "PEAK_METER", value))
-  {
-    peak_meter = (atoi(value.c_str()) != 0);
-  }
+  cfg.getValue(name(), "PEAK_METER", peak_meter);
   
   /*
   int dtmf_hangtime = 100;
@@ -803,15 +792,16 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
   {
     SigLevDetNoise *det = new SigLevDetNoise(sample_rate);
   
-    string value;
-    if (cfg.getValue(name, "SIGLEV_OFFSET", value))
+    float offset = 0.0f;
+    if (cfg.getValue(name, "SIGLEV_OFFSET", offset))
     {
-      det->setDetectorOffset(atof(value.c_str()));
+      det->setDetectorOffset(offset);
     }
     
-    if (cfg.getValue(name, "SIGLEV_SLOPE", value))
+    float slope = 1.0f;
+    if (cfg.getValue(name, "SIGLEV_SLOPE", slope))
     {
-      det->setDetectorSlope(atof(value.c_str()));
+      det->setDetectorSlope(slope);
     }
     
     siglevdet = det;

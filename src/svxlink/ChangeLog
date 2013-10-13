@@ -56,6 +56,9 @@
   settings (e.g. the LC_NUMERIC environment variable) the wrong CTCSS
   frequency could be announced.
 
+* Bugfix: Setting DTMF_MUTING=0 did not remove the audio delay, which it
+  should do.
+
 
 
  1.2.0 -- 29 Jul 2013
