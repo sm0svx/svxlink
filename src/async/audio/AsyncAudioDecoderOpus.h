@@ -1,12 +1,12 @@
 /**
-@file	 AsyncAudioDecoder.cpp
-@brief   Base class of an audio decoder
+@file	 AsyncAudioDecoderOpus.h
+@brief   An audio decoder that use the Opus audio codec
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-10-06
+@date	 2013-10-12
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+#ifndef ASYNC_AUDIO_DECODER_OPUS_INCLUDED
+#define ASYNC_AUDIO_DECODER_OPUS_INCLUDED
 
 
 /****************************************************************************
@@ -32,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <opus.h>
 
 
 /****************************************************************************
@@ -40,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncAudioDecoder.h>
 
 
 /****************************************************************************
@@ -48,46 +52,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncAudioDecoder.h"
-#include "AsyncAudioDecoderRaw.h"
-#include "AsyncAudioDecoderS16.h"
-#include "AsyncAudioDecoderGsm.h"
-#ifdef SPEEX_MAJOR
-#include "AsyncAudioDecoderSpeex.h"
-#endif
-#include "AsyncAudioDecoderOpus.h"
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Forward declarations
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
 
 
+/****************************************************************************
+ *
+ * Namespace
+ *
+ ****************************************************************************/
+
+namespace Async
+{
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
+
+  
 
 /****************************************************************************
  *
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
  *
  ****************************************************************************/
 
@@ -101,95 +96,91 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
+/**
+@brief	An audio decoder that use the Opus audio codec
+@author Tobias Blomberg / SM0SVX
+@date   2013-10-12
 
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-AudioDecoder *AudioDecoder::create(const std::string &name)
+This class implements an audio decoder that use the Opus audio codec.
+*/
+class AudioDecoderOpus : public AudioDecoder
 {
-  if (name == "RAW")
-  {
-    return new AudioDecoderRaw;
-  }
-  else if (name == "S16")
-  {
-    return new AudioDecoderS16;
-  }
-  else if (name == "GSM")
-  {
-    return new AudioDecoderGsm;
-  }
-#ifdef SPEEX_MAJOR
-  else if (name == "SPEEX")
-  {
-    return new AudioDecoderSpeex;
-  }
-#endif
-#ifdef OPUS_MAJOR
-  else if (name == "OPUS")
-  {
-    return new AudioDecoderOpus;
-  }
-#endif
-  else
-  {
-    return 0;
-  }
-}
-
-
-#if 0
-AudioDecoder::AudioDecoder(void)
-{
+  public:
+    /**
+     * @brief 	Default constuctor
+     */
+    AudioDecoderOpus(void);
   
-} /* AudioDecoder::AudioDecoder */
-
-
-AudioDecoder::~AudioDecoder(void)
-{
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~AudioDecoderOpus(void);
   
-} /* AudioDecoder::~AudioDecoder */
-
-
-void AudioDecoder::resumeOutput(void)
-{
+    /**
+     * @brief   Get the name of the codec
+     * @returns Return the name of the codec
+     */
+    virtual const char *name(void) const { return "OPUS"; }
   
-} /* AudioDecoder::resumeOutput */
-#endif
+    /**
+     * @brief 	Set an option for the decoder
+     * @param 	name The name of the option
+     * @param 	value The value of the option
+     */
+    virtual void setOption(const std::string &name, const std::string &value);
+
+    /**
+     * @brief Print codec parameter settings
+     */
+    virtual void printCodecParams(void) const;
+    
+    /**
+     * @brief   Configures decoder gain adjustment
+     * @param   new_gain The new gain to set [dB]
+     * @returns Retunrs the newly set gain
+     */
+    float setGain(float new_gain);
+
+    /**
+     * @brief   Get the currently set gain
+     * @returns Returns the currently set gain in dB
+     */
+    float gain(void) const;
+
+    /**
+     * @brief   Resets encoder to be equivalent to a freshly initialized one
+     */
+    void reset(void);
+
+    /**
+     * @brief 	Write encoded samples into the decoder
+     * @param 	buf  Buffer containing encoded samples
+     * @param 	size The size of the buffer
+     */
+    virtual void writeEncodedSamples(void *buf, int size);
+    
+
+  protected:
+    
+  private:
+    OpusDecoder *dec;
+    int         frame_size;
+    
+    AudioDecoderOpus(const AudioDecoderOpus&);
+    AudioDecoderOpus& operator=(const AudioDecoderOpus&);
+    
+};  /* class AudioDecoderOpus */
 
 
+} /* namespace */
 
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-#if 0
-void AudioDecoder::allSamplesFlushed(void)
-{
-  
-} /* AudioDecoder::allSamplesFlushed */
-#endif
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
+#endif /* ASYNC_AUDIO_DECODER_OPUS_INCLUDED */
 
 
 

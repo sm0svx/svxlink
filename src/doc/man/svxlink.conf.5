@@ -1097,10 +1097,11 @@ challenge-response procedure will be used for authentication.
 .TP
 .B CODEC
 The audio codec to use when transfering audio from this remote receiver.
-Available codecs are: RAW (256kbps), S16 (128kbps), GSM (13.2kbps),
-SPEEX (4-25kbps). These are raw bitrate values. There will be some
+Available codecs are: RAW (512kbps), S16 (256kbps), GSM (13.2kbps), SPEEX
+(8-25kbps), OPUS (8-64kbps). These are raw bitrate values. There will be some
 overhead added to this so the real bitrates on the wire are a little bit
-higher.
+higher. The OPUS codec is the most modern one and it also have the best
+quality for a given bitrate.
 .TP
 .B SPEEX_ENC_FRAMES_PER_PACKET
 Speex encoder setting. Each Speex frame contains 20ms audio. If using a low
@@ -1149,6 +1150,28 @@ to reduce the perception of the noise/distortion produced by the
 encoding/decoding process. In most cases, perceptual enhancement brings the
 sound further from the original objectively (e.g. considering only SNR), but in
 the end it still sounds better (subjective improvement).
+.TP
+.B OPUS_ENC_FRAME_SIZE
+Opus encoder setting. Specify how large, in milliseconds, each audio packet
+should be. Default: 20ms.
+.TP
+.B OPUS_ENC_COMPLEXITY
+Opus encoder setting. The complexity setting (0-10) tells the encoder how
+much CPU time it should spend on doing a good job. Set it as high as possible
+without overloading the CPU on the encoding computer (check CPU usage using
+command "top"). Default: 10.
+.TP
+.B OPUS_ENC_BITRATE
+Opus encoder setting. This is the bitrate that the encoder will encode for.
+Rates from about 8000 to 64000 bits per second are meaningful but the codec
+can handle from like 2500 to 512000 bps. Default: 20000bps.
+.TP
+.B OPUS_ENC_VBR
+Opus encoder setting. Enable (1) or disable (0) variable bitrate encoding. If
+enabled, the encoder will try to keep a constant quality by increasing the
+bitrate when needed and decrease it when the quality can be assured with a
+lower bitrate. The target average bitrate is the one set by OPUS_ENC_BITRATE.
+Default: 1.
 .
 .SS Local Transmitter Section
 .
@@ -1328,10 +1351,11 @@ challenge-response procedure will be used for authentication.
 .TP
 .B CODEC
 The audio codec to use when transfering audio to this remote transmitter.
-Available codecs are: RAW (256kbps), S16 (128kbps), GSM (13.2kbps),
-SPEEX (4-25kbps). These are raw bitrate values. There will be some
+Available codecs are: RAW (512kbps), S16 (256kbps), GSM (13.2kbps), SPEEX
+(8-25kbps), OPUS (8-64kbps). These are raw bitrate values. There will be some
 overhead added to this so the real bitrates on the wire are a little bit
-higher.
+higher. The OPUS codec is the most modern one and it also have the best
+quality for a given bitrate.
 .TP
 .B SPEEX_ENC_FRAMES_PER_PACKET
 Speex encoder setting. Each Speex frame contains 20ms audio. If using a low
@@ -1380,6 +1404,28 @@ to reduce the perception of the noise/distortion produced by the
 encoding/decoding process. In most cases, perceptual enhancement brings the
 sound further from the original objectively (e.g. considering only SNR), but in
 the end it still sounds better (subjective improvement).
+.TP
+.B OPUS_ENC_FRAME_SIZE
+Opus encoder setting. Specify how large, in milliseconds, each audio packet
+should be. Default: 20ms.
+.TP
+.B OPUS_ENC_COMPLEXITY
+Opus encoder setting. The complexity setting (0-10) tells the encoder how
+much CPU time it should spend on doing a good job. Set it as high as possible
+without overloading the CPU on the encoding computer (check CPU usage using
+command "top"). Default: 10.
+.TP
+.B OPUS_ENC_BITRATE
+Opus encoder setting. This is the bitrate that the encoder will encode for.
+Rates from about 8000 to 64000 bits per second are meaningful but the codec
+can handle from like 2500 to 512000 bps. Default: 20000bps.
+.TP
+.B OPUS_ENC_VBR
+Opus encoder setting. Enable (1) or disable (0) variable bitrate encoding. If
+enabled, the encoder will try to keep a constant quality by increasing the
+bitrate when needed and decrease it when the quality can be assured with a
+lower bitrate. The target average bitrate is the one set by OPUS_ENC_BITRATE.
+Default: 1.
 .
 .SS Multi Transmitter Section
 .

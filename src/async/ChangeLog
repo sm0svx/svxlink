@@ -9,6 +9,8 @@
 
 * The Async::AudioFilter setOutputGain method now take a dB value as argument.
 
+* Added support for the Opus audio codec.
+
 
 
  1.1.1 -- 29 Jul 2013

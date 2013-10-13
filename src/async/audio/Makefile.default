@@ -110,6 +110,10 @@ ifdef USE_SPEEX
 LIBSRC +=	  AsyncAudioEncoderSpeex.cpp AsyncAudioDecoderSpeex.cpp
 endif
 
+ifdef USE_OPUS
+LIBSRC +=	  AsyncAudioEncoderOpus.cpp AsyncAudioDecoderOpus.cpp
+endif
+
 ifeq ($(ASYNC_AUDIO_ALSA_SUPPORT),1)
 LIBSRC +=	  AsyncAudioDeviceAlsa.cpp
 endif
@@ -120,7 +124,7 @@ endif
 
 
 # Which libs are used by the DYNAMIC lib generated.
-LIB_LIBS = -lasynccore $(SIGC_LIBS) -lgsm $(SPEEX_LIBS)
+LIB_LIBS = -lasynccore $(SIGC_LIBS) -lgsm $(SPEEX_LIBS) $(OPUS_LIBS)
 
 ifeq ($(ASYNC_AUDIO_ALSA_SUPPORT),1)
 LIB_LIBS += -lasound
@@ -256,11 +260,12 @@ RPM_NAME :=
 
 # Paths to includefile-directories. All directories must be preceeded
 # by the "-I" switch.
-INCPATH 	+= $(SIGC_INCPATH) -I/usr/include/gsm $(SPEEX_INCPATH)
+INCPATH 	+= $(SIGC_INCPATH) -I/usr/include/gsm $(SPEEX_INCPATH) \
+		   $(OPUS_INCPATH)
 
 # Paths to library-directories. All directories must be preceeded
 # by the "-L" switch.
-LIBPATH 	+= $(SIGC_LIBPATH) $(SPEEX_LIBPATH)
+LIBPATH 	+= $(SIGC_LIBPATH) $(SPEEX_LIBPATH) $(OPUS_LIBPATH)
 
 # Additional warnings to use. If you want to override the default
 # warnings, change the "+=" to "=".
