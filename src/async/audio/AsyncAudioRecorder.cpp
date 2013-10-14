@@ -215,7 +215,7 @@ int AudioRecorder::writeSamples(const float *samples, int count)
   gettimeofday(&end_timestamp, NULL);
   if (!timerisset(&begin_timestamp))
   {
-    long long usec = 1000000L * count / sample_rate;
+    long usec = static_cast<long>(1000000LL * count / sample_rate);
     struct timeval block_time = { 0,  usec };
     timersub(&end_timestamp, &block_time, &begin_timestamp);
   }
