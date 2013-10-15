@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 #include <cstdlib>
+#include <sstream>
 
 
 /****************************************************************************
@@ -43,7 +44,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <common.h>
 
 
 /****************************************************************************
@@ -64,7 +64,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
-using namespace SvxLink;
 
 
 
@@ -157,13 +156,14 @@ void AudioEncoderOpus::setOption(const std::string &name,
 #endif
   if (name == "FRAME_SIZE")
   {
+    stringstream ss(value);
     float frame_size;
-    if (setValueFromString(frame_size, value))
+    if (ss >> frame_size)
     {
       setFrameSize(frame_size);
     }
   }
-  if (name == "COMPLEXITY")
+  else if (name == "COMPLEXITY")
   {
     setComplexity(atoi(value.c_str()));
   }
