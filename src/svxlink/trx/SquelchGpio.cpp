@@ -143,8 +143,8 @@ bool SquelchGpio::initialize(Async::Config& cfg, const std::string& rx_name)
     return false;
   }
 
-  int sql_pin = -1;
-  if (!cfg.getValue(rx_name, "GPIO_SQL_PIN", sql_pin) || (sql_pin < 0))
+  string sql_pin;
+  if (!cfg.getValue(rx_name, "GPIO_SQL_PIN", sql_pin) || sql_pin.empty())
   {
     cerr << "*** ERROR: Config variable " << rx_name <<
             "/GPIO_SQL_PIN not set or invalid\n";
@@ -152,10 +152,11 @@ bool SquelchGpio::initialize(Async::Config& cfg, const std::string& rx_name)
   }
 
   stringstream ss;
-  ss << "/sys/class/gpio/gpio" << sql_pin << "/value";
-  if ((fd = open(ss.str().c_str(), O_RDONLY)) < 0)
+  ss << "/sys/class/gpio/" << sql_pin << "/value";
+  fd = open(ss.str().c_str(), O_RDONLY);
+  if (fd < 0)
   {
-    cerr << "*** ERROR: Could not open event device " << ss.str()
+    cerr << "*** ERROR: Could not open GPIO device " << ss.str()
          << " specified in " << rx_name << "/GPIO_SQL_PIN: "
          << strerror(errno) << endl;
     return false;

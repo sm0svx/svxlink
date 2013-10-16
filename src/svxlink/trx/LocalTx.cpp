@@ -234,7 +234,7 @@ LocalTx::LocalTx(Config& cfg, const string& name)
     ptt_pin2(Serial::PIN_NONE), ptt_pin2_rev(false), txtot(0),
     tx_timeout_occured(false), tx_timeout(0), sine_gen(0), ctcss_enable(false),
     dtmf_encoder(0), selector(0), dtmf_valve(0), input_handler(0),
-    audio_valve(0), siglev_sine_gen(0), ptt_hangtimer(0), gpio_pin(-1)
+    audio_valve(0), siglev_sine_gen(0), ptt_hangtimer(0), gpio_pin("")
 {
 
 } /* LocalTx::LocalTx */
@@ -285,10 +285,9 @@ bool LocalTx::initialize(void)
 
   if (ptt_port == "GPIO")
   {
-    if (!cfg.getValue(name, "PTT_PIN", gpio_pin) || (gpio_pin < 0))
+    if (!cfg.getValue(name, "PTT_PIN", gpio_pin) || gpio_pin.empty())
     {
-      cerr << "*** ERROR: Config variable " << name << "/PTT_PIN not set "
-              "or invalid\n";
+      cerr << "*** ERROR: Config variable " << name << "/PTT_PIN not set\n";
       return false;
     }
   }
@@ -339,7 +338,7 @@ bool LocalTx::initialize(void)
   if (ptt_port == "GPIO")
   {
     stringstream ss;
-    ss << "/sys/class/gpio/gpio" << gpio_pin << "/value";
+    ss << "/sys/class/gpio/" << gpio_pin << "/value";
     ofstream gpioval(ss.str().c_str());
     if (gpioval.fail())
     {
@@ -810,10 +809,10 @@ bool LocalTx::setPtt(bool tx, bool with_hangtime)
     return false;
   }
 
-  if(gpio_pin > 0)
+  if(!gpio_pin.empty())
   {
     stringstream ss;
-    ss << "/sys/class/gpio/gpio" << gpio_pin << "/value";
+    ss << "/sys/class/gpio/" << gpio_pin << "/value";
     ofstream gpioval(ss.str().c_str());
     if (gpioval.fail())
     {

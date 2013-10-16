@@ -815,7 +815,8 @@ EVDEV_OPEN and EVDEV_CLOSE, that event will toggle the squelch.
 .TP
 .B GPIO_SQL_PIN
 If SQL_DET is set to GPIO this configuration variable is used to choose which
-GPIO pin to use for squelch input. Example: GPIO_SQL_PIN=4
+GPIO pin to use for squelch input. The most common name is gpio<number>, like
+gpio4. Some GPIO drivers use more complex names, like gpio33_pe11.
 .TP
 .B SIGLEV_DET
 Choose which type of signal level detector to use. There are two choices,
@@ -1210,9 +1211,10 @@ that you specify two pins since one pin does not provide enough drive power to
 the circuit. A "!" in front of the pin name indicates inverted operation. Some
 of the possible values are RTS, DTRRTS, !DTR!RTS or even DTR!RTS.
 
-If GPIO was specified for PTT_PORT, set the PTT_PIN config variable to the
-number of the GPIO-pin to use. Have a look at the USING GPIO section for
-information on how to set up the operating system.
+If GPIO was specified for PTT_PORT, set the PTT_PIN config variable to the pin
+name of the GPIO-pin to use. The most common name is gpio<number>, like gpio3.
+Some GPIO drivers use more complex pin names like gpio33_pe11.  Have a look at
+the USING GPIO section for information on how to set up the operating system.
 .TP
 .B SERIAL_SET_PINS
 Set the specified serial port pins to a static state. This can be good if using
