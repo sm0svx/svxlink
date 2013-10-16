@@ -39,9 +39,12 @@
   If the node is idle for more than QSO_TIMEOUT seconds, the file will be
   closed.
 
-* Added support for Squelch on GPIO. Use SQL_DET=GPIO and GPIO_SQL_PIN=30
+* Added support for Squelch on GPIO. Use SQL_DET=GPIO and GPIO_SQL_PIN=gpio3
   in your config for GPIO support.
   Patch contributed by DG9OAA / Jonny.
+
+* GPIO pins are now specified with the full name (e.g. gpio3) instead of with
+  just the pin number. This enables the use of any pin naming scheme.
 
 * Improved pre- and de-emphasis filters. They were not good at all in the
   previous relese. Now the filters should behave as expected. Also, the
