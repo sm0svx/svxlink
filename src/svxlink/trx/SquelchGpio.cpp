@@ -1,12 +1,12 @@
 /**
-@file	 Sel5Decoder.cpp
-@brief   This file contains the base class for implementing a Sel5 decoder
-@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
-@date	 2010-03-09
+@file	 SquelchGpio.cpp
+@brief   A squelch detector that read squelch state from a GPIO port pin
+@author  Jonny Roeker / DG9OAA
+@date	 2013-09-09
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2010  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,15 +26,18 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
 
-#include <iostream>
-#include <cstdlib>
+#include <cstring>
+#include <cerrno>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 
 /****************************************************************************
@@ -43,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -51,8 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Sel5Decoder.h"
-#include "SwSel5Decoder.h"
+#include "SquelchGpio.h"
 
 
 
@@ -64,6 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
+
 
 
 /****************************************************************************
@@ -113,34 +117,58 @@ using namespace Async;
  *
  ****************************************************************************/
 
-Sel5Decoder *Sel5Decoder::create(Config &cfg, const string& name)
+SquelchGpio::SquelchGpio(void)
+  : fd(-1), timer(0)
 {
-  Sel5Decoder *dec = 0;
-
-    // For later extensions we take the same structure from the dtmf stuff
-    // to have the chance to connect a e.g. ZVEI1 hardware detector
-  string type;
-  cfg.getValue(name, "SEL5_DEC_TYPE", type);
-  if (type == "INTERNAL")
-  {
-    dec = new SwSel5Decoder(cfg, name);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown Sel5 decoder type \"" << type
-         << "\" specified for " << name << "/SEL5_DEC_TYPE. "
-      	 << "Legal values are: \"NONE\" or \"INTERNAL\"\n";
-  }
-
-  return dec;
-
-} /* Sel5Decoder::create */
+  
+} /* SquelchGpio::SquelchGpio */
 
 
-bool Sel5Decoder::initialize(void)
+SquelchGpio::~SquelchGpio(void)
 {
+  delete timer;
+  timer = 0;
+  if (fd >= 0)
+  {
+    close(fd);
+    fd = -1;
+  }
+} /* SquelchGpio::~SquelchGpio */
+
+
+bool SquelchGpio::initialize(Async::Config& cfg, const std::string& rx_name)
+{
+  if (!Squelch::initialize(cfg, rx_name))
+  {
+    return false;
+  }
+
+  string sql_pin;
+  if (!cfg.getValue(rx_name, "GPIO_SQL_PIN", sql_pin) || sql_pin.empty())
+  {
+    cerr << "*** ERROR: Config variable " << rx_name <<
+            "/GPIO_SQL_PIN not set or invalid\n";
+    return false;
+  }
+
+  stringstream ss;
+  ss << "/sys/class/gpio/" << sql_pin << "/value";
+  fd = open(ss.str().c_str(), O_RDONLY);
+  if (fd < 0)
+  {
+    cerr << "*** ERROR: Could not open GPIO device " << ss.str()
+         << " specified in " << rx_name << "/GPIO_SQL_PIN: "
+         << strerror(errno) << endl;
+    return false;
+  }
+
+  timer = new Timer(100, Timer::TYPE_PERIODIC);
+  timer->expired.connect(
+      hide(mem_fun(*this, &SquelchGpio::readGpioValueData)));
+
   return true;
-} /* Sel5Decoder::initialize */
+}
+
 
 
 /****************************************************************************
@@ -157,9 +185,53 @@ bool Sel5Decoder::initialize(void)
  *
  ****************************************************************************/
 
+/**
+ * @brief  Called by a timer to periodically read the state of the GPIO pin
+ *
+ * An example of reading a GPIO ports can be found at:
+ * http://elinux.org/RPi_Low-level_peripherals#C_.2B_sysfs
+ * Note though that this example code is not 100% safe and not optimal. The
+ * implementation below is better.
+ * The file position must be reset before reading since we are keeping the
+ * file descriptor open. The first byte in the stream will contain ASCII
+ * '0' or '1' depending on the state of the GPIO pin. 0=GND, 1=3.3V. If the
+ * next char is read it will be a newline character but we will ignore that.
+ */
+void SquelchGpio::readGpioValueData(void)
+{
+  char value = '?';
+  if (lseek(fd, 0, SEEK_SET) == -1)
+  {
+    cerr << "*** WARNING: SquelchGpio::readGpioValueData: lseek failed: "
+         << strerror(errno) << endl;
+    return;
+  }
+  ssize_t cnt = read(fd, &value, 1);
+  if (cnt == -1)
+  {
+    cerr << "*** WARNING: SquelchGpio::readGpioValueData: read failed"
+         << strerror(errno) << endl;
+    return;
+  }
+  else if (cnt != 1)
+  {
+    cerr << "*** WARNING: SquelchGpio::readGpioValueData: read returned "
+         << cnt << " bytes instead of 1: " << strerror(errno) << endl;
+    return;
+  }
+
+  if (!signalDetected() && (value == '1'))
+  {
+    setSignalDetected(true);
+  }
+  else if (signalDetected() && (value == '0'))
+  {
+    setSignalDetected(false);
+  }
+} /* SquelchGpio::readGpioValueData */
+
 
 
 /*
  * This file has not been truncated
  */
-

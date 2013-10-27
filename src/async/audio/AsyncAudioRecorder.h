@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdio.h>
 #include <stdint.h>
 #include <sigc++/sigc++.h>
+#include <sys/time.h>
 
 #include <string>
 
@@ -113,7 +114,7 @@ namespace Async
 @date   2005-08-29
 
 Use this class to stream audio into a file. The audio is stored in raw format,
-only samples no header.
+(only samples no header) or WAV format.
 */
 class AudioRecorder : public Async::AudioSink
 {
@@ -138,20 +139,54 @@ class AudioRecorder : public Async::AudioSink
     /**
      * @brief 	Initialize the recorder
      * @return	Return \em true if the initialization was successful
+     *
+     * This function will initialize the recorder and open the file.
      */
     bool initialize(void);
     
     /**
      * @brief   Set the maximum length of this recording
      * @param   time_ms The maximum time in milliseconds
+     * @param   hw_time_ms The high watermark time in milliseconds
      * 
      * Use this function to set the maximum time for a recording. When the
-     * limit has been reached, any incoming samples will be thrown away.
+     * limit has been reached, the file will be closed and any incoming samples
+     * will be thrown away.
+     * The high watermark time is a soft limit. After reaching the high
+     * watermark, the recording will be ended as soon as the audio source
+     * call flushSamples. The high watermark need to be set to less than
+     * the maximum time to have any effect. A time of 0 disables it.
      * The sampling rate given in the constructor call is used to calculate
      * the time. Setting the time to 0 will allow the file to grow indefinetly.
      */
-    void setMaxRecordingTime(unsigned time_ms);
+    void setMaxRecordingTime(unsigned time_ms, unsigned hw_time_ms=0);
     
+    /**
+     * @brief   Close the file
+     *
+     * This function will close the file being recorded to. When the file has
+     * been closed, all samples coming in after that will be discarded.
+     */
+    void closeFile(void);
+
+    /**
+     * @brief   Find out how many samples that have been written so far
+     * @return  Returns the number of samples written so far
+     */
+    unsigned samplesWritten(void) const { return samples_written; }
+
+    /**
+     * @brief   The timestamp of the first stored sample
+     * @returns Returns the timestamp
+     */
+    const struct timeval &beginTimestamp(void) const { return begin_timestamp; }
+
+    /**
+     * @brief   The timestamp of the last stored sample
+     * @returns Returns the timestamp
+     */
+    const struct timeval &endTimestamp(void) const { return end_timestamp; }
+
     /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
@@ -175,14 +210,27 @@ class AudioRecorder : public Async::AudioSink
      */
     virtual void flushSamples(void);
 
-    
+    /**
+     * @brief   A signal that's emitted when the max recording time is reached
+     *
+     * This signal will be emitted when any of the maximum recording time or
+     * the high watermark limits are reached. Before this signal is emitted,
+     * the file is closed. It is safe to delete the audio recorder from the
+     * slot that is connected to this signal.
+     */
+    sigc::signal<void> maxRecordingTimeReached;
+
   private:
-    std::string filename;
-    FILE      	*file;
-    unsigned    samples_written;
-    Format    	format;
-    int       	sample_rate;
-    unsigned    max_samples;
+    std::string     filename;
+    FILE      	    *file;
+    unsigned        samples_written;
+    Format    	    format;
+    int       	    sample_rate;
+    unsigned        max_samples;
+    unsigned        high_water_mark;
+    bool            high_water_mark_reached;
+    struct timeval  begin_timestamp;
+    struct timeval  end_timestamp;
     
     AudioRecorder(const AudioRecorder&);
     AudioRecorder& operator=(const AudioRecorder&);

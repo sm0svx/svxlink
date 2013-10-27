@@ -252,6 +252,22 @@ proc qso_recorder_already_active {} {
 
 
 #
+# Executed when the timeout kicks in to activate the QSO recorder
+#
+proc qso_recorder_timeout_activate {} {
+  Logic::qso_recorder_timeout_activate
+}
+
+
+#
+# Executed when the timeout kicks in to deactivate the QSO recorder
+#
+proc qso_recorder_timeout_deactivate {} {
+  Logic::qso_recorder_timeout_deactivate
+}
+
+
+#
 # Executed when the user is requesting a language change
 #
 proc set_language {lang_code} {
@@ -266,6 +282,13 @@ proc list_languages {} {
   Logic::list_languages
 }
 
+
+#
+# Executed when the node is being brought online after being offline
+#
+proc logic_online {online} {
+  Logic::logic_online $online
+}
 
 
 # end of namespace

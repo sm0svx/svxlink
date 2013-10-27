@@ -12,7 +12,7 @@ set(LIBSRC
   NetTrxTcpClient.cpp DtmfDecoder.cpp HwDtmfDecoder.cpp
   S54sDtmfDecoder.cpp PttCtrl.cpp MultiTx.cpp
   SigLevDetTone.cpp Sel5Decoder.cpp SwSel5Decoder.cpp
-  SquelchEvDev.cpp Macho.cpp
+  SquelchEvDev.cpp Macho.cpp SquelchGpio.cpp
 )
 
 # Which other libraries this library depends on

@@ -55,6 +55,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifdef SPEEX_MAJOR
 #include "AsyncAudioEncoderSpeex.h"
 #endif
+#ifdef OPUS_MAJOR
+#include "AsyncAudioEncoderOpus.h"
+#endif
 
 
 /****************************************************************************
@@ -133,6 +136,12 @@ AudioEncoder *AudioEncoder::create(const std::string &name)
   else if (name == "SPEEX")
   {
     return new AudioEncoderSpeex;
+  }
+#endif
+#ifdef OPUS_MAJOR
+  else if (name == "OPUS")
+  {
+    return new AudioEncoderOpus;
   }
 #endif
   else

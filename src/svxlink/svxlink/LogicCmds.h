@@ -235,6 +235,16 @@ class LinkCmd : public Command
 };  /* class LinkCmd */
 
 
+/**
+@brief	The QSO recorder command
+@author Tobias Blomberg
+@date   2013-08-23
+
+This command is used to activate and deactivate the QSO recorder feature.
+The QSO recorder will record all traffic on the node to a file.
+
+Subcommand 1 activates the QSO recorder and subcommand 0 will deactivate it.
+*/
 class QsoRecorderCmd : public Command
 {
   public:
@@ -269,7 +279,7 @@ class QsoRecorderCmd : public Command
       {
         if (recorder->isEnabled())
         {
-          std::cout << logic->name() << ": Deactivating QSO recorder\n";
+          //std::cout << logic->name() << ": Deactivating QSO recorder\n";
           recorder->setEnabled(false);
           logic->processEvent("deactivating_qso_recorder");
         }
@@ -282,7 +292,7 @@ class QsoRecorderCmd : public Command
       {
         if (!recorder->isEnabled())
         {
-          std::cout << logic->name() << ": Activating QSO recorder\n";
+          //std::cout << logic->name() << ": Activating QSO recorder\n";
           recorder->setEnabled(true);
           logic->processEvent("activating_qso_recorder");
         }
@@ -306,6 +316,16 @@ class QsoRecorderCmd : public Command
 };  /* class QsoRecorderCmd */
 
 
+/**
+@brief	The change language command
+@author Tobias Blomberg
+@date   2013-08-23
+
+This command is used to switch the language that is used on the node for
+announcements. The base command is always "00" followed by the country
+prefix. The country prefix is the same as in the international phone system
+so US english will have prefix 1 and Swedish will have prefix 46.
+*/
 class ChangeLangCmd : public Command
 {
   public:
@@ -335,25 +355,38 @@ class ChangeLangCmd : public Command
 };
 
 
-class ShutdownCmd : public Command
+/**
+@brief	The online command
+@author Tobias Blomberg
+@date   2013-08-23
+
+This command is used to set the logic offline. In offline mode the logic will
+turn the transmitter off and stop accepting any other commands than the
+logic online command. Any active module will be deactivated when the logic is
+set to offline and module activation while the logic is offline will be
+prohibited.
+
+The logic online command is not handled here but in Logic.cpp in the
+checkIfOnlineCmd function.
+
+The name of this class may seem awkward (OnlineCmd) since it's used to bring
+the logic offline but it's more consistent with what the actual config
+variable is named, ONLINE_CMD.
+*/
+class OnlineCmd : public Command
 {
   public:
-    ShutdownCmd(CmdParser *parser, Logic *logic, const std::string &cmd)
+    OnlineCmd(CmdParser *parser, Logic *logic, const std::string &cmd)
       : Command(parser, cmd), logic(logic)
     {
     }
 
     void operator ()(const std::string& subcmd)
     {
-      if (subcmd == "1")
+      if (subcmd == "0")
       {
-        std::cout << logic->name() << ": Activating logic\n";
-        logic->setShutdown(false);
-      }
-      else if (subcmd == "0")
-      {
-        std::cout << logic->name() << ": Shutting down logic\n";
-        logic->setShutdown(true);
+        std::cout << logic->name() << ": Setting logic offline\n";
+        logic->setOnline(false);
       }
       else
       {

@@ -9,6 +9,13 @@ if(SPEEX_FOUND)
   set(LIBS ${LIBS} ${SPEEX_LIBRARIES})
 endif(SPEEX_FOUND)
 
+# Find Opus
+find_package(Opus)
+if(OPUS_FOUND)
+  include_directories(${OPUS_INCLUDE_DIRS})
+  set(LIBS ${LIBS} ${OPUS_LIBRARIES})
+endif(OPUS_FOUND)
+
 find_package(GSM REQUIRED)
 include_directories(${GSM_INCLUDE_DIR})
 set(LIBS ${LIBS} ${GSM_LIBRARY})
@@ -45,6 +52,10 @@ set(LIBSRC AsyncAudioSource.cpp AsyncAudioSink.cpp
 if(SPEEX_FOUND)
   set(LIBSRC ${LIBSRC} AsyncAudioEncoderSpeex.cpp AsyncAudioDecoderSpeex.cpp)
 endif(SPEEX_FOUND)
+
+if(OPUS_FOUND)
+  set(LIBSRC ${LIBSRC} AsyncAudioEncoderOpus.cpp AsyncAudioDecoderOpus.cpp)
+endif(OPUS_FOUND)
 
 if(USE_ALSA)
   set(LIBSRC ${LIBSRC} AsyncAudioDeviceAlsa.cpp)

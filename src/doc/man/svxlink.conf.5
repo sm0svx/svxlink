@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "AUGUST 2012" Linux "File Formats"
+.TH SVXLINK.CONF 5 "SEPTEMBER 2013" Linux "File Formats"
 .
 .SH NAME
 .
@@ -249,16 +249,19 @@ The gain (dB) to use for audio effects and announcements when there is other tra
 This gain is normally set to something like -12dB so that announcements and audio effects
 are attenuated when there is other traffic present.
 .TP
-.B QSO_RECORDER_DIR
-The QSO recorder is used to write all received audio to a disk file. Use this
-configuration variable to specify in which directory to write the audio files.
-A good place is /var/spool/svxlink/qso_recorder.
-.TP
-.B QSO_RECORDER_CMD
-The QSO recorder is used to write all received audio to a disk file. Use this
-configuration variable to specify which command to use to activate and
-deactivate the QSO recorder. For example, if this configuration variable is
-set to 8, 81 will activate the QSO recorder and 80 will deactivate it.
+.B QSO_RECORDER
+The QSO recorder is used to write all received audio to files on disk. The
+format for this configuration variable is <command>:<config section>. The
+specified command is used to activate or deactivate the QSO recorder. If the
+command for example is set to 8, 81 will activate the recorder and 80 will
+deactivate it.  The command may also be left out. It will then not be possible
+to control the QSO recorder using DTMF commands. Even if the command is left
+out the colon must always be specified.
+The config section point out a section in the configuration file that holds
+configuration for the QSO recorder.
+Have a look at the QSO Recorder Section documentation for more information.
+
+Example: QSO_RECORDER=8:QsoRecorder
 .TP
 .B SEL5_MACRO_RANGE
 Define two comma separated values here to map the Sel5 tone call to your macro
@@ -269,14 +272,17 @@ macros section (refer to Macros Section, next chapter). Other sequences but the
 one defined under OPEN_ON_SEL5 are ignored so it can be used to call other
 stations via the repeater without a repeater reaction.
 .TP
-.B SHUTDOWN_CMD
-Define a DTMF command that is used to force the transmitter off. When in the
-off-state, the transmitter will not be turned on by any event. The node will
-continue to run as usual though so if a DTMF command is received, the node will
-act on it. The only difference is that the transmitter will not be turned on.
+.B ONLINE_CMD
+Define a DTMF command that is used to switch the node between online and
+offline mode. When in the off-state, the transmitter will not be turned on by
+any event. If a module is active when the node is brought offline, it will be
+deactivated and no module activation will be allowed in offline mode. No other
+commands than the online command will be accepted in the offline state.
 
-If the command for example is set to 998877 then 9988771 will enable the
-transmitter and 9988770 will disable it.
+If the command for example is set to 998877 then 9988771 will set the node
+online and 9988770 will set it offline. If a module is active or if the
+ACTIVATE_MODULE_ON_LONG_CMD is used, the command must be prefixed with a star
+to work as expected. The star means "force core command".
 .
 .SS Simplex Logic Section
 .
@@ -418,6 +424,107 @@ This is the minimum time, in milliseconds, that a transmission must last to
 be considered as an identification. This is used as described in the
 IDENT_NAG_TIMEOUT configuration variable.
 .
+.SS QSO Recorder Section
+.
+The QSO recorder is used to record all received audio to files on disk. All
+audio from receivers, modules and logic links are recorded. Announcements are
+not recorded.
+.TP
+.B REC_DIR
+Use this configuration variable to specify in which directory to write the
+audio files. A good place is /var/spool/svxlink/qso_recorder.
+.TP
+.B MIN_TIME
+If the duration of the recorded content for a file is less then MIN_TIME
+milliseconds, the file will be deleted when the file is closed. Default: 0
+(empty files will be deleted).
+.TP
+.B MAX_TIME
+Setting this configuration variable will set an upper limit for the file size
+of a recording. No more than MAX_TIME seconds of content will be recorded to a
+single file. When the maximum time have been reached, the file is closed and
+another file is created. Note that it is not the maximum time that the
+recording has been active that we are setting a limit for but rather how much
+content that have been recorded to the file. If nothing is recorded, the file
+can stay open indefinitely. Default: 0 (no limit)
+.TP
+.B SOFT_TIME
+To not get abrupt breaks in recordings it is possible to set a soft break time.
+Let's say that MAX_TIME is set to 3600 seconds (one hour). If we set SOFT_TIME
+to 300 seconds (five minutes) the QSO recorder try to close the file on a
+squelch close somewhere between 55 and 60 minutes. In this way we may avoid
+getting transmissions splitted between files. Default: 0 (no limit)
+.TP
+.B MAX_DIRSIZE
+Specify the maximum total size in megabytes of the files in the recording
+directory. If the limit is exceeded, the oldest files are deleted. The
+directory size is checked upon file close so the size may grow temporarily past
+the limit with at most the size of one recorded file. Only files which have a
+filename starting with "qsorec_" will be considered for deletion. If using an
+ENCODING_CMD, make sure that the "qsorec_" prefix is not removed from the
+target filename unless you really want the MAX_DIRSIZE feature to skip them.
+Default: 0 (no limit)
+.TP
+.B DEFAULT_ACTIVE
+If this configuration variable is set to 1, the QSO recorder will be activated
+by default when SvxLink start. Default: 0 (default inactive)
+.TP
+.B TIMEOUT
+If a timeout is specified, the activation state of the QSO recorder will return
+to the value specified in the DEFAULT_ACTIVE configuration variable when the
+node has been idle for the specified number of seconds. When DEFAULT_ACTIVE is
+unset or 0, if the QSO recorder is manually activated it will be automatically
+deactivated after the specified amount of time of inactivity.  When
+DEFAULT_ACTIVE is set to 1, if the QSO recorder is manually deactivated it will
+be automatically activated after the specified amount of time of inactivity.
+Default: 0 (no timeout)
+.TP
+.B QSO_TIMEOUT
+Set this configuration variable if you want to close the currently opened file
+and open a new one after each QSO. The number of seconds the node should be
+idle before closing the file should be specified. Default: 0 (no QSO timeout)
+.TP
+.B ENCODER_CMD
+Specify a command to be executed after a new wav file have been written to
+disk. This makes it possible to use an external encoder utility to encode the
+wav file to another format. Even though this configuration variable was added
+to run an external encoder it could do more complicated things with the file if
+needed. A couple of examples would be to transfer the file to another computer
+or to send a notification e-mail. If the command line get too complicated it
+may be a good idea to write a script instead.
+
+The encoder command will be run under a shell so normal shell operators like
+redirects and pipes may be used. The shell specified in the SHELL environment
+variable will be used and if not set, /bin/sh will be used. The "-c" command
+line option will be added so the complete command will look something like:
+$SHELL -c "$ENCODER_CMD". A number of %-codes can be included in the command.
+They have the following meaning:
+.RS
+.IP \(bu 4
+.BR %f " - The full filename with full path"
+.IP \(bu 4
+.BR %d " - The directory part (what REC_DIR is set to)"
+.IP \(bu 4
+.BR %b " - The basename, that is, the filename without path and extension"
+.IP \(bu 4
+.BR %n " - The filename without path but with extension"
+.P
+The encoder will be started in the background and it will not be stopped even
+if SvxLink exits. It will run in the background until it's done. As long as
+SvxLink is running it is monitoring the encoding processes. If a process run
+for longer than one hour it will be killed.
+
+Note that SvxLink will never remove the original recording so that have to be
+done in the encoder command. Here are a couple of examples:
+
+ ENCODER_CMD=/usr/bin/oggenc -Q \\"%f\\" && rm \\"%f\\"
+.BR
+ ENCODER_CMD=/usr/bin/lame --quiet \\"%f\\" \\"%d/%b.mp3\\" && rm \\"%f\\"
+.BR
+ ENCODER_CMD=/usr/bin/speexenc \\"%f\\" \\"%d/%b.spx\\" 2>/dev/null && rm \\"%f\\"
+.BR
+ ENCODER_CMD=/usr/bin/opusenc \\"%f\\" \\"%d/%b.opus\\" 2>/dev/null && rm \\"%f\\"
+.
 .SS Macros Section
 .
 A macros section is used to declare macros that can be used by a logic core. The
@@ -520,7 +627,7 @@ channels as two mono channels. Legal values are 0 or 1.
 .TP
 .B SQL_DET
 Specify the type of squelch detector to use. Possible values are: VOX, CTCSS,
-SERIAL, EVDEV or SIGLEV.
+SERIAL, EVDEV, SIGLEV or GPIO.
 
 The VOX squelch detector determines if there is a signal
 present by calculating a mean value of the sound samples. The VOX squelch
@@ -546,6 +653,11 @@ some buttons on it. Some of these devices generate key press events, much like
 a keyboard. Specify which /dev/input device node to use using the EVDEV_DEVNAME
 config variable. Set which events that should open and close the squelch using
 the EVDEV_OPEN and EVDEV_CLOSE config variables.
+
+The GPIO squelch detector read a pin on the GPIO Port. Depending on the level
+of the pin, the squelch is switched. A HIGH (3.3V) at the pin set the squelch
+to open and a LOW (GND) level will set the squelch to closed.
+Specify which squelch pin to use with the GPIO_SQL_PIN configuration variable.
 
 The SIGLEV squelch detector use signal level measurements to determine if the
 squelch is open or not. Which signal level detector to use is determined by the
@@ -746,6 +858,11 @@ type is 1, code is 163 and value is 0, set this config variable to
 1,163,0. If you set the same type,code,value combination for both
 EVDEV_OPEN and EVDEV_CLOSE, that event will toggle the squelch.
 .TP
+.B GPIO_SQL_PIN
+If SQL_DET is set to GPIO this configuration variable is used to choose which
+GPIO pin to use for squelch input. The most common name is gpio<number>, like
+gpio4. Some GPIO drivers use more complex names, like gpio33_pe11.
+.TP
 .B SIGLEV_DET
 Choose which type of signal level detector to use. There are two choices,
 "NOISE" or "TONE". The  signal level detector is only needed when using
@@ -848,6 +965,9 @@ to use the internal software
 DTMF decoder. To use the S54S interface featuring a hardware DTMF decoder, set
 it to
 .B S54S.
+Setting it to
+.B NONE
+or commenting it out will disable DTMF detection.
 .TP
 .B DTMF_MUTING
 Mute the audio during the time when a DTMF digit is being received. Note that
@@ -915,8 +1035,8 @@ you define ZVEI1 for SvxLink and a (e.g.) ZVEI3 sequence is received.
 .TP
 .B SEL5_DEC_TYPE
 At the moment only SEL5_DEC_TYPE=INTERNAL is valid. Maybe we have support for
-some external tone detectors later.
-.TP
+some external tone detectors later. To disable SEL5 tone decoding, specify
+NONE or just comment the configuration variable out.
 .
 .SS Voter Section
 .
@@ -1023,10 +1143,11 @@ challenge-response procedure will be used for authentication.
 .TP
 .B CODEC
 The audio codec to use when transfering audio from this remote receiver.
-Available codecs are: RAW (256kbps), S16 (128kbps), GSM (13.2kbps),
-SPEEX (4-25kbps). These are raw bitrate values. There will be some
+Available codecs are: RAW (512kbps), S16 (256kbps), GSM (13.2kbps), SPEEX
+(8-25kbps), OPUS (8-64kbps). These are raw bitrate values. There will be some
 overhead added to this so the real bitrates on the wire are a little bit
-higher.
+higher. The OPUS codec is the most modern one and it also have the best
+quality for a given bitrate.
 .TP
 .B SPEEX_ENC_FRAMES_PER_PACKET
 Speex encoder setting. Each Speex frame contains 20ms audio. If using a low
@@ -1075,6 +1196,28 @@ to reduce the perception of the noise/distortion produced by the
 encoding/decoding process. In most cases, perceptual enhancement brings the
 sound further from the original objectively (e.g. considering only SNR), but in
 the end it still sounds better (subjective improvement).
+.TP
+.B OPUS_ENC_FRAME_SIZE
+Opus encoder setting. Specify how large, in milliseconds, each audio packet
+should be. Default: 20ms.
+.TP
+.B OPUS_ENC_COMPLEXITY
+Opus encoder setting. The complexity setting (0-10) tells the encoder how
+much CPU time it should spend on doing a good job. Set it as high as possible
+without overloading the CPU on the encoding computer (check CPU usage using
+command "top"). Default: 10.
+.TP
+.B OPUS_ENC_BITRATE
+Opus encoder setting. This is the bitrate that the encoder will encode for.
+Rates from about 8000 to 64000 bits per second are meaningful but the codec
+can handle from like 2500 to 512000 bps. Default: 20000bps.
+.TP
+.B OPUS_ENC_VBR
+Opus encoder setting. Enable (1) or disable (0) variable bitrate encoding. If
+enabled, the encoder will try to keep a constant quality by increasing the
+bitrate when needed and decrease it when the quality can be assured with a
+lower bitrate. The target average bitrate is the one set by OPUS_ENC_BITRATE.
+Default: 1.
 .
 .SS Local Transmitter Section
 .
@@ -1113,9 +1256,10 @@ that you specify two pins since one pin does not provide enough drive power to
 the circuit. A "!" in front of the pin name indicates inverted operation. Some
 of the possible values are RTS, DTRRTS, !DTR!RTS or even DTR!RTS.
 
-If GPIO was specified for PTT_PORT, set the PTT_PIN config variable to the
-number of the GPIO-pin to use. Have a look at the USING GPIO section for
-information on how to set up the operating system.
+If GPIO was specified for PTT_PORT, set the PTT_PIN config variable to the pin
+name of the GPIO-pin to use. The most common name is gpio<number>, like gpio3.
+Some GPIO drivers use more complex pin names like gpio33_pe11.  Have a look at
+the USING GPIO section for information on how to set up the operating system.
 .TP
 .B SERIAL_SET_PINS
 Set the specified serial port pins to a static state. This can be good if using
@@ -1254,10 +1398,11 @@ challenge-response procedure will be used for authentication.
 .TP
 .B CODEC
 The audio codec to use when transfering audio to this remote transmitter.
-Available codecs are: RAW (256kbps), S16 (128kbps), GSM (13.2kbps),
-SPEEX (4-25kbps). These are raw bitrate values. There will be some
+Available codecs are: RAW (512kbps), S16 (256kbps), GSM (13.2kbps), SPEEX
+(8-25kbps), OPUS (8-64kbps). These are raw bitrate values. There will be some
 overhead added to this so the real bitrates on the wire are a little bit
-higher.
+higher. The OPUS codec is the most modern one and it also have the best
+quality for a given bitrate.
 .TP
 .B SPEEX_ENC_FRAMES_PER_PACKET
 Speex encoder setting. Each Speex frame contains 20ms audio. If using a low
@@ -1306,6 +1451,28 @@ to reduce the perception of the noise/distortion produced by the
 encoding/decoding process. In most cases, perceptual enhancement brings the
 sound further from the original objectively (e.g. considering only SNR), but in
 the end it still sounds better (subjective improvement).
+.TP
+.B OPUS_ENC_FRAME_SIZE
+Opus encoder setting. Specify how large, in milliseconds, each audio packet
+should be. Default: 20ms.
+.TP
+.B OPUS_ENC_COMPLEXITY
+Opus encoder setting. The complexity setting (0-10) tells the encoder how
+much CPU time it should spend on doing a good job. Set it as high as possible
+without overloading the CPU on the encoding computer (check CPU usage using
+command "top"). Default: 10.
+.TP
+.B OPUS_ENC_BITRATE
+Opus encoder setting. This is the bitrate that the encoder will encode for.
+Rates from about 8000 to 64000 bits per second are meaningful but the codec
+can handle from like 2500 to 512000 bps. Default: 20000bps.
+.TP
+.B OPUS_ENC_VBR
+Opus encoder setting. Enable (1) or disable (0) variable bitrate encoding. If
+enabled, the encoder will try to keep a constant quality by increasing the
+bitrate when needed and decrease it when the quality can be assured with a
+lower bitrate. The target average bitrate is the one set by OPUS_ENC_BITRATE.
+Default: 1.
 .
 .SS Multi Transmitter Section
 .
@@ -1531,10 +1698,10 @@ be chosen using the CARD_SAMPLE_RATE config variable as usual.
 GPIO (General Purpose IO) is used to access hardware pins that are made
 available for example on an embedded system. Before starting to use a pin in
 SvxLink some setup need to be done in the operating system. The example below
-will set up pin 31 as an output for PTT use. Make sure that the commands are
-run as user root.
+will set up pin 31 as an output for PTT use and pin 30 is used as input for
+squelch. Make sure that the commands are run as user root.
 
-  Enable the pin for GPIO:
+  Enable the PTT pin for GPIO:
   echo 31 > /sys/class/gpio/export
 
   Set the direction to output for the pin:
@@ -1542,6 +1709,15 @@ run as user root.
 
   Make sure that the svxlink user can write to the GPIO pin:
   chown svxlink /sys/class/gpio31/value
+
+  Enable the squelch pin for GPIO:
+  echo 30 > /sys/class/gpio/export
+
+  Set the direction to input for the pin:
+  echo in > /sys/class/gpio/gpio30/direction
+
+  Make sure that the svxlink user can read from the GPIO pin:
+  chown svxlink /sys/class/gpio30/value
 
 These steps have to be performed whenever the system is rebooted. Putting the
 commands in a script is recommended.

@@ -63,7 +63,12 @@ namespace Async
 {
   class AudioSelector;
   class AudioRecorder;
+  class Config;
+  class Timer;
+  class Exec;
 };
+
+class Logic;
 
 
 /****************************************************************************
@@ -119,12 +124,20 @@ class QsoRecorder
      * @param   rec_dir The path to the directory where the recordings
      *                  are placed
      */
-    explicit QsoRecorder(const std::string &rec_path);
+    QsoRecorder(Logic *logic);
 
     /**
      * @brief 	Destructor
      */
     ~QsoRecorder(void);
+
+    /**
+     * @brief   Initialize the qso recorder
+     * @param   cfg An already initialize config object
+     * @param   name The name of the config section tp read config from
+     * @return  Returns \rm true on success or else \em false
+     */
+    bool initialize(const Async::Config &cfg, const std::string &name);
 
     /**
      * @brief   Add an audio source to the QSO recorder
@@ -140,19 +153,55 @@ class QsoRecorder
      */
     void setEnabled(bool enable);
 
+    /**
+     * @brief   Check if the recorder is enabled or not
+     * @returns Returns \em true if the recorder is enabled or else \em false
+     */
     bool isEnabled(void) const { return (recorder != 0); }
 
+    /**
+     * @brief   Set the maximum size of ech recorded file
+     * @param   max_time 
+     * @param   soft_time
+     *
+     * Use this function to limit the file size of the recordings. When the
+     * soft limit is reached, the next flushSamples (e.g. squelch close) will
+     * close the file
+     */
+    void setMaxChunkTime(unsigned max_time, unsigned soft_time=0);
+
+    void setMaxRecDirSize(unsigned max_size);
+
+    bool recorderIsActive(void) const { return (recorder != 0); }
 
   protected:
 
   private:
+    class FileEncoder;
+
     Async::AudioSelector  *selector;
     Async::AudioRecorder  *recorder;
     std::string           rec_dir;
-    std::string           rec_timestamp;
+    unsigned              hard_chunk_limit;
+    unsigned              soft_chunk_limit;
+    unsigned              max_dirsize;
+    bool                  default_active;
+    Async::Timer          *tmo_timer;
+    Logic                 *logic;
+    Async::Timer          *qso_tmo_timer;
+    unsigned              min_samples;
+    std::string           encoder_cmd;
 
     QsoRecorder(const QsoRecorder&);
     QsoRecorder& operator=(const QsoRecorder&);
+    void openNewFile(void);
+    void openFile(void);
+    void closeFile(void);
+    void cleanupDirectory(void);
+    void timerExpired(void);
+    void checkTimeoutTimers(void);
+    void handleEncoderPrintouts(const char *buf, int cnt);
+    void encoderExited(FileEncoder *enc);
 
 };  /* class QsoRecorder */
 

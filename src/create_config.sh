@@ -153,6 +153,26 @@ else
   info "no (optional)\n"
 fi
 
+# Checking for Opus
+info "--- Checking for opus..."
+if which pkg-config > /dev/null 2>&1; then
+  if pkg-config opus; then
+    ver=$(pkg-config opus --modversion)
+    ver_major=$(echo $ver | sed -r 's/^([0-9]+)\..*$/\1/')
+    ver_minor=$(echo $ver | sed -r 's/^([0-9]+)\.([0-9]+).*$/\2/')
+    info "$ver\n"
+    output "OPUS_LIBPATH=$(pkg-config opus --libs-only-L)"
+    output "OPUS_LIBS=$(pkg-config opus --libs-only-l)"
+    output "OPUS_INCPATH=$(pkg-config opus --cflags-only-I)"
+    output "CFLAGS_DEFINES+=-DOPUS_MAJOR=$ver_major -DOPUS_MINOR=$ver_minor"
+    output "USE_OPUS=1"
+  else
+    info "no (optional)\n"
+  fi
+else
+  info "no (optional)\n"
+fi
+
 # Checking for libgcrypt
 info "--- Checking for libgcrypt..."
 if which libgcrypt-config > /dev/null 2>&1; then

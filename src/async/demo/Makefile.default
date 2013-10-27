@@ -55,6 +55,7 @@ CPPPROGS        += AsyncCppApplication_demo
 CPPPROGS      	+= AsyncTcpServer_demo
 CPPPROGS      	+= AsyncConfig_demo
 CPPPROGS      	+= AsyncSerial_demo
+CPPPROGS      	+= AsyncExec_demo
 ifdef QT_BIN
 CPPPROGS      	+= AsyncQtApplication_demo
 endif

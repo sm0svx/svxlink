@@ -1,6 +1,6 @@
 /**
 @file	 AudioDecoderSpeex.cpp
-@brief   An audio decoder for signed 16 bit samples
+@brief   An audio decoder that use the Speex audio codec
 @author  Tobias Blomberg / SM0SVX
 @date	 2008-10-15
 

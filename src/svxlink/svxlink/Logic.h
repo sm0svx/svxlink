@@ -113,6 +113,7 @@ class Module;
 class EventHandler;
 class Command;
 class QsoRecorder;
+class DtmfDigitHandler;
 
 
 /****************************************************************************
@@ -199,7 +200,7 @@ class Logic : public sigc::trackable
     void setReportEventsAsIdle(bool idle) { report_events_as_idle = idle; }
 
     bool isWritingMessage(void);
-    void setShutdown(bool shut_down);
+    virtual void setOnline(bool online);
 
     Async::AudioSink *logicConIn(void);
     Async::AudioSource *logicConOut(void);
@@ -245,12 +246,8 @@ class Logic : public sigc::trackable
     MsgHandler	      	      	    *msg_handler;
     Module    	      	      	    *active_module;
     std::list<Module*>	      	    modules;
-    std::string       	      	    received_digits;
     std::string       	      	    m_callsign;
-    Async::Timer      	      	    *cmd_tmo_timer;
     std::list<std::string>    	    cmd_queue;
-    bool      	      	      	    anti_flutter;
-    char      	      	      	    prev_digit;
     int      	      	      	    exec_cmd_on_sql_close;
     Async::Timer      	      	    *exec_cmd_on_sql_close_timer;
     Async::Timer      	      	    *rgr_sound_timer;
@@ -287,19 +284,21 @@ class Logic : public sigc::trackable
     AprsStatistics                  aprs_stats;
     Async::Timer		    *aprs_stats_timer;
     Tx::TxCtrlMode                  currently_set_tx_ctrl_mode;
-    bool                            is_shut_down;
+    bool                            is_online;
+    std::string                     online_cmd;
+    DtmfDigitHandler                *dtmf_digit_handler;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);
     void unloadModules(void);
-    void cmdTimeout(Async::Timer *t);
     void processCommandQueue(void);
     void processCommand(const std::string &cmd, bool force_core_cmd=false);
     void processMacroCmd(const std::string &macro_cmd);
-    void putCmdOnQueue(Async::Timer *t=0);
+    void putCmdOnQueue(void);
     void sendRgrSound(Async::Timer *t=0);
     void timeoutNextMinute(void);
     void everyMinute(Async::AtTimer *t);
+    void checkIfOnlineCmd(void);
     void dtmfDigitDetectedP(char digit, int duration);
     void cleanup(void);
     void updateTxCtcss(bool do_set, TxCtcssType type);

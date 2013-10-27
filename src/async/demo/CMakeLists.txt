@@ -1,6 +1,7 @@
-set(CPPPROGS AsyncAudioIO_demo AsyncDnsLookup_demo AsyncFdWatch_demo AsyncTimer_demo
-             AsyncTcpClient_demo AsyncUdpSocket_demo AsyncCppApplication_demo
-             AsyncTcpServer_demo AsyncConfig_demo AsyncSerial_demo AsyncAtTimer_demo)
+set(CPPPROGS AsyncAudioIO_demo AsyncDnsLookup_demo AsyncFdWatch_demo
+             AsyncTimer_demo AsyncTcpClient_demo AsyncUdpSocket_demo
+             AsyncCppApplication_demo AsyncTcpServer_demo AsyncConfig_demo
+             AsyncSerial_demo AsyncAtTimer_demo AsyncExec_demo)
 
 
 foreach(prog ${CPPPROGS})
