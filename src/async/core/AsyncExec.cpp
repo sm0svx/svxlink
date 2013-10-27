@@ -547,6 +547,7 @@ void Exec::sigchldReceived(void)
            << ": " << strerror(errno) << endl;
     }
     //cout << "pid=" << pid << " ret=" << ret << " status=" << status << endl;
+    exec->status = status;
     if (ret == pid)
     {
       exec->subprocessExited();

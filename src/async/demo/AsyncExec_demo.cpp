@@ -40,12 +40,22 @@ int main()
   cat.writeStdin("This is a test\n");
   cat.closeStdin();
 
-    // Sleep for two seconds then quit application
-  Exec *sleep = new Exec("/usr/bin/sleep 2");
-  sleep->exited.connect(sigc::bind(sigc::ptr_fun(handleExit), sleep));
-  sleep->exited.connect(mem_fun(app, &CppApplication::quit));
-  sleep->setTimeout(5);
-  sleep->run();
+    // Try to run a command that does not exist
+  Exec xyz("/bin/xyz");
+  xyz.exited.connect(sigc::bind(sigc::ptr_fun(handleExit), &xyz));
+  xyz.run();
+
+    // Start a sleep but set a timeout that kills it before exit
+  Exec kill("/bin/tail");
+  kill.exited.connect(sigc::bind(sigc::ptr_fun(handleExit), &kill));
+  kill.setTimeout(1);
+  kill.run();
+
+    // Sleep for four seconds then quit application
+  Exec sleep("/bin/sleep 2");
+  sleep.exited.connect(sigc::bind(sigc::ptr_fun(handleExit), &sleep));
+  sleep.exited.connect(mem_fun(app, &CppApplication::quit));
+  sleep.run();
 
   app.exec();
 
