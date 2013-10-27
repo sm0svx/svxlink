@@ -29,7 +29,8 @@ int main()
 {
   CppApplication app;
 
-    // Start a "cat" process and then run some text through it
+    // Start a "cat" process and then run some text through it. Use the -n
+    // option to make cat number the lines
   Exec cat("/bin/cat -n");
   cat.stdoutData.connect(sigc::ptr_fun(handleOutput));
   cat.stderrData.connect(sigc::ptr_fun(handleOutput));
@@ -45,13 +46,13 @@ int main()
   xyz.exited.connect(sigc::bind(sigc::ptr_fun(handleExit), &xyz));
   xyz.run();
 
-    // Start a sleep but set a timeout that kills it before exit
-  Exec kill("/bin/tail");
+    // Start a sort that just blocks and then set a timeout which kills it
+  Exec kill("/bin/sort");
   kill.exited.connect(sigc::bind(sigc::ptr_fun(handleExit), &kill));
   kill.setTimeout(1);
   kill.run();
 
-    // Sleep for four seconds then quit application
+    // Sleep for two seconds then quit application
   Exec sleep("/bin/sleep 2");
   sleep.exited.connect(sigc::bind(sigc::ptr_fun(handleExit), &sleep));
   sleep.exited.connect(mem_fun(app, &CppApplication::quit));
