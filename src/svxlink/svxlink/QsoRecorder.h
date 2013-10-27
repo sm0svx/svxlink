@@ -65,6 +65,7 @@ namespace Async
   class AudioRecorder;
   class Config;
   class Timer;
+  class Exec;
 };
 
 class Logic;
@@ -176,6 +177,8 @@ class QsoRecorder
   protected:
 
   private:
+    class FileEncoder;
+
     Async::AudioSelector  *selector;
     Async::AudioRecorder  *recorder;
     std::string           rec_dir;
@@ -187,6 +190,7 @@ class QsoRecorder
     Logic                 *logic;
     Async::Timer          *qso_tmo_timer;
     unsigned              min_samples;
+    std::string           encoder_cmd;
 
     QsoRecorder(const QsoRecorder&);
     QsoRecorder& operator=(const QsoRecorder&);
@@ -196,6 +200,8 @@ class QsoRecorder
     void cleanupDirectory(void);
     void timerExpired(void);
     void checkTimeoutTimers(void);
+    void handleEncoderPrintouts(const char *buf, int cnt);
+    void encoderExited(FileEncoder *enc);
 
 };  /* class QsoRecorder */
 

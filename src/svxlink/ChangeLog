@@ -38,6 +38,8 @@
   closed, the file will be deleted.
   If the node is idle for more than QSO_TIMEOUT seconds, the file will be
   closed.
+  The ENCODER_CMD variable makes it possible to run an external audio
+  encoder to compress the recordings.
 
 * Added support for Squelch on GPIO. Use SQL_DET=GPIO and GPIO_SQL_PIN=gpio3
   in your config for GPIO support.

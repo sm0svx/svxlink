@@ -459,7 +459,11 @@ getting transmissions splitted between files. Default: 0 (no limit)
 Specify the maximum total size in megabytes of the files in the recording
 directory. If the limit is exceeded, the oldest files are deleted. The
 directory size is checked upon file close so the size may grow temporarily past
-the limit with at most the size of one recorded file. Default: 0 (no limit)
+the limit with at most the size of one recorded file. Only files which have a
+filename starting with "qsorec_" will be considered for deletion. If using an
+ENCODING_CMD, make sure that the "qsorec_" prefix is not removed from the
+target filename unless you really want the MAX_DIRSIZE feature to skip them.
+Default: 0 (no limit)
 .TP
 .B DEFAULT_ACTIVE
 If this configuration variable is set to 1, the QSO recorder will be activated
@@ -479,6 +483,47 @@ Default: 0 (no timeout)
 Set this configuration variable if you want to close the currently opened file
 and open a new one after each QSO. The number of seconds the node should be
 idle before closing the file should be specified. Default: 0 (no QSO timeout)
+.TP
+.B ENCODER_CMD
+Specify a command to be executed after a new wav file have been written to
+disk. This makes it possible to use an external encoder utility to encode the
+wav file to another format. Even though this configuration variable was added
+to run an external encoder it could do more complicated things with the file if
+needed. A couple of examples would be to transfer the file to another computer
+or to send a notification e-mail. If the command line get too complicated it
+may be a good idea to write a script instead.
+
+The encoder command will be run under a shell so normal shell operators like
+redirects and pipes may be used. The shell specified in the SHELL environment
+variable will be used and if not set, /bin/sh will be used. The "-c" command
+line option will be added so the complete command will look something like:
+$SHELL -c "$ENCODER_CMD". A number of %-codes can be included in the command.
+They have the following meaning:
+.RS
+.IP \(bu 4
+.BR %f " - The full filename with full path"
+.IP \(bu 4
+.BR %d " - The directory part (what REC_DIR is set to)"
+.IP \(bu 4
+.BR %b " - The basename, that is, the filename without path and extension"
+.IP \(bu 4
+.BR %n " - The filename without path but with extension"
+.P
+The encoder will be started in the background and it will not be stopped even
+if SvxLink exits. It will run in the background until it's done. As long as
+SvxLink is running it is monitoring the encoding processes. If a process run
+for longer than one hour it will be killed.
+
+Note that SvxLink will never remove the original recording so that have to be
+done in the encoder command. Here are a couple of examples:
+
+ ENCODER_CMD=/usr/bin/oggenc -Q \\"%f\\" && rm \\"%f\\"
+.BR
+ ENCODER_CMD=/usr/bin/lame --quiet \\"%f\\" \\"%d/%b.mp3\\" && rm \\"%f\\"
+.BR
+ ENCODER_CMD=/usr/bin/speexenc \\"%f\\" \\"%d/%b.spx\\" 2>/dev/null && rm \\"%f\\"
+.BR
+ ENCODER_CMD=/usr/bin/opusenc \\"%f\\" \\"%d/%b.opus\\" 2>/dev/null && rm \\"%f\\"
 .
 .SS Macros Section
 .

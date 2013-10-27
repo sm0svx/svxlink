@@ -11,6 +11,8 @@
 
 * Added support for the Opus audio codec.
 
+* New class Async::Exec for executing external programs.
+
 
 
  1.1.1 -- 29 Jul 2013
