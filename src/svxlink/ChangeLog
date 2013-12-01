@@ -64,6 +64,8 @@
 * Bugfix: Setting DTMF_MUTING=0 did not remove the audio delay, which it
   should do.
 
+* Sound clips are now included for module MetarInfo.
+
 
 
  1.2.0 -- 29 Jul 2013
