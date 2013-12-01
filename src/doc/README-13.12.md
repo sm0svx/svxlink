@@ -14,6 +14,12 @@ Example:
 
 svxlink-sounds-en_US-heather-16k-13.12.tar.bz2
 
+A new audio codec, Opus (http://www.opus-codec.org/), is now supported for
+RemoteTrx links. The Opus codec is a new IETF standard for encoding audio with
+bitrates ranging from 6 kb/s to 510 kb/s. The audio quality is very good over
+the whole bitrate range. It is even better then AAC, at least below 128kb/s.
+To enable SvxLink to use the Opus codec, make sure to install the development
+libraries for Opus and recompile.
 =============================================================================
 
 Complete ChangeLog for SvxLink Server version 1.3.0
