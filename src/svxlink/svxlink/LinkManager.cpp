@@ -416,8 +416,7 @@ void LinkManager::allLogicsStarted(void)
 string LinkManager::cmdReceived(LinkRef link, Logic *logic,
                                 const string &subcmd)
 {
-  /*
-  cout << "### LinkManager::cmdReceived: link=" << link.name
+  /* cout << "### LinkManager::cmdReceived: link=" << link.name
        << " logic=" << logic->name()
        << " subcmd=" << subcmd << endl;
   */
@@ -600,7 +599,7 @@ void LinkManager::activateLink(Link &link)
   {
     const string &src_name = it->first;
     const string &sink_name = it->second;
-    cout << "### " << src_name << " ===> " << sink_name << endl;
+    //cout << "### " << src_name << " ===> " << sink_name << endl;
     SinkInfo &sink = sinks[sink_name];
     sink.selector->enableAutoSelect(sink.connectors[src_name], 0);
 
@@ -643,7 +642,7 @@ void LinkManager::deactivateLink(Link &link)
   {
     const string &src_name = it->first;
     const string &sink_name = it->second;
-    cout << "### " << src_name << " =X=> " << sink_name << endl;
+    //cout << "### " << src_name << " =X=> " << sink_name << endl;
 
     SinkMap::iterator sink_it = sinks.find(sink_name);
     assert(sink_it != sinks.end());
@@ -711,8 +710,7 @@ void LinkManager::linkTimeout(Async::Timer *t, Link *link)
 
 void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
 {
-  /*
-  cout << "### LinkManager::logicIdleStateChanged:"
+  /* cout << "### LinkManager::logicIdleStateChanged:"
        << " is_idle=" << is_idle
        << " logic_name=" << logic->name()
        << endl;
@@ -742,8 +740,9 @@ void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
       StrSet::iterator acit = link.auto_activate.find(logic->name());
       if (acit != link.auto_activate.end())
       {
-        cout << "### Activating link " << link_name
+        /* cout << "### Activating link " << link_name
              << " due to AUTOCONNECT_ON_SQL from " << logic->name() << endl;
+        */
         activateLink(link);
       }
     }
