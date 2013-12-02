@@ -157,14 +157,27 @@ class SwDtmfDecoder : public DtmfDecoder
       int block_length;
     } GoertzelState;
 
+    // Sum level calculation descriptor
+    typedef struct
+    {
+      float sum_level;
+      float scale_factor;
+      int samples_left;
+      int block_length;
+    } SumLevelState;
+
     /*! Tone detector working states for the row tones. */
     GoertzelState row_out[8];
     /*! Tone detector working states for the column tones. */
     GoertzelState col_out[8];
+    /*! Sum level calculator working state. */
+    SumLevelState sum_out;
     /*! Row tone signal level values. */
     float row_energy[4];
     /*! Column tone signal level values. */
     float col_energy[4];
+    /*! Block sum signal level value. */
+    float ref_energy;
     /*! Remaining sample count in the current detection interval. */
     int samples_left;
     /*! The result of the last tone analysis. */
@@ -184,7 +197,9 @@ class SwDtmfDecoder : public DtmfDecoder
     void dtmfPostProcess(uint8_t hit);
     void goertzelInit(GoertzelState *s, float freq, float offset);
     float goertzelResult(GoertzelState *s);
-    int findMaxIndex(const float f[]);
+    void sumLevelInit(SumLevelState *s);
+    float sumLevelResult(SumLevelState *s);
+    int findMaxIndex(const float f[], const float ref);
 
 };  /* class SwDtmfDecoder */
 

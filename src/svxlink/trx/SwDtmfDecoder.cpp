@@ -159,6 +159,8 @@ SwDtmfDecoder::SwDtmfDecoder(Config &cfg, const string &name)
     goertzelInit(&col_out[6], 1477.0f, 0.5f);
     goertzelInit(&col_out[7], 1633.0f, 0.5f);
 
+    sumLevelInit(&sum_out);
+
 } /* SwDtmfDecoder::SwDtmfDecoder */
 
 
@@ -263,6 +265,8 @@ int SwDtmfDecoder::writeSamples(const float *buf, int len)
         col_out[7].v2 = col_out[7].v3;
         col_out[7].v3 = col_out[7].fac * col_out[7].v2 - v1 + famp * *(col_out[7].win++);
 
+        sum_out.sum_level += fabsf(famp);
+
         /* Row result calculators */
         if (--row_out[0].samples_left == 0)
             row_energy[0] = goertzelResult(&row_out[0]);
@@ -298,7 +302,10 @@ int SwDtmfDecoder::writeSamples(const float *buf, int len)
             col_energy[2] = goertzelResult(&col_out[6]);
         if (--col_out[7].samples_left == 0)
             col_energy[3] = goertzelResult(&col_out[7]);
-    
+
+        if (--sum_out.samples_left == 0)
+            ref_energy = sumLevelResult(&sum_out);
+                       
         /* Now we are at the end of the detection block */
         if (--samples_left == 0)
             dtmfReceive();
@@ -327,8 +334,8 @@ void SwDtmfDecoder::dtmfReceive(void)
     const char dtmf_table[] = "123A456B789C*0#D";
 
     /* Find the peak row and the peak column */
-    int best_row = findMaxIndex(row_energy);
-    int best_col = findMaxIndex(col_energy);
+    int best_row = findMaxIndex(row_energy, ref_energy);
+    int best_col = findMaxIndex(col_energy, ref_energy);
 
     uint8_t hit = 0;
     /* Valid index test */
@@ -432,9 +439,34 @@ float SwDtmfDecoder::goertzelResult(GoertzelState *s)
 } /* SwDtmfDecoder::goertzelResult */
 
 
-int SwDtmfDecoder::findMaxIndex(const float f[])
+void SwDtmfDecoder::sumLevelInit(SumLevelState *s)
 {
-    float threshold = 1.0f;
+    /* Calculate sum level every 10ms. */
+    s->block_length = INTERNAL_SAMPLE_RATE / 100;
+    /* Scale output values to achieve same levels at different block lengths. */
+    s->scale_factor = 1.0e4f / (s->block_length * s->block_length);
+    /* Reset the level calculator state. */
+    s->sum_level = 0.0f;
+    s->samples_left = s->block_length;
+
+} /* SwDtmfDecoder::sumLevellInit */
+
+
+float SwDtmfDecoder::sumLevelResult(SumLevelState *s)
+{
+    float res = (s->sum_level * s->sum_level) * s->scale_factor;
+    /* Reset the level calculator state. */
+    s->sum_level = 0.0f;
+    s->samples_left = s->block_length;
+    /* Return the calculated signal level. */
+    return res;
+    
+} /* SwDtmfDecoder::sumLevelResult */
+
+
+int SwDtmfDecoder::findMaxIndex(const float f[], const float ref)
+{
+    float threshold = ref;
     int idx = -1;
     int i;
 
