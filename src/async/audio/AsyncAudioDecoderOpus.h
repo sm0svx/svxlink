@@ -140,6 +140,7 @@ class AudioDecoderOpus : public AudioDecoder
      */
     virtual void printCodecParams(void) const;
     
+#if OPUS_MAJOR
     /**
      * @brief   Configures decoder gain adjustment
      * @param   new_gain The new gain to set [dB]
@@ -152,6 +153,7 @@ class AudioDecoderOpus : public AudioDecoder
      * @returns Returns the currently set gain in dB
      */
     float gain(void) const;
+#endif
 
     /**
      * @brief   Resets encoder to be equivalent to a freshly initialized one

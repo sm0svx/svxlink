@@ -133,7 +133,9 @@ AudioEncoderOpus::AudioEncoderOpus(void)
   setBandwidth(OPUS_AUTO);
   setSignalType(OPUS_SIGNAL_VOICE);
   enableDtx(false);
+#if OPUS_MAJOR > 0
   setLsbDepth(16);
+#endif
 
 } /* AsyncAudioEncoderOpus::AsyncAudioEncoderOpus */
 
@@ -206,7 +208,9 @@ void AudioEncoderOpus::printCodecParams(void)
        << (inbandFecEnabled() ? "YES" : "NO") << endl;
   cout << "Expected Packet Loss = " << expectedPacketLoss() << "%\n";
   cout << "DTX                  = " << (dtxEnabled() ? "YES" : "NO") << endl;
+#if OPUS_MAJOR > 0
   cout << "LSB depth            = " << lsbDepth() << endl;
+#endif
   cout << "--------------------------------------\n";
 } /* AudioEncoderOpus::printCodecParams */
 
@@ -511,6 +515,7 @@ bool AudioEncoderOpus::dtxEnabled(void)
 } /* AudioEncoderOpus::dtxEnabled */
 
 
+#if OPUS_MAJOR > 0
 opus_int32 AudioEncoderOpus::setLsbDepth(opus_int32 new_depth)
 {
   int err = opus_encoder_ctl(enc, OPUS_SET_LSB_DEPTH(new_depth));
@@ -535,6 +540,7 @@ opus_int32 AudioEncoderOpus::lsbDepth(void)
   }
   return depth;
 } /* AudioEncoderOpus::lsbDepth */
+#endif
 
 
 void AudioEncoderOpus::reset(void)
