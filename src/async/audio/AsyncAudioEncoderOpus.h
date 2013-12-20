@@ -344,6 +344,7 @@ class AudioEncoderOpus : public AudioEncoder
      */
     bool dtxEnabled(void);
     
+#if OPUS_MAJOR > 0
     /**
      * @brief   Configures the depth of signal being encoded
      * @param   new_depth The new LSB depth (8-24)
@@ -359,6 +360,7 @@ class AudioEncoderOpus : public AudioEncoder
      * @returns Returns the current bitrate
      */
     opus_int32 lsbDepth(void);
+#endif
 
     /**
      * @brief   Resets encoder to be equivalent to a freshly initialized one
