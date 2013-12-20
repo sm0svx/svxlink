@@ -471,7 +471,16 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, unsigned short revents
       continue;
     }
 
-    assert(frames_written == frames_to_write);
+    //assert(frames_written == frames_to_write);
+    if (frames_written != frames_to_write)
+    {
+      cerr << "*** WARNING: Number of frames written to sound device "
+           << devName()
+           << " (" << frames_written << ") differs from what was expected ("
+           << frames_to_write << "). Reopening soundcard...\n";
+      openDevice(mode());
+      return;
+    }
     
     if (frames_to_write != space_avail)
     {
