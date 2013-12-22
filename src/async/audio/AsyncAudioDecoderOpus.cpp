@@ -1,12 +1,12 @@
 /**
-@file	 AsyncAudioDecoder.cpp
-@brief   Base class of an audio decoder
+@file	 AudioDecoderOpus.cpp
+@brief   An audio decoder that use the Opus audio codec
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-10-06
+@date	 2013-10-12
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,6 +32,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <stdint.h>
+#include <iostream>
+#include <cstdlib>
+#include <cmath>
 
 
 /****************************************************************************
@@ -48,16 +52,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncAudioDecoder.h"
-#include "AsyncAudioDecoderRaw.h"
-#include "AsyncAudioDecoderS16.h"
-#include "AsyncAudioDecoderGsm.h"
-#ifdef SPEEX_MAJOR
-#include "AsyncAudioDecoderSpeex.h"
-#endif
-#ifdef OPUS_MAJOR
 #include "AsyncAudioDecoderOpus.h"
-#endif
+
 
 
 /****************************************************************************
@@ -118,57 +114,130 @@ using namespace Async;
  *
  ****************************************************************************/
 
-AudioDecoder *AudioDecoder::create(const std::string &name)
+AudioDecoderOpus::AudioDecoderOpus(void)
+  : frame_size(0)
 {
-  if (name == "RAW")
+  int error;
+  dec = opus_decoder_create(INTERNAL_SAMPLE_RATE, 1, &error);
+  if (error != OPUS_OK)
   {
-    return new AudioDecoderRaw;
+    cerr << "*** ERROR: Could not initialize Opus decoder\n";
+    exit(1);
   }
-  else if (name == "S16")
+} /* AudioDecoderOpus::AudioDecoderOpus */
+
+
+AudioDecoderOpus::~AudioDecoderOpus(void)
+{
+  opus_decoder_destroy(dec);
+} /* AudioDecoderOpus::~AudioDecoderOpus */
+
+
+void AudioDecoderOpus::setOption(const std::string &name,
+      	      	      	      	  const std::string &value)
+{
+#if OPUS_MAJOR > 0
+  if (name == "GAIN")
   {
-    return new AudioDecoderS16;
+    setGain(atof(value.c_str()));
   }
-  else if (name == "GSM")
-  {
-    return new AudioDecoderGsm;
-  }
-#ifdef SPEEX_MAJOR
-  else if (name == "SPEEX")
-  {
-    return new AudioDecoderSpeex;
-  }
-#endif
-#ifdef OPUS_MAJOR
-  else if (name == "OPUS")
-  {
-    return new AudioDecoderOpus;
-  }
-#endif
   else
-  {
-    return 0;
-  }
-}
-
-
-#if 0
-AudioDecoder::AudioDecoder(void)
-{
-  
-} /* AudioDecoder::AudioDecoder */
-
-
-AudioDecoder::~AudioDecoder(void)
-{
-  
-} /* AudioDecoder::~AudioDecoder */
-
-
-void AudioDecoder::resumeOutput(void)
-{
-  
-} /* AudioDecoder::resumeOutput */
 #endif
+  {
+    cerr << "*** WARNING AudioDecoderOpus: Unknown option \""
+      	 << name << "\". Ignoring it.\n";
+  }
+} /* AudioDecoderOpus::setOption */
+
+
+void AudioDecoderOpus::printCodecParams(void) const
+{
+#if OPUS_MAJOR > 0
+  cout << "------ Opus decoder parameters ------\n";
+  cout << "Gain       = " << gain() << "dB\n";
+  cout << "--------------------------------------\n";
+#endif
+} /* AudioDecoderOpus::printCodecParams */
+
+
+#if OPUS_MAJOR > 0
+float AudioDecoderOpus::setGain(float new_gain)
+{
+  opus_int32 gaini = static_cast<opus_int32>(256.0f * new_gain);
+  opus_decoder_ctl(dec, OPUS_SET_GAIN(gaini));
+  return gain();
+} /* AudioDecoderOpus::setGain */
+
+
+float AudioDecoderOpus::gain(void) const
+{
+  opus_int32 gaini;
+  opus_decoder_ctl(dec, OPUS_GET_GAIN(&gaini));
+  return gaini / 256.0f;
+} /* AudioDecoderOpus::gain */
+#endif
+
+
+void AudioDecoderOpus::reset(void)
+{
+  opus_decoder_ctl(dec, OPUS_RESET_STATE);
+} /* AudioDecoderOpus::reset */
+
+
+void AudioDecoderOpus::writeEncodedSamples(void *buf, int size)
+{
+  unsigned char *packet = reinterpret_cast<unsigned char *>(buf);
+  
+  int frame_cnt = opus_packet_get_nb_frames(packet, size);
+  if (frame_cnt == 0)
+  {
+    return;
+  }
+  else if (frame_cnt < 0)
+  {
+    cerr << "*** ERROR: Opus decoder error: " << opus_strerror(frame_size)
+         << endl;
+    return;
+  }
+  frame_size = opus_packet_get_samples_per_frame(packet, INTERNAL_SAMPLE_RATE);
+  if (frame_size == 0)
+  {
+    return;
+  }
+  else if (frame_size < 0)
+  {
+    cerr << "*** ERROR: Opus decoder error: " << opus_strerror(frame_size)
+         << endl;
+    return;
+  }
+  int channels = opus_packet_get_nb_channels(packet);
+  if (channels <= 0)
+  {
+    cerr << "*** ERROR: Opus decoder error: " << opus_strerror(channels)
+         << endl;
+    return;
+  }
+  else if (channels != 1)
+  {
+    cerr << "*** ERROR: Multi channel Opus packet received but only one "
+            "channel can be handled\n";
+    return;
+  }
+  //cout << "### frame_cnt=" << frame_cnt << " frame_size=" << frame_size;
+  float samples[frame_cnt*frame_size];
+  frame_size = opus_decode_float(dec, packet, size, samples,
+                                 frame_cnt*frame_size, 0);
+  //cout << " " << frame_size << endl;
+  if (frame_size > 0)
+  {
+    sinkWriteSamples(samples, frame_size);
+  }
+  else if (frame_size < 0)
+  {
+    cerr << "**** ERROR: Opus decoder error: " << opus_strerror(frame_size)
+         << endl;
+  }
+} /* AudioDecoderOpus::writeEncodedSamples */
 
 
 
@@ -177,13 +246,6 @@ void AudioDecoder::resumeOutput(void)
  * Protected member functions
  *
  ****************************************************************************/
-
-#if 0
-void AudioDecoder::allSamplesFlushed(void)
-{
-  
-} /* AudioDecoder::allSamplesFlushed */
-#endif
 
 
 

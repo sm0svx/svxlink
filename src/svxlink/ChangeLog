@@ -1,4 +1,4 @@
- 1.3.0 -- ?? ??? 2013
+ 1.3.0 -- 01 Dec 2013
 ----------------------
 
 * Improved support for linking logics together. It's now possible to have
@@ -38,10 +38,15 @@
   closed, the file will be deleted.
   If the node is idle for more than QSO_TIMEOUT seconds, the file will be
   closed.
+  The ENCODER_CMD variable makes it possible to run an external audio
+  encoder to compress the recordings.
 
-* Added support for Squelch on GPIO. Use SQL_DET=GPIO and GPIO_SQL_PIN=30
+* Added support for Squelch on GPIO. Use SQL_DET=GPIO and GPIO_SQL_PIN=gpio3
   in your config for GPIO support.
   Patch contributed by DG9OAA / Jonny.
+
+* GPIO pins are now specified with the full name (e.g. gpio3) instead of with
+  just the pin number. This enables the use of any pin naming scheme.
 
 * Improved pre- and de-emphasis filters. They were not good at all in the
   previous relese. Now the filters should behave as expected. Also, the
@@ -51,6 +56,15 @@
 * Now possible to specify DTMF_DEC_TYPE=NONE (or just comment it out) if no
   DTMF decoder is required for a certain receiver. Also made it possible to
   specify NONE for SEL5_DEC_TYPE to make them behave in the same way.
+
+* Bugfix for the REPORT_CTCSS config variable. Depending on the locale
+  settings (e.g. the LC_NUMERIC environment variable) the wrong CTCSS
+  frequency could be announced.
+
+* Bugfix: Setting DTMF_MUTING=0 did not remove the audio delay, which it
+  should do.
+
+* Sound clips are now included for module MetarInfo.
 
 
 

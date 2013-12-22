@@ -18,6 +18,9 @@
 #
 ###############################################################################
 
+# Sox options for raw sample format
+SOX_RAW_SAMP_FMT="-traw -e signed-integer -b 16"
+
 # Print a warning message
 warning()
 {
@@ -108,7 +111,7 @@ for subdir in $SUBDIRS; do
       echo "Maximizing $src_clip -> $dest_clip.$ext"
       $basedir/play_sound.sh -f$endian$encoding -r$target_rate \
 			     -l$SILENCE_LEVEL -e "$EFFECT" "$src_clip" |
-	  sox -traw -s2 -r$target_rate - "$dest_clip.$ext"
+	  sox ${SOX_RAW_SAMP_FMT} -r$target_rate - "$dest_clip.$ext"
     else
       warning "Missing sound clip: $src_clip"
     fi
@@ -122,8 +125,8 @@ for subdir in $SUBDIRS; do
       echo "Trimming $src_clip -> $dest_clip.$ext"
       $basedir/play_sound.sh -tf$endian$encoding -r$target_rate \
 			     -l$SILENCE_LEVEL -e "$EFFECT" "$src_clip" |
-	  sox -traw -s2 -r$target_rate - "$dest_clip.$ext"
-      sox "$dest_clip.$ext" -r$target_rate -s2 -t raw - >> /tmp/all_trimmed.raw
+	  sox ${SOX_RAW_SAMP_FMT} -r$target_rate - "$dest_clip.$ext"
+      sox "$dest_clip.$ext" -r$target_rate ${SOX_RAW_SAMP_FMT} - >> /tmp/all_trimmed.raw
     else
       warning "Missing sound clip: $src_clip"
     fi

@@ -231,7 +231,7 @@ class LocalTx : public Tx
     Async::Timer            *ptt_hangtimer;
     bool                    fsk_trailer_transmitted;
     char                    last_rx_id;
-    int                     gpio_pin;
+    std::string             gpio_pin;
     
     void txTimeoutOccured(Async::Timer *t);
     int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);

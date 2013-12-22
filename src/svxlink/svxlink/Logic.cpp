@@ -155,7 +155,7 @@ Logic::Logic(Config &cfg, const string& name)
     msg_handler(0), 	      	            active_module(0),
     exec_cmd_on_sql_close(0),
     exec_cmd_on_sql_close_timer(0),         rgr_sound_timer(0),
-    rgr_sound_delay(-1),                    report_ctcss(0),
+    rgr_sound_delay(-1),                    report_ctcss(0.0f),
     event_handler(0),                       recorder(0),
     tx_audio_mixer(0),                      tx_audio_selector(0),
     rx_splitter(0),                         audio_from_module_selector(0),
@@ -238,22 +238,11 @@ bool Logic::initialize(void)
     return false;
   }
 
+  cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", exec_cmd_on_sql_close);
+  cfg().getValue(name(), "RGR_SOUND_DELAY", rgr_sound_delay);
+  cfg().getValue(name(), "REPORT_CTCSS", report_ctcss);
+
   string value;
-  if (cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", value))
-  {
-    exec_cmd_on_sql_close = atoi(value.c_str());
-  }
-
-  if (cfg().getValue(name(), "RGR_SOUND_DELAY", value))
-  {
-    rgr_sound_delay = atoi(value.c_str());
-  }
-
-  if (cfg().getValue(name(), "REPORT_CTCSS", value))
-  {
-    report_ctcss = atof(value.c_str());
-  }
-
   if (cfg().getValue(name(), "ACTIVATE_MODULE_ON_LONG_CMD", value))
   {
     string::iterator colon = find(value.begin(), value.end(), ':');
@@ -339,15 +328,8 @@ bool Logic::initialize(void)
     } while (comma != value.end());
   }
 
-  if (cfg().getValue(name(), "FX_GAIN_NORMAL", value))
-  {
-    fx_gain_normal = atoi(value.c_str());
-  }
-
-  if (cfg().getValue(name(), "FX_GAIN_LOW", value))
-  {
-    fx_gain_low = atoi(value.c_str());
-  }
+  cfg().getValue(name(), "FX_GAIN_NORMAL", fx_gain_normal);
+  cfg().getValue(name(), "FX_GAIN_LOW", fx_gain_low);
 
   AudioSource *prev_rx_src = 0;
 

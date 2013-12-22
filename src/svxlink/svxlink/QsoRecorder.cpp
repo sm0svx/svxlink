@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioRecorder.h>
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
+#include <AsyncExec.h>
 
 
 /****************************************************************************
@@ -93,6 +94,14 @@ using namespace Async;
  *
  ****************************************************************************/
 
+class QsoRecorder::FileEncoder : public Exec
+{
+  public:
+    string basename;
+    FileEncoder(const char *shell, string basename)
+      : Exec(shell), basename(basename)
+    {}
+};
 
 
 /****************************************************************************
@@ -103,6 +112,8 @@ using namespace Async;
 
 namespace {
   int directory_filter(const struct dirent *ent);
+  void replace_all(std::string& str, const std::string& from,
+                   const std::string& to);
 };
 
 
@@ -111,7 +122,6 @@ namespace {
  * Exported Global Variables
  *
  ****************************************************************************/
-
 
 
 
@@ -191,6 +201,8 @@ bool QsoRecorder::initialize(const Config &cfg, const string &name)
   unsigned min_time = 0;
   cfg.getValue(name, "MIN_TIME", min_time);
   min_samples = min_time * INTERNAL_SAMPLE_RATE / 1000;
+
+  cfg.getValue(name, "ENCODER_CMD", encoder_cmd);
 
   logic->idleStateChanged.connect(
       hide(mem_fun(*this, &QsoRecorder::checkTimeoutTimers)));
@@ -292,25 +304,57 @@ void QsoRecorder::closeFile(void)
     string oldpath(rec_dir + "/.qsorec_" + logic->name() + ".wav");
     if (recorder->samplesWritten() > min_samples)
     {
-      string newpath(rec_dir + "/qsorec_" + logic->name() + "_");
+      string basename("qsorec_" + logic->name() + "_");
 
       const struct timeval &begin_time = recorder->beginTimestamp();
       struct tm tm;
       localtime_r(&begin_time.tv_sec, &tm);
       char timestamp[256];
       strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H%M%S", &tm);
-      newpath += timestamp;
+      basename += timestamp;
 
-      newpath += "_";
+      basename += "_";
 
       const struct timeval &end_time = recorder->endTimestamp();
       localtime_r(&end_time.tv_sec, &tm);
       strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H%M%S", &tm);
-      newpath += timestamp;
-      newpath += ".wav";
+      basename += timestamp;
+      string newpath = rec_dir + "/" + basename + ".wav";
       if (rename(oldpath.c_str(), newpath.c_str()) != 0)
       {
         perror("QsoRecorder rename");
+      }
+
+      cout << logic->name() << ": Wrote QSO recorder file "
+           << basename << ".wav\n";
+
+        // Execute external audio file handler (e.g. encoder) if configured
+      if (!encoder_cmd.empty())
+      {
+        cout << logic->name() << ": Starting encoding for file "
+             << basename << ".wav\n";
+        const char *shell = getenv("SHELL");
+        if (shell == NULL)
+        {
+          shell = "/bin/sh";
+        }
+        FileEncoder *enc = new FileEncoder(shell, basename);
+        enc->appendArgument("-c");
+        string cmdline(encoder_cmd);
+        replace_all(cmdline, "%f", newpath);
+        replace_all(cmdline, "%d", rec_dir);
+        replace_all(cmdline, "%b", basename);
+        replace_all(cmdline, "%n", basename + ".wav");
+        enc->appendArgument(cmdline);
+        enc->stdoutData.connect(
+            mem_fun(*this, &QsoRecorder::handleEncoderPrintouts));
+        enc->stderrData.connect(
+            mem_fun(*this, &QsoRecorder::handleEncoderPrintouts));
+        enc->exited.connect(
+            sigc::bind(mem_fun(*this, &QsoRecorder::encoderExited), enc));
+        enc->nice();
+        enc->setTimeout(60*60); // One hour timeout
+        enc->run();
       }
     }
     else
@@ -403,6 +447,32 @@ void QsoRecorder::checkTimeoutTimers(void)
 } /* QsoRecorder::checkTimeoutTimers */
 
 
+void QsoRecorder::handleEncoderPrintouts(const char *buf, int cnt)
+{
+  cout << buf;
+} /* Exec::handleEncoderPrintouts */
+
+
+void QsoRecorder::encoderExited(QsoRecorder::FileEncoder *enc)
+{
+  cout << logic->name() << ": Encoding done for file "
+             << enc->basename << ".wav\n";
+  if (enc->ifExited() && (enc->exitStatus() != 0))
+  {
+    cerr << "*** ERROR: QSO recorder external audio file handler in logic "
+         << logic->name() << " failed with "
+         << "exit code " << enc->exitStatus() << endl;
+  }
+  else if (enc->ifSignaled())
+  {
+    cerr << "*** ERROR: QSO recorder external audio file handler in logic "
+         << logic->name() << " exited on "
+         << "signal " << enc->termSig() << endl;
+  }
+  delete enc;
+} /* QsoRecorder::encoderExited */
+
+
 
 /****************************************************************************
  *
@@ -415,6 +485,21 @@ namespace {
   {
     return strstr(ent->d_name, "qsorec_") == ent->d_name;
   } /* directory_filter */
+
+  void replace_all(std::string& str, const std::string& from,
+                   const std::string& to)
+  {
+    if(from.empty())
+    {
+      return;
+    }
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos)
+    {
+      str.replace(start_pos, from.length(), to);
+      start_pos += to.length();
+    }
+  } /* replace_all */
 };
 
 

@@ -366,9 +366,38 @@ proc dtmf_digit_received {digit duration} {
 # Return 1 to hide the command from further processing is SvxLink or
 # return 0 to make SvxLink continue processing as normal.
 #
+# This function can be used to implement your own custom commands or to disable
+# DTMF commands that you do not want users to execute.
 proc dtmf_cmd_received {cmd} {
-  #puts "DTMF command received: $cmd";
-  return 0;
+  #global active_module
+
+  # Example: Ignore all commands starting with 3 in the EchoLink module
+  #if {$active_module == "EchoLink"} {
+  #  if {[string index $cmd 0] == "3"} {
+  #    puts "Ignoring random connect command for module EchoLink: $cmd"
+  #    return 1
+  #  }
+  #}
+
+  # Handle the "force core command" mode where a command is forced to be
+  # executed by the core command processor instead of by an active module.
+  # The "force core command" mode is entered by prefixing a command by a star.
+  #if {$active_module != "" && [string index $cmd 0] != "*"} {
+  #  return 0
+  #}
+  #if {[string index $cmd 0] == "*"} {
+  #  set cmd [string range $cmd 1 end]
+  #}
+
+  # Example: Custom command executed when DTMF 99 is received
+  #if {$cmd == "99"} {
+  #  puts "Executing external command"
+  #  playMsg "Core" "online"
+  #  exec ls &
+  #  return 1
+  #}
+
+  return 0
 }
 
 

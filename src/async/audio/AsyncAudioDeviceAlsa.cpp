@@ -1,5 +1,5 @@
 /**
-@file	 AsyncAudioDeviceAlsa.h
+@file	 AsyncAudioDeviceAlsa.cpp
 @brief   Handle Alsa audio devices
 @author  Steve / DH1DM, Tobias Blomberg / SM0SVX
 @date	 2009-07-21
@@ -8,7 +8,7 @@ Implements the low level interface to an Alsa audio device.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -471,7 +471,16 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, unsigned short revents
       continue;
     }
 
-    assert(frames_written == frames_to_write);
+    //assert(frames_written == frames_to_write);
+    if (frames_written != frames_to_write)
+    {
+      cerr << "*** WARNING: Number of frames written to sound device "
+           << devName()
+           << " (" << frames_written << ") differs from what was expected ("
+           << frames_to_write << "). Reopening soundcard...\n";
+      //openDevice(mode());
+      return;
+    }
     
     if (frames_to_write != space_avail)
     {

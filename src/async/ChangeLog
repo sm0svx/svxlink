@@ -1,4 +1,15 @@
- 1.2.0 -- ?? ??? 2013
+ 1.2.1 -- ?? ??? 2013
+----------------------
+
+* Some sound hardware cause an Alsa failure which SvxLink previously handled
+  as a fatal error (assert) and aborted the application. A warning is now
+  printed instead and the sound device is closed and reopened.
+
+* Support added for Opus version < 1.0.
+
+
+
+ 1.2.0 -- 01 Dec 2013
 ----------------------
 
 * The Async::AudioRecorder class now have some added features. In addition to
@@ -8,6 +19,10 @@
   available.
 
 * The Async::AudioFilter setOutputGain method now take a dB value as argument.
+
+* Added support for the Opus audio codec.
+
+* New class Async::Exec for executing external programs.
 
 
 

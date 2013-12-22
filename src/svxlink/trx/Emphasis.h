@@ -215,10 +215,13 @@ class PreemphasisFilter : public EmphasisBase
     {
       std::stringstream ss;
 
+        // First we band pass filter the signal to get rid of high and low
+        // frequency components. In the 8000 kHz case, only a high pass filter
+        // is needed.
 #if INTERNAL_SAMPLE_RATE >= 16000
-        // First we low pass filter the signal to get rid of high frequency
-        // components.
-      ss << "LpBu2/5000 x ";
+      ss << "BpBu4/300-4300 x ";
+#elif INTERNAL_SAMPLE_RATE == 8000
+      ss << "HpBu4/300 x ";
 #endif
 
         // Create the filter spec with inverted transfer function to cancel
