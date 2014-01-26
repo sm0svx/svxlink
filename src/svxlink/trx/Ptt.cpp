@@ -1,13 +1,11 @@
 /**
-@file	 Template.cpp
-@brief   A_brief_description_for_this_file
+@file	 Ptt.cpp
+@brief   Base class for PTT hw control
 @author  Tobias Blomberg / SM0SVX
-@date	 2014-
-
-A_detailed_description_for_this_file
+@date	 2014-01-26
 
 \verbatim
-<A brief description of the program or library this file belongs to>
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
 Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -34,6 +32,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <iostream>
+#include <cassert>
 
 
 /****************************************************************************
@@ -50,7 +50,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Template.h"
+#include "Ptt.h"
+#include "PttSerialPin.h"
+#include "PttGpio.h"
 
 
 
@@ -61,6 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 
 
 
@@ -77,6 +80,20 @@ using namespace std;
  * Local class definitions
  *
  ****************************************************************************/
+
+namespace {
+  class PttDummy : public Ptt
+  {
+    public:
+      struct Factory : public PttFactory<PttDummy>
+      {
+        Factory(void) : PttFactory<PttDummy>("Dummy") {}
+      };
+
+      virtual bool initialize(Config &cfg, const string name) { return true; }
+      virtual bool setTxOn(bool tx_on) { return true; }
+  };
+};
 
 
 
@@ -111,17 +128,36 @@ using namespace std;
  *
  ****************************************************************************/
 
-Template::Template(void)
+Ptt *PttFactoryBase::createNamedPtt(Config& cfg, const string& name)
 {
+  PttDummy::Factory dummy_ptt_factory;
+  PttSerialPin::Factory serial_ptt_factory;
+  PttGpio::Factory gpio_ptt_factory;
   
-} /* Template::Template */
+  string ptt_type;
+  if (!cfg.getValue(name, "PTT_TYPE", ptt_type) || ptt_type.empty())
+  {
+    cerr << "*** ERROR: PTT_TYPE not specified for transmitter "
+         << name << ". Legal values are: "
+         << validFactories() << "or \"NONE\"" << endl;
+    return 0;
+  }
 
-
-Template::~Template(void)
-{
+  if (ptt_type == "NONE")
+  {
+    ptt_type = "Dummy";
+  }
   
-} /* Template::~Template */
-
+  Ptt *ptt = createNamedObject(ptt_type);
+  if (ptt == 0)
+  {
+    cerr << "*** ERROR: Unknown PTT_TYPE \"" << ptt_type << "\" specified for "
+         << "transmitter " << name << ". Legal values are: "
+         << validFactories() << "or \"NONE\"" << endl;
+  }
+  
+  return ptt;
+} /* PttFactoryBase::createNamedPtt */
 
 
 

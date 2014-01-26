@@ -135,7 +135,7 @@ class DummyRxFactory : public RxFactory
     {
       return new DummyRx(cfg, name);
     }
-}; /* class NetRxFactory */
+}; /* class DummyRxFactory */
 
 
 /****************************************************************************

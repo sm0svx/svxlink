@@ -1240,23 +1240,26 @@ AUDIO DEVICE SPECIFICATIONS chapter for more information.
 Specify the audio channel to use. SvxLink can use the left/right stereo
 channels as two mono channels. Legal values are 0 or 1.
 .TP
+.B PTT_TYPE
+Use this configuration variable to specify which type of hardware to use to
+control the PTT.  Specify "SerialPin" for using a pin in the serial port or
+"GPIO" to use a pin in a GPIO port. Set PTT_TYPE to "Dummy" or "NONE" to not
+use any PTT hardware at all. It is an error to not specify PTT_TYPE.
+
+Use PTT_PIN to specify the pin to use for "SerialPin" or "GPIO".
+.TP
 .B PTT_PORT
 Specify the serial port that the PTT is connected to. E.g. /dev/ttyS0 for COM1.
-Set it to NONE if no PTT is desired for some reason.
-
-If PTT_PORT is set to GPIO, any available GPIO (General Purpose IO) pin may be
-used. The pin to use is specified using the PTT_PIN config variable. Have a
-look at the USING GPIO section for information on how to set up the operating
-system.
 .TP
 .B PTT_PIN
-Specify the pin(s) in the serial port that the PTT is connected to. It is
-possible to specify one or two serial port pins. Some interface boards require
-that you specify two pins since one pin does not provide enough drive power to
-the circuit. A "!" in front of the pin name indicates inverted operation. Some
-of the possible values are RTS, DTRRTS, !DTR!RTS or even DTR!RTS.
+If PTT_TYPE is set to "SerialPin", specify the pin(s) in the serial port that
+the PTT is connected to. It is possible to specify one or two serial port pins.
+Some interface boards require that you specify two pins since one pin does not
+provide enough drive power to the circuit. A "!" in front of the pin name
+indicates inverted operation. Some of the possible values are RTS, DTRRTS,
+!DTR!RTS or even DTR!RTS.
 
-If GPIO was specified for PTT_PORT, set the PTT_PIN config variable to the pin
+If GPIO was specified in PTT_TYPE, set the PTT_PIN config variable to the pin
 name of the GPIO-pin to use. The most common name is gpio<number>, like gpio3.
 Some GPIO drivers use more complex pin names like gpio33_pe11.  Have a look at
 the USING GPIO section for information on how to set up the operating system.
@@ -1266,7 +1269,8 @@ Set the specified serial port pins to a static state. This can be good if using
 a pin for reference voltage or if a pin have to be in a certain state to not
 interfere with the operation of some equipment. There are two pins that are
 possible to use, RTS and DTR. If prefixed with an exclamation mark (!), the
-pin will be cleared and if not it will be set.
+pin will be cleared and if not it will be set. This configuration variable can
+only be used when PTT_TYPE is set to "SerialPin".
 
 Example: SERIAL_SET_PINS=RTS!DTR will set RTS and clear DTR.
 .TP

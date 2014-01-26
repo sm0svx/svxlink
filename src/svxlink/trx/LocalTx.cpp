@@ -46,7 +46,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <algorithm>
 #include <cmath>
-#include <fstream>
 
 #include <sigc++/sigc++.h>
 
@@ -82,6 +81,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "multirate_filter_coeff.h"
 #include "PttCtrl.h"
 #include "Emphasis.h"
+#include "Ptt.h"
 
 
 /****************************************************************************
@@ -229,12 +229,10 @@ class SineGenerator : public Async::AudioSource
  ****************************************************************************/
 
 LocalTx::LocalTx(Config& cfg, const string& name)
-  : name(name), cfg(cfg), audio_io(0), is_transmitting(false),
-    serial(0), ptt_pin1(Serial::PIN_NONE), ptt_pin1_rev(false),
-    ptt_pin2(Serial::PIN_NONE), ptt_pin2_rev(false), txtot(0),
+  : name(name), cfg(cfg), audio_io(0), is_transmitting(false), txtot(0),
     tx_timeout_occured(false), tx_timeout(0), sine_gen(0), ctcss_enable(false),
     dtmf_encoder(0), selector(0), dtmf_valve(0), input_handler(0),
-    audio_valve(0), siglev_sine_gen(0), ptt_hangtimer(0), gpio_pin("")
+    audio_valve(0), siglev_sine_gen(0), ptt_hangtimer(0), ptt(0)
 {
 
 } /* LocalTx::LocalTx */
@@ -250,7 +248,7 @@ LocalTx::~LocalTx(void)
   delete dtmf_encoder;
   
   delete txtot;
-  delete serial;
+  delete ptt;
   delete sine_gen;
   delete siglev_sine_gen;
   delete ptt_hangtimer;
@@ -276,51 +274,18 @@ bool LocalTx::initialize(void)
   }
   int audio_channel = atoi(value.c_str());
 
-  string ptt_port;
-  if (!cfg.getValue(name, "PTT_PORT", ptt_port))
+  ptt = PttFactoryBase::createNamedPtt(cfg, name);
+  if ((ptt == 0) || (!ptt->initialize(cfg, name)))
   {
-    cerr << "*** ERROR: Config variable " << name << "/PTT_PORT not set\n";
     return false;
-  }
-
-  if (ptt_port == "GPIO")
-  {
-    if (!cfg.getValue(name, "PTT_PIN", gpio_pin) || gpio_pin.empty())
-    {
-      cerr << "*** ERROR: Config variable " << name << "/PTT_PIN not set\n";
-      return false;
-    }
-  }
-  else if (ptt_port != "NONE")
-  {
-    string ptt_pin_str;
-    if (!cfg.getValue(name, "PTT_PIN", ptt_pin_str))
-    {
-      cerr << "*** ERROR: Config variable " << name << "/PTT_PIN not set\n";
-      return false;
-    }
-    const char *ptr = ptt_pin_str.c_str();
-    int cnt;
-    cnt = parsePttPin(ptr, ptt_pin1, ptt_pin1_rev);
-    if (cnt == 0)
-    {
-      return false;
-    }
-    ptr += cnt;
-    if (*ptr != 0)
-    {
-      if (parsePttPin(ptr, ptt_pin2, ptt_pin2_rev) == 0)
-      {
-        return false;
-      }
-    }
   }
 
   int ptt_hangtime = 0;
   if (cfg.getValue(name, "PTT_HANGTIME", ptt_hangtime) && (ptt_hangtime > 0))
   {
     ptt_hangtimer = new Timer(ptt_hangtime);
-    ptt_hangtimer->expired.connect(mem_fun(*this, &LocalTx::pttHangtimeExpired));
+    ptt_hangtimer->expired.connect(
+        mem_fun(*this, &LocalTx::pttHangtimeExpired));
     ptt_hangtimer->setEnable(false);
   }
 
@@ -335,37 +300,10 @@ bool LocalTx::initialize(void)
     tx_delay = atoi(value.c_str());
   }
 
-  if (ptt_port == "GPIO")
-  {
-    stringstream ss;
-    ss << "/sys/class/gpio/" << gpio_pin << "/value";
-    ofstream gpioval(ss.str().c_str());
-    if (gpioval.fail())
-    {
-      cerr << "*** ERROR: Could not open GPIO " << ss.str()
-           << " for writing.\n";
-      return false;
-    }
-    gpioval.close();
-  }
-  else if (ptt_port != "NONE")
-  {
-    serial = new Serial(ptt_port.c_str());
-    if (!serial->open())
-    {
-      perror("open serial port");
-      return false;
-    }
-    if (!setPins(cfg, name))
-    {
-      return false;
-    }
-  }
   if (!setPtt(false))
   {
+      // FIXME: Maybe "perror" is not the right thing to use here
     perror("setPin");
-    delete serial;
-    serial = 0;
     return false;
   }
   
@@ -517,7 +455,8 @@ bool LocalTx::initialize(void)
   
     // Create the DTMF encoder
   dtmf_encoder = new DtmfEncoder(INTERNAL_SAMPLE_RATE);
-  dtmf_encoder->allDigitsSent.connect(mem_fun(*this, &LocalTx::allDtmfDigitsSent));
+  dtmf_encoder->allDigitsSent.connect(
+      mem_fun(*this, &LocalTx::allDtmfDigitsSent));
   dtmf_encoder->setToneLength(dtmf_tone_length);
   dtmf_encoder->setToneSpacing(dtmf_tone_spacing);
   dtmf_encoder->setToneAmplitude(dtmf_tone_amp);
@@ -754,39 +693,6 @@ void LocalTx::txTimeoutOccured(Timer *t)
 } /* LocalTx::txTimeoutOccured */
 
 
-int LocalTx::parsePttPin(const char *str, Serial::Pin &pin, bool &rev)
-{
-  int cnt = 0;
-  if (*str == '!')
-  {
-    rev = true;
-    str++;
-    cnt++;
-  }
-  if (strncmp(str, "RTS", 3) == 0)
-  {
-    pin = Serial::PIN_RTS;
-    str += 3;
-    cnt += 3;
-  }
-  else if (strncmp(str, "DTR", 3) == 0)
-  {
-    pin = Serial::PIN_DTR;
-    str += 3;
-    cnt += 3;
-  }
-  else
-  {
-    cerr << "*** ERROR: Accepted values for config variable "
-      	 << name << "/PTT_PIN are \"[!]RTS\" and/or \"[!]DTR\".\n";
-    return 0;
-  }
-
-  return cnt;
-
-} /* LocalTx::parsePttPin */
-
-
 bool LocalTx::setPtt(bool tx, bool with_hangtime)
 {
   if (ptt_hangtimer != 0)
@@ -799,70 +705,14 @@ bool LocalTx::setPtt(bool tx, bool with_hangtime)
     ptt_hangtimer->setEnable(false);
   }
 
-  if ((serial != 0) && !serial->setPin(ptt_pin1, tx ^ ptt_pin1_rev))
+  if (!ptt->setTxOn(tx))
   {
     return false;
-  }
-
-  if ((serial != 0) && !serial->setPin(ptt_pin2, tx ^ ptt_pin2_rev))
-  {
-    return false;
-  }
-
-  if(!gpio_pin.empty())
-  {
-    stringstream ss;
-    ss << "/sys/class/gpio/" << gpio_pin << "/value";
-    ofstream gpioval(ss.str().c_str());
-    if (gpioval.fail())
-    {
-      return false;
-    }
-    gpioval << (tx ? 1 : 0);
-    gpioval.close();
   }
 
   return true;
 
 } /* LocalTx::setPtt */
-
-
-bool LocalTx::setPins(const Async::Config &cfg, const std::string &name)
-{
-  std::string pins;
-  if (!cfg.getValue(name, "SERIAL_SET_PINS", pins))
-  {
-    return true;
-  }
-  std::string::iterator it(pins.begin());
-  while (it != pins.end())
-  {
-    bool do_set = true;
-    if (*it == '!')
-    {
-      do_set = false;
-      ++it;
-    }
-    std::string pin_name(it, it+3);
-    it += 3;
-    if (pin_name == "RTS")
-    {
-      serial->setPin(Async::Serial::PIN_RTS, do_set);
-    }
-    else if (pin_name == "DTR")
-    {
-      serial->setPin(Async::Serial::PIN_DTR, do_set);
-    }
-    else
-    {
-      std::cerr << "*** ERROR: Illegal pin name \"" << pin_name << "\" for the "
-                << name << "/SERIAL_SET_PINS configuration variable. "
-                << "Accepted values are \"[!]RTS\" and/or \"[!]DTR\".\n";
-      return false;
-    }
-  }
-  return true;
-} /* LocalTx::setPins */
 
 
 void LocalTx::allDtmfDigitsSent(void)

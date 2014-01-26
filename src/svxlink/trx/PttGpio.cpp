@@ -1,13 +1,11 @@
 /**
-@file	 Template.cpp
-@brief   A_brief_description_for_this_file
+@file	 PttGpio.cpp
+@brief   A PTT hardware controller using a pin in a GPIO port
 @author  Tobias Blomberg / SM0SVX
-@date	 2014-
-
-A_detailed_description_for_this_file
+@date	 2014-01-26
 
 \verbatim
-<A brief description of the program or library this file belongs to>
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
 Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -34,6 +32,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <iostream>
+#include <fstream>
+#include <cstring>
+#include <sstream>
 
 
 /****************************************************************************
@@ -50,7 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Template.h"
+#include "PttGpio.h"
 
 
 
@@ -61,6 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 
 
 
@@ -96,7 +99,6 @@ using namespace std;
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -111,17 +113,55 @@ using namespace std;
  *
  ****************************************************************************/
 
-Template::Template(void)
+PttGpio::PttGpio(void)
 {
-  
-} /* Template::Template */
+} /* PttGpio::PttGpio */
 
 
-Template::~Template(void)
+PttGpio::~PttGpio(void)
 {
-  
-} /* Template::~Template */
+} /* PttGpio::~PttGpio */
 
+
+bool PttGpio::initialize(Async::Config &cfg, const std::string name)
+{
+  if (!cfg.getValue(name, "PTT_PIN", gpio_pin) || gpio_pin.empty())
+  {
+    cerr << "*** ERROR: Config variable " << name << "/PTT_PIN not set\n";
+    return false;
+  }
+
+  stringstream ss;
+  ss << "/sys/class/gpio/" << gpio_pin << "/value";
+  ofstream gpioval(ss.str().c_str());
+  if (gpioval.fail())
+  {
+    cerr << "*** ERROR: Could not open GPIO " << ss.str()
+         << " for writing in transmitter " << name << ".\n";
+    return false;
+  }
+  gpioval.close();
+
+  return true;
+} /* PttGpio::initialize */
+
+
+bool PttGpio::setTxOn(bool tx_on)
+{
+  //cerr << "### PttGpio::setTxOn(" << (tx_on ? "true" : "false") << ")\n";
+
+  stringstream ss;
+  ss << "/sys/class/gpio/" << gpio_pin << "/value";
+  ofstream gpioval(ss.str().c_str());
+  if (gpioval.fail())
+  {
+    return false;
+  }
+  gpioval << (tx_on ? 1 : 0);
+  gpioval.close();
+
+  return true;
+} /* PttGpio::setTxOn */
 
 
 

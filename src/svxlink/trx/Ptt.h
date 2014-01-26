@@ -1,13 +1,11 @@
 /**
-@file	 Template.h
-@brief   A_brief_description_for_this_file
+@file	 Ptt.h
+@brief   Base class for PTT hw control
 @author  Tobias Blomberg / SM0SVX
-@date	 2014-
-
-A_detailed_description_for_this_file
+@date	 2014-01-26
 
 \verbatim
-<A brief description of the program or library this file belongs to>
+SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
 Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -26,13 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example Template_demo.cpp
-An example of how to use the Template class
-*/
-
-
-#ifndef TEMPLATE_INCLUDED
-#define TEMPLATE_INCLUDED
+#ifndef PTT_INCLUDED
+#define PTT_INCLUDED
 
 
 /****************************************************************************
@@ -41,6 +34,8 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include <string>
+#include <map>
 
 
 /****************************************************************************
@@ -49,6 +44,7 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include <AsyncConfig.h>
 
 
 /****************************************************************************
@@ -57,6 +53,7 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
+#include "Factory.h"
 
 
 /****************************************************************************
@@ -73,8 +70,6 @@ An example of how to use the Template class
  *
  ****************************************************************************/
 
-namespace MyNameSpace
-{
 
 
 /****************************************************************************
@@ -108,45 +103,84 @@ namespace MyNameSpace
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	Base class for PTT hw control
 @author Tobias Blomberg / SM0SVX
-@date   2014-
+@date   2014-01-26
 
-A_detailed_class_description
-
-\include Template_demo.cpp
+This is the base class for implementing a controller for PTT hardware.
 */
-class Template
+class Ptt
 {
   public:
     /**
      * @brief 	Default constructor
      */
-    Template(void);
+    Ptt(void) {}
   
     /**
      * @brief 	Destructor
      */
-    ~Template(void);
+    virtual ~Ptt(void) {}
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Initialize the PTT hardware
+     * @param 	cfg An initialized config object
+     * @param   name The name of the config section to read config from
+     * @returns Returns \em true on success or else \em false
      */
+    virtual bool initialize(Async::Config &cfg, const std::string name) = 0;
+
+    /**
+     * @brief 	Set the state of the PTT, TX on or off
+     * @param 	tx_on Set to \em true to turn the transmitter on
+     * @returns Returns \em true on success or else \em false
+     */
+    virtual bool setTxOn(bool tx_on) = 0;
     
   protected:
     
   private:
-    Template(const Template&);
-    Template& operator=(const Template&);
+    Ptt(const Ptt&);
+    Ptt& operator=(const Ptt&);
     
-};  /* class Template */
+};  /* class Ptt */
 
 
-} /* namespace */
+/**
+@brief	Base class for a PTT hw controller factory
+@author Tobias Blomberg / SM0SVX
+@date   2014-01-26
 
-#endif /* TEMPLATE_INCLUDED */
+This is the base class for a Ptt hardware controller factory. However, this
+is not the class to inherit from when implementing a Ptt hardware controller
+factory. Use the PttFactory class for that.
+This class is essentially used only to access the createNamedPtt function.
+*/
+struct PttFactoryBase : public FactoryBase<Ptt>
+{
+  static Ptt *createNamedPtt(Async::Config& cfg, const std::string& name);
+  PttFactoryBase(const std::string &name) : FactoryBase<Ptt>(name) {}
+};  /* class PttFactoryBase */
+
+
+/**
+@brief	Base class for implementing a PTT hw controller factory
+@author Tobias Blomberg / SM0SVX
+@date   2014-01-26
+
+This class should be inherited from when implementing a new PTT hardware
+controller factory.
+*/
+template <class T>
+struct PttFactory : public Factory<PttFactoryBase, T>
+{
+  PttFactory(const std::string &name) : Factory<PttFactoryBase, T>(name) {}
+}; /* class PttFactory */
+
+
+//} /* namespace */
+
+#endif /* PTT_INCLUDED */
 
 
 
