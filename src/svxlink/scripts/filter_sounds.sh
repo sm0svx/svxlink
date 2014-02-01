@@ -152,7 +152,7 @@ if [ -d "${SRC_DIR}/events.d" ]; then
   cp -a "${SRC_DIR}/events.d" "${DEST_DIR}/"
 fi
 
-archive_file="sounds-${DEST_DIR}.tar.bz2"
+archive_file="svxlink-sounds-${DEST_DIR}.tar.bz2"
 echo "Creating archive ${archive_file}..."
 tar cjf ${archive_file} ${DEST_DIR}
 
