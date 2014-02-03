@@ -114,6 +114,7 @@ using namespace Async;
  ****************************************************************************/
 
 PttGpio::PttGpio(void)
+  : active_low(false)
 {
 } /* PttGpio::PttGpio */
 
@@ -129,6 +130,12 @@ bool PttGpio::initialize(Async::Config &cfg, const std::string name)
   {
     cerr << "*** ERROR: Config variable " << name << "/PTT_PIN not set\n";
     return false;
+  }
+
+  if (gpio_pin[0] == '!')
+  {
+    active_low = true;
+    gpio_pin.erase(0, 1);
   }
 
   stringstream ss;
@@ -157,7 +164,7 @@ bool PttGpio::setTxOn(bool tx_on)
   {
     return false;
   }
-  gpioval << (tx_on ? 1 : 0);
+  gpioval << (tx_on ^ active_low ? 1 : 0);
   gpioval.close();
 
   return true;

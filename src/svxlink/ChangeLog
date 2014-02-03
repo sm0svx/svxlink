@@ -10,6 +10,11 @@
   possible to close the repeater using a selective calling sequence.
   Patch contributed by Adi / DL1HRC.
 
+* Now possible to have active low functionality on the PTT pin for GPIO. This
+  is configured in the same way as for serial ports, by prefixing the gpio
+  pin specification with an exclamation mark (!) in the PTT_PIN config.
+  Example: PTT_PIN=!gpio5
+
 
 
  1.3.0 -- 01 Dec 2013

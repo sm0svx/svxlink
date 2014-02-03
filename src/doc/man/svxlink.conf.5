@@ -1269,6 +1269,8 @@ If GPIO was specified in PTT_TYPE, set the PTT_PIN config variable to the pin
 name of the GPIO-pin to use. The most common name is gpio<number>, like gpio3.
 Some GPIO drivers use more complex pin names like gpio33_pe11.  Have a look at
 the USING GPIO section for information on how to set up the operating system.
+Normally, the pin will be active high but if the pin name is prefixed with an
+exclamation mark it will be active low instead.
 .TP
 .B SERIAL_SET_PINS
 Set the specified serial port pins to a static state. This can be good if using

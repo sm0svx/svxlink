@@ -142,6 +142,7 @@ class PttGpio : public Ptt
     
   private:
     std::string gpio_pin;
+    bool active_low;
 
     PttGpio(const PttGpio&);
     PttGpio& operator=(const PttGpio&);
