@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <cmath>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 
 
@@ -58,6 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "AfskDemodulator.h"
+#include "remez.h"
 
 
 
@@ -149,7 +151,6 @@ namespace {
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -165,23 +166,64 @@ namespace {
  ****************************************************************************/
 
 AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
-                               unsigned sample_rate)
+                                 unsigned sample_rate)
   : f0(f0), f1(f1), baudrate(baudrate)
 {
   AudioSource *prev_src = 0;
 
     // Clip the signal to eliminate level differences
+  /*
   AudioClipper *clipper = new AudioClipper(0.05);
   AudioSink::setHandler(clipper);
   prev_src = clipper;
+  */
 
-    // Apply a bandpass filter to filter out the FSK signal
+    // Apply a bandpass filter to filter out the AFSK signal.
+    // The constructed filter is a FIR filter with linear phase.
+    // The Parks-Macclellan algorithm is used to design the filter.
+    // The length of the filter is chosen to be one symbol long to not cause
+    // inter symbol interference (ISI).
+  const int numtaps = sample_rate / baudrate;
+  const int numband = 3;
+  const double bands[] = {
+    0.0,
+    (f0-baudrate/2.0-200.0)/sample_rate,
+    (f0-baudrate/2.0)/sample_rate,
+    (f1+baudrate/2.0)/sample_rate,
+    (f1+baudrate/2.0+200.0)/sample_rate,
+    0.5
+  };
+  const double des[] = {0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
+  const double weight[] = {1.0, 1.0, 1.0};
+  const int type = BANDPASS;
+  const int griddensity = 16;
+  double pre_filter_taps[numtaps];
+  int ret = remez(pre_filter_taps, numtaps, numband, bands, des, weight, type,
+                  griddensity);
+  assert(ret == 0);
+  /*
+  cout << "ret=" << ret << endl;
+  for (int i=0; i<numtaps; ++i)
+  {
+    cout << pre_filter_taps[i] << endl;
+  }
+  */
   stringstream ss;
-  ss << "BpBu3/" << (f0 - baudrate/2) << "-" << (f1 + baudrate/2);
+  //ss << "BpBu3/" << (f0 - baudrate/2) << "-" << (f1 + baudrate/2);
+  ss << fixed << setprecision(9);
+  ss << "x";
+  for (int i=0; i<numtaps; ++i)
+  {
+    ss << " " << pre_filter_taps[i];
+  }
   cout << "Passband filter: " << ss.str() << endl;
   AudioFilter *passband_filter = new AudioFilter(ss.str(), sample_rate);
-  prev_src->registerSink(passband_filter, true);
+  AudioSink::setHandler(passband_filter);
+  //prev_src->registerSink(passband_filter, true);
   prev_src = passband_filter;
+  AudioFilter *passband_filter2 = new AudioFilter(ss.str(), sample_rate);
+  prev_src->registerSink(passband_filter2, true);
+  prev_src = passband_filter2;
 
     // Run the sample stream through the correlator
   Correlator *corr = new Correlator(f0, f1, baudrate, sample_rate);
@@ -190,7 +232,7 @@ AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
 
     // Low pass out the constant component from the correlator
   ss.str("");
-  ss << "LpBu6/" << baudrate;
+  ss << "LpBu5/" << baudrate;
   cout << "Correlator filter: " << ss.str() << endl;
   AudioFilter *corr_filter = new AudioFilter(ss.str(), sample_rate);
   corr_filter->setOutputGain(10);

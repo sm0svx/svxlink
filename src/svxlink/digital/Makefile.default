@@ -68,7 +68,7 @@ SHLIB_VERSION	=
 
 # Sources needed to build the library
 LIBSRC		= AfskDemodulator.cpp Synchronizer.cpp HdlcDeframer.cpp \
-		  AfskModulator.cpp HdlcFramer.cpp Fcs.cpp
+		  AfskModulator.cpp HdlcFramer.cpp Fcs.cpp remez.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
 LIB_LIBS	= -lc -lasyncaudio

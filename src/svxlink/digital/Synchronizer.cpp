@@ -142,7 +142,7 @@ int Synchronizer::writeSamples(const float *samples, int len)
     if (is_mark != was_mark)
     {
       err = shift_pos - pos;
-      pos += err / 10;
+      pos += err / 5;
       /*
       float err_percent = 100.0 * static_cast<float>(err) / sample_rate;
       cout << "  " << err << " " << err_percent << "%" << endl;
