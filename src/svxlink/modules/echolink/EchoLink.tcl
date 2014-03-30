@@ -333,6 +333,54 @@ proc cbc_timeout {} {
 
 
 #
+# Executed when the disconnect by callsign list has been retrieved
+#
+proc dbc_list {call_list} {
+  playMsg "disconnect_by_callsign";
+  playSilence 200
+  playMsg "choose_station";
+  set idx 0;
+  foreach {call} $call_list {
+    incr idx;
+    playSilence 500;
+    playNumber $idx;
+    playSilence 200;
+    spellEchoLinkCallsign $call;
+  }
+}
+
+
+#
+# Executed when the disconnect by callsign function is manually aborted
+#
+proc dbc_aborted {} {
+  playMsg "disconnect_by_callsign";
+  playMsg "aborted";
+}
+
+
+#
+# Executed when an out of range index is entered in the disconnect by callsign
+# list
+#
+proc dbc_index_out_of_range {idx} {
+  playNumber $idx;
+  playSilence 50;
+  playMsg "idx_out_of_range";
+}
+
+
+#
+# Executed when no station have been chosen in 60 seconds in the disconnect
+# by callsign function
+#
+proc dbc_timeout {} {
+  playMsg "disconnect_by_callsign";
+  playMsg "timeout";
+}
+
+
+#
 # Executed when a local user enter the DTMF code for playing back the
 # local node ID.
 #

@@ -153,7 +153,7 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
   : Module(dl_handle, logic, cfg_name), dir(0), dir_refresh_timer(0),
     remote_activation(false), pending_connect_id(-1), last_message(""),
     max_connections(1), max_qsos(1), talker(0), squelch_is_open(false),
-    state(STATE_NORMAL), cbc_timer(0), drop_incoming_regex(0),
+    state(STATE_NORMAL), cbc_timer(0), dbc_timer(0), drop_incoming_regex(0),
     reject_incoming_regex(0), accept_incoming_regex(0),
     reject_outgoing_regex(0), accept_outgoing_regex(0), splitter(0),
     listen_only_valve(0), selector(0), num_con_max(0), num_con_ttl(5*60),
@@ -472,7 +472,7 @@ void ModuleEchoLink::logicIdleStateChanged(bool is_idle)
 
   if (qsos.size() > 0)
   {
-    list<QsoImpl*>::iterator it;
+    vector<QsoImpl*>::iterator it;
     for (it=qsos.begin(); it!=qsos.end(); ++it)
     {
       (*it)->logicIdleStateChanged(is_idle);
@@ -539,6 +539,8 @@ void ModuleEchoLink::moduleCleanup(void)
   proxy = 0;
   delete cbc_timer;
   cbc_timer = 0;
+  delete dbc_timer;
+  dbc_timer = 0;
   state = STATE_NORMAL;
   delete autocon_timer;
   autocon_timer = 0;
@@ -590,8 +592,8 @@ void ModuleEchoLink::activateInit(void)
  */
 void ModuleEchoLink::deactivateCleanup(void)
 {
-  list<QsoImpl*> qsos_tmp(qsos);
-  list<QsoImpl*>::iterator it;
+  vector<QsoImpl*> qsos_tmp(qsos);
+  vector<QsoImpl*>::iterator it;
   for (it=qsos_tmp.begin(); it!=qsos_tmp.end(); ++it)
   {
     if ((*it)->currentState() != Qso::STATE_DISCONNECTED)
@@ -605,6 +607,8 @@ void ModuleEchoLink::deactivateCleanup(void)
   remote_activation = false;
   delete cbc_timer;
   cbc_timer = 0;
+  delete dbc_timer;
+  dbc_timer = 0;
   state = STATE_NORMAL;
   listen_only_valve->setOpen(true);
 } /* deactivateCleanup */
@@ -659,6 +663,12 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
   if (state == STATE_CONNECT_BY_CALL)
   {
     handleConnectByCall(cmd);
+    return;
+  }
+  
+  if (state == STATE_DISCONNECT_BY_CALL)
+  {
+    handleDisconnectByCall(cmd);
     return;
   }
   
@@ -750,7 +760,7 @@ void ModuleEchoLink::allMsgsWritten(void)
 {
   if (!outgoing_con_pending.empty())
   {
-    list<QsoImpl*>::iterator it;
+    vector<QsoImpl*>::iterator it;
     for (it=outgoing_con_pending.begin(); it!=outgoing_con_pending.end(); ++it)
     {
       (*it)->connect();
@@ -1057,10 +1067,11 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
   {
     case Qso::STATE_DISCONNECTED:
     {
-      list<QsoImpl*>::iterator it = find(qsos.begin(), qsos.end(), qso);
+      vector<QsoImpl*>::iterator it = find(qsos.begin(), qsos.end(), qso);
       assert (it != qsos.end());
       qsos.erase(it);
-      qsos.push_front(qso);
+      it=qsos.begin();
+      qsos.insert(it,qso);
       updateEventVariables();
       
       if (!qso->connectionRejected())
@@ -1111,7 +1122,7 @@ void ModuleEchoLink::onChatMsgReceived(QsoImpl *qso, const string& msg)
   //     << " ---" << endl
   //     << msg << endl;
   
-  list<QsoImpl*>::iterator it;
+  vector<QsoImpl*>::iterator it;
   for (it=qsos.begin(); it!=qsos.end(); ++it)
   {
     if (*it != qso)
@@ -1175,7 +1186,7 @@ void ModuleEchoLink::destroyQsoObject(QsoImpl *qso)
   splitter->removeSink(qso);
   selector->removeSource(qso);
       
-  list<QsoImpl*>::iterator it = find(qsos.begin(), qsos.end(), qso);
+  vector<QsoImpl*>::iterator it = find(qsos.begin(), qsos.end(), qso);
   assert (it != qsos.end());
   qsos.erase(it);
 
@@ -1279,7 +1290,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
   
   QsoImpl *qso = 0;
   
-  list<QsoImpl*>::iterator it;
+  vector<QsoImpl*>::iterator it;
   for (it=qsos.begin(); it!=qsos.end(); ++it)
   {
     if ((*it)->remoteCallsign() == station.callsign())
@@ -1359,7 +1370,7 @@ void ModuleEchoLink::audioFromRemoteRaw(Qso::RawPacket *packet,
 
   if ((qso == talker) && !squelch_is_open)
   {
-    list<QsoImpl*>::iterator it;
+    vector<QsoImpl*>::iterator it;
     for (it=qsos.begin(); it!=qsos.end(); ++it)
     {
       if (*it != qso)
@@ -1373,7 +1384,7 @@ void ModuleEchoLink::audioFromRemoteRaw(Qso::RawPacket *packet,
 
 QsoImpl *ModuleEchoLink::findFirstTalker(void) const
 {
-  list<QsoImpl*>::const_iterator it;
+  vector<QsoImpl*>::const_iterator it;
   for (it=qsos.begin(); it!=qsos.end(); ++it)
   {
     if ((*it)->receivingAudio())
@@ -1417,7 +1428,7 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
     msg << sysop_name << "\n";
   }
   
-  list<QsoImpl*>::const_iterator it;
+  vector<QsoImpl*>::const_iterator it;
   for (it=qsos.begin(); it!=qsos.end(); ++it)
   {
     if ((*it)->currentState() == Qso::STATE_DISCONNECTED)
@@ -1595,10 +1606,93 @@ void ModuleEchoLink::cbcTimeout(Timer *t)
 } /* ModuleEchoLink::cbcTimeout  */
 
 
+void ModuleEchoLink::disconnectByCallsign(const string &cmd)
+{
+  if ((cmd.size() != 1) || qsos.empty())
+  {
+    commandFailed(cmd);
+    return;
+  }
+
+  stringstream ss;
+  ss << "dbc_list [list";
+  vector<QsoImpl*>::iterator it;
+  for (it=qsos.begin(); it!=qsos.end(); ++it)
+  {
+    if ((*it)->currentState() != Qso::STATE_DISCONNECTED)
+    {
+    	ss << " " << (*it)->remoteCallsign();
+    }
+  }
+  ss << "]";
+  processEvent(ss.str());
+  state = STATE_DISCONNECT_BY_CALL;
+  delete dbc_timer;
+  dbc_timer = new Timer(60000);
+  dbc_timer->expired.connect(mem_fun(*this, &ModuleEchoLink::dbcTimeout));
+  // FIXME: Is there a need for a timer ???
+
+} /* ModuleEchoLink::disconnectByCallsign  */
+
+
+void ModuleEchoLink::handleDisconnectByCall(const string& cmd)
+{
+  if (cmd.empty())
+  {
+    processEvent("dbc_aborted");
+    delete dbc_timer;
+    dbc_timer = 0;
+    state = STATE_NORMAL;
+    return;
+  }
+  
+  unsigned idx = static_cast<unsigned>(atoi(cmd.c_str()));
+  stringstream ss;
+
+  if (idx == 0)
+  {
+    ss << "dbc_list [list";
+    vector<QsoImpl*>::const_iterator it;
+    for (it = qsos.begin(); it != qsos.end(); ++it)
+    {
+      ss << " " << (*it)->remoteCallsign();
+    }
+    ss << "]";
+    processEvent(ss.str());
+    dbc_timer->reset();
+    return;
+  }
+
+  if (idx > qsos.size())
+  {
+    ss << "dbc_index_out_of_range " << idx;
+    processEvent(ss.str());
+    dbc_timer->reset();
+    return;
+  }
+
+  qsos[idx-1]->disconnect();
+  delete dbc_timer;
+  dbc_timer = 0;
+  state = STATE_NORMAL;
+
+} /* ModuleEchoLink::handleDisconnectByCall  */
+
+
+void ModuleEchoLink::dbcTimeout(Timer *t)
+{
+  delete dbc_timer;
+  dbc_timer = 0;
+  state = STATE_NORMAL;
+  cout << "Disconnect by call command timeout\n";
+  processEvent("dbc_timeout");
+} /* ModuleEchoLink::dbcTimeout  */
+
+
 int ModuleEchoLink::numConnectedStations(void)
 {
   int cnt = 0;
-  list<QsoImpl*>::iterator it;
+  vector<QsoImpl*>::iterator it;
   for (it=qsos.begin(); it!=qsos.end(); ++it)
   {
     if ((*it)->currentState() != Qso::STATE_DISCONNECTED)
@@ -1615,7 +1709,7 @@ int ModuleEchoLink::numConnectedStations(void)
 int ModuleEchoLink::listQsoCallsigns(list<string>& call_list)
 {
   call_list.clear();
-  list<QsoImpl*>::iterator it;
+  vector<QsoImpl*>::iterator it;
   for (it=qsos.begin(); it!=qsos.end(); ++it)
   {
     call_list.push_back((*it)->remoteCallsign());
@@ -1642,7 +1736,7 @@ void ModuleEchoLink::handleCommand(const string& cmd)
     
     stringstream ss;
     ss << "list_connected_stations [list";
-    list<QsoImpl*>::iterator it;
+    vector<QsoImpl*>::iterator it;
     for (it=qsos.begin(); it!=qsos.end(); ++it)
     {
       if ((*it)->currentState() != Qso::STATE_DISCONNECTED)
@@ -1747,7 +1841,7 @@ void ModuleEchoLink::handleCommand(const string& cmd)
     
     bool activate = (cmd[1] != '0');
     
-    list<QsoImpl*>::iterator it;
+    vector<QsoImpl*>::iterator it;
     for (it=qsos.begin(); it!=qsos.end(); ++it)
     {
       (*it)->setListenOnly(activate);
@@ -1763,6 +1857,10 @@ void ModuleEchoLink::handleCommand(const string& cmd)
   else if (cmd[0] == '6')   // Connect by callsign
   {
     connectByCallsign(cmd);
+  }
+  else if (cmd[0] == '7')   // Disconnect by callsign
+  {
+    disconnectByCallsign(cmd);
   }
   else
   {
