@@ -1130,6 +1130,12 @@ void ModuleEchoLink::onChatMsgReceived(QsoImpl *qso, const string& msg)
       (*it)->sendChatData(msg);
     }
   }
+
+  stringstream ss;
+  ss << "chat_received \"";
+  ss << msg;
+  ss << "\"";
+  processEvent(ss.str());
 } /* onChatMsgReceived */
 
 

@@ -455,6 +455,17 @@ proc is_receiving {rx} {
   }
 }
 
+
+#
+# Executed when a chat message is received from a remote station
+#
+#   msg -- The message text
+#
+proc chat_received {msg} {
+  #puts $msg
+}
+
+
 #-----------------------------------------------------------------------------
 # The events below are for remote EchoLink announcements. Sounds are not
 # played over the local transmitter but are sent to the remote station.
