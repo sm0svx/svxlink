@@ -1630,8 +1630,6 @@ void ModuleEchoLink::disconnectByCallsign(const string &cmd)
   delete dbc_timer;
   dbc_timer = new Timer(60000);
   dbc_timer->expired.connect(mem_fun(*this, &ModuleEchoLink::dbcTimeout));
-  // FIXME: Is there a need for a timer ???
-
 } /* ModuleEchoLink::disconnectByCallsign  */
 
 
