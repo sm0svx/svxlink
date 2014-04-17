@@ -43,7 +43,7 @@ if [ -r /etc/default/$PROG ]; then
 fi
 
 UGID=$(getent passwd $RUNASUSER | cut -f 3,4 -d:) || true
-SVXLINK_OPTS="--daemon ${LOGFILE:+--logfile=$LOGFILE} ${CFGFILE:+--config=$CFGFILE} --runasuser=$RUNASUSER --pidfile $PIDFILE"
+SVXLINK_OPTS="--daemon ${LOGFILE:+--logfile=$LOGFILE} ${CFGFILE:+--config=$CFGFILE} --runasuser=$RUNASUSER --pidfile=$PIDFILE"
 
 lock_svxlink() {
 	if [ -x /usr/bin/lockfile-create ]; then
