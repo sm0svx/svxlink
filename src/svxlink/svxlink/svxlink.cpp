@@ -542,12 +542,12 @@ int main(int argc, char **argv)
     perror("sigaction");
   }
   
-  if (sigaction(SIGHUP, &sigterm_oldact, NULL) == -1)
+  if (sigaction(SIGTERM, &sigterm_oldact, NULL) == -1)
   {
     perror("sigaction");
   }
   
-  if (sigaction(SIGHUP, &sigint_oldact, NULL) == -1)
+  if (sigaction(SIGINT, &sigint_oldact, NULL) == -1)
   {
     perror("sigaction");
   }
