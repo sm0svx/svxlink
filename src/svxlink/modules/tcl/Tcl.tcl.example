@@ -54,6 +54,7 @@ proc printInfo {msg} {
 # Executed when this module is being activated
 #
 proc activating_module {} {
+  variable module_name
   Module::activating_module $module_name
 }
 
@@ -62,6 +63,7 @@ proc activating_module {} {
 # Executed when this module is being deactivated.
 #
 proc deactivating_module {} {
+  variable module_name
   Module::deactivating_module $module_name
 }
 
@@ -70,6 +72,7 @@ proc deactivating_module {} {
 # Executed when the inactivity timeout for this module has expired.
 #
 proc timeout {} {
+  variable module_name
   Module::timeout $module_name
 }
 
@@ -78,6 +81,7 @@ proc timeout {} {
 # Executed when playing of the help message for this module has been requested.
 #
 proc play_help {} {
+  variable module_name
   Module::play_help $module_name
 }
 
@@ -97,7 +101,6 @@ proc play_help {} {
 #
 proc status_report {} {
   printInfo "status_report called..."
-  
 }
 
 
