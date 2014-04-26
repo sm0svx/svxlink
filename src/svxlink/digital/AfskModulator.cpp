@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include <iomanip>
 
 
 /****************************************************************************
@@ -56,6 +57,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "remez.h"
 #include "AfskModulator.h"
 
 
@@ -225,12 +227,52 @@ AfskModulator::AfskModulator(unsigned f0, unsigned f1, unsigned baudrate,
       mem_fun(*this, &AfskModulator::onAllSamplesFlushed));
   AudioSource *prev_src = sigc_src;
 
+  /*
   stringstream ss;
   ss << "BpBu3/" << (f0 - baudrate/2) << "-" << (f1 + baudrate/2);
   cout << "FSK modulator passband filter: " << ss.str() << endl;
   AudioFilter *filter = new AudioFilter(ss.str());
   prev_src->registerSink(filter);
   prev_src = filter;
+  */
+  
+    // Apply a bandpass filter to filter out the AFSK signal.
+    // The constructed filter is a FIR filter with linear phase.
+    // The Parks-Macclellan algorithm is used to design the filter.
+    // The length of the filter is chosen to be one symbol long to not cause
+    // inter symbol interference (ISI).
+  const int numtaps = sample_rate / baudrate;
+  const int numband = 3;
+  const double bands[] = {
+    0.0,
+    (f0-baudrate/2.0-200.0)/sample_rate,
+    (f0-baudrate/2.0)/sample_rate,
+    (f1+baudrate/2.0)/sample_rate,
+    (f1+baudrate/2.0+200.0)/sample_rate,
+    0.5
+  };
+  const double des[] = {0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
+  const double weight[] = {1.0, 1.0, 1.0};
+  const int type = BANDPASS;
+  const int griddensity = 16;
+  double pre_filter_taps[numtaps];
+  int ret = remez(pre_filter_taps, numtaps, numband, bands, des, weight, type,
+                  griddensity);
+  assert(ret == 0);
+  stringstream ss;
+  ss << fixed << setprecision(9);
+  ss << "x";
+  for (int i=0; i<numtaps; ++i)
+  {
+    ss << " " << pre_filter_taps[i];
+  }
+  cout << "AFSK TX passband filter: " << ss.str() << endl;
+  AudioFilter *passband_filter = new AudioFilter(ss.str(), sample_rate);
+  prev_src->registerSink(passband_filter, true);
+  prev_src = passband_filter;
+  AudioFilter *passband_filter2 = new AudioFilter(ss.str(), sample_rate);
+  prev_src->registerSink(passband_filter2, true);
+  prev_src = passband_filter2;
 
   AudioSource::setHandler(prev_src);
   prev_src = 0;

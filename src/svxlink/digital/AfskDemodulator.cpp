@@ -216,7 +216,7 @@ AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
   {
     ss << " " << pre_filter_taps[i];
   }
-  cout << "Passband filter: " << ss.str() << endl;
+  cout << "AFSK RX Passband filter: " << ss.str() << endl;
   AudioFilter *passband_filter = new AudioFilter(ss.str(), sample_rate);
   AudioSink::setHandler(passband_filter);
   //prev_src->registerSink(passband_filter, true);
