@@ -7,8 +7,6 @@
 
 * Support added for Opus version < 1.0.
 
-* Bugfix in ModuleTcl example file.
-
 * Bugfix for Async::Config::getValue. The std::ws operator set the fail bit on
   FreeBSD at end of string. This caused some config options to not be read
   correctly.

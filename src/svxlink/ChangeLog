@@ -6,7 +6,9 @@
 
 * Bugfix: The voter had a race condition which caused an assertion failure.
 
-  
+* Bugfix in ModuleTcl example file.
+
+
 
  1.3.0 -- 01 Dec 2013
 ----------------------
