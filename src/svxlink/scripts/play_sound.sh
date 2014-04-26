@@ -6,7 +6,7 @@ SOX_RAW_SAMP_FMT="-traw -e signed-integer -b 16"
 trim_silence=0
 endian=""
 encoding=${SOX_RAW_SAMP_FMT}
-target_rate=8000
+target_rate=16000
 silence_level=45
 effect=""
 
@@ -16,8 +16,8 @@ convert()
   if [ -r "$1.wav" ]; then
     sox "$1.wav" -r$target_rate ${SOX_RAW_SAMP_FMT} -
   elif [ -r "$1.raw" ]; then
-    if [ $target_rate != 8000 ]; then
-      sox -r8000 ${RAW_SAMP_FMT} "$1.raw" -r$target_rate ${SOX_RAW_SAMP_FMT} -
+    if [ $target_rate != 16000 ]; then
+      sox -r16000 ${RAW_SAMP_FMT} "$1.raw" -r$target_rate ${SOX_RAW_SAMP_FMT} -
     else
       cat "$1.raw"
     fi

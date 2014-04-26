@@ -6,7 +6,7 @@
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -156,7 +156,8 @@ class ModuleEchoLink : public Module
     typedef enum
     {
       STATE_NORMAL,
-      STATE_CONNECT_BY_CALL
+      STATE_CONNECT_BY_CALL,
+      STATE_DISCONNECT_BY_CALL
     } State;
     typedef std::vector<EchoLink::StationData> StnList;
     struct NumConStn
@@ -180,8 +181,8 @@ class ModuleEchoLink : public Module
     bool      	      	  remote_activation;
     int       	      	  pending_connect_id;
     std::string       	  last_message;
-    std::list<QsoImpl*>   outgoing_con_pending;
-    std::list<QsoImpl*>	  qsos;
+    std::vector<QsoImpl*> outgoing_con_pending;
+    std::vector<QsoImpl*> qsos;
     unsigned       	  max_connections;
     unsigned       	  max_qsos;
     QsoImpl   	      	  *talker;
@@ -189,6 +190,7 @@ class ModuleEchoLink : public Module
     State		  state;
     StnList		  cbc_stns;
     Async::Timer          *cbc_timer;
+    Async::Timer	  *dbc_timer;
     regex_t   	      	  *drop_incoming_regex;
     regex_t   	      	  *reject_incoming_regex;
     regex_t   	      	  *accept_incoming_regex;
@@ -243,6 +245,9 @@ class ModuleEchoLink : public Module
     void connectByCallsign(std::string cmd);
     void handleConnectByCall(const std::string& cmd);
     void cbcTimeout(Async::Timer *t);
+    void disconnectByCallsign(const std::string &cmd);
+    void handleDisconnectByCall(const std::string& cmd);
+    void dbcTimeout(Async::Timer *t);
     int numConnectedStations(void);
     int listQsoCallsigns(std::list<std::string>& call_list);
     void handleCommand(const std::string& cmd);

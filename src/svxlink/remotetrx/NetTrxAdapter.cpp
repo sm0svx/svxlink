@@ -89,7 +89,7 @@ class RxAdapter : public Rx, public AudioSink
 {
   public:
     RxAdapter(const string &name, char rx_id=Rx::ID_UNKNOWN)
-      : Rx(cfg, name), cfg(cfg), siglev_timer(1000, Timer::TYPE_PERIODIC),
+      : Rx(cfg, name), siglev_timer(1000, Timer::TYPE_PERIODIC),
         rx_id(rx_id)
     {
       mute_valve.setOpen(false);

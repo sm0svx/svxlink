@@ -8,8 +8,8 @@ This file contains a class that implementes the things needed for one
 EchoLink Qso.
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+A module (plugin) for the multi purpose tranciever frontend system.
+Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -380,6 +380,17 @@ void QsoImpl::setListenOnly(bool enable)
   }
 } /* QsoImpl::setListenOnly */
 
+
+void QsoImpl::squelchOpen(bool is_open)
+{
+  if (currentState() == Qso::STATE_CONNECTED)
+  {
+    msg_handler->begin();
+    event_handler->processEvent(string(module->name()) + "::squelch_open " +
+         (is_open ? "1": "0"));
+    msg_handler->end();
+  }
+} /* QsoImpl::squelchOpen */
 
 
 /****************************************************************************

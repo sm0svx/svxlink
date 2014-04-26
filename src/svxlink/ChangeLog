@@ -1,3 +1,48 @@
+ 1.4.0 -- ?? ??? 2014
+----------------------
+
+* The PTT hardware type must now be specified using the PTT_TYPE configuration
+  variable in a TX section. Specify "SerialPin" for using a pin in the serial
+  port, "GPIO" to use a pin in a GPIO port. Set PTT_TYPE to "Dummy" or "NONE" to
+  not use any PTT hardware at all. It is an error to not specify PTT_TYPE.
+
+* New config variable for repeater logics: CLOSE_ON_SEL5 which make it
+  possible to close the repeater using a selective calling sequence.
+  Patch contributed by Adi / DL1HRC.
+
+* Now possible to have active low functionality on the PTT pin for GPIO. This
+  is configured in the same way as for serial ports, by prefixing the gpio
+  pin specification with an exclamation mark (!) in the PTT_PIN config.
+  Example: PTT_PIN=!gpio5
+
+* ModuleEchoLink: It's now possible to disconnect one specific station by
+  choosing from a list of callsigns. The disconnect by callsign feature
+  is activated using subcommand 7 while the EchoLink module is active.
+  This feature was contributed by Martin/DF1AMB.
+
+* ModuleEchoLink: New TCL event handling function: "chat_received" which
+  is called when a remote chat message is received.
+
+* ModuleEchoLink: New TCL event handling function: "squelch_open" which is
+  called when the local receiver squelch open and closes. This function can be
+  used to for example send a roger beep to the remote station when the squelch
+  closes.
+  Patch contributed by DL1HRC / Adi.
+
+
+
+ 1.3.1 -- ?? ??? 2014
+----------------------
+
+* Bugfix: Some soundcards have unexpected behaviour which caused an assertion
+  failure in the Alsa code. This is now handled more gracefully.
+
+* Bugfix: The voter had a race condition which caused an assertion failure.
+
+* Bugfix in ModuleTcl example file.
+
+
+
  1.3.0 -- 01 Dec 2013
 ----------------------
 

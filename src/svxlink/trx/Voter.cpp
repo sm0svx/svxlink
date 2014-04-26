@@ -706,12 +706,12 @@ void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
 {
   assert(srx != 0);
   
-  if (box().best_srx == 0)
+  if (bestSrx() == 0)
   {
     assert(is_open);
     box().best_srx = srx;
   }
-  else if (srx == box().best_srx)
+  else if (srx == bestSrx())
   {
     if (!is_open)
     {
@@ -721,7 +721,7 @@ void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
   else
   {
     if (is_open &&
-        (srx->signalStrength() > box().best_srx->signalStrength()))
+        (srx->signalStrength() > bestSrx()->signalStrength()))
     {
       box().best_srx = srx;
     }
@@ -731,11 +731,12 @@ void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
 
 void Voter::Top::satSignalLevelUpdated(SatRx *srx, float siglev)
 {
-  assert(box().best_srx != 0);
+  assert(srx != 0);
+  assert(bestSrx() != 0);
   assert(srx->squelchIsOpen());
   
-  if (!box().best_srx->squelchIsOpen() ||
-      (siglev > box().best_srx->signalStrength()))
+  if (!bestSrx()->squelchIsOpen() ||
+      (siglev > bestSrx()->signalStrength()))
   {
     box().best_srx = srx;
   }
@@ -1114,9 +1115,9 @@ void Voter::Receiving::timerExpired(void)
   //voter().printSquelchState();
   
   assert(activeSrx() != 0);
-  assert(bestSrx() != 0);
+  //assert(bestSrx() != 0);
   
-  if (bestSrx() != activeSrx())
+  if ((bestSrx() != 0) && (bestSrx() != activeSrx()))
   {
     float best_srx_siglev = bestSrx()->signalStrength();
     float active_srx_siglev = activeSrx()->signalStrength();

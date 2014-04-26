@@ -193,6 +193,7 @@ class RepeaterLogic : public Logic
     int		    open_on_sql_after_rpt_close;
     char      	    open_on_dtmf;
     std::string     open_on_sel5;
+    std::string     close_on_sel5;
     bool      	    activate_on_sql_close;
     bool            no_repeat;
     Async::Timer    *open_on_sql_timer;
