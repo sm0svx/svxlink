@@ -504,6 +504,17 @@ proc remote_timeout {} {
 }
 
 
+#
+# Executed when the squelch state changes
+#
+proc squelch_open {is_open} {
+  if {!$is_open} {
+    playSilence 200
+    playTone 1000 100 100
+  }
+}
+
+
 # end of namespace
 }
 

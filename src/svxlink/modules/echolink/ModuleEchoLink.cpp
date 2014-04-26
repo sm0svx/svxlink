@@ -6,7 +6,7 @@
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004-2011 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -739,6 +739,11 @@ void ModuleEchoLink::squelchOpen(bool is_open)
   if (listen_only_valve->isOpen())
   {
     broadcastTalkerStatus();  
+  }
+
+  for (vector<QsoImpl*>::iterator it=qsos.begin(); it!=qsos.end(); ++it)
+  {
+    (*it)->squelchOpen(is_open);
   }
 } /* squelchOpen */
 

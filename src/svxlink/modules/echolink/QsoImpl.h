@@ -8,8 +8,8 @@ This file contains a class that implementes the things needed for one
 EchoLink Qso.
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+A module (plugin) for the multi purpose tranciever frontend system.
+Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,11 +26,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example Template_demo.cpp
-An example of how to use the Template class
-*/
-
 
 #ifndef QSO_IMPL_INCLUDED
 #define QSO_IMPL_INCLUDED
@@ -269,6 +264,11 @@ class QsoImpl
      */
     void setListenOnly(bool enable);
 
+    /**
+     * @brief   Called when the squelch state changes
+     * @param   is_open \em True if the squelch is open or else \em false
+     */
+    void squelchOpen(bool is_open);
 
     /**
      * @brief A signal that is emitted when the connection state changes
