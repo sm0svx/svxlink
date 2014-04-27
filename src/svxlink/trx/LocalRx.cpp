@@ -499,6 +499,7 @@ bool LocalRx::initialize(void)
   }
 
     // Set up out of band AFSK demodulator if configured
+  float voice_gain = 0.0f;
   bool ofsk_enable;
   if (cfg.getValue(name(), "OB_AFSK_ENABLE", ofsk_enable))
   {
@@ -508,6 +509,8 @@ bool LocalRx::initialize(void)
     cfg.getValue(name(), "OB_AFSK_SHIFT", shift);
     unsigned baudrate = 300;
     cfg.getValue(name(), "OB_AFSK_BAUDRATE", baudrate);
+    voice_gain = 6.0f;
+    cfg.getValue(name(), "OB_AFSK_VOICE_GAIN", voice_gain);
 
     AfskDemodulator *fsk_demod =
       new AfskDemodulator(fc - shift/2, fc + shift/2, baudrate);
@@ -544,6 +547,7 @@ bool LocalRx::initialize(void)
 
     // Create the highpass CTCSS filter that cuts off audio below 300Hz
   AudioFilter *ctcss_filt = new AudioFilter("HpBu20/300");
+  ctcss_filt->setOutputGain(voice_gain);
   prev_src->registerSink(ctcss_filt, true);
   prev_src = ctcss_filt;
   

@@ -207,22 +207,26 @@ struct AX25Frame
 class AX25Decoder : public sigc::trackable
 {
   public:
-    AX25Decoder(void) {}
+    AX25Decoder(void) : frameno(0) {}
 
     void frameReceived(vector<uint8_t> frame)
     {
       AX25Frame ax25_frame;
       ax25_frame.decode(frame);
-      cout << "\a";
+      //cout << "\a";
+      cout << setw(3) << ++frameno << ": ";
       ax25_frame.print();
     }
+
+  private:
+    unsigned frameno;
 };
 
 
 int main(int argc, const char **argv)
 {
   // 1200Bd AMPR
-#if 1
+#if 0
   unsigned baudrate = 1200;
   unsigned f0 = 1200;
   unsigned f1 = 2200;
@@ -235,6 +239,20 @@ int main(int argc, const char **argv)
   unsigned f1 = 2750;
 #endif
 
+  // 2400Bd AMPR
+#if 0
+  unsigned baudrate = 2400;
+  unsigned f0 = 2165;
+  unsigned f1 = 3970;
+#endif
+
+  // SvxLink out of band AFSK
+#if 1
+  unsigned baudrate = 300;
+  unsigned f0 = 5415;
+  unsigned f1 = 5585;
+#endif
+
   // 300Bd AMPR
 #if 0
   unsigned baudrate = 300;
@@ -242,11 +260,32 @@ int main(int argc, const char **argv)
   unsigned f1 = 1800;
 #endif
 
-  // RTTY
+  // RTTY 50Bd, 170Hz
 #if 0
   unsigned baudrate = 50;
   unsigned f0 = 900;
   unsigned f1 = 1070;
+#endif
+
+  // RTTY 50Bd, 425Hz
+#if 0
+  unsigned baudrate = 50;
+  unsigned f0 = 788;
+  unsigned f1 = 1213;
+#endif
+
+  // RTTY 50Bd, 850Hz
+#if 0
+  unsigned baudrate = 50;
+  unsigned f0 = 576;
+  unsigned f1 = 1426;
+#endif
+
+  // RTTY 50Bd, 450Hz (SYNOP/SHIP)
+#if 0
+  unsigned baudrate = 50;
+  unsigned f0 = 550;
+  unsigned f1 = 1000;
 #endif
 
   unsigned sample_rate = 16000;
@@ -282,7 +321,7 @@ int main(int argc, const char **argv)
 
   HdlcFramer framer;
 
-  AfskModulator fsk_mod(f0, f1, baudrate, sample_rate);
+  AfskModulator fsk_mod(f0, f1, baudrate, -6, sample_rate);
   framer.sendBits.connect(mem_fun(fsk_mod, &AfskModulator::sendBits));
   prev_src = &fsk_mod;
 
@@ -296,7 +335,7 @@ int main(int argc, const char **argv)
   prev_src = &d;
 #endif
 
-  AudioIO audio_out("udp:127.0.0.1:10001", 0);
+  AudioIO audio_out("udp:127.0.0.1:10002", 0);
   splitter.addSink(&audio_out);
   //AudioIO audio_out("alsa:plughw:0", 0);
   //prev_src->registerSink(&audio_out);
@@ -333,7 +372,6 @@ int main(int argc, const char **argv)
   */
 
   vector<uint8_t> frame;
-  /*
   frame.push_back(0x96);
   frame.push_back(0x70);
   frame.push_back(0x9a);
@@ -350,10 +388,11 @@ int main(int argc, const char **argv)
   frame.push_back(0x61);
   frame.push_back(0x3e);
   frame.push_back(0xf0);
-  */
+  /*
   frame.push_back(0xaa);
   frame.push_back(0x55);
-  //for (int i=0; i<2; ++i)
+  */
+  for (int i=0; i<100; ++i)
   {
     framer.sendBytes(frame);
   }

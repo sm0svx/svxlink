@@ -240,6 +240,16 @@ void MultiTx::setTransmittedSignalStrength(char rx_id, float siglev)
 } /* MultiTx::setTransmittedSignalStrength */
 
 
+void MultiTx::sendData(const std::vector<uint8_t> &msg)
+{
+  list<Tx *>::iterator it;
+  for (it=txs.begin(); it!=txs.end(); ++it)
+  {
+    (*it)->sendData(msg);
+  }
+} /* MultiTx::sendData */
+
+
 
 /****************************************************************************
  *

@@ -501,10 +501,18 @@ bool LocalTx::initialize(void)
     cfg.getValue(name, "OB_AFSK_SHIFT", shift);
     unsigned baudrate = 300;
     cfg.getValue(name, "OB_AFSK_BAUDRATE", baudrate);
+    float voice_gain = -6;
+    cfg.getValue(name, "OB_AFSK_VOICE_GAIN", voice_gain);
+    float afsk_level = -6;
+    cfg.getValue(name, "OB_AFSK_LEVEL", afsk_level);
 
-    AudioFilter *voice_filter = new AudioFilter("LpCh9/-0.5/4500");
+    AudioFilter *voice_filter = new AudioFilter("LpCh10/-0.5/4500");
+    voice_filter->setOutputGain(voice_gain);
     prev_src->registerSink(voice_filter, true);
     prev_src = voice_filter;
+    AudioFilter *voice_filter2 = new AudioFilter("LpCh10/-0.5/4500");
+    prev_src->registerSink(voice_filter2, true);
+    prev_src = voice_filter2;
 
       // Create a mixer so that we can mix other audio with the voice audio
     mixer = new AudioMixer;
@@ -515,7 +523,8 @@ bool LocalTx::initialize(void)
     hdlc_framer = new HdlcFramer;
 
       // Create the AFSK modulator
-    fsk_mod = new AfskModulator(fc - shift / 2, fc + shift / 2, baudrate);
+    fsk_mod = new AfskModulator(fc - shift / 2, fc + shift / 2, baudrate,
+                                afsk_level);
     hdlc_framer->sendBits.connect(mem_fun(fsk_mod, &AfskModulator::sendBits));
     mixer->addSource(fsk_mod);
 

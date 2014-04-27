@@ -130,7 +130,7 @@ class AfskModulator : public Async::AudioSource, public sigc::trackable
     /**
      * @brief 	Constuctor
      */
-    AfskModulator(unsigned f0, unsigned f1, unsigned baudrate,
+    AfskModulator(unsigned f0, unsigned f1, unsigned baudrate, float level,
                  unsigned sample_rate=INTERNAL_SAMPLE_RATE);
   
     /**

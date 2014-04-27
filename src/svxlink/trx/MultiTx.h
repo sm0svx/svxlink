@@ -178,6 +178,12 @@ class MultiTx : public Tx
      */
     virtual void setTransmittedSignalStrength(char rx_id, float siglev);
     
+    /**
+     * @brief 	Send a data frame
+     * @param 	msg The frame data
+     */
+    virtual void sendData(const std::vector<uint8_t> &msg);
+    
   protected:
     
   private:

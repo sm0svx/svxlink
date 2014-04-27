@@ -169,7 +169,7 @@ namespace {
  ****************************************************************************/
 
 AfskModulator::AfskModulator(unsigned f0, unsigned f1, unsigned baudrate,
-                           unsigned sample_rate)
+                             float level, unsigned sample_rate)
   : baudrate(baudrate), sample_rate(sample_rate), phi(0), bitclock(0),
     buf_pos(BUFSIZE), sigc_src(0), fade_len(0), fade_pos(0), fade_dir(0)
 {
@@ -199,9 +199,10 @@ AfskModulator::AfskModulator(unsigned f0, unsigned f1, unsigned baudrate,
   }
 
   sin_lookup = new float[N];
-  for (unsigned i=0; i<N; ++i)
+  float sin_ampl = powf(10.0f, level/10.0f);
+  for (unsigned n=0; n<N; ++n)
   {
-    sin_lookup[i] = 0.1 * sinf(2.0*M_PI*i/N);
+    sin_lookup[n] =  sin_ampl* sinf(2.0*M_PI*n/N);
   }
 
   k0 = N * f0 / sample_rate;
@@ -273,6 +274,14 @@ AfskModulator::AfskModulator(unsigned f0, unsigned f1, unsigned baudrate,
   AudioFilter *passband_filter2 = new AudioFilter(ss.str(), sample_rate);
   prev_src->registerSink(passband_filter2, true);
   prev_src = passband_filter2;
+#if 0
+  AudioFilter *passband_filter3 = new AudioFilter(ss.str(), sample_rate);
+  prev_src->registerSink(passband_filter3, true);
+  prev_src = passband_filter3;
+  AudioFilter *passband_filter4 = new AudioFilter(ss.str(), sample_rate);
+  prev_src->registerSink(passband_filter4, true);
+  prev_src = passband_filter4;
+#endif
 
   AudioSource::setHandler(prev_src);
   prev_src = 0;
