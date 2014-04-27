@@ -23,13 +23,13 @@
 PROGS		= 
 
 # C++ programs to compile
-CPPPROGS      	= afsk_test cal_sound_card tx_test
+CPPPROGS      	= afsk_test cal_sound_card
 
 # Sources other than the main files
 PRGSRC		= 
 
 # Libraries compiled in the project (in $(LIB)).
-PROJLIBS	= -lasyncaudio -lasynccpp -lasynccore -ltrx -ldigital
+PROJLIBS	= -lasyncaudio -lasynccpp -lasynccore -ldigital
 
 # Libraries external to the project
 LIBS		= $(SIGC_LIBS) $(GCRYPT_LIBS)
