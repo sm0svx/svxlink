@@ -136,11 +136,13 @@ AudioDecoderOpus::~AudioDecoderOpus(void)
 void AudioDecoderOpus::setOption(const std::string &name,
       	      	      	      	  const std::string &value)
 {
+#if OPUS_MAJOR > 0
   if (name == "GAIN")
   {
     setGain(atof(value.c_str()));
   }
   else
+#endif
   {
     cerr << "*** WARNING AudioDecoderOpus: Unknown option \""
       	 << name << "\". Ignoring it.\n";
@@ -150,12 +152,15 @@ void AudioDecoderOpus::setOption(const std::string &name,
 
 void AudioDecoderOpus::printCodecParams(void) const
 {
+#if OPUS_MAJOR > 0
   cout << "------ Opus decoder parameters ------\n";
   cout << "Gain       = " << gain() << "dB\n";
   cout << "--------------------------------------\n";
+#endif
 } /* AudioDecoderOpus::printCodecParams */
 
 
+#if OPUS_MAJOR > 0
 float AudioDecoderOpus::setGain(float new_gain)
 {
   opus_int32 gaini = static_cast<opus_int32>(256.0f * new_gain);
@@ -170,6 +175,7 @@ float AudioDecoderOpus::gain(void) const
   opus_decoder_ctl(dec, OPUS_GET_GAIN(&gaini));
   return gaini / 256.0f;
 } /* AudioDecoderOpus::gain */
+#endif
 
 
 void AudioDecoderOpus::reset(void)

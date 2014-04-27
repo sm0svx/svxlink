@@ -12,7 +12,7 @@ is shown below.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -212,7 +212,11 @@ class Config
       }
       std::stringstream ssval(str_val);
       Rsp tmp;
-      ssval >> tmp >> std::ws;
+      ssval >> tmp;
+      if(!ssval.eof())
+      {
+        ssval >> std::ws;
+      }
       if (ssval.fail() || !ssval.eof())
       {
 	return false;
@@ -261,7 +265,11 @@ class Config
       while (!ssval.eof())
       {
         Value tmp;
-        ssval >> tmp >> std::ws;
+        ssval >> tmp;
+        if(!ssval.eof())
+        {
+          ssval >> std::ws;
+        }
         if (ssval.fail())
         {
           return false;
@@ -304,7 +312,11 @@ class Config
       }
       std::stringstream ssval(str_val);
       Rsp tmp;
-      ssval >> tmp >> std::ws;
+      ssval >> tmp;
+      if(!ssval.eof())
+      {
+        ssval >> std::ws;
+      }
       if (ssval.fail() || !ssval.eof() || (tmp < min) || (tmp > max))
       {
 	return false;

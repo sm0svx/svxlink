@@ -18,6 +18,9 @@
 #
 ###############################################################################
 
+# Sox options for raw sample format
+SOX_RAW_SAMP_FMT="-traw -e signed-integer -b 16"
+
 # Print a warning message
 warning()
 {
@@ -34,7 +37,7 @@ print_usage_and_exit()
   echo "  -B -- Target sound clip files should be big endian"
   echo "  -L -- Target sound clip files should be little endian (default)"
   echo "  -g -- Target sound clip files should be GSM encoded"
-  echo "  -r -- Target sound clip file sample rate (default 8000)"
+  echo "  -r -- Target sound clip file sample rate (default 16000)"
   echo
   exit 1
 }
@@ -43,7 +46,7 @@ print_usage_and_exit()
 endian=""
 encoding=""
 ext="wav"
-target_rate=8000
+target_rate=16000
 while getopts LBgr: opt; do
   case $opt in
     B)
@@ -108,7 +111,7 @@ for subdir in $SUBDIRS; do
       echo "Maximizing $src_clip -> $dest_clip.$ext"
       $basedir/play_sound.sh -f$endian$encoding -r$target_rate \
 			     -l$SILENCE_LEVEL -e "$EFFECT" "$src_clip" |
-	  sox -traw -s2 -r$target_rate - "$dest_clip.$ext"
+	  sox ${SOX_RAW_SAMP_FMT} -r$target_rate - "$dest_clip.$ext"
     else
       warning "Missing sound clip: $src_clip"
     fi
@@ -122,8 +125,8 @@ for subdir in $SUBDIRS; do
       echo "Trimming $src_clip -> $dest_clip.$ext"
       $basedir/play_sound.sh -tf$endian$encoding -r$target_rate \
 			     -l$SILENCE_LEVEL -e "$EFFECT" "$src_clip" |
-	  sox -traw -s2 -r$target_rate - "$dest_clip.$ext"
-      sox "$dest_clip.$ext" -r$target_rate -s2 -t raw - >> /tmp/all_trimmed.raw
+	  sox ${SOX_RAW_SAMP_FMT} -r$target_rate - "$dest_clip.$ext"
+      sox "$dest_clip.$ext" -r$target_rate ${SOX_RAW_SAMP_FMT} - >> /tmp/all_trimmed.raw
     else
       warning "Missing sound clip: $src_clip"
     fi
@@ -143,3 +146,13 @@ for subdir in $SUBDIRS; do
     fi
   done
 done
+
+if [ -d "${SRC_DIR}/events.d" ]; then
+  echo "Copying the events.d directory to the target directory"
+  cp -a "${SRC_DIR}/events.d" "${DEST_DIR}/"
+fi
+
+archive_file="svxlink-sounds-${DEST_DIR}.tar.bz2"
+echo "Creating archive ${archive_file}..."
+tar cjf ${archive_file} ${DEST_DIR}
+

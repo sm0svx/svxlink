@@ -214,6 +214,19 @@ bool RepeaterLogic::initialize(void)
     }
   }
 
+  if (cfg().getValue(name(), "CLOSE_ON_SEL5", str))
+  {
+    if (str.length() > 25 || str.length() < 4)
+    {
+      cerr << "*** WARNING: Sel5 sequence to long/short in logic " << name()
+           << ", valid range from 4 to 25 digits, ignoring\n";
+    }
+    else
+    {
+      close_on_sel5 = str;
+    }
+  }
+
   if (cfg().getValue(name(), "OPEN_SQL_FLANK", str))
   {
     if (str == "OPEN")
@@ -363,6 +376,12 @@ void RepeaterLogic::selcallSequenceDetected(std::string sequence)
 {
   if (repeater_is_up)
   {
+     if (sequence == close_on_sel5)
+     {
+       cout << name() << ": Sel5 digits \"" << sequence << "\" detected. "
+              "Deactivating repeater...\n";
+       setUp(false, "SEL5");
+     }
      Logic::selcallSequenceDetected(sequence);
   }
   else

@@ -333,6 +333,54 @@ proc cbc_timeout {} {
 
 
 #
+# Executed when the disconnect by callsign list has been retrieved
+#
+proc dbc_list {call_list} {
+  playMsg "disconnect_by_callsign";
+  playSilence 200
+  playMsg "choose_station";
+  set idx 0;
+  foreach {call} $call_list {
+    incr idx;
+    playSilence 500;
+    playNumber $idx;
+    playSilence 200;
+    spellEchoLinkCallsign $call;
+  }
+}
+
+
+#
+# Executed when the disconnect by callsign function is manually aborted
+#
+proc dbc_aborted {} {
+  playMsg "disconnect_by_callsign";
+  playMsg "aborted";
+}
+
+
+#
+# Executed when an out of range index is entered in the disconnect by callsign
+# list
+#
+proc dbc_index_out_of_range {idx} {
+  playNumber $idx;
+  playSilence 50;
+  playMsg "idx_out_of_range";
+}
+
+
+#
+# Executed when no station have been chosen in 60 seconds in the disconnect
+# by callsign function
+#
+proc dbc_timeout {} {
+  playMsg "disconnect_by_callsign";
+  playMsg "timeout";
+}
+
+
+#
 # Executed when a local user enter the DTMF code for playing back the
 # local node ID.
 #
@@ -407,6 +455,17 @@ proc is_receiving {rx} {
   }
 }
 
+
+#
+# Executed when a chat message is received from a remote station
+#
+#   msg -- The message text
+#
+proc chat_received {msg} {
+  #puts $msg
+}
+
+
 #-----------------------------------------------------------------------------
 # The events below are for remote EchoLink announcements. Sounds are not
 # played over the local transmitter but are sent to the remote station.
@@ -442,6 +501,17 @@ proc reject_remote_connection {perm} {
 proc remote_timeout {} {
   playMsg "timeout";
   playSilence 1000;
+}
+
+
+#
+# Executed when the squelch state changes
+#
+proc squelch_open {is_open} {
+  if {!$is_open} {
+    playSilence 200
+    playTone 1000 100 100
+  }
 }
 
 

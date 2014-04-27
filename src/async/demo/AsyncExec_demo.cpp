@@ -29,7 +29,8 @@ int main()
 {
   CppApplication app;
 
-    // Start a "cat" process and then run some text through it
+    // Start a "cat" process and then run some text through it. Use the -n
+    // option to make cat number the lines
   Exec cat("/bin/cat -n");
   cat.stdoutData.connect(sigc::ptr_fun(handleOutput));
   cat.stderrData.connect(sigc::ptr_fun(handleOutput));
@@ -40,12 +41,22 @@ int main()
   cat.writeStdin("This is a test\n");
   cat.closeStdin();
 
+    // Try to run a command that does not exist
+  Exec xyz("/bin/xyz");
+  xyz.exited.connect(sigc::bind(sigc::ptr_fun(handleExit), &xyz));
+  xyz.run();
+
+    // Start a sort that just blocks and then set a timeout which kills it
+  Exec kill("/bin/sort");
+  kill.exited.connect(sigc::bind(sigc::ptr_fun(handleExit), &kill));
+  kill.setTimeout(1);
+  kill.run();
+
     // Sleep for two seconds then quit application
-  Exec *sleep = new Exec("/usr/bin/sleep 2");
-  sleep->exited.connect(sigc::bind(sigc::ptr_fun(handleExit), sleep));
-  sleep->exited.connect(mem_fun(app, &CppApplication::quit));
-  sleep->setTimeout(5);
-  sleep->run();
+  Exec sleep("/bin/sleep 2");
+  sleep.exited.connect(sigc::bind(sigc::ptr_fun(handleExit), &sleep));
+  sleep.exited.connect(mem_fun(app, &CppApplication::quit));
+  sleep.run();
 
   app.exec();
 

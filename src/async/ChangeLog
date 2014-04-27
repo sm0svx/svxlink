@@ -1,4 +1,19 @@
- 1.2.0 -- ?? ??? 2013
+ 1.2.1 -- ?? ??? 2014
+----------------------
+
+* Some sound hardware cause an Alsa failure which SvxLink previously handled
+  as a fatal error (assert) and aborted the application. A warning is now
+  printed instead and the sound device is closed and reopened.
+
+* Support added for Opus version < 1.0.
+
+* Bugfix for Async::Config::getValue. The std::ws operator set the fail bit on
+  FreeBSD at end of string. This caused some config options to not be read
+  correctly.
+
+
+
+ 1.2.0 -- 01 Dec 2013
 ----------------------
 
 * The Async::AudioRecorder class now have some added features. In addition to

@@ -46,7 +46,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncSerial.h>
 
 
 /****************************************************************************
@@ -97,6 +96,7 @@ class PttCtrl;
  ****************************************************************************/
 
 class SineGenerator;
+class Ptt;
 
 
 /****************************************************************************
@@ -193,11 +193,6 @@ class LocalTx : public Tx
     Async::Config     	    &cfg;
     Async::AudioIO    	    *audio_io;
     bool      	      	    is_transmitting;
-    Async::Serial     	    *serial;
-    Async::Serial::Pin      ptt_pin1;
-    bool                    ptt_pin1_rev;
-    Async::Serial::Pin      ptt_pin2;
-    bool                    ptt_pin2_rev;
     Async::Timer      	    *txtot;
     bool      	      	    tx_timeout_occured;
     int       	      	    tx_timeout;
@@ -213,12 +208,10 @@ class LocalTx : public Tx
     SineGenerator           *siglev_sine_gen;
     std::vector<int>        tone_siglev_map;
     Async::Timer            *ptt_hangtimer;
-    std::string             gpio_pin;
+    Ptt                     *ptt;
     
     void txTimeoutOccured(Async::Timer *t);
-    int parsePttPin(const char *str, Async::Serial::Pin &pin, bool &rev);
     bool setPtt(bool tx, bool with_hangtime=false);
-    bool setPins(const Async::Config &cfg, const std::string &name);
     void transmit(bool do_transmit);
     void allDtmfDigitsSent(void);
     void pttHangtimeExpired(Async::Timer *t);

@@ -1,5 +1,8 @@
-Most of the software in this directory and its subdirectories are released under
-the GNU General Public License. Exceptions are:
+SvxLink License
+===============
+
+Most of the software in this source tree is released under the GNU General
+Public License. Exceptions are:
 
 WOL (Wide Open License):
 	async/audio/AudioDecimator.*
@@ -8,7 +11,13 @@ WOL (Wide Open License):
 Custom license (Aladdin Enterprises):
         echolib/md5.{c,h}
 
+MIT License:
+        svxlink/trx/Macho.{hpp,cpp}
 
+LGPL-2.1:
+        async/audio/fidlib.*
+
+------------------------------------------------------------------------------
 
 		    GNU GENERAL PUBLIC LICENSE
 		       Version 2, June 1991

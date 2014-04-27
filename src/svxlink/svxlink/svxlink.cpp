@@ -421,7 +421,7 @@ int main(int argc, char **argv)
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
   cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__
-          ") Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX\n\n";
+          ") Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";
   cout << "welcome to redistribute it in accordance with the terms "
@@ -543,12 +543,12 @@ int main(int argc, char **argv)
     perror("sigaction");
   }
   
-  if (sigaction(SIGHUP, &sigterm_oldact, NULL) == -1)
+  if (sigaction(SIGTERM, &sigterm_oldact, NULL) == -1)
   {
     perror("sigaction");
   }
   
-  if (sigaction(SIGHUP, &sigint_oldact, NULL) == -1)
+  if (sigaction(SIGINT, &sigint_oldact, NULL) == -1)
   {
     perror("sigaction");
   }

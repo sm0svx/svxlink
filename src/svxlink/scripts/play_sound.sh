@@ -1,19 +1,23 @@
 #!/bin/sh
 
+# Sox options for raw sample format
+SOX_RAW_SAMP_FMT="-traw -e signed-integer -b 16"
+
 trim_silence=0
 endian=""
-encoding="-s2 -traw"
-target_rate=8000
+encoding=${SOX_RAW_SAMP_FMT}
+target_rate=16000
 silence_level=45
 effect=""
+
 
 convert()
 {
   if [ -r "$1.wav" ]; then
-    sox "$1.wav" -r$target_rate -s2 -traw -
+    sox "$1.wav" -r$target_rate ${SOX_RAW_SAMP_FMT} -
   elif [ -r "$1.raw" ]; then
-    if [ $target_rate != 8000 ]; then
-      sox -r 8000 -s2 "$1.raw" -r$target_rate -s2 -traw -
+    if [ $target_rate != 16000 ]; then
+      sox -r16000 ${RAW_SAMP_FMT} "$1.raw" -r$target_rate ${SOX_RAW_SAMP_FMT} -
     else
       cat "$1.raw"
     fi
@@ -24,7 +28,7 @@ convert()
 process()
 {
   # The format of the audio stream
-  format="-traw -r${target_rate} -s2";
+  format="${SOX_RAW_SAMP_FMT} -r${target_rate}";
   
   # The filter to apply before all other operations
   #filter="highpass 300 highpass 300 highpass 300"
@@ -36,7 +40,7 @@ process()
   silence_back_level="-${silence_level}d"
   
   # Calculate maximum gain without clipping. Leave headroom of about 3dB.
-  #gain=$(sox -traw -r${target_rate} -s2 $1 -traw /dev/null stat -v 2>&1)
+  #gain=$(sox ${SOX_RAW_SAMP_FMT} -r${target_rate}  $1 -traw /dev/null stat -v 2>&1)
   #gain=$(echo "$gain * 0.7" | bc)
   #echo $gain 1>&2
   
@@ -58,7 +62,7 @@ spell()
   ( for letter in $*; do
     process phonetic_$letter
   done ) > $tmp
-  play -r${target_rate} -s2 -traw $tmp
+  play -r${target_rate} ${SOX_RAW_SAMP_FMT} $tmp
   rm -f $tmp
 }
 
@@ -66,7 +70,8 @@ spell()
 endian_conv()
 {
   if [ -n "$endian" ]; then
-    sox -r${target_rate} -s2 -traw - -r${target_rate} -s2 -traw $endian -
+    sox -r${target_rate} ${SOX_RAW_SAMP_FMT} - \
+        -r${target_rate} ${SOX_RAW_SAMP_FMT} $endian -
   else
     cat
   fi
@@ -75,8 +80,8 @@ endian_conv()
 
 encode()
 {
-  if [ "$encoding" != "-s2 -traw" ]; then
-    sox -r${target_rate} -s2 -traw - $encoding -
+  if [ "$encoding" != "${SOX_RAW_SAMP_FMT}" ]; then
+    sox -r${target_rate} ${SOX_RAW_SAMP_FMT} - $encoding -
   else
     cat
   fi
