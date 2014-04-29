@@ -1,12 +1,12 @@
 /**
-@file	 DtmfDecoder.cpp
-@brief   This file contains the base class for implementing a DTMF decoder
-@author  Tobias Blomberg / SM0SVX
-@date	 2008-02-04
+@file	 PttPty.cpp
+@brief   A PTT hardware controller using a pin in a serial port
+@author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
+@date	 2014-03-21
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-
 /****************************************************************************
  *
  * System Includes
@@ -34,7 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
-#include <cstdlib>
+#include <cstring>
 
 
 /****************************************************************************
@@ -51,10 +50,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "DtmfDecoder.h"
-#include "SwDtmfDecoder.h"
-#include "S54sDtmfDecoder.h"
-#include "PtyDtmfDecoder.h"
+#include "PttPty.h"
+
 
 
 /****************************************************************************
@@ -65,6 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
+
 
 
 /****************************************************************************
@@ -99,7 +97,6 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -114,46 +111,74 @@ using namespace Async;
  *
  ****************************************************************************/
 
-DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
+PttPty::PttPty(void)
 {
-  DtmfDecoder *dec = 0;
-  string type;
-  cfg.getValue(name, "DTMF_DEC_TYPE", type);
-  if (type == "INTERNAL")
-  {
-    dec = new SwDtmfDecoder(cfg, name);
-  }
-  else if (type == "S54S")
-  {
-    dec = new S54sDtmfDecoder(cfg, name);
-  }
-  else if (type == "PTY")
-  {
-    dec = new PtyDtmfDecoder(cfg, name);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown DTMF decoder type \"" << type << "\" "
-         << "specified for " << name << "/DTMF_DEC_TYPE. "
-      	 << "Legal values are: \"NONE\", \"INTERNAL\", \"PTY\" or \"S54S\"\n";
-  }
-  
-  return dec;
-  
-} /* DtmfDecoder::create */
+} /* PttPty::PttPty */
 
 
-bool DtmfDecoder::initialize(void)
+PttPty::~PttPty(void)
 {
-  string value;
-  if (cfg().getValue(name(), "DTMF_HANGTIME", value))
+  master = 0;
+  unlink(slave);
+} /* PttPty::~PttPty */
+
+
+bool PttPty::initialize(Async::Config &cfg, const std::string name)
+{
+
+  string ptt_port;
+  if (!cfg.getValue(name, "PTT_PORT", ptt_port))
   {
-    m_hangtime = atoi(value.c_str());
+    cerr << "*** ERROR: Config variable " << name << "/PTT_PORT not set\n";
+    return false;
   }
-  
+
+  master = posix_openpt(O_WRONLY|O_NOCTTY|O_NONBLOCK);
+  if (master < 0 ||
+      grantpt(master) < 0 ||
+      unlockpt(master) < 0 ||
+      (slave = ptsname(master)) == NULL)
+  {
+    master = 0;
+	cerr << "*** ERROR: Creating the pty device.\n";
+	return false;
+  }
+
+  if ((fd = open(slave, O_WRONLY|O_NOCTTY|O_NONBLOCK)) == -1)
+  {
+    cerr << "*** ERROR: Could not open event device " << slave <<
+            " specified in " << name << endl;
+    return false;
+  }
+
+  // delete symlink if existing
+  unlink(ptt_port.c_str());
+
+  // create symlink to make the access for user scripts a bit easier
+  if (symlink(slave, ptt_port.c_str()) == -1)
+  {
+    cerr << "*** ERROR: creating symlink " << slave
+         << " -> " << ptt_port << "\n";
+    master = 0;
+    return false;
+  }
+
+  // the created device is ptsname(master)
+  cout << "created pseudo tty master (SQL) " << slave << " -> "
+       << ptt_port << endl;
+
   return true;
-  
-} /* DtmfDecoder::initialize */
+} /* PttPty::initialize */
+
+
+bool PttPty::setTxOn(bool tx_on)
+{
+  string s  = "";
+  s += (tx_on ? 'T' : 'R');
+  int ret = write(fd, s.c_str(), 1);
+  return (ret < 0 ? false : true);
+} /* PttPty::setTxOn */
+
 
 
 /****************************************************************************
