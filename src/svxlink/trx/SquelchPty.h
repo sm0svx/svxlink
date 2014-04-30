@@ -157,6 +157,8 @@ class SquelchPty : public Squelch
 	    return false;
       }
 
+      unlink(serial_port.c_str());
+
       // creating the pty master
       master = posix_openpt(O_RDWR|O_NOCTTY);
       if (master < 0 ||
@@ -167,8 +169,6 @@ class SquelchPty : public Squelch
 	    master = 0;
 	    return false;
       }
-      grantpt(master);
-      unlockpt(master);
 
       if ((fd = open(slave, O_RDONLY|O_NOCTTY)) == -1)
       {
@@ -178,12 +178,10 @@ class SquelchPty : public Squelch
       }
 
       // watch the master pty
-      watch = new Async::FdWatch(fd, Async::FdWatch::FD_WATCH_RD);
+      watch = new Async::FdWatch(master, Async::FdWatch::FD_WATCH_RD);
       assert(watch != 0);
       watch->setEnabled(true);
       watch->activity.connect(mem_fun(*this, &SquelchPty::charactersReceived));
-
-      unlink(serial_port.c_str());
 
       // create symlink to make the access for user scripts a bit easier
       if (symlink(slave, serial_port.c_str()) == -1)
@@ -234,12 +232,10 @@ class SquelchPty : public Squelch
       int rd = read(w->fd(), buf, 1);
       if (rd < 0)
       {
-        std::cerr << "*** PtyDtmfDecoder::charactersReceived read for receiver"
-             << std::endl;
+        std::cerr << "*** ERROR: reading characters from " <<
+              "PTY-squelch device." << std::endl;
         return;
       }
-
-      std::cout << "received: " << buf[0] << std::endl;
 
       if (buf[0] == 'Z')
       {

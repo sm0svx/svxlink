@@ -163,8 +163,6 @@ bool PtyDtmfDecoder::initialize(void)
 
   // creating the pty master
   master = posix_openpt(O_RDWR|O_NOCTTY);
-  grantpt(master);
-  unlockpt(master);
 
   if (master < 0 ||
       grantpt(master) < 0 ||
@@ -187,7 +185,7 @@ bool PtyDtmfDecoder::initialize(void)
             << serial_port << "\n";
 
   // watch the master pty
-  watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
+  watch = new FdWatch(master, FdWatch::FD_WATCH_RD);
   assert(watch != 0);
   watch->setEnabled(true);
   watch->activity.connect(mem_fun(*this, &PtyDtmfDecoder::charactersReceived));
@@ -229,12 +227,10 @@ void PtyDtmfDecoder::charactersReceived(FdWatch *w)
   int rd = read(w->fd(), buf, 1);
   if (rd < 0)
   {
-    cerr << "*** WARNING: PtyDtmfDecoder::charactersReceived read for receiver"
-         << name() << ": " << endl;
+    cerr << "*** ERROR: reading characters from serial_port " << name()
+         << "/PTY-dtmf device" << endl;
     return;
   }
-
-  cout << "received: " << buf[0] << endl;
 
   if (buf[0] == ' ')
   {
