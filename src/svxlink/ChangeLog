@@ -37,7 +37,11 @@
 * Bugfix: Some soundcards have unexpected behaviour which caused an assertion
   failure in the Alsa code. This is now handled more gracefully.
 
-* Bugfix: The voter had a race condition which caused an assertion failure.
+* Bugfix: The voter may have had a race condition which caused an assertion
+  failure. The code is a little bit more forgiving now.
+
+* Bugfix: The voter could crash/assert if a signal level lower than -100
+  were reported from one of the receivers.
 
 * Bugfix in ModuleTcl example file.
 
