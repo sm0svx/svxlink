@@ -631,13 +631,13 @@ void Voter::printSquelchState(void)
 
 Voter::SatRx *Voter::findBestRx(void) const
 {
-  float best_rx_siglev = BEST_RX_SIGLEV_RESET;
+  float best_rx_siglev = 0.0f;
   SatRx *best_rx = 0;
   list<SatRx *>::const_iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
     if ((*it)->squelchIsOpen() &&
-	((*it)->signalStrength() > best_rx_siglev))
+	((best_rx == 0) || ((*it)->signalStrength() > best_rx_siglev)))
     {
       best_rx = *it;
       best_rx_siglev = (*it)->signalStrength();
