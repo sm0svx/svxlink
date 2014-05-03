@@ -630,13 +630,13 @@ void Voter::printSquelchState(void)
 
 Voter::SatRx *Voter::findBestRx(void) const
 {
-  float best_rx_siglev = BEST_RX_SIGLEV_RESET;
+  float best_rx_siglev = 0.0f;
   SatRx *best_rx = 0;
   list<SatRx *>::const_iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
     if ((*it)->squelchIsOpen() &&
-	((*it)->signalStrength() > best_rx_siglev))
+	((best_rx == 0) || ((*it)->signalStrength() > best_rx_siglev)))
     {
       best_rx = *it;
       best_rx_siglev = (*it)->signalStrength();
@@ -699,7 +699,7 @@ void Voter::Top::setMuteState(Rx::MuteState new_mute_state)
       break;
   }
   box().mute_state = new_mute_state;
-} /* Voter::Top::mute */
+} /* Voter::Top::setMuteState */
 
 
 void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
@@ -790,7 +790,7 @@ void Voter::Top::stopTimer(void)
 void Voter::Top::eventTimerExpired(Timer *t)
 { 
   Macho::Machine<Top> &m(static_cast<Macho::Machine<Top>&>(machine()));
-  m.dispatch(Macho::Event(&Top::timerExpired));
+  voter().dispatchEvent(Macho::Event(&Top::timerExpired));
 } /* Voter::Top::eventTimerExpired */
 
 
@@ -925,7 +925,6 @@ void Voter::VotingDelay::timerExpired(void)
 
 void Voter::ActiveRxSelected::init(SatRx *srx)
 {
-  //cout << "### ActiveRxSelected::init\n";
   assert(srx != 0);
   box().active_srx = srx;
   if (muteState() == MUTE_CONTENT)

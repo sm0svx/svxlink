@@ -190,7 +190,6 @@ class Voter : public Rx
     static const unsigned DEFAULT_REVOTE_INTERVAL         = 1000;
     static const unsigned DEFAULT_RX_SWITCH_DELAY         = 500;
     
-    static const float	  BEST_RX_SIGLEV_RESET            = -100.0f;
     static const unsigned MAX_VOTING_DELAY                = 5000;
     static const unsigned MAX_BUFFER_LENGTH               = MAX_VOTING_DELAY;
     static const float	  MAX_HYSTERESIS                  = 2.0f;

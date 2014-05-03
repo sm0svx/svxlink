@@ -152,7 +152,7 @@ void _StateInstance::init(bool history) {
 		MACHO_TRC3(name(), "History transition to", myHistory->name());
 		myMachine.setPendingState(*myHistory, &_theDefaultInitializer);
 	} else {
-		MACHO_TRC2(name(), "Init");
+		//MACHO_TRC2(name(), "Init");
 		mySpecification->init();
 	}
 
@@ -340,6 +340,7 @@ void _MachineBase::rattleOn() {
 			_Initializer * init = myPendingInit;
 			myPendingInit = 0;
 
+			MACHO_TRC2(myCurrentState->name(), "Init");
 			init->execute(*myCurrentState);
 			init->destroy();
 
