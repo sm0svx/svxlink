@@ -790,7 +790,6 @@ void Voter::Top::stopTimer(void)
 
 void Voter::Top::eventTimerExpired(Timer *t)
 { 
-  Macho::Machine<Top> &m(static_cast<Macho::Machine<Top>&>(machine()));
   voter().dispatchEvent(Macho::Event(&Top::timerExpired));
 } /* Voter::Top::eventTimerExpired */
 
