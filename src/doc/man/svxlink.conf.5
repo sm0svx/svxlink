@@ -93,9 +93,13 @@ examples of format specifiers are:
 .BR %M " - The minute as a decimal number (range 00 to 59)"
 .IP \(bu 4
 .BR %S " - The second as a decimal number (range 00 to 61)"
+.IP \(bu 4
+.BR %f " - Fractional seconds in millisecond resolution (000-999)"
 .P
-So, TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S" would give a timestamp looking something like:
-"29 Nov 2005 22:31:59".
+The last one (%f) is a SvxLink specific formatting specifier.
+
+Example: TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S.%f" would give a timestamp looking
+something like: "29 Nov 2005 22:31:59.875".
 .RE
 .TP
 .B CARD_SAMPLE_RATE

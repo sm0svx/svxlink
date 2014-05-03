@@ -33,6 +33,9 @@
   signal level detector was hardcoded to 120. It can now be set using the
   configuration variable SIGLEV_BOGUS_THRESH. By default it's disabled.
 
+* Now possible to make log entries have milliseconds in the timestamp. Use the
+  code "%f" in the TIMESTAMP_FORMAT configuration variable to make that happen.
+
 
 
  1.3.1 -- ?? ??? 2014
