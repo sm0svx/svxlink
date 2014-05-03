@@ -211,6 +211,7 @@ WARNINGS	+=
 # add debug information, "-O2" to add optimizations etc.
 CFLAGS		+= -DT_LINUX
 CXXFLAGS        += -D__STDC_LIMIT_MACROS
+#CXXFLAGS        += -DMACHO_TRACE
 
 # Extra commandline switches to the linker
 LDFLAGS		+=
