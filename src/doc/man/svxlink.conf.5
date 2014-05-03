@@ -93,9 +93,13 @@ examples of format specifiers are:
 .BR %M " - The minute as a decimal number (range 00 to 59)"
 .IP \(bu 4
 .BR %S " - The second as a decimal number (range 00 to 61)"
+.IP \(bu 4
+.BR %f " - Fractional seconds in millisecond resolution (000-999)"
 .P
-So, TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S" would give a timestamp looking something like:
-"29 Nov 2005 22:31:59".
+The last one (%f) is a SvxLink specific formatting specifier.
+
+Example: TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S.%f" would give a timestamp looking
+something like: "29 Nov 2005 22:31:59.875".
 .RE
 .TP
 .B CARD_SAMPLE_RATE
@@ -903,6 +907,19 @@ SIGNAL LEVEL DETECTOR below for more information.
 .B SIGLEV_OFFSET
 The offset of the signal level detector. See chapter CALIBRATING THE SIGNAL
 LEVEL DETECTOR below for more information.
+.TP
+.B SIGLEV_BOGUS_THRESH
+This configuration variable set an upper threshold for the estimated signal
+level when using the noise signal level detector.  If the estimation goes over
+the given threshold, a signal level of 0 will be reported. This can be used as
+a workaround when using a receiver with squelched audio output. When the
+squelch is closed, the receiver audio is silent. The signal level estimator
+will interpret this as a very strong signal. Setting up the bogus signal level
+threshold will counteract this behavior but a better solution is to use
+unsquelched audio if possible.
+
+By default this feature is disabled. If enabling it, start with a value
+somewhere around 120.
 .TP
 .B TONE_SIGLEV_MAP
 This configuration variable is used to map tones to signal level values when

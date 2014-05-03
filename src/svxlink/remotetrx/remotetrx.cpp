@@ -48,6 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <grp.h>
 
 #include <iostream>
+#include <iomanip>
 #include <cstring>
 #include <cstdlib>
 #include <vector>
@@ -725,10 +726,20 @@ static void write_to_logfile(const char *buf)
     {
       if (!tstamp_format.empty())
       {
-	time_t epoch = time(NULL);
-	struct tm *tm = localtime(&epoch);
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        string fmt(tstamp_format);
+        const string frac_code("%f");
+        size_t pos = fmt.find(frac_code);
+        if (pos != string::npos)
+        {
+          stringstream ss;
+          ss << setfill('0') << setw(3) << (tv.tv_usec / 1000);
+          fmt.replace(pos, frac_code.length(), ss.str());
+        }
+	struct tm *tm = localtime(&tv.tv_sec);
 	char tstr[256];
-	size_t tlen = strftime(tstr, sizeof(tstr), tstamp_format.c_str(), tm);
+	size_t tlen = strftime(tstr, sizeof(tstr), fmt.c_str(), tm);
 	ret = write(logfd, tstr, tlen);
         assert(ret == static_cast<ssize_t>(tlen));
 	ret = write(logfd, ": ", 2);
