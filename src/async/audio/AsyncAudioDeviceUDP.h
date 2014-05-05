@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncIpAddress.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -85,6 +86,7 @@ namespace Async
  ****************************************************************************/
 
 class UdpSocket;
+class Timer;
 
 
 /****************************************************************************
@@ -190,6 +192,7 @@ class AudioDeviceUDP : public Async::AudioDevice
     int                 read_buf_pos;
     IpAddress           ip_addr;
     uint16_t            port;
+    Async::Timer        *pace_timer;
     
     void audioReadHandler(const Async::IpAddress &ip, void *buf, int count);
     void audioWriteHandler(void);

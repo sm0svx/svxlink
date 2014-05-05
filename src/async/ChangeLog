@@ -11,6 +11,9 @@
   FreeBSD at end of string. This caused some config options to not be read
   correctly.
 
+* Fixed Async::AudioDeviceUDP so that audio output is paced instead of writing
+  as fast as possible.
+
 
 
  1.2.0 -- 01 Dec 2013
