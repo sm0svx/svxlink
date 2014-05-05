@@ -1431,7 +1431,9 @@ Available codecs are: RAW (512kbps), S16 (256kbps), GSM (13.2kbps), SPEEX
 (8-25kbps), OPUS (8-64kbps). These are raw bitrate values. There will be some
 overhead added to this so the real bitrates on the wire are a little bit
 higher. The OPUS codec is the most modern one and it also have the best
-quality for a given bitrate.
+quality for a given bitrate. There also is a NULL codec that will just throw
+away samples which can be used in special situations when the audio is sent
+through another audio path.
 .TP
 .B SPEEX_ENC_FRAMES_PER_PACKET
 Speex encoder setting. Each Speex frame contains 20ms audio. If using a low
