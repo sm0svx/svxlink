@@ -186,7 +186,7 @@ class AudioDeviceUDP : public Async::AudioDevice
 
     
   private:
-    const int           block_size;
+    int                 block_size;
     Async::UdpSocket    *sock;
     int16_t             *read_buf;
     int                 read_buf_pos;

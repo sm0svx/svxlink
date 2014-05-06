@@ -183,12 +183,14 @@ int AudioDeviceUDP::samplesToWrite(void) const
 
 
 AudioDeviceUDP::AudioDeviceUDP(const string& dev_name)
-  : AudioDevice(dev_name), block_size(block_size_hint), sock(0), read_buf(0),
+  : AudioDevice(dev_name), block_size(0), sock(0), read_buf(0),
     read_buf_pos(0), port(0)
 {
+  int pace_interval = 1000 * block_size_hint / sampleRate();
+  block_size = pace_interval * sampleRate() / 1000;
+
   read_buf = new int16_t[block_size * channels];
-  pace_timer = new Timer(1000 * blocksize() / sampleRate(),
-                         Timer::TYPE_PERIODIC);
+  pace_timer = new Timer(pace_interval, Timer::TYPE_PERIODIC);
   pace_timer->setEnable(false);
   pace_timer->expired.connect(
       sigc::hide(mem_fun(*this, &AudioDeviceUDP::audioWriteHandler)));
