@@ -1,16 +1,12 @@
 /**
-@file	 AsyncAudioDevice.h
-@brief   Handle simple streaming of audio samples via UDP
+@file	 AsyncAudioEncoderNull.h
+@brief   A null audio "encoder" that just throw away audio
 @author  Tobias Blomberg / SM0SVX
-@date	 2012-06-25
-
-Implements a simple "audio interface" that stream samples via
-UDP. This can for example be used to stream audio to/from
-GNU Radio.
+@date	 2014-05-05
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2012 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,9 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-#ifndef ASYNC_AUDIO_DEVICE_UDP_INCLUDED
-#define ASYNC_AUDIO_DEVICE_UDP_INCLUDED
+#ifndef ASYNC_AUDIO_ENCODER_NULL_INCLUDED
+#define ASYNC_AUDIO_ENCODER_NULL_INCLUDED
 
 
 /****************************************************************************
@@ -39,7 +34,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <string>
 
 
 /****************************************************************************
@@ -48,8 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncIpAddress.h>
-#include <AsyncTimer.h>
+#include <AsyncAudioEncoder.h>
 
 
 /****************************************************************************
@@ -58,7 +51,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "AsyncAudioDevice.h"
 
 
 /****************************************************************************
@@ -85,9 +77,7 @@ namespace Async
  *
  ****************************************************************************/
 
-class UdpSocket;
-class Timer;
-
+  
 
 /****************************************************************************
  *
@@ -112,97 +102,61 @@ class Timer;
  ****************************************************************************/
 
 /**
-@brief	
+@brief	A null audio "encoder" that just throw away audio
 @author Tobias Blomberg / SM0SVX
-@date   2012-06-25
+@date   2014-05-05
 
-Implements a simple "audio interface" that stream samples via
-UDP. This can for example be used to stream audio to/from
-GNU Radio.
+This class implements an audio "encoder" that just throw away samples. This
+can be good to use if audio is sent through another audio path.
 */
-class AudioDeviceUDP : public Async::AudioDevice
+class AudioEncoderNull : public AudioEncoder
 {
   public:
     /**
-     * @brief 	Constuctor
-     * @param 	dev_name  The name of the device to associate this object with
+     * @brief 	Default constuctor
      */
-    explicit AudioDeviceUDP(const std::string& dev_name);
+    AudioEncoderNull(void) {}
   
     /**
      * @brief 	Destructor
      */
-    ~AudioDeviceUDP(void);
+    virtual ~AudioEncoderNull(void) {}
   
     /**
-     * @brief 	Find out what the blocksize is set to
-     * @return	Returns the currently set blocksize in samples per channel
+     * @brief   Get the name of the codec
+     * @return  Return the name of the codec
      */
-    virtual int blocksize(void);
-
+    virtual const char *name(void) const { return "NULL"; }
+  
     /**
-     * @brief 	Check if the audio device has full duplex capability
-     * @return	Returns \em true if the device has full duplex capability
-     *	      	or else \em false
-     */
-    virtual bool isFullDuplexCapable(void);
-    
-    /**
-     * @brief 	Tell the audio device handler that there are audio to be
-     *	      	written in the buffer
-     */
-    virtual void audioToWriteAvailable(void);
-
-    /**
-     * @brief	Tell the audio device to flush its buffers
-     */
-    virtual void flushSamples(void);
-    
-    /**
-     * @brief 	Find out how many samples there are in the output buffer
-     * @return	Returns the number of samples in the output buffer on
-     *          success or -1 on failure.
+     * @brief 	Write samples into this audio sink
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
      *
-     * This function can be used to find out how many samples there are
-     * in the output buffer at the moment. This can for example be used
-     * to find out how long it will take before the output buffer has
-     * been flushed.
+     * This function is used to write audio into this audio sink. If it
+     * returns 0, no more samples should be written until the resumeOutput
+     * function in the source have been called.
+     * This function is normally only called from a connected source object.
      */
-    virtual int samplesToWrite(void) const;
+    virtual int writeSamples(const float *samples, int count)
+    {
+      return count;
+    }
     
     
   protected:
-    /**
-     * @brief 	Open the audio device
-     * @param 	mode The mode to open the audio device in (See AudioIO::Mode)
-     * @return	Returns \em true on success or else \em false
-     */
-    virtual bool openDevice(Mode mode);
-
-    /**
-     * @brief 	Close the audio device
-     */
-    virtual void closeDevice(void);
-
     
   private:
-    int                 block_size;
-    Async::UdpSocket    *sock;
-    int16_t             *read_buf;
-    int                 read_buf_pos;
-    IpAddress           ip_addr;
-    uint16_t            port;
-    Async::Timer        *pace_timer;
+    AudioEncoderNull(const AudioEncoderNull&);
+    AudioEncoderNull& operator=(const AudioEncoderNull&);
     
-    void audioReadHandler(const Async::IpAddress &ip, void *buf, int count);
-    void audioWriteHandler(void);
-    
-};  /* class AudioDeviceUDP */
+};  /* class AudioEncoderNull */
 
 
 } /* namespace */
 
-#endif /* ASYNC_AUDIO_DEVICE_UDP_INCLUDED */
+#endif /* ASYNC_AUDIO_ENCODER_NULL_INCLUDED */
 
 
 
