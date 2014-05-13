@@ -38,11 +38,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <pty.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
-#include <sys/types.h>  // For stat().
 #include <sys/stat.h>   // For stat().
 
 
@@ -52,7 +50,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncSerial.h>
 
 
 /****************************************************************************
@@ -113,7 +110,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /**
 @brief	A PTT hardware controller using a pin in a serial port
 @author Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
-@date   2014-03-17
+@date   2014-05-05
 */
 class PttPty : public Ptt
 {

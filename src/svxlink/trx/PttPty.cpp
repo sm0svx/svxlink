@@ -2,7 +2,7 @@
 @file	 PttPty.cpp
 @brief   A PTT hardware controller using a pin in a serial port
 @author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
-@date	 2014-03-21
+@date	 2014-05-05
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -32,7 +32,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
 #include <cstring>
 
 
@@ -133,7 +132,10 @@ bool PttPty::initialize(Async::Config &cfg, const std::string name)
     return false;
   }
 
-  master = posix_openpt(O_WRONLY|O_NOCTTY|O_NONBLOCK);
+  // delete symlink if existing
+  unlink(ptt_port.c_str());
+
+  master = posix_openpt(O_RDWR|O_NONBLOCK);
   if (master < 0 ||
       grantpt(master) < 0 ||
       unlockpt(master) < 0 ||
@@ -144,15 +146,12 @@ bool PttPty::initialize(Async::Config &cfg, const std::string name)
 	return false;
   }
 
-  if ((fd = open(slave, O_WRONLY|O_NOCTTY|O_NONBLOCK)) == -1)
+  if ((fd = open(slave, O_RDWR|O_NONBLOCK)) == -1)
   {
     cerr << "*** ERROR: Could not open event device " << slave <<
             " specified in " << name << endl;
     return false;
   }
-
-  // delete symlink if existing
-  unlink(ptt_port.c_str());
 
   // create symlink to make the access for user scripts a bit easier
   if (symlink(slave, ptt_port.c_str()) == -1)
@@ -164,7 +163,7 @@ bool PttPty::initialize(Async::Config &cfg, const std::string name)
   }
 
   // the created device is ptsname(master)
-  cout << "created pseudo tty master (SQL) " << slave << " -> "
+  cout << "created pseudo tty master (PTT) " << slave << " -> "
        << ptt_port << endl;
 
   return true;
@@ -174,8 +173,8 @@ bool PttPty::initialize(Async::Config &cfg, const std::string name)
 bool PttPty::setTxOn(bool tx_on)
 {
   string s  = "";
-  s += (tx_on ? 'T' : 'R');
-  int ret = write(fd, s.c_str(), 1);
+  s += (tx_on ? "T\n" : "R\n");
+  int ret = write(master, s.c_str(), 2);
   return (ret < 0 ? false : true);
 } /* PttPty::setTxOn */
 

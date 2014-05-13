@@ -173,7 +173,7 @@ bool PtyDtmfDecoder::initialize(void)
 	return false;
   }
 
-  if ((fd = open(slave, O_RDONLY|O_NOCTTY)) == -1)
+  if ((fd = open(slave, O_RDWR|O_NOCTTY)) == -1)
   {
     cerr << "*** ERROR: Could not open event device " << slave <<
             " specified in " << name() << endl;
@@ -234,10 +234,12 @@ void PtyDtmfDecoder::charactersReceived(FdWatch *w)
 
   if (buf[0] == ' ')
   {
+    cout << "DTMF idle\n";
     digitIdle(); // DTMF digit deactivated
   }
   else
   {
+    cout << "DTMF = " << buf[0];
     digitActive(buf[0]); // DTMF digit activated
   }
 } /* PtyDtmfDecoder::charactersReceived */
