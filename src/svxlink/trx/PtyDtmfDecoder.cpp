@@ -234,12 +234,10 @@ void PtyDtmfDecoder::charactersReceived(FdWatch *w)
 
   if (buf[0] == ' ')
   {
-    cout << "DTMF idle\n";
     digitIdle(); // DTMF digit deactivated
   }
   else
   {
-    cout << "DTMF = " << buf[0];
     digitActive(buf[0]); // DTMF digit activated
   }
 } /* PtyDtmfDecoder::charactersReceived */

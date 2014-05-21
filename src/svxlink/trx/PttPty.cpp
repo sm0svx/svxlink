@@ -170,6 +170,12 @@ bool PttPty::initialize(Async::Config &cfg, const std::string name)
 } /* PttPty::initialize */
 
 
+/*
+ * This functions sends a character over the pty-device:
+ * T\n  to direct the controller to enable the TX
+ * R\n  to direct the controller to disable the TX
+ *
+**/
 bool PttPty::setTxOn(bool tx_on)
 {
   string s  = "";

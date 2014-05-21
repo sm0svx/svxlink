@@ -2,7 +2,7 @@
 @file	 SquelchPty.h
 @brief   A squelch detector that read squelch state on a pseudo Tty
 @author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
-@date	 2014-03-21
+@date	 2014-05-21
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -221,10 +221,10 @@ class SquelchPty : public Squelch
     SquelchPty& operator=(const SquelchPty&);
 
     /** We declare a new and very easy squelch protocol here to interact between
-      * the NHRC-x controller and SvxLink over a perl|python|xxx-script and the
-      * linux pseudo-tty's:
-      * Z -> SQL is closed
-      * O -> SQL is open
+      * the NHRC-x controller and SvxLink over a (perl|python|xxx)-script and
+      * the linux pseudo-tty's:
+      * 'Z' -> SQL is closed
+      * 'O' -> SQL is open
     **/
     void charactersReceived(Async::FdWatch *w)
     {
@@ -237,11 +237,11 @@ class SquelchPty : public Squelch
         return;
       }
 
-      if (buf[0] == 'Z')
+      if (buf[0] == 'Z') // the squelch is closed
       {
         setSignalDetected(false);
       }
-      if (buf[0] == 'O')
+      if (buf[0] == 'O')  // the squelch is open
       {
         setSignalDetected(true);
       }
