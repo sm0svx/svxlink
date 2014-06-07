@@ -36,6 +36,10 @@
 * Now possible to make log entries have milliseconds in the timestamp. Use the
   code "%f" in the TIMESTAMP_FORMAT configuration variable to make that happen.
 
+* New configuration variable for SimplexLogic, MUTE_TX_ON_RX, which can be set
+  to allow transmission during reception. This may be desired if the logic is
+  connected to some full duplex device.
+
 
 
  1.3.1 -- ?? ??? 2014
