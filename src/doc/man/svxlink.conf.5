@@ -1005,12 +1005,9 @@ it to
 .B S54S.
 To control it over a pseudo tty device set it to
 .B PTY.
-Setting it to PTY will install the PTY dtmf decoder. SvXLink creates a symlink
-linked to a master tty device on runtime. The name has to be defined with DTMF_SERIAL.
-Over this symlink a very easy communication protocol is used to tell indicate 
-SvxLink received dtmf digits (0...9A-F*#). This can be used by an own script 
-to adapt other devices, modems or other hardware to SvxLink. Look for 
-svxlink/scripts/nhrcx.pl to see an example.
+Setting it to PTY will install the PTY dtmf decoder. SvxLink creates a symlink
+linked to a slave pty device on runtime. The name has to be defined with
+DTMF_PTY.
 .B NONE
 or commenting it out will disable DTMF detection.
 .TP
@@ -1039,6 +1036,20 @@ new one. A good default value is 50-100ms.
 .B DTMF_SERIAL
 When using an external hardware DTMF decoder this config variable is used to
 specify a serial port (e.g. /dev/ttyS0).
+.TP
+.B DTMF_PTY
+When using the PTY DTMF "decoder" this configuration variable will set the path
+to the PTY slave softlink that the external interface script use to communicate
+to SvxLink. Over this symlink a very easy communication protocol is used to
+tell SvxLink received DTMF digits: 0-9, A-F, *, #. "E" is the same as "*" and
+"F" is the same as "#". Sending a digit tell SvxLink when it starts. To tell
+SvxLink that the digit has ended, send a space character.
+
+The PTY DTMF "decoder" can be used by an external script to interface custom
+devices, modems or other hardware to SvxLink. Look for nhrcx.pl to see an
+example.
+
+Example: /tmp/rx1_dtmf.
 .TP
 .B DTMF_MAX_FWD_TWIST
 DTMF use two tones to encode digits 0-9, A-F. These two tones should normally
