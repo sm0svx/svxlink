@@ -34,15 +34,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
-#include <string>
-#include <pty.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <unistd.h>
-#include <sys/types.h>  // for stat()
-#include <sys/stat.h>   // for stat()
 
 
 /****************************************************************************
@@ -51,7 +42,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncFdWatch.h>
 
 
 /****************************************************************************
@@ -61,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "PtyDtmfDecoder.h"
+#include "Pty.h"
 
 
 
@@ -123,23 +114,16 @@ using namespace Async;
  ****************************************************************************/
 
 PtyDtmfDecoder::PtyDtmfDecoder(Config &cfg, const string &name)
-  : HwDtmfDecoder(cfg, name), fd(-1), watch(0)
+  : HwDtmfDecoder(cfg, name), pty(0)
 {
-  //cout << "### Pty DTMF decoder loaded...\n";
 
 } /* PtyDtmfDecoder::PtyDtmfDecoder */
 
 
 PtyDtmfDecoder::~PtyDtmfDecoder(void)
 {
-  delete watch;
-  watch = 0;
-  if (fd >= 0)
-  {
-    close(fd);
-    fd = -1;
-  }
-  master = 0;
+  delete pty;
+  pty = 0;
 } /* PtyDtmfDecoder::~PtyDtmfDecoder */
 
 
@@ -150,58 +134,21 @@ bool PtyDtmfDecoder::initialize(void)
     return false;
   }
 
-  string serial_port;
-  if (!cfg().getValue(name(), "DTMF_SERIAL", serial_port))
+  string dtmf_pty;
+  if (!cfg().getValue(name(), "DTMF_PTY", dtmf_pty))
   {
     cerr << "*** ERROR: Config variable " << name()
-      	 << "/DTMF_SERIAL not specified\n";
+      	 << "/DTMF_PTY not specified\n";
     return false;
   }
 
-  // delete the old symlink if existing
-  unlink(serial_port.c_str());
-
-  // creating the pty master
-  master = posix_openpt(O_RDWR|O_NOCTTY);
-
-  if (master < 0 ||
-      grantpt(master) < 0 ||
-      unlockpt(master) < 0 ||
-      (slave = ptsname(master)) == NULL)
+  pty = new Pty(dtmf_pty);
+  if (pty == 0)
   {
-	master = 0;
-	return false;
-  }
-
-  if ((fd = open(slave, O_RDWR|O_NOCTTY)) == -1)
-  {
-    cerr << "*** ERROR: Could not open event device " << slave <<
-            " specified in " << name() << endl;
     return false;
   }
-
-  // the created device is ptsname(master)
-  std::cout << "created pseudo tty master (DTMF) " << slave << " -> "
-            << serial_port << "\n";
-
-  // watch the master pty
-  watch = new FdWatch(master, FdWatch::FD_WATCH_RD);
-  assert(watch != 0);
-  watch->setEnabled(true);
-  watch->activity.connect(mem_fun(*this, &PtyDtmfDecoder::charactersReceived));
-
-  // create symlink to make the access for user scripts a bit easier
-  if (symlink(slave, serial_port.c_str()) == -1)
-  {
-    cerr << "*** ERROR: creating symlink " << slave
-         << " -> " << serial_port << "\n";
-    master = 0;
-    return false;
-  }
-
-  cout << "PTY DTMF \n";
-
-  return true;
+  pty->cmdReceived.connect(sigc::mem_fun(*this, &PtyDtmfDecoder::cmdReceived));
+  return pty->open();
 
 } /* PtyDtmfDecoder::initialize */
 
@@ -221,24 +168,30 @@ bool PtyDtmfDecoder::initialize(void)
  *
  ****************************************************************************/
 
-void PtyDtmfDecoder::charactersReceived(FdWatch *w)
+void PtyDtmfDecoder::cmdReceived(char cmd)
 {
-  char buf[1];
-  int rd = read(w->fd(), buf, 1);
-  if (rd < 0)
-  {
-    cerr << "*** ERROR: reading characters from serial_port " << name()
-         << "/PTY-dtmf device" << endl;
-    return;
-  }
-
-  if (buf[0] == ' ')
+  if (cmd == ' ')
   {
     digitIdle(); // DTMF digit deactivated
   }
+  else if (((cmd >= '0') && (cmd <= '9')) ||
+           ((cmd >= 'A') && (cmd <= 'D')) ||
+           (cmd == '*') ||
+           (cmd == '#'))
+  {
+    digitActive(cmd); // DTMF digit activated
+  }
+  else if (cmd == 'E')
+  {
+    digitActive('*'); // DTMF digit E==* activated
+  }
+  else if (cmd == 'F')
+  {
+    digitActive('#'); // DTMF digit F==# activated
+  }
   else
   {
-    digitActive(buf[0]); // DTMF digit activated
+    cerr << "*** WARNING: Illegal DTMF PTY command received: " << cmd << endl;
   }
 } /* PtyDtmfDecoder::charactersReceived */
 

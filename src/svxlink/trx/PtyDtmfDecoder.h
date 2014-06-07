@@ -60,10 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class FdWatch;
-};
+class Pty;
 
 
 /****************************************************************************
@@ -102,8 +99,13 @@ namespace Async
  * @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
  * @date    2014-03-21
  *
- * This class implements support for the hardware DTMF decoder on the
- * Pty SvxLink interface board.
+ * This class implements support for an external DTMF decoder interfaced via
+ * a PTY device. DTMF digits can be fed into SvxLink from an external script
+ * for example. Signalling a DTMF digit is a two step process. One need to
+ * indicate both when a digit starts and when it stops so that SvxLink can
+ * measure the length of the digit. Digit start is indicated by sending the
+ * actual digit (0-9, A-F, *, #). "E" is the same as "*" and "F" is the same
+ * as "#". To indicate digit end, send a space character.
  */
 class PtyDtmfDecoder : public HwDtmfDecoder
 {
@@ -133,12 +135,9 @@ class PtyDtmfDecoder : public HwDtmfDecoder
   protected:
 
   private:
-    int     	    master;
-    char            *slave;
-    int			    fd;
-    Async::FdWatch	*watch;
+    Pty *pty;
 
-    void charactersReceived(Async::FdWatch *w);
+    void cmdReceived(char cmd);
 
 };  /* class PtyDtmfDecoder */
 
