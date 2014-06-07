@@ -34,16 +34,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
-#include <string>
 #include <pty.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
 #include <sys/types.h>  // For stat().
 #include <sys/stat.h>   // For stat()
+#include <iostream>
+#include <string>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
 
 
 /****************************************************************************
@@ -116,8 +117,9 @@ using namespace sigc;
 @author Tobias Blomberg / SM0SVX
 @date   2014-03-21
 
-This squelch detector read the state of an external hardware squelch through
-a pin in the serial port. The pins that can be used are CTS, DSR, DCD and RI.
+This squelch detector read the state of the squelch through a PTY device.  This
+can be used to interface SvxLink to any custom hardware using an interface
+script.
 */
 class SquelchPty : public Squelch
 {
@@ -125,15 +127,14 @@ class SquelchPty : public Squelch
     /**
      * @brief 	Default constuctor
      */
-    SquelchPty(void) : slave(0) {}
+    SquelchPty(void) : master(-1), slave(-1), watch(0) {}
 
     /**
      * @brief 	Destructor
      */
     ~SquelchPty(void)
     {
-      master=0;
-      unlink(slave);
+      closePty();
     }
 
     /**
@@ -144,59 +145,21 @@ class SquelchPty : public Squelch
      */
     bool initialize(Async::Config& cfg, const std::string& rx_name)
     {
+      this->rx_name = rx_name;
+
       if (!Squelch::initialize(cfg, rx_name))
       {
       	return false;
       }
 
-      std::string serial_port;
-      if (!cfg.getValue(rx_name, "SERIAL_PORT", serial_port))
+      if (!cfg.getValue(rx_name, "PTY_PATH", link_path))
       {
-	    std::cerr << "*** ERROR: Config variable " << rx_name
-	              << "/PTY_PORT not set\n";
-	    return false;
-      }
-
-      unlink(serial_port.c_str());
-
-      // creating the pty master
-      master = posix_openpt(O_RDWR|O_NOCTTY);
-      if (master < 0 ||
-          grantpt(master) < 0 ||
-          unlockpt(master) < 0 ||
-          (slave = ptsname(master)) == NULL)
-      {
-	    master = 0;
-	    return false;
-      }
-
-      if ((fd = open(slave, O_RDONLY|O_NOCTTY)) == -1)
-      {
-        std::cerr << "*** ERROR: Could not open event device " << slave <<
-                " specified in " << rx_name << std::endl;
+        std::cerr << "*** ERROR: Config variable " << rx_name
+                  << "/PTY_PATH not set\n";
         return false;
       }
 
-      // watch the master pty
-      watch = new Async::FdWatch(master, Async::FdWatch::FD_WATCH_RD);
-      assert(watch != 0);
-      watch->setEnabled(true);
-      watch->activity.connect(mem_fun(*this, &SquelchPty::charactersReceived));
-
-      // create symlink to make the access for user scripts a bit easier
-      if (symlink(slave, serial_port.c_str()) == -1)
-      {
-        std::cerr << "*** ERROR: creating symlink " << slave
-             << " -> " << serial_port << std::endl;
-        master = 0;
-        return false;
-      }
-
-      // the created device is ptsname(master)
-      std::cout << "created pseudo tty master (SQL) "
-                << slave << " -> " << serial_port << "\n";
-
-      return true;
+      return openPty();
     }
 
   protected:
@@ -208,44 +171,152 @@ class SquelchPty : public Squelch
      */
     int processSamples(const float *samples, int count)
     {
-	  return count;
+      return count;
     }
 
   private:
+    std::string     link_path;
     int     	    master;
-    int			    fd;
-    char            *slave;
-    Async::FdWatch	*watch;
+    int             slave;
+    Async::FdWatch  *watch;
+    std::string     rx_name;
 
     SquelchPty(const SquelchPty&);
     SquelchPty& operator=(const SquelchPty&);
 
-    /** We declare a new and very easy squelch protocol here to interact between
-      * the NHRC-x controller and SvxLink over a (perl|python|xxx)-script and
-      * the linux pseudo-tty's:
-      * 'Z' -> SQL is closed
-      * 'O' -> SQL is open
-    **/
+    /**
+     * @brief   Open the PTY
+     *
+     * Use this function to open the PTY. If the PTY is already open it will
+     * be closed first.
+     */
+    bool openPty(void)
+    {
+      closePty();
+
+        // Create the master pty
+      master = posix_openpt(O_RDWR|O_NOCTTY);
+
+      char *slave_path = NULL;
+      if ((master < 0) ||
+          (grantpt(master) < 0) ||
+          (unlockpt(master) < 0) ||
+          (slave_path = ptsname(master)) == NULL)
+      {
+        closePty();
+        return false;
+      }
+
+        // Open the slave device to keep it open even if the external script
+        // close the device. If we do not do this an I/O error will occur
+        // if the script close the device.
+      int slave = open(slave_path, O_RDWR|O_NOCTTY);
+      if (slave == -1)
+      {
+        std::cerr << "*** ERROR: Could not open slave PTY " << slave_path <<
+          " for receiver " << rx_name << std::endl;
+        closePty();
+        return false;
+      }
+
+        // Watch the master pty
+      watch = new Async::FdWatch(master, Async::FdWatch::FD_WATCH_RD);
+      assert(watch != 0);
+      watch->activity.connect(mem_fun(*this, &SquelchPty::charactersReceived));
+
+        // Create symlink to make the access for user scripts a bit easier
+      if (symlink(slave_path, link_path.c_str()) == -1)
+      {
+        std::cerr << "*** ERROR: Failed to create symlink " << slave_path
+             << " -> " << link_path << " for " << rx_name << std::endl;
+        closePty();
+        return false;
+      }
+
+      std::cout << "### " << rx_name << ": Created pseudo tty slave (SQL) "
+                << slave_path << " -> " << link_path << "\n";
+
+      return true;
+    } /* openPty */
+
+    /**
+     * @brief   Close the PTY if it's open
+     *
+     * Close the PTY if it's open. This function is safe to call even if
+     * the PTY is not open or if it's just partly opened.
+     */
+    void closePty(void)
+    {
+      if (!link_path.empty())
+      {
+        unlink(link_path.c_str());
+      }
+      delete watch;
+      watch = 0;
+      if (slave >= 0)
+      {
+        close(slave);
+        slave = -1;
+      }
+      if (master >= 0)
+      {
+        close(master);
+        master = -1;
+      }
+    } /* closePty */
+
+    /**
+     * @brief   Reopen the PTY
+     *
+     * Try to reopen the PTY. On failure an error message will be printed
+     * and the PTY will stay closed.
+     */
+    bool reopenPty(void)
+    {
+      if (!openPty())
+      {
+        std::cerr << "*** ERROR: Failed to reopen the PTY. The squelch will "
+                     "be inoperational for " << rx_name << std::endl;
+        return false;
+      }
+      return true;
+    } /* reopenPty */
+
+    /**
+     * @brief   Called when characters are received on the master PTY
+     * @param   w The watch that triggered the event
+     *
+     * We implement a very basic squelch protocol here to interface the
+     * actual squelch detector to SvxLink through a (perl|python|xxx)-script
+     * using a pseudo-tty (PTY). The following commands are understood:
+     *
+     *   'O' -> Squelch is open
+     *   'Z' -> Squelch is closed
+     *
+     * All other commands are ignored.
+     */
     void charactersReceived(Async::FdWatch *w)
     {
-      char buf[1];
-      int rd = read(w->fd(), buf, 1);
-      if (rd < 0)
+      char cmd;
+      int rd = read(w->fd(), &cmd, 1);
+      if (rd != 1)
       {
-        std::cerr << "*** ERROR: reading characters from " <<
-              "PTY-squelch device." << std::endl;
+        std::cerr << "*** ERROR: Failed to read master PTY: "
+                  << std::strerror(errno) << ". "
+                  << "Trying to reopen the PTY.\n";
+        reopenPty();
         return;
       }
 
-      if (buf[0] == 'Z') // the squelch is closed
+      if (cmd == 'Z') // The squelch is closed
       {
         setSignalDetected(false);
       }
-      if (buf[0] == 'O')  // the squelch is open
+      if (cmd == 'O') // The squelch is open
       {
         setSignalDetected(true);
       }
-    } /* SquelchPty::charactersReceived */
+    } /* charactersReceived */
 
 };  /* class SquelchPty */
 

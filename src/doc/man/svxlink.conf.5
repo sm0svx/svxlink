@@ -692,12 +692,11 @@ unsquelched since silence will be interpreted as a high signal strength.
 
 The PTY squelch expects a very easy protocol over a pseudo-tty device, 
 created by SvxLink on runtime. 
-A 'O' over this ptty device indicate an open squelch, a 'Z' is a closed squelch.
-Define the slave tty in SERIAL_PORT (e.g. SERIAL_PORT=/tmp/sql) and SvxLink 
-will create a link from /tmp/sql to it's pseudotty master device 
-(/dev/pts/ptmx). This can be used by an own script to adapt other devices,
-modems or other hardware to SvxLink. Look for svxlink/scripts/nhrcx.pl to
-see an example.
+An 'O' over this pty device indicate an open squelch, a 'Z' is a closed squelch.
+Define the slave pty in PTY_PATH (e.g. PTY_PATH=/tmp/sql) and SvxLink 
+will create a link to the specified path from it's pseudotty slave device 
+(/dev/pts/X). This can be used by a script to interface custom devices,
+modems or other hardware to SvxLink. Look for nhrcx.pl to see an example.
 .TP
 .B SQL_START_DELAY
 The squelch start delay is of most use when using VOX squelch. For example, if
