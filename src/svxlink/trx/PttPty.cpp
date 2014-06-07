@@ -1,6 +1,6 @@
 /**
 @file	 PttPty.cpp
-@brief   A PTT hardware controller using a pin in a serial port
+@brief   A PTT hardware controller using a PTY to signal an external script
 @author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
 @date	 2014-05-05
 
@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <cstring>
+#include <iostream>
 
 
 /****************************************************************************
@@ -50,6 +50,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "PttPty.h"
+#include "Pty.h"
 
 
 
@@ -60,7 +61,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace Async;
 
 
 
@@ -111,77 +111,49 @@ using namespace Async;
  ****************************************************************************/
 
 PttPty::PttPty(void)
+  : pty(0)
 {
 } /* PttPty::PttPty */
 
 
 PttPty::~PttPty(void)
 {
-  master = 0;
-  unlink(slave);
+  delete pty;
 } /* PttPty::~PttPty */
 
 
 bool PttPty::initialize(Async::Config &cfg, const std::string name)
 {
 
-  string ptt_port;
-  if (!cfg.getValue(name, "PTT_PORT", ptt_port))
+  string ptt_pty;
+  if (!cfg.getValue(name, "PTT_PTY", ptt_pty))
   {
-    cerr << "*** ERROR: Config variable " << name << "/PTT_PORT not set\n";
+    cerr << "*** ERROR: Config variable " << name << "/PTT_PTY not set\n";
     return false;
   }
 
-  // delete symlink if existing
-  unlink(ptt_port.c_str());
-
-  master = posix_openpt(O_RDWR|O_NONBLOCK);
-  if (master < 0 ||
-      grantpt(master) < 0 ||
-      unlockpt(master) < 0 ||
-      (slave = ptsname(master)) == NULL)
+  pty = new Pty(ptt_pty);
+  if (pty == 0)
   {
-    master = 0;
-	cerr << "*** ERROR: Creating the pty device.\n";
-	return false;
-  }
-
-  if ((fd = open(slave, O_RDWR|O_NONBLOCK)) == -1)
-  {
-    cerr << "*** ERROR: Could not open event device " << slave <<
-            " specified in " << name << endl;
     return false;
   }
-
-  // create symlink to make the access for user scripts a bit easier
-  if (symlink(slave, ptt_port.c_str()) == -1)
-  {
-    cerr << "*** ERROR: creating symlink " << slave
-         << " -> " << ptt_port << "\n";
-    master = 0;
-    return false;
-  }
-
-  // the created device is ptsname(master)
-  cout << "created pseudo tty master (PTT) " << slave << " -> "
-       << ptt_port << endl;
-
-  return true;
+  return pty->open();
 } /* PttPty::initialize */
 
 
 /*
  * This functions sends a character over the pty-device:
- * T\n  to direct the controller to enable the TX
- * R\n  to direct the controller to disable the TX
- *
-**/
+ * T  to direct the controller to enable the TX
+ * R  to direct the controller to disable the TX
+ */
 bool PttPty::setTxOn(bool tx_on)
 {
-  string s  = "";
-  s += (tx_on ? "T\n" : "R\n");
-  int ret = write(master, s.c_str(), 2);
-  return (ret < 0 ? false : true);
+  return pty->write(tx_on ? 'T' : 'R');
+  /*
+  pty->write(tx_on ? 'T' : 'R');
+  pty->write('\n');
+  return true;
+  */
 } /* PttPty::setTxOn */
 
 

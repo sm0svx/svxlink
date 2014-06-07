@@ -86,7 +86,7 @@ while (1) {
   }
 
     # receive and send ptt state
-  $PTT->read($p, 2);
+  $PTT->read($p, 1);
   if ($p gt ' ') {
     $message = $p;
     &writelog("PTT-command: $p");

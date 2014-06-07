@@ -1,6 +1,6 @@
 /**
 @file	 PttPty.h
-@brief   A PTT hardware controller using a pin in a serial port
+@brief   A PTT hardware controller using a PTY to signal an external script
 @author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
 @date	 2014-03-17
 
@@ -34,14 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
 #include <string>
-#include <pty.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <unistd.h>
-#include <sys/stat.h>   // For stat().
 
 
 /****************************************************************************
@@ -67,6 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+class Pty;
 
 
 /****************************************************************************
@@ -108,7 +102,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief	A PTT hardware controller using a pin in a serial port
+@brief	A PTT hardware controller using a PTY to signal an external script
 @author Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
 @date   2014-05-05
 */
@@ -148,9 +142,7 @@ class PttPty : public Ptt
   protected:
 
   private:
-    int     	    master;
-    int			    fd;
-    char            *slave;
+    Pty *pty;
 
     PttPty(const PttPty&);
     PttPty& operator=(const PttPty&);

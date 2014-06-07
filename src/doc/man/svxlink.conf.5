@@ -1298,12 +1298,9 @@ channels as two mono channels. Legal values are 0 or 1.
 .TP
 .B PTT_TYPE
 Use this configuration variable to specify which type of hardware to use to
-control the PTT.  Specify "SerialPin" for using a pin in the serial port or
-"GPIO" to use a pin in a GPIO port or "PTY" if you want to have a serial
-communication over a pseudo tty port. If set to PTY SvxLink sends a 'T' if
-it want to enable the TX and 'R' if disable it. This can be used by an 
-own script to adapt other devices, modems or other hardware to SvxLink. 
-Look for svxlink/scripts/nhrcx.pl to see an example.
+control the PTT.  Specify "SerialPin" for using a pin in the serial port,
+"GPIO" to use a pin in a GPIO port or "PTY" if you want to use an external
+interface script via a pseudo tty port. 
 
 Set PTT_TYPE to "Dummy" or "NONE"
 to not use any PTT hardware at all. It is an error to not specify PTT_TYPE.
@@ -1327,6 +1324,15 @@ Some GPIO drivers use more complex pin names like gpio33_pe11.  Have a look at
 the USING GPIO section for information on how to set up the operating system.
 Normally, the pin will be active high but if the pin name is prefixed with an
 exclamation mark it will be active low instead.
+.TP
+.B PTT_PTY
+If PTT_TYPE is set to "PTY" this configuration variable will set the path for
+the PTY slave softlink that is used by the external script to communicate to
+SvxLink.
+
+SvxLink sends a 'T' to start transmitting and a 'R' to turn the transmitter
+off.  This can be used by an external script to interface custom devices,
+modems or other hardware to SvxLink.  Look for nhrcx.pl to see an example.
 .TP
 .B SERIAL_SET_PINS
 Set the specified serial port pins to a static state. This can be good if using

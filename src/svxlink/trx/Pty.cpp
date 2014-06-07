@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <termios.h>
 
 #include <cstdlib>
 #include <cstring>
@@ -143,6 +144,25 @@ bool Pty::open(void)
       (unlockpt(master) < 0) ||
       (slave_path = ptsname(master)) == NULL)
   {
+    close();
+    return false;
+  }
+
+    // Turn off line buffering on the PTY (noncanonical mode)
+  struct termios port_settings;
+  memset(&port_settings, 0, sizeof(port_settings));
+  if (tcgetattr(master, &port_settings))
+  {
+    cerr << "*** ERROR: tcgetattr failed for PTY: "
+         << strerror(errno) << endl;
+    close();
+    return false;
+  }
+  port_settings.c_lflag &= ~ICANON;
+  if (tcsetattr(master, TCSANOW, &port_settings) == -1)
+  {
+    cerr << "*** ERROR: tcsetattr failed for PTY: "
+         << strerror(errno) << endl;
     close();
     return false;
   }
