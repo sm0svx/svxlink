@@ -93,9 +93,13 @@ examples of format specifiers are:
 .BR %M " - The minute as a decimal number (range 00 to 59)"
 .IP \(bu 4
 .BR %S " - The second as a decimal number (range 00 to 61)"
+.IP \(bu 4
+.BR %f " - Fractional seconds in millisecond resolution (000-999)"
 .P
-So, TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S" would give a timestamp looking something like:
-"29 Nov 2005 22:31:59".
+The last one (%f) is a SvxLink specific formatting specifier.
+
+Example: TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S.%f" would give a timestamp looking
+something like: "29 Nov 2005 22:31:59.875".
 .RE
 .TP
 .B CARD_SAMPLE_RATE
@@ -305,6 +309,13 @@ or set it to 0 to make the RX active during transmissions.
 One might want to set this to 0 if the link is operating on a split frequency.
 Then the link can accept commands even when it's transmitting.
 The normal setting is 1, to mute the RX when transmitting.
+.TP
+.B MUTE_TX_ON_RX
+Set to 1 to mute the transmitter when the squelch is open (default) or set it
+to 0 to make the TX active during squelch open.  One might want to set this to
+0 if the link is operating on a split frequency or if it's connected to some
+full duplex device.  The normal setting is 1, to mute the TX when the squelch
+is open.
 .
 .SS Repeater Logic Section
 .
@@ -904,6 +915,19 @@ SIGNAL LEVEL DETECTOR below for more information.
 The offset of the signal level detector. See chapter CALIBRATING THE SIGNAL
 LEVEL DETECTOR below for more information.
 .TP
+.B SIGLEV_BOGUS_THRESH
+This configuration variable set an upper threshold for the estimated signal
+level when using the noise signal level detector.  If the estimation goes over
+the given threshold, a signal level of 0 will be reported. This can be used as
+a workaround when using a receiver with squelched audio output. When the
+squelch is closed, the receiver audio is silent. The signal level estimator
+will interpret this as a very strong signal. Setting up the bogus signal level
+threshold will counteract this behavior but a better solution is to use
+unsquelched audio if possible.
+
+By default this feature is disabled. If enabling it, start with a value
+somewhere around 120.
+.TP
 .B TONE_SIGLEV_MAP
 This configuration variable is used to map tones to signal level values when
 SIGLEV_DET=TONE. It is a comma separated list of ten values in the 0 - 100
@@ -1414,7 +1438,9 @@ Available codecs are: RAW (512kbps), S16 (256kbps), GSM (13.2kbps), SPEEX
 (8-25kbps), OPUS (8-64kbps). These are raw bitrate values. There will be some
 overhead added to this so the real bitrates on the wire are a little bit
 higher. The OPUS codec is the most modern one and it also have the best
-quality for a given bitrate.
+quality for a given bitrate. There also is a NULL codec that will just throw
+away samples which can be used in special situations when the audio is sent
+through another audio path.
 .TP
 .B SPEEX_ENC_FRAMES_PER_PACKET
 Speex encoder setting. Each Speex frame contains 20ms audio. If using a low

@@ -20,14 +20,25 @@
   is activated using subcommand 7 while the EchoLink module is active.
   This feature was contributed by Martin/DF1AMB.
 
-* ModuleEchoLink: New TCL event handling function: "chat_received" which
-  is called when a remote chat message is received.
+//* ModuleEchoLink: New TCL event handling function: "chat_received" which
+//  is called when a remote chat message is received.
 
 * ModuleEchoLink: New TCL event handling function: "squelch_open" which is
   called when the local receiver squelch open and closes. This function can be
   used to for example send a roger beep to the remote station when the squelch
   closes.
   Patch contributed by DL1HRC / Adi.
+
+* Previously the upper threshold for the signal level reported from the noise
+  signal level detector was hardcoded to 120. It can now be set using the
+  configuration variable SIGLEV_BOGUS_THRESH. By default it's disabled.
+
+* Now possible to make log entries have milliseconds in the timestamp. Use the
+  code "%f" in the TIMESTAMP_FORMAT configuration variable to make that happen.
+
+* New configuration variable for SimplexLogic, MUTE_TX_ON_RX, which can be set
+  to allow transmission during reception. This may be desired if the logic is
+  connected to some full duplex device.
 
 
 
@@ -37,7 +48,13 @@
 * Bugfix: Some soundcards have unexpected behaviour which caused an assertion
   failure in the Alsa code. This is now handled more gracefully.
 
-* Bugfix: The voter had a race condition which caused an assertion failure.
+* Bugfix: The voter may have had a race condition which caused an assertion
+  failure. The code is a little bit more forgiving now.
+
+* Bugfix: The voter could cause an assertion failure if a signal level lower
+  than -100 were reported from one of the receivers.
+
+* Bugfix: The voter had a bug which caused a crash under certain conditions.
 
 * Bugfix in ModuleTcl example file.
 

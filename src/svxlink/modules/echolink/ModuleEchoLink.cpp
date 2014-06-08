@@ -1136,11 +1136,15 @@ void ModuleEchoLink::onChatMsgReceived(QsoImpl *qso, const string& msg)
     }
   }
 
+  // FIXME: This code has a security flaw. Incoming strings need to be
+  // escaped.
+#if 0
   stringstream ss;
   ss << "chat_received \"";
   ss << msg;
   ss << "\"";
   processEvent(ss.str());
+#endif
 } /* onChatMsgReceived */
 
 

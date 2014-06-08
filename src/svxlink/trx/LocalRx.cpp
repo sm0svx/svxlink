@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 #include <cmath>
+#include <limits>
 
 
 /****************************************************************************
@@ -802,6 +803,12 @@ SigLevDet *LocalRx::createSigLevDet(const string &name, int sample_rate)
     if (cfg.getValue(name, "SIGLEV_SLOPE", slope))
     {
       det->setDetectorSlope(slope);
+    }
+    
+    float bogus_thresh = numeric_limits<float>::max();
+    if (cfg.getValue(name, "SIGLEV_BOGUS_THRESH", bogus_thresh))
+    {
+      det->setBogusThresh(bogus_thresh);
     }
     
     siglevdet = det;

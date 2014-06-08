@@ -118,7 +118,8 @@ using namespace Async;
 SigLevDetNoise::SigLevDetNoise(int sample_rate)
   : sample_rate(sample_rate), block_len(BLOCK_TIME * sample_rate / 1000),
     slope(10.0), offset(0.0), update_interval(0), update_counter(0),
-    integration_time(0), ss(0.0), ss_cnt(0)
+    integration_time(0), ss(0.0), ss_cnt(0),
+    bogus_thresh(numeric_limits<float>::max())
 {
   if (sample_rate >= 16000)
   {
@@ -162,6 +163,12 @@ void SigLevDetNoise::setDetectorOffset(float offset)
 } /* SigLevDetNoise::setDetectorOffset  */
 
 
+void SigLevDetNoise::setBogusThresh(float thresh)
+{
+  bogus_thresh = thresh;
+} /* SigLevDetNoise::setBogusThresh */
+
+
 void SigLevDetNoise::setContinuousUpdateInterval(int interval_ms)
 {
   update_interval = interval_ms * sample_rate / 1000;
@@ -195,10 +202,10 @@ float SigLevDetNoise::lastSiglev(void) const
     // Calculate the siglev value
   float siglev = offset - slope * log10(*ss_idx.back());
 
-    // If the siglev value is way above 100, it's probably bogus. It's likely
-    // that this is caused by a closed squelch on the receiver or that
-    // it has been turned off.
-  if (siglev > BOGUS_ABOVE_SIGLEV)
+    // If the siglev value is way above 100 (like 120), it's probably bogus.
+    // It's likely that this is caused by a closed squelch on the receiver or
+    // that it has been turned off.
+  if (siglev > bogus_thresh)
   {
     return 0.0f;
   }
@@ -226,10 +233,10 @@ float SigLevDetNoise::siglevIntegrated(void) const
     // be changed too.
   float siglev = offset - slope * (log10(*ss_values.begin()) + 0.25);
 
-    // If the siglev value is over 120, it's probably bogus. It's likely
-    // that this is caused by a closed squelch on the receiver or that
-    // it has been turned off.
-  if (siglev > BOGUS_ABOVE_SIGLEV)
+    // If the siglev value is way above 100 (like 120), it's probably bogus.
+    // It's likely that this is caused by a closed squelch on the receiver or
+    // that it has been turned off.
+  if (siglev > bogus_thresh)
   {
     return 0.0f;
   }

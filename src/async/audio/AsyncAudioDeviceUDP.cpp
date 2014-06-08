@@ -139,13 +139,19 @@ bool AudioDeviceUDP::isFullDuplexCapable(void)
 
 void AudioDeviceUDP::audioToWriteAvailable(void)
 {
-  audioWriteHandler();
+  if (!pace_timer->isEnabled())
+  {
+    audioWriteHandler();
+  }
 } /* AudioDeviceUDP::audioToWriteAvailable */
 
 
 void AudioDeviceUDP::flushSamples(void)
 {
-  audioWriteHandler();
+  if (!pace_timer->isEnabled())
+  {
+    audioWriteHandler();
+  }
 } /* AudioDeviceUDP::flushSamples */
 
 
@@ -177,16 +183,24 @@ int AudioDeviceUDP::samplesToWrite(void) const
 
 
 AudioDeviceUDP::AudioDeviceUDP(const string& dev_name)
-  : AudioDevice(dev_name), block_size(block_size_hint), sock(0), read_buf(0),
+  : AudioDevice(dev_name), block_size(0), sock(0), read_buf(0),
     read_buf_pos(0), port(0)
 {
+  int pace_interval = 1000 * block_size_hint / sampleRate();
+  block_size = pace_interval * sampleRate() / 1000;
+
   read_buf = new int16_t[block_size * channels];
+  pace_timer = new Timer(pace_interval, Timer::TYPE_PERIODIC);
+  pace_timer->setEnable(false);
+  pace_timer->expired.connect(
+      sigc::hide(mem_fun(*this, &AudioDeviceUDP::audioWriteHandler)));
 } /* AudioDeviceUDP::AudioDeviceUDP */
 
 
 AudioDeviceUDP::~AudioDeviceUDP(void)
 {
   delete read_buf;
+  delete pace_timer;
 } /* AudioDeviceUDP::~AudioDeviceUDP */
 
 
@@ -279,6 +293,7 @@ bool AudioDeviceUDP::openDevice(Mode mode)
 
 void AudioDeviceUDP::closeDevice(void)
 {
+  pace_timer->setEnable(false);
   delete sock;
   sock = 0;
   ip_addr = IpAddress();
@@ -319,22 +334,23 @@ void AudioDeviceUDP::audioWriteHandler(void)
   
   unsigned frags_read;
   const unsigned frag_size = block_size * sizeof(int16_t) * channels;
-  do
+  int16_t buf[block_size * channels];
+  frags_read = getBlocks(buf, 1);
+  if (frags_read == 0)
   {
-    int16_t buf[block_size * channels];
-    frags_read = getBlocks(buf, 1);
-    if (frags_read == 0)
-    {
-      break;
-    }
-    
-      // Write the samples to the socket
-    if (!sock->write(ip_addr, port, (void *)buf, frag_size))
-    {
-      perror("write in AudioDeviceUDP::write");
-      return;
-    }
-  } while(frags_read == 1);
+    pace_timer->setEnable(false);
+    return;
+  }
+
+    // Write the samples to the socket
+  if (!sock->write(ip_addr, port, (void *)buf, frag_size))
+  {
+    perror("write in AudioDeviceUDP::write");
+    pace_timer->setEnable(false);
+    return;
+  }
+
+  pace_timer->setEnable(true);
 
 } /* AudioDeviceUDP::audioWriteHandler */
 

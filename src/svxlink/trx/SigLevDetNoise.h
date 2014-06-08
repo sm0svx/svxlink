@@ -139,6 +139,21 @@ class SigLevDetNoise : public SigLevDet
      * @param 	offset The offset to set
      */
     void setDetectorOffset(float offset);
+
+    /**
+     * @brief   Set the level above which the squelch is considered closed
+     * @param   The threshold (typically something like 120)
+     *
+     * This function set an upper limit for the estimated signal level. If the
+     * estimation goes over the given threshold, a signal level of 0 will be
+     * reported. This can be used as a workaround when using a receiver with
+     * squelched audio output. When the squelch is closed the receiver audio
+     * is silent. The signal level estimator will interpret this as a very
+     * strong signal. Setting up the bogus signal level threshold will
+     * counteract this behavior but a better solution is to use unsquelched
+     * audio if possible.
+     */
+    void setBogusThresh(float thresh);
   
     /**
      * @brief	Set the interval for continuous updates
@@ -185,7 +200,6 @@ class SigLevDetNoise : public SigLevDet
     typedef std::list<SsSetIter>  SsIndexList;
 
     static const unsigned BLOCK_TIME          = 25;     // milliseconds
-    static const float    BOGUS_ABOVE_SIGLEV  = 120.0f;
 
     const unsigned            sample_rate;
     const unsigned            block_len;
@@ -200,6 +214,7 @@ class SigLevDetNoise : public SigLevDet
     SsIndexList               ss_idx;
     double                    ss;
     unsigned                  ss_cnt;
+    float                     bogus_thresh;
     
     SigLevDetNoise(const SigLevDetNoise&);
     SigLevDetNoise& operator=(const SigLevDetNoise&);
