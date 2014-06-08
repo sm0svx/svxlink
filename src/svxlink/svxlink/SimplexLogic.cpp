@@ -117,7 +117,7 @@ using namespace Async;
 
 
 SimplexLogic::SimplexLogic(Async::Config& cfg, const string& name)
-  : Logic(cfg, name), mute_rx_on_tx(true)
+  : Logic(cfg, name), mute_rx_on_tx(true), mute_tx_on_rx(true)
 {
 } /* SimplexLogic::SimplexLogic */
 
@@ -134,11 +134,8 @@ bool SimplexLogic::initialize(void)
     return false;
   }
   
-  string value;
-  if (cfg().getValue(name(), "MUTE_RX_ON_TX", value))
-  {
-    mute_rx_on_tx = (atoi(value.c_str()) > 0);
-  }
+  cfg().getValue(name(), "MUTE_RX_ON_TX", mute_rx_on_tx);
+  cfg().getValue(name(), "MUTE_TX_ON_RX", mute_tx_on_rx);
   
   rxValveSetOpen(true);
   setTxCtrlMode(Tx::TX_AUTO);
@@ -179,12 +176,18 @@ void SimplexLogic::squelchOpen(bool is_open)
       enableRgrSoundTimer(true);
     }
     
-    setTxCtrlMode(Tx::TX_AUTO);
+    if (mute_tx_on_rx)
+    {
+      setTxCtrlMode(Tx::TX_AUTO);
+    }
   }
   else
   {
     enableRgrSoundTimer(false);
-    setTxCtrlMode(Tx::TX_OFF);
+    if (mute_tx_on_rx)
+    {
+      setTxCtrlMode(Tx::TX_OFF);
+    }
   }
     
   Logic::squelchOpen(is_open);

@@ -20,8 +20,8 @@
   is activated using subcommand 7 while the EchoLink module is active.
   This feature was contributed by Martin/DF1AMB.
 
-* ModuleEchoLink: New TCL event handling function: "chat_received" which
-  is called when a remote chat message is received.
+//* ModuleEchoLink: New TCL event handling function: "chat_received" which
+//  is called when a remote chat message is received.
 
 * ModuleEchoLink: New TCL event handling function: "squelch_open" which is
   called when the local receiver squelch open and closes. This function can be
@@ -35,6 +35,10 @@
 
 * Now possible to make log entries have milliseconds in the timestamp. Use the
   code "%f" in the TIMESTAMP_FORMAT configuration variable to make that happen.
+
+* New configuration variable for SimplexLogic, MUTE_TX_ON_RX, which can be set
+  to allow transmission during reception. This may be desired if the logic is
+  connected to some full duplex device.
 
 
 

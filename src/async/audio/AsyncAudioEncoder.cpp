@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "AsyncAudioEncoder.h"
+#include "AsyncAudioEncoderNull.h"
 #include "AsyncAudioEncoderRaw.h"
 #include "AsyncAudioEncoderS16.h"
 #include "AsyncAudioEncoderGsm.h"
@@ -120,7 +121,11 @@ using namespace Async;
 
 AudioEncoder *AudioEncoder::create(const std::string &name)
 {
-  if (name == "RAW")
+  if (name == "NULL")
+  {
+    return new AudioEncoderNull;
+  }
+  else if (name == "RAW")
   {
     return new AudioEncoderRaw;
   }
