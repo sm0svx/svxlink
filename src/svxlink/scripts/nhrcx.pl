@@ -68,7 +68,7 @@ while (1) {
     # dtmf character received?
     if (($instr ne ' ') && ($instr ne 'K') && ($instr ne $last_dtmf)) {
       &writelog("DTMF-Rx: in=>$instr<");
-      $DTMF->write($instr."\n");
+      $DTMF->write($instr);
       $last_dtmf = $instr;
       $dtmfchg = 1;
     }
