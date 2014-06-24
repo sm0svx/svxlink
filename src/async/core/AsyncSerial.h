@@ -9,7 +9,7 @@ asynchronous serial link (e.g. RS-232 port).
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -206,6 +206,7 @@ class Serial : public sigc::trackable
     
     /**
      * @brief 	Open the serial port
+     * @param   flush Flush (discard) pending RX/TX data on open
      * @return	Return \em true on success or else \em false on failue. On
      *	      	failure the global variable \em errno will be set to indicate
      *	      	the cause of the error.
@@ -217,7 +218,7 @@ class Serial : public sigc::trackable
      * If the open method is called when the port is already opened, it
      * just returns \em true without doing anything.
      */
-    bool open(void);
+    bool open(bool flush=false);
     
     /**
      * @brief 	Close a previously opened serial port

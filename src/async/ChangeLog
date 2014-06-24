@@ -19,6 +19,12 @@
 
 * Added the ability to bind a TCP server socket to a specific IP-address.
 
+* Serial port settings are now not restored unless they have been explicitly
+  changed using the Serial::setParams function.
+
+* The serial port TX/RX buffers are now only flushed if explicitly specified
+  in the open call.
+
 
 
  1.2.0 -- 01 Dec 2013
