@@ -118,7 +118,8 @@ class SquelchSerial : public Squelch
     /**
      * @brief 	Default constuctor
      */
-    SquelchSerial(void) : serial(0) {}
+    SquelchSerial(void)
+      : serial(0), sql_pin(Async::Serial::PIN_NONE), sql_pin_act_lvl(true) {}
 
     /**
      * @brief 	Destructor
@@ -142,7 +143,8 @@ class SquelchSerial : public Squelch
       }
 
       std::string serial_port;
-      if (!cfg.getValue(rx_name, "SERIAL_PORT", serial_port))
+      if (!cfg.getValue(rx_name, "SERIAL_PORT", serial_port) ||
+          serial_port.empty())
       {
 	std::cerr << "*** ERROR: Config variable " << rx_name
 	      	  << "/SERIAL_PORT not set\n";
@@ -150,7 +152,8 @@ class SquelchSerial : public Squelch
       }
 
       std::string serial_pin_str;
-      if (!cfg.getValue(rx_name, "SERIAL_PIN", serial_pin_str))
+      if (!cfg.getValue(rx_name, "SERIAL_PIN", serial_pin_str) ||
+          serial_pin_str.empty())
       {
 	std::cerr << "*** ERROR: Config variable " << rx_name
 	      	  << "/SERIAL_PIN not set\n";
@@ -158,55 +161,67 @@ class SquelchSerial : public Squelch
       }
       std::string::iterator colon;
       colon = find(serial_pin_str.begin(), serial_pin_str.end(), ':');
-      if ((colon == serial_pin_str.end()) ||
-      	  (colon + 1 == serial_pin_str.end()))
+      if ((colon != serial_pin_str.end()) &&
+      	  (colon + 1 != serial_pin_str.end()))
       {
-	std::cerr << "*** ERROR: Illegal format for config variable "
-	      	  << rx_name << "/SERIAL_PIN. Should be PINNAME:LEVEL\n";
-	return false;
-      }
-      std::string pin_str(serial_pin_str.begin(), colon);
-      std::string pin_act_lvl_str(colon + 1, serial_pin_str.end());
-      if (pin_str == "CTS")
-      {
-	sql_pin = Async::Serial::PIN_CTS;
-      }
-      else if (pin_str == "DSR")
-      {
-	sql_pin = Async::Serial::PIN_DSR;
-      }
-      else if (pin_str == "DCD")
-      {
-	sql_pin = Async::Serial::PIN_DCD;
-      }
-      else if (pin_str == "RI")
-      {
-	sql_pin = Async::Serial::PIN_RI;
-      }
-      else
-      {
-	std::cerr << "*** ERROR: Illegal pin name for config variable "
-	      	  << rx_name << "/SERIAL_PIN. Should be CTS, DSR, DCD or RI.\n";
-	return false;
-      }
-      if (pin_act_lvl_str == "SET")
-      {
-	sql_pin_act_lvl = true;
-      }
-      else if (pin_act_lvl_str == "CLEAR")
-      {
-	sql_pin_act_lvl = false;
+	std::cerr << "*** WARNING: The PINNAME:LEVEL syntax for config "
+	      	  << "variable " << rx_name << "/SERIAL_PIN is deprecated. "
+                  << "Just use the pin name and prefix it with an exclamation "
+                  << "mark (!) if inverted operation is desired.\n";
+
+        std::string pin_act_lvl_str(colon + 1, serial_pin_str.end());
+        serial_pin_str.erase(colon, serial_pin_str.end());
+        if (pin_act_lvl_str == "SET")
+        {
+          sql_pin_act_lvl = true;
+        }
+        else if (pin_act_lvl_str == "CLEAR")
+        {
+          sql_pin_act_lvl = false;
+        }
+        else
+        {
+          std::cerr << "*** ERROR: Illegal pin level for config variable "
+                    << rx_name << "/SERIAL_PIN. Should be SET or CLEAR.\n";
+          return false;
+        }
       }
       else
       {
-	std::cerr << "*** ERROR: Illegal pin level for config variable "
-	      	  << rx_name << "/SERIAL_PIN. Should be SET or CLEAR.\n";
-	return false;
+        if ((serial_pin_str.size() > 1) && (serial_pin_str[0] == '!'))
+        {
+          sql_pin_act_lvl = false;
+          serial_pin_str.erase(0, 1);
+        }
+      }
+      if (serial_pin_str == "CTS")
+      {
+        sql_pin = Async::Serial::PIN_CTS;
+      }
+      else if (serial_pin_str == "DSR")
+      {
+        sql_pin = Async::Serial::PIN_DSR;
+      }
+      else if (serial_pin_str == "DCD")
+      {
+        sql_pin = Async::Serial::PIN_DCD;
+      }
+      else if (serial_pin_str == "RI")
+      {
+        sql_pin = Async::Serial::PIN_RI;
+      }
+      else
+      {
+        std::cerr << "*** ERROR: Illegal pin name for config variable "
+                  << rx_name << "/SERIAL_PIN. Should be CTS, DSR, DCD or RI.\n";
+        return false;
       }
 
       serial = new Async::Serial(serial_port);
       if (!serial->open())
       {
+        std::cerr << "*** ERROR: Could not open the specified serial port "
+                  << rx_name << "/SERIAL_PIN=" << serial_port << "\n";
 	delete serial;
 	serial = 0;
 	return false;
