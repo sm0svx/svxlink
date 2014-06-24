@@ -64,6 +64,14 @@ expression. For more information on the syntax, see the
 .B REGULAR EXPRESSIONS
 chapter below.
 .TP
+.B REJECT_CONF
+When this is set to 1, reject all incoming connections where the name
+of the remote station ends in the word CONF. A message will be sent
+to the remote station indicating that the connection was rejected.
+This blocks connects from stations that are in conference mode.
+When a station enters conference mode after connecting, and transmits
+towards us, it will be disconnected as well.
+.TP
 .B CHECK_NR_CONNECTS
 If a station connects to often it can be blocked for a configurable time
 span. Example:

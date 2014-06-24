@@ -49,6 +49,9 @@
   (!). The old syntax, SERIAL_PIN=PINNAME:LEVEL, is still supported but a
   warning is printed if that form is used.
 
+* ModuleEchoLink: New config variable REJECT_CONF which when set will reject
+  connections from stations that are in conference mode.
+
 
 
  1.3.1 -- ?? ??? 2014
