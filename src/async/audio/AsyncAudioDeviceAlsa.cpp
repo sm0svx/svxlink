@@ -1,5 +1,5 @@
 /**
-@file	 AsyncAudioDeviceAlsa.h
+@file	 AsyncAudioDeviceAlsa.cpp
 @brief   Handle Alsa audio devices
 @author  Steve / DH1DM, Tobias Blomberg / SM0SVX
 @date	 2009-07-21
@@ -8,7 +8,7 @@ Implements the low level interface to an Alsa audio device.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -395,6 +395,7 @@ void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, unsigned short revents)
     frames_avail *= block_size;
 
     int16_t buf[frames_avail * channels];
+    memset(buf, 0, sizeof(buf));
 
     int frames_read = snd_pcm_readi(rec_handle, buf, frames_avail);
     if (frames_read < 0)
