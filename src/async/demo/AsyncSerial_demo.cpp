@@ -17,7 +17,7 @@ class MyClass : public sigc::trackable
       serial->charactersReceived.connect(
       	  mem_fun(*this, &MyClass::onCharactersReceived));
 
-      if (!serial->open())
+      if (!serial->open(true))
       {
       	perror("Open serial port failed");
 	exit(1);

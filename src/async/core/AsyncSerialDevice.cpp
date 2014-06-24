@@ -9,7 +9,7 @@ never be used directly by the user of the Async lib.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ map<string, SerialDevice *> SerialDevice::dev_map;
  * Bugs:      
  *------------------------------------------------------------------------
  */
-SerialDevice *SerialDevice::open(const string& port)
+SerialDevice *SerialDevice::open(const string& port, bool flush)
 {
   SerialDevice *dev = 0;
   
@@ -146,7 +146,7 @@ SerialDevice *SerialDevice::open(const string& port)
   
   if (dev->use_count++ == 0)
   {
-    if (!dev->openPort())
+    if (!dev->openPort(flush))
     {
       delete dev;
       dev = 0;
@@ -220,7 +220,7 @@ bool SerialDevice::close(SerialDevice *dev)
  *----------------------------------------------------------------------------
  */
 SerialDevice::SerialDevice(const string& port)
-  : port_name(port), use_count(0), fd(-1), rd_watch(0)
+  : port_name(port), use_count(0), fd(-1), rd_watch(0), restore_on_close(false)
 {
   
 } /* SerialDevice::SerialDevice */
@@ -232,7 +232,7 @@ SerialDevice::~SerialDevice(void)
 } /* SerialDevice::~SerialDevice */
 
 
-bool SerialDevice::openPort(void)
+bool SerialDevice::openPort(bool flush)
 {
   fd = ::open(port_name.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
   if (fd == -1)
@@ -240,13 +240,16 @@ bool SerialDevice::openPort(void)
     return false;
   }
   
-  if (tcflush(fd, TCIOFLUSH) == -1)
+  if (flush)
   {
-    int errno_tmp = errno;
-    ::close(fd);
-    fd = -1;
-    errno = errno_tmp;
-    return false;
+    if (tcflush(fd, TCIOFLUSH) == -1)
+    {
+      int errno_tmp = errno;
+      ::close(fd);
+      fd = -1;
+      errno = errno_tmp;
+      return false;
+    }
   }
   
   if(tcgetattr(fd, &old_port_settings) == -1)
@@ -268,13 +271,17 @@ bool SerialDevice::openPort(void)
 
 bool SerialDevice::closePort(void)
 {
-  if (tcsetattr(fd, TCSANOW, &old_port_settings) == -1)
+  if (restore_on_close)
   {
-    int errno_tmp = errno;
-    ::close(fd);
-    fd = -1;
-    errno = errno_tmp;
-    return false;
+    if (tcsetattr(fd, TCSANOW, &old_port_settings) == -1)
+    {
+      int errno_tmp = errno;
+      ::close(fd);
+      fd = -1;
+      errno = errno_tmp;
+      return false;
+    }
+    restore_on_close = false;
   }
   
   if (::close(fd) == -1)
