@@ -839,12 +839,13 @@ device name. Otherwise the RX and TX will not be able to share the port.
 Example: SQL_PORT=/dev/ttyS0 
 .TP
 .B SERIAL_PIN
-If SQL_DET is set to SERIAL, this config variable determines which pin in the serial port
-that should be used for hardware squelch input (COS - Carrier Operated Squelch). It is
-possible to use the DCD, CTS, DSR or RI pin. The squelch-open-level must also be
-specified. This is done using the syntax SQL_PIN=PIN:LEVEL, where PIN is one of the pins
-above and LEVEL is either SET or CLEAR.
-Example: SQL_PIN=CTS:SET
+If SQL_DET is set to SERIAL, this config variable determines which pin in the
+serial port that should be used for hardware squelch input (COS - Carrier
+Operated Squelch). It is possible to use the DCD, CTS, DSR or RI pin. If
+inverted operation is desired, prefix the pin name with an exclamation mark
+(!).
+
+Example: SQL_PIN=!CTS
 .TP
 .B SERIAL_SET_PINS
 Set the specified serial port pins to a static state. This can be good if using
@@ -878,7 +879,10 @@ EVDEV_OPEN and EVDEV_CLOSE, that event will toggle the squelch.
 .B GPIO_SQL_PIN
 If SQL_DET is set to GPIO this configuration variable is used to choose which
 GPIO pin to use for squelch input. The most common name is gpio<number>, like
-gpio4. Some GPIO drivers use more complex names, like gpio33_pe11.
+gpio4. Some GPIO drivers use more complex names, like gpio33_pe11. If inverted
+operation is desired, prefix the pin name with an exclamation mark (!).
+
+Example: GPIO_SQL_PIN=!gpio4
 .TP
 .B SIGLEV_DET
 Choose which type of signal level detector to use. There are two choices,
