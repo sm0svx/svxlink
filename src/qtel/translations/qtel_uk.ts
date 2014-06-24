@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0">
+<TS version="2.0" language="uk_UA">
 <context>
     <name>ComDialog</name>
     <message>
         <source>Qtel Error</source>
-        <translation>Помилка Qtel</translation>
+        <translation>Qtel Помилка</translation>
     </message>
     <message>
         <source>Could not create connection to station</source>
-        <translation type="obsolete">Не можу приєднатися до станції</translation>
+        <translation type="obsolete">Не можу приєднатися до</translation>
     </message>
     <message>
         <source>Station data not found in directory server.
@@ -47,7 +47,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Could not create connection to</source>
-        <translation type="unfinished"></translation>
+        <translation>Не можу приєднатися до</translation>
     </message>
 </context>
 <context>
@@ -86,7 +86,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Chat/Info</source>
-        <translation>Розмова/Інфо</translation>
+        <translation>Чат/Інфо</translation>
     </message>
     <message>
         <source>RX</source>
@@ -188,7 +188,7 @@ Can&apos;t create connection to</source>
     </message>
     <message>
         <source>Enter an IP address or hostname:</source>
-        <translation>Введіть IP-адресу або мережове ім&apos;я:</translation>
+        <translation>Введіть IP-адресу або мережеве ім&apos;я:</translation>
     </message>
     <message>
         <source>Bookmarks</source>
@@ -237,7 +237,7 @@ Qtel надається БЕЗ ЖОДНИХ ҐАРАНТІЙ. Це вільне 
     <name>MainWindowBase</name>
     <message>
         <source>Qtel - the Qt EchoLink Client</source>
-        <translation>Qtel - Qt EchoLink програма</translation>
+        <translation>Qtel - Qt EchoLink Клієнт</translation>
     </message>
     <message>
         <source>Conferences</source>
@@ -317,11 +317,11 @@ Qtel надається БЕЗ ЖОДНИХ ҐАРАНТІЙ. Це вільне 
     </message>
     <message>
         <source>Quit the Qtel application</source>
-        <translation>Вийти із програми Qtel </translation>
+        <translation>Вийти із програми Qtel</translation>
     </message>
     <message>
         <source>Qtel Settings...</source>
-        <translation>Qtel налаштування...</translation>
+        <translation>Qtel Налаштування...</translation>
     </message>
     <message>
         <source>Open the Qtel settings dialog</source>
@@ -385,7 +385,7 @@ Qtel надається БЕЗ ЖОДНИХ ҐАРАНТІЙ. Це вільне 
     </message>
     <message>
         <source>Qtel &amp;Settings...</source>
-        <translation>&amp;Налаштування Qtel</translation>
+        <translation>Qtel &amp;Налаштування...</translation>
     </message>
     <message>
         <source>F5</source>
@@ -497,7 +497,7 @@ Message</source>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation type="obsolete">Мережне ім&apos;я або IP-адреса реєстраційного сервера EchoLink</translation>
+        <translation type="obsolete">Мережеве ім&apos;я або IP-адреса реєстраційного сервера EchoLink</translation>
     </message>
     <message>
         <source>Server</source>
@@ -533,7 +533,7 @@ Message</source>
     </message>
     <message>
         <source>Check this check box to enable full duplex operation</source>
-        <translation>Встанови цю галочку, щоб увімкнути повнодуплексний режим</translation>
+        <translation>Встанови галочку, щоб увімкнути повнодуплексний режим</translation>
     </message>
     <message>
         <source>Connect Sound</source>
@@ -565,7 +565,7 @@ Message</source>
     </message>
     <message>
         <source>Chat encoding:</source>
-        <translation>Кодування символів: </translation>
+        <translation>Кодування чату:</translation>
     </message>
     <message>
         <source>Chinese</source>
@@ -641,7 +641,7 @@ Message</source>
     </message>
     <message>
         <source>Qtel: Password mismatch</source>
-        <translation>Qtel: пароль неправильний</translation>
+        <translation>Qtel: Пароль неправильний</translation>
     </message>
     <message>
         <source>Passwords do not match</source>
@@ -673,55 +673,55 @@ Message</source>
     </message>
     <message>
         <source>Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Мережа</translation>
     </message>
     <message>
         <source>Servers</source>
-        <translation type="unfinished"></translation>
+        <translation>Сервери</translation>
     </message>
     <message>
         <source>A space separated list of the hostname or IP address of the EchoLink directory servers to use</source>
-        <translation type="unfinished"></translation>
+        <translation>Розділений пробілом список мережевих імен або IP-адрес, реєстраційних серверів EchoLink</translation>
     </message>
     <message>
         <source>EchoLink Proxy Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Налаштування EchoLink Proxy</translation>
     </message>
     <message>
         <source>Enable</source>
-        <translation type="unfinished"></translation>
+        <translation>Увімкнено</translation>
     </message>
     <message>
         <source>If enabling EchoLink proxy you must supply a proxy server hostname or IP address.</source>
-        <translation type="unfinished"></translation>
+        <translation>Якщо ввімкнено EchoLink proxy, то необхідно вказати мережеве ім&apos;я або IP-адресу proxy сервера.</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink proxy server to use</source>
-        <translation type="unfinished"></translation>
+        <translation>Мережеве Ім&apos;я або IP-адреса, proxy сервера EchoLink</translation>
     </message>
     <message>
         <source>TCP Port</source>
-        <translation type="unfinished"></translation>
+        <translation>TCP Порт</translation>
     </message>
     <message>
         <source>The TCP port to connect to on the EchoLink proxy server, default 8100</source>
-        <translation type="unfinished"></translation>
+        <translation>TCP порт для приєднання до EchoLink proxy сервера, за замовчуванням 8100</translation>
     </message>
     <message>
         <source>The EchoLink PROXY password, not your normal EchoLink password. Leave empty for public proxy.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пароль EchoLink PROXY, але не ваш звичайний пароль у EchoLink. Залиште порожнім для публічного proxy.</translation>
     </message>
     <message>
         <source>Sampling Rate</source>
-        <translation type="unfinished"></translation>
+        <translation>Частота вибірки</translation>
     </message>
     <message>
         <source>EchoLink proxy configuration problem</source>
-        <translation type="unfinished"></translation>
+        <translation>Помилка у налаштуваннях EchoLink proxy</translation>
     </message>
     <message>
         <source>EchoLink proxy enabled but no server given</source>
-        <translation type="unfinished"></translation>
+        <translation>EchoLink proxy ввімкнено, але не вказано сервер</translation>
     </message>
 </context>
 </TS>
