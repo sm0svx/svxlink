@@ -122,6 +122,14 @@ Set the TCP port used for connecing to an EchoLink proxy server. Default is
 Set the EchoLink proxy password used when connecting to an EchoLink proxy
 server. Use the password PUBLIC for public proxy servers.
 .TP
+.B BIND_IP
+This configuration variable can be set to bind the EchoLink UDP sockets to a
+specific IP-address/interface. This may be needed if the computer is fitted
+with more than one ethernet interface and EchoLink should only be used on one
+of them.
+
+Example: BIND_IP=192.168.0.1
+.TP
 .B MAX_QSOS
 The maximum number of stations that can participate in a conference QSO on this
 node. If more stations try to connect, the connect request will be rejected. 

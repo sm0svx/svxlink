@@ -8,7 +8,7 @@ This class is used to create a TCP server that listens to a TCP-port.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -130,7 +130,8 @@ class TcpServer : public sigc::trackable
      * @brief 	Default constuctor
      * @param 	port_str A port number or service name to listen to
      */
-    TcpServer(const std::string& port_str);
+    TcpServer(const std::string& port_str,
+              const Async::IpAddress &bind_ip=IpAddress());
   
     /**
      * @brief 	Destructor

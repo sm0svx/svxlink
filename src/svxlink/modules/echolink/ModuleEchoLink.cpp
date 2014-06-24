@@ -412,6 +412,12 @@ bool ModuleEchoLink::initialize(void)
   dir->error.connect(mem_fun(*this, &ModuleEchoLink::onError));
   dir->makeOnline();
   
+  string bind_addr;
+  if (cfg().getValue(cfgName(), "BIND_ADDR", bind_addr) && !bind_addr.empty())
+  {
+    Dispatcher::setBindAddr(bind_addr);
+  }
+
     // Start listening to the EchoLink UDP ports
   if (Dispatcher::instance() == 0)
   {

@@ -17,6 +17,8 @@
 * Added a NULL audio encoder that can be used when one does not want audio to
   be sent at all.
 
+* Added the ability to bind a TCP server socket to a specific IP-address.
+
 
 
  1.2.0 -- 01 Dec 2013

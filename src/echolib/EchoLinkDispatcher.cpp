@@ -11,7 +11,7 @@ to indicate that an incoming connection is on its way.
 
 \verbatim
 EchoLib - A library for EchoLink communication
-Copyright (C) 2003  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -118,6 +118,7 @@ using namespace EchoLink;
  ****************************************************************************/
 
 int Dispatcher::port_base = Dispatcher::DEFAULT_PORT_BASE;
+IpAddress Dispatcher::bind_ip = IpAddress();
 Dispatcher *Dispatcher::the_instance = 0;
 
 
@@ -132,6 +133,12 @@ void Dispatcher::setPortBase(int base)
   assert(the_instance == 0);
   port_base = base;
 } /* Dispatcher::setPortBase */
+
+
+void Dispatcher::setBindAddr(const IpAddress& ip)
+{
+  bind_ip = ip;
+} /* Dispatcher::setBindAddr */
 
 
 /*
@@ -272,8 +279,8 @@ Dispatcher::Dispatcher(void)
   Proxy *proxy = Proxy::instance();
   if (proxy == 0)
   {
-    ctrl_sock = new UdpSocket(CTRL_PORT);
-    audio_sock = new UdpSocket(AUDIO_PORT);
+    ctrl_sock = new UdpSocket(CTRL_PORT, bind_ip);
+    audio_sock = new UdpSocket(AUDIO_PORT, bind_ip);
     if (!ctrl_sock->initOk() || !audio_sock->initOk())
     {
       delete ctrl_sock;

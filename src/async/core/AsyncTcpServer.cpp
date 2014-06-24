@@ -4,11 +4,11 @@
 @author  Tobias Blomberg
 @date	 2003-12-07
 
-This class is used to create a TCP server that listens to a specified TCP-port.
+This class is used to create a TCP server that listens to a TCP-port.
 
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003  Tobias Blomberg
+Async - A library for programming event driven applications
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -135,7 +135,7 @@ using namespace Async;
  * Bugs:      
  *------------------------------------------------------------------------
  */
-TcpServer::TcpServer(const string& port_str)
+TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
   : sock(-1), rd_watch(0)
 {
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -171,11 +171,18 @@ TcpServer::TcpServer(const string& port_str)
       return;
     }
   }
-  
+
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
-  addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  if (bind_ip.isEmpty())
+  {
+    addr.sin_addr.s_addr = INADDR_ANY;
+  }
+  else
+  {
+    addr.sin_addr = bind_ip.ip4Addr();
+  }
   if (bind(sock, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
   {
     perror("bind");
