@@ -48,7 +48,7 @@ set_target_properties(svxlink PROPERTIES
 )
 
 # Generate config file with correct paths
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxlink.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/svxlink.conf
   @ONLY
   )

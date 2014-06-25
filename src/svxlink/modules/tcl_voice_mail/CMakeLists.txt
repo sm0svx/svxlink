@@ -2,13 +2,13 @@
 set(MODNAME TclVoiceMail)
 
 # Generate config file with correct paths
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/TclVoiceMail.conf
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/TclVoiceMail.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/TclVoiceMail.conf
   @ONLY
   )
 
 # Generate TCL module with correct paths
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ModuleTclVoiceMail.tcl
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ModuleTclVoiceMail.tcl.in
   ${CMAKE_CURRENT_BINARY_DIR}/ModuleTclVoiceMail.tcl
   @ONLY
   )

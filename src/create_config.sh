@@ -1,5 +1,7 @@
 #!/bin/sh
 
+SRC_ROOT=$(cd $(dirname $0); pwd)
+
 info()
 {
   /bin/echo -en $1
@@ -14,6 +16,24 @@ exit_error()
 {
   rm -f $OUTPUT_FILE
   exit 1
+}
+
+configure_file()
+{
+  infile=$1
+  outfile=$2
+  outdir=$(dirname "${outfile}")
+  info "--- Generating $outfile...\n"
+  [ -d "${outdir}" ] || mkdir -p "${outdir}"
+  local IFS=""
+  while read -r line; do
+    if [[ "$line" =~ \@(.*)\@ ]]; then
+      var="${BASH_REMATCH[1]}"
+      echo "${line/@${var}@/${!var}}"
+    else
+      echo "${line}"
+    fi
+  done <"${SRC_ROOT}/${infile}" >"${SRC_ROOT}/${outfile}"
 }
 
 if [ $# -lt 1 ]; then
@@ -184,6 +204,25 @@ else
   exit_error
 fi
 
+# Generate config.h
+SYSCONF_INSTALL_DIR=${SYSCONF_INSTALL_DIR:-/etc}
+SVX_SYSCONF_INSTALL_DIR=${SVX_SYSCONF_INSTALL_DIR:-$SYSCONF_INSTALL_DIR/svxlink}
+SHARE_INSTALL_PREFIX=${SHARE_INSTALL_PREFIX:-/usr/share}
+SVX_SHARE_INSTALL_DIR=${SVX_SHARE_INSTALL_DIR:-$SHARE_INSTALL_PREFIX/svxlink}
+configure_file "config.h.in" "include/config.h"
+
+# Generate svxlink.conf
+LIB_INSTALL_DIR=${LIB_INSTALL_DIR:-/usr/lib}
+SVX_MODULE_INSTALL_DIR=${SVX_MODULE_INSTALL_DIR:-$LIB_INSTALL_DIR/svxlink}
+LOCAL_STATE_DIR=${LOCAL_STATE_DIR:-/var}
+SVX_SPOOL_INSTALL_DIR=${SVX_SPOOL_INSTALL_DIR:-$LOCAL_STATE_DIR/spool/svxlink}
+configure_file "svxlink/svxlink/svxlink.conf.in" "svxlink/svxlink/svxlink.conf"
+
+# Generate ModuleTclVoiceMail.tcl and TclVoiceMail.conf
+configure_file "svxlink/modules/tcl_voice_mail/ModuleTclVoiceMail.tcl.in" \
+               "svxlink/modules/tcl_voice_mail/ModuleTclVoiceMail.tcl"
+configure_file "svxlink/modules/tcl_voice_mail/TclVoiceMail.conf.in" \
+               "svxlink/modules/tcl_voice_mail/TclVoiceMail.conf"
 
 exit 0
 
