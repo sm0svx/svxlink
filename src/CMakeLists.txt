@@ -160,16 +160,11 @@ function(add_version_target name)
   add_custom_command(
     OUTPUT ${PROJECT_INCLUDE_DIR}/version/${name}.h
     WORKING_DIRECTORY ${PROJECT_INCLUDE_DIR}
-    #COMMAND ${CMAKE_SOURCE_DIR}/create_version_include.sh ${name} ${VERSION}
     COMMAND ${CMAKE_COMMAND} -DVER_NAME=${name} -DVER_VALUE=${VERSION} 
                      -P ${CMAKE_SOURCE_DIR}/cmake/create_version_include.cmake
     DEPENDS ${CMAKE_SOURCE_DIR}/versions
             ${CMAKE_SOURCE_DIR}/cmake/create_version_include.cmake
   )
-  #set(VER_VAR_NAME ${name})
-  #configure_file(${CMAKE_SOURCE_DIR}/version.h.in
-  #  ${PROJECT_INCLUDE_DIR}/version/${name}.h
-  #  )
 endfunction(add_version_target)
 
 # Read a versions file and set up CMake variables for each entry

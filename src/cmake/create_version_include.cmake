@@ -1,6 +1,3 @@
-#message("-- Creating config.h...")
-#configure_file(config.h.in config.h)
-
 if(NOT VER_NAME)
   message(FATAL_ERROR "VER_NAME not set")
 endif(NOT VER_NAME)
