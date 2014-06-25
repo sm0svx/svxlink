@@ -205,6 +205,7 @@ class ModuleEchoLink : public Module
     time_t                num_con_block_time;
     NumConMap             num_con_map;
     Async::Timer          *num_con_update_timer;
+    bool		  reject_conf;
     int   	      	  autocon_echolink_id;
     int   	      	  autocon_time;
     Async::Timer	  *autocon_timer;

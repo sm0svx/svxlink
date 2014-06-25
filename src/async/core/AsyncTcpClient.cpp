@@ -158,6 +158,12 @@ TcpClient::~TcpClient(void)
 } /* TcpClient::~TcpClient */
 
 
+void TcpClient::bind(const IpAddress& bind_ip)
+{
+  this->bind_ip = bind_ip;
+} /* TcpClient::bind */
+
+
 void TcpClient::connect(const string &remote_host, uint16_t remote_port)
 {
   this->remote_host = remote_host;
@@ -307,6 +313,22 @@ void TcpClient::connectToRemote(void)
     errno = errno_tmp;
     disconnected(this, DR_SYSTEM_ERROR);
     return;
+  }
+
+  if (!bind_ip.isEmpty())
+  {
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(0);
+    addr.sin_addr = bind_ip.ip4Addr();
+    if (::bind(sock, (struct sockaddr *)&addr, sizeof(addr)) != 0)
+    {
+      int errno_tmp = errno;
+      disconnect();
+      errno = errno_tmp;
+      disconnected(this, DR_SYSTEM_ERROR);
+      return;
+    }
   }
     
     /* Connect to the server */

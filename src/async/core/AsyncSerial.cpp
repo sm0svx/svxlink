@@ -9,7 +9,7 @@ asynchronous serial link (e.g. RS-232 port).
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -160,6 +160,9 @@ bool Serial::setParams(int speed, Parity parity, int bits, int stop_bits,
     errno = EBADF;
     return false;
   }
+  assert(dev != 0);
+
+  dev->setRestoreOnClose();
 
   memset(&port_settings, 0, sizeof(port_settings));
   port_settings.c_iflag = INPCK   /* Perform parity checking */
@@ -314,14 +317,14 @@ bool Serial::setParams(int speed, Parity parity, int bits, int stop_bits,
 } /* Serial::setParams */
 
 
-bool Serial::open(void)
+bool Serial::open(bool flush)
 {
   if (dev != 0)
   {
     return true;
   }
   
-  dev = SerialDevice::open(serial_port);
+  dev = SerialDevice::open(serial_port, flush);
   if (dev == NULL)
   {
     return false;

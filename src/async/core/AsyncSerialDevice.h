@@ -9,7 +9,7 @@ never be used directly by the user of the Async lib.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -128,7 +128,7 @@ class SerialDevice : public sigc::trackable
      * one does not already exist, a new one will be created and
      * the serial port will be opened.
      */
-    static SerialDevice *open(const std::string& port);
+    static SerialDevice *open(const std::string& port, bool flush);
 
     /**
      * @brief 	Release a SerialDevice object and close the port
@@ -146,6 +146,15 @@ class SerialDevice : public sigc::trackable
      * @return	Returns the file descriptor associated with this serial device
      */
     int desc(void) { return fd; }
+
+    /**
+     * @brief   Set a flag to restore port settings on close
+     *
+     * Call this function once, before or after open, to instruct this class
+     * to restore port settings, that was saved when opening the port, on
+     * closing the port. When the port is closed the flag is reset again.
+     */
+    void setRestoreOnClose(void) { restore_on_close = true; }
     
     /**
      * @brief 	A signal that is emitted when there is data to read
@@ -170,10 +179,11 @@ class SerialDevice : public sigc::trackable
     int       	    fd;
     struct termios  old_port_settings;
     FdWatch   	    *rd_watch;
+    bool            restore_on_close;
     
     SerialDevice(const std::string& port);
     ~SerialDevice(void);
-    bool openPort(void);
+    bool openPort(bool flush);
     bool closePort(void);
     void onIncomingData(FdWatch *watch);
   

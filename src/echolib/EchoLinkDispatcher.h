@@ -11,7 +11,7 @@ to indicate that an incoming connection is on its way.
 
 \verbatim
 EchoLib - A library for EchoLink communication
-Copyright (C) 2003  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -155,6 +155,20 @@ class Dispatcher : public sigc::trackable
      * called at all, the default ports will be used.
      */
     static void setPortBase(int base);
+
+    /**
+     * @brief 	Set the bind address for the two UDP ports
+     * @param 	ip The IP address to use
+     *
+     * This static function set the IP-address/interface to bind to for the two
+     * UDP communications ports. This may be necessary if the computer is
+     * fitted with more than one network interface and only one should be used
+     * for EchoLink.  This function may only be called when a dispatcher object
+     * does not exist. Typically, call this function before calling the
+     * Dispatcher::instance function for the first time. If this function is
+     * not called at all, the dispatcher will bind to all available interfaces.
+     */
+    static void setBindAddr(const Async::IpAddress& ip);
     
     /**
      * @brief 	Get the Singleton instance
@@ -219,12 +233,13 @@ class Dispatcher : public sigc::trackable
     
     static const int  	DEFAULT_PORT_BASE = 5198;
     
-    static int	      	port_base;
-    static Dispatcher * the_instance;
+    static int	      	    port_base;
+    static Async::IpAddress bind_ip;
+    static Dispatcher *     the_instance;
     
-    ConMap    	      	con_map;
-    Async::UdpSocket * 	ctrl_sock;
-    Async::UdpSocket * 	audio_sock;
+    ConMap    	      	    con_map;
+    Async::UdpSocket * 	    ctrl_sock;
+    Async::UdpSocket * 	    audio_sock;
     
     bool registerConnection(Qso *con, CtrlInputHandler cih,
 	AudioInputHandler aih);

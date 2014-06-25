@@ -1,12 +1,12 @@
 /**
-@file	 S54sDtmfDecoder.cpp
-@brief   This file contains a class that add support for the S54S interface
+@file	 Pty.cpp
+@brief   A class that wrap up some functionality to use a PTY
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-02-04
+@date	 2014-06-07
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2014  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,14 +26,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
 
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <termios.h>
+
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
+#include <cassert>
 
 
 /****************************************************************************
@@ -42,7 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncSerial.h>
+#include <AsyncFdWatch.h>
 
 
 /****************************************************************************
@@ -51,7 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "S54sDtmfDecoder.h"
+#include "Pty.h"
 
 
 
@@ -62,8 +69,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-using namespace sigc;
-using namespace Async;
+
 
 
 /****************************************************************************
@@ -105,11 +111,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-static const char digit_map[16] =
-{
-  'D', '1', '2', '3', '4', '5', '6', '7',
-  '8', '9', '0', '*', '#', 'A', 'B', 'C'
-};
 
 
 /****************************************************************************
@@ -118,57 +119,124 @@ static const char digit_map[16] =
  *
  ****************************************************************************/
 
-S54sDtmfDecoder::S54sDtmfDecoder(Config &cfg, const string &name)
-  : HwDtmfDecoder(cfg, name), serial(0)
+Pty::Pty(const std::string &slave_link)
+  : slave_link(slave_link), master(-1), slave(-1), watch(0)
 {
-  //cout << "### S54S DTMF decoder loaded...\n";
-  
-} /* S54sDtmfDecoder::S54sDtmfDecoder */
+} /* Pty::Pty */
 
 
-S54sDtmfDecoder::~S54sDtmfDecoder(void)
+Pty::~Pty(void)
 {
-  delete serial;
-} /* S54sDtmfDecoder::~S54sDtmfDecoder */
+  close();
+} /* Pty::~Pty */
 
 
-bool S54sDtmfDecoder::initialize(void)
+bool Pty::open(void)
 {
-  if (!HwDtmfDecoder::initialize())
+  close();
+
+    // Create the master pty
+  master = posix_openpt(O_RDWR|O_NOCTTY);
+
+  char *slave_path = NULL;
+  if ((master < 0) ||
+      (grantpt(master) < 0) ||
+      (unlockpt(master) < 0) ||
+      (slave_path = ptsname(master)) == NULL)
   {
+    close();
     return false;
   }
-  
-  string serial_dev;
-  if (!cfg().getValue(name(), "DTMF_SERIAL", serial_dev))
+
+    // Turn off line buffering on the PTY (noncanonical mode)
+  struct termios port_settings;
+  memset(&port_settings, 0, sizeof(port_settings));
+  if (tcgetattr(master, &port_settings))
   {
-    cerr << "*** ERROR: Config variable " << name()
-      	 << "/DTMF_SERIAL not specified\n";
+    cerr << "*** ERROR: tcgetattr failed for PTY: "
+         << strerror(errno) << endl;
+    close();
     return false;
   }
-  
-  serial = new Serial(serial_dev);
-  if (!serial->open(true))
+  port_settings.c_lflag &= ~ICANON;
+  if (tcsetattr(master, TCSANOW, &port_settings) == -1)
   {
-    cerr << "*** ERROR: Could not open the serial port " << serial_dev
-         << " specified in " << name() << "/DTMF_SERIAL\n";
+    cerr << "*** ERROR: tcsetattr failed for PTY: "
+         << strerror(errno) << endl;
+    close();
     return false;
   }
-  if (!serial->setParams(9600, Serial::PARITY_NONE, 8, 1, Serial::FLOW_NONE))
+
+    // Open the slave device to keep it open even if the external script
+    // close the device. If we do not do this an I/O error will occur
+    // if the script close the device.
+  int slave = ::open(slave_path, O_RDWR|O_NOCTTY);
+  if (slave == -1)
   {
-    cerr << "*** ERROR: Could not setup serial port parameters for "
-      	 << serial_dev << " specified in " << name() << "/DTMF_DERIAL\n";
-    serial->close();
+    cerr << "*** ERROR: Could not open slave PTY " << slave_path << endl;
+    close();
     return false;
   }
-  serial->charactersReceived.connect(
-      mem_fun(*this, &S54sDtmfDecoder::charactersReceived));
-  
+
+    // Watch the master pty
+  watch = new Async::FdWatch(master, Async::FdWatch::FD_WATCH_RD);
+  assert(watch != 0);
+  watch->activity.connect(mem_fun(*this, &Pty::charactersReceived));
+
+    // Create symlink to make the access for user scripts a bit easier
+  if (!slave_link.empty())
+  {
+    if (symlink(slave_path, slave_link.c_str()) == -1)
+    {
+      cerr << "*** ERROR: Failed to create PTY slave symlink " << slave_path
+           << " -> " << slave_link << endl;
+      close();
+      return false;
+    }
+    cout << "### Created pseudo tty slave link "
+         << slave_path << " -> " << slave_link << endl;
+  }
+
   return true;
-  
-} /* S54sDtmfDecoder::initialize */
+} /* Pty::open */
 
 
+void Pty::close(void)
+{
+  if (!slave_link.empty())
+  {
+    unlink(slave_link.c_str());
+  }
+  delete watch;
+  watch = 0;
+  if (slave >= 0)
+  {
+    ::close(slave);
+    slave = -1;
+  }
+  if (master >= 0)
+  {
+    ::close(master);
+    master = -1;
+  }
+} /* Pty::close */
+
+
+bool Pty::reopen(void)
+{
+  if (!open())
+  {
+    cerr << "*** ERROR: Failed to reopen the PTY\n";
+    return false;
+  }
+  return true;
+} /* Pty::reopen */
+
+
+bool Pty::write(char cmd)
+{
+  return (::write(master, &cmd, 1) == 1);
+} /* Pty::write */
 
 
 /****************************************************************************
@@ -179,40 +247,30 @@ bool S54sDtmfDecoder::initialize(void)
 
 
 
-
 /****************************************************************************
  *
  * Private member functions
  *
  ****************************************************************************/
 
-void S54sDtmfDecoder::charactersReceived(char *buf, int len)
+/**
+ * @brief   Called when characters are received on the master PTY
+ * @param   w The watch that triggered the event
+ */
+void Pty::charactersReceived(Async::FdWatch *w)
 {
-  for (int i=0; i<len; ++i)
+  char cmd;
+  int rd = read(w->fd(), &cmd, 1);
+  if (rd != 1)
   {
-    int func = (buf[i] >> 4) & 0x07;
-    int data = buf[i] & 0x0f;
-    printf("event=%02x (func=%d data=%d)\n", (unsigned int)buf[i], func, data);
-    switch (func)
-    {
-      case 0:	// DTMF digit deactivated
-        digitIdle();
-        break;
-
-      case 1:	// DTMF digit activated
-        digitActive(digit_map[data]);
-        break;
-
-      case 3:	// Maintenence functions
-        if (data == 0xf)	// '?' received == identify
-        {
-          serial->write("s", 1);
-        }
-        break;
-    }
+    std::cerr << "*** ERROR: Failed to read master PTY: "
+              << std::strerror(errno) << ". "
+              << "Trying to reopen the PTY.\n";
+    reopen();
+    return;
   }
-} /* S54sDtmfDecoder::charactersReceived */
-
+  cmdReceived(cmd);
+} /* Pty::charactersReceived */
 
 
 /*

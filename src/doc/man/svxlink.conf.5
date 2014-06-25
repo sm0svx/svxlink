@@ -644,7 +644,7 @@ channels as two mono channels. Legal values are 0 or 1.
 .TP
 .B SQL_DET
 Specify the type of squelch detector to use. Possible values are: VOX, CTCSS,
-SERIAL, EVDEV, SIGLEV or GPIO.
+SERIAL, EVDEV, SIGLEV, PTY or GPIO.
 
 The VOX squelch detector determines if there is a signal
 present by calculating a mean value of the sound samples. The VOX squelch
@@ -689,6 +689,14 @@ in cooperation with a voter, you'll also probably need to setup SQL_DELAY to
 get correct signal level measurements. A value of about 40ms seem to be OK.
 Also, when using the NOISE signal level detector the input audio must be
 unsquelched since silence will be interpreted as a high signal strength.
+
+The PTY squelch expects a very easy protocol over a pseudo-tty device, 
+created by SvxLink on runtime. 
+An 'O' over this pty device indicate an open squelch, a 'Z' is a closed squelch.
+Define the slave pty in PTY_PATH (e.g. PTY_PATH=/tmp/sql) and SvxLink 
+will create a link to the specified path from it's pseudotty slave device 
+(/dev/pts/X). This can be used by a script to interface custom devices,
+modems or other hardware to SvxLink. Look for nhrcx.pl to see an example.
 .TP
 .B SQL_START_DELAY
 The squelch start delay is of most use when using VOX squelch. For example, if
@@ -839,12 +847,13 @@ device name. Otherwise the RX and TX will not be able to share the port.
 Example: SQL_PORT=/dev/ttyS0 
 .TP
 .B SERIAL_PIN
-If SQL_DET is set to SERIAL, this config variable determines which pin in the serial port
-that should be used for hardware squelch input (COS - Carrier Operated Squelch). It is
-possible to use the DCD, CTS, DSR or RI pin. The squelch-open-level must also be
-specified. This is done using the syntax SQL_PIN=PIN:LEVEL, where PIN is one of the pins
-above and LEVEL is either SET or CLEAR.
-Example: SQL_PIN=CTS:SET
+If SQL_DET is set to SERIAL, this config variable determines which pin in the
+serial port that should be used for hardware squelch input (COS - Carrier
+Operated Squelch). It is possible to use the DCD, CTS, DSR or RI pin. If
+inverted operation is desired, prefix the pin name with an exclamation mark
+(!).
+
+Example: SQL_PIN=!CTS
 .TP
 .B SERIAL_SET_PINS
 Set the specified serial port pins to a static state. This can be good if using
@@ -878,7 +887,10 @@ EVDEV_OPEN and EVDEV_CLOSE, that event will toggle the squelch.
 .B GPIO_SQL_PIN
 If SQL_DET is set to GPIO this configuration variable is used to choose which
 GPIO pin to use for squelch input. The most common name is gpio<number>, like
-gpio4. Some GPIO drivers use more complex names, like gpio33_pe11.
+gpio4. Some GPIO drivers use more complex names, like gpio33_pe11. If inverted
+operation is desired, prefix the pin name with an exclamation mark (!).
+
+Example: GPIO_SQL_PIN=!gpio4
 .TP
 .B SIGLEV_DET
 Choose which type of signal level detector to use. There are two choices,
@@ -995,7 +1007,11 @@ to use the internal software
 DTMF decoder. To use the S54S interface featuring a hardware DTMF decoder, set
 it to
 .B S54S.
-Setting it to
+To control it over a pseudo tty device set it to
+.B PTY.
+Setting it to PTY will install the PTY dtmf decoder. SvxLink creates a symlink
+linked to a slave pty device on runtime. The name has to be defined with
+DTMF_PTY.
 .B NONE
 or commenting it out will disable DTMF detection.
 .TP
@@ -1024,6 +1040,20 @@ new one. A good default value is 50-100ms.
 .B DTMF_SERIAL
 When using an external hardware DTMF decoder this config variable is used to
 specify a serial port (e.g. /dev/ttyS0).
+.TP
+.B DTMF_PTY
+When using the PTY DTMF "decoder" this configuration variable will set the path
+to the PTY slave softlink that the external interface script use to communicate
+to SvxLink. Over this symlink a very easy communication protocol is used to
+tell SvxLink received DTMF digits: 0-9, A-F, *, #. "E" is the same as "*" and
+"F" is the same as "#". Sending a digit tell SvxLink when it starts. To tell
+SvxLink that the digit has ended, send a space character.
+
+The PTY DTMF "decoder" can be used by an external script to interface custom
+devices, modems or other hardware to SvxLink. Look for nhrcx.pl to see an
+example.
+
+Example: /tmp/rx1_dtmf.
 .TP
 .B DTMF_MAX_FWD_TWIST
 DTMF use two tones to encode digits 0-9, A-F. These two tones should normally
@@ -1272,9 +1302,12 @@ channels as two mono channels. Legal values are 0 or 1.
 .TP
 .B PTT_TYPE
 Use this configuration variable to specify which type of hardware to use to
-control the PTT.  Specify "SerialPin" for using a pin in the serial port or
-"GPIO" to use a pin in a GPIO port. Set PTT_TYPE to "Dummy" or "NONE" to not
-use any PTT hardware at all. It is an error to not specify PTT_TYPE.
+control the PTT.  Specify "SerialPin" for using a pin in the serial port,
+"GPIO" to use a pin in a GPIO port or "PTY" if you want to use an external
+interface script via a pseudo tty port. 
+
+Set PTT_TYPE to "Dummy" or "NONE"
+to not use any PTT hardware at all. It is an error to not specify PTT_TYPE.
 
 Use PTT_PIN to specify the pin to use for "SerialPin" or "GPIO".
 .TP
@@ -1295,6 +1328,15 @@ Some GPIO drivers use more complex pin names like gpio33_pe11.  Have a look at
 the USING GPIO section for information on how to set up the operating system.
 Normally, the pin will be active high but if the pin name is prefixed with an
 exclamation mark it will be active low instead.
+.TP
+.B PTT_PTY
+If PTT_TYPE is set to "PTY" this configuration variable will set the path for
+the PTY slave softlink that is used by the external script to communicate to
+SvxLink.
+
+SvxLink sends a 'T' to start transmitting and a 'R' to turn the transmitter
+off.  This can be used by an external script to interface custom devices,
+modems or other hardware to SvxLink.  Look for nhrcx.pl to see an example.
 .TP
 .B SERIAL_SET_PINS
 Set the specified serial port pins to a static state. This can be good if using

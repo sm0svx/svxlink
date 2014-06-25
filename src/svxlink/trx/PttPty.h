@@ -1,12 +1,12 @@
 /**
-@file	 DtmfDecoder.cpp
-@brief   This file contains the base class for implementing a DTMF decoder
-@author  Tobias Blomberg / SM0SVX
-@date	 2008-02-04
+@file	 PttPty.h
+@brief   A PTT hardware controller using a PTY to signal an external script
+@author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
+@date	 2014-03-17
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,7 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
+#ifndef PTT_PTY_INCLUDED
+#define PTT_PTY_INCLUDED
 
 
 /****************************************************************************
@@ -33,8 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
-#include <cstdlib>
+#include <string>
 
 
 /****************************************************************************
@@ -51,41 +51,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "DtmfDecoder.h"
-#include "SwDtmfDecoder.h"
-#include "S54sDtmfDecoder.h"
-#include "PtyDtmfDecoder.h"
+#include "Ptt.h"
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Forward declarations
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+class Pty;
+
+
+/****************************************************************************
+ *
+ * Namespace
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
+
 
 
 /****************************************************************************
  *
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
  *
  ****************************************************************************/
 
@@ -99,80 +95,64 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
-
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
+/**
+@brief	A PTT hardware controller using a PTY to signal an external script
+@author Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
+@date   2014-05-05
+*/
+class PttPty : public Ptt
 {
-  DtmfDecoder *dec = 0;
-  string type;
-  cfg.getValue(name, "DTMF_DEC_TYPE", type);
-  if (type == "INTERNAL")
-  {
-    dec = new SwDtmfDecoder(cfg, name);
-  }
-  else if (type == "S54S")
-  {
-    dec = new S54sDtmfDecoder(cfg, name);
-  }
-  else if (type == "PTY")
-  {
-    dec = new PtyDtmfDecoder(cfg, name);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown DTMF decoder type \"" << type << "\" "
-         << "specified for " << name << "/DTMF_DEC_TYPE. "
-      	 << "Legal values are: \"NONE\", \"INTERNAL\", \"PTY\" or \"S54S\"\n";
-  }
-  
-  return dec;
-  
-} /* DtmfDecoder::create */
+  public:
+    struct Factory : public PttFactory<PttPty>
+    {
+      Factory(void) : PttFactory<PttPty>("PTY") {}
+    };
+
+    /**
+     * @brief 	Default constructor
+     */
+    PttPty(void);
+
+    /**
+     * @brief 	Destructor
+     */
+    ~PttPty(void);
+
+    /**
+     * @brief 	Initialize the PTT hardware
+     * @param 	cfg An initialized config object
+     * @param   name The name of the config section to read config from
+     * @returns Returns \em true on success or else \em false
+     */
+    virtual bool initialize(Async::Config &cfg, const std::string name);
+
+    /**
+     * @brief 	Set the state of the PTT, TX on or off
+     * @param 	tx_on Set to \em true to turn the transmitter on
+     * @returns Returns \em true on success or else \em false
+     */
+    virtual bool setTxOn(bool tx_on);
+
+  protected:
+
+  private:
+    Pty *pty;
+
+    PttPty(const PttPty&);
+    PttPty& operator=(const PttPty&);
+
+};  /* class PttPty */
 
 
-bool DtmfDecoder::initialize(void)
-{
-  string value;
-  if (cfg().getValue(name(), "DTMF_HANGTIME", value))
-  {
-    m_hangtime = atoi(value.c_str());
-  }
-  
-  return true;
-  
-} /* DtmfDecoder::initialize */
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
-
+#endif /* PTT_PTY_INCLUDED */
 
 
 /*
  * This file has not been truncated
  */
-

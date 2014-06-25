@@ -136,13 +136,14 @@ struct Cmd
  ****************************************************************************/
 
 Directory::Directory(const vector<string>& servers, const string& callsign,
-    const string& password, const string& description)
+    const string& password, const string& description,
+    const IpAddress &bind_ip)
   : com_state(CS_IDLE),       	      	      the_servers(servers),
     the_password(password),   	      	      the_description(""),
     error_str(""),    	      	      	      ctrl_con(0),
     the_status(StationData::STAT_OFFLINE),    reg_refresh_timer(0),
     current_status(StationData::STAT_OFFLINE),server_changed(false),
-    cmd_timer(0)
+    cmd_timer(0), bind_ip(bind_ip)
 {
   the_callsign.resize(callsign.size());
   transform(callsign.begin(), callsign.end(), the_callsign.begin(), ::toupper);
@@ -951,7 +952,7 @@ void Directory::setStatus(StationData::Status new_status)
 
 void Directory::createClientObject(void)
 {
-  ctrl_con = new DirectoryCon(the_servers);
+  ctrl_con = new DirectoryCon(the_servers, bind_ip);
   ctrl_con->ready.connect(mem_fun(*this, &Directory::ctrlSockReady));
   ctrl_con->connected.connect(mem_fun(*this, &Directory::ctrlSockConnected));
   ctrl_con->dataReceived.connect(

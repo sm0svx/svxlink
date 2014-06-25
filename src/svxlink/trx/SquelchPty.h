@@ -1,12 +1,12 @@
 /**
-@file	 SquelchGpio.h
-@brief   A squelch detector that read squelch state from a GPIO port pin
-@author  Jonny Roeker / DG9OAA
-@date	 2013-09-09
+@file	 SquelchPty.h
+@brief   A squelch detector that read squelch state on a pseudo Tty
+@author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
+@date	 2014-05-21
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2013 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2014  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef SQUELCH_GPIO_INCLUDED
-#define SQUELCH_GPIO_INCLUDED
+#ifndef SQUELCH_PTY_INCLUDED
+#define SQUELCH_PTY_INCLUDED
 
 
 /****************************************************************************
@@ -34,7 +34,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <string>
 
 
 /****************************************************************************
@@ -52,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "Squelch.h"
+#include "Pty.h"
 
 
 /****************************************************************************
@@ -60,10 +60,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class Timer;
-};
 
 
 /****************************************************************************
@@ -72,8 +68,7 @@ namespace Async
  *
  ****************************************************************************/
 
-//namespace MyNameSpace
-//{
+using namespace sigc;
 
 
 /****************************************************************************
@@ -107,26 +102,29 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A squelch detector that read squelch state from a GPIO port
-@author Jonny Roeker / DG9OAA
-@date   2013-09-09
+@brief	External squelch detector over a pseudo tty
+@author Tobias Blomberg / SM0SVX
+@date   2014-03-21
 
-This squelch detector read the squelch indicator signal from a GPIO input pin.
-A high level (3.3V) will be interpreted as squelch open and a low level (GND)
-will be interpreted as squelch close.
+This squelch detector read the state of the squelch through a PTY device.  This
+can be used to interface SvxLink to any custom hardware using an interface
+script.
 */
-class SquelchGpio : public Squelch
+class SquelchPty : public Squelch
 {
   public:
     /**
      * @brief 	Default constuctor
      */
-    SquelchGpio(void);
+    SquelchPty(void) : pty(0) {}
 
     /**
      * @brief 	Destructor
      */
-    ~SquelchGpio(void);
+    ~SquelchPty(void)
+    {
+      delete pty;
+    }
 
     /**
      * @brief 	Initialize the squelch detector
@@ -134,25 +132,80 @@ class SquelchGpio : public Squelch
      * @param 	rx_name The name of the RX (config section name)
      * @return	Returns \em true on success or else \em false
      */
-    bool initialize(Async::Config& cfg, const std::string& rx_name);
+    bool initialize(Async::Config& cfg, const std::string& rx_name)
+    {
+      if (!Squelch::initialize(cfg, rx_name))
+      {
+      	return false;
+      }
+
+      std::string link_path;
+      if (!cfg.getValue(rx_name, "PTY_PATH", link_path))
+      {
+        std::cerr << "*** ERROR: Config variable " << rx_name
+                  << "/PTY_PATH not set\n";
+        return false;
+      }
+
+      pty = new Pty(link_path);
+      if (pty == 0)
+      {
+        return false;
+      }
+      pty->cmdReceived.connect(sigc::mem_fun(*this, &SquelchPty::cmdReceived));
+      return pty->open();
+    }
 
   protected:
+    /**
+     * @brief 	Process the incoming samples in the squelch detector
+     * @param 	samples A buffer containing samples
+     * @param 	count The number of samples in the buffer
+     * @return	Return the number of processed samples
+     */
+    int processSamples(const float *samples, int count)
+    {
+      return count;
+    }
 
   private:
-    int           fd;
-    Async::Timer  *timer;
-    bool          active_low;
+    Pty             *pty;
 
-    SquelchGpio(const SquelchGpio&);
-    SquelchGpio& operator=(const SquelchGpio&);
-    void readGpioValueData(void);
+    SquelchPty(const SquelchPty&);
+    SquelchPty& operator=(const SquelchPty&);
 
-};  /* class SquelchGpio */
+    /**
+     * @brief   Called when a command is received on the master PTY
+     * @param   cmd The received command
+     *
+     * We implement a very basic squelch protocol here to interface the
+     * actual squelch detector to SvxLink through a (perl|python|xxx)-script
+     * using a pseudo-tty (PTY). The following commands are understood:
+     *
+     *   'O' -> Squelch is open
+     *   'Z' -> Squelch is closed
+     *
+     * All other commands are ignored.
+     */
+    void cmdReceived(char cmd)
+    {
+      switch (cmd)
+      {
+        case 'O': // The squelch is open
+          setSignalDetected(true);
+          break;
+        case 'Z': // The squelch is closed
+          setSignalDetected(false);
+          break;
+      }
+    } /* cmdReceived */
+
+};  /* class SquelchPty */
 
 
 //} /* namespace */
 
-#endif /* SQUELCH_GPIO_INCLUDED */
+#endif /* SQUELCH_PTY_INCLUDED */
 
 
 

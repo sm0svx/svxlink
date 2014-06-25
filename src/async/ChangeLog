@@ -17,6 +17,17 @@
 * Added a NULL audio encoder that can be used when one does not want audio to
   be sent at all.
 
+* Added the ability to bind TCP client and server sockets to a specific
+  IP-address.
+
+* Serial port settings are now not restored unless they have been explicitly
+  changed using the Serial::setParams function.
+
+* The serial port TX/RX buffers are now only flushed if explicitly specified
+  in the open call.
+
+* The IpAddress class now have an input stream operator.
+
 
 
  1.2.0 -- 01 Dec 2013

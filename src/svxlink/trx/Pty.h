@@ -1,12 +1,12 @@
 /**
-@file	 DtmfDecoder.cpp
-@brief   This file contains the base class for implementing a DTMF decoder
+@file	 Pty.h
+@brief   A class that wrap up some functionality to use a PTY
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-02-04
+@date	 2014-06-07
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,7 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
+#ifndef PTY_INCLUDED
+#define PTY_INCLUDED
 
 
 /****************************************************************************
@@ -33,8 +34,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
-#include <cstdlib>
+#include <sigc++/sigc++.h>
+
+#include <string>
 
 
 /****************************************************************************
@@ -51,41 +53,41 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "DtmfDecoder.h"
-#include "SwDtmfDecoder.h"
-#include "S54sDtmfDecoder.h"
-#include "PtyDtmfDecoder.h"
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Forward declarations
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+namespace Async
+{
+  class FdWatch;
+};
 
+
+/****************************************************************************
+ *
+ * Namespace
+ *
+ ****************************************************************************/
+
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
+
+  
 
 /****************************************************************************
  *
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
  *
  ****************************************************************************/
 
@@ -99,80 +101,93 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
+/**
+@brief	A wrapper class for using a PTY
+@author Tobias Blomberg / SM0SVX
+@date   2014-06-07
 
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
+This class wrap up some functionality that is nice to have when using a PTY.
+*/
+class Pty : public sigc::trackable
 {
-  DtmfDecoder *dec = 0;
-  string type;
-  cfg.getValue(name, "DTMF_DEC_TYPE", type);
-  if (type == "INTERNAL")
-  {
-    dec = new SwDtmfDecoder(cfg, name);
-  }
-  else if (type == "S54S")
-  {
-    dec = new S54sDtmfDecoder(cfg, name);
-  }
-  else if (type == "PTY")
-  {
-    dec = new PtyDtmfDecoder(cfg, name);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown DTMF decoder type \"" << type << "\" "
-         << "specified for " << name << "/DTMF_DEC_TYPE. "
-      	 << "Legal values are: \"NONE\", \"INTERNAL\", \"PTY\" or \"S54S\"\n";
-  }
+  public:
+    /**
+     * @brief 	Default constructor
+     */
+    Pty(const std::string &slave_link="");
   
-  return dec;
+    /**
+     * @brief 	Destructor
+     */
+    ~Pty(void);
   
-} /* DtmfDecoder::create */
+    /**
+     * @brief   Open the PTY
+     * @return  Returns \em true on success or \em false on failure
+     *
+     * Use this function to open the PTY. If the PTY is already open it will
+     * be closed first.
+     */
+    bool open(void);
+
+    /**
+     * @brief   Close the PTY if it's open
+     *
+     * Close the PTY if it's open. This function is safe to call even if
+     * the PTY is not open or if it's just partly opened.
+     */
+    void close(void);
+
+    /**
+     * @brief   Reopen the PTY
+     * @return  Returns \em true on success or \em false on failure
+     *
+     * Try to reopen the PTY. On failure an error message will be printed
+     * and the PTY will stay closed.
+     */
+    bool reopen(void);
+
+    /**
+     * @brief   Write a command to the PTY
+     * @param   cmd The command to send
+     * @return  Returns \em true on success or \em false on failure
+     */
+    bool write(char cmd);
+
+    /**
+     * @brief   Signal that is emitted when a command has been received
+     * @param   cmd The received command
+     */
+    sigc::signal<void, char> cmdReceived;
+    
+  protected:
+    
+  private:
+    std::string     slave_link;
+    int     	    master;
+    int             slave;
+    Async::FdWatch  *watch;
+
+    Pty(const Pty&);
+    Pty& operator=(const Pty&);
+    
+    void charactersReceived(Async::FdWatch *w);
+
+};  /* class Pty */
 
 
-bool DtmfDecoder::initialize(void)
-{
-  string value;
-  if (cfg().getValue(name(), "DTMF_HANGTIME", value))
-  {
-    m_hangtime = atoi(value.c_str());
-  }
-  
-  return true;
-  
-} /* DtmfDecoder::initialize */
+//} /* namespace */
 
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
+#endif /* PTY_INCLUDED */
 
 
 
 /*
  * This file has not been truncated
  */
-
