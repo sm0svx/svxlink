@@ -404,21 +404,25 @@ bool ModuleEchoLink::initialize(void)
     proxy->connect();
   }
 
+  IpAddress bind_addr;
+  if (cfg().getValue(cfgName(), "BIND_ADDR", bind_addr) && bind_addr.isEmpty())
+  {
+    cerr << "*** ERROR: Invalid configuration value for " << cfgName()
+         << "/BIND_ADDR specified.\n";
+    moduleCleanup();
+    return false;
+  }
+
     // Initialize directory server communication
-  dir = new Directory(servers, mycall, password, location);
+  dir = new Directory(servers, mycall, password, location, bind_addr);
   dir->statusChanged.connect(mem_fun(*this, &ModuleEchoLink::onStatusChanged));
   dir->stationListUpdated.connect(
       	  mem_fun(*this, &ModuleEchoLink::onStationListUpdated));
   dir->error.connect(mem_fun(*this, &ModuleEchoLink::onError));
   dir->makeOnline();
   
-  string bind_addr;
-  if (cfg().getValue(cfgName(), "BIND_ADDR", bind_addr) && !bind_addr.empty())
-  {
-    Dispatcher::setBindAddr(bind_addr);
-  }
-
     // Start listening to the EchoLink UDP ports
+  Dispatcher::setBindAddr(bind_addr);
   if (Dispatcher::instance() == 0)
   {
     cerr << "*** ERROR: Could not create EchoLink listener (Dispatcher) "

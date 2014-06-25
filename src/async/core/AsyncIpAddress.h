@@ -178,6 +178,13 @@ class IpAddress
     std::string toString(void) const;
     
     /**
+     * @brief   Set the IP address from a string
+     * @param   str The string to parse (e.g. "192.168.0.1")
+     * @return  Returns \em true on success or else \em false
+     */
+    bool setIpFromString(const std::string &str);
+
+    /**
      * @brief 	Assignment operator.
      * @param 	rhs The address object to assign to this object
      * @return  Returns the new IP address
@@ -229,6 +236,14 @@ class IpAddress
     friend std::ostream& operator<<(std::ostream& os,
 	const Async::IpAddress& ip);
     
+    /**
+     * @brief Input stream operator
+     * @param is The stream to input data from
+     * @param ip The IP address object to store information in
+     */
+    friend std::istream& operator>>(std::istream& is,
+	Async::IpAddress& ip);
+    
   protected:
     
   private:
@@ -238,6 +253,7 @@ class IpAddress
 
 
 std::ostream& operator<<(std::ostream& os, const IpAddress& ip);
+std::istream& operator>>(std::istream& is, IpAddress& ip);
 
 
 } /* namespace */

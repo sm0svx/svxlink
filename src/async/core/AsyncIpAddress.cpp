@@ -142,10 +142,7 @@ IpAddress::IpAddress(void)
 
 IpAddress::IpAddress(const string& addr)
 {
-  if (inet_aton(addr.c_str(), &m_addr) == 0)  // Address is invalid
-  {
-    m_addr.s_addr = INADDR_NONE;
-  }
+  setIpFromString(addr);
 } /* IpAddress::IpAddress */
 
 
@@ -202,9 +199,30 @@ string IpAddress::toString(void) const
 } /* IpAddress::toString */
 
 
+bool IpAddress::setIpFromString(const string &str)
+{
+  if (inet_aton(str.c_str(), &m_addr) == 0)  // Address is invalid
+  {
+    m_addr.s_addr = INADDR_NONE;
+    return false;
+  }
+  return true;
+} /* IpAddress::setIpFromString */
+
+
 std::ostream& Async::operator<<(std::ostream& os, const Async::IpAddress& ip)
 {
   return os << ip.toString();
+} /* Async::operator<< */
+
+
+
+std::istream& Async::operator>>(std::istream& is, Async::IpAddress& ip)
+{
+  string str;
+  is >> str;
+  ip.setIpFromString(str);
+  return is;
 } /* Async::operator<< */
 
 

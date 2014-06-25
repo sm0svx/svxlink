@@ -52,7 +52,7 @@
 * ModuleEchoLink: New config variable REJECT_CONF which when set will reject
   connections from stations that are in conference mode.
 
-* ModuleEchoLink: New config variable BIND_IP which can be set to bind the
+* ModuleEchoLink: New config variable BIND_ADDR which can be set to bind the
   EchoLink UDP sockets to a specific IP-address/interface. This may be
   needed if the computer is fitted with more than one ethernet interface and
   EchoLink should only be used on one of them.

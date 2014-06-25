@@ -113,7 +113,8 @@ using namespace EchoLink;
  *
  ****************************************************************************/
 
-DirectoryCon::DirectoryCon(const vector<string> &servers)
+DirectoryCon::DirectoryCon(const vector<string> &servers,
+                           const IpAddress &bind_ip)
   : servers(servers), client(0), last_disconnect_reason(0), is_ready(false)
 {
   Proxy *proxy = Proxy::instance();
@@ -127,6 +128,7 @@ DirectoryCon::DirectoryCon(const vector<string> &servers)
   else
   {
     client = new TcpClient;
+    client->bind(bind_ip);
     client->connected.connect(connected.make_slot());
     client->disconnected.connect(mem_fun(*this, &DirectoryCon::onDisconnected));
     client->dataReceived.connect(mem_fun(*this, &DirectoryCon::onDataReceived));
