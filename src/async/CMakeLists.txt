@@ -1,0 +1,7 @@
+add_subdirectory(core)
+add_subdirectory(cpp)
+add_subdirectory(audio)
+if(USE_QT)
+  add_subdirectory(qt)
+endif(USE_QT)
+add_subdirectory(demo)

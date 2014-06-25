@@ -70,7 +70,7 @@ DAEMONS_INSTALL	=
 LIBNAME		= echolib
 
 # The version of the produced shared library
-SHLIB_VERSION	= $(ECHOLIB)
+SHLIB_VERSION	= $(LIBECHOLIB)
 
 # Sources needed to build the library
 LIBSRC		= EchoLinkDirectory.cpp EchoLinkQso.cpp rtpacket.cpp \
