@@ -81,7 +81,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "multirate_filter_coeff.h"
 #include "Sel5Decoder.h"
 #include "Emphasis.h"
-
+#include "SquelchPty.h"
 
 /****************************************************************************
  *
@@ -429,11 +429,15 @@ bool LocalRx::initialize(void)
   {
     squelch_det = new SquelchGpio;
   }
+  else if (sql_det_str == "PTY")
+  {
+    squelch_det = new SquelchPty;
+  }
   else
   {
     cerr << "*** ERROR: Unknown squelch type specified in config variable "
       	 << name() << "/SQL_DET. Legal values are: VOX, CTCSS, SIGLEV, "
-	 << "EVDEV, GPIO and SERIAL\n";
+	 << "EVDEV, GPIO, PTY and SERIAL\n";
     // FIXME: Cleanup
     return false;
   }

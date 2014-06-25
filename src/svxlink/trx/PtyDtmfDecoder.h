@@ -1,12 +1,12 @@
 /**
-@file	 DtmfDecoder.cpp
-@brief   This file contains the base class for implementing a DTMF decoder
-@author  Tobias Blomberg / SM0SVX
-@date	 2008-02-04
+@file	 PtyDtmfDecoder.h
+@brief   This file contains a class that add support for the Pty interface
+@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@date	 2014-03-21
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2014  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,6 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
+#ifndef PTY_DTMF_DECODER_INCLUDED
+#define PTY_DTMF_DECODER_INCLUDED
 
 
 /****************************************************************************
@@ -33,8 +35,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
-#include <cstdlib>
 
 
 /****************************************************************************
@@ -51,41 +51,30 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "DtmfDecoder.h"
-#include "SwDtmfDecoder.h"
-#include "S54sDtmfDecoder.h"
-#include "PtyDtmfDecoder.h"
+#include "HwDtmfDecoder.h"
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Forward declarations
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+class Pty;
 
+
+/****************************************************************************
+ *
+ * Namespace
+ *
+ ****************************************************************************/
+
+//namespace MyNameSpace
+//{
 
 /****************************************************************************
  *
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
  *
  ****************************************************************************/
 
@@ -99,76 +88,63 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
-
-
-/****************************************************************************
+/**
+ * @brief   This class add support for the Pty interface board
+ * @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+ * @date    2014-03-21
  *
- * Public member functions
- *
- ****************************************************************************/
-
-DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
+ * This class implements support for an external DTMF decoder interfaced via
+ * a PTY device. DTMF digits can be fed into SvxLink from an external script
+ * for example. Signalling a DTMF digit is a two step process. One need to
+ * indicate both when a digit starts and when it stops so that SvxLink can
+ * measure the length of the digit. Digit start is indicated by sending the
+ * actual digit (0-9, A-F, *, #). "E" is the same as "*" and "F" is the same
+ * as "#". To indicate digit end, send a space character.
+ */
+class PtyDtmfDecoder : public HwDtmfDecoder
 {
-  DtmfDecoder *dec = 0;
-  string type;
-  cfg.getValue(name, "DTMF_DEC_TYPE", type);
-  if (type == "INTERNAL")
-  {
-    dec = new SwDtmfDecoder(cfg, name);
-  }
-  else if (type == "S54S")
-  {
-    dec = new S54sDtmfDecoder(cfg, name);
-  }
-  else if (type == "PTY")
-  {
-    dec = new PtyDtmfDecoder(cfg, name);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown DTMF decoder type \"" << type << "\" "
-         << "specified for " << name << "/DTMF_DEC_TYPE. "
-      	 << "Legal values are: \"NONE\", \"INTERNAL\", \"PTY\" or \"S54S\"\n";
-  }
-  
-  return dec;
-  
-} /* DtmfDecoder::create */
+  public:
+    /**
+     * @brief 	Constructor
+     * @param 	cfg A previously initialised configuration object
+     * @param 	name The name of the receiver configuration section
+     */
+    PtyDtmfDecoder(Async::Config &cfg, const std::string &name);
+
+    /**
+     * @brief 	Destructor
+     */
+    virtual ~PtyDtmfDecoder(void);
+
+    /**
+     * @brief 	Initialize the DTMF decoder
+     * @returns Returns \em true if the initialization was successful or
+     *          else \em false.
+     *
+     * Call this function to initialize the DTMF decoder. It must be called
+     * before using it.
+     */
+    virtual bool initialize(void);
+
+  protected:
+
+  private:
+    Pty *pty;
+
+    void cmdReceived(char cmd);
+
+};  /* class PtyDtmfDecoder */
 
 
-bool DtmfDecoder::initialize(void)
-{
-  string value;
-  if (cfg().getValue(name(), "DTMF_HANGTIME", value))
-  {
-    m_hangtime = atoi(value.c_str());
-  }
-  
-  return true;
-  
-} /* DtmfDecoder::initialize */
+//} /* namespace */
 
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
+#endif /* PTY_DTMF_DECODER_INCLUDED */
 
 
 

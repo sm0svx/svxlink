@@ -1,12 +1,12 @@
 /**
-@file	 DtmfDecoder.cpp
-@brief   This file contains the base class for implementing a DTMF decoder
-@author  Tobias Blomberg / SM0SVX
-@date	 2008-02-04
+@file	 PtyDtmfDecoder.cpp
+@brief   This file contains a class that add support for the Pty interface
+@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@date	 2014-03-21
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2014  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
-#include <cstdlib>
 
 
 /****************************************************************************
@@ -51,10 +50,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "DtmfDecoder.h"
-#include "SwDtmfDecoder.h"
-#include "S54sDtmfDecoder.h"
 #include "PtyDtmfDecoder.h"
+#include "Pty.h"
+
 
 
 /****************************************************************************
@@ -64,6 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace sigc;
 using namespace Async;
 
 
@@ -114,46 +113,44 @@ using namespace Async;
  *
  ****************************************************************************/
 
-DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
+PtyDtmfDecoder::PtyDtmfDecoder(Config &cfg, const string &name)
+  : HwDtmfDecoder(cfg, name), pty(0)
 {
-  DtmfDecoder *dec = 0;
-  string type;
-  cfg.getValue(name, "DTMF_DEC_TYPE", type);
-  if (type == "INTERNAL")
-  {
-    dec = new SwDtmfDecoder(cfg, name);
-  }
-  else if (type == "S54S")
-  {
-    dec = new S54sDtmfDecoder(cfg, name);
-  }
-  else if (type == "PTY")
-  {
-    dec = new PtyDtmfDecoder(cfg, name);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown DTMF decoder type \"" << type << "\" "
-         << "specified for " << name << "/DTMF_DEC_TYPE. "
-      	 << "Legal values are: \"NONE\", \"INTERNAL\", \"PTY\" or \"S54S\"\n";
-  }
-  
-  return dec;
-  
-} /* DtmfDecoder::create */
+
+} /* PtyDtmfDecoder::PtyDtmfDecoder */
 
 
-bool DtmfDecoder::initialize(void)
+PtyDtmfDecoder::~PtyDtmfDecoder(void)
 {
-  string value;
-  if (cfg().getValue(name(), "DTMF_HANGTIME", value))
+  delete pty;
+  pty = 0;
+} /* PtyDtmfDecoder::~PtyDtmfDecoder */
+
+
+bool PtyDtmfDecoder::initialize(void)
+{
+  if (!HwDtmfDecoder::initialize())
   {
-    m_hangtime = atoi(value.c_str());
+    return false;
   }
-  
-  return true;
-  
-} /* DtmfDecoder::initialize */
+
+  string dtmf_pty;
+  if (!cfg().getValue(name(), "DTMF_PTY", dtmf_pty))
+  {
+    cerr << "*** ERROR: Config variable " << name()
+      	 << "/DTMF_PTY not specified\n";
+    return false;
+  }
+
+  pty = new Pty(dtmf_pty);
+  if (pty == 0)
+  {
+    return false;
+  }
+  pty->cmdReceived.connect(sigc::mem_fun(*this, &PtyDtmfDecoder::cmdReceived));
+  return pty->open();
+
+} /* PtyDtmfDecoder::initialize */
 
 
 /****************************************************************************
@@ -164,11 +161,39 @@ bool DtmfDecoder::initialize(void)
 
 
 
+
 /****************************************************************************
  *
  * Private member functions
  *
  ****************************************************************************/
+
+void PtyDtmfDecoder::cmdReceived(char cmd)
+{
+  if (cmd == ' ')
+  {
+    digitIdle(); // DTMF digit deactivated
+  }
+  else if (((cmd >= '0') && (cmd <= '9')) ||
+           ((cmd >= 'A') && (cmd <= 'D')) ||
+           (cmd == '*') ||
+           (cmd == '#'))
+  {
+    digitActive(cmd); // DTMF digit activated
+  }
+  else if (cmd == 'E')
+  {
+    digitActive('*'); // DTMF digit E==* activated
+  }
+  else if (cmd == 'F')
+  {
+    digitActive('#'); // DTMF digit F==# activated
+  }
+  else
+  {
+    cerr << "*** WARNING: Illegal DTMF PTY command received: " << cmd << endl;
+  }
+} /* PtyDtmfDecoder::charactersReceived */
 
 
 
