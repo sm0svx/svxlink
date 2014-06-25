@@ -38,6 +38,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 # Optional parts
 option(USE_QT "Build Qt applications and libs" ON)
+option(BUILD_STATIC_LIBS "Build static libraries in addition to dynamic" OFF)
 
 # The sample rate used internally in SvxLink
 if(NOT DEFINED INTERNAL_SAMPLE_RATE)

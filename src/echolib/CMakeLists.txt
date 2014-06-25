@@ -31,14 +31,16 @@ foreach(incfile ${EXPINC})
   expinc(${incfile})
 endforeach(incfile)
 
-# Build both a shared and a static library
+# Build a shared library and a static library if configured
 add_library(${LIBNAME} SHARED ${LIBSRC})
 set_target_properties(${LIBNAME} PROPERTIES VERSION ${VER_LIBECHOLIB}
   SOVERSION ${VER_LIBECHOLIB_SOVERSION})
 target_link_libraries(${LIBNAME} ${LIBS})
-add_library(${LIBNAME}_static STATIC ${LIBSRC})
-set_target_properties(${LIBNAME}_static PROPERTIES OUTPUT_NAME ${LIBNAME})
-target_link_libraries(${LIBNAME}_static ${LIBS})
+if (BUILD_STATIC_LIBS)
+  add_library(${LIBNAME}_static STATIC ${LIBSRC})
+  set_target_properties(${LIBNAME}_static PROPERTIES OUTPUT_NAME ${LIBNAME})
+  target_link_libraries(${LIBNAME}_static ${LIBS})
+endif(BUILD_STATIC_LIBS)
 
 # Find the popt library
 find_package(Popt REQUIRED)
@@ -56,5 +58,8 @@ target_link_libraries(echolib_test ${LIBS} ${POPT_LIBRARIES} echolib asynccpp
                         asyncaudio asynccore)
 
 # Install files
-install(TARGETS ${LIBNAME} ${LIBNAME}_static DESTINATION ${LIB_INSTALL_DIR})
+install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
+if (BUILD_STATIC_LIBS)
+  install(TARGETS ${LIBNAME}_static DESTINATION ${LIB_INSTALL_DIR})
+endif(BUILD_STATIC_LIBS)
 install(FILES ${INSTALL_INC} DESTINATION ${SVX_INCLUDE_INSTALL_DIR})

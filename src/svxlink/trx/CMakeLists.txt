@@ -40,4 +40,4 @@ add_library(${LIBNAME} STATIC ${LIBSRC} ${VERSION_DEPENDS})
 target_link_libraries(${LIBNAME} ${LIBS})
 
 # Install targets
-install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
+#install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})
