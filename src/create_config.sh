@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 SRC_ROOT=$(cd $(dirname $0); pwd)
 
