@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2014  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -148,7 +148,7 @@ bool S54sDtmfDecoder::initialize(void)
   }
   
   serial = new Serial(serial_dev);
-  if (!serial->open())
+  if (!serial->open(true))
   {
     cerr << "*** ERROR: Could not open the serial port " << serial_dev
          << " specified in " << name() << "/DTMF_SERIAL\n";

@@ -173,6 +173,8 @@ class TcpClient : public TcpConnection
      */
     ~TcpClient(void);
     
+    void bind(const IpAddress& bind_ip);
+
     /**
      * @brief 	Connect to the remote host
      * @param 	remote_host   The hostname of the remote host
@@ -229,6 +231,7 @@ class TcpClient : public TcpConnection
     std::string       remote_host;
     int       	      sock;
     FdWatch *         wr_watch;
+    Async::IpAddress  bind_ip;
     
     void dnsResultsReady(DnsLookup& dns_lookup);
     void connectToRemote(void);

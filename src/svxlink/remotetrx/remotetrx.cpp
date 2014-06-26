@@ -67,6 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <Rx.h>
 #include <Tx.h>
 #include <common.h>
+#include <config.h>
 
 
 
@@ -387,16 +388,16 @@ int main(int argc, char **argv)
     cfg_filename += "/.svxlink/remotetrx.conf";
     if (!cfg.open(cfg_filename))
     {
-      cfg_filename = "/etc/svxlink/remotetrx.conf";
+      cfg_filename = SVX_SYSCONF_INSTALL_DIR "/remotetrx.conf";
       if (!cfg.open(cfg_filename))
       {
-	cfg_filename = "/etc/remotetrx.conf";
+	cfg_filename = SYSCONF_INSTALL_DIR "/remotetrx.conf";
 	if (!cfg.open(cfg_filename))
 	{
 	  cerr << "*** ERROR: Could not open configuration file. Tried:\n"
       	       << "\t" << home_dir << "/.svxlink/remotetrx.conf\n"
-      	       << "\t/etc/svxlink/remotetrx.conf\n"
-	       << "\t/etc/remotetrx.conf\n"
+      	       << "\t" SVX_SYSCONF_INSTALL_DIR "/remotetrx.conf\n"
+	       << "\t" SYSCONF_INSTALL_DIR "/remotetrx.conf\n"
 	       << "Possible reasons for failure are: None of the files exist,\n"
 	       << "you do not have permission to read the file or there was a\n"
 	       << "syntax error in the file\n";

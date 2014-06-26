@@ -118,7 +118,7 @@ using namespace Async;
  ****************************************************************************/
 
 SquelchGpio::SquelchGpio(void)
-  : fd(-1), timer(0)
+  : fd(-1), timer(0), active_low(false)
 {
   
 } /* SquelchGpio::SquelchGpio */
@@ -149,6 +149,12 @@ bool SquelchGpio::initialize(Async::Config& cfg, const std::string& rx_name)
     cerr << "*** ERROR: Config variable " << rx_name <<
             "/GPIO_SQL_PIN not set or invalid\n";
     return false;
+  }
+
+  if ((sql_pin.size() > 1) && (sql_pin[0] == '!'))
+  {
+    active_low = true;
+    sql_pin.erase(0, 1);
   }
 
   stringstream ss;
@@ -222,11 +228,11 @@ void SquelchGpio::readGpioValueData(void)
 
   if (!signalDetected() && (value == '1'))
   {
-    setSignalDetected(true);
+    setSignalDetected(active_low ^ true);
   }
   else if (signalDetected() && (value == '0'))
   {
-    setSignalDetected(false);
+    setSignalDetected(active_low ^ false);
   }
 } /* SquelchGpio::readGpioValueData */
 

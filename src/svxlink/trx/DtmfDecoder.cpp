@@ -55,7 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SwDtmfDecoder.h"
 #include "S54sDtmfDecoder.h"
 #include "AfskDtmfDecoder.h"
-
+#include "PtyDtmfDecoder.h"
 
 
 /****************************************************************************
@@ -132,11 +132,15 @@ DtmfDecoder *DtmfDecoder::create(Rx *rx, Config &cfg, const string& name)
   {
     dec = new AfskDtmfDecoder(rx, cfg, name);
   }
+  else if (type == "PTY")
+  {
+    dec = new PtyDtmfDecoder(cfg, name);
+  }
   else
   {
     cerr << "*** ERROR: Unknown DTMF decoder type \"" << type << "\" "
          << "specified for " << name << "/DTMF_DEC_TYPE. "
-      	 << "Legal values are: \"NONE\", \"INTERNAL\" or \"S54S\"\n";
+      	 << "Legal values are: \"NONE\", \"INTERNAL\", \"PTY\" or \"S54S\"\n";
   }
   
   return dec;

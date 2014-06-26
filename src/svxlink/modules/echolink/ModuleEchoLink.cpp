@@ -157,7 +157,7 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
     reject_incoming_regex(0), accept_incoming_regex(0),
     reject_outgoing_regex(0), accept_outgoing_regex(0), splitter(0),
     listen_only_valve(0), selector(0), num_con_max(0), num_con_ttl(5*60),
-    num_con_block_time(120*60), num_con_update_timer(0),
+    num_con_block_time(120*60), num_con_update_timer(0), reject_conf(false),
     autocon_echolink_id(0), autocon_time(DEFAULT_AUTOCON_TIME),
     autocon_timer(0), proxy(0)
 {
@@ -385,6 +385,7 @@ bool ModuleEchoLink::initialize(void)
     return false;
   }
   
+  cfg().getValue(cfgName(), "REJECT_CONF", reject_conf);
   cfg().getValue(cfgName(), "AUTOCON_ECHOLINK_ID", autocon_echolink_id);
   int autocon_time_secs = autocon_time / 1000;
   cfg().getValue(cfgName(), "AUTOCON_TIME", autocon_time_secs);
@@ -403,8 +404,17 @@ bool ModuleEchoLink::initialize(void)
     proxy->connect();
   }
 
+  IpAddress bind_addr;
+  if (cfg().getValue(cfgName(), "BIND_ADDR", bind_addr) && bind_addr.isEmpty())
+  {
+    cerr << "*** ERROR: Invalid configuration value for " << cfgName()
+         << "/BIND_ADDR specified.\n";
+    moduleCleanup();
+    return false;
+  }
+
     // Initialize directory server communication
-  dir = new Directory(servers, mycall, password, location);
+  dir = new Directory(servers, mycall, password, location, bind_addr);
   dir->statusChanged.connect(mem_fun(*this, &ModuleEchoLink::onStatusChanged));
   dir->stationListUpdated.connect(
       	  mem_fun(*this, &ModuleEchoLink::onStationListUpdated));
@@ -412,6 +422,7 @@ bool ModuleEchoLink::initialize(void)
   dir->makeOnline();
   
     // Start listening to the EchoLink UDP ports
+  Dispatcher::setBindAddr(bind_addr);
   if (Dispatcher::instance() == 0)
   {
     cerr << "*** ERROR: Could not create EchoLink listener (Dispatcher) "
@@ -1015,12 +1026,14 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   }
 
   if ((regexec(reject_incoming_regex, callsign.c_str(), 0, 0, 0) == 0) ||
-      (regexec(accept_incoming_regex, callsign.c_str(), 0, 0, 0) != 0))
+      (regexec(accept_incoming_regex, callsign.c_str(), 0, 0, 0) != 0) ||
+      (reject_conf && (name.size() > 3) &&
+       (name.rfind("CONF") == (name.size()-4))))
   {
     qso->reject(true);
     return;
   }
-  
+
   if (!isActive())
   {
     remote_activation = true;
@@ -1174,6 +1187,16 @@ void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
 
   if ((talker == 0) && is_receiving)
   {
+    if (reject_conf)
+    {
+      string name = qso->remoteName();
+      if ((name.size() > 3) && (name.rfind("CONF") == (name.size()-4)))
+      {
+	qso->sendChatData("Connects from a conference are not allowed");
+	qso->disconnect();
+	return;
+      }
+    }
     talker = qso;
     broadcastTalkerStatus();
   }

@@ -64,6 +64,14 @@ expression. For more information on the syntax, see the
 .B REGULAR EXPRESSIONS
 chapter below.
 .TP
+.B REJECT_CONF
+When this is set to 1, reject all incoming connections where the name
+of the remote station ends in the word CONF. A message will be sent
+to the remote station indicating that the connection was rejected.
+This blocks connects from stations that are in conference mode.
+When a station enters conference mode after connecting, and transmits
+towards us, it will be disconnected as well.
+.TP
 .B CHECK_NR_CONNECTS
 If a station connects to often it can be blocked for a configurable time
 span. Example:
@@ -113,6 +121,14 @@ Set the TCP port used for connecing to an EchoLink proxy server. Default is
 .B PROXY_PASSWORD
 Set the EchoLink proxy password used when connecting to an EchoLink proxy
 server. Use the password PUBLIC for public proxy servers.
+.TP
+.B BIND_ADDR
+This configuration variable can be set to bind the EchoLink network sockets to
+a specific IP-address/interface. This may be needed if the computer is fitted
+with more than one ethernet interface and EchoLink should only be used on one
+of them.
+
+Example: BIND_ADDR=192.168.0.1
 .TP
 .B MAX_QSOS
 The maximum number of stations that can participate in a conference QSO on this

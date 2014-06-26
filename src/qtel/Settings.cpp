@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <config.h>
 
 
 /****************************************************************************
@@ -131,7 +132,8 @@ using namespace std;
 
 #define CONF_AUDIO_DEVICE_DEFAULT 	"alsa:default"
 #define CONF_USE_FULL_DUPLEX_DEFAULT    false
-#define CONF_CONNECT_SOUND_DEFAULT 	"/usr/share/qtel/sounds/connect.raw"
+#define CONF_CONNECT_SOUND_DEFAULT 	SHARE_INSTALL_PREFIX \
+                                        "/qtel/sounds/connect.raw"
 #define CONF_CARD_SAMPLE_RATE_DEFAULT   48000
 
 #define CONF_CHAT_ENCODING_DEFAULT	"ISO8859-1"

@@ -138,10 +138,12 @@ class Directory : public sigc::trackable
      * @param 	callsign    The callsign to register in the server
      * @param 	password    The password for the given callsign
      * @param 	description A description/location string
+     * @param   bind_ip     The source IP address to use
      */
     Directory(const std::vector<std::string>& servers,
               const std::string& callsign,
-      	      const std::string& password, const std::string& description="");
+      	      const std::string& password, const std::string& description="",
+              const Async::IpAddress &bind_ip=Async::IpAddress());
   
     /**
      * @brief 	Destructor
@@ -394,6 +396,7 @@ class Directory : public sigc::trackable
     StationData::Status       current_status;
     bool      	      	      server_changed;
     Async::Timer *            cmd_timer;
+    Async::IpAddress          bind_ip;
     
     Directory(const Directory&);
     Directory& operator =(const Directory&);

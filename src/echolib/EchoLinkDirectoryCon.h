@@ -128,7 +128,8 @@ class DirectoryCon : public sigc::trackable
      * @brief 	Constructor
      * @param   servers A list of possible directory servers to use
      */
-    DirectoryCon(const std::vector<std::string> &servers);
+    DirectoryCon(const std::vector<std::string> &servers,
+                 const Async::IpAddress &bind_ip);
   
     /**
      * @brief 	Destructor
