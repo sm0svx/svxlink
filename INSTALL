@@ -40,5 +40,5 @@ command line switch are:
   BUILD_STATIC_LIBS -- Set to YES to build static libraries as well as dynamic
   LIB_SUFFIX        -- Set to 64 on 64 bit systems to install in the lib64 dir
 
-For more detailed information, see http://svxlink.sf.net/
+For more detailed information, see http://www.svxlink.org/
 
