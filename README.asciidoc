@@ -1,0 +1,24 @@
+SvxLink
+=======
+
+SvxLink is a project that develops software targeting the ham radio community. It started out as an EchoLink application
+for Linux back in 2003 but have now evolved to be something much more advanced.
+
+== SvxLink Server ==
+The SvxLink Server is a general purpose voice services
+system, which when connected to a transceiver, can act as both an advanced repeater system and can also operate on a
+simplex channel. One could call it a radio operating system.
+
+SvxLink is very extensible and modular. Voice services are implemented as modules which are isolated from each other.
+Modules can be implemented in either C++ or TCL. Examples of modules are:
+
+* Help               -- A help system
+* Parrot             -- Play back everything that is received
+* EchoLink           -- Connect to other EchoLink stations
+* DtmfRepeater       -- Repeater received DTMF digits
+* TclVoiceMail       -- Send voice mail to other local users
+* PropagationMonitor -- Announce propagation warnings from dxmaps.com
+* SelCall            -- Send selective calling sequences by entering a DTMF code
+
+== Qtel ==
+Qtel, The Qt EchoLink client, is a graphical application used to access the EchoLink network.
