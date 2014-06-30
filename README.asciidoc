@@ -33,7 +33,7 @@ These are some of the resources connected to SvxLink:
 :gh_wiki:     https://github.com/sm0svx/svxlink/wiki
 :gh_releases: https://github.com/sm0svx/svxlink/releases
 :sf_summary:  http://svxlink.sourceforge.net/
-:sf_dl:       http://sourceforge.net/projects/svxlink/files
+:sf_dl:       http://sourceforge.net/projects/svxlink/files/sounds
 :sf_lists:    http://sourceforge.net/p/svxlink/mailman
 
 * {gh_main}[GitHub main page] -- The main project site
@@ -42,4 +42,3 @@ These are some of the resources connected to SvxLink:
 * {sf_summary}[The SvxLink SourcForge site] -- Old project site
 * {sf_dl}[Downloads] -- Download sound files for SvxLink Server from here
 * {sf_lists}[Mailing Lists] -- Communicate with other SvxLink users
-
