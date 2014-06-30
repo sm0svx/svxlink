@@ -1,0 +1,86 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of MODULESELCALLENC.CONF</TITLE>
+</HEAD><BODY>
+<H1>MODULESELCALLENC.CONF</H1>
+Section: File Formats (5)<BR>Updated: MAY 2011<BR><A HREF="#index">Index</A>
+<A HREF="../index.html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+ModuleSelCallEnc.conf - Configuration file for the SvxLink server
+SelCallEnc module
+<A NAME="lbAC">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<B>svxlink</B>
+
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration for the SelCallEnc module.
+
+The SelCallEnc module implements the possibility to send Selective Tone
+Sequences like CCIR, ZVEI, EEA etc.
+<A NAME="lbAD">&nbsp;</A>
+<H2>CONFIGURATION VARIABLES</H2>
+
+There are a couple of configuration variables that are common to all modules.
+The documentation for these can be found in the
+<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
+
+manual page.
+
+The SelCallEnc module does not have any module specific configuration
+variables.
+<A NAME="lbAE">&nbsp;</A>
+<H2>FILES</H2>
+
+<DL COMPACT>
+<DT><I>/etc/svxlink/svxlink.conf</I> (or deprecated <I>/etc/svxlink.conf</I>)
+
+<DD>
+The system wide configuration file.
+<DT><I>~/.svxlink/svxlink.conf</I>
+
+<DD>
+Per user configuration file.
+<DT><I>/etc/svxlink/svxlink.d/ModuleSelCallEnc.conf</I>
+
+<DD>
+Global modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+<DT><I>~/.svxlink/svxlink.d/ModuleSelCallEnc.conf</I>
+
+<DD>
+Per user modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+<DT></DL>
+<A NAME="lbAF">&nbsp;</A>
+<H2>AUTHOR</H2>
+
+<DD>
+Martin Burkhardt (DF1AMB) &lt;df1amb at t minuns online dot de&gt;
+<A NAME="lbAG">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
+
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAD">CONFIGURATION VARIABLES</A><DD>
+<DT><A HREF="#lbAE">FILES</A><DD>
+<DT><A HREF="#lbAF">AUTHOR</A><DD>
+<DT><A HREF="#lbAG">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 16:10:17 GMT, June 30, 2014
+</BODY>
+</HTML>

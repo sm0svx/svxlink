@@ -1,0 +1,184 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of MODULEPROPAGATIONMONITOR.CONF</TITLE>
+</HEAD><BODY>
+<H1>MODULEPROPAGATIONMONITOR.CONF</H1>
+Section: File Formats (5)<BR>Updated: MAY 2011<BR><A HREF="#index">Index</A>
+<A HREF="../index.html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+ModulePropagationMonitor.conf - Configuration file for the SvxLink server
+PropagationMonitor module
+<A NAME="lbAC">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<B>svxlink</B>
+
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration for the PropagationMonitor module.
+
+The PropagationMonitor module is used to announce propagation alerts
+received from vhfdx.info or gooddx.net. The process of receiving the emails
+is outside of this module and have to be arranged separately. This module
+expect to find new emails under the spool directory. Messages from VHFDX 
+should be put in a
+<I>vhfdx</I>
+
+subdirectory and messages from GoodDX should be put in a
+<I>dxrobot</I>
+
+subdirectory. This module must have write access to the subdirectories under
+the spool directory since it will move processed messages to an archive
+directory.
+
+<A NAME="lbAD">&nbsp;</A>
+<H2>CONFIGURATION VARIABLES</H2>
+
+There are a couple of configuration variables that are common to all modules.
+The documentation for these can be found in the
+<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
+
+manual page.
+
+Here is the description of all module specific configuration
+variables that the SvxLink PropagationMonitor module understands.
+<A NAME="lbAE">&nbsp;</A>
+<H3>ModulePropagationMonitor</H3>
+
+<DL COMPACT>
+<DT><B>SPOOL_DIR</B>
+
+<DD>
+Specify which directory to read incoming emails from. The default is
+<I>/var/spool/svxlink/propagation_monitor</I>.
+
+</DL>
+<A NAME="lbAF">&nbsp;</A>
+<H2>RECEIVING THE ALERT EMAILS</H2>
+
+The first step in setting up the flow of alert emails is to actually getting
+them to the computer running SvxLink and, on that computer, to the user
+SvxLink run as. This can be done in two ways. One way is to forward emails
+directly via SMTP to the  computer, if you have that possibility. A more
+common case propably is that you want to fetch alert emails using POP from
+some email account. The latter can be done using the
+<B><A HREF="../man1/fetchmail.1.html">fetchmail</A></B>(1)
+
+utility for example.
+
+The next step is to store incoming emails in files under the propagation
+monitor spool directory. This is done using the
+<B><A HREF="../man1/procmail.1.html">procmail</A></B>(1)
+
+utility. When an incoming email is received, the mail server call procmail
+which look for a configuration file in the destination users home directory.
+For SvxLink, the home directory should be set to
+<I>/etc/svxlink</I>.
+
+In that directory a procmail configuration file,
+<B>.procmailrc</B>,
+
+is installed by default. The syntax is a bit cryptic but the file contains
+some helpful comments to help you understand it. Have a look at the
+<B>procmailrc</B> (5) and <B><A HREF="../man5/procmailex.5.html">procmailex</A></B>(5)
+
+manual pages for more details.
+
+Finally, of course, you need to register with the vhfdx.info and/or gooddx.net
+site and set up for what geographic area and which bands you wish to receive
+alert emails for.
+<A NAME="lbAG">&nbsp;</A>
+<H2>SELINUX</H2>
+
+Some Linux distributions have the SELinux security framework enabled.
+This is true for RedHat based distributions, like Fedora for example.
+SELinux will by default deny procmail to write the mail files in the
+propagation monitor spool directory. To fix this, run the following commands:
+<P>
+
+<DL COMPACT><DT><DD>
+semanage fcontext -a -t user_home_t \
+<DL COMPACT><DT><DD>
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;/var/spool/svxlink/propagation_monitor(/.*)?&quot;
+<DL COMPACT><DT><DD>
+restorecon -r /var/spool/svxlink/propagation_monitor
+</DL>
+</DL>
+</DL>
+<A NAME="lbAH">&nbsp;</A>
+<H2>FILES</H2>
+
+<DL COMPACT>
+<DT><I>/etc/svxlink/svxlink.conf</I> (or deprecated <I>/etc/svxlink.conf</I>)
+
+<DD>
+The system wide configuration file.
+<DT><I>~/.svxlink/svxlink.conf</I>
+
+<DD>
+Per user configuration file.
+<DT><I>/etc/svxlink/svxlink.d/ModulePropagationMonitor.conf</I>
+
+<DD>
+Global modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+<DT><I>~/.svxlink/svxlink.d/ModulePropagationMonitor.conf</I>
+
+<DD>
+Per user modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+<DT><I>/var/spool/svxlink/propagation_monitor</I>
+
+<DD>
+Spool directory for alert mails. This is the default path. What path is
+actually used is determined by the SPOOL_DIR configuration variable.
+<DT><I>/etc/svxlink/.procmailrc</I>
+
+<DD>
+The configuration file for procmail. Procmail is used to write incoming
+alert emails into files in the spool directory.
+</DL>
+<A NAME="lbAI">&nbsp;</A>
+<H2>AUTHOR</H2>
+
+Tobias Blomberg (SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;
+<A NAME="lbAJ">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5),
+
+<B><A HREF="../man1/procmail.1.html">procmail</A></B>(1),
+
+<B><A HREF="../man5/procmailrc.5.html">procmailrc</A></B>(5),
+
+<B><A HREF="../man5/procmailex.5.html">procmailex</A></B>(5),
+
+<B><A HREF="../man1/fetchmail.1.html">fetchmail</A></B>(1)
+
+<P>
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAD">CONFIGURATION VARIABLES</A><DD>
+<DL>
+<DT><A HREF="#lbAE">ModulePropagationMonitor</A><DD>
+</DL>
+<DT><A HREF="#lbAF">RECEIVING THE ALERT EMAILS</A><DD>
+<DT><A HREF="#lbAG">SELINUX</A><DD>
+<DT><A HREF="#lbAH">FILES</A><DD>
+<DT><A HREF="#lbAI">AUTHOR</A><DD>
+<DT><A HREF="#lbAJ">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 16:10:17 GMT, June 30, 2014
+</BODY>
+</HTML>

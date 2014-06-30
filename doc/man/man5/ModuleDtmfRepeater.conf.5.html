@@ -1,0 +1,107 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of MODULEDTMFREPEATER.CONF</TITLE>
+</HEAD><BODY>
+<H1>MODULEDTMFREPEATER.CONF</H1>
+Section: File Formats (5)<BR>Updated: MAY 2011<BR><A HREF="#index">Index</A>
+<A HREF="../index.html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+ModuleDtmfRepeater.conf - Configuration file for the SvxLink server DTMF
+Repeater module
+<A NAME="lbAC">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<B>svxlink</B>
+
+is a general purpose voice service system for ham radio use. This man-page
+describe the SvxLink server configuration for the DTMF Repeater module.
+
+The DTMF Repeater module retransmits all received DTMF digits. This can be used
+to control remote systems that is also DTMF controlled. The DTMF muting feature
+should be used on a repeater to not retransmit the received DTMF audio.
+<A NAME="lbAD">&nbsp;</A>
+<H2>CONFIGURATION VARIABLES</H2>
+
+There are a couple of configuration variables that are common to all modules.
+The documentation for these can be found in the
+<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
+
+manual page.
+
+The amplitude, tone length and tone spacing of the generated DTMF digits is
+configured in the configuration section for the LocalTx that is actually
+transmitting the DTMF. Have a look at the documentation for the
+<B>DTMF_TONE_*</B>
+
+configuration variables for a full explanation.
+
+Here is the description of all module specific configuration
+variables that the SvxLink DtmfRepeater module understands.
+<A NAME="lbAE">&nbsp;</A>
+<H3>ModuleDtmfRepeater</H3>
+
+<DL COMPACT>
+<DT><B>REPEAT_DELAY</B>
+
+<DD>
+Specify a time, in milliseconds, that the DTMF Repeater module will wait after
+squelch close before retransmitting received DTMF digits. If zero or not
+specified, SvxLink will try to send the digits as soon as they are received.
+</DL>
+<A NAME="lbAF">&nbsp;</A>
+<H2>FILES</H2>
+
+<DL COMPACT>
+<DT><I>/etc/svxlink/svxlink.conf</I> (or deprecated <I>/etc/svxlink.conf</I>)
+
+<DD>
+The system wide configuration file.
+<DT><I>~/.svxlink/svxlink.conf</I>
+
+<DD>
+Per user configuration file.
+<DT><I>/etc/svxlink/svxlink.d/ModuleDtmfRepeater.conf</I>
+
+<DD>
+Global modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+<DT><I>~/.svxlink/svxlink.d/ModuleDtmfRepeater.conf</I>
+
+<DD>
+Per user modularized configuration file. Depends on the CFG_DIR configuration
+variable setting.
+</DL>
+<A NAME="lbAG">&nbsp;</A>
+<H2>AUTHOR</H2>
+
+Tobias Blomberg (SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;
+<A NAME="lbAH">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
+
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAD">CONFIGURATION VARIABLES</A><DD>
+<DL>
+<DT><A HREF="#lbAE">ModuleDtmfRepeater</A><DD>
+</DL>
+<DT><A HREF="#lbAF">FILES</A><DD>
+<DT><A HREF="#lbAG">AUTHOR</A><DD>
+<DT><A HREF="#lbAH">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 16:10:17 GMT, June 30, 2014
+</BODY>
+</HTML>

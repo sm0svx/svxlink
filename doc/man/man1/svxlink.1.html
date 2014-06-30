@@ -1,0 +1,128 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of SVXLINK</TITLE>
+</HEAD><BODY>
+<H1>SVXLINK</H1>
+Section: User Manuals (1)<BR>Updated: MAY 2011<BR><A HREF="#index">Index</A>
+<A HREF="../index.html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+svxlink - A general purpose voice services system for ham radio use
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>svxlink [--help] [--daemon] [--logfile=</B><I>log file</I><B>] [--config=</B><I>configuration file</I><B>] [--pidfile=</B><I>pid file</I><B>] [--runasuser=</B><I>user name</I><B>]</B>
+
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<B>svxlink</B>
+
+is a general purpose voice service system for ham radio use. The 
+SvxLink project contains multiple applications and this man-page
+describe the SvxLink server.
+<A NAME="lbAE">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>--help</B>
+
+<DD>
+Print a help message and exit.
+<DT><B>--daemon</B>
+
+<DD>
+Start the SvxLink server as a daemon.
+<DT><B>--runasuser</B>
+
+<DD>
+Start the SvxLink server as the specified user. The switch to the new user
+will happen after the log and pid files has been opened.
+<DT><B>--logfile=</B><I>log file</I>
+
+<DD>
+Specify a log file to put all output into. Both stdout and stderr will be redirected to
+the log file.
+<DT><B>--pidfile=</B><I>pid file</I>
+
+<DD>
+Specify a pid file to write the process ID into.
+<DT><B>--config=</B><I>configuration file</I>
+
+<DD>
+Specify which configuration file to use.
+</DL>
+<A NAME="lbAF">&nbsp;</A>
+<H2>FILES</H2>
+
+<DL COMPACT>
+<DT><I>/etc/svxlink.conf</I> (or deprecated <I>/etc/svxlink.conf</I>)
+
+<DD>
+The system wide configuration file. See
+<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
+
+for further details.
+<DT><I>~/.svxlink/svxlink.conf</I>
+
+<DD>
+Per user configuration file. See
+<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
+
+for further details.
+<DT><I>/etc/svxlink/svxlink.d/*</I>
+
+<DD>
+Additional configuration files. Typically one configuration file per module.
+</DL>
+<A NAME="lbAG">&nbsp;</A>
+<H2>ENVIRONMENT</H2>
+
+<DL COMPACT>
+<DT>ASYNC_AUDIO_NOTRIGGER<DD>
+Set this environment variable to 1 if you get an error about
+<B>ioctl: Broken pipe</B>
+
+during startup of the SvxLink server when using OSS audio.
+<DT>HOME<DD>
+Used to find the per user configuration file.
+</DL>
+<A NAME="lbAH">&nbsp;</A>
+<H2>AUTHOR</H2>
+
+Tobias Blomberg (SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;
+<A NAME="lbAI">&nbsp;</A>
+<H2>REPORTING BUGS</H2>
+
+SvxLink Devel &lt;svxlink-devel at lists dot sourceforge dot net&gt;
+<A NAME="lbAJ">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5),
+
+<B><A HREF="../man1/remotetrx.1.html">remotetrx</A></B>(1)
+
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">OPTIONS</A><DD>
+<DT><A HREF="#lbAF">FILES</A><DD>
+<DT><A HREF="#lbAG">ENVIRONMENT</A><DD>
+<DT><A HREF="#lbAH">AUTHOR</A><DD>
+<DT><A HREF="#lbAI">REPORTING BUGS</A><DD>
+<DT><A HREF="#lbAJ">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 16:10:17 GMT, June 30, 2014
+</BODY>
+</HTML>
