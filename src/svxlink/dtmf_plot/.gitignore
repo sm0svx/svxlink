@@ -1,0 +1,10 @@
+/DtmfPlot.cpp
+/DtmfPlot.h
+/depend
+/makefile.root
+/Makefile
+/moc_*.cpp
+/ToneDetector.cpp
+/ToneDetector.h
+/DtmfDecoder.cpp
+/DtmfDecoder.h
