@@ -28,14 +28,14 @@ Complete ChangeLog for Qtel version 1.2.1
 
 
 
-Complete ChangeLog for the EchoLib library version 1.2.0
+Complete ChangeLog for the EchoLib library version 1.2.1
 --------------------------------------------------------
 
 * Nothing new for EchoLib in this release
 
 
 
-Complete ChangeLog for the Async library version 1.2.0
+Complete ChangeLog for the Async library version 1.2.1
 ------------------------------------------------------
 
 * Some sound hardware cause an Alsa failure which SvxLink previously handled
