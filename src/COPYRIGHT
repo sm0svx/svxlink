@@ -14,7 +14,10 @@ Custom license (Aladdin Enterprises):
 MIT License:
         svxlink/trx/Macho.{hpp,cpp}
 
+LGPL-2.1:
+        async/audio/fidlib.*
 
+------------------------------------------------------------------------------
 
 		    GNU GENERAL PUBLIC LICENSE
 		       Version 2, June 1991

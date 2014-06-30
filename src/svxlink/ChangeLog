@@ -1,16 +1,11 @@
- 1.3.1 -- ?? ??? 2014
+ 1.3.1 -- 30 jun 2014
 ----------------------
-
-* Bugfix: Some soundcards have unexpected behaviour which caused an assertion
-  failure in the Alsa code. This is now handled more gracefully.
 
 * Bugfix: The voter may have had a race condition which caused an assertion
   failure. The code is a little bit more forgiving now.
 
 * Bugfix: The voter could cause an assertion failure if a signal level lower
   than -100 were reported from one of the receivers.
-
-* Bugfix: The voter had a bug which caused a crash under certain conditions.
 
 * Bugfix in ModuleTcl example file.
 
