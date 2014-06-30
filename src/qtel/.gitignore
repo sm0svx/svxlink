@@ -1,0 +1,9 @@
+/ComDialogBase.h
+/MainWindowBase.h
+/SettingsDialogBase.h
+/depend
+/version
+/makefile.root
+/moc_*.cpp
+/Makefile
+/qrc_*.cpp

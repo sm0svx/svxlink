@@ -1,4 +1,4 @@
- 1.2.1 -- ?? ??? 2014
+ 1.2.1 -- 30 Jun 2014
 ----------------------
 
 * Some sound hardware cause an Alsa failure which SvxLink previously handled
