@@ -249,14 +249,6 @@ bool LocalRx::initialize(void)
   bool peak_meter = false;
   cfg.getValue(name(), "PEAK_METER", peak_meter);
   
-  /*
-  int dtmf_hangtime = 100;
-  if (cfg.getValue(name(), "DTMF_HANGTIME", value))
-  {
-    dtmf_hangtime = atoi(value.c_str());
-  }
-  */
-  
     // Create the audio IO object
   audio_io = new AudioIO(audio_dev, audio_channel);
   //FIXME: Check that the audio device is correctly initialized
