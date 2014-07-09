@@ -68,7 +68,7 @@ endif()
 # Handle the QUIETLY and REQUIRED arguments and set Speex_FOUND to TRUE if 
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-if(CMAKE_VERSION VERSION_LESS 2.8.3)
+if(CMAKE_VERSION VERSION_LESS 2.8.12)
   find_package_handle_standard_args(Speex
     DEFAULT_MSG
     Speex_LIBRARY Speex_INCLUDE_DIR

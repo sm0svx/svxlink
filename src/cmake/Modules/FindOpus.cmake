@@ -68,7 +68,7 @@ endif()
 # Handle the QUIETLY and REQUIRED arguments and set Opus_FOUND to TRUE if 
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-if(CMAKE_VERSION VERSION_LESS 2.8.3)
+if(CMAKE_VERSION VERSION_LESS 2.8.12)
   find_package_handle_standard_args(Opus
     DEFAULT_MSG
     Opus_LIBRARY Opus_INCLUDE_DIR
