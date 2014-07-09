@@ -74,8 +74,8 @@ if(CMAKE_VERSION VERSION_LESS 2.8.3)
     Opus_LIBRARY Opus_INCLUDE_DIR
   )
 else()
-  find_package_handle_standard_args(OPUS
-    FOUND_VAR Opus_FOUND
+  find_package_handle_standard_args(Opus
+    FOUND_VAR OPUS_FOUND
     REQUIRED_VARS Opus_LIBRARY Opus_INCLUDE_DIR
     VERSION_VAR Opus_VERSION
   )

@@ -74,8 +74,8 @@ if(CMAKE_VERSION VERSION_LESS 2.8.3)
     Speex_LIBRARY Speex_INCLUDE_DIR
   )
 else()
-  find_package_handle_standard_args(SPEEX
-    FOUND_VAR Speex_FOUND
+  find_package_handle_standard_args(Speex
+    FOUND_VAR SPEEX_FOUND
     REQUIRED_VARS Speex_LIBRARY Speex_INCLUDE_DIR
     VERSION_VAR Speex_VERSION
   )
