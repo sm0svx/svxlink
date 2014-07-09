@@ -5,11 +5,18 @@ set(LIBS ${LIBS} ${GSM_LIBRARY})
 
 # Find Speex
 find_package(Speex)
-if(SPEEX_FOUND)
-  include_directories(${SPEEX_INCLUDE_DIRS})
-  add_definitions(${SPEEX_DEFINITIONS})
-  set(LIBS ${LIBS} ${SPEEX_LIBRARIES})
-endif(SPEEX_FOUND)
+if(Speex_FOUND)
+  if(Speex_VERSION_MAJOR)
+    include_directories(${Speex_INCLUDE_DIRS})
+    add_definitions(${Speex_DEFINITIONS})
+    add_definitions("-DSPEEX_MAJOR=${Speex_VERSION_MAJOR}")
+    set(LIBS ${LIBS} ${Speex_LIBRARIES})
+  else()
+    message(WARNING
+      "Found Speex but version could not be resolved. "
+      "Will proceed without Speex.")
+  endif()
+endif(Speex_FOUND)
 
 set(LIBNAME echolib)
 
