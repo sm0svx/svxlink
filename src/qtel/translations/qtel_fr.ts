@@ -8,10 +8,6 @@
         <translation>Erreur Qtel</translation>
     </message>
     <message>
-        <source>Could not create connection to station</source>
-        <translation type="obsolete">Impossible de créer la connexion avec la station</translation>
-    </message>
-    <message>
         <source>Station data not found in directory server.
 Can&apos;t create connection to</source>
         <translation>Les données de la  station ne ce trouve pas dans le serveur d&apos;annuaire.
@@ -217,10 +213,6 @@ Impossible de créer la connexion à </translation>
     <message>
         <source>Qtel v</source>
         <translation>Qtel v</translation>
-    </message>
-    <message>
-        <source> - Qt EchoLink client.</source>
-        <translation type="obsolete"> - Qt EchoLink client.</translation>
     </message>
     <message>
         <source>Copyright (C) 2011 Tobias Blomberg / SM0SVX
@@ -491,16 +483,8 @@ Message</source>
         <translation>Nom</translation>
     </message>
     <message>
-        <source>Directory Server</source>
-        <translation type="obsolete">Serveur d&apos;annuaire</translation>
-    </message>
-    <message>
         <source>Directory Server Settings</source>
         <translation>Paramètre du serveur d&apos;annuaire</translation>
-    </message>
-    <message>
-        <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation type="obsolete">utiliser l&apos;adresse Internet ou IP du serveur d&apos;annuaire EchoLink</translation>
     </message>
     <message>
         <source>Server</source>

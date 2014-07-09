@@ -26,10 +26,6 @@ Can&apos;t create connection to</source>
 Kan ej skapa uppkoppling till</translation>
     </message>
     <message>
-        <source>Could not create connection to station</source>
-        <translation type="obsolete">Kunde inte ansluta till station</translation>
-    </message>
-    <message>
         <source>Could not create connection to remote host</source>
         <translation>Kunde inte ansluta till fjärrdatorn</translation>
     </message>
@@ -44,10 +40,6 @@ Kan ej skapa uppkoppling till</translation>
     <message>
         <source>Could not open speaker audio device</source>
         <translation>Kunde ej öppna ljudenhet för högtalare</translation>
-    </message>
-    <message>
-        <source>Could not create connection to </source>
-        <translation type="obsolete">Kunde inte koppla upp till </translation>
     </message>
     <message>
         <source>Could not create connection to</source>
@@ -494,20 +486,12 @@ meddelande</translation>
         <translation>Namn</translation>
     </message>
     <message>
-        <source>Directory Server</source>
-        <translation type="obsolete">Listserver</translation>
-    </message>
-    <message>
         <source>Directory Server Settings</source>
         <translation>Listserverinställningar</translation>
     </message>
     <message>
         <source>Cancel</source>
         <translation>Avbryt</translation>
-    </message>
-    <message>
-        <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation type="obsolete">Namn eller IP-adress på den EchoLink listserver som skall användas</translation>
     </message>
     <message>
         <source>Refresh time</source>

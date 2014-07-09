@@ -30,10 +30,6 @@ Can&apos;t create connection to</source>
 	Non e possibile collegare a</translation>
     </message>
     <message>
-        <source>Could not create connection to station</source>
-        <translation type="obsolete">Impossibile connettere la stazione </translation>
-    </message>
-    <message>
         <source>Could not create connection to remote host</source>
         <translation>Impossibile connettere il host</translation>
     </message>
@@ -493,10 +489,6 @@ Message</source>
         <translation>Nome</translation>
     </message>
     <message>
-        <source>Directory Server</source>
-        <translation type="obsolete">Catalogo</translation>
-    </message>
-    <message>
         <source>Directory Server Settings</source>
         <translation>Caratteristica del server catalogo</translation>
     </message>
@@ -507,10 +499,6 @@ Message</source>
     <message>
         <source>Cancel</source>
         <translation>Cancellare</translation>
-    </message>
-    <message>
-        <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation type="obsolete">Nome o indirizzo IP del server catalogo</translation>
     </message>
     <message>
         <source>Refresh time</source>

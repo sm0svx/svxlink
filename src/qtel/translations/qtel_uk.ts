@@ -8,10 +8,6 @@
         <translation>Qtel Помилка</translation>
     </message>
     <message>
-        <source>Could not create connection to station</source>
-        <translation type="obsolete">Не можу приєднатися до</translation>
-    </message>
-    <message>
         <source>Station data not found in directory server.
 Can&apos;t create connection to</source>
         <translation>Немає даних про станцію на реєстраційному сервері.
@@ -488,16 +484,8 @@ Message</source>
         <translation>Ім&apos;я</translation>
     </message>
     <message>
-        <source>Directory Server</source>
-        <translation type="obsolete">Реєстраційний сервер</translation>
-    </message>
-    <message>
         <source>Directory Server Settings</source>
         <translation>Налаштування реєстраційного сервера</translation>
-    </message>
-    <message>
-        <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation type="obsolete">Мережеве ім&apos;я або IP-адреса реєстраційного сервера EchoLink</translation>
     </message>
     <message>
         <source>Server</source>
