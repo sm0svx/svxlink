@@ -1,85 +1,91 @@
-# - Try to find Speex
-# Once done this will define
+#.rst:
+# FindSpeex
+# --------
+# Find the speex library and include directory
 #
-#  SPEEX_FOUND - system has Speex
-#  SPEEX_INCLUDE_DIRS - the Speex include directory
-#  SPEEX_LIBRARIES - Link these to use Speex
-#  SPEEX_DEFINITIONS - Compiler switches required for using Speex
-#
-#  Copyright (c) 2006 Andreas Schneider <mail@cynapses.org>
-#
-#  Redistribution and use is allowed according to the terms of the New
-#  BSD license.
-#  For details see the accompanying COPYING-CMAKE-SCRIPTS file.
-#
+#  Speex_FOUND         - Set to true if the speex library is found
+#  Speex_INCLUDE_DIRS  - The directory where speex.h can be found
+#  Speex_LIBRARIES     - Libraries to link with to use speex
+#  Speex_VERSION       - Full version string (if available)
+#  Speex_VERSION_MAJOR - Major version (if available)
+#  Speex_VERSION_MINOR - Minor version (if available)
 
+#=============================================================================
+# Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#=============================================================================
 
-if (SPEEX_LIBRARIES AND SPEEX_INCLUDE_DIRS)
-  # in cache already
-  set(SPEEX_FOUND TRUE)
-else (SPEEX_LIBRARIES AND SPEEX_INCLUDE_DIRS)
-  # use pkg-config to get the directories and then use these values
-  # in the FIND_PATH() and FIND_LIBRARY() calls
-  include(FindPkgConfig)
+if(CMAKE_MINIMUM_REQUIRED_VERSION VERSION_LESS 2.6)
+  message(AUTHOR_WARNING
+    "Your project should require at least CMake 2.6 to use FindSpeex.cmake")
+endif()
 
-  pkg_check_modules(SPEEX speex)
+# use pkg-config to get the directories and then use these values
+# in the FIND_PATH() and FIND_LIBRARY() calls
+find_package(PkgConfig)
+if(CMAKE_VERSION VERSION_LESS 2.8.2)
+  pkg_check_modules(PC_Speex speex)
+else()
+  pkg_check_modules(PC_Speex QUIET speex)
+endif()
 
-  string(REGEX MATCHALL "[^.]+" SPEEX_VERSION_PARTS "${SPEEX_VERSION}")
-  list(GET SPEEX_VERSION_PARTS 0 SPEEX_VERSION_MAJOR)
-  set(SPEEX_DEFINITIONS "-DSPEEX_MAJOR=${SPEEX_VERSION_MAJOR}")
+# Try to find the directory where the speex.h header file is located
+find_path(Speex_INCLUDE_DIR
+  NAMES speex.h
+  PATHS ${PC_Speex_INCLUDE_DIRS}
+  PATH_SUFFIXES speex
+  DOC "Speex include directory"
+)
 
-  find_path(SPEEX_INCLUDE_DIR
-    NAMES
-      speex/speex.h
-    PATHS
-      ${SPEEX_INCLUDE_DIRS}
-      /usr/include
-      /usr/local/include
-      /opt/local/include
-      /sw/include
+# Try to find the speex library
+find_library(Speex_LIBRARY
+  NAMES speex
+  DOC "Speex library path"
+  PATHS ${Speex_LIBRARY_DIRS}
+)
+
+# Set up version variables
+if(PC_Speex_VERSION)
+  set(Speex_VERSION ${PC_Speex_VERSION})
+  string(REGEX MATCHALL "[0-9]+" _Speex_VERSION_PARTS "${PC_Speex_VERSION}")
+  list(GET _Speex_VERSION_PARTS 0 Speex_VERSION_MAJOR)
+  list(GET _Speex_VERSION_PARTS 1 Speex_VERSION_MINOR)
+endif()
+
+# Handle the QUIETLY and REQUIRED arguments and set Speex_FOUND to TRUE if 
+# all listed variables are TRUE
+include(FindPackageHandleStandardArgs)
+if(CMAKE_VERSION VERSION_LESS 2.8.3)
+  find_package_handle_standard_args(Speex
+    DEFAULT_MSG
+    Speex_LIBRARY Speex_INCLUDE_DIR
   )
-
-  find_library(SPEEX_LIBRARY
-    NAMES
-      speex
-    PATHS
-      ${SPEEX_LIBRARY_DIRS}
-      /usr/lib
-      /usr/local/lib
-      /opt/local/lib
-      /sw/lib
+else()
+  find_package_handle_standard_args(Speex
+    FOUND_VAR Speex_FOUND
+    REQUIRED_VARS Speex_LIBRARY Speex_INCLUDE_DIR
+    VERSION_VAR Speex_VERSION
   )
+endif()
 
-  if (SPEEX_LIBRARY)
-    set(SPEEX_FOUND TRUE)
-  endif (SPEEX_LIBRARY)
+if(Speex_FOUND)
+  set(Speex_LIBRARIES ${Speex_LIBRARY})
+  set(Speex_INCLUDE_DIRS ${Speex_INCLUDE_DIR})
+  set(Speex_DEFINITIONS ${PC_Speex_CFLAGS_OTHER})
+endif()
 
-  set(SPEEX_INCLUDE_DIRS
-    ${SPEEX_INCLUDE_DIR}
-  )
+mark_as_advanced(Speex_INCLUDE_DIR Speex_LIBRARY)
 
-  if (SPEEX_FOUND)
-    set(SPEEX_LIBRARIES
-      ${SPEEX_LIBRARIES}
-      ${SPEEX_LIBRARY}
-    )
-  endif (SPEEX_FOUND)
-
-  if (SPEEX_INCLUDE_DIRS AND SPEEX_LIBRARIES)
-     set(SPEEX_FOUND TRUE)
-  endif (SPEEX_INCLUDE_DIRS AND SPEEX_LIBRARIES)
-
-  if (SPEEX_FOUND)
-    if (NOT Speex_FIND_QUIETLY)
-      message(STATUS "Found Speex: ${SPEEX_LIBRARIES}")
-    endif (NOT Speex_FIND_QUIETLY)
-  else (SPEEX_FOUND)
-    if (Speex_FIND_REQUIRED)
-      message(FATAL_ERROR "Could not find Speex")
-    endif (Speex_FIND_REQUIRED)
-  endif (SPEEX_FOUND)
-
-  # show the SPEEX_INCLUDE_DIR and SPEEX_LIBRARY variables only in the advanced view
-  mark_as_advanced(SPEEX_INCLUDE_DIR SPEEX_LIBRARY)
-
-endif (SPEEX_LIBRARIES AND SPEEX_INCLUDE_DIRS)

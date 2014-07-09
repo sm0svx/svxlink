@@ -3,18 +3,33 @@ option(USE_OSS "OSS audio support" ON)
 
 # Find Speex
 find_package(Speex)
-if(SPEEX_FOUND)
-  include_directories(${SPEEX_INCLUDE_DIRS})
-  add_definitions(${SPEEX_DEFINITIONS})
-  set(LIBS ${LIBS} ${SPEEX_LIBRARIES})
-endif(SPEEX_FOUND)
+if(Speex_FOUND)
+  if(Speex_VERSION_MAJOR)
+    include_directories(${Speex_INCLUDE_DIRS})
+    add_definitions(${Speex_DEFINITIONS})
+    add_definitions("-DSPEEX_MAJOR=${Speex_VERSION_MAJOR}")
+    set(LIBS ${LIBS} ${Speex_LIBRARIES})
+  else()
+    message(WARNING
+      "Found Speex but version could not be resolved. "
+      "Will proceed without Speex.")
+  endif()
+endif(Speex_FOUND)
 
 # Find Opus
 find_package(Opus)
-if(OPUS_FOUND)
-  include_directories(${OPUS_INCLUDE_DIRS})
-  set(LIBS ${LIBS} ${OPUS_LIBRARIES})
-endif(OPUS_FOUND)
+if(Opus_FOUND)
+  if(Opus_VERSION_MAJOR)
+    include_directories(${Opus_INCLUDE_DIRS})
+    add_definitions(${Opus_DEFINITIONS})
+    add_definitions("-DOPUS_MAJOR=${Opus_VERSION_MAJOR}")
+    set(LIBS ${LIBS} ${Opus_LIBRARIES})
+  else()
+    message(WARNING
+      "Found Opus but version could not be resolved. "
+      "Will proceed without Opus.")
+  endif()
+endif(Opus_FOUND)
 
 find_package(GSM REQUIRED)
 include_directories(${GSM_INCLUDE_DIR})
@@ -49,13 +64,13 @@ set(LIBSRC AsyncAudioSource.cpp AsyncAudioSink.cpp
            AsyncAudioDeviceFactory.cpp AsyncAudioJitterFifo.cpp
            AsyncAudioDeviceUDP.cpp)
 
-if(SPEEX_FOUND)
+if(Speex_FOUND)
   set(LIBSRC ${LIBSRC} AsyncAudioEncoderSpeex.cpp AsyncAudioDecoderSpeex.cpp)
-endif(SPEEX_FOUND)
+endif(Speex_FOUND)
 
-if(OPUS_FOUND)
+if(Opus_FOUND)
   set(LIBSRC ${LIBSRC} AsyncAudioEncoderOpus.cpp AsyncAudioDecoderOpus.cpp)
-endif(OPUS_FOUND)
+endif(Opus_FOUND)
 
 if(USE_ALSA)
   set(LIBSRC ${LIBSRC} AsyncAudioDeviceAlsa.cpp)
