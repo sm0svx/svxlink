@@ -54,7 +54,7 @@ find_path(Speex_INCLUDE_DIR
 find_library(Speex_LIBRARY
   NAMES speex
   DOC "Speex library path"
-  PATHS ${Speex_LIBRARY_DIRS}
+  PATHS ${PC_Speex_LIBRARY_DIRS}
 )
 
 # Set up version variables
@@ -69,19 +69,20 @@ endif()
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
 if(CMAKE_VERSION VERSION_LESS 2.8.12)
-  find_package_handle_standard_args(Speex
+  find_package_handle_standard_args(SPEEX
     DEFAULT_MSG
     Speex_LIBRARY Speex_INCLUDE_DIR
   )
 else()
   find_package_handle_standard_args(Speex
-    FOUND_VAR Speex_FOUND
+    FOUND_VAR SPEEX_FOUND
     REQUIRED_VARS Speex_LIBRARY Speex_INCLUDE_DIR
     VERSION_VAR Speex_VERSION
   )
 endif()
 
-if(Speex_FOUND)
+if(SPEEX_FOUND)
+  set(Speex_FOUND 1)
   set(Speex_LIBRARIES ${Speex_LIBRARY})
   set(Speex_INCLUDE_DIRS ${Speex_INCLUDE_DIR})
   set(Speex_DEFINITIONS ${PC_Speex_CFLAGS_OTHER})
