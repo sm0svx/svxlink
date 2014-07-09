@@ -22,10 +22,11 @@ else (SPEEX_LIBRARIES AND SPEEX_INCLUDE_DIRS)
   # in the FIND_PATH() and FIND_LIBRARY() calls
   include(FindPkgConfig)
 
-  #pkgconfig(speex _SpeexIncDir _SpeexLinkDir _SpeexLinkFlags _SpeexCflags)
   pkg_check_modules(SPEEX speex)
 
-  set(SPEEX_DEFINITIONS ${_SpeexCflags})
+  string(REGEX MATCHALL "[^.]+" SPEEX_VERSION_PARTS "${SPEEX_VERSION}")
+  list(GET SPEEX_VERSION_PARTS 0 SPEEX_VERSION_MAJOR)
+  set(SPEEX_DEFINITIONS "-DSPEEX_MAJOR=${SPEEX_VERSION_MAJOR}")
 
   find_path(SPEEX_INCLUDE_DIR
     NAMES
