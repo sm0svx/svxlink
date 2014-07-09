@@ -11,10 +11,11 @@ endif(SPEEX_FOUND)
 
 # Find Opus
 find_package(Opus)
-if(OPUS_FOUND)
-  include_directories(${OPUS_INCLUDE_DIRS})
-  set(LIBS ${LIBS} ${OPUS_LIBRARIES})
-endif(OPUS_FOUND)
+if(Opus_FOUND)
+  include_directories(${Opus_INCLUDE_DIRS})
+  add_definitions("-DOPUS_MAJOR=${Opus_VERSION_MAJOR}")
+  set(LIBS ${LIBS} ${Opus_LIBRARIES})
+endif(Opus_FOUND)
 
 find_package(GSM REQUIRED)
 include_directories(${GSM_INCLUDE_DIR})
