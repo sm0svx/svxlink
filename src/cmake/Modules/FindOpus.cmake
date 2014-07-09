@@ -36,7 +36,7 @@ endif()
 # use pkg-config to get the directories and then use these values
 # in the FIND_PATH() and FIND_LIBRARY() calls
 find_package(PkgConfig)
-if(CMAKE_VERSION VERSION_LESS 2.8)
+if(CMAKE_VERSION VERSION_LESS 2.8.2)
   pkg_check_modules(PC_Opus opus)
 else()
   pkg_check_modules(PC_Opus QUIET opus)
@@ -68,7 +68,7 @@ endif()
 # Handle the QUIETLY and REQUIRED arguments and set Opus_FOUND to TRUE if 
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-if(CMAKE_VERSION VERSION_LESS 2.8)
+if(CMAKE_VERSION VERSION_LESS 2.8.3)
   find_package_handle_standard_args(Opus
     DEFAULT_MSG
     Opus_LIBRARY Opus_INCLUDE_DIR
