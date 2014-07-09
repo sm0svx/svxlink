@@ -30,10 +30,6 @@ Can&apos;t create connection to</source>
 	Es kann keine Verbindung aufgebaut werden zu</translation>
     </message>
     <message>
-        <source>Could not create connection to station</source>
-        <translation type="obsolete">Es kann keine Verbindung aufgebaut werden zur Station</translation>
-    </message>
-    <message>
         <source>Could not create connection to remote host</source>
         <translation>Es kann keine Verbindung aufgebaut werden zum Host</translation>
     </message>
@@ -493,10 +489,6 @@ Message</source>
         <translation>Name</translation>
     </message>
     <message>
-        <source>Directory Server</source>
-        <translation type="obsolete">Verzeichnisserver</translation>
-    </message>
-    <message>
         <source>Directory Server Settings</source>
         <translation>Verzeichnisservereinstellungen</translation>
     </message>
@@ -507,10 +499,6 @@ Message</source>
     <message>
         <source>Cancel</source>
         <translation>Abbrechen</translation>
-    </message>
-    <message>
-        <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation type="obsolete">Hostname oder IP-Adresse des Echolink-Verzeichnisservers</translation>
     </message>
     <message>
         <source>Refresh time</source>

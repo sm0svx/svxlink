@@ -34,10 +34,6 @@ No se puede crear una conexión</translation>
         <translation>No se puede crear conexión con el host</translation>
     </message>
     <message>
-        <source>Could not create connection to station</source>
-        <translation type="obsolete">No se puede crear conexión con la estación</translation>
-    </message>
-    <message>
         <source>Could not open mic audio device</source>
         <translation>No se puede abril el dispositovo de micrófono</translation>
     </message>
@@ -493,10 +489,6 @@ Message</source>
         <translation>Nombre</translation>
     </message>
     <message>
-        <source>Directory Server</source>
-        <translation type="obsolete">Servidor de directorio</translation>
-    </message>
-    <message>
         <source>Directory Server Settings</source>
         <translation>Configuración del servidor de directorio</translation>
     </message>
@@ -507,10 +499,6 @@ Message</source>
     <message>
         <source>Cancel</source>
         <translation>Cancelar</translation>
-    </message>
-    <message>
-        <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation type="obsolete">El nombre del equipo o dirección IP del servidor de directorio de Echolink a utilizar</translation>
     </message>
     <message>
         <source>Refresh time</source>

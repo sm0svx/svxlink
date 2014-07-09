@@ -8,10 +8,6 @@
         <translation>Qtel fout</translation>
     </message>
     <message>
-        <source>Could not create connection to station</source>
-        <translation type="obsolete">Kon geen verbinding maken met station</translation>
-    </message>
-    <message>
         <source>Station data not found in directory server.
 Can&apos;t create connection to</source>
         <translation>Station niet gevonden in de directory sever.
@@ -486,16 +482,8 @@ Bericht</translation>
         <translation type="unfinished">Naam</translation>
     </message>
     <message>
-        <source>Directory Server</source>
-        <translation type="obsolete">Directory Server</translation>
-    </message>
-    <message>
         <source>Directory Server Settings</source>
         <translation type="unfinished">Directory Server Instellingen</translation>
-    </message>
-    <message>
-        <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation type="obsolete">De hostnaam of het IP adres van de Echolink directory server</translation>
     </message>
     <message>
         <source>Server</source>

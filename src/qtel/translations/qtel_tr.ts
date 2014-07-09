@@ -8,10 +8,6 @@
         <translation>Qtel Hata</translation>
     </message>
     <message>
-        <source>Could not create connection to station</source>
-        <translation type="obsolete">Istasyona bağlantı sağlanamadı</translation>
-    </message>
-    <message>
         <source>Station data not found in directory server.
 Can&apos;t create connection to</source>
         <translation>Dizin sunucusunda istasyon bilgisi bulunamadı. 
@@ -485,16 +481,8 @@ Message</source>
         <translation type="unfinished">Ad</translation>
     </message>
     <message>
-        <source>Directory Server</source>
-        <translation type="obsolete">Dizin sunucusu</translation>
-    </message>
-    <message>
         <source>Directory Server Settings</source>
         <translation type="unfinished">Dizin Sunucusu Ayarları</translation>
-    </message>
-    <message>
-        <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation type="obsolete">Kullanılacak EchoLink dizin sunucusu ana bilgisayar adı veya IP adresi</translation>
     </message>
     <message>
         <source>Server</source>

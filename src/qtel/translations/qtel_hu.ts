@@ -8,10 +8,6 @@
         <translation>Over Qtel</translation>
     </message>
     <message>
-        <source>Could not create connection to station</source>
-        <translation type="obsolete">Nem-tudok-kapcsolatot-létrehozni-az-állomással</translation>
-    </message>
-    <message>
         <source>Station data not found in directory server.
 Can&apos;t create connection to</source>
         <translation>Az-állomás-adatai-nem-találhatóak-a-könyvtár-szerveren.
@@ -486,16 +482,8 @@ Message</source>
         <translation type="unfinished">Név</translation>
     </message>
     <message>
-        <source>Directory Server</source>
-        <translation type="obsolete">Könyvtár-szerver</translation>
-    </message>
-    <message>
         <source>Directory Server Settings</source>
         <translation type="unfinished">Könyvtár-szerver-beállítása</translation>
-    </message>
-    <message>
-        <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation type="obsolete">A-hosztnév-vagy-IP-cím-használja-az-Echolink-könyvtár-szervert</translation>
     </message>
     <message>
         <source>Server</source>

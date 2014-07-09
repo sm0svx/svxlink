@@ -25,10 +25,6 @@ Can&apos;t create connection to</source>
         <translation>ディレクトリサーバーに接続局データが見つかりませんので、接続できません</translation>
     </message>
     <message>
-        <source>Could not create connection to station</source>
-        <translation type="obsolete">接続できません</translation>
-    </message>
-    <message>
         <source>Could not create connection to remote host</source>
         <translation>ホストに接続できません</translation>
     </message>
@@ -487,10 +483,6 @@ Message</source>
         <translation>名前</translation>
     </message>
     <message>
-        <source>Directory Server</source>
-        <translation>ディレクトリサーバー</translation>
-    </message>
-    <message>
         <source>Directory Server Settings</source>
         <translation>ディレクトリサーバー設定</translation>
     </message>
@@ -513,10 +505,6 @@ Message</source>
     <message>
         <source>Cancel</source>
         <translation>取り消し</translation>
-    </message>
-    <message>
-        <source>The hostname or IP address of the EchoLink directory server to use</source>
-        <translation>エコーリンクディレクトリサーバーのホスト名またはIPアドレスの設定</translation>
     </message>
     <message>
         <source>Refresh time</source>

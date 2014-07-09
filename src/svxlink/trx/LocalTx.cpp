@@ -361,7 +361,7 @@ bool LocalTx::initialize(void)
   {
     int level = atoi(value.c_str());
     sine_gen->setLevel(level);
-    audio_io->setGain((100.0 - level) / 100.0);
+    //audio_io->setGain((100.0 - level) / 100.0);
   }
 
 #if INTERNAL_SAMPLE_RATE >= 16000
