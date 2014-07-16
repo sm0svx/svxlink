@@ -227,7 +227,6 @@ namespace {
       Decimator(int dec_fact, const float *coeff, int taps)
         : dec_fact(dec_fact), taps(taps)
       {
-        cout << "### dec_fact=" << dec_fact << endl;
         this->coeff.assign(coeff, coeff+taps);
 
         p_Z = new T[taps];
@@ -299,7 +298,7 @@ namespace {
         //Decimator<float> audio_dec(20, audio_dec_coeff, audio_dec_coeff_cnt);
       }
 
-      void iq_received(vector<RtlTcp::Sample> samples)
+      void iq_received(vector<WbRxRtlTcp::Sample> samples)
       {
         //cout << "### Received " << samples.size() << " samples\n";
 #if 0
@@ -307,7 +306,7 @@ namespace {
             samples.size() * sizeof(samples[0]));
 #endif
 
-        vector<RtlTcp::Sample> dec_samp1, dec_samp;
+        vector<WbRxRtlTcp::Sample> dec_samp1, dec_samp;
         iq_dec1.decimate(dec_samp1, samples);
         iq_dec2.decimate(dec_samp, dec_samp1);
         //dec_samp = samples;
@@ -372,7 +371,7 @@ namespace {
     private:
       float iold;
       float qold;
-      RtlTcp::Sample prev_samp;
+      WbRxRtlTcp::Sample prev_samp;
       AudioSink &audio_sink;
       Decimator<complex<float> > iq_dec1;
       Decimator<complex<float> > iq_dec2;
@@ -390,10 +389,10 @@ namespace {
         
       }
 
-      void iq_received(vector<RtlTcp::Sample> &out,
-                       const vector<RtlTcp::Sample> &in)
+      void iq_received(vector<WbRxRtlTcp::Sample> &out,
+                       const vector<WbRxRtlTcp::Sample> &in)
       {
-        vector<RtlTcp::Sample>::const_iterator it;
+        vector<WbRxRtlTcp::Sample>::const_iterator it;
         for (it = in.begin(); it != in.end(); ++it)
         {
           complex<float> e(0.0f, -2.0*M_PI*offset*n/FS);
@@ -421,9 +420,9 @@ namespace {
       {
       }
 
-      void iq_received(vector<RtlTcp::Sample> samples)
+      void iq_received(vector<WbRxRtlTcp::Sample> samples)
       {
-        vector<RtlTcp::Sample> translated;
+        vector<WbRxRtlTcp::Sample> translated;
         trans.iq_received(translated, samples);
         fm_demod.iq_received(translated);
       };
@@ -497,7 +496,7 @@ bool Ddr::initialize(void)
   audio_pipe = new AudioPassthrough;
   
   unsigned int fc = 433400000;
-  RtlTcp *rtl = new RtlTcp;
+  WbRxRtlTcp *rtl = new WbRxRtlTcp;
   rtl->setSampleRate(960000);
   rtl->setFqCorr(60);
   //rtl->setFqCorr(36);
