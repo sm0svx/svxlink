@@ -1,5 +1,5 @@
 /**
-@file	 WbRxRtlTcp.h
+@file	 RtlTcp.h
 @brief   A_brief_description_for_this_file
 @author  Tobias Blomberg / SM0SVX
 @date	 2014-07-16
@@ -114,7 +114,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 A_detailed_class_description
 */
-class WbRxRtlTcp : public sigc::trackable
+class RtlTcp : public sigc::trackable
 {
   public:
     typedef std::complex<float> Sample;
@@ -124,13 +124,13 @@ class WbRxRtlTcp : public sigc::trackable
     /**
      * @brief 	Default constructor
      */
-    WbRxRtlTcp(const std::string &remote_host="localhost",
+    RtlTcp(const std::string &remote_host="localhost",
            uint16_t remote_port=1234);
   
     /**
      * @brief 	Destructor
      */
-    ~WbRxRtlTcp(void) {}
+    ~RtlTcp(void) {}
   
     /**
      * @brief 	A_brief_member_function_description
@@ -186,8 +186,8 @@ class WbRxRtlTcp : public sigc::trackable
     bool      use_digital_agc_set;
     bool      use_digital_agc;
 
-    WbRxRtlTcp(const WbRxRtlTcp&);
-    WbRxRtlTcp& operator=(const WbRxRtlTcp&);
+    RtlTcp(const RtlTcp&);
+    RtlTcp& operator=(const RtlTcp&);
     void sendCommand(char cmd, uint32_t param);
     void connected(void);
     void disconnected(Async::TcpConnection *c,
@@ -195,7 +195,7 @@ class WbRxRtlTcp : public sigc::trackable
     void updateSettings(void);
     int dataReceived(Async::TcpConnection *con, void *buf, int count);
     
-};  /* class WbRxRtlTcp */
+};  /* class RtlTcp */
 
 
 
