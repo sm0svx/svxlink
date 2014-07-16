@@ -69,7 +69,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "Ddr.h"
-#include "RtlTcp.h"
+#include "WbRxRtlTcp.h"
 
 
 /****************************************************************************
@@ -298,7 +298,7 @@ namespace {
         //Decimator<float> audio_dec(20, audio_dec_coeff, audio_dec_coeff_cnt);
       }
 
-      void iq_received(vector<RtlTcp::Sample> samples)
+      void iq_received(vector<WbRxRtlTcp::Sample> samples)
       {
         //cout << "### Received " << samples.size() << " samples\n";
 #if 0
@@ -306,7 +306,7 @@ namespace {
             samples.size() * sizeof(samples[0]));
 #endif
 
-        vector<RtlTcp::Sample> dec_samp1, dec_samp;
+        vector<WbRxRtlTcp::Sample> dec_samp1, dec_samp;
         iq_dec1.decimate(dec_samp1, samples);
         iq_dec2.decimate(dec_samp, dec_samp1);
         //dec_samp = samples;
@@ -371,7 +371,7 @@ namespace {
     private:
       float iold;
       float qold;
-      RtlTcp::Sample prev_samp;
+      WbRxRtlTcp::Sample prev_samp;
       AudioSink &audio_sink;
       Decimator<complex<float> > iq_dec1;
       Decimator<complex<float> > iq_dec2;
@@ -389,10 +389,10 @@ namespace {
         
       }
 
-      void iq_received(vector<RtlTcp::Sample> &out,
-                       const vector<RtlTcp::Sample> &in)
+      void iq_received(vector<WbRxRtlTcp::Sample> &out,
+                       const vector<WbRxRtlTcp::Sample> &in)
       {
-        vector<RtlTcp::Sample>::const_iterator it;
+        vector<WbRxRtlTcp::Sample>::const_iterator it;
         for (it = in.begin(); it != in.end(); ++it)
         {
           complex<float> e(0.0f, -2.0*M_PI*offset*n/FS);
@@ -420,9 +420,9 @@ namespace {
       {
       }
 
-      void iq_received(vector<RtlTcp::Sample> samples)
+      void iq_received(vector<WbRxRtlTcp::Sample> samples)
       {
-        vector<RtlTcp::Sample> translated;
+        vector<WbRxRtlTcp::Sample> translated;
         trans.iq_received(translated, samples);
         fm_demod.iq_received(translated);
       };
@@ -496,11 +496,17 @@ bool Ddr::initialize(void)
   audio_pipe = new AudioPassthrough;
   
   unsigned int fc = 433400000;
-  RtlTcp *rtl = new RtlTcp;
-  rtl->setSampleRate(960000);
-  rtl->setFqCorr(60);
+  WbRxRtlTcp *rtl = WbRxRtlTcp::instance(cfg, wbrx);
+  if (rtl == 0)
+  {
+    cout << "*** ERROR: Could not create WBRX " << wbrx
+         << " specified in receiver " << name() << endl;
+    return false;
+  }
+  //rtl->setSampleRate(960000);
+  //rtl->setFqCorr(60);
   //rtl->setFqCorr(36);
-  rtl->setCenterFq(fc);
+  //rtl->setCenterFq(fc);
   //rtl->enableDigitalAgc(false);
 
   Channel *test = new Channel(*audio_pipe, 433450000-fc);

@@ -1,10 +1,8 @@
 /**
-@file	 RtlTcp.h
-@brief   A_brief_description_for_this_file
+@file	 WbRxRtlTcp.h
+@brief   A WBRX using RTL2832U based DVB-T tuners
 @author  Tobias Blomberg / SM0SVX
 @date	 2014-07-16
-
-A_detailed_description_for_this_file
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -26,8 +24,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef RTL_TCP_INCLUDED
-#define RTL_TCP_INCLUDED
+/** @example WbRxRtlTcp_demo.cpp
+An example of how to use the WbRxRtlTcp class
+*/
+
+
+#ifndef WBRX_RTL_TCP_INCLUDED
+#define WBRX_RTL_TCP_INCLUDED
 
 
 /****************************************************************************
@@ -37,9 +40,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <sigc++/sigc++.h>
-#include <complex>
+
+#include <map>
 #include <string>
 #include <vector>
+#include <complex>
 
 
 /****************************************************************************
@@ -48,7 +53,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncTcpClient.h>
 
 
 /****************************************************************************
@@ -65,6 +69,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class Config;
+};
+class RtlTcp;
 
 
 /****************************************************************************
@@ -113,52 +122,30 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 @date   2014-07-16
 
 A_detailed_class_description
+
+\include WbRxRtlTcp_demo.cpp
 */
-class RtlTcp : public sigc::trackable
+class WbRxRtlTcp
 {
   public:
     typedef std::complex<float> Sample;
-    
-    static const int GAIN_UNSET = -1000;
+
+    static WbRxRtlTcp *instance(Async::Config &cfg, const std::string &name);
 
     /**
      * @brief 	Default constructor
      */
-    RtlTcp(const std::string &remote_host="localhost",
-           uint16_t remote_port=1234);
+    WbRxRtlTcp(Async::Config &cfg, const std::string &name);
   
     /**
      * @brief 	Destructor
      */
-    ~RtlTcp(void) {}
+    ~WbRxRtlTcp(void);
   
     /**
      * @brief 	A_brief_member_function_description
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
-     */
-    void setCenterFq(uint32_t fq);
-
-    void setSampleRate(uint32_t rate);
-
-    void setGainMode(uint32_t mode);
-
-    void setGain(uint32_t gain);
-
-    void setFqCorr(uint32_t corr);
-
-    void setTunerIfGain(uint16_t stage, int16_t gain);
-
-    void enableTestMode(bool enable);
-
-    void enableDigitalAgc(bool enable);
-
-    /* Missing commands:
-     *   9 - set direct sampling
-     *   a - set offset tuning
-     *   b - set rtl xtal
-     *   c - set tuner xtal
-     *   d - set tuner gain by index
      */
 
     sigc::signal<void, std::vector<Sample> > iqReceived;
@@ -166,42 +153,22 @@ class RtlTcp : public sigc::trackable
   protected:
     
   private:
-    static const int BLOCK_SIZE = 8 * 2 * 960;
-    static const unsigned MAX_IF_GAIN_STAGES = 10;
+    typedef std::map<std::string, WbRxRtlTcp*> InstanceMap;
 
-    Async::TcpClient con;
-    uint32_t  tuner_type;
-    uint32_t  tuner_gain_count;
-    bool      center_fq_set;
-    uint32_t  center_fq;
-    bool      samp_rate_set;
-    uint32_t  samp_rate;
-    int32_t   gain_mode;
-    uint32_t  gain;
-    bool      fq_corr_set;
-    uint32_t  fq_corr;
-    int       tuner_if_gain[MAX_IF_GAIN_STAGES];
-    bool      test_mode_set;
-    bool      test_mode;
-    bool      use_digital_agc_set;
-    bool      use_digital_agc;
+    static InstanceMap instances;
 
-    RtlTcp(const RtlTcp&);
-    RtlTcp& operator=(const RtlTcp&);
-    void sendCommand(char cmd, uint32_t param);
-    void connected(void);
-    void disconnected(Async::TcpConnection *c,
-                      Async::TcpConnection::DisconnectReason reason);
-    void updateSettings(void);
-    int dataReceived(Async::TcpConnection *con, void *buf, int count);
+    RtlTcp *rtl;
+
+    WbRxRtlTcp(const WbRxRtlTcp&);
+    WbRxRtlTcp& operator=(const WbRxRtlTcp&);
     
-};  /* class RtlTcp */
-
+};  /* class WbRxRtlTcp */
 
 
 //} /* namespace */
 
-#endif /* RTL_TCP_INCLUDED */
+#endif /* WBRX_RTL_TCP_INCLUDED */
+
 
 
 /*
