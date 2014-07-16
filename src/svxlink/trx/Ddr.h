@@ -67,6 +67,8 @@ namespace Async
   class AudioPassthrough;
 };
 
+class WbRxRtlTcp;
+
 
 /****************************************************************************
  *
@@ -177,8 +179,12 @@ class Ddr : public LocalRxBase
     virtual Async::AudioSource *audioSource(void);
     
   private:
+    class Channel;
+
     Async::Config           &cfg;
     Async::AudioPassthrough *audio_pipe;
+    Channel                 *channel;
+    WbRxRtlTcp              *rtl;
     
 };  /* class Ddr */
 

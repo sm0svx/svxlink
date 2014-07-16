@@ -147,6 +147,7 @@ class WbRxRtlTcp
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
+    uint32_t centerFq(void);
 
     sigc::signal<void, std::vector<Sample> > iqReceived;
     

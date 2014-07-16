@@ -113,7 +113,7 @@ using namespace std;
  *
  ****************************************************************************/
 
-RtlTcp::RtlTcp(const std::string &remote_host, uint16_t remote_port)
+RtlTcp::RtlTcp(const string &remote_host, uint16_t remote_port)
   : con(remote_host, remote_port, BLOCK_SIZE), tuner_type(0),
     center_fq_set(false), center_fq(100000000), samp_rate_set(false),
     samp_rate(2048000), gain_mode(-1), gain(GAIN_UNSET), fq_corr_set(false),
@@ -220,7 +220,7 @@ void RtlTcp::sendCommand(char cmd, uint32_t param)
 {
   if (con.isConnected())
   {
-    std::cout << "### sendCommand(" << (int)cmd << ", " << param << ")" << std::endl;
+    cout << "### sendCommand(" << (int)cmd << ", " << param << ")" << endl;
     char msg[5];
     msg[0] = cmd;
     msg[4] = param & 0xff;
@@ -234,13 +234,13 @@ void RtlTcp::sendCommand(char cmd, uint32_t param)
 
 void RtlTcp::connected(void)
 {
-  std::cout << "Connected\n";
+  cout << "Connected\n";
 } /* RtlTcp::connected */
 
 
 void RtlTcp::disconnected(Async::TcpConnection *c, Async::TcpConnection::DisconnectReason reason)
 {
-  std::cout << "Disconnected\n";
+  cout << "Disconnected\n";
 } /* RtlTcp::disconnected */
 
 
@@ -262,13 +262,13 @@ void RtlTcp::updateSettings(void)
   {
     setGainMode(gain_mode);
   }
-  if ((gain_mode == 1) && (gain > GAIN_UNSET))
+  if ((gain_mode == 1) && (gain < GAIN_UNSET))
   {
     setGain(gain);
   }
   for (int i=0; i<MAX_IF_GAIN_STAGES; ++i)
   {
-    if (tuner_if_gain[i] > GAIN_UNSET)
+    if (tuner_if_gain[i] < GAIN_UNSET)
     {
       setTunerIfGain(i, tuner_if_gain[i]);
     }
@@ -286,7 +286,7 @@ void RtlTcp::updateSettings(void)
 
 int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
 {
-  //std::cout << "### Data received: " << count << " bytes\n";
+  //cout << "### Data received: " << count << " bytes\n";
   if (tuner_type == 0)
   {
     if (count < 12)
@@ -296,13 +296,13 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
     char *ptr = reinterpret_cast<char *>(buf);
     if (strncmp(ptr, "RTL0", 4) != 0)
     {
-      std::cout << "*** ERROR: Expected magic RTL0\n";
+      cout << "*** ERROR: Expected magic RTL0\n";
       exit(1);
     }
     tuner_type = ntohl(*reinterpret_cast<uint32_t *>(ptr+4));
     tuner_gain_count = ntohl(*reinterpret_cast<uint32_t *>(ptr+8));
-    std::cout << "### tuner_type=" << tuner_type
-         << " tuner_gain_count=" << tuner_gain_count << std::endl;
+    cout << "### tuner_type=" << tuner_type
+         << " tuner_gain_count=" << tuner_gain_count << endl;
     updateSettings();
     return 12;
   }
@@ -314,9 +314,9 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
   count = BLOCK_SIZE;
 
   int samp_count = count / 2;
-  std::complex<uint8_t> *samples =
-    reinterpret_cast<std::complex<uint8_t>*>(buf);
-  std::vector<Sample> iq;
+  complex<uint8_t> *samples =
+    reinterpret_cast<complex<uint8_t>*>(buf);
+  vector<Sample> iq;
   iq.reserve(samp_count);
   for (int idx=0; idx<samp_count; ++idx)
   {
@@ -324,7 +324,7 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
     i = i / 127.5f - 1.0f;
     float q = samples[idx].imag();
     q = q / 127.5f - 1.0f;
-    iq.push_back(std::complex<float>(i, q));
+    iq.push_back(complex<float>(i, q));
   }
   iqReceived(iq);
 

@@ -119,7 +119,7 @@ class RtlTcp : public sigc::trackable
   public:
     typedef std::complex<float> Sample;
     
-    static const int GAIN_UNSET = -1000;
+    static const int GAIN_UNSET = 1000;
 
     /**
      * @brief 	Default constructor
@@ -138,6 +138,7 @@ class RtlTcp : public sigc::trackable
      * @return	Return_value_of_this_member_function
      */
     void setCenterFq(uint32_t fq);
+    uint32_t centerFq(void) { return center_fq; }
 
     void setSampleRate(uint32_t rate);
 

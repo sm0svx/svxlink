@@ -412,27 +412,27 @@ namespace {
 
   };
 
-  class Channel
-  {
-    public:
-      Channel(AudioSink &audio_sink, int fq_offset)
-        : fm_demod(audio_sink), trans(fq_offset)
-      {
-      }
-
-      void iq_received(vector<WbRxRtlTcp::Sample> samples)
-      {
-        vector<WbRxRtlTcp::Sample> translated;
-        trans.iq_received(translated, samples);
-        fm_demod.iq_received(translated);
-      };
-
-    private:
-      FmDemod fm_demod;
-      Translate trans;
-  }; /* Channel */
 }; /* anonymous namespace */
 
+class Ddr::Channel
+{
+  public:
+    Channel(AudioSink &audio_sink, int fq_offset)
+      : fm_demod(audio_sink), trans(fq_offset)
+    {
+    }
+
+    void iq_received(vector<WbRxRtlTcp::Sample> samples)
+    {
+      vector<WbRxRtlTcp::Sample> translated;
+      trans.iq_received(translated, samples);
+      fm_demod.iq_received(translated);
+    };
+
+  private:
+    FmDemod fm_demod;
+    Translate trans;
+}; /* Channel */
 
 
 /****************************************************************************
@@ -466,13 +466,16 @@ namespace {
  ****************************************************************************/
 
 Ddr::Ddr(Config &cfg, const std::string& name)
-  : LocalRxBase(cfg, name), cfg(cfg)
+  : LocalRxBase(cfg, name), cfg(cfg), audio_pipe(0), channel(0), rtl(0)
 {
 } /* Ddr::Ddr */
 
 
 Ddr::~Ddr(void)
 {
+  delete channel;
+  delete rtl;
+  delete audio_pipe;
 } /* Ddr::~Ddr */
 
 
@@ -495,29 +498,16 @@ bool Ddr::initialize(void)
 
   audio_pipe = new AudioPassthrough;
   
-  unsigned int fc = 433400000;
-  WbRxRtlTcp *rtl = WbRxRtlTcp::instance(cfg, wbrx);
+  rtl = WbRxRtlTcp::instance(cfg, wbrx);
   if (rtl == 0)
   {
     cout << "*** ERROR: Could not create WBRX " << wbrx
          << " specified in receiver " << name() << endl;
     return false;
   }
-  //rtl->setSampleRate(960000);
-  //rtl->setFqCorr(60);
-  //rtl->setFqCorr(36);
-  //rtl->setCenterFq(fc);
-  //rtl->enableDigitalAgc(false);
 
-  Channel *test = new Channel(*audio_pipe, 433450000-fc);
-  rtl->iqReceived.connect(mem_fun(*test, &Channel::iq_received));
-  //Channel ru1("alsa:plughw:0", 0, 434625000-fc);
-  //rtl->iqReceived.connect(mem_fun(ru1, &Channel::iq_received));
-  //Channel *ru5 = new Channel(*audio_pipe, 434725000-fc);
-  //rtl->iqReceived.connect(mem_fun(*ru5, &Channel::iq_received));
-  //Channel ru13("alsa:plughw:0", 1, 434925000-fc);
-  //rtl->iqReceived.connect(mem_fun(ru13, &Channel::iq_received));
-    // Create the audio source object
+  channel = new Channel(*audio_pipe, fq-rtl->centerFq());
+  rtl->iqReceived.connect(mem_fun(*channel, &Channel::iq_received));
 
   if (!LocalRxBase::initialize())
   {
