@@ -14,7 +14,7 @@ set(LIBSRC
   SigLevDetTone.cpp Sel5Decoder.cpp SwSel5Decoder.cpp
   SquelchEvDev.cpp Macho.cpp SquelchGpio.cpp Ptt.cpp
   PttGpio.cpp PttSerialPin.cpp Pty.cpp PttPty.cpp
-  PtyDtmfDecoder.cpp
+  PtyDtmfDecoder.cpp LocalRxBase.cpp Ddr.cpp
 )
 
 # Which other libraries this library depends on

@@ -1,12 +1,10 @@
 /**
-@file	 LocalRx.h
-@brief   A receiver class to handle local receivers
+@file	 Ddr.h
+@brief   A receiver class to handle digital drop receivers
 @author  Tobias Blomberg / SM0SVX
-@date	 2004-03-21
+@date	 2014-07-16
 
-This file contains a class that handle local analogue receivers. A local
-receiver is a receiver that is directly connected to the sound card on the
-computer where the SvxLink core is running.
+This file contains a class that handle local digital drop receivers.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -29,8 +27,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef LOCAL_RX_INCLUDED
-#define LOCAL_RX_INCLUDED
+#ifndef DDR_INCLUDED
+#define DDR_INCLUDED
 
 
 /****************************************************************************
@@ -66,7 +64,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace Async
 {
-  class AudioIO;
+  class AudioPassthrough;
 };
 
 
@@ -111,26 +109,26 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A class to handle local receivers
+@brief	A class to handle digital drop receivers
 @author Tobias Blomberg
-@date   2004-03-21
+@date   2014-07-16
 
-This class handle local analogue receivers. A local receiver is a receiver that
-is directly connected to the sound card on the computer where the SvxLink core
-is running.
+This class handle local digital drop receivers. A digital drop receiver use
+a wideband tuner to receive wideband samples. A narrowband channel is then
+extracted from this wideband signal and a demodulator is applied.
 */
-class LocalRx : public LocalRxBase
+class Ddr : public LocalRxBase
 {
   public:
     /**
      * @brief 	Default constuctor
      */
-    explicit LocalRx(Async::Config &cfg, const std::string& name);
+    explicit Ddr(Async::Config &cfg, const std::string& name);
   
     /**
      * @brief 	Destructor
      */
-    virtual ~LocalRx(void);
+    virtual ~Ddr(void);
   
     /**
      * @brief 	Initialize the receiver object
@@ -179,15 +177,15 @@ class LocalRx : public LocalRxBase
     virtual Async::AudioSource *audioSource(void);
     
   private:
-    Async::Config   &cfg;
-    Async::AudioIO  *audio_io;
+    Async::Config           &cfg;
+    Async::AudioPassthrough *audio_pipe;
     
-};  /* class LocalRx */
+};  /* class Ddr */
 
 
 //} /* namespace */
 
-#endif /* LOCAL_RX_INCLUDED */
+#endif /* DDR_INCLUDED */
 
 
 /*

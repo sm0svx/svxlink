@@ -58,6 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Voter.h"
 #include "NetRx.h"
 #include "DummyRxTx.h"
+#include "Ddr.h"
 
 
 
@@ -136,6 +137,19 @@ class DummyRxFactory : public RxFactory
       return new DummyRx(cfg, name);
     }
 }; /* class DummyRxFactory */
+
+
+class DdrFactory : public RxFactory
+{
+  public:
+    DdrFactory(void) : RxFactory("Ddr") {}
+    
+  protected:
+    Rx *createRx(Config &cfg, const string& name)
+    {
+      return new Ddr(cfg, name);
+    }
+}; /* class DdrFactory */
 
 
 /****************************************************************************
@@ -242,6 +256,7 @@ Rx *RxFactory::createNamedRx(Config& cfg, const string& name)
   VoterFactory voter_factory;
   NetRxFactory net_rx_factory;
   DummyRxFactory dummy_rx_factory;
+  DdrFactory ddr_rx_factory;
   
   string rx_type;
   if (name != "NONE")
