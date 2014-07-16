@@ -154,7 +154,7 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
   uint32_t center_fq;
   if (cfg.getValue(name, "CENTER_FQ", center_fq))
   {
-    cout << "###   CENTER_FQ = " << fq_corr << endl;
+    cout << "###   CENTER_FQ = " << center_fq << endl;
     rtl->setCenterFq(center_fq);
   }
 

@@ -90,6 +90,11 @@ using namespace Async;
  *
  ****************************************************************************/
 
+#define FILTER_COEFF(name, coeffs...) \
+  static const float name[] = { \
+    coeffs \
+  }; \
+  static const int name ## _cnt = sizeof(name) / sizeof(*name);
 
 
 /****************************************************************************
@@ -98,58 +103,166 @@ using namespace Async;
  *
  ****************************************************************************/
 
-static const int nbfm_iq_dec_coeff1_cnt = 11;
-static const float nbfm_iq_dec_coeff1[nbfm_iq_dec_coeff1_cnt] = {
--0.0042774311138192,
-0.0203215628564991,
-0.0662460869736418,
-0.1305633864584946,
-0.1880313441401774,
-0.2111689145317699,
-0.1880313441401774,
-0.1305633864584946,
-0.0662460869736418,
-0.0203215628564991,
--0.0042774311138192
-};
+/**
+ * fs=960000;
+ * a=[1 1 0 0];
+ * f=[0 10000/(fs/2) 96000/(fs/2) 1];
+ * b=firpm(30,f,a);
+ *
+ * Lowpass filter of order 30 for first stage decimation from 960kHz to 192kHz
+ * sampling frequency. Below -50dB over 96kHz.
+ */
+FILTER_COEFF(nbfm_iq_dec_coeff1,
+-0.0028713422063345,
+-0.0041769139545598,
+-0.0062171808745743,
+-0.0078031238748803,
+-0.0081233271798609,
+-0.0062743621398142,
+-0.0014205292313401,
+0.0070048711105898,
+0.0191247988093941,
+0.0344897867015570,
+0.0520570673062483,
+0.0702711557447386,
+0.0872655777710594,
+0.1011208091483218,
+0.1101849356054080,
+0.1133410547020278,
+0.1101849356054080,
+0.1011208091483218,
+0.0872655777710594,
+0.0702711557447386,
+0.0520570673062483,
+0.0344897867015570,
+0.0191247988093941,
+0.0070048711105898,
+-0.0014205292313401,
+-0.0062743621398142,
+-0.0081233271798609,
+-0.0078031238748803,
+-0.0062171808745743,
+-0.0041769139545598,
+-0.0028713422063345
+)
 
-static const int nbfm_iq_dec_coeff2_cnt = 31;
-static const float nbfm_iq_dec_coeff2[nbfm_iq_dec_coeff2_cnt] = {
--0.0638521136019694,
--0.0010208850725564,
-0.0116531523021925,
-0.0263863783640881,
-0.0351438143433804,
-0.0313791760854124,
-0.0136787364296511,
--0.0124236208278904,
--0.0354874256756020,
--0.0420853937348059,
--0.0222900781714972,
-0.0255080232882617,
-0.0926463175001950,
-0.1622142633364627,
-0.2145119015320957,
-0.2339193865994095,
-0.2145119015320957,
-0.1622142633364627,
-0.0926463175001950,
-0.0255080232882617,
--0.0222900781714972,
--0.0420853937348059,
--0.0354874256756020,
--0.0124236208278904,
-0.0136787364296511,
-0.0313791760854124,
-0.0351438143433804,
-0.0263863783640881,
-0.0116531523021925,
--0.0010208850725564,
--0.0638521136019694
-};
+/**
+ * fs=192000;
+ * a=[1 1 0 0];
+ * f=[0 10000/(fs/2) 24000/(fs/2) 1];
+ * b=firpm(38,f,a);
+ *
+ * Lowpass filter of order 38 for second stage decimation from 192kHz to 48kHz
+ * sampling frequency. Below -50dB over 24kHz.
+ */
+FILTER_COEFF(nbfm_iq_dec_coeff2,
+-0.0022054057399946,
+-0.0013759144555157,
+-0.0003560235137129,
+0.0019402788096753,
+0.0050318463119633,
+0.0077118103385981,
+0.0083196771915043,
+0.0053564859260711,
+-0.0017223951190513,
+-0.0118310814176461,
+-0.0220269740210023,
+-0.0279535379185214,
+-0.0249640367446503,
+-0.0096365156797809,
+0.0187997839077061,
+0.0576385308284084,
+0.1008804142901618,
+0.1404539524894698,
+0.1682431134370760,
+0.1782444890349868,
+0.1682431134370760,
+0.1404539524894698,
+0.1008804142901618,
+0.0576385308284084,
+0.0187997839077061,
+-0.0096365156797809,
+-0.0249640367446503,
+-0.0279535379185214,
+-0.0220269740210023,
+-0.0118310814176461,
+-0.0017223951190513,
+0.0053564859260711,
+0.0083196771915043,
+0.0077118103385981,
+0.0050318463119633,
+0.0019402788096753,
+-0.0003560235137129,
+-0.0013759144555157,
+-0.0022054057399946
+)
 
-static const int wbfm_iq_dec_coeff_cnt = 41;
-static const float wbfm_iq_dec_coeff[wbfm_iq_dec_coeff_cnt] = {
+/**
+ * fs=48000;
+ * a=[1 1 0 0];
+ * f=[0 10000/(fs/2) 12500/(fs/2) 1];
+ * b=firpm(52,f,a);
+ *
+ * Lowpass filter of order 52 for channel filter to create a channel that start
+ * falling off at 20kHz bandwidth and at -50dB over 25kHz bandwidth.
+ */
+FILTER_COEFF(nbfm_iq_ch_filt_coeff,
+0.0008241697920589,
+-0.0021070026154187,
+-0.0018283827176036,
+0.0016310471394501,
+0.0028118758642382,
+-0.0019396699761340,
+-0.0046522841665745,
+0.0017070490502376,
+0.0070035913525649,
+-0.0007830014477388,
+-0.0098758879175436,
+-0.0011783591096547,
+0.0131725633282163,
+0.0045849076900695,
+-0.0167379346321622,
+-0.0099840064006532,
+0.0203645795200879,
+0.0182368672779849,
+-0.0238117005219107,
+-0.0310369079128660,
+0.0268255689484280,
+0.0527102597060804,
+-0.0291747144820595,
+-0.0992601034613792,
+0.0306674034773647,
+0.3159828500981747,
+0.4688223043097902,
+0.3159828500981747,
+0.0306674034773647,
+-0.0992601034613792,
+-0.0291747144820595,
+0.0527102597060804,
+0.0268255689484280,
+-0.0310369079128660,
+-0.0238117005219107,
+0.0182368672779849,
+0.0203645795200879,
+-0.0099840064006532,
+-0.0167379346321622,
+0.0045849076900695,
+0.0131725633282163,
+-0.0011783591096547,
+-0.0098758879175436,
+-0.0007830014477388,
+0.0070035913525649,
+0.0017070490502376,
+-0.0046522841665745,
+-0.0019396699761340,
+0.0028118758642382,
+0.0016310471394501,
+-0.0018283827176036,
+-0.0021070026154187,
+0.0008241697920589
+)
+
+FILTER_COEFF(wbfm_iq_dec_coeff,
 0.0194679922087664,
 -0.0005977805219536,
 -0.0061383768321768,
@@ -191,10 +304,9 @@ static const float wbfm_iq_dec_coeff[wbfm_iq_dec_coeff_cnt] = {
 -0.0061383768321768,
 -0.0005977805219536,
 0.0194679922087664
-};
+)
 
-static const int audio_dec_coeff_cnt = 21;
-static const float audio_dec_coeff[audio_dec_coeff_cnt] = {
+FILTER_COEFF(audio_dec_coeff,
 0.0018440287120654,
 0.0101759828785910,
 0.0099946080524450,
@@ -216,7 +328,7 @@ static const float audio_dec_coeff[audio_dec_coeff_cnt] = {
 0.0099946080524450,
 0.0101759828785910,
 0.0018440287120654
-};
+)
 
 
 namespace {
@@ -293,6 +405,7 @@ namespace {
         : iold(1.0f), qold(1.0f), audio_sink(audio_sink),
           iq_dec1(5, nbfm_iq_dec_coeff1, nbfm_iq_dec_coeff1_cnt),
           iq_dec2(4, nbfm_iq_dec_coeff2, nbfm_iq_dec_coeff2_cnt),
+          ch_filt(1, nbfm_iq_ch_filt_coeff, nbfm_iq_ch_filt_coeff_cnt),
           sql_open(false)
       {
         //Decimator<float> audio_dec(20, audio_dec_coeff, audio_dec_coeff_cnt);
@@ -306,24 +419,25 @@ namespace {
             samples.size() * sizeof(samples[0]));
 #endif
 
-        vector<WbRxRtlTcp::Sample> dec_samp1, dec_samp;
+        vector<WbRxRtlTcp::Sample> dec_samp1, dec_samp2, ch_samp;
         iq_dec1.decimate(dec_samp1, samples);
-        iq_dec2.decimate(dec_samp, dec_samp1);
+        iq_dec2.decimate(dec_samp2, dec_samp1);
+        ch_filt.decimate(ch_samp, dec_samp2);
         //dec_samp = samples;
 
           // Från article-sdr-is-qs.pdf: Watch your Is and Qs:
           // FM = (Qn.In-1 - In.Qn-1)/(In.In-1 + Qn.Qn-1)
         vector<float> audio;
         double sumE = 0.0;
-        for (size_t idx=0; idx<dec_samp.size(); ++idx)
+        for (size_t idx=0; idx<ch_samp.size(); ++idx)
         {
-          sumE += pow(abs(dec_samp[idx]), 2.0);
+          sumE += pow(abs(ch_samp[idx]), 2.0);
 
             // Normalize signal amplitude
-          dec_samp[idx] = dec_samp[idx] / abs(dec_samp[idx]);
+          ch_samp[idx] = ch_samp[idx] / abs(ch_samp[idx]);
 
-          float i = dec_samp[idx].real();
-          float q = dec_samp[idx].imag();
+          float i = ch_samp[idx].real();
+          float q = ch_samp[idx].imag();
           //outfile.write(reinterpret_cast<char*>(&i), sizeof(float));
           //outfile.write(reinterpret_cast<char*>(&q), sizeof(float));
 
@@ -337,8 +451,8 @@ namespace {
 
             // Complex baseband delay demodulator
 #if 0
-          float demod = arg(dec_samp[idx] * conj(prev_samp));
-          prev_samp = dec_samp[idx];
+          float demod = arg(ch_samp[idx] * conj(prev_samp));
+          prev_samp = ch_samp[idx];
 #endif
 
           audio.push_back(demod);
@@ -348,7 +462,7 @@ namespace {
           iold = i;
           qold = q;
         }
-        double meanE = sumE / dec_samp.size();
+        double meanE = sumE / ch_samp.size();
         //if (meanE > 5.0E-6)
         //if (meanE > 0.01)
         {
@@ -375,6 +489,7 @@ namespace {
       AudioSink &audio_sink;
       Decimator<complex<float> > iq_dec1;
       Decimator<complex<float> > iq_dec2;
+      Decimator<complex<float> > ch_filt;
       bool sql_open;
 
   };
