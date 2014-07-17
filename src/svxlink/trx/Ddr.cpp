@@ -409,6 +409,12 @@ namespace {
           sql_open(false)
       {
         //Decimator<float> audio_dec(20, audio_dec_coeff, audio_dec_coeff_cnt);
+        outfile.open("out.bin", ios::out | ios::binary);
+      }
+
+      ~FmDemod()
+      {
+        outfile.close();
       }
 
       void iq_received(vector<WbRxRtlTcp::Sample> samples)
@@ -424,14 +430,18 @@ namespace {
         iq_dec2.decimate(dec_samp2, dec_samp1);
         ch_filt.decimate(ch_samp, dec_samp2);
         //dec_samp = samples;
+#if 0
+        outfile.write(reinterpret_cast<char*>(&ch_samp[0]),
+            ch_samp.size() * sizeof(ch_samp[0]));
+#endif
 
-          // Från article-sdr-is-qs.pdf: Watch your Is and Qs:
+          // From article-sdr-is-qs.pdf: Watch your Is and Qs:
           // FM = (Qn.In-1 - In.Qn-1)/(In.In-1 + Qn.Qn-1)
         vector<float> audio;
-        double sumE = 0.0;
+        //double sumE = 0.0;
         for (size_t idx=0; idx<ch_samp.size(); ++idx)
         {
-          sumE += pow(abs(ch_samp[idx]), 2.0);
+          //sumE += pow(abs(ch_samp[idx]), 2.0);
 
             // Normalize signal amplitude
           ch_samp[idx] = ch_samp[idx] / abs(ch_samp[idx]);
@@ -462,11 +472,11 @@ namespace {
           iold = i;
           qold = q;
         }
-        double meanE = sumE / ch_samp.size();
+        //double meanE = sumE / ch_samp.size();
         //if (meanE > 5.0E-6)
         //if (meanE > 0.01)
         {
-          //cout << "meanE=" << meanE << endl;
+          //cout << "meanE=" << 10*log10(meanE/1.0E-3) << endl;
           sql_open = true;
           vector<float> dec_audio;
           //audio_dec.decimate(dec_audio, audio);
@@ -491,6 +501,7 @@ namespace {
       Decimator<complex<float> > iq_dec2;
       Decimator<complex<float> > ch_filt;
       bool sql_open;
+      ofstream outfile;
 
   };
 

@@ -155,10 +155,10 @@ void RtlTcp::setGainMode(uint32_t mode)
 } /* RtlTcp::setGainMode */
 
 
-void RtlTcp::setGain(uint32_t gain)
+void RtlTcp::setGain(int32_t gain)
 {
   this->gain = gain;
-  sendCommand(4, gain);
+  sendCommand(4, static_cast<uint32_t>(gain));
 } /* RtlTcp::setGain */
 
 

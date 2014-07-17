@@ -144,7 +144,7 @@ class RtlTcp : public sigc::trackable
 
     void setGainMode(uint32_t mode);
 
-    void setGain(uint32_t gain);
+    void setGain(int32_t gain);
 
     void setFqCorr(uint32_t corr);
 
@@ -178,7 +178,7 @@ class RtlTcp : public sigc::trackable
     bool      samp_rate_set;
     uint32_t  samp_rate;
     int32_t   gain_mode;
-    uint32_t  gain;
+    int32_t   gain;
     bool      fq_corr_set;
     uint32_t  fq_corr;
     int       tuner_if_gain[MAX_IF_GAIN_STAGES];

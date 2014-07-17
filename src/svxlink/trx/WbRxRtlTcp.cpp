@@ -147,23 +147,24 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
   uint32_t fq_corr;
   if (cfg.getValue(name, "FQ_CORR", fq_corr))
   {
-    cout << "###   FQ_CORR   = " << fq_corr << endl;
+    cout << "###   FQ_CORR   = " << fq_corr << "ppm\n";
     rtl->setFqCorr(fq_corr);
   }
 
   uint32_t center_fq;
   if (cfg.getValue(name, "CENTER_FQ", center_fq))
   {
-    cout << "###   CENTER_FQ = " << center_fq << endl;
+    cout << "###   CENTER_FQ = " << center_fq << "Hz\n";
     rtl->setCenterFq(center_fq);
   }
 
-  uint32_t gain;
+  float gain;
   if (cfg.getValue(name, "GAIN", gain))
   {
-    cout << "###   GAIN      = " << gain << endl;
+    cout << "###   GAIN      = " << gain << "dB\n";
     rtl->setGainMode(1);
-    rtl->setGain(gain);
+    int32_t int_gain = static_cast<int32_t>(10.0 * gain);
+    rtl->setGain(int_gain);
   }
 } /* WbRxRtlTcp::WbRxRtlTcp */
 
