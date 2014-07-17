@@ -290,7 +290,7 @@ int main(int argc, char **argv)
   cfg.setValue(rx_name, "CTCSS_OPEN_THRESH", "100");
   
     // Make sure we are using the "Noise" siglev detector
-  cfg.setValue(rx_name, "SIGLEV_DET", "NOISE");
+  //cfg.setValue(rx_name, "SIGLEV_DET", "NOISE");
 
     // Read the configured siglev slope and offset, then clear them so that
     // they cannot affect the measurement.

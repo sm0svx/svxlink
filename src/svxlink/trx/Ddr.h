@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "LocalRxBase.h"
+#include "RtlTcp.h"
 
 
 /****************************************************************************
@@ -122,6 +123,8 @@ extracted from this wideband signal and a demodulator is applied.
 class Ddr : public LocalRxBase
 {
   public:
+    static Ddr *find(const std::string &name);
+
     /**
      * @brief 	Default constuctor
      */
@@ -137,6 +140,8 @@ class Ddr : public LocalRxBase
      * @return 	Return \em true on success, or \em false on failure
      */
     virtual bool initialize(void);
+
+    sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
     
   protected:
     /**
@@ -180,6 +185,9 @@ class Ddr : public LocalRxBase
     
   private:
     class Channel;
+    typedef std::map<std::string, Ddr*> DdrMap;
+
+    static DdrMap ddr_map;
 
     Async::Config           &cfg;
     Async::AudioPassthrough *audio_pipe;

@@ -429,6 +429,7 @@ namespace {
         iq_dec1.decimate(dec_samp1, samples);
         iq_dec2.decimate(dec_samp2, dec_samp1);
         ch_filt.decimate(ch_samp, dec_samp2);
+        preDemod(ch_samp);
         //dec_samp = samples;
 #if 0
         outfile.write(reinterpret_cast<char*>(&ch_samp[0]),
@@ -492,6 +493,8 @@ namespace {
         }
         */
       }
+
+      sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
 
     private:
       float iold;
@@ -572,12 +575,13 @@ namespace {
 }; /* anonymous namespace */
 
 
-class Ddr::Channel
+class Ddr::Channel : public sigc::trackable
 {
   public:
     Channel(AudioSink &audio_sink, int fq_offset)
       : fm_demod(audio_sink), trans(960000, fq_offset)
     {
+      fm_demod.preDemod.connect(preDemod.make_slot());
     }
 
     void iq_received(vector<WbRxRtlTcp::Sample> samples)
@@ -586,6 +590,8 @@ class Ddr::Channel
       trans.iq_received(translated, samples);
       fm_demod.iq_received(translated);
     };
+
+    sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
 
   private:
     FmDemod fm_demod;
@@ -615,6 +621,7 @@ class Ddr::Channel
  *
  ****************************************************************************/
 
+Ddr::DdrMap Ddr::ddr_map;
 
 
 /****************************************************************************
@@ -622,6 +629,17 @@ class Ddr::Channel
  * Public member functions
  *
  ****************************************************************************/
+
+Ddr *Ddr::find(const std::string &name)
+{
+  DdrMap::iterator it = ddr_map.find(name);
+  if (it != ddr_map.end())
+  {
+    return (*it).second;
+  }
+  return 0;
+} /* Ddr::find */
+
 
 Ddr::Ddr(Config &cfg, const std::string& name)
   : LocalRxBase(cfg, name), cfg(cfg), audio_pipe(0), channel(0), rtl(0)
@@ -631,6 +649,12 @@ Ddr::Ddr(Config &cfg, const std::string& name)
 
 Ddr::~Ddr(void)
 {
+  DdrMap::iterator it = ddr_map.find(name());
+  if (it != ddr_map.end())
+  {
+    ddr_map.erase(it);
+  }
+
   delete channel;
   delete rtl;
   delete audio_pipe;
@@ -639,6 +663,16 @@ Ddr::~Ddr(void)
 
 bool Ddr::initialize(void)
 {
+  DdrMap::iterator it = ddr_map.find(name());
+  if (it != ddr_map.end())
+  {
+    cout << "*** ERROR: The name for a Digital Drop Receiver (DDR) must be "
+         << "unique. There already is a receiver named \"" << name()
+         << "\".\n";
+    return false;
+  }
+  ddr_map[name()] = this;
+
   double fq = 0.0;
   if (!cfg.getValue(name(), "FQ", fq))
   {
@@ -665,6 +699,7 @@ bool Ddr::initialize(void)
   }
 
   channel = new Channel(*audio_pipe, fq-rtl->centerFq());
+  channel->preDemod.connect(preDemod.make_slot());
   rtl->iqReceived.connect(mem_fun(*channel, &Channel::iq_received));
 
   if (!LocalRxBase::initialize())
