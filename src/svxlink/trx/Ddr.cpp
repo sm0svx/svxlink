@@ -454,6 +454,7 @@ namespace {
 #if 1
           float demod = (q*iold - i*qold)/(i*iold + q*qold);
           demod = atanf(demod);
+          //demod = FastArcTan(demod);
 #endif
           /*
           demod /= 5;
@@ -503,6 +504,12 @@ namespace {
       bool sql_open;
       ofstream outfile;
 
+        // Maximum error 0.0015 radians (0.085944 degrees)
+        // Produced another result and did not affect overall CPU% much
+      double FastArcTan(double x)
+      {
+        return M_PI_4*x - x*(fabs(x) - 1)*(0.2447 + 0.0663*fabs(x));
+      }
   };
 
 
@@ -525,11 +532,13 @@ namespace {
       void iq_received(vector<WbRxRtlTcp::Sample> &out,
                        const vector<WbRxRtlTcp::Sample> &in)
       {
+        out.clear();
+        out.reserve(in.size());
         vector<WbRxRtlTcp::Sample>::const_iterator it;
         for (it = in.begin(); it != in.end(); ++it)
         {
-          out.push_back(*it * exp_lut[n++]);
-          if (n == exp_lut.size())
+          out.push_back(*it * exp_lut[n]);
+          if (++n == exp_lut.size())
           {
             n = 0;
           }
