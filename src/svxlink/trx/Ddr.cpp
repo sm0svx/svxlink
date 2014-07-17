@@ -509,10 +509,17 @@ namespace {
   class Translate
   {
     public:
-      Translate(float offset)
-        : offset(offset), n(0)
+      Translate(float samp_rate, float offset)
+        : n(0)
       {
-        
+        unsigned N = gcd(samp_rate, abs(offset));
+        cout << "### Translate: offset=" << offset << " N=" << N << endl;
+        exp_lut.resize(N);
+        for (int i=0; i<N; ++i)
+        {
+          complex<float> e(0.0f, -2.0*M_PI*offset*i/samp_rate);
+          exp_lut[i] = exp(e);
+        }
       }
 
       void iq_received(vector<WbRxRtlTcp::Sample> &out,
@@ -521,30 +528,46 @@ namespace {
         vector<WbRxRtlTcp::Sample>::const_iterator it;
         for (it = in.begin(); it != in.end(); ++it)
         {
-          complex<float> e(0.0f, -2.0*M_PI*offset*n/FS);
-          if (++n >= FS)
+          out.push_back(*it * exp_lut[n++]);
+          if (n == exp_lut.size())
           {
             n = 0;
           }
-          out.push_back(*it * exp(e));
         }
       }
 
     private:
-      static const unsigned FS = 960000;
-
-      float offset;
+      vector<complex<float> > exp_lut;
       unsigned n;
 
+      /**
+       * @brief Find the greatest common divisor for two numbers
+       * @param dividend The larger number
+       * @param divisor The lesser number
+       *
+       * This function will return the greatest common divisor of the two given
+       * numbers. This implementation requires that the dividend is larger than
+       * the divisor.
+       */
+      unsigned gcd(unsigned dividend, unsigned divisor)
+      {
+        unsigned reminder = dividend % divisor;
+        if (reminder == 0)
+        {
+          return divisor;
+        }
+        return gcd(divisor, reminder);
+      }
   };
 
 }; /* anonymous namespace */
+
 
 class Ddr::Channel
 {
   public:
     Channel(AudioSink &audio_sink, int fq_offset)
-      : fm_demod(audio_sink), trans(fq_offset)
+      : fm_demod(audio_sink), trans(960000, fq_offset)
     {
     }
 
