@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "Factory.h"
 
 
 /****************************************************************************
@@ -134,9 +135,13 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
     
     /**
      * @brief 	Initialize the signal detector
+     * @param   cfg An initialized config object
+     * @param   name The name of the config section to read config from
+     * @param	sample_rate The rate with which samples enter the detector
      * @return 	Return \em true on success, or \em false on failure
      */
-    virtual bool initialize(Async::Config &cfg, const std::string& name)
+    virtual bool initialize(Async::Config &cfg, const std::string& name,
+                            int sample_rate)
     {
       return true;
     }
@@ -194,6 +199,43 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
     SigLevDet& operator=(const SigLevDet&);
     
 };  /* class SigLevDet */
+
+
+/**
+@brief	Base class for a signal level detector factory
+@author Tobias Blomberg / SM0SVX
+@date   2014-07-17
+
+This is the base class for a signal level detector factory. However, this
+is not the class to inherit from when implementing a signal level detector
+factory. Use the SigLevDetFactory class for that.
+This class is essentially used only to access the createNamedSigLevDet
+function.
+*/
+struct SigLevDetFactoryBase : public FactoryBase<SigLevDet>
+{
+  static SigLevDet *createNamedSigLevDet(Async::Config& cfg,
+                                         const std::string& name);
+  SigLevDetFactoryBase(const std::string &name) : FactoryBase<SigLevDet>(name)
+  {
+  }
+};  /* class SigLevDetFactoryBase */
+
+
+/**
+@brief	Base class for implementing a signal level detector factory
+@author Tobias Blomberg / SM0SVX
+@date   2014-07-17
+
+This class should be inherited from when implementing a new signal level
+detector factory.
+*/
+template <class T>
+struct SigLevDetFactory : public Factory<SigLevDetFactoryBase, T>
+{
+  SigLevDetFactory(const std::string &name)
+    : Factory<SigLevDetFactoryBase, T>(name) {}
+}; /* class SigLevDetFactory */
 
 
 //} /* namespace */

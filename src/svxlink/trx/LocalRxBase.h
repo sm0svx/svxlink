@@ -250,7 +250,6 @@ class LocalRxBase : public Rx
     void sel5Detected(std::string sequence);
     void audioStreamStateChange(bool is_active, bool is_idle);
     void onSquelchOpen(bool is_open);
-    SigLevDet *createSigLevDet(const std::string &name, int sample_rate);
     void tone1750detected(bool detected);
     void onSignalLevelUpdated(float siglev);
     void setSqlHangtimeFromSiglev(float siglev);

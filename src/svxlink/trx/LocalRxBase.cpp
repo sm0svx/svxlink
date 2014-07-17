@@ -67,8 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "SigLevDetNoise.h"
-#include "SigLevDetTone.h"
+#include "SigLevDet.h"
 #include "DtmfDecoder.h"
 #include "ToneDetector.h"
 #include "SquelchVox.h"
@@ -275,18 +274,15 @@ bool LocalRxBase::initialize(void)
   siglevdet_splitter = new AudioSplitter;
   prev_src->registerSink(siglevdet_splitter, true);
 
-    // Create the signal level detector. Connect it to the 16 or 8kHz splitter
-    // depending on how the sound card sample rate is setup.
-  if (audioSampleRate() > 8000)
+    // Create the signal level detector
+  siglevdet = SigLevDetFactoryBase::createNamedSigLevDet(cfg, name());
+  if ((siglevdet == 0) ||
+      (!siglevdet->initialize(cfg, name(), INTERNAL_SAMPLE_RATE)))
   {
-    siglevdet = createSigLevDet(name(), 16000);
-  }
-  else
-  {
-    siglevdet = createSigLevDet(name(), 8000);
-  }
-  if (siglevdet == 0)
-  {
+    cout << "*** ERROR: Could not initialize the signal level detector for "
+         << "receiver " << name() << endl;
+    delete siglevdet;
+    siglevdet = 0;
     return false;
   }
   siglevdet->setIntegrationTime(0);
@@ -337,38 +333,6 @@ bool LocalRxBase::initialize(void)
   prev_src->registerSink(splitter, true);
   prev_src = 0;
 
-#if 0  
-    // Create the signal level detector. Connect it to the 16 or 8kHz splitter
-    // depending on how the sound card sample rate is setup.
-#if (INTERNAL_SAMPLE_RATE != 16000)
-  if (rate_16k_splitter != 0)
-  {
-    siglevdet = createSigLevDet(name(), 16000);
-    if (siglevdet == 0)
-    {
-      return false;
-    }
-    rate_16k_splitter->addSink(siglevdet, true);
-  }
-  else
-  {
-    siglevdet = createSigLevDet(name(), 8000);
-    if (siglevdet == 0)
-    {
-      return false;
-    }
-    splitter->addSink(siglevdet, true);
-  }
-#else
-  siglevdet = createSigLevDet(name(), 16000);
-  if (siglevdet == 0)
-  {
-    return false;
-  }
-  splitter->addSink(siglevdet, true);
-#endif
-#endif
-  
     // Create the configured squelch detector and initialize it. Then connect
     // it to the 8kHz audio splitter
   string sql_det_str;
@@ -743,67 +707,6 @@ void LocalRxBase::onSquelchOpen(bool is_open)
     siglevdet->setContinuousUpdateInterval(0);
   }
 } /* LocalRxBase::onSquelchOpen */
-
-
-SigLevDet *LocalRxBase::createSigLevDet(const string &name, int sample_rate)
-{
-  string siglev_det_type;
-  if (!cfg.getValue(name, "SIGLEV_DET", siglev_det_type))
-  {
-    siglev_det_type = "NOISE";
-  }
-  
-  SigLevDet *siglevdet = 0;
-  if (siglev_det_type == "TONE")
-  {
-    if (sample_rate != 16000)
-    {
-      cerr << "*** ERROR: Tone signal level detector specified for receiver "
-           << name << ". It only works at 16kHz internal sampling rate\n";
-      return 0;
-    }
-    siglevdet = new SigLevDetTone(sample_rate);
-  }
-  else if (siglev_det_type == "NOISE")
-  {
-    SigLevDetNoise *det = new SigLevDetNoise(sample_rate);
-  
-    float offset = 0.0f;
-    if (cfg.getValue(name, "SIGLEV_OFFSET", offset))
-    {
-      det->setDetectorOffset(offset);
-    }
-    
-    float slope = 1.0f;
-    if (cfg.getValue(name, "SIGLEV_SLOPE", slope))
-    {
-      det->setDetectorSlope(slope);
-    }
-    
-    float bogus_thresh = numeric_limits<float>::max();
-    if (cfg.getValue(name, "SIGLEV_BOGUS_THRESH", bogus_thresh))
-    {
-      det->setBogusThresh(bogus_thresh);
-    }
-    
-    siglevdet = det;
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown signal level detector type \""
-         << siglev_det_type << "\" specified in " << name << "/SIGLEV_DET.\n";
-    return 0;
-  }
-  
-  if (!siglevdet->initialize(cfg, name))
-  {
-    delete siglevdet;
-    siglevdet = 0;
-  }
-  
-  return siglevdet;
-  
-} /* LocalRxBase::createSigLevDet */
 
 
 void LocalRxBase::tone1750detected(bool detected)
