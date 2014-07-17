@@ -7,7 +7,7 @@ LIBECHOLIB=1.2.99.1
 LIBECHOLIB_RPM_RELEASE=1
 
 # Version for the Async library
-LIBASYNC=1.2.99.2
+LIBASYNC=1.2.99.3
 LIBASYNC_RPM_RELEASE=1
 
 # SvxLink versions

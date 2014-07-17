@@ -18,6 +18,9 @@
 
 * The IpAddress class now have an input stream operator.
 
+* Bugfix in Async::AudioSelector: The selector did not work with some compiler
+  optimizations turned on.
+
 
 
  1.2.1 -- 30 Jun 2014
