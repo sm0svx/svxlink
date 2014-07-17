@@ -90,7 +90,6 @@ class Async::AudioSplitter::Branch : public AudioSource
       : current_buf_pos(0), is_flushed(true), is_enabled(true),
 	is_stopped(false), is_flushing(false), splitter(splitter)
     {
-      assert(registerSink(sink, managed));
     }
     
     virtual ~Branch(void)
@@ -245,6 +244,7 @@ AudioSplitter::~AudioSplitter(void)
 void AudioSplitter::addSink(AudioSink *sink, bool managed)
 {
   Branch *branch = new Branch(this, sink, managed);
+  branch->registerSink(sink, managed);
   branches.push_back(branch);
   if (do_flush)
   {

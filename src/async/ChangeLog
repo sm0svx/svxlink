@@ -18,8 +18,10 @@
 
 * The IpAddress class now have an input stream operator.
 
-* Bugfix in Async::AudioSelector: The selector did not work with some compiler
-  optimizations turned on.
+* Bugfix in Async::{AudioSelector,DnsLookup,AudioSplitter}: Important code had
+  been placed within assert statements. By default CMake set compiler options
+  that remove all assert statements when compiling in release mode. This
+  caused some things to stop working when compiling for release.
 
 
 
