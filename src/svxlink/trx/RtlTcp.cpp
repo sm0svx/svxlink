@@ -118,7 +118,7 @@ RtlTcp::RtlTcp(const string &remote_host, uint16_t remote_port)
     center_fq_set(false), center_fq(100000000), samp_rate_set(false),
     samp_rate(2048000), gain_mode(-1), gain(GAIN_UNSET), fq_corr_set(false),
     fq_corr(0), test_mode_set(false), test_mode(false),
-    use_digital_agc_set(false), use_digital_agc(false)
+    use_digital_agc_set(false), use_digital_agc(false), dist_print_cnt(-1)
 {
   con.dataReceived.connect(mem_fun(*this, &RtlTcp::dataReceived));
   con.connected.connect(mem_fun(*this, &RtlTcp::connected));
@@ -130,6 +130,12 @@ RtlTcp::RtlTcp(const string &remote_host, uint16_t remote_port)
     tuner_if_gain[i] = GAIN_UNSET;
   }
 } /* RtlTcp::RtlTcp */
+
+
+void RtlTcp::enableDistPrint(bool enable)
+{
+  dist_print_cnt = enable ? 0 : -1;
+} /* RtlTcp::enableDistPrint */
 
 
 void RtlTcp::setCenterFq(uint32_t fq)
@@ -338,18 +344,38 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
     reinterpret_cast<complex<uint8_t>*>(buf);
   vector<Sample> iq;
   iq.reserve(samp_count);
+  bool distorsion_detected = false;
   for (int idx=0; idx<samp_count; ++idx)
   {
+    if ((dist_print_cnt == 0) &&
+        ((samples[idx].real() == 255) || (samples[idx].imag() == 255)))
+    {
+      dist_print_cnt = samp_rate;
+    }
     float i = samples[idx].real();
     i = i / 127.5f - 1.0f;
     float q = samples[idx].imag();
     q = q / 127.5f - 1.0f;
     iq.push_back(complex<float>(i, q));
   }
+
+  if (dist_print_cnt > 0)
+  {
+    if (dist_print_cnt == samp_rate)
+    {
+      cout << "*** WARNING: Distorsion detected on RtlTcp tuner "
+           << con->remoteHost() << ":" << con->remotePort() << ". "
+           << "Lower the RF gain\n";
+    }
+    dist_print_cnt -= samp_count;
+    if (dist_print_cnt < 0)
+    {
+      dist_print_cnt = 0;
+    }
+  }
+
   iqReceived(iq);
 
-    // FIXME: Returning 0 terminates the connection. This have to be
-    // handled. Fix Async::TcpConnection?
   return 2 * samp_count;
 } /* RtlTcp::dataReceived */
 
@@ -357,4 +383,3 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
 /*
  * This file has not been truncated
  */
-

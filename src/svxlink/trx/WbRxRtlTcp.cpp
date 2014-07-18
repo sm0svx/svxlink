@@ -173,6 +173,10 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
     int32_t int_gain = static_cast<int32_t>(10.0 * gain);
     rtl->setGain(int_gain);
   }
+
+  bool peak_meter = false;
+  cfg.getValue(name, "PEAK_METER", peak_meter);
+  rtl->enableDistPrint(peak_meter);
 } /* WbRxRtlTcp::WbRxRtlTcp */
 
 

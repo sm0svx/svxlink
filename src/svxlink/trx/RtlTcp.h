@@ -146,6 +146,8 @@ class RtlTcp : public sigc::trackable
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
+    void enableDistPrint(bool enable);
+
     void setCenterFq(uint32_t fq);
     uint32_t centerFq(void) { return center_fq; }
 
@@ -184,7 +186,7 @@ class RtlTcp : public sigc::trackable
   protected:
     
   private:
-    static const int BLOCK_SIZE = 8 * 2 * 960;
+    static const int BLOCK_SIZE = 10 * 2 * 960; // 10ms @ 960kHz
     static const unsigned MAX_IF_GAIN_STAGES = 10;
 
     Async::TcpClient con;
@@ -203,6 +205,7 @@ class RtlTcp : public sigc::trackable
     bool      test_mode;
     bool      use_digital_agc_set;
     bool      use_digital_agc;
+    int       dist_print_cnt;
 
     RtlTcp(const RtlTcp&);
     RtlTcp& operator=(const RtlTcp&);
