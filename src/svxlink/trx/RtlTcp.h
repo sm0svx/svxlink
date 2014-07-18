@@ -118,7 +118,16 @@ class RtlTcp : public sigc::trackable
 {
   public:
     typedef std::complex<float> Sample;
-    
+
+    typedef enum {
+	TUNER_UNKNOWN = 0,
+	TUNER_E4000,
+	TUNER_FC0012,
+	TUNER_FC0013,
+	TUNER_FC2580,
+	TUNER_R820T
+    } TunerType;
+
     static const int GAIN_UNSET = 1000;
 
     /**
@@ -162,6 +171,13 @@ class RtlTcp : public sigc::trackable
      *   d - set tuner gain by index
      */
 
+    TunerType tunerType(void) const { return tuner_type; }
+    const char *tunerTypeString(TunerType type) const;
+    const char *tunerTypeString(void) const
+    {
+      return tunerTypeString(tuner_type);
+    }
+
     sigc::signal<void, std::vector<Sample> > iqReceived;
     
   protected:
@@ -171,7 +187,7 @@ class RtlTcp : public sigc::trackable
     static const unsigned MAX_IF_GAIN_STAGES = 10;
 
     Async::TcpClient con;
-    uint32_t  tuner_type;
+    TunerType tuner_type;
     uint32_t  tuner_gain_count;
     bool      center_fq_set;
     uint32_t  center_fq;

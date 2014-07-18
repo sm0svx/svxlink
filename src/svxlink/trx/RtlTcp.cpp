@@ -114,7 +114,7 @@ using namespace std;
  ****************************************************************************/
 
 RtlTcp::RtlTcp(const string &remote_host, uint16_t remote_port)
-  : con(remote_host, remote_port, BLOCK_SIZE), tuner_type(0),
+  : con(remote_host, remote_port, BLOCK_SIZE), tuner_type(TUNER_UNKNOWN),
     center_fq_set(false), center_fq(100000000), samp_rate_set(false),
     samp_rate(2048000), gain_mode(-1), gain(GAIN_UNSET), fq_corr_set(false),
     fq_corr(0), test_mode_set(false), test_mode(false),
@@ -199,6 +199,25 @@ void RtlTcp::enableDigitalAgc(bool enable)
   sendCommand(8, enable ? 1 : 0);
 } /* RtlTcp::enableDigitalAgc */
 
+
+const char *RtlTcp::tunerTypeString(TunerType type) const
+{
+  switch (type)
+  {
+    case TUNER_E4000:
+      return "E4000";
+    case TUNER_FC0012:
+      return "FC0012";
+    case TUNER_FC0013:
+      return "FC0013";
+    case TUNER_FC2580:
+      return "FC2580";
+    case TUNER_R820T:
+      return "R820T";
+    default:
+      return "UNKNOWN";
+  }
+} /* RtlTcp::tunerTypeString */
 
 
 
@@ -299,10 +318,11 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
       cout << "*** ERROR: Expected magic RTL0\n";
       exit(1);
     }
-    tuner_type = ntohl(*reinterpret_cast<uint32_t *>(ptr+4));
+    tuner_type =
+      static_cast<TunerType>(ntohl(*reinterpret_cast<uint32_t *>(ptr+4)));
     tuner_gain_count = ntohl(*reinterpret_cast<uint32_t *>(ptr+8));
-    cout << "### tuner_type=" << tuner_type
-         << " tuner_gain_count=" << tuner_gain_count << endl;
+    cout << "### tuner_type=" << tunerTypeString() << " "
+         << "tuner_gain_count=" << tuner_gain_count << endl;
     updateSettings();
     return 12;
   }
