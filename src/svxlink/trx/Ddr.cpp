@@ -627,8 +627,19 @@ namespace {
   {
     public:
       Translate(float samp_rate, float offset)
-        : n(0)
+        : samp_rate(samp_rate), n(0)
       {
+        setOffset(offset);
+      }
+
+      void setOffset(int offset)
+      {
+        n = 0;
+        exp_lut.clear();
+        if (offset == 0)
+        {
+          return;
+        }
         unsigned N = gcd(samp_rate, abs(offset));
         cout << "### Translate: offset=" << offset << " N=" << N << endl;
         exp_lut.resize(N);
@@ -642,20 +653,28 @@ namespace {
       void iq_received(vector<WbRxRtlTcp::Sample> &out,
                        const vector<WbRxRtlTcp::Sample> &in)
       {
-        out.clear();
-        out.reserve(in.size());
-        vector<WbRxRtlTcp::Sample>::const_iterator it;
-        for (it = in.begin(); it != in.end(); ++it)
+        if (exp_lut.size() > 0)
         {
-          out.push_back(*it * exp_lut[n]);
-          if (++n == exp_lut.size())
+          out.clear();
+          out.reserve(in.size());
+          vector<WbRxRtlTcp::Sample>::const_iterator it;
+          for (it = in.begin(); it != in.end(); ++it)
           {
-            n = 0;
+            out.push_back(*it * exp_lut[n]);
+            if (++n == exp_lut.size())
+            {
+              n = 0;
+            }
           }
+        }
+        else
+        {
+          out = in;
         }
       }
 
     private:
+      float samp_rate;
       vector<complex<float> > exp_lut;
       unsigned n;
 
@@ -689,6 +708,11 @@ class Ddr::Channel : public sigc::trackable
       : fm_demod(audio_sink), trans(960000, fq_offset)
     {
       fm_demod.preDemod.connect(preDemod.make_slot());
+    }
+
+    void setFqOffset(int fq_offset)
+    {
+      trans.setOffset(fq_offset);
     }
 
     void iq_received(vector<WbRxRtlTcp::Sample> samples)
@@ -749,13 +773,16 @@ Ddr *Ddr::find(const std::string &name)
 
 
 Ddr::Ddr(Config &cfg, const std::string& name)
-  : LocalRxBase(cfg, name), cfg(cfg), audio_pipe(0), channel(0), rtl(0)
+  : LocalRxBase(cfg, name), cfg(cfg), audio_pipe(0), channel(0), rtl(0),
+    fq(0.0)
 {
 } /* Ddr::Ddr */
 
 
 Ddr::~Ddr(void)
 {
+  rtl->unregisterDdr(this);
+
   DdrMap::iterator it = ddr_map.find(name());
   if (it != ddr_map.end())
   {
@@ -780,7 +807,6 @@ bool Ddr::initialize(void)
   }
   ddr_map[name()] = this;
 
-  double fq = 0.0;
   if (!cfg.getValue(name(), "FQ", fq))
   {
     cerr << "*** ERROR: Config variable " << name() << "/FQ not set\n";
@@ -813,6 +839,9 @@ bool Ddr::initialize(void)
   {
     return false;
   }
+
+  rtl->centerFqChanged.connect(mem_fun(*this, &Ddr::tunerFqChanged));
+  rtl->registerDdr(this);
 
   return true;
   
@@ -856,6 +885,12 @@ Async::AudioSource *Ddr::audioSource(void)
  *
  ****************************************************************************/
 
+void Ddr::tunerFqChanged(uint32_t center_fq)
+{
+  cout << "### Ddr::tunerFqChanged: The tuner fq changed to "
+       << center_fq << endl;
+  channel->setFqOffset(fq-center_fq);
+} /* Ddr::tunerFqChanged */
 
 
 /*

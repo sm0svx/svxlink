@@ -33,6 +33,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <stdint.h>
+#include <cassert>
+#include <limits>
+#include <algorithm>
+#include <deque>
 
 
 /****************************************************************************
@@ -52,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "WbRxRtlTcp.h"
 #include "RtlTcp.h"
+#include "Ddr.h"
 
 
 
@@ -127,6 +132,7 @@ WbRxRtlTcp *WbRxRtlTcp::instance(Async::Config &cfg, const string &name)
 
 
 WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
+  : auto_tune_enabled(true)
 {
   cout << "### Initializing WBRX " << name << endl;
 
@@ -155,7 +161,8 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
   if (cfg.getValue(name, "CENTER_FQ", center_fq))
   {
     cout << "###   CENTER_FQ = " << center_fq << "Hz\n";
-    rtl->setCenterFq(center_fq);
+    auto_tune_enabled = false;
+    setCenterFq(center_fq);
   }
 
   float gain;
@@ -176,10 +183,41 @@ WbRxRtlTcp::~WbRxRtlTcp(void)
 } /* WbRxRtlTcp::~WbRxRtlTcp */
 
 
+void WbRxRtlTcp::setCenterFq(uint32_t fq)
+{
+  rtl->setCenterFq(fq);
+  centerFqChanged(fq);
+} /* WbRxRtlTcp::setCenterFq */
+
+
 uint32_t WbRxRtlTcp::centerFq(void)
 {
   return rtl->centerFq();
 } /* WbRxRtlTcp::centerFq */
+
+
+void WbRxRtlTcp::registerDdr(Ddr *ddr)
+{
+  Ddrs::iterator it = ddrs.find(ddr);
+  assert(it == ddrs.end());
+  ddrs.insert(ddr);
+  if (auto_tune_enabled)
+  {
+    findBestCenterFq();
+  }
+} /* WbRxRtlTcp::registerDdr */
+
+
+void WbRxRtlTcp::unregisterDdr(Ddr *ddr)
+{
+  Ddrs::iterator it = ddrs.find(ddr);
+  assert(it != ddrs.end());
+  ddrs.erase(it);
+  if (auto_tune_enabled)
+  {
+    findBestCenterFq();
+  }
+} /* WbRxRtlTcp::unregisterDdr */
 
 
 
@@ -197,6 +235,60 @@ uint32_t WbRxRtlTcp::centerFq(void)
  *
  ****************************************************************************/
 
+void WbRxRtlTcp::findBestCenterFq(void)
+{
+  deque<double> fqs;
+  for (Ddrs::iterator it=ddrs.begin(); it!=ddrs.end(); ++it)
+  {
+    Ddr *ddr = (*it);
+    cout << "### " << ddr->name()
+         << ": fq=" << ddr->nbFq()
+         << endl;
+    fqs.push_back(ddr->nbFq());
+  }
+  sort(fqs.begin(), fqs.end());
+  double span;
+  while ((span = fqs.back() - fqs.front()) > rtl->sampleRate())
+  {
+    cout << "### Span too wide: " << span << endl;
+    deque<double>::iterator it =
+      upper_bound(fqs.begin(), fqs.end(), span / 2.0);
+    size_t lo_cnt = it - fqs.begin();
+    size_t hi_cnt = fqs.size() - lo_cnt;
+    if (hi_cnt > lo_cnt)
+    {
+      fqs.pop_back();
+    }
+    else
+    {
+      fqs.pop_front();
+    }
+  }
+
+  double center_fq = (fqs.front() + fqs.back()) / 2.0;
+
+  deque<double>::iterator hi_bound =
+    upper_bound(fqs.begin(), fqs.end(), center_fq + 12500);
+  deque<double>::iterator lo_bound =
+    lower_bound(fqs.begin(), fqs.end(), center_fq - 12500);
+  if (lo_bound != fqs.end())
+  {
+    cout << "### lo_bound=" << *lo_bound << endl;
+  }
+  if (hi_bound != fqs.end())
+  {
+    cout << "### hi_bound=" << *hi_bound << endl;
+  }
+  assert(lo_bound != fqs.end());
+  if (lo_bound < hi_bound)
+  {
+    center_fq += 25000;
+  }
+
+  cout << "### New center_fq=" << center_fq << endl;
+  setCenterFq(center_fq);
+
+} /* WbRxRtlTcp::findBestCenterFq */
 
 
 /*

@@ -141,6 +141,9 @@ class Ddr : public LocalRxBase
      */
     virtual bool initialize(void);
 
+    double nbFq(void) const { return fq; }
+
+
     sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
     
   protected:
@@ -193,7 +196,9 @@ class Ddr : public LocalRxBase
     Async::AudioPassthrough *audio_pipe;
     Channel                 *channel;
     WbRxRtlTcp              *rtl;
+    double                  fq;
     
+    void tunerFqChanged(uint32_t fq);
 };  /* class Ddr */
 
 

@@ -150,6 +150,7 @@ class RtlTcp : public sigc::trackable
     uint32_t centerFq(void) { return center_fq; }
 
     void setSampleRate(uint32_t rate);
+    uint32_t sampleRate(void) const { return samp_rate; }
 
     void setGainMode(uint32_t mode);
 

@@ -45,6 +45,7 @@ An example of how to use the WbRxRtlTcp class
 #include <string>
 #include <vector>
 #include <complex>
+#include <set>
 
 
 /****************************************************************************
@@ -74,6 +75,7 @@ namespace Async
   class Config;
 };
 class RtlTcp;
+class Ddr;
 
 
 /****************************************************************************
@@ -147,21 +149,30 @@ class WbRxRtlTcp
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
+    void setCenterFq(uint32_t fq);
     uint32_t centerFq(void);
 
+    void registerDdr(Ddr *ddr);
+    void unregisterDdr(Ddr *ddr);
+
     sigc::signal<void, std::vector<Sample> > iqReceived;
+    sigc::signal<void, uint32_t> centerFqChanged;
     
   protected:
     
   private:
     typedef std::map<std::string, WbRxRtlTcp*> InstanceMap;
+    typedef std::set<Ddr*> Ddrs;
 
     static InstanceMap instances;
 
     RtlTcp *rtl;
+    Ddrs ddrs;
+    bool auto_tune_enabled;
 
     WbRxRtlTcp(const WbRxRtlTcp&);
     WbRxRtlTcp& operator=(const WbRxRtlTcp&);
+    void findBestCenterFq(void);
     
 };  /* class WbRxRtlTcp */
 
