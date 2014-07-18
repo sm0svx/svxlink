@@ -152,8 +152,12 @@ class WbRxRtlTcp
     void setCenterFq(uint32_t fq);
     uint32_t centerFq(void);
 
+    uint32_t sampleRate(void) const;
+
     void registerDdr(Ddr *ddr);
     void unregisterDdr(Ddr *ddr);
+
+    std::string name(void) const { return m_name; }
 
     sigc::signal<void, std::vector<Sample> > iqReceived;
     sigc::signal<void, uint32_t> centerFqChanged;
@@ -169,6 +173,7 @@ class WbRxRtlTcp
     RtlTcp *rtl;
     Ddrs ddrs;
     bool auto_tune_enabled;
+    std::string m_name;
 
     WbRxRtlTcp(const WbRxRtlTcp&);
     WbRxRtlTcp& operator=(const WbRxRtlTcp&);

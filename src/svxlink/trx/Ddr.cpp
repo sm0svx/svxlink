@@ -705,7 +705,7 @@ class Ddr::Channel : public sigc::trackable
 {
   public:
     Channel(AudioSink &audio_sink, int fq_offset)
-      : fm_demod(audio_sink), trans(960000, fq_offset)
+      : fm_demod(audio_sink), trans(960000, fq_offset), enabled(true)
     {
       fm_demod.preDemod.connect(preDemod.make_slot());
     }
@@ -717,16 +717,32 @@ class Ddr::Channel : public sigc::trackable
 
     void iq_received(vector<WbRxRtlTcp::Sample> samples)
     {
-      vector<WbRxRtlTcp::Sample> translated;
-      trans.iq_received(translated, samples);
-      fm_demod.iq_received(translated);
+      if (enabled)
+      {
+        vector<WbRxRtlTcp::Sample> translated;
+        trans.iq_received(translated, samples);
+        fm_demod.iq_received(translated);
+      }
     };
+
+    void enable(void)
+    {
+      enabled = true;
+    }
+
+    void disable(void)
+    {
+      enabled = false;
+    }
+
+    bool isEnabled(void) const { return enabled; }
 
     sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
 
   private:
     FmDemod fm_demod;
     Translate trans;
+    bool enabled;
 }; /* Channel */
 
 
@@ -790,7 +806,6 @@ Ddr::~Ddr(void)
   }
 
   delete channel;
-  delete rtl;
   delete audio_pipe;
 } /* Ddr::~Ddr */
 
@@ -889,7 +904,21 @@ void Ddr::tunerFqChanged(uint32_t center_fq)
 {
   cout << "### Ddr::tunerFqChanged: The tuner fq changed to "
        << center_fq << endl;
-  channel->setFqOffset(fq-center_fq);
+  double new_offset = fq-center_fq;
+  cout << "### fq=" << fq << " new_offset=" << new_offset
+       << " samp_rate=" << rtl->sampleRate() << endl;
+  if (abs(new_offset) > (rtl->sampleRate() / 2)-12500)
+  {
+    if (channel->isEnabled())
+    {
+      cout << "*** WARNING: Could not fit DDR " << name() << " into tuner "
+           << rtl->name() << endl;
+      channel->disable();
+    }
+    return;
+  }
+  channel->setFqOffset(new_offset);
+  channel->enable();
 } /* Ddr::tunerFqChanged */
 
 

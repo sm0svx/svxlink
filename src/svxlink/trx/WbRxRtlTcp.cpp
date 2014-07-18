@@ -132,7 +132,7 @@ WbRxRtlTcp *WbRxRtlTcp::instance(Async::Config &cfg, const string &name)
 
 
 WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
-  : auto_tune_enabled(true)
+  : auto_tune_enabled(true), m_name(name)
 {
   cout << "### Initializing WBRX " << name << endl;
 
@@ -200,6 +200,12 @@ uint32_t WbRxRtlTcp::centerFq(void)
 } /* WbRxRtlTcp::centerFq */
 
 
+uint32_t WbRxRtlTcp::sampleRate(void) const
+{
+  return rtl->sampleRate();
+} /* WbRxRtlTcp::sampleRate */
+
+
 void WbRxRtlTcp::registerDdr(Ddr *ddr)
 {
   Ddrs::iterator it = ddrs.find(ddr);
@@ -221,6 +227,12 @@ void WbRxRtlTcp::unregisterDdr(Ddr *ddr)
   {
     findBestCenterFq();
   }
+
+    // Delete myself if this was the last DDR
+  if (ddrs.empty())
+  {
+    delete this;
+  }
 } /* WbRxRtlTcp::unregisterDdr */
 
 
@@ -241,6 +253,11 @@ void WbRxRtlTcp::unregisterDdr(Ddr *ddr)
 
 void WbRxRtlTcp::findBestCenterFq(void)
 {
+  if (ddrs.empty())
+  {
+    return;
+  }
+
   deque<double> fqs;
   for (Ddrs::iterator it=ddrs.begin(); it!=ddrs.end(); ++it)
   {
@@ -259,7 +276,7 @@ void WbRxRtlTcp::findBestCenterFq(void)
       upper_bound(fqs.begin(), fqs.end(), span / 2.0);
     size_t lo_cnt = it - fqs.begin();
     size_t hi_cnt = fqs.size() - lo_cnt;
-    if (hi_cnt > lo_cnt)
+    if (hi_cnt < lo_cnt)
     {
       fqs.pop_back();
     }
