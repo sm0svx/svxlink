@@ -514,7 +514,7 @@ namespace {
           audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt),
           sql_open(false)
       {
-        //audio_dec.adjustGain(-6);
+        audio_dec.adjustGain(-6);
         outfile.open("out.bin", ios::out | ios::binary);
       }
 
