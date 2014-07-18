@@ -143,6 +143,7 @@ class Ddr : public LocalRxBase
 
     double nbFq(void) const { return fq; }
 
+    void tunerFqChanged(uint32_t fq);
 
     sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
     
@@ -198,7 +199,6 @@ class Ddr : public LocalRxBase
     WbRxRtlTcp              *rtl;
     double                  fq;
     
-    void tunerFqChanged(uint32_t fq);
 };  /* class Ddr */
 
 

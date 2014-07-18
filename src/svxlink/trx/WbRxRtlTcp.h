@@ -160,7 +160,6 @@ class WbRxRtlTcp
     std::string name(void) const { return m_name; }
 
     sigc::signal<void, std::vector<Sample> > iqReceived;
-    sigc::signal<void, uint32_t> centerFqChanged;
     
   protected:
     

@@ -855,12 +855,33 @@ bool Ddr::initialize(void)
     return false;
   }
 
-  rtl->centerFqChanged.connect(mem_fun(*this, &Ddr::tunerFqChanged));
   rtl->registerDdr(this);
 
   return true;
   
 } /* Ddr:initialize */
+
+
+void Ddr::tunerFqChanged(uint32_t center_fq)
+{
+  cout << "### Ddr::tunerFqChanged: The tuner fq changed to "
+       << center_fq << endl;
+  double new_offset = fq-center_fq;
+  cout << "### fq=" << fq << " new_offset=" << new_offset
+       << " samp_rate=" << rtl->sampleRate() << endl;
+  if (abs(new_offset) > (rtl->sampleRate() / 2)-12500)
+  {
+    if (channel->isEnabled())
+    {
+      cout << "*** WARNING: Could not fit DDR " << name() << " into tuner "
+           << rtl->name() << endl;
+      channel->disable();
+    }
+    return;
+  }
+  channel->setFqOffset(new_offset);
+  channel->enable();
+} /* Ddr::tunerFqChanged */
 
 
 
@@ -899,28 +920,6 @@ Async::AudioSource *Ddr::audioSource(void)
  * Private member functions
  *
  ****************************************************************************/
-
-void Ddr::tunerFqChanged(uint32_t center_fq)
-{
-  cout << "### Ddr::tunerFqChanged: The tuner fq changed to "
-       << center_fq << endl;
-  double new_offset = fq-center_fq;
-  cout << "### fq=" << fq << " new_offset=" << new_offset
-       << " samp_rate=" << rtl->sampleRate() << endl;
-  if (abs(new_offset) > (rtl->sampleRate() / 2)-12500)
-  {
-    if (channel->isEnabled())
-    {
-      cout << "*** WARNING: Could not fit DDR " << name() << " into tuner "
-           << rtl->name() << endl;
-      channel->disable();
-    }
-    return;
-  }
-  channel->setFqOffset(new_offset);
-  channel->enable();
-} /* Ddr::tunerFqChanged */
-
 
 /*
  * This file has not been truncated

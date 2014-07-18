@@ -190,7 +190,11 @@ WbRxRtlTcp::~WbRxRtlTcp(void)
 void WbRxRtlTcp::setCenterFq(uint32_t fq)
 {
   rtl->setCenterFq(fq);
-  centerFqChanged(fq);
+  for (Ddrs::iterator it=ddrs.begin(); it!=ddrs.end(); ++it)
+  {
+    Ddr *ddr = (*it);
+    ddr->tunerFqChanged(fq);
+  }
 } /* WbRxRtlTcp::setCenterFq */
 
 
@@ -258,6 +262,7 @@ void WbRxRtlTcp::findBestCenterFq(void)
     return;
   }
 
+    // Put all DDR frequencies in a list and sort it
   deque<double> fqs;
   for (Ddrs::iterator it=ddrs.begin(); it!=ddrs.end(); ++it)
   {
@@ -268,48 +273,63 @@ void WbRxRtlTcp::findBestCenterFq(void)
     fqs.push_back(ddr->nbFq());
   }
   sort(fqs.begin(), fqs.end());
-  double span;
-  while ((span = fqs.back() - fqs.front()) > rtl->sampleRate())
+
+    // Now check that all DDRs fit inside the tuner bandwidth. If not,
+    // remove frequencies from the list until it will fit.
+  double span = 0.0;
+  while ((span = fqs.back() - fqs.front()) > (rtl->sampleRate()-25000))
   {
     cout << "### Span too wide: " << span << endl;
-    deque<double>::iterator it =
-      upper_bound(fqs.begin(), fqs.end(), span / 2.0);
-    size_t lo_cnt = it - fqs.begin();
-    size_t hi_cnt = fqs.size() - lo_cnt;
-    if (hi_cnt < lo_cnt)
-    {
-      fqs.pop_back();
-    }
-    else
+    double front_dist = *(fqs.begin()+1) - fqs.front();
+    double back_dist = fqs.back() - *(fqs.rbegin()+1);
+    if (front_dist > back_dist)
     {
       fqs.pop_front();
     }
+    else
+    {
+      fqs.pop_back();
+    }
   }
 
+    // Now place all channels centralized within the tuner bandwidth
   double center_fq = (fqs.front() + fqs.back()) / 2.0;
 
-  deque<double>::iterator hi_bound =
-    upper_bound(fqs.begin(), fqs.end(), center_fq + 12500);
-  deque<double>::iterator lo_bound =
-    lower_bound(fqs.begin(), fqs.end(), center_fq - 12500);
-  if (lo_bound != fqs.end())
+    // Check if we have any channel too close to the center of the band.
+    // The center of the band almost always contain interference signals.
+    // Shift the band to get channels away from the center.
+  double prev_dist = rtl->sampleRate();
+  deque<double>::iterator it = fqs.begin();
+  while (it != fqs.end())
   {
-    cout << "### lo_bound=" << *lo_bound << endl;
-  }
-  if (hi_bound != fqs.end())
-  {
-    cout << "### hi_bound=" << *hi_bound << endl;
-  }
-  assert(lo_bound != fqs.end());
-  if (lo_bound < hi_bound)
-  {
-    center_fq += 25000;
+    deque<double>::iterator next = it+1;
+    double dist = *it - center_fq;
+    double next_dist = *next - center_fq;
+    if ((next == fqs.end()) || (abs(dist) < abs(next_dist)))
+    {
+      if (abs(dist) < 12500)
+      {
+        double max_move = (rtl->sampleRate() - span) / 2;
+        cout << "### max_move=" << max_move 
+             << " prev_dist=" << prev_dist
+             << endl;
+        if (dist < 0)
+        {
+          center_fq += min(12500+dist, max_move);
+        }
+        else
+        {
+          center_fq -= min(12500-dist, max_move);
+        }
+      }
+    }
+    it = next;
   }
 
-  cout << "### New center_fq=" << center_fq << endl;
   setCenterFq(center_fq);
 
 } /* WbRxRtlTcp::findBestCenterFq */
+
 
 
 /*
