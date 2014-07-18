@@ -640,7 +640,7 @@ namespace {
         {
           return;
         }
-        unsigned N = gcd(samp_rate, abs(offset));
+        unsigned N = samp_rate / gcd(samp_rate, abs(offset));
         cout << "### Translate: offset=" << offset << " N=" << N << endl;
         exp_lut.resize(N);
         for (int i=0; i<N; ++i)
