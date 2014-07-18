@@ -514,7 +514,7 @@ namespace {
           audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt),
           sql_open(false)
       {
-        audio_dec.adjustGain(-6);
+        //audio_dec.adjustGain(-6);
         outfile.open("out.bin", ios::out | ios::binary);
       }
 
@@ -864,11 +864,7 @@ bool Ddr::initialize(void)
 
 void Ddr::tunerFqChanged(uint32_t center_fq)
 {
-  cout << "### Ddr::tunerFqChanged: The tuner fq changed to "
-       << center_fq << endl;
-  double new_offset = fq-center_fq;
-  cout << "### fq=" << fq << " new_offset=" << new_offset
-       << " samp_rate=" << rtl->sampleRate() << endl;
+  double new_offset = fq - center_fq;
   if (abs(new_offset) > (rtl->sampleRate() / 2)-12500)
   {
     if (channel->isEnabled())

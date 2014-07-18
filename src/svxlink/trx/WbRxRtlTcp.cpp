@@ -189,6 +189,7 @@ WbRxRtlTcp::~WbRxRtlTcp(void)
 
 void WbRxRtlTcp::setCenterFq(uint32_t fq)
 {
+  cout << "### WbRxRtlTcp::setCenterFq: fq=" << fq << endl;
   rtl->setCenterFq(fq);
   for (Ddrs::iterator it=ddrs.begin(); it!=ddrs.end(); ++it)
   {
@@ -267,9 +268,11 @@ void WbRxRtlTcp::findBestCenterFq(void)
   for (Ddrs::iterator it=ddrs.begin(); it!=ddrs.end(); ++it)
   {
     Ddr *ddr = (*it);
+    /*
     cout << "### " << ddr->name()
          << ": fq=" << ddr->nbFq()
          << endl;
+    */
     fqs.push_back(ddr->nbFq());
   }
   sort(fqs.begin(), fqs.end());
@@ -298,7 +301,6 @@ void WbRxRtlTcp::findBestCenterFq(void)
     // Check if we have any channel too close to the center of the band.
     // The center of the band almost always contain interference signals.
     // Shift the band to get channels away from the center.
-  double prev_dist = rtl->sampleRate();
   deque<double>::iterator it = fqs.begin();
   while (it != fqs.end())
   {
@@ -310,9 +312,6 @@ void WbRxRtlTcp::findBestCenterFq(void)
       if (abs(dist) < 12500)
       {
         double max_move = (rtl->sampleRate() - span) / 2;
-        cout << "### max_move=" << max_move 
-             << " prev_dist=" << prev_dist
-             << endl;
         if (dist < 0)
         {
           center_fq += min(12500+dist, max_move);
