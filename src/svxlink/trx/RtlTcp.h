@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncTcpClient.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -189,23 +190,24 @@ class RtlTcp : public sigc::trackable
     static const int BLOCK_SIZE = 10 * 2 * 960; // 10ms @ 960kHz
     static const unsigned MAX_IF_GAIN_STAGES = 10;
 
-    Async::TcpClient con;
-    TunerType tuner_type;
-    uint32_t  tuner_gain_count;
-    bool      center_fq_set;
-    uint32_t  center_fq;
-    bool      samp_rate_set;
-    uint32_t  samp_rate;
-    int32_t   gain_mode;
-    int32_t   gain;
-    bool      fq_corr_set;
-    uint32_t  fq_corr;
-    int       tuner_if_gain[MAX_IF_GAIN_STAGES];
-    bool      test_mode_set;
-    bool      test_mode;
-    bool      use_digital_agc_set;
-    bool      use_digital_agc;
-    int       dist_print_cnt;
+    Async::TcpClient  con;
+    TunerType         tuner_type;
+    uint32_t          tuner_gain_count;
+    bool              center_fq_set;
+    uint32_t          center_fq;
+    bool              samp_rate_set;
+    uint32_t          samp_rate;
+    int32_t           gain_mode;
+    int32_t           gain;
+    bool              fq_corr_set;
+    uint32_t          fq_corr;
+    int               tuner_if_gain[MAX_IF_GAIN_STAGES];
+    bool              test_mode_set;
+    bool              test_mode;
+    bool              use_digital_agc_set;
+    bool              use_digital_agc;
+    int               dist_print_cnt;
+    Async::Timer      reconnect_timer;
 
     RtlTcp(const RtlTcp&);
     RtlTcp& operator=(const RtlTcp&);

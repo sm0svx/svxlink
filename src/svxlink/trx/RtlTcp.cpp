@@ -63,6 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 
 
 
@@ -118,12 +119,16 @@ RtlTcp::RtlTcp(const string &remote_host, uint16_t remote_port)
     center_fq_set(false), center_fq(100000000), samp_rate_set(false),
     samp_rate(2048000), gain_mode(-1), gain(GAIN_UNSET), fq_corr_set(false),
     fq_corr(0), test_mode_set(false), test_mode(false),
-    use_digital_agc_set(false), use_digital_agc(false), dist_print_cnt(-1)
+    use_digital_agc_set(false), use_digital_agc(false), dist_print_cnt(-1),
+    reconnect_timer(1000, Timer::TYPE_PERIODIC)
 {
   con.dataReceived.connect(mem_fun(*this, &RtlTcp::dataReceived));
   con.connected.connect(mem_fun(*this, &RtlTcp::connected));
   con.disconnected.connect(mem_fun(*this, &RtlTcp::disconnected));
   con.connect();
+
+  reconnect_timer.expired.connect(
+      hide(mem_fun(con, &Async::TcpClient::connect)));
 
   for (int i=0; i<MAX_IF_GAIN_STAGES; ++i)
   {
@@ -259,13 +264,22 @@ void RtlTcp::sendCommand(char cmd, uint32_t param)
 
 void RtlTcp::connected(void)
 {
-  cout << "Connected\n";
+  cout << "Connected to RtlTcp at " << con.remoteHost() << ":"
+       << con.remotePort() << endl;
+  reconnect_timer.setEnable(false);
 } /* RtlTcp::connected */
 
 
-void RtlTcp::disconnected(Async::TcpConnection *c, Async::TcpConnection::DisconnectReason reason)
+void RtlTcp::disconnected(Async::TcpConnection *c,
+                          Async::TcpConnection::DisconnectReason reason)
 {
-  cout << "Disconnected\n";
+  tuner_type = TUNER_UNKNOWN;
+  if (!reconnect_timer.isEnabled())
+  {
+    cout << "Disconnected from RtlTcp at " << con.remoteHost() << ":"
+         << con.remotePort() << endl;
+    reconnect_timer.setEnable(true);
+  }
 } /* RtlTcp::disconnected */
 
 
