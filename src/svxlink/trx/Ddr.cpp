@@ -104,6 +104,156 @@ using namespace Async;
  ****************************************************************************/
 
 /**
+ * fs=2400000;
+ * a=[1 1 0 0];
+ * f=[0 10000/(fs/2) 400000/(fs/2) 1];
+ * b=firpm(12,f,a);
+ *
+ * Lowpass filter of order 12 for first stage decimation from 2400kHz to 800kHz
+ * sampling frequency. Below -50dB over 400kHz.
+ */
+FILTER_COEFF(coeff_dec_2400k_800k,
+0.0077055710085996,
+0.0231099825172581,
+0.0491033915373070,
+0.0827979875546905,
+0.1172425796413652,
+0.1432359886614141,
+0.1529234854517300,
+0.1432359886614141,
+0.1172425796413652,
+0.0827979875546905,
+0.0491033915373070,
+0.0231099825172581,
+0.0077055710085996
+)
+
+/**
+ * fs=800000;
+ * a=[1 1 0 0];
+ * f=[0 10000/(fs/2) 80000/(fs/2) 1];
+ * b=firpm(30,f,a);
+ *
+ * Lowpass filter of order 30 for second stage decimation from 800kHz to 160kHz
+ * sampling frequency. Below -50dB over 80kHz.
+ */
+FILTER_COEFF(coeff_dec_800k_160k,
+-0.0029997236277028,
+-0.0043861913900128,
+-0.0065590186109396,
+-0.0082920929936370,
+-0.0087502813117280,
+-0.0070008145790774,
+-0.0021775940281952,
+0.0063104873665492,
+0.0185989520369326,
+0.0342348393119680,
+0.0521531680677441,
+0.0707596583561849,
+0.0881384331148449,
+0.1023167472191527,
+0.1115960643590441,
+0.1148277609860070,
+0.1115960643590441,
+0.1023167472191527,
+0.0881384331148449,
+0.0707596583561849,
+0.0521531680677441,
+0.0342348393119680,
+0.0185989520369326,
+0.0063104873665492,
+-0.0021775940281952,
+-0.0070008145790774,
+-0.0087502813117280,
+-0.0082920929936370,
+-0.0065590186109396,
+-0.0043861913900128,
+-0.0029997236277028
+)
+
+/**
+ * fs=160000;
+ * a=[1 1 0 0];
+ * f=[0 10000/(fs/2) 16000/(fs/2) 1];
+ * b=firpm(69,f,a);
+ *
+ * Lowpass filter of order 69 for third stage decimation from 160kHz to 32kHz
+ * sampling frequency. Below -50dB over 16kHz.
+ */
+FILTER_COEFF(coeff_dec_160k_32k,
+-0.0021897935693675,
+-0.0014627396578915,
+-0.0013556525689907,
+-0.0007392088237726,
+0.0003574441355289,
+0.0017246039253812,
+0.0029895055896823,
+0.0037044482910084,
+0.0034725915191305,
+0.0020872049160927,
+-0.0003267103977320,
+-0.0032962979217630,
+-0.0060432956930122,
+-0.0076661105137475,
+-0.0073849727874053,
+-0.0048159145195665,
+-0.0001754973036671,
+0.0056460528670540,
+0.0111958136705557,
+0.0147666247087154,
+0.0148298059278710,
+0.0105161290387843,
+0.0020030328211424,
+-0.0092988333174977,
+-0.0208538093298570,
+-0.0294084509371543,
+-0.0316449887034609,
+-0.0249466889575552,
+-0.0080967911710057,
+0.0182565357679944,
+0.0515079450201972,
+0.0874215550152374,
+0.1208397653529333,
+0.1466281173863568,
+0.1606670688526116,
+0.1606670688526116,
+0.1466281173863568,
+0.1208397653529333,
+0.0874215550152374,
+0.0515079450201972,
+0.0182565357679944,
+-0.0080967911710057,
+-0.0249466889575552,
+-0.0316449887034609,
+-0.0294084509371543,
+-0.0208538093298570,
+-0.0092988333174977,
+0.0020030328211424,
+0.0105161290387843,
+0.0148298059278710,
+0.0147666247087154,
+0.0111958136705557,
+0.0056460528670540,
+-0.0001754973036671,
+-0.0048159145195665,
+-0.0073849727874053,
+-0.0076661105137475,
+-0.0060432956930122,
+-0.0032962979217630,
+-0.0003267103977320,
+0.0020872049160927,
+0.0034725915191305,
+0.0037044482910084,
+0.0029895055896823,
+0.0017246039253812,
+0.0003574441355289,
+-0.0007392088237726,
+-0.0013556525689907,
+-0.0014627396578915,
+-0.0021897935693675
+)
+
+/**
  * fs=960000;
  * a=[1 1 0 0];
  * f=[0 10000/(fs/2) 96000/(fs/2) 1];
@@ -508,96 +658,49 @@ namespace {
     public:
       FmDemod(AudioSink &audio_sink)
         : iold(1.0f), qold(1.0f), audio_sink(audio_sink),
-          iq_dec1(5, coeff_dec_960k_192k, coeff_dec_960k_192k_cnt),
-          iq_dec2(6, coeff_dec_192k_32k, coeff_dec_192k_32k_cnt),
-          ch_filt(1, coeff_nbfm_channel, coeff_nbfm_channel_cnt),
-          audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt),
-          sql_open(false)
+          audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt)
       {
         audio_dec.adjustGain(-6);
-        outfile.open("out.bin", ios::out | ios::binary);
       }
 
-      ~FmDemod()
+      ~FmDemod(void)
       {
-        outfile.close();
       }
 
       void iq_received(vector<WbRxRtlTcp::Sample> samples)
       {
-        //cout << "### Received " << samples.size() << " samples\n";
-#if 0
-        outfile.write(reinterpret_cast<char*>(&samples[0]),
-            samples.size() * sizeof(samples[0]));
-#endif
-
-        vector<WbRxRtlTcp::Sample> dec_samp1, dec_samp2, ch_samp;
-        iq_dec1.decimate(dec_samp1, samples);
-        iq_dec2.decimate(dec_samp2, dec_samp1);
-        ch_filt.decimate(ch_samp, dec_samp2);
-        preDemod(ch_samp);
-        //dec_samp = samples;
-#if 0
-        outfile.write(reinterpret_cast<char*>(&ch_samp[0]),
-            ch_samp.size() * sizeof(ch_samp[0]));
-#endif
-
           // From article-sdr-is-qs.pdf: Watch your Is and Qs:
-          // FM = (Qn.In-1 - In.Qn-1)/(In.In-1 + Qn.Qn-1)
+          //   FM = (Qn.In-1 - In.Qn-1)/(In.In-1 + Qn.Qn-1)
+          //
+          // A more indepth report:
+          //   Implementation of FM demodulator algorithms on a
+          //   high performance digital signal processor
         vector<float> audio;
-        //double sumE = 0.0;
-        for (size_t idx=0; idx<ch_samp.size(); ++idx)
+        for (size_t idx=0; idx<samples.size(); ++idx)
         {
-          //sumE += pow(abs(ch_samp[idx]), 2.0);
-
             // Normalize signal amplitude
-          ch_samp[idx] = ch_samp[idx] / abs(ch_samp[idx]);
-
-          float i = ch_samp[idx].real();
-          float q = ch_samp[idx].imag();
-          //outfile.write(reinterpret_cast<char*>(&i), sizeof(float));
-          //outfile.write(reinterpret_cast<char*>(&q), sizeof(float));
+          samples[idx] = samples[idx] / abs(samples[idx]);
 
 #if 1
+            // Mixed demodulator (delay demodulator + phase adapter demodulator)
+          float i = samples[idx].real();
+          float q = samples[idx].imag();
           float demod = (q*iold - i*qold)/(i*iold + q*qold);
+          iold = i;
+          qold = q;
           demod = atanf(demod);
           //demod = FastArcTan(demod);
-#endif
-          /*
-          demod /= 5;
-          */
-
+#else
             // Complex baseband delay demodulator
-#if 0
-          float demod = arg(ch_samp[idx] * conj(prev_samp));
-          prev_samp = ch_samp[idx];
+          float demod = arg(samples[idx] * conj(prev_samp));
+          prev_samp = samples[idx];
 #endif
 
           audio.push_back(demod);
-          //int16_t samp = static_cast<int16_t>(demod * 4096);
-          //outfile.write(reinterpret_cast<char*>(&samp), sizeof(samp));
-
-          iold = i;
-          qold = q;
         }
-        //double meanE = sumE / ch_samp.size();
-        //if (meanE > 5.0E-6)
-        //if (meanE > 0.01)
-        {
-          //cout << "meanE=" << 10*log10(meanE/1.0E-3) << endl;
-          sql_open = true;
-          vector<float> dec_audio;
-          audio_dec.decimate(dec_audio, audio);
-          //dec_audio = audio;
-          audio_sink.writeSamples(&dec_audio[0], dec_audio.size());
-        }
-        /*
-        else if (sql_open)
-        {
-          audio_sink.flushSamples();
-          sql_open = false;
-        }
-        */
+        vector<float> dec_audio;
+        audio_dec.decimate(dec_audio, audio);
+        audio_sink.writeSamples(&dec_audio[0], dec_audio.size());
       }
 
       sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
@@ -605,14 +708,9 @@ namespace {
     private:
       float iold;
       float qold;
-      WbRxRtlTcp::Sample prev_samp;
+      //WbRxRtlTcp::Sample prev_samp;
       AudioSink &audio_sink;
-      Decimator<complex<float> > iq_dec1;
-      Decimator<complex<float> > iq_dec2;
-      Decimator<complex<float> > ch_filt;
       Decimator<float> audio_dec;
-      bool sql_open;
-      ofstream outfile;
 
         // Maximum error 0.0015 radians (0.085944 degrees)
         // Produced another result and did not affect overall CPU% much
@@ -698,16 +796,125 @@ namespace {
       }
   };
 
+  class Channelizer
+  {
+    public:
+      virtual void iq_received(vector<WbRxRtlTcp::Sample> &out,
+                               const vector<WbRxRtlTcp::Sample> &in) = 0;
+
+      sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
+  };
+
+  class Channelizer960 : public Channelizer
+  {
+    public:
+      Channelizer960(void)
+        : iq_dec1(5, coeff_dec_960k_192k, coeff_dec_960k_192k_cnt),
+          iq_dec2(6, coeff_dec_192k_32k, coeff_dec_192k_32k_cnt),
+          ch_filt(1, coeff_nbfm_channel, coeff_nbfm_channel_cnt)
+      {
+
+      }
+      virtual ~Channelizer960(void) {}
+
+      virtual void iq_received(vector<WbRxRtlTcp::Sample> &out,
+                               const vector<WbRxRtlTcp::Sample> &in)
+      {
+        //cout << "### Received " << samples.size() << " samples\n";
+#if 0
+        outfile.write(reinterpret_cast<char*>(&samples[0]),
+            samples.size() * sizeof(samples[0]));
+#endif
+
+        vector<WbRxRtlTcp::Sample> dec_samp1, dec_samp2;
+        iq_dec1.decimate(dec_samp1, in);
+        iq_dec2.decimate(dec_samp2, dec_samp1);
+        ch_filt.decimate(out, dec_samp2);
+        preDemod(out);
+      }
+
+    private:
+      Decimator<complex<float> > iq_dec1;
+      Decimator<complex<float> > iq_dec2;
+      Decimator<complex<float> > ch_filt;
+  };
+
+  class Channelizer2400 : public Channelizer
+  {
+    public:
+      Channelizer2400(void)
+          /*
+          iq_dec1(5, coeff_dec_960k_192k, coeff_dec_960k_192k_cnt),
+          iq_dec2(6, coeff_dec_192k_32k, coeff_dec_192k_32k_cnt),
+          */
+        : iq_dec1(3, coeff_dec_2400k_800k, coeff_dec_2400k_800k_cnt),
+          iq_dec2(5, coeff_dec_800k_160k, coeff_dec_800k_160k_cnt),
+          iq_dec3(5, coeff_dec_160k_32k, coeff_dec_160k_32k_cnt),
+          ch_filt(1, coeff_nbfm_channel, coeff_nbfm_channel_cnt)
+      {
+
+      }
+      virtual ~Channelizer2400(void) {}
+
+      virtual void iq_received(vector<WbRxRtlTcp::Sample> &out,
+                               const vector<WbRxRtlTcp::Sample> &in)
+      {
+        //cout << "### Received " << samples.size() << " samples\n";
+#if 0
+        outfile.write(reinterpret_cast<char*>(&samples[0]),
+            samples.size() * sizeof(samples[0]));
+#endif
+
+        vector<WbRxRtlTcp::Sample> dec_samp1, dec_samp2, dec_samp3;
+        iq_dec1.decimate(dec_samp1, in);
+        iq_dec2.decimate(dec_samp2, dec_samp1);
+        iq_dec3.decimate(dec_samp3, dec_samp2);
+        ch_filt.decimate(out, dec_samp3);
+        preDemod(out);
+      }
+
+    private:
+      Decimator<complex<float> > iq_dec1;
+      Decimator<complex<float> > iq_dec2;
+      Decimator<complex<float> > iq_dec3;
+      Decimator<complex<float> > ch_filt;
+  };
+
 }; /* anonymous namespace */
 
 
 class Ddr::Channel : public sigc::trackable
 {
   public:
-    Channel(AudioSink &audio_sink, int fq_offset)
-      : fm_demod(audio_sink), trans(960000, fq_offset), enabled(true)
+    Channel(AudioSink &audio_sink, int fq_offset, int sample_rate)
+      : sample_rate(sample_rate), channelizer(0), fm_demod(audio_sink),
+        trans(sample_rate, fq_offset), enabled(true)
     {
-      fm_demod.preDemod.connect(preDemod.make_slot());
+    }
+
+    ~Channel(void)
+    {
+      delete channelizer;
+    }
+
+    bool initialize(void)
+    {
+      if (sample_rate == 2400000)
+      {
+        channelizer = new Channelizer2400;
+      }
+      else if (sample_rate == 960000)
+      {
+        channelizer = new Channelizer960;
+      }
+      else
+      {
+        cout << "*** ERROR: Unsupported tuner sampling rate " << sample_rate
+             << ". Legal values are: 960000 and 2400000\n";
+        return false;
+      }
+      channelizer->preDemod.connect(preDemod.make_slot());
+      return true;
     }
 
     void setFqOffset(int fq_offset)
@@ -719,9 +926,10 @@ class Ddr::Channel : public sigc::trackable
     {
       if (enabled)
       {
-        vector<WbRxRtlTcp::Sample> translated;
+        vector<WbRxRtlTcp::Sample> translated, channelized;
         trans.iq_received(translated, samples);
-        fm_demod.iq_received(translated);
+        channelizer->iq_received(channelized, translated);
+        fm_demod.iq_received(channelized);
       }
     };
 
@@ -740,6 +948,8 @@ class Ddr::Channel : public sigc::trackable
     sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
 
   private:
+    int sample_rate;
+    Channelizer *channelizer;
     FmDemod fm_demod;
     Translate trans;
     bool enabled;
@@ -846,7 +1056,15 @@ bool Ddr::initialize(void)
     return false;
   }
 
-  channel = new Channel(*audio_pipe, fq-rtl->centerFq());
+  channel = new Channel(*audio_pipe, fq-rtl->centerFq(), rtl->sampleRate());
+  if (!channel->initialize())
+  {
+    cout << "*** ERROR: Could not initialize channel object for receiver "
+         << name() << endl;
+    delete channel;
+    channel = 0;
+    return false;
+  }
   channel->preDemod.connect(preDemod.make_slot());
   rtl->iqReceived.connect(mem_fun(*channel, &Channel::iq_received));
 

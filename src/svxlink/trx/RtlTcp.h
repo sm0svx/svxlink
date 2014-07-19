@@ -188,16 +188,16 @@ class RtlTcp : public sigc::trackable
   protected:
     
   private:
-    static const int BLOCK_SIZE = 10 * 2 * 960; // 10ms @ 960kHz
     static const unsigned MAX_IF_GAIN_STAGES = 10;
 
+    uint32_t          samp_rate;
+    int               block_size;
     Async::TcpClient  con;
     TunerType         tuner_type;
     uint32_t          tuner_gain_count;
     bool              center_fq_set;
     uint32_t          center_fq;
     bool              samp_rate_set;
-    uint32_t          samp_rate;
     int32_t           gain_mode;
     int32_t           gain;
     bool              fq_corr_set;

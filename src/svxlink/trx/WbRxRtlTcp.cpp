@@ -140,15 +140,14 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
   cfg.getValue(name, "HOST", remote_host);
   int tcp_port = 1234;
   cfg.getValue(name, "PORT", tcp_port);
+  int sample_rate = 960000;
+  cfg.getValue(name, "SAMPLE_RATE", sample_rate);
 
   cout << "###   HOST      = " << remote_host << endl;
   cout << "###   PORT      = " << tcp_port << endl;
   rtl = new RtlTcp(remote_host, tcp_port);
+  rtl->setSampleRate(sample_rate);
   rtl->iqReceived.connect(iqReceived.make_slot());
-
-    // Hardcode sampling rate for now since the decimation filters are
-    // designed for that specific sampling frequency.
-  rtl->setSampleRate(960000);
 
   uint32_t fq_corr;
   if (cfg.getValue(name, "FQ_CORR", fq_corr))

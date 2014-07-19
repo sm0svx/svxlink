@@ -117,11 +117,12 @@ using namespace Async;
  ****************************************************************************/
 
 RtlTcp::RtlTcp(const string &remote_host, uint16_t remote_port)
-  : con(remote_host, remote_port, BLOCK_SIZE), tuner_type(TUNER_UNKNOWN),
+  : samp_rate(2048000), block_size(10*2*samp_rate/1000),
+    con(remote_host, remote_port, block_size), tuner_type(TUNER_UNKNOWN),
     center_fq_set(false), center_fq(100000000), samp_rate_set(false),
-    samp_rate(2048000), gain_mode(-1), gain(GAIN_UNSET), fq_corr_set(false),
-    fq_corr(0), test_mode_set(false), test_mode(false),
-    use_digital_agc_set(false), use_digital_agc(false), dist_print_cnt(-1),
+    gain_mode(-1), gain(GAIN_UNSET), fq_corr_set(false), fq_corr(0),
+    test_mode_set(false), test_mode(false), use_digital_agc_set(false),
+    use_digital_agc(false), dist_print_cnt(-1),
     reconnect_timer(1000, Timer::TYPE_PERIODIC)
 {
   con.dataReceived.connect(mem_fun(*this, &RtlTcp::dataReceived));
@@ -155,6 +156,8 @@ void RtlTcp::setCenterFq(uint32_t fq)
 
 void RtlTcp::setSampleRate(uint32_t rate)
 {
+  block_size = 10 * 2 * rate / 1000; // 10ms block size
+  con.setRecvBufLen(block_size);
   samp_rate = rate;
   samp_rate_set = true;
   sendCommand(2, rate);
@@ -398,11 +401,11 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
     return 12;
   }
 
-  if (count < BLOCK_SIZE)
+  if (count < block_size)
   {
     return 0;
   }
-  count = BLOCK_SIZE;
+  count = block_size;
 
   int samp_count = count / 2;
   complex<uint8_t> *samples =
