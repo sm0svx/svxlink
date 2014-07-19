@@ -189,7 +189,7 @@ void LocalRx::audioClose(void)
 
 int LocalRx::audioSampleRate(void)
 {
-  audio_io->sampleRate();
+  return audio_io->sampleRate();
 } /* LocalRx::audioSampleRate */
 
 

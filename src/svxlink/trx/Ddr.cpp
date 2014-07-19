@@ -750,7 +750,7 @@ namespace {
         unsigned N = samp_rate / gcd(samp_rate, abs(offset));
         cout << "### Translate: offset=" << offset << " N=" << N << endl;
         exp_lut.resize(N);
-        for (int i=0; i<N; ++i)
+        for (unsigned i=0; i<N; ++i)
         {
           complex<float> e(0.0f, -2.0*M_PI*offset*i/samp_rate);
           exp_lut[i] = exp(e);
@@ -808,6 +808,7 @@ namespace {
   class Channelizer
   {
     public:
+      virtual ~Channelizer(void) {}
       virtual void iq_received(vector<WbRxRtlTcp::Sample> &out,
                                const vector<WbRxRtlTcp::Sample> &in) = 0;
 
