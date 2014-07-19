@@ -1,2 +1,4 @@
 /makefile.root
 /Makefile
+/ModuleTclVoiceMail.tcl
+/TclVoiceMail.conf
