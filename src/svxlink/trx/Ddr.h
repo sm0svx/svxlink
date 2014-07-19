@@ -63,11 +63,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class AudioPassthrough;
-};
-
 class WbRxRtlTcp;
 
 
@@ -194,7 +189,6 @@ class Ddr : public LocalRxBase
     static DdrMap ddr_map;
 
     Async::Config           &cfg;
-    Async::AudioPassthrough *audio_pipe;
     Channel                 *channel;
     WbRxRtlTcp              *rtl;
     double                  fq;

@@ -58,7 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
-#include <AsyncAudioPassthrough.h>
+#include <AsyncAudioSource.h>
 #include <AsyncTcpClient.h>
 
 
@@ -604,12 +604,6 @@ namespace {
       {
         int orig_count = in.size();
 
-        /*
-        cout << "### in.size()=" << in.size()
-             << " dec_fact=" << dec_fact
-             << endl;
-        */
-
           // this implementation assumes in.size() is a multiple of factor_M
         assert(in.size() % dec_fact == 0);
         assert(taps >= dec_fact);
@@ -640,8 +634,6 @@ namespace {
           out.push_back(sum);     /* store sum */
           num_out++;
         }
-
-        //printf("out.size()=%d  in.size()=%d  dec_fact=%d\n", out.size(), in.size(), dec_fact);
         assert(num_out == orig_count / dec_fact);
       }
 
@@ -653,18 +645,14 @@ namespace {
   };
 
 
-  class FmDemod
+  class FmDemod : public Async::AudioSource
   {
     public:
-      FmDemod(AudioSink &audio_sink)
-        : iold(1.0f), qold(1.0f), audio_sink(audio_sink),
+      FmDemod(void)
+        : iold(1.0f), qold(1.0f),
           audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt)
       {
         audio_dec.adjustGain(-6);
-      }
-
-      ~FmDemod(void)
-      {
       }
 
       void iq_received(vector<WbRxRtlTcp::Sample> samples)
@@ -700,16 +688,37 @@ namespace {
         }
         vector<float> dec_audio;
         audio_dec.decimate(dec_audio, audio);
-        audio_sink.writeSamples(&dec_audio[0], dec_audio.size());
+        sinkWriteSamples(&dec_audio[0], dec_audio.size());
       }
 
       sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
+
+      /**
+       * @brief Resume audio output to the sink
+       * 
+       * This function must be reimplemented by the inheriting class. It
+       * will be called when the registered audio sink is ready to accept
+       * more samples.
+       * This function is normally only called from a connected sink object.
+       */
+      virtual void resumeOutput(void) { }
+
+    protected:
+      /**
+       * @brief The registered sink has flushed all samples
+       *
+       * This function should be implemented by the inheriting class. It
+       * will be called when all samples have been flushed in the
+       * registered sink. If it is not reimplemented, a handler must be set
+       * that handle the function call.
+       * This function is normally only called from a connected sink object.
+       */
+      virtual void allSamplesFlushed(void) { }
 
     private:
       float iold;
       float qold;
       //WbRxRtlTcp::Sample prev_samp;
-      AudioSink &audio_sink;
       Decimator<float> audio_dec;
 
         // Maximum error 0.0015 radians (0.085944 degrees)
@@ -843,10 +852,6 @@ namespace {
   {
     public:
       Channelizer2400(void)
-          /*
-          iq_dec1(5, coeff_dec_960k_192k, coeff_dec_960k_192k_cnt),
-          iq_dec2(6, coeff_dec_192k_32k, coeff_dec_192k_32k_cnt),
-          */
         : iq_dec1(3, coeff_dec_2400k_800k, coeff_dec_2400k_800k_cnt),
           iq_dec2(5, coeff_dec_800k_160k, coeff_dec_800k_160k_cnt),
           iq_dec3(5, coeff_dec_160k_32k, coeff_dec_160k_32k_cnt),
@@ -859,7 +864,6 @@ namespace {
       virtual void iq_received(vector<WbRxRtlTcp::Sample> &out,
                                const vector<WbRxRtlTcp::Sample> &in)
       {
-        //cout << "### Received " << samples.size() << " samples\n";
 #if 0
         outfile.write(reinterpret_cast<char*>(&samples[0]),
             samples.size() * sizeof(samples[0]));
@@ -883,13 +887,14 @@ namespace {
 }; /* anonymous namespace */
 
 
-class Ddr::Channel : public sigc::trackable
+class Ddr::Channel : public sigc::trackable, public Async::AudioSource
 {
   public:
-    Channel(AudioSink &audio_sink, int fq_offset, int sample_rate)
-      : sample_rate(sample_rate), channelizer(0), fm_demod(audio_sink),
+    Channel(int fq_offset, int sample_rate)
+      : sample_rate(sample_rate), channelizer(0),
         trans(sample_rate, fq_offset), enabled(true)
     {
+      setHandler(&fm_demod);
     }
 
     ~Channel(void)
@@ -999,7 +1004,7 @@ Ddr *Ddr::find(const std::string &name)
 
 
 Ddr::Ddr(Config &cfg, const std::string& name)
-  : LocalRxBase(cfg, name), cfg(cfg), audio_pipe(0), channel(0), rtl(0),
+  : LocalRxBase(cfg, name), cfg(cfg), channel(0), rtl(0),
     fq(0.0)
 {
 } /* Ddr::Ddr */
@@ -1016,7 +1021,6 @@ Ddr::~Ddr(void)
   }
 
   delete channel;
-  delete audio_pipe;
 } /* Ddr::~Ddr */
 
 
@@ -1046,8 +1050,6 @@ bool Ddr::initialize(void)
     return false;
   }
 
-  audio_pipe = new AudioPassthrough;
-  
   rtl = WbRxRtlTcp::instance(cfg, wbrx);
   if (rtl == 0)
   {
@@ -1056,7 +1058,7 @@ bool Ddr::initialize(void)
     return false;
   }
 
-  channel = new Channel(*audio_pipe, fq-rtl->centerFq(), rtl->sampleRate());
+  channel = new Channel(fq-rtl->centerFq(), rtl->sampleRate());
   if (!channel->initialize())
   {
     cout << "*** ERROR: Could not initialize channel object for receiver "
@@ -1124,7 +1126,7 @@ int Ddr::audioSampleRate(void)
 
 Async::AudioSource *Ddr::audioSource(void)
 {
-  return audio_pipe;
+  return channel;
 } /* Ddr::audioSource */
 
 
@@ -1134,6 +1136,7 @@ Async::AudioSource *Ddr::audioSource(void)
  * Private member functions
  *
  ****************************************************************************/
+
 
 /*
  * This file has not been truncated

@@ -296,7 +296,7 @@ void RtlTcp::sendCommand(char cmd, uint32_t param)
 {
   if (con.isConnected())
   {
-    cout << "### sendCommand(" << (int)cmd << ", " << param << ")" << endl;
+    //cout << "### sendCommand(" << (int)cmd << ", " << param << ")" << endl;
     char msg[5];
     msg[0] = cmd;
     msg[4] = param & 0xff;
