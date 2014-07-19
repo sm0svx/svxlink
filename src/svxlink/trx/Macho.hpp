@@ -1727,7 +1727,8 @@ namespace Macho {
 		// State machine instance can be initialized with a top state box.
 		Machine(typename TOP::Box * box = 0) {
 			// Compile time check: TOP must directly derive from TopBase<TOP>
-			typedef typename _SameType<TopBase<TOP>, typename TOP::SUPER>::Check MustDeriveFromTopBase;
+			typename _SameType<TopBase<TOP>, typename TOP::SUPER>::Check _mustDeriveFromTopBase;
+                        (void)_mustDeriveFromTopBase;
 
 			allocate(theStateCount);
 
@@ -1741,7 +1742,8 @@ namespace Macho {
 		// other than TOP on startup. Box of top state may also be initialized.
 		Machine(const Alias & state, typename TOP::Box * box = 0) {
 			// Compile time check: TOP must directly derive from TopBase<TOP>
-			typedef typename _SameType<TopBase<TOP>, typename TOP::SUPER>::Check MustDeriveFromTopBase;
+			typename _SameType<TopBase<TOP>, typename TOP::SUPER>::Check _mustDeriveFromTopBase;
+                        (void)_mustDeriveFromTopBase;
 
 			allocate(theStateCount);
 
