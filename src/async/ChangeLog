@@ -23,6 +23,9 @@
   that remove all assert statements when compiling in release mode. This
   caused some things to stop working when compiling for release.
 
+* Now possible to change the buffer size of a TCP connection using
+  TcpConnection::setRecvBufLen.
+
 
 
  1.2.1 -- 30 Jun 2014

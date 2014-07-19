@@ -168,6 +168,17 @@ class TcpConnection : public sigc::trackable
     ~TcpConnection(void);
     
     /**
+     * @brief   Set a new receive buffer size
+     * @param   recv_buf_len The new receive buffer size in bytes
+     *
+     * This function will resize the receive buffer to the specified size.
+     * If the buffer size is reduced and there are more bytes in the current
+     * buffer than can be fitted into the new buffer, an overflow disconnection
+     * will be issued on the next reception.
+     */
+    void setRecvBufLen(size_t recv_buf_len);
+
+    /**
      * @brief 	Disconnect from the remote host
      *
      * Call this function to disconnect from the remote host. If already
