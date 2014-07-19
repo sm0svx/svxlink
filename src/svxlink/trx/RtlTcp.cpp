@@ -133,7 +133,7 @@ RtlTcp::RtlTcp(const string &remote_host, uint16_t remote_port)
   reconnect_timer.expired.connect(
       hide(mem_fun(con, &Async::TcpClient::connect)));
 
-  for (int i=0; i<MAX_IF_GAIN_STAGES; ++i)
+  for (unsigned i=0; i<MAX_IF_GAIN_STAGES; ++i)
   {
     tuner_if_gain[i] = GAIN_UNSET;
   }
@@ -351,7 +351,7 @@ void RtlTcp::updateSettings(void)
   {
     setGain(gain);
   }
-  for (int i=0; i<MAX_IF_GAIN_STAGES; ++i)
+  for (unsigned i=0; i<MAX_IF_GAIN_STAGES; ++i)
   {
     if (tuner_if_gain[i] < GAIN_UNSET)
     {
@@ -412,7 +412,6 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
     reinterpret_cast<complex<uint8_t>*>(buf);
   vector<Sample> iq;
   iq.reserve(samp_count);
-  bool distorsion_detected = false;
   for (int idx=0; idx<samp_count; ++idx)
   {
     if ((dist_print_cnt == 0) &&
@@ -429,7 +428,7 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
 
   if (dist_print_cnt > 0)
   {
-    if (dist_print_cnt == samp_rate)
+    if (dist_print_cnt == static_cast<int>(samp_rate))
     {
       cout << "*** WARNING: Distorsion detected on RtlTcp tuner "
            << con->remoteHost() << ":" << con->remotePort() << ". "
