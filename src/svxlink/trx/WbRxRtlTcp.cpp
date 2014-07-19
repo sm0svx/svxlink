@@ -149,14 +149,14 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
   rtl->setSampleRate(sample_rate);
   rtl->iqReceived.connect(iqReceived.make_slot());
 
-  uint32_t fq_corr;
+  uint32_t fq_corr = 0;
   if (cfg.getValue(name, "FQ_CORR", fq_corr))
   {
     cout << "###   FQ_CORR   = " << fq_corr << "ppm\n";
     rtl->setFqCorr(fq_corr);
   }
 
-  uint32_t center_fq;
+  uint32_t center_fq = 0;
   if (cfg.getValue(name, "CENTER_FQ", center_fq))
   {
     cout << "###   CENTER_FQ = " << center_fq << "Hz\n";
@@ -164,7 +164,7 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
     setCenterFq(center_fq);
   }
 
-  float gain;
+  float gain = 0.0f;
   if (cfg.getValue(name, "GAIN", gain))
   {
     cout << "###   GAIN      = " << gain << "dB\n";
