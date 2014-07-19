@@ -181,6 +181,7 @@ class RtlTcp : public sigc::trackable
     {
       return tunerTypeString(tuner_type);
     }
+    std::vector<int> getTunerGains(void) const;
 
     sigc::signal<void, std::vector<Sample> > iqReceived;
     

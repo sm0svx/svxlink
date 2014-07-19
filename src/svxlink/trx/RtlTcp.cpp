@@ -36,6 +36,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <cstring>
 #include <cstdlib>
+#include <iterator>
+#include <algorithm>
 
 
 /****************************************************************************
@@ -231,6 +233,47 @@ const char *RtlTcp::tunerTypeString(TunerType type) const
 } /* RtlTcp::tunerTypeString */
 
 
+vector<int> RtlTcp::getTunerGains(void) const
+{
+  static const int e4k_gains[] = {
+    -10, 15, 40, 65, 90, 115, 140, 165, 190, 215, 240, 290, 340, 420
+  };
+  static const int fc0012_gains[] = { -99, -40, 71, 179, 192 };
+  static const int fc0013_gains[] = {
+    -99, -73, -65, -63, -60, -58, -54, 58, 61, 63, 65, 67,
+    68, 70, 71, 179, 181, 182, 184, 186, 188, 191, 197
+  };
+  static const int fc2580_gains[] = { 0 /* no gain values */ };
+  static const int r820t_gains[] = {
+    0, 9, 14, 27, 37, 77, 87, 125, 144, 157, 166, 197, 207, 229, 254, 280,
+    297, 328, 338, 364, 372, 386, 402, 421, 434, 439, 445, 480, 496
+  };
+  static const int unknown_gains[] = { 0 /* no gain values */ };
+
+  switch (tuner_type)
+  {
+    case TUNER_E4000:
+      return vector<int>(e4k_gains,
+                         e4k_gains+sizeof(e4k_gains)/sizeof(int));
+    case TUNER_FC0012:
+      return vector<int>(fc0012_gains,
+                         fc0012_gains+sizeof(fc0012_gains)/sizeof(int));
+    case TUNER_FC0013:
+      return vector<int>(fc0013_gains,
+                         fc0013_gains+sizeof(fc0013_gains)/sizeof(int));
+    case TUNER_FC2580:
+      return vector<int>(fc2580_gains,
+                         fc2580_gains+sizeof(fc2580_gains)/sizeof(int));
+    case TUNER_R820T:
+      return vector<int>(r820t_gains,
+                         r820t_gains+sizeof(r820t_gains)/sizeof(int));
+    default:
+      return vector<int>(unknown_gains,
+                         unknown_gains+sizeof(unknown_gains)/sizeof(int));
+  }
+} /* RtlTcp::getTunerGains */
+
+
 
 /****************************************************************************
  *
@@ -341,8 +384,16 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
     tuner_type =
       static_cast<TunerType>(ntohl(*reinterpret_cast<uint32_t *>(ptr+4)));
     tuner_gain_count = ntohl(*reinterpret_cast<uint32_t *>(ptr+8));
-    cout << "### tuner_type=" << tunerTypeString() << " "
-         << "tuner_gain_count=" << tuner_gain_count << endl;
+    cout << "Tuner type        : " << tunerTypeString() << endl;
+    vector<int> int_tuner_gains = getTunerGains();
+    vector<float> tuner_gains;
+    tuner_gains.assign(int_tuner_gains.begin(), int_tuner_gains.end());
+    transform(tuner_gains.begin(), tuner_gains.end(),
+        tuner_gains.begin(), bind2nd(divides<float>(),10.0));
+    cout << "Valid tuner gains : ";
+    copy(tuner_gains.begin(), tuner_gains.end(),
+         ostream_iterator<float>(cout, " "));
+    cout << endl;
     updateSettings();
     return 12;
   }
