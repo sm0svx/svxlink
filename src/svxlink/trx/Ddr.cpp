@@ -652,7 +652,7 @@ namespace {
         : iold(1.0f), qold(1.0f),
           audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt)
       {
-        audio_dec.adjustGain(-6);
+        //audio_dec.adjustGain(-6);
       }
 
       void iq_received(vector<WbRxRtlTcp::Sample> samples)
