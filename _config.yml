@@ -1,0 +1,10 @@
+name: SvxLink
+tagline: Advanced repeater controller and EchoLink software for Linux including a GUI, Qtel - The Qt EchoLink client
+maintainer: sm0svx
+
+github_url: "https://github.com/sm0svx/svxlink"
+url: "http://localhost:4000"
+
+markdown: rdiscount
+permalink: pretty
+highlighter: pygments
