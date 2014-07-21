@@ -648,11 +648,14 @@ namespace {
   class FmDemod : public Async::AudioSource
   {
     public:
-      FmDemod(void)
+      FmDemod(double samp_rate, double max_dev)
         : iold(1.0f), qold(1.0f),
           audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt)
       {
-        //audio_dec.adjustGain(-6);
+          // Adjust the gain so that the maximum deviation corresponds
+          // to a peak audio amplitude of 1.0.
+        double adj=20.0*log10(samp_rate/(2.0*M_PI*max_dev));
+        audio_dec.adjustGain(adj);
       }
 
       void iq_received(vector<WbRxRtlTcp::Sample> samples)
@@ -893,6 +896,7 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
   public:
     Channel(int fq_offset, int sample_rate)
       : sample_rate(sample_rate), channelizer(0),
+        fm_demod(32000.0, 5000.0),
         trans(sample_rate, fq_offset), enabled(true)
     {
       setHandler(&fm_demod);
