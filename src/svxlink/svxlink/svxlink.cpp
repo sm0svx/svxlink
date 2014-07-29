@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -779,7 +779,7 @@ static void handle_unix_signal(int signum)
 } /* handle_unix_signal */
 
 
-bool logfile_open(void)
+static bool logfile_open(void)
 {
   if (logfd != -1)
   {

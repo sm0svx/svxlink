@@ -64,8 +64,8 @@
 * Bugfix in the Voter: If the squelch were open while quitting, a crash could
   occur.
 
-* Bugfix in logfile handling: SvxLink would crash if the filesystem was full
-  while trying to write to the logfile.
+* Bugfix in logfile handling: SvxLink/RemoteTrx would crash if the filesystem
+  was full while trying to write to the logfile.
 
 
 
