@@ -41,6 +41,7 @@
 #include <sys/types.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#include <signal.h>
 #include <sigc++/sigc++.h>
 
 #include <map>
@@ -146,6 +147,18 @@ class CppApplication : public Application
     ~CppApplication(void);
     
     /**
+     * @brief   Catch the specified UNIX signal
+     * @param   signum The signal number to catch
+     */
+    void catchUnixSignal(int signum);
+
+    /**
+     * @brief   Uncatch the specified UNIX signal
+     * @param   signum The UNIX signal to uncatch
+     */
+    void uncatchUnixSignal(int signum);
+
+    /**
      * @brief Execute the application main loop
      *
      * When this member function is called the application core will enter the
@@ -160,6 +173,16 @@ class CppApplication : public Application
      * This function should be called to exit the application core main loop.
      */
     void quit(void);
+
+    /**
+     * @brief   A signal that is emitted when a monitored UNIX signal is caught
+     * @param   signum The signal number that was caught
+     *
+     * Use the catchUnixSignal and uncatchUnixSignal functions to add signals
+     * to be monitored for activity. When the signal is triggered, this sigc
+     * signal will be emitted.
+     */
+    sigc::signal<void, int> unixSignalCaught;
     
   protected:
     
@@ -175,7 +198,10 @@ class CppApplication : public Application
     };
     typedef std::map<int, FdWatch*>   	      	      	        WatchMap;
     typedef std::multimap<struct timespec, Timer *, lttimespec> TimerMap;
+    typedef std::map<int, struct sigaction>                     UnixSignalMap;
     
+    static int          sighandler_pipe[2];
+
     bool      	      	do_quit;
     int       	      	max_desc;
     fd_set    	      	rd_set;
@@ -183,13 +209,19 @@ class CppApplication : public Application
     WatchMap  	      	rd_watch_map;
     WatchMap  	      	wr_watch_map;
     TimerMap  	      	timer_map;
+    UnixSignalMap       unix_signals;
+    int                 unix_signal_recv;
+    size_t              unix_signal_recv_cnt;
     
+    static void unixSignalHandler(int signum);
+
     void addFdWatch(FdWatch *fd_watch);
     void delFdWatch(FdWatch *fd_watch);
     void addTimer(Timer *timer);
     void addTimerP(Timer *timer, const struct timespec& current);
     void delTimer(Timer *timer);    
     DnsLookupWorker *newDnsLookupWorker(const std::string& label);
+    void handleUnixSignal(void);
     
 };  /* class CppApplication */
 
