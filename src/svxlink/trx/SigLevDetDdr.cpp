@@ -117,7 +117,7 @@ using namespace Async;
 SigLevDetDdr::SigLevDetDdr(void)
   : sample_rate(0), block_idx(0), last_siglev(0), integration_time(1),
     update_interval(0), update_counter(0), pwr_sum(0.0), slope(1.0),
-    offset(0.0)
+    offset(0.0), block_size(0)
 {
 } /* SigLevDetDdr::SigLevDetDdr */
 
@@ -142,6 +142,8 @@ bool SigLevDetDdr::initialize(Config &cfg, const string& name, int sample_rate)
 
   cfg.getValue(name, "SIGLEV_OFFSET", offset);
   cfg.getValue(name, "SIGLEV_SLOPE", slope);
+
+  block_size = BLOCK_LENGTH * sample_rate / 1000;
 
   reset();
 
@@ -171,7 +173,7 @@ void SigLevDetDdr::setIntegrationTime(int time_ms)
 {
     // Calculate the integration time expressed as the
     // number of processing blocks.
-  integration_time = time_ms * 16000 / 1000 / BLOCK_SIZE;
+  integration_time = time_ms * 16000 / 1000 / block_size;
   if (integration_time <= 0)
   {
     integration_time = 1;
@@ -218,9 +220,9 @@ void SigLevDetDdr::processSamples(const vector<RtlTcp::Sample> &samples)
   {
     double mag = abs(*it);
     pwr_sum += mag * mag;
-    if (++block_idx == BLOCK_SIZE)
+    if (++block_idx == block_size)
     {
-      last_siglev = offset + slope * 10.0 * log10(pwr_sum / BLOCK_SIZE);
+      last_siglev = offset + slope * 10.0 * log10(pwr_sum / block_size);
       siglev_values.push_back(last_siglev);
       if (siglev_values.size() > integration_time)
       {
@@ -230,7 +232,7 @@ void SigLevDetDdr::processSamples(const vector<RtlTcp::Sample> &samples)
       
       if (update_interval > 0)
       {
-	update_counter += BLOCK_SIZE;
+	update_counter += block_size;
 	if (update_counter >= update_interval)
 	{
 	  signalLevelUpdated(lastSiglev());

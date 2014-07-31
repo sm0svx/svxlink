@@ -123,7 +123,7 @@ class SigLevDetDdr : public SigLevDet
     };
 
     /**
-     * @brief 	Constuctor
+     * @brief 	Default constuctor
      */
     explicit SigLevDetDdr(void);
   
@@ -184,7 +184,7 @@ class SigLevDetDdr : public SigLevDet
 
 
   private:
-    static const unsigned BLOCK_SIZE    = 480;  // 10ms @ 48kHz
+    static const unsigned BLOCK_LENGTH    = 10;  // 10ms
 
     int	                sample_rate;
     unsigned            block_idx;
@@ -196,6 +196,7 @@ class SigLevDetDdr : public SigLevDet
     double              pwr_sum;
     double     	        slope;
     double     	        offset;
+    unsigned            block_size;
     
     SigLevDetDdr(const SigLevDetDdr&);
     SigLevDetDdr& operator=(const SigLevDetDdr&);
