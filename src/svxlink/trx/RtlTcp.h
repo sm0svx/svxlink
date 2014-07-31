@@ -1,10 +1,8 @@
 /**
 @file	 RtlTcp.h
-@brief   A_brief_description_for_this_file
+@brief   An interface class for communicating to the rtl_tcp utility
 @author  Tobias Blomberg / SM0SVX
 @date	 2014-07-16
-
-A_detailed_description_for_this_file
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -109,11 +107,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	An interface class for communicating to the rtl_tcp utility
 @author Tobias Blomberg / SM0SVX
 @date   2014-07-16
 
-A_detailed_class_description
+Use this class to open and use a network connection to the rtl_tcp utility.
 */
 class RtlTcp : public sigc::trackable
 {
@@ -132,7 +130,9 @@ class RtlTcp : public sigc::trackable
     static const int GAIN_UNSET = 1000;
 
     /**
-     * @brief 	Default constructor
+     * @brief 	Constructor
+     * @param   remote_host The remote host to connect to
+     * @param   remote_port The TCP port to connect to
      */
     RtlTcp(const std::string &remote_host="localhost",
            uint16_t remote_port=1234);
@@ -143,28 +143,89 @@ class RtlTcp : public sigc::trackable
     ~RtlTcp(void) {}
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Enable printing of distorsion warnings
+     * @param 	enable Set to \em true to enable printing
      */
     void enableDistPrint(bool enable);
 
+    /**
+     * @brief   Set the center frequency of the tuner
+     * @param   fq The new center frequency, in Hz, to set
+     */
     void setCenterFq(uint32_t fq);
+
+    /**
+     * @brief   Read the currently set center frequency
+     * @returns Returns the currently set tuner frequency in Hz
+     */
     uint32_t centerFq(void) { return center_fq; }
 
+    /**
+     * @brief   Set the tuner sample rate
+     * @param   rate The new sample, in Hz, rate to set
+     */
     void setSampleRate(uint32_t rate);
+
+    /**
+     * @brief   Get the currently set sample rate
+     * @returns Returns the currently set sample rate in Hz
+     */
     uint32_t sampleRate(void) const { return samp_rate; }
 
+    /**
+     * @brief   Set the gain mode
+     * @param   mode The gain mode to set: 0=automatic, 1=manual
+     *
+     * Use this function to choose if automatic or manual gain mode should
+     * be used. When set to manual, the setGain function can be used to set
+     * the desired gain.
+     */
     void setGainMode(uint32_t mode);
 
+    /**
+     * @brief   Set manual gain
+     * @param   gain The gain in tenths of a dB to set (105=10.5dB)
+     *
+     * Use this function to set the gain when manual gain mode is selected.
+     * Set the gain mode using the setGainMode function.
+     */
     void setGain(int32_t gain);
 
+    /**
+     * @brief   Set frequency correction factor
+     * @param   corr The frequency correction factor in PPM
+     *
+     * Use this function to set the frequency correction factor for the tuner.
+     * The correction factor is given in parts per million (PPM). That is,
+     * how many Hz per MHz the tuner is off.
+     */
     void setFqCorr(uint32_t corr);
 
+    /**
+     * @brief   Set tuner IF gain for the specified stage
+     * @param   stage The number of the gain stage to set
+     * @param   gain The gain in tenths of a dB to set (105=10.5dB)
+     *
+     * Use this function to set the IF gain for a specific stage in the tuner.
+     * How many stages that are available is tuner dependent. For example,
+     * the E4000 tuner have stages 1 to 6.
+     */
     void setTunerIfGain(uint16_t stage, int16_t gain);
 
+    /**
+     * @brief   Enable or disable test mode
+     * @param   enable Set to \em true to enable testing
+     *
+     * Use this function to enable a testing mode in the tuner. Instead of
+     * returning real samples the tuner will return a 8 bit counter value
+     * instead. This can be used to verify that no samples are dropped.
+     */
     void enableTestMode(bool enable);
 
+    /**
+     * @brief   Enable or disable the digital AGC of the RTL2832
+     * @param   enable Set to \em true to enable the digital AGC
+     */
     void enableDigitalAgc(bool enable);
 
     /* Missing commands:
@@ -175,14 +236,58 @@ class RtlTcp : public sigc::trackable
      *   d - set tuner gain by index
      */
 
+    /**
+     * @brief   Return the tuner type
+     * @returns Returns a number representing the tuner type
+     *
+     * Use this function to return the tuner type. The tuner type is available
+     * after the connection has been estbalished with rtl_tcp. To get a string
+     * representation of the tuner type, use the tunerTypeString function.
+     * To compare to a specific numerical tuner type, use the TunerType enum.
+     */
     TunerType tunerType(void) const { return tuner_type; }
+
+    /**
+     * @brief   Get the tuner type as a string
+     * @param   type The tuner type to convert to a string
+     * @returns Returns a string representation of the tuner type
+     */
     const char *tunerTypeString(TunerType type) const;
+
+    /**
+     * @brief   Get the tuner type as a string
+     * @returns Returns a string representation of the tuner type
+     *
+     * Use this function to return a string representation of the tuner type.
+     * The tuner type is available after the connection has been estbalished
+     * with rtl_tcp.
+     * To compare to a specific numerical tuner type, use the tunerType
+     * function and the TunerType enum instead.
+     */
     const char *tunerTypeString(void) const
     {
       return tunerTypeString(tuner_type);
     }
+
+    /**
+     * @brief   Get a list of tuner gains available for the current tuner
+     * @returns Returns a vector of available tuner gains
+     *
+     * This function will return a list of tuner gains that are available for
+     * the current tuner. The connection must have been established with the
+     * tuner before calling this function.
+     * The gain values are given in tenhts of a dB so 105=10.5dB.
+     */
     std::vector<int> getTunerGains(void) const;
 
+    /**
+     * @brief   A signal that is emitted when new samples have been received
+     * @param   samples A vector of received samples
+     *
+     * Connecting to this signal is the way to get samples from the DVB-T
+     * dongle. The format is a vector of complex floats (I/Q) with a range from
+     * -1 to 1.
+     */
     sigc::signal<void, std::vector<Sample> > iqReceived;
     
   protected:

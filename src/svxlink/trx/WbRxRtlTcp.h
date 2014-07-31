@@ -1,6 +1,6 @@
 /**
 @file	 WbRxRtlTcp.h
-@brief   A WBRX using RTL2832U based DVB-T tuners
+@brief   A WBRX using RTL2832U based DVB-T tuners through rtl_tcp
 @author  Tobias Blomberg / SM0SVX
 @date	 2014-07-16
 
@@ -23,11 +23,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-/** @example WbRxRtlTcp_demo.cpp
-An example of how to use the WbRxRtlTcp class
-*/
-
 
 #ifndef WBRX_RTL_TCP_INCLUDED
 #define WBRX_RTL_TCP_INCLUDED
@@ -119,13 +114,12 @@ class Ddr;
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief	A WBRX using RTL2832U based DVB-T tuners through rtl_tcp
 @author Tobias Blomberg / SM0SVX
 @date   2014-07-16
 
-A_detailed_class_description
-
-\include WbRxRtlTcp_demo.cpp
+This class handle a RTL2832U tuner through the RtlTcp class. Configuration
+is read from the given section in the given configuration file.
 */
 class WbRxRtlTcp
 {
@@ -135,7 +129,9 @@ class WbRxRtlTcp
     static WbRxRtlTcp *instance(Async::Config &cfg, const std::string &name);
 
     /**
-     * @brief 	Default constructor
+     * @brief 	Constructor
+     * @param   cfg A previously initialized configuration object
+     * @param   name The name of the configuration section to read config from
      */
     WbRxRtlTcp(Async::Config &cfg, const std::string &name);
   
@@ -145,20 +141,56 @@ class WbRxRtlTcp
     ~WbRxRtlTcp(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief   Set the center frequency of the tuner
+     * @param   fq The new center frequency, in Hz, to set
      */
     void setCenterFq(uint32_t fq);
+
+    /**
+     * @brief   Read the currently set center frequency
+     * @returns Returns the currently set tuner frequency in Hz
+     */
     uint32_t centerFq(void);
 
+    /**
+     * @brief   Get the currently set sample rate
+     * @returns Returns the currently set sample rate in Hz
+     */
     uint32_t sampleRate(void) const;
 
+    /**
+     * @brief   Register a DDR with this tuner
+     * @param   ddr A pointer to the DDR object to register
+     *
+     * A registered DDR will receive a notification through the tunerFqChanged
+     * function when the tuner frequency changes. Also, the autoplacement of
+     * the tuner frequency is dependent on that all associated DDR:s are
+     * registered.
+     */
     void registerDdr(Ddr *ddr);
+
+    /**
+     * @brief   Unregister a DDR from this tuner
+     * @param   ddr A pointer to the DDR object to unregister
+     *
+     * @see registerDdr
+     */
     void unregisterDdr(Ddr *ddr);
 
+    /**
+     * @brief   Get the name of this tuner object
+     * @returns Returns the name of this tuner object
+     */
     std::string name(void) const { return m_name; }
 
+    /**
+     * @brief   A signal that is emitted when new samples have been received
+     * @param   samples A vector of received samples
+     *
+     * Connecting to this signal is the way to get samples from the DVB-T
+     * dongle. The format is a vector of complex floats (I/Q) with a range from
+     * -1 to 1.
+     */
     sigc::signal<void, std::vector<Sample> > iqReceived;
     
   protected:

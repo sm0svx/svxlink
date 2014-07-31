@@ -136,10 +136,27 @@ class Ddr : public LocalRxBase
      */
     virtual bool initialize(void);
 
+    /**
+     * @brief   Find out which frequency this DDR is tuned to
+     * @returns Returns the absolute frequency in Hz of this DDR
+     */
     double nbFq(void) const { return fq; }
 
+    /**
+     * @brief   Tell the DDR that the frequency of the wideband tuner changed
+     * @param   fq The new tuner frequency
+     */
     void tunerFqChanged(uint32_t fq);
 
+    /**
+     * @brief   A signal that is emitted when new I/Q data is available
+     * @param   samples The new samples that are available
+     *
+     * This signal is emitted each time a new block of I/Q samples are
+     * available. The samples are taken after all decimation and channel
+     * filtering has been done but before demodulation is performed. This make
+     * the channel samples available for other types of signal processing.
+     */
     sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
     
   protected:
