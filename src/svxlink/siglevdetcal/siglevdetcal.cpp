@@ -284,10 +284,11 @@ int main(int argc, char **argv)
   }
 
     // Make sure we have CTCSS squelch enabled
-  cfg.setValue(rx_name, "SQL_DET", "CTCSS");
+  //cfg.setValue(rx_name, "SQL_DET", "CTCSS");
 
     // Make sure that the squelch will not open during calibration
   cfg.setValue(rx_name, "CTCSS_OPEN_THRESH", "100");
+  cfg.setValue(rx_name, "SIGLEV_OPEN_THRESH", "10000");
   
     // Make sure we are using the "Noise" siglev detector
   //cfg.setValue(rx_name, "SIGLEV_DET", "NOISE");
