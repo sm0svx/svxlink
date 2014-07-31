@@ -152,7 +152,7 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
   uint32_t fq_corr = 0;
   if (cfg.getValue(name, "FQ_CORR", fq_corr))
   {
-    cout << "###   FQ_CORR   = " << fq_corr << "ppm\n";
+    cout << "###   FQ_CORR   = " << (int32_t)fq_corr << "ppm\n";
     rtl->setFqCorr(fq_corr);
   }
 
