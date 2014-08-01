@@ -341,7 +341,13 @@ Voter::~Voter(void)
 {
   delete selector;
   
+    // Mute all receivers before deleting them so that we do not get any
+    // unexpected updates during deletion
   list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    (*it)->setMuteState(Rx::MUTE_ALL);
+  }
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
     delete *it;

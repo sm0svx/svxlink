@@ -7,7 +7,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2006 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -85,10 +85,6 @@ class Async::AudioSelector::Branch : public AudioPassthrough
     Branch(AudioSelector *selector, AudioSource *source)
       : selector(selector), auto_select(false), prio(0)
     {
-      if (source != 0)
-      {
-      	assert(registerSource(source));
-      }
     }
     
     void setSelectionPrio(int prio)
@@ -228,7 +224,9 @@ AudioSelector::~AudioSelector(void)
 void AudioSelector::addSource(Async::AudioSource *source)
 {
   assert(branch_map.find(source) == branch_map.end());
-  branch_map[source] = new Branch(this, source);
+  Branch *branch = new Branch(this, source);
+  source->registerSink(branch);
+  branch_map[source] = branch;
 } /* AudioSelector::addSource */
 
 
@@ -270,7 +268,7 @@ void AudioSelector::disableAutoSelect(AudioSource *source)
   assert(branch_map.find(source) != branch_map.end());
   Branch *branch = branch_map[source];
   branch->disableAutoSelect();
-} /* AudioSelector::enableAutoSelect */
+} /* AudioSelector::disableAutoSelect */
 
 
 bool AudioSelector::autoSelectEnabled(AudioSource *source)
@@ -309,23 +307,6 @@ void AudioSelector::selectSource(AudioSource *source)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
 
 /****************************************************************************
  *
@@ -333,19 +314,6 @@ void AudioSelector::selectSource(AudioSource *source)
  *
  ****************************************************************************/
 
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
 void AudioSelector::selectBranch(Branch *branch)
 {
   //printf("AudioSelector::selectBranch: branch=%p\n", branch);
@@ -364,10 +332,6 @@ void AudioSelector::selectBranch(Branch *branch)
 
 
 
-
-
-
 /*
  * This file has not been truncated
  */
-

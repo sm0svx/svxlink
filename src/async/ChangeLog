@@ -1,3 +1,33 @@
+ 1.3.0 -- ?? ??? 2014
+----------------------
+
+* Fixed Async::AudioDeviceUDP so that audio output is paced instead of writing
+  as fast as possible.
+
+* Added a NULL audio encoder and decoder that can be used when one does not
+  want audio to be sent at all.
+
+* Added the ability to bind TCP client and server sockets to a specific
+  IP-address.
+
+* Serial port settings are now not restored unless they have been explicitly
+  changed using the Serial::setParams function.
+
+* The serial port TX/RX buffers are now only flushed if explicitly specified
+  in the open call.
+
+* The IpAddress class now have an input stream operator.
+
+* Bugfix in Async::{AudioSelector,DnsLookup,AudioSplitter}: Important code had
+  been placed within assert statements. By default CMake set compiler options
+  that remove all assert statements when compiling in release mode. This
+  caused some things to stop working when compiling for release.
+
+* Now possible to change the buffer size of a TCP connection using
+  TcpConnection::setRecvBufLen.
+
+
+
  1.2.1 -- 30 Jun 2014
 ----------------------
 
@@ -10,23 +40,6 @@
 * Bugfix for Async::Config::getValue. The std::ws operator set the fail bit on
   FreeBSD at end of string. This caused some config options to not be read
   correctly.
-
-* Fixed Async::AudioDeviceUDP so that audio output is paced instead of writing
-  as fast as possible.
-
-* Added a NULL audio encoder that can be used when one does not want audio to
-  be sent at all.
-
-* Added the ability to bind TCP client and server sockets to a specific
-  IP-address.
-
-* Serial port settings are now not restored unless they have been explicitly
-  changed using the Serial::setParams function.
-
-* The serial port TX/RX buffers are now only flushed if explicitly specified
-  in the open call.
-
-* The IpAddress class now have an input stream operator.
 
 
 

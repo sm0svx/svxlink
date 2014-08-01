@@ -173,6 +173,10 @@ class TcpClient : public TcpConnection
      */
     ~TcpClient(void);
     
+    /**
+     * @brief   Bind to the interface having the specified IP address
+     * @param   bind_ip The IP address of the interface to bind to
+     */
     void bind(const IpAddress& bind_ip);
 
     /**

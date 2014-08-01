@@ -37,6 +37,8 @@
  ****************************************************************************/
 
 #include <sys/select.h>
+#include <signal.h>
+#include <unistd.h>
 
 #include <cstdlib>
 #include <cstdio>
@@ -137,6 +139,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
+int CppApplication::sighandler_pipe[2];
 
 
 /****************************************************************************
@@ -159,11 +162,11 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 CppApplication::CppApplication(void)
-  : do_quit(false), max_desc(0)
+  : do_quit(false), max_desc(0), unix_signal_recv_cnt(0)
 {
   FD_ZERO(&rd_set);
   FD_ZERO(&wr_set);
-  
+  sighandler_pipe[0] = sighandler_pipe[1] = -1;
 } /* CppApplication::CppApplication */
 
 
@@ -175,6 +178,31 @@ CppApplication::~CppApplication(void)
 
 void CppApplication::exec(void)
 {
+  if (pipe(sighandler_pipe) == -1)
+  {
+    perror("pipe");
+    exit(1);
+  }
+
+  FdWatch watch(sighandler_pipe[0], FdWatch::FD_WATCH_RD);
+  watch.activity.connect(
+      hide(mem_fun(*this, &CppApplication::handleUnixSignal)));
+
+  for (UnixSignalMap::const_iterator it = unix_signals.begin();
+       it != unix_signals.end();
+       ++it)
+  {
+    struct sigaction act;
+    act.sa_handler = unixSignalHandler;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = 0;
+    if (sigaction((*it).first, &act, NULL) == -1)
+    {
+      perror("sigaction");
+      exit(1);
+    }
+  }
+  
   while (!do_quit)
   {
     struct timespec *timeout_ptr = 0;
@@ -280,6 +308,21 @@ void CppApplication::exec(void)
     
     assert(dcnt == 0);
   }
+
+  for (UnixSignalMap::const_iterator it = unix_signals.begin();
+       it != unix_signals.end();
+       ++it)
+  {
+    if (sigaction((*it).first, &(*it).second, NULL) == -1)
+    {
+      perror("sigaction");
+      exit(1);
+    }
+  }
+
+  close(sighandler_pipe[1]);
+  close(sighandler_pipe[0]);
+  sighandler_pipe[0] = sighandler_pipe[1] = -1;
 } /* CppApplication::exec */
 
 
@@ -287,6 +330,52 @@ void CppApplication::quit(void)
 {
   do_quit = true;
 } /* CppApplication::quit */
+
+
+void CppApplication::catchUnixSignal(int signum)
+{
+  UnixSignalMap::iterator it = unix_signals.find(signum);
+  if (it != unix_signals.end())
+  {
+    uncatchUnixSignal(signum);
+  }
+
+    // Store the old signal handler
+  if (sigaction(signum, NULL, &unix_signals[signum]) == -1)
+  {
+    perror("sigaction");
+    exit(1);
+  }
+
+    // Add signal handler if we're in the exec function
+  if (sighandler_pipe[0] != -1)
+  {
+    struct sigaction act;
+    act.sa_handler = unixSignalHandler;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = 0;
+    if (sigaction(signum, &act, NULL) == -1)
+    {
+      perror("sigaction");
+      exit(1);
+    }
+  }
+} /* CppApplication::catchUnixSignal */
+
+
+void CppApplication::uncatchUnixSignal(int signum)
+{
+  UnixSignalMap::iterator it = unix_signals.find(signum);
+  if (it == unix_signals.end())
+  {
+    return;
+  }
+  if (sigaction(signum, &unix_signals[signum], NULL) == -1)
+  {
+    perror("sigaction");
+    exit(1);
+  }
+} /* CppApplication::uncatchUnixSignal */
 
 
 
@@ -321,19 +410,13 @@ void CppApplication::quit(void)
  *
  ****************************************************************************/
 
+void CppApplication::unixSignalHandler(int signum)
+{
+  int cnt = write(sighandler_pipe[1], &signum, sizeof(signum));
+  assert(cnt == sizeof(signum));
+} /* CppApplication::unixSignalHandler */
 
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
+
 void CppApplication::addFdWatch(FdWatch *fd_watch)
 {
   int fd = fd_watch->fd();
@@ -453,6 +536,22 @@ DnsLookupWorker *CppApplication::newDnsLookupWorker(const string& label)
   return new CppDnsLookupWorker(label);
 } /* CppApplication::newDnsLookupWorker */
 
+
+void CppApplication::handleUnixSignal(void)
+{
+  char *ptr = reinterpret_cast<char*>(&unix_signal_recv) + unix_signal_recv_cnt;
+  int cnt = read(sighandler_pipe[0], ptr,
+                 sizeof(unix_signal_recv) - unix_signal_recv_cnt);
+  assert(cnt > 0);
+  unix_signal_recv_cnt += cnt;
+  assert(unix_signal_recv_cnt <= sizeof(unix_signal_recv));
+  if (unix_signal_recv_cnt == sizeof(unix_signal_recv))
+  {
+    unixSignalCaught(unix_signal_recv);
+    unix_signal_recv_cnt = 0;
+    unix_signal_recv = -1;
+  }
+} /* CppApplication::handleUnixSignal */
 
 
 

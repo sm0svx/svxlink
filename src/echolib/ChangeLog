@@ -4,6 +4,13 @@
 * Now possible to bind to a specific IP address to use a specific network
   interface.
 
+* Improved EchoLink RX timeout handling.
+  The previous EchoLink RX timeout handling was a little bit too simplistic.
+  It could not handle clients sending larger audio packets, like Apple devices
+  seem to do. The new algorithm adapts the timeout value to how much audio
+  data have been received, making the timeout longer if a larger audio packet
+  is received.
+
 
 
  1.2.0 -- 29 Jul 2013

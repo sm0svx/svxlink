@@ -193,6 +193,21 @@ TcpConnection::~TcpConnection(void)
 } /* TcpConnection::~TcpConnection */
 
 
+void TcpConnection::setRecvBufLen(size_t recv_buf_len)
+{
+  if (recv_buf_cnt > recv_buf_len)
+  {
+      // This will on next reception cause an overflow error disconnection
+    recv_buf_cnt = recv_buf_len;
+  }
+  char *new_recv_buf = new char[recv_buf_len];
+  memcpy(new_recv_buf, recv_buf, recv_buf_cnt);
+  this->recv_buf_len = recv_buf_len;
+  delete [] recv_buf;
+  recv_buf = new_recv_buf;
+} /* TcpConnection::setRecvBufLen */
+
+
 void TcpConnection::disconnect(void)
 {
   recv_buf_cnt = 0;

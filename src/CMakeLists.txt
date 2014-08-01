@@ -52,6 +52,27 @@ include_directories(
   ${CMAKE_BINARY_DIR}
 )
 
+# Warnings should be enabled for GCC. Also turning off the NDEBUG flag
+# since that remove asserts.
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+  set(CMAKE_C_FLAGS
+    "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes -Wpointer-arith")
+  set(CMAKE_C_FLAGS_RELEASE "-O3")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g")
+
+  set(CMAKE_CXX_FLAGS
+    "${CMAKE_CXX_FLAGS} -Wall -Wpointer-arith")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+endif()
+
+# Set the default build type to Release
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING
+      "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
 
 ##############################################################################
 # Install targets properties setup

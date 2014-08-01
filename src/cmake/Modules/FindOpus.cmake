@@ -54,7 +54,7 @@ find_path(Opus_INCLUDE_DIR
 find_library(Opus_LIBRARY
   NAMES opus
   DOC "Opus library path"
-  PATHS ${Opus_LIBRARY_DIRS}
+  PATHS ${PC_Opus_LIBRARY_DIRS}
 )
 
 # Set up version variables
@@ -68,20 +68,21 @@ endif()
 # Handle the QUIETLY and REQUIRED arguments and set Opus_FOUND to TRUE if 
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-if(CMAKE_VERSION VERSION_LESS 2.8.3)
-  find_package_handle_standard_args(Opus
+if(CMAKE_VERSION VERSION_LESS 2.8.12)
+  find_package_handle_standard_args(OPUS
     DEFAULT_MSG
     Opus_LIBRARY Opus_INCLUDE_DIR
   )
 else()
   find_package_handle_standard_args(Opus
-    FOUND_VAR Opus_FOUND
+    FOUND_VAR OPUS_FOUND
     REQUIRED_VARS Opus_LIBRARY Opus_INCLUDE_DIR
     VERSION_VAR Opus_VERSION
   )
 endif()
 
-if(Opus_FOUND)
+if(OPUS_FOUND)
+  set(Opus_FOUND 1)
   set(Opus_LIBRARIES ${Opus_LIBRARY})
   set(Opus_INCLUDE_DIRS ${Opus_INCLUDE_DIR})
   set(Opus_DEFINITIONS ${PC_Opus_CFLAGS_OTHER})

@@ -61,6 +61,12 @@
   was adjusted down by the same amount that the CTCSS level was adjusted up.
   This is just confusing so I removed that compensation.
 
+* Bugfix in the Voter: If the squelch were open while quitting, a crash could
+  occur.
+
+* Bugfix in logfile handling: SvxLink/RemoteTrx would crash if the filesystem
+  was full while trying to write to the logfile.
+
 
 
  1.3.1 -- 30 jun 2014
