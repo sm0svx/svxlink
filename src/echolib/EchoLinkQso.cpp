@@ -9,7 +9,7 @@ information, see the documentation for class EchoLink::Qso.
 
 \verbatim
 EchoLib - A library for EchoLink communication
-Copyright (C) 2003-2007  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,9 +27,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
 /****************************************************************************
  *
  * System Includes
@@ -42,6 +39,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+
+#ifdef SPEEX_MAJOR
+#include <speex/speex.h>
+#endif
 
 
 /****************************************************************************
@@ -90,6 +91,27 @@ using namespace EchoLink;
  *
  ****************************************************************************/
 
+struct Qso::Private
+{
+  typedef enum
+  {
+    CODEC_NONE,
+    CODEC_GSM
+#ifdef SPEEX_MAJOR
+    ,CODEC_SPEEX
+#endif
+  } Codec;
+
+  Codec     remote_codec;
+#ifdef SPEEX_MAJOR
+  SpeexBits enc_bits;
+  SpeexBits dec_bits;
+  void *    enc_state;
+  void *    dec_state;
+#endif
+
+  Private(void) : remote_codec(CODEC_GSM) {}
+};
 
 
 /****************************************************************************
@@ -124,26 +146,15 @@ using namespace EchoLink;
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
 Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
       	 const string& info)
   : init_ok(false),   	 state(STATE_DISCONNECTED), gsmh(0),
     next_audio_seq(0),   keep_alive_timer(0),       con_timeout_timer(0),
     callsign(callsign),  name(name),                local_stn_info(info),
     send_buffer_cnt(0),  remote_ip(addr),           rx_indicator_timer(0),
-    remote_name("?"),    remote_call("?"),          remote_codec(CODEC_GSM),
-    is_remote_initiated(false), receiving_audio(false), use_gsm_only(false)
+    remote_name("?"),    remote_call("?"),          is_remote_initiated(false),
+    receiving_audio(false), use_gsm_only(false),    p(new Private),      
+    rx_timeout_left(0)
 {
   if (!addr.isUnicast())
   {
@@ -156,18 +167,18 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
   gsmh = gsm_create();
 
 #ifdef SPEEX_MAJOR
-  speex_bits_init(&enc_bits);
-  speex_bits_init(&dec_bits);
+  speex_bits_init(&p->enc_bits);
+  speex_bits_init(&p->dec_bits);
     
-  enc_state = speex_encoder_init(&speex_nb_mode);
-  dec_state = speex_decoder_init(&speex_nb_mode);
+  p->enc_state = speex_encoder_init(&speex_nb_mode);
+  p->dec_state = speex_decoder_init(&speex_nb_mode);
 
   int val = 25000;
-  speex_encoder_ctl(enc_state, SPEEX_SET_BITRATE, &val);
+  speex_encoder_ctl(p->enc_state, SPEEX_SET_BITRATE, &val);
   val = 8;
-  speex_encoder_ctl(enc_state, SPEEX_SET_QUALITY, &val);
+  speex_encoder_ctl(p->enc_state, SPEEX_SET_QUALITY, &val);
   val = 4;
-  speex_encoder_ctl(enc_state, SPEEX_SET_COMPLEXITY, &val);
+  speex_encoder_ctl(p->enc_state, SPEEX_SET_COMPLEXITY, &val);
 #endif
     
   if (!Dispatcher::instance()->registerConnection(this, &Qso::handleCtrlInput,
@@ -184,18 +195,6 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
 } /* Qso::Qso */
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
 Qso::~Qso(void)
 {
   disconnect();
@@ -204,17 +203,20 @@ Qso::~Qso(void)
   gsmh = 0;
 
 #ifdef SPEEX_MAJOR
-  speex_bits_destroy(&enc_bits);
-  speex_bits_destroy(&dec_bits);
+  speex_bits_destroy(&p->enc_bits);
+  speex_bits_destroy(&p->dec_bits);
 
-  speex_encoder_destroy(enc_state);
-  speex_decoder_destroy(dec_state);
+  speex_encoder_destroy(p->enc_state);
+  speex_decoder_destroy(p->dec_state);
 #endif
   
   if (init_ok)
   {
     Dispatcher::instance()->unregisterConnection(this);
   }  
+
+  delete p;
+  p = 0;
 } /* Qso::~Qso */
 
 
@@ -393,7 +395,7 @@ bool Qso::sendAudioRaw(RawPacket *raw_packet)
   
 #ifdef SPEEX_MAJOR
   if ((raw_packet->voice_packet->header.pt == 0x96) &&
-      (remote_codec == CODEC_GSM))
+      (p->remote_codec == Private::CODEC_GSM))
   {
     // transcode SPEEX -> GSM
     VoicePacket voice_packet;
@@ -440,11 +442,12 @@ bool Qso::sendAudioRaw(RawPacket *raw_packet)
 void Qso::setRemoteParams(const string& priv)
 {
 #ifdef SPEEX_MAJOR  
-  if ((priv.find("SPEEX") != string::npos) && (remote_codec == CODEC_GSM)
+  if ((priv.find("SPEEX") != string::npos)
+      && (p->remote_codec == Private::CODEC_GSM)
       && !use_gsm_only)
   {
     cerr << "Switching to SPEEX audio codec for EchoLink Qso." << endl;
-    remote_codec = CODEC_SPEEX;
+    p->remote_codec = Private::CODEC_SPEEX;
   }
 #endif
 } /* Qso::setRemoteParams */
@@ -770,12 +773,12 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
 #ifdef SPEEX_MAJOR
   if (voice_packet->header.pt == 0x96)
   {
-    speex_bits_read_from(&dec_bits, (char*)voice_packet->data,
+    speex_bits_read_from(&p->dec_bits, (char*)voice_packet->data,
                          len - sizeof(voice_packet->header));
           
     for (int frameno=0; frameno<FRAME_COUNT; ++frameno)
     {
-      int err = speex_decode_int(dec_state, &dec_bits, sbuff);
+      int err = speex_decode_int(p->dec_state, &p->dec_bits, sbuff);
       if (err == -1)
       {
         cerr << "*** WARNING: Short frame count. There should be "
@@ -795,10 +798,12 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
       {
         receiving_audio = true;
         isReceiving(true);
-        rx_indicator_timer = new Timer(RX_INDICATOR_HANG_TIME);
-        rx_indicator_timer->expired.connect(mem_fun(*this, &Qso::checkRxActivity));
+        rx_indicator_timer = new Timer(RX_INDICATOR_POLL_TIME,
+                                       Timer::TYPE_PERIODIC);
+        rx_indicator_timer->expired.connect(
+            mem_fun(*this, &Qso::checkRxActivity));
+        rx_timeout_left = RX_INDICATOR_SLACK;
       }
-      gettimeofday(&last_audio_packet_received, 0);
       
       float samples[160];
       for (int i = 0; i < 160; i++)
@@ -824,11 +829,12 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
       {
         receiving_audio = true;
         isReceiving(true); 
-        rx_indicator_timer = new Timer(RX_INDICATOR_HANG_TIME);
+        rx_indicator_timer = new Timer(RX_INDICATOR_POLL_TIME,
+                                       Timer::TYPE_PERIODIC);
         rx_indicator_timer->expired.connect(
             mem_fun(*this, &Qso::checkRxActivity));
+        rx_timeout_left = RX_INDICATOR_SLACK;
       }
-      gettimeofday(&last_audio_packet_received, 0);
       
       float samples[160];
       for (int i=0; i<160; ++i)
@@ -838,6 +844,16 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
       sinkWriteSamples(samples, 160);
       sbuff += 160;
     }
+  }
+
+  rx_timeout_left += BLOCK_TIME;
+  if (rx_timeout_left < BLOCK_TIME + RX_INDICATOR_SLACK)
+  {
+    rx_timeout_left = BLOCK_TIME + RX_INDICATOR_SLACK;
+  }
+  else if (rx_timeout_left > RX_INDICATOR_MAX_TIME)
+  {
+    rx_timeout_left = RX_INDICATOR_MAX_TIME;
   }
 
   audioReceivedRaw(&raw_packet);
@@ -942,19 +958,19 @@ bool Qso::sendVoicePacket(void)
   voice_packet.header.seqNum = htons(next_audio_seq++);
 
 #ifdef SPEEX_MAJOR
-  if (remote_codec == CODEC_SPEEX)
+  if (p->remote_codec == Private::CODEC_SPEEX)
   {
     for(int i = 0; i < BUFFER_SIZE; i += 160)
     {
-      speex_encode_int(enc_state, send_buffer + i, &enc_bits);
+      speex_encode_int(p->enc_state, send_buffer + i, &p->enc_bits);
     }
-    speex_bits_insert_terminator(&enc_bits);
-    size_t nsize = speex_bits_nbytes(&enc_bits);
+    speex_bits_insert_terminator(&p->enc_bits);
+    size_t nsize = speex_bits_nbytes(&p->enc_bits);
     if (nsize < sizeof(voice_packet.data))
     {
-      nbytes = speex_bits_write(&enc_bits, (char*)voice_packet.data, nsize);
+      nbytes = speex_bits_write(&p->enc_bits, (char*)voice_packet.data, nsize);
     }
-    speex_bits_reset(&enc_bits);
+    speex_bits_reset(&p->enc_bits);
     voice_packet.header.pt = 0x96;
   }
   else
@@ -988,22 +1004,16 @@ bool Qso::sendVoicePacket(void)
 
 void Qso::checkRxActivity(Timer *timer)
 {
-  struct timeval tv;
-  gettimeofday(&tv, 0);
-  struct timeval diff;
-  timersub(&tv, &last_audio_packet_received, &diff);
-  long diff_ms = diff.tv_sec * 1000 + diff.tv_usec / 1000;
-  if (diff_ms >= RX_INDICATOR_HANG_TIME)
+  //cout << "### Qso::checkRxActivity: rx_timeout_left="
+  //     << rx_timeout_left << endl;
+  rx_timeout_left -= 100;
+  if (rx_timeout_left <= 0)
   {
     receiving_audio = false;
     isReceiving(false);
     sinkFlushSamples();
     delete rx_indicator_timer;
     rx_indicator_timer = 0;
-  }
-  else
-  {
-    rx_indicator_timer->setTimeout(RX_INDICATOR_HANG_TIME-diff_ms+100);
   }
 } /* Qso::checkRxActivity */
 
@@ -1029,4 +1039,3 @@ bool Qso::sendByePacket(void)
 /*
  * This file has not been truncated
  */
-

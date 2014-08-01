@@ -51,9 +51,6 @@ disconnected the application exits.
 #include <sigc++/sigc++.h>
 #include <stdint.h>
 #include <string>
-#ifdef SPEEX_MAJOR
-#include <speex/speex.h>
-#endif
 
 
 /****************************************************************************
@@ -469,31 +466,23 @@ class Qso
 
     
   private:
+    struct Private;
+
     static const int  	KEEP_ALIVE_TIME       	= 10000;
     static const int  	MAX_CONNECT_RETRY_CNT 	= 5;
     static const int  	CON_TIMEOUT_TIME      	= 50000;
-    static const int  	RX_INDICATOR_HANG_TIME  = 200;
+    static const int  	RX_INDICATOR_POLL_TIME  = 100;  // 10 times/s
+    static const int  	RX_INDICATOR_SLACK      = 100;  // 100ms extra time
+    static const int  	RX_INDICATOR_MAX_TIME   = 1000; // Max 1s timeout
     static const int    FRAME_COUNT             = 4;
-    static const int  	BUFFER_SIZE      	= FRAME_COUNT*160; // 20ms/frame
-
-    typedef enum
-    {
-      CODEC_NONE,
-      CODEC_GSM,
-      CODEC_SPEEX
-    } Codec;
+    static const int  	BUFFER_SIZE      	= FRAME_COUNT*160;
+    static const int    BLOCK_TIME              = FRAME_COUNT*1000*160/8000;
 
     bool      	      	init_ok;
     unsigned char      	sdes_packet[1500];
     int       	      	sdes_length;
     State     	      	state;
     gsm       	      	gsmh;
-#ifdef SPEEX_MAJOR
-    SpeexBits           enc_bits;
-    SpeexBits           dec_bits;
-    void *              enc_state;
-    void *              dec_state;
-#endif
     uint16_t    	next_audio_seq;
     Async::Timer *	keep_alive_timer;
     int       	      	connect_retry_cnt;
@@ -506,13 +495,13 @@ class Qso
     int       	      	send_buffer_cnt;
     Async::IpAddress  	remote_ip;
     Async::Timer *    	rx_indicator_timer;
-    struct timeval    	last_audio_packet_received;
     std::string       	remote_name;
     std::string       	remote_call;
-    Codec               remote_codec;
     bool		is_remote_initiated;
     bool      	      	receiving_audio;
     bool                use_gsm_only;
+    Private             *p;
+    int                 rx_timeout_left;
 
     Qso(const Qso&);
     Qso& operator=(const Qso&);
@@ -533,7 +522,6 @@ class Qso
     bool sendVoicePacket(void);
     void checkRxActivity(Async::Timer *timer);
     bool sendByePacket(void);
-
     
 };  /* class Qso */
 
