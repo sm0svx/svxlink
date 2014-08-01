@@ -3,7 +3,7 @@ QTEL=1.2.1
 QTEL_RPM_RELEASE=1
 
 # Version for the EchoLib library
-LIBECHOLIB=1.2.99.2
+LIBECHOLIB=1.2.99.3
 LIBECHOLIB_RPM_RELEASE=1
 
 # Version for the Async library
