@@ -153,8 +153,8 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
     callsign(callsign),  name(name),                local_stn_info(info),
     send_buffer_cnt(0),  remote_ip(addr),           rx_indicator_timer(0),
     remote_name("?"),    remote_call("?"),          is_remote_initiated(false),
-    receiving_audio(false), use_gsm_only(false),
-    p(new Private)
+    receiving_audio(false), use_gsm_only(false),    p(new Private),      
+    rx_timeout_left(0)
 {
   if (!addr.isUnicast())
   {
@@ -798,10 +798,12 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
       {
         receiving_audio = true;
         isReceiving(true);
-        rx_indicator_timer = new Timer(RX_INDICATOR_HANG_TIME);
-        rx_indicator_timer->expired.connect(mem_fun(*this, &Qso::checkRxActivity));
+        rx_indicator_timer = new Timer(RX_INDICATOR_POLL_TIME,
+                                       Timer::TYPE_PERIODIC);
+        rx_indicator_timer->expired.connect(
+            mem_fun(*this, &Qso::checkRxActivity));
+        rx_timeout_left = RX_INDICATOR_SLACK;
       }
-      gettimeofday(&last_audio_packet_received, 0);
       
       float samples[160];
       for (int i = 0; i < 160; i++)
@@ -827,11 +829,12 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
       {
         receiving_audio = true;
         isReceiving(true); 
-        rx_indicator_timer = new Timer(RX_INDICATOR_HANG_TIME);
+        rx_indicator_timer = new Timer(RX_INDICATOR_POLL_TIME,
+                                       Timer::TYPE_PERIODIC);
         rx_indicator_timer->expired.connect(
             mem_fun(*this, &Qso::checkRxActivity));
+        rx_timeout_left = RX_INDICATOR_SLACK;
       }
-      gettimeofday(&last_audio_packet_received, 0);
       
       float samples[160];
       for (int i=0; i<160; ++i)
@@ -841,6 +844,16 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
       sinkWriteSamples(samples, 160);
       sbuff += 160;
     }
+  }
+
+  rx_timeout_left += BLOCK_TIME;
+  if (rx_timeout_left < BLOCK_TIME + RX_INDICATOR_SLACK)
+  {
+    rx_timeout_left = BLOCK_TIME + RX_INDICATOR_SLACK;
+  }
+  else if (rx_timeout_left > RX_INDICATOR_MAX_TIME)
+  {
+    rx_timeout_left = RX_INDICATOR_MAX_TIME;
   }
 
   audioReceivedRaw(&raw_packet);
@@ -991,22 +1004,16 @@ bool Qso::sendVoicePacket(void)
 
 void Qso::checkRxActivity(Timer *timer)
 {
-  struct timeval tv;
-  gettimeofday(&tv, 0);
-  struct timeval diff;
-  timersub(&tv, &last_audio_packet_received, &diff);
-  long diff_ms = diff.tv_sec * 1000 + diff.tv_usec / 1000;
-  if (diff_ms >= RX_INDICATOR_HANG_TIME)
+  //cout << "### Qso::checkRxActivity: rx_timeout_left="
+  //     << rx_timeout_left << endl;
+  rx_timeout_left -= 100;
+  if (rx_timeout_left <= 0)
   {
     receiving_audio = false;
     isReceiving(false);
     sinkFlushSamples();
     delete rx_indicator_timer;
     rx_indicator_timer = 0;
-  }
-  else
-  {
-    rx_indicator_timer->setTimeout(RX_INDICATOR_HANG_TIME-diff_ms+100);
   }
 } /* Qso::checkRxActivity */
 
@@ -1032,4 +1039,3 @@ bool Qso::sendByePacket(void)
 /*
  * This file has not been truncated
  */
-
