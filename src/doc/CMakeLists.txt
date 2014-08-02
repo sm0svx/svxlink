@@ -5,7 +5,6 @@ add_custom_target(doc)
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
   configure_file(doxygen.echolib.in doxygen.echolib @ONLY)
-  configure_file(doxygen.async.in doxygen.async @ONLY)
   add_custom_target(echolib-doc
     ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doxygen.echolib
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -16,16 +15,22 @@ if(DOXYGEN_FOUND)
   install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/echolib/html/
     DESTINATION ${DOC_INSTALL_DIR}/echolib
     OPTIONAL)
+
+  configure_file(doxygen.async.in doxygen.async @ONLY)
   add_custom_target(async-doc
     ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doxygen.async
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Generating Async API documentation using Doxygen"
     VERBATIM
     )
+  add_dependencies(doc async-doc)
   install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/async/html/
     DESTINATION ${DOC_INSTALL_DIR}/async
     OPTIONAL)
-  add_dependencies(doc async-doc)
+
+  set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
+    "echolib;async"
+    )
 endif(DOXYGEN_FOUND)
 
 add_subdirectory(man)
