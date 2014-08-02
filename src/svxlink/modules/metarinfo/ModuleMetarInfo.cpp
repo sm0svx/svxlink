@@ -1446,7 +1446,7 @@ std::string ModuleMetarInfo::getPrecipitation(std::string token)
    stringstream ss;
    std::string tstr;
    std::string newstr = "";
-   unsigned int found;
+   size_t found;
    string::size_type pos = 0;
    string::size_type len;
 
