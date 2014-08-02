@@ -224,5 +224,13 @@ configure_file "svxlink/modules/tcl_voice_mail/ModuleTclVoiceMail.tcl.in" \
 configure_file "svxlink/modules/tcl_voice_mail/TclVoiceMail.conf.in" \
                "svxlink/modules/tcl_voice_mail/TclVoiceMail.conf"
 
+# Generate ModulePropagationMonitor.conf and .procmailrc
+configure_file \
+  "svxlink/modules/propagation_monitor/ModulePropagationMonitor.conf.in" \
+  "svxlink/modules/propagation_monitor/ModulePropagationMonitor.conf"
+configure_file \
+  "svxlink/modules/propagation_monitor/procmailrc.in" \
+  "svxlink/modules/propagation_monitor/.procmailrc"
+
 exit 0
 
