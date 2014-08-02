@@ -20,8 +20,8 @@
   is activated using subcommand 7 while the EchoLink module is active.
   This feature was contributed by Martin/DF1AMB.
 
-//* ModuleEchoLink: New TCL event handling function: "chat_received" which
-//  is called when a remote chat message is received.
+* ModuleEchoLink: New TCL event handling function: "chat_received" which
+  is called when a remote chat message is received.
 
 * ModuleEchoLink: New TCL event handling function: "squelch_open" which is
   called when the local receiver squelch open and closes. This function can be
