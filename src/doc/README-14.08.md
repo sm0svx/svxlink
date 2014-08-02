@@ -32,6 +32,8 @@ confusion.
 One big difference for those building SvxLink from source code is that CMake is
 the official build system now. How to build SvxLink using CMake is described in
 the INSTALL file that can be found in the root of the source tree.
+The old buildsystem is still there but it will probably be removed in the next
+release if there are no problems with the CMake buildsystem.
 
 There is one known larger problem left in this release which was also in the
 previous release. The EchoLink module may all of a sudden stop talking to the
