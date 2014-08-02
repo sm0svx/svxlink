@@ -20,9 +20,11 @@ foreach(man ${MAN_PAGES})
   string(REGEX REPLACE ^.*\([1-9]\)\$ \\1 sec ${man})
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${man}.gz
     DESTINATION ${MAN_INSTALL_DIR}/man${sec}
+    OPTIONAL
   )
   set(TARGETS ${TARGETS} ${man}.gz)
 endforeach(man)
 
 # Add a custom target to trigger the build of the man pages
-add_custom_target(man ALL DEPENDS ${TARGETS})
+add_custom_target(man DEPENDS ${TARGETS})
+add_dependencies(doc man)
