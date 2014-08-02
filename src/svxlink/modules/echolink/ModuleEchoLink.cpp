@@ -1157,7 +1157,7 @@ void ModuleEchoLink::onChatMsgReceived(QsoImpl *qso, const string& msg)
     // FIXME: This TCL specific code should not be here
   ss << "chat_received [subst -nocommands -novariables {";
   ss << escaped;
-  ss << "}";
+  ss << "}]";
   processEvent(ss.str());
 } /* onChatMsgReceived */
 
