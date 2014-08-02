@@ -67,6 +67,12 @@
 * Bugfix in logfile handling: SvxLink/RemoteTrx would crash if the filesystem
   was full while trying to write to the logfile.
 
+* Flushing logs at exit.
+  There have always been a problem with the log handling in SvxLink that if an
+  error occurred during startup, the error printouts would not end up in the
+  log. In fact, nothing would end up in the log, leaving the user confused.
+  Now the log is flushed before exit so that all printouts end up in the log.
+
 
 
  1.3.1 -- 30 jun 2014
