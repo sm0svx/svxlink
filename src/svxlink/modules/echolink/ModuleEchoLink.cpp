@@ -24,8 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /****************************************************************************
  *
  * System Includes
@@ -105,6 +103,7 @@ using namespace EchoLink;
  * Prototypes
  *
  ****************************************************************************/
+
 
 
 
@@ -1149,15 +1148,17 @@ void ModuleEchoLink::onChatMsgReceived(QsoImpl *qso, const string& msg)
     }
   }
 
-  // FIXME: This code has a security flaw. Incoming strings need to be
-  // escaped.
-#if 0
+    // Escape TCL control characters
+  string escaped(msg);
+  replaceAll(escaped, "\\", "\\\\");
+  replaceAll(escaped, "{", "\\{");
+  replaceAll(escaped, "}", "\\}");
   stringstream ss;
-  ss << "chat_received \"";
-  ss << msg;
-  ss << "\"";
+    // FIXME: This TCL specific code should not be here
+  ss << "chat_received [subst -nocommands -novariables {";
+  ss << escaped;
+  ss << "}";
   processEvent(ss.str());
-#endif
 } /* onChatMsgReceived */
 
 
@@ -2076,6 +2077,22 @@ void ModuleEchoLink::numConUpdate(void)
   num_con_update_timer->reset();
 
 } /* ModuleEchoLink::numConUpdate */
+
+
+void ModuleEchoLink::replaceAll(std::string &str, const std::string &from,
+                                const std::string &to) const
+{
+  if(from.empty())
+  {
+    return;
+  }
+  size_t start_pos = 0;
+  while((start_pos = str.find(from, start_pos)) != std::string::npos)
+  {
+    str.replace(start_pos, from.length(), to);
+    start_pos += to.length();
+  }
+} /* ModuleEchoLink::replaceAll */
 
 
 
