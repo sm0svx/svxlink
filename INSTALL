@@ -3,10 +3,12 @@ SvxLink build instructions
 SvxLink use the CMake build system. The basic pattern for building using CMake
 looks like this:
 
+  cd path/to/svxlink/src
   mkdir build
   cd build
   cmake ..
   make
+  make doc
   make install
 
 This will build SvxLink and install it under /usr/local. The first argument to

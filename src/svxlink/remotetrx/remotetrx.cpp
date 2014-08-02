@@ -163,6 +163,7 @@ static bool logfile_open(void);
 static void logfile_reopen(const char *reason);
 static bool logfile_write_timestamp(void);
 static void logfile_write(const char *buf);
+static void logfile_flush(void);
 
 
 /****************************************************************************
@@ -252,9 +253,19 @@ int main(int argc, char **argv)
       perror("pipe");
       exit(1);
     }
+    int flags = fcntl(pipefd[0], F_GETFL);
+    if (flags == -1)
+    {
+      perror("fcntl(..., F_GETFL)");
+      exit(1);
+    }
+    flags |= O_NONBLOCK;
+    if (fcntl(pipefd[0], F_SETFL, flags) == -1)
+    {
+      perror("fcntl(..., F_SETFL)");
+      exit(1);
+    }
     stdout_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
-    // must explicitly specify name space for ptr_fun() to avoid conflict
-    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
     stdout_watch->activity.connect(sigc::ptr_fun(&stdout_handler));
 
       /* Redirect stdout to the logpipe */
@@ -291,6 +302,8 @@ int main(int argc, char **argv)
       exit(1);
     }
 
+    atexit(logfile_flush);
+    
       /* Tell the daemon function call not to close the file descriptors */
     noclose = 1;
   }
@@ -533,6 +546,8 @@ int main(int argc, char **argv)
   {
     cerr << "*** ERROR: No trxs successfully initialized. Bailing out...\n";
   }
+
+  logfile_flush();
   
   if (stdin_watch != 0)
   {
@@ -680,16 +695,17 @@ static void stdinHandler(FdWatch *w)
 
 static void stdout_handler(FdWatch *w)
 {
-  char buf[256];
-  ssize_t len = read(w->fd(), buf, sizeof(buf)-1);
-  if (len == -1)
+  ssize_t len =  0;
+  do
   {
-    return;
-  }
-  buf[len] = 0;
-  
-  logfile_write(buf);
-  
+    char buf[256];
+    len = read(w->fd(), buf, sizeof(buf)-1);
+    if (len > 0)
+    {
+      buf[len] = 0;
+      logfile_write(buf);
+    }
+  } while (len > 0);
 } /* stdout_handler  */
 
 
@@ -857,6 +873,17 @@ static void logfile_write(const char *buf)
     ptr += write_len;
   }
 } /* logfile_write */
+
+
+static void logfile_flush(void)
+{
+  cout.flush();
+  cerr.flush();
+  if (stdout_watch != 0)
+  {
+    stdout_handler(stdout_watch);
+  }
+} /*  logfile_flush */
 
 
 

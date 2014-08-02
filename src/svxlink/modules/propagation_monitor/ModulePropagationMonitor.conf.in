@@ -3,5 +3,5 @@ NAME=PropagationMonitor
 PLUGIN_NAME=Tcl
 ID=10
 TIMEOUT=10
-SPOOL_DIR=/var/spool/svxlink/propagation_monitor
+SPOOL_DIR=@SVX_SPOOL_INSTALL_DIR@/propagation_monitor
 
