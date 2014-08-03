@@ -8,3 +8,4 @@ url: "http://localhost:4000"
 markdown: rdiscount
 permalink: pretty
 highlighter: pygments
+exclude: [update_doc.sh]
