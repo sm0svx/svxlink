@@ -502,7 +502,7 @@ clean::
 	    $(RM) $$file ;\
 	  fi \
 	done
-	$(RM) $(UI_FILES:%.ui=%.h) $(LIB_UI_FILES:%.ui=%.h)
+	$(RM) $(UI_FILES:%.ui=ui_%.h) $(LIB_UI_FILES:%.ui=ui_%.h)
 
 
 # Cleanup the dependency files and exported includefiles too.

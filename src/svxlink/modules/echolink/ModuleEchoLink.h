@@ -258,6 +258,8 @@ class ModuleEchoLink : public Module
     void checkAutoCon(Async::Timer *timer=0);
     bool numConCheck(const std::string &callsign);
     void numConUpdate(void);
+    void replaceAll(std::string &str, const std::string &from,
+                    const std::string &to) const;
 
 };  /* class ModuleEchoLink */
 

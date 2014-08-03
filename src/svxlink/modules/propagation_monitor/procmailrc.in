@@ -3,7 +3,7 @@
 # This is used by the PropagationMonitor SvxLink module.
 
 # Store received propagation alerts here
-MAILDIR=/var/spool/svxlink/propagation_monitor
+MAILDIR=@SVX_SPOOL_INSTALL_DIR@/propagation_monitor
 
 # Log for procmail activity
 #LOGFILE=$MAILDIR/procmail.log
