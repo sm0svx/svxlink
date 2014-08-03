@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncAudioFilter.h>
 #include <AsyncSigCAudioSink.h>
+#include <AsyncConfig.h>
 
 
 /****************************************************************************
@@ -115,12 +116,28 @@ using namespace Async;
  *
  ****************************************************************************/
 
-SigLevDetNoise::SigLevDetNoise(int sample_rate)
-  : sample_rate(sample_rate), block_len(BLOCK_TIME * sample_rate / 1000),
+SigLevDetNoise::SigLevDetNoise(void)
+  : sample_rate(0), block_len(0), filter(0), sigc_sink(0),
     slope(10.0), offset(0.0), update_interval(0), update_counter(0),
     integration_time(0), ss(0.0), ss_cnt(0),
     bogus_thresh(numeric_limits<float>::max())
 {
+} /* SigLevDetNoise::SigLevDetNoise */
+
+
+SigLevDetNoise::~SigLevDetNoise(void)
+{
+  clearHandler();
+  delete filter;
+  delete sigc_sink;
+} /* SigLevDetNoise::~SigLevDetNoise */
+
+
+bool SigLevDetNoise::initialize(Config &cfg, const string& name,
+                                int sample_rate)
+{
+  this->sample_rate = sample_rate;
+  block_len = BLOCK_TIME * sample_rate / 1000;
   if (sample_rate >= 16000)
   {
     filter = new AudioFilter("BpBu4/5000-5500", sample_rate);
@@ -137,16 +154,16 @@ SigLevDetNoise::SigLevDetNoise(int sample_rate)
       mem_fun(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
   sigc_sink->registerSource(filter);
   setIntegrationTime(0);
+
+  cfg.getValue(name, "SIGLEV_OFFSET", offset);
+  cfg.getValue(name, "SIGLEV_SLOPE", slope);
+  cfg.getValue(name, "SIGLEV_BOGUS_THRESH", bogus_thresh);
+
   reset();
-} /* SigLevDetNoise::SigLevDetNoise */
 
+  return SigLevDet::initialize(cfg, name, sample_rate);
 
-SigLevDetNoise::~SigLevDetNoise(void)
-{
-  clearHandler();
-  delete filter;
-  delete sigc_sink;
-} /* SigLevDetNoise::~SigLevDetNoise */
+} /* SigLevDetNoise::initialize */
 
 
 void SigLevDetNoise::setDetectorSlope(float slope)

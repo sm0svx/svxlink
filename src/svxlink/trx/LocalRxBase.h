@@ -1,16 +1,16 @@
 /**
-@file	 LocalRx.h
-@brief   A receiver class to handle local receivers
+@file	 LocalRxBase.h
+@brief   A base receiver class to handle local receivers
 @author  Tobias Blomberg / SM0SVX
-@date	 2004-03-21
+@date	 2014-07-16
 
-This file contains a class that handle local analogue receivers. A local
-receiver is a receiver that is directly connected to the sound card on the
-computer where the SvxLink core is running.
+This file contains a class that handle local receivers. A local receiver is
+a receiver that is directly connected to the sound card on the computer where
+the SvxLink core is running. It can also be a DDR (Digital Drop Receiver).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,8 +29,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef LOCAL_RX_INCLUDED
-#define LOCAL_RX_INCLUDED
+#ifndef LOCAL_RX_BASE_INCLUDED
+#define LOCAL_RX_BASE_INCLUDED
 
 
 /****************************************************************************
@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <sys/time.h>
 
 
 /****************************************************************************
@@ -47,6 +48,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncAudioValve.h>
+#include <AsyncAudioDelayLine.h>
 
 
 /****************************************************************************
@@ -55,7 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "LocalRxBase.h"
+#include "Rx.h"
 
 
 /****************************************************************************
@@ -66,8 +69,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace Async
 {
-  class AudioIO;
+  class Config;
+  class AudioSplitter;
+  class AudioValve;
+  class AudioFifo;
 };
+
+class Squelch;
 
 
 /****************************************************************************
@@ -86,6 +94,7 @@ namespace Async
  *
  ****************************************************************************/
 
+class SigLevDet;
 
 
 /****************************************************************************
@@ -111,32 +120,72 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A class to handle local receivers
+@brief	A base class to handle local receivers
 @author Tobias Blomberg
 @date   2004-03-21
 
-This class handle local analogue receivers. A local receiver is a receiver that
-is directly connected to the sound card on the computer where the SvxLink core
-is running.
+This class handle local receivers. A local receiver is a receiver that is
+directly connected to the sound card on the computer where the SvxLink core
+is running. It can also be a DDR (Digital Drop Receiver).
 */
-class LocalRx : public LocalRxBase
+class LocalRxBase : public Rx
 {
   public:
     /**
      * @brief 	Default constuctor
      */
-    explicit LocalRx(Async::Config &cfg, const std::string& name);
+    explicit LocalRxBase(Async::Config &cfg, const std::string& name);
   
     /**
      * @brief 	Destructor
      */
-    virtual ~LocalRx(void);
+    virtual ~LocalRxBase(void);
   
     /**
      * @brief 	Initialize the receiver object
      * @return 	Return \em true on success, or \em false on failure
      */
     virtual bool initialize(void);
+    
+    /**
+     * @brief 	Set the mute state for this receiver
+     * @param 	mute_state The mute state to set for this receiver
+     */
+    virtual void setMuteState(MuteState new_mute_state);
+    
+    /**
+     * @brief 	Call this function to add a tone detector to the RX
+     * @param 	fq The tone frequency to detect
+     * @param 	bw The bandwidth of the detector
+     * @param 	thresh The detection threshold in dB SNR
+     * @param 	required_duration The required time in milliseconds that
+     *	      	the tone must be active for activity to be reported.
+     * @return	Return \em true if the Rx is capable of tone detection or
+     *	      	\em false if it's not.
+     */
+    virtual bool addToneDetector(float fq, int bw, float thresh,
+                                 int required_duration);
+
+    /**
+     * @brief 	Read the current signal strength
+     * @return	Returns the signal strength
+     */
+    virtual float signalStrength(void) const;
+    
+    /**
+     * @brief 	Reset the receiver object to its default settings
+     */
+    virtual void reset(void);
+
+    /**
+     * @brief  A signal that is emitted when the CTCSS tone SNR has changed
+     * @param  snr The current SNR
+     *
+     * This signal will be emitted as soon as a new SNR value for the CTCSS
+     * tone has been calculated. The signal will only be emitted when
+     * CTCSS_MODE is set to 2 or 3.
+     */
+    sigc::signal<void, float> ctcssSnrUpdated;
     
   protected:
     /**
@@ -147,7 +196,7 @@ class LocalRx : public LocalRxBase
      * sure that the audio source object is initialized before calling
      * the LocalRxBase::initialize function.
      */
-    virtual bool audioOpen(void);
+    virtual bool audioOpen(void) = 0;
 
     /**
      * @brief   Close the audio input source
@@ -156,7 +205,7 @@ class LocalRx : public LocalRxBase
      * make sure that the audio source object is initialized before calling the
      * LocalRxBase::initialize function.
      */
-    virtual void audioClose(void);
+    virtual void audioClose(void) = 0;
 
     /**
      * @brief   Get the sampling rate of the audio source
@@ -166,7 +215,7 @@ class LocalRx : public LocalRxBase
      * sure that the proper sampling rate can be returned before calling
      * the LocalRxBase::initialize function.
      */
-    virtual int audioSampleRate(void);
+    virtual int audioSampleRate(void) = 0;
 
     /**
      * @brief   Get the audio source object
@@ -176,20 +225,45 @@ class LocalRx : public LocalRxBase
      * sure that the audio source object is initialized before calling
      * the LocalRxBase::initialize function.
      */
-    virtual Async::AudioSource *audioSource(void);
+    virtual Async::AudioSource *audioSource(void) = 0;
     
   private:
-    Async::Config   &cfg;
-    Async::AudioIO  *audio_io;
+    Async::Config     	      	&cfg;
+    MuteState      	      	mute_state;
+    Squelch   	      	      	*squelch_det;
+    SigLevDet 	      	        *siglevdet;
+    Async::AudioSplitter      	*tone_dets;
+    Async::AudioValve 	        *sql_valve;
+    Async::AudioDelayLine     	*delay;
+    bool      	      	      	mute_dtmf;
+    int       	      	      	sql_tail_elim;
+    int       	      	      	preamp_gain;
+    Async::AudioValve 	      	*mute_valve;
+    unsigned                    sql_hangtime;
+    unsigned                    sql_extended_hangtime;
+    unsigned                    sql_extended_hangtime_thresh;
+    Async::AudioFifo            *input_fifo;
     
-};  /* class LocalRx */
+    int audioRead(float *samples, int count);
+    void dtmfDigitActivated(char digit);
+    void dtmfDigitDeactivated(char digit, int duration_ms);
+    void sel5Detected(std::string sequence);
+    void audioStreamStateChange(bool is_active, bool is_idle);
+    void onSquelchOpen(bool is_open);
+    void tone1750detected(bool detected);
+    void onSignalLevelUpdated(float siglev);
+    void setSqlHangtimeFromSiglev(float siglev);
+
+};  /* class LocalRxBase */
 
 
 //} /* namespace */
 
-#endif /* LOCAL_RX_INCLUDED */
+#endif /* LOCAL_RX_BASE_INCLUDED */
+
 
 
 /*
  * This file has not been truncated
  */
+

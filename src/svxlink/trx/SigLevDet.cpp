@@ -1,16 +1,12 @@
 /**
-@file	 LocalRx.cpp
-@brief   A receiver class to handle local receivers
+@file	 SigLevDet.cpp
+@brief   The base class for a signal level detector
 @author  Tobias Blomberg / SM0SVX
-@date	 2004-03-21
-
-This file contains a class that handle local analogue receivers. A local
-receiver is a receiver that is directly connected to the sound card on the
-computer where the SvxLink core is running.
+@date	 2014-07-17
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -46,7 +42,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
-#include <AsyncAudioIO.h>
 
 
 /****************************************************************************
@@ -55,7 +50,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "LocalRx.h"
+#include "SigLevDet.h"
+#include "SigLevDetNoise.h"
+#include "SigLevDetTone.h"
+#include "SigLevDetDdr.h"
+
 
 
 /****************************************************************************
@@ -83,6 +82,27 @@ using namespace Async;
  *
  ****************************************************************************/
 
+namespace {
+  /**
+   * @brief A dummy signal level detector which always return 0 siglev
+   */
+  class SigLevDetNone : public SigLevDet
+  {
+    public:
+      struct Factory : public SigLevDetFactory<SigLevDetNone>
+      {
+        Factory(void) : SigLevDetFactory<SigLevDetNone>("NONE") {}
+      };
+
+    virtual void setContinuousUpdateInterval(int interval_ms) {}
+    virtual void setIntegrationTime(int time_ms) {}
+    virtual float lastSiglev(void) const { return 0; }
+    virtual float siglevIntegrated(void) const { return 0; }
+    virtual void reset(void) {}
+    virtual int writeSamples(const float *samples, int count) { return count; }
+    virtual void flushSamples(void) {}
+  };
+};
 
 
 /****************************************************************************
@@ -101,6 +121,7 @@ using namespace Async;
 
 
 
+
 /****************************************************************************
  *
  * Local Global Variables
@@ -115,49 +136,30 @@ using namespace Async;
  *
  ****************************************************************************/
 
-LocalRx::LocalRx(Config &cfg, const std::string& name)
-  : LocalRxBase(cfg, name), cfg(cfg), audio_io(0)
+SigLevDet *SigLevDetFactoryBase::createNamedSigLevDet(Config& cfg,
+                                                      const string& name)
 {
-} /* LocalRx::LocalRx */
-
-
-LocalRx::~LocalRx(void)
-{
-  delete audio_io;
-  audio_io = 0;
-} /* LocalRx::~LocalRx */
-
-
-bool LocalRx::initialize(void)
-{
-  string audio_dev;
-  if (!cfg.getValue(name(), "AUDIO_DEV", audio_dev))
-  {
-    cerr << "*** ERROR: Config variable " << name() << "/AUDIO_DEV not set\n";
-    return false;
-  }
+  SigLevDetNone::Factory none_siglev_factory;
+  SigLevDetNoise::Factory noise_siglev_factory;
+  SigLevDetTone::Factory tone_siglev_factory;
+  SigLevDetDdr::Factory ddr_siglev_factory;
   
-  int audio_channel = 0;
-  if (!cfg.getValue(name(), "AUDIO_CHANNEL", audio_channel))
+  string det_name;
+  if (!cfg.getValue(name, "SIGLEV_DET", det_name) || det_name.empty())
   {
-    cerr << "*** ERROR: Config variable " << name()
-         << "/AUDIO_CHANNEL not set\n";
-    return false;
-  }
-  
-    // Create the audio IO object
-    //FIXME: Check that the audio device is correctly initialized
-    //       before continuing.
-  audio_io = new AudioIO(audio_dev, audio_channel);
-
-  if (!LocalRxBase::initialize())
-  {
-    return false;
+    det_name = "NOISE";
   }
 
-  return true;
+  SigLevDet *det = createNamedObject(det_name);
+  if (det == 0)
+  {
+    cerr << "*** ERROR: Unknown SIGLEV_DET \"" << det_name
+         << "\" specified for receiver " << name << ". Legal values are: "
+         << validFactories() << endl;
+  }
   
-} /* LocalRx:initialize */
+  return det;
+} /* SigLevDetFactoryBase::createNamedSigLevDet */
 
 
 
@@ -166,37 +168,6 @@ bool LocalRx::initialize(void)
  * Protected member functions
  *
  ****************************************************************************/
-
-bool LocalRx::audioOpen(void)
-{
-    // Open the audio device for reading
-  if (!audio_io->open(AudioIO::MODE_RD))
-  {
-    cerr << "*** ERROR: Could not open audio device for receiver \""
-      	 << name() << "\"\n";
-    // FIXME: Cleanup?
-    return false;
-  }
-  return true;
-} /* LocalRx::audioOpen */
-
-
-void LocalRx::audioClose(void)
-{
-  audio_io->close();
-} /* LocalRx::audioClose */
-
-
-int LocalRx::audioSampleRate(void)
-{
-  return audio_io->sampleRate();
-} /* LocalRx::audioSampleRate */
-
-
-Async::AudioSource *LocalRx::audioSource(void)
-{
-  return audio_io;
-} /* LocalRx::audioSource */
 
 
 
