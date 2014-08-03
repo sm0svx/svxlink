@@ -1,109 +1,226 @@
-Content-type: text/html
+<!-- Creator     : groff version 1.22.2 -->
+<!-- CreationDate: Sun Aug  3 11:50:28 2014 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+</style>
+<title>SIGLEVDETCAL</title>
 
-<HTML><HEAD><TITLE>Manpage of SIGLEVDETCAL</TITLE>
-</HEAD><BODY>
-<H1>SIGLEVDETCAL</H1>
-Section: User Manuals (1)<BR>Updated: APRIL 2008<BR><A HREF="#index">Index</A>
-<A HREF="../index.html">Return to Main Contents</A><HR>
+</head>
+<body>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h1 align="center">SIGLEVDETCAL</h1>
 
-siglevdetcal - The SvxLink signal level detector calibration utility
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<a href="#NAME">NAME</a><br>
+<a href="#SYNOPSIS">SYNOPSIS</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#ENVIRONMENT">ENVIRONMENT</a><br>
+<a href="#AUTHOR">AUTHOR</a><br>
+<a href="#REPORTING BUGS">REPORTING BUGS</a><br>
+<a href="#SEE ALSO">SEE ALSO</a><br>
 
-<B>siglevdetcal &lt;</B><I>configuration file</I><B>&gt; &lt;</B><I>RX config section name</I><B>&gt;</B>
+<hr>
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
 
-<B>siglevdetcal</B>
+<h2>NAME
+<a name="NAME"></a>
+</h2>
 
-is the SvxLink signal level detector calibration utility. It is used to assist
-in the setup of the SIGLEV_SLOPE and SIGLEV_OFFSET configuration variables for a
-local receiver. The signal level detector need to be calibrated if a voter or
-the SIGLEV squelch detector is going to be used.
 
-The calibration procedure is quite simple and everything is more or less
-explained at run-time. The procedure is outlined below.
-<DL COMPACT><DT><DD>
-<DL COMPACT>
-<DT>*<DD>
-Disconnect the antenna and the PTT cable. The PTT might be triggered by the
-siglevdetcal utility. If you want to be really sure that no harm come to your
-transceiver, connect a dummy load.
-<DT>*<DD>
-Setup the audio input level. The audio input level must not be changed after the
-calibration has been done.
-<DT>*<DD>
-Start the siglevdetcal utility.
-<DT>*<DD>
-Transmit on another radio so that the receiver under calibration will receive
-full signal strength.
-<DT>*<DD>
-Still holding the PTT, press ENTER and wait until the squelch open level
-measurements have been done.
-<DT>*<DD>
-Release the PTT. Make sure the squelch is open so that only noise is received.
-<DT>*<DD>
-Press ENTER to start the squelch close level measurements.
-<DT>*<DD>
-When finished, the two config variables SIGLEV_SLOPE and SIGLEV_OFFSET are
-printed. Put these in your configuration file under the corresponding receiver
-configuration section.
-<DT>*<DD>
-Start the SvxLink server and verify that full signal strength is showed as about
-100 and open squelch is showed as about 0. If full signal strength is not
-showed, you might have to setup SQL_DELAY to delay the signal level measurement
-until the signal is stable.
-</DL>
-</DL>
+<p style="margin-left:11%; margin-top: 1em">siglevdetcal
+&minus; The SvxLink signal level detector calibration
+utility</p>
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>ENVIRONMENT</H2>
+<h2>SYNOPSIS
+<a name="SYNOPSIS"></a>
+</h2>
 
-<DL COMPACT>
-<DT>ASYNC_AUDIO_NOTRIGGER<DD>
-Set this environment variable to 1 if you get an error about
-<B>ioctl: Broken pipe</B>
 
-when the remotetrx server starts.
-</DL>
-<A NAME="lbAF">&nbsp;</A>
-<H2>AUTHOR</H2>
 
-Tobias Blomberg (SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;
-<A NAME="lbAG">&nbsp;</A>
-<H2>REPORTING BUGS</H2>
+<p style="margin-left:11%; margin-top: 1em"><b>siglevdetcal
+&lt;</b><i>configuration file</i><b>&gt; &lt;</b><i>RX
+config section name</i><b>&gt;</b></p>
 
-SvxLink Devel &lt;svxlink-devel at lists dot sourceforge dot net&gt;
-<A NAME="lbAH">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
 
-<B><A HREF="../man1/svxlink.1.html">svxlink</A></B>(1),
 
-<B><A HREF="../man1/remotetrx.1.html">remotetrx</A></B>(1),
 
-<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
+<p style="margin-left:11%; margin-top: 1em"><b>siglevdetcal</b>
+is the SvxLink signal level detector calibration utility. It
+is used to assist in the setup of the SIGLEV_SLOPE and
+SIGLEV_OFFSET configuration variables for a local receiver.
+The signal level detector need to be calibrated if a voter
+or the SIGLEV squelch detector is going to be used.</p>
 
-<P>
+<p style="margin-left:11%; margin-top: 1em">The calibration
+procedure is quite simple and everything is more or less
+explained at run-time. The procedure is outlined below.</p>
 
-<HR>
-<A NAME="index">&nbsp;</A><H2>Index</H2>
-<DL>
-<DT><A HREF="#lbAB">NAME</A><DD>
-<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
-<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
-<DT><A HREF="#lbAE">ENVIRONMENT</A><DD>
-<DT><A HREF="#lbAF">AUTHOR</A><DD>
-<DT><A HREF="#lbAG">REPORTING BUGS</A><DD>
-<DT><A HREF="#lbAH">SEE ALSO</A><DD>
-</DL>
-<HR>
-This document was created by
-<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
-using the manual pages.<BR>
-Time: 16:10:17 GMT, June 30, 2014
-</BODY>
-</HTML>
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="2%"></td>
+<td width="75%">
+
+
+<p>Disconnect the antenna and the PTT cable. The PTT might
+be triggered by the siglevdetcal utility. If you want to be
+really sure that no harm come to your transceiver, connect a
+dummy load.</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="2%"></td>
+<td width="75%">
+
+
+<p>Setup the audio input level. The audio input level must
+not be changed after the calibration has been done.</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="2%"></td>
+<td width="75%">
+
+
+<p>Start the siglevdetcal utility.</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="2%"></td>
+<td width="75%">
+
+
+<p>Transmit on another radio so that the receiver under
+calibration will receive full signal strength.</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="2%"></td>
+<td width="75%">
+
+
+<p>Still holding the PTT, press ENTER and wait until the
+squelch open level measurements have been done.</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="2%"></td>
+<td width="75%">
+
+
+<p>Release the PTT. Make sure the squelch is open so that
+only noise is received.</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="2%"></td>
+<td width="75%">
+
+
+<p>Press ENTER to start the squelch close level
+measurements.</p> </td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="2%"></td>
+<td width="75%">
+
+
+<p>When finished, the two config variables SIGLEV_SLOPE and
+SIGLEV_OFFSET are printed. Put these in your configuration
+file under the corresponding receiver configuration
+section.</p> </td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="2%"></td>
+<td width="75%">
+
+
+<p>Start the SvxLink server and verify that full signal
+strength is showed as about 100 and open squelch is showed
+as about 0. If full signal strength is not showed, you might
+have to setup SQL_DELAY to delay the signal level
+measurement until the signal is stable.</p></td></tr>
+</table>
+
+<h2>ENVIRONMENT
+<a name="ENVIRONMENT"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em">ASYNC_AUDIO_NOTRIGGER</p>
+
+<p style="margin-left:22%;">Set this environment variable
+to 1 if you get an error about <b>ioctl: Broken pipe</b>
+when the remotetrx server starts.</p>
+
+<h2>AUTHOR
+<a name="AUTHOR"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Tobias Blomberg
+(SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;</p>
+
+<h2>REPORTING BUGS
+<a name="REPORTING BUGS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">SvxLink Devel
+&lt;svxlink-devel at lists dot sourceforge dot net&gt;</p>
+
+<h2>SEE ALSO
+<a name="SEE ALSO"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>svxlink</b>(1),
+<b>remotetrx</b>(1), <b>svxlink.conf</b>(5)</p>
+<hr>
+</body>
+</html>

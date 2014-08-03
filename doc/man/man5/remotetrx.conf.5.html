@@ -1,345 +1,513 @@
-Content-type: text/html
-
-<HTML><HEAD><TITLE>Manpage of REMOTETRX.CONF</TITLE>
-</HEAD><BODY>
-<H1>REMOTETRX.CONF</H1>
-Section: File Formats (5)<BR>Updated: MAY 2011<BR><A HREF="#index">Index</A>
-<A HREF="../index.html">Return to Main Contents</A><HR>
-
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
-
-remotetrx.conf - Configuration file for the SvxLink remote transceiver server
-<A NAME="lbAC">&nbsp;</A>
-<H2>DESCRIPTION</H2>
-
-<B>remotetrx</B>
-
-is the SvxLink remote transceiver server. This man-page describe the
-configuration file format for it.
-
-The RemoteTrx application can handle more than one transceiver at a time. You
-may for example want to handle both a 2m and a 70cm receiver on a site. One
-sound card is sufficient for doing this since the left channel can be used for
-one receiver and the right channel can be used for the other receiver.
-The GLOBAL/TRXS configuration variable is used to tell the RemoteTrx
-application which transceivers to set up. Each transceiver have an uplink that
-is used to interface to the main SvxLink server. The most common type is the net
-uplink which link to the main SvxLink server over the Internet using TCP/IP.
-It is also possible to have an uplink via RF but the functionality is then
-limited.
-
-The term &quot;uplink&quot; might be a bit confusing for some people. In this case it does
-not refer to any specific direction in which the data or audio is flowing. It's
-just the name for the link up to the main SvxLink server.
-
-RemoteTrx look for configuration files in a number of places. First it tries to
-find a user specific configuration file. It will look for a user specific
-configuration file in two places:
-<B>$HOME/.svxlink/remotetrx.conf</B>.
-
-If no user specific configuration file can be found, remotetrx will look
-for the system wide configuration file
-<B>/etc/svxlink/remotetrx.conf</B>.
-
-The
-<B>--config</B>
-
-command line option may also be used to specify an arbitrary configuration file.
-<A NAME="lbAD">&nbsp;</A>
-<H2>FILE FORMAT</H2>
-
-The configuration file is in the famous INI-file format. A generic example of
-how such a file might look like is shown below.
-<P>
-<BR>&nbsp;&nbsp;[SECTION1]
-<BR>&nbsp;&nbsp;VALUE1=1
-<BR>&nbsp;&nbsp;VALUE2=&quot;TWO&nbsp;&quot;
-<BR>&nbsp;&nbsp;VAULE3=&quot;Multi&nbsp;&quot;
-<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;line&quot;
-<BR>&nbsp;&nbsp;
-<BR>&nbsp;&nbsp;[SECTION2]
-<BR>&nbsp;&nbsp;VALUE1=2
-<P>
-This is a simple format that contain name=value pairs that belong to a section.
-In written text, a specific configuration variable can be referred to as
-SECTION1/VALUE2 meaning &quot;configuration variable VALUE2 in section SECTION1&quot;.
-
-The same variable name can exist in two different sections. For example VALUE1
-in section SECTION1 have the value 1 and VALUE1 in section SECTION2 have the
-value 2. Values containing spaces at the beginning or end of the line must be
-surrounded by citation characters (see SECTION1/VALUE2). Likewise with a multi
-line value (see SECTION1/VALUE3).
-<A NAME="lbAE">&nbsp;</A>
-<H2>CONFIGURATION VARIABLES</H2>
-
-Here is the description of all configuration variables that remotetrx
-understands. The configuration variables are described section for section.
-<A NAME="lbAF">&nbsp;</A>
-<H3>GLOBAL</H3>
-
-The GLOBAL section contains application global configuration data.
-<DL COMPACT>
-<DT><B>TRXS</B>
-
-<DD>
-This configuration variable specify a comma separated list of transceiver
-configuration sections.
-<DT><B>CFG_DIR</B>
-
-<DD>
-Specify the path to a directory that contain additional configuration files.
-If a relative path is specified, the path will be relative to the directory
-where the main configuration file is at. All files in the specified directory
-will be read as additional configuration. Filenames starting with a dot are
-ignored.
-<DT><B>TIMESTAMP_FORMAT</B>
-
-<DD>
-This variable specifies the format of the timestamp that is written in front of
-each row in the log file. The format string is in the same format as specified
-in the
-<B><A HREF="../man3/strftime.3.html">strftime</A></B>(3)
-
-manual page. The default is &quot;%c&quot; which is described as: &quot;the preferred date and
-time representation for the current locale&quot;. The environment variables LC_TIME,
-LC_ALL and LANG will affect how this time format will look. For example, setting
-LC_TIME=&quot;sv_SE.UTF8&quot; will give you swedish timestamp representation. Other
-examples of format specifiers are:
-<DL COMPACT><DT><DD>
-<DL COMPACT>
-<DT>*<DD>
-<B>%d</B> - The day of the month as a decimal number (range 01 to 31)
-
-<DT>*<DD>
-<B>%b</B> - The abbreviated month name according to the current locale
-
-<DT>*<DD>
-<B>%Y</B> - The year as a decimal number including the century
-
-<DT>*<DD>
-<B>%H</B> - The hour as a decimal number using a 24-hour clock (range 00 to 23)
-
-<DT>*<DD>
-<B>%M</B> - The minute as a decimal number (range 00 to 59)
-
-<DT>*<DD>
-<B>%S</B> - The second as a decimal number (range 00 to 61)
-
-
-So, TIMESTAMP_FORMAT=&quot;%d %b %Y %H:%M:%S&quot; would give a timestamp looking something like:
-&quot;29 Nov 2005 22:31:59&quot;.
-</DL>
-</DL>
-
-<DT><B>CARD_SAMPLE_RATE</B>
-
-<DD>
-This configuration variable determines the sampling rate used for audio
-input/output. SvxLink always work with a sampling rate of 8kHz internally but
-there still are som benefits from using a higher sampling rate. On some sound
-cards the filters look pretty bad at 8kHz and the amplitude response will not be
-uniform which among other things can cause problems for the software DTMF
-decoder.
-<P>
-Some sound cards also sound very bad at 8kHz due to insufficient
-anti-alias filtering or resampling effects. These, often cheeper, sound cards
-sound OK at 48kHz.
-<P>
-The downside of choosing a higher sampling rate is that it puts a little bit
-more load on the CPU so if you have a very slow machine (&lt;300MHz), it might not
-have the computational power to handle it.
-<P>
-Supported sampling rates are: 8000, 16000 and 48000.
-</DL>
-<A NAME="lbAG">&nbsp;</A>
-<H3>Network uplink transceiver section</H3>
-
-The network uplink tranceiver section is used to specify the configuration for a
-network link to the main SvxLink server. In the default configuration file there
-is a network uplink transceiver section called
-<B>NetUpLinkTrx</B>.
-
-<DL COMPACT>
-<DT><B>TYPE</B>
-
-<DD>
-Always &quot;Net&quot; for a network uplink transceiver configuration section.
-<DT><B>RX</B>
-
-<DD>
-Point out the receiver configuration section to use. Set to NONE if no RX is
-used. A receiver is configured in the exact same way as in the SvxLink server.
-Have a look at
-<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
-
-for more information on how to configure a receiver.
-<DT><B>TX</B>
-
-<DD>
-Point out the transmitter configuration section to use. Set to NONE if no TX is
-used. A transmitter is configured in the exact same way as in the SvxLink
-server. Have a look at
-<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
-
-for more information on how to configure a transmitter.
-<DT><B>LISTEN_PORT</B>
-
-<DD>
-The TCP port to listen on. Make sure to choose a unique port for each
-network uplink transceiver configuration. The default is 5210.
-<DT><B>AUTH_KEY</B>
-
-<DD>
-This is the authentication key (password) to use to athenticate incoming
-connections. The same key have to be specified in the client configuration.
-If no key is specified, all logins will be unauthenticated. A good
-authentication key should be 20 characters long.
-The key will never be transmitted over the network. A HMAC-SHA1
-challenge-response procedure will be used for authentication.
-<DT><B>MUTE_TX_ON_RX</B>
-
-<DD>
-If set to a value &gt;= 0, will stop the transmitter from transmitting when the
-squelch is open. The value represents a delay, in milliseconds, after the
-squelch has closed, that the transmitter will be muted. For example, if set
-to 1000, the transmitter will be muted one second after the squelch has closed.
-The default is not to mute the transmitter when the squelch is open.
-</DL>
-<A NAME="lbAH">&nbsp;</A>
-<H3>RF uplink transceiver section</H3>
-
-The RF uplink transceiver configuration section is used to specify the
-configuration for an RF link to the main SvxLink server. In the default
-configuration file there is an RF uplink transceiver section called
-<B>RfUpLinkTrx</B>.
-
-The section name could be anything. It should match what is specified in the
-TRXS configuration variable in the GLOBAL section.
-
-The use of Rf uplinks is very EXPERIMENTAL and still have some flaws. Among
-other things, detected tones (like CTCSS or 1750 tone burst) are not relayed and
-all relayed DTMF tones are always 100ms long no matter how long the received
-digit was. Signal level measurements are not relayed either.
-
-Any way, it's used to link remote receivers coming in on the Internet to a site
-that do not have access to Internet.
-<DL COMPACT>
-<DT><B>TYPE</B>
-
-<DD>
-Always &quot;RF&quot; for an RF uplink transceiver configuration section.
-<DT><B>RX</B>
-
-<DD>
-Point out the receiver configuration section to use. Set to NONE if no RX is
-used. A receiver is configured in the exact same way as in the SvxLink server.
-Have a look at
-<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
-
-for more information on how to configure a receiver.
-<DT><B>TX</B>
-
-<DD>
-Point out the transmitter configuration section to use. Set to NONE if no TX is
-used. A transmitter is configured in the exact same way as in the SvxLink
-server. Have a look at
-<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
-
-for more information on how to configure a transmitter.
-<DT><B>UPLINK_TX</B>
-
-<DD>
-Point out the uplink transmitter configuration section to use. The configuration
-for an uplink transmitter looks exactly the same as for any other transmitter.
-In the default configuration file there is an uplink transmitter configuration
-section called
-<B>UplinkTx</B>.
-
-If there is no uplink transmitter, specify NONE.
-<DT><B>UPLINK_RX</B>
-
-<DD>
-Point out the uplink receiver configuration section to use. The configuration
-for an uplink receiver looks exactly the same as for any other receiver.
-In the default configuration file there is an uplink receiver configuration
-section called
-<B>UplinkRx</B>.
-
-If there is no uplink receiver, specify NONE.
-<DT><B>MUTE_UPLINK_RX_ON_TX</B>
-
-<DD>
-Specify if the link receiver should be muted or not when the link transmitter is
-transmitting. Set it to 0 if a full duplex link is desired. Default is 1.
-<DT><B>LOOP_RX_TO_TX</B>
-
-<DD>
-Set to 1 to loop incoming RX audio (not link RX) directly to the TX (not link
-TX). You figure out when to use it. Default is 0.
-<DT><B>FALLBACK_REPEATER</B>
-
-<DD>
-This function is useful if running RemoteTrx as both RX and TX for a repeater.
-If the connection to the SvxLink base station is lost due to network errors, the
-RemoteTrx provides a very basic repeater function (SQLELCH controlled) until the
-the connection has been established again. Set to 1 to enable this function
-or set to 0 to disable it. Default is 0.
-</DL>
-<A NAME="lbAI">&nbsp;</A>
-<H2>FILES</H2>
-
-<DL COMPACT>
-<DT><I>/etc/svxlink/remotetrx.conf</I> (or deprecated <I>/etc/remotetrx.conf</I>)
-
-<DD>
-The system wide configuration file.
-<DT><I>~/.svxlink/remotetrx.conf</I>
-
-<DD>
-Per user configuration file.
-<DT><I>/etc/svxlink/remotetrx.d/*</I>
-
-<DD>
-Additional configuration files.
-</DL>
-<A NAME="lbAJ">&nbsp;</A>
-<H2>AUTHOR</H2>
-
-Tobias Blomberg (SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;
-<A NAME="lbAK">&nbsp;</A>
-<H2>SEE ALSO</H2>
-
-<B><A HREF="../man1/svxlink.1.html">svxlink</A></B>(1),
-
-<B><A HREF="../man1/svxlink.conf.1.html">svxlink.conf</A></B>(1),
-
-<B><A HREF="../man1/remotetrx.1.html">remotetrx</A></B>(1),
-
-<B><A HREF="../man1/siglevdetcal.1.html">siglevdetcal</A></B>(1)
-
-<P>
-
-<HR>
-<A NAME="index">&nbsp;</A><H2>Index</H2>
-<DL>
-<DT><A HREF="#lbAB">NAME</A><DD>
-<DT><A HREF="#lbAC">DESCRIPTION</A><DD>
-<DT><A HREF="#lbAD">FILE FORMAT</A><DD>
-<DT><A HREF="#lbAE">CONFIGURATION VARIABLES</A><DD>
-<DL>
-<DT><A HREF="#lbAF">GLOBAL</A><DD>
-<DT><A HREF="#lbAG">Network uplink transceiver section</A><DD>
-<DT><A HREF="#lbAH">RF uplink transceiver section</A><DD>
-</DL>
-<DT><A HREF="#lbAI">FILES</A><DD>
-<DT><A HREF="#lbAJ">AUTHOR</A><DD>
-<DT><A HREF="#lbAK">SEE ALSO</A><DD>
-</DL>
-<HR>
-This document was created by
-<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
-using the manual pages.<BR>
-Time: 16:10:17 GMT, June 30, 2014
-</BODY>
-</HTML>
+<!-- Creator     : groff version 1.22.2 -->
+<!-- CreationDate: Sun Aug  3 11:50:28 2014 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+</style>
+<title>REMOTETRX.CONF</title>
+
+</head>
+<body>
+
+<h1 align="center">REMOTETRX.CONF</h1>
+
+<a href="#NAME">NAME</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#FILE FORMAT">FILE FORMAT</a><br>
+<a href="#CONFIGURATION VARIABLES">CONFIGURATION VARIABLES</a><br>
+<a href="#FILES">FILES</a><br>
+<a href="#AUTHOR">AUTHOR</a><br>
+<a href="#SEE ALSO">SEE ALSO</a><br>
+
+<hr>
+
+
+<h2>NAME
+<a name="NAME"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">remotetrx.conf
+&minus; Configuration file for the SvxLink remote
+transceiver server</p>
+
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>remotetrx</b>
+is the SvxLink remote transceiver server. This man-page
+describe the configuration file format for it.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The RemoteTrx
+application can handle more than one transceiver at a time.
+You may for example want to handle both a 2m and a 70cm
+receiver on a site. One sound card is sufficient for doing
+this since the left channel can be used for one receiver and
+the right channel can be used for the other receiver. The
+GLOBAL/TRXS configuration variable is used to tell the
+RemoteTrx application which transceivers to set up. Each
+transceiver have an uplink that is used to interface to the
+main SvxLink server. The most common type is the net uplink
+which link to the main SvxLink server over the Internet
+using TCP/IP. It is also possible to have an uplink via RF
+but the functionality is then limited.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The term
+&quot;uplink&quot; might be a bit confusing for some people.
+In this case it does not refer to any specific direction in
+which the data or audio is flowing. It&rsquo;s just the name
+for the link up to the main SvxLink server.</p>
+
+<p style="margin-left:11%; margin-top: 1em">RemoteTrx look
+for configuration files in a number of places. First it
+tries to find a user specific configuration file. It will
+look for a user specific configuration file in two places:
+<b>$HOME/.svxlink/remotetrx.conf</b>. If no user specific
+configuration file can be found, remotetrx will look for the
+system wide configuration file
+<b>/etc/svxlink/remotetrx.conf</b>. The <b>--config</b>
+command line option may also be used to specify an arbitrary
+configuration file.</p>
+
+<h2>FILE FORMAT
+<a name="FILE FORMAT"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The
+configuration file is in the famous INI-file format. A
+generic example of how such a file might look like is shown
+below.</p>
+
+<p style="margin-left:11%; margin-top: 1em">[SECTION1] <br>
+VALUE1=1 <br>
+VALUE2=&quot;TWO &quot; <br>
+VAULE3=&quot;Multi &quot; <br>
+&quot;line&quot;</p>
+
+<p style="margin-left:11%; margin-top: 1em">[SECTION2] <br>
+VALUE1=2</p>
+
+<p style="margin-left:11%; margin-top: 1em">This is a
+simple format that contain name=value pairs that belong to a
+section. In written text, a specific configuration variable
+can be referred to as SECTION1/VALUE2 meaning
+&quot;configuration variable VALUE2 in section
+SECTION1&quot;.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The same
+variable name can exist in two different sections. For
+example VALUE1 in section SECTION1 have the value 1 and
+VALUE1 in section SECTION2 have the value 2. Values
+containing spaces at the beginning or end of the line must
+be surrounded by citation characters (see SECTION1/VALUE2).
+Likewise with a multi line value (see SECTION1/VALUE3).</p>
+
+<h2>CONFIGURATION VARIABLES
+<a name="CONFIGURATION VARIABLES"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Here is the
+description of all configuration variables that remotetrx
+understands. The configuration variables are described
+section for section.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>GLOBAL</b>
+<br>
+The GLOBAL section contains application global configuration
+data.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p><b>TRXS</b></p></td>
+<td width="5%"></td>
+<td width="78%">
+
+
+<p>This configuration variable specify a comma separated
+list of transceiver configuration sections.</p></td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>CFG_DIR</b></p>
+
+<p style="margin-left:22%;">Specify the path to a directory
+that contain additional configuration files. If a relative
+path is specified, the path will be relative to the
+directory where the main configuration file is at. All files
+in the specified directory will be read as additional
+configuration. Filenames starting with a dot are
+ignored.</p>
+
+<p style="margin-left:11%;"><b>TIMESTAMP_FORMAT</b></p>
+
+<p style="margin-left:22%;">This variable specifies the
+format of the timestamp that is written in front of each row
+in the log file. The format string is in the same format as
+specified in the <b>strftime</b>(3) manual page. The default
+is &quot;%c&quot; which is described as: &quot;the preferred
+date and time representation for the current locale&quot;.
+The environment variables LC_TIME, LC_ALL and LANG will
+affect how this time format will look. For example, setting
+LC_TIME=&quot;sv_SE.UTF8&quot; will give you swedish
+timestamp representation. Other examples of format
+specifiers are:</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="5%"></td>
+<td width="72%">
+
+
+<p><b>%d</b> - The day of the month as a decimal number
+(range 01 to 31)</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="5%"></td>
+<td width="72%">
+
+
+<p><b>%b</b> - The abbreviated month name according to the
+current locale</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="5%"></td>
+<td width="72%">
+
+
+<p><b>%Y</b> - The year as a decimal number including the
+century</p> </td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="5%"></td>
+<td width="72%">
+
+
+<p><b>%H</b> - The hour as a decimal number using a 24-hour
+clock (range 00 to 23)</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="5%"></td>
+<td width="72%">
+
+
+<p><b>%M</b> - The minute as a decimal number (range 00 to
+59)</p> </td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="5%"></td>
+<td width="72%">
+
+
+<p><b>%S</b> - The second as a decimal number (range 00 to
+61)</p> </td></tr>
+</table>
+
+<p style="margin-left:22%; margin-top: 1em">So,
+TIMESTAMP_FORMAT=&quot;%d %b %Y %H:%M:%S&quot; would give a
+timestamp looking something like: &quot;29 Nov 2005
+22:31:59&quot;.</p>
+
+<p style="margin-left:11%;"><b>CARD_SAMPLE_RATE</b></p>
+
+<p style="margin-left:22%;">This configuration variable
+determines the sampling rate used for audio input/output.
+SvxLink always work with a sampling rate of 8kHz internally
+but there still are som benefits from using a higher
+sampling rate. On some sound cards the filters look pretty
+bad at 8kHz and the amplitude response will not be uniform
+which among other things can cause problems for the software
+DTMF decoder.</p>
+
+<p style="margin-left:22%; margin-top: 1em">Some sound
+cards also sound very bad at 8kHz due to insufficient
+anti-alias filtering or resampling effects. These, often
+cheeper, sound cards sound OK at 48kHz.</p>
+
+<p style="margin-left:22%; margin-top: 1em">The downside of
+choosing a higher sampling rate is that it puts a little bit
+more load on the CPU so if you have a very slow machine
+(&lt;300MHz), it might not have the computational power to
+handle it.</p>
+
+<p style="margin-left:22%; margin-top: 1em">Supported
+sampling rates are: 8000, 16000 and 48000.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Network
+uplink transceiver section</b> <br>
+The network uplink tranceiver section is used to specify the
+configuration for a network link to the main SvxLink server.
+In the default configuration file there is a network uplink
+transceiver section called <b>NetUpLinkTrx</b>.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p><b>TYPE</b></p></td>
+<td width="5%"></td>
+<td width="78%">
+
+
+<p>Always &quot;Net&quot; for a network uplink transceiver
+configuration section.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p><b>RX</b></p></td>
+<td width="5%"></td>
+<td width="78%">
+
+
+<p>Point out the receiver configuration section to use. Set
+to NONE if no RX is used. A receiver is configured in the
+exact same way as in the SvxLink server. Have a look at
+<b>svxlink.conf</b>(5) for more information on how to
+configure a receiver.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p><b>TX</b></p></td>
+<td width="5%"></td>
+<td width="78%">
+
+
+<p>Point out the transmitter configuration section to use.
+Set to NONE if no TX is used. A transmitter is configured in
+the exact same way as in the SvxLink server. Have a look at
+<b>svxlink.conf</b>(5) for more information on how to
+configure a transmitter.</p></td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>LISTEN_PORT</b></p>
+
+<p style="margin-left:22%;">The TCP port to listen on. Make
+sure to choose a unique port for each network uplink
+transceiver configuration. The default is 5210.</p>
+
+<p style="margin-left:11%;"><b>AUTH_KEY</b></p>
+
+<p style="margin-left:22%;">This is the authentication key
+(password) to use to athenticate incoming connections. The
+same key have to be specified in the client configuration.
+If no key is specified, all logins will be unauthenticated.
+A good authentication key should be 20 characters long. The
+key will never be transmitted over the network. A HMAC-SHA1
+challenge-response procedure will be used for
+authentication.</p>
+
+<p style="margin-left:11%;"><b>MUTE_TX_ON_RX</b></p>
+
+<p style="margin-left:22%;">If set to a value &gt;= 0, will
+stop the transmitter from transmitting when the squelch is
+open. The value represents a delay, in milliseconds, after
+the squelch has closed, that the transmitter will be muted.
+For example, if set to 1000, the transmitter will be muted
+one second after the squelch has closed. The default is not
+to mute the transmitter when the squelch is open.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>RF uplink
+transceiver section</b> <br>
+The RF uplink transceiver configuration section is used to
+specify the configuration for an RF link to the main SvxLink
+server. In the default configuration file there is an RF
+uplink transceiver section called <b>RfUpLinkTrx</b>. The
+section name could be anything. It should match what is
+specified in the TRXS configuration variable in the GLOBAL
+section.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The use of Rf
+uplinks is very EXPERIMENTAL and still have some flaws.
+Among other things, detected tones (like CTCSS or 1750 tone
+burst) are not relayed and all relayed DTMF tones are always
+100ms long no matter how long the received digit was. Signal
+level measurements are not relayed either.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Any way,
+it&rsquo;s used to link remote receivers coming in on the
+Internet to a site that do not have access to Internet.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p><b>TYPE</b></p></td>
+<td width="5%"></td>
+<td width="78%">
+
+
+<p>Always &quot;RF&quot; for an RF uplink transceiver
+configuration section.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p><b>RX</b></p></td>
+<td width="5%"></td>
+<td width="78%">
+
+
+<p>Point out the receiver configuration section to use. Set
+to NONE if no RX is used. A receiver is configured in the
+exact same way as in the SvxLink server. Have a look at
+<b>svxlink.conf</b>(5) for more information on how to
+configure a receiver.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p><b>TX</b></p></td>
+<td width="5%"></td>
+<td width="78%">
+
+
+<p>Point out the transmitter configuration section to use.
+Set to NONE if no TX is used. A transmitter is configured in
+the exact same way as in the SvxLink server. Have a look at
+<b>svxlink.conf</b>(5) for more information on how to
+configure a transmitter.</p></td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>UPLINK_TX</b></p>
+
+<p style="margin-left:22%;">Point out the uplink
+transmitter configuration section to use. The configuration
+for an uplink transmitter looks exactly the same as for any
+other transmitter. In the default configuration file there
+is an uplink transmitter configuration section called
+<b>UplinkTx</b>. If there is no uplink transmitter, specify
+NONE.</p>
+
+<p style="margin-left:11%;"><b>UPLINK_RX</b></p>
+
+<p style="margin-left:22%;">Point out the uplink receiver
+configuration section to use. The configuration for an
+uplink receiver looks exactly the same as for any other
+receiver. In the default configuration file there is an
+uplink receiver configuration section called
+<b>UplinkRx</b>. If there is no uplink receiver, specify
+NONE.</p>
+
+
+<p style="margin-left:11%;"><b>MUTE_UPLINK_RX_ON_TX</b></p>
+
+<p style="margin-left:22%;">Specify if the link receiver
+should be muted or not when the link transmitter is
+transmitting. Set it to 0 if a full duplex link is desired.
+Default is 1.</p>
+
+<p style="margin-left:11%;"><b>LOOP_RX_TO_TX</b></p>
+
+<p style="margin-left:22%;">Set to 1 to loop incoming RX
+audio (not link RX) directly to the TX (not link TX). You
+figure out when to use it. Default is 0.</p>
+
+<p style="margin-left:11%;"><b>FALLBACK_REPEATER</b></p>
+
+<p style="margin-left:22%;">This function is useful if
+running RemoteTrx as both RX and TX for a repeater. If the
+connection to the SvxLink base station is lost due to
+network errors, the RemoteTrx provides a very basic repeater
+function (SQLELCH controlled) until the the connection has
+been established again. Set to 1 to enable this function or
+set to 0 to disable it. Default is 0.</p>
+
+<h2>FILES
+<a name="FILES"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><i>/etc/svxlink/remotetrx.conf</i>
+(or deprecated <i>/etc/remotetrx.conf</i>)</p>
+
+<p style="margin-left:22%;">The system wide configuration
+file.</p>
+
+
+<p style="margin-left:11%;"><i>~/.svxlink/remotetrx.conf</i></p>
+
+<p style="margin-left:22%;">Per user configuration
+file.</p>
+
+
+<p style="margin-left:11%;"><i>/etc/svxlink/remotetrx.d/*</i></p>
+
+<p style="margin-left:22%;">Additional configuration
+files.</p>
+
+<h2>AUTHOR
+<a name="AUTHOR"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Tobias Blomberg
+(SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;</p>
+
+<h2>SEE ALSO
+<a name="SEE ALSO"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>svxlink</b>(1),
+<b>svxlink.conf</b>(1), <b>remotetrx</b>(1),
+<b>siglevdetcal</b>(1)</p>
+<hr>
+</body>
+</html>

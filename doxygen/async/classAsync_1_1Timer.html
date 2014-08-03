@@ -118,49 +118,7 @@ Public Attributes</h2></td></tr>
 <dl class="section author"><dt>Author</dt><dd>Tobias Blomberg </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2003-03-26</dd></dl>
 <p>This class is used to create timer objects. These objects will emit a signal when the specified time has elapsed. An example of how to use it is shown below.</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="AsyncCppApplication_8h.html">AsyncCppApplication.h</a>&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="AsyncTimer_8h.html">AsyncTimer.h</a>&gt;</span></div>
-<div class="line"></div>
-<div class="line"><span class="keyword">using namespace </span>std;</div>
-<div class="line"><span class="keyword">using namespace </span>Async;</div>
-<div class="line"></div>
-<div class="line"><span class="keyword">class </span>MyClass : <span class="keyword">public</span> sigc::trackable</div>
-<div class="line">{</div>
-<div class="line">  <span class="keyword">public</span>:</div>
-<div class="line">    MyClass(<span class="keywordtype">void</span>) : count(0)</div>
-<div class="line">    {</div>
-<div class="line">      timer = <span class="keyword">new</span> <a class="code" href="classAsync_1_1Timer.html#a92d48c80063aa06e7b1b897d8248b76a">Timer</a>(1000, <a class="code" href="classAsync_1_1Timer.html#a113ca6dbd092d592fa10e224f3f99ce4a2fc5ee9add40fddebecf2a009d91255a">Timer::TYPE_PERIODIC</a>);</div>
-<div class="line">      timer-&gt;expired.connect(mem_fun(*<span class="keyword">this</span>, &amp;MyClass::onTimerExpired));</div>
-<div class="line">    }</div>
-<div class="line">    </div>
-<div class="line">    ~MyClass(<span class="keywordtype">void</span>)</div>
-<div class="line">    {</div>
-<div class="line">      <span class="keyword">delete</span> timer;</div>
-<div class="line">    }</div>
-<div class="line"></div>
-<div class="line">  <span class="keyword">private</span>:</div>
-<div class="line">    <a class="code" href="classAsync_1_1Timer.html">Timer</a> * timer;</div>
-<div class="line">    <span class="keywordtype">int</span>     count;</div>
-<div class="line">    </div>
-<div class="line">    <span class="keywordtype">void</span> onTimerExpired(<a class="code" href="classAsync_1_1Timer.html">Timer</a> *t)</div>
-<div class="line">    {</div>
-<div class="line">      <span class="keywordflow">if</span> (++count == 3)</div>
-<div class="line">      {</div>
-<div class="line">        <a class="code" href="classAsync_1_1Application.html#aa6d446d6b333e0a1e5cc1400c07aa898">Application::app</a>().<a class="code" href="classAsync_1_1Application.html#ac4b9e6a600d782f750992d86fee5cea3">quit</a>();</div>
-<div class="line">      }</div>
-<div class="line">      cout &lt;&lt; <span class="stringliteral">&quot;Timer expired &quot;</span> &lt;&lt; count &lt;&lt; <span class="stringliteral">&quot;...\n&quot;</span>;</div>
-<div class="line">    }</div>
-<div class="line">};</div>
-<div class="line"></div>
-<div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)</div>
-<div class="line">{</div>
-<div class="line">  <a class="code" href="classAsync_1_1CppApplication.html">CppApplication</a> app;</div>
-<div class="line">  MyClass my_class;</div>
-<div class="line">  app.<a class="code" href="classAsync_1_1CppApplication.html#a9a921d33644bbb18767fb4d599f53bf4">exec</a>();</div>
-<div class="line">}</div>
-</div><!-- fragment --> <dl><dt><b>Examples: </b></dt><dd><a class="el" href="AsyncTimer_demo_8cpp-example.html#_a0">AsyncTimer_demo.cpp</a>.</dd>
-</dl>
+<div class="fragment"></div><!-- fragment --> 
 <p>Definition at line <a class="el" href="AsyncTimer_8h_source.html#l00116">116</a> of file <a class="el" href="AsyncTimer_8h_source.html">AsyncTimer.h</a>.</p>
 </div><h2 class="groupheader">Member Enumeration Documentation</h2>
 <a class="anchor" id="a113ca6dbd092d592fa10e224f3f99ce4"></a>
@@ -428,7 +386,7 @@ Public Attributes</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jul 21 2014 10:19:42 for Async by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Aug 3 2014 10:33:06 for Async by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.7
 </small></address>

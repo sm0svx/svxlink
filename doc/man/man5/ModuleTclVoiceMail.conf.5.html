@@ -1,99 +1,143 @@
-Content-type: text/html
+<!-- Creator     : groff version 1.22.2 -->
+<!-- CreationDate: Sun Aug  3 11:50:29 2014 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+</style>
+<title>MODULETCLVOICEMAIL.CONF</title>
 
-<HTML><HEAD><TITLE>Manpage of MODULETCLVOICEMAIL.CONF</TITLE>
-</HEAD><BODY>
-<H1>MODULETCLVOICEMAIL.CONF</H1>
-Section: File Formats (5)<BR>Updated: MAY 2011<BR><A HREF="#index">Index</A>
-<A HREF="../index.html">Return to Main Contents</A><HR>
+</head>
+<body>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h1 align="center">MODULETCLVOICEMAIL.CONF</h1>
 
-ModuleTclVoiceMail.conf - Configuration file for the SvxLink server
-TclVoiceMail module
-<A NAME="lbAC">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<a href="#NAME">NAME</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#CONFIGURATION VARIABLES">CONFIGURATION VARIABLES</a><br>
+<a href="#FILES">FILES</a><br>
+<a href="#AUTHOR">AUTHOR</a><br>
+<a href="#SEE ALSO">SEE ALSO</a><br>
 
-<B>svxlink</B>
+<hr>
 
-is a general purpose voice service system for ham radio use. This man-page
-describe the SvxLink server configuration for the TclVoiceMail module.
 
-The TclVoiceMail module implements a simple voice mail system.
-<A NAME="lbAD">&nbsp;</A>
-<H2>CONFIGURATION VARIABLES</H2>
+<h2>NAME
+<a name="NAME"></a>
+</h2>
 
-There are a couple of configuration variables that are common to all modules.
-The documentation for these can be found in the
-<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
 
-manual page.
 
-The TclVoiceMail module does not have any module specific configuration
-variables. It is configured in another configuration file. Its default location
-is /etc/svxlink/TclVoiceMail.conf. The configuration file is also looked for in
-directory &quot;$HOME/.svxlink/&quot;. The comments in that file should be enough to
-understand how to configure the voice mail module. 
-<A NAME="lbAE">&nbsp;</A>
-<H2>FILES</H2>
+<p style="margin-left:11%; margin-top: 1em">ModuleTclVoiceMail.conf
+&minus; Configuration file for the SvxLink server
+TclVoiceMail module</p>
 
-<DL COMPACT>
-<DT><I>/etc/svxlink/svxlink.conf</I> (or deprecated <I>/etc/svxlink.conf</I>)
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
 
-<DD>
-The system wide configuration file.
-<DT><I>~/.svxlink/svxlink.conf</I>
 
-<DD>
-Per user configuration file.
-<DT><I>/etc/svxlink/svxlink.d/ModuleTclVoiceMail.conf</I>
+<p style="margin-left:11%; margin-top: 1em"><b>svxlink</b>
+is a general purpose voice service system for ham radio use.
+This man-page describe the SvxLink server configuration for
+the TclVoiceMail module.</p>
 
-<DD>
-Global modularized configuration file. Depends on the CFG_DIR configuration
-variable setting.
-<DT><I>~/.svxlink/svxlink.d/ModuleTclVoiceMail.conf</I>
+<p style="margin-left:11%; margin-top: 1em">The
+TclVoiceMail module implements a simple voice mail
+system.</p>
 
-<DD>
-Per user modularized configuration file. Depends on the CFG_DIR configuration
-variable setting.
-<DT><I>/etc/svxlink/TclVoiceMail.conf</I>
+<h2>CONFIGURATION VARIABLES
+<a name="CONFIGURATION VARIABLES"></a>
+</h2>
 
-<DD>
-System wide configuration file for the TclVoiceMail module.
-<DT><I>~/.svxlink/TclVoiceMail.conf</I>
 
-<DD>
-Per user configuration file for the TclVoiceMail module.
-<DT><I>/var/spool/svxlink/voice_mail</I>
+<p style="margin-left:11%; margin-top: 1em">There are a
+couple of configuration variables that are common to all
+modules. The documentation for these can be found in the
+<b>svxlink.conf</b>(5) manual page.</p>
 
-<DD>
-Spool directory for voice mails.
-</DL>
-<A NAME="lbAF">&nbsp;</A>
-<H2>AUTHOR</H2>
+<p style="margin-left:11%; margin-top: 1em">The
+TclVoiceMail module does not have any module specific
+configuration variables. It is configured in another
+configuration file. Its default location is
+/etc/svxlink/TclVoiceMail.conf. The configuration file is
+also looked for in directory &quot;$HOME/.svxlink/&quot;.
+The comments in that file should be enough to understand how
+to configure the voice mail module.</p>
 
-Tobias Blomberg (SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2>FILES
+<a name="FILES"></a>
+</h2>
 
-<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
 
-<P>
 
-<HR>
-<A NAME="index">&nbsp;</A><H2>Index</H2>
-<DL>
-<DT><A HREF="#lbAB">NAME</A><DD>
-<DT><A HREF="#lbAC">DESCRIPTION</A><DD>
-<DT><A HREF="#lbAD">CONFIGURATION VARIABLES</A><DD>
-<DT><A HREF="#lbAE">FILES</A><DD>
-<DT><A HREF="#lbAF">AUTHOR</A><DD>
-<DT><A HREF="#lbAG">SEE ALSO</A><DD>
-</DL>
-<HR>
-This document was created by
-<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
-using the manual pages.<BR>
-Time: 16:10:17 GMT, June 30, 2014
-</BODY>
-</HTML>
+<p style="margin-left:11%; margin-top: 1em"><i>/etc/svxlink/svxlink.conf</i>
+(or deprecated <i>/etc/svxlink.conf</i>)</p>
+
+<p style="margin-left:22%;">The system wide configuration
+file.</p>
+
+
+<p style="margin-left:11%;"><i>~/.svxlink/svxlink.conf</i></p>
+
+<p style="margin-left:22%;">Per user configuration
+file.</p>
+
+
+<p style="margin-left:11%;"><i>/etc/svxlink/svxlink.d/ModuleTclVoiceMail.conf</i></p>
+
+<p style="margin-left:22%;">Global modularized
+configuration file. Depends on the CFG_DIR configuration
+variable setting.</p>
+
+
+<p style="margin-left:11%;"><i>~/.svxlink/svxlink.d/ModuleTclVoiceMail.conf</i></p>
+
+<p style="margin-left:22%;">Per user modularized
+configuration file. Depends on the CFG_DIR configuration
+variable setting.</p>
+
+
+<p style="margin-left:11%;"><i>/etc/svxlink/TclVoiceMail.conf</i></p>
+
+<p style="margin-left:22%;">System wide configuration file
+for the TclVoiceMail module.</p>
+
+
+<p style="margin-left:11%;"><i>~/.svxlink/TclVoiceMail.conf</i></p>
+
+<p style="margin-left:22%;">Per user configuration file for
+the TclVoiceMail module.</p>
+
+
+<p style="margin-left:11%;"><i>/var/spool/svxlink/voice_mail</i></p>
+
+<p style="margin-left:22%;">Spool directory for voice
+mails.</p>
+
+<h2>AUTHOR
+<a name="AUTHOR"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Tobias Blomberg
+(SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;</p>
+
+<h2>SEE ALSO
+<a name="SEE ALSO"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>svxlink.conf</b>(5)</p>
+<hr>
+</body>
+</html>

@@ -103,86 +103,7 @@ Public Member Functions</h2></td></tr>
 <dl class="section author"><dt>Author</dt><dd>Tobias Blomberg </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2004-03-17</dd></dl>
 <p>This class is used to read configuration files that is in the famous MS Windows INI file format. An example of a configuration file and how to use the class is shown below.</p>
-<div class="fragment"><div class="line">[SECTION1]</div>
-<div class="line">VALUE1=The value</div>
-<div class="line">VALUE2=<span class="stringliteral">&quot;Hello, &quot;</span></div>
-<div class="line">       <span class="stringliteral">&quot;multi line &quot;</span></div>
-<div class="line">       <span class="stringliteral">&quot;value!&quot;</span></div>
-<div class="line"></div>
-<div class="line">[SECTION2]</div>
-<div class="line">VALUE1=<span class="stringliteral">&quot;Whatever you want&quot;</span></div>
-<div class="line">MY_INT=42</div>
-<div class="line">MY_FLOAT=3.14159</div>
-</div><!-- fragment --><div class="fragment"><div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;string&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;cstdlib&gt;</span></div>
-<div class="line"></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="AsyncConfig_8h.html">AsyncConfig.h</a>&gt;</span></div>
-<div class="line"></div>
-<div class="line"><span class="keyword">using namespace </span>std;</div>
-<div class="line"><span class="keyword">using namespace </span>Async;</div>
-<div class="line"></div>
-<div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)</div>
-<div class="line">{</div>
-<div class="line">  <a class="code" href="classAsync_1_1Config.html">Config</a> cfg;</div>
-<div class="line">  <span class="keywordflow">if</span> (!cfg.<a class="code" href="classAsync_1_1Config.html#aad37b24a2922879f791763c571e86b8d">open</a>(<span class="stringliteral">&quot;test.cfg&quot;</span>))</div>
-<div class="line">  {</div>
-<div class="line">    cerr &lt;&lt; <span class="stringliteral">&quot;*** Error: Could not open config file test.cfg\n&quot;</span>;</div>
-<div class="line">    exit(1);</div>
-<div class="line">  }</div>
-<div class="line"></div>
-<div class="line">    <span class="comment">// Read the string value without checking if it exists or not.</span></div>
-<div class="line">  cout &lt;&lt; <span class="stringliteral">&quot;value=&quot;</span> &lt;&lt; cfg.<a class="code" href="classAsync_1_1Config.html#aabc8aad4db4a365414225d9e66e7c1a9">getValue</a>(<span class="stringliteral">&quot;SECTION1&quot;</span>, <span class="stringliteral">&quot;VALUE1&quot;</span>) &lt;&lt; endl;</div>
-<div class="line">  </div>
-<div class="line">    <span class="comment">// Read the string value, returning it in a variable.</span></div>
-<div class="line">    <span class="comment">// The return value will indicate if the variable was found or not.</span></div>
-<div class="line">  <span class="keywordtype">string</span> str_val;</div>
-<div class="line">  <span class="keywordflow">if</span> (cfg.<a class="code" href="classAsync_1_1Config.html#aabc8aad4db4a365414225d9e66e7c1a9">getValue</a>(<span class="stringliteral">&quot;SECTION1&quot;</span>, <span class="stringliteral">&quot;VALUE2&quot;</span>, str_val))</div>
-<div class="line">  {</div>
-<div class="line">    cout &lt;&lt; <span class="stringliteral">&quot;str_val=&quot;</span> &lt;&lt; str_val &lt;&lt; endl;</div>
-<div class="line">  }</div>
-<div class="line">  <span class="keywordflow">else</span></div>
-<div class="line">  {</div>
-<div class="line">    cerr &lt;&lt; <span class="stringliteral">&quot;*** ERROR: Config variable SECTION1/VALUE2 not found.\n&quot;</span>;</div>
-<div class="line">  }</div>
-<div class="line">  </div>
-<div class="line">    <span class="comment">// Read an integer value.</span></div>
-<div class="line">  <span class="keywordtype">int</span> int_val = 0;</div>
-<div class="line">  <span class="keywordflow">if</span> (cfg.<a class="code" href="classAsync_1_1Config.html#aabc8aad4db4a365414225d9e66e7c1a9">getValue</a>(<span class="stringliteral">&quot;SECTION2&quot;</span>, <span class="stringliteral">&quot;MY_INT&quot;</span>, int_val))</div>
-<div class="line">  {</div>
-<div class="line">    cout &lt;&lt; <span class="stringliteral">&quot;int_val=&quot;</span> &lt;&lt; int_val &lt;&lt; endl;</div>
-<div class="line">  }</div>
-<div class="line">  <span class="keywordflow">else</span></div>
-<div class="line">  {</div>
-<div class="line">    cerr &lt;&lt; <span class="stringliteral">&quot;*** ERROR: Config variable SECTION2/MY_INT malformed or &quot;</span></div>
-<div class="line">            <span class="stringliteral">&quot;not found.\n&quot;</span>;</div>
-<div class="line">  }</div>
-<div class="line">  </div>
-<div class="line">    <span class="comment">// Read a char value. Missing value is OK.</span></div>
-<div class="line">  <span class="keywordtype">char</span> char_val = <span class="charliteral">&#39;Q&#39;</span>;</div>
-<div class="line">  <span class="keywordflow">if</span> (cfg.<a class="code" href="classAsync_1_1Config.html#aabc8aad4db4a365414225d9e66e7c1a9">getValue</a>(<span class="stringliteral">&quot;SECTION1&quot;</span>, <span class="stringliteral">&quot;NO_VALUE&quot;</span>, char_val, <span class="keyword">true</span>))</div>
-<div class="line">  {</div>
-<div class="line">    cout &lt;&lt; <span class="stringliteral">&quot;char_val=&quot;</span> &lt;&lt; char_val &lt;&lt; endl;</div>
-<div class="line">  }</div>
-<div class="line">  <span class="keywordflow">else</span></div>
-<div class="line">  {</div>
-<div class="line">    cerr &lt;&lt; <span class="stringliteral">&quot;*** ERROR: Config variable SECTION1/NO_VALUE malformed.\n&quot;</span>;</div>
-<div class="line">  }</div>
-<div class="line">  </div>
-<div class="line">    <span class="comment">// Read a float with min and max limits.</span></div>
-<div class="line">  <span class="keywordtype">float</span> float_val = 0.0;</div>
-<div class="line">  <span class="keywordflow">if</span> (cfg.<a class="code" href="classAsync_1_1Config.html#aabc8aad4db4a365414225d9e66e7c1a9">getValue</a>(<span class="stringliteral">&quot;SECTION2&quot;</span>, <span class="stringliteral">&quot;MY_FLOAT&quot;</span>, 3.0f, 4.0f, float_val))</div>
-<div class="line">  {</div>
-<div class="line">    cout &lt;&lt; <span class="stringliteral">&quot;float_val=&quot;</span> &lt;&lt; float_val &lt;&lt; endl;</div>
-<div class="line">  }</div>
-<div class="line">  <span class="keywordflow">else</span></div>
-<div class="line">  {</div>
-<div class="line">    cerr &lt;&lt; <span class="stringliteral">&quot;*** ERROR: Config variable SECTION2/MY_FLOAT malformed, &quot;</span></div>
-<div class="line">            <span class="stringliteral">&quot;not found or out of range.\n&quot;</span>;</div>
-<div class="line">  }</div>
-<div class="line">}</div>
-</div><!-- fragment --> <dl><dt><b>Examples: </b></dt><dd><a class="el" href="AsyncConfig_demo_8cpp-example.html#_a0">AsyncConfig_demo.cpp</a>.</dd>
-</dl>
+<div class="fragment"></div><!-- fragment --><div class="fragment"></div><!-- fragment --> 
 <p>Definition at line <a class="el" href="AsyncConfig_8h_source.html#l00134">134</a> of file <a class="el" href="AsyncConfig_8h_source.html">AsyncConfig.h</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="a0cccf9936e65b4f41242bfc39431e3ec"></a>
@@ -266,8 +187,7 @@ Public Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns String with content of the configuration variable. If no variable is found an empty string is returned</dd></dl>
 <p>This function will return the string value corresponding to the given configuration variable. If the configuration variable is unset, an empty sting is returned. </p>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="AsyncConfig_demo_8cpp-example.html#a2">AsyncConfig_demo.cpp</a>.</dd>
-</dl>
+
 <p>Referenced by <a class="el" href="AsyncConfig_8h_source.html#l00205">getValue()</a>.</p>
 
 </div>
@@ -572,8 +492,7 @@ template&lt;typename Rsp &gt; </div>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns <em>true</em> on success or else <em>false</em>. </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="AsyncConfig_demo_8cpp-example.html#a1">AsyncConfig_demo.cpp</a>.</dd>
-</dl>
+
 </div>
 </div>
 <a class="anchor" id="add20842bd8cb3d4c1923ba7a4831abe7"></a>
@@ -625,7 +544,7 @@ template&lt;typename Rsp &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jul 21 2014 10:19:42 for Async by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Aug 3 2014 10:33:06 for Async by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.7
 </small></address>

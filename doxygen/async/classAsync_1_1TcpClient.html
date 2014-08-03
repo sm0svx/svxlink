@@ -190,62 +190,7 @@ Additional Inherited Members</h2></td></tr>
 <dl class="section author"><dt>Author</dt><dd>Tobias Blomberg </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2003-04-12</dd></dl>
 <p>This class is used to create a TCP client connection. All details of how to create the connection is hidden inside the class. This make it very easy to create and use the connections. An example usage is shown below.</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="AsyncCppApplication_8h.html">AsyncCppApplication.h</a>&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="AsyncTcpClient_8h.html">AsyncTcpClient.h</a>&gt;</span></div>
-<div class="line"></div>
-<div class="line"><span class="keyword">using namespace </span>std;</div>
-<div class="line"><span class="keyword">using namespace </span>Async;</div>
-<div class="line"></div>
-<div class="line"><span class="keyword">class </span>MyClass : <span class="keyword">public</span> sigc::trackable</div>
-<div class="line">{</div>
-<div class="line">  <span class="keyword">public</span>:</div>
-<div class="line">    MyClass(<span class="keywordtype">void</span>)</div>
-<div class="line">    {</div>
-<div class="line">      con = <span class="keyword">new</span> <a class="code" href="classAsync_1_1TcpClient.html#ab7232601164980d4baa32b1ac3fbf96c">TcpClient</a>(<span class="stringliteral">&quot;www.linux.org&quot;</span>, 80);</div>
-<div class="line">      con-&gt;connected.connect(mem_fun(*<span class="keyword">this</span>, &amp;MyClass::onConnected));</div>
-<div class="line">      con-&gt;disconnected.connect(mem_fun(*<span class="keyword">this</span>, &amp;MyClass::onDisconnected));</div>
-<div class="line">      con-&gt;dataReceived.connect(mem_fun(*<span class="keyword">this</span>, &amp;MyClass::onDataReceived));</div>
-<div class="line">      con-&gt;connect();</div>
-<div class="line">    }</div>
-<div class="line">    </div>
-<div class="line">    ~MyClass(<span class="keywordtype">void</span>)</div>
-<div class="line">    {</div>
-<div class="line">      <span class="keyword">delete</span> con;</div>
-<div class="line">    }</div>
-<div class="line"></div>
-<div class="line">  <span class="keyword">private</span>:</div>
-<div class="line">    <a class="code" href="classAsync_1_1TcpClient.html">TcpClient</a> *con;</div>
-<div class="line">    </div>
-<div class="line">    <span class="keywordtype">void</span> onConnected(<span class="keywordtype">void</span>)</div>
-<div class="line">    {</div>
-<div class="line">      cout &lt;&lt; <span class="stringliteral">&quot;Connection established to &quot;</span> &lt;&lt; con-&gt;<a class="code" href="classAsync_1_1TcpConnection.html#a4072ea8aef1bdd369bacba2367e8660d">remoteHost</a>() &lt;&lt; <span class="stringliteral">&quot;...\n&quot;</span>;</div>
-<div class="line">      con-&gt;write(<span class="stringliteral">&quot;GET /\n&quot;</span>, 6);</div>
-<div class="line">    }</div>
-<div class="line">    </div>
-<div class="line">    <span class="keywordtype">void</span> onDisconnected(<a class="code" href="classAsync_1_1TcpConnection.html">TcpConnection</a> *con, <a class="code" href="classAsync_1_1TcpConnection.html#a2a09caf85797c567d0cfce6f29ab9dd4">TcpClient::DisconnectReason</a> reason)</div>
-<div class="line">    {</div>
-<div class="line">      cout &lt;&lt; <span class="stringliteral">&quot;Disconnected from &quot;</span> &lt;&lt; con-&gt;<a class="code" href="classAsync_1_1TcpConnection.html#a4072ea8aef1bdd369bacba2367e8660d">remoteHost</a>() &lt;&lt; <span class="stringliteral">&quot;...\n&quot;</span>;</div>
-<div class="line">      <a class="code" href="classAsync_1_1Application.html#aa6d446d6b333e0a1e5cc1400c07aa898">Application::app</a>().<a class="code" href="classAsync_1_1Application.html#ac4b9e6a600d782f750992d86fee5cea3">quit</a>();</div>
-<div class="line">    }</div>
-<div class="line">    </div>
-<div class="line">    <span class="keywordtype">int</span> onDataReceived(<a class="code" href="classAsync_1_1TcpConnection.html">TcpConnection</a> *con, <span class="keywordtype">void</span> *buf, <span class="keywordtype">int</span> count)</div>
-<div class="line">    {</div>
-<div class="line">      <span class="keywordtype">char</span> *str = <span class="keyword">static_cast&lt;</span><span class="keywordtype">char</span> *<span class="keyword">&gt;</span>(buf);</div>
-<div class="line">      <span class="keywordtype">string</span> html(str, str+count);</div>
-<div class="line">      cout &lt;&lt; html;</div>
-<div class="line">      <span class="keywordflow">return</span> count;</div>
-<div class="line">    }</div>
-<div class="line">};</div>
-<div class="line"></div>
-<div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)</div>
-<div class="line">{</div>
-<div class="line">  <a class="code" href="classAsync_1_1CppApplication.html">CppApplication</a> app;</div>
-<div class="line">  MyClass my_class;</div>
-<div class="line">  app.<a class="code" href="classAsync_1_1CppApplication.html#a9a921d33644bbb18767fb4d599f53bf4">exec</a>();</div>
-<div class="line">}</div>
-</div><!-- fragment --> <dl><dt><b>Examples: </b></dt><dd><a class="el" href="AsyncTcpClient_demo_8cpp-example.html#_a0">AsyncTcpClient_demo.cpp</a>.</dd>
-</dl>
+<div class="fragment"></div><!-- fragment --> 
 <p>Definition at line <a class="el" href="AsyncTcpClient_8h_source.html#l00130">130</a> of file <a class="el" href="AsyncTcpClient_8h_source.html">AsyncTcpClient.h</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="ab7232601164980d4baa32b1ac3fbf96c"></a>
@@ -543,7 +488,7 @@ Additional Inherited Members</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jul 21 2014 10:19:42 for Async by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Aug 3 2014 10:33:06 for Async by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.7
 </small></address>

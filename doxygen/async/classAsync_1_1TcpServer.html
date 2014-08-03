@@ -112,94 +112,7 @@ Public Attributes</h2></td></tr>
 <dl class="section author"><dt>Author</dt><dd>Tobias Blomberg </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2003-12-07</dd></dl>
 <p>This class is used to create a TCP server that listens to a TCP-port. To use it, just create an instance and specify the TCP-port to listen to. When a client connects, a new <a class="el" href="classAsync_1_1TcpConnection.html" title="A class for handling exiting TCP connections. ">Async::TcpConnection</a> object is created which is used to do the actual communication. An example of how to use it is shown below.</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="AsyncCppApplication_8h.html">AsyncCppApplication.h</a>&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="AsyncTcpServer_8h.html">AsyncTcpServer.h</a>&gt;</span></div>
-<div class="line"></div>
-<div class="line"><span class="keyword">using namespace </span>std;</div>
-<div class="line"><span class="keyword">using namespace </span>Async;</div>
-<div class="line"></div>
-<div class="line"><span class="keyword">class </span>MyClass : <span class="keyword">public</span> sigc::trackable</div>
-<div class="line">{</div>
-<div class="line">  <span class="keyword">public</span>:</div>
-<div class="line">    MyClass(<span class="keywordtype">void</span>)</div>
-<div class="line">    {</div>
-<div class="line">      server = <span class="keyword">new</span> <a class="code" href="classAsync_1_1TcpServer.html#a976c59cf520c5855b35536abdc398630">TcpServer</a>(<span class="stringliteral">&quot;12345&quot;</span>);</div>
-<div class="line">      server-&gt;clientConnected.connect(</div>
-<div class="line">        mem_fun(*<span class="keyword">this</span>, &amp;MyClass::onClientConnected));</div>
-<div class="line">      server-&gt;clientDisconnected.connect(</div>
-<div class="line">              mem_fun(*<span class="keyword">this</span>, &amp;MyClass::onClientDisconnected));</div>
-<div class="line">      cout &lt;&lt; <span class="stringliteral">&quot;Connect using: \&quot;telnet localhost 12345\&quot; from &quot;</span></div>
-<div class="line">              <span class="stringliteral">&quot;another console\n&quot;</span>;</div>
-<div class="line">    }</div>
-<div class="line">    </div>
-<div class="line">    ~MyClass(<span class="keywordtype">void</span>)</div>
-<div class="line">    {</div>
-<div class="line">      <span class="keyword">delete</span> server;</div>
-<div class="line">    }</div>
-<div class="line"></div>
-<div class="line">  <span class="keyword">private</span>:</div>
-<div class="line">    <a class="code" href="classAsync_1_1TcpServer.html">TcpServer</a> *server;</div>
-<div class="line">    </div>
-<div class="line">    <span class="keywordtype">void</span> onClientConnected(<a class="code" href="classAsync_1_1TcpConnection.html">TcpConnection</a> *con)</div>
-<div class="line">    {</div>
-<div class="line">      cout &lt;&lt; <span class="stringliteral">&quot;Client &quot;</span> &lt;&lt; con-&gt;<a class="code" href="classAsync_1_1TcpConnection.html#a4072ea8aef1bdd369bacba2367e8660d">remoteHost</a>() &lt;&lt; <span class="stringliteral">&quot;:&quot;</span></div>
-<div class="line">           &lt;&lt; con-&gt;<a class="code" href="classAsync_1_1TcpConnection.html#acc4f658b73f32acc85c79671c2f50676">remotePort</a>() &lt;&lt; <span class="stringliteral">&quot; connected, &quot;</span></div>
-<div class="line">           &lt;&lt; server-&gt;numberOfClients() &lt;&lt; <span class="stringliteral">&quot; clients connected\n&quot;</span>;</div>
-<div class="line">        <span class="comment">// We need ONLY to add signal for receive data to the TcpConnection</span></div>
-<div class="line">      con-&gt;<a class="code" href="classAsync_1_1TcpConnection.html#a764131427a3592c0c89ef81043fd9c1c">dataReceived</a>.connect(mem_fun(*<span class="keyword">this</span>, &amp;MyClass::onDataReceived));</div>
-<div class="line">        <span class="comment">// Send welcome message to the connected client */</span></div>
-<div class="line">      con-&gt;<a class="code" href="classAsync_1_1TcpConnection.html#a9c941f8e1ce95b2d6419f42b92cc32a6">write</a>(<span class="stringliteral">&quot;Hello, client!\n&quot;</span>, 15);</div>
-<div class="line">    }</div>
-<div class="line">    </div>
-<div class="line">    <span class="keywordtype">void</span> onClientDisconnected(<a class="code" href="classAsync_1_1TcpConnection.html">TcpConnection</a> *con,</div>
-<div class="line">                              <a class="code" href="classAsync_1_1TcpConnection.html#a2a09caf85797c567d0cfce6f29ab9dd4">TcpConnection::DisconnectReason</a> reason)</div>
-<div class="line">    {</div>
-<div class="line">      cout &lt;&lt; <span class="stringliteral">&quot;Client &quot;</span> &lt;&lt; con-&gt;<a class="code" href="classAsync_1_1TcpConnection.html#a4072ea8aef1bdd369bacba2367e8660d">remoteHost</a>().<a class="code" href="classAsync_1_1IpAddress.html#a7f9be3568547648ef7d2d73cd561dc45">toString</a>() &lt;&lt; <span class="stringliteral">&quot;:&quot;</span></div>
-<div class="line">           &lt;&lt; con-&gt;<a class="code" href="classAsync_1_1TcpConnection.html#acc4f658b73f32acc85c79671c2f50676">remotePort</a>() &lt;&lt; <span class="stringliteral">&quot; disconnected,&quot;</span></div>
-<div class="line">           &lt;&lt; server-&gt;numberOfClients() &lt;&lt; <span class="stringliteral">&quot; clients connected\n&quot;</span>;</div>
-<div class="line">      <span class="comment">/* Don&#39;t delete the con object, the TcpServer will do it */</span></div>
-<div class="line">    }</div>
-<div class="line">    </div>
-<div class="line">    <span class="keywordtype">int</span> onDataReceived(<a class="code" href="classAsync_1_1TcpConnection.html">TcpConnection</a> *con, <span class="keywordtype">void</span> *buf, <span class="keywordtype">int</span> count)</div>
-<div class="line">    {</div>
-<div class="line">        <span class="comment">// retreive data</span></div>
-<div class="line">      <span class="keywordtype">char</span> *str = <span class="keyword">static_cast&lt;</span><span class="keywordtype">char</span> *<span class="keyword">&gt;</span>(buf);</div>
-<div class="line">      <span class="keywordtype">string</span> data(str, str+count);</div>
-<div class="line">      cout &lt;&lt; data;</div>
-<div class="line">      </div>
-<div class="line">        <span class="comment">// Send data back to sender</span></div>
-<div class="line">      <span class="keywordtype">string</span> dataOut = string(<span class="stringliteral">&quot;You said: &quot;</span>) + data;</div>
-<div class="line">      server-&gt;writeOnly(con, dataOut.c_str(), dataOut.size());</div>
-<div class="line">      </div>
-<div class="line">        <span class="comment">// Other way to send to sender</span></div>
-<div class="line">      <span class="comment">//con-&gt;write(dataOut.c_str(), dataOut.size());</span></div>
-<div class="line">      </div>
-<div class="line">        <span class="comment">// Send to other clients if there is more then one connected to server</span></div>
-<div class="line">      <span class="keywordflow">if</span> (server-&gt;numberOfClients() &gt; 1)</div>
-<div class="line">      {</div>
-<div class="line">          <span class="comment">// Send data back to all OTHER clients</span></div>
-<div class="line">        dataOut = string(<span class="stringliteral">&quot;He said : &quot;</span>) + data;</div>
-<div class="line">        server-&gt;writeExcept(con, dataOut.c_str(), dataOut.size());</div>
-<div class="line">        </div>
-<div class="line">          <span class="comment">// Send data back to all clients</span></div>
-<div class="line">        dataOut = string(<span class="stringliteral">&quot;To all  : &quot;</span>) + data;</div>
-<div class="line">        server-&gt;writeAll(dataOut.c_str(), dataOut.size());</div>
-<div class="line">      }</div>
-<div class="line">      <span class="keywordflow">return</span> count;</div>
-<div class="line">    }</div>
-<div class="line">};</div>
-<div class="line"></div>
-<div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)</div>
-<div class="line">{</div>
-<div class="line">  <a class="code" href="classAsync_1_1CppApplication.html">CppApplication</a> app;</div>
-<div class="line">  MyClass my_class;</div>
-<div class="line">  app.<a class="code" href="classAsync_1_1CppApplication.html#a9a921d33644bbb18767fb4d599f53bf4">exec</a>();</div>
-<div class="line">}</div>
-<div class="line"></div>
-<div class="line"></div>
-</div><!-- fragment --> <dl><dt><b>Examples: </b></dt><dd><a class="el" href="AsyncTcpServer_demo_8cpp-example.html#_a0">AsyncTcpServer_demo.cpp</a>.</dd>
-</dl>
+<div class="fragment"></div><!-- fragment --> 
 <p>Definition at line <a class="el" href="AsyncTcpServer_8h_source.html#l00126">126</a> of file <a class="el" href="AsyncTcpServer_8h_source.html">AsyncTcpServer.h</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="a976c59cf520c5855b35536abdc398630"></a>
@@ -472,7 +385,7 @@ Public Attributes</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jul 21 2014 10:19:42 for Async by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Aug 3 2014 10:33:06 for Async by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.7
 </small></address>

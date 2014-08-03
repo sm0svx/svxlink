@@ -1,156 +1,225 @@
-Content-type: text/html
+<!-- Creator     : groff version 1.22.2 -->
+<!-- CreationDate: Sun Aug  3 11:50:27 2014 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+</style>
+<title>REMOTETRX</title>
 
-<HTML><HEAD><TITLE>Manpage of REMOTETRX</TITLE>
-</HEAD><BODY>
-<H1>REMOTETRX</H1>
-Section: User Manuals (1)<BR>Updated: MAY 2011<BR><A HREF="#index">Index</A>
-<A HREF="../index.html">Return to Main Contents</A><HR>
+</head>
+<body>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h1 align="center">REMOTETRX</h1>
 
-remotetrx - The SvxLink remote transceiver application
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<a href="#NAME">NAME</a><br>
+<a href="#SYNOPSIS">SYNOPSIS</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#OPTIONS">OPTIONS</a><br>
+<a href="#FILES">FILES</a><br>
+<a href="#ENVIRONMENT">ENVIRONMENT</a><br>
+<a href="#AUTHOR">AUTHOR</a><br>
+<a href="#REPORTING BUGS">REPORTING BUGS</a><br>
+<a href="#SEE ALSO">SEE ALSO</a><br>
 
-<B>remotetrx [--help] [--daemon] [--logfile=</B><I>log file</I><B>] [--config=</B><I>configuration file</I><B>] [--pidfile=</B><I>pid file</I><B>] [--runasuser=</B><I>user name</I><B>]</B>
+<hr>
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
 
-<B>remotetrx</B>
+<h2>NAME
+<a name="NAME"></a>
+</h2>
 
-is the SvxLink remote transceiver application. It is used to connect to a
-receiver and/or transmitter and then the main SvxLink server can connect to the
-remote transceiver server via TCP/IP to get audio to/from it.
 
-It is also possible to link via RF instead of via TCP/IP. An example use of the
-latter would be if the repeater is placed in a remote location where there is
-no network. Then networked remote receivers can be linked up to the repeater
-via RF from a link site where network is available.
+<p style="margin-left:11%; margin-top: 1em">remotetrx
+&minus; The SvxLink remote transceiver application</p>
 
-The setup is pretty straight forward. The setup of a receiver or transmitter is
-done in the same way as in the SvxLink server so use the
-<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
+<h2>SYNOPSIS
+<a name="SYNOPSIS"></a>
+</h2>
 
-manual page as a reference for that. The remotetrx specific configuration is
-described in the
-<B><A HREF="../man5/remotetrx.conf.5.html">remotetrx.conf</A></B>(5)
 
-manual page.
+<p style="margin-left:11%; margin-top: 1em"><b>remotetrx
+[--help] [--daemon] [--logfile=</b><i>log file</i><b>]
+[--config=</b><i>configuration file</i><b>]
+[--pidfile=</b><i>pid file</i><b>] [--runasuser=</b><i>user
+name</i><b>]</b></p>
 
-On the SvxLink server side you need to configure a networked
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>remotetrx</b>
+is the SvxLink remote transceiver application. It is used to
+connect to a receiver and/or transmitter and then the main
+SvxLink server can connect to the remote transceiver server
+via TCP/IP to get audio to/from it.</p>
+
+<p style="margin-left:11%; margin-top: 1em">It is also
+possible to link via RF instead of via TCP/IP. An example
+use of the latter would be if the repeater is placed in a
+remote location where there is no network. Then networked
+remote receivers can be linked up to the repeater via RF
+from a link site where network is available.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The setup is
+pretty straight forward. The setup of a receiver or
+transmitter is done in the same way as in the SvxLink server
+so use the <b>svxlink.conf</b>(5) manual page as a reference
+for that. The remotetrx specific configuration is described
+in the <b>remotetrx.conf</b>(5) manual page.</p>
+
+<p style="margin-left:11%; margin-top: 1em">On the SvxLink
+server side you need to configure a networked
 receiver/transmitter. That is described in the
-<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
+<b>svxlink.conf</b>(5) manual page in the Networked
+Receiver/Transmitter Section. If using multiple receivers
+you also want to configure a voter and make proper
+calibration of the signal level detector on each
+receiver.</p>
 
-manual page in the Networked Receiver/Transmitter Section. If using multiple
-receivers you also want to configure a voter and make proper calibration of the
-signal level detector on each receiver.
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h2>OPTIONS
+<a name="OPTIONS"></a>
+</h2>
 
-<DL COMPACT>
-<DT><B>--help</B>
 
-<DD>
-Print a help message and exit.
-<DT><B>--daemon</B>
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
 
-<DD>
-Start the SvxLink remote receiver server as a daemon.
-<DT><B>--runasuser</B>
 
-<DD>
-Start RemoteTrx as the specified user. The switch to the new user
-will happen after the log and pid files has been opened.
-<DT><B>--logfile=</B><I>log file</I>
+<p style="margin-top: 1em"><b>--help</b></p></td>
+<td width="2%"></td>
+<td width="46%">
 
-<DD>
-Specify a log file to put all output into. Both stdout and stderr will be
-redirected to the log file.
-<DT><B>--pidfile=</B><I>pid file</I>
 
-<DD>
-Specify a pid file to write the process ID into.
-<DT><B>--config=</B><I>configuration file</I>
+<p style="margin-top: 1em">Print a help message and
+exit.</p> </td>
+<td width="32%">
+</td></tr>
+</table>
 
-<DD>
-Specify which configuration file to use.
-</DL>
-<A NAME="lbAF">&nbsp;</A>
-<H2>FILES</H2>
+<p style="margin-left:11%;"><b>--daemon</b></p>
 
-<DL COMPACT>
-<DT><I>/etc/svxlink/remotetrx.conf</I> (or deprecated <I>/etc/remotetrx.conf</I>)
+<p style="margin-left:22%;">Start the SvxLink remote
+receiver server as a daemon.</p>
 
-<DD>
-The system wide configuration file. See
-<B><A HREF="../man5/remotetrx.conf.5.html">remotetrx.conf</A></B>(5)
+<p style="margin-left:11%;"><b>--runasuser</b></p>
 
-for further details.
-<DT><I>~/.svxlink/remotetrx.conf</I>
+<p style="margin-left:22%;">Start RemoteTrx as the
+specified user. The switch to the new user will happen after
+the log and pid files has been opened.</p>
 
-<DD>
-Per user configuration file. See
-<B><A HREF="../man5/remotetrx.conf.5.html">remotetrx.conf</A></B>(5)
+<p style="margin-left:11%;"><b>--logfile=</b><i>log
+file</i></p>
 
-for further details.
-<DT><I>/etc/svxlink/remotetrx.d/*</I>
+<p style="margin-left:22%;">Specify a log file to put all
+output into. Both stdout and stderr will be redirected to
+the log file.</p>
 
-<DD>
-Additional configuration files. This directory is setup by the CFG_DIR
-configuration variable.
-</DL>
-<A NAME="lbAG">&nbsp;</A>
-<H2>ENVIRONMENT</H2>
+<p style="margin-left:11%;"><b>--pidfile=</b><i>pid
+file</i></p>
 
-<DL COMPACT>
-<DT>ASYNC_AUDIO_NOTRIGGER<DD>
-Set this environment variable to 1 if you get an error about
-<B>ioctl: Broken pipe</B>
+<p style="margin-left:22%;">Specify a pid file to write the
+process ID into.</p>
 
-during remotetrx server startup when using OSS audio.
-<DT>HOME<DD>
-Used to find the per user configuration file.
-</DL>
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
 
-Tobias Blomberg (SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;
-<A NAME="lbAI">&nbsp;</A>
-<H2>REPORTING BUGS</H2>
+<p style="margin-left:11%;"><b>--config=</b><i>configuration
+file</i></p>
 
-SvxLink Devel &lt;svxlink-devel at lists dot sourceforge dot net&gt;
-<A NAME="lbAJ">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<p style="margin-left:22%;">Specify which configuration
+file to use.</p>
 
-<B><A HREF="../man1/svxlink.1.html">svxlink</A></B>(1),
+<h2>FILES
+<a name="FILES"></a>
+</h2>
 
-<B><A HREF="../man5/remotetrx.conf.5.html">remotetrx.conf</A></B>(5),
 
-<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5),
 
-<B><A HREF="../man1/siglevdetcal.1.html">siglevdetcal</A></B>(1)
+<p style="margin-left:11%; margin-top: 1em"><i>/etc/svxlink/remotetrx.conf</i>
+(or deprecated <i>/etc/remotetrx.conf</i>)</p>
 
-<P>
+<p style="margin-left:22%;">The system wide configuration
+file. See <b>remotetrx.conf</b>(5) for further details.</p>
 
-<HR>
-<A NAME="index">&nbsp;</A><H2>Index</H2>
-<DL>
-<DT><A HREF="#lbAB">NAME</A><DD>
-<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
-<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
-<DT><A HREF="#lbAE">OPTIONS</A><DD>
-<DT><A HREF="#lbAF">FILES</A><DD>
-<DT><A HREF="#lbAG">ENVIRONMENT</A><DD>
-<DT><A HREF="#lbAH">AUTHOR</A><DD>
-<DT><A HREF="#lbAI">REPORTING BUGS</A><DD>
-<DT><A HREF="#lbAJ">SEE ALSO</A><DD>
-</DL>
-<HR>
-This document was created by
-<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
-using the manual pages.<BR>
-Time: 16:10:17 GMT, June 30, 2014
-</BODY>
-</HTML>
+
+<p style="margin-left:11%;"><i>~/.svxlink/remotetrx.conf</i></p>
+
+<p style="margin-left:22%;">Per user configuration file.
+See <b>remotetrx.conf</b>(5) for further details.</p>
+
+
+<p style="margin-left:11%;"><i>/etc/svxlink/remotetrx.d/*</i></p>
+
+<p style="margin-left:22%;">Additional configuration files.
+This directory is setup by the CFG_DIR configuration
+variable.</p>
+
+<h2>ENVIRONMENT
+<a name="ENVIRONMENT"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em">ASYNC_AUDIO_NOTRIGGER</p>
+
+<p style="margin-left:22%;">Set this environment variable
+to 1 if you get an error about <b>ioctl: Broken pipe</b>
+during remotetrx server startup when using OSS audio.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p>HOME</p></td>
+<td width="5%"></td>
+<td width="69%">
+
+
+<p>Used to find the per user configuration file.</p></td>
+<td width="9%">
+</td></tr>
+</table>
+
+<h2>AUTHOR
+<a name="AUTHOR"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Tobias Blomberg
+(SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;</p>
+
+<h2>REPORTING BUGS
+<a name="REPORTING BUGS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">SvxLink Devel
+&lt;svxlink-devel at lists dot sourceforge dot net&gt;</p>
+
+<h2>SEE ALSO
+<a name="SEE ALSO"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>svxlink</b>(1),
+<b>remotetrx.conf</b>(5), <b>svxlink.conf</b>(5),
+<b>siglevdetcal</b>(1)</p>
+<hr>
+</body>
+</html>

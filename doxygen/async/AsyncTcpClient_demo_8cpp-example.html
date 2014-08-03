@@ -43,64 +43,10 @@
 </div><!--header-->
 <div class="contents">
 <p>An example of how to use the <a class="el" href="classAsync_1_1TcpClient.html" title="A class for creating a TCP client connection. ">Async::TcpClient</a> class</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="AsyncCppApplication_8h.html">AsyncCppApplication.h</a>&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="AsyncTcpClient_8h.html">AsyncTcpClient.h</a>&gt;</span></div>
-<div class="line"></div>
-<div class="line"><span class="keyword">using namespace </span>std;</div>
-<div class="line"><span class="keyword">using namespace </span>Async;</div>
-<div class="line"></div>
-<div class="line"><span class="keyword">class </span>MyClass : <span class="keyword">public</span> sigc::trackable</div>
-<div class="line">{</div>
-<div class="line">  <span class="keyword">public</span>:</div>
-<div class="line">    MyClass(<span class="keywordtype">void</span>)</div>
-<div class="line">    {</div>
-<div class="line">      con = <span class="keyword">new</span> <a name="_a0"></a><a class="code" href="classAsync_1_1TcpClient.html">TcpClient</a>(<span class="stringliteral">&quot;www.linux.org&quot;</span>, 80);</div>
-<div class="line">      con-&gt;connected.connect(mem_fun(*<span class="keyword">this</span>, &amp;MyClass::onConnected));</div>
-<div class="line">      con-&gt;disconnected.connect(mem_fun(*<span class="keyword">this</span>, &amp;MyClass::onDisconnected));</div>
-<div class="line">      con-&gt;dataReceived.connect(mem_fun(*<span class="keyword">this</span>, &amp;MyClass::onDataReceived));</div>
-<div class="line">      con-&gt;connect();</div>
-<div class="line">    }</div>
-<div class="line">    </div>
-<div class="line">    ~MyClass(<span class="keywordtype">void</span>)</div>
-<div class="line">    {</div>
-<div class="line">      <span class="keyword">delete</span> con;</div>
-<div class="line">    }</div>
-<div class="line"></div>
-<div class="line">  <span class="keyword">private</span>:</div>
-<div class="line">    <a class="code" href="classAsync_1_1TcpClient.html">TcpClient</a> *con;</div>
-<div class="line">    </div>
-<div class="line">    <span class="keywordtype">void</span> onConnected(<span class="keywordtype">void</span>)</div>
-<div class="line">    {</div>
-<div class="line">      cout &lt;&lt; <span class="stringliteral">&quot;Connection established to &quot;</span> &lt;&lt; con-&gt;<a name="a1"></a><a class="code" href="classAsync_1_1TcpConnection.html#a4072ea8aef1bdd369bacba2367e8660d">remoteHost</a>() &lt;&lt; <span class="stringliteral">&quot;...\n&quot;</span>;</div>
-<div class="line">      con-&gt;write(<span class="stringliteral">&quot;GET /\n&quot;</span>, 6);</div>
-<div class="line">    }</div>
-<div class="line">    </div>
-<div class="line">    <span class="keywordtype">void</span> onDisconnected(<a name="_a2"></a><a class="code" href="classAsync_1_1TcpConnection.html">TcpConnection</a> *con, TcpClient::DisconnectReason reason)</div>
-<div class="line">    {</div>
-<div class="line">      cout &lt;&lt; <span class="stringliteral">&quot;Disconnected from &quot;</span> &lt;&lt; con-&gt;<a class="code" href="classAsync_1_1TcpConnection.html#a4072ea8aef1bdd369bacba2367e8660d">remoteHost</a>() &lt;&lt; <span class="stringliteral">&quot;...\n&quot;</span>;</div>
-<div class="line">      Application::app().quit();</div>
-<div class="line">    }</div>
-<div class="line">    </div>
-<div class="line">    <span class="keywordtype">int</span> onDataReceived(<a class="code" href="classAsync_1_1TcpConnection.html">TcpConnection</a> *con, <span class="keywordtype">void</span> *buf, <span class="keywordtype">int</span> count)</div>
-<div class="line">    {</div>
-<div class="line">      <span class="keywordtype">char</span> *str = <span class="keyword">static_cast&lt;</span><span class="keywordtype">char</span> *<span class="keyword">&gt;</span>(buf);</div>
-<div class="line">      <span class="keywordtype">string</span> html(str, str+count);</div>
-<div class="line">      cout &lt;&lt; html;</div>
-<div class="line">      <span class="keywordflow">return</span> count;</div>
-<div class="line">    }</div>
-<div class="line">};</div>
-<div class="line"></div>
-<div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)</div>
-<div class="line">{</div>
-<div class="line">  <a name="_a3"></a><a class="code" href="classAsync_1_1CppApplication.html">CppApplication</a> app;</div>
-<div class="line">  MyClass my_class;</div>
-<div class="line">  app.<a name="a4"></a><a class="code" href="classAsync_1_1CppApplication.html#a9a921d33644bbb18767fb4d599f53bf4">exec</a>();</div>
-<div class="line">}</div>
-</div><!-- fragment --> </div><!-- contents -->
+<div class="fragment"></div><!-- fragment --> </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jul 21 2014 10:19:42 for Async by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Aug 3 2014 10:33:05 for Async by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.7
 </small></address>

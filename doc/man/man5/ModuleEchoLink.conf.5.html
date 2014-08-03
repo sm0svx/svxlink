@@ -1,324 +1,463 @@
-Content-type: text/html
+<!-- Creator     : groff version 1.22.2 -->
+<!-- CreationDate: Sun Aug  3 11:50:29 2014 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+</style>
+<title>MODULEECHOLINK.CONF</title>
 
-<HTML><HEAD><TITLE>Manpage of MODULEECHOLINK.CONF</TITLE>
-</HEAD><BODY>
-<H1>MODULEECHOLINK.CONF</H1>
-Section: File Formats (5)<BR>Updated: MARS 2013<BR><A HREF="#index">Index</A>
-<A HREF="../index.html">Return to Main Contents</A><HR>
+</head>
+<body>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h1 align="center">MODULEECHOLINK.CONF</h1>
 
-ModuleEchoLink.conf - Configuration file for the SvxLink server EchoLink module
-<A NAME="lbAC">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<a href="#NAME">NAME</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#CONFIGURATION VARIABLES">CONFIGURATION VARIABLES</a><br>
+<a href="#REGULAR EXPRESSIONS">REGULAR EXPRESSIONS</a><br>
+<a href="#FILES">FILES</a><br>
+<a href="#AUTHOR">AUTHOR</a><br>
+<a href="#SEE ALSO">SEE ALSO</a><br>
 
-<B>svxlink</B>
+<hr>
 
-is a general purpose voice service system for ham radio use. This man-page
-describe the SvxLink server configuration for the EchoLink module.
 
-The EchoLink module is used to connect to other EchoLink stations.
-<A NAME="lbAD">&nbsp;</A>
-<H2>CONFIGURATION VARIABLES</H2>
+<h2>NAME
+<a name="NAME"></a>
+</h2>
 
-There are a couple of configuration variables that are common to all modules.
-The documentation for these can be found in the
-<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
 
-manual page.
 
-Here is the description of all module specific configuration
-variables that the SvxLink EchoLink module understands.
-<A NAME="lbAE">&nbsp;</A>
-<H3>ModuleEchoLink</H3>
+<p style="margin-left:11%; margin-top: 1em">ModuleEchoLink.conf
+&minus; Configuration file for the SvxLink server EchoLink
+module</p>
 
-<DL COMPACT>
-<DT><B>ALLOW_IP</B>
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
 
-<DD>
-Use this variable very carefully. Connections originating from the given subnet
-will not be checked against the EchoLink directory server. A typical use of this
-is if you want to connect to your own svxlink server and both the server and you
-are behind a IP masquerading firewall. 
-<DT><B>DROP_INCOMING</B>
 
-<DD>
-Drop all incoming connections where the remote callsign match this regular
-expression. No message will be sent to the remote station notifying about the
-drop. The connection will just be ignored.
-For more information on the syntax, see the
-<B>REGULAR EXPRESSIONS</B>
+<p style="margin-left:11%; margin-top: 1em"><b>svxlink</b>
+is a general purpose voice service system for ham radio use.
+This man-page describe the SvxLink server configuration for
+the EchoLink module.</p>
 
-chapter below.
-<DT><B>REJECT_INCOMING</B>
+<p style="margin-left:11%; margin-top: 1em">The EchoLink
+module is used to connect to other EchoLink stations.</p>
 
-<DD>
-Reject all incoming connections where the remote callsign match this regular
-expression. A message will be sent to the remote station indicating that the
-connection was rejected.
-The DROP_INCOMING directive will be evaluated before REJECT_INCOMING.
-For more information on the syntax, see the
-<B>REGULAR EXPRESSIONS</B>
+<h2>CONFIGURATION VARIABLES
+<a name="CONFIGURATION VARIABLES"></a>
+</h2>
 
-chapter below.
-<DT><B>ACCEPT_INCOMING</B>
 
-<DD>
-Only accept incoming connections where the remote callsign match this regular
-expression. If the callsign doesn't match, a message will be sent to the
+<p style="margin-left:11%; margin-top: 1em">There are a
+couple of configuration variables that are common to all
+modules. The documentation for these can be found in the
+<b>svxlink.conf</b>(5) manual page.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Here is the
+description of all module specific configuration variables
+that the SvxLink EchoLink module understands.</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>ModuleEchoLink
+<br>
+ALLOW_IP</b></p>
+
+<p style="margin-left:22%;">Use this variable very
+carefully. Connections originating from the given subnet
+will not be checked against the EchoLink directory server. A
+typical use of this is if you want to connect to your own
+svxlink server and both the server and you are behind a IP
+masquerading firewall.</p>
+
+<p style="margin-left:11%;"><b>DROP_INCOMING</b></p>
+
+<p style="margin-left:22%;">Drop all incoming connections
+where the remote callsign match this regular expression. No
+message will be sent to the remote station notifying about
+the drop. The connection will just be ignored. For more
+information on the syntax, see the <b>REGULAR
+EXPRESSIONS</b> chapter below.</p>
+
+<p style="margin-left:11%;"><b>REJECT_INCOMING</b></p>
+
+<p style="margin-left:22%;">Reject all incoming connections
+where the remote callsign match this regular expression. A
+message will be sent to the remote station indicating that
+the connection was rejected. The DROP_INCOMING directive
+will be evaluated before REJECT_INCOMING. For more
+information on the syntax, see the <b>REGULAR
+EXPRESSIONS</b> chapter below.</p>
+
+<p style="margin-left:11%;"><b>ACCEPT_INCOMING</b></p>
+
+<p style="margin-left:22%;">Only accept incoming
+connections where the remote callsign match this regular
+expression. If the callsign doesn&rsquo;t match, a message
+will be sent to the remote station indicating that the
+connection was rejected. The DROP_INCOMING and
+REJECT_INCOMING directives will be evaluated before
+ACCEPT_INCOMING. For more information on the syntax, see the
+<b>REGULAR EXPRESSIONS</b> chapter below.</p>
+
+<p style="margin-left:11%;"><b>REJECT_OUTGOING</b></p>
+
+<p style="margin-left:22%;">Reject all outgoing connections
+where the remote callsign match this regular expression. For
+more information on the syntax, see the <b>REGULAR
+EXPRESSIONS</b> chapter below.</p>
+
+<p style="margin-left:11%;"><b>REJECT_CONF</b></p>
+
+<p style="margin-left:22%;">When this is set to 1, reject
+all incoming connections where the name of the remote
+station ends in the word CONF. A message will be sent to the
 remote station indicating that the connection was rejected.
-The DROP_INCOMING and REJECT_INCOMING directives will be evaluated before
-ACCEPT_INCOMING.
-For more information on the syntax, see the
-<B>REGULAR EXPRESSIONS</B>
+This blocks connects from stations that are in conference
+mode. When a station enters conference mode after
+connecting, and transmits towards us, it will be
+disconnected as well.</p>
 
-chapter below.
-<DT><B>REJECT_OUTGOING</B>
+<p style="margin-left:11%;"><b>CHECK_NR_CONNECTS</b></p>
 
-<DD>
-Reject all outgoing connections where the remote callsign match this regular
-expression. For more information on the syntax, see the
-<B>REGULAR EXPRESSIONS</B>
+<p style="margin-left:22%;">If a station connects to often
+it can be blocked for a configurable time span. Example:
+CHECK_NR_CONNECTS=3,300,120 If a station connects more than
+3 times with less than 300 seconds in between each connect,
+that station will be rejected for 120 minutes.</p>
 
-chapter below.
-<DT><B>CHECK_NR_CONNECTS</B>
+<p style="margin-left:11%;"><b>ACCEPT_OUTGOING</b></p>
 
-<DD>
-If a station connects to often it can be blocked for a configurable time
-span. Example:
-CHECK_NR_CONNECTS=3,300,120
-If a station connects more than 3 times with less than 300 seconds in between
-each connect, that station will be rejected for 120 minutes.
-<DT><B>ACCEPT_OUTGOING</B>
+<p style="margin-left:22%;">Only accept outgoing
+connections where the remote callsign match this regular
+expression. The REJECT_OUTGOING directive will be evaluated
+before ACCEPT_OUTGOING. For more information on the syntax,
+see the <b>REGULAR EXPRESSIONS</b> chapter below.</p>
 
-<DD>
-Only accept outgoing connections where the remote callsign match this regular
-expression. The REJECT_OUTGOING directive will be evaluated before
-ACCEPT_OUTGOING. For more information on the syntax, see the
-<B>REGULAR EXPRESSIONS</B>
+<p style="margin-left:11%;"><b>SERVERS</b></p>
 
-chapter below.
-<DT><B>SERVERS</B>
+<p style="margin-left:22%;">A space separated list of IP
+addresses or names of the EchoLink directory servers to use.
+The specified servers will be tried in order until one is
+found that works. SvxLink will then stick to that server. If
+that server fail, SvxLink will again try the next server in
+the list and when the end of the list has been reached, the
+search start from the beginning again. Hostnames that
+resolve to multiple IP addresses, like servers.echolink.org,
+will also be correctly handled so that all returned IP
+addresses will be tried if necessary.</p>
 
-<DD>
-A space separated list of IP addresses or names of the EchoLink directory
-servers to use. The specified servers will be tried in order until one is
-found that works. SvxLink will then stick to that server. If that server fail,
-SvxLink will again try the next server in the list and when the end of the list
-has been reached, the search start from the beginning again.
-Hostnames that resolve to multiple IP addresses, like servers.echolink.org,
-will also be correctly handled so that all returned IP addresses will be tried
-if necessary.
-<DT><B>CALLSIGN</B>
+<p style="margin-left:11%;"><b>CALLSIGN</b></p>
 
-<DD>
-The callsign to use to login to the EchoLink directory server. 
-<DT><B>SYSOPNAME</B>
+<p style="margin-left:22%;">The callsign to use to login to
+the EchoLink directory server.</p>
 
-<DD>
-The name of the person or club that is responsible for this system. 
-<DT><B>PASSWORD</B>
+<p style="margin-left:11%;"><b>SYSOPNAME</b></p>
 
-<DD>
-The EchoLink directory server password to use. 
-<DT><B>LOCATION</B>
+<p style="margin-left:22%;">The name of the person or club
+that is responsible for this system.</p>
 
-<DD>
-The location of the station. Note: In the default configuration file the value
-of this configuration variable starts with &quot;[Svx]&quot;. This is of course not
-necessary but it's fun to see which other stations are running SvxLink. 
-<DT><B>PROXY_SERVER</B>
+<p style="margin-left:11%;"><b>PASSWORD</b></p>
 
-<DD>
-If set, connect to the given EchoLink proxy server host. All EchoLink
-connections, both incoming and outgoing, will then go through the proxy.
-<DT><B>PROXY_PORT</B>
+<p style="margin-left:22%;">The EchoLink directory server
+password to use.</p>
 
-<DD>
-Set the TCP port used for connecing to an EchoLink proxy server. Default is
-8100.
-<DT><B>PROXY_PASSWORD</B>
+<p style="margin-left:11%;"><b>LOCATION</b></p>
 
-<DD>
-Set the EchoLink proxy password used when connecting to an EchoLink proxy
-server. Use the password PUBLIC for public proxy servers.
-<DT><B>MAX_QSOS</B>
+<p style="margin-left:22%;">The location of the station.
+Note: In the default configuration file the value of this
+configuration variable starts with &quot;[Svx]&quot;. This
+is of course not necessary but it&rsquo;s fun to see which
+other stations are running SvxLink.</p>
 
-<DD>
-The maximum number of stations that can participate in a conference QSO on this
-node. If more stations try to connect, the connect request will be rejected. 
-<DT><B>USE_GSM_ONLY</B>
+<p style="margin-left:11%;"><b>PROXY_SERVER</b></p>
 
-<DD>
-On smaller systems with a less powerful CPU it is a good idea to prevent
-SvxLink from switching into the Speex codec when another SvxLink station is
-connecting via EchoLink.
-If this param is set to 1 SvxLink remains in the default codec (GSM).
-<DT><B>DEFAULT_LANG</B>
+<p style="margin-left:22%;">If set, connect to the given
+EchoLink proxy server host. All EchoLink connections, both
+incoming and outgoing, will then go through the proxy.</p>
 
-<DD>
-Set the language to use for announcements sent to remote EchoLink stations.
-If not set, it will be the same as the one chosen for the logic core. The
-reason for setting this up may be that you want one language for the core
-and another language for annoncements sent to remote EchoLink stations.
-<DT><B>MAX_CONNECTIONS</B>
+<p style="margin-left:11%;"><b>PROXY_PORT</b></p>
 
-<DD>
-When more stations than specified in MAX_QSOS try to connect, a connection will
-temporarily be established long enough to play a message telling the remote
-station that the connection was rejected. The connection is then immediately
-terminated. If the number of connections exceeds MAX_CONNECTIONS, the connect
-request is just ignored. This variable is typically set to MAX_QSOS+1 or more if
-using a large number for MAX_QSOS. 
-<DT><B>LINK_IDLE_TIMEOUT</B>
+<p style="margin-left:22%;">Set the TCP port used for
+connecing to an EchoLink proxy server. Default is 8100.</p>
 
-<DD>
-The number of seconds that a connection is idle before disconnection will occur.
-This is to prevent a link to stay open if someone forget to disconnect. Disable
-this feature by setting this config variable to zero (or comment it out). 
-<DT><B>AUTOCON_ECHOLINK_ID</B>
+<p style="margin-left:11%;"><b>PROXY_PASSWORD</b></p>
 
-<DD>
-Set this variable to an EchoLink ID that you want to automatically connect to.
-SvxLink will autoconnect only when no other station is connected.
-<DT><B>AUTOCON_TIME</B>
+<p style="margin-left:22%;">Set the EchoLink proxy password
+used when connecting to an EchoLink proxy server. Use the
+password PUBLIC for public proxy servers.</p>
 
-<DD>
-Set this to the time in seconds that you want in between autoconnect tries.
-<DT><B>DESCRIPTION</B>
+<p style="margin-left:11%;"><b>BIND_ADDR</b></p>
 
-<DD>
-A longer description that is sent to remote stations upon connection. This
-description should typically include detailed station information like QTH,
-transceiver frequency/power, antenna, CTCSS tone frequency etc.
-</DL>
-<A NAME="lbAF">&nbsp;</A>
-<H2>REGULAR EXPRESSIONS</H2>
+<p style="margin-left:22%;">This configuration variable can
+be set to bind the EchoLink network sockets to a specific
+IP-address/interface. This may be needed if the computer is
+fitted with more than one ethernet interface and EchoLink
+should only be used on one of them.</p>
 
-Regular expressions are used in the DROP, REJECT and ACCEPT configuration
-variables. A regular expression can be quite complex and the syntax is
-fully described in the
-<B><A HREF="../man7/regex.7.html">regex</A></B>(7)
+<p style="margin-left:22%; margin-top: 1em">Example:
+BIND_ADDR=192.168.0.1</p>
 
-manual page. This is just a quick tutorial for the most important features.
-<DL COMPACT>
-<DT><B>^</B>
+<p style="margin-left:11%;"><b>MAX_QSOS</b></p>
 
-<DD>
-match the beginning of a string.
-<DT><B>$</B>
+<p style="margin-left:22%;">The maximum number of stations
+that can participate in a conference QSO on this node. If
+more stations try to connect, the connect request will be
+rejected.</p>
 
-<DD>
-match the end of a string.
-<DT><B>.</B>
+<p style="margin-left:11%;"><b>USE_GSM_ONLY</b></p>
 
-<DD>
-match one character.
-<DT><B>*</B>
+<p style="margin-left:22%;">On smaller systems with a less
+powerful CPU it is a good idea to prevent SvxLink from
+switching into the Speex codec when another SvxLink station
+is connecting via EchoLink. If this param is set to 1
+SvxLink remains in the default codec (GSM).</p>
 
-<DD>
-match the previous expression zero or more times.
-<DT><B>|</B>
+<p style="margin-left:11%;"><b>DEFAULT_LANG</b></p>
 
-<DD>
-match the expression before OR after the |.
-<DT><B>\\</B>
+<p style="margin-left:22%;">Set the language to use for
+announcements sent to remote EchoLink stations. If not set,
+it will be the same as the one chosen for the logic core.
+The reason for setting this up may be that you want one
+language for the core and another language for annoncements
+sent to remote EchoLink stations.</p>
 
-<DD>
-escape the following character. Note that backslash is also parsed by the
-SvxLink configuration parser so a backslash must actually be typed as two.
-For example to include a * in the matching pattern it must be escaped as
-\\*.
-<DT><B>()</B>
+<p style="margin-left:11%;"><b>MAX_CONNECTIONS</b></p>
 
-<DD>
-grouping an expression.
-<DT><B>[]</B>
+<p style="margin-left:22%;">When more stations than
+specified in MAX_QSOS try to connect, a connection will
+temporarily be established long enough to play a message
+telling the remote station that the connection was rejected.
+The connection is then immediately terminated. If the number
+of connections exceeds MAX_CONNECTIONS, the connect request
+is just ignored. This variable is typically set to
+MAX_QSOS+1 or more if using a large number for MAX_QSOS.</p>
 
-<DD>
-match any of the characters inside of the brackets.
+<p style="margin-left:11%;"><b>LINK_IDLE_TIMEOUT</b></p>
 
-Some examples:
-<DT><B>^(AB1CDE|BA5CBA-L)$</B>
+<p style="margin-left:22%;">The number of seconds that a
+connection is idle before disconnection will occur. This is
+to prevent a link to stay open if someone forget to
+disconnect. Disable this feature by setting this config
+variable to zero (or comment it out).</p>
 
-<DD>
-Match AB1CDE or BA5CBA-L.
-<DT><B>^(AB1CDE-[LR])$</B>
+<p style="margin-left:11%;"><b>AUTOCON_ECHOLINK_ID</b></p>
 
-<DD>
-Match AB1CDE-L or AB1CDR-R.
-<DT><B>^(AB1.*)$</B>
+<p style="margin-left:22%;">Set this variable to an
+EchoLink ID that you want to automatically connect to.
+SvxLink will autoconnect only when no other station is
+connected.</p>
 
-<DD>
-Match all callsigns starting with AB1.
-<DT><B>^(\\\\*.*\\\\*)$</B>
+<p style="margin-left:11%;"><b>AUTOCON_TIME</b></p>
 
-<DD>
-Match all conference &quot;callsigns&quot;. We need to escape the star character since
-it would otherwise be parsed by the regular expression parser. We also need
-two backslah characters so that the SvxLink configuration reader doesn't
-parse it as an escape sequence.
+<p style="margin-left:22%;">Set this to the time in seconds
+that you want in between autoconnect tries.</p>
 
-The matches in SvxLink are case insensitive so &quot;sm3&quot; and &quot;SM3&quot; are the same.
-SvxLink use extended regular expressions (see
-<B><A HREF="../man7/regex.7.html">regex</A></B>(7)
+<p style="margin-left:11%;"><b>DESCRIPTION</b></p>
 
-). You almost always want to start the regular expression with &quot;^(&quot; and end
-it with &quot;)$&quot; so that the whole callsign will be used in the match.
-</DL>
-<A NAME="lbAG">&nbsp;</A>
-<H2>FILES</H2>
+<p style="margin-left:22%;">A longer description that is
+sent to remote stations upon connection. This description
+should typically include detailed station information like
+QTH, transceiver frequency/power, antenna, CTCSS tone
+frequency etc.</p>
 
-<DL COMPACT>
-<DT><I>/etc/svxlink/svxlink.conf</I> (or deprecated <I>/etc/svxlink.conf</I>)
+<h2>REGULAR EXPRESSIONS
+<a name="REGULAR EXPRESSIONS"></a>
+</h2>
 
-<DD>
-The system wide configuration file.
-<DT><I>~/.svxlink/svxlink.conf</I>
 
-<DD>
-Per user configuration file.
-<DT><I>/etc/svxlink/svxlink.d/ModuleEchoLink.conf</I>
+<p style="margin-left:11%; margin-top: 1em">Regular
+expressions are used in the DROP, REJECT and ACCEPT
+configuration variables. A regular expression can be quite
+complex and the syntax is fully described in the
+<b>regex</b>(7) manual page. This is just a quick tutorial
+for the most important features.</p>
 
-<DD>
-Global modularized configuration file. Depends on the CFG_DIR configuration
-variable setting.
-<DT><I>~/.svxlink/svxlink.d/ModuleEchoLink.conf</I>
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
 
-<DD>
-Per user modularized configuration file. Depends on the CFG_DIR configuration
-variable setting.
-</DL>
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
 
-Tobias Blomberg (SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;
-<A NAME="lbAI">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<p><b>^</b></p></td>
+<td width="8%"></td>
+<td width="78%">
 
-<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
 
-<P>
+<p>match the beginning of a string.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
 
-<HR>
-<A NAME="index">&nbsp;</A><H2>Index</H2>
-<DL>
-<DT><A HREF="#lbAB">NAME</A><DD>
-<DT><A HREF="#lbAC">DESCRIPTION</A><DD>
-<DT><A HREF="#lbAD">CONFIGURATION VARIABLES</A><DD>
-<DL>
-<DT><A HREF="#lbAE">ModuleEchoLink</A><DD>
-</DL>
-<DT><A HREF="#lbAF">REGULAR EXPRESSIONS</A><DD>
-<DT><A HREF="#lbAG">FILES</A><DD>
-<DT><A HREF="#lbAH">AUTHOR</A><DD>
-<DT><A HREF="#lbAI">SEE ALSO</A><DD>
-</DL>
-<HR>
-This document was created by
-<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
-using the manual pages.<BR>
-Time: 16:10:17 GMT, June 30, 2014
-</BODY>
-</HTML>
+
+<p><b>$</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>match the end of a string.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>.</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>match one character.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>*</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>match the previous expression zero or more times.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>|</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>match the expression before OR after the |.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>\</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>escape the following character. Note that backslash is
+also parsed by the SvxLink configuration parser so a
+backslash must actually be typed as two. For example to
+include a * in the matching pattern it must be escaped as
+\\*.</p> </td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>()</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>grouping an expression.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>[]</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>match any of the characters inside of the brackets.</p></td></tr>
+</table>
+
+<p style="margin-left:11%; margin-top: 1em">Some examples:
+<b><br>
+^(AB1CDE|BA5CBA-L)$</b></p>
+
+<p style="margin-left:22%;">Match AB1CDE or BA5CBA-L.</p>
+
+<p style="margin-left:11%;"><b>^(AB1CDE-[LR])$</b></p>
+
+<p style="margin-left:22%;">Match AB1CDE-L or AB1CDR-R.</p>
+
+<p style="margin-left:11%;"><b>^(AB1.*)$</b></p>
+
+<p style="margin-left:22%;">Match all callsigns starting
+with AB1.</p>
+
+<p style="margin-left:11%;"><b>^(\\*.*\\*)$</b></p>
+
+<p style="margin-left:22%;">Match all conference
+&quot;callsigns&quot;. We need to escape the star character
+since it would otherwise be parsed by the regular expression
+parser. We also need two backslah characters so that the
+SvxLink configuration reader doesn&rsquo;t parse it as an
+escape sequence.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The matches in
+SvxLink are case insensitive so &quot;sm3&quot; and
+&quot;SM3&quot; are the same. SvxLink use extended regular
+expressions (see <b>regex</b>(7) ). You almost always want
+to start the regular expression with &quot;^(&quot; and end
+it with &quot;)$&quot; so that the whole callsign will be
+used in the match.</p>
+
+<h2>FILES
+<a name="FILES"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><i>/etc/svxlink/svxlink.conf</i>
+(or deprecated <i>/etc/svxlink.conf</i>)</p>
+
+<p style="margin-left:22%;">The system wide configuration
+file.</p>
+
+
+<p style="margin-left:11%;"><i>~/.svxlink/svxlink.conf</i></p>
+
+<p style="margin-left:22%;">Per user configuration
+file.</p>
+
+
+<p style="margin-left:11%;"><i>/etc/svxlink/svxlink.d/ModuleEchoLink.conf</i></p>
+
+<p style="margin-left:22%;">Global modularized
+configuration file. Depends on the CFG_DIR configuration
+variable setting.</p>
+
+
+<p style="margin-left:11%;"><i>~/.svxlink/svxlink.d/ModuleEchoLink.conf</i></p>
+
+<p style="margin-left:22%;">Per user modularized
+configuration file. Depends on the CFG_DIR configuration
+variable setting.</p>
+
+<h2>AUTHOR
+<a name="AUTHOR"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Tobias Blomberg
+(SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;</p>
+
+<h2>SEE ALSO
+<a name="SEE ALSO"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>svxlink.conf</b>(5)</p>
+<hr>
+</body>
+</html>

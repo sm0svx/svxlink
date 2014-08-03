@@ -152,59 +152,7 @@ Static Public Attributes</h2></td></tr>
 <dl class="section date"><dt>Date</dt><dd>2004-08-02 </dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The flow control code is untested. Report success/failure to me.</dd></dl>
 <p>This class is used to communicate over an asynchronous serial link (e.g. RS-232 port). An example of how to use it is shown below.</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;cstdlib&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;cstdio&gt;</span></div>
-<div class="line"></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="AsyncCppApplication_8h.html">AsyncCppApplication.h</a>&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="AsyncSerial_8h.html">AsyncSerial.h</a>&gt;</span></div>
-<div class="line"></div>
-<div class="line"><span class="keyword">using namespace </span>std;</div>
-<div class="line"><span class="keyword">using namespace </span>Async;</div>
-<div class="line"></div>
-<div class="line"><span class="keyword">class </span>MyClass : <span class="keyword">public</span> sigc::trackable</div>
-<div class="line">{</div>
-<div class="line">  <span class="keyword">public</span>:</div>
-<div class="line">    MyClass(<span class="keywordtype">void</span>)</div>
-<div class="line">    {</div>
-<div class="line">      serial = <span class="keyword">new</span> <a class="code" href="classAsync_1_1Serial.html#a1e028dd2da210ecfa36cd385827877a1">Serial</a>(<span class="stringliteral">&quot;/dev/ttyS0&quot;</span>);</div>
-<div class="line">      serial-&gt;charactersReceived.connect(</div>
-<div class="line">          mem_fun(*<span class="keyword">this</span>, &amp;MyClass::onCharactersReceived));</div>
-<div class="line"></div>
-<div class="line">      <span class="keywordflow">if</span> (!serial-&gt;open(<span class="keyword">true</span>))</div>
-<div class="line">      {</div>
-<div class="line">        perror(<span class="stringliteral">&quot;Open serial port failed&quot;</span>);</div>
-<div class="line">        exit(1);</div>
-<div class="line">      }</div>
-<div class="line">      serial-&gt;setParams(9600, <a class="code" href="classAsync_1_1Serial.html#a7428061313a2989bce6355b0207728bca5da2349db85b90a230c03abed17a8a81">Serial::PARITY_NONE</a>, 8, 1, <a class="code" href="classAsync_1_1Serial.html#a10c109663cbee56341bb70863e598a61a47021b4d27b5bdd8ddee3213fe2465ec">Serial::FLOW_NONE</a>);</div>
-<div class="line">      </div>
-<div class="line">      serial-&gt;write(<span class="stringliteral">&quot;Hello, serial\n&quot;</span>, 14);</div>
-<div class="line">    }</div>
-<div class="line">    </div>
-<div class="line">    ~MyClass(<span class="keywordtype">void</span>)</div>
-<div class="line">    {</div>
-<div class="line">      serial-&gt;close();</div>
-<div class="line">      <span class="keyword">delete</span> serial;</div>
-<div class="line">    }</div>
-<div class="line"></div>
-<div class="line">  <span class="keyword">private</span>:</div>
-<div class="line">    <a class="code" href="classAsync_1_1Serial.html">Serial</a> *serial;</div>
-<div class="line">    </div>
-<div class="line">    <span class="keywordtype">void</span> onCharactersReceived(<span class="keywordtype">char</span> *buf, <span class="keywordtype">int</span> count)</div>
-<div class="line">    {</div>
-<div class="line">      cout &lt;&lt; <span class="stringliteral">&quot;Read &quot;</span> &lt;&lt; count &lt;&lt; <span class="stringliteral">&quot; characters from serial port: &quot;</span></div>
-<div class="line">           &lt;&lt; buf &lt;&lt; endl;</div>
-<div class="line">    }</div>
-<div class="line">};</div>
-<div class="line"></div>
-<div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)</div>
-<div class="line">{</div>
-<div class="line">  <a class="code" href="classAsync_1_1CppApplication.html">CppApplication</a> app;</div>
-<div class="line">  MyClass my_class;</div>
-<div class="line">  app.<a class="code" href="classAsync_1_1CppApplication.html#a9a921d33644bbb18767fb4d599f53bf4">exec</a>();</div>
-<div class="line">}</div>
-</div><!-- fragment --> <dl><dt><b>Examples: </b></dt><dd><a class="el" href="AsyncSerial_demo_8cpp-example.html#_a0">AsyncSerial_demo.cpp</a>.</dd>
-</dl>
+<div class="fragment"></div><!-- fragment --> 
 <p>Definition at line <a class="el" href="AsyncSerial_8h_source.html#l00129">129</a> of file <a class="el" href="AsyncSerial_8h_source.html">AsyncSerial.h</a>.</p>
 </div><h2 class="groupheader">Member Enumeration Documentation</h2>
 <a class="anchor" id="a10c109663cbee56341bb70863e598a61"></a>
@@ -680,7 +628,7 @@ Static Public Attributes</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jul 21 2014 10:19:42 for Async by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Aug 3 2014 10:33:06 for Async by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.7
 </small></address>

@@ -1,184 +1,207 @@
-Content-type: text/html
+<!-- Creator     : groff version 1.22.2 -->
+<!-- CreationDate: Sun Aug  3 11:50:29 2014 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+</style>
+<title>MODULEPROPAGATIONMONITOR.CONF</title>
 
-<HTML><HEAD><TITLE>Manpage of MODULEPROPAGATIONMONITOR.CONF</TITLE>
-</HEAD><BODY>
-<H1>MODULEPROPAGATIONMONITOR.CONF</H1>
-Section: File Formats (5)<BR>Updated: MAY 2011<BR><A HREF="#index">Index</A>
-<A HREF="../index.html">Return to Main Contents</A><HR>
+</head>
+<body>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<h1 align="center">MODULEPROPAGATIONMONITOR.CONF</h1>
 
-ModulePropagationMonitor.conf - Configuration file for the SvxLink server
-PropagationMonitor module
-<A NAME="lbAC">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<a href="#NAME">NAME</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#CONFIGURATION VARIABLES">CONFIGURATION VARIABLES</a><br>
+<a href="#RECEIVING THE ALERT EMAILS">RECEIVING THE ALERT EMAILS</a><br>
+<a href="#SELINUX">SELINUX</a><br>
+<a href="#FILES">FILES</a><br>
+<a href="#AUTHOR">AUTHOR</a><br>
+<a href="#SEE ALSO">SEE ALSO</a><br>
 
-<B>svxlink</B>
+<hr>
 
-is a general purpose voice service system for ham radio use. This man-page
-describe the SvxLink server configuration for the PropagationMonitor module.
 
-The PropagationMonitor module is used to announce propagation alerts
-received from vhfdx.info or gooddx.net. The process of receiving the emails
-is outside of this module and have to be arranged separately. This module
-expect to find new emails under the spool directory. Messages from VHFDX 
-should be put in a
-<I>vhfdx</I>
+<h2>NAME
+<a name="NAME"></a>
+</h2>
 
-subdirectory and messages from GoodDX should be put in a
-<I>dxrobot</I>
 
-subdirectory. This module must have write access to the subdirectories under
-the spool directory since it will move processed messages to an archive
-directory.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>CONFIGURATION VARIABLES</H2>
+<p style="margin-left:11%; margin-top: 1em">ModulePropagationMonitor.conf
+&minus; Configuration file for the SvxLink server
+PropagationMonitor module</p>
 
-There are a couple of configuration variables that are common to all modules.
-The documentation for these can be found in the
-<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5)
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
 
-manual page.
 
-Here is the description of all module specific configuration
-variables that the SvxLink PropagationMonitor module understands.
-<A NAME="lbAE">&nbsp;</A>
-<H3>ModulePropagationMonitor</H3>
+<p style="margin-left:11%; margin-top: 1em"><b>svxlink</b>
+is a general purpose voice service system for ham radio use.
+This man-page describe the SvxLink server configuration for
+the PropagationMonitor module.</p>
 
-<DL COMPACT>
-<DT><B>SPOOL_DIR</B>
+<p style="margin-left:11%; margin-top: 1em">The
+PropagationMonitor module is used to announce propagation
+alerts received from vhfdx.info or gooddx.net. The process
+of receiving the emails is outside of this module and have
+to be arranged separately. This module expect to find new
+emails under the spool directory. Messages from VHFDX should
+be put in a <i>vhfdx</i> subdirectory and messages from
+GoodDX should be put in a <i>dxrobot</i> subdirectory. This
+module must have write access to the subdirectories under
+the spool directory since it will move processed messages to
+an archive directory.</p>
 
-<DD>
-Specify which directory to read incoming emails from. The default is
-<I>/var/spool/svxlink/propagation_monitor</I>.
+<h2>CONFIGURATION VARIABLES
+<a name="CONFIGURATION VARIABLES"></a>
+</h2>
 
-</DL>
-<A NAME="lbAF">&nbsp;</A>
-<H2>RECEIVING THE ALERT EMAILS</H2>
 
-The first step in setting up the flow of alert emails is to actually getting
-them to the computer running SvxLink and, on that computer, to the user
-SvxLink run as. This can be done in two ways. One way is to forward emails
-directly via SMTP to the  computer, if you have that possibility. A more
-common case propably is that you want to fetch alert emails using POP from
-some email account. The latter can be done using the
-<B><A HREF="../man1/fetchmail.1.html">fetchmail</A></B>(1)
+<p style="margin-left:11%; margin-top: 1em">There are a
+couple of configuration variables that are common to all
+modules. The documentation for these can be found in the
+<b>svxlink.conf</b>(5) manual page.</p>
 
-utility for example.
+<p style="margin-left:11%; margin-top: 1em">Here is the
+description of all module specific configuration variables
+that the SvxLink PropagationMonitor module understands.</p>
 
-The next step is to store incoming emails in files under the propagation
+
+<p style="margin-left:11%; margin-top: 1em"><b>ModulePropagationMonitor
+<br>
+SPOOL_DIR</b></p>
+
+<p style="margin-left:22%;">Specify which directory to read
+incoming emails from. The default is
+<i>/var/spool/svxlink/propagation_monitor</i>.</p>
+
+<h2>RECEIVING THE ALERT EMAILS
+<a name="RECEIVING THE ALERT EMAILS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The first step
+in setting up the flow of alert emails is to actually
+getting them to the computer running SvxLink and, on that
+computer, to the user SvxLink run as. This can be done in
+two ways. One way is to forward emails directly via SMTP to
+the computer, if you have that possibility. A more common
+case propably is that you want to fetch alert emails using
+POP from some email account. The latter can be done using
+the <b>fetchmail</b>(1) utility for example.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The next step
+is to store incoming emails in files under the propagation
 monitor spool directory. This is done using the
-<B><A HREF="../man1/procmail.1.html">procmail</A></B>(1)
-
-utility. When an incoming email is received, the mail server call procmail
-which look for a configuration file in the destination users home directory.
+<b>procmail</b>(1) utility. When an incoming email is
+received, the mail server call procmail which look for a
+configuration file in the destination users home directory.
 For SvxLink, the home directory should be set to
-<I>/etc/svxlink</I>.
+<i>/etc/svxlink</i>. In that directory a procmail
+configuration file, <b>.procmailrc</b>, is installed by
+default. The syntax is a bit cryptic but the file contains
+some helpful comments to help you understand it. Have a look
+at the <b>procmailrc</b> (5) and <b>procmailex</b>(5) manual
+pages for more details.</p>
 
-In that directory a procmail configuration file,
-<B>.procmailrc</B>,
+<p style="margin-left:11%; margin-top: 1em">Finally, of
+course, you need to register with the vhfdx.info and/or
+gooddx.net site and set up for what geographic area and
+which bands you wish to receive alert emails for.</p>
 
-is installed by default. The syntax is a bit cryptic but the file contains
-some helpful comments to help you understand it. Have a look at the
-<B>procmailrc</B> (5) and <B><A HREF="../man5/procmailex.5.html">procmailex</A></B>(5)
+<h2>SELINUX
+<a name="SELINUX"></a>
+</h2>
 
-manual pages for more details.
 
-Finally, of course, you need to register with the vhfdx.info and/or gooddx.net
-site and set up for what geographic area and which bands you wish to receive
-alert emails for.
-<A NAME="lbAG">&nbsp;</A>
-<H2>SELINUX</H2>
+<p style="margin-left:11%; margin-top: 1em">Some Linux
+distributions have the SELinux security framework enabled.
+This is true for RedHat based distributions, like Fedora for
+example. SELinux will by default deny procmail to write the
+mail files in the propagation monitor spool directory. To
+fix this, run the following commands:</p>
 
-Some Linux distributions have the SELinux security framework enabled.
-This is true for RedHat based distributions, like Fedora for example.
-SELinux will by default deny procmail to write the mail files in the
-propagation monitor spool directory. To fix this, run the following commands:
-<P>
+<p style="margin-left:17%; margin-top: 1em">semanage
+fcontext -a -t user_home_t \ <br>
+&quot;/var/spool/svxlink/propagation_monitor(/.*)?&quot;
+<br>
+restorecon -r /var/spool/svxlink/propagation_monitor</p>
 
-<DL COMPACT><DT><DD>
-semanage fcontext -a -t user_home_t \
-<DL COMPACT><DT><DD>
-<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;/var/spool/svxlink/propagation_monitor(/.*)?&quot;
-<DL COMPACT><DT><DD>
-restorecon -r /var/spool/svxlink/propagation_monitor
-</DL>
-</DL>
-</DL>
-<A NAME="lbAH">&nbsp;</A>
-<H2>FILES</H2>
+<h2>FILES
+<a name="FILES"></a>
+</h2>
 
-<DL COMPACT>
-<DT><I>/etc/svxlink/svxlink.conf</I> (or deprecated <I>/etc/svxlink.conf</I>)
 
-<DD>
-The system wide configuration file.
-<DT><I>~/.svxlink/svxlink.conf</I>
 
-<DD>
-Per user configuration file.
-<DT><I>/etc/svxlink/svxlink.d/ModulePropagationMonitor.conf</I>
+<p style="margin-left:11%; margin-top: 1em"><i>/etc/svxlink/svxlink.conf</i>
+(or deprecated <i>/etc/svxlink.conf</i>)</p>
 
-<DD>
-Global modularized configuration file. Depends on the CFG_DIR configuration
-variable setting.
-<DT><I>~/.svxlink/svxlink.d/ModulePropagationMonitor.conf</I>
+<p style="margin-left:22%;">The system wide configuration
+file.</p>
 
-<DD>
-Per user modularized configuration file. Depends on the CFG_DIR configuration
-variable setting.
-<DT><I>/var/spool/svxlink/propagation_monitor</I>
 
-<DD>
-Spool directory for alert mails. This is the default path. What path is
-actually used is determined by the SPOOL_DIR configuration variable.
-<DT><I>/etc/svxlink/.procmailrc</I>
+<p style="margin-left:11%;"><i>~/.svxlink/svxlink.conf</i></p>
 
-<DD>
-The configuration file for procmail. Procmail is used to write incoming
-alert emails into files in the spool directory.
-</DL>
-<A NAME="lbAI">&nbsp;</A>
-<H2>AUTHOR</H2>
+<p style="margin-left:22%;">Per user configuration
+file.</p>
 
-Tobias Blomberg (SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;
-<A NAME="lbAJ">&nbsp;</A>
-<H2>SEE ALSO</H2>
 
-<B><A HREF="../man5/svxlink.conf.5.html">svxlink.conf</A></B>(5),
+<p style="margin-left:11%;"><i>/etc/svxlink/svxlink.d/ModulePropagationMonitor.conf</i></p>
 
-<B><A HREF="../man1/procmail.1.html">procmail</A></B>(1),
+<p style="margin-left:22%;">Global modularized
+configuration file. Depends on the CFG_DIR configuration
+variable setting.</p>
 
-<B><A HREF="../man5/procmailrc.5.html">procmailrc</A></B>(5),
 
-<B><A HREF="../man5/procmailex.5.html">procmailex</A></B>(5),
+<p style="margin-left:11%;"><i>~/.svxlink/svxlink.d/ModulePropagationMonitor.conf</i></p>
 
-<B><A HREF="../man1/fetchmail.1.html">fetchmail</A></B>(1)
+<p style="margin-left:22%;">Per user modularized
+configuration file. Depends on the CFG_DIR configuration
+variable setting.</p>
 
-<P>
-<P>
 
-<HR>
-<A NAME="index">&nbsp;</A><H2>Index</H2>
-<DL>
-<DT><A HREF="#lbAB">NAME</A><DD>
-<DT><A HREF="#lbAC">DESCRIPTION</A><DD>
-<DT><A HREF="#lbAD">CONFIGURATION VARIABLES</A><DD>
-<DL>
-<DT><A HREF="#lbAE">ModulePropagationMonitor</A><DD>
-</DL>
-<DT><A HREF="#lbAF">RECEIVING THE ALERT EMAILS</A><DD>
-<DT><A HREF="#lbAG">SELINUX</A><DD>
-<DT><A HREF="#lbAH">FILES</A><DD>
-<DT><A HREF="#lbAI">AUTHOR</A><DD>
-<DT><A HREF="#lbAJ">SEE ALSO</A><DD>
-</DL>
-<HR>
-This document was created by
-<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
-using the manual pages.<BR>
-Time: 16:10:17 GMT, June 30, 2014
-</BODY>
-</HTML>
+<p style="margin-left:11%;"><i>/var/spool/svxlink/propagation_monitor</i></p>
+
+<p style="margin-left:22%;">Spool directory for alert
+mails. This is the default path. What path is actually used
+is determined by the SPOOL_DIR configuration variable.</p>
+
+
+<p style="margin-left:11%;"><i>/etc/svxlink/.procmailrc</i></p>
+
+<p style="margin-left:22%;">The configuration file for
+procmail. Procmail is used to write incoming alert emails
+into files in the spool directory.</p>
+
+<h2>AUTHOR
+<a name="AUTHOR"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Tobias Blomberg
+(SM0SVX) &lt;sm0svx at users dot sourceforge dot net&gt;</p>
+
+<h2>SEE ALSO
+<a name="SEE ALSO"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>svxlink.conf</b>(5),
+<b>procmail</b>(1), <b>procmailrc</b>(5),
+<b>procmailex</b>(5), <b>fetchmail</b>(1)</p>
+<hr>
+</body>
+</html>
