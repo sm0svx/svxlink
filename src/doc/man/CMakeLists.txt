@@ -5,8 +5,9 @@ set(MAN_PAGES svxlink.1 remotetrx.1 siglevdetcal.1 svxlink.conf.5
   ModulePropagationMonitor.conf.5 ModuleSelCallEnc.conf.5 qtel.1
 )
 
-# Search for gzip program. Error out if not found.
+# Search for the gzip and groff programs. Error out if not found.
 include(FindGZIP)
+include(FindGROFF)
 
 # Set up a target for compressing each manual page. Also add an install
 # target for it.
@@ -17,12 +18,21 @@ foreach(man ${MAN_PAGES})
     COMMAND ${GZIP_TOOL} -c ${CMAKE_CURRENT_SOURCE_DIR}/${man} > ${man}.gz
     COMMENT "Compressing maual page ${man}.gz..."
   )
+  add_custom_command(OUTPUT ${man}.html
+    DEPENDS ${man}
+    COMMAND ${GROFF_TOOL} -mandoc -Thtml < ${CMAKE_CURRENT_SOURCE_DIR}/${man} > ${man}.html
+    COMMENT "Createing HTML maual page ${man}.html..."
+  )
   string(REGEX REPLACE ^.*\([1-9]\)\$ \\1 sec ${man})
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${man}.gz
     DESTINATION ${MAN_INSTALL_DIR}/man${sec}
     OPTIONAL
   )
-  set(TARGETS ${TARGETS} ${man}.gz)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${man}.html
+    DESTINATION ${DOC_INSTALL_DIR}/man/man${sec}
+    OPTIONAL
+  )
+  set(TARGETS ${TARGETS} ${man}.gz ${man}.html)
 endforeach(man)
 
 # Add a custom target to trigger the build of the man pages
