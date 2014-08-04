@@ -7,7 +7,7 @@
 #include <AsyncTimer.h>
 #include <AsyncAudioIO.h>
 
-#include <LocalRx.h>
+#include <LocalRxBase.h>
 
 #include "version/SIGLEV_DET_CAL.h"
 
@@ -21,7 +21,7 @@ static const int INTERVAL = 100;
 static const int ITERATIONS = 150;
 
 static Config cfg;
-static LocalRx *rx;
+static LocalRxBase *rx;
 static double open_sum = 0.0f;
 static double close_sum = 0.0f;
 static float siglev_slope = 10.0;
@@ -282,20 +282,16 @@ int main(int argc, char **argv)
 	 << "section?\n";
     exit(1);
   }
-  if (rx_type != "Local")
-  {
-    cerr << "*** WARNING: The given receiver config section is not for a "
-         << "local receiver. You are on your own...\n";
-  }
 
     // Make sure we have CTCSS squelch enabled
-  cfg.setValue(rx_name, "SQL_DET", "CTCSS");
+  //cfg.setValue(rx_name, "SQL_DET", "CTCSS");
 
     // Make sure that the squelch will not open during calibration
   cfg.setValue(rx_name, "CTCSS_OPEN_THRESH", "100");
+  cfg.setValue(rx_name, "SIGLEV_OPEN_THRESH", "10000");
   
     // Make sure we are using the "Noise" siglev detector
-  cfg.setValue(rx_name, "SIGLEV_DET", "NOISE");
+  //cfg.setValue(rx_name, "SIGLEV_DET", "NOISE");
 
     // Read the configured siglev slope and offset, then clear them so that
     // they cannot affect the measurement.
@@ -304,8 +300,14 @@ int main(int argc, char **argv)
   cfg.getValue(rx_name, "SIGLEV_OFFSET", siglev_offset);
   cfg.setValue(rx_name, "SIGLEV_OFFSET", "0.0");
   
-  rx = dynamic_cast<LocalRx*>(RxFactory::createNamedRx(cfg, rx_name));
-  if ((rx == 0) || !rx->initialize())
+  rx = dynamic_cast<LocalRxBase*>(RxFactory::createNamedRx(cfg, rx_name));
+  if (rx == 0)
+  {
+    cerr << "*** ERROR: The given receiver config section is not for a "
+         << "local receiver. Calibration can only be done locally.\n";
+    exit(1);
+  }
+  if (!rx->initialize())
   {
     cerr << "*** ERROR: Could not initialize receiver \"" << rx_name << "\"\n";
     exit(1);

@@ -76,7 +76,8 @@ LIBSRC		= ToneDetector.cpp SwDtmfDecoder.cpp Rx.cpp LocalRx.cpp \
 		  SquelchEvDev.cpp Macho.cpp SquelchGpio.cpp Ptt.cpp \
 		  SigLevDetAfsk.cpp AfskDtmfDecoder.cpp SigLevDet.cpp \
 		  PttSerialPin.cpp PttGpio.cpp PttPty.cpp PtyDtmfDecoder.cpp \
-		  Pty.cpp
+		  Pty.cpp LocalRxBase.cpp Ddr.cpp WbRxRtlTcp.cpp RtlTcp.cpp \
+		  SigLevDet.cpp SigLevDetDdr.cpp
 
 # Which libs are used by the DYNAMIC lib generated.
 LIB_LIBS	= -lc
@@ -88,7 +89,7 @@ LIB_LIBS	= -lc
 STATIC_LIBS   	= 
 
 # Includefiles to export. A softlink is created in $(INC).
-EXPINC		= Rx.h Tx.h NetTrxMsg.h LocalRx.h
+EXPINC		= Rx.h Tx.h NetTrxMsg.h LocalRxBase.h
 
 # Specify Qt header files here that you want to run the
 # Qt Meta Object Compiler on (for libraries).

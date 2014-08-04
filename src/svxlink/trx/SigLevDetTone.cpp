@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2012 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -160,27 +160,15 @@ class SigLevDetTone::HammingWindow
  *
  ****************************************************************************/
 
-SigLevDetTone::SigLevDetTone(int sample_rate)
-  : sample_rate(sample_rate), tone_siglev_map(10), block_idx(0), last_siglev(0),
-    passband_energy(0.0f), prev_peak_to_tot_pwr(0.0f), integration_time(1),
-    update_interval(0), update_counter(0)
+SigLevDetTone::SigLevDetTone(void)
+  : sample_rate(0), tone_siglev_map(10), block_idx(0), last_siglev(0),
+    passband_energy(0.0f), filter(0), prev_peak_to_tot_pwr(0.0f),
+    integration_time(1), update_interval(0), update_counter(0)
 {
-  filter = new AudioFilter("BpBu8/5400-6500");
-  setHandler(filter);
-
-  SigCAudioSink *sigc_sink = new SigCAudioSink;
-  sigc_sink->sigWriteSamples.connect(
-      mem_fun(*this, &SigLevDetTone::processSamples));
-  sigc_sink->sigFlushSamples.connect(
-      mem_fun(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
-  filter->registerSink(sigc_sink, true);
-
   for (int i=0; i<10; ++i)
   {
-    det[i] = new Goertzel(5500 + i * 100, 16000);
-    tone_siglev_map[i] = 100 - i * 10;
+    det[i] = 0;
   }
-  reset();
 } /* SigLevDetTone::SigLevDetTone */
 
 
@@ -195,12 +183,38 @@ SigLevDetTone::~SigLevDetTone(void)
 } /* SigLevDetTone::~SigLevDetTone */
 
 
-bool SigLevDetTone::initialize(Async::Config &cfg, const std::string& name)
+bool SigLevDetTone::initialize(Config &cfg, const string& name, int sample_rate)
 {
-  if (!SigLevDet::initialize(cfg, name))
+  if (!SigLevDet::initialize(cfg, name, sample_rate))
   {
     return false;
   }
+
+  if (sample_rate != 16000)
+  {
+    cerr << "*** ERROR: The tone signal level detector only works at 16kHz "
+            "internal sampling rate\n";
+    return false;
+  }
+
+  this->sample_rate = sample_rate;
+
+  filter = new AudioFilter("BpBu8/5400-6500", sample_rate);
+  setHandler(filter);
+
+  SigCAudioSink *sigc_sink = new SigCAudioSink;
+  sigc_sink->sigWriteSamples.connect(
+      mem_fun(*this, &SigLevDetTone::processSamples));
+  sigc_sink->sigFlushSamples.connect(
+      mem_fun(*sigc_sink, &SigCAudioSink::allSamplesFlushed));
+  filter->registerSink(sigc_sink, true);
+
+  for (int i=0; i<10; ++i)
+  {
+    det[i] = new Goertzel(5500 + i * 100, sample_rate);
+    tone_siglev_map[i] = 100 - i * 10;
+  }
+  reset();
 
   string mapstr;
   if (cfg.getValue(name, "TONE_SIGLEV_MAP", mapstr))
@@ -214,7 +228,7 @@ bool SigLevDetTone::initialize(Async::Config &cfg, const std::string& name)
     }
   }
   
-  return true;
+  return SigLevDet::initialize(cfg, name, sample_rate);
   
 } /* SigLevDetTone::initialize */
 

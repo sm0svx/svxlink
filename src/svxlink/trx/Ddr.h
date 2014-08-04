@@ -1,12 +1,10 @@
 /**
-@file	 LocalRx.h
-@brief   A receiver class to handle local receivers
+@file	 Ddr.h
+@brief   A receiver class to handle digital drop receivers
 @author  Tobias Blomberg / SM0SVX
-@date	 2004-03-21
+@date	 2014-07-16
 
-This file contains a class that handle local analogue receivers. A local
-receiver is a receiver that is directly connected to the sound card on the
-computer where the SvxLink core is running.
+This file contains a class that handle local digital drop receivers.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -29,8 +27,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef LOCAL_RX_INCLUDED
-#define LOCAL_RX_INCLUDED
+#ifndef DDR_INCLUDED
+#define DDR_INCLUDED
 
 
 /****************************************************************************
@@ -56,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "LocalRxBase.h"
+#include "RtlTcp.h"
 
 
 /****************************************************************************
@@ -64,10 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class AudioIO;
-};
+class WbRxRtlTcp;
 
 
 /****************************************************************************
@@ -111,32 +107,57 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A class to handle local receivers
+@brief	A class to handle digital drop receivers
 @author Tobias Blomberg
-@date   2004-03-21
+@date   2014-07-16
 
-This class handle local analogue receivers. A local receiver is a receiver that
-is directly connected to the sound card on the computer where the SvxLink core
-is running.
+This class handle local digital drop receivers. A digital drop receiver use
+a wideband tuner to receive wideband samples. A narrowband channel is then
+extracted from this wideband signal and a demodulator is applied.
 */
-class LocalRx : public LocalRxBase
+class Ddr : public LocalRxBase
 {
   public:
+    static Ddr *find(const std::string &name);
+
     /**
      * @brief 	Default constuctor
      */
-    explicit LocalRx(Async::Config &cfg, const std::string& name);
+    explicit Ddr(Async::Config &cfg, const std::string& name);
   
     /**
      * @brief 	Destructor
      */
-    virtual ~LocalRx(void);
+    virtual ~Ddr(void);
   
     /**
      * @brief 	Initialize the receiver object
      * @return 	Return \em true on success, or \em false on failure
      */
     virtual bool initialize(void);
+
+    /**
+     * @brief   Find out which frequency this DDR is tuned to
+     * @returns Returns the absolute frequency in Hz of this DDR
+     */
+    double nbFq(void) const { return fq; }
+
+    /**
+     * @brief   Tell the DDR that the frequency of the wideband tuner changed
+     * @param   fq The new tuner frequency
+     */
+    void tunerFqChanged(uint32_t fq);
+
+    /**
+     * @brief   A signal that is emitted when new I/Q data is available
+     * @param   samples The new samples that are available
+     *
+     * This signal is emitted each time a new block of I/Q samples are
+     * available. The samples are taken after all decimation and channel
+     * filtering has been done but before demodulation is performed. This make
+     * the channel samples available for other types of signal processing.
+     */
+    sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
     
   protected:
     /**
@@ -179,15 +200,22 @@ class LocalRx : public LocalRxBase
     virtual Async::AudioSource *audioSource(void);
     
   private:
-    Async::Config   &cfg;
-    Async::AudioIO  *audio_io;
+    class Channel;
+    typedef std::map<std::string, Ddr*> DdrMap;
+
+    static DdrMap ddr_map;
+
+    Async::Config           &cfg;
+    Channel                 *channel;
+    WbRxRtlTcp              *rtl;
+    double                  fq;
     
-};  /* class LocalRx */
+};  /* class Ddr */
 
 
 //} /* namespace */
 
-#endif /* LOCAL_RX_INCLUDED */
+#endif /* DDR_INCLUDED */
 
 
 /*

@@ -1,6 +1,6 @@
 /**
-@file	 SigLevDet.cpp
-@brief   The base class for a signal level detector
+@file	 SigLevDetDdr.cpp
+@brief   A signal level detector measuring power levels using a DDR
 @author  Tobias Blomberg / SM0SVX
 @date	 2014-07-17
 
@@ -33,6 +33,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+#include <cstdio>
+#include <cstdlib>
 
 
 /****************************************************************************
@@ -50,11 +52,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Rx.h"
-#include "SigLevDet.h"
-#include "SigLevDetNoise.h"
-#include "SigLevDetTone.h"
 #include "SigLevDetDdr.h"
+#include "Ddr.h"
 
 
 
@@ -83,27 +82,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-namespace {
-  /**
-   * @brief A dummy signal level detector which always return 0 siglev
-   */
-  class SigLevDetNone : public SigLevDet
-  {
-    public:
-      struct Factory : public SigLevDetFactory<SigLevDetNone>
-      {
-        Factory(void) : SigLevDetFactory<SigLevDetNone>("NONE") {}
-      };
-
-    virtual void setContinuousUpdateInterval(int interval_ms) {}
-    virtual void setIntegrationTime(int time_ms) {}
-    virtual float lastSiglev(void) const { return 0; }
-    virtual float siglevIntegrated(void) const { return 0; }
-    virtual void reset(void) {}
-    virtual int writeSamples(const float *samples, int count) { return count; }
-    virtual void flushSamples(void) {}
-  };
-};
 
 
 /****************************************************************************
@@ -122,7 +100,6 @@ namespace {
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -137,56 +114,87 @@ namespace {
  *
  ****************************************************************************/
 
-SigLevDet *SigLevDetFactoryBase::createNamedSigLevDet(Config& cfg,
-                                                      const string& name)
+SigLevDetDdr::SigLevDetDdr(void)
+  : sample_rate(0), block_idx(0), last_siglev(0), integration_time(1),
+    update_interval(0), update_counter(0), pwr_sum(0.0), slope(1.0),
+    offset(0.0), block_size(0)
 {
-  SigLevDetNone::Factory none_siglev_factory;
-  SigLevDetNoise::Factory noise_siglev_factory;
-  SigLevDetTone::Factory tone_siglev_factory;
-  SigLevDetDdr::Factory ddr_siglev_factory;
-  
-  string det_name;
-  if (!cfg.getValue(name, "SIGLEV_DET", det_name) || det_name.empty())
+} /* SigLevDetDdr::SigLevDetDdr */
+
+
+SigLevDetDdr::~SigLevDetDdr(void)
+{
+} /* SigLevDetDdr::~SigLevDetDdr */
+
+
+bool SigLevDetDdr::initialize(Config &cfg, const string& name, int sample_rate)
+{
+  Ddr *ddr = Ddr::find(name);
+  if (ddr == 0)
   {
-    det_name = "NOISE";
+    cout << "*** ERROR: Could not find a DDR named \"" << name << "\". "
+         << "Cannot use DDR signal level detector.\n";
+    return false;
   }
+  ddr->preDemod.connect(mem_fun(*this, &SigLevDetDdr::processSamples));
 
-  SigLevDet *det = createNamedObject(det_name);
-  if (det == 0)
+  this->sample_rate = sample_rate;
+
+  cfg.getValue(name, "SIGLEV_OFFSET", offset);
+  cfg.getValue(name, "SIGLEV_SLOPE", slope);
+
+  block_size = BLOCK_LENGTH * sample_rate / 1000;
+
+  reset();
+
+  return SigLevDet::initialize(cfg, name, sample_rate);
+  
+} /* SigLevDetDdr::initialize */
+
+
+void SigLevDetDdr::reset(void)
+{
+  block_idx = 0;
+  last_siglev = 0;
+  update_counter = 0;
+  siglev_values.clear();
+  pwr_sum = 0.0;
+} /* SigLevDetDdr::reset */
+
+
+void SigLevDetDdr::setContinuousUpdateInterval(int interval_ms)
+{
+  update_interval = interval_ms * sample_rate / 1000;
+  update_counter = 0;  
+} /* SigLevDetDdr::setContinuousUpdateInterval */
+
+
+void SigLevDetDdr::setIntegrationTime(int time_ms)
+{
+    // Calculate the integration time expressed as the
+    // number of processing blocks.
+  integration_time = time_ms * 16000 / 1000 / block_size;
+  if (integration_time <= 0)
   {
-    cerr << "*** ERROR: Unknown SIGLEV_DET \"" << det_name
-         << "\" specified for receiver " << name << ". Legal values are: "
-         << validFactories() << endl;
+    integration_time = 1;
   }
-  
-  return det;
-} /* SigLevDetFactoryBase::createNamedSigLevDet */
+} /* SigLevDetDdr::setIntegrationTime */
 
 
-SigLevDet::SigLevDet(void)
-  : last_rx_id(Rx::ID_UNKNOWN)
+float SigLevDetDdr::siglevIntegrated(void) const
 {
-  
-} /* SigLevDet::SigLevDet */
-
-
-#if 0
-SigLevDet::~SigLevDet(void)
-{
-  
-} /* SigLevDet::~SigLevDet */
-#endif
-
-
-bool SigLevDet::initialize(Async::Config &cfg, const std::string& name,
-                           int sample_rate)
-{
-  if (cfg.getValue(name, "RX_ID", last_rx_id))
+  if (siglev_values.size() > 0)
   {
-    force_rx_id = true;
+    int sum = 0;
+    deque<int>::const_iterator it;
+    for (it=siglev_values.begin(); it!=siglev_values.end(); ++it)
+    {
+      sum += *it;
+    }
+    return sum / siglev_values.size();
   }
-  return true;
-}
+  return 0;
+} /* SigLevDetDdr::siglevIntegrated */
 
 
 
@@ -196,14 +204,6 @@ bool SigLevDet::initialize(Async::Config &cfg, const std::string& name,
  *
  ****************************************************************************/
 
-void SigLevDet::updateRxId(char rx_id)
-{
-  if (!force_rx_id)
-  {
-    last_rx_id = rx_id;
-  }
-} /* SigLevDet::updateRxId */
-
 
 
 /****************************************************************************
@@ -211,6 +211,40 @@ void SigLevDet::updateRxId(char rx_id)
  * Private member functions
  *
  ****************************************************************************/
+
+void SigLevDetDdr::processSamples(const vector<RtlTcp::Sample> &samples)
+{
+  for (vector<RtlTcp::Sample>::const_iterator it = samples.begin();
+       it != samples.end();
+       ++it)
+  {
+    double mag = abs(*it);
+    pwr_sum += mag * mag;
+    if (++block_idx == block_size)
+    {
+      last_siglev = offset + slope * 10.0 * log10(pwr_sum / block_size);
+      siglev_values.push_back(last_siglev);
+      if (siglev_values.size() > integration_time)
+      {
+	siglev_values.erase(siglev_values.begin(),
+		siglev_values.begin()+siglev_values.size()-integration_time);
+      }
+      
+      if (update_interval > 0)
+      {
+	update_counter += block_size;
+	if (update_counter >= update_interval)
+	{
+	  signalLevelUpdated(lastSiglev());
+	  update_counter = 0;
+	}
+      }
+
+      block_idx = 0;
+      pwr_sum = 0.0;
+    }
+  }
+} /* SigLevDetDdr::processSamples */
 
 
 
