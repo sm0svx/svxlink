@@ -90,8 +90,14 @@ class RxAdapter : public Rx, public AudioSink
   public:
     RxAdapter(const string &name, char rx_id=Rx::ID_UNKNOWN)
       : Rx(cfg, name), siglev_timer(1000, Timer::TYPE_PERIODIC),
-        rx_id(rx_id), forced_rx_id(rx_id != Rx::ID_UNKNOWN)
+        rx_id(rx_id), forced_rx_id(rx_id != Rx::ID_UNKNOWN), siglev(0.0)
     {
+      struct timespec ts;
+      if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
+      {
+        perror("clock_gettime(CLOCK_MONOTONIC, ...)");
+      }
+      ts.tv_sec -= 2;
       mute_valve.setOpen(false);
       mute_valve.setBlockWhenClosed(false);
       AudioSink::setHandler(&mute_valve);
@@ -162,7 +168,7 @@ class RxAdapter : public Rx, public AudioSink
      * @brief 	Read the current signal strength
      * @return	Returns the signal strength
      */
-    virtual float signalStrength(void) const { return 1; }
+    virtual float signalStrength(void) const { return siglev; }
     
     /**
      * @brief 	Find out RX ID of last receiver with squelch activity
@@ -186,19 +192,39 @@ class RxAdapter : public Rx, public AudioSink
       }
       siglev_timer.setEnable(squelchIsOpen());
     }
+
+    void setSignalLevel(char rx_id, float new_siglev)
+    {
+      clock_gettime(CLOCK_MONOTONIC, &last_siglev_time);
+      setRxId(rx_id);
+      siglev = new_siglev;
+      signalLevelUpdated(siglev);
+    }
     
     sigc::signal<void, float> ctcssDetectorFqChanged;
    
   private:
-    AudioValve  mute_valve;
-    Config    	cfg;
-    Timer       siglev_timer;
-    char        rx_id;
-    bool        forced_rx_id;
+    AudioValve      mute_valve;
+    Config    	    cfg;
+    Timer           siglev_timer;
+    char            rx_id;
+    bool            forced_rx_id;
+    float           siglev;
+    struct timespec last_siglev_time;
 
     void reportSiglev(Timer *t)
     {
-      signalLevelUpdated(1);
+      struct timespec ts;
+      long diff = 2000;
+      if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0)
+      {
+        diff =  1000 * (ts.tv_sec - last_siglev_time.tv_sec) +
+                (ts.tv_nsec - last_siglev_time.tv_nsec) / 1000000;
+      }
+      if (diff > 1500)
+      {
+        signalLevelUpdated(siglev);
+      }
     }
     
 }; /* class RxAdapter */
@@ -307,8 +333,8 @@ class TxAdapter : public Tx, public AudioSource
      */
     virtual void setTransmittedSignalStrength(char rx_id, float siglev)
     {
-      cout << "### TxAdapter::setTransmittedSignalStrength: rx_id=" << rx_id
-           << " siglev=" << siglev << endl;
+      //cout << "### TxAdapter::setTransmittedSignalStrength: rx_id=" << rx_id
+      //     << " siglev=" << siglev << endl;
       transmittedSignalStrength(rx_id, siglev);
     }
 
@@ -550,8 +576,7 @@ bool NetTrxAdapter::initialize(void)
 void NetTrxAdapter::onTransmittedSignalStrength(RxAdapter *rx, char rx_id,
                                                 float siglev)
 {
-  rx->setRxId(rx_id);
-  rx->signalLevelUpdated(siglev);
+  rx->setSignalLevel(rx_id, siglev);
 } /* NetTrxAdapter::onTransmittedSignalStrength */
 
 

@@ -886,6 +886,8 @@ bool LocalTx::preTransmitterStateChange(bool do_transmit)
 
 void LocalTx::sendFskSiglev(char rxid, uint8_t siglev)
 {
+  //cout << "### LocalTx::sendFskSiglev: rxid=" << rxid
+  //     << " siglev=" << (int)siglev << endl;
   if ((rxid < '!') || (rxid > '~'))
   {
     rxid = Rx::ID_UNKNOWN;

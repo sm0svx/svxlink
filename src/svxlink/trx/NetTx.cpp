@@ -250,8 +250,8 @@ void NetTx::sendDtmf(const std::string& digits, unsigned duration)
 
 void NetTx::setTransmittedSignalStrength(char rx_id, float siglev)
 {
-  cout << "### NetTx::setTransmittedSignalStrength: rx_id=" << rx_id
-       << " siglev=" << siglev << endl;
+  //cout << "### NetTx::setTransmittedSignalStrength: rx_id=" << rx_id
+  //     << " siglev=" << siglev << endl;
   MsgTransmittedSignalStrength *msg =
     new MsgTransmittedSignalStrength(siglev, rx_id);
   sendMsg(msg);
