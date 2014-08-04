@@ -653,6 +653,23 @@ class MsgFlush : public Msg
 }; /* MsgFlush */
 
 
+class MsgTransmittedSignalStrength : public Msg
+{
+  public:
+    static const unsigned TYPE = 304;
+    MsgTransmittedSignalStrength(float signal_strength, char sql_rx_id)
+      : Msg(TYPE, sizeof(MsgTransmittedSignalStrength)),
+        m_signal_strength(signal_strength), m_sql_rx_id(sql_rx_id) {}
+    float signalStrength(void) const { return m_signal_strength; }
+    char sqlRxId(void) const { return m_sql_rx_id; }
+  
+  private:
+    float m_signal_strength;
+    char  m_sql_rx_id;
+    
+}; /* MsgTransmittedSignalStrength */
+
+
 
 
 class MsgTxTimeout : public Msg

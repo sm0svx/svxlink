@@ -262,6 +262,8 @@ bool RfUplink::initialize(void)
   uplink_rx->squelchOpen.connect(mem_fun(*this, &RfUplink::uplinkRxSquelchOpen));
   uplink_rx->dtmfDigitDetected.connect(
       mem_fun(*this, &RfUplink::uplinkRxDtmfRcvd));
+  uplink_rx->signalLevelUpdated.connect(
+      mem_fun(*this, &RfUplink::uplinkRxSignalLevelUpdated));
   uplink_rx->reset();
   uplink_rx->setMuteState(Rx::MUTE_NONE);
   if (mute_rx_on_tx)
@@ -328,6 +330,13 @@ void RfUplink::uplinkRxDtmfRcvd(char digit, int duration)
 } /* RfUplink::uplinkRxDtmfRcvd */
 
 
+void RfUplink::uplinkRxSignalLevelUpdated(float siglev)
+{
+  cout << "### RfUplink::uplinkRxSignalLevelUpdated: siglev=" << siglev << endl;
+  tx->setTransmittedSignalStrength('?', siglev);
+} /* RfUplink::uplinkRxSignalLevelUpdated */
+
+
 void RfUplink::rxSquelchOpen(bool is_open)
 {
   if (is_open)
@@ -344,7 +353,7 @@ void RfUplink::rxSquelchOpen(bool is_open)
 
 void RfUplink::rxSignalLevelUpdated(float siglev)
 {
-  //cout << "### RfUplink::rxSignalLevelUpdated: siglev=" << siglev << endl;
+  cout << "### RfUplink::rxSignalLevelUpdated: siglev=" << siglev << endl;
   if (rx->squelchIsOpen())
   {
     uplink_tx->setTransmittedSignalStrength(rx->sqlRxId(), siglev);

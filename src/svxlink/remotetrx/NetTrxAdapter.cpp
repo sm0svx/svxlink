@@ -90,7 +90,7 @@ class RxAdapter : public Rx, public AudioSink
   public:
     RxAdapter(const string &name, char rx_id=Rx::ID_UNKNOWN)
       : Rx(cfg, name), siglev_timer(1000, Timer::TYPE_PERIODIC),
-        rx_id(rx_id)
+        rx_id(rx_id), forced_rx_id(rx_id != Rx::ID_UNKNOWN)
     {
       mute_valve.setOpen(false);
       mute_valve.setBlockWhenClosed(false);
@@ -111,6 +111,21 @@ class RxAdapter : public Rx, public AudioSink
       return Rx::initialize();
     }
     
+    /**
+     * @brief   Set the RX identity
+     * @param   rx_id A char identifying the receiver
+     *
+     * Use this function to set the RX identity dynamically. If an RX identity
+     * was given during object construction, it cannot be changed.
+     */
+    void setRxId(char rx_id)
+    {
+      if (!forced_rx_id)
+      {
+        this->rx_id = rx_id;
+      }
+    }
+
     /**
      * @brief 	Set the mute state for this receiver
      * @param 	mute_state The mute state to set for this receiver
@@ -179,6 +194,7 @@ class RxAdapter : public Rx, public AudioSink
     Config    	cfg;
     Timer       siglev_timer;
     char        rx_id;
+    bool        forced_rx_id;
 
     void reportSiglev(Timer *t)
     {
@@ -278,6 +294,24 @@ class TxAdapter : public Tx, public AudioSource
       }
     }
 
+    /**
+     * @brief   Set the signal level value that should be transmitted
+     * @param   siglev The signal level to transmit
+     * @param   rx_id  The id of the receiver that received the signal
+     *
+     * This function does not set the output power of the transmitter but
+     * instead sets a signal level value that is transmitted with the
+     * transmission if the specific Tx object supports it. This can be used
+     * on a link transmitter to transport signal level measurements to the
+     * link receiver.
+     */
+    virtual void setTransmittedSignalStrength(char rx_id, float siglev)
+    {
+      cout << "### TxAdapter::setTransmittedSignalStrength: rx_id=" << rx_id
+           << " siglev=" << siglev << endl;
+      transmittedSignalStrength(rx_id, siglev);
+    }
+
     int writeSamples(const float *samples, int count)
     {
       //cout << "TxAdapter::writeSamples\n";
@@ -312,9 +346,10 @@ class TxAdapter : public Tx, public AudioSource
       }
     }
     
-    signal<void, bool>      sigTransmit;
-    signal<void, char, int> sendDtmfDigit;
-    signal<void, float>     sendTone;
+    signal<void, bool>        sigTransmit;
+    signal<void, char, int>   sendDtmfDigit;
+    signal<void, float>       sendTone;
+    signal<void, char, float> transmittedSignalStrength;
     
   private:
     Tx::TxCtrlMode  tx_ctrl_mode;
@@ -448,6 +483,8 @@ bool NetTrxAdapter::initialize(void)
   txa1->sigTransmit.connect(mem_fun(*rxa1, &RxAdapter::setSquelchState));
   txa1->sendDtmfDigit.connect(rxa1->dtmfDigitDetected.make_slot());
   txa1->sendTone.connect(rxa1->toneDetected.make_slot());
+  txa1->transmittedSignalStrength.connect(sigc::bind<0>(
+        mem_fun(*this, &NetTrxAdapter::onTransmittedSignalStrength), rxa1));
   rxa1->ctcssDetectorFqChanged.connect(mem_fun(*txa1, &TxAdapter::setCtcssFq));
 
     
@@ -474,6 +511,8 @@ bool NetTrxAdapter::initialize(void)
   txa2->sigTransmit.connect(mem_fun(*rxa2, &RxAdapter::setSquelchState));
   txa2->sendDtmfDigit.connect(rxa2->dtmfDigitDetected.make_slot());
   txa2->sendTone.connect(rxa2->toneDetected.make_slot());
+  txa2->transmittedSignalStrength.connect(sigc::bind<0>(
+        mem_fun(*this, &NetTrxAdapter::onTransmittedSignalStrength), rxa2));
   rxa2->ctcssDetectorFqChanged.connect(mem_fun(*txa2, &TxAdapter::setCtcssFq));
   
     // Create a NetUplink connected to the TX and RX adapters
@@ -507,6 +546,13 @@ bool NetTrxAdapter::initialize(void)
  * Private member functions
  *
  ****************************************************************************/
+
+void NetTrxAdapter::onTransmittedSignalStrength(RxAdapter *rx, char rx_id,
+                                                float siglev)
+{
+  rx->setRxId(rx_id);
+  rx->signalLevelUpdated(siglev);
+} /* NetTrxAdapter::onTransmittedSignalStrength */
 
 
 

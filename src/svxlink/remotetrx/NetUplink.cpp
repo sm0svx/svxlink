@@ -590,6 +590,15 @@ void NetUplink::handleMsg(Msg *msg)
       }
       break;
     } 
+
+    case MsgTransmittedSignalStrength::TYPE:
+    {
+      MsgTransmittedSignalStrength *siglev_msg =
+        reinterpret_cast<MsgTransmittedSignalStrength *>(msg);
+      tx->setTransmittedSignalStrength(siglev_msg->sqlRxId(),
+                                       siglev_msg->signalStrength());
+      break;
+    }
     
     default:
       cerr << "*** ERROR: Unknown TCP message received in NetUplink "

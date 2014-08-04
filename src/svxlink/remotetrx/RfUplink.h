@@ -155,6 +155,7 @@ class RfUplink : public Uplink
     
     void uplinkRxSquelchOpen(bool is_open);
     void uplinkRxDtmfRcvd(char digit, int duration);
+    void uplinkRxSignalLevelUpdated(float siglev);
     void rxSquelchOpen(bool is_open);
     void rxSignalLevelUpdated(float siglev);
     void rxDtmfDigitDetected(char digit, int duration);
