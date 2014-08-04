@@ -199,7 +199,7 @@ AfskModulator::AfskModulator(unsigned f0, unsigned f1, unsigned baudrate,
   }
 
   sin_lookup = new float[N];
-  float sin_ampl = powf(10.0f, level/10.0f);
+  float sin_ampl = powf(10.0f, level/20.0f);
   for (unsigned n=0; n<N; ++n)
   {
     sin_lookup[n] =  sin_ampl* sinf(2.0*M_PI*n/N);
@@ -237,6 +237,7 @@ AfskModulator::AfskModulator(unsigned f0, unsigned f1, unsigned baudrate,
   prev_src = filter;
   */
   
+#if 0
     // Apply a bandpass filter to filter out the AFSK signal.
     // The constructed filter is a FIR filter with linear phase.
     // The Parks-Macclellan algorithm is used to design the filter.
@@ -274,7 +275,6 @@ AfskModulator::AfskModulator(unsigned f0, unsigned f1, unsigned baudrate,
   AudioFilter *passband_filter2 = new AudioFilter(ss.str(), sample_rate);
   prev_src->registerSink(passband_filter2, true);
   prev_src = passband_filter2;
-#if 0
   AudioFilter *passband_filter3 = new AudioFilter(ss.str(), sample_rate);
   prev_src->registerSink(passband_filter3, true);
   prev_src = passband_filter3;
