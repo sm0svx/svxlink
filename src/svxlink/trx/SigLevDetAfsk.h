@@ -130,11 +130,16 @@ superimposed on the audio signal.
 class SigLevDetAfsk : public SigLevDet
 {
   public:
+    struct Factory : public SigLevDetFactory<SigLevDetAfsk>
+    {
+      Factory(void) : SigLevDetFactory<SigLevDetAfsk>("AFSK") {}
+    };
+
     /**
      * @brief 	Constuctor
      * @param	sample_rate The rate with which samples enter the detector
      */
-    explicit SigLevDetAfsk(Rx *rx);
+    SigLevDetAfsk(void);
   
     /**
      * @brief 	Destructor
@@ -179,6 +184,7 @@ class SigLevDetAfsk : public SigLevDet
     
     virtual int writeSamples(const float *samples, int len);
     virtual void flushSamples(void);
+    virtual void frameReceived(std::vector<uint8_t> frame);
 
   protected:
     
@@ -188,7 +194,6 @@ class SigLevDetAfsk : public SigLevDet
     
     SigLevDetAfsk(const SigLevDetAfsk&);
     SigLevDetAfsk& operator=(const SigLevDetAfsk&);
-    void frameReceived(std::vector<uint8_t> frame);
     void timeout(Async::Timer *t);
     
 };  /* class SigLevDetAfsk */

@@ -114,10 +114,9 @@ using namespace Async;
  *
  ****************************************************************************/
 
-SigLevDetAfsk::SigLevDetAfsk(Rx *rx)
+SigLevDetAfsk::SigLevDetAfsk(void)
   : last_siglev(0), timeout_timer(3500)
 {
-  rx->dataReceived.connect(mem_fun(*this, &SigLevDetAfsk::frameReceived));
   timeout_timer.setEnable(false);
   timeout_timer.expired.connect(mem_fun(*this, &SigLevDetAfsk::timeout));
 } /* SigLevDetAfsk::SigLevDetAfsk */
@@ -188,21 +187,6 @@ void SigLevDetAfsk::flushSamples(void)
 } /* SigLevDetAfsk::flushSamples */
 
 
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
-
 void SigLevDetAfsk::frameReceived(vector<uint8_t> frame)
 {
   uint8_t cmd = frame[0];
@@ -250,6 +234,21 @@ void SigLevDetAfsk::frameReceived(vector<uint8_t> frame)
   }
 } /* SigLevDetAfsk::frameReceived */
 
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
 
 void SigLevDetAfsk::timeout(Timer *t)
 {

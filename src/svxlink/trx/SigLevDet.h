@@ -34,8 +34,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <stdint.h>
 #include <sigc++/sigc++.h>
 #include <string>
+#include <vector>
 
 
 /****************************************************************************
@@ -185,6 +187,8 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
      */
     virtual void reset(void) = 0;
     
+    virtual void frameReceived(std::vector<uint8_t> frame) {}
+
     /**
      * @brief	A signal that is emitted when the signal strength is updated
      * @param	siglev The updated siglev measurement

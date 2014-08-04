@@ -293,6 +293,7 @@ bool LocalRxBase::initialize(void)
   siglevdet->signalLevelUpdated.connect(
       mem_fun(*this, &LocalRxBase::onSignalLevelUpdated));
   siglevdet_splitter->addSink(siglevdet, true);
+  dataReceived.connect(mem_fun(siglevdet, &SigLevDet::frameReceived));
   
     // Create a mute valve
   mute_valve = new AudioValve;
