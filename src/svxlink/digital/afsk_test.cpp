@@ -3,6 +3,8 @@
 #include <string>
 
 #include <cstdlib>
+#include <cstring>
+#include <unistd.h>
 
 #include <AsyncCppApplication.h>
 #include <AsyncAudioIO.h>
@@ -207,26 +209,117 @@ struct AX25Frame
 class AX25Decoder : public sigc::trackable
 {
   public:
-    AX25Decoder(void) : frameno(0) {}
+    AX25Decoder(void) : frameno(0), pkt_cnt(0) {}
 
     void frameReceived(vector<uint8_t> frame)
     {
       AX25Frame ax25_frame;
       ax25_frame.decode(frame);
       //cout << "\a";
-      cout << setw(3) << ++frameno << ": ";
-      ax25_frame.print();
+      //cout << setw(3) << ++frameno << ": ";
+      //ax25_frame.print();
+      ++pkt_cnt;
+      cout << "\r" << dec << pkt_cnt << " " << flush;
     }
 
   private:
     unsigned frameno;
+    unsigned pkt_cnt;
+};
+
+
+class StdInSource : public Async::AudioSource, public sigc::trackable
+{
+  public:
+    StdInSource(void)
+      : bufpos(0)
+    {
+      watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
+      watch->activity.connect(hide(mem_fun(*this, &StdInSource::readAudio)));
+    }
+
+    void readAudio(void)
+    {
+      size_t bufspace = sizeof(buf) - bufpos;
+      if (bufspace > 0)
+      {
+        ssize_t cnt = read(STDIN_FILENO, buf+bufpos, bufspace);
+        if (cnt == -1)
+        {
+          perror("read");
+          exit(1);
+        }
+        else if (cnt == 0)
+        {
+          sinkFlushSamples();
+          cout << "\n### End of file\n";
+          watch->setEnabled(false);
+        }
+
+        bufpos += cnt;
+      }
+
+      if (bufpos == sizeof(buf))
+      {
+        int16_t *isamples = reinterpret_cast<int16_t *>(buf);
+        float samples[sizeof(buf)/2];
+        for (size_t i=0; i<sizeof(buf)/2; ++i)
+        {
+          samples[i] = isamples[i] / 32768.0f;
+        }
+        int written = sinkWriteSamples(samples, sizeof(buf) / 2);
+        if (written == 0)
+        {
+          watch->setEnabled(false);
+        }
+        else if (written != sizeof(buf) / 2)
+        {
+          /*
+          cout << "### Only " << written << " samples of "
+               << (sizeof(buf) / 2) << " were written\n";
+          */
+
+          memmove(buf, buf+written*2, sizeof(buf)-written*2);
+          bufpos -= written*2;
+        }
+        else
+        {
+          bufpos = 0;
+        }
+      }
+    }
+
+    virtual void resumeOutput(void)
+    {
+      //cout << "### resumeOutput\n";
+      watch->setEnabled(true);
+    }
+
+    virtual void allSamplesFlushed(void)
+    {
+      //cout << "### allSamplesFlushed\n";
+      Application::app().quit();
+    }
+
+  private:
+    uint8_t buf[512];
+    unsigned bufpos;
+    FdWatch *watch;
+
+}; /* class StdInSource */
+
+
+class StdInSourceDev : public StdInSource
+{
+  public:
+    bool open(int mode) { return true; }
 };
 
 
 int main(int argc, const char **argv)
 {
   // 1200Bd AMPR
-#if 0
+#if 1
   unsigned baudrate = 1200;
   unsigned f0 = 1200;
   unsigned f1 = 2200;
@@ -247,7 +340,7 @@ int main(int argc, const char **argv)
 #endif
 
   // SvxLink out of band AFSK
-#if 1
+#if 0
   unsigned baudrate = 300;
   unsigned f0 = 5415;
   unsigned f1 = 5585;
@@ -297,7 +390,8 @@ int main(int argc, const char **argv)
   AudioIO::setBlockCount(4);
 
   //AudioIO audio_in("udp:127.0.0.1:10000", 0);
-  AudioIO audio_in("alsa:plughw:0", 0);
+  //AudioIO audio_in("alsa:plughw:0", 0);
+  StdInSourceDev audio_in;
   AudioSource *prev_src = &audio_in;
 
   AudioFifo fifo(2048);
@@ -319,6 +413,7 @@ int main(int argc, const char **argv)
   prev_src->registerSink(&splitter);
   prev_src = 0;
 
+#if 0
   HdlcFramer framer;
 
   AfskModulator fsk_mod(f0, f1, baudrate, -6, sample_rate);
@@ -340,6 +435,7 @@ int main(int argc, const char **argv)
   //AudioIO audio_out("alsa:plughw:0", 0);
   //prev_src->registerSink(&audio_out);
   prev_src = 0;
+#endif
 
   Synchronizer sync(baudrate, sample_rate);
   splitter.addSink(&sync);
@@ -350,11 +446,13 @@ int main(int argc, const char **argv)
   AX25Decoder decoder;
   deframer.frameReceived.connect(mem_fun(decoder, &AX25Decoder::frameReceived));
 
+  /*
   if (!audio_out.open(AudioIO::MODE_WR))
   {
     cerr << "*** ERROR: Could not open audio device for writing\n";
     exit(1);
   }
+  */
   if (!audio_in.open(AudioIO::MODE_RD))
   {
     cerr << "*** ERROR: Could not open audio device for reading\n";
@@ -371,6 +469,7 @@ int main(int argc, const char **argv)
   fsk_mod.sendBits(bits);
   */
 
+#if 0
   vector<uint8_t> frame;
   frame.push_back(0x96);
   frame.push_back(0x70);
@@ -396,6 +495,7 @@ int main(int argc, const char **argv)
   {
     framer.sendBytes(frame);
   }
+#endif
 
   app.exec();
 
