@@ -168,7 +168,7 @@ namespace {
   {
     public:
       DcBlocker(size_t order)
-        : order(order), delay(order-1, 0), prev(0.0f)
+        : order(order), delay(order, 0.0f), prev(0.0f)
       {
       }
 
@@ -190,12 +190,11 @@ namespace {
         for (int i=0; i<count; ++i)
         {
           float in = src[i];
-          float out = in - delay.front() + prev;
-          out /= order;
+          float out = (in - delay.back()) / order + prev;
           dest[i] = delay[order/2]-out;
           prev = out;
-          delay.push_back(in);
-          delay.pop_front();
+          delay.pop_back();
+          delay.push_front(in);
         }
       }
 
