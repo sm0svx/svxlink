@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <deque>
 
 
 /****************************************************************************
@@ -132,7 +133,79 @@ namespace {
       float *buf;
       unsigned head;
   };
-};
+
+#if 0
+  class RollingAverage
+  {
+    public:
+      RollingAverage(unsigned order)
+        : delay(order-1, 0), prev(0.0f)
+      {
+      }
+
+      void process(float *dest, const float *src, size_t count)
+      {
+        for (size_t i=0; i<count; ++i)
+        {
+          float in = src[i];
+          float out = in - delay.front() + prev;
+          out /= delay.size();
+          dest[i] = out;
+          prev = out;
+          delay.push_back(in);
+          delay.pop_front();
+        }
+      }
+
+    private:
+      deque<float> delay;
+      float prev;
+  };
+#endif
+
+
+  class DcBlocker : public AudioProcessor
+  {
+    public:
+      DcBlocker(size_t order)
+        : order(order), delay(order-1, 0), prev(0.0f)
+      {
+      }
+
+      ~DcBlocker(void) {}
+
+      /**
+       * @brief Process incoming samples and put them into the output buffer
+       * @param dest  Destination buffer
+       * @param src   Source buffer
+       * @param count Number of samples in the source buffer
+       *
+       * This function should be reimplemented by the inheriting class to
+       * do the actual processing of the incoming samples. All samples must
+       * be processed, otherwise they are lost and the output buffer will
+       * contain garbage.
+       */
+      virtual void processSamples(float *dest, const float *src, int count)
+      {
+        for (int i=0; i<count; ++i)
+        {
+          float in = src[i];
+          float out = in - delay.front() + prev;
+          out /= order;
+          dest[i] = delay[order/2]-out;
+          prev = out;
+          delay.push_back(in);
+          delay.pop_front();
+        }
+      }
+
+    private:
+      const size_t order;
+      deque<float> delay;
+      float prev;
+
+  }; /* class DcBlocker */
+}; /* Anonymous namespace */
 
 
 /****************************************************************************
@@ -178,6 +251,12 @@ AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
   prev_src = clipper;
   */
 
+  DcBlocker *dc_blocker = new DcBlocker(sample_rate / 10);
+  AudioSink::setHandler(dc_blocker);
+  prev_src = dc_blocker;
+
+
+
     // Apply a bandpass filter to filter out the AFSK signal.
     // The constructed filter is a FIR filter with linear phase.
     // The Parks-Macclellan algorithm is used to design the filter.
@@ -218,8 +297,8 @@ AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
   }
   cout << "AFSK RX Passband filter: " << ss.str() << endl;
   AudioFilter *passband_filter = new AudioFilter(ss.str(), sample_rate);
-  AudioSink::setHandler(passband_filter);
-  //prev_src->registerSink(passband_filter, true);
+  //AudioSink::setHandler(passband_filter);
+  prev_src->registerSink(passband_filter, true);
   prev_src = passband_filter;
   AudioFilter *passband_filter2 = new AudioFilter(ss.str(), sample_rate);
   prev_src->registerSink(passband_filter2, true);
