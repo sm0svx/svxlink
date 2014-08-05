@@ -1097,6 +1097,15 @@ you define ZVEI1 for SvxLink and a (e.g.) ZVEI3 sequence is received.
 At the moment only SEL5_DEC_TYPE=INTERNAL is valid. Maybe we have support for
 some external tone detectors later. To disable SEL5 tone decoding, specify
 NONE or just comment the configuration variable out.
+.TP
+.B RAW_AUDIO_UDP_DEST
+Setting this configuration variable makes it possible to stream the raw audio
+from the sound device to an UDP socket. The sample format is the one used
+internally in SvxLink, that is each sample is represented by a 32 bit float.
+The sample rate is the same as the one chosen for the audio device.
+The destination is specified as ip-address:port.
+
+Example: RAW_AUDIO_UDP_DEST=127.0.0.1:10000
 .
 .SS Ddr Receiver Section
 .
