@@ -191,7 +191,8 @@ namespace {
         {
           float in = src[i];
           float out = (in - delay.back()) / order + prev;
-          dest[i] = delay[order/2]-out;
+          //dest[i] = delay[order/2]-out;
+          dest[i] = in-out;
           prev = out;
           delay.pop_back();
           delay.push_front(in);
