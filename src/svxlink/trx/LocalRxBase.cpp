@@ -59,6 +59,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioCompressor.h>
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioStreamStateDetector.h>
+#include <AsyncUdpSocket.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -141,6 +143,55 @@ class PeakMeter : public AudioPassthrough
   private:
     string name;
     
+};
+
+
+class AudioUdpSink : public UdpSocket, public AudioSink
+{
+  public:
+    AudioUdpSink(const IpAddress &remote_ip, uint16_t remote_port,
+                 uint16_t local_port=0, const IpAddress &bind_ip=IpAddress())
+      : UdpSocket(local_port, bind_ip), remote_ip(remote_ip),
+        remote_port(remote_port)
+    {
+    }
+
+    /**
+     * @brief   Write samples into this audio sink
+     * @param   samples The buffer containing the samples
+     * @param   count The number of samples in the buffer
+     * @return  Returns the number of samples that has been taken care of
+     *
+     * This function is used to write audio into this audio sink. If it
+     * returns 0, no more samples should be written until the resumeOutput
+     * function in the source have been called.
+     * This function is normally only called from a connected source object.
+     */
+    virtual int writeSamples(const float *samples, int count)
+    {
+      const char *buf = reinterpret_cast<const char *>(samples);
+      size_t len = count * sizeof(*samples);
+      UdpSocket::write(remote_ip, remote_port, buf, len);
+      return count;
+    }
+
+    /**
+     * @brief   Tell the sink to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     * This function is normally only called from a connected source object.
+     */
+    virtual void flushSamples(void)
+    {
+      UdpSocket::write(remote_ip, remote_port, NULL, 0);
+    }
+
+  private:
+    Async::IpAddress  remote_ip;
+    uint16_t          remote_port;
+
 };
 
 
@@ -242,6 +293,25 @@ bool LocalRxBase::initialize(void)
 //  input_fifo->setOverwrite(true);
   prev_src->registerSink(input_fifo);
   prev_src = input_fifo;
+
+  SvxLink::SepPair<string, uint16_t> raw_audio_fwd_dest;
+  if (cfg.getValue(name(), "RAW_AUDIO_UDP_DEST", raw_audio_fwd_dest))
+  {
+    AudioSplitter *raw_audio_splitter = new AudioSplitter;
+    prev_src->registerSink(raw_audio_splitter, true);
+    AudioPassthrough *pass = new AudioPassthrough;
+    raw_audio_splitter->addSink(pass, true);
+    prev_src = pass;
+    AudioUdpSink *udp = new AudioUdpSink(IpAddress(raw_audio_fwd_dest.first),
+                                         raw_audio_fwd_dest.second);
+    if (!udp->initOk())
+    {
+      cerr << "*** ERROR: Could not open UDP socket for raw audio output\n";
+      return false;
+
+    }
+    raw_audio_splitter->addSink(udp, true);
+  }
   
     // If a preamp was configured, create it
   if (preamp_gain != 0)

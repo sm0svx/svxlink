@@ -7,6 +7,11 @@
   with local coverage for a SvxLink based repeater, as long as there is a
   network connection to the repeater.
 
+* New configuration variable for local receivers, RAW_AUDIO_UDP_DEST, which
+  makes it possible to stream the raw audio read by SvxLink from the audio
+  device to a UDP port. This feature was mainly added for debugging but may
+  be usable for other things as well.
+
 
 
  1.4.0 -- 02 aug 2014
