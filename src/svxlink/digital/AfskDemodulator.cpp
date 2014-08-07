@@ -230,6 +230,66 @@ namespace {
  *
  ****************************************************************************/
 
+namespace {
+const double pre_filter_taps[] =
+{
+-0.0497607774343533,
+-0.0414626205397930,
+0.0147754767686696,
+-0.0050460885570081,
+0.0126147216425678,
+-0.0264073840416123,
+0.0296003565900331,
+-0.0130149931857980,
+-0.0144000295612727,
+0.0295301867452591,
+-0.0152325941654806,
+-0.0201650467073737,
+0.0449705722700260,
+-0.0314722795301329,
+-0.0147694650389599,
+0.0541293567854939,
+-0.0469861720933350,
+-0.0064907618162468,
+0.0607226391419224,
+-0.0637607134140635,
+0.0074537437539216,
+0.0603289683874208,
+-0.0769560352643945,
+0.0239509524606725,
+0.0532261698461783,
+-0.0844641222378282,
+0.0403188191263031,
+0.0403188191263031,
+-0.0844641222378282,
+0.0532261698461783,
+0.0239509524606725,
+-0.0769560352643945,
+0.0603289683874208,
+0.0074537437539216,
+-0.0637607134140635,
+0.0607226391419224,
+-0.0064907618162468,
+-0.0469861720933350,
+0.0541293567854939,
+-0.0147694650389599,
+-0.0314722795301329,
+0.0449705722700260,
+-0.0201650467073737,
+-0.0152325941654806,
+0.0295301867452591,
+-0.0144000295612727,
+-0.0130149931857980,
+0.0296003565900331,
+-0.0264073840416123,
+0.0126147216425678,
+-0.0050460885570081,
+0.0147754767686696,
+-0.0414626205397930,
+-0.0497607774343533
+};
+const int numtaps = sizeof(pre_filter_taps) / sizeof(*pre_filter_taps);
+};
 
 
 /****************************************************************************
@@ -244,6 +304,11 @@ AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
 {
   AudioSource *prev_src = 0;
 
+  assert(f0 == 5415);
+  assert(f1 == 5585);
+  assert(baudrate == 300);
+  assert(sample_rate == 16000);
+
     // Clip the signal to eliminate level differences
   /*
   AudioClipper *clipper = new AudioClipper(0.05);
@@ -256,7 +321,7 @@ AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
   prev_src = dc_blocker;
 
 
-
+#if 0
     // Apply a bandpass filter to filter out the AFSK signal.
     // The constructed filter is a FIR filter with linear phase.
     // The Parks-Macclellan algorithm is used to design the filter.
@@ -280,6 +345,7 @@ AfskDemodulator::AfskDemodulator(unsigned f0, unsigned f1, unsigned baudrate,
   int ret = remez(pre_filter_taps, numtaps, numband, bands, des, weight, type,
                   griddensity);
   assert(ret == 0);
+#endif
   /*
   cout << "ret=" << ret << endl;
   for (int i=0; i<numtaps; ++i)
