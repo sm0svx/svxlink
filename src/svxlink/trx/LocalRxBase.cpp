@@ -561,6 +561,7 @@ bool LocalRxBase::initialize(void)
 
     // Create the highpass CTCSS filter that cuts off audio below 300Hz
   AudioFilter *ctcss_filt = new AudioFilter("HpBu20/300");
+  ctcss_filt->setOutputGain(voice_gain);
   prev_src->registerSink(ctcss_filt, true);
   prev_src = ctcss_filt;
   
