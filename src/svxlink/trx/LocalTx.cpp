@@ -475,6 +475,15 @@ bool LocalTx::initialize(void)
   prev_src->registerSink(ptt_ctrl, true);
   prev_src = ptt_ctrl;
 
+  float master_gain = 0.0f;
+  if (cfg.getValue(name, "MASTER_GAIN", master_gain))
+  {
+    AudioAmp *master_gain_stage = new AudioAmp;
+    master_gain_stage->setGain(master_gain);
+    prev_src->registerSink(master_gain_stage, true);
+    prev_src = master_gain_stage;
+  }
+
 #if (INTERNAL_SAMPLE_RATE != 16000)  
   if (audio_io->sampleRate() > 8000)
   {

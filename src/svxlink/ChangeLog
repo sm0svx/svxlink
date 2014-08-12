@@ -12,6 +12,17 @@
   device to a UDP port. This feature was mainly added for debugging but may
   be usable for other things as well.
 
+* New configuration variable MASTER_GAIN for local transmitters. This has the
+  functionality as the PREAMP variable have for local receivers. That is,
+  it can be used to fine tune or amplify the gain of the signal if it's not
+  possible to do with the normal hardware sound controls.
+
+* Added a calibration utility, devcal, which can be used to get all the
+  levels right for all transmitters and receivers in the system.
+
+* New squelch detector type, OPEN, which keeps the squelch open at all times.
+  Used at calibration for example.
+
 
 
  1.4.0 -- 02 aug 2014
