@@ -87,6 +87,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Tx.h"
 #include "Emphasis.h"
 #include "SquelchPty.h"
+#include "SquelchOpen.h"
+
 
 /****************************************************************************
  *
@@ -417,7 +419,11 @@ bool LocalRxBase::initialize(void)
     return false;
   }
 
-  if (sql_det_str == "VOX")
+  if (sql_det_str == "OPEN")
+  {
+    squelch_det = new SquelchOpen;
+  }
+  else if (sql_det_str == "VOX")
   {
     squelch_det = new SquelchVox;
   }
@@ -450,7 +456,7 @@ bool LocalRxBase::initialize(void)
   else
   {
     cerr << "*** ERROR: Unknown squelch type specified in config variable "
-      	 << name() << "/SQL_DET. Legal values are: VOX, CTCSS, SIGLEV, "
+      	 << name() << "/SQL_DET. Legal values are: OPEN, VOX, CTCSS, SIGLEV, "
 	 << "EVDEV, GPIO, PTY and SERIAL\n";
     // FIXME: Cleanup
     return false;

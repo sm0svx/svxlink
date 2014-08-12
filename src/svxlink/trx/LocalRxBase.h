@@ -245,7 +245,7 @@ class LocalRxBase : public Rx
     Async::AudioDelayLine     	*delay;
     bool      	      	      	mute_dtmf;
     int       	      	      	sql_tail_elim;
-    int       	      	      	preamp_gain;
+    float            	      	preamp_gain;
     Async::AudioValve 	      	*mute_valve;
     unsigned                    sql_hangtime;
     unsigned                    sql_extended_hangtime;

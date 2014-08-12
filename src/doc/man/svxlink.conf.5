@@ -1498,14 +1498,6 @@ maximum level. Then the level of the CTCSS tone should be reduced. The default
 in the configuration file is 9%. For the tone to be transmitted the CTCSS_FQ
 variable must also be setup and also the TX_CTCSS variable in the logic core
 configuration section.
-
-.I Note:
-The level of the tone affects the level of the rest of the audio in SvxLink.
-This is to avoid distorision when the two audio streams are mixed together. For
-example, if a tone level of 9% is setup the rest of the audio will be attenuated
-by 9%. This is true even if the CTCSS_FQ and TX_CTCSS configuration variables
-are not set so comment this configuration variable out if CTCSS on TX is not
-used.
 .TP
 .B PREEMPHASIS
 [EXPERIMENTAL] Enable this feature if you are modulating the FM modulator
@@ -1553,6 +1545,12 @@ disabled.
 The TONE_SIGLEV_LEVEL configuration variable is used to set the tone level.
 It is a value in the 1-100 range which indicate the output level in percent
 of the maximum possible level. The default is 10.
+.TP
+.B MASTER_GAIN
+This configuration variable can be used to fine tune or increase the audio
+gain for all transmitted sound if it's not possible to do using the normal
+sound card hardware gain controls. The gain should be given in dB and can
+be both positive and negative.
 .
 .SS Networked Transmitter Section
 .
