@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <cmath>
 #include <limits>
+#include <linux/hidraw.h>
 
 
 /****************************************************************************
@@ -82,6 +83,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Sel5Decoder.h"
 #include "Emphasis.h"
 #include "SquelchPty.h"
+#include "SquelchUri.h"
 
 /****************************************************************************
  *
@@ -425,11 +427,15 @@ bool LocalRx::initialize(void)
   {
     squelch_det = new SquelchPty;
   }
+  else if (sql_det_str == "URI")
+  {
+    squelch_det = new SquelchUri;
+  }
   else
   {
     cerr << "*** ERROR: Unknown squelch type specified in config variable "
       	 << name() << "/SQL_DET. Legal values are: VOX, CTCSS, SIGLEV, "
-	 << "EVDEV, GPIO, PTY and SERIAL\n";
+	 << "EVDEV, GPIO, PTY, URI and SERIAL\n";
     // FIXME: Cleanup
     return false;
   }
