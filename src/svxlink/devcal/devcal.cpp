@@ -198,7 +198,7 @@ class DevPrinter : public AudioSink
   public:
     DevPrinter(float mod_fq, float max_dev, float headroom_db)
       : g(mod_fq, INTERNAL_SAMPLE_RATE),
-        block_size(INTERNAL_SAMPLE_RATE / 50), samp_cnt(0), max_dev(max_dev),
+        block_size(INTERNAL_SAMPLE_RATE / 10), samp_cnt(0), max_dev(max_dev),
         headroom(pow(10.0, headroom_db/20.0)), adj_level(1.0f), dev_est(0.0)
     {
 
@@ -244,7 +244,7 @@ class DevPrinter : public AudioSink
     }
 
   private:
-    static const double ALPHA = 0.9;
+    static const double ALPHA = 0.5;
 
     Goertzel  g;
     int       block_size;

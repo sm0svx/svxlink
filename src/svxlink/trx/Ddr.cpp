@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <cmath>
 #include <iostream>
+//#include <iomanip>
 #include <string>
 #include <vector>
 #include <complex>
@@ -70,6 +71,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "Ddr.h"
 #include "WbRxRtlTcp.h"
+//#include "Goertzel.h"
 
 
 /****************************************************************************
@@ -592,11 +594,16 @@ namespace {
         memset(p_Z, 0, taps * sizeof(*p_Z));
       }
 
+      ~Decimator(void)
+      {
+        delete [] p_Z;
+      }
+
       void adjustGain(double gain_adjust)
       {
         for (vector<float>::iterator it=coeff.begin(); it!=coeff.end(); ++it)
         {
-          *it *= pow(10.0, gain_adjust / 10.0);
+          *it *= pow(10.0, gain_adjust / 20.0);
         }
       }
 
@@ -625,8 +632,7 @@ namespace {
           }
 
             // calculate FIR sum
-          T sum;
-          memset(&sum, 0, sizeof(T));
+          T sum(0);
           for (int tap = 0; tap < taps; tap++)
           {
             sum += coeff[tap] * p_Z[tap];
@@ -645,17 +651,51 @@ namespace {
   };
 
 
+#if 0
+  struct HammingWindow
+  {
+    public:
+      HammingWindow(size_t N)
+      {
+        w = new float[N];
+        for (size_t n=0; n<N; ++n)
+        {
+          w[n] = 0.54 + 0.46 * cos(2*M_PI*n/(N-1));
+          //w[n] *= 1.855;
+          w[n] *= 1.8519;
+        }
+      }
+
+      ~HammingWindow(void)
+      {
+        delete [] w;
+      }
+
+      inline float operator[](int i)
+      {
+        return w[i];
+      }
+
+    private:
+      float *w;
+  };
+#endif
+
+
   class FmDemod : public Async::AudioSource
   {
     public:
       FmDemod(double samp_rate, double max_dev)
         : iold(1.0f), qold(1.0f),
           audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt)
+          //, g(500, samp_rate/2), N(samp_rate / 20), Ncnt(0), /*w(N)*/
+          //, t(0.0), T(1.0 / samp_rate)
       {
           // Adjust the gain so that the maximum deviation corresponds
           // to a peak audio amplitude of 1.0.
-        double adj=20.0*log10(samp_rate/(2.0*M_PI*max_dev));
-        audio_dec.adjustGain(adj);
+        double adj = samp_rate / (2.0 * M_PI * max_dev);
+        double adj_db = 20.0 * log10(adj);
+        audio_dec.adjustGain(adj_db);
       }
 
       void iq_received(vector<WbRxRtlTcp::Sample> samples)
@@ -669,28 +709,68 @@ namespace {
         vector<float> audio;
         for (size_t idx=0; idx<samples.size(); ++idx)
         {
+#if 1
+          complex<float> samp = samples[idx];
+#else
+          double fm = 1000.0;
+          complex<double> samp = exp(
+              complex<float>(0, (2500/fm)*cos(2.0*M_PI*fm*t))
+              );
+          t += T;
+#endif
+
             // Normalize signal amplitude
-          samples[idx] = samples[idx] / abs(samples[idx]);
+          samp = samp / abs(samp);
 
 #if 1
             // Mixed demodulator (delay demodulator + phase adapter demodulator)
-          float i = samples[idx].real();
-          float q = samples[idx].imag();
-          float demod = (q*iold - i*qold)/(i*iold + q*qold);
+          float i = samp.real();
+          float q = samp.imag();
+          double demod = atan2(q*iold - i*qold, i*iold + q*qold);
+          //demod=demod*(32000/(2.0*M_PI*5000));
           iold = i;
           qold = q;
-          demod = atanf(demod);
           //demod = FastArcTan(demod);
 #else
             // Complex baseband delay demodulator
-          float demod = arg(samples[idx] * conj(prev_samp));
-          prev_samp = samples[idx];
+          float demod = arg(samp * conj(prev_samp));
+          prev_samp = samp;
 #endif
 
           audio.push_back(demod);
         }
+#if 0
+        for (size_t i=0; i<audio.size(); ++i)
+        {
+          //g.calc(w[Ncnt] * audio[i]);
+          g.calc(audio[i]);
+          if (++Ncnt >= N)
+          {
+            float dev = 5000*2*sqrt(g.magnitudeSquared())/N;
+            //dev *= 1.001603;
+            cout << dev << endl;
+            Ncnt = 0;
+            g.reset();
+          }
+        }
+#endif    
         vector<float> dec_audio;
         audio_dec.decimate(dec_audio, audio);
+#if 0
+        for (size_t i=0; i<dec_audio.size(); ++i)
+        {
+          //g.calc(w[Ncnt] * dec_audio[i]);
+          g.calc(dec_audio[i]);
+          if (++Ncnt >= N)
+          {
+            float dev = 5000*2*sqrt(g.magnitudeSquared())/N;
+            //dev *= 0.9811;
+            cout << dev << endl;
+            Ncnt = 0;
+            g.reset();
+          }
+        }
+#endif
         sinkWriteSamples(&dec_audio[0], dec_audio.size());
       }
 
@@ -721,6 +801,15 @@ namespace {
       float qold;
       //WbRxRtlTcp::Sample prev_samp;
       Decimator<float> audio_dec;
+#if 0
+      Goertzel g;
+      int N, Ncnt;
+      //HammingWindow w;
+#endif
+#if 0
+      double t;
+      const double T;
+#endif
 
         // Maximum error 0.0015 radians (0.085944 degrees)
         // Produced another result and did not affect overall CPU% much
