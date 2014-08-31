@@ -193,15 +193,80 @@ class SineGenerator : public Async::AudioSource
 };
 
 
+class Window
+{
+  public:
+    Window(size_t N)
+      : N(N)
+    {
+      w = new float[N];
+    }
+
+    ~Window(void)
+    {
+      delete [] w;
+    }
+
+    void normalize(void)
+    {
+      double mean = 0.0;
+      for (size_t n=0; n<N; ++n)
+      {
+        mean += w[n];
+      }
+      mean /= N;
+      for (size_t n=0; n<N; ++n)
+      {
+        w[n] /= mean;
+      }
+    }
+
+    inline size_t size(void) const { return N; }
+
+    inline float operator[](int i) const { return w[i]; }
+
+  protected:
+    size_t N;
+    float *w;
+};
+
+
+class FlatTopWindow : public Window
+{
+  public:
+    FlatTopWindow(size_t N, bool do_normalize=true)
+      : Window(N)
+    {
+      static const double a0 = 0.21557895;
+      static const double a1 = 0.41663158;
+      static const double a2 = 0.277263158;
+      static const double a3 = 0.083578947;
+      static const double a4 = 0.006947368;
+      for (unsigned n=0; n<N; ++n)
+      {
+        w[n] = a0
+             - a1 * cos(2*M_PI*n / (N-1))
+             + a2 * cos(4*M_PI*n / (N-1))
+             - a3 * cos(6*M_PI*n / (N-1))
+             + a4 * cos(8*M_PI*n / (N-1));
+      }
+      if (do_normalize)
+      {
+        normalize();
+      }
+    }
+};
+
+
 class DevPrinter : public AudioSink
 {
   public:
     DevPrinter(float mod_fq, float max_dev, float headroom_db)
-      : g(mod_fq, INTERNAL_SAMPLE_RATE),
-        block_size(INTERNAL_SAMPLE_RATE / 10), samp_cnt(0), max_dev(max_dev),
-        headroom(pow(10.0, headroom_db/20.0)), adj_level(1.0f), dev_est(0.0)
+      : block_size(INTERNAL_SAMPLE_RATE / 20), w(block_size),
+        g(mod_fq, INTERNAL_SAMPLE_RATE), samp_cnt(0), max_dev(max_dev),
+        headroom(pow(10.0, headroom_db/20.0)), adj_level(1.0f), dev_est(0.0),
+        block_cnt(0)
     {
-
     }
 
     void adjustLevel(double adj_db)
@@ -222,15 +287,19 @@ class DevPrinter : public AudioSink
     {
       for (int i=0; i<count; ++i)
       {
-        g.calc(samples[i]);
+        g.calc(w[samp_cnt] * samples[i]);
         if (++samp_cnt >= block_size)
         {
           float ampl = 2 * sqrt(g.magnitudeSquared()) / block_size;
           ampl *= adj_level;
           float dev = headroom * max_dev * ampl;
           dev_est = (1.0-ALPHA) * dev + ALPHA * dev_est;
-          cout << "Deviation: " << dev_est << "\r";
-          cout.flush();
+          if (++block_cnt >= PRINT_INTERVAL)
+          {
+            cout << "Deviation: " << dev_est << "\r";
+            cout.flush();
+            block_cnt = 0;
+          }
           g.reset();
           samp_cnt = 0;
         }
@@ -244,15 +313,18 @@ class DevPrinter : public AudioSink
     }
 
   private:
-    static const double ALPHA = 0.5;
+    static const double ALPHA = 0.75;         // IIR filter coeff
+    static const size_t PRINT_INTERVAL = 5;   // Block count
 
-    Goertzel  g;
-    int       block_size;
-    int       samp_cnt;
-    float     max_dev;
-    float     headroom;
-    double    adj_level;
-    double    dev_est;
+    int           block_size;
+    FlatTopWindow w;
+    Goertzel      g;
+    int           samp_cnt;
+    float         max_dev;
+    float         headroom;
+    double        adj_level;
+    double        dev_est;
+    size_t        block_cnt;
 };
 
 
@@ -367,6 +439,7 @@ int main(int argc, const char *argv[])
     cout << "PREAMP=" << level_adjust_offset << endl;
 
     cfg.setValue(cfgsect, "SQL_DET", "OPEN");
+    cfg.setValue(cfgsect, "DTMF_MUTING", "0");
 
     rx = RxFactory::createNamedRx(cfg, cfgsect);
     if ((rx == 0) || !rx->initialize())

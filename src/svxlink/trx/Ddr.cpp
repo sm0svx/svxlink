@@ -688,7 +688,7 @@ namespace {
       FmDemod(double samp_rate, double max_dev)
         : iold(1.0f), qold(1.0f),
           audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt)
-          //, g(500, samp_rate/2), N(samp_rate / 20), Ncnt(0), /*w(N)*/
+          //, g(934, samp_rate/2), N(samp_rate / 20), Ncnt(0) /*, w(N)*/
           //, t(0.0), T(1.0 / samp_rate)
       {
           // Adjust the gain so that the maximum deviation corresponds
@@ -712,9 +712,12 @@ namespace {
 #if 1
           complex<float> samp = samples[idx];
 #else
-          double fm = 1000.0;
+          double fm = 941.0;
           complex<double> samp = exp(
-              complex<float>(0, (2500/fm)*cos(2.0*M_PI*fm*t))
+              complex<float>(0,
+                (1200/fm)*cos(2.0*M_PI*fm*t) +
+                (1200/1633)*cos(2.0*M_PI*1633*t)
+                )
               );
           t += T;
 #endif
