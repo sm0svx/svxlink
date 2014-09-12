@@ -483,6 +483,9 @@ bool NetTrxAdapter::initialize(void)
          << net_uplink_name << endl;
     return false;
   }
+
+  float rx_siglev = 1.0f;
+  cfg.getValue(net_uplink_name, "RX_SIGLEV", rx_siglev);
   
   AudioSource *prev_src = 0;
 
@@ -503,6 +506,7 @@ bool NetTrxAdapter::initialize(void)
   {
     return false;
   }
+  rxa1->setSignalLevel(rx_id, rx_siglev);
   prev_src->registerSink(rxa1, true);
   prev_src = 0;
 
