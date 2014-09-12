@@ -15,8 +15,7 @@ set(LIBSRC
   SquelchEvDev.cpp Macho.cpp SquelchGpio.cpp Ptt.cpp
   PttGpio.cpp PttSerialPin.cpp Pty.cpp PttPty.cpp
   PtyDtmfDecoder.cpp LocalRxBase.cpp Ddr.cpp RtlTcp.cpp WbRxRtlTcp.cpp
-  SigLevDet.cpp SigLevDetDdr.cpp SigLevDet.cpp AfskDtmfDecoder.cpp
-  SigLevDetAfsk.cpp
+  SigLevDet.cpp SigLevDetDdr.cpp AfskDtmfDecoder.cpp SigLevDetAfsk.cpp
 )
 
 # Which other libraries this library depends on
