@@ -137,7 +137,7 @@ class AprsPty
       {
         return false;
       }
-      pty->cmdReceived.connect(sigc::mem_fun(*this, &AprsPty::cmdReceived));
+      pty->dataReceived.connect(sigc::mem_fun(*this, &AprsPty::dataReceived));
       return pty->open();
     }
 
@@ -160,18 +160,23 @@ class AprsPty
      *
      * All other commands are ignored.
      */
-    void cmdReceived(char digit)
+    void dataReceived(const void *buf, size_t count)
     {
-      if (digit != '\n')
+      const char *ptr = reinterpret_cast<const char*>(buf);
+      for (size_t i=0; i<count; ++i)
       {
-        message += digit;
+        const char &digit = *ptr++;
+        if (digit != '\n')
+        {
+          message += digit;
+        }
+        else
+        {
+          messageReceived(message);
+          message = "";
+        }
       }
-      else
-      {
-        messageReceived(message);
-        message = "";
-      }
-    } /* messageReceived */
+    } /* dataReceived */
 
 };  /* class AprsPty */
 

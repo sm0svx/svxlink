@@ -137,7 +137,7 @@ class PtyDtmfDecoder : public HwDtmfDecoder
   private:
     Pty *pty;
 
-    void cmdReceived(char cmd);
+    void dataReceived(const void *buf, size_t count);
 
 };  /* class PtyDtmfDecoder */
 

@@ -233,9 +233,9 @@ bool Pty::reopen(void)
 } /* Pty::reopen */
 
 
-bool Pty::write(char cmd)
+ssize_t Pty::write(const void *buf, size_t count)
 {
-  return (::write(master, &cmd, 1) == 1);
+  return ::write(master, buf, count);
 } /* Pty::write */
 
 
@@ -259,9 +259,9 @@ bool Pty::write(char cmd)
  */
 void Pty::charactersReceived(Async::FdWatch *w)
 {
-  char cmd;
-  int rd = read(w->fd(), &cmd, 1);
-  if (rd != 1)
+  char buf[256];
+  int rd = read(w->fd(), buf, sizeof(buf));
+  if (rd < 0)
   {
     std::cerr << "*** ERROR: Failed to read master PTY: "
               << std::strerror(errno) << ". "
@@ -269,7 +269,12 @@ void Pty::charactersReceived(Async::FdWatch *w)
     reopen();
     return;
   }
-  cmdReceived(cmd);
+  else if (rd == 0)
+  {
+    reopen();
+    return;
+  }
+  dataReceived(buf, rd);
 } /* Pty::charactersReceived */
 
 

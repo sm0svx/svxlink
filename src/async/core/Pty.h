@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <unistd.h>
 #include <sigc++/sigc++.h>
 
 #include <string>
@@ -154,17 +155,21 @@ class Pty : public sigc::trackable
     bool reopen(void);
 
     /**
-     * @brief   Write a command to the PTY
-     * @param   cmd The command to send
-     * @return  Returns \em true on success or \em false on failure
+     * @brief   Write data to the PTY
+     * @param   buf A buffer containing the data to write
+     * @param   count The number of bytes to write
+     * @return  On success, the number of bytes written is returned (zero
+     *          indicates nothing was written).  On error, -1 is returned,
+     *          and errno is set appropriately.
      */
-    bool write(char cmd);
+    ssize_t write(const void *buf, size_t count);
 
     /**
-     * @brief   Signal that is emitted when a command has been received
-     * @param   cmd The received command
+     * @brief   Signal that is emitted when data has been received
+     * @param   buf A buffer containing the received data
+     * @param   count The number of bytes in the buffer
      */
-    sigc::signal<void, char> cmdReceived;
+    sigc::signal<void, const void*, size_t> dataReceived;
     
   protected:
     

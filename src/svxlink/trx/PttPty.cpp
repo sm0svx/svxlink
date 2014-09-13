@@ -148,7 +148,8 @@ bool PttPty::initialize(Async::Config &cfg, const std::string name)
  */
 bool PttPty::setTxOn(bool tx_on)
 {
-  return pty->write(tx_on ? 'T' : 'R');
+  char cmd(tx_on ? 'T' : 'R');
+  return (pty->write(&cmd, 1) != 1);
 } /* PttPty::setTxOn */
 
 
