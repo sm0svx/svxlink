@@ -5,7 +5,7 @@
 @date	 2014-06-07
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Async - A library for programming event driven applications
 Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef PTY_INCLUDED
-#define PTY_INCLUDED
+#ifndef ASYNC_PTY_INCLUDED
+#define ASYNC_PTY_INCLUDED
 
 
 /****************************************************************************
@@ -62,10 +62,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class FdWatch;
-};
 
 
 /****************************************************************************
@@ -74,8 +70,8 @@ namespace Async
  *
  ****************************************************************************/
 
-//namespace MyNameSpace
-//{
+namespace Async
+{
 
 
 /****************************************************************************
@@ -84,6 +80,7 @@ namespace Async
  *
  ****************************************************************************/
 
+class FdWatch;
   
 
 /****************************************************************************
@@ -187,9 +184,9 @@ class Pty : public sigc::trackable
 };  /* class Pty */
 
 
-//} /* namespace */
+} /* namespace */
 
-#endif /* PTY_INCLUDED */
+#endif /* ASYNC_PTY_INCLUDED */
 
 
 

@@ -51,7 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <Pty.h>
+#include <AsyncPty.h>
 
 
 /****************************************************************************
@@ -132,7 +132,7 @@ class AprsPty
      */
     bool initialize(const std::string link_path)
     {
-      pty = new Pty(link_path);
+      pty = new Async::Pty(link_path);
       if (pty == 0)
       {
         return false;
@@ -148,7 +148,7 @@ class AprsPty
   protected:
 
   private:
-    Pty             *pty;
+    Async::Pty      *pty;
     std::string     message;
 
     AprsPty(const AprsPty&);

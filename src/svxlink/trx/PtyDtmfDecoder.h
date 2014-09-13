@@ -60,7 +60,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-class Pty;
+namespace Async
+{
+  class Pty;
+};
 
 
 /****************************************************************************
@@ -135,7 +138,7 @@ class PtyDtmfDecoder : public HwDtmfDecoder
   protected:
 
   private:
-    Pty *pty;
+    Async::Pty *pty;
 
     void dataReceived(const void *buf, size_t count);
 

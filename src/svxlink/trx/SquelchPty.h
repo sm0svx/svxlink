@@ -42,7 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <Pty.h>
+#include <AsyncPty.h>
 
 
 /****************************************************************************
@@ -147,7 +147,7 @@ class SquelchPty : public Squelch
         return false;
       }
 
-      pty = new Pty(link_path);
+      pty = new Async::Pty(link_path);
       if (pty == 0)
       {
         return false;
@@ -170,7 +170,7 @@ class SquelchPty : public Squelch
     }
 
   private:
-    Pty             *pty;
+    Async::Pty  *pty;
 
     SquelchPty(const SquelchPty&);
     SquelchPty& operator=(const SquelchPty&);
