@@ -8,7 +8,7 @@ WOL (Wide Open License):
 	async/audio/AudioDecimator.*
 	async/audio/AudioInterpolator.*
 
-Custom license (Aladdin Enterprises):
+Zlib (Aladdin Enterprises):
         echolib/md5.{c,h}
 
 MIT License:
