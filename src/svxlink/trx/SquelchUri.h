@@ -144,6 +144,7 @@ class SquelchUri : public Squelch
     Async::FdWatch  *watch;
     bool          active_low;
     struct hidraw_devinfo hiddevinfo;
+    int           pin_mask;
 
     SquelchUri(const SquelchUri&);
     SquelchUri& operator=(const SquelchUri&);

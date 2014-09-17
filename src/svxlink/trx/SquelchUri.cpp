@@ -2,7 +2,7 @@
 @file	 SquelchUri.cpp
 @brief   A squelch detector that read squelch state from a Uri device
 @author  Adi Bier / DL1HRC
-@date	 2014-08-28
+@date	 2014-09-17
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -122,7 +122,7 @@ using namespace Async;
 SquelchUri::SquelchUri(void)
   : fd(-1), active_low(false)
 {
-  
+
 } /* SquelchUri::SquelchUri */
 
 
@@ -165,10 +165,18 @@ bool SquelchUri::initialize(Async::Config& cfg, const std::string& rx_name)
     sql_pin.erase(0, 1);
   }
 
+  pin_mask = atoi(sql_pin.c_str());
+  if (pin_mask < 7 || pin_mask > 8 )
+  {
+    cerr << "*** ERROR: URI_SQL_PIN must be 7 (CTCSS_DET) or 8 (COR_DET)\n";
+    return false;
+  }
+  pin_mask = pin_mask >> 2;
+
   if ((fd = open(devicename.c_str(), O_RDWR)) == -1)
   {
     cout << "*** ERROR: Could not open event device " << devicename
-         << " specified in " << rx_name << "/URI_DEVICE: " 
+         << " specified in " << rx_name << "/URI_DEVICE: "
          << strerror(errno) << endl;
     return false;
   }
@@ -224,36 +232,29 @@ bool SquelchUri::initialize(Async::Config& cfg, const std::string& rx_name)
  ****************************************************************************/
 
 /**
- * @brief  Called by a timer to periodically read the state of the Uri pin
+ * @brief  Called when state of Uri port has been changed
  *
  */
 void SquelchUri::uriActivity(FdWatch *watch)
 {
-  char buf[25];
+  char buf[10];
   int rd = read(fd, buf, 5);
 
-  if (rd < 0) 
+  if (rd < 0)
   {
-    cerr << "*** ERROR: reading device\n";
+    cerr << "*** ERROR: reading URI_DEVICE\n";
   }
   else
   {
-    cout << "read() read " << rd << "bytes\n";
-    for (int i=0; i < 5; i++)
+    if (!signalDetected() && (buf[0] & pin_mask))
     {
-      printf("%hhx,", buf[i]);
+      setSignalDetected(active_low ^ true);
     }
-    cout << endl;
+    else if (signalDetected() && !(buf[0] & pin_mask))
+    {
+      setSignalDetected(active_low ^ false);
+    }
   }
-/*
-  if (!signalDetected() && (value == 1))
-  {
-    setSignalDetected(active_low ^ true);
-  }
-  else if (signalDetected() && (value == 0))
-  {
-    setSignalDetected(active_low ^ false);
-  }*/
 } /* SquelchUri::readUriValueData */
 
 

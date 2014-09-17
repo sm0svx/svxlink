@@ -2,7 +2,7 @@
 @file	 PttUri.h
 @brief   A PTT hardware controller using the URI-Board from DMK
 @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
-@date	 2014-08-28
+@date	 2014-09-17
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -77,7 +77,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -104,7 +104,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /**
 @brief  A PTT hardware controller using the URI-Board from DMK
 @author Tobias Blomberg / SM0SVX
-@date   2014-08-28
+@date   2014-09-17
 */
 class PttUri : public Ptt
 {
@@ -118,12 +118,12 @@ class PttUri : public Ptt
      * @brief 	Default constructor
      */
     PttUri(void);
-  
+
     /**
      * @brief 	Destructor
      */
     ~PttUri(void);
-  
+
     /**
      * @brief 	Initialize the PTT hardware
      * @param 	cfg An initialized config object
@@ -140,7 +140,7 @@ class PttUri : public Ptt
     virtual bool setTxOn(bool tx_on);
 
   protected:
-    
+
   private:
     std::string uri_pin;
     bool active_low;

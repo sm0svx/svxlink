@@ -1,8 +1,8 @@
 /**
 @file	 PttUri.cpp
 @brief   A PTT hardware controller using the URI Board from DMK
-@author  Tobias Blomberg / SM0SVX
-@date	 2014-01-26
+@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@date	 2014-09-17
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -137,9 +137,9 @@ bool PttUri::initialize(Async::Config &cfg, const std::string name)
   }
 
   string uri_dev;
-  if (!cfg.getValue(name, "URI_DEV", uri_dev) || uri_dev.empty())
+  if (!cfg.getValue(name, "URI_DEVICE", uri_dev) || uri_dev.empty())
   {
-    cerr << "*** ERROR: Config variable " << name << "/URI_DEV not set\n";
+    cerr << "*** ERROR: Config variable " << name << "/URI_DEVICE not set\n";
     return false;
   }
 
@@ -190,14 +190,14 @@ bool PttUri::setTxOn(bool tx_on)
 {
   //cerr << "### PttUri::setTxOn(" << (tx_on ? "true" : "false") << ")\n";
 
-  char a[5] = {'\000', '\000', 
+  char a[5] = {'\000', '\000',
               (tx_on ^ active_low ? '\004' : '\000'), '\004', '\000'};
 
   if (write(fd, a, 5) != -1)
   {
     return true;
   }
-  else 
+  else
   {
     return false;
   }
