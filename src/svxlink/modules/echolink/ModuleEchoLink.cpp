@@ -982,6 +982,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
       	 << " since the IP address registered in the directory server "
 	 << "(" << station->ip() << ") is not the same as the remote IP "
 	 << "address (" << ip << ") of the incoming connection\n";
+    getDirectoryList();
     return;
   }
 
