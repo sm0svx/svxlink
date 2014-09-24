@@ -1,6 +1,6 @@
 /**
-@file	 SquelchUri.h
-@brief   A squelch detector that read squelch state from a Uri device
+@file	 SquelchHidraw.h
+@brief   A squelch detector that read squelch state from a Hidraw device
 @author  Adi Bier / DL1HRC
 @date	 2014-08-28
 
@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef SQUELCH_URI_INCLUDED
-#define SQUELCH_URI_INCLUDED
+#ifndef SQUELCH_HIDRAW_INCLUDED
+#define SQUELCH_HIDRAW_INCLUDED
 
 
 /****************************************************************************
@@ -108,26 +108,26 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A squelch detector that read squelch state from a Uri device
+@brief	A squelch detector that read squelch state from a Hidraw device
 @author Adi Bier / DL1HRC
 @date   2014-08-28
 
-This squelch detector read the squelch indicator signal from a Uri pin.
+This squelch detector read the squelch indicator signal from a Hidraw pin.
 A high level (>3.3V) will be interpreted as squelch open and a low level (GND)
 will be interpreted as squelch close.
 */
-class SquelchUri : public Squelch
+class SquelchHidraw : public Squelch
 {
   public:
     /**
      * @brief 	Default constuctor
      */
-    SquelchUri(void);
+    SquelchHidraw(void);
 
     /**
      * @brief 	Destructor
      */
-    ~SquelchUri(void);
+    ~SquelchHidraw(void);
 
     /**
      * @brief 	Initialize the squelch detector
@@ -146,16 +146,16 @@ class SquelchUri : public Squelch
     struct hidraw_devinfo hiddevinfo;
     int           pin_mask;
 
-    SquelchUri(const SquelchUri&);
-    SquelchUri& operator=(const SquelchUri&);
-    void uriActivity(Async::FdWatch *watch);
+    SquelchHidraw(const SquelchHidraw&);
+    SquelchHidraw& operator=(const SquelchHidraw&);
+    void HidrawActivity(Async::FdWatch *watch);
 
 };  /* class SquelchGpio */
 
 
 //} /* namespace */
 
-#endif /* SQUELCH_URI_INCLUDED */
+#endif /* SQUELCH_HIDRAW_INCLUDED */
 
 
 

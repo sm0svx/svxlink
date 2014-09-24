@@ -1,7 +1,8 @@
 /**
-@file	 PttUri.cpp
-@brief   A PTT hardware controller using the URI Board from DMK
-@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@file	 SquelchHidraw.cpp
+@brief   A squelch detector that read squelch state from a linux/hidraw
+         device
+@author  Adi Bier / DL1HRC
 @date	 2014-09-17
 
 \verbatim
@@ -32,11 +33,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
-#include <fstream>
 #include <cstring>
-#include <sstream>
+#include <cerrno>
+#include <unistd.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <linux/hidraw.h>
 #include <sys/ioctl.h>
 
 
@@ -46,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncFdWatch.h>
 
 
 /****************************************************************************
@@ -54,7 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "PttUri.h"
+#include "SquelchHidraw.h"
 
 
 
@@ -101,6 +105,7 @@ using namespace Async;
 
 
 
+
 /****************************************************************************
  *
  * Local Global Variables
@@ -115,43 +120,71 @@ using namespace Async;
  *
  ****************************************************************************/
 
-PttUri::PttUri(void)
-  : active_low(false)
+SquelchHidraw::SquelchHidraw(void)
+  : fd(-1), active_low(false)
 {
-} /* PttUri::PttUri */
+
+} /* SquelchHidraw::SquelchHidraw */
 
 
-PttUri::~PttUri(void)
+SquelchHidraw::~SquelchHidraw(void)
 {
-  close(fd);
-  fd = -1;
-} /* PttUri::~PttUri */
-
-
-bool PttUri::initialize(Async::Config &cfg, const std::string name)
-{
-  if (!cfg.getValue(name, "URI_PIN", uri_pin) || uri_pin.empty())
+  if (fd >= 0)
   {
-    cerr << "*** ERROR: Config variable " << name << "/URI_PIN not set\n";
+    close(fd);
+    fd = -1;
+  }
+} /* SquelchHidraw::~SquelchHidraw */
+
+
+bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
+{
+  if (!Squelch::initialize(cfg, rx_name))
+  {
     return false;
   }
 
-  string uri_dev;
-  if (!cfg.getValue(name, "URI_DEVICE", uri_dev) || uri_dev.empty())
+  string devicename;
+  if (!cfg.getValue(rx_name, "HID_DEVICE", devicename))
   {
-    cerr << "*** ERROR: Config variable " << name << "/URI_DEVICE not set\n";
+    cerr << "*** ERROR: Config variable " << devicename <<
+            "/HID_DEVICE not set" << endl;
     return false;
   }
 
-  if ((fd = open(uri_dev.c_str(), O_WRONLY, 0)) < 0)
+  string sql_pin;
+  if (!cfg.getValue(rx_name, "HID_SQL_PIN", sql_pin) || sql_pin.empty())
   {
-    cerr << "*** ERROR: Can't open port " << uri_dev << endl;
+    cerr << "*** ERROR: Config variable " << rx_name <<
+            "/HID_SQL_PIN not set or invalid\n";
+    return false;
+  }
+
+  if ((sql_pin.size() > 1) && (sql_pin[0] == '!'))
+  {
+    active_low = true;
+    sql_pin.erase(0, 1);
+  }
+
+  pin_mask = atoi(sql_pin.c_str());
+  if (pin_mask < 7 || pin_mask > 8 )
+  {
+    cerr << "*** ERROR: HID_SQL_PIN must be 7 (CTCSS_DET) or 8 (COR_DET)\n";
+    return false;
+  }
+  pin_mask = pin_mask >> 2;
+
+  if ((fd = open(devicename.c_str(), O_RDWR)) == -1)
+  {
+    cout << "*** ERROR: Could not open event device " << devicename
+         << " specified in " << rx_name << "/Hidraw_DEVICE: "
+         << strerror(errno) << endl;
     return false;
   }
 
   if (!ioctl(fd, HIDIOCGRAWINFO, &hiddevinfo) && hiddevinfo.vendor == 0x0d8c)
   {
-    cout << "--- URI sound chip is ";
+    cout << "--- Hidraw sound chip is ";
     if (hiddevinfo.product == 0x000c)
     {
       cout << "CM108";
@@ -176,32 +209,12 @@ bool PttUri::initialize(Async::Config &cfg, const std::string name)
     return false;
   }
 
-  if (uri_pin[0] == '!')
-  {
-    active_low = true;
-    uri_pin.erase(0, 1);
-  }
+  watch = new Async::FdWatch(fd, Async::FdWatch::FD_WATCH_RD);
+  assert(watch != 0);
+  watch->activity.connect(mem_fun(*this, &SquelchHidraw::HidrawActivity));
 
   return true;
-} /* PttUri::initialize */
-
-
-bool PttUri::setTxOn(bool tx_on)
-{
-  //cerr << "### PttUri::setTxOn(" << (tx_on ? "true" : "false") << ")\n";
-
-  char a[5] = {'\000', '\000',
-              (tx_on ^ active_low ? '\004' : '\000'), '\004', '\000'};
-
-  if (write(fd, a, 5) != -1)
-  {
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-} /* PttUri::setTxOn */
+}
 
 
 
@@ -219,9 +232,34 @@ bool PttUri::setTxOn(bool tx_on)
  *
  ****************************************************************************/
 
+/**
+ * @brief  Called when state of Hidraw port has been changed
+ *
+ */
+void SquelchHidraw::HidrawActivity(FdWatch *watch)
+{
+  char buf[10];
+  int rd = read(fd, buf, 5);
+
+  if (rd < 0)
+  {
+    cerr << "*** ERROR: reading Hidraw_DEVICE\n";
+  }
+  else
+  {
+    if (!signalDetected() && (buf[0] & pin_mask))
+    {
+      setSignalDetected(active_low ^ true);
+    }
+    else if (signalDetected() && !(buf[0] & pin_mask))
+    {
+      setSignalDetected(active_low ^ false);
+    }
+  }
+} /* SquelchHidraw::readHidrawValueData */
+
 
 
 /*
  * This file has not been truncated
  */
-

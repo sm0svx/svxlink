@@ -1,6 +1,6 @@
 /**
-@file	 PttUri.h
-@brief   A PTT hardware controller using the URI-Board from DMK
+@file	 PttHidraw.h
+@brief   A PTT hardware controller using the Hidraw-Board from DMK
 @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
 @date	 2014-09-17
 
@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef PTT_URI_INCLUDED
-#define PTT_URI_INCLUDED
+#ifndef PTT_HIDRAW_INCLUDED
+#define PTT_HIDRAW_INCLUDED
 
 
 /****************************************************************************
@@ -102,27 +102,27 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief  A PTT hardware controller using the URI-Board from DMK
+@brief  A PTT hardware controller using the Hidraw-Board from DMK
 @author Tobias Blomberg / SM0SVX
 @date   2014-09-17
 */
-class PttUri : public Ptt
+class PttHidraw : public Ptt
 {
   public:
-    struct Factory : public PttFactory<PttUri>
+    struct Factory : public PttFactory<PttHidraw>
     {
-      Factory(void) : PttFactory<PttUri>("URI") {}
+      Factory(void) : PttFactory<PttHidraw>("Hidraw") {}
     };
 
     /**
      * @brief 	Default constructor
      */
-    PttUri(void);
+    PttHidraw(void);
 
     /**
      * @brief 	Destructor
      */
-    ~PttUri(void);
+    ~PttHidraw(void);
 
     /**
      * @brief 	Initialize the PTT hardware
@@ -142,18 +142,18 @@ class PttUri : public Ptt
   protected:
 
   private:
-    std::string uri_pin;
+    std::string Hidraw_pin;
     bool active_low;
     struct hidraw_devinfo hiddevinfo;
     int  fd;
 
-    PttUri(const PttUri&);
-    PttUri& operator=(const PttUri&);
+    PttHidraw(const PttHidraw&);
+    PttHidraw& operator=(const PttHidraw&);
 
-};  /* class PttUri */
+};  /* class PttHidraw */
 
 
-#endif /* PTT_URI_INCLUDED */
+#endif /* PTT_HIDRAW_INCLUDED */
 
 
 /*
