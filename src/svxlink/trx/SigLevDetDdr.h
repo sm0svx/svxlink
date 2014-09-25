@@ -1,8 +1,8 @@
 /**
-@file	 SigLevDet.h
-@brief   The base class for a signal level detector
+@file	 SigLevDetDdr.h
+@brief   A signal level detector measuring power levels using a DDR
 @author  Tobias Blomberg / SM0SVX
-@date	 2009-05-23
+@date	 2014-07-17
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef SIG_LEV_DET_INCLUDED
-#define SIG_LEV_DET_INCLUDED
+#ifndef SIG_LEV_DET_DDR_INCLUDED
+#define SIG_LEV_DET_DDR_INCLUDED
 
 
 /****************************************************************************
@@ -34,8 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
-#include <string>
+#include <vector>
+#include <deque>
 
 
 /****************************************************************************
@@ -44,7 +44,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioSink.h>
 
 
 /****************************************************************************
@@ -53,7 +52,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Factory.h"
+#include "SigLevDet.h"
+#include "RtlTcp.h"
 
 
 /****************************************************************************
@@ -65,8 +65,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace Async
 {
   class AudioFilter;
-  class SigCAudioSink;
-  class Config;
 };
 
 
@@ -111,27 +109,28 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	The base class for a signal level detector
+@brief	A signal level detector measuring power levels using a DDR
 @author Tobias Blomberg / SM0SVX
-@date   2006-05-07
+@date   2014-07-17
 
-This is the base class for all signal level detectors. The calculated signal
-level value is in the range of approximately 0 to 100 where 0 is the weakest
-signal strength measurement and where 100 is the strongest. The minimun and
-maximum values are approximate so higher and lower values may be reported.
 */
-class SigLevDet : public sigc::trackable, public Async::AudioSink
+class SigLevDetDdr : public SigLevDet
 {
   public:
+    struct Factory : public SigLevDetFactory<SigLevDetDdr>
+    {
+      Factory(void) : SigLevDetFactory<SigLevDetDdr>("DDR") {}
+    };
+
     /**
      * @brief 	Default constuctor
      */
-    SigLevDet(void) {}
+    explicit SigLevDetDdr(void);
   
     /**
      * @brief 	Destructor
      */
-    virtual ~SigLevDet(void) {}
+    ~SigLevDetDdr(void);
     
     /**
      * @brief 	Initialize the signal detector
@@ -141,10 +140,7 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
      * @return 	Return \em true on success, or \em false on failure
      */
     virtual bool initialize(Async::Config &cfg, const std::string& name,
-                            int sample_rate)
-    {
-      return true;
-    }
+                            int sample_rate);
     
     /**
      * @brief	Set the interval for continuous updates
@@ -153,7 +149,7 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
      * This function will set up how often the signal level detector will
      * report the signal strength.
      */
-    virtual void setContinuousUpdateInterval(int interval_ms) = 0;
+    virtual void setContinuousUpdateInterval(int interval_ms);
     
     /**
      * @brief	Set the integration time to use
@@ -163,84 +159,55 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
      * detector. That is, the detector will build a mean value of the
      * detected signal strengths over the given integration time.
      */
-    virtual void setIntegrationTime(int time_ms) = 0;
-    
+    virtual void setIntegrationTime(int time_ms);
+
     /**
      * @brief 	Read the latest measured signal level
      * @return	Returns the latest measured signal level
      */
-    virtual float lastSiglev(void) const = 0;
+    virtual float lastSiglev(void) const { return last_siglev; }
 
     /**
      * @brief   Read the integrated siglev value
      * @return  Returns the integrated siglev value
      */
-    virtual float siglevIntegrated(void) const = 0;
-    
+    virtual float siglevIntegrated(void) const;
+
     /**
      * @brief   Reset the signal level detector
      */
-    virtual void reset(void) = 0;
-    
-    /**
-     * @brief	A signal that is emitted when the signal strength is updated
-     * @param	siglev The updated siglev measurement
-     * 
-     * This signal is emitted when the detector have calculated a new signal
-     * level measurement. How often the signal is emitted is set up by calling
-     * the setCountiuousUpdateInterval function.
-     */
-    sigc::signal<void, float> signalLevelUpdated;
+    virtual void reset(void);
     
   protected:
-    
+    virtual int writeSamples(const float *samples, int count) { return count; }
+    virtual void flushSamples(void) {}
+
+
   private:
-    SigLevDet(const SigLevDet&);
-    SigLevDet& operator=(const SigLevDet&);
+    static const unsigned BLOCK_LENGTH    = 10;  // 10ms
+
+    int	                sample_rate;
+    unsigned            block_idx;
+    int                 last_siglev;
+    unsigned            integration_time;
+    std::deque<int>     siglev_values;
+    int                 update_interval;
+    int                 update_counter;
+    double              pwr_sum;
+    double     	        slope;
+    double     	        offset;
+    unsigned            block_size;
     
-};  /* class SigLevDet */
-
-
-/**
-@brief	Base class for a signal level detector factory
-@author Tobias Blomberg / SM0SVX
-@date   2014-07-17
-
-This is the base class for a signal level detector factory. However, this
-is not the class to inherit from when implementing a signal level detector
-factory. Use the SigLevDetFactory class for that.
-This class is essentially used only to access the createNamedSigLevDet
-function.
-*/
-struct SigLevDetFactoryBase : public FactoryBase<SigLevDet>
-{
-  static SigLevDet *createNamedSigLevDet(Async::Config& cfg,
-                                         const std::string& name);
-  SigLevDetFactoryBase(const std::string &name) : FactoryBase<SigLevDet>(name)
-  {
-  }
-};  /* class SigLevDetFactoryBase */
-
-
-/**
-@brief	Base class for implementing a signal level detector factory
-@author Tobias Blomberg / SM0SVX
-@date   2014-07-17
-
-This class should be inherited from when implementing a new signal level
-detector factory.
-*/
-template <class T>
-struct SigLevDetFactory : public Factory<SigLevDetFactoryBase, T>
-{
-  SigLevDetFactory(const std::string &name)
-    : Factory<SigLevDetFactoryBase, T>(name) {}
-}; /* class SigLevDetFactory */
+    SigLevDetDdr(const SigLevDetDdr&);
+    SigLevDetDdr& operator=(const SigLevDetDdr&);
+    void processSamples(const std::vector<RtlTcp::Sample> &samples);
+    
+};  /* class SigLevDetDdr */
 
 
 //} /* namespace */
 
-#endif /* SIG_LEV_DET_INCLUDED */
+#endif /* SIG_LEV_DET_DDR_INCLUDED */
 
 
 

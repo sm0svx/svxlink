@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -126,11 +126,15 @@ from other receivers.
 class SigLevDetTone : public SigLevDet
 {
   public:
+    struct Factory : public SigLevDetFactory<SigLevDetTone>
+    {
+      Factory(void) : SigLevDetFactory<SigLevDetTone>("TONE") {}
+    };
+
     /**
      * @brief 	Constuctor
-     * @param	sample_rate The rate with which samples enter the detector
      */
-    explicit SigLevDetTone(int sample_rate);
+    explicit SigLevDetTone(void);
   
     /**
      * @brief 	Destructor
@@ -139,9 +143,13 @@ class SigLevDetTone : public SigLevDet
     
     /**
      * @brief 	Initialize the signal detector
+     * @param   cfg An initialized config object
+     * @param   name The name of the config section to read config from
+     * @param	sample_rate The rate with which samples enter the detector
      * @return 	Return \em true on success, or \em false on failure
      */
-    virtual bool initialize(Async::Config &cfg, const std::string& name);
+    virtual bool initialize(Async::Config &cfg, const std::string& name,
+                            int sample_rate);
     
     /**
      * @brief	Set the interval for continuous updates
@@ -189,7 +197,7 @@ class SigLevDetTone : public SigLevDet
     static const float    ENERGY_THRESH = 1.0e-6f;
     static const float    DET_THRESH    = 0.7f; // Detection threshold
 
-    const int	        sample_rate;
+    int	                sample_rate;
     std::vector<int>    tone_siglev_map;
     Goertzel            *det[10];
     unsigned            block_idx;

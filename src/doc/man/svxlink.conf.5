@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "SEPTEMBER 2013" Linux "File Formats"
+.TH SVXLINK.CONF 5 "JULY 2014" Linux "File Formats"
 .
 .SH NAME
 .
@@ -1097,6 +1097,115 @@ you define ZVEI1 for SvxLink and a (e.g.) ZVEI3 sequence is received.
 At the moment only SEL5_DEC_TYPE=INTERNAL is valid. Maybe we have support for
 some external tone detectors later. To disable SEL5 tone decoding, specify
 NONE or just comment the configuration variable out.
+.TP
+.B RAW_AUDIO_UDP_DEST
+Setting this configuration variable makes it possible to stream the raw audio
+from the sound device to an UDP socket. The sample format is the one used
+internally in SvxLink, that is each sample is represented by a 32 bit float.
+The sample rate is the same as the one chosen for the audio device.
+The destination is specified as ip-address:port.
+
+Example: RAW_AUDIO_UDP_DEST=127.0.0.1:10000
+.
+.SS Ddr Receiver Section
+.
+A special kind of local receiver is the Digital Drop Receiver (DDR). It will
+use the rtl_tcp utility to interface to a RTL2832U based DVB-T USB dongle and
+use that as a wideband receiver. These USB dongles can be bought cheeply from
+an Internet shop (~$10). The radio performance may not be great but better than
+one might think. Usage as a cheap local coverage receiver or as a link receiver
+may work very well.
+
+One big advantage of using a wideband receiver is that it is possible to
+monitor more than one narrow band channel at a time. The only limit is the CPU
+power and the bandwidth of the wideband tuner. You probably need a Pentium4 or
+better to fulfill the CPU demands.
+
+Getting the DVB-T dongle running is out of scope for this document but what
+you need to do is to find out the frequency error on your specific dongle.
+If you have a recent version of the rtl_fm utility, that can be used to find
+the frequency error using the "-c" switch. The rtl_fm utility is in the
+rtl-sdr package. You also need the rtl_tcp utility from that package.
+
+When you have the rtl-sdr stuff installed, just start rtl_tcp. No command line
+arguments are needed. Then configure a Ddr receiver in SvxLink. All
+configuration variables that are available for an ordinary local receiver is
+also available for a Ddr receiver, except the audio device related ones which
+are just ignored. The following configuration variables are available in
+addition to the ordinary ones.
+.TP
+.B FQ
+The narrowband channel frequency to tune to.
+.TP
+.B WBRX
+The configuration section for the wideband receiver to connect this DDR to.
+See "Wideband Receiver Section" below.
+.TP
+.B SIGLEV_DET
+For a Ddr there also is a special signal level detector available, DDR, that
+will measure the RF power before demodulation. This is much more reliable than
+estimating the signal power through the audio which is normally done in SvxLink.
+The drawback is that the Ddr signal level is not completely comparable to the
+ordinary SvxLink signal level measurements since it have a larger dynamic
+range. Set SIGLEV_DET=DDR to activate the Ddr signal level detector.
+.
+.SS Wideband Receiver Section
+.
+A wideband receiver section is used to configure access to a wideband receiver
+which can be used by a Digital Drop Receiver (DDR), described above, to handle
+multiple narrowband channels using the same hardware. The only hardware
+supported at the moment is RTL2832U based DVB-T USB dongles. SvxLink access the
+dongle through the rtl_tcp utility which make the dongle available on a TCP
+network port. The following configuration variables are available:
+.TP
+.B HOST
+The name of the host that the rtl_tcp utility is running on (Default:
+localhost).
+.TP
+.B PORT
+The TCP port that rtl_tcp is listening on (Default: 1234).
+.TP
+.B SAMPLE_RATE
+The sample rate used by the dongle. Legal values are 960000 and 2400000
+(Default: 960000).
+.TP
+.B FQ_CORR
+This is probably the most important configuration variable. Most dongles are
+far off in frequency so they need to be calibrated. How to do this is out of
+scope for this document but some later versions of the rtl_fm utility may be
+able to do it using the "-c" command line switch.
+
+The end result should be a correction value for how far off the dongle is in
+frequency counted in parts per million (PPM). That is, how many Hz per MHz is
+the tuner off by. Typical values are in the range -100 to 100.
+.TP
+.B CENTER_FQ
+The frequency, in Hz, that the wideband tuner should be placed at. This
+configuration variable should normally be left unset since SvxLink will try to
+place the wideband tuner to cover all set up Ddr frequencies. SvxLink will also
+try to avoid placing a Ddr on the center frequency of the wideband spectrum
+since there is usually some noise there. Only use this configration variable
+if you need to override the automatic placement for some reason.
+.TP
+.B GAIN
+If unset, automatic gain is used. Do not use automatic gain control if using
+the DDR signal level detector. That may mess up the measurements. Finding a
+good gain setting may be hard. Too little and you will not hear the signals you
+want to hear. Too much and the tuner will be driven into distorsion. One way to
+decide the maximum usable gain is to use the PEAK_METER explained below.  When
+there are no distorsion warning messages printed or just a single one now and
+then you have found the max gain. You should probably back at least one step
+down from this value. If the signals you want to receive are very strong, set
+the gain as low as possible.
+
+What gain values that are available is tuner dependent. SvxLink will print the
+available gain values when it establishes the connection to the tuner. Typical
+values are in the range -10 to 50dB.
+.TP
+.B PEAK_METER
+If PEAK_METER is set to 1, a warning will be printed every time the tuner is
+driven into distorsion. If it happens too often the gain should be lowered.  At
+most, one warning per second will be printed.
 .
 .SS Voter Section
 .
@@ -1389,14 +1498,6 @@ maximum level. Then the level of the CTCSS tone should be reduced. The default
 in the configuration file is 9%. For the tone to be transmitted the CTCSS_FQ
 variable must also be setup and also the TX_CTCSS variable in the logic core
 configuration section.
-
-.I Note:
-The level of the tone affects the level of the rest of the audio in SvxLink.
-This is to avoid distorision when the two audio streams are mixed together. For
-example, if a tone level of 9% is setup the rest of the audio will be attenuated
-by 9%. This is true even if the CTCSS_FQ and TX_CTCSS configuration variables
-are not set so comment this configuration variable out if CTCSS on TX is not
-used.
 .TP
 .B PREEMPHASIS
 [EXPERIMENTAL] Enable this feature if you are modulating the FM modulator
@@ -1444,6 +1545,12 @@ disabled.
 The TONE_SIGLEV_LEVEL configuration variable is used to set the tone level.
 It is a value in the 1-100 range which indicate the output level in percent
 of the maximum possible level. The default is 10.
+.TP
+.B MASTER_GAIN
+This configuration variable can be used to fine tune or increase the audio
+gain for all transmitted sound if it's not possible to do using the normal
+sound card hardware gain controls. The gain should be given in dB and can
+be both positive and negative.
 .
 .SS Networked Transmitter Section
 .
