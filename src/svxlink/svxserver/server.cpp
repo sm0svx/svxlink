@@ -1,6 +1,6 @@
 /**
 @file	 svxserver.cpp
-@brief   Main file for the svxserver remote transceiver for SvxLink
+@brief   Main file for the svxserver
 @author  Adi Bier / DL1HRC
 @date	 2014-06-16
 
@@ -103,8 +103,8 @@ using namespace NetTrxMsg;
 
 SvxServer::SvxServer(Async::Config &cfg)
 {
-  string listen_port = "5210";
-  if (!cfg.getValue("GLOBAL", "LISTEN_PORT", listen_port))
+  string port = "5210";
+  if (!cfg.getValue("GLOBAL", "LISTEN_PORT", port))
   {
     cerr << "*** ERROR: Configuration variable LISTEN_PORT is missing."
          << "Setting default to 5210" << endl;
@@ -127,10 +127,10 @@ SvxServer::SvxServer(Async::Config &cfg)
   }
 
   cout << "--- AUTH_KEY=" << auth_key << endl;
-  cout << "--- starting SERVER on port " << listen_port << endl;
+  cout << "--- starting SERVER on port " << port << endl;
 
    // create the server instance
-  server = new Async::TcpServer(listen_port);
+  server = new Async::TcpServer(port);
   server->clientConnected.connect(mem_fun(*this, &SvxServer::clientConnected));
   server->clientDisconnected.connect(
       mem_fun(*this, &SvxServer::clientDisconnected));
@@ -171,6 +171,10 @@ void SvxServer::clientConnected(Async::TcpConnection *con)
   MsgProtoVer *ver_msg = new MsgProtoVer;
   sendMsg(con, ver_msg);
 
+  MsgAuthChallenge *auth_msg = new MsgAuthChallenge;
+  memcpy(auth_challenge, auth_msg->challenge(),
+        MsgAuthChallenge::CHALLENGE_LEN);
+
   if (auth_key.empty())
   {
     MsgAuthOk *auth_msg = new MsgAuthOk;
@@ -179,9 +183,6 @@ void SvxServer::clientConnected(Async::TcpConnection *con)
   }
   else
   {
-    MsgAuthChallenge *auth_msg = new MsgAuthChallenge;
-    memcpy(auth_challenge, auth_msg->challenge(),
-          MsgAuthChallenge::CHALLENGE_LEN);
     sendMsg(con, auth_msg);
     clpair.state = STATE_AUTH_WAIT;
   }
@@ -568,8 +569,6 @@ void SvxServer::heartbeat(Async::Timer *t)
       ((*it).second).con->disconnect();
       clientDisconnected(((*it).second).con, 
                       TcpConnection::DR_ORDERED_DISCONNECT);
-      cout << "-> called up ((*it).second).con->disconnect()..."
-           << endl;
     }
   }
 
