@@ -137,6 +137,14 @@ SquelchHidraw::~SquelchHidraw(void)
 } /* SquelchHidraw::~SquelchHidraw */
 
 
+/**
+Initializing the sound card as linux/hidraw device
+For further information:
+  http://dmkeng.com
+  http://www.halicky.sk/om3cph/sb/CM108_DataSheet_v1.6.pdf
+  http://www.ti.com/lit/ml/sllu093/sllu093.pdf
+  http://www.ti.com/tool/usb-to-gpio
+*/
 bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
 {
   if (!Squelch::initialize(cfg, rx_name))
@@ -155,8 +163,8 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
   string sql_pin;
   if (!cfg.getValue(rx_name, "HID_SQL_PIN", sql_pin) || sql_pin.empty())
   {
-    cerr << "*** ERROR: Config variable " << rx_name <<
-            "/HID_SQL_PIN not set or invalid\n";
+    cerr << "*** ERROR: Config variable " << rx_name 
+         << "/HID_SQL_PIN not set or invalid\n";
     return false;
   }
 
@@ -166,18 +174,25 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
     sql_pin.erase(0, 1);
   }
 
-  pin_mask = atoi(sql_pin.c_str());
-  if (pin_mask < 7 || pin_mask > 8 )
+  map<string, int> pin_mask;
+  pin_mask["VOL_UP"] = 0x01;
+  pin_mask["VOL_DN"] = 0x02;
+  pin_mask["MUTE_PLAY"] = 0x04;
+  pin_mask["MUTE_REC"] = 0x08;
+
+  map<string, int>::iterator it = pin_mask.find(sql_pin);
+  if (it == pin_mask.end())
   {
-    cerr << "*** ERROR: HID_SQL_PIN must be 7 (CTCSS_DET) or 8 (COR_DET)\n";
+    cerr << "*** ERROR: Invalid value for " << rx_name << "/HID_SQL_PIN=" 
+         << sql_pin << ", must be VOL_UP, VOL_DN, MUTE_PLAY, MUTE_REC" << endl;
     return false;
   }
-  pin_mask = pin_mask >> 2;
+  pin = (*it).second;
 
   if ((fd = open(devicename.c_str(), O_RDWR)) == -1)
   {
     cout << "*** ERROR: Could not open event device " << devicename
-         << " specified in " << rx_name << "/Hidraw_DEVICE: "
+         << " specified in " << rx_name << "/HID_DEVICE: "
          << strerror(errno) << endl;
     return false;
   }
@@ -192,6 +207,10 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
     else if (hiddevinfo.product == 0x013c)
     {
       cout << "CM108A";
+    }
+    else if (hiddevinfo.product == 0x000e)
+    {
+      cout << "CM109";
     }
     else if (hiddevinfo.product == 0x013a)
     {
@@ -243,15 +262,15 @@ void SquelchHidraw::HidrawActivity(FdWatch *watch)
 
   if (rd < 0)
   {
-    cerr << "*** ERROR: reading Hidraw_DEVICE\n";
+    cerr << "*** ERROR: reading HID_DEVICE\n";
   }
   else
   {
-    if (!signalDetected() && (buf[0] & pin_mask))
+    if (!signalDetected() && (buf[0] & pin))
     {
       setSignalDetected(active_low ^ true);
     }
-    else if (signalDetected() && !(buf[0] & pin_mask))
+    else if (signalDetected() && !(buf[0] & pin))
     {
       setSignalDetected(active_low ^ false);
     }

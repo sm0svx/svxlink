@@ -130,22 +130,29 @@ PttHidraw::~PttHidraw(void)
 
 bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
 {
-  if (!cfg.getValue(name, "HID_PIN", Hidraw_pin) || Hidraw_pin.empty())
+    
+  map<string, int> pin_mask;
+  pin_mask["GPIO1"] = 0x01;
+  pin_mask["GPIO2"] = 0x02;
+  pin_mask["GPIO3"] = 0x04;
+  pin_mask["GPIO4"] = 0x08;
+
+  if (!cfg.getValue(name, "HID_PTT_PIN", hidraw_pin) || hidraw_pin.empty())
   {
-    cerr << "*** ERROR: Config variable " << name << "/HID_PIN not set\n";
+    cerr << "*** ERROR: Config variable " << name << "/HID_PTT_PIN not set\n";
     return false;
   }
 
-  string Hidraw_dev;
-  if (!cfg.getValue(name, "HID_DEVICE", Hidraw_dev) || Hidraw_dev.empty())
+  string hidraw_dev;
+  if (!cfg.getValue(name, "HID_DEVICE", hidraw_dev) || hidraw_dev.empty())
   {
     cerr << "*** ERROR: Config variable " << name << "/HID_DEVICE not set\n";
     return false;
   }
 
-  if ((fd = open(Hidraw_dev.c_str(), O_WRONLY, 0)) < 0)
+  if ((fd = open(hidraw_dev.c_str(), O_WRONLY, 0)) < 0)
   {
-    cerr << "*** ERROR: Can't open port " << Hidraw_dev << endl;
+    cerr << "*** ERROR: Can't open port " << hidraw_dev << endl;
     return false;
   }
 
@@ -159,6 +166,10 @@ bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
     else if (hiddevinfo.product == 0x013c)
     {
       cout << "CM108A";
+    }
+    else if (hiddevinfo.product == 0x000e)
+    {
+      cout << "CM109";
     }
     else if (hiddevinfo.product == 0x013a)
     {
@@ -176,11 +187,20 @@ bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
     return false;
   }
 
-  if (Hidraw_pin[0] == '!')
+  if (hidraw_pin[0] == '!')
   {
     active_low = true;
-    Hidraw_pin.erase(0, 1);
+    hidraw_pin.erase(0, 1);
   }
+
+  map<string, int>::iterator it = pin_mask.find(hidraw_pin);
+  if (it == pin_mask.end())
+  {
+    cerr << "*** ERROR: Wrong value for " << name << "/HID_PIN=" << hidraw_pin 
+         << ", valid are GPIO1, GPIO2, GPIO3, GPIO4" << endl;
+    return false;
+  }
+  pin = (*it).second;
 
   return true;
 } /* PttHidraw::initialize */
@@ -191,7 +211,7 @@ bool PttHidraw::setTxOn(bool tx_on)
   //cerr << "### PttHidraw::setTxOn(" << (tx_on ? "true" : "false") << ")\n";
 
   char a[5] = {'\000', '\000',
-              (tx_on ^ active_low ? '\004' : '\000'), '\004', '\000'};
+              (tx_on ^ active_low ? pin : '\000'), pin, '\000'};
 
   if (write(fd, a, 5) != -1)
   {

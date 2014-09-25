@@ -145,7 +145,7 @@ class SquelchHidraw : public Squelch
     Async::FdWatch  *watch;
     bool          active_low;
     struct hidraw_devinfo hiddevinfo;
-    int           pin_mask;
+    int           pin;
 
     SquelchHidraw(const SquelchHidraw&);
     SquelchHidraw& operator=(const SquelchHidraw&);

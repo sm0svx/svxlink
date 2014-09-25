@@ -1,6 +1,6 @@
 /**
 @file	 PttHidraw.h
-@brief   A PTT hardware controller using the Hidraw-Board from DMK
+@brief   A PTT hardware controller using the hidraw device
 @author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
 @date	 2014-09-17
 
@@ -142,10 +142,11 @@ class PttHidraw : public Ptt
   protected:
 
   private:
-    std::string Hidraw_pin;
+    std::string hidraw_pin;
     bool active_low;
     struct hidraw_devinfo hiddevinfo;
     int  fd;
+    int pin;
 
     PttHidraw(const PttHidraw&);
     PttHidraw& operator=(const PttHidraw&);
