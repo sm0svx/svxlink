@@ -66,6 +66,13 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 endif()
 
+# Set the default build type to Release
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING
+      "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
 
 ##############################################################################
 # Install targets properties setup
@@ -105,6 +112,11 @@ endif(NOT DEFINED BIN_INSTALL_DIR)
 if(NOT DEFINED MAN_INSTALL_DIR)
   set(MAN_INSTALL_DIR ${SHARE_INSTALL_PREFIX}/man)
 endif(NOT DEFINED MAN_INSTALL_DIR)
+
+# Where to install documentation
+if(NOT DEFINED DOC_INSTALL_DIR)
+  set(DOC_INSTALL_DIR ${SHARE_INSTALL_PREFIX}/doc/svxlink)
+endif(NOT DEFINED DOC_INSTALL_DIR)
 
 # Where to install startup scripts
 if(NOT DEFINED INIT_D_INSTALL_DIR)

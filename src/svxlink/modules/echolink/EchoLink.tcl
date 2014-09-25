@@ -461,6 +461,10 @@ proc is_receiving {rx} {
 #
 #   msg -- The message text
 #
+# WARNING: This is a slightly dangerous function since unexepected input
+# may open up a security flaw. Make sure that the message string is handled
+# as unknown data that can contain anything. Check it thoroughly before
+# using it.
 proc chat_received {msg} {
   #puts $msg
 }

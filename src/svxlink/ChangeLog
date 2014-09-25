@@ -1,10 +1,37 @@
- 1.4.0 -- ?? ??? 2014
+ 1.5.0 -- ?? ??? 2014
+----------------------
+
+* Added support for using digital drop receivers on an RTL2832U based DVB-T
+  USB dongle. This will open up the world of cheap receiver hardware to all
+  SvxLink users. It will for example be very cheap to set up an extra receiver
+  with local coverage for a SvxLink based repeater, as long as there is a
+  network connection to the repeater.
+
+* New configuration variable for local receivers, RAW_AUDIO_UDP_DEST, which
+  makes it possible to stream the raw audio read by SvxLink from the audio
+  device to a UDP port. This feature was mainly added for debugging but may
+  be usable for other things as well.
+
+* New configuration variable MASTER_GAIN for local transmitters. This has the
+  functionality as the PREAMP variable have for local receivers. That is,
+  it can be used to fine tune or amplify the gain of the signal if it's not
+  possible to do with the normal hardware sound controls.
+
+* Added a calibration utility, devcal, which can be used to get all the
+  levels right for all transmitters and receivers in the system.
+
+* New squelch detector type, OPEN, which keeps the squelch open at all times.
+  Used at calibration for example.
+
+
+
+ 1.4.0 -- 02 aug 2014
 ----------------------
 
 * The PTT hardware type must now be specified using the PTT_TYPE configuration
   variable in a TX section. Specify "SerialPin" for using a pin in the serial
-  port, "GPIO" to use a pin in a GPIO port. Set PTT_TYPE to "Dummy" or "NONE" to
-  not use any PTT hardware at all. It is an error to not specify PTT_TYPE.
+  port, "GPIO" to use a pin in a GPIO port. Set PTT_TYPE to "Dummy" or "NONE"
+  to not use any PTT hardware at all. It is an error to not specify PTT_TYPE.
 
 * New config variable for repeater logics: CLOSE_ON_SEL5 which make it
   possible to close the repeater using a selective calling sequence.
@@ -20,8 +47,8 @@
   is activated using subcommand 7 while the EchoLink module is active.
   This feature was contributed by Martin/DF1AMB.
 
-//* ModuleEchoLink: New TCL event handling function: "chat_received" which
-//  is called when a remote chat message is received.
+* ModuleEchoLink: New TCL event handling function: "chat_received" which
+  is called when a remote chat message is received.
 
 * ModuleEchoLink: New TCL event handling function: "squelch_open" which is
   called when the local receiver squelch open and closes. This function can be
@@ -63,6 +90,15 @@
 
 * Bugfix in the Voter: If the squelch were open while quitting, a crash could
   occur.
+
+* Bugfix in logfile handling: SvxLink/RemoteTrx would crash if the filesystem
+  was full while trying to write to the logfile.
+
+* Flushing logs at exit.
+  There have always been a problem with the log handling in SvxLink that if an
+  error occurred during startup, the error printouts would not end up in the
+  log. In fact, nothing would end up in the log, leaving the user confused.
+  Now the log is flushed before exit so that all printouts end up in the log.
 
 
 

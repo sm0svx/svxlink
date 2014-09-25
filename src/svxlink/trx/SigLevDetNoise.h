@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -118,15 +118,30 @@ namespace Async
 class SigLevDetNoise : public SigLevDet
 {
   public:
+    struct Factory : public SigLevDetFactory<SigLevDetNoise>
+    {
+      Factory(void) : SigLevDetFactory<SigLevDetNoise>("NOISE") {}
+    };
+
     /**
      * @brief 	Default constuctor
      */
-    explicit SigLevDetNoise(int sample_rate);
+    explicit SigLevDetNoise(void);
   
     /**
      * @brief 	Destructor
      */
     ~SigLevDetNoise(void);
+    
+    /**
+     * @brief 	Initialize the signal detector
+     * @param   cfg An initialized config object
+     * @param   name The name of the config section to read config from
+     * @param	sample_rate The rate with which samples enter the detector
+     * @return 	Return \em true on success, or \em false on failure
+     */
+    virtual bool initialize(Async::Config &cfg, const std::string& name,
+                            int sample_rate);
     
     /**
      * @brief 	Set the detector slope
@@ -201,8 +216,8 @@ class SigLevDetNoise : public SigLevDet
 
     static const unsigned BLOCK_TIME          = 25;     // milliseconds
 
-    const unsigned            sample_rate;
-    const unsigned            block_len;
+    unsigned                  sample_rate;
+    unsigned                  block_len;
     Async::AudioFilter	      *filter;
     Async::SigCAudioSink      *sigc_sink;
     float     	      	      slope;

@@ -165,6 +165,19 @@ class AudioDebugger : public AudioSink, public AudioSource
       int ret = sinkWriteSamples(samples, count);
       sample_count += ret;
 
+      float max_samp = 0.0f;
+      for (int i=0; i<count; ++i)
+      {
+        if (samples[i] > max_samp)
+        {
+          max_samp = samples[i];
+        }
+        if (-samples[i] > max_samp)
+        {
+          max_samp = -samples[i];
+        }
+      }
+
       struct timeval time, diff;
       gettimeofday(&time, 0);
 
@@ -175,12 +188,14 @@ class AudioDebugger : public AudioSink, public AudioSource
                 << " ret=" << ret << " sample_rate=";
       if (diff_ms > 0)
       {
-        std::cout << sample_count * 1000 / diff_ms << std::endl;
+        std::cout << sample_count * 1000 / diff_ms;
       }
       else
       {
-        std::cout << "inf\n";
+        std::cout << "inf";
       }
+      std::cout << " max=" << max_samp;
+      std::cout << std::endl;
       return ret;
     }
     

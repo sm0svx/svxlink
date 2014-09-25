@@ -10,7 +10,7 @@ server core (e.g. via a TCP/IP network).
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -155,11 +155,15 @@ class NetTxAdapterFactory : public TxFactory
 
 static void parse_arguments(int argc, const char **argv);
 static void stdinHandler(FdWatch *w);
-static void write_to_logfile(const char *buf);
 static void stdout_handler(FdWatch *w);
 static void sighup_handler(int signal);
 static void sigterm_handler(int signal);
-static bool open_logfile(void);
+static void handle_unix_signal(int signum);
+static bool logfile_open(void);
+static void logfile_reopen(const char *reason);
+static bool logfile_write_timestamp(void);
+static void logfile_write(const char *buf);
+static void logfile_flush(void);
 
 
 /****************************************************************************
@@ -186,8 +190,6 @@ static int    	      	logfd = -1;
 static FdWatch	      	*stdin_watch = 0;
 static FdWatch	      	*stdout_watch = 0;
 static string         	tstamp_format;
-static struct sigaction sighup_oldact, sigint_oldact, sigterm_oldact;
-static volatile bool  	reopen_log = false;
 
 
 
@@ -218,34 +220,17 @@ int main(int argc, char **argv)
   setlocale(LC_ALL, "");
 
   CppApplication app;
+  app.catchUnixSignal(SIGHUP);
+  app.catchUnixSignal(SIGINT);
+  app.catchUnixSignal(SIGTERM);
+  app.unixSignalCaught.connect(sigc::ptr_fun(&handle_unix_signal));
 
   parse_arguments(argc, const_cast<const char **>(argv));
 
   struct sigaction act;
-  act.sa_handler = sighup_handler;
+  act.sa_handler = SIG_IGN;
   sigemptyset(&act.sa_mask);
   act.sa_flags = 0;
-  if (sigaction(SIGHUP, &act, &sighup_oldact) == -1)
-  {
-    perror("sigaction");
-    exit(1);
-  }
-
-  act.sa_handler = sigterm_handler;
-  if (sigaction(SIGTERM, &act, &sigterm_oldact) == -1)
-  {
-    perror("sigaction");
-    exit(1);
-  }
-  
-  act.sa_handler = sigterm_handler;
-  if (sigaction(SIGINT, &act, &sigint_oldact) == -1)
-  {
-    perror("sigaction");
-    exit(1);
-  }
-  
-  act.sa_handler = SIG_IGN;
   if (sigaction(SIGPIPE, &act, NULL) == -1)
   {
     perror("sigaction");
@@ -257,7 +242,7 @@ int main(int argc, char **argv)
   if (logfile_name != 0)
   {
       /* Open the logfile */
-    if (!open_logfile())
+    if (!logfile_open())
     {
       exit(1);
     }
@@ -268,9 +253,19 @@ int main(int argc, char **argv)
       perror("pipe");
       exit(1);
     }
+    int flags = fcntl(pipefd[0], F_GETFL);
+    if (flags == -1)
+    {
+      perror("fcntl(..., F_GETFL)");
+      exit(1);
+    }
+    flags |= O_NONBLOCK;
+    if (fcntl(pipefd[0], F_SETFL, flags) == -1)
+    {
+      perror("fcntl(..., F_SETFL)");
+      exit(1);
+    }
     stdout_watch = new FdWatch(pipefd[0], FdWatch::FD_WATCH_RD);
-    // must explicitly specify name space for ptr_fun() to avoid conflict
-    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
     stdout_watch->activity.connect(sigc::ptr_fun(&stdout_handler));
 
       /* Redirect stdout to the logpipe */
@@ -307,6 +302,8 @@ int main(int argc, char **argv)
       exit(1);
     }
 
+    atexit(logfile_flush);
+    
       /* Tell the daemon function call not to close the file descriptors */
     noclose = 1;
   }
@@ -549,6 +546,8 @@ int main(int argc, char **argv)
   {
     cerr << "*** ERROR: No trxs successfully initialized. Bailing out...\n";
   }
+
+  logfile_flush();
   
   if (stdin_watch != 0)
   {
@@ -566,21 +565,6 @@ int main(int argc, char **argv)
   if (logfd != -1)
   {
     close(logfd);
-  }
-  
-  if (sigaction(SIGHUP, &sighup_oldact, NULL) == -1)
-  {
-    perror("sigaction");
-  }
-  
-  if (sigaction(SIGHUP, &sigterm_oldact, NULL) == -1)
-  {
-    perror("sigaction");
-  }
-  
-  if (sigaction(SIGHUP, &sigint_oldact, NULL) == -1)
-  {
-    perror("sigaction");
   }
   
   return 0;
@@ -709,106 +693,30 @@ static void stdinHandler(FdWatch *w)
 }
 
 
-static void write_to_logfile(const char *buf)
-{
-  if (logfd == -1)
-  {
-    cout << buf;
-    return;
-  }
-  
-  const char *ptr = buf;
-  ssize_t ret;
-  while (*ptr != 0)
-  {
-    static bool print_timestamp = true;
-    
-    if (print_timestamp)
-    {
-      if (!tstamp_format.empty())
-      {
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        string fmt(tstamp_format);
-        const string frac_code("%f");
-        size_t pos = fmt.find(frac_code);
-        if (pos != string::npos)
-        {
-          stringstream ss;
-          ss << setfill('0') << setw(3) << (tv.tv_usec / 1000);
-          fmt.replace(pos, frac_code.length(), ss.str());
-        }
-	struct tm *tm = localtime(&tv.tv_sec);
-	char tstr[256];
-	size_t tlen = strftime(tstr, sizeof(tstr), fmt.c_str(), tm);
-	ret = write(logfd, tstr, tlen);
-        assert(ret == static_cast<ssize_t>(tlen));
-	ret = write(logfd, ": ", 2);
-        assert(ret == 2);
-	print_timestamp = false;
-      }
-
-      if (reopen_log)
-      {
-	const char *reopen_txt = "SIGHUP received. Reopening logfile\n";
-        const size_t reopen_txt_len = strlen(reopen_txt);
-	ret = write(logfd, reopen_txt, reopen_txt_len);
-        assert(ret == static_cast<ssize_t>(reopen_txt_len));
-	open_logfile();
-	reopen_log = false;
-	print_timestamp = true;
-	continue;
-      }
-    }
-
-    size_t write_len = 0;
-    const char *nl = strchr(ptr, '\n');
-    if (nl != 0)
-    {
-      write_len = nl-ptr+1;
-      print_timestamp = true;
-    }
-    else
-    {
-      write_len = strlen(ptr);
-    }
-    ret = write(logfd, ptr, write_len);
-    assert(ret == static_cast<ssize_t>(write_len));
-    ptr += write_len;
-  }
-} /* write_to_logfile */
-
-
 static void stdout_handler(FdWatch *w)
 {
-  char buf[256];
-  ssize_t len = read(w->fd(), buf, sizeof(buf)-1);
-  if (len == -1)
+  ssize_t len =  0;
+  do
   {
-    return;
-  }
-  buf[len] = 0;
-  
-  write_to_logfile(buf);
-  
+    char buf[256];
+    len = read(w->fd(), buf, sizeof(buf)-1);
+    if (len > 0)
+    {
+      buf[len] = 0;
+      logfile_write(buf);
+    }
+  } while (len > 0);
 } /* stdout_handler  */
 
 
-void sighup_handler(int signal)
+static void sighup_handler(int signal)
 {
-  ssize_t ret;
-
   if (logfile_name == 0)
   {
-    ret = write(STDOUT_FILENO, "Ignoring SIGHUP\n", 16);
-    assert(ret == 16);
+    cout << "Ignoring SIGHUP\n";
     return;
   }
-  
-  ret = write(STDOUT_FILENO, "SIGHUP received. Logfile reopened\n", 34);
-  assert(ret == 34);
-  reopen_log = true;
-    
+  logfile_reopen("SIGHUP received");
 } /* sighup_handler */
 
 
@@ -830,12 +738,27 @@ void sigterm_handler(int signal)
   string msg("\n");
   msg += signame;
   msg += " received. Shutting down application...\n";
-  write_to_logfile(msg.c_str());
+  logfile_write(msg.c_str());
   Application::app().quit();
 } /* sigterm_handler */
 
 
-bool open_logfile(void)
+static void handle_unix_signal(int signum)
+{
+  switch (signum)
+  {
+    case SIGHUP:
+      sighup_handler(signum);
+      break;
+    case SIGINT:
+    case SIGTERM:
+      sigterm_handler(signum);
+      break;
+  }
+} /* handle_unix_signal */
+
+
+static bool logfile_open(void)
 {
   if (logfd != -1)
   {
@@ -854,8 +777,113 @@ bool open_logfile(void)
 
   return true;
   
-} /* open_logfile */
+} /* logfile_open */
 
+
+static void logfile_reopen(const char *reason)
+{
+  logfile_write_timestamp();
+  string msg(reason);
+  msg += ". Reopening logfile\n";
+  write(logfd, msg.c_str(), msg.size());
+
+  logfile_open();
+
+  logfile_write_timestamp();
+  msg = reason;
+  msg += ". Logfile reopened\n";
+  write(logfd, msg.c_str(), msg.size());
+} /* logfile_reopen */
+
+
+static bool logfile_write_timestamp(void)
+{
+  if (!tstamp_format.empty())
+  {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    string fmt(tstamp_format);
+    const string frac_code("%f");
+    size_t pos = fmt.find(frac_code);
+    if (pos != string::npos)
+    {
+      stringstream ss;
+      ss << setfill('0') << setw(3) << (tv.tv_usec / 1000);
+      fmt.replace(pos, frac_code.length(), ss.str());
+    }
+    struct tm *tm = localtime(&tv.tv_sec);
+    char tstr[256];
+    size_t tlen = strftime(tstr, sizeof(tstr), fmt.c_str(), tm);
+    ssize_t ret = write(logfd, tstr, tlen);
+    if (ret != static_cast<ssize_t>(tlen))
+    {
+      return false;
+    }
+    ret = write(logfd, ": ", 2);
+    if (ret != 2)
+    {
+      return false;
+    }
+  }
+  return true;
+} /* logfile_write_timestamp */
+
+
+static void logfile_write(const char *buf)
+{
+  if (logfd == -1)
+  {
+    cout << buf;
+    return;
+  }
+  
+  const char *ptr = buf;
+  while (*ptr != 0)
+  {
+    static bool print_timestamp = true;
+    ssize_t ret;
+    
+    if (print_timestamp)
+    {
+      if (!logfile_write_timestamp())
+      {
+        logfile_reopen("Write error");
+        return;
+      }
+      print_timestamp = false;
+    }
+
+    size_t write_len = 0;
+    const char *nl = strchr(ptr, '\n');
+    if (nl != 0)
+    {
+      write_len = nl-ptr+1;
+      print_timestamp = true;
+    }
+    else
+    {
+      write_len = strlen(ptr);
+    }
+    ret = write(logfd, ptr, write_len);
+    if (ret != static_cast<ssize_t>(write_len))
+    {
+      logfile_reopen("Write error");
+      return;
+    }
+    ptr += write_len;
+  }
+} /* logfile_write */
+
+
+static void logfile_flush(void)
+{
+  cout.flush();
+  cerr.flush();
+  if (stdout_watch != 0)
+  {
+    stdout_handler(stdout_watch);
+  }
+} /*  logfile_flush */
 
 
 
