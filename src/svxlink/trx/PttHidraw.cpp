@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <sstream>
 #include <fcntl.h>
+#include <linux/hidraw.h>
 #include <sys/ioctl.h>
 
 
@@ -130,7 +131,7 @@ PttHidraw::~PttHidraw(void)
 
 bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
 {
-    
+ 
   map<string, int> pin_mask;
   pin_mask["GPIO1"] = 0x01;
   pin_mask["GPIO2"] = 0x02;
@@ -156,6 +157,7 @@ bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
     return false;
   }
 
+  struct hidraw_devinfo hiddevinfo;    
   if (!ioctl(fd, HIDIOCGRAWINFO, &hiddevinfo) && hiddevinfo.vendor == 0x0d8c)
   {
     cout << "--- Hidraw sound chip is ";

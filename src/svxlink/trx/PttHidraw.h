@@ -35,7 +35,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <string>
-#include <linux/hidraw.h>
 
 
 /****************************************************************************
@@ -144,7 +143,7 @@ class PttHidraw : public Ptt
   private:
     std::string hidraw_pin;
     bool active_low;
-    struct hidraw_devinfo hiddevinfo;
+
     int  fd;
     int pin;
 

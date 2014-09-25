@@ -196,7 +196,8 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
          << strerror(errno) << endl;
     return false;
   }
-
+  
+  struct hidraw_devinfo hiddevinfo;
   if (!ioctl(fd, HIDIOCGRAWINFO, &hiddevinfo) && hiddevinfo.vendor == 0x0d8c)
   {
     cout << "--- Hidraw sound chip is ";
