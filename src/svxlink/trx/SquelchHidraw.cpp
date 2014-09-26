@@ -123,7 +123,6 @@ using namespace Async;
 SquelchHidraw::SquelchHidraw(void)
   : fd(-1), active_low(false)
 {
-
 } /* SquelchHidraw::SquelchHidraw */
 
 
@@ -134,6 +133,7 @@ SquelchHidraw::~SquelchHidraw(void)
     close(fd);
     fd = -1;
   }
+  delete watch;
 } /* SquelchHidraw::~SquelchHidraw */
 
 
@@ -189,7 +189,7 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
   }
   pin = (*it).second;
 
-  if ((fd = open(devicename.c_str(), O_RDWR)) == -1)
+  if ((fd = open(devicename.c_str(), O_RDWR, 0)) < 0)
   {
     cout << "*** ERROR: Could not open event device " << devicename
          << " specified in " << rx_name << "/HID_DEVICE: "

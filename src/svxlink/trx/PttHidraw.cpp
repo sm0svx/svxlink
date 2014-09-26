@@ -124,8 +124,11 @@ PttHidraw::PttHidraw(void)
 
 PttHidraw::~PttHidraw(void)
 {
-  close(fd);
-  fd = -1;
+  if (fd >= 0)
+  {
+    close(fd);
+    fd = -1;
+  }
 } /* PttHidraw::~PttHidraw */
 
 
