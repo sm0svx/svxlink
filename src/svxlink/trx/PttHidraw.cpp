@@ -117,7 +117,7 @@ using namespace Async;
  ****************************************************************************/
 
 PttHidraw::PttHidraw(void)
-  : active_low(false)
+  : fd(-1), active_low(false)
 {
 } /* PttHidraw::PttHidraw */
 
@@ -134,7 +134,7 @@ PttHidraw::~PttHidraw(void)
 
 bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
 {
- 
+
   map<string, int> pin_mask;
   pin_mask["GPIO1"] = 0x01;
   pin_mask["GPIO2"] = 0x02;
@@ -160,7 +160,7 @@ bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
     return false;
   }
 
-  struct hidraw_devinfo hiddevinfo;    
+  struct hidraw_devinfo hiddevinfo;
   if (!ioctl(fd, HIDIOCGRAWINFO, &hiddevinfo) && hiddevinfo.vendor == 0x0d8c)
   {
     cout << "--- Hidraw sound chip is ";
@@ -201,7 +201,7 @@ bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
   map<string, int>::iterator it = pin_mask.find(hidraw_pin);
   if (it == pin_mask.end())
   {
-    cerr << "*** ERROR: Wrong value for " << name << "/HID_PIN=" << hidraw_pin 
+    cerr << "*** ERROR: Wrong value for " << name << "/HID_PIN=" << hidraw_pin
          << ", valid are GPIO1, GPIO2, GPIO3, GPIO4" << endl;
     return false;
   }
