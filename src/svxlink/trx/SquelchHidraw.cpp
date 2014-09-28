@@ -121,19 +121,19 @@ using namespace Async;
  ****************************************************************************/
 
 SquelchHidraw::SquelchHidraw(void)
-  : fd(-1), active_low(false)
+  : fd(-1), active_low(false), watch(0)
 {
 } /* SquelchHidraw::SquelchHidraw */
 
 
 SquelchHidraw::~SquelchHidraw(void)
 {
+  delete watch;
   if (fd >= 0)
   {
     close(fd);
     fd = -1;
   }
-  delete watch;
 } /* SquelchHidraw::~SquelchHidraw */
 
 
@@ -163,7 +163,7 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
   string sql_pin;
   if (!cfg.getValue(rx_name, "HID_SQL_PIN", sql_pin) || sql_pin.empty())
   {
-    cerr << "*** ERROR: Config variable " << rx_name 
+    cerr << "*** ERROR: Config variable " << rx_name
          << "/HID_SQL_PIN not set or invalid\n";
     return false;
   }
@@ -183,7 +183,7 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
   map<string, int>::iterator it = pin_mask.find(sql_pin);
   if (it == pin_mask.end())
   {
-    cerr << "*** ERROR: Invalid value for " << rx_name << "/HID_SQL_PIN=" 
+    cerr << "*** ERROR: Invalid value for " << rx_name << "/HID_SQL_PIN="
          << sql_pin << ", must be VOL_UP, VOL_DN, MUTE_PLAY, MUTE_REC" << endl;
     return false;
   }
@@ -196,7 +196,7 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
          << strerror(errno) << endl;
     return false;
   }
-  
+
   struct hidraw_devinfo hiddevinfo;
   if (!ioctl(fd, HIDIOCGRAWINFO, &hiddevinfo) && hiddevinfo.vendor == 0x0d8c)
   {
