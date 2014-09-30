@@ -37,8 +37,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cerrno>
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <linux/hidraw.h>
 #include <sys/ioctl.h>
 
@@ -121,7 +119,7 @@ using namespace Async;
  ****************************************************************************/
 
 SquelchHidraw::SquelchHidraw(void)
-  : fd(-1), active_low(false), watch(0)
+  : fd(-1), watch(0), active_low(false)
 {
 } /* SquelchHidraw::SquelchHidraw */
 
@@ -174,13 +172,13 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
     sql_pin.erase(0, 1);
   }
 
-  map<string, int> pin_mask;
+  map<string, char> pin_mask;
   pin_mask["VOL_UP"] = 0x01;
   pin_mask["VOL_DN"] = 0x02;
   pin_mask["MUTE_PLAY"] = 0x04;
   pin_mask["MUTE_REC"] = 0x08;
 
-  map<string, int>::iterator it = pin_mask.find(sql_pin);
+  map<string, char>::iterator it = pin_mask.find(sql_pin);
   if (it == pin_mask.end())
   {
     cerr << "*** ERROR: Invalid value for " << rx_name << "/HID_SQL_PIN="
@@ -198,7 +196,8 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
   }
 
   struct hidraw_devinfo hiddevinfo;
-  if (!ioctl(fd, HIDIOCGRAWINFO, &hiddevinfo) && hiddevinfo.vendor == 0x0d8c)
+  if ((ioctl(fd, HIDIOCGRAWINFO, &hiddevinfo) != -1) &&
+      (hiddevinfo.vendor == 0x0d8c))
   {
     cout << "--- Hidraw sound chip is ";
     if (hiddevinfo.product == 0x000c)
@@ -231,7 +230,7 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
 
   watch = new Async::FdWatch(fd, Async::FdWatch::FD_WATCH_RD);
   assert(watch != 0);
-  watch->activity.connect(mem_fun(*this, &SquelchHidraw::HidrawActivity));
+  watch->activity.connect(mem_fun(*this, &SquelchHidraw::hidrawActivity));
 
   return true;
 }
@@ -256,27 +255,25 @@ bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
  * @brief  Called when state of Hidraw port has been changed
  *
  */
-void SquelchHidraw::HidrawActivity(FdWatch *watch)
+void SquelchHidraw::hidrawActivity(FdWatch *watch)
 {
-  char buf[10];
-  int rd = read(fd, buf, 5);
-
+  char buf[5];
+  int rd = read(fd, buf, sizeof(buf));
   if (rd < 0)
   {
     cerr << "*** ERROR: reading HID_DEVICE\n";
+    return;
   }
-  else
+
+  if (!signalDetected() && (buf[0] & pin))
   {
-    if (!signalDetected() && (buf[0] & pin))
-    {
-      setSignalDetected(active_low ^ true);
-    }
-    else if (signalDetected() && !(buf[0] & pin))
-    {
-      setSignalDetected(active_low ^ false);
-    }
+    setSignalDetected(active_low ^ true);
   }
-} /* SquelchHidraw::readHidrawValueData */
+  else if (signalDetected() && !(buf[0] & pin))
+  {
+    setSignalDetected(active_low ^ false);
+  }
+} /* SquelchHidraw::hidrawActivity */
 
 
 
