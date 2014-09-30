@@ -33,9 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
-#include <fstream>
-#include <cstring>
-#include <sstream>
+#include <unistd.h>
 #include <fcntl.h>
 #include <linux/hidraw.h>
 #include <sys/ioctl.h>
@@ -117,7 +115,7 @@ using namespace Async;
  ****************************************************************************/
 
 PttHidraw::PttHidraw(void)
-  : fd(-1), active_low(false)
+  : active_low(false), fd(-1)
 {
 } /* PttHidraw::PttHidraw */
 
@@ -135,12 +133,13 @@ PttHidraw::~PttHidraw(void)
 bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
 {
 
-  map<string, int> pin_mask;
+  map<string, char> pin_mask;
   pin_mask["GPIO1"] = 0x01;
   pin_mask["GPIO2"] = 0x02;
   pin_mask["GPIO3"] = 0x04;
   pin_mask["GPIO4"] = 0x08;
 
+  string hidraw_pin;
   if (!cfg.getValue(name, "HID_PTT_PIN", hidraw_pin) || hidraw_pin.empty())
   {
     cerr << "*** ERROR: Config variable " << name << "/HID_PTT_PIN not set\n";
@@ -161,7 +160,8 @@ bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
   }
 
   struct hidraw_devinfo hiddevinfo;
-  if (!ioctl(fd, HIDIOCGRAWINFO, &hiddevinfo) && hiddevinfo.vendor == 0x0d8c)
+  if ((ioctl(fd, HIDIOCGRAWINFO, &hiddevinfo) != -1) &&
+      (hiddevinfo.vendor == 0x0d8c))
   {
     cout << "--- Hidraw sound chip is ";
     if (hiddevinfo.product == 0x000c)
@@ -188,7 +188,7 @@ bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
   }
   else
   {
-    cout << "*** ERROR: unknown/unsupported sound chip detected...\n";
+    cerr << "*** ERROR: unknown/unsupported sound chip detected...\n";
     return false;
   }
 
@@ -198,7 +198,7 @@ bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
     hidraw_pin.erase(0, 1);
   }
 
-  map<string, int>::iterator it = pin_mask.find(hidraw_pin);
+  map<string, char>::iterator it = pin_mask.find(hidraw_pin);
   if (it == pin_mask.end())
   {
     cerr << "*** ERROR: Wrong value for " << name << "/HID_PIN=" << hidraw_pin
@@ -218,14 +218,12 @@ bool PttHidraw::setTxOn(bool tx_on)
   char a[5] = {'\000', '\000',
               (tx_on ^ active_low ? pin : '\000'), pin, '\000'};
 
-  if (write(fd, a, 5) != -1)
-  {
-    return true;
-  }
-  else
+  if (write(fd, a, sizeof(a)) == -1)
   {
     return false;
   }
+
+  return true;
 } /* PttHidraw::setTxOn */
 
 
