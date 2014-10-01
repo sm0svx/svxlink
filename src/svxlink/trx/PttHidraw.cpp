@@ -117,7 +117,7 @@ using namespace Async;
  ****************************************************************************/
 
 PttHidraw::PttHidraw(void)
-  : fd(-1), active_low(false)
+  : active_low(false), fd(-1)
 {
 } /* PttHidraw::PttHidraw */
 

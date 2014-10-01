@@ -141,8 +141,8 @@ class SquelchHidraw : public Squelch
 
   private:
     int           fd;
-    Async::FdWatch  *watch;
     bool          active_low;
+    Async::FdWatch  *watch;
     int           pin;
 
     SquelchHidraw(const SquelchHidraw&);
