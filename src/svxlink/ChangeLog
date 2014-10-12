@@ -23,6 +23,9 @@
 * New squelch detector type, OPEN, which keeps the squelch open at all times.
   Used at calibration for example.
 
+* Bugfix: The receiver voter had a bug which caused incoming audio to be
+  muted if a receiver switch occurred in the middle of an identification.
+
 
 
  1.4.0 -- 02 aug 2014
