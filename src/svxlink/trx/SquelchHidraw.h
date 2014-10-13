@@ -140,14 +140,15 @@ class SquelchHidraw : public Squelch
   protected:
 
   private:
-    int           fd;
-    bool          active_low;
+
+    int             fd;
     Async::FdWatch  *watch;
-    int           pin;
+    bool            active_low;
+    char            pin;
 
     SquelchHidraw(const SquelchHidraw&);
     SquelchHidraw& operator=(const SquelchHidraw&);
-    void HidrawActivity(Async::FdWatch *watch);
+    void hidrawActivity(Async::FdWatch *watch);
 
 };  /* class SquelchGpio */
 
