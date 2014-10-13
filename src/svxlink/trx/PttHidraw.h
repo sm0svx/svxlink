@@ -141,11 +141,10 @@ class PttHidraw : public Ptt
   protected:
 
   private:
-    std::string hidraw_pin;
     bool active_low;
 
-    int  fd;
-    int pin;
+    int   fd;
+    char  pin;
 
     PttHidraw(const PttHidraw&);
     PttHidraw& operator=(const PttHidraw&);

@@ -698,8 +698,8 @@ will create a link to the specified path from it's pseudotty slave device
 (/dev/pts/X). This can be used by a script to interface custom devices,
 modems or other hardware to SvxLink. Look for nhrcx.pl to see an example.
 
-The HIDRAW squelch supports human interface devices (HID) USB devices
-like CM108 soundcard e.g. used in the URI echolink adapter made by DMK.
+The HIDRAW squelch supports human interface devices (HID), USB devices
+like CM108 soundcard e.g. used in the URI Echolink adapter made by DMK.
 .TP
 .B SQL_START_DELAY
 The squelch start delay is of most use when using VOX squelch. For example, if
@@ -928,9 +928,10 @@ port is created by the linux/hidraw driver.
 e.g. HID_DEVICE=/dev/hidraw3
 .TP
 .B HID_SQL_PIN
-Defined the pin your hardware squelch (from RX) is connected to. Valid are
-VOL_UP, VOL_DN, MUTE_PLAY or MUTE_REC.
-e.g. HID_SQL_PIN=VOL_UP
+Define the pin your hardware squelch (from RX) is connected to. Valid values
+are VOL_UP, VOL_DN, MUTE_PLAY or MUTE_REC.
+
+Example: HID_SQL_PIN=VOL_UP
 .TP
 .B SIGLEV_SLOPE
 The slope (or gain) of the signal level detector. See chapter CALIBRATING THE
@@ -1425,7 +1426,7 @@ channels as two mono channels. Legal values are 0 or 1.
 .B PTT_TYPE
 Use this configuration variable to specify which type of hardware to use to
 control the PTT.  Specify "SerialPin" for using a pin in the serial port,
-"GPIO" to use a pin in a GPIO port "PTY" if you want to use an external
+"GPIO" to use a pin in a GPIO port, "PTY" if you want to use an external
 interface script via a pseudo tty port or "Hidraw" to use the linux/hidraw
 driver to support hidraw devices like CM108 sound card, e.g. URI device
 from DMK.
@@ -1463,8 +1464,9 @@ off.  This can be used by an external script to interface custom devices,
 modems or other hardware to SvxLink.  Look for nhrcx.pl to see an example.
 .TP
 .B HID_DEVICE
-Define the device your supported hidraw device is accessible.
-e.g. HID_DEVICE=/dev/hidraw3
+Define the device node where your hidraw device is accessible at.
+
+Example: HID_DEVICE=/dev/hidraw3
 .TP
 .B HID_PTT_PIN
 Define the pin your ptt control is connected to. Valid parameters are 
