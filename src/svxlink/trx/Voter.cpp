@@ -444,6 +444,13 @@ bool Voter::initialize(void)
   }
   sm->setRxSwitchDelay(rx_switch_delay);
   
+  string sql_state_pty;
+  cfg.getValue(name(), "SQL_STATE_PTY", sql_state_pty);
+  if (!sql_state_pty.empty())
+  {
+    
+  }
+
   selector = new AudioSelector;
   setHandler(selector);
   
@@ -611,7 +618,7 @@ void Voter::resetAll(void)
 } /* Voter::resetAll */
 
 
-void Voter::printSquelchState(void)
+void Voter::printSquelchState(ostream &out)
 {
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
@@ -619,19 +626,19 @@ void Voter::printSquelchState(void)
     float siglev = (*it)->signalStrength();
     bool sql_is_open = (*it)->squelchIsOpen();
 
-    cout << (*it)->name();
+    out << (*it)->name();
     if (sql_is_open)
     {
-      cout << ((*it) == sm->activeSrx() ? "*" : ":");
+      out << ((*it) == sm->activeSrx() ? "*" : ":");
     }
     else
     {
-      cout << " ";
+      out << " ";
     }
-    cout << left << setw(4) << static_cast<int>(siglev);
-    cout << " ";
+    out << left << setw(4) << static_cast<int>(siglev);
+    out << " ";
   }
-  cout << endl;
+  out << endl;
 } /* Voter::printSquelchState */
 
 
@@ -1118,7 +1125,7 @@ void Voter::Receiving::exit(void)
 
 void Voter::Receiving::timerExpired(void)
 {
-  //voter().printSquelchState();
+  //voter().printSquelchState(cout);
   
   assert(activeSrx() != 0);
   //assert(bestSrx() != 0);

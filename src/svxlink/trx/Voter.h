@@ -416,7 +416,7 @@ class Voter : public Rx
     void muteAll(Rx::MuteState mute_state) { muteAllBut(0, mute_state); }
     void unmuteAll(void);
     void resetAll(void);
-    void printSquelchState(void);
+    void printSquelchState(std::ostream &out);
     SatRx *findBestRx(void) const;
 
 };  /* class Voter */
