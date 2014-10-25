@@ -597,7 +597,7 @@ proc rmk_precip {args} {
 }
 
 
-# daytime minimal/maximal temprarature
+# daytime minimal/maximal temperature
 proc rmk_minmaxtemp {max min} {
   playMsg "daytime";
   playMsg "temperature";
@@ -663,15 +663,15 @@ proc qfe {val} {
 
 # runwaystate
 proc runwaystate args {
-   foreach item $args {
-     if [regexp {(\d+)} $item] {
-       sayNumber $item;
-     } else {
-       playMsg $item;
-     }
-     playSilence 200;
-   }
-   playSilence 200;
+  foreach item $args {
+    if [regexp {(\d+)} $item] {
+      sayNumber $item;
+    } else {
+      playMsg $item;
+    }
+    playSilence 200;
+  }
+  playSilence 200;
 }
 
 
@@ -680,25 +680,25 @@ proc sayNumber { number } {
   variable ts;
   variable hd;
 
-  if {$number > 99} {
+  if {$number > 99 && $number < 10000} {
     if [ expr {$number % 100} ] {
-       spellNumber $number;
+      spellNumber $number;
     } else {
-  set ts [expr {int($number / 1000)}];   # 1...9 thousand
-  set hd [expr {(($number - $ts * 1000)/100) * 100}];  # 1...9 houndred
+      set ts [expr {int($number / 1000)}];   # 1...9 thousand
+      set hd [expr {(($number - $ts * 1000)/100) * 100}];  # 1...9 houndred
 
-  # say 1...9 thousand
-  if { $ts > 0 } {
+      # say 1...9 thousand
+      if { $ts > 0 } {
         playMsg $ts;
-     playMsg "thousand";
-  }
-  if { $hd > 0 } {
+        playMsg "thousand";
+      }
+      if { $hd > 0 } {
         playMsg $hd;
-  }
-  }
+      }
+    }
   } else {
     spellNumber $number;
-}
+  }
 }
 
 
