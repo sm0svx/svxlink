@@ -261,6 +261,9 @@ class MsgAuthResponse : public Msg
       //err = gcry_control(GCRYCTL_INIT_SECMEM, 16384, 0);
       err = gcry_control(GCRYCTL_DISABLE_SECMEM, 0);
       if (err) goto error;
+        // Tell Libgcrypt that initialization has completed
+      err = gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
+      if (err) goto error;
       gcry_md_hd_t hd;
       //printf("gcry_md_open\n");
       err = gcry_md_open(&hd, ALGO, GCRY_MD_FLAG_HMAC);

@@ -1,8 +1,8 @@
 /**
-@file	 Ptt.cpp
-@brief   Base class for PTT hw control
-@author  Tobias Blomberg / SM0SVX
-@date	 2014-01-26
+@file	 PttHidraw.cpp
+@brief   A PTT hardware controller using the Hidraw Board from DMK
+@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@date	 2014-09-17
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -33,7 +33,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
-#include <cassert>
+#include <unistd.h>
+#include <fcntl.h>
+#include <linux/hidraw.h>
+#include <sys/ioctl.h>
 
 
 /****************************************************************************
@@ -50,10 +53,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Ptt.h"
-#include "PttSerialPin.h"
-#include "PttGpio.h"
-#include "PttPty.h"
 #include "PttHidraw.h"
 
 
@@ -83,20 +82,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-namespace {
-  class PttDummy : public Ptt
-  {
-    public:
-      struct Factory : public PttFactory<PttDummy>
-      {
-        Factory(void) : PttFactory<PttDummy>("Dummy") {}
-      };
-
-      virtual bool initialize(Config &cfg, const string name) { return true; }
-      virtual bool setTxOn(bool tx_on) { return true; }
-  };
-};
-
 
 
 /****************************************************************************
@@ -115,7 +100,6 @@ namespace {
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -130,38 +114,117 @@ namespace {
  *
  ****************************************************************************/
 
-Ptt *PttFactoryBase::createNamedPtt(Config& cfg, const string& name)
+PttHidraw::PttHidraw(void)
+  : active_low(false), fd(-1)
 {
-  PttDummy::Factory dummy_ptt_factory;
-  PttSerialPin::Factory serial_ptt_factory;
-  PttGpio::Factory gpio_ptt_factory;
-  PttPty::Factory pty_ptt_factory;
-  PttHidraw::Factory hidraw_ptt_factory;
-  
-  string ptt_type;
-  if (!cfg.getValue(name, "PTT_TYPE", ptt_type) || ptt_type.empty())
+} /* PttHidraw::PttHidraw */
+
+
+PttHidraw::~PttHidraw(void)
+{
+  if (fd >= 0)
   {
-    cerr << "*** ERROR: PTT_TYPE not specified for transmitter "
-         << name << ". Legal values are: "
-         << validFactories() << "or \"NONE\"" << endl;
-    return 0;
+    close(fd);
+    fd = -1;
+  }
+} /* PttHidraw::~PttHidraw */
+
+
+bool PttHidraw::initialize(Async::Config &cfg, const std::string name)
+{
+
+  map<string, char> pin_mask;
+  pin_mask["GPIO1"] = 0x01;
+  pin_mask["GPIO2"] = 0x02;
+  pin_mask["GPIO3"] = 0x04;
+  pin_mask["GPIO4"] = 0x08;
+
+  string hidraw_pin;
+  if (!cfg.getValue(name, "HID_PTT_PIN", hidraw_pin) || hidraw_pin.empty())
+  {
+    cerr << "*** ERROR: Config variable " << name << "/HID_PTT_PIN not set\n";
+    return false;
   }
 
-  if (ptt_type == "NONE")
+  string hidraw_dev;
+  if (!cfg.getValue(name, "HID_DEVICE", hidraw_dev) || hidraw_dev.empty())
   {
-    ptt_type = "Dummy";
+    cerr << "*** ERROR: Config variable " << name << "/HID_DEVICE not set\n";
+    return false;
   }
-  
-  Ptt *ptt = createNamedObject(ptt_type);
-  if (ptt == 0)
+
+  if ((fd = open(hidraw_dev.c_str(), O_WRONLY, 0)) < 0)
   {
-    cerr << "*** ERROR: Unknown PTT_TYPE \"" << ptt_type << "\" specified for "
-         << "transmitter " << name << ". Legal values are: "
-         << validFactories() << "or \"NONE\"" << endl;
+    cerr << "*** ERROR: Can't open port " << hidraw_dev << endl;
+    return false;
   }
-  
-  return ptt;
-} /* PttFactoryBase::createNamedPtt */
+
+  struct hidraw_devinfo hiddevinfo;
+  if ((ioctl(fd, HIDIOCGRAWINFO, &hiddevinfo) != -1) &&
+      (hiddevinfo.vendor == 0x0d8c))
+  {
+    cout << "--- Hidraw sound chip is ";
+    if (hiddevinfo.product == 0x000c)
+    {
+      cout << "CM108";
+    }
+    else if (hiddevinfo.product == 0x013c)
+    {
+      cout << "CM108A";
+    }
+    else if (hiddevinfo.product == 0x000e)
+    {
+      cout << "CM109";
+    }
+    else if (hiddevinfo.product == 0x013a)
+    {
+      cout << "CM119";
+    }
+    else
+    {
+      cout << "unknown";
+    }
+    cout << endl;
+  }
+  else
+  {
+    cerr << "*** ERROR: unknown/unsupported sound chip detected...\n";
+    return false;
+  }
+
+  if (hidraw_pin[0] == '!')
+  {
+    active_low = true;
+    hidraw_pin.erase(0, 1);
+  }
+
+  map<string, char>::iterator it = pin_mask.find(hidraw_pin);
+  if (it == pin_mask.end())
+  {
+    cerr << "*** ERROR: Wrong value for " << name << "/HID_PIN=" << hidraw_pin
+         << ", valid are GPIO1, GPIO2, GPIO3, GPIO4" << endl;
+    return false;
+  }
+  pin = (*it).second;
+
+  return true;
+} /* PttHidraw::initialize */
+
+
+bool PttHidraw::setTxOn(bool tx_on)
+{
+  //cerr << "### PttHidraw::setTxOn(" << (tx_on ? "true" : "false") << ")\n";
+
+  char a[5] = {'\000', '\000',
+              (tx_on ^ active_low ? pin : '\000'), pin, '\000'};
+
+  if (write(fd, a, sizeof(a)) == -1)
+  {
+    return false;
+  }
+
+  return true;
+} /* PttHidraw::setTxOn */
 
 
 

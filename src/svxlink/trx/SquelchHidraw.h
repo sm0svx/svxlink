@@ -1,8 +1,8 @@
 /**
-@file	 Ptt.cpp
-@brief   Base class for PTT hw control
-@author  Tobias Blomberg / SM0SVX
-@date	 2014-01-26
+@file	 SquelchHidraw.h
+@brief   A squelch detector that read squelch state from a Hidraw device
+@author  Adi Bier / DL1HRC
+@date	 2014-08-28
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -24,6 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+#ifndef SQUELCH_HIDRAW_INCLUDED
+#define SQUELCH_HIDRAW_INCLUDED
 
 
 /****************************************************************************
@@ -32,8 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
-#include <cassert>
+#include <string>
+#include <sigc++/sigc++.h>
 
 
 /****************************************************************************
@@ -50,22 +52,36 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Ptt.h"
-#include "PttSerialPin.h"
-#include "PttGpio.h"
-#include "PttPty.h"
-#include "PttHidraw.h"
-
+#include "Squelch.h"
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Forward declarations
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+namespace Async
+{
+  class Timer;
+};
+
+
+/****************************************************************************
+ *
+ * Namespace
+ *
+ ****************************************************************************/
+
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
 
 
 
@@ -79,105 +95,66 @@ using namespace Async;
 
 /****************************************************************************
  *
- * Local class definitions
- *
- ****************************************************************************/
-
-namespace {
-  class PttDummy : public Ptt
-  {
-    public:
-      struct Factory : public PttFactory<PttDummy>
-      {
-        Factory(void) : PttFactory<PttDummy>("Dummy") {}
-      };
-
-      virtual bool initialize(Config &cfg, const string name) { return true; }
-      virtual bool setTxOn(bool tx_on) { return true; }
-  };
-};
-
-
-
-/****************************************************************************
- *
- * Prototypes
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
  * Exported Global Variables
  *
  ****************************************************************************/
 
 
 
-
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
+/**
+@brief	A squelch detector that read squelch state from a Hidraw device
+@author Adi Bier / DL1HRC
+@date   2014-08-28
 
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-Ptt *PttFactoryBase::createNamedPtt(Config& cfg, const string& name)
+This squelch detector read the squelch indicator signal from a Hidraw pin.
+A high level (>3.3V) will be interpreted as squelch open and a low level (GND)
+will be interpreted as squelch close.
+*/
+class SquelchHidraw : public Squelch
 {
-  PttDummy::Factory dummy_ptt_factory;
-  PttSerialPin::Factory serial_ptt_factory;
-  PttGpio::Factory gpio_ptt_factory;
-  PttPty::Factory pty_ptt_factory;
-  PttHidraw::Factory hidraw_ptt_factory;
-  
-  string ptt_type;
-  if (!cfg.getValue(name, "PTT_TYPE", ptt_type) || ptt_type.empty())
-  {
-    cerr << "*** ERROR: PTT_TYPE not specified for transmitter "
-         << name << ". Legal values are: "
-         << validFactories() << "or \"NONE\"" << endl;
-    return 0;
-  }
+  public:
+    /**
+     * @brief 	Default constuctor
+     */
+    SquelchHidraw(void);
 
-  if (ptt_type == "NONE")
-  {
-    ptt_type = "Dummy";
-  }
-  
-  Ptt *ptt = createNamedObject(ptt_type);
-  if (ptt == 0)
-  {
-    cerr << "*** ERROR: Unknown PTT_TYPE \"" << ptt_type << "\" specified for "
-         << "transmitter " << name << ". Legal values are: "
-         << validFactories() << "or \"NONE\"" << endl;
-  }
-  
-  return ptt;
-} /* PttFactoryBase::createNamedPtt */
+    /**
+     * @brief 	Destructor
+     */
+    ~SquelchHidraw(void);
 
+    /**
+     * @brief 	Initialize the squelch detector
+     * @param 	cfg A previsously initialized config object
+     * @param 	rx_name The name of the RX (config section name)
+     * @return	Returns \em true on success or else \em false
+     */
+    bool initialize(Async::Config& cfg, const std::string& rx_name);
 
+  protected:
 
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
+  private:
+    int             fd;
+    Async::FdWatch  *watch;
+    bool            active_low;
+    char            pin;
+
+    SquelchHidraw(const SquelchHidraw&);
+    SquelchHidraw& operator=(const SquelchHidraw&);
+    void hidrawActivity(Async::FdWatch *watch);
+
+};  /* class SquelchGpio */
 
 
+//} /* namespace */
 
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
+#endif /* SQUELCH_HIDRAW_INCLUDED */
 
 
 
