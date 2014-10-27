@@ -42,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncPty.h>
 
 
 /****************************************************************************
@@ -51,7 +52,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "PtyDtmfDecoder.h"
-#include "Pty.h"
 
 
 
@@ -147,7 +147,8 @@ bool PtyDtmfDecoder::initialize(void)
   {
     return false;
   }
-  pty->cmdReceived.connect(sigc::mem_fun(*this, &PtyDtmfDecoder::cmdReceived));
+  pty->dataReceived.connect(
+      sigc::mem_fun(*this, &PtyDtmfDecoder::dataReceived));
   return pty->open();
 
 } /* PtyDtmfDecoder::initialize */
@@ -168,32 +169,37 @@ bool PtyDtmfDecoder::initialize(void)
  *
  ****************************************************************************/
 
-void PtyDtmfDecoder::cmdReceived(char cmd)
+void PtyDtmfDecoder::dataReceived(const void *buf, size_t count)
 {
-  if (cmd == ' ')
+  const char *ptr = reinterpret_cast<const char*>(buf);
+  for (size_t i=0; i<count; ++i)
   {
-    digitIdle(); // DTMF digit deactivated
+    const char &cmd = *ptr++;
+    if (cmd == ' ')
+    {
+      digitIdle(); // DTMF digit deactivated
+    }
+    else if (((cmd >= '0') && (cmd <= '9')) ||
+        ((cmd >= 'A') && (cmd <= 'D')) ||
+        (cmd == '*') ||
+        (cmd == '#'))
+    {
+      digitActive(cmd); // DTMF digit activated
+    }
+    else if (cmd == 'E')
+    {
+      digitActive('*'); // DTMF digit E==* activated
+    }
+    else if (cmd == 'F')
+    {
+      digitActive('#'); // DTMF digit F==# activated
+    }
+    else
+    {
+      cerr << "*** WARNING: Illegal DTMF PTY command received: " << cmd << endl;
+    }
   }
-  else if (((cmd >= '0') && (cmd <= '9')) ||
-           ((cmd >= 'A') && (cmd <= 'D')) ||
-           (cmd == '*') ||
-           (cmd == '#'))
-  {
-    digitActive(cmd); // DTMF digit activated
-  }
-  else if (cmd == 'E')
-  {
-    digitActive('*'); // DTMF digit E==* activated
-  }
-  else if (cmd == 'F')
-  {
-    digitActive('#'); // DTMF digit F==# activated
-  }
-  else
-  {
-    cerr << "*** WARNING: Illegal DTMF PTY command received: " << cmd << endl;
-  }
-} /* PtyDtmfDecoder::charactersReceived */
+} /* PtyDtmfDecoder::dataReceived */
 
 
 

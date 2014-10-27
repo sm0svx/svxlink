@@ -1,12 +1,13 @@
 /**
-@file	 Pty.h
-@brief   A class that wrap up some functionality to use a PTY
-@author  Tobias Blomberg / SM0SVX
-@date	 2014-06-07
+@file	 AprsPty.h
+@brief   A interface to receive Aprs messages over a pseudo Tty device
+         to send the information into the Aprs network
+@author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
+@date	 2014-08-05
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2014  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef PTY_INCLUDED
-#define PTY_INCLUDED
+#ifndef APRS_PTY_INCLUDED
+#define APRS_PTY_INCLUDED
 
 
 /****************************************************************************
@@ -34,9 +35,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
-
-#include <string>
 
 
 /****************************************************************************
@@ -53,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncPty.h>
 
 
 /****************************************************************************
@@ -61,10 +60,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class FdWatch;
-};
 
 
 /****************************************************************************
@@ -73,8 +68,7 @@ namespace Async
  *
  ****************************************************************************/
 
-//namespace MyNameSpace
-//{
+using namespace sigc;
 
 
 /****************************************************************************
@@ -83,7 +77,7 @@ namespace Async
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -108,86 +102,92 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A wrapper class for using a PTY
-@author Tobias Blomberg / SM0SVX
-@date   2014-06-07
+@brief   A interface to receive Aprs messages over a pseudo Tty device
+         to send the information into the Aprs network
+@author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
+@date	 2014-08-05
 
-This class wrap up some functionality that is nice to have when using a PTY.
+This interface receive messages through a PTY device.  This
+can be used to gateway Aprs messages to the Aprs network
 */
-class Pty : public sigc::trackable
+class AprsPty
 {
   public:
     /**
-     * @brief 	Default constructor
+     * @brief 	Default constuctor
      */
-    Pty(const std::string &slave_link="");
-  
+    AprsPty(void) : pty(0) {}
+
     /**
      * @brief 	Destructor
      */
-    ~Pty(void);
-  
-    /**
-     * @brief   Open the PTY
-     * @return  Returns \em true on success or \em false on failure
-     *
-     * Use this function to open the PTY. If the PTY is already open it will
-     * be closed first.
-     */
-    bool open(void);
+    ~AprsPty(void)
+    {
+      delete pty;
+    }
 
     /**
-     * @brief   Close the PTY if it's open
-     *
-     * Close the PTY if it's open. This function is safe to call even if
-     * the PTY is not open or if it's just partly opened.
+     * @brief 	Initialize the AprsPty device
+     * @return	Returns \em true on success or else \em false
      */
-    void close(void);
+    bool initialize(const std::string link_path)
+    {
+      pty = new Async::Pty(link_path);
+      if (pty == 0)
+      {
+        return false;
+      }
+      pty->dataReceived.connect(sigc::mem_fun(*this, &AprsPty::dataReceived));
+      return pty->open();
+    }
 
-    /**
-     * @brief   Reopen the PTY
-     * @return  Returns \em true on success or \em false on failure
-     *
-     * Try to reopen the PTY. On failure an error message will be printed
-     * and the PTY will stay closed.
-     */
-    bool reopen(void);
+    /*
+    */
+    sigc::signal<void, std::string> messageReceived;
 
-    /**
-     * @brief   Write a command to the PTY
-     * @param   cmd The command to send
-     * @return  Returns \em true on success or \em false on failure
-     */
-    bool write(char cmd);
-
-    /**
-     * @brief   Signal that is emitted when a command has been received
-     * @param   cmd The received command
-     */
-    sigc::signal<void, char> cmdReceived;
-    
   protected:
-    
+
   private:
-    std::string     slave_link;
-    int     	    master;
-    int             slave;
-    Async::FdWatch  *watch;
+    Async::Pty      *pty;
+    std::string     message;
 
-    Pty(const Pty&);
-    Pty& operator=(const Pty&);
-    
-    void charactersReceived(Async::FdWatch *w);
+    AprsPty(const AprsPty&);
+    AprsPty& operator=(const AprsPty&);
 
-};  /* class Pty */
+    /**
+     * @brief   Called when a command is received on the master PTY
+     * @param   message The received message
+     *
+     * All other commands are ignored.
+     */
+    void dataReceived(const void *buf, size_t count)
+    {
+      const char *ptr = reinterpret_cast<const char*>(buf);
+      for (size_t i=0; i<count; ++i)
+      {
+        const char &digit = *ptr++;
+        if (digit != '\n')
+        {
+          message += digit;
+        }
+        else
+        {
+          messageReceived(message);
+          message = "";
+        }
+      }
+    } /* dataReceived */
+
+};  /* class AprsPty */
 
 
 //} /* namespace */
 
-#endif /* PTY_INCLUDED */
+#endif /* APRS_PTY_INCLUDED */
 
 
 
 /*
  * This file has not been truncated
  */
+

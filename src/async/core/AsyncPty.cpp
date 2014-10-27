@@ -1,11 +1,11 @@
 /**
-@file	 Pty.cpp
+@file	 AsyncPty.cpp
 @brief   A class that wrap up some functionality to use a PTY
 @author  Tobias Blomberg / SM0SVX
 @date	 2014-06-07
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Async - A library for programming event driven applications
 Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -58,7 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Pty.h"
+#include "AsyncPty.h"
 
 
 
@@ -69,7 +69,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-
+using namespace Async;
 
 
 /****************************************************************************
@@ -233,9 +233,9 @@ bool Pty::reopen(void)
 } /* Pty::reopen */
 
 
-bool Pty::write(char cmd)
+ssize_t Pty::write(const void *buf, size_t count)
 {
-  return (::write(master, &cmd, 1) == 1);
+  return ::write(master, buf, count);
 } /* Pty::write */
 
 
@@ -259,9 +259,9 @@ bool Pty::write(char cmd)
  */
 void Pty::charactersReceived(Async::FdWatch *w)
 {
-  char cmd;
-  int rd = read(w->fd(), &cmd, 1);
-  if (rd != 1)
+  char buf[256];
+  int rd = read(w->fd(), buf, sizeof(buf));
+  if (rd < 0)
   {
     std::cerr << "*** ERROR: Failed to read master PTY: "
               << std::strerror(errno) << ". "
@@ -269,7 +269,12 @@ void Pty::charactersReceived(Async::FdWatch *w)
     reopen();
     return;
   }
-  cmdReceived(cmd);
+  else if (rd == 0)
+  {
+    reopen();
+    return;
+  }
+  dataReceived(buf, rd);
 } /* Pty::charactersReceived */
 
 

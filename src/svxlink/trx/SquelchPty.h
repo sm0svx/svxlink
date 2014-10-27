@@ -42,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncPty.h>
 
 
 /****************************************************************************
@@ -51,7 +52,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "Squelch.h"
-#include "Pty.h"
 
 
 /****************************************************************************
@@ -147,12 +147,13 @@ class SquelchPty : public Squelch
         return false;
       }
 
-      pty = new Pty(link_path);
+      pty = new Async::Pty(link_path);
       if (pty == 0)
       {
         return false;
       }
-      pty->cmdReceived.connect(sigc::mem_fun(*this, &SquelchPty::cmdReceived));
+      pty->dataReceived.connect(
+          sigc::mem_fun(*this, &SquelchPty::dataReceived));
       return pty->open();
     }
 
@@ -169,14 +170,15 @@ class SquelchPty : public Squelch
     }
 
   private:
-    Pty             *pty;
+    Async::Pty  *pty;
 
     SquelchPty(const SquelchPty&);
     SquelchPty& operator=(const SquelchPty&);
 
     /**
-     * @brief   Called when a command is received on the master PTY
-     * @param   cmd The received command
+     * @brief   Called when data is received on the master PTY
+     * @param   buf A buffer containing the received data
+     * @param   count The number of bytes in the buffer
      *
      * We implement a very basic squelch protocol here to interface the
      * actual squelch detector to SvxLink through a (perl|python|xxx)-script
@@ -187,18 +189,23 @@ class SquelchPty : public Squelch
      *
      * All other commands are ignored.
      */
-    void cmdReceived(char cmd)
+    void dataReceived(const void *buf, size_t count)
     {
-      switch (cmd)
+      const char *ptr = reinterpret_cast<const char*>(buf);
+      for (size_t i=0; i<count; ++i)
       {
-        case 'O': // The squelch is open
-          setSignalDetected(true);
-          break;
-        case 'Z': // The squelch is closed
-          setSignalDetected(false);
-          break;
+        const char &cmd = *ptr++;
+        switch (cmd)
+        {
+          case 'O': // The squelch is open
+            setSignalDetected(true);
+            break;
+          case 'Z': // The squelch is closed
+            setSignalDetected(false);
+            break;
+        }
       }
-    } /* cmdReceived */
+    } /* dataReceived */
 
 };  /* class SquelchPty */
 

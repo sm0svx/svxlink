@@ -41,6 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncPty.h>
 
 
 /****************************************************************************
@@ -50,7 +51,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "PttPty.h"
-#include "Pty.h"
 
 
 
@@ -61,6 +61,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 
 
 
@@ -148,7 +149,8 @@ bool PttPty::initialize(Async::Config &cfg, const std::string name)
  */
 bool PttPty::setTxOn(bool tx_on)
 {
-  return pty->write(tx_on ? 'T' : 'R');
+  char cmd(tx_on ? 'T' : 'R');
+  return (pty->write(&cmd, 1) != 1);
 } /* PttPty::setTxOn */
 
 

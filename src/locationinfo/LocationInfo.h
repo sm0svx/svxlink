@@ -56,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "AprsPty.h"
 
 
 /****************************************************************************
@@ -238,6 +239,8 @@ class LocationInfo
     bool parseClients(const Async::Config &cfg, const std::string &name);
     void startStatisticsTimer(int interval);
     void sendAprsStatistics(Async::Timer *t);
+    void initExtPty(std::string ptydevice);
+    void mesReceived(std::string message);
 
 };  /* class LocationInfo */
 
