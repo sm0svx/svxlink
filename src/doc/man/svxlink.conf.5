@@ -644,7 +644,7 @@ channels as two mono channels. Legal values are 0 or 1.
 .TP
 .B SQL_DET
 Specify the type of squelch detector to use. Possible values are: VOX, CTCSS,
-SERIAL, EVDEV, SIGLEV, PTY or GPIO.
+SERIAL, EVDEV, SIGLEV, PTY, GPIO or HIDRAW.
 
 The VOX squelch detector determines if there is a signal
 present by calculating a mean value of the sound samples. The VOX squelch
@@ -697,6 +697,9 @@ Define the slave pty in PTY_PATH (e.g. PTY_PATH=/tmp/sql) and SvxLink
 will create a link to the specified path from it's pseudotty slave device 
 (/dev/pts/X). This can be used by a script to interface custom devices,
 modems or other hardware to SvxLink. Look for nhrcx.pl to see an example.
+
+The HIDRAW squelch supports human interface devices (HID), USB devices
+like CM108 soundcard e.g. used in the URI Echolink adapter made by DMK.
 .TP
 .B SQL_START_DELAY
 The squelch start delay is of most use when using VOX squelch. For example, if
@@ -918,6 +921,17 @@ moment. On the remote receiver side an Atmel AVR ATmega8 is used to map the
 signal level voltage to tone frequencies.
 Use the TONE_SIGLEV_MAP configuration variable to map each tone to a 
 corresponding signal level value in between 0 - 100.
+.TP
+.B HID_DEVICE
+This parameter defines the device your hidraw adapter is connected to. This 
+port is created by the linux/hidraw driver.
+e.g. HID_DEVICE=/dev/hidraw3
+.TP
+.B HID_SQL_PIN
+Define the pin your hardware squelch (from RX) is connected to. Valid values
+are VOL_UP, VOL_DN, MUTE_PLAY or MUTE_REC.
+
+Example: HID_SQL_PIN=VOL_UP
 .TP
 .B SIGLEV_SLOPE
 The slope (or gain) of the signal level detector. See chapter CALIBRATING THE
@@ -1412,8 +1426,10 @@ channels as two mono channels. Legal values are 0 or 1.
 .B PTT_TYPE
 Use this configuration variable to specify which type of hardware to use to
 control the PTT.  Specify "SerialPin" for using a pin in the serial port,
-"GPIO" to use a pin in a GPIO port or "PTY" if you want to use an external
-interface script via a pseudo tty port. 
+"GPIO" to use a pin in a GPIO port, "PTY" if you want to use an external
+interface script via a pseudo tty port or "Hidraw" to use the linux/hidraw
+driver to support hidraw devices like CM108 sound card, e.g. URI device
+from DMK.
 
 Set PTT_TYPE to "Dummy" or "NONE"
 to not use any PTT hardware at all. It is an error to not specify PTT_TYPE.
@@ -1446,6 +1462,17 @@ SvxLink.
 SvxLink sends a 'T' to start transmitting and a 'R' to turn the transmitter
 off.  This can be used by an external script to interface custom devices,
 modems or other hardware to SvxLink.  Look for nhrcx.pl to see an example.
+.TP
+.B HID_DEVICE
+Define the device node where your hidraw device is accessible at.
+
+Example: HID_DEVICE=/dev/hidraw3
+.TP
+.B HID_PTT_PIN
+Define the pin your ptt control is connected to. Valid parameters are 
+are GPIO1,GPIO2,GPIO3,GPIO4. Note that some sound cards like SSS1621 may
+not support GPIO3 and GPIO4! You can invert the behaviour with a "!" in 
+front of the name. Only one value is supported.
 .TP
 .B SERIAL_SET_PINS
 Set the specified serial port pins to a static state. This can be good if using
@@ -1856,6 +1883,10 @@ text.
 Example:
 .br
 COMMENT=[svx] Running SvxLink by SM0SVX
+.TP
+.B PTY_PATH
+Specify a path to a communications PTY that can be used by external applications to
+inject APRS packets into the APRS-IS network.
 .
 .SH AUDIO DEVICE SPECIFICATIONS
 .

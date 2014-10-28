@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "PttSerialPin.h"
 #include "PttGpio.h"
 #include "PttPty.h"
+#include "PttHidraw.h"
 
 
 
@@ -135,6 +136,7 @@ Ptt *PttFactoryBase::createNamedPtt(Config& cfg, const string& name)
   PttSerialPin::Factory serial_ptt_factory;
   PttGpio::Factory gpio_ptt_factory;
   PttPty::Factory pty_ptt_factory;
+  PttHidraw::Factory hidraw_ptt_factory;
   
   string ptt_type;
   if (!cfg.getValue(name, "PTT_TYPE", ptt_type) || ptt_type.empty())

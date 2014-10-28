@@ -13,8 +13,9 @@ set(LIBSRC
   S54sDtmfDecoder.cpp PttCtrl.cpp MultiTx.cpp
   SigLevDetTone.cpp Sel5Decoder.cpp SwSel5Decoder.cpp
   SquelchEvDev.cpp Macho.cpp SquelchGpio.cpp Ptt.cpp
-  PttGpio.cpp PttSerialPin.cpp Pty.cpp PttPty.cpp
-  PtyDtmfDecoder.cpp LocalRxBase.cpp Ddr.cpp RtlTcp.cpp WbRxRtlTcp.cpp
+  PttGpio.cpp PttSerialPin.cpp PttPty.cpp
+  PtyDtmfDecoder.cpp PttHidraw.cpp SquelchHidraw.cpp
+  LocalRxBase.cpp Ddr.cpp RtlTcp.cpp WbRxRtlTcp.cpp
   SigLevDet.cpp SigLevDetDdr.cpp
 )
 

@@ -1,8 +1,8 @@
 /**
-@file	 Pty.h
-@brief   A class that wrap up some functionality to use a PTY
-@author  Tobias Blomberg / SM0SVX
-@date	 2014-06-07
+@file	 PttHidraw.h
+@brief   A PTT hardware controller using the hidraw device
+@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@date	 2014-09-17
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef PTY_INCLUDED
-#define PTY_INCLUDED
+#ifndef PTT_HIDRAW_INCLUDED
+#define PTT_HIDRAW_INCLUDED
 
 
 /****************************************************************************
@@ -33,8 +33,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * System Includes
  *
  ****************************************************************************/
-
-#include <sigc++/sigc++.h>
 
 #include <string>
 
@@ -53,6 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "Ptt.h"
 
 
 /****************************************************************************
@@ -61,10 +60,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class FdWatch;
-};
 
 
 /****************************************************************************
@@ -73,8 +68,6 @@ namespace Async
  *
  ****************************************************************************/
 
-//namespace MyNameSpace
-//{
 
 
 /****************************************************************************
@@ -83,7 +76,7 @@ namespace Async
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -108,84 +101,58 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A wrapper class for using a PTY
+@brief  A PTT hardware controller using the Hidraw-Board from DMK
 @author Tobias Blomberg / SM0SVX
-@date   2014-06-07
-
-This class wrap up some functionality that is nice to have when using a PTY.
+@date   2014-09-17
 */
-class Pty : public sigc::trackable
+class PttHidraw : public Ptt
 {
   public:
+    struct Factory : public PttFactory<PttHidraw>
+    {
+      Factory(void) : PttFactory<PttHidraw>("Hidraw") {}
+    };
+
     /**
      * @brief 	Default constructor
      */
-    Pty(const std::string &slave_link="");
-  
+    PttHidraw(void);
+
     /**
      * @brief 	Destructor
      */
-    ~Pty(void);
-  
-    /**
-     * @brief   Open the PTY
-     * @return  Returns \em true on success or \em false on failure
-     *
-     * Use this function to open the PTY. If the PTY is already open it will
-     * be closed first.
-     */
-    bool open(void);
+    ~PttHidraw(void);
 
     /**
-     * @brief   Close the PTY if it's open
-     *
-     * Close the PTY if it's open. This function is safe to call even if
-     * the PTY is not open or if it's just partly opened.
+     * @brief 	Initialize the PTT hardware
+     * @param 	cfg An initialized config object
+     * @param   name The name of the config section to read config from
+     * @returns Returns \em true on success or else \em false
      */
-    void close(void);
+    virtual bool initialize(Async::Config &cfg, const std::string name);
 
     /**
-     * @brief   Reopen the PTY
-     * @return  Returns \em true on success or \em false on failure
-     *
-     * Try to reopen the PTY. On failure an error message will be printed
-     * and the PTY will stay closed.
+     * @brief 	Set the state of the PTT, TX on or off
+     * @param 	tx_on Set to \em true to turn the transmitter on
+     * @returns Returns \em true on success or else \em false
      */
-    bool reopen(void);
+    virtual bool setTxOn(bool tx_on);
 
-    /**
-     * @brief   Write a command to the PTY
-     * @param   cmd The command to send
-     * @return  Returns \em true on success or \em false on failure
-     */
-    bool write(char cmd);
-
-    /**
-     * @brief   Signal that is emitted when a command has been received
-     * @param   cmd The received command
-     */
-    sigc::signal<void, char> cmdReceived;
-    
   protected:
-    
+
   private:
-    std::string     slave_link;
-    int     	    master;
-    int             slave;
-    Async::FdWatch  *watch;
+    bool active_low;
 
-    Pty(const Pty&);
-    Pty& operator=(const Pty&);
-    
-    void charactersReceived(Async::FdWatch *w);
+    int   fd;
+    char  pin;
 
-};  /* class Pty */
+    PttHidraw(const PttHidraw&);
+    PttHidraw& operator=(const PttHidraw&);
+
+};  /* class PttHidraw */
 
 
-//} /* namespace */
-
-#endif /* PTY_INCLUDED */
-
+#endif /* PTT_HIDRAW_INCLUDED */
 
 
 /*

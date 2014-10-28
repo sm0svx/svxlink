@@ -60,7 +60,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-class Pty;
+namespace Async
+{
+  class Pty;
+};
 
 
 /****************************************************************************
@@ -142,7 +145,7 @@ class PttPty : public Ptt
   protected:
 
   private:
-    Pty *pty;
+    Async::Pty *pty;
 
     PttPty(const PttPty&);
     PttPty& operator=(const PttPty&);

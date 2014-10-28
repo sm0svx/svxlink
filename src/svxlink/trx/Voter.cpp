@@ -971,6 +971,7 @@ int Voter::ActiveRxSelected::sqlRxId(void)
 
 void Voter::ActiveRxSelected::changeActiveSrx(SatRx *srx)
 {
+  voter().selector->selectSource(srx);
   activeSrx()->setMuteState(MUTE_CONTENT);
   box().active_srx = srx;
   if (muteState() == Rx::MUTE_NONE)

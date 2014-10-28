@@ -84,6 +84,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Emphasis.h"
 #include "SquelchPty.h"
 #include "SquelchOpen.h"
+#include "SquelchHidraw.h"
 
 
 /****************************************************************************
@@ -447,6 +448,10 @@ bool LocalRxBase::initialize(void)
   else if (sql_det_str == "PTY")
   {
     squelch_det = new SquelchPty;
+  }
+  else if (sql_det_str == "HIDRAW")
+  {
+    squelch_det = new SquelchHidraw;
   }
   else
   {

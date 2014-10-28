@@ -23,6 +23,16 @@
 * New squelch detector type, OPEN, which keeps the squelch open at all times.
   Used at calibration for example.
 
+* Bugfix: The receiver voter had a bug which caused incoming audio to be
+  muted if a receiver switch occurred in the middle of an identification.
+
+* Support added for raw HID (Human Interface Devices) based devices that can
+  be used for PTT and Squelch. An example of such a chip is the CM108 which
+  can be found in some USB audio devices.
+  Contributed by Adi / DL1HRC.
+
+* Bugfix in ModuleMetarInfo: Numbers was some times read in the wrong way
+
 
 
  1.4.0 -- 02 aug 2014

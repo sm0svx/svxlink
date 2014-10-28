@@ -1,12 +1,12 @@
 /**
-@file	 SquelchOpen.h
-@brief   A squelch detector that read squelch state on a pseudo Tty
-@author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
-@date	 2014-05-21
+@file	 Pty.h
+@brief   A class that wrap up some functionality to use a PTY
+@author  Tobias Blomberg / SM0SVX
+@date	 2014-06-07
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2014  Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef SQUELCH_OPEN_INCLUDED
-#define SQUELCH_OPEN_INCLUDED
+#ifndef ASYNC_PTY_INCLUDED
+#define ASYNC_PTY_INCLUDED
 
 
 /****************************************************************************
@@ -34,6 +34,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <unistd.h>
+#include <sigc++/sigc++.h>
+
+#include <string>
 
 
 /****************************************************************************
@@ -50,7 +54,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Squelch.h"
 
 
 /****************************************************************************
@@ -67,7 +70,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-using namespace sigc;
+namespace Async
+{
 
 
 /****************************************************************************
@@ -76,7 +80,8 @@ using namespace sigc;
  *
  ****************************************************************************/
 
-
+class FdWatch;
+  
 
 /****************************************************************************
  *
@@ -101,41 +106,90 @@ using namespace sigc;
  ****************************************************************************/
 
 /**
-@brief	An always open "squelch detector"
+@brief	A wrapper class for using a PTY
 @author Tobias Blomberg / SM0SVX
-@date   2014-08-11
+@date   2014-06-07
 
-This "squelch detector" always report squelch open
+This class wrap up some functionality that is nice to have when using a PTY.
 */
-class SquelchOpen : public Squelch
+class Pty : public sigc::trackable
 {
   public:
-
-  protected:
     /**
-     * @brief 	Process the incoming samples in the squelch detector
-     * @param 	samples A buffer containing samples
-     * @param 	count The number of samples in the buffer
-     * @return	Return the number of processed samples
+     * @brief 	Default constructor
      */
-    int processSamples(const float *samples, int count)
-    {
-      setSignalDetected(true);
-      return count;
-    }
+    Pty(const std::string &slave_link="");
+  
+    /**
+     * @brief 	Destructor
+     */
+    ~Pty(void);
+  
+    /**
+     * @brief   Open the PTY
+     * @return  Returns \em true on success or \em false on failure
+     *
+     * Use this function to open the PTY. If the PTY is already open it will
+     * be closed first.
+     */
+    bool open(void);
 
+    /**
+     * @brief   Close the PTY if it's open
+     *
+     * Close the PTY if it's open. This function is safe to call even if
+     * the PTY is not open or if it's just partly opened.
+     */
+    void close(void);
+
+    /**
+     * @brief   Reopen the PTY
+     * @return  Returns \em true on success or \em false on failure
+     *
+     * Try to reopen the PTY. On failure an error message will be printed
+     * and the PTY will stay closed.
+     */
+    bool reopen(void);
+
+    /**
+     * @brief   Write data to the PTY
+     * @param   buf A buffer containing the data to write
+     * @param   count The number of bytes to write
+     * @return  On success, the number of bytes written is returned (zero
+     *          indicates nothing was written).  On error, -1 is returned,
+     *          and errno is set appropriately.
+     */
+    ssize_t write(const void *buf, size_t count);
+
+    /**
+     * @brief   Signal that is emitted when data has been received
+     * @param   buf A buffer containing the received data
+     * @param   count The number of bytes in the buffer
+     */
+    sigc::signal<void, const void*, size_t> dataReceived;
+    
+  protected:
+    
   private:
+    std::string     slave_link;
+    int     	    master;
+    int             slave;
+    Async::FdWatch  *watch;
 
-};  /* class SquelchOpen */
+    Pty(const Pty&);
+    Pty& operator=(const Pty&);
+    
+    void charactersReceived(Async::FdWatch *w);
+
+};  /* class Pty */
 
 
-//} /* namespace */
+} /* namespace */
 
-#endif /* SQUELCH_OPEN_INCLUDED */
+#endif /* ASYNC_PTY_INCLUDED */
 
 
 
 /*
  * This file has not been truncated
  */
-
