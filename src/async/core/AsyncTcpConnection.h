@@ -165,7 +165,7 @@ class TcpConnection : public sigc::trackable
     /**
      * @brief 	Destructor
      */
-    ~TcpConnection(void);
+    virtual ~TcpConnection(void);
     
     /**
      * @brief   Set a new receive buffer size
