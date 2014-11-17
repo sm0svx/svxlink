@@ -172,7 +172,7 @@ TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
     }
   }
 
-  struct sockaddr_in addr;
+  struct sockaddr_in addr = { 0 };
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
   if (bind_ip.isEmpty())
