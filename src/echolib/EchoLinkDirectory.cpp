@@ -340,8 +340,7 @@ bool Directory::stationCodeEq(const StationData& stn, string code, bool exact)
   }
   else
   {
-    const char *stn_code = stn.code().c_str();
-    return (strstr(stn_code, code.c_str()) == stn_code);
+    return (stn.code().find(code) == 0);
   }
 } /* Directory::stationCodeEq  */
 
