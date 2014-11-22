@@ -118,7 +118,8 @@ class AudioSource
      * @brief 	Default constuctor
      */
     AudioSource(void)
-      : m_sink(0), m_sink_managed(false), m_handler(0), is_flushing(false)
+      : m_sink(0), m_sink_managed(false), m_handler(0),
+        m_auto_unreg_source(false), is_flushing(false)
     {
     }
   
