@@ -484,8 +484,8 @@ void ModuleMetarInfo::dtmfCmdReceived(const string& cmd)
   stringstream tosay;
   int a = 0;
   int offset;
-  const char *pos;
-  std::string spos;
+  //const char *pos;
+  //std::string spos;
   StrList mtcmd;
   typedef map<char, std::string> Digits;
   Digits mypad;
@@ -545,8 +545,9 @@ void ModuleMetarInfo::dtmfCmdReceived(const string& cmd)
      for (StrList::const_iterator cmdit = mtcmd.begin();
         cmdit != mtcmd.end(); cmdit++)
      {
-        pos = (cmdit->substr(0,1)).c_str();
-        spos= mypad[pos[0]];
+        //pos = (cmdit->substr(0,1)).c_str();
+        //spos= mypad[pos[0]];
+        string spos = mypad[(*cmdit)[0]];
         icao += spos.substr(cmdit->length(),1);
      }
   }
@@ -557,8 +558,9 @@ void ModuleMetarInfo::dtmfCmdReceived(const string& cmd)
      icao = "";
      for (a=0; a<8; a+=2)
      {
-        pos = cmd.substr(a,1).c_str();
-        spos= mypad[pos[0]];
+        //pos = cmd.substr(a,1).c_str();
+        //spos= mypad[pos[0]];
+        string spos = mypad[cmd[a]];
         offset = atoi(cmd.substr(a+1,1).c_str());
         icao += spos.substr(offset,1);
      }
