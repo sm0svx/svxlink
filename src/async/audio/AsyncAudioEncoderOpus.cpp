@@ -557,7 +557,12 @@ opus_int32 AudioEncoderOpus::lsbDepth(void)
 
 void AudioEncoderOpus::reset(void)
 {
-  opus_encoder_ctl(enc, OPUS_RESET_STATE);
+  int err = opus_encoder_ctl(enc, OPUS_RESET_STATE);
+  if (err != OPUS_OK)
+  {
+    cerr << "*** ERROR: Could not reset Opus encoder: "
+         << opus_strerror(err) << endl;
+  }
 } /* AudioEncoderOpus::reset */
 
 
