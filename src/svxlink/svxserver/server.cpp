@@ -36,24 +36,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <unistd.h>
 #include <cassert>
 #include <signal.h>
-#include <termios.h>
-#include <dirent.h>
-#include <popt.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/time.h>
-#include <fcntl.h>
-//#include <pwd.h>
-//#include <grp.h>
-
-#include <iostream>
-#include <iomanip>
 #include <cstring>
 #include <cstdlib>
-//#include <vector>
 #include <map>
 
 
@@ -68,7 +55,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <AsyncTcpServer.h>
 #include <AsyncTcpConnection.h>
-
 #include <common.h>
 
 
