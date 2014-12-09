@@ -201,6 +201,12 @@ bool ModuleFrn::initialize(void)
   {
     return false;
   }
+  if (!cfg().getValue(cfgName(), "SERVER", opt_server))
+  {
+    cerr << "*** ERROR: Config variable " << cfgName()
+         << "/SERVER not set\n";
+    return false;
+  }
   if (!cfg().getValue(cfgName(), "EMAIL_ADDRESS", opt_email_address))
   {
     cerr << "*** ERROR: Config variable " << cfgName()
@@ -217,6 +223,12 @@ bool ModuleFrn::initialize(void)
   {
     cerr << "*** ERROR: Config variable " << cfgName()
          << "/CALLSIGN_AND_USER not set\n";
+    return false;
+  }
+  if (!cfg().getValue(cfgName(), "CLIENT_TYPE", opt_client_type))
+  {
+    cerr << "*** ERROR: Config variable " << cfgName()
+         << "/CLIENT_TYPE not set\n";
     return false;
   }
   if (!cfg().getValue(cfgName(), "BAND_AND_CHANNEL", opt_band_and_channel))

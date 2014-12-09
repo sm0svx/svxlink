@@ -131,10 +131,12 @@ class ModuleFrn : public Module
     void reportState(void);
 
  private:
+    std::string opt_server;
     std::string opt_version;
     std::string opt_email_address;
     std::string opt_dyn_password;
     std::string opt_callsign_and_user;
+    std::string opt_client_type;
     std::string opt_band_and_channel;
     std::string opt_description;
     std::string opt_country;
