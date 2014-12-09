@@ -43,8 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Project Includes
  *
  ****************************************************************************/
-
-#include <version/MODULE_FRN.h>
+#include <AsyncConfig.h>
 
 
 
@@ -54,6 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <version/MODULE_FRN.h>
 #include "ModuleFrn.h"
 
 
@@ -199,6 +199,60 @@ bool ModuleFrn::initialize(void)
 {
   if (!Module::initialize())
   {
+    return false;
+  }
+  if (!cfg().getValue(cfgName(), "EMAIL_ADDRESS", opt_email_address))
+  {
+    cerr << "*** ERROR: Config variable " << cfgName()
+         << "/EMAIL_ADDRESS not set\n";
+    return false;
+  }
+  if (!cfg().getValue(cfgName(), "DYN_PASSWORD", opt_dyn_password))
+  {
+    cerr << "*** ERROR: Config variable " << cfgName()
+         << "/DYN_PASSWORD not set\n";
+    return false;
+  }
+  if (!cfg().getValue(cfgName(), "CALLSIGN_AND_USER", opt_callsign_and_user))
+  {
+    cerr << "*** ERROR: Config variable " << cfgName()
+         << "/CALLSIGN_AND_USER not set\n";
+    return false;
+  }
+  if (!cfg().getValue(cfgName(), "BAND_AND_CHANNEL", opt_band_and_channel))
+  {
+    cerr << "*** ERROR: Config variable " << cfgName()
+         << "/BAND_AND_CHANNEL not set\n";
+    return false;
+  }
+  if (!cfg().getValue(cfgName(), "DESCRIPTION", opt_description))
+  {
+    cerr << "*** ERROR: Config variable " << cfgName()
+         << "/DESCRIPTION not set\n";
+    return false;
+  }
+  if (!cfg().getValue(cfgName(), "COUNTRY", opt_country))
+  {
+    cerr << "*** ERROR: Config variable " << cfgName()
+         << "/COUNTRY not set\n";
+    return false;
+  }
+  if (!cfg().getValue(cfgName(), "CITY_CITY_PART", opt_city_city_part))
+  {
+    cerr << "*** ERROR: Config variable " << cfgName()
+         << "/CITY_CITY_PART not set\n";
+    return false;
+  }
+  if (!cfg().getValue(cfgName(), "NET", opt_net))
+  {
+    cerr << "*** ERROR: Config variable " << cfgName()
+         << "/NET not set\n";
+    return false;
+  }
+  if (!cfg().getValue(cfgName(), "VERSION", opt_version))
+  {
+    cerr << "*** ERROR: Config variable " << cfgName()
+         << "/VERSION not set\n";
     return false;
   }
   
