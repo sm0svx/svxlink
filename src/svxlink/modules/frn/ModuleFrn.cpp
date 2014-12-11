@@ -44,7 +44,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 #include <AsyncConfig.h>
-
+#include <AsyncAudioSplitter.h>
+#include <AsyncAudioValve.h>
+#include <AsyncAudioSelector.h>
 
 
 /****************************************************************************
@@ -65,7 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
-
+using namespace Async;
 
 
 /****************************************************************************
@@ -134,6 +136,9 @@ extern "C" {
 
 ModuleFrn::ModuleFrn(void *dl_handle, Logic *logic, const string& cfg_name)
   : Module(dl_handle, logic, cfg_name)
+  , audio_from_rig(0)
+  , audio_to_frn(0)
+  , audio_from_frn(0)
 {
   cout << "\tModule Frn v" MODULE_FRN_VERSION " starting...\n";
 
@@ -142,11 +147,8 @@ ModuleFrn::ModuleFrn(void *dl_handle, Logic *logic, const string& cfg_name)
 
 ModuleFrn::~ModuleFrn(void)
 {
-
+  moduleCleanup();
 } /* ~ModuleFrn */
-
-
-
 
 
 /****************************************************************************
@@ -268,10 +270,32 @@ bool ModuleFrn::initialize(void)
     return false;
   }
   
+  audio_from_rig = new AudioValve;
+  AudioSink::setHandler(audio_from_rig);
+
+  audio_to_frn = new AudioSplitter;
+  audio_from_rig->registerSink(audio_to_frn);
+
+  audio_from_frn = new AudioSelector;
+  AudioSource::setHandler(audio_from_frn);
+
   return true;
   
 } /* initialize */
 
+
+void ModuleFrn::moduleCleanup()
+{
+  AudioSink::clearHandler();
+  delete audio_from_frn;
+  audio_from_frn = 0;
+  delete audio_from_rig;
+  audio_from_rig = 0;
+
+  AudioSource::clearHandler();
+  delete audio_from_frn;
+  audio_from_frn = 0;
+}
 
 /*
  *----------------------------------------------------------------------------
@@ -287,8 +311,8 @@ bool ModuleFrn::initialize(void)
  */
 void ModuleFrn::activateInit(void)
 {
-
-} /* activateInit */
+    audio_from_rig->setOpen(true);
+}
 
 
 /*
@@ -306,8 +330,8 @@ void ModuleFrn::activateInit(void)
  */
 void ModuleFrn::deactivateCleanup(void)
 {
-  
-} /* deactivateCleanup */
+  audio_from_rig->setOpen(true);
+} 
 
 
 /*

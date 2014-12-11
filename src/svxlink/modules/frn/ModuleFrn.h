@@ -64,7 +64,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Forward declarations
  *
  ****************************************************************************/
-
+namespace Async
+{
+  class AudioSplitter;
+  class AudioValve;
+  class AudioSelector;
+};
 
 
 /****************************************************************************
@@ -120,6 +125,7 @@ class ModuleFrn : public Module
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
   private:
+    void moduleCleanup();
     bool initialize(void);
     void activateInit(void);
     void deactivateCleanup(void);
@@ -130,7 +136,7 @@ class ModuleFrn : public Module
     void allMsgsWritten(void);
     void reportState(void);
 
- private:
+  private:
     std::string opt_server;
     std::string opt_version;
     std::string opt_email_address;
@@ -142,6 +148,10 @@ class ModuleFrn : public Module
     std::string opt_country;
     std::string opt_city_city_part;
     std::string opt_net;
+
+    Async::AudioValve     *audio_from_rig;
+    Async::AudioSplitter  *audio_to_frn;
+    Async::AudioSelector  *audio_from_frn;
 
 };  /* class ModuleFrn */
 
