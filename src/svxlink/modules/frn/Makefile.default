@@ -119,7 +119,7 @@ PLUGINS		=
 PLUGINS_CPP   	= $(LIB)/ModuleFrn
 
 # Additional C sources to compile.
-PLUGINSRC	= 
+PLUGINSRC	= QsoFrn.cpp
 
 # Libs that the plugins depend on.
 PLUGIN_LIBS	= 

@@ -136,9 +136,10 @@ extern "C" {
 
 ModuleFrn::ModuleFrn(void *dl_handle, Logic *logic, const string& cfg_name)
   : Module(dl_handle, logic, cfg_name)
-  , audio_from_rig(0)
-  , audio_to_frn(0)
-  , audio_from_frn(0)
+  , qso(0)
+  , audio_valve(0)
+  , audio_splitter(0)
+  , audio_selector(0)
 {
   cout << "\tModule Frn v" MODULE_FRN_VERSION " starting...\n";
 
@@ -270,14 +271,19 @@ bool ModuleFrn::initialize(void)
     return false;
   }
   
-  audio_from_rig = new AudioValve;
-  AudioSink::setHandler(audio_from_rig);
+  audio_valve = new AudioValve;
+  AudioSink::setHandler(audio_valve);
 
-  audio_to_frn = new AudioSplitter;
-  audio_from_rig->registerSink(audio_to_frn);
+  audio_splitter = new AudioSplitter;
+  audio_valve->registerSink(audio_splitter);
 
-  audio_from_frn = new AudioSelector;
-  AudioSource::setHandler(audio_from_frn);
+  audio_selector = new AudioSelector;
+  AudioSource::setHandler(audio_selector);
+
+  qso = new QsoFrn(this);
+  audio_splitter->addSink(qso);
+  audio_selector->addSource(qso);
+  audio_selector->enableAutoSelect(qso, 0);
 
   return true;
   
@@ -286,15 +292,20 @@ bool ModuleFrn::initialize(void)
 
 void ModuleFrn::moduleCleanup()
 {
+  audio_splitter->removeSink(qso);
+  audio_selector->removeSource(qso);
+  delete qso;
+  qso = 0;
+
   AudioSink::clearHandler();
-  delete audio_from_frn;
-  audio_from_frn = 0;
-  delete audio_from_rig;
-  audio_from_rig = 0;
+  delete audio_splitter;
+  audio_splitter = 0;
+  delete audio_valve;
+  audio_valve = 0;
 
   AudioSource::clearHandler();
-  delete audio_from_frn;
-  audio_from_frn = 0;
+  delete audio_selector;
+  audio_selector = 0;
 }
 
 /*
@@ -311,7 +322,7 @@ void ModuleFrn::moduleCleanup()
  */
 void ModuleFrn::activateInit(void)
 {
-    audio_from_rig->setOpen(true);
+    audio_valve->setOpen(true);
 }
 
 
@@ -330,7 +341,7 @@ void ModuleFrn::activateInit(void)
  */
 void ModuleFrn::deactivateCleanup(void)
 {
-  audio_from_rig->setOpen(true);
+  audio_valve->setOpen(true);
 } 
 
 
@@ -412,8 +423,8 @@ void ModuleFrn::dtmfCmdReceivedWhenIdle(const std::string &cmd)
  */
 void ModuleFrn::squelchOpen(bool is_open)
 {
-  
-} /* squelchOpen */
+  cout << __PRETTY_FUNCTION__ << " " << is_open << endl;
+}
 
 
 /*

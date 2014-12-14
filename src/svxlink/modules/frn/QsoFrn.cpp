@@ -1,13 +1,15 @@
 /**
-@file	 ModuleFrn.h
-@brief   A_brief_description_of_this_module
+@file	 QsoFrn.cpp
+@brief   Data for Frn Qso.
 @author  Tobias Blomberg / SM0SVX
-@date	 2005-08-28
+@date	 2004-06-02
+
+This file contains a class that implementes the things needed for one
+EchoLink Qso.
 
 \verbatim
-A module (plugin) for the svxlink server, a multi purpose tranciever
-frontend system.
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+A module (plugin) for the multi purpose tranciever frontend system.
+Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,9 +28,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef MODULE_FRN_INCLUDED
-#define MODULE_FRN_INCLUDED
-
 
 /****************************************************************************
  *
@@ -36,8 +35,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <string>
-
+#include <cassert>
+#include <cstdlib>
+#include <sigc++/bind.h>
+#include <sstream>
 
 
 /****************************************************************************
@@ -46,9 +47,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <Module.h>
-#include <version/SVXLINK.h>
-
+#include <AsyncConfig.h>
+#include <AsyncAudioPacer.h>
+#include <AsyncAudioSelector.h>
+#include <AsyncAudioPassthrough.h>
+#include <AsyncAudioFifo.h>
+#include <AsyncAudioDecimator.h>
+#include <AsyncAudioInterpolator.h>
+#include <AsyncAudioDebugger.h>
 
 
 /****************************************************************************
@@ -56,43 +62,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Local Includes
  *
  ****************************************************************************/
+
+#include "ModuleFrn.h"
 #include "QsoFrn.h"
+#include "multirate_filter_coeff.h"
 
 
 /****************************************************************************
  *
- * Forward declarations
- *
- ****************************************************************************/
-namespace Async
-{
-  class AudioSplitter;
-  class AudioValve;
-  class AudioSelector;
-};
-
-
-/****************************************************************************
- *
- * Namespace
+ * Namespaces to use
  *
  ****************************************************************************/
 
-//namespace MyNameSpace
-//{
+using namespace std;
+using namespace Async;
+using namespace sigc;
 
 
-/****************************************************************************
- *
- * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
-  
 
 /****************************************************************************
  *
  * Defines & typedefs
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Local class definitions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Prototypes
  *
  ****************************************************************************/
 
@@ -108,61 +114,72 @@ namespace Async
 
 /****************************************************************************
  *
- * Class definitions
+ * Local Global Variables
  *
  ****************************************************************************/
 
-/**
-@brief	A_brief_description_of_this_class
-@author Tobias Blomberg
-@date   2005-08-28
-*/
-class ModuleFrn : public Module
+
+
+/****************************************************************************
+ *
+ * Public member functions
+ *
+ ****************************************************************************/
+
+
+
+QsoFrn::QsoFrn(ModuleFrn *module)
 {
-  public:
-    ModuleFrn(void *dl_handle, Logic *logic, const std::string& cfg_name);
-    ~ModuleFrn(void);
-    const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
+  assert(module != 0);
 
-  private:
-    void moduleCleanup();
-    bool initialize(void);
-    void activateInit(void);
-    void deactivateCleanup(void);
-    bool dtmfDigitReceived(char digit, int duration);
-    void dtmfCmdReceived(const std::string& cmd);
-    //void dtmfCmdReceivedWhenIdle(const std::string &cmd);
-    void squelchOpen(bool is_open);
-    void allMsgsWritten(void);
-    void reportState(void);
-
-  private:
-    std::string opt_server;
-    std::string opt_version;
-    std::string opt_email_address;
-    std::string opt_dyn_password;
-    std::string opt_callsign_and_user;
-    std::string opt_client_type;
-    std::string opt_band_and_channel;
-    std::string opt_description;
-    std::string opt_country;
-    std::string opt_city_city_part;
-    std::string opt_net;
-
-    QsoFrn *qso;
-    Async::AudioValve     *audio_valve;
-    Async::AudioSplitter  *audio_splitter;
-    Async::AudioSelector  *audio_selector;
-
-};  /* class ModuleFrn */
+  //Config &cfg = module->cfg();
+  //const string &cfg_name = module->cfgName();
+}
 
 
-//} /* namespace */
+QsoFrn::~QsoFrn(void)
+{
+  AudioSink::clearHandler();
+  AudioSource::clearHandler();
+}
 
-#endif /* MODULE_FRN_INCLUDED */
 
+int QsoFrn::writeSamples(const float *samples, int count)
+{
+  cout << __PRETTY_FUNCTION__ << " " << count  << endl;
+  return count;
+}
+
+
+void QsoFrn::flushSamples(void)
+{
+}
+
+
+void QsoFrn::resumeOutput(void)
+{
+}
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+void QsoFrn::allSamplesFlushed(void)
+{
+}
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
 
 
 /*
  * This file has not been truncated
  */
+
