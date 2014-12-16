@@ -153,11 +153,14 @@ int QsoFrn::writeSamples(const float *samples, int count)
 
 void QsoFrn::flushSamples(void)
 {
+  cout << __PRETTY_FUNCTION__ << endl;
+  sourceAllSamplesFlushed();
 }
 
 
 void QsoFrn::resumeOutput(void)
 {
+  cout << __PRETTY_FUNCTION__ << endl;
 }
 
 
@@ -169,6 +172,7 @@ void QsoFrn::resumeOutput(void)
 
 void QsoFrn::allSamplesFlushed(void)
 {
+  cout << __PRETTY_FUNCTION__ << endl;
 }
 
 
