@@ -138,6 +138,8 @@ class QsoFrn
      */
     virtual ~QsoFrn(void);
      
+    bool initOk(void);
+
     /**
      * @brief   Write samples into this audio sink
      * @param   samples The buffer containing the samples
@@ -188,7 +190,19 @@ class QsoFrn
      virtual void allSamplesFlushed(void);
 
   private:
+    bool init_ok;
 
+    std::string opt_server;
+    std::string opt_version;
+    std::string opt_email_address;
+    std::string opt_dyn_password;
+    std::string opt_callsign_and_user;
+    std::string opt_client_type;
+    std::string opt_band_and_channel;
+    std::string opt_description;
+    std::string opt_country;
+    std::string opt_city_city_part;
+    std::string opt_net;
 };
 
 

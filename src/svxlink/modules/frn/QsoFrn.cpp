@@ -126,14 +126,82 @@ using namespace sigc;
  *
  ****************************************************************************/
 
-
-
 QsoFrn::QsoFrn(ModuleFrn *module)
+  : init_ok(false)
 {
   assert(module != 0);
 
-  //Config &cfg = module->cfg();
-  //const string &cfg_name = module->cfgName();
+  Config &cfg = module->cfg();
+  const string &cfg_name = module->cfgName();
+
+  if (!cfg.getValue(cfg_name, "SERVER", opt_server))
+  {
+    cerr << "*** ERROR: Config variable " << cfg_name
+         << "/SERVER not set\n";
+    return;
+  }
+  if (!cfg.getValue(cfg_name, "EMAIL_ADDRESS", opt_email_address))
+  {
+    cerr << "*** ERROR: Config variable " << cfg_name
+         << "/EMAIL_ADDRESS not set\n";
+    return;
+  }
+  if (!cfg.getValue(cfg_name, "DYN_PASSWORD", opt_dyn_password))
+  {
+    cerr << "*** ERROR: Config variable " << cfg_name
+         << "/DYN_PASSWORD not set\n";
+    return;
+  }
+  if (!cfg.getValue(cfg_name, "CALLSIGN_AND_USER", opt_callsign_and_user))
+  {
+    cerr << "*** ERROR: Config variable " << cfg_name
+         << "/CALLSIGN_AND_USER not set\n";
+    return;
+  }
+  if (!cfg.getValue(cfg_name, "CLIENT_TYPE", opt_client_type))
+  {
+    cerr << "*** ERROR: Config variable " << cfg_name
+         << "/CLIENT_TYPE not set\n";
+    return;
+  }
+  if (!cfg.getValue(cfg_name, "BAND_AND_CHANNEL", opt_band_and_channel))
+  {
+    cerr << "*** ERROR: Config variable " << cfg_name
+         << "/BAND_AND_CHANNEL not set\n";
+    return;
+  }
+  if (!cfg.getValue(cfg_name, "DESCRIPTION", opt_description))
+  {
+    cerr << "*** ERROR: Config variable " << cfg_name
+         << "/DESCRIPTION not set\n";
+    return;
+  }
+  if (!cfg.getValue(cfg_name, "COUNTRY", opt_country))
+  {
+    cerr << "*** ERROR: Config variable " << cfg_name
+         << "/COUNTRY not set\n";
+    return;
+  }
+  if (!cfg.getValue(cfg_name, "CITY_CITY_PART", opt_city_city_part))
+  {
+    cerr << "*** ERROR: Config variable " << cfg_name
+         << "/CITY_CITY_PART not set\n";
+    return;
+  }
+  if (!cfg.getValue(cfg_name, "NET", opt_net))
+  {
+    cerr << "*** ERROR: Config variable " << cfg_name
+         << "/NET not set\n";
+    return;
+  }
+  if (!cfg.getValue(cfg_name, "VERSION", opt_version))
+  {
+    cerr << "*** ERROR: Config variable " << cfg_name
+         << "/VERSION not set\n";
+    return;
+  }
+ 
+  init_ok = true;
 }
 
 
@@ -144,9 +212,15 @@ QsoFrn::~QsoFrn(void)
 }
 
 
+bool QsoFrn::initOk(void)
+{
+  return init_ok;
+}
+
+
 int QsoFrn::writeSamples(const float *samples, int count)
 {
-  cout << __PRETTY_FUNCTION__ << " " << count  << endl;
+  cout << "." << flush;
   return count;
 }
 

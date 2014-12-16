@@ -173,10 +173,6 @@ ModuleFrn::~ModuleFrn(void)
  */
 
 
-
-
-
-
 /****************************************************************************
  *
  * Private member functions
@@ -204,73 +200,7 @@ bool ModuleFrn::initialize(void)
   {
     return false;
   }
-  if (!cfg().getValue(cfgName(), "SERVER", opt_server))
-  {
-    cerr << "*** ERROR: Config variable " << cfgName()
-         << "/SERVER not set\n";
-    return false;
-  }
-  if (!cfg().getValue(cfgName(), "EMAIL_ADDRESS", opt_email_address))
-  {
-    cerr << "*** ERROR: Config variable " << cfgName()
-         << "/EMAIL_ADDRESS not set\n";
-    return false;
-  }
-  if (!cfg().getValue(cfgName(), "DYN_PASSWORD", opt_dyn_password))
-  {
-    cerr << "*** ERROR: Config variable " << cfgName()
-         << "/DYN_PASSWORD not set\n";
-    return false;
-  }
-  if (!cfg().getValue(cfgName(), "CALLSIGN_AND_USER", opt_callsign_and_user))
-  {
-    cerr << "*** ERROR: Config variable " << cfgName()
-         << "/CALLSIGN_AND_USER not set\n";
-    return false;
-  }
-  if (!cfg().getValue(cfgName(), "CLIENT_TYPE", opt_client_type))
-  {
-    cerr << "*** ERROR: Config variable " << cfgName()
-         << "/CLIENT_TYPE not set\n";
-    return false;
-  }
-  if (!cfg().getValue(cfgName(), "BAND_AND_CHANNEL", opt_band_and_channel))
-  {
-    cerr << "*** ERROR: Config variable " << cfgName()
-         << "/BAND_AND_CHANNEL not set\n";
-    return false;
-  }
-  if (!cfg().getValue(cfgName(), "DESCRIPTION", opt_description))
-  {
-    cerr << "*** ERROR: Config variable " << cfgName()
-         << "/DESCRIPTION not set\n";
-    return false;
-  }
-  if (!cfg().getValue(cfgName(), "COUNTRY", opt_country))
-  {
-    cerr << "*** ERROR: Config variable " << cfgName()
-         << "/COUNTRY not set\n";
-    return false;
-  }
-  if (!cfg().getValue(cfgName(), "CITY_CITY_PART", opt_city_city_part))
-  {
-    cerr << "*** ERROR: Config variable " << cfgName()
-         << "/CITY_CITY_PART not set\n";
-    return false;
-  }
-  if (!cfg().getValue(cfgName(), "NET", opt_net))
-  {
-    cerr << "*** ERROR: Config variable " << cfgName()
-         << "/NET not set\n";
-    return false;
-  }
-  if (!cfg().getValue(cfgName(), "VERSION", opt_version))
-  {
-    cerr << "*** ERROR: Config variable " << cfgName()
-         << "/VERSION not set\n";
-    return false;
-  }
-  
+ 
   audio_valve = new AudioValve;
   AudioSink::setHandler(audio_valve);
 
@@ -284,6 +214,13 @@ bool ModuleFrn::initialize(void)
   audio_splitter->addSink(qso);
   audio_selector->addSource(qso);
   audio_selector->enableAutoSelect(qso, 0);
+
+  if (!qso->initOk())
+  {
+    delete qso;
+    cerr << "*** ERROR: Creation of Qso object failed\n";
+    return false;
+  }
 
   return true;
   
