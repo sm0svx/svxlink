@@ -193,8 +193,10 @@ bool Pty::open(void)
       close();
       return false;
     }
+    /*
     cout << "### Created pseudo tty slave link "
          << slave_path << " -> " << slave_link << endl;
+    */
   }
 
   return true;
