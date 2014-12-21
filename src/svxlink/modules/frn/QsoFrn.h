@@ -49,7 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
-
+#include <AsyncTcpConnection.h>
 
 /****************************************************************************
  *
@@ -70,6 +70,8 @@ namespace Async
   class Config;
   class AudioPacer;
   class AudioPassthrough;
+  class TcpClient;
+  class TcpConnection;
 };
 
 
@@ -88,7 +90,6 @@ namespace Async
  * Forward declarations of classes inside of the declared namespace
  *
  ****************************************************************************/
-
 class MsgHandler;
 class EventHandler;
 class AsyncTimer;
@@ -190,7 +191,15 @@ class QsoFrn
      virtual void allSamplesFlushed(void);
 
   private:
+     void onConnected(void);
+     void onDisconnected(Async::TcpConnection *conn, 
+         Async::TcpConnection::DisconnectReason reason);
+     int onDataReceived(Async::TcpConnection *con, void *data, int len);
+     void onSendBufferFull(bool is_full);
+
+  private:
     bool init_ok;
+    Async::TcpClient *tcp_client;
 
     std::string opt_server;
     std::string opt_version;

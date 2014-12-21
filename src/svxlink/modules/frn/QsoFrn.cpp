@@ -55,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioDecimator.h>
 #include <AsyncAudioInterpolator.h>
 #include <AsyncAudioDebugger.h>
+#include <AsyncTcpClient.h>
 
 
 /****************************************************************************
@@ -128,6 +129,7 @@ using namespace sigc;
 
 QsoFrn::QsoFrn(ModuleFrn *module)
   : init_ok(false)
+  , tcp_client(new TcpClient())
 {
   assert(module != 0);
 
@@ -201,6 +203,15 @@ QsoFrn::QsoFrn(ModuleFrn *module)
     return;
   }
  
+  tcp_client->connected.connect(
+      mem_fun(*this, &QsoFrn::onConnected));
+  tcp_client->disconnected.connect(
+      mem_fun(*this, &QsoFrn::onDisconnected));
+  tcp_client->dataReceived.connect(
+      mem_fun(*this, &QsoFrn::onDataReceived));
+  tcp_client->sendBufferFull.connect(
+      mem_fun(*this, &QsoFrn::onSendBufferFull));
+
   init_ok = true;
 }
 
@@ -209,6 +220,9 @@ QsoFrn::~QsoFrn(void)
 {
   AudioSink::clearHandler();
   AudioSource::clearHandler();
+
+  delete tcp_client;
+  tcp_client = 0;
 }
 
 
@@ -255,7 +269,25 @@ void QsoFrn::allSamplesFlushed(void)
  * Private member functions
  *
  ****************************************************************************/
+void QsoFrn::onConnected(void)
+{
+}
 
+
+void QsoFrn::onDisconnected(TcpConnection *conn, 
+  TcpConnection::DisconnectReason reason)
+{
+}
+
+
+int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
+{
+  return len;
+}
+
+void QsoFrn::onSendBufferFull(bool is_full)
+{
+}
 
 /*
  * This file has not been truncated
