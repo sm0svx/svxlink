@@ -114,6 +114,7 @@ using namespace Async;
 PtyStreamBuf::PtyStreamBuf(Pty *pty, size_t buf_size)
   : m_pty(pty), m_buf(buf_size + 1)
 {
+  assert(m_pty != 0);
   char *base = &m_buf.front();
   setp(base, base + m_buf.size() - 1);
 } /* PtyStreamBuf::PtyStreamBuf */
@@ -142,8 +143,7 @@ PtyStreamBuf::~PtyStreamBuf(void)
 
 PtyStreamBuf::int_type PtyStreamBuf::overflow(int_type ch)
 {
-    // FIXME: Check the state of the PTY before writing
-  if (ch != traits_type::eof())
+  if (m_pty->isOpen() && (ch != traits_type::eof()))
   {
     assert(std::less_equal<char *>()(pptr(), epptr()));
     *pptr() = ch;
@@ -160,7 +160,7 @@ PtyStreamBuf::int_type PtyStreamBuf::overflow(int_type ch)
 
 int PtyStreamBuf::sync(void)
 {
-  return writeToPty() ? 0 : -1;
+  return (m_pty->isOpen() && writeToPty()) ? 0 : -1;
 } /* PtyStreamBuf::sync */
 
 

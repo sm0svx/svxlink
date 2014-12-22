@@ -162,6 +162,12 @@ class Pty : public sigc::trackable
     ssize_t write(const void *buf, size_t count);
 
     /**
+     * @brief   Check if the PTY is open or not
+     * @return  Returns \em true if the PTY has been successfully opened
+     */
+    bool isOpen(void) const { return is_open; }
+
+    /**
      * @brief   Signal that is emitted when data has been received
      * @param   buf A buffer containing the received data
      * @param   count The number of bytes in the buffer
@@ -175,6 +181,7 @@ class Pty : public sigc::trackable
     int     	    master;
     int             slave;
     Async::FdWatch  *watch;
+    bool            is_open;
 
     Pty(const Pty&);
     Pty& operator=(const Pty&);
