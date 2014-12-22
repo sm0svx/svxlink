@@ -115,9 +115,9 @@ class Pty;
 
 This class can be used to write data to a UNIX 98 PTY using the standard
 streaming interface. The typical usage pattern is to first create an instance
-of this class, the stream buffer. Then a std::ostream can be created with the
-stream buffer as an argument to the constructor. The std::ostream can then be
-used as any other output stream.
+of a Pty. Then an instance of this class is created, the stream buffer. Lastly
+a std::ostream can be created with the stream buffer as an argument to the
+constructor. The std::ostream can then be used as any other output stream.
 
 \include AsyncPtyStreamBuf_demo.cpp
 */

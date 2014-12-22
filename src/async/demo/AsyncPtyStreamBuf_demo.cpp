@@ -22,6 +22,8 @@ int main(void)
 
   Async::PtyStreamBuf *psb = new Async::PtyStreamBuf(&pty);
   ostream os(psb);
+
+    // Flush the stream buffer after every write
   os.setf(ios::unitbuf);
 
   cout << "\nThis demo app will write a line of text every second to a PTY.\n";
