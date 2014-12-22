@@ -408,6 +408,7 @@ class Voter : public Rx
     Macho::Machine<Top>   sm;
     bool		  is_processing_event;
     EventQueue		  event_queue;
+    std::ostream          *sql_state_os;
     
     void dispatchEvent(Macho::IEvent<Top> *event);
     void satSquelchOpen(bool is_open, SatRx *rx);
@@ -416,7 +417,7 @@ class Voter : public Rx
     void muteAll(Rx::MuteState mute_state) { muteAllBut(0, mute_state); }
     void unmuteAll(void);
     void resetAll(void);
-    void printSquelchState(std::ostream &out);
+    void printSquelchState(void);
     SatRx *findBestRx(void) const;
 
 };  /* class Voter */

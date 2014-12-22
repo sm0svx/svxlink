@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <functional>
 #include <cassert>
+#include <iostream>
 
 
 /****************************************************************************
@@ -110,7 +111,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-PtyStreamBuf::PtyStreamBuf(Pty &pty, size_t buf_size)
+PtyStreamBuf::PtyStreamBuf(Pty *pty, size_t buf_size)
   : m_pty(pty), m_buf(buf_size + 1)
 {
   char *base = &m_buf.front();
@@ -120,7 +121,6 @@ PtyStreamBuf::PtyStreamBuf(Pty &pty, size_t buf_size)
 
 PtyStreamBuf::~PtyStreamBuf(void)
 {
-  
 } /* PtyStreamBuf::~PtyStreamBuf */
 
 
@@ -168,7 +168,7 @@ bool PtyStreamBuf::writeToPty(void)
 {
   ptrdiff_t n = pptr() - pbase();
   pbump(-n);
-  ssize_t written = m_pty.write(pbase(), n);
+  ssize_t written = m_pty->write(pbase(), n);
   return (written == n);
 } /* PtyStreamBuf::writeToPty */
 

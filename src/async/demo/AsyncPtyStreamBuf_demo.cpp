@@ -20,8 +20,8 @@ int main(void)
     exit(1);
   }
 
-  Async::PtyStreamBuf psb(pty);
-  ostream os(&psb);
+  Async::PtyStreamBuf *psb = new Async::PtyStreamBuf(&pty);
+  ostream os(psb);
   os.setf(ios::unitbuf);
 
   cout << "\nThis demo app will write a line of text every second to a PTY.\n";

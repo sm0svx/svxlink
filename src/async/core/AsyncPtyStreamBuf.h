@@ -128,7 +128,7 @@ class PtyStreamBuf : public std::streambuf
      * @brief 	Default constructor
      * @param   pty A previously created PTY object
      */
-    explicit PtyStreamBuf(Pty &pty, std::size_t buf_size=256);
+    explicit PtyStreamBuf(Pty *pty, std::size_t buf_size=256);
   
     /**
      * @brief 	Destructor
@@ -140,11 +140,12 @@ class PtyStreamBuf : public std::streambuf
      * @param 	param1 Description_of_param1
      * @return	Return_value_of_this_member_function
      */
+    Pty *pty(void) const { return m_pty; }
     
   protected:
     
   private:
-    Pty &             m_pty;
+    Pty *             m_pty;
     std::vector<char> m_buf;
 
     PtyStreamBuf(const PtyStreamBuf&);
