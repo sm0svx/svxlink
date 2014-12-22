@@ -302,6 +302,22 @@ void QsoFrn::setState(State newState)
 void QsoFrn::login(void)
 {
   setState(STATE_LOGGING_IN);
+
+  std::stringstream s;
+  s << "CT:";
+  s << "<VX>" << opt_version           << "</VX>";
+  s << "<EA>" << opt_email_address     << "</EA>";
+  s << "<PW>" << opt_dyn_password      << "</PW>";
+  s << "<ON>" << opt_callsign_and_user << "</ON>";
+  s << "<CL>" << opt_client_type       << "</CL>";
+  s << "<BC>" << opt_band_and_channel  << "</BC>";
+  s << "<DS>" << opt_description       << "</DS>";
+  s << "<NN>" << opt_country           << "</NN>";
+  s << "<CT>" << opt_city_city_part    << "</CT>";
+  s << "<NT>" << opt_net               << "</NT>";
+
+  std::string req = s.str();
+  tcp_client->write(req.c_str(), req.length());
 }
 
 void QsoFrn::onConnected(void)
@@ -323,10 +339,12 @@ void QsoFrn::onDisconnected(TcpConnection *conn,
       cout << "DR_HOST_NOT_FOUND";
       break;
     case TcpConnection::DR_REMOTE_DISCONNECTED:
-      cout << "DR_REMOTE_DISCONNECTED" << ", " << conn->disconnectReasonStr(reason);
+      cout << "DR_REMOTE_DISCONNECTED" << ", " 
+           << conn->disconnectReasonStr(reason);
       break;
     case TcpConnection::DR_SYSTEM_ERROR:
-      cout << "DR_SYSTEM_ERROR" << ", " << conn->disconnectReasonStr(reason);
+      cout << "DR_SYSTEM_ERROR" << ", " 
+           << conn->disconnectReasonStr(reason);
       break;
     case TcpConnection::DR_RECV_BUFFER_OVERFLOW:
       cout << "DR_RECV_BUFFER_OVERFLOW";
