@@ -141,6 +141,12 @@ QsoFrn::QsoFrn(ModuleFrn *module)
     cerr << "*** ERROR: Config variable " << cfg_name
          << "/SERVER not set\n";
     return;
+  } 
+  if (!cfg.getValue(cfg_name, "PORT", opt_port))
+  {
+    cerr << "*** ERROR: Config variable " << cfg_name
+         << "/PORT not set\n";
+    return;
   }
   if (!cfg.getValue(cfg_name, "EMAIL_ADDRESS", opt_email_address))
   {
@@ -232,6 +238,20 @@ bool QsoFrn::initOk(void)
 }
 
 
+void QsoFrn::connect(void)
+{
+  tcp_client->connect(opt_server, atoi(opt_port.c_str()));
+}
+
+
+void QsoFrn::disconnect(void)
+{
+  if (tcp_client->isConnected())
+  {
+    tcp_client->disconnect();
+  }
+}
+
 int QsoFrn::writeSamples(const float *samples, int count)
 {
   cout << "." << flush;
@@ -241,14 +261,14 @@ int QsoFrn::writeSamples(const float *samples, int count)
 
 void QsoFrn::flushSamples(void)
 {
-  cout << __PRETTY_FUNCTION__ << endl;
+  cout << __FUNCTION__ << endl;
   sourceAllSamplesFlushed();
 }
 
 
 void QsoFrn::resumeOutput(void)
 {
-  cout << __PRETTY_FUNCTION__ << endl;
+  cout << __FUNCTION__ << endl;
 }
 
 
@@ -257,10 +277,9 @@ void QsoFrn::resumeOutput(void)
  * Protected member functions
  *
  ****************************************************************************/
-
 void QsoFrn::allSamplesFlushed(void)
 {
-  cout << __PRETTY_FUNCTION__ << endl;
+  cout << __FUNCTION__ << endl;
 }
 
 
@@ -271,12 +290,36 @@ void QsoFrn::allSamplesFlushed(void)
  ****************************************************************************/
 void QsoFrn::onConnected(void)
 {
+  cout << __FUNCTION__ << endl;
 }
 
 
 void QsoFrn::onDisconnected(TcpConnection *conn, 
   TcpConnection::DisconnectReason reason)
 {
+  cout << __FUNCTION__ << " ";
+  switch (reason)
+  {
+    case TcpConnection::DR_HOST_NOT_FOUND:
+      cout << "DR_HOST_NOT_FOUND";
+      break;
+    case TcpConnection::DR_REMOTE_DISCONNECTED:
+      cout << "DR_REMOTE_DISCONNECTED" << ", " << conn->disconnectReasonStr(reason);
+      break;
+    case TcpConnection::DR_SYSTEM_ERROR:
+      cout << "DR_SYSTEM_ERROR" << ", " << conn->disconnectReasonStr(reason);
+      break;
+    case TcpConnection::DR_RECV_BUFFER_OVERFLOW:
+      cout << "DR_RECV_BUFFER_OVERFLOW";
+      break;
+    case TcpConnection::DR_ORDERED_DISCONNECT:
+      cout << "DR_ORDERED_DISCONNECT";
+      break;
+    default:
+      cout << "DR_UNKNOWN";
+      break;
+  }
+  cout << endl;
 }
 
 

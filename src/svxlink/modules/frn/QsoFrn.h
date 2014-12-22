@@ -141,6 +141,10 @@ class QsoFrn
      
     bool initOk(void);
 
+    void connect(void);
+
+    void disconnect(void);
+
     /**
      * @brief   Write samples into this audio sink
      * @param   samples The buffer containing the samples
@@ -202,6 +206,7 @@ class QsoFrn
     Async::TcpClient *tcp_client;
 
     std::string opt_server;
+    std::string opt_port;
     std::string opt_version;
     std::string opt_email_address;
     std::string opt_dyn_password;

@@ -260,6 +260,7 @@ void ModuleFrn::moduleCleanup()
 void ModuleFrn::activateInit(void)
 {
     audio_valve->setOpen(true);
+    qso->connect();
 }
 
 
@@ -279,6 +280,7 @@ void ModuleFrn::activateInit(void)
 void ModuleFrn::deactivateCleanup(void)
 {
   audio_valve->setOpen(true);
+  qso->disconnect();
 } 
 
 
