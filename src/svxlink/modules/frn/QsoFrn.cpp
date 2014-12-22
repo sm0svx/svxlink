@@ -130,6 +130,7 @@ using namespace sigc;
 QsoFrn::QsoFrn(ModuleFrn *module)
   : init_ok(false)
   , tcp_client(new TcpClient())
+  , state(STATE_DISCONNECTED)
 {
   assert(module != 0);
 
@@ -241,6 +242,7 @@ bool QsoFrn::initOk(void)
 void QsoFrn::connect(void)
 {
   tcp_client->connect(opt_server, atoi(opt_port.c_str()));
+  setState(STATE_CONNECTING);
 }
 
 
@@ -288,9 +290,20 @@ void QsoFrn::allSamplesFlushed(void)
  * Private member functions
  *
  ****************************************************************************/
+void QsoFrn::setState(State newState)
+{
+  if (newState != state)
+  {
+    state = newState;
+    stateChange(newState);
+  }
+}
+
+
 void QsoFrn::onConnected(void)
 {
   cout << __FUNCTION__ << endl;
+  setState(STATE_CONNECTED);
 }
 
 
@@ -298,6 +311,7 @@ void QsoFrn::onDisconnected(TcpConnection *conn,
   TcpConnection::DisconnectReason reason)
 {
   cout << __FUNCTION__ << " ";
+  setState(STATE_DISCONNECTED);
   switch (reason)
   {
     case TcpConnection::DR_HOST_NOT_FOUND:

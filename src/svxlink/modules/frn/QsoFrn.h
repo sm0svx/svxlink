@@ -129,6 +129,12 @@ class QsoFrn
   : public Async::AudioSink, public Async::AudioSource, public sigc::trackable
 {
   public:
+    typedef enum {
+      STATE_DISCONNECTED,
+      STATE_CONNECTING,
+      STATE_CONNECTED
+    } State;
+
     /**
      * @brief 	Default constuctor
      */
@@ -183,6 +189,8 @@ class QsoFrn
       */
      virtual void resumeOutput(void);
 
+     sigc::signal<void, State> stateChange;
+
   protected:
      /**
       * @brief The registered sink has flushed all samples
@@ -201,9 +209,12 @@ class QsoFrn
      int onDataReceived(Async::TcpConnection *con, void *data, int len);
      void onSendBufferFull(bool is_full);
 
+     void setState(State newState);
+
   private:
     bool init_ok;
     Async::TcpClient *tcp_client;
+    State state;
 
     std::string opt_server;
     std::string opt_port;
