@@ -659,16 +659,11 @@ void Voter::printSquelchState(void)
   }
 
   ostream &os = *sql_state_os;
+  os << setfill('0') << std::internal;
 
   struct timeval tv;
   gettimeofday(&tv, NULL);
-  ios::fmtflags old_flags = os.flags();
-  ios::char_type old_fill = os.fill();
-  os << tv.tv_sec << "."
-     << right << setw(3) << setfill('0') << tv.tv_usec / 1000
-     << ": ";
-  os.flags(old_flags);
-  os.fill(old_fill);
+  os << tv.tv_sec << "." << setw(3) << tv.tv_usec / 1000 << " ";
 
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
@@ -683,9 +678,9 @@ void Voter::printSquelchState(void)
     }
     else
     {
-      os << " ";
+      os << "_";
     }
-    os << left << setw(4) << static_cast<int>(siglev);
+    os << showpos << setw(4) << static_cast<int>(siglev) << noshowpos;
     os << " ";
   }
   os << endl;
