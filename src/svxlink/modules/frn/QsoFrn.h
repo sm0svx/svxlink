@@ -132,7 +132,9 @@ class QsoFrn
     typedef enum {
       STATE_DISCONNECTED,
       STATE_CONNECTING,
-      STATE_CONNECTED
+      STATE_CONNECTED,
+      STATE_LOGGING_IN,
+      STATE_LOGGED_IN
     } State;
 
     /**
@@ -202,14 +204,17 @@ class QsoFrn
       */
      virtual void allSamplesFlushed(void);
 
+     void setState(State newState);
+
   private:
+
+     void login(void);
+
      void onConnected(void);
      void onDisconnected(Async::TcpConnection *conn, 
          Async::TcpConnection::DisconnectReason reason);
      int onDataReceived(Async::TcpConnection *con, void *data, int len);
      void onSendBufferFull(bool is_full);
-
-     void setState(State newState);
 
   private:
     bool init_ok;

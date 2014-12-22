@@ -299,11 +299,16 @@ void QsoFrn::setState(State newState)
   }
 }
 
+void QsoFrn::login(void)
+{
+  setState(STATE_LOGGING_IN);
+}
 
 void QsoFrn::onConnected(void)
 {
   cout << __FUNCTION__ << endl;
   setState(STATE_CONNECTED);
+  login();
 }
 
 
