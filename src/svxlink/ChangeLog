@@ -33,6 +33,9 @@
 
 * Bugfix in ModuleMetarInfo: Numbers was some times read in the wrong way
 
+* New voter configuration, SQL_STATE_PTY, which make it possible to
+  continuously output squelch state information to a UNIX98 PTY.
+
 
 
  1.4.0 -- 02 aug 2014
