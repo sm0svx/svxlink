@@ -134,8 +134,24 @@ class QsoFrn
       STATE_CONNECTING,
       STATE_CONNECTED,
       STATE_LOGGING_IN,
-      STATE_LOGGED_IN
+      STATE_LOGGING_IN_2,
+      STATE_LOGGED_IN,
+      STATE_ERROR
     } State;
+
+    typedef enum {
+      DT_IDLE = 0,
+      DT_DO_TX,
+      DT_VOICE_BUFFER,
+      DT_CLIENT_LIST,
+      DT_TEXT_MESSAGE,
+      DT_NET_NAMES,
+      DT_ADMIN_LIST,
+      DT_ACCESS_LIST,
+      DT_BLOCK_LIST,
+      DT_MUTE_LIST,
+      DT_ACCESS_MODE
+    } Command;
 
     /**
      * @brief 	Default constuctor
@@ -152,6 +168,8 @@ class QsoFrn
     void connect(void);
 
     void disconnect(void);
+
+    std::string stateToString(State state);
 
     /**
      * @brief   Write samples into this audio sink
@@ -207,32 +225,43 @@ class QsoFrn
      void setState(State newState);
 
   private:
-
+     void reconnect();
      void login(void);
+     void handleCommand(Command cmd, void *data, int len);
 
      void onConnected(void);
      void onDisconnected(Async::TcpConnection *conn, 
-         Async::TcpConnection::DisconnectReason reason);
+		         Async::TcpConnection::DisconnectReason reason);
      int onDataReceived(Async::TcpConnection *con, void *data, int len);
      void onSendBufferFull(bool is_full);
 
-  private:
-    bool init_ok;
-    Async::TcpClient *tcp_client;
-    State state;
+     void onKeepaliveTimeout(Async::Timer *timer);
+     void onConnectTimeout(Async::Timer *timer);
 
-    std::string opt_server;
-    std::string opt_port;
-    std::string opt_version;
-    std::string opt_email_address;
-    std::string opt_dyn_password;
-    std::string opt_callsign_and_user;
-    std::string opt_client_type;
-    std::string opt_band_and_channel;
-    std::string opt_description;
-    std::string opt_country;
-    std::string opt_city_city_part;
-    std::string opt_net;
+  private:
+    static const int    KEEP_ALIVE_TIME         = 500;
+    static const int    MAX_CONNECT_RETRY_CNT   = 5;
+    static const int    CON_TIMEOUT_TIME        = 50000;
+
+    bool                init_ok;
+    Async::TcpClient *  tcp_client;
+    Async::Timer *      keep_alive_timer;
+    Async::Timer *      con_timeout_timer;
+    State               state;
+    int                 connect_retry_cnt;
+
+    std::string         opt_server;
+    std::string         opt_port;
+    std::string         opt_version;
+    std::string         opt_email_address;
+    std::string         opt_dyn_password;
+    std::string         opt_callsign_and_user;
+    std::string         opt_client_type;
+    std::string         opt_band_and_channel;
+    std::string         opt_description;
+    std::string         opt_country;
+    std::string         opt_city_city_part;
+    std::string         opt_net;
 };
 
 
