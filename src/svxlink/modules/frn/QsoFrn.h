@@ -46,6 +46,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Project Includes
  *
  ****************************************************************************/
+extern "C" {
+#include <gsm.h>
+}
 
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
@@ -151,7 +154,14 @@ class QsoFrn
       DT_BLOCK_LIST,
       DT_MUTE_LIST,
       DT_ACCESS_MODE
-    } Command;
+    } Response;
+
+    typedef enum {
+      RQ_RX0,
+      RQ_TX0,
+      RQ_TX1,
+      RQ_P
+    } Request;
 
     /**
      * @brief 	Default constuctor
@@ -168,6 +178,8 @@ class QsoFrn
     void connect(void);
 
     void disconnect(void);
+
+    void squelchOpen(bool is_open);
 
     std::string stateToString(State state);
 
@@ -227,7 +239,10 @@ class QsoFrn
   private:
      void reconnect();
      void login(void);
-     void handleCommand(Command cmd, void *data, int len);
+     void sendVoiceData();
+
+     void sendRequest(Request rq);
+     void handleResponse(Response cmd, void *data, int len);
 
      void onConnected(void);
      void onDisconnected(Async::TcpConnection *conn, 
@@ -242,10 +257,12 @@ class QsoFrn
     static const int    KEEP_ALIVE_TIME         = 500;
     static const int    MAX_CONNECT_RETRY_CNT   = 5;
     static const int    CON_TIMEOUT_TIME        = 30000;
-    static const int    FRAME_COUNT             = 4;
-    static const int    BUFFER_SIZE             = FRAME_COUNT*325;
+    static const int    FRAME_COUNT             = 10;
+    static const int    BUFFER_SIZE             = FRAME_COUNT*160;
 
     bool                init_ok;
+    bool                is_sending_voice;
+
     Async::TcpClient *  tcp_client;
     Async::Timer *      keep_alive_timer;
     Async::Timer *      con_timeout_timer;
@@ -254,6 +271,7 @@ class QsoFrn
     short               receive_buffer[BUFFER_SIZE];
     short               send_buffer[BUFFER_SIZE];
     int                 send_buffer_cnt;
+    gsm                 gsmh;
 
     std::string         opt_server;
     std::string         opt_port;

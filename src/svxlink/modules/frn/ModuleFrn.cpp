@@ -362,7 +362,7 @@ void ModuleFrn::dtmfCmdReceivedWhenIdle(const std::string &cmd)
  */
 void ModuleFrn::squelchOpen(bool is_open)
 {
-  cout << __PRETTY_FUNCTION__ << " " << is_open << endl;
+  qso->squelchOpen(is_open);
 }
 
 

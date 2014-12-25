@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <cassert>
+#include <cstring>
 #include <cstdlib>
 #include <sigc++/bind.h>
 #include <sstream>
@@ -131,12 +132,14 @@ using namespace sigc;
 
 QsoFrn::QsoFrn(ModuleFrn *module)
   : init_ok(false)
+  , is_sending_voice(false)
   , tcp_client(new TcpClient())
   , keep_alive_timer(new Timer(KEEP_ALIVE_TIME, Timer::TYPE_PERIODIC))
   , con_timeout_timer(new Timer(CON_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , state(STATE_DISCONNECTED)
   , connect_retry_cnt(0)
   , send_buffer_cnt(0)
+  , gsmh(gsm_create())
 {
   assert(module != 0);
 
@@ -250,6 +253,9 @@ QsoFrn::~QsoFrn(void)
 
   delete tcp_client;
   tcp_client = 0;
+
+  gsm_destroy(gsmh);
+  gsmh = 0;
 }
 
 
@@ -261,8 +267,9 @@ bool QsoFrn::initOk(void)
 
 void QsoFrn::connect(void)
 {
-  cout << __FUNCTION__ << ", " << opt_server << ":" << opt_port << endl;
   setState(STATE_CONNECTING);
+
+  cout << "connecting to " << opt_server << ":" << opt_port << endl;
   tcp_client->connect(opt_server, atoi(opt_port.c_str()));
 }
 
@@ -271,10 +278,11 @@ void QsoFrn::disconnect(void)
 {
   setState(STATE_DISCONNECTED);
 
+  keep_alive_timer->setEnable(false);
+  con_timeout_timer->setEnable(false);
+
   if (tcp_client->isConnected())
   { 
-    keep_alive_timer->setEnable(false);
-    con_timeout_timer->setEnable(false);
     tcp_client->disconnect();
   }
 }
@@ -317,14 +325,66 @@ std::string QsoFrn::stateToString(State state)
 
 int QsoFrn::writeSamples(const float *samples, int count)
 {
-  cout << __FUNCTION__ << " " << count << endl;
-  return count;
+  //cout << __FUNCTION__ << " " << count << endl;
+  int samples_read = 0;
+
+  if (state != STATE_LOGGED_IN)
+  {
+    return count;
+  }
+ 
+  while (samples_read < count)
+  {
+    int read_cnt = min(BUFFER_SIZE - send_buffer_cnt, count-samples_read);
+    for (int i = 0; i < read_cnt; ++i)
+    {
+      float sample = samples[samples_read++];
+      if (sample > 1)
+      {
+        send_buffer[send_buffer_cnt++] = 32767;
+      }
+      else if (sample < -1)
+      {
+        send_buffer[send_buffer_cnt++] = -32767;
+      }
+      else
+      {
+        send_buffer[send_buffer_cnt++] = static_cast<int16_t>(32767.0 * sample);
+      }
+    }
+    if (send_buffer_cnt == BUFFER_SIZE)
+    {
+      if (is_sending_voice)
+      {
+        sendVoiceData();
+        send_buffer_cnt = 0;
+      }
+      else
+      {
+        break;
+      }
+    }
+  }
+  return samples_read;
 }
 
 
 void QsoFrn::flushSamples(void)
 {
-  cout << __FUNCTION__ << endl;
+  //cout << __FUNCTION__ << endl;
+
+  if (state == STATE_LOGGED_IN && send_buffer_cnt > 0)
+  {
+    memset(send_buffer + send_buffer_cnt, 0,
+        sizeof(send_buffer) - sizeof(*send_buffer) * send_buffer_cnt);
+    send_buffer_cnt = BUFFER_SIZE;
+
+    sendVoiceData();
+    sendRequest(RQ_TX0);
+
+    is_sending_voice = false;
+    send_buffer_cnt = 0;
+  }
   sourceAllSamplesFlushed();
 }
 
@@ -334,6 +394,14 @@ void QsoFrn::resumeOutput(void)
   cout << __FUNCTION__ << endl;
 }
 
+
+void QsoFrn::squelchOpen(bool is_open)
+{
+  if (is_open)
+  {
+    sendRequest(RQ_TX0);
+  }
+}
 
 /****************************************************************************
  *
@@ -355,11 +423,12 @@ void QsoFrn::setState(State newState)
 {
   if (newState != state)
   {
-    cout << __FUNCTION__ << " " << stateToString(newState) << endl;
+    cout << __FUNCTION__ << " " << stateToString(newState) << endl << flush;
     state = newState;
     stateChange(newState);
   }
 }
+
 
 void QsoFrn::login(void)
 {
@@ -384,6 +453,23 @@ void QsoFrn::login(void)
 }
 
 
+void QsoFrn::sendVoiceData(void)
+{
+  assert(send_buffer_cnt == BUFFER_SIZE); 
+
+  size_t nbytes = 0;
+  uint8_t gsm_data[33*FRAME_COUNT];
+
+  for (int i = 0; i < FRAME_COUNT; i++)
+  {
+    gsm_encode(gsmh, send_buffer + i*160, gsm_data + i*33);
+    nbytes += 33;
+  }
+  sendRequest(RQ_TX1);
+  tcp_client->write(gsm_data, 325);
+}
+
+
 void QsoFrn::reconnect(void)
 {
   if (connect_retry_cnt++ < MAX_CONNECT_RETRY_CNT)
@@ -399,7 +485,39 @@ void QsoFrn::reconnect(void)
 }
 
 
-void QsoFrn::handleCommand(Command cmd, void *data, int len)
+void QsoFrn::sendRequest(Request rq)
+{
+  std::stringstream s;
+
+  switch(rq)
+  {
+    case RQ_RX0:
+      s << "RX0";
+      break;
+    case RQ_TX0:
+      s << "TX0";
+      break;
+    case RQ_TX1:
+      s << "TX1";
+      break;
+    case RQ_P:
+      s << "P";
+      break;
+    default:
+      cerr << "unknown request " << rq << endl;
+      return;
+  }
+  cout << " " << s.str() << " " << flush;
+  if (tcp_client->isConnected())
+  {
+    s << endl;
+    std::string rq_s = s.str();
+    tcp_client->write(rq_s.c_str(), rq_s.length());
+  }
+}
+
+
+void QsoFrn::handleResponse(Response cmd, void *data, int len)
 {
   cout << cmd << flush;
   std::string data_s((char*)data, len);
@@ -410,6 +528,8 @@ void QsoFrn::handleCommand(Command cmd, void *data, int len)
       break;
 
     case DT_DO_TX:
+      is_sending_voice = true;
+      sourceResumeOutput();
       break;
 
     case DT_VOICE_BUFFER:
@@ -423,7 +543,8 @@ void QsoFrn::handleCommand(Command cmd, void *data, int len)
     case DT_BLOCK_LIST:
     case DT_MUTE_LIST:
     case DT_ACCESS_MODE:
-      cout << endl << data_s << endl;
+      cout << "Received command " << cmd << endl;
+      cout << data_s << endl;
       break;
 
     default:
@@ -456,46 +577,45 @@ void QsoFrn::onDisconnected(TcpConnection *conn,
   switch (reason)
   {
     case TcpConnection::DR_HOST_NOT_FOUND:
-      cout << "DR_HOST_NOT_FOUND";
+      cout << "DR_HOST_NOT_FOUND" << endl;
       setState(STATE_ERROR);
       break;
 
     case TcpConnection::DR_REMOTE_DISCONNECTED:
       cout << "DR_REMOTE_DISCONNECTED" << ", " 
-           << conn->disconnectReasonStr(reason);
+           << conn->disconnectReasonStr(reason) << endl;
       reconnect();
       break;
 
     case TcpConnection::DR_SYSTEM_ERROR:
       cout << "DR_SYSTEM_ERROR" << ", " 
-           << conn->disconnectReasonStr(reason);
+           << conn->disconnectReasonStr(reason) << endl;
       reconnect();
       break;
 
     case TcpConnection::DR_RECV_BUFFER_OVERFLOW:
-      cout << "DR_RECV_BUFFER_OVERFLOW";
+      cout << "DR_RECV_BUFFER_OVERFLOW" << endl;
       setState(STATE_ERROR);
       break;
 
     case TcpConnection::DR_ORDERED_DISCONNECT:
-      cout << "DR_ORDERED_DISCONNECT";
+      cout << "DR_ORDERED_DISCONNECT" << endl;
       break;
 
     default:
-      cout << "DR_UNKNOWN";
+      cout << "DR_UNKNOWN" << endl;
       setState(STATE_ERROR);
       break;
   }
-  cout << endl;
 }
 
 
 int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
 {
   //cout << __FUNCTION__ << " len: " << len << endl;
-  con_timeout_timer->reset();
-
   std::string data_s((char*)data, len);
+
+  con_timeout_timer->reset();
 
   switch(state)
   {
@@ -509,11 +629,12 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
       // TODO add server response validation
       setState(STATE_LOGGED_IN);
       keep_alive_timer->setEnable(true);
+      sendRequest(RQ_RX0);
       cout << data_s << endl;
       break;
 
     case STATE_LOGGED_IN:
-      handleCommand((Command)data_s[0], data, len);
+      handleResponse((Response)data_s[0], data, len);
       break;
 
     default:
@@ -531,11 +652,9 @@ void QsoFrn::onSendBufferFull(bool is_full)
 
 void QsoFrn::onKeepaliveTimeout(Timer *timer)
 {
-  cout << "_" << flush;
-  std::string req("P\n");
   if (tcp_client->isConnected())
   {
-    tcp_client->write(req.c_str(), req.length());
+    sendRequest(RQ_P);
   }
 }
 
