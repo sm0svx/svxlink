@@ -120,7 +120,7 @@ using namespace Async;
  ****************************************************************************/
 
 Pty::Pty(const std::string &slave_link)
-  : slave_link(slave_link), master(-1), slave(-1), watch(0)
+  : slave_link(slave_link), master(-1), slave(-1), watch(0), is_open(false)
 {
 } /* Pty::Pty */
 
@@ -193,9 +193,13 @@ bool Pty::open(void)
       close();
       return false;
     }
+    /*
     cout << "### Created pseudo tty slave link "
          << slave_path << " -> " << slave_link << endl;
+    */
   }
+
+  is_open = true;
 
   return true;
 } /* Pty::open */
@@ -203,6 +207,7 @@ bool Pty::open(void)
 
 void Pty::close(void)
 {
+  is_open = false;
   if (!slave_link.empty())
   {
     unlink(slave_link.c_str());
