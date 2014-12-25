@@ -10,6 +10,8 @@ FIND_PROGRAM(CHOWN_TOOL
 
 IF(CHOWN_TOOL)
   MESSAGE("-- Found chown: ${CHOWN_TOOL}")
+ELSE(CHOWN_TOOL)
+  MESSAGE("-- Unable to find the 'chown' program")
 ENDIF(CHOWN_TOOL)
 
 MARK_AS_ADVANCED(CHOWN_TOOL)

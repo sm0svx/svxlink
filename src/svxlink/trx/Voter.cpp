@@ -41,6 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <utility>
 #include <list>
 #include <sigc++/bind.h>
+#include <sys/time.h>
 
 
 /****************************************************************************
@@ -53,6 +54,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioValve.h>
+#include <AsyncPty.h>
+#include <AsyncPtyStreamBuf.h>
 
 
 /****************************************************************************
@@ -332,7 +335,8 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
 
 Voter::Voter(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), m_verbose(true), selector(0),
-    sm(Macho::State<Top>(this)), is_processing_event(false)
+    sm(Macho::State<Top>(this)), is_processing_event(false),
+    sql_state_os(0)
 {
   Rx::setVerbose(false);
 } /* Voter::Voter */
@@ -354,6 +358,15 @@ Voter::~Voter(void)
     delete *it;
   }
   rxs.clear();
+
+  if ((sql_state_os != 0) && (sql_state_os != &cout))
+  {
+    PtyStreamBuf *sb = dynamic_cast<PtyStreamBuf*>(sql_state_os->rdbuf());
+    assert(sb != 0);
+    delete sql_state_os;
+    delete sb->pty();
+    delete sb;
+  }
 } /* Voter::~Voter */
 
 
@@ -444,6 +457,33 @@ bool Voter::initialize(void)
   }
   sm->setRxSwitchDelay(rx_switch_delay);
   
+  string sql_state_pty;
+  cfg.getValue(name(), "SQL_STATE_PTY", sql_state_pty);
+  if (!sql_state_pty.empty())
+  {
+    if (sql_state_pty == "-")
+    {
+      sql_state_os = &cout;
+    }
+    else
+    {
+      Pty *pty = new Pty(sql_state_pty);
+      if (!pty->open())
+      {
+        cerr << "*** ERROR: Could not open squelch state PTY "
+             << sql_state_pty << " as spcified in configuration variable "
+             << name() << "/" << "SQL_STATE_PTY" << endl;
+        delete pty;
+        pty = 0;
+        return false;
+      }
+      PtyStreamBuf *sb = new PtyStreamBuf(pty);
+      assert(sb != 0);
+      sql_state_os = new ostream(sb);
+      assert(sql_state_os != 0);
+    }
+  }
+
   selector = new AudioSelector;
   setHandler(selector);
   
@@ -613,25 +653,37 @@ void Voter::resetAll(void)
 
 void Voter::printSquelchState(void)
 {
+  if (sql_state_os == 0)
+  {
+    return;
+  }
+
+  ostream &os = *sql_state_os;
+  os << setfill('0') << std::internal;
+
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  os << tv.tv_sec << "." << setw(3) << tv.tv_usec / 1000 << " ";
+
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
     float siglev = (*it)->signalStrength();
     bool sql_is_open = (*it)->squelchIsOpen();
 
-    cout << (*it)->name();
+    os << (*it)->name();
     if (sql_is_open)
     {
-      cout << ((*it) == sm->activeSrx() ? "*" : ":");
+      os << ((*it) == sm->activeSrx() ? "*" : ":");
     }
     else
     {
-      cout << " ";
+      os << "_";
     }
-    cout << left << setw(4) << static_cast<int>(siglev);
-    cout << " ";
+    os << showpos << setw(4) << static_cast<int>(siglev) << noshowpos;
+    os << " ";
   }
-  cout << endl;
+  os << endl;
 } /* Voter::printSquelchState */
 
 
@@ -1000,6 +1052,7 @@ void Voter::SquelchOpen::entry(void)
   
   runTask(bind(mem_fun(voter(), &Voter::setSquelchState), true));
   runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), false));
+  runTask(mem_fun(voter(), &Voter::printSquelchState));
 } /* Voter::SquelchOpen::entry */
 
 
@@ -1020,6 +1073,7 @@ void Voter::SquelchOpen::exit(void)
   }
   
   runTask(bind(mem_fun(voter(), &Voter::setSquelchState), false));
+  runTask(mem_fun(voter(), &Voter::printSquelchState));
 } /* Voter::SquelchOpen::exit */
 
 
@@ -1118,7 +1172,7 @@ void Voter::Receiving::exit(void)
 
 void Voter::Receiving::timerExpired(void)
 {
-  //voter().printSquelchState();
+  voter().printSquelchState();
   
   assert(activeSrx() != 0);
   //assert(bestSrx() != 0);

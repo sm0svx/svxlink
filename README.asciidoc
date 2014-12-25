@@ -2,7 +2,7 @@ SvxLink
 =======
 
 SvxLink is a project that develops software targeting the ham radio community.
-It started out as an EchoLink application for Linux back in 2003 but have now
+It started out as an EchoLink application for Linux back in 2003 but has now
 evolved to be something much more advanced.
 
 == SvxLink Server ==
@@ -21,7 +21,7 @@ either C++ or TCL. Examples of modules are:
 * *TclVoiceMail*       -- Send voice mail to other local users
 * *PropagationMonitor* -- Announce propagation warnings from dxmaps.com
 * *SelCall*            -- Send selective calling sequences by entering DTMF codes
-* *MetarInformation*   -- Play airport weather informatoion
+* *MetarInformation*   -- Play airport weather information
 
 == Qtel ==
 Qtel, the Qt EchoLink client, is a graphical application used to access the
