@@ -242,6 +242,8 @@ class QsoFrn
     static const int    KEEP_ALIVE_TIME         = 500;
     static const int    MAX_CONNECT_RETRY_CNT   = 5;
     static const int    CON_TIMEOUT_TIME        = 30000;
+    static const int    FRAME_COUNT             = 4;
+    static const int    BUFFER_SIZE             = FRAME_COUNT*325;
 
     bool                init_ok;
     Async::TcpClient *  tcp_client;
@@ -249,6 +251,9 @@ class QsoFrn
     Async::Timer *      con_timeout_timer;
     State               state;
     int                 connect_retry_cnt;
+    short               receive_buffer[BUFFER_SIZE];
+    short               send_buffer[BUFFER_SIZE];
+    int                 send_buffer_cnt;
 
     std::string         opt_server;
     std::string         opt_port;

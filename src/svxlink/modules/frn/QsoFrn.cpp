@@ -136,6 +136,7 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   , con_timeout_timer(new Timer(CON_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , state(STATE_DISCONNECTED)
   , connect_retry_cnt(0)
+  , send_buffer_cnt(0)
 {
   assert(module != 0);
 
@@ -316,7 +317,7 @@ std::string QsoFrn::stateToString(State state)
 
 int QsoFrn::writeSamples(const float *samples, int count)
 {
-  cout << "." << flush;
+  cout << __FUNCTION__ << " " << count << endl;
   return count;
 }
 
