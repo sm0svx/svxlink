@@ -241,7 +241,7 @@ class QsoFrn
   private:
     static const int    KEEP_ALIVE_TIME         = 500;
     static const int    MAX_CONNECT_RETRY_CNT   = 5;
-    static const int    CON_TIMEOUT_TIME        = 50000;
+    static const int    CON_TIMEOUT_TIME        = 30000;
 
     bool                init_ok;
     Async::TcpClient *  tcp_client;

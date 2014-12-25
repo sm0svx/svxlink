@@ -543,6 +543,7 @@ void QsoFrn::onConnectTimeout(Timer *timer)
 {
   //cout << __FUNCTION__ << endl;
   disconnect();
+  reconnect();
 }
 
 
