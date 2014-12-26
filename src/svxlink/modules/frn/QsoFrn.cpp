@@ -133,7 +133,8 @@ using namespace sigc;
 QsoFrn::QsoFrn(ModuleFrn *module)
   : init_ok(false)
   , is_sending_voice(false)
-  , tcp_client(new TcpClient())
+  , is_receiving_voice(false)
+  , tcp_client(new TcpClient(TCP_BUFFER_SIZE))
   , keep_alive_timer(new Timer(KEEP_ALIVE_TIME, Timer::TYPE_PERIODIC))
   , con_timeout_timer(new Timer(CON_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , state(STATE_DISCONNECTED)
@@ -219,6 +220,9 @@ QsoFrn::QsoFrn(ModuleFrn *module)
     return;
   }
  
+  int gsm_one = 1;
+  assert(gsm_option(gsmh, GSM_OPT_WAV49, &gsm_one) != -1);
+
   tcp_client->connected.connect(
       mem_fun(*this, &QsoFrn::onConnected));
   tcp_client->disconnected.connect(
@@ -297,24 +301,31 @@ std::string QsoFrn::stateToString(State state)
     case STATE_DISCONNECTED:
       result = "DISCONNECTED";
       break;
+
     case STATE_CONNECTING:
       result = "CONNECTING";
       break;
+
     case STATE_CONNECTED:
       result = "CONNECTED";
       break;
+
     case STATE_LOGGING_IN:
       result = "LOGGING_IN";
       break;
+
     case STATE_LOGGING_IN_2:
       result = "LOGGIN_IN_2";
       break;
+
     case STATE_LOGGED_IN:
       result = "LOGGED_IN";
       break;
+
     case STATE_ERROR:
       result = "ERROR";
       break;
+
     default:
       result = "UNKNOWN";
       break;
@@ -336,7 +347,7 @@ int QsoFrn::writeSamples(const float *samples, int count)
   while (samples_read < count)
   {
     int read_cnt = min(BUFFER_SIZE - send_buffer_cnt, count-samples_read);
-    for (int i = 0; i < read_cnt; ++i)
+    for (int i = 0; i < read_cnt; i++)
     {
       float sample = samples[samples_read++];
       if (sample > 1)
@@ -357,7 +368,6 @@ int QsoFrn::writeSamples(const float *samples, int count)
       if (is_sending_voice)
       {
         sendVoiceData();
-        send_buffer_cnt = 0;
       }
       else
       {
@@ -383,7 +393,6 @@ void QsoFrn::flushSamples(void)
     sendRequest(RQ_TX0);
 
     is_sending_voice = false;
-    send_buffer_cnt = 0;
   }
   sourceAllSamplesFlushed();
 }
@@ -402,6 +411,7 @@ void QsoFrn::squelchOpen(bool is_open)
     sendRequest(RQ_TX0);
   }
 }
+
 
 /****************************************************************************
  *
@@ -458,15 +468,22 @@ void QsoFrn::sendVoiceData(void)
   assert(send_buffer_cnt == BUFFER_SIZE); 
 
   size_t nbytes = 0;
-  uint8_t gsm_data[33*FRAME_COUNT];
+  unsigned char gsm_data[FRN_AUDIO_PACKET_SIZE];
 
-  for (int i = 0; i < FRAME_COUNT; i++)
+  for (int nframe = 0; nframe < FRAME_COUNT; nframe++)
   {
-    gsm_encode(gsmh, send_buffer + i*160, gsm_data + i*33);
-    nbytes += 33;
+    short * src = send_buffer + nframe * PCM_FRAME_SIZE;
+    unsigned char * dst = gsm_data + nframe * GSM_FRAME_SIZE;
+
+    // GSM_OPT_WAV49, produce alternating frames 32, 33, 32, 33, ..
+    gsm_encode(gsmh, src, dst);
+    gsm_encode(gsmh, src + PCM_FRAME_SIZE / 2, dst + 32);
+ 
+    nbytes += GSM_FRAME_SIZE;
   }
   sendRequest(RQ_TX1);
-  tcp_client->write(gsm_data, 325);
+  tcp_client->write(gsm_data, nbytes);
+  send_buffer_cnt = 0;
 }
 
 
@@ -494,15 +511,19 @@ void QsoFrn::sendRequest(Request rq)
     case RQ_RX0:
       s << "RX0";
       break;
+
     case RQ_TX0:
       s << "TX0";
       break;
+
     case RQ_TX1:
       s << "TX1";
       break;
+
     case RQ_P:
       s << "P";
       break;
+
     default:
       cerr << "unknown request " << rq << endl;
       return;
@@ -513,6 +534,36 @@ void QsoFrn::sendRequest(Request rq)
     s << endl;
     std::string rq_s = s.str();
     tcp_client->write(rq_s.c_str(), rq_s.length());
+  }
+}
+
+
+void QsoFrn::handleAudioData(unsigned char *data, int len)
+{
+  unsigned char *gsm_data = data + 3;
+  short *pcm_buffer = receive_buffer;
+  float pcm_samples[PCM_FRAME_SIZE];
+
+  if (len != FRN_AUDIO_PACKET_SIZE + 3)
+  {
+    return;
+  }
+
+  for (int frameno = 0; frameno < FRAME_COUNT; frameno++)
+  {
+    unsigned char *src = gsm_data + frameno * GSM_FRAME_SIZE;
+    short *dst = pcm_buffer;
+
+    // GSM_OPT_WAV49, consume alternating frames of size 33, 32, 33, 32, ..
+    gsm_decode(gsmh, src, dst);
+    gsm_decode(gsmh, src + 33, dst + PCM_FRAME_SIZE / 2);
+
+    for (int i = 0; i < PCM_FRAME_SIZE; i++)
+    {
+       pcm_samples[i] = static_cast<float>(pcm_buffer[i]) / 32768.0;
+    }
+    sinkWriteSamples(pcm_samples, PCM_FRAME_SIZE);
+    pcm_buffer += PCM_FRAME_SIZE;
   }
 }
 
@@ -533,6 +584,8 @@ void QsoFrn::handleResponse(Response cmd, void *data, int len)
       break;
 
     case DT_VOICE_BUFFER:
+      is_receiving_voice = true;
+      handleAudioData((unsigned char*)data, len);
       break;
 
     case DT_CLIENT_LIST:
@@ -652,6 +705,7 @@ void QsoFrn::onSendBufferFull(bool is_full)
 
 void QsoFrn::onKeepaliveTimeout(Timer *timer)
 {
+  //if (tcp_client->isConnected() && !is_receiving_voice && !is_sending_voice)
   if (tcp_client->isConnected())
   {
     sendRequest(RQ_P);

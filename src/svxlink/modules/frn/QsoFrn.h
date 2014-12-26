@@ -243,6 +243,7 @@ class QsoFrn
 
      void sendRequest(Request rq);
      void handleResponse(Response cmd, void *data, int len);
+     void handleAudioData(unsigned char *data, int len);
 
      void onConnected(void);
      void onDisconnected(Async::TcpConnection *conn, 
@@ -254,14 +255,19 @@ class QsoFrn
      void onConnectTimeout(Async::Timer *timer);
 
   private:
+    static const int    TCP_BUFFER_SIZE         = 65536;
     static const int    KEEP_ALIVE_TIME         = 500;
     static const int    MAX_CONNECT_RETRY_CNT   = 5;
     static const int    CON_TIMEOUT_TIME        = 30000;
-    static const int    FRAME_COUNT             = 10;
-    static const int    BUFFER_SIZE             = FRAME_COUNT*160;
+    static const int    FRAME_COUNT             = 5;
+    static const int    PCM_FRAME_SIZE          = 160*2;  // WAV49 has 2x
+    static const int    GSM_FRAME_SIZE          = 65;     // WAV49 has 65
+    static const int    BUFFER_SIZE             = FRAME_COUNT*PCM_FRAME_SIZE;
+    static const int    FRN_AUDIO_PACKET_SIZE   = FRAME_COUNT*GSM_FRAME_SIZE;
 
     bool                init_ok;
     bool                is_sending_voice;
+    bool                is_receiving_voice;
 
     Async::TcpClient *  tcp_client;
     Async::Timer *      keep_alive_timer;
