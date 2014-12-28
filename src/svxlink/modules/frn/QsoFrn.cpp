@@ -536,7 +536,12 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
     {
        pcm_samples[i] = static_cast<float>(pcm_buffer[i]) / 32768.0;
     }
-    sinkWriteSamples(pcm_samples, PCM_FRAME_SIZE);
+    int all_written = 0;
+    while (all_written < PCM_FRAME_SIZE)
+    {
+      all_written += sinkWriteSamples(pcm_samples + all_written, 
+          PCM_FRAME_SIZE - all_written);
+    }
     pcm_buffer += PCM_FRAME_SIZE;
   }
   return FRN_AUDIO_PACKET_SIZE + 2;
@@ -695,6 +700,7 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
       case STATE_RX_AUDIO:
         bytes_read += handleAudioData(p_data, remaining_bytes);
         setState(STATE_IDLE);
+        sendRequest(RQ_P);
         break;
 
       default:

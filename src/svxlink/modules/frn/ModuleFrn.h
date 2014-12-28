@@ -143,7 +143,7 @@ class ModuleFrn : public Module
     Async::AudioValve       *audio_valve;
     Async::AudioSplitter    *audio_splitter;
     Async::AudioSelector    *audio_selector;
-    Async::AudioJitterFifo  *audio_fifo;
+    Async::AudioFifo        *audio_fifo;
 
 };  /* class ModuleFrn */
 

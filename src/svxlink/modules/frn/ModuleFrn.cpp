@@ -224,19 +224,20 @@ bool ModuleFrn::initialize(void)
 
   // frn -> rig/speaker
   audio_selector = new AudioSelector;
-  audio_fifo = new Async::AudioJitterFifo(4 * 320 * 5);
+  audio_fifo = new Async::AudioFifo(4 * 320 * 5);
 
 #if INTERNAL_SAMPLE_RATE == 16000
   AudioInterpolator *up_sampler = new AudioInterpolator(
       2, coeff_16_8, coeff_16_8_taps);
   qso->registerSink(up_sampler, true);
-  audio_fifo->registerSource(up_sampler);
+  audio_selector->addSource(up_sampler);
+  audio_selector->enableAutoSelect(up_sampler, 10);
 #else
-  audio_fifo->registerSource(qso);
+  audio_selector->addSource(qso);
+  audio_selector->enableAutoSelect(qso, 10);
 #endif
-  audio_selector->addSource(audio_fifo);
-  audio_selector->enableAutoSelect(audio_fifo, 10);
-  AudioSource::setHandler(audio_selector);
+  audio_fifo->registerSource(audio_selector);
+  AudioSource::setHandler(audio_fifo);
 
   if (!qso->initOk())
   {
