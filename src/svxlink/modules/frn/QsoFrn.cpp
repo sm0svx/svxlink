@@ -132,10 +132,7 @@ using namespace sigc;
 
 QsoFrn::QsoFrn(ModuleFrn *module)
   : init_ok(false)
-  , is_sending_voice(false)
-  , is_receiving_voice(false)
   , tcp_client(new TcpClient(TCP_BUFFER_SIZE))
-  , keep_alive_timer(new Timer(KEEP_ALIVE_TIME, Timer::TYPE_PERIODIC))
   , con_timeout_timer(new Timer(CON_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , state(STATE_DISCONNECTED)
   , connect_retry_cnt(0)
@@ -232,10 +229,6 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   tcp_client->sendBufferFull.connect(
       mem_fun(*this, &QsoFrn::onSendBufferFull));
 
-  keep_alive_timer->setEnable(false);
-  keep_alive_timer->expired.connect(
-      mem_fun(*this, &QsoFrn::onKeepaliveTimeout));
-
   con_timeout_timer->setEnable(false);
   con_timeout_timer->expired.connect(
       mem_fun(*this, &QsoFrn::onConnectTimeout));
@@ -248,9 +241,6 @@ QsoFrn::~QsoFrn(void)
 {
   AudioSink::clearHandler();
   AudioSource::clearHandler();
-
-  delete keep_alive_timer;
-  keep_alive_timer = 0;
 
   delete con_timeout_timer;
   con_timeout_timer = 0;
@@ -282,7 +272,6 @@ void QsoFrn::disconnect(void)
 {
   setState(STATE_DISCONNECTED);
 
-  keep_alive_timer->setEnable(false);
   con_timeout_timer->setEnable(false);
 
   if (tcp_client->isConnected())
@@ -294,43 +283,33 @@ void QsoFrn::disconnect(void)
 
 std::string QsoFrn::stateToString(State state)
 {
-  std::string result;
-
   switch(state)
   {
     case STATE_DISCONNECTED:
-      result = "DISCONNECTED";
-      break;
-
+      return "DISCONNECTED";
     case STATE_CONNECTING:
-      result = "CONNECTING";
-      break;
-
+      return "CONNECTING";
     case STATE_CONNECTED:
-      result = "CONNECTED";
-      break;
-
-    case STATE_LOGGING_IN:
-      result = "LOGGING_IN";
-      break;
-
+      return "CONNECTED";
+    case STATE_LOGGING_IN_1:
+      return "LOGGING_IN_1";
     case STATE_LOGGING_IN_2:
-      result = "LOGGIN_IN_2";
-      break;
-
-    case STATE_LOGGED_IN:
-      result = "LOGGED_IN";
-      break;
-
+      return "LOGGIN_IN_2";
+    case STATE_IDLE:
+      return "IDLE";
     case STATE_ERROR:
-      result = "ERROR";
-      break;
-
+      return "ERROR";
+    case STATE_TX_AUDIO_WAITING:
+      return "TX_AUDIO_WAITING";
+    case STATE_TX_AUDIO_APPROVED:
+      return "TX_AUDIO_APPROVED";
+    case STATE_TX_AUDIO:
+      return "TX_AUDIO";
+    case STATE_RX_AUDIO:
+      return "RX_AUDIO";
     default:
-      result = "UNKNOWN";
-      break;
+      return "UNKNOWN";
   }
-  return result;
 }
 
 
@@ -339,11 +318,6 @@ int QsoFrn::writeSamples(const float *samples, int count)
   //cout << __FUNCTION__ << " " << count << endl;
   int samples_read = 0;
 
-  if (state != STATE_LOGGED_IN)
-  {
-    return count;
-  }
- 
   while (samples_read < count)
   {
     int read_cnt = min(BUFFER_SIZE - send_buffer_cnt, count-samples_read);
@@ -365,7 +339,7 @@ int QsoFrn::writeSamples(const float *samples, int count)
     }
     if (send_buffer_cnt == BUFFER_SIZE)
     {
-      if (is_sending_voice)
+      if (state == STATE_TX_AUDIO)
       {
         sendVoiceData();
       }
@@ -381,9 +355,9 @@ int QsoFrn::writeSamples(const float *samples, int count)
 
 void QsoFrn::flushSamples(void)
 {
-  //cout << __FUNCTION__ << endl;
+  cout << __FUNCTION__ << endl;
 
-  if (state == STATE_LOGGED_IN && send_buffer_cnt > 0)
+  if (state == STATE_TX_AUDIO && send_buffer_cnt > 0)
   {
     memset(send_buffer + send_buffer_cnt, 0,
         sizeof(send_buffer) - sizeof(*send_buffer) * send_buffer_cnt);
@@ -391,8 +365,6 @@ void QsoFrn::flushSamples(void)
 
     sendVoiceData();
     sendRequest(RQ_TX0);
-
-    is_sending_voice = false;
   }
   sourceAllSamplesFlushed();
 }
@@ -409,6 +381,7 @@ void QsoFrn::squelchOpen(bool is_open)
   if (is_open)
   {
     sendRequest(RQ_TX0);
+    setState(STATE_TX_AUDIO_WAITING);
   }
 }
 
@@ -433,7 +406,7 @@ void QsoFrn::setState(State newState)
 {
   if (newState != state)
   {
-    cout << __FUNCTION__ << " " << stateToString(newState) << endl << flush;
+    //cout << __FUNCTION__ << " " << stateToString(newState) << endl;
     state = newState;
     stateChange(newState);
   }
@@ -442,7 +415,7 @@ void QsoFrn::setState(State newState)
 
 void QsoFrn::login(void)
 {
-  setState(STATE_LOGGING_IN);
+  setState(STATE_LOGGING_IN_1);
 
   std::stringstream s;
   s << "CT:";
@@ -461,7 +434,6 @@ void QsoFrn::login(void)
   std::string req = s.str();
   tcp_client->write(req.c_str(), req.length());
 }
-
 
 void QsoFrn::sendVoiceData(void)
 {
@@ -528,25 +500,27 @@ void QsoFrn::sendRequest(Request rq)
       cerr << "unknown request " << rq << endl;
       return;
   }
-  cout << " " << s.str() << " " << flush;
+  //cout << "req = " << s.str() << endl;
   if (tcp_client->isConnected())
   {
-    s << endl;
+    s << "\r\n";
     std::string rq_s = s.str();
     tcp_client->write(rq_s.c_str(), rq_s.length());
   }
 }
 
 
-void QsoFrn::handleAudioData(unsigned char *data, int len)
+int QsoFrn::handleAudioData(unsigned char *data, int len)
 {
-  unsigned char *gsm_data = data + 3;
+  unsigned char *gsm_data = data + 2;
   short *pcm_buffer = receive_buffer;
   float pcm_samples[PCM_FRAME_SIZE];
 
-  if (len != FRN_AUDIO_PACKET_SIZE + 3)
+  //cout << " [" << len << "] ";
+  if (len < FRN_AUDIO_PACKET_SIZE + 2)
   {
-    return;
+    //cout << "!" << flush;
+    return 0;
   }
 
   for (int frameno = 0; frameno < FRAME_COUNT; frameno++)
@@ -565,27 +539,37 @@ void QsoFrn::handleAudioData(unsigned char *data, int len)
     sinkWriteSamples(pcm_samples, PCM_FRAME_SIZE);
     pcm_buffer += PCM_FRAME_SIZE;
   }
+  return FRN_AUDIO_PACKET_SIZE + 2;
 }
 
 
-void QsoFrn::handleResponse(Response cmd, void *data, int len)
+int QsoFrn::handleCommand(unsigned char *data, int len)
 {
-  cout << cmd << flush;
-  std::string data_s((char*)data, len);
+  int bytes_read = 0;
+  Response cmd = (Response)data[0];
+  //cout << "cmd = " << cmd << endl;
+
+  bytes_read += 1;
 
   switch (cmd)
   {
     case DT_IDLE:
+      sendRequest(RQ_P);
       break;
 
     case DT_DO_TX:
-      is_sending_voice = true;
-      sourceResumeOutput();
+      if (state == STATE_TX_AUDIO)
+      {
+        setState(STATE_IDLE);
+      }
+      else
+      {
+        setState(STATE_TX_AUDIO_APPROVED);
+      }
       break;
 
     case DT_VOICE_BUFFER:
-      is_receiving_voice = true;
-      handleAudioData((unsigned char*)data, len);
+      setState(STATE_RX_AUDIO);
       break;
 
     case DT_CLIENT_LIST:
@@ -597,13 +581,15 @@ void QsoFrn::handleResponse(Response cmd, void *data, int len)
     case DT_MUTE_LIST:
     case DT_ACCESS_MODE:
       cout << "Received command " << cmd << endl;
-      cout << data_s << endl;
+      cout << std::string((char*)data + bytes_read, len - bytes_read) << endl;
+      bytes_read += len;
       break;
 
     default:
-      cerr << "unknown command" << endl << data_s << endl;
+      cout << "Unknown command " << cmd << endl;
       break;
   }
+  return bytes_read;
 }
 
 
@@ -624,7 +610,6 @@ void QsoFrn::onDisconnected(TcpConnection *conn,
   //cout << __FUNCTION__ << " ";
   setState(STATE_DISCONNECTED);
 
-  keep_alive_timer->setEnable(false);
   con_timeout_timer->setEnable(false);
 
   switch (reason)
@@ -666,50 +651,70 @@ void QsoFrn::onDisconnected(TcpConnection *conn,
 int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
 {
   //cout << __FUNCTION__ << " len: " << len << endl;
-  std::string data_s((char*)data, len);
+  unsigned char *p_data = (unsigned char*)data;
 
   con_timeout_timer->reset();
+  int remaining_bytes = len;
 
-  switch(state)
+  while (remaining_bytes > 0)
   {
-    case STATE_LOGGING_IN:
-      // TODO add version validation
-      setState(STATE_LOGGING_IN_2);
-      cout << data_s << endl;
-      break;
+    int bytes_read = 0;
 
-    case STATE_LOGGING_IN_2:
-      // TODO add server response validation
-      setState(STATE_LOGGED_IN);
-      keep_alive_timer->setEnable(true);
-      sendRequest(RQ_RX0);
-      cout << data_s << endl;
-      break;
+    switch (state)
+    {
+      case STATE_LOGGING_IN_1:
+        // TODO add version validation
+        setState(STATE_LOGGING_IN_2);
+        cout << std::string((char*)p_data, remaining_bytes) << endl;
+        bytes_read += remaining_bytes;
+        break;
 
-    case STATE_LOGGED_IN:
-      handleResponse((Response)data_s[0], data, len);
-      break;
+      case STATE_LOGGING_IN_2:
+        // TODO add server response validation
+        setState(STATE_IDLE);
+        sendRequest(RQ_RX0);
+        cout << std::string((char*)p_data, remaining_bytes) << endl;
+        bytes_read += remaining_bytes;
+        break;
 
-    default:
+      case STATE_TX_AUDIO_APPROVED:
+        if (remaining_bytes >= 2)
+        {
+          bytes_read += 2;
+        }
+        setState(STATE_TX_AUDIO);
+        sourceResumeOutput();
+        break;
+
+      case STATE_TX_AUDIO:
+      case STATE_TX_AUDIO_WAITING:
+      case STATE_IDLE: 
+        bytes_read += handleCommand(p_data, remaining_bytes);
+        break;
+
+      case STATE_RX_AUDIO:
+        bytes_read += handleAudioData(p_data, remaining_bytes);
+        setState(STATE_IDLE);
+        break;
+
+      default:
+        break;
+    }
+    //cout << bytes_read << " " << remaining_bytes << " " << len << endl;
+    if (bytes_read == 0)
+    {
       break;
+    }
+    remaining_bytes -= bytes_read;
+    p_data += bytes_read;
   }
-  return len;
+  return len - remaining_bytes;
 }
 
 
 void QsoFrn::onSendBufferFull(bool is_full)
 {
   cout << __FUNCTION__ << " " << is_full << endl;
-}
-
-
-void QsoFrn::onKeepaliveTimeout(Timer *timer)
-{
-  //if (tcp_client->isConnected() && !is_receiving_voice && !is_sending_voice)
-  if (tcp_client->isConnected())
-  {
-    sendRequest(RQ_P);
-  }
 }
 
 

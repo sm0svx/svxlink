@@ -47,6 +47,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSplitter.h>
 #include <AsyncAudioValve.h>
 #include <AsyncAudioSelector.h>
+#include <AsyncAudioFifo.h>
+#include <AsyncAudioJitterFifo.h>
+#include <AsyncAudioDecimator.h>
+#include <AsyncAudioInterpolator.h>
 
 
 /****************************************************************************
@@ -57,7 +61,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <version/MODULE_FRN.h>
 #include "ModuleFrn.h"
-
+#include "multirate_filter_coeff.h"
 
 
 /****************************************************************************
@@ -201,19 +205,38 @@ bool ModuleFrn::initialize(void)
     return false;
   }
  
-  audio_valve = new AudioValve;
-  AudioSink::setHandler(audio_valve);
-
-  audio_splitter = new AudioSplitter;
-  audio_valve->registerSink(audio_splitter);
-
-  audio_selector = new AudioSelector;
-  AudioSource::setHandler(audio_selector);
-
   qso = new QsoFrn(this);
+
+  // rig/mic -> frn
+  audio_valve = new AudioValve;
+  audio_splitter = new AudioSplitter;
+
+  AudioSink::setHandler(audio_valve);
+  audio_valve->registerSink(audio_splitter);
+#if INTERNAL_SAMPLE_RATE == 16000
+  AudioDecimator *down_sampler = new AudioDecimator(
+      2, coeff_16_8, coeff_16_8_taps);
+  audio_splitter->addSink(down_sampler, true);
+  down_sampler->registerSink(qso);
+#else
   audio_splitter->addSink(qso);
-  audio_selector->addSource(qso);
-  audio_selector->enableAutoSelect(qso, 0);
+#endif
+
+  // frn -> rig/speaker
+  audio_selector = new AudioSelector;
+  audio_fifo = new Async::AudioJitterFifo(4 * 320 * 5);
+
+#if INTERNAL_SAMPLE_RATE == 16000
+  AudioInterpolator *up_sampler = new AudioInterpolator(
+      2, coeff_16_8, coeff_16_8_taps);
+  qso->registerSink(up_sampler, true);
+  audio_fifo->registerSource(up_sampler);
+#else
+  audio_fifo->registerSource(qso);
+#endif
+  audio_selector->addSource(audio_fifo);
+  audio_selector->enableAutoSelect(audio_fifo, 10);
+  AudioSource::setHandler(audio_selector);
 
   if (!qso->initOk())
   {
@@ -229,18 +252,26 @@ bool ModuleFrn::initialize(void)
 
 void ModuleFrn::moduleCleanup()
 {
+  AudioSource::clearHandler();
+  audio_selector->removeSource(audio_fifo);
+  audio_fifo->unregisterSource();
+
   audio_splitter->removeSink(qso);
-  audio_selector->removeSource(qso);
+  audio_valve->unregisterSink();
+  AudioSink::clearHandler();
+
   delete qso;
   qso = 0;
 
-  AudioSink::clearHandler();
+  delete audio_fifo;
+  audio_fifo = 0;
+
   delete audio_splitter;
   audio_splitter = 0;
+
   delete audio_valve;
   audio_valve = 0;
 
-  AudioSource::clearHandler();
   delete audio_selector;
   audio_selector = 0;
 }

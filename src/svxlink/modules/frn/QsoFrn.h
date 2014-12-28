@@ -72,6 +72,7 @@ namespace Async
 {
   class Config;
   class AudioPacer;
+  class AudioFifo;
   class AudioPassthrough;
   class TcpClient;
   class TcpConnection;
@@ -96,6 +97,7 @@ namespace Async
 class MsgHandler;
 class EventHandler;
 class AsyncTimer;
+class AudioFifo;
 class ModuleFrn;
 
 
@@ -136,9 +138,13 @@ class QsoFrn
       STATE_DISCONNECTED,
       STATE_CONNECTING,
       STATE_CONNECTED,
-      STATE_LOGGING_IN,
+      STATE_LOGGING_IN_1,
       STATE_LOGGING_IN_2,
-      STATE_LOGGED_IN,
+      STATE_IDLE,
+      STATE_TX_AUDIO_WAITING,
+      STATE_TX_AUDIO_APPROVED,
+      STATE_TX_AUDIO,
+      STATE_RX_AUDIO,
       STATE_ERROR
     } State;
 
@@ -242,8 +248,8 @@ class QsoFrn
      void sendVoiceData();
 
      void sendRequest(Request rq);
-     void handleResponse(Response cmd, void *data, int len);
-     void handleAudioData(unsigned char *data, int len);
+     int handleCommand(unsigned char *data, int len);
+     int handleAudioData(unsigned char *data, int len);
 
      void onConnected(void);
      void onDisconnected(Async::TcpConnection *conn, 
@@ -266,11 +272,8 @@ class QsoFrn
     static const int    FRN_AUDIO_PACKET_SIZE   = FRAME_COUNT*GSM_FRAME_SIZE;
 
     bool                init_ok;
-    bool                is_sending_voice;
-    bool                is_receiving_voice;
 
     Async::TcpClient *  tcp_client;
-    Async::Timer *      keep_alive_timer;
     Async::Timer *      con_timeout_timer;
     State               state;
     int                 connect_retry_cnt;

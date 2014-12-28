@@ -69,6 +69,8 @@ namespace Async
   class AudioSplitter;
   class AudioValve;
   class AudioSelector;
+  class AudioFifo;
+  class AudioJitterFifo;
 };
 
 
@@ -138,9 +140,10 @@ class ModuleFrn : public Module
 
   private:
     QsoFrn *qso;
-    Async::AudioValve     *audio_valve;
-    Async::AudioSplitter  *audio_splitter;
-    Async::AudioSelector  *audio_selector;
+    Async::AudioValve       *audio_valve;
+    Async::AudioSplitter    *audio_splitter;
+    Async::AudioSelector    *audio_selector;
+    Async::AudioJitterFifo  *audio_fifo;
 
 };  /* class ModuleFrn */
 
