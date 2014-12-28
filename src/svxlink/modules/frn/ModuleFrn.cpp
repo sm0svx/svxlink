@@ -254,7 +254,6 @@ bool ModuleFrn::initialize(void)
 void ModuleFrn::moduleCleanup()
 {
   AudioSource::clearHandler();
-  audio_selector->removeSource(audio_fifo);
   audio_fifo->unregisterSource();
 
   audio_splitter->removeSink(qso);
