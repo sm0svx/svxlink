@@ -63,9 +63,20 @@ std::istream& safeGetline(std::istream& is, std::string& t)
   }
 }
 
-bool hasLine(std::istringstream &is)
+
+bool hasLine(std::istringstream& is)
 {
   return (is.str().find('\n') != std::string::npos);
 }
 
+
+bool hasWinNewline(std::istringstream& is)
+{
+  return !(is.str().find("\r\n") == std::string::npos && 
+           is.str().find("\n\r") == std::string::npos);
+}
+
+/*
+ * This file has not been truncated
+ */
 

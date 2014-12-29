@@ -139,7 +139,7 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   , connect_retry_cnt(0)
   , send_buffer_cnt(0)
   , gsmh(gsm_create())
-  , lines_to_read(0)
+  , lines_to_read(-1)
 {
   assert(module != 0);
 
@@ -474,8 +474,8 @@ void QsoFrn::reconnect(void)
   } 
   else 
   {
-    setState(STATE_ERROR);
     cerr << "failed to connect " << MAX_CONNECT_RETRY_CNT << " times" << endl;
+    setState(STATE_ERROR);
   }
 }
 
@@ -616,6 +616,7 @@ int QsoFrn::handleList(unsigned char *data, int len, bool is_header)
   {
     std::string line;
     std::istringstream lines(std::string((char*)data, len));
+    bool has_win_newline = hasWinNewline(lines);
 
     if (hasLine(lines) && safeGetline(lines, line))
     {
@@ -629,7 +630,7 @@ int QsoFrn::handleList(unsigned char *data, int len, bool is_header)
         cout << "-- " << line << endl;
         lines_to_read--;
       }
-      bytes_read += line.length() + 2;
+      bytes_read += line.length() + (has_win_newline ? 2 : 1);
     }
     if (lines_to_read == 0)
     {
