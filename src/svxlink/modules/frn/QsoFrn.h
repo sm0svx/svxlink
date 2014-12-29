@@ -262,13 +262,14 @@ class QsoFrn
 
      void onKeepaliveTimeout(Async::Timer *timer);
      void onConnectTimeout(Async::Timer *timer);
+     void onRxTimeout(Async::Timer *timer);
 
   private:
     static const int    CLIENT_INDEX_SIZE       = 2;
     static const int    TCP_BUFFER_SIZE         = 65536;
-    static const int    KEEP_ALIVE_TIME         = 500;
     static const int    MAX_CONNECT_RETRY_CNT   = 5;
     static const int    CON_TIMEOUT_TIME        = 30000;
+    static const int    RX_TIMEOUT_TIME         = 500;
     static const int    FRAME_COUNT             = 5;
     static const int    PCM_FRAME_SIZE          = 160*2;  // WAV49 has 2x
     static const int    GSM_FRAME_SIZE          = 65;     // WAV49 has 65
@@ -278,6 +279,7 @@ class QsoFrn
     bool                init_ok;
 
     Async::TcpClient *  tcp_client;
+    Async::Timer *      rx_timeout_timer;
     Async::Timer *      con_timeout_timer;
     State               state;
     int                 connect_retry_cnt;

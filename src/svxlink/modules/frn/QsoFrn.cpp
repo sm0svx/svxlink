@@ -134,6 +134,7 @@ using namespace sigc;
 QsoFrn::QsoFrn(ModuleFrn *module)
   : init_ok(false)
   , tcp_client(new TcpClient(TCP_BUFFER_SIZE))
+  , rx_timeout_timer(new Timer(RX_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , con_timeout_timer(new Timer(CON_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , state(STATE_DISCONNECTED)
   , connect_retry_cnt(0)
@@ -234,6 +235,11 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   con_timeout_timer->setEnable(false);
   con_timeout_timer->expired.connect(
       mem_fun(*this, &QsoFrn::onConnectTimeout));
+
+  rx_timeout_timer->setEnable(false);
+  rx_timeout_timer->expired.connect(
+      mem_fun(*this, &QsoFrn::onRxTimeout));
+
 
   init_ok = true;
 }
@@ -522,6 +528,9 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
   short *pcm_buffer = receive_buffer;
   float pcm_samples[PCM_FRAME_SIZE];
 
+  rx_timeout_timer->setEnable(true);
+  rx_timeout_timer->reset();
+
   if (len < FRN_AUDIO_PACKET_SIZE + CLIENT_INDEX_SIZE)
     return 0;
 
@@ -777,6 +786,13 @@ void QsoFrn::onConnectTimeout(Timer *timer)
   disconnect();
   reconnect();
 }
+
+void QsoFrn::onRxTimeout(Timer *timer)
+{                                      
+  //cout << __FUNCTION__ << endl;
+  sinkFlushSamples();
+  rx_timeout_timer->setEnable(false);
+}   
 
 /*
  * This file has not been truncated

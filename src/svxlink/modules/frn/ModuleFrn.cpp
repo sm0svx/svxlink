@@ -231,10 +231,10 @@ bool ModuleFrn::initialize(void)
       2, coeff_16_8, coeff_16_8_taps);
   qso->registerSink(up_sampler, true);
   audio_selector->addSource(up_sampler);
-  audio_selector->enableAutoSelect(up_sampler, 10);
+  audio_selector->enableAutoSelect(up_sampler, 0);
 #else
   audio_selector->addSource(qso);
-  audio_selector->enableAutoSelect(qso, 10);
+  audio_selector->enableAutoSelect(qso, 0);
 #endif
   audio_fifo->registerSource(audio_selector);
   AudioSource::setHandler(audio_fifo);
