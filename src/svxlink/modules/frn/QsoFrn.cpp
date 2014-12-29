@@ -67,6 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "Utils.h"
 #include "ModuleFrn.h"
 #include "QsoFrn.h"
 #include "multirate_filter_coeff.h"
@@ -138,6 +139,7 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   , connect_retry_cnt(0)
   , send_buffer_cnt(0)
   , gsmh(gsm_create())
+  , lines_to_read(0)
 {
   assert(module != 0);
 
@@ -307,6 +309,10 @@ std::string QsoFrn::stateToString(State state)
       return "TX_AUDIO";
     case STATE_RX_AUDIO:
       return "RX_AUDIO";
+    case STATE_RX_LIST_HEADER:
+      return "RX_LIST_HEADER";
+    case STATE_RX_LIST:
+      return "RX_LIST";
     default:
       return "UNKNOWN";
   }
@@ -512,16 +518,12 @@ void QsoFrn::sendRequest(Request rq)
 
 int QsoFrn::handleAudioData(unsigned char *data, int len)
 {
-  unsigned char *gsm_data = data + 2;
+  unsigned char *gsm_data = data + CLIENT_INDEX_SIZE;
   short *pcm_buffer = receive_buffer;
   float pcm_samples[PCM_FRAME_SIZE];
 
-  //cout << " [" << len << "] ";
-  if (len < FRN_AUDIO_PACKET_SIZE + 2)
-  {
-    //cout << "!" << flush;
+  if (len < FRN_AUDIO_PACKET_SIZE + CLIENT_INDEX_SIZE)
     return 0;
-  }
 
   for (int frameno = 0; frameno < FRAME_COUNT; frameno++)
   {
@@ -544,7 +546,9 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
     }
     pcm_buffer += PCM_FRAME_SIZE;
   }
-  return FRN_AUDIO_PACKET_SIZE + 2;
+  setState(STATE_IDLE);
+  sendRequest(RQ_P);
+  return FRN_AUDIO_PACKET_SIZE + CLIENT_INDEX_SIZE;
 }
 
 
@@ -564,20 +568,15 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
 
     case DT_DO_TX:
       if (state == STATE_TX_AUDIO)
-      {
         setState(STATE_IDLE);
-      }
       else
-      {
         setState(STATE_TX_AUDIO_APPROVED);
-      }
       break;
 
     case DT_VOICE_BUFFER:
       setState(STATE_RX_AUDIO);
       break;
 
-    case DT_CLIENT_LIST:
     case DT_TEXT_MESSAGE:
     case DT_NET_NAMES:
     case DT_ADMIN_LIST:
@@ -585,15 +584,60 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
     case DT_BLOCK_LIST:
     case DT_MUTE_LIST:
     case DT_ACCESS_MODE:
-      cout << "Received command " << cmd << endl;
-      cout << std::string((char*)data + bytes_read, len - bytes_read) << endl;
-      bytes_read += len;
+      setState(STATE_RX_LIST);
+      break;
+
+    case DT_CLIENT_LIST:
+      setState(STATE_RX_LIST_HEADER);
       break;
 
     default:
       cout << "Unknown command " << cmd << endl;
       break;
   }
+  return bytes_read;
+}
+
+
+int QsoFrn::handleList(unsigned char *data, int len, bool is_header)
+{
+  int bytes_read = 0;
+
+  if (is_header)
+  {
+    if (len >= CLIENT_INDEX_SIZE)
+    {
+      bytes_read += CLIENT_INDEX_SIZE;
+      setState(STATE_RX_LIST);
+      lines_to_read = -1;
+    }
+  }
+  else
+  {
+    std::string line;
+    std::istringstream lines(std::string((char*)data, len));
+
+    if (hasLine(lines) && safeGetline(lines, line))
+    {
+      if (lines_to_read == -1)
+      {
+        lines_to_read = atoi(line.c_str());
+        cout << lines_to_read << " lines received" << endl;
+      }
+      else
+      {
+        cout << "-- " << line << endl;
+        lines_to_read--;
+      }
+      bytes_read += line.length() + 2;
+    }
+    if (lines_to_read == 0)
+    {
+      setState(STATE_IDLE);
+      lines_to_read = -1;
+    }
+  }
+  //cout << "got " << len << " read " << bytes_read << endl;
   return bytes_read;
 }
 
@@ -683,10 +727,8 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
         break;
 
       case STATE_TX_AUDIO_APPROVED:
-        if (remaining_bytes >= 2)
-        {
-          bytes_read += 2;
-        }
+        if (remaining_bytes >= CLIENT_INDEX_SIZE)
+          bytes_read += CLIENT_INDEX_SIZE;
         setState(STATE_TX_AUDIO);
         sourceResumeOutput();
         break;
@@ -699,8 +741,14 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
 
       case STATE_RX_AUDIO:
         bytes_read += handleAudioData(p_data, remaining_bytes);
-        setState(STATE_IDLE);
-        sendRequest(RQ_P);
+       break;
+
+      case STATE_RX_LIST_HEADER:
+	bytes_read += handleList(p_data, remaining_bytes, true);
+        break;
+
+      case STATE_RX_LIST:
+	bytes_read += handleList(p_data, remaining_bytes);
         break;
 
       default:
@@ -708,9 +756,7 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
     }
     //cout << bytes_read << " " << remaining_bytes << " " << len << endl;
     if (bytes_read == 0)
-    {
       break;
-    }
     remaining_bytes -= bytes_read;
     p_data += bytes_read;
   }
@@ -730,7 +776,6 @@ void QsoFrn::onConnectTimeout(Timer *timer)
   disconnect();
   reconnect();
 }
-
 
 /*
  * This file has not been truncated

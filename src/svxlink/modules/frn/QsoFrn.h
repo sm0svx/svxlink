@@ -145,6 +145,8 @@ class QsoFrn
       STATE_TX_AUDIO_APPROVED,
       STATE_TX_AUDIO,
       STATE_RX_AUDIO,
+      STATE_RX_LIST_HEADER,
+      STATE_RX_LIST,
       STATE_ERROR
     } State;
 
@@ -250,6 +252,7 @@ class QsoFrn
      void sendRequest(Request rq);
      int handleCommand(unsigned char *data, int len);
      int handleAudioData(unsigned char *data, int len);
+     int handleList(unsigned char *data, int len, bool is_header=false);
 
      void onConnected(void);
      void onDisconnected(Async::TcpConnection *conn, 
@@ -261,6 +264,7 @@ class QsoFrn
      void onConnectTimeout(Async::Timer *timer);
 
   private:
+    static const int    CLIENT_INDEX_SIZE       = 2;
     static const int    TCP_BUFFER_SIZE         = 65536;
     static const int    KEEP_ALIVE_TIME         = 500;
     static const int    MAX_CONNECT_RETRY_CNT   = 5;
@@ -281,6 +285,7 @@ class QsoFrn
     short               send_buffer[BUFFER_SIZE];
     int                 send_buffer_cnt;
     gsm                 gsmh;
+    int                 lines_to_read;
 
     std::string         opt_server;
     std::string         opt_port;

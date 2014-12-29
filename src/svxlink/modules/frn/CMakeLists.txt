@@ -2,7 +2,7 @@
 set(MODNAME Frn)
 
 # Module source code
-set(MODSRC QsoFrn.cpp)
+set(MODSRC QsoFrn.cpp Utils.cpp)
 
 # Project libraries to link to
 #set(LIBS ${LIBS} echolib)
