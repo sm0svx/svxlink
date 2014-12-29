@@ -224,7 +224,7 @@ bool ModuleFrn::initialize(void)
 
   // frn -> rig/speaker
   audio_selector = new AudioSelector;
-  audio_fifo = new Async::AudioFifo(4 * 320 * 5);
+  audio_fifo = new Async::AudioFifo(100 * 320 * 5);
 
 #if INTERNAL_SAMPLE_RATE == 16000
   AudioInterpolator *up_sampler = new AudioInterpolator(

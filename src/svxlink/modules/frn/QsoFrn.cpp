@@ -550,11 +550,18 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
     int all_written = 0;
     while (all_written < PCM_FRAME_SIZE)
     {
-      all_written += sinkWriteSamples(pcm_samples + all_written, 
+      int written = sinkWriteSamples(pcm_samples + all_written, 
           PCM_FRAME_SIZE - all_written);
+      if (written == 0)
+      {
+	cerr << "dropping sample " << (PCM_FRAME - all_written) << endl;
+        break;
+      }
+      all_written += written;
     }
     pcm_buffer += PCM_FRAME_SIZE;
   }
+
   setState(STATE_IDLE);
   sendRequest(RQ_P);
   return FRN_AUDIO_PACKET_SIZE + CLIENT_INDEX_SIZE;
