@@ -250,6 +250,8 @@ class QsoFrn
      void sendVoiceData();
 
      void sendRequest(Request rq);
+
+     int handleLogin(unsigned char *data, int len, bool stage_one);
      int handleCommand(unsigned char *data, int len);
      int handleAudioData(unsigned char *data, int len);
      int handleList(unsigned char *data, int len, bool is_header=false);

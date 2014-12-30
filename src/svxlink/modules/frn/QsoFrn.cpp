@@ -253,6 +253,9 @@ QsoFrn::~QsoFrn(void)
   delete con_timeout_timer;
   con_timeout_timer = 0;
 
+  delete rx_timeout_timer;
+  con_timeout_timer = 0;
+
   delete tcp_client;
   tcp_client = 0;
 
@@ -337,28 +340,18 @@ int QsoFrn::writeSamples(const float *samples, int count)
     {
       float sample = samples[samples_read++];
       if (sample > 1)
-      {
         send_buffer[send_buffer_cnt++] = 32767;
-      }
       else if (sample < -1)
-      {
         send_buffer[send_buffer_cnt++] = -32767;
-      }
       else
-      {
         send_buffer[send_buffer_cnt++] = static_cast<int16_t>(32767.0 * sample);
-      }
     }
     if (send_buffer_cnt == BUFFER_SIZE)
     {
       if (state == STATE_TX_AUDIO)
-      {
         sendVoiceData();
-      }
       else
-      {
         break;
-      }
     }
   }
   return samples_read;
@@ -405,7 +398,7 @@ void QsoFrn::squelchOpen(bool is_open)
  ****************************************************************************/
 void QsoFrn::allSamplesFlushed(void)
 {
-  cout << __FUNCTION__ << endl;
+  //cout << __FUNCTION__ << endl;
 }
 
 
@@ -544,9 +537,8 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
     gsm_decode(gsmh, src + 33, dst + PCM_FRAME_SIZE / 2);
 
     for (int i = 0; i < PCM_FRAME_SIZE; i++)
-    {
        pcm_samples[i] = static_cast<float>(pcm_buffer[i]) / 32768.0;
-    }
+
     int all_written = 0;
     while (all_written < PCM_FRAME_SIZE)
     {
@@ -554,7 +546,7 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
           PCM_FRAME_SIZE - all_written);
       if (written == 0)
       {
-	cerr << "dropping sample " << (PCM_FRAME - all_written) << endl;
+	cerr << "dropping sample " << (PCM_FRAME_SIZE - all_written) << endl;
         break;
       }
       all_written += written;
@@ -608,7 +600,7 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
       break;
 
     default:
-      cout << "Unknown command " << cmd << endl;
+      cout << "unknown command " << cmd << endl;
       break;
   }
   return bytes_read;
@@ -655,6 +647,41 @@ int QsoFrn::handleList(unsigned char *data, int len, bool is_header)
     }
   }
   //cout << "got " << len << " read " << bytes_read << endl;
+  return bytes_read;
+}
+
+
+int QsoFrn::handleLogin(unsigned char *data, int len, bool stage_one)
+{
+  int bytes_read = 0;
+  std::string line;
+  std::istringstream lines(std::string((char*)data, len));
+  bool has_win_newline = hasWinNewline(lines);
+
+  if (hasLine(lines) && safeGetline(lines, line))
+  {
+    if (stage_one)
+    {
+      setState(STATE_LOGGING_IN_2);
+      cout << "login stage 1 completed: " << line << endl;
+    }
+    else
+    {
+      if (line.find("<AL>BLOCK</AL>") == std::string::npos &&
+          line.find("<AL>WRONG</AL>") == std::string::npos)
+      {
+        setState(STATE_IDLE);
+        sendRequest(RQ_RX0);
+        cout << "login stage 2 completed: " << line << endl;
+      }
+      else
+      {
+        setState(STATE_ERROR);
+	cerr << "login stage 2 failed: " << line << endl;
+      }
+    }
+    bytes_read += line.length() + (has_win_newline ? 2 : 1);
+  }
   return bytes_read;
 }
 
@@ -729,19 +756,12 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
     switch (state)
     {
       case STATE_LOGGING_IN_1:
-        // TODO add version validation
-        setState(STATE_LOGGING_IN_2);
-        cout << std::string((char*)p_data, remaining_bytes) << endl;
-        bytes_read += remaining_bytes;
-        break;
+	bytes_read += handleLogin(p_data, remaining_bytes, true);
+       break;
 
       case STATE_LOGGING_IN_2:
-        // TODO add server response validation
-        setState(STATE_IDLE);
-        sendRequest(RQ_RX0);
-        cout << std::string((char*)p_data, remaining_bytes) << endl;
-        bytes_read += remaining_bytes;
-        break;
+	bytes_read += handleLogin(p_data, remaining_bytes, false);
+       break;
 
       case STATE_TX_AUDIO_APPROVED:
         if (remaining_bytes >= CLIENT_INDEX_SIZE)
@@ -783,7 +803,7 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
 
 void QsoFrn::onSendBufferFull(bool is_full)
 {
-  cout << __FUNCTION__ << " " << is_full << endl;
+  cerr << __FUNCTION__ << " " << is_full << endl;
 }
 
 
