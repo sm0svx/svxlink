@@ -175,12 +175,12 @@ class QsoFrn
      * @brief 	Default constuctor
      */
     QsoFrn(ModuleFrn *module);
-  
+
     /**
      * @brief 	Destructor
      */
     virtual ~QsoFrn(void);
-    
+
     /**
      * @brief Call to check if QSO was ctor-ed succesfully
      * 
@@ -194,7 +194,7 @@ class QsoFrn
      * @brief Method to put QSO to live
      */
     void connect(void);
-    
+
     /**
      * @brief Disconnect QSO from server, put it to disconnected state
      */
@@ -235,7 +235,7 @@ class QsoFrn
       * This function is normally only called from a connected source object.
       */
      virtual void flushSamples(void);
- 
+
      /**
       * @brief Resume audio output to the sink
       * 
@@ -294,7 +294,7 @@ class QsoFrn
      * QSO state to error.
      */
     void reconnect();
-    
+
     /**
      * @brief Starts initial FRN server login process
      *

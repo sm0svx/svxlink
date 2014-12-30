@@ -53,9 +53,9 @@ std::istream& safeGetline(std::istream& is, std::string& t)
         {
           sb->sbumpc();
           return is;
-	}
+        }
         t += (char)c;
-	break;
+        break;
       case EOF:
         if(t.empty())
           is.setstate(std::ios::eofbit);

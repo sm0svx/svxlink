@@ -299,7 +299,7 @@ void ModuleFrn::deactivateCleanup(void)
 {
   audio_valve->setOpen(true);
   qso->disconnect();
-} 
+}
 
 
 /*
@@ -320,9 +320,9 @@ void ModuleFrn::deactivateCleanup(void)
 bool ModuleFrn::dtmfDigitReceived(char digit, int duration)
 {
   cout << "DTMF digit received in module " << name() << ": " << digit << endl;
-  
+
   return false;
-  
+
 } /* dtmfDigitReceived */
 
 
@@ -345,7 +345,7 @@ bool ModuleFrn::dtmfDigitReceived(char digit, int duration)
 void ModuleFrn::dtmfCmdReceived(const string& cmd)
 {
   cout << "DTMF command received in module " << name() << ": " << cmd << endl;
-  
+
   if (cmd == "")
   {
     deactivateMe();

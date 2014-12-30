@@ -215,7 +215,7 @@ QsoFrn::QsoFrn(ModuleFrn *module)
          << "/VERSION not set\n";
     return;
   }
- 
+
   int gsm_one = 1;
   assert(gsm_option(gsmh, GSM_OPT_WAV49, &gsm_one) != -1);
 
@@ -347,7 +347,7 @@ int QsoFrn::writeSamples(const float *samples, int count)
       if (state == STATE_TX_AUDIO)
       {
         sendVoiceData(send_buffer, send_buffer_cnt);
-	send_buffer_cnt = 0;
+        send_buffer_cnt = 0;
       } 
       else
         break;
@@ -459,7 +459,7 @@ void QsoFrn::sendVoiceData(short *data, int len)
     // GSM_OPT_WAV49, produce alternating frames 32, 33, 32, 33, ..
     gsm_encode(gsmh, src, dst);
     gsm_encode(gsmh, src + PCM_FRAME_SIZE / 2, dst + 32);
- 
+
     nbytes += GSM_FRAME_SIZE;
   }
   sendRequest(RQ_TX1);
@@ -467,7 +467,7 @@ void QsoFrn::sendVoiceData(short *data, int len)
   if (written != nbytes)
   {
     cerr << "not all voice data was written to FRN: " 
-	 << written << "\\" << nbytes << endl;
+         << written << "\\" << nbytes << endl;
   }
 }
 
@@ -478,8 +478,8 @@ void QsoFrn::reconnect(void)
   {
     cout << "reconnecting " << connect_retry_cnt << endl;
     connect();
-  } 
-  else 
+  }
+  else
   {
     cerr << "failed to connect " << MAX_CONNECT_RETRY_CNT << " times" << endl;
     setState(STATE_ERROR);
@@ -522,7 +522,7 @@ void QsoFrn::sendRequest(Request rq)
     if (written != rq_s.length())
     {
       cerr << "request " << rq_s << " was not written to FRN: " 
-	   << written << "\\" << rq_s.length() << endl;
+           << written << "\\" << rq_s.length() << endl;
     }
   }
 }
@@ -559,7 +559,7 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
           PCM_FRAME_SIZE - all_written);
       if (written == 0)
       {
-	cerr << "dropping sample " << (PCM_FRAME_SIZE - all_written) << endl;
+        cerr << "dropping sample " << (PCM_FRAME_SIZE - all_written) << endl;
         break;
       }
       all_written += written;
@@ -698,7 +698,7 @@ int QsoFrn::handleLogin(unsigned char *data, int len, bool stage_one)
       else
       {
         setState(STATE_ERROR);
-	cerr << "login stage 2 failed: " << line << endl;
+        cerr << "login stage 2 failed: " << line << endl;
       }
     }
     bytes_read += line.length() + (has_win_newline ? 2 : 1);
@@ -777,12 +777,12 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
     switch (state)
     {
       case STATE_LOGGING_IN_1:
-	bytes_read += handleLogin(p_data, remaining_bytes, true);
-       break;
+        bytes_read += handleLogin(p_data, remaining_bytes, true);
+        break;
 
       case STATE_LOGGING_IN_2:
-	bytes_read += handleLogin(p_data, remaining_bytes, false);
-       break;
+        bytes_read += handleLogin(p_data, remaining_bytes, false);
+        break;
 
       case STATE_TX_AUDIO_APPROVED:
         if (remaining_bytes >= CLIENT_INDEX_SIZE)
@@ -802,11 +802,11 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
        break;
 
       case STATE_RX_LIST_HEADER:
-	bytes_read += handleList(p_data, remaining_bytes, true);
+        bytes_read += handleList(p_data, remaining_bytes, true);
         break;
 
       case STATE_RX_LIST:
-	bytes_read += handleList(p_data, remaining_bytes);
+        bytes_read += handleList(p_data, remaining_bytes);
         break;
 
       default:
@@ -836,11 +836,11 @@ void QsoFrn::onConnectTimeout(Timer *timer)
 }
 
 void QsoFrn::onRxTimeout(Timer *timer)
-{                                      
+{
   //cout << __FUNCTION__ << endl;
   sinkFlushSamples();
   rx_timeout_timer->setEnable(false);
-}   
+}
 
 /*
  * This file has not been truncated
