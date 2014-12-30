@@ -363,7 +363,7 @@ int QsoFrn::writeSamples(const float *samples, int count)
 
 void QsoFrn::flushSamples(void)
 {
-  cout << __FUNCTION__ << endl;
+  //cout << __FUNCTION__ << endl;
 
   if (state == STATE_TX_AUDIO && send_buffer_cnt > 0)
   {
@@ -381,7 +381,7 @@ void QsoFrn::flushSamples(void)
 
 void QsoFrn::resumeOutput(void)
 {
-  cout << __FUNCTION__ << endl;
+  //cout << __FUNCTION__ << endl;
 }
 
 
@@ -828,7 +828,7 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
 
 void QsoFrn::onSendBufferFull(bool is_full)
 {
-  cerr << __FUNCTION__ << " " << is_full << endl;
+  cerr << "Send buffer is full " << is_full << endl;
 }
 
 
