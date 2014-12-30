@@ -22,6 +22,7 @@ either C++ or TCL. Examples of modules are:
 * *PropagationMonitor* -- Announce propagation warnings from dxmaps.com
 * *SelCall*            -- Send selective calling sequences by entering DTMF codes
 * *MetarInformation*   -- Play airport weather information
+* *Frn*                -- Connect to Free Radio Network (FRN) servers
 
 == Qtel ==
 Qtel, the Qt EchoLink client, is a graphical application used to access the
