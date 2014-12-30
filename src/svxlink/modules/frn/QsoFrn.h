@@ -320,15 +320,83 @@ class QsoFrn
      */
     void sendRequest(Request rq);
 
+    /**
+     * @brief Consumed and handles incoming data when in loging in stage
+     *
+     * @param pointer to received data
+     * @param length of incoming data
+     * @param true if logging in stage 1, else stage 2
+     * @return count of bytes consumed
+     *
+     * Handles incoming data when in logging in stage 1 or 2,
+     * switches to next state if all required data was consumed.
+     */
     int handleLogin(unsigned char *data, int len, bool stage_one);
+
+    /**
+     * @brief Consume and handle one incoming FRN command
+     * @param pointer to received data
+     * @param length of received data
+     * @return count of bytes consumed
+     *
+     * Consumes and handles one incoming FRN command and sets
+     * internal QSO state accordingly.
+     */
     int handleCommand(unsigned char *data, int len);
+
+    /**
+     * @brief Consume and handle one incoming audio frame
+     *
+     * @param pointer to received data
+     * @param length of received data
+     * @return count of bytes consumed
+     *
+     * Consumes and handles one incoming FRN audio frame. Decodes 
+     * from gsm wav49 format and sends to audio sink.
+     */
     int handleAudioData(unsigned char *data, int len);
+
+    /**
+     * @brief Consume and handle FRN incoming string lists
+     *
+     * @param pointer to received data
+     * @param length of received data
+     * @return count of bytes consumed
+     *
+     * Method is used to consume and handle FRN incoming lists, for
+     * example list of users, chat messages, etc.
+     */
     int handleList(unsigned char *data, int len, bool is_header=false);
 
+    /**
+     * @brief Called when connection to FRN server is established
+     *
+     * Called when connection to FRN server is established, updates
+     * internal state, starts timeout timer.
+     */
     void onConnected(void);
+
+    /**
+     * @brief Called when connection to FRN server is lost
+     *
+     * Called when connection to FRN server is lost, based on
+     * disconnect reason sets the internal QSO state and start
+     * reconnection if needed.
+     */
     void onDisconnected(Async::TcpConnection *conn, 
         Async::TcpConnection::DisconnectReason reason);
+
+    /**
+     * @brief Called when new data is received from FRN server
+     * 
+     * Called when new data is received from FRN server, calls proper
+     * handler based on the current state.
+     */
     int onDataReceived(Async::TcpConnection *con, void *data, int len);
+
+    /**
+     * @brief Called when FRN connection buffer is full
+     */
     void onSendBufferFull(bool is_full);
 
     /**
