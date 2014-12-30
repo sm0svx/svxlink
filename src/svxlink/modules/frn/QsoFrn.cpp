@@ -1,8 +1,8 @@
 /**
 @file	 QsoFrn.cpp
-@brief   Data for Frn Qso.
-@author  Tobias Blomberg / SM0SVX
-@date	 2004-06-02
+@brief   Free Radio Network (FRN) QSO module
+@author  sh123
+@date	 2014-12-30
 
 This file contains a class that implementes the things needed for one
 EchoLink Qso.
@@ -34,7 +34,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * System Includes
  *
  ****************************************************************************/
-
 #include <cassert>
 #include <cstring>
 #include <cstdlib>
@@ -48,7 +47,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Project Includes
  *
  ****************************************************************************/
-
 #include <AsyncConfig.h>
 #include <AsyncAudioPacer.h>
 #include <AsyncAudioSelector.h>
@@ -66,7 +64,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Local Includes
  *
  ****************************************************************************/
-
 #include "Utils.h"
 #include "ModuleFrn.h"
 #include "QsoFrn.h"
@@ -78,7 +75,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Namespaces to use
  *
  ****************************************************************************/
-
 using namespace std;
 using namespace Async;
 using namespace sigc;

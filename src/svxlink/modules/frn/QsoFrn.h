@@ -1,8 +1,8 @@
 /**
 @file	 QsoFrn.h
-@brief   Data for Frn Qso.
-@author  Tobias Blomberg / SM0SVX
-@date	 2004-06-02
+@brief   Free Radio Network (FRN) QSO module
+@author  sh123
+@date	 2014-12-30
 
 This file contains a class that implementes the things needed for one
 Frn Qso.

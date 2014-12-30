@@ -1,8 +1,8 @@
 /**
 @file	 ModuleFrn.h
-@brief   A_brief_description_of_this_module
-@author  Tobias Blomberg / SM0SVX
-@date	 2005-08-28
+@brief   Free Radio Network (FRN) QSO module
+@author  sh123
+@date	 2014-12-30
 
 \verbatim
 A module (plugin) for the svxlink server, a multi purpose tranciever

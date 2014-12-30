@@ -1,8 +1,8 @@
 /**
 @file	 Utils.cpp
 @brief   Helpers for qso frn module
-@author  Tobias Blomberg / SM0SVX
-@date	 2004-06-02
+@author  sh123
+@date	 2014-12-30
 
 This file contains a class that implementes the things needed for one
 EchoLink Qso.

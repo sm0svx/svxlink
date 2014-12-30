@@ -1,8 +1,8 @@
 /**
 @file	 ModuleFrn.cpp
-@brief   A_brief_description_of_this_module
-@author  Tobias Blomberg / SM0SVX
-@date	 2005-08-28
+@brief   Free Radio Network (FRN) module
+@author  sh123
+@date	 2014-12-30
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
@@ -25,15 +25,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
-
 #include <stdio.h>
-
 #include <iostream>
 #include <sstream>
 
@@ -58,7 +55,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Local Includes
  *
  ****************************************************************************/
-
 #include <version/MODULE_FRN.h>
 #include "ModuleFrn.h"
 #include "multirate_filter_coeff.h"
@@ -69,7 +65,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Namespaces to use
  *
  ****************************************************************************/
-
 using namespace std;
 using namespace Async;
 
@@ -81,13 +76,11 @@ using namespace Async;
  ****************************************************************************/
 
 
-
 /****************************************************************************
  *
  * Local class definitions
  *
  ****************************************************************************/
-
 
 
 /****************************************************************************
@@ -97,14 +90,11 @@ using namespace Async;
  ****************************************************************************/
 
 
-
 /****************************************************************************
  *
  * Exported Global Variables
  *
  ****************************************************************************/
-
-
 
 
 /****************************************************************************
@@ -114,14 +104,11 @@ using namespace Async;
  ****************************************************************************/
 
 
-
 /****************************************************************************
  *
  * Pure C-functions
  *
  ****************************************************************************/
-
-
 extern "C" {
   Module *module_init(void *dl_handle, Logic *logic, const char *cfg_name)
   {
@@ -136,8 +123,6 @@ extern "C" {
  * Public member functions
  *
  ****************************************************************************/
-
-
 ModuleFrn::ModuleFrn(void *dl_handle, Logic *logic, const string& cfg_name)
   : Module(dl_handle, logic, cfg_name)
   , qso(0)
