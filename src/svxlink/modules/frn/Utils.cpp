@@ -31,6 +31,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <cstdio>
 
+
+namespace FrnUtils
+{
+
 std::istream& safeGetline(std::istream& is, std::string& t)
 {
   t.clear();
@@ -75,6 +79,9 @@ bool hasWinNewline(std::istringstream& is)
   return !(is.str().find("\r\n") == std::string::npos && 
            is.str().find("\n\r") == std::string::npos);
 }
+
+
+} // namspace FrnUtils
 
 /*
  * This file has not been truncated

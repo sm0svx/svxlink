@@ -138,6 +138,8 @@ class ModuleFrn : public Module
     void allMsgsWritten(void);
     void reportState(void);
 
+    void onQsoError(void);
+
   private:
     QsoFrn *qso;
     Async::AudioValve       *audio_valve;

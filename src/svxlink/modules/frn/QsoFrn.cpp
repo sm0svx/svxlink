@@ -82,7 +82,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 using namespace std;
 using namespace Async;
 using namespace sigc;
-
+using namespace FrnUtils;
 
 
 /****************************************************************************
@@ -414,6 +414,8 @@ void QsoFrn::setState(State newState)
     //cout << __FUNCTION__ << " " << stateToString(newState) << endl;
     state = newState;
     stateChange(newState);
+    if (state == STATE_ERROR)
+      error();
   }
 }
 
@@ -662,8 +664,16 @@ int QsoFrn::handleLogin(unsigned char *data, int len, bool stage_one)
   {
     if (stage_one)
     {
-      setState(STATE_LOGGING_IN_2);
-      cout << "login stage 1 completed: " << line << endl;
+      if (line.length() == std::string("2014003").length())
+      {
+        setState(STATE_LOGGING_IN_2);
+        cout << "login stage 1 completed: " << line << endl;
+      }
+      else 
+      {
+        setState(STATE_ERROR);
+        cerr << "login stage 1 failed: " << line << endl;
+      }
     }
     else
     {

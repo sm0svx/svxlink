@@ -206,6 +206,8 @@ bool ModuleFrn::initialize(void)
   }
  
   qso = new QsoFrn(this);
+  qso->error.connect(
+      mem_fun(*this, &ModuleFrn::onQsoError));
 
   // rig/mic -> frn
   audio_valve = new AudioValve;
@@ -439,6 +441,11 @@ void ModuleFrn::reportState(void)
 } /* reportState */
 
 
+void ModuleFrn::onQsoError(void)
+{
+  cerr << "QSO errored, deactivating module" << endl;
+  deactivateMe();
+}
 
 /*
  * This file has not been truncated

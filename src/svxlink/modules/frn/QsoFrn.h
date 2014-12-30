@@ -229,6 +229,8 @@ class QsoFrn
       */
      virtual void resumeOutput(void);
 
+     sigc::signal<void> error;
+
      sigc::signal<void, State> stateChange;
 
   protected:
@@ -236,6 +238,7 @@ class QsoFrn
       * @brief The registered sink has flushed all samples
       *
       * This function will be called when all samples have been flushed in the
+
       * registered sink. If it is not reimplemented, a handler must be set
       * that handle the function call.
       * This function is normally only called from a connected sink object.
@@ -247,8 +250,8 @@ class QsoFrn
   private:
      void reconnect();
      void login(void);
-     void sendVoiceData();
 
+     void sendVoiceData();
      void sendRequest(Request rq);
 
      int handleLogin(unsigned char *data, int len, bool stage_one);
@@ -262,7 +265,6 @@ class QsoFrn
      int onDataReceived(Async::TcpConnection *con, void *data, int len);
      void onSendBufferFull(bool is_full);
 
-     void onKeepaliveTimeout(Async::Timer *timer);
      void onConnectTimeout(Async::Timer *timer);
      void onRxTimeout(Async::Timer *timer);
 
