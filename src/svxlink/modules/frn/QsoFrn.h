@@ -124,11 +124,11 @@ class ModuleFrn;
  ****************************************************************************/
 
 /**
-@brief	Implements the things needed for Frn QSO.
-@author Tobias Blomberg
-@date   2004-06-02
+@brief	Free Radio Network (FRN) QSO module
+@author sh123
+@date   2014-12-30
 
-A class that implementes the things needed for Frn Qso.
+A class that implementes the things needed for FRN QSO.
 */
 class QsoFrn
   : public Async::AudioSink, public Async::AudioSource, public sigc::trackable
@@ -180,16 +180,32 @@ class QsoFrn
      * @brief 	Destructor
      */
     virtual ~QsoFrn(void);
-     
+    
+    /**
+     * @brief Call to check if QSO was ctor-ed succesfully
+     * 
+     * @return true if QSO was constructed correctly
+     *
+     * Call after qso contruction to make sure that it was ctor-ed correctly.
+     */
     bool initOk(void);
 
+    /**
+     * @brief Method to put QSO to live
+     */
     void connect(void);
-
+    
+    /**
+     * @brief Disconnect QSO from server, put it to disconnected state
+     */
     void disconnect(void);
 
+    /**
+     * @brief Called by FRN module to notify that squelch is opened
+     *
+     * @param true if squelch is open or false if closed
+     */
     void squelchOpen(bool is_open);
-
-    std::string stateToString(State state);
 
     /**
      * @brief   Write samples into this audio sink
@@ -229,8 +245,15 @@ class QsoFrn
       */
      virtual void resumeOutput(void);
 
+     /**
+      * @brief  QSO is erroring out and cannot recover itself
+      */
      sigc::signal<void> error;
 
+     /**
+      * @brief QSO internal state has been changed
+      * @param QSO state enum value
+      */
      sigc::signal<void, State> stateChange;
 
   protected:
@@ -238,35 +261,91 @@ class QsoFrn
       * @brief The registered sink has flushed all samples
       *
       * This function will be called when all samples have been flushed in the
-
+      *
       * registered sink. If it is not reimplemented, a handler must be set
       * that handle the function call.
       * This function is normally only called from a connected sink object.
       */
      virtual void allSamplesFlushed(void);
 
-     void setState(State newState);
+    /**
+     * @brief Converts QSO state enum to string for debugging
+     * @param QSO state enum
+     * @return String representation of the enum value
+     *
+     * This function is used to convert QSO state enum to readable
+     * string for debugging purposes
+     */
+    std::string stateToString(State state);
+
+    /** 
+     * @brief Called internally to set new QSO state
+     *
+     * @param New state to set
+     */
+    void setState(State newState);
 
   private:
-     void reconnect();
-     void login(void);
 
-     void sendVoiceData();
-     void sendRequest(Request rq);
+    /**
+     * @brief Initiate connection to FRN server when connection was lost
+     * 
+     * Starts new connection retry. If maximum retry count is reached sets
+     * QSO state to error.
+     */
+    void reconnect();
+    
+    /**
+     * @brief Starts initial FRN server login process
+     *
+     * Sends connection string with credentials and other required information
+     * to the FRN server, sets proper QSO state.
+     */
+    void login(void);
 
-     int handleLogin(unsigned char *data, int len, bool stage_one);
-     int handleCommand(unsigned char *data, int len);
-     int handleAudioData(unsigned char *data, int len);
-     int handleList(unsigned char *data, int len, bool is_header=false);
+    /**
+     * @brief Sends pcm raw frames to FRN server
+     *
+     * @param Pcm buffer with samples
+     * @param Size of buffer
+     */
+    void sendVoiceData(short *data, int len);
 
-     void onConnected(void);
-     void onDisconnected(Async::TcpConnection *conn, 
-		         Async::TcpConnection::DisconnectReason reason);
-     int onDataReceived(Async::TcpConnection *con, void *data, int len);
-     void onSendBufferFull(bool is_full);
+    /**
+     * @brief Sends FRN client request to the server
+     *
+     * @param Request to send out
+     * 
+     * This method is used to send FRN control request.
+     */
+    void sendRequest(Request rq);
 
-     void onConnectTimeout(Async::Timer *timer);
-     void onRxTimeout(Async::Timer *timer);
+    int handleLogin(unsigned char *data, int len, bool stage_one);
+    int handleCommand(unsigned char *data, int len);
+    int handleAudioData(unsigned char *data, int len);
+    int handleList(unsigned char *data, int len, bool is_header=false);
+
+    void onConnected(void);
+    void onDisconnected(Async::TcpConnection *conn, 
+        Async::TcpConnection::DisconnectReason reason);
+    int onDataReceived(Async::TcpConnection *con, void *data, int len);
+    void onSendBufferFull(bool is_full);
+
+    /**
+     * @brief Called when no pings were received during timeout time
+     *
+     * Initiates reconnection when no pings/data was received from 
+     * the FRN serer during timeout time.
+     */
+    void onConnectTimeout(Async::Timer *timer);
+
+    /**
+     * @brief Called when no voice data was received during timeout time
+     *
+     * Called when no more voice data is received during timeout time, 
+     * which is treated as end of voice data receive state.
+     */
+    void onRxTimeout(Async::Timer *timer);
 
   private:
     static const int    CLIENT_INDEX_SIZE       = 2;

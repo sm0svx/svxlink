@@ -349,7 +349,10 @@ int QsoFrn::writeSamples(const float *samples, int count)
     if (send_buffer_cnt == BUFFER_SIZE)
     {
       if (state == STATE_TX_AUDIO)
-        sendVoiceData();
+      {
+        sendVoiceData(send_buffer, send_buffer_cnt);
+	send_buffer_cnt = 0;
+      } 
       else
         break;
     }
@@ -368,7 +371,8 @@ void QsoFrn::flushSamples(void)
         sizeof(send_buffer) - sizeof(*send_buffer) * send_buffer_cnt);
     send_buffer_cnt = BUFFER_SIZE;
 
-    sendVoiceData();
+    sendVoiceData(send_buffer, send_buffer_cnt);
+    send_buffer_cnt = 0;
     sendRequest(RQ_TX0);
   }
   sourceAllSamplesFlushed();
@@ -422,6 +426,8 @@ void QsoFrn::setState(State newState)
 
 void QsoFrn::login(void)
 {
+  assert(state == STATE_CONNECTED);
+
   setState(STATE_LOGGING_IN_1);
 
   std::stringstream s;
@@ -442,16 +448,16 @@ void QsoFrn::login(void)
   tcp_client->write(req.c_str(), req.length());
 }
 
-void QsoFrn::sendVoiceData(void)
+void QsoFrn::sendVoiceData(short *data, int len)
 {
-  assert(send_buffer_cnt == BUFFER_SIZE); 
+  assert(len == BUFFER_SIZE); 
 
   size_t nbytes = 0;
   unsigned char gsm_data[FRN_AUDIO_PACKET_SIZE];
 
   for (int nframe = 0; nframe < FRAME_COUNT; nframe++)
   {
-    short * src = send_buffer + nframe * PCM_FRAME_SIZE;
+    short * src = data + nframe * PCM_FRAME_SIZE;
     unsigned char * dst = gsm_data + nframe * GSM_FRAME_SIZE;
 
     // GSM_OPT_WAV49, produce alternating frames 32, 33, 32, 33, ..
@@ -461,8 +467,12 @@ void QsoFrn::sendVoiceData(void)
     nbytes += GSM_FRAME_SIZE;
   }
   sendRequest(RQ_TX1);
-  tcp_client->write(gsm_data, nbytes);
-  send_buffer_cnt = 0;
+  size_t written = tcp_client->write(gsm_data, nbytes);
+  if (written != nbytes)
+  {
+    cerr << "not all voice data was written to FRN: " 
+	 << written << "\\" << nbytes << endl;
+  }
 }
 
 
@@ -512,7 +522,12 @@ void QsoFrn::sendRequest(Request rq)
   {
     s << "\r\n";
     std::string rq_s = s.str();
-    tcp_client->write(rq_s.c_str(), rq_s.length());
+    size_t written = tcp_client->write(rq_s.c_str(), rq_s.length());
+    if (written != rq_s.length())
+    {
+      cerr << "request " << rq_s << " was not written to FRN: " 
+	   << written << "\\" << rq_s.length() << endl;
+    }
   }
 }
 

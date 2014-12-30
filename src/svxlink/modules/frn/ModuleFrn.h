@@ -115,9 +115,9 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A_brief_description_of_this_class
-@author Tobias Blomberg
-@date   2005-08-28
+@brief	Free Radio Network (FRN) module
+@author sh123
+@date   2014-12-30
 */
 class ModuleFrn : public Module
 {
@@ -133,11 +133,9 @@ class ModuleFrn : public Module
     void deactivateCleanup(void);
     bool dtmfDigitReceived(char digit, int duration);
     void dtmfCmdReceived(const std::string& cmd);
-    //void dtmfCmdReceivedWhenIdle(const std::string &cmd);
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
     void reportState(void);
-
     void onQsoError(void);
 
   private:
@@ -153,7 +151,6 @@ class ModuleFrn : public Module
 //} /* namespace */
 
 #endif /* MODULE_FRN_INCLUDED */
-
 
 
 /*
