@@ -544,10 +544,17 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
   {
     unsigned char *src = gsm_data + frameno * GSM_FRAME_SIZE;
     short *dst = pcm_buffer;
+    bool is_gsm_decode_success = true;
 
     // GSM_OPT_WAV49, consume alternating frames of size 33, 32, 33, 32, ..
-    gsm_decode(gsmh, src, dst);
-    gsm_decode(gsmh, src + 33, dst + PCM_FRAME_SIZE / 2);
+    if (gsm_decode(gsmh, src, dst) == -1)
+      is_gsm_decode_success = false;
+
+    if (gsm_decode(gsmh, src + 33, dst + PCM_FRAME_SIZE / 2) == -1)
+      is_gsm_decode_success = false;
+
+    if (!is_gsm_decode_success)
+      cerr << "gsm decoder failed to decode frame " << frameno << endl;
 
     for (int i = 0; i < PCM_FRAME_SIZE; i++)
        pcm_samples[i] = static_cast<float>(pcm_buffer[i]) / 32768.0;
@@ -559,7 +566,8 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
           PCM_FRAME_SIZE - all_written);
       if (written == 0)
       {
-        cerr << "dropping sample " << (PCM_FRAME_SIZE - all_written) << endl;
+        cerr << "cannot write frame to sink, dropping sample " 
+             << (PCM_FRAME_SIZE - all_written) << endl;
         break;
       }
       all_written += written;
