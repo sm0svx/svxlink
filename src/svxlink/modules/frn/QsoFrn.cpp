@@ -852,8 +852,11 @@ void QsoFrn::onSendBufferFull(bool is_full)
 void QsoFrn::onConnectTimeout(Timer *timer)
 {
   //cout << __FUNCTION__ << endl;
-  disconnect();
-  reconnect();
+  if (state == STATE_IDLE)
+  {
+    disconnect();
+    reconnect();
+  }
 }
 
 
