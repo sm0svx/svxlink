@@ -132,6 +132,7 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   , tcp_client(new TcpClient(TCP_BUFFER_SIZE))
   , rx_timeout_timer(new Timer(RX_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , con_timeout_timer(new Timer(CON_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
+  , keepalive_timer(new Timer(KEEPALIVE_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , state(STATE_DISCONNECTED)
   , connect_retry_cnt(0)
   , send_buffer_cnt(0)
@@ -236,6 +237,9 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   rx_timeout_timer->expired.connect(
       mem_fun(*this, &QsoFrn::onRxTimeout));
 
+  keepalive_timer->setEnable(true);
+  keepalive_timer->expired.connect(
+      mem_fun(*this, &QsoFrn::onKeepaliveTimeout));
 
   init_ok = true;
 }
@@ -594,6 +598,8 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
   Response cmd = (Response)data[0];
   //cout << "cmd = " << cmd << endl;
 
+  keepalive_timer->reset();
+
   bytes_read += 1;
 
   switch (cmd)
@@ -850,11 +856,22 @@ void QsoFrn::onConnectTimeout(Timer *timer)
   reconnect();
 }
 
+
 void QsoFrn::onRxTimeout(Timer *timer)
 {
   //cout << __FUNCTION__ << endl;
   sinkFlushSamples();
   rx_timeout_timer->setEnable(false);
+}
+
+
+void QsoFrn::onKeepaliveTimeout(Timer *timer)
+{
+  if (state == STATE_IDLE)
+  {
+    cerr << "keepalive timeout, forcing server ping" << endl;
+    sendRequest(RQ_P);
+  }
 }
 
 /*

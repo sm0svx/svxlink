@@ -415,6 +415,13 @@ class QsoFrn
      */
     void onRxTimeout(Async::Timer *timer);
 
+    /**
+     *  @brief Called when no pings/data were received during timeout time
+     *
+     * Called when no pings and data were received during timeout time
+     */
+    void onKeepaliveTimeout(Async::Timer *timer);
+
   private:
     static const int    CLIENT_INDEX_SIZE       = 2;
     static const int    TCP_BUFFER_SIZE         = 65536;
@@ -427,12 +434,14 @@ class QsoFrn
 
     static const int    CON_TIMEOUT_TIME        = 30000;
     static const int    RX_TIMEOUT_TIME         = 1000;
+    static const int    KEEPALIVE_TIMEOUT_TIME  = 10000;
  
     bool                init_ok;
 
     Async::TcpClient *  tcp_client;
     Async::Timer *      rx_timeout_timer;
     Async::Timer *      con_timeout_timer;
+    Async::Timer *      keepalive_timer;
     State               state;
     int                 connect_retry_cnt;
     short               receive_buffer[BUFFER_SIZE];
