@@ -383,10 +383,18 @@ void QsoFrn::resumeOutput(void)
 
 void QsoFrn::squelchOpen(bool is_open)
 {
-  if (is_open && state != STATE_RX_AUDIO)
+  if (is_open)
   {
-    sendRequest(RQ_TX0);
-    setState(STATE_TX_AUDIO_WAITING);
+    if (state == STATE_IDLE)
+    {
+      sendRequest(RQ_TX0);
+      setState(STATE_TX_AUDIO_WAITING);
+    }
+    else 
+    {
+      cerr << "skipping TX initiation, state: " 
+           << stateToString(state) << endl;
+    }
   }
 }
 
@@ -534,9 +542,6 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
   short *pcm_buffer = receive_buffer;
   float pcm_samples[PCM_FRAME_SIZE];
 
-  rx_timeout_timer->setEnable(true);
-  rx_timeout_timer->reset();
-
   if (len < FRN_AUDIO_PACKET_SIZE + CLIENT_INDEX_SIZE)
     return 0;
 
@@ -576,6 +581,8 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
   }
 
   setState(STATE_IDLE);
+  rx_timeout_timer->setEnable(true);
+  rx_timeout_timer->reset();
   sendRequest(RQ_P);
   return FRN_AUDIO_PACKET_SIZE + CLIENT_INDEX_SIZE;
 }
@@ -832,7 +839,7 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
 
 void QsoFrn::onSendBufferFull(bool is_full)
 {
-  cerr << "Send buffer is full " << is_full << endl;
+  cerr << "send buffer is full " << is_full << endl;
 }
 
 
