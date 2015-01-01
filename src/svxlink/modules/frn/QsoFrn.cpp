@@ -383,7 +383,7 @@ void QsoFrn::resumeOutput(void)
 
 void QsoFrn::squelchOpen(bool is_open)
 {
-  if (is_open)
+  if (is_open && state != STATE_RX_AUDIO)
   {
     sendRequest(RQ_TX0);
     setState(STATE_TX_AUDIO_WAITING);
@@ -807,7 +807,7 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
 
       case STATE_RX_AUDIO:
         bytes_read += handleAudioData(p_data, remaining_bytes);
-       break;
+        break;
 
       case STATE_RX_LIST_HEADER:
         bytes_read += handleList(p_data, remaining_bytes, true);
