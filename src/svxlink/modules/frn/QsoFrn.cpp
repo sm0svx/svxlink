@@ -133,6 +133,7 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   , rx_timeout_timer(new Timer(RX_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , con_timeout_timer(new Timer(CON_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , keepalive_timer(new Timer(KEEPALIVE_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
+  , tx_wait_timer(new Timer(TX_WAIT_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , state(STATE_DISCONNECTED)
   , connect_retry_cnt(0)
   , send_buffer_cnt(0)
@@ -248,6 +249,10 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   keepalive_timer->setEnable(true);
   keepalive_timer->expired.connect(
       mem_fun(*this, &QsoFrn::onKeepaliveTimeout));
+
+  tx_wait_timer->setEnable(false);
+  tx_wait_timer->expired.connect(
+      mem_fun(*this, &QsoFrn::onTxWaitTimeout));
 
   init_ok = true;
 }
@@ -406,6 +411,8 @@ void QsoFrn::squelchOpen(bool is_open)
     {
       sendRequest(RQ_TX0);
       setState(STATE_TX_AUDIO_WAITING);
+      tx_wait_timer->setEnable(true);
+      tx_wait_timer->reset();
     }
     else 
     {
@@ -631,7 +638,10 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
 
     case DT_DO_TX:
       if (STATE_TX_AUDIO_WAITING)
+      {
         setState(STATE_TX_AUDIO_APPROVED);
+        tx_wait_timer->setEnable(false);
+      }
       break;
 
     case DT_VOICE_BUFFER:
@@ -896,6 +906,16 @@ void QsoFrn::onRxTimeout(Timer *timer)
   sendRequest(RQ_P);
 }
 
+
+void QsoFrn::onTxWaitTimeout(Async::Timer *timer)
+{
+  if (state == STATE_TX_AUDIO_WAITING)
+  {
+    setState(STATE_IDLE);
+    sendRequest(RQ_P);
+    tx_wait_timer->setEnable(false);
+  }
+}
 
 void QsoFrn::onKeepaliveTimeout(Timer *timer)
 {

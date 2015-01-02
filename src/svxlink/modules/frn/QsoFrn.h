@@ -471,6 +471,14 @@ class QsoFrn
     void onRxTimeout(Async::Timer *timer);
 
     /**
+     * @brief Called when wait for tx timer timeouts
+     *
+     * Called when server does not respond withing timeout time
+     * to TX request
+     */
+    void onTxWaitTimeout(Async::Timer *timer);
+
+    /**
      * @brief Called when no pings/data were received during timeout time
      *
      * Called when no pings and data were received during timeout time
@@ -489,6 +497,7 @@ class QsoFrn
 
     static const int    CON_TIMEOUT_TIME        = 60000;
     static const int    RX_TIMEOUT_TIME         = 1000;
+    static const int    TX_WAIT_TIMEOUT_TIME    = 3000;
     static const int    KEEPALIVE_TIMEOUT_TIME  = 10000;
  
     bool                init_ok;
@@ -497,6 +506,7 @@ class QsoFrn
     Async::Timer *      rx_timeout_timer;
     Async::Timer *      con_timeout_timer;
     Async::Timer *      keepalive_timer;
+    Async::Timer *      tx_wait_timer;
     State               state;
     int                 connect_retry_cnt;
     short               receive_buffer[BUFFER_SIZE];
