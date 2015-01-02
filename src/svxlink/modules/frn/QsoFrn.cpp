@@ -617,6 +617,8 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
 
     case DT_VOICE_BUFFER:
       setState(STATE_RX_AUDIO);
+      rx_timeout_timer->setEnable(true);
+      rx_timeout_timer->reset();
       break;
 
     case DT_TEXT_MESSAGE:
@@ -865,6 +867,8 @@ void QsoFrn::onRxTimeout(Timer *timer)
   //cout << __FUNCTION__ << endl;
   sinkFlushSamples();
   rx_timeout_timer->setEnable(false);
+  setState(STATE_IDLE);
+  sendRequest(RQ_P);
 }
 
 
