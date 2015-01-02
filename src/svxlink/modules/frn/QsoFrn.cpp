@@ -342,6 +342,7 @@ int QsoFrn::writeSamples(const float *samples, int count)
 {
   //cout << __FUNCTION__ << " " << count << endl;
   int samples_read = 0;
+  con_timeout_timer->reset();
 
   while (samples_read < count)
   {

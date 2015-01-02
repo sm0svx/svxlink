@@ -487,7 +487,7 @@ class QsoFrn
     static const int    BUFFER_SIZE             = FRAME_COUNT*PCM_FRAME_SIZE;
     static const int    FRN_AUDIO_PACKET_SIZE   = FRAME_COUNT*GSM_FRAME_SIZE;
 
-    static const int    CON_TIMEOUT_TIME        = 30000;
+    static const int    CON_TIMEOUT_TIME        = 60000;
     static const int    RX_TIMEOUT_TIME         = 1000;
     static const int    KEEPALIVE_TIMEOUT_TIME  = 10000;
  
