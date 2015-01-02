@@ -138,6 +138,7 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   , send_buffer_cnt(0)
   , gsmh(gsm_create())
   , lines_to_read(-1)
+  , is_receiving_voice(false)
 {
   assert(module != 0);
 
@@ -229,6 +230,13 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   tcp_client->sendBufferFull.connect(
       mem_fun(*this, &QsoFrn::onSendBufferFull));
 
+  this->rxVoiceStarted.connect(
+      mem_fun(*this, &QsoFrn::onRxVoiceStarted));
+  this->frnListReceived.connect(
+      mem_fun(*this, &QsoFrn::onFrnListReceived));
+  this->frnClientListReceived.connect(
+      mem_fun(*this, &QsoFrn::onFrnClientListReceived));
+
   con_timeout_timer->setEnable(false);
   con_timeout_timer->expired.connect(
       mem_fun(*this, &QsoFrn::onConnectTimeout));
@@ -318,8 +326,10 @@ std::string QsoFrn::stateToString(State state)
       return "TX_AUDIO";
     case STATE_RX_AUDIO:
       return "RX_AUDIO";
-    case STATE_RX_LIST_HEADER:
-      return "RX_LIST_HEADER";
+    case STATE_RX_CLIENT_LIST_HEADER:
+      return "RX_CLIENT_LIST_HEADER";
+    case STATE_RX_CLIENT_LIST:
+      return "RX_CLIENT_LIST";
     case STATE_RX_LIST:
       return "RX_LIST";
     default:
@@ -363,7 +373,7 @@ int QsoFrn::writeSamples(const float *samples, int count)
 
 void QsoFrn::flushSamples(void)
 {
-  //cout << __FUNCTION__ << endl;
+  //cout << __FUNCTION__ << " " << stateToString(state) << endl;
 
   if (state == STATE_TX_AUDIO && send_buffer_cnt > 0)
   {
@@ -373,8 +383,10 @@ void QsoFrn::flushSamples(void)
 
     sendVoiceData(send_buffer, send_buffer_cnt);
     send_buffer_cnt = 0;
-    sendRequest(RQ_TX0);
   }
+  sendRequest(RQ_TX0);
+  setState(STATE_IDLE);
+
   sourceAllSamplesFlushed();
 }
 
@@ -549,6 +561,14 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
   if (len < FRN_AUDIO_PACKET_SIZE + CLIENT_INDEX_SIZE)
     return 0;
 
+  if (!is_receiving_voice)
+  {
+    unsigned short client_index = data[1] | data[0] << 8;
+    is_receiving_voice = true;
+    if (client_index > 0 && client_index <= client_list.size())
+      rxVoiceStarted(client_list[client_index - 1]);
+  }
+
   for (int frameno = 0; frameno < FRAME_COUNT; frameno++)
   {
     unsigned char *src = gsm_data + frameno * GSM_FRAME_SIZE;
@@ -609,9 +629,7 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
       break;
 
     case DT_DO_TX:
-      if (state == STATE_TX_AUDIO)
-        setState(STATE_IDLE);
-      else
+      if (STATE_TX_AUDIO_WAITING)
         setState(STATE_TX_AUDIO_APPROVED);
       break;
 
@@ -632,7 +650,7 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
       break;
 
     case DT_CLIENT_LIST:
-      setState(STATE_RX_LIST_HEADER);
+      setState(STATE_RX_CLIENT_LIST_HEADER);
       break;
 
     default:
@@ -643,44 +661,48 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
 }
 
 
-int QsoFrn::handleList(unsigned char *data, int len, bool is_header)
+int QsoFrn::handleListHeader(unsigned char *data, int len)
 {
   int bytes_read = 0;
 
-  if (is_header)
+  if (len >= CLIENT_INDEX_SIZE)
   {
-    if (len >= CLIENT_INDEX_SIZE)
-    {
-      bytes_read += CLIENT_INDEX_SIZE;
-      setState(STATE_RX_LIST);
-      lines_to_read = -1;
-    }
+    bytes_read += CLIENT_INDEX_SIZE;
+    setState(STATE_RX_CLIENT_LIST);
+    lines_to_read = -1;
   }
-  else
-  {
-    std::string line;
-    std::istringstream lines(std::string((char*)data, len));
-    bool has_win_newline = hasWinNewline(lines);
+  return bytes_read;
+}
 
-    if (hasLine(lines) && safeGetline(lines, line))
+
+int QsoFrn::handleList(unsigned char *data, int len)
+{
+  int bytes_read = 0;
+  std::string line;
+  std::istringstream lines(std::string((char*)data, len));
+  bool has_win_newline = hasWinNewline(lines);
+
+  if (hasLine(lines) && safeGetline(lines, line))
+  {
+    if (lines_to_read == -1)
     {
-      if (lines_to_read == -1)
-      {
-        lines_to_read = atoi(line.c_str());
-        cout << lines_to_read << " lines received" << endl;
-      }
-      else
-      {
-        cout << "-- " << line << endl;
-        lines_to_read--;
-      }
-      bytes_read += line.length() + (has_win_newline ? 2 : 1);
+      lines_to_read = atoi(line.c_str());
     }
-    if (lines_to_read == 0)
+    else
     {
-      setState(STATE_IDLE);
-      lines_to_read = -1;
+      cur_item_list.push_back(line);
+      lines_to_read--;
     }
+    bytes_read += line.length() + (has_win_newline ? 2 : 1);
+  }
+  if (lines_to_read == 0)
+  {
+    if (state == STATE_RX_CLIENT_LIST)
+      frnClientListReceived(cur_item_list);
+    frnListReceived(cur_item_list);
+    cur_item_list.clear();
+    lines_to_read = -1;
+    setState(STATE_IDLE);
   }
   //cout << "got " << len << " read " << bytes_read << endl;
   return bytes_read;
@@ -824,11 +846,12 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
         bytes_read += handleAudioData(p_data, remaining_bytes);
         break;
 
-      case STATE_RX_LIST_HEADER:
-        bytes_read += handleList(p_data, remaining_bytes, true);
+      case STATE_RX_CLIENT_LIST_HEADER:
+        bytes_read += handleListHeader(p_data, remaining_bytes);
         break;
 
       case STATE_RX_LIST:
+      case STATE_RX_CLIENT_LIST:
         bytes_read += handleList(p_data, remaining_bytes);
         break;
 
@@ -867,6 +890,7 @@ void QsoFrn::onRxTimeout(Timer *timer)
   //cout << __FUNCTION__ << endl;
   sinkFlushSamples();
   rx_timeout_timer->setEnable(false);
+  is_receiving_voice = false;
   setState(STATE_IDLE);
   sendRequest(RQ_P);
 }
@@ -875,11 +899,32 @@ void QsoFrn::onRxTimeout(Timer *timer)
 void QsoFrn::onKeepaliveTimeout(Timer *timer)
 {
   if (state == STATE_IDLE)
-  {
-    cerr << "keepalive timeout, forcing server ping" << endl;
     sendRequest(RQ_P);
+}
+
+
+void QsoFrn::onRxVoiceStarted(const string &client_descritpion) const
+{
+  cout << "voice started: " << client_descritpion << endl;
+}
+
+
+void QsoFrn::onFrnListReceived(const FrnList &list) const
+{
+  cout << "FRN list received:" << endl;
+  for (FrnList::const_iterator it = list.begin(); it != list.end(); ++it)
+  {
+    cout << "-- " << *it << endl;
   }
 }
+
+
+void QsoFrn::onFrnClientListReceived(const FrnList &list)
+{
+  cout << "FRN active client list updated" << endl;
+  client_list = list;
+}
+
 
 /*
  * This file has not been truncated

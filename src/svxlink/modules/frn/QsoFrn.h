@@ -36,8 +36,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * System Includes
  *
  ****************************************************************************/
-
 #include <string>
+#include <vector>
 #include <sigc++/sigc++.h>
 
 
@@ -54,6 +54,7 @@ extern "C" {
 #include <AsyncAudioSource.h>
 #include <AsyncTcpConnection.h>
 
+
 /****************************************************************************
  *
  * Local Includes
@@ -67,7 +68,6 @@ extern "C" {
  * Forward declarations
  *
  ****************************************************************************/
-
 namespace Async
 {
   class Config;
@@ -106,7 +106,7 @@ class ModuleFrn;
  * Defines & typedefs
  *
  ****************************************************************************/
-
+typedef std::vector<std::string> FrnList;
 
 
 /****************************************************************************
@@ -145,7 +145,8 @@ class QsoFrn
       STATE_TX_AUDIO_APPROVED,
       STATE_TX_AUDIO,
       STATE_RX_AUDIO,
-      STATE_RX_LIST_HEADER,
+      STATE_RX_CLIENT_LIST_HEADER,
+      STATE_RX_CLIENT_LIST,
       STATE_RX_LIST,
       STATE_ERROR
     } State;
@@ -256,7 +257,7 @@ class QsoFrn
       */
      sigc::signal<void, State> stateChange;
 
-  protected:
+ protected:
      /**
       * @brief The registered sink has flushed all samples
       *
@@ -284,6 +285,48 @@ class QsoFrn
      * @param New state to set
      */
     void setState(State newState);
+
+    /**
+     * @brief Emitted when FRN list is fully populated
+     *
+     * @param vector of strings populated from FRN
+     */
+    sigc::signal<void, const FrnList& > frnListReceived;
+
+    /**
+     * @brief Emitted when FRN client list is fully populated
+     *
+     * @param vector of strings populated from FRN
+     */
+    sigc::signal<void, const FrnList& > frnClientListReceived;
+
+    /**
+     * @brief Emitted when started receiving voice from client
+     *
+     * @param string with client xml data
+     */
+    sigc::signal<void, const std::string& > rxVoiceStarted;
+
+     /**
+     * @brief Called when started receiving voice from the client
+     *
+     * @param xml FRN format client descrition
+     */
+    void onRxVoiceStarted(const std::string &client_description) const;
+
+    /**
+     * @brief Called when completed FRN list is received
+     *
+     * @param xml FRN format client descrition line
+     */
+    void onFrnListReceived(const FrnList &list) const;
+
+    /**
+     * @brief Called when completed FRN client list is received
+     *
+     * @param xml FRN format client descrition line
+     */
+    void onFrnClientListReceived(const FrnList &list);
 
   private:
 
@@ -363,10 +406,22 @@ class QsoFrn
      * @param length of received data
      * @return count of bytes consumed
      *
+     * Method is used to consume and handle FRN incoming list
+     * header
+     */
+    int handleListHeader(unsigned char *data, int len);
+
+    /**
+     * @brief Consume and handle FRN incoming string lists
+     *
+     * @param pointer to received data
+     * @param length of received data
+     * @return count of bytes consumed
+     *
      * Method is used to consume and handle FRN incoming lists, for
      * example list of users, chat messages, etc.
      */
-    int handleList(unsigned char *data, int len, bool is_header=false);
+    int handleList(unsigned char *data, int len);
 
     /**
      * @brief Called when connection to FRN server is established
@@ -416,7 +471,7 @@ class QsoFrn
     void onRxTimeout(Async::Timer *timer);
 
     /**
-     *  @brief Called when no pings/data were received during timeout time
+     * @brief Called when no pings/data were received during timeout time
      *
      * Called when no pings and data were received during timeout time
      */
@@ -449,6 +504,9 @@ class QsoFrn
     int                 send_buffer_cnt;
     gsm                 gsmh;
     int                 lines_to_read;
+    FrnList             cur_item_list;
+    FrnList             client_list;
+    bool                is_receiving_voice;
 
     std::string         opt_server;
     std::string         opt_port;
