@@ -129,6 +129,7 @@ using namespace FrnUtils;
 
 QsoFrn::QsoFrn(ModuleFrn *module)
   : init_ok(false)
+  , frn_debug_enabled(false)
   , tcp_client(new TcpClient(TCP_BUFFER_SIZE))
   , rx_timeout_timer(new Timer(RX_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , con_timeout_timer(new Timer(CON_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
@@ -145,6 +146,9 @@ QsoFrn::QsoFrn(ModuleFrn *module)
 
   Config &cfg = module->cfg();
   const string &cfg_name = module->cfgName();
+
+  if (cfg.getValue(cfg_name, "FRN_DEBUG", frn_debug_enabled))
+    cout << "frn debugging is enabled" << endl;
 
   if (!cfg.getValue(cfg_name, "SERVER", opt_server))
   {
@@ -370,7 +374,10 @@ int QsoFrn::writeSamples(const float *samples, int count)
         send_buffer_cnt = 0;
       } 
       else
+      {
+        samples_read = count;
         break;
+      }
     }
   }
   return samples_read;
@@ -392,14 +399,13 @@ void QsoFrn::flushSamples(void)
   }
   sendRequest(RQ_TX0);
   setState(STATE_IDLE);
-
   sourceAllSamplesFlushed();
 }
 
 
 void QsoFrn::resumeOutput(void)
 {
-  //cout << __FUNCTION__ << endl;
+  cout << __FUNCTION__ << endl;
 }
 
 
@@ -443,7 +449,8 @@ void QsoFrn::setState(State newState)
 {
   if (newState != state)
   {
-    //cout << __FUNCTION__ << " " << stateToString(newState) << endl;
+    if (frn_debug_enabled)
+      cout << "state: " << stateToString(newState) << endl;
     state = newState;
     stateChange(newState);
     if (state == STATE_ERROR)
@@ -545,7 +552,8 @@ void QsoFrn::sendRequest(Request rq)
       cerr << "unknown request " << rq << endl;
       return;
   }
-  //cout << "req = " << s.str() << endl;
+  if (frn_debug_enabled)
+    cout << "req:   " << s.str() << endl;
   if (tcp_client->isConnected())
   {
     s << "\r\n";
@@ -624,7 +632,8 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
 {
   int bytes_read = 0;
   Response cmd = (Response)data[0];
-  //cout << "cmd = " << cmd << endl;
+  if (frn_debug_enabled)
+    cout << "cmd:   " << cmd << endl;
 
   keepalive_timer->reset();
 
@@ -637,7 +646,7 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
       break;
 
     case DT_DO_TX:
-      if (STATE_TX_AUDIO_WAITING)
+      if (state == STATE_TX_AUDIO_WAITING)
       {
         setState(STATE_TX_AUDIO_APPROVED);
         tx_wait_timer->setEnable(false);
@@ -844,7 +853,6 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
         if (remaining_bytes >= CLIENT_INDEX_SIZE)
           bytes_read += CLIENT_INDEX_SIZE;
         setState(STATE_TX_AUDIO);
-        sourceResumeOutput();
         break;
 
       case STATE_TX_AUDIO:

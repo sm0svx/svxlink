@@ -495,12 +495,13 @@ class QsoFrn
     static const int    BUFFER_SIZE             = FRAME_COUNT*PCM_FRAME_SIZE;
     static const int    FRN_AUDIO_PACKET_SIZE   = FRAME_COUNT*GSM_FRAME_SIZE;
 
-    static const int    CON_TIMEOUT_TIME        = 60000;
+    static const int    CON_TIMEOUT_TIME        = 30000;
     static const int    RX_TIMEOUT_TIME         = 1000;
-    static const int    TX_WAIT_TIMEOUT_TIME    = 3000;
-    static const int    KEEPALIVE_TIMEOUT_TIME  = 10000;
+    static const int    TX_WAIT_TIMEOUT_TIME    = 2000;
+    static const int    KEEPALIVE_TIMEOUT_TIME  = 5000;
  
     bool                init_ok;
+    bool                frn_debug_enabled;
 
     Async::TcpClient *  tcp_client;
     Async::Timer *      rx_timeout_timer;
