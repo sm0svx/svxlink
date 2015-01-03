@@ -117,7 +117,7 @@ proc count_clients {count_clients} {
   playSilence 50;
   playMsg "connected_stations";
   playSilence 250;
- }
+}
 
 
 # end of namespace

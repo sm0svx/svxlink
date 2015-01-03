@@ -360,7 +360,7 @@ void ModuleFrn::dtmfCmdReceived(const string& cmd)
       playHelpMsg();
       break;
 
-    case CMD_CONNECTION_STATUS:
+    case CMD_COUNT_CLIENTS:
     {
       if (!validateCommand(cmd, 1))
         return;
@@ -460,7 +460,9 @@ void ModuleFrn::allMsgsWritten(void)
  */
 void ModuleFrn::reportState(void)
 {
-
+  stringstream ss;
+  ss << "count_clients " << qso->clientsCount();
+  processEvent(ss.str());
 } /* reportState */
 
 

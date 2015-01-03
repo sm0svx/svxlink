@@ -147,7 +147,7 @@ class ModuleFrn : public Module
     Async::AudioFifo        *audio_fifo;
 
     static const char       CMD_HELP = '0';
-    static const char       CMD_CONNECTION_STATUS = '1';
+    static const char       CMD_COUNT_CLIENTS = '1';
 
 };  /* class ModuleFrn */
 
