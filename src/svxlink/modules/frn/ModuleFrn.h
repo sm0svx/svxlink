@@ -148,6 +148,7 @@ class ModuleFrn : public Module
 
     static const char       CMD_HELP = '0';
     static const char       CMD_COUNT_CLIENTS = '1';
+    static const char       CMD_RF_DISABLE = '2';
 
 };  /* class ModuleFrn */
 

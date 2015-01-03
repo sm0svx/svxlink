@@ -109,6 +109,7 @@ proc unknown_command {cmd} {
   playMsg "unknown_command";
 }
 
+
 #
 # Executed when command to count nodes on the channel is called
 #
@@ -119,6 +120,26 @@ proc count_clients {count_clients} {
   playSilence 250;
 }
 
+
+#
+# Executed when the rf disable feature is activated or deactivated
+#   status    - The current status of the feature (0=deactivated, 1=activated)
+#   activate  - The requested new status of the feature
+#               (0=deactivate, 1=activate)
+#
+proc rf_disable {status activate} {
+  variable module_name;
+
+  if {$status == $activate} {
+    playMsg "rf_disable";
+    playMsg [expr {$status ? "already_active" : "not_active"}];
+  } else {
+    puts "$module_name: [expr {$activate ? "Activating" : "Deactivating"}]\
+          listen only mode.";
+    playMsg [expr {$activate ? "activating" : "deactivating"}];
+    playMsg "rf_disable";
+  }
+}
 
 # end of namespace
 }

@@ -140,6 +140,7 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   , gsmh(gsm_create())
   , lines_to_read(-1)
   , is_receiving_voice(false)
+  , is_rf_disabled(false)
   , opt_frn_debug(false)
 {
   assert(module != 0);
@@ -591,41 +592,43 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
       rxVoiceStarted(client_list[client_index - 1]);
   }
 
-  for (int frameno = 0; frameno < FRAME_COUNT; frameno++)
+  if (!is_rf_disabled)
   {
-    unsigned char *src = gsm_data + frameno * GSM_FRAME_SIZE;
-    short *dst = pcm_buffer;
-    bool is_gsm_decode_success = true;
-
-    // GSM_OPT_WAV49, consume alternating frames of size 33, 32, 33, 32, ..
-    if (gsm_decode(gsmh, src, dst) == -1)
-      is_gsm_decode_success = false;
-
-    if (gsm_decode(gsmh, src + 33, dst + PCM_FRAME_SIZE / 2) == -1)
-      is_gsm_decode_success = false;
-
-    if (!is_gsm_decode_success)
-      cerr << "gsm decoder failed to decode frame " << frameno << endl;
-
-    for (int i = 0; i < PCM_FRAME_SIZE; i++)
-       pcm_samples[i] = static_cast<float>(pcm_buffer[i]) / 32768.0;
-
-    int all_written = 0;
-    while (all_written < PCM_FRAME_SIZE)
+    for (int frameno = 0; frameno < FRAME_COUNT; frameno++)
     {
-      int written = sinkWriteSamples(pcm_samples + all_written, 
-          PCM_FRAME_SIZE - all_written);
-      if (written == 0)
-      {
-        cerr << "cannot write frame to sink, dropping sample " 
-             << (PCM_FRAME_SIZE - all_written) << endl;
-        break;
-      }
-      all_written += written;
-    }
-    pcm_buffer += PCM_FRAME_SIZE;
-  }
+      unsigned char *src = gsm_data + frameno * GSM_FRAME_SIZE;
+      short *dst = pcm_buffer;
+      bool is_gsm_decode_success = true;
 
+      // GSM_OPT_WAV49, consume alternating frames of size 33, 32, 33, 32, ..
+      if (gsm_decode(gsmh, src, dst) == -1)
+        is_gsm_decode_success = false;
+
+      if (gsm_decode(gsmh, src + 33, dst + PCM_FRAME_SIZE / 2) == -1)
+        is_gsm_decode_success = false;
+
+      if (!is_gsm_decode_success)
+        cerr << "gsm decoder failed to decode frame " << frameno << endl;
+
+      for (int i = 0; i < PCM_FRAME_SIZE; i++)
+         pcm_samples[i] = static_cast<float>(pcm_buffer[i]) / 32768.0;
+
+      int all_written = 0;
+      while (all_written < PCM_FRAME_SIZE)
+      {
+        int written = sinkWriteSamples(pcm_samples + all_written, 
+            PCM_FRAME_SIZE - all_written);
+        if (written == 0)
+        {
+          cerr << "cannot write frame to sink, dropping sample " 
+               << (PCM_FRAME_SIZE - all_written) << endl;
+          break;
+        }
+        all_written += written;
+      }
+      pcm_buffer += PCM_FRAME_SIZE;
+    }
+  }
   setState(STATE_IDLE);
   rx_timeout_timer->setEnable(true);
   rx_timeout_timer->reset();
@@ -940,6 +943,8 @@ void QsoFrn::onKeepaliveTimeout(Timer *timer)
 
 void QsoFrn::onRxVoiceStarted(const string &client_descritpion) const
 {
+  if (is_rf_disabled)
+    cout << "[listen only] ";
   cout << "voice started: " << client_descritpion << endl;
 }
 

@@ -261,6 +261,20 @@ class QsoFrn
      virtual void resumeOutput(void);
 
      /**
+      * @brief Do not send anything to rig
+      * 
+      * @param true to disable audio stream to rig
+      */
+     void setRfDisabled(bool disabled) { is_rf_disabled = disabled; }
+
+     /**
+      * @brief Return true if rf tx disabled for the qso
+      * 
+      * @return true if rf tx is disabled
+      */
+     bool isRfDisabled() const { return is_rf_disabled; }
+
+     /**
       * @brief  QSO is erroring out and cannot recover itself
       */
      sigc::signal<void> error;
@@ -531,6 +545,7 @@ class QsoFrn
     FrnList             cur_item_list;
     FrnList             client_list;
     bool                is_receiving_voice;
+    bool                is_rf_disabled;
 
     bool                opt_frn_debug;
     std::string         opt_server;

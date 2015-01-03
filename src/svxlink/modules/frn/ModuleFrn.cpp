@@ -369,6 +369,19 @@ void ModuleFrn::dtmfCmdReceived(const string& cmd)
       break;
     }
 
+    case CMD_RF_DISABLE:
+    {
+      if (!validateCommand(cmd, 2))
+        return;
+
+      bool disable = (cmd[1] != '0');
+      qso->setRfDisabled(disable);
+      cout << "rf disable: " << disable << endl;
+      ss << "rf_disable " <<  (qso->isRfDisabled() ? "1 " : "0 ")
+         << (disable ? "1" : "0");
+      break;
+    }
+
     default:
       ss << "unknown_command " << cmd;
       break;
