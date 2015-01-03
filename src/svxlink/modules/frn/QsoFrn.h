@@ -135,6 +135,7 @@ class QsoFrn
 {
   public:
     typedef enum {
+      STATE_ERROR,
       STATE_DISCONNECTED,
       STATE_CONNECTING,
       STATE_CONNECTED,
@@ -147,8 +148,7 @@ class QsoFrn
       STATE_RX_AUDIO,
       STATE_RX_CLIENT_LIST_HEADER,
       STATE_RX_CLIENT_LIST,
-      STATE_RX_LIST,
-      STATE_ERROR
+      STATE_RX_LIST
     } State;
 
     typedef enum {
@@ -236,6 +236,20 @@ class QsoFrn
       * This function is normally only called from a connected source object.
       */
      virtual void flushSamples(void);
+
+     /** 
+      * @brief Return true if qso is connected to the server
+      * 
+      * @return true if qso is connected
+      */
+     bool isConnected() const { return state >= STATE_IDLE; }
+
+     /** 
+      * @brief return number of clients on the channel
+      *
+      * @return count of clients on the channel including myself
+      */
+     int clientsCount() const { return client_list.size(); }
 
      /**
       * @brief Resume audio output to the sink

@@ -136,6 +136,7 @@ class ModuleFrn : public Module
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
     void reportState(void);
+    bool validateCommand(const std::string& cmd, size_t argc);
     void onQsoError(void);
 
   private:
@@ -145,7 +146,9 @@ class ModuleFrn : public Module
     Async::AudioSelector    *audio_selector;
     Async::AudioFifo        *audio_fifo;
 
-    static const char CMD_HELP = '0';
+    static const char       CMD_HELP = '0';
+    static const char       CMD_CONNECTION_STATUS = '1';
+
 };  /* class ModuleFrn */
 
 

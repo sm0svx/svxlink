@@ -92,6 +92,34 @@ proc status_report {} {
 }
 
 
+#
+# Executed when an entered command failed or have bad syntax.
+#
+proc command_failed {cmd} {
+  spellWord $cmd;
+  playMsg "operation_failed";
+}
+ 
+ 
+#
+# Executed when an unrecognized command has been received.
+#
+proc unknown_command {cmd} {
+  spellWord $cmd;
+  playMsg "unknown_command";
+}
+
+#
+# Executed when command to count nodes on the channel is called
+#
+proc count_clients {count_clients} {
+  playNumber $count_clients;
+  playSilence 50;
+  playMsg "connected_stations";
+  playSilence 250;
+ }
+
+
 # end of namespace
 }
 

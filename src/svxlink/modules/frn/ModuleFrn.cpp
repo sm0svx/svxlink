@@ -351,16 +351,48 @@ void ModuleFrn::dtmfCmdReceived(const string& cmd)
     deactivateMe();
     return;
   }
+
+  stringstream ss;
+
   switch (cmd[0])
   {
     case CMD_HELP:
       playHelpMsg();
       break;
 
+    case CMD_CONNECTION_STATUS:
+    {
+      if (!validateCommand(cmd, 1))
+        return;
+      ss << "count_clients ";
+      ss << qso->clientsCount();
+      break;
+    }
+
     default:
+      ss << "unknown_command " << cmd;
       break;
   }
+
+  processEvent(ss.str());
+
 } /* dtmfCmdReceived */
+
+
+bool ModuleFrn::validateCommand(const string& cmd, size_t argc)
+{
+  if (cmd.size() == argc)
+  {
+    return true;
+  } 
+  else
+  {
+    stringstream ss;
+    ss << "command_failed " << cmd;
+    processEvent(ss.str());
+    return false;
+  }
+} /* ModulrFrn::commandFailed */
 
 
 #if 0
