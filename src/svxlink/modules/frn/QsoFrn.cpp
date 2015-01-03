@@ -129,7 +129,6 @@ using namespace FrnUtils;
 
 QsoFrn::QsoFrn(ModuleFrn *module)
   : init_ok(false)
-  , frn_debug_enabled(false)
   , tcp_client(new TcpClient(TCP_BUFFER_SIZE))
   , rx_timeout_timer(new Timer(RX_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , con_timeout_timer(new Timer(CON_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
@@ -141,13 +140,14 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   , gsmh(gsm_create())
   , lines_to_read(-1)
   , is_receiving_voice(false)
+  , opt_frn_debug(false)
 {
   assert(module != 0);
 
   Config &cfg = module->cfg();
   const string &cfg_name = module->cfgName();
 
-  if (cfg.getValue(cfg_name, "FRN_DEBUG", frn_debug_enabled))
+  if (cfg.getValue(cfg_name, "FRN_DEBUG", opt_frn_debug))
     cout << "frn debugging is enabled" << endl;
 
   if (!cfg.getValue(cfg_name, "SERVER", opt_server))
@@ -275,6 +275,12 @@ QsoFrn::~QsoFrn(void)
 
   delete tcp_client;
   tcp_client = 0;
+
+  delete keepalive_timer;
+  keepalive_timer = 0;
+
+  delete tx_wait_timer;
+  tx_wait_timer = 0;
 
   gsm_destroy(gsmh);
   gsmh = 0;
@@ -449,7 +455,7 @@ void QsoFrn::setState(State newState)
 {
   if (newState != state)
   {
-    if (frn_debug_enabled)
+    if (opt_frn_debug)
       cout << "state: " << stateToString(newState) << endl;
     state = newState;
     stateChange(newState);
@@ -552,7 +558,7 @@ void QsoFrn::sendRequest(Request rq)
       cerr << "unknown request " << rq << endl;
       return;
   }
-  if (frn_debug_enabled)
+  if (opt_frn_debug)
     cout << "req:   " << s.str() << endl;
   if (tcp_client->isConnected())
   {
@@ -632,7 +638,7 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
 {
   int bytes_read = 0;
   Response cmd = (Response)data[0];
-  if (frn_debug_enabled)
+  if (opt_frn_debug)
     cout << "cmd:   " << cmd << endl;
 
   keepalive_timer->reset();

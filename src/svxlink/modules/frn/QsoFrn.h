@@ -501,7 +501,6 @@ class QsoFrn
     static const int    KEEPALIVE_TIMEOUT_TIME  = 5000;
  
     bool                init_ok;
-    bool                frn_debug_enabled;
 
     Async::TcpClient *  tcp_client;
     Async::Timer *      rx_timeout_timer;
@@ -519,6 +518,7 @@ class QsoFrn
     FrnList             client_list;
     bool                is_receiving_voice;
 
+    bool                opt_frn_debug;
     std::string         opt_server;
     std::string         opt_port;
     std::string         opt_version;
