@@ -411,7 +411,7 @@ void QsoFrn::flushSamples(void)
 
 void QsoFrn::resumeOutput(void)
 {
-  cout << __FUNCTION__ << endl;
+  //cout << __FUNCTION__ << endl;
 }
 
 

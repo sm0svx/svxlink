@@ -145,6 +145,7 @@ class ModuleFrn : public Module
     Async::AudioSelector    *audio_selector;
     Async::AudioFifo        *audio_fifo;
 
+    static const char CMD_HELP = '0';
 };  /* class ModuleFrn */
 
 

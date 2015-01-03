@@ -349,10 +349,16 @@ void ModuleFrn::dtmfCmdReceived(const string& cmd)
   if (cmd == "")
   {
     deactivateMe();
+    return;
   }
-  else
+  switch (cmd[0])
   {
+    case CMD_HELP:
+      playHelpMsg();
+      break;
 
+    default:
+      break;
   }
 } /* dtmfCmdReceived */
 
