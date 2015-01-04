@@ -151,6 +151,9 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   if (cfg.getValue(cfg_name, "FRN_DEBUG", opt_frn_debug))
     cout << "frn debugging is enabled" << endl;
 
+  if (cfg.getValue(cfg_name, "DISABLE_RF", is_rf_disabled))
+    cout << "rf is disabled" << endl;
+
   if (!cfg.getValue(cfg_name, "SERVER", opt_server))
   {
     cerr << "*** ERROR: Config variable " << cfg_name
