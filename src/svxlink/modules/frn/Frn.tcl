@@ -116,7 +116,7 @@ proc unknown_command {cmd} {
 proc count_clients {count_clients} {
   playNumber $count_clients;
   playSilence 50;
-  playMsg "connected_stations";
+  playMsg "connected_clients";
   playSilence 250;
 }
 
