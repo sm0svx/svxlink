@@ -229,7 +229,7 @@ class Dispatcher : public sigc::trackable
 	return a1 < a2;
       }
     };
-    typedef std::map<Async::IpAddress, ConData, ipaddr_lt> ConMap;
+    typedef std::map<Async::IpAddress, ConData> ConMap;
     
     static const int  	DEFAULT_PORT_BASE = 5198;
     
