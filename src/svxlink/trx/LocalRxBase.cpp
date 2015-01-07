@@ -84,7 +84,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Emphasis.h"
 #include "SquelchPty.h"
 #include "SquelchOpen.h"
+#ifndef NO_HID
 #include "SquelchHidraw.h"
+#endif
 
 
 /****************************************************************************
@@ -449,10 +451,12 @@ bool LocalRxBase::initialize(void)
   {
     squelch_det = new SquelchPty;
   }
+#ifndef NO_HID
   else if (sql_det_str == "HIDRAW")
   {
     squelch_det = new SquelchHidraw;
   }
+#endif
   else
   {
     cerr << "*** ERROR: Unknown squelch type specified in config variable "

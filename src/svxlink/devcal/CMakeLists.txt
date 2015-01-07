@@ -1,5 +1,10 @@
+# Find the popt library
+find_package(Popt REQUIRED)
+include_directories(${POPT_INCLUDE_DIRS})
+add_definitions(${POPT_DEFINITIONS})
+
 add_executable(devcal devcal.cpp)
-target_link_libraries(devcal asyncaudio asynccpp trx popt)
+target_link_libraries(devcal asyncaudio asynccpp trx ${POPT_LIBRARIES})
 set_target_properties(devcal PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
