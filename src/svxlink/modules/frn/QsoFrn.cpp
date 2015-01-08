@@ -430,11 +430,6 @@ void QsoFrn::squelchOpen(bool is_open)
       tx_wait_timer->setEnable(true);
       tx_wait_timer->reset();
     }
-    else 
-    {
-      cerr << "skipping TX initiation, state: " 
-           << stateToString(state) << endl;
-    }
   }
 }
 
@@ -666,9 +661,12 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
       break;
 
     case DT_VOICE_BUFFER:
-      setState(STATE_RX_AUDIO);
-      rx_timeout_timer->setEnable(true);
-      rx_timeout_timer->reset();
+      if (state == STATE_IDLE)
+      {
+        setState(STATE_RX_AUDIO);
+        rx_timeout_timer->setEnable(true);
+        rx_timeout_timer->reset();
+      }
       break;
 
     case DT_TEXT_MESSAGE:
