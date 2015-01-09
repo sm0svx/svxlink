@@ -21,7 +21,6 @@ include (CheckSymbolExists)
 CHECK_SYMBOL_EXISTS(HIDIOCGRAWINFO linux/hidraw.h HAS_HIDRAW_SUPPORT)
 if (HAS_HIDRAW_SUPPORT)
   set (LIBSRC ${LIBSRC} PttHidraw.cpp SquelchHidraw.cpp)
-else (HAS_HIDRAW_SUPPORT)
   add_definitions(-DHAS_HIDRAW_SUPPORT)
 endif (HAS_HIDRAW_SUPPORT)
 
