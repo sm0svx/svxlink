@@ -54,7 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "PttSerialPin.h"
 #include "PttGpio.h"
 #include "PttPty.h"
-#ifndef NO_HID
+#ifdef HAS_HIDRAW_SUPPORT
 #include "PttHidraw.h"
 #endif
 
@@ -138,7 +138,7 @@ Ptt *PttFactoryBase::createNamedPtt(Config& cfg, const string& name)
   PttSerialPin::Factory serial_ptt_factory;
   PttGpio::Factory gpio_ptt_factory;
   PttPty::Factory pty_ptt_factory;
-#ifndef NO_HID
+#ifdef HAS_HIDRAW_SUPPORT
   PttHidraw::Factory hidraw_ptt_factory;
 #endif
   
