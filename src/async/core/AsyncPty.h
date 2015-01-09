@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -111,6 +112,14 @@ class FdWatch;
 @date   2014-06-07
 
 This class wrap up some functionality that is nice to have when using a PTY.
+
+The PTY is opened in raw mode.
+
+If the slave end of the PTY is not open, the master file descriptor will be
+continuously polled to detect when it is opened.  When the slave end of the PTY
+is open, an FdWatch will be used to check for activity instead of polling.
+
+Data written to the master end will be discarded if the slave end is not open.
 */
 class Pty : public sigc::trackable
 {
@@ -158,6 +167,10 @@ class Pty : public sigc::trackable
      * @return  On success, the number of bytes written is returned (zero
      *          indicates nothing was written).  On error, -1 is returned,
      *          and errno is set appropriately.
+     * 
+     * Use this function to write data to the PTY. If the slave end of the PTY
+     * is not open, the written data will just be discarded and \em count is
+     * used as the return value.
      */
     ssize_t write(const void *buf, size_t count);
 
@@ -165,7 +178,7 @@ class Pty : public sigc::trackable
      * @brief   Check if the PTY is open or not
      * @return  Returns \em true if the PTY has been successfully opened
      */
-    bool isOpen(void) const { return is_open; }
+    bool isOpen(void) const { return master >= 0; }
 
     /**
      * @brief   Signal that is emitted when data has been received
@@ -177,16 +190,19 @@ class Pty : public sigc::trackable
   protected:
     
   private:
+    static const int POLLHUP_CHECK_INTERVAL = 100;
+
     std::string     slave_link;
     int     	    master;
-    int             slave;
     Async::FdWatch  *watch;
-    bool            is_open;
+    Async::Timer    pollhup_timer;
 
     Pty(const Pty&);
     Pty& operator=(const Pty&);
     
-    void charactersReceived(Async::FdWatch *w);
+    void charactersReceived(void);
+    short pollMaster(void);
+    void checkIfSlaveEndOpen(void);
 
 };  /* class Pty */
 
