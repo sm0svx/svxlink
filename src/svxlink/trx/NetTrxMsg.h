@@ -176,8 +176,8 @@ class MsgProtoVer : public Msg
     MsgProtoVer(void)
       : Msg(TYPE, sizeof(MsgProtoVer)), m_major(MAJOR),
         m_minor(MINOR) {}
-    uint16_t major_ver(void) const { return m_major; }
-    uint16_t minor_ver(void) const { return m_minor; }
+    uint16_t majorVer(void) const { return m_major; }
+    uint16_t minorVer(void) const { return m_minor; }
   
   private:
     uint16_t m_major;
