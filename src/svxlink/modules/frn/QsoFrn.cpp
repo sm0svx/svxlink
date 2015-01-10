@@ -133,7 +133,6 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   , rx_timeout_timer(new Timer(RX_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , con_timeout_timer(new Timer(CON_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , keepalive_timer(new Timer(KEEPALIVE_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
-  , tx_wait_timer(new Timer(TX_WAIT_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , state(STATE_DISCONNECTED)
   , connect_retry_cnt(0)
   , send_buffer_cnt(0)
@@ -159,7 +158,7 @@ QsoFrn::QsoFrn(ModuleFrn *module)
     cerr << "*** ERROR: Config variable " << cfg_name
          << "/SERVER not set\n";
     return;
-  } 
+  }
   if (!cfg.getValue(cfg_name, "PORT", opt_port))
   {
     cerr << "*** ERROR: Config variable " << cfg_name
@@ -258,10 +257,6 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   keepalive_timer->expired.connect(
       mem_fun(*this, &QsoFrn::onKeepaliveTimeout));
 
-  tx_wait_timer->setEnable(false);
-  tx_wait_timer->expired.connect(
-      mem_fun(*this, &QsoFrn::onTxWaitTimeout));
-
   init_ok = true;
 }
 
@@ -282,9 +277,6 @@ QsoFrn::~QsoFrn(void)
 
   delete keepalive_timer;
   keepalive_timer = 0;
-
-  delete tx_wait_timer;
-  tx_wait_timer = 0;
 
   gsm_destroy(gsmh);
   gsmh = 0;
@@ -313,7 +305,7 @@ void QsoFrn::disconnect(void)
   con_timeout_timer->setEnable(false);
 
   if (tcp_client->isConnected())
-  { 
+  {
     tcp_client->disconnect();
   }
 }
@@ -382,7 +374,7 @@ int QsoFrn::writeSamples(const float *samples, int count)
       {
         sendVoiceData(send_buffer, send_buffer_cnt);
         send_buffer_cnt = 0;
-      } 
+      }
       else
       {
         samples_read = count;
@@ -398,17 +390,19 @@ void QsoFrn::flushSamples(void)
 {
   //cout << __FUNCTION__ << " " << stateToString(state) << endl;
 
-  if (state == STATE_TX_AUDIO && send_buffer_cnt > 0)
+  if (state == STATE_TX_AUDIO)
   {
-    memset(send_buffer + send_buffer_cnt, 0,
-        sizeof(send_buffer) - sizeof(*send_buffer) * send_buffer_cnt);
-    send_buffer_cnt = BUFFER_SIZE;
+    if (send_buffer_cnt > 0)
+    {
+      memset(send_buffer + send_buffer_cnt, 0,
+          sizeof(send_buffer) - sizeof(*send_buffer) * send_buffer_cnt);
+      send_buffer_cnt = BUFFER_SIZE;
 
-    sendVoiceData(send_buffer, send_buffer_cnt);
-    send_buffer_cnt = 0;
+      sendVoiceData(send_buffer, send_buffer_cnt);
+      send_buffer_cnt = 0;
+    }
+    sendRequest(RQ_TX0);
   }
-  sendRequest(RQ_TX0);
-  setState(STATE_IDLE);
   sourceAllSamplesFlushed();
 }
 
@@ -421,15 +415,10 @@ void QsoFrn::resumeOutput(void)
 
 void QsoFrn::squelchOpen(bool is_open)
 {
-  if (is_open)
+  if (is_open && state == STATE_IDLE)
   {
-    if (state == STATE_IDLE)
-    {
-      sendRequest(RQ_TX0);
-      setState(STATE_TX_AUDIO_WAITING);
-      tx_wait_timer->setEnable(true);
-      tx_wait_timer->reset();
-    }
+    sendRequest(RQ_TX0);
+    setState(STATE_TX_AUDIO_WAITING);
   }
 }
 
@@ -490,7 +479,7 @@ void QsoFrn::login(void)
 
 void QsoFrn::sendVoiceData(short *data, int len)
 {
-  assert(len == BUFFER_SIZE); 
+  assert(len == BUFFER_SIZE);
 
   size_t nbytes = 0;
   unsigned char gsm_data[FRN_AUDIO_PACKET_SIZE];
@@ -510,7 +499,7 @@ void QsoFrn::sendVoiceData(short *data, int len)
   size_t written = tcp_client->write(gsm_data, nbytes);
   if (written != nbytes)
   {
-    cerr << "not all voice data was written to FRN: " 
+    cerr << "not all voice data was written to FRN: "
          << written << "\\" << nbytes << endl;
   }
 }
@@ -566,7 +555,7 @@ void QsoFrn::sendRequest(Request rq)
     size_t written = tcp_client->write(rq_s.c_str(), rq_s.length());
     if (written != rq_s.length())
     {
-      cerr << "request " << rq_s << " was not written to FRN: " 
+      cerr << "request " << rq_s << " was not written to FRN: "
            << written << "\\" << rq_s.length() << endl;
     }
   }
@@ -614,11 +603,11 @@ int QsoFrn::handleAudioData(unsigned char *data, int len)
       int all_written = 0;
       while (all_written < PCM_FRAME_SIZE)
       {
-        int written = sinkWriteSamples(pcm_samples + all_written, 
+        int written = sinkWriteSamples(pcm_samples + all_written,
             PCM_FRAME_SIZE - all_written);
         if (written == 0)
         {
-          cerr << "cannot write frame to sink, dropping sample " 
+          cerr << "cannot write frame to sink, dropping sample "
                << (PCM_FRAME_SIZE - all_written) << endl;
           break;
         }
@@ -650,23 +639,17 @@ int QsoFrn::handleCommand(unsigned char *data, int len)
   {
     case DT_IDLE:
       sendRequest(RQ_P);
+      setState(STATE_IDLE);
       break;
 
     case DT_DO_TX:
-      if (state == STATE_TX_AUDIO_WAITING)
-      {
-        setState(STATE_TX_AUDIO_APPROVED);
-        tx_wait_timer->setEnable(false);
-      }
+      setState(STATE_TX_AUDIO_APPROVED);
       break;
 
     case DT_VOICE_BUFFER:
-      if (state == STATE_IDLE)
-      {
-        setState(STATE_RX_AUDIO);
-        rx_timeout_timer->setEnable(true);
-        rx_timeout_timer->reset();
-      }
+      setState(STATE_RX_AUDIO);
+      rx_timeout_timer->setEnable(true);
+      rx_timeout_timer->reset();
       break;
 
     case DT_TEXT_MESSAGE:
@@ -755,7 +738,7 @@ int QsoFrn::handleLogin(unsigned char *data, int len, bool stage_one)
         setState(STATE_LOGGING_IN_2);
         cout << "login stage 1 completed: " << line << endl;
       }
-      else 
+      else
       {
         setState(STATE_ERROR);
         cerr << "login stage 1 failed: " << line << endl;
@@ -793,7 +776,7 @@ void QsoFrn::onConnected(void)
 }
 
 
-void QsoFrn::onDisconnected(TcpConnection *conn, 
+void QsoFrn::onDisconnected(TcpConnection *conn,
   TcpConnection::DisconnectReason reason)
 {
   //cout << __FUNCTION__ << " ";
@@ -809,13 +792,13 @@ void QsoFrn::onDisconnected(TcpConnection *conn,
       break;
 
     case TcpConnection::DR_REMOTE_DISCONNECTED:
-      cout << "DR_REMOTE_DISCONNECTED" << ", " 
+      cout << "DR_REMOTE_DISCONNECTED" << ", "
            << conn->disconnectReasonStr(reason) << endl;
       reconnect();
       break;
 
     case TcpConnection::DR_SYSTEM_ERROR:
-      cout << "DR_SYSTEM_ERROR" << ", " 
+      cout << "DR_SYSTEM_ERROR" << ", "
            << conn->disconnectReasonStr(reason) << endl;
       reconnect();
       break;
@@ -867,7 +850,7 @@ int QsoFrn::onDataReceived(TcpConnection *con, void *data, int len)
 
       case STATE_TX_AUDIO:
       case STATE_TX_AUDIO_WAITING:
-      case STATE_IDLE: 
+      case STATE_IDLE:
         bytes_read += handleCommand(p_data, remaining_bytes);
         break;
 
@@ -920,20 +903,10 @@ void QsoFrn::onRxTimeout(Timer *timer)
   sinkFlushSamples();
   rx_timeout_timer->setEnable(false);
   is_receiving_voice = false;
-  setState(STATE_IDLE);
+  //setState(STATE_IDLE);
   sendRequest(RQ_P);
 }
 
-
-void QsoFrn::onTxWaitTimeout(Async::Timer *timer)
-{
-  if (state == STATE_TX_AUDIO_WAITING)
-  {
-    setState(STATE_IDLE);
-    sendRequest(RQ_P);
-    tx_wait_timer->setEnable(false);
-  }
-}
 
 void QsoFrn::onKeepaliveTimeout(Timer *timer)
 {

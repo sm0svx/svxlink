@@ -1,8 +1,8 @@
 /**
-@file	 QsoFrn.h
+@file    QsoFrn.h
 @brief   Free Radio Network (FRN) QSO module
 @author  sh123
-@date	 2014-12-30
+@date    2014-12-30
 
 This file contains a class that implementes the things needed for one
 Frn Qso.
@@ -173,18 +173,18 @@ class QsoFrn
     } Request;
 
     /**
-     * @brief 	Default constuctor
+     * @brief   Default constuctor
      */
     QsoFrn(ModuleFrn *module);
 
     /**
-     * @brief 	Destructor
+     * @brief   Destructor
      */
     virtual ~QsoFrn(void);
 
     /**
      * @brief Call to check if QSO was ctor-ed succesfully
-     * 
+     *
      * @return true if QSO was constructed correctly
      *
      * Call after qso contruction to make sure that it was ctor-ed correctly.
@@ -237,14 +237,14 @@ class QsoFrn
       */
      virtual void flushSamples(void);
 
-     /** 
+     /**
       * @brief Return true if qso is connected to the server
-      * 
+      *
       * @return true if qso is connected
       */
      bool isConnected() const { return state >= STATE_IDLE; }
 
-     /** 
+     /**
       * @brief return number of clients on the channel
       *
       * @return count of clients on the channel including myself
@@ -253,7 +253,7 @@ class QsoFrn
 
      /**
       * @brief Resume audio output to the sink
-      * 
+      *
       * This function will be called when the registered audio sink is ready
       * to accept more samples.
       * This function is normally only called from a connected sink object.
@@ -262,14 +262,14 @@ class QsoFrn
 
      /**
       * @brief Do not send anything to rig
-      * 
+      *
       * @param true to disable audio stream to rig
       */
      void setRfDisabled(bool disabled) { is_rf_disabled = disabled; }
 
      /**
       * @brief Return true if rf tx disabled for the qso
-      * 
+      *
       * @return true if rf tx is disabled
       */
      bool isRfDisabled() const { return is_rf_disabled; }
@@ -307,7 +307,7 @@ class QsoFrn
      */
     std::string stateToString(State state);
 
-    /** 
+    /**
      * @brief Called internally to set new QSO state
      *
      * @param New state to set
@@ -360,7 +360,7 @@ class QsoFrn
 
     /**
      * @brief Initiate connection to FRN server when connection was lost
-     * 
+     *
      * Starts new connection retry. If maximum retry count is reached sets
      * QSO state to error.
      */
@@ -386,7 +386,7 @@ class QsoFrn
      * @brief Sends FRN client request to the server
      *
      * @param Request to send out
-     * 
+     *
      * This method is used to send FRN control request.
      */
     void sendRequest(Request rq);
@@ -466,12 +466,12 @@ class QsoFrn
      * disconnect reason sets the internal QSO state and start
      * reconnection if needed.
      */
-    void onDisconnected(Async::TcpConnection *conn, 
+    void onDisconnected(Async::TcpConnection *conn,
         Async::TcpConnection::DisconnectReason reason);
 
     /**
      * @brief Called when new data is received from FRN server
-     * 
+     *
      * Called when new data is received from FRN server, calls proper
      * handler based on the current state.
      */
@@ -485,7 +485,7 @@ class QsoFrn
     /**
      * @brief Called when no pings were received during timeout time
      *
-     * Initiates reconnection when no pings/data was received from 
+     * Initiates reconnection when no pings/data was received from
      * the FRN serer during timeout time.
      */
     void onConnectTimeout(Async::Timer *timer);
@@ -493,7 +493,7 @@ class QsoFrn
     /**
      * @brief Called when no voice data was received during timeout time
      *
-     * Called when no more voice data is received during timeout time, 
+     * Called when no more voice data is received during timeout time,
      * which is treated as end of voice data receive state.
      */
     void onRxTimeout(Async::Timer *timer);
@@ -516,7 +516,7 @@ class QsoFrn
   private:
     static const int    CLIENT_INDEX_SIZE       = 2;
     static const int    TCP_BUFFER_SIZE         = 65536;
-    static const int    MAX_CONNECT_RETRY_CNT   = 5;
+    static const int    MAX_CONNECT_RETRY_CNT   = 16;
     static const int    FRAME_COUNT             = 5;
     static const int    PCM_FRAME_SIZE          = 160*2;  // WAV49 has 2x
     static const int    GSM_FRAME_SIZE          = 65;     // WAV49 has 65
@@ -525,16 +525,14 @@ class QsoFrn
 
     static const int    CON_TIMEOUT_TIME        = 30000;
     static const int    RX_TIMEOUT_TIME         = 1000;
-    static const int    TX_WAIT_TIMEOUT_TIME    = 2000;
     static const int    KEEPALIVE_TIMEOUT_TIME  = 5000;
- 
+
     bool                init_ok;
 
     Async::TcpClient *  tcp_client;
     Async::Timer *      rx_timeout_timer;
     Async::Timer *      con_timeout_timer;
     Async::Timer *      keepalive_timer;
-    Async::Timer *      tx_wait_timer;
     State               state;
     int                 connect_retry_cnt;
     short               receive_buffer[BUFFER_SIZE];
