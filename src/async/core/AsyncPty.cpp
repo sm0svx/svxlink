@@ -185,7 +185,7 @@ bool Pty::open(void)
     // Open the slave device to keep it open even if the external script
     // close the device. If we do not do this an I/O error will occur
     // if the script close the device.
-  slave = ::open(slave_path, O_RDWR|O_NOCTTY);
+  int slave = ::open(slave_path, O_RDWR|O_NOCTTY);
   if (slave == -1)
   {
     cerr << "*** ERROR: Could not open slave PTY " << slave_path << endl;
