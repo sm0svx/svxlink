@@ -1,11 +1,11 @@
 /**
-@file	 Pty.h
-@brief   A class that wrap up some functionality to use a PTY
+@file	 AsyncPtyStreamBuf.h
+@brief   A stream buffer for writing to a PTY
 @author  Tobias Blomberg / SM0SVX
-@date	 2014-06-07
+@date	 2014-12-20
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Async - A library for programming event driven applications
 Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -24,8 +24,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef PTY_INCLUDED
-#define PTY_INCLUDED
+/** @example AsyncPtyStreamBuf_demo.cpp
+An example of how to use the AsyncPtyStreamBuf class
+*/
+
+
+#ifndef ASYNC_PTY_STREAM_BUF_INCLUDED
+#define ASYNC_PTY_STREAM_BUF_INCLUDED
 
 
 /****************************************************************************
@@ -34,9 +39,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <sigc++/sigc++.h>
-
-#include <string>
+#include <streambuf>
+#include <vector>
 
 
 /****************************************************************************
@@ -61,10 +65,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class FdWatch;
-};
 
 
 /****************************************************************************
@@ -73,8 +73,8 @@ namespace Async
  *
  ****************************************************************************/
 
-//namespace MyNameSpace
-//{
+namespace Async
+{
 
 
 /****************************************************************************
@@ -83,6 +83,7 @@ namespace Async
  *
  ****************************************************************************/
 
+class Pty;
   
 
 /****************************************************************************
@@ -108,83 +109,58 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A wrapper class for using a PTY
+@brief	A stream buffer class to stream characters to a PTY
 @author Tobias Blomberg / SM0SVX
-@date   2014-06-07
+@date   2014-12-20
 
-This class wrap up some functionality that is nice to have when using a PTY.
+This class can be used to write data to a UNIX 98 PTY using the standard
+streaming interface. The typical usage pattern is to first create an instance
+of a Pty. Then an instance of this class is created, the stream buffer. Lastly
+a std::ostream can be created with the stream buffer as an argument to the
+constructor. The std::ostream can then be used as any other output stream.
+
+\include AsyncPtyStreamBuf_demo.cpp
 */
-class Pty : public sigc::trackable
+class PtyStreamBuf : public std::streambuf
 {
   public:
     /**
      * @brief 	Default constructor
+     * @param   pty A previously created PTY object
      */
-    Pty(const std::string &slave_link="");
+    explicit PtyStreamBuf(Pty *pty, std::size_t buf_size=256);
   
     /**
      * @brief 	Destructor
      */
-    ~Pty(void);
+    ~PtyStreamBuf(void);
   
     /**
-     * @brief   Open the PTY
-     * @return  Returns \em true on success or \em false on failure
-     *
-     * Use this function to open the PTY. If the PTY is already open it will
-     * be closed first.
+     * @brief 	A_brief_member_function_description
+     * @param 	param1 Description_of_param1
+     * @return	Return_value_of_this_member_function
      */
-    bool open(void);
-
-    /**
-     * @brief   Close the PTY if it's open
-     *
-     * Close the PTY if it's open. This function is safe to call even if
-     * the PTY is not open or if it's just partly opened.
-     */
-    void close(void);
-
-    /**
-     * @brief   Reopen the PTY
-     * @return  Returns \em true on success or \em false on failure
-     *
-     * Try to reopen the PTY. On failure an error message will be printed
-     * and the PTY will stay closed.
-     */
-    bool reopen(void);
-
-    /**
-     * @brief   Write a command to the PTY
-     * @param   cmd The command to send
-     * @return  Returns \em true on success or \em false on failure
-     */
-    bool write(char cmd);
-
-    /**
-     * @brief   Signal that is emitted when a command has been received
-     * @param   cmd The received command
-     */
-    sigc::signal<void, char> cmdReceived;
+    Pty *pty(void) const { return m_pty; }
     
   protected:
     
   private:
-    std::string     slave_link;
-    int     	    master;
-    int             slave;
-    Async::FdWatch  *watch;
+    Pty *             m_pty;
+    std::vector<char> m_buf;
 
-    Pty(const Pty&);
-    Pty& operator=(const Pty&);
+    PtyStreamBuf(const PtyStreamBuf&);
+    PtyStreamBuf& operator=(const PtyStreamBuf&);
+
+    virtual int_type overflow(int_type ch);
+    virtual int sync(void);
+    bool writeToPty(void);
     
-    void charactersReceived(Async::FdWatch *w);
-
-};  /* class Pty */
+};  /* class PtyStreamBuf */
 
 
-//} /* namespace */
+} /* namespace */
 
-#endif /* PTY_INCLUDED */
+#endif /* ASYNC_PTY_STREAM_BUF_INCLUDED */
 
 
 

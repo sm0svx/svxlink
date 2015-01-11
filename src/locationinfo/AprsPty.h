@@ -1,12 +1,13 @@
 /**
-@file	 PttPty.cpp
-@brief   A PTT hardware controller using a PTY to signal an external script
+@file	 AprsPty.h
+@brief   A interface to receive Aprs messages over a pseudo Tty device
+         to send the information into the Aprs network
 @author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
-@date	 2014-05-05
+@date	 2014-08-05
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2014  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,6 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+#ifndef APRS_PTY_INCLUDED
+#define APRS_PTY_INCLUDED
 
 
 /****************************************************************************
@@ -32,7 +35,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
 
 
 /****************************************************************************
@@ -41,7 +43,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncPty.h>
 
 
 /****************************************************************************
@@ -50,40 +51,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "PttPty.h"
+#include <AsyncPty.h>
+
+
+/****************************************************************************
+ *
+ * Forward declarations
+ *
+ ****************************************************************************/
 
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Namespace
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+using namespace sigc;
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
 
 
 
 /****************************************************************************
  *
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
  *
  ****************************************************************************/
 
@@ -99,75 +97,93 @@ using namespace Async;
 
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
+/**
+@brief   A interface to receive Aprs messages over a pseudo Tty device
+         to send the information into the Aprs network
+@author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
+@date	 2014-08-05
 
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-PttPty::PttPty(void)
-  : pty(0)
+This interface receive messages through a PTY device.  This
+can be used to gateway Aprs messages to the Aprs network
+*/
+class AprsPty
 {
-} /* PttPty::PttPty */
+  public:
+    /**
+     * @brief 	Default constuctor
+     */
+    AprsPty(void) : pty(0) {}
+
+    /**
+     * @brief 	Destructor
+     */
+    ~AprsPty(void)
+    {
+      delete pty;
+    }
+
+    /**
+     * @brief 	Initialize the AprsPty device
+     * @return	Returns \em true on success or else \em false
+     */
+    bool initialize(const std::string link_path)
+    {
+      pty = new Async::Pty(link_path);
+      if (pty == 0)
+      {
+        return false;
+      }
+      pty->dataReceived.connect(sigc::mem_fun(*this, &AprsPty::dataReceived));
+      return pty->open();
+    }
+
+    /*
+    */
+    sigc::signal<void, std::string> messageReceived;
+
+  protected:
+
+  private:
+    Async::Pty      *pty;
+    std::string     message;
+
+    AprsPty(const AprsPty&);
+    AprsPty& operator=(const AprsPty&);
+
+    /**
+     * @brief   Called when a command is received on the master PTY
+     * @param   message The received message
+     *
+     * All other commands are ignored.
+     */
+    void dataReceived(const void *buf, size_t count)
+    {
+      const char *ptr = reinterpret_cast<const char*>(buf);
+      for (size_t i=0; i<count; ++i)
+      {
+        const char &digit = *ptr++;
+        if (digit != '\n')
+        {
+          message += digit;
+        }
+        else
+        {
+          messageReceived(message);
+          message = "";
+        }
+      }
+    } /* dataReceived */
+
+};  /* class AprsPty */
 
 
-PttPty::~PttPty(void)
-{
-  delete pty;
-} /* PttPty::~PttPty */
+//} /* namespace */
 
-
-bool PttPty::initialize(Async::Config &cfg, const std::string name)
-{
-
-  string ptt_pty;
-  if (!cfg.getValue(name, "PTT_PTY", ptt_pty))
-  {
-    cerr << "*** ERROR: Config variable " << name << "/PTT_PTY not set\n";
-    return false;
-  }
-
-  pty = new Pty(ptt_pty);
-  if (pty == 0)
-  {
-    return false;
-  }
-  return pty->open();
-} /* PttPty::initialize */
-
-
-/*
- * This functions sends a character over the pty-device:
- * T  to direct the controller to enable the TX
- * R  to direct the controller to disable the TX
- */
-bool PttPty::setTxOn(bool tx_on)
-{
-  char cmd(tx_on ? 'T' : 'R');
-  return (pty->write(&cmd, 1) != 1);
-} /* PttPty::setTxOn */
-
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
+#endif /* APRS_PTY_INCLUDED */
 
 
 

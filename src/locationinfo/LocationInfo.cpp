@@ -183,6 +183,9 @@ bool LocationInfo::initialize(const Async::Config &cfg, const std::string &cfg_n
   LocationInfo::_instance->sinterval = iv;
   LocationInfo::_instance->startStatisticsTimer(iv*60000);
 
+  value = cfg.getValue(cfg_name, "PTY_PATH");
+  LocationInfo::_instance->initExtPty(value);
+
   if( !init_ok )
   {
     delete LocationInfo::_instance;
@@ -480,7 +483,7 @@ int LocationInfo::calculateRange(const Cfg &cfg)
   }
 
   double tmp = sqrt(2.0 * loc_cfg.height * sqrt((loc_cfg.power / 10.0) *
-                        pow10(loc_cfg.gain / 10.0) / 2)) * range_factor;
+                        pow(10, loc_cfg.gain / 10.0) / 2)) * range_factor;
 
   return lrintf(tmp);
 
@@ -678,6 +681,35 @@ void LocationInfo::sendAprsStatistics(Timer *t)
   }
 } /* LocationInfo::sendAprsStatistics */
 
+
+void LocationInfo::initExtPty(std::string ptydevice)
+{
+  AprsPty *aprspty = new AprsPty();
+  if (!aprspty->initialize(ptydevice))
+  {
+     cout << "*** ERROR: initializing aprs pty device " << ptydevice << endl;
+  }
+  else
+  {
+     aprspty->messageReceived.connect(mem_fun(*this,
+                    &LocationInfo::mesReceived));
+  }
+} /* LocationInfo::initExtPty */
+
+
+void LocationInfo::mesReceived(std::string message)
+{
+  string loc_call = LocationInfo::getCallsign();
+  size_t found = message.find("XXXXXX");
+
+  if (found != std::string::npos)
+  {
+    message.replace(found, 6, loc_call);
+  }
+
+  igateMessage(message);
+  cout << message << endl;
+} /* LocationInfo::mesReceived */
 
 
 /****************************************************************************

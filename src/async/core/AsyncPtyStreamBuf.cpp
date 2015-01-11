@@ -1,11 +1,11 @@
 /**
-@file	 PttPty.cpp
-@brief   A PTT hardware controller using a PTY to signal an external script
-@author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
-@date	 2014-05-05
+@file	 AsyncPtyStreamBuf.cpp
+@brief   A stream buffer for writing to a PTY
+@author  Tobias Blomberg / SM0SVX
+@date	 2014-12-20
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
+Async - A library for programming event driven applications
 Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
@@ -24,14 +24,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
 
+#include <functional>
+#include <cassert>
 #include <iostream>
 
 
@@ -41,7 +41,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncPty.h>
 
 
 /****************************************************************************
@@ -50,8 +49,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "PttPty.h"
-
+#include "AsyncPtyStreamBuf.h"
+#include "AsyncPty.h"
 
 
 /****************************************************************************
@@ -97,6 +96,7 @@ using namespace Async;
 
 
 
+
 /****************************************************************************
  *
  * Local Global Variables
@@ -111,47 +111,19 @@ using namespace Async;
  *
  ****************************************************************************/
 
-PttPty::PttPty(void)
-  : pty(0)
+PtyStreamBuf::PtyStreamBuf(Pty *pty, size_t buf_size)
+  : m_pty(pty), m_buf(buf_size + 1)
 {
-} /* PttPty::PttPty */
+  assert(m_pty != 0);
+  char *base = &m_buf.front();
+  setp(base, base + m_buf.size() - 1);
+} /* PtyStreamBuf::PtyStreamBuf */
 
 
-PttPty::~PttPty(void)
+PtyStreamBuf::~PtyStreamBuf(void)
 {
-  delete pty;
-} /* PttPty::~PttPty */
+} /* PtyStreamBuf::~PtyStreamBuf */
 
-
-bool PttPty::initialize(Async::Config &cfg, const std::string name)
-{
-
-  string ptt_pty;
-  if (!cfg.getValue(name, "PTT_PTY", ptt_pty))
-  {
-    cerr << "*** ERROR: Config variable " << name << "/PTT_PTY not set\n";
-    return false;
-  }
-
-  pty = new Pty(ptt_pty);
-  if (pty == 0)
-  {
-    return false;
-  }
-  return pty->open();
-} /* PttPty::initialize */
-
-
-/*
- * This functions sends a character over the pty-device:
- * T  to direct the controller to enable the TX
- * R  to direct the controller to disable the TX
- */
-bool PttPty::setTxOn(bool tx_on)
-{
-  char cmd(tx_on ? 'T' : 'R');
-  return (pty->write(&cmd, 1) != 1);
-} /* PttPty::setTxOn */
 
 
 
@@ -168,6 +140,37 @@ bool PttPty::setTxOn(bool tx_on)
  * Private member functions
  *
  ****************************************************************************/
+
+PtyStreamBuf::int_type PtyStreamBuf::overflow(int_type ch)
+{
+  if (m_pty->isOpen() && (ch != traits_type::eof()))
+  {
+    assert(std::less_equal<char *>()(pptr(), epptr()));
+    *pptr() = ch;
+    pbump(1);
+    if (writeToPty())
+    {
+      return ch;
+    }
+  }
+
+  return traits_type::eof();
+} /* PtyStreamBuf::overflow */
+
+
+int PtyStreamBuf::sync(void)
+{
+  return (m_pty->isOpen() && writeToPty()) ? 0 : -1;
+} /* PtyStreamBuf::sync */
+
+
+bool PtyStreamBuf::writeToPty(void)
+{
+  ptrdiff_t n = pptr() - pbase();
+  pbump(-n);
+  ssize_t written = m_pty->write(pbase(), n);
+  return (written == n);
+} /* PtyStreamBuf::writeToPty */
 
 
 

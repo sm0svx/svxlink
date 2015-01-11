@@ -176,8 +176,8 @@ class MsgProtoVer : public Msg
     MsgProtoVer(void)
       : Msg(TYPE, sizeof(MsgProtoVer)), m_major(MAJOR),
         m_minor(MINOR) {}
-    uint16_t major(void) const { return m_major; }
-    uint16_t minor(void) const { return m_minor; }
+    uint16_t majorVer(void) const { return m_major; }
+    uint16_t minorVer(void) const { return m_minor; }
   
   private:
     uint16_t m_major;
@@ -260,6 +260,9 @@ class MsgAuthResponse : public Msg
       gcry_error_t err;
       //err = gcry_control(GCRYCTL_INIT_SECMEM, 16384, 0);
       err = gcry_control(GCRYCTL_DISABLE_SECMEM, 0);
+      if (err) goto error;
+        // Tell Libgcrypt that initialization has completed
+      err = gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
       if (err) goto error;
       gcry_md_hd_t hd;
       //printf("gcry_md_open\n");

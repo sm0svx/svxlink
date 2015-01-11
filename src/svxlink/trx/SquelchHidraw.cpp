@@ -1,8 +1,9 @@
 /**
-@file	 Pty.cpp
-@brief   A class that wrap up some functionality to use a PTY
-@author  Tobias Blomberg / SM0SVX
-@date	 2014-06-07
+@file	 SquelchHidraw.cpp
+@brief   A squelch detector that read squelch state from a linux/hidraw
+         device
+@author  Adi Bier / DL1HRC
+@date	 2014-09-17
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -32,15 +33,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <termios.h>
-
-#include <cstdlib>
 #include <cstring>
-#include <iostream>
-#include <cassert>
+#include <cerrno>
+#include <unistd.h>
+#include <fcntl.h>
+#include <linux/hidraw.h>
+#include <sys/ioctl.h>
 
 
 /****************************************************************************
@@ -58,7 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Pty.h"
+#include "SquelchHidraw.h"
 
 
 
@@ -69,6 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 
 
 
@@ -119,124 +118,123 @@ using namespace std;
  *
  ****************************************************************************/
 
-Pty::Pty(const std::string &slave_link)
-  : slave_link(slave_link), master(-1), slave(-1), watch(0)
+SquelchHidraw::SquelchHidraw(void)
+  : fd(-1), watch(0), active_low(false)
 {
-} /* Pty::Pty */
+} /* SquelchHidraw::SquelchHidraw */
 
 
-Pty::~Pty(void)
+SquelchHidraw::~SquelchHidraw(void)
 {
-  close();
-} /* Pty::~Pty */
-
-
-bool Pty::open(void)
-{
-  close();
-
-    // Create the master pty
-  master = posix_openpt(O_RDWR|O_NOCTTY);
-
-  char *slave_path = NULL;
-  if ((master < 0) ||
-      (grantpt(master) < 0) ||
-      (unlockpt(master) < 0) ||
-      (slave_path = ptsname(master)) == NULL)
-  {
-    close();
-    return false;
-  }
-
-    // Turn off line buffering on the PTY (noncanonical mode)
-  struct termios port_settings;
-  memset(&port_settings, 0, sizeof(port_settings));
-  if (tcgetattr(master, &port_settings))
-  {
-    cerr << "*** ERROR: tcgetattr failed for PTY: "
-         << strerror(errno) << endl;
-    close();
-    return false;
-  }
-  port_settings.c_lflag &= ~ICANON;
-  if (tcsetattr(master, TCSANOW, &port_settings) == -1)
-  {
-    cerr << "*** ERROR: tcsetattr failed for PTY: "
-         << strerror(errno) << endl;
-    close();
-    return false;
-  }
-
-    // Open the slave device to keep it open even if the external script
-    // close the device. If we do not do this an I/O error will occur
-    // if the script close the device.
-  int slave = ::open(slave_path, O_RDWR|O_NOCTTY);
-  if (slave == -1)
-  {
-    cerr << "*** ERROR: Could not open slave PTY " << slave_path << endl;
-    close();
-    return false;
-  }
-
-    // Watch the master pty
-  watch = new Async::FdWatch(master, Async::FdWatch::FD_WATCH_RD);
-  assert(watch != 0);
-  watch->activity.connect(mem_fun(*this, &Pty::charactersReceived));
-
-    // Create symlink to make the access for user scripts a bit easier
-  if (!slave_link.empty())
-  {
-    if (symlink(slave_path, slave_link.c_str()) == -1)
-    {
-      cerr << "*** ERROR: Failed to create PTY slave symlink " << slave_path
-           << " -> " << slave_link << endl;
-      close();
-      return false;
-    }
-    cout << "### Created pseudo tty slave link "
-         << slave_path << " -> " << slave_link << endl;
-  }
-
-  return true;
-} /* Pty::open */
-
-
-void Pty::close(void)
-{
-  if (!slave_link.empty())
-  {
-    unlink(slave_link.c_str());
-  }
   delete watch;
-  watch = 0;
-  if (slave >= 0)
+  if (fd >= 0)
   {
-    ::close(slave);
-    slave = -1;
+    close(fd);
+    fd = -1;
   }
-  if (master >= 0)
-  {
-    ::close(master);
-    master = -1;
-  }
-} /* Pty::close */
+} /* SquelchHidraw::~SquelchHidraw */
 
 
-bool Pty::reopen(void)
+/**
+Initializing the sound card as linux/hidraw device
+For further information:
+  http://dmkeng.com
+  http://www.halicky.sk/om3cph/sb/CM108_DataSheet_v1.6.pdf
+  http://www.ti.com/lit/ml/sllu093/sllu093.pdf
+  http://www.ti.com/tool/usb-to-gpio
+*/
+bool SquelchHidraw::initialize(Async::Config& cfg, const std::string& rx_name)
 {
-  if (!open())
+  if (!Squelch::initialize(cfg, rx_name))
   {
-    cerr << "*** ERROR: Failed to reopen the PTY\n";
     return false;
   }
+
+  string devicename;
+  if (!cfg.getValue(rx_name, "HID_DEVICE", devicename))
+  {
+    cerr << "*** ERROR: Config variable " << devicename <<
+            "/HID_DEVICE not set" << endl;
+    return false;
+  }
+
+  string sql_pin;
+  if (!cfg.getValue(rx_name, "HID_SQL_PIN", sql_pin) || sql_pin.empty())
+  {
+    cerr << "*** ERROR: Config variable " << rx_name
+         << "/HID_SQL_PIN not set or invalid\n";
+    return false;
+  }
+
+  if ((sql_pin.size() > 1) && (sql_pin[0] == '!'))
+  {
+    active_low = true;
+    sql_pin.erase(0, 1);
+  }
+
+  map<string, char> pin_mask;
+  pin_mask["VOL_UP"] = 0x01;
+  pin_mask["VOL_DN"] = 0x02;
+  pin_mask["MUTE_PLAY"] = 0x04;
+  pin_mask["MUTE_REC"] = 0x08;
+
+  map<string, char>::iterator it = pin_mask.find(sql_pin);
+  if (it == pin_mask.end())
+  {
+    cerr << "*** ERROR: Invalid value for " << rx_name << "/HID_SQL_PIN="
+         << sql_pin << ", must be VOL_UP, VOL_DN, MUTE_PLAY, MUTE_REC" << endl;
+    return false;
+  }
+  pin = (*it).second;
+
+  if ((fd = open(devicename.c_str(), O_RDWR, 0)) < 0)
+  {
+    cout << "*** ERROR: Could not open event device " << devicename
+         << " specified in " << rx_name << "/HID_DEVICE: "
+         << strerror(errno) << endl;
+    return false;
+  }
+
+  struct hidraw_devinfo hiddevinfo;
+  if ((ioctl(fd, HIDIOCGRAWINFO, &hiddevinfo) != -1) &&
+      (hiddevinfo.vendor == 0x0d8c))
+  {
+    cout << "--- Hidraw sound chip is ";
+    if (hiddevinfo.product == 0x000c)
+    {
+      cout << "CM108";
+    }
+    else if (hiddevinfo.product == 0x013c)
+    {
+      cout << "CM108A";
+    }
+    else if (hiddevinfo.product == 0x000e)
+    {
+      cout << "CM109";
+    }
+    else if (hiddevinfo.product == 0x013a)
+    {
+      cout << "CM119";
+    }
+    else
+    {
+      cout << "unknown";
+    }
+    cout << endl;
+  }
+  else
+  {
+    cout << "*** ERROR: unknown/unsupported sound chip detected...\n";
+    return false;
+  }
+
+  watch = new Async::FdWatch(fd, Async::FdWatch::FD_WATCH_RD);
+  assert(watch != 0);
+  watch->activity.connect(mem_fun(*this, &SquelchHidraw::hidrawActivity));
+
   return true;
-} /* Pty::reopen */
+}
 
-
-bool Pty::write(char cmd)
-{
-  return (::write(master, &cmd, 1) == 1);
-} /* Pty::write */
 
 
 /****************************************************************************
@@ -254,26 +252,31 @@ bool Pty::write(char cmd)
  ****************************************************************************/
 
 /**
- * @brief   Called when characters are received on the master PTY
- * @param   w The watch that triggered the event
+ * @brief  Called when state of Hidraw port has been changed
+ *
  */
-void Pty::charactersReceived(Async::FdWatch *w)
+void SquelchHidraw::hidrawActivity(FdWatch *watch)
 {
-  char cmd;
-  int rd = read(w->fd(), &cmd, 1);
-  if (rd != 1)
+  char buf[5];
+  int rd = read(fd, buf, sizeof(buf));
+  if (rd < 0)
   {
-    std::cerr << "*** ERROR: Failed to read master PTY: "
-              << std::strerror(errno) << ". "
-              << "Trying to reopen the PTY.\n";
-    reopen();
+    cerr << "*** ERROR: reading HID_DEVICE\n";
     return;
   }
-  cmdReceived(cmd);
-} /* Pty::charactersReceived */
+
+  if (!signalDetected() && (buf[0] & pin))
+  {
+    setSignalDetected(active_low ^ true);
+  }
+  else if (signalDetected() && !(buf[0] & pin))
+  {
+    setSignalDetected(active_low ^ false);
+  }
+} /* SquelchHidraw::hidrawActivity */
+
 
 
 /*
  * This file has not been truncated
  */
-

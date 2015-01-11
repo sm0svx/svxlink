@@ -1,3 +1,14 @@
+ 1.4.0 -- ?? ??? 2015
+----------------------
+
+* New class Async::Pty used to communicate over UNIX 98 PTY:s.
+
+* Bugfix in Async::CppApplication: The max_desc variable used in the call to
+  pselect was not correctly set up in some cases after a removal of a file
+  descriptor watch.
+
+
+
  1.3.0 -- 02 Aug 2014
 ----------------------
 

@@ -1,8 +1,8 @@
 /**
-@file	 PttPty.cpp
-@brief   A PTT hardware controller using a PTY to signal an external script
-@author  Tobias Blomberg / SM0SVX & Steve Koehler / DH1DM & Adi Bier / DL1HRC
-@date	 2014-05-05
+@file	 SquelchHidraw.h
+@brief   A squelch detector that read squelch state from a Hidraw device
+@author  Adi Bier / DL1HRC
+@date	 2014-08-28
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -24,6 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
+#ifndef SQUELCH_HIDRAW_INCLUDED
+#define SQUELCH_HIDRAW_INCLUDED
 
 
 /****************************************************************************
@@ -32,7 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
+#include <string>
+#include <sigc++/sigc++.h>
 
 
 /****************************************************************************
@@ -41,7 +44,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncPty.h>
 
 
 /****************************************************************************
@@ -50,40 +52,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "PttPty.h"
-
+#include "Squelch.h"
 
 
 /****************************************************************************
  *
- * Namespaces to use
+ * Forward declarations
  *
  ****************************************************************************/
 
-using namespace std;
-using namespace Async;
+namespace Async
+{
+  class Timer;
+};
+
+
+/****************************************************************************
+ *
+ * Namespace
+ *
+ ****************************************************************************/
+
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
+ * Forward declarations of classes inside of the declared namespace
+ *
+ ****************************************************************************/
 
 
 
 /****************************************************************************
  *
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Local class definitions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Prototypes
  *
  ****************************************************************************/
 
@@ -99,75 +103,58 @@ using namespace Async;
 
 /****************************************************************************
  *
- * Local Global Variables
+ * Class definitions
  *
  ****************************************************************************/
 
+/**
+@brief	A squelch detector that read squelch state from a Hidraw device
+@author Adi Bier / DL1HRC
+@date   2014-08-28
 
-
-/****************************************************************************
- *
- * Public member functions
- *
- ****************************************************************************/
-
-PttPty::PttPty(void)
-  : pty(0)
+This squelch detector read the squelch indicator signal from a Hidraw pin.
+A high level (>3.3V) will be interpreted as squelch open and a low level (GND)
+will be interpreted as squelch close.
+*/
+class SquelchHidraw : public Squelch
 {
-} /* PttPty::PttPty */
+  public:
+    /**
+     * @brief 	Default constuctor
+     */
+    SquelchHidraw(void);
+
+    /**
+     * @brief 	Destructor
+     */
+    ~SquelchHidraw(void);
+
+    /**
+     * @brief 	Initialize the squelch detector
+     * @param 	cfg A previsously initialized config object
+     * @param 	rx_name The name of the RX (config section name)
+     * @return	Returns \em true on success or else \em false
+     */
+    bool initialize(Async::Config& cfg, const std::string& rx_name);
+
+  protected:
+
+  private:
+    int             fd;
+    Async::FdWatch  *watch;
+    bool            active_low;
+    char            pin;
+
+    SquelchHidraw(const SquelchHidraw&);
+    SquelchHidraw& operator=(const SquelchHidraw&);
+    void hidrawActivity(Async::FdWatch *watch);
+
+};  /* class SquelchGpio */
 
 
-PttPty::~PttPty(void)
-{
-  delete pty;
-} /* PttPty::~PttPty */
+//} /* namespace */
 
-
-bool PttPty::initialize(Async::Config &cfg, const std::string name)
-{
-
-  string ptt_pty;
-  if (!cfg.getValue(name, "PTT_PTY", ptt_pty))
-  {
-    cerr << "*** ERROR: Config variable " << name << "/PTT_PTY not set\n";
-    return false;
-  }
-
-  pty = new Pty(ptt_pty);
-  if (pty == 0)
-  {
-    return false;
-  }
-  return pty->open();
-} /* PttPty::initialize */
-
-
-/*
- * This functions sends a character over the pty-device:
- * T  to direct the controller to enable the TX
- * R  to direct the controller to disable the TX
- */
-bool PttPty::setTxOn(bool tx_on)
-{
-  char cmd(tx_on ? 'T' : 'R');
-  return (pty->write(&cmd, 1) != 1);
-} /* PttPty::setTxOn */
-
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
+#endif /* SQUELCH_HIDRAW_INCLUDED */
 
 
 
