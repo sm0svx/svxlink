@@ -513,10 +513,16 @@ class QsoFrn
      */
     void onKeepaliveTimeout(Async::Timer *timer);
 
+    /**
+     * @brief Delayed reconnect timer callback
+     *
+     * Called to start delayed reconnection to FRN server
+     */
+    void onDelayedReconnect(Async::Timer *timer);
+
   private:
     static const int    CLIENT_INDEX_SIZE       = 2;
     static const int    TCP_BUFFER_SIZE         = 65536;
-    static const int    MAX_CONNECT_RETRY_CNT   = 16;
     static const int    FRAME_COUNT             = 5;
     static const int    PCM_FRAME_SIZE          = 160*2;  // WAV49 has 2x
     static const int    GSM_FRAME_SIZE          = 65;     // WAV49 has 65
@@ -527,12 +533,17 @@ class QsoFrn
     static const int    RX_TIMEOUT_TIME         = 1000;
     static const int    KEEPALIVE_TIMEOUT_TIME  = 5000;
 
+    static const int    MAX_CONNECT_RETRY_CNT   = 5;
+    static const int    RECONNECT_TIMEOUT_TIME  = 2000;
+    static const int    RECONNECT_BACKOFF       = 5;
+
     bool                init_ok;
 
     Async::TcpClient *  tcp_client;
     Async::Timer *      rx_timeout_timer;
     Async::Timer *      con_timeout_timer;
     Async::Timer *      keepalive_timer;
+    Async::Timer *      reconnect_timer;
     State               state;
     int                 connect_retry_cnt;
     short               receive_buffer[BUFFER_SIZE];
@@ -544,6 +555,7 @@ class QsoFrn
     FrnList             client_list;
     bool                is_receiving_voice;
     bool                is_rf_disabled;
+    int                 reconnect_timeout_ms;
 
     bool                opt_frn_debug;
     std::string         opt_server;

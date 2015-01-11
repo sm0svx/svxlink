@@ -133,6 +133,7 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   , rx_timeout_timer(new Timer(RX_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , con_timeout_timer(new Timer(CON_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
   , keepalive_timer(new Timer(KEEPALIVE_TIMEOUT_TIME, Timer::TYPE_PERIODIC))
+  , reconnect_timer(new Timer(KEEPALIVE_TIMEOUT_TIME, Timer::TYPE_ONESHOT))
   , state(STATE_DISCONNECTED)
   , connect_retry_cnt(0)
   , send_buffer_cnt(0)
@@ -140,6 +141,7 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   , lines_to_read(-1)
   , is_receiving_voice(false)
   , is_rf_disabled(false)
+  , reconnect_timeout_ms(RECONNECT_TIMEOUT_TIME)
   , opt_frn_debug(false)
 {
   assert(module != 0);
@@ -256,6 +258,10 @@ QsoFrn::QsoFrn(ModuleFrn *module)
   keepalive_timer->setEnable(true);
   keepalive_timer->expired.connect(
       mem_fun(*this, &QsoFrn::onKeepaliveTimeout));
+
+  reconnect_timer->setEnable(false);
+  reconnect_timer->expired.connect(
+      mem_fun(*this, &QsoFrn::onDelayedReconnect));
 
   init_ok = true;
 }
@@ -507,14 +513,15 @@ void QsoFrn::sendVoiceData(short *data, int len)
 
 void QsoFrn::reconnect(void)
 {
+  reconnect_timeout_ms *= RECONNECT_BACKOFF;
   if (connect_retry_cnt++ < MAX_CONNECT_RETRY_CNT)
   {
-    cout << "reconnecting " << connect_retry_cnt << endl;
+    cout << "reconnecting #" << connect_retry_cnt << endl;
     connect();
   }
   else
   {
-    cerr << "failed to connect " << MAX_CONNECT_RETRY_CNT << " times" << endl;
+    cerr << "failed to reconnect " << MAX_CONNECT_RETRY_CNT << " times" << endl;
     setState(STATE_ERROR);
   }
 }
@@ -771,6 +778,7 @@ void QsoFrn::onConnected(void)
   setState(STATE_CONNECTED);
 
   connect_retry_cnt = 0;
+  reconnect_timeout_ms = RECONNECT_TIMEOUT_TIME;
   con_timeout_timer->setEnable(true);
   login();
 }
@@ -780,6 +788,8 @@ void QsoFrn::onDisconnected(TcpConnection *conn,
   TcpConnection::DisconnectReason reason)
 {
   //cout << __FUNCTION__ << " ";
+  bool needs_reconnect = false;
+
   setState(STATE_DISCONNECTED);
 
   con_timeout_timer->setEnable(false);
@@ -788,19 +798,19 @@ void QsoFrn::onDisconnected(TcpConnection *conn,
   {
     case TcpConnection::DR_HOST_NOT_FOUND:
       cout << "DR_HOST_NOT_FOUND" << endl;
-      setState(STATE_ERROR);
+      needs_reconnect = true;
       break;
 
     case TcpConnection::DR_REMOTE_DISCONNECTED:
       cout << "DR_REMOTE_DISCONNECTED" << ", "
            << conn->disconnectReasonStr(reason) << endl;
-      reconnect();
+      needs_reconnect = true;
       break;
 
     case TcpConnection::DR_SYSTEM_ERROR:
       cout << "DR_SYSTEM_ERROR" << ", "
            << conn->disconnectReasonStr(reason) << endl;
-      reconnect();
+      needs_reconnect = true;
       break;
 
     case TcpConnection::DR_RECV_BUFFER_OVERFLOW:
@@ -816,6 +826,14 @@ void QsoFrn::onDisconnected(TcpConnection *conn,
       cout << "DR_UNKNOWN" << endl;
       setState(STATE_ERROR);
       break;
+  }
+
+  if (needs_reconnect)
+  {
+    cout << "reconnecting in " << reconnect_timeout_ms << " ms" << endl;
+    reconnect_timer->setEnable(true);
+    reconnect_timer->setTimeout(reconnect_timeout_ms);
+    reconnect_timer->reset();
   }
 }
 
@@ -939,6 +957,11 @@ void QsoFrn::onFrnClientListReceived(const FrnList &list)
   client_list = list;
 }
 
+
+void QsoFrn::onDelayedReconnect(Async::Timer *timer)
+{
+  reconnect();
+}
 
 /*
  * This file has not been truncated
