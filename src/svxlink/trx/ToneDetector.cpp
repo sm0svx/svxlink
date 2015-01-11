@@ -335,7 +335,7 @@ void ToneDetector::setDetectPeakThresh(float thresh)
 {
   if (thresh > 0.0f)
   {
-    det_par->peak_thresh = exp10f(thresh/10.0f);
+    det_par->peak_thresh = powf(10, thresh/10.0f);
   }
   else
   {
@@ -348,7 +348,7 @@ void ToneDetector::setUndetectPeakThresh(float thresh)
 {
   if (thresh > 0.0f)
   {
-    undet_par->peak_thresh = exp10f(thresh/10.0f);
+    undet_par->peak_thresh = powf(10, thresh/10.0f);
   }
   else
   {

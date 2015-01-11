@@ -14,10 +14,15 @@ set(LIBSRC
   SigLevDetTone.cpp Sel5Decoder.cpp SwSel5Decoder.cpp
   SquelchEvDev.cpp Macho.cpp SquelchGpio.cpp Ptt.cpp
   PttGpio.cpp PttSerialPin.cpp PttPty.cpp
-  PtyDtmfDecoder.cpp PttHidraw.cpp SquelchHidraw.cpp
-  LocalRxBase.cpp Ddr.cpp RtlTcp.cpp WbRxRtlTcp.cpp
-  SigLevDet.cpp SigLevDetDdr.cpp
+  PtyDtmfDecoder.cpp LocalRxBase.cpp Ddr.cpp RtlTcp.cpp
+  WbRxRtlTcp.cpp SigLevDet.cpp SigLevDetDdr.cpp
 )
+include (CheckSymbolExists)
+CHECK_SYMBOL_EXISTS(HIDIOCGRAWINFO linux/hidraw.h HAS_HIDRAW_SUPPORT)
+if (HAS_HIDRAW_SUPPORT)
+  set (LIBSRC ${LIBSRC} PttHidraw.cpp SquelchHidraw.cpp)
+  add_definitions(-DHAS_HIDRAW_SUPPORT)
+endif (HAS_HIDRAW_SUPPORT)
 
 # Which other libraries this library depends on
 #set(LIBS ${LIBS} asynccore)
