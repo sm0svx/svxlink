@@ -2,6 +2,7 @@
 add_custom_target(doc)
 
 # Add targets to generate API documentation with Doxygen if it's installed
+if(NOT QT_ONLY)
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
   configure_file(doxygen.echolib.in doxygen.echolib @ONLY)
@@ -32,5 +33,6 @@ if(DOXYGEN_FOUND)
     "echolib;async"
     )
 endif(DOXYGEN_FOUND)
+endif(NOT QT_ONLY)
 
 add_subdirectory(man)

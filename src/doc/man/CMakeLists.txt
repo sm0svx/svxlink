@@ -1,9 +1,16 @@
 # Set up which man pages to build and install
-set(MAN_PAGES svxlink.1 remotetrx.1 siglevdetcal.1 svxlink.conf.5
-  ModuleHelp.conf.5 remotetrx.conf.5 ModuleParrot.conf.5 ModuleEchoLink.conf.5
-  ModuleTclVoiceMail.conf.5 ModuleDtmfRepeater.conf.5
-  ModulePropagationMonitor.conf.5 ModuleSelCallEnc.conf.5 qtel.1
-)
+if(QT_ONLY)
+  set(MAN_PAGES qtel.1)
+else(QT_ONLY)
+  set(MAN_PAGES svxlink.1 remotetrx.1 siglevdetcal.1 svxlink.conf.5
+    ModuleHelp.conf.5 remotetrx.conf.5 ModuleParrot.conf.5 ModuleEchoLink.conf.5
+    ModuleTclVoiceMail.conf.5 ModuleDtmfRepeater.conf.5
+    ModulePropagationMonitor.conf.5 ModuleSelCallEnc.conf.5
+  )
+  if(USE_QT)
+    set(MAN_PAGES ${MAN_PAGES} qtel.1)
+  endif(USE_QT)
+endif(QT_ONLY)
 
 # Search for the gzip and groff programs. Error out if not found.
 include(FindGZIP)

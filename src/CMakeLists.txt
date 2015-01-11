@@ -37,6 +37,7 @@ set(RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 # Optional parts
+option(QT_ONLY "Only Build Qt applications and libs" OFF)
 option(USE_QT "Build Qt applications and libs" ON)
 option(BUILD_STATIC_LIBS "Build static libraries in addition to dynamic" OFF)
 
@@ -45,12 +46,6 @@ if(NOT DEFINED INTERNAL_SAMPLE_RATE)
   set(INTERNAL_SAMPLE_RATE 16000)
 endif(NOT DEFINED INTERNAL_SAMPLE_RATE)
 add_definitions(-DINTERNAL_SAMPLE_RATE=${INTERNAL_SAMPLE_RATE})
-
-# Set up include directories
-include_directories(
-  ${PROJECT_INCLUDE_DIR}
-  ${CMAKE_BINARY_DIR}
-)
 
 # Warnings should be enabled for GCC. Also turning off the NDEBUG flag
 # since that remove asserts.
@@ -82,6 +77,15 @@ endif(NOT CMAKE_BUILD_TYPE)
 if(NOT DEFINED INCLUDE_INSTALL_DIR)
   set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
 endif(NOT DEFINED INCLUDE_INSTALL_DIR)
+
+# Set up include directories
+include_directories(
+  ${PROJECT_INCLUDE_DIR}
+  ${CMAKE_BINARY_DIR}
+if(QT_ONLY)
+  ${INCLUDE_INSTALL_DIR}/svxlink
+endif(QT_ONLY)
+)
 
 # Where to install libraries
 if(NOT DEFINED LIB_INSTALL_DIR)
@@ -312,10 +316,12 @@ include(FindCHOWN)
 
 # Add directories to build
 add_subdirectory(async)
+if(NOT QT_ONLY)
 add_subdirectory(misc)
 add_subdirectory(echolib)
 add_subdirectory(locationinfo)
 add_subdirectory(svxlink)
+endif(NOT QT_ONLY)
 if(USE_QT)
   add_subdirectory(qtel)
 endif(USE_QT)

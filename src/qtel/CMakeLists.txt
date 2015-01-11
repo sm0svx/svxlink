@@ -16,7 +16,14 @@ set(FORMS MainWindowBase.ui ComDialogBase.ui SettingsDialogBase.ui)
 set(RESOURCES qtel.qrc)
 
 # Libraries
+if(QT_ONLY)
+find_library(ASYNCCORE_LIB asynccore ${LIB_INSTALL_DIR})
+find_library(ASYNCAUDIO_LIB asyncaudio ${LIB_INSTALL_DIR})
+find_library(ECHOLIB_LIB echolib ${LIB_INSTALL_DIR})
+set(LIBS ${LIBS} ${ECHOLIB_LIB} asyncqt ${ASYNCAUDIO_LIB} ${ASYNCCORE_LIB})
+else(QT_ONLY)
 set(LIBS ${LIBS} echolib asyncqt asyncaudio asynccore)
+endif(QT_ONLY)
 
 # Find the GSM codec library and include directory
 find_package(GSM REQUIRED)

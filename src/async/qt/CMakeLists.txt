@@ -6,7 +6,12 @@ set(LIBSRC AsyncQtApplication.cpp AsyncQtDnsLookupWorker.cpp)
 
 set(QTHEADERS AsyncQtApplication.h AsyncQtTimer.h AsyncQtDnsLookupWorker.h)
 
+if(QT_ONLY)
+find_library(ASYNCCORE_LIB asynccore ${LIB_INSTALL_DIR})
+set(LIBS ${LIBS} ${ASYNCCORE_LIB})
+else(QT_ONLY)
 set(LIBS ${LIBS} asynccore)
+endif(QT_ONLY)
 
 # Copy exported include files to the global include directory
 foreach(incfile ${EXPINC})
