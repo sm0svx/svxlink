@@ -222,14 +222,7 @@ class Dispatcher : public sigc::trackable
       CtrlInputHandler	cih;
       AudioInputHandler aih;
     } ConData;
-    struct ipaddr_lt
-    {
-      bool operator()(const Async::IpAddress& a1, const Async::IpAddress& a2)
-      {
-	return a1 < a2;
-      }
-    };
-    typedef std::map<Async::IpAddress, ConData, ipaddr_lt> ConMap;
+    typedef std::map<Async::IpAddress, ConData> ConMap;
     
     static const int  	DEFAULT_PORT_BASE = 5198;
     
