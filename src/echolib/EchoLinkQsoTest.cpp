@@ -246,7 +246,7 @@ void EchoLinkQsoTest::handleChatMode(void)
     buf = "";
     putchar('\n');
   }
-  else if ((ch == '\033') && (ch == EOF))  // ESC or CTRL-D pressed
+  else if ((ch == '\033') || (ch == EOF))  // ESC or CTRL-D pressed
   {
     cout << "Exiting chat mode\n";
     printPrompt();
