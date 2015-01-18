@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -399,6 +399,7 @@ void QsoRecorder::cleanupDirectory(void)
     free(namelist[idx]);
 
     struct stat buf;
+      // coverity[fs_check_call]
     if (stat(path.c_str(), &buf) < 0)
     {
       perror("QsoRecorder stat");
