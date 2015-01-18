@@ -121,7 +121,8 @@ class SquelchSigLev : public Squelch
     /**
      * @brief 	Default constuctor
      */
-    SquelchSigLev(SigLevDet *det) : sig_lev_det(det) {}
+    SquelchSigLev(SigLevDet *det)
+      : sig_lev_det(det), open_thresh(0), close_thresh(0) {}
 
     /**
      * @brief 	Destructor

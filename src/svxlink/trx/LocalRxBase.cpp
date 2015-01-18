@@ -235,7 +235,7 @@ LocalRxBase::LocalRxBase(Config &cfg, const std::string& name)
     squelch_det(0), siglevdet(0), /* siglev_offset(0.0), siglev_slope(1.0), */
     tone_dets(0), sql_valve(0), delay(0), mute_dtmf(false), sql_tail_elim(0),
     preamp_gain(0), mute_valve(0), sql_hangtime(0), sql_extended_hangtime(0),
-    sql_extended_hangtime_thresh(0)
+    sql_extended_hangtime_thresh(0), input_fifo(0)
 {
 } /* LocalRxBase::LocalRxBase */
 
