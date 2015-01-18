@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <cstdlib>
 #include <vector>
+#include <sstream>
 
 
 /****************************************************************************
@@ -766,10 +767,9 @@ static bool logfile_open(void)
   logfd = open(logfile_name, O_WRONLY | O_APPEND | O_CREAT, 00644);
   if (logfd == -1)
   {
-    char str[256] = "open(\"";
-    strcat(str, logfile_name);
-    strcat(str, "\")");
-    perror(str);
+    ostringstream ss;
+    ss << "open(\"" << logfile_name << "\")";
+    perror(ss.str().c_str());
     return false;
   }
 
