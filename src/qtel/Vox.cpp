@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -116,7 +116,8 @@ using namespace Async;
  ****************************************************************************/
 
 Vox::Vox(void)
-  : m_threshold(0), m_vox_timer(0), m_vox_state(IDLE), m_enabled(false)
+  : m_threshold(0), m_delay(0), m_vox_timer(0), m_vox_state(IDLE),
+    m_enabled(false)
 {
   m_vox_timer = new QTimer;
   connect(m_vox_timer, SIGNAL(timeout()),

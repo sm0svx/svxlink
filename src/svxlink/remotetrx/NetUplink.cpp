@@ -124,10 +124,10 @@ using namespace NetTrxMsg;
 NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
       	      	     const string& port_str)
   : server(0), con(0), recv_cnt(0), recv_exp(0), rx(rx), tx(tx), fifo(0),
-    cfg(cfg), name(name), heartbeat_timer(0), audio_enc(0), audio_dec(0),
-    loopback_con(0), rx_splitter(0), tx_selector(0), state(STATE_DISC),
-    mute_tx_timer(0), tx_muted(false), fallback_enabled(false),
-    tx_ctrl_mode(Tx::TX_OFF)
+    cfg(cfg), name(name), last_msg_timestamp(), heartbeat_timer(0),
+    audio_enc(0), audio_dec(0), loopback_con(0), rx_splitter(0),
+    tx_selector(0), state(STATE_DISC), mute_tx_timer(0), tx_muted(false),
+    fallback_enabled(false), tx_ctrl_mode(Tx::TX_OFF)
 {
   heartbeat_timer = new Timer(10000);
   heartbeat_timer->setEnable(false);

@@ -211,21 +211,19 @@ Settings *Settings::instance(void)
 
 
 Settings::Settings(void)
-  : dialog(0)
+  : dialog(0),
+    m_list_refresh_time(CONF_LIST_REFRESH_TIME_DEFAULT),
+    m_start_as_busy(CONF_START_AS_BUSY_DEFAULT),
+    m_proxy_enabled(CONF_PROXY_ENABLED_DEFAULT),
+    m_proxy_port(CONF_PROXY_PORT_DEFAULT),
+    m_use_full_duplex(CONF_USE_FULL_DUPLEX_DEFAULT),
+    m_card_sample_rate(CONF_CARD_SAMPLE_RATE_DEFAULT),
+    m_chat_encoding(0),
+    m_vox_enabled(CONF_VOX_ENABLED_DEFAULT),
+    m_vox_threshold(CONF_VOX_THRESHOLD_DEFAULT),
+    m_vox_delay(CONF_VOX_DELAY_DEFAULT)
 {
-  encodings.push_back(Encoding("Big5", SettingsDialog::trUtf8("Chinese")));
-  encodings.push_back(Encoding("Big5-HKSCS", SettingsDialog::trUtf8("Chinese")));
-  encodings.push_back(Encoding("eucJP", SettingsDialog::trUtf8("Japanese")));
-  encodings.push_back(Encoding("eucKR", SettingsDialog::trUtf8("Korean")));
-  encodings.push_back(Encoding("GB2312", SettingsDialog::trUtf8("Chinese")));
-  encodings.push_back(Encoding("GBK", SettingsDialog::trUtf8("Chinese")));
-  encodings.push_back(Encoding("GB18030", SettingsDialog::trUtf8("Chinese")));
-  encodings.push_back(Encoding("JIS7", SettingsDialog::trUtf8("Japanese")));
-  encodings.push_back(Encoding("Shift-JIS", SettingsDialog::trUtf8("Japanese")));
-  encodings.push_back(Encoding("TSCII", SettingsDialog::trUtf8("Tamil")));
-  encodings.push_back(Encoding("utf8", SettingsDialog::trUtf8("Unicode, 8-bit")));
-  encodings.push_back(Encoding("KOI8-R", SettingsDialog::trUtf8("Russian")));
-  encodings.push_back(Encoding("KOI8-U", SettingsDialog::trUtf8("Ukrainian")));
+    // The default encoding should be first in the list
   encodings.push_back(Encoding("ISO8859-1", SettingsDialog::trUtf8("Western")));
   encodings.push_back(Encoding("ISO8859-2", SettingsDialog::trUtf8("Central European")));
   encodings.push_back(Encoding("ISO8859-3", SettingsDialog::trUtf8("Central European")));
@@ -242,6 +240,19 @@ Settings::Settings(void)
   encodings.push_back(Encoding("ISO8859-13"));
   encodings.push_back(Encoding("ISO8859-14"));
   encodings.push_back(Encoding("ISO8859-15", SettingsDialog::trUtf8("Western")));
+  encodings.push_back(Encoding("utf8", SettingsDialog::trUtf8("Unicode, 8-bit")));
+  encodings.push_back(Encoding("Big5", SettingsDialog::trUtf8("Chinese")));
+  encodings.push_back(Encoding("Big5-HKSCS", SettingsDialog::trUtf8("Chinese")));
+  encodings.push_back(Encoding("eucJP", SettingsDialog::trUtf8("Japanese")));
+  encodings.push_back(Encoding("eucKR", SettingsDialog::trUtf8("Korean")));
+  encodings.push_back(Encoding("GB2312", SettingsDialog::trUtf8("Chinese")));
+  encodings.push_back(Encoding("GBK", SettingsDialog::trUtf8("Chinese")));
+  encodings.push_back(Encoding("GB18030", SettingsDialog::trUtf8("Chinese")));
+  encodings.push_back(Encoding("JIS7", SettingsDialog::trUtf8("Japanese")));
+  encodings.push_back(Encoding("Shift-JIS", SettingsDialog::trUtf8("Japanese")));
+  encodings.push_back(Encoding("TSCII", SettingsDialog::trUtf8("Tamil")));
+  encodings.push_back(Encoding("KOI8-R", SettingsDialog::trUtf8("Russian")));
+  encodings.push_back(Encoding("KOI8-U", SettingsDialog::trUtf8("Ukrainian")));
   encodings.push_back(Encoding("IBM850"));
   encodings.push_back(Encoding("IBM866"));
   encodings.push_back(Encoding("CP874"));

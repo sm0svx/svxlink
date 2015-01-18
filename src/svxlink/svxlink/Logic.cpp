@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -157,8 +157,10 @@ Logic::Logic(Config &cfg, const string& name)
     exec_cmd_on_sql_close_timer(0),         rgr_sound_timer(0),
     rgr_sound_delay(-1),                    report_ctcss(0.0f),
     event_handler(0),                       recorder(0),
-    tx_audio_mixer(0),                      tx_audio_selector(0),
-    rx_splitter(0),                         audio_from_module_selector(0),
+    tx_audio_mixer(0),                      fx_gain_ctrl(0),
+    tx_audio_selector(0),
+    rx_splitter(0),                         rx_valve(0),
+    rpt_valve(0),                           audio_from_module_selector(0),
     audio_to_module_splitter(0),            audio_to_module_selector(0),
     state_det(0),                           is_idle(true),
     fx_gain_normal(0),                      fx_gain_low(-12),

@@ -9,7 +9,7 @@ A module (plugin) to request the latest METAR (weather) information from
 by using ICAO shortcuts.
 Look at http://en.wikipedia.org/wiki/METAR for further information
 
-Copyright (C) 2009  Tobias Blomberg / SM0SVX ( & Adi )
+Copyright (C) 2009-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -218,8 +218,9 @@ extern "C" {
  ****************************************************************************/
 
 
-ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic, const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), con(0)
+ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic,
+                                 const string& cfg_name)
+  : Module(dl_handle, logic, cfg_name), remarks(false), debug(false), con(0)
 {
   cout << "\tModule MetarInfo v" MODULE_METARINFO_VERSION " starting...\n";
 
