@@ -82,6 +82,7 @@ class NoiseGenerator : public Async::AudioSource
 	float buf[BLOCK_SIZE];
 	for (int i=0; i<BLOCK_SIZE; ++i)
 	{
+            // coverity[dont_call]
       	  buf[i] = level * static_cast<float>(rand()) / RAND_MAX;
 	}
 	written = sinkWriteSamples(buf, BLOCK_SIZE);
