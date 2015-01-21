@@ -1343,8 +1343,8 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
 	processEvent(ss.str());
 	return;
       }
-      qsos.erase(it);
       qso = *it;
+      qsos.erase(it);
       qsos.push_back(qso);
       break;
     }
