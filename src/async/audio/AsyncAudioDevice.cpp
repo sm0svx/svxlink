@@ -141,12 +141,12 @@ AudioDevice *AudioDevice::registerAudioIO(const string& dev_designator,
   AudioDevice *dev = 0;
   if (devices.count(dev_designator) == 0)
   {
-    dev = AudioDeviceFactory::instance()->create(dev_type, dev_name);
+    dev = AudioDeviceFactory::instance().create(dev_type, dev_name);
     if (dev == 0)
     {
       cerr << "*** ERROR: Unknown audio device type \"" << dev_type << "\" "
               "given. Valid device types: "
-           << AudioDeviceFactory::instance()->validDevTypes() << endl;
+           << AudioDeviceFactory::instance().validDevTypes() << endl;
       return 0;
     }
 
