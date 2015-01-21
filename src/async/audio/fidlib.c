@@ -2158,7 +2158,7 @@ fid_parse(double rate, char **pp, FidFilter **ffp) {
    double val;
    char dmy;
 
-#define ERR(ptr, msg) { *pp= ptr; *ffp= 0; return msg; }
+#define ERR(ptr, msg) { free(rv); *pp= ptr; *ffp= 0; return msg; }
 #define INCBUF { tmp= realloc(rv, (rvend-rv) * 2); if (!tmp) error("Out of memory"); \
  rvend= (rvend-rv) * 2 + tmp; rvp= (rvp-rv) + tmp; \
  curr= (void*)(((char*)curr) - rv + tmp); rv= tmp; }
