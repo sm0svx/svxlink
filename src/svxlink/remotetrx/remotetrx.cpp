@@ -502,6 +502,10 @@ int main(int argc, char **argv)
     cout << "--- Using sample rate " << rate << "Hz\n";
   }
   
+  int card_channels = 2;
+  cfg.getValue("GLOBAL", "CARD_CHANNELS", card_channels);
+  AudioIO::setChannels(card_channels);
+
   struct termios org_termios = {0};
   if (logfile_name == 0)
   {
