@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2006  Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -118,7 +118,7 @@ class AudioSink
     /**
      * @brief 	Default constuctor
      */
-    AudioSink(void) : m_source(0), m_handler(0) {}
+    AudioSink(void) : m_source(0), m_handler(0), m_auto_unreg_sink(false) {}
   
     /**
      * @brief 	Destructor

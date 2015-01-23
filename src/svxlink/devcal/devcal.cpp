@@ -394,6 +394,7 @@ int main(int argc, const char *argv[])
        << (20.0*log10(mod_level / 100.0)) << "dBF (" << mod_level << "%)\n";
   cout << endl;
 
+  ios::fmtflags old_cout_flags(cout.flags());
   cout.precision(2);
   cout << fixed;
 
@@ -495,6 +496,8 @@ int main(int argc, const char *argv[])
 
   delete stdin_watch;
   tcsetattr(STDIN_FILENO, TCSANOW, &org_termios);
+
+  cout.flags(old_cout_flags);
 
   return 0;
 }

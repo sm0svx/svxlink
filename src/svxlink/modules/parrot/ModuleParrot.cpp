@@ -10,7 +10,7 @@ you sound.
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004-2008  Tobias Blomberg
+Copyright (C) 2004-2015  Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -163,7 +163,7 @@ extern "C" {
 
 ModuleParrot::ModuleParrot(void *dl_handle, Logic *logic,
       	      	      	   const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), adapter(0), fifo(0),
+  : Module(dl_handle, logic, cfg_name), adapter(0), fifo(0), valve(0),
     squelch_is_open(false), repeat_delay(0), repeat_delay_timer(0)
 {
   cout << "\tModule Parrot v" MODULE_PARROT_VERSION " starting...\n";

@@ -1343,8 +1343,8 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
 	processEvent(ss.str());
 	return;
       }
-      qsos.erase(it);
       qso = *it;
+      qsos.erase(it);
       qsos.push_back(qso);
       break;
     }
@@ -1843,6 +1843,7 @@ void ModuleEchoLink::handleCommand(const string& cmd)
     if (count > 0)
     {
       srand(time(NULL));
+        // coverity[dont_call]
       size_t random_idx = (size_t)(count * ((double)rand() / (1.0 + RAND_MAX)));
       StationData station = nodes[random_idx];
       

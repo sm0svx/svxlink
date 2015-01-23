@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -604,6 +604,7 @@ bool LocationInfo::parseClientStr(string &host, int &port, const string &val)
 
 
 void LocationInfo::startStatisticsTimer(int interval) {
+  delete aprs_stats_timer;
   aprs_stats_timer = new Timer(interval, Timer::TYPE_PERIODIC);
   aprs_stats_timer->setEnable(true);
   aprs_stats_timer->expired.connect(mem_fun(*this, &LocationInfo::sendAprsStatistics));

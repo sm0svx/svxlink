@@ -392,6 +392,8 @@ void Dispatcher::audioDataReceived(const IpAddress& ip, void *buf, int len)
  */
 void Dispatcher::printData(const char *buf, int len)
 {
+  ios::fmtflags old_flags(cerr.flags());
+
   for(int i=0; i<len; i++)
   {
     if (isprint(buf[i]))
@@ -405,6 +407,8 @@ void Dispatcher::printData(const char *buf, int len)
     }
   }
   cerr << endl;
+
+  cerr.flags(old_flags);
 } /* Dispatcher::printData */
 
 

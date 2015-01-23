@@ -193,6 +193,7 @@ _MachineBase::_MachineBase()
 	, myPendingInit(0)
 	, myPendingBox(0)	// Deprecated!
 	, myPendingEvent(0)
+        , myInstances(0)
 {}
 
 _MachineBase::~_MachineBase() {

@@ -140,7 +140,8 @@ Directory::Directory(const vector<string>& servers, const string& callsign,
     const IpAddress &bind_ip)
   : com_state(CS_IDLE),       	      	      the_servers(servers),
     the_password(password),   	      	      the_description(""),
-    error_str(""),    	      	      	      ctrl_con(0),
+    error_str(""),    	      	      	      get_call_cnt(0),
+    ctrl_con(0),
     the_status(StationData::STAT_OFFLINE),    reg_refresh_timer(0),
     current_status(StationData::STAT_OFFLINE),server_changed(false),
     cmd_timer(0), bind_ip(bind_ip)
@@ -340,8 +341,7 @@ bool Directory::stationCodeEq(const StationData& stn, string code, bool exact)
   }
   else
   {
-    const char *stn_code = stn.code().c_str();
-    return (strstr(stn_code, code.c_str()) == stn_code);
+    return (stn.code().find(code) == 0);
   }
 } /* Directory::stationCodeEq  */
 

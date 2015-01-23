@@ -115,7 +115,7 @@ using namespace Async;
 
 HwDtmfDecoder::HwDtmfDecoder(Config &cfg, const string &name)
   : DtmfDecoder(cfg, name), last_detected_digit('?'), state(STATE_IDLE),
-    hang_timer(0), timeout_timer(0)
+    det_timestamp(), hang_timer(0), timeout_timer(0)
 {
 } /* HwDtmfDecoder::HwDtmfDecoder */
 

@@ -130,12 +130,6 @@ Config::~Config(void)
 
 bool Config::open(const string& name)
 {
-  if (access(name.c_str(), R_OK) != 0)
-  {
-    //perror("Config::open");
-    return false;
-  }
-  
   file = fopen(name.c_str(), "r");
   if (file == NULL)
   {

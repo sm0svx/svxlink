@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <cstdlib>
 #include <vector>
+#include <sstream>
 
 
 /****************************************************************************
@@ -501,7 +502,7 @@ int main(int argc, char **argv)
     cout << "--- Using sample rate " << rate << "Hz\n";
   }
   
-  struct termios org_termios;
+  struct termios org_termios = {0};
   if (logfile_name == 0)
   {
     struct termios termios;
@@ -511,8 +512,6 @@ int main(int argc, char **argv)
     tcsetattr(STDIN_FILENO, TCSANOW, &termios);
 
     stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
-    // must explicitly specify name space for ptr_fun() to avoid conflict
-    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
     stdin_watch->activity.connect(sigc::ptr_fun(&stdinHandler));
   }
   
@@ -768,10 +767,9 @@ static bool logfile_open(void)
   logfd = open(logfile_name, O_WRONLY | O_APPEND | O_CREAT, 00644);
   if (logfd == -1)
   {
-    char str[256] = "open(\"";
-    strcat(str, logfile_name);
-    strcat(str, "\")");
-    perror(str);
+    ostringstream ss;
+    ss << "open(\"" << logfile_name << "\")";
+    perror(ss.str().c_str());
     return false;
   }
 

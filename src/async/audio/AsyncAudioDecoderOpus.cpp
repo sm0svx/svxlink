@@ -172,6 +172,7 @@ float AudioDecoderOpus::setGain(float new_gain)
 float AudioDecoderOpus::gain(void) const
 {
   opus_int32 gaini;
+    // coverity[ptr_arith]
   opus_decoder_ctl(dec, OPUS_GET_GAIN(&gaini));
   return gaini / 256.0f;
 } /* AudioDecoderOpus::gain */

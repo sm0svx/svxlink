@@ -110,7 +110,12 @@ struct Qso::Private
   void *    dec_state;
 #endif
 
-  Private(void) : remote_codec(CODEC_GSM) {}
+  Private(void)
+    : remote_codec(CODEC_GSM)
+#if SPEEX_MAJOR
+      , enc_bits(), dec_bits(), enc_state(0), dec_state(0)
+#endif
+  {}
 };
 
 
@@ -148,12 +153,12 @@ struct Qso::Private
 
 Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
       	 const string& info)
-  : init_ok(false),   	 state(STATE_DISCONNECTED), gsmh(0),
-    next_audio_seq(0),   keep_alive_timer(0),       con_timeout_timer(0),
-    callsign(callsign),  name(name),                local_stn_info(info),
-    send_buffer_cnt(0),  remote_ip(addr),           rx_indicator_timer(0),
-    remote_name("?"),    remote_call("?"),          is_remote_initiated(false),
-    receiving_audio(false), use_gsm_only(false),    p(new Private),      
+  : init_ok(false), sdes_length(0), state(STATE_DISCONNECTED), gsmh(0),
+    next_audio_seq(0), keep_alive_timer(0), connect_retry_cnt(0),
+    con_timeout_timer(0), callsign(callsign), name(name), local_stn_info(info),
+    send_buffer_cnt(0), remote_ip(addr), rx_indicator_timer(0),
+    remote_name("?"), remote_call("?"), is_remote_initiated(false),
+    receiving_audio(false), use_gsm_only(false), p(new Private),
     rx_timeout_left(0)
 {
   if (!addr.isUnicast())
@@ -552,6 +557,8 @@ void Qso::allSamplesFlushed(void)
 
 void Qso::printData(const unsigned char *buf, int len)
 {
+  ios::fmtflags old_flags(cerr.flags());
+
   for(int i=0; i<len; i++)
   {
     if (isprint(buf[i]))
@@ -565,6 +572,8 @@ void Qso::printData(const unsigned char *buf, int len)
     }
   }
   cerr << endl;
+
+  cerr.flags(old_flags);
 } /* Qso::printData */
 
 

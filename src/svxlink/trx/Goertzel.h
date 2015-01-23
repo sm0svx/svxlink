@@ -227,7 +227,8 @@ class Goertzel
      * This constructor will create an uninitialized object. Use the
      * initialize method to initialize it later.
      */
-    Goertzel(void) { }
+    Goertzel(void)
+      : cosw(0.0f), sinw(0.0f), two_cosw(0.0f), q0(0.0f), q1(0.0f) {}
 
     /**
      * @brief 	Constuctor

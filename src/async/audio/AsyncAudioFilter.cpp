@@ -233,6 +233,7 @@ void AudioFilter::deleteFilter(void)
       free(fv->ff);
     }
     delete fv;
+    fv = 0;
   }
 } /* AudioFilter::deleteFilter */
 

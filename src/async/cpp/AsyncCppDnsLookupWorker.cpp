@@ -130,7 +130,7 @@ using namespace Async;
 
 CppDnsLookupWorker::CppDnsLookupWorker(const string &label)
   : label(label), worker(0), notifier_rd(-1), notifier_wr(-1),
-    notifier_watch(0), done(false), result(0), buf(0)
+    notifier_watch(0), done(false), he_buf(), result(0), buf(0)
 {
   int ret = pthread_mutex_init(&mutex, NULL);
   if (ret != 0)
