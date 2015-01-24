@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2009 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -145,7 +145,8 @@ class LocationInfo
       bool squelch_on;
 
       AprsStatistics(void) : rx_on_nr(0), tx_on_nr(0), rx_sec(0), tx_sec(0),
-                             tx_on(false), squelch_on(false) {}
+                             last_rx_sec(), last_tx_sec(), tx_on(false),
+                             squelch_on(false) {}
       void reset(void)
       {
         rx_on_nr = 0;
@@ -215,9 +216,9 @@ class LocationInfo
 
   private:
     static LocationInfo* _instance;
-    LocationInfo() : sequence(0) {}
+    LocationInfo() : sequence(0), aprs_stats_timer(0), sinterval(0) {}
     LocationInfo(const LocationInfo&);
-    ~LocationInfo(void) {};
+    ~LocationInfo(void) { delete aprs_stats_timer; };
 
     typedef std::list<AprsClient*> ClientList;
 

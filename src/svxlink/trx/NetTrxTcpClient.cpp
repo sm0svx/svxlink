@@ -184,8 +184,8 @@ void NetTrxTcpClient::sendMsg(Msg *msg)
 NetTrxTcpClient::NetTrxTcpClient(const std::string& remote_host,
       	      	      	      	 uint16_t remote_port, size_t recv_buf_len)
   : TcpClient(remote_host, remote_port, recv_buf_len), recv_cnt(0),
-    recv_exp(0), reconnect_timer(0), heartbeat_timer(0), user_cnt(0),
-    state(STATE_DISC)
+    recv_exp(0), reconnect_timer(0), last_msg_timestamp(), heartbeat_timer(0),
+    user_cnt(0), state(STATE_DISC), disc_reason(DR_SYSTEM_ERROR)
 {
   connected.connect(mem_fun(*this, &NetTrxTcpClient::tcpConnected));
   disconnected.connect(mem_fun(*this, &NetTrxTcpClient::tcpDisconnected));
@@ -328,8 +328,8 @@ void NetTrxTcpClient::handleMsg(Msg *msg)
       {
         MsgProtoVer *ver_msg = reinterpret_cast<MsgProtoVer *>(msg);
         if ((msg->size() != sizeof(MsgProtoVer)) ||
-            (ver_msg->major() != MsgProtoVer::MAJOR) ||
-            (ver_msg->minor() != MsgProtoVer::MINOR))
+            (ver_msg->majorVer() != MsgProtoVer::MAJOR) ||
+            (ver_msg->minorVer() != MsgProtoVer::MINOR))
         {
           cerr << "*** ERROR: Incompatible protocol version. Disconnecting from "
                << remoteHost().toString() << ":" << remotePort() << "...\n";
@@ -337,8 +337,8 @@ void NetTrxTcpClient::handleMsg(Msg *msg)
           return;
         }
         cout << remoteHost().toString() << ":" << remotePort()
-             << ": RemoteTrx protocol version " << ver_msg->major() << "."
-             << ver_msg->minor() << endl;
+             << ": RemoteTrx protocol version " << ver_msg->majorVer() << "."
+             << ver_msg->minorVer() << endl;
         state = STATE_AUTH_WAIT;
       }
       else

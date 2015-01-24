@@ -140,7 +140,7 @@ using namespace Async;
  *------------------------------------------------------------------------
  */
 Serial::Serial(const string& serial_port)
-  : serial_port(serial_port), canonical(false), fd(-1), dev(0)
+  : serial_port(serial_port), canonical(false), fd(-1), port_settings(), dev(0)
 {
 
 } /* Serial::Serial */

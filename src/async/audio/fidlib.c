@@ -308,6 +308,7 @@ strdupf(char *fmt, ...) {
    int len;
    va_start(ap, fmt);
    len= vsnprintf(buf, sizeof(buf), fmt, ap);
+   va_end(ap);
    if (len < 0 || len >= sizeof(buf)-1) 
       error("strdupf exceeded buffer");
    rv= strdup(buf);
@@ -688,6 +689,7 @@ stack_filter(int order, int n_head, int n_val, ...) {
 	 p->val[b]= va_arg(ap, double);
       p= FFNEXT(p);
    }
+   va_end(ap);
    order--;
 
    // Check length
@@ -2156,7 +2158,7 @@ fid_parse(double rate, char **pp, FidFilter **ffp) {
    double val;
    char dmy;
 
-#define ERR(ptr, msg) { *pp= ptr; *ffp= 0; return msg; }
+#define ERR(ptr, msg) { free(rv); *pp= ptr; *ffp= 0; return msg; }
 #define INCBUF { tmp= realloc(rv, (rvend-rv) * 2); if (!tmp) error("Out of memory"); \
  rvend= (rvend-rv) * 2 + tmp; rvp= (rvp-rv) + tmp; \
  curr= (void*)(((char*)curr) - rv + tmp); rv= tmp; }

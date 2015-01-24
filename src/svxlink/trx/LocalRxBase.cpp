@@ -84,7 +84,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Emphasis.h"
 #include "SquelchPty.h"
 #include "SquelchOpen.h"
+#ifdef HAS_HIDRAW_SUPPORT
 #include "SquelchHidraw.h"
+#endif
 
 
 /****************************************************************************
@@ -233,7 +235,7 @@ LocalRxBase::LocalRxBase(Config &cfg, const std::string& name)
     squelch_det(0), siglevdet(0), /* siglev_offset(0.0), siglev_slope(1.0), */
     tone_dets(0), sql_valve(0), delay(0), mute_dtmf(false), sql_tail_elim(0),
     preamp_gain(0), mute_valve(0), sql_hangtime(0), sql_extended_hangtime(0),
-    sql_extended_hangtime_thresh(0)
+    sql_extended_hangtime_thresh(0), input_fifo(0)
 {
 } /* LocalRxBase::LocalRxBase */
 
@@ -449,10 +451,12 @@ bool LocalRxBase::initialize(void)
   {
     squelch_det = new SquelchPty;
   }
+#ifdef HAS_HIDRAW_SUPPORT
   else if (sql_det_str == "HIDRAW")
   {
     squelch_det = new SquelchHidraw;
   }
+#endif
   else
   {
     cerr << "*** ERROR: Unknown squelch type specified in config variable "

@@ -10,7 +10,7 @@ server core (e.g. via a TCP/IP network).
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <cstdlib>
 #include <vector>
+#include <sstream>
 
 
 /****************************************************************************
@@ -457,7 +458,7 @@ int main(int argc, char **argv)
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
   cout << PROGRAM_NAME " v" REMOTE_TRX_VERSION " (" __DATE__ 
-          ") Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX\n\n";
+          ") Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";
   cout << "welcome to redistribute it in accordance with the "
@@ -501,7 +502,11 @@ int main(int argc, char **argv)
     cout << "--- Using sample rate " << rate << "Hz\n";
   }
   
-  struct termios org_termios;
+  int card_channels = 2;
+  cfg.getValue("GLOBAL", "CARD_CHANNELS", card_channels);
+  AudioIO::setChannels(card_channels);
+
+  struct termios org_termios = {0};
   if (logfile_name == 0)
   {
     struct termios termios;
@@ -511,8 +516,6 @@ int main(int argc, char **argv)
     tcsetattr(STDIN_FILENO, TCSANOW, &termios);
 
     stdin_watch = new FdWatch(STDIN_FILENO, FdWatch::FD_WATCH_RD);
-    // must explicitly specify name space for ptr_fun() to avoid conflict
-    // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
     stdin_watch->activity.connect(sigc::ptr_fun(&stdinHandler));
   }
   
@@ -768,10 +771,9 @@ static bool logfile_open(void)
   logfd = open(logfile_name, O_WRONLY | O_APPEND | O_CREAT, 00644);
   if (logfd == -1)
   {
-    char str[256] = "open(\"";
-    strcat(str, logfile_name);
-    strcat(str, "\")");
-    perror(str);
+    ostringstream ss;
+    ss << "open(\"" << logfile_name << "\")";
+    perror(ss.str().c_str());
     return false;
   }
 

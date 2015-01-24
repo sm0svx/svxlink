@@ -146,14 +146,29 @@ TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
   }
   
   /* Force close on exec */
-  fcntl(sock, F_SETFD, 1);
+  if (fcntl(sock, F_SETFD, 1) == -1)
+  {
+    perror("fcntl(F_SETFD)");
+    cleanup();
+    return;
+  }
   
     /* Reuse address if server crashes */
   const int on = 1;
-  setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) == -1)
+  {
+    perror("setsockopt(sock, SO_REUSEADDR)");
+    cleanup();
+    return;
+  }
   
     /* Send small packets at once. */
-  setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof(on));
+  if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) == -1)
+  {
+    perror("setsockopt(sock, TCP_NODELAY)");
+    cleanup();
+    return;
+  }
   
   char *endptr = 0;
   struct servent *se;
@@ -172,7 +187,7 @@ TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
     }
   }
 
-  struct sockaddr_in addr;
+  struct sockaddr_in addr = { 0 };
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
   if (bind_ip.isEmpty())
@@ -453,14 +468,30 @@ void TcpServer::onConnection(FdWatch *watch)
   }
   
     // Force close on exec
-  fcntl(client_sock, F_SETFD, 1);
+  if (fcntl(client_sock, F_SETFD, 1) == -1)
+  {
+    perror("fcntl(F_SETFD)");
+    close(client_sock);
+    return;
+  }
   
     // Write must not block!
-  fcntl(client_sock, F_SETFL, O_NONBLOCK);
+  if (fcntl(client_sock, F_SETFL, O_NONBLOCK) == -1)
+  {
+    perror("fcntl(client_sock, F_SETFL)");
+    close(client_sock);
+    return;
+  }
   
     // Send small packets at once
   const int on = 1;
-  setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof(on));
+  if (setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY,
+                 (char *)&on, sizeof(on)) == -1)
+  {
+    perror("setsockopt(client_sock, TCP_NODELAY)");
+    close(client_sock);
+    return;
+  }
   
     // Create client object, add signal handling, add to client list
   TcpConnection *con = new TcpConnection(client_sock,

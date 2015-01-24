@@ -8,7 +8,7 @@ This file contains an object that handles the playback of audio clips.
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2011 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -166,7 +166,8 @@ class GsmFileQueueItem : public QueueItem
 {
   public:
     GsmFileQueueItem(const std::string& filename, bool idle_marked)
-      : QueueItem(idle_marked), filename(filename), file(-1), decoder(0) {}
+      : QueueItem(idle_marked), filename(filename), file(-1), decoder(0),
+        buf_pos(0) {}
     ~GsmFileQueueItem(void);
     bool initialize(void);
     int readSamples(float *samples, int len);
@@ -187,7 +188,10 @@ class WavFileQueueItem : public QueueItem
 {
   public:
     WavFileQueueItem(const std::string& filename, bool idle_marked)
-      : QueueItem(idle_marked), filename(filename), file(-1) {}
+      : QueueItem(idle_marked), filename(filename), file(-1), chunk_size(0),
+        subchunk1size(0), audio_format(0), num_channels(0), sample_rate(0),
+        byte_rate(0), block_align(0), bits_per_sample(0), subchunk2size(0)
+    {}
     ~WavFileQueueItem(void);
     bool initialize(void);
     int readSamples(float *samples, int len);

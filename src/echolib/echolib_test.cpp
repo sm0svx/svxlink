@@ -182,8 +182,6 @@ char my_info[256];
  */
 int main( int argc, const char **argv )
 {
-  bool success = true;
-  
   openlog(PROGRAM_NAME, LOG_PID, LOG_USER);
   parse_arguments(argc, argv);
   
@@ -260,7 +258,7 @@ int main( int argc, const char **argv )
   
   closelog();
   
-  return success ? 0 : 1;
+  return 0;
   
 } /* main */
 

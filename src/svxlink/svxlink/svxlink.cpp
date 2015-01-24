@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <vector>
 #include <cstring>
 #include <set>
+#include <cerrno>
 
 
 /****************************************************************************
@@ -416,7 +417,7 @@ int main(int argc, char **argv)
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
   cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__
-          ") Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX\n\n";
+          ") Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";
   cout << "welcome to redistribute it in accordance with the terms "
@@ -460,6 +461,10 @@ int main(int argc, char **argv)
     cout << "--- Using sample rate " << rate << "Hz\n";
   }
   
+  int card_channels = 2;
+  cfg.getValue("GLOBAL", "CARD_CHANNELS", card_channels);
+  AudioIO::setChannels(card_channels);
+
     // Init locationinfo
   if (cfg.getValue("GLOBAL", "LOCATION_INFO", value))
   {
@@ -805,10 +810,7 @@ static bool logfile_open(void)
   logfd = open(logfile_name, O_WRONLY | O_APPEND | O_CREAT, 00644);
   if (logfd == -1)
   {
-    char str[256] = "open(\"";
-    strcat(str, logfile_name);
-    strcat(str, "\")");
-    perror(str);
+    cerr << "open(\"" << logfile_name << "\"): " << strerror(errno) << endl;
     return false;
   }
 

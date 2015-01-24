@@ -110,13 +110,13 @@ So, TIMESTAMP_FORMAT="%d %b %Y %H:%M:%S" would give a timestamp looking somethin
 .TP
 .B CARD_SAMPLE_RATE
 This configuration variable determines the sampling rate used for audio
-input/output. SvxLink always work with a sampling rate of 8kHz internally but
+input/output. SvxLink always work with a sampling rate of 16kHz internally but
 there still are som benefits from using a higher sampling rate. On some sound
-cards the filters look pretty bad at 8kHz and the amplitude response will not be
-uniform which among other things can cause problems for the software DTMF
+cards the filters look pretty bad at 16kHz and the amplitude response will not
+be uniform which among other things can cause problems for the software DTMF
 decoder.
 
-Some sound cards also sound very bad at 8kHz due to insufficient
+Some sound cards also sound very bad at 16kHz due to insufficient
 anti-alias filtering or resampling effects. These, often cheeper, sound cards
 sound OK at 48kHz.
 
@@ -124,7 +124,17 @@ The downside of choosing a higher sampling rate is that it puts a little bit
 more load on the CPU so if you have a very slow machine (<300MHz), it might not
 have the computational power to handle it.
 
-Supported sampling rates are: 8000, 16000 and 48000.
+Supported sampling rates are: 16000 and 48000.
+.TP
+.B CARD_CHANNELS
+Use this configuration variable to specify how many channels to use when
+opening a sound card. For normal sound cards the only practical values to use
+are 1 for mono and 2 for stereo. The latter is the default.
+
+When using the sound card in stereo mode it is possible to use the left and
+right channels independenly to drive two transceivers. When using the sound
+card in mono mode, both left and right channels transmit/receive the same
+audio.
 .
 .SS Network uplink transceiver section
 .

@@ -176,8 +176,8 @@ class MsgProtoVer : public Msg
     MsgProtoVer(void)
       : Msg(TYPE, sizeof(MsgProtoVer)), m_major(MAJOR),
         m_minor(MINOR) {}
-    uint16_t major(void) const { return m_major; }
-    uint16_t minor(void) const { return m_minor; }
+    uint16_t majorVer(void) const { return m_major; }
+    uint16_t minorVer(void) const { return m_minor; }
   
   private:
     uint16_t m_major;
@@ -258,13 +258,13 @@ class MsgAuthResponse : public Msg
         // Must call gcry_check_verion to initialize the gcypt library
       gcry_check_version(NULL);
       gcry_error_t err;
+      gcry_md_hd_t hd = { 0 };
       //err = gcry_control(GCRYCTL_INIT_SECMEM, 16384, 0);
       err = gcry_control(GCRYCTL_DISABLE_SECMEM, 0);
-      if (err) goto error;
+      if (err) goto libinit_error;
         // Tell Libgcrypt that initialization has completed
       err = gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
-      if (err) goto error;
-      gcry_md_hd_t hd;
+      if (err) goto libinit_error;
       //printf("gcry_md_open\n");
       err = gcry_md_open(&hd, ALGO, GCRY_MD_FLAG_HMAC);
       if (err) goto error;
@@ -289,9 +289,11 @@ class MsgAuthResponse : public Msg
       return true;
       
       error:
+        gcry_md_close(hd);
+
+      libinit_error:
         std::cerr << "*** ERROR: gcrypt error: " << gcry_strerror(err)
                   << std::endl;
-        gcry_md_close(hd);
         return false;
     }
     

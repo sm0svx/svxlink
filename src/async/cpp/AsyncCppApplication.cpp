@@ -162,7 +162,7 @@ int CppApplication::sighandler_pipe[2];
  *------------------------------------------------------------------------
  */
 CppApplication::CppApplication(void)
-  : do_quit(false), max_desc(0), unix_signal_recv_cnt(0)
+  : do_quit(false), max_desc(0), unix_signal_recv(-1), unix_signal_recv_cnt(0)
 {
   FD_ZERO(&rd_set);
   FD_ZERO(&wr_set);
@@ -242,8 +242,8 @@ void CppApplication::exec(void)
       }
       else
       {
-      	perror("select");
-      	exit(1);
+        perror("pselect");
+        exit(1);
       }
     }
     
@@ -474,23 +474,29 @@ void CppApplication::delFdWatch(FdWatch *fd_watch)
   
   if (fd+1 == max_desc)
   {
-    max_desc = 0;
+    max_desc = -1;
+
     WatchMap::reverse_iterator riter;
-    riter = rd_watch_map.rbegin();
-    if ((riter != rd_watch_map.rend()) && (riter->first > max_desc))
+    for (riter = rd_watch_map.rbegin(); riter != rd_watch_map.rend(); ++riter)
     {
-      max_desc = riter->first;
+      if ((riter->second != 0) && (riter->first > max_desc))
+      {
+        max_desc = riter->first;
+        break;
+      }
     }
     
-    riter = wr_watch_map.rbegin();
-    if ((riter != wr_watch_map.rend()) && (riter->first > max_desc))
+    for (riter = wr_watch_map.rbegin(); riter != wr_watch_map.rend(); ++riter)
     {
-      max_desc = riter->first;
+      if ((riter->second != 0) && (riter->first > max_desc))
+      {
+        max_desc = riter->first;
+        break;
+      }
     }
     
     ++max_desc;
   }
-  
 } /* CppApplication::delFdWatch */
 
 

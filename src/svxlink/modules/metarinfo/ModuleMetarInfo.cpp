@@ -9,7 +9,7 @@ A module (plugin) to request the latest METAR (weather) information from
 by using ICAO shortcuts.
 Look at http://en.wikipedia.org/wiki/METAR for further information
 
-Copyright (C) 2009  Tobias Blomberg / SM0SVX ( & Adi )
+Copyright (C) 2009-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -218,8 +218,9 @@ extern "C" {
  ****************************************************************************/
 
 
-ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic, const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), con(0)
+ModuleMetarInfo::ModuleMetarInfo(void *dl_handle, Logic *logic,
+                                 const string& cfg_name)
+  : Module(dl_handle, logic, cfg_name), remarks(false), debug(false), con(0)
 {
   cout << "\tModule MetarInfo v" MODULE_METARINFO_VERSION " starting...\n";
 
@@ -484,8 +485,8 @@ void ModuleMetarInfo::dtmfCmdReceived(const string& cmd)
   stringstream tosay;
   int a = 0;
   int offset;
-  const char *pos;
-  std::string spos;
+  //const char *pos;
+  //std::string spos;
   StrList mtcmd;
   typedef map<char, std::string> Digits;
   Digits mypad;
@@ -545,8 +546,9 @@ void ModuleMetarInfo::dtmfCmdReceived(const string& cmd)
      for (StrList::const_iterator cmdit = mtcmd.begin();
         cmdit != mtcmd.end(); cmdit++)
      {
-        pos = (cmdit->substr(0,1)).c_str();
-        spos= mypad[pos[0]];
+        //pos = (cmdit->substr(0,1)).c_str();
+        //spos= mypad[pos[0]];
+        string spos = mypad[(*cmdit)[0]];
         icao += spos.substr(cmdit->length(),1);
      }
   }
@@ -557,8 +559,9 @@ void ModuleMetarInfo::dtmfCmdReceived(const string& cmd)
      icao = "";
      for (a=0; a<8; a+=2)
      {
-        pos = cmd.substr(a,1).c_str();
-        spos= mypad[pos[0]];
+        //pos = cmd.substr(a,1).c_str();
+        //spos= mypad[pos[0]];
+        string spos = mypad[cmd[a]];
         offset = atoi(cmd.substr(a+1,1).c_str());
         icao += spos.substr(offset,1);
      }

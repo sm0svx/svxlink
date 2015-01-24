@@ -582,10 +582,10 @@ void ComDialog::dnsResultsReady(DnsLookup &)
     return;
   }
   
-  StationData *station = new StationData;
-  station->setIp(dns->addresses()[0]);
-  updateStationData(station);
-  createConnection(station);  
+  StationData station;
+  station.setIp(dns->addresses()[0]);
+  updateStationData(&station);
+  createConnection(&station);  
   
   delete dns;
   dns = 0;

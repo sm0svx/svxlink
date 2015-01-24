@@ -41,6 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/soundcard.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <cassert>
 #include <cstring>
@@ -187,7 +188,7 @@ int AudioDeviceOSS::samplesToWrite(void) const
 
 AudioDeviceOSS::AudioDeviceOSS(const string& dev_name)
   : AudioDevice(dev_name), fd(-1), read_watch(0), write_watch(0),
-    device_caps(0), use_trigger(false)
+    device_caps(0), use_trigger(false), frag_size(0)
 {
   char *use_trigger_str = getenv("ASYNC_AUDIO_NOTRIGGER");
   use_trigger = (use_trigger_str != 0) && (atoi(use_trigger_str) == 0);
@@ -196,8 +197,14 @@ AudioDeviceOSS::AudioDeviceOSS(const string& dev_name)
   int f = ::open(dev_name.c_str(), O_RDWR);
   if (f >= 0)
   {
-    ioctl(fd, SNDCTL_DSP_SETDUPLEX, 0);
-    ioctl(fd, SNDCTL_DSP_GETCAPS, &device_caps);
+    if (ioctl(fd, SNDCTL_DSP_SETDUPLEX, 0) == -1)
+    {
+      perror("SNDCTL_DSP_SETDUPLEX ioctl failed");
+    }
+    if (ioctl(fd, SNDCTL_DSP_GETCAPS, &device_caps) == -1)
+    {
+      perror("SNDCTL_DSP_GETCAPS ioctl failed");
+    }
     ::close(f);
   }
 } /* AudioDeviceOSS::AudioDeviceOSS */
@@ -242,7 +249,12 @@ bool AudioDeviceOSS::openDevice(Mode mode)
 
   if (mode == MODE_RDWR)
   {
-    ioctl(fd, SNDCTL_DSP_SETDUPLEX, 0);
+    if (ioctl(fd, SNDCTL_DSP_SETDUPLEX, 0) == -1)
+    {
+      perror("SNDCTL_DSP_SETDUPLEX ioctl failed");
+      close();
+      return false;
+    }
   }
   
   if (ioctl(fd, SNDCTL_DSP_GETCAPS, &device_caps) == -1)

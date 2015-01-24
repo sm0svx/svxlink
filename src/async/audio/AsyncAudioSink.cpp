@@ -1,14 +1,12 @@
 /**
 @file	 AsyncAudioSink.cpp
-@brief   A_brief_description_for_this_file
+@brief   This file contains the base class for an audio sink
 @author  Tobias Blomberg / SM0SVX
 @date	 2005-04-17
 
-A_detailed_description_for_this_file
-
 \verbatim
-<A brief description of the program or library this file belongs to>
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

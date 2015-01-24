@@ -206,7 +206,7 @@ int DirectoryCon::write(const void *data, unsigned len)
     }
     else
     {
-      errno = ECOMM;
+      errno = EIO;
       return -1;
     }
   }
