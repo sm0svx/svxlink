@@ -201,8 +201,16 @@ bool SquelchEvDev::initialize(Async::Config& cfg, const std::string& rx_name)
   
     // Print Device Name
   char name[256] = "Unknown";
-  ioctl(fd, EVIOCGNAME (sizeof (name)), name);
-  cout << rx_name << ": EvDev Squelch: " << devname << "(" << name << ")\n";
+  if (ioctl(fd, EVIOCGNAME (sizeof (name)), name) != -1)
+  {
+    cout << rx_name << ": EvDev Squelch: " << devname << "(" << name << ")\n";
+  }
+  else
+  {
+    cerr << "*** WARNING: Could not read EvDev squelch device name from "
+         << "event device " << devname << " specified in " << rx_name
+         << "/EVDEV_DEVNAME: " << strerror(errno) << endl;
+  }
  
   return true;
 }

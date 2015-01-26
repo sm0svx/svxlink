@@ -129,10 +129,16 @@ using namespace Async;
  ****************************************************************************/
 
 SwSel5Decoder::SwSel5Decoder(Config &cfg, const string &name)
-  : Sel5Decoder(cfg, name), samples_left(SEL5_BLOCK_LENGTH),
-    last_hit(0), last_stable(0), stable_timer(0), active_timer(0)
+  : Sel5Decoder(cfg, name), sel5_table(0), samples_left(SEL5_BLOCK_LENGTH),
+    last_hit(0), last_stable(0), stable_timer(0), active_timer(0), arr_len(0)
 {
 } /* SwSel5Decoder::SwSel5Decoder */
+
+
+SwSel5Decoder::~SwSel5Decoder(void)
+{
+  delete [] sel5_table;
+} /* SwSel5Decoder::~SwSel5Decoder */
 
 
 bool SwSel5Decoder::initialize(void)
@@ -495,7 +501,7 @@ int SwSel5Decoder::findMaxIndex(const float f[])
     int i;
 
     /* Peak search */
-    for (i = 0; i < 19; i++)
+    for (i = 0; i < arr_len; i++)
     {
         if (f[i] > threshold)
         {
@@ -509,7 +515,7 @@ int SwSel5Decoder::findMaxIndex(const float f[])
     /* Peak test */
     threshold *= 1.0f / SEL5_RELATIVE_PEAK;
 
-    for (i = 0; i < 19; i++)
+    for (i = 0; i < arr_len; i++)
     {
         if (idx != i && f[i] > threshold)
             return -1;

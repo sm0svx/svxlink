@@ -246,13 +246,13 @@ void EchoLinkQsoTest::handleChatMode(void)
     buf = "";
     putchar('\n');
   }
-  else if (ch == '\033')  // ESC pressed
+  else if ((ch == '\033') || (ch == EOF))  // ESC or CTRL-D pressed
   {
     cout << "Exiting chat mode\n";
     printPrompt();
     chat_mode = false;
   }
-  else	// Add character to chat buffer
+  else if (ch >= 0)	// Add character to chat buffer
   {
     buf.push_back(ch);
     putchar(ch);

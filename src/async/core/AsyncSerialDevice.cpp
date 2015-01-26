@@ -220,7 +220,8 @@ bool SerialDevice::close(SerialDevice *dev)
  *----------------------------------------------------------------------------
  */
 SerialDevice::SerialDevice(const string& port)
-  : port_name(port), use_count(0), fd(-1), rd_watch(0), restore_on_close(false)
+  : port_name(port), use_count(0), fd(-1), old_port_settings(),
+    rd_watch(0), restore_on_close(false)
 {
   
 } /* SerialDevice::SerialDevice */

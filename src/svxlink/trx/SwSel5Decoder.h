@@ -115,6 +115,11 @@ class SwSel5Decoder : public Sel5Decoder
     SwSel5Decoder(Async::Config &cfg, const std::string &name);
 
     /**
+     * @brief   Destructor
+     */
+    virtual ~SwSel5Decoder(void);
+
+    /**
      * @brief 	Initialize the Fms decoder
      * @returns Returns \em true if the initialization was successful or
      *          else \em false.

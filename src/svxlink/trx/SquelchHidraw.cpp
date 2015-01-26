@@ -119,7 +119,7 @@ using namespace Async;
  ****************************************************************************/
 
 SquelchHidraw::SquelchHidraw(void)
-  : fd(-1), watch(0), active_low(false)
+  : fd(-1), watch(0), active_low(false), pin(0)
 {
 } /* SquelchHidraw::SquelchHidraw */
 

@@ -1,4 +1,4 @@
- 1.5.0 -- ?? ??? 2014
+ 1.5.0 -- ?? ??? 2015
 ----------------------
 
 * Added support for using digital drop receivers on an RTL2832U based DVB-T
@@ -35,6 +35,11 @@
 
 * New voter configuration, SQL_STATE_PTY, which make it possible to
   continuously output squelch state information to a UNIX98 PTY.
+
+* Fixed issues reported by the Coverity scan static analysis tool.
+
+* New config variable CARD_CHANNELS which is used to set the number of
+  channels that is used on the sound card, e.g. 1=mono, 2=stereo.
 
 
 

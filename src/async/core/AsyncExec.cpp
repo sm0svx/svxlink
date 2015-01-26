@@ -482,16 +482,13 @@ void Exec::handleSigChld(int signal_number, siginfo_t *info, void *context)
   }
 
     // Call the old signal handler if there was one registered
-  if ((old_sigact.sa_handler != 0) || (old_sigact.sa_sigaction != 0))
+  if ((old_sigact.sa_flags & SA_SIGINFO) && (old_sigact.sa_sigaction != 0))
   {
-    if (old_sigact.sa_flags & SA_SIGINFO)
-    {
-      old_sigact.sa_sigaction(signal_number, info, context);
-    }
-    else
-    {
-      old_sigact.sa_handler(signal_number);
-    }
+    old_sigact.sa_sigaction(signal_number, info, context);
+  }
+  else if (old_sigact.sa_handler != 0)
+  {
+    old_sigact.sa_handler(signal_number);
   }
 } /* Exec::handleSigChld */
 
@@ -529,7 +526,17 @@ void Exec::handleTimeout(void)
 void Exec::sigchldReceived(void)
 {
   char buf[1];
-  read(sigchld_pipe[0], buf, 1);
+  int err = read(sigchld_pipe[0], buf, 1);
+  if (err == -1)
+  {
+    cout << "*** WARNING: Error while reading SIGCHLD pipe: "
+         << strerror(errno) << endl;
+  }
+  else if (err != 1)
+  {
+    cout << "*** WARNING: Unexpected read of size " << err 
+         << " from SIGCHLD pipe\n";
+  }
 
   //cout << "### sigchldReceived\n";
   ExecMap::iterator it = execs.begin();

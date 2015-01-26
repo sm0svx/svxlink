@@ -198,7 +198,6 @@ class LocalTx : public Tx
     int       	      	    tx_timeout;
     SineGenerator     	    *sine_gen;
     bool      	      	    ctcss_enable;
-    Async::SigCAudioSource  *sigc_src;
     DtmfEncoder       	    *dtmf_encoder;
     Async::AudioSelector    *selector;
     Async::AudioValve 	    *dtmf_valve;

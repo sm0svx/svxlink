@@ -97,8 +97,8 @@ class AudioDevice;
   AudioDevice *create_ ## _class(const string& dev_name) \
           { return new _class(dev_name); } \
   static bool _class ## _creator_registered = \
-          AudioDeviceFactory::instance()->registerCreator(_name, \
-                                                          create_ ## _class)
+          AudioDeviceFactory::instance().registerCreator(_name, \
+                                                         create_ ## _class)
 
 
 
@@ -134,13 +134,10 @@ class AudioDeviceFactory
      * @brief 	Get the factory singleton instance
      * @return  Returns the factory instance
      */
-    static AudioDeviceFactory *instance(void)
+    static AudioDeviceFactory &instance(void)
     {
-      if (_instance == 0)
-      {
-        _instance = new AudioDeviceFactory;
-      }
-      return _instance;
+      static AudioDeviceFactory the_factory;
+      return the_factory;
     }
 
     /**
@@ -180,8 +177,6 @@ class AudioDeviceFactory
   private:
     typedef std::map<std::string, CreatorFunc> CreatorMap;
     
-    static AudioDeviceFactory *_instance;
-
     CreatorMap creator_map;
     
     AudioDeviceFactory(const AudioDeviceFactory&);

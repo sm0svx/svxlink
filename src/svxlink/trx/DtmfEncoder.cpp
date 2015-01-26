@@ -117,8 +117,9 @@ static map<char, pair<int, int> > tone_map;
 
 DtmfEncoder::DtmfEncoder(int sampling_rate)
   : sampling_rate(sampling_rate), tone_length(100 * sampling_rate / 1000),
-    tone_spacing(50 * sampling_rate / 1000), tone_amp(0.5), low_tone(-1),
-    is_playing(false), is_sending_digits(false)
+    tone_spacing(50 * sampling_rate / 1000), tone_amp(0.5), low_tone(0),
+    high_tone(0), pos(0), length(0), is_playing(false),
+    is_sending_digits(false)
 {
   if (tone_map.empty())
   {

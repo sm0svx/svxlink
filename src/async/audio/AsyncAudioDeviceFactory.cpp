@@ -96,14 +96,12 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
  *
  ****************************************************************************/
 
-AudioDeviceFactory *AudioDeviceFactory::_instance = 0;
 
 
 /****************************************************************************
@@ -122,7 +120,6 @@ AudioDeviceFactory *AudioDeviceFactory::_instance = 0;
 
 AudioDeviceFactory::~AudioDeviceFactory(void)
 {
-  _instance = 0;
 } /* AudioDeviceFactory::~AudioDeviceFactory */
 
 

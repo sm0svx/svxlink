@@ -184,8 +184,8 @@ void NetTrxTcpClient::sendMsg(Msg *msg)
 NetTrxTcpClient::NetTrxTcpClient(const std::string& remote_host,
       	      	      	      	 uint16_t remote_port, size_t recv_buf_len)
   : TcpClient(remote_host, remote_port, recv_buf_len), recv_cnt(0),
-    recv_exp(0), reconnect_timer(0), heartbeat_timer(0), user_cnt(0),
-    state(STATE_DISC)
+    recv_exp(0), reconnect_timer(0), last_msg_timestamp(), heartbeat_timer(0),
+    user_cnt(0), state(STATE_DISC), disc_reason(DR_SYSTEM_ERROR)
 {
   connected.connect(mem_fun(*this, &NetTrxTcpClient::tcpConnected));
   disconnected.connect(mem_fun(*this, &NetTrxTcpClient::tcpDisconnected));
