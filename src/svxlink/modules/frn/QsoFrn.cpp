@@ -740,7 +740,8 @@ int QsoFrn::handleLogin(unsigned char *data, int len, bool stage_one)
   {
     if (stage_one)
     {
-      if (line.length() == std::string("2014003").length())
+      if (line.length() == std::string("2014003").length() ||
+          line.length() == std::string("0").length)
       {
         setState(STATE_LOGGING_IN_2);
         cout << "login stage 1 completed: " << line << endl;
