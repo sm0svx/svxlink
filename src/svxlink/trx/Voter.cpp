@@ -637,7 +637,7 @@ void Voter::printSquelchState(void)
     os << showpos << setw(4) << static_cast<int>(siglev) << noshowpos;
     os << " ";
   }
-  stateUpdate("Voter:sql_state", os.str());
+  publishStateEvent("Voter:sql_state", os.str());
 } /* Voter::printSquelchState */
 
 

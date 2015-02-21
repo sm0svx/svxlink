@@ -251,7 +251,8 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * event name must be unique within SvxLink. The recommended format is
      * <context>::<name>, e.g. Rx::sql_state.
      */
-    sigc::signal<void, const std::string&, const std::string&> stateUpdate;
+    sigc::signal<void, const std::string&,
+                 const std::string&> publishStateEvent;
     
     
   protected:

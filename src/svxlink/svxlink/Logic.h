@@ -306,8 +306,8 @@ class Logic : public sigc::trackable
     void updateTxCtcss(bool do_set, TxCtcssType type);
     void logicConInStreamStateChanged(bool is_active, bool is_idle);
     void audioFromModuleStreamStateChanged(bool is_active, bool is_idle);
-    void publishStateUpdate(const std::string &event_name,
-                            const std::string &msg);
+    void publishStateEvent(const std::string &event_name,
+                           const std::string &msg);
 
 };  /* class Logic */
 

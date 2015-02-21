@@ -367,7 +367,7 @@ bool Logic::initialize(void)
   rx().selcallSequenceDetected.connect(
 	mem_fun(*this, &Logic::selcallSequenceDetected));
   rx().setMuteState(Rx::MUTE_NONE);
-  rx().stateUpdate.connect(mem_fun(*this, &Logic::publishStateUpdate));
+  rx().publishStateEvent.connect(mem_fun(*this, &Logic::publishStateEvent));
   prev_rx_src = m_rx;
 
     // This valve is used to turn RX audio on/off into the logic core
@@ -555,6 +555,8 @@ bool Logic::initialize(void)
   event_handler->recordStop.connect(mem_fun(*this, &Logic::recordStop));
   event_handler->deactivateModule.connect(
           bind(mem_fun(*this, &Logic::deactivateModule), (Module *)0));
+  event_handler->publishStateEvent.connect(
+          mem_fun(*this, &Logic::publishStateEvent));
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
@@ -1488,7 +1490,7 @@ void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 } /* Logic::audioFromModuleStreamStateChanged */
 
 
-void Logic::publishStateUpdate(const string &event_name, const string &msg)
+void Logic::publishStateEvent(const string &event_name, const string &msg)
 {
   if (state_pty == 0)
   {
@@ -1502,7 +1504,7 @@ void Logic::publishStateUpdate(const string &event_name, const string &msg)
   os << event_name << " " << msg;
   os << endl;
   state_pty->write(os.str().c_str(), os.str().size());
-} /* Logic::publishStateUpdate */
+} /* Logic::publishStateEvent */
 
 
 
