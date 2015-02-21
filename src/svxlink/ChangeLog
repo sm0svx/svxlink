@@ -33,8 +33,12 @@
 
 * Bugfix in ModuleMetarInfo: Numbers was some times read in the wrong way
 
-* New voter configuration, SQL_STATE_PTY, which make it possible to
-  continuously output squelch state information to a UNIX98 PTY.
+* New logic core configuration, STATE_PTY, which specify a UNIX 98 PTY to open
+  where SvxLink state information can be published. This information can be
+  used by external applications to act on.
+
+* The receiver voter now continuously output squelch state information to the
+  logic core state PTY.
 
 * Fixed issues reported by the Coverity scan static analysis tool.
 
