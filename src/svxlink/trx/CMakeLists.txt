@@ -16,6 +16,7 @@ set(LIBSRC
   PttGpio.cpp PttSerialPin.cpp PttPty.cpp
   PtyDtmfDecoder.cpp LocalRxBase.cpp Ddr.cpp RtlTcp.cpp
   WbRxRtlTcp.cpp SigLevDet.cpp SigLevDetDdr.cpp
+  NewSwDtmfDecoder.cpp
 )
 include (CheckSymbolExists)
 CHECK_SYMBOL_EXISTS(HIDIOCGRAWINFO linux/hidraw.h HAS_HIDRAW_SUPPORT)
@@ -45,6 +46,9 @@ add_version_target(SVXLINK VERSION_DEPENDS)
 # Build only a static library
 add_library(${LIBNAME} STATIC ${LIBSRC} ${VERSION_DEPENDS})
 target_link_libraries(${LIBNAME} ${LIBS})
+
+add_executable(DtmfDecoderTest DtmfDecoderTest.cpp)
+target_link_libraries(DtmfDecoderTest ${LIBNAME} asynccore asyncaudio)
 
 # Install targets
 #install(TARGETS ${LIBNAME} DESTINATION ${LIB_INSTALL_DIR})

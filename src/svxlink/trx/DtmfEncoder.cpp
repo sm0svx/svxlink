@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -246,12 +246,6 @@ void DtmfEncoder::playNextDigit(void)
     return;
   }
   
-  if (current_str.empty())
-  {
-    sinkFlushSamples();
-    return;
-  }
-  
   if (low_tone > 0)
   {
     low_tone = 0;
@@ -259,6 +253,12 @@ void DtmfEncoder::playNextDigit(void)
     length = tone_spacing;
     is_playing = true;
     writeAudio();
+    return;
+  }
+  
+  if (current_str.empty())
+  {
+    sinkFlushSamples();
     return;
   }
   
@@ -315,14 +315,10 @@ void DtmfEncoder::writeAudio(void)
     is_playing = false;
     playNextDigit();
   }
-  
 } /* DtmfEncoder::writeAudio */
-
-
 
 
 
 /*
  * This file has not been truncated
  */
-

@@ -53,6 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "DtmfDecoder.h"
 #include "SwDtmfDecoder.h"
+#include "NewSwDtmfDecoder.h"
 #include "S54sDtmfDecoder.h"
 #include "PtyDtmfDecoder.h"
 
@@ -130,6 +131,10 @@ DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
   else if (type == "PTY")
   {
     dec = new PtyDtmfDecoder(cfg, name);
+  }
+  else if (type == "EXPERIMENTAL")
+  {
+    dec = new NewSwDtmfDecoder(cfg, name);
   }
   else
   {
