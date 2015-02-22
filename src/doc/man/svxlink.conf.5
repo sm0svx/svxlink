@@ -2025,7 +2025,7 @@ around 0.
 The format of the output from the state PTY is:
 .PP
 .RS 4
-<timestamp> <context>::<event name> <event data>
+<timestamp> <context>:<event name> <event data>
 
 .RS -4
 where the different parts mean:
@@ -2043,7 +2043,7 @@ event data = Event specific data
 
 The following specific events exist.
 .TP
-.B Voter::sql_state
+.B Voter:sql_state
 Report the state of all squelches for all receivers. The format of the event
 specific data is:
 .PP

@@ -200,7 +200,7 @@ class EventHandler : public sigc::trackable
     /**
      * @brief   A signal that is emitted when the TCL script want to publish
      *          a state event
-     * @param   event_name The name of the event (<context>::<name>)
+     * @param   event_name The name of the event (<context>:<name>)
      * @param   event_msg  The event message
      */
     sigc::signal<void, const std::string&,
