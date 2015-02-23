@@ -41,6 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/time.h>
 
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <cctype>
 #include <cassert>
@@ -168,7 +169,7 @@ Logic::Logic(Config &cfg, const string& name)
     qso_recorder(0),                        tx_ctcss(TX_CTCSS_ALWAYS),
     tx_ctcss_mask(0),                       aprs_stats_timer(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
-    dtmf_digit_handler(0)
+    dtmf_digit_handler(0),                  state_pty(0)
 {
   logic_con_in = new AudioSplitter;
   logic_con_out = new AudioSelector;
@@ -243,6 +244,21 @@ bool Logic::initialize(void)
   cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", exec_cmd_on_sql_close);
   cfg().getValue(name(), "RGR_SOUND_DELAY", rgr_sound_delay);
   cfg().getValue(name(), "REPORT_CTCSS", report_ctcss);
+
+  string state_pty_path;
+  cfg().getValue(name(), "STATE_PTY", state_pty_path);
+  if (!state_pty_path.empty())
+  {
+    state_pty = new Pty(state_pty_path);
+    if (!state_pty->open())
+    {
+      cerr << "*** ERROR: Could not open state PTY "
+           << state_pty_path << " as spcified in configuration variable "
+           << name() << "/" << "STATE_PTY" << endl;
+      cleanup();
+      return false;
+    }
+  }
 
   string value;
   if (cfg().getValue(name(), "ACTIVATE_MODULE_ON_LONG_CMD", value))
@@ -351,6 +367,7 @@ bool Logic::initialize(void)
   rx().selcallSequenceDetected.connect(
 	mem_fun(*this, &Logic::selcallSequenceDetected));
   rx().setMuteState(Rx::MUTE_NONE);
+  rx().publishStateEvent.connect(mem_fun(*this, &Logic::publishStateEvent));
   prev_rx_src = m_rx;
 
     // This valve is used to turn RX audio on/off into the logic core
@@ -538,6 +555,8 @@ bool Logic::initialize(void)
   event_handler->recordStop.connect(mem_fun(*this, &Logic::recordStop));
   event_handler->deactivateModule.connect(
           bind(mem_fun(*this, &Logic::deactivateModule), (Module *)0));
+  event_handler->publishStateEvent.connect(
+          mem_fun(*this, &Logic::publishStateEvent));
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
@@ -1439,6 +1458,7 @@ void Logic::cleanup(void)
   delete audio_from_module_selector;  audio_from_module_selector = 0;
   delete tx_audio_mixer;      	      tx_audio_mixer = 0;
   delete qso_recorder;                qso_recorder = 0;
+  delete state_pty;                   state_pty = 0;
 } /* Logic::cleanup */
 
 
@@ -1468,6 +1488,23 @@ void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 {
   updateTxCtcss(!is_idle, TX_CTCSS_MODULE);
 } /* Logic::audioFromModuleStreamStateChanged */
+
+
+void Logic::publishStateEvent(const string &event_name, const string &msg)
+{
+  if (state_pty == 0)
+  {
+    return;
+  }
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  stringstream os;
+  os << setfill('0');
+  os << tv.tv_sec << "." << setw(3) << tv.tv_usec / 1000 << " ";
+  os << event_name << " " << msg;
+  os << endl;
+  state_pty->write(os.str().c_str(), os.str().size());
+} /* Logic::publishStateEvent */
 
 
 

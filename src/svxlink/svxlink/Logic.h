@@ -10,7 +10,7 @@ specific logic core classes (e.g. SimplexLogic and RepeaterLogic).
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2010  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2015  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -88,6 +88,7 @@ namespace Async
   class AudioRecorder;
   class AudioSource;
   class AudioSink;
+  class Pty;
 };
 
 
@@ -287,6 +288,7 @@ class Logic : public sigc::trackable
     bool                            is_online;
     std::string                     online_cmd;
     DtmfDigitHandler                *dtmf_digit_handler;
+    Async::Pty                      *state_pty;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);
@@ -304,6 +306,8 @@ class Logic : public sigc::trackable
     void updateTxCtcss(bool do_set, TxCtcssType type);
     void logicConInStreamStateChanged(bool is_active, bool is_idle);
     void audioFromModuleStreamStateChanged(bool is_active, bool is_idle);
+    void publishStateEvent(const std::string &event_name,
+                           const std::string &msg);
 
 };  /* class Logic */
 

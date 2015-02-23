@@ -240,6 +240,20 @@ class Rx : public sigc::trackable, public Async::AudioSource
      */
     sigc::signal<void, float> signalLevelUpdated;
     
+    /**
+     * @brief	A signal that is emitted to publish a state update event
+     * @param	event_name The name of the event
+     * @param   msg The state update message
+     *
+     * This signal is emitted when a receiver wish to publish a state update
+     * message. A state update message is a free text message that can be used
+     * by subscribers to act on certain state changes within SvxLink. The
+     * event name must be unique within SvxLink. The recommended format is
+     * <context>:<name>, e.g. Rx:sql_state.
+     */
+    sigc::signal<void, const std::string&,
+                 const std::string&> publishStateEvent;
+    
     
   protected:
     /**
