@@ -146,6 +146,8 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
   Tcl_CreateCommand(interp, "recordStop", recordHandler, this, NULL);
   Tcl_CreateCommand(interp, "deactivateModule", deactivateModuleHandler,
                     this, NULL);
+  Tcl_CreateCommand(interp, "publishStateEvent", publishStateEventHandler,
+                    this, NULL);
 
   setVariable("script_path", event_script);
 
@@ -389,6 +391,23 @@ int EventHandler::deactivateModuleHandler(ClientData cdata, Tcl_Interp *irp,
   EventHandler *self = static_cast<EventHandler *>(cdata);
   Timer *t = new Timer(0);
   t->expired.connect(mem_fun(*self, &EventHandler::doDeactivateModule));
+
+  return TCL_OK;
+}
+
+
+int EventHandler::publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
+      	      	      	      int argc, const char *argv[])
+{
+  if (argc != 3)
+  {
+    char msg[] = "Usage: publishStateEvent <event name> <event msg>";
+    Tcl_SetResult(irp, msg, TCL_STATIC);
+    return TCL_ERROR;
+  }
+
+  EventHandler *self = static_cast<EventHandler *>(cdata);
+  self->publishStateEvent(argv[1], argv[2]);
 
   return TCL_OK;
 }

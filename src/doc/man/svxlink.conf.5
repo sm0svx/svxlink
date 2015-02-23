@@ -297,6 +297,19 @@ If the command for example is set to 998877 then 9988771 will set the node
 online and 9988770 will set it offline. If a module is active or if the
 ACTIVATE_MODULE_ON_LONG_CMD is used, the command must be prefixed with a star
 to work as expected. The star means "force core command".
+.TP
+.B STATE_PTY
+Using this configuration variable it is possible to specify a path to a UNIX 98
+PTY that SvxLink state events is published to. The published events is in a
+simple text format using a space separated list of values. SvxLink will create
+a softlink to the actual slave PTY. For that reason, SvxLink must have write
+permissions in the directory where the softlink should be created. Monitoring
+the PTY output is as simple at doing a
+.B "cat /path/to/pty"
+after starting SvxLink. See STATE PTY FORMAT for more information on the format
+of the state messages.
+
+Example: STATE_PTY=/tmp/state_pty
 .
 .SS Simplex Logic Section
 .
@@ -1147,10 +1160,8 @@ better to fulfill the CPU demands.
 
 Getting the DVB-T dongle running is out of scope for this document but what
 you need to do is to find out the frequency error on your specific dongle.
-If you have a recent version of the rtl_fm utility, that can be used to find
-the frequency error using the "-c" switch. The rtl_fm utility is in the
-rtl-sdr package. You also need the rtl_tcp utility from that package.
 
+The rtl_tcp utility is in a package named similar to something like rtl-sdr.
 When you have the rtl-sdr stuff installed, just start rtl_tcp. No command line
 arguments are needed. Then configure a Ddr receiver in SvxLink. All
 configuration variables that are available for an ordinary local receiver is
@@ -1304,39 +1315,6 @@ and fast receiver is receiving the same signal and the faster is currently
 chosen, when the PTT is released the slower receiver will be voted before
 closing.  This will cause a double squelch tail and double roger beep.
 Default is 500 milliseconds.
-.TP
-.B SQL_STATE_PTY
-Using this configuration variable it is possible to continuously get the state
-of all squelches for all receivers. The state is sent in text form to a UNIX98
-PTY which is created when SvxLink starts. The wanted path to the PTY should be
-specified in this configuration variable. SvxLink will create a softlink to the
-actual slave PTY. For that reason, SvxLink must have write permissions in the
-directory where the softlink should be created. Monitoring the PTY output is as
-simple at doing a
-.B "cat /path/to/pty"
-after starting SvxLink. 
-
-If a dash (-) is specified instead of a path, output will be sent to stdout.
-
-The format of the output is:
-.PP
-.RS 11
-<timestamp> <rx name><state><siglev> [<rx_name><state><siglev> ...]
-
-.RS -4
-where the different parts mean:
-.PP
-.RS 4
-timestamp = <seconds since 1 jan 1970>.<milliseconds>
-.RS 0
-rx_name = <configuration file section name for receiver>
-.RS 0
-state = _ (sql closed), : (sql open), * (sql open and rx selected)
-.RS 0
-siglev = The measured signal level
-
-.RS -4
-Example: SQL_STATE_PTY=/tmp/sql_state_pty
 .
 .SS Networked Receiver Section
 .
@@ -2041,6 +2019,48 @@ SIGLEV_OFFSET = - (mean lower) * SIGLEV_SLOPE
 After changing SIGLEV_SLOPE and SIGLEV_OFFSET, restart SvxLink and check to see
 that the squelch open value is now around 100 and the squelch close value is
 around 0.
+.
+.SH STATE PTY FORMAT
+.
+The format of the output from the state PTY is:
+.PP
+.RS 4
+<timestamp> <context>:<event name> <event data>
+
+.RS -4
+where the different parts mean:
+.PP
+.RS 4
+timestamp = <seconds since 1 jan 1970>.<milliseconds>
+.RS 0
+context = Name of context
+.RS 0
+event_name = Name of event
+.RS 0
+event data = Event specific data
+
+.RS -4
+
+The following specific events exist.
+.TP
+.B Voter:sql_state
+Report the state of all squelches for all receivers. The format of the event
+specific data is:
+.PP
+.RS 11
+<rx name><state><siglev> [<rx_name><state><siglev> ...]
+
+.RS -4
+where the different parts mean:
+.PP
+.RS 4
+rx_name = Configuration file section name for receiver
+.RS 0
+state = _ (sql closed), : (sql open), * (sql open and rx selected)
+.RS 0
+siglev = The measured signal level
+
+.RS -4
 .
 .SH FILES
 .
