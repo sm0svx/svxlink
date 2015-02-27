@@ -66,7 +66,7 @@ if (typeof EventSource !== 'function') {        // Attempt to fix IE
 }
 
 function getlist() {
-    $.getJSON('http://rpt.vrza.nl/repeaters.json',repeaterlist);
+    $.getJSON('/repeaters.json',repeaterlist);
 }
 
 function repeaterlist(list) {
