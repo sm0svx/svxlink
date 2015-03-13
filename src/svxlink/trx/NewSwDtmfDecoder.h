@@ -132,7 +132,7 @@ class NewSwDtmfDecoder : public DtmfDecoder
      * @param 	count The number of samples in the buffer
      * @return	Returns the number of samples that has been taken care of
      */
-    virtual int writeSamples(const float *samples, int count);
+    int handleSamples(const float *samples, int count);
     
     /**
      * @brief 	Return the active digit
@@ -147,22 +147,22 @@ class NewSwDtmfDecoder : public DtmfDecoder
     struct DtmfGoertzel : public Goertzel
     {
       float m_freq;
-      float m_phase_offset;
-      int m_period_block_len;
+      float m_max_fqdiff;
 
       void initialize(float freq);
     };
 
-    static const float DEFAULT_MAX_NORMAL_TWIST = 6.3f; // 8dB
-    static const float DEFAULT_MAX_REV_TWIST = 2.5f; // 4dB
+    static const float DEFAULT_MAX_NORMAL_TWIST_DB = 8.0f;
+    static const float DEFAULT_MAX_REV_TWIST_DB = 8.0f;
     static const size_t BLOCK_SIZE = INTERNAL_SAMPLE_RATE / 100; // 10ms
-    static const float ENERGY_THRESH = 1e-6 * BLOCK_SIZE; // Min passband energy
-    static const float REL_THRESH = 0.7; // Passband/tones relation threshold
+    static const float ENERGY_THRESH = 1e-3 * BLOCK_SIZE; // Min passband energy
+    static const float REL_THRESH = 0.8; // Passband/tones relation threshold
+    static const float MAX_FQ_ERROR = 0.025; // Max 2.5% frequency error
 
     /*! Maximum acceptable "normal" (lower bigger than higher) twist ratio */
-    float max_normal_twist;
+    float twist_nrm_thresh;
     /*! Maximum acceptable "reverse" (higher bigger than lower) twist ratio */
-    float max_reverse_twist;
+    float twist_rev_thresh;
 
     std::vector<DtmfGoertzel> row;
     std::vector<DtmfGoertzel> col;

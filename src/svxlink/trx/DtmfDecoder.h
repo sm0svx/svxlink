@@ -172,7 +172,7 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
      * @param 	count The number of samples in the buffer
      * @return	Returns the number of samples that has been taken care of
      */
-    virtual int writeSamples(const float *samples, int count) { return count; }
+    //virtual int writeSamples(const float *samples, int count) { return count; }
     
     /**
      * @brief 	Tell the DTMF decoder to flush the previously written samples
@@ -181,10 +181,12 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
      * samples. When done flushing, the sink should call the
      * sourceAllSamplesFlushed function.
      */
+    /*
     virtual void flushSamples(void)
     {
       sourceAllSamplesFlushed();
     }
+    */
     
     /**
      * @brief 	Return the active digit

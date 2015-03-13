@@ -31,6 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+#include <iomanip>
 #include <cmath>
 
 
@@ -40,6 +41,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncAudioFilter.h>
+#include <AsyncSigCAudioSink.h>
 
 
 /****************************************************************************
@@ -118,10 +121,12 @@ namespace {
  ****************************************************************************/
 
 NewSwDtmfDecoder::NewSwDtmfDecoder(Config &cfg, const string &name)
-  : DtmfDecoder(cfg, name), max_normal_twist(DEFAULT_MAX_NORMAL_TWIST),
-    max_reverse_twist(DEFAULT_MAX_REV_TWIST), row(4), col(4), block_pos(0),
-    det_cnt(0), undet_cnt(0), last_digit_detected(0)
+  : DtmfDecoder(cfg, name), twist_nrm_thresh(0), twist_rev_thresh(0), row(4),
+    col(4), block_pos(0), det_cnt(0), undet_cnt(0), last_digit_detected(0)
 {
+  twist_nrm_thresh = powf(10.0f, DEFAULT_MAX_NORMAL_TWIST_DB / 10.0f);
+  twist_rev_thresh = powf(10.0f, -DEFAULT_MAX_REV_TWIST_DB / 10.0f);
+
     // Row detectors
   row[0].initialize(697);
   row[1].initialize(770);
@@ -134,6 +139,16 @@ NewSwDtmfDecoder::NewSwDtmfDecoder(Config &cfg, const string &name)
   col[2].initialize(1477);
   col[3].initialize(1633);
 
+  AudioFilter *bpf = new AudioFilter("BpBu4/450-2500");
+  setHandler(bpf);
+
+  SigCAudioSink *sigc_sink = new SigCAudioSink;
+  sigc_sink->sigWriteSamples.connect(
+      mem_fun(*this, &NewSwDtmfDecoder::handleSamples));
+  sigc_sink->sigFlushSamples.connect(
+      mem_fun(sigc_sink, &SigCAudioSink::allSamplesFlushed));
+  bpf->registerSink(sigc_sink, true);
+
 } /* NewSwDtmfDecoder::NewSwDtmfDecoder */
 
 
@@ -144,20 +159,22 @@ bool NewSwDtmfDecoder::initialize(void)
     return false;
   }
   
-  int cfg_max_normal_twist;
+  float cfg_max_normal_twist = -1.0f;
   if (cfg().getValue(name(), "DTMF_MAX_FWD_TWIST", cfg_max_normal_twist))
   {
-    if (cfg_max_normal_twist >= 0)
+    if (cfg_max_normal_twist > 0.0f)
     {
-      max_normal_twist = powf(10, cfg_max_normal_twist / 10.0f);
+      twist_nrm_thresh = powf(10.0f, cfg_max_normal_twist / 10.0f);
     }
   }
   
-  int cfg_max_rev_twist;
+  float cfg_max_rev_twist = -1.0f;
   if (cfg().getValue(name(), "DTMF_MAX_REV_TWIST", cfg_max_rev_twist))
   {
-    if (cfg_max_rev_twist >= 0)
-      max_reverse_twist = powf(10, cfg_max_rev_twist / 10.0f);
+    if (cfg_max_rev_twist >= 0.0f)
+    {
+      twist_rev_thresh = powf(10.0f, -cfg_max_rev_twist / 10.0f);
+    }
   }
   
   return true;
@@ -165,7 +182,7 @@ bool NewSwDtmfDecoder::initialize(void)
 } /* NewSwDtmfDecoder::initialize */
 
 
-int NewSwDtmfDecoder::writeSamples(const float *buf, int len)
+int NewSwDtmfDecoder::handleSamples(const float *buf, int len)
 {
     for (int i = 0; i < len; i++)
     {
@@ -178,7 +195,7 @@ int NewSwDtmfDecoder::writeSamples(const float *buf, int len)
     }
     
     return len;
-} /* NewSwDtmfDecoder::writeSamples */
+} /* NewSwDtmfDecoder::handleSamples */
 
 
 /****************************************************************************
@@ -196,6 +213,8 @@ int NewSwDtmfDecoder::writeSamples(const float *buf, int len)
 
 void NewSwDtmfDecoder::processBlock(void)
 {
+  bool debug = true;
+
   for (int i=0; i<4; ++i)
   {
     row[i].reset();
@@ -212,7 +231,11 @@ void NewSwDtmfDecoder::processBlock(void)
     }
     block_energy += block[i] * block[i];
   }
-  cout << "### block_energy=" << block_energy;
+  if (debug)
+  {
+    cout << setprecision(2) << fixed;
+    cout << "### block_energy=" << setw(6) << block_energy;
+  }
 
   bool digit_active = false;
   float rel_energy = 0.0f;
@@ -241,62 +264,68 @@ void NewSwDtmfDecoder::processBlock(void)
 
     rel_energy = 2 * (max_row_ms + max_col_ms) / (BLOCK_SIZE * block_energy);
     //cout << " row=" << max_row << " col=" << max_col;
-    digit_active = (rel_energy > REL_THRESH);
+    float twist = max_row_ms / max_col_ms;
+    if (debug)
+    {
+      cout << " rel_energy=" << setw(4) << rel_energy;
+      cout << " twist=" << setw(5) << 10.0 * log10(twist) << "dB";
+    }
+    digit_active = (rel_energy > REL_THRESH) &&
+                   (twist > twist_rev_thresh) &&
+                   (twist < twist_nrm_thresh);
   }
-
-  //cout << " rel_energy=" << rel_energy;
 
   if (digit_active)
   {
     row[max_row].reset();
     col[max_col].reset();
-    double row_fq_sum = 0.0;
-    double col_fq_sum = 0.0;
     row[max_row].calc(block[0]);
     col[max_col].calc(block[0]);
-    float prev_row_phase = row[max_row].phase();
-    float prev_col_phase = col[max_col].phase();
-    int row_period_block_pos = 0;
-    int col_period_block_pos = 0;
-    int row_period_cnt = 0;
-    int col_period_cnt = 0;
+    complex<double> prev_row_result = row[max_row].result();
+    complex<double> prev_col_result = col[max_col].result();
+    complex<double> row_sum = 0;
+    complex<double> col_sum = 0;
     for (size_t i=1; i<BLOCK_SIZE; ++i)
     {
       row[max_row].calc(block[i]);
       col[max_col].calc(block[i]);
 
-      if (++row_period_block_pos >= row[max_row].m_period_block_len)
-      {
-        row_period_block_pos = 0;
-        float row_phase = row[max_row].phase();
-        row_fq_sum += phaseDiffToFq(row_phase, prev_row_phase);
-        prev_row_phase = row_phase;
-        ++row_period_cnt;
-      }
+        // Caclulate row phase differense and accumulate
+      complex<double> row_result = row[max_row].result();
+      row_sum += row_result * conj(prev_row_result);
+      prev_row_result = row_result;
 
-      if (++col_period_block_pos >= col[max_col].m_period_block_len)
-      {
-        col_period_block_pos = 0;
-        float col_phase = col[max_col].phase();
-        col_fq_sum += phaseDiffToFq(col_phase, prev_col_phase);
-        prev_col_phase = col_phase;
-        ++col_period_cnt;
-      }
+        // Caclulate column phase differense and accumulate
+      complex<double> col_result = col[max_col].result();
+      col_sum += col_result * conj(prev_col_result);
+      prev_col_result = col_result;
     }
-    //float row_fqdiff = (row_fq_sum / (BLOCK_SIZE-1)) - row[max_row].m_freq;
-    //float col_fqdiff = (col_fq_sum / (BLOCK_SIZE-1)) - col[max_col].m_freq;
-    float row_fqdiff = (row_fq_sum / row_period_cnt);
-    float col_fqdiff = (col_fq_sum / col_period_cnt);
-    cout << " row_fqdiff=" << row_fqdiff;
-    cout << " col_fqdiff=" << col_fqdiff;
+    float row_fq = INTERNAL_SAMPLE_RATE * arg(row_sum) / (2 * M_PI);
+    float col_fq = INTERNAL_SAMPLE_RATE * arg(col_sum) / (2 * M_PI);
+    float row_fqdiff = 2.0 * (row_fq - row[max_row].m_freq);
+    float col_fqdiff = 2.0 * (col_fq - col[max_col].m_freq);
+    if (debug)
+    {
+      cout << " row_fqdiff=" << row_fqdiff
+           << " (" << (100.0 * row_fqdiff / row[max_row].m_freq) << "%)";
+      cout << " col_fqdiff=" << col_fqdiff
+           << " (" << (100.0 * col_fqdiff / col[max_col].m_freq) << "%)";
+
+      digit_active = (abs(row_fqdiff) < row[max_row].m_max_fqdiff) &&
+                     (abs(col_fqdiff) < col[max_col].m_max_fqdiff);
+    }
   }
 
   if (digit_active)
   {
+    undet_cnt = 0;
     if (++det_cnt == 3)
     {
       last_digit_detected = digit_map[max_row][max_col];
-      //cout << " digit=" << last_digit_detected;
+      if (debug)
+      {
+        cout << " activated=" << last_digit_detected;
+      }
       digitActivated(last_digit_detected);
     }
   }
@@ -306,6 +335,10 @@ void NewSwDtmfDecoder::processBlock(void)
     {
       if (det_cnt > 2)
       {
+        if (debug)
+        {
+          cout << " deactivated=" << last_digit_detected;
+        }
         digitDeactivated(last_digit_detected, 10 * det_cnt);
       }
       det_cnt = 0;
@@ -314,7 +347,11 @@ void NewSwDtmfDecoder::processBlock(void)
     }
   }
 
-  cout << endl;
+  if (debug)
+  {
+    cout << " " << (digit_active ? "*" : "");
+    cout << endl;
+  }
 
 } /* NewSwDtmfDecoder::processBlock */
 
@@ -337,10 +374,11 @@ float NewSwDtmfDecoder::phaseDiffToFq(float phase, float prev_phase)
 void NewSwDtmfDecoder::DtmfGoertzel::initialize(float freq)
 {
   Goertzel::initialize(freq, INTERNAL_SAMPLE_RATE);
-  m_period_block_len = static_cast<int>(ceilf(INTERNAL_SAMPLE_RATE / freq));
-  float actual_fq = INTERNAL_SAMPLE_RATE / m_period_block_len;
-  cout << "### actual_fq=" << actual_fq << endl;
-  m_freq = actual_fq;
-  m_phase_offset = 2.0f * (freq - actual_fq) * (M_PI / actual_fq);
+  m_freq = freq;
+  m_max_fqdiff = m_freq * MAX_FQ_ERROR;
 }
 
+
+/*
+ * This file has not been truncated
+ */
