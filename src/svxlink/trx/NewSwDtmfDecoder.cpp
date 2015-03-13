@@ -139,7 +139,7 @@ NewSwDtmfDecoder::NewSwDtmfDecoder(Config &cfg, const string &name)
   col[2].initialize(1477);
   col[3].initialize(1633);
 
-  AudioFilter *bpf = new AudioFilter("BpBu4/450-2500");
+  AudioFilter *bpf = new AudioFilter("BpBu6/350-3500");
   setHandler(bpf);
 
   SigCAudioSink *sigc_sink = new SigCAudioSink;
