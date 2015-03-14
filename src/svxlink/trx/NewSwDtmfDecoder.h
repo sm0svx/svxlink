@@ -163,7 +163,8 @@ class NewSwDtmfDecoder : public DtmfDecoder
     static const size_t BLOCK_SIZE = INTERNAL_SAMPLE_RATE / 50; // 20ms
     static const size_t OVERLAP = BLOCK_SIZE / 2; // 50% overlap
     static const float ENERGY_THRESH = 1e-6 * BLOCK_SIZE; // Min passband energy
-    static const float REL_THRESH = 0.70; // Passband/tones relation threshold
+    static const float REL_THRESH_LO = 0.70; // Low passband relation threshold
+    static const float REL_THRESH_HI = 0.85; // High passband relation threshold
     static const float MAX_FQ_ERROR = 0.025; // Max 2.5% frequency error
 
     /*! Maximum acceptable "normal" (lower bigger than higher) twist ratio */

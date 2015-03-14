@@ -222,20 +222,28 @@ void NewSwDtmfDecoder::processBlock(void)
 {
   bool debug = false;
 
-  for (int i=0; i<4; ++i)
-  {
-    row[i].reset();
-    col[i].reset();
-  }
+    // Reset all Goertzel objects
+  row[0].reset();
+  row[1].reset();
+  row[2].reset();
+  row[3].reset();
+  col[0].reset();
+  col[1].reset();
+  col[2].reset();
+  col[3].reset();
 
+    // Calculate total block energy and energy for all Goertzel detectors
   double block_energy = 0.0;
   for (size_t i=0; i<BLOCK_SIZE; ++i)
   {
-    for (int di=0; di<4; ++di)
-    {
-      row[di].calc(block[i]);
-      col[di].calc(block[i]);
-    }
+    row[0].calc(block[i]);
+    row[1].calc(block[i]);
+    row[2].calc(block[i]);
+    row[3].calc(block[i]);
+    col[0].calc(block[i]);
+    col[1].calc(block[i]);
+    col[2].calc(block[i]);
+    col[3].calc(block[i]);
     block_energy += block[i] * block[i];
   }
   if (debug)
@@ -245,101 +253,112 @@ void NewSwDtmfDecoder::processBlock(void)
   }
 
   bool digit_active = false;
-  float rel_energy = 0.0f;
-  size_t max_row = 0;
-  size_t max_col = 0;
+  size_t max_row_idx = 0;
+  size_t max_col_idx = 0;
   if (block_energy > ENERGY_THRESH)
   {
+    float rel_energy = 0.0f;
     float max_row_ms = 0.0f;
     float max_col_ms = 0.0f;
     for (size_t i = 0; i < 4; ++i)
     {
-      float row_ms = row[i].magnitudeSquared();
+      const float row_ms = row[i].magnitudeSquared();
       if (row_ms > max_row_ms)
       {
         max_row_ms = row_ms;
-        max_row = i;
+        max_row_idx = i;
       }
 
-      float col_ms = col[i].magnitudeSquared();
+      const float col_ms = col[i].magnitudeSquared();
       if (col_ms > max_col_ms)
       {
         max_col_ms = col_ms;
-        max_col = i;
+        max_col_idx = i;
       }
     }
 
     rel_energy = 2 * (max_row_ms + max_col_ms) / (BLOCK_SIZE * block_energy);
-    //cout << " row=" << max_row << " col=" << max_col;
-    float twist = max_row_ms / max_col_ms;
+    //cout << " row=" << max_row_idx << " col=" << max_col_idx;
+    const float twist = max_row_ms / max_col_ms;
     if (debug)
     {
       cout << " rel_energy=" << setw(4) << rel_energy;
       cout << " twist=" << setw(5) << 10.0 * log10(twist) << "dB";
     }
-    digit_active = (rel_energy > REL_THRESH) &&
-                   (twist > twist_rev_thresh) &&
-                   (twist < twist_nrm_thresh);
-    if (rel_energy > 0.85)
+    if (rel_energy > REL_THRESH_HI)
     {
       det_cnt_weight = 5;
+      digit_active = (twist > twist_rev_thresh) && (twist < twist_nrm_thresh);
     }
-    else if (rel_energy > 0.70)
+    else if (rel_energy > REL_THRESH_LO)
     {
       det_cnt_weight = 1;
+      digit_active = (twist > twist_rev_thresh) && (twist < twist_nrm_thresh);
+    }
+    else
+    {
+      digit_active = false;
     }
   }
 
   char digit = 0;
   if (digit_active)
   {
-    digit = digit_map[max_row][max_col];
+    digit = digit_map[max_row_idx][max_col_idx];
     if (debug)
     {
       cout << " digit=" << digit;
     }
-    digit_active = ((det_cnt == 0) || (digit == last_digit_active));
+    digit_active = ((det_state == STATE_IDLE) || (digit == last_digit_active));
     last_digit_active = digit;
   }
 
   if (digit_active)
   {
-    row[max_row].reset();
-    col[max_col].reset();
-    row[max_row].calc(block[0]);
-    col[max_col].calc(block[0]);
-    complex<double> prev_row_result = row[max_row].result();
-    complex<double> prev_col_result = col[max_col].result();
+    DtmfGoertzel &max_row = row[max_row_idx];
+    DtmfGoertzel &max_col = col[max_col_idx];
+    max_row.reset();
+    max_col.reset();
+    max_row.calc(block[0]);
+    max_col.calc(block[0]);
+    complex<double> prev_row_result = max_row.result();
+    complex<double> prev_col_result = max_col.result();
     complex<double> row_sum = 0;
     complex<double> col_sum = 0;
+    size_t samp_cnt = 0;
     for (size_t i=1; i<BLOCK_SIZE; ++i)
     {
-      row[max_row].calc(block[i]);
-      col[max_col].calc(block[i]);
+      max_row.calc(block[i]);
+      max_col.calc(block[i]);
 
-        // Caclulate row phase differense and accumulate
-      complex<double> row_result = row[max_row].result();
-      row_sum += row_result * conj(prev_row_result);
-      prev_row_result = row_result;
+      if (++samp_cnt >= 4)
+      {
+        samp_cnt = 0;
 
-        // Caclulate column phase differense and accumulate
-      complex<double> col_result = col[max_col].result();
-      col_sum += col_result * conj(prev_col_result);
-      prev_col_result = col_result;
+          // Caclulate row phase differense and accumulate
+        complex<double> row_result = max_row.result();
+        row_sum += row_result * conj(prev_row_result);
+        prev_row_result = row_result;
+
+          // Caclulate column phase differense and accumulate
+        complex<double> col_result = max_col.result();
+        col_sum += col_result * conj(prev_col_result);
+        prev_col_result = col_result;
+      }
     }
-    float row_fq = INTERNAL_SAMPLE_RATE * arg(row_sum) / (2 * M_PI);
-    float col_fq = INTERNAL_SAMPLE_RATE * arg(col_sum) / (2 * M_PI);
-    float row_fqdiff = 2.0 * (row_fq - row[max_row].m_freq);
-    float col_fqdiff = 2.0 * (col_fq - col[max_col].m_freq);
+    float row_fq = INTERNAL_SAMPLE_RATE * arg(row_sum) / (8.0 * M_PI);
+    float col_fq = INTERNAL_SAMPLE_RATE * arg(col_sum) / (8.0 * M_PI);
+    float row_fqdiff = 2.0 * (row_fq - max_row.m_freq);
+    float col_fqdiff = 2.0 * (col_fq - max_col.m_freq);
     if (debug)
     {
       cout << " row_fqdiff=" << row_fqdiff
-           << " (" << (100.0 * row_fqdiff / row[max_row].m_freq) << "%)";
+           << " (" << (100.0 * row_fqdiff / max_row.m_freq) << "%)";
       cout << " col_fqdiff=" << col_fqdiff
-           << " (" << (100.0 * col_fqdiff / col[max_col].m_freq) << "%)";
+           << " (" << (100.0 * col_fqdiff / max_col.m_freq) << "%)";
 
-      digit_active = (abs(row_fqdiff) < row[max_row].m_max_fqdiff) &&
-                     (abs(col_fqdiff) < col[max_col].m_max_fqdiff);
+      digit_active = (abs(row_fqdiff) < max_row.m_max_fqdiff) &&
+                     (abs(col_fqdiff) < max_col.m_max_fqdiff);
     }
   }
 
@@ -413,55 +432,6 @@ void NewSwDtmfDecoder::processBlock(void)
       }
       break;
   }
-
-#if 0
-  if (digit_active)
-  {
-    last_digit_active = digit;
-    det_cnt += det_cnt_weight;
-    if (det_cnt == min_det_cnt)
-    {
-      if (debug)
-      {
-        cout << " activated";
-      }
-      digitActivated(last_digit_active);
-    }
-    else if (det_cnt > min_det_cnt)
-    {
-      det_cnt += undet_cnt;
-    }
-    undet_cnt = 0;
-  }
-  else if (det_cnt > 0)
-  {
-    if (det_cnt >= min_det_cnt)
-    {
-      if (++undet_cnt >= min_undet_cnt)
-      {
-        const int first_block_time = 1000 * BLOCK_SIZE / INTERNAL_SAMPLE_RATE;
-        const int block_time =
-          1000 * (BLOCK_SIZE-OVERLAP) / INTERNAL_SAMPLE_RATE;
-        const int duration = first_block_time + block_time * (det_cnt - 1);
-        if (debug)
-        {
-          cout << " deactivated=" << last_digit_active;
-          cout << " duration=" << duration;
-        }
-        digitDeactivated(last_digit_active, duration);
-        det_cnt = 0;
-        undet_cnt = 0;
-        last_digit_active = 0;
-      }
-    }
-    else
-    {
-      det_cnt = 0;
-      undet_cnt = 0;
-      last_digit_active = 0;
-    }
-  }
-#endif
 
   if (debug)
   {
