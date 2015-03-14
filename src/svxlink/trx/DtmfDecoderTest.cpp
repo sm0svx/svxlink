@@ -12,24 +12,12 @@
 using namespace std;
 using namespace Async;
 
-namespace {
-string send_digits = "00112233445566778899AABBCCDD**##";
-//string send_digits = "0123456789ABCD*#";
-//string send_digits = "1";
-string received_digits;
-
-void digit_detected(char ch, int duration)
-{
-  //cout << ch << " " << duration << endl;
-  received_digits += ch;
-}
-};
-
 
 class FileWriter : public Async::AudioProcessor
 {
   public:
     FileWriter(const string &path)
+      : samppos(0)
     {
       ofs.open(path.c_str(), ios::out | ios::binary);
       if (ofs.fail())
@@ -44,6 +32,8 @@ class FileWriter : public Async::AudioProcessor
       ofs.close();
     }
 
+    int sampPos(void) { return samppos; }
+
   protected:
     void processSamples(float *dest, const float *src, int count)
     {
@@ -52,10 +42,30 @@ class FileWriter : public Async::AudioProcessor
       {
         dest[i] = src[i];
       }
+      samppos += count;
     }
 
   private:
     ofstream ofs;
+    int samppos;
+};
+
+
+namespace {
+string send_digits = "00112233445566778899AABBCCDD**##";
+//string send_digits = "0123456789ABCD*#";
+//string send_digits = "1";
+string received_digits;
+FileWriter *fwriter = 0;
+
+void digit_detected(char ch, int duration)
+{
+  /*
+  cout << "pos=" << fwriter->sampPos() << " digit=" << ch
+       << " duration=" << duration << endl;
+  */
+  received_digits += ch;
+}
 };
 
 
@@ -110,6 +120,10 @@ class FileReader : public AudioSource
         int16_t buf[256];
         ifs.read(reinterpret_cast<char*>(buf), sizeof(buf));
         int samp_cnt = ifs.gcount() / sizeof(*buf);
+        if (samp_cnt == 0)
+        {
+          break;
+        }
         float samples[samp_cnt];
         for (int i=0; i<samp_cnt; ++i)
         {
@@ -140,17 +154,16 @@ int main()
   //cfg.setValue("Test", "DTMF_MAX_REV_TWIST", "6");
 
   AudioSource *prev_src = 0;
-  DtmfEncoder *enc = 0;
 #define SIMULATE
 #ifdef SIMULATE
-  enc = new DtmfEncoder;
+  DtmfEncoder *enc = new DtmfEncoder;
   enc->setToneLength(40);
-  enc->setToneSpacing(20);
+  enc->setToneSpacing(40);
   enc->setToneAmplitude(-8);
   prev_src = enc;
 
-  AudioNoiseAdder *noise_adder = new AudioNoiseAdder(0.39);
-  //AudioNoiseAdder *noise_adder = new AudioNoiseAdder(0.0);
+  AudioNoiseAdder *noise_adder = new AudioNoiseAdder(0.0);
+  //AudioNoiseAdder *noise_adder = new AudioNoiseAdder(0.64);
   prev_src->registerSink(noise_adder);
   prev_src = noise_adder;
 #else
@@ -158,7 +171,7 @@ int main()
   prev_src = rdr;
 #endif
 
-  FileWriter *fwriter = new FileWriter("/tmp/samples.raw");
+  fwriter = new FileWriter("/tmp/samples.raw");
   prev_src->registerSink(fwriter);
   prev_src = fwriter;
 
@@ -172,23 +185,31 @@ int main()
   prev_src->registerSink(dec);
   prev_src = 0;
 
-#ifndef SIMULATE
+#ifdef SIMULATE
   //for (int i=0; i<1000; ++i)
   {
     enc->send(send_digits);
   }
+#else
   if (!rdr->open("/tmp/output.raw"))
+  //if (!rdr->open("/tmp/selected.raw"))
+  //if (!rdr->open("/tmp/false10.raw"))
   {
     exit(1);
   }
 #endif
-  cout << received_digits << endl;
   if (!received_digits.empty())
   {
-    return 1;
+    cout << received_digits << endl;
   }
 #ifdef SIMULATE
   if (received_digits != send_digits)
+  {
+    cout << "received != sent\n";
+    return 1;
+  }
+#else
+  if (!received_digits.empty())
   {
     return 1;
   }

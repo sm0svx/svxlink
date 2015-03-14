@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <cstring>
 
 
 /****************************************************************************
@@ -123,7 +124,8 @@ namespace {
 NewSwDtmfDecoder::NewSwDtmfDecoder(Config &cfg, const string &name)
   : DtmfDecoder(cfg, name), twist_nrm_thresh(0), twist_rev_thresh(0), row(4),
     col(4), block_pos(0), det_cnt(0), undet_cnt(0), last_digit_active(0),
-    min_det_cnt(DEFAULT_MIN_DET_CNT)
+    min_det_cnt(DEFAULT_MIN_DET_CNT), min_undet_cnt(DEFAULT_MIN_UNDET_CNT),
+    det_state(STATE_IDLE), det_cnt_weight(0)
 {
   twist_nrm_thresh = powf(10.0f, DEFAULT_MAX_NORMAL_TWIST_DB / 10.0f);
   twist_rev_thresh = powf(10.0f, -DEFAULT_MAX_REV_TWIST_DB / 10.0f);
@@ -185,17 +187,21 @@ bool NewSwDtmfDecoder::initialize(void)
 
 int NewSwDtmfDecoder::handleSamples(const float *buf, int len)
 {
-    for (int i = 0; i < len; i++)
+  for (int i = 0; i < len; i++)
+  {
+    block[block_pos] = buf[i];
+    if (++block_pos >= BLOCK_SIZE)
     {
-      block[block_pos] = buf[i];
-      if (++block_pos >= BLOCK_SIZE)
+      processBlock();
+      if (OVERLAP > 0)
       {
-        processBlock();
-        block_pos = 0;
+        memmove(block, block + (BLOCK_SIZE - OVERLAP), OVERLAP * sizeof(*buf));
       }
+      block_pos = OVERLAP;
     }
-    
-    return len;
+  }
+
+  return len;
 } /* NewSwDtmfDecoder::handleSamples */
 
 
@@ -214,7 +220,7 @@ int NewSwDtmfDecoder::handleSamples(const float *buf, int len)
 
 void NewSwDtmfDecoder::processBlock(void)
 {
-  bool debug = true;
+  bool debug = false;
 
   for (int i=0; i<4; ++i)
   {
@@ -274,6 +280,26 @@ void NewSwDtmfDecoder::processBlock(void)
     digit_active = (rel_energy > REL_THRESH) &&
                    (twist > twist_rev_thresh) &&
                    (twist < twist_nrm_thresh);
+    if (rel_energy > 0.85)
+    {
+      det_cnt_weight = 5;
+    }
+    else if (rel_energy > 0.70)
+    {
+      det_cnt_weight = 1;
+    }
+  }
+
+  char digit = 0;
+  if (digit_active)
+  {
+    digit = digit_map[max_row][max_col];
+    if (debug)
+    {
+      cout << " digit=" << digit;
+    }
+    digit_active = ((det_cnt == 0) || (digit == last_digit_active));
+    last_digit_active = digit;
   }
 
   if (digit_active)
@@ -317,19 +343,83 @@ void NewSwDtmfDecoder::processBlock(void)
     }
   }
 
+  switch (det_state)
+  {
+    case STATE_IDLE:
+      if (digit_active)
+      {
+        det_cnt = det_cnt_weight;
+        undet_cnt = 0;
+        duration = 1;
+        det_state = STATE_DET_DELAY;
+      }
+      break;
+
+    case STATE_DET_DELAY:
+      duration += 1;
+      if (digit_active)
+      {
+        undet_cnt = 0;
+        det_cnt += det_cnt_weight;
+        if (det_cnt >= min_det_cnt)
+        {
+          if (debug)
+          {
+            cout << " activated";
+          }
+          digitActivated(last_digit_active);
+          det_state = STATE_DETECTED;
+        }
+      }
+      else
+      {
+        if ((det_cnt_weight > 1) || (++undet_cnt >= 2))
+        {
+          undet_cnt = 0;
+          det_state = STATE_IDLE;
+        }
+      }
+      break;
+
+    case STATE_DETECTED:
+      if (digit_active)
+      {
+        if (undet_cnt > 0)
+        {
+          duration += undet_cnt;
+          undet_cnt = 0;
+        }
+        else
+        {
+          duration += 1;
+        }
+      }
+      else
+      {
+        if (++undet_cnt >= min_undet_cnt)
+        {
+          const int first_block_time = 1000 * BLOCK_SIZE / INTERNAL_SAMPLE_RATE;
+          const int block_time =
+              1000 * (BLOCK_SIZE-OVERLAP) / INTERNAL_SAMPLE_RATE;
+          const int dur_ms = first_block_time + block_time * (duration - 1);
+          if (debug)
+          {
+            cout << " deactivated=" << last_digit_active;
+            cout << " duration=" << dur_ms;
+          }
+          digitDeactivated(last_digit_active, dur_ms);
+          det_state = STATE_IDLE;
+        }
+      }
+      break;
+  }
+
+#if 0
   if (digit_active)
   {
-    char digit = digit_map[max_row][max_col];
-    if (debug)
-    {
-      cout << " digit=" << digit;
-    }
-    if (digit != last_digit_active)
-    {
-      det_cnt = 0;
-    }
     last_digit_active = digit;
-    if (++det_cnt == min_det_cnt)
+    det_cnt += det_cnt_weight;
+    if (det_cnt == min_det_cnt)
     {
       if (debug)
       {
@@ -345,31 +435,39 @@ void NewSwDtmfDecoder::processBlock(void)
   }
   else if (det_cnt > 0)
   {
-    if (++undet_cnt > 1)
+    if (det_cnt >= min_det_cnt)
     {
-      if (det_cnt >= min_det_cnt)
+      if (++undet_cnt >= min_undet_cnt)
       {
-        const int block_time = 1000 * BLOCK_SIZE / INTERNAL_SAMPLE_RATE;
-        const int duration = block_time * det_cnt;
+        const int first_block_time = 1000 * BLOCK_SIZE / INTERNAL_SAMPLE_RATE;
+        const int block_time =
+          1000 * (BLOCK_SIZE-OVERLAP) / INTERNAL_SAMPLE_RATE;
+        const int duration = first_block_time + block_time * (det_cnt - 1);
         if (debug)
         {
           cout << " deactivated=" << last_digit_active;
           cout << " duration=" << duration;
         }
         digitDeactivated(last_digit_active, duration);
+        det_cnt = 0;
+        undet_cnt = 0;
+        last_digit_active = 0;
       }
+    }
+    else
+    {
       det_cnt = 0;
       undet_cnt = 0;
       last_digit_active = 0;
     }
   }
+#endif
 
   if (debug)
   {
     cout << " " << (digit_active ? "*" : "");
     cout << endl;
   }
-
 } /* NewSwDtmfDecoder::processBlock */
 
 
