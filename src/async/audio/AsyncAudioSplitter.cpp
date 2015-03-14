@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2007  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -86,7 +86,7 @@ class Async::AudioSplitter::Branch : public AudioSource
     int   current_buf_pos;
     bool  is_flushed;
   
-    Branch(AudioSplitter *splitter, AudioSink *sink, bool managed)
+    Branch(AudioSplitter *splitter)
       : current_buf_pos(0), is_flushed(true), is_enabled(true),
 	is_stopped(false), is_flushing(false), splitter(splitter)
     {
@@ -227,8 +227,11 @@ class Async::AudioSplitter::Branch : public AudioSource
 
 AudioSplitter::AudioSplitter(void)
   : buf(0), buf_size(0), buf_len(0), do_flush(false), input_stopped(false),
-    flushed_branches(0), cleanup_branches_timer(0)
+    flushed_branches(0), cleanup_branches_timer(0), main_branch(0)
 {
+  main_branch = new Branch(this);
+  branches.push_back(main_branch);
+  AudioSource::setHandler(main_branch);
 } /* AudioSplitter::AudioSplitter */
 
 
@@ -238,12 +241,15 @@ AudioSplitter::~AudioSplitter(void)
   cleanup_branches_timer = 0;
   delete [] buf;
   removeAllSinks();
+  delete main_branch;
+  main_branch = 0;
+  branches.clear();
 } /* AudioSplitter::~AudioSplitter */
 
 
 void AudioSplitter::addSink(AudioSink *sink, bool managed)
 {
-  Branch *branch = new Branch(this, sink, managed);
+  Branch *branch = new Branch(this);
   branch->registerSink(sink, managed);
   branches.push_back(branch);
   if (do_flush)
@@ -255,15 +261,16 @@ void AudioSplitter::addSink(AudioSink *sink, bool managed)
 
 void AudioSplitter::removeSink(AudioSink *sink)
 {
+  if (sink == main_branch->sink())
+  {
+    return;
+  }
+
   list<Branch *>::iterator it;
   for (it = branches.begin(); it != branches.end(); ++it)
   {
     if ((*it)->sink() == sink)
     {
-      //Branch *branch = *it;
-      //branches.erase(it);
-      //*it = 0;
-      //delete branch;
       if ((*it)->sinkManaged())
       {
       	delete (*it)->sink();
@@ -289,14 +296,23 @@ void AudioSplitter::removeAllSinks(void)
   list<Branch *>::iterator it;
   for (it = branches.begin(); it != branches.end(); ++it)
   {
-    delete (*it);
+    if (*it != main_branch)
+    {
+      delete *it;
+    }
   }
   branches.clear();
+  branches.push_back(main_branch);
 } /* AudioSplitter::removeAllSinks */
 
 
 void AudioSplitter::enableSink(AudioSink *sink, bool enable)
 {
+  if (sink == main_branch->sink())
+  {
+    return;
+  }
+
   list<Branch *>::iterator it;
   for (it = branches.begin(); it != branches.end(); ++it)
   {
@@ -515,7 +531,7 @@ void AudioSplitter::cleanupBranches(Timer *t)
   list<Branch *>::iterator it = branches.begin();
   while (it != branches.end())
   {
-    if (!(*it)->isRegistered())
+    if ((*it != main_branch) && !(*it)->isRegistered())
     {
       list<Branch *>::iterator delete_it = it;
       ++it;
@@ -534,4 +550,3 @@ void AudioSplitter::cleanupBranches(Timer *t)
 /*
  * This file has not been truncated
  */
-
