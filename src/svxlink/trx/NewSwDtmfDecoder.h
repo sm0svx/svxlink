@@ -140,7 +140,7 @@ class NewSwDtmfDecoder : public DtmfDecoder
      */
     char activeDigit(void) const
     {
-      return last_digit_detected ? last_digit_detected : '?';
+      return (det_cnt >= min_det_cnt) ? last_digit_active : '?';
     }
 
   private:
@@ -154,9 +154,10 @@ class NewSwDtmfDecoder : public DtmfDecoder
 
     static const float DEFAULT_MAX_NORMAL_TWIST_DB = 8.0f;
     static const float DEFAULT_MAX_REV_TWIST_DB = 8.0f;
-    static const size_t BLOCK_SIZE = INTERNAL_SAMPLE_RATE / 100; // 10ms
-    static const float ENERGY_THRESH = 1e-3 * BLOCK_SIZE; // Min passband energy
-    static const float REL_THRESH = 0.8; // Passband/tones relation threshold
+    static const size_t DEFAULT_MIN_DET_CNT = 2;
+    static const size_t BLOCK_SIZE = 3 * INTERNAL_SAMPLE_RATE / 200; // 15ms
+    static const float ENERGY_THRESH = 1e-6 * BLOCK_SIZE; // Min passband energy
+    static const float REL_THRESH = 0.85; // Passband/tones relation threshold
     static const float MAX_FQ_ERROR = 0.025; // Max 2.5% frequency error
 
     /*! Maximum acceptable "normal" (lower bigger than higher) twist ratio */
@@ -171,7 +172,8 @@ class NewSwDtmfDecoder : public DtmfDecoder
     size_t block_pos;
     size_t det_cnt;
     size_t undet_cnt;
-    char last_digit_detected;
+    char last_digit_active;
+    size_t min_det_cnt;
 
     void processBlock(void);
     float phaseDiffToFq(float phase, float prev_phase);

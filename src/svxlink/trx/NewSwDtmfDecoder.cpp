@@ -122,7 +122,8 @@ namespace {
 
 NewSwDtmfDecoder::NewSwDtmfDecoder(Config &cfg, const string &name)
   : DtmfDecoder(cfg, name), twist_nrm_thresh(0), twist_rev_thresh(0), row(4),
-    col(4), block_pos(0), det_cnt(0), undet_cnt(0), last_digit_detected(0)
+    col(4), block_pos(0), det_cnt(0), undet_cnt(0), last_digit_active(0),
+    min_det_cnt(DEFAULT_MIN_DET_CNT)
 {
   twist_nrm_thresh = powf(10.0f, DEFAULT_MAX_NORMAL_TWIST_DB / 10.0f);
   twist_rev_thresh = powf(10.0f, -DEFAULT_MAX_REV_TWIST_DB / 10.0f);
@@ -318,32 +319,48 @@ void NewSwDtmfDecoder::processBlock(void)
 
   if (digit_active)
   {
-    undet_cnt = 0;
-    if (++det_cnt == 3)
+    char digit = digit_map[max_row][max_col];
+    if (debug)
     {
-      last_digit_detected = digit_map[max_row][max_col];
+      cout << " digit=" << digit;
+    }
+    if (digit != last_digit_active)
+    {
+      det_cnt = 0;
+    }
+    last_digit_active = digit;
+    if (++det_cnt == min_det_cnt)
+    {
       if (debug)
       {
-        cout << " activated=" << last_digit_detected;
+        cout << " activated";
       }
-      digitActivated(last_digit_detected);
+      digitActivated(last_digit_active);
     }
+    else if (det_cnt > min_det_cnt)
+    {
+      det_cnt += undet_cnt;
+    }
+    undet_cnt = 0;
   }
   else if (det_cnt > 0)
   {
     if (++undet_cnt > 1)
     {
-      if (det_cnt > 2)
+      if (det_cnt >= min_det_cnt)
       {
+        const int block_time = 1000 * BLOCK_SIZE / INTERNAL_SAMPLE_RATE;
+        const int duration = block_time * det_cnt;
         if (debug)
         {
-          cout << " deactivated=" << last_digit_detected;
+          cout << " deactivated=" << last_digit_active;
+          cout << " duration=" << duration;
         }
-        digitDeactivated(last_digit_detected, 10 * det_cnt);
+        digitDeactivated(last_digit_active, duration);
       }
       det_cnt = 0;
       undet_cnt = 0;
-      last_digit_detected = 0;
+      last_digit_active = 0;
     }
   }
 
