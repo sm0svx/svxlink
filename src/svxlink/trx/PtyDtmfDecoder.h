@@ -152,6 +152,18 @@ class PtyDtmfDecoder : public HwDtmfDecoder
      */
     virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
     
+    /**
+     * @brief   The detection time for this detector
+     * @returns Returns the detection time in milliseconds
+     *
+     * This function will return the time in milliseconds that it will take
+     * for the detector to detect a DTMF digit. That is, the time from the
+     * moment when the tone is activated until the digitActivated signal is
+     * emitted.
+     * The time can for example be used in a DTMF muting function.
+     */
+    virtual int detectionTime(void) const { return 75; }
+
   protected:
 
   private:

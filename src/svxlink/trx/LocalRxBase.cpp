@@ -106,7 +106,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define DTMF_MUTING_PRE   40
 #define DTMF_MUTING_POST  200
 #define TONE_1750_MUTING_PRE 75
 #define TONE_1750_MUTING_POST 100
@@ -233,9 +232,9 @@ class AudioUdpSink : public UdpSocket, public AudioSink
 LocalRxBase::LocalRxBase(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), mute_state(MUTE_ALL),
     squelch_det(0), siglevdet(0), /* siglev_offset(0.0), siglev_slope(1.0), */
-    tone_dets(0), sql_valve(0), delay(0), mute_dtmf(false), sql_tail_elim(0),
+    tone_dets(0), sql_valve(0), delay(0), sql_tail_elim(0),
     preamp_gain(0), mute_valve(0), sql_hangtime(0), sql_extended_hangtime(0),
-    sql_extended_hangtime_thresh(0), input_fifo(0)
+    sql_extended_hangtime_thresh(0), input_fifo(0), dtmf_muting_pre(0)
 {
 } /* LocalRxBase::LocalRxBase */
 
@@ -257,21 +256,7 @@ bool LocalRxBase::initialize(void)
   bool deemphasis = false;
   cfg.getValue(name(), "DEEMPHASIS", deemphasis);
   
-  if (cfg.getValue(name(), "MUTE_DTMF", mute_dtmf))
-  {
-    cerr << "*** ERROR: The MUTE_DTMF configuration variable has been\n"
-      	 << "           renamed to DTMF_MUTING. Change this in configuration\n"
-	 << "           section \"" << name() << "\".\n";
-    return false;
-  }
-
   int delay_line_len = 0;
-  cfg.getValue(name(), "DTMF_MUTING", mute_dtmf);
-  if (mute_dtmf)
-  {
-    delay_line_len = max(delay_line_len, DTMF_MUTING_PRE);
-  }
-  
   bool  mute_1750 = false;
   if (cfg.getValue(name(), "1750_MUTING", mute_1750))
   {
@@ -519,6 +504,14 @@ bool LocalRxBase::initialize(void)
     dtmf_dec->digitDeactivated.connect(
         mem_fun(*this, &LocalRxBase::dtmfDigitDeactivated));
     voiceband_splitter->addSink(dtmf_dec, true);
+
+    bool dtmf_muting = false;
+    cfg.getValue(name(), "DTMF_MUTING", dtmf_muting);
+    if (dtmf_muting)
+    {
+      dtmf_muting_pre = dtmf_dec->detectionTime();
+      delay_line_len = max(delay_line_len, dtmf_muting_pre);
+    }
   }
   
     // Create a selective multiple tone detector object
@@ -733,9 +726,9 @@ void LocalRxBase::sel5Detected(std::string sequence)
 void LocalRxBase::dtmfDigitActivated(char digit)
 {
   //printf("DTMF digit %c activated.\n", digit);
-  if (mute_dtmf)
+  if (dtmf_muting_pre > 0)
   {
-    delay->mute(true, DTMF_MUTING_PRE);
+    delay->mute(true, dtmf_muting_pre);
   }
 } /* LocalRxBase::dtmfDigitActivated */
 
@@ -747,7 +740,7 @@ void LocalRxBase::dtmfDigitDeactivated(char digit, int duration_ms)
   {
     dtmfDigitDetected(digit, duration_ms);
   }
-  if (mute_dtmf)
+  if (dtmf_muting_pre > 0)
   {
     delay->mute(false, DTMF_MUTING_POST);
   }

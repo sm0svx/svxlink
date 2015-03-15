@@ -172,6 +172,18 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
      */
     virtual char activeDigit(void) const = 0;
 
+    /**
+     * @brief   The detection time for this detector
+     * @returns Returns the detection time in milliseconds
+     *
+     * This function will return the time in milliseconds that it will take
+     * for the detector to detect a DTMF digit. That is, the time from the
+     * moment when the tone is activated until the digitActivated signal is
+     * emitted.
+     * The time can for example be used in a DTMF muting function.
+     */
+    virtual int detectionTime(void) const = 0;
+
     /*
      * @brief 	A signal that is emitted when a DTMF digit is first detected
      * @param 	digit The detected digit
