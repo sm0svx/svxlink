@@ -167,28 +167,6 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
     int hangtime(void) const { return m_hangtime; }
     
     /**
-     * @brief 	Write samples into the DTMF decoder
-     * @param 	samples The buffer containing the samples
-     * @param 	count The number of samples in the buffer
-     * @return	Returns the number of samples that has been taken care of
-     */
-    //virtual int writeSamples(const float *samples, int count) { return count; }
-    
-    /**
-     * @brief 	Tell the DTMF decoder to flush the previously written samples
-     *
-     * This function is used to tell the sink to flush previously written
-     * samples. When done flushing, the sink should call the
-     * sourceAllSamplesFlushed function.
-     */
-    /*
-    virtual void flushSamples(void)
-    {
-      sourceAllSamplesFlushed();
-    }
-    */
-    
-    /**
      * @brief 	Return the active digit
      * @return	Return the active digit if any or a '?' if none.
      */
