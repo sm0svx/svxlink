@@ -2,11 +2,11 @@
 @file	 NewSwDtmfDecoder.h
 @brief   This file contains a class that implements a sw DTMF decoder
 @author  Tobias Blomberg / SM0SVX
-@date	 2003-04-16
+@date	 2015-02-22
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2015  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -46,7 +46,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-//#include <AsyncAudioSink.h>
 
 
 /****************************************************************************
