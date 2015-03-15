@@ -102,8 +102,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * @author  Tobias Blomberg, SM0SVX
  * @date    2015-02-22
  *
- * This class implements a software DTMF decoder
- * implemented using Goertzel's algorithm.
+ * This class implements a software DTMF decoder implemented using Goertzel's
+ * algorithm.
  */   
 class NewSwDtmfDecoder : public DtmfDecoder
 {
@@ -131,7 +131,7 @@ class NewSwDtmfDecoder : public DtmfDecoder
      * @param 	count The number of samples in the buffer
      * @return	Returns the number of samples that has been taken care of
      */
-    int writeSamples(const float *samples, int count);
+    virtual int writeSamples(const float *samples, int count);
     
     /**
      * @brief 	Tell the DTMF decoder to flush the previously written samples
@@ -146,7 +146,7 @@ class NewSwDtmfDecoder : public DtmfDecoder
      * @brief 	Return the active digit
      * @return	Return the active digit if any or a '?' if none.
      */
-    char activeDigit(void) const
+    virtual char activeDigit(void) const
     {
       return (det_state == STATE_DETECTED) ? last_digit_active : '?';
     }
@@ -188,11 +188,8 @@ class NewSwDtmfDecoder : public DtmfDecoder
     static const float REL_THRESH_HI = 0.85; // Passband relation high threshold
     static const float MAX_FQ_ERROR = 0.025; // Max 2.5% frequency error
 
-    /*! Maximum acceptable "normal" (lower bigger than higher) twist ratio */
     float twist_nrm_thresh;
-    /*! Maximum acceptable "reverse" (higher bigger than lower) twist ratio */
     float twist_rev_thresh;
-
     std::vector<DtmfGoertzel> row;
     std::vector<DtmfGoertzel> col;
     float block[BLOCK_SIZE];
@@ -208,7 +205,6 @@ class NewSwDtmfDecoder : public DtmfDecoder
     int duration;
 
     void processBlock(void);
-    float phaseDiffToFq(float phase, float prev_phase);
 
 };  /* class NewSwDtmfDecoder */
 

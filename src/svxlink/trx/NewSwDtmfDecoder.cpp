@@ -220,7 +220,8 @@ void NewSwDtmfDecoder::processBlock(void)
   col[2].reset();
   col[3].reset();
 
-    // Calculate total block energy and energy for all Goertzel detectors
+    // Calculate the total block energy and energy for all individual
+    // Goertzel detectors over the block
   double block_energy = 0.0;
   for (size_t i=0; i<BLOCK_SIZE; ++i)
   {
@@ -240,6 +241,17 @@ void NewSwDtmfDecoder::processBlock(void)
     cout << "### block_energy=" << setw(6) << block_energy;
   }
 
+    // If the total block energy is over the threshold, find the strongest
+    // tone in the low group (row) and the high group (column).
+    // Calculate the relation between the energy in the two tones to the
+    // energy in the whole passband. If more than 85% of the energy is in the
+    // tones, we class this as a strong signal. If more than 50% of the energy
+    // is in the tones, we consider this a weak signal and the required time
+    // for detection is increased so as to suppress false positives. Below
+    // 50% is considered as not active.
+    // Also test the two strongest tones for twist, the amplitude difference
+    // between the two tones must not exceed the limits (configurable) which
+    // typically are +/- 8dB.
   bool digit_active = false;
   size_t max_row_idx = 0;
   size_t max_col_idx = 0;
@@ -273,22 +285,24 @@ void NewSwDtmfDecoder::processBlock(void)
       cout << " rel_energy=" << setw(4) << rel_energy;
       cout << " twist=" << setw(5) << 10.0 * log10(twist) << "dB";
     }
-    if (rel_energy > REL_THRESH_HI)
+    digit_active = false;
+    if (rel_energy > REL_THRESH_LO)
     {
-      det_cnt_weight = DET_CNT_HI_WEIGHT;
+      if (rel_energy > REL_THRESH_HI)
+      {
+        det_cnt_weight = DET_CNT_HI_WEIGHT;
+      }
+      else
+      {
+        det_cnt_weight = 1;
+      }
       digit_active = (twist > twist_rev_thresh) && (twist < twist_nrm_thresh);
-    }
-    else if (rel_energy > REL_THRESH_LO)
-    {
-      det_cnt_weight = 1;
-      digit_active = (twist > twist_rev_thresh) && (twist < twist_nrm_thresh);
-    }
-    else
-    {
-      digit_active = false;
     }
   }
 
+    // Find out what digit corresponds to the two strongest tones.
+    // If the digit changed from the previous detection without a proper pause
+    // we consider this detection bogus.
   char digit = 0;
   if (digit_active)
   {
@@ -301,6 +315,16 @@ void NewSwDtmfDecoder::processBlock(void)
     last_digit_active = digit;
   }
 
+    // Since we use the same detection bandwidth for all eight tones, most
+    // detectors actually allow a tone frequency deviation that is outside of
+    // the DTMF spec. To find out what the frequency error is, we one more time
+    // run through the Goertzel for the two strongest tones. The difference is
+    // that this time we also calculate the phase for multiple points during
+    // the block. We can then use the mean value of the phase differences to
+    // estimate the frequency errors for the tones.
+    // After the frequency error have been calculated, it's easy to make sure
+    // that both tones lie within the tolerance limit which is about a maximum
+    // of 3% frequency deviation.
   if (digit_active)
   {
     DtmfGoertzel &max_row = row[max_row_idx];
@@ -350,6 +374,19 @@ void NewSwDtmfDecoder::processBlock(void)
     }
   }
 
+    // Using the result from the calculations above, either digit active or
+    // not active for this block, we use a state machine to determine if a DTMF
+    // digit detection should be reported or not.
+    // STATE_IDLE: We wait for the first active block. When found, reset all
+    // variables and move to the next state.
+    // STATE_DET_DELAY: There need to be a number of blocks in a row where the
+    // same digit is considered active. If the signal is weak, more blocks are
+    // required for a successful detection. For strong signals, we go straight
+    // back to the IDLE state if one non-active block is found. For weaker
+    // signals we allow two non-active blocks in a row before going to IDLE.
+    // STATE_DETECTED: Now the digit is considered a real detection and so the
+    // start of digit is reported (digitActivated). There now must be a number
+    // of non-active blocks before we consider the digit as ended.
   switch (det_state)
   {
     case STATE_IDLE:
@@ -427,21 +464,6 @@ void NewSwDtmfDecoder::processBlock(void)
     cout << endl;
   }
 } /* NewSwDtmfDecoder::processBlock */
-
-
-float NewSwDtmfDecoder::phaseDiffToFq(float phase, float prev_phase)
-{
-  float diff = phase - prev_phase;
-  if (diff > M_PI)
-  {
-    diff -= 2.0f * M_PI;
-  }
-  else if (diff < -M_PI)
-  {
-    diff += 2.0f * M_PI;
-  }
-  return INTERNAL_SAMPLE_RATE * diff / (2.0f * M_PI);
-} /* NewSwDtmfDecoder::phaseDiffToFq */
 
 
 void NewSwDtmfDecoder::DtmfGoertzel::initialize(float freq)
