@@ -189,8 +189,8 @@ REGISTER_AUDIO_DEVICE_TYPE("alsa", AudioDeviceAlsa);
  ****************************************************************************/
 
 AudioDeviceAlsa::AudioDeviceAlsa(const std::string& dev_name)
-  : AudioDevice(dev_name), play_handle(0), rec_handle(0), play_watch(0),
-    rec_watch(0), duplex(false)
+  : AudioDevice(dev_name), block_size(0), block_count(0), play_handle(0), 
+    rec_handle(0), play_watch(0), rec_watch(0), duplex(false)
 {
   snd_pcm_t *play, *capture;
 

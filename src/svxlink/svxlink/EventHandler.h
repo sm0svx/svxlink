@@ -196,6 +196,15 @@ class EventHandler : public sigc::trackable
      *	      	the currently active module
      */
     sigc::signal<void>       	      	    deactivateModule;
+
+    /**
+     * @brief   A signal that is emitted when the TCL script want to publish
+     *          a state event
+     * @param   event_name The name of the event (<context>:<name>)
+     * @param   event_msg  The event message
+     */
+    sigc::signal<void, const std::string&,
+                 const std::string&> publishStateEvent;
     
     
   protected:
@@ -215,6 +224,8 @@ class EventHandler : public sigc::trackable
       	      	    int argc, const char *argv[]);
     static int deactivateModuleHandler(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
+    static int publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
+      	            int argc, const char *argv[]);
     
     void doDeactivateModule(Async::Timer *t);
 

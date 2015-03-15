@@ -240,6 +240,7 @@ opus_int32 AudioEncoderOpus::setComplexity(opus_int32 new_comp)
 opus_int32 AudioEncoderOpus::complexity(void)
 {
   opus_int32 comp;
+    // coverity[ptr_arith]
   int err = opus_encoder_ctl(enc, OPUS_GET_COMPLEXITY(&comp));
   if (err != OPUS_OK)
   {
@@ -266,6 +267,7 @@ opus_int32 AudioEncoderOpus::setBitrate(opus_int32 new_bitrate)
 opus_int32 AudioEncoderOpus::bitrate(void)
 {
   opus_int32 br;
+    // coverity[ptr_arith]
   int err = opus_encoder_ctl(enc, OPUS_GET_BITRATE(&br));
   if (err != OPUS_OK)
   {
@@ -293,6 +295,7 @@ bool AudioEncoderOpus::enableVbr(bool enable)
 bool AudioEncoderOpus::vbrEnabled(void)
 {
   opus_int32 enabled;
+    // coverity[ptr_arith]
   int err = opus_encoder_ctl(enc, OPUS_GET_VBR(&enabled));
   if (err != OPUS_OK)
   {
@@ -320,6 +323,7 @@ bool AudioEncoderOpus::enableConstrainedVbr(bool enable)
 bool AudioEncoderOpus::constrainedVbrEnabled(void)
 {
   opus_int32 enabled;
+    // coverity[ptr_arith]
   int err = opus_encoder_ctl(enc, OPUS_GET_VBR_CONSTRAINT(&enabled));
   if (err != OPUS_OK)
   {
@@ -346,6 +350,7 @@ opus_int32 AudioEncoderOpus::setMaxBandwidth(opus_int32 new_bw)
 opus_int32 AudioEncoderOpus::maxBandwidth(void)
 {
   opus_int32 bw;
+    // coverity[ptr_arith]
   int err = opus_encoder_ctl(enc, OPUS_GET_MAX_BANDWIDTH(&bw));
   if (err != OPUS_OK)
   {
@@ -372,6 +377,7 @@ opus_int32 AudioEncoderOpus::setBandwidth(opus_int32 new_bw)
 opus_int32 AudioEncoderOpus::bandwidth(void)
 {
   opus_int32 bw;
+    // coverity[ptr_arith]
   int err = opus_encoder_ctl(enc, OPUS_GET_BANDWIDTH(&bw));
   if (err != OPUS_OK)
   {
@@ -398,6 +404,7 @@ opus_int32 AudioEncoderOpus::setSignalType(opus_int32 new_type)
 opus_int32 AudioEncoderOpus::signalType(void)
 {
   opus_int32 type;
+    // coverity[ptr_arith]
   int err = opus_encoder_ctl(enc, OPUS_GET_SIGNAL(&type));
   if (err != OPUS_OK)
   {
@@ -424,6 +431,7 @@ opus_int32 AudioEncoderOpus::setApplicationType(opus_int32 new_app)
 opus_int32 AudioEncoderOpus::applicationType(void)
 {
   opus_int32 app;
+    // coverity[ptr_arith]
   int err = opus_encoder_ctl(enc, OPUS_GET_APPLICATION(&app));
   if (err != OPUS_OK)
   {
@@ -451,6 +459,7 @@ bool AudioEncoderOpus::enableInbandFec(bool enable)
 bool AudioEncoderOpus::inbandFecEnabled(void)
 {
   opus_int32 enabled;
+    // coverity[ptr_arith]
   int err = opus_encoder_ctl(enc, OPUS_GET_INBAND_FEC(&enabled));
   if (err != OPUS_OK)
   {
@@ -477,6 +486,7 @@ opus_int32 AudioEncoderOpus::setExpectedPacketLoss(opus_int32 new_pl_perc)
 opus_int32 AudioEncoderOpus::expectedPacketLoss(void)
 {
   opus_int32 pl_perc;
+    // coverity[ptr_arith]
   int err = opus_encoder_ctl(enc, OPUS_GET_PACKET_LOSS_PERC(&pl_perc));
   if (err != OPUS_OK)
   {
@@ -504,6 +514,7 @@ bool AudioEncoderOpus::enableDtx(bool enable)
 bool AudioEncoderOpus::dtxEnabled(void)
 {
   opus_int32 enabled;
+    // coverity[ptr_arith]
   int err = opus_encoder_ctl(enc, OPUS_GET_DTX(&enabled));
   if (err != OPUS_OK)
   {
@@ -531,6 +542,7 @@ opus_int32 AudioEncoderOpus::setLsbDepth(opus_int32 new_depth)
 opus_int32 AudioEncoderOpus::lsbDepth(void)
 {
   opus_int32 depth;
+    // coverity[ptr_arith]
   int err = opus_encoder_ctl(enc, OPUS_GET_LSB_DEPTH(&depth));
   if (err != OPUS_OK)
   {
@@ -545,7 +557,12 @@ opus_int32 AudioEncoderOpus::lsbDepth(void)
 
 void AudioEncoderOpus::reset(void)
 {
-  opus_encoder_ctl(enc, OPUS_RESET_STATE);
+  int err = opus_encoder_ctl(enc, OPUS_RESET_STATE);
+  if (err != OPUS_OK)
+  {
+    cerr << "*** ERROR: Could not reset Opus encoder: "
+         << opus_strerror(err) << endl;
+  }
 } /* AudioEncoderOpus::reset */
 
 

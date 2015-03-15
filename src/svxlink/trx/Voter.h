@@ -408,7 +408,6 @@ class Voter : public Rx
     Macho::Machine<Top>   sm;
     bool		  is_processing_event;
     EventQueue		  event_queue;
-    std::ostream          *sql_state_os;
     
     void dispatchEvent(Macho::IEvent<Top> *event);
     void satSquelchOpen(bool is_open, SatRx *rx);

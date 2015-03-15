@@ -240,8 +240,9 @@ LocalTx::LocalTx(Config& cfg, const string& name)
   : name(name), cfg(cfg), audio_io(0), is_transmitting(false), txtot(0),
     tx_timeout_occured(false), tx_timeout(0), sine_gen(0), ctcss_enable(false),
     dtmf_encoder(0), selector(0), dtmf_valve(0), mixer(0), hdlc_framer(0),
-    fsk_mod(0), fsk_valve(0), input_handler(0), audio_valve(0),
-    siglev_sine_gen(0), ptt_hangtimer(0), ptt(0), last_rx_id(Rx::ID_UNKNOWN)
+    fsk_mod(0), fsk_valve(0), input_handler(0), ptt_ctrl(0),
+    audio_valve(0), siglev_sine_gen(0), ptt_hangtimer(0), ptt(0),
+    last_rx_id(Rx::ID_UNKNOWN)
 {
 
 } /* LocalTx::LocalTx */

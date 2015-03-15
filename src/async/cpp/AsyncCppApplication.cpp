@@ -162,7 +162,7 @@ int CppApplication::sighandler_pipe[2];
  *------------------------------------------------------------------------
  */
 CppApplication::CppApplication(void)
-  : do_quit(false), max_desc(0), unix_signal_recv_cnt(0)
+  : do_quit(false), max_desc(0), unix_signal_recv(-1), unix_signal_recv_cnt(0)
 {
   FD_ZERO(&rd_set);
   FD_ZERO(&wr_set);

@@ -317,7 +317,7 @@ void TcpClient::connectToRemote(void)
 
   if (!bind_ip.isEmpty())
   {
-    struct sockaddr_in addr;
+    struct sockaddr_in addr = { 0 };
     addr.sin_family = AF_INET;
     addr.sin_port = htons(0);
     addr.sin_addr = bind_ip.ip4Addr();

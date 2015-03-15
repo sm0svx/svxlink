@@ -1,4 +1,4 @@
- 1.5.0 -- ?? ??? 2014
+ 1.5.0 -- ?? ??? 2015
 ----------------------
 
 * Added support for using digital drop receivers on an RTL2832U based DVB-T
@@ -33,8 +33,17 @@
 
 * Bugfix in ModuleMetarInfo: Numbers was some times read in the wrong way
 
-* New voter configuration, SQL_STATE_PTY, which make it possible to
-  continuously output squelch state information to a UNIX98 PTY.
+* New logic core configuration, STATE_PTY, which specify a UNIX 98 PTY to open
+  where SvxLink state information can be published. This information can be
+  used by external applications to act on.
+
+* The receiver voter now continuously output squelch state information to the
+  logic core state PTY.
+
+* Fixed issues reported by the Coverity scan static analysis tool.
+
+* New config variable CARD_CHANNELS which is used to set the number of
+  channels that is used on the sound card, e.g. 1=mono, 2=stereo.
 
 
 

@@ -135,7 +135,7 @@ class FactoryBase
       }
 
       return (*it).second->createObject();
-    } /* Factory::createNamedRx */
+    } /* Factory::createNamedObject */
 
     /**
      * @brief 	Get a list of valid class names
