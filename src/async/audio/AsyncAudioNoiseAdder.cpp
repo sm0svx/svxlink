@@ -1,12 +1,12 @@
 /**
 @file	 AsyncAudioNoiseAdder.cpp
-@brief   Contains a class for creating a wide range of audio filters
+@brief   A class to add white noise to an audio stream
 @author  Tobias Blomberg / SM0SVX
-@date	 2006-04-23
+@date	 2015-03-08
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
