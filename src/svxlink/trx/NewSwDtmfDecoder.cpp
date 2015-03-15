@@ -42,7 +42,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioFilter.h>
 #include <AsyncSigCAudioSink.h>
 
 
@@ -141,17 +140,6 @@ NewSwDtmfDecoder::NewSwDtmfDecoder(Config &cfg, const string &name)
   col[1].initialize(1336);
   col[2].initialize(1477);
   col[3].initialize(1633);
-
-  AudioFilter *bpf = new AudioFilter("BpBu6/350-3500");
-  setHandler(bpf);
-
-  SigCAudioSink *sigc_sink = new SigCAudioSink;
-  sigc_sink->sigWriteSamples.connect(
-      mem_fun(*this, &NewSwDtmfDecoder::handleSamples));
-  sigc_sink->sigFlushSamples.connect(
-      mem_fun(sigc_sink, &SigCAudioSink::allSamplesFlushed));
-  bpf->registerSink(sigc_sink, true);
-
 } /* NewSwDtmfDecoder::NewSwDtmfDecoder */
 
 
@@ -185,7 +173,7 @@ bool NewSwDtmfDecoder::initialize(void)
 } /* NewSwDtmfDecoder::initialize */
 
 
-int NewSwDtmfDecoder::handleSamples(const float *buf, int len)
+int NewSwDtmfDecoder::writeSamples(const float *buf, int len)
 {
   for (int i = 0; i < len; i++)
   {
@@ -202,7 +190,7 @@ int NewSwDtmfDecoder::handleSamples(const float *buf, int len)
   }
 
   return len;
-} /* NewSwDtmfDecoder::handleSamples */
+} /* NewSwDtmfDecoder::writeSamples */
 
 
 /****************************************************************************
@@ -287,7 +275,7 @@ void NewSwDtmfDecoder::processBlock(void)
     }
     if (rel_energy > REL_THRESH_HI)
     {
-      det_cnt_weight = 5;
+      det_cnt_weight = DET_CNT_HI_WEIGHT;
       digit_active = (twist > twist_rev_thresh) && (twist < twist_nrm_thresh);
     }
     else if (rel_energy > REL_THRESH_LO)

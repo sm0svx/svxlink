@@ -132,8 +132,17 @@ class NewSwDtmfDecoder : public DtmfDecoder
      * @param 	count The number of samples in the buffer
      * @return	Returns the number of samples that has been taken care of
      */
-    int handleSamples(const float *samples, int count);
+    int writeSamples(const float *samples, int count);
     
+    /**
+     * @brief 	Tell the DTMF decoder to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     */
+    virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
+
     /**
      * @brief 	Return the active digit
      * @return	Return the active digit if any or a '?' if none.
@@ -158,13 +167,14 @@ class NewSwDtmfDecoder : public DtmfDecoder
 
     static const float DEFAULT_MAX_NORMAL_TWIST_DB = 8.0f;
     static const float DEFAULT_MAX_REV_TWIST_DB = 8.0f;
-    static const size_t DEFAULT_MIN_DET_CNT = 5*2;
+    static const size_t DET_CNT_HI_WEIGHT = 8;
+    static const size_t DEFAULT_MIN_DET_CNT = 2 * DET_CNT_HI_WEIGHT;
     static const size_t DEFAULT_MIN_UNDET_CNT = 4;
     static const size_t BLOCK_SIZE = INTERNAL_SAMPLE_RATE / 50; // 20ms
     static const size_t OVERLAP = BLOCK_SIZE / 2; // 50% overlap
     static const float ENERGY_THRESH = 1e-6 * BLOCK_SIZE; // Min passband energy
-    static const float REL_THRESH_LO = 0.70; // Low passband relation threshold
-    static const float REL_THRESH_HI = 0.85; // High passband relation threshold
+    static const float REL_THRESH_LO = 0.50; // Passband relation low threshold
+    static const float REL_THRESH_HI = 0.85; // Passband relation high threshold
     static const float MAX_FQ_ERROR = 0.025; // Max 2.5% frequency error
 
     /*! Maximum acceptable "normal" (lower bigger than higher) twist ratio */

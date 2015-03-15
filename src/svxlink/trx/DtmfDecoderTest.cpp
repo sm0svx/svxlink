@@ -5,6 +5,7 @@
 
 #include <AsyncConfig.h>
 #include <AsyncAudioNoiseAdder.h>
+#include <AsyncAudioFilter.h>
 
 #include "DtmfDecoder.h"
 #include "DtmfEncoder.h"
@@ -60,8 +61,10 @@ FileWriter *fwriter = 0;
 
 void digit_detected(char ch, int duration)
 {
+  cout << " pos=" << fwriter->sampPos()
+       << " (" << (static_cast<float>(fwriter->sampPos()) / (60*16000)) << "m)";
   /*
-  cout << "pos=" << fwriter->sampPos() << " digit=" << ch
+  cout << " digit=" << ch
        << " duration=" << duration << endl;
   */
   received_digits += ch;
@@ -163,9 +166,13 @@ int main()
   prev_src = enc;
 
   AudioNoiseAdder *noise_adder = new AudioNoiseAdder(0.0);
-  //AudioNoiseAdder *noise_adder = new AudioNoiseAdder(0.64);
+  //AudioNoiseAdder *noise_adder = new AudioNoiseAdder(0.75);
   prev_src->registerSink(noise_adder);
   prev_src = noise_adder;
+
+  AudioFilter *voiceband_filter = new AudioFilter("BpBu20/300-5000");
+  prev_src->registerSink(voiceband_filter);
+  prev_src = voiceband_filter;
 #else
   FileReader *rdr = new FileReader;
   prev_src = rdr;
@@ -190,17 +197,19 @@ int main()
   {
     enc->send(send_digits);
   }
+  enc->setToneAmplitude(-80);
+  enc->send("0");
 #else
   if (!rdr->open("/tmp/output.raw"))
   //if (!rdr->open("/tmp/selected.raw"))
-  //if (!rdr->open("/tmp/false10.raw"))
+  //if (!rdr->open("/tmp/false11.raw"))
   {
     exit(1);
   }
 #endif
   if (!received_digits.empty())
   {
-    cout << received_digits << endl;
+    cout << "Digits detected: " << received_digits << endl;
   }
 #ifdef SIMULATE
   if (received_digits != send_digits)

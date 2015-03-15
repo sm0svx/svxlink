@@ -106,7 +106,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define DTMF_MUTING_PRE   75
+#define DTMF_MUTING_PRE   40
 #define DTMF_MUTING_POST  200
 #define TONE_1750_MUTING_PRE 75
 #define TONE_1750_MUTING_POST 100
@@ -371,19 +371,14 @@ bool LocalRxBase::initialize(void)
   siglevdet_splitter->addSink(mute_valve, true);
   prev_src = mute_valve;
   
-    // If the sound card sample rate is higher than 8kHz (16 or 48kHz assumed)
-    // decimate it down to 8kHz. Also create a splitter to distribute the
-    // 16kHz audio to other consumers.
 #if (INTERNAL_SAMPLE_RATE != 16000)
-  //AudioSplitter *rate_16k_splitter = 0;
+    // If the sound card sample rate is higher than 8kHz (16 or 48kHz assumed)
+    // decimate it down to 8kHz.
+    // 16kHz audio to other consumers.
   if (audioSampleRate() > 8000)
   {
-    //rate_16k_splitter = new AudioSplitter;
-    //prev_src->registerSink(rate_16k_splitter, true);
-
     AudioDecimator *d2 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
     prev_src->registerSink(d2, true);
-    //rate_16k_splitter->addSink(d2, true);
     prev_src = d2;
   }
 #endif
@@ -403,13 +398,12 @@ bool LocalRxBase::initialize(void)
     prev_src = deemph_filt;
   }
   
-    // Create an audio splitter to distribute the 8kHz audio to all consumers
-  AudioSplitter *splitter = new AudioSplitter;
-  prev_src->registerSink(splitter, true);
-  prev_src = 0;
+    // Create a splitter to distribute full bandwidth audio to all consumers
+  AudioSplitter *fullband_splitter = new AudioSplitter;
+  prev_src->registerSink(fullband_splitter, true);
+  prev_src = fullband_splitter;
 
-    // Create the configured squelch detector and initialize it. Then connect
-    // it to the 8kHz audio splitter
+    // Create the configured squelch detector and initialize it
   string sql_det_str;
   if (!cfg.getValue(name(), "SQL_DET", sql_det_str))
   {
@@ -485,7 +479,28 @@ bool LocalRxBase::initialize(void)
       sql_extended_hangtime_thresh);
   
   squelch_det->squelchOpen.connect(mem_fun(*this, &LocalRxBase::onSquelchOpen));
-  splitter->addSink(squelch_det, true);
+  fullband_splitter->addSink(squelch_det, true);
+
+    // Create a new audio splitter to handle tone detectors
+  tone_dets = new AudioSplitter;
+  prev_src->registerSink(tone_dets);
+  prev_src = tone_dets;
+
+    // Filter out the voice band, removing high- and subaudible frequencies,
+    // for example CTCSS.
+#if (INTERNAL_SAMPLE_RATE == 16000)
+  AudioFilter *voiceband_filter = new AudioFilter("BpBu20/300-5000");
+#else
+  AudioFilter *voiceband_filter = new AudioFilter("BpBu20/300-3500");
+#endif
+  prev_src->registerSink(voiceband_filter, true);
+  prev_src = voiceband_filter;
+
+    // Create an audio splitter to distribute the voiceband audio to all
+    // other consumers
+  AudioSplitter *voiceband_splitter = new AudioSplitter;
+  prev_src->registerSink(voiceband_splitter, true);
+  prev_src = voiceband_splitter;
 
     // Create the configured type of DTMF decoder and add it to the splitter
   string dtmf_dec_type("NONE");
@@ -503,7 +518,7 @@ bool LocalRxBase::initialize(void)
         mem_fun(*this, &LocalRxBase::dtmfDigitActivated));
     dtmf_dec->digitDeactivated.connect(
         mem_fun(*this, &LocalRxBase::dtmfDigitDeactivated));
-    splitter->addSink(dtmf_dec, true);
+    voiceband_splitter->addSink(dtmf_dec, true);
   }
   
     // Create a selective multiple tone detector object
@@ -518,19 +533,15 @@ bool LocalRxBase::initialize(void)
           << name() << "\"\n";
       return false;
     }
-    sel5_dec->sequenceDetected.connect(mem_fun(*this, &LocalRxBase::sel5Detected));
-    splitter->addSink(sel5_dec, true);
+    sel5_dec->sequenceDetected.connect(
+        mem_fun(*this, &LocalRxBase::sel5Detected));
+    voiceband_splitter->addSink(sel5_dec, true);
   }
 
-    // Create a new audio splitter to handle tone detectors then add it to
-    // the splitter
-  tone_dets = new AudioSplitter;
-  splitter->addSink(tone_dets, true);
-  
     // Create an audio valve to use as squelch and connect it to the splitter
   sql_valve = new AudioValve;
   sql_valve->setOpen(false);
-  splitter->addSink(sql_valve, true);
+  prev_src->registerSink(sql_valve);
   prev_src = sql_valve;
 
     // Create the state detector
@@ -540,11 +551,6 @@ bool LocalRxBase::initialize(void)
   prev_src->registerSink(state_det, true);
   prev_src = state_det;
 
-    // Create the highpass CTCSS filter that cuts off audio below 300Hz
-  AudioFilter *ctcss_filt = new AudioFilter("HpBu20/300");
-  prev_src->registerSink(ctcss_filt, true);
-  prev_src = ctcss_filt;
-  
     // If we need a delay line (e.g. for DTMF muting and/or squelch tail
     // elimination), create it
   if (delay_line_len > 0)
@@ -553,7 +559,7 @@ bool LocalRxBase::initialize(void)
     prev_src->registerSink(delay, true);
     prev_src = delay;
   }
-  
+
     // Add a limiter to smoothly limiting the audio before hard clipping it
   AudioCompressor *limit = new AudioCompressor;
   limit->setThreshold(-1);
@@ -596,7 +602,7 @@ bool LocalRxBase::initialize(void)
     assert(calldet != 0);
     calldet->setPeakThresh(13);
     calldet->activated.connect(mem_fun(*this, &LocalRxBase::tone1750detected));
-    splitter->addSink(calldet, true);
+    voiceband_splitter->addSink(calldet, true);
     //cout << "### Enabling 1750Hz muting\n";
   }
 
