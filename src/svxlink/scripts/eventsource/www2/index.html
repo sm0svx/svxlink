@@ -73,13 +73,13 @@ function repeaterlist(list) {
     var body = '';
     for (index = 0; index < list.repeaterlist.length; ++index) {
         var call = list.repeaterlist[index];
-        body = body + '<p><div class="head">Signaalwaardes bij '+call+
+        body = body + '<p><div class="head">Signal levels at '+call+
                       '<span id="'+call+'freq"></span>'+
                       '<span style="float:right;">'+
                       '<span id="'+call+'tx"><img src="/icons/ball.red.png"></span>'+
                       '<span id="'+call+'stream"></span>'+
                       '</span></div><p><table>'+
-                      '<tr><th>Ontvanger</th><th>Sql</th><th>Signaal</th>'+
+                      '<tr><th>Receiver</th><th>Sql</th><th>Signal</th>'+
                       '<th>Bargraph</th>'+
                       '<tr id="'+call+'sigtab"></tr></table><p><br>';
 
@@ -167,6 +167,6 @@ function repeaterinfo(info) {
 </script>
 </head>
 <body>
-<p id="body">Deze pagina heeft een moderne browser nodig, en Javascript
-moet ingeschakeld zijn.  Met Internet Explorer werkt het niet zo best.</p>
+<p id="body">This page requires a modern browser, and JavaScript has to be
+enabled.  It does not work well when using Internet Explorer.</p>
 </body>
