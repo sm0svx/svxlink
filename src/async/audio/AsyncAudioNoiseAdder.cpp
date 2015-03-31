@@ -1,12 +1,12 @@
 /**
-@file	 DtmfDecoder.cpp
-@brief   This file contains the base class for implementing a DTMF decoder
+@file	 AsyncAudioNoiseAdder.cpp
+@brief   A class to add white gaussian noise to an audio stream
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-02-04
+@date	 2015-03-08
 
 \verbatim
-SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Async - A library for programming event driven applications
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-
 /****************************************************************************
  *
  * System Includes
@@ -34,7 +33,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <iostream>
+
+#include <cstring>
 #include <cstdlib>
+#include <cmath>
+#include <locale>
+#include <limits>
 
 
 /****************************************************************************
@@ -51,11 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "DtmfDecoder.h"
-#include "Dh1dmSwDtmfDecoder.h"
-#include "SvxSwDtmfDecoder.h"
-#include "S54sDtmfDecoder.h"
-#include "PtyDtmfDecoder.h"
+#include "AsyncAudioNoiseAdder.h"
 
 
 /****************************************************************************
@@ -66,6 +66,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using namespace std;
 using namespace Async;
+
 
 
 /****************************************************************************
@@ -100,7 +101,6 @@ using namespace Async;
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
@@ -115,50 +115,16 @@ using namespace Async;
  *
  ****************************************************************************/
 
-DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
+AudioNoiseAdder::AudioNoiseAdder(float level_db)
+  : sigma(sqrt(powf(10.0f, level_db / 10.0f) / 2.0f))
 {
-  DtmfDecoder *dec = 0;
-  string type;
-  cfg.getValue(name, "DTMF_DEC_TYPE", type);
-  if (type == "INTERNAL")
-  {
-    dec = new Dh1dmSwDtmfDecoder(cfg, name);
-  }
-  else if (type == "S54S")
-  {
-    dec = new S54sDtmfDecoder(cfg, name);
-  }
-  else if (type == "PTY")
-  {
-    dec = new PtyDtmfDecoder(cfg, name);
-  }
-  else if (type == "EXPERIMENTAL")
-  {
-    dec = new SvxSwDtmfDecoder(cfg, name);
-  }
-  else
-  {
-    cerr << "*** ERROR: Unknown DTMF decoder type \"" << type << "\" "
-         << "specified for " << name << "/DTMF_DEC_TYPE. "
-      	 << "Legal values are: \"NONE\", \"INTERNAL\", \"PTY\" or \"S54S\"\n";
-  }
-  
-  return dec;
-  
-} /* DtmfDecoder::create */
+} /* AudioNoiseAdder::AudioNoiseAdder */
 
 
-bool DtmfDecoder::initialize(void)
+AudioNoiseAdder::~AudioNoiseAdder(void)
 {
-  string value;
-  if (cfg().getValue(name(), "DTMF_HANGTIME", value))
-  {
-    m_hangtime = atoi(value.c_str());
-  }
-  
-  return true;
-  
-} /* DtmfDecoder::initialize */
+} /* AudioNoiseAdder::~AudioNoiseAdder */
+
 
 
 /****************************************************************************
@@ -166,6 +132,17 @@ bool DtmfDecoder::initialize(void)
  * Protected member functions
  *
  ****************************************************************************/
+
+void AudioNoiseAdder::processSamples(float *dest, const float *src, int count)
+{
+  //cout << "AudioNoiseAdder::processSamples: len=" << len << endl;
+  
+  for (int i=0; i<count; ++i)
+  {
+    float noise = generateGaussianNoise();
+    dest[i] = src[i] + noise;
+  }
+} /* AudioNoiseAdder::writeSamples */
 
 
 
@@ -175,9 +152,33 @@ bool DtmfDecoder::initialize(void)
  *
  ****************************************************************************/
 
+float AudioNoiseAdder::generateGaussianNoise(void)
+{
+  static const float epsilon = std::numeric_limits<float>::min();
+  static const float two_pi = 2.0f * M_PI;
+  static const float mu = 0.0f;
+
+  generate = !generate;
+
+  if (!generate)
+  {
+    return z1 * sigma + mu;
+  }
+
+  float u1, u2;
+  do
+  {
+    u1 = rand() * (1.0f / RAND_MAX);
+    u2 = rand() * (1.0f / RAND_MAX);
+  }
+  while (u1 <= epsilon);
+
+  z0 = sqrt(-2.0f * log(u1)) * cos(two_pi * u2);
+  z1 = sqrt(-2.0f * log(u1)) * sin(two_pi * u2);
+  return z0 * sigma + mu;
+} /* AudioNoiseAdder::generateGaussianNoise */
 
 
 /*
  * This file has not been truncated
  */
-

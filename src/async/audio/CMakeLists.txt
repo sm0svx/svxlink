@@ -48,7 +48,7 @@ set(EXPINC AsyncAudioSource.h AsyncAudioSink.h AsyncAudioProcessor.h
            AsyncAudioStreamStateDetector.h AsyncAudioEncoder.h
            AsyncAudioDecoder.h AsyncAudioRecorder.h
            AsyncAudioJitterFifo.h AsyncAudioDeviceFactory.h
-           AsyncAudioDevice.h)
+           AsyncAudioDevice.h AsyncAudioNoiseAdder.h)
 
 set(LIBSRC AsyncAudioSource.cpp AsyncAudioSink.cpp
            AsyncAudioProcessor.cpp AsyncAudioCompressor.cpp
@@ -62,7 +62,7 @@ set(LIBSRC AsyncAudioSource.cpp AsyncAudioSink.cpp
            AsyncAudioDecoderS16.cpp AsyncAudioEncoderGsm.cpp
            AsyncAudioDecoderGsm.cpp AsyncAudioRecorder.cpp
            AsyncAudioDeviceFactory.cpp AsyncAudioJitterFifo.cpp
-           AsyncAudioDeviceUDP.cpp)
+           AsyncAudioDeviceUDP.cpp AsyncAudioNoiseAdder.cpp)
 
 if(Speex_FOUND)
   set(LIBSRC ${LIBSRC} AsyncAudioEncoderSpeex.cpp AsyncAudioDecoderSpeex.cpp)
