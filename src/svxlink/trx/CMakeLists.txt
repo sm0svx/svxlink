@@ -6,7 +6,7 @@ set(EXPINC Rx.h Tx.h NetTrxMsg.h LocalRx.h)
 
 # What sources to compile for the library
 set(LIBSRC
-  ToneDetector.cpp SwDtmfDecoder.cpp Rx.cpp LocalRx.cpp
+  ToneDetector.cpp Dh1dmSwDtmfDecoder.cpp Rx.cpp LocalRx.cpp
   SquelchVox.cpp SigLevDetNoise.cpp NetRx.cpp Voter.cpp
   Tx.cpp LocalTx.cpp DtmfEncoder.cpp NetTx.cpp
   NetTrxTcpClient.cpp DtmfDecoder.cpp HwDtmfDecoder.cpp
@@ -16,7 +16,7 @@ set(LIBSRC
   PttGpio.cpp PttSerialPin.cpp PttPty.cpp
   PtyDtmfDecoder.cpp LocalRxBase.cpp Ddr.cpp RtlTcp.cpp
   WbRxRtlTcp.cpp SigLevDet.cpp SigLevDetDdr.cpp
-  NewSwDtmfDecoder.cpp
+  SvxSwDtmfDecoder.cpp
 )
 include (CheckSymbolExists)
 CHECK_SYMBOL_EXISTS(HIDIOCGRAWINFO linux/hidraw.h HAS_HIDRAW_SUPPORT)

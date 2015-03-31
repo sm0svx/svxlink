@@ -324,8 +324,8 @@ bool LocalTx::initialize(void)
   if (cfg.getValue(name, "DTMF_TONE_AMP", dtmf_tone_amp))
   {
     cout << "*** WARNING: The DTMF_TONE_AMP configuration variable set in "
-            "transmitter " << name << " is deprecated. Use DTMF_DIGIT_PWR"
-            "instead. To get the same output level uing the new configuration"
+            "transmitter " << name << " is deprecated. Use DTMF_DIGIT_PWR "
+            "instead. To get the same output level uing the new configuration "
             "variable, add 3dB to the old value.";
     dtmf_digit_pwr = dtmf_tone_amp + 3;
   }

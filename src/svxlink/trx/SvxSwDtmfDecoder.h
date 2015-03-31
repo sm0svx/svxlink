@@ -1,12 +1,12 @@
 /**
-@file	 SwDtmfDecoder.h
+@file	 SvxSwDtmfDecoder.h
 @brief   This file contains a class that implements a sw DTMF decoder
 @author  Tobias Blomberg / SM0SVX
-@date	 2003-04-16
+@date	 2015-02-22
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2015  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef SW_DTMF_DECODER_INCLUDED
-#define SW_DTMF_DECODER_INCLUDED
+#ifndef SVX_SW_DTMF_DECODER_INCLUDED
+#define SVX_SW_DTMF_DECODER_INCLUDED
 
 
 /****************************************************************************
@@ -46,7 +46,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-//#include <AsyncAudioSink.h>
 
 
 /****************************************************************************
@@ -56,6 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "DtmfDecoder.h"
+#include "Goertzel.h"
 
 
 /****************************************************************************
@@ -100,12 +100,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /**
  * @brief   This class implements a software DTMF decoder
  * @author  Tobias Blomberg, SM0SVX
- * @date    2007-05-01
+ * @date    2015-02-22
  *
- * This class implements a software DTMF decoder
- * implemented using Goertzel's algorithm.
+ * This class implements a software DTMF decoder implemented using Goertzel's
+ * algorithm.
  */   
-class SwDtmfDecoder : public DtmfDecoder
+class SvxSwDtmfDecoder : public DtmfDecoder
 {
   public:
     /**
@@ -113,7 +113,7 @@ class SwDtmfDecoder : public DtmfDecoder
      * @param 	cfg A previously initialised configuration object
      * @param 	name The name of the receiver configuration section
      */
-    SwDtmfDecoder(Async::Config &cfg, const std::string &name);
+    SvxSwDtmfDecoder(Async::Config &cfg, const std::string &name);
 
     /**
      * @brief 	Initialize the DTMF decoder
@@ -132,7 +132,7 @@ class SwDtmfDecoder : public DtmfDecoder
      * @return	Returns the number of samples that has been taken care of
      */
     virtual int writeSamples(const float *samples, int count);
-
+    
     /**
      * @brief 	Tell the DTMF decoder to flush the previously written samples
      *
@@ -141,14 +141,14 @@ class SwDtmfDecoder : public DtmfDecoder
      * sourceAllSamplesFlushed function.
      */
     virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
-    
+
     /**
      * @brief 	Return the active digit
      * @return	Return the active digit if any or a '?' if none.
      */
-    char activeDigit(void) const
+    virtual char activeDigit(void) const
     {
-      return last_stable ? last_stable : '?';
+      return (det_state == STATE_DETECTED) ? last_digit_active : '?';
     }
 
     /**
@@ -161,58 +161,67 @@ class SwDtmfDecoder : public DtmfDecoder
      * emitted.
      * The time can for example be used in a DTMF muting function.
      */
-    virtual int detectionTime(void) const { return 75; }
+    virtual int detectionTime(void) const { return 40; }
 
   private:
-
-    // Tone detection descriptor
-    typedef struct
+    struct DtmfGoertzel : public Goertzel
     {
-      float v2;
-      float v3;
-      float fac;
-      float scale_factor;
-      std::vector<float> window_table;
-      std::vector<float>::const_iterator win;
-      int samples_left;
-      int block_length;
-    } GoertzelState;
+      float m_freq;
+      float m_max_fqdiff;
 
-    /*! Tone detector working states for the row tones. */
-    GoertzelState row_out[8];
-    /*! Tone detector working states for the column tones. */
-    GoertzelState col_out[8];
-    /*! Row tone signal level values. */
-    float row_energy[4];
-    /*! Column tone signal level values. */
-    float col_energy[4];
-    /*! Remaining sample count in the current detection interval. */
-    int samples_left;
-    /*! The result of the last tone analysis. */
-    uint8_t last_hit;
-    /*! This is the last stable DTMF digit. */
-    uint8_t last_stable;
-    /*! The detection timer advances when the input is stable. */
-    int stable_timer;
-    /*! The active timer is reset when a new non-zero digit is detected. */
-    int active_timer;
-    /*! Maximum acceptable "normal" (lower bigger than higher) twist ratio */
-    float normal_twist;
-    /*! Maximum acceptable "reverse" (higher bigger than lower) twist ratio */
-    float reverse_twist;
+      void initialize(float freq);
+    };
+    typedef enum
+    {
+      STATE_IDLE, STATE_DET_DELAY, STATE_DETECTED
+    } DetState;
 
-    void dtmfReceive(void);
-    void dtmfPostProcess(uint8_t hit);
-    void goertzelInit(GoertzelState *s, float freq, float offset);
-    float goertzelResult(GoertzelState *s);
-    int findMaxIndex(const float f[]);
+    static const float DEFAULT_MAX_NORMAL_TWIST_DB = 8.0f;
+    static const float DEFAULT_MAX_REV_TWIST_DB = 8.0f;
+    static const size_t DET_CNT_HI_WEIGHT = 12;
+    static const size_t DET_CNT_MED_WEIGHT = 4;
+    static const size_t DET_CNT_LO_WEIGHT = 1;
+    static const size_t DEFAULT_MIN_DET_CNT = 2 * DET_CNT_HI_WEIGHT;
+    static const size_t DEFAULT_MIN_UNDET_CNT = 3;
+    static const size_t LOW_QUALITY_UNDET_MULT = 3;
+    static const size_t BLOCK_SIZE = 20 * INTERNAL_SAMPLE_RATE / 1000; // 20ms
+    static const size_t STEP_SIZE = 10 * INTERNAL_SAMPLE_RATE / 1000; // 10ms
+    static const float ENERGY_THRESH = 1e-6 * BLOCK_SIZE; // Min passband energy
+    static const float REL_THRESH_LO = 0.5; // Tone/passband pwr low thresh
+    static const float REL_THRESH_MED = 0.73; // Tone/passband pwr medium thresh
+    static const float REL_THRESH_HI = 0.9; // Tone/passband pwr high thresh
+    //static const float MAX_FQ_ERROR = 0.025; // Max 2.5% frequency error
+    static const float WIN_ENB = 1.37f; // FFT window equivalent noise bandwidth
+    static const float MAX_OT_REL = 0.2f; // Overtone at least ~7dB below
+    static const float MAX_SEC_REL = 0.13f; // Second strongest > ~9dB below
+    static const float MAX_IM_REL = 0.1f; // Intermodulation prod > 10dB below
 
-};  /* class SwDtmfDecoder */
+    float twist_nrm_thresh;
+    float twist_rev_thresh;
+    std::vector<DtmfGoertzel> row;
+    std::vector<DtmfGoertzel> col;
+    float block[BLOCK_SIZE];
+    size_t block_size;
+    size_t block_pos;
+    size_t det_cnt;
+    size_t undet_cnt;
+    char last_digit_active;
+    size_t min_det_cnt;
+    size_t min_undet_cnt;
+    DetState det_state;
+    size_t det_cnt_weight;
+    int duration;
+    float win[BLOCK_SIZE];
+    size_t undet_thresh;
+
+    void processBlock(void);
+
+};  /* class SvxSwDtmfDecoder */
 
 
 //} /* namespace */
 
-#endif /* SW_DTMF_DECODER_INCLUDED */
+#endif /* SVX_SW_DTMF_DECODER_INCLUDED */
 
 
 

@@ -52,8 +52,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "DtmfDecoder.h"
-#include "SwDtmfDecoder.h"
-#include "NewSwDtmfDecoder.h"
+#include "Dh1dmSwDtmfDecoder.h"
+#include "SvxSwDtmfDecoder.h"
 #include "S54sDtmfDecoder.h"
 #include "PtyDtmfDecoder.h"
 
@@ -122,7 +122,7 @@ DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
   cfg.getValue(name, "DTMF_DEC_TYPE", type);
   if (type == "INTERNAL")
   {
-    dec = new SwDtmfDecoder(cfg, name);
+    dec = new Dh1dmSwDtmfDecoder(cfg, name);
   }
   else if (type == "S54S")
   {
@@ -134,7 +134,7 @@ DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
   }
   else if (type == "EXPERIMENTAL")
   {
-    dec = new NewSwDtmfDecoder(cfg, name);
+    dec = new SvxSwDtmfDecoder(cfg, name);
   }
   else
   {

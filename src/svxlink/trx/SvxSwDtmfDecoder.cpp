@@ -1,5 +1,5 @@
 /**
-@file	 NewSwDtmfDecoder.cpp
+@file	 SvxSwDtmfDecoder.cpp
 @brief   This file contains a class that implements a sw DTMF decoder
 @author  Tobias Blomberg / SM0SVX
 @date	 2015-02-22
@@ -51,7 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "NewSwDtmfDecoder.h"
+#include "SvxSwDtmfDecoder.h"
 
 
 
@@ -123,7 +123,7 @@ namespace {
  *
  ****************************************************************************/
 
-NewSwDtmfDecoder::NewSwDtmfDecoder(Config &cfg, const string &name)
+SvxSwDtmfDecoder::SvxSwDtmfDecoder(Config &cfg, const string &name)
   : DtmfDecoder(cfg, name), twist_nrm_thresh(0), twist_rev_thresh(0), row(8),
     col(8), block_pos(0), det_cnt(0), undet_cnt(0), last_digit_active(0),
     min_det_cnt(DEFAULT_MIN_DET_CNT), min_undet_cnt(DEFAULT_MIN_UNDET_CNT),
@@ -156,10 +156,10 @@ NewSwDtmfDecoder::NewSwDtmfDecoder(Config &cfg, const string &name)
       // Rectangular window
     //win[n] = 1.0f;
   }
-} /* NewSwDtmfDecoder::NewSwDtmfDecoder */
+} /* SvxSwDtmfDecoder::SvxSwDtmfDecoder */
 
 
-bool NewSwDtmfDecoder::initialize(void)
+bool SvxSwDtmfDecoder::initialize(void)
 {
   if (!DtmfDecoder::initialize())
   {
@@ -186,10 +186,10 @@ bool NewSwDtmfDecoder::initialize(void)
   
   return true;
   
-} /* NewSwDtmfDecoder::initialize */
+} /* SvxSwDtmfDecoder::initialize */
 
 
-int NewSwDtmfDecoder::writeSamples(const float *buf, int len)
+int SvxSwDtmfDecoder::writeSamples(const float *buf, int len)
 {
   for (int i = 0; i < len; i++)
   {
@@ -207,7 +207,7 @@ int NewSwDtmfDecoder::writeSamples(const float *buf, int len)
   }
 
   return len;
-} /* NewSwDtmfDecoder::writeSamples */
+} /* SvxSwDtmfDecoder::writeSamples */
 
 
 /****************************************************************************
@@ -223,7 +223,7 @@ int NewSwDtmfDecoder::writeSamples(const float *buf, int len)
  *
  ****************************************************************************/
 
-void NewSwDtmfDecoder::processBlock(void)
+void SvxSwDtmfDecoder::processBlock(void)
 {
   bool debug = false;
 
@@ -566,15 +566,15 @@ void NewSwDtmfDecoder::processBlock(void)
     cout << " " << (digit_active ? "*" : "");
     cout << endl;
   }
-} /* NewSwDtmfDecoder::processBlock */
+} /* SvxSwDtmfDecoder::processBlock */
 
 
-void NewSwDtmfDecoder::DtmfGoertzel::initialize(float freq)
+void SvxSwDtmfDecoder::DtmfGoertzel::initialize(float freq)
 {
   Goertzel::initialize(freq, INTERNAL_SAMPLE_RATE);
   m_freq = freq;
   //m_max_fqdiff = m_freq * MAX_FQ_ERROR;
-}
+} /* SvxSwDtmfDecoder::DtmfGoertzel::initialize */
 
 
 /*
