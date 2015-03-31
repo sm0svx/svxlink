@@ -1,6 +1,6 @@
 /**
 @file	 AsyncAudioNoiseAdder.cpp
-@brief   A class to add white noise to an audio stream
+@brief   A class to add white gaussian noise to an audio stream
 @author  Tobias Blomberg / SM0SVX
 @date	 2015-03-08
 
@@ -38,8 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <cmath>
 #include <locale>
-
-#include <cstdlib>
+#include <limits>
 
 
 /****************************************************************************
@@ -116,8 +115,8 @@ using namespace Async;
  *
  ****************************************************************************/
 
-AudioNoiseAdder::AudioNoiseAdder(float max_ampl)
-  : seed(0), max_ampl(max_ampl)
+AudioNoiseAdder::AudioNoiseAdder(float level_db)
+  : sigma(sqrt(powf(10.0f, level_db / 10.0f) / 2.0f))
 {
 } /* AudioNoiseAdder::AudioNoiseAdder */
 
@@ -140,8 +139,8 @@ void AudioNoiseAdder::processSamples(float *dest, const float *src, int count)
   
   for (int i=0; i<count; ++i)
   {
-    float noise = 2.0 * rand_r(&seed) / RAND_MAX - 1.0;
-    dest[i] = src[i] + max_ampl * noise;
+    float noise = generateGaussianNoise();
+    dest[i] = src[i] + noise;
   }
 } /* AudioNoiseAdder::writeSamples */
 
@@ -152,6 +151,32 @@ void AudioNoiseAdder::processSamples(float *dest, const float *src, int count)
  * Private member functions
  *
  ****************************************************************************/
+
+float AudioNoiseAdder::generateGaussianNoise(void)
+{
+  static const float epsilon = std::numeric_limits<float>::min();
+  static const float two_pi = 2.0f * M_PI;
+  static const float mu = 0.0f;
+
+  generate = !generate;
+
+  if (!generate)
+  {
+    return z1 * sigma + mu;
+  }
+
+  float u1, u2;
+  do
+  {
+    u1 = rand() * (1.0f / RAND_MAX);
+    u2 = rand() * (1.0f / RAND_MAX);
+  }
+  while (u1 <= epsilon);
+
+  z0 = sqrt(-2.0f * log(u1)) * cos(two_pi * u2);
+  z1 = sqrt(-2.0f * log(u1)) * sin(two_pi * u2);
+  return z0 * sigma + mu;
+} /* AudioNoiseAdder::generateGaussianNoise */
 
 
 /*

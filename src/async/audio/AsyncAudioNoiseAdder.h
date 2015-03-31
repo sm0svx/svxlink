@@ -1,6 +1,6 @@
 /**
 @file	 AsyncAudioNoiseAdder.h
-@brief   A class to add white noise to an audio stream
+@brief   A class to add white gaussian noise to an audio stream
 @author  Tobias Blomberg / SM0SVX
 @date	 2015-03-08
 
@@ -105,17 +105,34 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A class to add white noise to an audio stream
+@brief	A class to add gaussian white noise to an audio stream
 @author Tobias Blomberg / SM0SVX
 @date   2015-03-08
+
+This class implement a noise generator that add white gaussian noise to an
+audio stream. The noise is generated using the Box-Muller transform which for
+example is described on Wikipedia:
+
+  http://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
+
+The class is not implemented as a pure audio source but rather as an audio pipe
+component that should be inserted in the audio path.
 */
 class AudioNoiseAdder : public AudioProcessor
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
+     * @param   level_db The noise level in dB
+     *
+     * The level_db parameter deserve some clarification. A level of 0dB give
+     * the same power as in a full scale sine wave. This make it possible to
+     * add noise to a generated signal under controlled conditions.
+     * For example, if a sine wave is generated in SvxLink with a level of 0dB
+     * and noise is added with a level of -10dB, we get a signal to noise ratio
+     * (SNR) of 10dB.
      */
-    AudioNoiseAdder(float max_ampl);
+    AudioNoiseAdder(float level_db);
   
     /**
      * @brief 	Destructor
@@ -137,11 +154,14 @@ class AudioNoiseAdder : public AudioProcessor
     void processSamples(float *dest, const float *src, int count);
 
   private:
-    unsigned int seed;
-    float max_ampl;
+    float sigma;        // Standard deviation of the generated noise
+    float z0;
+    float z1;
+    bool generate;
 
     AudioNoiseAdder(const AudioNoiseAdder&);
     AudioNoiseAdder& operator=(const AudioNoiseAdder&);
+    float generateGaussianNoise(void);
 
 };  /* class AudioNoiseAdder */
 
