@@ -2,10 +2,12 @@
 #include <string>
 #include <fstream>
 #include <cstdlib>
+#include <cmath>
 
 #include <AsyncConfig.h>
 #include <AsyncAudioNoiseAdder.h>
 #include <AsyncAudioFilter.h>
+#include <AsyncAudioPassthrough.h>
 
 #include "DtmfDecoder.h"
 #include "DtmfEncoder.h"
@@ -63,6 +65,7 @@ void digit_detected(char ch, int duration)
 {
   cout << " pos=" << fwriter->sampPos()
        << " (" << (static_cast<float>(fwriter->sampPos()) / (60*16000)) << "m)";
+  cout << endl;
   /*
   cout << " digit=" << ch
        << " duration=" << duration << endl;
@@ -148,6 +151,32 @@ class FileReader : public AudioSource
 };
 
 
+class PowerPlotter : public Async::AudioPassthrough
+{
+  public:
+    PowerPlotter(void) : prev_power(0.0f) { }
+
+    virtual int writeSamples(const float *samples, int count)
+    {
+      double power = 0.0;
+      for (int i=0; i<count; ++i)
+      {
+        power += samples[i] * samples[i];
+      }
+      power /= count;
+      power = ALPHA * power + (1-ALPHA) * prev_power;
+      prev_power = power;
+      cout << "pwr=" << power << endl;
+      return sinkWriteSamples(samples, count);
+    }
+
+  private:
+    static const float ALPHA = 0.05;
+    float prev_power;
+
+}; /* class PowerPlotter */
+
+
 int main()
 {
   Config cfg;
@@ -160,19 +189,33 @@ int main()
 #define SIMULATE
 #ifdef SIMULATE
   DtmfEncoder *enc = new DtmfEncoder;
-  enc->setToneLength(40);
-  enc->setToneSpacing(40);
-  enc->setToneAmplitude(-8);
+  enc->setDigitDuration(40);
+  enc->setDigitSpacing(40);
+  enc->setDigitPower(-10);
   prev_src = enc;
 
-  AudioNoiseAdder *noise_adder = new AudioNoiseAdder(0.0);
-  //AudioNoiseAdder *noise_adder = new AudioNoiseAdder(0.75);
+  //float noise_pwr = 0;
+  //float noise_pwr = -10;
+  //float noise_pwr = -13;
+  //float noise_pwr = -16;
+  float noise_pwr = -22;
+  //float noise_pwr = -100;
+  noise_pwr += 10.0f * log10f(0.5f / 0.30f); // 300-5000Hz filter
+  //noise_pwr += 10.0f * log10f(0.5f / 0.18f); // 480-3400Hz filter
+  AudioNoiseAdder *noise_adder = new AudioNoiseAdder(noise_pwr);
   prev_src->registerSink(noise_adder);
   prev_src = noise_adder;
 
   AudioFilter *voiceband_filter = new AudioFilter("BpBu20/300-5000");
+  //AudioFilter *voiceband_filter = new AudioFilter("BpBu20/480-3400");
   prev_src->registerSink(voiceband_filter);
   prev_src = voiceband_filter;
+
+  /*
+  PowerPlotter pp;
+  prev_src->registerSink(&pp);
+  prev_src = &pp;
+  */
 #else
   FileReader *rdr = new FileReader;
   prev_src = rdr;
@@ -193,11 +236,17 @@ int main()
   prev_src = 0;
 
 #ifdef SIMULATE
-  //for (int i=0; i<1000; ++i)
+  int tone_amp = enc->digitPower();
+  enc->setDigitPower(-100);
+  enc->send("0");
+  enc->setDigitPower(tone_amp);
+  string digits;
+  for (int i=0; i<50; ++i)
   {
-    enc->send(send_digits);
+    digits += send_digits;
   }
-  enc->setToneAmplitude(-80);
+  enc->send(digits);
+  enc->setDigitPower(-100);
   enc->send("0");
 #else
   if (!rdr->open("/tmp/output.raw"))
@@ -209,12 +258,15 @@ int main()
 #endif
   if (!received_digits.empty())
   {
-    cout << "Digits detected: " << received_digits << endl;
+    cout << "Digits detected(" << received_digits.size() << "): "
+         << received_digits << endl;
   }
 #ifdef SIMULATE
-  if (received_digits != send_digits)
+  if (received_digits != digits)
   {
-    cout << "received != sent\n";
+    cout << "received(" << received_digits.size() << ") != sent("
+         << digits.size() << ") => "
+         << (100.0 * received_digits.size() / digits.size()) << "%\n";
     return 1;
   }
 #else

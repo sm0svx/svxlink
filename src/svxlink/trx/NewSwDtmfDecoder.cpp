@@ -111,6 +111,9 @@ namespace {
     {'7', '8', '9', 'C'},
     {'*', '0', '#', 'D'}
   };
+
+  static const float row_fqs[] = { 697, 770, 852, 941 };
+  static const float col_fqs[] = { 1209, 1336, 1477, 1633 };
 };
 
 
@@ -121,8 +124,8 @@ namespace {
  ****************************************************************************/
 
 NewSwDtmfDecoder::NewSwDtmfDecoder(Config &cfg, const string &name)
-  : DtmfDecoder(cfg, name), twist_nrm_thresh(0), twist_rev_thresh(0), row(4),
-    col(4), block_pos(0), det_cnt(0), undet_cnt(0), last_digit_active(0),
+  : DtmfDecoder(cfg, name), twist_nrm_thresh(0), twist_rev_thresh(0), row(8),
+    col(8), block_pos(0), det_cnt(0), undet_cnt(0), last_digit_active(0),
     min_det_cnt(DEFAULT_MIN_DET_CNT), min_undet_cnt(DEFAULT_MIN_UNDET_CNT),
     det_state(STATE_IDLE), det_cnt_weight(0)
 {
@@ -130,16 +133,29 @@ NewSwDtmfDecoder::NewSwDtmfDecoder(Config &cfg, const string &name)
   twist_rev_thresh = powf(10.0f, -DEFAULT_MAX_REV_TWIST_DB / 10.0f);
 
     // Row detectors
-  row[0].initialize(697);
-  row[1].initialize(770);
-  row[2].initialize(852);
-  row[3].initialize(941);
+  for (size_t i=0; i<4; ++i)
+  {
+    row[i].initialize(row_fqs[i]);
+    row[i+4].initialize(3.0f * row_fqs[i]); // Third overtone
+  }
 
     // Column detectors
-  col[0].initialize(1209);
-  col[1].initialize(1336);
-  col[2].initialize(1477);
-  col[3].initialize(1633);
+  for (size_t i=0; i<4; ++i)
+  {
+    col[i].initialize(col_fqs[i]);
+    col[i+4].initialize(3.0f * col_fqs[i]); // Third overtone
+  }
+
+    // Initialize window function
+  for (size_t n=0; n<BLOCK_SIZE; ++n)
+  {
+      // Hamming window
+    win[n] = 0.53836 - 0.46164 * cosf(2.0f * M_PI * n / (BLOCK_SIZE - 1));
+      // Hann window
+    //win[n] = 0.5 - 0.5 * cosf(2.0f * M_PI * n / (BLOCK_SIZE - 1));
+      // Rectangular window
+    //win[n] = 1.0f;
+  }
 } /* NewSwDtmfDecoder::NewSwDtmfDecoder */
 
 
@@ -181,11 +197,12 @@ int NewSwDtmfDecoder::writeSamples(const float *buf, int len)
     if (++block_pos >= BLOCK_SIZE)
     {
       processBlock();
-      if (OVERLAP > 0)
+      if (STEP_SIZE < BLOCK_SIZE)
       {
-        memmove(block, block + (BLOCK_SIZE - OVERLAP), OVERLAP * sizeof(*buf));
+        memmove(block, block + STEP_SIZE,
+                (BLOCK_SIZE - STEP_SIZE) * sizeof(*buf));
       }
-      block_pos = OVERLAP;
+      block_pos = BLOCK_SIZE - STEP_SIZE;
     }
   }
 
@@ -225,15 +242,16 @@ void NewSwDtmfDecoder::processBlock(void)
   double block_energy = 0.0;
   for (size_t i=0; i<BLOCK_SIZE; ++i)
   {
-    row[0].calc(block[i]);
-    row[1].calc(block[i]);
-    row[2].calc(block[i]);
-    row[3].calc(block[i]);
-    col[0].calc(block[i]);
-    col[1].calc(block[i]);
-    col[2].calc(block[i]);
-    col[3].calc(block[i]);
-    block_energy += block[i] * block[i];
+    float sample = block[i] * win[i];
+    block_energy += sample * sample;
+    row[0].calc(sample);
+    row[1].calc(sample);
+    row[2].calc(sample);
+    row[3].calc(sample);
+    col[0].calc(sample);
+    col[1].calc(sample);
+    col[2].calc(sample);
+    col[3].calc(sample);
   }
   if (debug)
   {
@@ -255,35 +273,51 @@ void NewSwDtmfDecoder::processBlock(void)
   bool digit_active = false;
   size_t max_row_idx = 0;
   size_t max_col_idx = 0;
+  float max_row_ms = 0.0f;
+  float max_col_ms = 0.0f;
   if (block_energy > ENERGY_THRESH)
   {
     float rel_energy = 0.0f;
-    float max_row_ms = 0.0f;
-    float max_col_ms = 0.0f;
+    //float second_max_row_ms = 0.0f;
+    //float second_max_col_ms = 0.0f;
+    float row_sum = 0.0f;
+    float col_sum = 0.0f;
     for (size_t i = 0; i < 4; ++i)
     {
-      const float row_ms = row[i].magnitudeSquared();
+      const float row_ms = WIN_ENB * row[i].magnitudeSquared();
       if (row_ms > max_row_ms)
       {
+        //second_max_row_ms = max_row_ms;
         max_row_ms = row_ms;
         max_row_idx = i;
       }
+      row_sum += row_ms;
 
-      const float col_ms = col[i].magnitudeSquared();
+      const float col_ms = WIN_ENB * col[i].magnitudeSquared();
       if (col_ms > max_col_ms)
       {
+        //second_max_col_ms = max_col_ms;
         max_col_ms = col_ms;
         max_col_idx = i;
       }
+      col_sum += col_ms;
     }
 
     rel_energy = 2 * (max_row_ms + max_col_ms) / (BLOCK_SIZE * block_energy);
     //cout << " row=" << max_row_idx << " col=" << max_col_idx;
     const float twist = max_row_ms / max_col_ms;
+    //const float sec_row = second_max_row_ms / max_row_ms;
+    //const float sec_col = second_max_col_ms / max_col_ms;
+    const float row_group_rel = max_row_ms / row_sum;
+    const float col_group_rel = max_col_ms / col_sum;
     if (debug)
     {
       cout << " rel_energy=" << setw(4) << rel_energy;
       cout << " twist=" << setw(5) << 10.0 * log10(twist) << "dB";
+      //cout << " sec_row=" << sec_row;
+      //cout << " sec_col=" << sec_col;
+      cout << " row_group=" << row_group_rel;
+      cout << " col_group=" << col_group_rel;
     }
     digit_active = false;
     if (rel_energy > REL_THRESH_LO)
@@ -292,13 +326,26 @@ void NewSwDtmfDecoder::processBlock(void)
       {
         det_cnt_weight = DET_CNT_HI_WEIGHT;
       }
+      else if (rel_energy > REL_THRESH_MED)
+      {
+        det_cnt_weight = DET_CNT_MED_WEIGHT;
+      }
       else
       {
-        det_cnt_weight = 1;
+        det_cnt_weight = DET_CNT_LO_WEIGHT;
       }
-      digit_active = (twist > twist_rev_thresh) && (twist < twist_nrm_thresh);
+      digit_active = (twist > twist_rev_thresh) &&
+                     (twist < twist_nrm_thresh) &&
+                     /*
+                     (sec_row < MAX_SEC_REL) &&
+                     (sec_col < MAX_SEC_REL) &&
+                     */
+                     (row_group_rel > 0.80) &&
+                     (col_group_rel > 0.80);
     }
   }
+  DtmfGoertzel &max_row = row[max_row_idx];
+  DtmfGoertzel &max_col = col[max_col_idx];
 
     // Find out what digit corresponds to the two strongest tones.
     // If the digit changed from the previous detection without a proper pause
@@ -311,10 +358,51 @@ void NewSwDtmfDecoder::processBlock(void)
     {
       cout << " digit=" << digit;
     }
-    digit_active = ((det_state == STATE_IDLE) || (digit == last_digit_active));
-    last_digit_active = digit;
+    if ((det_state != STATE_IDLE) && (digit != last_digit_active))
+    {
+      digit_active = false;
+    }
+    else
+    {
+      last_digit_active = digit;
+    }
   }
 
+    // Calculate overtone DFT:s and intermodulation DFT.
+    // The third overtone for the selected tones in each tone group is
+    // calculated and compared to a threshold. If the overtone is too high,
+    // the received tone is not a pure sine.
+    // Intermodulation between the two selected tones can also be a sign of
+    // that this is not a DTMF digit.
+  if (digit_active)
+  {
+    Goertzel im(max_col.m_freq + max_col.m_freq - max_row.m_freq,
+                INTERNAL_SAMPLE_RATE);
+    row[max_row_idx+4].reset();
+    col[max_col_idx+4].reset();
+    for (size_t i=0; i<BLOCK_SIZE; ++i)
+    {
+      float sample = block[i] * win[i];
+      im.calc(sample);
+      row[max_row_idx+4].calc(sample);
+      col[max_col_idx+4].calc(sample);
+    }
+
+    float row_ot_rel = row[max_row_idx+4].magnitudeSquared() / max_row_ms;
+    float col_ot_rel = col[max_col_idx+4].magnitudeSquared() / max_col_ms;
+    float im_rel = im.magnitudeSquared() / (max_row_ms + max_col_ms);
+    if (debug)
+    {
+      cout << " row_ot=" << row_ot_rel;
+      cout << " col_ot=" << col_ot_rel;
+      cout << " im=" << im_rel;
+    }
+
+    digit_active = (row_ot_rel < MAX_OT_REL) && (col_ot_rel < MAX_OT_REL) &&
+                   (im_rel < MAX_IM_REL);
+  }
+
+#if 0
     // Since we use the same detection bandwidth for all eight tones, most
     // detectors actually allow a tone frequency deviation that is outside of
     // the DTMF spec. To find out what the frequency error is, we one more time
@@ -373,6 +461,7 @@ void NewSwDtmfDecoder::processBlock(void)
                      (abs(col_fqdiff) < max_col.m_max_fqdiff);
     }
   }
+#endif
 
     // Using the result from the calculations above, either digit active or
     // not active for this block, we use a state machine to determine if a DTMF
@@ -407,8 +496,23 @@ void NewSwDtmfDecoder::processBlock(void)
         det_cnt += det_cnt_weight;
         if (det_cnt >= min_det_cnt)
         {
+          float det_quality = static_cast<float>(det_cnt)
+                            / (duration * DET_CNT_HI_WEIGHT);
+          if (det_quality > 0.5)
+          {
+            undet_thresh = min_undet_cnt;
+          }
+          else if (det_quality > 0.2)
+          {
+            undet_thresh = 2 * min_undet_cnt;
+          }
+          else
+          {
+            undet_thresh = 3 * min_undet_cnt;
+          }
           if (debug)
           {
+            cout << " det_q=" << det_quality;
             cout << " activated";
           }
           digitActivated(last_digit_active);
@@ -417,7 +521,7 @@ void NewSwDtmfDecoder::processBlock(void)
       }
       else
       {
-        if ((det_cnt_weight > 1) || (++undet_cnt >= 2))
+        //if ((det_cnt_weight > 1) || (++undet_cnt >= 2))
         {
           undet_cnt = 0;
           det_state = STATE_IDLE;
@@ -440,11 +544,10 @@ void NewSwDtmfDecoder::processBlock(void)
       }
       else
       {
-        if (++undet_cnt >= min_undet_cnt)
+        if (++undet_cnt >= undet_thresh)
         {
           const int first_block_time = 1000 * BLOCK_SIZE / INTERNAL_SAMPLE_RATE;
-          const int block_time =
-              1000 * (BLOCK_SIZE-OVERLAP) / INTERNAL_SAMPLE_RATE;
+          const int block_time = 1000 * STEP_SIZE / INTERNAL_SAMPLE_RATE;
           const int dur_ms = first_block_time + block_time * (duration - 1);
           if (debug)
           {
@@ -470,7 +573,7 @@ void NewSwDtmfDecoder::DtmfGoertzel::initialize(float freq)
 {
   Goertzel::initialize(freq, INTERNAL_SAMPLE_RATE);
   m_freq = freq;
-  m_max_fqdiff = m_freq * MAX_FQ_ERROR;
+  //m_max_fqdiff = m_freq * MAX_FQ_ERROR;
 }
 
 
