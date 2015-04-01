@@ -142,30 +142,22 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
     int hangtime(void) const { return m_hangtime; }
     
     /**
-     * @brief 	Write samples into the DTMF decoder
-     * @param 	samples The buffer containing the samples
-     * @param 	count The number of samples in the buffer
-     * @return	Returns the number of samples that has been taken care of
-     */
-    virtual int writeSamples(const float *samples, int count) { return count; }
-    
-    /**
-     * @brief 	Tell the DTMF decoder to flush the previously written samples
-     *
-     * This function is used to tell the sink to flush previously written
-     * samples. When done flushing, the sink should call the
-     * sourceAllSamplesFlushed function.
-     */
-    virtual void flushSamples(void)
-    {
-      sourceAllSamplesFlushed();
-    }
-    
-    /**
      * @brief 	Return the active digit
      * @return	Return the active digit if any or a '?' if none.
      */
     virtual char activeDigit(void) const = 0;
+
+    /**
+     * @brief   The detection time for this detector
+     * @returns Returns the detection time in milliseconds
+     *
+     * This function will return the time in milliseconds that it will take
+     * for the detector to detect a DTMF digit. That is, the time from the
+     * moment when the tone is activated until the digitActivated signal is
+     * emitted.
+     * The time can for example be used in a DTMF muting function.
+     */
+    virtual int detectionTime(void) const = 0;
 
     /*
      * @brief 	A signal that is emitted when a DTMF digit is first detected

@@ -243,7 +243,6 @@ class LocalRxBase : public Rx
     Async::AudioSplitter      	*tone_dets;
     Async::AudioValve 	        *sql_valve;
     Async::AudioDelayLine     	*delay;
-    bool      	      	      	mute_dtmf;
     int       	      	      	sql_tail_elim;
     float            	      	preamp_gain;
     Async::AudioValve 	      	*mute_valve;
@@ -251,6 +250,7 @@ class LocalRxBase : public Rx
     unsigned                    sql_extended_hangtime;
     unsigned                    sql_extended_hangtime_thresh;
     Async::AudioFifo            *input_fifo;
+    int                         dtmf_muting_pre;
     
     int audioRead(float *samples, int count);
     void dtmfDigitActivated(char digit);

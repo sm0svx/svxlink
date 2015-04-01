@@ -45,6 +45,10 @@
 * New config variable CARD_CHANNELS which is used to set the number of
   channels that is used on the sound card, e.g. 1=mono, 2=stereo.
 
+* The DTMF_TONE_AMP transmitter configuration variable has been renamed to
+  DTMF_DIGIT_PWR. To get the same level as with the old variable, add 3dB
+  to the value set on the new configuration variable.
+
 
 
  1.4.0 -- 02 aug 2014

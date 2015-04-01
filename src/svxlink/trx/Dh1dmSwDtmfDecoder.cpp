@@ -1,5 +1,5 @@
 /**
-@file	 SwDtmfDecoder.cpp
+@file	 Dh1dmSwDtmfDecoder.cpp
 @brief   This file contains a class that implements a sw DTMF decoder
 @author  Tobias Blomberg / SM0SVX
 @date	 2003-04-16
@@ -54,7 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "SwDtmfDecoder.h"
+#include "Dh1dmSwDtmfDecoder.h"
 
 
 
@@ -127,7 +127,7 @@ using namespace Async;
  *
  ****************************************************************************/
 
-SwDtmfDecoder::SwDtmfDecoder(Config &cfg, const string &name)
+Dh1dmSwDtmfDecoder::Dh1dmSwDtmfDecoder(Config &cfg, const string &name)
   : DtmfDecoder(cfg, name), samples_left(DTMF_BLOCK_LENGTH),
     last_hit(0), last_stable(0), stable_timer(0), active_timer(0),
     normal_twist(DTMF_NORMAL_TWIST), reverse_twist(DTMF_REVERSE_TWIST)
@@ -159,10 +159,10 @@ SwDtmfDecoder::SwDtmfDecoder(Config &cfg, const string &name)
     goertzelInit(&col_out[6], 1477.0f, 0.5f);
     goertzelInit(&col_out[7], 1633.0f, 0.5f);
 
-} /* SwDtmfDecoder::SwDtmfDecoder */
+} /* Dh1dmSwDtmfDecoder::Dh1dmSwDtmfDecoder */
 
 
-bool SwDtmfDecoder::initialize(void)
+bool Dh1dmSwDtmfDecoder::initialize(void)
 {
   if (!DtmfDecoder::initialize())
   {
@@ -187,10 +187,10 @@ bool SwDtmfDecoder::initialize(void)
   
   return true;
   
-} /* SwDtmfDecoder::initialize */
+} /* Dh1dmSwDtmfDecoder::initialize */
 
 
-int SwDtmfDecoder::writeSamples(const float *buf, int len)
+int Dh1dmSwDtmfDecoder::writeSamples(const float *buf, int len)
 {
     for (int i = 0; i < len; i++)
     {
@@ -306,7 +306,7 @@ int SwDtmfDecoder::writeSamples(const float *buf, int len)
     
     return len;
     
-} /* SwDtmfDecoder::writeSamples */
+} /* Dh1dmSwDtmfDecoder::writeSamples */
 
 
 /****************************************************************************
@@ -322,7 +322,7 @@ int SwDtmfDecoder::writeSamples(const float *buf, int len)
  *
  ****************************************************************************/
 
-void SwDtmfDecoder::dtmfReceive(void)
+void Dh1dmSwDtmfDecoder::dtmfReceive(void)
 {
     const char dtmf_table[] = "123A456B789C*0#D";
 
@@ -349,10 +349,10 @@ void SwDtmfDecoder::dtmfReceive(void)
     /* Reset the sample counter. */
     samples_left = DTMF_BLOCK_LENGTH;
 
-} /* SwDtmfDecoder::dtmfReceive */
+} /* Dh1dmSwDtmfDecoder::dtmfReceive */
 
 
-void SwDtmfDecoder::dtmfPostProcess(uint8_t hit)
+void Dh1dmSwDtmfDecoder::dtmfPostProcess(uint8_t hit)
 {
   /* This function is called when a complete block has been received. */
   active_timer++; stable_timer++;
@@ -383,10 +383,10 @@ void SwDtmfDecoder::dtmfPostProcess(uint8_t hit)
     last_stable = 0;
   }
   
-} /* SwDtmfDecoder::dtmfPostProcess */
+} /* Dh1dmSwDtmfDecoder::dtmfPostProcess */
 
 
-void SwDtmfDecoder::goertzelInit(GoertzelState *s, float freq, float offset)
+void Dh1dmSwDtmfDecoder::goertzelInit(GoertzelState *s, float freq, float offset)
 {
     /* Adjust the block length for 2.5% bandwidth. The real bandwidth will */
     /* be approx. 3% because we apply a Hamming window. */
@@ -407,10 +407,10 @@ void SwDtmfDecoder::goertzelInit(GoertzelState *s, float freq, float offset)
     /* Point to the first table entry */
     s->win = s->window_table.begin();
 
-} /* SwDtmfDecoder::goertzelInit */
+} /* Dh1dmSwDtmfDecoder::goertzelInit */
 
 
-float SwDtmfDecoder::goertzelResult(GoertzelState *s)
+float Dh1dmSwDtmfDecoder::goertzelResult(GoertzelState *s)
 {
     float v1, res;
 
@@ -429,10 +429,10 @@ float SwDtmfDecoder::goertzelResult(GoertzelState *s)
     /* Return the calculated signal level. */
     return res;
     
-} /* SwDtmfDecoder::goertzelResult */
+} /* Dh1dmSwDtmfDecoder::goertzelResult */
 
 
-int SwDtmfDecoder::findMaxIndex(const float f[])
+int Dh1dmSwDtmfDecoder::findMaxIndex(const float f[])
 {
     float threshold = 1.0f;
     int idx = -1;
@@ -460,6 +460,6 @@ int SwDtmfDecoder::findMaxIndex(const float f[])
     }
     return idx;
     
-} /* SwDtmfDecoder::findMaxIndex */
+} /* Dh1dmSwDtmfDecoder::findMaxIndex */
 
 /*- End of file ------------------------------------------------------------*/

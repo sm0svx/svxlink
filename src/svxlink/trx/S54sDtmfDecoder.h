@@ -130,6 +130,35 @@ class S54sDtmfDecoder : public HwDtmfDecoder
      */
     virtual bool initialize(void);
     
+    /**
+     * @brief 	Write samples into the DTMF decoder
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
+     */
+    virtual int writeSamples(const float *samples, int count) { return count; }
+    
+    /**
+     * @brief 	Tell the DTMF decoder to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     */
+    virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
+    
+    /**
+     * @brief   The detection time for this detector
+     * @returns Returns the detection time in milliseconds
+     *
+     * This function will return the time in milliseconds that it will take
+     * for the detector to detect a DTMF digit. That is, the time from the
+     * moment when the tone is activated until the digitActivated signal is
+     * emitted.
+     * The time can for example be used in a DTMF muting function.
+     */
+    virtual int detectionTime(void) const { return 75; }
+
   protected:
     
   private:

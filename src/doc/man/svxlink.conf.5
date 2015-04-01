@@ -1555,16 +1555,17 @@ transmitter through the microphone input the radio will apply a preemphasis
 filter so this feature should be disabled. 0=disabled, 1=enabled.
 .TP
 .B DTMF_TONE_LENGTH
-The length, in milliseconds, of DTMF digits transmitted on this transmitter.
+The duration, in milliseconds, of DTMF digits transmitted on this transmitter.
 100ms is the default.
 .TP
 .B DTMF_TONE_SPACING
 The spacing, in milliseconds, between DTMF digits transmitted on this
 transmitter. 50ms is the default.
 .TP
-.B DTMF_TONE_AMP
-The amplitude, in dB, of DTMF digits transmitted on this transmitter. Zero
-dB is the maximum amplitude. -18dB is the default.
+.B DTMF_DIGIT_PWR
+The power, in dB, of DTMF digits transmitted on this transmitter. Zero dB will
+give the same power in the generated signal as there is in a maximum amplitude
+(full scale) sine wave. -15dB is the default.
 .TP
 .B TONE_SIGLEV_MAP
 It is possible to transmit one of ten tones along with the normal transmission

@@ -110,7 +110,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define DTMF_MUTING_PRE       75
 #define DTMF_MUTING_POST      200
 #define TONE_1750_MUTING_PRE  75
 #define TONE_1750_MUTING_POST 100
@@ -237,9 +236,9 @@ class AudioUdpSink : public UdpSocket, public AudioSink
 LocalRxBase::LocalRxBase(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), mute_state(MUTE_ALL),
     squelch_det(0), siglevdet(0), /* siglev_offset(0.0), siglev_slope(1.0), */
-    tone_dets(0), sql_valve(0), delay(0), mute_dtmf(false), sql_tail_elim(0),
+    tone_dets(0), sql_valve(0), delay(0), sql_tail_elim(0),
     preamp_gain(0), mute_valve(0), sql_hangtime(0), sql_extended_hangtime(0),
-    sql_extended_hangtime_thresh(0), input_fifo(0)
+    sql_extended_hangtime_thresh(0), input_fifo(0), dtmf_muting_pre(0)
 {
 } /* LocalRxBase::LocalRxBase */
 
@@ -261,21 +260,7 @@ bool LocalRxBase::initialize(void)
   bool deemphasis = false;
   cfg.getValue(name(), "DEEMPHASIS", deemphasis);
   
-  if (cfg.getValue(name(), "MUTE_DTMF", mute_dtmf))
-  {
-    cerr << "*** ERROR: The MUTE_DTMF configuration variable has been\n"
-      	 << "           renamed to DTMF_MUTING. Change this in configuration\n"
-	 << "           section \"" << name() << "\".\n";
-    return false;
-  }
-
   int delay_line_len = 0;
-  cfg.getValue(name(), "DTMF_MUTING", mute_dtmf);
-  if (mute_dtmf)
-  {
-    delay_line_len = max(delay_line_len, DTMF_MUTING_PRE);
-  }
-  
   bool  mute_1750 = false;
   if (cfg.getValue(name(), "1750_MUTING", mute_1750))
   {
@@ -376,19 +361,14 @@ bool LocalRxBase::initialize(void)
   siglevdet_splitter->addSink(mute_valve, true);
   prev_src = mute_valve;
   
-    // If the sound card sample rate is higher than 8kHz (16 or 48kHz assumed)
-    // decimate it down to 8kHz. Also create a splitter to distribute the
-    // 16kHz audio to other consumers.
 #if (INTERNAL_SAMPLE_RATE != 16000)
-  //AudioSplitter *rate_16k_splitter = 0;
+    // If the sound card sample rate is higher than 8kHz (16 or 48kHz assumed)
+    // decimate it down to 8kHz.
+    // 16kHz audio to other consumers.
   if (audioSampleRate() > 8000)
   {
-    //rate_16k_splitter = new AudioSplitter;
-    //prev_src->registerSink(rate_16k_splitter, true);
-
     AudioDecimator *d2 = new AudioDecimator(2, coeff_16_8, coeff_16_8_taps);
     prev_src->registerSink(d2, true);
-    //rate_16k_splitter->addSink(d2, true);
     prev_src = d2;
   }
 #endif
@@ -408,13 +388,12 @@ bool LocalRxBase::initialize(void)
     prev_src = deemph_filt;
   }
   
-    // Create an audio splitter to distribute the 8kHz audio to all consumers
-  AudioSplitter *splitter = new AudioSplitter;
-  prev_src->registerSink(splitter, true);
-  prev_src = 0;
+    // Create a splitter to distribute full bandwidth audio to all consumers
+  AudioSplitter *fullband_splitter = new AudioSplitter;
+  prev_src->registerSink(fullband_splitter, true);
+  prev_src = fullband_splitter;
 
-    // Create the configured squelch detector and initialize it. Then connect
-    // it to the 8kHz audio splitter
+    // Create the configured squelch detector and initialize it
   string sql_det_str;
   if (!cfg.getValue(name(), "SQL_DET", sql_det_str))
   {
@@ -490,42 +469,7 @@ bool LocalRxBase::initialize(void)
       sql_extended_hangtime_thresh);
   
   squelch_det->squelchOpen.connect(mem_fun(*this, &LocalRxBase::onSquelchOpen));
-  splitter->addSink(squelch_det, true);
-
-    // Create the configured type of DTMF decoder and add it to the splitter
-  string dtmf_dec_type("NONE");
-  cfg.getValue(name(), "DTMF_DEC_TYPE", dtmf_dec_type);
-  if (dtmf_dec_type != "NONE")
-  {
-    DtmfDecoder *dtmf_dec = DtmfDecoder::create(this, cfg, name());
-    if ((dtmf_dec == 0) || !dtmf_dec->initialize())
-    {
-      // FIXME: Cleanup?
-      delete dtmf_dec;
-      return false;
-    }
-    dtmf_dec->digitActivated.connect(
-        mem_fun(*this, &LocalRxBase::dtmfDigitActivated));
-    dtmf_dec->digitDeactivated.connect(
-        mem_fun(*this, &LocalRxBase::dtmfDigitDeactivated));
-    splitter->addSink(dtmf_dec, true);
-  }
-  
-    // Create a selective multiple tone detector object
-  string sel5_dec_type("NONE");
-  cfg.getValue(name(), "SEL5_DEC_TYPE", sel5_dec_type);
-  if (sel5_dec_type != "NONE")
-  {
-    Sel5Decoder *sel5_dec = Sel5Decoder::create(cfg, name());
-    if (sel5_dec == 0 || !sel5_dec->initialize())
-    {
-      cerr << "*** ERROR: Sel5 decoder initialization failed for RX \""
-          << name() << "\"\n";
-      return false;
-    }
-    sel5_dec->sequenceDetected.connect(mem_fun(*this, &LocalRxBase::sel5Detected));
-    splitter->addSink(sel5_dec, true);
-  }
+  fullband_splitter->addSink(squelch_det, true);
 
     // Set up out of band AFSK demodulator if configured
   float voice_gain = 0.0f;
@@ -543,7 +487,7 @@ bool LocalRxBase::initialize(void)
 
     AfskDemodulator *fsk_demod =
       new AfskDemodulator(fc - shift/2, fc + shift/2, baudrate);
-    splitter->addSink(fsk_demod, true);
+    fullband_splitter->addSink(fsk_demod, true);
     AudioSource *prev_src = fsk_demod;
 
     Synchronizer *sync = new Synchronizer(baudrate);
@@ -556,15 +500,75 @@ bool LocalRxBase::initialize(void)
     sync->bitsReceived.connect(mem_fun(deframer, &HdlcDeframer::bitsReceived));
   }
 
-    // Create a new audio splitter to handle tone detectors then add it to
-    // the splitter
+    // Create a new audio splitter to handle tone detectors
   tone_dets = new AudioSplitter;
-  splitter->addSink(tone_dets, true);
+  prev_src->registerSink(tone_dets);
+  prev_src = tone_dets;
+
+    // Filter out the voice band, removing high- and subaudible frequencies,
+    // for example CTCSS.
+#if (INTERNAL_SAMPLE_RATE == 16000)
+  AudioFilter *voiceband_filter = new AudioFilter("BpBu20/300-5000");
+#else
+  AudioFilter *voiceband_filter = new AudioFilter("BpBu20/300-3500");
+#endif
+  prev_src->registerSink(voiceband_filter, true);
+  prev_src = voiceband_filter;
+
+    // Create an audio splitter to distribute the voiceband audio to all
+    // other consumers
+  AudioSplitter *voiceband_splitter = new AudioSplitter;
+  prev_src->registerSink(voiceband_splitter, true);
+  prev_src = voiceband_splitter;
+
+    // Create the configured type of DTMF decoder and add it to the splitter
+  string dtmf_dec_type("NONE");
+  cfg.getValue(name(), "DTMF_DEC_TYPE", dtmf_dec_type);
+  if (dtmf_dec_type != "NONE")
+  {
+    DtmfDecoder *dtmf_dec = DtmfDecoder::create(this, cfg, name());
+    if ((dtmf_dec == 0) || !dtmf_dec->initialize())
+    {
+      // FIXME: Cleanup?
+      delete dtmf_dec;
+      return false;
+    }
+    dtmf_dec->digitActivated.connect(
+        mem_fun(*this, &LocalRxBase::dtmfDigitActivated));
+    dtmf_dec->digitDeactivated.connect(
+        mem_fun(*this, &LocalRxBase::dtmfDigitDeactivated));
+    voiceband_splitter->addSink(dtmf_dec, true);
+
+    bool dtmf_muting = false;
+    cfg.getValue(name(), "DTMF_MUTING", dtmf_muting);
+    if (dtmf_muting)
+    {
+      dtmf_muting_pre = dtmf_dec->detectionTime();
+      delay_line_len = max(delay_line_len, dtmf_muting_pre);
+    }
+  }
   
+    // Create a selective multiple tone detector object
+  string sel5_dec_type("NONE");
+  cfg.getValue(name(), "SEL5_DEC_TYPE", sel5_dec_type);
+  if (sel5_dec_type != "NONE")
+  {
+    Sel5Decoder *sel5_dec = Sel5Decoder::create(cfg, name());
+    if (sel5_dec == 0 || !sel5_dec->initialize())
+    {
+      cerr << "*** ERROR: Sel5 decoder initialization failed for RX \""
+          << name() << "\"\n";
+      return false;
+    }
+    sel5_dec->sequenceDetected.connect(
+        mem_fun(*this, &LocalRxBase::sel5Detected));
+    voiceband_splitter->addSink(sel5_dec, true);
+  }
+
     // Create an audio valve to use as squelch and connect it to the splitter
   sql_valve = new AudioValve;
   sql_valve->setOpen(false);
-  splitter->addSink(sql_valve, true);
+  prev_src->registerSink(sql_valve);
   prev_src = sql_valve;
 
     // Create the state detector
@@ -574,12 +578,6 @@ bool LocalRxBase::initialize(void)
   prev_src->registerSink(state_det, true);
   prev_src = state_det;
 
-    // Create the highpass CTCSS filter that cuts off audio below 300Hz
-  AudioFilter *ctcss_filt = new AudioFilter("HpBu20/300");
-  ctcss_filt->setOutputGain(voice_gain);
-  prev_src->registerSink(ctcss_filt, true);
-  prev_src = ctcss_filt;
-  
     // If we need a delay line (e.g. for DTMF muting and/or squelch tail
     // elimination), create it
   if (delay_line_len > 0)
@@ -588,7 +586,7 @@ bool LocalRxBase::initialize(void)
     prev_src->registerSink(delay, true);
     prev_src = delay;
   }
-  
+
     // Add a limiter to smoothly limiting the audio before hard clipping it
   AudioCompressor *limit = new AudioCompressor;
   limit->setThreshold(-1);
@@ -631,7 +629,7 @@ bool LocalRxBase::initialize(void)
     assert(calldet != 0);
     calldet->setPeakThresh(13);
     calldet->activated.connect(mem_fun(*this, &LocalRxBase::tone1750detected));
-    splitter->addSink(calldet, true);
+    voiceband_splitter->addSink(calldet, true);
     //cout << "### Enabling 1750Hz muting\n";
   }
 
@@ -768,9 +766,9 @@ void LocalRxBase::sel5Detected(std::string sequence)
 void LocalRxBase::dtmfDigitActivated(char digit)
 {
   //printf("DTMF digit %c activated.\n", digit);
-  if (mute_dtmf)
+  if (dtmf_muting_pre > 0)
   {
-    delay->mute(true, DTMF_MUTING_PRE);
+    delay->mute(true, dtmf_muting_pre);
   }
 } /* LocalRxBase::dtmfDigitActivated */
 
@@ -782,7 +780,7 @@ void LocalRxBase::dtmfDigitDeactivated(char digit, int duration_ms)
   {
     dtmfDigitDetected(digit, duration_ms);
   }
-  if (mute_dtmf)
+  if (dtmf_muting_pre > 0)
   {
     delay->mute(false, DTMF_MUTING_POST);
   }
