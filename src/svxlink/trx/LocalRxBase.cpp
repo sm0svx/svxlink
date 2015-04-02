@@ -795,9 +795,9 @@ void LocalRxBase::onSquelchOpen(bool is_open)
 
 void LocalRxBase::tone1750detected(bool detected)
 {
-   //cout << "### Muting 1750Hz: " << (detected ? "TRUE\n" : "FALSE\n");
    if (detected)
    {
+     cout << name() << ": Muting 1750Hz tone burst\n";
      delay->mute(true, TONE_1750_MUTING_PRE);
    }
    else

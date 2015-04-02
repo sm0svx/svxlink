@@ -59,6 +59,8 @@
   - Slightly more sensitive
   - Lowered CPU requirements
 
+* Now printing out when 1750Hz tone burst muting is active.
+
 
 
  1.4.0 -- 02 aug 2014
