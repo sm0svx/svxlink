@@ -49,7 +49,10 @@
   DTMF_DIGIT_PWR. To get the same level as with the old variable, add 3dB
   to the value set on the new configuration variable.
 
-* Rewritten and greatly improved software DTMF decoder.
+* Rewritten and greatly improved software DTMF decoder. The new decoder is
+  the default choice when DTMF_DEC_TYPE is set to INTERNAL. To keep using the
+  old DTMF decoder, set it to DH1DM instead. The improvements in the new DTMF
+  decoder are:
   - Quicker: Now detect durations as short as 40ms
   - Much better immunity to non-DTMF audio, like speech, which mean less
     false detections

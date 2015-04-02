@@ -122,7 +122,7 @@ DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
   cfg.getValue(name, "DTMF_DEC_TYPE", type);
   if (type == "INTERNAL")
   {
-    dec = new Dh1dmSwDtmfDecoder(cfg, name);
+    dec = new SvxSwDtmfDecoder(cfg, name);
   }
   else if (type == "S54S")
   {
@@ -132,9 +132,9 @@ DtmfDecoder *DtmfDecoder::create(Config &cfg, const string& name)
   {
     dec = new PtyDtmfDecoder(cfg, name);
   }
-  else if (type == "EXPERIMENTAL")
+  else if (type == "DH1DM")
   {
-    dec = new SvxSwDtmfDecoder(cfg, name);
+    dec = new Dh1dmSwDtmfDecoder(cfg, name);
   }
   else
   {
