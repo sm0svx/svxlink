@@ -223,6 +223,14 @@ class TcpClient : public TcpConnection
     void disconnect(void);
     
     /**
+     * @brief   Check if the connection is idle
+     * @return  Returns \em true if the connection is idle
+     *
+     * A connection being idle means that it is not connected nor connecting.
+     */
+    bool isIdle(void) const { return TcpConnection::isIdle() && (sock == -1); }
+    
+    /**
      * @brief 	A signal that is emitted when a connection has been established
      */
     sigc::signal<void>       	      	  connected;

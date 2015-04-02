@@ -1,3 +1,10 @@
+ 1.3.1 -- 02 Apr 2015
+----------------------
+
+* New functions Async::TcpClient::idIdle and Async::TcpConnection::idle
+
+
+
  1.3.0 -- 02 Aug 2014
 ----------------------
 
