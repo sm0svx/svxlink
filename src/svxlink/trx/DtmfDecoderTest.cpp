@@ -206,8 +206,8 @@ int main()
   prev_src->registerSink(noise_adder);
   prev_src = noise_adder;
 
-  AudioFilter *voiceband_filter = new AudioFilter("BpBu20/300-5000");
-  //AudioFilter *voiceband_filter = new AudioFilter("BpBu20/480-3400");
+  AudioFilter *voiceband_filter = new AudioFilter("BpCh10/-0.1/300-5000");
+  //AudioFilter *voiceband_filter = new AudioFilter("BpCh10/-0.1/480-3400");
   prev_src->registerSink(voiceband_filter);
   prev_src = voiceband_filter;
 
