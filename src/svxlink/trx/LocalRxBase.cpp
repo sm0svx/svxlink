@@ -508,9 +508,9 @@ bool LocalRxBase::initialize(void)
     // Filter out the voice band, removing high- and subaudible frequencies,
     // for example CTCSS.
 #if (INTERNAL_SAMPLE_RATE == 16000)
-  AudioFilter *voiceband_filter = new AudioFilter("BpBu20/300-5000");
+  AudioFilter *voiceband_filter = new AudioFilter("BpCh10/-0.1/300-5000");
 #else
-  AudioFilter *voiceband_filter = new AudioFilter("BpBu20/300-3500");
+  AudioFilter *voiceband_filter = new AudioFilter("BpCh10/-0.1/300-3500");
 #endif
   prev_src->registerSink(voiceband_filter, true);
   prev_src = voiceband_filter;

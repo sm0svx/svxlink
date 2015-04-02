@@ -130,7 +130,7 @@ SvxSwDtmfDecoder::SvxSwDtmfDecoder(Config &cfg, const string &name)
     det_state(STATE_IDLE), det_cnt_weight(0)
 {
   twist_nrm_thresh = powf(10.0f, DEFAULT_MAX_NORMAL_TWIST_DB / 10.0f);
-  twist_rev_thresh = powf(10.0f, -DEFAULT_MAX_REV_TWIST_DB / 10.0f);
+  twist_rev_thresh = powf(10.0f, -(DEFAULT_MAX_REV_TWIST_DB / 10.0f));
 
     // Row detectors
   for (size_t i=0; i<4; ++i)
