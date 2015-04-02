@@ -176,8 +176,8 @@ class SvxSwDtmfDecoder : public DtmfDecoder
       STATE_IDLE, STATE_DET_DELAY, STATE_DETECTED
     } DetState;
 
-    static const float DEFAULT_MAX_NORMAL_TWIST_DB = 8.0f;
-    static const float DEFAULT_MAX_REV_TWIST_DB = 8.0f;
+    static const float DEFAULT_MAX_NORMAL_TWIST_DB = 8.5f;
+    static const float DEFAULT_MAX_REV_TWIST_DB = 6.0f;
     static const size_t DET_CNT_HI_WEIGHT = 12;
     static const size_t DET_CNT_MED_WEIGHT = 4;
     static const size_t DET_CNT_LO_WEIGHT = 1;
