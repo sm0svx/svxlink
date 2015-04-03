@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <cstring>
 
 
 /****************************************************************************
@@ -150,7 +151,8 @@ class AudioDecoderNull : public AudioDecoder
       }
 
         // Allocate a zeroed out buffer and write it to the sink
-      const float samples[count] = {0};
+      float samples[count];
+      std::memset(samples, 0, count * sizeof(*samples));
       sinkWriteSamples(samples, count);
     }
 
