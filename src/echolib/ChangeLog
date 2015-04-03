@@ -1,7 +1,15 @@
- 1.3.1 -- ?? ??? 2014
+ 1.3.2 -- ?? ??? 2014
 ----------------------
 
 * Fixed issues reported by the Coverity scan static analysis tool.
+
+
+
+ 1.3.1 -- 02 Apr 2015
+----------------------
+
+* Bugfix: Fixes issue #87 "Suddenly stops speaking to the EchoLink directory
+  server".
 
 
 

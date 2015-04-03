@@ -1,12 +1,12 @@
 /**
-@file	 DtmfDecoder.h
-@brief   This file contains the base class for implementing a DTMF decoder
+@file	 SvxSwDtmfDecoder.h
+@brief   This file contains a class that implements a sw DTMF decoder
 @author  Tobias Blomberg / SM0SVX
-@date	 2008-02-06
+@date	 2015-02-22
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2008  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2015  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef DTMF_DECODER_INCLUDED
-#define DTMF_DECODER_INCLUDED
+#ifndef SVX_SW_DTMF_DECODER_INCLUDED
+#define SVX_SW_DTMF_DECODER_INCLUDED
 
 
 /****************************************************************************
@@ -35,8 +35,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <vector>
+#include <stdint.h>
 #include <sigc++/sigc++.h>
-#include <string>
 
 
 /****************************************************************************
@@ -45,8 +46,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioSink.h>
-#include <AsyncConfig.h>
 
 
 /****************************************************************************
@@ -55,6 +54,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "DtmfDecoder.h"
+#include "Goertzel.h"
 
 
 /****************************************************************************
@@ -79,33 +80,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Defines & typedefs
  *
  ****************************************************************************/
-
-/*
- *----------------------------------------------------------------------------
- * Macro:   
- * Purpose: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- * Bugs:    
- *----------------------------------------------------------------------------
- */
-
-
-/*
- *----------------------------------------------------------------------------
- * Type:    
- * Purpose: 
- * Members: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- *----------------------------------------------------------------------------
- */
     
 
 
@@ -124,32 +98,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
- * @brief   This is the base class for implementing a DTMF decoder
+ * @brief   This class implements a software DTMF decoder
  * @author  Tobias Blomberg, SM0SVX
- * @date    2008-02-06
+ * @date    2015-02-22
+ *
+ * This class implements a software DTMF decoder implemented using Goertzel's
+ * algorithm.
  */   
-class DtmfDecoder : public sigc::trackable, public Async::AudioSink
+class SvxSwDtmfDecoder : public DtmfDecoder
 {
   public:
     /**
-     * @brief 	Create a new DTMF decoder object
+     * @brief 	Constructor
      * @param 	cfg A previously initialised configuration object
      * @param 	name The name of the receiver configuration section
-     * @returns Returns a new DTMF object or 0 on failure
-     *
-     * Use this function to create new DTMF decoder objects. What DTMF
-     * decoder type to create is determined by the configuration pointed
-     * out by the arguments to this function. The section pointed out should
-     * contain a configuration variable DTMF_DEC_TYPE that points out the
-     * decoder type to use. Valid values are: INTERNAL, S54S
      */
-    static DtmfDecoder *create(Async::Config &cfg, const std::string& name);
-    
-    /**
-     * @brief 	Destructor
-     */
-    virtual ~DtmfDecoder(void) {}
-    
+    SvxSwDtmfDecoder(Async::Config &cfg, const std::string &name);
+
     /**
      * @brief 	Initialize the DTMF decoder
      * @returns Returns \em true if the initialization was successful or
@@ -161,16 +126,30 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
     virtual bool initialize(void);
     
     /**
-     * @brief 	Find out what the configured hangtime is
-     * @returns Returns the configured hangtime in milliseconds
+     * @brief 	Write samples into the DTMF decoder
+     * @param 	samples The buffer containing the samples
+     * @param 	count The number of samples in the buffer
+     * @return	Returns the number of samples that has been taken care of
      */
-    int hangtime(void) const { return m_hangtime; }
+    virtual int writeSamples(const float *samples, int count);
     
+    /**
+     * @brief 	Tell the DTMF decoder to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     */
+    virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
+
     /**
      * @brief 	Return the active digit
      * @return	Return the active digit if any or a '?' if none.
      */
-    virtual char activeDigit(void) const = 0;
+    virtual char activeDigit(void) const
+    {
+      return (det_state == STATE_DETECTED) ? last_digit_active : '?';
+    }
 
     /**
      * @brief   The detection time for this detector
@@ -182,53 +161,71 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
      * emitted.
      * The time can for example be used in a DTMF muting function.
      */
-    virtual int detectionTime(void) const = 0;
+    virtual int detectionTime(void) const { return 40; }
 
-    /*
-     * @brief 	A signal that is emitted when a DTMF digit is first detected
-     * @param 	digit The detected digit
-     */
-    sigc::signal<void, char> digitActivated;
-
-    /*
-     * @brief 	A signal that is emitted when a DTMF digit is no longer present
-     * @param 	digit 	  The detected digit
-     * @param 	duration  The time that the digit was active
-     */
-    sigc::signal<void, char, int> digitDeactivated;
-    
-    
-  protected:
-    /**
-     * @brief 	Constructor
-     * @param 	cfg A previously initialised configuration object
-     * @param 	name The name of the receiver configuration section
-     *
-     * DtmfDecoder objects are created by calling DtmfDecoder::create.
-     */
-    DtmfDecoder(Async::Config &cfg, const std::string &name)
-      : m_cfg(cfg), m_name(name), m_hangtime(DEFAULT_HANGTIME) {}
-    
-    Async::Config &cfg(void) { return m_cfg; }
-    const std::string &name(void) const { return m_name; }
-    
-    
   private:
-    static const int DEFAULT_HANGTIME = 0;
-    
-    Async::Config   m_cfg;
-    std::string     m_name;
-    int       	    m_hangtime;
-    
-};  /* class DtmfDecoder */
+    struct DtmfGoertzel : public Goertzel
+    {
+      float m_freq;
+      float m_max_fqdiff;
+
+      void initialize(float freq);
+    };
+    typedef enum
+    {
+      STATE_IDLE, STATE_DET_DELAY, STATE_DETECTED
+    } DetState;
+
+    static const float DEFAULT_MAX_NORMAL_TWIST_DB = 8.5f;
+    static const float DEFAULT_MAX_REV_TWIST_DB = 6.0f;
+    static const size_t DET_CNT_HI_WEIGHT = 12;
+    static const size_t DET_CNT_MED_WEIGHT = 4;
+    static const size_t DET_CNT_LO_WEIGHT = 1;
+    static const size_t DEFAULT_MIN_DET_CNT = 2 * DET_CNT_HI_WEIGHT;
+    static const size_t DEFAULT_MIN_UNDET_CNT = 3;
+    static const size_t LOW_QUALITY_UNDET_MULT = 3;
+    static const size_t BLOCK_SIZE = 20 * INTERNAL_SAMPLE_RATE / 1000; // 20ms
+    static const size_t STEP_SIZE = 10 * INTERNAL_SAMPLE_RATE / 1000; // 10ms
+    static const float ENERGY_THRESH = 1e-6 * BLOCK_SIZE; // Min passband energy
+    static const float REL_THRESH_LO = 0.5; // Tone/passband pwr low thresh
+    static const float REL_THRESH_MED = 0.73; // Tone/passband pwr medium thresh
+    static const float REL_THRESH_HI = 0.9; // Tone/passband pwr high thresh
+    //static const float MAX_FQ_ERROR = 0.025; // Max 2.5% frequency error
+    static const float WIN_ENB = 1.37f; // FFT window equivalent noise bandwidth
+    static const float MAX_OT_REL = 0.2f; // Overtone at least ~7dB below
+    static const float MAX_SEC_REL = 0.13f; // Second strongest > ~9dB below
+    static const float MAX_IM_REL = 0.1f; // Intermodulation prod > 10dB below
+
+    float twist_nrm_thresh;
+    float twist_rev_thresh;
+    std::vector<DtmfGoertzel> row;
+    std::vector<DtmfGoertzel> col;
+    float block[BLOCK_SIZE];
+    size_t block_size;
+    size_t block_pos;
+    size_t det_cnt;
+    size_t undet_cnt;
+    char last_digit_active;
+    size_t min_det_cnt;
+    size_t min_undet_cnt;
+    DetState det_state;
+    size_t det_cnt_weight;
+    int duration;
+    float win[BLOCK_SIZE];
+    size_t undet_thresh;
+
+    void processBlock(void);
+
+};  /* class SvxSwDtmfDecoder */
 
 
 //} /* namespace */
 
-#endif /* DTMF_DECODER_INCLUDED */
+#endif /* SVX_SW_DTMF_DECODER_INCLUDED */
 
 
 
 /*
  * This file has not been truncated
  */
+

@@ -320,10 +320,16 @@ bool LocalTx::initialize(void)
   }
   
   int dtmf_tone_amp = -18;
-  if (cfg.getValue(name, "DTMF_TONE_AMP", value))
+  int dtmf_digit_pwr = -15;
+  if (cfg.getValue(name, "DTMF_TONE_AMP", dtmf_tone_amp))
   {
-    dtmf_tone_amp = min(atoi(value.c_str()), 0);
+    cout << "*** WARNING: The DTMF_TONE_AMP configuration variable set in "
+            "transmitter " << name << " is deprecated. Use DTMF_DIGIT_PWR "
+            "instead. To get the same output level uing the new configuration "
+            "variable, add 3dB to the old value.";
+    dtmf_digit_pwr = dtmf_tone_amp + 3;
   }
+  cfg.getValue(name, "DTMF_DIGIT_PWR", dtmf_digit_pwr);
   
   audio_io = new AudioIO(audio_dev, audio_channel);
   // FIXME: Check that the audio device has been correctly initialized
@@ -458,9 +464,9 @@ bool LocalTx::initialize(void)
   dtmf_encoder = new DtmfEncoder(INTERNAL_SAMPLE_RATE);
   dtmf_encoder->allDigitsSent.connect(
       mem_fun(*this, &LocalTx::allDtmfDigitsSent));
-  dtmf_encoder->setToneLength(dtmf_tone_length);
-  dtmf_encoder->setToneSpacing(dtmf_tone_spacing);
-  dtmf_encoder->setToneAmplitude(dtmf_tone_amp);
+  dtmf_encoder->setDigitDuration(dtmf_tone_length);
+  dtmf_encoder->setDigitSpacing(dtmf_tone_spacing);
+  dtmf_encoder->setDigitPower(dtmf_digit_pwr);
   
     // Create a valve so that we can control when to transmit DTMF
   dtmf_valve = new AudioValve;

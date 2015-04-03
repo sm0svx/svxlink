@@ -45,6 +45,22 @@
 * New config variable CARD_CHANNELS which is used to set the number of
   channels that is used on the sound card, e.g. 1=mono, 2=stereo.
 
+* The DTMF_TONE_AMP transmitter configuration variable has been renamed to
+  DTMF_DIGIT_PWR. To get the same level as with the old variable, add 3dB
+  to the value set on the new configuration variable.
+
+* Rewritten and greatly improved software DTMF decoder. The new decoder is
+  the default choice when DTMF_DEC_TYPE is set to INTERNAL. To keep using the
+  old DTMF decoder, set it to DH1DM instead. The improvements in the new DTMF
+  decoder are:
+  - Quicker: Now detect durations as short as 40ms
+  - Much better immunity to non-DTMF audio, like speech, which mean less
+    false detections
+  - Slightly more sensitive
+  - Lowered CPU requirements
+
+* Now printing out when 1750Hz tone burst muting is active.
+
 
 
  1.4.0 -- 02 aug 2014

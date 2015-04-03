@@ -1,8 +1,8 @@
 /**
-@file	 AsyncAudioDecoderNull.h
-@brief   An audio "decoder" used when no real audio need to be communicated
+@file	 AsyncAudioNoiseAdder.cpp
+@brief   A class to add white gaussian noise to an audio stream
 @author  Tobias Blomberg / SM0SVX
-@date	 2014-05-05
+@date	 2015-03-08
 
 \verbatim
 Async - A library for programming event driven applications
@@ -24,8 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef ASYNC_AUDIO_DECODER_NULL_INCLUDED
-#define ASYNC_AUDIO_DECODER_NULL_INCLUDED
 
 
 /****************************************************************************
@@ -34,7 +32,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <iostream>
+
 #include <cstring>
+#include <cstdlib>
+#include <cmath>
+#include <locale>
+#include <limits>
 
 
 /****************************************************************************
@@ -43,7 +47,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioDecoder.h>
 
 
 /****************************************************************************
@@ -52,37 +55,39 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "AsyncAudioNoiseAdder.h"
 
 
 /****************************************************************************
  *
- * Forward declarations
+ * Namespaces to use
  *
  ****************************************************************************/
 
+using namespace std;
+using namespace Async;
 
 
-/****************************************************************************
- *
- * Namespace
- *
- ****************************************************************************/
-
-namespace Async
-{
-
-
-/****************************************************************************
- *
- * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
-  
 
 /****************************************************************************
  *
  * Defines & typedefs
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Local class definitions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Prototypes
  *
  ****************************************************************************/
 
@@ -98,77 +103,80 @@ namespace Async
 
 /****************************************************************************
  *
- * Class definitions
+ * Local Global Variables
  *
  ****************************************************************************/
 
-/**
-@brief	An audio "decoder" used when no real audio need to be communicated
-@author Tobias Blomberg / SM0SVX
-@date   2014-05-05
 
-This class implements an audio "decoder" that will just produce zero samples.
-The only thing transmitted by the encoder is the number of samples in the
-block but no real samples are encoded. The NULL codec may be of use when the
-real audio is communicated through another path.
-*/
-class AudioDecoderNull : public AudioDecoder
+
+/****************************************************************************
+ *
+ * Public member functions
+ *
+ ****************************************************************************/
+
+AudioNoiseAdder::AudioNoiseAdder(float level_db)
+  : sigma(sqrt(powf(10.0f, level_db / 10.0f) / 2.0f))
 {
-  public:
-    /**
-     * @brief 	Default constuctor
-     */
-    AudioDecoderNull(void) {}
+} /* AudioNoiseAdder::AudioNoiseAdder */
+
+
+AudioNoiseAdder::~AudioNoiseAdder(void)
+{
+} /* AudioNoiseAdder::~AudioNoiseAdder */
+
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+void AudioNoiseAdder::processSamples(float *dest, const float *src, int count)
+{
+  //cout << "AudioNoiseAdder::processSamples: len=" << len << endl;
   
-    /**
-     * @brief 	Destructor
-     */
-    virtual ~AudioDecoderNull(void) {}
-  
-    /**
-     * @brief   Get the name of the codec
-     * @returns Return the name of the codec
-     */
-    virtual const char *name(void) const { return "NULL"; }
-  
-    /**
-     * @brief 	Write encoded samples into the decoder
-     * @param 	buf  Buffer containing encoded samples
-     * @param 	size The size of the buffer
-     *
-     * This NULL decoder will just write zero samples. The incoming buffer
-     * will contain an integer that indicate how many zero samples that should
-     * be written to the audio sink.
-     */
-    virtual void writeEncodedSamples(void *buf, int size)
-    {
-      int count = *(reinterpret_cast<int*>(buf));
-
-        // Sanity check
-      if ((count < 0) || (count > 10 * INTERNAL_SAMPLE_RATE))
-      {
-        return;
-      }
-
-        // Allocate a zeroed out buffer and write it to the sink
-      float samples[count];
-      std::memset(samples, 0, count * sizeof(*samples));
-      sinkWriteSamples(samples, count);
-    }
-
-  protected:
-    
-  private:
-    AudioDecoderNull(const AudioDecoderNull&);
-    AudioDecoderNull& operator=(const AudioDecoderNull&);
-    
-};  /* class AudioDecoderNull */
+  for (int i=0; i<count; ++i)
+  {
+    float noise = generateGaussianNoise();
+    dest[i] = src[i] + noise;
+  }
+} /* AudioNoiseAdder::writeSamples */
 
 
-} /* namespace */
 
-#endif /* ASYNC_AUDIO_DECODER_NULL_INCLUDED */
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
 
+float AudioNoiseAdder::generateGaussianNoise(void)
+{
+  static const float epsilon = std::numeric_limits<float>::min();
+  static const float two_pi = 2.0f * M_PI;
+  static const float mu = 0.0f;
+
+  generate = !generate;
+
+  if (!generate)
+  {
+    return z1 * sigma + mu;
+  }
+
+  float u1, u2;
+  do
+  {
+    u1 = rand() * (1.0f / RAND_MAX);
+    u2 = rand() * (1.0f / RAND_MAX);
+  }
+  while (u1 <= epsilon);
+
+  z0 = sqrt(-2.0f * log(u1)) * cos(two_pi * u2);
+  z1 = sqrt(-2.0f * log(u1)) * sin(two_pi * u2);
+  return z0 * sigma + mu;
+} /* AudioNoiseAdder::generateGaussianNoise */
 
 
 /*

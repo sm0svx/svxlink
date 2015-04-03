@@ -172,9 +172,9 @@ void DirectoryCon::disconnect(void)
   Proxy *proxy = Proxy::instance();
   if (proxy == 0)
   {
-    bool was_connected = client->isConnected();
+    bool was_idle = client->isIdle();
     client->disconnect();
-    if (was_connected)
+    if (!was_idle)
     {
       last_disconnect_reason = TcpClient::DR_ORDERED_DISCONNECT;
       disconnected();
