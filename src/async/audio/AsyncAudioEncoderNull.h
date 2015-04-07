@@ -34,6 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <limits>
+#include <stdint.h>
 
 
 /****************************************************************************
@@ -143,7 +145,18 @@ class AudioEncoderNull : public AudioEncoder
      */
     virtual int writeSamples(const float *samples, int count)
     {
-      writeEncodedSamples(&count, sizeof(count));
+      if (count > std::numeric_limits<uint16_t>::max())
+      {
+        count = std::numeric_limits<uint16_t>::max();
+      }
+      else if (count < 0)
+      {
+        return -1;
+      }
+      uint8_t buf[2];
+      buf[0] = static_cast<uint8_t>(count & 0xff);
+      buf[1] = static_cast<uint8_t>(count >> 8);
+      writeEncodedSamples(buf, sizeof(buf));
       return count;
     }
     
