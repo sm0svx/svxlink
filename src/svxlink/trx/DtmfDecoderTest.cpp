@@ -184,6 +184,7 @@ int main()
   //cfg.setValue("Test", "DTMF_DEC_TYPE", "DH1DM");
   //cfg.setValue("Test", "DTMF_MAX_FWD_TWIST", "6");
   //cfg.setValue("Test", "DTMF_MAX_REV_TWIST", "6");
+  //cfg.setValue("Test", "DTMF_HANGTIME", "100");
   cfg.setValue("Test", "DTMF_DEBUG", "1");
 
   AudioSource *prev_src = 0;

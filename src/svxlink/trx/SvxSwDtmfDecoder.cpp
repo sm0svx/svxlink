@@ -186,6 +186,17 @@ bool SvxSwDtmfDecoder::initialize(void)
       twist_rev_thresh = powf(10.0f, -cfg_max_rev_twist / 10.0f);
     }
   }
+
+  if (hangtime() > 0)
+  {
+    const size_t block_size_ms = 1000 * BLOCK_SIZE / INTERNAL_SAMPLE_RATE;
+    const size_t step_size_ms = 1000 * STEP_SIZE / INTERNAL_SAMPLE_RATE;
+    min_undet_cnt = 1;
+    if (hangtime() > block_size_ms)
+    {
+      min_undet_cnt = 1 + (hangtime() - block_size_ms) / step_size_ms;
+    }
+  }
   
   cfg().getValue(name(), "DTMF_DEBUG", debug);
   

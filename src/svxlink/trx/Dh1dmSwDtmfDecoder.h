@@ -193,7 +193,7 @@ class Dh1dmSwDtmfDecoder : public DtmfDecoder
     /*! This is the last stable DTMF digit. */
     uint8_t last_stable;
     /*! The detection timer advances when the input is stable. */
-    int stable_timer;
+    unsigned stable_timer;
     /*! The active timer is reset when a new non-zero digit is detected. */
     int active_timer;
     /*! Maximum acceptable "normal" (lower bigger than higher) twist ratio */
