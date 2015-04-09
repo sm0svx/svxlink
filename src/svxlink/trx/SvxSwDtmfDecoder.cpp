@@ -127,7 +127,7 @@ SvxSwDtmfDecoder::SvxSwDtmfDecoder(Config &cfg, const string &name)
   : DtmfDecoder(cfg, name), twist_nrm_thresh(0), twist_rev_thresh(0), row(8),
     col(8), block_pos(0), det_cnt(0), undet_cnt(0), last_digit_active(0),
     min_det_cnt(DEFAULT_MIN_DET_CNT), min_undet_cnt(DEFAULT_MIN_UNDET_CNT),
-    det_state(STATE_IDLE), det_cnt_weight(0)
+    det_state(STATE_IDLE), det_cnt_weight(0), debug(false), win_pwr_comp(0.0f)
 {
   twist_nrm_thresh = powf(10.0f, DEFAULT_MAX_NORMAL_TWIST_DB / 10.0f);
   twist_rev_thresh = powf(10.0f, -(DEFAULT_MAX_REV_TWIST_DB / 10.0f));
@@ -155,7 +155,10 @@ SvxSwDtmfDecoder::SvxSwDtmfDecoder(Config &cfg, const string &name)
     //win[n] = 0.5 - 0.5 * cosf(2.0f * M_PI * n / (BLOCK_SIZE - 1));
       // Rectangular window
     //win[n] = 1.0f;
+    win_pwr_comp += win[n] * win[n];
   }
+  win_pwr_comp /= BLOCK_SIZE;
+  win_pwr_comp = 1.0f / win_pwr_comp;
 } /* SvxSwDtmfDecoder::SvxSwDtmfDecoder */
 
 
@@ -183,6 +186,8 @@ bool SvxSwDtmfDecoder::initialize(void)
       twist_rev_thresh = powf(10.0f, -cfg_max_rev_twist / 10.0f);
     }
   }
+  
+  cfg().getValue(name(), "DTMF_DEBUG", debug);
   
   return true;
   
@@ -225,8 +230,6 @@ int SvxSwDtmfDecoder::writeSamples(const float *buf, int len)
 
 void SvxSwDtmfDecoder::processBlock(void)
 {
-  bool debug = false;
-
     // Reset all Goertzel objects
   row[0].reset();
   row[1].reset();
@@ -253,10 +256,14 @@ void SvxSwDtmfDecoder::processBlock(void)
     col[2].calc(sample);
     col[3].calc(sample);
   }
+  ios_base::fmtflags orig_cout_flags;
   if (debug)
   {
+    orig_cout_flags = cout.flags();
     cout << setprecision(2) << fixed;
-    cout << "### block_energy=" << setw(6) << block_energy;
+    cout << "### pwr=" << setw(6) 
+         << 10.0f * log10f(2 * win_pwr_comp * block_energy / BLOCK_SIZE)
+         << "dB";
   }
 
     // If the total block energy is over the threshold, find the strongest
@@ -278,8 +285,6 @@ void SvxSwDtmfDecoder::processBlock(void)
   if (block_energy > ENERGY_THRESH)
   {
     float rel_energy = 0.0f;
-    //float second_max_row_ms = 0.0f;
-    //float second_max_col_ms = 0.0f;
     float row_sum = 0.0f;
     float col_sum = 0.0f;
     for (size_t i = 0; i < 4; ++i)
@@ -287,7 +292,6 @@ void SvxSwDtmfDecoder::processBlock(void)
       const float row_ms = WIN_ENB * row[i].magnitudeSquared();
       if (row_ms > max_row_ms)
       {
-        //second_max_row_ms = max_row_ms;
         max_row_ms = row_ms;
         max_row_idx = i;
       }
@@ -296,7 +300,6 @@ void SvxSwDtmfDecoder::processBlock(void)
       const float col_ms = WIN_ENB * col[i].magnitudeSquared();
       if (col_ms > max_col_ms)
       {
-        //second_max_col_ms = max_col_ms;
         max_col_ms = col_ms;
         max_col_idx = i;
       }
@@ -306,18 +309,14 @@ void SvxSwDtmfDecoder::processBlock(void)
     rel_energy = 2 * (max_row_ms + max_col_ms) / (BLOCK_SIZE * block_energy);
     //cout << " row=" << max_row_idx << " col=" << max_col_idx;
     const float twist = max_row_ms / max_col_ms;
-    //const float sec_row = second_max_row_ms / max_row_ms;
-    //const float sec_col = second_max_col_ms / max_col_ms;
     const float row_group_rel = max_row_ms / row_sum;
     const float col_group_rel = max_col_ms / col_sum;
     if (debug)
     {
-      cout << " rel_energy=" << setw(4) << rel_energy;
+      cout << " q=" << setw(4) << rel_energy;
       cout << " twist=" << setw(5) << 10.0 * log10(twist) << "dB";
-      //cout << " sec_row=" << sec_row;
-      //cout << " sec_col=" << sec_col;
-      cout << " row_group=" << row_group_rel;
-      cout << " col_group=" << col_group_rel;
+      cout << " rowq=" << row_group_rel;
+      cout << " colq=" << col_group_rel;
     }
     digit_active = false;
     if (rel_energy > REL_THRESH_LO)
@@ -336,10 +335,6 @@ void SvxSwDtmfDecoder::processBlock(void)
       }
       digit_active = (twist > twist_rev_thresh) &&
                      (twist < twist_nrm_thresh) &&
-                     /*
-                     (sec_row < MAX_SEC_REL) &&
-                     (sec_col < MAX_SEC_REL) &&
-                     */
                      (row_group_rel > 0.80) &&
                      (col_group_rel > 0.80);
     }
@@ -393,8 +388,8 @@ void SvxSwDtmfDecoder::processBlock(void)
     float im_rel = im.magnitudeSquared() / (max_row_ms + max_col_ms);
     if (debug)
     {
-      cout << " row_ot=" << row_ot_rel;
-      cout << " col_ot=" << col_ot_rel;
+      cout << " row3rd=" << row_ot_rel;
+      cout << " col3rd=" << col_ot_rel;
       cout << " im=" << im_rel;
     }
 
@@ -512,7 +507,7 @@ void SvxSwDtmfDecoder::processBlock(void)
           }
           if (debug)
           {
-            cout << " det_q=" << det_quality;
+            //cout << " det_q=" << det_quality;
             cout << " activated";
           }
           digitActivated(last_digit_active);
@@ -551,7 +546,8 @@ void SvxSwDtmfDecoder::processBlock(void)
           const int dur_ms = first_block_time + block_time * (duration - 1);
           if (debug)
           {
-            cout << " deactivated=" << last_digit_active;
+            cout << " digit=" << last_digit_active;
+            cout << " deactivated";
             cout << " duration=" << dur_ms;
           }
           digitDeactivated(last_digit_active, dur_ms);
@@ -563,8 +559,9 @@ void SvxSwDtmfDecoder::processBlock(void)
 
   if (debug)
   {
-    cout << " " << (digit_active ? "*" : "");
+    cout << " " << (digit_active ? "^" : "");
     cout << endl;
+    cout.flags(orig_cout_flags);
   }
 } /* SvxSwDtmfDecoder::processBlock */
 

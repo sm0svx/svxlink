@@ -213,6 +213,9 @@ class SvxSwDtmfDecoder : public DtmfDecoder
     int duration;
     float win[BLOCK_SIZE];
     size_t undet_thresh;
+    bool debug;
+    float win_pwr_comp;
+
 
     void processBlock(void);
 

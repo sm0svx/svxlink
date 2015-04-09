@@ -180,10 +180,11 @@ class PowerPlotter : public Async::AudioPassthrough
 int main()
 {
   Config cfg;
-  cfg.setValue("Test", "DTMF_DEC_TYPE", "EXPERIMENTAL");
-  //cfg.setValue("Test", "DTMF_DEC_TYPE", "INTERNAL");
+  cfg.setValue("Test", "DTMF_DEC_TYPE", "INTERNAL");
+  //cfg.setValue("Test", "DTMF_DEC_TYPE", "DH1DM");
   //cfg.setValue("Test", "DTMF_MAX_FWD_TWIST", "6");
   //cfg.setValue("Test", "DTMF_MAX_REV_TWIST", "6");
+  cfg.setValue("Test", "DTMF_DEBUG", "1");
 
   AudioSource *prev_src = 0;
 #define SIMULATE
