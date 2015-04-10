@@ -61,6 +61,8 @@
 
 * Now printing out when 1750Hz tone burst muting is active.
 
+* Added support for the r828D rtl-sdr tuner.
+
 
 
  1.4.0 -- 02 aug 2014

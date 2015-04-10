@@ -124,7 +124,8 @@ class RtlTcp : public sigc::trackable
 	TUNER_FC0012,
 	TUNER_FC0013,
 	TUNER_FC2580,
-	TUNER_R820T
+	TUNER_R820T,
+        TUNER_R828D
     } TunerType;
 
     static const int GAIN_UNSET = 1000;

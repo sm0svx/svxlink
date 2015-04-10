@@ -230,6 +230,8 @@ const char *RtlTcp::tunerTypeString(TunerType type) const
       return "FC2580";
     case TUNER_R820T:
       return "R820T";
+    case TUNER_R828D:
+      return "R828D";
     default:
       return "UNKNOWN";
   }
@@ -247,7 +249,7 @@ vector<int> RtlTcp::getTunerGains(void) const
     68, 70, 71, 179, 181, 182, 184, 186, 188, 191, 197
   };
   static const int fc2580_gains[] = { 0 /* no gain values */ };
-  static const int r820t_gains[] = {
+  static const int r82xx_gains[] = {
     0, 9, 14, 27, 37, 77, 87, 125, 144, 157, 166, 197, 207, 229, 254, 280,
     297, 328, 338, 364, 372, 386, 402, 421, 434, 439, 445, 480, 496
   };
@@ -268,8 +270,9 @@ vector<int> RtlTcp::getTunerGains(void) const
       return vector<int>(fc2580_gains,
                          fc2580_gains+sizeof(fc2580_gains)/sizeof(int));
     case TUNER_R820T:
-      return vector<int>(r820t_gains,
-                         r820t_gains+sizeof(r820t_gains)/sizeof(int));
+    case TUNER_R828D:
+      return vector<int>(r82xx_gains,
+                         r82xx_gains+sizeof(r82xx_gains)/sizeof(int));
     default:
       return vector<int>(unknown_gains,
                          unknown_gains+sizeof(unknown_gains)/sizeof(int));
