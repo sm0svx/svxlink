@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-2005  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2015  Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -109,7 +109,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 @author Tobias Blomberg / SM0SVX
 @date   2006-07-09
 
-A_detailed_class_description
+This class implement a DTMF encoder which can be used to generate DTMF audio
+from a sequence of DTMF digits.
 */
 class DtmfEncoder : public Async::AudioSource, sigc::trackable
 {
@@ -117,7 +118,7 @@ class DtmfEncoder : public Async::AudioSource, sigc::trackable
     /**
      * @brief 	Default constuctor
      */
-    DtmfEncoder(int sampling_rate);
+    DtmfEncoder(int sampling_rate=INTERNAL_SAMPLE_RATE);
   
     /**
      * @brief 	Destructor
@@ -125,14 +126,43 @@ class DtmfEncoder : public Async::AudioSource, sigc::trackable
     ~DtmfEncoder(void);
   
     /**
-     * @brief 	A_brief_member_function_description
-     * @param 	param1 Description_of_param1
-     * @return	Return_value_of_this_member_function
+     * @brief 	Set the duration for each digit
+     * @param 	duration_ms The duration of the tone in milliseconds
      */
-    void setToneLength(int length_ms);
-    void setToneSpacing(int spacing_ms);
-    void setToneAmplitude(int amp_db);
+    void setDigitDuration(int duration_ms);
+
+    /**
+     * @brief   Set the spacing between each digit
+     * @param   spacing_ms The spacing in milliseconds
+     */
+    void setDigitSpacing(int spacing_ms);
+
+    /**
+     * @brief   Set the power of the generated DTMF digits
+     * @param   power_db The power to set
+     *
+     * The tone power is set in dB. A value of 0dB will generate a DTMF digit
+     * with the same power as a full scale sine wave. Since DTMF contain two
+     * sine waves, each tone will have a power of -3dB.
+     */
+    void setDigitPower(int power_db);
+
+    /**
+     * @brief   Return the currently set tone power
+     * @returns Return the tone power in dB (@see setTonePower)
+     */
+    int digitPower(void) const;
+
+    /**
+     * @brief   Send the specified digits
+     * @param   str A string of digits (0-9, A-D, *, #)
+     */
     void send(const std::string &str);
+
+    /**
+     * @brief   Check if we are currently transmitting digits
+     * @returns Return \em true if digits are being transmitted
+     */
     bool isSending(void) const { return is_sending_digits; }
     
     /**

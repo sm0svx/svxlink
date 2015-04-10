@@ -215,6 +215,15 @@ class TcpConnection : public sigc::trackable
      *	      	\em false if the connection is not established
      */
     bool isConnected(void) const { return sock != -1; }
+
+    /**
+     * @brief   Check if the connection is idle
+     * @return  Returns \em true if the connection is idle
+     *
+     * A connection being idle means that it is not connected
+     * NOTE: This function is overridden in Async::TcpClient.
+     */
+    bool isIdle(void) const { return sock == -1; }
     
     /**
      * @brief 	A signal that is emitted when a connection has been terminated

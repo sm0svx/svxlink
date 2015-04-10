@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -150,23 +150,33 @@ DtmfEncoder::~DtmfEncoder(void)
 } /* DtmfEncoder::~DtmfEncoder */
 
 
-void DtmfEncoder::setToneLength(int length_ms)
+void DtmfEncoder::setDigitDuration(int duration_ms)
 {
-  tone_length = length_ms * sampling_rate / 1000;
-} /* DtmfEncoder::setToneLength */
+  tone_length = duration_ms * sampling_rate / 1000;
+} /* DtmfEncoder::setDigitDuration */
 
 
-void DtmfEncoder::setToneSpacing(int spacing_ms)
+void DtmfEncoder::setDigitSpacing(int spacing_ms)
 {
   tone_spacing = spacing_ms * sampling_rate / 1000;
-} /* DtmfEncoder::setGapLength */
+} /* DtmfEncoder::setDigitSpacing */
 
 
-void DtmfEncoder::setToneAmplitude(int amp_db)
+void DtmfEncoder::setDigitPower(int power_db)
 {
-  tone_amp = powf(10, amp_db / 20.0);
-  //printf("tone_amp=%.2f\n", tone_amp);
-} /* DtmfEncoder::setGapLength */
+    // Subtract 3dB to keep the power at the reference level
+    // (0dB = 0.5W over 1ohm)
+  power_db -= 3;
+
+    // Convert from dB to tone amplitude
+  tone_amp = powf(10.0f, power_db / 20.0f);
+} /* DtmfEncoder::setDigitPower */
+
+
+int DtmfEncoder::digitPower(void) const
+{
+  return 20.0f * log10f(tone_amp) + 3.0f;
+} /* DtmfEncoder::digitPower */
 
 
 void DtmfEncoder::send(const std::string &str)
@@ -246,12 +256,6 @@ void DtmfEncoder::playNextDigit(void)
     return;
   }
   
-  if (current_str.empty())
-  {
-    sinkFlushSamples();
-    return;
-  }
-  
   if (low_tone > 0)
   {
     low_tone = 0;
@@ -259,6 +263,12 @@ void DtmfEncoder::playNextDigit(void)
     length = tone_spacing;
     is_playing = true;
     writeAudio();
+    return;
+  }
+  
+  if (current_str.empty())
+  {
+    sinkFlushSamples();
     return;
   }
   
@@ -306,7 +316,6 @@ void DtmfEncoder::writeAudio(void)
     }
 
     ret = sinkWriteSamples(block, count);
-    //printf("Wrote %d DTMF samples\n", ret);
     pos -= (count - ret);
   } while ((ret > 0) && (pos < length));
   
@@ -315,14 +324,10 @@ void DtmfEncoder::writeAudio(void)
     is_playing = false;
     playNextDigit();
   }
-  
 } /* DtmfEncoder::writeAudio */
-
-
 
 
 
 /*
  * This file has not been truncated
  */
-

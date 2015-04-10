@@ -1,5 +1,5 @@
 /**
-@file	 SwDtmfDecoder.h
+@file	 Dh1dmSwDtmfDecoder.h
 @brief   This file contains a class that implements a sw DTMF decoder
 @author  Tobias Blomberg / SM0SVX
 @date	 2003-04-16
@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-#ifndef SW_DTMF_DECODER_INCLUDED
-#define SW_DTMF_DECODER_INCLUDED
+#ifndef DH1DM_SW_DTMF_DECODER_INCLUDED
+#define DH1DM_SW_DTMF_DECODER_INCLUDED
 
 
 /****************************************************************************
@@ -105,7 +105,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * This class implements a software DTMF decoder
  * implemented using Goertzel's algorithm.
  */   
-class SwDtmfDecoder : public DtmfDecoder
+class Dh1dmSwDtmfDecoder : public DtmfDecoder
 {
   public:
     /**
@@ -113,7 +113,7 @@ class SwDtmfDecoder : public DtmfDecoder
      * @param 	cfg A previously initialised configuration object
      * @param 	name The name of the receiver configuration section
      */
-    SwDtmfDecoder(Async::Config &cfg, const std::string &name);
+    Dh1dmSwDtmfDecoder(Async::Config &cfg, const std::string &name);
 
     /**
      * @brief 	Initialize the DTMF decoder
@@ -132,6 +132,15 @@ class SwDtmfDecoder : public DtmfDecoder
      * @return	Returns the number of samples that has been taken care of
      */
     virtual int writeSamples(const float *samples, int count);
+
+    /**
+     * @brief 	Tell the DTMF decoder to flush the previously written samples
+     *
+     * This function is used to tell the sink to flush previously written
+     * samples. When done flushing, the sink should call the
+     * sourceAllSamplesFlushed function.
+     */
+    virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
     
     /**
      * @brief 	Return the active digit
@@ -141,6 +150,18 @@ class SwDtmfDecoder : public DtmfDecoder
     {
       return last_stable ? last_stable : '?';
     }
+
+    /**
+     * @brief   The detection time for this detector
+     * @returns Returns the detection time in milliseconds
+     *
+     * This function will return the time in milliseconds that it will take
+     * for the detector to detect a DTMF digit. That is, the time from the
+     * moment when the tone is activated until the digitActivated signal is
+     * emitted.
+     * The time can for example be used in a DTMF muting function.
+     */
+    virtual int detectionTime(void) const { return 75; }
 
   private:
 
@@ -172,7 +193,7 @@ class SwDtmfDecoder : public DtmfDecoder
     /*! This is the last stable DTMF digit. */
     uint8_t last_stable;
     /*! The detection timer advances when the input is stable. */
-    int stable_timer;
+    unsigned stable_timer;
     /*! The active timer is reset when a new non-zero digit is detected. */
     int active_timer;
     /*! Maximum acceptable "normal" (lower bigger than higher) twist ratio */
@@ -186,12 +207,12 @@ class SwDtmfDecoder : public DtmfDecoder
     float goertzelResult(GoertzelState *s);
     int findMaxIndex(const float f[]);
 
-};  /* class SwDtmfDecoder */
+};  /* class Dh1dmSwDtmfDecoder */
 
 
 //} /* namespace */
 
-#endif /* SW_DTMF_DECODER_INCLUDED */
+#endif /* DH1DM_SW_DTMF_DECODER_INCLUDED */
 
 
 

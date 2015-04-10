@@ -1,8 +1,8 @@
 /**
-@file	 AsyncAudioEncoderNull.h
-@brief   A null audio "encoder" that just encode silence
+@file	 AsyncAudioNoiseAdder.h
+@brief   A class to add white gaussian noise to an audio stream
 @author  Tobias Blomberg / SM0SVX
-@date	 2014-05-05
+@date	 2015-03-08
 
 \verbatim
 Async - A library for programming event driven applications
@@ -24,8 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef ASYNC_AUDIO_ENCODER_NULL_INCLUDED
-#define ASYNC_AUDIO_ENCODER_NULL_INCLUDED
+
+#ifndef ASYNC_AUDIO_NOISE_ADDER
+#define ASYNC_AUDIO_NOISE_ADDER
 
 
 /****************************************************************************
@@ -34,8 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <limits>
-#include <stdint.h>
+#include <string>
 
 
 /****************************************************************************
@@ -44,7 +44,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncAudioEncoder.h>
 
 
 /****************************************************************************
@@ -52,6 +51,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Local Includes
  *
  ****************************************************************************/
+
+#include <AsyncAudioProcessor.h>
 
 
 
@@ -104,78 +105,72 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A null audio "encoder" that just communicate zero samples
+@brief	A class to add gaussian white noise to an audio stream
 @author Tobias Blomberg / SM0SVX
-@date   2014-05-05
+@date   2015-03-08
 
-This class implements an audio "encoder" that will just produce zero samples.
-The only thing transmitted by the encoder is the number of samples in the
-block but no real samples are encoded. The NULL codec may be of use when the
-real audio is communicated through another path.
+This class implement a noise generator that add white gaussian noise to an
+audio stream. The noise is generated using the Box-Muller transform which for
+example is described on Wikipedia:
+
+  http://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
+
+The class is not implemented as a pure audio source but rather as an audio pipe
+component that should be inserted in the audio path.
 */
-class AudioEncoderNull : public AudioEncoder
+class AudioNoiseAdder : public AudioProcessor
 {
   public:
     /**
-     * @brief 	Default constuctor
+     * @brief 	Constuctor
+     * @param   level_db The noise level in dB
+     *
+     * The level_db parameter deserve some clarification. A level of 0dB give
+     * the same power as in a full scale sine wave. This make it possible to
+     * add noise to a generated signal under controlled conditions.
+     * For example, if a sine wave is generated in SvxLink with a level of 0dB
+     * and noise is added with a level of -10dB, we get a signal to noise ratio
+     * (SNR) of 10dB.
      */
-    AudioEncoderNull(void) {}
+    AudioNoiseAdder(float level_db);
   
     /**
      * @brief 	Destructor
      */
-    virtual ~AudioEncoderNull(void) {}
-  
-    /**
-     * @brief   Get the name of the codec
-     * @return  Return the name of the codec
-     */
-    virtual const char *name(void) const { return "NULL"; }
-  
-    /**
-     * @brief 	Write samples into this audio sink
-     * @param 	samples The buffer containing the samples
-     * @param 	count The number of samples in the buffer
-     * @return	Returns the number of samples that has been taken care of
-     *
-     * This function is used to write audio into this audio sink. If it
-     * returns 0, no more samples should be written until the resumeOutput
-     * function in the source have been called.
-     * This function is normally only called from a connected source object.
-     */
-    virtual int writeSamples(const float *samples, int count)
-    {
-      if (count > std::numeric_limits<uint16_t>::max())
-      {
-        count = std::numeric_limits<uint16_t>::max();
-      }
-      else if (count < 0)
-      {
-        return -1;
-      }
-      uint8_t buf[2];
-      buf[0] = static_cast<uint8_t>(count & 0xff);
-      buf[1] = static_cast<uint8_t>(count >> 8);
-      writeEncodedSamples(buf, sizeof(buf));
-      return count;
-    }
+    ~AudioNoiseAdder(void);
     
   protected:
-    
+    /**
+     * @brief Process incoming samples and put them into the output buffer
+     * @param dest  Destination buffer
+     * @param src   Source buffer
+     * @param count Number of samples in the source buffer
+     *
+     * This function is called from the base class to do the actual
+     * processing of the incoming samples. All samples must
+     * be processed, otherwise they are lost and the output buffer will
+     * contain garbage.
+     */
+    void processSamples(float *dest, const float *src, int count);
+
   private:
-    AudioEncoderNull(const AudioEncoderNull&);
-    AudioEncoderNull& operator=(const AudioEncoderNull&);
-    
-};  /* class AudioEncoderNull */
+    float sigma;        // Standard deviation of the generated noise
+    float z0;
+    float z1;
+    bool generate;
+
+    AudioNoiseAdder(const AudioNoiseAdder&);
+    AudioNoiseAdder& operator=(const AudioNoiseAdder&);
+    float generateGaussianNoise(void);
+
+};  /* class AudioNoiseAdder */
 
 
 } /* namespace */
 
-#endif /* ASYNC_AUDIO_ENCODER_NULL_INCLUDED */
-
+#endif /* ASYNC_AUDIO_NOISE_ADDER */
 
 
 /*
  * This file has not been truncated
  */
-

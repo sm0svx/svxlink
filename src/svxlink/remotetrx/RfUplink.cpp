@@ -307,6 +307,8 @@ void RfUplink::rxSignalLevelUpdated(float siglev)
 
 void RfUplink::rxDtmfDigitDetected(char digit, int duration)
 {
+  cout << name << ": DTMF digit \"" << digit << "\" received for "
+       << duration << "ms" << endl;
     // FIXME: DTMF digits should be retransmitted with the correct duration.
   const char dtmf_str[] = {digit, 0};
   uplink_tx->sendDtmf(dtmf_str);
