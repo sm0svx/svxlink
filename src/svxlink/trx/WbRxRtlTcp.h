@@ -69,7 +69,7 @@ namespace Async
 {
   class Config;
 };
-class RtlTcp;
+class RtlSdr;
 class Ddr;
 
 
@@ -201,7 +201,7 @@ class WbRxRtlTcp
 
     static InstanceMap instances;
 
-    RtlTcp *rtl;
+    RtlSdr *rtl;
     Ddrs ddrs;
     bool auto_tune_enabled;
     std::string m_name;
