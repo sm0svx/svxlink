@@ -321,45 +321,6 @@ void RtlSdr::handleIq(const complex<uint8_t> *samples, int samp_count)
  *
  ****************************************************************************/
 
-#if 0
-void RtlSdr::sendCommand(char cmd, uint32_t param)
-{
-  if (con.isConnected())
-  {
-    //cout << "### sendCommand(" << (int)cmd << ", " << param << ")" << endl;
-    char msg[5];
-    msg[0] = cmd;
-    msg[4] = param & 0xff;
-    msg[3] = (param >> 8) & 0xff;
-    msg[2] = (param >> 16) & 0xff;
-    msg[1] = (param >> 24) & 0xff;
-    con.write(msg, sizeof(msg));
-  }
-} /* RtlSdr::sendCommand */
-
-
-void RtlSdr::connected(void)
-{
-  cout << "Connected to RtlSdr at " << con.remoteHost() << ":"
-       << con.remotePort() << endl;
-  reconnect_timer.setEnable(false);
-} /* RtlSdr::connected */
-
-
-void RtlSdr::disconnected(Async::TcpConnection *c,
-                          Async::TcpConnection::DisconnectReason reason)
-{
-  tuner_type = TUNER_UNKNOWN;
-  if (!reconnect_timer.isEnabled())
-  {
-    cout << "Disconnected from RtlSdr at " << con.remoteHost() << ":"
-         << con.remotePort() << endl;
-    reconnect_timer.setEnable(true);
-  }
-} /* RtlSdr::disconnected */
-#endif
-
-
 void RtlSdr::updateSettings(void)
 {
   if (samp_rate_set)
@@ -395,7 +356,7 @@ void RtlSdr::updateSettings(void)
   }
   if (use_digital_agc_set)
   {
-    enableDigitalAgc(use_digital_agc);
+    handleEnableDigitalAgc(use_digital_agc);
   }
 } /* RtlSdr::updateSettings */
 

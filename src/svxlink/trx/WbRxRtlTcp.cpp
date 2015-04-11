@@ -56,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "WbRxRtlTcp.h"
 #include "RtlTcp.h"
+#include "RtlUsb.h"
 #include "Ddr.h"
 
 
@@ -136,30 +137,49 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
 {
   cout << "### Initializing WBRX " << name << endl;
 
-  string remote_host = "localhost";
-  cfg.getValue(name, "HOST", remote_host);
-  int tcp_port = 1234;
-  cfg.getValue(name, "PORT", tcp_port);
+  string rtl_type = "RtlUsb";
+  cfg.getValue(name, "TYPE", rtl_type);
+  if (rtl_type == "RtlTcp")
+  {
+    string remote_host = "localhost";
+    cfg.getValue(name, "HOST", remote_host);
+    int tcp_port = 1234;
+    cfg.getValue(name, "PORT", tcp_port);
+
+    cout << "###   HOST        = " << remote_host << endl;
+    cout << "###   PORT        = " << tcp_port << endl;
+    rtl = new RtlTcp(remote_host, tcp_port);
+  }
+  else if (rtl_type == "RtlUsb")
+  {
+    string dev_match = "0";
+    cfg.getValue(name, "DEV_MATCH", dev_match);
+    cout << "###   DEV_MATCH   = " << dev_match << endl;
+    rtl = new RtlUsb(dev_match);
+  }
+  else
+  {
+    cerr << "*** ERROR: Unknown WbRx type: " << rtl_type << endl;
+    exit(1);
+  }
+
   int sample_rate = 960000;
   cfg.getValue(name, "SAMPLE_RATE", sample_rate);
-
-  cout << "###   HOST      = " << remote_host << endl;
-  cout << "###   PORT      = " << tcp_port << endl;
-  rtl = new RtlTcp(remote_host, tcp_port);
+  cout << "###   SAMPLE_RATE = " << sample_rate << endl;
   rtl->setSampleRate(sample_rate);
   rtl->iqReceived.connect(iqReceived.make_slot());
 
   uint32_t fq_corr = 0;
   if (cfg.getValue(name, "FQ_CORR", fq_corr))
   {
-    cout << "###   FQ_CORR   = " << (int32_t)fq_corr << "ppm\n";
+    cout << "###   FQ_CORR     = " << (int32_t)fq_corr << "ppm\n";
     rtl->setFqCorr(fq_corr);
   }
 
   uint32_t center_fq = 0;
   if (cfg.getValue(name, "CENTER_FQ", center_fq))
   {
-    cout << "###   CENTER_FQ = " << center_fq << "Hz\n";
+    cout << "###   CENTER_FQ   = " << center_fq << "Hz\n";
     auto_tune_enabled = false;
     setCenterFq(center_fq);
   }
@@ -167,7 +187,7 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
   float gain = 0.0f;
   if (cfg.getValue(name, "GAIN", gain))
   {
-    cout << "###   GAIN      = " << gain << "dB\n";
+    cout << "###   GAIN        = " << gain << "dB\n";
     rtl->setGainMode(1);
     int32_t int_gain = static_cast<int32_t>(10.0 * gain);
     rtl->setGain(int_gain);

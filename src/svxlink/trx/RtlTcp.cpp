@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iterator>
 #include <algorithm>
 #include <sstream>
+#include <cassert>
 
 
 /****************************************************************************
@@ -243,6 +244,7 @@ void RtlTcp::disconnected(Async::TcpConnection *c,
 int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
 {
   //cout << "### Data received: " << count << " bytes\n";
+  assert(count > 0);
   if (tunerType() == 0)
   {
     if (count < 12)
@@ -279,7 +281,7 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
     return 12;
   }
 
-  if (count < blockSize())
+  if (static_cast<size_t>(count) < blockSize())
   {
     return 0;
   }

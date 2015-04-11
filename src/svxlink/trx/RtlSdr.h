@@ -378,7 +378,7 @@ class RtlSdr : public sigc::trackable
      * @brief   Return the size of each block of samples being processed
      * @returns Returns the number of samples in each block
      */
-    int blockSize(void) const { return block_size; }
+    size_t blockSize(void) const { return block_size; }
 
     /**
      * @brief   Set the tuner type
@@ -390,7 +390,7 @@ class RtlSdr : public sigc::trackable
     static const unsigned MAX_IF_GAIN_STAGES = 10;
 
     uint32_t          samp_rate;
-    int               block_size;
+    size_t            block_size;
     TunerType         tuner_type;
     bool              center_fq_set;
     uint32_t          center_fq;

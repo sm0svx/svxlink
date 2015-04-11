@@ -15,7 +15,7 @@ set(LIBSRC
   SquelchEvDev.cpp Macho.cpp SquelchGpio.cpp Ptt.cpp
   PttGpio.cpp PttSerialPin.cpp PttPty.cpp
   PtyDtmfDecoder.cpp LocalRxBase.cpp Ddr.cpp RtlSdr.cpp RtlTcp.cpp
-  WbRxRtlTcp.cpp SigLevDet.cpp SigLevDetDdr.cpp
+  RtlUsb.cpp WbRxRtlTcp.cpp SigLevDet.cpp SigLevDetDdr.cpp
   SvxSwDtmfDecoder.cpp
 )
 include (CheckSymbolExists)
@@ -38,6 +38,9 @@ find_package(GCrypt REQUIRED)
 set(LIBS ${LIBS} ${GCRYPT_LIBRARIES})
 include_directories(${GCRYPT_INCLUDE_DIRS})
 add_definitions(${GCRYPT_DEFINITIONS})
+
+# Find rtl-sdr
+set(LIBS ${LIBS} rtlsdr)
 
 # Add targets for version files
 set(VERSION_DEPENDS)
