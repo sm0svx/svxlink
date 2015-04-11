@@ -161,8 +161,10 @@ void RtlUsb::handleSetTunerIfGain(uint16_t stage, int16_t gain)
   }
   else
   {
+    /*
     cerr << "### Tuner IF gain stage " << stage << " set to " 
          << (gain / 10.0) << "dB\n";
+         */
   }
 } /* RtlUsb::handleSetTunerIfGain */
 
@@ -182,7 +184,7 @@ void RtlUsb::handleSetCenterFq(uint32_t fq)
   }
   else
   {
-    cerr << "### Tuned to " << fq << "Hz\n";
+    //cerr << "### Tuned to " << fq << "Hz\n";
   }
 } /* RtlUsb::handleSetCenterFq */
 
@@ -202,7 +204,7 @@ void RtlUsb::handleSetSampleRate(uint32_t rate)
   }
   else
   {
-    cerr << "### Sample rate set to " << rate << "Hz\n";
+    //cerr << "### Sample rate set to " << rate << "Hz\n";
   }
 } /* RtlUsb::handleSetSampleRate */
 
@@ -225,7 +227,7 @@ void RtlUsb::handleSetGainMode(uint32_t mode)
     }
     else
     {
-      cerr << "### Enable automatic gain control\n";
+      //cerr << "### Enable automatic gain control\n";
     }
   }
   else
@@ -239,7 +241,7 @@ void RtlUsb::handleSetGainMode(uint32_t mode)
     }
     else
     {
-      cerr << "### Enable manual gain control\n";
+      //cerr << "### Enable manual gain control\n";
     }
   }
 } /* RtlUsb::handleSetGainMode */
@@ -261,7 +263,7 @@ void RtlUsb::handleSetGain(int32_t gain)
   }
   else
   {
-    cout << "### Tuner gain set to " << (gain/10.0) << "dB\n";
+    //cout << "### Tuner gain set to " << (gain/10.0) << "dB\n";
   }
 } /* RtlUsb::handleSetGain */
 
@@ -281,7 +283,7 @@ void RtlUsb::handleSetFqCorr(uint32_t corr)
   }
   else
   {
-    cerr << "### Tuner error set to " << corr << " ppm\n";
+    //cerr << "### Tuner error set to " << corr << " ppm\n";
   }
 } /* RtlUsb::handleSetFqCorr */
 
@@ -300,7 +302,7 @@ void RtlUsb::handleEnableTestMode(bool enable)
   }
   else
   {
-    cerr << "### Test mode " << (enable ? "enabled" : "disabled") << endl;
+    //cerr << "### Test mode " << (enable ? "enabled" : "disabled") << endl;
   }
 } /* RtlUsb::handleEnableTestMode */
 
@@ -319,7 +321,7 @@ void RtlUsb::handleEnableDigitalAgc(bool enable)
   }
   else
   {
-    cerr << "### Digital AGC " << (enable ? "enabled" : "disabled") << endl;
+    //cerr << "### Digital AGC " << (enable ? "enabled" : "disabled") << endl;
   }
 } /* RtlUsb::handleEnableDigitalAgc */
 
@@ -340,7 +342,7 @@ void *RtlUsb::rtlReader(void *data)
   int r = rtlsdr_read_async(rtl->dev, rtlsdrCallback, rtl, 0, buf_len);
   if (r != 0)
   {
-    cerr << "*** WARNING: Failed to read from RTL dongle\n";
+    cerr << "*** WARNING: Failed to read samples from RTL dongle\n";
     close(rtl->sample_pipe[1]);
     rtl->sample_pipe[1] = -1;
   }
@@ -459,7 +461,7 @@ void RtlUsb::initializeDongle(void)
   ss << "[" << dev_index << "] " << vendor << " " << product 
      << " SN:" << serial;
   dev_name = ss.str();
-  cout << "### Device name: " << dev_name << endl;
+  //cout << "### Device name: " << dev_name << endl;
 
     // Stop the reconnect timer
   reconnect_timer.setEnable(false);
@@ -536,23 +538,18 @@ int RtlUsb::verboseDeviceSearch(const char *s)
   device_count = rtlsdr_get_device_count();
   if (!device_count)
   {
-    cerr << "No supported devices found\n";
+    cerr << "*** WARNING: No supported RTL devices found\n";
     return -1;
-  }
-  cerr << "### Found " << device_count << " device(s):\n";
-  for (i = 0; i < device_count; i++)
-  {
-    rtlsdr_get_device_usb_strings(i, vendor, product, serial);
-    cerr << "###   [" << i << "] " << vendor << " " << product
-         << " SN:" << serial << endl;
   }
 
     /* Does string look like raw id number */
   device = (int)strtol(s, &s2, 0);
   if (s2[0] == '\0' && device >= 0 && device < device_count)
   {
+    /*
     cerr << "### Device index match. Using device " << device << ": "
          << rtlsdr_get_device_name((uint32_t)device) << endl;
+    */
     return device;
   }
 
@@ -565,8 +562,10 @@ int RtlUsb::verboseDeviceSearch(const char *s)
       continue;
     }
     device = i;
+    /*
     cerr << "### Serial match. Using device " << device << ": "
          << rtlsdr_get_device_name((uint32_t)device) << endl;
+    */
     return device;
   }
 
@@ -579,8 +578,10 @@ int RtlUsb::verboseDeviceSearch(const char *s)
       continue;
     }
     device = i;
+    /*
     cerr << "### Serial prefix match. Using device " << device << ": "
          << rtlsdr_get_device_name((uint32_t)device) << endl;
+    */
     return device;
   }
 
@@ -598,11 +599,20 @@ int RtlUsb::verboseDeviceSearch(const char *s)
       continue;
     }
     device = i;
+    /*
     cerr << "### Serial suffix match. Using device " << device << ": " 
          << rtlsdr_get_device_name((uint32_t)device) << endl;
+    */
     return device;
   }
-  cerr << "No matching devices found.\n";
+  cerr << "*** WARNING: No RTL devices matching \"" << s << "\" found. "
+          "The following devices has been detected:\n";
+  for (i = 0; i < device_count; i++)
+  {
+    rtlsdr_get_device_usb_strings(i, vendor, product, serial);
+    cerr << "      [" << i << "] " << vendor << " " << product
+         << " SN:" << serial << endl;
+  }
   return -1;
 }
 
