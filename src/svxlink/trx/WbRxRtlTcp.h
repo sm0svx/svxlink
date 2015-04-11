@@ -121,7 +121,7 @@ class Ddr;
 This class handle a RTL2832U tuner through the RtlTcp class. Configuration
 is read from the given section in the given configuration file.
 */
-class WbRxRtlTcp
+class WbRxRtlTcp : public sigc::trackable
 {
   public:
     typedef std::complex<float> Sample;
@@ -184,6 +184,12 @@ class WbRxRtlTcp
     std::string name(void) const { return m_name; }
 
     /**
+     * @brief   Find out if the wideband receiver is ready for operation
+     * @returns Returns \em true if the receiver is ready for operation
+     */
+    bool isReady(void) const;
+
+    /**
      * @brief   A signal that is emitted when new samples have been received
      * @param   samples A vector of received samples
      *
@@ -193,6 +199,11 @@ class WbRxRtlTcp
      */
     sigc::signal<void, std::vector<Sample> > iqReceived;
     
+    /**
+     * @brief   A signal that is emitted when the ready state changes
+     */
+    sigc::signal<void> readyStateChanged;
+
   protected:
     
   private:
@@ -209,6 +220,7 @@ class WbRxRtlTcp
     WbRxRtlTcp(const WbRxRtlTcp&);
     WbRxRtlTcp& operator=(const WbRxRtlTcp&);
     void findBestCenterFq(void);
+    void rtlReadyStateChanged(void);
     
 };  /* class WbRxRtlTcp */
 

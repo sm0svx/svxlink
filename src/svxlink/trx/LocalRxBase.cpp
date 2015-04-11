@@ -455,6 +455,8 @@ bool LocalRxBase::initialize(void)
     return false;
   }
 
+  readyStateChanged.connect(mem_fun(*this, &LocalRxBase::rxReadyStateChanged));
+
   if (cfg.getValue(name(), "SQL_HANGTIME", sql_hangtime))
   {
     squelch_det->setHangtime(sql_hangtime);
@@ -828,6 +830,18 @@ void LocalRxBase::setSqlHangtimeFromSiglev(float siglev)
     }
   }
 } /* LocalRxBase::setSqlHangtime */
+
+
+void LocalRxBase::rxReadyStateChanged(void)
+{
+  if (!isReady())
+  {
+    siglevdet->reset();
+    squelch_det->reset();
+    siglevdet->signalLevelUpdated(siglevdet->lastSiglev());
+    squelch_det->squelchOpen(false);
+  }
+} /* LocalRxBase::rxReadyStateChanged */
 
 
 

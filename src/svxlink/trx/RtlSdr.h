@@ -273,16 +273,11 @@ class RtlSdr : public sigc::trackable
     std::vector<int> getTunerGains(void) const;
 
     /**
-     * @brief   A signal that is emitted when new samples have been received
-     * @param   samples A vector of received samples
-     *
-     * Connecting to this signal is the way to get samples from the DVB-T
-     * dongle. The format is a vector of complex floats (I/Q) with a range from
-     * -1 to 1.
+     * @brief   Find out if the RTL dongle is ready for operation
+     * @returns Returns \em true if the dongle is ready for operation
      */
-    sigc::signal<void, std::vector<Sample> > iqReceived;
-    
-  protected:
+    virtual bool isReady(void) const = 0;
+
     /**
      * @brief   Return a string which identifies the specific dongle
      * @returns Returns a string that uniquely identifies the dongle
@@ -293,6 +288,22 @@ class RtlSdr : public sigc::trackable
      */
     virtual const std::string displayName(void) const = 0;
 
+    /**
+     * @brief   A signal that is emitted when new samples have been received
+     * @param   samples A vector of received samples
+     *
+     * Connecting to this signal is the way to get samples from the DVB-T
+     * dongle. The format is a vector of complex floats (I/Q) with a range from
+     * -1 to 1.
+     */
+    sigc::signal<void, std::vector<Sample> > iqReceived;
+    
+    /**
+     * @brief   A signal that is emitted when the ready state changes
+     */
+    sigc::signal<void> readyStateChanged;
+
+  protected:
     /**
      * @brief   Set tuner IF gain for the specified stage
      * @param   stage The number of the gain stage to set

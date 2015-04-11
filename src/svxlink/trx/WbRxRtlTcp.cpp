@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <limits>
 #include <algorithm>
 #include <deque>
+#include <iterator>
 
 
 /****************************************************************************
@@ -172,6 +173,8 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
   //cout << "###   SAMPLE_RATE = " << sample_rate << endl;
   rtl->setSampleRate(sample_rate);
   rtl->iqReceived.connect(iqReceived.make_slot());
+  rtl->readyStateChanged.connect(
+      mem_fun(*this, &WbRxRtlTcp::rtlReadyStateChanged));
 
   uint32_t fq_corr = 0;
   if (cfg.getValue(name, "FQ_CORR", fq_corr))
@@ -264,6 +267,12 @@ void WbRxRtlTcp::unregisterDdr(Ddr *ddr)
 } /* WbRxRtlTcp::unregisterDdr */
 
 
+bool WbRxRtlTcp::isReady(void) const
+{
+  return (rtl != 0) && rtl->isReady();
+} /* WbRxRtlTcp::isReady */
+
+
 
 /****************************************************************************
  *
@@ -351,6 +360,34 @@ void WbRxRtlTcp::findBestCenterFq(void)
   setCenterFq(center_fq);
 
 } /* WbRxRtlTcp::findBestCenterFq */
+
+
+void WbRxRtlTcp::rtlReadyStateChanged(void)
+{
+  cout << name() << ": ";
+  if (rtl->isReady())
+  {
+    cout << "Changed state to READY\n";
+
+    cout << "\tUsing device      : " << rtl->displayName() << endl;
+    cout << "\tTuner type        : " << rtl->tunerTypeString() << endl;
+    vector<int> int_tuner_gains = rtl->getTunerGains();
+    vector<float> tuner_gains;
+    tuner_gains.assign(int_tuner_gains.begin(), int_tuner_gains.end());
+    transform(tuner_gains.begin(), tuner_gains.end(),
+        tuner_gains.begin(), bind2nd(divides<float>(),10.0));
+    cout << "\tValid tuner gains : ";
+    copy(tuner_gains.begin(), tuner_gains.end(),
+        ostream_iterator<float>(cout, " "));
+    cout << endl;
+  }
+  else
+  {
+    cout << "Changed state to NOT READY\n";
+  }
+
+  readyStateChanged();
+} /* WbRxRtlTcp::rtlReadyStateChanged */
 
 
 

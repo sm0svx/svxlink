@@ -130,7 +130,12 @@ class RtlUsb : public RtlSdr
      */
     virtual ~RtlUsb(void);
   
-  protected:
+    /**
+     * @brief   Find out if the RTL dongle is ready for operation
+     * @returns Returns \em true if the dongle is ready for operation
+     */
+    virtual bool isReady(void) const { return dev != NULL; }
+
     /**
      * @brief   Return a string which identifies the specific dongle
      * @returns Returns a string that uniquely identifies the dongle
@@ -141,6 +146,7 @@ class RtlUsb : public RtlSdr
      */
     virtual const std::string displayName(void) const { return dev_name; }
 
+  protected:
     /**
      * @brief   Set tuner IF gain for the specified stage
      * @param   stage The number of the gain stage to set

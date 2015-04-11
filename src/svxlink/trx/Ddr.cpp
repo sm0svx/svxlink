@@ -1164,6 +1164,7 @@ bool Ddr::initialize(void)
   }
   channel->preDemod.connect(preDemod.make_slot());
   rtl->iqReceived.connect(mem_fun(*channel, &Channel::iq_received));
+  rtl->readyStateChanged.connect(readyStateChanged.make_slot());
 
   if (!LocalRxBase::initialize())
   {
@@ -1193,6 +1194,12 @@ void Ddr::tunerFqChanged(uint32_t center_fq)
   channel->setFqOffset(new_offset);
   channel->enable();
 } /* Ddr::tunerFqChanged */
+
+
+bool Ddr::isReady(void) const
+{
+  return (rtl != 0) && rtl->isReady();
+} /* Ddr::isReady */
 
 
 

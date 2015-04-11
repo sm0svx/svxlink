@@ -222,8 +222,10 @@ void RtlTcp::sendCommand(char cmd, uint32_t param)
 
 void RtlTcp::connected(void)
 {
-  cout << "Connected to RtlTcp at " << con.remoteHost() << ":"
+  /*
+  cout << "### Connected to RtlTcp at " << con.remoteHost() << ":"
        << con.remotePort() << endl;
+  */
   reconnect_timer.setEnable(false);
 } /* RtlTcp::connected */
 
@@ -234,9 +236,12 @@ void RtlTcp::disconnected(Async::TcpConnection *c,
   setTunerType(TUNER_UNKNOWN);
   if (!reconnect_timer.isEnabled())
   {
-    cout << "Disconnected from RtlTcp at " << con.remoteHost() << ":"
+    /*
+    cout << "### Disconnected from RtlTcp at " << con.remoteHost() << ":"
          << con.remotePort() << endl;
+    */
     reconnect_timer.setEnable(true);
+    readyStateChanged();
   }
 } /* RtlTcp::disconnected */
 
@@ -259,6 +264,7 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
     }
     setTunerType(
       static_cast<TunerType>(ntohl(*reinterpret_cast<uint32_t *>(ptr+4))));
+#if 0
     uint32_t tuner_gain_count = ntohl(*reinterpret_cast<uint32_t *>(ptr+8));
     cout << "Tuner type        : " << tunerTypeString() << endl;
     vector<int> int_tuner_gains = getTunerGains();
@@ -277,6 +283,8 @@ int RtlTcp::dataReceived(Async::TcpConnection *con, void *buf, int count)
     copy(tuner_gains.begin(), tuner_gains.end(),
          ostream_iterator<float>(cout, " "));
     cout << endl;
+#endif
+    readyStateChanged();
     updateSettings();
     return 12;
   }

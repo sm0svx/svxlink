@@ -420,6 +420,34 @@ void RtlUsb::initializeDongle(void)
     return;
   }
 
+    // Get tuner type
+  setTunerType(TUNER_UNKNOWN);
+  enum rtlsdr_tuner tuner_type = rtlsdr_get_tuner_type(dev);
+  switch (tuner_type)
+  {
+    case RTLSDR_TUNER_E4000:
+      setTunerType(TUNER_E4000);
+      break;
+    case RTLSDR_TUNER_FC0012:
+      setTunerType(TUNER_FC0012);
+      break;
+    case RTLSDR_TUNER_FC0013:
+      setTunerType(TUNER_FC0013);
+      break;
+    case RTLSDR_TUNER_FC2580:
+      setTunerType(TUNER_FC2580);
+      break;
+    case RTLSDR_TUNER_R820T:
+      setTunerType(TUNER_R820T);
+      break;
+    case RTLSDR_TUNER_R828D:
+      setTunerType(TUNER_R828D);
+      break;
+    default:
+      cerr << "*** WARNING: Unknown RTL tuner type found\n";
+      break;
+  }
+
     // Reset endpoint before we start reading from it (mandatory)
   int r = rtlsdr_reset_buffer(dev);
   if (r < 0)
@@ -469,6 +497,9 @@ void RtlUsb::initializeDongle(void)
 
     // Stop the reconnect timer
   reconnect_timer.setEnable(false);
+
+    // Tell the world that we are ready for operation
+  readyStateChanged();
 } /* RtlUsb::initializeDongle */
 
 
@@ -534,6 +565,10 @@ void RtlUsb::verboseClose(void)
 
   reconnect_timer.setTimeout(RECONNECT_INTERVAL);
   reconnect_timer.setEnable(true);
+
+  setTunerType(TUNER_UNKNOWN);
+
+  readyStateChanged();
 } /* RtlUsb::verboseClose */
 
 
