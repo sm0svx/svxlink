@@ -56,7 +56,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "WbRxRtlTcp.h"
 #include "RtlTcp.h"
+#ifdef HAS_RTLSDR_SUPPORT
 #include "RtlUsb.h"
+#endif
 #include "Ddr.h"
 
 
@@ -137,7 +139,7 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
 {
   cout << "### Initializing WBRX " << name << endl;
 
-  string rtl_type = "RtlUsb";
+  string rtl_type = "RtlTcp";
   cfg.getValue(name, "TYPE", rtl_type);
   if (rtl_type == "RtlTcp")
   {
@@ -150,6 +152,7 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
     cout << "###   PORT        = " << tcp_port << endl;
     rtl = new RtlTcp(remote_host, tcp_port);
   }
+#ifdef HAS_RTLSDR_SUPPORT
   else if (rtl_type == "RtlUsb")
   {
     string dev_match = "0";
@@ -157,6 +160,7 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
     cout << "###   DEV_MATCH   = " << dev_match << endl;
     rtl = new RtlUsb(dev_match);
   }
+#endif
   else
   {
     cerr << "*** ERROR: Unknown WbRx type: " << rtl_type << endl;
