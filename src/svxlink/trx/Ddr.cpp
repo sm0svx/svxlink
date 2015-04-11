@@ -70,7 +70,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "Ddr.h"
-#include "WbRxRtlTcp.h"
+#include "WbRxRtlSdr.h"
 //#include "Goertzel.h"
 
 
@@ -698,7 +698,7 @@ namespace {
         audio_dec.adjustGain(adj_db);
       }
 
-      void iq_received(vector<WbRxRtlTcp::Sample> samples)
+      void iq_received(vector<WbRxRtlSdr::Sample> samples)
       {
           // From article-sdr-is-qs.pdf: Watch your Is and Qs:
           //   FM = (Qn.In-1 - In.Qn-1)/(In.In-1 + Qn.Qn-1)
@@ -802,7 +802,7 @@ namespace {
     private:
       float iold;
       float qold;
-      //WbRxRtlTcp::Sample prev_samp;
+      //WbRxRtlSdr::Sample prev_samp;
       Decimator<float> audio_dec;
 #if 0
       Goertzel g;
@@ -850,14 +850,14 @@ namespace {
         }
       }
 
-      void iq_received(vector<WbRxRtlTcp::Sample> &out,
-                       const vector<WbRxRtlTcp::Sample> &in)
+      void iq_received(vector<WbRxRtlSdr::Sample> &out,
+                       const vector<WbRxRtlSdr::Sample> &in)
       {
         if (exp_lut.size() > 0)
         {
           out.clear();
           out.reserve(in.size());
-          vector<WbRxRtlTcp::Sample>::const_iterator it;
+          vector<WbRxRtlSdr::Sample>::const_iterator it;
           for (it = in.begin(); it != in.end(); ++it)
           {
             out.push_back(*it * exp_lut[n]);
@@ -902,8 +902,8 @@ namespace {
   {
     public:
       virtual ~Channelizer(void) {}
-      virtual void iq_received(vector<WbRxRtlTcp::Sample> &out,
-                               const vector<WbRxRtlTcp::Sample> &in) = 0;
+      virtual void iq_received(vector<WbRxRtlSdr::Sample> &out,
+                               const vector<WbRxRtlSdr::Sample> &in) = 0;
 
       sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
   };
@@ -920,8 +920,8 @@ namespace {
       }
       virtual ~Channelizer960(void) {}
 
-      virtual void iq_received(vector<WbRxRtlTcp::Sample> &out,
-                               const vector<WbRxRtlTcp::Sample> &in)
+      virtual void iq_received(vector<WbRxRtlSdr::Sample> &out,
+                               const vector<WbRxRtlSdr::Sample> &in)
       {
         //cout << "### Received " << samples.size() << " samples\n";
 #if 0
@@ -929,7 +929,7 @@ namespace {
             samples.size() * sizeof(samples[0]));
 #endif
 
-        vector<WbRxRtlTcp::Sample> dec_samp1, dec_samp2;
+        vector<WbRxRtlSdr::Sample> dec_samp1, dec_samp2;
         iq_dec1.decimate(dec_samp1, in);
         iq_dec2.decimate(dec_samp2, dec_samp1);
         ch_filt.decimate(out, dec_samp2);
@@ -955,15 +955,15 @@ namespace {
       }
       virtual ~Channelizer2400(void) {}
 
-      virtual void iq_received(vector<WbRxRtlTcp::Sample> &out,
-                               const vector<WbRxRtlTcp::Sample> &in)
+      virtual void iq_received(vector<WbRxRtlSdr::Sample> &out,
+                               const vector<WbRxRtlSdr::Sample> &in)
       {
 #if 0
         outfile.write(reinterpret_cast<char*>(&samples[0]),
             samples.size() * sizeof(samples[0]));
 #endif
 
-        vector<WbRxRtlTcp::Sample> dec_samp1, dec_samp2, dec_samp3;
+        vector<WbRxRtlSdr::Sample> dec_samp1, dec_samp2, dec_samp3;
         iq_dec1.decimate(dec_samp1, in);
         iq_dec2.decimate(dec_samp2, dec_samp1);
         iq_dec3.decimate(dec_samp3, dec_samp2);
@@ -1022,11 +1022,11 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
       trans.setOffset(fq_offset);
     }
 
-    void iq_received(vector<WbRxRtlTcp::Sample> samples)
+    void iq_received(vector<WbRxRtlSdr::Sample> samples)
     {
       if (enabled)
       {
-        vector<WbRxRtlTcp::Sample> translated, channelized;
+        vector<WbRxRtlSdr::Sample> translated, channelized;
         trans.iq_received(translated, samples);
         channelizer->iq_received(channelized, translated);
         fm_demod.iq_received(channelized);
@@ -1145,7 +1145,7 @@ bool Ddr::initialize(void)
     return false;
   }
 
-  rtl = WbRxRtlTcp::instance(cfg, wbrx);
+  rtl = WbRxRtlSdr::instance(cfg, wbrx);
   if (rtl == 0)
   {
     cout << "*** ERROR: Could not create WBRX " << wbrx

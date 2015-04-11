@@ -1,5 +1,5 @@
 /**
-@file	 WbRxRtlTcp.cpp
+@file	 WbRxRtlSdr.cpp
 @brief   A WBRX using RTL2832U based DVB-T tuners
 @author  Tobias Blomberg / SM0SVX
 @date	 2014-07-16
@@ -55,7 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "WbRxRtlTcp.h"
+#include "WbRxRtlSdr.h"
 #include "RtlTcp.h"
 #ifdef HAS_RTLSDR_SUPPORT
 #include "RtlUsb.h"
@@ -113,7 +113,7 @@ using namespace std;
  *
  ****************************************************************************/
 
-WbRxRtlTcp::InstanceMap WbRxRtlTcp::instances;
+WbRxRtlSdr::InstanceMap WbRxRtlSdr::instances;
 
 
 /****************************************************************************
@@ -122,20 +122,20 @@ WbRxRtlTcp::InstanceMap WbRxRtlTcp::instances;
  *
  ****************************************************************************/
 
-WbRxRtlTcp *WbRxRtlTcp::instance(Async::Config &cfg, const string &name)
+WbRxRtlSdr *WbRxRtlSdr::instance(Async::Config &cfg, const string &name)
 {
   InstanceMap::iterator it = instances.find(name);
   if (it != instances.end())
   {
     return (*it).second;
   }
-  WbRxRtlTcp *wbrx = new WbRxRtlTcp(cfg, name);
+  WbRxRtlSdr *wbrx = new WbRxRtlSdr(cfg, name);
   instances[name] = wbrx;
   return wbrx;
-} /* WbRxRtlTcp::instance */
+} /* WbRxRtlSdr::instance */
 
 
-WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
+WbRxRtlSdr::WbRxRtlSdr(Async::Config &cfg, const string &name)
   : auto_tune_enabled(true), m_name(name)
 {
   //cout << "### Initializing WBRX " << name << endl;
@@ -174,7 +174,7 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
   rtl->setSampleRate(sample_rate);
   rtl->iqReceived.connect(iqReceived.make_slot());
   rtl->readyStateChanged.connect(
-      mem_fun(*this, &WbRxRtlTcp::rtlReadyStateChanged));
+      mem_fun(*this, &WbRxRtlSdr::rtlReadyStateChanged));
 
   uint32_t fq_corr = 0;
   if (cfg.getValue(name, "FQ_CORR", fq_corr))
@@ -203,41 +203,41 @@ WbRxRtlTcp::WbRxRtlTcp(Async::Config &cfg, const string &name)
   bool peak_meter = false;
   cfg.getValue(name, "PEAK_METER", peak_meter);
   rtl->enableDistPrint(peak_meter);
-} /* WbRxRtlTcp::WbRxRtlTcp */
+} /* WbRxRtlSdr::WbRxRtlSdr */
 
 
-WbRxRtlTcp::~WbRxRtlTcp(void)
+WbRxRtlSdr::~WbRxRtlSdr(void)
 {
   delete rtl;
   rtl = 0;
-} /* WbRxRtlTcp::~WbRxRtlTcp */
+} /* WbRxRtlSdr::~WbRxRtlSdr */
 
 
-void WbRxRtlTcp::setCenterFq(uint32_t fq)
+void WbRxRtlSdr::setCenterFq(uint32_t fq)
 {
-  //cout << "### WbRxRtlTcp::setCenterFq: fq=" << fq << endl;
+  //cout << "### WbRxRtlSdr::setCenterFq: fq=" << fq << endl;
   rtl->setCenterFq(fq);
   for (Ddrs::iterator it=ddrs.begin(); it!=ddrs.end(); ++it)
   {
     Ddr *ddr = (*it);
     ddr->tunerFqChanged(fq);
   }
-} /* WbRxRtlTcp::setCenterFq */
+} /* WbRxRtlSdr::setCenterFq */
 
 
-uint32_t WbRxRtlTcp::centerFq(void)
+uint32_t WbRxRtlSdr::centerFq(void)
 {
   return rtl->centerFq();
-} /* WbRxRtlTcp::centerFq */
+} /* WbRxRtlSdr::centerFq */
 
 
-uint32_t WbRxRtlTcp::sampleRate(void) const
+uint32_t WbRxRtlSdr::sampleRate(void) const
 {
   return rtl->sampleRate();
-} /* WbRxRtlTcp::sampleRate */
+} /* WbRxRtlSdr::sampleRate */
 
 
-void WbRxRtlTcp::registerDdr(Ddr *ddr)
+void WbRxRtlSdr::registerDdr(Ddr *ddr)
 {
   Ddrs::iterator it = ddrs.find(ddr);
   assert(it == ddrs.end());
@@ -246,10 +246,10 @@ void WbRxRtlTcp::registerDdr(Ddr *ddr)
   {
     findBestCenterFq();
   }
-} /* WbRxRtlTcp::registerDdr */
+} /* WbRxRtlSdr::registerDdr */
 
 
-void WbRxRtlTcp::unregisterDdr(Ddr *ddr)
+void WbRxRtlSdr::unregisterDdr(Ddr *ddr)
 {
   Ddrs::iterator it = ddrs.find(ddr);
   assert(it != ddrs.end());
@@ -264,13 +264,13 @@ void WbRxRtlTcp::unregisterDdr(Ddr *ddr)
   {
     delete this;
   }
-} /* WbRxRtlTcp::unregisterDdr */
+} /* WbRxRtlSdr::unregisterDdr */
 
 
-bool WbRxRtlTcp::isReady(void) const
+bool WbRxRtlSdr::isReady(void) const
 {
   return (rtl != 0) && rtl->isReady();
-} /* WbRxRtlTcp::isReady */
+} /* WbRxRtlSdr::isReady */
 
 
 
@@ -288,7 +288,7 @@ bool WbRxRtlTcp::isReady(void) const
  *
  ****************************************************************************/
 
-void WbRxRtlTcp::findBestCenterFq(void)
+void WbRxRtlSdr::findBestCenterFq(void)
 {
   if (ddrs.empty())
   {
@@ -359,10 +359,10 @@ void WbRxRtlTcp::findBestCenterFq(void)
 
   setCenterFq(center_fq);
 
-} /* WbRxRtlTcp::findBestCenterFq */
+} /* WbRxRtlSdr::findBestCenterFq */
 
 
-void WbRxRtlTcp::rtlReadyStateChanged(void)
+void WbRxRtlSdr::rtlReadyStateChanged(void)
 {
   cout << name() << ": ";
   if (rtl->isReady())
@@ -387,7 +387,7 @@ void WbRxRtlTcp::rtlReadyStateChanged(void)
   }
 
   readyStateChanged();
-} /* WbRxRtlTcp::rtlReadyStateChanged */
+} /* WbRxRtlSdr::rtlReadyStateChanged */
 
 
 

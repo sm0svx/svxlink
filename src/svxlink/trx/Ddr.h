@@ -63,7 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-class WbRxRtlTcp;
+class WbRxRtlSdr;
 
 
 /****************************************************************************
@@ -213,7 +213,7 @@ class Ddr : public LocalRxBase
 
     Async::Config           &cfg;
     Channel                 *channel;
-    WbRxRtlTcp              *rtl;
+    WbRxRtlSdr              *rtl;
     double                  fq;
     
 };  /* class Ddr */
