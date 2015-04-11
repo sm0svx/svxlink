@@ -121,7 +121,7 @@ using namespace Async;
  ****************************************************************************/
 
 RtlUsb::RtlUsb(const std::string &match)
-  : reconnect_timer(1000, Timer::TYPE_PERIODIC), dev(NULL),
+  : reconnect_timer(0, Timer::TYPE_ONESHOT), dev(NULL),
     sample_pipe_watch(0), buf(0), buf_pos(0), dev_match(match), dev_name("?")
 {
   sample_pipe[0] = sample_pipe[1] = -1;
@@ -397,6 +397,7 @@ void RtlUsb::initializeDongle(void)
   int dev_index = verboseDeviceSearch(dev_match.c_str());
   if (dev_index < 0)
   {
+    verboseClose();
     return;
   }
   
@@ -405,6 +406,8 @@ void RtlUsb::initializeDongle(void)
   if (dev == NULL)
   {
     cerr << "Failed to open rtlsdr device #" << dev_index << endl;
+    verboseClose();
+    return;
   }
 
     // Write current settings to the dongle
@@ -413,6 +416,7 @@ void RtlUsb::initializeDongle(void)
     // The setter functions may close the device so we better check it
   if (dev == NULL)
   {
+    verboseClose();
     return;
   }
 
@@ -472,6 +476,8 @@ void RtlUsb::verboseClose(void)
 {
   if (dev == NULL)
   {
+    reconnect_timer.setTimeout(RECONNECT_INTERVAL);
+    reconnect_timer.setEnable(true);
     return;
   }
 
@@ -526,6 +532,7 @@ void RtlUsb::verboseClose(void)
   }
   dev = NULL;
 
+  reconnect_timer.setTimeout(RECONNECT_INTERVAL);
   reconnect_timer.setEnable(true);
 } /* RtlUsb::verboseClose */
 

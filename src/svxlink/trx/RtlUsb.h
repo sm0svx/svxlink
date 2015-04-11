@@ -211,6 +211,8 @@ class RtlUsb : public RtlSdr
 
     
   private:
+    static const unsigned RECONNECT_INTERVAL = 5000;
+
     Async::Timer    reconnect_timer;
     rtlsdr_dev_t    *dev;
     pthread_t       rtl_reader_thread;
