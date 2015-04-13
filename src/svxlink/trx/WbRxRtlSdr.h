@@ -1,12 +1,12 @@
 /**
-@file	 WbRxRtlTcp.h
-@brief   A WBRX using RTL2832U based DVB-T tuners through rtl_tcp
+@file	 WbRxRtlSdr.h
+@brief   A WBRX using RTL2832U based DVB-T tuners
 @author  Tobias Blomberg / SM0SVX
 @date	 2014-07-16
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef WBRX_RTL_TCP_INCLUDED
-#define WBRX_RTL_TCP_INCLUDED
+#ifndef WBRX_RTL_SDR_INCLUDED
+#define WBRX_RTL_SDR_INCLUDED
 
 
 /****************************************************************************
@@ -69,7 +69,7 @@ namespace Async
 {
   class Config;
 };
-class RtlTcp;
+class RtlSdr;
 class Ddr;
 
 
@@ -114,31 +114,31 @@ class Ddr;
  ****************************************************************************/
 
 /**
-@brief	A WBRX using RTL2832U based DVB-T tuners through rtl_tcp
+@brief	A WBRX using RTL2832U based DVB-T tuners
 @author Tobias Blomberg / SM0SVX
 @date   2014-07-16
 
-This class handle a RTL2832U tuner through the RtlTcp class. Configuration
+This class handle a RTL2832U tuner through the RtlSdr class. Configuration
 is read from the given section in the given configuration file.
 */
-class WbRxRtlTcp
+class WbRxRtlSdr : public sigc::trackable
 {
   public:
     typedef std::complex<float> Sample;
 
-    static WbRxRtlTcp *instance(Async::Config &cfg, const std::string &name);
+    static WbRxRtlSdr *instance(Async::Config &cfg, const std::string &name);
 
     /**
      * @brief 	Constructor
      * @param   cfg A previously initialized configuration object
      * @param   name The name of the configuration section to read config from
      */
-    WbRxRtlTcp(Async::Config &cfg, const std::string &name);
+    WbRxRtlSdr(Async::Config &cfg, const std::string &name);
   
     /**
      * @brief 	Destructor
      */
-    ~WbRxRtlTcp(void);
+    ~WbRxRtlSdr(void);
   
     /**
      * @brief   Set the center frequency of the tuner
@@ -184,6 +184,12 @@ class WbRxRtlTcp
     std::string name(void) const { return m_name; }
 
     /**
+     * @brief   Find out if the wideband receiver is ready for operation
+     * @returns Returns \em true if the receiver is ready for operation
+     */
+    bool isReady(void) const;
+
+    /**
      * @brief   A signal that is emitted when new samples have been received
      * @param   samples A vector of received samples
      *
@@ -193,29 +199,35 @@ class WbRxRtlTcp
      */
     sigc::signal<void, std::vector<Sample> > iqReceived;
     
+    /**
+     * @brief   A signal that is emitted when the ready state changes
+     */
+    sigc::signal<void> readyStateChanged;
+
   protected:
     
   private:
-    typedef std::map<std::string, WbRxRtlTcp*> InstanceMap;
+    typedef std::map<std::string, WbRxRtlSdr*> InstanceMap;
     typedef std::set<Ddr*> Ddrs;
 
     static InstanceMap instances;
 
-    RtlTcp *rtl;
+    RtlSdr *rtl;
     Ddrs ddrs;
     bool auto_tune_enabled;
     std::string m_name;
 
-    WbRxRtlTcp(const WbRxRtlTcp&);
-    WbRxRtlTcp& operator=(const WbRxRtlTcp&);
+    WbRxRtlSdr(const WbRxRtlSdr&);
+    WbRxRtlSdr& operator=(const WbRxRtlSdr&);
     void findBestCenterFq(void);
+    void rtlReadyStateChanged(void);
     
-};  /* class WbRxRtlTcp */
+};  /* class WbRxRtlSdr */
 
 
 //} /* namespace */
 
-#endif /* WBRX_RTL_TCP_INCLUDED */
+#endif /* WBRX_RTL_SDR_INCLUDED */
 
 
 

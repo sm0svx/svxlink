@@ -208,6 +208,12 @@ class Rx : public sigc::trackable, public Async::AudioSource
     virtual void reset(void) = 0;
     
     /**
+     * @brief   Find out if the receiver is ready for operation
+     * @returns Returns \em true if the receiver is ready for operation
+     */
+    virtual bool isReady(void) const { return true; }
+
+    /**
      * @brief 	A signal that indicates if the squelch is open or not
      * @param 	is_open \em True if the squelch is open or \em false if not
      */
@@ -254,6 +260,11 @@ class Rx : public sigc::trackable, public Async::AudioSource
     sigc::signal<void, const std::string&,
                  const std::string&> publishStateEvent;
     
+    /**
+     * @brief   A signal that is emitted when the ready state changes
+     */
+    sigc::signal<void> readyStateChanged;
+
     
   protected:
     /**

@@ -63,7 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-class WbRxRtlTcp;
+class WbRxRtlSdr;
 
 
 /****************************************************************************
@@ -149,6 +149,12 @@ class Ddr : public LocalRxBase
     void tunerFqChanged(uint32_t fq);
 
     /**
+     * @brief   Find out if the receiver is ready for operation
+     * @returns Returns \em true if the receiver is ready for operation
+     */
+    virtual bool isReady(void) const;
+
+    /**
      * @brief   A signal that is emitted when new I/Q data is available
      * @param   samples The new samples that are available
      *
@@ -207,7 +213,7 @@ class Ddr : public LocalRxBase
 
     Async::Config           &cfg;
     Channel                 *channel;
-    WbRxRtlTcp              *rtl;
+    WbRxRtlSdr              *rtl;
     double                  fq;
     
 };  /* class Ddr */

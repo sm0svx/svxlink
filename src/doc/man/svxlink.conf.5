@@ -1183,11 +1183,11 @@ Example: RAW_AUDIO_UDP_DEST=127.0.0.1:10000
 .SS Ddr Receiver Section
 .
 A special kind of local receiver is the Digital Drop Receiver (DDR). It will
-use the rtl_tcp utility to interface to a RTL2832U based DVB-T USB dongle and
-use that as a wideband receiver. These USB dongles can be bought cheeply from
-an Internet shop (~$10). The radio performance may not be great but better than
-one might think. Usage as a cheap local coverage receiver or as a link receiver
-may work very well.
+use either the rtl_tcp utility or a direct USB connection to interface to a
+RTL2832U based DVB-T USB dongle and use that as a wideband receiver. These USB
+dongles can be bought cheeply from an Internet shop (~$10). The radio
+performance may not be great but better than one might think. Usage as a cheap
+local coverage receiver or as a link receiver may work very well.
 
 One big advantage of using a wideband receiver is that it is possible to
 monitor more than one narrow band channel at a time. The only limit is the CPU
@@ -1195,7 +1195,9 @@ power and the bandwidth of the wideband tuner. You probably need a Pentium4 or
 better to fulfill the CPU demands.
 
 Getting the DVB-T dongle running is out of scope for this document but what
-you need to do is to find out the frequency error on your specific dongle.
+you absolutely need to do is to find out the frequency error on your specific
+dongle. When you have figured out what the frequency error is, set up the
+FQ_CORR configuration variable in the wideband receiver configuration section.
 
 The rtl_tcp utility is in a package named similar to something like rtl-sdr.
 When you have the rtl-sdr stuff installed, just start rtl_tcp. No command line
@@ -1226,8 +1228,26 @@ A wideband receiver section is used to configure access to a wideband receiver
 which can be used by a Digital Drop Receiver (DDR), described above, to handle
 multiple narrowband channels using the same hardware. The only hardware
 supported at the moment is RTL2832U based DVB-T USB dongles. SvxLink access the
-dongle through the rtl_tcp utility which make the dongle available on a TCP
-network port. The following configuration variables are available:
+dongle directly via USB or through the rtl_tcp utility, which make the dongle
+available on a TCP network port. The following configuration variables are
+available:
+.TP
+.B TYPE
+The type of wideband receiver used. The only supported values right now are
+"RtlTcp" and "RtlUsb".
+.TP
+.B DEV_MATCH
+When using RtlUsb, this configuration variable is used to select the dongle to
+use if there are multiple dongles connected to the computer. When looking for
+dongles, SvxLink will try to match the string given in this configuration
+variable in different ways. First, if it's a digit, a match against the device
+index is tried. The device index is just a number, zero and up, that is given
+to a dongle when it's inserted.
+
+If the device index does not match, a match against the beginning, end or the
+whole serial number will be tried.
+
+Default: 0 (first device found)
 .TP
 .B HOST
 The name of the host that the rtl_tcp utility is running on (Default:
@@ -1243,8 +1263,7 @@ The sample rate used by the dongle. Legal values are 960000 and 2400000
 .B FQ_CORR
 This is probably the most important configuration variable. Most dongles are
 far off in frequency so they need to be calibrated. How to do this is out of
-scope for this document but some later versions of the rtl_fm utility may be
-able to do it using the "-c" command line switch.
+scope for this document.
 
 The end result should be a correction value for how far off the dongle is in
 frequency counted in parts per million (PPM). That is, how many Hz per MHz is

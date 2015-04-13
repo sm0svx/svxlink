@@ -73,17 +73,15 @@ else (POPT_LIBRARIES AND POPT_INCLUDE_DIRS)
      set(POPT_FOUND TRUE)
   endif (POPT_INCLUDE_DIRS AND POPT_LIBRARIES)
 
-  if (POPT_FOUND)
-    if (NOT Popt_FIND_QUIETLY)
-      message(STATUS "Found Popt: ${POPT_LIBRARIES}")
-    endif (NOT Popt_FIND_QUIETLY)
-  else (POPT_FOUND)
-    if (Popt_FIND_REQUIRED)
-      message(FATAL_ERROR "Could not find Popt")
-    endif (Popt_FIND_REQUIRED)
-  endif (POPT_FOUND)
+  include(FindPackageHandleStandardArgs)
+  find_package_handle_standard_args(Popt
+    DEFAULT_MSG
+    POPT_LIBRARIES 
+    POPT_INCLUDE_DIRS
+  )
 
-  # show the POPT_INCLUDE_DIR and POPT_LIBRARY variables only in the advanced view
+  # Show the POPT_INCLUDE_DIR and POPT_LIBRARY variables only in the
+  # advanced view
   mark_as_advanced(POPT_INCLUDE_DIR POPT_LIBRARY)
 
 endif (POPT_LIBRARIES AND POPT_INCLUDE_DIRS)

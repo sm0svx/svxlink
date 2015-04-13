@@ -550,6 +550,14 @@ int main(int argc, char **argv)
     cerr << "*** ERROR: No trxs successfully initialized. Bailing out...\n";
   }
 
+  for (vector<TrxHandler*>::iterator it = trx_handlers.begin();
+       it != trx_handlers.end();
+       ++it)
+  {
+    delete *it;
+  }
+  trx_handlers.clear();
+
   logfile_flush();
   
   if (stdin_watch != 0)

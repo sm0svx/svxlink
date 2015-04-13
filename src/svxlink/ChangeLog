@@ -61,6 +61,11 @@
 
 * Now printing out when 1750Hz tone burst muting is active.
 
+* Added support for the r828D rtl-sdr tuner.
+
+* Now possible to use an RTL2832u DVB-T dongle directly via USB instead of
+  using rtl_tcp.
+
 
 
  1.4.0 -- 02 aug 2014

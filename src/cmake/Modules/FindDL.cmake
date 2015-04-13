@@ -1,55 +1,54 @@
 # - Check for the presence of DL
 #
 # The following variables are set when DL is found:
-#  HAVE_DL       = Set to true, if all components of DL
-#                          have been found.
-#  DL_INCLUDES   = Include path for the header files of DL
-#  DL_LIBRARIES  = Link these to use DL
+#  DL_FOUND        = Set to true, if all components of DL
+#                    have been found.
+#  DL_INCLUDE_DIRS = Include path for the header files of DL
+#  DL_LIBRARIES    = Link these to use DL
 
-## -----------------------------------------------------------------------------
-## Check for the header files
+if (DL_LIBRARIES AND DL_INCLUDE_DIRS)
+  # in cache already
+  set(DL_FOUND TRUE)
+else (DL_LIBRARIES AND DL_INCLUDE_DIRS)
+  ## -------------------------------------------------------------------------
+  ## Check for the header files
 
-find_path (DL_INCLUDES dlfcn.h
-  PATHS /usr/local/include /usr/include ${CMAKE_EXTRA_INCLUDES}
-  )
+  find_path (DL_INCLUDE_DIR
+    NAMES dlfcn.h
+    PATHS /usr/local/include /usr/include ${CMAKE_EXTRA_INCLUDES}
+    )
 
-## -----------------------------------------------------------------------------
-## Check for the library
+  ## -------------------------------------------------------------------------
+  ## Check for the library
 
-find_library (DL_LIBRARIES dl
-  PATHS /usr/local/lib /usr/lib /lib ${CMAKE_EXTRA_LIBRARIES}
-  )
+  find_library (DL_LIBRARY
+    NAMES dl
+    PATHS /usr/local/lib /usr/lib /lib ${CMAKE_EXTRA_LIBRARIES}
+    )
 
-## -----------------------------------------------------------------------------
-## Actions taken when all components have been found
+  ## -------------------------------------------------------------------------
+  ## Actions taken when all components have been found
 
-if (DL_INCLUDES AND DL_LIBRARIES)
-  set (HAVE_DL TRUE)
-else (DL_INCLUDES AND DL_LIBRARIES)
-  if (NOT DL_FIND_QUIETLY)
-    if (NOT DL_INCLUDES)
-      message (STATUS "Unable to find DL header files!")
-    endif (NOT DL_INCLUDES)
-    if (NOT DL_LIBRARIES)
-      message (STATUS "Unable to find DL library files!")
-    endif (NOT DL_LIBRARIES)
-  endif (NOT DL_FIND_QUIETLY)
-endif (DL_INCLUDES AND DL_LIBRARIES)
+  if (DL_LIBRARY)
+    set(DL_FOUND TRUE)
+  endif (DL_LIBRARY)
 
-if (HAVE_DL)
-  if (NOT DL_FIND_QUIETLY)
-    message (STATUS "Found components for DL")
-    message (STATUS "DL_INCLUDES = ${DL_INCLUDES}")
-    message (STATUS "DL_LIBRARIES     = ${DL_LIBRARIES}")
-  endif (NOT DL_FIND_QUIETLY)
-else (HAVE_DL)
-  if (DL_FIND_REQUIRED)
-    message (FATAL_ERROR "Could not find DL!")
-  endif (DL_FIND_REQUIRED)
-endif (HAVE_DL)
+  set(DL_INCLUDE_DIRS ${DL_INCLUDE_DIR})
 
-mark_as_advanced (
-  HAVE_DL
-  DL_LIBRARIES
-  DL_INCLUDES
-  )
+  if (DL_FOUND)
+    set(DL_LIBRARIES ${DL_LIBRARIES} ${DL_LIBRARY})
+  endif (DL_FOUND)
+
+  include(FindPackageHandleStandardArgs)
+  find_package_handle_standard_args(DL
+    DEFAULT_MSG
+    DL_LIBRARIES 
+    DL_INCLUDE_DIRS
+    )
+
+  mark_as_advanced (
+    HAVE_DL
+    DL_LIBRARIES
+    DL_INCLUDES
+    )
+endif (DL_LIBRARIES AND DL_INCLUDE_DIRS)
