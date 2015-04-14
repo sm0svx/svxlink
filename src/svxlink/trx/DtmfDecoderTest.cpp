@@ -190,11 +190,11 @@ int main()
   AudioSource *prev_src = 0;
 #define SIMULATE
 #ifdef SIMULATE
-  DtmfEncoder *enc = new DtmfEncoder;
-  enc->setDigitDuration(40);
-  enc->setDigitSpacing(40);
-  enc->setDigitPower(-10);
-  prev_src = enc;
+  DtmfEncoder enc;
+  enc.setDigitDuration(40);
+  enc.setDigitSpacing(40);
+  enc.setDigitPower(-10);
+  prev_src = &enc;
 
   //float noise_pwr = 0;
   //float noise_pwr = -10;
@@ -205,12 +205,12 @@ int main()
   noise_pwr += 10.0f * log10f(0.5f / 0.30f); // 300-5000Hz filter
   //noise_pwr += 10.0f * log10f(0.5f / 0.18f); // 480-3400Hz filter
   AudioNoiseAdder *noise_adder = new AudioNoiseAdder(noise_pwr);
-  prev_src->registerSink(noise_adder);
+  prev_src->registerSink(noise_adder, true);
   prev_src = noise_adder;
 
   AudioFilter *voiceband_filter = new AudioFilter("BpCh10/-0.1/300-5000");
   //AudioFilter *voiceband_filter = new AudioFilter("BpCh10/-0.1/480-3400");
-  prev_src->registerSink(voiceband_filter);
+  prev_src->registerSink(voiceband_filter, true);
   prev_src = voiceband_filter;
 
   /*
@@ -219,12 +219,12 @@ int main()
   prev_src = &pp;
   */
 #else
-  FileReader *rdr = new FileReader;
-  prev_src = rdr;
+  FileReader rdr;
+  prev_src = &rdr;
 #endif
 
   fwriter = new FileWriter("/tmp/samples.raw");
-  prev_src->registerSink(fwriter);
+  prev_src->registerSink(fwriter, true);
   prev_src = fwriter;
 
   DtmfDecoder *dec = DtmfDecoder::create(cfg, "Test");
@@ -234,26 +234,26 @@ int main()
     exit(1);
   }
   dec->digitDeactivated.connect(sigc::ptr_fun(digit_detected));
-  prev_src->registerSink(dec);
+  prev_src->registerSink(dec, true);
   prev_src = 0;
 
 #ifdef SIMULATE
-  int tone_amp = enc->digitPower();
-  enc->setDigitPower(-100);
-  enc->send("0");
-  enc->setDigitPower(tone_amp);
+  int tone_amp = enc.digitPower();
+  enc.setDigitPower(-100);
+  enc.send("0");
+  enc.setDigitPower(tone_amp);
   string digits;
   for (int i=0; i<50; ++i)
   {
     digits += send_digits;
   }
-  enc->send(digits);
-  enc->setDigitPower(-100);
-  enc->send("0");
+  enc.send(digits);
+  enc.setDigitPower(-100);
+  enc.send("0");
 #else
-  if (!rdr->open("/tmp/output.raw"))
-  //if (!rdr->open("/tmp/selected.raw"))
-  //if (!rdr->open("/tmp/false11.raw"))
+  if (!rdr.open("/tmp/output.raw"))
+  //if (!rdr.open("/tmp/selected.raw"))
+  //if (!rdr.open("/tmp/false11.raw"))
   {
     exit(1);
   }

@@ -116,7 +116,7 @@ using namespace Async;
  ****************************************************************************/
 
 AudioNoiseAdder::AudioNoiseAdder(float level_db)
-  : sigma(sqrt(powf(10.0f, level_db / 10.0f) / 2.0f))
+  : sigma(sqrt(powf(10.0f, level_db / 10.0f) / 2.0f)), generate(false)
 {
 } /* AudioNoiseAdder::AudioNoiseAdder */
 
