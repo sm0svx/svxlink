@@ -692,8 +692,9 @@ void Logic::recordStart(const string& filename, unsigned max_time)
   recorder = new AudioRecorder(filename);
   if (!recorder->initialize())
   {
-    cerr << "*** ERROR: Could not open file for recording in logic "
-         << name() << ": " << filename << endl;
+    cerr << "*** ERROR: Could not open file " << filename
+         << " for recording in logic " << name() << ": "
+         << recorder->errorMsg() << endl;
     recordStop();
     return;
   }
@@ -706,7 +707,7 @@ void Logic::recordStop(void)
 {
   rx_splitter->removeSink(recorder);
   recorder = 0;
-} /* Logic::recordStart */
+} /* Logic::recordStop */
 
 
 bool Logic::activateModule(Module *module)
