@@ -636,6 +636,7 @@ int AudioEncoderOpus::writeSamples(const float *samples, int count)
     
     if (buf_len == frame_size)
     {
+      buf_len = 0;
       unsigned char output_buf[4000];
       opus_int32 nbytes = opus_encode_float(enc, sample_buf, frame_size,
                                             output_buf, sizeof(output_buf));
@@ -649,7 +650,6 @@ int AudioEncoderOpus::writeSamples(const float *samples, int count)
         cerr << "**** ERROR: Opus encoder error: " << opus_strerror(frame_size)
              << endl;
       }
-      buf_len = 0;
     }
   }
   
