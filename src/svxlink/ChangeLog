@@ -61,11 +61,6 @@
 
 * Now printing out when 1750Hz tone burst muting is active.
 
-* Added support for the r828D rtl-sdr tuner.
-
-* Now possible to use an RTL2832u DVB-T dongle directly via USB instead of
-  using rtl_tcp.
-
 * Bugfix in the QSO recorder: If a write error occurred, the audio pipe could
   get stuck leading to audio to stop flowing in other parts of SvxLink.
 
