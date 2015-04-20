@@ -335,14 +335,14 @@ int AudioEncoderSpeex::writeSamples(const float *samples, int count)
       
       if (++frame_cnt == frames_per_packet)
       {
+        frame_cnt = 0;
       	speex_bits_insert_terminator(&bits);
         int nbytes = speex_bits_nbytes(&bits);
         char output_buf[nbytes];
         nbytes = speex_bits_write(&bits, output_buf, nbytes);
+        speex_bits_reset(&bits);
         //cout << "writing " << nbytes << " bytes\n";
         writeEncodedSamples(output_buf, nbytes);
-        speex_bits_reset(&bits);
-        frame_cnt = 0;
       }
     }
   }

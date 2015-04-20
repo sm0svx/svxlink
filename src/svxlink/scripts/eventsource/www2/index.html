@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=UTF-8">
+<style type="text/css">
+div.head {
+    font-size: 1.5em;
+    font-family: sans-serif;
+    font-weight: bold;
+    width: 644px;
+}
+
+img {
+    border: 0px;
+    vertical-align: bottom;
+}
+
+table {
+    border-collapse: collapse;
+    empty-cells: show;
+}
+
+td, th {
+    font-family: sans-serif;
+    border: 1px solid black;
+    padding: 3px;
+    background-color: #e0e0e0;
+}
+
+td.rx {
+    width: 100px;
+    text-align: left;
+}
+
+td.sql {
+    width: 50px;
+    text-align: center;
+}
+
+td.lvl {
+    width: 60px;
+    padding-right: 8px;
+    text-align: right;
+}
+
+td.bar {
+    width: 402px;
+}
+
+td.bar div {
+    width: 0px;
+    height: 10px;
+    border: 1px solid black;
+    background-color: #808080;
+}
+</style>
+<script language="JavaScript" type="text/JavaScript" src="/javascript/jquery/jquery.js"></script>
+<script language="JavaScript" type="text/JavaScript">
+if (typeof EventSource !== 'function') {        // Attempt to fix IE
+    $.ajaxSetup({ cache: true });
+    $.getScript("EventSource.js",function(data,textStatus,jqxhr) {
+        setTimeout(getlist,500);
+    });
+} else {
+    getlist();
+}
+
+function getlist() {
+    $.getJSON('/repeaters.json',repeaterlist);
+}
+
+function repeaterlist(list) {
+    var body = '';
+    for (index = 0; index < list.repeaterlist.length; ++index) {
+        var call = list.repeaterlist[index];
+        body = body + '<p><div class="head">Signal levels at '+call+
+                      '<span id="'+call+'freq"></span>'+
+                      '<span style="float:right;">'+
+                      '<span id="'+call+'tx"><img src="/icons/ball.red.png"></span>'+
+                      '<span id="'+call+'stream"></span>'+
+                      '</span></div><p><table>'+
+                      '<tr><th>Receiver</th><th>Sql</th><th>Signal</th>'+
+                      '<th>Bargraph</th>'+
+                      '<tr id="'+call+'sigtab"></tr></table><p><br>';
+
+        $.getJSON(list.info[call].uri,repeaterinfo);
+    }
+
+    $('#body').replaceWith(body);
+};
+
+function repeaterinfo(info) {
+    var call = info.callsign;
+    var tab = '';
+    for (index = 0; index < info.rxlist.length; ++index) {
+        var rx = info.rxlist[index];
+        switch (info.rx[rx].type)
+        {
+        case 'radio':
+            tab = tab + '<tr id="'+call+rx+'">'+
+                        '<td class="rx">'+info.rx[rx].name+'</td>'+
+                        '<td class="sql"></td><td class="lvl"></td>'+
+                        '<td class="bar"><div></div></td></tr>';
+            break;
+
+        case 'virtual':
+            tab = tab + '<tr id="'+call+rx+'">'+
+                        '<td class="rx">'+info.rx[rx].name+'</td>'+
+                        '<td class="sql"></td><td></td>'+
+                        '<td></td></tr>';
+            break;
+        }
+    }
+
+    $('#'+call+'sigtab').replaceWith(tab);
+
+    var freq = info.output_freq / 1000000.0;
+    var offs = (info.input_freq - info.output_freq) / 1000000.0;
+
+    if (offs >= 0) {
+        offs = '+'+offs;
+    }
+
+    $('#'+call+'freq').replaceWith(' ('+freq.toFixed(3)+' MHz '+offs+')');
+
+    var stream = info.uri.audiostream;
+    if (stream) {
+        $('#'+call+'stream').html('<a href="'+stream+'" target="_blank">'+
+            '<img src="/icons/sound1.png"></a>');
+    }
+
+    new EventSource(info.uri.signalEventStream).onmessage = function(e) {
+        var message = JSON.parse(e.data);
+
+        if (message.event == 'Logic:transmit') {
+            var tx = '';
+            if (message.tx == 1) { tx = '<img src="/icons/ball.red.png">'; };
+            $('#'+call+'tx').html(tx);
+        }
+
+        if (message.event == 'Voter:sql_state') {
+            for (index = 0; index < info.rxlist.length; ++index) {
+                var rx = info.rxlist[index];
+                var tri = 'tr#'+call+rx+' ';
+
+                if (typeof message.rx[rx] == 'undefined') {
+                    $(tri+'td.sql').text('undef');
+                    $(tri+'td.lvl').text('');
+                    $(tri+'td.bar div').width('0px');
+                } else {
+                    var sql = message.rx[rx].sql;
+                    var lvl = message.rx[rx].lvl;
+                    $(tri+'td.sql').text(sql);
+                    $(tri+'td.lvl').text(lvl);
+                    if (lvl < 0) { lvl = 0; }
+                    if (lvl > 100) { lvl = 100; };
+                    $(tri+'td.bar div').width(4*lvl+'px');
+                    var color = '#808080';
+                    if (sql == 'open') { color = 'yellow' };
+                    if (sql == 'active') { color = 'red' };
+                    $(tri+'td.bar div').css('background-color',color);
+                }
+            }
+        }
+    };
+};
+</script>
+</head>
+<body>
+<p id="body">This page requires a modern browser, and JavaScript has to be
+enabled.  It does not work well when using Internet Explorer.</p>
+</body>

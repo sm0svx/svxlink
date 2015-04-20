@@ -694,6 +694,7 @@ namespace {
           // Adjust the gain so that the maximum deviation corresponds
           // to a peak audio amplitude of 1.0.
         double adj = samp_rate / (2.0 * M_PI * max_dev);
+        adj /= 2.0; // Default to 6dB headroom
         double adj_db = 20.0 * log10(adj);
         audio_dec.adjustGain(adj_db);
       }

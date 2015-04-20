@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE9">
+<meta http-equiv="Content-type" content="text/html; charset=UTF-8">
+<style type="text/css">
+div.head {
+    font-size: 1.5em;
+    font-family: sans-serif;
+    font-weight: bold;
+    width: 644px;
+}
+
+img {
+    border: 0px;
+    vertical-align: bottom;
+}
+
+table {
+    border-collapse: collapse;
+    empty-cells: show;
+}
+
+td, th {
+    font-family: sans-serif;
+    border: 1px solid black;
+    padding: 3px;
+    background-color: #e0e0e0;
+}
+
+td.rx {
+    width: 100px;
+    text-align: left;
+}
+
+td.sql {
+    width: 50px;
+    text-align: center;
+}
+
+td.lvl {
+    width: 60px;
+    padding-right: 8px;
+    text-align: right;
+}
+
+td.bar {
+    width: 402px;
+}
+
+td.bar div {
+    width: 0px;
+    height: 10px;
+    border: 1px solid black;
+    background-color: #808080;
+}
+</style>
+<!--[if IE]><script language="JavaScript" type="text/JavaScript" src="EventSource.js"></script><![endif]-->
+<script language="JavaScript" type="text/JavaScript" src="/javascript/jquery/jquery.js"></script>
+<script language="JavaScript" type="text/JavaScript">
+$.getJSON("/repeater-info.json", function( info ) {
+    var tab = "";
+    for (index = 0; index < info.rxlist.length; ++index) {
+        var rx = info.rxlist[index];
+        switch (info.rx[rx].type)
+        {
+        case "radio":
+            tab = tab + '<tr id="'+rx+'">'+
+                        '<td class="rx">'+info.rx[rx].name+'</td>'+
+                        '<td class="sql"></td><td class="lvl"></td>'+
+                        '<td class="bar"><div></div></td></tr>\r\n';
+            break;
+
+        case "virtual":
+            tab = tab + '<tr id="'+rx+'">'+
+                        '<td class="rx">'+info.rx[rx].name+'</td>'+
+                        '<td class="sql"></td><td></td><td></td></tr>\r\n';
+            break;
+        }
+    }
+
+    $("#sigtab").replaceWith(tab);
+    $("#callsign").replaceWith(info.callsign);
+
+    var freq = info.output_freq / 1000000.0;
+    var offs = (info.input_freq - info.output_freq) / 1000000.0;
+
+    if (offs >= 0) {
+        offs = '+'+offs;
+    }
+
+    $('#freq').replaceWith(' ('+freq.toFixed(3)+' MHz '+offs+')');
+
+    var stream = info.uri.audiostream;
+    if (stream) {
+        $('#stream').html('<a href="'+stream+'" target="_blank">'+
+            '<img src="/icons/sound1.png"></a>');
+    }
+
+    var jsonStream = new EventSource(info.uri.signalEventStream);
+    jsonStream.onmessage = function (e) {
+        var message = JSON.parse(e.data);
+
+        if (message.event == 'Logic:transmit') {
+            var tx = '';
+            if (message.tx == 1) { tx = '<img src="/icons/ball.red.png">'; };
+            $('#tx').html(tx);
+        }
+
+        if (message.event == 'Voter:sql_state') {
+            for (index = 0; index < info.rxlist.length; ++index) {
+                var rx = info.rxlist[index];
+                var tri = 'tr#'+rx+' ';
+
+                if (typeof message.rx[rx] == 'undefined') {
+                    $(tri+'td.sql').text('undef');
+                    $(tri+'td.lvl').text('');
+                    $(tri+'td.bar div').width('0px');
+                } else {
+                    var sql = message.rx[rx].sql;
+                    var lvl = message.rx[rx].lvl;
+                    $(tri+'td.sql').text(sql);
+                    $(tri+'td.lvl').text(lvl);
+                    if (lvl < 0) { lvl = 0; }
+                    if (lvl > 100) { lvl = 100; };
+                    $(tri+'td.bar div').width(4*lvl+'px');
+                    var color = '#808080';
+                    if (sql == 'open') { color = 'yellow' };
+                    if (sql == 'active') { color = 'red' };
+                    $(tri+'td.bar div').css('background-color',color);
+                }
+            }
+        }
+    };
+});
+</script>
+</head>
+<body>
+<p><div class="head">Signal values at <span id="callsign">repeater</span>
+<span id="freq"></span><span style="float:right;"><span id="tx"><img src="/icons/ball.red.png"></span><span id="stream"></span></span></div>
+<p>
+<table>
+<tr><th>Receiver</th><th>Sql</th><th>Signal</th><th>Bargraph</th></tr>
+<tr id="sigtab"><td colspan="4">This page requires Javascript and a modern browser.</td></tr>
+</table>
+</body>

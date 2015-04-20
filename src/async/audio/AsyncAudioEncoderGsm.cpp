@@ -145,6 +145,8 @@ int AudioEncoderGsm::writeSamples(const float *samples, int count)
     
     if (gsm_buf_len == GSM_BUF_SIZE)
     {
+      gsm_buf_len = 0;
+
       gsm_frame frame[FRAME_COUNT];
       for (int frameno=0; frameno<FRAME_COUNT; ++frameno)
       {
@@ -152,8 +154,6 @@ int AudioEncoderGsm::writeSamples(const float *samples, int count)
       }
       
       writeEncodedSamples(frame, FRAME_COUNT * sizeof(gsm_frame));
-      
-      gsm_buf_len = 0;
     }
   }
   

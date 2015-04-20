@@ -285,11 +285,13 @@ void QsoRecorder::openFile(void)
     recorder->setMaxRecordingTime(hard_chunk_limit, soft_chunk_limit);
     recorder->maxRecordingTimeReached.connect(
         mem_fun(*this, &QsoRecorder::openNewFile));
+    recorder->errorOccurred.connect(mem_fun(*this, &QsoRecorder::onError));
     selector->registerSink(recorder, true);
     if (!recorder->initialize())
     {
-      cerr << "*** QsoRecorder ERROR: Could not open file for recording: "
-        << filename << endl;
+      cerr << "*** ERROR: Could not open QsoRecorder file \"" << filename 
+           << " for writing in logic " << logic->name() << ": "
+           << recorder->errorMsg() << endl;
     }
   }
 } /* QsoRecorder::openFile */
@@ -299,9 +301,15 @@ void QsoRecorder::closeFile(void)
 {
   if (recorder != 0)
   {
-    recorder->closeFile();
-
     string oldpath(rec_dir + "/.qsorec_" + logic->name() + ".wav");
+
+    if (!recorder->closeFile())
+    {
+      cerr << "*** ERROR: Failed to close QsoRecorder file \"" << oldpath
+           << "\" in logic " << logic->name() << ": " << recorder->errorMsg()
+           << endl;
+    }
+
     if (recorder->samplesWritten() > min_samples)
     {
       string basename("qsorec_" + logic->name() + "_");
@@ -472,6 +480,13 @@ void QsoRecorder::encoderExited(QsoRecorder::FileEncoder *enc)
   }
   delete enc;
 } /* QsoRecorder::encoderExited */
+
+
+void QsoRecorder::onError(void)
+{
+  cerr << "*** ERROR: The QsoRecorder in logic " << logic->name() 
+       << " failed: " << recorder->errorMsg() << endl;
+} /* QsoRecorder::onError */
 
 
 

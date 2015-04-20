@@ -1,0 +1,64 @@
+The eventsource server reads a state PTY configured in SvxLink and
+converts the events to JSON and XML form to be easily used in web
+applications.   It has to be started as a daemon running under the
+same user ID as the svxlink service itself.  An example script to
+start it (for Debian) is provided.
+
+In /etc/svxlink/svxlink.conf, add the following to the RepeaterLogic
+section:
+
+STATE_PTY=/dev/shm/state_pty
+
+Make sure the file /var/log/eventsource exists and is writable for
+the user running SvxLink.
+Also make sure the /var/spool/svxlink/state_info directory exists
+and is writable for that user.
+
+Alternatively, the paths for the above items can be modified in
+eventsource.pl when it is installed.
+
+The script uses the following Perl packages:
+
+IO::Select
+IO::Socket
+Fcntl
+Socket
+JSON::PP
+XML::Simple
+
+You might have to install some of them, e.g. on Debian using:
+
+apt-get install libxml-simple-perl
+
+(others are in perl-base and perl-modules which you probably already have)
+
+Also provided (in the www directory) is a sample webpage that displays
+the voter information for the repeater.  It uses jQuery, which can be
+installed on Debian using:
+
+apt-get install libjs-jquery
+
+But of course you can change the URL to load the jQuery from somewhere
+else, e.g. the Google server.
+
+The page uses a .json file that contains the detailed description of
+your repeater.  It can be used by this (and other) webpages that display
+repeater location info etc.  You need to modify the script to reflect
+your locations, receivers, transmitters etc.
+
+A second example (www2) can display the information from multiple repeaters.
+It uses another .json file with a list of the repeaters, pointing to
+the repeater info for each repeater.
+
+To get the "transmit" indication in those examples, add an event to the
+transmit TCL event function (after copying it to a local directory), i.e.
+in file /usr/share/svxlink/events.d/local/Logic.tcl put:
+
+  publishStateEvent Logic:transmit "tx=$is_on"
+
+in proc transmit.
+
+When you want to see an example before going through installing all this,
+check: http://pe1chl.nl.eu.org/repeaters/
+
+Rob PE1CHL
