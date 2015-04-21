@@ -554,8 +554,6 @@ int main(int argc, const char *argv[])
     cfg.setValue(cfgsect, "SQL_DET", "OPEN");
     cout << "Setting DTMF_MUTING=0\n";
     cfg.setValue(cfgsect, "DTMF_MUTING", "0");
-    cout << "Setting PEAK_METER=0\n";
-    cfg.setValue(cfgsect, "PEAK_METER", "0");
 
     rx = RxFactory::createNamedRx(cfg, cfgsect);
     if ((rx == 0) || !rx->initialize())
