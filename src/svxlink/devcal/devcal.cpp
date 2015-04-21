@@ -550,8 +550,12 @@ int main(int argc, const char *argv[])
     cfg.getValue(cfgsect, "PREAMP", level_adjust_offset);
     cout << "PREAMP=" << level_adjust_offset << endl;
 
+    cout << "Setting SQL_DET=OPEN\n";
     cfg.setValue(cfgsect, "SQL_DET", "OPEN");
+    cout << "Setting DTMF_MUTING=0\n";
     cfg.setValue(cfgsect, "DTMF_MUTING", "0");
+    cout << "Setting PEAK_METER=0\n";
+    cfg.setValue(cfgsect, "PEAK_METER", "0");
 
     rx = RxFactory::createNamedRx(cfg, cfgsect);
     if ((rx == 0) || !rx->initialize())
@@ -795,7 +799,7 @@ static void stdin_handler(FdWatch *w)
         cout << "PREAMP="
              << (dp->levelAdjust() + level_adjust_offset);
       }
-      cout << "                       \n";
+      cout << "                                           \n";
       break;
     }
     
@@ -815,7 +819,7 @@ static void stdin_handler(FdWatch *w)
         cout << "PREAMP="
              << (dp->levelAdjust() + level_adjust_offset);
       }
-      cout << "                       \n";
+      cout << "                                           \n";
       break;
     }
 
@@ -833,7 +837,7 @@ static void stdin_handler(FdWatch *w)
         cout << "PREAMP="
              << (dp->levelAdjust() + level_adjust_offset);
       }
-      cout << "                       \n";
+      cout << "                                           \n";
       break;
     }
 
