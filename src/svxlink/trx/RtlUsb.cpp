@@ -191,6 +191,9 @@ void RtlUsb::handleSetCenterFq(uint32_t fq)
 
 void RtlUsb::handleSetSampleRate(uint32_t rate)
 {
+  delete [] buf;
+  buf = new char[2 * blockSize()];
+
   if (dev == NULL)
   {
     return;
@@ -367,7 +370,10 @@ void RtlUsb::rtlSamplesReceived(void)
 {
   size_t read_len = 2 * blockSize() - buf_pos;
   ssize_t len = read(sample_pipe[0], buf + buf_pos, read_len);
-  //cout << "### RtlUsb::rtlSamplesReceived: len=" << len << "\n";
+  /*
+  cout << "### read_len=" << read_len << " buf_pos=" << buf_pos
+       << " len=" << len << endl;
+  */
   if (len < 0)
   {
     cerr << "*** WARNING: Failed to read from RTL sample pipe\n";
@@ -381,11 +387,11 @@ void RtlUsb::rtlSamplesReceived(void)
 
   if (buf_pos >= 2 * blockSize())
   {
+    buf_pos = 0;
     complex<uint8_t> *samples = reinterpret_cast<complex<uint8_t>*>(buf);
     handleIq(samples, blockSize());
-    buf_pos = 0;
   }
-} /* RtlUsb::dataReceived */
+} /* RtlUsb::rtlSamplesReceived */
 
 
 void RtlUsb::initializeDongle(void)
