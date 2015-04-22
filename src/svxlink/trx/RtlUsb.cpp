@@ -41,6 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <unistd.h>
 #include <stdio.h>
+#include <errno.h>
 
 
 /****************************************************************************
@@ -463,14 +464,11 @@ void RtlUsb::initializeDongle(void)
     return;
   }
 
-  pthread_attr_t attr;
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-  r = pthread_create(&rtl_reader_thread, &attr, rtlReader, this);
-  pthread_attr_destroy(&attr);
+  r = pthread_create(&rtl_reader_thread, NULL, rtlReader, this);
   if (r != 0)
   {
-    cerr << "*** ERROR: Failed to create RTL reader thread\n";
+    cerr << "*** ERROR: Failed to create RTL reader thread: "
+         << strerror(r) << "\n";
     verboseClose();
     return;
   }
@@ -536,8 +534,8 @@ void RtlUsb::verboseClose(void)
   r = pthread_join(rtl_reader_thread, NULL);
   if (r != 0)
   {
-    cerr << "*** WARNING: Failed to join the RTL reader thread\n";
-    perror("pthread_join");
+    cerr << "*** WARNING: Failed to join the RTL reader thread: "
+         << strerror(r) << "\n";
   }
 
   delete sample_pipe_watch;
@@ -549,7 +547,7 @@ void RtlUsb::verboseClose(void)
     if (r != 0)
     {
       cerr << "*** WARNING: Failed to close read end of RTL "
-           << "sample reader pipe\n";
+           << "sample reader pipe: " << strerror(errno) << "\n";
     }
   }
   if (sample_pipe[1] >= 0)
@@ -558,14 +556,14 @@ void RtlUsb::verboseClose(void)
     if (r != 0)
     {
       cerr << "*** WARNING: Failed to close write end of RTL "
-           << "sample reader pipe\n";
+           << "sample reader pipe: " << strerror(errno) << "\n";
     }
   }
 
   r = rtlsdr_close(dev);
   if (r < 0)
   {
-    cerr << "*** WARNING: Failed to close device.\n";
+    cerr << "*** WARNING: Failed to close RTL device.\n";
   }
   dev = NULL;
 
