@@ -213,7 +213,8 @@ AudioDeviceAlsa::AudioDeviceAlsa(const std::string& dev_name)
 
 AudioDeviceAlsa::~AudioDeviceAlsa(void)
 {
-  
+  closeDevice();
+  snd_config_update_free_global();
 } /* AudioDeviceAlsa::~AudioDeviceAlsa */
 
 
