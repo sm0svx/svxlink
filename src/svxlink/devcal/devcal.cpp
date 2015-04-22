@@ -277,7 +277,8 @@ class DevPrinter : public AudioSink
       : block_size(samp_rate / 20), w(block_size),
         g(mod_fqs.size()), samp_cnt(0), max_dev(max_dev),
         headroom(pow(10.0, headroom_db/20.0)), adj_level(1.0f), dev_est(0.0),
-        block_cnt(0), pwr_sum(0.0)
+        block_cnt(0), pwr_sum(0.0), amp_sum(0.0), fqerr_est(0.0),
+        carrier_fq(0.0)
     {
       for (size_t i=0; i<mod_fqs.size(); ++i)
       {
@@ -298,12 +299,20 @@ class DevPrinter : public AudioSink
     {
       return 20.0 * log10(adj_level);
     }
+
+    void setCarrierFq(double carrier_fq)
+    {
+      this->carrier_fq = carrier_fq;
+    }
+
+    double carrierFq(void) const { return carrier_fq; }
     
     virtual int writeSamples(const float *samples, int count)
     {
       for (int i=0; i<count; ++i)
       {
         pwr_sum += samples[i] * samples[i];
+        amp_sum += samples[i];
 
         float windowed = w[samp_cnt] * samples[i];
         for (size_t i=0; i<g.size(); ++i)
@@ -328,10 +337,24 @@ class DevPrinter : public AudioSink
           dev *= adj_level;
           dev *= headroom * max_dev;
           dev_est = (1.0-ALPHA) * dev + ALPHA * dev_est;
+
+          double fqerr = amp_sum / block_size;
+          fqerr *= adj_level;
+          fqerr *= headroom * max_dev;
+          amp_sum = 0.0;
+          fqerr_est = (1.0-ALPHA) * fqerr + ALPHA * fqerr_est;
+
           if (++block_cnt >= PRINT_INTERVAL)
           {
             cout << "Deviation: " << dev_est
-                 << " (tot: " << tot_dev_est << ")" << "             \r";
+                 << " (tot: " << tot_dev_est << ") Freq error: "
+                 << fqerr_est;
+            if (carrier_fq > 0.0)
+            {
+              int ppm_err = round(1000000.0 * fqerr / carrier_fq);
+              cout << "(" << ppm_err << "ppm)";
+            }
+            cout << "        \r";
             cout.flush();
             block_cnt = 0;
           }
@@ -365,15 +388,19 @@ class DevPrinter : public AudioSink
     size_t        block_cnt;
     double        pwr_sum;
     double        tot_dev_est;
+    double        amp_sum;
+    double        fqerr_est;
+    double        carrier_fq;
 };
 
 
 class DevMeasure : public sigc::trackable
 {
   public:
-    DevMeasure(const vector<float> &mod_fqs)
+    DevMeasure(const vector<float> &mod_fqs, double carrier_fq=0.0)
       : iold(0.0f), qold(0.0f), dev_print(PREDEMOD_SAMPLE_RATE, mod_fqs)
     {
+      dev_print.setCarrierFq(carrier_fq);
     }
 
     void processPreDemod(const vector<RtlSdr::Sample> &preDemod)
@@ -523,7 +550,9 @@ int main(int argc, const char *argv[])
     cfg.getValue(cfgsect, "PREAMP", level_adjust_offset);
     cout << "PREAMP=" << level_adjust_offset << endl;
 
+    cout << "Setting SQL_DET=OPEN\n";
     cfg.setValue(cfgsect, "SQL_DET", "OPEN");
+    cout << "Setting DTMF_MUTING=0\n";
     cfg.setValue(cfgsect, "DTMF_MUTING", "0");
 
     rx = RxFactory::createNamedRx(cfg, cfgsect);
@@ -556,13 +585,13 @@ int main(int argc, const char *argv[])
     }
     rx->setVerbose(false);
 
-    DevMeasure *dev_measure = new DevMeasure(mod_fqs);
     Ddr *ddr = dynamic_cast<Ddr*>(rx);
     if (ddr == 0)
     {
       cerr << "*** ERROR: An rtl-sdr receiver is needed to measure deviation\n";
       exit(1);
     }
+    DevMeasure *dev_measure = new DevMeasure(mod_fqs, ddr->nbFq());
     ddr->preDemod.connect(mem_fun(dev_measure, &DevMeasure::processPreDemod));
   }
 
@@ -768,7 +797,7 @@ static void stdin_handler(FdWatch *w)
         cout << "PREAMP="
              << (dp->levelAdjust() + level_adjust_offset);
       }
-      cout << "                       \n";
+      cout << "                                           \n";
       break;
     }
     
@@ -788,7 +817,7 @@ static void stdin_handler(FdWatch *w)
         cout << "PREAMP="
              << (dp->levelAdjust() + level_adjust_offset);
       }
-      cout << "                       \n";
+      cout << "                                           \n";
       break;
     }
 
@@ -806,7 +835,7 @@ static void stdin_handler(FdWatch *w)
         cout << "PREAMP="
              << (dp->levelAdjust() + level_adjust_offset);
       }
-      cout << "                       \n";
+      cout << "                                           \n";
       break;
     }
 
