@@ -241,6 +241,7 @@ AudioSplitter::~AudioSplitter(void)
   cleanup_branches_timer = 0;
   delete [] buf;
   removeAllSinks();
+  AudioSource::clearHandler();
   delete main_branch;
   main_branch = 0;
   branches.clear();

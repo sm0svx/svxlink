@@ -455,6 +455,8 @@ bool LocalRxBase::initialize(void)
     return false;
   }
 
+  readyStateChanged.connect(mem_fun(*this, &LocalRxBase::rxReadyStateChanged));
+
   if (cfg.getValue(name(), "SQL_HANGTIME", sql_hangtime))
   {
     squelch_det->setHangtime(sql_hangtime);
@@ -468,7 +470,7 @@ bool LocalRxBase::initialize(void)
 
     // Create a new audio splitter to handle tone detectors
   tone_dets = new AudioSplitter;
-  prev_src->registerSink(tone_dets);
+  prev_src->registerSink(tone_dets, true);
   prev_src = tone_dets;
 
     // Filter out the voice band, removing high- and subaudible frequencies,
@@ -534,7 +536,7 @@ bool LocalRxBase::initialize(void)
     // Create an audio valve to use as squelch and connect it to the splitter
   sql_valve = new AudioValve;
   sql_valve->setOpen(false);
-  prev_src->registerSink(sql_valve);
+  prev_src->registerSink(sql_valve, true);
   prev_src = sql_valve;
 
     // Create the state detector
@@ -828,6 +830,18 @@ void LocalRxBase::setSqlHangtimeFromSiglev(float siglev)
     }
   }
 } /* LocalRxBase::setSqlHangtime */
+
+
+void LocalRxBase::rxReadyStateChanged(void)
+{
+  if (!isReady())
+  {
+    siglevdet->reset();
+    squelch_det->reset();
+    siglevdet->signalLevelUpdated(siglevdet->lastSiglev());
+    squelch_det->squelchOpen(false);
+  }
+} /* LocalRxBase::rxReadyStateChanged */
 
 
 

@@ -74,7 +74,7 @@ endif(Opus_FOUND)
 
 if(USE_ALSA)
   set(LIBSRC ${LIBSRC} AsyncAudioDeviceAlsa.cpp)
-  find_package(ALSA REQUIRED)
+  find_package(ALSA REQUIRED QUIET)
   set(LIBS ${LIBS} ${ALSA_LIBRARIES})
   include_directories(${ALSA_INCLUDE_DIRS})
 endif(USE_ALSA)

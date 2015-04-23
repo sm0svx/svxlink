@@ -1107,11 +1107,47 @@ noise and might cause more false triggers.
 DTMF use two tones to encode digits 0-9, A-F. These two tones should normally
 have the sample amplitude. The difference in amplitude is called twist. Reverse
 twist is when the lower frequency tone is lower in amplitude than the higher
-frequency tone. According to the standards, 4dB reverse twist should be allowed.
-The most common reason for getting reverse twist is a bad de-emphasis filter or
-that none at all is used, like when taking audio directly from the FM
-discriminator. Have a look at the DEEMPHASIS configuration variable before
-starting to modify this configuration variable.
+frequency tone. According to the standards, 4dB reverse twist should be allowed
+but SvxLink will allow 6dB by default.  The most common reason for getting
+reverse twist is a bad de-emphasis filter or that none at all is used, like
+when taking audio directly from the FM discriminator. Have a look at the
+DEEMPHASIS configuration variable before starting to modify this configuration
+variable.
+.TP
+.B DTMF_DEBUG
+Set to 1 to continuously print software DTMF decoder decision parameters. This
+should only be used for a short while to pinpoint problems with the DTMF
+decoding since it will print one row of analysis parameters 100 times per
+second. The following parameters are printed.
+.RS
+.IP \(bu 4
+.BR pwr " - The power in the audio signal. Must be over about -50dB."
+.IP \(bu 4
+.BR q " - Quality. Should be close to 1.00 for a good detection."
+If the signal is strong but the value is low anyway, the signal probably is
+distorted for some reason. The input audio level may be too high for example.
+.IP \(bu 4
+.BR twist " - The amplitude difference between the two tones."
+Should be around 0dB, which means the tones should ideally be of the same
+strength. By default, values between -6dB to +8dB are accepted but the
+thresholds can be set using the DTMF_MAX_FWD_TWIST and DTMF_MAX_REV_TWIST
+configuration variables.
+.IP \(bu 4
+.BR rowq " - Quality of the row (low group) tone. Should be close to one."
+.IP \(bu 4
+.BR colq " - Quality of the column (high group) tone. Should be close to one."
+.IP \(bu 4
+.BR digit " - The digit mapped to the two detected tones."
+.IP \(bu 4
+.BR row3rd " - The row tone relation to its third overtone."
+Should be close to zero. If it's not, the signal is probably distorted.
+.IP \(bu 4
+.BR col3rd " - The column tone relation to its third overtone."
+Should be close to zero. If it's not, the signal is probably distorted.
+.IP \(bu 4
+.BR im " - The relation of the two tones to their intermodulation product."
+Should be close to zero. If it's not, the signal is probably distorted.
+.RE
 .TP
 .B 1750_MUTING
 Mute the audio during a call tone of 1750Hz is received. Note that
@@ -1147,11 +1183,11 @@ Example: RAW_AUDIO_UDP_DEST=127.0.0.1:10000
 .SS Ddr Receiver Section
 .
 A special kind of local receiver is the Digital Drop Receiver (DDR). It will
-use the rtl_tcp utility to interface to a RTL2832U based DVB-T USB dongle and
-use that as a wideband receiver. These USB dongles can be bought cheeply from
-an Internet shop (~$10). The radio performance may not be great but better than
-one might think. Usage as a cheap local coverage receiver or as a link receiver
-may work very well.
+use either the rtl_tcp utility or a direct USB connection to interface to a
+RTL2832U based DVB-T USB dongle and use that as a wideband receiver. These USB
+dongles can be bought cheeply from an Internet shop (~$10). The radio
+performance may not be great but better than one might think. Usage as a cheap
+local coverage receiver or as a link receiver may work very well.
 
 One big advantage of using a wideband receiver is that it is possible to
 monitor more than one narrow band channel at a time. The only limit is the CPU
@@ -1159,7 +1195,9 @@ power and the bandwidth of the wideband tuner. You probably need a Pentium4 or
 better to fulfill the CPU demands.
 
 Getting the DVB-T dongle running is out of scope for this document but what
-you need to do is to find out the frequency error on your specific dongle.
+you absolutely need to do is to find out the frequency error on your specific
+dongle. When you have figured out what the frequency error is, set up the
+FQ_CORR configuration variable in the wideband receiver configuration section.
 
 The rtl_tcp utility is in a package named similar to something like rtl-sdr.
 When you have the rtl-sdr stuff installed, just start rtl_tcp. No command line
@@ -1190,8 +1228,26 @@ A wideband receiver section is used to configure access to a wideband receiver
 which can be used by a Digital Drop Receiver (DDR), described above, to handle
 multiple narrowband channels using the same hardware. The only hardware
 supported at the moment is RTL2832U based DVB-T USB dongles. SvxLink access the
-dongle through the rtl_tcp utility which make the dongle available on a TCP
-network port. The following configuration variables are available:
+dongle directly via USB or through the rtl_tcp utility, which make the dongle
+available on a TCP network port. The following configuration variables are
+available:
+.TP
+.B TYPE
+The type of wideband receiver used. The only supported values right now are
+"RtlTcp" and "RtlUsb".
+.TP
+.B DEV_MATCH
+When using RtlUsb, this configuration variable is used to select the dongle to
+use if there are multiple dongles connected to the computer. When looking for
+dongles, SvxLink will try to match the string given in this configuration
+variable in different ways. First, if it's a digit, a match against the device
+index is tried. The device index is just a number, zero and up, that is given
+to a dongle when it's inserted.
+
+If the device index does not match, a match against the beginning, end or the
+whole serial number will be tried.
+
+Default: 0 (first device found)
 .TP
 .B HOST
 The name of the host that the rtl_tcp utility is running on (Default:
@@ -1207,8 +1263,7 @@ The sample rate used by the dongle. Legal values are 960000 and 2400000
 .B FQ_CORR
 This is probably the most important configuration variable. Most dongles are
 far off in frequency so they need to be calibrated. How to do this is out of
-scope for this document but some later versions of the rtl_fm utility may be
-able to do it using the "-c" command line switch.
+scope for this document.
 
 The end result should be a correction value for how far off the dongle is in
 frequency counted in parts per million (PPM). That is, how many Hz per MHz is

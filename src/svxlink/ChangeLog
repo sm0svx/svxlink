@@ -61,6 +61,9 @@
 
 * Now printing out when 1750Hz tone burst muting is active.
 
+* Bugfix in the QSO recorder: If a write error occurred, the audio pipe could
+  get stuck leading to audio to stop flowing in other parts of SvxLink.
+
 
 
  1.4.0 -- 02 aug 2014

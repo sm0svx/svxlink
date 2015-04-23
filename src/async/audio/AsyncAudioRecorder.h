@@ -141,6 +141,8 @@ class AudioRecorder : public Async::AudioSink
      * @return	Return \em true if the initialization was successful
      *
      * This function will initialize the recorder and open the file.
+     * On error, this function returns \em false. The error message can be
+     * retrieved using the errorMsg function.
      */
     bool initialize(void);
     
@@ -163,11 +165,14 @@ class AudioRecorder : public Async::AudioSink
     
     /**
      * @brief   Close the file
+     * @returns Return \em true if closing went well or \em false otherwise
      *
      * This function will close the file being recorded to. When the file has
      * been closed, all samples coming in after that will be discarded.
+     * If an error occurr, this function will return \em false. The error
+     * message can be retrieved using the errorMsg function.
      */
-    void closeFile(void);
+    bool closeFile(void);
 
     /**
      * @brief   Find out how many samples that have been written so far
@@ -211,6 +216,16 @@ class AudioRecorder : public Async::AudioSink
     virtual void flushSamples(void);
 
     /**
+     * @brief   Return the current error message
+     * @returns Returns the currently set error message
+     *
+     * This function is used to retrieve the last set error message. It can
+     * for example be used when the initialize method return false or when the
+     * error signal is emitted.
+     */
+    std::string errorMsg(void) const { return errmsg; }
+
+    /**
      * @brief   A signal that's emitted when the max recording time is reached
      *
      * This signal will be emitted when any of the maximum recording time or
@@ -219,6 +234,16 @@ class AudioRecorder : public Async::AudioSink
      * slot that is connected to this signal.
      */
     sigc::signal<void> maxRecordingTimeReached;
+
+    /**
+     * @brief   This signal is emitted when an error occurrs in the recorder
+     *
+     * This signal will be emitted when an error occurrs in the recorder.
+     * After emitting the signal the associated file will be closed. All audio
+     * that is written after an error has occurred will be thrown away. To open
+     * a new file, call the initialize method again.
+     */
+    sigc::signal<void> errorOccurred;
 
   private:
     std::string     filename;
@@ -231,12 +256,14 @@ class AudioRecorder : public Async::AudioSink
     bool            high_water_mark_reached;
     struct timeval  begin_timestamp;
     struct timeval  end_timestamp;
+    std::string     errmsg;
     
     AudioRecorder(const AudioRecorder&);
     AudioRecorder& operator=(const AudioRecorder&);
-    void writeWaveHeader(void);
+    bool writeWaveHeader(void);
     int store32bitValue(char *ptr, uint32_t val);
     int store16bitValue(char *ptr, uint16_t val);
+    void setErrMsgFromErrno(const std::string &fname);
 
 };  /* class AudioRecorder */
 

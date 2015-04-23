@@ -1,8 +1,8 @@
 /**
-@file	 RtlTcp.h
-@brief   An interface class for communicating to the rtl_tcp utility
+@file	 RtlUsb.h
+@brief   An interface class for communicating to a RTL dongle through USB
 @author  Tobias Blomberg / SM0SVX
-@date	 2014-07-16
+@date	 2015-04-10
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-#ifndef RTL_TCP_INCLUDED
-#define RTL_TCP_INCLUDED
+#ifndef RTL_USB_INCLUDED
+#define RTL_USB_INCLUDED
 
 
 /****************************************************************************
@@ -35,6 +35,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <string>
+#include <rtl-sdr.h>
+#include <pthread.h>
 
 
 /****************************************************************************
@@ -43,7 +45,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncTcpClient.h>
 #include <AsyncTimer.h>
 
 
@@ -62,6 +63,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class FdWatch;
+};
 
 
 /****************************************************************************
@@ -105,41 +110,31 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief	An interface class for communicating to the rtl_tcp utility
+@brief  An interface class for communicating to a RTL dongle through USB
 @author Tobias Blomberg / SM0SVX
 @date   2014-07-16
 
-Use this class to open and use a network connection to the rtl_tcp utility.
+Use this class to communicate to an RTL2832u DVB-T dongle using USB.
 */
-class RtlTcp : public RtlSdr
+class RtlUsb : public RtlSdr
 {
   public:
     /**
      * @brief 	Constructor
-     * @param   remote_host The remote host to connect to
-     * @param   remote_port The TCP port to connect to
+     * @param   match Device match string
      */
-    RtlTcp(const std::string &remote_host="localhost",
-           uint16_t remote_port=1234);
+    RtlUsb(const std::string &match);
   
     /**
      * @brief 	Destructor
      */
-    virtual ~RtlTcp(void) {}
+    virtual ~RtlUsb(void);
   
-    /* Missing commands:
-     *   9 - set direct sampling
-     *   a - set offset tuning
-     *   b - set rtl xtal
-     *   c - set tuner xtal
-     *   d - set tuner gain by index
-     */
-
     /**
      * @brief   Find out if the RTL dongle is ready for operation
      * @returns Returns \em true if the dongle is ready for operation
      */
-    virtual bool isReady(void) const { return !reconnect_timer.isEnabled(); }
+    virtual bool isReady(void) const { return dev != NULL; }
 
     /**
      * @brief   Return a string which identifies the specific dongle
@@ -149,7 +144,7 @@ class RtlTcp : public RtlSdr
      * dongle used for this instance of RtlSdr. The string is for example used
      * when printing out messages associated with the dongle.
      */
-    virtual const std::string displayName(void) const;
+    virtual const std::string displayName(void) const { return dev_name; }
 
   protected:
     /**
@@ -222,24 +217,35 @@ class RtlTcp : public RtlSdr
 
     
   private:
-    Async::TcpClient  con;
-    Async::Timer      reconnect_timer;
+    static const unsigned RECONNECT_INTERVAL = 5000;
 
-    RtlTcp(const RtlTcp&);
-    RtlTcp& operator=(const RtlTcp&);
-    void sendCommand(char cmd, uint32_t param);
-    void connected(void);
-    void disconnected(Async::TcpConnection *c,
-                      Async::TcpConnection::DisconnectReason reason);
-    int dataReceived(Async::TcpConnection *con, void *buf, int count);
+    Async::Timer    reconnect_timer;
+    rtlsdr_dev_t    *dev;
+    pthread_t       rtl_reader_thread;
+    int             sample_pipe[2];
+    Async::FdWatch  *sample_pipe_watch;
+    char            *buf;
+    size_t          buf_pos;
+    std::string     dev_match;
+    std::string     dev_name;
+
+    static void *rtlReader(void *data);
+    static void rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx);
+
+    RtlUsb(const RtlUsb&);
+    RtlUsb& operator=(const RtlUsb&);
+    void rtlSamplesReceived(void);
+    void initializeDongle(void);
+    void verboseClose(void);
+    int verboseDeviceSearch(const char *s);
     
-};  /* class RtlTcp */
+};  /* class RtlUsb */
 
 
 
 //} /* namespace */
 
-#endif /* RTL_TCP_INCLUDED */
+#endif /* RTL_USB_INCLUDED */
 
 
 /*

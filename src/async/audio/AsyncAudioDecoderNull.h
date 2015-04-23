@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <cstring>
+#include <stdint.h>
 
 
 /****************************************************************************
@@ -137,23 +138,26 @@ class AudioDecoderNull : public AudioDecoder
      * @param 	size The size of the buffer
      *
      * This NULL decoder will just write zero samples. The incoming buffer
-     * will contain an integer that indicate how many zero samples that should
-     * be written to the audio sink.
+     * will contain a 16 bit unsigned integer that indicate how many zero
+     * samples that should be written to the audio sink.
      */
     virtual void writeEncodedSamples(void *buf, int size)
     {
-      int count = *(reinterpret_cast<int*>(buf));
-
         // Sanity check
-      if ((count < 0) || (count > 10 * INTERNAL_SAMPLE_RATE))
+      if (size != sizeof(uint16_t))
       {
         return;
       }
 
+        // Decode incoming buffer
+      uint8_t *ptr = reinterpret_cast<uint8_t*>(buf);
+      uint16_t cnt = static_cast<uint16_t>(ptr[0]);
+      cnt |= static_cast<uint16_t>(ptr[1]) << 8;
+
         // Allocate a zeroed out buffer and write it to the sink
-      float samples[count];
-      std::memset(samples, 0, count * sizeof(*samples));
-      sinkWriteSamples(samples, count);
+      float samples[cnt];
+      std::memset(samples, 0, cnt * sizeof(*samples));
+      sinkWriteSamples(samples, cnt);
     }
 
   protected:
