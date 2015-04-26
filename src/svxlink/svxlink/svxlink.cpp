@@ -292,6 +292,7 @@ int main(int argc, char **argv)
     fclose(pidfile);
   }
 
+  const char *home_dir = 0;
   if (runasuser != NULL)
   {
       // Setup supplementary group IDs
@@ -317,10 +318,14 @@ int main(int argc, char **argv)
       perror("setuid");
       exit(1);
     }
+    home_dir = passwd->pw_dir;
   }
 
-  const char *home_dir = getenv("HOME");
-  if (home_dir == NULL)
+  if (home_dir == 0)
+  {
+    home_dir = getenv("HOME");
+  }
+  if (home_dir == 0)
   {
     home_dir = ".";
   }
@@ -351,13 +356,19 @@ int main(int argc, char **argv)
 	cfg_filename = SYSCONF_INSTALL_DIR "/svxlink.conf";
 	if (!cfg.open(cfg_filename))
 	{
-	  cerr << "*** ERROR: Could not open configuration file. Tried:\n"
+	  cerr << "*** ERROR: Could not open configuration file";
+          if (errno != 0)
+          {
+            cerr << " (" << strerror(errno) << ")";
+          }
+          cerr << ".\n";
+	  cerr << "Tried the following paths:\n"
       	       << "\t" << home_dir << "/.svxlink/svxlink.conf\n"
       	       << "\t" SVX_SYSCONF_INSTALL_DIR "/svxlink.conf\n"
 	       << "\t" SYSCONF_INSTALL_DIR "/svxlink.conf\n"
 	       << "Possible reasons for failure are: None of the files exist,\n"
 	       << "you do not have permission to read the file or there was a\n"
-	       << "syntax error in the file\n";
+	       << "syntax error in the file.\n";
 	  exit(1);
 	}
       }
