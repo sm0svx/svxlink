@@ -31,3 +31,6 @@ REMOTE_TRX_RELEASE=1
 SIGLEV_DET_CAL=1.0.3.99.3
 SIGLEV_DET_CAL_RELEASE=1
 
+# Version for the deviation calibration utility
+DEVCAL=0.99.0
+
