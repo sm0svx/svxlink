@@ -173,7 +173,7 @@ bool RfUplink::initialize(void)
 
   AudioFifo *fifo = new AudioFifo(8000);
   fifo->setPrebufSamples(512);
-  prev_src->registerSink(fifo);
+  prev_src->registerSink(fifo, true);
   prev_src = fifo;
   
   AudioSplitter *splitter = 0;

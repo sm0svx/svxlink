@@ -64,6 +64,13 @@
 * Bugfix in the QSO recorder: If a write error occurred, the audio pipe could
   get stuck leading to audio to stop flowing in other parts of SvxLink.
 
+* Config file open code cleanup for SvxLink and RemoteTrx. Under some
+  circumstances "fopen: ..." error messsages were printed even though there
+  really wasn't an error. Also, when using the --runasuser switch, the
+  configuration file was still searched for using the HOME environment variable
+  of the user who started the process rather than using the home directory
+  of the target user.
+
 
 
  1.4.0 -- 02 aug 2014

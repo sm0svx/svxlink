@@ -148,6 +148,10 @@ class Config
      * @brief 	Open the given config file
      * @param 	name The name of the configuration file to open
      * @return	Returns \em true on success or else \em false.
+     *
+     * This function will read the given configuration file into memory.
+     * If this function return false and errno != 0, the errno variable may
+     * give a hint what the problem was.
      */
     bool open(const std::string& name);
     
