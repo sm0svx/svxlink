@@ -1,3 +1,13 @@
+ 1.4.1 -- 30 apr 2015
+----------------------
+
+* ModuleEchoLink: If an incoming connect have a different IP address than
+  the one registered in the Echolink directory server, the station list is now
+  refreshed immediately instead of just rejecting the connection and wait for
+  the next periodic refresh.
+
+
+
  1.4.0 -- 02 aug 2014
 ----------------------
 
