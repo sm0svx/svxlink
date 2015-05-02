@@ -694,11 +694,41 @@ namespace {
   };
 #endif
 
-
-  class FmDemod : public Async::AudioSource
+  class Demodulator : public Async::AudioSource
   {
     public:
-      FmDemod(unsigned samp_rate, double max_dev)
+      virtual ~Demodulator(void) {}
+
+      virtual void iq_received(vector<WbRxRtlSdr::Sample> samples) = 0;
+
+      /**
+       * @brief Resume audio output to the sink
+       * 
+       * This function must be reimplemented by the inheriting class. It
+       * will be called when the registered audio sink is ready to accept
+       * more samples.
+       * This function is normally only called from a connected sink object.
+       */
+      virtual void resumeOutput(void) { }
+
+    protected:
+      /**
+       * @brief The registered sink has flushed all samples
+       *
+       * This function should be implemented by the inheriting class. It
+       * will be called when all samples have been flushed in the
+       * registered sink. If it is not reimplemented, a handler must be set
+       * that handle the function call.
+       * This function is normally only called from a connected sink object.
+       */
+      virtual void allSamplesFlushed(void) { }
+  };
+
+
+  class DemodulatorFm : public Demodulator
+  {
+    public:
+      DemodulatorFm(unsigned samp_rate, double max_dev)
         : iold(1.0f), qold(1.0f),
           audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt),
           wb_mode(false)
@@ -816,28 +846,6 @@ namespace {
         sinkWriteSamples(&dec_audio[0], dec_audio.size());
       }
 
-      /**
-       * @brief Resume audio output to the sink
-       * 
-       * This function must be reimplemented by the inheriting class. It
-       * will be called when the registered audio sink is ready to accept
-       * more samples.
-       * This function is normally only called from a connected sink object.
-       */
-      virtual void resumeOutput(void) { }
-
-    protected:
-      /**
-       * @brief The registered sink has flushed all samples
-       *
-       * This function should be implemented by the inheriting class. It
-       * will be called when all samples have been flushed in the
-       * registered sink. If it is not reimplemented, a handler must be set
-       * that handle the function call.
-       * This function is normally only called from a connected sink object.
-       */
-      virtual void allSamplesFlushed(void) { }
-
     private:
       float iold;
       float qold;
@@ -861,6 +869,34 @@ namespace {
       {
         return M_PI_4*x - x*(fabs(x) - 1)*(0.2447 + 0.0663*fabs(x));
       }
+  };
+
+
+  class DemodulatorAm : public Demodulator
+  {
+    public:
+      DemodulatorAm(void)
+        : audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt)
+      {
+        audio_dec.setGain(10);
+      }
+
+      void iq_received(vector<WbRxRtlSdr::Sample> samples)
+      {
+        vector<float> audio;
+        for (size_t idx=0; idx<samples.size(); ++idx)
+        {
+          complex<float> samp = samples[idx];
+          double demod = abs(samp);
+          audio.push_back(demod);
+        }
+        vector<float> dec_audio;
+        audio_dec.decimate(dec_audio, audio);
+        sinkWriteSamples(&dec_audio[0], dec_audio.size());
+      }
+
+    private:
+      Decimator<float> audio_dec;
   };
 
 
@@ -1059,10 +1095,9 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
   public:
     Channel(int fq_offset, unsigned sample_rate)
       : sample_rate(sample_rate), channelizer(0),
-        fm_demod(32000.0, 5000.0),
+        fm_demod(32000.0, 5000.0), demod(0),
         trans(sample_rate, fq_offset), enabled(true)
     {
-      setHandler(&fm_demod);
     }
 
     ~Channel(void)
@@ -1086,6 +1121,7 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
              << ". Legal values are: 960000 and 2400000\n";
         return false;
       }
+      setModulation(Ddr::MOD_FM);
       channelizer->preDemod.connect(preDemod.make_slot());
       return true;
     }
@@ -1095,17 +1131,26 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
       trans.setOffset(fq_offset);
     }
 
-    void setWbMode(bool enable)
+    void setModulation(Ddr::Modulation mod)
     {
-      channelizer->setWbMode(enable);
-      if (enable)
+      channelizer->setWbMode(mod == Ddr::MOD_WBFM);
+      demod = 0;
+      switch (mod)
       {
-        fm_demod.setDemodParams(channelizer->chSampRate(), 75000);
+        case Ddr::MOD_FM:
+          fm_demod.setDemodParams(channelizer->chSampRate(), 5000);
+          demod = &fm_demod;
+          break;
+        case Ddr::MOD_WBFM:
+          fm_demod.setDemodParams(channelizer->chSampRate(), 75000);
+          demod = &fm_demod;
+          break;
+        case Ddr::MOD_AM:
+          demod = &am_demod;
+          break;
       }
-      else
-      {
-        fm_demod.setDemodParams(channelizer->chSampRate(), 5000);
-      }
+      assert((demod != 0) && "Channel::setModulation: Unknown modulation");
+      setHandler(demod);
     }
 
     unsigned chSampRate(void) const
@@ -1120,7 +1165,7 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
         vector<WbRxRtlSdr::Sample> translated, channelized;
         trans.iq_received(translated, samples);
         channelizer->iq_received(channelized, translated);
-        fm_demod.iq_received(channelized);
+        demod->iq_received(channelized);
       }
     };
 
@@ -1141,7 +1186,9 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
   private:
     unsigned sample_rate;
     Channelizer *channelizer;
-    FmDemod fm_demod;
+    DemodulatorFm fm_demod;
+    DemodulatorAm am_demod;
+    Demodulator *demod;
     Translate trans;
     bool enabled;
 }; /* Channel */
@@ -1198,7 +1245,11 @@ Ddr::Ddr(Config &cfg, const std::string& name)
 
 Ddr::~Ddr(void)
 {
-  rtl->unregisterDdr(this);
+  if (rtl != 0)
+  {
+    rtl->unregisterDdr(this);
+    rtl = 0;
+  }
 
   DdrMap::iterator it = ddr_map.find(name());
   if (it != ddr_map.end())
@@ -1243,6 +1294,7 @@ bool Ddr::initialize(void)
          << " specified in receiver " << name() << endl;
     return false;
   }
+  rtl->registerDdr(this);
 
   channel = new Channel(fq-rtl->centerFq(), rtl->sampleRate());
   if (!channel->initialize())
@@ -1257,20 +1309,49 @@ bool Ddr::initialize(void)
   rtl->iqReceived.connect(mem_fun(*channel, &Channel::iq_received));
   rtl->readyStateChanged.connect(readyStateChanged.make_slot());
 
-  if (!LocalRxBase::initialize())
+  string modstr("FM");
+  cfg.getValue(name(), "MODULATION", modstr);
+  if (modstr == "FM")
   {
+    channel->setModulation(MOD_FM);
+  }
+  else if (modstr == "WBFM")
+  {
+    channel->setModulation(MOD_WBFM);
+  }
+  else if (modstr == "AM")
+  {
+    channel->setModulation(MOD_AM);
+  }
+  else
+  {
+    cout << "*** ERROR: Unknown modulation " << modstr
+         << " specified in receiver " << name() << endl;
+    delete channel;
+    channel = 0;
     return false;
   }
 
-  rtl->registerDdr(this);
+  if (!LocalRxBase::initialize())
+  {
+    delete channel;
+    channel = 0;
+    return false;
+  }
+
+  tunerFqChanged(rtl->centerFq());
 
   return true;
-  
 } /* Ddr:initialize */
 
 
 void Ddr::tunerFqChanged(uint32_t center_fq)
 {
+  if (channel == 0)
+  {
+    return;
+  }
+
   double new_offset = fq - center_fq;
   if (abs(new_offset) > (rtl->sampleRate() / 2)-12500)
   {
@@ -1289,17 +1370,7 @@ void Ddr::tunerFqChanged(uint32_t center_fq)
 
 void Ddr::setModulation(Modulation mod)
 {
-  switch (mod)
-  {
-    case MOD_NBFM:
-      channel->setWbMode(false);
-      return;
-
-    case MOD_WBFM:
-      channel->setWbMode(true);
-      return;
-  }
-  assert(false && "Ddr::setModulation: Unknown modulation");
+  channel->setModulation(mod);
 } /* Ddr::setModulation */
 
 
