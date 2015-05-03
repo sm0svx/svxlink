@@ -14,6 +14,10 @@ if(Speex_FOUND)
       "Found Speex but version could not be resolved. "
       "Will proceed without Speex.")
   endif()
+else(Speex_FOUND)
+  message("--   Speex is an optional dependency. The build will complete")
+  message("--   without it but support for the Speex audio codec will")
+  message("--   be unavailable.")
 endif(Speex_FOUND)
 
 # Find Opus
@@ -29,6 +33,10 @@ if(Opus_FOUND)
       "Found Opus but version could not be resolved. "
       "Will proceed without Opus.")
   endif()
+else(Opus_FOUND)
+  message("--   Opus is an optional dependency. The build will complete")
+  message("--   without it but support for the Opus audio codec will")
+  message("--   be unavailable.")
 endif(Opus_FOUND)
 
 find_package(GSM REQUIRED)
