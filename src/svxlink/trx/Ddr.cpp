@@ -585,13 +585,12 @@ namespace {
   class Decimator
   {
     public:
-      Decimator(int dec_fact, const float *coeff, int taps)
-        : dec_fact(dec_fact), taps(taps)
-      {
-        this->coeff.assign(coeff, coeff+taps);
+      Decimator(void) : dec_fact(0), p_Z(0), taps(0) {}
 
-        p_Z = new T[taps];
-        memset(p_Z, 0, taps * sizeof(*p_Z));
+      Decimator(int dec_fact, const float *coeff, int taps)
+        : dec_fact(dec_fact), p_Z(0), taps(taps)
+      {
+        setDecimatorParams(dec_fact, coeff, taps);
       }
 
       ~Decimator(void)
@@ -599,8 +598,21 @@ namespace {
         delete [] p_Z;
       }
 
-      void adjustGain(double gain_adjust)
+      void setDecimatorParams(int dec_fact, const float *coeff, int taps)
       {
+        set_coeff.assign(coeff, coeff + taps);
+        this->dec_fact = dec_fact;
+        this->coeff = set_coeff;
+        this->taps = taps;
+
+        delete [] p_Z;
+        p_Z = new T[taps];
+        memset(p_Z, 0, taps * sizeof(*p_Z));
+      }
+
+      void setGain(double gain_adjust)
+      {
+        coeff = set_coeff;
         for (vector<float>::iterator it=coeff.begin(); it!=coeff.end(); ++it)
         {
           *it *= pow(10.0, gain_adjust / 20.0);
@@ -644,9 +656,10 @@ namespace {
       }
 
     private:
-      const int       dec_fact;
+      int             dec_fact;
       T               *p_Z;
       int             taps;
+      vector<float>   set_coeff;
       vector<float>   coeff;
   };
 
@@ -681,22 +694,68 @@ namespace {
   };
 #endif
 
-
-  class FmDemod : public Async::AudioSource
+  class Demodulator : public Async::AudioSource
   {
     public:
-      FmDemod(double samp_rate, double max_dev)
+      virtual ~Demodulator(void) {}
+
+      virtual void iq_received(vector<WbRxRtlSdr::Sample> samples) = 0;
+
+      /**
+       * @brief Resume audio output to the sink
+       * 
+       * This function must be reimplemented by the inheriting class. It
+       * will be called when the registered audio sink is ready to accept
+       * more samples.
+       * This function is normally only called from a connected sink object.
+       */
+      virtual void resumeOutput(void) { }
+
+    protected:
+      /**
+       * @brief The registered sink has flushed all samples
+       *
+       * This function should be implemented by the inheriting class. It
+       * will be called when all samples have been flushed in the
+       * registered sink. If it is not reimplemented, a handler must be set
+       * that handle the function call.
+       * This function is normally only called from a connected sink object.
+       */
+      virtual void allSamplesFlushed(void) { }
+  };
+
+
+  class DemodulatorFm : public Demodulator
+  {
+    public:
+      DemodulatorFm(unsigned samp_rate, double max_dev)
         : iold(1.0f), qold(1.0f),
-          audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt)
-          //, g(934, samp_rate/2), N(samp_rate / 20), Ncnt(0) /*, w(N)*/
-          //, t(0.0), T(1.0 / samp_rate)
+          audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt),
+          wb_mode(false)
+      {
+        setDemodParams(samp_rate, max_dev);
+      }
+
+      void setDemodParams(unsigned samp_rate, double max_dev)
       {
           // Adjust the gain so that the maximum deviation corresponds
           // to a peak audio amplitude of 1.0.
-        double adj = samp_rate / (2.0 * M_PI * max_dev);
+        double adj = static_cast<double>(samp_rate) / (2.0 * M_PI * max_dev);
         adj /= 2.0; // Default to 6dB headroom
         double adj_db = 20.0 * log10(adj);
-        audio_dec.adjustGain(adj_db);
+        audio_dec.setGain(adj_db);
+
+        wb_mode = (samp_rate > 32000);
+        if (samp_rate == 160000)
+        {
+          audio_dec_wb.setDecimatorParams(5, coeff_dec_160k_32k, 
+                                          coeff_dec_160k_32k_cnt);
+        }
+        else if (samp_rate == 192000)
+        {
+          audio_dec_wb.setDecimatorParams(6, coeff_dec_192k_32k, 
+                                          coeff_dec_192k_32k_cnt);
+        }
       }
 
       void iq_received(vector<WbRxRtlSdr::Sample> samples)
@@ -759,7 +818,16 @@ namespace {
         }
 #endif    
         vector<float> dec_audio;
-        audio_dec.decimate(dec_audio, audio);
+        if (wb_mode)
+        {
+          vector<float> dec_audio1;
+          audio_dec_wb.decimate(dec_audio1, audio);
+          audio_dec.decimate(dec_audio, dec_audio1);
+        }
+        else
+        {
+          audio_dec.decimate(dec_audio, audio);
+        }
 #if 0
         for (size_t i=0; i<dec_audio.size(); ++i)
         {
@@ -778,33 +846,13 @@ namespace {
         sinkWriteSamples(&dec_audio[0], dec_audio.size());
       }
 
-      /**
-       * @brief Resume audio output to the sink
-       * 
-       * This function must be reimplemented by the inheriting class. It
-       * will be called when the registered audio sink is ready to accept
-       * more samples.
-       * This function is normally only called from a connected sink object.
-       */
-      virtual void resumeOutput(void) { }
-
-    protected:
-      /**
-       * @brief The registered sink has flushed all samples
-       *
-       * This function should be implemented by the inheriting class. It
-       * will be called when all samples have been flushed in the
-       * registered sink. If it is not reimplemented, a handler must be set
-       * that handle the function call.
-       * This function is normally only called from a connected sink object.
-       */
-      virtual void allSamplesFlushed(void) { }
-
     private:
       float iold;
       float qold;
       //WbRxRtlSdr::Sample prev_samp;
+      Decimator<float> audio_dec_wb;
       Decimator<float> audio_dec;
+      bool wb_mode;
 #if 0
       Goertzel g;
       int N, Ncnt;
@@ -824,10 +872,38 @@ namespace {
   };
 
 
+  class DemodulatorAm : public Demodulator
+  {
+    public:
+      DemodulatorAm(void)
+        : audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt)
+      {
+        audio_dec.setGain(10);
+      }
+
+      void iq_received(vector<WbRxRtlSdr::Sample> samples)
+      {
+        vector<float> audio;
+        for (size_t idx=0; idx<samples.size(); ++idx)
+        {
+          complex<float> samp = samples[idx];
+          double demod = abs(samp);
+          audio.push_back(demod);
+        }
+        vector<float> dec_audio;
+        audio_dec.decimate(dec_audio, audio);
+        sinkWriteSamples(&dec_audio[0], dec_audio.size());
+      }
+
+    private:
+      Decimator<float> audio_dec;
+  };
+
+
   class Translate
   {
     public:
-      Translate(float samp_rate, float offset)
+      Translate(unsigned samp_rate, float offset)
         : samp_rate(samp_rate), n(0)
       {
         setOffset(offset);
@@ -875,7 +951,7 @@ namespace {
       }
 
     private:
-      float samp_rate;
+      unsigned samp_rate;
       vector<complex<float> > exp_lut;
       unsigned n;
 
@@ -903,6 +979,8 @@ namespace {
   {
     public:
       virtual ~Channelizer(void) {}
+      virtual void setWbMode(bool enable) = 0;
+      virtual unsigned chSampRate(void) const = 0;
       virtual void iq_received(vector<WbRxRtlSdr::Sample> &out,
                                const vector<WbRxRtlSdr::Sample> &in) = 0;
 
@@ -915,25 +993,38 @@ namespace {
       Channelizer960(void)
         : iq_dec1(5, coeff_dec_960k_192k, coeff_dec_960k_192k_cnt),
           iq_dec2(6, coeff_dec_192k_32k, coeff_dec_192k_32k_cnt),
-          ch_filt(1, coeff_nbfm_channel, coeff_nbfm_channel_cnt)
+          ch_filt(1, coeff_nbfm_channel, coeff_nbfm_channel_cnt),
+          wb_mode(false)
       {
 
       }
       virtual ~Channelizer960(void) {}
 
+      virtual void setWbMode(bool enable)
+      {
+        wb_mode = enable;
+      }
+
+      virtual unsigned chSampRate(void) const
+      {
+        return wb_mode ? 192000 : 32000;
+      }
+
       virtual void iq_received(vector<WbRxRtlSdr::Sample> &out,
                                const vector<WbRxRtlSdr::Sample> &in)
       {
         //cout << "### Received " << samples.size() << " samples\n";
-#if 0
-        outfile.write(reinterpret_cast<char*>(&samples[0]),
-            samples.size() * sizeof(samples[0]));
-#endif
-
-        vector<WbRxRtlSdr::Sample> dec_samp1, dec_samp2;
-        iq_dec1.decimate(dec_samp1, in);
-        iq_dec2.decimate(dec_samp2, dec_samp1);
-        ch_filt.decimate(out, dec_samp2);
+        if (wb_mode)
+        {
+          iq_dec1.decimate(out, in);
+        }
+        else
+        {
+          vector<WbRxRtlSdr::Sample> dec_samp1, dec_samp2;
+          iq_dec1.decimate(dec_samp1, in);
+          iq_dec2.decimate(dec_samp2, dec_samp1);
+          ch_filt.decimate(out, dec_samp2);
+        }
         preDemod(out);
       }
 
@@ -941,6 +1032,7 @@ namespace {
       Decimator<complex<float> > iq_dec1;
       Decimator<complex<float> > iq_dec2;
       Decimator<complex<float> > ch_filt;
+      bool                       wb_mode;
   };
 
   class Channelizer2400 : public Channelizer
@@ -950,25 +1042,40 @@ namespace {
         : iq_dec1(3, coeff_dec_2400k_800k, coeff_dec_2400k_800k_cnt),
           iq_dec2(5, coeff_dec_800k_160k, coeff_dec_800k_160k_cnt),
           iq_dec3(5, coeff_dec_160k_32k, coeff_dec_160k_32k_cnt),
-          ch_filt(1, coeff_nbfm_channel, coeff_nbfm_channel_cnt)
+          ch_filt(1, coeff_nbfm_channel, coeff_nbfm_channel_cnt),
+          wb_mode(false)
       {
 
       }
       virtual ~Channelizer2400(void) {}
 
+      virtual void setWbMode(bool enable)
+      {
+        wb_mode = enable;
+      }
+
+      virtual unsigned chSampRate(void) const
+      {
+        return wb_mode ? 160000 : 32000;
+      }
+
       virtual void iq_received(vector<WbRxRtlSdr::Sample> &out,
                                const vector<WbRxRtlSdr::Sample> &in)
       {
-#if 0
-        outfile.write(reinterpret_cast<char*>(&samples[0]),
-            samples.size() * sizeof(samples[0]));
-#endif
-
-        vector<WbRxRtlSdr::Sample> dec_samp1, dec_samp2, dec_samp3;
-        iq_dec1.decimate(dec_samp1, in);
-        iq_dec2.decimate(dec_samp2, dec_samp1);
-        iq_dec3.decimate(dec_samp3, dec_samp2);
-        ch_filt.decimate(out, dec_samp3);
+        if (wb_mode)
+        {
+          vector<WbRxRtlSdr::Sample> dec_samp1;
+          iq_dec1.decimate(dec_samp1, in);
+          iq_dec2.decimate(out, dec_samp1);
+        }
+        else
+        {
+          vector<WbRxRtlSdr::Sample> dec_samp1, dec_samp2, dec_samp3;
+          iq_dec1.decimate(dec_samp1, in);
+          iq_dec2.decimate(dec_samp2, dec_samp1);
+          iq_dec3.decimate(dec_samp3, dec_samp2);
+          ch_filt.decimate(out, dec_samp3);
+        }
         preDemod(out);
       }
 
@@ -977,6 +1084,7 @@ namespace {
       Decimator<complex<float> > iq_dec2;
       Decimator<complex<float> > iq_dec3;
       Decimator<complex<float> > ch_filt;
+      bool                       wb_mode;
   };
 
 }; /* anonymous namespace */
@@ -985,12 +1093,11 @@ namespace {
 class Ddr::Channel : public sigc::trackable, public Async::AudioSource
 {
   public:
-    Channel(int fq_offset, int sample_rate)
+    Channel(int fq_offset, unsigned sample_rate)
       : sample_rate(sample_rate), channelizer(0),
-        fm_demod(32000.0, 5000.0),
+        fm_demod(32000.0, 5000.0), demod(0),
         trans(sample_rate, fq_offset), enabled(true)
     {
-      setHandler(&fm_demod);
     }
 
     ~Channel(void)
@@ -1014,6 +1121,7 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
              << ". Legal values are: 960000 and 2400000\n";
         return false;
       }
+      setModulation(Ddr::MOD_FM);
       channelizer->preDemod.connect(preDemod.make_slot());
       return true;
     }
@@ -1023,6 +1131,33 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
       trans.setOffset(fq_offset);
     }
 
+    void setModulation(Ddr::Modulation mod)
+    {
+      channelizer->setWbMode(mod == Ddr::MOD_WBFM);
+      demod = 0;
+      switch (mod)
+      {
+        case Ddr::MOD_FM:
+          fm_demod.setDemodParams(channelizer->chSampRate(), 5000);
+          demod = &fm_demod;
+          break;
+        case Ddr::MOD_WBFM:
+          fm_demod.setDemodParams(channelizer->chSampRate(), 75000);
+          demod = &fm_demod;
+          break;
+        case Ddr::MOD_AM:
+          demod = &am_demod;
+          break;
+      }
+      assert((demod != 0) && "Channel::setModulation: Unknown modulation");
+      setHandler(demod);
+    }
+
+    unsigned chSampRate(void) const
+    {
+      return channelizer->chSampRate();
+    }
+
     void iq_received(vector<WbRxRtlSdr::Sample> samples)
     {
       if (enabled)
@@ -1030,7 +1165,7 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
         vector<WbRxRtlSdr::Sample> translated, channelized;
         trans.iq_received(translated, samples);
         channelizer->iq_received(channelized, translated);
-        fm_demod.iq_received(channelized);
+        demod->iq_received(channelized);
       }
     };
 
@@ -1049,9 +1184,11 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
     sigc::signal<void, const std::vector<RtlTcp::Sample>&> preDemod;
 
   private:
-    int sample_rate;
+    unsigned sample_rate;
     Channelizer *channelizer;
-    FmDemod fm_demod;
+    DemodulatorFm fm_demod;
+    DemodulatorAm am_demod;
+    Demodulator *demod;
     Translate trans;
     bool enabled;
 }; /* Channel */
@@ -1108,7 +1245,11 @@ Ddr::Ddr(Config &cfg, const std::string& name)
 
 Ddr::~Ddr(void)
 {
-  rtl->unregisterDdr(this);
+  if (rtl != 0)
+  {
+    rtl->unregisterDdr(this);
+    rtl = 0;
+  }
 
   DdrMap::iterator it = ddr_map.find(name());
   if (it != ddr_map.end())
@@ -1153,6 +1294,7 @@ bool Ddr::initialize(void)
          << " specified in receiver " << name() << endl;
     return false;
   }
+  rtl->registerDdr(this);
 
   channel = new Channel(fq-rtl->centerFq(), rtl->sampleRate());
   if (!channel->initialize())
@@ -1167,20 +1309,49 @@ bool Ddr::initialize(void)
   rtl->iqReceived.connect(mem_fun(*channel, &Channel::iq_received));
   rtl->readyStateChanged.connect(readyStateChanged.make_slot());
 
-  if (!LocalRxBase::initialize())
+  string modstr("FM");
+  cfg.getValue(name(), "MODULATION", modstr);
+  if (modstr == "FM")
   {
+    channel->setModulation(MOD_FM);
+  }
+  else if (modstr == "WBFM")
+  {
+    channel->setModulation(MOD_WBFM);
+  }
+  else if (modstr == "AM")
+  {
+    channel->setModulation(MOD_AM);
+  }
+  else
+  {
+    cout << "*** ERROR: Unknown modulation " << modstr
+         << " specified in receiver " << name() << endl;
+    delete channel;
+    channel = 0;
     return false;
   }
 
-  rtl->registerDdr(this);
+  if (!LocalRxBase::initialize())
+  {
+    delete channel;
+    channel = 0;
+    return false;
+  }
+
+  tunerFqChanged(rtl->centerFq());
 
   return true;
-  
 } /* Ddr:initialize */
 
 
 void Ddr::tunerFqChanged(uint32_t center_fq)
 {
+  if (channel == 0)
+  {
+    return;
+  }
+
   double new_offset = fq - center_fq;
   if (abs(new_offset) > (rtl->sampleRate() / 2)-12500)
   {
@@ -1195,6 +1366,18 @@ void Ddr::tunerFqChanged(uint32_t center_fq)
   channel->setFqOffset(new_offset);
   channel->enable();
 } /* Ddr::tunerFqChanged */
+
+
+void Ddr::setModulation(Modulation mod)
+{
+  channel->setModulation(mod);
+} /* Ddr::setModulation */
+
+
+unsigned Ddr::preDemodSampleRate(void) const
+{
+  return channel->chSampRate();
+} /* Ddr::preDemodSampleRate */
 
 
 bool Ddr::isReady(void) const
