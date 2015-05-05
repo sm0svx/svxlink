@@ -1,0 +1,101 @@
+SvxLink build instructions
+==========================
+
+== Dependencies ==
+Some dependencies need to be installed before building. First, the build tools:
+
+* *gcc/g\+\+*: The GNU C/C++ compiler (Required)
+* *make*: The Make build tool (Required)
+* *cmake*: Version 2.8 or later. A makefile generator (Required)
+* *groff*: Needed to build manual pages (Recommended)
+* *gzip*: Needed to compress manual pages (Recommended)
+* *doxygen*: Used to build developer documentation (Optional)
+* *tar*: Needed to unpack downloaded source archives (Recommended)
+* *git*: Needed to download bleeding edge/experimental source code (Optional)
+
+SvxLink depend on some third party libraries. Since packages are named
+differently in different distributions you need to do some research to find out
+exactly what the packages are called in your distribution. Packages usually are
+devided in two parts, a runtime part and a development part. Both are needed to
+compile SvxLink. The development packages usually have a name ending in "-dev"
+or "-devel".
+
+* *libsigc++*: Version 2. A callback handling framework (Required)
+* *libpopt*: Parse command line options (Required)
+* *tcl*: The TCL scripting language (Required)
+* *libgcrypt*: Cryptographic functions (Required)
+* *libasound*: Alsa sound system support (Recommended)
+* *libgsm*: GSM audio codec (Required)
+* *libspeex*: The Speex audio codec (Optional)
+* *librtlsdr*: Support for RTL2832U DVB-T/SDR USB dongles (Optional)
+* *libqt*: Version 4. Framework for graphical applications (Optional)
+
+There also are some runtime dependencies which normally is needed to run a
+SvxLink system.
+
+* *alsa-utils*: Alsa tools for configuring sound levels etc (Recommended)
+* *opus-tools*: Encode/decode Opus sound files (Optional)
+
+== Required system user ==
+Before trying to build and install using the commands below you also need to
+create a user called 'svxlink'. There must also exist a group called 'daemon'
+for the install to complete without errors.
+
+How to create users and groups vary between different Linux distributions.
+A common command that exist on many distributions is 'useradd'. The 'daemon'
+group usually exist but if not, look for the 'groupadd' command.
+
+
+== Build and install  ==
+SvxLink use the CMake build system. The basic pattern for building using CMake
+looks like this:
+
+  cd path/to/svxlink/src
+  mkdir build
+  cd build
+  cmake ..
+  make
+  make doc
+  make install
+  ldconfig
+
+This will build SvxLink and install it under /usr/local. The first argument to
+cmake point out the source directory so the build directory can be created
+anywhere. A common pattern is to place the build directly under the top source
+code directory, hence the ".." in the example above.
+
+To use another install location (e.g. /opt/svxlink) use the following line when
+running cmake:
+
+  cmake -DCMAKE_INSTALL_PREFIX=/opt/svxlink ..
+
+The "-D" switch is used to define CMake variables. There are both standardized
+CMake variables and project specific ones.
+
+To get install locations that would be used when building a binary package,
+use the following cmake line:
+
+  cmake -DCMAKE_INSTALL_PREFIX=/usr -DSYSCONF_INSTALL_DIR=/etc \
+        -DLOCAL_STATE_DIR=/var ..
+
+Cmake does normally only need to be run one time. After that the configuration
+is cached so only "make" need to be run. Make will rerun cmake when necessary.
+
+Some other good to know configuration variables that also can be set using -D
+command line switch are:
+
+  USE_ALSA          -- Set to NO to compile without Alsa sound support
+  USE_OSS           -- Set to NO to compile without OSS sound support
+  USE_QT            -- Set to NO to compile without Qt (no Qtel)
+  BUILD_STATIC_LIBS -- Set to YES to build static libraries as well as dynamic
+  LIB_SUFFIX        -- Set to 64 on 64 bit systems to install in the lib64 dir
+
+
+== Further reading ==
+More details can be found on the SvxLink web pages:
+
+* Main web page: http://www.svxlink.org/
+* Wiki main page: https://github.com/sm0svx/svxlink/wiki
+* Installation instructions:
+  https://github.com/sm0svx/svxlink/wiki/InstallationInstructions
+

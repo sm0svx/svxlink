@@ -123,8 +123,9 @@ class Ddr : public LocalRxBase
      */
     typedef enum
     {
-      MOD_NBFM,   //!< Narrow band FM. Standard two-way radio 20kHz channel.
-      MOD_WBFM    //!< Wide band FM. Standard FM broadcasting 180kHz channel.
+      MOD_FM,     //!< FM. Standard two-way radio 20kHz channel.
+      MOD_WBFM,   //!< Wide band FM. Standard FM broadcasting 180kHz channel.
+      MOD_AM      //!< AM. Standard two-way radio 20kHz channel.
     } Modulation;
 
     static Ddr *find(const std::string &name);

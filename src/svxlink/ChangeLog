@@ -5,7 +5,8 @@
   USB dongle. This will open up the world of cheap receiver hardware to all
   SvxLink users. It will for example be very cheap to set up an extra receiver
   with local coverage for a SvxLink based repeater, as long as there is a
-  network connection to the repeater.
+  network connection to the repeater. The modulation forms supported are:
+  FM, AM and wideband FM (broadcast).
 
 * New configuration variable for local receivers, RAW_AUDIO_UDP_DEST, which
   makes it possible to stream the raw audio read by SvxLink from the audio
@@ -70,6 +71,16 @@
   configuration file was still searched for using the HOME environment variable
   of the user who started the process rather than using the home directory
   of the target user.
+
+
+
+ 1.4.1 -- 30 apr 2015
+----------------------
+
+* ModuleEchoLink: If an incoming connect have a different IP address than
+  the one registered in the Echolink directory server, the station list is now
+  refreshed immediately instead of just rejecting the connection and wait for
+  the next periodic refresh.
 
 
 

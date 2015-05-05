@@ -4,19 +4,14 @@ include_directories(${GSM_INCLUDE_DIR})
 set(LIBS ${LIBS} ${GSM_LIBRARY})
 
 # Find Speex
-find_package(Speex)
-if(Speex_FOUND)
-  if(Speex_VERSION_MAJOR)
-    include_directories(${Speex_INCLUDE_DIRS})
-    add_definitions(${Speex_DEFINITIONS})
-    add_definitions("-DSPEEX_MAJOR=${Speex_VERSION_MAJOR}")
-    set(LIBS ${LIBS} ${Speex_LIBRARIES})
-  else()
-    message(WARNING
-      "Found Speex but version could not be resolved. "
-      "Will proceed without Speex.")
-  endif()
-endif(Speex_FOUND)
+# Do a quiet find here since the Async library already do a verbose find
+find_package(Speex QUIET)
+if(Speex_FOUND AND Speex_VERSION_MAJOR)
+  include_directories(${Speex_INCLUDE_DIRS})
+  add_definitions(${Speex_DEFINITIONS})
+  add_definitions("-DSPEEX_MAJOR=${Speex_VERSION_MAJOR}")
+  set(LIBS ${LIBS} ${Speex_LIBRARIES})
+endif(Speex_FOUND AND Speex_VERSION_MAJOR)
 
 set(LIBNAME echolib)
 
