@@ -189,8 +189,33 @@ namespace {
   {
     public:
       virtual ~DecimatorMS(void) {}
+      virtual void setGain(float new_gain) = 0;
       virtual int decFact(void) const = 0;
       virtual void decimate(vector<T> &out, const vector<T> &in) = 0;
+  };
+
+  template <class T>
+  class DecimatorMS0 : public DecimatorMS<T>
+  {
+    public:
+      DecimatorMS0(void) : gain(1.0f) {}
+      virtual void setGain(float gain_db)
+      {
+        gain = pow(10.0, gain_db / 20.0);
+      }
+      virtual int decFact(void) const { return 1; }
+      virtual void decimate(vector<T> &out, const vector<T> &in)
+      {
+        out.clear();
+        out.reserve(in.size());
+        for (size_t i=0; i<in.size(); ++i)
+        {
+          out.push_back(gain * in[i]);
+        }
+      }
+
+    private:
+      float gain;
   };
 
   template <class T>
@@ -198,6 +223,7 @@ namespace {
   {
     public:
       DecimatorMS1(Decimator<T> &d1) : d1(d1) {}
+      virtual void setGain(float gain_db) { d1.setGain(gain_db); }
       virtual int decFact(void) const { return d1.decFact(); }
       virtual void decimate(vector<T> &out, const vector<T> &in)
       {
@@ -213,6 +239,7 @@ namespace {
   {
     public:
       DecimatorMS2(Decimator<T> &d1, Decimator<T> &d2) : d1(d1), d2(d2) {}
+      virtual void setGain(float gain_db) { d2.setGain(gain_db); }
       virtual int decFact(void) const { return d1.decFact() * d2.decFact(); }
       virtual void decimate(vector<T> &out, const vector<T> &in)
       {
@@ -231,6 +258,7 @@ namespace {
     public:
       DecimatorMS3(Decimator<T> &d1, Decimator<T> &d2, Decimator<T> &d3)
         : d1(d1), d2(d2), d3(d3) {}
+      virtual void setGain(float gain_db) { d3.setGain(gain_db); }
       virtual int decFact(void) const
       {
         return d1.decFact() * d2.decFact() * d3.decFact();
@@ -254,6 +282,7 @@ namespace {
       DecimatorMS4(Decimator<T> &d1, Decimator<T> &d2, Decimator<T> &d3,
                    Decimator<T> &d4)
         : d1(d1), d2(d2), d3(d3), d4(d4) {}
+      virtual void setGain(float gain_db) { d4.setGain(gain_db); }
       virtual int decFact(void) const
       {
         return d1.decFact() * d2.decFact() * d3.decFact() * d4.decFact();
@@ -278,6 +307,7 @@ namespace {
       DecimatorMS5(Decimator<T> &d1, Decimator<T> &d2, Decimator<T> &d3,
                    Decimator<T> &d4, Decimator<T> &d5)
         : d1(d1), d2(d2), d3(d3), d4(d4), d5(d5) {}
+      virtual void setGain(float gain_db) { d5.setGain(gain_db); }
       virtual int decFact(void) const
       {
         return d1.decFact() * d2.decFact() * d3.decFact() *
@@ -296,36 +326,6 @@ namespace {
     private:
       Decimator<T> &d1, &d2, &d3, &d4, &d5;
   };
-
-#if 0
-  struct HammingWindow
-  {
-    public:
-      HammingWindow(size_t N)
-      {
-        w = new float[N];
-        for (size_t n=0; n<N; ++n)
-        {
-          w[n] = 0.54 + 0.46 * cos(2*M_PI*n/(N-1));
-          //w[n] *= 1.855;
-          w[n] *= 1.8519;
-        }
-      }
-
-      ~HammingWindow(void)
-      {
-        delete [] w;
-      }
-
-      inline float operator[](int i)
-      {
-        return w[i];
-      }
-
-    private:
-      float *w;
-  };
-#endif
 
   class Demodulator : public Async::AudioSource
   {
@@ -364,31 +364,52 @@ namespace {
       DemodulatorFm(unsigned samp_rate, double max_dev)
         : iold(1.0f), qold(1.0f),
           audio_dec(2, coeff_dec_audio_32k_16k, coeff_dec_audio_32k_16k_cnt),
-          wb_mode(false)
+          dec(0)
       {
         setDemodParams(samp_rate, max_dev);
       }
 
+      ~DemodulatorFm(void)
+      {
+        delete dec;
+        dec = 0;
+      }
+
       void setDemodParams(unsigned samp_rate, double max_dev)
       {
-          // Adjust the gain so that the maximum deviation corresponds
-          // to a peak audio amplitude of 1.0.
-        double adj = static_cast<double>(samp_rate) / (2.0 * M_PI * max_dev);
-        adj /= 2.0; // Default to 6dB headroom
-        double adj_db = 20.0 * log10(adj);
-        audio_dec.setGain(adj_db);
+        delete dec;
+        dec = 0;
 
-        wb_mode = (samp_rate > 32000);
-        if (samp_rate == 160000)
+        if (samp_rate == 16000)
+        {
+          dec = new DecimatorMS0<float>;
+        }
+        else if (samp_rate == 32000)
+        {
+          dec = new DecimatorMS1<float>(audio_dec);
+        }
+        else if (samp_rate == 160000)
         {
           audio_dec_wb.setDecimatorParams(5, coeff_dec_160k_32k, 
                                           coeff_dec_160k_32k_cnt);
+          dec = new DecimatorMS2<float>(audio_dec_wb, audio_dec);
         }
         else if (samp_rate == 192000)
         {
           audio_dec_wb.setDecimatorParams(6, coeff_dec_192k_32k, 
                                           coeff_dec_192k_32k_cnt);
+          dec = new DecimatorMS2<float>(audio_dec_wb, audio_dec);
         }
+
+        assert((dec != 0) &&
+               "DemodulatorFm::setDemodParams: Unsupported sampling rate");
+
+          // Adjust the gain so that the maximum deviation corresponds
+          // to a peak audio amplitude of 1.0, minus headroom.
+        double adj = static_cast<double>(samp_rate) / (2.0 * M_PI * max_dev);
+        adj /= 2.0; // Default to 6dB headroom
+        double adj_db = 20.0 * log10(adj);
+        dec->setGain(adj_db);
       }
 
       void iq_received(vector<WbRxRtlSdr::Sample> samples)
@@ -402,106 +423,31 @@ namespace {
         vector<float> audio;
         for (size_t idx=0; idx<samples.size(); ++idx)
         {
-#if 1
           complex<float> samp = samples[idx];
-#else
-          double fm = 941.0;
-          complex<double> samp = exp(
-              complex<float>(0,
-                (1200/fm)*cos(2.0*M_PI*fm*t) +
-                (1200/1633)*cos(2.0*M_PI*1633*t)
-                )
-              );
-          t += T;
-#endif
 
             // Normalize signal amplitude
           samp = samp / abs(samp);
 
-#if 1
             // Mixed demodulator (delay demodulator + phase adapter demodulator)
           float i = samp.real();
           float q = samp.imag();
           double demod = atan2(q*iold - i*qold, i*iold + q*qold);
-          //demod=demod*(32000/(2.0*M_PI*5000));
           iold = i;
           qold = q;
-          //demod = FastArcTan(demod);
-#else
-            // Complex baseband delay demodulator
-          float demod = arg(samp * conj(prev_samp));
-          prev_samp = samp;
-#endif
 
           audio.push_back(demod);
         }
-#if 0
-        for (size_t i=0; i<audio.size(); ++i)
-        {
-          //g.calc(w[Ncnt] * audio[i]);
-          g.calc(audio[i]);
-          if (++Ncnt >= N)
-          {
-            float dev = 5000*2*sqrt(g.magnitudeSquared())/N;
-            //dev *= 1.001603;
-            cout << dev << endl;
-            Ncnt = 0;
-            g.reset();
-          }
-        }
-#endif    
         vector<float> dec_audio;
-        if (wb_mode)
-        {
-          vector<float> dec_audio1;
-          audio_dec_wb.decimate(dec_audio1, audio);
-          audio_dec.decimate(dec_audio, dec_audio1);
-        }
-        else
-        {
-          audio_dec.decimate(dec_audio, audio);
-        }
-#if 0
-        for (size_t i=0; i<dec_audio.size(); ++i)
-        {
-          //g.calc(w[Ncnt] * dec_audio[i]);
-          g.calc(dec_audio[i]);
-          if (++Ncnt >= N)
-          {
-            float dev = 5000*2*sqrt(g.magnitudeSquared())/N;
-            //dev *= 0.9811;
-            cout << dev << endl;
-            Ncnt = 0;
-            g.reset();
-          }
-        }
-#endif
+        dec->decimate(dec_audio, audio);
         sinkWriteSamples(&dec_audio[0], dec_audio.size());
       }
 
     private:
       float iold;
       float qold;
-      //WbRxRtlSdr::Sample prev_samp;
       Decimator<float> audio_dec_wb;
       Decimator<float> audio_dec;
-      bool wb_mode;
-#if 0
-      Goertzel g;
-      int N, Ncnt;
-      //HammingWindow w;
-#endif
-#if 0
-      double t;
-      const double T;
-#endif
-
-        // Maximum error 0.0015 radians (0.085944 degrees)
-        // Produced another result and did not affect overall CPU% much
-      double FastArcTan(double x)
-      {
-        return M_PI_4*x - x*(fabs(x) - 1)*(0.2447 + 0.0663*fabs(x));
-      }
+      DecimatorMS<float> *dec;
   };
 
 
@@ -837,6 +783,11 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
           fm_demod.setDemodParams(channelizer->chSampRate(), 5000);
           demod = &fm_demod;
           break;
+        case Ddr::MOD_NBFM:
+          channelizer->setBw(Channelizer::BW_10K);
+          fm_demod.setDemodParams(channelizer->chSampRate(), 2500);
+          demod = &fm_demod;
+          break;
         case Ddr::MOD_WBFM:
           channelizer->setBw(Channelizer::BW_WIDE);
           fm_demod.setDemodParams(channelizer->chSampRate(), 75000);
@@ -1012,6 +963,10 @@ bool Ddr::initialize(void)
   if (modstr == "FM")
   {
     channel->setModulation(MOD_FM);
+  }
+  else if (modstr == "NBFM")
+  {
+    channel->setModulation(MOD_NBFM);
   }
   else if (modstr == "WBFM")
   {
