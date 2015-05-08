@@ -797,6 +797,10 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
           channelizer->setBw(Channelizer::BW_10K);
           demod = &am_demod;
           break;
+        case Ddr::MOD_NBAM:
+          channelizer->setBw(Channelizer::BW_6K);
+          demod = &am_demod;
+          break;
       }
       assert((demod != 0) && "Channel::setModulation: Unknown modulation");
       setHandler(demod);
@@ -975,6 +979,10 @@ bool Ddr::initialize(void)
   else if (modstr == "AM")
   {
     channel->setModulation(MOD_AM);
+  }
+  else if (modstr == "NBAM")
+  {
+    channel->setModulation(MOD_NBAM);
   }
   else
   {
