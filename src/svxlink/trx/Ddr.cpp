@@ -403,7 +403,70 @@ namespace {
         }
         return gcd(divisor, reminder);
       }
-  };
+  }; /* Translate */
+
+
+  class AGC
+  {
+    public:
+      AGC(float attack=1.0e0, float decay=1.0e-2, float max_gain=2.0e2,
+          float reference=0.25f)
+        : m_attack(attack), m_decay(decay), m_max_gain(max_gain),
+          m_reference(reference), m_gain(1.0f)
+      {
+
+      }
+
+      void setReference(float reference) { m_reference = reference; }
+      void setDecay(float decay) { m_decay = decay; }
+      void setAttack(float attack) { m_attack = attack; }
+
+      void iq_received(vector<WbRxRtlSdr::Sample> &out,
+                       const vector<WbRxRtlSdr::Sample> &in)
+      {
+        out.clear();
+        out.reserve(in.size());
+        float P = 0.0f;
+        for (vector<WbRxRtlSdr::Sample>::const_iterator it = in.begin();
+             it != in.end();
+             ++it)
+        {
+          const WbRxRtlSdr::Sample &samp = *it;
+          WbRxRtlSdr::Sample osamp = m_gain * samp;
+          P = osamp.real() * osamp.real() + osamp.imag() * osamp.imag();
+          out.push_back(osamp);
+
+          float err = m_reference - P;
+          float rate;
+          if (err > 0.0f)
+          {
+            rate = m_decay * err;
+          }
+          else
+          {
+            rate = m_attack * err;
+          }
+          m_gain += rate;
+          if (m_gain < 0.0f)
+          {
+            m_gain = 0.0f;
+          }
+          else if (m_gain > m_max_gain)
+          {
+            m_gain = m_max_gain;
+          }
+        }
+        //cout << "### P=" << P << "  m_gain=" << m_gain << endl;
+      }
+
+    private:
+      float   m_attack;
+      float   m_decay;
+      float   m_max_gain;
+      float   m_reference;
+      float   m_gain;
+
+  }; /* AGC */
 
 
   class Demodulator : public Async::AudioSource
@@ -534,30 +597,29 @@ namespace {
   {
     public:
       DemodulatorAm(void)
-        : audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt)
       {
-        audio_dec.setGain(10);
+        agc.setAttack(1.0e-0);
+        agc.setDecay(1.0e-2);
+        agc.setReference(1);
       }
 
       void iq_received(vector<WbRxRtlSdr::Sample> samples)
       {
+        vector<WbRxRtlSdr::Sample> gain_adjusted;
+        agc.iq_received(gain_adjusted, samples);
+
         vector<float> audio;
-        for (size_t idx=0; idx<samples.size(); ++idx)
+        for (size_t idx=0; idx<gain_adjusted.size(); ++idx)
         {
-          complex<float> samp = samples[idx];
+          complex<float> samp = gain_adjusted[idx];
           float demod = abs(samp);
           audio.push_back(demod);
         }
-        /*
-        vector<float> dec_audio;
-        audio_dec.decimate(dec_audio, audio);
-        sinkWriteSamples(&dec_audio[0], dec_audio.size());
-        */
         sinkWriteSamples(&audio[0], audio.size());
       }
 
     private:
-      Decimator<float> audio_dec;
+      AGC              agc;
   };
 
 
@@ -652,10 +714,13 @@ namespace {
           trans.iq_received(translated, samples);
         }
 
+        vector<WbRxRtlSdr::Sample> gain_adjusted;
+        agc.iq_received(gain_adjusted, translated);
+
         vector<float> audio;
-        audio.reserve(translated.size());
-        for (vector<WbRxRtlSdr::Sample>::const_iterator it = translated.begin();
-             it != translated.end();
+        audio.reserve(gain_adjusted.size());
+        for (vector<WbRxRtlSdr::Sample>::const_iterator it = gain_adjusted.begin();
+             it != gain_adjusted.end();
              ++it)
         {
           float demod = it->real();
@@ -667,6 +732,7 @@ namespace {
     private:
       Translate         trans;
       bool              use_lsb;
+      AGC               agc;
   };
 #endif
 
@@ -677,12 +743,18 @@ namespace {
       DemodulatorCw(unsigned samp_rate)
         : trans(samp_rate, 600)
       {
+        agc.setAttack(1.0e+2);
+        agc.setDecay(4.0e-2);
+        agc.setReference(0.05);
       }
 
       void iq_received(vector<WbRxRtlSdr::Sample> samples)
       {
+        vector<WbRxRtlSdr::Sample> gain_adjusted;
+        agc.iq_received(gain_adjusted, samples);
+
         vector<WbRxRtlSdr::Sample> translated;
-        trans.iq_received(translated, samples);
+        trans.iq_received(translated, gain_adjusted);
         vector<float> audio;
         audio.reserve(translated.size());
         for (vector<WbRxRtlSdr::Sample>::const_iterator it = translated.begin();
@@ -697,6 +769,7 @@ namespace {
 
     private:
       Translate         trans;
+      AGC               agc;
   };
 
 
