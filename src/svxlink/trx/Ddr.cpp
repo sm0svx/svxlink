@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <fstream>
 #include <algorithm>
 #include <iterator>
+#include <deque>
 
 
 /****************************************************************************
@@ -121,6 +122,8 @@ namespace {
 
       void setDecimatorParams(int dec_fact, const float *coeff, int taps)
       {
+        assert(taps >= dec_fact);
+
         set_coeff.assign(coeff, coeff + taps);
         this->dec_fact = dec_fact;
         this->coeff = set_coeff;
@@ -146,7 +149,6 @@ namespace {
 
           // this implementation assumes in.size() is a multiple of factor_M
         assert(in.size() % dec_fact == 0);
-        assert(taps >= dec_fact);
 
         int num_out = 0;
         typename vector<T>::const_iterator src = in.begin();
@@ -327,6 +329,83 @@ namespace {
       Decimator<T> &d1, &d2, &d3, &d4, &d5;
   };
 
+
+  class Translate
+  {
+    public:
+      Translate(unsigned samp_rate, float offset)
+        : samp_rate(samp_rate), n(0)
+      {
+        setOffset(offset);
+      }
+
+      void setOffset(int offset)
+      {
+        n = 0;
+        exp_lut.clear();
+        if (offset == 0)
+        {
+          return;
+        }
+        unsigned N = samp_rate / gcd(samp_rate, abs(offset));
+        //cout << "### Translate: offset=" << offset << " N=" << N << endl;
+        exp_lut.resize(N);
+        for (unsigned i=0; i<N; ++i)
+        {
+          complex<float> e(0.0f, -2.0*M_PI*offset*i/samp_rate);
+          exp_lut[i] = exp(e);
+        }
+      }
+
+      void iq_received(vector<WbRxRtlSdr::Sample> &out,
+                       const vector<WbRxRtlSdr::Sample> &in)
+      {
+        if (exp_lut.size() > 0)
+        {
+          out.clear();
+          out.reserve(in.size());
+          vector<WbRxRtlSdr::Sample>::const_iterator it;
+          for (it = in.begin(); it != in.end(); ++it)
+          {
+            out.push_back(*it * exp_lut[n]);
+            if (++n == exp_lut.size())
+            {
+              n = 0;
+            }
+          }
+        }
+        else
+        {
+          out = in;
+        }
+      }
+
+    private:
+      unsigned samp_rate;
+      vector<complex<float> > exp_lut;
+      unsigned n;
+
+      /**
+       * @brief Find the greatest common divisor for two numbers
+       * @param dividend The larger number
+       * @param divisor The lesser number
+       *
+       * This function will return the greatest common divisor of the two given
+       * numbers. This implementation requires that the dividend is larger than
+       * the divisor.
+       */
+      unsigned gcd(unsigned dividend, unsigned divisor)
+      {
+        unsigned reminder = dividend % divisor;
+        if (reminder == 0)
+        {
+          return divisor;
+        }
+        return gcd(divisor, reminder);
+      }
+  };
+
+
   class Demodulator : public Async::AudioSource
   {
     public:
@@ -482,87 +561,151 @@ namespace {
   };
 
 
-  class Translate
+//#define USE_SSB_PHASE_DEMOD
+#ifdef USE_SSB_PHASE_DEMOD
+  class DemodulatorSsb : public Demodulator
   {
     public:
-      Translate(unsigned samp_rate, float offset)
-        : samp_rate(samp_rate), n(0)
+      DemodulatorSsb(unsigned samp_rate)
+        : I(coeff_hilbert_cnt/2, 0),
+          hilbert(1, coeff_hilbert, coeff_hilbert_cnt),
+          use_lsb(false)
       {
-        setOffset(offset);
       }
 
-      void setOffset(int offset)
+      void useLsb(bool use)
       {
-        n = 0;
-        exp_lut.clear();
-        if (offset == 0)
-        {
-          return;
-        }
-        unsigned N = samp_rate / gcd(samp_rate, abs(offset));
-        //cout << "### Translate: offset=" << offset << " N=" << N << endl;
-        exp_lut.resize(N);
-        for (unsigned i=0; i<N; ++i)
-        {
-          complex<float> e(0.0f, -2.0*M_PI*offset*i/samp_rate);
-          exp_lut[i] = exp(e);
-        }
+        use_lsb = use;
       }
 
-      void iq_received(vector<WbRxRtlSdr::Sample> &out,
-                       const vector<WbRxRtlSdr::Sample> &in)
+      void iq_received(vector<WbRxRtlSdr::Sample> samples)
       {
-        if (exp_lut.size() > 0)
+        vector<float> Q, Qh, audio;
+        Q.reserve(samples.size());
+        for (vector<WbRxRtlSdr::Sample>::const_iterator it = samples.begin();
+             it != samples.end();
+             ++it)
         {
-          out.clear();
-          out.reserve(in.size());
-          vector<WbRxRtlSdr::Sample>::const_iterator it;
-          for (it = in.begin(); it != in.end(); ++it)
+          I.push_back(it->real());
+          Q.push_back(it->imag());
+        }
+        hilbert.decimate(Qh, Q);
+        audio.reserve(Qh.size());
+        for (size_t idx=0; idx<Qh.size(); ++idx)
+        {
+          float demod;
+          if (use_lsb)
           {
-            out.push_back(*it * exp_lut[n]);
-            if (++n == exp_lut.size())
-            {
-              n = 0;
-            }
+            demod = I[idx] + Qh[idx];
           }
+          else
+          {
+            demod = I[idx] - Qh[idx];
+          }
+          audio.push_back(demod);
         }
-        else
-        {
-          out = in;
-        }
+        I.erase(I.begin(), I.begin() + Qh.size());
+        sinkWriteSamples(&audio[0], audio.size());
       }
 
     private:
-      unsigned samp_rate;
-      vector<complex<float> > exp_lut;
-      unsigned n;
-
-      /**
-       * @brief Find the greatest common divisor for two numbers
-       * @param dividend The larger number
-       * @param divisor The lesser number
-       *
-       * This function will return the greatest common divisor of the two given
-       * numbers. This implementation requires that the dividend is larger than
-       * the divisor.
-       */
-      unsigned gcd(unsigned dividend, unsigned divisor)
-      {
-        unsigned reminder = dividend % divisor;
-        if (reminder == 0)
-        {
-          return divisor;
-        }
-        return gcd(divisor, reminder);
-      }
+      deque<float>      I;
+      Decimator<float>  hilbert;
+      bool              use_lsb;
   };
+
+#else
+
+  class DemodulatorSsb : public Demodulator
+  {
+    public:
+      DemodulatorSsb(unsigned samp_rate)
+        : trans(samp_rate, 2000), use_lsb(false)
+      {
+      }
+
+      void useLsb(bool use)
+      {
+        use_lsb = use;
+      }
+
+      void iq_received(vector<WbRxRtlSdr::Sample> samples)
+      {
+        vector<WbRxRtlSdr::Sample> translated;
+        if (!use_lsb)
+        {
+            // Complex conjugate each sample to flip the spectrum.
+            // FIXME: This should be needed for LSB modulation but we have to
+            // do it for USB instead to make it work. What's wrong...?
+          vector<WbRxRtlSdr::Sample> conjugated;
+          conjugated.reserve(samples.size());
+          for (vector<WbRxRtlSdr::Sample>::const_iterator it = samples.begin();
+              it != samples.end();
+              ++it)
+          {
+            conjugated.push_back(conj(*it));
+          }
+          trans.iq_received(translated, conjugated);
+        }
+        else
+        {
+          trans.iq_received(translated, samples);
+        }
+
+        vector<float> audio;
+        audio.reserve(translated.size());
+        for (vector<WbRxRtlSdr::Sample>::const_iterator it = translated.begin();
+             it != translated.end();
+             ++it)
+        {
+          float demod = it->real();
+          audio.push_back(demod);
+        }
+        sinkWriteSamples(&audio[0], audio.size());
+      }
+
+    private:
+      Translate         trans;
+      bool              use_lsb;
+  };
+#endif
+
+
+  class DemodulatorCw : public Demodulator
+  {
+    public:
+      DemodulatorCw(unsigned samp_rate)
+        : trans(samp_rate, 600)
+      {
+      }
+
+      void iq_received(vector<WbRxRtlSdr::Sample> samples)
+      {
+        vector<WbRxRtlSdr::Sample> translated;
+        trans.iq_received(translated, samples);
+        vector<float> audio;
+        audio.reserve(translated.size());
+        for (vector<WbRxRtlSdr::Sample>::const_iterator it = translated.begin();
+             it != translated.end();
+             ++it)
+        {
+          float demod = it->real();
+          audio.push_back(demod);
+        }
+        sinkWriteSamples(&audio[0], audio.size());
+      }
+
+    private:
+      Translate         trans;
+  };
+
 
   class Channelizer
   {
     public:
       typedef enum
       {
-        BW_WIDE, BW_20K, BW_10K, BW_6K
+        BW_WIDE, BW_20K, BW_10K, BW_6K, BW_3K, BW_500
       } Bandwidth;
 
       virtual ~Channelizer(void) {}
@@ -585,7 +728,9 @@ namespace {
           dec_48k_16k(  3, coeff_dec_48k_16k,   coeff_dec_48k_16k_cnt  ),
           ch_filt(      1, coeff_25k_channel,   coeff_25k_channel_cnt  ),
           ch_filt_narr( 1, coeff_12k5_channel,  coeff_12k5_channel_cnt ),
-          ch_filt_6k(   1, coeff_ssb_channel,   coeff_ssb_channel_cnt  ),
+          ch_filt_6k(   1, coeff_nbam_channel,  coeff_nbam_channel_cnt ),
+          ch_filt_3k(   1, coeff_ssb_channel,   coeff_ssb_channel_cnt  ),
+          ch_filt_500(  1, coeff_cw_channel,    coeff_cw_channel_cnt   ),
           dec(0)
       {
         setBw(BW_20K);
@@ -614,14 +759,26 @@ namespace {
           case BW_10K:
             dec = new DecimatorMS4<complex<float> >(dec_960k_192k,
                                                     dec_192k_48k,
-                                                    dec_48k_16k, 
+                                                    dec_48k_16k,
                                                     ch_filt_narr);
             return;
           case BW_6K:
             dec = new DecimatorMS4<complex<float> >(dec_960k_192k,
                                                     dec_192k_48k,
-                                                    dec_48k_16k, 
+                                                    dec_48k_16k,
                                                     ch_filt_6k);
+            return;
+          case BW_3K:
+            dec = new DecimatorMS4<complex<float> >(dec_960k_192k,
+                                                    dec_192k_48k,
+                                                    dec_48k_16k,
+                                                    ch_filt_3k);
+            return;
+          case BW_500:
+            dec = new DecimatorMS4<complex<float> >(dec_960k_192k,
+                                                    dec_192k_48k,
+                                                    dec_48k_16k,
+                                                    ch_filt_500);
             return;
         }
         assert(!"Channelizer::setBw: Unknown bandwidth");
@@ -648,6 +805,8 @@ namespace {
       Decimator<complex<float> >    ch_filt;
       Decimator<complex<float> >    ch_filt_narr;
       Decimator<complex<float> >    ch_filt_6k;
+      Decimator<complex<float> >    ch_filt_3k;
+      Decimator<complex<float> >    ch_filt_500;
       DecimatorMS<complex<float> >  *dec;
   };
 
@@ -661,7 +820,9 @@ namespace {
           dec_32k_16k   (2, coeff_dec_32k_16k,    coeff_dec_32k_16k_cnt   ),
           ch_filt       (1, coeff_25k_channel,    coeff_25k_channel_cnt   ),
           ch_filt_narr  (1, coeff_12k5_channel,   coeff_12k5_channel_cnt  ),
-          ch_filt_6k    (1, coeff_ssb_channel,    coeff_ssb_channel_cnt   )
+          ch_filt_6k    (1, coeff_nbam_channel,   coeff_nbam_channel_cnt  ),
+          ch_filt_3k    (1, coeff_ssb_channel,    coeff_ssb_channel_cnt   ),
+          ch_filt_500   (1, coeff_cw_channel,     coeff_cw_channel_cnt    )
       {
         setBw(BW_20K);
       }
@@ -702,6 +863,20 @@ namespace {
                                                     dec_32k_16k,
                                                     ch_filt_6k);
             return;
+          case BW_3K:
+            dec = new DecimatorMS5<complex<float> >(dec_2400k_800k,
+                                                    dec_800k_160k,
+                                                    dec_160k_32k,
+                                                    dec_32k_16k,
+                                                    ch_filt_3k);
+            return;
+          case BW_500:
+            dec = new DecimatorMS5<complex<float> >(dec_2400k_800k,
+                                                    dec_800k_160k,
+                                                    dec_160k_32k,
+                                                    dec_32k_16k,
+                                                    ch_filt_500);
+            return;
         }
         assert(!"Channelizer::setBw: Unknown bandwidth");
       }
@@ -726,6 +901,8 @@ namespace {
       Decimator<complex<float> >    ch_filt;
       Decimator<complex<float> >    ch_filt_narr;
       Decimator<complex<float> >    ch_filt_6k;
+      Decimator<complex<float> >    ch_filt_3k;
+      Decimator<complex<float> >    ch_filt_500;
       DecimatorMS<complex<float> >  *dec;
   };
 
@@ -737,8 +914,9 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
   public:
     Channel(int fq_offset, unsigned sample_rate)
       : sample_rate(sample_rate), channelizer(0),
-        fm_demod(32000.0, 5000.0), demod(0),
-        trans(sample_rate, fq_offset), enabled(true)
+        fm_demod(32000, 5000.0), ssb_demod(16000), cw_demod(16000), demod(0),
+        trans(sample_rate, fq_offset), enabled(true), ch_offset(0),
+        fq_offset(fq_offset)
     {
     }
 
@@ -770,12 +948,14 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
 
     void setFqOffset(int fq_offset)
     {
-      trans.setOffset(fq_offset);
+      this->fq_offset = fq_offset;
+      trans.setOffset(fq_offset - ch_offset);
     }
 
     void setModulation(Ddr::Modulation mod)
     {
       demod = 0;
+      ch_offset = 0;
       switch (mod)
       {
         case Ddr::MOD_FM:
@@ -801,7 +981,32 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
           channelizer->setBw(Channelizer::BW_6K);
           demod = &am_demod;
           break;
+        case Ddr::MOD_USB:
+#ifdef USE_SSB_PHASE_DEMOD
+          channelizer->setBw(Channelizer::BW_6K);
+#else
+          channelizer->setBw(Channelizer::BW_3K);
+          ch_offset = -2000;
+#endif
+          ssb_demod.useLsb(false);
+          demod = &ssb_demod;
+          break;
+        case Ddr::MOD_LSB:
+#ifdef USE_SSB_PHASE_DEMOD
+          channelizer->setBw(Channelizer::BW_6K);
+#else
+          channelizer->setBw(Channelizer::BW_3K);
+          ch_offset = 2000;
+#endif
+          ssb_demod.useLsb(true);
+          demod = &ssb_demod;
+          break;
+        case Ddr::MOD_CW:
+          channelizer->setBw(Channelizer::BW_500);
+          demod = &cw_demod;
+          break;
       }
+      setFqOffset(fq_offset);
       assert((demod != 0) && "Channel::setModulation: Unknown modulation");
       setHandler(demod);
     }
@@ -841,9 +1046,13 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
     Channelizer *channelizer;
     DemodulatorFm fm_demod;
     DemodulatorAm am_demod;
+    DemodulatorSsb ssb_demod;
+    DemodulatorCw cw_demod;
     Demodulator *demod;
     Translate trans;
     bool enabled;
+    int ch_offset;
+    int fq_offset;
 }; /* Channel */
 
 
@@ -983,6 +1192,18 @@ bool Ddr::initialize(void)
   else if (modstr == "NBAM")
   {
     channel->setModulation(MOD_NBAM);
+  }
+  else if (modstr == "USB")
+  {
+    channel->setModulation(MOD_USB);
+  }
+  else if (modstr == "LSB")
+  {
+    channel->setModulation(MOD_LSB);
+  }
+  else if (modstr == "CW")
+  {
+    channel->setModulation(MOD_CW);
   }
   else
   {

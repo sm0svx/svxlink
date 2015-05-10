@@ -127,7 +127,10 @@ class Ddr : public LocalRxBase
       MOD_NBFM,   //!< FM narrow. Narrow band two-way radio 10kHz channel.
       MOD_WBFM,   //!< Wide band FM. Standard FM broadcasting 180kHz channel.
       MOD_AM,     //!< AM. Standard two-way radio 10kHz channel.
-      MOD_NBAM    //!< AM narrow. Narrow band two-way radio 6kHz channel.
+      MOD_NBAM,   //!< AM narrow. Narrow band two-way radio 6kHz channel.
+      MOD_USB,    //!< Upper Sideband 3kHz channel
+      MOD_LSB,    //!< Lower Sideband 3kHz channel
+      MOD_CW      //!< Morse
     } Modulation;
 
     static Ddr *find(const std::string &name);
