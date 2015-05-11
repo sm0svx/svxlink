@@ -291,7 +291,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 //cout << "message <---------- " << con->remoteHost() << ":" << con->remotePort()
 //     << ", type=" << msg->type() << " received\n";
 
-  int state;
+  int state = STATE_READY;
   Clients::iterator it;
 
   for (it=clients.begin(); it!=clients.end(); it++)
@@ -510,7 +510,7 @@ void SvxServer::sendExcept(Async::TcpConnection *con, Msg *msg)
 void SvxServer::sendMsg(Async::TcpConnection *con, Msg *msg)
 {
 
-  assert (con->isConnected());
+  assert(con->isConnected());
   if (clients.size() < 1)
   {
     return;
@@ -530,7 +530,6 @@ void SvxServer::sendMsg(Async::TcpConnection *con, Msg *msg)
       clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
     }
   }
-  delete msg;
 } /* SvxServer::sendMsg */
 
 
@@ -542,11 +541,12 @@ void SvxServer::heartbeat(Async::Timer *t)
   int diff_ms;
 
   assert(clients.size() > 0);
+  MsgHeartbeat *msg = new MsgHeartbeat;
+
   Clients::iterator it;
   for (it = clients.begin(); it != clients.end(); it++)
   {
-    // sendinmg heartbeat to clients
-    MsgHeartbeat *msg = new MsgHeartbeat;
+    // sending heartbeat to clients
     sendMsg(((*it).second).con, msg);
 
     // get clients last activity
