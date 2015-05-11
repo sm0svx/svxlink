@@ -409,7 +409,7 @@ namespace {
   class AGC
   {
     public:
-      AGC(float attack=1.0e0, float decay=1.0e-2, float max_gain=2.0e2,
+      AGC(float attack=1.0e1, float decay=1.0e-2, float max_gain=2.0e2,
           float reference=0.25f)
         : m_attack(attack), m_decay(decay), m_max_gain(max_gain),
           m_reference(reference), m_gain(1.0f)
