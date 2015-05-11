@@ -612,8 +612,6 @@ void NetUplink::sendMsg(Msg *msg)
     {
       cerr << "*** ERROR: TCP transmit error in NetUplink \"" << name
            << "\": " << strerror(errno) << ".\n";
-      con->disconnect();
-      clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
     }
     else if (written != static_cast<int>(msg->size()))
     {
