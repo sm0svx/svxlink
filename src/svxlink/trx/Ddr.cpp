@@ -682,45 +682,27 @@ namespace {
   {
     public:
       DemodulatorSsb(unsigned samp_rate)
-        : trans(samp_rate, 2000), use_lsb(false)
+        : trans(samp_rate, -2000)
       {
       }
 
-      void useLsb(bool use)
+      void useLsb(bool lsb)
       {
-        use_lsb = use;
+        trans.setOffset(lsb ? 2000 : -2000);
       }
 
       void iq_received(vector<WbRxRtlSdr::Sample> samples)
       {
-        vector<WbRxRtlSdr::Sample> translated;
-        if (!use_lsb)
-        {
-            // Complex conjugate each sample to flip the spectrum.
-            // FIXME: This should be needed for LSB modulation but we have to
-            // do it for USB instead to make it work. What's wrong...?
-          vector<WbRxRtlSdr::Sample> conjugated;
-          conjugated.reserve(samples.size());
-          for (vector<WbRxRtlSdr::Sample>::const_iterator it = samples.begin();
-              it != samples.end();
-              ++it)
-          {
-            conjugated.push_back(conj(*it));
-          }
-          trans.iq_received(translated, conjugated);
-        }
-        else
-        {
-          trans.iq_received(translated, samples);
-        }
-
         vector<WbRxRtlSdr::Sample> gain_adjusted;
-        agc.iq_received(gain_adjusted, translated);
+        agc.iq_received(gain_adjusted, samples);
+
+        vector<WbRxRtlSdr::Sample> translated;
+        trans.iq_received(translated, gain_adjusted);
 
         vector<float> audio;
         audio.reserve(gain_adjusted.size());
-        for (vector<WbRxRtlSdr::Sample>::const_iterator it = gain_adjusted.begin();
-             it != gain_adjusted.end();
+        for (vector<WbRxRtlSdr::Sample>::const_iterator it = translated.begin();
+             it != translated.end();
              ++it)
         {
           float demod = it->real();
@@ -731,7 +713,6 @@ namespace {
 
     private:
       Translate         trans;
-      bool              use_lsb;
       AGC               agc;
   };
 #endif
