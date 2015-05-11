@@ -510,22 +510,27 @@ void SvxServer::sendExcept(Async::TcpConnection *con, Msg *msg)
 void SvxServer::sendMsg(Async::TcpConnection *con, Msg *msg)
 {
 
+  assert (con->isConnected());
   if (clients.size() < 1)
   {
     return;
   }
 
   int written = con->write(msg, msg->size());
-  if (written == -1)
+  if (written != static_cast<int>(msg->size()))
   {
-    cerr << "*** ERROR: TCP transmit error.\n";
+    if (written == -1)
+    {
+      cerr << "*** ERROR: TCP transmit error.\n";
+    }
+    else
+    {
+      cerr << "*** ERROR: TCP transmit buffer overflow.\n";
+      con->disconnect();
+      clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+    }
   }
-  else if (written != static_cast<int>(msg->size()))
-  {
-    cerr << "*** ERROR: TCP transmit buffer overflow.\n";
-    con->disconnect();
-    clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
-  }
+  delete msg;
 } /* SvxServer::sendMsg */
 
 
@@ -553,7 +558,7 @@ void SvxServer::heartbeat(Async::Timer *t)
            << (*it).second.con->remoteHost() << ":"
            << (*it).second.con->remotePort() << endl;
       ((*it).second).con->disconnect();
-      clientDisconnected(((*it).second).con, 
+      clientDisconnected(((*it).second).con,
                       TcpConnection::DR_ORDERED_DISCONNECT);
     }
   }
