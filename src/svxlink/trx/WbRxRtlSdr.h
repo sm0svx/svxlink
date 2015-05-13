@@ -216,6 +216,7 @@ class WbRxRtlSdr : public sigc::trackable
     Ddrs ddrs;
     bool auto_tune_enabled;
     std::string m_name;
+    int xvrtr_offset;
 
     WbRxRtlSdr(const WbRxRtlSdr&);
     WbRxRtlSdr& operator=(const WbRxRtlSdr&);
