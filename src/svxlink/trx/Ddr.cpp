@@ -1059,6 +1059,10 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
           channelizer->setBw(Channelizer::BW_500);
           demod = &cw_demod;
           break;
+        case Ddr::MOD_WBCW:
+          channelizer->setBw(Channelizer::BW_3K);
+          demod = &cw_demod;
+          break;
       }
       setFqOffset(fq_offset);
       assert((demod != 0) && "Channel::setModulation: Unknown modulation");
@@ -1258,6 +1262,10 @@ bool Ddr::initialize(void)
   else if (modstr == "CW")
   {
     channel->setModulation(MOD_CW);
+  }
+  else if (modstr == "WBCW")
+  {
+    channel->setModulation(MOD_WBCW);
   }
   else
   {
