@@ -442,6 +442,20 @@ class MsgSetFq : public Msg
 }; /* MsgSetFq */
 
 
+class MsgSetModulation : public Msg
+{
+  public:
+    static const unsigned TYPE = 104;
+    MsgSetModulation(Rx::Modulation mod)
+      : Msg(TYPE, sizeof(MsgSetModulation)), m_modulation(mod) {}
+    Rx::Modulation modulation(void) const { return m_modulation; }
+
+  private:
+    Rx::Modulation  m_modulation;
+
+}; /* MsgSetModulation */
+
+
 
 /******************************** RX Messages ********************************/
 

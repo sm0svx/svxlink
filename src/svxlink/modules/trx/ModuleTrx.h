@@ -124,6 +124,7 @@ class ModuleTrx : public Module
   private:
     Rx *rx;
     Tx *tx;
+    bool auto_mod_select;
 
     bool initialize(void);
     void activateInit(void);

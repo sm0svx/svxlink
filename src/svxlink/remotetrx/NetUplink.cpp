@@ -519,6 +519,15 @@ void NetUplink::handleMsg(Msg *msg)
       break;
     }
 
+    case MsgSetModulation::TYPE:
+    {
+      MsgSetModulation *mod_msg = reinterpret_cast<MsgSetModulation*>(msg);
+      cout << rx->name() << ": SetModulation("
+           << mod_msg->modulation() << ")\n";
+      rx->setModulation(mod_msg->modulation());
+      break;
+    }
+
     case MsgSetMuteState::TYPE:
     {
       MsgSetMuteState *mute_msg = reinterpret_cast<MsgSetMuteState*>(msg);

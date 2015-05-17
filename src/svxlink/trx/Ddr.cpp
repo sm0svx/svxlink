@@ -1064,6 +1064,8 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
           channelizer->setBw(Channelizer::BW_3K);
           demod = &cw_demod;
           break;
+        case Ddr::MOD_UNKNOWN:
+          break;
       }
       setFqOffset(fq_offset);
       assert((demod != 0) && "Channel::setModulation: Unknown modulation");
@@ -1296,12 +1298,6 @@ void Ddr::tunerFqChanged(uint32_t center_fq)
 } /* Ddr::tunerFqChanged */
 
 
-void Ddr::setModulation(Modulation mod)
-{
-  channel->setModulation(mod);
-} /* Ddr::setModulation */
-
-
 unsigned Ddr::preDemodSampleRate(void) const
 {
   return channel->chSampRate();
@@ -1320,6 +1316,12 @@ void Ddr::setFq(unsigned fq)
   rtl->updateDdrFq(this);
   updateFqOffset();
 } /* Ddr::setFq */
+
+
+void Ddr::setModulation(Modulation mod)
+{
+  channel->setModulation(mod);
+} /* Ddr::setModulation */
 
 
 

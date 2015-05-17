@@ -185,6 +185,12 @@ class NetRx : public Rx
     virtual void setFq(unsigned fq);
 
     /**
+     * @brief   Set the receiver modulation mode
+     * @param   mod The modulation to set (@see Modulation)
+     */
+    virtual void setModulation(Modulation mod);
+
+    /**
      * @brief Resume audio output to the sink
      *
      * This function will be called when the registered audio sink is
@@ -192,10 +198,8 @@ class NetRx : public Rx
      * This function is normally only called from a connected sink object.
      */
     //virtual void resumeOutput(void) {}
-    
 
   protected:
-    
 
   private:
     Async::Config     	&cfg;
@@ -210,6 +214,7 @@ class NetRx : public Rx
     bool      	      	sql_is_open;
     Async::AudioDecoder *audio_dec;
     unsigned            fq;
+    Modulation          modulation;
     
     void connectionReady(bool is_ready);
     void handleMsg(NetTrxMsg::Msg *msg);

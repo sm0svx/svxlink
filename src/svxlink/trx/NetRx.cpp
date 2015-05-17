@@ -134,7 +134,8 @@ NetRx::NetRx(Config &cfg, const string& name)
   : Rx(cfg, name), cfg(cfg), mute_state(Rx::MUTE_ALL), tcp_con(0),
     log_disconnects_once(false), log_disconnect(true),
     last_signal_strength(0.0), last_sql_rx_id(Rx::ID_UNKNOWN),
-    unflushed_samples(false), sql_is_open(false), audio_dec(0), fq(0)
+    unflushed_samples(false), sql_is_open(false), audio_dec(0), fq(0),
+    modulation(MOD_UNKNOWN)
 {
 } /* NetRx::NetRx */
 
@@ -325,6 +326,14 @@ void NetRx::setFq(unsigned fq)
 } /* NetRx::setFq */
 
 
+void NetRx::setModulation(Modulation mod)
+{
+  modulation = mod;
+  MsgSetModulation *msg = new MsgSetModulation(mod);
+  sendMsg(msg);
+} /* NetRx::setModulation */
+
+
 
 /****************************************************************************
  *
@@ -370,6 +379,12 @@ void NetRx::connectionReady(bool is_ready)
       sendMsg(msg);
     }
     
+    if (modulation != MOD_UNKNOWN)
+    {
+      MsgSetModulation *msg = new MsgSetModulation(modulation);
+      sendMsg(msg);
+    }
+
     MsgAudioCodecSelect *msg = new MsgRxAudioCodecSelect(audio_dec->name());
     string opt_prefix(audio_dec->name());
     opt_prefix += "_ENC_";

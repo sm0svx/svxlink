@@ -133,7 +133,7 @@ extern "C" {
  ****************************************************************************/
 
 ModuleTrx::ModuleTrx(void *dl_handle, Logic *logic, const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), rx(0), tx(0)
+  : Module(dl_handle, logic, cfg_name), rx(0), tx(0), auto_mod_select(false)
 {
   cout << "\tModule Trx v" MODULE_TRX_VERSION " starting...\n";
 
@@ -191,7 +191,7 @@ bool ModuleTrx::initialize(void)
   if ((rx == 0) || !rx->initialize())
   {
     cerr << "*** ERROR: Could not initialize receiver \"" << rx_name
-         << "\" in ModuleTrx\n";
+         << "\" in module \"" << name() << "\"\n";
     return false;
   }
   AudioSource::setHandler(rx);
@@ -202,10 +202,25 @@ bool ModuleTrx::initialize(void)
   if ((tx == 0) || !tx->initialize())
   {
     cerr << "*** ERROR: Could not initialize transmitter \"" << tx_name
-         << "\" in ModuleTrx\n";
+         << "\" in module \"" << name() << "\"\n";
     return false;
   }
   AudioSink::setHandler(tx);
+
+  string modstr;
+  if (cfg().getValue(cfgName(), "MODULATION", modstr))
+  {
+    if (modstr == "AUTO")
+    {
+      auto_mod_select = true;
+    }
+    else
+    {
+      cerr << "*** ERROR: Unsupported modulation \"" << modstr
+           << "\" configured in module \"" << name() << "\"\n";
+      return false;
+    }
+  }
 
   return true;
   
@@ -310,6 +325,17 @@ void ModuleTrx::dtmfCmdReceived(const string& cmd)
          << setprecision(3) << fixed << fq << "kHz\n";
     cout.flags(orig_cout_flags);
     rx->setFq(1000 * fq);
+    if (auto_mod_select)
+    {
+      if (fq < 10000.0)
+      {
+        rx->setModulation(Rx::MOD_LSB);
+      }
+      else
+      {
+        rx->setModulation(Rx::MOD_USB);
+      }
+    }
   }
 } /* dtmfCmdReceived */
 

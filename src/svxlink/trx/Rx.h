@@ -134,6 +134,23 @@ class Rx : public sigc::trackable, public Async::AudioSource
       MUTE_ALL      //! Mute everything. Also close the audio device.
     } MuteState;
 
+    /**
+     * @brief   Modulation types
+     */
+    typedef enum
+    {
+      MOD_UNKNOWN,  //!< Unknown/unset
+      MOD_FM,       //!< FM. Standard two-way radio 20kHz channel.
+      MOD_NBFM,     //!< FM narrow. Narrow band two-way radio 10kHz channel.
+      MOD_WBFM,     //!< Wide band FM. Standard FM broadcasting 180kHz channel.
+      MOD_AM,       //!< AM. Standard two-way radio 10kHz channel.
+      MOD_NBAM,     //!< AM narrow. Narrow band two-way radio 6kHz channel.
+      MOD_USB,      //!< Upper Sideband 3kHz channel
+      MOD_LSB,      //!< Lower Sideband 3kHz channel
+      MOD_CW,       //!< Morse
+      MOD_WBCW      //!< Morse 3kHz channel
+    } Modulation;
+
     static const char ID_UNKNOWN = '?';   //! Unknown RX id
 
     /**
@@ -226,6 +243,12 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @param   fq The frequency in Hz
      */
     virtual void setFq(unsigned fq) {}
+
+    /**
+     * @brief   Set the receiver modulation mode
+     * @param   mod The modulation to set (@see Modulation)
+     */
+    virtual void setModulation(Modulation mod) {}
 
     /**
      * @brief 	A signal that indicates if the squelch is open or not
