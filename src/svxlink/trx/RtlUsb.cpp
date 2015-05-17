@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <iostream>
 #include <cassert>
+#include <queue>
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
@@ -88,6 +89,163 @@ using namespace Async;
  *
  ****************************************************************************/
 
+class RtlUsb::SampleBuffer : public sigc::trackable
+{
+  public:
+    SampleBuffer(uint32_t block_size)
+      : block_size(block_size), buf(0), buf_cnt(0), watch(0)
+    {
+      pthread_mutex_init(&mutex, NULL);
+
+      buf = new uint8_t[block_size];
+
+      int r = pipe(signal_pipe);
+      assert (r == 0);
+      watch = new FdWatch(signal_pipe[0], FdWatch::FD_WATCH_RD);
+      watch->activity.connect(
+          sigc::hide(mem_fun(*this, &SampleBuffer::removeSamples)));
+    }
+
+    ~SampleBuffer(void)
+    {
+      pthread_mutex_destroy(&mutex);
+      delete [] buf;
+      buf = 0;
+      while (!block_queue.empty())
+      {
+        delete [] block_queue.front();
+        block_queue.pop();
+      }
+      if (signal_pipe[0] != -1)
+      {
+        if (close(signal_pipe[0]) != 0)
+        {
+          cerr << "*** ERROR: Close error on read end of SampleBuffer pipe: "
+               << strerror(errno) << endl;
+        }
+      }
+      if (signal_pipe[1] != -1)
+      {
+        if (close(signal_pipe[1]) != 0)
+        {
+          cerr << "*** ERROR: Close error on write end of SampleBuffer pipe: "
+               << strerror(errno) << "\n";
+        }
+      }
+    }
+
+    void setBlockSize(uint32_t new_block_size)
+    {
+      lockMutex();
+      block_size = new_block_size;
+      while (!block_queue.empty())
+      {
+        delete block_queue.front();
+        block_queue.pop();
+      }
+      delete [] buf;
+      buf = new uint8_t[block_size];
+      buf_cnt = 0;
+      unlockMutex();
+    }
+
+    void clear(void)
+    {
+      lockMutex();
+      while (!block_queue.empty())
+      {
+        delete [] block_queue.front();
+        block_queue.pop();
+      }
+      buf_cnt = 0;
+      unlockMutex();
+    }
+
+    bool addSamples(const unsigned char *samples, uint32_t len)
+    {
+      lockMutex();
+      while (len > 0)
+      {
+        uint32_t cpy_cnt = min(block_size - buf_cnt, len);
+        memcpy(buf + buf_cnt, samples, cpy_cnt);
+        buf_cnt += cpy_cnt;
+        len -= cpy_cnt;
+        samples += cpy_cnt;
+        if (buf_cnt >= block_size)
+        {
+          block_queue.push(buf);
+          buf = new uint8_t[block_size];
+          buf_cnt = 0;
+          unlockMutex();
+          if (write(signal_pipe[1], "S", 1) != 1)
+          {
+            return false;
+          }
+          lockMutex();
+        }
+      }
+      unlockMutex();
+      return true;
+    }
+
+    sigc::signal<void, complex<uint8_t>*, int> handleIq;
+
+  private:
+    uint32_t          block_size;
+    uint8_t           *buf;
+    uint32_t          buf_cnt;
+    pthread_mutex_t   mutex;
+    int               signal_pipe[2];
+    FdWatch           *watch;
+    queue<uint8_t*>   block_queue;
+
+    void lockMutex(void)
+    {
+      int r = pthread_mutex_lock(&mutex);
+      if (r != 0)
+      {
+        cerr << "*** ERROR: pthread_mutex_lock failed: "
+             << strerror(r) << endl;
+        abort();
+      }
+    }
+
+    void unlockMutex(void)
+    {
+      int r = pthread_mutex_unlock(&mutex);
+      if (r != 0)
+      {
+        cerr << "*** ERROR: pthread_mutex_unlock failed: "
+             << strerror(r) << endl;
+        abort();
+      }
+    }
+
+    void removeSamples(void)
+    {
+      char read_buf[64];
+      int r = read(signal_pipe[0], read_buf, sizeof(read_buf));
+      if (r <= 0)
+      {
+        cerr << "*** ERROR: Error while reading SampleBuffer signal pipe\n";
+        abort();
+      }
+
+      lockMutex();
+      while (!block_queue.empty())
+      {
+        uint8_t *buf = block_queue.front();
+        block_queue.pop();
+        unlockMutex();
+        complex<uint8_t> *samples = reinterpret_cast<complex<uint8_t>*>(buf);
+        handleIq(samples, block_size / 2);
+        delete [] buf;
+        lockMutex();
+      }
+      unlockMutex();
+    }
+};
+
 
 
 /****************************************************************************
@@ -122,22 +280,21 @@ using namespace Async;
  ****************************************************************************/
 
 RtlUsb::RtlUsb(const std::string &match)
-  : reconnect_timer(0, Timer::TYPE_ONESHOT), dev(NULL),
-    sample_pipe_watch(0), buf(0), buf_pos(0), dev_match(match), dev_name("?"),
-    do_exit(false)
+  : reconnect_timer(0, Timer::TYPE_ONESHOT), dev(NULL), dev_match(match),
+    dev_name("?"), rtl_reader_thread_started(false)
 {
-  sample_pipe[0] = sample_pipe[1] = -1;
-  buf = new char[2 * blockSize()];
   reconnect_timer.expired.connect(
       hide(mem_fun(*this, &RtlUsb::initializeDongle)));
+  sample_buf = new SampleBuffer(blockSize());
+  sample_buf->handleIq.connect(mem_fun(*this, &RtlUsb::handleIq));
 } /* RtlUsb::RtlUsb */
 
 
 RtlUsb::~RtlUsb(void)
 {
   verboseClose();
-  delete [] buf;
-  buf = 0;
+  delete sample_buf;
+  sample_buf = 0;
 } /* RtlUsb::~RtlUsb */
 
 
@@ -193,8 +350,7 @@ void RtlUsb::handleSetCenterFq(uint32_t fq)
 
 void RtlUsb::handleSetSampleRate(uint32_t rate)
 {
-  delete [] buf;
-  buf = new char[2 * blockSize()];
+  sample_buf->setBlockSize(blockSize());
 
   if (dev == NULL)
   {
@@ -347,8 +503,13 @@ void *RtlUsb::startRtlReader(void *data)
 } /* RtlUsb::startRtlReader */
 
 
+#if 0
 void RtlUsb::rtlReader(void)
 {
+  unsigned samp_cnt = 0;
+  struct timespec prev_ts;
+  clock_gettime(CLOCK_MONOTONIC, &prev_ts);
+
   while (!do_exit)
   {
     uint32_t buf_len = 16384 * ceil(blockSize() / 16384.0);
@@ -368,6 +529,19 @@ void RtlUsb::rtlReader(void)
               "sample pipe\n";
       break;
     }
+
+    samp_cnt += n_read / 2;
+    if (samp_cnt >= sampleRate())
+    {
+      struct timespec ts;
+      clock_gettime(CLOCK_MONOTONIC, &ts);
+      double diff = (ts.tv_sec - prev_ts.tv_sec) +
+                    (ts.tv_nsec - prev_ts.tv_nsec) / 1000000000.0;
+      double samp_rate = samp_cnt / diff;
+      cout << "### samp_rate=" << samp_rate << endl;
+      prev_ts = ts;
+      samp_cnt = 0;
+    }
   }
 
   int r = close(sample_pipe[1]);
@@ -377,34 +551,29 @@ void RtlUsb::rtlReader(void)
          << "sample reader pipe: " << strerror(errno) << "\n";
   }
 } /* RtlUsb::rtlReader */
-
-
-void RtlUsb::rtlSamplesReceived(void)
+#else
+void RtlUsb::rtlReader(void)
 {
-  size_t read_len = 2 * blockSize() - buf_pos;
-  ssize_t len = read(sample_pipe[0], buf + buf_pos, read_len);
-  /*
-  cout << "### read_len=" << read_len << " buf_pos=" << buf_pos
-       << " len=" << len << endl;
-  */
-  if (len < 0)
+  uint32_t buf_len = 16384 * ceil(blockSize() / 16384.0);
+  int r = rtlsdr_read_async(dev, rtlsdrCallback, this, 0, buf_len);
+  if (r != 0)
   {
-    cerr << "*** WARNING: Failed to read from RTL sample pipe\n";
+    cerr << "*** WARNING: Failed to read samples from RTL dongle\n";
   }
-  else if (len == 0)
-  {
-    verboseClose();
-    return;
-  }
-  buf_pos += len;
+} /* RtlUsb::rtlReader */
 
-  if (buf_pos >= 2 * blockSize())
+
+void RtlUsb::rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx)
+{
+  //cout << "### RtlUsb::rtlsdrCallback: len=" << len << endl;
+  RtlUsb *rtl = reinterpret_cast<RtlUsb*>(ctx);
+  if (!rtl->sample_buf->addSamples(buf, len))
   {
-    buf_pos = 0;
-    complex<uint8_t> *samples = reinterpret_cast<complex<uint8_t>*>(buf);
-    handleIq(samples, blockSize());
+    cerr << "*** WARNING: Write error while writing to the RTL sample buffer\n";
+    rtl->verboseClose();
   }
-} /* RtlUsb::rtlSamplesReceived */
+} /* RtlUsb::rtlsdrCallback */
+#endif
 
 
 void RtlUsb::initializeDongle(void)
@@ -476,30 +645,15 @@ void RtlUsb::initializeDongle(void)
     return;
   }
 
-  r = pipe(sample_pipe);
-  if (r != 0)
-  {
-    cerr << "*** ERROR: Failed to create RTL reader pipe\n";
-    sample_pipe[0] = sample_pipe[1] = -1;
-    verboseClose();
-    return;
-  }
-
-  do_exit = false;
   r = pthread_create(&rtl_reader_thread, NULL, startRtlReader, this);
   if (r != 0)
   {
     cerr << "*** ERROR: Failed to create RTL reader thread: "
          << strerror(r) << "\n";
-    close(sample_pipe[1]);
-    sample_pipe[1] = -1;
     verboseClose();
     return;
   }
-
-  sample_pipe_watch = new FdWatch(sample_pipe[0], FdWatch::FD_WATCH_RD);
-  sample_pipe_watch->activity.connect(
-      hide(mem_fun(*this, &RtlUsb::rtlSamplesReceived)));
+  rtl_reader_thread_started = true;
 
   char vendor[256], product[256], serial[256];
   r = rtlsdr_get_device_usb_strings(dev_index, vendor, product, serial);
@@ -513,7 +667,6 @@ void RtlUsb::initializeDongle(void)
   ss << "[" << dev_index << "] " << vendor << " " << product 
      << " SN:" << serial;
   dev_name = ss.str();
-  //cout << "### Device name: " << dev_name << endl;
 
     // Stop the reconnect timer
   reconnect_timer.setEnable(false);
@@ -532,41 +685,25 @@ void RtlUsb::verboseClose(void)
     return;
   }
 
-    // Signal the RTL reader thread to exit
-  do_exit = true;
-
-    // Close the read end of the sample pipe. If the RTL reader thread is
-    // stuck in writing to the pipe, or is about to write, an error will
-    // occur and the thread will exit.
-  delete sample_pipe_watch;
-  sample_pipe_watch = 0;
-  int r;
-  if (sample_pipe[0] >= 0)
+  if (rtl_reader_thread_started)
   {
-    r = close(sample_pipe[0]);
+    int r = rtlsdr_cancel_async(dev);
     if (r != 0)
     {
-      cerr << "*** WARNING: Failed to close read end of RTL "
-           << "sample reader pipe: " << strerror(errno) << "\n";
+      cerr << "*** WARNING: Failed to cancel the RTL async reader\n";
     }
-    sample_pipe[0] = -1;
-  }
 
-    // If the write end of the sample pipe is open the RTL reader thread is
-    // running so we need to wait for it to stop
-  if (sample_pipe[1] >= 0)
-  {
     r = pthread_join(rtl_reader_thread, NULL);
     if (r != 0)
     {
       cerr << "*** WARNING: Failed to join the RTL reader thread: "
            << strerror(r) << "\n";
     }
-    sample_pipe[1] = -1;
+    rtl_reader_thread_started = false;
   }
 
     // Close the RTL device
-  r = rtlsdr_close(dev);
+  int r = rtlsdr_close(dev);
   if (r < 0)
   {
     cerr << "*** WARNING: Failed to close RTL device.\n";
