@@ -222,6 +222,12 @@ class Rx : public sigc::trackable, public Async::AudioSource
     virtual bool isReady(void) const { return true; }
 
     /**
+     * @brief   Set the receiver frequency
+     * @param   fq The frequency in Hz
+     */
+    virtual void setFq(unsigned fq) {}
+
+    /**
      * @brief 	A signal that indicates if the squelch is open or not
      * @param 	is_open \em True if the squelch is open or \em false if not
      */

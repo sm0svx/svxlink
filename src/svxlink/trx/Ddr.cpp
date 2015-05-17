@@ -1292,24 +1292,7 @@ bool Ddr::initialize(void)
 
 void Ddr::tunerFqChanged(uint32_t center_fq)
 {
-  if (channel == 0)
-  {
-    return;
-  }
-
-  int new_offset = fq - center_fq;
-  if (static_cast<uint32_t>(abs(new_offset)) > (rtl->sampleRate() / 2)-12500)
-  {
-    if (channel->isEnabled())
-    {
-      cout << "*** WARNING: Could not fit DDR " << name() << " into tuner "
-           << rtl->name() << endl;
-      channel->disable();
-    }
-    return;
-  }
-  channel->setFqOffset(new_offset);
-  channel->enable();
+  updateFqOffset();
 } /* Ddr::tunerFqChanged */
 
 
@@ -1329,6 +1312,14 @@ bool Ddr::isReady(void) const
 {
   return (rtl != 0) && rtl->isReady();
 } /* Ddr::isReady */
+
+
+void Ddr::setFq(unsigned fq)
+{
+  this->fq = fq;
+  rtl->updateDdrFq(this);
+  updateFqOffset();
+} /* Ddr::setFq */
 
 
 
@@ -1367,6 +1358,30 @@ Async::AudioSource *Ddr::audioSource(void)
  * Private member functions
  *
  ****************************************************************************/
+
+void Ddr::updateFqOffset(void)
+{
+  if ((channel == 0) || (rtl == 0))
+  {
+    return;
+  }
+
+  double new_offset = fq - rtl->centerFq();
+  if (abs(new_offset) > (rtl->sampleRate() / 2)-12500)
+  {
+    if (channel->isEnabled())
+    {
+      cout << "*** WARNING: Could not fit DDR \"" << name() 
+           << "\" with frequency " << fq << "Hz into tuner " 
+           << rtl->name() << endl;
+      channel->disable();
+    }
+    return;
+  }
+  channel->setFqOffset(new_offset);
+  channel->enable();
+} /* Ddr::updateFqOffset */
+
 
 
 /*

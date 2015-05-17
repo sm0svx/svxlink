@@ -186,6 +186,12 @@ class Ddr : public LocalRxBase
     virtual bool isReady(void) const;
 
     /**
+     * @brief   Set the receiver frequency
+     * @param   fq The frequency in Hz
+     */
+    virtual void setFq(unsigned fq);
+
+    /**
      * @brief   A signal that is emitted when new I/Q data is available
      * @param   samples The new samples that are available
      *
@@ -245,7 +251,9 @@ class Ddr : public LocalRxBase
     Async::Config           &cfg;
     Channel                 *channel;
     WbRxRtlSdr              *rtl;
-    uint32_t                fq;
+    double                  fq;
+
+    void updateFqOffset(void);
     
 };  /* class Ddr */
 
