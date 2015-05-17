@@ -511,6 +511,14 @@ void NetUplink::handleMsg(Msg *msg)
       break;
     }
     
+    case MsgSetFq::TYPE:
+    {
+      MsgSetFq *fq_msg = reinterpret_cast<MsgSetFq*>(msg);
+      cout << rx->name() << ": SetFq(" << fq_msg->fq() << ")\n";
+      rx->setFq(fq_msg->fq());
+      break;
+    }
+
     case MsgSetMuteState::TYPE:
     {
       MsgSetMuteState *mute_msg = reinterpret_cast<MsgSetMuteState*>(msg);

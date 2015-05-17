@@ -317,6 +317,13 @@ void NetRx::reset(void)
 } /* NetRx::reset */
 
 
+void NetRx::setFq(unsigned fq)
+{
+  MsgSetFq *msg = new MsgSetFq(fq);
+  sendMsg(msg);
+} /* NetRx::setFq */
+
+
 
 /****************************************************************************
  *

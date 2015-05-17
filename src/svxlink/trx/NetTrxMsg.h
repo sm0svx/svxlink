@@ -428,6 +428,19 @@ class MsgAudio : public Msg
 }; /* MsgAudio */
 
 
+class MsgSetFq : public Msg
+{
+  public:
+    static const unsigned TYPE = 103;
+    MsgSetFq(unsigned fq)
+      : Msg(TYPE, sizeof(MsgSetFq)), m_fq(fq) {}
+    unsigned fq(void) const { return m_fq; }
+  
+  private:
+    uint32_t  m_fq;
+    
+}; /* MsgSetFq */
+
 
 
 /******************************** RX Messages ********************************/

@@ -179,6 +179,12 @@ class NetRx : public Rx
     void reset(void);
     
     /**
+     * @brief   Set the receiver frequency
+     * @param   fq The frequency in Hz
+     */
+    virtual void setFq(unsigned fq);
+
+    /**
      * @brief Resume audio output to the sink
      *
      * This function will be called when the registered audio sink is
