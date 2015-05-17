@@ -220,7 +220,6 @@ class ModuleEchoLink : public Module
     void squelchOpen(bool is_open);
     int audioFromRx(float *samples, int count);
     void allMsgsWritten(void);
-    void reportState(void);
 
     void onStatusChanged(EchoLink::StationData::Status status);
     void onStationListUpdated(void);

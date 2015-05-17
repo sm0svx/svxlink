@@ -790,28 +790,6 @@ void ModuleEchoLink::allMsgsWritten(void)
 
 /*
  *----------------------------------------------------------------------------
- * Method:    reportState
- * Purpose:   Called by the core system when the state of the module should
- *    	      be reported.
- * Input:     None
- * Output:    None
- * Author:    Tobias Blomberg / SM0SVX
- * Created:   2005-02-12
- * Remarks:   FIXME: Is this function needed?? Status reports are handled in
- *    	      TCL only I think.
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-void ModuleEchoLink::reportState(void)
-{
-  stringstream ss;
-  ss << "status_report " << numConnectedStations();
-  processEvent(ss.str());
-} /* reportState */
-
-
-/*
- *----------------------------------------------------------------------------
  * Method:    onStatusChanged
  * Purpose:   Called by the EchoLink::Directory object when the status of
  *    	      the registration is changed in the directory server.

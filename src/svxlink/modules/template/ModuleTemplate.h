@@ -128,7 +128,6 @@ class ModuleTemplate : public Module
     //void dtmfCmdReceivedWhenIdle(const std::string &cmd);
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
-    void reportState(void);
 
 };  /* class ModuleTemplate */
 
