@@ -209,6 +209,7 @@ class NetRx : public Rx
     bool      	      	unflushed_samples;
     bool      	      	sql_is_open;
     Async::AudioDecoder *audio_dec;
+    unsigned            fq;
     
     void connectionReady(bool is_ready);
     void handleMsg(NetTrxMsg::Msg *msg);

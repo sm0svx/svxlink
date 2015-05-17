@@ -134,7 +134,7 @@ NetRx::NetRx(Config &cfg, const string& name)
   : Rx(cfg, name), cfg(cfg), mute_state(Rx::MUTE_ALL), tcp_con(0),
     log_disconnects_once(false), log_disconnect(true),
     last_signal_strength(0.0), last_sql_rx_id(Rx::ID_UNKNOWN),
-    unflushed_samples(false), sql_is_open(false), audio_dec(0)
+    unflushed_samples(false), sql_is_open(false), audio_dec(0), fq(0)
 {
 } /* NetRx::NetRx */
 
@@ -319,6 +319,7 @@ void NetRx::reset(void)
 
 void NetRx::setFq(unsigned fq)
 {
+  this->fq = fq;
   MsgSetFq *msg = new MsgSetFq(fq);
   sendMsg(msg);
 } /* NetRx::setFq */
@@ -360,6 +361,12 @@ void NetRx::connectionReady(bool is_ready)
       MsgAddToneDetector *msg =
           new MsgAddToneDetector((*it)->fq, (*it)->bw, (*it)->thresh,
                                 (*it)->required_duration);
+      sendMsg(msg);
+    }
+
+    if (fq > 0)
+    {
+      MsgSetFq *msg = new MsgSetFq(fq);
       sendMsg(msg);
     }
     
