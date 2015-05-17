@@ -876,7 +876,8 @@ namespace {
           ch_filt_narr  (1, coeff_12k5_channel,   coeff_12k5_channel_cnt  ),
           ch_filt_6k    (1, coeff_nbam_channel,   coeff_nbam_channel_cnt  ),
           ch_filt_3k    (1, coeff_ssb_channel,    coeff_ssb_channel_cnt   ),
-          ch_filt_500   (1, coeff_cw_channel,     coeff_cw_channel_cnt    )
+          ch_filt_500   (1, coeff_cw_channel,     coeff_cw_channel_cnt    ),
+          dec(0)
       {
         setBw(BW_20K);
       }
