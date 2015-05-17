@@ -123,7 +123,8 @@ using namespace Async;
 
 RtlUsb::RtlUsb(const std::string &match)
   : reconnect_timer(0, Timer::TYPE_ONESHOT), dev(NULL),
-    sample_pipe_watch(0), buf(0), buf_pos(0), dev_match(match), dev_name("?")
+    sample_pipe_watch(0), buf(0), buf_pos(0), dev_match(match), dev_name("?"),
+    do_exit(false)
 {
   sample_pipe[0] = sample_pipe[1] = -1;
   buf = new char[2 * blockSize()];
@@ -337,34 +338,45 @@ void RtlUsb::handleEnableDigitalAgc(bool enable)
  *
  ****************************************************************************/
 
-void *RtlUsb::rtlReader(void *data)
+void *RtlUsb::startRtlReader(void *data)
 {
   RtlUsb *rtl = reinterpret_cast<RtlUsb*>(data);
   assert(rtl != 0);
-  //cout << "### blockSize()=" << rtl->blockSize() << endl;
-  uint32_t buf_len = 16384 * (2 * rtl->blockSize() / 16384);
-  int r = rtlsdr_read_async(rtl->dev, rtlsdrCallback, rtl, 0, buf_len);
+  rtl->rtlReader();
+  return NULL;
+} /* RtlUsb::startRtlReader */
+
+
+void RtlUsb::rtlReader(void)
+{
+  while (!do_exit)
+  {
+    uint32_t buf_len = 16384 * ceil(blockSize() / 16384.0);
+    int n_read = 0;
+    char buf[buf_len];
+    int r = rtlsdr_read_sync(dev, buf, buf_len, &n_read);
+    //cout << "### buf_len=" << buf_len << "  n_read=" << n_read << endl;
+    if (r != 0)
+    {
+      cerr << "*** ERROR: Failed to read from the RTL dongle\n";
+      break;
+    }
+    ssize_t ret = write(sample_pipe[1], buf, n_read);
+    if (!do_exit && (ret != n_read))
+    {
+      cerr << "*** ERROR: Samples were lost while writing to RTL "
+              "sample pipe\n";
+      break;
+    }
+  }
+
+  int r = close(sample_pipe[1]);
   if (r != 0)
   {
-    cerr << "*** WARNING: Failed to read samples from RTL dongle\n";
-    close(rtl->sample_pipe[1]);
-    rtl->sample_pipe[1] = -1;
+    cerr << "*** WARNING: Failed to close write end of RTL "
+         << "sample reader pipe: " << strerror(errno) << "\n";
   }
-  return NULL;
 } /* RtlUsb::rtlReader */
-
-
-void RtlUsb::rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx)
-{
-  //cout << "### RtlUsb::rtlsdrCallback: len=" << len << endl;
-  RtlUsb *rtl = reinterpret_cast<RtlUsb*>(ctx);
-  ssize_t ret = write(rtl->sample_pipe[1], buf, len);
-  if (ret != len)
-  {
-    cerr << "*** WARNING: Samples were lost while writing to RTL sample pipe\n";
-    rtl->verboseClose();
-  }
-} /* RtlUsb::rtlsdrCallback */
 
 
 void RtlUsb::rtlSamplesReceived(void)
@@ -464,15 +476,6 @@ void RtlUsb::initializeDongle(void)
     return;
   }
 
-  r = pthread_create(&rtl_reader_thread, NULL, rtlReader, this);
-  if (r != 0)
-  {
-    cerr << "*** ERROR: Failed to create RTL reader thread: "
-         << strerror(r) << "\n";
-    verboseClose();
-    return;
-  }
-
   r = pipe(sample_pipe);
   if (r != 0)
   {
@@ -481,6 +484,19 @@ void RtlUsb::initializeDongle(void)
     verboseClose();
     return;
   }
+
+  do_exit = false;
+  r = pthread_create(&rtl_reader_thread, NULL, startRtlReader, this);
+  if (r != 0)
+  {
+    cerr << "*** ERROR: Failed to create RTL reader thread: "
+         << strerror(r) << "\n";
+    close(sample_pipe[1]);
+    sample_pipe[1] = -1;
+    verboseClose();
+    return;
+  }
+
   sample_pipe_watch = new FdWatch(sample_pipe[0], FdWatch::FD_WATCH_RD);
   sample_pipe_watch->activity.connect(
       hide(mem_fun(*this, &RtlUsb::rtlSamplesReceived)));
@@ -516,31 +532,15 @@ void RtlUsb::verboseClose(void)
     return;
   }
 
-  /*
-  cout << "### Canceling...\n";
-  int r = pthread_cancel(rtl_reader_thread);
-  if (r != 0)
-  {
-    cerr << "*** WARNING: Failed to cancel the RTL reader thread\n";
-  }
-  */
+    // Signal the RTL reader thread to exit
+  do_exit = true;
 
-  int r = rtlsdr_cancel_async(dev);
-  if (r != 0)
-  {
-    cerr << "*** WARNING: Failed to cancel the RTL async reader\n";
-  }
-
-  r = pthread_join(rtl_reader_thread, NULL);
-  if (r != 0)
-  {
-    cerr << "*** WARNING: Failed to join the RTL reader thread: "
-         << strerror(r) << "\n";
-  }
-
+    // Close the read end of the sample pipe. If the RTL reader thread is
+    // stuck in writing to the pipe, or is about to write, an error will
+    // occur and the thread will exit.
   delete sample_pipe_watch;
   sample_pipe_watch = 0;
-
+  int r;
   if (sample_pipe[0] >= 0)
   {
     r = close(sample_pipe[0]);
@@ -549,17 +549,23 @@ void RtlUsb::verboseClose(void)
       cerr << "*** WARNING: Failed to close read end of RTL "
            << "sample reader pipe: " << strerror(errno) << "\n";
     }
-  }
-  if (sample_pipe[1] >= 0)
-  {
-    r = close(sample_pipe[1]);
-    if (r != 0)
-    {
-      cerr << "*** WARNING: Failed to close write end of RTL "
-           << "sample reader pipe: " << strerror(errno) << "\n";
-    }
+    sample_pipe[0] = -1;
   }
 
+    // If the write end of the sample pipe is open the RTL reader thread is
+    // running so we need to wait for it to stop
+  if (sample_pipe[1] >= 0)
+  {
+    r = pthread_join(rtl_reader_thread, NULL);
+    if (r != 0)
+    {
+      cerr << "*** WARNING: Failed to join the RTL reader thread: "
+           << strerror(r) << "\n";
+    }
+    sample_pipe[1] = -1;
+  }
+
+    // Close the RTL device
   r = rtlsdr_close(dev);
   if (r < 0)
   {
@@ -567,11 +573,14 @@ void RtlUsb::verboseClose(void)
   }
   dev = NULL;
 
+    // Start the reconnect timer
   reconnect_timer.setTimeout(RECONNECT_INTERVAL);
   reconnect_timer.setEnable(true);
 
+    // Since we now have no connection to the dongle, the tuner type is unknown
   setTunerType(TUNER_UNKNOWN);
 
+    // Signal to upper layers that the receiver is no longer ready
   readyStateChanged();
 } /* RtlUsb::verboseClose */
 

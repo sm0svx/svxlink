@@ -228,12 +228,13 @@ class RtlUsb : public RtlSdr
     size_t          buf_pos;
     std::string     dev_match;
     std::string     dev_name;
+    volatile bool   do_exit;
 
-    static void *rtlReader(void *data);
-    static void rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx);
+    static void *startRtlReader(void *data);
 
     RtlUsb(const RtlUsb&);
     RtlUsb& operator=(const RtlUsb&);
+    void rtlReader(void);
     void rtlSamplesReceived(void);
     void initializeDongle(void);
     void verboseClose(void);
