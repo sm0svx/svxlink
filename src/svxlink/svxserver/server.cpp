@@ -329,11 +329,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 //cout << "message <---------- " << con->remoteHost() << ":" << con->remotePort()
 //     << ", type=" << msg->type() << " received\n";
 
-<<<<<<< HEAD
-  int state = STATE_DISC;
-=======
   int state = STATE_READY;
->>>>>>> 7243a968a18c5b469242a9874a39484a4553e58a
   Clients::iterator it;
 
   for (it=clients.begin(); it!=clients.end(); it++)
@@ -574,43 +570,6 @@ void SvxServer::sendMsg(Async::TcpConnection *con, Msg *msg)
   }
 } /* SvxServer::sendMsg */
 
-
-<<<<<<< HEAD
-=======
-void SvxServer::heartbeat(Async::Timer *t)
-{
-  struct timeval diff_tv;
-  struct timeval now;
-  gettimeofday(&now, NULL);
-  int diff_ms;
-
-  assert(clients.size() > 0);
-  MsgHeartbeat *msg = new MsgHeartbeat;
-
-  Clients::iterator it;
-  for (it = clients.begin(); it != clients.end(); it++)
-  {
-    // sending heartbeat to clients
-    sendMsg(((*it).second).con, msg);
-
-    // get clients last activity
-    timersub(&now, &((*it).second).last_msg, &diff_tv);
-    diff_ms=diff_tv.tv_sec * 1000 + diff_tv.tv_usec / 1000;
-    if (diff_ms > 15000)
-    {
-      cerr << "**** ERROR: Heartbeat timeout, lost connection from "
-           << (*it).second.con->remoteHost() << ":"
-           << (*it).second.con->remotePort() << endl;
-      ((*it).second).con->disconnect();
-      clientDisconnected(((*it).second).con,
-                      TcpConnection::DR_ORDERED_DISCONNECT);
-    }
-  }
-
-  t->reset();
-} /* SvxServer::heartbeat */
-
->>>>>>> 7243a968a18c5b469242a9874a39484a4553e58a
 
 /*
  * This file has not been truncated
