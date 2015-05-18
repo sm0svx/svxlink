@@ -28,3 +28,5 @@ SIGLEV_DET_CAL=1.0.3.99.3
 # Version for the deviation calibration utility
 DEVCAL=0.99.0
 
+# Version for svxserver
+SVXSERVER=0.0.2

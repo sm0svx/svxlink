@@ -97,8 +97,8 @@ SvxServer::SvxServer(Async::Config &cfg)
   }
 
   cfg.getValue("GLOBAL", "AUTH_KEY", auth_key, true);
-
-  int hbto = 10000;
+  
+  hbto = 10000;
   string value;
   if (cfg.getValue("GLOBAL", "HEARTBEAT_TIMEOUT", value))
   {
@@ -138,7 +138,7 @@ SvxServer::~SvxServer(void)
 
 void SvxServer::clientConnected(Async::TcpConnection *con)
 {
-  cout << ": Client connected: " << con->remoteHost() << ":"
+  cout << "--- Client connected: " << con->remoteHost() << ":"
        << con->remotePort() << endl;
 
   con->dataReceived.connect(mem_fun(*this, &SvxServer::tcpDataReceived));
@@ -160,7 +160,7 @@ void SvxServer::clientConnected(Async::TcpConnection *con)
   MsgAuthChallenge *auth_msg = new MsgAuthChallenge;
   memcpy(auth_challenge, auth_msg->challenge(),
         MsgAuthChallenge::CHALLENGE_LEN);
-
+        
   if (auth_key.empty())
   {
     MsgAuthOk *auth_msg = new MsgAuthOk;
@@ -182,7 +182,7 @@ void SvxServer::clientConnected(Async::TcpConnection *con)
 void SvxServer::clientDisconnected(Async::TcpConnection *con,
       	      	      	Async::TcpConnection::DisconnectReason reason)
 {
-  cout << ": Client disconnected: " << con->remoteHost() << ":"
+  cout << "--- Client disconnected: " << con->remoteHost() << ":"
        << con->remotePort() << endl;
 
   assert(clients.size() > 0);
@@ -199,7 +199,7 @@ void SvxServer::clientDisconnected(Async::TcpConnection *con,
 
   assert(it != clients.end());
 
-  cout << "removing client " << con->remoteHost() << ":"
+  cout << "--- removing client " << con->remoteHost() << ":"
        << con->remotePort()  << " from client list" << endl;
 
   clients.erase(it);
@@ -209,8 +209,46 @@ void SvxServer::clientDisconnected(Async::TcpConnection *con,
     heartbeat_timer->setEnable(false);
     heartbeat_timer->reset();
   }
-
 } /* SvxServer::clientDisconnected */
+
+
+void SvxServer::heartbeat(Async::Timer *t)
+{
+  struct timeval diff_tv;
+  struct timeval now;
+  gettimeofday(&now, NULL);
+  int diff_ms;
+  Clients t_clients;
+
+  assert(clients.size() > 0);
+  MsgHeartbeat *msg = new MsgHeartbeat;
+  Clients::iterator it;
+  for (it = clients.begin(); it != clients.end(); it++)
+  {
+    // sending heartbeat to clients
+    sendMsg(((*it).second).con, msg);
+
+    // get clients last activity
+    timersub(&now, &((*it).second).last_msg, &diff_tv);
+    diff_ms=diff_tv.tv_sec * 1000 + diff_tv.tv_usec / 1000;
+    if (diff_ms > 2 * hbto)
+    {
+      cerr << "**** ERROR: Heartbeat timeout, lost connection from "
+           << (*it).second.con->remoteHost() << ":"
+           << (*it).second.con->remotePort() << endl;
+      t_clients.insert(*it);
+    }
+  }
+  
+  // check if something to delete
+  for (it = t_clients.begin(); it != t_clients.end(); it++)
+  {
+    ((*it).second).con->disconnect();
+    clientDisconnected(((*it).second).con, 
+                  TcpConnection::DR_ORDERED_DISCONNECT);
+  }
+  t->reset();
+} /* SvxServer::heartbeat */
 
 
 int SvxServer::tcpDataReceived(Async::TcpConnection *con, void *data, int size)
@@ -291,7 +329,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 //cout << "message <---------- " << con->remoteHost() << ":" << con->remotePort()
 //     << ", type=" << msg->type() << " received\n";
 
-  int state;
+  int state = STATE_DISC;
   Clients::iterator it;
 
   for (it=clients.begin(); it!=clients.end(); it++)
@@ -323,8 +361,8 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
         {
           cerr << "*** ERROR: Authentication error in svxserver.\n";
           con->disconnect();
-          clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
           ((*it).second).state = STATE_DISC;
+          clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
           return;
         }
         else
@@ -528,38 +566,6 @@ void SvxServer::sendMsg(Async::TcpConnection *con, Msg *msg)
   }
 } /* SvxServer::sendMsg */
 
-
-void SvxServer::heartbeat(Async::Timer *t)
-{
-  struct timeval diff_tv;
-  struct timeval now;
-  gettimeofday(&now, NULL);
-  int diff_ms;
-
-  assert(clients.size() > 0);
-  Clients::iterator it;
-  for (it = clients.begin(); it != clients.end(); it++)
-  {
-    // sendinmg heartbeat to clients
-    MsgHeartbeat *msg = new MsgHeartbeat;
-    sendMsg(((*it).second).con, msg);
-
-    // get clients last activity
-    timersub(&now, &((*it).second).last_msg, &diff_tv);
-    diff_ms=diff_tv.tv_sec * 1000 + diff_tv.tv_usec / 1000;
-    if (diff_ms > 15000)
-    {
-      cerr << "**** ERROR: Heartbeat timeout, lost connection from "
-           << (*it).second.con->remoteHost() << ":"
-           << (*it).second.con->remotePort() << endl;
-      ((*it).second).con->disconnect();
-      clientDisconnected(((*it).second).con, 
-                      TcpConnection::DR_ORDERED_DISCONNECT);
-    }
-  }
-
-  t->reset();
-} /* SvxServer::heartbeat */
 
 
 /*

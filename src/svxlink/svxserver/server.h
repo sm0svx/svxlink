@@ -160,6 +160,7 @@ class SvxServer : public sigc::trackable
 
     std::string     auth_key;
     Async::Timer    *heartbeat_timer;
+    int hbto;
 
     unsigned char   auth_challenge[NetTrxMsg::MsgAuthChallenge::CHALLENGE_LEN];
 
