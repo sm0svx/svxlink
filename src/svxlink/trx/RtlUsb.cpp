@@ -116,14 +116,12 @@ class RtlUsb::SampleBuffer : public sigc::trackable
         delete [] block_queue.front();
         block_queue.pop();
       }
-      if (signal_pipe[0] != -1)
-      {
-        if (close(signal_pipe[0]) != 0)
-        {
-          cerr << "*** ERROR: Close error on read end of SampleBuffer pipe: "
-               << strerror(errno) << endl;
-        }
-      }
+      closeReadPipe();
+      closeWritePipe();
+    }
+
+    void closeWritePipe(void)
+    {
       if (signal_pipe[1] != -1)
       {
         if (close(signal_pipe[1]) != 0)
@@ -131,6 +129,22 @@ class RtlUsb::SampleBuffer : public sigc::trackable
           cerr << "*** ERROR: Close error on write end of SampleBuffer pipe: "
                << strerror(errno) << "\n";
         }
+        signal_pipe[1] = -1;
+      }
+    }
+
+    void closeReadPipe(void)
+    {
+      delete watch;
+      watch = 0;
+      if (signal_pipe[0] != -1)
+      {
+        if (close(signal_pipe[0]) != 0)
+        {
+          cerr << "*** ERROR: Close error on read end of SampleBuffer pipe: "
+               << strerror(errno) << endl;
+        }
+        signal_pipe[0] = -1;
       }
     }
 
@@ -189,6 +203,7 @@ class RtlUsb::SampleBuffer : public sigc::trackable
     }
 
     sigc::signal<void, complex<uint8_t>*, int> handleIq;
+    sigc::signal<void> writePipeClosed;
 
   private:
     uint32_t          block_size;
@@ -225,7 +240,13 @@ class RtlUsb::SampleBuffer : public sigc::trackable
     {
       char read_buf[64];
       int r = read(signal_pipe[0], read_buf, sizeof(read_buf));
-      if (r <= 0)
+      if (r == 0)
+      {
+        closeReadPipe();
+        writePipeClosed();
+        return;
+      }
+      else if (r <= 0)
       {
         cerr << "*** ERROR: Error while reading SampleBuffer signal pipe\n";
         abort();
@@ -281,12 +302,10 @@ class RtlUsb::SampleBuffer : public sigc::trackable
 
 RtlUsb::RtlUsb(const std::string &match)
   : reconnect_timer(0, Timer::TYPE_ONESHOT), dev(NULL), dev_match(match),
-    dev_name("?"), rtl_reader_thread_started(false)
+    dev_name("?"), sample_buf(0), rtl_reader_thread_started(false)
 {
   reconnect_timer.expired.connect(
       hide(mem_fun(*this, &RtlUsb::initializeDongle)));
-  sample_buf = new SampleBuffer(blockSize());
-  sample_buf->handleIq.connect(mem_fun(*this, &RtlUsb::handleIq));
 } /* RtlUsb::RtlUsb */
 
 
@@ -350,7 +369,10 @@ void RtlUsb::handleSetCenterFq(uint32_t fq)
 
 void RtlUsb::handleSetSampleRate(uint32_t rate)
 {
-  sample_buf->setBlockSize(blockSize());
+  if (sample_buf != 0)
+  {
+    sample_buf->setBlockSize(blockSize());
+  }
 
   if (dev == NULL)
   {
@@ -560,6 +582,7 @@ void RtlUsb::rtlReader(void)
   {
     cerr << "*** WARNING: Failed to read samples from RTL dongle\n";
   }
+  sample_buf->closeWritePipe();
 } /* RtlUsb::rtlReader */
 
 
@@ -645,6 +668,10 @@ void RtlUsb::initializeDongle(void)
     return;
   }
 
+  sample_buf = new SampleBuffer(blockSize());
+  sample_buf->handleIq.connect(mem_fun(*this, &RtlUsb::handleIq));
+  sample_buf->writePipeClosed.connect(mem_fun(*this, &RtlUsb::verboseClose));
+
   r = pthread_create(&rtl_reader_thread, NULL, startRtlReader, this);
   if (r != 0)
   {
@@ -678,6 +705,7 @@ void RtlUsb::initializeDongle(void)
 
 void RtlUsb::verboseClose(void)
 {
+  //cout << "### RtlUsb::verboseClose\n";
   if (dev == NULL)
   {
     reconnect_timer.setTimeout(RECONNECT_INTERVAL);
@@ -701,6 +729,9 @@ void RtlUsb::verboseClose(void)
     }
     rtl_reader_thread_started = false;
   }
+
+  delete sample_buf;
+  sample_buf = 0;
 
     // Close the RTL device
   int r = rtlsdr_close(dev);
