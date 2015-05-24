@@ -217,23 +217,24 @@ class RtlUsb : public RtlSdr
 
     
   private:
+    class SampleBuffer;
+
     static const unsigned RECONNECT_INTERVAL = 5000;
 
     Async::Timer    reconnect_timer;
     rtlsdr_dev_t    *dev;
     pthread_t       rtl_reader_thread;
-    int             sample_pipe[2];
-    Async::FdWatch  *sample_pipe_watch;
-    char            *buf;
-    size_t          buf_pos;
     std::string     dev_match;
     std::string     dev_name;
+    SampleBuffer    *sample_buf;
+    bool            rtl_reader_thread_started;
 
-    static void *rtlReader(void *data);
+    static void *startRtlReader(void *data);
     static void rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx);
 
     RtlUsb(const RtlUsb&);
     RtlUsb& operator=(const RtlUsb&);
+    void rtlReader(void);
     void rtlSamplesReceived(void);
     void initializeDongle(void);
     void verboseClose(void);

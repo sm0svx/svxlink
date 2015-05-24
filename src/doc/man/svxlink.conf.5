@@ -1212,8 +1212,11 @@ The narrowband channel frequency to tune to.
 .TP
 .B MODULATION
 The modulation used on the channel. Legal values are: "FM" (two-way radio
-frequency modulation), "WBFM" (broadcast wideband frequency modulation) and
-"AM" (two-way radio amplitude modulation).
+frequency modulation), "NBFM" (two-way radio narrow frequency modulation),
+"WBFM" (broadcast wideband frequency modulation), "AM" (two-way radio amplitude
+modulation), "NBAM" (two-way radio narrow band amplitude modulation), "USB"
+(Upper Sideband), "LSB" (Lower Sideband), "CW" (Continuous Wave, e.g. Morse),
+"WBCW" (CW wide).
 .TP
 .B WBRX
 The configuration section for the wideband receiver to connect this DDR to.
@@ -1281,6 +1284,11 @@ place the wideband tuner to cover all set up Ddr frequencies. SvxLink will also
 try to avoid placing a Ddr on the center frequency of the wideband spectrum
 since there is usually some noise there. Only use this configration variable
 if you need to override the automatic placement for some reason.
+.TP
+.B XVRTR_OFFSET
+If a transverter is used, this configuration variable can be set to the
+frequency offset that the transverter introduce. The frequency set here will be
+added to the center frequency of the wideband receiver.
 .TP
 .B GAIN
 If unset, automatic gain is used. Do not use automatic gain control if using

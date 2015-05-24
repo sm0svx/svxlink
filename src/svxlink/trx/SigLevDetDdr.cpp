@@ -218,8 +218,7 @@ void SigLevDetDdr::processSamples(const vector<RtlTcp::Sample> &samples)
        it != samples.end();
        ++it)
   {
-    double mag = abs(*it);
-    pwr_sum += mag * mag;
+    pwr_sum += it->real() * it->real() + it->imag() * it->imag();
     if (++block_idx == block_size)
     {
       last_siglev = offset + slope * 10.0 * log10(pwr_sum / block_size);

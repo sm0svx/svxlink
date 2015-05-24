@@ -43,13 +43,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <cmath>
 #include <iostream>
-//#include <iomanip>
 #include <string>
 #include <vector>
 #include <complex>
 #include <fstream>
 #include <algorithm>
 #include <iterator>
+#include <deque>
 
 
 /****************************************************************************
@@ -71,7 +71,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "Ddr.h"
 #include "WbRxRtlSdr.h"
-//#include "Goertzel.h"
+#include "DdrFilterCoeffs.h"
 
 
 /****************************************************************************
@@ -92,11 +92,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-#define FILTER_COEFF(name, coeffs...) \
-  static const float name[] = { \
-    coeffs \
-  }; \
-  static const int name ## _cnt = sizeof(name) / sizeof(*name);
 
 
 /****************************************************************************
@@ -104,481 +99,6 @@ using namespace Async;
  * Local class definitions
  *
  ****************************************************************************/
-
-/**
- * fs=2400000;
- * a=[1 1 0 0];
- * f=[0 10000/(fs/2) 400000/(fs/2) 1];
- * b=firpm(12,f,a);
- *
- * Lowpass filter of order 12 for first stage decimation from 2400kHz to 800kHz
- * sampling frequency. Below -50dB over 400kHz.
- */
-FILTER_COEFF(coeff_dec_2400k_800k,
-  0.0077055710085996,
-  0.0231099825172581,
-  0.0491033915373070,
-  0.0827979875546905,
-  0.1172425796413652,
-  0.1432359886614141,
-  0.1529234854517300,
-  0.1432359886614141,
-  0.1172425796413652,
-  0.0827979875546905,
-  0.0491033915373070,
-  0.0231099825172581,
-  0.0077055710085996
-)
-
-/**
- * fs=800000;
- * a=[1 1 0 0];
- * f=[0 10000/(fs/2) 80000/(fs/2) 1];
- * b=firpm(30,f,a);
- *
- * Lowpass filter of order 30 for second stage decimation from 800kHz to 160kHz
- * sampling frequency. Below -50dB over 80kHz.
- */
-FILTER_COEFF(coeff_dec_800k_160k,
-  -0.0029997236277028,
-  -0.0043861913900128,
-  -0.0065590186109396,
-  -0.0082920929936370,
-  -0.0087502813117280,
-  -0.0070008145790774,
-  -0.0021775940281952,
-  0.0063104873665492,
-  0.0185989520369326,
-  0.0342348393119680,
-  0.0521531680677441,
-  0.0707596583561849,
-  0.0881384331148449,
-  0.1023167472191527,
-  0.1115960643590441,
-  0.1148277609860070,
-  0.1115960643590441,
-  0.1023167472191527,
-  0.0881384331148449,
-  0.0707596583561849,
-  0.0521531680677441,
-  0.0342348393119680,
-  0.0185989520369326,
-  0.0063104873665492,
-  -0.0021775940281952,
-  -0.0070008145790774,
-  -0.0087502813117280,
-  -0.0082920929936370,
-  -0.0065590186109396,
-  -0.0043861913900128,
-  -0.0029997236277028
-)
-
-/**
- * fs=160000;
- * a=[1 1 0 0];
- * f=[0 10000/(fs/2) 16000/(fs/2) 1];
- * b=firpm(69,f,a);
- *
- * Lowpass filter of order 69 for third stage decimation from 160kHz to 32kHz
- * sampling frequency. Below -50dB over 16kHz.
- */
-FILTER_COEFF(coeff_dec_160k_32k,
-  -0.0021897935693675,
-  -0.0014627396578915,
-  -0.0013556525689907,
-  -0.0007392088237726,
-  0.0003574441355289,
-  0.0017246039253812,
-  0.0029895055896823,
-  0.0037044482910084,
-  0.0034725915191305,
-  0.0020872049160927,
-  -0.0003267103977320,
-  -0.0032962979217630,
-  -0.0060432956930122,
-  -0.0076661105137475,
-  -0.0073849727874053,
-  -0.0048159145195665,
-  -0.0001754973036671,
-  0.0056460528670540,
-  0.0111958136705557,
-  0.0147666247087154,
-  0.0148298059278710,
-  0.0105161290387843,
-  0.0020030328211424,
-  -0.0092988333174977,
-  -0.0208538093298570,
-  -0.0294084509371543,
-  -0.0316449887034609,
-  -0.0249466889575552,
-  -0.0080967911710057,
-  0.0182565357679944,
-  0.0515079450201972,
-  0.0874215550152374,
-  0.1208397653529333,
-  0.1466281173863568,
-  0.1606670688526116,
-  0.1606670688526116,
-  0.1466281173863568,
-  0.1208397653529333,
-  0.0874215550152374,
-  0.0515079450201972,
-  0.0182565357679944,
-  -0.0080967911710057,
-  -0.0249466889575552,
-  -0.0316449887034609,
-  -0.0294084509371543,
-  -0.0208538093298570,
-  -0.0092988333174977,
-  0.0020030328211424,
-  0.0105161290387843,
-  0.0148298059278710,
-  0.0147666247087154,
-  0.0111958136705557,
-  0.0056460528670540,
-  -0.0001754973036671,
-  -0.0048159145195665,
-  -0.0073849727874053,
-  -0.0076661105137475,
-  -0.0060432956930122,
-  -0.0032962979217630,
-  -0.0003267103977320,
-  0.0020872049160927,
-  0.0034725915191305,
-  0.0037044482910084,
-  0.0029895055896823,
-  0.0017246039253812,
-  0.0003574441355289,
-  -0.0007392088237726,
-  -0.0013556525689907,
-  -0.0014627396578915,
-  -0.0021897935693675
-)
-
-/**
- * fs=960000;
- * a=[1 1 0 0];
- * f=[0 10000/(fs/2) 96000/(fs/2) 1];
- * b=firpm(30,f,a);
- *
- * Lowpass filter of order 30 for first stage decimation from 960kHz to 192kHz
- * sampling frequency. Below -50dB over 96kHz.
- */
-FILTER_COEFF(coeff_dec_960k_192k,
-  -0.0028713422063345,
-  -0.0041769139545598,
-  -0.0062171808745743,
-  -0.0078031238748803,
-  -0.0081233271798609,
-  -0.0062743621398142,
-  -0.0014205292313401,
-  0.0070048711105898,
-  0.0191247988093941,
-  0.0344897867015570,
-  0.0520570673062483,
-  0.0702711557447386,
-  0.0872655777710594,
-  0.1011208091483218,
-  0.1101849356054080,
-  0.1133410547020278,
-  0.1101849356054080,
-  0.1011208091483218,
-  0.0872655777710594,
-  0.0702711557447386,
-  0.0520570673062483,
-  0.0344897867015570,
-  0.0191247988093941,
-  0.0070048711105898,
-  -0.0014205292313401,
-  -0.0062743621398142,
-  -0.0081233271798609,
-  -0.0078031238748803,
-  -0.0062171808745743,
-  -0.0041769139545598,
-  -0.0028713422063345
-)
-
-/**
- * fs=192000;
- * a=[1 1 0 0];
- * f=[0 10000/(fs/2) 24000/(fs/2) 1];
- * b=firpm(38,f,a);
- *
- * Lowpass filter of order 38 for second stage decimation from 192kHz to 48kHz
- * sampling frequency. Below -50dB over 24kHz.
- */
-FILTER_COEFF(nbfm_iq_dec_coeff2,
-  -0.0022054057399946,
-  -0.0013759144555157,
-  -0.0003560235137129,
-  0.0019402788096753,
-  0.0050318463119633,
-  0.0077118103385981,
-  0.0083196771915043,
-  0.0053564859260711,
-  -0.0017223951190513,
-  -0.0118310814176461,
-  -0.0220269740210023,
-  -0.0279535379185214,
-  -0.0249640367446503,
-  -0.0096365156797809,
-  0.0187997839077061,
-  0.0576385308284084,
-  0.1008804142901618,
-  0.1404539524894698,
-  0.1682431134370760,
-  0.1782444890349868,
-  0.1682431134370760,
-  0.1404539524894698,
-  0.1008804142901618,
-  0.0576385308284084,
-  0.0187997839077061,
-  -0.0096365156797809,
-  -0.0249640367446503,
-  -0.0279535379185214,
-  -0.0220269740210023,
-  -0.0118310814176461,
-  -0.0017223951190513,
-  0.0053564859260711,
-  0.0083196771915043,
-  0.0077118103385981,
-  0.0050318463119633,
-  0.0019402788096753,
-  -0.0003560235137129,
-  -0.0013759144555157,
-  -0.0022054057399946
-)
-
-/**
- * fs=192000;
- * a=[1 1 0 0];
- * f=[0 10000/(fs/2) 16000/(fs/2) 1];
- * b=firpm(83,f,a);
- *
- * Lowpass filter of order 83 for second stage decimation from 192kHz to 32kHz
- * sampling frequency. Below -50dB over 16kHz.
- */
-FILTER_COEFF(coeff_dec_192k_32k,
-  -0.0018908004875791,
-  -0.0014088046526025,
-  -0.0010323279150753,
-  -0.0011609937805184,
-  -0.0002616260421106,
-  0.0002282613874497,
-  0.0014794737163843,
-  0.0021208611663994,
-  0.0030372993243376,
-  0.0030011893771900,
-  0.0027937120905529,
-  0.0014962726557786,
-  -0.0000026511430646,
-  -0.0022129339849578,
-  -0.0040935849190142,
-  -0.0058404676355097,
-  -0.0064472699433756,
-  -0.0061207976418120,
-  -0.0042173681807972,
-  -0.0012991336407301,
-  0.0026759149088455,
-  0.0066958942487303,
-  0.0103205964042610,
-  0.0123978773268841,
-  0.0125150704574251,
-  0.0099739187608554,
-  0.0050138881239198,
-  -0.0021145533182887,
-  -0.0102288336524600,
-  -0.0181423359949556,
-  -0.0240730300262369,
-  -0.0265609078833171,
-  -0.0241108160478653,
-  -0.0159913513331595,
-  -0.0019343883009423,
-  0.0173321075924516,
-  0.0404780715637686,
-  0.0653782990983535,
-  0.0896308725182227,
-  0.1106366920921416,
-  0.1261268044110260,
-  0.1343340191429704,
-  0.1343340191429704,
-  0.1261268044110260,
-  0.1106366920921416,
-  0.0896308725182227,
-  0.0653782990983535,
-  0.0404780715637686,
-  0.0173321075924516,
-  -0.0019343883009423,
-  -0.0159913513331595,
-  -0.0241108160478653,
-  -0.0265609078833171,
-  -0.0240730300262369,
-  -0.0181423359949556,
-  -0.0102288336524600,
-  -0.0021145533182887,
-  0.0050138881239198,
-  0.0099739187608554,
-  0.0125150704574251,
-  0.0123978773268841,
-  0.0103205964042610,
-  0.0066958942487303,
-  0.0026759149088455,
-  -0.0012991336407301,
-  -0.0042173681807972,
-  -0.0061207976418120,
-  -0.0064472699433756,
-  -0.0058404676355097,
-  -0.0040935849190142,
-  -0.0022129339849578,
-  -0.0000026511430646,
-  0.0014962726557786,
-  0.0027937120905529,
-  0.0030011893771900,
-  0.0030372993243376,
-  0.0021208611663994,
-  0.0014794737163843,
-  0.0002282613874497,
-  -0.0002616260421106,
-  -0.0011609937805184,
-  -0.0010323279150753,
-  -0.0014088046526025,
-  -0.0018908004875791
-)
-
-/**
- * fs=48000;
- * a=[1 1 0 0];
- * f=[0 10000/(fs/2) 12500/(fs/2) 1];
- * b=firpm(52,f,a);
- *
- * Lowpass filter of order 52 for channel filter to create a channel that start
- * falling off at 20kHz bandwidth and at -50dB over 25kHz bandwidth.
- */
-FILTER_COEFF(coeff_nbfm_channel,
-  0.0008241697920589,
-  -0.0021070026154187,
-  -0.0018283827176036,
-  0.0016310471394501,
-  0.0028118758642382,
-  -0.0019396699761340,
-  -0.0046522841665745,
-  0.0017070490502376,
-  0.0070035913525649,
-  -0.0007830014477388,
-  -0.0098758879175436,
-  -0.0011783591096547,
-  0.0131725633282163,
-  0.0045849076900695,
-  -0.0167379346321622,
-  -0.0099840064006532,
-  0.0203645795200879,
-  0.0182368672779849,
-  -0.0238117005219107,
-  -0.0310369079128660,
-  0.0268255689484280,
-  0.0527102597060804,
-  -0.0291747144820595,
-  -0.0992601034613792,
-  0.0306674034773647,
-  0.3159828500981747,
-  0.4688223043097902,
-  0.3159828500981747,
-  0.0306674034773647,
-  -0.0992601034613792,
-  -0.0291747144820595,
-  0.0527102597060804,
-  0.0268255689484280,
-  -0.0310369079128660,
-  -0.0238117005219107,
-  0.0182368672779849,
-  0.0203645795200879,
-  -0.0099840064006532,
-  -0.0167379346321622,
-  0.0045849076900695,
-  0.0131725633282163,
-  -0.0011783591096547,
-  -0.0098758879175436,
-  -0.0007830014477388,
-  0.0070035913525649,
-  0.0017070490502376,
-  -0.0046522841665745,
-  -0.0019396699761340,
-  0.0028118758642382,
-  0.0016310471394501,
-  -0.0018283827176036,
-  -0.0021070026154187,
-  0.0008241697920589
-)
-
-/**
- * fs=32000;
- * a=[1 1 0 0];
- * f=[0 6500/(fs/2) 8000/(fs/2) 1];
- * b=firpm(57,f,a);
- *
- * Lowpass filter of order 57 for final audio filtering and decimation from
- * 32kHz to 16kHz sampling frequency. The filter start falling off at 6500Hz.
- */
-FILTER_COEFF(coeff_dec_32k_16k,
-  0.0002044755564088,
-  0.0025162729368701,
-  -0.0000373739243192,
-  -0.0023823323199525,
-  -0.0009174324092698,
-  0.0031733626970525,
-  0.0024257908780856,
-  -0.0036237006402449,
-  -0.0046114089386084,
-  0.0033770296626382,
-  0.0073898992647920,
-  -0.0020191017651296,
-  -0.0105102309333354,
-  -0.0008742534716957,
-  0.0135359367419711,
-  0.0056990956333815,
-  -0.0158330056196493,
-  -0.0128122329209208,
-  0.0165412314235204,
-  0.0226120483249114,
-  -0.0144736851809570,
-  -0.0357965204848320,
-  0.0076824090739295,
-  0.0543098761642641,
-  0.0082798389911014,
-  -0.0854498969493825,
-  -0.0509115753577537,
-  0.1784581615217777,
-  0.4155906562564999,
-  0.4155906562564999,
-  0.1784581615217777,
-  -0.0509115753577537,
-  -0.0854498969493825,
-  0.0082798389911014,
-  0.0543098761642641,
-  0.0076824090739295,
-  -0.0357965204848320,
-  -0.0144736851809570,
-  0.0226120483249114,
-  0.0165412314235204,
-  -0.0128122329209208,
-  -0.0158330056196493,
-  0.0056990956333815,
-  0.0135359367419711,
-  -0.0008742534716957,
-  -0.0105102309333354,
-  -0.0020191017651296,
-  0.0073898992647920,
-  0.0033770296626382,
-  -0.0046114089386084,
-  -0.0036237006402449,
-  0.0024257908780856,
-  0.0031733626970525,
-  -0.0009174324092698,
-  -0.0023823323199525,
-  -0.0000373739243192,
-  0.0025162729368701,
-  0.0002044755564088
-)
 
 namespace {
   template <class T>
@@ -598,8 +118,12 @@ namespace {
         delete [] p_Z;
       }
 
+      int decFact(void) const { return dec_fact; }
+
       void setDecimatorParams(int dec_fact, const float *coeff, int taps)
       {
+        assert(taps >= dec_fact);
+
         set_coeff.assign(coeff, coeff + taps);
         this->dec_fact = dec_fact;
         this->coeff = set_coeff;
@@ -625,7 +149,6 @@ namespace {
 
           // this implementation assumes in.size() is a multiple of factor_M
         assert(in.size() % dec_fact == 0);
-        assert(taps >= dec_fact);
 
         int num_out = 0;
         typename vector<T>::const_iterator src = in.begin();
@@ -663,240 +186,147 @@ namespace {
       vector<float>   coeff;
   };
 
-
-#if 0
-  struct HammingWindow
+  template <class T>
+  class DecimatorMS
   {
     public:
-      HammingWindow(size_t N)
+      virtual ~DecimatorMS(void) {}
+      virtual void setGain(float new_gain) = 0;
+      virtual int decFact(void) const = 0;
+      virtual void decimate(vector<T> &out, const vector<T> &in) = 0;
+  };
+
+  template <class T>
+  class DecimatorMS0 : public DecimatorMS<T>
+  {
+    public:
+      DecimatorMS0(void) : gain(1.0f) {}
+      virtual void setGain(float gain_db)
       {
-        w = new float[N];
-        for (size_t n=0; n<N; ++n)
+        gain = pow(10.0, gain_db / 20.0);
+      }
+      virtual int decFact(void) const { return 1; }
+      virtual void decimate(vector<T> &out, const vector<T> &in)
+      {
+        out.clear();
+        out.reserve(in.size());
+        for (size_t i=0; i<in.size(); ++i)
         {
-          w[n] = 0.54 + 0.46 * cos(2*M_PI*n/(N-1));
-          //w[n] *= 1.855;
-          w[n] *= 1.8519;
+          out.push_back(gain * in[i]);
         }
-      }
-
-      ~HammingWindow(void)
-      {
-        delete [] w;
-      }
-
-      inline float operator[](int i)
-      {
-        return w[i];
       }
 
     private:
-      float *w;
-  };
-#endif
-
-  class Demodulator : public Async::AudioSource
-  {
-    public:
-      virtual ~Demodulator(void) {}
-
-      virtual void iq_received(vector<WbRxRtlSdr::Sample> samples) = 0;
-
-      /**
-       * @brief Resume audio output to the sink
-       * 
-       * This function must be reimplemented by the inheriting class. It
-       * will be called when the registered audio sink is ready to accept
-       * more samples.
-       * This function is normally only called from a connected sink object.
-       */
-      virtual void resumeOutput(void) { }
-
-    protected:
-      /**
-       * @brief The registered sink has flushed all samples
-       *
-       * This function should be implemented by the inheriting class. It
-       * will be called when all samples have been flushed in the
-       * registered sink. If it is not reimplemented, a handler must be set
-       * that handle the function call.
-       * This function is normally only called from a connected sink object.
-       */
-      virtual void allSamplesFlushed(void) { }
+      float gain;
   };
 
-
-  class DemodulatorFm : public Demodulator
+  template <class T>
+  class DecimatorMS1 : public DecimatorMS<T>
   {
     public:
-      DemodulatorFm(unsigned samp_rate, double max_dev)
-        : iold(1.0f), qold(1.0f),
-          audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt),
-          wb_mode(false)
+      DecimatorMS1(Decimator<T> &d1) : d1(d1) {}
+      virtual void setGain(float gain_db) { d1.setGain(gain_db); }
+      virtual int decFact(void) const { return d1.decFact(); }
+      virtual void decimate(vector<T> &out, const vector<T> &in)
       {
-        setDemodParams(samp_rate, max_dev);
-      }
-
-      void setDemodParams(unsigned samp_rate, double max_dev)
-      {
-          // Adjust the gain so that the maximum deviation corresponds
-          // to a peak audio amplitude of 1.0.
-        double adj = static_cast<double>(samp_rate) / (2.0 * M_PI * max_dev);
-        adj /= 2.0; // Default to 6dB headroom
-        double adj_db = 20.0 * log10(adj);
-        audio_dec.setGain(adj_db);
-
-        wb_mode = (samp_rate > 32000);
-        if (samp_rate == 160000)
-        {
-          audio_dec_wb.setDecimatorParams(5, coeff_dec_160k_32k, 
-                                          coeff_dec_160k_32k_cnt);
-        }
-        else if (samp_rate == 192000)
-        {
-          audio_dec_wb.setDecimatorParams(6, coeff_dec_192k_32k, 
-                                          coeff_dec_192k_32k_cnt);
-        }
-      }
-
-      void iq_received(vector<WbRxRtlSdr::Sample> samples)
-      {
-          // From article-sdr-is-qs.pdf: Watch your Is and Qs:
-          //   FM = (Qn.In-1 - In.Qn-1)/(In.In-1 + Qn.Qn-1)
-          //
-          // A more indepth report:
-          //   Implementation of FM demodulator algorithms on a
-          //   high performance digital signal processor
-        vector<float> audio;
-        for (size_t idx=0; idx<samples.size(); ++idx)
-        {
-#if 1
-          complex<float> samp = samples[idx];
-#else
-          double fm = 941.0;
-          complex<double> samp = exp(
-              complex<float>(0,
-                (1200/fm)*cos(2.0*M_PI*fm*t) +
-                (1200/1633)*cos(2.0*M_PI*1633*t)
-                )
-              );
-          t += T;
-#endif
-
-            // Normalize signal amplitude
-          samp = samp / abs(samp);
-
-#if 1
-            // Mixed demodulator (delay demodulator + phase adapter demodulator)
-          float i = samp.real();
-          float q = samp.imag();
-          double demod = atan2(q*iold - i*qold, i*iold + q*qold);
-          //demod=demod*(32000/(2.0*M_PI*5000));
-          iold = i;
-          qold = q;
-          //demod = FastArcTan(demod);
-#else
-            // Complex baseband delay demodulator
-          float demod = arg(samp * conj(prev_samp));
-          prev_samp = samp;
-#endif
-
-          audio.push_back(demod);
-        }
-#if 0
-        for (size_t i=0; i<audio.size(); ++i)
-        {
-          //g.calc(w[Ncnt] * audio[i]);
-          g.calc(audio[i]);
-          if (++Ncnt >= N)
-          {
-            float dev = 5000*2*sqrt(g.magnitudeSquared())/N;
-            //dev *= 1.001603;
-            cout << dev << endl;
-            Ncnt = 0;
-            g.reset();
-          }
-        }
-#endif    
-        vector<float> dec_audio;
-        if (wb_mode)
-        {
-          vector<float> dec_audio1;
-          audio_dec_wb.decimate(dec_audio1, audio);
-          audio_dec.decimate(dec_audio, dec_audio1);
-        }
-        else
-        {
-          audio_dec.decimate(dec_audio, audio);
-        }
-#if 0
-        for (size_t i=0; i<dec_audio.size(); ++i)
-        {
-          //g.calc(w[Ncnt] * dec_audio[i]);
-          g.calc(dec_audio[i]);
-          if (++Ncnt >= N)
-          {
-            float dev = 5000*2*sqrt(g.magnitudeSquared())/N;
-            //dev *= 0.9811;
-            cout << dev << endl;
-            Ncnt = 0;
-            g.reset();
-          }
-        }
-#endif
-        sinkWriteSamples(&dec_audio[0], dec_audio.size());
+        d1.decimate(out, in);
       }
 
     private:
-      float iold;
-      float qold;
-      //WbRxRtlSdr::Sample prev_samp;
-      Decimator<float> audio_dec_wb;
-      Decimator<float> audio_dec;
-      bool wb_mode;
-#if 0
-      Goertzel g;
-      int N, Ncnt;
-      //HammingWindow w;
-#endif
-#if 0
-      double t;
-      const double T;
-#endif
-
-        // Maximum error 0.0015 radians (0.085944 degrees)
-        // Produced another result and did not affect overall CPU% much
-      double FastArcTan(double x)
-      {
-        return M_PI_4*x - x*(fabs(x) - 1)*(0.2447 + 0.0663*fabs(x));
-      }
+      Decimator<T> &d1;
   };
 
-
-  class DemodulatorAm : public Demodulator
+  template <class T>
+  class DecimatorMS2 : public DecimatorMS<T>
   {
     public:
-      DemodulatorAm(void)
-        : audio_dec(2, coeff_dec_32k_16k, coeff_dec_32k_16k_cnt)
+      DecimatorMS2(Decimator<T> &d1, Decimator<T> &d2) : d1(d1), d2(d2) {}
+      virtual void setGain(float gain_db) { d2.setGain(gain_db); }
+      virtual int decFact(void) const { return d1.decFact() * d2.decFact(); }
+      virtual void decimate(vector<T> &out, const vector<T> &in)
       {
-        audio_dec.setGain(10);
-      }
-
-      void iq_received(vector<WbRxRtlSdr::Sample> samples)
-      {
-        vector<float> audio;
-        for (size_t idx=0; idx<samples.size(); ++idx)
-        {
-          complex<float> samp = samples[idx];
-          double demod = abs(samp);
-          audio.push_back(demod);
-        }
-        vector<float> dec_audio;
-        audio_dec.decimate(dec_audio, audio);
-        sinkWriteSamples(&dec_audio[0], dec_audio.size());
+        vector<T> dec_samp1;
+        d1.decimate(dec_samp1, in);
+        d2.decimate(out, dec_samp1);
       }
 
     private:
-      Decimator<float> audio_dec;
+      Decimator<T> &d1, &d2;
+  };
+
+  template <class T>
+  class DecimatorMS3 : public DecimatorMS<T>
+  {
+    public:
+      DecimatorMS3(Decimator<T> &d1, Decimator<T> &d2, Decimator<T> &d3)
+        : d1(d1), d2(d2), d3(d3) {}
+      virtual void setGain(float gain_db) { d3.setGain(gain_db); }
+      virtual int decFact(void) const
+      {
+        return d1.decFact() * d2.decFact() * d3.decFact();
+      }
+      virtual void decimate(vector<T> &out, const vector<T> &in)
+      {
+        vector<T> dec_samp1, dec_samp2;
+        d1.decimate(dec_samp1, in);
+        d2.decimate(dec_samp2, dec_samp1);
+        d3.decimate(out, dec_samp2);
+      }
+
+    private:
+      Decimator<T> &d1, &d2, &d3;
+  };
+
+  template <class T>
+  class DecimatorMS4 : public DecimatorMS<T>
+  {
+    public:
+      DecimatorMS4(Decimator<T> &d1, Decimator<T> &d2, Decimator<T> &d3,
+                   Decimator<T> &d4)
+        : d1(d1), d2(d2), d3(d3), d4(d4) {}
+      virtual void setGain(float gain_db) { d4.setGain(gain_db); }
+      virtual int decFact(void) const
+      {
+        return d1.decFact() * d2.decFact() * d3.decFact() * d4.decFact();
+      }
+      virtual void decimate(vector<T> &out, const vector<T> &in)
+      {
+        vector<T> dec_samp1, dec_samp2, dec_samp3;
+        d1.decimate(dec_samp1, in);
+        d2.decimate(dec_samp2, dec_samp1);
+        d3.decimate(dec_samp3, dec_samp2);
+        d4.decimate(out, dec_samp3);
+      }
+
+    private:
+      Decimator<T> &d1, &d2, &d3, &d4;
+  };
+
+  template <class T>
+  class DecimatorMS5 : public DecimatorMS<T>
+  {
+    public:
+      DecimatorMS5(Decimator<T> &d1, Decimator<T> &d2, Decimator<T> &d3,
+                   Decimator<T> &d4, Decimator<T> &d5)
+        : d1(d1), d2(d2), d3(d3), d4(d4), d5(d5) {}
+      virtual void setGain(float gain_db) { d5.setGain(gain_db); }
+      virtual int decFact(void) const
+      {
+        return d1.decFact() * d2.decFact() * d3.decFact() *
+               d4.decFact() * d5.decFact();
+      }
+      virtual void decimate(vector<T> &out, const vector<T> &in)
+      {
+        vector<T> dec_samp1, dec_samp2, dec_samp3, dec_samp4;
+        d1.decimate(dec_samp1, in);
+        d2.decimate(dec_samp2, dec_samp1);
+        d3.decimate(dec_samp3, dec_samp2);
+        d4.decimate(dec_samp4, dec_samp3);
+        d5.decimate(out, dec_samp4);
+      }
+
+    private:
+      Decimator<T> &d1, &d2, &d3, &d4, &d5;
   };
 
 
@@ -973,13 +403,367 @@ namespace {
         }
         return gcd(divisor, reminder);
       }
+  }; /* Translate */
+
+
+  class AGC
+  {
+    public:
+      AGC(float attack=1.0e1, float decay=1.0e-2, float max_gain=2.0e2,
+          float reference=0.25f)
+        : m_attack(attack), m_decay(decay), m_max_gain(max_gain),
+          m_reference(reference), m_gain(1.0f)
+      {
+
+      }
+
+      void setReference(float reference) { m_reference = reference; }
+      void setDecay(float decay) { m_decay = decay; }
+      void setAttack(float attack) { m_attack = attack; }
+
+      void iq_received(vector<WbRxRtlSdr::Sample> &out,
+                       const vector<WbRxRtlSdr::Sample> &in)
+      {
+        out.clear();
+        out.reserve(in.size());
+        float P = 0.0f;
+        for (vector<WbRxRtlSdr::Sample>::const_iterator it = in.begin();
+             it != in.end();
+             ++it)
+        {
+          const WbRxRtlSdr::Sample &samp = *it;
+          WbRxRtlSdr::Sample osamp = m_gain * samp;
+          P = osamp.real() * osamp.real() + osamp.imag() * osamp.imag();
+          out.push_back(osamp);
+
+          float err = m_reference - P;
+          float rate;
+          if (err > 0.0f)
+          {
+            rate = m_decay * err;
+          }
+          else
+          {
+            rate = m_attack * err;
+          }
+          m_gain += rate;
+          if (m_gain < 0.0f)
+          {
+            m_gain = 0.0f;
+          }
+          else if (m_gain > m_max_gain)
+          {
+            m_gain = m_max_gain;
+          }
+        }
+        //cout << "### P=" << P << "  m_gain=" << m_gain << endl;
+      }
+
+    private:
+      float   m_attack;
+      float   m_decay;
+      float   m_max_gain;
+      float   m_reference;
+      float   m_gain;
+
+  }; /* AGC */
+
+
+  class Demodulator : public Async::AudioSource
+  {
+    public:
+      virtual ~Demodulator(void) {}
+
+      virtual void iq_received(vector<WbRxRtlSdr::Sample> samples) = 0;
+
+      /**
+       * @brief Resume audio output to the sink
+       * 
+       * This function must be reimplemented by the inheriting class. It
+       * will be called when the registered audio sink is ready to accept
+       * more samples.
+       * This function is normally only called from a connected sink object.
+       */
+      virtual void resumeOutput(void) { }
+
+    protected:
+      /**
+       * @brief The registered sink has flushed all samples
+       *
+       * This function should be implemented by the inheriting class. It
+       * will be called when all samples have been flushed in the
+       * registered sink. If it is not reimplemented, a handler must be set
+       * that handle the function call.
+       * This function is normally only called from a connected sink object.
+       */
+      virtual void allSamplesFlushed(void) { }
   };
+
+
+  class DemodulatorFm : public Demodulator
+  {
+    public:
+      DemodulatorFm(unsigned samp_rate, double max_dev)
+        : iold(1.0f), qold(1.0f),
+          audio_dec(2, coeff_dec_audio_32k_16k, coeff_dec_audio_32k_16k_cnt),
+          dec(0)
+      {
+        setDemodParams(samp_rate, max_dev);
+      }
+
+      ~DemodulatorFm(void)
+      {
+        delete dec;
+        dec = 0;
+      }
+
+      void setDemodParams(unsigned samp_rate, double max_dev)
+      {
+        delete dec;
+        dec = 0;
+
+        if (samp_rate == 16000)
+        {
+          dec = new DecimatorMS0<float>;
+        }
+        else if (samp_rate == 32000)
+        {
+          dec = new DecimatorMS1<float>(audio_dec);
+        }
+        else if (samp_rate == 160000)
+        {
+          audio_dec_wb.setDecimatorParams(5, coeff_dec_160k_32k, 
+                                          coeff_dec_160k_32k_cnt);
+          dec = new DecimatorMS2<float>(audio_dec_wb, audio_dec);
+        }
+        else if (samp_rate == 192000)
+        {
+          audio_dec_wb.setDecimatorParams(6, coeff_dec_192k_32k, 
+                                          coeff_dec_192k_32k_cnt);
+          dec = new DecimatorMS2<float>(audio_dec_wb, audio_dec);
+        }
+
+        assert((dec != 0) &&
+               "DemodulatorFm::setDemodParams: Unsupported sampling rate");
+
+          // Adjust the gain so that the maximum deviation corresponds
+          // to a peak audio amplitude of 1.0, minus headroom.
+        double adj = static_cast<double>(samp_rate) / (2.0 * M_PI * max_dev);
+        adj /= 2.0; // Default to 6dB headroom
+        double adj_db = 20.0 * log10(adj);
+        dec->setGain(adj_db);
+      }
+
+      void iq_received(vector<WbRxRtlSdr::Sample> samples)
+      {
+          // From article-sdr-is-qs.pdf: Watch your Is and Qs:
+          //   FM = (Qn.In-1 - In.Qn-1)/(In.In-1 + Qn.Qn-1)
+          //
+          // A more indepth report:
+          //   Implementation of FM demodulator algorithms on a
+          //   high performance digital signal processor
+        vector<float> audio;
+        for (size_t idx=0; idx<samples.size(); ++idx)
+        {
+          complex<float> samp = samples[idx];
+
+            // Normalize signal amplitude
+          samp = samp / abs(samp);
+
+            // Mixed demodulator (delay demodulator + phase adapter demodulator)
+          float i = samp.real();
+          float q = samp.imag();
+          double demod = atan2(q*iold - i*qold, i*iold + q*qold);
+          iold = i;
+          qold = q;
+
+          audio.push_back(demod);
+        }
+        vector<float> dec_audio;
+        dec->decimate(dec_audio, audio);
+        sinkWriteSamples(&dec_audio[0], dec_audio.size());
+      }
+
+    private:
+      float iold;
+      float qold;
+      Decimator<float> audio_dec_wb;
+      Decimator<float> audio_dec;
+      DecimatorMS<float> *dec;
+  };
+
+
+  class DemodulatorAm : public Demodulator
+  {
+    public:
+      DemodulatorAm(void)
+      {
+        agc.setAttack(1.0e-0);
+        agc.setDecay(1.0e-2);
+        agc.setReference(1);
+      }
+
+      void iq_received(vector<WbRxRtlSdr::Sample> samples)
+      {
+        vector<WbRxRtlSdr::Sample> gain_adjusted;
+        agc.iq_received(gain_adjusted, samples);
+
+        vector<float> audio;
+        for (size_t idx=0; idx<gain_adjusted.size(); ++idx)
+        {
+          complex<float> samp = gain_adjusted[idx];
+          float demod = abs(samp);
+          audio.push_back(demod);
+        }
+        sinkWriteSamples(&audio[0], audio.size());
+      }
+
+    private:
+      AGC              agc;
+  };
+
+
+//#define USE_SSB_PHASE_DEMOD
+#ifdef USE_SSB_PHASE_DEMOD
+  class DemodulatorSsb : public Demodulator
+  {
+    public:
+      DemodulatorSsb(unsigned samp_rate)
+        : I(coeff_hilbert_cnt/2, 0),
+          hilbert(1, coeff_hilbert, coeff_hilbert_cnt),
+          use_lsb(false)
+      {
+      }
+
+      void useLsb(bool use)
+      {
+        use_lsb = use;
+      }
+
+      void iq_received(vector<WbRxRtlSdr::Sample> samples)
+      {
+        vector<float> Q, Qh, audio;
+        Q.reserve(samples.size());
+        for (vector<WbRxRtlSdr::Sample>::const_iterator it = samples.begin();
+             it != samples.end();
+             ++it)
+        {
+          I.push_back(it->real());
+          Q.push_back(it->imag());
+        }
+        hilbert.decimate(Qh, Q);
+        audio.reserve(Qh.size());
+        for (size_t idx=0; idx<Qh.size(); ++idx)
+        {
+          float demod;
+          if (use_lsb)
+          {
+            demod = I[idx] + Qh[idx];
+          }
+          else
+          {
+            demod = I[idx] - Qh[idx];
+          }
+          audio.push_back(demod);
+        }
+        I.erase(I.begin(), I.begin() + Qh.size());
+        sinkWriteSamples(&audio[0], audio.size());
+      }
+
+    private:
+      deque<float>      I;
+      Decimator<float>  hilbert;
+      bool              use_lsb;
+  };
+
+#else
+
+  class DemodulatorSsb : public Demodulator
+  {
+    public:
+      DemodulatorSsb(unsigned samp_rate)
+        : trans(samp_rate, -2000)
+      {
+      }
+
+      void useLsb(bool lsb)
+      {
+        trans.setOffset(lsb ? 2000 : -2000);
+      }
+
+      void iq_received(vector<WbRxRtlSdr::Sample> samples)
+      {
+        vector<WbRxRtlSdr::Sample> gain_adjusted;
+        agc.iq_received(gain_adjusted, samples);
+
+        vector<WbRxRtlSdr::Sample> translated;
+        trans.iq_received(translated, gain_adjusted);
+
+        vector<float> audio;
+        audio.reserve(gain_adjusted.size());
+        for (vector<WbRxRtlSdr::Sample>::const_iterator it = translated.begin();
+             it != translated.end();
+             ++it)
+        {
+          float demod = it->real();
+          audio.push_back(demod);
+        }
+        sinkWriteSamples(&audio[0], audio.size());
+      }
+
+    private:
+      Translate         trans;
+      AGC               agc;
+  };
+#endif
+
+
+  class DemodulatorCw : public Demodulator
+  {
+    public:
+      DemodulatorCw(unsigned samp_rate)
+        : trans(samp_rate, 600)
+      {
+        agc.setAttack(1.0e+2);
+        agc.setDecay(4.0e-2);
+        agc.setReference(0.05);
+      }
+
+      void iq_received(vector<WbRxRtlSdr::Sample> samples)
+      {
+        vector<WbRxRtlSdr::Sample> gain_adjusted;
+        agc.iq_received(gain_adjusted, samples);
+
+        vector<WbRxRtlSdr::Sample> translated;
+        trans.iq_received(translated, gain_adjusted);
+        vector<float> audio;
+        audio.reserve(translated.size());
+        for (vector<WbRxRtlSdr::Sample>::const_iterator it = translated.begin();
+             it != translated.end();
+             ++it)
+        {
+          float demod = it->real();
+          audio.push_back(demod);
+        }
+        sinkWriteSamples(&audio[0], audio.size());
+      }
+
+    private:
+      Translate         trans;
+      AGC               agc;
+  };
+
 
   class Channelizer
   {
     public:
+      typedef enum
+      {
+        BW_WIDE, BW_20K, BW_10K, BW_6K, BW_3K, BW_500
+      } Bandwidth;
+
       virtual ~Channelizer(void) {}
-      virtual void setWbMode(bool enable) = 0;
+      virtual void setBw(Bandwidth bw) = 0;
       virtual unsigned chSampRate(void) const = 0;
       virtual void iq_received(vector<WbRxRtlSdr::Sample> &out,
                                const vector<WbRxRtlSdr::Sample> &in) = 0;
@@ -991,100 +775,190 @@ namespace {
   {
     public:
       Channelizer960(void)
-        : iq_dec1(5, coeff_dec_960k_192k, coeff_dec_960k_192k_cnt),
-          iq_dec2(6, coeff_dec_192k_32k, coeff_dec_192k_32k_cnt),
-          ch_filt(1, coeff_nbfm_channel, coeff_nbfm_channel_cnt),
-          wb_mode(false)
+        : dec_960k_192k(5, coeff_dec_960k_192k, coeff_dec_960k_192k_cnt),
+          dec_192k_64k( 3, coeff_dec_192k_64k,  coeff_dec_192k_64k_cnt ),
+          dec_64k_32k(  2, coeff_dec_64k_32k,   coeff_dec_64k_32k_cnt  ),
+          dec_192k_48k( 4, coeff_dec_192k_48k,  coeff_dec_192k_48k_cnt ),
+          dec_48k_16k(  3, coeff_dec_48k_16k,   coeff_dec_48k_16k_cnt  ),
+          ch_filt(      1, coeff_25k_channel,   coeff_25k_channel_cnt  ),
+          ch_filt_narr( 1, coeff_12k5_channel,  coeff_12k5_channel_cnt ),
+          ch_filt_6k(   1, coeff_nbam_channel,  coeff_nbam_channel_cnt ),
+          ch_filt_3k(   1, coeff_ssb_channel,   coeff_ssb_channel_cnt  ),
+          ch_filt_500(  1, coeff_cw_channel,    coeff_cw_channel_cnt   ),
+          dec(0)
       {
-
+        setBw(BW_20K);
       }
-      virtual ~Channelizer960(void) {}
-
-      virtual void setWbMode(bool enable)
+      virtual ~Channelizer960(void)
       {
-        wb_mode = enable;
+        delete dec;
+        dec = 0;
+      }
+
+      virtual void setBw(Bandwidth bw)
+      {
+        delete dec;
+        dec = 0;
+        switch (bw)
+        {
+          case BW_WIDE:
+            dec = new DecimatorMS1<complex<float> >(dec_960k_192k);
+            return;
+          case BW_20K:
+            dec = new DecimatorMS4<complex<float> >(dec_960k_192k,
+                                                    dec_192k_64k,
+                                                    dec_64k_32k, 
+                                                    ch_filt);
+            return;
+          case BW_10K:
+            dec = new DecimatorMS4<complex<float> >(dec_960k_192k,
+                                                    dec_192k_48k,
+                                                    dec_48k_16k,
+                                                    ch_filt_narr);
+            return;
+          case BW_6K:
+            dec = new DecimatorMS4<complex<float> >(dec_960k_192k,
+                                                    dec_192k_48k,
+                                                    dec_48k_16k,
+                                                    ch_filt_6k);
+            return;
+          case BW_3K:
+            dec = new DecimatorMS4<complex<float> >(dec_960k_192k,
+                                                    dec_192k_48k,
+                                                    dec_48k_16k,
+                                                    ch_filt_3k);
+            return;
+          case BW_500:
+            dec = new DecimatorMS4<complex<float> >(dec_960k_192k,
+                                                    dec_192k_48k,
+                                                    dec_48k_16k,
+                                                    ch_filt_500);
+            return;
+        }
+        assert(!"Channelizer::setBw: Unknown bandwidth");
       }
 
       virtual unsigned chSampRate(void) const
       {
-        return wb_mode ? 192000 : 32000;
+        return 960000 / dec->decFact();
       }
 
       virtual void iq_received(vector<WbRxRtlSdr::Sample> &out,
                                const vector<WbRxRtlSdr::Sample> &in)
       {
-        //cout << "### Received " << samples.size() << " samples\n";
-        if (wb_mode)
-        {
-          iq_dec1.decimate(out, in);
-        }
-        else
-        {
-          vector<WbRxRtlSdr::Sample> dec_samp1, dec_samp2;
-          iq_dec1.decimate(dec_samp1, in);
-          iq_dec2.decimate(dec_samp2, dec_samp1);
-          ch_filt.decimate(out, dec_samp2);
-        }
+        dec->decimate(out, in);
         preDemod(out);
       }
 
     private:
-      Decimator<complex<float> > iq_dec1;
-      Decimator<complex<float> > iq_dec2;
-      Decimator<complex<float> > ch_filt;
-      bool                       wb_mode;
+      Decimator<complex<float> >    dec_960k_192k;
+      Decimator<complex<float> >    dec_192k_64k;
+      Decimator<complex<float> >    dec_64k_32k;
+      Decimator<complex<float> >    dec_192k_48k;
+      Decimator<complex<float> >    dec_48k_16k;
+      Decimator<complex<float> >    ch_filt;
+      Decimator<complex<float> >    ch_filt_narr;
+      Decimator<complex<float> >    ch_filt_6k;
+      Decimator<complex<float> >    ch_filt_3k;
+      Decimator<complex<float> >    ch_filt_500;
+      DecimatorMS<complex<float> >  *dec;
   };
 
   class Channelizer2400 : public Channelizer
   {
     public:
       Channelizer2400(void)
-        : iq_dec1(3, coeff_dec_2400k_800k, coeff_dec_2400k_800k_cnt),
-          iq_dec2(5, coeff_dec_800k_160k, coeff_dec_800k_160k_cnt),
-          iq_dec3(5, coeff_dec_160k_32k, coeff_dec_160k_32k_cnt),
-          ch_filt(1, coeff_nbfm_channel, coeff_nbfm_channel_cnt),
-          wb_mode(false)
+        : dec_2400k_800k(3, coeff_dec_2400k_800k, coeff_dec_2400k_800k_cnt),
+          dec_800k_160k (5, coeff_dec_800k_160k,  coeff_dec_800k_160k_cnt ),
+          dec_160k_32k  (5, coeff_dec_160k_32k,   coeff_dec_160k_32k_cnt  ),
+          dec_32k_16k   (2, coeff_dec_32k_16k,    coeff_dec_32k_16k_cnt   ),
+          ch_filt       (1, coeff_25k_channel,    coeff_25k_channel_cnt   ),
+          ch_filt_narr  (1, coeff_12k5_channel,   coeff_12k5_channel_cnt  ),
+          ch_filt_6k    (1, coeff_nbam_channel,   coeff_nbam_channel_cnt  ),
+          ch_filt_3k    (1, coeff_ssb_channel,    coeff_ssb_channel_cnt   ),
+          ch_filt_500   (1, coeff_cw_channel,     coeff_cw_channel_cnt    ),
+          dec(0)
       {
-
+        setBw(BW_20K);
       }
-      virtual ~Channelizer2400(void) {}
-
-      virtual void setWbMode(bool enable)
+      virtual ~Channelizer2400(void)
       {
-        wb_mode = enable;
+        delete dec;
+        dec = 0;
+      }
+
+      virtual void setBw(Bandwidth bw)
+      {
+        delete dec;
+        dec = 0;
+
+        switch (bw)
+        {
+          case BW_WIDE:
+            dec = new DecimatorMS2<complex<float> >(dec_2400k_800k,
+                                                    dec_800k_160k);
+            return;
+          case BW_20K:
+            dec = new DecimatorMS4<complex<float> >(dec_2400k_800k,
+                                                    dec_800k_160k,
+                                                    dec_160k_32k, 
+                                                    ch_filt);
+            return;
+          case BW_10K:
+            dec = new DecimatorMS5<complex<float> >(dec_2400k_800k,
+                                                    dec_800k_160k,
+                                                    dec_160k_32k, 
+                                                    dec_32k_16k,
+                                                    ch_filt_narr);
+            return;
+          case BW_6K:
+            dec = new DecimatorMS5<complex<float> >(dec_2400k_800k,
+                                                    dec_800k_160k,
+                                                    dec_160k_32k, 
+                                                    dec_32k_16k,
+                                                    ch_filt_6k);
+            return;
+          case BW_3K:
+            dec = new DecimatorMS5<complex<float> >(dec_2400k_800k,
+                                                    dec_800k_160k,
+                                                    dec_160k_32k,
+                                                    dec_32k_16k,
+                                                    ch_filt_3k);
+            return;
+          case BW_500:
+            dec = new DecimatorMS5<complex<float> >(dec_2400k_800k,
+                                                    dec_800k_160k,
+                                                    dec_160k_32k,
+                                                    dec_32k_16k,
+                                                    ch_filt_500);
+            return;
+        }
+        assert(!"Channelizer::setBw: Unknown bandwidth");
       }
 
       virtual unsigned chSampRate(void) const
       {
-        return wb_mode ? 160000 : 32000;
+        return 2400000 / dec->decFact();
       }
 
       virtual void iq_received(vector<WbRxRtlSdr::Sample> &out,
                                const vector<WbRxRtlSdr::Sample> &in)
       {
-        if (wb_mode)
-        {
-          vector<WbRxRtlSdr::Sample> dec_samp1;
-          iq_dec1.decimate(dec_samp1, in);
-          iq_dec2.decimate(out, dec_samp1);
-        }
-        else
-        {
-          vector<WbRxRtlSdr::Sample> dec_samp1, dec_samp2, dec_samp3;
-          iq_dec1.decimate(dec_samp1, in);
-          iq_dec2.decimate(dec_samp2, dec_samp1);
-          iq_dec3.decimate(dec_samp3, dec_samp2);
-          ch_filt.decimate(out, dec_samp3);
-        }
+        dec->decimate(out, in);
         preDemod(out);
       }
 
     private:
-      Decimator<complex<float> > iq_dec1;
-      Decimator<complex<float> > iq_dec2;
-      Decimator<complex<float> > iq_dec3;
-      Decimator<complex<float> > ch_filt;
-      bool                       wb_mode;
+      Decimator<complex<float> >    dec_2400k_800k;
+      Decimator<complex<float> >    dec_800k_160k;
+      Decimator<complex<float> >    dec_160k_32k;
+      Decimator<complex<float> >    dec_32k_16k;
+      Decimator<complex<float> >    ch_filt;
+      Decimator<complex<float> >    ch_filt_narr;
+      Decimator<complex<float> >    ch_filt_6k;
+      Decimator<complex<float> >    ch_filt_3k;
+      Decimator<complex<float> >    ch_filt_500;
+      DecimatorMS<complex<float> >  *dec;
   };
 
 }; /* anonymous namespace */
@@ -1095,8 +969,9 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
   public:
     Channel(int fq_offset, unsigned sample_rate)
       : sample_rate(sample_rate), channelizer(0),
-        fm_demod(32000.0, 5000.0), demod(0),
-        trans(sample_rate, fq_offset), enabled(true)
+        fm_demod(32000, 5000.0), ssb_demod(16000), cw_demod(16000), demod(0),
+        trans(sample_rate, fq_offset), enabled(true), ch_offset(0),
+        fq_offset(fq_offset)
     {
     }
 
@@ -1128,27 +1003,69 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
 
     void setFqOffset(int fq_offset)
     {
-      trans.setOffset(fq_offset);
+      this->fq_offset = fq_offset;
+      trans.setOffset(fq_offset - ch_offset);
     }
 
     void setModulation(Ddr::Modulation mod)
     {
-      channelizer->setWbMode(mod == Ddr::MOD_WBFM);
       demod = 0;
+      ch_offset = 0;
       switch (mod)
       {
         case Ddr::MOD_FM:
+          channelizer->setBw(Channelizer::BW_20K);
           fm_demod.setDemodParams(channelizer->chSampRate(), 5000);
           demod = &fm_demod;
           break;
+        case Ddr::MOD_NBFM:
+          channelizer->setBw(Channelizer::BW_10K);
+          fm_demod.setDemodParams(channelizer->chSampRate(), 2500);
+          demod = &fm_demod;
+          break;
         case Ddr::MOD_WBFM:
+          channelizer->setBw(Channelizer::BW_WIDE);
           fm_demod.setDemodParams(channelizer->chSampRate(), 75000);
           demod = &fm_demod;
           break;
         case Ddr::MOD_AM:
+          channelizer->setBw(Channelizer::BW_10K);
           demod = &am_demod;
           break;
+        case Ddr::MOD_NBAM:
+          channelizer->setBw(Channelizer::BW_6K);
+          demod = &am_demod;
+          break;
+        case Ddr::MOD_USB:
+#ifdef USE_SSB_PHASE_DEMOD
+          channelizer->setBw(Channelizer::BW_6K);
+#else
+          channelizer->setBw(Channelizer::BW_3K);
+          ch_offset = -2000;
+#endif
+          ssb_demod.useLsb(false);
+          demod = &ssb_demod;
+          break;
+        case Ddr::MOD_LSB:
+#ifdef USE_SSB_PHASE_DEMOD
+          channelizer->setBw(Channelizer::BW_6K);
+#else
+          channelizer->setBw(Channelizer::BW_3K);
+          ch_offset = 2000;
+#endif
+          ssb_demod.useLsb(true);
+          demod = &ssb_demod;
+          break;
+        case Ddr::MOD_CW:
+          channelizer->setBw(Channelizer::BW_500);
+          demod = &cw_demod;
+          break;
+        case Ddr::MOD_WBCW:
+          channelizer->setBw(Channelizer::BW_3K);
+          demod = &cw_demod;
+          break;
       }
+      setFqOffset(fq_offset);
       assert((demod != 0) && "Channel::setModulation: Unknown modulation");
       setHandler(demod);
     }
@@ -1188,9 +1105,13 @@ class Ddr::Channel : public sigc::trackable, public Async::AudioSource
     Channelizer *channelizer;
     DemodulatorFm fm_demod;
     DemodulatorAm am_demod;
+    DemodulatorSsb ssb_demod;
+    DemodulatorCw cw_demod;
     Demodulator *demod;
     Translate trans;
     bool enabled;
+    int ch_offset;
+    int fq_offset;
 }; /* Channel */
 
 
@@ -1315,6 +1236,10 @@ bool Ddr::initialize(void)
   {
     channel->setModulation(MOD_FM);
   }
+  else if (modstr == "NBFM")
+  {
+    channel->setModulation(MOD_NBFM);
+  }
   else if (modstr == "WBFM")
   {
     channel->setModulation(MOD_WBFM);
@@ -1322,6 +1247,26 @@ bool Ddr::initialize(void)
   else if (modstr == "AM")
   {
     channel->setModulation(MOD_AM);
+  }
+  else if (modstr == "NBAM")
+  {
+    channel->setModulation(MOD_NBAM);
+  }
+  else if (modstr == "USB")
+  {
+    channel->setModulation(MOD_USB);
+  }
+  else if (modstr == "LSB")
+  {
+    channel->setModulation(MOD_LSB);
+  }
+  else if (modstr == "CW")
+  {
+    channel->setModulation(MOD_CW);
+  }
+  else if (modstr == "WBCW")
+  {
+    channel->setModulation(MOD_WBCW);
   }
   else
   {
