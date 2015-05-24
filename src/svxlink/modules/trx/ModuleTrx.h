@@ -65,6 +65,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+namespace Async
+{
+  class Timer;
+};
 class Rx;
 class Tx;
 
@@ -122,9 +126,10 @@ class ModuleTrx : public Module
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
   private:
-    Rx *rx;
-    Tx *tx;
-    bool auto_mod_select;
+    Rx            *rx;
+    Tx            *tx;
+    bool          auto_mod_select;
+    Async::Timer  *rx_timeout_timer;
 
     bool initialize(void);
     void activateInit(void);
@@ -132,8 +137,10 @@ class ModuleTrx : public Module
     bool dtmfDigitReceived(char digit, int duration);
     void dtmfCmdReceived(const std::string& cmd);
     //void dtmfCmdReceivedWhenIdle(const std::string &cmd);
-    //void squelchOpen(bool is_open);
+    void squelchOpen(bool is_open);
     //void allMsgsWritten(void);
+    void rxTimeout(Async::Timer *t);
+    void rxSquelchOpen(bool is_open);
 
 };  /* class ModuleTrx */
 

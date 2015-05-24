@@ -47,6 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <version/MODULE_TRX.h>
 #include <Rx.h>
 #include <Tx.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -66,6 +67,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 using namespace std;
+using namespace Async;
 
 
 
@@ -133,7 +135,8 @@ extern "C" {
  ****************************************************************************/
 
 ModuleTrx::ModuleTrx(void *dl_handle, Logic *logic, const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), rx(0), tx(0), auto_mod_select(false)
+  : Module(dl_handle, logic, cfg_name), rx(0), tx(0), auto_mod_select(false),
+    rx_timeout_timer(0)
 {
   cout << "\tModule Trx v" MODULE_TRX_VERSION " starting...\n";
 
@@ -142,10 +145,14 @@ ModuleTrx::ModuleTrx(void *dl_handle, Logic *logic, const string& cfg_name)
 
 ModuleTrx::~ModuleTrx(void)
 {
+  delete rx_timeout_timer;
+  rx_timeout_timer = 0;
   AudioSink::clearHandler();
   AudioSource::clearHandler();
   delete rx;
+  rx = 0;
   delete tx;
+  tx = 0;
 } /* ~ModuleTrx */
 
 
@@ -194,6 +201,7 @@ bool ModuleTrx::initialize(void)
          << "\" in module \"" << name() << "\"\n";
     return false;
   }
+  rx->squelchOpen.connect(mem_fun(*this, &ModuleTrx::rxSquelchOpen));
   AudioSource::setHandler(rx);
   
   string tx_name;
@@ -220,6 +228,15 @@ bool ModuleTrx::initialize(void)
            << "\" configured in module \"" << name() << "\"\n";
       return false;
     }
+  }
+
+  int rx_timeout = 0;
+  cfg().getValue(cfgName(), "RX_TIMEOUT", rx_timeout);
+  if (rx_timeout > 0)
+  {
+    rx_timeout_timer = new Timer(1000 * rx_timeout);
+    rx_timeout_timer->setEnable(false);
+    rx_timeout_timer->expired.connect(mem_fun(*this, &ModuleTrx::rxTimeout));
   }
 
   return true;
@@ -261,6 +278,10 @@ void ModuleTrx::activateInit(void)
  */
 void ModuleTrx::deactivateCleanup(void)
 {
+  if (rx_timeout_timer != 0)
+  {
+    rx_timeout_timer->setEnable(false);
+  }
   rx->setMuteState(Rx::MUTE_ALL);
   tx->setTxCtrlMode(Tx::TX_OFF);
 } /* deactivateCleanup */
@@ -345,6 +366,7 @@ void ModuleTrx::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
 
 } /* dtmfCmdReceivedWhenIdle */
+#endif
 
 
 /*
@@ -362,10 +384,19 @@ void ModuleTrx::dtmfCmdReceivedWhenIdle(const std::string &cmd)
  */
 void ModuleTrx::squelchOpen(bool is_open)
 {
-  
+  //cout << "### ModuleTrx::squelchOpen: is_open=" << is_open << endl;
+  if (isActive())
+  {
+    rx->setMuteState(Rx::MUTE_NONE);
+    if (rx_timeout_timer != 0)
+    {
+      rx_timeout_timer->reset();
+    }
+  }
 } /* squelchOpen */
 
 
+#if 0
 /*
  *----------------------------------------------------------------------------
  * Method:    allMsgsWritten
@@ -385,6 +416,28 @@ void ModuleTrx::allMsgsWritten(void)
 
 } /* allMsgsWritten */
 #endif
+
+
+void ModuleTrx::rxTimeout(Async::Timer *t)
+{
+  cout << cfgName() << ": RX Timeout" << endl;
+  rx->setMuteState(Rx::MUTE_ALL);
+} /* ModuleTrx::rxTimeout */
+
+
+void ModuleTrx::rxSquelchOpen(bool is_open)
+{
+  //cout << "### ModuleTrx::rxSquelchOpen: is_open=" << is_open << endl;
+  if (isActive())
+  {
+    setIdle(!is_open);
+
+    if (rx_timeout_timer != 0)
+    {
+      rx_timeout_timer->setEnable(is_open);
+    }
+  }
+} /* ModuleTrx::rxSquelchOpen */
 
 
 
