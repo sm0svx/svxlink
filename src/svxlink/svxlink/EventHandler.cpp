@@ -212,17 +212,18 @@ bool EventHandler::processEvent(const string& event)
     return false;
   }
   
+  bool success = true;
   Tcl_Preserve(interp);
   if (Tcl_Eval(interp, (event + ";").c_str()) != TCL_OK)
   {
     cerr << "*** ERROR: Unable to handle event: " << event
       	 << " in logic " << logic->name() << " ("
          << Tcl_GetStringResult(interp) << ")" << endl;
-    return false;
+    success = false;
   }
   Tcl_Release(interp);
   
-  return true;
+  return success;
   
 } /* EventHandler::processEvent */
 
@@ -383,7 +384,7 @@ int EventHandler::deactivateModuleHandler(ClientData cdata, Tcl_Interp *irp,
 {
   if(argc != 1)
   {
-    char msg[] = "Usage: deactivateModuleHandler";
+    char msg[] = "Usage: deactivateModule";
     Tcl_SetResult(irp, msg, TCL_STATIC);
     return TCL_ERROR;
   }

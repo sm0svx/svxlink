@@ -31,6 +31,10 @@ if(DOXYGEN_FOUND)
   set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
     "echolib;async"
     )
+else(DOXYGEN_FOUND)
+  message("--   The Doxygen tool is used to generate developer documentation.")
+  message("--   It is an optional dependency and SvxLink will build without")
+  message("--   it. Not needed for normal use.")
 endif(DOXYGEN_FOUND)
 
 add_subdirectory(man)

@@ -183,7 +183,6 @@ class SvxSwDtmfDecoder : public DtmfDecoder
     static const size_t DET_CNT_LO_WEIGHT = 1;
     static const size_t DEFAULT_MIN_DET_CNT = 2 * DET_CNT_HI_WEIGHT;
     static const size_t DEFAULT_MIN_UNDET_CNT = 3;
-    static const size_t LOW_QUALITY_UNDET_MULT = 3;
     static const size_t BLOCK_SIZE = 20 * INTERNAL_SAMPLE_RATE / 1000; // 20ms
     static const size_t STEP_SIZE = 10 * INTERNAL_SAMPLE_RATE / 1000; // 10ms
     static const float ENERGY_THRESH = 1e-6 * BLOCK_SIZE; // Min passband energy
@@ -213,6 +212,9 @@ class SvxSwDtmfDecoder : public DtmfDecoder
     int duration;
     float win[BLOCK_SIZE];
     size_t undet_thresh;
+    bool debug;
+    float win_pwr_comp;
+
 
     void processBlock(void);
 

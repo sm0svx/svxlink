@@ -63,7 +63,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-class WbRxRtlTcp;
+class WbRxRtlSdr;
 
 
 /****************************************************************************
@@ -118,6 +118,22 @@ extracted from this wideband signal and a demodulator is applied.
 class Ddr : public LocalRxBase
 {
   public:
+    /**
+     * @brief   Modulation types
+     */
+    typedef enum
+    {
+      MOD_FM,     //!< FM. Standard two-way radio 20kHz channel.
+      MOD_NBFM,   //!< FM narrow. Narrow band two-way radio 10kHz channel.
+      MOD_WBFM,   //!< Wide band FM. Standard FM broadcasting 180kHz channel.
+      MOD_AM,     //!< AM. Standard two-way radio 10kHz channel.
+      MOD_NBAM,   //!< AM narrow. Narrow band two-way radio 6kHz channel.
+      MOD_USB,    //!< Upper Sideband 3kHz channel
+      MOD_LSB,    //!< Lower Sideband 3kHz channel
+      MOD_CW,     //!< Morse
+      MOD_WBCW    //!< Morse
+    } Modulation;
+
     static Ddr *find(const std::string &name);
 
     /**
@@ -147,6 +163,27 @@ class Ddr : public LocalRxBase
      * @param   fq The new tuner frequency
      */
     void tunerFqChanged(uint32_t fq);
+
+    /**
+     * @brief   Set the modulation used for this ddr
+     * @param   mod The type of modulation to set (@see Modulation)
+     */
+    void setModulation(Modulation mod);
+
+    /**
+     * @brief   Find out what the pre-demodulation sample rate is
+     * @returns Returns the sample rate used before the demodulator
+     *
+     * This function is used to find out what the sampling rate is before the
+     * demodulator. This must be known before using the preDemod signal.
+     */
+    unsigned preDemodSampleRate(void) const;
+
+    /**
+     * @brief   Find out if the receiver is ready for operation
+     * @returns Returns \em true if the receiver is ready for operation
+     */
+    virtual bool isReady(void) const;
 
     /**
      * @brief   A signal that is emitted when new I/Q data is available
@@ -207,7 +244,7 @@ class Ddr : public LocalRxBase
 
     Async::Config           &cfg;
     Channel                 *channel;
-    WbRxRtlTcp              *rtl;
+    WbRxRtlSdr              *rtl;
     double                  fq;
     
 };  /* class Ddr */

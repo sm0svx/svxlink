@@ -15,6 +15,20 @@
   handle in an audio pipe where there is a main path and you just want
   to split off a branch.
 
+* The NULL audio codec now encode and decode a sample count which is used
+  by the decoder to write the correct number of samples to its audio sink.
+  All written samples will be zero-samples.
+
+* Bugfix in Async::AudioRecorder: If a write error occurred, the audio pipe
+  could be blocked indefinitely. Error handling was improved all over. There
+  now is a "errorOccurred" signal and a "errorMsg" function.
+
+* Bugfix in Async::AudioEncoder{Opus,Speex,Gsm}: Applications using the Opus,
+  Speex or Gsm audio encoders could crash due to some dangerous coding.
+
+* Async::Config: Removed error message printed on open failure. Printing an
+  error message must be done by the caller.
+
 
 
  1.3.1 -- 02 Apr 2015

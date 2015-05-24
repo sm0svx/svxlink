@@ -139,7 +139,7 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
      * @brief 	Find out what the configured hangtime is
      * @returns Returns the configured hangtime in milliseconds
      */
-    int hangtime(void) const { return m_hangtime; }
+    unsigned hangtime(void) const { return m_hangtime; }
     
     /**
      * @brief 	Return the active digit
@@ -189,11 +189,11 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
     
     
   private:
-    static const int DEFAULT_HANGTIME = 0;
+    static const unsigned DEFAULT_HANGTIME = 0;
     
     Async::Config   m_cfg;
     std::string     m_name;
-    int       	    m_hangtime;
+    unsigned   	    m_hangtime;
     
 };  /* class DtmfDecoder */
 

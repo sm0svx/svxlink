@@ -39,6 +39,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <vector>
+#include <algorithm>
+#include <iterator>
 
 
 /****************************************************************************
@@ -49,10 +52,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncCppApplication.h>
 #include <AsyncAudioIO.h>
+#include <AsyncAudioSplitter.h>
 #include <AsyncConfig.h>
 #include <AsyncFdWatch.h>
 #include <Tx.h>
 #include <Rx.h>
+#include <common.h>
 
 
 /****************************************************************************
@@ -61,11 +66,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include "version/DEVCAL.h"
 #if 0
 #include "../trx/Ptt.h"
 #endif
 #include "../trx/Goertzel.h"
 #include "../trx/Emphasis.h"
+#include "../trx/RtlSdr.h"
+#include "../trx/Ddr.h"
 
 
 /****************************************************************************
@@ -85,7 +93,7 @@ using namespace Async;
  ****************************************************************************/
 
 #define PROGRAM_NAME          "devcal"
-#define DEFAULT_MOD_FQ        1000.0f
+#define DEFAULT_MOD_FQS       "1000.0"
 #define DEFAULT_HEADROOM_DB   6.0f
 #define DEFAULT_CALDEV        2404.8f
 #define DEFAULT_MAXDEV        5000.0f
@@ -100,8 +108,8 @@ using namespace Async;
 class SineGenerator : public Async::AudioSource
 {
   public:
-    explicit SineGenerator(void)
-      : pos(0), fq(0.0), level(0.0), adj_level(1.0),
+    explicit SineGenerator(const vector<float> &fqs)
+      : pos(0), fqs(fqs), level(0.0), adj_level(1.0),
         sample_rate(INTERNAL_SAMPLE_RATE), enabled(false)
     {
     }
@@ -111,14 +119,13 @@ class SineGenerator : public Async::AudioSource
       enable(false);
     }
     
-    void setFq(double tone_fq)
-    {
-      fq = tone_fq;
-    }
-    
     void setLevel(double level_percent)
     {
       level = level_percent / 100.0;
+      if (fqs.size() > 1)
+      {
+        level /= powf(10.0f, 3.0f/20.0f) * (fqs.size() - 1);
+      }
     }
 
     void adjustLevel(double adj_db)
@@ -133,7 +140,7 @@ class SineGenerator : public Async::AudioSource
     
     void enable(bool enable)
     {
-      if (enable && (fq != 0))
+      if (enable && !fqs.empty())
       {
         enabled = true;
         pos = 0;
@@ -160,16 +167,15 @@ class SineGenerator : public Async::AudioSource
     {
     }
     
-    
   private:
     static const int BLOCK_SIZE = 128;
     
-    unsigned  pos;
-    double    fq;
-    double    level;
-    double    adj_level;
-    int       sample_rate;
-    bool      enabled;
+    unsigned      pos;
+    vector<float> fqs;
+    double        level;
+    double        adj_level;
+    int           sample_rate;
+    bool          enabled;
     
     void writeSamples(void)
     {
@@ -182,8 +188,15 @@ class SineGenerator : public Async::AudioSource
 	float buf[BLOCK_SIZE];
 	for (int i=0; i<BLOCK_SIZE; ++i)
 	{
-      	  buf[i] = adj_level * level *
-                   sin(2 * M_PI * fq * (pos+i) / sample_rate);
+      	  buf[i] = 0.0f;
+          for (vector<float>::const_iterator it = fqs.begin();
+              it != fqs.end();
+              ++it)
+          {
+            const float &fq = *it;
+            buf[i] += adj_level * level *
+                      sin(2 * M_PI * fq * (pos+i) / sample_rate);
+          }
 	}
 	written = sinkWriteSamples(buf, BLOCK_SIZE);
 	pos += written;
@@ -261,12 +274,18 @@ class FlatTopWindow : public Window
 class DevPrinter : public AudioSink
 {
   public:
-    DevPrinter(float mod_fq, float max_dev, float headroom_db)
-      : block_size(INTERNAL_SAMPLE_RATE / 20), w(block_size),
-        g(mod_fq, INTERNAL_SAMPLE_RATE), samp_cnt(0), max_dev(max_dev),
+    DevPrinter(float samp_rate, const vector<float> &mod_fqs,
+               float max_dev=1.0f, float headroom_db=0.0f)
+      : block_size(samp_rate / 20), w(block_size),
+        g(mod_fqs.size()), samp_cnt(0), max_dev(max_dev),
         headroom(pow(10.0, headroom_db/20.0)), adj_level(1.0f), dev_est(0.0),
-        block_cnt(0)
+        block_cnt(0), pwr_sum(0.0), amp_sum(0.0), fqerr_est(0.0),
+        carrier_fq(0.0)
     {
+      for (size_t i=0; i<mod_fqs.size(); ++i)
+      {
+        g[i].initialize(mod_fqs[i], samp_rate);
+      }
     }
 
     void adjustLevel(double adj_db)
@@ -282,25 +301,68 @@ class DevPrinter : public AudioSink
     {
       return 20.0 * log10(adj_level);
     }
+
+    void setCarrierFq(double carrier_fq)
+    {
+      this->carrier_fq = carrier_fq;
+    }
+
+    double carrierFq(void) const { return carrier_fq; }
     
     virtual int writeSamples(const float *samples, int count)
     {
       for (int i=0; i<count; ++i)
       {
-        g.calc(w[samp_cnt] * samples[i]);
+        pwr_sum += samples[i] * samples[i];
+        amp_sum += samples[i];
+
+        float windowed = w[samp_cnt] * samples[i];
+        for (size_t i=0; i<g.size(); ++i)
+        {
+          g[i].calc(windowed);
+        }
         if (++samp_cnt >= block_size)
         {
-          float ampl = 2 * sqrt(g.magnitudeSquared()) / block_size;
-          ampl *= adj_level;
-          float dev = headroom * max_dev * ampl;
+          double avg_power = pwr_sum / block_size;
+          float tot_dev = sqrt(avg_power) * sqrt(2);
+          tot_dev *= adj_level;
+          tot_dev *= headroom * max_dev;
+          tot_dev_est = (1.0-ALPHA) * tot_dev + ALPHA * tot_dev_est;
+          pwr_sum = 0.0;
+
+          float dev = 0.0f;
+          for (size_t i=0; i<g.size(); ++i)
+          {
+            dev += g[i].magnitudeSquared();
+          }
+          dev = 2 * sqrt(dev) / block_size;
+          dev *= adj_level;
+          dev *= headroom * max_dev;
           dev_est = (1.0-ALPHA) * dev + ALPHA * dev_est;
+
+          double fqerr = amp_sum / block_size;
+          fqerr *= adj_level;
+          fqerr *= headroom * max_dev;
+          amp_sum = 0.0;
+          fqerr_est = (1.0-ALPHA) * fqerr + ALPHA * fqerr_est;
+
           if (++block_cnt >= PRINT_INTERVAL)
           {
-            cout << "Deviation: " << dev_est << "\r";
+            cout << "\r\033[K" "Tone dev=" << dev_est
+                 << "  Full bw dev=" << tot_dev_est 
+                 << "  Carrier freq err=" << fqerr_est;
+            if (carrier_fq > 0.0)
+            {
+              int ppm_err = round(1000000.0 * fqerr_est / carrier_fq);
+              cout << "(" << ppm_err << "ppm)";
+            }
             cout.flush();
             block_cnt = 0;
           }
-          g.reset();
+          for (size_t i=0; i<g.size(); ++i)
+          {
+            g[i].reset();
+          }
           samp_cnt = 0;
         }
       }
@@ -313,19 +375,63 @@ class DevPrinter : public AudioSink
     }
 
   private:
-    static const double ALPHA = 0.75;         // IIR filter coeff
-    static const size_t PRINT_INTERVAL = 5;   // Block count
+    static const double ALPHA = 0.9;        //!< IIR filter coeff
+    static const size_t PRINT_INTERVAL = 5; //!< Block count
 
     int           block_size;
     FlatTopWindow w;
-    Goertzel      g;
+    vector<Goertzel> g;
     int           samp_cnt;
     float         max_dev;
     float         headroom;
     double        adj_level;
     double        dev_est;
     size_t        block_cnt;
+    double        pwr_sum;
+    double        tot_dev_est;
+    double        amp_sum;
+    double        fqerr_est;
+    double        carrier_fq;
 };
+
+
+class DevMeasure : public sigc::trackable
+{
+  public:
+    DevMeasure(unsigned samp_rate, const vector<float> &mod_fqs,
+               double carrier_fq=0.0)
+      : iold(0.0f), qold(0.0f), dev_print(samp_rate, mod_fqs),
+        samp_rate(samp_rate)
+    {
+      dev_print.setCarrierFq(carrier_fq);
+    }
+
+    void processPreDemod(const vector<RtlSdr::Sample> &preDemod)
+    {
+      vector<float> audio;
+      audio.reserve(preDemod.size());
+
+      for (vector<RtlSdr::Sample>::const_iterator it = preDemod.begin();
+           it != preDemod.end();
+           ++it)
+      {
+        float I = it->real();
+        float Q = it->imag();
+        double demod = atan2(Q*iold - I*qold, I*iold + Q*qold);
+        iold = I;
+        qold = Q;
+        audio.push_back(samp_rate * demod / (2.0 * M_PI));
+      }
+      dev_print.writeSamples(&audio[0], audio.size());
+    }
+
+  private:
+    float         iold;
+    float         qold;
+    DevPrinter    dev_print;
+    unsigned      samp_rate;
+};
+
 
 
 /****************************************************************************
@@ -345,12 +451,14 @@ static void sigterm_handler(int signal);
  *
  ****************************************************************************/
 
-static float mod_fq = DEFAULT_MOD_FQ;
+static const char *mod_fqs_str = DEFAULT_MOD_FQS;
 static float headroom_db = DEFAULT_HEADROOM_DB;
 static float caldev = DEFAULT_CALDEV;
 static float maxdev = DEFAULT_MAXDEV;
 static int cal_rx = false;
 static int cal_tx = false;
+static int measure = false;
+static bool wb_mode = false;
 static int flat_fq_response = false;
 static string cfgfile;
 static string cfgsect;
@@ -360,6 +468,10 @@ static DevPrinter *dp = 0;
 static Tx *tx = 0;
 static Rx *rx = 0;
 static float level_adjust_offset = 0.0f;
+static vector<float> mod_fqs;
+static const char *audio_dev = "alsa:default";
+static const unsigned audio_ch = 0;
+
 
 
 /****************************************************************************
@@ -370,6 +482,14 @@ static float level_adjust_offset = 0.0f;
 
 int main(int argc, const char *argv[])
 {
+  cout << PROGRAM_NAME " v" DEVCAL_VERSION " (" __DATE__ 
+          ") Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
+          "This is free software, and you\n";
+  cout << "are welcome to redistribute it in accordance with the "
+          "terms and conditions in\n";
+  cout << "the GNU GPL (General Public License) version 2 or later.\n\n";
+
   setlocale(LC_ALL, "");
   CppApplication app;
   app.catchUnixSignal(SIGINT);
@@ -378,20 +498,21 @@ int main(int argc, const char *argv[])
 
   parse_arguments(argc, const_cast<const char **>(argv));
 
-  /*
-  const string audio_dev = "alsa:plughw:0";
-  const unsigned audio_ch = 0;
-  */
-
-  float mod_idx = caldev / mod_fq;
+  vector<float> mod_idxs(mod_fqs.size());
+  transform(mod_fqs.begin(), mod_fqs.end(), mod_idxs.begin(),
+      bind1st(divides<float>(), caldev));
   float mod_level = 100.0 * caldev / (maxdev * pow(10.0, headroom_db / 20.0));
-  cout << "--- Modulation frequency  : " << mod_fq << " Hz\n";
-  cout << "--- Calibration deviation : " << caldev << " Hz\n";
-  cout << "--- Maximum deviation     : " << maxdev << " Hz\n";
-  cout << "--- Modulation index      : " << mod_idx << "\n";
-  cout << "--- Headroom              : " << headroom_db << "dB\n";
-  cout << "--- Peak sample level     : "
-       << (20.0*log10(mod_level / 100.0)) << "dBF (" << mod_level << "%)\n";
+  cout << "--- Modulation frequencies [Hz] : ";
+  copy(mod_fqs.begin(), mod_fqs.end(), ostream_iterator<float>(cout, " "));
+  cout << endl;
+  cout << "--- Calibration deviation [Hz]  : " << caldev << endl;
+  cout << "--- Maximum deviation [Hz]      : " << maxdev << endl;
+  cout << "--- Modulation indexes          : ";
+  copy(mod_idxs.begin(), mod_idxs.end(), ostream_iterator<float>(cout, " "));
+  cout << endl;
+  cout << "--- Headroom [dB]               : " << headroom_db << endl;
+  cout << "--- Peak sample level [dBF]     : "
+       << (20.0*log10(mod_level / 100.0)) << " (" << mod_level << "%)\n";
   cout << endl;
 
   ios::fmtflags old_cout_flags(cout.flags());
@@ -406,14 +527,16 @@ int main(int argc, const char *argv[])
     exit(1);
   }
 
-
+  AudioIO *audio_io = 0;
   if (cal_tx)
   {
     cfg.getValue(cfgsect, "MASTER_GAIN", level_adjust_offset);
-    cout << "MASTER_GAIN=" << level_adjust_offset << endl;
+    cout << "--- Initial MASTER_GAIN=" << level_adjust_offset << endl;
 
-    gen = new SineGenerator;
-    gen->setFq(mod_fq);
+    cout << "--- Use +, - and 0 to adjust MASTER_GAIN\n";
+    cout << "--- Use T to toggle the transmitter on and off\n";
+
+    gen = new SineGenerator(mod_fqs);
     gen->setLevel(mod_level);
     AudioSource *prev_src = gen;
 
@@ -432,15 +555,19 @@ int main(int argc, const char *argv[])
     }
     prev_src->registerSink(tx);
     tx->setTxCtrlMode(Tx::TX_AUTO);
-    gen->enable(true);
+    //gen->enable(true);
   }
   else if (cal_rx)
   {
     cfg.getValue(cfgsect, "PREAMP", level_adjust_offset);
-    cout << "PREAMP=" << level_adjust_offset << endl;
+    cout << "--- Initial PREAMP=" << level_adjust_offset << endl;
 
+    cout << "--- Setting SQL_DET=OPEN\n";
     cfg.setValue(cfgsect, "SQL_DET", "OPEN");
+    cout << "--- Setting DTMF_MUTING=0\n";
     cfg.setValue(cfgsect, "DTMF_MUTING", "0");
+
+    cout << "--- Use +, - and 0 to adjust PREAMP\n";
 
     rx = RxFactory::createNamedRx(cfg, cfgsect);
     if ((rx == 0) || !rx->initialize())
@@ -451,6 +578,10 @@ int main(int argc, const char *argv[])
     rx->setVerbose(false);
     AudioSource *prev_src = rx;
 
+    AudioSplitter *splitter = new AudioSplitter;
+    prev_src->registerSink(splitter);
+    prev_src = splitter;
+
     if (!flat_fq_response)
     {
       PreemphasisFilter *preemph = new PreemphasisFilter;
@@ -458,23 +589,79 @@ int main(int argc, const char *argv[])
       prev_src = preemph;
     }
     
-    dp = new DevPrinter(mod_fq, maxdev, headroom_db);
+    dp = new DevPrinter(INTERNAL_SAMPLE_RATE, mod_fqs, maxdev, headroom_db);
     prev_src->registerSink(dp, true);
+    prev_src = 0;
+
+    if (audio_dev[0] != '\0')
+    {
+      audio_io = new AudioIO(audio_dev, audio_ch);
+      if (!audio_io->open(AudioIO::MODE_WR))
+      {
+        cerr << "*** WARNING: Could not open audio output device \""
+             << audio_dev << "\"\n";
+      }
+      else
+      {
+        splitter->addSink(audio_io, true);
+      }
+    }
+
     rx->setMuteState(Rx::MUTE_NONE);
   }
-
-#if 0
-  AudioIO audio_out(audio_dev, audio_ch);
-  gen.registerSink(&audio_out);
-  gen.enable(true);
-  ptt->setTxOn(true);
-
-  Ptt *ptt = PttFactoryBase::createNamedPtt(cfg, cfgsect);
-  if ((ptt == 0) || (!ptt->initialize(cfg, cfgsect)))
+  else if (measure)
   {
-    return false;
+    cout << "--- Setting SQL_DET=OPEN\n";
+    cfg.setValue(cfgsect, "SQL_DET", "OPEN");
+    cout << "--- Setting DTMF_MUTING=0\n";
+    cfg.setValue(cfgsect, "DTMF_MUTING", "0");
+    string wbrx_sect;
+    if (cfg.getValue(cfgsect, "WBRX", wbrx_sect))
+    {
+      cout << "--- Setting " << wbrx_sect << "/SAMPLE_RATE to default value\n";
+      cfg.setValue(wbrx_sect, "SAMPLE_RATE", "");
+    }
+
+    rx = RxFactory::createNamedRx(cfg, cfgsect);
+    if ((rx == 0) || !rx->initialize())
+    {
+      cerr << "*** ERROR: Could not initialize receiver object\n";
+      exit(1);
+    }
+    rx->setVerbose(false);
+    AudioSource *prev_src = rx;
+
+    Ddr *ddr = dynamic_cast<Ddr*>(rx);
+    if (ddr == 0)
+    {
+      cerr << "*** ERROR: An rtl-sdr receiver is needed to measure deviation\n";
+      exit(1);
+    }
+    if (wb_mode)
+    {
+      ddr->setModulation(Ddr::MOD_WBFM);
+    }
+    DevMeasure *dev_measure = new DevMeasure(ddr->preDemodSampleRate(), 
+                                             mod_fqs, ddr->nbFq());
+    ddr->preDemod.connect(mem_fun(dev_measure, &DevMeasure::processPreDemod));
+
+    if (audio_dev[0] != '\0')
+    {
+      audio_io = new AudioIO(audio_dev, audio_ch);
+      if (!audio_io->open(AudioIO::MODE_WR))
+      {
+        cerr << "*** WARNING: Could not open audio output device \""
+          << audio_dev << "\"\n";
+      }
+      else
+      {
+        prev_src->registerSink(audio_io);
+        rx->setMuteState(Rx::MUTE_NONE);
+      }
+    }
   }
-#endif
+
+  cout << "--- Use Q or Ctrl+C to quit\n\n";
 
   struct termios org_termios;
   struct termios termios;
@@ -487,9 +674,11 @@ int main(int argc, const char *argv[])
 
   app.exec();
 
-#if 0
-  ptt->setTxOn(false);
-#endif
+  if (audio_io != 0)
+  {
+    audio_io->close();
+    delete audio_io;
+  }
   delete gen;
   delete tx;
   delete rx;
@@ -529,9 +718,10 @@ static void parse_arguments(int argc, const char **argv)
   const struct poptOption optionsTable[] =
   {
     POPT_AUTOHELP
-    {"modfq", 'f', POPT_ARG_FLOAT | POPT_ARGFLAG_SHOW_DEFAULT, &mod_fq, 0,
-	    "The frequency of the sine wave to modulate with",
-            "<frequency in hz>"},
+    {"modfqs", 'f', POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,
+            &mod_fqs_str, 0,
+	    "The frequencies of the sine waves to modulate with",
+            "<frequences in hz>"},
     {"caldev", 'd', POPT_ARG_FLOAT | POPT_ARGFLAG_SHOW_DEFAULT, &caldev, 0,
 	    "The deviation to calibrate with", "<deviation in Hz>"},
     {"maxdev", 'm', POPT_ARG_FLOAT | POPT_ARGFLAG_SHOW_DEFAULT, &maxdev, 0,
@@ -542,10 +732,17 @@ static void parse_arguments(int argc, const char **argv)
     {"config", 0, POPT_ARG_STRING, &config, 0,
 	    "Specify the configuration file to use", "<filename>"},
     */
-    {NULL, 'r', POPT_ARG_NONE, &cal_rx, 0, "Do receiver calibration", NULL},
-    {NULL, 't', POPT_ARG_NONE, &cal_tx, 0, "Do transmitter calibration", NULL},
-    {NULL, 'F', POPT_ARG_NONE, &flat_fq_response, 0,
+    {"rxcal", 'r', POPT_ARG_NONE, &cal_rx, 0, "Do receiver calibration", NULL},
+    {"txcal", 't', POPT_ARG_NONE, &cal_tx, 0,
+            "Do transmitter calibration", NULL},
+    {"flat", 'F', POPT_ARG_NONE, &flat_fq_response, 0,
             "Flat TX/RX frequency response (no emphasis)", NULL},
+    {"measure", 'M', POPT_ARG_NONE, &measure, 0, "Measure deviation", NULL},
+    {"wide", 'w', POPT_ARG_NONE, &wb_mode, 0, "Wideband mode", NULL},
+    {"audiodev", 'a', POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,
+            &audio_dev, 0,
+	    "The audio device to use for audio output",
+            "<type:dev>"},
     {NULL, 0, 0, NULL, 0}
   };
   int err;
@@ -583,10 +780,34 @@ static void parse_arguments(int argc, const char **argv)
     }
   }
 
-  if (!(cal_rx ^ cal_tx))
+  if ((static_cast<int>(cal_rx) + cal_tx + measure) != 1)
   {
-    cerr << "*** ERROR: Either -r or -t command line options must be given\n";
+    cerr << "*** ERROR: There must be one and only one of the -r, -t and -M "
+            "command line switches\n";
     poptPrintUsage(optCon, stderr, 0);
+    exit(1);
+  }
+
+  if (wb_mode)
+  {
+    if (!measure)
+    {
+      cerr << "*** ERROR: Wideband mode is only valid in measure mode\n";
+      exit(1);
+    }
+  }
+
+  SvxLink::splitStr(mod_fqs, mod_fqs_str, ",");
+  /*
+  for (vector<float>::iterator it = mod_fqs.begin(); it != mod_fqs.end(); ++it)
+  {
+    cout << *it << " ";
+  }
+  cout << endl;
+  */
+  if (mod_fqs.empty())
+  {
+    cerr << "*** ERROR: Modulation frequency is unset\n";
     exit(1);
   }
 
@@ -639,17 +860,18 @@ static void stdin_handler(FdWatch *w)
       {
         double gain = gen->levelAdjust() + 0.01;
         gen->adjustLevel(gain);
-        cout << "MASTER_GAIN="
-             << (gen->levelAdjust() + level_adjust_offset);
+        cout << "\r\033[K" "MASTER_GAIN="
+             << (gen->levelAdjust() + level_adjust_offset)
+             << endl;
       }
       else if (cal_rx)
       {
         double gain = dp->levelAdjust() + 0.01;
         dp->adjustLevel(gain);
-        cout << "PREAMP="
-             << (dp->levelAdjust() + level_adjust_offset);
+        cout << "\r\033[K" "PREAMP="
+             << (dp->levelAdjust() + level_adjust_offset)
+             << endl;
       }
-      cout << "      \n";
       break;
     }
     
@@ -659,17 +881,18 @@ static void stdin_handler(FdWatch *w)
       {
         double gain = gen->levelAdjust() - 0.01;
         gen->adjustLevel(gain);
-        cout << "MASTER_GAIN="
-             << (gen->levelAdjust() + level_adjust_offset);
+        cout << "\r\033[K" "MASTER_GAIN="
+             << (gen->levelAdjust() + level_adjust_offset)
+             << endl;
       }
       else if (cal_rx)
       {
         double gain = dp->levelAdjust() - 0.01;
         dp->adjustLevel(gain);
-        cout << "PREAMP="
-             << (dp->levelAdjust() + level_adjust_offset);
+        cout << "\r\033[K" "PREAMP="
+             << (dp->levelAdjust() + level_adjust_offset)
+             << endl;
       }
-      cout << "      \n";
       break;
     }
 
@@ -679,15 +902,16 @@ static void stdin_handler(FdWatch *w)
       {
         gen->adjustLevel(-level_adjust_offset);
         cout << "MASTER_GAIN="
-             << (gen->levelAdjust() + level_adjust_offset);
+             << (gen->levelAdjust() + level_adjust_offset)
+             << endl;
       }
       else if (cal_rx)
       {
         dp->adjustLevel(-level_adjust_offset);
-        cout << "PREAMP="
-             << (dp->levelAdjust() + level_adjust_offset);
+        cout << "\r\033[K" "PREAMP="
+             << (dp->levelAdjust() + level_adjust_offset)
+             << endl;
       }
-      cout << "      \n";
       break;
     }
 

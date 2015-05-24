@@ -11,30 +11,36 @@ include(FindGROFF)
 
 # Set up a target for compressing each manual page. Also add an install
 # target for it.
-set(TARGETS)
-foreach(man ${MAN_PAGES})
-  add_custom_command(OUTPUT ${man}.gz
-    DEPENDS ${man}
-    COMMAND ${GZIP_TOOL} -c ${CMAKE_CURRENT_SOURCE_DIR}/${man} > ${man}.gz
-    COMMENT "Compressing maual page ${man}.gz..."
-  )
-  add_custom_command(OUTPUT ${man}.html
-    DEPENDS ${man}
-    COMMAND ${GROFF_TOOL} -mandoc -Thtml < ${CMAKE_CURRENT_SOURCE_DIR}/${man} > ${man}.html
-    COMMENT "Createing HTML maual page ${man}.html..."
-  )
-  string(REGEX REPLACE ^.*\([1-9]\)\$ \\1 sec ${man})
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${man}.gz
-    DESTINATION ${MAN_INSTALL_DIR}/man${sec}
-    OPTIONAL
-  )
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${man}.html
-    DESTINATION ${DOC_INSTALL_DIR}/man/man${sec}
-    OPTIONAL
-  )
-  set(TARGETS ${TARGETS} ${man}.gz ${man}.html)
-endforeach(man)
+if(GROFF_TOOL AND GZIP_TOOL)
+  set(TARGETS)
+  foreach(man ${MAN_PAGES})
+    add_custom_command(OUTPUT ${man}.gz
+      DEPENDS ${man}
+      COMMAND ${GZIP_TOOL} -c ${CMAKE_CURRENT_SOURCE_DIR}/${man} > ${man}.gz
+      COMMENT "Compressing maual page ${man}.gz..."
+    )
+    add_custom_command(OUTPUT ${man}.html
+      DEPENDS ${man}
+      COMMAND ${GROFF_TOOL} -mandoc -Thtml < ${CMAKE_CURRENT_SOURCE_DIR}/${man} > ${man}.html
+      COMMENT "Createing HTML maual page ${man}.html..."
+    )
+    string(REGEX REPLACE ^.*\([1-9]\)\$ \\1 sec ${man})
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${man}.gz
+      DESTINATION ${MAN_INSTALL_DIR}/man${sec}
+      OPTIONAL
+    )
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${man}.html
+      DESTINATION ${DOC_INSTALL_DIR}/man/man${sec}
+      OPTIONAL
+    )
+    set(TARGETS ${TARGETS} ${man}.gz ${man}.html)
+  endforeach(man)
 
-# Add a custom target to trigger the build of the man pages
-add_custom_target(man DEPENDS ${TARGETS})
-add_dependencies(doc man)
+  # Add a custom target to trigger the build of the man pages
+  add_custom_target(man DEPENDS ${TARGETS})
+  add_dependencies(doc man)
+else(GROFF_TOOL AND GZIP_TOOL)
+  message("--   The groff and gzip tools are optional dependencies.")
+  message("--   They are used to build the UNIX manual pages. SvxLink will")
+  message("--   build without them but usage documentation will be missing.")
+endif(GROFF_TOOL AND GZIP_TOOL)

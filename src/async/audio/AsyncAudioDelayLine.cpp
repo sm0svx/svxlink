@@ -119,6 +119,7 @@ AudioDelayLine::AudioDelayLine(int length_ms)
     fade_pos(0), fade_dir(0)
 {
   buf = new float[size];
+  memset(buf, 0, size * sizeof(*buf));
   clear();
   setFadeTime(DEFAULT_FADE_TIME);
 } /* AudioDelayLine::AudioDelayLine */

@@ -155,14 +155,8 @@ DtmfDecoder *DtmfDecoder::create(Rx *rx, Config &cfg, const string& name)
 
 bool DtmfDecoder::initialize(void)
 {
-  string value;
-  if (cfg().getValue(name(), "DTMF_HANGTIME", value))
-  {
-    m_hangtime = atoi(value.c_str());
-  }
-  
+  cfg().getValue(name(), "DTMF_HANGTIME", m_hangtime);
   return true;
-  
 } /* DtmfDecoder::initialize */
 
 

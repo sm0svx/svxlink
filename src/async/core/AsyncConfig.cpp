@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <unistd.h>
+#include <errno.h>
 #include <ctype.h>
 
 #include <iostream>
@@ -130,24 +131,20 @@ Config::~Config(void)
 
 bool Config::open(const string& name)
 {
+  errno = 0;
+
   file = fopen(name.c_str(), "r");
   if (file == NULL)
   {
-    perror("fopen");
     return false;
   }
   
-  if (!parseCfgFile())
-  {
-    fclose(file);
-    file = NULL;
-    return false;
-  }
+  bool success = parseCfgFile();
   
   fclose(file);
   file = NULL;
   
-  return true;
+  return success;
   
 } /* Config::open */
 

@@ -262,6 +262,7 @@ class LocalRxBase : public Rx
     void tone1750detected(bool detected);
     void onSignalLevelUpdated(float siglev);
     void setSqlHangtimeFromSiglev(float siglev);
+    void rxReadyStateChanged(void);
 
 };  /* class LocalRxBase */
 
