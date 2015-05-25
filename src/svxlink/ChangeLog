@@ -6,7 +6,8 @@
   SvxLink users. It will for example be very cheap to set up an extra receiver
   with local coverage for a SvxLink based repeater, as long as there is a
   network connection to the repeater. The modulation forms supported are:
-  FM, AM and wideband FM (broadcast).
+  FM, FM narrow, AM, AM narrow, USB, LSB, CW, CW wide and wideband FM
+  (broadcast).
 
 * New configuration variable for local receivers, RAW_AUDIO_UDP_DEST, which
   makes it possible to stream the raw audio read by SvxLink from the audio

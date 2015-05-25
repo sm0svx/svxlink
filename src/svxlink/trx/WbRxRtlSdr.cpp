@@ -136,7 +136,7 @@ WbRxRtlSdr *WbRxRtlSdr::instance(Async::Config &cfg, const string &name)
 
 
 WbRxRtlSdr::WbRxRtlSdr(Async::Config &cfg, const string &name)
-  : auto_tune_enabled(true), m_name(name)
+  : auto_tune_enabled(true), m_name(name), xvrtr_offset(0)
 {
   //cout << "### Initializing WBRX " << name << endl;
 
@@ -191,6 +191,8 @@ WbRxRtlSdr::WbRxRtlSdr(Async::Config &cfg, const string &name)
     setCenterFq(center_fq);
   }
 
+  cfg.getValue(name, "XVRTR_OFFSET", xvrtr_offset);
+
   float gain = 0.0f;
   if (cfg.getValue(name, "GAIN", gain))
   {
@@ -216,7 +218,7 @@ WbRxRtlSdr::~WbRxRtlSdr(void)
 void WbRxRtlSdr::setCenterFq(uint32_t fq)
 {
   //cout << "### WbRxRtlSdr::setCenterFq: fq=" << fq << endl;
-  rtl->setCenterFq(fq);
+  rtl->setCenterFq(fq + xvrtr_offset);
   for (Ddrs::iterator it=ddrs.begin(); it!=ddrs.end(); ++it)
   {
     Ddr *ddr = (*it);
@@ -227,7 +229,7 @@ void WbRxRtlSdr::setCenterFq(uint32_t fq)
 
 uint32_t WbRxRtlSdr::centerFq(void)
 {
-  return rtl->centerFq();
+  return rtl->centerFq() - xvrtr_offset;
 } /* WbRxRtlSdr::centerFq */
 
 

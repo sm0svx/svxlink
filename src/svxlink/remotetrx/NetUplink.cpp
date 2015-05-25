@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <cstring>
+#include <cerrno>
 
 
 /****************************************************************************
@@ -609,7 +610,8 @@ void NetUplink::sendMsg(Msg *msg)
     int written = con->write(msg, msg->size());
     if (written == -1)
     {
-      cerr << "*** ERROR: TCP transmit error in NetUplink " << name << ".\n";
+      cerr << "*** ERROR: TCP transmit error in NetUplink \"" << name
+           << "\": " << strerror(errno) << ".\n";
     }
     else if (written != static_cast<int>(msg->size()))
     {
