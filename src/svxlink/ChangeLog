@@ -75,6 +75,15 @@
 
 
 
+ 1.4.2 -- 06 jun 2015
+----------------------
+
+* Bugfix: The logic linking would cause a crash under some circumstances.
+  For example SvxLink would crash on startup if link TIMEOUT was set and the
+  startup Tcl function was modified to play an audio clip.
+
+
+
  1.4.1 -- 30 apr 2015
 ----------------------
 
