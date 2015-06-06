@@ -506,6 +506,8 @@ int main(int argc, char **argv)
 
   app.exec();
 
+  LinkManager::deleteInstance();
+
   logfile_flush();
   
   if (stdin_watch != 0)
@@ -528,8 +530,6 @@ int main(int argc, char **argv)
   }
   logic_vec.clear();
   
-  LinkManager::deleteInstance();
-
   if (logfd != -1)
   {
     close(logfd);

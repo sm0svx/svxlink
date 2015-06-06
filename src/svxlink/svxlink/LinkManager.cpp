@@ -330,9 +330,12 @@ void LinkManager::addLogic(Logic *logic)
 
 void LinkManager::deleteLogic(Logic *logic)
 {
-    // Verify that the logic has been previously added
   LogicMap::iterator lmit = logic_map.find(logic->name());
-  assert(lmit != logic_map.end());
+  if (lmit == logic_map.end())
+  {
+    return;
+  }
+
   LogicInfo &logic_info = (*lmit).second;
   assert(logic_info.logic == logic);
   assert(sources.find(logic->name()) != sources.end());
@@ -380,6 +383,8 @@ void LinkManager::deleteLogic(Logic *logic)
 
 void LinkManager::allLogicsStarted(void)
 {
+  all_logics_started = true;
+
   for (LinkMap::iterator it = links.begin(); it != links.end(); ++it)
   {
     Link &link = it->second;
@@ -715,6 +720,11 @@ void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
        << " logic_name=" << logic->name()
        << endl;
   */
+
+  if (!all_logics_started)
+  {
+    return;
+  }
 
     // We need all linknames where the logic is included in
   vector<string> link_names = getLinkNames(logic->name());
