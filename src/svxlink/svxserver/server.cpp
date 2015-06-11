@@ -467,6 +467,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
       cout << "___set MsgSquelch(false)" << endl;*/
       MsgSquelch  *ms = new MsgSquelch(false, 0.0, 1);
       sendExcept(con, ms);
+      sendMsg(con, ms);
       (*it).second.sql_open = false;
 
       MsgAllSamplesFlushed *o = new MsgAllSamplesFlushed;
