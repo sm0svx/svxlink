@@ -2,7 +2,7 @@
 @file	 svxserver.cpp
 @brief   Main file for the svxserver
 @author  Adi Bier / DL1HRC
-@date	 2014-06-16
+@date	 2015-08-13
 
 This is the main file for the svxserver remote transceiver for the
 SvxLink server. It is used to link in remote transceivers to the SvxLink
@@ -10,7 +10,7 @@ server core (e.g. via a TCP/IP network).
 
 \verbatim
 svxserver - A svxlink server application
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -121,9 +121,13 @@ SvxServer::SvxServer(Async::Config &cfg)
   server->clientDisconnected.connect(
       mem_fun(*this, &SvxServer::clientDisconnected));
 
+  auth_msg = new MsgAuthChallenge;
+  memcpy(auth_challenge, auth_msg->challenge(),
+        MsgAuthChallenge::CHALLENGE_LEN);
+
   heartbeat_timer = new Async::Timer(hbto);
+  heartbeat_timer->expired.connect(mem_fun(*this, &SvxServer::hbtimeout));
   heartbeat_timer->setEnable(false);
-  heartbeat_timer->expired.connect(mem_fun(*this, &SvxServer::heartbeat));
 
 } /* SvxServer::SvxServer */
 
@@ -131,8 +135,8 @@ SvxServer::SvxServer(Async::Config &cfg)
 SvxServer::~SvxServer(void)
 {
   clients.clear();
-  delete heartbeat_timer;
   delete server;
+  delete heartbeat_timer;
 }
 
 
@@ -151,20 +155,17 @@ void SvxServer::clientConnected(Async::TcpConnection *con)
   clpair.recv_exp = sizeof(Msg);
   clpair.recv_cnt = 0;
   gettimeofday(&clpair.last_msg, NULL);
+  gettimeofday(&clpair.sent_msg, NULL);
 
   clients[key] = clpair;
 
   MsgProtoVer *ver_msg = new MsgProtoVer;
   sendMsg(con, ver_msg);
 
-  MsgAuthChallenge *auth_msg = new MsgAuthChallenge;
-  memcpy(auth_challenge, auth_msg->challenge(),
-        MsgAuthChallenge::CHALLENGE_LEN);
-        
   if (auth_key.empty())
   {
-    MsgAuthOk *auth_msg = new MsgAuthOk;
-    sendMsg(con, auth_msg);
+    MsgAuthOk *auth_ok = new MsgAuthOk;
+    sendMsg(con, auth_ok);
     clpair.state = STATE_VER_WAIT;
   }
   else
@@ -185,7 +186,11 @@ void SvxServer::clientDisconnected(Async::TcpConnection *con,
   cout << "--- Client disconnected: " << con->remoteHost() << ":"
        << con->remotePort() << endl;
 
-  assert(clients.size() > 0);
+  if (clients.size() < 1)
+  {
+    heartbeat_timer->setEnable(false);
+    heartbeat_timer->reset();
+  }
 
   Clients::iterator it;
   for (it=clients.begin(); it!=clients.end(); it++)
@@ -193,6 +198,7 @@ void SvxServer::clientDisconnected(Async::TcpConnection *con,
     if ((*it).second.con == con)
     {
       (*it).second.state = STATE_DISC;
+      resetMaster((*it).second.con);
       break;
     }
   }
@@ -203,57 +209,14 @@ void SvxServer::clientDisconnected(Async::TcpConnection *con,
        << con->remotePort()  << " from client list" << endl;
 
   clients.erase(it);
-
-  if (clients.size() < 1)
-  {
-    heartbeat_timer->setEnable(false);
-    heartbeat_timer->reset();
-  }
 } /* SvxServer::clientDisconnected */
-
-
-void SvxServer::heartbeat(Async::Timer *t)
-{
-  struct timeval diff_tv;
-  struct timeval now;
-  gettimeofday(&now, NULL);
-  int diff_ms;
-  Clients t_clients;
-
-  assert(clients.size() > 0);
-  MsgHeartbeat *msg = new MsgHeartbeat;
-  Clients::iterator it;
-  for (it = clients.begin(); it != clients.end(); it++)
-  {
-    // sending heartbeat to clients
-    sendMsg(((*it).second).con, msg);
-
-    // get clients last activity
-    timersub(&now, &((*it).second).last_msg, &diff_tv);
-    diff_ms=diff_tv.tv_sec * 1000 + diff_tv.tv_usec / 1000;
-    if (diff_ms > 2 * hbto)
-    {
-      cerr << "**** ERROR: Heartbeat timeout, lost connection from "
-           << (*it).second.con->remoteHost() << ":"
-           << (*it).second.con->remotePort() << endl;
-      t_clients.insert(*it);
-    }
-  }
-  
-  // check if something to delete
-  for (it = t_clients.begin(); it != t_clients.end(); it++)
-  {
-    ((*it).second).con->disconnect();
-    clientDisconnected(((*it).second).con, 
-                  TcpConnection::DR_ORDERED_DISCONNECT);
-  }
-  t->reset();
-} /* SvxServer::heartbeat */
 
 
 int SvxServer::tcpDataReceived(Async::TcpConnection *con, void *data, int size)
 {
-  //cout << "tcpDataReceived: size=" << size << endl;
+
+//  cout << "tcpDataReceived: " << con->remoteHost() << ":"
+//       << con->remotePort() << endl;
 
   Clients::iterator it;
   for (it=clients.begin(); it!=clients.end(); it++)
@@ -264,7 +227,12 @@ int SvxServer::tcpDataReceived(Async::TcpConnection *con, void *data, int size)
     }
   }
 
-  assert (it != clients.end());
+  if (it == clients.end())
+  {
+    cout << "--- tcp data received from station out of my list "
+         << con->remoteHost() << ":" << con->remotePort() << endl;
+    return size;
+  }
 
   int orig_size = size;
   char *buf = static_cast<char*>(data);
@@ -292,28 +260,28 @@ int SvxServer::tcpDataReceived(Async::TcpConnection *con, void *data, int size)
         Msg *msg = reinterpret_cast<Msg*>((*it).second.recv_buf);
         if (msg->size() == sizeof(Msg))
         {
-	      handleMsg(con, msg);
-	      (*it).second.recv_cnt = 0;
-	      (*it).second.recv_exp = sizeof(Msg);
-	    }
-	    else if (msg->size() > sizeof(Msg))
-	    {
+          handleMsg(con, msg);
+          (*it).second.recv_cnt = 0;
+          (*it).second.recv_exp = sizeof(Msg);
+        }
+        else if (msg->size() > sizeof(Msg))
+        {
           (*it).second.recv_exp = msg->size();
-	    }
-	    else
-	    {
-	      cerr << "*** ERROR: Illegal message header received in svxserver "
-               << ". Header length too small (" << msg->size() << ")\n";
-	      con->disconnect();
-	      clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
-	      return orig_size;
-	    }
+        }
+        else
+        {
+          cerr << "*** ERROR: Illegal message header received in svxserver. "
+               << "Header length too small (" << msg->size() << ")\n";
+          con->disconnect();
+          clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+          return orig_size;
+        }
       }
       else
       {
-    	Msg *msg = reinterpret_cast<Msg*>((*it).second.recv_buf);
-    	handleMsg(con, msg);
-	    (*it).second.recv_cnt = 0;
+        Msg *msg = reinterpret_cast<Msg*>((*it).second.recv_buf);
+        handleMsg(con, msg);
+        (*it).second.recv_cnt = 0;
         (*it).second.recv_exp = sizeof(Msg);
       }
     }
@@ -326,11 +294,13 @@ int SvxServer::tcpDataReceived(Async::TcpConnection *con, void *data, int size)
 
 void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 {
-//cout << "message <---------- " << con->remoteHost() << ":" << con->remotePort()
-//     << ", type=" << msg->type() << " received\n";
+
+//  cout << "message <---------- " << con->remoteHost() << ":" 
+//       << con->remotePort() << ", type=" << msg->type() << " received\n";
 
   int state = STATE_READY;
   Clients::iterator it;
+  Clients t_clients;
 
   for (it=clients.begin(); it!=clients.end(); it++)
   {
@@ -342,7 +312,12 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
     }
   }
 
-  assert(it != clients.end());
+  if (it == clients.end())
+  {
+    cout << "-- message received from ip out of my list "
+         << con->remoteHost() << ":" << con->remotePort() << endl;
+    return;
+  }
 
   switch (state)
   {
@@ -381,21 +356,23 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
       return;
 
     case STATE_READY:
-      //cout << "state=STATE_READY\n";
       break;
   }
 
   Msg *cmsg = 0;
 
-  // check type of message
+    // check type of message
   switch (msg->type())
   {
+      // is heartbeat, send a heartbeat back to client
     case MsgHeartbeat::TYPE:
     {
+      MsgHeartbeat *m = new MsgHeartbeat;
+      sendMsg(con, m);
       return;
     }
 
-      // get callsign from remote station
+      // get callsign from remote station, not implemented yet
     case MsgRemoteCall::TYPE:
     {
       MsgRemoteCall *n = reinterpret_cast<MsgRemoteCall *>(msg);
@@ -406,14 +383,13 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
     case MsgSquelch::TYPE:
     {
       MsgSquelch *n = reinterpret_cast<MsgSquelch *>(msg);
-      //cout << "___MsgSquelch: isOpen=" << n->isOpen() << endl;
+      cout << (*it).second.con->remoteHost() << " - RX " << n->isOpen() << endl;
       cmsg = n;
       break;
     }
 
     case MsgReset::TYPE:
     {
-      //cout << "___MsgReset" << endl;
       break;
     }
 
@@ -439,23 +415,31 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 
     case MsgAudio::TYPE:
     {
+
+        // if SvxServer is receiving an audiostream and the SQL is still not
+        // open, it will send a SQL=open command to all connected stations
+        // may occur in case of a network error when the connection has been
+        // reestablished
       if ((*it).second.sql_open == false)
       {
-        //cout << "___set MsgSquelch(false)" << endl;
-        MsgSquelch  *ms = new MsgSquelch(true, 1.0, 1);
+        MsgSquelch *ms = new MsgSquelch(true, 1.0, 1);
         sendExcept(con, ms);
         (*it).second.sql_open = true;
+//        cout << (*it).second.con->remoteHost() << " MsgAudio - SQL=1 MASTER" << endl;
       }
 
+        // sends the audiostream to all connected clients without the
+        // source client
       if ((*it).second.tx_mode != Tx::TX_AUTO)
       {
-        //cout << "___MsgAudio::TYPE" << endl;
         (*it).second.tx_mode = Tx::TX_AUTO;
         MsgSetTxCtrlMode *n = new MsgSetTxCtrlMode(Tx::TX_AUTO);
         sendExcept(con, n);
         sendMsg(con, n);
       }
 
+       // sends the audiostream to all connected clients without the
+       // source client
       cmsg = reinterpret_cast<MsgAudio *>(msg);
       sendExcept(con, cmsg);
       return;
@@ -463,8 +447,6 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 
     case MsgFlush::TYPE:
     {
-      /*cout << "___rx=MsgFlush" << endl;
-      cout << "___set MsgSquelch(false)" << endl;*/
       MsgSquelch  *ms = new MsgSquelch(false, 0.0, 1);
       sendExcept(con, ms);
       sendMsg(con, ms);
@@ -473,13 +455,15 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
       MsgAllSamplesFlushed *o = new MsgAllSamplesFlushed;
       sendMsg(con, o);
       cmsg = o;
+//      cout << (*it).second.con->remoteHost() << " - Flush, SQL=0 noMaster" << endl;
       break;
     }
 
     case MsgSetMuteState::TYPE:
     {
       MsgSetMuteState *s = reinterpret_cast<MsgSetMuteState *>(msg);
-      //cout << "___MsgSetMuteState: muteState=" << s->muteState() << endl;
+//      cout << "___MsgSetMuteState: muteState=" << s->muteState() << endl;
+        // wirklich notwendig?
       cmsg = s;
       break;
     }
@@ -487,29 +471,32 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
     case MsgSetTxCtrlMode::TYPE:
     {
       MsgSetTxCtrlMode *s = reinterpret_cast<MsgSetTxCtrlMode *>(msg);
-      /*cout << "___MsgSetTxCtrlMode: type="<< s->type() <<
+        /*cout << "___MsgSetTxCtrlMode: type="<< s->type() <<
            ", mode=" << s->mode() << endl;*/
 
+        // mode=1 means TX=true/on
       if (s->mode() == 1)
       {
-        //cout << "___sende MsgTransmitterStateChange TX=true" << endl;
+//        cout << "___sende MsgTransmitterStateChange TX=true" << endl;
         MsgTransmitterStateChange *n = new MsgTransmitterStateChange(true);
         sendMsg(con, n);
         sendExcept(con, n);
 
         MsgSquelch  *ms = new MsgSquelch(true, 1.0, 1);
-        //cout << "___set MsgSquelch(true)" << endl;
         sendExcept(con, ms);
+//        cout << (*it).second.con->remoteHost() << " MsgSetTxCtrlMode - SQL=1, MASTER" << endl;
         (*it).second.sql_open = true;
       }
+
+        // mode=2 means TX=AUTO
       if (s->mode() == 2)
       {
-        //cout << "___MsgSetTxCtrlMode(Tx::TX_AUTO)" << endl;
+//        cout << "___MsgSetTxCtrlMode(Tx::TX_AUTO)" << endl;
         (*it).second.tx_mode = Tx::TX_AUTO;
         MsgSetTxCtrlMode *n = new MsgSetTxCtrlMode(Tx::TX_AUTO);
         sendExcept(con, n);
 
-        //cout << "___sende MsgTransmitterStateChange TX=false" << endl;
+//        cout << "___sende MsgTransmitterStateChange TX=false" << endl;
         MsgTransmitterStateChange *m = new MsgTransmitterStateChange(false);
         sendExcept(con, m);
         sendMsg(con, m);
@@ -530,13 +517,59 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 } /* SvxServer::handleMsg */
 
 
+void SvxServer::hbtimeout(Timer *t)
+{
+  struct timeval t_time;
+  struct timeval t_diff;
+  int diff_ms;
+
+  Clients::iterator it;
+  Clients t_clients;
+  MsgHeartbeat *m = new MsgHeartbeat;
+
+  for (it=clients.begin(); it!=clients.end(); it++)
+  {
+    gettimeofday(&t_time, NULL);
+    timersub(&t_time, &((*it).second).last_msg, &t_diff );
+    diff_ms = int(t_diff.tv_sec * 1000 +  t_diff.tv_usec/1000);
+//    cout << (*it).second.con->remoteHost() << " - " << diff_ms << endl;
+    if (diff_ms > 2 * hbto)
+    {
+      cerr << "**** ERROR: Heartbeat timeout, lost connection to "
+           << (*it).second.con->remoteHost() << ":"
+           << (*it).second.con->remotePort() << endl;
+      t_clients.insert(*it); // storing clients to be removed later
+    }
+    else 
+    {
+      sendMsg((*it).second.con, m);
+    }
+  }
+
+  // removing client connection from connection pool
+  for (it = t_clients.begin(); it != t_clients.end(); it++)
+  {
+    cout << "--- disconnect client " << (*it).second.con->remoteHost() << ":"
+         << (*it).second.con->remotePort() << endl;
+    ((*it).second).con->disconnect();
+    clientDisconnected(((*it).second).con, TcpConnection::DR_ORDERED_DISCONNECT);
+  }
+
+  t->reset();
+
+} /* SvxServer::hbtimeout */
+
+
 void SvxServer::sendExcept(Async::TcpConnection *con, Msg *msg)
 {
 
+    // copy map to prevent a segfault by erasing a connection
+    // that exists anymore
+  Clients t_clients = clients;
   Clients::iterator it;
 
-  // sending data to connected clients
-  for (it=clients.begin(); it != clients.end(); it++)
+    // sending data to connected clients without the source client
+  for (it = t_clients.begin(); it != t_clients.end(); it++)
   {
     if (((*it).second).con != con)
     {
@@ -558,18 +591,43 @@ void SvxServer::sendMsg(Async::TcpConnection *con, Msg *msg)
   int written = con->write(msg, msg->size());
   if (written != static_cast<int>(msg->size()))
   {
-    if (written == -1)
-    {
-      cerr << "*** ERROR: TCP transmit error.\n";
-    }
-    else
-    {
-      cerr << "*** ERROR: TCP transmit buffer overflow.\n";
-      con->disconnect();
-      clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
-    }
+    cout << "*** ERROR: (" << con->remoteHost() << ":"
+         << con->remotePort() << ") TCP transmit "
+         << (written == -1 ? "error." : "buffer overflow.")
+         << endl;
+    con->disconnect();
+    clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
   }
 } /* SvxServer::sendMsg */
+
+
+bool SvxServer::hasMaster()
+{
+  return (master != 0);
+} /* SvxServer::hasMaster */
+
+
+bool SvxServer::isMaster(Async::TcpConnection *con)
+{
+  return (con == master ? true : false);
+} /* SvxServer::isMaster */
+
+
+void SvxServer::setMaster(Async::TcpConnection *con)
+{
+  if (master == 0) {
+    master = con;
+  }
+} /* SvxServer::setMaster */
+
+
+void SvxServer::resetMaster(Async::TcpConnection *con)
+{
+  if (master == con)
+  {
+    master = 0;
+  }
+} /* SvxServer::resetMaster */
 
 
 /*

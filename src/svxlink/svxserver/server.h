@@ -131,7 +131,8 @@ class SvxServer : public sigc::trackable
   private:
 
     Async::TcpServer *server;
-
+    Async::Timer * heartbeat_timer;
+    Async::TcpConnection *master;
 
     typedef enum
     {
@@ -143,7 +144,8 @@ class SvxServer : public sigc::trackable
       Async::TcpConnection *con;
       State   state;
       std::string  callsign;
-      struct  timeval last_msg;
+      struct timeval last_msg;
+      struct timeval sent_msg;
       bool    is_rtrx;
       Tx::TxCtrlMode tx_mode;
       bool sql_open;
@@ -159,7 +161,8 @@ class SvxServer : public sigc::trackable
     Clients clients;
 
     std::string     auth_key;
-    Async::Timer    *heartbeat_timer;
+    NetTrxMsg::MsgAuthChallenge *auth_msg;
+    struct timeval l_time;
     int hbto;
 
     unsigned char   auth_challenge[NetTrxMsg::MsgAuthChallenge::CHALLENGE_LEN];
@@ -171,8 +174,11 @@ class SvxServer : public sigc::trackable
     int tcpDataReceived(Async::TcpConnection *con, void *data, int size);
     void handleMsg(Async::TcpConnection *con, NetTrxMsg::Msg *msg);
     void sendMsg(Async::TcpConnection *con, NetTrxMsg::Msg *msg);
-    void heartbeat(Async::Timer *t);
-
+    void hbtimeout(Async::Timer *t);
+    bool isMaster(Async::TcpConnection *con);
+    void setMaster(Async::TcpConnection *con);
+    void resetMaster(Async::TcpConnection *con);
+    bool hasMaster(void);
 
     SvxServer(const SvxServer&);
     SvxServer& operator=(const SvxServer&);
