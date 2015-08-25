@@ -1,12 +1,12 @@
 /**
-@file	 NetTrxAdapter.h
-@brief   Make it possible to connect a remote NetTx/NetRx as a Rx/Tx
-@author  Tobias Blomberg / SM0SVX
-@date	 2008-04-15
+@file	 server.h
+@brief   Header file or svxserver instance
+@author  Tobias Blomberg / SM0SVX & Adi Bier / DL1HRC
+@date	 2015-08-13
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncConfig.h>
 #include <AsyncTcpServer.h>
 #include <Tx.h>
-#include <Rx.h>
+
 
 /****************************************************************************
  *
@@ -106,7 +106,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /**
 @brief	 SvxLinkServer app
 @author	 Adi Bier / DL1HRC
-@date	 2014-06-16
+@date	 2015-08-13
 */
 
 class SvxServer : public sigc::trackable
