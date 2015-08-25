@@ -29,4 +29,4 @@ SIGLEV_DET_CAL=1.0.3.99.3
 DEVCAL=0.99.0
 
 # Version for svxserver
-SVXSERVER=0.0.3a
+SVXSERVER=0.0.3b
