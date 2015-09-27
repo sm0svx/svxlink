@@ -235,6 +235,7 @@ class NetUplink : public Uplink
     void unmuteTx(Async::Timer *t);
     void setFallbackActive(bool activate);
     void signalLevelUpdated(float siglev);
+    void forceDisconnect(void);
 
 };  /* class NetUplink */
 

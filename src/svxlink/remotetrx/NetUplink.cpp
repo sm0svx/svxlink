@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncApplication.h>
 #include <AsyncTcpServer.h>
 #include <AsyncAudioFifo.h>
 #include <AsyncTimer.h>
@@ -297,10 +298,9 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
 void NetUplink::clientDisconnected(TcpConnection *the_con,
       	      	      	      	   TcpConnection::DisconnectReason reason)
 {
-  cout << name << ": Client disconnected: " << con->remoteHost() << ":"
-       << con->remotePort() << endl;
+  cout << name << ": Client disconnected: " << the_con->remoteHost() << ":"
+       << the_con->remotePort() << endl;
 
-  assert(the_con == con);
   con = 0;
   recv_exp = 0;
   state = STATE_DISC;
@@ -355,8 +355,7 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
     {
       cerr << "*** ERROR: TCP receive buffer overflow in NetUplink "
            << name << ". Disconnecting...\n";
-      con->disconnect();
-      clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+      forceDisconnect();
       return orig_size;
     }
     memcpy(recv_buf+recv_cnt, buf, read_cnt);
@@ -384,8 +383,7 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
 	  cerr << "*** ERROR: Illegal message header received in NetUplink "
                << name << ". Header length too small (" << msg->size()
                << ")\n";
-	  con->disconnect();
-	  clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+          forceDisconnect();
 	  return orig_size;
 	}
       }
@@ -420,8 +418,7 @@ void NetUplink::handleMsg(Msg *msg)
         {
           cerr << "*** ERROR: Authentication error in NetUplink "
                << name << ".\n";
-          con->disconnect();
-          clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+          forceDisconnect();
           return;
         }
         else
@@ -434,8 +431,7 @@ void NetUplink::handleMsg(Msg *msg)
       else
       {
         cerr << "*** ERROR: Protocol error in NetUplink " << name << ".\n";
-        con->disconnect();
-        clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+        forceDisconnect();
       }
       return;
     
@@ -617,8 +613,7 @@ void NetUplink::sendMsg(Msg *msg)
     {
       cerr << "*** ERROR: TCP transmit buffer overflow in NetUplink "
            << name << ".\n";
-      con->disconnect();
-      clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+      forceDisconnect();
     }
   }
   
@@ -725,8 +720,7 @@ void NetUplink::heartbeat(Timer *t)
   if (diff_ms > 15000)
   {
     cerr << "*** ERROR: Heartbeat timeout in NetUplink " << name << "\n";
-    con->disconnect();
-    clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+    forceDisconnect();
   }
   
   t->reset();
@@ -776,8 +770,16 @@ void NetUplink::signalLevelUpdated(float siglev)
 } /* NetUplink::signalLevelUpdated */
 
 
+void NetUplink::forceDisconnect(void)
+{
+  con->disconnect();
+  Async::Application::app().runTask(
+      bind(mem_fun(*this, &NetUplink::clientDisconnected),
+        con, TcpConnection::DR_ORDERED_DISCONNECT));
+  con = 0;
+} /* NetUplink::forceDisconnect */
+
 
 /*
  * This file has not been truncated
  */
-
