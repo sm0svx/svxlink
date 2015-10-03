@@ -73,6 +73,9 @@
   of the user who started the process rather than using the home directory
   of the target user.
 
+* Add simulator for local receivers and signal level detectors. These
+  simulators can be used to debug problems in SvxLink.
+
 
 
  1.4.2 -- 06 jun 2015
