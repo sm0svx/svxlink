@@ -29,6 +29,8 @@
 * Async::Config: Removed error message printed on open failure. Printing an
   error message must be done by the caller.
 
+* New class Async::AudioGenerator that can generate sine and square waves.
+
 
 
  1.3.1 -- 02 Apr 2015
