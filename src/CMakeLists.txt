@@ -20,7 +20,7 @@
 ##############################################################################
 # Project setup
 ##############################################################################
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 project(svxlink C CXX)
 #enable_testing()
 
@@ -78,44 +78,55 @@ endif(NOT CMAKE_BUILD_TYPE)
 # Install targets properties setup
 ##############################################################################
 
+# Set up standard GNU installation directories
+include(GNUInstallDirs)
+
 # Where to install include files
 if(NOT DEFINED INCLUDE_INSTALL_DIR)
-  set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
+  #set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
+  set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_FULL_INCLUDEDIR})
 endif(NOT DEFINED INCLUDE_INSTALL_DIR)
 
 # Where to install libraries
 if(NOT DEFINED LIB_INSTALL_DIR)
-  set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX})
+  #set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX})
+  set(LIB_INSTALL_DIR ${CMAKE_INSTALL_FULL_LIBDIR})
 endif(NOT DEFINED LIB_INSTALL_DIR)
 
 # The config directory (normally /etc)
 if(NOT DEFINED SYSCONF_INSTALL_DIR)
-  set(SYSCONF_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/etc)
+  #set(SYSCONF_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/etc)
+  set(SYSCONF_INSTALL_DIR ${CMAKE_INSTALL_FULL_SYSCONFDIR})
 endif(NOT DEFINED SYSCONF_INSTALL_DIR)
 
 # Architecture independent files directory (normally /usr/share)
 if(NOT DEFINED SHARE_INSTALL_PREFIX)
-  set(SHARE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}/share)
+  #set(SHARE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}/share)
+  set(SHARE_INSTALL_PREFIX ${CMAKE_INSTALL_FULL_DATADIR})
 endif(NOT DEFINED SHARE_INSTALL_PREFIX)
 
 # Local state directory (normally /var)
 if(NOT DEFINED LOCAL_STATE_DIR)
-  set(LOCAL_STATE_DIR ${CMAKE_INSTALL_PREFIX}/var)
+  #set(LOCAL_STATE_DIR ${CMAKE_INSTALL_PREFIX}/var)
+  set(LOCAL_STATE_DIR ${CMAKE_INSTALL_FULL_LOCALSTATEDIR})
 endif(NOT DEFINED LOCAL_STATE_DIR)
 
 # Where to install executables
 if(NOT DEFINED BIN_INSTALL_DIR)
-  set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+  #set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+  set(BIN_INSTALL_DIR ${CMAKE_INSTALL_FULL_BINDIR})
 endif(NOT DEFINED BIN_INSTALL_DIR)
 
 # Where to install manual pages
 if(NOT DEFINED MAN_INSTALL_DIR)
-  set(MAN_INSTALL_DIR ${SHARE_INSTALL_PREFIX}/man)
+  #set(MAN_INSTALL_DIR ${SHARE_INSTALL_PREFIX}/man)
+  set(MAN_INSTALL_DIR ${CMAKE_INSTALL_FULL_MANDIR})
 endif(NOT DEFINED MAN_INSTALL_DIR)
 
 # Where to install documentation
 if(NOT DEFINED DOC_INSTALL_DIR)
-  set(DOC_INSTALL_DIR ${SHARE_INSTALL_PREFIX}/doc/svxlink)
+  #set(DOC_INSTALL_DIR ${SHARE_INSTALL_PREFIX}/doc/svxlink)
+  set(DOC_INSTALL_DIR ${CMAKE_INSTALL_FULL_DOCDIR})
 endif(NOT DEFINED DOC_INSTALL_DIR)
 
 # Where to install startup scripts
