@@ -239,71 +239,78 @@ bool NetUplink::initialize(void)
  *
  ****************************************************************************/
 
+void NetUplink::handleIncomingConnection(TcpConnection *incoming_con)
+{
+  assert(con == 0);
+  if (fallback_enabled) // Deactivate fallback repeater mode
+  {
+    setFallbackActive(false);
+  }
+  
+  if (audio_enc != 0)
+  {
+    rx_splitter->removeSink(audio_enc);
+    delete audio_enc;
+    audio_enc = 0;
+  }
+  
+  delete audio_dec;
+  audio_dec = 0;
+  
+  con = incoming_con;
+  con->dataReceived.connect(mem_fun(*this, &NetUplink::tcpDataReceived));
+  recv_exp = sizeof(Msg);
+  recv_cnt = 0;
+  heartbeat_timer->setEnable(true);
+  gettimeofday(&last_msg_timestamp, NULL);
+  
+  setState(STATE_CON_SETUP);
+
+  MsgProtoVer *ver_msg = new MsgProtoVer;
+  sendMsg(ver_msg);
+  
+  if (auth_key.empty())
+  {
+    MsgAuthOk *auth_msg = new MsgAuthOk;
+    sendMsg(auth_msg);
+    setState(STATE_READY);
+  }
+  else
+  {
+    MsgAuthChallenge *auth_msg = new MsgAuthChallenge;
+    memcpy(auth_challenge, auth_msg->challenge(),
+           MsgAuthChallenge::CHALLENGE_LEN);
+    sendMsg(auth_msg);
+  }
+} /* NetUplink::handleIncomingConnection */
+
 
 void NetUplink::clientConnected(TcpConnection *incoming_con)
 {
   cout << name << ": Client connected: " << incoming_con->remoteHost() << ":"
        << incoming_con->remotePort() << endl;
   
-  if (con == 0)
+  switch (state)
   {
-    if (fallback_enabled) // Deactivate fallback repeater mode
-    {
-      setFallbackActive(false);
-    }
-    
-    if (audio_enc != 0)
-    {
-      rx_splitter->removeSink(audio_enc);
-      delete audio_enc;
-      audio_enc = 0;
-    }
-    
-    delete audio_dec;
-    audio_dec = 0;
-    
-    con = incoming_con;
-    con->dataReceived.connect(mem_fun(*this, &NetUplink::tcpDataReceived));
-    recv_exp = sizeof(Msg);
-    recv_cnt = 0;
-    heartbeat_timer->setEnable(true);
-    gettimeofday(&last_msg_timestamp, NULL);
-    
-    MsgProtoVer *ver_msg = new MsgProtoVer;
-    sendMsg(ver_msg);
-    
-    if (auth_key.empty())
-    {
-      MsgAuthOk *auth_msg = new MsgAuthOk;
-      sendMsg(auth_msg);
-      state = STATE_READY;
-    }
-    else
-    {
-      MsgAuthChallenge *auth_msg = new MsgAuthChallenge;
-      memcpy(auth_challenge, auth_msg->challenge(),
-             MsgAuthChallenge::CHALLENGE_LEN);
-      sendMsg(auth_msg);
-      state = STATE_AUTH_WAIT;
-    }
-  }
-  else
-  {
-    cout << name << ": Only one client allowed. Disconnecting...\n";
-    incoming_con->disconnect();
+    case STATE_DISC:
+      handleIncomingConnection(incoming_con);
+      break;
+    case STATE_CON_SETUP:
+    case STATE_READY:
+      cout << name << ": Only one client allowed. Disconnecting...\n";
+      // Fall through
+    case STATE_DISC_CLEANUP:
+      incoming_con->disconnect();
+      break;
   }
 } /* NetUplink::clientConnected */
 
 
-void NetUplink::clientDisconnected(TcpConnection *the_con,
-      	      	      	      	   TcpConnection::DisconnectReason reason)
+void NetUplink::disconnectCleanup(void)
 {
-  cout << name << ": Client disconnected: " << the_con->remoteHost() << ":"
-       << the_con->remotePort() << endl;
-
   con = 0;
   recv_exp = 0;
-  state = STATE_DISC;
+  setState(STATE_DISC);
 
   rx->reset();
   tx->enableCtcss(false);
@@ -327,6 +334,17 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
   {
     setFallbackActive(true);
   }
+} /* NetUplink::disconnectCleanup */
+
+
+void NetUplink::clientDisconnected(TcpConnection *the_con,
+                                   TcpConnection::DisconnectReason reason)
+{
+  cout << name << ": Client disconnected: " << the_con->remoteHost() << ":"
+       << the_con->remotePort() << endl;
+  con = 0;
+  setState(STATE_DISC_CLEANUP);
+  Application::app().runTask(mem_fun(*this, &NetUplink::disconnectCleanup));
 } /* NetUplink::clientDisconnected */
 
 
@@ -338,6 +356,12 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
   //cout << "Received a TCP message with type " << msg->type()
   //     << " and size " << msg->size() << endl;
   
+    // Discard data if we are not in one of the "connected" states
+  if ((state != STATE_CON_SETUP) && (state != STATE_READY))
+  {
+    return size;
+  }
+
   if (recv_exp == 0)
   {
     cerr << "*** ERROR: Unexpected TCP data received in NetUplink "
@@ -407,9 +431,10 @@ void NetUplink::handleMsg(Msg *msg)
   switch (state)
   {
     case STATE_DISC:
+    case STATE_DISC_CLEANUP:
       return;
       
-    case STATE_AUTH_WAIT:
+    case STATE_CON_SETUP:
       if (msg->type() == MsgAuthResponse::TYPE &&
           msg->size() == sizeof(MsgAuthResponse))
       {
@@ -426,7 +451,7 @@ void NetUplink::handleMsg(Msg *msg)
           MsgAuthOk *ok_msg = new MsgAuthOk;
           sendMsg(ok_msg);
         }
-        state = STATE_READY;
+        setState(STATE_READY);
       }
       else
       {
@@ -601,7 +626,7 @@ void NetUplink::handleMsg(Msg *msg)
 
 void NetUplink::sendMsg(Msg *msg)
 {
-  if (con != 0)
+  if ((state == STATE_CON_SETUP) || (state == STATE_READY))
   {
     int written = con->write(msg, msg->size());
     if (written == -1)
@@ -773,10 +798,7 @@ void NetUplink::signalLevelUpdated(float siglev)
 void NetUplink::forceDisconnect(void)
 {
   con->disconnect();
-  Async::Application::app().runTask(
-      bind(mem_fun(*this, &NetUplink::clientDisconnected),
-        con, TcpConnection::DR_ORDERED_DISCONNECT));
-  con = 0;
+  clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
 } /* NetUplink::forceDisconnect */
 
 
