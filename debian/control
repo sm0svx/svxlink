@@ -2,7 +2,7 @@ Source: svxlink
 Section: hamradio
 Priority: optional
 Maintainer: Richard Neese <kb3vw@gmail.com>
-Build-Depends: debhelper (>= 9), dh-systemd (>= 7)
+Build-Depends: debhelper (>= 9), dh-systemd (>= 1)
 Build-Depends-Indep: quilt, cmake, doxygen, libsigc++-2.0-dev (>= 2.2.10-0.2), 
  libpopt-dev, libgcrypt20-dev, libgsm1-dev, libspeex-dev, libopus-dev,
  libasound2-dev, libqt4-dev, tcl8.6-dev, tk-dev, librtlsdr-dev 
