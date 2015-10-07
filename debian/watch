@@ -2,6 +2,3 @@ version=3
 
 https://github.com/rneese45/svxlink/tags .*/archive/(.*)\.tar\.gz
 
-# Svxlink on GitHub
-#opts=filenamemangle=s/v?(\d\S*)\.tar\.gz/svxlink-$1\.tar\.gz/ \
-#  https://github.com/rneese45/svxlink/releases .*/(\d+(?:\.\d+)+)\.tar\.gz

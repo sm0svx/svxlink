@@ -8,8 +8,8 @@ Build-Depends-Indep: quilt, cmake, doxygen, libsigc++-2.0-dev (>= 2.2.10-0.2),
  libasound2-dev, libqt4-dev, tcl8.6-dev, tk-dev, librtlsdr-dev 
 Standards-Version: 3.9.6
 Homepage: http://www.svxlink.org
-Vcs-Browser: https://github.com/sm0svx/svxlink
-Vcs-Git: https://github.com/sm0svx/svxlink.git
+Vcs-Browser: https://github.com/rneese45/svxlink
+Vcs-Git: https://github.com/rneese45/svxlink.git
 
 Package: svxlink-server
 Architecture: any
