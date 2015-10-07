@@ -1,0 +1,76 @@
+Description: Turn of SONAME versioning for modules
+Author: Richard Neese <kb3vw@gmail.com>
+Forwarded: no
+Last-Update: 2014-09-17
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/svxlink/modules/parrot/CMakeLists.txt
++++ b/src/svxlink/modules/parrot/CMakeLists.txt
+@@ -22,6 +22,7 @@
+   ${VERSION_DEPENDS}
+ )
+ set_target_properties(Module${MODNAME} PROPERTIES PREFIX "")
++set_property(TARGET Module${MODNAME} PROPERTY NO_SONAME 1)
+ target_link_libraries(Module${MODNAME} ${LIBS})
+ 
+ # Install targets
+--- a/src/svxlink/modules/dtmf_repeater/CMakeLists.txt
++++ b/src/svxlink/modules/dtmf_repeater/CMakeLists.txt
+@@ -22,6 +22,7 @@
+   ${VERSION_DEPENDS}
+ )
+ set_target_properties(Module${MODNAME} PROPERTIES PREFIX "")
++set_property(TARGET Module${MODNAME} PROPERTY NO_SONAME 1)
+ target_link_libraries(Module${MODNAME} ${LIBS})
+ 
+ # Install targets
+--- a/src/svxlink/modules/echolink/CMakeLists.txt
++++ b/src/svxlink/modules/echolink/CMakeLists.txt
+@@ -35,6 +35,7 @@
+   ${VERSION_DEPENDS}
+ )
+ set_target_properties(Module${MODNAME} PROPERTIES PREFIX "")
++set_property(TARGET Module${MODNAME} PROPERTY NO_SONAME 1)
+ target_link_libraries(Module${MODNAME} ${LIBS})
+ 
+ # Install targets
+--- a/src/svxlink/modules/help/CMakeLists.txt
++++ b/src/svxlink/modules/help/CMakeLists.txt
+@@ -22,6 +22,7 @@
+   ${VERSION_DEPENDS}
+ )
+ set_target_properties(Module${MODNAME} PROPERTIES PREFIX "")
++set_property(TARGET Module${MODNAME} PROPERTY NO_SONAME 1)
+ target_link_libraries(Module${MODNAME} ${LIBS})
+ 
+ # Install targets
+--- a/src/svxlink/modules/metarinfo/CMakeLists.txt
++++ b/src/svxlink/modules/metarinfo/CMakeLists.txt
+@@ -22,6 +22,7 @@
+   ${VERSION_DEPENDS}
+ )
+ set_target_properties(Module${MODNAME} PROPERTIES PREFIX "")
++set_property(TARGET Module${MODNAME} PROPERTY NO_SONAME 1)
+ target_link_libraries(Module${MODNAME} ${LIBS})
+ 
+ # Install targets
+--- a/src/svxlink/modules/tcl/CMakeLists.txt
++++ b/src/svxlink/modules/tcl/CMakeLists.txt
+@@ -22,6 +22,7 @@
+   ${VERSION_DEPENDS}
+ )
+ set_target_properties(Module${MODNAME} PROPERTIES PREFIX "")
++set_property(TARGET Module${MODNAME} PROPERTY NO_SONAME 1)
+ target_link_libraries(Module${MODNAME} ${LIBS})
+ 
+ # Install targets
+--- a/src/svxlink/modules/template/CMakeLists.txt
++++ b/src/svxlink/modules/template/CMakeLists.txt
+@@ -22,6 +22,7 @@
+   ${VERSION_DEPENDS}
+ )
+ set_target_properties(Module${MODNAME} PROPERTIES PREFIX "")
++set_property(TARGET Module${MODNAME} PROPERTY NO_SONAME 1)
+ target_link_libraries(Module${MODNAME} ${LIBS})
+ 
+ # Install targets

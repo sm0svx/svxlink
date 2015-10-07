@@ -1,0 +1,21 @@
+;;;;; Author: Richard Neese<kb3vgw@gmail.com>
+
+[Unit]
+Description=svxlink repeater control software
+After=network.target remote-fs.target
+
+[Service]
+; service
+PIDFile=/run/svxlink/svxlink.pid
+RuntimeDirectory=svxlink
+ExecStart=/usr/bin/svxlink 
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s QUIT $MAINPID
+Restart=on-failure
+; exec
+WorkingDirectory=/run/svxlink
+User=svxlink
+Group=svxlink
+
+[Install]
+WantedBy=multi-user.target
