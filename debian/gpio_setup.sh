@@ -1,4 +1,6 @@
 #!/bin/sh
+systemctl show -pUser svxlink.service
+
 if [ -r /etc/default/svxlink ]; then
         . /etc/default/svxlink
 fi
@@ -17,7 +19,7 @@ gpio_setup() {
            echo 1 >/sys/class/gpio/gpio"$PIN"/active_low
         fi
       # Make sure that the "RUNASUSER" user can write to the GPIO pin:
-      chown "$USER" /sys/class/gpio/gpio"$PIN"/value
+      chown "$User" /sys/class/gpio/gpio"$PIN"/value
    fi
 }
 
