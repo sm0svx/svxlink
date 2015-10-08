@@ -533,7 +533,7 @@ void MainWindow::initEchoLink(void)
   if (disp == 0)
   {
     //FIXME: Better error handling!
-    fprintf(stderr, "Could not initalize network listen ports\n");
+    fprintf(stderr, "Could not initialize network listen ports\n");
     exit(1);
   }
   disp->incomingConnection.connect(

@@ -1,0 +1,10 @@
+/var/log/svxlink {
+    missingok
+    notifempty
+    weekly
+    create 0644 svxlink adm
+    postrotate
+        killall -HUP svxlink
+    endscript
+}
+

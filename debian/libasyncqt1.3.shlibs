@@ -1,0 +1,8 @@
+libasyncqt 1.3 libasynccore1.3 (>= 14.08)
+libasyncqt 1.3 libc6 (>= 2.4)
+libasyncqt 1.3 libgcc1 (>= 1:4.1.1)
+libasyncqt 1.3 libqt4-network (>= 4:4.5.3)
+libasyncqt 1.3 libqtcore4 (>= 4:4.7.0~beta1)
+libasyncqt 1.3 libqtgui4 (>= 4:4.5.3)
+libasyncqt 1.3 libsigc++-2.0-0c2a (>= 2.2.0)
+libasyncqt 1.3 libstdc++6 (>= 4.6)

@@ -1,0 +1,158 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:        svxlink
+# Required-Start:  $network $local_fs $remote_fs $syslog $time
+# Required-Stop:   $remote_fs
+# Default-Start:   2 3 4 5
+# Default-Stop:    0 1 6
+# Short-Description: Start SvxLink Server daemon
+# Description: Start SvxLink Server daemon
+### END INIT INFO
+
+# Use the following command to activate the start script
+#   update-rc.d svxlink start 30 2 3 4 5 . stop 70 0 1 6 .
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+. /lib/lsb/init-functions
+
+PNAME=svxlink
+
+NAME="SvxLink Server"
+DAEMON=/usr/bin/$PNAME
+
+test -x $DAEMON || exit 0
+
+if [ -r /etc/default/$PNAME ]; then
+        . /etc/default/$PNAME
+fi
+
+#if [ -n "$PIDFILE" ]; then PIDFILE=/var/run/$PNAME; fi
+#if [ -n "$LOGFILE" ]; then LOGFILE=/var/log/$PNAME; fi
+#if [ -n "$CFGFILE" ]; then CFGFILE=/etc/svxlink/$PNAME.conf; fi
+#if [ -n "$RUNASUSER" ]; then RUNASUSER=svxlink; fi
+
+
+POPTS="--daemon ${RUNASUSER:+--runasuser=$RUNASUSER} ${PIDFILE:+--pidfile=$PIDFILE} ${LOGFILE:+--logfile=$LOGFILE} ${CFGFILE:+--config=$CFGFILE}"
+
+gpio_setup() {
+   NAME=$1
+   PIN=$2
+   DIR=$3
+   if [ ! -z "$PIN" -a ! -e /sys/class/gpio/gpio$PIN ]; then
+       # Enable the pin for GPIO:
+       echo $PIN > /sys/class/gpio/export
+       # Set the direction to output for the pin:
+       echo $DIR > /sys/class/gpio/gpio$PIN/direction
+       # If pin direction is an input then set active low:
+       if [ "$DIR" = "in" ]; then
+          echo 1 >/sys/class/gpio/gpio$PIN/active_low
+       fi
+       # Make sure that the "RUNASUSER" user can write to the GPIO pin:
+       chown $RUNASUSER /sys/class/gpio/gpio$PIN/value
+       log_progress_msg "[$NAME: GPIO_$PIN]"
+   fi
+}
+
+
+gpio_teardown() {
+   NAME=$1
+   PIN=$2
+   if [ ! -z "$PIN" -a -e /sys/class/gpio/gpio$PIN ]; then
+       log_progress_msg "[$NAME: GPIO_$PIN stop]"
+       # Disable the pin for GPIO:
+       echo $PIN > /sys/class/gpio/unexport
+   fi
+}
+
+create_logfile()
+{
+        touch $LOGFILE
+
+        if [ -n "$RUNASUSER" ]; then
+                chown $RUNASUSER $LOGFILE
+        fi
+}
+
+
+case $1 in
+        start)
+                log_daemon_msg "Starting $NAME: $PNAME"
+                create_logfile
+
+                ## GPIO PTT support ?
+                for i in $GPIO_PTT_PIN
+                do
+                if [ ! -z "$i" -a ! -e /sys/class/gpio/gpio"$i" ]; then
+                   log_daemon_msg "Initialize PTT GPIO" "gpio$i"
+                   gpio_setup PTT "$i" out
+                fi
+                done
+                
+                ## GPIO SQL support ?
+                for i in $GPIO_SQL_PIN
+                do
+                if [  ! -z "$i" -a ! -e /sys/class/gpio/gpio"$i" ]; then
+                   log_daemon_msg "Initialize Squelch GPIO" "gpio$i"
+                   gpio_setup SQL "$i" in
+                fi
+                done
+                
+                export $ENV
+                start-stop-daemon --start --quiet --pidfile $PIDFILE --startas $DAEMON -- $POPTS
+                log_end_msg $?
+                ;;
+        stop)
+                log_daemon_msg "Stopping $NAME: $PNAME"
+                start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
+                rm -f $PIDFILE
+                
+                ## Unset GPIO PTT pin, if used
+                for i in $GPIO_PTT_PIN
+                do
+                if [ ! -z "$i" ]; then
+                   log_daemon_msg "Tearing Down PTT GPIO" "gpio$i"
+                   gpio_teardown PTT "$i"
+                fi
+                done
+				
+                ## Unset GPIO SQL pin, if used
+                for i in $GPIO_SQL_PIN
+                do
+                if [ ! -z "$i" ]; then
+                   log_daemon_msg "Tearing Down Squelch GPIO" "gpio$i"
+                   gpio_teardown SQL "$i"
+                fi
+                done
+
+                log_end_msg $?
+                ;;
+        restart|force-reload)
+                $0 stop && sleep 2 && $0 start
+                ;;
+        try-restart)
+                if $0 status >/dev/null; then
+                       $0 stop && sleep 5 && $0 restart
+                else
+                        exit 0
+                fi
+                ;;
+        reload)
+                exit 3
+                ;;
+        status)
+                pidofproc -p $PIDFILE $DAEMON >/dev/null
+                status=$?
+                if [ $status -eq 0 ]; then
+                        log_success_msg "$NAME is running."
+                else
+                        log_failure_msg "$NAME is not running."
+                fi
+                exit $status
+                ;;
+        *)
+                echo "Usage: $0 {start|stop|restart|try-restart|force-reload|status}"
+                exit 2
+                ;;
+esac
