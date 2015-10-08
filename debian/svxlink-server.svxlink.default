@@ -19,8 +19,6 @@ CFGFILE=/etc/svxlink/svxlink.conf
 # Environment variables to set up. Separate variables with a space.
 ENV="ASYNC_AUDIO_NOTRIGGER=1"
 
-#uesd for openrepeater to get gpio pins
-if [ -r /etc/openrepeater/svxlink/svxlink_gpio.conf ]; then
-        . /etc/openrepeater/svxlink/svxlink_gpio.conf
+if [ -r /etc/svxlink/svxlink_gpio.conf ]; then
+        . /etc/svxlink/svxlink_gpio.conf
 fi
-

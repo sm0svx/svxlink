@@ -100,7 +100,7 @@ case $1 in
                 done
                 
                 export $ENV
-                start-stop-daemon --start --quiet --pidfile $PIDFILE --startas $DAEMON -- $POPTS
+                start-stop-daemon --start --quiet --pidfile $PIDFILE --startas $DAEMON --$POPTS
                 log_end_msg $?
                 ;;
         stop)

@@ -2,15 +2,17 @@
 
 [Unit]
 Description=svxlink repeater control software
-After=network.target remote-fs.target
+After=network.target remote-fs.target syslog.target time.target
 
 [Service]
 ; service
+EnvironmentFile=/etc/default/svxlink
 PIDFile=/run/svxlink/svxlink.pid
 RuntimeDirectory=svxlink
+ExexcStartPre=/usr/sbin/gpio_setup.sh
 ExecStart=/usr/bin/svxlink 
 ExecReload=/bin/kill -s HUP $MAINPID
-ExecStop=/bin/kill -s QUIT $MAINPID
+ExecStopPost=/usr/sbin/gpio_tear_down.sh
 Restart=on-failure
 ; exec
 WorkingDirectory=/run/svxlink
