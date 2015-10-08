@@ -21,6 +21,5 @@ Restart=on-failure
 TimeoutStartSec=60
 WorkingDirectory=/run/svxlink
 
-
 [Install]
 WantedBy=multi-user.target

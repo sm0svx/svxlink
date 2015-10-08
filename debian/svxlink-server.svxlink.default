@@ -4,12 +4,6 @@
 #
 #############################################################################
 
-# The log file to use
-LOGFILE=/var/log/svxlink
-
-# The PID file to use
-PIDFILE=/var/run/svxlink.pid
-
 # The user to run the SvxLink server as
 RUNASUSER=svxlink
 
