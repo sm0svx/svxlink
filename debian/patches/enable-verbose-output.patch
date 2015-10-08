@@ -1,0 +1,16 @@
+Description: Enable verbose output in CMake
+Author: Richard Neese <kb3vw@gmail.com>
+Forwarded: not-needed
+Last-Update: 2014-09-18
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -52,6 +52,7 @@ include_directories(
+   ${CMAKE_BINARY_DIR}
+ )
+ 
++set(CMAKE_VERBOSE_MAKEFILE on)
+ 
+ ##############################################################################
+ # Install targets properties setup

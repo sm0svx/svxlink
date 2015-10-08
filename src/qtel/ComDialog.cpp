@@ -498,7 +498,7 @@ void ComDialog::createConnection(const StationData *station)
   
   prev_src->registerSink(rem_audio_fifo);
   
-  connect_button->setEnabled(TRUE);
+  connect_button->setEnabled(true);
   connect_button->setFocus();
   
   if (accept_connection)

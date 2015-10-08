@@ -23,15 +23,15 @@ find_package(GSM REQUIRED)
 include_directories(${GSM_INCLUDE_DIR})
 set(LIBS ${LIBS} ${GSM_LIBRARY})
 
-# Find Qt4
-find_package(Qt4 4.2 REQUIRED QtCore QtGui QtNetwork)
-include(${QT_USE_FILE})
-set(LIBS ${LIBS} ${QT_LIBRARIES})
+# Find Qt5
+find_package(Qt5 REQUIRED Core Gui Widgets Network LinguistTools)
+include_directories(${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Network_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${Qt5Core_LIBRARIES} ${Qt5Gui_LIBRARIES} ${Qt5Widgets_LIBRARIES} ${Qt5Network_LIBRARIES} )
 
 # Generate targets for moc, uic and rcc
-QT4_WRAP_CPP(QTHEADERS_MOC ${QTHEADERS})
-QT4_WRAP_UI(FORMS_HEADERS ${FORMS})
-QT4_ADD_RESOURCES(RESOURCES_RCC ${RESOURCES})
+qt5_wrap_cpp(QTHEADERS_MOC ${QTHEADERS})
+qt5_wrap_ui(FORMS_HEADERS ${FORMS})
+qt5_add_resources(RESOURCES_RCC ${RESOURCES})
 
 # We also need to add the current build directory to the include search path
 # to find automatically generated h-files.
