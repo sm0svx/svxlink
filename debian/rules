@@ -3,14 +3,26 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+CPPFLAGS:=$(shell dpkg-buildflags --get CPPFLAGS)
+CFLAGS:=$(shell dpkg-buildflags --get CFLAGS) $(CPPFLAGS)
+CXXFLAGS:=$(shell dpkg-buildflags --get CXXFLAGS) $(CPPFLAGS)
+LDFLAGS:=$(shell dpkg-buildflags --get LDFLAGS)
+
 export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
+export QT_SELECT=qt5
 
 # The other tricks didn't work
 # See https://wiki.debian.org/Hardening#Notes_for_packages_using_CMake
 export DEB_BUILD_HARDENING=1
 
 %:
-	dh $@ --with=systemd --parallel --buildsystem=cmake --sourcedirectory=src --builddirectory=build 
+	dh $@ \
+	--with=systemd \
+	--parallel \
+	--buildsystem=cmake \
+	--sourcedirectory=src \
+	--builddirectory=build 
 
 .PHONY: override_dh_auto_clean
 override_dh_auto_clean:
