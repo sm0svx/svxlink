@@ -5,19 +5,22 @@ Description=svxlink repeater control software
 After=network.target remote-fs.target syslog.target time.target
 
 [Service]
-; service
+User=svxlink
+Group=svxlink
 EnvironmentFile=/etc/default/svxlink
+DAEMONOPTS="--config $CFGFILE}"
 PIDFile=/run/svxlink/svxlink.pid
 RuntimeDirectory=svxlink
 ExexcStartPre=/usr/sbin/gpio_setup.sh
-ExecStart=/usr/bin/svxlink 
+ExecStartPre=-touch /var/log/svxlink
+ExecStartPre=-chmod $User /var/log/svxlink
+ExecStart=/usr/bin/svxlink --pidfile $PIDFILE --logfile /var/log/svxlink $DAEMONOPTS
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStopPost=/usr/sbin/gpio_tear_down.sh
 Restart=on-failure
-; exec
+TimeoutStartSec=60
 WorkingDirectory=/run/svxlink
-User=svxlink
-Group=svxlink
+
 
 [Install]
 WantedBy=multi-user.target

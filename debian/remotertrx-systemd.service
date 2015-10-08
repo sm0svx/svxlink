@@ -1,21 +1,23 @@
 ;;;;; Author: Richard Neese<kb3vgw@gmail.com>
 
 [Unit]
-Description=remotetrx svxlink remote connection server
-After=network.target remote-fs.target
+Description=svxlink repeater control software
+After=network.target remote-fs.target syslog.target time.target
 
 [Service]
-; service
-PIDFile=/run/svxlink/remotetrx.pid
-RuntimeDirectory=svxlink
-ExecStart=/usr/bin/remotetrx
-ExecReload=/bin/kill -s HUP $MAINPID
-ExecStop=/bin/kill -s QUIT $MAINPID
-Restart=on-failure
-; exec
-WorkingDirectory=/run/svxlink
 User=svxlink
 Group=svxlink
+EnvironmentFile=/etc/default/remotetrx
+DAEMONOPTS="--cfgfile $CFGFILE "
+PIDFile=/run/svxlink/remotetrx.pid
+RuntimeDirectory=svxlink
+ExecStartPre=-touch /var/log/svxlink
+ExecStartPre=-chmod $User /var/log/svxlink
+ExecStart=/usr/bin/remotetrx --pidfile $PIDFILE --logfile /var/log/remotetrx $DAEMONOPTS
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+TimeoutStartSec=60
+WorkingDirectory=/run/svxlink
 
 [Install]
 WantedBy=multi-user.target
