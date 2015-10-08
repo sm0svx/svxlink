@@ -27,8 +27,8 @@ case "$1" in
     [ -z "$SERVER_USER" ] && SERVER_USER=svxlink
     [ -z "$SERVER_GROUP" ] && SERVER_GROUP=daemon
     
-#    chown $SERVER_USER:$SERVER_GROUP $SERVER_HOME/svxlink
-    chown $SERVER_USER:$SERVER_GROUP /var/spool/svxlink/voice_mail/
+    chmod +x /usr/sbin/gpio_setup.sh /usr/sbin/gpio_tear_down.sh
+    chown $SERVER_USER:$SERVER_GROUP /var/spool/svxlink/voice_mail
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
