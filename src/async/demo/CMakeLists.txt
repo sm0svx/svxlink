@@ -12,9 +12,9 @@ endforeach(prog)
 
 if(USE_QT)
   # Find Qt5
-  find_package(Qt5 REQUIRED Core Gui Network)
-  include_directories(${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} ${Qt5Network_INCLUDE_DIRS})
-  set(LIBS ${LIBS} ${Qt5Core_LIBRARIES} ${Qt5Gui_LIBRARIES} ${Qt5Network_LIBRARIES})
+  find_package(Qt5 REQUIRED Core Gui Network Widget)
+  include_directories(${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widget_INCLUDE_DIRS}${Qt5Network_INCLUDE_DIRS})
+  set(LIBS ${LIBS} ${Qt5Core_LIBRARIES} ${Qt5Gui_LIBRARIES} ${Qt5Gui_LIBRARIES} ${Qt5Network_LIBRARIES})
 
   add_executable(AsyncQtApplication_demo AsyncQtApplication_demo.cpp)
   target_link_libraries(AsyncQtApplication_demo ${LIBS} asyncaudio

@@ -25,8 +25,8 @@ set(LIBS ${LIBS} ${GSM_LIBRARY})
 
 # Find Qt5
 find_package(Qt5 REQUIRED Core Gui Widgets Network LinguistTools)
-include_directories(${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Network_INCLUDE_DIRS} ${Qt5LinguistTools_INCLUDE_DIRS})
-set(LIBS ${LIBS} ${Qt5Core_LIBRARIES} ${Qt5Gui_LIBRARIES} ${Qt5Widgets_LIBRARIES} ${Qt5Network_LIBRARIES} ${Qt5LinguistTools_LIBRARIES})
+include_directories(${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Network_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${Qt5Core_LIBRARIES} ${Qt5Gui_LIBRARIES} ${Qt5Widgets_LIBRARIES} ${Qt5Network_LIBRARIES})
 
 # Generate targets for moc, uic and rcc
 qt5_wrap_cpp(QTHEADERS_MOC ${QTHEADERS})
