@@ -1,0 +1,18 @@
+Description: Fix install destinations
+Author: Felix Lechner <felix.lechner@gmail.com>
+Forwarded: no
+Last-Update: 2014-09-17
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -78,6 +78,9 @@
+ # Install targets properties setup
+ ##############################################################################
+ 
++set(SYSCONF_INSTALL_DIR /etc)
++set(LOCAL_STATE_DIR /var)
++
+ # Where to install include files
+ if(NOT DEFINED INCLUDE_INSTALL_DIR)
+   set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
