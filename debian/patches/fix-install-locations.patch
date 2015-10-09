@@ -6,7 +6,7 @@ Last-Update: 2014-09-17
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -24.6 +24.9 @@
+@@ -78,6 +78,9 @@
  # Install targets properties setup
  ##############################################################################
  
