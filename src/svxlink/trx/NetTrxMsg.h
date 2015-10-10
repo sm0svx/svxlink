@@ -86,7 +86,7 @@ namespace NetTrxMsg
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -128,39 +128,39 @@ class Msg
      * @param 	size The message size
      */
     Msg(unsigned type, unsigned size) : m_type(type), m_size(size) {}
-  
+
     /**
      * @brief 	Destructor
      */
     ~Msg(void) {}
-  
+
     /**
      * @brief 	Get the message type
      * @return	Returns the message type
      */
      unsigned type(void) const { return m_type; }
-  
+
     /**
      * @brief 	Get the message size
      * @return	Returns the message size
      */
      unsigned size(void) const { return m_size; }
-    
+
   protected:
-  
+
     /**
      * @brief 	Set the message size
      * @param 	size The new size of the message in bytes
      */
     void setSize(unsigned size) { m_size = size; }
-        
+
   private:
     unsigned m_type;
     unsigned m_size;
-    
+
     Msg(const Msg&);
     Msg& operator=(const Msg&);
-    
+
 };  /* class Msg */
 
 
@@ -172,17 +172,17 @@ class MsgProtoVer : public Msg
   public:
     static const unsigned TYPE  = 0;
     static const uint16_t MAJOR = 2;
-    static const uint16_t MINOR = 4;
+    static const uint16_t MINOR = 5;
     MsgProtoVer(void)
       : Msg(TYPE, sizeof(MsgProtoVer)), m_major(MAJOR),
         m_minor(MINOR) {}
     uint16_t majorVer(void) const { return m_major; }
     uint16_t minorVer(void) const { return m_minor; }
-  
+
   private:
     uint16_t m_major;
     uint16_t m_minor;
-    
+
 }; /* MsgProtoVer */
 
 
@@ -191,7 +191,7 @@ class MsgHeartbeat : public Msg
   public:
     static const unsigned TYPE = 1;
     MsgHeartbeat(void) : Msg(TYPE, sizeof(MsgHeartbeat)) {}
-    
+
 };  /* MsgHeartbeat */
 
 
@@ -205,12 +205,12 @@ class MsgAuthChallenge : public Msg
     {
       gcry_create_nonce(m_challenge, CHALLENGE_LEN);
     }
-    
+
     const unsigned char *challenge(void) const { return m_challenge; }
-  
+
   private:
     unsigned char m_challenge[CHALLENGE_LEN];
-    
+
 }; /* MsgAuthChallenge */
 
 
@@ -228,19 +228,19 @@ class MsgAuthResponse : public Msg
         exit(1);
       }
     }
-    
+
     const unsigned char *digest(void) const { return m_digest; }
-    
+
     bool verify(const std::string &key, const unsigned char *challenge) const
     {
       unsigned char digest[DIGEST_LEN];
       bool ok = calcDigest(digest, key.c_str(), key.size(), challenge);
       return ok && (memcmp(m_digest, digest, DIGEST_LEN) == 0);
     }
-  
+
   private:
     unsigned char m_digest[DIGEST_LEN];
-    
+
     bool calcDigest(unsigned char *digest, const char *key,
                     int keylen, const unsigned char *challenge) const
     {
@@ -287,7 +287,7 @@ class MsgAuthResponse : public Msg
       */
       gcry_md_close(hd);
       return true;
-      
+
       error:
         gcry_md_close(hd);
 
@@ -296,7 +296,7 @@ class MsgAuthResponse : public Msg
                   << std::endl;
         return false;
     }
-    
+
 }; /* MsgAuthResponse */
 
 
@@ -305,7 +305,7 @@ class MsgAuthOk : public Msg
   public:
     static const unsigned TYPE = 12;
     MsgAuthOk(void) : Msg(TYPE, sizeof(MsgAuthOk)) {}
-    
+
 };  /* MsgAuthOk */
 
 
@@ -318,7 +318,7 @@ class MsgAudioCodecSelect : public Msg
 {
   public:
     typedef std::vector<std::pair<std::string, std::string> > Opts;
-    
+
     MsgAudioCodecSelect(const char *codec_name, unsigned msg_type)
       : Msg(msg_type, sizeof(MsgAudioCodecSelect)), m_option_cnt(0)
     {
@@ -327,7 +327,7 @@ class MsgAudioCodecSelect : public Msg
       strncpy(m_codec_name, codec_name, sizeof(m_codec_name));
       m_codec_name[sizeof(m_codec_name)-1] = 0;
     }
-    
+
     void addOption(const std::string &name, const std::string &value)
     {
       char *ptr = m_options;
@@ -361,10 +361,10 @@ class MsgAudioCodecSelect : public Msg
       ptr += name.size();
       *ptr++ = value.size();
       memcpy(ptr, value.c_str(), value.size());
-      
+
       m_option_cnt += 1;
     }
-    
+
     void options(Opts &opts)
     {
       char *ptr = m_options;
@@ -401,18 +401,18 @@ class MsgAudioCodecSelect : public Msg
 	      	    << "MsgAudioCodecSelect message\n";
 	  return;
 	}
-	
+
 	opts.push_back(std::pair<std::string, std::string>(name, value));
       }
     }
-    
+
     const char *name(void) const { return m_codec_name; }
-  
+
   private:
     char    m_codec_name[32];
     uint8_t m_option_cnt;
     char    m_options[256];
-    
+
 };  /* MsgAudioCodecSelect */
 
 
@@ -422,7 +422,7 @@ class MsgRxAudioCodecSelect : public MsgAudioCodecSelect
     static const unsigned TYPE = 100;
     MsgRxAudioCodecSelect(const char *codec_name)
       : MsgAudioCodecSelect(codec_name, TYPE) {}
-  
+
 };  /* MsgRxAudioCodecSelect */
 
 
@@ -432,7 +432,7 @@ class MsgTxAudioCodecSelect : public MsgAudioCodecSelect
     static const unsigned TYPE = 101;
     MsgTxAudioCodecSelect(const char *codec_name)
       : MsgAudioCodecSelect(codec_name, TYPE) {}
-  
+
 };  /* MsgTxAudioCodecSelect */
 
 
@@ -453,11 +453,11 @@ class MsgAudio : public Msg
       return m_buf;
     }
     int size(void) const { return m_size; }
-  
+
   private:
     int     m_size;
     uint8_t m_buf[BUFSIZE];
-    
+
 }; /* MsgAudio */
 
 
@@ -472,10 +472,10 @@ class MsgSetMuteState : public Msg
     MsgSetMuteState(Rx::MuteState new_mute_state)
       : Msg(TYPE, sizeof(MsgSetMuteState)), m_mute_state(new_mute_state) {}
     Rx::MuteState muteState(void) const { return m_mute_state; }
-  
+
   private:
     Rx::MuteState  m_mute_state;
-    
+
 }; /* MsgSetMuteState */
 
 
@@ -490,13 +490,13 @@ class MsgAddToneDetector : public Msg
     int bw(void) const { return m_bw; }
     float thresh(void) const { return m_thresh; }
     int requiredDuration(void) const { return m_required_duration; }
-  
+
   private:
     float m_fq;
     int   m_bw;
     float m_thresh;
     int   m_required_duration;
-    
+
 }; /* MsgAddToneDetector */
 
 
@@ -505,7 +505,7 @@ class MsgReset : public Msg
   public:
     static const unsigned TYPE = 202;
     MsgReset(void) : Msg(TYPE, sizeof(MsgReset)) {}
-    
+
 }; /* MsgReset */
 
 
@@ -521,12 +521,12 @@ class MsgSquelch : public Msg
     bool isOpen(void) const { return m_is_open; }
     float signalStrength(void) const { return m_signal_strength; }
     int sqlRxId(void) const { return m_sql_rx_id; }
-  
+
   private:
     bool  m_is_open;
     float m_signal_strength;
     int   m_sql_rx_id;
-    
+
 }; /* MsgSquelch */
 
 
@@ -538,11 +538,11 @@ class MsgDtmf : public Msg
       : Msg(TYPE, sizeof(MsgDtmf)), m_digit(digit), m_duration(duration) {}
     char digit(void) const { return m_digit; }
     int duration(void) const { return m_duration; }
-  
+
   private:
     char  m_digit;
     int   m_duration;
-    
+
 }; /* MsgDtmf */
 
 
@@ -553,10 +553,10 @@ class MsgTone : public Msg
     MsgTone(float tone_fq)
       : Msg(TYPE, sizeof(MsgTone)), m_tone_fq(tone_fq) {}
     float toneFq(void) const { return m_tone_fq; }
-  
+
   private:
     float  m_tone_fq;
-    
+
 }; /* MsgTone */
 
 
@@ -588,11 +588,11 @@ class MsgSiglevUpdate : public Msg
         m_sql_rx_id(sql_rx_id) {}
     float signalStrength(void) const { return m_signal_strength; }
     int sqlRxId(void) const { return m_sql_rx_id; }
-  
+
   private:
     float m_signal_strength;
     int   m_sql_rx_id;
-    
+
 }; /* MsgSiglevUpdate */
 
 
@@ -606,10 +606,10 @@ class MsgSetTxCtrlMode : public Msg
     MsgSetTxCtrlMode(Tx::TxCtrlMode mode)
       : Msg(TYPE, sizeof(MsgSetTxCtrlMode)), m_mode(mode) {}
     Tx::TxCtrlMode mode(void) const { return m_mode; }
-  
+
   private:
     Tx::TxCtrlMode m_mode;
-    
+
 }; /* MsgSetTxCtrlMode */
 
 
@@ -620,10 +620,10 @@ class MsgEnableCtcss : public Msg
     MsgEnableCtcss(bool enable)
       : Msg(TYPE, sizeof(MsgEnableCtcss)), m_enable(enable) {}
     bool enable(void) const { return m_enable; }
-  
+
   private:
     bool m_enable;
-        
+
 }; /* MsgEnableCtcss */
 
 
@@ -632,18 +632,25 @@ class MsgSendDtmf : public Msg
   public:
     static const unsigned TYPE  = 302;
     static const int MAX_DIGITS = 256;
-    MsgSendDtmf(const std::string &digits)
+    MsgSendDtmf(const std::string &digits, int tone_length,
+                                          int tone_pwr)
       : Msg(TYPE, sizeof(MsgSendDtmf))
     {
       strncpy(m_digits, digits.c_str(), MAX_DIGITS);
       m_digits[MAX_DIGITS] = 0;
       setSize(size() - MAX_DIGITS + strlen(m_digits));
+      m_tone_length = tone_length;
+      m_tone_pwr = tone_pwr;
     }
     std::string digits(void) const { return m_digits; }
-  
+    int tone_length(void) const { return m_tone_length; }
+    int tone_pwr(void) const {return m_tone_pwr; }
+
   private:
     char  m_digits[MAX_DIGITS+1];
-    
+    int m_tone_length;
+    int m_tone_pwr;
+
 }; /* MsgSendDtmf */
 
 
@@ -675,10 +682,10 @@ class MsgTransmitterStateChange : public Msg
       : Msg(TYPE, sizeof(MsgTransmitterStateChange)),
       	m_is_transmitting(is_transmitting) {}
     bool isTransmitting(void) const { return m_is_transmitting; }
-  
+
   private:
     bool m_is_transmitting;
-    
+
 }; /* MsgTxTimeout */
 
 

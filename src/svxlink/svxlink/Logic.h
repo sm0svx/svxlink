@@ -173,7 +173,7 @@ class Logic : public sigc::trackable
     virtual void playFile(const std::string& path);
     virtual void playSilence(int length);
     virtual void playTone(int fq, int amp, int len);
-    virtual void playDtmf(char digit, int amp, int len);
+    virtual void playDtmf(const std::string& digits, int amp, int len);
     void recordStart(const std::string& filename, unsigned max_time);
     void recordStop(void);
 
@@ -190,7 +190,8 @@ class Logic : public sigc::trackable
     Rx &rx(void) const { return *m_rx; }
     Tx &tx(void) const { return *m_tx; }
 
-    void sendDtmf(const std::string& digits);
+    void sendDtmf(const std::string& digits, int dtmf_tone_length,
+                                   int dtmf_digit_pwr);
 
     void injectDtmfDigit(char digit, int duration_ms)
     {

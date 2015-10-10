@@ -84,7 +84,7 @@ namespace Async
  *
  ****************************************************************************/
 
-  
+
 
 /****************************************************************************
  *
@@ -127,20 +127,20 @@ class RfUplink : public Uplink
      * @param 	tx The transmitter
      */
     RfUplink(Async::Config &cfg, const std::string &name, Rx *rx, Tx *tx);
-  
+
     /**
      * @brief 	Destructor
      */
     ~RfUplink(void);
-  
+
     /**
      * @brief 	Initialize the uplink
      * @return	Return \em true on success or \em false on failure
      */
     virtual bool initialize(void);
-        
+
   protected:
-    
+
   private:
     Async::Config        &cfg;
     std::string          name;
@@ -149,10 +149,11 @@ class RfUplink : public Uplink
     Tx	      	         *uplink_tx;
     Rx	      	         *uplink_rx;
     Async::AudioSelector *tx_audio_sel;
-    
+    int                  dtmf_tone_pwr;
+
     RfUplink(const RfUplink&);
     RfUplink& operator=(const RfUplink&);
-    
+
     void uplinkRxSquelchOpen(bool is_open);
     void uplinkRxDtmfRcvd(char digit, int duration);
     void rxSquelchOpen(bool is_open);

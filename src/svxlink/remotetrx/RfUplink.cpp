@@ -121,9 +121,9 @@ using namespace Async;
 
 RfUplink::RfUplink(Config &cfg, const string &name, Rx *rx, Tx *tx)
   : cfg(cfg), name(name), rx(rx), tx(tx), uplink_tx(0), uplink_rx(0),
-    tx_audio_sel(0)
+    tx_audio_sel(0), dtmf_tone_pwr(400)
 {
-  
+
 } /* RfUplink::RfUplink */
 
 
@@ -164,6 +164,11 @@ bool RfUplink::initialize(void)
     loop_rx_to_tx = atoi(value.c_str()) != 0;
   }
 
+  if (cfg.getValue(name, "DTMF_TONE_PWR", value))
+  {
+     dtmf_tone_pwr = atoi(value.c_str());
+  }
+
   rx->squelchOpen.connect(mem_fun(*this, &RfUplink::rxSquelchOpen));
   rx->signalLevelUpdated.connect(mem_fun(*this, &RfUplink::rxSignalLevelUpdated));
   rx->dtmfDigitDetected.connect(mem_fun(*this, &RfUplink::rxDtmfDigitDetected));
@@ -175,7 +180,7 @@ bool RfUplink::initialize(void)
   fifo->setPrebufSamples(512);
   prev_src->registerSink(fifo, true);
   prev_src = fifo;
-  
+
   AudioSplitter *splitter = 0;
   if (loop_rx_to_tx)
   {
@@ -183,7 +188,7 @@ bool RfUplink::initialize(void)
     prev_src->registerSink(splitter, true);
     prev_src = 0;
   }
-  
+
   uplink_tx = TxFactory::createNamedTx(cfg, uplink_tx_name);
   if ((uplink_tx == 0) || !uplink_tx->initialize())
   {
@@ -204,8 +209,8 @@ bool RfUplink::initialize(void)
     prev_src->registerSink(uplink_tx);
   }
   prev_src = 0;
-  
-  
+
+
   uplink_rx = RxFactory::createNamedRx(cfg, uplink_rx_name);
   if ((uplink_rx == 0) || !uplink_rx->initialize())
   {
@@ -226,7 +231,7 @@ bool RfUplink::initialize(void)
         mem_fun(*this, &RfUplink::uplinkTxTransmitterStateChange));
   }
   prev_src = uplink_rx;
-  
+
   if (loop_rx_to_tx)
   {
     tx_audio_sel = new AudioSelector;
@@ -241,9 +246,9 @@ bool RfUplink::initialize(void)
 
   tx->setTxCtrlMode(Tx::TX_AUTO);
   prev_src->registerSink(tx);
-  
+
   return true;
-  
+
 } /* RfUplink::initialize */
 
 
@@ -279,7 +284,7 @@ void RfUplink::uplinkRxSquelchOpen(bool is_open)
 void RfUplink::uplinkRxDtmfRcvd(char digit, int duration)
 {
   char digit_str[2] = {digit, 0};
-  tx->sendDtmf(digit_str);
+  tx->sendDtmf(digit_str, duration, dtmf_tone_pwr);
 } /* RfUplink::uplinkRxDtmfRcvd */
 
 
@@ -311,7 +316,7 @@ void RfUplink::rxDtmfDigitDetected(char digit, int duration)
        << duration << "ms" << endl;
     // FIXME: DTMF digits should be retransmitted with the correct duration.
   const char dtmf_str[] = {digit, 0};
-  uplink_tx->sendDtmf(dtmf_str);
+  uplink_tx->sendDtmf(dtmf_str, duration, dtmf_tone_pwr);
 } /* RfUplink::rxDtmfDigitDetected */
 
 

@@ -128,14 +128,16 @@ class ModuleDtmfRepeater : public Module
     virtual void allSamplesFlushed(void);
     virtual int writeSamples(const float *samples, int count);
     virtual void flushSamples(void);
-  
+
   private:
     std::string   received_digits;
     int       	  repeat_delay;
     Async::Timer  *repeat_delay_timer;
     bool      	  sql_is_open;
     bool          deactivate_on_sql_close;
-    
+    int           dtmf_tone_length;
+    int           dtmf_tone_pwr;
+
     bool initialize(void);
     void activateInit(void);
     void deactivateCleanup(void);

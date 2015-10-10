@@ -106,9 +106,9 @@ class QueueItem
     virtual bool initialize(void) { return true; }
     virtual int readSamples(float *samples, int len) = 0;
     virtual void unreadSamples(int len) = 0;
-    
+
     bool idleMarked(void) const { return idle_marked; }
-  
+
   private:
     bool  idle_marked;
 };
@@ -125,7 +125,7 @@ class SilenceQueueItem : public QueueItem
   private:
     int len;
     int silence_left;
-    
+
 };
 
 class ToneQueueItem : public QueueItem
@@ -143,26 +143,9 @@ class ToneQueueItem : public QueueItem
     int tone_len;
     int pos;
     int sample_rate;
-    
+
 };
 
-class DtmfQueueItem : public QueueItem
-{
-  public:
-    DtmfQueueItem(char digit, int amp, int len, int sample_rate, bool idle_marked)
-      : QueueItem(idle_marked), digit(digit), amp(amp),
-      	tone_len(sample_rate * len / 1000), pos(0), sample_rate(sample_rate) {}
-    int readSamples(float *samples, int len);
-    void unreadSamples(int len);
-
-  private:
-    char digit;
-    int amp;
-    int tone_len;
-    int pos;
-    int sample_rate;
-    
-};
 
 class RawFileQueueItem : public QueueItem
 {
@@ -177,7 +160,7 @@ class RawFileQueueItem : public QueueItem
   private:
     string  filename;
     int     file;
-    
+
 };
 
 class GsmFileQueueItem : public QueueItem
@@ -193,7 +176,7 @@ class GsmFileQueueItem : public QueueItem
 
   private:
     static const int BUFSIZE = 160;
-    
+
     string    	filename;
     int       	file;
     gsm       	decoder;
@@ -231,7 +214,7 @@ class WavFileQueueItem : public QueueItem
     uint16_t  bits_per_sample;
     char      subchunk2id[4];
     uint32_t  subchunk2size;
-    
+
     int read32bitValue(unsigned char *ptr, uint32_t *val);
     int read16bitValue(unsigned char *ptr, uint16_t *val);
 };
@@ -273,7 +256,7 @@ MsgHandler::MsgHandler(int sample_rate)
   : sample_rate(sample_rate), nesting_level(0), pending_play_next(false),
     current(0), is_writing_message(false), non_idle_cnt(0)
 {
-  
+
 }
 
 
@@ -318,27 +301,19 @@ void MsgHandler::playTone(int fq, int amp, int length, bool idle_marked)
 } /* MsgHandler::playSilence */
 
 
-void MsgHandler::playDtmf(char digit, int amp, int length, bool idle_marked)
-{
-  QueueItem *item = new DtmfQueueItem(digit, amp, length, sample_rate,
-                                      idle_marked);
-  addItemToQueue(item);
-} /* MsgHandler::playDtmf */
-
-
 void MsgHandler::clear(void)
 {
   deleteQueueItem(current);
   current = 0;
-  
+
   list<QueueItem*>::iterator it;
   for (it=msg_queue.begin(); it!=msg_queue.end(); ++it)
   {
     deleteQueueItem(*it);
   }
-  
+
   non_idle_cnt = 0;
-  
+
   msg_queue.clear();
   sinkFlushSamples();
 } /* MsgHandler::clear */
@@ -443,18 +418,18 @@ void MsgHandler::playMsg(void)
     pending_play_next = true;
     return;
   }
-  
+
   if (msg_queue.empty())
   {
     sinkFlushSamples();
     return;
   }
-  
+
   if (current != 0)
   {
     return;
   }
-    
+
   current = msg_queue.front();
   msg_queue.pop_front();
   if (!current->initialize())
@@ -475,7 +450,7 @@ void MsgHandler::writeSamples(void)
   float buf[WRITE_BLOCK_SIZE];
 
   assert(current != 0);
-    
+
   int written;
   int read_cnt;
   do
@@ -485,7 +460,7 @@ void MsgHandler::writeSamples(void)
     {
       goto done;
     }
-    
+
     written = sinkWriteSamples(buf, read_cnt);
     if (written == -1)
     {
@@ -493,15 +468,15 @@ void MsgHandler::writeSamples(void)
       goto done;
     }
     //printf("Read=%d  Written=%d\n", read_cnt, written);
-    
+
     if (written < read_cnt)
     {
       current->unreadSamples(read_cnt - written);
     }
   } while (written > 0);
-  
+
   return;
-    
+
   done:
     //printf("Done...\n");
     deleteQueueItem(current);
@@ -536,9 +511,9 @@ bool RawFileQueueItem::initialize(void)
     cerr << "*** WARNING: Could not find audio file \"" << filename << "\"\n";
     return false;
   }
-    
+
   return true;
-  
+
 } /* RawFileQueueItem::initialize */
 
 
@@ -560,9 +535,9 @@ int RawFileQueueItem::readSamples(float *samples, int len)
       samples[i] = static_cast<float>(buf[i]) / 32768.0;
     }
   }
-  
+
   return read_cnt;
-  
+
 } /* RawFileQueueItem::readSamples */
 
 
@@ -588,7 +563,7 @@ GsmFileQueueItem::~GsmFileQueueItem(void)
   {
     gsm_destroy(decoder);
   }
-  
+
   if (file != -1)
   {
     ::close(file);
@@ -599,7 +574,7 @@ GsmFileQueueItem::~GsmFileQueueItem(void)
 bool GsmFileQueueItem::initialize(void)
 {
   //cout << "GsmFileQueueItem::initialize\n";
-  
+
   assert(file == -1);
 
   file = ::open(filename.c_str(), O_RDONLY);
@@ -608,20 +583,20 @@ bool GsmFileQueueItem::initialize(void)
     cerr << "*** WARNING: Could not find audio file \"" << filename << "\"\n";
     return false;
   }
-  
+
   decoder = gsm_create();
-  
+
   buf_pos = BUFSIZE;
-  
+
   return true;
-  
+
 } /* GsmFileQueueItem::initialize */
 
 
 int GsmFileQueueItem::readSamples(float *samples, int len)
 {
   int read_cnt = 0;
-  
+
   //cout << "buf_pos=" << buf_pos << endl;
   if (buf_pos == BUFSIZE)
   {
@@ -640,7 +615,7 @@ int GsmFileQueueItem::readSamples(float *samples, int len)
       {
       	cerr << "*** WARNING: Corrupt GSM file: " << filename << endl;
       }
-      
+
       return 0;
     }
     else
@@ -649,16 +624,16 @@ int GsmFileQueueItem::readSamples(float *samples, int len)
       buf_pos = 0;
     }
   }
-  
+
   while ((read_cnt < len) && (buf_pos < BUFSIZE))
   {
     samples[read_cnt++] = static_cast<float>(buf[buf_pos++]) / 32768.0;
   }
-  
+
   //cout << "GsmFileQueueItem::readSamples: " << read_cnt << endl;
-  
+
   return read_cnt;
-  
+
 } /* GsmFileQueueItem::readSamples */
 
 
@@ -671,11 +646,11 @@ void GsmFileQueueItem::unreadSamples(int len)
             "previously read." << endl;
     return;
   }
-  
+
   buf_pos -= len;
-  
+
   //cout << "GsmFileQueueItem::unreadSamples: buf_pos=" << buf_pos << endl;
-  
+
 } /* GsmFileQueueItem::unreadSamples */
 
 
@@ -705,7 +680,7 @@ bool WavFileQueueItem::initialize(void)
     cerr << "*** WARNING: Could not find audio file \"" << filename << "\"\n";
     return false;
   }
-  
+
     // Read the wave file header
   unsigned char buf[44];
   int read_cnt = read(file, buf, sizeof(buf));
@@ -715,7 +690,7 @@ bool WavFileQueueItem::initialize(void)
       	 << filename << "\n";
     return false;
   }
-  
+
   unsigned char *ptr = buf;
   memcpy(chunk_id, ptr, 4);
   ptr += 4;
@@ -725,9 +700,9 @@ bool WavFileQueueItem::initialize(void)
       	 << filename << "\n";
     return false;
   }
-  
+
   ptr += read32bitValue(ptr, &chunk_size);
-  
+
   memcpy(format, ptr, 4);
   ptr += 4;
   if (memcmp(format, "WAVE", 4) != 0)
@@ -736,7 +711,7 @@ bool WavFileQueueItem::initialize(void)
       	 << filename << "\n";
     return false;
   }
-  
+
   memcpy(subchunk1id, ptr, 4);
   ptr += 4;
   if (memcmp(subchunk1id, "fmt ", 4) != 0)
@@ -746,7 +721,7 @@ bool WavFileQueueItem::initialize(void)
       	 << filename << "\n";
     return false;
   }
-  
+
   ptr += read32bitValue(ptr, &subchunk1size);
   if (subchunk1size != 16)
   {
@@ -755,7 +730,7 @@ bool WavFileQueueItem::initialize(void)
       	 << filename << "\n";
     return false;
   }
-  
+
   ptr += read16bitValue(ptr, &audio_format);
   if (audio_format != 1)
   {
@@ -763,7 +738,7 @@ bool WavFileQueueItem::initialize(void)
       	 << filename << "\n";
     return false;
   }
-  
+
   ptr += read16bitValue(ptr, &num_channels);
   if (num_channels != 1)
   {
@@ -771,7 +746,7 @@ bool WavFileQueueItem::initialize(void)
       	 << filename << "\n";
     return false;
   }
-  
+
   ptr += read32bitValue(ptr, &sample_rate);
   if (sample_rate != INTERNAL_SAMPLE_RATE)
   {
@@ -780,11 +755,11 @@ bool WavFileQueueItem::initialize(void)
       	 << filename << "\n";
     return false;
   }
-  
+
   ptr += read32bitValue(ptr, &byte_rate);
-  
+
   ptr += read16bitValue(ptr, &block_align);
-  
+
   ptr += read16bitValue(ptr, &bits_per_sample);
   if (bits_per_sample != 16)
   {
@@ -793,7 +768,7 @@ bool WavFileQueueItem::initialize(void)
       	 << filename << "\n";
     return false;
   }
-  
+
   memcpy(subchunk2id, ptr, 4);
   ptr += 4;
   if (memcmp(subchunk2id, "data", 4) != 0)
@@ -803,7 +778,7 @@ bool WavFileQueueItem::initialize(void)
       	 << filename << "\n";
     return false;
   }
-  
+
   ptr += read32bitValue(ptr, &subchunk2size);
   if (chunk_size != subchunk2size + 36)
   {
@@ -812,9 +787,9 @@ bool WavFileQueueItem::initialize(void)
       	 << filename << "\n";
     return false;
   }
-  
+
   return true;
-  
+
 } /* WavFileQueueItem::initialize */
 
 
@@ -836,9 +811,9 @@ int WavFileQueueItem::readSamples(float *samples, int len)
       samples[i] = static_cast<float>(buf[i]) / 32768.0;
     }
   }
-  
+
   return read_cnt;
-  
+
 } /* WavFileQueueItem::readSamples */
 
 
@@ -875,7 +850,7 @@ int WavFileQueueItem::read16bitValue(unsigned char *ptr, uint16_t *val)
 int SilenceQueueItem::readSamples(float *samples, int len)
 {
   assert(silence_left != -1);
-  
+
   int read_cnt = min(len, silence_left);
   memset(samples, 0, sizeof(*samples) * read_cnt);
   if (silence_left == 0)
@@ -886,9 +861,9 @@ int SilenceQueueItem::readSamples(float *samples, int len)
   {
     silence_left -= read_cnt;
   }
-  
+
   return read_cnt;
-  
+
 } /* SilenceQueueItem::readSamples */
 
 
@@ -914,9 +889,9 @@ int ToneQueueItem::readSamples(float *samples, int len)
     samples[i] = amp / 1000.0 * sin(2 * M_PI * fq * pos / sample_rate);
     ++pos;
   }
-  
+
   return read_cnt;
-  
+
 } /* ToneQueueItem::readSamples */
 
 
@@ -924,57 +899,6 @@ void ToneQueueItem::unreadSamples(int len)
 {
   pos -= len;
 } /* ToneQueueItem::unreadSamples */
-
-
-/****************************************************************************
- *
- * Private member functions for class DtmfQueueItem
- *
- ****************************************************************************/
-
-int DtmfQueueItem::readSamples(float *samples, int len)
-{
-  
-  static map<char, pair<int, int> > tone_map;
-  tone_map['1'] = pair<int, int>(697, 1209);
-  tone_map['2'] = pair<int, int>(697, 1336);
-  tone_map['3'] = pair<int, int>(697, 1477);
-  tone_map['A'] = pair<int, int>(697, 1633);
-  tone_map['4'] = pair<int, int>(770, 1209);
-  tone_map['5'] = pair<int, int>(770, 1336);
-  tone_map['6'] = pair<int, int>(770, 1477);
-  tone_map['B'] = pair<int, int>(770, 1633);
-  tone_map['7'] = pair<int, int>(852, 1209);
-  tone_map['8'] = pair<int, int>(852, 1336);
-  tone_map['9'] = pair<int, int>(852, 1477);
-  tone_map['C'] = pair<int, int>(852, 1633);
-  tone_map['*'] = pair<int, int>(941, 1209);
-  tone_map['0'] = pair<int, int>(941, 1336);
-  tone_map['#'] = pair<int, int>(941, 1477);
-  tone_map['D'] = pair<int, int>(941, 1633);
-  
-  int low_tone = tone_map[digit].first;
-  int high_tone = tone_map[digit].second;
- 
-  int read_cnt = min(len, tone_len-pos);
-  for (int i=0; i<read_cnt; ++i)
-  {
-    samples[i] = amp / 1000.0 * sin(2 * M_PI * low_tone * pos / sample_rate)
-                 + sin(2 * M_PI * high_tone * pos / sample_rate);
-    ++pos;
-  }
-  
-  return read_cnt;
-  
-} /* DtmfQueueItem::readSamples */
-
-
-void DtmfQueueItem::unreadSamples(int len)
-{
-  pos -= len;
-} /* DtmfQueueItem::unreadSamples */
-
-
 
 
 /*

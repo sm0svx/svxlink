@@ -687,15 +687,9 @@ void Logic::playTone(int fq, int amp, int len)
 } /* Logic::playSilence */
 
 
-void Logic::playDtmf(char digit, int amp, int len)
+void Logic::playDtmf(const std::string& digits, int amp, int len)
 {
-  msg_handler->playDtmf(digit, amp, len, report_events_as_idle);
-
-  if (!msg_handler->isIdle())
-  {
-    updateTxCtcss(true, TX_CTCSS_ANNOUNCEMENT);
-  }
-
+  sendDtmf(digits, len, amp);
   checkIdle();
 } /* Logic::playDtmf */
 
@@ -828,11 +822,12 @@ void Logic::selcallSequenceDetected(std::string sequence)
 } /* Logic::selcallSequenceDetected */
 
 
-void Logic::sendDtmf(const std::string& digits)
+void Logic::sendDtmf(const std::string& digits,
+                       int dtmf_tone_length, int dtmf_digit_pwr)
 {
   if (!digits.empty())
   {
-    tx().sendDtmf(digits);
+    tx().sendDtmf(digits, dtmf_tone_length, dtmf_digit_pwr);
   }
 } /* Logic::sendDtmf */
 

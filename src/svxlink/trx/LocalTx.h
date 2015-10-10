@@ -136,18 +136,18 @@ class LocalTx : public Tx
      * @brief 	Default constuctor
      */
     LocalTx(Async::Config& cfg, const std::string& name);
-  
+
     /**
      * @brief 	Destructor
      */
     ~LocalTx(void);
-  
+
     /**
      * @brief 	Initialize the transmitter object
      * @return 	Return \em true on success, or \em false on failure
      */
     bool initialize(void);
-  
+
     /**
      * @brief 	Set the transmit control mode
      * @param 	mode The mode to use to set the transmitter on or off.
@@ -157,25 +157,26 @@ class LocalTx : public Tx
      * transmitter on when there is audio to transmit.
      */
     void setTxCtrlMode(TxCtrlMode mode);
-    
+
     /**
      * @brief 	Check if the transmitter is transmitting
      * @return	Return \em true if transmitting or else \em false
      */
     bool isTransmitting(void) const { return is_transmitting; }
-    
+
     /**
      * @brief 	Enable/disable CTCSS on TX
      * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
      */
     void enableCtcss(bool enable);
-    
+
     /**
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send
      */
-    void sendDtmf(const std::string& digits);
-    
+    void sendDtmf(const std::string& digits, int dtmf_tone_length,
+                                        int dtmf_digit_pwr);
+
     /**
      * @brief   Set the signal level value that should be transmitted
      * @param   siglev The signal level to transmit
@@ -187,7 +188,7 @@ class LocalTx : public Tx
      * link receiver.
      */
     void setTransmittedSignalStrength(float siglev);
-    
+
   private:
     std::string       	    name;
     Async::Config     	    &cfg;
@@ -208,7 +209,7 @@ class LocalTx : public Tx
     std::vector<int>        tone_siglev_map;
     Async::Timer            *ptt_hangtimer;
     Ptt                     *ptt;
-    
+
     void txTimeoutOccured(Async::Timer *t);
     bool setPtt(bool tx, bool with_hangtime=false);
     void transmit(bool do_transmit);

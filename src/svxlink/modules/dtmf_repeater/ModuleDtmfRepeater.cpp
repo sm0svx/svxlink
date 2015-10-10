@@ -139,7 +139,8 @@ extern "C" {
 ModuleDtmfRepeater::ModuleDtmfRepeater(void *dl_handle, Logic *logic,
       	      	      	      	       const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), repeat_delay(0), repeat_delay_timer(0),
-    sql_is_open(false), deactivate_on_sql_close(false)
+    sql_is_open(false), deactivate_on_sql_close(false), dtmf_tone_length(100),
+    dtmf_tone_pwr(300)
 {
   cout << "\tModule DTMF Repeater v" MODULE_DTMF_REPEATER_VERSION
       	  " starting...\n";
@@ -202,7 +203,7 @@ void ModuleDtmfRepeater::flushSamples(void)
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2005-08-28
  * Remarks:   The base class initialize method must be called from here.
- * Bugs:      
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 bool ModuleDtmfRepeater::initialize(void)
@@ -211,15 +212,24 @@ bool ModuleDtmfRepeater::initialize(void)
   {
     return false;
   }
-  
+
   string value;
   if (cfg().getValue(cfgName(), "REPEAT_DELAY", value))
   {
     repeat_delay = atoi(value.c_str());
   }
-  
+
+  if (cfg().getValue(cfgName(), "DTMF_TONE_LENGTH", value))
+  {
+    dtmf_tone_length = atoi(value.c_str());
+  }
+
+  if (cfg().getValue(cfgName(), "DTMF_TONE_PWR", value))
+  {
+    dtmf_tone_pwr = atoi(value.c_str());
+  }
   return true;
-  
+
 } /* initialize */
 
 
@@ -231,8 +241,8 @@ bool ModuleDtmfRepeater::initialize(void)
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2004-03-07
- * Remarks:   
- * Bugs:      
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 void ModuleDtmfRepeater::activateInit(void)
@@ -253,7 +263,7 @@ void ModuleDtmfRepeater::activateInit(void)
  * Created:   2004-03-07
  * Remarks:   Do NOT call this function directly unless you really know what
  *    	      you are doing. Use Module::deactivate() instead.
- * Bugs:      
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 void ModuleDtmfRepeater::deactivateCleanup(void)
@@ -276,15 +286,15 @@ void ModuleDtmfRepeater::deactivateCleanup(void)
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2004-03-07
- * Remarks:   
- * Bugs:      
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
 {
   cout << "DTMF digit " << digit << " (" << duration
        << "ms) received in module " << name() << endl;
-  
+
   if (digit == '#' && (duration > 3000))
   {
     if (squelchIsOpen())
@@ -297,9 +307,9 @@ bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
     }
     return true;
   }
-  
+
   received_digits += digit;
-  
+
   if (repeat_delay == 0)
   {
     onRepeatDelayExpired(0);
@@ -308,16 +318,16 @@ bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
   {
     setupRepeatDelay();
   }
-  
+
   return true;
-  
+
 } /* dtmfDigitReceived */
 
 
 void ModuleDtmfRepeater::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
   received_digits += cmd;
-  
+
   if (repeat_delay == 0)
   {
     onRepeatDelayExpired(0);
@@ -338,8 +348,8 @@ void ModuleDtmfRepeater::dtmfCmdReceivedWhenIdle(const std::string &cmd)
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2005-08-28
- * Remarks:   
- * Bugs:      
+ * Remarks:
+ * Bugs:
  *----------------------------------------------------------------------------
  */
 void ModuleDtmfRepeater::squelchOpen(bool is_open)
@@ -392,7 +402,7 @@ void ModuleDtmfRepeater::setupRepeatDelay(void)
 void ModuleDtmfRepeater::sendStoredDigits(void)
 {
   cout << name() << ": Sending DTMF digits " << received_digits << endl;
-  sendDtmf(received_digits);
+  sendDtmf(received_digits, dtmf_tone_length, dtmf_tone_pwr);
   received_digits.clear();
 } /* ModuleDtmfRepeater::sendStoredDigits */
 
