@@ -1,0 +1,3 @@
+# symbols files are fragile for C++ libraries
+# some symbols depend on architecture because of different system type sizes
+libasynccore1.3: no-symbols-control-file usr/lib/libasynccore.so.1.3.0

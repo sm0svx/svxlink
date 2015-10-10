@@ -1,0 +1,3 @@
+# symbols files are fragile for C++ libraries
+# some symbols depend on architecture because of different system type sizes
+libasyncqt1.3: no-symbols-control-file usr/lib/libasyncqt.so.1.3.0

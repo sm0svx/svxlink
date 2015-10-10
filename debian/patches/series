@@ -1,0 +1,7 @@
+# quilt series file
+
+no-sonames-on-modules.patch
+fix-install-locations.patch
+enable-static-libs.patch
+use-default-compile-flags.patch
+enable-verbose-output.patch
