@@ -431,10 +431,10 @@ int EventHandler::playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
     Tcl_SetResult(irp, msg, TCL_STATIC);
     return TCL_ERROR;
   }
-  //cout << "EventHandler::playDtmf: " << argv[1] << ", "
-  //    << argv[2] << ", " << argv[3]<< endl;
+  cout << "EventHandler::playDtmf: " << argv[1] << ", "
+      << argv[2] << ", " << argv[3]<< endl;
   EventHandler *self = static_cast<EventHandler *>(cdata);
-  self->playDtmf(argv[0], atoi(argv[2]), atoi(argv[3]));
+  self->playDtmf(argv[1], atoi(argv[2]), atoi(argv[3]));
 
   return TCL_OK;
 } /* EventHandler::playDtmfHandler */
