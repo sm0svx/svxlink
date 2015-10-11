@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncApplication.h>
 
 
 /****************************************************************************
@@ -227,7 +228,7 @@ class Async::AudioSplitter::Branch : public AudioSource
 
 AudioSplitter::AudioSplitter(void)
   : buf(0), buf_size(0), buf_len(0), do_flush(false), input_stopped(false),
-    flushed_branches(0), cleanup_branches_timer(0), main_branch(0)
+    flushed_branches(0), main_branch(0)
 {
   main_branch = new Branch(this);
   branches.push_back(main_branch);
@@ -237,8 +238,6 @@ AudioSplitter::AudioSplitter(void)
 
 AudioSplitter::~AudioSplitter(void)
 {
-  delete cleanup_branches_timer;
-  cleanup_branches_timer = 0;
   delete [] buf;
   removeAllSinks();
   AudioSource::clearHandler();
@@ -280,12 +279,8 @@ void AudioSplitter::removeSink(AudioSink *sink)
       {
       	(*it)->unregisterSink();
       }
-      if (cleanup_branches_timer == 0)
-      {
-      	cleanup_branches_timer = new Timer(0);
-	cleanup_branches_timer->expired.connect(
-	    mem_fun(*this, &AudioSplitter::cleanupBranches));
-      }
+      Async::Application::app().runTask(
+          mem_fun(*this, &AudioSplitter::cleanupBranches));
       break;
     }
   }
@@ -524,11 +519,8 @@ void AudioSplitter::branchAllSamplesFlushed(void)
  * Branches cannot be removed directly from the list since that could
  * corrupt iterators when looping through the list.
  */
-void AudioSplitter::cleanupBranches(Timer *t)
+void AudioSplitter::cleanupBranches(void)
 {
-  delete cleanup_branches_timer;
-  cleanup_branches_timer = 0;
-  
   list<Branch *>::iterator it = branches.begin();
   while (it != branches.end())
   {

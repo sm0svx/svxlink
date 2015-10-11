@@ -156,14 +156,13 @@ class NetUplink : public Uplink
      * @param key The autentication key to use
      */
     void setAuthKey(const std::string &key) { auth_key = key; }
-    
 
   protected:
     
   private:
     typedef enum
     {
-      STATE_DISC, STATE_AUTH_WAIT, STATE_READY
+      STATE_DISC, STATE_CON_SETUP, STATE_READY, STATE_DISC_CLEANUP
     } State;
     
     Async::TcpServer  	    *server;
@@ -194,7 +193,9 @@ class NetUplink : public Uplink
     
     NetUplink(const NetUplink&);
     NetUplink& operator=(const NetUplink&);
+    void handleIncomingConnection(Async::TcpConnection *incoming_con);
     void clientConnected(Async::TcpConnection *con);
+    void disconnectCleanup(void);
     void clientDisconnected(Async::TcpConnection *con,
       	      	      	    Async::TcpConnection::DisconnectReason reason);
     int tcpDataReceived(Async::TcpConnection *con, void *data, int size);
@@ -235,6 +236,8 @@ class NetUplink : public Uplink
     void unmuteTx(Async::Timer *t);
     void setFallbackActive(bool activate);
     void signalLevelUpdated(float siglev);
+    void forceDisconnect(void);
+    void setState(State new_state) { state = new_state; }
 
 };  /* class NetUplink */
 
