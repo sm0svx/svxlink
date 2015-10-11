@@ -117,10 +117,10 @@ using namespace Async;
  ****************************************************************************/
 
 
-Timer::Timer(int timeout_ms, Type type)
+Timer::Timer(int timeout_ms, Type type, bool enabled)
   : m_type(type), m_timeout_ms(timeout_ms), m_is_enabled(false)
 {
-  setEnable(true);
+  setEnable(enabled);
 } /* Timer::Timer */
 
 

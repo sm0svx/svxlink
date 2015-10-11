@@ -9,7 +9,7 @@ application that use the Async classes.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2015 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -153,16 +153,45 @@ class Application : public sigc::trackable
      * This function should be called to exit the application core main loop.
      */
     virtual void quit(void) = 0;
+
+    /**
+     * @brief Run a task from the Async main loop
+     * @param task The task (SigC++ slot) to run
+     *
+     * This function can be used to delay a function call until the call chain
+     * have returned to the Async main loop. This may be required in some
+     * cases where one otherwise would get into trouble with complex callback
+     * chains causing strange errors.
+     *
+     * Use it something like this to call a function taking no arguments:
+     *
+     *   runTask(mem_fun(*this, &MyClass::func));
+     *
+     * If the function need arguments passed to it, they must be bound to the
+     * slot using the sigc::bind function:
+     *
+     *   runTask(sigc::bind(mem_fun(*this, &MyClass::func), true, my_int));
+     *
+     * In this case the function take two arguments where the first is a bool
+     * and the second is an integer.
+     */
+    void runTask(sigc::slot<void> task);
     
   protected:
     
-  private:    
+  private:
     friend class FdWatch;
     friend class Timer;
     friend class DnsLookup;
     
+    typedef std::list<sigc::slot<void> > SlotList;
+
     static Application *app_ptr;
     
+    SlotList task_list;
+    Timer    *task_timer;
+
+    void taskTimerExpired(void);
     virtual void addFdWatch(FdWatch *fd_watch) = 0;
     virtual void delFdWatch(FdWatch *fd_watch) = 0;
     virtual void addTimer(Timer *timer) = 0;

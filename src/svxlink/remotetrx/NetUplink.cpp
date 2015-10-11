@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncApplication.h>
 #include <AsyncTcpServer.h>
 #include <AsyncAudioFifo.h>
 #include <AsyncTimer.h>
@@ -159,6 +160,28 @@ NetUplink::~NetUplink(void)
 
 bool NetUplink::initialize(void)
 {
+    // Initialize the GCrypt library if not already initialized
+  if (!gcry_control(GCRYCTL_INITIALIZATION_FINISHED_P))
+  {
+    gcry_check_version(NULL);
+    gcry_error_t err;
+    err = gcry_control(GCRYCTL_DISABLE_SECMEM, 0);
+    if (err != GPG_ERR_NO_ERROR)
+    {
+      cerr << "*** ERROR: Failed to initialize the Libgcrypt library: "
+           << gcry_strsource(err) << "/" << gcry_strerror(err) << endl;
+      return false;
+    }
+      // Tell Libgcrypt that initialization has completed
+    err = gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
+    if (err != GPG_ERR_NO_ERROR)
+    {
+      cerr << "*** ERROR: Failed to initialize the Libgcrypt library: "
+           << gcry_strsource(err) << "/" << gcry_strerror(err) << endl;
+      return false;
+    }
+  }
+
   string listen_port;
   if (!cfg.getValue(name, "LISTEN_PORT", listen_port))
   {
@@ -238,72 +261,78 @@ bool NetUplink::initialize(void)
  *
  ****************************************************************************/
 
+void NetUplink::handleIncomingConnection(TcpConnection *incoming_con)
+{
+  assert(con == 0);
+  if (fallback_enabled) // Deactivate fallback repeater mode
+  {
+    setFallbackActive(false);
+  }
+  
+  if (audio_enc != 0)
+  {
+    rx_splitter->removeSink(audio_enc);
+    delete audio_enc;
+    audio_enc = 0;
+  }
+  
+  delete audio_dec;
+  audio_dec = 0;
+  
+  con = incoming_con;
+  con->dataReceived.connect(mem_fun(*this, &NetUplink::tcpDataReceived));
+  recv_exp = sizeof(Msg);
+  recv_cnt = 0;
+  heartbeat_timer->setEnable(true);
+  gettimeofday(&last_msg_timestamp, NULL);
+  
+  setState(STATE_CON_SETUP);
+
+  MsgProtoVer *ver_msg = new MsgProtoVer;
+  sendMsg(ver_msg);
+  
+  if (auth_key.empty())
+  {
+    MsgAuthOk *auth_msg = new MsgAuthOk;
+    sendMsg(auth_msg);
+    setState(STATE_READY);
+  }
+  else
+  {
+    MsgAuthChallenge *auth_msg = new MsgAuthChallenge;
+    memcpy(auth_challenge, auth_msg->challenge(),
+           MsgAuthChallenge::CHALLENGE_LEN);
+    sendMsg(auth_msg);
+  }
+} /* NetUplink::handleIncomingConnection */
+
 
 void NetUplink::clientConnected(TcpConnection *incoming_con)
 {
   cout << name << ": Client connected: " << incoming_con->remoteHost() << ":"
        << incoming_con->remotePort() << endl;
   
-  if (con == 0)
+  switch (state)
   {
-    if (fallback_enabled) // Deactivate fallback repeater mode
-    {
-      setFallbackActive(false);
-    }
-    
-    if (audio_enc != 0)
-    {
-      rx_splitter->removeSink(audio_enc);
-      delete audio_enc;
-      audio_enc = 0;
-    }
-    
-    delete audio_dec;
-    audio_dec = 0;
-    
-    con = incoming_con;
-    con->dataReceived.connect(mem_fun(*this, &NetUplink::tcpDataReceived));
-    recv_exp = sizeof(Msg);
-    recv_cnt = 0;
-    heartbeat_timer->setEnable(true);
-    gettimeofday(&last_msg_timestamp, NULL);
-    
-    MsgProtoVer *ver_msg = new MsgProtoVer;
-    sendMsg(ver_msg);
-    
-    if (auth_key.empty())
-    {
-      MsgAuthOk *auth_msg = new MsgAuthOk;
-      sendMsg(auth_msg);
-      state = STATE_READY;
-    }
-    else
-    {
-      MsgAuthChallenge *auth_msg = new MsgAuthChallenge;
-      memcpy(auth_challenge, auth_msg->challenge(),
-             MsgAuthChallenge::CHALLENGE_LEN);
-      sendMsg(auth_msg);
-      state = STATE_AUTH_WAIT;
-    }
-  }
-  else
-  {
-    cout << name << ": Only one client allowed. Disconnecting...\n";
-    incoming_con->disconnect();
+    case STATE_DISC:
+      handleIncomingConnection(incoming_con);
+      break;
+    case STATE_CON_SETUP:
+    case STATE_READY:
+      cout << name << ": Only one client allowed. Disconnecting...\n";
+      // Fall through
+    case STATE_DISC_CLEANUP:
+      incoming_con->disconnect();
+      break;
   }
 } /* NetUplink::clientConnected */
 
 
-void NetUplink::clientDisconnected(TcpConnection *the_con,
-      	      	      	      	   TcpConnection::DisconnectReason reason)
+void NetUplink::disconnectCleanup(void)
 {
-  cout << name << ": Client disconnected: " << con->remoteHost() << ":"
-       << con->remotePort() << endl;
-
-  assert(the_con == con);
   con = 0;
   recv_exp = 0;
-  state = STATE_DISC;
+  setState(STATE_DISC);
 
   rx->reset();
   tx->enableCtcss(false);
@@ -327,6 +356,17 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
   {
     setFallbackActive(true);
   }
+} /* NetUplink::disconnectCleanup */
+
+
+void NetUplink::clientDisconnected(TcpConnection *the_con,
+                                   TcpConnection::DisconnectReason reason)
+{
+  cout << name << ": Client disconnected: " << the_con->remoteHost() << ":"
+       << the_con->remotePort() << endl;
+  con = 0;
+  setState(STATE_DISC_CLEANUP);
+  Application::app().runTask(mem_fun(*this, &NetUplink::disconnectCleanup));
 } /* NetUplink::clientDisconnected */
 
 
@@ -338,6 +378,12 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
   //cout << "Received a TCP message with type " << msg->type()
   //     << " and size " << msg->size() << endl;
   
+    // Discard data if we are not in one of the "connected" states
+  if ((state != STATE_CON_SETUP) && (state != STATE_READY))
+  {
+    return size;
+  }
+
   if (recv_exp == 0)
   {
     cerr << "*** ERROR: Unexpected TCP data received in NetUplink "
@@ -355,8 +401,7 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
     {
       cerr << "*** ERROR: TCP receive buffer overflow in NetUplink "
            << name << ". Disconnecting...\n";
-      con->disconnect();
-      clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+      forceDisconnect();
       return orig_size;
     }
     memcpy(recv_buf+recv_cnt, buf, read_cnt);
@@ -384,8 +429,7 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
 	  cerr << "*** ERROR: Illegal message header received in NetUplink "
                << name << ". Header length too small (" << msg->size()
                << ")\n";
-	  con->disconnect();
-	  clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+          forceDisconnect();
 	  return orig_size;
 	}
       }
@@ -409,9 +453,10 @@ void NetUplink::handleMsg(Msg *msg)
   switch (state)
   {
     case STATE_DISC:
+    case STATE_DISC_CLEANUP:
       return;
       
-    case STATE_AUTH_WAIT:
+    case STATE_CON_SETUP:
       if (msg->type() == MsgAuthResponse::TYPE &&
           msg->size() == sizeof(MsgAuthResponse))
       {
@@ -420,8 +465,7 @@ void NetUplink::handleMsg(Msg *msg)
         {
           cerr << "*** ERROR: Authentication error in NetUplink "
                << name << ".\n";
-          con->disconnect();
-          clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+          forceDisconnect();
           return;
         }
         else
@@ -429,13 +473,12 @@ void NetUplink::handleMsg(Msg *msg)
           MsgAuthOk *ok_msg = new MsgAuthOk;
           sendMsg(ok_msg);
         }
-        state = STATE_READY;
+        setState(STATE_READY);
       }
       else
       {
         cerr << "*** ERROR: Protocol error in NetUplink " << name << ".\n";
-        con->disconnect();
-        clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+        forceDisconnect();
       }
       return;
     
@@ -605,7 +648,7 @@ void NetUplink::handleMsg(Msg *msg)
 
 void NetUplink::sendMsg(Msg *msg)
 {
-  if (con != 0)
+  if ((state == STATE_CON_SETUP) || (state == STATE_READY))
   {
     int written = con->write(msg, msg->size());
     if (written == -1)
@@ -617,8 +660,7 @@ void NetUplink::sendMsg(Msg *msg)
     {
       cerr << "*** ERROR: TCP transmit buffer overflow in NetUplink "
            << name << ".\n";
-      con->disconnect();
-      clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+      forceDisconnect();
     }
   }
   
@@ -725,8 +767,7 @@ void NetUplink::heartbeat(Timer *t)
   if (diff_ms > 15000)
   {
     cerr << "*** ERROR: Heartbeat timeout in NetUplink " << name << "\n";
-    con->disconnect();
-    clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+    forceDisconnect();
   }
   
   t->reset();
@@ -776,8 +817,13 @@ void NetUplink::signalLevelUpdated(float siglev)
 } /* NetUplink::signalLevelUpdated */
 
 
+void NetUplink::forceDisconnect(void)
+{
+  con->disconnect();
+  clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
+} /* NetUplink::forceDisconnect */
+
 
 /*
  * This file has not been truncated
  */
-

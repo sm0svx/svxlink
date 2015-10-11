@@ -192,6 +192,10 @@ bool NetTx::initialize(void)
   pacer->registerSink(audio_enc);
   
   tcp_con = NetTrxTcpClient::instance(host, atoi(tcp_port.c_str()));
+  if (tcp_con == 0)
+  {
+    return false;
+  }
   tcp_con->setAuthKey(auth_key);
   tcp_con->isReady.connect(mem_fun(*this, &NetTx::connectionReady));
   tcp_con->msgReceived.connect(mem_fun(*this, &NetTx::handleMsg));

@@ -760,6 +760,11 @@ void LocalRxBase::audioStreamStateChange(bool is_active, bool is_idle)
 
 void LocalRxBase::onSquelchOpen(bool is_open)
 {
+  if (mute_state == MUTE_ALL)
+  {
+    return;
+  }
+
   if (is_open)
   {
     if (delay != 0)
