@@ -1,0 +1,84 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+CPPFLAGS:=$(shell dpkg-buildflags --get CPPFLAGS)
+CFLAGS:=$(shell dpkg-buildflags --get CFLAGS) $(CPPFLAGS)
+CXXFLAGS:=$(shell dpkg-buildflags --get CXXFLAGS) $(CPPFLAGS)
+LDFLAGS:=$(shell dpkg-buildflags --get LDFLAGS)
+
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
+export QT_SELECT=qt5
+
+# The other tricks didn't work
+# See https://wiki.debian.org/Hardening#Notes_for_packages_using_CMake
+export DEB_BUILD_HARDENING=1
+
+%:
+	dh $@ \
+	--with=systemd \
+	--parallel \
+	--buildsystem=cmake \
+	--sourcedirectory=src \
+	--builddirectory=build 
+
+.PHONY: override_dh_auto_clean
+override_dh_auto_clean:
+	find .. -name 'moc_*' -execdir rm -fv '{}' \;
+	find .. -name 'qrc_*' -execdir rm -fv '{}' \;
+	dh_auto_clean
+
+.PHONY: override_dh_strip
+override_dh_strip:
+	dh_strip -psvxlink-server --dbg-package=svxlink-server-dbg
+	dh_strip -premotetrx --dbg-package=remotetrx-dbg
+	dh_strip -pqtel --dbg-package=qtel-dbg
+	dh_strip -plibecholib1.3 --dbg-package=libecholib-dbg
+	dh_strip -plibasynccore1.3 --dbg-package=libasynccore-dbg
+	dh_strip -plibasynccpp1.3 --dbg-package=libasynccpp-dbg
+	dh_strip -plibasyncaudio1.3 --dbg-package=libasyncaudio-dbg
+	dh_strip -plibasyncqt1.3 --dbg-package=libasyncqt-dbg
+ 	
+.PHONY: override_dh_install_init
+override_dh_installinit:
+	dh_installinit -psvxlink-server --name=svxlink
+	dh_installinit -premotetrx
+
+.PHONY: override_dh_systemd_enable
+override_dh_systemd_enable:
+	# Do not enable the file by default on purpose.
+	# The user should enable it only after making sure the configuration is
+	# appropriate for his/her computer.
+	# This corresponds to START=no in /etc/default/svxlink
+
+.PHONY: override_dh_installchangelogs
+override_dh_installchangelogs:
+	dh_installchangelogs -psvxlink-server src/svxlink/ChangeLog
+	dh_installchangelogs -psvxlink-server-dbg src/svxlink/ChangeLog
+	dh_installchangelogs -premotetrx src/svxlink/ChangeLog
+	dh_installchangelogs -premotetrx-dbg src/svxlink/ChangeLog
+	dh_installchangelogs -pqtel src/qtel/ChangeLog
+	dh_installchangelogs -pqtel-dbg src/qtel/ChangeLog
+	dh_installchangelogs -plibecholib1.3 src/echolib/ChangeLog
+	dh_installchangelogs -plibecholib-dev src/echolib/ChangeLog
+	dh_installchangelogs -plibecholib-dbg src/echolib/ChangeLog
+	dh_installchangelogs -plibasynccore1.3 src/async/ChangeLog
+	dh_installchangelogs -plibasynccore-dev src/async/ChangeLog
+	dh_installchangelogs -plibasynccore-dbg src/async/ChangeLog
+	dh_installchangelogs -plibasyncaudio1.3 src/async/ChangeLog
+	dh_installchangelogs -plibasyncaudio-dev src/async/ChangeLog
+	dh_installchangelogs -plibasyncaudio-dbg src/async/ChangeLog
+	dh_installchangelogs -plibasynccpp1.3 src/async/ChangeLog
+	dh_installchangelogs -plibasynccpp-dev src/async/ChangeLog
+	dh_installchangelogs -plibasynccpp-dbg src/async/ChangeLog
+	dh_installchangelogs -plibasyncqt1.3 src/async/ChangeLog
+	dh_installchangelogs -plibasyncqt-dev src/async/ChangeLog
+	dh_installchangelogs -plibasyncqt-dbg src/async/ChangeLog
+
+#.PHONY: override_dh_fixperms
+#override_dh_fixperms:
+#	dh_fixperms
+#	chmod a-x debian/svxlink-server/etc/default/svxlink
+#	chmod a-x debian/remotetrx/etc/default/remotetrx

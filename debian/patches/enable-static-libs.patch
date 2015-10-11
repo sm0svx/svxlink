@@ -1,0 +1,17 @@
+Description: Enable building of static libraries
+Author: Richard Neese <kb3vw@gmail.com>
+Forwarded: not-needed
+Last-Update: 2014-09-17
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -38,7 +38,7 @@
+ 
+ # Optional parts
+ option(USE_QT "Build Qt applications and libs" ON)
+-option(BUILD_STATIC_LIBS "Build static libraries in addition to dynamic" OFF)
++option(BUILD_STATIC_LIBS "Build static libraries in addition to dynamic" ON)
+ 
+ # The sample rate used internally in SvxLink
+ if(NOT DEFINED INTERNAL_SAMPLE_RATE)
