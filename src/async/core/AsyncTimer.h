@@ -127,15 +127,16 @@ class Timer : public sigc::trackable
   
     /**
      * @brief 	Constructor
-     * @param 	timeout_ms  The timeout value in milliseconds
-     * @param 	type  	    The type of timer to use (see @ref Type)
+     * @param   timeout_ms  The timeout value in milliseconds
+     * @param   type        The type of timer to use (see @ref Type)
+     * @param   enabled     Set to \em false if the timer should be disabled
      *
      * If no arguments are given (default constructor) a timer that expires
      * immediately will be created. Such a timer can for example be used to
      * delay the execution of some function until all active callbacks have
      * returned.
      */
-    Timer(int timeout_ms = 0, Type type = TYPE_ONESHOT);
+    Timer(int timeout_ms = 0, Type type = TYPE_ONESHOT, bool enabled=true);
     
     /**
      * @brief 	Destructor
