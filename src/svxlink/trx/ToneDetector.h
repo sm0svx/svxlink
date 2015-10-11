@@ -124,6 +124,11 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
     ToneDetector(float tone_hz, float width_hz, int det_delay_ms = 0);
 
     /**
+     * @brief   Destructor
+     */
+    ~ToneDetector(void);
+
+    /**
      * @brief  Return the detection frequency
      * @return Returns the detection frequency in Hz
      */

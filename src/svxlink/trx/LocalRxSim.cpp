@@ -1,12 +1,12 @@
 /**
-@file	 SigLevDet.cpp
-@brief   The base class for a signal level detector
+@file	 LocalRxSim.cpp
+@brief   A class to simulate a local receiver
 @author  Tobias Blomberg / SM0SVX
-@date	 2014-07-17
+@date	 2015-10-03
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2014 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,8 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /****************************************************************************
  *
  * System Includes
@@ -42,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
+#include <AsyncAudioPacer.h>
 
 
 /****************************************************************************
@@ -50,14 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include "Rx.h"
-#include "SigLevDet.h"
-#include "SigLevDetNoise.h"
-#include "SigLevDetTone.h"
-#include "SigLevDetDdr.h"
-#include "SigLevDetSim.h"
-#include "SigLevDetAfsk.h"
-
+#include "LocalRxSim.h"
 
 
 /****************************************************************************
@@ -85,27 +77,6 @@ using namespace Async;
  *
  ****************************************************************************/
 
-namespace {
-  /**
-   * @brief A dummy signal level detector which always return 0 siglev
-   */
-  class SigLevDetNone : public SigLevDet
-  {
-    public:
-      struct Factory : public SigLevDetFactory<SigLevDetNone>
-      {
-        Factory(void) : SigLevDetFactory<SigLevDetNone>("NONE") {}
-      };
-
-    virtual void setContinuousUpdateInterval(int interval_ms) {}
-    virtual void setIntegrationTime(int time_ms) {}
-    virtual float lastSiglev(void) const { return 0; }
-    virtual float siglevIntegrated(void) const { return 0; }
-    virtual void reset(void) {}
-    virtual int writeSamples(const float *samples, int count) { return count; }
-    virtual void flushSamples(void) {}
-  };
-};
 
 
 /****************************************************************************
@@ -124,13 +95,13 @@ namespace {
 
 
 
-
 /****************************************************************************
  *
  * Local Global Variables
  *
  ****************************************************************************/
 
+unsigned int LocalRxSim::next_seed = 0;
 
 
 /****************************************************************************
@@ -139,58 +110,56 @@ namespace {
  *
  ****************************************************************************/
 
-SigLevDet *SigLevDetFactoryBase::createNamedSigLevDet(Config& cfg,
-                                                      const string& name)
+LocalRxSim::LocalRxSim(Config &cfg, const std::string& name)
+  : LocalRxBase(cfg, name), cfg(cfg), pacer(0)
 {
-  SigLevDetNone::Factory none_siglev_factory;
-  SigLevDetNoise::Factory noise_siglev_factory;
-  SigLevDetTone::Factory tone_siglev_factory;
-  SigLevDetDdr::Factory ddr_siglev_factory;
-  SigLevDetSim::Factory sim_siglev_factory;
-  SigLevDetAfsk::Factory afsk_siglev_factory;
-  
-  string det_name;
-  if (!cfg.getValue(name, "SIGLEV_DET", det_name) || det_name.empty())
+} /* LocalRxSim::LocalRxSim */
+
+
+LocalRxSim::~LocalRxSim(void)
+{
+} /* LocalRxSim::~LocalRxSim */
+
+
+bool LocalRxSim::initialize(void)
+{
+  int tone_fq = 1000;
+  cfg.getValue(name(), "SIM_TONE_FQ", tone_fq);
+  audio_gen.setFq(tone_fq);
+
+  string waveform("SIN");
+  cfg.getValue(name(), "SIM_WAVEFORM", waveform);
+  if (waveform == "SIN")
   {
-    det_name = "NOISE";
+    audio_gen.setWaveform(AudioGenerator::SIN);
+  }
+  else if (waveform == "SQUARE")
+  {
+    audio_gen.setWaveform(AudioGenerator::SQUARE);
+  }
+  else
+  {
+    cerr << "*** ERROR: Unknown waveform specified in "
+         << name() << "/" << "SIM_WAVEFORM (\"" << waveform 
+         << "\"). Valid values are: SIN, SQUARE.\n";
+    return false;
   }
 
-  SigLevDet *det = createNamedObject(det_name);
-  if (det == 0)
+  float sim_tone_pwr_db = -20.0f;
+  cfg.getValue(name(), "SIM_TONE_PWR", sim_tone_pwr_db);
+  audio_gen.setPower(sim_tone_pwr_db);
+
+  pacer = new Async::AudioPacer(INTERNAL_SAMPLE_RATE, 128, 0);
+  audio_gen.registerSink(pacer, true);
+
+  if (!LocalRxBase::initialize())
   {
-    cerr << "*** ERROR: Unknown SIGLEV_DET \"" << det_name
-         << "\" specified for receiver " << name << ". Legal values are: "
-         << validFactories() << endl;
+    return false;
   }
-  
-  return det;
-} /* SigLevDetFactoryBase::createNamedSigLevDet */
 
-
-SigLevDet::SigLevDet(void)
-  : last_rx_id(Rx::ID_UNKNOWN)
-{
-  
-} /* SigLevDet::SigLevDet */
-
-
-#if 0
-SigLevDet::~SigLevDet(void)
-{
-  
-} /* SigLevDet::~SigLevDet */
-#endif
-
-
-bool SigLevDet::initialize(Async::Config &cfg, const std::string& name,
-                           int sample_rate)
-{
-  if (cfg.getValue(name, "RX_ID", last_rx_id))
-  {
-    force_rx_id = true;
-  }
   return true;
-}
+  
+} /* LocalRxSim:initialize */
 
 
 
@@ -200,13 +169,29 @@ bool SigLevDet::initialize(Async::Config &cfg, const std::string& name,
  *
  ****************************************************************************/
 
-void SigLevDet::updateRxId(char rx_id)
+bool LocalRxSim::audioOpen(void)
 {
-  if (!force_rx_id)
-  {
-    last_rx_id = rx_id;
-  }
-} /* SigLevDet::updateRxId */
+  audio_gen.enable(true);
+  return true;
+} /* LocalRxSim::audioOpen */
+
+
+void LocalRxSim::audioClose(void)
+{
+  audio_gen.enable(false);
+} /* LocalRxSim::audioClose */
+
+
+int LocalRxSim::audioSampleRate(void)
+{
+  return INTERNAL_SAMPLE_RATE;
+} /* LocalRxSim::audioSampleRate */
+
+
+Async::AudioSource *LocalRxSim::audioSource(void)
+{
+  return pacer;
+} /* LocalRxSim::audioSource */
 
 
 

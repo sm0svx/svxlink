@@ -919,10 +919,15 @@ operation is desired, prefix the pin name with an exclamation mark (!).
 Example: GPIO_SQL_PIN=!gpio4
 .TP
 .B SIGLEV_DET
-Choose which type of signal level detector to use. There are two choices,
-"NOISE" or "TONE". The  signal level detector is only needed when using
-multiple receivers in a voter configuration or when using the SIGLEV squelch
-type.
+Choose which type of signal level detector to use. The available choices are:
+"NONE", "NOISE", "TONE" or "SIM". Depending on other configuration there may be
+more choices available. For example, if a Ddr receiver is used there will also
+be a DDR signal level detector available.  The  signal level detector is only
+needed when using multiple receivers in a voter configuration or when using the
+SIGLEV squelch type.
+
+Type NONE disable the signal level detector. This may be used if no signal
+level detector is needed.
 
 Type NOISE use a bandpass filter in the range of 5 - 5.5kHz
 (CARD_SAMPLE_RATE >= 16000) or a highpass filter at 3.5kHz
@@ -944,6 +949,11 @@ moment. On the remote receiver side an Atmel AVR ATmega8 is used to map the
 signal level voltage to tone frequencies.
 Use the TONE_SIGLEV_MAP configuration variable to map each tone to a 
 corresponding signal level value in between 0 - 100.
+
+Type SIM is a simulated signal level detector that can be used to debug
+problems in the SvxLink software. Use the SIGLEV_MIN, SIGLEV_MAX,
+SIGLEV_DEFAULT, SIGLEV_TOGGLE_INTERVAL and SIGLEV_RAND_INTERVAL configuration
+variables to configure the simulator.
 .TP
 .B HID_DEVICE
 This parameter defines the device your hidraw adapter is connected to. This 
@@ -1007,6 +1017,24 @@ signal level detector using the SIGLEV_SLOPE and SIGLEV_OFFSET configuration
 variables. The signal level detector should normally be calibrated so that full
 signal strength is 100 and no signal is 0. Depending on your background noise
 level a good value for this configuration variable is between 1 and 10.
+.TP
+.B SIGLEV_MIN
+The minimum signal level used by SIM signal level detector.
+.TP
+.B SIGLEV_MAX
+The maximum signal level used by SIM signal level detector.
+.TP
+.B SIGLEV_DEFAULT
+The default signal level set on startup by the SIM signal level detector.
+.TP
+.B SIGLEV_TOGGLE_INTERVAL
+The interval, in millisecods, that the SIM signal level detector will use to
+toggle between the maximum and the minimum signal levels.
+.TP
+.B SIGLEV_RAND_INTERVAL
+The interval, in milliseconds, that the SIM signal level detector will use
+between randomizing a new signal level value. At each interval, the simulator
+will randomly either increase or decrease the signal level with one step.
 .TP
 .B DEEMPHASIS
 Apply a deemphasis filter on received audio. The deemphasis filter is used when
@@ -1309,6 +1337,20 @@ values are in the range -10 to 50dB.
 If PEAK_METER is set to 1, a warning will be printed every time the tuner is
 driven into distorsion. If it happens too often the gain should be lowered.  At
 most, one warning per second will be printed.
+.
+.SS LocalSim Receiver Section
+.
+A simulated local receiver can be used to debug problems in the SvxLink software. The only thing that this very simple simulator does is to play a tone. The generated tone can be controlled using some configuration variables.
+.TP
+.B SIM_WAVEFORM
+Set the waveform to use; SIN=sine wave, SQUARE=square wave.
+.TP
+.B SIM_TONE_FQ
+Set the frequency of the tone in Hz.
+.TP
+.B SIM_TONE_PWR
+Set the tone power in dB. 0dB corresponds to the power in a full-scale sine
+wave.
 .
 .SS Voter Section
 .

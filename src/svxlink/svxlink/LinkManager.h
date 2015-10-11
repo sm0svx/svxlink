@@ -282,8 +282,9 @@ class LinkManager : public sigc::trackable
     LogicConSet current_cons;
     SourceMap   sources;
     SinkMap     sinks;
+    bool        all_logics_started;
 
-    LinkManager(void) {};
+    LinkManager(void) : all_logics_started(false) {};
     LinkManager(const LinkManager&);
     ~LinkManager(void) {};
 

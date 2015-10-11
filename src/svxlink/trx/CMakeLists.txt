@@ -16,7 +16,7 @@ set(LIBSRC
   PttGpio.cpp PttSerialPin.cpp PttPty.cpp
   PtyDtmfDecoder.cpp LocalRxBase.cpp Ddr.cpp RtlSdr.cpp RtlTcp.cpp
   WbRxRtlSdr.cpp SigLevDet.cpp SigLevDetDdr.cpp
-  SvxSwDtmfDecoder.cpp
+  SvxSwDtmfDecoder.cpp LocalRxSim.cpp SigLevDetSim.cpp
   AfskDtmfDecoder.cpp SigLevDetAfsk.cpp
 )
 include (CheckSymbolExists)

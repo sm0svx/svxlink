@@ -73,6 +73,18 @@
   of the user who started the process rather than using the home directory
   of the target user.
 
+* Add simulator for local receivers and signal level detectors. These
+  simulators can be used to debug problems in SvxLink.
+
+
+
+ 1.4.2 -- 06 jun 2015
+----------------------
+
+* Bugfix: The logic linking would cause a crash under some circumstances.
+  For example SvxLink would crash on startup if link TIMEOUT was set and the
+  startup Tcl function was modified to play an audio clip.
+
 
 
  1.4.1 -- 30 apr 2015
