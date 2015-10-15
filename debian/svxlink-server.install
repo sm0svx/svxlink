@@ -7,6 +7,7 @@ usr/share/svxlink/*
 var/spool/svxlink/*
 etc/default/svxlink
 etc/svxlink/svxlink.conf
+etc/svxlink/svxlink_gpio.conf
 etc/svxlink/svxlink.d/*
 etc/svxlink/TclVoiceMail.conf
 etc/svxlink/.procmailrc
