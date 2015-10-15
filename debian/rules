@@ -10,7 +10,7 @@ LDFLAGS:=$(shell dpkg-buildflags --get LDFLAGS)
 
 export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
-export QT_SELECT=qt5
+export QT_SELECT=qt5 #Pkgs use QT5 by default
 
 # The other tricks didn't work
 # See https://wiki.debian.org/Hardening#Notes_for_packages_using_CMake
