@@ -1,11 +1,11 @@
-lib/systemd/system/*
+lib/systemd/system/svxlink.service
 usr/bin/svxlink
 usr/bin/siglevdetcal
 usr/sbin/*
 usr/lib/svxlink/*
 usr/share/svxlink/*
 var/spool/svxlink/*
-etc/default/*
+etc/default/svxlink
 etc/svxlink/svxlink.conf
 etc/svxlink/svxlink.d/*
 etc/svxlink/TclVoiceMail.conf
