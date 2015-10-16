@@ -1,10 +1,11 @@
-;;;;; Author: Richard Neese<kb3vgw@gmail.com>ls /usr/lib
+;;;;; Author: Richard Neese<kb3vgw@gmail.com>
 
 [Unit]
 Description=svxlink repeater control software
 After=network.target remote-fs.target syslog.target time.target
 
 [Service]
+;;; Type=Notify
 EnvironmentFile=/etc/default/svxlink
 PIDFile=/run/svxlink.pid
 ExecStartPre=@CMAKE_INSTALL_PREFIX@/sbin/gpio_setup.sh
@@ -16,7 +17,7 @@ ExecStopPost=@CMAKE_INSTALL_PREFIX@/sbin/gpio_tear_down.sh
 Restart=on-failure
 TimeoutStartSec=60
 WatchdogSec=@SVX_WatchdogSec@
-NotifyAccess=main
+;;; NotifyAccess=main
 LimitCORE=infinity
 WorkingDirectory=/etc/svxlink
 
