@@ -7,7 +7,7 @@ After=network.target remote-fs.target syslog.target time.target
 [Service]
 EnvironmentFile=/etc/default/remotetrx
 PIDFile=/run/remotetrx.pid
-RuntimeDirectory=svxlink
+RuntimeDirectory=/run
 ExecStartPre=-touch /var/log/remotetrx
 ExecStartPre=-chmod $User /var/log/remotetrx
 ExecStart=/bin/sh -c '@CMAKE_INSTALL_PREFIX@/bin/remotetrx --pidfile=/run/remotetrx.pid --logfile=/var/log/remotetrx --cfgfile=$CFGFILE --runasuser=$RUNASUSER'
@@ -17,7 +17,7 @@ TimeoutStartSec=60
 WatchdogSec=@SVX_WatchdogSec@
 NotifyAccess=main
 LimitCORE=infinity
-WorkingDirectory=/run
+WorkingDirectory=/etc/svxlink
 
 [Install]
 WantedBy=multi-user.target
