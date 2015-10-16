@@ -54,7 +54,11 @@ configuration variables are described section for section.
 The GLOBAL section contains application global configuration data.
 .TP
 .B MODULE_PATH
-Specify where the SvxLink modules can be found. The default is /usr/lib/svxlink 
+Specify where the SvxLink modules can be found. If MODULE_PATH is not
+specified, the standard search paths for library files will be used. If that
+also fails a hardcoded default will be used. What that default is depend on the
+architecture but typically on a x86_64 system it is /usr/lib64/svxlink.
+Leaving this variable unset should work in most cases.
 .TP
 .B LOGICS
 Specify a comma separated list of logic cores that should be created. The logic core is

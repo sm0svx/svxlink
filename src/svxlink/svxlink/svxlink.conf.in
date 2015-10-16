@@ -5,7 +5,7 @@
 ###############################################################################
 
 [GLOBAL]
-MODULE_PATH=@SVX_MODULE_INSTALL_DIR@
+#MODULE_PATH=@SVX_MODULE_INSTALL_DIR@
 LOGICS=SimplexLogic
 CFG_DIR=svxlink.d
 TIMESTAMP_FORMAT="%c"
