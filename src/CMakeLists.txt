@@ -39,6 +39,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 # Optional parts
 option(USE_QT "Build Qt applications and libs" ON)
 option(BUILD_STATIC_LIBS "Build static libraries in addition to dynamic" OFF)
+option(WITH_SYSTEMD "Set to ON to create unit files and systemd check on svx-daemon startup" ON )
+#option(WITH_SYSTEMD_WATCHDOG  "Set to ON to use the systemd watchdog in svx-daemon" OFF)
 
 # The sample rate used internally in SvxLink
 if(NOT DEFINED INTERNAL_SAMPLE_RATE)
@@ -299,6 +301,26 @@ function(install_if_not_exists src dest)
   ")
 endfunction(install_if_not_exists)
 
+#############################################################################
+#Systemd Enviroment 
+#############################################################################
+
+if(WITH_SYSTEMD) # OR WITH_SYSTEMD_WATCHDOG) (watchdog in the works)
+    #if(WITH_SYSTEMD)
+        #add_definitions( -DSVX_SYSTEMD_ENABLE)
+    #endif(WITH_SYSTEMD)
+    
+    #if(WITH_SYSTEMD_WATCHDOG)
+        #add_definitions( -DSVX_SYSTEMD_WATCHDOG_ENABLE)
+    #endif(WITH_SYSTEMD_WATCHDOG)
+    
+    #set( systemd_SRCS ${CMAKE_SOURCE_DIR}/systemd/3rdparty/sd-daemon.c)
+    
+    add_subdirectory( systemd )
+endif(WITH_SYSTEMD ) #OR WITH_SYSTEMD_WATCHDOG)
+
+message( STATUS "WITH_SYSTEMD = ${WITH_SYSTEMD}" )
+#message( STATUS "WITH_SYSTEMD_WATCHDOG = ${WITH_SYSTEMD_WATCHDOG}" )
 
 ##############################################################################
 # Main execution starts here
@@ -331,4 +353,3 @@ if(USE_QT)
   add_subdirectory(qtel)
 endif(USE_QT)
 add_subdirectory(doc)
-

@@ -1,0 +1,23 @@
+;;;;; Author: Richard Neese<kb3vgw@gmail.com>
+
+[Unit]
+Description=svxlink remote repeater control software
+After=network.target remote-fs.target syslog.target time.target
+
+[Service]
+EnvironmentFile=/etc/default/remotetrx
+PIDFile=/run/remotetrx.pid
+#RuntimeDirectory=
+ExecStartPre=-touch /var/log/remotetrx
+ExecStartPre=-chmod $User /var/log/remotetrx
+ExecStart=@CMAKE_INSTALL_PREFIX@/bin/remotetrx --pidfile=/run/remotetrx.pid --logfile=/var/log/remotetrx --cfgfile=$CFGFILE --runasuser=$RUNASUSER
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+TimeoutStartSec=60
+WatchdogSec=@SVX_WatchdogSec@
+NotifyAccess=main
+LimitCORE=infinity
+WorkingDirectory=/run
+
+[Install]
+WantedBy=multi-user.target
