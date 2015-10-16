@@ -3,8 +3,11 @@
 # Configuration file for the RemoteTrx startup script /etc/init.d/remotetrx
 #
 #############################################################################
-#Enable service to start
-START=no
+# The log file to use
+LOGFILE=/var/log/remotetrx
+
+# The PID file to use
+PIDFILE=/run/remotetrx.pid
 
 # The user to run the SvxLink server as
 RUNASUSER=svxlink

@@ -3,8 +3,11 @@
 # Configuration file for the SvxLink startup script /etc/init.d/svxlink
 #
 #############################################################################
-#Enable service to start
-START=no
+# The log file to use
+LOGFILE=/var/log/svxlink
+
+# The PID file to use
+PIDFILE=/run/svxlink.pid
 
 # The user to run the SvxLink server as
 RUNASUSER=svxlink
