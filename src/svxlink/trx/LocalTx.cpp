@@ -238,7 +238,7 @@ class SineGenerator : public Async::AudioSource
  ****************************************************************************/
 
 LocalTx::LocalTx(Config& cfg, const string& name)
-  : Tx(name), cfg(cfg), audio_io(0), is_transmitting(false), txtot(0),
+  : Tx(name), cfg(cfg), audio_io(0), txtot(0),
     tx_timeout_occured(false), tx_timeout(0), sine_gen(0), ctcss_enable(false),
     dtmf_encoder(0), selector(0), dtmf_valve(0), mixer(0), hdlc_framer(0),
     fsk_mod(0), /*fsk_valve(0),*/ input_handler(0), ptt_ctrl(0),
@@ -390,7 +390,8 @@ bool LocalTx::initialize(void)
     }
     else if (list_len != 0)
     {
-      cerr << "*** ERROR: Config variable " << name() << "/TONE_SIGLEV_MAP must "
+      cerr << "*** ERROR: Config variable " << name()
+           << "/TONE_SIGLEV_MAP must "
            << "contain exactly ten comma separated siglev values.\n";
     }
   }
@@ -703,7 +704,7 @@ void LocalTx::setTxCtrlMode(Tx::TxCtrlMode mode)
 void LocalTx::enableCtcss(bool enable)
 {
   ctcss_enable = enable;
-  if (is_transmitting)
+  if (isTransmitting())
   {
     sine_gen->enable(enable);
   }
@@ -843,21 +844,19 @@ void LocalTx::setModulation(Modulation::Type mod)
 
 void LocalTx::transmit(bool do_transmit)
 {
-  if (do_transmit == is_transmitting)
+  if (do_transmit == isTransmitting())
   {
     return;
   }
   
-  cout << name() << ": Turning the transmitter " << (do_transmit ? "ON" : "OFF")
-       << endl;
-  
-  is_transmitting = do_transmit;
+  //cout << name() << ": Turning the transmitter " << (do_transmit ? "ON" : "OFF")
+  //     << endl;
   
   if (do_transmit)
   {
     fsk_trailer_transmitted = false;
 
-    transmitterStateChange(true);
+    setIsTransmitting(true);
 
     if (!audio_io->open(AudioIO::MODE_WR))
     {
@@ -901,10 +900,10 @@ void LocalTx::transmit(bool do_transmit)
     txtot = 0;
     tx_timeout_occured = false;
 
-    transmitterStateChange(false);
+    setIsTransmitting(false);
   }
   
-  if (!setPtt(is_transmitting && !tx_timeout_occured, true))
+  if (!setPtt(isTransmitting() && !tx_timeout_occured, true))
   {
     perror("setPin");
   }

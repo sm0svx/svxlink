@@ -96,6 +96,9 @@
   Also it's now possible to give the CW::play function temporary values for CW
   speed, frequency and amplitude.
 
+* The MultiTx now "mute" the logging printouts from its transmitters so that
+  only one "Turning the transmitter ON/OFF" is displayed instead of one for
+  each transmitter.
 
 
  1.6.1 -- 21 Jan 2018
