@@ -1452,6 +1452,13 @@ The hostname or IP address of the remote receiver host.
 .B TCP_PORT
 The TCP port that RemoteTrx listen on. The default is 5210.
 .TP
+.B LOG_DISCONNECTS_ONCE
+Set this configuration variable to 1 to suppress logging of multiple disconnect
+messages in a row, like when there is no RemoteTrx running on the other side.
+Thus, failed reconnect attempts will not be logged at all. This may be of use
+if a RemoteTrx is missing for a long time or if it's only used from time to
+time. The default is 0 which means that all reconnect attempts will be logged.
+.TP
 .B AUTH_KEY
 This is the authentication key (password) to use to connect to the RemoteTrx
 server. The same key have to be specified in the RemoteTrx configuration.
@@ -1739,6 +1746,13 @@ The hostname or IP address of the remote transmitter host.
 .TP
 .B TCP_PORT
 The TCP port that RemoteTrx listen on. The default is 5210.
+.TP
+.B LOG_DISCONNECTS_ONCE
+Set this configuration variable to 1 to suppress logging of multiple disconnect
+messages in a row, like when there is no RemoteTrx running on the other side.
+Thus, failed reconnect attempts will not be logged at all. This may be of use
+if a RemoteTrx is missing for a long time or if it's only used from time to
+time. The default is 0 which means that all reconnect attempts will be logged.
 .TP
 .B AUTH_KEY
 This is the authentication key (password) to use to connect to the RemoteTrx

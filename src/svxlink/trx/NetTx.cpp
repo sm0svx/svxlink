@@ -119,9 +119,10 @@ using namespace NetTrxMsg;
  ****************************************************************************/
 
 NetTx::NetTx(Config &cfg, const string& name)
-  : cfg(cfg), name(name), tcp_con(0), is_transmitting(false),
-    mode(Tx::TX_OFF), ctcss_enable(false), pacer(0), is_connected(false),
-    pending_flush(false), unflushed_samples(false), audio_enc(0)
+  : cfg(cfg), name(name), tcp_con(0), log_disconnects_once(false),
+    log_disconnect(true), is_transmitting(false), mode(Tx::TX_OFF),
+    ctcss_enable(false), pacer(0), is_connected(false), pending_flush(false),
+    unflushed_samples(false), audio_enc(0)
 {
 } /* NetTx::NetTx */
 
@@ -150,6 +151,8 @@ bool NetTx::initialize(void)
   string udp_port(NET_TRX_DEFAULT_UDP_PORT);
   cfg.getValue(name, "UDP_PORT", udp_port);
   
+  cfg.getValue(name, "LOG_DISCONNECTS_ONCE", log_disconnects_once);
+
   string audio_enc_name;
   cfg.getValue(name, "CODEC", audio_enc_name);
   if (audio_enc_name.empty())
@@ -276,6 +279,7 @@ void NetTx::connectionReady(bool is_ready)
         << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << "\n";
     
     is_connected = true;
+    log_disconnect = true;
     
     MsgSetTxCtrlMode *mode_msg = new MsgSetTxCtrlMode(mode);
     sendMsg(mode_msg);
@@ -303,12 +307,16 @@ void NetTx::connectionReady(bool is_ready)
   }
   else
   {
-    cout << name << ": Disconnected from remote transmitter at "
-        << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << ": "
-        << TcpConnection::disconnectReasonStr(tcp_con->disconnectReason())
-        << "\n";
+    if (log_disconnect)
+    {
+      cout << name << ": Disconnected from remote transmitter at "
+          << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << ": "
+          << TcpConnection::disconnectReasonStr(tcp_con->disconnectReason())
+          << "\n";
+    }
     
     is_connected = false;
+    log_disconnect = !log_disconnects_once;
   
     if (pending_flush)
     {

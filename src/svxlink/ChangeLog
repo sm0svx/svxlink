@@ -88,6 +88,11 @@
   configuration variable and let SvxLink determine what to use.
   The old LIB_SUFFIX CMake variable is not used anymore.
 
+* New configuration variable in svxlink.conf for remote transmitters and
+  receivers, LOG_DISCONNECTS_ONCE, that can be set to 1 to not log reconnect
+  attempts.  This may be of use if a RemoteTrx is missing for a long time or if
+  it's only used from time to time.
+
 
 
  1.4.2 -- 06 jun 2015
