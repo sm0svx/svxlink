@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -178,7 +178,6 @@ class NetTx : public Tx
 
   private:
     Async::Config     	  &cfg;
-    std::string       	  name;
     NetTrxTcpClient   	  *tcp_con;
     bool                  log_disconnects_once;
     bool                  log_disconnect;
@@ -196,7 +195,6 @@ class NetTx : public Tx
     void sendMsg(NetTrxMsg::Msg *msg);
     void writeEncodedSamples(const void *buf, int size);
     void flushEncodedSamples(void);
-    void setIsTransmitting(bool is_transmitting);
     void allEncodedSamplesFlushed(void);
 
 

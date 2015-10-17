@@ -93,6 +93,10 @@
   attempts.  This may be of use if a RemoteTrx is missing for a long time or if
   it's only used from time to time.
 
+* The MultiTx now "mute" the logging printouts from its transmitters so that
+  only one "Turning the transmitter ON/OFF" is displayed instead of one for
+  each transmitter.
+
 
 
  1.4.2 -- 06 jun 2015

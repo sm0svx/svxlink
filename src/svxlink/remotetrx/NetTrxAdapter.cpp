@@ -6,7 +6,7 @@
 
 \verbatim
 RemoteTrx - A remote receiver for the SvxLink server
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -174,7 +174,7 @@ class TxAdapter : public Tx, public AudioSource
 {
   public:
     TxAdapter(void)
-      : tx_ctrl_mode(Tx::TX_OFF), is_transmitting(false), is_idle(true)
+      : Tx("TxAdapter"), tx_ctrl_mode(Tx::TX_OFF), is_idle(true)
     {
     }
 
@@ -223,15 +223,6 @@ class TxAdapter : public Tx, public AudioSource
     }
     
     /**
-     * @brief 	Check if the transmitter is transmitting
-     * @return	Return \em true if transmitting or else \em false
-     */
-    virtual bool isTransmitting(void) const
-    {
-      return is_transmitting;
-    }
-    
-    /**
      * @brief 	Enable/disable CTCSS on TX
      * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
      */
@@ -253,9 +244,8 @@ class TxAdapter : public Tx, public AudioSource
 
     int writeSamples(const float *samples, int count)
     {
-      //cout << "TxAdapter::writeSamples\n";
       is_idle = false;
-      if ((tx_ctrl_mode == Tx::TX_AUTO) && !is_transmitting)
+      if ((tx_ctrl_mode == Tx::TX_AUTO) && !isTransmitting())
       {
       	transmit(true);
       }
@@ -265,7 +255,6 @@ class TxAdapter : public Tx, public AudioSource
     
     void flushSamples(void)
     {
-      //cout << "TxAdapter::flushSamples\n";
       sinkFlushSamples();
     }
     
@@ -276,10 +265,9 @@ class TxAdapter : public Tx, public AudioSource
     
     void allSamplesFlushed(void)
     {
-      //cout << "TxAdapter::allSamplesFlushed\n";
       is_idle = true;
       sourceAllSamplesFlushed();
-      if ((tx_ctrl_mode == Tx::TX_AUTO) && is_transmitting)
+      if ((tx_ctrl_mode == Tx::TX_AUTO) && isTransmitting())
       {
       	transmit(false);
       }
@@ -288,24 +276,14 @@ class TxAdapter : public Tx, public AudioSource
     signal<void, bool> sigTransmit;
     signal<void, char, int> sendDtmfDigit;
     
-    
-    
   private:
     Tx::TxCtrlMode  tx_ctrl_mode;
-    bool      	    is_transmitting;
     bool      	    is_idle;
 
     void transmit(bool do_transmit)
     {
-      //cout << "TxAdapter::transmit: do_transmit=" << do_transmit << endl;
-      if (do_transmit == is_transmitting)
-      {
-      	return;
-      }
-      
-      is_transmitting = do_transmit;
+      setIsTransmitting(do_transmit);
       sigTransmit(do_transmit);
-      transmitterStateChange(do_transmit);
     }
     
 }; /* class TxAdapter */
