@@ -5,6 +5,8 @@
 
 * Updated Hungarian translation by HG0MV.
 
+* Now possible to bind the communication to a specific network interface.
+
 
 
  1.2.1 -- 30 jun 2014
