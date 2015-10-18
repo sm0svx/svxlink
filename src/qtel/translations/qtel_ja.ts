@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="ja_JP">
+<TS version="2.1" language="ja_JP">
 <context>
     <name>ComDialog</name>
     <message>
@@ -709,6 +709,18 @@ Message</source>
     <message>
         <source>EchoLink proxy enabled but no server given</source>
         <translation>エコーリンクプロキシ設定は有効だが、サーバー側が問題</translation>
+    </message>
+    <message>
+        <source>Bind address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A bind address can be specified to force Qtel to use a specific network interface if your computer has more than one. Specify the IP address of the interface to bind to.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>
