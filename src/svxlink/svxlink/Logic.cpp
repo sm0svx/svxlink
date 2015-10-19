@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <dlfcn.h>
+#include <link.h>
 #include <sigc++/bind.h>
 #include <sys/time.h>
 
@@ -73,6 +74,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioDebugger.h>
 #include <AsyncAudioRecorder.h>
 #include <common.h>
+#include <config.h>
 
 
 /****************************************************************************
@@ -1082,10 +1084,7 @@ void Logic::loadModule(const string& module_cfg_name)
        << name() << "\"\n";
 
   string module_path;
-  if (!cfg().getValue("GLOBAL", "MODULE_PATH", module_path))
-  {
-    module_path = "";
-  }
+  cfg().getValue("GLOBAL", "MODULE_PATH", module_path);
 
   string plugin_name = module_cfg_name;
   cfg().getValue(module_cfg_name, "NAME", plugin_name);
@@ -1095,21 +1094,49 @@ void Logic::loadModule(const string& module_cfg_name)
 
   cfg().getValue(module_cfg_name, "PLUGIN_NAME", plugin_name);
 
-  string plugin_filename;
+  void *handle = NULL;
+  string plugin_filename = "Module" + plugin_name + ".so";
   if (!module_path.empty())
   {
-    plugin_filename = module_path + "/";
+    string plugin_abs_filename = module_path + "/" + plugin_filename;
+    handle = dlopen(plugin_abs_filename.c_str(), RTLD_NOW);
+    if (handle == NULL)
+    {
+      cerr << "*** ERROR: Failed to load module "
+        << module_cfg_name.c_str() << " into logic " << name() << ": "
+        << dlerror() << endl;
+      return;
+    }
   }
-  plugin_filename +=  "Module" + plugin_name + ".so";
-
-  void *handle = dlopen(plugin_filename.c_str(), RTLD_NOW);
-  if (handle == NULL)
+  else
   {
-    cerr << "*** ERROR: Failed to load module "
-      	 << module_cfg_name.c_str() << " into logic " << name() << ": "
+    handle = dlopen(plugin_filename.c_str(), RTLD_NOW);
+    if (handle == NULL)
+    {
+      string plugin_abs_filename = string(SVX_MODULE_INSTALL_DIR "/")
+                                   + plugin_filename;
+      handle = dlopen(plugin_abs_filename.c_str(), RTLD_NOW);
+      if (handle == NULL)
+      {
+        cerr << "*** ERROR: Failed to load module "
+          << module_cfg_name.c_str() << " into logic " << name() << ": "
+          << dlerror() << endl;
+        return;
+      }
+    }
+  }
+
+  struct link_map *link_map;
+  if (dlinfo(handle, RTLD_DI_LINKMAP, &link_map) == -1)
+  {
+    cerr << "*** ERROR: Could not read information for module "
+      	 << module_cfg_name.c_str() << " in logic " << name() << ": "
          << dlerror() << endl;
+    dlclose(handle);
     return;
   }
+  cout << "\tFound " << link_map->l_name << endl;
+
   Module::InitFunc init = (Module::InitFunc)dlsym(handle, "module_init");
   if (init == NULL)
   {

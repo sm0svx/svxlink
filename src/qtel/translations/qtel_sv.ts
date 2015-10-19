@@ -713,5 +713,17 @@ meddelande</translation>
         <source>EchoLink proxy enabled but no server given</source>
         <translation>EchoLink proxy aktiverad men ingen server angiven</translation>
     </message>
+    <message>
+        <source>Bind address</source>
+        <translation>Bindningsadress</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A bind address can be specified to force Qtel to use a specific network interface if your computer has more than one. Specify the IP address of the interface to bind to.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;En bindningsadress kan användas för att tvinga Qtel att använda ett visst specifikt nätverksgränssnitt. Välj den IP-adress i listan som motsvarar det nätverksgränssnitt som du vill binda till.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Ingen</translation>
+    </message>
 </context>
 </TS>
