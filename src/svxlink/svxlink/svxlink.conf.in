@@ -5,7 +5,7 @@
 ###############################################################################
 
 [GLOBAL]
-MODULE_PATH=@SVX_MODULE_INSTALL_DIR@
+#MODULE_PATH=@SVX_MODULE_INSTALL_DIR@
 LOGICS=SimplexLogic
 CFG_DIR=svxlink.d
 TIMESTAMP_FORMAT="%c"
@@ -117,6 +117,7 @@ TRANSMITTERS=Tx1,Tx2,Tx3
 TYPE=Net
 HOST=remote.rx.host
 TCP_PORT=5210
+#LOG_DISCONNECTS_ONCE=0
 AUTH_KEY="Change this key now!"
 CODEC=S16
 #SPEEX_ENC_FRAMES_PER_PACKET=4
@@ -136,6 +137,7 @@ CODEC=S16
 TYPE=Net
 HOST=remote.tx.host
 TCP_PORT=5210
+#LOG_DISCONNECTS_ONCE=0
 AUTH_KEY="Change this key now!"
 CODEC=S16
 #SPEEX_ENC_FRAMES_PER_PACKET=4

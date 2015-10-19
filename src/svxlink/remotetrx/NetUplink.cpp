@@ -160,6 +160,28 @@ NetUplink::~NetUplink(void)
 
 bool NetUplink::initialize(void)
 {
+    // Initialize the GCrypt library if not already initialized
+  if (!gcry_control(GCRYCTL_INITIALIZATION_FINISHED_P))
+  {
+    gcry_check_version(NULL);
+    gcry_error_t err;
+    err = gcry_control(GCRYCTL_DISABLE_SECMEM, 0);
+    if (err != GPG_ERR_NO_ERROR)
+    {
+      cerr << "*** ERROR: Failed to initialize the Libgcrypt library: "
+           << gcry_strsource(err) << "/" << gcry_strerror(err) << endl;
+      return false;
+    }
+      // Tell Libgcrypt that initialization has completed
+    err = gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
+    if (err != GPG_ERR_NO_ERROR)
+    {
+      cerr << "*** ERROR: Failed to initialize the Libgcrypt library: "
+           << gcry_strsource(err) << "/" << gcry_strerror(err) << endl;
+      return false;
+    }
+  }
+
   string listen_port;
   if (!cfg.getValue(name, "LISTEN_PORT", listen_port))
   {
