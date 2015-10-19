@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -156,6 +156,7 @@ class Settings : public sigc::trackable
     const QString& directoryServers(void) const { return m_directory_servers; }
     int listRefreshTime(void) const { return m_list_refresh_time; }
     bool startAsBusy(void) const { return m_start_as_busy; }
+    const QString& bindAddress(void) const { return m_bind_address; }
     bool proxyEnabled(void) const { return m_proxy_enabled; }
     const QString& proxyServer(void) const { return m_proxy_server; }
     uint16_t proxyPort(void) const { return m_proxy_port; }
@@ -222,6 +223,7 @@ class Settings : public sigc::trackable
     QString   	            m_directory_servers;
     int       	            m_list_refresh_time;
     bool      	            m_start_as_busy;
+    QString   	            m_bind_address;
     bool                    m_proxy_enabled;
     QString                 m_proxy_server;
     uint16_t                m_proxy_port;

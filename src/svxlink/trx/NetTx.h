@@ -180,6 +180,8 @@ class NetTx : public Tx
     Async::Config     	  &cfg;
     std::string       	  name;
     NetTrxTcpClient   	  *tcp_con;
+    bool                  log_disconnects_once;
+    bool                  log_disconnect;
     bool      	      	  is_transmitting;
     Tx::TxCtrlMode    	  mode;
     bool      	      	  ctcss_enable;
