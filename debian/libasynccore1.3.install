@@ -1,1 +1,1 @@
-usr/lib/libasynccore.so.*
+usr/lib/*/libasynccore.so.*

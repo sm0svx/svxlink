@@ -1,5 +1,5 @@
-usr/lib/libasynccore.so
-usr/lib/libasynccore.a
+usr/lib/*/libasynccore.so
+usr/lib/*/libasynccore.a
 usr/include/svxlink/AsyncApplication.h
 usr/include/svxlink/AsyncConfig.h
 usr/include/svxlink/AsyncDnsLookup.h

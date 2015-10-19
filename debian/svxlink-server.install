@@ -2,7 +2,7 @@ lib/systemd/system/svxlink.service
 usr/bin/svxlink
 usr/bin/siglevdetcal
 usr/sbin/*
-usr/lib/svxlink/*
+usr/lib/*/svxlink/*
 usr/share/svxlink/*
 var/spool/svxlink/*
 etc/default/svxlink
