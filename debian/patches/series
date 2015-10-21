@@ -1,5 +1,0 @@
-# quilt series file
-
-fix-install-locations.patch
-use-default-compile-flags.patch
-enable-verbose-output.patch
