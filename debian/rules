@@ -25,13 +25,13 @@ export DEB_BUILD_HARDENING=1
 	--builddirectory=build 
 
 override_dh_auto_configure:
-     dh_auto_configure -- \
-     --with_no_soname \
-     -DBUILD_STATIC_LIBS=YES  \
-     -DCMAKE_VERBOSE_MAKEFILE=ON \
-     -DSYSCONF_INSTALL_DIR=/etc \
-     -DLOCAL_STATE_DIR=/var \
-     -DUSE_DEFAULT_COMPILER_FLAGS=OFF
+	dh_auto_configure -- \
+	--with_no_soname \
+	-DBUILD_STATIC_LIBS=YES  \
+	-DCMAKE_VERBOSE_MAKEFILE=ON \
+	-DSYSCONF_INSTALL_DIR=/etc \
+	-DLOCAL_STATE_DIR=/var \
+	-DUSE_DEFAULT_COMPILER_FLAGS=OFF
 
 .PHONY: override_dh_auto_clean
 override_dh_auto_clean:
