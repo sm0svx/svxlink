@@ -30,7 +30,8 @@ override_dh_auto_configure:
      -DBUILD_STATIC_LIBS=YES  \
      -DCMAKE_VERBOSE_MAKEFILE=ON \
      -DSYSCONF_INSTALL_DIR=/etc \
-     -DLOCAL_STATE_DIR=/var
+     -DLOCAL_STATE_DIR=/var \
+     -DUSE_DEFAULT_COMPILER_FLAGS=OFF
      
 
 .PHONY: override_dh_auto_clean
