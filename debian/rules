@@ -23,7 +23,7 @@ export DEB_BUILD_HARDENING=1
 	--buildsystem=cmake \
 	--sourcedirectory=src \
 	--builddirectory=build 
-	
+
 override_dh_auto_configure:
      dh_auto_configure -- \
      --with_no_soname \
@@ -32,7 +32,6 @@ override_dh_auto_configure:
      -DSYSCONF_INSTALL_DIR=/etc \
      -DLOCAL_STATE_DIR=/var \
      -DUSE_DEFAULT_COMPILER_FLAGS=OFF
-     
 
 .PHONY: override_dh_auto_clean
 override_dh_auto_clean:
