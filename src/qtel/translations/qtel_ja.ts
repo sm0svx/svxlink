@@ -712,15 +712,15 @@ Message</source>
     </message>
     <message>
         <source>Bind address</source>
-        <translation type="unfinished"></translation>
+        <translation>バインディングアドレス</translation>
     </message>
     <message>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A bind address can be specified to force Qtel to use a specific network interface if your computer has more than one. Specify the IP address of the interface to bind to.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;あなたのコンピュータに一つ以上のネットワークインタフェースがあるなら、Qtelが使うようにバインディングアドレスが指定できます。バインドするインタフェースのIPアドレスを指定してください。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <source>None</source>
-        <translation type="unfinished"></translation>
+        <translation>無指定</translation>
     </message>
 </context>
 </TS>
