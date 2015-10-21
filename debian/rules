@@ -23,6 +23,9 @@ export DEB_BUILD_HARDENING=1
 	--buildsystem=cmake \
 	--sourcedirectory=src \
 	--builddirectory=build 
+	
+override_dh_auto_configure:
+     dh_auto_configure -- --with_no_soname 
 
 .PHONY: override_dh_auto_clean
 override_dh_auto_clean:
