@@ -136,7 +136,7 @@ WbRxRtlSdr *WbRxRtlSdr::instance(Async::Config &cfg, const string &name)
 
 
 WbRxRtlSdr::WbRxRtlSdr(Async::Config &cfg, const string &name)
-  : auto_tune_enabled(true), m_name(name), xvrtr_offset(0)
+  : auto_tune_enabled(true), m_name(name), xvrtr_offset(0.0)
 {
   //cout << "### Initializing WBRX " << name << endl;
 
@@ -183,7 +183,7 @@ WbRxRtlSdr::WbRxRtlSdr(Async::Config &cfg, const string &name)
     rtl->setFqCorr(fq_corr);
   }
 
-  uint32_t center_fq = 0;
+  double center_fq = 0.0;
   if (cfg.getValue(name, "CENTER_FQ", center_fq))
   {
     //cout << "###   CENTER_FQ   = " << center_fq << "Hz\n";
@@ -215,10 +215,10 @@ WbRxRtlSdr::~WbRxRtlSdr(void)
 } /* WbRxRtlSdr::~WbRxRtlSdr */
 
 
-void WbRxRtlSdr::setCenterFq(uint32_t fq)
+void WbRxRtlSdr::setCenterFq(double fq)
 {
   //cout << "### WbRxRtlSdr::setCenterFq: fq=" << fq << endl;
-  rtl->setCenterFq(fq + xvrtr_offset);
+  rtl->setCenterFq(static_cast<uint32_t>(round(fq + xvrtr_offset)));
   for (Ddrs::iterator it=ddrs.begin(); it!=ddrs.end(); ++it)
   {
     Ddr *ddr = (*it);
@@ -227,9 +227,9 @@ void WbRxRtlSdr::setCenterFq(uint32_t fq)
 } /* WbRxRtlSdr::setCenterFq */
 
 
-uint32_t WbRxRtlSdr::centerFq(void)
+double WbRxRtlSdr::centerFq(void)
 {
-  return rtl->centerFq() - xvrtr_offset;
+  return static_cast<double>(rtl->centerFq() - xvrtr_offset);
 } /* WbRxRtlSdr::centerFq */
 
 
@@ -343,16 +343,16 @@ void WbRxRtlSdr::findBestCenterFq(void)
     int32_t next_dist = *next - center_fq;
     if ((next == fqs.end()) || (abs(dist) < abs(next_dist)))
     {
-      if (abs(dist) < 12500)
+      if (fabs(dist) < 12500.0)
       {
         int32_t max_move = (rtl->sampleRate() - span) / 2;
         if (dist < 0)
         {
-          center_fq += min(12500+dist, max_move);
+          center_fq += min(12500.0+dist, max_move);
         }
         else
         {
-          center_fq -= min(12500-dist, max_move);
+          center_fq -= min(12500.0-dist, max_move);
         }
       }
     }

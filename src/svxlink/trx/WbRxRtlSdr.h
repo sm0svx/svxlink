@@ -144,13 +144,13 @@ class WbRxRtlSdr : public sigc::trackable
      * @brief   Set the center frequency of the tuner
      * @param   fq The new center frequency, in Hz, to set
      */
-    void setCenterFq(uint32_t fq);
+    void setCenterFq(double fq);
 
     /**
      * @brief   Read the currently set center frequency
      * @returns Returns the currently set tuner frequency in Hz
      */
-    uint32_t centerFq(void);
+    double centerFq(void);
 
     /**
      * @brief   Get the currently set sample rate
@@ -216,7 +216,7 @@ class WbRxRtlSdr : public sigc::trackable
     Ddrs ddrs;
     bool auto_tune_enabled;
     std::string m_name;
-    int xvrtr_offset;
+    double xvrtr_offset;
 
     WbRxRtlSdr(const WbRxRtlSdr&);
     WbRxRtlSdr& operator=(const WbRxRtlSdr&);
