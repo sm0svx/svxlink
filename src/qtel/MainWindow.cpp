@@ -517,6 +517,12 @@ void MainWindow::initEchoLink(void)
     proxy->connect();
   }
 
+  Async::IpAddress bind_ip;
+  if (!settings->bindAddress().isEmpty())
+  {
+    bind_ip = Async::IpAddress(settings->bindAddress().toStdString());
+  }
+
   vector<string> servers;
   SvxLink::splitStr(servers, settings->directoryServers().toStdString(), " ");
   dir = new Directory(
@@ -524,12 +530,13 @@ void MainWindow::initEchoLink(void)
       settings->callsign().toStdString(),
       settings->password().toStdString(),
       settings->location().toStdString(),
-      Async::IpAddress(settings->bindAddress().toStdString()));
+      bind_ip);
   dir->error.connect(mem_fun(*this, &MainWindow::serverError));
   dir->statusChanged.connect(mem_fun(*this, &MainWindow::statusChanged));
   dir->stationListUpdated.connect(
       mem_fun(*this, &MainWindow::callsignListUpdated));
 
+  Dispatcher::setBindAddr(bind_ip);
   Dispatcher *disp = Dispatcher::instance();
   if (disp == 0)
   {
