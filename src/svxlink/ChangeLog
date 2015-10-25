@@ -93,6 +93,11 @@
   attempts.  This may be of use if a RemoteTrx is missing for a long time or if
   it's only used from time to time.
 
+* The CFG_DIR configuration variable read additional config from files in
+  the configured directory. The man-page stated that files starting with a dot
+  were ignored. This was not true but is now. The man-page was also lacking
+  information on that all files not ending in ".conf" are ignored.
+
 
 
  1.4.2 -- 06 jun 2015

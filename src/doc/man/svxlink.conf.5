@@ -71,8 +71,8 @@ behaviour of the logic core is specified.
 Specify the path to a directory that contain additional configuration files.
 If a relative path is specified, the path will be relative to the directory
 where the main configuration file is at. All files in the specified directory
-will be read as additional configuration. Filenames starting with a dot are
-ignored.
+will be read as additional configuration. Filenames starting with a dot (hidden
+files) or not ending in .conf are ignored.
 .TP
 .B TIMESTAMP_FORMAT
 This variable specifies the format of the timestamp that is written in front of

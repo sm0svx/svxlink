@@ -404,7 +404,8 @@ int main(int argc, char **argv)
     while ((dirent = readdir(dir)) != NULL)
     {
       char *dot = strrchr(dirent->d_name, '.');
-      if ((dot == NULL) || (strcmp(dot, ".conf") != 0))
+      if ((dot == NULL) || (dirent->d_name[0] == '.') ||
+          (strcmp(dot, ".conf") != 0))
       {
       	continue;
       }
