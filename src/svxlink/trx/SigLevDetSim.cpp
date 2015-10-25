@@ -112,7 +112,7 @@ SigLevDetSim::SigLevDetSim(void)
   : sample_rate(0), block_idx(0), last_siglev(0), integration_time(1),
     update_interval(0), update_counter(0), siglev_toggle_interval(0),
     siglev_toggle_counter(0), siglev_rand_interval(0), siglev_rand_counter(0),
-    block_size(0), siglev_min(0.0f), siglev_max(100.0f), siglev_default(0.0f),
+    block_size(0), siglev_min(0), siglev_max(100), siglev_default(0),
     seed(next_seed++)
 {
 } /* SigLevDetSim::SigLevDetSim */
@@ -257,11 +257,11 @@ void SigLevDetSim::randNewSiglev(void)
 {
   if ((rand_r(&seed) > RAND_MAX/2) && (last_siglev < siglev_max))
   {
-    last_siglev += 1.0f;
+    last_siglev += 1;
   }
   else if (last_siglev > siglev_min)
   {
-    last_siglev -= 1.0f;
+    last_siglev -= 1;
   }
 } /* SigLevDetSim::randNewSiglev */
 
