@@ -153,13 +153,13 @@ class Tx : public sigc::trackable, public Async::AudioSink
      * @return	Return \em true if transmitting or else \em false
      */
     virtual bool isTransmitting(void) const = 0;
-
+    
     /**
      * @brief 	Enable/disable CTCSS on TX
      * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
      */
     virtual void enableCtcss(bool enable) { }
-
+    
     /**
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send

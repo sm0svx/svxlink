@@ -145,7 +145,7 @@ class Msg
      * @return	Returns the message size
      */
      unsigned size(void) const { return m_size; }
-     
+    
   protected:
   
     /**
@@ -368,7 +368,7 @@ class MsgAudioCodecSelect : public Msg
 	      	    << "MsgAudioCodecSelect message\n";
 	  return;
 	}
-    
+	
 	opts.push_back(std::pair<std::string, std::string>(name, value));
       }
     }
@@ -590,7 +590,7 @@ class MsgEnableCtcss : public Msg
   
   private:
     bool m_enable;
-    
+        
 }; /* MsgEnableCtcss */
 
 
