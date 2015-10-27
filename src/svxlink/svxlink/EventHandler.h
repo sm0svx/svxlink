@@ -239,6 +239,7 @@ class EventHandler : public sigc::trackable
     void doDeactivateModule(Async::Timer *t);
     static int playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
+
 };  /* class EventHandler */
 
 

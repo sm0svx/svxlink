@@ -146,7 +146,6 @@ class ToneQueueItem : public QueueItem
     
 };
 
-
 class RawFileQueueItem : public QueueItem
 {
   public:
