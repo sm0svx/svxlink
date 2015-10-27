@@ -195,6 +195,8 @@ class NetRx : public Rx
     Async::Config     	&cfg;
     Rx::MuteState       mute_state;
     NetTrxTcpClient  	*tcp_con;
+    bool                log_disconnects_once;
+    bool                log_disconnect;
     float     	      	last_signal_strength;
     int       	      	last_sql_rx_id;
     std::list<ToneDet*> tone_detectors;

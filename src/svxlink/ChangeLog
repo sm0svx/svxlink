@@ -76,6 +76,28 @@
 * Add simulator for local receivers and signal level detectors. These
   simulators can be used to debug problems in SvxLink.
 
+* Bugfix: A Local Rx would let squelch open/close through even when muted.
+
+* The install path for libraries are now automatically discovered which may
+  make libraries install in a another directory than before. For example, on
+  normal 64 bit x86_64 systems they will end up in /usr/lib64 and the plugins
+  will be placed in /usr/lib64/svxlink. On other platforms the paths may be a
+  bit stranger, like /usr/lib/arm-linux-gnueabihf on the Cubieboard.
+  This may require that the MODULE_PATH config variable is changed for the
+  plugins to be found. The best is to comment out the MODULE_PATH
+  configuration variable and let SvxLink determine what to use.
+  The old LIB_SUFFIX CMake variable is not used anymore.
+
+* New configuration variable in svxlink.conf for remote transmitters and
+  receivers, LOG_DISCONNECTS_ONCE, that can be set to 1 to not log reconnect
+  attempts.  This may be of use if a RemoteTrx is missing for a long time or if
+  it's only used from time to time.
+
+* The CFG_DIR configuration variable read additional config from files in
+  the configured directory. The man-page stated that files starting with a dot
+  were ignored. This was not true but is now. The man-page was also lacking
+  information on that all files not ending in ".conf" are ignored.
+
 
 
  1.4.2 -- 06 jun 2015

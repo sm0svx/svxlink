@@ -191,7 +191,6 @@ class AudioSplitter : public Async::AudioSink, public Async::AudioSource,
     bool      	      	do_flush;
     bool      	      	input_stopped;
     int       	      	flushed_branches;
-    Async::Timer      	*cleanup_branches_timer;
     Branch              *main_branch;
     
     void writeFromBuffer(void);
@@ -200,7 +199,7 @@ class AudioSplitter : public Async::AudioSink, public Async::AudioSource,
     friend class Branch;
     void branchResumeOutput(void);
     void branchAllSamplesFlushed(void);
-    void cleanupBranches(Async::Timer *t);
+    void cleanupBranches(void);
 
 };  /* class AudioSplitter */
 

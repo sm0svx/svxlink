@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <QStringList>
 #include <QComboBox>
 #include <QList>
+#include <QNetworkInterface>
 #undef emit
 
 #include <stdlib.h>
@@ -93,6 +94,7 @@ using namespace std;
 #define CONF_DIRECTORY_SERVER 	      "DirectoryServers"
 #define CONF_LIST_REFRESH_TIME        "ListRefreshTime"
 #define CONF_START_AS_BUSY            "StartAsBusy"
+#define CONF_BIND_ADDRESS             "BindAddress"
 #define CONF_PROXY_ENABLED            "ProxyEnabled"
 #define CONF_PROXY_SERVER             "ProxyServer"
 #define CONF_PROXY_PORT               "ProxyPort"
@@ -295,6 +297,26 @@ void Settings::showDialog(void)
     }
     settings_dialog.chat_encoding->insertItem(10000, str);
   }
+
+    // Set up bind address combobox
+  foreach (const QNetworkInterface &netif, QNetworkInterface::allInterfaces())
+  {
+    const QString &hname = netif.humanReadableName();
+    foreach (const QNetworkAddressEntry &netaddr, netif.addressEntries())
+    {
+      const QHostAddress &addr = netaddr.ip();
+      if (addr.protocol() == QAbstractSocket::IPv4Protocol)
+      {
+        QString item_text(addr.toString() + " (" + hname + ")");
+        settings_dialog.bind_address->addItem(item_text, addr.toString());
+      }
+    }
+  }
+  int cur_index = settings_dialog.bind_address->findData(m_bind_address);
+  if (cur_index > 0)
+  {
+    settings_dialog.bind_address->setCurrentIndex(cur_index);
+  }
   
   settings_dialog.my_callsign->setText(m_callsign);
   settings_dialog.my_password->setText(m_password);
@@ -358,6 +380,15 @@ void Settings::showDialog(void)
 	m_directory_servers = settings_dialog.directory_servers->text();
 	m_list_refresh_time = settings_dialog.list_refresh_time->value();
 	m_start_as_busy = settings_dialog.start_as_busy_checkbox->isChecked();
+        int cur_index = settings_dialog.bind_address->currentIndex();
+        if (cur_index > 0)
+        {
+	  m_bind_address = settings_dialog.bind_address->itemData(cur_index).toString();
+        }
+        else
+        {
+          m_bind_address = "";
+        }
 	m_proxy_enabled = settings_dialog.proxy_enabled->isChecked();
 	m_proxy_server = settings_dialog.proxy_server->text();
 	m_proxy_port = settings_dialog.proxy_port->value();
@@ -382,6 +413,7 @@ void Settings::showDialog(void)
 	qsettings.setValue(CONF_DIRECTORY_SERVER, m_directory_servers);
 	qsettings.setValue(CONF_LIST_REFRESH_TIME, m_list_refresh_time);
 	qsettings.setValue(CONF_START_AS_BUSY, m_start_as_busy);
+	qsettings.setValue(CONF_BIND_ADDRESS, m_bind_address);
 	qsettings.setValue(CONF_PROXY_ENABLED, m_proxy_enabled);
 	qsettings.setValue(CONF_PROXY_SERVER, m_proxy_server);
 	qsettings.setValue(CONF_PROXY_PORT, m_proxy_port);
@@ -425,6 +457,7 @@ void Settings::readSettings(void)
       CONF_LIST_REFRESH_TIME_DEFAULT).toInt();
   m_start_as_busy = qsettings.value(CONF_START_AS_BUSY,
       CONF_START_AS_BUSY_DEFAULT).toBool();
+  m_bind_address = qsettings.value(CONF_BIND_ADDRESS).toString();
   m_proxy_enabled = qsettings.value(CONF_PROXY_ENABLED,
       CONF_PROXY_ENABLED_DEFAULT).toBool();
   m_proxy_server = qsettings.value(CONF_PROXY_SERVER,

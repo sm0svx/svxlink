@@ -244,55 +244,22 @@ class MsgAuthResponse : public Msg
     bool calcDigest(unsigned char *digest, const char *key,
                     int keylen, const unsigned char *challenge) const
     {
-      unsigned char *digest_ptr;
-      /*
-      printf("key=%s\n", key);
-      printf("Challenge=");
-      int i;
-      for (i=0; i<MsgAuthChallenge::CHALLENGE_LEN; ++i)
-      {
-        printf("%02x", challenge[i]);
-      }
-      printf("\n");
-      */
-        // Must call gcry_check_verion to initialize the gcypt library
-      gcry_check_version(NULL);
-      gcry_error_t err;
+      unsigned char *digest_ptr = 0;
       gcry_md_hd_t hd = { 0 };
-      //err = gcry_control(GCRYCTL_INIT_SECMEM, 16384, 0);
-      err = gcry_control(GCRYCTL_DISABLE_SECMEM, 0);
-      if (err) goto libinit_error;
-        // Tell Libgcrypt that initialization has completed
-      err = gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
-      if (err) goto libinit_error;
-      //printf("gcry_md_open\n");
-      err = gcry_md_open(&hd, ALGO, GCRY_MD_FLAG_HMAC);
+      gcry_error_t err = gcry_md_open(&hd, ALGO, GCRY_MD_FLAG_HMAC);
       if (err) goto error;
-      //printf("gcry_md_setkey\n");
       err = gcry_md_setkey(hd, key, keylen);
       if (err) goto error;
-      //printf("gcry_md_write\n");
       gcry_md_write(hd, challenge, MsgAuthChallenge::CHALLENGE_LEN);
-      //printf("gcry_md_read\n");
       digest_ptr = gcry_md_read(hd, 0);
       memcpy(digest, digest_ptr, DIGEST_LEN);
-      /*
-      printf("Digest=");
-      for (i=0; i<DIGEST_LEN; ++i)
-      {
-        printf("%02x", digest[i]);
-      }
-      printf("\n");
-      printf("gcry_md_close\n");
-      */
       gcry_md_close(hd);
       return true;
       
       error:
         gcry_md_close(hd);
-
-      libinit_error:
-        std::cerr << "*** ERROR: gcrypt error: " << gcry_strerror(err)
+        std::cerr << "*** ERROR: gcrypt error: "
+                  << gcry_strsource(err) << "/" << gcry_strerror(err)
                   << std::endl;
         return false;
     }
