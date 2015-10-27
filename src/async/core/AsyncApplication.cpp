@@ -9,7 +9,7 @@ application that use the Async classes.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2015 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -58,6 +58,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "AsyncFdWatch.h"
+#include "AsyncTimer.h"
 #include "AsyncApplication.h"
 
 
@@ -144,14 +145,24 @@ Application::Application(void)
 {
   assert(app_ptr == 0);
   app_ptr = this;  
+  task_timer = new Async::Timer(0, Timer::TYPE_ONESHOT, false);
+  task_timer->expired.connect(
+      sigc::hide(mem_fun(*this, &Application::taskTimerExpired)));
 } /* Application::Application */
 
 
 Application::~Application(void)
 {
-  
+  delete task_timer;
+  task_timer = 0;
 } /* Application::~Application */
 
+
+void Application::runTask(sigc::slot<void> task)
+{
+  task_list.push_back(task);
+  task_timer->setEnable(true);
+} /* Application::runTask */
 
 
 
@@ -162,23 +173,6 @@ Application::~Application(void)
  ****************************************************************************/
 
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
 
 /****************************************************************************
  *
@@ -186,27 +180,19 @@ Application::~Application(void)
  *
  ****************************************************************************/
 
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-
-
-
-
+void Application::taskTimerExpired(void)
+{
+  SlotList::iterator it;
+  for (it=task_list.begin(); it!=task_list.end(); ++it)
+  {
+    (*it)();
+  }
+  task_list.clear();
+  task_timer->setEnable(false);
+} /* Application::taskTimerExpired */
 
 
 
 /*
  * This file has not been truncated
  */
-

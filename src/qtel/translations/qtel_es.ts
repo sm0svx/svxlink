@@ -43,7 +43,7 @@ No se puede crear una conexión</translation>
     </message>
     <message>
         <source>Could not create connection to</source>
-        <translation type="unfinished"></translation>
+        <translation>No se puede crear una conexion con</translation>
     </message>
 </context>
 <context>
@@ -546,11 +546,11 @@ Message</source>
     </message>
     <message>
         <source>Raw Sound Files (*.raw)</source>
-        <translation type="unfinished">Archivos Raw (*.raw)</translation>
+        <translation>Archivos Raw (*.raw)</translation>
     </message>
     <message>
         <source>Choose a connect sound file</source>
-        <translation type="unfinished">Seleccione un archivo de sonido</translation>
+        <translation>Seleccione un archivo de sonido</translation>
     </message>
     <message>
         <source>QSO</source>
@@ -662,55 +662,68 @@ Message</source>
     </message>
     <message>
         <source>Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Red</translation>
     </message>
     <message>
         <source>Servers</source>
-        <translation type="unfinished"></translation>
+        <translation>Servidores</translation>
     </message>
     <message>
         <source>A space separated list of the hostname or IP address of the EchoLink directory servers to use</source>
-        <translation type="unfinished"></translation>
+        <translation>Una lista separada por estacios de nombres o direcciones IP de servidores de directorio de Echolink a utilizar</translation>
     </message>
     <message>
         <source>EchoLink Proxy Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajustes de Echolink Proxy</translation>
     </message>
     <message>
         <source>Enable</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilitar</translation>
     </message>
     <message>
         <source>If enabling EchoLink proxy you must supply a proxy server hostname or IP address.</source>
-        <translation type="unfinished"></translation>
+        <translation>Si se habilita un proxy de Echolink se debe suministrar el nombre o direccion IP del mismo.</translation>
     </message>
     <message>
         <source>The hostname or IP address of the EchoLink proxy server to use</source>
-        <translation type="unfinished"></translation>
+        <translation>El nombre o direccion IP del servidor proxy de Echolink a utilizar</translation>
     </message>
     <message>
         <source>TCP Port</source>
-        <translation type="unfinished"></translation>
+        <translation>Puerto TCP</translation>
     </message>
     <message>
         <source>The TCP port to connect to on the EchoLink proxy server, default 8100</source>
-        <translation type="unfinished"></translation>
+        <translation>El puerto TCP de conexion del proxy de Echolink, por defecto 8100</translation>
     </message>
     <message>
         <source>The EchoLink PROXY password, not your normal EchoLink password. Leave empty for public proxy.</source>
-        <translation type="unfinished"></translation>
+        <translation>El password del proxy Echolink, no el password normal de usuario.  Dejar vacio para proxy publicos.</translation>
     </message>
     <message>
         <source>Sampling Rate</source>
-        <translation type="unfinished"></translation>
+        <translation>Tasa de muestreo</translation>
     </message>
     <message>
         <source>EchoLink proxy configuration problem</source>
-        <translation type="unfinished"></translation>
+        <translation>Problema en la configuracion del proxy Echolink</translation>
     </message>
     <message>
         <source>EchoLink proxy enabled but no server given</source>
-        <translation type="unfinished"></translation>
+        <translation>Proxy Echolink habilitado pero no se especifica el servidor</translation>
+    </message>
+    <message>
+        <source>Bind address</source>
+        <translatorcomment>Maybe the word &quot;escucha&quot; is more related to &quot;listen address&quot;. Couldn&apos;t find a closer translation.</translatorcomment>
+        <translation>Direccion de escucha</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A bind address can be specified to force Qtel to use a specific network interface if your computer has more than one. Specify the IP address of the interface to bind to.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Se puede especificar una direccion para forzar a Qtel a utilizar una interfaz de red determinada si la PC posee mas de una. Especificar la direccion IP de la interfaz de red a utilizar.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Ninguno</translation>
     </message>
 </context>
 </TS>

@@ -132,6 +132,7 @@ class ToneDet
 
 NetRx::NetRx(Config &cfg, const string& name)
   : Rx(cfg, name), cfg(cfg), mute_state(Rx::MUTE_ALL), tcp_con(0),
+    log_disconnects_once(false), log_disconnect(true),
     last_signal_strength(0.0), last_sql_rx_id(0), unflushed_samples(false),
     sql_is_open(false), audio_dec(0)
 {
@@ -174,6 +175,8 @@ bool NetRx::initialize(void)
   
   string udp_port(NET_TRX_DEFAULT_UDP_PORT);
   cfg.getValue(name(), "UDP_PORT", udp_port);
+
+  cfg.getValue(name(), "LOG_DISCONNECTS_ONCE", log_disconnects_once);
   
   string audio_dec_name;
   cfg.getValue(name(), "CODEC", audio_dec_name);
@@ -212,6 +215,10 @@ bool NetRx::initialize(void)
   setHandler(audio_dec);
   
   tcp_con = NetTrxTcpClient::instance(host, atoi(tcp_port.c_str()));
+  if (tcp_con == 0)
+  {
+    return false;
+  }
   tcp_con->setAuthKey(auth_key);
   tcp_con->isReady.connect(mem_fun(*this, &NetRx::connectionReady));
   tcp_con->msgReceived.connect(mem_fun(*this, &NetRx::handleMsg));
@@ -332,6 +339,8 @@ void NetRx::connectionReady(bool is_ready)
     cout << name() << ": Connected to remote receiver at "
         << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << "\n";
     
+    log_disconnect = true;
+
     if (mute_state != Rx::MUTE_ALL)
     {
       MsgSetMuteState *msg = new MsgSetMuteState(mute_state);
@@ -367,10 +376,15 @@ void NetRx::connectionReady(bool is_ready)
   }
   else
   {
-    cout << name() << ": Disconnected from remote receiver "
-        << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << ": "
-        << TcpConnection::disconnectReasonStr(tcp_con->disconnectReason())
-        << "\n";
+    if (log_disconnect)
+    {
+      cout << name() << ": Disconnected from remote receiver "
+          << tcp_con->remoteHost() << ":" << tcp_con->remotePort() << ": "
+          << TcpConnection::disconnectReasonStr(tcp_con->disconnectReason())
+          << "\n";
+    }
+
+    log_disconnect = !log_disconnects_once;
     
     sql_is_open = false;
     if (unflushed_samples)

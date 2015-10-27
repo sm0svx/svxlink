@@ -29,6 +29,12 @@
 * Async::Config: Removed error message printed on open failure. Printing an
   error message must be done by the caller.
 
+* Async::Timer: Now possible to create a timer object that is disabled from
+  the beginning.
+
+* Async::Application: New function runTask which can be used to delay
+  execution of a function until control is returned to the Async main loop.
+
 * New class Async::AudioGenerator that can generate sine and square waves.
 
 

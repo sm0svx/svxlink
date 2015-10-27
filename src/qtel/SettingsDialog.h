@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -104,13 +104,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 /**
-@brief	A_brief_class_description
+@brief  Wrapper for the SettingsDialog
 @author Tobias Blomberg / SM0SVX
-@date   2008-
-
-A_detailed_class_description
-
-\include Template_demo.cpp
+@date   2010-05-01
 */
 class SettingsDialog : public QDialog, public Ui::SettingsDialog
 {
