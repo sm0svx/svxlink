@@ -117,7 +117,7 @@ using namespace Async;
 MultiTx::MultiTx(Config& cfg, const string& name)
   : cfg(cfg), m_name(name), splitter(0)
 {
-
+  
 } /* MultiTx::MultiTx */
 
 
@@ -131,9 +131,9 @@ MultiTx::~MultiTx(void)
     delete *it;
   }
   txs.clear();
-
+  
   delete splitter;
-
+  
 } /* MultiTx::~MultiTx */
 
 
@@ -146,9 +146,9 @@ bool MultiTx::initialize(void)
       	 << "/TRANSMITTERS not set\n";
     return false;
   }
-
+  
   splitter = new AudioSplitter;
-
+  
   string::iterator start(transmitters.begin());
   for (;;)
   {
@@ -166,9 +166,9 @@ bool MultiTx::initialize(void)
       tx->txTimeout.connect(txTimeout.make_slot());
       tx->transmitterStateChange.connect(
       	      mem_fun(*this, &MultiTx::onTransmitterStateChange));
-
+      
       splitter->addSink(tx);
-
+      
       txs.push_back(tx);
     }
     if (comma == transmitters.end())
@@ -178,11 +178,11 @@ bool MultiTx::initialize(void)
     start = comma;
     ++start;
   }
-
+  
   setHandler(splitter);
-
+  
   return true;
-
+  
 } /* MultiTx::initialize */
 
 
@@ -192,7 +192,7 @@ void MultiTx::setTxCtrlMode(TxCtrlMode mode)
   for (it=txs.begin(); it!=txs.end(); ++it)
   {
     (*it)->setTxCtrlMode(mode);
-  }
+  }  
 } /* MultiTx::setTxCtrlMode */
 
 
@@ -204,9 +204,9 @@ bool MultiTx::isTransmitting(void) const
   {
     is_transmitting |= (*it)->isTransmitting();
   }
-
+  
   return is_transmitting;
-
+  
 } /* MultiTx::isTransmitting */
 
 

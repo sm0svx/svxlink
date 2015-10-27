@@ -139,7 +139,7 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
   siglev_check_timer = new Timer(1000, Timer::TYPE_PERIODIC);
   siglev_check_timer->setEnable(true);
   siglev_check_timer->expired.connect(mem_fun(*this, &NetUplink::checkSiglev));
-
+  
 } /* NetUplink::NetUplink */
 
 
@@ -189,10 +189,10 @@ bool NetUplink::initialize(void)
       	 << "/LISTEN_PORT is missing.\n";
     return false;
   }
-
+  
   cfg.getValue(name, "FALLBACK_REPEATER", fallback_enabled, true);
   cfg.getValue(name, "AUTH_KEY", auth_key, true);
-
+  
   int mute_tx_on_rx = -1;
   cfg.getValue(name, "MUTE_TX_ON_RX", mute_tx_on_rx, true);
   if (mute_tx_on_rx >= 0)
@@ -201,7 +201,7 @@ bool NetUplink::initialize(void)
     mute_tx_timer->setEnable(false);
     mute_tx_timer->expired.connect(mem_fun(*this, &NetUplink::unmuteTx));
   }
-
+  
   server = new TcpServer(listen_port);
   server->clientConnected.connect(mem_fun(*this, &NetUplink::clientConnected));
   server->clientDisconnected.connect(
@@ -214,16 +214,16 @@ bool NetUplink::initialize(void)
   rx->toneDetected.connect(mem_fun(*this, &NetUplink::toneDetected));
   rx->selcallSequenceDetected.connect(
       mem_fun(*this, &NetUplink::selcallSequenceDetected));
-
+  
   tx->txTimeout.connect(mem_fun(*this, &NetUplink::txTimeout));
   tx->transmitterStateChange.connect(
       mem_fun(*this, &NetUplink::transmitterStateChange));
-
+  
   rx_splitter = new AudioSplitter;
   rx->registerSink(rx_splitter);
 
   loopback_con = new AudioPassthrough;
-
+  
   rx_splitter->addSink(loopback_con);
 
   tx_selector = new AudioSelector;
@@ -234,14 +234,14 @@ bool NetUplink::initialize(void)
   tx_selector->selectSource(fifo);
 
   tx_selector->registerSink(tx);
-
+  
   if (fallback_enabled)
   {
     setFallbackActive(true);
   }
 
   return true;
-
+  
 } /* NetUplink::initialize */
 
 
@@ -311,7 +311,7 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
 {
   cout << name << ": Client connected: " << incoming_con->remoteHost() << ":"
        << incoming_con->remotePort() << endl;
-
+  
   switch (state)
   {
     case STATE_DISC:
@@ -351,7 +351,7 @@ void NetUplink::disconnectCleanup(void)
 
   tx_muted = false;
   tx_ctrl_mode = Tx::TX_OFF;
-
+  
   if (fallback_enabled)
   {
     setFallbackActive(true);
@@ -373,7 +373,7 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
 int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
 {
   //cout << "NetRx::tcpDataReceived: size=" << size << endl;
-
+  
   //Msg *msg = reinterpret_cast<Msg*>(data);
   //cout << "Received a TCP message with type " << msg->type()
   //     << " and size " << msg->size() << endl;
@@ -390,9 +390,9 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
          << name << ". Throwing it away...\n";
     return size;
   }
-
+  
   int orig_size = size;
-
+  
   char *buf = static_cast<char*>(data);
   while (size > 0)
   {
@@ -408,7 +408,7 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
     size -= read_cnt;
     recv_cnt += read_cnt;
     buf += read_cnt;
-
+    
     if (recv_cnt == recv_exp)
     {
       if (recv_exp == sizeof(Msg))
@@ -442,7 +442,7 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
       }
     }
   }
-
+  
   return orig_size;
 
 } /* NetUplink::tcpDataReceived */
@@ -481,20 +481,20 @@ void NetUplink::handleMsg(Msg *msg)
         forceDisconnect();
       }
       return;
-
+    
     case STATE_READY:
       break;
   }
-
+  
   gettimeofday(&last_msg_timestamp, NULL);
-
+  
   switch (msg->type())
   {
     case MsgHeartbeat::TYPE:
     {
       break;
     }
-
+    
     case MsgReset::TYPE:
     {
       rx->reset();
@@ -510,7 +510,7 @@ void NetUplink::handleMsg(Msg *msg)
       rx->setMuteState(mute_msg->muteState());
       break;
     }
-
+    
     case MsgAddToneDetector::TYPE:
     {
       MsgAddToneDetector *atd = reinterpret_cast<MsgAddToneDetector*>(msg);
@@ -521,7 +521,7 @@ void NetUplink::handleMsg(Msg *msg)
       	      	      	  atd->requiredDuration());
       break;
     }
-
+    
     case MsgSetTxCtrlMode::TYPE:
     {
       MsgSetTxCtrlMode *mode_msg = reinterpret_cast<MsgSetTxCtrlMode *>(msg);
@@ -532,21 +532,21 @@ void NetUplink::handleMsg(Msg *msg)
       }
       break;
     }
-
+    
     case MsgEnableCtcss::TYPE:
     {
       MsgEnableCtcss *ctcss_msg = reinterpret_cast<MsgEnableCtcss *>(msg);
       tx->enableCtcss(ctcss_msg->enable());
       break;
     }
-
+    
     case MsgSendDtmf::TYPE:
     {
       MsgSendDtmf *dtmf_msg = reinterpret_cast<MsgSendDtmf *>(msg);
       tx->sendDtmf(dtmf_msg->digits(), dtmf_msg->tone_length(), dtmf_msg->tone_pwr());
       break;
     }
-
+    
     case MsgRxAudioCodecSelect::TYPE:
     {
       MsgRxAudioCodecSelect *codec_msg =
@@ -567,7 +567,7 @@ void NetUplink::handleMsg(Msg *msg)
 	rx_splitter->addSink(audio_enc);
         cout << name << ": Using CODEC \"" << audio_enc->name()
              << "\" to encode RX audio\n";
-
+    
 	MsgRxAudioCodecSelect::Opts opts;
 	codec_msg->options(opts);
 	MsgRxAudioCodecSelect::Opts::const_iterator it;
@@ -584,7 +584,7 @@ void NetUplink::handleMsg(Msg *msg)
       }
       break;
     }
-
+    
     case MsgTxAudioCodecSelect::TYPE:
     {
       MsgTxAudioCodecSelect *codec_msg =
@@ -598,7 +598,7 @@ void NetUplink::handleMsg(Msg *msg)
             mem_fun(*this, &NetUplink::allEncodedSamplesFlushed));
         cout << name << ": Using CODEC \"" << audio_dec->name()
              << "\" to decode TX audio\n";
-
+    
 	MsgRxAudioCodecSelect::Opts opts;
 	codec_msg->options(opts);
 	MsgTxAudioCodecSelect::Opts::const_iterator it;
@@ -615,7 +615,7 @@ void NetUplink::handleMsg(Msg *msg)
       }
       break;
     }
-
+    
     case MsgAudio::TYPE:
     {
       //cout << "NetUplink [MsgAudio]\n";
@@ -626,7 +626,7 @@ void NetUplink::handleMsg(Msg *msg)
       }
       break;
     }
-
+    
     case MsgFlush::TYPE:
     {
       if (audio_dec != 0)
@@ -634,15 +634,15 @@ void NetUplink::handleMsg(Msg *msg)
         audio_dec->flushEncodedSamples();
       }
       break;
-    }
-
+    } 
+    
     default:
       cerr << "*** ERROR: Unknown TCP message received in NetUplink "
            << name << ". type=" << msg->type() << ", tize="
            << msg->size() << endl;
       break;
   }
-
+  
 } /* NetUplink::handleMsg */
 
 
@@ -663,9 +663,9 @@ void NetUplink::sendMsg(Msg *msg)
       forceDisconnect();
     }
   }
-
+  
   delete msg;
-
+  
 } /* NetUplink::sendMsg */
 
 
@@ -683,7 +683,7 @@ void NetUplink::squelchOpen(bool is_open)
       mute_tx_timer->setEnable(true);
     }
   }
-
+  
   MsgSquelch *msg = new MsgSquelch(is_open, rx->signalStrength(),
       	      	      	      	   rx->sqlRxId());
   sendMsg(msg);
@@ -757,7 +757,7 @@ void NetUplink::heartbeat(Timer *t)
 {
   MsgHeartbeat *msg = new MsgHeartbeat;
   sendMsg(msg);
-
+  
   struct timeval diff_tv;
   struct timeval now;
   gettimeofday(&now, NULL);
@@ -769,9 +769,9 @@ void NetUplink::heartbeat(Timer *t)
     cerr << "*** ERROR: Heartbeat timeout in NetUplink " << name << "\n";
     forceDisconnect();
   }
-
+  
   t->reset();
-
+  
 } /* NetTrxTcpClient::heartbeat */
 
 
@@ -813,7 +813,7 @@ void NetUplink::signalLevelUpdated(float siglev)
 {
   MsgSiglevUpdate *msg = new MsgSiglevUpdate(rx->signalStrength(),
 					     rx->sqlRxId());
-  sendMsg(msg);
+  sendMsg(msg);  
 } /* NetUplink::signalLevelUpdated */
 
 

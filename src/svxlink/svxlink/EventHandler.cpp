@@ -129,7 +129,7 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
          << logic->name() << "\n";
     return;
   }
-
+  
   if (Tcl_Init(interp) != TCL_OK)
   {
     cerr << event_script << " in logic " << logic->name() << ": "
@@ -138,7 +138,7 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
     interp = 0;
     return;
   }
-
+  
   Tcl_CreateCommand(interp, "playFile", playFileHandler, this, NULL);
   Tcl_CreateCommand(interp, "playSilence", playSilenceHandler, this, NULL);
   Tcl_CreateCommand(interp, "playTone", playToneHandler, this, NULL);
@@ -175,16 +175,16 @@ bool EventHandler::initialize(void)
   {
     return false;
   }
-
+  
   if (Tcl_EvalFile(interp, event_script.c_str()) != TCL_OK)
   {
     cerr << event_script << " in logic " << logic->name() << ": "
          << Tcl_GetStringResult(interp) << endl;
     return false;
   }
-
+  
   return true;
-
+  
 } /* EventHandler::initialize */
 
 
@@ -194,7 +194,7 @@ void EventHandler::setVariable(const string& name, const string& value)
   {
     return;
   }
-
+  
   Tcl_Preserve(interp);
   if (Tcl_SetVar(interp, name.c_str(), value.c_str(), TCL_LEAVE_ERR_MSG)
   	== NULL)
@@ -223,7 +223,7 @@ bool EventHandler::processEvent(const string& event)
     success = false;
   }
   Tcl_Release(interp);
-
+  
   return success;
 
 } /* EventHandler::processEvent */
@@ -235,9 +235,9 @@ const string EventHandler::eventResult(void) const
   {
     return 0;
   }
-
+  
   return Tcl_GetStringResult(interp);
-
+  
 } /* EventHandler::eventResult */
 
 
@@ -250,14 +250,14 @@ const string EventHandler::eventResult(void) const
 
 /*
  *------------------------------------------------------------------------
- * Method:
- * Purpose:
- * Input:
- * Output:
- * Author:
- * Created:
- * Remarks:
- * Bugs:
+ * Method:    
+ * Purpose:    
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
  *------------------------------------------------------------------------
  */
 
@@ -275,14 +275,14 @@ const string EventHandler::eventResult(void) const
 
 /*
  *----------------------------------------------------------------------------
- * Method:
- * Purpose:
- * Input:
- * Output:
- * Author:
- * Created:
- * Remarks:
- * Bugs:
+ * Method:    
+ * Purpose:    
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
  *----------------------------------------------------------------------------
  */
 
@@ -374,7 +374,7 @@ int EventHandler::recordHandler(ClientData cdata, Tcl_Interp *irp,
     EventHandler *self = static_cast<EventHandler *>(cdata);
     self->recordStop();
   }
-
+  
 
   return TCL_OK;
 }

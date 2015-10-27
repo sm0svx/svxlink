@@ -86,7 +86,7 @@ namespace Async
  *
  ****************************************************************************/
 
-
+  
 
 /****************************************************************************
  *
@@ -124,18 +124,18 @@ class MultiTx : public Tx
      * @brief 	Default constuctor
      */
     MultiTx(Async::Config& cfg, const std::string& name);
-
+  
     /**
      * @brief 	Destructor
      */
     ~MultiTx(void);
-
+  
     /**
      * @brief 	Initialize the transmitter object
      * @return 	Return \em true on success, or \em false on failure
      */
     virtual bool initialize(void);
-
+  
     /**
      * @brief 	Set the transmit control mode
      * @param 	mode The mode to use to set the transmitter on or off.
@@ -145,19 +145,19 @@ class MultiTx : public Tx
      * transmitter on when there is audio to transmit.
      */
     virtual void setTxCtrlMode(TxCtrlMode mode);
-
+    
     /**
      * @brief 	Check if the transmitter is transmitting
      * @return	Return \em true if transmitting or else \em false
      */
     virtual bool isTransmitting(void) const;
-
+    
     /**
      * @brief 	Enable/disable CTCSS on TX
      * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
      */
     virtual void enableCtcss(bool enable);
-
+    
     /**
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send
@@ -178,19 +178,19 @@ class MultiTx : public Tx
      * link receiver.
      */
     virtual void setTransmittedSignalStrength(float siglev);
-
+    
   protected:
-
+    
   private:
     Async::Config     	  &cfg;
     std::string       	  m_name;
     std::list<Tx *>   	  txs;
     Async::AudioSplitter  *splitter;
-
+    
     MultiTx(const MultiTx&);
     MultiTx& operator=(const MultiTx&);
     void onTransmitterStateChange(bool is_transmitting);
-
+    
 };  /* class MultiTx */
 
 

@@ -51,7 +51,7 @@ Module::Module(void *dl_handle, Logic *logic, const string& cfg_name)
     m_is_transmitting(false), m_is_active(false), m_cfg_name(cfg_name),
     m_tmo_timer(0)
 {
-
+  
 } /* Module::Module */
 
 
@@ -81,7 +81,7 @@ bool Module::initialize(void)
   m_id = atoi(id_str.c_str());
 
   cfg().getValue(cfgName(), "NAME", m_name);
-
+  
   string timeout_str;
   if (cfg().getValue(cfgName(), "TIMEOUT", timeout_str))
   {
@@ -89,7 +89,7 @@ bool Module::initialize(void)
     m_tmo_timer->setEnable(false);
     m_tmo_timer->expired.connect(mem_fun(*this, &Module::moduleTimeout));
   }
-
+  
   list<string> vars = cfg().listSection(cfgName());
   list<string>::const_iterator cfgit;
   for (cfgit=vars.begin(); cfgit!=vars.end(); ++cfgit)
@@ -99,20 +99,20 @@ bool Module::initialize(void)
     cfg().getValue(cfgName(), *cfgit, value);
     setEventVariable(var, value);
   }
-
+  
   return true;
-
+  
 } /* Module::initialize */
 
 
 void Module::activate(void)
 {
   cout << logic()->name() << ": Activating module " << name() << "...\n";
-
+  
   m_is_active = true;
-
+  
   processEvent("activating_module");
-
+  
   /*
   m_audio_con = logic()->rx().audioReceived.connect(
       	  mem_fun(*this, &Module::audioFromRx));
@@ -120,7 +120,7 @@ void Module::activate(void)
 
   m_logic_idle_con = logic()->idleStateChanged.connect(
       mem_fun(*this, &Module::logicIdleStateChanged));
-
+  
   setIdle(logic()->isIdle());
   activateInit();
 }
@@ -129,15 +129,15 @@ void Module::activate(void)
 void Module::deactivate(void)
 {
   cout << logic()->name() << ": Deactivating module " << name() << "...\n";
-
+  
   deactivateCleanup();
   //transmit(false);
-
+  
   //m_audio_con.disconnect();
   m_logic_idle_con.disconnect();
-
+  
   processEvent("deactivating_module");
-
+  
   m_is_active = false;
 
   setIdle(true);

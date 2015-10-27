@@ -203,7 +203,7 @@ void ModuleDtmfRepeater::flushSamples(void)
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2005-08-28
  * Remarks:   The base class initialize method must be called from here.
- * Bugs:
+ * Bugs:      
  *----------------------------------------------------------------------------
  */
 bool ModuleDtmfRepeater::initialize(void)
@@ -212,7 +212,7 @@ bool ModuleDtmfRepeater::initialize(void)
   {
     return false;
   }
-
+  
   string value;
   if (cfg().getValue(cfgName(), "REPEAT_DELAY", value))
   {
@@ -229,7 +229,7 @@ bool ModuleDtmfRepeater::initialize(void)
     dtmf_tone_pwr = atoi(value.c_str());
   }
   return true;
-
+  
 } /* initialize */
 
 
@@ -241,8 +241,8 @@ bool ModuleDtmfRepeater::initialize(void)
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2004-03-07
- * Remarks:
- * Bugs:
+ * Remarks:   
+ * Bugs:      
  *----------------------------------------------------------------------------
  */
 void ModuleDtmfRepeater::activateInit(void)
@@ -263,7 +263,7 @@ void ModuleDtmfRepeater::activateInit(void)
  * Created:   2004-03-07
  * Remarks:   Do NOT call this function directly unless you really know what
  *    	      you are doing. Use Module::deactivate() instead.
- * Bugs:
+ * Bugs:      
  *----------------------------------------------------------------------------
  */
 void ModuleDtmfRepeater::deactivateCleanup(void)
@@ -286,15 +286,15 @@ void ModuleDtmfRepeater::deactivateCleanup(void)
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2004-03-07
- * Remarks:
- * Bugs:
+ * Remarks:   
+ * Bugs:      
  *----------------------------------------------------------------------------
  */
 bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
 {
   cout << "DTMF digit " << digit << " (" << duration
        << "ms) received in module " << name() << endl;
-
+  
   if (digit == '#' && (duration > 3000))
   {
     if (squelchIsOpen())
@@ -307,9 +307,9 @@ bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
     }
     return true;
   }
-
+  
   received_digits += digit;
-
+  
   if (repeat_delay == 0)
   {
     onRepeatDelayExpired(0);
@@ -318,16 +318,16 @@ bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
   {
     setupRepeatDelay();
   }
-
+  
   return true;
-
+  
 } /* dtmfDigitReceived */
 
 
 void ModuleDtmfRepeater::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
   received_digits += cmd;
-
+  
   if (repeat_delay == 0)
   {
     onRepeatDelayExpired(0);
@@ -348,8 +348,8 @@ void ModuleDtmfRepeater::dtmfCmdReceivedWhenIdle(const std::string &cmd)
  * Output:    None
  * Author:    Tobias Blomberg / SM0SVX
  * Created:   2005-08-28
- * Remarks:
- * Bugs:
+ * Remarks:   
+ * Bugs:      
  *----------------------------------------------------------------------------
  */
 void ModuleDtmfRepeater::squelchOpen(bool is_open)

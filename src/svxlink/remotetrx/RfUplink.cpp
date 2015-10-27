@@ -123,7 +123,7 @@ RfUplink::RfUplink(Config &cfg, const string &name, Rx *rx, Tx *tx)
   : cfg(cfg), name(name), rx(rx), tx(tx), uplink_tx(0), uplink_rx(0),
     tx_audio_sel(0), dtmf_tone_pwr(400)
 {
-
+  
 } /* RfUplink::RfUplink */
 
 
@@ -175,7 +175,7 @@ bool RfUplink::initialize(void)
   rx->reset();
   rx->setMuteState(Rx::MUTE_NONE);
   AudioSource *prev_src = rx;
-
+  
   AudioFifo *fifo = new AudioFifo(8000);
   fifo->setPrebufSamples(512);
   prev_src->registerSink(fifo, true);
@@ -188,7 +188,7 @@ bool RfUplink::initialize(void)
     prev_src->registerSink(splitter, true);
     prev_src = 0;
   }
-
+  
   uplink_tx = TxFactory::createNamedTx(cfg, uplink_tx_name);
   if ((uplink_tx == 0) || !uplink_tx->initialize())
   {
@@ -209,8 +209,8 @@ bool RfUplink::initialize(void)
     prev_src->registerSink(uplink_tx);
   }
   prev_src = 0;
-
-
+  
+  
   uplink_rx = RxFactory::createNamedRx(cfg, uplink_rx_name);
   if ((uplink_rx == 0) || !uplink_rx->initialize())
   {
@@ -231,7 +231,7 @@ bool RfUplink::initialize(void)
         mem_fun(*this, &RfUplink::uplinkTxTransmitterStateChange));
   }
   prev_src = uplink_rx;
-
+  
   if (loop_rx_to_tx)
   {
     tx_audio_sel = new AudioSelector;
@@ -246,9 +246,9 @@ bool RfUplink::initialize(void)
 
   tx->setTxCtrlMode(Tx::TX_AUTO);
   prev_src->registerSink(tx);
-
+  
   return true;
-
+  
 } /* RfUplink::initialize */
 
 

@@ -133,18 +133,18 @@ class NetTx : public Tx
      * @param 	name  The name of the configuration section to use
      */
     NetTx(Async::Config& cfg, const std::string& name);
-
+  
     /**
      * @brief 	Destructor
      */
     virtual ~NetTx(void);
-
+  
     /**
      * @brief 	Initialize the transmitter object
      * @return 	Return \em true on success, or \em false on failure
      */
     virtual bool initialize(void);
-
+  
     /**
      * @brief 	Set the transmit control mode
      * @param 	mode The mode to use to set the transmitter on or off.
@@ -154,19 +154,19 @@ class NetTx : public Tx
      * transmitter on when there is audio to transmit.
      */
     virtual void setTxCtrlMode(TxCtrlMode mode);
-
+    
     /**
      * @brief 	Check if the transmitter is transmitting
      * @return	Return \em true if transmitting or else \em false
      */
     virtual bool isTransmitting(void) const;
-
+    
     /**
      * @brief 	Enable/disable CTCSS on TX
      * @param 	enable	Set to \em true to enable or \em false to disable CTCSS
      */
     virtual void enableCtcss(bool enable);
-
+    
     /**
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send
@@ -175,7 +175,7 @@ class NetTx : public Tx
      */
     virtual void sendDtmf(const std::string& digits, int dtmf_tone_length,
                              int dtmf_tone_pwr);
-
+    
 
   protected:
 
@@ -193,7 +193,7 @@ class NetTx : public Tx
     bool      	      	  pending_flush;
     bool      	      	  unflushed_samples;
     Async::AudioEncoder   *audio_enc;
-
+    
     void connectionReady(bool is_ready);
     void handleMsg(NetTrxMsg::Msg *msg);
     void sendMsg(NetTrxMsg::Msg *msg);

@@ -95,7 +95,7 @@ class Logic;
  *
  ****************************************************************************/
 
-
+  
 
 /****************************************************************************
  *
@@ -160,17 +160,17 @@ class Module : public sigc::trackable, public Async::AudioSink,
      */
     typedef Module* (*InitFunc)(void *dl_handle, Logic *logic,
       	      	      	        const char *cfg_name);
-
+    
     /**
      * @brief 	Default constuctor
      */
     Module(void *dl_handle, Logic *logic, const std::string& cfg_name);
-
+  
     /**
      * @brief 	Destructor
      */
     virtual ~Module(void);
-
+    
     /**
      * @brief 	Initialize the module
      * @return	Return \em true if the initialization was successful
@@ -288,7 +288,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * the transceiver frontend.
      */
     void playHelpMsg(void);
-
+    
     /**
      * @brief 	Retrieve the name of the module
      * @return	Returns the name of the module
@@ -303,7 +303,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * notification when the module is activated.
      */
     virtual void activateInit(void) {}
-
+    
     /**
      * @brief 	Internal function for module deactivation
      *
@@ -313,7 +313,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * This function will only be called if this module is active.
      */
     virtual void deactivateCleanup(void) {}
-
+    
     /**
      * @brief 	Tell the module that a DTMF digit has been received
      * @param 	digit 	  The received digit
@@ -328,7 +328,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * This function will only be called if this module is active.
      */
     virtual bool dtmfDigitReceived(char digit, int duration) { return false; }
-
+    
     /**
      * @brief 	Tell the module that a DTMF command has been received
      * @param 	cmd The received command
@@ -339,7 +339,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * This function will only be called if this module is active.
      */
     virtual void dtmfCmdReceived(const std::string& cmd) {}
-
+    
     /**
      * @brief 	Tell the module that a DTMF command has been received when idle
      * @param 	cmd The received command
@@ -364,7 +364,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * This function will only be called if this module is active.
      */
     virtual void squelchOpen(bool is_open) {}
-
+    
     /**
      * @brief 	Tell the module that all announcement messages has been played
      *
@@ -376,7 +376,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * This function will only be called if this module is active.
      */
     virtual void allMsgsWritten(void) {}
-
+    
     /**
      * @brief 	Order the logic core to process an event
      * @param 	event The name of the event to process
@@ -388,7 +388,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * XxxLogic/EVENT_HANDLER.
      */
     void processEvent(const std::string& event);
-
+    
     /**
      * @brief 	Order the logic to set a variable in the event handler
      * @param 	name The name of the variable
@@ -399,7 +399,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * by the event scripts to make announcements more dynamic.
      */
     void setEventVariable(const std::string& name, const std::string& value);
-
+    
     /**
      * @brief 	Order the logic core to play an audio file over the transmitter
      * @param 	path The full path to an audio file
@@ -410,11 +410,11 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * The module must be active for this function to do anything.
      */
     void playFile(const std::string& path);
-
+    
     void sendDtmf(const std::string& digits, int dtmf_tone_length,
                                             int dtmf_digit_pwr);
-
-
+    
+    
   protected:
     /**
      * @brief 	Called by the module to activate itself
@@ -425,14 +425,14 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * check the return value to make sure that the activation process went ok.
      */
     bool activateMe(void);
-
+    
     /**
      * @brief 	Called by the module to deactivate itself
      *
      * This function should be used by the module to deactivate itself.
      */
     void deactivateMe(void);
-
+    
     /**
      * @brief 	Find a module based on module id
      * @param 	id The id of the module to find
@@ -442,7 +442,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * number.
      */
     Module *findModule(int id);
-
+    
     /**
      * @brief 	Retrieve a list of all loaded modules
      * @return	Returns a list of all loaded modules
@@ -451,7 +451,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * loaded into the same logic core as this module.
      */
     std::list<Module*> moduleList(void);
-
+    
     /**
      * @brief 	Tell the logic core if the module is idle or not
      * @param	is_idle \em True if the module is idle or else \em false
@@ -461,7 +461,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * is specified in the configuration file, it will be deactivated.
      */
     void setIdle(bool is_idle);
-
+    
     /**
      * @brief 	Check if the logic core is idle or not
      * @returns Returns \em true if the logic core is idle or
@@ -477,7 +477,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * This function is called by the logic core when the idle state changes.
      */
     virtual void logicIdleStateChanged(bool is_idle);
-
+    
     /**
      * @brief 	Check if the squelch is open or not
      * @returns Returns \em true if the squelch is open or
@@ -503,7 +503,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
     bool      	      m_is_active;
     std::string	      m_cfg_name;
     Async::Timer      *m_tmo_timer;
-
+    
     void moduleTimeout(Async::Timer *t);
 
 };  /* class Module */

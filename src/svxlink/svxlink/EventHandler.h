@@ -86,7 +86,7 @@ namespace Async
  *
  ****************************************************************************/
 
-
+  
 
 /****************************************************************************
  *
@@ -122,45 +122,45 @@ class EventHandler : public sigc::trackable
      * @brief 	Constuctor
      */
     EventHandler(const std::string& event_script, Logic *logic);
-
+  
     /**
      * @brief 	Destructor
      */
     ~EventHandler(void);
-
+  
     /**
      * @brief 	Load the event handling script
      * @return	Returns \em true on success or else \em false
      */
     bool initialize(void);
-
+  
     /**
      * @brief 	Set a TCL variable
      * @param 	name The name of the variable to set
      * @param 	value The value to set the given variable to
      */
     void setVariable(const std::string& name, const std::string& value);
-
+  
     /**
      * @brief 	Process the given event
      * @param 	event The event must be a valid TCL function call
      * @return	Returns \em true on success or else \em false
      */
     bool processEvent(const std::string& event);
-
+  
     /**
      * @brief 	Return the event result from the last call
      * @return	This is the return value from the called TCL function
      */
     const std::string eventResult(void) const;
-
+    
     /**
      * @brief 	A signal that is emitted when the TCL script want to play
      *	      	back an audio file
      * @param 	filename The name of the file to plat
      */
     sigc::signal<void, const std::string&> playFile;
-
+    
     /**
      * @brief 	A signal that is emitted when the TCL script want to play
      *	      	back silence
@@ -176,7 +176,7 @@ class EventHandler : public sigc::trackable
      * @param 	duration  The duration of the tone in milliseconds
      */
     sigc::signal<void, int, int, int>      playTone;
-
+    
     /**
      * @brief 	A signal that is emitted when the TCL script want to play
      *	      	back a dtmf tone
@@ -193,13 +193,13 @@ class EventHandler : public sigc::trackable
      * @param   max_time The maximum recording time in milliseconds
      */
     sigc::signal<void, const std::string&, unsigned> recordStart;
-
+    
     /**
      * @brief 	A signal that is emitted when the TCL script want to stop
      *	      	the current recording
      */
     sigc::signal<void>       	      	    recordStop;
-
+    
     /**
      * @brief 	A signal that is emitted when the TCL script want to deactivate
      *	      	the currently active module
@@ -214,15 +214,15 @@ class EventHandler : public sigc::trackable
      */
     sigc::signal<void, const std::string&,
                  const std::string&> publishStateEvent;
-
-
+    
+    
   protected:
-
+    
   private:
     std::string event_script;
     Logic	*logic;
     Tcl_Interp  *interp;
-
+    
     static int playFileHandler(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
     static int playSilenceHandler(ClientData cdata, Tcl_Interp *irp,
@@ -235,7 +235,7 @@ class EventHandler : public sigc::trackable
       	      	    int argc, const char *argv[]);
     static int publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
       	            int argc, const char *argv[]);
-
+    
     void doDeactivateModule(Async::Timer *t);
     static int playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);

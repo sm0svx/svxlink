@@ -82,7 +82,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-
+  
 
 /****************************************************************************
  *
@@ -121,23 +121,23 @@ class Tx : public sigc::trackable, public Async::AudioSink
     {
       TX_OFF, TX_ON, TX_AUTO
     } TxCtrlMode;
-
+    
     /**
      * @brief 	Default constuctor
      */
     Tx(void) {}
-
+  
     /**
      * @brief 	Destructor
      */
     virtual ~Tx(void) {}
-
+  
     /**
      * @brief 	Initialize the transmitter object
      * @return 	Return \em true on success, or \em false on failure
      */
     virtual bool initialize(void) = 0;
-
+  
     /**
      * @brief 	Set the transmit control mode
      * @param 	mode The mode to use to set the transmitter on or off.
@@ -147,7 +147,7 @@ class Tx : public sigc::trackable, public Async::AudioSink
      * transmitter on when there is audio to transmit.
      */
     virtual void setTxCtrlMode(TxCtrlMode mode) = 0;
-
+    
     /**
      * @brief 	Check if the transmitter is transmitting
      * @return	Return \em true if transmitting or else \em false
@@ -180,7 +180,7 @@ class Tx : public sigc::trackable, public Async::AudioSink
      * link receiver.
      */
     virtual void setTransmittedSignalStrength(float siglev) {}
-
+    
     /**
      * @brief 	This signal is emitted when the tx timeout timer expires
      *
@@ -189,7 +189,7 @@ class Tx : public sigc::trackable, public Async::AudioSink
      * endlessly if an error occurs.
      */
     sigc::signal<void> txTimeout;
-
+    
     /**
      * @brief 	This signal is emitted when the transmitter starts or stops
      *          transmitting
@@ -197,7 +197,7 @@ class Tx : public sigc::trackable, public Async::AudioSink
      *          is transmitting or else \em false.
      */
     sigc::signal<void, bool> transmitterStateChange;
-
+    
 };  /* class Tx */
 
 
@@ -250,7 +250,7 @@ class TxFactory
      * Destructor
      */
     virtual ~TxFactory(void);
-
+    
   protected:
     /**
      * @brief Virtual method to create the Tx object
@@ -262,10 +262,10 @@ class TxFactory
      * function that the specific Tx object get created.
      */
     virtual Tx *createTx(Async::Config& cfg, const std::string& name) = 0;
-
+  
   private:
     static std::map<std::string, TxFactory*> tx_factories;
-
+    
     std::string m_name;
 
 };  /* class TxFactory */
