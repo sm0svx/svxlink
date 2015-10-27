@@ -206,7 +206,7 @@ bool NetUplink::initialize(void)
   server->clientConnected.connect(mem_fun(*this, &NetUplink::clientConnected));
   server->clientDisconnected.connect(
       mem_fun(*this, &NetUplink::clientDisconnected));
-
+  
   rx->reset();
   rx->squelchOpen.connect(mem_fun(*this, &NetUplink::squelchOpen));
   rx->signalLevelUpdated.connect(mem_fun(*this, &NetUplink::signalLevelUpdated));
@@ -351,7 +351,7 @@ void NetUplink::disconnectCleanup(void)
 
   tx_muted = false;
   tx_ctrl_mode = Tx::TX_OFF;
-  
+    
   if (fallback_enabled)
   {
     setFallbackActive(true);
@@ -444,7 +444,7 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
   }
   
   return orig_size;
-
+  
 } /* NetUplink::tcpDataReceived */
 
 
@@ -500,7 +500,7 @@ void NetUplink::handleMsg(Msg *msg)
       rx->reset();
       break;
     }
-
+    
     case MsgSetMuteState::TYPE:
     {
       MsgSetMuteState *mute_msg = reinterpret_cast<MsgSetMuteState*>(msg);
@@ -532,14 +532,14 @@ void NetUplink::handleMsg(Msg *msg)
       }
       break;
     }
-    
+     
     case MsgEnableCtcss::TYPE:
     {
       MsgEnableCtcss *ctcss_msg = reinterpret_cast<MsgEnableCtcss *>(msg);
       tx->enableCtcss(ctcss_msg->enable());
       break;
     }
-    
+     
     case MsgSendDtmf::TYPE:
     {
       MsgSendDtmf *dtmf_msg = reinterpret_cast<MsgSendDtmf *>(msg);
@@ -549,7 +549,7 @@ void NetUplink::handleMsg(Msg *msg)
     
     case MsgRxAudioCodecSelect::TYPE:
     {
-      MsgRxAudioCodecSelect *codec_msg =
+      MsgRxAudioCodecSelect *codec_msg = 
           reinterpret_cast<MsgRxAudioCodecSelect *>(msg);
       if (audio_enc != 0)
       {
@@ -567,7 +567,7 @@ void NetUplink::handleMsg(Msg *msg)
 	rx_splitter->addSink(audio_enc);
         cout << name << ": Using CODEC \"" << audio_enc->name()
              << "\" to encode RX audio\n";
-    
+	
 	MsgRxAudioCodecSelect::Opts opts;
 	codec_msg->options(opts);
 	MsgRxAudioCodecSelect::Opts::const_iterator it;
@@ -587,7 +587,7 @@ void NetUplink::handleMsg(Msg *msg)
     
     case MsgTxAudioCodecSelect::TYPE:
     {
-      MsgTxAudioCodecSelect *codec_msg =
+      MsgTxAudioCodecSelect *codec_msg = 
           reinterpret_cast<MsgTxAudioCodecSelect *>(msg);
       delete audio_dec;
       audio_dec = AudioDecoder::create(codec_msg->name());
@@ -598,7 +598,7 @@ void NetUplink::handleMsg(Msg *msg)
             mem_fun(*this, &NetUplink::allEncodedSamplesFlushed));
         cout << name << ": Using CODEC \"" << audio_dec->name()
              << "\" to decode TX audio\n";
-    
+	
 	MsgRxAudioCodecSelect::Opts opts;
 	codec_msg->options(opts);
 	MsgTxAudioCodecSelect::Opts::const_iterator it;
@@ -763,7 +763,7 @@ void NetUplink::heartbeat(Timer *t)
   gettimeofday(&now, NULL);
   timersub(&now, &last_msg_timestamp, &diff_tv);
   int diff_ms = diff_tv.tv_sec * 1000 + diff_tv.tv_usec / 1000;
-
+  
   if (diff_ms > 15000)
   {
     cerr << "*** ERROR: Heartbeat timeout in NetUplink " << name << "\n";

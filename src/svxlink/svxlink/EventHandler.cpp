@@ -212,7 +212,7 @@ bool EventHandler::processEvent(const string& event)
   {
     return false;
   }
-
+  
   bool success = true;
   Tcl_Preserve(interp);
   if (Tcl_Eval(interp, (event + ";").c_str()) != TCL_OK)
@@ -225,7 +225,7 @@ bool EventHandler::processEvent(const string& event)
   Tcl_Release(interp);
   
   return success;
-
+  
 } /* EventHandler::processEvent */
 
 
@@ -251,7 +251,7 @@ const string EventHandler::eventResult(void) const
 /*
  *------------------------------------------------------------------------
  * Method:    
- * Purpose:    
+ * Purpose:   
  * Input:     
  * Output:    
  * Author:    
@@ -276,7 +276,7 @@ const string EventHandler::eventResult(void) const
 /*
  *----------------------------------------------------------------------------
  * Method:    
- * Purpose:    
+ * Purpose:   
  * Input:     
  * Output:    
  * Author:    

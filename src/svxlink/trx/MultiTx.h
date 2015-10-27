@@ -166,7 +166,7 @@ class MultiTx : public Tx
      */
     virtual void sendDtmf(const std::string& digits,
                                     int dtmf_tone_length, int dtmf_digit_pwr);
-
+    
     /**
      * @brief   Set the signal level value that should be transmitted
      * @param   siglev The signal level to transmit

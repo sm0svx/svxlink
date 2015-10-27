@@ -612,12 +612,12 @@ class MsgSendDtmf : public Msg
     std::string digits(void) const { return m_digits; }
     int tone_length(void) const { return m_tone_length; }
     int tone_pwr(void) const {return m_tone_pwr; }
-
+  
   private:
     char  m_digits[MAX_DIGITS+1];
     int m_tone_length;
     int m_tone_pwr;
-
+    
 }; /* MsgSendDtmf */
 
 

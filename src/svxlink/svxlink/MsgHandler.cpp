@@ -450,7 +450,7 @@ void MsgHandler::writeSamples(void)
   float buf[WRITE_BLOCK_SIZE];
 
   assert(current != 0);
-  
+    
   int written;
   int read_cnt;
   do
@@ -861,9 +861,9 @@ int SilenceQueueItem::readSamples(float *samples, int len)
   {
     silence_left -= read_cnt;
   }
-
+  
   return read_cnt;
-
+  
 } /* SilenceQueueItem::readSamples */
 
 
@@ -899,8 +899,10 @@ void ToneQueueItem::unreadSamples(int len)
 {
   pos -= len;
 } /* ToneQueueItem::unreadSamples */
- 
- 
+
+
+
+
 /*
  * This file has not been truncated
  */

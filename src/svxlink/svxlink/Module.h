@@ -294,7 +294,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      * @return	Returns the name of the module
      */
     virtual const std::string& name(void) const { return m_name; }
-
+    
     /**
      * @brief 	Internal function for module activation
      *

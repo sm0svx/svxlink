@@ -147,7 +147,7 @@ class LocalTx : public Tx
      * @return 	Return \em true on success, or \em false on failure
      */
     bool initialize(void);
-
+  
     /**
      * @brief 	Set the transmit control mode
      * @param 	mode The mode to use to set the transmitter on or off.
@@ -176,7 +176,7 @@ class LocalTx : public Tx
      */
     void sendDtmf(const std::string& digits, int dtmf_tone_length,
                                         int dtmf_digit_pwr);
-
+    
     /**
      * @brief   Set the signal level value that should be transmitted
      * @param   siglev The signal level to transmit

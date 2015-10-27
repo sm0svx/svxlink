@@ -175,12 +175,12 @@ bool RfUplink::initialize(void)
   rx->reset();
   rx->setMuteState(Rx::MUTE_NONE);
   AudioSource *prev_src = rx;
-  
+
   AudioFifo *fifo = new AudioFifo(8000);
   fifo->setPrebufSamples(512);
   prev_src->registerSink(fifo, true);
   prev_src = fifo;
-
+  
   AudioSplitter *splitter = 0;
   if (loop_rx_to_tx)
   {

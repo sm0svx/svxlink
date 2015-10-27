@@ -706,7 +706,7 @@ void LocalTx::txTimeoutOccured(Timer *t)
   {
     perror("setPin");
   }
-
+  
   tx_timeout_occured = true;
   txTimeout();
 } /* LocalTx::txTimeoutOccured */
