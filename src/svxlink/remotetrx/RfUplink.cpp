@@ -121,7 +121,7 @@ using namespace Async;
 
 RfUplink::RfUplink(Config &cfg, const string &name, Rx *rx, Tx *tx)
   : cfg(cfg), name(name), rx(rx), tx(tx), uplink_tx(0), uplink_rx(0),
-    tx_audio_sel(0), dtmf_tone_pwr(400)
+    tx_audio_sel(0), dtmf_tone_pwr(-15)
 {
   
 } /* RfUplink::RfUplink */
