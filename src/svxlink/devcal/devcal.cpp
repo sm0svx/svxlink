@@ -375,8 +375,8 @@ class DevPrinter : public AudioSink
     }
 
   private:
-    static const double ALPHA = 0.9;        //!< IIR filter coeff
-    static const size_t PRINT_INTERVAL = 5; //!< Block count
+    static CONSTEXPR double ALPHA = 0.9;        //!< IIR filter coeff
+    static CONSTEXPR size_t PRINT_INTERVAL = 5; //!< Block count
 
     int           block_size;
     FlatTopWindow w;
