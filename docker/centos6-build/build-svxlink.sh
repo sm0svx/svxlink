@@ -15,10 +15,11 @@ else
 fi
 
 # Checkout the wanted branch
-git checkout $GIT_BRANCH
+if [ -n "$GIT_BRANCH" ]; then
+  git checkout $GIT_BRANCH
+fi
 
 # Find out how many cores we've got
-#num_cores=$(cat /proc/cpuinfo | grep "^processor" | wc -l)
 num_cores=${NUM_CORES:-1}
 
 # Create a build directory and build svxlink
