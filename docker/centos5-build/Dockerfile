@@ -1,12 +1,26 @@
 # Build with:
-#   docker -t svxlink-centos5-build .
+#   docker build --pull -t svxlink-centos5-build .
 #
 # Run with:
 #   docker run -it --rm --hostname centos5-build \
-#              --privileged -v /dev/snd:/dev/snd \
-#              -v ${HOME}/.gitconfig:/home/svxlink/.gitconfig:ro \
-#              -v ${HOME}/.ssh:/home/svxlink/.ssh:ro \
 #              svxlink-centos5-build
+#
+# For using sound inside the docker container add:
+#              --privileged -v /dev/snd:/dev/snd \
+#              -e HOSTAUDIO_GID=$(stat -c "%g" /dev/snd/timer) \
+#
+# To import your git config add (mileage may vary):
+#              -v ${HOME}/.gitconfig:/home/svxlink/.gitconfig:ro \
+#
+# To use a specific git repository instead of the default one:
+#              -e GIT_URL=username@your.repo:/path/to/svxlink.git \
+#
+# To build another branch than master:
+#              -e GIT_BRANCH=the_branch
+#
+# To use more than one CPU core when compiling:
+#              -e NUM_CORES=8
+#
 
 FROM centos:5
 MAINTAINER Tobias Blomberg <sm0svx@ssa.se>
