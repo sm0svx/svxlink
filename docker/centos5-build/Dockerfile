@@ -1,3 +1,13 @@
+# Build with:
+#   docker -t svxlink-centos5-build .
+#
+# Run with:
+#   docker run -it --rm --hostname centos5-build \
+#              --privileged -v /dev/snd:/dev/snd \
+#              -v ${HOME}/.gitconfig:/home/svxlink/.gitconfig:ro \
+#              -v ${HOME}/.ssh:/home/svxlink/.ssh:ro \
+#              svxlink-centos5-build
+
 FROM centos:5
 MAINTAINER Tobias Blomberg <sm0svx@ssa.se>
 
@@ -24,6 +34,7 @@ RUN mkdir -p /usr/share/svxlink/sounds && \
 
 # Set up password less sudo for user svxlink
 ADD sudoers /etc/
+RUN chmod 0440 /etc/sudoers
 
 ENV GIT_URL https://github.com/sm0svx/svxlink.git \
     GIT_BRANCH master \
