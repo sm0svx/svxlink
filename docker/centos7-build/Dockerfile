@@ -31,7 +31,7 @@ RUN yum -y install epel-release && \
     yum -y install git sudo cmake make gcc gcc-c++ libsigc++20-devel \
                    alsa-lib-devel speex-devel opus-devel qt-devel \
                    popt-devel libgcrypt-devel tcl-devel gsm-devel \
-                   doxygen alsa-utils wget bzip2 \
+                   rtl-sdr-devel doxygen alsa-utils wget bzip2 \
                    vim-enhanced && \
     yum clean all
 
