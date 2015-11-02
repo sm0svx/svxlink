@@ -1,3 +1,13 @@
+ 1.4.3 -- 02 nov 2015
+----------------------
+
+* SvxLink now compile in C++11 mode with GCC and other compilers that
+  understand the -std=c++11 compiler switch. The compiler switch will
+  automatically be turned on if a version of libsigc++ greater than 2.5.0 is
+  detected since those versions require C++11 to be enabled.
+
+
+
  1.4.2 -- 06 jun 2015
 ----------------------
 
