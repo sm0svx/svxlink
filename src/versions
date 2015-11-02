@@ -23,8 +23,7 @@ MODULE_METARINFO=1.0.0.99.2
 REMOTE_TRX=1.1.99.30
 
 # Version for the signal level calibration utility
-SIGLEV_DET_CAL=1.0.3.99.4
+SIGLEV_DET_CAL=1.0.4.99.0
 
 # Version for the deviation calibration utility
 DEVCAL=0.99.1
-
