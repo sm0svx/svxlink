@@ -103,6 +103,9 @@
   automatically be turned on if a version of libsigc++ greater than 2.5.0 is
   detected since those versions require C++11 to be enabled.
 
+* The default PTT type is now NONE so that svxlink and remotetrx can start
+  out of the box without reconfiguring them.
+
 
 
  1.4.2 -- 06 jun 2015
