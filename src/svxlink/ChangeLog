@@ -101,6 +101,9 @@
 * The default PTT type is now NONE so that svxlink and remotetrx can start
   out of the box without reconfiguring them.
 
+* Bugfix in the GPIO squelch detector. The usage of "!" in GPIO_SQL_PIN to get
+  inverted operation did not work.
+
 
 
  1.4.3 -- 02 nov 2015
