@@ -267,10 +267,9 @@ void SvxSwDtmfDecoder::processBlock(void)
     col[2].calc(sample);
     col[3].calc(sample);
   }
-  ios_base::fmtflags orig_cout_flags;
+  ios_base::fmtflags orig_cout_flags(cout.flags());
   if (debug)
   {
-    orig_cout_flags = cout.flags();
     cout << setprecision(2) << fixed;
     cout << "### pwr=" << setw(6) 
          << 10.0f * log10f(2 * win_pwr_comp * block_energy / BLOCK_SIZE)
