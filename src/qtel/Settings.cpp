@@ -301,7 +301,7 @@ void Settings::showDialog(void)
     // Set up bind address combobox
   foreach (const QNetworkInterface &netif, QNetworkInterface::allInterfaces())
   {
-    const QString &hname = netif.humanReadableName();
+    const QString &hname = netif.name();
     foreach (const QNetworkAddressEntry &netaddr, netif.addressEntries())
     {
       const QHostAddress &addr = netaddr.ip();

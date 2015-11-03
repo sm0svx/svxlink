@@ -713,15 +713,15 @@ Message</source>
     </message>
     <message>
         <source>Bind address</source>
-        <translation type="unfinished"></translation>
+        <translation>Прив&apos;язана адреса</translation>
     </message>
     <message>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A bind address can be specified to force Qtel to use a specific network interface if your computer has more than one. Specify the IP address of the interface to bind to.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Прив&apos;язана адреса може бути вказана, щоб змусити Qtel використовувати певний мережевий інтерфейс, якщо ваш комп&apos;ютер має більше ніж один. Вкажіть IP-адресу інтерфейсу щоб його прив&apos;язати.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <source>None</source>
-        <translation type="unfinished"></translation>
+        <translation>Ні</translation>
     </message>
 </context>
 </TS>
