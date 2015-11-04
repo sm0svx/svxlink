@@ -617,7 +617,7 @@ void LocationInfo::sendAprsStatistics(Timer *t)
   info[0] ='\0';
   string head ="UNIT.RX Erlang,TX Erlang,RXcount/10m,TXcount/10m,none1,STxxxxxx,logic";
 
-  sprintf(info, "E%s-%s>RXTLM-1,TCPIP,qAR,%s::E%s-%s:%s\n",
+  sprintf(info, "E%s-%s>RXTLM-1,TCPIP,qAR,%s::E%s-%-6s:%s\n",
        loc_cfg.prefix.c_str(), loc_cfg.mycall.c_str(), loc_cfg.mycall.c_str(),
        loc_cfg.prefix.c_str(), loc_cfg.mycall.c_str(), head.c_str());
 

@@ -274,7 +274,7 @@ class FlatTopWindow : public Window
 class DevPrinter : public AudioSink
 {
   public:
-    DevPrinter(float samp_rate, const vector<float> &mod_fqs,
+    DevPrinter(unsigned samp_rate, const vector<float> &mod_fqs,
                float max_dev=1.0f, float headroom_db=0.0f)
       : block_size(samp_rate / 20), w(block_size),
         g(mod_fqs.size()), samp_cnt(0), max_dev(max_dev),
@@ -353,7 +353,8 @@ class DevPrinter : public AudioSink
                  << "  Carrier freq err=" << fqerr_est;
             if (carrier_fq > 0.0)
             {
-              int ppm_err = round(1000000.0 * fqerr_est / carrier_fq);
+              int ppm_err =
+                static_cast<int>(round(1000000.0 * fqerr_est / carrier_fq));
               cout << "(" << ppm_err << "ppm)";
             }
             cout.flush();
@@ -375,8 +376,8 @@ class DevPrinter : public AudioSink
     }
 
   private:
-    static const double ALPHA = 0.9;        //!< IIR filter coeff
-    static const size_t PRINT_INTERVAL = 5; //!< Block count
+    static CONSTEXPR double ALPHA = 0.9;        //!< IIR filter coeff
+    static CONSTEXPR size_t PRINT_INTERVAL = 5; //!< Block count
 
     int           block_size;
     FlatTopWindow w;

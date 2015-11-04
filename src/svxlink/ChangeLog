@@ -98,6 +98,22 @@
   were ignored. This was not true but is now. The man-page was also lacking
   information on that all files not ending in ".conf" are ignored.
 
+* The default PTT type is now NONE so that svxlink and remotetrx can start
+  out of the box without reconfiguring them.
+
+* Bugfix in the GPIO squelch detector. The usage of "!" in GPIO_SQL_PIN to get
+  inverted operation did not work.
+
+
+
+ 1.4.3 -- 02 nov 2015
+----------------------
+
+* SvxLink now compile in C++11 mode with GCC and other compilers that
+  understand the -std=c++11 compiler switch. The compiler switch will
+  automatically be turned on if a version of libsigc++ greater than 2.5.0 is
+  detected since those versions require C++11 to be enabled.
+
 
 
  1.4.2 -- 06 jun 2015
