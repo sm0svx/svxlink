@@ -154,6 +154,7 @@ void SvxServer::clientConnected(Async::TcpConnection *con)
   Cons clpair;
   clpair.con = con;
   clpair.state = STATE_VER_WAIT;
+  clpair.sql_open = false;
   clpair.recv_exp = sizeof(Msg);
   clpair.recv_cnt = 0;
   gettimeofday(&clpair.last_msg, NULL);
@@ -200,9 +201,16 @@ void SvxServer::clientDisconnected(Async::TcpConnection *con,
     if ((*it).second.con == con)
     {
       (*it).second.state = STATE_DISC;
-        // ToDo: if a station lost network connection it can't be
-        //       master anymore
-      resetMaster((*it).second.con);
+        // If a station lost network connection it can't be
+        // master anymore, send a SQL close command to all
+        // connected stations
+      if (isMaster(con))
+      {
+        cout << "--- sending SQL close to all, resetting master" << endl;
+        MsgSquelch *ms = new MsgSquelch(false, 0.0, 1);
+        sendExcept(con, ms);
+        resetMaster((*it).second.con);
+      }
       break;
     }
   }
@@ -354,6 +362,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
       else
       {
         cerr << "*** ERROR: Protocol error in svxserver.\n";
+        ((*it).second).state = STATE_DISC;
         con->disconnect();
         clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
       }
@@ -387,7 +396,6 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
     case MsgSquelch::TYPE:
     {
       MsgSquelch *n = reinterpret_cast<MsgSquelch *>(msg);
-      cout << (*it).second.con->remoteHost() << " - RX " << n->isOpen() << endl;
       cmsg = n;
       break;
     }
@@ -424,13 +432,13 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
         // open, it will send a SQL=open command to all connected stations
         // may occur in case of a network error when the connection has been
         // reestablished
-      if ((*it).second.sql_open == false)
+        
+      if (!hasMaster())
       {
         MsgSquelch *ms = new MsgSquelch(true, 1.0, 1);
         sendExcept(con, ms);
         (*it).second.sql_open = true;
         setMaster(con);
-//        cout << (*it).second.con->remoteHost() << " MsgAudio - SQL=1 MASTER" << endl;
       }
 
         // sends the audiostream to all connected clients without the
@@ -472,7 +480,6 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
     case MsgSetMuteState::TYPE:
     {
       MsgSetMuteState *s = reinterpret_cast<MsgSetMuteState *>(msg);
-//      cout << "___MsgSetMuteState: muteState=" << s->muteState() << endl;
         // wirklich notwendig?
       cmsg = s;
       break;
@@ -507,6 +514,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
         MsgTransmitterStateChange *m = new MsgTransmitterStateChange(false);
         sendExcept(con, m);
         sendMsg(con, m);
+        resetMaster(con);
       }
 
       cmsg = s;
@@ -548,6 +556,7 @@ void SvxServer::hbtimeout(Timer *t)
            << (*it).second.con->remoteHost() << ":"
            << (*it).second.con->remotePort() << endl;
       t_clients.insert(*it); // storing clients to be removed later
+      ((*it).second).state = STATE_DISC;
     }
     else 
     {
