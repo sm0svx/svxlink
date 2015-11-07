@@ -54,7 +54,11 @@ configuration variables are described section for section.
 The GLOBAL section contains application global configuration data.
 .TP
 .B MODULE_PATH
-Specify where the SvxLink modules can be found. The default is /usr/lib/svxlink 
+Specify where the SvxLink modules can be found. If MODULE_PATH is not
+specified, the standard search paths for library files will be used. If that
+also fails a hardcoded default will be used. What that default is depend on the
+architecture but typically on a x86_64 system it is /usr/lib64/svxlink.
+Leaving this variable unset should work in most cases.
 .TP
 .B LOGICS
 Specify a comma separated list of logic cores that should be created. The logic core is
@@ -67,8 +71,8 @@ behaviour of the logic core is specified.
 Specify the path to a directory that contain additional configuration files.
 If a relative path is specified, the path will be relative to the directory
 where the main configuration file is at. All files in the specified directory
-will be read as additional configuration. Filenames starting with a dot are
-ignored.
+will be read as additional configuration. Filenames starting with a dot (hidden
+files) or not ending in .conf are ignored.
 .TP
 .B TIMESTAMP_FORMAT
 This variable specifies the format of the timestamp that is written in front of
@@ -1445,6 +1449,16 @@ Always "Net" for a networked receiver.
 .B HOST
 The hostname or IP address of the remote receiver host.
 .TP
+.B TCP_PORT
+The TCP port that RemoteTrx listen on. The default is 5210.
+.TP
+.B LOG_DISCONNECTS_ONCE
+Set this configuration variable to 1 to suppress logging of multiple disconnect
+messages in a row, like when there is no RemoteTrx running on the other side.
+Thus, failed reconnect attempts will not be logged at all. This may be of use
+if a RemoteTrx is missing for a long time or if it's only used from time to
+time. The default is 0 which means that all reconnect attempts will be logged.
+.TP
 .B AUTH_KEY
 This is the authentication key (password) to use to connect to the RemoteTrx
 server. The same key have to be specified in the RemoteTrx configuration.
@@ -1729,6 +1743,16 @@ Always "Net" for a networked transmitter.
 .TP
 .B HOST
 The hostname or IP address of the remote transmitter host.
+.TP
+.B TCP_PORT
+The TCP port that RemoteTrx listen on. The default is 5210.
+.TP
+.B LOG_DISCONNECTS_ONCE
+Set this configuration variable to 1 to suppress logging of multiple disconnect
+messages in a row, like when there is no RemoteTrx running on the other side.
+Thus, failed reconnect attempts will not be logged at all. This may be of use
+if a RemoteTrx is missing for a long time or if it's only used from time to
+time. The default is 0 which means that all reconnect attempts will be logged.
 .TP
 .B AUTH_KEY
 This is the authentication key (password) to use to connect to the RemoteTrx

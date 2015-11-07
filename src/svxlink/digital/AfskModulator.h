@@ -53,6 +53,7 @@ An example of how to use the AfskModulator class
  ****************************************************************************/
 
 #include <AsyncAudioSource.h>
+#include <CppStdCompat.h>
 
 
 /****************************************************************************
@@ -150,9 +151,9 @@ class AfskModulator : public Async::AudioSource, public sigc::trackable
   protected:
     
   private:
-    static const unsigned   BUFSIZE = 256;
-    static const unsigned   FADE_SYMBOLS = 1;
-    static const float      FADE_START_VAL = 0.01f;
+    static CONSTEXPR unsigned BUFSIZE = 256;
+    static CONSTEXPR unsigned FADE_SYMBOLS = 1;
+    static CONSTEXPR float    FADE_START_VAL = 0.01f;
 
     const unsigned          baudrate;
     const unsigned          sample_rate;

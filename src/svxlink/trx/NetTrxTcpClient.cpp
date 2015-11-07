@@ -129,6 +129,28 @@ NetTrxTcpClient *NetTrxTcpClient::instance(const std::string& remote_host,
   }
   else
   {
+      // Initialize the GCrypt library if not already initialized
+    if (!gcry_control(GCRYCTL_INITIALIZATION_FINISHED_P))
+    {
+      gcry_check_version(NULL);
+      gcry_error_t err;
+      err = gcry_control(GCRYCTL_DISABLE_SECMEM, 0);
+      if (err != GPG_ERR_NO_ERROR)
+      {
+        cerr << "*** ERROR: Failed to initialize the Libgcrypt library: "
+             << gcry_strsource(err) << "/" << gcry_strerror(err) << endl;
+        return 0;
+      }
+        // Tell Libgcrypt that initialization has completed
+      err = gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
+      if (err != GPG_ERR_NO_ERROR)
+      {
+        cerr << "*** ERROR: Failed to initialize the Libgcrypt library: "
+             << gcry_strsource(err) << "/" << gcry_strerror(err) << endl;
+        return 0;
+      }
+    }
+
     con = new NetTrxTcpClient(remote_host, remote_port, RECV_BUF_SIZE);
     clients[key] = con;
   }

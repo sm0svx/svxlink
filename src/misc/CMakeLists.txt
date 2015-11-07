@@ -1,4 +1,4 @@
-set(EXPINC common.h)
+set(EXPINC common.h CppStdCompat.h)
 
 # Copy exported include files to the global include directory
 foreach(incfile ${EXPINC})

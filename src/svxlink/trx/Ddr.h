@@ -156,7 +156,7 @@ class Ddr : public LocalRxBase
      * @brief   Find out which frequency this DDR is tuned to
      * @returns Returns the absolute frequency in Hz of this DDR
      */
-    double nbFq(void) const { return fq; }
+    uint32_t nbFq(void) const { return fq; }
 
     /**
      * @brief   Tell the DDR that the frequency of the wideband tuner changed
@@ -245,7 +245,7 @@ class Ddr : public LocalRxBase
     Async::Config           &cfg;
     Channel                 *channel;
     WbRxRtlSdr              *rtl;
-    double                  fq;
+    uint32_t                fq;
     
 };  /* class Ddr */
 

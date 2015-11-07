@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncConfig.h>
+#include <CppStdCompat.h>
 
 
 /****************************************************************************
@@ -184,19 +185,19 @@ class Voter : public Rx
   protected:
     
   private:
-    static const float	  DEFAULT_HYSTERESIS              = 1.5f;
-    static const unsigned DEFAULT_VOTING_DEALAY           = 0;
-    static const unsigned DEFAULT_SQL_CLOSE_REVOTE_DELAY  = 500;
-    static const unsigned DEFAULT_REVOTE_INTERVAL         = 1000;
-    static const unsigned DEFAULT_RX_SWITCH_DELAY         = 500;
+    static CONSTEXPR float    DEFAULT_HYSTERESIS             = 1.5f;
+    static CONSTEXPR unsigned DEFAULT_VOTING_DEALAY          = 0;
+    static CONSTEXPR unsigned DEFAULT_SQL_CLOSE_REVOTE_DELAY = 500;
+    static CONSTEXPR unsigned DEFAULT_REVOTE_INTERVAL        = 1000;
+    static CONSTEXPR unsigned DEFAULT_RX_SWITCH_DELAY        = 500;
     
-    static const unsigned MAX_VOTING_DELAY                = 5000;
-    static const unsigned MAX_BUFFER_LENGTH               = MAX_VOTING_DELAY;
-    static const float	  MAX_HYSTERESIS                  = 2.0f;
-    static const unsigned MAX_SQL_CLOSE_REVOTE_DELAY      = 3000;
-    static const unsigned MIN_REVOTE_INTERVAL             = 100;
-    static const unsigned MAX_REVOTE_INTERVAL             = 60000;
-    static const unsigned MAX_RX_SWITCH_DELAY             = 3000;
+    static CONSTEXPR unsigned MAX_VOTING_DELAY               = 5000;
+    static CONSTEXPR unsigned MAX_BUFFER_LENGTH              = MAX_VOTING_DELAY;
+    static CONSTEXPR float    MAX_HYSTERESIS                 = 2.0f;
+    static CONSTEXPR unsigned MAX_SQL_CLOSE_REVOTE_DELAY     = 3000;
+    static CONSTEXPR unsigned MIN_REVOTE_INTERVAL            = 100;
+    static CONSTEXPR unsigned MAX_REVOTE_INTERVAL            = 60000;
+    static CONSTEXPR unsigned MAX_RX_SWITCH_DELAY            = 3000;
     
     class SatRx;
 

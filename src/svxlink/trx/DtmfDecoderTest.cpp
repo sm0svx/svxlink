@@ -8,6 +8,7 @@
 #include <AsyncAudioNoiseAdder.h>
 #include <AsyncAudioFilter.h>
 #include <AsyncAudioPassthrough.h>
+#include <CppStdCompat.h>
 
 #include "DtmfDecoder.h"
 #include "DtmfEncoder.h"
@@ -171,7 +172,7 @@ class PowerPlotter : public Async::AudioPassthrough
     }
 
   private:
-    static const float ALPHA = 0.05;
+    static CONSTEXPR float ALPHA = 0.05;
     float prev_power;
 
 }; /* class PowerPlotter */
