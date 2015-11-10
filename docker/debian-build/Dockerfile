@@ -1,10 +1,10 @@
 # Build with:
-#   docker build --pull -t svxlink-centos7-build .
+#   docker build --pull -t svxlink-debian-build .
 #
 # Run with:
-#   docker run -it --rm --hostname centos7-build \
+#   docker run -it --rm --hostname debian-build \
 #              --privileged -v /dev/snd:/dev/snd \
-#              svxlink-centos7-build
+#              svxlink-debian-build
 #
 # For using sound inside the docker container add:
 #              --privileged -v /dev/snd:/dev/snd \
