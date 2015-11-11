@@ -195,9 +195,9 @@ class SigLevDetSim : public SigLevDet
     unsigned            siglev_rand_interval;
     unsigned            siglev_rand_counter;
     unsigned            block_size;
-    int                 siglev_min;
-    int                 siglev_max;
-    int                 siglev_default;
+    float               siglev_min;
+    float               siglev_max;
+    float               siglev_default;
     unsigned int        seed;
     
     SigLevDetSim(const SigLevDetSim&);
