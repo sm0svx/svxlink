@@ -194,6 +194,7 @@ void SvxServer::clientDisconnected(Async::TcpConnection *con,
     heartbeat_timer->setEnable(false);
     heartbeat_timer->reset();
   }
+  resetMaster(con);
 
   Clients::iterator it;
   for (it=clients.begin(); it!=clients.end(); it++)
@@ -209,7 +210,6 @@ void SvxServer::clientDisconnected(Async::TcpConnection *con,
         cout << "--- sending SQL close to all, resetting master" << endl;
         MsgSquelch *ms = new MsgSquelch(false, 0.0, 1);
         sendExcept(con, ms);
-        resetMaster((*it).second.con);
       }
       break;
     }
@@ -432,7 +432,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
         // open, it will send a SQL=open command to all connected stations
         // may occur in case of a network error when the connection has been
         // reestablished
-        
+
       if (!hasMaster())
       {
         MsgSquelch *ms = new MsgSquelch(true, 1.0, 1);
@@ -463,6 +463,9 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 
     case MsgFlush::TYPE:
     {
+        // reset the master to provide other stations to get the audio focus
+      resetMaster((*it).second.con);
+
       MsgSquelch  *ms = new MsgSquelch(false, 0.0, 1);
       sendExcept(con, ms);
       sendMsg(con, ms);
@@ -472,8 +475,6 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
       sendMsg(con, o);
       cmsg = o;
 
-        // reset the master to provide other stations to get the audio focus
-      resetMaster((*it).second.con);
       break;
     }
 
@@ -492,6 +493,9 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
         // mode=1 means TX=true/on
       if (s->mode() == 1)
       {
+          // the station with 1st SQL opening becomes a master
+        setMaster(con);
+
         MsgTransmitterStateChange *n = new MsgTransmitterStateChange(true);
         sendMsg(con, n);
         sendExcept(con, n);
@@ -499,14 +503,13 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
         MsgSquelch  *ms = new MsgSquelch(true, 1.0, 1);
         sendExcept(con, ms);
         (*it).second.sql_open = true;
-
-          // the station with 1st SQL opening becomes a master
-        setMaster(con);
       }
 
         // mode=2 means TX=AUTO
       if (s->mode() == 2)
       {
+        resetMaster(con);
+
         (*it).second.tx_mode = Tx::TX_AUTO;
         MsgSetTxCtrlMode *n = new MsgSetTxCtrlMode(Tx::TX_AUTO);
         sendExcept(con, n);
@@ -514,7 +517,6 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
         MsgTransmitterStateChange *m = new MsgTransmitterStateChange(false);
         sendExcept(con, m);
         sendMsg(con, m);
-        resetMaster(con);
       }
 
       cmsg = s;

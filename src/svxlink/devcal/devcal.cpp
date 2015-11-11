@@ -483,8 +483,8 @@ static const unsigned audio_ch = 0;
 
 int main(int argc, const char *argv[])
 {
-  cout << PROGRAM_NAME " v" DEVCAL_VERSION " (" __DATE__ 
-          ") Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " v" DEVCAL_VERSION
+          " Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you\n";
   cout << "are welcome to redistribute it in accordance with the "
