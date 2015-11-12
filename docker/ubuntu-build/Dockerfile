@@ -23,7 +23,8 @@
 #              -e NUM_CORES=8
 #
 
-FROM ubuntu
+#FROM ubuntu
+FROM ubuntu:wily
 MAINTAINER Tobias Blomberg <sm0svx@ssa.se>
 
 # Install required packages and set up the svxlink user
