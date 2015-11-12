@@ -200,7 +200,7 @@ AudioDeviceUDP::AudioDeviceUDP(const string& dev_name)
 
 AudioDeviceUDP::~AudioDeviceUDP(void)
 {
-  delete read_buf;
+  delete [] read_buf;
   delete pace_timer;
 } /* AudioDeviceUDP::~AudioDeviceUDP */
 
