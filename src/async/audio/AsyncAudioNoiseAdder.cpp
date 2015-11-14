@@ -117,7 +117,7 @@ using namespace Async;
 
 AudioNoiseAdder::AudioNoiseAdder(float level_db)
   : sigma(sqrt(powf(10.0f, level_db / 10.0f) / 2.0f)), z1(0.0f),
-    generate(false)
+    generate(false), seed(0)
 {
 } /* AudioNoiseAdder::AudioNoiseAdder */
 
@@ -169,8 +169,8 @@ float AudioNoiseAdder::generateGaussianNoise(void)
   float u1, u2;
   do
   {
-    u1 = rand() * (1.0f / RAND_MAX);
-    u2 = rand() * (1.0f / RAND_MAX);
+    u1 = rand_r(&seed) * (1.0f / RAND_MAX);
+    u2 = rand_r(&seed) * (1.0f / RAND_MAX);
   }
   while (u1 <= epsilon);
 
