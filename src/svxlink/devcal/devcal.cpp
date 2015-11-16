@@ -279,8 +279,8 @@ class DevPrinter : public AudioSink
       : block_size(samp_rate / 20), w(block_size),
         g(mod_fqs.size()), samp_cnt(0), max_dev(max_dev),
         headroom(pow(10.0, headroom_db/20.0)), adj_level(1.0f), dev_est(0.0),
-        block_cnt(0), pwr_sum(0.0), amp_sum(0.0), fqerr_est(0.0),
-        carrier_fq(0.0)
+        block_cnt(0), pwr_sum(0.0), tot_dev_est(0.0f), amp_sum(0.0),
+        fqerr_est(0.0), carrier_fq(0.0)
     {
       for (size_t i=0; i<mod_fqs.size(); ++i)
       {
@@ -483,8 +483,8 @@ static const unsigned audio_ch = 0;
 
 int main(int argc, const char *argv[])
 {
-  cout << PROGRAM_NAME " v" DEVCAL_VERSION " (" __DATE__ 
-          ") Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " v" DEVCAL_VERSION
+          " Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you\n";
   cout << "are welcome to redistribute it in accordance with the "

@@ -295,9 +295,8 @@ bool Proxy::sendMsgBlock(MsgBlockType type, const IpAddress &remote_ip,
   {
     char errstr[256];
     errstr[0] = 0;
-    strerror_r(errno, errstr, sizeof(errstr));
     cerr << "*** ERROR: Error while writing message to EchoLink proxy: "
-         << errstr << endl;
+         << strerror_r(errno, errstr, sizeof(errstr)) << endl;
     reset();
   }
   else if (ret != msg_len)

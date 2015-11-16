@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -188,17 +188,15 @@ class Async::AudioMixer::MixerSrc : public AudioSink
  ****************************************************************************/
 
 AudioMixer::AudioMixer(void)
-  : delayed_exec_timer(0), outbuf_pos(0), outbuf_cnt(0), is_flushed(true),
-    output_stopped(false)
+  : output_timer(0, Timer::TYPE_ONESHOT, false), outbuf_pos(0),
+    outbuf_cnt(0), is_flushed(true), output_stopped(false)
 {
-  
+  output_timer.expired.connect(mem_fun(*this, &AudioMixer::outputHandler));
 } /* AudioMixer::AudioMixer */
 
 
 AudioMixer::~AudioMixer(void)
 {
-  delete delayed_exec_timer;
-  
   list<MixerSrc *>::iterator it;
   for (it = sources.begin(); it != sources.end(); ++it)
   {
@@ -267,12 +265,7 @@ void AudioMixer::allSamplesFlushed(void)
  */
 void AudioMixer::setAudioAvailable(void)
 {
-  if (delayed_exec_timer == 0)
-  {
-    delayed_exec_timer = new Timer(0);
-    delayed_exec_timer->expired.connect(
-      	    mem_fun(*this, &AudioMixer::outputHandler));
-  }
+  output_timer.setEnable(true);
 } /* AudioMixer::setAudioAvailable */
 
 
@@ -290,35 +283,7 @@ void AudioMixer::setAudioAvailable(void)
  */
 void AudioMixer::flushSamples(void)
 {
-  //printf("AudioMixer::flushSamples\n");
-
-  if (delayed_exec_timer == 0)
-  {
-    delayed_exec_timer = new Timer(0);
-    delayed_exec_timer->expired.connect(
-      	    mem_fun(*this, &AudioMixer::outputHandler));
-  }
-  
-#if 0
-    // If any input stream is still active we can't flush the output stream
-  list<MixerSrc *>::iterator it;
-  for (it = sources.begin(); it != sources.end(); ++it)
-  {
-    if ((*it)->isActive())
-    {
-      return;
-    }
-  }
-  
-  if (outbuf_pos < outbuf_cnt)
-  {
-    return;
-  }
-  
-  //printf("\tFlushing...\n");
-  sinkFlushSamples();
-#endif
-
+  output_timer.setEnable(true);
 } /* AudioMixer::flushSamples */
 
 
@@ -336,11 +301,7 @@ void AudioMixer::flushSamples(void)
  */
 void AudioMixer::outputHandler(Timer *t)
 {
-  if (t != 0)
-  {
-    delete delayed_exec_timer;
-    delayed_exec_timer = 0;
-  }
+  output_timer.setEnable(false);
   
   if (output_stopped)
   {

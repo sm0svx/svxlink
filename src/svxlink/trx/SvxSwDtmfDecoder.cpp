@@ -124,10 +124,12 @@ namespace {
  ****************************************************************************/
 
 SvxSwDtmfDecoder::SvxSwDtmfDecoder(Config &cfg, const string &name)
-  : DtmfDecoder(cfg, name), twist_nrm_thresh(0), twist_rev_thresh(0), row(8),
-    col(8), block_pos(0), det_cnt(0), undet_cnt(0), last_digit_active(0),
-    min_det_cnt(DEFAULT_MIN_DET_CNT), min_undet_cnt(DEFAULT_MIN_UNDET_CNT),
-    det_state(STATE_IDLE), det_cnt_weight(0), debug(false), win_pwr_comp(0.0f)
+  : DtmfDecoder(cfg, name), twist_nrm_thresh(0), twist_rev_thresh(0),
+    row(8), col(8), block_size(0), block_pos(0), det_cnt(0), undet_cnt(0),
+    last_digit_active(0), min_det_cnt(DEFAULT_MIN_DET_CNT),
+    min_undet_cnt(DEFAULT_MIN_UNDET_CNT), det_state(STATE_IDLE),
+    det_cnt_weight(0), duration(0), undet_thresh(0), debug(false),
+    win_pwr_comp(0.0f)
 {
   twist_nrm_thresh = powf(10.0f, DEFAULT_MAX_NORMAL_TWIST_DB / 10.0f);
   twist_rev_thresh = powf(10.0f, -(DEFAULT_MAX_REV_TWIST_DB / 10.0f));

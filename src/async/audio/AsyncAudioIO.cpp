@@ -151,59 +151,43 @@ class Async::AudioIO::DelayedFlushAudioReader
 {
   public:
     DelayedFlushAudioReader(AudioDevice *audio_dev)
-      : audio_dev(audio_dev), flush_timer(0), is_idle(true)
+      : audio_dev(audio_dev), flush_timer(0, Timer::TYPE_ONESHOT, false),
+        is_idle(true)
     {
-      
+      flush_timer.expired.connect(
+      	  mem_fun(*this, &DelayedFlushAudioReader::flushDone));
     }
     
-    ~DelayedFlushAudioReader(void)
-    {
-      delete flush_timer;
-    }
+    ~DelayedFlushAudioReader(void) {}
 
     bool isIdle(void) const { return is_idle; }
     
     virtual int writeSamples(const float *samples, int count)
     {
-      //printf("DelayedFlushAudioReader[%s]::writeSamples: count=%d\n", audio_dev->devName().c_str(), count);
-
       is_idle = false;
-
-      if (flush_timer != 0)
-      {
-	delete flush_timer;
-	flush_timer = 0;
-      }
-      
+      flush_timer.setEnable(false);
       return AudioReader::writeSamples(samples, count);
     }
     
     virtual void flushSamples(void)
     {
-      //printf("DelayedFlushAudioReader[%s]::flushSamples\n", audio_dev->devName().c_str());
-
       is_idle = true;
-
       audio_dev->flushSamples();
       long flushtime =
               1000 * audio_dev->samplesToWrite() / audio_dev->sampleRate();
-      delete flush_timer;
-      flush_timer = new Timer(flushtime);
-      flush_timer->expired.connect(
-      	  mem_fun(*this, &DelayedFlushAudioReader::flushDone));
+      flush_timer.setEnable(false);
+      flush_timer.setTimeout(flushtime);
+      flush_timer.setEnable(true);
     }
 
   private:
     AudioDevice *audio_dev;
-    Timer     	*flush_timer;
+    Timer     	flush_timer;
     bool        is_idle;
   
     void flushDone(Timer *timer)
     {
-      //printf("DelayedFlushAudioReader[%s]::flushDone\n", audio_dev->devName().c_str());
-
-      delete flush_timer;
-      flush_timer = 0;
+      flush_timer.setEnable(false);
       AudioReader::flushSamples();
     } /* AudioIO::flushDone */
 
