@@ -9,7 +9,7 @@ to a remote host. See usage instructions in the class definition.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2015 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,9 +26,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
-
 
 /****************************************************************************
  *
@@ -172,6 +169,10 @@ TcpConnection::TcpConnection(size_t recv_buf_len)
     wr_watch(0), recv_buf(0), recv_buf_cnt(0)
 {
   recv_buf = new char[recv_buf_len];
+  rd_watch = new FdWatch;
+  rd_watch->activity.connect(mem_fun(*this, &TcpConnection::recvHandler));
+  wr_watch = new FdWatch;
+  wr_watch->activity.connect(mem_fun(*this, &TcpConnection::writeHandler));
 } /* TcpConnection::TcpConnection */
 
 
@@ -182,6 +183,10 @@ TcpConnection::TcpConnection(int sock, const IpAddress& remote_addr,
     recv_buf(0), recv_buf_cnt(0)
 {
   recv_buf = new char[recv_buf_len];
+  rd_watch = new FdWatch;
+  rd_watch->activity.connect(mem_fun(*this, &TcpConnection::recvHandler));
+  wr_watch = new FdWatch;
+  wr_watch->activity.connect(mem_fun(*this, &TcpConnection::writeHandler));
   setSocket(sock);
 } /* TcpConnection::TcpConnection */
 
@@ -190,6 +195,8 @@ TcpConnection::~TcpConnection(void)
 {
   disconnect();
   delete [] recv_buf;
+  delete rd_watch;
+  delete wr_watch;
 } /* TcpConnection::~TcpConnection */
 
 
@@ -212,12 +219,9 @@ void TcpConnection::disconnect(void)
 {
   recv_buf_cnt = 0;
   
-  delete wr_watch;
-  wr_watch = 0;
-  
-  delete rd_watch;
-  rd_watch = 0;
-  
+  wr_watch->setEnabled(false);
+  rd_watch->setEnabled(false);
+
   if (sock != -1)
   {
     close(sock);
@@ -271,13 +275,10 @@ int TcpConnection::write(const void *buf, int count)
 void TcpConnection::setSocket(int sock)
 {
   this->sock = sock;
-  
-  rd_watch = new FdWatch(sock, FdWatch::FD_WATCH_RD);
-  rd_watch->activity.connect(mem_fun(*this, &TcpConnection::recvHandler));
-  
-  wr_watch = new FdWatch(sock, FdWatch::FD_WATCH_WR);
-  wr_watch->activity.connect(mem_fun(*this, &TcpConnection::writeHandler));
+  rd_watch->setFd(sock, FdWatch::FD_WATCH_RD);
+  rd_watch->setEnabled(true);
   wr_watch->setEnabled(false);
+  wr_watch->setFd(sock, FdWatch::FD_WATCH_WR);
 } /* TcpConnection::setSocket */
 
 
