@@ -9,7 +9,7 @@ file descriptor, a signal is emitted.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2015 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,15 +27,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
 /****************************************************************************
  *
  * System Includes
  *
  ****************************************************************************/
 
+#include <cassert>
 
 
 /****************************************************************************
@@ -115,19 +113,12 @@ using namespace Async;
  *
  ****************************************************************************/
 
+FdWatch::FdWatch(void)
+  : m_fd(-1), m_type(FD_WATCH_RD), m_enabled(false)
+{
+} /* FdWatch::FdWatch */
 
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
+
 FdWatch::FdWatch(int fd, FdWatchType type)
   : m_fd(fd), m_type(type), m_enabled(true)
 {
@@ -148,6 +139,7 @@ void FdWatch::setEnabled(bool enabled)
 {
   if (!m_enabled && enabled)
   {
+    assert(m_fd >= 0);
     Application::app().addFdWatch(this);
     m_enabled = enabled;
   }
@@ -156,8 +148,18 @@ void FdWatch::setEnabled(bool enabled)
     Application::app().delFdWatch(this);
     m_enabled = enabled;
   }
-  
 } /* FdWatch::setEnabled */
+
+
+void FdWatch::setFd(int fd, FdWatchType type)
+{
+  bool was_enabled = m_enabled;
+  setEnabled(false);
+  m_fd = fd;
+  m_type = type;
+  setEnabled(was_enabled);
+} /* FdWatch::setFd */
+
 
 
 /****************************************************************************
@@ -165,23 +167,6 @@ void FdWatch::setEnabled(bool enabled)
  * Protected member functions
  *
  ****************************************************************************/
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
 
 
 
@@ -192,26 +177,7 @@ void FdWatch::setEnabled(bool enabled)
  ****************************************************************************/
 
 
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-
-
-
-
-
-
 
 /*
  * This file has not been truncated
  */
-

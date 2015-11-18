@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncAudioFilter.h>
 //#include <AsyncAudioProcessor.h>
+#include <CppStdCompat.h>
 
 
 /****************************************************************************
@@ -178,16 +179,16 @@ class EmphasisBase : public Async::AudioFilter
   protected:
 #if INTERNAL_SAMPLE_RATE == 16000
       // 0dB gain, f1=300Hz, fs=16kHz
-    static const double b0 = 0.058555891443177958410881700501704472117;
-    static const double b1 = 0.052700302299058421340305358171463012695;
-    static const double a0 = 1.0;
-    static const double a1 = -0.88874380625776361330991903741960413754;
+    static CONSTEXPR double b0 = 0.058555891443177958410881700501704472117;
+    static CONSTEXPR double b1 = 0.052700302299058421340305358171463012695;
+    static CONSTEXPR double a0 = 1.0;
+    static CONSTEXPR double a1 = -0.88874380625776361330991903741960413754;
 #elif INTERNAL_SAMPLE_RATE == 8000
       // 0dB gain, f1=300Hz, fs=8kHz
-    static const double b0 = 0.110940380645014949334559162252844544128 ;
-    static const double b1 = 0.099846342580711719416619587263994617388 ;
-    static const double a0 = 1.0;
-    static const double a1 = -0.789213276774273331248821250483160838485;
+    static CONSTEXPR double b0 = 0.110940380645014949334559162252844544128;
+    static CONSTEXPR double b1 = 0.099846342580711719416619587263994617388;
+    static CONSTEXPR double a0 = 1.0;
+    static CONSTEXPR double a1 = -0.789213276774273331248821250483160838485;
 #else
 #error "Only 16 and 8kHz sampling rate is supported by the pre- and de-emphasis filters."
 #endif

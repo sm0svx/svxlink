@@ -222,11 +222,11 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   
   event_handler = new EventHandler(event_handler_script, 0);
   event_handler->playFile.connect(
-      	  bind(mem_fun(*msg_handler, &MsgHandler::playFile), false));
+      sigc::bind(mem_fun(*msg_handler, &MsgHandler::playFile), false));
   event_handler->playSilence.connect(
-      	  bind(mem_fun(*msg_handler, &MsgHandler::playSilence), false));
+      sigc::bind(mem_fun(*msg_handler, &MsgHandler::playSilence), false));
   event_handler->playTone.connect(
-      	  bind(mem_fun(*msg_handler, &MsgHandler::playTone), false));
+      sigc::bind(mem_fun(*msg_handler, &MsgHandler::playTone), false));
 
     // Workaround: Need to set the ID config variable and "logic_name"
     // variable to load the TCL script.
@@ -246,8 +246,9 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   m_qso.infoMsgReceived.connect(mem_fun(*this, &QsoImpl::onInfoMsgReceived));
   m_qso.chatMsgReceived.connect(mem_fun(*this, &QsoImpl::onChatMsgReceived));
   m_qso.stateChange.connect(mem_fun(*this, &QsoImpl::onStateChange));
-  m_qso.isReceiving.connect(bind(isReceiving.make_slot(), this));
-  m_qso.audioReceivedRaw.connect(bind(audioReceivedRaw.make_slot(), this));
+  m_qso.isReceiving.connect(sigc::bind(isReceiving.make_slot(), this));
+  m_qso.audioReceivedRaw.connect(
+      sigc::bind(audioReceivedRaw.make_slot(), this));
   
   prev_src = &m_qso;
   

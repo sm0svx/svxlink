@@ -226,13 +226,10 @@ void SquelchGpio::readGpioValueData(void)
     return;
   }
 
-  if (!signalDetected() && (value == '1'))
+  bool is_active = active_low ^ (value == '1');
+  if (signalDetected() != is_active)
   {
-    setSignalDetected(active_low ^ true);
-  }
-  else if (signalDetected() && (value == '0'))
-  {
-    setSignalDetected(active_low ^ false);
+    setSignalDetected(is_active);
   }
 } /* SquelchGpio::readGpioValueData */
 
