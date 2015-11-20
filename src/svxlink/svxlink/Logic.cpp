@@ -892,12 +892,17 @@ void Logic::squelchOpen(bool is_open)
   if (!is_open)
   {
     const string &received_digits = dtmf_digit_handler->command();
-    if (((exec_cmd_on_sql_close_timer.timeout() > 0) ||
-         (received_digits == "*")) &&
-        !dtmf_digit_handler->antiFlutterActive() &&
+    if (!dtmf_digit_handler->antiFlutterActive() &&
         !received_digits.empty())
     {
-      exec_cmd_on_sql_close_timer.setEnable(true);
+      if (exec_cmd_on_sql_close_timer.timeout() > 0)
+      {
+        exec_cmd_on_sql_close_timer.setEnable(true);
+      }
+      else if (received_digits == "*")
+      {
+        dtmf_digit_handler->forceCommandComplete();
+      }
     }
     processCommandQueue();
   }

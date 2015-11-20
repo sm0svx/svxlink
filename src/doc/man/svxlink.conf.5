@@ -197,12 +197,10 @@ will then be interpreted as the minimum number of seconds between identification
 LONG_IDENT_INTERVAL will not be affected by this parameter.   
 .TP
 .B EXEC_CMD_ON_SQL_CLOSE
-Specify a time, in milliseconds, after squelch close after which entered DTMF digits will
-be executed as a command without the need to send the # character. This really only is of
-use when using a radio that it is difficult to send DTMF digits from, like the Yaesu VX-2
-handheld. The down side of enabling this option is that the DTMF detection some times
-false trigger on voice. This can cause interresting situations when all of a sudden a
-module get activated in the middle of a QSO.
+Specify a time, in milliseconds, after squelch close after which entered DTMF
+digits will be executed as a command without the need to send the # character.
+To disable this feature, either comment out the configuration row or set it to
+a value less or equal to zero.
 .TP
 .B EVENT_HANDLER
 Point out the TCL event handler script to use. The TCL event handler script is
