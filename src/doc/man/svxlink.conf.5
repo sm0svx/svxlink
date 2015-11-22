@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "JULY 2014" Linux "File Formats"
+.TH SVXLINK.CONF 5 "NOVEMBER 2015" Linux "File Formats"
 .
 .SH NAME
 .
@@ -1300,8 +1300,10 @@ The sample rate used by the dongle. Legal values are 960000 and 2400000
 .TP
 .B FQ_CORR
 This is probably the most important configuration variable. Most dongles are
-far off in frequency so they need to be calibrated. How to do this is out of
-scope for this document.
+far off in frequency so they need to be calibrated. Calibrating the dongle can
+be done in multiple ways. The recommended way is to use the devcal utility that
+is distributed along with SvxLink. The calibration procedure is described in
+the devcal (1) manual page.
 
 The end result should be a correction value for how far off the dongle is in
 frequency counted in parts per million (PPM). That is, how many Hz per MHz is
@@ -2215,4 +2217,5 @@ Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
 .
 .BR svxlink (1),
 .BR remotetrx (1),
-.BR siglevdetcal (1)
+.BR siglevdetcal (1),
+.BR devcal (1)
