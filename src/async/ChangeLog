@@ -1,4 +1,4 @@
- 1.4.0 -- ?? ??? 2015
+ 1.4.0 -- 22 Nov 2015
 ----------------------
 
 * New class Async::Pty used to communicate over UNIX 98 PTY:s.
