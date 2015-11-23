@@ -13,11 +13,27 @@ foreach(incfile ${EXPINC})
   expinc(${incfile})
 endforeach(incfile)
 
-# Find Qt4
-find_package(Qt4 4.2 REQUIRED QtCore QtGui QtNetwork)
-include(${QT_USE_FILE})
-set(LIBS ${LIBS} ${QT_LIBRARIES})
-QT4_WRAP_CPP(QTHEADERS_MOC ${QTHEADERS})
+# Find Qt5
+find_package(Qt5Core QUIET)
+if (Qt5Core_FOUND)
+  message("-- Found Qt5 version ${Qt5Core_VERSION_STRING}")
+  find_package(Qt5Gui REQUIRED)
+  find_package(Qt5Widgets REQUIRED)
+  find_package(Qt5Network REQUIRED)
+  include_directories(${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS}
+                      ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Network_INCLUDE_DIRS})
+  set(LIBS ${LIBS} ${Qt5Core_LIBRARIES} ${Qt5Gui_LIBRARIES}
+           ${Qt5Widgets_LIBRARIES} ${Qt5Network_LIBRARIES})
+  QT5_WRAP_CPP(QTHEADERS_MOC ${QTHEADERS})
+endif()
+
+# If not Qt5 was found, try Qt4
+if (NOT Qt5Core_FOUND)
+  find_package(Qt4 4.2 REQUIRED QtCore QtGui QtNetwork)
+  include(${QT_USE_FILE})
+  set(LIBS ${LIBS} ${QT_LIBRARIES})
+  QT4_WRAP_CPP(QTHEADERS_MOC ${QTHEADERS})
+endif()
 
 # Build a shared library and a static library if configured
 add_library(${LIBNAME} SHARED ${LIBSRC} ${QTHEADERS_MOC})
