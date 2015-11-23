@@ -202,12 +202,15 @@ void SvxServer::clientDisconnected(Async::TcpConnection *con,
     if ((*it).second.con == con)
     {
       (*it).second.state = STATE_DISC;
+      (*it).second.sql_open = false;
+      cout << "... " << (*it).second.con->remoteHost() << ".sql_open=0 " << endl;
+
         // If a station lost network connection it can't be
         // master anymore, send a SQL close command to all
         // connected stations
       if (isMaster(con))
       {
-        cout << "--- sending SQL close to all, resetting master" << endl;
+        cout << "--- sending SQL=0 to all, resetting master" << endl;
         MsgSquelch *ms = new MsgSquelch(false, 0.0, 1);
         sendExcept(con, ms);
       }
@@ -215,12 +218,13 @@ void SvxServer::clientDisconnected(Async::TcpConnection *con,
     }
   }
 
-  assert(it != clients.end());
+  if (it != clients.end())
+  {
 
-  cout << "--- removing client " << con->remoteHost() << ":"
-       << con->remotePort()  << " from client list" << endl;
-
-  clients.erase(it);
+     cout << "-X- removing client " << con->remoteHost() << ":"
+          << con->remotePort()  << " from client list" << endl;
+     clients.erase(it);
+  }
 } /* SvxServer::clientDisconnected */
 
 
@@ -397,6 +401,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
     {
       MsgSquelch *n = reinterpret_cast<MsgSquelch *>(msg);
       cmsg = n;
+      cout << "--- MsgSquelch::TYPE: " << con->remoteHost() << endl;
       break;
     }
 
@@ -437,7 +442,9 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
       {
         MsgSquelch *ms = new MsgSquelch(true, 1.0, 1);
         sendExcept(con, ms);
+        cout << "... " << con->remoteHost() << ".sql_open=1"<< endl;
         (*it).second.sql_open = true;
+        cout << "... MsgAudio::TYPE: !hasMaster() " << con->remoteHost() << endl;
         setMaster(con);
       }
 
@@ -464,17 +471,21 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
     case MsgFlush::TYPE:
     {
         // reset the master to provide other stations to get the audio focus
-      resetMaster((*it).second.con);
+      cout << "... MsgFlush::TYPE: " << con->remoteHost() << endl;
 
-      MsgSquelch  *ms = new MsgSquelch(false, 0.0, 1);
-      sendExcept(con, ms);
-      sendMsg(con, ms);
-      (*it).second.sql_open = false;
+      if (isMaster(con))
+      {
+        resetMaster((*it).second.con);
 
-      MsgAllSamplesFlushed *o = new MsgAllSamplesFlushed;
-      sendMsg(con, o);
-      cmsg = o;
-
+        MsgSquelch  *ms = new MsgSquelch(false, 0.0, 1);
+        sendExcept(con, ms);
+        sendMsg(con, ms);
+        cout << "... " << con->remoteHost() << ".sql_open=0" << endl;
+        (*it).second.sql_open = false;
+     }
+        MsgAllSamplesFlushed *o = new MsgAllSamplesFlushed;
+        sendMsg(con, o);
+        cmsg = o;
       break;
     }
 
@@ -483,6 +494,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
       MsgSetMuteState *s = reinterpret_cast<MsgSetMuteState *>(msg);
         // wirklich notwendig?
       cmsg = s;
+      cout << "... MsgSetMuteState::TYPE: " << con->remoteHost() << endl;
       break;
     }
 
@@ -494,6 +506,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
       if (s->mode() == 1)
       {
           // the station with 1st SQL opening becomes a master
+        cout << "... s->mode() = 1, setting Master: " << con->remoteHost() << endl;
         setMaster(con);
 
         MsgTransmitterStateChange *n = new MsgTransmitterStateChange(true);
@@ -502,13 +515,17 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 
         MsgSquelch  *ms = new MsgSquelch(true, 1.0, 1);
         sendExcept(con, ms);
+        cout << "... " << con->remoteHost() << ".sql_open=1" << endl;
         (*it).second.sql_open = true;
       }
 
         // mode=2 means TX=AUTO
       if (s->mode() == 2)
       {
+        cout << "... s->mode() = 2, resetting Master" << endl;
         resetMaster(con);
+        cout << "... " << con->remoteHost() << ".sql_open=0" << endl;
+        (*it).second.sql_open = false;
 
         (*it).second.tx_mode = Tx::TX_AUTO;
         MsgSetTxCtrlMode *n = new MsgSetTxCtrlMode(Tx::TX_AUTO);
@@ -569,7 +586,7 @@ void SvxServer::hbtimeout(Timer *t)
   // removing client connection from connection pool
   for (it = t_clients.begin(); it != t_clients.end(); it++)
   {
-    cout << "--- disconnect client " << (*it).second.con->remoteHost() << ":"
+    cout << "-X- disconnect client " << (*it).second.con->remoteHost() << ":"
          << (*it).second.con->remotePort() << endl;
     ((*it).second).con->disconnect();
     clientDisconnected(((*it).second).con, TcpConnection::DR_ORDERED_DISCONNECT);
