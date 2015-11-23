@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncTimer.h>
+#include <AsyncApplication.h>
 
 
 
@@ -390,8 +390,7 @@ int EventHandler::deactivateModuleHandler(ClientData cdata, Tcl_Interp *irp,
   }
 
   EventHandler *self = static_cast<EventHandler *>(cdata);
-  Timer *t = new Timer(0);
-  t->expired.connect(mem_fun(*self, &EventHandler::doDeactivateModule));
+  Application::app().runTask(self->deactivateModule.make_slot());
 
   return TCL_OK;
 }
@@ -412,13 +411,6 @@ int EventHandler::publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
 
   return TCL_OK;
 }
-
-
-void EventHandler::doDeactivateModule(Timer *t)
-{
-  delete t;
-  deactivateModule();
-} /* EventHandler::doDeactivateModule */
 
 
 

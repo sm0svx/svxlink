@@ -161,6 +161,7 @@ Dispatcher *Dispatcher::instance(void)
     if ((the_instance->ctrl_sock == 0) && (Proxy::instance() == 0))
     {
       delete the_instance;
+      the_instance = 0;
     }
   }
   
