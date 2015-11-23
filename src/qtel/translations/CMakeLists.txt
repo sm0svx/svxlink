@@ -3,7 +3,7 @@ set(TRANSLATIONS
   qtel_sv.ts qtel_de.ts qtel_tr.ts qtel_nl.ts qtel_it.ts qtel_uk.ts qtel_ru.ts
   qtel_hu.ts qtel_ja.ts qtel_fr.ts qtel_es.ts
   )
-  
+
 if (Qt5Core_FOUND)
   find_package(Qt5LinguistTools REQUIRED)
   QT5_ADD_TRANSLATION(TRANSLATIONS_QM ${TRANSLATIONS})

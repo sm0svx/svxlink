@@ -20,7 +20,7 @@ if (Qt5Core_FOUND)
   find_package(Qt5Gui REQUIRED)
   find_package(Qt5Widgets REQUIRED)
   find_package(Qt5Network REQUIRED)
-  include_directories(${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
+  include_directories(${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS}
                       ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Network_INCLUDE_DIRS})
   set(LIBS ${LIBS} ${Qt5Core_LIBRARIES} ${Qt5Gui_LIBRARIES}
            ${Qt5Widgets_LIBRARIES} ${Qt5Network_LIBRARIES})
