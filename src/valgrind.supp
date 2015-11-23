@@ -1,0 +1,85 @@
+{
+   Libgcrypt
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   obj:/usr/lib/libgcrypt.so.20.0.4
+   ...
+   fun:_ZN9NetUplink10initializeEv
+   fun:_ZN10TrxHandler10initializeEv
+   fun:main
+}
+{
+   dl_init
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:pool
+   fun:__static_initialization_and_destruction_0
+   fun:_GLOBAL__sub_I_eh_alloc.cc
+   fun:call_init.part.0
+   fun:_dl_init
+   obj:/usr/lib/ld-2.22.so
+}
+{
+   ALSA_dlopen
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   ...
+   fun:dlopen
+   fun:snd_dlopen
+   ...
+   fun:snd_config_update_r
+   fun:snd_config_update
+   fun:snd_pcm_open
+   fun:_ZN5Async15AudioDeviceAlsaC1ERKSs
+   fun:_Z22create_AudioDeviceAlsaRKSs
+   fun:_ZN5Async18AudioDeviceFactory6createERKSsS2_
+   fun:_ZN5Async11AudioDevice15registerAudioIOERKSsPNS_7AudioIOE
+}
+{
+   Tcl_CreateInterp
+   Memcheck:Leak
+   match-leak-kinds: reachable,possible
+   ...
+   fun:Tcl_CreateInterp
+   ...
+}
+{
+   Tcl_Eval
+   Memcheck:Leak
+   match-leak-kinds: reachable,possible
+   ...
+   fun:Tcl_Eval
+   ...
+}
+{
+   Tcl_EvalFile
+   Memcheck:Leak
+   match-leak-kinds: reachable,possible
+   ...
+   fun:Tcl_EvalFile
+   ...
+}
+{
+   TclNREvalFile
+   Memcheck:Leak
+   match-leak-kinds: reachable,possible
+   ...
+   fun:TclNREvalFile
+}
+{
+   TclEvalEx
+   Memcheck:Leak
+   match-leak-kinds: reachable,possible
+   ...
+   fun:TclEvalEx
+}
+{
+   TclNREvalObjEx
+   Memcheck:Leak
+   match-leak-kinds: reachable,possible
+   ...
+   fun:TclNREvalObjEx
+}

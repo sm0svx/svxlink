@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <CppStdCompat.h>
 
 
 /****************************************************************************
@@ -176,24 +177,24 @@ class SvxSwDtmfDecoder : public DtmfDecoder
       STATE_IDLE, STATE_DET_DELAY, STATE_DETECTED
     } DetState;
 
-    static const float DEFAULT_MAX_NORMAL_TWIST_DB = 8.5f;
-    static const float DEFAULT_MAX_REV_TWIST_DB = 6.0f;
-    static const size_t DET_CNT_HI_WEIGHT = 12;
-    static const size_t DET_CNT_MED_WEIGHT = 4;
-    static const size_t DET_CNT_LO_WEIGHT = 1;
-    static const size_t DEFAULT_MIN_DET_CNT = 2 * DET_CNT_HI_WEIGHT;
-    static const size_t DEFAULT_MIN_UNDET_CNT = 3;
-    static const size_t BLOCK_SIZE = 20 * INTERNAL_SAMPLE_RATE / 1000; // 20ms
-    static const size_t STEP_SIZE = 10 * INTERNAL_SAMPLE_RATE / 1000; // 10ms
-    static const float ENERGY_THRESH = 1e-6 * BLOCK_SIZE; // Min passband energy
-    static const float REL_THRESH_LO = 0.5; // Tone/passband pwr low thresh
-    static const float REL_THRESH_MED = 0.73; // Tone/passband pwr medium thresh
-    static const float REL_THRESH_HI = 0.9; // Tone/passband pwr high thresh
-    //static const float MAX_FQ_ERROR = 0.025; // Max 2.5% frequency error
-    static const float WIN_ENB = 1.37f; // FFT window equivalent noise bandwidth
-    static const float MAX_OT_REL = 0.2f; // Overtone at least ~7dB below
-    static const float MAX_SEC_REL = 0.13f; // Second strongest > ~9dB below
-    static const float MAX_IM_REL = 0.1f; // Intermodulation prod > 10dB below
+    static CONSTEXPR float DEFAULT_MAX_NORMAL_TWIST_DB = 8.5f;
+    static CONSTEXPR float DEFAULT_MAX_REV_TWIST_DB = 6.0f;
+    static CONSTEXPR size_t DET_CNT_HI_WEIGHT = 12;
+    static CONSTEXPR size_t DET_CNT_MED_WEIGHT = 4;
+    static CONSTEXPR size_t DET_CNT_LO_WEIGHT = 1;
+    static CONSTEXPR size_t DEFAULT_MIN_DET_CNT = 2*DET_CNT_HI_WEIGHT;
+    static CONSTEXPR size_t DEFAULT_MIN_UNDET_CNT = 3;
+    static CONSTEXPR size_t BLOCK_SIZE = 20*INTERNAL_SAMPLE_RATE/1000; // 20ms
+    static CONSTEXPR size_t STEP_SIZE = 10*INTERNAL_SAMPLE_RATE/1000; // 10ms
+    static CONSTEXPR float ENERGY_THRESH = 1e-6*BLOCK_SIZE; // Min pb energy
+    static CONSTEXPR float REL_THRESH_LO = 0.5; // Tone/pb pwr low thresh
+    static CONSTEXPR float REL_THRESH_MED = 0.73; // Tone/pb pwr medium thresh
+    static CONSTEXPR float REL_THRESH_HI = 0.9; // Tone/pb pwr high thresh
+    //static CONSTEXPR float MAX_FQ_ERROR = 0.025; // Max 2.5% frequency error
+    static CONSTEXPR float WIN_ENB = 1.37f; // FFT window equivalent noise bw
+    static CONSTEXPR float MAX_OT_REL = 0.2f; // Overtone at least ~7dB below
+    static CONSTEXPR float MAX_SEC_REL = 0.13f; // Second strongest > ~9dB below
+    static CONSTEXPR float MAX_IM_REL = 0.1f; // Intermod prod > 10dB below
 
     float twist_nrm_thresh;
     float twist_rev_thresh;

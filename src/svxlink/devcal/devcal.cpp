@@ -274,13 +274,13 @@ class FlatTopWindow : public Window
 class DevPrinter : public AudioSink
 {
   public:
-    DevPrinter(float samp_rate, const vector<float> &mod_fqs,
+    DevPrinter(unsigned samp_rate, const vector<float> &mod_fqs,
                float max_dev=1.0f, float headroom_db=0.0f)
       : block_size(samp_rate / 20), w(block_size),
         g(mod_fqs.size()), samp_cnt(0), max_dev(max_dev),
         headroom(pow(10.0, headroom_db/20.0)), adj_level(1.0f), dev_est(0.0),
-        block_cnt(0), pwr_sum(0.0), amp_sum(0.0), fqerr_est(0.0),
-        carrier_fq(0.0)
+        block_cnt(0), pwr_sum(0.0), tot_dev_est(0.0f), amp_sum(0.0),
+        fqerr_est(0.0), carrier_fq(0.0)
     {
       for (size_t i=0; i<mod_fqs.size(); ++i)
       {
@@ -353,7 +353,8 @@ class DevPrinter : public AudioSink
                  << "  Carrier freq err=" << fqerr_est;
             if (carrier_fq > 0.0)
             {
-              int ppm_err = round(1000000.0 * fqerr_est / carrier_fq);
+              int ppm_err =
+                static_cast<int>(round(1000000.0 * fqerr_est / carrier_fq));
               cout << "(" << ppm_err << "ppm)";
             }
             cout.flush();
@@ -375,8 +376,8 @@ class DevPrinter : public AudioSink
     }
 
   private:
-    static const double ALPHA = 0.9;        //!< IIR filter coeff
-    static const size_t PRINT_INTERVAL = 5; //!< Block count
+    static CONSTEXPR double ALPHA = 0.9;        //!< IIR filter coeff
+    static CONSTEXPR size_t PRINT_INTERVAL = 5; //!< Block count
 
     int           block_size;
     FlatTopWindow w;
@@ -482,8 +483,8 @@ static const unsigned audio_ch = 0;
 
 int main(int argc, const char *argv[])
 {
-  cout << PROGRAM_NAME " v" DEVCAL_VERSION " (" __DATE__ 
-          ") Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " v" DEVCAL_VERSION
+          " Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you\n";
   cout << "are welcome to redistribute it in accordance with the "

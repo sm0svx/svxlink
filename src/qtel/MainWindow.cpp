@@ -6,7 +6,7 @@
 
 \verbatim
 Qtel - The Qt EchoLink client
-Copyright (C) 2003-2010 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -517,18 +517,26 @@ void MainWindow::initEchoLink(void)
     proxy->connect();
   }
 
+  Async::IpAddress bind_ip;
+  if (!settings->bindAddress().isEmpty())
+  {
+    bind_ip = Async::IpAddress(settings->bindAddress().toStdString());
+  }
+
   vector<string> servers;
   SvxLink::splitStr(servers, settings->directoryServers().toStdString(), " ");
   dir = new Directory(
       servers,
       settings->callsign().toStdString(),
       settings->password().toStdString(),
-      settings->location().toStdString());
+      settings->location().toStdString(),
+      bind_ip);
   dir->error.connect(mem_fun(*this, &MainWindow::serverError));
   dir->statusChanged.connect(mem_fun(*this, &MainWindow::statusChanged));
   dir->stationListUpdated.connect(
       mem_fun(*this, &MainWindow::callsignListUpdated));
 
+  Dispatcher::setBindAddr(bind_ip);
   Dispatcher *disp = Dispatcher::instance();
   if (disp == 0)
   {

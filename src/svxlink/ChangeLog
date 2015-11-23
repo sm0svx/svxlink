@@ -1,4 +1,4 @@
- 1.5.0 -- ?? ??? 2015
+ 1.5.0 -- 22 Nov 2015
 ----------------------
 
 * Added support for using digital drop receivers on an RTL2832U based DVB-T
@@ -77,6 +77,42 @@
   simulators can be used to debug problems in SvxLink.
 
 * Bugfix: A Local Rx would let squelch open/close through even when muted.
+
+* The install path for libraries are now automatically discovered which may
+  make libraries install in a another directory than before. For example, on
+  normal 64 bit x86_64 systems they will end up in /usr/lib64 and the plugins
+  will be placed in /usr/lib64/svxlink. On other platforms the paths may be a
+  bit stranger, like /usr/lib/arm-linux-gnueabihf on the Cubieboard.
+  This may require that the MODULE_PATH config variable is changed for the
+  plugins to be found. The best is to comment out the MODULE_PATH
+  configuration variable and let SvxLink determine what to use.
+  The old LIB_SUFFIX CMake variable is not used anymore.
+
+* New configuration variable in svxlink.conf for remote transmitters and
+  receivers, LOG_DISCONNECTS_ONCE, that can be set to 1 to not log reconnect
+  attempts.  This may be of use if a RemoteTrx is missing for a long time or if
+  it's only used from time to time.
+
+* The CFG_DIR configuration variable read additional config from files in
+  the configured directory. The man-page stated that files starting with a dot
+  were ignored. This was not true but is now. The man-page was also lacking
+  information on that all files not ending in ".conf" are ignored.
+
+* The default PTT type is now NONE so that svxlink and remotetrx can start
+  out of the box without reconfiguring them.
+
+* Bugfix in the GPIO squelch detector. The usage of "!" in GPIO_SQL_PIN to get
+  inverted operation did not work.
+
+
+
+ 1.4.3 -- 02 nov 2015
+----------------------
+
+* SvxLink now compile in C++11 mode with GCC and other compilers that
+  understand the -std=c++11 compiler switch. The compiler switch will
+  automatically be turned on if a version of libsigc++ greater than 2.5.0 is
+  detected since those versions require C++11 to be enabled.
 
 
 

@@ -261,7 +261,7 @@ MsgHandler::MsgHandler(int sample_rate)
 
 MsgHandler::~MsgHandler(void)
 {
-
+  clearP();
 } /* MsgHandler::~MsgHandler */
 
 
@@ -302,18 +302,7 @@ void MsgHandler::playTone(int fq, int amp, int length, bool idle_marked)
 
 void MsgHandler::clear(void)
 {
-  deleteQueueItem(current);
-  current = 0;
-  
-  list<QueueItem*>::iterator it;
-  for (it=msg_queue.begin(); it!=msg_queue.end(); ++it)
-  {
-    deleteQueueItem(*it);
-  }
-  
-  non_idle_cnt = 0;
-  
-  msg_queue.clear();
+  clearP();
   sinkFlushSamples();
 } /* MsgHandler::clear */
 
@@ -358,17 +347,6 @@ void MsgHandler::resumeOutput(void)
     writeSamples();
   }
 } /* MsgHandler::resumeOutput */
-
-
-void MsgHandler::deleteQueueItem(QueueItem *item)
-{
-  if (!item->idleMarked())
-  {
-    non_idle_cnt -= 1;
-    assert(non_idle_cnt >= 0);
-  }
-  delete item;
-} /* MsgHandler::deleteQueueItem */
 
 
 
@@ -482,6 +460,38 @@ void MsgHandler::writeSamples(void)
     current = 0;
     playMsg();
 } /* MsgHandler::writeSamples */
+
+
+void MsgHandler::deleteQueueItem(QueueItem *item)
+{
+  if (item == 0)
+  {
+    return;
+  }
+  if (!item->idleMarked())
+  {
+    non_idle_cnt -= 1;
+    assert(non_idle_cnt >= 0);
+  }
+  delete item;
+} /* MsgHandler::deleteQueueItem */
+
+
+void MsgHandler::clearP(void)
+{
+  deleteQueueItem(current);
+  current = 0;
+
+  list<QueueItem*>::iterator it;
+  for (it=msg_queue.begin(); it!=msg_queue.end(); ++it)
+  {
+    deleteQueueItem(*it);
+  }
+
+  non_idle_cnt = 0;
+
+  msg_queue.clear();
+} /* MsgHandler::clearP */
 
 
 

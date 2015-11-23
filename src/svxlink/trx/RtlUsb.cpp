@@ -301,8 +301,9 @@ class RtlUsb::SampleBuffer : public sigc::trackable
  ****************************************************************************/
 
 RtlUsb::RtlUsb(const std::string &match)
-  : reconnect_timer(0, Timer::TYPE_ONESHOT), dev(NULL), dev_match(match),
-    dev_name("?"), sample_buf(0), rtl_reader_thread_started(false)
+  : reconnect_timer(0, Timer::TYPE_ONESHOT), dev(NULL), rtl_reader_thread(),
+    dev_match(match), dev_name("?"), sample_buf(0),
+    rtl_reader_thread_started(false)
 {
   reconnect_timer.expired.connect(
       hide(mem_fun(*this, &RtlUsb::initializeDongle)));

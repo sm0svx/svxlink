@@ -1,7 +1,17 @@
- 1.2.2 -- ?? ??? 2015
+ 1.2.2 -- 22 Nov 2015
 ----------------------
 
 * Fixed issues reported by the Coverity scan static analysis tool.
+
+* Updated Hungarian translation by HG0MV.
+
+* Now possible to bind the communication to a specific network interface.
+
+* Updated Japanese translation by JH1PGO / Masao
+
+* Updated Spanish translation by Gustavo - LU8WFY
+
+* Updated Ukrainian translation by UR3QJW / Volodymyr
 
 
 
