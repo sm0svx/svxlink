@@ -144,13 +144,13 @@ ModuleDtmfRepeater::ModuleDtmfRepeater(void *dl_handle, Logic *logic,
 {
   cout << "\tModule DTMF Repeater v" MODULE_DTMF_REPEATER_VERSION
       	  " starting...\n";
-
+  repeat_delay_timer.expired.connect(
+      sigc::hide(mem_fun(*this, &ModuleDtmfRepeater::onRepeatDelayExpired)));
 } /* ModuleDtmfRepeater */
 
 
 ModuleDtmfRepeater::~ModuleDtmfRepeater(void)
 {
-  delete repeat_delay_timer;
 } /* ~ModuleDtmfRepeater */
 
 
@@ -213,10 +213,10 @@ bool ModuleDtmfRepeater::initialize(void)
     return false;
   }
   
-  string value;
-  if (cfg().getValue(cfgName(), "REPEAT_DELAY", value))
+  int repeat_delay;
+  if (cfg().getValue(cfgName(), "REPEAT_DELAY", repeat_delay))
   {
-    repeat_delay = atoi(value.c_str());
+    repeat_delay_timer.setTimeout(repeat_delay);
   }
 
   if (cfg().getValue(cfgName(), "DTMF_TONE_LENGTH", value))
@@ -268,8 +268,7 @@ void ModuleDtmfRepeater::activateInit(void)
  */
 void ModuleDtmfRepeater::deactivateCleanup(void)
 {
-  delete repeat_delay_timer;
-  repeat_delay_timer = 0;
+  repeat_delay_timer.setEnable(false);
   sql_is_open = false;
   deactivate_on_sql_close = false;
 } /* deactivateCleanup */
@@ -310,9 +309,9 @@ bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
   
   received_digits += digit;
   
-  if (repeat_delay == 0)
+  if (repeat_delay_timer.timeout() <= 0)
   {
-    onRepeatDelayExpired(0);
+    onRepeatDelayExpired();
   }
   else if (!sql_is_open)
   {
@@ -328,9 +327,9 @@ void ModuleDtmfRepeater::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
   received_digits += cmd;
   
-  if (repeat_delay == 0)
+  if (repeat_delay_timer.timeout() <= 0)
   {
-    onRepeatDelayExpired(0);
+    onRepeatDelayExpired();
   }
   else if (!sql_is_open)
   {
@@ -366,17 +365,16 @@ void ModuleDtmfRepeater::squelchOpen(bool is_open)
 
 void ModuleDtmfRepeater::allMsgsWritten(void)
 {
-  if (!received_digits.empty() && (repeat_delay_timer == 0))
+  if (!received_digits.empty() && (repeat_delay_timer.timeout() <= 0))
   {
     sendStoredDigits();
   }
 } /* ModuleDtmfRepeater::allMsgsWritten */
 
 
-void ModuleDtmfRepeater::onRepeatDelayExpired(Timer *t)
+void ModuleDtmfRepeater::onRepeatDelayExpired(void)
 {
-  delete repeat_delay_timer;
-  repeat_delay_timer = 0;
+  repeat_delay_timer.setEnable(false);
 
   if (!isWritingMessage())
   {
@@ -387,14 +385,12 @@ void ModuleDtmfRepeater::onRepeatDelayExpired(Timer *t)
 
 void ModuleDtmfRepeater::setupRepeatDelay(void)
 {
-  delete repeat_delay_timer;
-  repeat_delay_timer = 0;
+  repeat_delay_timer.setEnable(false);
 
-  if (!sql_is_open && (repeat_delay > 0) && !received_digits.empty())
+  if (!sql_is_open && (repeat_delay_timer.timeout() > 0) &&
+      !received_digits.empty())
   {
-    repeat_delay_timer = new Timer(repeat_delay);
-    repeat_delay_timer->expired.connect(
-	mem_fun(*this, &ModuleDtmfRepeater::onRepeatDelayExpired));
+    repeat_delay_timer.setEnable(true);
   }
 } /* ModuleDtmfRepeater::setupRepeatDelay */
 

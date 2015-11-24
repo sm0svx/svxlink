@@ -190,6 +190,8 @@ AudioDeviceOSS::AudioDeviceOSS(const string& dev_name)
   : AudioDevice(dev_name), fd(-1), read_watch(0), write_watch(0),
     device_caps(0), use_trigger(false), frag_size(0)
 {
+  assert(AudioDeviceOSS_creator_registered);
+
   char *use_trigger_str = getenv("ASYNC_AUDIO_NOTRIGGER");
   use_trigger = (use_trigger_str != 0) && (atoi(use_trigger_str) == 0);
 

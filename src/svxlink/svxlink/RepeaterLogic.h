@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2004-20089 Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -64,7 +65,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace Async
 {
   class Config;
-  class Timer;
 };
 
 
@@ -184,11 +184,8 @@ class RepeaterLogic : public Logic
     } SqlFlank;
     
     bool      	    repeater_is_up;
-    Async::Timer    *up_timer;
-    int      	    idle_timeout;
-    Async::Timer    *idle_sound_timer;
-    int       	    idle_sound_interval;
-    int      	    required_sql_open_duration;
+    Async::Timer    up_timer;
+    Async::Timer    idle_sound_timer;
     struct timeval  rpt_close_timestamp;
     int		    open_on_sql_after_rpt_close;
     char      	    open_on_dtmf;
@@ -196,7 +193,7 @@ class RepeaterLogic : public Logic
     std::string     close_on_sel5;
     bool      	    activate_on_sql_close;
     bool            no_repeat;
-    Async::Timer    *open_on_sql_timer;
+    Async::Timer    open_on_sql_timer;
     SqlFlank  	    open_sql_flank;
     struct timeval  sql_up_timestamp;
     int       	    short_sql_open_cnt;
@@ -204,9 +201,8 @@ class RepeaterLogic : public Logic
     int       	    sql_flap_sup_max_cnt;
     bool            rgr_enable;
     std::string     open_reason;
-    int		    ident_nag_timeout;
     int		    ident_nag_min_time;
-    Async::Timer    *ident_nag_timer;
+    Async::Timer    ident_nag_timer;
     
     void idleTimeout(Async::Timer *t);
     void setIdle(bool idle);

@@ -6,7 +6,7 @@
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2004-2007  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncAudioSource.h>
+#include <AsyncTimer.h>
 
 
 /****************************************************************************
@@ -79,7 +80,6 @@ namespace Async
  *
  ****************************************************************************/
 
-class Timer;
   
 
 /****************************************************************************
@@ -157,7 +157,7 @@ class AudioMixer : public sigc::trackable, public Async::AudioSource
     static const int OUTBUF_SIZE = 256;
     
     std::list<MixerSrc *> sources;
-    Timer     	      	  *delayed_exec_timer;
+    Timer     	      	  output_timer;
     float     	      	  outbuf[OUTBUF_SIZE];
     unsigned       	  outbuf_pos;
     unsigned  	      	  outbuf_cnt;

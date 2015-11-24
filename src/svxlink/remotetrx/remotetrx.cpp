@@ -807,14 +807,14 @@ static void logfile_reopen(const char *reason)
   logfile_write_timestamp();
   string msg(reason);
   msg += ". Reopening logfile\n";
-  write(logfd, msg.c_str(), msg.size());
+  if (write(logfd, msg.c_str(), msg.size()) == -1) {}
 
   logfile_open();
 
   logfile_write_timestamp();
   msg = reason;
   msg += ". Logfile reopened\n";
-  write(logfd, msg.c_str(), msg.size());
+  if (write(logfd, msg.c_str(), msg.size()) == -1) {}
 } /* logfile_reopen */
 
 

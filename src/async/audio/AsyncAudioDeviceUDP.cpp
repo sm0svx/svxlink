@@ -186,6 +186,7 @@ AudioDeviceUDP::AudioDeviceUDP(const string& dev_name)
   : AudioDevice(dev_name), block_size(0), sock(0), read_buf(0),
     read_buf_pos(0), port(0)
 {
+  assert(AudioDeviceUDP_creator_registered);
   int pace_interval = 1000 * block_size_hint / sampleRate();
   block_size = pace_interval * sampleRate() / 1000;
 
@@ -199,7 +200,7 @@ AudioDeviceUDP::AudioDeviceUDP(const string& dev_name)
 
 AudioDeviceUDP::~AudioDeviceUDP(void)
 {
-  delete read_buf;
+  delete [] read_buf;
   delete pace_timer;
 } /* AudioDeviceUDP::~AudioDeviceUDP */
 
