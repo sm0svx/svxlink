@@ -112,7 +112,7 @@ SvxServer::SvxServer(Async::Config &cfg)
     cout << "--- setting HEARTBEAT_TIMEOUT=" << hbto << "ms" << endl;
   }
 
-  cout << "--- AUTH_KEY=" << auth_key << endl;
+  // cout << "--- AUTH_KEY=" << auth_key << endl;
   cout << "--- starting SERVER on port " << port << endl;
 
    // create the server instance
@@ -482,10 +482,10 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
         sendMsg(con, ms);
         cout << "... " << con->remoteHost() << ".sql_open=0" << endl;
         (*it).second.sql_open = false;
-     }
-        MsgAllSamplesFlushed *o = new MsgAllSamplesFlushed;
-        sendMsg(con, o);
-        cmsg = o;
+      }
+      MsgAllSamplesFlushed *o = new MsgAllSamplesFlushed;
+      sendMsg(con, o);
+      cmsg = o;
       break;
     }
 
