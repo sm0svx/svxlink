@@ -1,0 +1,258 @@
+.TH DEVCAL 1 "NOVEMBER 2015" Linux "User Manuals"
+.
+.SH NAME
+.
+devcal \- An FM deviation calibration utility for the SvxLink system
+.
+.SH SYNOPSIS
+.
+.BI "devcal [-?|--help] [-h|--usage] [-f|--modfqs=" "frequencies in Hz" "] [-d|--caldev=" "deviation in Hz" "] [-m|--maxdev=" "deviation in Hz" "] [-H|--headroom=" "Headroom in dB" "] [-r|--rxcal] [-F|--flat] [-M|--measure] [-w|--wide] [-a|--audiodev=" "type:dev" "] <" "config file" "> <" "config section" ">"
+.
+.SH DESCRIPTION
+.
+.B devcal
+is a utility that is used to calibrate the input and output sound levels
+(deviation) on an FM SvxLink system. The idea is that it should be possible to
+calibrate multiple parts of a SvxLink system to the exact same sound levels.
+This will ensure that a system using multiple receivers have the same sound
+level for all receivers and for a repeater it means that the audio being
+retransmitted is at the same level as the received audio. For an EchoLink
+system it will guarantee that audio received by the local node will be at a
+proper level to be retransmitted on remote EchoLink nodes, and the other way
+around.
+
+An RTL2832U based DVB-T USB dongle can be used to measure deviation and the
+devcal utility can also be used to calibrate the receiving frequency correction
+for such a dongle.
+
+Deviation calibration can be done both with and without a DVB-T USB dongle.
+Both methods are described below.
+.
+.SH OPTIONS
+.
+.TP
+.B -?|--help
+Print a help message and exit.
+.TP
+.B -h|--usage
+Display a brief help message and exit.
+.TP
+.BI "-f|--modfqs" "frequencies in Hz"
+Use this command line option to set at what frequencies you want to calibrate
+the deviation. Separate multiple frequencies using commas. The default
+frequency is 1000Hz.
+.TP
+.BI "-d|--caldev=" "deviation in Hz"
+The deviation value at where to perform the calibration. The default value of
+2404,8Hz may seem strange but it will be explained below.
+.TP
+.BI "-m|--maxdev=" "deviation in Hz"
+The maximum deviation used on the channel. This is the deviation value where
+transmitters start to limit the deviation so as not to cause interference in
+neighbouring channels. The default value is 5000Hz.
+.TP
+.BI "-H|--headroom=" "headroom in dB"
+The headroom is the margin to add above the maximum deviation level. Adding a
+headroom will allow SvxLink to handle levels above the maximum deviation level
+without causing immediate distorsion. The default is 6dB which mean that
+SvxLink can handle twice the specified maximum deviation. If both maxdev and
+headroom are left at their default this will mean that SvxLink can handle 10kHz
+deviation without distorsion.
+
+Changing the headroom cause a lot of different effects so don't do that unless
+you are prepared to deal with the problems. For example, increasing the
+headroom will cause the TX level to get lower and the RX level to get higher,
+which then must be compensated. The announcement levels will get lower so they
+also need to be compensated. The EchoLink RX/TX levels will get unbalanced and
+at the moment there is no way to fix that.
+.TP
+.B -r|--rxcal
+Specify this command line option to perform receiver calibration.
+.TP
+.B -t|--txcal
+Specify this command line option to perform transmitter calibration.
+.TP
+.B -F|--flat
+Perform calibration on a transmitter or receiver that has a flat frequency
+response (no pre- or de-emphasis). If the transceiver has flat frequency
+responce but you have enabled pre-/de-emphasis in SvxLink, this option should
+NOT be specified.
+.TP
+.B -M|--measure
+The measurement mode requires the use of a RTL2832U based DVB-T USB dongle and
+will measure the received deviation.
+.TP
+.B -w|--wide
+Use wide FM (broadcast) instead of narrow band FM
+.TP
+.BI "-a|--audiodev=" "type:dev"
+Use this command line option to set an audio device to use for playing back the
+received audio. The default is to use "alsa:default". Disable audio output by
+setting the audio device to the empty string (i.e. --audiodev="").
+.
+.SH CALIBRATING AN RTL2832U BASED DVB-T USB DONGLE
+.
+All RTL2832U based DVB-T USB dongles requires calibration so that the specified
+receiving frequency is correct. Most dongles are way off in frequency. 50-60ppm
+is not uncommon which translates to more than 20kHz on 434MHz.
+
+Most dongles are sensitive to temperature change so start by plugging the
+dongle into the computer and let it warm up for like 15 minutes before doing
+the calibration.
+
+Devcal need a receiver configuration file to work so such a file must be
+created before this utility can be used. Read the Ddr Receiver Section and the
+Wideband Receiver Section in the
+.BR svxlink.conf (5)
+manual page for information on how to set it up.
+
+A first coarse calibration should be done in wideband mode so that the
+calibration carrier is easy to find. You can use any FM carrier to calibrate on
+that you know is correct in frequency. It does not matter if the carrier is
+modulated or not. Use your own transceiver or a repeater for example. If the
+frequency calibration is unknown for the transmitter being used it may be wise
+to test with multiple transmitters. The command line may look like this:
+
+  devcal -Mw /path/to/svxlink.conf RxRtl
+
+The utility will print, among other things, the carrier frequency error. It may look something like:
+
+Tone dev=7.30  Full bw dev=39198.90  Carrier freq err=-27713.53(-64ppm)
+
+We ignore the first two values for now and concentrate on the carrier frequency
+error. The -64ppm mean that the dongle is receiving the transmitted carrier
+about 27kHz below the set frequency. To compensate for this, set the FQ_CORR
+configuration variable in the wideband receiver configuration section to 64. Do
+another measurement to verify that the received carrier frequency is now closer
+to the expected one.
+
+Now we can do the final calibration in narrow band mode. Remove the "w" command
+line option from the command above and do another measurement. Adjust FQ_CORR
+until a value around 0ppm is shown.
+.
+.SH CALIBRATING THE TRANSMITTER
+.
+In order to calibrate the transmitted deviation we need a way to measure it.
+There are multiple methods to do that. If you have a deviation meter you're in
+luck but most people does not own one of those. Fortuantely there are other
+ways.
+
+One way is to use a RTL2832U based DVB-T dongle with the devcal utility. First
+calibrate the DVB-T dongle according to the instructions in the previous
+section. The devcal utility can then be used in measurement mode to measure the
+transmitted FM deviation. The measurement mode is activated using the "-M"
+command line option. Use the "-f" command line option to specify the audio
+frequency to calibrate at if the default of 1000Hz need to be changed.
+
+Another way to measure FM deviation without a deviation meter is to use the
+Bessel null method. It makes use of the fact that the FM carrier will go down
+to zero power for certain combinations of modulation frequency and deviation.
+The deviation divided by the modulation frequency give something called the
+modulation index. Bessel nulls occur at specific modulation indexes where the
+first one is at 2.4048. So, if we choose the deviation to 2404.8Hz and the
+modulation frequency to 1000Hz we should get a Bessel null when the transmitter
+is calibrated. These are the default modulation parameters in devcal.
+
+So how can we detect when the carrier power goes down to zero?  If you own some
+form of spectrum analyzer the spectrum can be watched to see when the carrier
+falls down to zero. If you own a CW receiver that covers the frequency of
+interest you can use that to listen to the carrier. Start devcal in transmitter
+calibration mode using a command looking like the one below.
+
+ devcal -t /path/to/svxlink.conf Tx1
+
+In another window, start the alsamixer utility or some other utility to adjust
+the audio output level. Set the output level to zero. Go back to the devcal
+window and press 0 to set MASTER_GAIN to zero. Press T to start transmitting.
+Since we set the sound output level to zero only a carrier will be transmitted.
+Adjust the CW receiver to center on the carrier. Use the narrowest filter that
+the receiver support. Now start increasing the audio output level in alsamixer.
+Listen to the tone to find the first minimum. Use the +/- keys in deval to fine
+tune the output level to a minimum. You have now found the calibration values
+for the transmitter. The printed value of MASTER_GAIN should be entered into
+the configuration section for the transmitter.
+.
+.SH CALIBRATING THE RECEIVER
+.
+To calibrate the receiver we need a transmitter with a known calibration. If
+possible, the transmitter that was calibrated above can be used. If it's not
+possible, another transmitter can be calibrated in the same way to be used as a
+calibration transmitter. Start the devcal utility something like this:
+
+  devcal -r /path/to/svxlink.conf Rx1
+
+Start alsamixer in another window and adjust the input level to get as close 
+as possible to the expected deviation. Use the 0, + and - keys to adjust PREAMP
+to fine tune the deviation that is shown. When satisfied, enter the PREAMP
+value into the configuration file in the receiver section.
+.
+.SH EXAMPLE: CALIBRATING USING A DVB-T USB DONGLE
+.
+This is an example of how the calibration procedure may be performed using a
+DVB-T USB dongle and an arbitrary transmitter, like a handie tranceiver.
+
+The calibration transmitter, a handie transmitter for example, must be able to
+send some form of modulated tone for this procedure to work. The 1750Hz tone
+burst that many transmitters are equipped with is a good one to use. It is also
+possible to use a DTMF tone but the results is not as good as when using a
+single tone, it seems. If using DTMF, try using the code "A" (1633Hz) or "3"
+(1477Hz). In this example, the use of 1750Hz tone burst is described.
+
+Use the DVB-T dongle to measure the deviation of the 1750Hz tone.
+
+  devcal -M -f1750 /path/to/svxlink.conf RxRtl
+
+Start transmitting with the calibration transmitter and wait for the values to
+stablilize. Take a note of the value for "tone dev". It may be something like
+3200Hz, which is used in the example below. Leave deval running since we will
+need it later on.
+
+On the system being calibrated, start the receiver calibration.
+
+  devcal -r -f1750 /path/to/svxlink.conf Rx1
+
+Transmit using the calibration transmitter and adjust the input level using
+alsamixer and PREAMP to the correct level for "tone dev".
+
+Make sure that devcal is started in measurement mode like when the deviation on
+the calibration transmitter was measured above. Then, on the system being
+calibrated, start the transmitter calibration.
+
+  devcal -t -f1750 -d3200 /path/to/svxlink.conf RxRtl
+
+The value of 3200 was the one we measured in the first step. Adjust it to match
+your own measurements. Adjust the output level using alsamixer and MASTER_GAIN
+to get the correct reading for "tone dev".
+
+To check the calibration, use devcal in measurement mode to measure the
+deviation on the transmitter when retransmitting a received signal. For a
+repeater that is easily achieved by transmitting on the receive frequency using
+the calibration transmitter. The deviation measurement should show the correct
+value being retransmitted. For a simplex link the parrot can be used to achieve
+the same thing.
+
+NOTE: The retransmitted deviation may not be exactly the same for some
+transceivers. This is an issue that remains to find the cause of.
+.
+.SH ENVIRONMENT
+.
+.TP
+ASYNC_AUDIO_NOTRIGGER
+Set this environment variable to 1 if you get an error about
+.B ioctl: Broken pipe
+during remotetrx server startup when using OSS audio.
+.
+.SH AUTHOR
+.
+Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
+.
+.SH REPORTING BUGS
+.
+SvxLink Devel <svxlink-devel at lists dot sourceforge dot net>
+.
+.SH "SEE ALSO"
+.
+.BR svxlink (1),
+.BR remotetrx.conf (5),
+.BR svxlink.conf (5),
+.BR siglevdetcal (1)

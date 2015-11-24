@@ -1,4 +1,11 @@
- 1.2.2 -- ?? ??? 2015
+ 1.2.3 -- ?? ??? 2015
+----------------------
+
+* Support for Qt5 added. Patch contributed by Richard Neese.
+
+
+
+ 1.2.2 -- 22 Nov 2015
 ----------------------
 
 * Fixed issues reported by the Coverity scan static analysis tool.
