@@ -4,10 +4,15 @@
 #  SIGC2_INCLUDE_DIRS - The libsigc++-2 include directories
 #  SIGC2_LIBRARIES    - The libraries needed to use libsigc++-2
 #  SIGC2_DEFINITIONS  - Compiler switches required for using libsigc++-2
+#  SIGC_CXX_FLAGS     - Required C++ specific compiler switches
 
 find_package(PkgConfig)
 pkg_check_modules(PC_SIGC2 sigc++-2.0)
 set(SIGC2_DEFINITIONS ${PC_SIGC2_CFLAGS_OTHER})
+
+if(${PC_SIGC2_VERSION} VERSION_GREATER "2.5.0")
+  set(SIGC2_CXX_FLAGS "--std=c++11")
+endif()
 
 find_path(SIGC2_CONFIG_INCLUDE_DIR sigc++config.h
   HINTS ${PC_SIGC2_INCLUDEDIR} ${PC_SIGC2_INCLUDE_DIRS}

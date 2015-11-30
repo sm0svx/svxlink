@@ -465,7 +465,7 @@
  <connections>
   <connection>
    <sender>fileQuitAction</sender>
-   <signal>activated()</signal>
+   <signal>triggered()</signal>
    <receiver>MainWindowBase</receiver>
    <slot>close()</slot>
    <hints>

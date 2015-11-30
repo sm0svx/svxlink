@@ -10,7 +10,7 @@ you sound.
 
 \verbatim
 A module (plugin) for the multi purpose tranciever frontend system.
-Copyright (C) 2004  Tobias Blomberg / SM0SVX
+Copyright (C) 2004-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncTimer.h>
 #include <Module.h>
 
 
@@ -70,7 +71,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace Async
 {
-  class Timer;
   class SampleFifo;
   class AudioValve;
 };
@@ -148,8 +148,7 @@ class ModuleParrot : public Module
     Async::AudioFifo	    *fifo;
     Async::AudioValve 	    *valve;
     bool      	      	    squelch_is_open;
-    int       	      	    repeat_delay;
-    Async::Timer      	    *repeat_delay_timer;
+    Async::Timer      	    repeat_delay_timer;
     std::list<std::string>  cmd_queue;
     
     void activateInit(void);
@@ -160,7 +159,7 @@ class ModuleParrot : public Module
     void squelchOpen(bool is_open);
 
     void allSamplesWritten(void);
-    void onRepeatDelayExpired(Async::Timer *t);
+    void onRepeatDelayExpired(void);
     void execCmdQueue(void);
 
 };  /* class ModuleParrot */

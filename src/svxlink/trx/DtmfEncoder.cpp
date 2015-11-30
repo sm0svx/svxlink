@@ -175,7 +175,7 @@ void DtmfEncoder::setDigitPower(int power_db)
 
 int DtmfEncoder::digitPower(void) const
 {
-  return 20.0f * log10f(tone_amp) + 3.0f;
+  return static_cast<int>(20.0f * log10f(tone_amp) + 3.0f);
 } /* DtmfEncoder::digitPower */
 
 

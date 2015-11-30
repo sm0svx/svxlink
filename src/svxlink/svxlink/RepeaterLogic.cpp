@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-20089 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -126,15 +126,22 @@ using namespace Async;
 
 
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
-  : Logic(cfg, name), repeater_is_up(false), up_timer(0), idle_timeout(30000),
-    idle_sound_timer(0), idle_sound_interval(0),
-    required_sql_open_duration(-1), open_on_sql_after_rpt_close(0),
-    open_on_dtmf('?'), activate_on_sql_close(false), no_repeat(false),
-    open_on_sql_timer(0), open_sql_flank(SQL_FLANK_CLOSE),
+  : Logic(cfg, name), repeater_is_up(false),
+    up_timer(30000, Timer::TYPE_ONESHOT, false),
+    idle_sound_timer(-1, Timer::TYPE_PERIODIC),
+    open_on_sql_after_rpt_close(0), open_on_dtmf('?'),
+    activate_on_sql_close(false), no_repeat(false), open_on_sql_timer(-1),
+    open_sql_flank(SQL_FLANK_CLOSE),
     short_sql_open_cnt(0), sql_flap_sup_min_time(1000),
     sql_flap_sup_max_cnt(0), rgr_enable(true), open_reason("?"),
-    ident_nag_timeout(0), ident_nag_min_time(2000), ident_nag_timer(0)
+    ident_nag_min_time(2000), ident_nag_timer(-1)
 {
+  up_timer.expired.connect(mem_fun(*this, &RepeaterLogic::idleTimeout));
+  open_on_sql_timer.expired.connect(
+      mem_fun(*this, &RepeaterLogic::openOnSqlTimerExpired));
+  idle_sound_timer.expired.connect(
+      mem_fun(*this, &RepeaterLogic::playIdleSound));
+  ident_nag_timer.expired.connect(mem_fun(*this, &RepeaterLogic::identNag));
   timerclear(&rpt_close_timestamp);
   timerclear(&sql_up_timestamp);
 } /* RepeaterLogic::RepeaterLogic */
@@ -142,10 +149,6 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
 
 RepeaterLogic::~RepeaterLogic(void)
 {
-  delete open_on_sql_timer;
-  delete idle_sound_timer;
-  delete up_timer;
-  delete ident_nag_timer;
 } /* RepeaterLogic::~RepeaterLogic */
 
 
@@ -160,12 +163,13 @@ bool RepeaterLogic::initialize(void)
   int open_on_ctcss_duration = 0;
   int required_1750_duration = 0;
   
-  string str;
-  if (cfg().getValue(name(), "IDLE_TIMEOUT", str))
+  int idle_timeout;
+  if (cfg().getValue(name(), "IDLE_TIMEOUT", idle_timeout))
   {
-    idle_timeout = atoi(str.c_str()) * 1000;
+    up_timer.setTimeout(idle_timeout * 1000);
   }
   
+  string str;
   if (cfg().getValue(name(), "OPEN_ON_1750", str))
   {
     required_1750_duration = atoi(str.c_str());
@@ -186,9 +190,10 @@ bool RepeaterLogic::initialize(void)
     open_on_ctcss_duration = atoi(dur_str.c_str());
   }
 
-  if (cfg().getValue(name(), "OPEN_ON_SQL", str))
+  int required_sql_open_duration;
+  if (cfg().getValue(name(), "OPEN_ON_SQL", required_sql_open_duration))
   {
-    required_sql_open_duration = atoi(str.c_str());
+    open_on_sql_timer.setTimeout(required_sql_open_duration);
   }
   
   if (cfg().getValue(name(), "OPEN_ON_SQL_AFTER_RPT_CLOSE", str))
@@ -244,9 +249,10 @@ bool RepeaterLogic::initialize(void)
     }
   }
   
-  if (cfg().getValue(name(), "IDLE_SOUND_INTERVAL", str))
+  int idle_sound_interval;
+  if (cfg().getValue(name(), "IDLE_SOUND_INTERVAL", idle_sound_interval))
   {
-    idle_sound_interval = atoi(str.c_str());
+    idle_sound_timer.setTimeout(idle_sound_interval);
   }
   
   if (cfg().getValue(name(), "NO_REPEAT", str))
@@ -264,9 +270,10 @@ bool RepeaterLogic::initialize(void)
     sql_flap_sup_max_cnt = atoi(str.c_str());
   }
   
-  if (cfg().getValue(name(), "IDENT_NAG_TIMEOUT", str))
+  int ident_nag_timeout;
+  if (cfg().getValue(name(), "IDENT_NAG_TIMEOUT", ident_nag_timeout))
   {
-    ident_nag_timeout = 1000 * atoi(str.c_str());
+    ident_nag_timer.setTimeout(1000 * ident_nag_timeout);
   }
   
   if (cfg().getValue(name(), "IDENT_NAG_MIN_TIME", str))
@@ -465,32 +472,19 @@ void RepeaterLogic::idleTimeout(Timer *t)
 
 void RepeaterLogic::setIdle(bool idle)
 {
-  //printf("RepeaterLogic::setIdle: idle=%s\n", idle ? "true" : "false");
-
-  if (!repeater_is_up)
+  if (!repeater_is_up || (idle == up_timer.isEnabled()))
   {
     return;
   }
   
-  if ((idle && (up_timer != 0)) || (!idle && (up_timer == 0)))
-  {
-    return;
-  }
-  
-  delete up_timer;
-  up_timer = 0;
-  delete idle_sound_timer;
-  idle_sound_timer = 0;
+  up_timer.setEnable(false);
+  idle_sound_timer.setEnable(false);
   if (idle)
   {
-    up_timer = new Timer(idle_timeout);
-    up_timer->expired.connect(mem_fun(*this, &RepeaterLogic::idleTimeout));
-    
-    if (idle_sound_interval > 0)
+    up_timer.setEnable(true);
+    if (idle_sound_timer.timeout() > 0)
     {
-      idle_sound_timer = new Timer(idle_sound_interval, Timer::TYPE_PERIODIC);
-      idle_sound_timer->expired.connect(
-      	  mem_fun(*this, &RepeaterLogic::playIdleSound));
+      idle_sound_timer.setEnable(true);
     }
   }
 
@@ -525,12 +519,10 @@ void RepeaterLogic::setUp(bool up, string reason)
     checkIdle();
     setIdle(isIdle());
     
-    if ((ident_nag_timeout > 0) && (reason != "MODULE") &&
+    if ((ident_nag_timer.timeout() > 0) && (reason != "MODULE") &&
         (reason != "AUDIO") && (reason != "SQL_RPT_REOPEN"))
     {
-      delete ident_nag_timer; // Just to be sure...
-      ident_nag_timer = new Timer(ident_nag_timeout);
-      ident_nag_timer->expired.connect(mem_fun(*this, &RepeaterLogic::identNag));
+      ident_nag_timer.setEnable(true);
     }
   }
   else
@@ -546,12 +538,9 @@ void RepeaterLogic::setUp(bool up, string reason)
     open_reason = "?";
     rxValveSetOpen(false);
     repeater_is_up = false;
-    delete up_timer;
-    up_timer = 0;
-    delete idle_sound_timer;
-    idle_sound_timer = 0;
-    delete ident_nag_timer;
-    ident_nag_timer = 0;
+    up_timer.setEnable(false);
+    idle_sound_timer.setEnable(false);
+    ident_nag_timer.setEnable(false);
     stringstream ss;
     ss << "repeater_down " << reason;
     processEvent(ss.str());
@@ -608,10 +597,9 @@ void RepeaterLogic::squelchOpen(bool is_open)
 	}
       }
       
-      if ((ident_nag_timer != 0) && (diff_ms > ident_nag_min_time))
+      if (ident_nag_timer.isEnabled() && (diff_ms > ident_nag_min_time))
       {
-	delete ident_nag_timer;
-	ident_nag_timer = 0;
+        ident_nag_timer.setEnable(false);
       }
     }
   
@@ -621,11 +609,9 @@ void RepeaterLogic::squelchOpen(bool is_open)
   {
     if (is_open)
     {
-      if (required_sql_open_duration >= 0)
+      if (open_on_sql_timer.timeout() >= 0)
       {
-      	open_on_sql_timer = new Timer(required_sql_open_duration);
-	open_on_sql_timer->expired.connect(
-	    mem_fun(*this, &RepeaterLogic::openOnSqlTimerExpired));
+        open_on_sql_timer.setEnable(true);
       }
       
       if (open_on_sql_after_rpt_close > 0)
@@ -641,12 +627,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
     }
     else
     {
-      if (open_on_sql_timer != 0)
-      {
-      	delete open_on_sql_timer;
-      	open_on_sql_timer = 0;
-      }
-      
+      open_on_sql_timer.setEnable(false);
       if (activate_on_sql_close)
       {
       	activate_on_sql_close = false;
@@ -685,8 +666,7 @@ void RepeaterLogic::playIdleSound(Timer *t)
 
 void RepeaterLogic::openOnSqlTimerExpired(Timer *t)
 {
-  delete open_on_sql_timer;
-  open_on_sql_timer = 0;
+  open_on_sql_timer.setEnable(false);
   open_reason = "SQL";
   activateOnOpenOrClose(open_sql_flank);
 } /* RepeaterLogic::openOnSqlTimerExpired */
@@ -726,8 +706,7 @@ void RepeaterLogic::activateOnOpenOrClose(SqlFlank flank)
 
 void RepeaterLogic::identNag(Timer *t)
 {
-  delete ident_nag_timer;
-  ident_nag_timer = 0;
+  ident_nag_timer.setEnable(false);
   
   if (!rx().squelchIsOpen())
   {

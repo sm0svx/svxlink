@@ -10,7 +10,7 @@ class documentation.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2008 Tobias Blomberg
+Copyright (C) 2003-2015 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <cassert>
 
 
 /****************************************************************************
@@ -120,7 +121,7 @@ using namespace Async;
 Timer::Timer(int timeout_ms, Type type, bool enabled)
   : m_type(type), m_timeout_ms(timeout_ms), m_is_enabled(false)
 {
-  setEnable(enabled);
+  setEnable(enabled && (timeout_ms >= 0));
 } /* Timer::Timer */
 
 
@@ -133,12 +134,20 @@ Timer::~Timer(void)
 void Timer::setTimeout(int timeout_ms)
 {
   m_timeout_ms = timeout_ms;
-  reset();
+  if (m_timeout_ms >= 0)
+  {
+    reset();
+  }
+  else
+  {
+    setEnable(false);
+  }
 } /* Timer::setTimeout */
 
 
 void Timer::setEnable(bool do_enable)
 {
+  assert((m_timeout_ms >= 0) || !do_enable);
   if (do_enable && !m_is_enabled)
   {
     Application::app().addTimer(this);
@@ -156,6 +165,7 @@ void Timer::reset(void)
 {
   if (m_is_enabled)
   {
+    assert(m_timeout_ms >= 0);
     Application::app().delTimer(this);
     Application::app().addTimer(this);
   }

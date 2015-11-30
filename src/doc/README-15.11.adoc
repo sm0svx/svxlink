@@ -1,0 +1,209 @@
+SvxLink release 15.11 -- 22 Nov 2015
+------------------------------------
+The biggest news in this release is the support for RTL2832U based DVB-T USB
+dongles. This make it possible to use such USB dongles as cheap SDR (Software
+Defined Radio) receivers.  This will open up the world of cheap receiver
+hardware to all SvxLink users. It will for example be very cheap to set up an
+extra receiver with local coverage for a SvxLink based repeater, as long as
+there is a network connection to the repeater. The modulation forms supported
+are: FM, FM narrow, AM, AM narrow, USB, LSB, CW, CW wide and wideband FM
+(broadcast). Running multiple receivers on the same dongle is supported as well as using multiple dongles.
+
+There now is a utility called "devcal" added to the toolbox.  It's purpose is
+to give the SvxLink sysop a way to measure and calibrate the input and output
+sound levels on FM. Read the devcal(1) man page for more information.
+
+The DTMF decoder has been completely rewritten for better performance. The new
+decoder is quicker and will be able to detect DTMF codes with duration of 40
+milliseconds and up. The immunity to speech is much better so false detections
+will be rare. The decoder is also slightly more sensitive and also adapts after
+the signal conditions. On weak signals a longer tone duration is required and
+the hangtime will also be increased.
+
+Another thing that may be good to know is that the default install path for
+libraries may have changed since it is now autodetected during the build.  For
+example, on a x86_64 architecture the libraries and plugins will now end up
+under /usr/lib64 instead of /usr/lib. This may affect the loading of plugins
+and SvxLink may find the old plugins under /usr/lib which will cause an error.
+To get around this, remove the old plugins and comment out the MODULE_PATH
+configuration variable in the GLOBAL section of the configuration file.
+
+As usual a lot of bugs have also been fixed.  The full list of changes and more
+details can be found below. Information on configuration of new features can be
+found in the manual pages.
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Complete ChangeLog for SvxLink Server version 1.5.0
+---------------------------------------------------
+
+* Added support for using digital drop receivers on an RTL2832U based DVB-T
+  USB dongle. This will open up the world of cheap receiver hardware to all
+  SvxLink users. It will for example be very cheap to set up an extra receiver
+  with local coverage for a SvxLink based repeater, as long as there is a
+  network connection to the repeater. The modulation forms supported are:
+  FM, FM narrow, AM, AM narrow, USB, LSB, CW, CW wide and wideband FM
+  (broadcast).
+
+* New configuration variable for local receivers, RAW_AUDIO_UDP_DEST, which
+  makes it possible to stream the raw audio read by SvxLink from the audio
+  device to a UDP port. This feature was mainly added for debugging but may
+  be usable for other things as well.
+
+* New configuration variable MASTER_GAIN for local transmitters. This has the
+  functionality as the PREAMP variable have for local receivers. That is,
+  it can be used to fine tune or amplify the gain of the signal if it's not
+  possible to do with the normal hardware sound controls.
+
+* Added a calibration utility, devcal, which can be used to get all the
+  levels right for all transmitters and receivers in the system.
+
+* New squelch detector type, OPEN, which keeps the squelch open at all times.
+  Used at calibration for example.
+
+* Bugfix: The receiver voter had a bug which caused incoming audio to be
+  muted if a receiver switch occurred in the middle of an identification.
+
+* Support added for raw HID (Human Interface Devices) based devices that can
+  be used for PTT and Squelch. An example of such a chip is the CM108 which
+  can be found in some USB audio devices.
+  Contributed by Adi / DL1HRC.
+
+* Bugfix in ModuleMetarInfo: Numbers was some times read in the wrong way
+
+* New logic core configuration, STATE_PTY, which specify a UNIX 98 PTY to open
+  where SvxLink state information can be published. This information can be
+  used by external applications to act on.
+
+* The receiver voter now continuously output squelch state information to the
+  logic core state PTY.
+
+* Fixed issues reported by the Coverity scan static analysis tool.
+
+* New config variable CARD_CHANNELS which is used to set the number of
+  channels that is used on the sound card, e.g. 1=mono, 2=stereo.
+
+* The DTMF_TONE_AMP transmitter configuration variable has been renamed to
+  DTMF_DIGIT_PWR. To get the same level as with the old variable, add 3dB
+  to the value set on the new configuration variable.
+
+* Rewritten and greatly improved software DTMF decoder. The new decoder is
+  the default choice when DTMF_DEC_TYPE is set to INTERNAL. To keep using the
+  old DTMF decoder, set it to DH1DM instead. The improvements in the new DTMF
+  decoder are:
+  - Quicker: Now detect durations as short as 40ms
+  - Much better immunity to non-DTMF audio, like speech, which mean less
+    false detections
+  - Slightly more sensitive
+  - Lowered CPU requirements
+
+* Now printing out when 1750Hz tone burst muting is active.
+
+* Bugfix in the QSO recorder: If a write error occurred, the audio pipe could
+  get stuck leading to audio to stop flowing in other parts of SvxLink.
+
+* Config file open code cleanup for SvxLink and RemoteTrx. Under some
+  circumstances "fopen: ..." error messsages were printed even though there
+  really wasn't an error. Also, when using the --runasuser switch, the
+  configuration file was still searched for using the HOME environment variable
+  of the user who started the process rather than using the home directory
+  of the target user.
+
+* Add simulator for local receivers and signal level detectors. These
+  simulators can be used to debug problems in SvxLink.
+
+* Bugfix: A Local Rx would let squelch open/close through even when muted.
+
+* The install path for libraries are now automatically discovered which may
+  make libraries install in a another directory than before. For example, on
+  normal 64 bit x86_64 systems they will end up in /usr/lib64 and the plugins
+  will be placed in /usr/lib64/svxlink. On other platforms the paths may be a
+  bit stranger, like /usr/lib/arm-linux-gnueabihf on the Cubieboard.
+  This may require that the MODULE_PATH config variable is changed for the
+  plugins to be found. The best is to comment out the MODULE_PATH
+  configuration variable and let SvxLink determine what to use.
+  The old LIB_SUFFIX CMake variable is not used anymore.
+
+* New configuration variable in svxlink.conf for remote transmitters and
+  receivers, LOG_DISCONNECTS_ONCE, that can be set to 1 to not log reconnect
+  attempts.  This may be of use if a RemoteTrx is missing for a long time or if
+  it's only used from time to time.
+
+* The CFG_DIR configuration variable read additional config from files in
+  the configured directory. The man-page stated that files starting with a dot
+  were ignored. This was not true but is now. The man-page was also lacking
+  information on that all files not ending in ".conf" are ignored.
+
+* The default PTT type is now NONE so that svxlink and remotetrx can start
+  out of the box without reconfiguring them.
+
+* Bugfix in the GPIO squelch detector. The usage of "!" in GPIO_SQL_PIN to get
+  inverted operation did not work.
+
+
+
+Complete ChangeLog for Qtel version 1.2.2
+-----------------------------------------
+
+* Fixed issues reported by the Coverity scan static analysis tool.
+
+* Updated Hungarian translation by HG0MV.
+
+* Now possible to bind the communication to a specific network interface.
+
+* Updated Japanese translation by JH1PGO / Masao
+
+* Updated Spanish translation by Gustavo - LU8WFY
+
+* Updated Ukrainian translation by UR3QJW / Volodymyr
+
+
+
+Complete ChangeLog for the EchoLib library version 1.3.2
+--------------------------------------------------------
+
+* Fixed issues reported by the Coverity scan static analysis tool.
+
+
+
+Complete ChangeLog for the Async library version 1.4.0
+------------------------------------------------------
+
+* New class Async::Pty used to communicate over UNIX 98 PTY:s.
+
+* Bugfix in Async::CppApplication: The max_desc variable used in the call to
+  pselect was not correctly set up in some cases after a removal of a file
+  descriptor watch.
+
+* Fixed issues reported by the Coverity scan static analysis tool.
+
+* The AudioSplitter now also is a source itself so that it can be used to
+  pipe audio through to the next stage in the pipe instead of having to
+  use addSink to register all sinks. This make the splitter easier to
+  handle in an audio pipe where there is a main path and you just want
+  to split off a branch.
+
+* The NULL audio codec now encode and decode a sample count which is used
+  by the decoder to write the correct number of samples to its audio sink.
+  All written samples will be zero-samples.
+
+* Bugfix in Async::AudioRecorder: If a write error occurred, the audio pipe
+  could be blocked indefinitely. Error handling was improved all over. There
+  now is a "errorOccurred" signal and a "errorMsg" function.
+
+* Bugfix in Async::AudioEncoder{Opus,Speex,Gsm}: Applications using the Opus,
+  Speex or Gsm audio encoders could crash due to some dangerous coding.
+
+* Async::Config: Removed error message printed on open failure. Printing an
+  error message must be done by the caller.
+
+* Async::Timer: Now possible to create a timer object that is disabled from
+  the beginning.
+
+* Async::Application: New function runTask which can be used to delay
+  execution of a function until control is returned to the Async main loop.
+
+* New class Async::AudioGenerator that can generate sine and square waves.
+
+* Now possible to create an Async::FdWatch without an associated file
+  descriptor and then set it later using the new setFd function.

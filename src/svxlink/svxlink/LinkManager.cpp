@@ -218,9 +218,9 @@ bool LinkManager::initialize(const Async::Config &cfg,
     {
       link.timeout_timer = new Timer(link.timeout);
       link.timeout_timer->setEnable(false);
-      link.timeout_timer->expired.connect(
-          bind(mem_fun(LinkManager::instance(), &LinkManager::linkTimeout),
-               &link));
+      link.timeout_timer->expired.connect(sigc::bind(
+          mem_fun(LinkManager::instance(), &LinkManager::linkTimeout),
+          &link));
     }
 
       // Automatically activate the link, if one (or more) logics
@@ -301,7 +301,7 @@ void LinkManager::addLogic(Logic *logic)
     // Keep track of the newly added logics idle state so that we can start
     // and stop timeout timers.
   logic_info.idle_state_changed_con = logic->idleStateChanged.connect(
-      bind(mem_fun(*this, &LinkManager::logicIdleStateChanged), logic));
+      sigc::bind(mem_fun(*this, &LinkManager::logicIdleStateChanged), logic));
 
     // Add the logic to the logic map
   logic_map[logic->name()] = logic_info;

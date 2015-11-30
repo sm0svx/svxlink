@@ -1,4 +1,11 @@
- 1.4.0 -- ?? ??? 2015
+ 1.4.1 -- ?? ??? 2015
+----------------------
+
+* Support for Qt5 added. Patch contributed by Richard Neese.
+
+
+
+ 1.4.0 -- 22 Nov 2015
 ----------------------
 
 * New class Async::Pty used to communicate over UNIX 98 PTY:s.
@@ -36,6 +43,9 @@
   execution of a function until control is returned to the Async main loop.
 
 * New class Async::AudioGenerator that can generate sine and square waves.
+
+* Now possible to create an Async::FdWatch without an associated file
+  descriptor and then set it later using the new setFd function.
 
 
 

@@ -155,9 +155,9 @@ class AudioNoiseAdder : public AudioProcessor
 
   private:
     float sigma;        // Standard deviation of the generated noise
-    float z0;
     float z1;
     bool generate;
+    unsigned int seed;
 
     AudioNoiseAdder(const AudioNoiseAdder&);
     AudioNoiseAdder& operator=(const AudioNoiseAdder&);
