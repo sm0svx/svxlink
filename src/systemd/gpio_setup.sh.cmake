@@ -12,27 +12,44 @@ gpio_setup() {
       echo "$PIN" > /sys/class/gpio/export
       # Set the direction to output for the pin:
       echo "$DIR" > /sys/class/gpio/gpio"$PIN"/direction
-      # If pin direction is an input then set active low:
-        if [ "$DIR" = "in" ]; then
-           echo 1 >/sys/class/gpio/gpio"$PIN"/active_low
-        fi
       # Make sure that the "RUNASUSER" user can write to the GPIO pin:
       chown "$RUNASUSER" /sys/class/gpio/gpio"$PIN"/value
    fi
 }
 
-## GPIO PTT support ?
-for i in $GPIO_PTT_PIN
+gpio_setup2() {
+   NAME=$1
+   PIN=$2
+   DIR=$3
+   if [[ -e /sys/class/gpio/gpio"$PIN" ]]; then
+        if [ "$NAME" = "LOW" ]; then
+           echo 1 >/sys/class/gpio/gpio"$PIN"/active_low
+           # Make sure that the "RUNASUSER" user can write to the GPIO pin:
+           chown "$RUNASUSER" /sys/class/gpio/gpio"$PIN"/active_low
+        fi
+   fi
+}
+      
+## GPIO PIN OUT support ?
+for i in $GPIO_OUT_PIN
 do
 if [ ! -z "$i" -a ! -e /sys/class/gpio/gpio"$i" ]; then
-   gpio_setup PTT "$i" out
+   gpio_setup OUT "$i" out
 fi
 done
 
-## GPIO SQL support ?
-for i in $GPIO_SQL_PIN
+## GPIO PIN IN support ?
+for i in $GPIO_IN_PIN
 do
 if [  ! -z "$i" -a ! -e /sys/class/gpio/gpio"$i" ]; then
-   gpio_setup SQL "$i" in
+   gpio_setup IN "$i" in
+fi
+done
+
+## GPIO PIN LOW support ?
+for i in $GPIO_LOW_PIN
+do
+if [[ -e /sys/class/gpio/gpio"$i" ]]; then
+   gpio_setup2 LOW "$i" in
 fi
 done

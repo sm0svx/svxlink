@@ -12,18 +12,18 @@ gpio_teardown() {
    fi
 }
 
-## Unset GPIO PTT pin, if used
-for i in $GPIO_PTT_PIN
+## Unset GPIO OUT pin, if used
+for i in $GPIO_OUT_PIN
 do
 if [ ! -z "$i" ]; then
-   gpio_teardown PTT "$i"
+   gpio_teardown OUT "$i"
 fi
 done
 
-## Unset GPIO SQL pin, if used
-for i in $GPIO_SQL_PIN
+## Unset GPIO IN pin, if used
+for i in $GPIO_IN_PIN
 do
 if [ ! -z "$i" ]; then
-gpio_teardown SQL "$i"
+gpio_teardown IN "$i"
 fi
 done
