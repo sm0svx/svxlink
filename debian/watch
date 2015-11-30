@@ -1,4 +1,4 @@
 version=3
 
-https://github.com/sm0svx/svxlink/tags .*/archive/(.*)\.tar\.gz
+https://github.com/rneese45/svxlink/tags .*/archive/(.*)\.tar\.gz
 
