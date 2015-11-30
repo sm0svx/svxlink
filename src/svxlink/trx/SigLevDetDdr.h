@@ -188,9 +188,9 @@ class SigLevDetDdr : public SigLevDet
 
     int	                sample_rate;
     unsigned            block_idx;
-    int                 last_siglev;
+    float               last_siglev;
     unsigned            integration_time;
-    std::deque<int>     siglev_values;
+    std::deque<float>   siglev_values;
     int                 update_interval;
     int                 update_counter;
     double              pwr_sum;

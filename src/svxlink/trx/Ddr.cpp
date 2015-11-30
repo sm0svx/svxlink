@@ -333,7 +333,7 @@ namespace {
   class Translate
   {
     public:
-      Translate(unsigned samp_rate, float offset)
+      Translate(unsigned samp_rate, int offset)
         : samp_rate(samp_rate), n(0)
       {
         setOffset(offset);
@@ -1159,7 +1159,7 @@ Ddr *Ddr::find(const std::string &name)
 
 Ddr::Ddr(Config &cfg, const std::string& name)
   : LocalRxBase(cfg, name), cfg(cfg), channel(0), rtl(0),
-    fq(0.0)
+    fq(0)
 {
 } /* Ddr::Ddr */
 
@@ -1297,8 +1297,8 @@ void Ddr::tunerFqChanged(uint32_t center_fq)
     return;
   }
 
-  double new_offset = fq - center_fq;
-  if (abs(new_offset) > (rtl->sampleRate() / 2)-12500)
+  int new_offset = fq - center_fq;
+  if (static_cast<uint32_t>(abs(new_offset)) > (rtl->sampleRate() / 2)-12500)
   {
     if (channel->isEnabled())
     {

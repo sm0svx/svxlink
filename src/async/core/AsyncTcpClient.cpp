@@ -9,7 +9,7 @@ to a remote host. See usage instructions in the class definition.
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003  Tobias Blomberg
+Copyright (C) 2003-2015 Tobias Blomberg
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -129,7 +129,8 @@ using namespace Async;
 TcpClient::TcpClient(size_t recv_buf_len)
   : TcpConnection(recv_buf_len), dns(0), sock(-1), wr_watch(0)
 {
-  
+  wr_watch = new FdWatch;
+  wr_watch->activity.connect(mem_fun(*this, &TcpClient::connectHandler));
 } /* TcpClient::TcpClient */
 
 
@@ -138,6 +139,8 @@ TcpClient::TcpClient(const string& remote_host, uint16_t remote_port,
   : TcpConnection(recv_buf_len), dns(0), remote_host(remote_host),
     sock(-1), wr_watch(0)
 {
+  wr_watch = new FdWatch;
+  wr_watch->activity.connect(mem_fun(*this, &TcpClient::connectHandler));
   setRemotePort(remote_port);
 } /* TcpClient::TcpClient */
 
@@ -147,6 +150,8 @@ TcpClient::TcpClient(const IpAddress& remote_ip, uint16_t remote_port,
   : TcpConnection(recv_buf_len), dns(0), remote_host(remote_ip.toString()),
     sock(-1), wr_watch(0)
 {
+  wr_watch = new FdWatch;
+  wr_watch->activity.connect(mem_fun(*this, &TcpClient::connectHandler));
   setRemoteAddr(remote_ip);
   setRemotePort(remote_port);
 } /* TcpClient::TcpClient */
@@ -155,6 +160,8 @@ TcpClient::TcpClient(const IpAddress& remote_ip, uint16_t remote_port,
 TcpClient::~TcpClient(void)
 {
   disconnect();
+  delete wr_watch;
+  wr_watch = 0;
 } /* TcpClient::~TcpClient */
 
 
@@ -206,8 +213,7 @@ void TcpClient::disconnect(void)
 {
   TcpConnection::disconnect();
 
-  delete wr_watch;
-  wr_watch = 0;
+  wr_watch->setEnabled(false);
 
   delete dns;
   dns = 0;
@@ -338,8 +344,8 @@ void TcpClient::connectToRemote(void)
   {
     if (errno == EINPROGRESS)
     {
-      wr_watch = new FdWatch(sock, FdWatch::FD_WATCH_WR);
-      wr_watch->activity.connect(mem_fun(*this, &TcpClient::connectHandler));
+      wr_watch->setFd(sock, FdWatch::FD_WATCH_WR);
+      wr_watch->setEnabled(true);
     }
     else
     {
@@ -363,8 +369,7 @@ void TcpClient::connectToRemote(void)
 
 void TcpClient::connectHandler(FdWatch *watch)
 {
-  delete wr_watch;
-  wr_watch = 0;
+  wr_watch->setEnabled(false);
   
   int error;
   socklen_t error_size = sizeof(error);

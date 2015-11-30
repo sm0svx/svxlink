@@ -298,7 +298,7 @@ void WbRxRtlSdr::findBestCenterFq(void)
   }
 
     // Put all DDR frequencies in a list and sort it
-  deque<double> fqs;
+  deque<uint32_t> fqs;
   for (Ddrs::iterator it=ddrs.begin(); it!=ddrs.end(); ++it)
   {
     Ddr *ddr = (*it);
@@ -313,12 +313,12 @@ void WbRxRtlSdr::findBestCenterFq(void)
 
     // Now check that all DDRs fit inside the tuner bandwidth. If not,
     // remove frequencies from the list until it will fit.
-  double span = 0.0;
+  uint32_t span = 0;
   while ((span = fqs.back() - fqs.front()) > (rtl->sampleRate()-25000))
   {
     cout << "### Span too wide: " << span << endl;
-    double front_dist = *(fqs.begin()+1) - fqs.front();
-    double back_dist = fqs.back() - *(fqs.rbegin()+1);
+    uint32_t front_dist = *(fqs.begin()+1) - fqs.front();
+    uint32_t back_dist = fqs.back() - *(fqs.rbegin()+1);
     if (front_dist > back_dist)
     {
       fqs.pop_front();
@@ -330,22 +330,22 @@ void WbRxRtlSdr::findBestCenterFq(void)
   }
 
     // Now place all channels centralized within the tuner bandwidth
-  double center_fq = (fqs.front() + fqs.back()) / 2.0;
+  uint32_t center_fq = (fqs.front() + fqs.back()) / 2;
 
     // Check if we have any channel too close to the center of the band.
     // The center of the band almost always contain interference signals.
     // Shift the band to get channels away from the center.
-  deque<double>::iterator it = fqs.begin();
+  deque<uint32_t>::iterator it = fqs.begin();
   while (it != fqs.end())
   {
-    deque<double>::iterator next = it+1;
-    double dist = *it - center_fq;
-    double next_dist = *next - center_fq;
+    deque<uint32_t>::iterator next = it+1;
+    int32_t dist = *it - center_fq;
+    int32_t next_dist = *next - center_fq;
     if ((next == fqs.end()) || (abs(dist) < abs(next_dist)))
     {
       if (abs(dist) < 12500)
       {
-        double max_move = (rtl->sampleRate() - span) / 2;
+        int32_t max_move = (rtl->sampleRate() - span) / 2;
         if (dist < 0)
         {
           center_fq += min(12500+dist, max_move);

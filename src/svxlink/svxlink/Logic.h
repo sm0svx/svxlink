@@ -56,6 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <LocationInfo.h>
 #include <AsyncAtTimer.h>
+#include <AsyncTimer.h>
 #include <Tx.h>
 
 
@@ -78,7 +79,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace Async
 {
   class Config;
-  class Timer;
   class AudioMixer;
   class AudioAmp;
   class AudioSelector;
@@ -249,10 +249,8 @@ class Logic : public sigc::trackable
     std::list<Module*>	      	    modules;
     std::string       	      	    m_callsign;
     std::list<std::string>    	    cmd_queue;
-    int      	      	      	    exec_cmd_on_sql_close;
-    Async::Timer      	      	    *exec_cmd_on_sql_close_timer;
-    Async::Timer      	      	    *rgr_sound_timer;
-    int       	      	      	    rgr_sound_delay;
+    Async::Timer      	      	    exec_cmd_on_sql_close_timer;
+    Async::Timer      	      	    rgr_sound_timer;
     float       	      	    report_ctcss;
     std::map<int, std::string>	    macros;
     EventHandler      	      	    *event_handler;
@@ -283,7 +281,6 @@ class Logic : public sigc::trackable
     std::string                     sel5_from;
     std::string                     sel5_to;
     AprsStatistics                  aprs_stats;
-    Async::Timer		    *aprs_stats_timer;
     Tx::TxCtrlMode                  currently_set_tx_ctrl_mode;
     bool                            is_online;
     std::string                     online_cmd;
@@ -297,7 +294,7 @@ class Logic : public sigc::trackable
     void processCommand(const std::string &cmd, bool force_core_cmd=false);
     void processMacroCmd(const std::string &macro_cmd);
     void putCmdOnQueue(void);
-    void sendRgrSound(Async::Timer *t=0);
+    void sendRgrSound(void);
     void timeoutNextMinute(void);
     void everyMinute(Async::AtTimer *t);
     void checkIfOnlineCmd(void);

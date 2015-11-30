@@ -1,4 +1,4 @@
-.TH SVXLINK.CONF 5 "JULY 2014" Linux "File Formats"
+.TH SVXLINK.CONF 5 "NOVEMBER 2015" Linux "File Formats"
 .
 .SH NAME
 .
@@ -197,12 +197,10 @@ will then be interpreted as the minimum number of seconds between identification
 LONG_IDENT_INTERVAL will not be affected by this parameter.   
 .TP
 .B EXEC_CMD_ON_SQL_CLOSE
-Specify a time, in milliseconds, after squelch close after which entered DTMF digits will
-be executed as a command without the need to send the # character. This really only is of
-use when using a radio that it is difficult to send DTMF digits from, like the Yaesu VX-2
-handheld. The down side of enabling this option is that the DTMF detection some times
-false trigger on voice. This can cause interresting situations when all of a sudden a
-module get activated in the middle of a QSO.
+Specify a time, in milliseconds, after squelch close after which entered DTMF
+digits will be executed as a command without the need to send the # character.
+To disable this feature, either comment out the configuration row or set it to
+a value less or equal to zero.
 .TP
 .B EVENT_HANDLER
 Point out the TCL event handler script to use. The TCL event handler script is
@@ -1302,8 +1300,10 @@ The sample rate used by the dongle. Legal values are 960000 and 2400000
 .TP
 .B FQ_CORR
 This is probably the most important configuration variable. Most dongles are
-far off in frequency so they need to be calibrated. How to do this is out of
-scope for this document.
+far off in frequency so they need to be calibrated. Calibrating the dongle can
+be done in multiple ways. The recommended way is to use the devcal utility that
+is distributed along with SvxLink. The calibration procedure is described in
+the devcal (1) manual page.
 
 The end result should be a correction value for how far off the dongle is in
 frequency counted in parts per million (PPM). That is, how many Hz per MHz is
@@ -2217,4 +2217,5 @@ Tobias Blomberg (SM0SVX) <sm0svx at users dot sourceforge dot net>
 .
 .BR svxlink (1),
 .BR remotetrx (1),
-.BR siglevdetcal (1)
+.BR siglevdetcal (1),
+.BR devcal (1)

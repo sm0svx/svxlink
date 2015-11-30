@@ -166,11 +166,11 @@ MainWindow::MainWindow(void)
   station_view->addAction(addSelectedToBookmarksAction);
   station_view->addAction(removeSelectedFromBookmarksAction);
 
-  connect(directoryRefreshAction, SIGNAL(activated()),
+  connect(directoryRefreshAction, SIGNAL(triggered()),
       	  this, SLOT(refreshCallList()));
-  connect(connectionConnectToSelectedAction, SIGNAL(activated()),
+  connect(connectionConnectToSelectedAction, SIGNAL(triggered()),
       	  this, SLOT(connectionConnectToSelectedActionActivated()));
-  connect(connectionConnectToIpAction, SIGNAL(activated()),
+  connect(connectionConnectToIpAction, SIGNAL(triggered()),
       	  this, SLOT(connectionConnectToIpActionActivated()));
   connect(addSelectedToBookmarksAction, SIGNAL(triggered()),
 	  this, SLOT(addSelectedToBookmarks()));
@@ -178,9 +178,9 @@ MainWindow::MainWindow(void)
 	  this, SLOT(removeSelectedFromBookmarks()));
   connect(addNamedStationToBookmarksAction, SIGNAL(triggered()),
 	  this, SLOT(addNamedStationToBookmarks()));
-  connect(settingsConfigureAction, SIGNAL(activated()),
+  connect(settingsConfigureAction, SIGNAL(triggered()),
       	  this, SLOT(settings()));
-  connect(helpAboutAction, SIGNAL(activated()),
+  connect(helpAboutAction, SIGNAL(triggered()),
       	  this, SLOT(helpAbout()));
 
   connect(station_view_selector, SIGNAL(currentItemChanged(QListWidgetItem*,
@@ -541,7 +541,7 @@ void MainWindow::initEchoLink(void)
   if (disp == 0)
   {
     //FIXME: Better error handling!
-    fprintf(stderr, "Could not initalize network listen ports\n");
+    fprintf(stderr, "Could not initialize network listen ports\n");
     exit(1);
   }
   disp->incomingConnection.connect(
@@ -717,7 +717,7 @@ void MainWindow::incomingSelectionChanged(void)
 void MainWindow::clearIncomingList(void)
 {
   incoming_con_view->clear();
-  incoming_accept_button->setEnabled(FALSE);
+  incoming_accept_button->setEnabled(false);
 } /* MainWindow::clearIncomingList */
 
 
@@ -726,7 +726,7 @@ void MainWindow::acceptIncoming(void)
   QList<QTreeWidgetItem*> items = incoming_con_view->selectedItems();
   Q_ASSERT(items.size() == 1);
   QTreeWidgetItem *item = items.at(0);
-  incoming_accept_button->setEnabled(FALSE);
+  incoming_accept_button->setEnabled(false);
   ComDialog *com_dialog = new ComDialog(*dir, item->text(0), item->text(1));
   com_dialog->show();
   com_dialog->acceptConnection();

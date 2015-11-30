@@ -335,7 +335,7 @@ bool Exec::run(void)
   {
     cmd[i] = strdup(args[i].c_str());
   }
-  cmd[args.size()] = '\0';
+  cmd[args.size()] = 0;
   ret = execv(cmd[0], cmd);
   assert (ret == -1);
 

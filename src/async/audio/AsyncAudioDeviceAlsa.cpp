@@ -192,6 +192,8 @@ AudioDeviceAlsa::AudioDeviceAlsa(const std::string& dev_name)
   : AudioDevice(dev_name), block_size(0), block_count(0), play_handle(0), 
     rec_handle(0), play_watch(0), rec_watch(0), duplex(false)
 {
+  assert(AudioDeviceAlsa_creator_registered);
+
   snd_pcm_t *play, *capture;
 
     // Open the device to check its duplex capability
