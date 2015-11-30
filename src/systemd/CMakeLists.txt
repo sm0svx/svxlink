@@ -8,14 +8,6 @@ if(WITH_SYSTEMD)
     set(SYSTEMD_DEFAULTS_FILES_DIR "/etc/default" )
     set(SYSTEMD_SCRIPTS_FILES_DIR "/usr/sbin" )
     
-    if(WITH_SYSTEMD_WATCHDOG)
-        set( SVX_WatchdogSec 10 )
-        message( STATUS "The systemd watchdog is enabled - timeout is set to ${SVX_WatchdogSec} seconds")
-    else(WITH_SYSTEMD_WATCHDOG) 
-        set( SVX_WatchdogSec 0 )
-        message( STATUS "The systemd watchdog is disabled")
-    endif(WITH_SYSTEMD_WATCHDOG) 
-    
     configure_file(${CMAKE_SOURCE_DIR}/systemd/svxlink.service.cmake ${PROJECT_BINARY_DIR}/systemd/svxlink.service)
     message( STATUS "Configured systemd unit file:svxlink.service" )
 
