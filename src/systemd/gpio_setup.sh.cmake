@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 if [ -r /etc/default/svxlink ]; then
         . /etc/default/svxlink
 fi
