@@ -202,6 +202,7 @@ class QsoRecorder
     void checkTimeoutTimers(void);
     void handleEncoderPrintouts(const char *buf, int cnt);
     void encoderExited(FileEncoder *enc);
+    void onError(void);
 
 };  /* class QsoRecorder */
 

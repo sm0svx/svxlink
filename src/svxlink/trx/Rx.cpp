@@ -59,6 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "NetRx.h"
 #include "DummyRxTx.h"
 #include "Ddr.h"
+#include "LocalRxSim.h"
 
 
 
@@ -150,6 +151,19 @@ class DdrFactory : public RxFactory
       return new Ddr(cfg, name);
     }
 }; /* class DdrFactory */
+
+
+class LocalRxSimFactory : public RxFactory
+{
+  public:
+    LocalRxSimFactory(void) : RxFactory("LocalSim") {}
+    
+  protected:
+    Rx *createRx(Config &cfg, const string& name)
+    {
+      return new LocalRxSim(cfg, name);
+    }
+}; /* class LocalRxSimFactory */
 
 
 /****************************************************************************
@@ -257,6 +271,7 @@ Rx *RxFactory::createNamedRx(Config& cfg, const string& name)
   NetRxFactory net_rx_factory;
   DummyRxFactory dummy_rx_factory;
   DdrFactory ddr_rx_factory;
+  LocalRxSimFactory local_rx_sim_factory;
   
   string rx_type;
   if (name != "NONE")

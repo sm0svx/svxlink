@@ -208,6 +208,12 @@ class Rx : public sigc::trackable, public Async::AudioSource
     virtual void reset(void) = 0;
     
     /**
+     * @brief   Find out if the receiver is ready for operation
+     * @returns Returns \em true if the receiver is ready for operation
+     */
+    virtual bool isReady(void) const { return true; }
+
+    /**
      * @brief 	A signal that indicates if the squelch is open or not
      * @param 	is_open \em True if the squelch is open or \em false if not
      */
@@ -240,6 +246,25 @@ class Rx : public sigc::trackable, public Async::AudioSource
      */
     sigc::signal<void, float> signalLevelUpdated;
     
+    /**
+     * @brief	A signal that is emitted to publish a state update event
+     * @param	event_name The name of the event
+     * @param   msg The state update message
+     *
+     * This signal is emitted when a receiver wish to publish a state update
+     * message. A state update message is a free text message that can be used
+     * by subscribers to act on certain state changes within SvxLink. The
+     * event name must be unique within SvxLink. The recommended format is
+     * <context>:<name>, e.g. Rx:sql_state.
+     */
+    sigc::signal<void, const std::string&,
+                 const std::string&> publishStateEvent;
+    
+    /**
+     * @brief   A signal that is emitted when the ready state changes
+     */
+    sigc::signal<void> readyStateChanged;
+
     
   protected:
     /**

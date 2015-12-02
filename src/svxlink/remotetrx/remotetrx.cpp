@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <fcntl.h>
 #include <pwd.h>
 #include <grp.h>
+#include <errno.h>
 
 #include <iostream>
 #include <iomanip>
@@ -333,6 +334,7 @@ int main(int argc, char **argv)
     fclose(pidfile);
   }
 
+  const char *home_dir = 0;
   if (runasuser != NULL)
   {
       // Setup supplementary group IDs
@@ -358,10 +360,14 @@ int main(int argc, char **argv)
       perror("setuid");
       exit(1);
     }
+    home_dir = passwd->pw_dir;
   }
 
-  const char *home_dir = getenv("HOME");
-  if (home_dir == NULL)
+  if (home_dir == 0)
+  {
+    home_dir = getenv("HOME");
+  }
+  if (home_dir == 0)
   {
     home_dir = ".";
   }
@@ -392,13 +398,19 @@ int main(int argc, char **argv)
 	cfg_filename = SYSCONF_INSTALL_DIR "/remotetrx.conf";
 	if (!cfg.open(cfg_filename))
 	{
-	  cerr << "*** ERROR: Could not open configuration file. Tried:\n"
+	  cerr << "*** ERROR: Could not open configuration file";
+          if (errno != 0)
+          {
+            cerr << " (" << strerror(errno) << ")";
+          }
+          cerr << ".\n";
+	  cerr << "Tried the following paths:\n"
       	       << "\t" << home_dir << "/.svxlink/remotetrx.conf\n"
       	       << "\t" SVX_SYSCONF_INSTALL_DIR "/remotetrx.conf\n"
 	       << "\t" SYSCONF_INSTALL_DIR "/remotetrx.conf\n"
 	       << "Possible reasons for failure are: None of the files exist,\n"
 	       << "you do not have permission to read the file or there was a\n"
-	       << "syntax error in the file\n";
+	       << "syntax error in the file.\n";
 	  exit(1);
 	}
       }
@@ -457,8 +469,8 @@ int main(int argc, char **argv)
   
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
-  cout << PROGRAM_NAME " v" REMOTE_TRX_VERSION " (" __DATE__ 
-          ") Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " v" REMOTE_TRX_VERSION
+          " Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";
   cout << "welcome to redistribute it in accordance with the "
@@ -549,6 +561,14 @@ int main(int argc, char **argv)
   {
     cerr << "*** ERROR: No trxs successfully initialized. Bailing out...\n";
   }
+
+  for (vector<TrxHandler*>::iterator it = trx_handlers.begin();
+       it != trx_handlers.end();
+       ++it)
+  {
+    delete *it;
+  }
+  trx_handlers.clear();
 
   logfile_flush();
   
@@ -787,14 +807,14 @@ static void logfile_reopen(const char *reason)
   logfile_write_timestamp();
   string msg(reason);
   msg += ". Reopening logfile\n";
-  write(logfd, msg.c_str(), msg.size());
+  if (write(logfd, msg.c_str(), msg.size()) == -1) {}
 
   logfile_open();
 
   logfile_write_timestamp();
   msg = reason;
   msg += ". Logfile reopened\n";
-  write(logfd, msg.c_str(), msg.size());
+  if (write(logfd, msg.c_str(), msg.size()) == -1) {}
 } /* logfile_reopen */
 
 

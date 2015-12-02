@@ -639,30 +639,6 @@ void ModuleMetarInfo::allMsgsWritten(void)
 
 
 /*
- *----------------------------------------------------------------------------
- * Method:    reportState
- * Purpose:   This function is called by the logic core when it wishes the
- *    	      module to report its state on the radio channel. Typically this
- *    	      is done when a manual identification has been triggered by the
- *    	      user by sending a "*".
- *    	      This function will only be called if this module is active.
- * Input:     None
- * Output:    None
- * Author:    Tobias Blomberg / SM0SVX
- * Created:   2005-08-28
- * Remarks:
- * Bugs:
- *----------------------------------------------------------------------------
- */
-void ModuleMetarInfo::reportState(void)
-{
-    stringstream ss;
-    ss << "status_report ";
-    processEvent(ss.str());
-
-} /* reportState */
-
-/*
 * establish a tcp-connection to the METAR-Server
 */
 void ModuleMetarInfo::openConnection(void)

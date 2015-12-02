@@ -292,6 +292,7 @@ int main(int argc, char **argv)
     fclose(pidfile);
   }
 
+  const char *home_dir = 0;
   if (runasuser != NULL)
   {
       // Setup supplementary group IDs
@@ -317,10 +318,14 @@ int main(int argc, char **argv)
       perror("setuid");
       exit(1);
     }
+    home_dir = passwd->pw_dir;
   }
 
-  const char *home_dir = getenv("HOME");
-  if (home_dir == NULL)
+  if (home_dir == 0)
+  {
+    home_dir = getenv("HOME");
+  }
+  if (home_dir == 0)
   {
     home_dir = ".";
   }
@@ -351,13 +356,19 @@ int main(int argc, char **argv)
 	cfg_filename = SYSCONF_INSTALL_DIR "/svxlink.conf";
 	if (!cfg.open(cfg_filename))
 	{
-	  cerr << "*** ERROR: Could not open configuration file. Tried:\n"
+	  cerr << "*** ERROR: Could not open configuration file";
+          if (errno != 0)
+          {
+            cerr << " (" << strerror(errno) << ")";
+          }
+          cerr << ".\n";
+	  cerr << "Tried the following paths:\n"
       	       << "\t" << home_dir << "/.svxlink/svxlink.conf\n"
       	       << "\t" SVX_SYSCONF_INSTALL_DIR "/svxlink.conf\n"
 	       << "\t" SYSCONF_INSTALL_DIR "/svxlink.conf\n"
 	       << "Possible reasons for failure are: None of the files exist,\n"
 	       << "you do not have permission to read the file or there was a\n"
-	       << "syntax error in the file\n";
+	       << "syntax error in the file.\n";
 	  exit(1);
 	}
       }
@@ -393,7 +404,8 @@ int main(int argc, char **argv)
     while ((dirent = readdir(dir)) != NULL)
     {
       char *dot = strrchr(dirent->d_name, '.');
-      if ((dot == NULL) || (strcmp(dot, ".conf") != 0))
+      if ((dot == NULL) || (dirent->d_name[0] == '.') ||
+          (strcmp(dot, ".conf") != 0))
       {
       	continue;
       }
@@ -416,8 +428,8 @@ int main(int argc, char **argv)
   
   cfg.getValue("GLOBAL", "TIMESTAMP_FORMAT", tstamp_format);
   
-  cout << PROGRAM_NAME " v" SVXLINK_VERSION " (" __DATE__
-          ") Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
+  cout << PROGRAM_NAME " v" SVXLINK_VERSION
+          " Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX\n\n";
   cout << PROGRAM_NAME " comes with ABSOLUTELY NO WARRANTY. "
           "This is free software, and you are\n";
   cout << "welcome to redistribute it in accordance with the terms "
@@ -511,6 +523,8 @@ int main(int argc, char **argv)
 
   app.exec();
 
+  LinkManager::deleteInstance();
+
   logfile_flush();
   
   if (stdin_watch != 0)
@@ -533,8 +547,6 @@ int main(int argc, char **argv)
   }
   logic_vec.clear();
   
-  LinkManager::deleteInstance();
-
   if (logfd != -1)
   {
     close(logfd);
@@ -824,14 +836,14 @@ static void logfile_reopen(const char *reason)
   logfile_write_timestamp();
   string msg(reason);
   msg += ". Reopening logfile\n";
-  write(logfd, msg.c_str(), msg.size());
+  if (write(logfd, msg.c_str(), msg.size()) == -1) {}
 
   logfile_open();
 
   logfile_write_timestamp();
   msg = reason;
   msg += ". Logfile reopened\n";
-  write(logfd, msg.c_str(), msg.size());
+  if (write(logfd, msg.c_str(), msg.size()) == -1) {}
 } /* logfile_reopen */
 
 

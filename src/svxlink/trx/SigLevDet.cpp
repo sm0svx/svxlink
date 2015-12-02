@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "SigLevDetNoise.h"
 #include "SigLevDetTone.h"
 #include "SigLevDetDdr.h"
+#include "SigLevDetSim.h"
 
 
 
@@ -143,6 +144,7 @@ SigLevDet *SigLevDetFactoryBase::createNamedSigLevDet(Config& cfg,
   SigLevDetNoise::Factory noise_siglev_factory;
   SigLevDetTone::Factory tone_siglev_factory;
   SigLevDetDdr::Factory ddr_siglev_factory;
+  SigLevDetSim::Factory sim_siglev_factory;
   
   string det_name;
   if (!cfg.getValue(name, "SIGLEV_DET", det_name) || det_name.empty())

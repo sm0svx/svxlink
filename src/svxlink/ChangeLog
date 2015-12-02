@@ -1,11 +1,13 @@
- 1.5.0 -- ?? ??? 2015
+ 1.5.0 -- 22 Nov 2015
 ----------------------
 
 * Added support for using digital drop receivers on an RTL2832U based DVB-T
   USB dongle. This will open up the world of cheap receiver hardware to all
   SvxLink users. It will for example be very cheap to set up an extra receiver
   with local coverage for a SvxLink based repeater, as long as there is a
-  network connection to the repeater.
+  network connection to the repeater. The modulation forms supported are:
+  FM, FM narrow, AM, AM narrow, USB, LSB, CW, CW wide and wideband FM
+  (broadcast).
 
 * New configuration variable for local receivers, RAW_AUDIO_UDP_DEST, which
   makes it possible to stream the raw audio read by SvxLink from the audio
@@ -33,13 +35,103 @@
 
 * Bugfix in ModuleMetarInfo: Numbers was some times read in the wrong way
 
-* New voter configuration, SQL_STATE_PTY, which make it possible to
-  continuously output squelch state information to a UNIX98 PTY.
+* New logic core configuration, STATE_PTY, which specify a UNIX 98 PTY to open
+  where SvxLink state information can be published. This information can be
+  used by external applications to act on.
+
+* The receiver voter now continuously output squelch state information to the
+  logic core state PTY.
 
 * Fixed issues reported by the Coverity scan static analysis tool.
 
 * New config variable CARD_CHANNELS which is used to set the number of
   channels that is used on the sound card, e.g. 1=mono, 2=stereo.
+
+* The DTMF_TONE_AMP transmitter configuration variable has been renamed to
+  DTMF_DIGIT_PWR. To get the same level as with the old variable, add 3dB
+  to the value set on the new configuration variable.
+
+* Rewritten and greatly improved software DTMF decoder. The new decoder is
+  the default choice when DTMF_DEC_TYPE is set to INTERNAL. To keep using the
+  old DTMF decoder, set it to DH1DM instead. The improvements in the new DTMF
+  decoder are:
+  - Quicker: Now detect durations as short as 40ms
+  - Much better immunity to non-DTMF audio, like speech, which mean less
+    false detections
+  - Slightly more sensitive
+  - Lowered CPU requirements
+
+* Now printing out when 1750Hz tone burst muting is active.
+
+* Bugfix in the QSO recorder: If a write error occurred, the audio pipe could
+  get stuck leading to audio to stop flowing in other parts of SvxLink.
+
+* Config file open code cleanup for SvxLink and RemoteTrx. Under some
+  circumstances "fopen: ..." error messsages were printed even though there
+  really wasn't an error. Also, when using the --runasuser switch, the
+  configuration file was still searched for using the HOME environment variable
+  of the user who started the process rather than using the home directory
+  of the target user.
+
+* Add simulator for local receivers and signal level detectors. These
+  simulators can be used to debug problems in SvxLink.
+
+* Bugfix: A Local Rx would let squelch open/close through even when muted.
+
+* The install path for libraries are now automatically discovered which may
+  make libraries install in a another directory than before. For example, on
+  normal 64 bit x86_64 systems they will end up in /usr/lib64 and the plugins
+  will be placed in /usr/lib64/svxlink. On other platforms the paths may be a
+  bit stranger, like /usr/lib/arm-linux-gnueabihf on the Cubieboard.
+  This may require that the MODULE_PATH config variable is changed for the
+  plugins to be found. The best is to comment out the MODULE_PATH
+  configuration variable and let SvxLink determine what to use.
+  The old LIB_SUFFIX CMake variable is not used anymore.
+
+* New configuration variable in svxlink.conf for remote transmitters and
+  receivers, LOG_DISCONNECTS_ONCE, that can be set to 1 to not log reconnect
+  attempts.  This may be of use if a RemoteTrx is missing for a long time or if
+  it's only used from time to time.
+
+* The CFG_DIR configuration variable read additional config from files in
+  the configured directory. The man-page stated that files starting with a dot
+  were ignored. This was not true but is now. The man-page was also lacking
+  information on that all files not ending in ".conf" are ignored.
+
+* The default PTT type is now NONE so that svxlink and remotetrx can start
+  out of the box without reconfiguring them.
+
+* Bugfix in the GPIO squelch detector. The usage of "!" in GPIO_SQL_PIN to get
+  inverted operation did not work.
+
+
+
+ 1.4.3 -- 02 nov 2015
+----------------------
+
+* SvxLink now compile in C++11 mode with GCC and other compilers that
+  understand the -std=c++11 compiler switch. The compiler switch will
+  automatically be turned on if a version of libsigc++ greater than 2.5.0 is
+  detected since those versions require C++11 to be enabled.
+
+
+
+ 1.4.2 -- 06 jun 2015
+----------------------
+
+* Bugfix: The logic linking would cause a crash under some circumstances.
+  For example SvxLink would crash on startup if link TIMEOUT was set and the
+  startup Tcl function was modified to play an audio clip.
+
+
+
+ 1.4.1 -- 30 apr 2015
+----------------------
+
+* ModuleEchoLink: If an incoming connect have a different IP address than
+  the one registered in the Echolink directory server, the station list is now
+  refreshed immediately instead of just rejecting the connection and wait for
+  the next periodic refresh.
 
 
 

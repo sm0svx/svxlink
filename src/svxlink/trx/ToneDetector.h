@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <AsyncAudioSink.h>
+#include <CppStdCompat.h>
 
 
 /****************************************************************************
@@ -122,6 +123,11 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
      * give the same detection result before the detector change state.
      */
     ToneDetector(float tone_hz, float width_hz, int det_delay_ms = 0);
+
+    /**
+     * @brief   Destructor
+     */
+    ~ToneDetector(void);
 
     /**
      * @brief  Return the detection frequency
@@ -450,12 +456,12 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
   private:
     struct DetectorParams;
 
-    static const bool   DEFAULT_USE_WINDOWING		= true;
-    static const float  DEFAULT_TONE_ENERGY_THRESH	= 0.1f;
-    static const float  DEFAULT_PEAK_THRESH		= 10.0;
-    static const float  DEFAULT_PHASE_MEAN_THRESH	= 0.0f;
-    static const float  DEFAULT_PHASE_VAR_THRESH	= 0.0f;
-    static const int    DEFAULT_STABLE_COUNT_THRESH	= 3;
+    static CONSTEXPR bool   DEFAULT_USE_WINDOWING	= true;
+    static CONSTEXPR float  DEFAULT_TONE_ENERGY_THRESH	= 0.1f;
+    static CONSTEXPR float  DEFAULT_PEAK_THRESH		= 10.0;
+    static CONSTEXPR float  DEFAULT_PHASE_MEAN_THRESH	= 0.0f;
+    static CONSTEXPR float  DEFAULT_PHASE_VAR_THRESH	= 0.0f;
+    static CONSTEXPR int    DEFAULT_STABLE_COUNT_THRESH	= 3;
 
     float               tone_fq;
     int                 samples_left;

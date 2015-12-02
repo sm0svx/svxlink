@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -63,11 +63,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 class Logic;
-
-namespace Async
-{
-  class Timer;
-}
 
 
 /****************************************************************************
@@ -196,6 +191,15 @@ class EventHandler : public sigc::trackable
      *	      	the currently active module
      */
     sigc::signal<void>       	      	    deactivateModule;
+
+    /**
+     * @brief   A signal that is emitted when the TCL script want to publish
+     *          a state event
+     * @param   event_name The name of the event (<context>:<name>)
+     * @param   event_msg  The event message
+     */
+    sigc::signal<void, const std::string&,
+                 const std::string&> publishStateEvent;
     
     
   protected:
@@ -215,9 +219,9 @@ class EventHandler : public sigc::trackable
       	      	    int argc, const char *argv[]);
     static int deactivateModuleHandler(ClientData cdata, Tcl_Interp *irp,
       	      	    int argc, const char *argv[]);
+    static int publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
+      	            int argc, const char *argv[]);
     
-    void doDeactivateModule(Async::Timer *t);
-
 };  /* class EventHandler */
 
 

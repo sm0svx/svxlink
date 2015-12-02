@@ -35,7 +35,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <cstdio>
 #include <cstring>
+#include <cerrno>
 #include <algorithm>
+#include <sstream>
+#include <sys/time.h>
 
 
 /****************************************************************************
@@ -155,7 +158,7 @@ bool AudioRecorder::initialize(void)
   file = fopen(filename.c_str(), "w");
   if (file == NULL)
   {
-    perror("*** ERROR fopen");
+    setErrMsgFromErrno("fopen");
     return false;
   }
   
@@ -164,9 +167,18 @@ bool AudioRecorder::initialize(void)
       // Leave room for the wave file header
     if (fseek(file, WAVE_HEADER_SIZE, SEEK_SET) != 0)
     {
-      perror("fseek");
+      setErrMsgFromErrno("fseek");
+      fclose(file);
+      file = NULL;
+      return false;
     }
   }
+  
+  samples_written = 0;
+  high_water_mark_reached = false;
+  timerclear(&begin_timestamp);
+  timerclear(&end_timestamp);
+  errmsg = "";
   
   return true;
   
@@ -180,17 +192,23 @@ void AudioRecorder::setMaxRecordingTime(unsigned time_ms, unsigned hw_time_ms)
 } /* AudioRecorder::setMaxRecordingTime */
 
 
-void AudioRecorder::closeFile(void)
+bool AudioRecorder::closeFile(void)
 {
+  bool success = true;
   if (file != NULL)
   {
     if (format == FMT_WAV)
     {
-      writeWaveHeader();
+      success = writeWaveHeader();
     }
-    fclose(file);
+    if (fclose(file) != 0)
+    {
+      setErrMsgFromErrno("fclose");
+      success = false;
+    }
     file = NULL;
   }
+  return success;
 } /* AudioRecorder::closeFile */
 
 
@@ -239,10 +257,12 @@ int AudioRecorder::writeSamples(const float *samples, int count)
   }
   
   int written = fwrite(buf, sizeof(*buf), count, file);
-  if ((written == 0) && ferror(file))
+  if ((written != count) && ferror(file))
   {
-    fclose(file);
-    file = NULL;
+    setErrMsgFromErrno("fwrite");
+    errorOccurred();
+    closeFile();
+    return count;
   }
   
   samples_written += written;
@@ -297,7 +317,7 @@ void AudioRecorder::flushSamples(void)
  *
  ****************************************************************************/
 
-void AudioRecorder::writeWaveHeader(void)
+bool AudioRecorder::writeWaveHeader(void)
 {
   rewind(file);
  
@@ -351,8 +371,10 @@ void AudioRecorder::writeWaveHeader(void)
 
   if (fwrite(buf, 1, WAVE_HEADER_SIZE, file) != WAVE_HEADER_SIZE)
   {
-    perror("fwrite");
+    setErrMsgFromErrno("fwrite");
+    return false;
   }
+  return true;
 } /* AudioRecorder::writeWaveHeader */
 
 
@@ -376,6 +398,14 @@ int AudioRecorder::store16bitValue(char *ptr, uint16_t val)
   *ptr++ = val & 0xff;
   return 2;
 } /* AudioRecorder::store32bitValue */
+
+
+void AudioRecorder::setErrMsgFromErrno(const std::string &fname)
+{
+  ostringstream ss;
+  ss << fname << ": " << strerror(errno);
+  errmsg = ss.str();
+} /* AudioRecorder::setErrMsgFromErrno */
 
 
 

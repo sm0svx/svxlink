@@ -173,7 +173,7 @@ bool RfUplink::initialize(void)
 
   AudioFifo *fifo = new AudioFifo(8000);
   fifo->setPrebufSamples(512);
-  prev_src->registerSink(fifo);
+  prev_src->registerSink(fifo, true);
   prev_src = fifo;
   
   AudioSplitter *splitter = 0;
@@ -307,6 +307,8 @@ void RfUplink::rxSignalLevelUpdated(float siglev)
 
 void RfUplink::rxDtmfDigitDetected(char digit, int duration)
 {
+  cout << name << ": DTMF digit \"" << digit << "\" received for "
+       << duration << "ms" << endl;
     // FIXME: DTMF digits should be retransmitted with the correct duration.
   const char dtmf_str[] = {digit, 0};
   uplink_tx->sendDtmf(dtmf_str);

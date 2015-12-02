@@ -115,7 +115,7 @@ using namespace Async;
  ****************************************************************************/
 
 SigLevDetDdr::SigLevDetDdr(void)
-  : sample_rate(0), block_idx(0), last_siglev(0), integration_time(1),
+  : sample_rate(0), block_idx(0), last_siglev(0.0f), integration_time(1),
     update_interval(0), update_counter(0), pwr_sum(0.0), slope(1.0),
     offset(0.0), block_size(0)
 {
@@ -155,7 +155,7 @@ bool SigLevDetDdr::initialize(Config &cfg, const string& name, int sample_rate)
 void SigLevDetDdr::reset(void)
 {
   block_idx = 0;
-  last_siglev = 0;
+  last_siglev = 0.0f;
   update_counter = 0;
   siglev_values.clear();
   pwr_sum = 0.0;
@@ -185,8 +185,8 @@ float SigLevDetDdr::siglevIntegrated(void) const
 {
   if (siglev_values.size() > 0)
   {
-    int sum = 0;
-    deque<int>::const_iterator it;
+    float sum = 0;
+    deque<float>::const_iterator it;
     for (it=siglev_values.begin(); it!=siglev_values.end(); ++it)
     {
       sum += *it;
@@ -218,8 +218,7 @@ void SigLevDetDdr::processSamples(const vector<RtlTcp::Sample> &samples)
        it != samples.end();
        ++it)
   {
-    double mag = abs(*it);
-    pwr_sum += mag * mag;
+    pwr_sum += it->real() * it->real() + it->imag() * it->imag();
     if (++block_idx == block_size)
     {
       last_siglev = offset + slope * 10.0 * log10(pwr_sum / block_size);

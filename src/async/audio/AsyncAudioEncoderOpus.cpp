@@ -218,7 +218,8 @@ void AudioEncoderOpus::printCodecParams(void)
 float AudioEncoderOpus::setFrameSize(float new_frame_size_ms)
 {
     // The frame size may be 2.5, 5, 10, 20, 40 or 60 ms
-  frame_size = new_frame_size_ms * INTERNAL_SAMPLE_RATE / 1000;
+  frame_size =
+    static_cast<int>(new_frame_size_ms * INTERNAL_SAMPLE_RATE / 1000);
   delete sample_buf;
   sample_buf = new float[frame_size];
   return new_frame_size_ms;
@@ -636,6 +637,7 @@ int AudioEncoderOpus::writeSamples(const float *samples, int count)
     
     if (buf_len == frame_size)
     {
+      buf_len = 0;
       unsigned char output_buf[4000];
       opus_int32 nbytes = opus_encode_float(enc, sample_buf, frame_size,
                                             output_buf, sizeof(output_buf));
@@ -649,7 +651,6 @@ int AudioEncoderOpus::writeSamples(const float *samples, int count)
         cerr << "**** ERROR: Opus encoder error: " << opus_strerror(frame_size)
              << endl;
       }
-      buf_len = 0;
     }
   }
   

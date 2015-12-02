@@ -194,6 +194,15 @@ ToneDetector::ToneDetector(float tone_hz, float width_hz, int det_delay_ms)
 } /* ToneDetector::ToneDetector */
 
 
+ToneDetector::~ToneDetector(void)
+{
+  delete det_par;
+  det_par = 0;
+  delete undet_par;
+  undet_par = 0;
+} /* ToneDetector::~ToneDetector */
+
+
 void ToneDetector::reset(void)
 {
   setActivated(false);

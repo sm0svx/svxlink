@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <AsyncTimer.h>
 #include <Module.h>
 
 
@@ -83,10 +84,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-namespace Async
-{
-  class Timer;
-};
 
 
 /****************************************************************************
@@ -131,8 +128,7 @@ class ModuleDtmfRepeater : public Module
   
   private:
     std::string   received_digits;
-    int       	  repeat_delay;
-    Async::Timer  *repeat_delay_timer;
+    Async::Timer  repeat_delay_timer;
     bool      	  sql_is_open;
     bool          deactivate_on_sql_close;
     
@@ -144,7 +140,7 @@ class ModuleDtmfRepeater : public Module
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
 
-    void onRepeatDelayExpired(Async::Timer *t);
+    void onRepeatDelayExpired(void);
     void setupRepeatDelay(void);
     void sendStoredDigits(void);
 

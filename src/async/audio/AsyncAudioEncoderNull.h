@@ -1,12 +1,12 @@
 /**
 @file	 AsyncAudioEncoderNull.h
-@brief   A null audio "encoder" that just throw away audio
+@brief   A null audio "encoder" that just encode silence
 @author  Tobias Blomberg / SM0SVX
 @date	 2014-05-05
 
 \verbatim
 Async - A library for programming event driven applications
-Copyright (C) 2003-2014 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -34,6 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <limits>
+#include <stdint.h>
 
 
 /****************************************************************************
@@ -102,12 +104,14 @@ namespace Async
  ****************************************************************************/
 
 /**
-@brief	A null audio "encoder" that just throw away audio
+@brief	A null audio "encoder" that just communicate zero samples
 @author Tobias Blomberg / SM0SVX
 @date   2014-05-05
 
-This class implements an audio "encoder" that just throw away samples. This
-can be good to use if audio is sent through another audio path.
+This class implements an audio "encoder" that will just produce zero samples.
+The only thing transmitted by the encoder is the number of samples in the
+block but no real samples are encoded. The NULL codec may be of use when the
+real audio is communicated through another path.
 */
 class AudioEncoderNull : public AudioEncoder
 {
@@ -141,9 +145,20 @@ class AudioEncoderNull : public AudioEncoder
      */
     virtual int writeSamples(const float *samples, int count)
     {
+      if (count > std::numeric_limits<uint16_t>::max())
+      {
+        count = std::numeric_limits<uint16_t>::max();
+      }
+      else if (count < 0)
+      {
+        return -1;
+      }
+      uint8_t buf[2];
+      buf[0] = static_cast<uint8_t>(count & 0xff);
+      buf[1] = static_cast<uint8_t>(count >> 8);
+      writeEncodedSamples(buf, sizeof(buf));
       return count;
     }
-    
     
   protected:
     

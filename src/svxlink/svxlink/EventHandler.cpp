@@ -6,7 +6,7 @@
 
 \verbatim
 SvxLink - A Multi Purpose Voice Services System for Ham Radio Use
-Copyright (C) 2003-2008 Tobias Blomberg / SM0SVX
+Copyright (C) 2003-2015 Tobias Blomberg / SM0SVX
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <AsyncTimer.h>
+#include <AsyncApplication.h>
 
 
 
@@ -146,6 +146,8 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
   Tcl_CreateCommand(interp, "recordStop", recordHandler, this, NULL);
   Tcl_CreateCommand(interp, "deactivateModule", deactivateModuleHandler,
                     this, NULL);
+  Tcl_CreateCommand(interp, "publishStateEvent", publishStateEventHandler,
+                    this, NULL);
 
   setVariable("script_path", event_script);
 
@@ -210,17 +212,18 @@ bool EventHandler::processEvent(const string& event)
     return false;
   }
   
+  bool success = true;
   Tcl_Preserve(interp);
   if (Tcl_Eval(interp, (event + ";").c_str()) != TCL_OK)
   {
     cerr << "*** ERROR: Unable to handle event: " << event
       	 << " in logic " << logic->name() << " ("
          << Tcl_GetStringResult(interp) << ")" << endl;
-    return false;
+    success = false;
   }
   Tcl_Release(interp);
   
-  return true;
+  return success;
   
 } /* EventHandler::processEvent */
 
@@ -381,24 +384,33 @@ int EventHandler::deactivateModuleHandler(ClientData cdata, Tcl_Interp *irp,
 {
   if(argc != 1)
   {
-    char msg[] = "Usage: deactivateModuleHandler";
+    char msg[] = "Usage: deactivateModule";
     Tcl_SetResult(irp, msg, TCL_STATIC);
     return TCL_ERROR;
   }
 
   EventHandler *self = static_cast<EventHandler *>(cdata);
-  Timer *t = new Timer(0);
-  t->expired.connect(mem_fun(*self, &EventHandler::doDeactivateModule));
+  Application::app().runTask(self->deactivateModule.make_slot());
 
   return TCL_OK;
 }
 
 
-void EventHandler::doDeactivateModule(Timer *t)
+int EventHandler::publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
+      	      	      	      int argc, const char *argv[])
 {
-  delete t;
-  deactivateModule();
-} /* EventHandler::doDeactivateModule */
+  if (argc != 3)
+  {
+    char msg[] = "Usage: publishStateEvent <event name> <event msg>";
+    Tcl_SetResult(irp, msg, TCL_STATIC);
+    return TCL_ERROR;
+  }
+
+  EventHandler *self = static_cast<EventHandler *>(cdata);
+  self->publishStateEvent(argv[1], argv[2]);
+
+  return TCL_OK;
+}
 
 
 

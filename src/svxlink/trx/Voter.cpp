@@ -335,8 +335,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
 
 Voter::Voter(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), m_verbose(true), selector(0),
-    sm(Macho::State<Top>(this)), is_processing_event(false),
-    sql_state_os(0)
+    sm(Macho::State<Top>(this)), is_processing_event(false)
 {
   Rx::setVerbose(false);
 } /* Voter::Voter */
@@ -358,15 +357,6 @@ Voter::~Voter(void)
     delete *it;
   }
   rxs.clear();
-
-  if ((sql_state_os != 0) && (sql_state_os != &cout))
-  {
-    PtyStreamBuf *sb = dynamic_cast<PtyStreamBuf*>(sql_state_os->rdbuf());
-    assert(sb != 0);
-    delete sql_state_os;
-    delete sb->pty();
-    delete sb;
-  }
 } /* Voter::~Voter */
 
 
@@ -457,33 +447,6 @@ bool Voter::initialize(void)
   }
   sm->setRxSwitchDelay(rx_switch_delay);
   
-  string sql_state_pty;
-  cfg.getValue(name(), "SQL_STATE_PTY", sql_state_pty);
-  if (!sql_state_pty.empty())
-  {
-    if (sql_state_pty == "-")
-    {
-      sql_state_os = &cout;
-    }
-    else
-    {
-      Pty *pty = new Pty(sql_state_pty);
-      if (!pty->open())
-      {
-        cerr << "*** ERROR: Could not open squelch state PTY "
-             << sql_state_pty << " as spcified in configuration variable "
-             << name() << "/" << "SQL_STATE_PTY" << endl;
-        delete pty;
-        pty = 0;
-        return false;
-      }
-      PtyStreamBuf *sb = new PtyStreamBuf(pty);
-      assert(sb != 0);
-      sql_state_os = new ostream(sb);
-      assert(sql_state_os != 0);
-    }
-  }
-
   selector = new AudioSelector;
   setHandler(selector);
   
@@ -653,17 +616,8 @@ void Voter::resetAll(void)
 
 void Voter::printSquelchState(void)
 {
-  if (sql_state_os == 0)
-  {
-    return;
-  }
-
-  ostream &os = *sql_state_os;
+  stringstream os;
   os << setfill('0') << std::internal;
-
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  os << tv.tv_sec << "." << setw(3) << tv.tv_usec / 1000 << " ";
 
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
@@ -683,7 +637,7 @@ void Voter::printSquelchState(void)
     os << showpos << setw(4) << static_cast<int>(siglev) << noshowpos;
     os << " ";
   }
-  os << endl;
+  publishStateEvent("Voter:sql_state", os.str());
 } /* Voter::printSquelchState */
 
 

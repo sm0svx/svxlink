@@ -218,9 +218,9 @@ bool LinkManager::initialize(const Async::Config &cfg,
     {
       link.timeout_timer = new Timer(link.timeout);
       link.timeout_timer->setEnable(false);
-      link.timeout_timer->expired.connect(
-          bind(mem_fun(LinkManager::instance(), &LinkManager::linkTimeout),
-               &link));
+      link.timeout_timer->expired.connect(sigc::bind(
+          mem_fun(LinkManager::instance(), &LinkManager::linkTimeout),
+          &link));
     }
 
       // Automatically activate the link, if one (or more) logics
@@ -301,7 +301,7 @@ void LinkManager::addLogic(Logic *logic)
     // Keep track of the newly added logics idle state so that we can start
     // and stop timeout timers.
   logic_info.idle_state_changed_con = logic->idleStateChanged.connect(
-      bind(mem_fun(*this, &LinkManager::logicIdleStateChanged), logic));
+      sigc::bind(mem_fun(*this, &LinkManager::logicIdleStateChanged), logic));
 
     // Add the logic to the logic map
   logic_map[logic->name()] = logic_info;
@@ -330,9 +330,12 @@ void LinkManager::addLogic(Logic *logic)
 
 void LinkManager::deleteLogic(Logic *logic)
 {
-    // Verify that the logic has been previously added
   LogicMap::iterator lmit = logic_map.find(logic->name());
-  assert(lmit != logic_map.end());
+  if (lmit == logic_map.end())
+  {
+    return;
+  }
+
   LogicInfo &logic_info = (*lmit).second;
   assert(logic_info.logic == logic);
   assert(sources.find(logic->name()) != sources.end());
@@ -380,6 +383,8 @@ void LinkManager::deleteLogic(Logic *logic)
 
 void LinkManager::allLogicsStarted(void)
 {
+  all_logics_started = true;
+
   for (LinkMap::iterator it = links.begin(); it != links.end(); ++it)
   {
     Link &link = it->second;
@@ -715,6 +720,11 @@ void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
        << " logic_name=" << logic->name()
        << endl;
   */
+
+  if (!all_logics_started)
+  {
+    return;
+  }
 
     // We need all linknames where the logic is included in
   vector<string> link_names = getLinkNames(logic->name());

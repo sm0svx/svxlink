@@ -127,15 +127,19 @@ class Timer : public sigc::trackable
   
     /**
      * @brief 	Constructor
-     * @param 	timeout_ms  The timeout value in milliseconds
-     * @param 	type  	    The type of timer to use (see @ref Type)
+     * @param   timeout_ms  The timeout value in milliseconds
+     * @param   type        The type of timer to use (see @ref Type)
+     * @param   enabled     Set to \em false if the timer should be disabled
      *
      * If no arguments are given (default constructor) a timer that expires
      * immediately will be created. Such a timer can for example be used to
      * delay the execution of some function until all active callbacks have
      * returned.
+     * If a negative timeout value is given, the timer will be disabled. The
+     * timer must not be enabled until a timeout value equal or greater than
+     * zero has been set.
      */
-    Timer(int timeout_ms = 0, Type type = TYPE_ONESHOT);
+    Timer(int timeout_ms = 0, Type type = TYPE_ONESHOT, bool enabled=true);
     
     /**
      * @brief 	Destructor
@@ -153,9 +157,12 @@ class Timer : public sigc::trackable
      * @param 	timeout_ms The new timeout value in milliseconds
      *
      * Use this function to set a new timeout value on an existing timer.
-     * The timer will expire when the new timeout time has elapsed. If the
-     * timer is disabled, this function will set the new timeout value but
-     * it will not enable the timer.
+     * The timer will be reset so the timer will expire when the new timeout
+     * time has elapsed. If the timer is disabled, this function will set the
+     * new timeout value but it will not enable the timer.
+     * If a negative timeout value is given, the timer will be disabled. The
+     * timer must not be enabled until a timeout value equal or greater than
+     * zero has been set.
      */
     void setTimeout(int timeout_ms);
   
@@ -169,6 +176,9 @@ class Timer : public sigc::trackable
      * @brief 	Enable or disable the timer
      * @param 	do_enable Set to \em true to enable the timer or \em false to
      *	      	      	  disable it
+     *
+     * This function will enable or disable an existing timer. A timer that has
+     * a negative timeout value set must not be enabled.
      */
     void setEnable(bool do_enable);
   

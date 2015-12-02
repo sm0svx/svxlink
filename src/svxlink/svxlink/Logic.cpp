@@ -37,10 +37,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <dlfcn.h>
+#include <link.h>
 #include <sigc++/bind.h>
 #include <sys/time.h>
 
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <cctype>
 #include <cassert>
@@ -72,6 +74,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioDebugger.h>
 #include <AsyncAudioRecorder.h>
 #include <common.h>
+#include <config.h>
 
 
 /****************************************************************************
@@ -153,12 +156,10 @@ Logic::Logic(Config &cfg, const string& name)
   : m_cfg(cfg),       	      	            m_name(name),
     m_rx(0),  	      	      	            m_tx(0),
     msg_handler(0), 	      	            active_module(0),
-    exec_cmd_on_sql_close(0),
-    exec_cmd_on_sql_close_timer(0),         rgr_sound_timer(0),
-    rgr_sound_delay(-1),                    report_ctcss(0.0f),
-    event_handler(0),                       recorder(0),
-    tx_audio_mixer(0),                      fx_gain_ctrl(0),
-    tx_audio_selector(0),
+    exec_cmd_on_sql_close_timer(-1),        rgr_sound_timer(-1),
+    report_ctcss(0.0f),                     event_handler(0),
+    recorder(0),                            tx_audio_mixer(0),
+    fx_gain_ctrl(0),                        tx_audio_selector(0),
     rx_splitter(0),                         rx_valve(0),
     rpt_valve(0),                           audio_from_module_selector(0),
     audio_to_module_splitter(0),            audio_to_module_selector(0),
@@ -166,10 +167,12 @@ Logic::Logic(Config &cfg, const string& name)
     fx_gain_normal(0),                      fx_gain_low(-12),
     long_cmd_digits(100),                   report_events_as_idle(false),
     qso_recorder(0),                        tx_ctcss(TX_CTCSS_ALWAYS),
-    tx_ctcss_mask(0),                       aprs_stats_timer(0),
+    tx_ctcss_mask(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
-    dtmf_digit_handler(0)
+    dtmf_digit_handler(0),                  state_pty(0)
 {
+  rgr_sound_timer.expired.connect(sigc::hide(
+        mem_fun(*this, &Logic::sendRgrSound)));
   logic_con_in = new AudioSplitter;
   logic_con_out = new AudioSelector;
 } /* Logic::Logic */
@@ -180,7 +183,6 @@ Logic::~Logic(void)
   cleanup();
   delete logic_con_out;
   delete logic_con_in;
-  delete aprs_stats_timer;
   delete dtmf_digit_handler;
 } /* Logic::~Logic */
 
@@ -240,9 +242,32 @@ bool Logic::initialize(void)
     return false;
   }
 
-  cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", exec_cmd_on_sql_close);
-  cfg().getValue(name(), "RGR_SOUND_DELAY", rgr_sound_delay);
+  int exec_cmd_on_sql_close = -1;
+  if (cfg().getValue(name(), "EXEC_CMD_ON_SQL_CLOSE", exec_cmd_on_sql_close))
+  {
+    exec_cmd_on_sql_close_timer.setTimeout(exec_cmd_on_sql_close);
+  }
+  int rgr_sound_delay = -1;
+  if (cfg().getValue(name(), "RGR_SOUND_DELAY", rgr_sound_delay))
+  {
+    rgr_sound_timer.setTimeout(rgr_sound_delay);
+  }
   cfg().getValue(name(), "REPORT_CTCSS", report_ctcss);
+
+  string state_pty_path;
+  cfg().getValue(name(), "STATE_PTY", state_pty_path);
+  if (!state_pty_path.empty())
+  {
+    state_pty = new Pty(state_pty_path);
+    if (!state_pty->open())
+    {
+      cerr << "*** ERROR: Could not open state PTY "
+           << state_pty_path << " as spcified in configuration variable "
+           << name() << "/" << "STATE_PTY" << endl;
+      cleanup();
+      return false;
+    }
+  }
 
   string value;
   if (cfg().getValue(name(), "ACTIVATE_MODULE_ON_LONG_CMD", value))
@@ -351,6 +376,7 @@ bool Logic::initialize(void)
   rx().selcallSequenceDetected.connect(
 	mem_fun(*this, &Logic::selcallSequenceDetected));
   rx().setMuteState(Rx::MUTE_NONE);
+  rx().publishStateEvent.connect(mem_fun(*this, &Logic::publishStateEvent));
   prev_rx_src = m_rx;
 
     // This valve is used to turn RX audio on/off into the logic core
@@ -538,6 +564,8 @@ bool Logic::initialize(void)
   event_handler->recordStop.connect(mem_fun(*this, &Logic::recordStop));
   event_handler->deactivateModule.connect(
           bind(mem_fun(*this, &Logic::deactivateModule), (Module *)0));
+  event_handler->publishStateEvent.connect(
+          mem_fun(*this, &Logic::publishStateEvent));
   event_handler->setVariable("mycall", m_callsign);
   char str[256];
   sprintf(str, "%.1f", report_ctcss);
@@ -601,6 +629,8 @@ bool Logic::initialize(void)
   dtmf_digit_handler = new DtmfDigitHandler;
   dtmf_digit_handler->commandComplete.connect(
       mem_fun(*this, &Logic::putCmdOnQueue));
+  exec_cmd_on_sql_close_timer.expired.connect(sigc::hide(
+      mem_fun(dtmf_digit_handler, &DtmfDigitHandler::forceCommandComplete)));
 
   return true;
 
@@ -673,8 +703,9 @@ void Logic::recordStart(const string& filename, unsigned max_time)
   recorder = new AudioRecorder(filename);
   if (!recorder->initialize())
   {
-    cerr << "*** ERROR: Could not open file for recording in logic "
-         << name() << ": " << filename << endl;
+    cerr << "*** ERROR: Could not open file " << filename
+         << " for recording in logic " << name() << ": "
+         << recorder->errorMsg() << endl;
     recordStop();
     return;
   }
@@ -687,7 +718,7 @@ void Logic::recordStop(void)
 {
   rx_splitter->removeSink(recorder);
   recorder = 0;
-} /* Logic::recordStart */
+} /* Logic::recordStop */
 
 
 bool Logic::activateModule(Module *module)
@@ -861,20 +892,23 @@ void Logic::squelchOpen(bool is_open)
   if (!is_open)
   {
     const string &received_digits = dtmf_digit_handler->command();
-    if (((exec_cmd_on_sql_close > 0) || (received_digits == "*")) &&
-        !dtmf_digit_handler->antiFlutterActive() && !received_digits.empty())
+    if (!dtmf_digit_handler->antiFlutterActive() &&
+        !received_digits.empty())
     {
-      exec_cmd_on_sql_close_timer = new Timer(exec_cmd_on_sql_close);
-      exec_cmd_on_sql_close_timer->expired.connect(hide(mem_fun(
-              dtmf_digit_handler, &DtmfDigitHandler::forceCommandComplete
-              )));
+      if (exec_cmd_on_sql_close_timer.timeout() > 0)
+      {
+        exec_cmd_on_sql_close_timer.setEnable(true);
+      }
+      else if (received_digits == "*")
+      {
+        dtmf_digit_handler->forceCommandComplete();
+      }
     }
     processCommandQueue();
   }
   else
   {
-    delete exec_cmd_on_sql_close_timer;
-    exec_cmd_on_sql_close_timer = 0;
+    exec_cmd_on_sql_close_timer.setEnable(false);
   }
 
   if (LocationInfo::has_instance())
@@ -924,20 +958,18 @@ void Logic::clearPendingSamples(void)
 
 void Logic::enableRgrSoundTimer(bool enable)
 {
-  if (rgr_sound_delay == -1)
+  if (rgr_sound_timer.timeout() < 0)
   {
     return;
   }
 
-  delete rgr_sound_timer;
-  rgr_sound_timer = 0;
+  rgr_sound_timer.setEnable(false);
 
   if (enable)
   {
-    if (rgr_sound_delay > 0)
+    if (rgr_sound_timer.timeout() > 0)
     {
-      rgr_sound_timer = new Timer(rgr_sound_delay);
-      rgr_sound_timer->expired.connect(mem_fun(*this, &Logic::sendRgrSound));
+      rgr_sound_timer.setEnable(true);
     }
     else
     {
@@ -1062,10 +1094,7 @@ void Logic::loadModule(const string& module_cfg_name)
        << name() << "\"\n";
 
   string module_path;
-  if (!cfg().getValue("GLOBAL", "MODULE_PATH", module_path))
-  {
-    module_path = "";
-  }
+  cfg().getValue("GLOBAL", "MODULE_PATH", module_path);
 
   string plugin_name = module_cfg_name;
   cfg().getValue(module_cfg_name, "NAME", plugin_name);
@@ -1075,21 +1104,49 @@ void Logic::loadModule(const string& module_cfg_name)
 
   cfg().getValue(module_cfg_name, "PLUGIN_NAME", plugin_name);
 
-  string plugin_filename;
+  void *handle = NULL;
+  string plugin_filename = "Module" + plugin_name + ".so";
   if (!module_path.empty())
   {
-    plugin_filename = module_path + "/";
+    string plugin_abs_filename = module_path + "/" + plugin_filename;
+    handle = dlopen(plugin_abs_filename.c_str(), RTLD_NOW);
+    if (handle == NULL)
+    {
+      cerr << "*** ERROR: Failed to load module "
+        << module_cfg_name.c_str() << " into logic " << name() << ": "
+        << dlerror() << endl;
+      return;
+    }
   }
-  plugin_filename +=  "Module" + plugin_name + ".so";
-
-  void *handle = dlopen(plugin_filename.c_str(), RTLD_NOW);
-  if (handle == NULL)
+  else
   {
-    cerr << "*** ERROR: Failed to load module "
-      	 << module_cfg_name.c_str() << " into logic " << name() << ": "
+    handle = dlopen(plugin_filename.c_str(), RTLD_NOW);
+    if (handle == NULL)
+    {
+      string plugin_abs_filename = string(SVX_MODULE_INSTALL_DIR "/")
+                                   + plugin_filename;
+      handle = dlopen(plugin_abs_filename.c_str(), RTLD_NOW);
+      if (handle == NULL)
+      {
+        cerr << "*** ERROR: Failed to load module "
+          << module_cfg_name.c_str() << " into logic " << name() << ": "
+          << dlerror() << endl;
+        return;
+      }
+    }
+  }
+
+  struct link_map *link_map;
+  if (dlinfo(handle, RTLD_DI_LINKMAP, &link_map) == -1)
+  {
+    cerr << "*** ERROR: Could not read information for module "
+      	 << module_cfg_name.c_str() << " in logic " << name() << ": "
          << dlerror() << endl;
+    dlclose(handle);
     return;
   }
+  cout << "\tFound " << link_map->l_name << endl;
+
   Module::InitFunc init = (Module::InitFunc)dlsym(handle, "module_init");
   if (init == NULL)
   {
@@ -1327,8 +1384,7 @@ void Logic::checkIfOnlineCmd(void)
 
 void Logic::putCmdOnQueue(void)
 {
-  delete exec_cmd_on_sql_close_timer;
-  exec_cmd_on_sql_close_timer = 0;
+  exec_cmd_on_sql_close_timer.setEnable(false);
 
   if (!is_online)
   {
@@ -1350,7 +1406,7 @@ void Logic::putCmdOnQueue(void)
 } /* Logic::putCmdOnQueue */
 
 
-void Logic::sendRgrSound(Timer *t)
+void Logic::sendRgrSound(void)
 {
   processEvent("send_rgr_sound");
   enableRgrSoundTimer(false);
@@ -1422,8 +1478,8 @@ void Logic::cleanup(void)
 
   delete event_handler;       	      event_handler = 0;
   unloadModules();
-  delete exec_cmd_on_sql_close_timer; exec_cmd_on_sql_close_timer = 0;
-  delete rgr_sound_timer;     	      rgr_sound_timer = 0;
+  exec_cmd_on_sql_close_timer.setEnable(false);
+  rgr_sound_timer.setEnable(false);
   every_minute_timer.stop();
 
   if (LinkManager::hasInstance())
@@ -1439,6 +1495,7 @@ void Logic::cleanup(void)
   delete audio_from_module_selector;  audio_from_module_selector = 0;
   delete tx_audio_mixer;      	      tx_audio_mixer = 0;
   delete qso_recorder;                qso_recorder = 0;
+  delete state_pty;                   state_pty = 0;
 } /* Logic::cleanup */
 
 
@@ -1468,6 +1525,23 @@ void Logic::audioFromModuleStreamStateChanged(bool is_active, bool is_idle)
 {
   updateTxCtcss(!is_idle, TX_CTCSS_MODULE);
 } /* Logic::audioFromModuleStreamStateChanged */
+
+
+void Logic::publishStateEvent(const string &event_name, const string &msg)
+{
+  if (state_pty == 0)
+  {
+    return;
+  }
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  stringstream os;
+  os << setfill('0');
+  os << tv.tv_sec << "." << setw(3) << tv.tv_usec / 1000 << " ";
+  os << event_name << " " << msg;
+  os << endl;
+  state_pty->write(os.str().c_str(), os.str().size());
+} /* Logic::publishStateEvent */
 
 
 

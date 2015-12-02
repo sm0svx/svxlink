@@ -11,7 +11,7 @@ FIND_PROGRAM(GROFF_TOOL
 IF(GROFF_TOOL)
   MESSAGE("-- Found groff: ${GROFF_TOOL}")
 ELSE(GROFF_TOOL)
-  MESSAGE(FATAL_ERROR "Unable to find the 'groff' program which is used to build the UNIX manual pages")
+  MESSAGE("-- Could NOT find the 'groff' program (missing: GROFF_TOOL)")
 ENDIF(GROFF_TOOL)
 
 MARK_AS_ADVANCED(GROFF_TOOL)

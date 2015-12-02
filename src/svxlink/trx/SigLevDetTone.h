@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
+#include <CppStdCompat.h>
 
 
 /****************************************************************************
@@ -192,10 +193,10 @@ class SigLevDetTone : public SigLevDet
   private:
     class HammingWindow;
     
-    static const float    ALPHA         = 0.1f; // Time constant for IIR filter
-    static const unsigned BLOCK_SIZE    = 100;  // 160Hz bandwidth, 6.25ms
-    static const float    ENERGY_THRESH = 1.0e-6f;
-    static const float    DET_THRESH    = 0.7f; // Detection threshold
+    static CONSTEXPR float    ALPHA         = 0.1f; // IIR filter time constant
+    static CONSTEXPR unsigned BLOCK_SIZE    = 100;  // 160Hz bandwidth, 6.25ms
+    static CONSTEXPR float    ENERGY_THRESH = 1.0e-6f; // Min tone energy
+    static CONSTEXPR float    DET_THRESH    = 0.7f; // Detection threshold
 
     int	                sample_rate;
     std::vector<int>    tone_siglev_map;

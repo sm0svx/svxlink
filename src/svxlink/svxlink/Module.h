@@ -378,17 +378,6 @@ class Module : public sigc::trackable, public Async::AudioSink,
     virtual void allMsgsWritten(void) {}
     
     /**
-     * @brief 	Tell the module to report its state on the radio channel
-     *
-     * This function is called by the logic core when it wishes the module to
-     * report its state on the radio channel. Typically this is done when a
-     * manual identification has been triggered by the user by sending a "*".
-     * For example, use one of the "playXxx" functions to announce the state.
-     * This function will only be called if this module is active.
-     */
-    virtual void reportState(void) {}
-    
-    /**
      * @brief 	Order the logic core to process an event
      * @param 	event The name of the event to process
      *
