@@ -2,12 +2,8 @@
 set(MAN_PAGES svxlink.1 remotetrx.1 siglevdetcal.1 svxlink.conf.5
   ModuleHelp.conf.5 remotetrx.conf.5 ModuleParrot.conf.5 ModuleEchoLink.conf.5
   ModuleTclVoiceMail.conf.5 ModuleDtmfRepeater.conf.5
-<<<<<<< HEAD
-  ModulePropagationMonitor.conf.5 ModuleSelCallEnc.conf.5 qtel.1
-  ModuleFrn.conf.5
-=======
   ModulePropagationMonitor.conf.5 ModuleSelCallEnc.conf.5 qtel.1 devcal.1
->>>>>>> upstream/master
+  ModuleFrn.conf.5
 )
 
 # Search for the gzip and groff programs. Error out if not found.
