@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 if [ -r /etc/default/svxlink ]; then
         . /etc/default/svxlink
 fi
@@ -21,7 +21,7 @@ gpio_setup2() {
    NAME=$1
    PIN=$2
    DIR=$3
-   if [[ -e /sys/class/gpio/gpio"$PIN" ]]; then
+   if [ -e /sys/class/gpio/gpio"$PIN" ]; then
         if [ "$NAME" = "LOW" ]; then
            echo 1 >/sys/class/gpio/gpio"$PIN"/active_low
            # Make sure that the "RUNASUSER" user can write to the GPIO pin:
@@ -49,7 +49,7 @@ done
 ## GPIO PIN LOW support ?
 for i in $GPIO_LOW_PIN
 do
-if [[ -e /sys/class/gpio/gpio"$i" ]]; then
+if [ -e /sys/class/gpio/gpio"$i" ]; then
    gpio_setup2 LOW "$i" in
 fi
 done
