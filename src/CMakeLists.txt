@@ -39,7 +39,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 # Optional parts
 option(USE_QT "Build Qt applications and libs" ON)
 option(BUILD_STATIC_LIBS "Build static libraries in addition to dynamic" OFF)
-option(WITH_SYSTEMD "Set to ON to create unit files and systemd check on svx-daemon startup" ON )
 
 # The sample rate used internally in SvxLink
 if(NOT DEFINED INTERNAL_SAMPLE_RATE)
@@ -299,15 +298,6 @@ function(install_if_not_exists src dest)
     endif()
   ")
 endfunction(install_if_not_exists)
-
-#############################################################################
-#Systemd Enviroment 
-#############################################################################
-
-if(WITH_SYSTEMD)     
-    add_subdirectory( systemd )
-endif(WITH_SYSTEMD ) 
-message( STATUS "WITH_SYSTEMD = ${WITH_SYSTEMD}" )
 
 ##############################################################################
 # Main execution starts here
