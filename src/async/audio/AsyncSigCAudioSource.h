@@ -156,9 +156,9 @@ class SigCAudioSource : public AudioSource, public sigc::trackable
      * returns 0, no more samples should be written until the sigResumeOutput
      * signal have been emitted.
      */
-    int writeSamples(float *samples, int len)
+    int writeSamples(float *samples, int count)
     {
-      return sinkWriteSamples(samples, len);
+      return sinkWriteSamples(samples, count);
     }
 
     /**
