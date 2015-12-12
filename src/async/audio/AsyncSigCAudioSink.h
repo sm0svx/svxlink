@@ -137,9 +137,9 @@ class SigCAudioSink : public AudioSink, public sigc::trackable
      * When called by the source, the sigWriteSamples function will be
      * emitted.
      */
-    virtual int writeSamples(const float *samples, int len)
+    virtual int writeSamples(const float *samples, int count)
     {
-      return sigWriteSamples(const_cast<float *>(samples), len);
+      return sigWriteSamples(const_cast<float *>(samples), count);
     }
     
     /**
