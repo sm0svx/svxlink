@@ -129,16 +129,10 @@ proc count_clients {count_clients} {
 #
 proc rf_disable {status activate} {
   variable module_name;
-
-  if {$status == $activate} {
-    playMsg "rf_disable";
-    playMsg [expr {$status ? "already_active" : "not_active"}];
-  } else {
-    puts "$module_name: [expr {$activate ? "Activating" : "Deactivating"}]\
-          listen only mode.";
-    playMsg [expr {$activate ? "activating" : "deactivating"}];
-    playMsg "rf_disable";
-  }
+  puts "$module_name: [expr {$activate ? "Activating" : "Deactivating"}]\
+        listen only mode.";
+  playMsg [expr {$activate ? "activating" : "deactivating"}];
+  playMsg "rf_disable";
 }
 
 # end of namespace
