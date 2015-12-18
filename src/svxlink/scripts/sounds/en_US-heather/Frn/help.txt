@@ -1,1 +1,0 @@
-	The F R N module is used to connect to free radio network server.
