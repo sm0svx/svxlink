@@ -286,6 +286,7 @@ class Logic : public sigc::trackable
     std::string                     online_cmd;
     DtmfDigitHandler                *dtmf_digit_handler;
     Async::Pty                      *state_pty;
+    Async::Pty                      *voter_pty;
 
     void loadModules(void);
     void loadModule(const std::string& module_name);
