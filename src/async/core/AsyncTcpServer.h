@@ -129,6 +129,7 @@ class TcpServer : public sigc::trackable
     /**
      * @brief 	Default constuctor
      * @param 	port_str A port number or service name to listen to
+     * @param 	bind_ip The IP to bind the server to
      */
     TcpServer(const std::string& port_str,
               const Async::IpAddress &bind_ip=IpAddress());

@@ -1,5 +1,5 @@
 /**
-@file	 Pty.h
+@file	 AsyncPty.h
 @brief   A class that wrap up some functionality to use a PTY
 @author  Tobias Blomberg / SM0SVX
 @date	 2014-06-07

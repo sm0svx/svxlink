@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/** @example Exec_demo.cpp
+/** @example AsyncExec_demo.cpp
 An example of how to use the Exec class
 */
 
@@ -126,7 +126,7 @@ class.
 This class depends on the SIGCHLD UNIX signal so it must not be used by
 another part of the application.
 
-\include Exec_demo.cpp
+\include AsyncExec_demo.cpp
 */
 class Exec : public sigc::trackable
 {
