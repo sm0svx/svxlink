@@ -341,9 +341,12 @@ void MsgHandler::playDtmf(char digit, int amp, int length, bool idle_marked)
   
   int fql = tone_map[digit].first;
   int fqh = tone_map[digit].second;
+  
+  QueueItem *item;
+  
   if (fql > 0)
   {
-    QueueItem *item = new DtmfQueueItem(fqh, fql, amp, length, sample_rate,
+    item = new DtmfQueueItem(fqh, fql, amp, length, sample_rate,
       	      	      	      	      idle_marked);
     addItemToQueue(item);
   }
