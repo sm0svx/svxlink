@@ -170,11 +170,8 @@ class NetTx : public Tx
     /**
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send
-     *          dtmf_tone_length duration of the dtmf tone in ms
-     *          dtmf_tone_pwr amplitude of the dtmf tone from 0 to 1000
      */
-    virtual void sendDtmf(const std::string& digits, int dtmf_tone_length,
-                             int dtmf_tone_pwr);
+    virtual void sendDtmf(const std::string& digits);
     
 
   protected:

@@ -599,24 +599,17 @@ class MsgSendDtmf : public Msg
   public:
     static const unsigned TYPE  = 302;
     static const int MAX_DIGITS = 256;
-    MsgSendDtmf(const std::string &digits, int tone_length,
-                                          int tone_pwr)
+    MsgSendDtmf(const std::string &digits)
       : Msg(TYPE, sizeof(MsgSendDtmf))
     {
       strncpy(m_digits, digits.c_str(), MAX_DIGITS);
       m_digits[MAX_DIGITS] = 0;
       setSize(size() - MAX_DIGITS + strlen(m_digits));
-      m_tone_length = tone_length;
-      m_tone_pwr = tone_pwr;
     }
     std::string digits(void) const { return m_digits; }
-    int tone_length(void) const { return m_tone_length; }
-    int tone_pwr(void) const {return m_tone_pwr; }
   
   private:
     char  m_digits[MAX_DIGITS+1];
-    int m_tone_length;
-    int m_tone_pwr;
     
 }; /* MsgSendDtmf */
 

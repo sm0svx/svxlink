@@ -172,7 +172,7 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
 
     /**
      * @brief 	Play a dtmf tone
-     * @param 	seq The dtmf sequence to play
+     * @param 	digit The dtmf digit to play
      * @param 	amp The amplitude of the tone to play (0-1000)
      * @param 	length The length in milliseconds of the tone to play
      * @param   idle_marked Choose if the playback should be idle marked or not

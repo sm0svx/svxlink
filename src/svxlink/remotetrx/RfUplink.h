@@ -149,7 +149,6 @@ class RfUplink : public Uplink
     Tx	      	         *uplink_tx;
     Rx	      	         *uplink_rx;
     Async::AudioSelector *tx_audio_sel;
-    int                  dtmf_tone_pwr;
     
     RfUplink(const RfUplink&);
     RfUplink& operator=(const RfUplink&);

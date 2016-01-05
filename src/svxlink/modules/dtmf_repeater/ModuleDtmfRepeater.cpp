@@ -217,7 +217,7 @@ bool ModuleDtmfRepeater::initialize(void)
   {
     repeat_delay_timer.setTimeout(repeat_delay);
   }
-
+  
   return true;
   
 } /* initialize */

@@ -248,10 +248,9 @@ void NetTx::enableCtcss(bool enable)
 } /* NetTx::enableCtcss */
 
 
-void NetTx::sendDtmf(const std::string& digits, int dtmf_tone_length,
-                             int dtmf_tone_pwr)
+void NetTx::sendDtmf(const std::string& digits)
 {
-  MsgSendDtmf *msg = new MsgSendDtmf(digits, dtmf_tone_length, dtmf_tone_pwr);
+  MsgSendDtmf *msg = new MsgSendDtmf(digits);
   sendMsg(msg);
 } /* NetTx::sendDtmf */
 

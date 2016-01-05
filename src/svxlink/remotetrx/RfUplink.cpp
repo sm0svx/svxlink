@@ -121,7 +121,7 @@ using namespace Async;
 
 RfUplink::RfUplink(Config &cfg, const string &name, Rx *rx, Tx *tx)
   : cfg(cfg), name(name), rx(rx), tx(tx), uplink_tx(0), uplink_rx(0),
-    tx_audio_sel(0), dtmf_tone_pwr(-15)
+    tx_audio_sel(0)
 {
   
 } /* RfUplink::RfUplink */
@@ -162,11 +162,6 @@ bool RfUplink::initialize(void)
   if (cfg.getValue(name, "LOOP_RX_TO_TX", value))
   {
     loop_rx_to_tx = atoi(value.c_str()) != 0;
-  }
-
-  if (cfg.getValue(name, "DTMF_TONE_PWR", value))
-  {
-     dtmf_tone_pwr = atoi(value.c_str());
   }
 
   rx->squelchOpen.connect(mem_fun(*this, &RfUplink::rxSquelchOpen));
