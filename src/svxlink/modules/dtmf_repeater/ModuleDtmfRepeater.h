@@ -131,8 +131,6 @@ class ModuleDtmfRepeater : public Module
     Async::Timer  repeat_delay_timer;
     bool      	  sql_is_open;
     bool          deactivate_on_sql_close;
-    int           dtmf_tone_length;
-    int           dtmf_tone_pwr;
     
     bool initialize(void);
     void activateInit(void);

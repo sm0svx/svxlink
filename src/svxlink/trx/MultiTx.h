@@ -161,11 +161,8 @@ class MultiTx : public Tx
     /**
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send
-     *          dtmf_tone_length durtion of the dtmf tone in ms
-     *          dtmf_digit_pwr amplitude of the dtmf tone from 0 to 1000
      */
-    virtual void sendDtmf(const std::string& digits,
-                                    int dtmf_tone_length, int dtmf_digit_pwr);
+    virtual void sendDtmf(const std::string& digits);
     
     /**
      * @brief   Set the signal level value that should be transmitted

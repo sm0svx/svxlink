@@ -284,7 +284,7 @@ void RfUplink::uplinkRxSquelchOpen(bool is_open)
 void RfUplink::uplinkRxDtmfRcvd(char digit, int duration)
 {
   char digit_str[2] = {digit, 0};
-  tx->sendDtmf(digit_str, duration, dtmf_tone_pwr);
+  tx->sendDtmf(digit_str);
 } /* RfUplink::uplinkRxDtmfRcvd */
 
 
@@ -316,7 +316,7 @@ void RfUplink::rxDtmfDigitDetected(char digit, int duration)
        << duration << "ms" << endl;
     // FIXME: DTMF digits should be retransmitted with the correct duration.
   const char dtmf_str[] = {digit, 0};
-  uplink_tx->sendDtmf(dtmf_str, duration, dtmf_tone_pwr);
+  uplink_tx->sendDtmf(dtmf_str);
 } /* RfUplink::rxDtmfDigitDetected */
 
 

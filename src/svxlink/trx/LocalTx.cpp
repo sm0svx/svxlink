@@ -552,14 +552,11 @@ void LocalTx::enableCtcss(bool enable)
 } /* LocalTx::enableCtcss */
 
 
-void LocalTx::sendDtmf(const string& digits,
-                    int dtmf_tone_length, int dtmf_digit_pwr)
+void LocalTx::sendDtmf(const string& digits)
 {
   #if USE_AUDIO_VALVE
   audio_valve->setOpen(false);
   #endif
-  dtmf_encoder->setDigitDuration(dtmf_tone_length);
-  dtmf_encoder->setDigitPower(dtmf_digit_pwr);
   dtmf_encoder->send(digits);
 } /* LocalTx::sendDtmf */
 

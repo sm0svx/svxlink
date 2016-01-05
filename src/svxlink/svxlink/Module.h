@@ -411,8 +411,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      */
     void playFile(const std::string& path);
     
-    void sendDtmf(const std::string& digits, int dtmf_tone_length,
-                                            int dtmf_digit_pwr);
+    void sendDtmf(const std::string& digits);
     
     
   protected:

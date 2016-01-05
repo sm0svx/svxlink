@@ -163,11 +163,8 @@ class Tx : public sigc::trackable, public Async::AudioSink
     /**
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send
-     *          dtmf_tone_length duration of the dtmf tone in ms
-     *          dtmf_digit_pwr amplitude of the dtmf tone fom 0 to 1000
      */
-    virtual void sendDtmf(const std::string& digits, int dtmf_tone_length,
-                                         int dtmf_digit_pwr) {}
+    virtual void sendDtmf(const std::string& digits) {}
 
     /**
      * @brief   Set the signal level value that should be transmitted

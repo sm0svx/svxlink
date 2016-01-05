@@ -188,10 +188,9 @@ void Module::playFile(const string& path)
 } /* Module::playFile */
 
 
-void Module::sendDtmf(const std::string& digits, int dtmf_tone_length,
-                    int dtmf_digit_pwr)
+void Module::sendDtmf(const std::string& digits)
 {
-  logic()->sendDtmf(digits, dtmf_tone_length, dtmf_digit_pwr);
+  logic()->sendDtmf(digits);
 } /* Module::sendDtmf */
 
 

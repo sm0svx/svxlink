@@ -220,13 +220,12 @@ void MultiTx::enableCtcss(bool enable)
 } /* MultiTx::enableCtcss */
 
 
-void MultiTx::sendDtmf(const std::string& digits,
-            int dtmf_tone_length, int dtmf_digit_pwr)
+void MultiTx::sendDtmf(const std::string& digits)
 {
   list<Tx *>::iterator it;
   for (it=txs.begin(); it!=txs.end(); ++it)
   {
-    (*it)->sendDtmf(digits, dtmf_tone_length, dtmf_digit_pwr);
+    (*it)->sendDtmf(digits);
   }
 } /* MultiTx::sendDtmf */
 

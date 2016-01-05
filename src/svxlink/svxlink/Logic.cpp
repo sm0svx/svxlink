@@ -700,8 +700,11 @@ void Logic::playTone(int fq, int amp, int len)
 
 void Logic::playDtmf(const std::string& digits, int amp, int len)
 {
-  sendDtmf(digits, len, amp);
-  checkIdle();
+  for (string::size_type i=0; i < digits.size(); ++i)
+  {
+    msg_handler->playDtmf(digits[i], amp, len);
+    checkIdle();
+  }  
 } /* Logic::playDtmf */
 
 
@@ -833,12 +836,11 @@ void Logic::selcallSequenceDetected(std::string sequence)
 } /* Logic::selcallSequenceDetected */
 
 
-void Logic::sendDtmf(const std::string& digits,
-                       int dtmf_tone_length, int dtmf_digit_pwr)
+void Logic::sendDtmf(const std::string& digits)
 {
   if (!digits.empty())
   {
-    tx().sendDtmf(digits, dtmf_tone_length, dtmf_digit_pwr);
+    tx().sendDtmf(digits);
   }
 } /* Logic::sendDtmf */
 

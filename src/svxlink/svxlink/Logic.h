@@ -190,8 +190,7 @@ class Logic : public sigc::trackable
     Rx &rx(void) const { return *m_rx; }
     Tx &tx(void) const { return *m_tx; }
 
-    void sendDtmf(const std::string& digits, int dtmf_tone_length,
-                                   int dtmf_digit_pwr);
+    void sendDtmf(const std::string& digits);
 
     void injectDtmfDigit(char digit, int duration_ms)
     {

@@ -174,8 +174,7 @@ class LocalTx : public Tx
      * @brief 	Send a string of DTMF digits
      * @param 	digits	The digits to send
      */
-    void sendDtmf(const std::string& digits, int dtmf_tone_length,
-                                        int dtmf_digit_pwr);
+    void sendDtmf(const std::string& digits);
     
     /**
      * @brief   Set the signal level value that should be transmitted

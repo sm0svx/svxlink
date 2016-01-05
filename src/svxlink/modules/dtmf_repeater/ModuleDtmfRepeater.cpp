@@ -138,9 +138,8 @@ extern "C" {
 
 ModuleDtmfRepeater::ModuleDtmfRepeater(void *dl_handle, Logic *logic,
       	      	      	      	       const string& cfg_name)
-  : Module(dl_handle, logic, cfg_name), repeat_delay(0), repeat_delay_timer(0),
-    sql_is_open(false), deactivate_on_sql_close(false), dtmf_tone_length(100),
-    dtmf_tone_pwr(300)
+  : Module(dl_handle, logic, cfg_name), repeat_delay_timer(-1),
+    sql_is_open(false), deactivate_on_sql_close(false)
 {
   cout << "\tModule DTMF Repeater v" MODULE_DTMF_REPEATER_VERSION
       	  " starting...\n";
@@ -219,15 +218,6 @@ bool ModuleDtmfRepeater::initialize(void)
     repeat_delay_timer.setTimeout(repeat_delay);
   }
 
-  if (cfg().getValue(cfgName(), "DTMF_TONE_LENGTH", value))
-  {
-    dtmf_tone_length = atoi(value.c_str());
-  }
-
-  if (cfg().getValue(cfgName(), "DTMF_TONE_PWR", value))
-  {
-    dtmf_tone_pwr = atoi(value.c_str());
-  }
   return true;
   
 } /* initialize */
@@ -398,7 +388,7 @@ void ModuleDtmfRepeater::setupRepeatDelay(void)
 void ModuleDtmfRepeater::sendStoredDigits(void)
 {
   cout << name() << ": Sending DTMF digits " << received_digits << endl;
-  sendDtmf(received_digits, dtmf_tone_length, dtmf_tone_pwr);
+  sendDtmf(received_digits);
   received_digits.clear();
 } /* ModuleDtmfRepeater::sendStoredDigits */
 
