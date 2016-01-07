@@ -186,6 +186,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     void Disable(void) {
       rx_enabled = false;
       setMuteState(MUTE_ALL);
+      setMuteState(MUTE_NONE);
     }
 
     void setMuteState(Rx::MuteState new_mute_state)
@@ -747,7 +748,7 @@ Voter::SatRx *Voter::findBestRx(void) const
   list<SatRx *>::const_iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    if ((*it)->squelchIsOpen() &&
+    if ((*it)->squelchIsOpen()  && (*it)->isEnabled() &&
 	((best_rx == 0) || ((*it)->signalStrength() > best_rx_siglev)))
     {
       best_rx = *it;
@@ -853,8 +854,8 @@ void Voter::Top::satSignalLevelUpdated(SatRx *srx, float siglev)
   
   if (bestSrx() != 0) 
   {
-    if(!bestSrx()->squelchIsOpen() ||
-        (siglev > bestSrx()->signalStrength()))
+    if(srx->isEnabled() && (!bestSrx()->squelchIsOpen() ||
+        (siglev > bestSrx()->signalStrength())))
     {
       box().best_srx = srx;
     }
@@ -864,6 +865,7 @@ void Voter::Top::satSignalLevelUpdated(SatRx *srx, float siglev)
   {
     runTask(bind(voter().signalLevelUpdated.make_slot(), siglev));
   }
+  voter().printSquelchState();
 } /* Voter::Top::satSignalLevelUpdated */
 
 
