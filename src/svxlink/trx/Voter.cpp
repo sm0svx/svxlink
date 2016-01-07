@@ -186,7 +186,6 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     void Disable(void) {
       rx_enabled = false;
       setMuteState(MUTE_ALL);
-      setMuteState(MUTE_NONE);
     }
 
     void setMuteState(Rx::MuteState new_mute_state)
@@ -819,7 +818,7 @@ void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
 {
   assert(srx != 0);
 
-  if (bestSrx() == 0)
+  if (bestSrx() == 0 && srx->isEnabled())
   {
 //    assert(is_open); // FIXME: asserts on enable when disabled while open
     if (is_open) {
@@ -837,7 +836,7 @@ void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
   }
   else
   {
-    if (is_open &&
+    if (srx->isEnabled() && is_open &&
         (srx->signalStrength() > bestSrx()->signalStrength()))
     {
       box().best_srx = srx;
