@@ -414,13 +414,6 @@ int EventHandler::publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
 }
 
 
-void EventHandler::doDeactivateModule(Timer *t)
-{
-  delete t;
-  deactivateModule();
-} /* EventHandler::doDeactivateModule */
-
-
 int EventHandler::playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
       	      	      	      int argc, const char *argv[])
 {
