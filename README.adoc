@@ -1,6 +1,7 @@
 SvxLink
 =======
 
+image:https://travis-ci.org/sm0svx/svxlink.svg?branch=master["Build Status", link="https://travis-ci.org/sm0svx/svxlink"]
 image:https://badges.gitter.im/Join%20Chat.svg[link="https://gitter.im/sm0svx/svxlink?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 
 SvxLink is a project that develops software targeting the ham radio community.
@@ -24,6 +25,7 @@ either C++ or TCL. Examples of modules are:
 * *PropagationMonitor* -- Announce propagation warnings from dxmaps.com
 * *SelCall*            -- Send selective calling sequences by entering DTMF codes
 * *MetarInformation*   -- Play airport weather information
+* *Frn*                -- Connect to Free Radio Network (FRN) servers
 
 == Qtel ==
 Qtel, the Qt EchoLink client, is a graphical application used to access the
