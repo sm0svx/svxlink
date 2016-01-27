@@ -898,6 +898,31 @@ void ModuleEchoLink::onError(const string& msg)
 } /* onError */
 
 
+/*
+ *----------------------------------------------------------------------------
+ * Method:    clientList
+ * Purpose:   Called on connect or disconnect of a remote client to send an
+ *    	      event to list the connected stations.
+ * Input:     None
+ * Output:    None
+ * Author:    Wim Fournier / PH7WIM
+ * Created:   2016-01-11
+ * Remarks:
+ * Bugs:
+ *----------------------------------------------------------------------------
+ */
+void ModuleEchoLink::clientList(void) {
+  stringstream ss;
+  ss << "clients clients:";
+  vector<QsoImpl *>::iterator it;
+  for (it = qsos.begin(); it != qsos.end(); ++it) {
+    if ((*it)->currentState() != Qso::STATE_DISCONNECTED) {
+      ss << (*it)->remoteCallsign() << ":";
+    }
+  }
+  processEvent(ss.str());
+//  cout << ss.str();
+} /* clientList */
 
 /*
  *----------------------------------------------------------------------------
@@ -1029,6 +1054,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->accept();
   broadcastTalkerStatus();
   updateDescription();
+  clientList();
 
   if (LocationInfo::has_instance())
   {
@@ -1088,6 +1114,7 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
 
       broadcastTalkerStatus();
       updateDescription();
+      clientList();
       break;
     }
     
@@ -1162,7 +1189,7 @@ void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
   //     << (is_receiving ? "TRUE" : "FALSE") << endl;
   
   stringstream ss;
-  ss << "is_receiving " << (is_receiving ? "1" : "0");
+  ss << "is_receiving rx=" << (is_receiving ? "1" : "0") << " client=" << qso->remoteCallsign();
   processEvent(ss.str());
 
   if ((talker == 0) && is_receiving)
