@@ -43,7 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sigc++/bind.h>
 #include <sys/time.h>
 #include <string.h>
-#include <time.h>
+//#include <time.h>
 
 
 /****************************************************************************
@@ -593,10 +593,10 @@ void Voter::commandHandler(const void *buf, size_t count) {
         Voter::enableSat(receiver);
       }
     }
-    printOperationalState();
     command = strtok(NULL, "\n\r ");
     count -= sizeof(command);
   }
+  printSquelchState();
 }
 
 void Voter::dispatchEvent(Macho::IEvent<Top> *event)
@@ -716,33 +716,6 @@ void Voter::printSquelchState(void)
   }
   publishStateEvent("Voter:sql_state", os.str());
 } /* Voter::printSquelchState */
-
-void Voter::printOperationalState(void)
-{
-  stringstream os;
-  os << setfill('0') << std::internal;
-
-  list<SatRx *>::iterator it;
-  for (it=rxs.begin(); it!=rxs.end(); ++it)
-  {
-    bool rx_enabled = (*it)->isEnabled();
-
-    os << (*it)->name();
-    os << "=";
-    if (rx_enabled)
-    {
-      os << "1";
-    }
-    else
-    {
-      os << "0";
-    }
-    os << " ";
-  }
-//  publishStateEvent("Voter:opr_state", os.str());
-//  cout << "printOperationalState" << os.str() << endl;
-} /* Voter::printOperationalState */
-
 
 Voter::SatRx *Voter::findBestRx(void) const
 {

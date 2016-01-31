@@ -913,13 +913,14 @@ void ModuleEchoLink::onError(const string& msg)
  */
 void ModuleEchoLink::clientList(void) {
   stringstream ss;
-  ss << "clients clients:";
+  ss << "clients [list";
   vector<QsoImpl *>::iterator it;
   for (it = qsos.begin(); it != qsos.end(); ++it) {
     if ((*it)->currentState() != Qso::STATE_DISCONNECTED) {
-      ss << (*it)->remoteCallsign() << ":";
+      ss << " " << (*it)->remoteCallsign();
     }
   }
+  ss << "]";
   processEvent(ss.str());
 //  cout << ss.str();
 } /* clientList */
@@ -1189,7 +1190,7 @@ void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
   //     << (is_receiving ? "TRUE" : "FALSE") << endl;
   
   stringstream ss;
-  ss << "is_receiving rx=" << (is_receiving ? "1" : "0") << " client=" << qso->remoteCallsign();
+  ss << "is_receiving " << (is_receiving ? "1" : "0") << " " << qso->remoteCallsign();
   processEvent(ss.str());
 
   if ((talker == 0) && is_receiving)
