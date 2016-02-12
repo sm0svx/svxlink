@@ -183,12 +183,14 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
       rx_enabled = true; // make available for selection
       rx->setEnabled(true); // enable opening of squelch on receiver
       setMuteState(MUTE_NONE); // unmute receiver
+      cout << "RX " << rx->name() << " has been enabled" << endl;
     }
     
     void Disable(void) {
       rx_enabled = false; // make unavailable for selection
-      setMuteState(MUTE_ALL); // mute receiver
       rx->setEnabled(false); // disable opening of squelch on receiver
+      setMuteState(MUTE_ALL); // mute receiver
+      cout << "RX " << rx->name() << " has been disabled" << endl;
     }
 
     void setMuteState(Rx::MuteState new_mute_state)
@@ -797,33 +799,31 @@ void Voter::Top::setMuteState(Rx::MuteState new_mute_state)
 } /* Voter::Top::setMuteState */
 
 
-void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
-{
-  assert(srx != 0);
+void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open) {
+  if (srx.isEnabled()) {
+    assert(srx != 0);
 
-  if (bestSrx() == 0 && srx->isEnabled())
-  {
-//    assert(is_open); // FIXME: asserts on enable when disabled while open
-    if (is_open) {
-      box().best_srx = srx;
-    } else {
-      cout << "ERROR: assert(is_open)" << endl;
+    if (bestSrx() == 0) {
+    //    assert(is_open); // FIXME: asserts on enable when disabled while open
+      if (is_open) {
+        box().best_srx = srx;
+      } else {
+        cout << "ERROR: assert(is_open)" << endl;
+      }
     }
-  }
-  else if (srx == bestSrx())
-  {
-    if (!is_open)
-    {
-      box().best_srx = voter().findBestRx();
+    else if (srx == bestSrx()) {
+      if (!is_open) {
+        box().best_srx = voter().findBestRx();
+      }
     }
-  }
-  else
-  {
-    if (srx->isEnabled() && is_open &&
-        (srx->signalStrength() > bestSrx()->signalStrength()))
-    {
-      box().best_srx = srx;
+    else {
+      if (is_open &&
+          (srx->signalStrength() > bestSrx()->signalStrength())) {
+        box().best_srx = srx;
+      }
     }
+  } else {
+    cout << "Voter::Top::satSquelchOpen called on disbled RX: " << srx->name() << endl;
   }
 } /* Voter::Top::satSquelchOpen */
 
@@ -1260,7 +1260,7 @@ void Voter::Receiving::timerExpired(void)
   //assert(bestSrx() != 0);
   
   if (
-//        bestSrx()->isEnabled() /* just in case */ &&
+        bestSrx()->isEnabled() /* just in case */ &&
         (bestSrx() != 0) &&
         (bestSrx() != activeSrx())
       )
