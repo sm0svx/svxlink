@@ -189,7 +189,8 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     void Disable(void) {
       rx_enabled = false; // make unavailable for selection
       rx->setEnabled(false); // disable opening of squelch on receiver
-      setMuteState(MUTE_ALL); // mute receiver
+//      setMuteState(MUTE_ALL); // mute receiver
+      setMuteState(MUTE_CONTENT); // mute receiver
       cout << "RX " << rx->name() << " has been disabled" << endl;
     }
 
@@ -245,6 +246,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     virtual void allSamplesFlushed(void)
     {
       AudioSource::allSamplesFlushed();
+//      cout << "245: allSamplesFlushed: setting squelch to: " << rx->squelchIsOpen() << " rx: " << rx->name() << endl;
       setSquelchOpen(rx->squelchIsOpen());
     }
   
@@ -288,6 +290,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     
     void rxSquelchOpen(bool is_open)
     {
+//      cout << "289: rxSquelchOpen: is_open: " << is_open << " name: " << name() << endl;
       if (is_open)
       {
       	setSquelchOpen(true);
@@ -311,6 +314,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     
     void setSquelchOpen(bool is_open)
     {
+//      cout << "312: setSquelchOpen: is_open: " << is_open << " name: " << name() << endl;
       if (is_open != sql_open)
       {
       	sql_open = is_open;
@@ -624,8 +628,8 @@ void Voter::dispatchEvent(Macho::IEvent<Top> *event)
 
 void Voter::satSquelchOpen(bool is_open, SatRx *srx)
 {
-  //cout << "Voter::satSquelchOpen: is_open=" << (is_open ? "TRUE" : "FALSE")
-  //     << " srx=" << srx->name() << endl;
+//  cout << "Voter::satSquelchOpen: is_open=" << (is_open ? "TRUE" : "FALSE")
+//       << " srx=" << srx->name() << endl;
   dispatchEvent(Macho::Event(&Top::satSquelchOpen, srx, is_open));
 } /* Voter::satSquelchOpen */
 
@@ -800,7 +804,8 @@ void Voter::Top::setMuteState(Rx::MuteState new_mute_state)
 
 
 void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open) {
-  if (srx.isEnabled()) {
+//  cout << "Voter::Top::satSquelchOpen: srx: " << srx->name() << " is_open: " << is_open << endl;
+  if (srx->isEnabled() || !is_open) { // Don't act when this RX is disabled and sql open is requested
     assert(srx != 0);
 
     if (bestSrx() == 0) {
@@ -960,7 +965,7 @@ void Voter::Idle::entry(void)
 
 void Voter::Idle::satSquelchOpen(SatRx *srx, bool is_open)
 {
-//  cout << "### Idle::satSquelchOpen: " << is_open << "\n" ;
+//  cout << "### Idle::satSquelchOpen: srx: " <<srx->name() << " is_open: " << is_open << "\n" ;
 //  if (srx->isEnabled())
 //  {
     SUPER::satSquelchOpen(srx, is_open);
@@ -1005,7 +1010,7 @@ void Voter::VotingDelay::exit(void)
 
 void Voter::VotingDelay::satSquelchOpen(SatRx *srx, bool is_open)
 {
-//  cout << "### VotingDelay::satSquelchOpen: " << is_open << endl;
+//  cout << "### VotingDelay::satSquelchOpen: on srx: " << srx->name() << " is_open: " << is_open << endl;
   SUPER::satSquelchOpen(srx, is_open);
   if (is_open)
   {
@@ -1064,6 +1069,7 @@ void Voter::ActiveRxSelected::init(SatRx *srx)
   {
     voter().muteAllBut(srx, MUTE_CONTENT);
   }
+//  cout << " Voter::ActiveRxSelected::init on srx: " << srx->name() << endl;
   setState<SquelchOpen>();
 } /* Voter::ActiveRxSelected::init */
 
@@ -1167,6 +1173,7 @@ void Voter::SquelchOpen::satSquelchOpen(SatRx *srx, bool is_open)
 
 float Voter::SquelchOpen::signalStrength(void)
 {
+//  cout << "### Voter::SquelchOpen::signalStrength activeSrx: " << activeSrx()->name() << endl;
   return activeSrx()->signalStrength();
 } /* Voter::SquelchOpen::signalStrength */
 
@@ -1215,14 +1222,31 @@ void Voter::SqlCloseWait::satSquelchOpen(SatRx *srx, bool is_open)
 void Voter::SqlCloseWait::timerExpired(void)
 {
 //  cout << "### Voter::SqlCloseWait::timerExpired" << endl;
-  if (bestSrx() != 0)
+  if (bestSrx() == 0)
   {
-    changeActiveSrx(bestSrx());
-    setState<SquelchOpen>();
-  }
-  else
-  {
-    setState<Idle>();
+    cout << "### Voter::SqlCloseWait::timerExpired: no bestSrx, going IDLE" << endl;
+    setState<Idle>(); // No srx selected, shut TX off
+  } else {
+//    cout << "-------- bestSrx: " << bestSrx()->name() << endl;
+//    cout << "-------- findbestsrx: " << voter().findBestRx()->name() << endl;
+    if (bestSrx()->isEnabled()) { // bestSrx is enabled, switch to it
+      cout << "### Voter::SqlCloseWait::timerExpired: requesting switch to: " << bestSrx()->name() << endl;
+      changeActiveSrx(bestSrx());
+      setState<SquelchOpen>();
+
+    } else {
+      SatRx *newBestSrx = voter().findBestRx();
+      if (newBestSrx != bestSrx()) {
+        cout << "### Voter::SqlCloseWait::timerExpired: bestSrx is disabled, requesting switch to: " << newBestSrx->name() << endl;
+        // bestSrx is disabled, but we found another one
+        changeActiveSrx(newBestSrx);
+        setState<SquelchOpen>();
+      } else {
+        cout << "### Voter::SqlCloseWait::timerExpired: bestSrx is disabled, no alternative, going IDLE" << endl;
+        // bestSrx is disabled, and we have no alternative, so shut TX off
+        setState<Idle>();
+      }
+    }
   }
 } /* Voter::SqlCloseWait::timerExpired */
 
