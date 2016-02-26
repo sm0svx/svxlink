@@ -170,7 +170,6 @@ Logic::Logic(Config &cfg, const string& name)
     tx_ctcss_mask(0),
     currently_set_tx_ctrl_mode(Tx::TX_OFF), is_online(true),
     dtmf_digit_handler(0),                  state_pty(0),
-    voter_pty(0)
 {
   rgr_sound_timer.expired.connect(sigc::hide(
         mem_fun(*this, &Logic::sendRgrSound)));
@@ -265,21 +264,6 @@ bool Logic::initialize(void)
       cerr << "*** ERROR: Could not open state PTY "
            << state_pty_path << " as specified in configuration variable "
            << name() << "/" << "STATE_PTY" << endl;
-      cleanup();
-      return false;
-    }
-  }
-
-  string voter_pty_path;
-  cfg().getValue(name(), "VOTER_PTY", voter_pty_path);
-  if (!voter_pty_path.empty())
-  {
-    voter_pty = new Pty(voter_pty_path);
-    if (!voter_pty->open())
-    {
-      cerr << "*** ERROR: Could not open voter PTY "
-           << voter_pty_path << " as specified in configuration variable "
-           << name() << "/" << "VOTER_PTY" << endl;
       cleanup();
       return false;
     }
@@ -1513,7 +1497,6 @@ void Logic::cleanup(void)
   delete tx_audio_mixer;      	      tx_audio_mixer = 0;
   delete qso_recorder;                qso_recorder = 0;
   delete state_pty;                   state_pty = 0;
-  delete voter_pty;                   voter_pty = 0;
 } /* Logic::cleanup */
 
 
