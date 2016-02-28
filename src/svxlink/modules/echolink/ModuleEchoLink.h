@@ -75,6 +75,7 @@ namespace Async
   class AudioSplitter;
   class AudioValve;
   class AudioSelector;
+  class Pty;
 };
 namespace EchoLink
 {
@@ -103,7 +104,7 @@ namespace EchoLink
 class MsgHandler;
 class QsoImpl;
 class LocationInfo;
-  
+
 
 /****************************************************************************
  *
@@ -140,7 +141,7 @@ class ModuleEchoLink : public Module
     bool initialize(void);
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
-    
+
   protected:
     /**
      * @brief 	Notify the module that the logic core idle state has changed
@@ -220,10 +221,14 @@ class ModuleEchoLink : public Module
     void squelchOpen(bool is_open);
     int audioFromRx(float *samples, int count);
     void allMsgsWritten(void);
+    void commandHandler(const void *buf, size_t count); // WIM
+    Async::Pty                      *pty;
+
 
     void onStatusChanged(EchoLink::StationData::Status status);
     void onStationListUpdated(void);
     void onError(const std::string& msg);
+    void clientList(void);
     void onIncomingConnection(const Async::IpAddress& ip,
       	    const std::string& callsign, const std::string& name,
       	    const std::string& priv);

@@ -68,6 +68,7 @@ namespace Async
 {
   class Timer;
   class AudioSelector;
+  class Pty;
 };
 
 
@@ -198,8 +199,11 @@ class Voter : public Rx
     static CONSTEXPR unsigned MIN_REVOTE_INTERVAL            = 100;
     static CONSTEXPR unsigned MAX_REVOTE_INTERVAL            = 60000;
     static CONSTEXPR unsigned MAX_RX_SWITCH_DELAY            = 3000;
-    
-    class SatRx;
+	void commandHandler(const void *buf, size_t count); // WIM
+	void disableSat(char *name);
+	void enableSat(char *name);
+
+	class SatRx;
 
     TOPSTATE(Top)
     {
@@ -267,7 +271,7 @@ class Voter : public Rx
       virtual float signalStrength(void) { return -100.0; }
       virtual int sqlRxId(void) { return 0; }
       virtual SatRx *activeSrx(void) { return 0; }
-      
+
       protected:
 	Voter &voter(void) { return *box().voter; }
 	SatRx *bestSrx(void) { return box().best_srx; }
@@ -417,8 +421,11 @@ class Voter : public Rx
     void muteAll(Rx::MuteState mute_state) { muteAllBut(0, mute_state); }
     void unmuteAll(void);
     void resetAll(void);
-    void printSquelchState(void);
+	void printSquelchState(void);
+	void printOperationalState(void);
     SatRx *findBestRx(void) const;
+	Async::Pty                      *voter_pty;
+
 
 };  /* class Voter */
 
