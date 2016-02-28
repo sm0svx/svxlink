@@ -163,6 +163,12 @@ class Rx : public sigc::trackable, public Async::AudioSource
     virtual void setVerbose(bool verbose) { m_verbose = verbose; }
 
     /**
+     * @brief   Set the enabled state of the receiver
+     * @param   eneabled Set to \em false to disable receiver
+     */
+    virtual void setEnabled(bool);
+
+    /**
      * @brief 	Set the mute state for this receiver
      * @param 	mute_state The mute state to set for this receiver
      */
@@ -278,7 +284,9 @@ class Rx : public sigc::trackable, public Async::AudioSource
   private:
     std::string   m_name;
     bool          m_verbose;
+    bool          m_enabled;
     bool      	  m_sql_open;
+    bool      	  m_sql_open_hidden;
     Async::Config m_cfg;
     Async::Timer  *m_sql_tmo_timer;
     

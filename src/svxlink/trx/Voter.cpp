@@ -42,6 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <list>
 #include <sigc++/bind.h>
 #include <sys/time.h>
+#include <string.h>
 
 
 /****************************************************************************
@@ -109,7 +110,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
 {
   public:
     SatRx(Config &cfg, const string &rx_name, int id, int fifo_length_ms)
-      : rx_id(id), rx(0), fifo(0), sql_open(false)
+      : rx_id(id), rx(0), fifo(0), sql_open(false), rx_enabled(true)
     {
       rx = RxFactory::createNamedRx(cfg, rx_name);
       if (rx != 0)
@@ -174,6 +175,21 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     }
     
     float signalStrength(void) const { return rx->signalStrength(); }
+    bool isEnabled(void) const { return rx_enabled; }
+    
+    void Enable(void) { 
+      rx_enabled = true; // make available for selection
+      rx->setEnabled(true); // enable opening of squelch on receiver
+      setMuteState(MUTE_NONE); // unmute receiver
+      cout << "RX " << rx->name() << " has been enabled" << endl;
+    }
+    
+    void Disable(void) {
+      rx_enabled = false; // make unavailable for selection
+      rx->setEnabled(false); // disable opening of squelch on receiver
+      setMuteState(MUTE_CONTENT); // mute receiver
+      cout << "RX " << rx->name() << " has been disabled" << endl;
+    }
 
     void setMuteState(Rx::MuteState new_mute_state)
     {
@@ -242,6 +258,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     DtmfBuf   	dtmf_buf;
     SelcallBuf	selcall_buf;
     bool      	sql_open;
+    bool        rx_enabled;
     
     void onDtmfDigitDetected(char digit, int duration)
     {
@@ -335,7 +352,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
 
 Voter::Voter(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), m_verbose(true), selector(0),
-    sm(Macho::State<Top>(this)), is_processing_event(false)
+    sm(Macho::State<Top>(this)), is_processing_event(false), voter_pty(0)
 {
   Rx::setVerbose(false);
 } /* Voter::Voter */
@@ -367,6 +384,19 @@ bool Voter::initialize(void)
     return false;
   }
   
+  string voter_pty_path;
+  if(cfg.getValue(name(), "VOTER_PTY", voter_pty_path))
+  {
+    voter_pty = new Pty(voter_pty_path);
+    if (!voter_pty->open()) {
+      cerr << "*** ERROR: Could not open voter PTY "
+      <<voter_pty_path << " as specified in configuration variable "
+      << name() << "/" << "VOTER_PTY" << endl;
+      return false;
+    }
+    voter_pty->dataReceived.connect(sigc::mem_fun(*this, &Voter::commandHandler));
+  }
+
   string receivers;
   if (!cfg.getValue(name(), "RECEIVERS", receivers))
   {
@@ -549,6 +579,26 @@ void Voter::reset(void)
  *
  ****************************************************************************/
 
+void Voter::commandHandler(const void *buf, size_t count) {
+  char* buffer = (char *) buf;
+  char* command;
+  buffer[count] = '\0'; // received string is not null terminated
+  command = strtok(buffer, "\n\r ");
+  while (command != NULL && count >= 3) {
+    if (command[0] != '?' && strchr(command, ':')) {
+      char *receiver = strsep(&command, ":");
+      if (command[0] == '0') {
+        Voter::disableSat(receiver);
+      } else {
+        Voter::enableSat(receiver);
+      }
+    }
+    command = strtok(NULL, "\n\r ");
+    count -= sizeof(command);
+  }
+  printSquelchState();
+}
+
 void Voter::dispatchEvent(Macho::IEvent<Top> *event)
 {
   if (!is_processing_event)
@@ -613,6 +663,32 @@ void Voter::resetAll(void)
   }
 } /* Voter::resetAll */
 
+void Voter::disableSat(char *name)
+{
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    if ((*it)->name().compare(name) == 0)
+    {
+      cout << "Disabling receiver " << (*it)->name() << endl;
+      (*it)->Disable();
+
+    }
+  }
+}
+
+void Voter::enableSat(char *name)
+{
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    if ((*it)->name().compare(name) == 0)
+    {
+      cout << "Enabling receiver " << (*it)->name() << endl;
+      (*it)->Enable();
+    }
+  }
+}
 
 void Voter::printSquelchState(void)
 {
@@ -624,15 +700,16 @@ void Voter::printSquelchState(void)
   {
     float siglev = (*it)->signalStrength();
     bool sql_is_open = (*it)->squelchIsOpen();
+    bool is_enabled = (*it)->isEnabled();
 
     os << (*it)->name();
     if (sql_is_open)
     {
-      os << ((*it) == sm->activeSrx() ? "*" : ":");
+      os << ((*it) == sm->activeSrx() ? "*" : (is_enabled ? ":" : "#"));
     }
     else
     {
-      os << "_";
+      os << (is_enabled ? "_" : "#");
     }
     os << showpos << setw(4) << static_cast<int>(siglev) << noshowpos;
     os << " ";
@@ -648,8 +725,14 @@ Voter::SatRx *Voter::findBestRx(void) const
   list<SatRx *>::const_iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    if ((*it)->squelchIsOpen() &&
-	((best_rx == 0) || ((*it)->signalStrength() > best_rx_siglev)))
+    if (
+            (*it)->isEnabled() &&
+            (*it)->squelchIsOpen()  &&
+	        (
+                    (best_rx == 0) ||
+                    ((*it)->signalStrength() > best_rx_siglev)
+            )
+        )
     {
       best_rx = *it;
       best_rx_siglev = (*it)->signalStrength();
@@ -715,28 +798,28 @@ void Voter::Top::setMuteState(Rx::MuteState new_mute_state)
 } /* Voter::Top::setMuteState */
 
 
-void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
-{
-  assert(srx != 0);
-  
-  if (bestSrx() == 0)
-  {
-    assert(is_open);
-    box().best_srx = srx;
-  }
-  else if (srx == bestSrx())
-  {
-    if (!is_open)
-    {
-      box().best_srx = voter().findBestRx();
+void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open) {
+  if (srx->isEnabled() || !is_open) { // Don't act when this RX is disabled and sql open is requested
+    assert(srx != 0);
+
+    if (bestSrx() == 0) {
+    //    assert(is_open); // FIXME: asserts on enable when disabled while open (FIXED?)
+      if (is_open) {
+        box().best_srx = srx;
+      } else {
+        cout << "ERROR: assert(is_open)" << endl;
+      }
     }
-  }
-  else
-  {
-    if (is_open &&
-        (srx->signalStrength() > bestSrx()->signalStrength()))
-    {
-      box().best_srx = srx;
+    else if (srx == bestSrx()) {
+      if (!is_open) {
+        box().best_srx = voter().findBestRx();
+      }
+    }
+    else {
+      if (is_open &&
+          (srx->signalStrength() > bestSrx()->signalStrength())) {
+        box().best_srx = srx;
+      }
     }
   }
 } /* Voter::Top::satSquelchOpen */
@@ -745,13 +828,16 @@ void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
 void Voter::Top::satSignalLevelUpdated(SatRx *srx, float siglev)
 {
   assert(srx != 0);
-  assert(bestSrx() != 0);
+  //assert(bestSrx() != 0);
   assert(srx->squelchIsOpen());
   
-  if (!bestSrx()->squelchIsOpen() ||
-      (siglev > bestSrx()->signalStrength()))
+  if (bestSrx() != 0) 
   {
-    box().best_srx = srx;
+    if(srx->isEnabled() && (!bestSrx()->squelchIsOpen() ||
+        (siglev > bestSrx()->signalStrength())))
+    {
+      box().best_srx = srx;
+    }
   }
 
   if (srx == activeSrx())
@@ -864,18 +950,18 @@ void Voter::Idle::entry(void)
 
 void Voter::Idle::satSquelchOpen(SatRx *srx, bool is_open)
 {
-  SUPER::satSquelchOpen(srx, is_open);
-  if (is_open)
+SUPER::satSquelchOpen(srx, is_open);
+if (is_open)
+{
+  if (srx->signalStrength() * hysteresis() > 100.0f)
   {
-    if (srx->signalStrength() * hysteresis() > 100.0f)
-    {
-      setState<ActiveRxSelected>(bestSrx());
-    }
-    else
-    {
-      setState<VotingDelay>();
-    }
+    setState<ActiveRxSelected>(bestSrx());
   }
+  else
+  {
+    setState<VotingDelay>();
+  }
+}
 } /* Voter::Idle::satSquelchOpen */
 
 
@@ -907,7 +993,9 @@ void Voter::VotingDelay::satSquelchOpen(SatRx *srx, bool is_open)
   {
     if (srx->signalStrength() * hysteresis() > 100.0f)
     {
-      setState<ActiveRxSelected>(bestSrx());
+      if (bestSrx()->isEnabled()) {
+        setState<ActiveRxSelected>(bestSrx());
+      }
     }
   }
   else
@@ -924,7 +1012,9 @@ void Voter::VotingDelay::timerExpired(void)
 {
   assert(bestSrx() != 0);
   assert(bestSrx()->squelchIsOpen());
-  setState<ActiveRxSelected>(bestSrx());
+  if (bestSrx()->isEnabled()) {
+    setState<ActiveRxSelected>(bestSrx());
+  }
 } /* Voter::VotingDelay::timerExpired */
 
 
@@ -1088,14 +1178,27 @@ void Voter::SqlCloseWait::satSquelchOpen(SatRx *srx, bool is_open)
 
 void Voter::SqlCloseWait::timerExpired(void)
 {
-  if (bestSrx() != 0)
+  if (bestSrx() == 0)
   {
-    changeActiveSrx(bestSrx());
-    setState<SquelchOpen>();
-  }
-  else
-  {
+    // No srx selected, shut TX off
     setState<Idle>();
+  } else {
+    if (bestSrx()->isEnabled()) { 
+      // bestSrx is enabled, switch to it
+      changeActiveSrx(bestSrx());
+      setState<SquelchOpen>();
+
+    } else {
+      SatRx *newBestSrx = voter().findBestRx();
+      if (newBestSrx != bestSrx()) {
+        // bestSrx is disabled, but we found another one
+        changeActiveSrx(newBestSrx);
+        setState<SquelchOpen>();
+      } else {
+        // bestSrx is disabled, and we have no alternative, so shut TX off
+        setState<Idle>();
+      }
+    }
   }
 } /* Voter::SqlCloseWait::timerExpired */
 
@@ -1131,7 +1234,11 @@ void Voter::Receiving::timerExpired(void)
   assert(activeSrx() != 0);
   //assert(bestSrx() != 0);
   
-  if ((bestSrx() != 0) && (bestSrx() != activeSrx()))
+  if (
+        bestSrx()->isEnabled() /* just in case */ &&
+        (bestSrx() != 0) &&
+        (bestSrx() != activeSrx())
+      )
   {
     float best_srx_siglev = bestSrx()->signalStrength();
     float active_srx_siglev = activeSrx()->signalStrength();
