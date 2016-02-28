@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <vector>
 
+#include <string.h>
 
 /****************************************************************************
  *
@@ -57,6 +58,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <LocationInfo.h>
 #include <common.h>
 
+
+#include <AsyncPty.h>
+#include <AsyncPtyStreamBuf.h>
 
 /****************************************************************************
  *
@@ -158,7 +162,7 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
     listen_only_valve(0), selector(0), num_con_max(0), num_con_ttl(5*60),
     num_con_block_time(120*60), num_con_update_timer(0), reject_conf(false),
     autocon_echolink_id(0), autocon_time(DEFAULT_AUTOCON_TIME),
-    autocon_timer(0), proxy(0)
+    autocon_timer(0), proxy(0), pty(0)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
@@ -461,6 +465,20 @@ bool ModuleEchoLink::initialize(void)
         mem_fun(*this, &ModuleEchoLink::checkAutoCon));
   }
 
+  string pty_path;
+  if(cfg().getValue(cfgName(), "ECHOLINK_PTY", pty_path))
+  {
+    pty = new Pty(pty_path);
+    if (!pty->open()) {
+      cerr << "*** ERROR: Could not open echolink PTY "
+      <<pty_path << " as specified in configuration variable "
+      << name() << "/" << "ECHOLINK_PTY" << endl;
+      return false;
+    }
+    pty->dataReceived.connect(sigc::mem_fun(*this, &ModuleEchoLink::commandHandler));
+  }
+
+
   return true;
   
 } /* ModuleEchoLink::initialize */
@@ -500,6 +518,36 @@ void ModuleEchoLink::logicIdleStateChanged(bool is_idle)
  * Private member functions
  *
  ****************************************************************************/
+
+void ModuleEchoLink::commandHandler(const void *buf, size_t count) {
+  char* buffer = (char *) buf;
+  char* command;
+  buffer[count] = '\0'; // received string is not null terminated
+  cout << "echolink commandHandler received: " << buffer << " (" << count << ")" << endl;
+  command = strtok(buffer, "\n\r ");
+  while (command != NULL && count >= 3) {
+    if (strstr(command, "KILL")) {
+      if (talker == 0) {
+        cout << "echolink: trying to KILL, but no active talkers" << endl;
+      } else {
+        cout << "echolink: KILLing talker: " << talker->remoteCallsign() << endl;
+        talker->disconnect();
+      }
+    } else if (strstr(command, ":D")) {
+      // disconnect client by callsign
+      vector<QsoImpl *>::iterator it;
+      for (it = qsos.begin(); it != qsos.end(); ++it) {
+        if (strstr(command, (*it)->remoteCallsign().c_str())) {
+          cout << "echolink: disconnecting user " << (*it)->remoteCallsign() << endl;
+          (*it)->disconnect();
+        }
+      }
+    }
+    command = strtok(NULL, "\n\r ");
+    count -= sizeof(command);
+  }
+//  printSquelchState();
+}
 
 
 void ModuleEchoLink::moduleCleanup(void)
@@ -896,7 +944,6 @@ void ModuleEchoLink::onError(const string& msg)
   }
   
 } /* onError */
-
 
 
 /*
