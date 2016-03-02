@@ -92,14 +92,24 @@ SvxServer::SvxServer(Async::Config &cfg)
   string port = "5210";
   if (!cfg.getValue("GLOBAL", "LISTEN_PORT", port))
   {
-    cerr << "*** ERROR: Configuration variable LISTEN_PORT is missing."
+    cerr << "--- WARNING: Configuration variable LISTEN_PORT is missing."
          << "Setting default to 5210" << endl;
+  }
+
+  string value;
+  cfg.getValue("GLOBAL", "SQL_TIMEOUT", value);
+  sql_timeout = 1000 * atoi(value.c_str());
+  if (sql_timeout < 1000)
+  {
+     // if SQL_TIMEOUT not set, define 60 seconds
+    cerr << "--- WARNING: Configuration variable SQL_TIMEOUT is senseless or missing."
+         << "Setting default to 60 seconds" << endl;
+    sql_timeout = 60000;
   }
 
   cfg.getValue("GLOBAL", "AUTH_KEY", auth_key, true);
 
   hbto = 10000;
-  string value;
   if (cfg.getValue("GLOBAL", "HEARTBEAT_TIMEOUT", value))
   {
     hbto = 1000 * atoi(value.c_str());
@@ -113,6 +123,7 @@ SvxServer::SvxServer(Async::Config &cfg)
   }
 
   // cout << "--- AUTH_KEY=" << auth_key << endl;
+  cout << "--- setting sql-timeout to " << sql_timeout << " ms" << endl;
   cout << "--- starting SERVER on port " << port << endl;
 
    // create the server instance
@@ -128,6 +139,10 @@ SvxServer::SvxServer(Async::Config &cfg)
   heartbeat_timer = new Async::Timer(hbto);
   heartbeat_timer->expired.connect(mem_fun(*this, &SvxServer::hbtimeout));
   heartbeat_timer->setEnable(false);
+
+  sql_timer = new Async::Timer(sql_timeout);
+  sql_timer->expired.connect(mem_fun(*this, &SvxServer::sqltimeout));
+  sql_timer->setEnable(false);
 
   audio_timer = new Async::Timer(1000);
   audio_timer->expired.connect(mem_fun(*this, &SvxServer::audiotimeout));
@@ -225,8 +240,8 @@ void SvxServer::clientDisconnected(Async::TcpConnection *con,
   if (it != clients.end())
   {
 
-    // cout << "-X- removing client " << con->remoteHost() << ":"
-    //      << con->remotePort()  << " from client list" << endl;
+    cout << "-X- removing client " << con->remoteHost() << ":"
+         << con->remotePort()  << " from client list" << endl;
      clients.erase(it);
   }
 } /* SvxServer::clientDisconnected */
@@ -476,7 +491,8 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 
       if (isMaster(con))
       {
-        resetMaster((*it).second.con);
+//       resetMaster((*it).second.con);
+        resetMaster(con);
         MsgSquelch  *ms = new MsgSquelch(false, 0.0, 1);
         sendExcept(con, ms);
         sendMsg(con, ms);
@@ -552,18 +568,42 @@ void SvxServer::audiotimeout(Timer *t)
   if (hasMaster())
   {
     cout << "...Audio timeout " << master->remoteHost() << endl;
-
-    MsgSquelch *ms = new MsgSquelch(false, 0.0, 1);
-    sendExcept(master, ms);
-    sendMsg(master, ms);
-//    (*it).second.sql_open = false;
-
-    MsgAllSamplesFlushed *o = new MsgAllSamplesFlushed;
-    sendMsg(master, o);
-    sendExcept(master, o);
-    resetMaster(master);
+    resetAll();
   }
 } /* SvxServer::audiotimeout */
+
+
+void SvxServer::sqltimeout(Timer *t)
+{
+  cout << "...SQL timeout " << master->remoteHost() << endl;
+  resetAll();
+} /* SvxServer::sqltimeout */
+
+
+void SvxServer::resetAll(void)
+{
+  MsgSquelch *ms = new MsgSquelch(false, 0.0, 1);
+  sendExcept(master, ms);
+  sendMsg(master, ms);
+
+  Clients::iterator it;
+  Clients t_clients;
+
+  for (it=clients.begin(); it!=clients.end(); it++)
+  {
+    if ( ((*it).second).con == master)
+    {
+      (*it).second.sql_open = false;
+      gettimeofday(&((*it).second).last_msg, NULL);
+      break;
+    }
+  }
+
+  MsgAllSamplesFlushed *o = new MsgAllSamplesFlushed;
+  sendMsg(master, o);
+  sendExcept(master, o);
+  resetMaster(master);
+} /* SvxServer::resetAll */
 
 
 void SvxServer::hbtimeout(Timer *t)
@@ -670,6 +710,8 @@ void SvxServer::setMaster(Async::TcpConnection *con)
   if (master == 0) {
     cout << "IS Master " << con->remoteHost() << endl;
     master = con;
+    sql_timer->reset();
+    sql_timer->setEnable(true);
   }
 } /* SvxServer::setMaster */
 
@@ -680,6 +722,7 @@ void SvxServer::resetMaster(Async::TcpConnection *con)
   {
     cout << "NO Master " << con->remoteHost() << endl;
     master = 0;
+    sql_timer->setEnable(false);
   }
 } /* SvxServer::resetMaster */
 

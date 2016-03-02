@@ -132,6 +132,7 @@ class SvxServer : public sigc::trackable
 
     Async::TcpServer *server;
     Async::Timer * heartbeat_timer;
+    Async::Timer * sql_timer;
     Async::Timer * audio_timer;
     Async::TcpConnection *master;
 
@@ -164,6 +165,7 @@ class SvxServer : public sigc::trackable
     std::string     auth_key;
     NetTrxMsg::MsgAuthChallenge *auth_msg;
     struct timeval l_time;
+    int sql_timeout;
     int hbto;
 
     unsigned char   auth_challenge[NetTrxMsg::MsgAuthChallenge::CHALLENGE_LEN];
@@ -176,7 +178,9 @@ class SvxServer : public sigc::trackable
     void handleMsg(Async::TcpConnection *con, NetTrxMsg::Msg *msg);
     void sendMsg(Async::TcpConnection *con, NetTrxMsg::Msg *msg);
     void hbtimeout(Async::Timer *t);
+    void sqltimeout(Async::Timer *t);
     void audiotimeout(Async::Timer *t);
+    void resetAll(void);
     bool isMaster(Async::TcpConnection *con);
     void setMaster(Async::TcpConnection *con);
     void resetMaster(Async::TcpConnection *con);
