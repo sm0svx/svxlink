@@ -1,0 +1,13 @@
+#
+# /etc/default/svxlink support following options:
+#
+# GPIO_PTT_PIN=<num>
+#   <num> defines the GPIO pin used for PTT.
+#
+# GPIO_SQL_PIN=<num>
+#   <num> defines the GPIO pin used for Squelch.
+#
+# AUDIO_SETTINGS_ONSTART="<string>"
+# AUDIO_SETTINGS_ONSTOP="<string>"
+#   <string>: shell script command(s)
+#
