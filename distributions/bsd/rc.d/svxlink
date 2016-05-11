@@ -1,0 +1,73 @@
+#! /bin/sh
+# ----------------------------------------------------------------------
+#
+#   Project     : SvxLink
+#   Modul       : /etc/rc.d/svxlink 
+#   Aufruf      : 
+#   Descr       : 
+#
+#   Updates:
+#       Version |  who  |  when  | what
+#      ---------+-------+--------+-----
+#         1.0   | jonny |19072013| init
+#               |       |        |
+# ----------------------------------------------------------------------
+
+# The log file to use
+LOGFILE=/var/log/svxlink
+
+# The PID file to use
+PIDFILE=/var/run/svxlink.pid
+
+# The user to run the SvxLink server as 
+#(If you are running as 'root' or other user change it accrodingly)
+RUNASUSER=svxlink
+
+. /etc/rc.subr
+
+name=svxlink
+rcvar=svxlink_enable
+
+start_cmd="${name}_start"
+stop_cmd="${name}_stop"
+
+load_rc_config $name
+: ${svxlink_enable:=no}
+: ${svxlink_msg="svxlink started."}
+: ${svxlink_msg_stop="svxlink stoped."}
+: ${svxlink_msg_restart="svxlink restarted."}
+
+svxlink_start() {
+  echo "$svxlink_msg"
+  if [ -n ${RUNASUSER} ]; then
+    pw user show ${RUNASUSER} 2>/dev/null 1>/dev/null
+    if [ $? != 0 ]; then
+       echo "User ${RUNASUSER} not exists"
+       return 1
+    fi
+    if [ -f ${PIDFILE} ]; then
+       chown -R ${RUNASUSER} ${PIDFILE}
+    fi
+    if [ -f ${LOGFILE} ]; then
+       chown -R ${RUNASUSER} ${LOGFILE}
+    fi
+    if [ -d /var/spool/svxlink ]; then
+       chown -R ${RUNASUSER} /var/spool/svxlink
+    fi
+    /usr/local/bin/svxlink --pidfile=${PIDFILE} --logfile=${LOGFILE} --runasuser=${RUNASUSER} --daemon
+  else
+    /usr/local/bin/svxlink --pidfile=${PIDFILE} --logfile=${LOGFILE} --daemon
+  fi
+}
+
+svxlink_stop() {
+  echo "$svxlink_msg_stop"
+  if [ -f "${PIDFILE}" ]; then
+    kill $(cat ${PIDFILE})
+    sleep 1 # wait a little bit
+    /bin/rm ${PIDFILE}
+  fi
+}
+
+run_rc_command "$1"
+
