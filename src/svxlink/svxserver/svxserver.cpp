@@ -185,6 +185,7 @@ int main(int argc, char **argv)
   parse_arguments(argc, const_cast<const char **>(argv));
 
   struct sigaction act;
+  memset(&act, '\0', sizeof(act));
   act.sa_handler = sighup_handler;
   sigemptyset(&act.sa_mask);
   act.sa_flags = 0;
@@ -313,6 +314,16 @@ int main(int argc, char **argv)
       perror("getpwnam");
       exit(1);
     }
+
+    int rc = fchown(logfd, passwd->pw_uid, passwd->pw_gid);
+    if (rc != 0)
+    {
+      char str[256];
+      sprintf(str, "chown returns:%d uid:%d gid:%d", rc, 
+              passwd->pw_uid, passwd->pw_gid);
+      perror(str);
+    }
+
     if (setgid(passwd->pw_gid) == -1)
     {
       perror("setgid");
