@@ -280,7 +280,7 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
   if (result != 0)
   {
     struct addrinfo *entry;
-    for (entry = result; entry != 0; entry->ai_next)
+    for (entry = result; entry != 0; entry = entry->ai_next)
     {
       struct in_addr addr = ((struct sockaddr_in*)entry->ai_addr)->sin_addr;
       the_addresses.push_back(IpAddress(addr));
