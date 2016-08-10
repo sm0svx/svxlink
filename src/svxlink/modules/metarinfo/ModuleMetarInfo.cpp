@@ -306,6 +306,7 @@ bool ModuleMetarInfo::initialize(void)
   string value;
   StrList apset;
   std::string tp;
+  html = "";
 
   repstr["shra"] = "ra sh ";
   repstr["shsn"] = "sn sh ";
@@ -643,7 +644,7 @@ void ModuleMetarInfo::allMsgsWritten(void)
 */
 void ModuleMetarInfo::openConnection(void)
 {
-  std::string server = "weather.noaa.gov";
+  std::string server = "aviationweather.gov";
 
   if (con == 0)
   {
@@ -659,6 +660,77 @@ void ModuleMetarInfo::openConnection(void)
 
 int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
 {
+  std::string metar = "";
+  char *metarinput = static_cast<char *>(buf);
+  html += string(metarinput, metarinput + count);
+
+  if (html.find("<data num_results=\"0\" />") != string::npos)
+  {
+    stringstream temp;
+    cout << "Metar information not available" << endl;
+    temp << "metar_not_valid";
+    say(temp);
+    html = "";
+    return -1;
+  }
+
+  // check day and time, if not in limit throw information away
+  // e.g.: 2016-08-10T08:20:00Z
+  std::string met_utc = getXmlParam("observation_time", html);
+
+   // look for raw metar data
+  metar = getXmlParam("raw_text", html);
+
+  if (metar.length() > 0)
+  {
+    html = "";
+    if (debug)
+    {
+      cout << "METAR: " << metar << endl;
+    }
+
+    if (met_utc.length() == 20 && !isvalidUTC(met_utc))
+    {
+      stringstream temp;
+      cout << "Metar information outdated" << endl;
+      temp << "metar_not_valid";
+      say(temp);
+      return -1;
+    }
+
+    handleMetar(metar);
+  }
+  return count;
+
+} /* onDataReceived */
+
+
+std::string ModuleMetarInfo::getXmlParam(std::string token, std::string input)
+{
+  std::string start = "<";
+  std::string stop = "</";
+  start += token;
+  start += ">";
+  stop += token;
+  stop += ">";
+
+  size_t an, en;
+
+  an = input.find(start);
+  en = input.find(stop);
+
+  if (an != std::string::npos && en != std::string::npos)
+  {
+     an += token.length() + 2;
+     return input.substr(an, en - an);
+  }
+
+  return "";
+} /* getXmlParam */
+
+
+int ModuleMetarInfo::handleMetar(std::string input)
+{
    std::string current;
    std::string tempstr;
    std::stringstream temp;
@@ -667,60 +739,21 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
    bool endflag = false;
    bool nceiling = false;
    float temp_view = 0;
-   size_t found;
    int metartoken;
 
-   char *metarinput = static_cast<char *>(buf);
-   string html(metarinput, metarinput + count);
+   metartoken = 0;
 
-   metartoken = 0;            // start with UTC
-
-   // This is a MEATAR-report:
+   // This is a raw MEATAR-report:
    //
-   // 2009/04/07 13:20
    // FBJW 071300Z 09013KT 9999 FEW030 29/15 Q1023 RMK ...
    //
-   // don't worry, it's always the same structure...
-
    temp << "airports " << icao;
    say(temp);
 
-   // put each single line into a StringList
-   // only the last 2 lines are interesting for uns
-   //
-   // 2009/04/07 13:20
-   // FBJW 071300Z 09013KT 9999 FEW030 29/15 Q1023 RMK ...
-   //
-   splitStr(values, html, "\n");
-   std::string met = values.back();  // contains the METAR
-   values.pop_back();
-   std::string metartime = values.back();  // and the time at UTC
-
-   // split \n -> <SPACE>
-   while ((found = html.find('\n')) != string::npos) html[found] = ' ';
-
-   if (html.find("404 Not Found") != string::npos)
-   {
-      cout << "ERROR 404 from webserver -> no such airport\n";
-      temp << "no_such_airport";
-      say(temp);
-      return -1;
-   }
-
-   // check if METAR is actual
-   if (!isvalidUTC(metartime.substr(0,16)))
-   {
-      temp << "metar_not_valid";
-      say(temp);
-      return -1;
-   }
-
    processEvent("say airport");
 
-   splitStr(values, met, " ");
+   splitStr(values, input, " ");
    StrList::iterator it = values.begin();
-
-   cout << "METAR: " << met << "\n";
 
    while (it != values.end() && !endflag) {
 
@@ -1122,7 +1155,6 @@ int ModuleMetarInfo::checkToken(std::string token)
     mre["^[a-z]{2,4}(b|e)([0-9]{2}){1,2}(e[0-9]{2,4})?$"]  = PRECIPINRMK;
     mre["^((ac|acc|as|cb|cbmam|cc|cf|ci|cs|cu|tcu|ns|sc|sf|st)[1-8]){1,4}$"] = CLOUDTYPE;
     mre["^(mar|alqds|mod|twr|sfc|dsnt|lan|loc|fir|presrr|presfr|abv|agl|btn|cld|cot|nil|obs|obsc|stnr|turb|valid|wkn|wspd|ltg|wx)$"] = WORDSINRMK;
-
 
     for (rt = mre.begin(); rt != mre.end(); rt++)
     {
@@ -1555,27 +1587,40 @@ bool ModuleMetarInfo::rmatch(std::string tok, std::string pattern, regex_t *re)
 } /* rmatch */
 
 
-bool ModuleMetarInfo::isvalidUTC(std::string token)
+bool ModuleMetarInfo::isvalidUTC(std::string utctoken)
 {
 
+   // token e.g.: 2016-08-10T08:20:00Z
+   if (utctoken.length() < 20)
+   {
+     return false;
+   }
+
    time_t rawtime;
-   struct tm mtime;              // time of METAR
-   struct tm *utc;               // actual time as UTC
+   struct tm mtime;          // time of METAR
+   struct tm *utc;           // actual time as UTC
    double diff;
 
    rawtime = time(NULL);
    utc = gmtime(&rawtime);
 
    mtime.tm_sec  = 0;
-   mtime.tm_min  = atoi(token.substr(14,2).c_str());
-   mtime.tm_hour = atoi(token.substr(11,2).c_str()) + 1; // why??
-   mtime.tm_mday = atoi(token.substr(8,2).c_str());
-   mtime.tm_mon  = atoi(token.substr(5,2).c_str()) - 1;
-   mtime.tm_year = atoi(token.substr(0,4).c_str()) - 1900;
+   mtime.tm_min  = atoi(utctoken.substr(14,2).c_str());
+   mtime.tm_hour = atoi(utctoken.substr(11,2).c_str());
+   mtime.tm_mday = atoi(utctoken.substr(8,2).c_str());
+   mtime.tm_mon  = atoi(utctoken.substr(5,2).c_str()) - 1;
+   mtime.tm_year = atoi(utctoken.substr(0,4).c_str()) - 1900;
 
    diff = difftime(mktime(utc),mktime(&mtime));
 
-   if (diff > 3720) return false;
+   if (debug)
+   {
+     cout << "UTC: " << utc->tm_hour << ":" << utc->tm_min << ":"
+          << utc->tm_sec << " daytime saving:" << utc->tm_isdst
+          << " vs " << mtime.tm_hour << ":" << mtime.tm_min
+          << ":" << mtime.tm_sec << endl;
+   }
+   if (diff > 7200) return false;
 
    return true;
 } /* isvalidUTC */
@@ -1924,9 +1969,17 @@ void ModuleMetarInfo::onConnected(void)
 {
   assert(con->isConnected());
   string getpath;
-  getpath = "GET http://weather.noaa.gov/pub/data/observations/metar/stations/";
+  /*
+   * noaa.gov has changed their web service, new string:
+   * https://aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString=EDDP
+  */
+  getpath = "GET /adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString=";
   getpath += icao;
-  getpath += ".TXT HTTP/1.0\015\012\015\012";
+  getpath += " HTTP/1.0\r\nHOST:www.aviationweather.gov\r\n\r\n";
+  if (debug)
+  {
+    cout << getpath << endl;
+  }
   con->write(getpath.c_str(), getpath.size());
 } /* onConnected */
 
