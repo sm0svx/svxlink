@@ -13,6 +13,9 @@ CARD_SAMPLE_RATE=48000
 #CARD_CHANNELS=1
 #LOCATION_INFO=LocationInfo
 #LINKS=LinkToR4
+#listen_port = 5212 
+#AUTH_KEY = "ganz_geheim" 
+#HEARTBEAT_TIMEOUT = 10
 
 [SimplexLogic]
 TYPE=Simplex
@@ -87,6 +90,7 @@ TIMEOUT=300
 1=EchoLink:9999#
 9=Parrot:0123456789#
 03400=EchoLink:9999#
+#72=Frn:Server name (IP-address):Network Name (rooms):Port#
 
 [QsoRecorder]
 REC_DIR=@SVX_SPOOL_INSTALL_DIR@/qso_recorder

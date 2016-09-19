@@ -7,9 +7,9 @@
 ###############################################################################
 
 #
-# Spell the specified word using a phonetic alphabet
+# Spell the specified word using the phonetic alphabet
 #
-proc spellWord {word} {
+proc spellWord_alpha {word} {
   set word [string tolower $word];
   for {set i 0} {$i < [string length $word]} {set i [expr $i + 1]} {
     set char [string index $word $i];
@@ -25,6 +25,24 @@ proc spellWord {word} {
   }
 }
 
+#
+# Spell the specified word using the standard alphabet
+#
+proc spellWord {word} {
+  set word [string tolower $word];
+  for {set i 0} {$i < [string length $word]} {set i [expr $i + 1]} {
+    set char [string index $word $i];
+    if {$char == "*"} {
+      playMsg "Default" "star";
+    } elseif {$char == "/"} {
+      playMsg "Default" "slash";
+    } elseif {$char == "-"} {
+      playMsg "Default" "dash";
+    } elseif {[regexp {[a-z0-9]} $char]} {
+      playMsg "Default" "$char";
+    }
+  }
+}
 
 #
 # Spell the specified number digit for digit
@@ -36,10 +54,10 @@ proc spellNumber {number} {
       playMsg "Default" "decimal";
     } else {
       playMsg "Default" "$ch";
+      
     }
   }
 }
-
 
 #
 # Say the specified two digit number (00 - 99)
@@ -49,19 +67,31 @@ proc playTwoDigitNumber {number} {
     puts "*** WARNING: Function playTwoDigitNumber received a non two digit number: $number";
     return;
   }
-  
-  set first [string index $number 0];
-  if {($first == "0") || ($first == "O")} {
+
+set first [string index $number 0];
+if {($first == "0") || ($first == "O")} {
     playMsg "Default" $first;
     playMsg "Default" [string index $number 1];
-  } elseif {$first == "1"} {
-    playMsg "Default" $number;
-  } elseif {[string index $number 1] == "0"} {
-    playMsg "Default" $number;
-  } else {
-    playMsg "Default" "[string index $number 0]X";
-    playMsg "Default" "[string index $number 1]";
-  }
+   }  elseif {$first == "1"} {
+      playMsg "Default" $number;
+   }  elseif {$first == "7"} {
+      playMsg "Default" "6X";
+      if {[string index $number 1] == "1"} {
+        playMsg "Default" "and";
+        }
+          playMsg "Default" [expr $number - 60];
+            } elseif {$first == "9"}  {
+              playMsg "Default" "8X";
+              playMsg "Default" [expr $number - 80];
+            } else {
+              playMsg "Default" "[string index $number 0]X";
+            if {[string index $number 1] == "1"} {
+              playMsg "Default" "and";
+            }
+            if {[string index $number 1] != "0"} {
+             playMsg "Default" "[string index $number 1]";
+        }
+    }
 }
 
 
@@ -90,6 +120,34 @@ proc playThreeDigitNumber {number} {
   }
 }
 
+#
+# Say a number as intelligent as posible. Examples:
+#   x.x.x.x
+#   xx.xx.xx.xx
+#	xxx.xxx.xxx.xxx	- onehundred and xxx point xxx point xxx point xxx
+#
+proc playNumberIp {number} {
+  if {[regexp {(\d+)\.(\d+).(\d+)\.(\d+)?} $number -> integer fraction]} {
+    playNumber $integer;
+    playMsg "Default" "decimal";
+    spellNumber $fraction;
+    return;
+  }
+
+  while {[string length $number] > 0} {
+    set len [string length $number];
+    if {$len == 1} {
+      playMsg "Default" $number;
+      set number "";
+    } elseif {$len % 2 == 0} {
+      playTwoDigitNumber [string range $number 0 1];
+      set number [string range $number 2 end];
+    } else {
+      playThreeDigitNumber [string range $number 0 2];
+      set number [string range $number 3 end];
+    }
+  }
+}
 
 #
 # Say a number as intelligent as posible. Examples:
@@ -123,7 +181,6 @@ proc playNumber {number} {
     }
   }
 }
-
 
 #
 # Say the time specified by function arguments "hour" and "minute".
@@ -162,6 +219,42 @@ proc playTime {hour minute} {
   playMsg "Core" $ampm;
 }
 
+#
+# Say temperature as intelligent as posible. Examples:
+#
+#       1       - one
+#       24      - twentyfour
+#       245     - twohundred and fourtyfive
+#       1234    - twelve thirtyfour
+#       12345   - onehundred and twentythree fourtyfive
+#       136.5   - onehundred and thirtysix point five
+#
+proc playTemp {number} {
+  if {[regexp {(\d+)\.(\d+)?} $number -> integer fraction]} {
+    playNumber $integer;
+    playMsg "WeatherStation" "degree";
+
+# No say 0 if decimal = 0
+if {$fraction != 0} {
+    spellNumber $fraction;
+}
+   return;
+}
+
+  while {[string length $number] > 0} {
+    set len [string length $number];
+    if {$len == 1} {
+      playMsg "Default" $number;
+      set number "";
+    } elseif {$len % 2 == 0} {
+      playTwoDigitNumber [string range $number 0 1];
+      set number [string range $number 2 end];
+    } else {
+      playThreeDigitNumber [string range $number 0 2];
+      set number [string range $number 3 end];
+    }
+  }
+}
 
 #
 # This file has not been truncated

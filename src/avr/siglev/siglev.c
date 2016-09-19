@@ -1,4 +1,4 @@
-/*****************************************************************************
+/**
  *
  * This is a signal level transmitter for use with remote receivers linked
  * in via RF to the SvxLink core. It use ten tones to indicate one of ten
@@ -14,7 +14,7 @@
  * The program is written for the ATmega8 processor but should be easily
  * ported to other AVR processors.
  *
- ****************************************************************************/
+ */
 
 #include <avr/io.h>
 #include <avr/interrupt.h>

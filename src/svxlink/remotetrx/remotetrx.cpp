@@ -30,11 +30,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/****************************************************************************
+/*
  *
  * System Includes
  *
- ****************************************************************************/
+ */
 
 #include <unistd.h>
 #include <signal.h>
@@ -56,11 +56,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 
 
-/****************************************************************************
+/*
  *
  * Project Includes
  *
- ****************************************************************************/
+ */
 
 #include <AsyncCppApplication.h>
 #include <AsyncConfig.h>
@@ -73,22 +73,22 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/****************************************************************************
+/*
  *
  * Local Includes
  *
- ****************************************************************************/
+ */
 
 #include "version/REMOTE_TRX.h"
 #include "TrxHandler.h"
 #include "NetTrxAdapter.h"
 
 
-/****************************************************************************
+/*
  *
  * Namespaces to use
  *
- ****************************************************************************/
+ */
 
 using namespace std;
 using namespace Async;
@@ -97,20 +97,20 @@ using namespace SvxLink;
 
 
 
-/****************************************************************************
+/*
  *
  * Defines & typedefs
  *
- ****************************************************************************/
+ */
 
 #define PROGRAM_NAME "RemoteTrx"
 
 
-/****************************************************************************
+/*
  *
  * Local class definitions
  *
- ****************************************************************************/
+ */
 
 class NetRxAdapterFactory : public RxFactory
 {
@@ -149,11 +149,11 @@ class NetTxAdapterFactory : public TxFactory
 
 
 
-/****************************************************************************
+/*
  *
  * Prototypes
  *
- ****************************************************************************/
+ */
 
 static void parse_arguments(int argc, const char **argv);
 static void stdinHandler(FdWatch *w);
@@ -168,20 +168,20 @@ static void logfile_write(const char *buf);
 static void logfile_flush(void);
 
 
-/****************************************************************************
+/*
  *
  * Exported Global Variables
  *
- ****************************************************************************/
+ */
 
 
 
 
-/****************************************************************************
+/*
  *
  * Local Global Variables
  *
- ****************************************************************************/
+ */
 
 static char             *pidfile_name = NULL;
 static char             *logfile_name = NULL;
@@ -195,11 +195,11 @@ static string         	tstamp_format;
 
 
 
-/****************************************************************************
+/*
  *
  * MAIN
  *
- ****************************************************************************/
+ */
 
 
 /*
@@ -388,9 +388,8 @@ int main(int argc, char **argv)
   }
   else
   {
-    cfg_filename = string(home_dir);
-    cfg_filename += "/.svxlink/remotetrx.conf";
-    if (!cfg.open(cfg_filename))
+    if (home_dir != NULL &&
+	!cfg.open(cfg_filename = string(home_dir) + "/.svxlink/remotetrx.conf"))
     {
       cfg_filename = SVX_SYSCONF_INSTALL_DIR "/remotetrx.conf";
       if (!cfg.open(cfg_filename))
@@ -597,11 +596,11 @@ int main(int argc, char **argv)
 
 
 
-/****************************************************************************
+/*
  *
  * Functions
  *
- ****************************************************************************/
+ */
 
 /*
  *----------------------------------------------------------------------------

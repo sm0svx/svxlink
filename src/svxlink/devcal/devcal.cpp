@@ -24,11 +24,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/****************************************************************************
+/*
  *
  * System Includes
  *
- ****************************************************************************/
+ */
 
 #include <unistd.h>
 #include <signal.h>
@@ -44,11 +44,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iterator>
 
 
-/****************************************************************************
+/*
  *
  * Project Includes
  *
- ****************************************************************************/
+ */
 
 #include <AsyncCppApplication.h>
 #include <AsyncAudioIO.h>
@@ -60,11 +60,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <common.h>
 
 
-/****************************************************************************
+/*
  *
  * Local Includes
  *
- ****************************************************************************/
+ */
 
 #include "version/DEVCAL.h"
 #if 0
@@ -76,21 +76,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "../trx/Ddr.h"
 
 
-/****************************************************************************
+/*
  *
  * Namespaces to use
  *
- ****************************************************************************/
+ */
 
 using namespace std;
 using namespace Async;
 
 
-/****************************************************************************
+/*
  *
  * Defines & typedefs
  *
- ****************************************************************************/
+ */
 
 #define PROGRAM_NAME          "devcal"
 #define DEFAULT_MOD_FQS       "1000.0"
@@ -99,11 +99,11 @@ using namespace Async;
 #define DEFAULT_MAXDEV        5000.0f
 
 
-/****************************************************************************
+/*
  *
  * Local class definitions
  *
- ****************************************************************************/
+ */
 
 class SineGenerator : public Async::AudioSource
 {
@@ -435,22 +435,22 @@ class DevMeasure : public sigc::trackable
 
 
 
-/****************************************************************************
+/*
  *
  * Prototypes
  *
- ****************************************************************************/
+ */
 
 static void parse_arguments(int argc, const char **argv);
 static void stdin_handler(FdWatch *w);
 static void sigterm_handler(int signal);
 
 
-/****************************************************************************
+/*
  *
  * Local Global Variables
  *
- ****************************************************************************/
+ */
 
 static const char *mod_fqs_str = DEFAULT_MOD_FQS;
 static float headroom_db = DEFAULT_HEADROOM_DB;
@@ -475,11 +475,11 @@ static const unsigned audio_ch = 0;
 
 
 
-/****************************************************************************
+/*
  *
  * MAIN
  *
- ****************************************************************************/
+ */
 
 int main(int argc, const char *argv[])
 {
@@ -694,11 +694,11 @@ int main(int argc, const char *argv[])
 
 
 
-/****************************************************************************
+/*
  *
  * Functions
  *
- ****************************************************************************/
+ */
 
 /*
  *----------------------------------------------------------------------------

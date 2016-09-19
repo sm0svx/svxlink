@@ -279,7 +279,6 @@ extern FidFilter *mkfilter(char *, ...);
  }
 #endif
 
-
 //
 //	Support code
 //
