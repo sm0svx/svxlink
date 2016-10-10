@@ -755,6 +755,24 @@ proc airports args {
 }
 
 
+# say clouds with covering
+proc cloudtypes {} {
+variable a 0;
+  variable l [llength $args];
+
+  while {$a < $l} {
+    set msg [lindex $args $a];
+    playMsg "cld_$msg";
+    playMsg "covering";
+    incr a;
+    playNumber [lindex $args $a];
+    playMsg "eighth";
+    incr a;
+    playSilence 100;
+  }
+}
+
+
 #
 # Spell the specified number
 #
