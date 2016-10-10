@@ -151,6 +151,9 @@ class ModuleMetarInfo : public Module
 
     Async::TcpClient *con;
     std::string html;
+    std::string type;
+    std::string server;
+    std::string link;
 
     bool initialize(void);
     void activateInit(void);

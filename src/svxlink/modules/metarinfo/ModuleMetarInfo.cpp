@@ -377,13 +377,36 @@ bool ModuleMetarInfo::initialize(void)
   // still  development
   if (cfg().getValue(cfgName(), "REMARKS", value))
   {
-     remarks = true;
+    remarks = true;
   }
 
   if (cfg().getValue(cfgName(), "DEBUG", value))
   {
-     debug = true;
+    debug = true;
   }
+  
+  if (!cfg().getValue(cfgName(), "TYPE", type))
+  {
+    cout << "**** WARNING: Config variable " << cfgName() 
+         << "/TYPE is not set.\n";
+    return false;
+  }
+
+  if (type != "TXT" && type != "XML")
+  {
+    cout << "**** WARNING: Config variable " << cfgName() 
+         << "/TYPE: " << type << " is not valid.\n";
+    return false;
+  }
+
+  if (!cfg().getValue(cfgName(), "SERVER", server))
+  {
+    cout << "**** WARNING: Config variable " << cfgName() 
+         << "/SERVER: " << server << " is not set.\n";
+    return false;      
+  }
+
+  cfg().getValue(cfgName(), "LINK", link);
 
   // long messages or short messages
   // nosig -> "nosig"  == short message
@@ -644,8 +667,6 @@ void ModuleMetarInfo::allMsgsWritten(void)
 */
 void ModuleMetarInfo::openConnection(void)
 {
-  std::string server = "aviationweather.gov";
-
   if (con == 0)
   {
     con = new TcpClient(server, 80);
@@ -664,42 +685,96 @@ int ModuleMetarInfo::onDataReceived(TcpConnection *con, void *buf, int count)
   char *metarinput = static_cast<char *>(buf);
   html += string(metarinput, metarinput + count);
 
-  if (html.find("<data num_results=\"0\" />") != string::npos)
+
+  // switching between the newer xml-service by aviationweather and the old 
+  // noaa.gov version. With the standard TXT format anybody will be able to 
+  // create it's own METAR report from it's own weather station
+
+  if (type == "XML")
   {
-    stringstream temp;
-    cout << "Metar information not available" << endl;
-    temp << "metar_not_valid";
-    say(temp);
-    html = "";
-    return -1;
-  }
-
-  // check day and time, if not in limit throw information away
-  // e.g.: 2016-08-10T08:20:00Z
-  std::string met_utc = getXmlParam("observation_time", html);
-
-   // look for raw metar data
-  metar = getXmlParam("raw_text", html);
-
-  if (metar.length() > 0)
-  {
-    html = "";
     if (debug)
     {
-      cout << "METAR: " << metar << endl;
+      cout << "requesting XML metar version from " << server << "/" << endl;
     }
 
-    if (met_utc.length() == 20 && !isvalidUTC(met_utc))
+    if (html.find("<data num_results=\"0\" />") != string::npos)
     {
       stringstream temp;
-      cout << "Metar information outdated" << endl;
+      cout << "Metar information not available" << endl;
       temp << "metar_not_valid";
+      say(temp);
+      html = "";
+      return -1;
+    }
+
+    // check day and time, if not in limit throw information away
+    // e.g.: 2016-08-10T08:20:00Z
+    std::string met_utc = getXmlParam("observation_time", html);
+
+    // look for raw metar data
+    metar = getXmlParam("raw_text", html);
+
+    if (metar.length() > 0)
+    {
+      html = "";
+      if (debug)
+      {
+        cout << "XML-METAR: " << metar << endl;
+      }
+
+      if (met_utc.length() == 20 && !isvalidUTC(met_utc))
+      {
+        stringstream temp;
+        cout << "Metar information outdated" << endl;
+        temp << "metar_not_valid";
+        say(temp);
+        return -1;
+      }
+    }
+  }
+  // the TXT version of METAR
+  else 
+  {
+    // This is a MEATAR-report:
+    //
+    // 2009/04/07 13:20
+    // FBJW 071300Z 09013KT 9999 FEW030 29/15 Q1023 RMK ...
+
+    size_t found;
+    StrList values;
+    std::stringstream temp;
+    splitStr(values, html, "\n");
+    metar = values.back();  // contains the METAR
+
+    if (debug)
+    {
+      cout << "TXT-METAR: " << metar << endl;
+    }
+
+    values.pop_back();
+    std::string metartime = values.back();  // and the time at UTC
+
+    // split \n -> <SPACE>
+    while ((found = html.find('\n')) != string::npos) html[found] = ' ';
+
+    if (html.find("404 Not Found") != string::npos)
+    {
+      cout << "ERROR 404 from webserver -> no such airport\n";
+      temp << "no_such_airport";
       say(temp);
       return -1;
     }
 
-    handleMetar(metar);
+    // check if METAR is actual
+    if (!isvalidUTC(metartime.substr(0,16)))
+    {
+      temp << "metar_not_valid";
+      say(temp);
+      return -1;
+    }
   }
+
+  handleMetar(metar);
   return count;
 
 } /* onDataReceived */
@@ -1591,7 +1666,7 @@ bool ModuleMetarInfo::isvalidUTC(std::string utctoken)
 {
 
    // token e.g.: 2016-08-10T08:20:00Z
-   if (utctoken.length() < 20)
+   if (utctoken.length() < 16)
    {
      return false;
    }
@@ -1969,17 +2044,37 @@ void ModuleMetarInfo::onConnected(void)
 {
   assert(con->isConnected());
   string getpath;
+  
   /*
    * noaa.gov has changed their web service, new string:
    * https://aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString=EDDP
   */
-  getpath = "GET /adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString=";
-  getpath += icao;
-  getpath += " HTTP/1.0\r\nHOST:www.aviationweather.gov\r\n\r\n";
+
+  if (type == "XML")
+  {
+    getpath = "GET ";
+    getpath += link; 
+    getpath += icao;
+    getpath += " HTTP/1.0\r\nHOST:";
+    getpath += server;
+    getpath += "\r\n\r\n";
+  }
+  else
+  {
+    getpath = "GET http://";
+    getpath += server;
+    getpath += "/";
+    getpath += link;
+    getpath += "/";
+    getpath += icao;
+    getpath += ".TXT HTTP/1.0\015\012\015\012";
+  }
+
   if (debug)
   {
     cout << getpath << endl;
   }
+
   con->write(getpath.c_str(), getpath.size());
 } /* onConnected */
 
