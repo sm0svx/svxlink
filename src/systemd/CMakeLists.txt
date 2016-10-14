@@ -20,11 +20,11 @@ if(WITH_SYSTEMD)
     configure_file(${CMAKE_SOURCE_DIR}/systemd/remotetrx.default.cmake ${PROJECT_BINARY_DIR}/systemd/remotetrx)
     message( STATUS "Configured systemd unit file:remotetrx" )   
 
-    configure_file(${CMAKE_SOURCE_DIR}/systemd/svxlink_gpio_setup.cmake ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio_setup)
-    message( STATUS "Configured systemd unit file:svxlink_gpio_setup" )
+    configure_file(${CMAKE_SOURCE_DIR}/systemd/svxlink_gpio_setup.cmake ${PROJECT_BINARY_DIR}/systemd/svxlink_gpio_setup.cmake)
+    message( STATUS "Configured systemd unit file:svxlink_gpio_setup.cmake" )
 
-    configure_file(${CMAKE_SOURCE_DIR}/systemd/svvxlink_gpio_down.cmake ${PROJECT_BINARY_DIR}/systemd/svvxlink_gpio_down)
-    message( STATUS "Configured systemd unit file:svvxlink_gpio_down" )
+    configure_file(${CMAKE_SOURCE_DIR}/systemd/svvxlink_gpio_down.cmake ${PROJECT_BINARY_DIR}/systemd/svvxlink_gpio_down.cmake)
+    message( STATUS "Configured systemd unit file:svvxlink_gpio_down.cmake" )
 
     if(EXISTS ${SYSTEMD_CONFIGURATIONS_FILES_DIR})
         install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink.service DESTINATION ${SYSTEMD_CONFIGURATIONS_FILES_DIR} )
