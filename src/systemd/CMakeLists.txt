@@ -40,7 +40,6 @@ if(WITH_SYSTEMD)
 
      if(EXISTS ${SYSTEMD_DEFAULTS_FILES_DIR})
         install(FILES ${PROJECT_BINARY_DIR}/systemd/svxlink DESTINATION ${SYSTEMD_DEFAULTS_FILES_DIR} )
-        install(FILES ${PROJECT_BINARY_DIR}/systemd/svxserver DESTINATION ${SYSTEMD_DEFAULTS_FILES_DIR} )
         install(FILES ${PROJECT_BINARY_DIR}/systemd/remotetrx DESTINATION ${SYSTEMD_DEFAULTS_FILES_DIR} )
         message(STATUS "Unit files will be installed to ${SYSTEMD_DEFAULTS_FILES_DIR} after make install" )
      else(EXISTS ${SYSTEMD_DEFAULTS_FILES_DIR})
