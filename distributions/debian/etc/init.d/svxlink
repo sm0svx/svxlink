@@ -60,7 +60,7 @@ unlock_svxlink() {
 	fi
 }
 
-gpio_setup() {
+gpio_up() {
    NAME=$1
    PIN=$2
    DIR=$3
@@ -112,12 +112,12 @@ case "$1" in
 	
 	## GPIO PTT support ?
 	if [ ! -z "$GPIO_PTT_PIN" ]; then
-	    gpio_setup PTT $GPIO_PTT_PIN out
+	    gpio_up PTT $GPIO_PTT_PIN out
 	fi
 
 	## GPIO SQL support ?
 	if [ ! -z "$GPIO_SQL_PIN" ]; then
-	    gpio_setup SQL $GPIO_SQL_PIN in
+	    gpio_up SQL $GPIO_SQL_PIN in
 	fi
 
 	## Audio settings on startup ?
@@ -185,7 +185,7 @@ case "$1" in
 	# PTT
 	if [ ! -z "$GPIO_PTT_PIN" -a ! -e /sys/class/gpio/gpio$GPIO_PTT_PIN ]; then
 	    log_daemon_msg "Initialize PTT GPIO" "gpio$GPIO_PTT_PIN"
-	    gpio_setup PTT $GPIO_PTT_PIN out
+	    gpio_up PTT $GPIO_PTT_PIN out
 	else
 	    log_daemon_msg "Uninitialize PTT GPIO" "gpio$GPIO_PTT_PIN"
 	    gpio_unsetup PTT $GPIO_PTT_PIN
@@ -195,7 +195,7 @@ case "$1" in
 	## Squelch
 	if [ ! -z "$GPIO_SQL_PIN" -a ! -e /sys/class/gpio/gpio$GPIO_SQL_PIN ]; then
 	    log_daemon_msg "Initialize Squelch GPIO" "gpio$GPIO_SQL_PIN"
-	    gpio_setup SQL $GPIO_SQL_PIN in
+	    gpio_up SQL $GPIO_SQL_PIN in
 	else
 	    log_daemon_msg "Uninitialize Squelch GPIO" "gpio$GPIO_SQL_PIN"
 	    gpio_unsetup SQL $GPIO_SQL_PIN

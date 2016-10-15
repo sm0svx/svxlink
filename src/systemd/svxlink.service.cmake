@@ -8,7 +8,7 @@ After=network.target remote-fs.target syslog.target time.target
 ;;; Type=Notify
 EnvironmentFile=/etc/default/svxlink
 PIDFile=/run/svxlink.pid
-ExecStartPre=@CMAKE_INSTALL_PREFIX@/sbin/svxlink_gpio_setup
+ExecStartPre=@CMAKE_INSTALL_PREFIX@/sbin/svxlink_gpio_up
 ExecStartPre=-/bin/touch /var/log/svxlink
 ExecStartPre=-/bin/chown $RUNASUSER /var/log/svxlink
 ExecStart=/bin/sh -c '@CMAKE_INSTALL_PREFIX@/bin/svxlink --logfile=/var/log/svxlink --config=$CFGFILE --pidfile=/run/svxlink.pid --runasuser=$RUNASUSER'
