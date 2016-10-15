@@ -62,8 +62,8 @@ Description: Voice-over-IP server for ham radio operators (debug symbols)
 
 Package: svxserver
 Architecture: any
-Depends: ${shlibs:Depends}
-Recommends: svxlink remotetrx (= ${binary:Version})
+Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
+Recommends: svxlink (= ${binary:Version})
 Description: Server to allow svxlink repeaters to linkup without 
  EchoLink® protocol.
 
