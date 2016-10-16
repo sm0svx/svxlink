@@ -28,7 +28,7 @@ case "$1" in
     [ -z "$SERVER_GROUP" ] && SERVER_GROUP=daemon
     
     chmod +x /usr/sbin/svxlink_gpio_up 
-    chmod +x /usr/sbin/svvxlink_gpio_down
+    chmod +x /usr/sbin/svxlink_gpio_down
     chown $SERVER_USER:$SERVER_GROUP /var/spool/svxlink/voice_mail
     ;;
 

@@ -21,7 +21,7 @@ case "$1" in
      
     [ -z "$SERVER_HOME" ] && SERVER_HOME=/usr/bin
     [ -z "$SERVER_USER" ] && SERVER_USER=svxlink
-    [ -z "$SERVER_NAME" ] && SERVER_NAME="Svxlink-related Daemons"
+    [ -z "$SERVER_NAME" ] && SERVER_NAME="svxlink-related Daemons"
     [ -z "$SERVER_GROUP" ] && SERVER_GROUP=daemon
      
     # Groups that the user will be added to, if undefined, then none.
