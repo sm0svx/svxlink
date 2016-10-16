@@ -41,6 +41,7 @@ override_dh_auto_clean:
 
 .PHONY: override_dh_strip
 override_dh_strip:
+	dh_strip -psvxserver
 	dh_strip -psvxlink-server --dbg-package=svxlink-server-dbg
 	dh_strip -premotetrx --dbg-package=remotetrx-dbg
 	dh_strip -pqtel --dbg-package=qtel-dbg
@@ -52,6 +53,7 @@ override_dh_strip:
  	
 .PHONY: override_dh_install_init
 override_dh_installinit:
+	dh_installinit -psvxserver
 	dh_installinit -psvxlink-server --name=svxlink
 	dh_installinit -premotetrx
 
@@ -64,6 +66,7 @@ override_dh_systemd_enable:
 
 .PHONY: override_dh_installchangelogs
 override_dh_installchangelogs:
+	dh_installchangelogs -psvxserver src/svxlink/ChangeLog
 	dh_installchangelogs -psvxlink-server src/svxlink/ChangeLog
 	dh_installchangelogs -psvxlink-server-dbg src/svxlink/ChangeLog
 	dh_installchangelogs -premotetrx src/svxlink/ChangeLog

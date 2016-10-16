@@ -2,7 +2,7 @@
 
 [Unit]
 Description=svxlink remote repeater control software
-After=network.target remote-fs.target syslog.target time.target
+After=network.target remote-fs.target syslog.target time.target svxlink.service
 
 [Service]
 EnvironmentFile=/etc/default/remotetrx

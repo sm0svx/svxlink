@@ -24,7 +24,7 @@ case "$1" in
     
     LOG_FILE=/var/log/svxserver
 
-    # Remove svxlink log-file. Check if it's present. The upgrade fails if
+    # Remove svxserver log-file. Check if it's present. The upgrade fails if
     # user has some old version of the package in which this file is not present.
     if test -f $LOG_FILE; then
         echo "Removing logfile $LOG_FILE"
