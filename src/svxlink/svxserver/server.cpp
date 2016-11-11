@@ -2,7 +2,7 @@
 @file	 svxserver.cpp
 @brief   Main file for the svxserver
 @author  Adi Bier / DL1HRC
-@date	 2015-08-13
+@date	 2016-11-10
 
 This is the main file for the svxserver remote transceiver for the
 SvxLink server. It is used to link in remote transceivers to the SvxLink
@@ -491,19 +491,27 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 
       if (isMaster(con))
       {
-//       resetMaster((*it).second.con);
         resetMaster(con);
         MsgSquelch  *ms = new MsgSquelch(false, 0.0, 1);
         sendExcept(con, ms);
         sendMsg(con, ms);
-        (*it).second.sql_open = false;
-      }
 
-      MsgAllSamplesFlushed *o = new MsgAllSamplesFlushed;
-      sendMsg(con, o);
-      cmsg = o;
-      resetMaster(con);
-      break;
+        (*it).second.sql_open = false;
+
+        MsgAllSamplesFlushed *o = new MsgAllSamplesFlushed;
+        sendMsg(con, o);
+        cmsg = o;
+        break;
+      }
+      else
+      {
+        /*
+        / ignore all flush messages from nodes that's not master,
+        / this can happen if a rx audiostream is triggerd when the
+        / TX is keying up
+        */
+        return;
+      }
     }
 
     case MsgSetMuteState::TYPE:
