@@ -28,6 +28,12 @@ set_target_properties(svxserver PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
 
+# Generate config file with correct paths
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxserver.conf.in
+  ${CMAKE_CURRENT_BINARY_DIR}/svxserver.conf
+  @ONLY
+)
+
 # Install targets
 install(TARGETS svxserver DESTINATION ${BIN_INSTALL_DIR})
 install_if_not_exists(svxserver.conf ${SVX_SYSCONF_INSTALL_DIR})
