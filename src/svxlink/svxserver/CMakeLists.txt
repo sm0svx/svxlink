@@ -27,8 +27,6 @@ target_link_libraries(svxserver ${LIBS})
 set_target_properties(svxserver PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
-
-# Generate config file with correct paths
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxserver.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/svxserver.conf
   @ONLY
