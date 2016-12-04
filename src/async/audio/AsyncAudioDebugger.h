@@ -23,90 +23,52 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef AUDIO_DEBUGGER_INCLUDED
 #define AUDIO_DEBUGGER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sys/time.h>
 #include <iostream>
 #include <string>
 #include <stdint.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	This class is used to debug an audio stream
 @author Tobias Blomberg / SM0SVX
@@ -137,12 +99,12 @@ class AudioDebugger : public AudioSink, public AudioSource
       	registerSource(src);
       }
     }
-  
+
     /**
      * @brief 	Destructor
      */
     virtual ~AudioDebugger(void) {}
-  
+
     /**
      * @brief   Set the name that is displayed before debug messages
      * @param   debug_name The name to set
@@ -198,7 +160,7 @@ class AudioDebugger : public AudioSink, public AudioSource
       std::cout << std::endl;
       return ret;
     }
-    
+
     /**
      * @brief 	Tell the sink to flush the previously written samples
      *
@@ -212,7 +174,7 @@ class AudioDebugger : public AudioSink, public AudioSource
       std::cout << name << "::flushSamples\n";
       sinkFlushSamples();
     }
-    
+
     /**
      * @brief Resume audio output to the sink
      * 
@@ -225,7 +187,7 @@ class AudioDebugger : public AudioSink, public AudioSource
       std::cout << name << "::resumeOutput\n";
       sourceResumeOutput();
     }
-    
+
     /**
      * @brief The registered sink has flushed all samples
      *
@@ -238,25 +200,22 @@ class AudioDebugger : public AudioSink, public AudioSource
       std::cout << name << "::allSamplesFlushed\n";
       sourceAllSamplesFlushed();
     }
-    
+
   protected:
-    
+
   private:
     std::string name;
     struct timeval start_time;
     uint64_t sample_count;
-    
+
     AudioDebugger(const AudioDebugger&);
     AudioDebugger& operator=(const AudioDebugger&);
-    
-}; /* AudioDebugger */
 
+}; /* AudioDebugger */
 
 } /* namespace */
 
 #endif /* AUDIO_DEBUGGER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

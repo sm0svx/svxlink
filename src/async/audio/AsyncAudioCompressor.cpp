@@ -24,73 +24,39 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <iostream>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncAudioCompressor.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
-
 // DC offset to prevent denormal
 static const double DC_OFFSET = 1.0E-25;
 
-
-
-
-
 /*
- *
  * Local class definitions
- *
  */
-
-
 
 /*
- *
  * Prototypes
- *
  */
-
 // linear -> dB conversion
 static inline double lin2dB( double lin )
 {
@@ -107,42 +73,26 @@ static inline double dB2lin( double dB )
   return exp( dB * DB_2_LOG );
 }
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
 AudioCompressor::AudioCompressor(void)
   : threshdB_(0.0), ratio_(1.0), output_gain(1.0),att_(10.0), rel_(100.0),
     envdB_(DC_OFFSET)
 {
 } /* AudioCompressor::AudioCompressor */
 
-
 AudioCompressor::~AudioCompressor(void)
 {
 } /* AudioCompressor::~AudioCompressor */
-
 
 #if 0
 void AudioCompressor::setRatio(float ratio)
@@ -152,13 +102,11 @@ void AudioCompressor::setRatio(float ratio)
   decay_step = comp_ratio / (decay * sampling_rate / 1000);
 } /* AudioCompressor::setRatio */
 
-
 void AudioCompressor::setAttack(unsigned attack_ms)
 {
   attack = attack_ms;
   attack_step = comp_ratio / (attack * sampling_rate / 1000);
 } /* AudioCompressor::setAttack */
-
 
 void AudioCompressor::setDecay(unsigned decay_ms)
 {
@@ -166,7 +114,6 @@ void AudioCompressor::setDecay(unsigned decay_ms)
   decay_step = comp_ratio / (decay * sampling_rate / 1000);
 } /* AudioCompressor::setDecay */
 #endif
-
 
 void AudioCompressor::setOutputGain(float gain)
 {
@@ -181,19 +128,14 @@ void AudioCompressor::setOutputGain(float gain)
   //cout << "output_gain=" << output_gain << endl;
 } /* AudioCompressor::setOutputGain */
 
-
 void AudioCompressor::reset(void)
 {
   envdB_ = DC_OFFSET;
 } /* AudioCompressor::reset */
 
-
 /*
- *
  * Protected member functions
- *
  */
-
 
 void AudioCompressor::processSamples(float *dest, const float *src, int count)
 {
@@ -252,16 +194,9 @@ void AudioCompressor::processSamples(float *dest, const float *src, int count)
   
 } /* AudioCompressor::writeSamples */
 
-
-
 /*
- *
  * Private member functions
- *
  */
-
-
-
 
 /*
  * This file has not been truncated

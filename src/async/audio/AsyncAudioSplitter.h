@@ -23,89 +23,51 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ASYNC_AUDIO_SPLITTER_INCLUDED
 #define ASYNC_AUDIO_SPLITTER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <list>
 #include <sigc++/sigc++.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncTimer.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A class that splits an audio stream into multiple streams
 @author Tobias Blomberg
@@ -122,12 +84,12 @@ class AudioSplitter : public Async::AudioSink, public Async::AudioSource,
      * @brief 	Default constuctor
      */
     AudioSplitter(void);
-  
+
     /**
      * @brief 	Destructor
      */
     ~AudioSplitter(void);
-  
+
     /**
      * @brief 	Add an audio sink to the splitter
      * @param 	sink  	The sink object to add
@@ -135,18 +97,18 @@ class AudioSplitter : public Async::AudioSink, public Async::AudioSource,
      *                  deleted when the splitter is deleted
      */
     void addSink(AudioSink *sink, bool managed=false);
-  
+
     /**
      * @brief 	Remove an audio sink from the splitter
      * @param 	sink The sink object to remove
      */
     void removeSink(AudioSink *sink);
-  
+
     /**
      * @brief 	Remove all audio sinks from this splitter
      */
     void removeAllSinks(void);
-  
+
     /**
      * @brief 	Enable or disable audio output to the given audio sink
      * @param 	sink  	The audio sink to enable/disable
@@ -167,7 +129,7 @@ class AudioSplitter : public Async::AudioSink, public Async::AudioSource,
      * This function is normally only called from a connected source object.
      */
     int writeSamples(const float *samples, int len);
-    
+
     /**
      * @brief 	Tell the sink to flush the previously written samples
      *
@@ -177,13 +139,12 @@ class AudioSplitter : public Async::AudioSink, public Async::AudioSource,
      * This function is normally only called from a connected source object.
      */
     void flushSamples(void);
-    
-    
+
   protected:
-    
+
   private:
     class Branch;
-    
+
     std::list<Branch *> branches;
     float     	      	*buf;
     int       	      	buf_size;
@@ -192,7 +153,7 @@ class AudioSplitter : public Async::AudioSink, public Async::AudioSource,
     bool      	      	input_stopped;
     int       	      	flushed_branches;
     Branch              *main_branch;
-    
+
     void writeFromBuffer(void);
     void flushAllBranches(void);
 
@@ -203,12 +164,9 @@ class AudioSplitter : public Async::AudioSink, public Async::AudioSource,
 
 };  /* class AudioSplitter */
 
-
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_SPLITTER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

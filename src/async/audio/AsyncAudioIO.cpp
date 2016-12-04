@@ -27,15 +27,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 #include <stdint.h>
 
@@ -44,21 +38,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cerrno>
 #include <cmath>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncAudioDevice.h"
 #include "AsyncFdWatch.h"
 #include "AsyncAudioReader.h"
@@ -67,33 +53,19 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncAudioIO.h"
 #include "AsyncAudioDebugger.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
-
-
 
 /*
- *
  * Local class definitions
- *
  */
-
 class Async::AudioIO::InputFifo : public AudioFifo
 {
   public:
@@ -145,7 +117,6 @@ class Async::AudioIO::InputFifo : public AudioFifo
     
 }; /* Async::AudioIO::InputFifo */
 
-
 class Async::AudioIO::DelayedFlushAudioReader
   : public AudioReader, public sigc::trackable
 {
@@ -193,70 +164,45 @@ class Async::AudioIO::DelayedFlushAudioReader
 
 }; /* class Async::AudioIO::DelayedFlushAudioReader */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
-
 void AudioIO::setSampleRate(int rate)
 {
   AudioDevice::setSampleRate(rate);
 } /* AudioIO::setSampleRate */
-
 
 void AudioIO::setBlocksize(int size)
 {
   AudioDevice::setBlocksize(size);
 } /* AudioIO::setBlocksize */
 
-
 int AudioIO::blocksize(void)
 {
   return audio_dev->blocksize();
 } /* AudioIO::blocksize */
-
 
 void AudioIO::setBlockCount(int count)
 {
   AudioDevice::setBlockCount(count);
 } /* AudioIO::setBlockCount */
 
-
 void AudioIO::setChannels(int channels)
 {
   return AudioDevice::setChannels(channels);
 } /* AudioIO::setBufferCount */
-
-
 
 AudioIO::AudioIO(const string& dev_name, int channel)
   : io_mode(MODE_NONE), audio_dev(0),
@@ -289,7 +235,6 @@ AudioIO::AudioIO(const string& dev_name, int channel)
 
 } /* AudioIO::AudioIO */
 
-
 AudioIO::~AudioIO(void)
 {
   close();
@@ -298,12 +243,10 @@ AudioIO::~AudioIO(void)
   AudioDevice::unregisterAudioIO(this);
 } /* AudioIO::~AudioIO */
 
-
 bool AudioIO::isFullDuplexCapable(void)
 {
   return audio_dev->isFullDuplexCapable();
 } /* AudioIO::isFullDuplexCapable */
-
 
 bool AudioIO::open(Mode mode)
 {
@@ -339,7 +282,6 @@ bool AudioIO::open(Mode mode)
   
 } /* AudioIO::open */
 
-
 void AudioIO::close(void)
 {
   if (io_mode == MODE_NONE)
@@ -364,45 +306,17 @@ void AudioIO::close(void)
 } /* AudioIO::close */
 
 
-
 /*
- *
  * Protected member functions
- *
  */
 
-
 /*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-/*
- *
  * Private member functions
- *
  */
-
-
-
 
 /*
- *
  * Private member functions used by friend class AudioDevice
- *
  */
-
 int AudioIO::readSamples(float *samples, int count)
 {
   //printf("AudioIO[%s:%d]::readSamples\n", audio_dev->devName().c_str(), m_channel);
@@ -423,13 +337,11 @@ int AudioIO::readSamples(float *samples, int count)
   
 } /* AudioIO::readSamples */
 
-
 bool AudioIO::doFlush(void) const
 {
   //printf("AudioIO::doFlush\n");
   return input_fifo->doFlush();
 } /* AudioIO::doFlush */
-
 
 bool AudioIO::isIdle(void) const
 {
@@ -437,21 +349,16 @@ bool AudioIO::isIdle(void) const
   return audio_reader->isIdle();
 } /* AudioIO::isIdle */
 
-
 int AudioIO::audioRead(float *samples, int count)
 {
   return sinkWriteSamples(samples, count);
 } /* AudioIO::audioRead */
-
 
 unsigned AudioIO::samplesAvailable(void)
 {
   //printf("AudioIO[%s:%d]::samplesAvailable: %d\n", audio_dev->devName().c_str(), m_channel, input_fifo->samplesInFifo(true));
   return input_fifo->samplesInFifo();
 } /* AudioIO::samplesAvailable */
-
-
-
 
 /*
  * This file has not been truncated

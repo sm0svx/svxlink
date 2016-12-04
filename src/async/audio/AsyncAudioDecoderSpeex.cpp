@@ -24,94 +24,50 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <iostream>
 #include <cstdlib>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncAudioDecoderSpeex.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
 AudioDecoderSpeex::AudioDecoderSpeex(void)
 {
   speex_bits_init(&bits);
@@ -125,13 +81,11 @@ AudioDecoderSpeex::AudioDecoderSpeex(void)
   //enableEnhancer(false);
 } /* AudioDecoderSpeex::AudioDecoderSpeex */
 
-
 AudioDecoderSpeex::~AudioDecoderSpeex(void)
 {
   speex_bits_destroy(&bits);
   speex_decoder_destroy(dec_state);
 } /* AudioDecoderSpeex::~AudioDecoderSpeex */
-
 
 void AudioDecoderSpeex::setOption(const std::string &name,
       	      	      	      	  const std::string &value)
@@ -147,7 +101,6 @@ void AudioDecoderSpeex::setOption(const std::string &name,
   }
 } /* AudioDecoderSpeex::setOption */
 
-
 void AudioDecoderSpeex::printCodecParams(void) const
 {
   cout << "------ Speex decoder parameters ------\n";
@@ -156,7 +109,6 @@ void AudioDecoderSpeex::printCodecParams(void) const
   cout << "--------------------------------------\n";
 } /* AudioDecoderSpeex::printCodecParams */
 
-
 bool AudioDecoderSpeex::enableEnhancer(bool enable)
 {
   int enh = enable ? 1 : 0;
@@ -164,16 +116,12 @@ bool AudioDecoderSpeex::enableEnhancer(bool enable)
   return enhancerEnabled();
 } /* AudioDecoderSpeex::enableEnhancer */
 
-
 bool AudioDecoderSpeex::enhancerEnabled(void) const
 {
   int enh;
   speex_decoder_ctl(dec_state, SPEEX_GET_ENH, &enh);
   return (enh != 0);
 } /* AudioDecoderSpeex::enhancerEnabled */
-
-
-
 
 void AudioDecoderSpeex::writeEncodedSamples(void *buf, int size)
 {
@@ -196,23 +144,13 @@ void AudioDecoderSpeex::writeEncodedSamples(void *buf, int size)
   }
 } /* AudioDecoderSpeex::writeEncodedSamples */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
-
-
 
 /*
- *
  * Private member functions
- *
  */
-
-
 
 /*
  * This file has not been truncated

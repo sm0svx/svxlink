@@ -23,84 +23,48 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef ASYNC_AUDIO_DECODER_NULL_INCLUDED
 #define ASYNC_AUDIO_DECODER_NULL_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <cstring>
 #include <stdint.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncAudioDecoder.h>
 
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Class definitions
- *
  */
 
 /**
@@ -125,13 +89,13 @@ class AudioDecoderNull : public AudioDecoder
      * @brief 	Destructor
      */
     virtual ~AudioDecoderNull(void) {}
-  
+
     /**
      * @brief   Get the name of the codec
      * @returns Return the name of the codec
      */
     virtual const char *name(void) const { return "NULL"; }
-  
+
     /**
      * @brief 	Write encoded samples into the decoder
      * @param 	buf  Buffer containing encoded samples
@@ -161,19 +125,16 @@ class AudioDecoderNull : public AudioDecoder
     }
 
   protected:
-    
+
   private:
     AudioDecoderNull(const AudioDecoderNull&);
     AudioDecoderNull& operator=(const AudioDecoderNull&);
-    
-};  /* class AudioDecoderNull */
 
+};  /* class AudioDecoderNull */
 
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_DECODER_NULL_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

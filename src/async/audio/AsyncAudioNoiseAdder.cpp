@@ -24,14 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <iostream>
 
 #include <cstring>
@@ -40,79 +35,44 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <locale>
 #include <limits>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncAudioNoiseAdder.h"
 
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Local Global Variables
- *
  */
 
 
-
 /*
- *
  * Public member functions
- *
  */
 
 AudioNoiseAdder::AudioNoiseAdder(float level_db)
@@ -121,17 +81,12 @@ AudioNoiseAdder::AudioNoiseAdder(float level_db)
 {
 } /* AudioNoiseAdder::AudioNoiseAdder */
 
-
 AudioNoiseAdder::~AudioNoiseAdder(void)
 {
 } /* AudioNoiseAdder::~AudioNoiseAdder */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
 
 void AudioNoiseAdder::processSamples(float *dest, const float *src, int count)
@@ -145,12 +100,8 @@ void AudioNoiseAdder::processSamples(float *dest, const float *src, int count)
   }
 } /* AudioNoiseAdder::writeSamples */
 
-
-
 /*
- *
  * Private member functions
- *
  */
 
 float AudioNoiseAdder::generateGaussianNoise(void)
@@ -178,7 +129,6 @@ float AudioNoiseAdder::generateGaussianNoise(void)
   z1 = sqrt(-2.0f * log(u1)) * sin(two_pi * u2);
   return z0 * sigma + mu;
 } /* AudioNoiseAdder::generateGaussianNoise */
-
 
 /*
  * This file has not been truncated

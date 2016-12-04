@@ -23,85 +23,48 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ASYNC_AUDIO_MIXER_INCLUDED
 #define ASYNC_AUDIO_MIXER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <list>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncAudioSource.h>
 #include <AsyncTimer.h>
 
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Class definitions
- *
  */
 
 /**
@@ -138,8 +101,7 @@ class AudioMixer : public sigc::trackable, public Async::AudioSource
      * This function is normally only called from a connected sink object.
      */
     void resumeOutput(void);
-    
-    
+
   protected:
     /**
      * @brief The registered sink has flushed all samples
@@ -149,8 +111,7 @@ class AudioMixer : public sigc::trackable, public Async::AudioSource
      * This function is normally only called from a connected sink object.
      */
     void allSamplesFlushed(void);
-    
-    
+
   private:
     class MixerSrc;
     
@@ -176,12 +137,9 @@ class AudioMixer : public sigc::trackable, public Async::AudioSource
     
 };  /* class AudioMixer */
 
-
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_MIXER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

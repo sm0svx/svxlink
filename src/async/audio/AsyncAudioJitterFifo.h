@@ -25,84 +25,48 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ASYNC_AUDIO_JITTER_FIFO_INCLUDED
 #define ASYNC_AUDIO_JITTER_FIFO_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
-
 
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
 
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Class definitions
- *
  */
 
 /**
@@ -192,8 +156,7 @@ class AudioJitterFifo : public AudioSink, public AudioSource
      * This function is normally only called from a connected sink object.
      */
     virtual void resumeOutput(void);
-    
-    
+
   protected:
     /**
      * @brief The registered sink has flushed all samples
@@ -203,8 +166,7 @@ class AudioJitterFifo : public AudioSink, public AudioSource
      * This function is normally only called from a connected sink object.
      */
     virtual void allSamplesFlushed(void);
-    
-    
+
   private:
     float     	*fifo;
     unsigned    fifo_size;
@@ -217,11 +179,9 @@ class AudioJitterFifo : public AudioSink, public AudioSource
 
 };  /* class AudioJitterFifo */
 
-
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_JITTER_FIFO_INCLUDED */
-
 
 /*
  * This file has not been truncated

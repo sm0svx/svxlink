@@ -24,106 +24,60 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <stdint.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncAudioEncoderS16.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
 #if 0
 AudioEncoderS16::AudioEncoderS16(void)
 {
   
 } /* AsyncAudioEncoderS16::AsyncAudioEncoderS16 */
 
-
 AudioEncoderS16::~AudioEncoderS16(void)
 {
   
 } /* AsyncAudioEncoderS16::~AsyncAudioEncoderS16 */
 #endif
-
 
 int AudioEncoderS16::writeSamples(const float *samples, int count)
 {
@@ -152,24 +106,13 @@ int AudioEncoderS16::writeSamples(const float *samples, int count)
   
 } /* AudioEncoderS16::writeSamples */
 
-
-
-
 /*
- *
  * Protected member functions
- *
  */
-
-
 
 /*
- *
  * Private member functions
- *
  */
-
-
 
 /*
  * This file has not been truncated

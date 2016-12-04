@@ -23,84 +23,47 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ASYNC_AUDIO_SOURCE_INCLUDED
 #define ASYNC_AUDIO_SOURCE_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <cassert>
 
-
 /*
- *
  * Project Includes
- *
  */
 
-
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
-
 class AudioSink;
   
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Class definitions
- *
  */
 
 /**
@@ -191,8 +154,7 @@ class AudioSource
       assert(m_handler != 0);
       m_handler->resumeOutput();
     }
-    
-
+  
   protected:
     /**
      * @brief The registered sink has flushed all samples
@@ -257,7 +219,6 @@ class AudioSource
      */
     void clearHandler(void);
     
-    
   private:
     AudioSink 	*m_sink;
     bool      	m_sink_managed;
@@ -270,12 +231,9 @@ class AudioSource
 
 };  /* class AudioSource */
 
-
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_SOURCE_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

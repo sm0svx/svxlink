@@ -24,96 +24,52 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <iostream>
 #include <algorithm>
 
 #include <cstring>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncAudioProcessor.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
 AudioProcessor::AudioProcessor(void)
   : buf_cnt(0), do_flush(false), input_stopped(false),
     output_stopped(false), input_rate(1), output_rate(1), input_buf(0),
@@ -122,12 +78,10 @@ AudioProcessor::AudioProcessor(void)
   
 } /* AudioProcessor::AudioProcessor */
 
-
 AudioProcessor::~AudioProcessor(void)
 {
   delete [] input_buf;
 } /* AudioProcessor::~AudioProcessor */
-
 
 int AudioProcessor::writeSamples(const float *samples, int len)
 {
@@ -202,7 +156,6 @@ int AudioProcessor::writeSamples(const float *samples, int len)
 
 } /* AudioProcessor::writeSamples */
 
-
 void AudioProcessor::flushSamples(void)
 {
   //cout << "AudioProcessor::flushSamples" << endl;
@@ -227,7 +180,6 @@ void AudioProcessor::flushSamples(void)
   }
 } /* AudioProcessor::flushSamples */
 
-
 void AudioProcessor::resumeOutput(void)
 {
   //cout << "AudioProcessor::resumeOutput" << endl;
@@ -235,14 +187,12 @@ void AudioProcessor::resumeOutput(void)
   writeFromBuf();
 } /* AudioProcessor::resumeOutput */
 
-
 void AudioProcessor::allSamplesFlushed(void)
 {
   //cout << "AudioProcessor::allSamplesFlushed" << endl;
   do_flush = false;
   sourceAllSamplesFlushed();
 } /* AudioProcessor::allSamplesFlushed */
-
 
 void AudioProcessor::setInputOutputSampleRate(int input_rate, int output_rate)
 {
@@ -263,39 +213,13 @@ void AudioProcessor::setInputOutputSampleRate(int input_rate, int output_rate)
   }
 } /* AudioProcessor::setSampleRateRatio */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
 
-
 /*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
-
-/*
- *
  * Private member functions
- *
  */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -355,10 +279,6 @@ void AudioProcessor::writeFromBuf(void)
   output_stopped = (written == 0);
   
 } /* AudioProcessor::writeFromBuf */
-
-
-
-
 
 /*
  * This file has not been truncated

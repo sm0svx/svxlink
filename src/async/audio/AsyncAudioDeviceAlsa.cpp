@@ -26,66 +26,39 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 #include <poll.h>
 #include <iostream>
 #include <cmath>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncFdWatch.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncAudioDeviceAlsa.h"
 #include "AsyncAudioDeviceFactory.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 using namespace sigc;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
-
-
 
 /*
- *
  * Local class definitions
- *
  */
-
 class AudioDeviceAlsa::AlsaWatch : public sigc::trackable
 {
   public:
@@ -111,7 +84,7 @@ class AudioDeviceAlsa::AlsaWatch : public sigc::trackable
         pfd_map[pfds[i].fd] = pfds[i];
       }
     }
-  
+
     ~AlsaWatch()
     {
       std::list<FdWatch*>::const_iterator cii;
@@ -120,7 +93,7 @@ class AudioDeviceAlsa::AlsaWatch : public sigc::trackable
         delete *cii;
       }
     }
-    
+
     void setEnabled(bool enable)
     {
       std::list<FdWatch*>::const_iterator cii;
@@ -155,39 +128,22 @@ class AudioDeviceAlsa::AlsaWatch : public sigc::trackable
     }
 };
 
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
-
 
 /*
- *
  * Local Global Variables
- *
  */
-
 REGISTER_AUDIO_DEVICE_TYPE("alsa", AudioDeviceAlsa);
 
-
 /*
- *
  * Public member functions
- *
  */
-
 AudioDeviceAlsa::AudioDeviceAlsa(const std::string& dev_name)
   : AudioDevice(dev_name), block_size(0), block_count(0), play_handle(0), 
     rec_handle(0), play_watch(0), rec_watch(0), duplex(false)
@@ -212,25 +168,21 @@ AudioDeviceAlsa::AudioDeviceAlsa(const std::string& dev_name)
   }
 } /* AudioDeviceAlsa::AudioDeviceAlsa */
 
-
 AudioDeviceAlsa::~AudioDeviceAlsa(void)
 {
   closeDevice();
   snd_config_update_free_global();
 } /* AudioDeviceAlsa::~AudioDeviceAlsa */
 
-
 int AudioDeviceAlsa::blocksize(void)
 {
   return block_size;
 } /* AudioDeviceAlsa::blocksize */
 
-
 bool AudioDeviceAlsa::isFullDuplexCapable(void)
 {
   return duplex;
 } /* AudioDeviceAlsa::isFullDuplexCapable */
-
 
 void AudioDeviceAlsa::audioToWriteAvailable(void)
 {
@@ -241,7 +193,6 @@ void AudioDeviceAlsa::audioToWriteAvailable(void)
   }
 } /* AudioDeviceAlsa::audioToWriteAvailable */
 
-
 void AudioDeviceAlsa::flushSamples(void)
 {
   if (play_watch)
@@ -249,7 +200,6 @@ void AudioDeviceAlsa::flushSamples(void)
     play_watch->setEnabled(true);
   }  
 } /* AudioDeviceAlsa::flushSamples */
-
 
 int AudioDeviceAlsa::samplesToWrite(void) const
 {
@@ -264,14 +214,9 @@ int AudioDeviceAlsa::samplesToWrite(void) const
 
 } /* AudioDeviceAlsa::samplesToWrite */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
-
 bool AudioDeviceAlsa::openDevice(Mode mode)
 {
   closeDevice();
@@ -341,7 +286,6 @@ bool AudioDeviceAlsa::openDevice(Mode mode)
 
 } /* AudioDeviceAlsa::openDevice */
 
-
 void AudioDeviceAlsa::closeDevice(void)
 {
   if (play_handle != 0)
@@ -361,14 +305,9 @@ void AudioDeviceAlsa::closeDevice(void)
   }
 } /* AudioDeviceAlsa::closeDevice */
 
-
-
 /*
- *
  * Private member functions
- *
  */
-
 
 void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, unsigned short revents)
 {
@@ -414,7 +353,6 @@ void AudioDeviceAlsa::audioReadHandler(FdWatch *watch, unsigned short revents)
     putBlocks(buf, frames_read);
   }
 } /* AudioDeviceAlsa::audioReadHandler */
-
 
 void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, unsigned short revents)
 {
@@ -490,7 +428,6 @@ void AudioDeviceAlsa::writeSpaceAvailable(FdWatch *watch, unsigned short revents
     }
   }
 }
-
 
 bool AudioDeviceAlsa::initParams(snd_pcm_t *pcm_handle)
 {
@@ -670,7 +607,6 @@ bool AudioDeviceAlsa::initParams(snd_pcm_t *pcm_handle)
   return true;
 } /* AudioDeviceAlsa::initParams */
 
-
 bool AudioDeviceAlsa::startPlayback(snd_pcm_t *pcm_handle)
 {
   int err = snd_pcm_prepare(pcm_handle);
@@ -683,7 +619,6 @@ bool AudioDeviceAlsa::startPlayback(snd_pcm_t *pcm_handle)
   }
   return true;
 } /* AudioDeviceAlsa::startPlayback */
-
 
 bool AudioDeviceAlsa::startCapture(snd_pcm_t *pcm_handle)
 {
@@ -705,7 +640,6 @@ bool AudioDeviceAlsa::startCapture(snd_pcm_t *pcm_handle)
   }
   return true;
 } /* AudioDeviceAlsa::startCapture */
-
 
 /*
  * This file has not been truncated

@@ -24,105 +24,58 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
 
-
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncAudioSink.h"
 #include "AsyncAudioSource.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
-
 AudioSink::~AudioSink(void)
 {
   unregisterSource();
   clearHandler();
 } /* AudioSink::~AudioSink */
 
-
 bool AudioSink::registerSource(AudioSource *source)
 {
   return registerSourceInternal(source, true);
 } /* AudioSink::registerSource */
-
 
 void AudioSink::unregisterSource(void)
 {
@@ -145,26 +98,8 @@ void AudioSink::unregisterSource(void)
   }
 } /* AudioSink::unregisterSource */
 
-
-
 /*
- *
  * Protected member functions
- *
- */
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
  */
 void AudioSink::sourceResumeOutput(void)
 {
@@ -174,7 +109,6 @@ void AudioSink::sourceResumeOutput(void)
   }
 } /* AudioSink::sourceResumeOutput */
 
-
 void AudioSink::sourceAllSamplesFlushed(void)
 {
   if (m_source != 0)
@@ -182,7 +116,6 @@ void AudioSink::sourceAllSamplesFlushed(void)
     m_source->handleAllSamplesFlushed();
   }
 } /* AudioSink::sourceAllSamplesFlushed */
-
 
 bool AudioSink::setHandler(AudioSink *handler)
 {
@@ -207,7 +140,6 @@ bool AudioSink::setHandler(AudioSink *handler)
     
 } /* AudioSink::setHandler */
 
-
 void AudioSink::clearHandler(void)
 {
   if (m_handler == 0)
@@ -223,26 +155,8 @@ void AudioSink::clearHandler(void)
   m_handler = 0;
 } /* AudioSink::clearHandler */
 
-
-
 /*
- *
  * Private member functions
- *
- */
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
  */
 bool AudioSink::registerSourceInternal(AudioSource *source, bool reg_sink)
 {
@@ -280,9 +194,6 @@ bool AudioSink::registerSourceInternal(AudioSource *source, bool reg_sink)
   return true;
   
 } /* AudioSink::registerSourceInternal */
-
-
-
 
 /*
  * This file has not been truncated

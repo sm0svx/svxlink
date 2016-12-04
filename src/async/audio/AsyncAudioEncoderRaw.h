@@ -23,84 +23,47 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef ASYNC_AUDIO_ENCODER_RAW_INCLUDED
 #define ASYNC_AUDIO_ENCODER_RAW_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
-
 
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncAudioEncoder.h>
 
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A pass through audio "encoder"
 @author Tobias Blomberg / SM0SVX
@@ -127,7 +90,7 @@ class AudioEncoderRaw : public AudioEncoder
      * @return  Return the name of the codec
      */
     virtual const char *name(void) const { return "RAW"; }
-  
+
     /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
@@ -144,22 +107,18 @@ class AudioEncoderRaw : public AudioEncoder
       writeEncodedSamples(samples, sizeof(*samples) * count);
       return count;
     }
-    
-    
+
   protected:
-    
+
   private:
     AudioEncoderRaw(const AudioEncoderRaw&);
     AudioEncoderRaw& operator=(const AudioEncoderRaw&);
-    
+ 
 };  /* class AudioEncoderRaw */
-
 
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_ENCODER_S16_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

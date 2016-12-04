@@ -25,87 +25,49 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ASYNC_AUDIO_DEVICE_OSS_INCLUDED
 #define ASYNC_AUDIO_DEVICE_OSS_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <string>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncAudioDevice.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
-
 class FdWatch;
 
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A class that implements the low level interface to an OSS audio device
 @author Tobias Blomberg / SM0SVX
@@ -153,7 +115,7 @@ class AudioDeviceOSS : public Async::AudioDevice
      * @brief	Tell the audio device to flush its buffers
      */
     virtual void flushSamples(void);
-    
+
     /**
      * @brief 	Find out how many samples there are in the output buffer
      * @return	Returns the number of samples in the output buffer on
@@ -165,8 +127,7 @@ class AudioDeviceOSS : public Async::AudioDevice
      * been flushed.
      */
     virtual int samplesToWrite(void) const;
-    
-    
+
   protected:
     /**
      * @brief 	Open the audio device
@@ -180,7 +141,6 @@ class AudioDeviceOSS : public Async::AudioDevice
      */
     virtual void closeDevice(void);
 
-    
   private:
     //static const int  BUF_FRAG_COUNT = 4;
     
@@ -196,12 +156,9 @@ class AudioDeviceOSS : public Async::AudioDevice
     
 };  /* class AudioDevice */
 
-
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_DEVICE_OSS_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

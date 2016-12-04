@@ -24,91 +24,48 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <stdint.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncAudioEncoderGsm.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
 
-
-
 /*
- *
  * Public member functions
- *
  */
 
 AudioEncoderGsm::AudioEncoderGsm(void)
@@ -156,30 +113,18 @@ int AudioEncoderGsm::writeSamples(const float *samples, int count)
       writeEncodedSamples(frame, FRAME_COUNT * sizeof(gsm_frame));
     }
   }
-  
-  
+
   return count;
   
 } /* AudioEncoderGsm::writeSamples */
 
-
-
-
 /*
- *
  * Protected member functions
- *
  */
-
-
 
 /*
- *
  * Private member functions
- *
  */
-
-
 
 /*
  * This file has not been truncated

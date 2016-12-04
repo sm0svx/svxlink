@@ -23,87 +23,48 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ASYNC_AUDIO_SINK_INCLUDED
 #define ASYNC_AUDIO_SINK_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
-
 #include <cassert>
 
-
 /*
- *
  * Project Includes
- *
  */
 
-
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
-
 class AudioSource;
-  
 
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	The base class for an audio sink
 @author Tobias Blomberg
@@ -180,8 +141,7 @@ class AudioSink
       assert(m_handler != 0);
       m_handler->flushSamples();    
     }
-    
-    
+
   protected:
     /**
      * @brief 	Tell the source that we are ready to accept more samples
@@ -220,8 +180,7 @@ class AudioSink
      *          if none have been set
      */
     AudioSink *handler(void) const { return m_handler; }
-    
-    
+
   private:
     AudioSource *m_source;
     AudioSink 	*m_handler;
@@ -231,12 +190,9 @@ class AudioSink
     
 };  /* class AudioSink */
 
-
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_SINK_INCLUDED */
-
-
 
 /*
  * This file has not been truncated
