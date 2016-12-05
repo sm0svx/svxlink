@@ -35,28 +35,19 @@ the information message is automatically transmitted. Upon reception of the
 information message a disconnect is initiated. When the link has been
 disconnected the application exits.
 */
-
-
 #ifndef ECHOLINK_QSO_INCLUDED
 #define ECHOLINK_QSO_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sys/time.h>
 #include <sigc++/sigc++.h>
 #include <stdint.h>
 #include <string>
 
-
 /*
- *
  * Project Includes
- *
  */
 
 extern "C" {
@@ -67,62 +58,35 @@ extern "C" {
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace EchoLink
 {
 
 /*
- *
  * Forward declarations inside the declared namespace
- *
  */
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A class for creating an EchoLink connection
 @author Tobias Blomberg
@@ -525,12 +489,9 @@ class Qso
     
 };  /* class Qso */
 
-
 } /* namespace */
 
 #endif /* ECHOLINK_QSO_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

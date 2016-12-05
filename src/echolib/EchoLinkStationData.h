@@ -25,79 +25,46 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ECHOLINK_STATION_DATA_INCLUDED
 #define ECHOLINK_STATION_DATA_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <netinet/in.h>
 
 #include <string>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncIpAddress.h>
 
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace EchoLink
 {
 
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A class for representing data for a station
 @author Tobias Blomberg
@@ -277,10 +244,9 @@ class StationData
      */
     friend std::ostream& operator<<(std::ostream& os,
 	const StationData& station);
-    
-    
+
   protected:
-    
+
   private:
     std::string       m_callsign;
     Status    	      m_status;
@@ -295,12 +261,9 @@ class StationData
 
 };  /* class StationData */
 
-
 } /* namespace */
 
 #endif /* ECHOLINK_STATION_DATA_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

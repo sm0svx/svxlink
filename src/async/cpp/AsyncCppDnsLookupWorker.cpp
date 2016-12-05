@@ -28,16 +28,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -48,86 +41,46 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdio>
 #include <cassert>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncTimer.h>
 #include <AsyncFdWatch.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncCppDnsLookupWorker.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
-
 CppDnsLookupWorker::CppDnsLookupWorker(const string &label)
   : label(label), worker(0), notifier_rd(-1), notifier_wr(-1),
     notifier_watch(0), done(false), he_buf(), result(0), buf(0)
@@ -138,7 +91,6 @@ CppDnsLookupWorker::CppDnsLookupWorker(const string &label)
     cerr << "pthread_mutex_init: error " << ret << endl;
   }
 } /* CppDnsLookupWorker::CppDnsLookupWorker */
-
 
 CppDnsLookupWorker::~CppDnsLookupWorker(void)
 {
@@ -154,7 +106,7 @@ CppDnsLookupWorker::~CppDnsLookupWorker(void)
 	cerr << "pthread_cancel: error " << ret << endl;
       }
     }
-   
+
     void *ud;
     ret = pthread_join(worker, &ud);
     if (ret != 0)
@@ -162,10 +114,10 @@ CppDnsLookupWorker::~CppDnsLookupWorker(void)
       cerr << "pthread_join: error " << ret << endl;
     }
   }
-  
+
   free(buf);
   buf = 0;
-  
+
   delete notifier_watch;
   if (notifier_rd != -1)
   {
@@ -175,14 +127,13 @@ CppDnsLookupWorker::~CppDnsLookupWorker(void)
   {
     close(notifier_wr);
   }
-  
+
   int ret = pthread_mutex_destroy(&mutex);
   if (ret != 0)
   {
     cerr << "pthread_mutex_destroy: error " << ret << endl;
   }
 } /* CppDnsLookupWorker::~CppDnsLookupWorker */
-
 
 bool CppDnsLookupWorker::doLookup(void)
 {
@@ -227,25 +178,13 @@ bool CppDnsLookupWorker::doLookup(void)
   
 } /* CppDnsLookupWorker::doLookup */
 
-
-
-
 /*
- *
  * Protected member functions
- *
  */
-
-
-
 
 /*
- *
  * Private member functions
- *
  */
-
-
 /*
  *----------------------------------------------------------------------------
  * Method:    CppDnsLookupWorker::workerFunc
@@ -304,7 +243,6 @@ void *CppDnsLookupWorker::workerFunc(void *w)
   
 } /* CppDnsLookupWorker::workerFunc */
 
-
 /*
  *----------------------------------------------------------------------------
  * Method:    CppDnsLookupWorker::notificationReceived
@@ -347,8 +285,6 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
   resultsReady();
 
 } /* CppDnsLookupWorker::notificationReceived */
-
-
 
 /*
  * This file has not been truncated

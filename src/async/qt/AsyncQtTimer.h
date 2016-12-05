@@ -26,88 +26,50 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
-
 #ifndef ASYNC_QT_TIMER_INCLUDED
 #define ASYNC_QT_TIMER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 
-
 /*
- *
  * Qt Includes
- *
  */
-
 #include <QTimer>
 #undef emit
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncTimer.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	Async library internal class for creating timer in a Qt application
 @author Tobias Blomberg
@@ -136,13 +98,13 @@ class AsyncQtTimer : public QObject
      * @brief 	Destructor
      */
     virtual ~AsyncQtTimer(void) {}
-  
+
   protected:
-    
+
   private:
     Timer  *timer;
     QTimer *qtimer;
-    
+
   private slots:
     void timerExpired(void)
     {
@@ -151,12 +113,9 @@ class AsyncQtTimer : public QObject
     
 };  /* class AsyncQtTimer */
 
-
 } /* namespace */
 
 #endif /* ASYNC_QT_TIMER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

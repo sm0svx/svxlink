@@ -28,106 +28,48 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncQtDnsLookupWorker.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
 
-
-
 /*
- *
  * Public member functions
- *
- */
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
  */
 QtDnsLookupWorker::QtDnsLookupWorker(const string& label)
   : lookup_id(-1)
@@ -165,20 +107,12 @@ vector<IpAddress> QtDnsLookupWorker::addresses(void)
   
 } /* QtDnsLookupWorker::addresses */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
 
-
-
 /*
- *
  * Private member functions
- *
  */
 
 void QtDnsLookupWorker::onResultsReady(const QHostInfo &info)
@@ -187,8 +121,6 @@ void QtDnsLookupWorker::onResultsReady(const QHostInfo &info)
   host_info = info;
   resultsReady();
 } /* QtDnsLookupWorker::onResultsReady */
-
-
 
 /*
  * This file has not been truncated

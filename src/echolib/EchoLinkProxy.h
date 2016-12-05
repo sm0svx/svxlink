@@ -23,92 +23,53 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 /** @example EchoLinkProxy_demo.cpp
 An example of how to use the EchoLinkProxy class
 */
-
-
 #ifndef ECHOLINK_PROXY_INCLUDED
 #define ECHOLINK_PROXY_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <string>
 #include <sigc++/sigc++.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncTcpClient.h>
 #include <AsyncTimer.h>
 
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace EchoLink
 {
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	Implements the EchoLink Proxy protocol
 @author Tobias Blomberg / SM0SVX
@@ -383,12 +344,9 @@ class Proxy : public sigc::trackable
     
 };  /* class Proxy */
 
-
 } /* namespace */
 
 #endif /* ECHOLINK_PROXY_INCLUDED */
-
-
 
 /*
  * This file has not been truncated
