@@ -24,15 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <cstdio>
 #include <cstring>
 
@@ -40,43 +34,25 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <cmath>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "ToneDetector.h"
 #include "DtmfDecoder.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace SigC;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
-
 #define BASETONE_N    	      330
 #define OVERTONE_N    	      201
 #define POWER_THRESHOLD       500000
@@ -84,13 +60,9 @@ using namespace SigC;
 #define MIN_TWIST     	      -8
 #define MAX_TWIST     	      4
 
-
 /*
- *
  * Local class definitions
- *
  */
-
 class DtmfToneDetector : public sigc::trackable
 {
   public:
@@ -144,52 +116,22 @@ class DtmfToneDetector : public sigc::trackable
     
 }; /* class DtmfToneDetector */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
 
-
-
 /*
- *
  * Public member functions
- *
  */
 
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
 DtmfDecoder::DtmfDecoder(void)
   : active_row(-1), active_col(-1), buffered_samples(0),
     last_detected_digit('?'), digit_activated(false)
@@ -206,7 +148,6 @@ DtmfDecoder::DtmfDecoder(void)
 
 } /* DtmfDecoder::DtmfDecoder */
 
-
 DtmfDecoder::~DtmfDecoder(void)
 {
   for (int i=0; i<4; i++)
@@ -215,7 +156,6 @@ DtmfDecoder::~DtmfDecoder(void)
     delete col[i];
   }
 } /* DtmfDecoder::~DtmfDecoder */
-
 
 int DtmfDecoder::writeSamples(const float *buf, int len)
 {
@@ -247,51 +187,12 @@ int DtmfDecoder::writeSamples(const float *buf, int len)
   
 } /* DtmfDecoder::processSamples */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
 
-
 /*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
-
-/*
- *
  * Private member functions
- *
- */
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
  */
 void DtmfDecoder::checkTones(void)
 {
@@ -382,7 +283,6 @@ void DtmfDecoder::checkTones(void)
   
 } /* DtmfDecoder::checkTones */
 
-
 void DtmfDecoder::setDigitActive(bool is_active)
 {
   /*
@@ -413,9 +313,6 @@ void DtmfDecoder::setDigitActive(bool is_active)
   digit_activated = is_active;
   
 } /* DtmfDecoder::setDigitActive */
-
-
-
 
 /*
  * This file has not been truncated

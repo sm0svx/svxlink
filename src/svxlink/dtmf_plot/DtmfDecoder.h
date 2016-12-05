@@ -23,118 +23,44 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef DTMF_DECODER_INCLUDED
 #define DTMF_DECODER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 #include <sys/time.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncAudioSink.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
-
 
 /*
- *
  * Forward declarations
- *
  */
-
 class DtmfToneDetector;
 
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
 /*
- *
  * Defines & typedefs
- *
  */
 
 /*
- *----------------------------------------------------------------------------
- * Macro:   
- * Purpose: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- * Bugs:    
- *----------------------------------------------------------------------------
- */
-
-
-/*
- *----------------------------------------------------------------------------
- * Type:    
- * Purpose: 
- * Members: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- *----------------------------------------------------------------------------
- */
-
-
-/*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Class definitions
- *
  */
-
-/*
- *----------------------------------------------------------------------------
- * Class:     DtmfDecoder
- * Purpose:   DtmfDecoder class
- * Inherits:  
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */   
 class DtmfDecoder : public sigc::trackable, public Async::AudioSink
 {
   public:
@@ -189,10 +115,9 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
      * @param 	duration  The time that the digit was active
      */
     sigc::signal<void, char, int> digitDeactivated;
-    
-    
+
   protected:
-    
+
   private:
     DtmfToneDetector  *row[4];
     DtmfToneDetector  *col[4];
@@ -209,12 +134,7 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
 
 };  /* class DtmfDecoder */
 
-
-//} /* namespace */
-
 #endif /* DTMF_DECODER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated
