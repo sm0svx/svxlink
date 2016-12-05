@@ -23,87 +23,47 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef VOX_INCLUDED
 #define VOX_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <QObject>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncAudioSink.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
-
 
 /*
- *
  * Forward declarations
- *
  */
-
 class QTimer;
 
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	Implements voice operated transmission (VOX)
 @author Stuart Longland, Tobias Blomberg / SM0SVX
@@ -155,8 +115,7 @@ class Vox : public QObject, public Async::AudioSink
      * @return	Returns the current VOX delay
      */
     int delay(void) const { return m_delay; }
-    
-    
+        
     /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
@@ -179,7 +138,6 @@ class Vox : public QObject, public Async::AudioSink
      * This function is normally only called from a connected source object.
      */
     virtual void flushSamples(void) { sourceAllSamplesFlushed(); }
-
       
   signals:
     /**
@@ -193,7 +151,6 @@ class Vox : public QObject, public Async::AudioSink
      * @param 	new_state The new state of the VOX (IDLE, ACTIVE or HANG)
      */
     void stateChanged(Vox::State new_state);
-
 
   public slots:    
     /**
@@ -214,8 +171,7 @@ class Vox : public QObject, public Async::AudioSink
      *	      	       disable it
      */
     void setEnabled(bool enable);
-    
-    
+
   protected:
     
   private:
@@ -229,18 +185,12 @@ class Vox : public QObject, public Async::AudioSink
     Vox& operator=(const Vox&);
     void setState(State new_state);
 
-
   private slots:
     void voxTimeout(void);
     
 };  /* class Vox */
 
-
-//} /* namespace */
-
 #endif /* VOX_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

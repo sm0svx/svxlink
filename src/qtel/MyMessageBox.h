@@ -24,115 +24,41 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef MY_MESSAGE_BOX_INCLUDED
 #define MY_MESSAGE_BOX_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <QMessageBox>
 
-
 /*
- *
  * Project Includes
- *
  */
 
-
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
 /*
- *
  * Defines & typedefs
- *
  */
 
 /*
- *----------------------------------------------------------------------------
- * Macro:   
- * Purpose: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- * Bugs:    
- *----------------------------------------------------------------------------
- */
-
-
-/*
- *----------------------------------------------------------------------------
- * Type:    
- * Purpose: 
- * Members: 
- * Input:   
- * Output:  
- * Author:  
- * Created: 
- * Remarks: 
- *----------------------------------------------------------------------------
- */
-
-
-/*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Class definitions
- *
  */
-
-/*
- *----------------------------------------------------------------------------
- * Class:     MyMessageBox
- * Purpose:   MyMessageBox class
- * Inherits:  
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */   
 class MyMessageBox : public QMessageBox
 {
   Q_OBJECT
@@ -160,12 +86,7 @@ class MyMessageBox : public QMessageBox
     
 };  /* class MyMessageBox */
 
-
-//} /* namespace */
-
 #endif /* MY_MESSAGE_BOX_INCLUDED */
-
-
 
 /*
  * This file has not been truncated
