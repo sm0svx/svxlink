@@ -26,95 +26,57 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 /** @example AsyncSerial_demo.cpp
 An example of how to use the Serial class
 */
-
-
 #ifndef SERIAL_INCLUDED
 #define SERIAL_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 #include <termios.h>
 #include <unistd.h>
 
 #include <string>
 
-
 /*
- *
  * Project Includes
- *
  */
 
-
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
-
 class FdWatch;
 class SerialDevice;
   
 
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A class for using asyncronous serial communications
 @author Tobias Blomberg
@@ -167,7 +129,6 @@ class Serial : public sigc::trackable
      * @brief 	The maximum number of characters that can be read at once.
      */
     static const int READ_BUFSIZE = 1024;
-        
 
     /**
      * @brief 	Constuctor
@@ -203,7 +164,7 @@ class Serial : public sigc::trackable
      */
     bool setParams(int speed, Parity parity, int bits, int stop_bits,
       	      	   Flow flow);
-    
+
     /**
      * @brief 	Open the serial port
      * @param   flush Flush (discard) pending RX/TX data on open
@@ -219,7 +180,7 @@ class Serial : public sigc::trackable
      * just returns \em true without doing anything.
      */
     bool open(bool flush=false);
-    
+ 
     /**
      * @brief 	Close a previously opened serial port
      * @return	Return \em true on success or else \em false on failue. On
@@ -232,7 +193,7 @@ class Serial : public sigc::trackable
      * closed until the last instance has closed it.
      */
     bool close(void);
-    
+
     /**
      * @brief 	Write data to the serial port
      * @param 	buf   A buffer containing the data to write
@@ -263,7 +224,7 @@ class Serial : public sigc::trackable
      * opened and the setting is remembered after a close.
      */
     bool setCanonical(bool canonical);
-    
+
     /**
      * @brief 	Stop/start input of data
      * @param 	stop  Stop input if \em true or start input if \em false
@@ -288,7 +249,7 @@ class Serial : public sigc::trackable
      * For a list of available pins see @ref Serial::Pin.
      */
     bool setPin(Pin pin, bool set);
-    
+
     /**
      * @brief 	Get the state of one of the input pins in the serial port
      * @param 	pin   	The pin to get the state of. See @ref Serial::Pin.
@@ -313,8 +274,7 @@ class Serial : public sigc::trackable
      * but the null is not included in the count.
      */
     sigc::signal<void, char*, int> charactersReceived;
-    
-      
+
   protected:
     
   private:    
@@ -324,16 +284,12 @@ class Serial : public sigc::trackable
     int       	      	fd;
     struct termios    	port_settings;
     SerialDevice      	*dev;
-    
 
 };  /* class Serial */
-
 
 } /* namespace */
 
 #endif /* SERIAL_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

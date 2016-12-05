@@ -27,14 +27,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/select.h>
@@ -47,97 +42,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <iostream>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncFdWatch.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncSerialDevice.h"
 #include "AsyncSerial.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
 
-
-
 /*
- *
  * Public member functions
- *
- */
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
  */
 Serial::Serial(const string& serial_port)
   : serial_port(serial_port), canonical(false), fd(-1), port_settings(), dev(0)
@@ -316,7 +259,6 @@ bool Serial::setParams(int speed, Parity parity, int bits, int stop_bits,
   
 } /* Serial::setParams */
 
-
 bool Serial::open(bool flush)
 {
   if (dev != 0)
@@ -380,7 +322,6 @@ bool Serial::setCanonical(bool canonical)
   
 } /* Serial::setCanonical */
 
-
 bool Serial::stopInput(bool stop)
 {
   return tcflow(fd, stop ? TCIOFF : TCION) == 0;
@@ -417,7 +358,6 @@ bool Serial::setPin(Pin pin, bool set)
   return true;
   
 } /* Serial::setPin */
-
 
 bool Serial::getPin(Pin pin, bool &is_set)
 {
@@ -462,56 +402,13 @@ bool Serial::getPin(Pin pin, bool &is_set)
   
 } /* Serial::getPin */
 
-
-
-
 /*
- *
  * Protected member functions
- *
  */
 
-
 /*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
-
-/*
- *
  * Private member functions
- *
  */
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
-
-
-
 
 /*
  * This file has not been truncated
