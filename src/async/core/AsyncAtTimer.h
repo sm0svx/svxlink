@@ -31,87 +31,49 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /** @example AsyncAtTimer_demo.cpp
 An example of how to use the AsyncAtTimer class
 */
-
-
 #ifndef ASYNC_AT_TIMER_INCLUDED
 #define ASYNC_AT_TIMER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <time.h>
 #include <sigc++/sigc++.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncTimer.h>
 
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A timer that times out at a specified absolute time
 @author Tobias Blomberg / SM0SVX
@@ -147,12 +109,12 @@ class AtTimer : public sigc::trackable
      *                   upon creation
      */
     AtTimer(struct tm &tm, bool do_start=true);
-  
+
     /**
      * @brief 	Destructor
      */
     ~AtTimer(void);
-  
+
     /**
      * @brief 	Set the timeout time
      * @param 	t When the timer should expire in seconds since the epoch
@@ -200,7 +162,7 @@ class AtTimer : public sigc::trackable
     sigc::signal<void, AtTimer *> expired;
 
   protected:
-    
+
   private:
     Timer           m_timer;
     struct timeval  m_expire_at;
@@ -213,12 +175,9 @@ class AtTimer : public sigc::trackable
     
 };  /* class AtTimer */
 
-
 } /* namespace */
 
 #endif /* ASYNC_AT_TIMER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

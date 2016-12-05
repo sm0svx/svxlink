@@ -26,91 +26,52 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
-
 #ifndef ASYNC_SERIAL_DEVICE_INCLUDED
 #define ASYNC_SERIAL_DEVICE_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 #include <termios.h>
 
 #include <string>
 #include <map>
 
-
 /*
- *
  * Project Includes
- *
  */
 
-
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
-
 class FdWatch;
-  
 
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	An internal class used by the Async::Serial class
 @author Tobias Blomberg
@@ -167,13 +128,12 @@ class SerialDevice : public sigc::trackable
      * but the null is not included in the count.
      */
     sigc::signal<void, char*, int> charactersReceived;
-    
-    
+
   protected:
-    
+
   private:
     static std::map<std::string, SerialDevice *>  dev_map;
-    
+
     std::string     port_name;
     int       	    use_count;
     int       	    fd;
@@ -186,16 +146,12 @@ class SerialDevice : public sigc::trackable
     bool openPort(bool flush);
     bool closePort(void);
     void onIncomingData(FdWatch *watch);
-  
-    
-};  /* class SerialDevice */
 
+};  /* class SerialDevice */
 
 } /* namespace */
 
 #endif /* ASYNC_SERIAL_DEVICE_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

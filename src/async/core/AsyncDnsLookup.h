@@ -31,81 +31,47 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /** @example  AsyncDnsLookup_demo.cpp
 An example of how to use the Async::DnsLookup class
 */
-
-
-
 #ifndef ASYNC_DNS_LOOKUP_INCLUDED
 #define ASYNC_DNS_LOOKUP_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 
 #include <vector>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncIpAddress.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
-
 
 /*
- *
  * Forward declarations
- *
  */
-
 class DnsLookupWorker;
 
-
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A class for performing asynchronous DNS lookups
 @author Tobias Blomberg
@@ -125,12 +91,12 @@ class DnsLookup : public sigc::trackable
      * @param 	label The label (hostname) to lookup
      */
     DnsLookup(const std::string& label);
-  
+
     /**
      * @brief 	Destructor
      */
     ~DnsLookup(void);
-    
+
     /**
      * @brief  Return the associated label
      * @return Returns the label associated with this DNS lookup
@@ -154,16 +120,15 @@ class DnsLookup : public sigc::trackable
      * the hostname in the query. If the list is empty, the query has failed.
      */
     std::vector<IpAddress> addresses(void);
-    
+
     /**
      * @brief 	A signal to indicate that the query has been completed
      * @param 	dns A reference to the DNS object associated with the query
      */
     sigc::signal<void, DnsLookup&> resultsReady;
-    
-    
+
   protected:
-    
+
   private:
     DnsLookupWorker * m_worker;
     std::string       m_label;
@@ -173,12 +138,9 @@ class DnsLookup : public sigc::trackable
 
 };  /* class DnsLookup */
 
-
 } /* namespace */
 
 #endif /* ASYNC_DNS_LOOKUP_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

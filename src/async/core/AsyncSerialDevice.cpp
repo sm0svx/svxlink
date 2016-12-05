@@ -27,112 +27,55 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <cstdio>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncFdWatch.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncSerial.h"
 #include "AsyncSerialDevice.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
-
 
 /*
- *
  * Local Global Variables
- *
  */
-
 map<string, SerialDevice *> SerialDevice::dev_map;
 
-
 /*
- *
  * Public member functions
- *
- */
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
  */
 SerialDevice *SerialDevice::open(const string& port, bool flush)
 {
@@ -157,7 +100,6 @@ SerialDevice *SerialDevice::open(const string& port, bool flush)
   
 } /* SerialDevice::instance */
 
-
 bool SerialDevice::close(SerialDevice *dev)
 {
   bool success = true;
@@ -168,56 +110,17 @@ bool SerialDevice::close(SerialDevice *dev)
     success = dev->closePort();
     delete dev;
   }
-  
+
   return success;
   
 } /* SerialDevice::close */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
 
-
 /*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
- */
-
-
-
-
-
-
-/*
- *
  * Private member functions
- *
- */
-
-
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
  */
 SerialDevice::SerialDevice(const string& port)
   : port_name(port), use_count(0), fd(-1), old_port_settings(),
@@ -296,7 +199,6 @@ bool SerialDevice::closePort(void)
   
 } /* SerialDevice::closePort */
 
-
 void SerialDevice::onIncomingData(FdWatch *watch)
 {
   char buf[Serial::READ_BUFSIZE];
@@ -313,10 +215,6 @@ void SerialDevice::onIncomingData(FdWatch *watch)
   charactersReceived(buf, cnt);
   
 } /* SerialDevice::onIncomingData */
-
-
-
-
 
 /*
  * This file has not been truncated

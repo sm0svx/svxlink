@@ -25,92 +25,54 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 /** @example AsyncTcpServer_demo.cpp
 An example of how to use the Async::TcpServer class
 */
-
-
 #ifndef ASYNC_TCP_SERVER_INCLUDED
 #define ASYNC_TCP_SERVER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <string>
 #include <vector>
 #include <sigc++/sigc++.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncTcpConnection.h>
 
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
-
 class FdWatch;
   
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A class for creating a TCP server
 @author Tobias Blomberg
@@ -133,12 +95,12 @@ class TcpServer : public sigc::trackable
      */
     TcpServer(const std::string& port_str,
               const Async::IpAddress &bind_ip=IpAddress());
-  
+
     /**
      * @brief 	Destructor
      */
     ~TcpServer(void);
-  
+
     /**
      * @brief 	Get the number of clients that is connected to the server
      * @return 	The number of connected clients
@@ -191,10 +153,9 @@ class TcpServer : public sigc::trackable
      */
     sigc::signal<void, TcpConnection *,TcpConnection::DisconnectReason>
       	    clientDisconnected;
-  
-  
+
   protected:
-    
+
   private:
     typedef std::vector<TcpConnection*> TcpConnectionList;
     
@@ -206,15 +167,12 @@ class TcpServer : public sigc::trackable
     void onConnection(FdWatch *watch);
     void onDisconnected(TcpConnection *con,
       	      	      	TcpConnection::DisconnectReason reason);
-    
-};  /* class TcpServer */
 
+};  /* class TcpServer */
 
 } /* namespace */
 
 #endif /* ASYNC_TCP_SERVER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

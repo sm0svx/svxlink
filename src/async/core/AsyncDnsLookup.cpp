@@ -28,110 +28,51 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <cassert>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "AsyncApplication.h"
 #include "AsyncDnsLookupWorker.h"
 #include "AsyncDnsLookup.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace sigc;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
 
-
-
 /*
- *
  * Public member functions
- *
- */
-
-
-/*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
  */
 DnsLookup::DnsLookup(const string& label)
   : m_worker(0), m_label(label), m_results_ready(false)
@@ -141,53 +82,29 @@ DnsLookup::DnsLookup(const string& label)
   m_worker->doLookup();
 } /* DnsLookup::DnsLookup */
 
-
 DnsLookup::~DnsLookup(void)
 {
   delete m_worker;
 } /* DnsLookup::~DnsLookup */
-
 
 vector<IpAddress> DnsLookup::addresses(void)
 {
   return m_worker->addresses();
 } /* DnsLookup::addresses */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
 
-
-
 /*
- *
  * Private member functions
- *
  */
 
-/*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
- */
 void DnsLookup::onResultsReady(void)
 {
   m_results_ready = true;
   resultsReady(*this);
 } /* DnsLookup::onResultsReady */
-
-
 
 /*
  * This file has not been truncated

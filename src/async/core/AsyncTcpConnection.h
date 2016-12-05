@@ -26,91 +26,53 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
-
 #ifndef ASYNC_TCP_CONNECTION_INCLUDED
 #define ASYNC_TCP_CONNECTION_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 #include <stdint.h>
 
 #include <string>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncIpAddress.h>
 
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
-
 class FdWatch;
 class IpAddress;
 
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A class for handling exiting TCP connections
 @author Tobias Blomberg
@@ -161,12 +123,12 @@ class TcpConnection : public sigc::trackable
     TcpConnection(int sock, const IpAddress& remote_addr,
       	      	  uint16_t remote_port,
       	      	  size_t recv_buf_len = DEFAULT_RECV_BUF_LEN);
-    
+
     /**
      * @brief 	Destructor
      */
     virtual ~TcpConnection(void);
-    
+
     /**
      * @brief   Set a new receive buffer size
      * @param   recv_buf_len The new receive buffer size in bytes
@@ -255,7 +217,6 @@ class TcpConnection : public sigc::trackable
      */
     sigc::signal<void, bool> sendBufferFull;
 
-        
   protected:
     /**
      * @brief 	Setup information about the connection
@@ -264,7 +225,7 @@ class TcpConnection : public sigc::trackable
      * Use this function to set up the socket for the connection.
      */
     void setSocket(int sock);
-    
+
     /**
      * @brief 	Setup information about the connection
      * @param 	remote_addr   The remote IP-address of the connection
@@ -272,7 +233,7 @@ class TcpConnection : public sigc::trackable
      * Use this function to set up the remote IP-address for the connection.
      */
     void setRemoteAddr(const IpAddress& remote_addr);
-    
+
     /**
      * @brief 	Setup information about the connection
      * @param 	remote_port   The remote TCP-port of the connection
@@ -280,7 +241,7 @@ class TcpConnection : public sigc::trackable
      * Use this function to set up the remote port for the connection.
      */
     void setRemotePort(uint16_t remote_port);
-    
+
     /**
      * @brief 	Return the socket file descriptor
      * @return	Returns the currently used socket file descriptor
@@ -289,8 +250,7 @@ class TcpConnection : public sigc::trackable
      * in use. If it is -1 it has not been set.
      */
     int socket(void) const { return sock; }
-    
-    
+
   private:
     IpAddress remote_addr;
     uint16_t  remote_port;
@@ -306,12 +266,9 @@ class TcpConnection : public sigc::trackable
 
 };  /* class TcpConnection */
 
-
 } /* namespace */
 
 #endif /* ASYNC_TCP_CONNECTION_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

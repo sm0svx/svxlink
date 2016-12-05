@@ -27,18 +27,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /** @example AsyncExec_demo.cpp
 An example of how to use the Exec class
 */
-
-
 #ifndef ASYNC_EXEC_INCLUDED
 #define ASYNC_EXEC_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <unistd.h>
 #include <signal.h>
 #include <sigc++/sigc++.h>
@@ -47,73 +41,41 @@ An example of how to use the Exec class
 #include <string>
 #include <map>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncFdWatch.h>
 
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 namespace Async
 {
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
-
 class Timer;
-  
 
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	Execute external commands
 @author Tobias Blomberg / SM0SVX
@@ -135,12 +97,12 @@ class Exec : public sigc::trackable
      * @brief 	Default constructor
      */
     explicit Exec(const std::string &cmdline="");
-  
+
     /**
      * @brief 	Destructor
      */
     ~Exec(void);
-  
+
     /**
      * @brief 	Set the command line to use
      * @param 	cmdline The command line to run
@@ -310,9 +272,9 @@ class Exec : public sigc::trackable
      * find out what caused the subprocess to exit.
      */
     sigc::signal<void> exited;
-    
+
   protected:
-    
+
   private:
     typedef std::map<pid_t, Exec*> ExecMap;
 
@@ -344,12 +306,9 @@ class Exec : public sigc::trackable
     
 };  /* class Exec */
 
-
 } /* namespace */
 
 #endif /* ASYNC_EXEC_INCLUDED */
-
-
 
 /*
  * This file has not been truncated
