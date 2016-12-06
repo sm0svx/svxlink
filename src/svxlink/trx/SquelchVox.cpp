@@ -24,97 +24,52 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <stdio.h>
 #include <cstdlib>
 #include <iostream>
 #include <cmath>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "SquelchVox.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
-
 SquelchVox::SquelchVox(void)
   : buf(0), buf_size(0), head(0), sum(0), up_thresh(0), down_thresh(0)
 {
@@ -177,13 +132,11 @@ bool SquelchVox::initialize(Config& cfg, const string& rx_name)
 
 } /* SquelchVox::initialize */
 
-
 void SquelchVox::setVoxThreshold(short thresh)
 {
   up_thresh = pow(thresh / 10000.0, 2) * buf_size;
   down_thresh = pow(thresh / 10000.0, 2) * buf_size;
 } /* SquelchVox::setVoxThreshold */
-
 
 void SquelchVox::reset(void)
 {
@@ -196,14 +149,9 @@ void SquelchVox::reset(void)
   Squelch::reset();
 } /* SquelchVox::reset */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
-
 int SquelchVox::processSamples(const float *samples, int count)
 {
   int start_pos = 0;
@@ -233,15 +181,9 @@ int SquelchVox::processSamples(const float *samples, int count)
 
 } /* SquelchVox::processSamples */
 
-
-
 /*
- *
  * Private member functions
- *
  */
-
-
 
 /*
  * This file has not been truncated

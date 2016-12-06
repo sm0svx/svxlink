@@ -23,83 +23,46 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef SQUELCH_OPEN_INCLUDED
 #define SQUELCH_OPEN_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
 
-
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "Squelch.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 using namespace sigc;
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	An always open "squelch detector"
 @author Tobias Blomberg / SM0SVX
@@ -128,12 +91,7 @@ class SquelchOpen : public Squelch
 
 };  /* class SquelchOpen */
 
-
-//} /* namespace */
-
 #endif /* SQUELCH_OPEN_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

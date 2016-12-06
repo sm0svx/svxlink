@@ -23,84 +23,47 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef SQUELCH_PTY_INCLUDED
 #define SQUELCH_PTY_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
-
 
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncPty.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "Squelch.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
-
-
 
 /*
- *
  * Namespace
- *
  */
-
 using namespace sigc;
 
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	External squelch detector over a pseudo tty
 @author Tobias Blomberg / SM0SVX
@@ -209,12 +172,7 @@ class SquelchPty : public Squelch
 
 };  /* class SquelchPty */
 
-
-//} /* namespace */
-
 #endif /* SQUELCH_PTY_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

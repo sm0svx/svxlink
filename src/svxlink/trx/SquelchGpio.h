@@ -23,89 +23,50 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef SQUELCH_GPIO_INCLUDED
 #define SQUELCH_GPIO_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <string>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "Squelch.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
-
 namespace Async
 {
   class Timer;
 };
 
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A squelch detector that read squelch state from a GPIO port
 @author Jonny Roeker / DG9OAA
@@ -149,12 +110,7 @@ class SquelchGpio : public Squelch
 
 };  /* class SquelchGpio */
 
-
-//} /* namespace */
-
 #endif /* SQUELCH_GPIO_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

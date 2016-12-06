@@ -23,79 +23,44 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef TONE_DETECTOR_INCLUDED
 #define TONE_DETECTOR_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 #include <vector>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncAudioSink.h>
 #include <CppStdCompat.h>
 
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A tone detector that use the Goertzel algorithm
 @author Tobias Blomberg / SM0SVX
@@ -485,12 +450,7 @@ class ToneDetector : public sigc::trackable, public Async::AudioSink
 
 };  /* class ToneDetector */
 
-
-//} /* namespace */
-
 #endif /* TONE_DETECTOR_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

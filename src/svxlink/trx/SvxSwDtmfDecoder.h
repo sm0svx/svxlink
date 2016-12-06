@@ -23,81 +23,46 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef SVX_SW_DTMF_DECODER_INCLUDED
 #define SVX_SW_DTMF_DECODER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <vector>
 #include <stdint.h>
 #include <sigc++/sigc++.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <CppStdCompat.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "DtmfDecoder.h"
 #include "Goertzel.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
 /*
- *
  * Defines & typedefs
- *
  */
-    
-
 
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
  * @brief   This class implements a software DTMF decoder
  * @author  Tobias Blomberg, SM0SVX
@@ -216,17 +181,11 @@ class SvxSwDtmfDecoder : public DtmfDecoder
     bool debug;
     float win_pwr_comp;
 
-
     void processBlock(void);
 
 };  /* class SvxSwDtmfDecoder */
 
-
-//} /* namespace */
-
 #endif /* SVX_SW_DTMF_DECODER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

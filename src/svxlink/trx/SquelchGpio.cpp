@@ -24,14 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <cstring>
 #include <cerrno>
 #include <unistd.h>
@@ -39,90 +34,50 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/types.h>
 #include <sys/stat.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncTimer.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "SquelchGpio.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
 SquelchGpio::SquelchGpio(void)
   : fd(-1), timer(0), active_low(false)
 {
   
 } /* SquelchGpio::SquelchGpio */
-
 
 SquelchGpio::~SquelchGpio(void)
 {
@@ -134,7 +89,6 @@ SquelchGpio::~SquelchGpio(void)
     fd = -1;
   }
 } /* SquelchGpio::~SquelchGpio */
-
 
 bool SquelchGpio::initialize(Async::Config& cfg, const std::string& rx_name)
 {
@@ -175,22 +129,13 @@ bool SquelchGpio::initialize(Async::Config& cfg, const std::string& rx_name)
   return true;
 }
 
-
-
 /*
- *
  * Protected member functions
- *
  */
-
-
 
 /*
- *
  * Private member functions
- *
  */
-
 /**
  * @brief  Called by a timer to periodically read the state of the GPIO pin
  *
@@ -232,8 +177,6 @@ void SquelchGpio::readGpioValueData(void)
     setSignalDetected(is_active);
   }
 } /* SquelchGpio::readGpioValueData */
-
-
 
 /*
  * This file has not been truncated

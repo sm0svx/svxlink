@@ -24,64 +24,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <iostream>
 
-
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "Tx.h"
 #include "LocalTx.h"
 #include "NetTx.h"
 #include "MultiTx.h"
 #include "DummyRxTx.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
 /*
- *
  * Defines & typedefs
- *
  */
-
-
 
 /*
- *
  * Local class definitions
- *
  */
-
 class LocalTxFactory : public TxFactory
 {
   public:
@@ -93,7 +66,6 @@ class LocalTxFactory : public TxFactory
       return new LocalTx(cfg, name);
     }
 }; /* class LocalTxFactory */
-
 
 class NetTxFactory : public TxFactory
 {
@@ -107,7 +79,6 @@ class NetTxFactory : public TxFactory
     }
 }; /* class NetTxFactory */
 
-
 class MultiTxFactory : public TxFactory
 {
   public:
@@ -119,7 +90,6 @@ class MultiTxFactory : public TxFactory
       return new MultiTx(cfg, name);
     }
 }; /* class MultiTxFactory */
-
 
 class DummyTxFactory : public TxFactory
 {
@@ -133,47 +103,27 @@ class DummyTxFactory : public TxFactory
     }
 }; /* class MultiTxFactory */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
-
 
 /*
- *
  * Local Global Variables
- *
  */
-
 map<string, TxFactory*> TxFactory::tx_factories;
 
-
-
 /*
- *
  * Public member functions
- *
  */
-
 TxFactory::TxFactory(const string &name)
   : m_name(name)
 {
   tx_factories[name] = this;
 } /* TxFactory::TxFactory */
-
 
 TxFactory::~TxFactory(void)
 {
@@ -182,7 +132,6 @@ TxFactory::~TxFactory(void)
   assert(it != tx_factories.end());
   tx_factories.erase(it);
 } /* TxFactory::~TxFactory */
-
 
 Tx *TxFactory::createNamedTx(Config& cfg, const string& name)
 {
@@ -223,23 +172,13 @@ Tx *TxFactory::createNamedTx(Config& cfg, const string& name)
 
 } /* TxFactory::createNamedTx */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
-
-
 
 /*
- *
  * Private member functions
- *
  */
-
-
 
 /*
  * This file has not been truncated

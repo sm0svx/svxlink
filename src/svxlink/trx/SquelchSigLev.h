@@ -23,88 +23,48 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef SQUELCH_SIG_LEV_INCLUDED
 #define SQUELCH_SIG_LEV_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <iostream>
 #include <string>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "Squelch.h"
 #include "SigLevDet.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A signal level based squelch detector
 @author Tobias Blomberg / SM0SVX
@@ -193,12 +153,7 @@ class SquelchSigLev : public Squelch
 
 };  /* class SquelchSigLev */
 
-
-//} /* namespace */
-
 #endif /* SQUELCH_SIG_LEV_INCLUDED */
-
-
 
 /*
  * This file has not been truncated
