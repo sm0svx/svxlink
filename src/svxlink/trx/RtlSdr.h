@@ -23,88 +23,49 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef RTL_SDR_INCLUDED
 #define RTL_SDR_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 #include <complex>
 #include <string>
 #include <vector>
 #include <stdint.h>
 
-
 /*
- *
  * Project Includes
- *
  */
 
-
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A base class for communicating to an RTL2832u based DVB-T dongle
 @author Tobias Blomberg / SM0SVX
@@ -422,12 +383,7 @@ class RtlSdr : public sigc::trackable
     
 };  /* class RtlSdr */
 
-
-
-//} /* namespace */
-
 #endif /* RTL_SDR_INCLUDED */
-
 
 /*
  * This file has not been truncated

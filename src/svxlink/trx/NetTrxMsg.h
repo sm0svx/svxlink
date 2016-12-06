@@ -23,18 +23,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef NET_TRX_MSG_INCLUDED
 #define NET_TRX_MSG_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cassert>
 #include <cstring>
 #include <iostream>
@@ -43,75 +37,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <gcrypt.h>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <Tx.h>
 #include <Rx.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace NetTrxMsg
 {
 
-
-/****************************************************************************
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
-
+ */
 #define NET_TRX_DEFAULT_TCP_PORT   "5210"
 #define NET_TRX_DEFAULT_UDP_PORT   NET_TRX_DEFAULT_TCP_PORT
 
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 #pragma pack(push, 1)
 
 /**
@@ -164,8 +126,7 @@ class Msg
 };  /* class Msg */
 
 
-
-/************************** Administrative Messages **************************/
+/* Administrative Messages */
 
 class MsgProtoVer : public Msg
 {
@@ -185,7 +146,6 @@ class MsgProtoVer : public Msg
     
 }; /* MsgProtoVer */
 
-
 class MsgHeartbeat : public Msg
 {
   public:
@@ -193,7 +153,6 @@ class MsgHeartbeat : public Msg
     MsgHeartbeat(void) : Msg(TYPE, sizeof(MsgHeartbeat)) {}
     
 };  /* MsgHeartbeat */
-
 
 class MsgAuthChallenge : public Msg
 {
@@ -212,7 +171,6 @@ class MsgAuthChallenge : public Msg
     unsigned char m_challenge[CHALLENGE_LEN];
     
 }; /* MsgAuthChallenge */
-
 
 class MsgAuthResponse : public Msg
 {
@@ -266,7 +224,6 @@ class MsgAuthResponse : public Msg
     
 }; /* MsgAuthResponse */
 
-
 class MsgAuthOk : public Msg
 {
   public:
@@ -275,12 +232,7 @@ class MsgAuthOk : public Msg
     
 };  /* MsgAuthOk */
 
-
-
-
-
-/****************************** Common Messages *****************************/
-
+/* Common Messages */
 class MsgAudioCodecSelect : public Msg
 {
   public:
@@ -382,7 +334,6 @@ class MsgAudioCodecSelect : public Msg
     
 };  /* MsgAudioCodecSelect */
 
-
 class MsgRxAudioCodecSelect : public MsgAudioCodecSelect
 {
   public:
@@ -392,7 +343,6 @@ class MsgRxAudioCodecSelect : public MsgAudioCodecSelect
   
 };  /* MsgRxAudioCodecSelect */
 
-
 class MsgTxAudioCodecSelect : public MsgAudioCodecSelect
 {
   public:
@@ -401,7 +351,6 @@ class MsgTxAudioCodecSelect : public MsgAudioCodecSelect
       : MsgAudioCodecSelect(codec_name, TYPE) {}
   
 };  /* MsgTxAudioCodecSelect */
-
 
 class MsgAudio : public Msg
 {
@@ -427,7 +376,6 @@ class MsgAudio : public Msg
     
 }; /* MsgAudio */
 
-
 class MsgRemoteCall : public Msg
 {
   public:
@@ -442,9 +390,7 @@ class MsgRemoteCall : public Msg
 
 }; /* MsgRemoteCall */
 
-
-/******************************** RX Messages ********************************/
-
+/* RX Messages */
 class MsgSetMuteState : public Msg
 {
   public:
@@ -457,7 +403,6 @@ class MsgSetMuteState : public Msg
     Rx::MuteState  m_mute_state;
     
 }; /* MsgSetMuteState */
-
 
 class MsgAddToneDetector : public Msg
 {
@@ -479,7 +424,6 @@ class MsgAddToneDetector : public Msg
     
 }; /* MsgAddToneDetector */
 
-
 class MsgReset : public Msg
 {
   public:
@@ -487,9 +431,6 @@ class MsgReset : public Msg
     MsgReset(void) : Msg(TYPE, sizeof(MsgReset)) {}
     
 }; /* MsgReset */
-
-
-
 
 class MsgSquelch : public Msg
 {
@@ -509,7 +450,6 @@ class MsgSquelch : public Msg
     
 }; /* MsgSquelch */
 
-
 class MsgDtmf : public Msg
 {
   public:
@@ -525,7 +465,6 @@ class MsgDtmf : public Msg
     
 }; /* MsgDtmf */
 
-
 class MsgTone : public Msg
 {
   public:
@@ -538,7 +477,6 @@ class MsgTone : public Msg
     float  m_tone_fq;
     
 }; /* MsgTone */
-
 
 class MsgSel5 : public Msg
 {
@@ -558,7 +496,6 @@ class MsgSel5 : public Msg
     char m_digits[MAX_DIGITS + 1];
 }; /* MsgSel5 */
 
-
 class MsgSiglevUpdate : public Msg
 {
   public:
@@ -575,10 +512,7 @@ class MsgSiglevUpdate : public Msg
     
 }; /* MsgSiglevUpdate */
 
-
-
-/******************************** TX Messages ********************************/
-
+/* TX Messages */
 class MsgSetTxCtrlMode : public Msg
 {
   public:
@@ -606,7 +540,6 @@ class MsgEnableCtcss : public Msg
         
 }; /* MsgEnableCtcss */
 
-
 class MsgSendDtmf : public Msg
 {
   public:
@@ -626,7 +559,6 @@ class MsgSendDtmf : public Msg
     
 }; /* MsgSendDtmf */
 
-
 class MsgFlush : public Msg
 {
   public:
@@ -635,9 +567,6 @@ class MsgFlush : public Msg
       : Msg(TYPE, sizeof(MsgFlush)) {}
 }; /* MsgFlush */
 
-
-
-
 class MsgTxTimeout : public Msg
 {
   public:
@@ -645,7 +574,6 @@ class MsgTxTimeout : public Msg
     MsgTxTimeout(void)
       : Msg(TYPE, sizeof(MsgTxTimeout)) {}
 }; /* MsgTxTimeout */
-
 
 class MsgTransmitterStateChange : public Msg
 {
@@ -661,7 +589,6 @@ class MsgTransmitterStateChange : public Msg
     
 }; /* MsgTxTimeout */
 
-
 class MsgAllSamplesFlushed : public Msg
 {
   public:
@@ -670,17 +597,11 @@ class MsgAllSamplesFlushed : public Msg
       : Msg(TYPE, sizeof(MsgAllSamplesFlushed)) {}
 }; /* MsgTxTimeout */
 
-
 #pragma pack(pop)
-
-
 
 } /* namespace */
 
-
 #endif /* NET_TRX_MSG_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

@@ -23,93 +23,54 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef SIG_LEV_DET_NOISE_INCLUDED
 #define SIG_LEV_DET_NOISE_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <list>
 #include <set>
 #include <sigc++/sigc++.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncAudioSink.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "SigLevDet.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
-
 namespace Async
 {
   class AudioFilter;
   class SigCAudioSink;
 };
 
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A simple noise measuring signal level detector
 @author Tobias Blomberg / SM0SVX
@@ -205,8 +166,7 @@ class SigLevDetNoise : public SigLevDet
      * @brief   Reset the signal level detector
      */
     virtual void reset(void);
-     
-    
+
   protected:
     
   private:
@@ -237,12 +197,7 @@ class SigLevDetNoise : public SigLevDet
     
 };  /* class SigLevDetNoise */
 
-
-//} /* namespace */
-
 #endif /* SIG_LEV_DET_NOISE_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

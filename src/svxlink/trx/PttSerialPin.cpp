@@ -24,105 +24,60 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <iostream>
 #include <cstring>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "PttSerialPin.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
 PttSerialPin::PttSerialPin(void)
   : serial(0), ptt_pin1(Serial::PIN_NONE), ptt_pin1_rev(false),
     ptt_pin2(Serial::PIN_NONE), ptt_pin2_rev(false)
 {
 } /* PttSerialPin::PttSerialPin */
 
-
 PttSerialPin::~PttSerialPin(void)
 {
   delete serial;
 } /* PttSerialPin::~PttSerialPin */
-
 
 bool PttSerialPin::initialize(Async::Config &cfg, const std::string name)
 {
@@ -168,7 +123,6 @@ bool PttSerialPin::initialize(Async::Config &cfg, const std::string name)
   return true;
 } /* PttSerialPin::initialize */
 
-
 bool PttSerialPin::setTxOn(bool tx_on)
 {
   //cerr << "### PttSerialPin::setTxOn(" << (tx_on ? "true" : "false") << ")\n";
@@ -187,19 +141,12 @@ bool PttSerialPin::setTxOn(bool tx_on)
 } /* PttSerialPin::setTxOn */
 
 
-
 /*
- *
  * Protected member functions
- *
  */
 
-
-
 /*
- *
  * Private member functions
- *
  */
 
 int PttSerialPin::parsePttPin(const string &name, const char *str,
@@ -234,7 +181,6 @@ int PttSerialPin::parsePttPin(const string &name, const char *str,
   return cnt;
 
 } /* PttSerialPin::parsePttPin */
-
 
 bool PttSerialPin::setPins(const Async::Config &cfg, const std::string &name)
 {
@@ -272,9 +218,6 @@ bool PttSerialPin::setPins(const Async::Config &cfg, const std::string &name)
   }
   return true;
 } /* PttSerialPin::setPins */
-
-
-
 
 /*
  * This file has not been truncated

@@ -24,68 +24,41 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncConfig.h>
 #include <AsyncSigCAudioSink.h>
 #include <AsyncAudioFilter.h>
 #include <common.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "SigLevDetTone.h"
 #include "Goertzel.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 using namespace SvxLink;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
-
-
 
 /*
- *
  * Local class definitions
- *
  */
-
 #if 0
 class SigLevDetTone::HammingWindow
 {
@@ -129,37 +102,21 @@ class SigLevDetTone::HammingWindow
 };  /* HammingWindow */
 #endif
 
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
 SigLevDetTone::SigLevDetTone(void)
   : sample_rate(0), tone_siglev_map(10), block_idx(0), last_siglev(0),
     passband_energy(0.0f), filter(0), prev_peak_to_tot_pwr(0.0f),
@@ -171,7 +128,6 @@ SigLevDetTone::SigLevDetTone(void)
   }
 } /* SigLevDetTone::SigLevDetTone */
 
-
 SigLevDetTone::~SigLevDetTone(void)
 {
   delete filter;
@@ -181,7 +137,6 @@ SigLevDetTone::~SigLevDetTone(void)
     delete det[i];
   }
 } /* SigLevDetTone::~SigLevDetTone */
-
 
 bool SigLevDetTone::initialize(Config &cfg, const string& name, int sample_rate)
 {
@@ -242,13 +197,11 @@ void SigLevDetTone::reset(void)
   siglev_values.clear();
 } /* SigLevDetTone::reset */
 
-
 void SigLevDetTone::setContinuousUpdateInterval(int interval_ms)
 {
   update_interval = interval_ms * sample_rate / 1000;
   update_counter = 0;  
 } /* SigLevDetTone::setContinuousUpdateInterval */
-
 
 void SigLevDetTone::setIntegrationTime(int time_ms)
 {
@@ -260,7 +213,6 @@ void SigLevDetTone::setIntegrationTime(int time_ms)
     integration_time = 1;
   }
 } /* SigLevDetTone::setIntegrationTime */
-
 
 float SigLevDetTone::siglevIntegrated(void) const
 {
@@ -277,20 +229,12 @@ float SigLevDetTone::siglevIntegrated(void) const
   return 0;
 } /* SigLevDetTone::siglevIntegrated */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
 
-
-
 /*
- *
  * Private member functions
- *
  */
 
 int SigLevDetTone::processSamples(const float *samples, int count)
@@ -394,8 +338,6 @@ int SigLevDetTone::processSamples(const float *samples, int count)
   return count;
   
 } /* SigLevDetTone::processSamples */
-
-
 
 /*
  * This file has not been truncated

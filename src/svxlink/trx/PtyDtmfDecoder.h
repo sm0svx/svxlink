@@ -23,43 +23,25 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef PTY_DTMF_DECODER_INCLUDED
 #define PTY_DTMF_DECODER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
 
-
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "HwDtmfDecoder.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
-
 namespace Async
 {
   class Pty;
@@ -67,34 +49,19 @@ namespace Async
 
 
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Class definitions
- *
  */
 
 /**
@@ -173,12 +140,7 @@ class PtyDtmfDecoder : public HwDtmfDecoder
 
 };  /* class PtyDtmfDecoder */
 
-
-//} /* namespace */
-
 #endif /* PTY_DTMF_DECODER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

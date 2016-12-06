@@ -26,14 +26,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
@@ -49,13 +44,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sigc++/sigc++.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncAudioIO.h>
 #include <AsyncConfig.h>
 #include <AsyncAudioClipper.h>
@@ -69,13 +60,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioAmp.h>
 #include <common.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "LocalTx.h"
 #include "DtmfEncoder.h"
 #include "multirate_filter_coeff.h"
@@ -83,35 +70,22 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Emphasis.h"
 #include "Ptt.h"
 
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 using namespace sigc;
 using namespace SvxLink;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
-
 #define USE_AUDIO_VALVE 0
 
-
 /*
- *
  * Local class definitions
- *
  */
-
 class SineGenerator : public Async::AudioSource
 {
   public:
@@ -170,8 +144,7 @@ class SineGenerator : public Async::AudioSource
     void allSamplesFlushed(void)
     {
     }
-    
-    
+
   private:
     static const int BLOCK_SIZE = 128;
     
@@ -194,40 +167,23 @@ class SineGenerator : public Async::AudioSource
 	pos += written;
       } while (written != 0);
     }
-    
 };
 
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
 LocalTx::LocalTx(Config& cfg, const string& name)
   : name(name), cfg(cfg), audio_io(0), is_transmitting(false), txtot(0),
     tx_timeout_occured(false), tx_timeout(0), sine_gen(0), ctcss_enable(false),
@@ -236,7 +192,6 @@ LocalTx::LocalTx(Config& cfg, const string& name)
 {
 
 } /* LocalTx::LocalTx */
-
 
 LocalTx::~LocalTx(void)
 {
@@ -253,7 +208,6 @@ LocalTx::~LocalTx(void)
   delete siglev_sine_gen;
   delete ptt_hangtimer;
 } /* LocalTx::~LocalTx */
-
 
 bool LocalTx::initialize(void)
 {
@@ -523,7 +477,6 @@ bool LocalTx::initialize(void)
   
 } /* LocalTx::initialize */
 
-
 void LocalTx::setTxCtrlMode(Tx::TxCtrlMode mode)
 {
   ptt_ctrl->setTxCtrlMode(mode);
@@ -541,7 +494,6 @@ void LocalTx::setTxCtrlMode(Tx::TxCtrlMode mode)
   
 } /* LocalTx::setTxCtrlMode */
 
-
 void LocalTx::enableCtcss(bool enable)
 {
   ctcss_enable = enable;
@@ -551,7 +503,6 @@ void LocalTx::enableCtcss(bool enable)
   }
 } /* LocalTx::enableCtcss */
 
-
 void LocalTx::sendDtmf(const string& digits)
 {
   #if USE_AUDIO_VALVE
@@ -559,7 +510,6 @@ void LocalTx::sendDtmf(const string& digits)
   #endif
   dtmf_encoder->send(digits);
 } /* LocalTx::sendDtmf */
-
 
 void LocalTx::setTransmittedSignalStrength(float siglev)
 {
@@ -599,14 +549,9 @@ void LocalTx::setTransmittedSignalStrength(float siglev)
 #endif
 } /* LocalTx::setTransmittedSignalLevel */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
-
 
 void LocalTx::transmit(bool do_transmit)
 {
@@ -676,15 +621,9 @@ void LocalTx::transmit(bool do_transmit)
   
 } /* LocalTx::transmit */
 
-
-
-
 /*
- *
  * Private member functions
- *
  */
-
 
 void LocalTx::txTimeoutOccured(Timer *t)
 {
@@ -708,7 +647,6 @@ void LocalTx::txTimeoutOccured(Timer *t)
   txTimeout();
 } /* LocalTx::txTimeoutOccured */
 
-
 bool LocalTx::setPtt(bool tx, bool with_hangtime)
 {
   if (ptt_hangtimer != 0)
@@ -730,7 +668,6 @@ bool LocalTx::setPtt(bool tx, bool with_hangtime)
 
 } /* LocalTx::setPtt */
 
-
 void LocalTx::allDtmfDigitsSent(void)
 {
   #if USE_AUDIO_VALVE
@@ -738,13 +675,10 @@ void LocalTx::allDtmfDigitsSent(void)
   #endif
 } /* LocalTx::allDtmfDigitsSent  */
 
-
 void LocalTx::pttHangtimeExpired(Timer *t)
 {
   setPtt(false);
 } /* LocalTx::pttHangtimeExpired */
-
-
 
 /*
  * This file has not been truncated

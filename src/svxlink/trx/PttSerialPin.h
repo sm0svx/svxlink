@@ -23,81 +23,45 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef PTT_SERIAL_PIN_INCLUDED
 #define PTT_SERIAL_PIN_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
-
 
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncSerial.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "Ptt.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Class definitions
- *
  */
 
 /**
@@ -155,9 +119,7 @@ class PttSerialPin : public Ptt
     
 };  /* class PttSerialPin */
 
-
 #endif /* PTT_SERIAL_PIN_INCLUDED */
-
 
 /*
  * This file has not been truncated

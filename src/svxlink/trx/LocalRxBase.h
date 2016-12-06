@@ -27,46 +27,28 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef LOCAL_RX_BASE_INCLUDED
 #define LOCAL_RX_BASE_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sys/time.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncAudioValve.h>
 #include <AsyncAudioDelayLine.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "Rx.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
-
 namespace Async
 {
   class Config;
@@ -77,48 +59,26 @@ namespace Async
 
 class Squelch;
 
-
 /*
- *
  * Namespace
- *
  */
-
-//namespace MyNameSpace
-//{
-
 
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
-
 class SigLevDet;
 
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A base class to handle local receivers
 @author Tobias Blomberg
@@ -257,12 +217,7 @@ class LocalRxBase : public Rx
 
 };  /* class LocalRxBase */
 
-
-//} /* namespace */
-
 #endif /* LOCAL_RX_BASE_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

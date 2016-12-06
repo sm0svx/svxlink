@@ -23,83 +23,46 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef PTT_HIDRAW_INCLUDED
 #define PTT_HIDRAW_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <string>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "Ptt.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief  A PTT hardware controller using the Hidraw-Board from DMK
 @author Tobias Blomberg / SM0SVX
@@ -151,9 +114,7 @@ class PttHidraw : public Ptt
 
 };  /* class PttHidraw */
 
-
 #endif /* PTT_HIDRAW_INCLUDED */
-
 
 /*
  * This file has not been truncated

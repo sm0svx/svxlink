@@ -23,80 +23,45 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef DDR_FILTER_COEFFS_INCLUDED
 #define DDR_FILTER_COEFFS_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
 
-
-
 /*
- *
  * Project Includes
- *
  */
 
-
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
-
-  
 
 /*
- *
  * Defines & typedefs
- *
  */
-
 #define FILTER_COEFF(name, coeffs...) \
   static const float name[] = { \
     coeffs \
   }; \
   static const int name ## _cnt = sizeof(name) / sizeof(*name);
 
-
 /*
- *
  * Exported Global Variables
- *
  */
-
 /**
  * fs=2400000;
  * a=[1 1 0 0];
@@ -1107,16 +1072,9 @@ FILTER_COEFF(coeff_hilbert,
   -0.0000000000000037
 )
 
-
 /*
- *
  * Class definitions
- *
  */
-
-
-
-//} /* namespace */
 
 #endif /* DDR_FILTER_COEFFS_INCLUDED */
 

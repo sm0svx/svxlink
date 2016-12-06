@@ -23,85 +23,47 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef RTL_TCP_INCLUDED
 #define RTL_TCP_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <string>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncTcpClient.h>
 #include <AsyncTimer.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "RtlSdr.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Class definitions
- *
  */
 
 /**
@@ -220,7 +182,6 @@ class RtlTcp : public RtlSdr
      */
     virtual void handleEnableDigitalAgc(bool enable);
 
-    
   private:
     Async::TcpClient  con;
     Async::Timer      reconnect_timer;
@@ -235,12 +196,7 @@ class RtlTcp : public RtlSdr
     
 };  /* class RtlTcp */
 
-
-
-//} /* namespace */
-
 #endif /* RTL_TCP_INCLUDED */
-
 
 /*
  * This file has not been truncated

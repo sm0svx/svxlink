@@ -23,79 +23,44 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef SPAN_DTMF_DECODER_INCLUDED
 #define SPAN_DTMF_DECODER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 //#include <AsyncAudioSink.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "DtmfDecoder.h"
 #include "spandsp_tone_report_func_args.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
 /*
- *
  * Defines & typedefs
- *
  */
-    
-
 
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
  * @brief   This class implements a software DTMF decoder
  * @author  Tobias Blomberg, SM0SVX
@@ -146,9 +111,8 @@ class SpanDtmfDecoder : public DtmfDecoder
       return (state != STATE_IDLE) ? last_detected_digit : '?';
     }
 
-    
   protected:
-    
+
   private:
     class PrivateData;
     typedef enum
@@ -168,12 +132,7 @@ class SpanDtmfDecoder : public DtmfDecoder
 
 };  /* class SpanDtmfDecoder */
 
-
-//} /* namespace */
-
 #endif /* SPAN_DTMF_DECODER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

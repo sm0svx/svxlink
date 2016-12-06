@@ -24,95 +24,52 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <iostream>
 #include <fstream>
 #include <cstring>
 #include <sstream>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "PttGpio.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
 PttGpio::PttGpio(void)
   : active_low(false)
 {
@@ -152,7 +109,6 @@ bool PttGpio::initialize(Async::Config &cfg, const std::string name)
   return true;
 } /* PttGpio::initialize */
 
-
 bool PttGpio::setTxOn(bool tx_on)
 {
   //cerr << "### PttGpio::setTxOn(" << (tx_on ? "true" : "false") << ")\n";
@@ -170,23 +126,13 @@ bool PttGpio::setTxOn(bool tx_on)
   return true;
 } /* PttGpio::setTxOn */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
-
-
 
 /*
- *
  * Private member functions
- *
  */
-
-
 
 /*
  * This file has not been truncated

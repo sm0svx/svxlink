@@ -23,95 +23,56 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef RX_INCLUDED
 #define RX_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 
 #include <string>
 #include <map>
 #include <cassert>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncConfig.h>
 #include <AsyncAudioSource.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
-
 
 /*
- *
  * Forward declarations
- *
  */
-
 namespace Async
 {
   class Timer;
   class Config;
 };
 
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
-
-  
-
+ 
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	The base class for a receiver
 @author Tobias Blomberg
@@ -265,7 +226,6 @@ class Rx : public sigc::trackable, public Async::AudioSource
      */
     sigc::signal<void> readyStateChanged;
 
-    
   protected:
     /**
      * @brief 	Set the state of the squelch
@@ -273,8 +233,7 @@ class Rx : public sigc::trackable, public Async::AudioSource
      *	      	      	\em false if it is closed.
      */
     void setSquelchState(bool is_open);
-    
-    
+
   private:
     std::string   m_name;
     bool          m_verbose;
@@ -285,7 +244,6 @@ class Rx : public sigc::trackable, public Async::AudioSource
     void sqlTimeout(Async::Timer *t);
     
 };  /* class Rx */
-
 
 class RxFactory
 {
@@ -305,12 +263,7 @@ class RxFactory
 
 };  /* class RxFactory */
 
-
-//} /* namespace */
-
 #endif /* RX_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

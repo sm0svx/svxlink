@@ -24,100 +24,56 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <iostream>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncSerial.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "S54sDtmfDecoder.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace sigc;
 using namespace Async;
 
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
-
 
 /*
- *
  * Local Global Variables
- *
  */
-
 static const char digit_map[16] =
 {
   'D', '1', '2', '3', '4', '5', '6', '7',
   '8', '9', '0', '*', '#', 'A', 'B', 'C'
 };
 
-
 /*
- *
  * Public member functions
- *
  */
-
 S54sDtmfDecoder::S54sDtmfDecoder(Config &cfg, const string &name)
   : HwDtmfDecoder(cfg, name), serial(0)
 {
@@ -125,12 +81,10 @@ S54sDtmfDecoder::S54sDtmfDecoder(Config &cfg, const string &name)
   
 } /* S54sDtmfDecoder::S54sDtmfDecoder */
 
-
 S54sDtmfDecoder::~S54sDtmfDecoder(void)
 {
   delete serial;
 } /* S54sDtmfDecoder::~S54sDtmfDecoder */
-
 
 bool S54sDtmfDecoder::initialize(void)
 {
@@ -168,22 +122,12 @@ bool S54sDtmfDecoder::initialize(void)
   
 } /* S54sDtmfDecoder::initialize */
 
-
-
-
 /*
- *
  * Protected member functions
- *
  */
 
-
-
-
 /*
- *
  * Private member functions
- *
  */
 
 void S54sDtmfDecoder::charactersReceived(char *buf, int len)
@@ -212,8 +156,6 @@ void S54sDtmfDecoder::charactersReceived(char *buf, int len)
     }
   }
 } /* S54sDtmfDecoder::charactersReceived */
-
-
 
 /*
  * This file has not been truncated

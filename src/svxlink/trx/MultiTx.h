@@ -23,93 +23,52 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef MULTI_TX_INCLUDED
 #define MULTI_TX_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <string>
 #include <list>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "Tx.h"
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
 namespace Async
 {
   class Config;
   class AudioSplitter;
 };
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	Make it possible to use multiple transmitters for one logic
 @author Tobias Blomberg / SM0SVX
@@ -190,12 +149,7 @@ class MultiTx : public Tx
     
 };  /* class MultiTx */
 
-
-//} /* namespace */
-
 #endif /* MULTI_TX_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

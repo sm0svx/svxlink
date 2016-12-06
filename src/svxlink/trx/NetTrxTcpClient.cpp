@@ -24,99 +24,54 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <cerrno>
 #include <cstring>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncTimer.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "NetTrxTcpClient.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 using namespace NetTrxMsg;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
-
 
 /*
- *
  * Local Global Variables
- *
  */
-
 std::map<std::pair<const std::string, uint16_t>, NetTrxTcpClient*>
       	NetTrxTcpClient::clients;
 
-
-
 /*
- *
  * Public member functions
- *
  */
-
 NetTrxTcpClient *NetTrxTcpClient::instance(const std::string& remote_host,
       	      	      	      	      	   uint16_t remote_port)
 {
@@ -161,7 +116,6 @@ NetTrxTcpClient *NetTrxTcpClient::instance(const std::string& remote_host,
   
 } /* NetTrxTcpClient::instance */
 
-
 void NetTrxTcpClient::deleteInstance(void)
 {
   user_cnt -= 1;
@@ -182,7 +136,6 @@ void NetTrxTcpClient::deleteInstance(void)
   }
 } /* NetTrxTcpClient::deleteInstance */
 
-
 void NetTrxTcpClient::sendMsg(Msg *msg)
 {
   if (state == STATE_READY)
@@ -195,14 +148,9 @@ void NetTrxTcpClient::sendMsg(Msg *msg)
   }
 } /* NetTrxTcpClient::sendMsg */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
-
 NetTrxTcpClient::NetTrxTcpClient(const std::string& remote_host,
       	      	      	      	 uint16_t remote_port, size_t recv_buf_len)
   : TcpClient(remote_host, remote_port, recv_buf_len), recv_cnt(0),
@@ -223,23 +171,15 @@ NetTrxTcpClient::NetTrxTcpClient(const std::string& remote_host,
   
 } /* NetTrxTcpClient::NetTrxTcpClient */
 
-
 NetTrxTcpClient::~NetTrxTcpClient(void)
 {
   delete reconnect_timer;
   delete heartbeat_timer;
 } /* NetTrxTcpClient::~NetTrxTcpClient */
 
-
-
-
 /*
- *
  * Private member functions
- *
  */
-
-
 void NetTrxTcpClient::tcpConnected(void)
 {
   recv_cnt = 0;
@@ -248,7 +188,6 @@ void NetTrxTcpClient::tcpConnected(void)
   heartbeat_timer->setEnable(true);
   state = STATE_VER_WAIT;
 } /* NetTx::tcpConnected */
-
 
 void NetTrxTcpClient::tcpDisconnected(TcpConnection *con,
       	      	      	    TcpConnection::DisconnectReason reason)
@@ -260,7 +199,6 @@ void NetTrxTcpClient::tcpDisconnected(TcpConnection *con,
   heartbeat_timer->setEnable(false);
   isReady(false);
 } /* NetTrxTcpClient::tcpDisconnected */
-
 
 int NetTrxTcpClient::tcpDataReceived(TcpConnection *con, void *data, int size)
 {
@@ -328,13 +266,11 @@ int NetTrxTcpClient::tcpDataReceived(TcpConnection *con, void *data, int size)
   
 } /* NetTrxTcpClient::tcpDataReceived */
 
-
 void NetTrxTcpClient::reconnect(Timer *t)
 {
   reconnect_timer->setEnable(false);
   connect();
 } /* NetTrxTcpClient::reconnect */
-
 
 void NetTrxTcpClient::handleMsg(Msg *msg)
 {
@@ -432,7 +368,6 @@ void NetTrxTcpClient::handleMsg(Msg *msg)
   
 } /* NetTrxTcpClient::handleMsg */
 
-
 void NetTrxTcpClient::heartbeat(Timer *t)
 {
   MsgHeartbeat *msg = new MsgHeartbeat;
@@ -455,13 +390,11 @@ void NetTrxTcpClient::heartbeat(Timer *t)
   
 } /* NetTrxTcpClient::heartbeat */
 
-
 void NetTrxTcpClient::localDisconnect(void)
 {
   disconnect();
   disconnected(this, TcpConnection::DR_ORDERED_DISCONNECT);
 } /* NetTrxTcpClient::localDisconnect */
-
 
 void NetTrxTcpClient::sendMsgP(Msg *msg)
 {
@@ -486,8 +419,6 @@ void NetTrxTcpClient::sendMsgP(Msg *msg)
   delete msg;
   
 } /* NetTrxTcpClient::sendMsgP */
-
-
 
 /*
  * This file has not been truncated

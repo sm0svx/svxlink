@@ -23,81 +23,46 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef HW_DTMF_DECODER_INCLUDED
 #define HW_DTMF_DECODER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sys/time.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "DtmfDecoder.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
-
 namespace Async
 {
   class Timer;
 };
 
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
 /*
- *
  * Defines & typedefs
- *
  */
-    
-
 
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
  * @brief   This is the base class for implementing a hardware DTMF decoder.
  * @author  Tobias Blomberg, SM0SVX
@@ -129,8 +94,7 @@ class HwDtmfDecoder : public DtmfDecoder
     {
       return (state != STATE_IDLE) ? last_detected_digit : '?';
     }
-    
-    
+
   protected:
     /**
      * @brief 	Default constructor
@@ -143,8 +107,7 @@ class HwDtmfDecoder : public DtmfDecoder
     
     void digitActive(char digit);
     void digitIdle(void);
-    
-    
+
   private:
     typedef enum
     {
@@ -165,12 +128,7 @@ class HwDtmfDecoder : public DtmfDecoder
     
 };  /* class HwDtmfDecoder */
 
-
-//} /* namespace */
-
 #endif /* HW_DTMF_DECODER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

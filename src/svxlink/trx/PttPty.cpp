@@ -24,83 +24,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <iostream>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncPty.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "PttPty.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
 /*
- *
  * Local Global Variables
- *
  */
 
 
@@ -116,12 +78,10 @@ PttPty::PttPty(void)
 {
 } /* PttPty::PttPty */
 
-
 PttPty::~PttPty(void)
 {
   delete pty;
 } /* PttPty::~PttPty */
-
 
 bool PttPty::initialize(Async::Config &cfg, const std::string name)
 {
@@ -141,7 +101,6 @@ bool PttPty::initialize(Async::Config &cfg, const std::string name)
   return pty->open();
 } /* PttPty::initialize */
 
-
 /*
  * This functions sends a character over the pty-device:
  * T  to direct the controller to enable the TX
@@ -154,22 +113,13 @@ bool PttPty::setTxOn(bool tx_on)
 } /* PttPty::setTxOn */
 
 
-
 /*
- *
  * Protected member functions
- *
  */
-
-
 
 /*
- *
  * Private member functions
- *
  */
-
-
 
 /*
  * This file has not been truncated

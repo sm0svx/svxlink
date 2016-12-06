@@ -26,86 +26,47 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
 #ifndef DDR_INCLUDED
 #define DDR_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
 
-
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "LocalRxBase.h"
 #include "RtlTcp.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
-
 class WbRxRtlSdr;
 
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A class to handle digital drop receivers
 @author Tobias Blomberg
@@ -249,11 +210,7 @@ class Ddr : public LocalRxBase
     
 };  /* class Ddr */
 
-
-//} /* namespace */
-
 #endif /* DDR_INCLUDED */
-
 
 /*
  * This file has not been truncated

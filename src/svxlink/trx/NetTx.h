@@ -23,53 +23,34 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef NET_TX_INCLUDED
 #define NET_TX_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 
 #include <string>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncConfig.h>
 #include <AsyncTcpClient.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "Tx.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
-
 namespace NetTrxMsg
 {
   class Msg;
 };
-
 namespace Async
 {
   class AudioPacer;
@@ -77,48 +58,26 @@ namespace Async
   class AudioEncoder;
 };
 
-
 /*
- *
  * Namespace
- *
  */
-
-//namespace MyNameSpace
-//{
-
 
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
-
 class NetTrxTcpClient;
 
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	Implements a class that connect to a remote transmitter via IP
 @author Tobias Blomberg / SM0SVX
@@ -172,7 +131,6 @@ class NetTx : public Tx
      * @param 	digits	The digits to send
      */
     virtual void sendDtmf(const std::string& digits);
-    
 
   protected:
 
@@ -199,15 +157,9 @@ class NetTx : public Tx
     void setIsTransmitting(bool is_transmitting);
     void allEncodedSamplesFlushed(void);
 
-
 };  /* class NetTx */
 
-
-//} /* namespace */
-
 #endif /* NET_TX_INCLUDED */
-
-
 
 /*
  * This file has not been truncated
