@@ -23,89 +23,50 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef CMD_PARSER_INCLUDED
 #define CMD_PARSER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sigc++/sigc++.h>
 
 #include <map>
 #include <string>
 #include <cassert>
 
-
 /*
- *
  * Project Includes
- *
  */
 
-
-
 /*
- *
  * Local Includes
- *
  */
 
-
-
 /*
- *
  * Forward declarations
- *
  */
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
-
 class Command;
-  
 
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	Command parser for DTMF commands
 @author Tobias Blomberg
@@ -126,29 +87,28 @@ class CmdParser
      * @brief 	Destructor
      */
     ~CmdParser(void);
-  
+ 
     /**
      * @brief 	Add a command to the parser
      * @param 	cmd The command to add
      * @return	Returns \em true on success or else \em false
      */
     bool addCmd(Command *cmd);
-    
+
     /**
      * @brief	Remove a command from the parser
      * @param	cmd The command to remove
      * @return	Returns \em true on success or else \em false
      */
     bool removeCmd(Command *cmd);
-    
+
     /**
      * @brief	Process a command string
      * @param	cmd_str The command string to process
      * @return	Returns \em true if the command was found or else \em false
      */
     bool processCmd(const std::string& cmd_str);
-    
-    
+
   protected:
     
   private:
@@ -156,7 +116,6 @@ class CmdParser
     CmdMap cmds;
     
 };  /* class CmdParser */
-
 
 class Command : public sigc::trackable
 {
@@ -248,13 +207,7 @@ class Command : public sigc::trackable
     
 };  /* class Command */
 
-
-
-//} /* namespace */
-
 #endif /* CMD_PARSER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

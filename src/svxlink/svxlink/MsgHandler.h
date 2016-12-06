@@ -25,94 +25,51 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
-
 #ifndef MSG_HANDLER_INCLUDED
 #define MSG_HANDLER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <string>
 #include <list>
 #include <map>
 
 #include <sigc++/sigc++.h>
 
-
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncAudioSource.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
-
 
 /*
- *
  * Forward declarations
- *
  */
-
 class QueueItem;
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	Handling of playback of audio clips
 @author Tobias Blomberg / SM0SVX
@@ -246,12 +203,7 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
 
 }; /* class MsgHandler */
 
-
-//} /* namespace */
-
 #endif /* MSG_HANDLER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

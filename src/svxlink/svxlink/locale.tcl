@@ -5,7 +5,6 @@
 # reimplemented for a new language pack.
 #
 ###############################################################################
-
 #
 # Spell the specified word using the phonetic alphabet
 #

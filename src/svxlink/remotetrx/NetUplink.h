@@ -23,49 +23,30 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef NET_UPLINK_INCLUDED
 #define NET_UPLINK_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sys/time.h>
 
 #include <string>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncTcpConnection.h>
 #include <NetTrxMsg.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "Uplink.h"
 
-
-
 /*
- *
  * Forward declarations
- *
  */
-
 namespace Async
 {
   class Config;
@@ -85,45 +66,24 @@ namespace NetTrxMsg
 };
 
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	Implements a remote transceiver uplink via an IP network
 @author Tobias Blomberg / SM0SVX
@@ -241,12 +201,9 @@ class NetUplink : public Uplink
 
 };  /* class NetUplink */
 
-
 //} /* namespace */
 
 #endif /* NET_UPLINK_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

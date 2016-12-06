@@ -23,88 +23,49 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef EVENT_HANDLER_INCLUDED
 #define EVENT_HANDLER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <tcl.h>
 #include <sigc++/sigc++.h>
 
 #include <string>
 
-
 /*
- *
  * Project Includes
- *
  */
 
-
-
 /*
- *
  * Local Includes
- *
  */
-
-
 
 /*
- *
  * Forward declarations
- *
  */
-
 class Logic;
 
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	Manage the TCL interpreter and call TCL functions for different events.
 @author Tobias Blomberg
@@ -200,10 +161,9 @@ class EventHandler : public sigc::trackable
      */
     sigc::signal<void, const std::string&,
                  const std::string&> publishStateEvent;
-    
-    
+
   protected:
-    
+
   private:
     std::string event_script;
     Logic	*logic;
@@ -224,12 +184,7 @@ class EventHandler : public sigc::trackable
     
 };  /* class EventHandler */
 
-
-//} /* namespace */
-
 #endif /* EVENT_HANDLER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

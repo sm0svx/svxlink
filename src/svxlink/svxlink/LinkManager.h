@@ -25,94 +25,58 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef LINK_MANAGER_INCLUDED
 #define LINK_MANAGER_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <string>
 #include <vector>
 #include <list>
 #include <set>
 #include <stdint.h>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioSplitter.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "CmdParser.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
-
 namespace Async
 {
   class AudioPassthrough;
 };
 class Logic;
 
-
 /*
- *
  * Namespace
- *
  */
 
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Types
- *
  */
 
-
 /*
- *
  * Class definitions
- *
  */
 
 /**
@@ -301,7 +265,6 @@ class LinkManager : public sigc::trackable
     void checkTimeoutTimer(Link &link);
 
 };  /* class LinkManager */
-
 
 #endif /* LINK_MANAGER_INCLUDED */
 

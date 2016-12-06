@@ -23,86 +23,48 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef SIMPLEX_LOGIC_INCLUDED
 #define SIMPLEX_LOGIC_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <string>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
  *
  * Local Includes
  *
  */
-
 #include "Logic.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	This class implements a simplex logic core
 @author Tobias Blomberg
@@ -133,19 +95,14 @@ class SimplexLogic : public Logic
   protected:
     virtual void squelchOpen(bool is_open);
     virtual void transmitterStateChange(bool is_transmitting);
-    
+
   private:
     bool  mute_rx_on_tx;
     bool  mute_tx_on_rx;
-    
+
 };  /* class SimplexLogic */
 
-
-//} /* namespace */
-
 #endif /* SIMPLEX_LOGIC_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

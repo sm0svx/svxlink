@@ -26,14 +26,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -51,53 +46,29 @@ extern "C" {
 #include <iostream>
 #include <cstring>
 
-
-
 /*
- *
  * Project Includes
- *
  */
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "MsgHandler.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
-
 //#define WRITE_BLOCK_SIZE    4*160
 #define WRITE_BLOCK_SIZE    256
 
-
-
 /*
- *
  * Local class definitions
- *
  */
-
 class QueueItem
 {
   public:
@@ -218,39 +189,21 @@ class WavFileQueueItem : public QueueItem
     int read16bitValue(unsigned char *ptr, uint16_t *val);
 };
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
 MsgHandler::MsgHandler(int sample_rate)
   : sample_rate(sample_rate), nesting_level(0), pending_play_next(false),
     current(0), is_writing_message(false), non_idle_cnt(0)
@@ -258,12 +211,10 @@ MsgHandler::MsgHandler(int sample_rate)
   
 }
 
-
 MsgHandler::~MsgHandler(void)
 {
   clearP();
 } /* MsgHandler::~MsgHandler */
-
 
 void MsgHandler::playFile(const string& path, bool idle_marked)
 {
@@ -284,13 +235,11 @@ void MsgHandler::playFile(const string& path, bool idle_marked)
   addItemToQueue(item);
 } /* MsgHandler::playFile */
 
-
 void MsgHandler::playSilence(int length, bool idle_marked)
 {
   QueueItem *item = new SilenceQueueItem(length, sample_rate, idle_marked);
   addItemToQueue(item);
 } /* MsgHandler::playSilence */
-
 
 void MsgHandler::playTone(int fq, int amp, int length, bool idle_marked)
 {
@@ -299,13 +248,11 @@ void MsgHandler::playTone(int fq, int amp, int length, bool idle_marked)
   addItemToQueue(item);
 } /* MsgHandler::playSilence */
 
-
 void MsgHandler::clear(void)
 {
   clearP();
   sinkFlushSamples();
 } /* MsgHandler::clear */
-
 
 void MsgHandler::begin(void)
 {
@@ -316,7 +263,6 @@ void MsgHandler::begin(void)
   }
   ++nesting_level;
 } /* MsgHandler::begin */
-
 
 void MsgHandler::end(void)
 {
@@ -339,7 +285,6 @@ void MsgHandler::end(void)
   }
 } /* MsgHandler::end */
 
-
 void MsgHandler::resumeOutput(void)
 {
   if (current != 0)
@@ -348,15 +293,9 @@ void MsgHandler::resumeOutput(void)
   }
 } /* MsgHandler::resumeOutput */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
-
-
 void MsgHandler::allSamplesFlushed(void)
 {
   //printf("MsgHandler::allSamplesFlushed\n");
@@ -364,15 +303,9 @@ void MsgHandler::allSamplesFlushed(void)
   allMsgsWritten();
 } /* MsgHandler::allSamplesFlushed */
 
-
-
-
 /*
- *
  * Private member functions for class MsgHandler
- *
  */
-
 void MsgHandler::addItemToQueue(QueueItem *item)
 {
   is_writing_message = true;
@@ -386,7 +319,6 @@ void MsgHandler::addItemToQueue(QueueItem *item)
     playMsg();
   }
 } /* MsgHandler::addItemToQueue */
-
 
 void MsgHandler::playMsg(void)
 {
@@ -420,7 +352,6 @@ void MsgHandler::playMsg(void)
     writeSamples();
   }
 } /* MsgHandler::playMsg */
-
 
 void MsgHandler::writeSamples(void)
 {
@@ -461,7 +392,6 @@ void MsgHandler::writeSamples(void)
     playMsg();
 } /* MsgHandler::writeSamples */
 
-
 void MsgHandler::deleteQueueItem(QueueItem *item)
 {
   if (item == 0)
@@ -475,7 +405,6 @@ void MsgHandler::deleteQueueItem(QueueItem *item)
   }
   delete item;
 } /* MsgHandler::deleteQueueItem */
-
 
 void MsgHandler::clearP(void)
 {
@@ -493,12 +422,8 @@ void MsgHandler::clearP(void)
   msg_queue.clear();
 } /* MsgHandler::clearP */
 
-
-
 /*
- *
  * Private member functions for class FileQueueItem
- *
  */
 
 RawFileQueueItem::~RawFileQueueItem(void)
@@ -525,7 +450,6 @@ bool RawFileQueueItem::initialize(void)
   
 } /* RawFileQueueItem::initialize */
 
-
 int RawFileQueueItem::readSamples(float *samples, int len)
 {
   short buf[len];
@@ -549,7 +473,6 @@ int RawFileQueueItem::readSamples(float *samples, int len)
   
 } /* RawFileQueueItem::readSamples */
 
-
 void RawFileQueueItem::unreadSamples(int len)
 {
   if (lseek(file, -len * sizeof(short), SEEK_CUR) == -1)
@@ -558,12 +481,8 @@ void RawFileQueueItem::unreadSamples(int len)
   }
 } /* RawFileQueueItem::unreadSamples */
 
-
-
 /*
- *
  * Private member functions for class GsmFileQueueItem
- *
  */
 
 GsmFileQueueItem::~GsmFileQueueItem(void)
@@ -578,7 +497,6 @@ GsmFileQueueItem::~GsmFileQueueItem(void)
     ::close(file);
   }
 } /* GsmFileQueueItem::~FileQueueItem */
-
 
 bool GsmFileQueueItem::initialize(void)
 {
@@ -600,7 +518,6 @@ bool GsmFileQueueItem::initialize(void)
   return true;
   
 } /* GsmFileQueueItem::initialize */
-
 
 int GsmFileQueueItem::readSamples(float *samples, int len)
 {
@@ -645,7 +562,6 @@ int GsmFileQueueItem::readSamples(float *samples, int len)
   
 } /* GsmFileQueueItem::readSamples */
 
-
 void GsmFileQueueItem::unreadSamples(int len)
 {
   //cout << "GsmFileQueueItem::unreadSamples(" << len << ")\n";
@@ -662,12 +578,8 @@ void GsmFileQueueItem::unreadSamples(int len)
   
 } /* GsmFileQueueItem::unreadSamples */
 
-
-
 /*
- *
  * Private member functions for class WavFileQueueItem
- *
  */
 
 WavFileQueueItem::~WavFileQueueItem(void)
@@ -677,7 +589,6 @@ WavFileQueueItem::~WavFileQueueItem(void)
     ::close(file);
   }
 } /* RawFileQueueItem::~FileQueueItem */
-
 
 bool WavFileQueueItem::initialize(void)
 {
@@ -801,7 +712,6 @@ bool WavFileQueueItem::initialize(void)
   
 } /* WavFileQueueItem::initialize */
 
-
 int WavFileQueueItem::readSamples(float *samples, int len)
 {
   short buf[len];
@@ -825,7 +735,6 @@ int WavFileQueueItem::readSamples(float *samples, int len)
   
 } /* WavFileQueueItem::readSamples */
 
-
 void WavFileQueueItem::unreadSamples(int len)
 {
   if (lseek(file, -len * sizeof(short), SEEK_CUR) == -1)
@@ -834,13 +743,11 @@ void WavFileQueueItem::unreadSamples(int len)
   }
 } /* WavFileQueueItem::unreadSamples */
 
-
 int WavFileQueueItem::read32bitValue(unsigned char *ptr, uint32_t *val)
 {
   *val = ptr[0] + (ptr[1] << 8) + (ptr[2] << 16) + (ptr[3] << 24);
   return 4;
 } /* WavFileQueueItem::read32bitValue */
-
 
 int WavFileQueueItem::read16bitValue(unsigned char *ptr, uint16_t *val)
 {
@@ -848,14 +755,9 @@ int WavFileQueueItem::read16bitValue(unsigned char *ptr, uint16_t *val)
   return 2;
 } /* WavFileQueueItem::read16bitValue */
 
-
-
 /*
- *
  * Private member functions for class SilenceQueueItem
- *
  */
-
 int SilenceQueueItem::readSamples(float *samples, int len)
 {
   assert(silence_left != -1);
@@ -875,19 +777,13 @@ int SilenceQueueItem::readSamples(float *samples, int len)
   
 } /* SilenceQueueItem::readSamples */
 
-
 void SilenceQueueItem::unreadSamples(int len)
 {
   silence_left += len;
 } /* SilenceQueueItem::unreadSamples */
 
-
-
-
 /*
- *
  * Private member functions for class ToneQueueItem
- *
  */
 
 int ToneQueueItem::readSamples(float *samples, int len)
@@ -903,14 +799,10 @@ int ToneQueueItem::readSamples(float *samples, int len)
   
 } /* ToneQueueItem::readSamples */
 
-
 void ToneQueueItem::unreadSamples(int len)
 {
   pos -= len;
 } /* ToneQueueItem::unreadSamples */
-
-
-
 
 /*
  * This file has not been truncated

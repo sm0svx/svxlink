@@ -24,24 +24,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <iostream>
 #include <algorithm>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <Rx.h>
 #include <Tx.h>
 #include <AsyncAudioDebugger.h>
@@ -50,75 +41,40 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioPassthrough.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "RfUplink.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
 RfUplink::RfUplink(Config &cfg, const string &name, Rx *rx, Tx *tx)
   : cfg(cfg), name(name), rx(rx), tx(tx), uplink_tx(0), uplink_rx(0),
     tx_audio_sel(0)
@@ -126,14 +82,12 @@ RfUplink::RfUplink(Config &cfg, const string &name, Rx *rx, Tx *tx)
   
 } /* RfUplink::RfUplink */
 
-
 RfUplink::~RfUplink(void)
 {
   delete uplink_tx;
   delete tx_audio_sel;
   delete uplink_rx;
 } /* RfUplink::~RfUplink */
-
 
 bool RfUplink::initialize(void)
 {
@@ -246,23 +200,13 @@ bool RfUplink::initialize(void)
   
 } /* RfUplink::initialize */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
-
-
-
 
 /*
- *
  * Private member functions
- *
  */
-
 void RfUplink::uplinkRxSquelchOpen(bool is_open)
 {
   if (is_open)
@@ -275,13 +219,11 @@ void RfUplink::uplinkRxSquelchOpen(bool is_open)
   }
 } /* RfUplink::uplinkRxSquelchOpen */
 
-
 void RfUplink::uplinkRxDtmfRcvd(char digit, int duration)
 {
   char digit_str[2] = {digit, 0};
   tx->sendDtmf(digit_str);
 } /* RfUplink::uplinkRxDtmfRcvd */
-
 
 void RfUplink::rxSquelchOpen(bool is_open)
 {
@@ -295,7 +237,6 @@ void RfUplink::rxSquelchOpen(bool is_open)
   }
 } /* RfUplink::rxSquelchOpen  */
 
-
 void RfUplink::rxSignalLevelUpdated(float siglev)
 {
   if (rx->squelchIsOpen())
@@ -303,7 +244,6 @@ void RfUplink::rxSignalLevelUpdated(float siglev)
     uplink_tx->setTransmittedSignalStrength(siglev);
   }
 } /* RfUplink::rxSignalLevelUpdated */
-
 
 void RfUplink::rxDtmfDigitDetected(char digit, int duration)
 {
@@ -314,13 +254,10 @@ void RfUplink::rxDtmfDigitDetected(char digit, int duration)
   uplink_tx->sendDtmf(dtmf_str);
 } /* RfUplink::rxDtmfDigitDetected */
 
-
 void RfUplink::uplinkTxTransmitterStateChange(bool is_transmitting)
 {
   uplink_rx->setMuteState(is_transmitting ? Rx::MUTE_ALL : Rx::MUTE_NONE);
 } /* RfUplink::uplinkTxTransmitterStateChange */
-
-
 
 /*
  * This file has not been truncated

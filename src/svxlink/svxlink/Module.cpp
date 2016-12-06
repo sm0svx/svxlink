@@ -26,8 +26,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
@@ -41,10 +39,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Logic.h"
 #include "Module.h"
 
-
 using namespace std;
 using namespace Async;
-
 
 Module::Module(void *dl_handle, Logic *logic, const string& cfg_name)
   : m_dl_handle(dl_handle), m_logic(logic), m_id(-1), m_name(cfg_name),
@@ -54,12 +50,10 @@ Module::Module(void *dl_handle, Logic *logic, const string& cfg_name)
   
 } /* Module::Module */
 
-
 Module::~Module(void)
 {
   delete m_tmo_timer;
 } /* Module::~Module */
-
 
 bool Module::initialize(void)
 {
@@ -104,7 +98,6 @@ bool Module::initialize(void)
   
 } /* Module::initialize */
 
-
 void Module::activate(void)
 {
   cout << logic()->name() << ": Activating module " << name() << "...\n";
@@ -125,7 +118,6 @@ void Module::activate(void)
   activateInit();
 }
 
-
 void Module::deactivate(void)
 {
   cout << logic()->name() << ": Deactivating module " << name() << "...\n";
@@ -143,24 +135,20 @@ void Module::deactivate(void)
   setIdle(true);
 }
 
-
 Config &Module::cfg(void) const
 {
   return logic()->cfg();
 } /* Module::cfg */
-
 
 const string& Module::logicName(void) const
 {
   return logic()->name();
 } /* Module::logicName */
 
-
 void Module::playHelpMsg(void)
 {
   processEvent("play_help");
 } /* Module::playHelpMsg */
-
 
 void Module::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
@@ -169,30 +157,25 @@ void Module::dtmfCmdReceivedWhenIdle(const std::string &cmd)
   logic()->processEvent(ss.str());
 } /* Module::dtmfCmdReceivedWhenIdle */
 
-
 void Module::processEvent(const string& event)
 {
   logic()->processEvent(event, this);
 } /* Module::playFile */
-
 
 void Module::setEventVariable(const string& name, const string& value)
 {
   logic()->setEventVariable(name, value);
 } /* Module::setEventVariable */
 
-
 void Module::playFile(const string& path)
 {
   logic()->playFile(path);
 } /* Module::playFile */
 
-
 void Module::sendDtmf(const std::string& digits)
 {
   logic()->sendDtmf(digits);
 } /* Module::sendDtmf */
-
 
 #if 0
 int Module::audioFromModule(float *samples, int count)
@@ -204,7 +187,6 @@ int Module::audioFromModule(float *samples, int count)
   return count;
 }
 
-
 void Module::transmit(bool tx)
 {
   if (m_is_active && (tx != m_is_transmitting))
@@ -215,12 +197,10 @@ void Module::transmit(bool tx)
 } /* transmit */
 #endif
 
-
 bool Module::activateMe(void)
 {
   return logic()->activateModule(this);
 } /* Module::activateMe */
-
 
 void Module::deactivateMe(void)
 {
@@ -230,18 +210,15 @@ void Module::deactivateMe(void)
   }
 } /* Module::deactivateMe */
 
-
 Module *Module::findModule(int id)
 {
   return logic()->findModule(id);
 } /* Module::findModule */
 
-
 list<Module*> Module::moduleList(void)
 {
   return logic()->moduleList();
 } /* Module::moduleList */
-
 
 void Module::setIdle(bool is_idle)
 {
@@ -251,12 +228,10 @@ void Module::setIdle(bool is_idle)
   }
 } /* Module::setIdle */
 
-
 bool Module::logicIsIdle(void) const
 {
   return logic()->isIdle();
 } /* Module::logicIsIdle */
-
 
 void Module::logicIdleStateChanged(bool is_idle)
 {
@@ -267,18 +242,15 @@ void Module::logicIdleStateChanged(bool is_idle)
   setIdle(is_idle);
 } /* Module::logicIdleStateChanged */
 
-
 bool Module::squelchIsOpen(void)
 {
   return logic()->rx().squelchIsOpen();
 } /* Module::squelchIsOpen */
 
-
 bool Module::isWritingMessage(void)
 {
   return logic()->isWritingMessage();
 } /* Module::isWritingMessage */
-
 
 void Module::moduleTimeout(Timer *t)
 {

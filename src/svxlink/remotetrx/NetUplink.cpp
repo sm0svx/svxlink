@@ -24,25 +24,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <iostream>
 #include <cstring>
 #include <cerrno>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncApplication.h>
 #include <AsyncTcpServer.h>
 #include <AsyncAudioFifo.h>
@@ -53,76 +44,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioPassthrough.h>
 
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "NetUplink.h"
 #include "Rx.h"
 
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 using namespace NetTrxMsg;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Public member functions
- *
  */
-
 NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
       	      	     const string& port_str)
   : server(0), con(0), recv_cnt(0), recv_exp(0), rx(rx), tx(tx), fifo(0),
@@ -142,7 +99,6 @@ NetUplink::NetUplink(Config &cfg, const string &name, Rx *rx, Tx *tx,
   
 } /* NetUplink::NetUplink */
 
-
 NetUplink::~NetUplink(void)
 {
   delete audio_enc;
@@ -156,7 +112,6 @@ NetUplink::~NetUplink(void)
   delete mute_tx_timer;
   delete siglev_check_timer;
 } /* NetUplink::~NetUplink */
-
 
 bool NetUplink::initialize(void)
 {
@@ -244,21 +199,12 @@ bool NetUplink::initialize(void)
   
 } /* NetUplink::initialize */
 
-
-
 /*
- *
  * Protected member functions
- *
  */
 
-
-
-
 /*
- *
  * Private member functions
- *
  */
 
 void NetUplink::handleIncomingConnection(TcpConnection *incoming_con)
@@ -306,7 +252,6 @@ void NetUplink::handleIncomingConnection(TcpConnection *incoming_con)
   }
 } /* NetUplink::handleIncomingConnection */
 
-
 void NetUplink::clientConnected(TcpConnection *incoming_con)
 {
   cout << name << ": Client connected: " << incoming_con->remoteHost() << ":"
@@ -326,7 +271,6 @@ void NetUplink::clientConnected(TcpConnection *incoming_con)
       break;
   }
 } /* NetUplink::clientConnected */
-
 
 void NetUplink::disconnectCleanup(void)
 {
@@ -368,7 +312,6 @@ void NetUplink::clientDisconnected(TcpConnection *the_con,
   setState(STATE_DISC_CLEANUP);
   Application::app().runTask(mem_fun(*this, &NetUplink::disconnectCleanup));
 } /* NetUplink::clientDisconnected */
-
 
 int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
 {
@@ -446,7 +389,6 @@ int NetUplink::tcpDataReceived(TcpConnection *con, void *data, int size)
   return orig_size;
   
 } /* NetUplink::tcpDataReceived */
-
 
 void NetUplink::handleMsg(Msg *msg)
 {
@@ -668,7 +610,6 @@ void NetUplink::sendMsg(Msg *msg)
   
 } /* NetUplink::sendMsg */
 
-
 void NetUplink::squelchOpen(bool is_open)
 {
   if (mute_tx_timer != 0)
@@ -689,7 +630,6 @@ void NetUplink::squelchOpen(bool is_open)
   sendMsg(msg);
 } /* NetUplink::squelchOpen */
 
-
 void NetUplink::dtmfDigitDetected(char digit, int duration)
 {
   cout << name << ": DTMF digit detected: " << digit << " with duration " << duration
@@ -698,7 +638,6 @@ void NetUplink::dtmfDigitDetected(char digit, int duration)
   sendMsg(msg);
 } /* NetUplink::dtmfDigitDetected */
 
-
 void NetUplink::toneDetected(float tone_fq)
 {
   cout << name << ": Tone detected: " << tone_fq << endl;
@@ -706,14 +645,12 @@ void NetUplink::toneDetected(float tone_fq)
   sendMsg(msg);
 } /* NetUplink::toneDetected */
 
-
 void NetUplink::selcallSequenceDetected(std::string sequence)
 {
   // cout "Sel5 sequence detected: " << sequence << endl;
   MsgSel5 *msg = new MsgSel5(sequence);
   sendMsg(msg);
 } /* NetUplink::selcallSequenceDetected */
-
 
 void NetUplink::writeEncodedSamples(const void *buf, int size)
 {
@@ -730,13 +667,11 @@ void NetUplink::writeEncodedSamples(const void *buf, int size)
   }
 } /* NetUplink::writeEncodedSamples */
 
-
 void NetUplink::txTimeout(void)
 {
   MsgTxTimeout *msg = new MsgTxTimeout;
   sendMsg(msg);
 } /* NetUplink::txTimeout */
-
 
 void NetUplink::transmitterStateChange(bool is_transmitting)
 {
@@ -745,13 +680,11 @@ void NetUplink::transmitterStateChange(bool is_transmitting)
   sendMsg(msg);
 } /* NetUplink::transmitterStateChange */
 
-
 void NetUplink::allEncodedSamplesFlushed(void)
 {
   MsgAllSamplesFlushed *msg = new MsgAllSamplesFlushed;
   sendMsg(msg);
 } /* NetUplink::allEncodedSamplesFlushed */
-
 
 void NetUplink::heartbeat(Timer *t)
 {
@@ -774,12 +707,10 @@ void NetUplink::heartbeat(Timer *t)
   
 } /* NetTrxTcpClient::heartbeat */
 
-
 void NetUplink::checkSiglev(Timer *t)
 {
   squelchOpen(rx->squelchIsOpen());
 } /* NetUplink::checkSiglev */
-
 
 void NetUplink::unmuteTx(Timer *t)
 {
@@ -787,7 +718,6 @@ void NetUplink::unmuteTx(Timer *t)
   tx_muted = false;
   tx->setTxCtrlMode(tx_ctrl_mode);
 } /* NetUplink::unmuteTx */
-
 
 void NetUplink::setFallbackActive(bool activate)
 {
@@ -808,7 +738,6 @@ void NetUplink::setFallbackActive(bool activate)
   }
 } /* NetUplink::setFallbackActive */
 
-
 void NetUplink::signalLevelUpdated(float siglev)
 {
   MsgSiglevUpdate *msg = new MsgSiglevUpdate(rx->signalStrength(),
@@ -816,13 +745,11 @@ void NetUplink::signalLevelUpdated(float siglev)
   sendMsg(msg);  
 } /* NetUplink::signalLevelUpdated */
 
-
 void NetUplink::forceDisconnect(void)
 {
   con->disconnect();
   clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
 } /* NetUplink::forceDisconnect */
-
 
 /*
  * This file has not been truncated

@@ -8,21 +8,17 @@ proc playFile {filename} {
   }
 }
 
-
 proc playTone {fq amp len} {
   puts "playTone($fq, $amp, $len);";
 }
-
 
 proc playSilence {milliseconds} {
   puts "playSilence($milliseconds);";
 }
 
-
 proc reportActiveModuleState {} {
   puts "reportActiveModuleState;";
 }
-
 
 proc activateModule {name} {
   global active_module;
@@ -32,7 +28,6 @@ proc activateModule {name} {
   set active_module $name;
 }
 
-
 proc deactivateModule {} {
   global active_module;
   puts "deactivateModule";
@@ -40,13 +35,11 @@ proc deactivateModule {} {
   set active_module "";
 }
 
-
 proc recordStart {filename} {
   global rec_file;
   puts "recordStart \"$filename\"";
   set rec_file [open $filename w];
 }
-
 
 proc recordStop {} {
   global rec_file;
@@ -54,13 +47,11 @@ proc recordStop {} {
   close $rec_file;
 }
 
-
 proc execTest {cmd} {
   puts "--- $cmd";
   eval $cmd;
   puts "";
 }
-
 
 proc SimplexLogic {} {
   puts "--- SimplexLogic::startup";
@@ -135,7 +126,6 @@ proc SimplexLogic {} {
   SimplexLogic::every_minute;
   puts "";
 }
-
 
 proc RepeaterLogic {} {
   puts "--- RepeaterLogic::startup";
@@ -223,7 +213,6 @@ proc RepeaterLogic {} {
   puts "";
 }
 
-
 proc Help {} {
   puts "--- Help::activating_module";
   Help::activating_module;
@@ -250,7 +239,6 @@ proc Help {} {
   puts "";
 }
 
-
 proc Parrot {} {
   puts "--- Parrot::activating_module";
   Parrot::activating_module;
@@ -272,7 +260,6 @@ proc Parrot {} {
   Parrot::spell_digits "0123456789";
   puts "";
 }
-
 
 proc EchoLink {} {
   puts "--- EchoLink::activating_module";
@@ -360,7 +347,6 @@ proc EchoLink {} {
   puts "";
 }
 
-
 proc TclVoiceMail {} {
   namespace eval Logic {
     variable CFG_CALLSIGN "TEST";
@@ -422,7 +408,6 @@ proc TclVoiceMail {} {
     file delete "$recdir/TEST";
   }
 }
-
 
 if {$argc < 1} {
   puts "Usage: $argv0 <path to events.tcl>";
