@@ -19,14 +19,16 @@ add_version_target(SVXSERVER VERSION_DEPENDS)
 
 # Build the executable
 add_executable(svxserver
-  svxserver.cpp
+  svxserver.cpp 
   server.cpp
   ${VERSION_DEPENDS}
 )
+
 target_link_libraries(svxserver ${LIBS})
 set_target_properties(svxserver PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY}
 )
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxserver.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/svxserver.conf
   @ONLY
