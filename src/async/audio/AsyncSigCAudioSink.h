@@ -66,13 +66,13 @@ namespace Async
  * Class definitions
  */
 /**
-@brief	An adapter class to connect to an AudioSource class using SigC
-@author Tobias Blomberg
-@date   2005-04-17
+ *@brief  An adapter class to connect to an AudioSource class using SigC
+ *@author Tobias Blomberg
+ *@date   2005-04-17
 
-This is an adapter class that can be used to interact with an AudioSource
-class using SigC signals and slots.
-*/
+ * This is an adapter class that can be used to interact with an AudioSource
+ * class using SigC signals and slots.
+ */
 class SigCAudioSink : public AudioSink, public sigc::trackable
 {
   public:
