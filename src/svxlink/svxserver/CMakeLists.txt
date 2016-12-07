@@ -36,4 +36,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/svxserver.conf.in
 
 # Install targets
 install(TARGETS svxserver DESTINATION ${BIN_INSTALL_DIR})
-install_if_not_exists(svxserver.conf ${SVX_SYSCONF_INSTALL_DIR})
+install_if_not_exists(${CMAKE_CURRENT_BINARY_DIR}/svxserver.conf
+  ${SVX_SYSCONF_INSTALL_DIR}
+  )
