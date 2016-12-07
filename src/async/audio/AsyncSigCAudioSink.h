@@ -1,10 +1,9 @@
-**
-@file	 AsyncSigCAudioSink.h
-@brief   Contains an adapter class to connect to an AudioSource using SigC
-@author  Tobias Blomberg / SM0SVX
-@date	 2005-04-17
-
-\verbatim
+/**
+ * @file	 AsyncSigCAudioSink.h
+ * @brief   Contains an adapter class to connect to an AudioSource using SigC
+ * @author  Tobias Blomberg / SM0SVX
+ * @date	 2005-04-17
+ *\verbatim
 Async - A library for programming event driven applications
 Copyright (C) 2003-2013  Tobias Blomberg / SM0SVX
 
