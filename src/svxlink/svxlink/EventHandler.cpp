@@ -342,4 +342,3 @@ int EventHandler::playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
 /*
  * This file has not been truncated
  */
-"Usage: playDtmf <digit#> <amp> <milliseconds>";
