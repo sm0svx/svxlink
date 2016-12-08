@@ -75,6 +75,7 @@ namespace Async
   class AudioSplitter;
   class AudioValve;
   class AudioSelector;
+  class Pty;
 };
 namespace EchoLink
 {
@@ -221,6 +222,9 @@ class ModuleEchoLink : public Module
     int audioFromRx(float *samples, int count);
     void allMsgsWritten(void);
     void clientList(void);
+    void commandHandler(const void *buf, size_t count); // WIM
+    Async::Pty                      *pty;   
+
     void onStatusChanged(EchoLink::StationData::Status status);
     void onStationListUpdated(void);
     void onError(const std::string& msg);
