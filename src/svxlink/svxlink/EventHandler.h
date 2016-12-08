@@ -190,7 +190,8 @@ class EventHandler : public sigc::trackable
       	      	    int argc, const char *argv[]);
     static int publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
       	            int argc, const char *argv[]);
-    
+    static int playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
+      	      	    int argc, const char *argv[]);    
 };  /* class EventHandler */
 
 #endif /* EVENT_HANDLER_INCLUDED */
