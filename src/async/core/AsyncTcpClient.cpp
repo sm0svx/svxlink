@@ -165,7 +165,7 @@ void TcpClient::disconnect(void)
   delete dns;
   dns = 0;
   
-  if (sock != -1) ::close(sock);
+  if (sock != -1)
   {
     ::close(sock);
     sock = -1;
