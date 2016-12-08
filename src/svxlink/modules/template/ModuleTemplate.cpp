@@ -24,97 +24,52 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
- * System Includes
- *
+  * System Includes
  */
-
 #include <stdio.h>
 
 #include <iostream>
 #include <sstream>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <version/MODULE_TEMPLATE.h>
 
-
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "ModuleTemplate.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Pure C-functions
- *
  */
-
 
 extern "C" {
   Module *module_init(void *dl_handle, Logic *logic, const char *cfg_name)
@@ -123,15 +78,9 @@ extern "C" {
   }
 } /* extern "C" */
 
-
-
 /*
- *
  * Public member functions
- *
  */
-
-
 ModuleTemplate::ModuleTemplate(void *dl_handle, Logic *logic, const string& cfg_name)
   : Module(dl_handle, logic, cfg_name)
 {
@@ -139,22 +88,14 @@ ModuleTemplate::ModuleTemplate(void *dl_handle, Logic *logic, const string& cfg_
 
 } /* ModuleTemplate */
 
-
 ModuleTemplate::~ModuleTemplate(void)
 {
 
 } /* ~ModuleTemplate */
 
-
-
-
-
 /*
- *
  * Protected member functions
- *
  */
-
 
 /*
  *------------------------------------------------------------------------
@@ -170,16 +111,9 @@ ModuleTemplate::~ModuleTemplate(void)
  */
 
 
-
-
-
-
 /*
- *
  * Private member functions
- *
  */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -206,7 +140,6 @@ bool ModuleTemplate::initialize(void)
   
 } /* initialize */
 
-
 /*
  *----------------------------------------------------------------------------
  * Method:    activateInit
@@ -223,7 +156,6 @@ void ModuleTemplate::activateInit(void)
 {
 
 } /* activateInit */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -242,7 +174,6 @@ void ModuleTemplate::deactivateCleanup(void)
 {
   
 } /* deactivateCleanup */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -266,7 +197,6 @@ bool ModuleTemplate::dtmfDigitReceived(char digit, int duration)
   return false;
   
 } /* dtmfDigitReceived */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -298,14 +228,12 @@ void ModuleTemplate::dtmfCmdReceived(const string& cmd)
   }
 } /* dtmfCmdReceived */
 
-
 #if 0
 void ModuleTemplate::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
 
 } /* dtmfCmdReceivedWhenIdle */
 #endif
-
 
 /*
  *----------------------------------------------------------------------------
@@ -325,7 +253,6 @@ void ModuleTemplate::squelchOpen(bool is_open)
   
 } /* squelchOpen */
 
-
 /*
  *----------------------------------------------------------------------------
  * Method:    allMsgsWritten
@@ -344,8 +271,6 @@ void ModuleTemplate::allMsgsWritten(void)
 {
 
 } /* allMsgsWritten */
-
-
 
 /*
  * This file has not been truncated

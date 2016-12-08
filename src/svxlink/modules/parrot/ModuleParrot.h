@@ -27,96 +27,54 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef MODULE_PARROT_INCLUDED
 #define MODULE_PARROT_INCLUDED
 
-
 /*
- *
  * System Includes
- *
  */
-
 #include <string>
 #include <list>
 
-
 /*
- *
  * Project Includes
- *
  */
-
 #include <AsyncTimer.h>
 #include <Module.h>
 
-
-
 /*
- *
  * Local Includes
- *
  */
-
 #include "version/SVXLINK.h"
 
-
 /*
- *
  * Forward declarations
- *
  */
-
 namespace Async
 {
   class SampleFifo;
   class AudioValve;
 };
 
-
-
 /*
- *
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
 /*
- *
  * Forward declarations of classes inside of the declared namespace
- *
  */
-
-  
-
+ 
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
-
-
 
 /*
- *
  * Class definitions
- *
  */
-
 /**
 @brief	A module that provides a "parrot" function.h
 @author Tobias Blomberg
@@ -164,12 +122,7 @@ class ModuleParrot : public Module
 
 };  /* class ModuleParrot */
 
-
-//} /* namespace */
-
 #endif /* MODULE_PARROT_INCLUDED */
-
-
 
 /*
  * This file has not been truncated
