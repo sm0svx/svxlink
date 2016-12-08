@@ -126,7 +126,17 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
      * the silence is being played.
      */
     void playTone(int fq, int amp, int length, bool idle_marked=false);
-    
+
+    /**
+     * @brief 	Play a dtmf tone
+     * @param 	seq The dtmf sequence to play
+     * @param 	amp The amplitude of the tone to play (0-1000)
+     * @param 	length The length in milliseconds of the tone to play
+     * @param   idle_marked Choose if the playback should be idle marked or not
+     *
+     */
+    void playDtmf(char digit, int amp, int length, bool idle_marked=false);
+
     /**
      * @brief 	Check if a message is beeing written
      * @return	Return \em true if a message is beeing written

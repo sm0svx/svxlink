@@ -83,13 +83,8 @@ using namespace Async;
  */
 CppDnsLookupWorker::CppDnsLookupWorker(const string &label)
   : label(label), worker(0), notifier_rd(-1), notifier_wr(-1),
-    notifier_watch(0), done(false), he_buf(), result(0), buf(0)
+    notifier_watch(0), done(false), result(0)
 {
-  int ret = pthread_mutex_init(&mutex, NULL);
-  if (ret != 0)
-  {
-    cerr << "pthread_mutex_init: error " << ret << endl;
-  }
 } /* CppDnsLookupWorker::CppDnsLookupWorker */
 
 CppDnsLookupWorker::~CppDnsLookupWorker(void)
@@ -115,8 +110,10 @@ CppDnsLookupWorker::~CppDnsLookupWorker(void)
     }
   }
 
-  free(buf);
-  buf = 0;
+  if (result != 0)
+  {
+    freeaddrinfo(result);
+  }
 
   delete notifier_watch;
   if (notifier_rd != -1)
@@ -127,22 +124,11 @@ CppDnsLookupWorker::~CppDnsLookupWorker(void)
   {
     close(notifier_wr);
   }
-
-  int ret = pthread_mutex_destroy(&mutex);
-  if (ret != 0)
-  {
-    cerr << "pthread_mutex_destroy: error " << ret << endl;
-  }
 } /* CppDnsLookupWorker::~CppDnsLookupWorker */
 
 bool CppDnsLookupWorker::doLookup(void)
 {
-  int ret = pthread_mutex_lock(&mutex);
-  if (ret != 0)
-  {
-    cerr << "pthread_mutex_lock: error " << ret << endl;
-  }
-  
+
   int fd[2];
   if (pipe(fd) != 0)
   {
@@ -154,7 +140,7 @@ bool CppDnsLookupWorker::doLookup(void)
   notifier_watch = new FdWatch(notifier_rd, FdWatch::FD_WATCH_RD);
   notifier_watch->activity.connect(
       	  mem_fun(*this, &CppDnsLookupWorker::notificationReceived));
-  ret = pthread_create(&worker, NULL, workerFunc, this);
+  int ret = pthread_create(&worker, NULL, workerFunc, this);
   if (ret != 0)
   {
     cerr << "pthread_create: error " << ret << endl;
@@ -168,12 +154,6 @@ bool CppDnsLookupWorker::doLookup(void)
   }
   */
 
-  ret = pthread_mutex_unlock(&mutex);
-  if (ret != 0)
-  {
-    cerr << "pthread_mutex_unlock: error " << ret << endl;
-  }
-    
   return true;
   
 } /* CppDnsLookupWorker::doLookup */
@@ -205,27 +185,10 @@ void *CppDnsLookupWorker::workerFunc(void *w)
 {
   CppDnsLookupWorker *worker = reinterpret_cast<CppDnsLookupWorker *>(w);
 
-  int ret = pthread_mutex_lock(&worker->mutex);
+  int ret = getaddrinfo(worker->label.c_str(), NULL, NULL, &worker->result);
   if (ret != 0)
   {
-    cerr << "pthread_mutex_lock: error " << ret << endl;
-  }
-  
-  int bufsize = 512;
-  do
-  {
-    worker->buf = (char *)realloc(worker->buf, bufsize);
-    int h_errnop;
-    ret = gethostbyname_r(worker->label.c_str(), &worker->he_buf, worker->buf,
-      	      	      	  bufsize, &worker->result, &h_errnop);
-    bufsize *= 2;
-  } while (ret == ERANGE);
-  
-  if ((ret != 0) || (worker->result == 0))
-  {
-    free(worker->buf);
-    worker->buf = 0;
-    worker->result = 0;
+    cerr << "getaddrinfo" << gai_strerror(ret) << endl;
   }
   
   ret = write(worker->notifier_wr, "D", 1);
@@ -233,13 +196,7 @@ void *CppDnsLookupWorker::workerFunc(void *w)
   
   worker->done = true;
   
-  ret = pthread_mutex_unlock(&worker->mutex);
-  if (ret != 0)
-  {
-    cerr << "pthread_mutex_unlock: error " << ret << endl;
-  }
-    
-  return NULL;
+   return NULL;
   
 } /* CppDnsLookupWorker::workerFunc */
 
@@ -260,26 +217,14 @@ void CppDnsLookupWorker::notificationReceived(FdWatch *w)
 {
   w->setEnabled(false);
 
-  int ret = pthread_mutex_lock(&mutex);
-  if (ret != 0)
-  {
-    cerr << "pthread_mutex_lock: error " << ret << endl;
-  }
-
   if (result != 0)
   {
-    for (int i=0; result->h_addr_list[i] != NULL; ++i)
+    struct addrinfo *entry;
+    for (entry = result; entry != 0; entry = entry->ai_next)
     {
-      struct in_addr *addr;      
-      addr = reinterpret_cast<struct in_addr *>(result->h_addr_list[i]);
-      the_addresses.push_back(IpAddress(*addr));
+      struct in_addr addr = ((struct sockaddr_in*)entry->ai_addr)->sin_addr;
+      the_addresses.push_back(IpAddress(addr));;
     }
-  }
-  
-  ret = pthread_mutex_unlock(&mutex);
-  if (ret != 0)
-  {
-    cerr << "pthread_mutex_unlock: error " << ret << endl;
   }
   
   resultsReady();

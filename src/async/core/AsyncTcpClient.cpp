@@ -165,7 +165,7 @@ void TcpClient::disconnect(void)
   delete dns;
   dns = 0;
   
-  if (sock != -1)
+  if (sock != -1) ::close(sock);
   {
     ::close(sock);
     sock = -1;
@@ -204,7 +204,7 @@ void TcpClient::dnsResultsReady(DnsLookup& dns_lookup)
 
 void TcpClient::connectToRemote(void)
 {
-  assert(sock == -1);
+  assert(sock == -1) ::close(sock);
   
   struct sockaddr_in addr;
   memset(&addr, 0, sizeof(addr));

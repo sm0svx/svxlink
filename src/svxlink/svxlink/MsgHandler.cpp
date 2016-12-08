@@ -117,6 +117,24 @@ class ToneQueueItem : public QueueItem
     
 };
 
+class DtmfQueueItem : public QueueItem
+{
+  public:
+    DtmfQueueItem(char digit, int amp, int len, int sample_rate, bool idle_marked)
+      : QueueItem(idle_marked), digit(digit), amp(amp),
+      	tone_len(sample_rate * len / 1000), pos(0), sample_rate(sample_rate) {}
+    int readSamples(float *samples, int len);
+    void unreadSamples(int len);
+
+  private:
+    char digit;
+    int amp;
+    int tone_len;
+    int pos;
+    int sample_rate;
+    
+};
+
 class RawFileQueueItem : public QueueItem
 {
   public:
@@ -803,6 +821,68 @@ void ToneQueueItem::unreadSamples(int len)
 {
   pos -= len;
 } /* ToneQueueItem::unreadSamples */
+
+/*
+ * Private member functions for class DtmfQueueItem
+ */
+int DtmfQueueItem::readSamples(float *samples, int len)
+{
+  
+  static map<char, pair<int, int> > tone_map;
+  tone_map['1'] = pair<int, int>(697, 1209);
+  tone_map['2'] = pair<int, int>(697, 1336);
+  tone_map['3'] = pair<int, int>(697, 1477);
+  tone_map['A'] = pair<int, int>(697, 1633);
+  tone_map['4'] = pair<int, int>(770, 1209);
+  tone_map['5'] = pair<int, int>(770, 1336);
+  tone_map['6'] = pair<int, int>(770, 1477);
+  tone_map['B'] = pair<int, int>(770, 1633);
+  tone_map['7'] = pair<int, int>(852, 1209);
+  tone_map['8'] = pair<int, int>(852, 1336);
+  tone_map['9'] = pair<int, int>(852, 1477);
+  tone_map['C'] = pair<int, int>(852, 1633);
+  tone_map['*'] = pair<int, int>(941, 1209);
+  tone_map['0'] = pair<int, int>(941, 1336);
+  tone_map['#'] = pair<int, int>(941, 1477);
+  tone_map['D'] = pair<int, int>(941, 1633);
+  
+  int low_tone = tone_map[digit].first;
+  int high_tone = tone_map[digit].second;
+ 
+  int read_cnt = min(len, tone_len-pos);
+  for (int i=0; i<read_cnt; ++i)
+  {
+    samples[i] = amp / 1000.0 * sin(2 * M_PI * low_tone * pos / sample_rate)
+                 + sin(2 * M_PI * high_tone * pos / sample_rate);
+    ++pos;
+  }
+  
+  return read_cnt;
+  
+} /* DtmfQueueItem::readSamples */
+
+void DtmfQueueItem::unreadSamples(int len)
+{
+  pos -= len;
+} /* DtmfQueueItem::unreadSamples */
+ 
+ /*
+View   
+10  src/svxlink/svxlink/MsgHandler.h
+ @@ -169,6 +169,16 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
+      * the silence is being played.
+      */
+     void playTone(int fq, int amp, int length, bool idle_marked=false);
+
+    /**
+     * @brief 	Play a dtmf tone
+     * @param 	seq The dtmf sequence to play
+     * @param 	amp The amplitude of the tone to play (0-1000)
+     * @param 	length The length in milliseconds of the tone to play
+     * @param   idle_marked Choose if the playback should be idle marked or not
+     *
+     */
+    void playDtmf(char digit, int amp, int length, bool idle_marked=false);
 
 /*
  * This file has not been truncated

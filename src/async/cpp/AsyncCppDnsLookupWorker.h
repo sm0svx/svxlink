@@ -119,11 +119,7 @@ class CppDnsLookupWorker : public DnsLookupWorker, public sigc::trackable
     int       	      	    notifier_wr;
     Async::FdWatch    	    *notifier_watch;
     bool      	      	    done;
-    pthread_mutex_t   	    mutex;
-
-    struct hostent    	    he_buf;
-    struct hostent    	    *result;
-    char      	      	    *buf;
+    struct addrinfo    	    *result;
   
     static void *workerFunc(void *);
 

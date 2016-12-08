@@ -134,6 +134,15 @@ class EventHandler : public sigc::trackable
     sigc::signal<void, int, int, int>      playTone;
     
     /**
+     * @brief 	A signal that is emitted when the TCL script want to play
+     *	      	back a dtmf tone
+     * @param 	digit#    The dtmf-tone as character (0-9, A-F, #)
+     * @param 	amp   	   The tone amplitude to use (0-1000)
+     * @param 	duration  The duration of the tone in milliseconds
+     */
+    sigc::signal<void, char, int, int>      playDtmf;    
+
+    /**
      * @brief 	A signal that is emitted when the TCL script want to start
      *	      	a recording
      * @param 	filename The name of the file to record the audio to
