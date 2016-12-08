@@ -249,6 +249,7 @@ class Rx : public sigc::trackable, public Async::AudioSource
   private:
     std::string   m_name;
     bool          m_verbose;
+    bool      	  m_sql_open;
     bool      	  m_sql_open_hidden;
     Async::Config m_cfg;
     Async::Timer  *m_sql_tmo_timer;
