@@ -642,9 +642,9 @@ Voter::SatRx *Voter::findBestRx(void) const
       best_rx_siglev = (*it)->signalStrength();
     }
   }
-  
+
   return best_rx;
-  
+
 } /* Voter::findBestRx */
 
 /*

@@ -37,7 +37,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
 
-
 /*
  *
  * Local Includes
@@ -288,6 +287,7 @@ void Rx::setSquelchState(bool is_open)
     // cout << m_name << ": Refusing to open squelch, we're disabled" << endl;
     return;
   }
+  
   if (is_open == m_sql_open)
   {
     return;
