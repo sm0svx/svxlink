@@ -592,7 +592,6 @@ bool Logic::initialize(void)
       mem_fun(dtmf_digit_handler, &DtmfDigitHandler::forceCommandComplete)));
 
   return true;
-
 } /* Logic::initialize */
 
 void Logic::processEvent(const string& event, const Module *module)
@@ -700,7 +699,6 @@ bool Logic::activateModule(Module *module)
   }
 
   return false;
-
 } /* Logic::activateModule */
 
 void Logic::deactivateModule(Module *module)
@@ -730,7 +728,6 @@ Module *Logic::findModule(int id)
   }
 
   return 0;
-
 } /* Logic::findModule */
 
 Module *Logic::findModule(const string& name)
@@ -745,7 +742,6 @@ Module *Logic::findModule(const string& name)
   }
 
   return 0;
-
 } /* Logic::findModule */
 
 void Logic::dtmfDigitDetected(char digit, int duration)
@@ -764,7 +760,6 @@ void Logic::dtmfDigitDetected(char digit, int duration)
   {
     processCommandQueue();
   }
-
 } /* Logic::dtmfDigitDetected */
 
 void Logic::selcallSequenceDetected(std::string sequence)
@@ -868,7 +863,6 @@ void Logic::squelchOpen(bool is_open)
   updateTxCtcss(is_open, TX_CTCSS_SQL_OPEN);
 
   checkIdle();
-
 } /* Logic::squelchOpen */
 
 bool Logic::getIdleState(void) const
