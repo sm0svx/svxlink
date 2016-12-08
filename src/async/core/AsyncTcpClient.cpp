@@ -204,7 +204,7 @@ void TcpClient::dnsResultsReady(DnsLookup& dns_lookup)
 
 void TcpClient::connectToRemote(void)
 {
-  assert(sock == -1) ::close(sock);
+  if (sock != -1) ::close(sock);
   
   struct sockaddr_in addr;
   memset(&addr, 0, sizeof(addr));
