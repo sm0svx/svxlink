@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <list>
 #include <sigc++/bind.h>
 #include <sys/time.h>
+#include <string.h>
 
 /*
  * Project Includes
@@ -138,7 +139,16 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
       rx->setVerbose(false);
       return true;
     }
-    
+
+    void setEnabled(bool status) {
+      rx->setEnabled(status);
+      stopOutput(true); // or else they will 'fall through' when all 'open' RXes are disabled
+    }
+
+    bool isEnabled(void) {
+      return rx->isEnabled();
+    }
+
     const std::string& name(void) const { return rx->name(); }
     
     bool addToneDetector(float fq, int bw, float thresh, int required_duration)
@@ -288,7 +298,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
  */
 Voter::Voter(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), m_verbose(true), selector(0),
-    sm(Macho::State<Top>(this)), is_processing_event(false)
+    sm(Macho::State<Top>(this)), is_processing_event(false), voter_pty(0)
 {
   Rx::setVerbose(false);
 } /* Voter::Voter */
@@ -316,6 +326,19 @@ bool Voter::initialize(void)
   if (!Rx::initialize())
   {
     return false;
+  }
+
+  string voter_pty_path;
+  if(cfg.getValue(name(), "VOTER_PTY", voter_pty_path))
+  {
+    voter_pty = new Pty(voter_pty_path);
+    if (!voter_pty->open()) {
+      cerr << "*** ERROR: Could not open voter PTY "
+      <<voter_pty_path << " as specified in configuration variable "
+      << name() << "/" << "VOTER_PTY" << endl;
+      return false;
+    }
+    voter_pty->dataReceived.connect(sigc::mem_fun(*this, &Voter::commandHandler));
   }
   
   string receivers;
@@ -486,6 +509,26 @@ void Voter::reset(void)
 /*
  * Private member functions
  */
+void Voter::commandHandler(const void *buf, size_t count) {
+  char* buffer = (char *) buf;
+  char* command;
+  buffer[count] = '\0'; // received string is not null terminated
+  command = strtok(buffer, "\n\r ");
+  while (command != NULL && count >= 3) {
+    if (command[0] != '?' && strchr(command, ':')) {
+      char *receiver = strsep(&command, ":");
+      if (command[0] == '0') {
+        Voter::setRxStatus(receiver, false);
+      } else {
+        Voter::setRxStatus(receiver, true);
+      }
+    }
+    command = strtok(NULL, "\n\r ");
+    count -= sizeof(command);
+  }
+  printSquelchState();
+} 
+ 
 void Voter::dispatchEvent(Macho::IEvent<Top> *event)
 {
   if (!is_processing_event)
@@ -536,6 +579,19 @@ void Voter::unmuteAll(void)
   }
 } /* Voter::unmuteAll */
 
+void Voter::setRxStatus(char *name, bool status)
+{
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    if ((*it)->name().compare(name) == 0)
+    {
+      cout << "Voter: " << (status?"Enabling":"Disabling") << " receiver " << (*it)->name() << endl;
+      (*it)->setEnabled(status);
+    }
+  }
+}
+
 void Voter::resetAll(void)
 {
   list<SatRx *>::iterator it;
@@ -555,15 +611,16 @@ void Voter::printSquelchState(void)
   {
     float siglev = (*it)->signalStrength();
     bool sql_is_open = (*it)->squelchIsOpen();
+    bool is_enabled = (*it)->isEnabled();
 
     os << (*it)->name();
     if (sql_is_open)
     {
-      os << ((*it) == sm->activeSrx() ? "*" : ":");
+      os << ((*it) == sm->activeSrx() ? "*" : (is_enabled ? ":" : "#"));
     }
     else
     {
-      os << "_";
+      os << (is_enabled ? "_" : "#");
     }
     os << showpos << setw(4) << static_cast<int>(siglev) << noshowpos;
     os << " ";
