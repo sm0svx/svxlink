@@ -9,8 +9,6 @@
 #
 #  Visit the project at OpenRepeater.com
 ###############################################################################
-
-
 # Start of namespace
 namespace eval RemoteRelay {
 	
@@ -18,25 +16,21 @@ namespace eval RemoteRelay {
 	if {![info exists CFG_ID]} {
 		return;
 	}
-	
 
 	# Extract the module name from the current namespace
 	set module_name [namespace tail [namespace current]]
-	
 
 	# A convenience function for printing out information prefixed by the module name
 	proc printInfo {msg} {
 		variable module_name
 		puts "$module_name: $msg"
 	}
-	
 
 	# A convenience function for calling an event handler
 	proc processEvent {ev} {
 		variable module_name
 		::processEvent "$module_name" "$ev"
 	}
-	
 
 	# Executed when this module is being activated
 	proc activateInit {} {
@@ -79,7 +73,6 @@ namespace eval RemoteRelay {
 		set ACCESS_GRANTED 0
 		set ACCESS_ATTEMPTS_ATTEMPTED 0
 
-
 		printInfo "Module Activated"
 
 		if {$ACCESS_PIN_REQ == "1"} {
@@ -92,7 +85,6 @@ namespace eval RemoteRelay {
 		}
 		
 	}
-	
 
 	# Executed when this module is being deactivated.
 	proc deactivateCleanup {} {
@@ -103,9 +95,6 @@ namespace eval RemoteRelay {
 			allRelaysOFF
 		}
 	}
-	
-	
-	
 	
 	# Returns voice status of all relays
 	proc allRelaysStatus {} {
@@ -233,7 +222,6 @@ namespace eval RemoteRelay {
 		exec echo 0 > /sys/class/gpio/gpio$GPIO_RELAY($NUM)/value &
 	}
 
-
 	# Executed when a DTMF command is received
 	proc changeRelayState {cmd} {
 		printInfo "DTMF command received: $cmd"
@@ -351,7 +339,6 @@ namespace eval RemoteRelay {
 	proc allMsgsWritten {} {
 		#printInfo "Test allMsgsWritten called..."
 	}
-
 
 # end of namespace
 }
