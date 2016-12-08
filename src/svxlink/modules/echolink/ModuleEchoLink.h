@@ -228,8 +228,6 @@ class ModuleEchoLink : public Module
 
 #endif /* MODULE_ECHOLINK_INCLUDED */
 
-
-
 /*
  * This file has not been truncated
  */

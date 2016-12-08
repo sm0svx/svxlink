@@ -887,7 +887,7 @@ void ModuleEchoLink::onError(const string& msg)
  */
 void ModuleEchoLink::clientList(void) {
   stringstream ss;
-+  ss << "clients [list";
+  ss << "clients [list";
   vector<QsoImpl *>::iterator it;
   for (it = qsos.begin(); it != qsos.end(); ++it) {
     if ((*it)->currentState() != Qso::STATE_DISCONNECTED) {
