@@ -66,6 +66,11 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
 Description: Server to allow svxlink repeaters to linkup without 
  EchoLink® protocol.
 
+Package: svxserver-debug
+Architecture: any
+Depends: svxserver (= ${binary:Version}), ${misc:Depends}
+Description: svxserver (debug symbols)
+
 Package: remotetrx
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
