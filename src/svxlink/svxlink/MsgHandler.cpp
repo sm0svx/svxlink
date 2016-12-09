@@ -266,6 +266,13 @@ void MsgHandler::playTone(int fq, int amp, int length, bool idle_marked)
   addItemToQueue(item);
 } /* MsgHandler::playSilence */
 
++void MsgHandler::playDtmf(char digit, int amp, int length, bool idle_marked)
+{
+  QueueItem *item = new DtmfQueueItem(digit, amp, length, sample_rate,
+                                      idle_marked);
+  addItemToQueue(item);
+} /* MsgHandler::playDtmf */
+
 void MsgHandler::clear(void)
 {
   clearP();
