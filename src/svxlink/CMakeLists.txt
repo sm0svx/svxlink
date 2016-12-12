@@ -1,4 +1,4 @@
-include_directories(trx svxlink svxserver)
+include_directories(trx svxlink)
 
 add_subdirectory(trx)
 add_subdirectory(svxlink)
