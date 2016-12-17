@@ -24,98 +24,54 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cmath>
 #include <limits>
 //#include <iostream>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioFilter.h>
 #include <AsyncSigCAudioSink.h>
 #include <AsyncConfig.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "SigLevDetNoise.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 SigLevDetNoise::SigLevDetNoise(void)
   : sample_rate(0), block_len(0), filter(0), sigc_sink(0),
     slope(10.0), offset(0.0), update_interval(0), update_counter(0),
@@ -124,14 +80,12 @@ SigLevDetNoise::SigLevDetNoise(void)
 {
 } /* SigLevDetNoise::SigLevDetNoise */
 
-
 SigLevDetNoise::~SigLevDetNoise(void)
 {
   clearHandler();
   delete filter;
   delete sigc_sink;
 } /* SigLevDetNoise::~SigLevDetNoise */
-
 
 bool SigLevDetNoise::initialize(Config &cfg, const string& name,
                                 int sample_rate)
@@ -231,7 +185,6 @@ float SigLevDetNoise::lastSiglev(void) const
 
 } /* SigLevDetNoise::lastSiglev */
 
-
 float SigLevDetNoise::siglevIntegrated(void) const
 {
   if (ss_values.empty())
@@ -262,7 +215,6 @@ float SigLevDetNoise::siglevIntegrated(void) const
 
 } /* SigLevDetNoise::siglevIntegrated */
 
-
 void SigLevDetNoise::reset(void)
 {
   filter->reset();
@@ -273,22 +225,13 @@ void SigLevDetNoise::reset(void)
   ss = 0.0;
 } /* SigLevDetNoise::reset */
 
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 int SigLevDetNoise::processSamples(float *samples, int count)
 {
   for (int i=0; i<count; ++i)
@@ -324,8 +267,6 @@ int SigLevDetNoise::processSamples(float *samples, int count)
   return count;
   
 } /* SigLevDetNoise::processSamples */
-
-
 
 /*
  * This file has not been truncated

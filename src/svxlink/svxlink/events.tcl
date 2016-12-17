@@ -31,7 +31,6 @@ proc playMsg {context msg} {
   }
 }
 
-
 #
 # Play a range of subcommand description files. The file names must be on the
 # format <basename><command number>[ABCD*#]. The last characters are optional.
@@ -67,7 +66,6 @@ proc playSubcommands {context basename {header ""}} {
   }
 }
 
-
 #
 # Process the given event.
 # All TCL modules should use this function instead of calling playMsg etc
@@ -82,13 +80,11 @@ proc processEvent {module ev} {
   eval "$func"
 }
 
-
 ###############################################################################
 #
 # Main program
 #
 ###############################################################################
-
 set basedir [file dirname $script_path];
 if [info exists Logic::CFG_DEFAULT_LANG] {
   set lang $Logic::CFG_DEFAULT_LANG
@@ -131,7 +127,6 @@ foreach {file} [glob -directory $basedir/modules.d *.tcl] {
 if [info exists is_core_event_handler] {
   puts "$logic_name: Event handler script successfully loaded.";
 }
-
 
 #
 # This file has not been truncated

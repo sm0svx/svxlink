@@ -25,101 +25,56 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cstdio>
 #include <cstdlib>
 
 #include <iostream>
 #include <sstream>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "version/MODULE_DTMF_REPEATER.h"
 #include "ModuleDtmfRepeater.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Pure C-functions
- *
- ****************************************************************************/
-
-
+ */
 extern "C" {
   Module *module_init(void *dl_handle, Logic *logic, const char *cfg_name)
   {
@@ -127,15 +82,9 @@ extern "C" {
   }
 } /* extern "C" */
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
-
+ */
 ModuleDtmfRepeater::ModuleDtmfRepeater(void *dl_handle, Logic *logic,
       	      	      	      	       const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), repeat_delay_timer(-1),
@@ -147,50 +96,36 @@ ModuleDtmfRepeater::ModuleDtmfRepeater(void *dl_handle, Logic *logic,
       sigc::hide(mem_fun(*this, &ModuleDtmfRepeater::onRepeatDelayExpired)));
 } /* ModuleDtmfRepeater */
 
-
 ModuleDtmfRepeater::~ModuleDtmfRepeater(void)
 {
 } /* ~ModuleDtmfRepeater */
 
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
-
+ */
 void ModuleDtmfRepeater::resumeOutput(void)
 {
 
 } /* ModuleDtmfRepeater::resumeOutput */
-
 
 void ModuleDtmfRepeater::allSamplesFlushed(void)
 {
 
 } /* ModuleDtmfRepeater::allSamplesFlushed */
 
-
 int ModuleDtmfRepeater::writeSamples(const float *samples, int count)
 {
   return count;
 } /* ModuleDtmfRepeater::writeSamples */
-
 
 void ModuleDtmfRepeater::flushSamples(void)
 {
   sourceAllSamplesFlushed();
 } /* ModuleDtmfRepeater::flushSamples */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 /*
  *----------------------------------------------------------------------------
  * Method:    initialize
@@ -222,7 +157,6 @@ bool ModuleDtmfRepeater::initialize(void)
   
 } /* initialize */
 
-
 /*
  *----------------------------------------------------------------------------
  * Method:    activateInit
@@ -241,7 +175,6 @@ void ModuleDtmfRepeater::activateInit(void)
   sql_is_open = squelchIsOpen();
   deactivate_on_sql_close = false;
 } /* activateInit */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -262,7 +195,6 @@ void ModuleDtmfRepeater::deactivateCleanup(void)
   sql_is_open = false;
   deactivate_on_sql_close = false;
 } /* deactivateCleanup */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -312,7 +244,6 @@ bool ModuleDtmfRepeater::dtmfDigitReceived(char digit, int duration)
   
 } /* dtmfDigitReceived */
 
-
 void ModuleDtmfRepeater::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
   received_digits += cmd;
@@ -326,7 +257,6 @@ void ModuleDtmfRepeater::dtmfCmdReceivedWhenIdle(const std::string &cmd)
     setupRepeatDelay();
   }
 } /* dtmfCmdReceivedWhenIdle */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -352,7 +282,6 @@ void ModuleDtmfRepeater::squelchOpen(bool is_open)
   }
 } /* squelchOpen */
 
-
 void ModuleDtmfRepeater::allMsgsWritten(void)
 {
   if (!received_digits.empty() && (repeat_delay_timer.timeout() <= 0))
@@ -360,7 +289,6 @@ void ModuleDtmfRepeater::allMsgsWritten(void)
     sendStoredDigits();
   }
 } /* ModuleDtmfRepeater::allMsgsWritten */
-
 
 void ModuleDtmfRepeater::onRepeatDelayExpired(void)
 {
@@ -371,7 +299,6 @@ void ModuleDtmfRepeater::onRepeatDelayExpired(void)
     sendStoredDigits();
   }
 } /* ModuleDtmfRepeater::onRepeatDelayExpired */
-
 
 void ModuleDtmfRepeater::setupRepeatDelay(void)
 {
@@ -384,15 +311,12 @@ void ModuleDtmfRepeater::setupRepeatDelay(void)
   }
 } /* ModuleDtmfRepeater::setupRepeatDelay */
 
-
 void ModuleDtmfRepeater::sendStoredDigits(void)
 {
   cout << name() << ": Sending DTMF digits " << received_digits << endl;
   sendDtmf(received_digits);
   received_digits.clear();
 } /* ModuleDtmfRepeater::sendStoredDigits */
-
-
 
 /*
  * This file has not been truncated

@@ -25,91 +25,50 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 /** @example EchoLinkDirectoryModel_demo.cpp
 An example of how to use the EchoLinkDirectoryModel class
 */
-
-
 #ifndef ECHOLINK_DIRECTORY_MODEL_INCLUDED
 #define ECHOLINK_DIRECTORY_MODEL_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <QList>
 #include <QAbstractItemModel>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <EchoLinkStationData.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
+ */
 
-//namespace MyNameSpace
-//{
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	A_brief_class_description
 @author Tobias Blomberg / SM0SVX
@@ -165,12 +124,7 @@ class EchoLinkDirectoryModel : public QAbstractItemModel
     
 };  /* class EchoLinkDirectoryModel */
 
-
-//} /* namespace */
-
 #endif /* ECHOLINK_DIRECTORY_MODEL_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

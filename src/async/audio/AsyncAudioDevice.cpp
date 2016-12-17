@@ -27,103 +27,60 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cstring>
 #include <algorithm>
 #include <iostream>
 #include <sstream>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncFdWatch.h"
 #include "AsyncAudioIO.h"
 #include "AsyncAudioDevice.h"
 #include "AsyncAudioDeviceFactory.h"
 
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
-
+ */
 map<string, AudioDevice*>  AudioDevice::devices;
 int AudioDevice::sample_rate = DEFAULT_SAMPLE_RATE;
 int AudioDevice::block_size_hint = DEFAULT_BLOCK_SIZE_HINT;
 int AudioDevice::block_count_hint = DEFAULT_BLOCK_COUNT_HINT;
 int AudioDevice::channels = DEFAULT_CHANNELS;
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 AudioDevice *AudioDevice::registerAudioIO(const string& dev_designator,
       	AudioIO *audio_io)
 {
@@ -159,7 +116,6 @@ AudioDevice *AudioDevice::registerAudioIO(const string& dev_designator,
   
 } /* AudioDevice::registerAudioIO */
 
-
 void AudioDevice::unregisterAudioIO(AudioIO *audio_io)
 {
   AudioDevice *dev = audio_io->device();
@@ -191,7 +147,6 @@ void AudioDevice::unregisterAudioIO(AudioIO *audio_io)
     delete dev;
   }
 } /* AudioDevice::unregisterAudioIO */
-
 
 bool AudioDevice::open(Mode mode)
 {
@@ -226,7 +181,6 @@ bool AudioDevice::open(Mode mode)
   
 } /* AudioDevice::open */
 
-
 void AudioDevice::close(void)
 {
   list<AudioIO*>::iterator it;
@@ -243,25 +197,17 @@ void AudioDevice::close(void)
   
 } /* AudioDevice::close */
 
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
-
-
+ */
 AudioDevice::AudioDevice(const string& dev_name)
   : dev_name(dev_name), current_mode(MODE_NONE), use_count(0)
 {
 } /* AudioDevice::AudioDevice */
 
-
 AudioDevice::~AudioDevice(void)
 {
 } /* AudioDevice::~AudioDevice */
-
 
 void AudioDevice::putBlocks(int16_t *buf, int frame_cnt)
 {
@@ -284,7 +230,6 @@ void AudioDevice::putBlocks(int16_t *buf, int frame_cnt)
     }
   }
 } /* AudioDevice::putBlocks */
-
 
 int AudioDevice::getBlocks(int16_t *buf, int block_cnt)
 {
@@ -386,14 +331,9 @@ int AudioDevice::getBlocks(int16_t *buf, int block_cnt)
   
 } /* AudioDevice::getBlocks */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 
 /*
  * This file has not been truncated

@@ -24,35 +24,24 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <iostream>
 #include <cstdlib>
+#include <string.h>
 
-
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
 
-
-/****************************************************************************
+/*
  *
  * Local Includes
  *
- ****************************************************************************/
-
+ */
 #include "Rx.h"
 #include "LocalRx.h"
 #include "Voter.h"
@@ -61,33 +50,19 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Ddr.h"
 #include "LocalRxSim.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
-
+ */
 class LocalRxFactory : public RxFactory
 {
   public:
@@ -99,7 +74,6 @@ class LocalRxFactory : public RxFactory
       return new LocalRx(cfg, name);
     }
 }; /* class LocalRxFactory */
-
 
 class VoterFactory : public RxFactory
 {
@@ -113,7 +87,6 @@ class VoterFactory : public RxFactory
     }
 }; /* class VoterFactory */
 
-
 class NetRxFactory : public RxFactory
 {
   public:
@@ -125,7 +98,6 @@ class NetRxFactory : public RxFactory
       return new NetRx(cfg, name);
     }
 }; /* class NetRxFactory */
-
 
 class DummyRxFactory : public RxFactory
 {
@@ -139,7 +111,6 @@ class DummyRxFactory : public RxFactory
     }
 }; /* class DummyRxFactory */
 
-
 class DdrFactory : public RxFactory
 {
   public:
@@ -151,7 +122,6 @@ class DdrFactory : public RxFactory
       return new Ddr(cfg, name);
     }
 }; /* class DdrFactory */
-
 
 class LocalRxSimFactory : public RxFactory
 {
@@ -165,39 +135,43 @@ class LocalRxSimFactory : public RxFactory
     }
 }; /* class LocalRxSimFactory */
 
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
-
+ */
 map<string, RxFactory*> RxFactory::rx_factories;
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
+ */
+void Rx::setEnabled(bool status)
+{
+  cout << "RX: " << m_name << ": setEnabled: " << status << endl;
+  m_is_enabled = status;
+  if (! status) {
+    // close squelch, but set m_sql_open_hidden to what it WAS
+    int was_open = m_sql_open;
+    setSquelchState(false);
+    m_sql_open_hidden = was_open;
+
+  } else {
+    cout << "Rx:setEnabled: re-enable, set SQ to " << m_sql_open_hidden << endl;
+    // Set squelch to the correct, current status
+    setSquelchState(m_sql_open_hidden);
+  }
+}
+
+bool Rx::isEnabled(void)
+{
+  return m_is_enabled;
+}
 
 std::string Rx::muteStateToString(MuteState mute_state)
 {
@@ -213,19 +187,16 @@ std::string Rx::muteStateToString(MuteState mute_state)
   return "?";
 } /* Rx::muteStateToString */
 
-
 Rx::Rx(Config &cfg, const string& name)
-  : m_name(name), m_verbose(true), m_sql_open(false), m_cfg(cfg),
-    m_sql_tmo_timer(0)
+  : m_name(name), m_verbose(true), m_sql_open(false), m_sql_open_hidden(false), m_cfg(cfg),
+    m_sql_tmo_timer(0), m_is_enabled(true)
 {
 } /* Rx::Rx */
-
 
 Rx::~Rx(void)
 {
   delete m_sql_tmo_timer;
 } /* Rx::~Rx */
-
 
 bool Rx::initialize(void)
 {
@@ -247,13 +218,11 @@ bool Rx::initialize(void)
   
 } /* Rx::initialize */
 
-
 RxFactory::RxFactory(const string &name)
   : m_name(name)
 {
   rx_factories[name] = this;
 } /* RxFactory::RxFactory */
-
 
 RxFactory::~RxFactory(void)
 {
@@ -261,8 +230,8 @@ RxFactory::~RxFactory(void)
   it = rx_factories.find(m_name);
   assert(it != rx_factories.end());
   rx_factories.erase(it);
+  
 } /* RxFactory::~RxFactory */
-
 
 Rx *RxFactory::createNamedRx(Config& cfg, const string& name)
 {
@@ -305,16 +274,20 @@ Rx *RxFactory::createNamedRx(Config& cfg, const string& name)
 
 } /* RxFactory::createNamedRx */
 
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
 void Rx::setSquelchState(bool is_open)
 {
+  m_sql_open_hidden = is_open;
+
+  if (is_open && not m_is_enabled)
+  {
+    // cout << m_name << ": Refusing to open squelch, we're disabled" << endl;
+    return;
+  }
+  
   if (is_open == m_sql_open)
   {
     return;
@@ -334,22 +307,15 @@ void Rx::setSquelchState(bool is_open)
   }
 } /* Rx::setSquelchState */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void Rx::sqlTimeout(Timer *t)
 {
   cerr << "*** WARNING: The squelch was open for too long for receiver "
        << name() << ". Forcing it closed.\n";
   setSquelchState(false);
 } /* Rx::sqlTimeout */
-
-
 
 /*
  * This file has not been truncated

@@ -16,8 +16,7 @@
 #include "Macho.hpp"
 using namespace Macho;
 
-
-////////////////////////////////////////////////////////////////////////////////
+///
 // Helper functions for tracing.
 #ifdef MACHO_TRACE
 #	include <iostream>
@@ -33,13 +32,11 @@ using namespace Macho;
 #	define MACHO_TRC3(STATE, MSG1, MSG2)
 #endif
 
-
-////////////////////////////////////////////////////////////////////////////////
+///
 // Box for states which don't declare own Box class.
 _EmptyBox _EmptyBox::theEmptyBox;
 
-
-////////////////////////////////////////////////////////////////////////////////
+///
 // Helper functions for box creation
 template<>
 void * Macho::_createBox<_EmptyBox>(void * & place) {
@@ -57,15 +54,13 @@ void * Macho::_cloneBox<_EmptyBox>(void * other) {
 }
 #endif
 
-
-////////////////////////////////////////////////////////////////////////////////
+///
 // Implementation for Alias
 void Alias::setState(_MachineBase & machine) const {
 	machine.setPendingState(key()->instanceGenerator(machine), myInitializer->clone());
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
+///
 // Implementation for StateSpecification
 _StateInstance & _StateSpecification::_getInstance(_MachineBase & machine) {
 	// Look first in machine for existing StateInstance.
@@ -94,8 +89,7 @@ void _StateSpecification::setState(_StateInstance & current) {
 }
 #endif
 
-
-////////////////////////////////////////////////////////////////////////////////
+///
 // StateInstance implementation
 _StateInstance::_StateInstance(_MachineBase & machine, _StateInstance * parent)
 	: myMachine(machine)
@@ -184,8 +178,7 @@ _StateInstance * _StateInstance::clone(_MachineBase & newMachine) {
 }
 #endif
 
-
-////////////////////////////////////////////////////////////////////////////////
+///
 // Base class for Machine objects.
 _MachineBase::_MachineBase()
 	: myCurrentState(0)
@@ -368,8 +361,7 @@ void _MachineBase::rattleOn() {
 
 } // rattleOn
 
-
-////////////////////////////////////////////////////////////////////////////////
+///
 // Implementation for _AdaptingInitializer
 
 Key _AdaptingInitializer::adapt(Key key) {
@@ -383,8 +375,7 @@ Key _AdaptingInitializer::adapt(Key key) {
 	return history ? history->key() : key;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
+///
 // Singleton initializers.
 _DefaultInitializer _theDefaultInitializer;
 _HistoryInitializer _theHistoryInitializer;

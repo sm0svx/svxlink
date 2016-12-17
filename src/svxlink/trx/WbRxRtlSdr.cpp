@@ -24,14 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <stdint.h>
 #include <cassert>
 #include <limits>
@@ -39,22 +34,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <deque>
 #include <iterator>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncConfig.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "WbRxRtlSdr.h"
 #include "RtlTcp.h"
 #ifdef HAS_RTLSDR_SUPPORT
@@ -62,66 +49,35 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #endif
 #include "Ddr.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
-
+ */
 WbRxRtlSdr::InstanceMap WbRxRtlSdr::instances;
 
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 WbRxRtlSdr *WbRxRtlSdr::instance(Async::Config &cfg, const string &name)
 {
   InstanceMap::iterator it = instances.find(name);
@@ -133,7 +89,6 @@ WbRxRtlSdr *WbRxRtlSdr::instance(Async::Config &cfg, const string &name)
   instances[name] = wbrx;
   return wbrx;
 } /* WbRxRtlSdr::instance */
-
 
 WbRxRtlSdr::WbRxRtlSdr(Async::Config &cfg, const string &name)
   : auto_tune_enabled(true), m_name(name), xvrtr_offset(0)
@@ -207,13 +162,11 @@ WbRxRtlSdr::WbRxRtlSdr(Async::Config &cfg, const string &name)
   rtl->enableDistPrint(peak_meter);
 } /* WbRxRtlSdr::WbRxRtlSdr */
 
-
 WbRxRtlSdr::~WbRxRtlSdr(void)
 {
   delete rtl;
   rtl = 0;
 } /* WbRxRtlSdr::~WbRxRtlSdr */
-
 
 void WbRxRtlSdr::setCenterFq(uint32_t fq)
 {
@@ -226,18 +179,15 @@ void WbRxRtlSdr::setCenterFq(uint32_t fq)
   }
 } /* WbRxRtlSdr::setCenterFq */
 
-
 uint32_t WbRxRtlSdr::centerFq(void)
 {
   return rtl->centerFq() - xvrtr_offset;
 } /* WbRxRtlSdr::centerFq */
 
-
 uint32_t WbRxRtlSdr::sampleRate(void) const
 {
   return rtl->sampleRate();
 } /* WbRxRtlSdr::sampleRate */
-
 
 void WbRxRtlSdr::registerDdr(Ddr *ddr)
 {
@@ -249,7 +199,6 @@ void WbRxRtlSdr::registerDdr(Ddr *ddr)
     findBestCenterFq();
   }
 } /* WbRxRtlSdr::registerDdr */
-
 
 void WbRxRtlSdr::unregisterDdr(Ddr *ddr)
 {
@@ -268,28 +217,18 @@ void WbRxRtlSdr::unregisterDdr(Ddr *ddr)
   }
 } /* WbRxRtlSdr::unregisterDdr */
 
-
 bool WbRxRtlSdr::isReady(void) const
 {
   return (rtl != 0) && rtl->isReady();
 } /* WbRxRtlSdr::isReady */
 
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void WbRxRtlSdr::findBestCenterFq(void)
 {
   if (ddrs.empty())
@@ -363,7 +302,6 @@ void WbRxRtlSdr::findBestCenterFq(void)
 
 } /* WbRxRtlSdr::findBestCenterFq */
 
-
 void WbRxRtlSdr::rtlReadyStateChanged(void)
 {
   cout << name() << ": ";
@@ -390,8 +328,6 @@ void WbRxRtlSdr::rtlReadyStateChanged(void)
 
   readyStateChanged();
 } /* WbRxRtlSdr::rtlReadyStateChanged */
-
-
 
 /*
  * This file has not been truncated

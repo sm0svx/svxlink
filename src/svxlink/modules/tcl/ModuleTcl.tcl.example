@@ -24,7 +24,6 @@ if {![info exists CFG_ID]} {
 #
 set module_name [namespace tail [namespace current]]
 
-
 #
 # A convenience function for printing out information prefixed by the
 # module name
@@ -36,7 +35,6 @@ proc printInfo {msg} {
   puts "$module_name: $msg"
 }
 
-
 #
 # A convenience function for calling an event handler
 #
@@ -47,8 +45,6 @@ proc processEvent {ev} {
   ::processEvent "$module_name" "$ev"
 }
 
-
-
 #
 # Executed when this module is being activated
 #
@@ -57,7 +53,6 @@ proc activateInit {} {
   
 }
 
-
 #
 # Executed when this module is being deactivated.
 #
@@ -65,7 +60,6 @@ proc deactivateCleanup {} {
   printInfo "Module deactivated"
 
 }
-
 
 #
 # Executed when a DTMF digit (0-9, A-F, *, #) is received
@@ -77,7 +71,6 @@ proc dtmfDigitReceived {char duration} {
   printInfo "DTMF digit $char received with duration $duration milliseconds"
 
 }
-
 
 #
 # Executed when a DTMF command is received
@@ -96,7 +89,6 @@ proc dtmfCmdReceived {cmd} {
   }
 }
 
-
 #
 # Executed when a DTMF command is received in idle mode. That is, a command is
 # received when this module has not been activated first.
@@ -107,7 +99,6 @@ proc dtmfCmdReceivedWhenIdle {cmd} {
   printInfo "DTMF command received when idle: $cmd"
   
 }
-
 
 #
 # Executed when the squelch open or close.
@@ -120,7 +111,6 @@ proc squelchOpen {is_open} {
   
 }
 
-
 #
 # Executed when all announcement messages has been played.
 # Note that this function also may be called even if it wasn't this module
@@ -131,11 +121,8 @@ proc allMsgsWritten {} {
   
 }
 
-
-
 # end of namespace
 }
-
 
 #
 # This file has not been truncated

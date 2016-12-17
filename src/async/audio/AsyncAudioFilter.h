@@ -23,88 +23,49 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ASYNC_AUDIO_FILTER_INCLUDED
 #define ASYNC_AUDIO_FILTER_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <string>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioProcessor.h>
 
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+ */
 class FidVars;
   
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	A class for creating a wide range of audio filters
 @author Tobias Blomberg / SM0SVX
@@ -171,8 +132,7 @@ class AudioFilter : public AudioProcessor
      * @brief Reset the filter state
      */
     void reset(void);
-    
-    
+
   protected:
     /**
      * @brief Process incoming samples and put them into the output buffer
@@ -187,7 +147,6 @@ class AudioFilter : public AudioProcessor
      */
     void processSamples(float *dest, const float *src, int count);
 
-
   private:
     int         sample_rate;
     FidVars   	*fv;
@@ -200,12 +159,9 @@ class AudioFilter : public AudioProcessor
 
 };  /* class AudioFilter */
 
-
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_FILTER_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

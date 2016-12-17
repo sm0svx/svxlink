@@ -24,60 +24,33 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "PttCtrl.h"
 
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace Async;
 using namespace sigc;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
-
-
+ */
 PttCtrl::PttCtrl(int tx_delay)
   : tx_ctrl_mode(Tx::TX_OFF), is_transmitting(false), tx_delay_timer(0),
     tx_delay(tx_delay), fifo(0)
@@ -99,7 +72,6 @@ PttCtrl::PttCtrl(int tx_delay)
   AudioSource::setHandler(&valve);
 }
 
-
 PttCtrl::~PttCtrl(void)
 {
   AudioSink::clearHandler();
@@ -107,7 +79,6 @@ PttCtrl::~PttCtrl(void)
   delete fifo;
   delete tx_delay_timer;
 }
-
 
 void PttCtrl::setTxCtrlMode(Tx::TxCtrlMode mode)
 {
@@ -133,7 +104,6 @@ void PttCtrl::setTxCtrlMode(Tx::TxCtrlMode mode)
   }
 }
 
-
 int PttCtrl::writeSamples(const float *samples, int count)
 {
   if ((tx_ctrl_mode == Tx::TX_AUTO) && !is_transmitting)
@@ -149,7 +119,6 @@ int PttCtrl::writeSamples(const float *samples, int count)
   return valve.writeSamples(samples, count);
 }
 
-
 void PttCtrl::allSamplesFlushed(void)
 {
   valve.allSamplesFlushed();
@@ -159,22 +128,13 @@ void PttCtrl::allSamplesFlushed(void)
   }
 }
 
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
+ */
 void PttCtrl::transmit(bool do_transmit)
 {
   if (do_transmit == is_transmitting)
@@ -211,7 +171,6 @@ void PttCtrl::transmit(bool do_transmit)
   }
 }
 
-
 void PttCtrl::txDelayExpired(Timer *t)
 {
   delete tx_delay_timer;
@@ -220,7 +179,6 @@ void PttCtrl::txDelayExpired(Timer *t)
   valve.setOpen(true);
   valve.setBlockWhenClosed(false);
 }
-
 
 /*
  * This file has not been truncated

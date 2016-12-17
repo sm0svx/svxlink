@@ -23,48 +23,30 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef NET_RX_INCLUDED
 #define NET_RX_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 
 #include <string>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncConfig.h>
 #include <AsyncTcpConnection.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "Rx.h"
 
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
-
+ */
 namespace NetTrxMsg
 {
   class Msg;
@@ -75,48 +57,27 @@ namespace Async
   class AudioDecoder;
 };
 
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
+ */
 
-//namespace MyNameSpace
-//{
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+ */
 class ToneDet;
 class NetTrxTcpClient;
-  
 
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	Implements a class that connect to a remote receiver via IP
 @author Tobias Blomberg
@@ -186,10 +147,8 @@ class NetRx : public Rx
      * This function is normally only called from a connected sink object.
      */
     //virtual void resumeOutput(void) {}
-    
 
   protected:
-    
 
   private:
     Async::Config     	&cfg;
@@ -211,12 +170,7 @@ class NetRx : public Rx
 
 };  /* class NetRx */
 
-
-//} /* namespace */
-
 #endif /* NET_RX_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

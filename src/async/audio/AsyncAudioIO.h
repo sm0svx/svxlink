@@ -30,93 +30,55 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /** @example  AsyncAudioIO_demo.cpp
 An example of how to use the Async::AudioIO class
 */
-
-
-
 #ifndef ASYNC_AUDIO_IO_INCLUDED
 #define ASYNC_AUDIO_IO_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cstdio>
 #include <string>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncFdWatch.h>
 #include <AsyncTimer.h>
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-/****************************************************************************
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+ */
 class AudioDevice;
 class AudioValve;
 class AudioFifo;
 
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
-
-
+ */
   
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
 @brief	A class for handling audio input/output to an audio device
 @author Tobias Blomberg
@@ -333,8 +295,7 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
      */
     void flushSamples(void);
 #endif
-
-            
+      
   protected:
     
   private:
@@ -361,11 +322,9 @@ class AudioIO : public Async::AudioSource, public Async::AudioSink
 
 };  /* class AudioIO */
 
-
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_IO_INCLUDED */
-
 
 /*
  * This file has not been truncated

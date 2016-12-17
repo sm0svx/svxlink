@@ -24,10 +24,8 @@ using namespace std;
 using namespace SigC;
 using namespace Async;
 
-
 set<int>	dtmf_k;
 set<int>	dtmf_ko;
-
 
 class BarPlot : public QWidget
 {
@@ -90,7 +88,6 @@ class BarPlot : public QWidget
     }
 };
 
-
 DtmfPlot *plot_win = 0;
 BarPlot *bar_plot = 0;
 BarPlot *overtone_plot = 0;
@@ -105,7 +102,6 @@ class Det : public ToneDetector
     
 };
 
-
 void detValueChanged(ToneDetector *tdet, double value)
 {
   Det *det = dynamic_cast<Det*>(tdet);
@@ -113,14 +109,12 @@ void detValueChanged(ToneDetector *tdet, double value)
   bar_plot->setBar(det->index, (int)(value / 100000.0));
 }
 
-
 void overtoneValueChanged(ToneDetector *tdet, double value)
 {
   Det *det = dynamic_cast<Det*>(tdet);
   //overtone_plot->setBar(det->index, (int)(value / 2500000000.0));
   overtone_plot->setBar(det->index, (int)(value / 100000.0));
 }
-
 
 void repaint(Timer *t)
 {
@@ -147,7 +141,6 @@ void dtmf_digit_detected(char digit)
       	  plot_win->digit_view->text().length());
   plot_win->digit_view->insert(str);
 } /*  */
-
 
 int update_peak_meter(float *samples, int count)
 {
@@ -181,7 +174,6 @@ int update_peak_meter(float *samples, int count)
   return count;
   
 } /*  */
-
 
 int fq_to_k(int N, int fq)
 {

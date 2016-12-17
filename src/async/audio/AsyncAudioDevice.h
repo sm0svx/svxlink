@@ -23,18 +23,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef ASYNC_AUDIO_DEVICE_INCLUDED
 #define ASYNC_AUDIO_DEVICE_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 #include <stdint.h>
 
@@ -42,72 +36,41 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <map>
 #include <list>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+ */
 class AudioIO;
 class FdWatch;
 
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
+ */
 
 /**
 @brief	Base class for handling audio devices
@@ -132,7 +95,7 @@ class AudioDevice : public sigc::trackable
       MODE_WR,	  ///< Write
       MODE_RDWR   ///< Both read and write
     } Mode;
-  
+
     /**
      * @brief 	Register an AudioIO object with the given device name
      * @param 	dev_designator The name of the audio device
@@ -146,13 +109,13 @@ class AudioDevice : public sigc::trackable
      */
     static AudioDevice *registerAudioIO(const std::string& dev_designator,
       	    AudioIO *audio_io);
-    
+
     /**
      * @brief 	Unregister a previously registered AudioIO object
      * @param 	audio_io  A previously registered AudioIO object
      */
     static void unregisterAudioIO(AudioIO *audio_io);
-    
+
     /**
      * @brief 	Set the sample rate used when doing future opens
      * @param 	rate  The sampling rate to use
@@ -163,7 +126,7 @@ class AudioDevice : public sigc::trackable
      * opened sound cards will not be affected.
      */
     static void setSampleRate(int rate) { sample_rate = rate; }
-    
+
     /**
      * @brief 	Set the blocksize used when opening audio devices
      * @param 	size  The blocksize, in samples per channel, to use
@@ -182,7 +145,7 @@ class AudioDevice : public sigc::trackable
     {
       block_size_hint = size;
     }
-    
+
     /**
      * @brief 	Find out what the blocksize is set to
      * @return	Returns the currently set blocksize in samples per channel
@@ -206,7 +169,7 @@ class AudioDevice : public sigc::trackable
     {
       block_count_hint = (count <= 0) ? 0 : count;
     }
-    
+
     /**
      * @brief 	Set the number of channels used when doing future opens
      * @param 	channels  The number of channels to use
@@ -221,32 +184,31 @@ class AudioDevice : public sigc::trackable
       AudioDevice::channels = channels;
     }
 
-    
     /**
      * @brief 	Check if the audio device has full duplex capability
      * @return	Returns \em true if the device has full duplex capability
      *	      	or else \em false
      */
     virtual bool isFullDuplexCapable(void) = 0;
-    
+
     /**
      * @brief 	Open the audio device
      * @param 	mode The mode to open the audio device in (See AudioIO::Mode)
      * @return	Returns \em true on success or else \em false
      */
     bool open(Mode mode);
-    
+
     /**
      * @brief 	Close the audio device
      */
     void close(void);
-    
+
     /**
      * @brief 	Get the current operating mode of this audio device
      * @return	Returns the current mode (See AudioIO::Mode)
      */
     Mode mode(void) const { return current_mode; }
-    
+
     /**
      * @brief 	Tell the audio device handler that there are audio to be
      *	      	written in the buffer
@@ -257,7 +219,7 @@ class AudioDevice : public sigc::trackable
      * @brief	Tell the audio device to flush its buffers
      */
     virtual void flushSamples(void) = 0;
-    
+ 
     /**
      * @brief 	Find out how many samples there are in the output buffer
      * @return	Returns the number of samples in the output buffer on
@@ -269,7 +231,7 @@ class AudioDevice : public sigc::trackable
      * been flushed.
      */
     virtual int samplesToWrite(void) const = 0;
-    
+
     /**
      * @brief 	Return the sample rate
      * @return	Returns the sample rate
@@ -281,8 +243,7 @@ class AudioDevice : public sigc::trackable
      * @return  Returns the device name
      */
     const std::string& devName(void) const { return dev_name; }
-    
-    
+
   protected:
     static int	      	sample_rate;
     static int	      	block_size_hint;
@@ -290,18 +251,18 @@ class AudioDevice : public sigc::trackable
     static int	      	channels;
 
     std::string       	dev_name;
-    
+
     /**
      * @brief 	Constuctor
      * @param 	dev_name  The name of the device to associate this object with
      */
     explicit AudioDevice(const std::string& dev_name);
-  
+
     /**
      * @brief 	Destructor
      */
     virtual ~AudioDevice(void);
-    
+
     /**
      * @brief 	Open the audio device
      * @param 	mode The mode to open the audio device in (See AudioIO::Mode)
@@ -316,14 +277,13 @@ class AudioDevice : public sigc::trackable
 
     void putBlocks(int16_t *buf, int frame_cnt);
     int getBlocks(int16_t *buf, int block_cnt);
-    
-    
+
   private:
     static const int  DEFAULT_SAMPLE_RATE = INTERNAL_SAMPLE_RATE;
     static const int  DEFAULT_CHANNELS = 2;
     static const int  DEFAULT_BLOCK_COUNT_HINT = 4;
     static const int  DEFAULT_BLOCK_SIZE_HINT = 256; // Samples/channel/block
-    
+
     static std::map<std::string, AudioDevice*>  devices;
     
     Mode      	      	current_mode;
@@ -332,12 +292,9 @@ class AudioDevice : public sigc::trackable
 
 };  /* class AudioDevice */
 
-
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_DEVICE_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

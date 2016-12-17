@@ -24,97 +24,52 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <map>
 #include <utility>
 #include <cmath>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "DtmfEncoder.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 
-
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
-
+ */
 #define BLOCK_SIZE  512
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
-
+ */
 static map<char, pair<int, int> > tone_map;
 
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 DtmfEncoder::DtmfEncoder(int sampling_rate)
   : sampling_rate(sampling_rate), tone_length(100 * sampling_rate / 1000),
     tone_spacing(50 * sampling_rate / 1000), tone_amp(0.5), low_tone(0),
@@ -143,24 +98,20 @@ DtmfEncoder::DtmfEncoder(int sampling_rate)
   
 } /* DtmfEncoder::DtmfEncoder */
 
-
 DtmfEncoder::~DtmfEncoder(void)
 {
   
 } /* DtmfEncoder::~DtmfEncoder */
-
 
 void DtmfEncoder::setDigitDuration(int duration_ms)
 {
   tone_length = duration_ms * sampling_rate / 1000;
 } /* DtmfEncoder::setDigitDuration */
 
-
 void DtmfEncoder::setDigitSpacing(int spacing_ms)
 {
   tone_spacing = spacing_ms * sampling_rate / 1000;
 } /* DtmfEncoder::setDigitSpacing */
-
 
 void DtmfEncoder::setDigitPower(int power_db)
 {
@@ -172,12 +123,10 @@ void DtmfEncoder::setDigitPower(int power_db)
   tone_amp = powf(10.0f, power_db / 20.0f);
 } /* DtmfEncoder::setDigitPower */
 
-
 int DtmfEncoder::digitPower(void) const
 {
   return static_cast<int>(20.0f * log10f(tone_amp) + 3.0f);
 } /* DtmfEncoder::digitPower */
-
 
 void DtmfEncoder::send(const std::string &str)
 {
@@ -185,7 +134,6 @@ void DtmfEncoder::send(const std::string &str)
   current_str += str;
   playNextDigit();
 } /* DtmfEncoder::send */
-
 
 void DtmfEncoder::resumeOutput(void)
 {
@@ -195,7 +143,6 @@ void DtmfEncoder::resumeOutput(void)
   }
 } /* DtmfEncoder::resumeOutput */
 
-
 void DtmfEncoder::allSamplesFlushed(void)
 {
   //printf("All digits sent!\n");
@@ -203,51 +150,12 @@ void DtmfEncoder::allSamplesFlushed(void)
   allDigitsSent();
 } /* DtmfEncoder::allSamplesFlushed */
 
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
 /*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
+ * Protected member functions
  */
 
-
-
-
-
-
-/****************************************************************************
- *
- * Private member functions
- *
- ****************************************************************************/
-
-
 /*
- *----------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *----------------------------------------------------------------------------
+ * Private member functions
  */
 void DtmfEncoder::playNextDigit(void)
 {
@@ -292,7 +200,6 @@ void DtmfEncoder::playNextDigit(void)
   
 } /* DtmfEncoder::playNextDigit */
 
-
 void DtmfEncoder::writeAudio(void)
 {
   float block[BLOCK_SIZE];
@@ -325,8 +232,6 @@ void DtmfEncoder::writeAudio(void)
     playNextDigit();
   }
 } /* DtmfEncoder::writeAudio */
-
-
 
 /*
  * This file has not been truncated

@@ -39,6 +39,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 # Optional parts
 option(USE_QT "Build Qt applications and libs" ON)
 option(BUILD_STATIC_LIBS "Build static libraries in addition to dynamic" OFF)
+option(USE_DEFAULT_COMPILER_FLAGS "Use default compiler flags in cmake file" ON)
+option(WITH_SYSTEMD "Set to ON to create unit files and systemd check on svx-daemon startup" ON )
+#option(WITH_SYSTEMD_WATCHDOG  "Set to ON to use the systemd watchdog in svx-daemon" OFF)
 
 # The sample rate used internally in SvxLink
 if(NOT DEFINED INTERNAL_SAMPLE_RATE)
@@ -52,27 +55,28 @@ include_directories(
   ${CMAKE_BINARY_DIR}
 )
 
-# Warnings should be enabled for GCC. Also turning off the NDEBUG flag
-# since that remove asserts.
-if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_C_FLAGS
-    "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes -Wpointer-arith")
-  set(CMAKE_C_FLAGS_RELEASE "-O3")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g")
+if(NOT DEFINED USE_DEFAULT_COMPILER_FLAGS)
+  # Warnings should be enabled for GCC. Also turning off the NDEBUG flag
+  # since that remove asserts.
+  if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_C_FLAGS
+      "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes -Wpointer-arith")
+    set(CMAKE_C_FLAGS_RELEASE "-O3")
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g")
 
-  set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -Wall -Wpointer-arith")
-  set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
-endif()
+    set(CMAKE_CXX_FLAGS
+      "${CMAKE_CXX_FLAGS} -Wall -Wpointer-arith")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+  endif()
 
-# Set the default build type to Release
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release" CACHE STRING
-      "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel."
-      FORCE)
-endif(NOT CMAKE_BUILD_TYPE)
-
+  # Set the default build type to Release
+  if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING
+        "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel."
+        FORCE)
+  endif(NOT CMAKE_BUILD_TYPE)
+endif(NOT DEFINED USE_DEFAULT_COMPILER_FLAGS)
 
 ##############################################################################
 # Install targets properties setup
@@ -299,6 +303,15 @@ function(install_if_not_exists src dest)
   ")
 endfunction(install_if_not_exists)
 
+#############################################################################
+#Systemd Enviroment 
+#############################################################################
+
+if(WITH_SYSTEMD) 
+    add_subdirectory( systemd )
+endif(WITH_SYSTEMD ) 
+
+message( STATUS "WITH_SYSTEMD = ${WITH_SYSTEMD}" )
 
 ##############################################################################
 # Main execution starts here
@@ -332,4 +345,3 @@ if(USE_QT)
   add_subdirectory(qtel)
 endif(USE_QT)
 add_subdirectory(doc)
-

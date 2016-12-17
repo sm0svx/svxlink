@@ -26,14 +26,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -45,83 +40,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <cassert>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncFdWatch.h>
 
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncTcpServer.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 
 /*
  *------------------------------------------------------------------------
@@ -144,7 +101,7 @@ TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
     cleanup();
     return;
   }
-  
+
   /* Force close on exec */
   if (fcntl(sock, F_SETFD, 1) == -1)
   {
@@ -152,7 +109,7 @@ TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
     cleanup();
     return;
   }
-  
+
     /* Reuse address if server crashes */
   const int on = 1;
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) == -1)
@@ -161,7 +118,7 @@ TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
     cleanup();
     return;
   }
-  
+
     /* Send small packets at once. */
   if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) == -1)
   {
@@ -169,7 +126,7 @@ TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
     cleanup();
     return;
   }
-  
+
   char *endptr = 0;
   struct servent *se;
   uint16_t port = strtol(port_str.c_str(), &endptr, 10);
@@ -217,7 +174,6 @@ TcpServer::TcpServer(const string& port_str, const Async::IpAddress &bind_ip)
     
 } /* TcpServer::TcpServer */
 
-
 /*
  *------------------------------------------------------------------------
  * Method:    TcpServer::~TcpServer
@@ -235,7 +191,6 @@ TcpServer::~TcpServer(void)
   cleanup();
 } /* TcpServer::~TcpServer */
 
-
 /*
  *------------------------------------------------------------------------
  * Method:    TcpServer::numberOfClients
@@ -252,7 +207,6 @@ int TcpServer::numberOfClients(void)
 {
   return tcpConnectionList.size();
 } /* TcpServer::numberOfClients */
-
 
 /*
  *------------------------------------------------------------------------
@@ -276,7 +230,6 @@ TcpConnection *TcpServer::getClient(unsigned int index)
   return 0;
 
 } /* TcpServer::getClient */
-
 
 /*
  *------------------------------------------------------------------------
@@ -308,7 +261,6 @@ int TcpServer::writeAll(const void *buf, int count)
 
 } /* TcpServer::writeAll */
 
-
 /*
  *------------------------------------------------------------------------
  * Method:    TcpServer::writeOnly
@@ -338,7 +290,6 @@ int TcpServer::writeOnly(TcpConnection *con, const void *buf, int count)
   return count;
 
 } /* TcpServer::writeOnly */
-
 
 /*
  *------------------------------------------------------------------------
@@ -374,41 +325,13 @@ int TcpServer::writeExcept(TcpConnection *con, const void *buf, int count)
 
 } /* TcpServer::writeExcept */
 
-
-
-
-/****************************************************************************
- *
- * Protected member functions
- *
- ****************************************************************************/
-
-
 /*
- *------------------------------------------------------------------------
- * Method:    
- * Purpose:   
- * Input:     
- * Output:    
- * Author:    
- * Created:   
- * Remarks:   
- * Bugs:      
- *------------------------------------------------------------------------
+ * Protected member functions
  */
 
-
-
-
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
-
+ */
 /*
  *----------------------------------------------------------------------------
  * Method:    TcpServer::cleanup
@@ -441,7 +364,6 @@ void TcpServer::cleanup(void)
   tcpConnectionList.clear();
   
 } /* TcpServer::cleanup */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -504,7 +426,6 @@ void TcpServer::onConnection(FdWatch *watch)
   
 } /* TcpServer::onConnection */
 
-
 /*
  *----------------------------------------------------------------------------
  * Method:    TcpServer::onDisconnected
@@ -531,9 +452,6 @@ void TcpServer::onDisconnected(TcpConnection *con,
   delete con;
   
 } /* TcpServer::onDisconnected */
-
-
-
 
 /*
  * This file has not been truncated

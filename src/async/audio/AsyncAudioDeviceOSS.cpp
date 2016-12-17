@@ -27,14 +27,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -49,105 +44,63 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cmath>
 #include <cstdio>
 
-
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncFdWatch.h>
 
 
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
-
+ */
 #include "AsyncAudioDeviceOSS.h"
 #include "AsyncAudioDeviceFactory.h"
 
-
-
-/****************************************************************************
- *
+/*
  * Namespaces to use
- *
- ****************************************************************************/
-
+ */
 using namespace std;
 using namespace Async;
 
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local class definitions
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Prototypes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-
-/****************************************************************************
- *
+/*
  * Local Global Variables
- *
- ****************************************************************************/
-
+ */
 REGISTER_AUDIO_DEVICE_TYPE("oss", AudioDeviceOSS);
 
-
-
-/****************************************************************************
- *
+/*
  * Public member functions
- *
- ****************************************************************************/
-
+ */
 int AudioDeviceOSS::blocksize(void)
 {
   assert(fd != -1);
   return frag_size / (channels * sizeof(int16_t));
 } /* AudioDeviceOSS::blocksize */
 
-
 bool AudioDeviceOSS::isFullDuplexCapable(void)
 {
   return (device_caps & DSP_CAP_DUPLEX);
 } /* AudioDeviceOSS::isFullDuplexCapable */
 
-
 void AudioDeviceOSS::audioToWriteAvailable(void)
 {
   write_watch->setEnabled(true);
 } /* AudioDeviceOSS::audioToWriteAvailable */
-
 
 void AudioDeviceOSS::flushSamples(void)
 {
@@ -156,7 +109,6 @@ void AudioDeviceOSS::flushSamples(void)
     write_watch->setEnabled(true);
   }
 } /* AudioDeviceOSS::flushSamples */
-
 
 int AudioDeviceOSS::samplesToWrite(void) const
 {
@@ -177,15 +129,9 @@ int AudioDeviceOSS::samplesToWrite(void) const
   
 } /* AudioDeviceOSS::samplesToWrite */
 
-
-
-/****************************************************************************
- *
+/*
  * Protected member functions
- *
- ****************************************************************************/
-
-
+ */
 AudioDeviceOSS::AudioDeviceOSS(const string& dev_name)
   : AudioDevice(dev_name), fd(-1), read_watch(0), write_watch(0),
     device_caps(0), use_trigger(false), frag_size(0)
@@ -211,11 +157,9 @@ AudioDeviceOSS::AudioDeviceOSS(const string& dev_name)
   }
 } /* AudioDeviceOSS::AudioDeviceOSS */
 
-
 AudioDeviceOSS::~AudioDeviceOSS(void)
 {
 } /* AudioDeviceOSS::~AudioDeviceOSS */
-
 
 bool AudioDeviceOSS::openDevice(Mode mode)
 {
@@ -377,7 +321,6 @@ bool AudioDeviceOSS::openDevice(Mode mode)
   
 } /* AudioDeviceOSS::openDevice */
 
-
 void AudioDeviceOSS::closeDevice(void)
 {
   frag_size = 0;
@@ -395,15 +338,9 @@ void AudioDeviceOSS::closeDevice(void)
   }
 } /* AudioDeviceOSS::closeDevice */
 
-
-
-/****************************************************************************
- *
+/*
  * Private member functions
- *
- ****************************************************************************/
-
-
+ */
 void AudioDeviceOSS::audioReadHandler(FdWatch *watch)
 {
   audio_buf_info info;
@@ -431,7 +368,6 @@ void AudioDeviceOSS::audioReadHandler(FdWatch *watch)
     putBlocks(buf, frame_cnt);
   }
 } /* AudioDeviceOSS::audioReadHandler */
-
 
 void AudioDeviceOSS::writeSpaceAvailable(FdWatch *watch)
 {
@@ -484,8 +420,6 @@ void AudioDeviceOSS::writeSpaceAvailable(FdWatch *watch)
   watch->setEnabled(true);
   
 } /* AudioDeviceOSS::writeSpaceAvailable */
-
-
 
 /*
  * This file has not been truncated

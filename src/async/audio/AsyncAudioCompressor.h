@@ -23,86 +23,48 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef ASYNC_AUDIO_COMPRESSOR_INCLUDED
 #define ASYNC_AUDIO_COMPRESSOR_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <cmath>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
-
+ */
 #include <AsyncAudioProcessor.h>
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-
-/****************************************************************************
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
+ */
 
-  
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 class EnvelopeDetector
 {
   public:
@@ -142,17 +104,13 @@ class EnvelopeDetector
     double sampleRate_;		// sample rate
     double ms_;			// time constant in ms
     double coef_;		// runtime coefficient
-    
+
     void setCoef( void )	// coef algorithm
     {
       coef_ = exp( -1.0 / ( 0.001 * ms_ * sampleRate_ ) );
     }
 
 }; // end EnvelopeDetector class
-
-
-
-
 
 /**
 @brief	A class to do audio compression/limiting
@@ -173,39 +131,39 @@ class AudioCompressor : public AudioProcessor
      * @brief 	Default constuctor
      */
     AudioCompressor(void);
-  
+
     /**
      * @brief 	Destructor
      */
     ~AudioCompressor(void);
-  
+
     /**
-     * @brief 	Set the compression threshold
+    * @brief 	Set the compression threshold
      * @param 	thresh_db The compression threshold in dB
      *
      * The threshold is the level, in dB, the signal must rise to before
      * the compressor kicks in.
      */
     void setThreshold(double thresh_db) { threshdB_ = thresh_db; }
-  
+
     /**
      * @brief 	Set the compression ratio
      * @param 	ratio The compression ratio (ex 0.1 == 10:1)
      */
     void setRatio(double ratio) { ratio_ = ratio; }
-  
+
     /**
      * @brief 	Set the compressor attack time
      * @param 	attack_ms The attack time in milliseconds
      */
     void setAttack(double attack_ms) { att_.setTc(attack_ms);}
-  
+
     /**
      * @brief 	Set the compressor decay time
      * @param 	decay_ms The decay time in milliseconds
      */
     void setDecay(double decay_ms) { rel_.setTc(decay_ms); }
-  
+
     /**
      * @brief 	Set the output gain
      * @param 	gain The gain to set.
@@ -215,17 +173,15 @@ class AudioCompressor : public AudioProcessor
      * If gain < 1 the signal is attenuated.
      */
     void setOutputGain(float gain);
-  
+
     /**
      * @brief 	Reset the compressor
      */
     void reset(void);
 
-    
   protected:
     virtual void processSamples(float *dest, const float *src, int count);
-    
-    
+
   private:
     // transfer function
     double threshdB_;	// threshold (dB)
@@ -238,18 +194,15 @@ class AudioCompressor : public AudioProcessor
 
     // runtime variables
     double envdB_;			// over-threshold envelope (dB)
-    
+
     AudioCompressor(const AudioCompressor&);
     AudioCompressor& operator=(const AudioCompressor&);
-    
-};  /* class AudioCompressor */
 
+};  /* class AudioCompressor */
 
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_COMPRESSOR_INCLUDED */
-
-
 
 /*
  * This file has not been truncated

@@ -26,88 +26,52 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
 #ifndef ASYNC_APPLICATION_INCLUDED
 #define ASYNC_APPLICATION_INCLUDED
 
-
-/****************************************************************************
- *
+/*
  * System Includes
- *
- ****************************************************************************/
-
+ */
 #include <sigc++/sigc++.h>
 
 #include <string>
 
-
-/****************************************************************************
- *
+/*
  * Project Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Local Includes
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Forward declarations
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Namespace
- *
- ****************************************************************************/
-
+ */
 namespace Async
 {
 
-/****************************************************************************
- *
+/*
  * Forward declarations of classes inside of the declared namespace
- *
- ****************************************************************************/
-
+ */
 class Timer;
 class FdWatch;
 class DnsLookupWorker;
 
-
-/****************************************************************************
- *
+/*
  * Defines & typedefs
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Exported Global Variables
- *
- ****************************************************************************/
+ */
 
-
-
-/****************************************************************************
- *
+/*
  * Class definitions
- *
- ****************************************************************************/
-
+ */
 /**
  * @brief The base class for asynchronous applications
  *
@@ -127,17 +91,17 @@ class Application : public sigc::trackable
      * @return	Returns a reference to the applicaton instance
      */
     static Application &app(void);
-    
+
     /**
      * @brief Default constructor
      */
     Application(void);
-    
+
     /**
      * @brief Destructor
      */
     virtual ~Application(void);
-    
+
     /**
      * @brief Execute the application main loop
      *
@@ -146,7 +110,7 @@ class Application : public sigc::trackable
      * Async::Application::quit method is called.
      */
     virtual void exec(void) = 0;
-    
+
     /**
      * @brief Exit the application main loop
      *
@@ -176,18 +140,18 @@ class Application : public sigc::trackable
      * and the second is an integer.
      */
     void runTask(sigc::slot<void> task);
-    
+
   protected:
-    
+
   private:
     friend class FdWatch;
     friend class Timer;
     friend class DnsLookup;
-    
+
     typedef std::list<sigc::slot<void> > SlotList;
 
     static Application *app_ptr;
-    
+
     SlotList task_list;
     Timer    *task_timer;
 
@@ -200,12 +164,9 @@ class Application : public sigc::trackable
     
 };  /* class Application */
 
-
 } /* namespace */
 
 #endif /* ASYNC_APPLICATION_INCLUDED */
-
-
 
 /*
  * This file has not been truncated
