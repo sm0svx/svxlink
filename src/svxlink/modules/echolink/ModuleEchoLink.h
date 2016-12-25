@@ -223,8 +223,6 @@ class ModuleEchoLink : public Module
 
 };  /* class ModuleEchoLink */
 
-//} /* namespace */
-
 #endif /* MODULE_ECHOLINK_INCLUDED */
 
 /*
