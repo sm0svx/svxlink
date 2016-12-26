@@ -1,0 +1,210 @@
+#!/bin/sh
+# Debian like server start/stop script, developed for raspbian distro
+# Copyright (c) 2013-2014 - F1RMB, Daniel Caujolle-Bert <f1rmb.daniel@gmail.com>
+# Licended under GPL v2 or later
+
+#
+# /etc/default/svxlink support following options:
+#
+# GPIO_PTT_PIN=<num>
+#     <num> defines the GPIO pin used for PTT.
+# GPIO_SQL_PIN=<num>
+#     <num> defines the GPIO pin used for Squelch.
+#
+# AUDIO_SETTINGS_ONSTART="<string>"
+# AUDIO_SETTINGS_ONSTOP="<string>"
+#     <string>: shell script command(s) 
+#
+
+### BEGIN INIT INFO
+# Provides:        svxlink
+# Required-Start:  $local_fs $remote_fs $syslog $network $ntp
+# Required-Stop:   $local_fs $remote_fs
+# Default-Start:   2 3 4 5
+# Default-Stop:    0 1 6
+# Short-Description: Start svxLink Server daemon
+### END INIT INFO
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+. /lib/lsb/init-functions
+
+PROG="svxlink"
+DAEMON=/usr/bin/$PROG
+PIDFILE=/var/run/$PROG.pid
+LOCKFILE=/var/lock/$PROG
+LOGFILE=/var/log/$PROG
+RUNASUSER=svxlink
+
+test -x $DAEMON || exit 5
+
+if [ -r /etc/default/$PROG ]; then
+	. /etc/default/$PROG
+fi
+
+UGID=$(getent passwd $RUNASUSER | cut -f 3,4 -d:) || true
+SVXLINK_OPTS="--daemon ${LOGFILE:+--logfile=$LOGFILE} ${CFGFILE:+--config=$CFGFILE} --runasuser=$RUNASUSER --pidfile=$PIDFILE"
+
+lock_svxlink() {
+	if [ -x /usr/bin/lockfile-create ]; then
+		lockfile-create $LOCKFILE
+		lockfile-touch $LOCKFILE &
+		LOCKTOUCHPID="$!"
+	fi
+}
+
+unlock_svxlink() {
+	if [ -x /usr/bin/lockfile-create ] ; then
+		kill $LOCKTOUCHPID
+		lockfile-remove $LOCKFILE
+	fi
+}
+
+gpio_setup() {
+   NAME=$1
+   PIN=$2
+   DIR=$3
+   if [ ! -z "$PIN" -a ! -e /sys/class/gpio/gpio$PIN ]; then
+       # Enable the pin for GPIO:
+       log_progress_msg "[GPIO $NAME #$PIN"
+       echo $PIN > /sys/class/gpio/export
+       # Set the direction to output for the pin:
+       log_progress_msg ", direction"
+       echo $DIR > /sys/class/gpio/gpio$PIN/direction
+       # Make sure that the svxlink user can write to the GPIO pin:
+       log_progress_msg ", owner]"
+       chown svxlink /sys/class/gpio/gpio$PIN/value
+   fi
+}
+
+gpio_unsetup() {
+   NAME=$1
+   PIN=$2
+   if [ ! -z "$PIN" -a -e /sys/class/gpio/gpio$PIN ]; then
+       log_progress_msg "[GPIO $NAME #$PIN]"
+       # Enable the pin for GPIO:
+       echo $PIN > /sys/class/gpio/unexport
+   fi
+}
+
+case "$1" in
+    start)
+	log_daemon_msg "Starting SVXLINK server" "svxlink"
+
+	## Check if svxlink user exists
+	if [ -z "$UGID" ]; then
+	    log_failure_msg "user \"$RUNASUSER\" does not exist"
+	    exit 1
+	fi
+
+	lock_svxlink
+	
+	## Check about pid file
+	if [ -e $PIDFILE ]; then
+	    if $0 status > /dev/null ; then
+		log_failure_msg "$PROG is already started; not starting"
+		return
+	    else
+		log_progress_msg "[Removing stale PID file $PIDFILE]"
+		rm -f $PIDFILE
+	    fi
+	fi
+	
+	## GPIO PTT support ?
+	if [ ! -z "$GPIO_PTT_PIN" ]; then
+	    gpio_setup PTT $GPIO_PTT_PIN out
+	fi
+
+	## GPIO SQL support ?
+	if [ ! -z "$GPIO_SQL_PIN" ]; then
+	    gpio_setup SQL $GPIO_SQL_PIN in
+	fi
+
+	## Audio settings on startup ?
+	if [ ! -z "$AUDIO_SETTINGS_ONSTART" ]; then
+	    log_progress_msg ", audio"
+	    eval $AUDIO_SETTINGS_ONSTART > /dev/null 2<&1
+	fi
+
+	## Start the daemon
+	start-stop-daemon --start --quiet --oknodo --pidfile $PIDFILE --startas $DAEMON -- $SVXLINK_OPTS
+	status=$?
+
+	unlock_svxlink
+
+	log_end_msg $status
+        ;;
+
+    stop)
+	log_daemon_msg "Stopping SVXLINK server" "svxlink"
+
+	## Stopping the daemon
+  	start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
+
+	## Audio settings on leaving ?
+	if [ ! -z "$AUDIO_SETTINGS_ONSTOP" ]; then
+	    log_progress_msg ", unsetting audio"
+	    eval $AUDIO_SETTINGS_ONSTOP > /dev/null 2<&1
+	fi
+
+	## Unset GPIO PTT pin, if used
+	if [ ! -z "$GPIO_PTT_PIN" ]; then
+	    gpio_unsetup PTT $GPIO_PTT_PIN
+	fi
+
+	## Unset GPIO SQL pin, if used
+	if [ ! -z "$GPIO_SQL_PIN" ]; then
+	    gpio_unsetup SQL $GPIO_SQL_PIN
+	fi
+
+	log_end_msg $?
+	rm -f $PIDFILE
+        ;;
+
+    restart|force-reload)
+	$0 stop && sleep 2 && $0 start
+  	;;
+
+    try-restart)
+	if $0 status >/dev/null; then
+	    $0 restart
+	else
+	    exit 0
+	fi
+	;;
+
+    reload)
+	exit 3
+	;;
+
+    status)
+	status_of_proc $DAEMON "SVXLINK server"
+	;;
+
+    gpio)
+	# PTT
+	if [ ! -z "$GPIO_PTT_PIN" -a ! -e /sys/class/gpio/gpio$GPIO_PTT_PIN ]; then
+	    log_daemon_msg "Initialize PTT GPIO" "gpio$GPIO_PTT_PIN"
+	    gpio_setup PTT $GPIO_PTT_PIN out
+	else
+	    log_daemon_msg "Uninitialize PTT GPIO" "gpio$GPIO_PTT_PIN"
+	    gpio_unsetup PTT $GPIO_PTT_PIN
+	fi
+	log_end_msg 0
+
+	## Squelch
+	if [ ! -z "$GPIO_SQL_PIN" -a ! -e /sys/class/gpio/gpio$GPIO_SQL_PIN ]; then
+	    log_daemon_msg "Initialize Squelch GPIO" "gpio$GPIO_SQL_PIN"
+	    gpio_setup SQL $GPIO_SQL_PIN in
+	else
+	    log_daemon_msg "Uninitialize Squelch GPIO" "gpio$GPIO_SQL_PIN"
+	    gpio_unsetup SQL $GPIO_SQL_PIN
+	fi
+	log_end_msg 0
+	;;
+
+    *)
+	echo "Usage: $0 {start|stop|restart|try-restart|force-reload|gpio|status}"
+	exit 2
+	;;
+esac

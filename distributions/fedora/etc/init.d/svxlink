@@ -1,0 +1,76 @@
+#!/bin/bash
+#
+# svxlink	This shell script takes care of starting and stopping
+#		svxlink (The SvxLink server daemon).
+#
+# chkconfig: - 58 74
+# description: The SvxLink server is a multi purpose voice services system. \
+# It is targeted at ham radio use. Connect the sound card to a radio \
+# transceiver and load the modules you need. Enjoy...
+
+# Source function library.
+. /etc/init.d/functions
+
+PROG="svxlink"
+RETVAL=0
+
+if [ -f /etc/sysconfig/$PROG ];then
+        . /etc/sysconfig/$PROG
+fi
+
+POPTS="--daemon ${LOGFILE:+--logfile=$LOGFILE} ${CFGFILE:+--config=$CFGFILE}"
+DOPTS="${USER:+--user=$USER}"
+
+
+start() {
+        echo -n $"Starting $PROG: "
+	touch $LOGFILE
+	[ -n "$USER" ] && chown ${USER} $LOGFILE
+        daemon $DOPTS $ENV $PROG $POPTS
+	RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$PROG
+	return $RETVAL
+}
+
+
+stop() {
+        echo -n $"Shutting down $PROG: "
+	killproc $PROG
+	RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/$PROG
+	return $RETVAL
+}
+
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+        ;;
+  stop)
+	stop
+        ;;
+  status)
+	status $PROG
+	RETVAL=$?
+	;;
+  restart|reload)
+	stop
+	start
+	RETVAL=$?
+	;;
+  condrestart)
+	if [ -f /var/lock/subsys/$PROG ]; then
+	    stop
+	    start
+	    RETVAL=$?
+	fi
+	;;
+  *)
+        echo $"Usage: $0 {start|stop|restart|condrestart|status}"
+        exit 1
+esac
+
+exit $RETVAL
