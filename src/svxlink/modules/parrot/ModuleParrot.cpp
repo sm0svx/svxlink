@@ -93,7 +93,6 @@ class ModuleParrot::FifoAdapter : public AudioPassthrough
  * Exported Global Variables
  */
 
-
 /*
  * Local Global Variables
  */
@@ -101,7 +100,6 @@ class ModuleParrot::FifoAdapter : public AudioPassthrough
 /*
  * Pure C-functions
  */
-
 extern "C" {
   Module *module_init(void *dl_handle, Logic *logic, const char *cfg_name)
   {
@@ -167,7 +165,6 @@ bool ModuleParrot::initialize(void)
   return true;
   
 } /* ModuleParrot::initialize */
-
 
 /*
  * Protected member functions
@@ -265,9 +262,8 @@ void ModuleParrot::deactivateCleanup(void)
 bool ModuleParrot::dtmfDigitReceived(char digit, int duration)
 {
   //cout << "DTMF digit received in module " << name() << ": " << digit << endl;
-  
   return false;
-  
+
 } /* dtmfDigitReceived */
 
 /*

@@ -24,99 +24,53 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
 /*
- *
  * System Includes
- *
  */
-
 #include <cstdio>
 #include <cstdlib>
 
 #include <iostream>
 #include <sstream>
 
-
 /*
- *
  * Project Includes
- *
  */
-
-
-
 
 /*
- *
  * Local Includes
- *
  */
-
 #include "version/MODULE_HELP.h"
 #include "ModuleHelp.h"
 
-
-
 /*
- *
  * Namespaces to use
- *
  */
-
 using namespace std;
 
-
-
 /*
- *
  * Defines & typedefs
- *
  */
 
-
-
 /*
- *
  * Local class definitions
- *
  */
 
-
-
 /*
- *
  * Prototypes
- *
  */
 
-
-
 /*
- *
  * Exported Global Variables
- *
  */
 
-
-
-
 /*
- *
  * Local Global Variables
- *
  */
-
-
 
 /*
- *
  * Pure C-functions
- *
  */
-
-
 extern "C" {
   Module *module_init(void *dl_handle, Logic *logic, const char *cfg_name)
   {
@@ -124,14 +78,9 @@ extern "C" {
   }
 } /* extern "C" */
 
-
-
 /*
- *
  * Public member functions
- *
  */
-
 
 ModuleHelp::ModuleHelp(void *dl_handle, Logic *logic, const string& cfg_name)
   : Module(dl_handle, logic, cfg_name)
@@ -140,54 +89,37 @@ ModuleHelp::ModuleHelp(void *dl_handle, Logic *logic, const string& cfg_name)
 
 } /* ModuleHelp */
 
-
 ModuleHelp::~ModuleHelp(void)
 {
 
 } /* ~ModuleHelp */
 
-
-
-
-
 /*
- *
  * Protected member functions
- *
  */
-
 void ModuleHelp::resumeOutput(void)
 {
   
 } /* ModuleHelp::resumeOutput */
-
 
 void ModuleHelp::allSamplesFlushed(void)
 {
   
 } /* ModuleHelp::allSamplesFlushed */
 
-
 int ModuleHelp::writeSamples(const float *samples, int count)
 {
   return count;
 } /* ModuleHelp::writeSamples */
-
 
 void ModuleHelp::flushSamples(void)
 {
   sourceAllSamplesFlushed();
 } /* ModuleHelp::flushSamples */
 
-
-
 /*
- *
  * Private member functions
- *
  */
-
-
 /*
  *----------------------------------------------------------------------------
  * Method:    activateInit
@@ -204,7 +136,6 @@ void ModuleHelp::activateInit(void)
 {
   playChooseModuleMsg();
 } /* activateInit */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -223,7 +154,6 @@ void ModuleHelp::deactivateCleanup(void)
 {
   
 } /* deactivateCleanup */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -246,7 +176,6 @@ bool ModuleHelp::dtmfDigitReceived(char digit, int duration)
   return false;
   
 } /* dtmfDigitReceived */
-
 
 /*
  *----------------------------------------------------------------------------
@@ -292,7 +221,6 @@ void ModuleHelp::dtmfCmdReceived(const string& cmd)
   }
 } /* dtmfCmdReceived */
 
-
 void ModuleHelp::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
   stringstream ss(cmd);
@@ -311,7 +239,6 @@ void ModuleHelp::dtmfCmdReceivedWhenIdle(const std::string &cmd)
   }
 } /* dtmfCmdReceivedWhenIdle */
 
-
 void ModuleHelp::playChooseModuleMsg(void)
 {
   stringstream ss;
@@ -327,8 +254,6 @@ void ModuleHelp::playChooseModuleMsg(void)
   processEvent(ss.str());
 
 } /* ModuleHelp::playChooseModuleMsg */
-
-
 
 /*
  * This file has not been truncated
