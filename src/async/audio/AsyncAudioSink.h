@@ -66,11 +66,11 @@ class AudioSource;
  * Class definitions
  */
 /**
- *@brief	The base class for an audio sink
- *@author Tobias Blomberg
- *@date   2005-04-17
+@brief	The base class for an audio sink
+@author Tobias Blomberg
+@date   2005-04-17
 
- *This is the base class for an audio sink. An audio sink is a class that can consume audio.
+This is the base class for an audio sink. An audio sink is a class that can consume audio.
 */
 class AudioSink
 {
