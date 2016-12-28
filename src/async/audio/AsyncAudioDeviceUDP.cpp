@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <sys/ioctl.h>
@@ -38,58 +38,58 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <vector>
 #include <sstream>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncUdpSocket.h>
 #include <AsyncIpAddress.h>
 
-/*
+/**
  * Local Includes
  */
 #include "AsyncAudioDeviceUDP.h"
 #include "AsyncAudioDeviceFactory.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
 
-/*
+/**
  * Local Global Variables
  */
 REGISTER_AUDIO_DEVICE_TYPE("udp", AudioDeviceUDP);
 
-/*
+/**
  * Public member functions
  */
 int AudioDeviceUDP::blocksize(void)
 {
   return block_size;
-} /* AudioDeviceUDP::blocksize */
+} /** AudioDeviceUDP::blocksize */
 
 bool AudioDeviceUDP::isFullDuplexCapable(void)
 {
   return true;
-} /* AudioDeviceUDP::isFullDuplexCapable */
+} /** AudioDeviceUDP::isFullDuplexCapable */
 
 void AudioDeviceUDP::audioToWriteAvailable(void)
 {
@@ -97,7 +97,7 @@ void AudioDeviceUDP::audioToWriteAvailable(void)
   {
     audioWriteHandler();
   }
-} /* AudioDeviceUDP::audioToWriteAvailable */
+} /** AudioDeviceUDP::audioToWriteAvailable */
 
 void AudioDeviceUDP::flushSamples(void)
 {
@@ -105,7 +105,7 @@ void AudioDeviceUDP::flushSamples(void)
   {
     audioWriteHandler();
   }
-} /* AudioDeviceUDP::flushSamples */
+} /** AudioDeviceUDP::flushSamples */
 
 int AudioDeviceUDP::samplesToWrite(void) const
 {
@@ -123,9 +123,9 @@ int AudioDeviceUDP::samplesToWrite(void) const
   
   return len / sizeof(*read_buf);
   
-} /* AudioDeviceUDP::samplesToWrite */
+} /** AudioDeviceUDP::samplesToWrite */
 
-/*
+/**
  * Protected member functions
  */
 
@@ -142,13 +142,13 @@ AudioDeviceUDP::AudioDeviceUDP(const string& dev_name)
   pace_timer->setEnable(false);
   pace_timer->expired.connect(
       sigc::hide(mem_fun(*this, &AudioDeviceUDP::audioWriteHandler)));
-} /* AudioDeviceUDP::AudioDeviceUDP */
+} /** AudioDeviceUDP::AudioDeviceUDP */
 
 AudioDeviceUDP::~AudioDeviceUDP(void)
 {
   delete [] read_buf;
   delete pace_timer;
-} /* AudioDeviceUDP::~AudioDeviceUDP */
+} /** AudioDeviceUDP::~AudioDeviceUDP */
 
 bool AudioDeviceUDP::openDevice(Mode mode)
 {
@@ -234,7 +234,7 @@ bool AudioDeviceUDP::openDevice(Mode mode)
 
   return true;
   
-} /* AudioDeviceUDP::openDevice */
+} /** AudioDeviceUDP::openDevice */
 
 void AudioDeviceUDP::closeDevice(void)
 {
@@ -243,9 +243,9 @@ void AudioDeviceUDP::closeDevice(void)
   sock = 0;
   ip_addr = IpAddress();
   port = 0;
-} /* AudioDeviceUDP::closeDevice */
+} /** AudioDeviceUDP::closeDevice */
 
-/*
+/**
  * Private member functions
  */
 void AudioDeviceUDP::audioReadHandler(const IpAddress &ip, void *buf, int count)
@@ -263,7 +263,7 @@ void AudioDeviceUDP::audioReadHandler(const IpAddress &ip, void *buf, int count)
       read_buf_pos = 0;
     }
   }
-} /* AudioDeviceUDP::audioReadHandler */
+} /** AudioDeviceUDP::audioReadHandler */
 
 void AudioDeviceUDP::audioWriteHandler(void)
 {
@@ -290,9 +290,9 @@ void AudioDeviceUDP::audioWriteHandler(void)
 
   pace_timer->setEnable(true);
 
-} /* AudioDeviceUDP::audioWriteHandler */
+} /** AudioDeviceUDP::audioWriteHandler */
 
-/*
+/**
  * This file has not been truncated
  */
 

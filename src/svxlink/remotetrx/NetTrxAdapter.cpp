@@ -24,11 +24,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 
-/*
+/**
  * Project Includes
  */
 #include <Rx.h>
@@ -37,25 +37,25 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioFifo.h>
 #include <AsyncAudioDebugger.h>
 
-/*
+/**
  * Local Includes
  */
 #include "NetTrxAdapter.h"
 #include "Uplink.h"
 #include "NetUplink.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace sigc;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
@@ -140,7 +140,7 @@ class RxAdapter : public Rx, public AudioSink
     AudioValve  mute_valve;
     Config    	cfg;
 
-}; /* class RxAdapter */
+}; /** class RxAdapter */
 
 class TxAdapter : public Tx, public AudioSource
 {
@@ -276,22 +276,22 @@ class TxAdapter : public Tx, public AudioSource
       transmitterStateChange(do_transmit);
     }
     
-}; /* class TxAdapter */
+}; /** class TxAdapter */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 map<string, NetTrxAdapter*> NetTrxAdapter::net_trx_adapters;
 
-/*
+/**
  * Public member functions
  */
 NetTrxAdapter *NetTrxAdapter::instance(Async::Config &cfg,
@@ -312,19 +312,19 @@ NetTrxAdapter *NetTrxAdapter::instance(Async::Config &cfg,
     net_trx_adapters[net_uplink_name] = adapter;
     return adapter;
   }
-} /* NetTrxAdapter::instance */
+} /** NetTrxAdapter::instance */
 
 NetTrxAdapter::NetTrxAdapter(Config &cfg, const string &net_uplink_name)
   : ul(0), cfg(cfg), txa1(0), txa2(0), rxa1(0), net_uplink_name(net_uplink_name)
 {
   
-} /* NetTrxAdapter::NetTrxAdapter */
+} /** NetTrxAdapter::NetTrxAdapter */
 
 NetTrxAdapter::~NetTrxAdapter(void)
 {
   delete txa1;
   delete txa2;
-} /* NetTrxAdapter::~NetTrxAdapter */
+} /** NetTrxAdapter::~NetTrxAdapter */
 
 bool NetTrxAdapter::initialize(void)
 {
@@ -387,17 +387,17 @@ bool NetTrxAdapter::initialize(void)
 
   return true;
   
-} /* NetTrxAdapter::initialize */
+} /** NetTrxAdapter::initialize */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 
-/*
+/**
  * This file has not been truncated
  */
 

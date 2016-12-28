@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <stdint.h>
@@ -34,12 +34,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <deque>
 #include <iterator>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncConfig.h>
 
-/*
+/**
  * Local Includes
  */
 #include "WbRxRtlSdr.h"
@@ -49,33 +49,33 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #endif
 #include "Ddr.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 WbRxRtlSdr::InstanceMap WbRxRtlSdr::instances;
 
-/*
+/**
  * Public member functions
  */
 WbRxRtlSdr *WbRxRtlSdr::instance(Async::Config &cfg, const string &name)
@@ -88,7 +88,7 @@ WbRxRtlSdr *WbRxRtlSdr::instance(Async::Config &cfg, const string &name)
   WbRxRtlSdr *wbrx = new WbRxRtlSdr(cfg, name);
   instances[name] = wbrx;
   return wbrx;
-} /* WbRxRtlSdr::instance */
+} /** WbRxRtlSdr::instance */
 
 WbRxRtlSdr::WbRxRtlSdr(Async::Config &cfg, const string &name)
   : auto_tune_enabled(true), m_name(name), xvrtr_offset(0)
@@ -160,13 +160,13 @@ WbRxRtlSdr::WbRxRtlSdr(Async::Config &cfg, const string &name)
   bool peak_meter = false;
   cfg.getValue(name, "PEAK_METER", peak_meter);
   rtl->enableDistPrint(peak_meter);
-} /* WbRxRtlSdr::WbRxRtlSdr */
+} /** WbRxRtlSdr::WbRxRtlSdr */
 
 WbRxRtlSdr::~WbRxRtlSdr(void)
 {
   delete rtl;
   rtl = 0;
-} /* WbRxRtlSdr::~WbRxRtlSdr */
+} /** WbRxRtlSdr::~WbRxRtlSdr */
 
 void WbRxRtlSdr::setCenterFq(uint32_t fq)
 {
@@ -177,17 +177,17 @@ void WbRxRtlSdr::setCenterFq(uint32_t fq)
     Ddr *ddr = (*it);
     ddr->tunerFqChanged(fq);
   }
-} /* WbRxRtlSdr::setCenterFq */
+} /** WbRxRtlSdr::setCenterFq */
 
 uint32_t WbRxRtlSdr::centerFq(void)
 {
   return rtl->centerFq() - xvrtr_offset;
-} /* WbRxRtlSdr::centerFq */
+} /** WbRxRtlSdr::centerFq */
 
 uint32_t WbRxRtlSdr::sampleRate(void) const
 {
   return rtl->sampleRate();
-} /* WbRxRtlSdr::sampleRate */
+} /** WbRxRtlSdr::sampleRate */
 
 void WbRxRtlSdr::registerDdr(Ddr *ddr)
 {
@@ -198,7 +198,7 @@ void WbRxRtlSdr::registerDdr(Ddr *ddr)
   {
     findBestCenterFq();
   }
-} /* WbRxRtlSdr::registerDdr */
+} /** WbRxRtlSdr::registerDdr */
 
 void WbRxRtlSdr::unregisterDdr(Ddr *ddr)
 {
@@ -215,18 +215,18 @@ void WbRxRtlSdr::unregisterDdr(Ddr *ddr)
   {
     delete this;
   }
-} /* WbRxRtlSdr::unregisterDdr */
+} /** WbRxRtlSdr::unregisterDdr */
 
 bool WbRxRtlSdr::isReady(void) const
 {
   return (rtl != 0) && rtl->isReady();
-} /* WbRxRtlSdr::isReady */
+} /** WbRxRtlSdr::isReady */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 void WbRxRtlSdr::findBestCenterFq(void)
@@ -241,7 +241,7 @@ void WbRxRtlSdr::findBestCenterFq(void)
   for (Ddrs::iterator it=ddrs.begin(); it!=ddrs.end(); ++it)
   {
     Ddr *ddr = (*it);
-    /*
+    /**
     cout << "### " << ddr->name()
          << ": fq=" << ddr->nbFq()
          << endl;
@@ -300,7 +300,7 @@ void WbRxRtlSdr::findBestCenterFq(void)
 
   setCenterFq(center_fq);
 
-} /* WbRxRtlSdr::findBestCenterFq */
+} /** WbRxRtlSdr::findBestCenterFq */
 
 void WbRxRtlSdr::rtlReadyStateChanged(void)
 {
@@ -327,9 +327,9 @@ void WbRxRtlSdr::rtlReadyStateChanged(void)
   }
 
   readyStateChanged();
-} /* WbRxRtlSdr::rtlReadyStateChanged */
+} /** WbRxRtlSdr::rtlReadyStateChanged */
 
-/*
+/**
  * This file has not been truncated
  */
 

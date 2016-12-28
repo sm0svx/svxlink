@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_TCP_CONNECTION_INCLUDED
 #define ASYNC_TCP_CONNECTION_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -37,40 +37,40 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncIpAddress.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class FdWatch;
 class IpAddress;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -264,13 +264,13 @@ class TcpConnection : public sigc::trackable
     void recvHandler(FdWatch *watch);
     void writeHandler(FdWatch *watch);
 
-};  /* class TcpConnection */
+};  /** class TcpConnection */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_TCP_CONNECTION_INCLUDED */
+#endif /** ASYNC_TCP_CONNECTION_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

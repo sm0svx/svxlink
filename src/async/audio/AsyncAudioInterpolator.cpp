@@ -19,47 +19,47 @@ ANY KIND. See http://www.dspguru.com/wol.htm for more information.
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <cstring>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "AsyncAudioInterpolator.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 AudioInterpolator::AudioInterpolator(int interpolation_factor,
@@ -75,14 +75,14 @@ AudioInterpolator::AudioInterpolator(int interpolation_factor,
   size_t p_Z_size = L_size / factor_L;
   p_Z = new float[p_Z_size];
   memset(p_Z, 0, sizeof(*p_Z) * p_Z_size);
-} /* AudioInterpolator::AudioInterpolator */
+} /** AudioInterpolator::AudioInterpolator */
 
 AudioInterpolator::~AudioInterpolator(void)
 {
   delete [] p_Z;
-} /* AudioInterpolator::~AudioInterpolator */
+} /** AudioInterpolator::~AudioInterpolator */
 
-/*
+/**
  * Protected member functions
  */
 void AudioInterpolator::processSamples(float *dest, const float *src, int count)
@@ -110,9 +110,9 @@ void AudioInterpolator::processSamples(float *dest, const float *src, int count)
       for (int tap = 0; tap < num_taps_per_phase; tap++)
       {
         sum += *p_coeff * p_Z[tap];
-        p_coeff += factor_L;          /* point to next coefficient */
+        p_coeff += factor_L;          /** point to next coefficient */
       }
-      *dest++ = sum * factor_L; /* store scaled sum and point to next output */
+      *dest++ = sum * factor_L; /** store scaled sum and point to next output */
       num_out++;
     }
   }
@@ -120,13 +120,13 @@ void AudioInterpolator::processSamples(float *dest, const float *src, int count)
   //printf("num_out=%d  orig_count=%d\n", num_out, orig_count);
   assert(num_out == orig_count * factor_L);
   
-} /* AudioInterpolator::processSamples */
+} /** AudioInterpolator::processSamples */
 
-/*
+/**
  * Private member functions
  */
 
-/*
+/**
  * This file has not been truncated
  */
 

@@ -26,43 +26,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_AMP_INCLUDED
 #define ASYNC_AUDIO_AMP_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <cmath>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioProcessor.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -112,13 +112,13 @@ class AudioAmp : public Async::AudioProcessor
     
     float m_gain;
     
-};  /* class AudioAmp */
+};  /** class AudioAmp */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AUDIO_AMP_INCLUDED */
+#endif /** ASYNC_AUDIO_AMP_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef WBRX_RTL_SDR_INCLUDED
 #define WBRX_RTL_SDR_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -37,15 +37,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <complex>
 #include <set>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -55,23 +55,23 @@ namespace Async
 class RtlSdr;
 class Ddr;
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -184,10 +184,10 @@ class WbRxRtlSdr : public sigc::trackable
     void findBestCenterFq(void);
     void rtlReadyStateChanged(void);
     
-};  /* class WbRxRtlSdr */
+};  /** class WbRxRtlSdr */
 
-#endif /* WBRX_RTL_SDR_INCLUDED */
+#endif /** WBRX_RTL_SDR_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

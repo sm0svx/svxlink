@@ -26,44 +26,44 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef NET_TRX_ADAPTER_INCLUDED
 #define NET_TRX_ADAPTER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <map>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncConfig.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 class Uplink;
 class TxAdapter;
 class RxAdapter;
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -137,11 +137,11 @@ class NetTrxAdapter
     NetTrxAdapter(const NetTrxAdapter&);
     NetTrxAdapter& operator=(const NetTrxAdapter&);
     
-};  /* class NetTrxAdapter */
+};  /** class NetTrxAdapter */
 
-#endif /* NET_TRX_ADAPTER_INCLUDED */
+#endif /** NET_TRX_ADAPTER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

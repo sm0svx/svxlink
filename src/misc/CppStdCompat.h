@@ -7,4 +7,4 @@
   #define CONSTEXPR const
 #endif
 
-#endif /* CPP_STD_COMPAT_INCLUDED */
+#endif /** CPP_STD_COMPAT_INCLUDED */

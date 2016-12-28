@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
-/*
+/**
  *
  * System Includes
  *
@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 
 
-/*
+/**
  *
  * Project Includes
  *
@@ -50,7 +50,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioInterpolator.h>
 
 
-/*
+/**
  *
  * Local Includes
  *
@@ -60,7 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "multirate_filter_coeff.h"
 
 
-/*
+/**
  *
  * Namespaces to use
  *
@@ -69,42 +69,42 @@ using namespace std;
 using namespace Async;
 
 
-/*
+/**
  *
  * Defines & typedefs
  *
  */
 
 
-/*
+/**
  *
  * Local class definitions
  *
  */
 
 
-/*
+/**
  *
  * Prototypes
  *
  */
 
 
-/*
+/**
  *
  * Exported Global Variables
  *
  */
 
 
-/*
+/**
  *
  * Local Global Variables
  *
  */
 
 
-/*
+/**
  *
  * Pure C-functions
  *
@@ -114,11 +114,11 @@ extern "C" {
   {
     return new ModuleFrn(dl_handle, logic, cfg_name);
   }
-} /* extern "C" */
+} /** extern "C" */
 
 
 
-/*
+/**
  *
  * Public member functions
  *
@@ -132,23 +132,23 @@ ModuleFrn::ModuleFrn(void *dl_handle, Logic *logic, const string& cfg_name)
 {
   cout << "\tModule Frn v" MODULE_FRN_VERSION " starting...\n";
 
-} /* ModuleFrn */
+} /** ModuleFrn */
 
 
 ModuleFrn::~ModuleFrn(void)
 {
   moduleCleanup();
-} /* ~ModuleFrn */
+} /** ~ModuleFrn */
 
 
-/*
+/**
  *
  * Protected member functions
  *
  */
 
 
-/*
+/**
  *------------------------------------------------------------------------
  * Method:    
  * Purpose:   
@@ -162,14 +162,14 @@ ModuleFrn::~ModuleFrn(void)
  */
 
 
-/*
+/**
  *
  * Private member functions
  *
  */
 
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    initialize
  * Purpose:   Called by the core system right after the object has been
@@ -235,7 +235,7 @@ bool ModuleFrn::initialize(void)
 
   return true;
   
-} /* initialize */
+} /** initialize */
 
 
 void ModuleFrn::moduleCleanup()
@@ -263,7 +263,7 @@ void ModuleFrn::moduleCleanup()
   audio_selector = 0;
 }
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    activateInit
  * Purpose:   Called by the core system when this module is activated.
@@ -282,7 +282,7 @@ void ModuleFrn::activateInit(void)
 }
 
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    deactivateCleanup
  * Purpose:   Called by the core system when this module is deactivated.
@@ -302,7 +302,7 @@ void ModuleFrn::deactivateCleanup(void)
 }
 
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    dtmfDigitReceived
  * Purpose:   Called by the core system when a DTMF digit has been
@@ -323,10 +323,10 @@ bool ModuleFrn::dtmfDigitReceived(char digit, int duration)
 
   return false;
 
-} /* dtmfDigitReceived */
+} /** dtmfDigitReceived */
 
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    dtmfCmdReceived
  * Purpose:   Called by the core system when a DTMF command has been
@@ -389,7 +389,7 @@ void ModuleFrn::dtmfCmdReceived(const string& cmd)
 
   processEvent(ss.str());
 
-} /* dtmfCmdReceived */
+} /** dtmfCmdReceived */
 
 
 bool ModuleFrn::validateCommand(const string& cmd, size_t argc)
@@ -405,18 +405,18 @@ bool ModuleFrn::validateCommand(const string& cmd, size_t argc)
     processEvent(ss.str());
     return false;
   }
-} /* ModulrFrn::commandFailed */
+} /** ModulrFrn::commandFailed */
 
 
 #if 0
 void ModuleFrn::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
 
-} /* dtmfCmdReceivedWhenIdle */
+} /** dtmfCmdReceivedWhenIdle */
 #endif
 
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    squelchOpen
  * Purpose:   Called by the core system when the squelch open or close.
@@ -435,7 +435,7 @@ void ModuleFrn::squelchOpen(bool is_open)
 }
 
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    allMsgsWritten
  * Purpose:   Called by the core system when all announcement messages has
@@ -452,10 +452,10 @@ void ModuleFrn::squelchOpen(bool is_open)
 void ModuleFrn::allMsgsWritten(void)
 {
 
-} /* allMsgsWritten */
+} /** allMsgsWritten */
 
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    reportState
  * Purpose:   This function is called by the logic core when it wishes the
@@ -476,7 +476,7 @@ void ModuleFrn::reportState(void)
   stringstream ss;
   ss << "count_clients " << qso->clientsCount();
   processEvent(ss.str());
-} /* reportState */
+} /** reportState */
 
 
 void ModuleFrn::onQsoError(void)
@@ -485,6 +485,6 @@ void ModuleFrn::onQsoError(void)
   deactivateMe();
 }
 
-/*
+/**
  * This file has not been truncated
  */

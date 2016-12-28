@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <cerrno>
@@ -33,18 +33,18 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <algorithm>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncIpAddress.h>
 
-/*
+/**
  * Local Includes
  */
 #include "EchoLinkProxy.h"
 #include "md5.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
@@ -52,7 +52,7 @@ using namespace sigc;
 using namespace Async;
 using namespace EchoLink;
 
-/*
+/**
  * Defines & typedefs
  */
 enum
@@ -60,24 +60,24 @@ enum
   MSG_SYSTEM_BAD_PASSWORD=1, MSG_SYSTEM_ACCESS_DENIED
 };
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 Proxy *Proxy::the_instance = 0;
 
-/*
+/**
  * Public member functions
  */
 Proxy::Proxy(const string &host, uint16_t port, const string &callsign,
@@ -111,31 +111,31 @@ Proxy::Proxy(const string &host, uint16_t port, const string &callsign,
 
   cmd_timer.setEnable(false);
   cmd_timer.expired.connect(hide(mem_fun(*this, &Proxy::cmdTimeout)));
-} /* Proxy::Proxy */
+} /** Proxy::Proxy */
 
 Proxy::~Proxy(void)
 {
   the_instance = 0;
-} /* Proxy::~Proxy */
+} /** Proxy::~Proxy */
 
 void Proxy::connect(void)
 {
   con.connect();
-} /* Proxy::connect  */
+} /** Proxy::connect  */
 
 void Proxy::disconnect(void)
 {
   reconnect_timer.setEnable(false);
   con.disconnect();
   disconnectHandler();
-} /* Proxy::disconnect */
+} /** Proxy::disconnect */
 
 void Proxy::reset(void)
 {
   reconnect_timer.setEnable(true);
   con.disconnect();
   disconnectHandler();
-} /* Proxy::reset */
+} /** Proxy::reset */
 
 bool Proxy::tcpOpen(const IpAddress &remote_ip)
 {
@@ -150,7 +150,7 @@ bool Proxy::tcpOpen(const IpAddress &remote_ip)
   tcp_state = TCP_STATE_CONNECTING;
 
   return sendMsgBlock(MSG_TYPE_TCP_OPEN, remote_ip);
-} /* Proxy::tcpOpen */
+} /** Proxy::tcpOpen */
 
 bool Proxy::tcpClose(void)
 {
@@ -161,7 +161,7 @@ bool Proxy::tcpClose(void)
   tcp_state = TCP_STATE_DISCONNECTING;
 
   return sendMsgBlock(MSG_TYPE_TCP_CLOSE);
-} /* Proxy::tcpClose */
+} /** Proxy::tcpClose */
 
 bool Proxy::tcpData(const void *data, unsigned len)
 {
@@ -171,23 +171,23 @@ bool Proxy::tcpData(const void *data, unsigned len)
   }
 
   return sendMsgBlock(MSG_TYPE_TCP_DATA, IpAddress(), data, len);
-} /* Proxy::tcpData */
+} /** Proxy::tcpData */
 
 bool Proxy::udpData(const IpAddress &addr, const void *data, unsigned len)
 {
   return sendMsgBlock(MSG_TYPE_UDP_DATA, addr, data, len);
-} /* Proxy::udpData */
+} /** Proxy::udpData */
 
 bool Proxy::udpCtrl(const IpAddress &addr, const void *data, unsigned len)
 {
   return sendMsgBlock(MSG_TYPE_UDP_CONTROL, addr, data, len);
-} /* Proxy::udpCtrl */
+} /** Proxy::udpCtrl */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 
@@ -245,7 +245,7 @@ bool Proxy::sendMsgBlock(MsgBlockType type, const IpAddress &remote_ip,
     reset();
   }
   return true;
-} /* Proxy::sendMsgBlock */
+} /** Proxy::sendMsgBlock */
 
 void Proxy::onConnected(void)
 {
@@ -254,7 +254,7 @@ void Proxy::onConnected(void)
        << con.remoteHost() << ":" << con.remotePort() << endl;
   reconnect_timer.setEnable(false);
   cmd_timer.setEnable(true);
-} /* Proxy::onConnected */
+} /** Proxy::onConnected */
 
 int Proxy::onDataReceived(TcpConnection *con, void *data, int len)
 {
@@ -280,14 +280,14 @@ int Proxy::onDataReceived(TcpConnection *con, void *data, int len)
 
   return 0;
 
-} /* Proxy::onDataReceived */
+} /** Proxy::onDataReceived */
 
 void Proxy::onDisconnected(TcpConnection *con,
                            Async::TcpClient::DisconnectReason reason)
 {
   reconnect_timer.setEnable(true);
   disconnectHandler();
-} /* Proxy::onDisconnected */
+} /** Proxy::onDisconnected */
 
 
 void Proxy::disconnectHandler(void)
@@ -306,7 +306,7 @@ void Proxy::disconnectHandler(void)
     recv_buf_cnt = 0;
     tcpDisconnected();
   }
-} /* Proxy::disconnectHandler */
+} /** Proxy::disconnectHandler */
 /**
  * @brief   Create and send an authentication message
  * @param   con The connection that the message was received on
@@ -361,7 +361,7 @@ int Proxy::handleAuthentication(const unsigned char *buf, int len)
 
   return 0;
 
-} /* Proxy::handleAuthentication */
+} /** Proxy::handleAuthentication */
 
 int Proxy::parseProxyMessageBlock(unsigned char *buf, int len)
 {
@@ -398,7 +398,7 @@ int Proxy::parseProxyMessageBlock(unsigned char *buf, int len)
   }
   
   return total_processed;
-} /* Proxy::parseProxyMessageBlock */
+} /** Proxy::parseProxyMessageBlock */
 
 void Proxy::handleProxyMessageBlock(MsgBlockType type,
     const IpAddress &remote_ip, uint32_t len, unsigned char *data)
@@ -449,7 +449,7 @@ void Proxy::handleProxyMessageBlock(MsgBlockType type,
       reset();
       break;
   }
-} /* Proxy::handleProxyMessageBlock */
+} /** Proxy::handleProxyMessageBlock */
 
 void Proxy::handleTcpDataMsg(uint8_t *buf, int len)
 {
@@ -493,7 +493,7 @@ void Proxy::handleTcpDataMsg(uint8_t *buf, int len)
       }
     }
   }
-} /* Proxy::handleTcpDataMsg */
+} /** Proxy::handleTcpDataMsg */
 
 void Proxy::handleTcpCloseMsg(const uint8_t *buf, int len)
 {
@@ -513,7 +513,7 @@ void Proxy::handleTcpCloseMsg(const uint8_t *buf, int len)
   tcp_state = TCP_STATE_DISCONNECTED;
 
   tcpDisconnected();
-} /* Proxy::handleTcpCloseMsg */
+} /** Proxy::handleTcpCloseMsg */
 
 void Proxy::handleTcpStatusMsg(const uint8_t *buf, int len)
 {
@@ -547,7 +547,7 @@ void Proxy::handleTcpStatusMsg(const uint8_t *buf, int len)
       tcpDisconnected();
     }
   }
-} /* Proxy::handleTcpStatusMsg */
+} /** Proxy::handleTcpStatusMsg */
 
 void Proxy::handleUdpDataMsg(const IpAddress &remote_ip, uint8_t *buf, int len)
 {
@@ -555,7 +555,7 @@ void Proxy::handleUdpDataMsg(const IpAddress &remote_ip, uint8_t *buf, int len)
   {
     udpDataReceived(remote_ip, buf, len);
   }
-} /* Proxy::handleUdpDataMsg */
+} /** Proxy::handleUdpDataMsg */
 
 void Proxy::handleUdpCtrlMsg(const IpAddress &remote_ip, uint8_t *buf, int len)
 {
@@ -563,7 +563,7 @@ void Proxy::handleUdpCtrlMsg(const IpAddress &remote_ip, uint8_t *buf, int len)
   {
     udpCtrlReceived(remote_ip, buf, len);
   }
-} /* Proxy::handleUdpCtrlMsg */
+} /** Proxy::handleUdpCtrlMsg */
 
 void Proxy::handleSystemMsg(const unsigned char *buf, int len)
 {
@@ -600,15 +600,15 @@ void Proxy::handleSystemMsg(const unsigned char *buf, int len)
       reset();
       break;
   }
-} /* Proxy::handleSystemMsgBlock */
+} /** Proxy::handleSystemMsgBlock */
 
 void Proxy::cmdTimeout(void)
 {
   cerr << "*** ERROR: EchoLink proxy command timeout\n";
   reset();
-} /* Proxy::cmdTimeout */
+} /** Proxy::cmdTimeout */
 
-/*
+/**
  * This file has not been truncated
  */
 

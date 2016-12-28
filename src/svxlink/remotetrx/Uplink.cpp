@@ -24,50 +24,50 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <iostream>
 #include <cstring>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "Uplink.h"
 #include "NetUplink.h"
 #include "RfUplink.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 Uplink *Uplink::create(Config &cfg, const string &name, Rx *rx, Tx *tx)
@@ -98,29 +98,29 @@ Uplink *Uplink::create(Config &cfg, const string &name, Rx *rx, Tx *tx)
   
   return uplink;
   
-} /* Uplink::create */
+} /** Uplink::create */
 
 Uplink::Uplink(void)
 {
   
-} /* Uplink::Uplink */
+} /** Uplink::Uplink */
 
 Uplink::~Uplink(void)
 {
   
-} /* Uplink::~Uplink */
+} /** Uplink::~Uplink */
 
 
-/*
+/**
  * Protected member functions
  */
 
 
-/*
+/**
  * Private member functions
  */
 
-/*
+/**
  * This file has not been truncated
  */
 

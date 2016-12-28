@@ -27,44 +27,44 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef MODULE_TEMPLATE_INCLUDED
 #define MODULE_TEMPLATE_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 #include <Module.h>
 #include <version/SVXLINK.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 //namespace MyNameSpace
 //{
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -89,12 +89,12 @@ class ModuleTemplate : public Module
     void squelchOpen(bool is_open);
     void allMsgsWritten(void);
 
-};  /* class ModuleTemplate */
+};  /** class ModuleTemplate */
 
-//} /* namespace */
+//} /** namespace */
 
-#endif /* MODULE_TEMPLATE_INCLUDED */
+#endif /** MODULE_TEMPLATE_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

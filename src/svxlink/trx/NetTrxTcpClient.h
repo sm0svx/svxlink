@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef NET_TRX_TCP_CLIENT_INCLUDED
 #define NET_TRX_TCP_CLIENT_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <map>
@@ -35,17 +35,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sys/time.h>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncTcpClient.h>
 
-/*
+/**
  * Local Includes
  */
 #include "NetTrxMsg.h"
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -53,23 +53,23 @@ namespace Async
   class Timer;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
   
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -184,11 +184,11 @@ class NetTrxTcpClient : public Async::TcpClient
     void localDisconnect(void);
     void sendMsgP(NetTrxMsg::Msg *msg);
 
-};  /* class NetTrxTcpClient */
+};  /** class NetTrxTcpClient */
 
-#endif /* NET_TRX_TCP_CLIENT_INCLUDED */
+#endif /** NET_TRX_TCP_CLIENT_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

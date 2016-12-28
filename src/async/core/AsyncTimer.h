@@ -33,38 +33,38 @@ An example of how to use the Async::Timer class
 #ifndef ASYNC_TIMER_INCLUDED
 #define ASYNC_TIMER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -180,13 +180,13 @@ class Timer : public sigc::trackable
     int   m_timeout_ms;
     bool  m_is_enabled;
 
-};  /* class Timer */
+};  /** class Timer */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_TIMER_INCLUDED */
+#endif /** ASYNC_TIMER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

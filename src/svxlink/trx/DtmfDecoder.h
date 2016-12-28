@@ -26,39 +26,39 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef DTMF_DECODER_INCLUDED
 #define DTMF_DECODER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sigc++/sigc++.h>
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioSink.h>
 #include <AsyncConfig.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -122,13 +122,13 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
      */
     virtual int detectionTime(void) const = 0;
 
-    /*
+    /**
      * @brief 	A signal that is emitted when a DTMF digit is first detected
      * @param 	digit The detected digit
      */
     sigc::signal<void, char> digitActivated;
 
-    /*
+    /**
      * @brief 	A signal that is emitted when a DTMF digit is no longer present
      * @param 	digit 	  The detected digit
      * @param 	duration  The time that the digit was active
@@ -156,10 +156,10 @@ class DtmfDecoder : public sigc::trackable, public Async::AudioSink
     std::string     m_name;
     unsigned   	    m_hangtime;
     
-};  /* class DtmfDecoder */
+};  /** class DtmfDecoder */
 
-#endif /* DTMF_DECODER_INCLUDED */
+#endif /** DTMF_DECODER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

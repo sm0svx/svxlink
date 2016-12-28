@@ -29,45 +29,45 @@ An example of how to use the AsyncPtyStreamBuf class
 #ifndef ASYNC_PTY_STREAM_BUF_INCLUDED
 #define ASYNC_PTY_STREAM_BUF_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <streambuf>
 #include <vector>
 
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class Pty;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -117,12 +117,12 @@ class PtyStreamBuf : public std::streambuf
     virtual int sync(void);
     bool writeToPty(void);
     
-};  /* class PtyStreamBuf */
+};  /** class PtyStreamBuf */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_PTY_STREAM_BUF_INCLUDED */
+#endif /** ASYNC_PTY_STREAM_BUF_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

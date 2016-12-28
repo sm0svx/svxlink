@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_RECORDER_INCLUDED
 #define ASYNC_AUDIO_RECORDER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <stdio.h>
@@ -38,37 +38,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <AsyncAudioSink.h>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -228,13 +228,13 @@ class AudioRecorder : public Async::AudioSink
     int store16bitValue(char *ptr, uint16_t val);
     void setErrMsgFromErrno(const std::string &fname);
 
-};  /* class AudioRecorder */
+};  /** class AudioRecorder */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AUDIO_RECORDER_INCLUDED */
+#endif /** ASYNC_AUDIO_RECORDER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

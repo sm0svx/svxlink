@@ -65,7 +65,7 @@ void digit_detected(char ch, int duration)
   cout << " pos=" << fwriter->sampPos()
        << " (" << (static_cast<float>(fwriter->sampPos()) / (60*16000)) << "m)";
   cout << endl;
-  /*
+  /**
   cout << " digit=" << ch
        << " duration=" << duration << endl;
   */
@@ -170,7 +170,7 @@ class PowerPlotter : public Async::AudioPassthrough
     static CONSTEXPR float ALPHA = 0.05;
     float prev_power;
 
-}; /* class PowerPlotter */
+}; /** class PowerPlotter */
 
 int main()
 {
@@ -208,7 +208,7 @@ int main()
   prev_src->registerSink(voiceband_filter, true);
   prev_src = voiceband_filter;
 
-  /*
+  /**
   PowerPlotter pp;
   prev_src->registerSink(&pp);
   prev_src = &pp;

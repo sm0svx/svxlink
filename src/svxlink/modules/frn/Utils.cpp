@@ -83,7 +83,7 @@ bool hasWinNewline(std::istringstream& is)
 
 } // namspace FrnUtils
 
-/*
+/**
  * This file has not been truncated
  */
 

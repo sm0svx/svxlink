@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <dirent.h>
@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <cstring>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioSelector.h>
@@ -47,24 +47,24 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 #include <AsyncExec.h>
 
-/*
+/**
  * Local Includes
  */
 #include "QsoRecorder.h"
 #include "Logic.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace sigc;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 class QsoRecorder::FileEncoder : public Exec
@@ -76,7 +76,7 @@ class QsoRecorder::FileEncoder : public Exec
     {}
 };
 
-/*
+/**
  * Prototypes
  */
 namespace {
@@ -85,15 +85,15 @@ namespace {
                    const std::string& to);
 };
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 
@@ -103,7 +103,7 @@ QsoRecorder::QsoRecorder(Logic *logic)
     min_samples(0)
 {
   selector = new AudioSelector;
-} /* QsoRecorder::QsoRecorder */
+} /** QsoRecorder::QsoRecorder */
 
 QsoRecorder::~QsoRecorder(void)
 {
@@ -111,7 +111,7 @@ QsoRecorder::~QsoRecorder(void)
   delete selector;
   delete tmo_timer;
   delete qso_tmo_timer;
-} /* QsoRecorder::~QsoRecorder */
+} /** QsoRecorder::~QsoRecorder */
 
 bool QsoRecorder::initialize(const Config &cfg, const string &name)
 {
@@ -164,13 +164,13 @@ bool QsoRecorder::initialize(const Config &cfg, const string &name)
       hide(mem_fun(*this, &QsoRecorder::checkTimeoutTimers)));
 
   return true;
-} /* QsoRecorder::initialize */
+} /** QsoRecorder::initialize */
 
 void QsoRecorder::addSource(Async::AudioSource *source, int prio)
 {
   selector->addSource(source);
   selector->enableAutoSelect(source, prio);
-} /* QsoRecorder::addSource */
+} /** QsoRecorder::addSource */
 
 void QsoRecorder::setEnabled(bool enable)
 {
@@ -186,7 +186,7 @@ void QsoRecorder::setEnabled(bool enable)
   }
 
   checkTimeoutTimers();
-} /* QsoRecorder::setEnabled */
+} /** QsoRecorder::setEnabled */
 
 void QsoRecorder::setMaxChunkTime(unsigned max_time, unsigned soft_time)
 {
@@ -195,25 +195,25 @@ void QsoRecorder::setMaxChunkTime(unsigned max_time, unsigned soft_time)
   {
     soft_chunk_limit = (max_time - soft_time) * 1000;
   }
-} /* QsoRecorder::setChunkTime */
+} /** QsoRecorder::setChunkTime */
 
 void QsoRecorder::setMaxRecDirSize(unsigned max_size)
 {
   max_dirsize = max_size;
-} /* QsoRecorder::setMaxRecDirSize */
+} /** QsoRecorder::setMaxRecDirSize */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 void QsoRecorder::openNewFile(void)
 {
   closeFile();
   openFile();
-} /* QsoRecorder::openNewFile */
+} /** QsoRecorder::openNewFile */
 
 void QsoRecorder::openFile(void)
 {
@@ -236,7 +236,7 @@ void QsoRecorder::openFile(void)
            << recorder->errorMsg() << endl;
     }
   }
-} /* QsoRecorder::openFile */
+} /** QsoRecorder::openFile */
 
 void QsoRecorder::closeFile(void)
 {
@@ -319,7 +319,7 @@ void QsoRecorder::closeFile(void)
 
     cleanupDirectory();
   }
-} /* QsoRecorder::closeFile */
+} /** QsoRecorder::closeFile */
 
 void QsoRecorder::cleanupDirectory(void)
 {
@@ -364,7 +364,7 @@ void QsoRecorder::cleanupDirectory(void)
     //cout << endl;
   }
   free(namelist);
-} /* QsoRecorder::cleanupDirectory */
+} /** QsoRecorder::cleanupDirectory */
 
 void QsoRecorder::timerExpired(void)
 {
@@ -375,7 +375,7 @@ void QsoRecorder::timerExpired(void)
     logic->processEvent(ev);
     setEnabled(default_active);
   }
-} /* QsoRecorder::timerExpired */
+} /** QsoRecorder::timerExpired */
 
 void QsoRecorder::checkTimeoutTimers(void)
 {
@@ -391,12 +391,12 @@ void QsoRecorder::checkTimeoutTimers(void)
                              && (recorder->samplesWritten() > 0)
                              && logic->isIdle());
   }
-} /* QsoRecorder::checkTimeoutTimers */
+} /** QsoRecorder::checkTimeoutTimers */
 
 void QsoRecorder::handleEncoderPrintouts(const char *buf, int cnt)
 {
   cout << buf;
-} /* Exec::handleEncoderPrintouts */
+} /** Exec::handleEncoderPrintouts */
 
 void QsoRecorder::encoderExited(QsoRecorder::FileEncoder *enc)
 {
@@ -415,22 +415,22 @@ void QsoRecorder::encoderExited(QsoRecorder::FileEncoder *enc)
          << "signal " << enc->termSig() << endl;
   }
   delete enc;
-} /* QsoRecorder::encoderExited */
+} /** QsoRecorder::encoderExited */
 
 void QsoRecorder::onError(void)
 {
   cerr << "*** ERROR: The QsoRecorder in logic " << logic->name() 
        << " failed: " << recorder->errorMsg() << endl;
-} /* QsoRecorder::onError */
+} /** QsoRecorder::onError */
 
-/*
+/**
  * Private functions
  */
 namespace {
   int directory_filter(const struct dirent *ent)
   {
     return strstr(ent->d_name, "qsorec_") == ent->d_name;
-  } /* directory_filter */
+  } /** directory_filter */
 
   void replace_all(std::string& str, const std::string& from,
                    const std::string& to)
@@ -445,10 +445,10 @@ namespace {
       str.replace(start_pos, from.length(), to);
       start_pos += to.length();
     }
-  } /* replace_all */
+  } /** replace_all */
 };
 
-/*
+/**
  * This file has not been truncated
  */
 

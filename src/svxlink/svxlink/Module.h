@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef MODULE_INCLUDED
 #define MODULE_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <dlfcn.h>
@@ -38,17 +38,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <list>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -59,23 +59,23 @@ namespace Async
 
 class Logic;
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -462,11 +462,11 @@ class Module : public sigc::trackable, public Async::AudioSink,
     
     void moduleTimeout(Async::Timer *t);
 
-};  /* class Module */
+};  /** class Module */
 
-#endif /* MODULE_INCLUDED */
+#endif /** MODULE_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

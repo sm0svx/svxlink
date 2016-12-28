@@ -26,19 +26,19 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef LOGIC_CMDS_INCLUDED
 #define LOGIC_CMDS_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <iostream>
 #include <sstream>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncConfig.h>
 #include <common.h>
 
-/*
+/**
  * Local Includes
  */
 #include "CmdParser.h"
@@ -47,27 +47,27 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "QsoRecorder.h"
 #include "LinkManager.h"
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -123,7 +123,7 @@ class ModuleActivateCmd : public Command
   private:
     Logic *logic;
 
-};  /* class ModuleActivateCmd */
+};  /** class ModuleActivateCmd */
 
 /**
 @brief	The logic linking activation command
@@ -192,7 +192,7 @@ class LinkCmd : public Command
     Logic                 *logic;
     LinkManager::LinkRef  link;
 
-};  /* class LinkCmd */
+};  /** class LinkCmd */
 
 /**
 @brief	The QSO recorder command
@@ -272,7 +272,7 @@ class QsoRecorderCmd : public Command
     Logic       *logic;
     QsoRecorder *recorder;
 
-};  /* class QsoRecorderCmd */
+};  /** class QsoRecorderCmd */
 
 /**
 @brief	The change language command
@@ -358,9 +358,9 @@ class OnlineCmd : public Command
 
 };
 
-#endif /* LOGIC_CMDS_INCLUDED */
+#endif /** LOGIC_CMDS_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

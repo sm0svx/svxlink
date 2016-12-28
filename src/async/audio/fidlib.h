@@ -70,4 +70,4 @@ extern void fid_run_zapbuf(void *buf);
 extern void fid_run_freebuf(void *runbuf);
 extern void fid_run_free(void *run);
 
-#endif /* FIDLIB_INCLUDED */
+#endif /** FIDLIB_INCLUDED */

@@ -24,17 +24,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <iostream>
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "TrxHandler.h"
@@ -43,33 +43,33 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Uplink.h"
 #include "NetTrxAdapter.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 
@@ -77,14 +77,14 @@ TrxHandler::TrxHandler(Async::Config &cfg, const std::string &name)
   : m_cfg(cfg), m_name(name), m_uplink(0), m_rx(0), m_tx(0)
 {
   
-} /* TrxHandler::TrxHandler */
+} /** TrxHandler::TrxHandler */
 
 TrxHandler::~TrxHandler(void)
 {
   delete m_uplink;
   delete m_rx;
   delete m_tx;
-} /* TrxHandler::~TrxHandler */
+} /** TrxHandler::~TrxHandler */
 
 bool TrxHandler::initialize(void)
 {
@@ -133,13 +133,13 @@ bool TrxHandler::initialize(void)
   
   return true;
   
-} /* TrxHandler::initialize */
+} /** TrxHandler::initialize */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 void TrxHandler::cleanup(void)
@@ -150,9 +150,9 @@ void TrxHandler::cleanup(void)
   m_tx = 0;
   delete m_uplink;
   m_uplink = 0;
-} /* TrxHandler::cleanup */
+} /** TrxHandler::cleanup */
 
-/*
+/**
  * This file has not been truncated
  */
 

@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <cstring>
@@ -33,41 +33,41 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <iostream>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "RtlSdr.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 RtlSdr::RtlSdr(void)
@@ -81,7 +81,7 @@ RtlSdr::RtlSdr(void)
   {
     tuner_if_gain[i] = GAIN_UNSET;
   }
-} /* RtlSdr::RtlSdr */
+} /** RtlSdr::RtlSdr */
 
 
 RtlSdr::~RtlSdr(void)
@@ -91,14 +91,14 @@ RtlSdr::~RtlSdr(void)
 void RtlSdr::enableDistPrint(bool enable)
 {
   dist_print_cnt = enable ? 0 : -1;
-} /* RtlSdr::enableDistPrint */
+} /** RtlSdr::enableDistPrint */
 
 void RtlSdr::setCenterFq(uint32_t fq)
 {
   center_fq = fq;
   center_fq_set = true;
   handleSetCenterFq(fq);
-} /* RtlSdr::setCenterFq */
+} /** RtlSdr::setCenterFq */
 
 void RtlSdr::setSampleRate(uint32_t rate)
 {
@@ -106,26 +106,26 @@ void RtlSdr::setSampleRate(uint32_t rate)
   samp_rate = rate;
   samp_rate_set = true;
   handleSetSampleRate(rate);
-} /* RtlSdr::setSampleRate */
+} /** RtlSdr::setSampleRate */
 
 void RtlSdr::setGainMode(uint32_t mode)
 {
   gain_mode = mode;
   handleSetGainMode(mode);
-} /* RtlSdr::setGainMode */
+} /** RtlSdr::setGainMode */
 
 void RtlSdr::setGain(int32_t gain)
 {
   this->gain = gain;
   handleSetGain(gain);
-} /* RtlSdr::setGain */
+} /** RtlSdr::setGain */
 
 void RtlSdr::setFqCorr(uint32_t corr)
 {
   fq_corr = corr;
   fq_corr_set = true;
   handleSetFqCorr(corr);
-} /* RtlSdr::setFqCorr */
+} /** RtlSdr::setFqCorr */
 
 void RtlSdr::setTunerIfGain(uint16_t stage, int16_t gain)
 {
@@ -135,21 +135,21 @@ void RtlSdr::setTunerIfGain(uint16_t stage, int16_t gain)
   }
   tuner_if_gain[stage] = gain;
   handleSetTunerIfGain(stage, gain);
-} /* RtlSdr::setTunerIfGain */
+} /** RtlSdr::setTunerIfGain */
 
 void RtlSdr::enableTestMode(bool enable)
 {
   test_mode = enable;
   test_mode_set = true;
   handleEnableTestMode(enable);
-} /* RtlSdr::enableTestMode */
+} /** RtlSdr::enableTestMode */
 
 void RtlSdr::enableDigitalAgc(bool enable)
 {
   use_digital_agc = enable;
   use_digital_agc_set = true;
   handleEnableDigitalAgc(enable);
-} /* RtlSdr::enableDigitalAgc */
+} /** RtlSdr::enableDigitalAgc */
 
 const char *RtlSdr::tunerTypeString(TunerType type) const
 {
@@ -170,7 +170,7 @@ const char *RtlSdr::tunerTypeString(TunerType type) const
     default:
       return "UNKNOWN";
   }
-} /* RtlSdr::tunerTypeString */
+} /** RtlSdr::tunerTypeString */
 
 vector<int> RtlSdr::getTunerGains(void) const
 {
@@ -182,12 +182,12 @@ vector<int> RtlSdr::getTunerGains(void) const
     -99, -73, -65, -63, -60, -58, -54, 58, 61, 63, 65, 67,
     68, 70, 71, 179, 181, 182, 184, 186, 188, 191, 197
   };
-  static const int fc2580_gains[] = { 0 /* no gain values */ };
+  static const int fc2580_gains[] = { 0 /** no gain values */ };
   static const int r82xx_gains[] = {
     0, 9, 14, 27, 37, 77, 87, 125, 144, 157, 166, 197, 207, 229, 254, 280,
     297, 328, 338, 364, 372, 386, 402, 421, 434, 439, 445, 480, 496
   };
-  static const int unknown_gains[] = { 0 /* no gain values */ };
+  static const int unknown_gains[] = { 0 /** no gain values */ };
 
   switch (tuner_type)
   {
@@ -211,9 +211,9 @@ vector<int> RtlSdr::getTunerGains(void) const
       return vector<int>(unknown_gains,
                          unknown_gains+sizeof(unknown_gains)/sizeof(int));
   }
-} /* RtlSdr::getTunerGains */
+} /** RtlSdr::getTunerGains */
 
-/*
+/**
  * Protected member functions
  */
 void RtlSdr::handleIq(const complex<uint8_t> *samples, int samp_count)
@@ -251,9 +251,9 @@ void RtlSdr::handleIq(const complex<uint8_t> *samples, int samp_count)
   }
 
   iqReceived(iq);
-} /* RtlSdr::handleIq */
+} /** RtlSdr::handleIq */
 
-/*
+/**
  * Private member functions
  */
 void RtlSdr::updateSettings(void)
@@ -293,7 +293,7 @@ void RtlSdr::updateSettings(void)
   {
     handleEnableDigitalAgc(use_digital_agc);
   }
-} /* RtlSdr::updateSettings */
+} /** RtlSdr::updateSettings */
 
 #if 0
 int RtlSdr::dataReceived(Async::TcpConnection *con, void *buf, int count)
@@ -371,9 +371,9 @@ int RtlSdr::dataReceived(Async::TcpConnection *con, void *buf, int count)
   iqReceived(iq);
 
   return 2 * samp_count;
-} /* RtlSdr::dataReceived */
+} /** RtlSdr::dataReceived */
 #endif
 
-/*
+/**
  * This file has not been truncated
  */

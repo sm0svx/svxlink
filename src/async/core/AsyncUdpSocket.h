@@ -32,46 +32,46 @@ An example of how to use the Async::UdpSocket class
 #ifndef ASYNC_UDP_SOCKET_INCLUDED
 #define ASYNC_UDP_SOCKET_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sigc++/sigc++.h>
 #include <stdint.h>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncIpAddress.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 class UdpPacket;
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class FdWatch;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -155,13 +155,13 @@ class UdpSocket : public sigc::trackable
     void handleInput(FdWatch *watch);
     void sendRest(FdWatch *watch);
 
-};  /* class UdpSocket */
+};  /** class UdpSocket */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_UDP_SOCKET_INCLUDED */
+#endif /** ASYNC_UDP_SOCKET_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

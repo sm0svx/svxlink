@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <unistd.h>
@@ -41,49 +41,49 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <cstring>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "AsyncConfig.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 
 Config::~Config(void)
 {
   //fclose(file);
-} /* Config::~Config */
+} /** Config::~Config */
 
 bool Config::open(const string& name)
 {
@@ -102,7 +102,7 @@ bool Config::open(const string& name)
 
   return success;
 
-} /* Config::open */
+} /** Config::open */
 
 bool Config::getValue(const string& section, const string& tag,
 		      string& value) const
@@ -121,7 +121,7 @@ bool Config::getValue(const string& section, const string& tag,
 
   value = val_it->second;
   return true;
-} /* Config::getValue */
+} /** Config::getValue */
 
 const string &Config::getValue(const string& section, const string& tag) const
 {
@@ -141,7 +141,7 @@ const string &Config::getValue(const string& section, const string& tag) const
 
   return val_it->second;
 
-} /* Config::getValue */
+} /** Config::getValue */
 
 list<string> Config::listSection(const string& section)
 {
@@ -161,20 +161,20 @@ list<string> Config::listSection(const string& section)
   
   return tags;
   
-} /* Config::listSection */
+} /** Config::listSection */
 
 void Config::setValue(const std::string& section, const std::string& tag,
       	      	      const std::string& value)
 {
   Values &values = sections[section];
   values[tag] = value;
-} /* Config::setValue */
+} /** Config::setValue */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 
@@ -271,7 +271,7 @@ bool Config::parseCfgFile(void)
 
   return true;
 
-} /* Config::parseCfgFile */
+} /** Config::parseCfgFile */
 
 char *Config::trimSpaces(char *line)
 {
@@ -289,12 +289,12 @@ char *Config::trimSpaces(char *line)
 
   return begin;
 
-} /* Config::trimSpaces */
+} /** Config::trimSpaces */
 
 char *Config::parseSection(char *line)
 {
   return parseDelimitedString(line, '[', ']');
-} /* Config::parseSection */
+} /** Config::parseSection */
 
 char *Config::parseDelimitedString(char *str, char begin_tok, char end_tok)
 {
@@ -310,7 +310,7 @@ char *Config::parseDelimitedString(char *str, char begin_tok, char end_tok)
   }
   *end = 0;
 
-  /*
+  /**
   if (end == str+1)
   {
     return 0;
@@ -319,7 +319,7 @@ char *Config::parseDelimitedString(char *str, char begin_tok, char end_tok)
 
   return str + 1;
 
-} /* Config::parseDelimitedString */
+} /** Config::parseDelimitedString */
 
 bool Config::parseValueLine(char *line, string& tag, string& value)
 {
@@ -341,7 +341,7 @@ bool Config::parseValueLine(char *line, string& tag, string& value)
 
   return true;
 
-} /* Config::parseValueLine */
+} /** Config::parseValueLine */
 
 char *Config::parseValue(char *value)
 {
@@ -358,7 +358,7 @@ char *Config::parseValue(char *value)
 
   return translateEscapedChars(value);
   
-} /* Config::parseValue */
+} /** Config::parseValue */
 
 char *Config::translateEscapedChars(char *val)
 {
@@ -407,9 +407,9 @@ char *Config::translateEscapedChars(char *val)
   
   return val;
   
-} /* Config::translateEscapedChars */
+} /** Config::translateEscapedChars */
 
-/*
+/**
  * This file has not been truncated
  */
 

@@ -28,21 +28,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef LOCAL_TX_INCLUDED
 #define LOCAL_TX_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <vector>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "Tx.h"
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -60,25 +60,25 @@ namespace Async
 class DtmfEncoder;
 class PttCtrl;
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class SineGenerator;
 class Ptt;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -175,11 +175,11 @@ class LocalTx : public Tx
     void allDtmfDigitsSent(void);
     void pttHangtimeExpired(Async::Timer *t);
 
-};  /* class LocalTx */
+};  /** class LocalTx */
 
-#endif /* LOCAL_TX_INCLUDED */
+#endif /** LOCAL_TX_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

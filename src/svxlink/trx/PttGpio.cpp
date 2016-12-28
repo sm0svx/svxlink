@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <iostream>
@@ -32,53 +32,53 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <sstream>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "PttGpio.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 PttGpio::PttGpio(void)
   : active_low(false)
 {
-} /* PttGpio::PttGpio */
+} /** PttGpio::PttGpio */
 
 
 PttGpio::~PttGpio(void)
 {
-} /* PttGpio::~PttGpio */
+} /** PttGpio::~PttGpio */
 
 
 bool PttGpio::initialize(Async::Config &cfg, const std::string name)
@@ -107,7 +107,7 @@ bool PttGpio::initialize(Async::Config &cfg, const std::string name)
   gpioval.close();
 
   return true;
-} /* PttGpio::initialize */
+} /** PttGpio::initialize */
 
 bool PttGpio::setTxOn(bool tx_on)
 {
@@ -124,17 +124,17 @@ bool PttGpio::setTxOn(bool tx_on)
   gpioval.close();
 
   return true;
-} /* PttGpio::setTxOn */
+} /** PttGpio::setTxOn */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 
-/*
+/**
  * This file has not been truncated
  */
 
