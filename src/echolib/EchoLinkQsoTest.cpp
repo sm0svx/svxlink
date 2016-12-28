@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <termios.h>
@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cmath>
 #include <iostream>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncFdWatch.h>
@@ -43,12 +43,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncSigCAudioSink.h>
 #include <AsyncSigCAudioSource.h>
 
-/*
+/**
  * Local Includes
  */
 #include "EchoLinkQsoTest.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
@@ -56,27 +56,27 @@ using namespace sigc;
 using namespace Async;
 using namespace EchoLink;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 
@@ -84,7 +84,7 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
     const string& info, const StationData *station)
   : Qso(station->ip(), callsign, name, info),
     station(station), chat_mode(false), is_transmitting(false),
-    vox_limit(-1), sigc_sink(0) /*, sigc_src(0)*/
+    vox_limit(-1), sigc_sink(0) /**, sigc_src(0)*/
 {
   cout << "Call        : " << station->callsign() << endl;
   cout << "Description : " << station->description() << endl;
@@ -92,7 +92,7 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
   cout << "Time        : " << station->time() << endl;
   cout << "Status      : " << station->statusStr() << endl;
   
-    /* Turn off line buffering and echo for stdin */
+    /** Turn off line buffering and echo for stdin */
   struct termios termios;
   tcgetattr(STDIN_FILENO, &org_termios);
   termios = org_termios;
@@ -132,7 +132,7 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
 
   printPrompt();
   
-} /* EchoLinkQsoTest::EchoLinkQsoTest */
+} /** EchoLinkQsoTest::EchoLinkQsoTest */
 
 EchoLinkQsoTest::~EchoLinkQsoTest(void)
 {
@@ -140,13 +140,13 @@ EchoLinkQsoTest::~EchoLinkQsoTest(void)
   delete sigc_sink;
   delete stdin_watch;
   tcsetattr(STDIN_FILENO, TCSANOW, &org_termios);  
-} /* EchoLinkQsoTest::~EchoLinkQsoTest */
+} /** EchoLinkQsoTest::~EchoLinkQsoTest */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 void EchoLinkQsoTest::handleChatMode(void)
@@ -176,7 +176,7 @@ void EchoLinkQsoTest::handleChatMode(void)
   
   fflush(stdout);
   
-} /* EchoLinkQsoTest::handleChatMode */
+} /** EchoLinkQsoTest::handleChatMode */
 void EchoLinkQsoTest::stdinHandler(FdWatch *watch)
 {
   if (chat_mode)
@@ -248,19 +248,19 @@ void EchoLinkQsoTest::printPrompt(void)
        << endl;
   cout << station->callsign() << "> ";
   cout.flush();
-} /* EchoLinkQsoTest::printPrompt */
+} /** EchoLinkQsoTest::printPrompt */
 
 void EchoLinkQsoTest::chatMsg(const string& msg)
 {
   cout << msg << endl;
-} /* EchoLinkQsoTest::chatMsg */
+} /** EchoLinkQsoTest::chatMsg */
 
 void EchoLinkQsoTest::infoMsg(const string& msg)
 {
   cout << "------------ INFO ------------\n";
   cout << msg << endl;
   cout << "------------------------------\n";
-} /* EchoLinkQsoTest::infoMsg */
+} /** EchoLinkQsoTest::infoMsg */
 
 void EchoLinkQsoTest::onStateChange(Qso::State state)
 {
@@ -284,7 +284,7 @@ void EchoLinkQsoTest::onStateChange(Qso::State state)
       cout << "?\n";
       break;
   }
-} /* EchoLinkQsoTest::onStateChange */
+} /** EchoLinkQsoTest::onStateChange */
 
 int EchoLinkQsoTest::micAudioRead(float *buf, int len)
 {
@@ -304,9 +304,9 @@ int EchoLinkQsoTest::micAudioRead(float *buf, int len)
   
   return len;
   
-} /* EchoLinkTest::micAudioRead */
+} /** EchoLinkTest::micAudioRead */
 
-/*
+/**
  * This file has not been truncated
  */
 

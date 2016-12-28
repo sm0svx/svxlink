@@ -232,13 +232,13 @@ class TestAccess;
 #define STATE(S) \
 public: \
 	typedef S SELF; \
-	typedef S ANCHOR; /* Anchor is the first non-template state in the inheritance chain */ \
-	/* Constructor and destructor already defined: you can't (and shouldn't) have your own! */ \
-	/* For the user a state class "constructor" and "destructor" are its entry and exit method! */ \
+	typedef S ANCHOR; /** Anchor is the first non-template state in the inheritance chain */ \
+	/** Constructor and destructor already defined: you can't (and shouldn't) have your own! */ \
+	/** For the user a state class "constructor" and "destructor" are its entry and exit method! */ \
 	S(::Macho::_StateInstance & instance) : LINK(instance) {} \
 	~S() {} \
 	static const char * _state_name() { return #S; } \
-	/* Get to your Box with this method: */ \
+	/** Get to your Box with this method: */ \
 	Box & box() { return *static_cast<Box *>(_box()); } \
 	friend class ::_VS8_Bug_101615;
 
@@ -248,7 +248,7 @@ public: \
 	typedef S SELF; \
 	typedef typename S::SUPER SUPER; \
 	typedef typename S::TOP TOP; \
-	typedef typename S::ANCHOR ANCHOR; /* Anchor is the first non-template state in the inheritance chain */ \
+	typedef typename S::ANCHOR ANCHOR; /** Anchor is the first non-template state in the inheritance chain */ \
 	typedef ::Macho::Link<S, SUPER> LINK; \
 	S(::Macho::_StateInstance & instance) : LINK(instance) {} \
 	~S() {} \
@@ -257,7 +257,7 @@ public: \
 	friend class ::_VS8_Bug_101615; \
 	using LINK::dispatch; \
 	using LINK::machine; \
-	/* must have these methods to quieten gcc */ \
+	/** must have these methods to quieten gcc */ \
 	template<class U> void setState() { LINK::template setState<U>(); } \
 	template<class U, class P1> void setState(const P1 & p1) { LINK::template setState<U, P1>(p1); } \
 	template<class U, class P1, class P2> void setState(const P1 & p1, const P2 & p2) { LINK::template setState<U, P1, P2>(p1, p2); } \
@@ -271,11 +271,11 @@ public: \
 // Use this macro to select deep history strategy.
 #define DEEPHISTORY() \
 private: \
-	/* If no superstate has history, SUPER::_setHistorySuper is a NOOP */ \
+	/** If no superstate has history, SUPER::_setHistorySuper is a NOOP */ \
 	virtual void _saveHistory(::Macho::_StateInstance & self, ::Macho::_StateInstance & shallow, ::Macho::_StateInstance & deep) \
 	{ self.setHistory(&deep); SELF::SUPER::_setHistorySuper(self, deep); } \
 protected: \
-	/* Substates may use _setHistorySuper to bubble up history */ \
+	/** Substates may use _setHistorySuper to bubble up history */ \
 	virtual void _setHistorySuper(::Macho::_StateInstance & self, ::Macho::_StateInstance & deep) \
 	{ self.setHistorySuper(deep); } \
 public:
@@ -283,11 +283,11 @@ public:
 // Use this macro to select shallow history strategy.
 #define HISTORY() \
 private: \
-	/* If no superstate has history, SUPER::_setHistorySuper is a NOOP */ \
+	/** If no superstate has history, SUPER::_setHistorySuper is a NOOP */ \
 	virtual void _saveHistory(::Macho::_StateInstance & self, ::Macho::_StateInstance & shallow, ::Macho::_StateInstance & deep) \
 	{ self.setHistory(&shallow); SELF::SUPER::_setHistorySuper(self, deep); } \
 protected: \
-	/* Substates may use _setHistorySuper to bubble up history */ \
+	/** Substates may use _setHistorySuper to bubble up history */ \
 	virtual void _setHistorySuper(::Macho::_StateInstance & self, ::Macho::_StateInstance & deep) \
 	{ self.setHistorySuper(deep); } \
 public:
@@ -1924,7 +1924,7 @@ namespace Macho {
 
 	// Create StateInstance object of state.
 	template<class C, class P>
-	/* static */ inline _StateInstance & Link<C, P>::_getInstance(_MachineBase & machine) {
+	/** static */ inline _StateInstance & Link<C, P>::_getInstance(_MachineBase & machine) {
 		// Look first in machine for existing StateInstance.
 		_StateInstance * & instance = machine.getInstance(StateID<C>::value);
 		if (!instance)
@@ -1935,32 +1935,32 @@ namespace Macho {
 	}
 
 	template<class C, class P>
-	/* static */ inline bool Link<C, P>::isCurrent(const _MachineBase & machine) {
+	/** static */ inline bool Link<C, P>::isCurrent(const _MachineBase & machine) {
 		return machine.currentState().isChild(key());
 	}
 
 	// Deprecated!
 	template<class C, class P>
-	/* static */ inline bool Link<C, P>::isCurrentDirect(const _MachineBase & machine) {
+	/** static */ inline bool Link<C, P>::isCurrentDirect(const _MachineBase & machine) {
 		return key() == machine.currentState();
 	}
 
 	template<class C, class P>
-	/* static */ void Link<C, P>::clearHistory(_MachineBase & machine) {
+	/** static */ void Link<C, P>::clearHistory(_MachineBase & machine) {
 		const _StateInstance * instance = machine.getInstance(StateID<C>::value);
 		if (instance)
 			instance->setHistory(0);
 	}
 
 	template<class C, class P>
-	/* static */ void Link<C, P>::clearHistoryDeep(_MachineBase & machine) {
+	/** static */ void Link<C, P>::clearHistoryDeep(_MachineBase & machine) {
 		const _StateInstance * instance = machine.getInstance(StateID<C>::value);
 		if (instance)
 			machine.clearHistoryDeep(Machine<TOP>::theStateCount, *instance);
 	}
 
 	template<class C, class P>
-	/* static */ Alias Link<C, P>::history(const _MachineBase & machine) {
+	/** static */ Alias Link<C, P>::history(const _MachineBase & machine) {
 		const _StateInstance * instance = machine.getInstance(StateID<C>::value);
 		_StateInstance * history = 0;
 
@@ -1971,13 +1971,13 @@ namespace Macho {
 	}
 
 	template<class C, class P>
-	/* static */ inline Key Link<C, P>::key() {
+	/** static */ inline Key Link<C, P>::key() {
 		static _KeyData k = { _getInstance, isChild, C::_state_name, StateID<C>::value };
 		return &k;
 	}
 
 	template<class C, class P>
-	/* static */ inline Alias Link<C, P>::alias() {
+	/** static */ inline Alias Link<C, P>::alias() {
 		return Alias(key());
 	}
 

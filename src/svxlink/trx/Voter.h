@@ -26,24 +26,24 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef VOTER_INCLUDED
 #define VOTER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <list>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncConfig.h>
 #include <CppStdCompat.h>
 
-/*
+/**
  * Local Includes
  */
 #include "Rx.h"
 #include "Macho.hpp"
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -53,23 +53,23 @@ namespace Async
   class Pty;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
  
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 
@@ -386,10 +386,10 @@ class Voter : public Rx
     SatRx *findBestRx(void) const;
     Async::Pty *voter_pty;
 
-};  /* class Voter */
+};  /** class Voter */
 
-#endif /* VOTER_INCLUDED */
+#endif /** VOTER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

@@ -29,18 +29,18 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <iomanip>
 #include <cassert>
 #include <cstring>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "EchoLinkProxy.h"
@@ -49,7 +49,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "EchoLinkQso.h"
 #include "EchoLinkDispatcher.h"
 
-/*
+/**
  *
  * Namespaces to use
  *
@@ -59,44 +59,44 @@ using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-/*
+/**
  * Defines & typedefs
  */
 #define AUDIO_PORT  port_base
 #define CTRL_PORT   (port_base+1)
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 int Dispatcher::port_base = Dispatcher::DEFAULT_PORT_BASE;
 IpAddress Dispatcher::bind_ip = IpAddress();
 Dispatcher *Dispatcher::the_instance = 0;
 
-/*
+/**
  * Public member functions
  */
 void Dispatcher::setPortBase(int base)
 {
   assert(the_instance == 0);
   port_base = base;
-} /* Dispatcher::setPortBase */
+} /** Dispatcher::setPortBase */
 
 void Dispatcher::setBindAddr(const IpAddress& ip)
 {
   bind_ip = ip;
-} /* Dispatcher::setBindAddr */
+} /** Dispatcher::setBindAddr */
 
 Dispatcher *Dispatcher::instance(void)
 {
@@ -112,20 +112,20 @@ Dispatcher *Dispatcher::instance(void)
   
   return the_instance;
   
-} /* Dispatcher::instance */
+} /** Dispatcher::instance */
 
 void Dispatcher::deleteInstance(void)
 {
   delete the_instance;
   the_instance = 0;
-} /* Dispatcher::deleteInstance */
+} /** Dispatcher::deleteInstance */
 
 Dispatcher::~Dispatcher(void)
 {
   delete ctrl_sock;
   delete audio_sock;
   the_instance = 0;
-} /* Dispatcher::~Dispatcher */
+} /** Dispatcher::~Dispatcher */
 
 bool Dispatcher::registerConnection(Qso *con, CtrlInputHandler cih,
 	AudioInputHandler aih)
@@ -143,7 +143,7 @@ bool Dispatcher::registerConnection(Qso *con, CtrlInputHandler cih,
   
   return true;
   
-} /* Dispatcher::registerConnection */
+} /** Dispatcher::registerConnection */
 
 void Dispatcher::unregisterConnection(Qso *con)
 {
@@ -151,7 +151,7 @@ void Dispatcher::unregisterConnection(Qso *con)
   iter = con_map.find(con->remoteIp());
   assert(iter != con_map.end());
   con_map.erase(iter);
-} /* Dispatcher::unregisterConnection */
+} /** Dispatcher::unregisterConnection */
 
 bool Dispatcher::sendCtrlMsg(const IpAddress& to, const void *buf, int len)
 {
@@ -164,7 +164,7 @@ bool Dispatcher::sendCtrlMsg(const IpAddress& to, const void *buf, int len)
   {
     return proxy->udpCtrl(to, buf, len);
   }
-} /* Dispatcher::sendCtrlMsg */
+} /** Dispatcher::sendCtrlMsg */
 
 bool Dispatcher::sendAudioMsg(const IpAddress& to, const void *buf, int len)
 {
@@ -177,13 +177,13 @@ bool Dispatcher::sendAudioMsg(const IpAddress& to, const void *buf, int len)
   {
     return proxy->udpData(to, buf, len);
   }
-} /* Dispatcher::sendCtrlMsg */
+} /** Dispatcher::sendCtrlMsg */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 
@@ -216,7 +216,7 @@ Dispatcher::Dispatcher(void)
     proxy->udpDataReceived.connect(
         mem_fun(*this, &Dispatcher::audioDataReceived));
   }
-} /* Dispatcher::Dispatcher */
+} /** Dispatcher::Dispatcher */
 
 void Dispatcher::ctrlDataReceived(const IpAddress& ip, void *buf, int len)
 {
@@ -258,7 +258,7 @@ void Dispatcher::ctrlDataReceived(const IpAddress& ip, void *buf, int len)
     }
   }
   
-} /* Dispatcher::ctrldDataReceived */
+} /** Dispatcher::ctrldDataReceived */
 
 void Dispatcher::audioDataReceived(const IpAddress& ip, void *buf, int len)
 {
@@ -274,9 +274,9 @@ void Dispatcher::audioDataReceived(const IpAddress& ip, void *buf, int len)
   {
     cerr << "Spurious audio packet received from " << ip << endl;
   }
-} /* Dispatcher::audioDataReceived */
+} /** Dispatcher::audioDataReceived */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    Dispatcher::printData
  * Purpose:   Print the contents of "buf". Used for debugging.
@@ -308,9 +308,9 @@ void Dispatcher::printData(const char *buf, int len)
   cerr << endl;
 
   cerr.flags(old_flags);
-} /* Dispatcher::printData */
+} /** Dispatcher::printData */
 
-/*
+/**
  * This file has not been truncated
  */
 

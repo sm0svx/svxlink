@@ -26,23 +26,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SIG_LEV_DET_INCLUDED
 #define SIG_LEV_DET_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sigc++/sigc++.h>
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioSink.h>
 
-/*
+/**
  * Local Includes
  */
 #include "Factory.h"
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -52,23 +52,23 @@ namespace Async
   class Config;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -159,7 +159,7 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
     SigLevDet(const SigLevDet&);
     SigLevDet& operator=(const SigLevDet&);
     
-};  /* class SigLevDet */
+};  /** class SigLevDet */
 
 /**
 @brief	Base class for a signal level detector factory
@@ -179,7 +179,7 @@ struct SigLevDetFactoryBase : public FactoryBase<SigLevDet>
   SigLevDetFactoryBase(const std::string &name) : FactoryBase<SigLevDet>(name)
   {
   }
-};  /* class SigLevDetFactoryBase */
+};  /** class SigLevDetFactoryBase */
 
 /**
 @brief	Base class for implementing a signal level detector factory
@@ -194,11 +194,11 @@ struct SigLevDetFactory : public Factory<SigLevDetFactoryBase, T>
 {
   SigLevDetFactory(const std::string &name)
     : Factory<SigLevDetFactoryBase, T>(name) {}
-}; /* class SigLevDetFactory */
+}; /** class SigLevDetFactory */
 
-#endif /* SIG_LEV_DET_INCLUDED */
+#endif /** SIG_LEV_DET_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

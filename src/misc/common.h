@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef COMMON_INCLUDED
 #define COMMON_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <utility>
@@ -34,37 +34,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <istream>
 #include <ostream>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace SvxLink
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Global functions
  */
 /**
@@ -88,7 +88,7 @@ static bool setValueFromString(ValueType &val, const std::string &str)
     ss >> std::ws;
   }
   return !ss.fail() && ss.eof();
-} /* setValueFromString */
+} /** setValueFromString */
 
 /**
  * @brief   Set a value of any type supporting streaming from a string
@@ -109,7 +109,7 @@ bool setValueFromString(std::string &val, const std::string &str)
 {
   val = str;
   return true;
-} /* setValueFromString */
+} /** setValueFromString */
 
 /**
  * @brief   Split a string using a set of delimiters and put the tokens in a
@@ -172,7 +172,7 @@ static typename Container::size_type splitStr(Container &L,
 
   return L.size();
 
-} /* splitStr */
+} /** splitStr */
 
 /**
  * @brief A pair type with separator which can be streamed
@@ -212,11 +212,11 @@ class SepPair : public std::pair<a, b>
 };
 
 
-} /* namespace */
+} /** namespace */
 
-#endif /* COMMON_INCLUDED */
+#endif /** COMMON_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

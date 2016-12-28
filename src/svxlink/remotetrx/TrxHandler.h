@@ -26,44 +26,44 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef TRX_HANDLER_INCLUDED
 #define TRX_HANDLER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncConfig.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class Uplink;
 class Rx;
 class Tx;
   
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -103,11 +103,11 @@ class TrxHandler : public sigc::trackable
     TrxHandler& operator=(const TrxHandler&);
     void cleanup(void);
     
-};  /* class TrxHandler */
+};  /** class TrxHandler */
 
-#endif /* TRX_HANDLER_INCLUDED */
+#endif /** TRX_HANDLER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

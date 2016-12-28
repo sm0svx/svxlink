@@ -24,15 +24,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "AsyncAudioDecoder.h"
@@ -47,33 +47,33 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncAudioDecoderOpus.h"
 #endif
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 
@@ -117,20 +117,20 @@ AudioDecoder *AudioDecoder::create(const std::string &name)
 AudioDecoder::AudioDecoder(void)
 {
   
-} /* AudioDecoder::AudioDecoder */
+} /** AudioDecoder::AudioDecoder */
 
 AudioDecoder::~AudioDecoder(void)
 {
   
-} /* AudioDecoder::~AudioDecoder */
+} /** AudioDecoder::~AudioDecoder */
 
 void AudioDecoder::resumeOutput(void)
 {
   
-} /* AudioDecoder::resumeOutput */
+} /** AudioDecoder::resumeOutput */
 #endif
 
-/*
+/**
  *
  * Protected member functions
  *
@@ -140,14 +140,14 @@ void AudioDecoder::resumeOutput(void)
 void AudioDecoder::allSamplesFlushed(void)
 {
   
-} /* AudioDecoder::allSamplesFlushed */
+} /** AudioDecoder::allSamplesFlushed */
 #endif
 
-/*
+/**
  * Private member functions
  */
 
-/*
+/**
  * This file has not been truncated
  */
 

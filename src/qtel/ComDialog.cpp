@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <iostream>
@@ -47,7 +47,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <QKeyEvent>
 #undef emit
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioIO.h>
@@ -60,7 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioInterpolator.h>
 #include <AsyncAudioDecimator.h>
 
-/*
+/**
  * Local Includes
  */
 #include "MyMessageBox.h"
@@ -68,7 +68,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "ComDialog.h"
 #include "multirate_filter_coeff.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
@@ -76,27 +76,27 @@ using namespace sigc;
 using namespace Async;
 using namespace EchoLink;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 ComDialog::ComDialog(Directory& dir, const QString& callsign,
@@ -124,7 +124,7 @@ ComDialog::ComDialog(Directory& dir, const QString& callsign,
   {
     dir.getCalls();
   }
-} /* ComDialog::ComDialog */
+} /** ComDialog::ComDialog */
 
 ComDialog::ComDialog(Directory& dir, const QString& remote_host)
   : callsign(remote_host), con(0), dir(dir), accept_connection(false),
@@ -142,7 +142,7 @@ ComDialog::ComDialog(Directory& dir, const QString& remote_host)
   init();
   dns = new DnsLookup(remote_host.toStdString());
   dns->resultsReady.connect(mem_fun(*this, &ComDialog::dnsResultsReady));
-} /* ComDialog::ComDialog */
+} /** ComDialog::ComDialog */
 
 ComDialog::~ComDialog(void)
 {
@@ -160,7 +160,7 @@ ComDialog::~ComDialog(void)
   delete rem_audio_fifo;
   delete mic_audio_io;
   delete spkr_audio_io;
-} /* ComDialog::~ComDialog */
+} /** ComDialog::~ComDialog */
 
 void ComDialog::acceptConnection(void)
 {
@@ -169,7 +169,7 @@ void ComDialog::acceptConnection(void)
   {
     con->accept();
   }
-} /* ComDialog::accept */
+} /** ComDialog::accept */
 
 void ComDialog::setRemoteParams(const QString& priv)
 {
@@ -177,9 +177,9 @@ void ComDialog::setRemoteParams(const QString& priv)
   {
     con->setRemoteParams(priv.toStdString());
   }
-} /* ComDialog::setRemoteParams */
+} /** ComDialog::setRemoteParams */
 
-/*
+/**
  * Protected member functions
  */
 void ComDialog::keyPressEvent(QKeyEvent *ke)
@@ -199,7 +199,7 @@ void ComDialog::keyPressEvent(QKeyEvent *ke)
 
   ke->ignore();
   QDialog::keyPressEvent(ke);
-} /* ComDialog::keyPressEvent */
+} /** ComDialog::keyPressEvent */
 
 void ComDialog::keyReleaseEvent(QKeyEvent *ke)
 {
@@ -213,9 +213,9 @@ void ComDialog::keyReleaseEvent(QKeyEvent *ke)
   }
   ke->ignore();
   QDialog::keyReleaseEvent(ke);
-} /* ComDialog::keyReleaseEvent */
+} /** ComDialog::keyReleaseEvent */
 
-/*
+/**
  * Private member functions
  */
 void ComDialog::init(const QString& remote_name)
@@ -391,7 +391,7 @@ void ComDialog::init(const QString& remote_name)
     (*this, &ComDialog::onStationListUpdated));
   
   orig_background_color = rx_indicator->palette().color(QPalette::Window);
-} /* ComDialog::init */
+} /** ComDialog::init */
 
 
 void ComDialog::updateStationData(const StationData *station)
@@ -410,7 +410,7 @@ void ComDialog::updateStationData(const StationData *station)
     ip_address->setText("?");
     time->setText("?");  
   }
-} /* ComDialog::updateStationData */
+} /** ComDialog::updateStationData */
 
 void ComDialog::createConnection(const StationData *station)
 {
@@ -448,7 +448,7 @@ void ComDialog::createConnection(const StationData *station)
   
   setIsTransmitting(false);
   
-} /* ComDialog::createConnection */
+} /** ComDialog::createConnection */
 
 void ComDialog::onStationListUpdated(void)
 {
@@ -470,7 +470,7 @@ void ComDialog::onStationListUpdated(void)
       connect(mb, SIGNAL(closed()), this, SLOT(close()));
     }
   }
-} /* ComDialog::onStationListUpdated */
+} /** ComDialog::onStationListUpdated */
 
 bool ComDialog::openAudioDevice(AudioIO::Mode mode)
 {
@@ -503,7 +503,7 @@ bool ComDialog::openAudioDevice(AudioIO::Mode mode)
   
   return mic_open_ok && spkr_open_ok;
   
-} /* ComDialog::openAudioDevice */
+} /** ComDialog::openAudioDevice */
 
 void ComDialog::dnsResultsReady(DnsLookup &)
 {
@@ -527,17 +527,17 @@ void ComDialog::dnsResultsReady(DnsLookup &)
   delete dns;
   dns = 0;
   
-} /* ComDialog::dnsResultsReady */
+} /** ComDialog::dnsResultsReady */
 
 void ComDialog::connectToStation()
 {
   con->connect();
-} /* ComDialog::connectToStation */
+} /** ComDialog::connectToStation */
 
 void ComDialog::disconnectFromStation()
 {
   con->disconnect();
-} /* ComDialog::disconnectFromStation */
+} /** ComDialog::disconnectFromStation */
 
 void ComDialog::setIsTransmitting(bool transmit)
 {
@@ -584,13 +584,13 @@ void ComDialog::setIsTransmitting(bool transmit)
       ptt_button->setCheckable(false);
     }
   }
-} /* ComDialog::setIsTransmitting */
+} /** ComDialog::setIsTransmitting */
 
 void ComDialog::pttButtonPressedReleased(void)
 {
   ptt_button->setFocus();
   
-    /* Ignore press and release events if toggle mode is enabled */
+    /** Ignore press and release events if toggle mode is enabled */
   if (ptt_button->isCheckable())
   {
     return;
@@ -598,12 +598,12 @@ void ComDialog::pttButtonPressedReleased(void)
   
   checkTransmit();
   
-} /* ComDialog::pttButtonPressedReleased */
+} /** ComDialog::pttButtonPressedReleased */
 
 void ComDialog::pttButtonToggleStateChanged(bool checked)
 {
   checkTransmit();
-} /* ComDialog::pttButtonToggleStateChanged */
+} /** ComDialog::pttButtonToggleStateChanged */
 
 void ComDialog::sendChatMsg()
 {
@@ -612,14 +612,14 @@ void ComDialog::sendChatMsg()
   con->sendChatData(chat_codec->fromUnicode(chat_outgoing->text()).data());
   chat_outgoing->clear();
   ptt_button->setFocus();
-} /* ComDialog::sendChatMsg */
+} /** ComDialog::sendChatMsg */
 
 void ComDialog::infoMsgReceived(const string& msg)
 {
   info_incoming->append("------------ " + trUtf8("INFO") + " ------------");
   info_incoming->append(msg.c_str());
   info_incoming->append("------------------------------");
-} /* ComDialog::infoMsgReceived */
+} /** ComDialog::infoMsgReceived */
 
 void ComDialog::chatMsgReceived(const string& msg)
 {
@@ -632,7 +632,7 @@ void ComDialog::chatMsgReceived(const string& msg)
   {
     info_incoming->append(msg.c_str());
   }
-} /* ComDialog::chatMsgReceived */
+} /** ComDialog::chatMsgReceived */
 
 void ComDialog::stateChange(Qso::State state)
 {
@@ -683,7 +683,7 @@ void ComDialog::stateChange(Qso::State state)
   
   checkTransmit();
   
-} /* ComDialog::stateChange */
+} /** ComDialog::stateChange */
 
 void ComDialog::isReceiving(bool is_receiving)
 {
@@ -697,12 +697,12 @@ void ComDialog::isReceiving(bool is_receiving)
     palette.setColor(QPalette::Window, orig_background_color);
   }
   rx_indicator->setPalette(palette);
-} /* ComDialog::isReceiving */
+} /** ComDialog::isReceiving */
 
 void ComDialog::meterLevelChanged(int level_db)
 {
   vox_meter->setValue(vox_meter->maximum() + level_db);
-} /* ComDialog::meterLevelChanged */
+} /** ComDialog::meterLevelChanged */
 
 void ComDialog::voxStateChanged(Vox::State state)
 {
@@ -721,7 +721,7 @@ void ComDialog::voxStateChanged(Vox::State state)
   }
   vox_indicator->setPalette(palette);
   checkTransmit();
-} /* ComDialog::voxStateChanged */
+} /** ComDialog::voxStateChanged */
 
 void ComDialog::checkTransmit(void)
 {
@@ -733,7 +733,7 @@ void ComDialog::checkTransmit(void)
       ((ptt_button->isChecked()) || ptt_button->isDown() ||
        (vox->state() != Vox::IDLE))
   );
-} /* ComDialog::checkTransmit */
+} /** ComDialog::checkTransmit */
 
 bool ComDialog::isChatText(const QString& msg)
 {
@@ -745,7 +745,7 @@ bool ComDialog::isChatText(const QString& msg)
   return msg.contains(rexp);
 }
 
-/*
+/**
  * This file has not been truncated
  */
 

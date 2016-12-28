@@ -24,56 +24,56 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <iostream>
 #include <algorithm>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioSplitter.h>
 
-/*
+/**
  * Local Includes
  */
 #include "MultiTx.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 MultiTx::MultiTx(Config& cfg, const string& name)
   : cfg(cfg), m_name(name), splitter(0)
 {
   
-} /* MultiTx::MultiTx */
+} /** MultiTx::MultiTx */
 
 MultiTx::~MultiTx(void)
 {
@@ -88,7 +88,7 @@ MultiTx::~MultiTx(void)
   
   delete splitter;
   
-} /* MultiTx::~MultiTx */
+} /** MultiTx::~MultiTx */
 
 bool MultiTx::initialize(void)
 {
@@ -136,7 +136,7 @@ bool MultiTx::initialize(void)
   
   return true;
   
-} /* MultiTx::initialize */
+} /** MultiTx::initialize */
 
 void MultiTx::setTxCtrlMode(TxCtrlMode mode)
 {
@@ -145,7 +145,7 @@ void MultiTx::setTxCtrlMode(TxCtrlMode mode)
   {
     (*it)->setTxCtrlMode(mode);
   }  
-} /* MultiTx::setTxCtrlMode */
+} /** MultiTx::setTxCtrlMode */
 
 bool MultiTx::isTransmitting(void) const
 {
@@ -158,7 +158,7 @@ bool MultiTx::isTransmitting(void) const
   
   return is_transmitting;
   
-} /* MultiTx::isTransmitting */
+} /** MultiTx::isTransmitting */
 
 
 void MultiTx::enableCtcss(bool enable)
@@ -168,7 +168,7 @@ void MultiTx::enableCtcss(bool enable)
   {
     (*it)->enableCtcss(enable);
   }
-} /* MultiTx::enableCtcss */
+} /** MultiTx::enableCtcss */
 
 void MultiTx::sendDtmf(const std::string& digits)
 {
@@ -177,7 +177,7 @@ void MultiTx::sendDtmf(const std::string& digits)
   {
     (*it)->sendDtmf(digits);
   }
-} /* MultiTx::sendDtmf */
+} /** MultiTx::sendDtmf */
 
 void MultiTx::setTransmittedSignalStrength(float siglev)
 {
@@ -186,13 +186,13 @@ void MultiTx::setTransmittedSignalStrength(float siglev)
   {
     (*it)->setTransmittedSignalStrength(siglev);
   }
-} /* MultiTx::setTransmittedSignalStrength */
+} /** MultiTx::setTransmittedSignalStrength */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 void MultiTx::onTransmitterStateChange(bool is_transmitting)
@@ -201,9 +201,9 @@ void MultiTx::onTransmitterStateChange(bool is_transmitting)
   {
     transmitterStateChange(is_transmitting);
   }
-} /* MultiTx::onTransmitterStateChange */
+} /** MultiTx::onTransmitterStateChange */
 
-/*
+/**
  * This file has not been truncated
  */
 

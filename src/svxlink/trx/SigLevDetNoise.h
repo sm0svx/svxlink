@@ -26,24 +26,24 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SIG_LEV_DET_NOISE_INCLUDED
 #define SIG_LEV_DET_NOISE_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <list>
 #include <set>
 #include <sigc++/sigc++.h>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioSink.h>
 
-/*
+/**
  * Local Includes
  */
 #include "SigLevDet.h"
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -52,23 +52,23 @@ namespace Async
   class SigCAudioSink;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -195,11 +195,11 @@ class SigLevDetNoise : public SigLevDet
     SigLevDetNoise& operator=(const SigLevDetNoise&);
     int processSamples(float *samples, int count);
     
-};  /* class SigLevDetNoise */
+};  /** class SigLevDetNoise */
 
-#endif /* SIG_LEV_DET_NOISE_INCLUDED */
+#endif /** SIG_LEV_DET_NOISE_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

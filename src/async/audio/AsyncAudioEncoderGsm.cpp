@@ -24,47 +24,47 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <stdint.h>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "AsyncAudioEncoderGsm.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 
@@ -72,14 +72,14 @@ AudioEncoderGsm::AudioEncoderGsm(void)
   : gsmh(0), gsm_buf_len(0)
 {
   gsmh = gsm_create();
-} /* AsyncAudioEncoderGsm::AsyncAudioEncoderGsm */
+} /** AsyncAudioEncoderGsm::AsyncAudioEncoderGsm */
 
 
 AudioEncoderGsm::~AudioEncoderGsm(void)
 {
   gsm_destroy(gsmh);
   gsmh = 0;
-} /* AsyncAudioEncoderGsm::~AsyncAudioEncoderGsm */
+} /** AsyncAudioEncoderGsm::~AsyncAudioEncoderGsm */
 
 
 int AudioEncoderGsm::writeSamples(const float *samples, int count)
@@ -116,17 +116,17 @@ int AudioEncoderGsm::writeSamples(const float *samples, int count)
 
   return count;
   
-} /* AudioEncoderGsm::writeSamples */
+} /** AudioEncoderGsm::writeSamples */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 
-/*
+/**
  * This file has not been truncated
  */
 

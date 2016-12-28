@@ -26,22 +26,22 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef REPEATER_LOGIC_INCLUDED
 #define REPEATER_LOGIC_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncTimer.h>
 
-/*
+/**
  * Local Includes
  */
 #include "Logic.h"
 
-/*
+/**
  * Forward declarations
  */
 
@@ -50,24 +50,24 @@ namespace Async
   class Config;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class Module;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -173,11 +173,11 @@ class RepeaterLogic : public Logic
     void activateOnOpenOrClose(SqlFlank flank);
     void identNag(Async::Timer *t);
 
-};  /* class RepeaterLogic */
+};  /** class RepeaterLogic */
 
-#endif /* REPEATER_LOGIC_INCLUDED */
+#endif /** REPEATER_LOGIC_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

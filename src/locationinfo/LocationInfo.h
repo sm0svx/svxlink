@@ -26,46 +26,46 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef LOCATION_INFO_INCLUDED
 #define LOCATION_INFO_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
 #include <vector>
 #include <list>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncConfig.h>
 #include <EchoLinkStationData.h>
 
-/*
+/**
  * Local Includes
  */
 #include "AprsPty.h"
 
-/*
+/**
  * Forward declarations
  */
 class AprsClient;
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Types
  */
 
-/*
+/**
  * Class definitions
  */
 class LocationInfo
@@ -205,10 +205,10 @@ class LocationInfo
     void initExtPty(std::string ptydevice);
     void mesReceived(std::string message);
 
-};  /* class LocationInfo */
+};  /** class LocationInfo */
 
-#endif /* LOCATION_INFO_INCLUDED */
+#endif /** LOCATION_INFO_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

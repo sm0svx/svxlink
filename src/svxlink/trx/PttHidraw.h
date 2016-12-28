@@ -26,41 +26,41 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef PTT_HIDRAW_INCLUDED
 #define PTT_HIDRAW_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "Ptt.h"
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -112,10 +112,10 @@ class PttHidraw : public Ptt
     PttHidraw(const PttHidraw&);
     PttHidraw& operator=(const PttHidraw&);
 
-};  /* class PttHidraw */
+};  /** class PttHidraw */
 
-#endif /* PTT_HIDRAW_INCLUDED */
+#endif /** PTT_HIDRAW_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

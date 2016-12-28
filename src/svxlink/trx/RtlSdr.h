@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef RTL_SDR_INCLUDED
 #define RTL_SDR_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -35,35 +35,35 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <vector>
 #include <stdint.h>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -381,10 +381,10 @@ class RtlSdr : public sigc::trackable
     RtlSdr(const RtlSdr&);
     RtlSdr& operator=(const RtlSdr&);
     
-};  /* class RtlSdr */
+};  /** class RtlSdr */
 
-#endif /* RTL_SDR_INCLUDED */
+#endif /** RTL_SDR_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

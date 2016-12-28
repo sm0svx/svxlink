@@ -67,7 +67,7 @@ void squelchOpen(bool is_open)
       	   << " more times)\n";
     }
   }
-} /* squelchOpen */
+} /** squelchOpen */
 #endif
 
 void sample_squelch_close(Timer *t)
@@ -126,7 +126,7 @@ void sample_squelch_close(Timer *t)
   {
     t->reset();
   }
-} /* sample_squelch_close */
+} /** sample_squelch_close */
 
 void start_squelch_close_measurement(FdWatch *w)
 {
@@ -145,7 +145,7 @@ void start_squelch_close_measurement(FdWatch *w)
     // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
     timer->expired.connect(sigc::ptr_fun(&sample_squelch_close));
   }
-} /* start_squelch_close_measurement */
+} /** start_squelch_close_measurement */
 
 void sample_squelch_open(Timer *t)
 {
@@ -180,7 +180,7 @@ void sample_squelch_open(Timer *t)
   {
     t->reset();
   }
-} /* sample_squelch_open */
+} /** sample_squelch_open */
 
 void start_squelch_open_measurement(FdWatch *w)
 {
@@ -198,7 +198,7 @@ void start_squelch_open_measurement(FdWatch *w)
     timer->expired.connect(sigc::ptr_fun(&sample_squelch_open));
   }
   
-} /* start_squelch_open_measurement */
+} /** start_squelch_open_measurement */
 
 void ctcss_snr_updated(float snr)
 {
@@ -329,4 +329,4 @@ int main(int argc, char **argv)
   
   delete rx;
   
-} /* main */
+} /** main */

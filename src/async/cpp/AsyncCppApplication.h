@@ -29,7 +29,7 @@
 #ifndef ASYNC_CPP_APPLICATION_INCLUDED
 #define ASYNC_CPP_APPLICATION_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sys/types.h>
@@ -41,34 +41,34 @@
 #include <map>
 #include <utility>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncApplication.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -164,13 +164,13 @@ class CppApplication : public Application
     DnsLookupWorker *newDnsLookupWorker(const std::string& label);
     void handleUnixSignal(void);
     
-};  /* class CppApplication */
+};  /** class CppApplication */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_CPP_APPLICATION_INCLUDED */
+#endif /** ASYNC_CPP_APPLICATION_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

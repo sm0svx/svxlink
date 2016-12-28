@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <cstdlib>
@@ -36,7 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <iterator>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncConfig.h>
@@ -48,7 +48,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioPassthrough.h>
 
-/*
+/**
  * Local Includes
  */
 #include "LinkManager.h"
@@ -56,7 +56,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Logic.h"
 #include "LogicCmds.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
@@ -68,30 +68,30 @@ using namespace Async;
 namespace
 {
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Prototypes for local functions
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Local class definitions
  */
 
 } // End of anonymous namespace
 
-/*
+/**
  * Exported Global Variables
  */
 LinkManager* LinkManager::_instance = 0;
 
-/*
+/**
  * Public member functions
  */
 bool LinkManager::initialize(const Async::Config &cfg,
@@ -210,7 +210,7 @@ bool LinkManager::initialize(const Async::Config &cfg,
 
   return init_ok;
 
-} /* LinkManager::initialize */
+} /** LinkManager::initialize */
 
 
 void LinkManager::addLogic(Logic *logic)
@@ -285,7 +285,7 @@ void LinkManager::addLogic(Logic *logic)
       }
     }
   }
-} /* LinkManager::addLogic */
+} /** LinkManager::addLogic */
 
 void LinkManager::deleteLogic(Logic *logic)
 {
@@ -337,7 +337,7 @@ void LinkManager::deleteLogic(Logic *logic)
     // Finally remove the logic from the logic_map
   logic_map.erase(logic->name());
 
-} /* LinkManager::deleteLogic */
+} /** LinkManager::deleteLogic */
 
 void LinkManager::allLogicsStarted(void)
 {
@@ -373,12 +373,12 @@ void LinkManager::allLogicsStarted(void)
       activateLink(link);
     }
   }
-} /* LinkManager::allLogicsStarted */
+} /** LinkManager::allLogicsStarted */
 
 string LinkManager::cmdReceived(LinkRef link, Logic *logic,
                                 const string &subcmd)
 {
-  /* cout << "### LinkManager::cmdReceived: link=" << link.name
+  /** cout << "### LinkManager::cmdReceived: link=" << link.name
        << " logic=" << logic->name()
        << " subcmd=" << subcmd << endl;
   */
@@ -419,13 +419,13 @@ string LinkManager::cmdReceived(LinkRef link, Logic *logic,
     ss << "unknown_command " << logic_props.cmd << subcmd;
   }
   return ss.str();
-} /* LinkManager::cmdReceived */
+} /** LinkManager::cmdReceived */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 /**
@@ -514,7 +514,7 @@ void LinkManager::wantedConnections(LogicConSet &want)
       }
     }
   } while (want.size() > prev_size);
-} /* LinkManager::wantedConnections */
+} /** LinkManager::wantedConnections */
 
 /**
  * @brief Activates the specified link
@@ -562,7 +562,7 @@ void LinkManager::activateLink(Link &link)
     // Check if the timeout timer should be enabled or disabled
   checkTimeoutTimer(link);
 
-} /* LinkManager::activateLink */
+} /** LinkManager::activateLink */
 
 void LinkManager::deactivateLink(Link &link)
 {
@@ -609,7 +609,7 @@ void LinkManager::deactivateLink(Link &link)
     // Check if the timeout timer should be enabled or disabled
   checkTimeoutTimer(link);
 
-} /* LinkManager::deactivateLink */
+} /** LinkManager::deactivateLink */
 
 #if 0
 bool LinkManager::isConnected(const string& source_name,
@@ -622,7 +622,7 @@ bool LinkManager::isConnected(const string& source_name,
   AudioPassthrough *connector = sinks[sink_name].connectors[source_name];
   AudioSelector *selector = sinks[sink_name].selector;
   return selector->autoSelectEnabled(connector);
-} /* LinkManager::isConnected */
+} /** LinkManager::isConnected */
 #endif
 
 /**
@@ -640,7 +640,7 @@ vector<string> LinkManager::getLinkNames(const string& logicname)
     }
   }
   return linknames;
-} /* LinkManager::getLinkNames */
+} /** LinkManager::getLinkNames */
 
 void LinkManager::linkTimeout(Async::Timer *t, Link *link)
 {
@@ -653,11 +653,11 @@ void LinkManager::linkTimeout(Async::Timer *t, Link *link)
   {
     activateLink(*link);
   }
-} /* LinkManager::linkTimeout */
+} /** LinkManager::linkTimeout */
 
 void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
 {
-  /* cout << "### LinkManager::logicIdleStateChanged:"
+  /** cout << "### LinkManager::logicIdleStateChanged:"
        << " is_idle=" << is_idle
        << " logic_name=" << logic->name()
        << endl;
@@ -692,7 +692,7 @@ void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
       StrSet::iterator acit = link.auto_activate.find(logic->name());
       if (acit != link.auto_activate.end())
       {
-        /* cout << "### Activating link " << link_name
+        /** cout << "### Activating link " << link_name
              << " due to AUTOCONNECT_ON_SQL from " << logic->name() << endl;
         */
         activateLink(link);
@@ -701,7 +701,7 @@ void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
 
     checkTimeoutTimer(link);
   }
-} /* LinkManager::logicIdleStateChanged */
+} /** LinkManager::logicIdleStateChanged */
 
 void LinkManager::checkTimeoutTimer(Link &link)
 {
@@ -732,8 +732,8 @@ void LinkManager::checkTimeoutTimer(Link &link)
     //cout << "### Disabling timeout timer for link " << link.name << endl;
     link.timeout_timer->setEnable(false);
   }
-} /* LinkManager::checkTimeoutTimer */
+} /** LinkManager::checkTimeoutTimer */
 
-/*
+/**
  * This file has not been truncated
  */

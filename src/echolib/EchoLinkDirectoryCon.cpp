@@ -24,49 +24,49 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <errno.h>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "EchoLinkProxy.h"
 #include "EchoLinkDirectoryCon.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 DirectoryCon::DirectoryCon(const vector<string> &servers,
@@ -91,14 +91,14 @@ DirectoryCon::DirectoryCon(const vector<string> &servers,
     is_ready = true;
     ready(true);
   }
-} /* DirectoryCon::DirectoryCon */
+} /** DirectoryCon::DirectoryCon */
 
 DirectoryCon::~DirectoryCon(void)
 {
   disconnect();
   delete client;
   client = 0;
-} /* DirectoryCon::~DirectoryCon */
+} /** DirectoryCon::~DirectoryCon */
 
 void DirectoryCon::connect(void)
 {
@@ -110,7 +110,7 @@ void DirectoryCon::connect(void)
   {
     doConnect();
   }
-} /* DirectoryCon::connect */
+} /** DirectoryCon::connect */
 
 void DirectoryCon::disconnect(void)
 {
@@ -141,7 +141,7 @@ void DirectoryCon::disconnect(void)
       cerr << "*** ERROR: EchoLink proxy TCP close failed\n";
     }
   }
-} /* DirectoryCon::disconnect */
+} /** DirectoryCon::disconnect */
 
 int DirectoryCon::write(const void *data, unsigned len)
 {
@@ -162,7 +162,7 @@ int DirectoryCon::write(const void *data, unsigned len)
       return -1;
     }
   }
-} /* DirectoryCon::write */
+} /** DirectoryCon::write */
 
 bool DirectoryCon::isIdle(void) const
 {
@@ -175,13 +175,13 @@ bool DirectoryCon::isIdle(void) const
   {
     return is_ready && (proxy->tcpState() == Proxy::TCP_STATE_DISCONNECTED);
   }
-} /* DirectoryCon::isIdle */
+} /** DirectoryCon::isIdle */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 void DirectoryCon::doDnsLookup(void)
@@ -194,7 +194,7 @@ void DirectoryCon::doDnsLookup(void)
         mem_fun(*this, &DirectoryCon::onDnsLookupResultsReady));
     dns_lookups.push_back(dns_lookup);
   }
-} /* DirectoryCon::doDnsLookup */
+} /** DirectoryCon::doDnsLookup */
 
 
 void DirectoryCon::onDnsLookupResultsReady(DnsLookup &dns)
@@ -235,7 +235,7 @@ void DirectoryCon::onDnsLookupResultsReady(DnsLookup &dns)
 
   current_server = addresses.begin();
   doConnect();
-} /* DirectoryCon::onDnsLookupResultsReady */
+} /** DirectoryCon::onDnsLookupResultsReady */
 
 void DirectoryCon::doConnect(void)
 {
@@ -257,7 +257,7 @@ void DirectoryCon::doConnect(void)
       disconnected();
     }
   }
-} /* DirectoryCon::doConnect */
+} /** DirectoryCon::doConnect */
 
 void DirectoryCon::onDisconnected(TcpConnection *con,
                                   TcpClient::DisconnectReason reason)
@@ -268,21 +268,21 @@ void DirectoryCon::onDisconnected(TcpConnection *con,
   }
   last_disconnect_reason = static_cast<int>(reason);
   disconnected();
-} /* DirectoryCon::onDisconnected */
+} /** DirectoryCon::onDisconnected */
 
 
 int DirectoryCon::onDataReceived(TcpConnection *con, void *data, int len)
 {
   return dataReceived(data, static_cast<unsigned>(len));
-} /* DirectoryCon::onDataReceived */
+} /** DirectoryCon::onDataReceived */
 
 void DirectoryCon::proxyReady(bool is_ready)
 {
   this->is_ready = is_ready;
   ready(is_ready);
-} /* DirectoryCon::proxyReady */
+} /** DirectoryCon::proxyReady */
 
-/*
+/**
  * This file has not been truncated
  */
 

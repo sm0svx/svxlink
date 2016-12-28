@@ -26,45 +26,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef TX_INCLUDED
 #define TX_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncConfig.h>
 #include <AsyncAudioSink.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -156,7 +156,7 @@ class Tx : public sigc::trackable, public Async::AudioSink
      */
     sigc::signal<void, bool> transmitterStateChange;
     
-};  /* class Tx */
+};  /** class Tx */
 
 /**
  * @brief   An abstract factory class for creating Tx objects
@@ -225,11 +225,11 @@ class TxFactory
     
     std::string m_name;
 
-};  /* class TxFactory */
+};  /** class TxFactory */
 
-#endif /* TX_INCLUDED */
+#endif /** TX_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

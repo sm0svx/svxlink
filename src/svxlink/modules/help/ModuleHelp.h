@@ -23,89 +23,47 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
-
-
 #ifndef MODULE_HELP_INCLUDED
 #define MODULE_HELP_INCLUDED
 
-
-/*
- *
+/**
  * System Includes
- *
  */
-
 #include <string>
 
-
-
-/*
- *
+/**
  * Project Includes
- *
  */
-
 #include <Module.h>
 
-
-
-/*
- *
+/**
  * Local Includes
- *
  */
-
 #include "version/SVXLINK.h"
 
-
-/*
- *
+/**
  * Forward declarations
- *
  */
 
-
-
-/*
- *
+/**
  * Namespace
- *
  */
 
-//namespace MyNameSpace
-//{
-
-
-/*
- *
+/**
  * Forward declarations of classes inside of the declared namespace
- *
  */
 
-  
-
-/*
- *
+/**
  * Defines & typedefs
- *
  */
 
-
-
-/*
- *
+/**
  * Exported Global Variables
- *
  */
 
-
-
-/*
- *
+/**
  * Class definitions
- *
  */
-
 /**
 @brief	A module for providing help to the user of the system
 @author Tobias Blomberg
@@ -118,13 +76,11 @@ class ModuleHelp : public Module
     ~ModuleHelp(void);
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
-
   protected:
     virtual void resumeOutput(void);
     virtual void allSamplesFlushed(void);
     virtual int writeSamples(const float *samples, int count);
     virtual void flushSamples(void);
-
 
   private:
     void activateInit(void);
@@ -134,15 +90,10 @@ class ModuleHelp : public Module
     void dtmfCmdReceivedWhenIdle(const std::string &cmd);
     void playChooseModuleMsg(void);
 
-};  /* class ModuleHelp */
+};  /** class ModuleHelp */
 
+#endif /** MODULE_HELP_INCLUDED */
 
-//} /* namespace */
-
-#endif /* MODULE_HELP_INCLUDED */
-
-
-
-/*
+/**
  * This file has not been truncated
  */

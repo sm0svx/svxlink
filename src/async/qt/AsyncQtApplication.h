@@ -36,7 +36,7 @@ An example of how to use the Async::QtApplication class
 #define ASYNC_QT_APPLICATION_INCLUDED
 
 
-/*
+/**
  *
  * System Includes
  *
@@ -53,7 +53,7 @@ An example of how to use the Async::QtApplication class
 #include <set>
 
 
-/*
+/**
  *
  * Project Includes
  *
@@ -62,7 +62,7 @@ An example of how to use the Async::QtApplication class
 #include <AsyncApplication.h>
 
 
-/*
+/**
  *
  * Local Includes
  *
@@ -70,7 +70,7 @@ An example of how to use the Async::QtApplication class
 
 
 
-/*
+/**
  *
  * Forward declarations
  *
@@ -80,7 +80,7 @@ class QSocketNotifier;
 class AsyncQtTimer;
 
 
-/*
+/**
  *
  * Namespace
  *
@@ -89,13 +89,13 @@ class AsyncQtTimer;
 namespace Async
 {
 
-/*
+/**
  *
  * Defines & typedefs
  *
  */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Macro:   
  * Purpose: 
@@ -109,7 +109,7 @@ namespace Async
  */
 
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Type:    
  * Purpose: 
@@ -123,7 +123,7 @@ namespace Async
  */
 
 
-/*
+/**
  *
  * Exported Global Variables
  *
@@ -131,7 +131,7 @@ namespace Async
 
 
 
-/*
+/**
  *
  * Class definitions
  *
@@ -210,16 +210,16 @@ class QtApplication : public QApplication, public Application
     void rdFdActivity(int socket);
     void wrFdActivity(int socket);
     
-};  /* class QtApplication */
+};  /** class QtApplication */
 
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_QT_APPLICATION_INCLUDED */
+#endif /** ASYNC_QT_APPLICATION_INCLUDED */
 
 
 
-/*
+/**
  * This file has not been truncated
  */
 

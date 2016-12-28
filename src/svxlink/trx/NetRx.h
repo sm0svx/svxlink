@@ -26,25 +26,25 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef NET_RX_INCLUDED
 #define NET_RX_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncConfig.h>
 #include <AsyncTcpConnection.h>
 
-/*
+/**
  * Local Includes
  */
 #include "Rx.h"
 
-/*
+/**
  * Forward declarations
  */
 namespace NetTrxMsg
@@ -57,25 +57,25 @@ namespace Async
   class AudioDecoder;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class ToneDet;
 class NetTrxTcpClient;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -168,11 +168,11 @@ class NetRx : public Rx
     void sendMsg(NetTrxMsg::Msg *msg);
     void allEncodedSamplesFlushed(void);
 
-};  /* class NetRx */
+};  /** class NetRx */
 
-#endif /* NET_RX_INCLUDED */
+#endif /** NET_RX_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

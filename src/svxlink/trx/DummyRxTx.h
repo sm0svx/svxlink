@@ -26,43 +26,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef DUMMY_RX_TX_INCLUDED
 #define DUMMY_RX_TX_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncConfig.h>
 
-/*
+/**
  * Local Includes
  */
 #include "Rx.h"
 #include "Tx.h"
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -109,8 +109,8 @@ class DummyRx : public Rx
     virtual void allSamplesFlushed(void) {}
 };
 
-#endif /* DUMMY_RX_TX_INCLUDED */
+#endif /** DUMMY_RX_TX_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

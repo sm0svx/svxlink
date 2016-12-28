@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/*
+/**
  *
  * System Includes
  *
@@ -42,7 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <regex.h>
 
 
-/*
+/**
  *
  * Project Includes
  *
@@ -59,7 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTimer.h>
 
 
-/*
+/**
  *
  * Local Includes
  *
@@ -70,7 +70,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "multirate_filter_coeff.h"
 
 
-/*
+/**
  *
  * Namespaces to use
  *
@@ -81,7 +81,7 @@ using namespace sigc;
 using namespace FrnUtils;
 
 
-/*
+/**
  *
  * Defines & typedefs
  *
@@ -89,7 +89,7 @@ using namespace FrnUtils;
 
 
 
-/*
+/**
  *
  * Local class definitions
  *
@@ -97,7 +97,7 @@ using namespace FrnUtils;
 
 
 
-/*
+/**
  *
  * Prototypes
  *
@@ -105,7 +105,7 @@ using namespace FrnUtils;
 
 
 
-/*
+/**
  *
  * Exported Global Variables
  *
@@ -113,7 +113,7 @@ using namespace FrnUtils;
 
 
 
-/*
+/**
  *
  * Local Global Variables
  *
@@ -121,7 +121,7 @@ using namespace FrnUtils;
 
 
 
-/*
+/**
  *
  * Public member functions
  *
@@ -429,7 +429,7 @@ void QsoFrn::squelchOpen(bool is_open)
 }
 
 
-/*
+/**
  *
  * Protected member functions
  *
@@ -440,7 +440,7 @@ void QsoFrn::allSamplesFlushed(void)
 }
 
 
-/*
+/**
  *
  * Private member functions
  *
@@ -964,7 +964,7 @@ void QsoFrn::onDelayedReconnect(Async::Timer *timer)
   reconnect();
 }
 
-/*
+/**
  * This file has not been truncated
  */
 

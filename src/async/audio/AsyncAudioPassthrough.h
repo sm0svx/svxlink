@@ -26,43 +26,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef AUDIO_PASSTHROUGH_INCLUDED
 #define AUDIO_PASSTHROUGH_INCLUDED
 
-/*
+/**
  * System Includes
  */
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -148,13 +148,13 @@ class AudioPassthrough : public AudioSink, public AudioSource
     AudioPassthrough(const AudioPassthrough&);
     AudioPassthrough& operator=(const AudioPassthrough&);
     
-}; /* AudioPassthrough */
+}; /** AudioPassthrough */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* AUDIO_PASSTHROUGH_INCLUDED */
+#endif /** AUDIO_PASSTHROUGH_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_IP_ADDRESS_INCLUDED
 #define ASYNC_IP_ADDRESS_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <netinet/in.h>
@@ -37,33 +37,33 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <iostream>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -217,16 +217,16 @@ class IpAddress
   private:
     Ip4Addr m_addr;
 
-};  /* class IpAddress */
+};  /** class IpAddress */
 
 std::ostream& operator<<(std::ostream& os, const IpAddress& ip);
 std::istream& operator>>(std::istream& is, IpAddress& ip);
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_IP_ADDRESS_INCLUDED */
+#endif /** ASYNC_IP_ADDRESS_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

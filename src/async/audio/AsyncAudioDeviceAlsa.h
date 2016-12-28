@@ -28,43 +28,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_DEVICE_ALSA_INCLUDED
 #define ASYNC_AUDIO_DEVICE_ALSA_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <alsa/asoundlib.h>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "AsyncAudioDevice.h"
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -158,13 +158,13 @@ class AudioDeviceAlsa : public AudioDevice
     bool startPlayback(snd_pcm_t *pcm_handle);
     bool startCapture(snd_pcm_t *pcm_handle);
     
-};  /* class AudioDeviceAlsa */
+};  /** class AudioDeviceAlsa */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AUDIO_DEVICE_ALSA_INCLUDED */
+#endif /** ASYNC_AUDIO_DEVICE_ALSA_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

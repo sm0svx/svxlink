@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef MODULE_ECHOLINK_INCLUDED
 #define MODULE_ECHOLINK_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
@@ -35,19 +35,19 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/types.h>
 #include <regex.h>
 
-/*
+/**
  * Project Includes
  */
 #include <Module.h>
 #include <EchoLinkQso.h>
 #include <EchoLinkStationData.h>
 
-/*
+/**
  * Local Includes
  */
 #include "version/SVXLINK.h"
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -65,26 +65,26 @@ namespace EchoLink
   class Proxy;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class MsgHandler;
 class QsoImpl;
 class LocationInfo;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -221,10 +221,10 @@ class ModuleEchoLink : public Module
     void replaceAll(std::string &str, const std::string &from,
                     const std::string &to) const;
 
-};  /* class ModuleEchoLink */
+};  /** class ModuleEchoLink */
 
-#endif /* MODULE_ECHOLINK_INCLUDED */
+#endif /** MODULE_ECHOLINK_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

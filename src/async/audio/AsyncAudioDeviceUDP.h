@@ -30,47 +30,47 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_DEVICE_UDP_INCLUDED
 #define ASYNC_AUDIO_DEVICE_UDP_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncIpAddress.h>
 #include <AsyncTimer.h>
 
-/*
+/**
  * Local Includes
  */
 #include "AsyncAudioDevice.h"
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class UdpSocket;
 class Timer;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -157,13 +157,13 @@ class AudioDeviceUDP : public Async::AudioDevice
     void audioReadHandler(const Async::IpAddress &ip, void *buf, int count);
     void audioWriteHandler(void);
 
-};  /* class AudioDeviceUDP */
+};  /** class AudioDeviceUDP */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AUDIO_DEVICE_UDP_INCLUDED */
+#endif /** ASYNC_AUDIO_DEVICE_UDP_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

@@ -44,7 +44,7 @@ class MyClass : public sigc::trackable
       cout << "Client " << con->remoteHost().toString() << ":"
       	   << con->remotePort() << " disconnected,"
            << server->numberOfClients() << " clients connected\n";
-      /* Don't delete the con object, the TcpServer will do it */
+      /** Don't delete the con object, the TcpServer will do it */
     }
     
     int onDataReceived(TcpConnection *con, void *buf, int count)

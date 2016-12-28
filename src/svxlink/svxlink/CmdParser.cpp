@@ -24,46 +24,46 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <cassert>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "CmdParser.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 CmdParser::~CmdParser(void)
@@ -74,7 +74,7 @@ CmdParser::~CmdParser(void)
   {
     delete (*it).second;
   }
-} /* CmdParser::~CmdParser */
+} /** CmdParser::~CmdParser */
 
 
 bool CmdParser::addCmd(Command *cmd)
@@ -85,7 +85,7 @@ bool CmdParser::addCmd(Command *cmd)
     cmds[cmd->cmdStr()] = cmd;
   }
   return cmd_undefined;
-} /* CmdParser::addCmd */
+} /** CmdParser::addCmd */
 
 bool CmdParser::removeCmd(Command *cmd)
 {
@@ -96,7 +96,7 @@ bool CmdParser::removeCmd(Command *cmd)
     cmds.erase(cmd_it);
   }
   return cmd_exist;
-} /* CmdParser::removeCmd */
+} /** CmdParser::removeCmd */
 
 bool CmdParser::processCmd(const string& cmd_str)
 {
@@ -114,17 +114,17 @@ bool CmdParser::processCmd(const string& cmd_str)
 
   return false;
   
-} /* CmdParser::processCmd */
+} /** CmdParser::processCmd */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 
-/*
+/**
  * This file has not been truncated
  */
 

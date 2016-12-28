@@ -26,20 +26,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef QSO_RECORDER_INCLUDED
 #define QSO_RECORDER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -53,23 +53,23 @@ namespace Async
 
 class Logic;
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -165,11 +165,11 @@ class QsoRecorder
     void encoderExited(FileEncoder *enc);
     void onError(void);
 
-};  /* class QsoRecorder */
+};  /** class QsoRecorder */
 
-#endif /* QSO_RECORDER_INCLUDED */
+#endif /** QSO_RECORDER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

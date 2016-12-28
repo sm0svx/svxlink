@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 An example of how to use the Template class
 */
 
-/*
+/**
  * System Includes
  */
 #include <popt.h>
@@ -44,12 +44,12 @@ An example of how to use the Template class
 #include <cstring>
 #include <iostream>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioIO.h>
 	
-/*
+/**
  * Local Includes
  */
 #include "EchoLinkProxy.h"
@@ -57,14 +57,14 @@ An example of how to use the Template class
 #include "EchoLinkDispatcher.h"
 #include "EchoLinkQsoTest.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-/*
+/**
  * Defines & typedefs
  */
 #define PROGRAM_NAME  "echolib_test"
@@ -77,7 +77,7 @@ typedef enum
   PS_CONNECT_TO_CALL, PS_CONNECT_TO_IP, PS_LOGOFF, PS_QUIT
 } ProcessingStage;
 
-/*
+/**
  * Prototypes
  */
 static void process_next_stage(void);
@@ -88,11 +88,11 @@ static void on_station_list_updated(void);
 static void print_call_list(const list<StationData>& calls);
 static void parse_arguments(int argc, const char **argv);
 
-/*
+/**
  * Global Variables
  */
  
-/*
+/**
  * Private Global Variables
  */
 int verbose = 0;
@@ -121,11 +121,11 @@ char my_name[256];
 char my_location[256];
 char my_info[256];
 
-/*
+/**
  * MAIN
  */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Function:  main
  * Purpose:   Start everything...
@@ -220,9 +220,9 @@ int main( int argc, const char **argv )
   
   return 0;
   
-} /* main */
+} /** main */
 
-/*
+/**
  * Functions
  */
 static void process_next_stage(void)
@@ -373,20 +373,20 @@ static void process_next_stage(void)
       Application::app().quit();
       break;
     
-    /*
+    /**
     default:
       process_next_stage();
       break;
     */
   }
   
-} /* process_next_stage */
+} /** process_next_stage */
 
 static void on_error_msg(const string& msg)
 {
   cout << "*** ERROR: " << msg << endl;
   Application::app().quit();
-} /* on_error_msg */
+} /** on_error_msg */
 
 static void on_status_changed(StationData::Status status)
 {
@@ -397,19 +397,19 @@ static void on_status_changed(StationData::Status status)
   
   process_next_stage();
   
-} /* on_status_changed */
+} /** on_status_changed */
 
 static void echolink_qso_done(EchoLinkQsoTest *con)
 {
   delete con;
   process_next_stage();
-} /* echolink_qso_done */
+} /** echolink_qso_done */
 
 static void on_station_list_updated(void)
 {
   if (verbose)
   {
-    /*
+    /**
     list<string> message = dir->message();
     list<string>::const_iterator it;
     for (it=message.begin(); it!=message.end(); ++it)
@@ -480,9 +480,9 @@ static void on_station_list_updated(void)
       break;
   }
   
-} /* on_station_list_updated */
+} /** on_station_list_updated */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Function:  print_call_list
  * Purpose:   Print the contents of the supplied list of calls
@@ -505,9 +505,9 @@ static void print_call_list(const list<StationData>& calls)
 	iter->statusStr().c_str(), iter->time().c_str(),
 	iter->description().c_str(), iter->id(), iter->ipStr().c_str());
   }  
-} /* print_call_list */
+} /** print_call_list */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Function:  parse_arguments
  * Purpose:   Parse the command line arguments.
@@ -588,7 +588,7 @@ static void parse_arguments( int argc, const char **argv )
     }
   }
   
-    /* Parse arguments that do not begin with '-' (leftovers) */
+    /** Parse arguments that do not begin with '-' (leftovers) */
   arg = poptGetArg(optCon);
   while (arg != NULL)
   {
@@ -600,7 +600,7 @@ static void parse_arguments( int argc, const char **argv )
 
 }
 
-/*
+/**
  * This file has not been truncated
  */
 

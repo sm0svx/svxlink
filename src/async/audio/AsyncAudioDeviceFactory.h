@@ -26,36 +26,36 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_DEVICE_FACTORY_INCLUDED
 #define ASYNC_AUDIO_DEVICE_FACTORY_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
 #include <map>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class AudioDevice;
 
-/*
+/**
  * Defines & typedefs
  */
 
@@ -71,11 +71,11 @@ class AudioDevice;
           AudioDeviceFactory::instance().registerCreator(_name, \
                                                          create_ ## _class)
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -143,13 +143,13 @@ class AudioDeviceFactory
     AudioDeviceFactory(const AudioDeviceFactory&);
     AudioDeviceFactory& operator=(const AudioDeviceFactory&);
     
-};  /* class AudioDeviceFactory */
+};  /** class AudioDeviceFactory */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AUDIO_DEVICE_FACTORY_INCLUDED */
+#endif /** ASYNC_AUDIO_DEVICE_FACTORY_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

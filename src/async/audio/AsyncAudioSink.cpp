@@ -24,58 +24,58 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "AsyncAudioSink.h"
 #include "AsyncAudioSource.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 AudioSink::~AudioSink(void)
 {
   unregisterSource();
   clearHandler();
-} /* AudioSink::~AudioSink */
+} /** AudioSink::~AudioSink */
 
 bool AudioSink::registerSource(AudioSource *source)
 {
   return registerSourceInternal(source, true);
-} /* AudioSink::registerSource */
+} /** AudioSink::registerSource */
 
 void AudioSink::unregisterSource(void)
 {
@@ -96,9 +96,9 @@ void AudioSink::unregisterSource(void)
   {
     m_handler->unregisterSource();
   }
-} /* AudioSink::unregisterSource */
+} /** AudioSink::unregisterSource */
 
-/*
+/**
  * Protected member functions
  */
 void AudioSink::sourceResumeOutput(void)
@@ -107,7 +107,7 @@ void AudioSink::sourceResumeOutput(void)
   {
     m_source->resumeOutput();
   }
-} /* AudioSink::sourceResumeOutput */
+} /** AudioSink::sourceResumeOutput */
 
 void AudioSink::sourceAllSamplesFlushed(void)
 {
@@ -115,7 +115,7 @@ void AudioSink::sourceAllSamplesFlushed(void)
   {
     m_source->handleAllSamplesFlushed();
   }
-} /* AudioSink::sourceAllSamplesFlushed */
+} /** AudioSink::sourceAllSamplesFlushed */
 
 bool AudioSink::setHandler(AudioSink *handler)
 {
@@ -138,7 +138,7 @@ bool AudioSink::setHandler(AudioSink *handler)
   
   return true;
     
-} /* AudioSink::setHandler */
+} /** AudioSink::setHandler */
 
 void AudioSink::clearHandler(void)
 {
@@ -153,9 +153,9 @@ void AudioSink::clearHandler(void)
   }
   
   m_handler = 0;
-} /* AudioSink::clearHandler */
+} /** AudioSink::clearHandler */
 
-/*
+/**
  * Private member functions
  */
 bool AudioSink::registerSourceInternal(AudioSource *source, bool reg_sink)
@@ -193,9 +193,9 @@ bool AudioSink::registerSourceInternal(AudioSource *source, bool reg_sink)
   
   return true;
   
-} /* AudioSink::registerSourceInternal */
+} /** AudioSink::registerSourceInternal */
 
-/*
+/**
  * This file has not been truncated
  */
 

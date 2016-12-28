@@ -30,7 +30,7 @@ An example of how to use the Exec class
 #ifndef ASYNC_EXEC_INCLUDED
 #define ASYNC_EXEC_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <unistd.h>
@@ -41,39 +41,39 @@ An example of how to use the Exec class
 #include <string>
 #include <map>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncFdWatch.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class Timer;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -304,12 +304,12 @@ class Exec : public sigc::trackable
     void subprocessExited(void);
     void handleTimeout(void);
     
-};  /* class Exec */
+};  /** class Exec */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_EXEC_INCLUDED */
+#endif /** ASYNC_EXEC_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

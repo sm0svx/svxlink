@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define ASYNC_AUDIO_CLIPPER_INCLUDED
 
 
-/*
+/**
  *
  * System Includes
  *
@@ -36,7 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/*
+/**
  *
  * Project Includes
  *
@@ -46,7 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/*
+/**
  *
  * Local Includes
  *
@@ -54,7 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/*
+/**
  *
  * Forward declarations
  *
@@ -62,7 +62,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/*
+/**
  *
  * Namespace
  *
@@ -72,7 +72,7 @@ namespace Async
 {
 
 
-/*
+/**
  *
  * Forward declarations of classes inside of the declared namespace
  *
@@ -80,7 +80,7 @@ namespace Async
 
   
 
-/*
+/**
  *
  * Defines & typedefs
  *
@@ -88,7 +88,7 @@ namespace Async
 
 
 
-/*
+/**
  *
  * Exported Global Variables
  *
@@ -96,7 +96,7 @@ namespace Async
 
 
 
-/*
+/**
  *
  * Class definitions
  *
@@ -158,16 +158,16 @@ class AudioClipper : public AudioProcessor
     AudioClipper(const AudioClipper&);
     AudioClipper& operator=(const AudioClipper&);
     
-};  /* class AudioClipper */
+};  /** class AudioClipper */
 
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AUDIO_CLIPPER_INCLUDED */
+#endif /** ASYNC_AUDIO_CLIPPER_INCLUDED */
 
 
 
-/*
+/**
  * This file has not been truncated
  */
 

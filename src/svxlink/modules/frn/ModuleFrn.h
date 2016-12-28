@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define MODULE_FRN_INCLUDED
 
 
-/*
+/**
  *
  * System Includes
  *
@@ -40,7 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/*
+/**
  *
  * Project Includes
  *
@@ -51,7 +51,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 
-/*
+/**
  *
  * Local Includes
  *
@@ -59,7 +59,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "QsoFrn.h"
 
 
-/*
+/**
  *
  * Forward declarations
  *
@@ -74,7 +74,7 @@ namespace Async
 };
 
 
-/*
+/**
  *
  * Namespace
  *
@@ -84,7 +84,7 @@ namespace Async
 //{
 
 
-/*
+/**
  *
  * Forward declarations of classes inside of the declared namespace
  *
@@ -92,7 +92,7 @@ namespace Async
 
   
 
-/*
+/**
  *
  * Defines & typedefs
  *
@@ -100,7 +100,7 @@ namespace Async
 
 
 
-/*
+/**
  *
  * Exported Global Variables
  *
@@ -108,7 +108,7 @@ namespace Async
 
 
 
-/*
+/**
  *
  * Class definitions
  *
@@ -150,14 +150,14 @@ class ModuleFrn : public Module
     static const char       CMD_COUNT_CLIENTS = '1';
     static const char       CMD_RF_DISABLE = '2';
 
-};  /* class ModuleFrn */
+};  /** class ModuleFrn */
 
 
-//} /* namespace */
+//} /** namespace */
 
-#endif /* MODULE_FRN_INCLUDED */
+#endif /** MODULE_FRN_INCLUDED */
 
 
-/*
+/**
  * This file has not been truncated
  */

@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <cassert>
@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <map>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncCppApplication.h>
@@ -48,13 +48,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncTcpConnection.h>
 #include <common.h>
 
-/*
+/**
  * Local Includes
  */
 #include "server.h"
 #include "NetTrxMsg.h"
 
-/*
+/**
  *
  * Namespaces to use
  */
@@ -63,7 +63,7 @@ using namespace Async;
 using namespace sigc;
 using namespace NetTrxMsg;
 
-/*
+/**
  * Public member functions
  */
 SvxServer::SvxServer(Async::Config &cfg)
@@ -128,7 +128,7 @@ SvxServer::SvxServer(Async::Config &cfg)
   audio_timer->setEnable(false);
 
   master = 0;
-} /* SvxServer::SvxServer */
+} /** SvxServer::SvxServer */
 
 SvxServer::~SvxServer(void)
 {
@@ -176,7 +176,7 @@ void SvxServer::clientConnected(Async::TcpConnection *con)
   clients[key] = clpair;
   heartbeat_timer->setEnable(true);
 
-} /* SvxServer::clientConnected */
+} /** SvxServer::clientConnected */
 
 void SvxServer::clientDisconnected(Async::TcpConnection *con,
       	      	      	Async::TcpConnection::DisconnectReason reason)
@@ -220,7 +220,7 @@ void SvxServer::clientDisconnected(Async::TcpConnection *con,
          << con->remotePort()  << " from client list" << endl;
      clients.erase(it);
   }
-} /* SvxServer::clientDisconnected */
+} /** SvxServer::clientDisconnected */
 
 int SvxServer::tcpDataReceived(Async::TcpConnection *con, void *data, int size)
 {
@@ -299,7 +299,7 @@ int SvxServer::tcpDataReceived(Async::TcpConnection *con, void *data, int size)
 
   return orig_size;
 
-} /* SvxServer::tcpDataReceived */
+} /** SvxServer::tcpDataReceived */
 
 void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 {
@@ -534,7 +534,7 @@ void SvxServer::handleMsg(Async::TcpConnection *con, Msg *msg)
 
   sendExcept(con, cmsg);
 
-} /* SvxServer::handleMsg */
+} /** SvxServer::handleMsg */
 
 void SvxServer::audiotimeout(Timer *t)
 {
@@ -543,13 +543,13 @@ void SvxServer::audiotimeout(Timer *t)
     cout << "...Audio timeout " << master->remoteHost() << endl;
     resetAll();
   }
-} /* SvxServer::audiotimeout */
+} /** SvxServer::audiotimeout */
 
 void SvxServer::sqltimeout(Timer *t)
 {
   cout << "...SQL timeout " << master->remoteHost() << endl;
   resetAll();
-} /* SvxServer::sqltimeout */
+} /** SvxServer::sqltimeout */
 
 void SvxServer::resetAll(void)
 {
@@ -574,7 +574,7 @@ void SvxServer::resetAll(void)
   sendMsg(master, o);
   sendExcept(master, o);
   resetMaster(master);
-} /* SvxServer::resetAll */
+} /** SvxServer::resetAll */
 
 void SvxServer::hbtimeout(Timer *t)
 {
@@ -619,7 +619,7 @@ void SvxServer::hbtimeout(Timer *t)
 
   t->reset();
 
-} /* SvxServer::hbtimeout */
+} /** SvxServer::hbtimeout */
 
 void SvxServer::sendExcept(Async::TcpConnection *con, Msg *msg)
 {
@@ -637,7 +637,7 @@ void SvxServer::sendExcept(Async::TcpConnection *con, Msg *msg)
       sendMsg(((*it).second).con, msg);
     }
   }
-} /* SvxServer::sendExcept */
+} /** SvxServer::sendExcept */
 
 
 void SvxServer::sendMsg(Async::TcpConnection *con, Msg *msg)
@@ -659,17 +659,17 @@ void SvxServer::sendMsg(Async::TcpConnection *con, Msg *msg)
     con->disconnect();
     clientDisconnected(con, TcpConnection::DR_ORDERED_DISCONNECT);
   }
-} /* SvxServer::sendMsg */
+} /** SvxServer::sendMsg */
 
 bool SvxServer::hasMaster()
 {
   return (master != 0);
-} /* SvxServer::hasMaster */
+} /** SvxServer::hasMaster */
 
 bool SvxServer::isMaster(Async::TcpConnection *con)
 {
   return (con == master ? true : false);
-} /* SvxServer::isMaster */
+} /** SvxServer::isMaster */
 
 void SvxServer::setMaster(Async::TcpConnection *con)
 {
@@ -679,7 +679,7 @@ void SvxServer::setMaster(Async::TcpConnection *con)
     sql_timer->reset();
     sql_timer->setEnable(true);
   }
-} /* SvxServer::setMaster */
+} /** SvxServer::setMaster */
 
 void SvxServer::resetMaster(Async::TcpConnection *con)
 {
@@ -689,8 +689,8 @@ void SvxServer::resetMaster(Async::TcpConnection *con)
     master = 0;
     sql_timer->setEnable(false);
   }
-} /* SvxServer::resetMaster */
+} /** SvxServer::resetMaster */
 
-/*
+/**
  * This file has not been truncated
  */

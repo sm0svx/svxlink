@@ -26,41 +26,41 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SIG_LEV_DET_SIM_INCLUDED
 #define SIG_LEV_DET_SIM_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <deque>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "SigLevDet.h"
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -165,11 +165,11 @@ class SigLevDetSim : public SigLevDet
     void randNewSiglev(void);
     void toggleSiglev(void);
     
-};  /* class SigLevDetSim */
+};  /** class SigLevDetSim */
 
-#endif /* SIG_LEV_DET_SIM_INCLUDED */
+#endif /** SIG_LEV_DET_SIM_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

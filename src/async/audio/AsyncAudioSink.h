@@ -26,51 +26,51 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_SINK_INCLUDED
 #define ASYNC_AUDIO_SINK_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <cassert>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class AudioSource;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
- *@brief	The base class for an audio sink
- *@author Tobias Blomberg
- *@date   2005-04-17
+@brief	The base class for an audio sink
+@author Tobias Blomberg
+@date   2005-04-17
 
- *This is the base class for an audio sink. An audio sink is a class that can consume audio.
+This is the base class for an audio sink. An audio sink is a class that can consume audio.
 */
 class AudioSink
 {
@@ -173,7 +173,7 @@ class AudioSink
      */
     void clearHandler(void);
     
-    /*
+    /**
      * @brief 	Return the handler
      * @return	Returns the handler previously set with setHandler or 0
      *          if none have been set
@@ -187,13 +187,13 @@ class AudioSink
     
     bool registerSourceInternal(AudioSource *source, bool reg_sink);
     
-};  /* class AudioSink */
+};  /** class AudioSink */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AUDIO_SINK_INCLUDED */
+#endif /** ASYNC_AUDIO_SINK_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

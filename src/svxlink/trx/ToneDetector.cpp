@@ -24,15 +24,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-
-
-
-/*
- *
+/**
  * System Includes
- *
  */
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -40,51 +34,29 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <algorithm>
 
-
-/*
- *
+/**
  * Project Includes
- *
  */
 
-
-
-/*
- *
+/**
  * Local Includes
- *
  */
-
 #include "ToneDetector.h"
 #include "Goertzel.h"
 
-
-
-/*
- *
+/**
  * Namespaces to use
- *
  */
-
 using namespace std;
 using namespace Async;
 
-
-
-/*
- *
+/**
  * Defines & typedefs
- *
  */
 
-
-
-/*
- *
+/**
  * Local class definitions
- *
  */
-
 struct ToneDetector::DetectorParams
 {
   float		      bw;
@@ -106,38 +78,21 @@ struct ToneDetector::DetectorParams
   float		      passband_bw;
 };
 
-
-/*
- *
+/**
  * Prototypes
- *
  */
 
-
-
-/*
- *
+/**
  * Exported Global Variables
- *
  */
 
-
-
-
-/*
- *
+/**
  * Local Global Variables
- *
  */
 
-
-
-/*
- *
+/**
  * Public member functions
- *
  */
-
 ToneDetector::ToneDetector(float tone_hz, float width_hz, int det_delay_ms)
   : tone_fq(tone_hz), samples_left(0), is_activated(false),
     last_active(false), stable_count(0), phase_check_left(-1),
@@ -191,8 +146,7 @@ ToneDetector::ToneDetector(float tone_hz, float width_hz, int det_delay_ms)
 
   reset();
 
-} /* ToneDetector::ToneDetector */
-
+} /** ToneDetector::ToneDetector */
 
 ToneDetector::~ToneDetector(void)
 {
@@ -200,8 +154,7 @@ ToneDetector::~ToneDetector(void)
   det_par = 0;
   delete undet_par;
   undet_par = 0;
-} /* ToneDetector::~ToneDetector */
-
+} /** ToneDetector::~ToneDetector */
 
 void ToneDetector::reset(void)
 {
@@ -223,8 +176,7 @@ void ToneDetector::reset(void)
 
     // Reset the passband energy
   passband_energy = 0.0f;
-} /* ToneDetector::reset */
-
+} /** ToneDetector::reset */
 
 void ToneDetector::setDetectDelay(int delay_ms)
 {
@@ -237,21 +189,18 @@ void ToneDetector::setDetectDelay(int delay_ms)
   {
     det_par->stable_count_thresh = DEFAULT_STABLE_COUNT_THRESH;
   }
-} /* ToneDetector::setDetectDelay */
-
+} /** ToneDetector::setDetectDelay */
 
 void ToneDetector::setDetectStableCountThresh(int count)
 {
   det_par->stable_count_thresh = count;
-} /* ToneDetector::setDetectStableCountThresh */
-
+} /** ToneDetector::setDetectStableCountThresh */
 
 int ToneDetector::detectDelay(void) const
 {
   return det_par->stable_count_thresh * det_par->block_len *
          1000 / INTERNAL_SAMPLE_RATE;
-} /* ToneDetector::detectDelay */
-
+} /** ToneDetector::detectDelay */
 
 void ToneDetector::setUndetectDelay(int delay_ms)
 {
@@ -265,21 +214,19 @@ void ToneDetector::setUndetectDelay(int delay_ms)
   {
     undet_par->stable_count_thresh = DEFAULT_STABLE_COUNT_THRESH;
   }
-} /* ToneDetector::setUndetectDelay */
+} /** ToneDetector::setUndetectDelay */
 
 
 void ToneDetector::setUndetectStableCountThresh(int count)
 {
   undet_par->stable_count_thresh = count;
-} /* ToneDetector::setUndetectStableCountThresh */
-
+} /** ToneDetector::setUndetectStableCountThresh */
 
 int ToneDetector::undetectDelay(void) const
 {
   return undet_par->stable_count_thresh * undet_par->block_len *
          1000 / INTERNAL_SAMPLE_RATE;
-} /* ToneDetector::undetectDelay */
-
+} /** ToneDetector::undetectDelay */
 
 void ToneDetector::setDetectBw(float bw_hz)
 {
@@ -304,8 +251,7 @@ void ToneDetector::setDetectBw(float bw_hz)
   det_par->lower.initialize(tone_fq - 2 * bw_hz, INTERNAL_SAMPLE_RATE);
   det_par->upper.initialize(tone_fq + 2 * bw_hz, INTERNAL_SAMPLE_RATE);
   
-} /* ToneDetector::setDetectBw */
-
+} /** ToneDetector::setDetectBw */
 
 void ToneDetector::setUndetectBw(float bw_hz)
 {
@@ -330,15 +276,13 @@ void ToneDetector::setUndetectBw(float bw_hz)
   undet_par->lower.initialize(tone_fq - 2 * bw_hz, INTERNAL_SAMPLE_RATE);
   undet_par->upper.initialize(tone_fq + 2 * bw_hz, INTERNAL_SAMPLE_RATE);
 
-} /* ToneDetector::setUndetectBw */
-
+} /** ToneDetector::setUndetectBw */
 
 void ToneDetector::setPeakThresh(float thresh)
 {
   setDetectPeakThresh(thresh);
   setUndetectPeakThresh(thresh);
-} /* ToneDetector::setPeakThresh */
-
+} /** ToneDetector::setPeakThresh */
 
 void ToneDetector::setDetectPeakThresh(float thresh)
 {
@@ -350,8 +294,7 @@ void ToneDetector::setDetectPeakThresh(float thresh)
   {
     det_par->peak_thresh = 0.0f;
   }
-} /* ToneDetector::setDetectPeakThresh */
-
+} /** ToneDetector::setDetectPeakThresh */
 
 void ToneDetector::setUndetectPeakThresh(float thresh)
 {
@@ -363,34 +306,29 @@ void ToneDetector::setUndetectPeakThresh(float thresh)
   {
     undet_par->peak_thresh = 0.0f;
   }
-} /* ToneDetector::setUndetectPeakThresh */
-
+} /** ToneDetector::setUndetectPeakThresh */
 
 void ToneDetector::setDetectPeakToTotPwrThresh(float thresh)
 {
   det_par->peak_to_tot_pwr_thresh = thresh;
-} /* ToneDetector::setDetectPeakToTotPwrThresh */
-
+} /** ToneDetector::setDetectPeakToTotPwrThresh */
 
 void ToneDetector::setUndetectPeakToTotPwrThresh(float thresh)
 {
   undet_par->peak_to_tot_pwr_thresh = thresh;
-} /* ToneDetector::setUndetectPeakToTotPwrThresh */
-
+} /** ToneDetector::setUndetectPeakToTotPwrThresh */
 
 void ToneDetector::setDetectSnrThresh(float thresh_db, float passband_bw_hz)
 {
   det_par->snr_thresh = thresh_db;
   det_par->passband_bw = passband_bw_hz;
-} /* ToneDetector::setDetectSnrThresh */
-
+} /** ToneDetector::setDetectSnrThresh */
 
 void ToneDetector::setUndetectSnrThresh(float thresh_db, float passband_bw_hz)
 {
   undet_par->snr_thresh = thresh_db;  
   undet_par->passband_bw = passband_bw_hz;
-} /* ToneDetector::setUndetectSnrThresh */
-
+} /** ToneDetector::setUndetectSnrThresh */
 
 void ToneDetector::setDetectPhaseBwThresh(float bw_hz, float stddev_hz)
 {
@@ -408,8 +346,7 @@ void ToneDetector::setDetectPhaseBwThresh(float bw_hz, float stddev_hz)
     det_par->phase_mean_thresh = 0.0f;
     det_par->phase_var_thresh = 0.0f;
   }
-} /* ToneDetector::setDetectPhaseBwThresh */
-
+} /** ToneDetector::setDetectPhaseBwThresh */
 
 void ToneDetector::setUndetectPhaseBwThresh(float bw_hz, float stddev_hz)
 {
@@ -428,8 +365,7 @@ void ToneDetector::setUndetectPhaseBwThresh(float bw_hz, float stddev_hz)
     undet_par->phase_mean_thresh = 0.0f;
     undet_par->phase_var_thresh = 0.0f;
   }
-} /* ToneDetector::setUndetectPhaseBwThresh */
-
+} /** ToneDetector::setUndetectPhaseBwThresh */
 
 void ToneDetector::setDetectUseWindowing(bool enable)
 {
@@ -439,8 +375,7 @@ void ToneDetector::setDetectUseWindowing(bool enable)
   }
   det_par->use_windowing = enable;
   setDetectBw(det_par->bw);
-} /* ToneDetector::setDetectUseWindowing */
-
+} /** ToneDetector::setDetectUseWindowing */
 
 void ToneDetector::setUndetectUseWindowing(bool enable)
 {
@@ -450,8 +385,7 @@ void ToneDetector::setUndetectUseWindowing(bool enable)
   }
   undet_par->use_windowing = enable;
   setUndetectBw(undet_par->bw);
-} /* ToneDetector::setUndetectUseWindowing */
-
+} /** ToneDetector::setUndetectUseWindowing */
 
 int ToneDetector::writeSamples(const float *buf, int len)
 {
@@ -491,14 +425,10 @@ int ToneDetector::writeSamples(const float *buf, int len)
     
   return len;
   
-} /* ToneDetector::writeSamples */
+} /** ToneDetector::writeSamples */
 
-
-
-/*
- *
+/**
  * Private member functions
- *
  */
 
 void ToneDetector::phaseCheckReset(void)
@@ -513,8 +443,7 @@ void ToneDetector::phaseCheckReset(void)
   {
     phase_check_left = -1;
   }
-} /* ToneDetector::phaseCheckReset */
-
+} /** ToneDetector::phaseCheckReset */
 
 void ToneDetector::phaseCheck(void)
 {
@@ -534,8 +463,7 @@ void ToneDetector::phaseCheck(void)
     phase_diffs.push_back(diff);
   }
   prev_phase = phase;
-} /* ToneDetector::phaseCheck */
-
+} /** ToneDetector::phaseCheck */
 
 void ToneDetector::postProcess(void)
 {
@@ -672,16 +600,14 @@ void ToneDetector::postProcess(void)
   phaseCheckReset();
   passband_energy = 0.0f;
 
-} /* ToneDetector::postProcess */
-
+} /** ToneDetector::postProcess */
 
 void ToneDetector::setActivated(bool activated)
 {
   is_activated = activated;
   par = is_activated ? undet_par : det_par;
-} /* ToneDetector::setActivated */
+} /** ToneDetector::setActivated */
 
-
-/*
+/**
  * This file has not been truncated
  */
