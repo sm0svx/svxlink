@@ -27,17 +27,26 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <cassert>
 #include <cstdlib>
 #include <sigc++/bind.h>
 #include <sstream>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncConfig.h>
 #include <AsyncAudioPacer.h>
 #include <AsyncAudioSelector.h>
@@ -50,44 +59,78 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <MsgHandler.h>
 #include <EventHandler.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "ModuleEchoLink.h"
 #include "QsoImpl.h"
 #include "multirate_filter_coeff.h"
 
-/*
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
 using namespace sigc;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 
 QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   : m_qso(station.ip()), module(module), event_handler(0), msg_handler(0),
@@ -228,6 +271,7 @@ QsoImpl::QsoImpl(const StationData &station, ModuleEchoLink *module)
   
 } /* QsoImpl::QsoImpl */
 
+
 QsoImpl::~QsoImpl(void)
 {
   AudioSink::clearHandler();
@@ -240,10 +284,12 @@ QsoImpl::~QsoImpl(void)
   delete destroy_timer;
 } /* QsoImpl::~QsoImpl */
 
+
 bool QsoImpl::initOk(void)
 {
   return m_qso.initOk() && init_ok;
 } /* QsoImpl::initOk */
+
 
 void QsoImpl::logicIdleStateChanged(bool is_idle)
 {
@@ -258,6 +304,7 @@ void QsoImpl::logicIdleStateChanged(bool is_idle)
   }
 } /* QsoImpl::logicIdleStateChanged */
 
+
 bool QsoImpl::sendAudioRaw(Qso::RawPacket *packet)
 {
   idle_timer_cnt = 0;
@@ -271,6 +318,7 @@ bool QsoImpl::sendAudioRaw(Qso::RawPacket *packet)
   
 } /* QsoImpl::sendAudioRaw */
 
+
 bool QsoImpl::connect(void)
 {
   if (destroy_timer != 0)
@@ -280,6 +328,7 @@ bool QsoImpl::connect(void)
   }
   return m_qso.connect();
 } /* QsoImpl::connect */
+
 
 bool QsoImpl::accept(void)
 {
@@ -297,6 +346,7 @@ bool QsoImpl::accept(void)
   return success;
   
 } /* QsoImpl::accept */
+
 
 void QsoImpl::reject(bool perm)
 {
@@ -316,6 +366,7 @@ void QsoImpl::reject(bool perm)
   }
 } /* QsoImpl::reject */
 
+
 void QsoImpl::setListenOnly(bool enable)
 {
   if (enable)
@@ -330,6 +381,7 @@ void QsoImpl::setListenOnly(bool enable)
   }
 } /* QsoImpl::setListenOnly */
 
+
 void QsoImpl::squelchOpen(bool is_open)
 {
   if (currentState() == Qso::STATE_CONNECTED)
@@ -341,12 +393,33 @@ void QsoImpl::squelchOpen(bool is_open)
   }
 } /* QsoImpl::squelchOpen */
 
-/*
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
 
 /*
- * Private member functions
+ *----------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
  */
 void QsoImpl::allRemoteMsgsWritten(void)
 {
@@ -355,6 +428,8 @@ void QsoImpl::allRemoteMsgsWritten(void)
     disconnect();
   }
 } /* QsoImpl::allRemoteMsgsWritten */
+
+
 /*
  *----------------------------------------------------------------------------
  * Method:    onInfoMsgReceived
@@ -378,6 +453,8 @@ void QsoImpl::onInfoMsgReceived(const string& msg)
     last_info_msg = msg;
   }  
 } /* onInfoMsgReceived */
+
+
 /*
  *----------------------------------------------------------------------------
  * Method:    onChatMsgReceived
@@ -398,6 +475,8 @@ void QsoImpl::onChatMsgReceived(const string& msg)
        << msg << endl;
   chatMsgReceived(this, msg);
 } /* onChatMsgReceived */
+
+
 /*
  *----------------------------------------------------------------------------
  * Method:    onStateChange
@@ -456,6 +535,7 @@ void QsoImpl::onStateChange(Qso::State state)
   stateChange(this, state);
 } /* onStateChange */
 
+
 void QsoImpl::idleTimeoutCheck(Timer *t)
 {
   if (receivingAudio())
@@ -476,10 +556,13 @@ void QsoImpl::idleTimeoutCheck(Timer *t)
   }
 } /* idleTimeoutCheck */
 
+
 void QsoImpl::destroyMeNow(Timer *t)
 {
   destroyMe(this);
 } /* destroyMeNow */
+
+
 
 /*
  * This file has not been truncated

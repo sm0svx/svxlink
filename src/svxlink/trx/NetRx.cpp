@@ -24,41 +24,67 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <iostream>
 #include <cassert>
 #include <cstring>
 #include <cstdlib>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncConfig.h>
 #include <AsyncAudioDecoder.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "NetRx.h"
 #include "NetTrxMsg.h"
 #include "NetTrxTcpClient.h"
 
-/*
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 using namespace NetTrxMsg;
 
-/*
- * Defines & typedefs
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Defines & typedefs
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
+
 class ToneDet
 {
   public:
@@ -72,21 +98,38 @@ class ToneDet
     
 };
 
-/*
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 NetRx::NetRx(Config &cfg, const string& name)
   : Rx(cfg, name), cfg(cfg), mute_state(Rx::MUTE_ALL), tcp_con(0),
     log_disconnects_once(false), log_disconnect(true),
@@ -94,6 +137,7 @@ NetRx::NetRx(Config &cfg, const string& name)
     sql_is_open(false), audio_dec(0)
 {
 } /* NetRx::NetRx */
+
 
 NetRx::~NetRx(void)
 {
@@ -110,6 +154,7 @@ NetRx::~NetRx(void)
   tone_detectors.clear();
   
 } /* NetRx::~NetRx */
+
 
 bool NetRx::initialize(void)
 {
@@ -182,6 +227,8 @@ bool NetRx::initialize(void)
   return true;
   
 } /* NetRx:initialize */
+
+
 void NetRx::setMuteState(Rx::MuteState new_mute_state)
 {
   while (mute_state != new_mute_state)
@@ -225,6 +272,7 @@ void NetRx::setMuteState(Rx::MuteState new_mute_state)
   
 } /* NetRx::setMuteState */
 
+
 bool NetRx::addToneDetector(float fq, int bw, float thresh,
       	      	      	    int required_duration)
 {
@@ -238,6 +286,7 @@ bool NetRx::addToneDetector(float fq, int bw, float thresh,
   return true;
 
 } /* NetRx::addToneDetector */
+
 
 void NetRx::reset(void)
 {
@@ -267,13 +316,21 @@ void NetRx::reset(void)
 
 } /* NetRx::reset */
 
-/*
- * Protected member functions
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Private member functions
- */                        
+ *
+ ****************************************************************************/                        
 
 void NetRx::connectionReady(bool is_ready)
 {
@@ -340,6 +397,7 @@ void NetRx::connectionReady(bool is_ready)
     }
   }
 } /* NetRx::connectionReady */
+
 
 void NetRx::handleMsg(Msg *msg)
 {
@@ -435,10 +493,12 @@ void NetRx::handleMsg(Msg *msg)
   
 } /* NetRx::handleMsg */
 
+
 void NetRx::sendMsg(Msg *msg)
 {
   tcp_con->sendMsg(msg);
 } /* NetUplink::sendMsg */
+
 
 void NetRx::allEncodedSamplesFlushed(void)
 {
@@ -448,6 +508,8 @@ void NetRx::allEncodedSamplesFlushed(void)
     setSquelchState(false);
   }
 } /* NetRx::allEncodedSamplesFlushed */
+
+
 
 /*
  * This file has not been truncated

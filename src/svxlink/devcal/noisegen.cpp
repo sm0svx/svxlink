@@ -10,8 +10,10 @@
 
 #include "../trx/Ptt.h"
 
+
 using namespace std;
 using namespace Async;
+
 
 class NoiseGenerator : public Async::AudioSource
 {
@@ -64,7 +66,8 @@ class NoiseGenerator : public Async::AudioSource
     void allSamplesFlushed(void)
     {
     }
-
+    
+    
   private:
     static const int BLOCK_SIZE = 128;
     
@@ -88,6 +91,7 @@ class NoiseGenerator : public Async::AudioSource
     
 };
 
+
 void sigterm_handler(int signal)
 {
   const char *signame = 0;
@@ -109,6 +113,7 @@ void sigterm_handler(int signal)
   cout << msg;
   Application::app().quit();
 } /* sigterm_handler */
+
 
 void level_step(Timer *t, NoiseGenerator *gen)
 {

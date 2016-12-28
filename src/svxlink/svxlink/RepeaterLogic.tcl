@@ -18,10 +18,12 @@ if {$logic_name != [namespace tail [namespace current]]} {
   return;
 }
 
+
 #
 # This variable indicates if the repeater is up or not
 #
 variable repeater_is_up 0;
+
 
 #
 # Executed when the SvxLink software is started
@@ -33,6 +35,7 @@ proc startup {} {
   Logic::startup;
 }
 
+
 #
 # Executed when a specified module could not be found
 #
@@ -40,12 +43,14 @@ proc no_such_module {module_id} {
   Logic::no_such_module $module_id;
 }
 
+
 #
 # Executed when a manual identification is initiated with the * DTMF code
 #
 proc manual_identification {} {
   Logic::manual_identification;
 }
+
 
 #
 # Executed when the squelch just have closed and the RGR_SOUND_DELAY timer has
@@ -55,12 +60,14 @@ proc send_rgr_sound {} {
   Logic::send_rgr_sound;
 }
 
+
 #
 # Executed when an empty macro command (i.e. D#) has been entered.
 #
 proc macro_empty {} {
   Logic::macro_empty;
 }
+
 
 #
 # Executed when an entered macro command could not be found
@@ -69,12 +76,14 @@ proc macro_not_found {} {
   Logic::macro_not_found;
 }
 
+
 #
 # Executed when a macro syntax error occurs (configuration error).
 #
 proc macro_syntax_error {} {
   Logic::macro_syntax_error;
 }
+
 
 #
 # Executed when the specified module in a macro command is not found
@@ -84,6 +93,7 @@ proc macro_module_not_found {} {
   Logic::macro_module_not_found;
 }
 
+
 #
 # Executed when the activation of the module specified in the macro command
 # failed.
@@ -91,6 +101,7 @@ proc macro_module_not_found {} {
 proc macro_module_activation_failed {} {
   Logic::macro_module_activation_failed;
 }
+
 
 #
 # Executed when a macro command is executed that requires a module to
@@ -100,12 +111,14 @@ proc macro_another_active_module {} {
   Logic::macro_another_active_module;
 }
 
+
 #
 # Executed when an unknown DTMF command is entered
 #
 proc unknown_command {cmd} {
   Logic::unknown_command $cmd;
 }
+
 
 #
 # Executed when an entered DTMF command failed
@@ -114,6 +127,7 @@ proc command_failed {cmd} {
   Logic::command_failed $cmd;
 }
 
+
 #
 # Executed when a link to another logic core is activated.
 #   name  - The name of the link
@@ -121,6 +135,7 @@ proc command_failed {cmd} {
 proc activating_link {name} {
   Logic::activating_link $name;
 }
+
 
 #
 # Executed when a link to another logic core is deactivated.
@@ -140,6 +155,7 @@ proc link_not_active {name} {
   Logic::link_not_active $name;
 }
 
+
 #
 # Executed when trying to activate a link to another logic core but the
 # link is already active.
@@ -149,12 +165,14 @@ proc link_already_active {name} {
   Logic::link_already_active $name;
 }
 
+
 #
 # Executed each time the transmitter is turned on or off
 #
 proc transmit {is_on} {
   Logic::transmit $is_on;
 }
+
 
 #
 # Executed each time the squelch is opened or closed
@@ -163,12 +181,14 @@ proc squelch_open {rx_id is_open} {
   Logic::squelch_open $rx_id $is_open;
 }
 
+
 #
 # Executed once every whole minute
 #
 proc every_minute {} {
   Logic::every_minute;
 }
+
 
 #
 # Executed when the repeater is activated
@@ -209,6 +229,7 @@ proc repeater_up {reason} {
   }
 }
 
+
 #
 # Executed when the repeater is deactivated
 #   reason  - The reason why the repeater was deactivated
@@ -245,6 +266,7 @@ proc repeater_down {reason} {
   #playMsg "../extra-sounds" "shutdown";
 }
 
+
 #
 # Executed when there has been no activity on the repeater for
 # IDLE_SOUND_INTERVAL milliseconds. This function will be called each
@@ -261,6 +283,7 @@ proc repeater_idle {} {
   }
 }
 
+
 #
 # Executed once every whole minute to check if it's time to identify
 #
@@ -270,6 +293,7 @@ proc checkPeriodicIdentify {} {
     Logic::checkPeriodicIdentify;
   #}
 }
+
 
 #
 # Executed when a DTMF digit has been received
@@ -283,6 +307,7 @@ proc dtmf_digit_received {digit duration} {
   return [Logic::dtmf_digit_received $digit $duration];
 }
 
+
 #
 # Executed when a DTMF command has been received
 #   cmd - The command
@@ -294,6 +319,7 @@ proc dtmf_cmd_received {cmd} {
   return [Logic::dtmf_cmd_received $cmd];
 }
 
+
 #
 # Executed when the QSO recorder is being activated
 #
@@ -301,12 +327,14 @@ proc activating_qso_recorder {} {
   Logic::activating_qso_recorder;
 }
 
+
 #
 # Executed when the QSO recorder is being deactivated
 #
 proc deactivating_qso_recorder {} {
   Logic::deactivating_qso_recorder;
 }
+
 
 #
 # Executed when trying to deactivate the QSO recorder even though it's
@@ -316,6 +344,7 @@ proc qso_recorder_not_active {} {
   Logic::qso_recorder_not_active;
 }
 
+
 #
 # Executed when trying to activate the QSO recorder even though it's
 # already active
@@ -324,6 +353,7 @@ proc qso_recorder_already_active {} {
   Logic::qso_recorder_already_active;
 }
 
+
 #
 # Executed when the timeout kicks in to activate the QSO recorder
 #
@@ -331,12 +361,14 @@ proc qso_recorder_timeout_activate {} {
   Logic::qso_recorder_timeout_activate
 }
 
+
 #
 # Executed when the timeout kicks in to deactivate the QSO recorder
 #
 proc qso_recorder_timeout_deactivate {} {
   Logic::qso_recorder_timeout_deactivate
 }
+
 
 #
 # Executed if the repeater opens but the squelch never opens again.
@@ -348,12 +380,14 @@ proc identify_nag {} {
   playSilence 500;
 }
 
+
 #
 # Executed when the user is requesting a language change
 #
 proc set_language {lang_code} {
   Logic::set_language "$lang_code";
 }
+
 
 #
 # Executed when the user requests a list of available languages
@@ -362,12 +396,14 @@ proc list_languages {} {
   Logic::list_languages
 }
 
+
 #
 # Executed when the node is being brought online or offline
 #
 proc logic_online {online} {
   Logic::logic_online $online
 }
+
 
 # end of namespace
 }

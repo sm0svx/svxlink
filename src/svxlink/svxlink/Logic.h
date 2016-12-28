@@ -27,12 +27,18 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
+
 #ifndef LOGIC_INCLUDED
 #define LOGIC_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <string>
 #include <list>
 #include <map>
@@ -41,22 +47,35 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sigc++/sigc++.h>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <LocationInfo.h>
 #include <AsyncAtTimer.h>
 #include <AsyncTimer.h>
 #include <Tx.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "CmdParser.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
   class Config;
@@ -72,13 +91,23 @@ namespace Async
   class Pty;
 };
 
-/*
- * Namespace
- */
 
-/*
+/****************************************************************************
+ *
+ * Namespace
+ *
+ ****************************************************************************/
+
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
+
 class Rx;
 class MsgHandler;
 class Module;
@@ -87,17 +116,29 @@ class Command;
 class QsoRecorder;
 class DtmfDigitHandler;
 
-/*
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	This class implements the core logic of SvxLink
 @author Tobias Blomberg
@@ -132,7 +173,6 @@ class Logic : public sigc::trackable
     virtual void playFile(const std::string& path);
     virtual void playSilence(int length);
     virtual void playTone(int fq, int amp, int len);
-    virtual void playDtmf(char digit, int amp, int len);
     void recordStart(const std::string& filename, unsigned max_time);
     void recordStop(void);
 
@@ -268,7 +308,12 @@ class Logic : public sigc::trackable
 
 };  /* class Logic */
 
+
+//} /* namespace */
+
 #endif /* LOGIC_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

@@ -23,41 +23,70 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
+
 #ifndef ASYNC_AUDIO_DEVICE_FACTORY_INCLUDED
 #define ASYNC_AUDIO_DEVICE_FACTORY_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <string>
 #include <map>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
+
 class AudioDevice;
 
-/*
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
 /**
  * @brief   Register a new audio device type
@@ -71,13 +100,22 @@ class AudioDevice;
           AudioDeviceFactory::instance().registerCreator(_name, \
                                                          create_ ## _class)
 
-/*
- * Exported Global Variables
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Exported Global Variables
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	A factory class for audio devices
 @author Tobias Blomberg / SM0SVX
@@ -134,7 +172,8 @@ class AudioDeviceFactory
      * @brief   Default constuctor
      */
     AudioDeviceFactory(void);
-
+  
+    
   private:
     typedef std::map<std::string, CreatorFunc> CreatorMap;
     
@@ -145,9 +184,12 @@ class AudioDeviceFactory
     
 };  /* class AudioDeviceFactory */
 
+
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_DEVICE_FACTORY_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

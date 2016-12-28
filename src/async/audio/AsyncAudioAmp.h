@@ -23,48 +23,85 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
 #ifndef ASYNC_AUDIO_AMP_INCLUDED
 #define ASYNC_AUDIO_AMP_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <cmath>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioProcessor.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+  
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	An audio pipe class for amplification/attenuation of an audio stream
 @author Tobias Blomberg / SM0SVX
@@ -84,19 +121,20 @@ class AudioAmp : public Async::AudioProcessor
      * @brief 	Destructor
      */
     ~AudioAmp(void) {}
-
+  
     /**
      * @brief 	Set the gain to use
      * @param 	gain_db The gain given in dB
      */
     void setGain(float gain_db) { m_gain = powf(10, gain_db / 20); }
-
+    
     /**
      * @brief 	Read the gain
      * @return	Return the gain in dB
      */
     float gain(void) const { return 20 * log10(m_gain); }
-
+    
+    
   protected:
     void processSamples(float *dest, const float *src, int count)
     {
@@ -105,7 +143,8 @@ class AudioAmp : public Async::AudioProcessor
       	dest[i] = src[i] * m_gain;
       }
     }
-
+    
+    
   private:
     AudioAmp(const AudioAmp&);
     AudioAmp& operator=(const AudioAmp&);
@@ -114,9 +153,12 @@ class AudioAmp : public Async::AudioProcessor
     
 };  /* class AudioAmp */
 
+
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_AMP_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

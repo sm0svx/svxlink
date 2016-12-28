@@ -24,6 +24,7 @@ if {![info exists CFG_ID]} {
 #
 set module_name [namespace tail [namespace current]]
 
+
 #
 # An "overloaded" playMsg that eliminates the need to write the module name
 # as the first argument.
@@ -34,6 +35,7 @@ proc playMsg {msg} {
   variable module_name
   ::playMsg $module_name $msg
 }
+
 
 #
 # A convenience function for printing out information prefixed by the
@@ -46,6 +48,7 @@ proc printInfo {msg} {
   puts "$module_name: $msg"
 }
 
+
 #
 # Executed when this module is being activated
 #
@@ -55,6 +58,7 @@ proc activating_module {} {
   playMsg "login"
 }
 
+
 #
 # Executed when this module is being deactivated.
 #
@@ -62,6 +66,7 @@ proc deactivating_module {} {
   variable module_name
   Module::deactivating_module $module_name
 }
+
 
 #
 # Executed when the inactivity timeout for this module has expired.
@@ -71,6 +76,7 @@ proc timeout {} {
   Module::timeout $module_name
 }
 
+
 #
 # Executed when playing of the help message for this module has been requested.
 #
@@ -78,6 +84,7 @@ proc play_help {} {
   variable module_name
   Module::play_help $module_name
 }
+
 
 #
 # Executed when the state of this module should be reported on the radio
@@ -116,12 +123,14 @@ proc status_report {} {
   }
 }
 
+
 #
 # Called when a fatal module error ocurrs after which the module is deactivated
 #
 proc module_error {} {
   playMsg "operation_failed"
 }
+
 
 #
 # Called when the user enters an unknown user ID when a user is checking
@@ -133,6 +142,7 @@ proc idle_unknown_userid {userid} {
   spellNumber $userid
   playMsg "unknown_userid"
 }
+
 
 #
 # Called, when the module is not active, to announce how many voice mails
@@ -149,6 +159,7 @@ proc idle_announce_num_new_messages_for {call msg_cnt} {
   playSilence 500
 }
 
+
 #
 # Called when the login procedure is aborted.
 #
@@ -156,6 +167,7 @@ proc login_aborted {} {
   playMsg "aborted"
   playSilence 500
 }
+
 
 #
 # Called when login is approved.
@@ -169,6 +181,7 @@ proc login_ok {call} {
   logged_in_menu_help
 }
 
+
 #
 # Called when login fails due to entering an invalid user ID
 #
@@ -179,6 +192,7 @@ proc login_failed_unknown_userid {userid} {
   playSilence 500
   playMsg "login"
 }
+
 
 #
 # Called when login fails due to entering the wrong password
@@ -193,12 +207,14 @@ proc login_failed_wrong_password {call userid password} {
   playMsg "login"
 }
 
+
 #
 # Called when the logged in menu help should be played
 #
 proc logged_in_menu_help {} {
   playSubcommands "TclVoiceMail" "logged_in_menu"
 }
+
 
 #
 # Called when an invalid command is entered in the "logged in" mode.
@@ -212,6 +228,7 @@ proc logged_in_unknown_command {cmd} {
   logged_in_menu_help
 }
 
+
 #
 # Called when a recording is aborted before it's finished.
 #
@@ -221,12 +238,14 @@ proc rec_aborted {} {
   logged_in_menu_help
 }
 
+
 #
 # Called when the user should enter the recipient for a voice mail.
 #
 proc rec_enter_rcpt {} {
   playMsg "rec_enter_rcpt"
 }
+
 
 #
 # Called when an unknown recipient user ID is entered.
@@ -240,6 +259,7 @@ proc rec_enter_rcpt_unknown_userid {userid} {
   rec_enter_rcpt
 }
 
+
 #
 # Called when starting to record the subject after entering the recipient.
 #
@@ -252,12 +272,14 @@ proc rec_sending_to {call} {
   playMsg "rec_subject"
 }
 
+
 #
 # Called when the recording of the message body starts.
 #
 proc rec_message {} {
   playMsg "rec_message"
 }
+
 
 #
 # Called when a voice mail recording has been finished.
@@ -266,6 +288,7 @@ proc rec_done {} {
   playMsg "rec_done"
   playSilence 500
 }
+
 
 #
 # This is not an event but a helper to play back a message specified by the
@@ -279,6 +302,7 @@ proc playMessage {basename} {
   playSilence 1000
   playFile "$basename\_mesg.wav"
 }
+
 
 #
 # Called when the user request playing of the next new message.
@@ -297,12 +321,14 @@ proc play_next_new_message {msg_cnt {basename ""}} {
   }
 }
 
+
 #
 # Called when the pnm menu help should be played
 #
 proc pnm_menu_help {} {
   playSubcommands "TclVoiceMail" "pnm_menu"
 }
+
 
 #
 # Called when aborting from the menu after listening to a message
@@ -312,6 +338,7 @@ proc pnm_aborted {} {
   playSilence 500
   logged_in_menu_help
 }
+
 
 #
 # Called when an invalid command is entered after listening to a message
@@ -325,6 +352,7 @@ proc pnm_unknown_command {cmd} {
   pnm_menu_help
 }
 
+
 #
 # Called when a delete is requested after listening to a message
 #
@@ -334,6 +362,7 @@ proc pnm_delete {} {
   logged_in_menu_help
 }
 
+
 #
 # Called when "reply and delete" is requested after listening to a message
 #
@@ -342,6 +371,7 @@ proc pnm_reply_and_delete {} {
   playSilence 500
   pnm_menu_help
 }
+
 
 #
 # Called when "play again" is requested after listening to a message
@@ -354,8 +384,10 @@ proc pnm_play_again {basename} {
   pnm_menu_help
 }
 
+
 # end of namespace
 }
+
 
 #
 # This file has not been truncated

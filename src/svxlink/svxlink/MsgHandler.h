@@ -25,51 +25,94 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
+
+
 #ifndef MSG_HANDLER_INCLUDED
 #define MSG_HANDLER_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <string>
 #include <list>
 #include <map>
 
 #include <sigc++/sigc++.h>
 
-/*
+
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioSource.h>
 
-/*
- * Local Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Local Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
+
 class QueueItem;
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+  
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	Handling of playback of audio clips
 @author Tobias Blomberg / SM0SVX
@@ -126,17 +169,7 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
      * the silence is being played.
      */
     void playTone(int fq, int amp, int length, bool idle_marked=false);
-
-    /**
-     * @brief 	Play a dtmf tone
-     * @param 	seq The dtmf sequence to play
-     * @param 	amp The amplitude of the tone to play (0-1000)
-     * @param 	length The length in milliseconds of the tone to play
-     * @param   idle_marked Choose if the playback should be idle marked or not
-     *
-     */
-    void playDtmf(char digit, int amp, int length, bool idle_marked=false);
-
+    
     /**
      * @brief 	Check if a message is beeing written
      * @return	Return \em true if a message is beeing written
@@ -213,7 +246,12 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
 
 }; /* class MsgHandler */
 
+
+//} /* namespace */
+
 #endif /* MSG_HANDLER_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

@@ -24,9 +24,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <termios.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -51,9 +56,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <set>
 #include <cerrno>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncCppApplication.h>
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
@@ -63,35 +72,57 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <common.h>
 #include <config.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "version/SVXLINK.h"
 #include "MsgHandler.h"
 #include "SimplexLogic.h"
 #include "RepeaterLogic.h"
 #include "LinkManager.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 using namespace sigc;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
+
 #define PROGRAM_NAME "SvxLink"
 
-/*
 
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
+
 static void parse_arguments(int argc, const char **argv);
 static void stdinHandler(FdWatch *w);
 static void stdout_handler(FdWatch *w);
@@ -105,13 +136,21 @@ static bool logfile_write_timestamp(void);
 static void logfile_write(const char *buf);
 static void logfile_flush(void);
 
-/*
- * Exported Global Variables
- */
 
-/*
+/****************************************************************************
+ *
+ * Exported Global Variables
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
+
 static char   	      	*pidfile_name = NULL;
 static char   	      	*logfile_name = NULL;
 static char   	      	*runasuser = NULL;
@@ -123,9 +162,14 @@ static FdWatch	      	*stdin_watch = 0;
 static FdWatch	      	*stdout_watch = 0;
 static string         	tstamp_format;
 
-/*
+
+/****************************************************************************
+ *
  * MAIN
- */
+ *
+ ****************************************************************************/
+
+
 /*
  *----------------------------------------------------------------------------
  * Function:  main
@@ -512,11 +556,14 @@ int main(int argc, char **argv)
   
 } /* main */
 
-/*
+
+
+
+/****************************************************************************
  *
  * Functions
  *
- */
+ ****************************************************************************/
 
 /*
  *----------------------------------------------------------------------------
@@ -589,6 +636,7 @@ static void parse_arguments(int argc, const char **argv)
 
 } /* parse_arguments */
 
+
 static void stdinHandler(FdWatch *w)
 {
   char buf[1];
@@ -629,6 +677,7 @@ static void stdinHandler(FdWatch *w)
       break;
   }
 }
+
 
 static void stdout_handler(FdWatch *w)
 {
@@ -747,6 +796,7 @@ static void sigterm_handler(int signal)
   Application::app().quit();
 } /* sigterm_handler */
 
+
 static void handle_unix_signal(int signum)
 {
   switch (signum)
@@ -760,6 +810,7 @@ static void handle_unix_signal(int signum)
       break;
   }
 } /* handle_unix_signal */
+
 
 static bool logfile_open(void)
 {
@@ -779,6 +830,7 @@ static bool logfile_open(void)
   
 } /* logfile_open */
 
+
 static void logfile_reopen(const char *reason)
 {
   logfile_write_timestamp();
@@ -793,6 +845,7 @@ static void logfile_reopen(const char *reason)
   msg += ". Logfile reopened\n";
   if (write(logfd, msg.c_str(), msg.size()) == -1) {}
 } /* logfile_reopen */
+
 
 static bool logfile_write_timestamp(void)
 {
@@ -825,6 +878,7 @@ static bool logfile_write_timestamp(void)
   }
   return true;
 } /* logfile_write_timestamp */
+
 
 static void logfile_write(const char *buf)
 {
@@ -871,6 +925,7 @@ static void logfile_write(const char *buf)
   }
 } /* logfile_write */
 
+
 static void logfile_flush(void)
 {
   cout.flush();
@@ -880,6 +935,8 @@ static void logfile_flush(void)
     stdout_handler(stdout_watch);
   }
 } /*  logfile_flush */
+
+
 
 /*
  * This file has not been truncated

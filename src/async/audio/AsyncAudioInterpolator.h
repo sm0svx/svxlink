@@ -18,47 +18,85 @@ THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT EXPRESS OR IMPLIED WARRANTY OF
 ANY KIND. See http://www.dspguru.com/wol.htm for more information.
 \endverbatim
 */
+
 #ifndef ASYNC_AUDIO_INTERPOLATOR_INCLUDED
 #define ASYNC_AUDIO_INTERPOLATOR_INCLUDED
 
-/*
- * System Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * System Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioProcessor.h>
 
-/*
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+  
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	Interpolates a lower sampling rate to a higher one
 @author Tobias Blomberg / SM0SVX
@@ -92,6 +130,7 @@ class AudioInterpolator : public Async::AudioProcessor
      * @brief 	Destructor
      */
     ~AudioInterpolator(void);
+  
 
   protected:
     /**
@@ -107,6 +146,7 @@ class AudioInterpolator : public Async::AudioProcessor
      */
     virtual void processSamples(float *dest, const float *src, int count);
 
+    
   private:
     const int 	factor_L;
     float     	*p_Z;
@@ -118,9 +158,12 @@ class AudioInterpolator : public Async::AudioProcessor
     
 };  /* class AudioInterpolator */
 
+
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_INTERPOLATOR_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

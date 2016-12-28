@@ -26,30 +26,47 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
 #ifndef QSO_IMPL_INCLUDED
 #define QSO_IMPL_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <string>
 #include <sigc++/sigc++.h>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 #include <EchoLinkQso.h>
 #include <EchoLinkStationData.h>
 
-/*
- * Local Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Local Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
   class Config;
@@ -57,29 +74,51 @@ namespace Async
   class AudioPassthrough;
 };
 
-/*
- * Namespace
- */
 
-/*
+/****************************************************************************
+ *
+ * Namespace
+ *
+ ****************************************************************************/
+
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
+
 class MsgHandler;
 class EventHandler;
 class AsyncTimer;
 class ModuleEchoLink;
 
-/*
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	Implements the things needed for one EchoLink QSO.
 @author Tobias Blomberg
@@ -204,7 +243,9 @@ class QsoImpl
 
     bool receivingAudio(void) const { return m_qso.receivingAudio(); }
 
+
     bool connectionRejected(void) const { return reject_qso; }
+    
     
     /**
      * @brief 	Return the StationData object associated with this QSO
@@ -264,7 +305,8 @@ class QsoImpl
      * @param 	qso The QSO object
      */
     sigc::signal<void, QsoImpl*> destroyMe;
-
+    
+        
   protected:
     
   private:
@@ -295,7 +337,12 @@ class QsoImpl
 
 };  /* class QsoImpl */
 
+
+//} /* namespace */
+
 #endif /* QSO_IMPL_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

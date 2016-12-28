@@ -1,4 +1,0 @@
-version=3
-
-https://github.com/kb3vgw/svxlink/tags .*/archive/(.*)\.tar\.gz
-

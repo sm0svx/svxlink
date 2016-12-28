@@ -23,49 +23,87 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
+
 #ifndef ASYNC_AUDIO_PROCESSOR_INCLUDED
 #define ASYNC_AUDIO_PROCESSOR_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <string>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioSource.h>
 #include <AsyncAudioSink.h>
 
-/*
- * Forward declarations
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Forward declarations
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+  
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
 
 /**
 @brief	The base class for an audio processor
@@ -111,6 +149,7 @@ class AudioProcessor : public AudioSink, public AudioSource
      * @brief All samples have been flushed by the sink
      */
     void allSamplesFlushed(void);
+    
 
   protected:
     /**
@@ -132,7 +171,8 @@ class AudioProcessor : public AudioSink, public AudioSource
      * contain garbage.
      */
     virtual void processSamples(float *dest, const float *src, int count) = 0;
-
+    
+    
   private:
     static const int BUFSIZE = 256;
     
@@ -153,9 +193,12 @@ class AudioProcessor : public AudioSink, public AudioSource
 
 };  /* class AudioProcessor */
 
+
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_PROCESSOR_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

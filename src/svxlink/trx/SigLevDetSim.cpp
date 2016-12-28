@@ -24,51 +24,90 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <cstdlib>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncConfig.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "SigLevDetSim.h"
 
-/*
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
+
 unsigned int SigLevDetSim::next_seed = 0;
 
-/*
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 SigLevDetSim::SigLevDetSim(void)
   : sample_rate(0), block_idx(0), last_siglev(0), integration_time(1),
     update_interval(0), update_counter(0), siglev_toggle_interval(0),
@@ -78,9 +117,11 @@ SigLevDetSim::SigLevDetSim(void)
 {
 } /* SigLevDetSim::SigLevDetSim */
 
+
 SigLevDetSim::~SigLevDetSim(void)
 {
 } /* SigLevDetSim::~SigLevDetSim */
+
 
 bool SigLevDetSim::initialize(Config &cfg, const string& name, int sample_rate)
 {
@@ -105,6 +146,7 @@ bool SigLevDetSim::initialize(Config &cfg, const string& name, int sample_rate)
   
 } /* SigLevDetSim::initialize */
 
+
 void SigLevDetSim::reset(void)
 {
   block_idx = 0;
@@ -115,11 +157,13 @@ void SigLevDetSim::reset(void)
   siglev_values.clear();
 } /* SigLevDetSim::reset */
 
+
 void SigLevDetSim::setContinuousUpdateInterval(int interval_ms)
 {
   update_interval = interval_ms * sample_rate / 1000;
   update_counter = 0;  
 } /* SigLevDetSim::setContinuousUpdateInterval */
+
 
 void SigLevDetSim::setIntegrationTime(int time_ms)
 {
@@ -131,6 +175,7 @@ void SigLevDetSim::setIntegrationTime(int time_ms)
     integration_time = 1;
   }
 } /* SigLevDetSim::setIntegrationTime */
+
 
 float SigLevDetSim::siglevIntegrated(void) const
 {
@@ -147,9 +192,13 @@ float SigLevDetSim::siglevIntegrated(void) const
   return 0;
 } /* SigLevDetSim::siglevIntegrated */
 
-/*
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
 
 int SigLevDetSim::writeSamples(const float *samples, int count)
 {
@@ -198,9 +247,11 @@ int SigLevDetSim::writeSamples(const float *samples, int count)
 } /* SigLevDetSim::writeSamples */
 
 
-/*
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
 
 void SigLevDetSim::randNewSiglev(void)
 {
@@ -214,6 +265,7 @@ void SigLevDetSim::randNewSiglev(void)
   }
 } /* SigLevDetSim::randNewSiglev */
 
+
 void SigLevDetSim::toggleSiglev(void)
 {
   if (last_siglev == siglev_min)
@@ -225,6 +277,7 @@ void SigLevDetSim::toggleSiglev(void)
     last_siglev = siglev_min;
   }
 } /* SigLevDetSim::toggleSiglev */
+
 
 /*
  * This file has not been truncated

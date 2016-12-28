@@ -27,9 +27,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <string>
 #include <iostream>
 #include <iomanip>
@@ -41,32 +44,53 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <speex/speex.h>
 #endif
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "rtp.h"
 #include "rtpacket.h"
 #include "EchoLinkDispatcher.h"
 #include "EchoLinkQso.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-/*
- * Defines & typedefs
- */
 
-/*
+/****************************************************************************
+ *
+ * Defines & typedefs
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
+
 struct Qso::Private
 {
   typedef enum
@@ -94,21 +118,39 @@ struct Qso::Private
   {}
 };
 
-/*
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
+
 Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
       	 const string& info)
   : init_ok(false), sdes_length(0), state(STATE_DISCONNECTED), gsmh(0),
@@ -182,6 +224,7 @@ Qso::~Qso(void)
   p = 0;
 } /* Qso::~Qso */
 
+
 bool Qso::setLocalCallsign(const string& callsign)
 {
 #ifdef SPEEX_MAJOR
@@ -203,6 +246,7 @@ bool Qso::setLocalCallsign(const string& callsign)
   return true;
   
 } /* Qso::setLocalCallsign */
+
 
 bool Qso::setLocalName(const string& name)
 {
@@ -227,10 +271,12 @@ bool Qso::setLocalName(const string& name)
   
 } /* Qso::setLocalName */
 
+
 void Qso::setLocalInfo(const string& info)
 {
   local_stn_info = info;
 } /* Qso::setLocalInfo */
+
 
 bool Qso::connect(void)
 {
@@ -251,6 +297,7 @@ bool Qso::connect(void)
   
 } /* Qso::connect */
 
+
 bool Qso::accept(void)
 {
   if (state != STATE_DISCONNECTED)
@@ -268,6 +315,7 @@ bool Qso::accept(void)
   return setup_connection_ok;
   
 } /* Qso::accept */
+
 
 bool Qso::disconnect(void)
 {
@@ -289,6 +337,7 @@ bool Qso::disconnect(void)
   return true;
   
 } /* Qso::disconnect */
+
 
 bool Qso::sendInfoData(const string& info)
 {
@@ -320,6 +369,7 @@ bool Qso::sendInfoData(const string& info)
   
 } /* Qso::sendInfoData */
 
+
 bool Qso::sendChatData(const string& msg)
 {
   if (state != STATE_CONNECTED)
@@ -339,6 +389,7 @@ bool Qso::sendChatData(const string& msg)
   return true;
   
 } /* Qso::sendChatData */
+
 
 bool Qso::sendAudioRaw(RawPacket *raw_packet)
 {
@@ -392,6 +443,7 @@ bool Qso::sendAudioRaw(RawPacket *raw_packet)
 
 } /* Qso::sendAudioRaw */
 
+
 void Qso::setRemoteParams(const string& priv)
 {
 #ifdef SPEEX_MAJOR  
@@ -404,6 +456,7 @@ void Qso::setRemoteParams(const string& priv)
   }
 #endif
 } /* Qso::setRemoteParams */
+
 
 int Qso::writeSamples(const float *samples, int count)
 {
@@ -451,6 +504,7 @@ int Qso::writeSamples(const float *samples, int count)
   
 } /* Qso::writeSamples */
 
+
 void Qso::flushSamples(void)
 {
   if (state == STATE_CONNECTED)
@@ -481,18 +535,25 @@ void Qso::setUseGsmOnly(void)
 } /* Qso::setGsmCodec */
 
 
-/*
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
 
 void Qso::allSamplesFlushed(void)
 {
 
 } /* Qso::allSamplesFlushed */
 
-/*
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
 
 void Qso::printData(const unsigned char *buf, int len)
 {
@@ -515,6 +576,19 @@ void Qso::printData(const unsigned char *buf, int len)
   cerr.flags(old_flags);
 } /* Qso::printData */
 
+
+/*
+ *----------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
 void Qso::handleCtrlInput(unsigned char *buf, int len)
 {
   //printData(buf, recv_len);
@@ -534,6 +608,7 @@ void Qso::handleCtrlInput(unsigned char *buf, int len)
   }
 } /* Qso::handleCtrlInput */
 
+
 inline void Qso::handleByePacket(unsigned char *buf, int len)
 {
   if (state != STATE_DISCONNECTED)
@@ -546,6 +621,7 @@ inline void Qso::handleByePacket(unsigned char *buf, int len)
     sendByePacket();
   }
 } /* Qso::handleByePacket */
+
 
 inline void Qso::handleSdesPacket(unsigned char *buf, int len)
 {
@@ -606,6 +682,7 @@ inline void Qso::handleSdesPacket(unsigned char *buf, int len)
   }  
 } /* Qso::handleSdesPacket */
 
+
 void Qso::handleAudioInput(unsigned char *buf, int len)
 {
   if (state == STATE_DISCONNECTED)
@@ -624,6 +701,7 @@ void Qso::handleAudioInput(unsigned char *buf, int len)
     handleAudioPacket(buf, len);
   }
 } /* Qso::handleAudioInput */
+
 
 inline void Qso::handleNonAudioPacket(unsigned char *buf, int len)
 {
@@ -685,6 +763,7 @@ inline void Qso::handleNonAudioPacket(unsigned char *buf, int len)
   }
   
 } /* Qso::handleNonAudioPacket */
+
 
 inline void Qso::handleAudioPacket(unsigned char *buf, int len)
 {
@@ -790,6 +869,7 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
 
 } /* Qso::handleAudioPacket */
 
+
 bool Qso::sendSdesPacket(void)
 {
   bool success = Dispatcher::instance()->sendCtrlMsg(remote_ip, sdes_packet,
@@ -804,6 +884,7 @@ bool Qso::sendSdesPacket(void)
   
 } /* Qso::sendSdesPacket */
 
+
 void Qso::sendKeepAlive(Timer *timer)
 {
   if ((state == STATE_CONNECTING) &&
@@ -816,6 +897,7 @@ void Qso::sendKeepAlive(Timer *timer)
     sendSdesPacket();
   }
 } /* Qso::sendKeepAlive */
+
 
 void Qso::setState(State state)
 {
@@ -830,10 +912,12 @@ void Qso::setState(State state)
   }
 } /* Qso::setState */
 
+
 void Qso::connectionTimeout(Timer *timer)
 {
   cleanupConnection();
 } /* Qso::connectionTimeout */
+
 
 bool Qso::setupConnection(void)
 {
@@ -852,6 +936,7 @@ bool Qso::setupConnection(void)
     
 } /* Qso::setupConnection */
 
+
 void Qso::cleanupConnection(void)
 {
   if (rx_indicator_timer != 0)
@@ -868,6 +953,7 @@ void Qso::cleanupConnection(void)
   con_timeout_timer = 0;
   setState(STATE_DISCONNECTED);
 } /* Qso::cleanupConnection */
+
 
 bool Qso::sendVoicePacket(void)
 {
@@ -924,6 +1010,7 @@ bool Qso::sendVoicePacket(void)
   
 } /* Qso::sendVoicePacket */
 
+
 void Qso::checkRxActivity(Timer *timer)
 {
   //cout << "### Qso::checkRxActivity: rx_timeout_left="
@@ -939,6 +1026,7 @@ void Qso::checkRxActivity(Timer *timer)
   }
 } /* Qso::checkRxActivity */
 
+
 bool Qso::sendByePacket(void)
 {
   unsigned char bye[64];
@@ -953,6 +1041,9 @@ bool Qso::sendByePacket(void)
   return true;
 
 } /* Qso::sendByePacket */
+
+
+
 
 /*
  * This file has not been truncated

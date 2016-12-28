@@ -26,31 +26,50 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
+
 #ifndef MODULE_INCLUDED
 #define MODULE_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <dlfcn.h>
 #include <sigc++/sigc++.h>
 
 #include <string>
 #include <list>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-/*
- * Local Includes
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Local Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
   class Config;
@@ -59,25 +78,47 @@ namespace Async
 
 class Logic;
 
-/*
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+  
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	Base class for implementing a SvxLink module
 @author Tobias Blomberg
@@ -371,7 +412,8 @@ class Module : public sigc::trackable, public Async::AudioSink,
     void playFile(const std::string& path);
     
     void sendDtmf(const std::string& digits);
-
+    
+    
   protected:
     /**
      * @brief 	Called by the module to activate itself
@@ -449,6 +491,7 @@ class Module : public sigc::trackable, public Async::AudioSink,
      */
     bool isWritingMessage(void);
 
+
   private:
     void      	      *m_dl_handle;
     Logic     	      *m_logic;
@@ -464,7 +507,12 @@ class Module : public sigc::trackable, public Async::AudioSink,
 
 };  /* class Module */
 
+
+//} /* namespace */
+
 #endif /* MODULE_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

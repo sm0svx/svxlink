@@ -24,9 +24,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <sigc++/sigc++.h>
 
 #include <QSettings>
@@ -42,25 +48,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <stdlib.h>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <config.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "SettingsDialog.h"
 #include "Settings.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
 #define CONF_CALLSIGN 	      	      "Callsign"
 #define CONF_PASSWORD 	      	      "Password"
@@ -121,25 +144,61 @@ using namespace std;
 #define CONF_VOX_THRESHOLD_DEFAULT    	-30
 #define CONF_VOX_DELAY_DEFAULT      	1000
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
+
 Settings *Settings::the_instance = 0;
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
+ *
+ ****************************************************************************/
+
+
+/*
+ *------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
  */
 Settings *Settings::instance(void)
 {
@@ -151,6 +210,7 @@ Settings *Settings::instance(void)
   return the_instance;
   
 } /* Settings::instance */
+
 
 Settings::Settings(void)
   : dialog(0),
@@ -211,11 +271,13 @@ Settings::Settings(void)
   encodings.push_back(Encoding("TIS-620", SettingsDialog::trUtf8("Thai")));
 } /* Settings::Settings */
 
+
 Settings::~Settings(void)
 {
   encodings.clear();
   the_instance = 0;
 } /* Settings::~Settings */
+
 
 void Settings::showDialog(void)
 {
@@ -379,6 +441,7 @@ void Settings::showDialog(void)
     
 } /* Settings::showDialog */
 
+
 void Settings::readSettings(void)
 {
   QSettings qsettings;
@@ -490,6 +553,7 @@ void Settings::readSettings(void)
   
 } /* Settings::readSettings */
 
+
 void Settings::setBookmarks(const QStringList &bookmarks)
 {
   m_bookmarks = bookmarks;
@@ -497,12 +561,14 @@ void Settings::setBookmarks(const QStringList &bookmarks)
   qsettings.setValue(CONF_BOOKMARKS, m_bookmarks);
 } /* Settings::setBookmarks */
 
+
 void Settings::setMainWindowSize(QSize size)
 {
   m_main_window_size = size;
   QSettings qsettings;
   qsettings.setValue(CONF_MAIN_WINDOW_SIZE, size);
 } /* Settings::setMainWindowSize */
+
 
 void Settings::setVSplitterSizes(QList<int> sizes)
 {
@@ -516,6 +582,7 @@ void Settings::setVSplitterSizes(QList<int> sizes)
   qsettings.setValue(CONF_VSPLITTER_SIZES, str_list);
 } /* Settings::setVSplitterSizes */
 
+
 void Settings::setHSplitterSizes(QList<int> sizes)
 {
   m_hsplitter_sizes = sizes;
@@ -527,6 +594,7 @@ void Settings::setHSplitterSizes(QList<int> sizes)
   QSettings qsettings;
   qsettings.setValue(CONF_HSPLITTER_SIZES, str_list);
 } /* Settings::setHSplitterSizes */
+
 
 void Settings::setStationViewColSizes(QList<int> sizes)
 {
@@ -540,6 +608,7 @@ void Settings::setStationViewColSizes(QList<int> sizes)
   qsettings.setValue(CONF_STN_VIEW_COL_SIZES, str_list);
 } /* Settings::setStationViewColSizes */
 
+
 void Settings::setIncomingViewColSizes(QList<int> sizes)
 {
   m_incm_view_col_sizes = sizes;
@@ -552,6 +621,7 @@ void Settings::setIncomingViewColSizes(QList<int> sizes)
   qsettings.setValue(CONF_INCM_VIEW_COL_SIZES, str_list);
 } /* Settings::setStationViewColSizes */
 
+
 void Settings::setVoxParams(bool enabled, int threshold_db, int delay_ms)
 {
   m_vox_enabled = enabled;
@@ -563,6 +633,7 @@ void Settings::setVoxParams(bool enabled, int threshold_db, int delay_ms)
   qsettings.setValue(CONF_VOX_DELAY, m_vox_delay);
 } /* Settings::setVoxParams */
 
+
 void Settings::setConnectToIp(const QString &host)
 {
   m_connect_to_ip = host;
@@ -570,13 +641,59 @@ void Settings::setConnectToIp(const QString &host)
   qsettings.setValue(CONF_CONNECT_TO_IP, m_connect_to_ip);
 } /* Settings::setConnectToIp */
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 
 /*
- * Private member functions
+ *------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
  */
+
+
+
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
+
+/*
+ *----------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
+
+
+
+
+
+
 
 /*
  * This file has not been truncated

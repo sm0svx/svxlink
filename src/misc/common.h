@@ -23,50 +23,87 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
 #ifndef COMMON_INCLUDED
 #define COMMON_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <utility>
 #include <sstream>
 #include <istream>
 #include <ostream>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
+
 namespace SvxLink
 {
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Global functions
- */
+ *
+ ****************************************************************************/
+
 /**
  * @brief   Set a value of any type supporting streaming from a string
  * @param   val Reference to the value to set
@@ -90,6 +127,7 @@ static bool setValueFromString(ValueType &val, const std::string &str)
   return !ss.fail() && ss.eof();
 } /* setValueFromString */
 
+
 /**
  * @brief   Set a value of any type supporting streaming from a string
  * @param   val Reference to the value to set
@@ -110,6 +148,7 @@ bool setValueFromString(std::string &val, const std::string &str)
   val = str;
   return true;
 } /* setValueFromString */
+
 
 /**
  * @brief   Split a string using a set of delimiters and put the tokens in a
@@ -174,6 +213,7 @@ static typename Container::size_type splitStr(Container &L,
 
 } /* splitStr */
 
+
 /**
  * @brief A pair type with separator which can be streamed
  * @param a The first type in the pair
@@ -215,6 +255,8 @@ class SepPair : public std::pair<a, b>
 } /* namespace */
 
 #endif /* COMMON_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

@@ -31,6 +31,7 @@ static unsigned ctcss_snr_cnt = 0;
 static float ctcss_open_snr = 0.0f;
 static float ctcss_close_snr = 0.0f;
 
+
 #if 0
 void squelchOpen(bool is_open)
 {
@@ -69,6 +70,7 @@ void squelchOpen(bool is_open)
   }
 } /* squelchOpen */
 #endif
+
 
 void sample_squelch_close(Timer *t)
 {
@@ -128,6 +130,7 @@ void sample_squelch_close(Timer *t)
   }
 } /* sample_squelch_close */
 
+
 void start_squelch_close_measurement(FdWatch *w)
 {
   int ch = getchar();
@@ -146,6 +149,7 @@ void start_squelch_close_measurement(FdWatch *w)
     timer->expired.connect(sigc::ptr_fun(&sample_squelch_close));
   }
 } /* start_squelch_close_measurement */
+
 
 void sample_squelch_open(Timer *t)
 {
@@ -182,6 +186,7 @@ void sample_squelch_open(Timer *t)
   }
 } /* sample_squelch_open */
 
+
 void start_squelch_open_measurement(FdWatch *w)
 {
   int ch = getchar();
@@ -200,11 +205,13 @@ void start_squelch_open_measurement(FdWatch *w)
   
 } /* start_squelch_open_measurement */
 
+
 void ctcss_snr_updated(float snr)
 {
   ctcss_snr_sum += snr;
   ctcss_snr_cnt += 1;
 }
+
 
 int main(int argc, char **argv)
 {

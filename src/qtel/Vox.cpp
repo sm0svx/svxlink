@@ -24,53 +24,96 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <iostream>
 #include <cmath>
 #include <cassert>
 
 #include <QTimer>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "Vox.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
 
 Vox::Vox(void)
   : m_threshold(0), m_delay(0), m_vox_timer(0), m_vox_state(IDLE),
@@ -81,10 +124,12 @@ Vox::Vox(void)
           this, SLOT(voxTimeout()));
 } /* Vox::Vox */
 
+
 Vox::~Vox(void)
 {
   delete m_vox_timer;
 } /* Vox::~Vox */
+
 
 int Vox::writeSamples(const float *samples, int count)
 {
@@ -141,6 +186,7 @@ int Vox::writeSamples(const float *samples, int count)
     
 } /* Vox::writeSamples */
 
+
 void Vox::setThreshold(int threshold_db)
 {
   if (threshold_db < -60)
@@ -157,6 +203,7 @@ void Vox::setThreshold(int threshold_db)
   }
 } /* Vox::setThreshold */
 
+
 void Vox::setDelay(int delay_ms)
 {
   if (delay_ms < 0)
@@ -169,6 +216,7 @@ void Vox::setDelay(int delay_ms)
   }
 } /* Vox::setDelay */
 
+
 void Vox::setEnabled(bool enable)
 {
   m_enabled = enable;
@@ -179,13 +227,23 @@ void Vox::setEnabled(bool enable)
   }
 } /* Vox::setEnabled */
 
-/*
- * Protected member functions
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
+
 /**
  * @brief Called when the VOX delay time has expired
  */
@@ -193,6 +251,7 @@ void Vox::voxTimeout(void)
 {
   setState(IDLE);
 } /* Vox::voxTimeout */
+
 
 /**
  * @brief Used to set the state of the VOX
@@ -221,6 +280,8 @@ void Vox::setState(State new_state)
   stateChanged(m_vox_state);
   
 } /* Vox::setState */
+
+
 
 /*
  * This file has not been truncated

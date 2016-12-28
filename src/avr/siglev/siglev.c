@@ -1,4 +1,4 @@
-/**
+/*****************************************************************************
  *
  * This is a signal level transmitter for use with remote receivers linked
  * in via RF to the SvxLink core. It use ten tones to indicate one of ten
@@ -14,7 +14,7 @@
  * The program is written for the ATmega8 processor but should be easily
  * ported to other AVR processors.
  *
- */
+ ****************************************************************************/
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -31,6 +31,7 @@
 #define RSSI_ADC_CH     0       /* ADC channel for RSSI measurements */
 #define SQL_LVL_ADC_CH  1       /* ADC channel for squelch level */
 #define WINDOW_SIZE     2       /* Size of the RSSI schmitt trigger window */
+
 
 struct siglev_tone_map_item
 {
@@ -50,7 +51,9 @@ static uint8_t  rssi_lo = 0;
 static uint8_t  rssi_hi = WINDOW_SIZE;
 static uint8_t  sql_thresh = 255;
 
+
 static inline void set_sin_fq(unsigned short fq);
+
 
 int main(void)
 {
@@ -124,6 +127,7 @@ int main(void)
   return 0;
 }
 
+
 static inline void set_sin_fq(unsigned short fq)
 {
   if (fq == cur_fq)
@@ -142,6 +146,7 @@ static inline void set_sin_fq(unsigned short fq)
     ICR1 = 511;
   }
 } /* set_sin_fq */
+
 
 /*
  * Interrupt handling routine for timer 0 overflow. This timer is used for
@@ -163,6 +168,7 @@ SIGNAL(SIG_OVERFLOW0)
   ADCSRA |= (_BV(ADEN) | _BV(ADSC));
   
 } /* SIGNAL(SIG_OVERFLOW0) */
+
 
 /*
  * Interrupt handling routine for time 1 overflow. This timer is used in PWM
@@ -186,6 +192,7 @@ SIGNAL(SIG_OVERFLOW1)
     }
   }
 } /* SIGNAL(SIG_OVERFLOW1) */
+
 
 /*
  * Interrupt service routine for ADC conversion finished

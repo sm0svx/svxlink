@@ -24,51 +24,95 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <iostream>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncTimer.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "HwDtmfDecoder.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace sigc;
 using namespace Async;
 
-/*
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 HwDtmfDecoder::HwDtmfDecoder(Config &cfg, const string &name)
   : DtmfDecoder(cfg, name), last_detected_digit('?'), state(STATE_IDLE),
     det_timestamp(), hang_timer(0), timeout_timer(0)
@@ -82,6 +126,7 @@ HwDtmfDecoder::~HwDtmfDecoder(void)
   delete timeout_timer;
 } /* HwDtmfDecoder::~HwDtmfDecoder */
 
+
 bool HwDtmfDecoder::initialize(void)
 {
   if (!DtmfDecoder::initialize())
@@ -93,9 +138,14 @@ bool HwDtmfDecoder::initialize(void)
   
 } /* HwDtmfDecoder::initialize */
 
-/*
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 void HwDtmfDecoder::digitActive(char digit)
 {
   if (state == STATE_ACTIVE)
@@ -127,6 +177,7 @@ void HwDtmfDecoder::digitActive(char digit)
   timeout_timer->expired.connect(mem_fun(*this, &HwDtmfDecoder::timeout));
 } /* HwDtmfDecoder::digitActive */
 
+
 void HwDtmfDecoder::digitIdle(void)
 {
   if (state != STATE_ACTIVE)
@@ -146,13 +197,19 @@ void HwDtmfDecoder::digitIdle(void)
   }
 } /* HwDtmfDecoder::digitIdle */
 
-/*
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
 void HwDtmfDecoder::hangtimeExpired(Timer *t)
 {
   setIdle();
 } /* HwDtmfDecoder::hangtimeExpired */
+
 
 void HwDtmfDecoder::timeout(Timer *t)
 {
@@ -161,6 +218,7 @@ void HwDtmfDecoder::timeout(Timer *t)
        << "for receiver " << name() << ".\n";
   setIdle();  
 } /* HwDtmfDecoder::timeout */
+
 
 void HwDtmfDecoder::setIdle(void)
 {
@@ -177,6 +235,8 @@ void HwDtmfDecoder::setIdle(void)
       diff.tv_sec * 1000 + diff.tv_usec / 1000);
   state = STATE_IDLE;
 } /* HwDtmfDecoder::setIdle */
+
+
 
 /*
  * This file has not been truncated

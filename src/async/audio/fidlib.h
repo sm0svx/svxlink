@@ -35,6 +35,7 @@ struct FidFilter {
 typedef void FidRun;
 typedef double (FidFunc)(void*, double);
 
+
 //
 //	Prototypes
 //

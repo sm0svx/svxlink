@@ -24,56 +24,102 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <iostream>
 #include <algorithm>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioSplitter.h>
 
-/*
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "MultiTx.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 MultiTx::MultiTx(Config& cfg, const string& name)
   : cfg(cfg), m_name(name), splitter(0)
 {
   
 } /* MultiTx::MultiTx */
+
 
 MultiTx::~MultiTx(void)
 {
@@ -89,6 +135,7 @@ MultiTx::~MultiTx(void)
   delete splitter;
   
 } /* MultiTx::~MultiTx */
+
 
 bool MultiTx::initialize(void)
 {
@@ -138,6 +185,7 @@ bool MultiTx::initialize(void)
   
 } /* MultiTx::initialize */
 
+
 void MultiTx::setTxCtrlMode(TxCtrlMode mode)
 {
   list<Tx *>::iterator it;
@@ -146,6 +194,7 @@ void MultiTx::setTxCtrlMode(TxCtrlMode mode)
     (*it)->setTxCtrlMode(mode);
   }  
 } /* MultiTx::setTxCtrlMode */
+
 
 bool MultiTx::isTransmitting(void) const
 {
@@ -170,6 +219,7 @@ void MultiTx::enableCtcss(bool enable)
   }
 } /* MultiTx::enableCtcss */
 
+
 void MultiTx::sendDtmf(const std::string& digits)
 {
   list<Tx *>::iterator it;
@@ -178,6 +228,7 @@ void MultiTx::sendDtmf(const std::string& digits)
     (*it)->sendDtmf(digits);
   }
 } /* MultiTx::sendDtmf */
+
 
 void MultiTx::setTransmittedSignalStrength(float siglev)
 {
@@ -188,13 +239,22 @@ void MultiTx::setTransmittedSignalStrength(float siglev)
   }
 } /* MultiTx::setTransmittedSignalStrength */
 
-/*
- * Protected member functions
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
 void MultiTx::onTransmitterStateChange(bool is_transmitting)
 {
   if (is_transmitting == isTransmitting())
@@ -202,6 +262,8 @@ void MultiTx::onTransmitterStateChange(bool is_transmitting)
     transmitterStateChange(is_transmitting);
   }
 } /* MultiTx::onTransmitterStateChange */
+
+
 
 /*
  * This file has not been truncated

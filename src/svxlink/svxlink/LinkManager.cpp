@@ -26,9 +26,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -36,9 +41,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <iterator>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncConfig.h>
 #include <AsyncTimer.h>
 #include <common.h>
@@ -48,52 +57,83 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioPassthrough.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "LinkManager.h"
 #include "CmdParser.h"
 #include "Logic.h"
 #include "LogicCmds.h"
 
-/*
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-// Put all locally defined types, functions and variables in an anonymous
-// namespace to make them file local. The "static" keyword has been
-// deprecated in C++ so it should not be used.
+
+  // Put all locally defined types, functions and variables in an anonymous
+  // namespace to make them file local. The "static" keyword has been
+  // deprecated in C++ so it should not be used.
 namespace
 {
 
-/*
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes for local functions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
+
 
 } // End of anonymous namespace
 
-/*
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
+
 LinkManager* LinkManager::_instance = 0;
 
-/*
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 bool LinkManager::initialize(const Async::Config &cfg,
                              const std::string &link_names)
 {
@@ -287,6 +327,7 @@ void LinkManager::addLogic(Logic *logic)
   }
 } /* LinkManager::addLogic */
 
+
 void LinkManager::deleteLogic(Logic *logic)
 {
   LogicMap::iterator lmit = logic_map.find(logic->name());
@@ -339,6 +380,7 @@ void LinkManager::deleteLogic(Logic *logic)
 
 } /* LinkManager::deleteLogic */
 
+
 void LinkManager::allLogicsStarted(void)
 {
   all_logics_started = true;
@@ -374,6 +416,7 @@ void LinkManager::allLogicsStarted(void)
     }
   }
 } /* LinkManager::allLogicsStarted */
+
 
 string LinkManager::cmdReceived(LinkRef link, Logic *logic,
                                 const string &subcmd)
@@ -421,13 +464,22 @@ string LinkManager::cmdReceived(LinkRef link, Logic *logic,
   return ss.str();
 } /* LinkManager::cmdReceived */
 
-/*
- * Protected member functions
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
 /**
  * @brief Find out which logics that should be connected
  * @param want The connections we want
@@ -516,6 +568,7 @@ void LinkManager::wantedConnections(LogicConSet &want)
   } while (want.size() > prev_size);
 } /* LinkManager::wantedConnections */
 
+
 /**
  * @brief Activates the specified link
  */
@@ -564,6 +617,7 @@ void LinkManager::activateLink(Link &link)
 
 } /* LinkManager::activateLink */
 
+
 void LinkManager::deactivateLink(Link &link)
 {
   if (!link.is_activated)
@@ -611,6 +665,7 @@ void LinkManager::deactivateLink(Link &link)
 
 } /* LinkManager::deactivateLink */
 
+
 #if 0
 bool LinkManager::isConnected(const string& source_name,
       	                      const string& sink_name)
@@ -624,6 +679,7 @@ bool LinkManager::isConnected(const string& source_name,
   return selector->autoSelectEnabled(connector);
 } /* LinkManager::isConnected */
 #endif
+
 
 /**
  * @brief Returns all linknames in that the specific logic is involved
@@ -642,6 +698,7 @@ vector<string> LinkManager::getLinkNames(const string& logicname)
   return linknames;
 } /* LinkManager::getLinkNames */
 
+
 void LinkManager::linkTimeout(Async::Timer *t, Link *link)
 {
   if (link->is_activated && !link->default_active)
@@ -654,6 +711,7 @@ void LinkManager::linkTimeout(Async::Timer *t, Link *link)
     activateLink(*link);
   }
 } /* LinkManager::linkTimeout */
+
 
 void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
 {
@@ -703,6 +761,7 @@ void LinkManager::logicIdleStateChanged(bool is_idle, const Logic *logic)
   }
 } /* LinkManager::logicIdleStateChanged */
 
+
 void LinkManager::checkTimeoutTimer(Link &link)
 {
   if (link.timeout_timer == 0)
@@ -733,6 +792,8 @@ void LinkManager::checkTimeoutTimer(Link &link)
     link.timeout_timer->setEnable(false);
   }
 } /* LinkManager::checkTimeoutTimer */
+
+
 
 /*
  * This file has not been truncated

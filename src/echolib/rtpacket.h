@@ -1,6 +1,9 @@
 /*
-   Definitions for RTP packet manipulation routines
+
+	   Definitions for RTP packet manipulation routines
+
 */
+
 #ifndef RTPACKET_H
 #define RTPACKET_H
 

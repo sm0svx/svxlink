@@ -24,9 +24,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <iostream>
 #include <algorithm>
 #include <cstring>
@@ -35,24 +38,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <stdint.h>
 
-/*
- * Project Includes
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "Dh1dmSwDtmfDecoder.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
+
 // All values are squared magnitude ratios !
 #define DTMF_NORMAL_TWIST           6.3f   /* 8dB */
 #define DTMF_REVERSE_TWIST          6.3f   /* 8dB */
@@ -66,25 +88,45 @@ using namespace Async;
 // process itself involves scaling and sampling of the tone detector results.
 #define DTMF_BLOCK_LENGTH           (INTERNAL_SAMPLE_RATE / 1000)
 
-/*
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 Dh1dmSwDtmfDecoder::Dh1dmSwDtmfDecoder(Config &cfg, const string &name)
   : DtmfDecoder(cfg, name), samples_left(DTMF_BLOCK_LENGTH),
     last_hit(0), last_stable(0), stable_timer(0), active_timer(0),
@@ -119,6 +161,7 @@ Dh1dmSwDtmfDecoder::Dh1dmSwDtmfDecoder(Config &cfg, const string &name)
 
 } /* Dh1dmSwDtmfDecoder::Dh1dmSwDtmfDecoder */
 
+
 bool Dh1dmSwDtmfDecoder::initialize(void)
 {
   if (!DtmfDecoder::initialize())
@@ -145,6 +188,7 @@ bool Dh1dmSwDtmfDecoder::initialize(void)
   return true;
   
 } /* Dh1dmSwDtmfDecoder::initialize */
+
 
 int Dh1dmSwDtmfDecoder::writeSamples(const float *buf, int len)
 {
@@ -264,13 +308,20 @@ int Dh1dmSwDtmfDecoder::writeSamples(const float *buf, int len)
     
 } /* Dh1dmSwDtmfDecoder::writeSamples */
 
-/*
- * Protected member functions
- */
 
-/*
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
 void Dh1dmSwDtmfDecoder::dtmfReceive(void)
 {
     const char dtmf_table[] = "123A456B789C*0#D";
@@ -299,6 +350,7 @@ void Dh1dmSwDtmfDecoder::dtmfReceive(void)
     samples_left = DTMF_BLOCK_LENGTH;
 
 } /* Dh1dmSwDtmfDecoder::dtmfReceive */
+
 
 void Dh1dmSwDtmfDecoder::dtmfPostProcess(uint8_t hit)
 {
@@ -333,6 +385,7 @@ void Dh1dmSwDtmfDecoder::dtmfPostProcess(uint8_t hit)
   
 } /* Dh1dmSwDtmfDecoder::dtmfPostProcess */
 
+
 void Dh1dmSwDtmfDecoder::goertzelInit(GoertzelState *s, float freq, float offset)
 {
     /* Adjust the block length for 2.5% bandwidth. The real bandwidth will */
@@ -356,6 +409,7 @@ void Dh1dmSwDtmfDecoder::goertzelInit(GoertzelState *s, float freq, float offset
 
 } /* Dh1dmSwDtmfDecoder::goertzelInit */
 
+
 float Dh1dmSwDtmfDecoder::goertzelResult(GoertzelState *s)
 {
     float v1, res;
@@ -376,6 +430,7 @@ float Dh1dmSwDtmfDecoder::goertzelResult(GoertzelState *s)
     return res;
     
 } /* Dh1dmSwDtmfDecoder::goertzelResult */
+
 
 int Dh1dmSwDtmfDecoder::findMaxIndex(const float f[])
 {
@@ -407,7 +462,4 @@ int Dh1dmSwDtmfDecoder::findMaxIndex(const float f[])
     
 } /* Dh1dmSwDtmfDecoder::findMaxIndex */
 
-
-/*
- * This file has not been truncated
- */
+/*- End of file ------------------------------------------------------------*/

@@ -23,40 +23,58 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
+
 #ifndef MODULE_ECHOLINK_INCLUDED
 #define MODULE_ECHOLINK_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <string>
 #include <vector>
 
 #include <sys/types.h>
 #include <regex.h>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <Module.h>
 #include <EchoLinkQso.h>
 #include <EchoLinkStationData.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "version/SVXLINK.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
   class Timer;
   class AudioSplitter;
   class AudioValve;
   class AudioSelector;
-  class Pty;
 };
 namespace EchoLink
 {
@@ -65,28 +83,50 @@ namespace EchoLink
   class Proxy;
 };
 
-/*
- * Namespace
- */
 
-/*
+/****************************************************************************
+ *
+ * Namespace
+ *
+ ****************************************************************************/
+
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
+
 class MsgHandler;
 class QsoImpl;
 class LocationInfo;
+  
 
-/*
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	A module for providing EchoLink connections
 @author Tobias Blomberg
@@ -100,6 +140,7 @@ class ModuleEchoLink : public Module
     bool initialize(void);
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
+    
   protected:
     /**
      * @brief 	Notify the module that the logic core idle state has changed
@@ -109,6 +150,7 @@ class ModuleEchoLink : public Module
      * This function is called by the logic core when the idle state changes.
      */
     virtual void logicIdleStateChanged(bool is_idle);
+
 
   private:
     typedef enum
@@ -178,13 +220,10 @@ class ModuleEchoLink : public Module
     void squelchOpen(bool is_open);
     int audioFromRx(float *samples, int count);
     void allMsgsWritten(void);
-    void commandHandler(const void *buf, size_t count); // WIM
-    Async::Pty                      *pty;   
 
     void onStatusChanged(EchoLink::StationData::Status status);
     void onStationListUpdated(void);
     void onError(const std::string& msg);
-    void clientList(void);
     void onIncomingConnection(const Async::IpAddress& ip,
       	    const std::string& callsign, const std::string& name,
       	    const std::string& priv);
@@ -223,7 +262,12 @@ class ModuleEchoLink : public Module
 
 };  /* class ModuleEchoLink */
 
+
+//} /* namespace */
+
 #endif /* MODULE_ECHOLINK_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

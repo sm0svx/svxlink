@@ -74,6 +74,7 @@ array set letters {
   " " " "
 }
 
+
 # Private function
 proc calculateTimings {} {
   variable short_len;
@@ -83,6 +84,7 @@ proc calculateTimings {} {
   variable word_spacing [expr $short_len * 7];
 }
 
+
 #
 # Set the CW speed in words per minute
 #
@@ -90,6 +92,7 @@ proc setWpm {wpm} {
   variable short_len [expr 60000 / (50 * $wpm)];
   calculateTimings;
 }
+
 
 #
 # Set the CW speed in characters per minute
@@ -99,6 +102,7 @@ proc setCpm {cpm} {
   calculateTimings;
 }
 
+
 #
 # Set the pitch (frequency), in Hz, of the CW audio.
 #
@@ -106,12 +110,14 @@ proc setPitch {new_fq} {
   variable fq $new_fq;
 }
 
+
 #
 # Set the amplitude in per mille (0-1000) of full amplitude.
 #
 proc setAmplitude {new_amplitude} {
   variable amplitude $new_amplitude;
 }
+
 
 #
 # Play the given CW text
@@ -149,6 +155,7 @@ proc play {txt} {
     }
   }
 }
+
 
 # Set defaults
 setPitch 800;

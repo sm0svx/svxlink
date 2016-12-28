@@ -29,75 +29,130 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <iomanip>
 #include <cassert>
 #include <cstring>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "EchoLinkProxy.h"
 #include "rtp.h"
 #include "rtpacket.h"
 #include "EchoLinkQso.h"
 #include "EchoLinkDispatcher.h"
 
-/*
+
+
+/****************************************************************************
  *
  * Namespaces to use
  *
- */
+ ****************************************************************************/
 
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
+
 #define AUDIO_PORT  port_base
 #define CTRL_PORT   (port_base+1)
 
-/*
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
+
 int Dispatcher::port_base = Dispatcher::DEFAULT_PORT_BASE;
 IpAddress Dispatcher::bind_ip = IpAddress();
 Dispatcher *Dispatcher::the_instance = 0;
 
-/*
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 void Dispatcher::setPortBase(int base)
 {
   assert(the_instance == 0);
   port_base = base;
 } /* Dispatcher::setPortBase */
 
+
 void Dispatcher::setBindAddr(const IpAddress& ip)
 {
   bind_ip = ip;
 } /* Dispatcher::setBindAddr */
 
+
+/*
+ *------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
+ */
 Dispatcher *Dispatcher::instance(void)
 {
   if (the_instance == 0)
@@ -114,11 +169,13 @@ Dispatcher *Dispatcher::instance(void)
   
 } /* Dispatcher::instance */
 
+
 void Dispatcher::deleteInstance(void)
 {
   delete the_instance;
   the_instance = 0;
 } /* Dispatcher::deleteInstance */
+
 
 Dispatcher::~Dispatcher(void)
 {
@@ -126,6 +183,7 @@ Dispatcher::~Dispatcher(void)
   delete audio_sock;
   the_instance = 0;
 } /* Dispatcher::~Dispatcher */
+
 
 bool Dispatcher::registerConnection(Qso *con, CtrlInputHandler cih,
 	AudioInputHandler aih)
@@ -145,6 +203,7 @@ bool Dispatcher::registerConnection(Qso *con, CtrlInputHandler cih,
   
 } /* Dispatcher::registerConnection */
 
+
 void Dispatcher::unregisterConnection(Qso *con)
 {
   ConMap::iterator iter;
@@ -152,6 +211,7 @@ void Dispatcher::unregisterConnection(Qso *con)
   assert(iter != con_map.end());
   con_map.erase(iter);
 } /* Dispatcher::unregisterConnection */
+
 
 bool Dispatcher::sendCtrlMsg(const IpAddress& to, const void *buf, int len)
 {
@@ -166,6 +226,7 @@ bool Dispatcher::sendCtrlMsg(const IpAddress& to, const void *buf, int len)
   }
 } /* Dispatcher::sendCtrlMsg */
 
+
 bool Dispatcher::sendAudioMsg(const IpAddress& to, const void *buf, int len)
 {
   Proxy *proxy = Proxy::instance();
@@ -179,13 +240,39 @@ bool Dispatcher::sendAudioMsg(const IpAddress& to, const void *buf, int len)
   }
 } /* Dispatcher::sendCtrlMsg */
 
-/*
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 
 /*
- * Private member functions
+ *------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
  */
+
+
+
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
 
 Dispatcher::Dispatcher(void)
   : ctrl_sock(0), audio_sock(0)
@@ -218,6 +305,19 @@ Dispatcher::Dispatcher(void)
   }
 } /* Dispatcher::Dispatcher */
 
+
+/*
+ *----------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
 void Dispatcher::ctrlDataReceived(const IpAddress& ip, void *buf, int len)
 {
   unsigned char *recv_buf = static_cast<unsigned char *>(buf);
@@ -260,6 +360,7 @@ void Dispatcher::ctrlDataReceived(const IpAddress& ip, void *buf, int len)
   
 } /* Dispatcher::ctrldDataReceived */
 
+
 void Dispatcher::audioDataReceived(const IpAddress& ip, void *buf, int len)
 {
   unsigned char *recv_buf = static_cast<unsigned char *>(buf);
@@ -275,6 +376,7 @@ void Dispatcher::audioDataReceived(const IpAddress& ip, void *buf, int len)
     cerr << "Spurious audio packet received from " << ip << endl;
   }
 } /* Dispatcher::audioDataReceived */
+
 
 /*
  *----------------------------------------------------------------------------
@@ -309,6 +411,9 @@ void Dispatcher::printData(const char *buf, int len)
 
   cerr.flags(old_flags);
 } /* Dispatcher::printData */
+
+
+
 
 /*
  * This file has not been truncated

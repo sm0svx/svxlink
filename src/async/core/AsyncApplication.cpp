@@ -27,9 +27,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <sys/types.h>
 #include <sys/select.h>
 #include <stdlib.h>
@@ -37,47 +42,85 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <algorithm>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "AsyncFdWatch.h"
 #include "AsyncTimer.h"
 #include "AsyncApplication.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
+
 Application *Application::app_ptr = 0;
 
-/*
- * Local Global Variables
- */
 
-/*
+/****************************************************************************
+ *
+ * Local Global Variables
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 
 Application &Application::app(void)
 {
@@ -85,6 +128,19 @@ Application &Application::app(void)
   return *app_ptr;
 } /* Application::app */
 
+
+/*
+ *------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
+ */
 Application::Application(void)
 {
   assert(app_ptr == 0);
@@ -94,11 +150,13 @@ Application::Application(void)
       sigc::hide(mem_fun(*this, &Application::taskTimerExpired)));
 } /* Application::Application */
 
+
 Application::~Application(void)
 {
   delete task_timer;
   task_timer = 0;
 } /* Application::~Application */
+
 
 void Application::runTask(sigc::slot<void> task)
 {
@@ -106,13 +164,21 @@ void Application::runTask(sigc::slot<void> task)
   task_timer->setEnable(true);
 } /* Application::runTask */
 
-/*
- * Protected member functions
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
 
 void Application::taskTimerExpired(void)
 {
@@ -124,6 +190,8 @@ void Application::taskTimerExpired(void)
   task_list.clear();
   task_timer->setEnable(false);
 } /* Application::taskTimerExpired */
+
+
 
 /*
  * This file has not been truncated

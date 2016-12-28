@@ -24,52 +24,97 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <stdio.h>
 
 #include <iostream>
 #include <sstream>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "version/MODULE_TCL.h"
 #include "ModuleTcl.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Pure C-functions
- */
+ *
+ ****************************************************************************/
+
+
 extern "C" {
   Module *module_init(void *dl_handle, Logic *logic, const char *cfg_name)
   {
@@ -77,9 +122,14 @@ extern "C" {
   }
 } /* extern "C" */
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 
 ModuleTcl::ModuleTcl(void *dl_handle, Logic *logic, const string& cfg_name)
   : Module(dl_handle, logic, cfg_name)
@@ -94,33 +144,52 @@ ModuleTcl::~ModuleTcl(void)
 
 } /* ~ModuleTcl */
 
-/*
+
+
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 
 void ModuleTcl::resumeOutput(void)
 {
 
 } /* ModuleTcl::resumeOutput */
 
+
 void ModuleTcl::allSamplesFlushed(void)
 {
 
 } /* ModuleTcl::allSamplesFlushed */
+
 
 int ModuleTcl::writeSamples(const float *samples, int count)
 {
   return count;
 } /* ModuleTcl::writeSamples */
 
+
 void ModuleTcl::flushSamples(void)
 {
   sourceAllSamplesFlushed();
 } /* ModuleTcl::flushSamples */
 
-/*
+
+
+
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
+
 /*
  *----------------------------------------------------------------------------
  * Method:    activateInit
@@ -137,6 +206,7 @@ void ModuleTcl::activateInit(void)
 {
   processEvent("activateInit");
 } /* activateInit */
+
 
 /*
  *----------------------------------------------------------------------------
@@ -155,6 +225,7 @@ void ModuleTcl::deactivateCleanup(void)
 {
   processEvent("deactivateCleanup");
 } /* deactivateCleanup */
+
 
 /*
  *----------------------------------------------------------------------------
@@ -178,6 +249,7 @@ bool ModuleTcl::dtmfDigitReceived(char digit, int duration)
   return false;
 } /* dtmfDigitReceived */
 
+
 /*
  *----------------------------------------------------------------------------
  * Method:    dtmfCmdReceived
@@ -199,6 +271,7 @@ void ModuleTcl::dtmfCmdReceived(const string& cmd)
   ss << "dtmfCmdReceived \"" << cmd << "\"";
   processEvent(ss.str());
 } /* dtmfCmdReceived */
+
 
 /*
  *----------------------------------------------------------------------------
@@ -227,6 +300,7 @@ void ModuleTcl::dtmfCmdReceivedWhenIdle(const std::string &cmd)
   processEvent(ss.str());
 } /* dtmfCmdReceivedWhenIdle  */
 
+
 /*
  *----------------------------------------------------------------------------
  * Method:    squelchOpen
@@ -247,6 +321,7 @@ void ModuleTcl::squelchOpen(bool is_open)
   processEvent(ss.str());
 } /* squelchOpen */
 
+
 /*
  *----------------------------------------------------------------------------
  * Method:    allMsgsWritten
@@ -265,6 +340,8 @@ void ModuleTcl::allMsgsWritten(void)
 {
   processEvent("allMsgsWritten");
 } /* allMsgsWritten */
+
+
 
 /*
  * This file has not been truncated

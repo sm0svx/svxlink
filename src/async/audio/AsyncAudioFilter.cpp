@@ -24,9 +24,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <iostream>
 
 #include <cstring>
@@ -34,32 +39,54 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cmath>
 #include <locale>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 extern "C" {
 #include "fidlib.h"
 };
 
 #include "AsyncAudioFilter.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
- * Defines & typedefs
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Defines & typedefs
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
   class FidVars
@@ -75,26 +102,43 @@ namespace Async
 };
 
 
-/*
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 AudioFilter::AudioFilter(int sample_rate)
   : sample_rate(sample_rate), fv(0), output_gain(1.0f)
 {
 
 } /* AudioFilter::AudioFilter */
+
 
 AudioFilter::AudioFilter(const string &filter_spec, int sample_rate)
   : sample_rate(sample_rate), fv(0), output_gain(1.0f)
@@ -106,10 +150,12 @@ AudioFilter::AudioFilter(const string &filter_spec, int sample_rate)
   }
 } /* AudioFilter::AudioFilter */
 
+
 AudioFilter::~AudioFilter(void)
 {
   deleteFilter();
 } /* AudioFilter::~AudioFilter */
+
 
 bool AudioFilter::parseFilterSpec(const std::string &filter_spec)
 {
@@ -136,19 +182,26 @@ bool AudioFilter::parseFilterSpec(const std::string &filter_spec)
   return true;
 } /* AudioFilter::parseFilterSpec */
 
+
 void AudioFilter::setOutputGain(float gain_db)
 {
   output_gain = powf(10.0f, gain_db / 20.0f);
 } /* AudioFilter::setOutputGain */
+
 
 void AudioFilter::reset(void)
 {
   fid_run_zapbuf(fv->buf);
 } /* AudioFilter::reset */
 
-/*
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 
 void AudioFilter::processSamples(float *dest, const float *src, int count)
 {
@@ -160,9 +213,15 @@ void AudioFilter::processSamples(float *dest, const float *src, int count)
   }
 } /* AudioFilter::writeSamples */
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
 void AudioFilter::deleteFilter(void)
 {
   if (fv != 0)
@@ -177,6 +236,8 @@ void AudioFilter::deleteFilter(void)
     fv = 0;
   }
 } /* AudioFilter::deleteFilter */
+
+
 
 /*
  * This file has not been truncated

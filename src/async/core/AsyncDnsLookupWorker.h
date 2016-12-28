@@ -28,47 +28,81 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
+
+
 #ifndef ASYNC_DNS_LOOKUP_WORKER_INCLUDED
 #define ASYNC_DNS_LOOKUP_WORKER_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <sigc++/sigc++.h>
 
 #include <string>
 #include <vector>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncIpAddress.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
 
-/*
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	DNS lookup worker base class
 @author Tobias Blomberg
@@ -84,14 +118,14 @@ class DnsLookupWorker
      * @brief 	Constructor
      */
     DnsLookupWorker(void) {}
-
+  
     /**
      * @brief 	Destructor
      */
     virtual ~DnsLookupWorker(void) {}
-
+    
     virtual bool doLookup(void) { return true; }
-
+    
     /**
      * @brief 	Return the addresses for the host in the query
      * @return	Returns an stl vector which contains all the addresses
@@ -103,21 +137,24 @@ class DnsLookupWorker
      * in the derived classes.
      */
     virtual std::vector<IpAddress> addresses(void) = 0;
-
+    
     /**
      * @brief 	A signal to indicate that the query has been completed
      */
     sigc::signal<void> resultsReady;
-
+    
   protected:
-
+    
   private:
-
+    
 };  /* class DnsLookupWorker */
+
 
 } /* namespace */
 
 #endif /* ASYNC_DNS_LOOKUP_WORKER_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

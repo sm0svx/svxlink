@@ -23,33 +23,53 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
 #ifndef PTT_CTRL_INCLUDED
 #define PTT_CTRL_INCLUDED
 
-/*
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <sigc++/sigc++.h>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioIO.h>
 #include <AsyncAudioValve.h>
 #include <AsyncAudioFifo.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "Tx.h"
 
-/*
- * Defines & typedefs
- */
 
-/*
+/****************************************************************************
+ *
+ * Defines & typedefs
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	A class that implements the PTT controller
 @author Tobias Blomberg
@@ -123,7 +143,8 @@ class PttCtrl : public Async::AudioSink, public Async::AudioSource,
      *	      	      	  turn it off
      */
     sigc::signal<void, bool> transmitterStateChange;
-
+    
+    
   private:
     Tx::TxCtrlMode      tx_ctrl_mode;
     bool      	        is_transmitting;
@@ -137,7 +158,9 @@ class PttCtrl : public Async::AudioSink, public Async::AudioSource,
     
 }; /* class PttCtrl */
 
+
 #endif /* PTT_CTRL_INCLUDED */
+
 
 /*
  * This file has not been truncated

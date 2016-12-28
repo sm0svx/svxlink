@@ -24,9 +24,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -35,45 +40,84 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <sys/time.h>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "AsyncAudioRecorder.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
+
 #define WAVE_HEADER_SIZE  44
 
-/*
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 AudioRecorder::AudioRecorder(const string& filename,
       	      	      	     AudioRecorder::Format fmt,
 			     int sample_rate)
@@ -100,10 +144,12 @@ AudioRecorder::AudioRecorder(const string& filename,
   }
 } /* AudioRecorder::AudioRecorder */
 
+
 AudioRecorder::~AudioRecorder(void)
 {
   closeFile();
 } /* AudioRecorder::~AudioRecorder */
+
 
 bool AudioRecorder::initialize(void)
 {
@@ -138,11 +184,13 @@ bool AudioRecorder::initialize(void)
   
 } /* AudioRecorder::initialize */
 
+
 void AudioRecorder::setMaxRecordingTime(unsigned time_ms, unsigned hw_time_ms)
 {
   max_samples = time_ms * (sample_rate / 1000);
   high_water_mark = hw_time_ms * (sample_rate / 1000);
 } /* AudioRecorder::setMaxRecordingTime */
+
 
 bool AudioRecorder::closeFile(void)
 {
@@ -162,6 +210,7 @@ bool AudioRecorder::closeFile(void)
   }
   return success;
 } /* AudioRecorder::closeFile */
+
 
 int AudioRecorder::writeSamples(const float *samples, int count)
 {
@@ -234,6 +283,7 @@ int AudioRecorder::writeSamples(const float *samples, int count)
 
 } /* AudioRecorder::writeSamples */
 
+
 void AudioRecorder::flushSamples(void)
 {
   if (high_water_mark_reached)
@@ -248,13 +298,25 @@ void AudioRecorder::flushSamples(void)
   }
 } /* AudioRecorder::flushSamples */
 
-/*
- * Protected member functions
- */
 
-/*
+
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
 bool AudioRecorder::writeWaveHeader(void)
 {
   rewind(file);
@@ -315,6 +377,7 @@ bool AudioRecorder::writeWaveHeader(void)
   return true;
 } /* AudioRecorder::writeWaveHeader */
 
+
 int AudioRecorder::store32bitValue(char *ptr, uint32_t val)
 {
   *ptr++ = val & 0xff;
@@ -327,6 +390,7 @@ int AudioRecorder::store32bitValue(char *ptr, uint32_t val)
   return 4;
 } /* AudioRecorder::store32bitValue */
 
+
 int AudioRecorder::store16bitValue(char *ptr, uint16_t val)
 {
   *ptr++ = val & 0xff;
@@ -335,12 +399,15 @@ int AudioRecorder::store16bitValue(char *ptr, uint16_t val)
   return 2;
 } /* AudioRecorder::store32bitValue */
 
+
 void AudioRecorder::setErrMsgFromErrno(const std::string &fname)
 {
   ostringstream ss;
   ss << fname << ": " << strerror(errno);
   errmsg = ss.str();
 } /* AudioRecorder::setErrMsgFromErrno */
+
+
 
 /*
  * This file has not been truncated

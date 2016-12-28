@@ -49,7 +49,7 @@ set recdir "@SVX_SPOOL_INSTALL_DIR@/voice_mail";
 #
 set cfg_etc "@SVX_SYSCONF_INSTALL_DIR@/TclVoiceMail.conf";
 set cfg_home "$env(HOME)/.svxlink/TclVoiceMail.conf";
-set cfg_relative_home ".svxlink/TclVoiceMail.conf";
+
 
 #
 # Default maximum recording times. Set them from config variables if
@@ -85,12 +85,12 @@ proc processEvent {ev} {
 #
 # Read configuration file
 #
-if {[info exists env(HOME)] && [file exists env(HOME)/$cfg_relative_home]} {
-  source env(HOME)/$cfg_relative_home;
+if [file exists $cfg_home] {
+  source $cfg_home;
 } elseif [file exists $cfg_etc] {
   source $cfg_etc;
 } else {
-  printInfo "*** ERROR: Could not find a configuration file in module \"$module_name\". Tried \$HOME/\"$cfg_relative_home\" and \"$cfg_etc\"";
+  printInfo "*** ERROR: Could not find a configuration file in module \"$module_name\". Tried \"$cfg_home\" and \"$cfg_etc\"";
   exit 1;
 }
 

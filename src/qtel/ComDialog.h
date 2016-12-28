@@ -23,32 +23,49 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
 #ifndef COMDIALOG_INCLUDED
 #define COMDIALOG_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <sigc++/sigc++.h>
 #include <string>
 #include <QEvent>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioIO.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkQso.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "ui_ComDialogBase.h"
 #include "Vox.h"
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
   class DnsLookup;
@@ -60,21 +77,64 @@ namespace Async
 class QString;
 class QTextCodec;
 
-/*
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+//namespace MyNameSpace
+//{
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
 /*
+ *----------------------------------------------------------------------------
+ * Macro:   
+ * Purpose: 
+ * Input:   
+ * Output:  
+ * Author:  
+ * Created: 
+ * Remarks: 
+ * Bugs:    
+ *----------------------------------------------------------------------------
+ */
+
+
+/*
+ *----------------------------------------------------------------------------
+ * Type:    
+ * Purpose: 
+ * Members: 
+ * Input:   
+ * Output:  
+ * Author:  
+ * Created: 
+ * Remarks: 
+ *----------------------------------------------------------------------------
+ */
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 class ComDialog : public QDialog, private Ui::ComDialogBase,
 		  public sigc::trackable
 {
@@ -137,10 +197,16 @@ class ComDialog : public QDialog, private Ui::ComDialogBase,
     void meterLevelChanged(int level_db);
     void voxStateChanged(Vox::State state);
     void checkTransmit(void);
+
     
 };  /* class ComDialog */
 
+
+//} /* namespace */
+
 #endif /* COMDIALOG_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

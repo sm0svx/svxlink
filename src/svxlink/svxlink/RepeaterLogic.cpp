@@ -24,9 +24,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <sys/time.h>
 
 #include <cstdio>
@@ -37,9 +42,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <algorithm>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
 
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
@@ -47,42 +55,75 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <Rx.h>
 #include <Tx.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "RepeaterLogic.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
 
 
-/*
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 
 RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
   : Logic(cfg, name), repeater_is_up(false),
@@ -109,6 +150,7 @@ RepeaterLogic::RepeaterLogic(Async::Config& cfg, const std::string& name)
 RepeaterLogic::~RepeaterLogic(void)
 {
 } /* RepeaterLogic::~RepeaterLogic */
+
 
 bool RepeaterLogic::initialize(void)
 {
@@ -271,6 +313,7 @@ bool RepeaterLogic::initialize(void)
   
 } /* RepeaterLogic::initialize */
 
+
 void RepeaterLogic::processEvent(const string& event, const Module *module)
 {
   rgr_enable = true;
@@ -301,6 +344,7 @@ bool RepeaterLogic::activateModule(Module *module)
   return Logic::activateModule(module);
 } /* RepeaterLogic::activateModule */
 
+
 void RepeaterLogic::setOnline(bool online)
 {
   Logic::setOnline(online);
@@ -309,6 +353,7 @@ void RepeaterLogic::setOnline(bool online)
     setUp(false, "OFFLINE");
   }
 } /* RepeaterLogic::setOnline */
+
 
 void RepeaterLogic::dtmfDigitDetected(char digit, int duration)
 {
@@ -332,6 +377,7 @@ void RepeaterLogic::dtmfDigitDetected(char digit, int duration)
     }
   }
 } /* RepeaterLogic::dtmfDigitDetected */
+
 
 void RepeaterLogic::selcallSequenceDetected(std::string sequence)
 {
@@ -362,9 +408,12 @@ void RepeaterLogic::selcallSequenceDetected(std::string sequence)
   }
 } /* RepeaterLogic::selcallSequenceDetected */
 
-/*
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
 
 void RepeaterLogic::allMsgsWritten(void)
 {
@@ -374,6 +423,7 @@ void RepeaterLogic::allMsgsWritten(void)
     setTxCtrlMode(Tx::TX_AUTO);
   }
 } /* RepeaterLogic::allMsgsWritten */
+
 
 void RepeaterLogic::audioStreamStateChange(bool is_active, bool is_idle)
 {
@@ -388,6 +438,7 @@ void RepeaterLogic::audioStreamStateChange(bool is_active, bool is_idle)
   Logic::audioStreamStateChange(is_active, is_idle);
   
 } /* Logic::audioStreamStateChange */
+
 
 #if 0
 bool RepeaterLogic::getIdleState(void) const
@@ -404,17 +455,20 @@ bool RepeaterLogic::getIdleState(void) const
 } /* RepeaterLogic::isIdle */
 #endif
 
-/*
+
+
+/****************************************************************************
  *
  * Private member functions
  *
- */
+ ****************************************************************************/
 
 void RepeaterLogic::idleTimeout(Timer *t)
 {
   //printf("RepeaterLogic::idleTimeout\n");
   setUp(false, "IDLE");
 } /* RepeaterLogic::idleTimeout */
+
 
 void RepeaterLogic::setIdle(bool idle)
 {
@@ -437,6 +491,7 @@ void RepeaterLogic::setIdle(bool idle)
   enableRgrSoundTimer(idle && rgr_enable);
   
 } /* RepeaterLogic::setIdle */
+
 
 void RepeaterLogic::setUp(bool up, string reason)
 {
@@ -496,6 +551,7 @@ void RepeaterLogic::setUp(bool up, string reason)
   }
   
 } /* RepeaterLogic::setUp */
+
 
 void RepeaterLogic::squelchOpen(bool is_open)
 {
@@ -581,6 +637,7 @@ void RepeaterLogic::squelchOpen(bool is_open)
   }
 } /* RepeaterLogic::squelchOpen */
 
+
 void RepeaterLogic::detectedTone(float fq)
 {
   if (!repeater_is_up && !activate_on_sql_close)
@@ -600,6 +657,7 @@ void RepeaterLogic::detectedTone(float fq)
   }
 } /* RepeaterLogic::detectedTone */
 
+
 void RepeaterLogic::playIdleSound(Timer *t)
 {
   processEvent("repeater_idle");
@@ -612,6 +670,7 @@ void RepeaterLogic::openOnSqlTimerExpired(Timer *t)
   open_reason = "SQL";
   activateOnOpenOrClose(open_sql_flank);
 } /* RepeaterLogic::openOnSqlTimerExpired */
+
 
 void RepeaterLogic::activateOnOpenOrClose(SqlFlank flank)
 {
@@ -644,6 +703,7 @@ void RepeaterLogic::activateOnOpenOrClose(SqlFlank flank)
   }
 }
 
+
 void RepeaterLogic::identNag(Timer *t)
 {
   ident_nag_timer.setEnable(false);
@@ -654,6 +714,8 @@ void RepeaterLogic::identNag(Timer *t)
     processEvent("identify_nag");
   }
 } /* RepeaterLogic::identNag */
+
+
 
 /*
  * This file has not been truncated

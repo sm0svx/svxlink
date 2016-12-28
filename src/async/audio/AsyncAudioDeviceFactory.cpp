@@ -24,56 +24,104 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <iostream>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "AsyncAudioDeviceFactory.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public static functions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 AudioDeviceFactory::~AudioDeviceFactory(void)
 {
 } /* AudioDeviceFactory::~AudioDeviceFactory */
+
 
 bool AudioDeviceFactory::registerCreator(const std::string &name,
                                          CreatorFunc creator)
@@ -81,6 +129,7 @@ bool AudioDeviceFactory::registerCreator(const std::string &name,
   creator_map[name] = creator;
   return true;
 } /* AudioDeviceFactory::registerCreator */
+
 
 AudioDevice *AudioDeviceFactory::create(const std::string &name,
                                         const std::string &dev_name)
@@ -92,6 +141,7 @@ AudioDevice *AudioDeviceFactory::create(const std::string &name,
   }
   return it->second(dev_name);
 } /* AudioDeviceFactory::create */
+
 
 std::string AudioDeviceFactory::validDevTypes(void) const
 {
@@ -108,16 +158,28 @@ std::string AudioDeviceFactory::validDevTypes(void) const
   return type_list;
 } /* AudioDeviceFactory::validDevTypes */
 
-/*
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 AudioDeviceFactory::AudioDeviceFactory(void)
 {
 } /* AudioDeviceFactory::AudioDeviceFactory */
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
+
 
 /*
  * This file has not been truncated

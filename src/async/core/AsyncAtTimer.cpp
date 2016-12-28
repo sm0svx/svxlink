@@ -28,57 +28,101 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <sys/time.h>
 #include <iostream>
 #include <cstdio>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "AsyncAtTimer.h"
 
-/*
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 AtTimer::AtTimer(void)
   : m_expire_offset(0)
 {
   timerclear(&m_expire_at);
   m_timer.expired.connect(mem_fun(*this, &AtTimer::onTimerExpired));
 } /* AtTimer::AtTimer */
+
 
 AtTimer::AtTimer(struct tm &tm, bool do_start)
   : m_expire_offset(0)
@@ -92,10 +136,12 @@ AtTimer::AtTimer(struct tm &tm, bool do_start)
   }
 } /* AtTimer::AtTimer */
 
+
 AtTimer::~AtTimer(void)
 {
 
 } /* AtTimer::~AtTimer */
+
 
 bool AtTimer::setTimeout(time_t t)
 {
@@ -106,6 +152,7 @@ bool AtTimer::setTimeout(time_t t)
   }
   return true;
 } /* AtTimer::setTimeout */
+
 
 bool AtTimer::setTimeout(struct tm &tm)
 {
@@ -119,10 +166,12 @@ bool AtTimer::setTimeout(struct tm &tm)
   return setTimeout(t);
 } /* AtTimer::setTimeout */
 
+
 void AtTimer::setExpireOffset(int offset_ms)
 {
   m_expire_offset = offset_ms;
 } /* AtTimer::setExpireOffset */
+
 
 bool AtTimer::start(void)
 {
@@ -136,18 +185,28 @@ bool AtTimer::start(void)
   return true;
 } /* AtTimer::start */
 
+
 void AtTimer::stop(void)
 {
   m_timer.setEnable(false);
 } /* AtTimer::stop */
 
-/*
- * Protected member functions
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
 /**
  * @brief   This function will calculate what to set the timer to
  * @return  Returns the number of milliseconds to set the timer to
@@ -188,6 +247,7 @@ int AtTimer::msecToTimeout(void)
   return static_cast<int>(msec);
 } /* AtTimer::msecToTimeout */
 
+
 /**
  * @brief Called by the timer when it expires
  * @param t The timer object
@@ -207,6 +267,8 @@ void AtTimer::onTimerExpired(Timer *t)
     expired(this);
   }
 } /* AtTimer::onTimerExpired */
+
+
 
 /*
  * This file has not been truncated

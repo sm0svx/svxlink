@@ -24,52 +24,85 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
 #ifndef ASYNC_AUDIO_SELECTOR_INCLUDED
 #define ASYNC_AUDIO_SELECTOR_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <map>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioSource.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+  
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
 
 
-/*
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
 
 
-/*
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	This class is used to select one of many audio streams
 @author Tobias Blomberg / SM0SVX
@@ -136,7 +169,8 @@ class AudioSelector : public AudioSource
      * @param 	source The audio source to select. 0 = none selected.
      */
     void selectSource(AudioSource *source);
-
+    
+    
   protected:
     
   private:
@@ -155,9 +189,12 @@ class AudioSelector : public AudioSource
     
 };  /* class AudioSelector */
 
+
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_SELECTOR_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

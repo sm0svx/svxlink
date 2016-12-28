@@ -24,9 +24,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <termios.h>
 #include <unistd.h>
 
@@ -34,52 +40,102 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cmath>
 #include <iostream>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncFdWatch.h>
 #include <AsyncCppApplication.h>
 #include <AsyncAudioDevice.h>
 #include <AsyncSigCAudioSink.h>
 #include <AsyncSigCAudioSource.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "EchoLinkQsoTest.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace sigc;
 using namespace Async;
 using namespace EchoLink;
 
-/*
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
+ * Public member functions
+ *
+ ****************************************************************************/
+
 
 /*
- * Public member functions
+ *------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
  */
-
 EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
     const string& info, const StationData *station)
   : Qso(station->ip(), callsign, name, info),
@@ -134,6 +190,7 @@ EchoLinkQsoTest::EchoLinkQsoTest(const string& callsign, const string& name,
   
 } /* EchoLinkQsoTest::EchoLinkQsoTest */
 
+
 EchoLinkQsoTest::~EchoLinkQsoTest(void)
 {
   //delete sigc_src;
@@ -142,13 +199,40 @@ EchoLinkQsoTest::~EchoLinkQsoTest(void)
   tcsetattr(STDIN_FILENO, TCSANOW, &org_termios);  
 } /* EchoLinkQsoTest::~EchoLinkQsoTest */
 
-/*
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 
 /*
- * Private member functions
+ *------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
  */
+
+
+
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
+
 void EchoLinkQsoTest::handleChatMode(void)
 {
   static string buf;
@@ -177,6 +261,20 @@ void EchoLinkQsoTest::handleChatMode(void)
   fflush(stdout);
   
 } /* EchoLinkQsoTest::handleChatMode */
+
+
+/*
+ *----------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
 void EchoLinkQsoTest::stdinHandler(FdWatch *watch)
 {
   if (chat_mode)
@@ -241,6 +339,7 @@ void EchoLinkQsoTest::stdinHandler(FdWatch *watch)
   printPrompt();  
 }
 
+
 void EchoLinkQsoTest::printPrompt(void)
 {
   cout << endl;
@@ -250,10 +349,12 @@ void EchoLinkQsoTest::printPrompt(void)
   cout.flush();
 } /* EchoLinkQsoTest::printPrompt */
 
+
 void EchoLinkQsoTest::chatMsg(const string& msg)
 {
   cout << msg << endl;
 } /* EchoLinkQsoTest::chatMsg */
+
 
 void EchoLinkQsoTest::infoMsg(const string& msg)
 {
@@ -261,6 +362,7 @@ void EchoLinkQsoTest::infoMsg(const string& msg)
   cout << msg << endl;
   cout << "------------------------------\n";
 } /* EchoLinkQsoTest::infoMsg */
+
 
 void EchoLinkQsoTest::onStateChange(Qso::State state)
 {
@@ -286,6 +388,7 @@ void EchoLinkQsoTest::onStateChange(Qso::State state)
   }
 } /* EchoLinkQsoTest::onStateChange */
 
+
 int EchoLinkQsoTest::micAudioRead(float *buf, int len)
 {
   if (is_transmitting)
@@ -305,6 +408,7 @@ int EchoLinkQsoTest::micAudioRead(float *buf, int len)
   return len;
   
 } /* EchoLinkTest::micAudioRead */
+
 
 /*
  * This file has not been truncated

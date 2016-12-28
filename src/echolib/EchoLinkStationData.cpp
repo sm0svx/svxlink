@@ -26,52 +26,97 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <cstring>
 #include <cstdlib>
 
 #include <sys/types.h>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "EchoLinkStationData.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace EchoLink;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 string StationData::statusStr(Status status)
 {
   const char *str;
@@ -105,6 +150,7 @@ StationData::StationData(void)
   clear();
 } /* StationData::StationData */
 
+
 /*
  *------------------------------------------------------------------------
  * Method:    StationData::StationData
@@ -133,6 +179,7 @@ void StationData::setCallsign(const string& callsign)
   m_callsign = callsign;
   m_code = callToCode(callsign);
 } /* StationData::setCallsign  */
+
 
 void StationData::setData(const char *data)
 {
@@ -174,6 +221,7 @@ void StationData::setData(const char *data)
   
 } /* StationData::setData */
 
+
 StationData& StationData::operator=(const StationData& rhs)
 {
   m_callsign = rhs.m_callsign;
@@ -188,14 +236,53 @@ StationData& StationData::operator=(const StationData& rhs)
   
 } /* StationData::operator= */
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 
 /*
- * Private member functions
+ *------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
  */
 
+
+
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
+
+/*
+ *----------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
 void StationData::removeTrailingSpaces(string& str)
 {
   int pos = str.find_last_not_of(' ');
@@ -212,6 +299,7 @@ void StationData::removeTrailingSpaces(string& str)
     str = "";
   }
 } /* StationData::removeTrailingSpaces */
+
 
 string StationData::callToCode(const string& call)
 {
@@ -246,6 +334,9 @@ string StationData::callToCode(const string& call)
   return code;
   
 } /* StationData::callToCode  */
+
+
+
 
 
 /*

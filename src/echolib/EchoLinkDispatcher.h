@@ -28,55 +28,93 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
 /** @example EchoLinkDispatcher_demo.cpp
 An example of how to use the EchoLink::Dispatcher class
 */
+
+
 #ifndef ECHOLINK_DISPATCHER_INCLUDED
 #define ECHOLINK_DISPATCHER_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <sigc++/sigc++.h>
 
 #include <map>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncIpAddress.h>
 #include <AsyncUdpSocket.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
+
 namespace EchoLink
 {
 
-/*
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
+
 class Qso;
 
-/*
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	A class for handling incoming connections and dispatch active
       	connections
@@ -172,10 +210,10 @@ class Dispatcher : public sigc::trackable
       	      	  const std::string&, const std::string&> incomingConnection;
     
   protected:
-
+    
   private:
     friend class Qso;
-
+  
     typedef void (Qso::*CtrlInputHandler)(unsigned char *buf, int len);
     typedef void (Qso::*AudioInputHandler)(unsigned char *buf, int len);
     typedef struct
@@ -211,9 +249,12 @@ class Dispatcher : public sigc::trackable
     
 };  /* class Dispatcher */
 
+
 } /* namespace */
 
 #endif /* ECHOLINK_DISPATCHER_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

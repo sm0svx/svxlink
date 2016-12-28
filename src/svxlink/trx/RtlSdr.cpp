@@ -24,52 +24,96 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <cstring>
 #include <cstdlib>
 #include <iterator>
 #include <algorithm>
 #include <iostream>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "RtlSdr.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 RtlSdr::RtlSdr(void)
   : samp_rate(2048000), block_size(10*2*samp_rate/1000),
     tuner_type(TUNER_UNKNOWN), center_fq_set(false), center_fq(100000000),
@@ -88,10 +132,12 @@ RtlSdr::~RtlSdr(void)
 {
 }
 
+
 void RtlSdr::enableDistPrint(bool enable)
 {
   dist_print_cnt = enable ? 0 : -1;
 } /* RtlSdr::enableDistPrint */
+
 
 void RtlSdr::setCenterFq(uint32_t fq)
 {
@@ -99,6 +145,7 @@ void RtlSdr::setCenterFq(uint32_t fq)
   center_fq_set = true;
   handleSetCenterFq(fq);
 } /* RtlSdr::setCenterFq */
+
 
 void RtlSdr::setSampleRate(uint32_t rate)
 {
@@ -108,11 +155,13 @@ void RtlSdr::setSampleRate(uint32_t rate)
   handleSetSampleRate(rate);
 } /* RtlSdr::setSampleRate */
 
+
 void RtlSdr::setGainMode(uint32_t mode)
 {
   gain_mode = mode;
   handleSetGainMode(mode);
 } /* RtlSdr::setGainMode */
+
 
 void RtlSdr::setGain(int32_t gain)
 {
@@ -120,12 +169,14 @@ void RtlSdr::setGain(int32_t gain)
   handleSetGain(gain);
 } /* RtlSdr::setGain */
 
+
 void RtlSdr::setFqCorr(uint32_t corr)
 {
   fq_corr = corr;
   fq_corr_set = true;
   handleSetFqCorr(corr);
 } /* RtlSdr::setFqCorr */
+
 
 void RtlSdr::setTunerIfGain(uint16_t stage, int16_t gain)
 {
@@ -137,6 +188,7 @@ void RtlSdr::setTunerIfGain(uint16_t stage, int16_t gain)
   handleSetTunerIfGain(stage, gain);
 } /* RtlSdr::setTunerIfGain */
 
+
 void RtlSdr::enableTestMode(bool enable)
 {
   test_mode = enable;
@@ -144,12 +196,14 @@ void RtlSdr::enableTestMode(bool enable)
   handleEnableTestMode(enable);
 } /* RtlSdr::enableTestMode */
 
+
 void RtlSdr::enableDigitalAgc(bool enable)
 {
   use_digital_agc = enable;
   use_digital_agc_set = true;
   handleEnableDigitalAgc(enable);
 } /* RtlSdr::enableDigitalAgc */
+
 
 const char *RtlSdr::tunerTypeString(TunerType type) const
 {
@@ -171,6 +225,7 @@ const char *RtlSdr::tunerTypeString(TunerType type) const
       return "UNKNOWN";
   }
 } /* RtlSdr::tunerTypeString */
+
 
 vector<int> RtlSdr::getTunerGains(void) const
 {
@@ -213,9 +268,14 @@ vector<int> RtlSdr::getTunerGains(void) const
   }
 } /* RtlSdr::getTunerGains */
 
-/*
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 void RtlSdr::handleIq(const complex<uint8_t> *samples, int samp_count)
 {
   //cout << "RtlSdr::handleIq: samp_count=" << samp_count << endl;
@@ -253,9 +313,14 @@ void RtlSdr::handleIq(const complex<uint8_t> *samples, int samp_count)
   iqReceived(iq);
 } /* RtlSdr::handleIq */
 
-/*
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
 void RtlSdr::updateSettings(void)
 {
   if (samp_rate_set)
@@ -294,6 +359,7 @@ void RtlSdr::updateSettings(void)
     handleEnableDigitalAgc(use_digital_agc);
   }
 } /* RtlSdr::updateSettings */
+
 
 #if 0
 int RtlSdr::dataReceived(Async::TcpConnection *con, void *buf, int count)
@@ -373,6 +439,7 @@ int RtlSdr::dataReceived(Async::TcpConnection *con, void *buf, int count)
   return 2 * samp_count;
 } /* RtlSdr::dataReceived */
 #endif
+
 
 /*
  * This file has not been truncated

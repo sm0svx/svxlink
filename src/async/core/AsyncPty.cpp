@@ -24,9 +24,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -38,45 +43,83 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cassert>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncFdWatch.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "AsyncPty.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 Pty::Pty(const std::string &slave_link)
   : slave_link(slave_link), master(-1), watch(0),
     pollhup_timer(POLLHUP_CHECK_INTERVAL, Timer::TYPE_PERIODIC)
@@ -86,10 +129,12 @@ Pty::Pty(const std::string &slave_link)
       sigc::hide(mem_fun(*this, &Pty::checkIfSlaveEndOpen)));
 } /* Pty::Pty */
 
+
 Pty::~Pty(void)
 {
   close();
 } /* Pty::~Pty */
+
 
 bool Pty::open(void)
 {
@@ -166,6 +211,7 @@ bool Pty::open(void)
   return true;
 } /* Pty::open */
 
+
 void Pty::close(void)
 {
   if (!slave_link.empty())
@@ -182,6 +228,7 @@ void Pty::close(void)
   }
 } /* Pty::close */
 
+
 bool Pty::reopen(void)
 {
   if (!open())
@@ -192,6 +239,7 @@ bool Pty::reopen(void)
   return true;
 } /* Pty::reopen */
 
+
 ssize_t Pty::write(const void *buf, size_t count)
 {
   if ((pollMaster() & POLLHUP) != 0)
@@ -201,13 +249,22 @@ ssize_t Pty::write(const void *buf, size_t count)
   return ::write(master, buf, count);
 } /* Pty::write */
 
-/*
- * Protected member functions
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
 /**
  * @brief   Called when characters are received on the master PTY
  * @param   w The watch that triggered the event
@@ -250,6 +307,7 @@ void Pty::charactersReceived(void)
   dataReceived(buf, rd);
 } /* Pty::charactersReceived */
 
+
 /**
  * @brief   Read file descriptor status for the master end of the PTY
  */
@@ -272,6 +330,7 @@ short Pty::pollMaster(void)
   }
   return 0;
 } /* Pty::pollMaster */
+
 
 /**
  * @brief Check if slave end of the PTY is open
@@ -297,6 +356,8 @@ void Pty::checkIfSlaveEndOpen(void)
     charactersReceived();
   }
 } /* Pty::checkIfSlaveEndOpen */
+
+
 
 /*
  * This file has not been truncated

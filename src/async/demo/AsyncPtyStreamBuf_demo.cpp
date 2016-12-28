@@ -10,16 +10,19 @@
 
 using namespace std;
 
+
 void write_to_stream(ostream *os)
 {
   *os << "Hello, PTY\n";
 }
+
 
 void data_received(const void *buf, size_t len)
 {
   cout << "Received: ";
   cout.write(static_cast<const char *>(buf), len);
 }
+
 
 int main(void)
 {

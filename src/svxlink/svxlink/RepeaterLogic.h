@@ -23,53 +23,92 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
+
 #ifndef REPEATER_LOGIC_INCLUDED
 #define REPEATER_LOGIC_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <string>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncTimer.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "Logic.h"
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
 
 namespace Async
 {
   class Config;
 };
 
-/*
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
+
 class Module;
+  
 
-/*
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	This class implements a repeater controller
 @author Tobias Blomberg / SM0SVX
@@ -98,21 +137,21 @@ class RepeaterLogic : public Logic
      * @return	Returns \em true on success or \em false on failure
      */
     bool initialize(void);
-
+    
     /**
      * @brief 	Process an event
      * @param 	event Event string
      * @param 	module The calling module or 0 if it's a core event
      */
     virtual void processEvent(const std::string& event, const Module *module=0);
-
+    
     /**
      * @brief 	Called when a module is activated
      * @param 	module The module to activate
      * @return	Returns \em true if the activation went well or \em false if not
      */
     virtual bool activateModule(Module *module);
-
+    
     /**
      * @brief   Set the node to offline or online
      * @param   online Set to \em true to set the node online
@@ -132,9 +171,11 @@ class RepeaterLogic : public Logic
      */
     virtual void selcallSequenceDetected(std::string sequence);
 
+
   protected:
     virtual void allMsgsWritten(void);
     virtual void audioStreamStateChange(bool is_active, bool is_idle);
+
 
   private:
     typedef enum
@@ -175,7 +216,12 @@ class RepeaterLogic : public Logic
 
 };  /* class RepeaterLogic */
 
+
+//} /* namespace */
+
 #endif /* REPEATER_LOGIC_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

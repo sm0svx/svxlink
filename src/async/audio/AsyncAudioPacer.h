@@ -23,50 +23,87 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
+
 #ifndef AUDIO_PACER_INCLUDED
 #define AUDIO_PACER_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <sigc++/sigc++.h>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioSink.h>
 #include <AsyncAudioSource.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
+
 class Timer;
+  
 
-/*
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
 
 /**
 @brief	An audio pipe class that pace audio output
@@ -122,6 +159,7 @@ class AudioPacer : public AudioSink, public AudioSource, public sigc::trackable
      * This function is normally only called from a connected sink object.
      */
     virtual void resumeOutput(void);
+    
 
   protected:
     /**
@@ -133,7 +171,8 @@ class AudioPacer : public AudioSink, public AudioSource, public sigc::trackable
      * This function is normally only called from a connected sink object.
      */
     virtual void allSamplesFlushed(void);
-
+    
+    
   private:
     int       	  sample_rate;
     int       	  buf_size;
@@ -149,9 +188,12 @@ class AudioPacer : public AudioSink, public AudioSource, public sigc::trackable
 
 };  /* class AudioPacer */
 
+
 } /* namespace */
 
 #endif /* AUDIO_PACER_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

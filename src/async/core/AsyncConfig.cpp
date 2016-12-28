@@ -30,9 +30,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <unistd.h>
 #include <errno.h>
 #include <ctype.h>
@@ -41,49 +46,88 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <cstring>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "AsyncConfig.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 
 Config::~Config(void)
 {
   //fclose(file);
 } /* Config::~Config */
+
 
 bool Config::open(const string& name)
 {
@@ -94,15 +138,16 @@ bool Config::open(const string& name)
   {
     return false;
   }
-
+  
   bool success = parseCfgFile();
-
+  
   fclose(file);
   file = NULL;
-
+  
   return success;
-
+  
 } /* Config::open */
+
 
 bool Config::getValue(const string& section, const string& tag,
 		      string& value) const
@@ -123,6 +168,7 @@ bool Config::getValue(const string& section, const string& tag,
   return true;
 } /* Config::getValue */
 
+
 const string &Config::getValue(const string& section, const string& tag) const
 {
   static const string empty_strng;
@@ -140,8 +186,9 @@ const string &Config::getValue(const string& section, const string& tag) const
   }
 
   return val_it->second;
-
+  
 } /* Config::getValue */
+
 
 list<string> Config::listSection(const string& section)
 {
@@ -163,6 +210,7 @@ list<string> Config::listSection(const string& section)
   
 } /* Config::listSection */
 
+
 void Config::setValue(const std::string& section, const std::string& tag,
       	      	      const std::string& value)
 {
@@ -170,14 +218,52 @@ void Config::setValue(const std::string& section, const std::string& tag,
   values[tag] = value;
 } /* Config::setValue */
 
-/*
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 
 /*
- * Private member functions
+ *------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
  */
 
+
+
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
+
+/*
+ *----------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
+ */
 bool Config::parseCfgFile(void)
 {
   char line[16384];
@@ -237,13 +323,13 @@ bool Config::parseCfgFile(void)
 	  return false;
 	}
 	assert(!current_sec.empty());
-
+	
 	Values &values = sections[current_sec];
 	string& value = values[current_tag];
 	value += val;
 	break;
       }
-
+      
       default:
       {
       	string tag, value;
@@ -268,10 +354,11 @@ bool Config::parseCfgFile(void)
       }
     }
   }
-
+  
   return true;
-
+  
 } /* Config::parseCfgFile */
+
 
 char *Config::trimSpaces(char *line)
 {
@@ -286,15 +373,17 @@ char *Config::trimSpaces(char *line)
   {
     *end-- = 0;
   }
-
+  
   return begin;
-
+  
 } /* Config::trimSpaces */
+
 
 char *Config::parseSection(char *line)
 {
   return parseDelimitedString(line, '[', ']');
 } /* Config::parseSection */
+
 
 char *Config::parseDelimitedString(char *str, char begin_tok, char end_tok)
 {
@@ -302,24 +391,25 @@ char *Config::parseDelimitedString(char *str, char begin_tok, char end_tok)
   {
     return 0;
   }
-
+  
   char *end = str + strlen(str) - 1;
   if (*end != end_tok)
   {
     return 0;
   }
   *end = 0;
-
+  
   /*
   if (end == str+1)
   {
     return 0;
   }
   */
-
+  
   return str + 1;
-
+  
 } /* Config::parseDelimitedString */
+
 
 bool Config::parseValueLine(char *line, string& tag, string& value)
 {
@@ -329,19 +419,20 @@ bool Config::parseValueLine(char *line, string& tag, string& value)
     return false;
   }
   *eq = 0;
-
+  
   tag = trimSpaces(line);
   char *val = parseValue(eq + 1);
   if (val == 0)
   {
     return false;
   }
-
+  
   value = val;
-
+  
   return true;
-
+  
 } /* Config::parseValueLine */
+
 
 char *Config::parseValue(char *value)
 {
@@ -350,21 +441,22 @@ char *Config::parseValue(char *value)
   {
     value = parseDelimitedString(value, '"', '"');
   }
-
+  
   if (value == 0)
   {
     return 0;
   }
-
+  
   return translateEscapedChars(value);
   
 } /* Config::parseValue */
+
 
 char *Config::translateEscapedChars(char *val)
 {
   char *head = val;
   char *tail = head;
-
+  
   while (*head != 0)
   {
     if (*head == '\\')
@@ -375,23 +467,23 @@ char *Config::translateEscapedChars(char *val)
       	case 'n':
 	  *tail = '\n';
 	  break;
-
+	  
       	case 'r':
 	  *tail = '\r';
 	  break;
-
+	  
       	case 't':
 	  *tail = '\t';
 	  break;
-
+	  
       	case '\\':
 	  *tail = '\\';
 	  break;
-
+	  
       	case '"':
 	  *tail = '"';
 	  break;
-
+	  
       	default:
 	  return 0;
       }
@@ -408,6 +500,9 @@ char *Config::translateEscapedChars(char *val)
   return val;
   
 } /* Config::translateEscapedChars */
+
+
+
 
 /*
  * This file has not been truncated

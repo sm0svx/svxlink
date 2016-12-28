@@ -26,52 +26,96 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <algorithm>
 #include <iostream>
 
 #include <QtAlgorithms>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "EchoLinkDirectoryModel.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace EchoLink;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 EchoLinkDirectoryModel::EchoLinkDirectoryModel(QObject *parent)
   : QAbstractItemModel(parent)
 {
@@ -169,6 +213,7 @@ void EchoLinkDirectoryModel::updateStationList(
   
 } /* EchoLinkDirectoryModel::updateStationList */
 
+
 QModelIndex EchoLinkDirectoryModel::index(int row, int column,
 					  const QModelIndex &parent) const
 {
@@ -182,11 +227,13 @@ QModelIndex EchoLinkDirectoryModel::index(int row, int column,
   return QModelIndex();
 } /* EchoLinkDirectoryModel::index */
 
+
 QModelIndex EchoLinkDirectoryModel::parent(const QModelIndex &index) const
 {
   Q_UNUSED(index);
   return QModelIndex();
 } /* EchoLinkDirectoryModel::parent */
+
 
 int EchoLinkDirectoryModel::rowCount(const QModelIndex &parent) const
 {
@@ -198,11 +245,13 @@ int EchoLinkDirectoryModel::rowCount(const QModelIndex &parent) const
   return stations.count();
 } /* EchoLinkDirectoryModel::rowCount */
 
+
 int EchoLinkDirectoryModel::columnCount(const QModelIndex &parent) const
 {
   Q_UNUSED(parent);
   return 6;
 } /* EchoLinkDirectoryModel::columnCount */
+
 
 QVariant EchoLinkDirectoryModel::headerData(int section,
 					    Qt::Orientation orientation,
@@ -231,6 +280,7 @@ QVariant EchoLinkDirectoryModel::headerData(int section,
   
   return QAbstractItemModel::headerData(section, orientation, role);
 } /* EchoLinkDirectoryModel::headerData */
+
 
 QVariant EchoLinkDirectoryModel::data(const QModelIndex &index, int role) const
 {
@@ -272,6 +322,7 @@ QVariant EchoLinkDirectoryModel::data(const QModelIndex &index, int role) const
   return QVariant();
 } /* EchoLinkDirectoryModel::data */
 
+
 bool EchoLinkDirectoryModel::removeRows(int row, int count,
 					const QModelIndex &parent)
 {
@@ -290,13 +341,22 @@ bool EchoLinkDirectoryModel::removeRows(int row, int count,
   return true;
 } /* EchoLinkDirectoryModel::removeRows */
 
-/*
- * Protected member functions
- */
 
-/*
+/****************************************************************************
+ *
+ * Protected member functions
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
+
 
 /*
  * This file has not been truncated

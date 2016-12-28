@@ -19,10 +19,12 @@ if {![info exists CFG_ID]} {
   return;
 }
 
+
 #
 # Extract the module name from the current namespace
 #
 set module_name [namespace tail [namespace current]];
+
 
 #
 # Type ID to selcall type name mapping
@@ -48,6 +50,7 @@ array set variants {
   "18" "QC2"
 }
 
+
 #
 # A convenience function for printing out information prefixed by the
 # module name
@@ -59,6 +62,7 @@ proc printInfo {msg} {
   puts "$module_name: $msg"
 }
 
+
 #
 # A convenience function for calling an event handler
 #
@@ -69,6 +73,7 @@ proc processEvent {ev} {
   ::processEvent "$module_name" "$ev"
 }
 
+
 #
 # Executed when this module is being activated
 #
@@ -76,12 +81,14 @@ proc activateInit {} {
   #printInfo "Module activated"
 }
 
+
 #
 # Executed when this module is being deactivated.
 #
 proc deactivateCleanup {} {
   #printInfo "Module deactivated"
 }
+
 
 # The amplitude of the selcall audio. Set by function setAmplitude.
 #variable amplitude
@@ -95,6 +102,7 @@ proc deactivateCleanup {} {
 # The length of the first tone in a sequence. Set by function setMode.
 #variable first_tone_length
 
+
 #
 # Executed when a DTMF digit (0-9, A-F, *, #) is received
 #
@@ -104,6 +112,7 @@ proc deactivateCleanup {} {
 proc dtmfDigitReceived {char duration} {
   #printInfo "DTMF digit $char received with duration $duration milliseconds"
 }
+
 
 #
 # Executed when a DTMF command is received
@@ -126,6 +135,7 @@ proc dtmfCmdReceived {cmd} {
   }
 }
 
+
 #
 # Executed when a DTMF command is received in idle mode. That is, a command is
 # received when this module has not been activated first.
@@ -146,6 +156,7 @@ proc dtmfCmdReceivedWhenIdle {cmd} {
   }
 }
 
+
 #
 # Executed when the squelch open or close.
 #
@@ -156,6 +167,7 @@ proc squelchOpen {is_open} {
   #printInfo "The squelch is $str"
 }
 
+
 #
 # Executed when all announcement messages has been played.
 # Note that this function also may be called even if it wasn't this module
@@ -163,6 +175,7 @@ proc squelchOpen {is_open} {
 #
 proc allMsgsWritten {} {
 }
+
 
 # end of namespace
 }

@@ -24,9 +24,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <stdio.h>
 #include <time.h>
 
@@ -35,11 +38,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <cstdlib>
 #include <vector>
-#include <string.h>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
 #include <AsyncAudioSplitter.h>
@@ -51,47 +57,80 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <LocationInfo.h>
 #include <common.h>
 
-#include <AsyncPty.h>
-#include <AsyncPtyStreamBuf.h>
 
-/*
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "version/MODULE_ECHOLINK.h"
 #include "ModuleEchoLink.h"
 #include "QsoImpl.h"
 
-/*
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace sigc;
 using namespace Async;
 using namespace EchoLink;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Pure C-functions
- */
+ *
+ ****************************************************************************/
+
+
 extern "C" {
   Module *module_init(void *dl_handle, Logic *logic, const char *cfg_name)
   { 
@@ -99,9 +138,15 @@ extern "C" {
   }
 } /* extern "C" */
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
+
 ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
       	      	      	       const string& cfg_name)
   : Module(dl_handle, logic, cfg_name), dir(0), dir_refresh_timer(0),
@@ -113,16 +158,18 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
     listen_only_valve(0), selector(0), num_con_max(0), num_con_ttl(5*60),
     num_con_block_time(120*60), num_con_update_timer(0), reject_conf(false),
     autocon_echolink_id(0), autocon_time(DEFAULT_AUTOCON_TIME),
-    autocon_timer(0), proxy(0), pty(0)
+    autocon_timer(0), proxy(0)
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
 } /* ModuleEchoLink */
 
+
 ModuleEchoLink::~ModuleEchoLink(void)
 {
   moduleCleanup();
 } /* ~ModuleEchoLink */
+
 
 bool ModuleEchoLink::initialize(void)
 {
@@ -414,26 +461,18 @@ bool ModuleEchoLink::initialize(void)
         mem_fun(*this, &ModuleEchoLink::checkAutoCon));
   }
 
-  string pty_path;
-  if(cfg().getValue(cfgName(), "ECHOLINK_PTY", pty_path))
-  {
-    pty = new Pty(pty_path);
-    if (!pty->open()) {
-      cerr << "*** ERROR: Could not open echolink PTY "
-      <<pty_path << " as specified in configuration variable "
-      << name() << "/" << "ECHOLINK_PTY" << endl;
-      return false;
-    }
-    pty->dataReceived.connect(sigc::mem_fun(*this, &ModuleEchoLink::commandHandler));
-  }
-
   return true;
   
 } /* ModuleEchoLink::initialize */
 
-/*
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 void ModuleEchoLink::logicIdleStateChanged(bool is_idle)
 {
   /*
@@ -454,38 +493,14 @@ void ModuleEchoLink::logicIdleStateChanged(bool is_idle)
   
 } /* ModuleEchoLink::logicIdleStateChanged */
 
-/*
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
-void ModuleEchoLink::commandHandler(const void *buf, size_t count) {
-  char* buffer = (char *) buf;
-  char* command;
-  buffer[count] = '\0'; // received string is not null terminated
-  cout << "echolink commandHandler received: " << buffer << " (" << count << ")" << endl;
-  command = strtok(buffer, "\n\r ");
-  while (command != NULL && count >= 3) {
-    if (strstr(command, "KILL")) {
-      if (talker == 0) {
-        cout << "echolink: trying to KILL, but no active talkers" << endl;
-      } else {
-        cout << "echolink: KILLing talker: " << talker->remoteCallsign() << endl;
-        talker->disconnect();
-      }
-    } else if (strstr(command, ":D")) {
-      // disconnect client by callsign
-      vector<QsoImpl *>::iterator it;
-      for (it = qsos.begin(); it != qsos.end(); ++it) {
-        if (strstr(command, (*it)->remoteCallsign().c_str())) {
-          cout << "echolink: disconnecting user " << (*it)->remoteCallsign() << endl;
-          (*it)->disconnect();
-        }
-      }
-    }
-    command = strtok(NULL, "\n\r ");
-    count -= sizeof(command);
-  }
-//  printSquelchState();
-}
+ *
+ ****************************************************************************/
+
 
 void ModuleEchoLink::moduleCleanup(void)
 {
@@ -551,6 +566,7 @@ void ModuleEchoLink::moduleCleanup(void)
   selector = 0;
 } /* ModuleEchoLink::moduleCleanup */
 
+
 /*
  *----------------------------------------------------------------------------
  * Method:    activateInit
@@ -569,6 +585,7 @@ void ModuleEchoLink::activateInit(void)
   state = STATE_NORMAL;
   listen_only_valve->setOpen(true);
 } /* activateInit */
+
 
 /*
  *----------------------------------------------------------------------------
@@ -606,6 +623,7 @@ void ModuleEchoLink::deactivateCleanup(void)
   listen_only_valve->setOpen(true);
 } /* deactivateCleanup */
 
+
 /*
  *----------------------------------------------------------------------------
  * Method:    dtmfDigitReceived
@@ -629,6 +647,7 @@ bool ModuleEchoLink::dtmfDigitReceived(char digit, int duration)
   
 } /* dtmfDigitReceived */
 #endif
+
 
 /*
  *----------------------------------------------------------------------------
@@ -691,6 +710,7 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
   }
 } /* dtmfCmdReceived */
 
+
 void ModuleEchoLink::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
   if (cmd == "2")   // Play own node id
@@ -706,6 +726,7 @@ void ModuleEchoLink::dtmfCmdReceivedWhenIdle(const std::string &cmd)
     commandFailed(cmd);
   }
 } /* dtmfCmdReceivedWhenIdle */
+
 
 /*
  *----------------------------------------------------------------------------
@@ -736,6 +757,7 @@ void ModuleEchoLink::squelchOpen(bool is_open)
   }
 } /* squelchOpen */
 
+
 /*
  *----------------------------------------------------------------------------
  * Method:    allMsgsWritten
@@ -764,6 +786,7 @@ void ModuleEchoLink::allMsgsWritten(void)
     outgoing_con_pending.clear();
   }
 } /* allMsgsWritten */
+
 
 /*
  *----------------------------------------------------------------------------
@@ -804,6 +827,7 @@ void ModuleEchoLink::onStatusChanged(StationData::Status status)
     LocationInfo::instance()->updateDirectoryStatus(status);
   }
 } /* onStatusChanged */
+
 
 /*
  *----------------------------------------------------------------------------
@@ -846,6 +870,7 @@ void ModuleEchoLink::onStationListUpdated(void)
   }
 } /* onStationListUpdated */
 
+
 /*
  *----------------------------------------------------------------------------
  * Method:    onError
@@ -872,31 +897,7 @@ void ModuleEchoLink::onError(const string& msg)
   
 } /* onError */
 
-/*
- *----------------------------------------------------------------------------
- * Method:    clientList
- * Purpose:   Called on connect or disconnect of a remote client to send an
- *    	      event to list the connected stations.
- * Input:     None
- * Output:    None
- * Author:    Wim Fournier / PH7WIM
- * Created:   2016-01-11
- * Remarks:
- * Bugs:
- *----------------------------------------------------------------------------
- */
-void ModuleEchoLink::clientList(void) {
-  stringstream ss;
-  ss << "clients [list";
-  vector<QsoImpl *>::iterator it;
-  for (it = qsos.begin(); it != qsos.end(); ++it) {
-    if ((*it)->currentState() != Qso::STATE_DISCONNECTED) {
-      ss << " " << (*it)->remoteCallsign();
-    }
-  }
-  ss << "]";
-  processEvent(ss.str());
-} /* clientList */
+
 
 /*
  *----------------------------------------------------------------------------
@@ -1028,7 +1029,6 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->accept();
   broadcastTalkerStatus();
   updateDescription();
-  clientList();
 
   if (LocationInfo::has_instance())
   {
@@ -1041,6 +1041,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   checkIdle();
   
 } /* onIncomingConnection */
+
 
 /*
  *----------------------------------------------------------------------------
@@ -1087,7 +1088,6 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
 
       broadcastTalkerStatus();
       updateDescription();
-      clientList();
       break;
     }
     
@@ -1096,6 +1096,7 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
       break;
   }  
 } /* ModuleEchoLink::onStateChange */
+
 
 /*
  *----------------------------------------------------------------------------
@@ -1139,6 +1140,7 @@ void ModuleEchoLink::onChatMsgReceived(QsoImpl *qso, const string& msg)
   processEvent(ss.str());
 } /* onChatMsgReceived */
 
+
 /*
  *----------------------------------------------------------------------------
  * Method:    onIsReceiving
@@ -1160,7 +1162,7 @@ void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
   //     << (is_receiving ? "TRUE" : "FALSE") << endl;
   
   stringstream ss;
-  ss << "is_receiving " << (is_receiving ? "1" : "0")<< " " << qso->remoteCallsign();
+  ss << "is_receiving " << (is_receiving ? "1" : "0");
   processEvent(ss.str());
 
   if ((talker == 0) && is_receiving)
@@ -1192,6 +1194,7 @@ void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
     }
   }
 } /* onIsReceiving */
+
 
 void ModuleEchoLink::destroyQsoObject(QsoImpl *qso)
 {
@@ -1236,6 +1239,7 @@ void ModuleEchoLink::destroyQsoObject(QsoImpl *qso)
   
 } /* ModuleEchoLink::destroyQsoObject */
 
+
 /*
  *----------------------------------------------------------------------------
  * Method:    getDirectoryList
@@ -1265,6 +1269,7 @@ void ModuleEchoLink::getDirectoryList(Timer *timer)
       	    mem_fun(*this, &ModuleEchoLink::getDirectoryList));
   }
 } /* ModuleEchoLink::getDirectoryList */
+
 
 void ModuleEchoLink::createOutgoingConnection(const StationData &station)
 {
@@ -1372,6 +1377,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
   
 } /* ModuleEchoLink::createOutgoingConnection */
 
+
 void ModuleEchoLink::audioFromRemoteRaw(Qso::RawPacket *packet,
       	QsoImpl *qso)
 {
@@ -1393,6 +1399,7 @@ void ModuleEchoLink::audioFromRemoteRaw(Qso::RawPacket *packet,
   }
 } /* ModuleEchoLink::audioFromRemoteRaw */
 
+
 QsoImpl *ModuleEchoLink::findFirstTalker(void) const
 {
   vector<QsoImpl*>::const_iterator it;
@@ -1407,6 +1414,7 @@ QsoImpl *ModuleEchoLink::findFirstTalker(void) const
   return 0;
   
 } /* ModuleEchoLink::findFirstTalker */
+
 
 void ModuleEchoLink::broadcastTalkerStatus(void)
 {
@@ -1459,6 +1467,7 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
   
 } /* ModuleEchoLink::broadcastTalkerStatus */
 
+
 void ModuleEchoLink::updateDescription(void)
 {
   if (max_qsos < 2)
@@ -1479,6 +1488,7 @@ void ModuleEchoLink::updateDescription(void)
   dir->refreshRegistration();
   
 } /* ModuleEchoLink::updateDescription */
+
 
 void ModuleEchoLink::updateEventVariables(void)
 {
@@ -1557,6 +1567,7 @@ void ModuleEchoLink::connectByCallsign(string cmd)
 
 } /* ModuleEchoLink::connectByCallsign */
 
+
 void ModuleEchoLink::handleConnectByCall(const string& cmd)
 {
   if (cmd.empty())
@@ -1601,6 +1612,7 @@ void ModuleEchoLink::handleConnectByCall(const string& cmd)
   state = STATE_NORMAL;
 } /* ModuleEchoLink::handleConnectByCall  */
 
+
 void ModuleEchoLink::cbcTimeout(Timer *t)
 {
   delete cbc_timer;
@@ -1610,6 +1622,7 @@ void ModuleEchoLink::cbcTimeout(Timer *t)
   cout << "Connect by call command timeout\n";
   processEvent("cbc_timeout");
 } /* ModuleEchoLink::cbcTimeout  */
+
 
 void ModuleEchoLink::disconnectByCallsign(const string &cmd)
 {
@@ -1636,6 +1649,7 @@ void ModuleEchoLink::disconnectByCallsign(const string &cmd)
   dbc_timer = new Timer(60000);
   dbc_timer->expired.connect(mem_fun(*this, &ModuleEchoLink::dbcTimeout));
 } /* ModuleEchoLink::disconnectByCallsign  */
+
 
 void ModuleEchoLink::handleDisconnectByCall(const string& cmd)
 {
@@ -1680,6 +1694,7 @@ void ModuleEchoLink::handleDisconnectByCall(const string& cmd)
 
 } /* ModuleEchoLink::handleDisconnectByCall  */
 
+
 void ModuleEchoLink::dbcTimeout(Timer *t)
 {
   delete dbc_timer;
@@ -1688,6 +1703,7 @@ void ModuleEchoLink::dbcTimeout(Timer *t)
   cout << "Disconnect by call command timeout\n";
   processEvent("dbc_timeout");
 } /* ModuleEchoLink::dbcTimeout  */
+
 
 int ModuleEchoLink::numConnectedStations(void)
 {
@@ -1705,6 +1721,7 @@ int ModuleEchoLink::numConnectedStations(void)
   
 } /* ModuleEchoLink::numConnectedStations */
 
+
 int ModuleEchoLink::listQsoCallsigns(list<string>& call_list)
 {
   call_list.clear();
@@ -1717,6 +1734,7 @@ int ModuleEchoLink::listQsoCallsigns(list<string>& call_list)
   return call_list.size();
   
 } /* ModuleEchoLink::listQsoCallsigns */
+
 
 void ModuleEchoLink::handleCommand(const string& cmd)
 {
@@ -1870,6 +1888,7 @@ void ModuleEchoLink::handleCommand(const string& cmd)
 
 } /* ModuleEchoLink::handleCommand */
 
+
 void ModuleEchoLink::commandFailed(const string& cmd)
 {
   stringstream ss;
@@ -1911,6 +1930,7 @@ void ModuleEchoLink::checkIdle(void)
 	  (state == STATE_NORMAL));
 } /* ModuleEchoLink::checkIdle */
 
+
 /*
  *----------------------------------------------------------------------------
  * Method:    checkAutoCon
@@ -1937,6 +1957,7 @@ void ModuleEchoLink::checkAutoCon(Timer *)
     connectByNodeId(autocon_echolink_id);
   }
 } /* ModuleEchoLink::checkAutoCon */
+
 
 bool ModuleEchoLink::numConCheck(const std::string &callsign)
 {
@@ -1993,6 +2014,7 @@ bool ModuleEchoLink::numConCheck(const std::string &callsign)
 
 } /* ModuleEchoLink::numConCheck */
 
+
 void ModuleEchoLink::numConUpdate(void)
 {
     // Get current time
@@ -2036,6 +2058,7 @@ void ModuleEchoLink::numConUpdate(void)
 
 } /* ModuleEchoLink::numConUpdate */
 
+
 void ModuleEchoLink::replaceAll(std::string &str, const std::string &from,
                                 const std::string &to) const
 {
@@ -2050,6 +2073,8 @@ void ModuleEchoLink::replaceAll(std::string &str, const std::string &from,
     start_pos += to.length();
   }
 } /* ModuleEchoLink::replaceAll */
+
+
 
 /*
  * This file has not been truncated

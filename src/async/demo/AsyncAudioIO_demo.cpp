@@ -9,6 +9,7 @@
 using namespace std;
 using namespace Async;
 
+
 class SineGenerator : public Async::AudioSource
 {
   public:
@@ -96,6 +97,8 @@ class SineGenerator : public Async::AudioSource
     }
 
 };
+
+
 
 class MyClass : public Async::AudioSink, public Async::AudioSource
 {

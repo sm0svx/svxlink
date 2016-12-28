@@ -24,55 +24,100 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <iostream>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncApplication.h>
 
-/*
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "EventHandler.h"
 #include "Logic.h"
 #include "Module.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 
 EventHandler::EventHandler(const string& event_script, Logic *logic)
   : event_script(event_script), logic(logic), interp(0)
@@ -103,11 +148,11 @@ EventHandler::EventHandler(const string& event_script, Logic *logic)
                     this, NULL);
   Tcl_CreateCommand(interp, "publishStateEvent", publishStateEventHandler,
                     this, NULL);
-  Tcl_CreateCommand(interp, "playDtmf", playDtmfHandler, this, NULL);
 
   setVariable("script_path", event_script);
 
 } /* EventHandler::EventHandler */
+
 
 EventHandler::~EventHandler(void)
 {
@@ -121,6 +166,7 @@ EventHandler::~EventHandler(void)
     Tcl_Release(interp);
   }
 } /* EventHandler::~EventHandler */
+
 
 bool EventHandler::initialize(void)
 {
@@ -140,6 +186,7 @@ bool EventHandler::initialize(void)
   
 } /* EventHandler::initialize */
 
+
 void EventHandler::setVariable(const string& name, const string& value)
 {
   if (interp == 0)
@@ -156,6 +203,7 @@ void EventHandler::setVariable(const string& name, const string& value)
   }
   Tcl_Release(interp);
 } /* EventHandler::setVariable */
+
 
 bool EventHandler::processEvent(const string& event)
 {
@@ -179,6 +227,7 @@ bool EventHandler::processEvent(const string& event)
   
 } /* EventHandler::processEvent */
 
+
 const string EventHandler::eventResult(void) const
 {
   if (interp == 0)
@@ -190,12 +239,50 @@ const string EventHandler::eventResult(void) const
   
 } /* EventHandler::eventResult */
 
-/*
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 
 /*
+ *------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
+ */
+
+
+
+
+
+
+/****************************************************************************
+ *
  * Private member functions
+ *
+ ****************************************************************************/
+
+
+/*
+ *----------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *----------------------------------------------------------------------------
  */
 
 int EventHandler::playFileHandler(ClientData cdata, Tcl_Interp *irp, int argc,
@@ -216,6 +303,7 @@ int EventHandler::playFileHandler(ClientData cdata, Tcl_Interp *irp, int argc,
   return TCL_OK;
 }
 
+
 int EventHandler::playSilenceHandler(ClientData cdata, Tcl_Interp *irp,
       	      	      	      int argc, const char *argv[])
 {
@@ -233,6 +321,7 @@ int EventHandler::playSilenceHandler(ClientData cdata, Tcl_Interp *irp,
   return TCL_OK;
 }
 
+
 int EventHandler::playToneHandler(ClientData cdata, Tcl_Interp *irp,
       	      	      	      int argc, const char *argv[])
 {
@@ -249,6 +338,7 @@ int EventHandler::playToneHandler(ClientData cdata, Tcl_Interp *irp,
 
   return TCL_OK;
 }
+
 
 int EventHandler::recordHandler(ClientData cdata, Tcl_Interp *irp,
       	      	      	      int argc, const char *argv[])
@@ -288,6 +378,7 @@ int EventHandler::recordHandler(ClientData cdata, Tcl_Interp *irp,
   return TCL_OK;
 }
 
+
 int EventHandler::deactivateModuleHandler(ClientData cdata, Tcl_Interp *irp,
       	      	      	      int argc, const char *argv[])
 {
@@ -303,6 +394,7 @@ int EventHandler::deactivateModuleHandler(ClientData cdata, Tcl_Interp *irp,
 
   return TCL_OK;
 }
+
 
 int EventHandler::publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
       	      	      	      int argc, const char *argv[])
@@ -320,25 +412,9 @@ int EventHandler::publishStateEventHandler(ClientData cdata, Tcl_Interp *irp,
   return TCL_OK;
 }
 
-int EventHandler::playDtmfHandler(ClientData cdata, Tcl_Interp *irp,
-      	      	      	      int argc, const char *argv[])
-{
-  if(argc != 4)
-  {
-    char msg[] = "Usage: playDtmf <digit#> <amp> <milliseconds>";
-    Tcl_SetResult(irp, msg, TCL_STATIC);
-    return TCL_ERROR;
-  }
-  //cout << "EventHandler::playDtmf: " << argv[1] << ", " 
-  //    << argv[2] << ", " << argv[3]<< endl;
-  char *digit;
-  digit = const_cast<char*>(argv[1]);
-  EventHandler *self = static_cast<EventHandler *>(cdata);
-  self->playDtmf(digit[0], atoi(argv[2]), atoi(argv[3]));
 
-  return TCL_OK;
-} /* EventHandler::playDtmfHandler */
 
 /*
  * This file has not been truncated
  */
+

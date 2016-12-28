@@ -23,50 +23,84 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
+
 #ifndef ECHOLINK_QSO_TEST_INCLUDED
 #define ECHOLINK_QSO_TEST_INCLUDED
 
-/*
- * System Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * System Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncCppApplication.h>
 #include <AsyncFdWatch.h>
 #include <AsyncAudioIO.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkQso.h>
 
-/*
- * Local Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Local Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
   class SigCAudioSink;
   class SigCAudioSource;
 };
 
-/*
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+//namespace MyNameSpace
+//{
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
 
 class EchoLinkQsoTest : public EchoLink::Qso
 {
@@ -104,9 +138,12 @@ class EchoLinkQsoTest : public EchoLink::Qso
     
 };  /* class EchoLinkQsoTest */
 
+
 //} /* namespace */
 
 #endif /* ECHOLINK_QSO_TEST_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

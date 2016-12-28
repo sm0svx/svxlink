@@ -23,48 +23,85 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
 #ifndef ASYNC_AUDIO_DECODER_SPEEX_INCLUDED
 #define ASYNC_AUDIO_DECODER_SPEEX_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <speex/speex.h>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioDecoder.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+  
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	An audio decoder that use the Speex audio codec
 @author Tobias Blomberg / SM0SVX
@@ -79,18 +116,18 @@ class AudioDecoderSpeex : public AudioDecoder
      * @brief 	Default constuctor
      */
     AudioDecoderSpeex(void);
-
+  
     /**
      * @brief 	Destructor
      */
     virtual ~AudioDecoderSpeex(void);
-
+  
     /**
      * @brief   Get the name of the codec
      * @returns Return the name of the codec
      */
     virtual const char *name(void) const { return "SPEEX"; }
-
+  
     /**
      * @brief 	Set an option for the decoder
      * @param 	name The name of the option
@@ -102,36 +139,37 @@ class AudioDecoderSpeex : public AudioDecoder
      * @brief Print codec parameter settings
      */
     virtual void printCodecParams(void) const;
-
+    
     /**
      * @brief 	Get the frame size for the decoder
      * @return	Returns the decoder frame size
      */
     int frameSize(void) const { return frame_size; }
-
+  
     /**
      * @brief 	Enable or disable the perceptual enhancer
      * @param 	enable Set to \em true to enable or \em false to disable
      * @return	Returns the new setting
      */
     bool enableEnhancer(bool enable);
-
+  
     /**
      * @brief 	Get the perceptual enhance enable/disable state
      * @return	Returns \em true if the enhancer is enabled or \em false if
      *          it's not
      */
     bool enhancerEnabled(void) const;
-
+    
     /**
      * @brief 	Write encoded samples into the decoder
      * @param 	buf  Buffer containing encoded samples
      * @param 	size The size of the buffer
      */
     virtual void writeEncodedSamples(void *buf, int size);
+    
 
   protected:
-
+    
   private:
     SpeexBits bits;
     void      *dec_state;
@@ -142,9 +180,12 @@ class AudioDecoderSpeex : public AudioDecoder
     
 };  /* class AudioDecoderSpeex */
 
+
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_DECODER_SPEEX_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

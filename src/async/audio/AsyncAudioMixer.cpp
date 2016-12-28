@@ -24,37 +24,63 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <algorithm>
 #include <cstring>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncTimer.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "AsyncAudioMixer.h"
 #include "AsyncAudioFifo.h"
 #include "AsyncAudioReader.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
- * Defines & typedefs
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Defines & typedefs
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
 class Async::AudioMixer::MixerSrc : public AudioSink
 {
@@ -127,21 +153,39 @@ class Async::AudioMixer::MixerSrc : public AudioSink
     
 }; /* class Async::AudioMixer::MixerSrc */
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
 
 AudioMixer::AudioMixer(void)
   : output_timer(0, Timer::TYPE_ONESHOT, false), outbuf_pos(0),
@@ -160,6 +204,7 @@ AudioMixer::~AudioMixer(void)
   }
 } /* AudioMixer::~AudioMixer */
 
+
 void AudioMixer::addSource(AudioSource *source)
 {
   MixerSrc *mixer_src = new MixerSrc(this);
@@ -169,6 +214,7 @@ void AudioMixer::addSource(AudioSource *source)
   sources.push_back(mixer_src);
 } /* AudioMixer::addSource */
 
+
 void AudioMixer::resumeOutput(void)
 {
   //printf("AudioMixer::resumeOutput\n");
@@ -176,9 +222,13 @@ void AudioMixer::resumeOutput(void)
   outputHandler(0);
 } /* AudioMixer::resumeOutput */
 
-/*
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
 
 void AudioMixer::allSamplesFlushed(void)
 {
@@ -190,9 +240,14 @@ void AudioMixer::allSamplesFlushed(void)
   }
 } /* AudioMixer::allSamplesFlushed */
 
-/*
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
 
 /*
  *----------------------------------------------------------------------------
@@ -213,6 +268,7 @@ void AudioMixer::setAudioAvailable(void)
   output_timer.setEnable(true);
 } /* AudioMixer::setAudioAvailable */
 
+
 /*
  *----------------------------------------------------------------------------
  * Method:    AudioMixer::flushSamples
@@ -229,6 +285,7 @@ void AudioMixer::flushSamples(void)
 {
   output_timer.setEnable(true);
 } /* AudioMixer::flushSamples */
+
 
 /*
  *----------------------------------------------------------------------------
@@ -342,6 +399,10 @@ void AudioMixer::checkFlush(void)
   sinkFlushSamples();
   
 } /* AudioMixer::checkFlush */
+
+
+
+
 
 /*
  * This file has not been truncated

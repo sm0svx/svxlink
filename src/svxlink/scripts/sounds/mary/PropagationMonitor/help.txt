@@ -1,0 +1,4 @@
+The propagation monitor receive propagation alerts from VHF DX dot net. These are announced by
+voice messages as soon as they are received.
+
+The types of messages announced are: sporadic e, au-rora and troppo opening.

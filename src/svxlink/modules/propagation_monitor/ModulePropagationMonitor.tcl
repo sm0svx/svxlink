@@ -19,6 +19,7 @@ if {![info exists CFG_ID]} {
   return;
 }
 
+
 #
 # Extract the module name from the current namespace
 #
@@ -33,6 +34,7 @@ proc printInfo {msg} {
   variable module_name;
   puts "$module_name: $msg";
 }
+
 
 #
 # A convenience function for calling an event handler
@@ -50,6 +52,7 @@ proc activateInit {} {
   printInfo "Module activated"
 }
 
+
 #
 # Executed when this module is being deactivated.
 #
@@ -65,6 +68,7 @@ proc dtmfDigitReceived {char duration} {
   printInfo "DTMF digit $char received with duration $duration milliseconds";
 }
 
+
 #
 # Executed when a DTMF command is received
 #
@@ -79,6 +83,7 @@ proc dtmfCmdReceived {cmd} {
   }
 }
 
+
 #
 # Executed when a DTMF command is received in idle mode. That is, a command is
 # received when this module has not been activated first.
@@ -86,6 +91,7 @@ proc dtmfCmdReceived {cmd} {
 proc dtmfCmdReceivedWhenIdle {cmd} {
   #printInfo "DTMF command received while idle: $cmd";
 }
+
 
 #
 # Executed when the squelch open or close. If it's open is_open is set to 1,
@@ -96,6 +102,7 @@ proc squelchOpen {is_open} {
   printInfo "The squelch is $str";
 }
 
+
 #
 # Executed when all announcement messages has been played.
 # Note that this function also may be called even if it wasn't this module
@@ -104,6 +111,7 @@ proc squelchOpen {is_open} {
 proc allMsgsWritten {} {
   #printInfo "all_msgs_written called...";
 }
+
 
 #
 # Extract the message subject from the given message file
@@ -119,6 +127,7 @@ proc subject_of_msg {msg_file} {
   close $chan
   return "$subject"
 }
+
 
 proc handle_dxrobot {msg_file} {
   set subject [subject_of_msg "$msg_file"]
@@ -153,6 +162,7 @@ proc handle_dxrobot {msg_file} {
 
   printInfo "*** WARNING: Unknown DXRobot alert encountered in $msg_file: $subject"
 }
+
 
 proc handle_vhfdx {msg_file} {
   set subject [subject_of_msg "$msg_file"]
@@ -241,6 +251,7 @@ proc handle_vhfdx {msg_file} {
   printInfo "*** WARNING: Unknown VHFDX alert encountered in $msg_file: $subject"
 }
 
+
 proc check_dir {dir} {
   variable CFG_SPOOL_DIR
 
@@ -252,10 +263,12 @@ proc check_dir {dir} {
   }
 }
 
+
 proc check_for_alerts {} {
   check_dir vhfdx
   check_dir dxrobot
 }
+
 
 if {![file exists $CFG_SPOOL_DIR/dxrobot/archive]} {
   file mkdir $CFG_SPOOL_DIR/dxrobot/archive
@@ -268,8 +281,11 @@ if {![file exists $CFG_SPOOL_DIR/vhfdx/archive]} {
 append func $module_name "::check_for_alerts";
 Logic::addTimerTickSubscriber $func;
 
+
+
 # end of namespace
 }
+
 
 #
 # This file has not been truncated

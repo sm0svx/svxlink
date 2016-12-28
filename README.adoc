@@ -26,8 +26,6 @@ either C++ or TCL. Examples of modules are:
 * *SelCall*            -- Send selective calling sequences by entering DTMF codes
 * *MetarInformation*   -- Play airport weather information
 * *Frn*                -- Connect to Free Radio Network (FRN) servers
-* *RmeotrRelay*        -- Control remote features with Relay modules frome dtmf codes
-* *TclSSTV*            -- SSTV TV Module controlled by dtmf with upload of pics.
 
 == Qtel ==
 Qtel, the Qt EchoLink client, is a graphical application used to access the

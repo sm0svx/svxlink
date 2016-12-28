@@ -1,0 +1,57 @@
+This is the README file for generating SvxLink sound clips using the MARY
+text to speech system (http://mary.dfki.de/). This instruction was written
+for version 4.0.0 of the MARY speech synthesizer.
+
+MARY is by far the best free text-to-voice system I have seen. You can
+test it or generate sounds for SvxLink directly using the online demo:
+http://mary.dfki.de/online-demos.
+
+Start by downloading the latest installer jar file from the downloads
+page: http://mary.dfki.de/Download. Install the application and the
+wanted voices and languages. Start the installation by running the following
+command:
+
+	java -jar openmary-standalone-install-4.0.0.jar
+
+A java JDK need to be installed first of course.
+
+Start the MARY server application. Just go to the MARY/bin subdirectory
+and type ./maryserver. It takes a while for it to start. Up to half a
+minute on my old 1GHz laptop! The startup time depends on the number of
+installed voices.
+
+All sounds are generated from small text files. These are read and processed
+by a Ruby script found in this directory. You may first have to install a Ruby
+interpretator on your system. Then, to generate all sounds, type:
+
+	./mary4_svxlink_sounds.rb */*.txt
+
+To generate the sound clip for a single existing txt-file, just point out that
+single file. Example:
+
+	./mary4_svxlink_sounds.rb Core/online.txt
+
+To generate a single _new_ sound, use the "one_file.sh" script. Example:
+
+	cd Core
+	../one_file.sh my_sound "this is my sound clip"
+
+This will generate two files. The pure text go into my_sound.txt and the
+generated audio will go into my_sound.wav. If you add new sound clips,
+also make an addition to the subdir.cfg configuration file.
+
+Almost all sound clips are generated as they should be but the 2X, 3X etc
+sound clips in the Default subdirectory need some manual editing. Use a
+program like "audacity" to only save the first part of these clips, the
+"twenty", "thirty" etc part. These clips are used to say numbers like 24,
+35 etc.
+
+There is one more step before the new sounds can be used with SvxLink. The
+filter_sounds.sh script must be used to maximize the amplitude and cut
+away unnecessary silence plus gettig the sound clips to the right format
+(sampling rate etc).
+
+	../../filter_sounds.sh . /tmp/sounds-mary
+
+Now you can put the sound clips in the right place and start using them.
+

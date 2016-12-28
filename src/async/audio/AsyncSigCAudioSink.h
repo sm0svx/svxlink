@@ -1,9 +1,10 @@
 /**
- * @file	 AsyncSigCAudioSink.h
- * @brief   Contains an adapter class to connect to an AudioSource using SigC
- * @author  Tobias Blomberg / SM0SVX
- * @date	 2005-04-17
- *\verbatim
+@file	 AsyncSigCAudioSink.h
+@brief   Contains an adapter class to connect to an AudioSource using SigC
+@author  Tobias Blomberg / SM0SVX
+@date	 2005-04-17
+
+\verbatim
 Async - A library for programming event driven applications
 Copyright (C) 2003-2013  Tobias Blomberg / SM0SVX
 
@@ -22,56 +23,94 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
+
 #ifndef ASYNC_SIGC_AUDIO_SINK_INCLUDED
 #define ASYNC_SIGC_AUDIO_SINK_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <sigc++/sigc++.h>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioSink.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+  
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
- /**
- * @brief  An adapter class to connect to an AudioSource class using SigC
- * @author Tobias Blomberg
- * @date   2005-04-17
+ *
+ ****************************************************************************/
 
- * This is an adapter class that can be used to interact with an AudioSource
- * class using SigC signals and slots.
- */
+/**
+@brief	An adapter class to connect to an AudioSource class using SigC
+@author Tobias Blomberg
+@date   2005-04-17
+
+This is an adapter class that can be used to interact with an AudioSource
+class using SigC signals and slots.
+*/
 class SigCAudioSink : public AudioSink, public sigc::trackable
 {
   public:
@@ -79,12 +118,12 @@ class SigCAudioSink : public AudioSink, public sigc::trackable
      * @brief 	Default constuctor
      */
     SigCAudioSink(void) {}
-
+  
     /**
      * @brief 	Destructor
      */
     ~SigCAudioSink(void) {}
-
+  
     /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
@@ -102,7 +141,7 @@ class SigCAudioSink : public AudioSink, public sigc::trackable
     {
       return sigWriteSamples(const_cast<float *>(samples), count);
     }
-
+    
     /**
      * @brief 	Tell the sink to flush the previously written samples
      *
@@ -117,7 +156,7 @@ class SigCAudioSink : public AudioSink, public sigc::trackable
     {
       sigFlushSamples();
     }
-
+    
     /**
      * @brief 	Tell the source that we are ready to accept more samples
      *
@@ -128,7 +167,7 @@ class SigCAudioSink : public AudioSink, public sigc::trackable
     {
       sourceResumeOutput();
     }
-
+    
     /**
      * @brief 	Tell the source that all samples have been flushed
      *
@@ -141,7 +180,7 @@ class SigCAudioSink : public AudioSink, public sigc::trackable
     {
       sourceAllSamplesFlushed();
     }
-
+    
     /**
      * @brief 	Signal that is emitted when the source write samples
      * @param 	samples The buffer containing the samples
@@ -162,12 +201,15 @@ class SigCAudioSink : public AudioSink, public sigc::trackable
      * should be called.
      */
     sigc::signal<void>       	    sigFlushSamples;
-
+    
 };  /* class SigCAudioSink */
+
 
 } /* namespace */
 
 #endif /* ASYNC_SIGC_AUDIO_SINK_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

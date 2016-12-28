@@ -26,53 +26,97 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
 #include <cassert>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "AsyncAudioFifo.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
+
 static const unsigned  MAX_WRITE_SIZE = 800;
 
-/*
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
+
 AudioFifo::AudioFifo(unsigned fifo_size)
   : fifo_size(fifo_size), head(0), tail(0),
     do_overwrite(false), output_stopped(false), prebuf_samples(0),
@@ -83,10 +127,12 @@ AudioFifo::AudioFifo(unsigned fifo_size)
   fifo = new float[fifo_size];
 } /* AudioFifo */
 
+
 AudioFifo::~AudioFifo(void)
 {
   delete [] fifo;
 } /* ~AudioFifo */
+
 
 void AudioFifo::setSize(unsigned new_size)
 {
@@ -99,6 +145,7 @@ void AudioFifo::setSize(unsigned new_size)
   }
   clear();
 } /* AudioFifo::setSize */
+
 
 unsigned AudioFifo::samplesInFifo(bool ignore_prebuf) const
 {
@@ -117,6 +164,7 @@ unsigned AudioFifo::samplesInFifo(bool ignore_prebuf) const
 
 } /* AudioFifo::samplesInFifo */
 
+
 void AudioFifo::clear(void)
 {
   bool was_empty = empty();
@@ -132,6 +180,7 @@ void AudioFifo::clear(void)
   }
 } /* AudioFifo::clear */
 
+
 void AudioFifo::setPrebufSamples(unsigned prebuf_samples)
 {
   this->prebuf_samples = min(prebuf_samples, fifo_size-1);
@@ -140,6 +189,7 @@ void AudioFifo::setPrebufSamples(unsigned prebuf_samples)
     prebuf = (prebuf_samples > 0);
   }
 } /* AudioFifo::setPrebufSamples */
+
 
 void AudioFifo::enableBuffering(bool enable)
 {
@@ -170,6 +220,7 @@ void AudioFifo::enableBuffering(bool enable)
     }
   }
 } /* AudioFifo::enableBuffering */
+
 
 int AudioFifo::writeSamples(const float *samples, int count)
 {
@@ -239,6 +290,7 @@ int AudioFifo::writeSamples(const float *samples, int count)
   
 } /* writeSamples */
 
+
 void AudioFifo::flushSamples(void)
 {
   //printf("AudioFifo::flushSamples\n");
@@ -271,9 +323,14 @@ void AudioFifo::resumeOutput(void)
   }
 } /* resumeOutput */
 
-/*
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 
 void AudioFifo::allSamplesFlushed(void)
 {
@@ -293,9 +350,18 @@ void AudioFifo::allSamplesFlushed(void)
   }
 } /* AudioFifo::allSamplesFlushed */
 
-/*
+
+
+
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
+
 void AudioFifo::writeSamplesFromFifo(void)
 {
   if (output_stopped || (samplesInFifo() == 0))
@@ -340,6 +406,8 @@ void AudioFifo::writeSamplesFromFifo(void)
   }
   
 } /* writeSamplesFromFifo */
+
+
 
 /*
  * This file has not been truncated

@@ -24,9 +24,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <iostream>
 #include <cassert>
 
@@ -45,18 +51,26 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <QCloseEvent>
 #undef emit
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncIpAddress.h>
 #include <AsyncAudioInterpolator.h>
 #include <EchoLinkDirectory.h>
 #include <EchoLinkProxy.h>
 #include <common.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "version/QTEL.h"
 #include "Settings.h"
 #include "EchoLinkDispatcher.h"
@@ -66,36 +80,66 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "EchoLinkDirectoryModel.h"
 #include "multirate_filter_coeff.h"
 
-/*
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-/*
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
+
 /*
  *------------------------------------------------------------------------
  * Method:    MainWindow::MainWindow
@@ -208,6 +252,7 @@ MainWindow::MainWindow(void)
   initMsgAudioIo();
 } /* MainWindow::MainWindow */
 
+
 MainWindow::~MainWindow(void)
 {
   delete msg_handler;
@@ -239,13 +284,40 @@ MainWindow::~MainWindow(void)
   Dispatcher::deleteInstance();
 } /* MainWindow::~MainWindow */
 
-/*
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 
 /*
- * Private member functions
+ *------------------------------------------------------------------------
+ * Method:    
+ * Purpose:   
+ * Input:     
+ * Output:    
+ * Author:    
+ * Created:   
+ * Remarks:   
+ * Bugs:      
+ *------------------------------------------------------------------------
  */
+
+
+
+
+
+
+/****************************************************************************
+ *
+ * Private member functions
+ *
+ ****************************************************************************/
+
+
 void MainWindow::incomingConnection(const IpAddress& remote_ip,
     const string& remote_call, const string& remote_name,
     const string& remote_priv)
@@ -285,6 +357,7 @@ void MainWindow::incomingConnection(const IpAddress& remote_ip,
   
 } /* MainWindow::incomingConnection */
 
+
 void MainWindow::closeEvent(QCloseEvent *e)
 {
   static int close_count = 0;
@@ -309,6 +382,7 @@ void MainWindow::serverError(const string& msg)
   statusBar()->showMessage(msg.c_str(), 5000);
   server_msg_view->append(msg.c_str());
 } /* MainWindow::serverError */
+
 
 void MainWindow::statusChanged(StationData::Status status)
 {
@@ -345,6 +419,7 @@ void MainWindow::statusChanged(StationData::Status status)
   prev_status = status;
   
 } /* MainWindow::statusChanged */
+
 
 void MainWindow::allMsgsWritten(void)
 {
@@ -395,6 +470,7 @@ void MainWindow::initMsgAudioIo(void)
   
 } /* MainWindow::initMsgAudioIo */
 
+
 void MainWindow::setupAudioParams(void)
 {
   int rate = Settings::instance()->cardSampleRate();
@@ -418,6 +494,7 @@ void MainWindow::setupAudioParams(void)
   AudioIO::setSampleRate(rate);
   AudioIO::setChannels(1);
 } /* MainWindow::setupAudioParams */
+
 
 void MainWindow::initEchoLink(void)
 {
@@ -471,6 +548,7 @@ void MainWindow::initEchoLink(void)
       mem_fun(*this, &MainWindow::incomingConnection));
 } /* MainWindow::initEchoLink */
 
+
 void MainWindow::updateBookmarkModel(void)
 {
   list<StationData> bookmarks;
@@ -495,6 +573,8 @@ void MainWindow::updateBookmarkModel(void)
   bookmark_model->updateStationList(bookmarks);
   
 } /* MainWindow::updateBookmarkModel */
+
+
 
 void MainWindow::stationViewSelectorCurrentItemChanged(QListWidgetItem *current,
 						       QListWidgetItem *previous
@@ -570,6 +650,7 @@ void MainWindow::stationViewSelectionChanged(const QItemSelection &current,
   
 } /* MainWindow::stationViewSelectionChanged */
 
+
 void MainWindow::callsignListUpdated(void)
 {
   updateBookmarkModel();
@@ -589,6 +670,7 @@ void MainWindow::callsignListUpdated(void)
   }
     
 } /* MainWindow::callsignListUpdated */
+
 
 void MainWindow::refreshCallList(void)
 {
@@ -612,27 +694,32 @@ void MainWindow::updateRegistration(void)
   }
 } /* MainWindow::updateRegistration */
 
+
 void MainWindow::setBusy(bool busy)
 {
   is_busy = busy;
   updateRegistration();
 } /* MainWindow::setBusy */
 
+
 void MainWindow::forceQuit(void)
 {
   close();
 } /* MainWindow::forceQuit */
+
 
 void MainWindow::incomingSelectionChanged(void)
 {
   incoming_accept_button->setEnabled(incoming_con_view->selectedItems().size() > 0);
 } /* MainWindow::incomingSelectionChanged */
 
+
 void MainWindow::clearIncomingList(void)
 {
   incoming_con_view->clear();
   incoming_accept_button->setEnabled(false);
 } /* MainWindow::clearIncomingList */
+
 
 void MainWindow::acceptIncoming(void)
 {
@@ -649,6 +736,7 @@ void MainWindow::acceptIncoming(void)
   incoming_con_view->takeTopLevelItem(item_index);
   delete item;
 } /* MainWindow::acceptIncoming */
+
 
 void MainWindow::addSelectedToBookmarks(void)
 {
@@ -669,6 +757,7 @@ void MainWindow::addSelectedToBookmarks(void)
 
 } /* MainWindow::addSelectedToBookmarks */
 
+
 void MainWindow::removeSelectedFromBookmarks(void)
 {
   QModelIndexList indexes = station_view->selectionModel()->selectedIndexes();
@@ -688,6 +777,7 @@ void MainWindow::removeSelectedFromBookmarks(void)
   }
 } /* MainWindow::removeSelectedFromBookmarks */
 
+
 void MainWindow::addNamedStationToBookmarks(void)
 {
   QString call = QInputDialog::getText(this, trUtf8("Qtel - Add station..."),
@@ -706,6 +796,7 @@ void MainWindow::addNamedStationToBookmarks(void)
   }
   
 } /* MainWindow::addNamedStationToBookmarks */
+
 
 void MainWindow::configurationUpdated(void)
 {
@@ -727,6 +818,7 @@ void MainWindow::configurationUpdated(void)
   updateRegistration();
 } /* MainWindow::configurationChanged */
 
+
 void MainWindow::connectionConnectToIpActionActivated(void)
 {
   bool ok;
@@ -746,6 +838,7 @@ void MainWindow::connectionConnectToIpActionActivated(void)
   }
 } /* MainWindow::connectionConnectToIpActionActivated */
 
+
 void MainWindow::connectionConnectToSelectedActionActivated(void)
 {
   QModelIndexList indexes = station_view->selectionModel()->selectedIndexes();
@@ -761,6 +854,7 @@ void MainWindow::connectionConnectToSelectedActionActivated(void)
     com_dialog->show();
   }
 } /* MainWindow::connectionConnectToSelectedActionActivated */
+
 
 void MainWindow::settings(void)
 {
@@ -781,6 +875,8 @@ void MainWindow::helpAbout(void)
                "terms and conditions in "
                "the GNU GPL (General Public License) version 2 or later."));
 } /* MainWindow::helpAbout */
+
+
 
 /*
  * This file has not been truncated

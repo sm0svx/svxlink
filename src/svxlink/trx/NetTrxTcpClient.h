@@ -23,55 +23,95 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
+
 #ifndef NET_TRX_TCP_CLIENT_INCLUDED
 #define NET_TRX_TCP_CLIENT_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <map>
 #include <utility>
 #include <string>
 
 #include <sys/time.h>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncTcpClient.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "NetTrxMsg.h"
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
   class Timer;
 };
 
-/*
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
+
   
-/*
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	Network connection manager for remote transceivers
 @author Tobias Blomberg / SM0SVX
@@ -131,6 +171,7 @@ class NetTrxTcpClient : public Async::TcpClient
      */
     sigc::signal<void, NetTrxMsg::Msg*> msgReceived;
     
+    
   protected:
     /**
      * @brief   Constructor
@@ -149,7 +190,8 @@ class NetTrxTcpClient : public Async::TcpClient
      * @brief 	Destructor
      */
     ~NetTrxTcpClient(void);
-
+  
+    
   private:
     typedef std::map<std::pair<const std::string, uint16_t>, NetTrxTcpClient*>
       	    Clients;
@@ -186,7 +228,12 @@ class NetTrxTcpClient : public Async::TcpClient
 
 };  /* class NetTrxTcpClient */
 
+
+//} /* namespace */
+
 #endif /* NET_TRX_TCP_CLIENT_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

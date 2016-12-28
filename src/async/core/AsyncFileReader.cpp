@@ -27,53 +27,95 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <fcntl.h>
 #include <errno.h>
 #include <cstring>
 #include <iostream>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncFdWatch.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "AsyncFileReader.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 FileReader::FileReader(int buf_size)
   : fd(-1), rd_watch(0), buffer(0), head(0), tail(0), buf_size(buf_size),
     is_full(false), is_eof(false)
@@ -81,28 +123,31 @@ FileReader::FileReader(int buf_size)
   buffer = new char [buf_size];
 } /* FileReader::FileReader */
 
+
 FileReader::~FileReader(void)
 {
   close();
   delete [] buffer;
 } /* FileReader::~FileReader */
 
+
 bool FileReader::open(const string& name)
 {
   close();
-
+  
   fd = ::open(name.c_str(), O_RDONLY | O_NONBLOCK);
   if (fd == -1)
   {
     return false;
   }
-
+  
   rd_watch = new FdWatch(fd, FdWatch::FD_WATCH_RD);
   rd_watch->activity.connect(mem_fun(*this, &FileReader::onDataAvail));
 
   return fillBuffer();
-
+  
 } /* FileReader::openPort */
+
 
 bool FileReader::close(void)
 {
@@ -110,21 +155,22 @@ bool FileReader::close(void)
   {
     return true;
   }
-
+  
   if (::close(fd) < 0)
   {
     return false;
   }
-
+  
   fd = -1;
   head = tail = 0;
   is_full = false;
   is_eof = false;
-
+  
   delete rd_watch;
   return true;
   
 } /* FileReader::close */
+
 
 int FileReader::read(void *buf, int len)
 {
@@ -139,7 +185,7 @@ int FileReader::read(void *buf, int len)
     cerr << "FileReader: Buffer underrun" << endl;
     return -1;
   }
-
+  
   int bytes_from_buffer = min(avail, len);
   int written = 0;
   while (bytes_from_buffer > 0)
@@ -158,14 +204,19 @@ int FileReader::read(void *buf, int len)
   return written;
 }
 
-/*
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
 void FileReader::onDataAvail(FdWatch *watch)
 {
   fillBuffer();
 
 } /* FileReader::onDataAvail */
+
 
 bool FileReader::fillBuffer(void)
 {
@@ -190,13 +241,13 @@ bool FileReader::fillBuffer(void)
       is_eof |= (cnt == 0);
       break;
     }
-
+    
     head += cnt;
     head %= buf_size;
     bytes_to_buffer -= cnt;
     written += cnt;
   }
-
+  
   if (written == space)
   {
     is_full = true;
@@ -207,11 +258,13 @@ bool FileReader::fillBuffer(void)
 
 } /* FileReader::fillBuffer */
 
+
 int FileReader::bytesInBuffer(void) const
 {
   return is_full ? buf_size : (head - tail + buf_size) % buf_size;
   
 } /* FileReader::bytesInBuffer */
+
 
 /*
  * This file has not been truncated

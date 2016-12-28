@@ -23,55 +23,93 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
+
 #ifndef VOTER_INCLUDED
 #define VOTER_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <list>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncConfig.h>
 #include <CppStdCompat.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "Rx.h"
 #include "Macho.hpp"
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
   class Timer;
   class AudioSelector;
-  class Pty;
 };
 
-/*
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
- 
-/*
+ *
+ ****************************************************************************/
+
+  
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
 
 /**
 @brief	An Rx class that implement a receiver voter
@@ -161,8 +199,6 @@ class Voter : public Rx
     static CONSTEXPR unsigned MAX_REVOTE_INTERVAL            = 60000;
     static CONSTEXPR unsigned MAX_RX_SWITCH_DELAY            = 3000;
     
-	void commandHandler(const void *buf, size_t count);
-	void setRxStatus(char *name, bool status);
     class SatRx;
 
     TOPSTATE(Top)
@@ -382,13 +418,16 @@ class Voter : public Rx
     void unmuteAll(void);
     void resetAll(void);
     void printSquelchState(void);
-    void setRxStatus(void);
     SatRx *findBestRx(void) const;
-    Async::Pty *voter_pty;
 
 };  /* class Voter */
 
+
+//} /* namespace */
+
 #endif /* VOTER_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

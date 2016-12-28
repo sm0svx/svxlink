@@ -24,48 +24,85 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
+
 #ifndef ASYNC_AUDIO_STREAM_STATE_DETECTOR_INCLUDED
 #define ASYNC_AUDIO_STREAM_STATE_DETECTOR_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <sigc++/sigc++.h>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioPassthrough.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+  
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
 
 /**
  * @brief A class that just passes the audio through and fires an event when
@@ -83,7 +120,7 @@ class AudioStreamStateDetector : public AudioPassthrough, public sigc::trackable
      * @brief 	Destructor
      */
     virtual ~AudioStreamStateDetector(void) {}
-
+  
     /**
      * @brief 	Write samples into this audio sink
      * @param 	samples The buffer containing the samples
@@ -104,7 +141,7 @@ class AudioStreamStateDetector : public AudioPassthrough, public sigc::trackable
       }
       return AudioPassthrough::writeSamples(samples, count);
     }
-
+    
     /**
      * @brief 	Tell the sink to flush the previously written samples
      *
@@ -122,7 +159,7 @@ class AudioStreamStateDetector : public AudioPassthrough, public sigc::trackable
       }
       AudioPassthrough::flushSamples();
     }
-
+    
     /**
      * @brief The registered sink has flushed all samples
      *
@@ -166,7 +203,8 @@ class AudioStreamStateDetector : public AudioPassthrough, public sigc::trackable
      * @param is_idle 	Is \em  true if the stream is idle
      */
     sigc::signal<void, bool, bool> sigStreamStateChanged;
-
+    
+    
   private:
     AudioStreamStateDetector(const AudioStreamStateDetector&);
     AudioStreamStateDetector& operator=(const AudioStreamStateDetector&);
@@ -177,12 +215,15 @@ class AudioStreamStateDetector : public AudioPassthrough, public sigc::trackable
     } StreamState;
 
     StreamState stream_state;
-
+    
 }; /* AudioStreamStateDetector */
+
 
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_STREAM_STATE_DETECTOR_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

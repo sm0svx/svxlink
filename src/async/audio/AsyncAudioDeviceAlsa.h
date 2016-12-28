@@ -25,48 +25,85 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
 #ifndef ASYNC_AUDIO_DEVICE_ALSA_INCLUDED
 #define ASYNC_AUDIO_DEVICE_ALSA_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <alsa/asoundlib.h>
 
-/*
- * Project Includes
- */
 
-/*
+/****************************************************************************
+ *
+ * Project Includes
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "AsyncAudioDevice.h"
 
-/*
- * Forward declarations
- */
 
-/*
+/****************************************************************************
+ *
+ * Forward declarations
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	Implements the low level interface to an Alsa audio device
 @author Tobias Blomberg / SM0SVX
@@ -103,7 +140,7 @@ class AudioDeviceAlsa : public AudioDevice
      *	      	or else \em false
      */
     virtual bool isFullDuplexCapable(void);
-
+    
     /**
      * @brief 	Tell the audio device handler that there are audio to be
      *	      	written in the buffer
@@ -114,7 +151,7 @@ class AudioDeviceAlsa : public AudioDevice
      * @brief	Tell the audio device to flush its buffers
      */
     virtual void flushSamples(void);
-
+    
     /**
      * @brief 	Find out how many samples there are in the output buffer
      * @return	Returns the number of samples in the output buffer on
@@ -126,7 +163,8 @@ class AudioDeviceAlsa : public AudioDevice
      * been flushed.
      */
     virtual int samplesToWrite(void) const;
-
+    
+    
   protected:
     /**
      * @brief 	Open the audio device
@@ -139,6 +177,7 @@ class AudioDeviceAlsa : public AudioDevice
      * @brief 	Close the audio device
      */
     virtual void closeDevice(void);
+
 
   private:
     class       AlsaWatch;
@@ -160,9 +199,12 @@ class AudioDeviceAlsa : public AudioDevice
     
 };  /* class AudioDeviceAlsa */
 
+
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_DEVICE_ALSA_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

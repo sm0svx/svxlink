@@ -1,4 +1,0 @@
-lib/systemd/system/remotetrx.service
-usr/bin/remotetrx
-etc/default/remotetrx
-etc/svxlink/remotetrx.conf

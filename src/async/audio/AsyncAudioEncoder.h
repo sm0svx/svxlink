@@ -23,49 +23,86 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
 #ifndef ASYNC_AUDIO_ENCODER_INCLUDED
 #define ASYNC_AUDIO_ENCODER_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <sigc++/sigc++.h>
 #include <string>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioSink.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+  
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	Base class for an audio encoder
 @author Tobias Blomberg / SM0SVX
@@ -77,23 +114,23 @@ class AudioEncoder : public AudioSink, public sigc::trackable
 {
   public:
     static AudioEncoder *create(const std::string &name);
-
+    
     /**
      * @brief 	Default constuctor
      */
     AudioEncoder(void) {}
-
+  
     /**
      * @brief 	Destructor
      */
     ~AudioEncoder(void) {}
-
+  
     /**
      * @brief   Get the name of the codec
      * @returns Return the name of the codec
      */
     virtual const char *name(void) const = 0;
-
+    
     /**
      * @brief 	Set an option for the encoder
      * @param 	name The name of the option
@@ -105,12 +142,12 @@ class AudioEncoder : public AudioSink, public sigc::trackable
      * @brief Print codec parameter settings
      */
     virtual void printCodecParams(void) {}
-
+    
     /**
      * @brief 	Call this function when all encoded samples have been flushed
      */
     void allEncodedSamplesFlushed(void) { sourceAllSamplesFlushed(); }
-
+    
     /**
      * @brief 	Tell the sink to flush the previously written samples
      *
@@ -120,7 +157,7 @@ class AudioEncoder : public AudioSink, public sigc::trackable
      * This function is normally only called from a connected source object.
      */
     virtual void flushSamples(void) { flushEncodedSamples(); }
-
+    
     /**
      * @brief 	A signal emitted when encoded samples are available
      * @param 	buf  Buffer containing encoded samples
@@ -132,18 +169,22 @@ class AudioEncoder : public AudioSink, public sigc::trackable
      * @brief This signal is emitted when the source calls flushSamples
      */
     sigc::signal<void> flushEncodedSamples;
-
+    
+  
   protected:
-
+    
   private:
     AudioEncoder(const AudioEncoder&);
     AudioEncoder& operator=(const AudioEncoder&);
-
+    
 };  /* class AudioEncoder */
+
 
 } /* namespace */
 
 #endif /* ASYNC_AUDIO_ENCODER_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

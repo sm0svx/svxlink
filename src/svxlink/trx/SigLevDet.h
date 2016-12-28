@@ -23,28 +23,45 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
+
 #ifndef SIG_LEV_DET_INCLUDED
 #define SIG_LEV_DET_INCLUDED
 
-/*
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <sigc++/sigc++.h>
 #include <string>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncAudioSink.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "Factory.h"
 
-/*
+
+/****************************************************************************
+ *
  * Forward declarations
- */
+ *
+ ****************************************************************************/
+
 namespace Async
 {
   class AudioFilter;
@@ -52,25 +69,47 @@ namespace Async
   class Config;
 };
 
-/*
+
+/****************************************************************************
+ *
  * Namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+//namespace MyNameSpace
+//{
+
+
+/****************************************************************************
+ *
  * Forward declarations of classes inside of the declared namespace
- */
+ *
+ ****************************************************************************/
 
-/*
+  
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Class definitions
- */
+ *
+ ****************************************************************************/
+
 /**
 @brief	The base class for a signal level detector
 @author Tobias Blomberg / SM0SVX
@@ -161,6 +200,7 @@ class SigLevDet : public sigc::trackable, public Async::AudioSink
     
 };  /* class SigLevDet */
 
+
 /**
 @brief	Base class for a signal level detector factory
 @author Tobias Blomberg / SM0SVX
@@ -181,6 +221,7 @@ struct SigLevDetFactoryBase : public FactoryBase<SigLevDet>
   }
 };  /* class SigLevDetFactoryBase */
 
+
 /**
 @brief	Base class for implementing a signal level detector factory
 @author Tobias Blomberg / SM0SVX
@@ -196,7 +237,12 @@ struct SigLevDetFactory : public Factory<SigLevDetFactoryBase, T>
     : Factory<SigLevDetFactoryBase, T>(name) {}
 }; /* class SigLevDetFactory */
 
+
+//} /* namespace */
+
 #endif /* SIG_LEV_DET_INCLUDED */
+
+
 
 /*
  * This file has not been truncated

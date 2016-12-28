@@ -24,62 +24,108 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <Rx.h>
 #include <Tx.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "SimplexLogic.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
+
+
+/****************************************************************************
+ *
  * Defines & typedefs
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 
 SimplexLogic::SimplexLogic(Async::Config& cfg, const string& name)
   : Logic(cfg, name), mute_rx_on_tx(true), mute_tx_on_rx(true)
 {
 } /* SimplexLogic::SimplexLogic */
 
+
 SimplexLogic::~SimplexLogic(void)
 {
 } /* SimplexLogic::~SimplexLogic */
+
 
 bool SimplexLogic::initialize(void)
 {
@@ -87,22 +133,27 @@ bool SimplexLogic::initialize(void)
   {
     return false;
   }
-
+  
   cfg().getValue(name(), "MUTE_RX_ON_TX", mute_rx_on_tx);
   cfg().getValue(name(), "MUTE_TX_ON_RX", mute_tx_on_rx);
-
+  
   rxValveSetOpen(true);
   setTxCtrlMode(Tx::TX_AUTO);
   
   processEvent("startup");
-
+  
   return true;
-
+  
 } /* SimplexLogic::initialize */
 
-/*
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 void SimplexLogic::squelchOpen(bool is_open)
 {
   //cout << name() << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
@@ -143,6 +194,7 @@ void SimplexLogic::squelchOpen(bool is_open)
   
 } /* SimplexLogic::squelchOpen */
 
+
 void SimplexLogic::transmitterStateChange(bool is_transmitting)
 {
   if (mute_rx_on_tx)
@@ -152,9 +204,16 @@ void SimplexLogic::transmitterStateChange(bool is_transmitting)
   Logic::transmitterStateChange(is_transmitting);
 } /* SimplexLogic::transmitterStateChange */
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
+
 
 /*
  * This file has not been truncated

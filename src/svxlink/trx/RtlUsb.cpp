@@ -24,9 +24,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+
+
+/****************************************************************************
+ *
  * System Includes
- */
+ *
+ ****************************************************************************/
+
 #include <cstring>
 #include <cstdlib>
 #include <iterator>
@@ -39,29 +44,51 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdio.h>
 #include <errno.h>
 
-/*
+
+/****************************************************************************
+ *
  * Project Includes
- */
+ *
+ ****************************************************************************/
+
 #include <AsyncFdWatch.h>
 
-/*
+
+/****************************************************************************
+ *
  * Local Includes
- */
+ *
+ ****************************************************************************/
+
 #include "RtlUsb.h"
 
-/*
+
+
+/****************************************************************************
+ *
  * Namespaces to use
- */
+ *
+ ****************************************************************************/
+
 using namespace std;
 using namespace Async;
 
-/*
- * Defines & typedefs
- */
 
-/*
+
+/****************************************************************************
+ *
+ * Defines & typedefs
+ *
+ ****************************************************************************/
+
+
+
+/****************************************************************************
+ *
  * Local class definitions
- */
+ *
+ ****************************************************************************/
+
 class RtlUsb::SampleBuffer : public sigc::trackable
 {
   public:
@@ -240,21 +267,39 @@ class RtlUsb::SampleBuffer : public sigc::trackable
     }
 };
 
-/*
+
+
+/****************************************************************************
+ *
  * Prototypes
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Exported Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+
+/****************************************************************************
+ *
  * Local Global Variables
- */
+ *
+ ****************************************************************************/
 
-/*
+
+
+/****************************************************************************
+ *
  * Public member functions
- */
+ *
+ ****************************************************************************/
+
 RtlUsb::RtlUsb(const std::string &match)
   : reconnect_timer(0, Timer::TYPE_ONESHOT), dev(NULL), rtl_reader_thread(),
     dev_match(match), dev_name("?"), sample_buf(0),
@@ -264,6 +309,7 @@ RtlUsb::RtlUsb(const std::string &match)
       hide(mem_fun(*this, &RtlUsb::initializeDongle)));
 } /* RtlUsb::RtlUsb */
 
+
 RtlUsb::~RtlUsb(void)
 {
   verboseClose();
@@ -271,9 +317,14 @@ RtlUsb::~RtlUsb(void)
   sample_buf = 0;
 } /* RtlUsb::~RtlUsb */
 
-/*
+
+
+/****************************************************************************
+ *
  * Protected member functions
- */
+ *
+ ****************************************************************************/
+
 void RtlUsb::handleSetTunerIfGain(uint16_t stage, int16_t gain)
 {
   if (dev == NULL)
@@ -296,6 +347,7 @@ void RtlUsb::handleSetTunerIfGain(uint16_t stage, int16_t gain)
   }
 } /* RtlUsb::handleSetTunerIfGain */
 
+
 void RtlUsb::handleSetCenterFq(uint32_t fq)
 {
   if (dev == NULL)
@@ -314,6 +366,7 @@ void RtlUsb::handleSetCenterFq(uint32_t fq)
     //cerr << "### Tuned to " << fq << "Hz\n";
   }
 } /* RtlUsb::handleSetCenterFq */
+
 
 void RtlUsb::handleSetSampleRate(uint32_t rate)
 {
@@ -338,6 +391,7 @@ void RtlUsb::handleSetSampleRate(uint32_t rate)
     //cerr << "### Sample rate set to " << rate << "Hz\n";
   }
 } /* RtlUsb::handleSetSampleRate */
+
 
 void RtlUsb::handleSetGainMode(uint32_t mode)
 {
@@ -376,6 +430,7 @@ void RtlUsb::handleSetGainMode(uint32_t mode)
   }
 } /* RtlUsb::handleSetGainMode */
 
+
 void RtlUsb::handleSetGain(int32_t gain)
 {
   if (dev == NULL)
@@ -396,6 +451,7 @@ void RtlUsb::handleSetGain(int32_t gain)
   }
 } /* RtlUsb::handleSetGain */
 
+
 void RtlUsb::handleSetFqCorr(uint32_t corr)
 {
   if (dev == NULL)
@@ -415,6 +471,7 @@ void RtlUsb::handleSetFqCorr(uint32_t corr)
   }
 } /* RtlUsb::handleSetFqCorr */
 
+
 void RtlUsb::handleEnableTestMode(bool enable)
 {
   if (dev == NULL)
@@ -432,6 +489,7 @@ void RtlUsb::handleEnableTestMode(bool enable)
     //cerr << "### Test mode " << (enable ? "enabled" : "disabled") << endl;
   }
 } /* RtlUsb::handleEnableTestMode */
+
 
 void RtlUsb::handleEnableDigitalAgc(bool enable)
 {
@@ -451,9 +509,14 @@ void RtlUsb::handleEnableDigitalAgc(bool enable)
   }
 } /* RtlUsb::handleEnableDigitalAgc */
 
-/*
+
+
+/****************************************************************************
+ *
  * Private member functions
- */
+ *
+ ****************************************************************************/
+
 void *RtlUsb::startRtlReader(void *data)
 {
   RtlUsb *rtl = reinterpret_cast<RtlUsb*>(data);
@@ -461,6 +524,7 @@ void *RtlUsb::startRtlReader(void *data)
   rtl->rtlReader();
   return NULL;
 } /* RtlUsb::startRtlReader */
+
 
 #if 0
 void RtlUsb::rtlReader(void)
@@ -522,6 +586,7 @@ void RtlUsb::rtlReader(void)
   sample_buf->closeWritePipe();
 } /* RtlUsb::rtlReader */
 
+
 void RtlUsb::rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx)
 {
   //cout << "### RtlUsb::rtlsdrCallback: len=" << len << endl;
@@ -533,6 +598,7 @@ void RtlUsb::rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx)
   }
 } /* RtlUsb::rtlsdrCallback */
 #endif
+
 
 void RtlUsb::initializeDongle(void)
 {
@@ -637,6 +703,7 @@ void RtlUsb::initializeDongle(void)
   readyStateChanged();
 } /* RtlUsb::initializeDongle */
 
+
 void RtlUsb::verboseClose(void)
 {
   //cout << "### RtlUsb::verboseClose\n";
@@ -685,6 +752,7 @@ void RtlUsb::verboseClose(void)
     // Signal to upper layers that the receiver is no longer ready
   readyStateChanged();
 } /* RtlUsb::verboseClose */
+
 
 int RtlUsb::verboseDeviceSearch(const char *s)
 {
@@ -771,6 +839,8 @@ int RtlUsb::verboseDeviceSearch(const char *s)
   }
   return -1;
 }
+
+
 
 /*
  * This file has not been truncated

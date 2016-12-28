@@ -1,5 +1,3 @@
-option(WITH_NO_SONAME "Tell CMake that the imported library file has no soname:" OFF)
-
 # The name of the module without the Module prefix
 set(MODNAME MetarInfo)
 
@@ -24,9 +22,6 @@ add_library(Module${MODNAME} MODULE Module${MODNAME}.cpp ${MODSRC}
   ${VERSION_DEPENDS}
 )
 set_target_properties(Module${MODNAME} PROPERTIES PREFIX "")
-if(WITH_NO_SONAME)
-   set_property(TARGET Module${MODNAME} PROPERTY NO_SONAME 1)
-endif(WITH_NO_SONAME)
 target_link_libraries(Module${MODNAME} ${LIBS})
 
 # Install targets
