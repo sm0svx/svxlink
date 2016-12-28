@@ -83,7 +83,7 @@ NetTx::NetTx(Config &cfg, const string& name)
     ctcss_enable(false), pacer(0), is_connected(false), pending_flush(false),
     unflushed_samples(false), audio_enc(0)
 {
-} /** NetTx::NetTx */
+} /* NetTx::NetTx */
 
 NetTx::~NetTx(void)
 {
@@ -91,7 +91,7 @@ NetTx::~NetTx(void)
   delete audio_enc;
   delete pacer;
   tcp_con->deleteInstance();
-} /** NetTx::~NetTx */
+} /* NetTx::~NetTx */
 
 bool NetTx::initialize(void)
 {
@@ -189,7 +189,6 @@ void NetTx::setTxCtrlMode(TxCtrlMode mode)
   }
 } /** NetTx::setTxCtrlMode */
 
-
 bool NetTx::isTransmitting(void) const
 {
   return is_transmitting;
@@ -201,7 +200,6 @@ void NetTx::enableCtcss(bool enable)
   MsgEnableCtcss *msg = new MsgEnableCtcss(enable);
   sendMsg(msg);
 } /** NetTx::enableCtcss */
-
 
 void NetTx::sendDtmf(const std::string& digits)
 {
@@ -302,7 +300,7 @@ void NetTx::handleMsg(Msg *msg)
     */
   }
   
-} /** NetTx::handleMsg */
+} /* NetTx::handleMsg */
 
 void NetTx::sendMsg(Msg *msg)
 {
@@ -334,7 +332,7 @@ void NetTx::writeEncodedSamples(const void *buf, int size)
       setIsTransmitting(true);
     }
   }
-} /** NetTx::writeEncodedSamples */
+} /* NetTx::writeEncodedSamples */
 
 void NetTx::flushEncodedSamples(void)
 {
@@ -348,7 +346,7 @@ void NetTx::flushEncodedSamples(void)
   {
     allEncodedSamplesFlushed();
   }
-} /** NetTx::flushSamples */
+} /* NetTx::flushSamples */
 
 void NetTx::setIsTransmitting(bool is_transmitting)
 {
@@ -359,7 +357,7 @@ void NetTx::setIsTransmitting(bool is_transmitting)
     this->is_transmitting = is_transmitting;
     transmitterStateChange(is_transmitting);
   }
-} /** NetTx::setIsTransmitting */
+} /* NetTx::setIsTransmitting */
 
 void NetTx::allEncodedSamplesFlushed(void)
 {
@@ -371,7 +369,7 @@ void NetTx::allEncodedSamplesFlushed(void)
   {
     setIsTransmitting(false);
   }
-} /** NetTx::allEncodedSamplesFlushed */
+} /* NetTx::allEncodedSamplesFlushed */
 
 /**
  * This file has not been truncated

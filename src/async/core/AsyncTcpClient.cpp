@@ -86,7 +86,7 @@ TcpClient::TcpClient(size_t recv_buf_len)
 {
   wr_watch = new FdWatch;
   wr_watch->activity.connect(mem_fun(*this, &TcpClient::connectHandler));
-} /** TcpClient::TcpClient */
+} /* TcpClient::TcpClient */
 
 TcpClient::TcpClient(const string& remote_host, uint16_t remote_port,
     size_t recv_buf_len)
@@ -96,7 +96,7 @@ TcpClient::TcpClient(const string& remote_host, uint16_t remote_port,
   wr_watch = new FdWatch;
   wr_watch->activity.connect(mem_fun(*this, &TcpClient::connectHandler));
   setRemotePort(remote_port);
-} /** TcpClient::TcpClient */
+} /* TcpClient::TcpClient */
 
 TcpClient::TcpClient(const IpAddress& remote_ip, uint16_t remote_port,
     size_t recv_buf_len)
@@ -107,26 +107,26 @@ TcpClient::TcpClient(const IpAddress& remote_ip, uint16_t remote_port,
   wr_watch->activity.connect(mem_fun(*this, &TcpClient::connectHandler));
   setRemoteAddr(remote_ip);
   setRemotePort(remote_port);
-} /** TcpClient::TcpClient */
+} /* TcpClient::TcpClient */
 
 TcpClient::~TcpClient(void)
 {
   disconnect();
   delete wr_watch;
   wr_watch = 0;
-} /** TcpClient::~TcpClient */
+} /* TcpClient::~TcpClient */
 
 void TcpClient::bind(const IpAddress& bind_ip)
 {
   this->bind_ip = bind_ip;
-} /** TcpClient::bind */
+} /* TcpClient::bind */
 
 void TcpClient::connect(const string &remote_host, uint16_t remote_port)
 {
   this->remote_host = remote_host;
   setRemotePort(remote_port);
   connect();
-} /** TcpClient::connect */
+} /* TcpClient::connect */
 
 void TcpClient::connect(const IpAddress& remote_ip, uint16_t remote_port)
 {
@@ -134,7 +134,7 @@ void TcpClient::connect(const IpAddress& remote_ip, uint16_t remote_port)
   remote_host = remote_ip.toString();
   setRemotePort(remote_port);
   connect();
-} /** TcpClient::connect */
+} /* TcpClient::connect */
 
 void TcpClient::connect(void)
 {
@@ -154,7 +154,7 @@ void TcpClient::connect(void)
   {
     connectToRemote();
   }
-} /** TcpClient::connect */
+} /* TcpClient::connect */
 
 void TcpClient::disconnect(void)
 {
@@ -171,7 +171,7 @@ void TcpClient::disconnect(void)
     sock = -1;
   }
   
-} /** TcpClient::disconnect */
+} /* TcpClient::disconnect */
 
 
 /**
@@ -199,8 +199,7 @@ void TcpClient::dnsResultsReady(DnsLookup& dns_lookup)
   
   connectToRemote();
   
-} /** TcpClient::dnsResultsReady */
-
+} /* TcpClient::dnsResultsReady */
 
 void TcpClient::connectToRemote(void)
 {
@@ -212,7 +211,7 @@ void TcpClient::connectToRemote(void)
   addr.sin_port = htons(remotePort());
   addr.sin_addr = remoteHost().ip4Addr();
 
-    /** Create a TCP/IP socket to use */
+    /* Create a TCP/IP socket to use */
   sock = ::socket(PF_INET, SOCK_STREAM, 0);
   if (sock == -1)
   {
@@ -220,7 +219,7 @@ void TcpClient::connectToRemote(void)
     return;
   }
 
-    /** Setup non-blocking operation */
+    /* Setup non-blocking operation */
   if (fcntl(sock, F_SETFL, O_NONBLOCK))
   {
     int errno_tmp = errno;
@@ -246,7 +245,7 @@ void TcpClient::connectToRemote(void)
     }
   }
 
-    /** Connect to the server */
+    /* Connect to the server */
   int result = ::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
       	      	       sizeof(addr));
   if (result == -1)
@@ -273,7 +272,7 @@ void TcpClient::connectToRemote(void)
     connected();
   }
 
-} /** TcpClient::connectToRemote */
+} /* TcpClient::connectToRemote */
 
 void TcpClient::connectHandler(FdWatch *watch)
 {
@@ -302,7 +301,7 @@ void TcpClient::connectHandler(FdWatch *watch)
   
   connected();
   
-} /** TcpClient::connectHandler */
+} /* TcpClient::connectHandler */
 
 /**
  * This file has not been truncated

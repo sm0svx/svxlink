@@ -148,7 +148,7 @@ class NetTx : public Tx
     bool      	      	  pending_flush;
     bool      	      	  unflushed_samples;
     Async::AudioEncoder   *audio_enc;
-    
+
     void connectionReady(bool is_ready);
     void handleMsg(NetTrxMsg::Msg *msg);
     void sendMsg(NetTrxMsg::Msg *msg);
@@ -157,7 +157,7 @@ class NetTx : public Tx
     void setIsTransmitting(bool is_transmitting);
     void allEncodedSamplesFlushed(void);
 
-};  /** class NetTx */
+};  /* class NetTx */
 
 #endif /** NET_TX_INCLUDED */
 
