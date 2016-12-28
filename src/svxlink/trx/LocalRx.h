@@ -30,20 +30,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef LOCAL_RX_INCLUDED
 #define LOCAL_RX_INCLUDED
 
-/*
+/**
  * System Includes
  */
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "LocalRxBase.h"
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -51,23 +51,23 @@ namespace Async
   class AudioIO;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -142,10 +142,10 @@ class LocalRx : public LocalRxBase
     Async::Config   &cfg;
     Async::AudioIO  *audio_io;
     
-};  /* class LocalRx */
+};  /** class LocalRx */
 
-#endif /* LOCAL_RX_INCLUDED */
+#endif /** LOCAL_RX_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

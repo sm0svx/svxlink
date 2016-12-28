@@ -26,43 +26,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef PTT_INCLUDED
 #define PTT_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
 #include <map>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncConfig.h>
 
-/*
+/**
  * Local Includes
  */
 #include "Factory.h"
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -106,7 +106,7 @@ class Ptt
     Ptt(const Ptt&);
     Ptt& operator=(const Ptt&);
     
-};  /* class Ptt */
+};  /** class Ptt */
 
 /**
 @brief	Base class for a PTT hw controller factory
@@ -122,7 +122,7 @@ struct PttFactoryBase : public FactoryBase<Ptt>
 {
   static Ptt *createNamedPtt(Async::Config& cfg, const std::string& name);
   PttFactoryBase(const std::string &name) : FactoryBase<Ptt>(name) {}
-};  /* class PttFactoryBase */
+};  /** class PttFactoryBase */
 
 /**
 @brief	Base class for implementing a PTT hw controller factory
@@ -136,10 +136,10 @@ template <class T>
 struct PttFactory : public Factory<PttFactoryBase, T>
 {
   PttFactory(const std::string &name) : Factory<PttFactoryBase, T>(name) {}
-}; /* class PttFactory */
+}; /** class PttFactory */
 
-#endif /* PTT_INCLUDED */
+#endif /** PTT_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

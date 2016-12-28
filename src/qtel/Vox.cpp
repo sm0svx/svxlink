@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <iostream>
@@ -33,42 +33,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <QTimer>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "Vox.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 
@@ -79,12 +79,12 @@ Vox::Vox(void)
   m_vox_timer = new QTimer;
   connect(m_vox_timer, SIGNAL(timeout()),
           this, SLOT(voxTimeout()));
-} /* Vox::Vox */
+} /** Vox::Vox */
 
 Vox::~Vox(void)
 {
   delete m_vox_timer;
-} /* Vox::~Vox */
+} /** Vox::~Vox */
 
 int Vox::writeSamples(const float *samples, int count)
 {
@@ -139,7 +139,7 @@ int Vox::writeSamples(const float *samples, int count)
 
   return count;
     
-} /* Vox::writeSamples */
+} /** Vox::writeSamples */
 
 void Vox::setThreshold(int threshold_db)
 {
@@ -155,7 +155,7 @@ void Vox::setThreshold(int threshold_db)
   {
     m_threshold = threshold_db;
   }
-} /* Vox::setThreshold */
+} /** Vox::setThreshold */
 
 void Vox::setDelay(int delay_ms)
 {
@@ -167,7 +167,7 @@ void Vox::setDelay(int delay_ms)
   {
     m_delay = delay_ms;
   }
-} /* Vox::setDelay */
+} /** Vox::setDelay */
 
 void Vox::setEnabled(bool enable)
 {
@@ -177,13 +177,13 @@ void Vox::setEnabled(bool enable)
     levelChanged(-60);
     setState(IDLE);
   }
-} /* Vox::setEnabled */
+} /** Vox::setEnabled */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 /**
@@ -192,7 +192,7 @@ void Vox::setEnabled(bool enable)
 void Vox::voxTimeout(void)
 {
   setState(IDLE);
-} /* Vox::voxTimeout */
+} /** Vox::voxTimeout */
 
 /**
  * @brief Used to set the state of the VOX
@@ -220,9 +220,9 @@ void Vox::setState(State new_state)
   
   stateChanged(m_vox_state);
   
-} /* Vox::setState */
+} /** Vox::setState */
 
-/*
+/**
  * This file has not been truncated
  */
 

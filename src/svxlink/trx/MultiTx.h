@@ -26,22 +26,22 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef MULTI_TX_INCLUDED
 #define MULTI_TX_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
 #include <list>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "Tx.h"
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -50,23 +50,23 @@ namespace Async
   class AudioSplitter;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -147,11 +147,11 @@ class MultiTx : public Tx
     MultiTx& operator=(const MultiTx&);
     void onTransmitterStateChange(bool is_transmitting);
     
-};  /* class MultiTx */
+};  /** class MultiTx */
 
-#endif /* MULTI_TX_INCLUDED */
+#endif /** MULTI_TX_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

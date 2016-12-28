@@ -29,13 +29,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef QSO_IMPL_INCLUDED
 #define QSO_IMPL_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
 #include <sigc++/sigc++.h>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioSink.h>
@@ -43,11 +43,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <EchoLinkQso.h>
 #include <EchoLinkStationData.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -57,11 +57,11 @@ namespace Async
   class AudioPassthrough;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class MsgHandler;
@@ -69,15 +69,15 @@ class EventHandler;
 class AsyncTimer;
 class ModuleEchoLink;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -293,11 +293,11 @@ class QsoImpl
     void idleTimeoutCheck(Async::Timer *t);
     void destroyMeNow(Async::Timer *t);
 
-};  /* class QsoImpl */
+};  /** class QsoImpl */
 
-#endif /* QSO_IMPL_INCLUDED */
+#endif /** QSO_IMPL_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

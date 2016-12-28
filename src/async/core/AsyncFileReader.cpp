@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <fcntl.h>
@@ -35,43 +35,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstring>
 #include <iostream>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncFdWatch.h>
 
-/*
+/**
  * Local Includes
  */
 #include "AsyncFileReader.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 FileReader::FileReader(int buf_size)
@@ -79,13 +79,13 @@ FileReader::FileReader(int buf_size)
     is_full(false), is_eof(false)
 {
   buffer = new char [buf_size];
-} /* FileReader::FileReader */
+} /** FileReader::FileReader */
 
 FileReader::~FileReader(void)
 {
   close();
   delete [] buffer;
-} /* FileReader::~FileReader */
+} /** FileReader::~FileReader */
 
 bool FileReader::open(const string& name)
 {
@@ -102,7 +102,7 @@ bool FileReader::open(const string& name)
 
   return fillBuffer();
 
-} /* FileReader::openPort */
+} /** FileReader::openPort */
 
 bool FileReader::close(void)
 {
@@ -124,7 +124,7 @@ bool FileReader::close(void)
   delete rd_watch;
   return true;
   
-} /* FileReader::close */
+} /** FileReader::close */
 
 int FileReader::read(void *buf, int len)
 {
@@ -158,14 +158,14 @@ int FileReader::read(void *buf, int len)
   return written;
 }
 
-/*
+/**
  * Private member functions
  */
 void FileReader::onDataAvail(FdWatch *watch)
 {
   fillBuffer();
 
-} /* FileReader::onDataAvail */
+} /** FileReader::onDataAvail */
 
 bool FileReader::fillBuffer(void)
 {
@@ -205,14 +205,14 @@ bool FileReader::fillBuffer(void)
 
   return isOpen();
 
-} /* FileReader::fillBuffer */
+} /** FileReader::fillBuffer */
 
 int FileReader::bytesInBuffer(void) const
 {
   return is_full ? buf_size : (head - tail + buf_size) % buf_size;
   
-} /* FileReader::bytesInBuffer */
+} /** FileReader::bytesInBuffer */
 
-/*
+/**
  * This file has not been truncated
  */

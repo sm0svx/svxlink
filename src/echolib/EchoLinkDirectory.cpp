@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 
@@ -43,28 +43,28 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cassert>
 #include <cstring>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "EchoLinkDirectory.h"
 #include "EchoLinkDirectoryCon.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 struct Cmd
@@ -76,19 +76,19 @@ struct Cmd
   Cmd(Type type) : type(type), done(false) {}
 };
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 Directory::Directory(const vector<string>& servers, const string& callsign,
@@ -114,32 +114,32 @@ Directory::Directory(const vector<string>& servers, const string& callsign,
   reg_refresh_timer->expired.connect(
       mem_fun(*this, &Directory::onRefreshRegistration));
 
-} /* Directory::Directory */
+} /** Directory::Directory */
 
 Directory::~Directory(void)
 {
   delete reg_refresh_timer;
   delete cmd_timer;
   delete ctrl_con;
-} /* Directory::~Directory */
+} /** Directory::~Directory */
 
 void Directory::makeOnline(void)
 {
   the_status = StationData::STAT_ONLINE;
   addCmdToQueue(Cmd(Cmd::ONLINE));
-} /* Directory::makeOnline */
+} /** Directory::makeOnline */
 
 void Directory::makeBusy()
 {
   the_status = StationData::STAT_BUSY;
   addCmdToQueue(Cmd(Cmd::BUSY));
-} /* Directory::makeBusy */
+} /** Directory::makeBusy */
 
 void Directory::makeOffline(void)
 {
   the_status = StationData::STAT_OFFLINE;
   addCmdToQueue(Cmd(Cmd::OFFLINE));
-} /* Directory::makeOffline */
+} /** Directory::makeOffline */
 
 void Directory::getCalls(void)
 {
@@ -166,25 +166,25 @@ void Directory::getCalls(void)
       	  "directory server");
     //stationListUpdated();
   }
-} /* Directory::getCalls */
+} /** Directory::getCalls */
 
 void Directory::setServers(const vector<string>& servers)
 {
   server_changed = true;
   the_servers = servers;
-} /* Directory::setServer */
+} /** Directory::setServer */
 
 void Directory::setCallsign(const string& callsign)
 {
   the_callsign.resize(callsign.size());
   transform(callsign.begin(), callsign.end(), the_callsign.begin(), ::toupper);
   //the_callsign = callsign;
-} /* Directory::setCall */
+} /** Directory::setCall */
 
 void Directory::setPassword(const string& password)
 {
   the_password = password;
-} /* Directory::setPassword */
+} /** Directory::setPassword */
 
 void Directory::setDescription(const string& description)
 {
@@ -193,7 +193,7 @@ void Directory::setDescription(const string& description)
   {
     the_description.resize(MAX_DESCRIPTION_SIZE);
   }
-} /* Directory::setDescription */
+} /** Directory::setDescription */
 
 const StationData *Directory::findCall(const string& call)
 {
@@ -234,7 +234,7 @@ const StationData *Directory::findCall(const string& call)
   
   return 0;
   
-} /* Directory::findCall */
+} /** Directory::findCall */
 
 const StationData *Directory::findStation(int id)
 {
@@ -275,7 +275,7 @@ const StationData *Directory::findStation(int id)
   
   return 0;
   
-} /* Directory::findStation */
+} /** Directory::findStation */
 
 bool Directory::stationCodeEq(const StationData& stn, string code, bool exact)
 {
@@ -287,7 +287,7 @@ bool Directory::stationCodeEq(const StationData& stn, string code, bool exact)
   {
     return (stn.code().find(code) == 0);
   }
-} /* Directory::stationCodeEq  */
+} /** Directory::stationCodeEq  */
 
 void Directory::findStationsByCode(vector<StationData> &stns,
 		const string& code, bool exact)
@@ -328,7 +328,7 @@ void Directory::findStationsByCode(vector<StationData> &stns,
     }
   }
 
-} /* Directory::findStationsByCode  */
+} /** Directory::findStationsByCode  */
 
 ostream& EchoLink::operator<<(ostream& os, const StationData& station)
 {
@@ -340,17 +340,17 @@ ostream& EchoLink::operator<<(ostream& os, const StationData& station)
       << setw(7) << station.id()
       << station.ip();
   return os;
-} /* EchoLink::operator<< */
+} /** EchoLink::operator<< */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    Directory::printBuf
  * Purpose:   Print the contents of "buf". Used for debugging.
@@ -377,7 +377,7 @@ void Directory::printBuf(const unsigned char *buf, int len)
     }
   }
   fprintf(stderr, "\n");
-} /* Directory::printBuf */
+} /** Directory::printBuf */
 
 int Directory::handleCallList(char *buf, int len)
 {
@@ -479,7 +479,7 @@ int Directory::handleCallList(char *buf, int len)
 	get_call_entry.setIp(IpAddress(buf));
 	//printf("Station ip: %s\n", get_call_ip);
 	
-	/*
+	/**
 	if (strlen(get_call_entry.callsign().c_str()) == 1)
 	{
 	  the_message += get_call_entry.description() + "\n";
@@ -573,7 +573,7 @@ int Directory::handleCallList(char *buf, int len)
   
   return read_len;
   
-} /* Directory::handleCallList */
+} /** Directory::handleCallList */
 
 void Directory::ctrlSockReady(bool is_ready)
 {
@@ -581,7 +581,7 @@ void Directory::ctrlSockReady(bool is_ready)
   {
     sendNextCmd();
   }
-} /* Directory::ctrlSockReady */
+} /** Directory::ctrlSockReady */
 
 void Directory::ctrlSockConnected(void)
 {
@@ -635,7 +635,7 @@ void Directory::ctrlSockConnected(void)
   //printBuf(reinterpret_cast<const unsigned char *>(cmdstr.c_str()), cmdstr.size());
   ctrl_con->write(cmdstr.c_str(), cmdstr.size());
   //cerr << "Write returned: " << ret << endl;
-} /* Directory::ctrlSockConnected */
+} /** Directory::ctrlSockConnected */
 
 
 int Directory::ctrlSockDataReceived(void *ptr, unsigned len)
@@ -724,7 +724,7 @@ int Directory::ctrlSockDataReceived(void *ptr, unsigned len)
     
   return tot_read_len;
   
-} /* Directory::ctrlSockDataReceived */
+} /** Directory::ctrlSockDataReceived */
 
 void Directory::ctrlSockDisconnected(void)
 {
@@ -786,7 +786,7 @@ void Directory::ctrlSockDisconnected(void)
   com_state = CS_IDLE;
   sendNextCmd();
   
-} /* Directory::ctrlSockDisconnected */
+} /** Directory::ctrlSockDisconnected */
 
 void Directory::sendNextCmd(void)
 {
@@ -842,14 +842,14 @@ void Directory::sendNextCmd(void)
     // Connect
   ctrl_con->connect();
 
-} /* Directory::sendNextCmd */
+} /** Directory::sendNextCmd */
 
 void Directory::addCmdToQueue(Cmd cmd)
 {
   //cout << "### Adding cmd to queue: " << cmd.type << endl;
   cmd_queue.push_back(cmd);
   sendNextCmd();
-} /* Directory::addCmdToQueue */
+} /** Directory::addCmdToQueue */
 
 void Directory::setStatus(StationData::Status new_status)
 {
@@ -858,7 +858,7 @@ void Directory::setStatus(StationData::Status new_status)
     current_status = new_status;
     statusChanged(current_status);
   }
-} /* Directory::setStatus */
+} /** Directory::setStatus */
 
 void Directory::createClientObject(void)
 {
@@ -869,7 +869,7 @@ void Directory::createClientObject(void)
       mem_fun(*this, &Directory::ctrlSockDataReceived));
   ctrl_con->disconnected.connect(
       mem_fun(*this, &Directory::ctrlSockDisconnected));
-} /* Directory::createClientObject */
+} /** Directory::createClientObject */
 
 void Directory::onRefreshRegistration(Timer *timer)
 {
@@ -884,14 +884,14 @@ void Directory::onRefreshRegistration(Timer *timer)
   {
     makeBusy();
   }
-} /* Directory::onRefreshRegistration */
+} /** Directory::onRefreshRegistration */
 
 void Directory::onCmdTimeout(Timer *timer)
 {
   error("Command timeout while communicating to the directory server");
   ctrl_con->disconnect();
 
-  /*
+  /**
   assert(!cmd_queue.empty());
 
   switch (cmd_queue.front().type)
@@ -911,9 +911,9 @@ void Directory::onCmdTimeout(Timer *timer)
   com_state = CS_IDLE;
   sendNextCmd();
   */
-} /* Directory::onCmdTimeout */
+} /** Directory::onCmdTimeout */
 
-/*
+/**
  * This file has not been truncated
  */
 

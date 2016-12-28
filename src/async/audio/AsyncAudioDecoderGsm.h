@@ -26,45 +26,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_DECODER_GSM_INCLUDED
 #define ASYNC_AUDIO_DECODER_GSM_INCLUDED
 
-/*
+/**
  * System Includes
  */
 extern "C" {
 #include <gsm.h>
 }
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioDecoder.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -119,13 +119,13 @@ class AudioDecoderGsm : public AudioDecoder
     AudioDecoderGsm(const AudioDecoderGsm&);
     AudioDecoderGsm& operator=(const AudioDecoderGsm&);
 
-};  /* class AudioDecoderGsm */
+};  /** class AudioDecoderGsm */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AUDIO_DECODER_GSM_INCLUDED */
+#endif /** ASYNC_AUDIO_DECODER_GSM_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

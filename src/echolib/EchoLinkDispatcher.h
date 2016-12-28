@@ -34,47 +34,47 @@ An example of how to use the EchoLink::Dispatcher class
 #ifndef ECHOLINK_DISPATCHER_INCLUDED
 #define ECHOLINK_DISPATCHER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
 #include <map>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncIpAddress.h>
 #include <AsyncUdpSocket.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace EchoLink
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class Qso;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -209,13 +209,13 @@ class Dispatcher : public sigc::trackable
     bool sendCtrlMsg(const Async::IpAddress& to, const void *buf, int len);
     bool sendAudioMsg(const Async::IpAddress& to, const void *buf, int len);
     
-};  /* class Dispatcher */
+};  /** class Dispatcher */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ECHOLINK_DISPATCHER_INCLUDED */
+#endif /** ECHOLINK_DISPATCHER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

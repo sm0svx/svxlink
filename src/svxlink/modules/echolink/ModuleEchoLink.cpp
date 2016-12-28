@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <stdio.h>
@@ -37,7 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <vector>
 #include <string.h>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncTimer.h>
@@ -54,14 +54,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncPty.h>
 #include <AsyncPtyStreamBuf.h>
 
-/*
+/**
  * Local Includes
  */
 #include "version/MODULE_ECHOLINK.h"
 #include "ModuleEchoLink.h"
 #include "QsoImpl.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
@@ -69,27 +69,27 @@ using namespace sigc;
 using namespace Async;
 using namespace EchoLink;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Pure C-functions
  */
 extern "C" {
@@ -97,9 +97,9 @@ extern "C" {
   { 
     return new ModuleEchoLink(dl_handle, logic, cfg_name);
   }
-} /* extern "C" */
+} /** extern "C" */
 
-/*
+/**
  * Public member functions
  */
 ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
@@ -117,12 +117,12 @@ ModuleEchoLink::ModuleEchoLink(void *dl_handle, Logic *logic,
 {
   cout << "\tModule EchoLink v" MODULE_ECHOLINK_VERSION " starting...\n";
   
-} /* ModuleEchoLink */
+} /** ModuleEchoLink */
 
 ModuleEchoLink::~ModuleEchoLink(void)
 {
   moduleCleanup();
-} /* ~ModuleEchoLink */
+} /** ~ModuleEchoLink */
 
 bool ModuleEchoLink::initialize(void)
 {
@@ -429,14 +429,14 @@ bool ModuleEchoLink::initialize(void)
 
   return true;
   
-} /* ModuleEchoLink::initialize */
+} /** ModuleEchoLink::initialize */
 
-/*
+/**
  * Protected member functions
  */
 void ModuleEchoLink::logicIdleStateChanged(bool is_idle)
 {
-  /*
+  /**
   printf("ModuleEchoLink::logicIdleStateChanged: is_idle=%s\n",
       is_idle ? "TRUE" : "FALSE");
   */
@@ -452,9 +452,9 @@ void ModuleEchoLink::logicIdleStateChanged(bool is_idle)
   
   checkIdle();
   
-} /* ModuleEchoLink::logicIdleStateChanged */
+} /** ModuleEchoLink::logicIdleStateChanged */
 
-/*
+/**
  * Private member functions
  */
 void ModuleEchoLink::commandHandler(const void *buf, size_t count) {
@@ -549,9 +549,9 @@ void ModuleEchoLink::moduleCleanup(void)
   AudioSource::clearHandler();
   delete selector;
   selector = 0;
-} /* ModuleEchoLink::moduleCleanup */
+} /** ModuleEchoLink::moduleCleanup */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    activateInit
  * Purpose:   Called by the core system when this module is activated.
@@ -568,9 +568,9 @@ void ModuleEchoLink::activateInit(void)
   updateEventVariables();
   state = STATE_NORMAL;
   listen_only_valve->setOpen(true);
-} /* activateInit */
+} /** activateInit */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    deactivateCleanup
  * Purpose:   Called by the core system when this module is deactivated.
@@ -604,9 +604,9 @@ void ModuleEchoLink::deactivateCleanup(void)
   dbc_timer = 0;
   state = STATE_NORMAL;
   listen_only_valve->setOpen(true);
-} /* deactivateCleanup */
+} /** deactivateCleanup */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    dtmfDigitReceived
  * Purpose:   Called by the core system when a DTMF digit has been
@@ -627,10 +627,10 @@ bool ModuleEchoLink::dtmfDigitReceived(char digit, int duration)
   
   return false;
   
-} /* dtmfDigitReceived */
+} /** dtmfDigitReceived */
 #endif
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    dtmfCmdReceived
  * Purpose:   Called by the core system when a DTMF command has been
@@ -675,7 +675,7 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
       deactivateMe();
     }
   }
-  /*
+  /**
   else if (cmd[0] == '*')   // Connect by callsign
   {
     connectByCallsign(cmd);
@@ -689,7 +689,7 @@ void ModuleEchoLink::dtmfCmdReceived(const string& cmd)
   {
     connectByNodeId(atoi(cmd.c_str()));
   }
-} /* dtmfCmdReceived */
+} /** dtmfCmdReceived */
 
 void ModuleEchoLink::dtmfCmdReceivedWhenIdle(const std::string &cmd)
 {
@@ -705,9 +705,9 @@ void ModuleEchoLink::dtmfCmdReceivedWhenIdle(const std::string &cmd)
   {
     commandFailed(cmd);
   }
-} /* dtmfCmdReceivedWhenIdle */
+} /** dtmfCmdReceivedWhenIdle */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    squelchOpen
  * Purpose:   Called by the core system when activity is detected
@@ -734,9 +734,9 @@ void ModuleEchoLink::squelchOpen(bool is_open)
   {
     (*it)->squelchOpen(is_open);
   }
-} /* squelchOpen */
+} /** squelchOpen */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    allMsgsWritten
  * Purpose:   Called by the core system when all audio messages queued
@@ -763,9 +763,9 @@ void ModuleEchoLink::allMsgsWritten(void)
     broadcastTalkerStatus();
     outgoing_con_pending.clear();
   }
-} /* allMsgsWritten */
+} /** allMsgsWritten */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    onStatusChanged
  * Purpose:   Called by the EchoLink::Directory object when the status of
@@ -803,9 +803,9 @@ void ModuleEchoLink::onStatusChanged(StationData::Status status)
   {
     LocationInfo::instance()->updateDirectoryStatus(status);
   }
-} /* onStatusChanged */
+} /** onStatusChanged */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    onStationListUpdated
  * Purpose:   Called by the EchoLink::Directory object when the station list
@@ -844,9 +844,9 @@ void ModuleEchoLink::onStationListUpdated(void)
     cout << dir->message() << endl;
     last_message = dir->message();
   }
-} /* onStationListUpdated */
+} /** onStationListUpdated */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    onError
  * Purpose:   Called by the EchoLink::Directory object when a communication
@@ -870,9 +870,9 @@ void ModuleEchoLink::onError(const string& msg)
     processEvent(ss.str());
   }
   
-} /* onError */
+} /** onError */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    clientList
  * Purpose:   Called on connect or disconnect of a remote client to send an
@@ -896,9 +896,9 @@ void ModuleEchoLink::clientList(void) {
   }
   ss << "]";
   processEvent(ss.str());
-} /* clientList */
+} /** clientList */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    onIncomingConnection
  * Purpose:   Called by the EchoLink::Dispatcher object when a new remote
@@ -1040,9 +1040,9 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   
   checkIdle();
   
-} /* onIncomingConnection */
+} /** onIncomingConnection */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    onStateChange
  * Purpose:   Called by the EchoLink::QsoImpl object when a state change has
@@ -1095,9 +1095,9 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
       updateEventVariables();
       break;
   }  
-} /* ModuleEchoLink::onStateChange */
+} /** ModuleEchoLink::onStateChange */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    onChatMsgReceived
  * Purpose:   Called by the EchoLink::Qso object when a chat message has been
@@ -1137,9 +1137,9 @@ void ModuleEchoLink::onChatMsgReceived(QsoImpl *qso, const string& msg)
   ss << escaped;
   ss << "}]";
   processEvent(ss.str());
-} /* onChatMsgReceived */
+} /** onChatMsgReceived */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    onIsReceiving
  * Purpose:   Called by the EchoLink::Qso object to indicate whether the
@@ -1191,7 +1191,7 @@ void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
       broadcastTalkerStatus();
     }
   }
-} /* onIsReceiving */
+} /** onIsReceiving */
 
 void ModuleEchoLink::destroyQsoObject(QsoImpl *qso)
 {
@@ -1234,9 +1234,9 @@ void ModuleEchoLink::destroyQsoObject(QsoImpl *qso)
 
   checkIdle();
   
-} /* ModuleEchoLink::destroyQsoObject */
+} /** ModuleEchoLink::destroyQsoObject */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    getDirectoryList
  * Purpose:   Initiate the process of getting a directory list from the
@@ -1264,7 +1264,7 @@ void ModuleEchoLink::getDirectoryList(Timer *timer)
     dir_refresh_timer->expired.connect(
       	    mem_fun(*this, &ModuleEchoLink::getDirectoryList));
   }
-} /* ModuleEchoLink::getDirectoryList */
+} /** ModuleEchoLink::getDirectoryList */
 
 void ModuleEchoLink::createOutgoingConnection(const StationData &station)
 {
@@ -1370,7 +1370,7 @@ void ModuleEchoLink::createOutgoingConnection(const StationData &station)
     
   checkIdle();
   
-} /* ModuleEchoLink::createOutgoingConnection */
+} /** ModuleEchoLink::createOutgoingConnection */
 
 void ModuleEchoLink::audioFromRemoteRaw(Qso::RawPacket *packet,
       	QsoImpl *qso)
@@ -1391,7 +1391,7 @@ void ModuleEchoLink::audioFromRemoteRaw(Qso::RawPacket *packet,
       }
     }
   }
-} /* ModuleEchoLink::audioFromRemoteRaw */
+} /** ModuleEchoLink::audioFromRemoteRaw */
 
 QsoImpl *ModuleEchoLink::findFirstTalker(void) const
 {
@@ -1406,7 +1406,7 @@ QsoImpl *ModuleEchoLink::findFirstTalker(void) const
   
   return 0;
   
-} /* ModuleEchoLink::findFirstTalker */
+} /** ModuleEchoLink::findFirstTalker */
 
 void ModuleEchoLink::broadcastTalkerStatus(void)
 {
@@ -1457,7 +1457,7 @@ void ModuleEchoLink::broadcastTalkerStatus(void)
     (*it)->sendInfoData(msg.str());
   }
   
-} /* ModuleEchoLink::broadcastTalkerStatus */
+} /** ModuleEchoLink::broadcastTalkerStatus */
 
 void ModuleEchoLink::updateDescription(void)
 {
@@ -1478,7 +1478,7 @@ void ModuleEchoLink::updateDescription(void)
   dir->setDescription(desc);
   dir->refreshRegistration();
   
-} /* ModuleEchoLink::updateDescription */
+} /** ModuleEchoLink::updateDescription */
 
 void ModuleEchoLink::updateEventVariables(void)
 {
@@ -1487,7 +1487,7 @@ void ModuleEchoLink::updateEventVariables(void)
   string var_name(name());
   var_name +=  "::num_connected_stations";
   setEventVariable(var_name, ss.str());
-} /* ModuleEchoLink::updateEventVariables */
+} /** ModuleEchoLink::updateEventVariables */
 
 
 void ModuleEchoLink::connectByCallsign(string cmd)
@@ -1555,7 +1555,7 @@ void ModuleEchoLink::connectByCallsign(string cmd)
   cbc_timer = new Timer(60000);
   cbc_timer->expired.connect(mem_fun(*this, &ModuleEchoLink::cbcTimeout));
 
-} /* ModuleEchoLink::connectByCallsign */
+} /** ModuleEchoLink::connectByCallsign */
 
 void ModuleEchoLink::handleConnectByCall(const string& cmd)
 {
@@ -1599,7 +1599,7 @@ void ModuleEchoLink::handleConnectByCall(const string& cmd)
   delete cbc_timer;
   cbc_timer = 0;
   state = STATE_NORMAL;
-} /* ModuleEchoLink::handleConnectByCall  */
+} /** ModuleEchoLink::handleConnectByCall  */
 
 void ModuleEchoLink::cbcTimeout(Timer *t)
 {
@@ -1609,7 +1609,7 @@ void ModuleEchoLink::cbcTimeout(Timer *t)
   state = STATE_NORMAL;
   cout << "Connect by call command timeout\n";
   processEvent("cbc_timeout");
-} /* ModuleEchoLink::cbcTimeout  */
+} /** ModuleEchoLink::cbcTimeout  */
 
 void ModuleEchoLink::disconnectByCallsign(const string &cmd)
 {
@@ -1635,7 +1635,7 @@ void ModuleEchoLink::disconnectByCallsign(const string &cmd)
   delete dbc_timer;
   dbc_timer = new Timer(60000);
   dbc_timer->expired.connect(mem_fun(*this, &ModuleEchoLink::dbcTimeout));
-} /* ModuleEchoLink::disconnectByCallsign  */
+} /** ModuleEchoLink::disconnectByCallsign  */
 
 void ModuleEchoLink::handleDisconnectByCall(const string& cmd)
 {
@@ -1678,7 +1678,7 @@ void ModuleEchoLink::handleDisconnectByCall(const string& cmd)
   dbc_timer = 0;
   state = STATE_NORMAL;
 
-} /* ModuleEchoLink::handleDisconnectByCall  */
+} /** ModuleEchoLink::handleDisconnectByCall  */
 
 void ModuleEchoLink::dbcTimeout(Timer *t)
 {
@@ -1687,7 +1687,7 @@ void ModuleEchoLink::dbcTimeout(Timer *t)
   state = STATE_NORMAL;
   cout << "Disconnect by call command timeout\n";
   processEvent("dbc_timeout");
-} /* ModuleEchoLink::dbcTimeout  */
+} /** ModuleEchoLink::dbcTimeout  */
 
 int ModuleEchoLink::numConnectedStations(void)
 {
@@ -1703,7 +1703,7 @@ int ModuleEchoLink::numConnectedStations(void)
   
   return cnt;
   
-} /* ModuleEchoLink::numConnectedStations */
+} /** ModuleEchoLink::numConnectedStations */
 
 int ModuleEchoLink::listQsoCallsigns(list<string>& call_list)
 {
@@ -1716,7 +1716,7 @@ int ModuleEchoLink::listQsoCallsigns(list<string>& call_list)
   
   return call_list.size();
   
-} /* ModuleEchoLink::listQsoCallsigns */
+} /** ModuleEchoLink::listQsoCallsigns */
 
 void ModuleEchoLink::handleCommand(const string& cmd)
 {
@@ -1868,14 +1868,14 @@ void ModuleEchoLink::handleCommand(const string& cmd)
     processEvent(ss.str());
   }
 
-} /* ModuleEchoLink::handleCommand */
+} /** ModuleEchoLink::handleCommand */
 
 void ModuleEchoLink::commandFailed(const string& cmd)
 {
   stringstream ss;
   ss << "command_failed " << cmd;
   processEvent(ss.str());
-} /* ModuleEchoLink::commandFailed */
+} /** ModuleEchoLink::commandFailed */
 
 
 void ModuleEchoLink::connectByNodeId(int node_id)
@@ -1901,7 +1901,7 @@ void ModuleEchoLink::connectByNodeId(int node_id)
     getDirectoryList();
     pending_connect_id = node_id;
   }
-} /* ModuleEchoLink::connectByNodeId */
+} /** ModuleEchoLink::connectByNodeId */
 
 
 void ModuleEchoLink::checkIdle(void)
@@ -1909,9 +1909,9 @@ void ModuleEchoLink::checkIdle(void)
   setIdle(qsos.empty() &&
       	  logicIsIdle() &&
 	  (state == STATE_NORMAL));
-} /* ModuleEchoLink::checkIdle */
+} /** ModuleEchoLink::checkIdle */
 
-/*
+/**
  *----------------------------------------------------------------------------
  * Method:    checkAutoCon
  * Purpose:   Initiate the process of connecting to autocon_echolink_id
@@ -1936,7 +1936,7 @@ void ModuleEchoLink::checkAutoCon(Timer *)
          << autocon_echolink_id << "\n";
     connectByNodeId(autocon_echolink_id);
   }
-} /* ModuleEchoLink::checkAutoCon */
+} /** ModuleEchoLink::checkAutoCon */
 
 bool ModuleEchoLink::numConCheck(const std::string &callsign)
 {
@@ -1991,7 +1991,7 @@ bool ModuleEchoLink::numConCheck(const std::string &callsign)
 
   return true;
 
-} /* ModuleEchoLink::numConCheck */
+} /** ModuleEchoLink::numConCheck */
 
 void ModuleEchoLink::numConUpdate(void)
 {
@@ -2034,7 +2034,7 @@ void ModuleEchoLink::numConUpdate(void)
 
   num_con_update_timer->reset();
 
-} /* ModuleEchoLink::numConUpdate */
+} /** ModuleEchoLink::numConUpdate */
 
 void ModuleEchoLink::replaceAll(std::string &str, const std::string &from,
                                 const std::string &to) const
@@ -2049,8 +2049,8 @@ void ModuleEchoLink::replaceAll(std::string &str, const std::string &from,
     str.replace(start_pos, from.length(), to);
     start_pos += to.length();
   }
-} /* ModuleEchoLink::replaceAll */
+} /** ModuleEchoLink::replaceAll */
 
-/*
+/**
  * This file has not been truncated
  */

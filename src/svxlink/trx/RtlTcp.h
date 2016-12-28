@@ -26,43 +26,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef RTL_TCP_INCLUDED
 #define RTL_TCP_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncTcpClient.h>
 #include <AsyncTimer.h>
 
-/*
+/**
  * Local Includes
  */
 #include "RtlSdr.h"
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 
@@ -89,7 +89,7 @@ class RtlTcp : public RtlSdr
      */
     virtual ~RtlTcp(void) {}
   
-    /* Missing commands:
+    /** Missing commands:
      *   9 - set direct sampling
      *   a - set offset tuning
      *   b - set rtl xtal
@@ -194,10 +194,10 @@ class RtlTcp : public RtlSdr
                       Async::TcpConnection::DisconnectReason reason);
     int dataReceived(Async::TcpConnection *con, void *buf, int count);
     
-};  /* class RtlTcp */
+};  /** class RtlTcp */
 
-#endif /* RTL_TCP_INCLUDED */
+#endif /** RTL_TCP_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

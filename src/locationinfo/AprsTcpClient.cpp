@@ -24,55 +24,55 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <iostream>
 #include <cmath>
 #include <cstring>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncTimer.h>
 #include <AsyncConfig.h>
 
-/*
+/**
  * Local Includes
  */
 #include "version/SVXLINK.h"
 #include "AprsTcpClient.h"
 #include "common.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 using namespace SvxLink;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 #define HASH_KEY	0x73e2 			// This is the seed for the key
 
-/*
+/**
  * Public member functions
  */
 AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
@@ -106,7 +106,7 @@ AprsTcpClient::AprsTcpClient(LocationInfo::Cfg &loc_cfg,
    reconnect_timer->setEnable(false);
    reconnect_timer->expired.connect(mem_fun(*this,
                  &AprsTcpClient::reconnectAprsServer));
-} /* AprsTcpClient::AprsTcpClient */
+} /** AprsTcpClient::AprsTcpClient */
 
 AprsTcpClient::~AprsTcpClient(void)
 {
@@ -114,7 +114,7 @@ AprsTcpClient::~AprsTcpClient(void)
    delete reconnect_timer;
    delete offset_timer;
    delete beacon_timer;
-} /* AprsTcpClient::~AprsTcpClient */
+} /** AprsTcpClient::~AprsTcpClient */
 
 void AprsTcpClient::updateQsoStatus(int action, const string& call,
   const string& info, list<string>& call_list)
@@ -160,7 +160,7 @@ void AprsTcpClient::updateQsoStatus(int action, const string& call,
   status += "\r\n";
   sendMsg(status.c_str());
 
-} /* AprsTcpClient::updateQsoStatus */
+} /** AprsTcpClient::updateQsoStatus */
 
 // updates state of a 3rd party
 void AprsTcpClient::update3rdState(const string& call, const string& info)
@@ -168,19 +168,19 @@ void AprsTcpClient::update3rdState(const string& call, const string& info)
    char aprsmsg[200];
    sprintf(aprsmsg, "%s>%s\n\r", call.c_str(), info.c_str());
    sendMsg(aprsmsg);
-} /* AprsTcpClient::update3rdState */
+} /** AprsTcpClient::update3rdState */
 
 
 void AprsTcpClient::igateMessage(const string& info)
 {
   sendMsg(info.c_str());
-} /* AprsTcpClient::igateMessage */
+} /** AprsTcpClient::igateMessage */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 void AprsTcpClient::posStr(char *pos)
@@ -223,7 +223,7 @@ void AprsTcpClient::sendAprsBeacon(Timer *t)
 
   sendMsg(aprsmsg);
 
-} /* AprsTcpClient::sendAprsBeacon*/
+} /** AprsTcpClient::sendAprsBeacon*/
 
 void AprsTcpClient::sendMsg(const char *aprsmsg)
 {
@@ -244,7 +244,7 @@ void AprsTcpClient::sendMsg(const char *aprsmsg)
     cerr << "*** ERROR: TCP transmit buffer overflow, reconnecting." << endl;
     con->disconnect();
   }
-} /* AprsTcpClient::sendMsg */
+} /** AprsTcpClient::sendMsg */
 
 void AprsTcpClient::aprsLogin(void)
 {
@@ -256,7 +256,7 @@ void AprsTcpClient::aprsLogin(void)
    //cout << loginmsg;
    sendMsg(loginmsg);
 
-} /* AprsTcpClient::aprsLogin */
+} /** AprsTcpClient::aprsLogin */
 
 // generate passcode for the aprs-servers, copied from xastir-source...
 // special tnx to:
@@ -278,7 +278,7 @@ short AprsTcpClient::getPasswd(const string& call)
   }
 
   return (hash & 0x7fff);
-} /* AprsTcpClient::callpass */
+} /** AprsTcpClient::callpass */
 
 void AprsTcpClient::tcpConnected(void)
 {
@@ -288,13 +288,13 @@ void AprsTcpClient::tcpConnected(void)
   aprsLogin();                    // login
   offset_timer->reset();          // reset the offset_timer
   offset_timer->setEnable(true);  // restart the offset_timer
-} /* AprsTcpClient::tcpConnected */
+} /** AprsTcpClient::tcpConnected */
 
 void AprsTcpClient::startNormalSequence(Timer *t)
 {
   sendAprsBeacon(t);
   beacon_timer->setEnable(true);		// start the beaconinterval
-} /* AprsTcpClient::startNormalSequence */
+} /** AprsTcpClient::startNormalSequence */
 
 // ToDo: possible interaction of SvxLink on commands sended via
 //       APRS-net
@@ -302,7 +302,7 @@ int AprsTcpClient::tcpDataReceived(TcpClient::TcpConnection *con,
                                    void *buf, int count)
 {
    return count;                                // do nothing...
-} /* AprsTcpClient::tcpDataReceived */
+} /** AprsTcpClient::tcpDataReceived */
 
 void AprsTcpClient::tcpDisconnected(TcpClient::TcpConnection *con,
                                     TcpClient::DisconnectReason reason)
@@ -313,15 +313,15 @@ void AprsTcpClient::tcpDisconnected(TcpClient::TcpConnection *con,
   reconnect_timer->setEnable(true);		// start the reconnect-timer
   offset_timer->setEnable(false);
   offset_timer->reset();
-} /* AprsTcpClient::tcpDisconnected */
+} /** AprsTcpClient::tcpDisconnected */
 
 void AprsTcpClient::reconnectAprsServer(Async::Timer *t)
 {
   reconnect_timer->setEnable(false);		// stop the reconnect-timer
   cout << "*** WARNING: Trying to reconnect to APRS server" << endl;
   con->connect();
-} /* AprsTcpClient::reconnectNextAprsServer */
+} /** AprsTcpClient::reconnectNextAprsServer */
 
-/*
+/**
  * This file has not been truncated
  */

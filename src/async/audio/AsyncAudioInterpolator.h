@@ -21,42 +21,42 @@ ANY KIND. See http://www.dspguru.com/wol.htm for more information.
 #ifndef ASYNC_AUDIO_INTERPOLATOR_INCLUDED
 #define ASYNC_AUDIO_INTERPOLATOR_INCLUDED
 
-/*
+/**
  * System Includes
  */
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioProcessor.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -116,13 +116,13 @@ class AudioInterpolator : public Async::AudioProcessor
     AudioInterpolator(const AudioInterpolator&);
     AudioInterpolator& operator=(const AudioInterpolator&);
     
-};  /* class AudioInterpolator */
+};  /** class AudioInterpolator */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AUDIO_INTERPOLATOR_INCLUDED */
+#endif /** ASYNC_AUDIO_INTERPOLATOR_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

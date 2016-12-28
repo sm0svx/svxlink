@@ -26,43 +26,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_NOISE_ADDER
 #define ASYNC_AUDIO_NOISE_ADDER
 
-/*
+/**
  * System Includes
  */
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include <AsyncAudioProcessor.h>
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 
@@ -125,12 +125,12 @@ class AudioNoiseAdder : public AudioProcessor
     AudioNoiseAdder& operator=(const AudioNoiseAdder&);
     float generateGaussianNoise(void);
 
-};  /* class AudioNoiseAdder */
+};  /** class AudioNoiseAdder */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AUDIO_NOISE_ADDER */
+#endif /** ASYNC_AUDIO_NOISE_ADDER */
 
-/*
+/**
  * This file has not been truncated
  */

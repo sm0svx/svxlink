@@ -26,21 +26,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef HW_DTMF_DECODER_INCLUDED
 #define HW_DTMF_DECODER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sys/time.h>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "DtmfDecoder.h"
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -48,19 +48,19 @@ namespace Async
   class Timer;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -126,10 +126,10 @@ class HwDtmfDecoder : public DtmfDecoder
     void timeout(Async::Timer *t);
     void setIdle(void);
     
-};  /* class HwDtmfDecoder */
+};  /** class HwDtmfDecoder */
 
-#endif /* HW_DTMF_DECODER_INCLUDED */
+#endif /** HW_DTMF_DECODER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

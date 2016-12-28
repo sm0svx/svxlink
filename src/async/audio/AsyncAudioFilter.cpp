@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <iostream>
@@ -34,11 +34,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cmath>
 #include <locale>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 extern "C" {
@@ -47,17 +47,17 @@ extern "C" {
 
 #include "AsyncAudioFilter.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 namespace Async
@@ -75,26 +75,26 @@ namespace Async
 };
 
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 AudioFilter::AudioFilter(int sample_rate)
   : sample_rate(sample_rate), fv(0), output_gain(1.0f)
 {
 
-} /* AudioFilter::AudioFilter */
+} /** AudioFilter::AudioFilter */
 
 AudioFilter::AudioFilter(const string &filter_spec, int sample_rate)
   : sample_rate(sample_rate), fv(0), output_gain(1.0f)
@@ -104,12 +104,12 @@ AudioFilter::AudioFilter(const string &filter_spec, int sample_rate)
     cerr << "***ERROR: Filter creation error: " << error_str << endl;
     exit(1);
   }
-} /* AudioFilter::AudioFilter */
+} /** AudioFilter::AudioFilter */
 
 AudioFilter::~AudioFilter(void)
 {
   deleteFilter();
-} /* AudioFilter::~AudioFilter */
+} /** AudioFilter::~AudioFilter */
 
 bool AudioFilter::parseFilterSpec(const std::string &filter_spec)
 {
@@ -134,19 +134,19 @@ bool AudioFilter::parseFilterSpec(const std::string &filter_spec)
   fv->run = fid_run_new(fv->ff, &fv->func);
   fv->buf = fid_run_newbuf(fv->run);
   return true;
-} /* AudioFilter::parseFilterSpec */
+} /** AudioFilter::parseFilterSpec */
 
 void AudioFilter::setOutputGain(float gain_db)
 {
   output_gain = powf(10.0f, gain_db / 20.0f);
-} /* AudioFilter::setOutputGain */
+} /** AudioFilter::setOutputGain */
 
 void AudioFilter::reset(void)
 {
   fid_run_zapbuf(fv->buf);
-} /* AudioFilter::reset */
+} /** AudioFilter::reset */
 
-/*
+/**
  * Protected member functions
  */
 
@@ -158,9 +158,9 @@ void AudioFilter::processSamples(float *dest, const float *src, int count)
   {
     dest[i] = output_gain * fv->func(fv->buf, src[i]);
   }
-} /* AudioFilter::writeSamples */
+} /** AudioFilter::writeSamples */
 
-/*
+/**
  * Private member functions
  */
 void AudioFilter::deleteFilter(void)
@@ -176,9 +176,9 @@ void AudioFilter::deleteFilter(void)
     delete fv;
     fv = 0;
   }
-} /* AudioFilter::deleteFilter */
+} /** AudioFilter::deleteFilter */
 
-/*
+/**
  * This file has not been truncated
  */
 

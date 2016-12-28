@@ -26,7 +26,7 @@
  * \endverbatim
  */
 
-/*
+/**
  * System Includes
  */
 #include <sys/types.h>
@@ -40,28 +40,28 @@
 #include <cstdio>
 #include <cstring>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncFdWatch.h>
 
-/*
+/**
  * Local Includes
  */
 #include "AsyncIpAddress.h"
 #include "AsyncUdpSocket.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 class UdpPacket
@@ -80,19 +80,19 @@ class UdpPacket
 
 };
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 UdpSocket::UdpSocket(uint16_t local_port, const IpAddress &bind_ip)
@@ -152,12 +152,12 @@ UdpSocket::UdpSocket(uint16_t local_port, const IpAddress &bind_ip)
   wr_watch->activity.connect(mem_fun(*this, &UdpSocket::sendRest));
   wr_watch->setEnabled(false);
   
-} /* UdpSocket::UdpSocket */
+} /** UdpSocket::UdpSocket */
 
 UdpSocket::~UdpSocket(void)
 {
   cleanup();
-} /* UdpSocket::~UdpSocket */
+} /** UdpSocket::~UdpSocket */
 
 bool UdpSocket::write(const IpAddress& remote_ip, int remote_port,
     const void *buf, int count)
@@ -192,13 +192,13 @@ bool UdpSocket::write(const IpAddress& remote_ip, int remote_port,
   
   return true;
   
-} /* UdpSocket::write */
+} /** UdpSocket::write */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 void UdpSocket::cleanup(void)
@@ -220,7 +220,7 @@ void UdpSocket::cleanup(void)
     }
     sock = -1;
   }
-} /* UdpSocket::cleanup */
+} /** UdpSocket::cleanup */
 
 void UdpSocket::handleInput(FdWatch *watch)
 {
@@ -238,7 +238,7 @@ void UdpSocket::handleInput(FdWatch *watch)
   
   dataReceived(IpAddress(addr.sin_addr), buf, len);
 
-} /* UdpSocket::handleInput */
+} /** UdpSocket::handleInput */
 
 void UdpSocket::sendRest(FdWatch *watch)
 {
@@ -246,7 +246,7 @@ void UdpSocket::sendRest(FdWatch *watch)
   addr.sin_family = AF_INET;
   addr.sin_port = htons(send_buf->port);
   addr.sin_addr = send_buf->ip.ip4Addr();
-  /*
+  /**
   cout << "sock=" << sock << "  port=" << send_buf->port
       << "  ip=" << send_buf->ip.toString() << "  len=" << send_buf->len
       << endl;
@@ -274,9 +274,9 @@ void UdpSocket::sendRest(FdWatch *watch)
   send_buf = 0;
   wr_watch->setEnabled(false);
   
-} /* UdpSocket::handleInput */
+} /** UdpSocket::handleInput */
 
-/*
+/**
  * This file has not been truncated
  */
 

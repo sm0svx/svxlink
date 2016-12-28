@@ -26,43 +26,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SQUELCH_SIG_LEV_INCLUDED
 #define SQUELCH_SIG_LEV_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <iostream>
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "Squelch.h"
 #include "SigLevDet.h"
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -151,11 +151,11 @@ class SquelchSigLev : public Squelch
     SquelchSigLev(const SquelchSigLev&);
     SquelchSigLev& operator=(const SquelchSigLev&);
 
-};  /* class SquelchSigLev */
+};  /** class SquelchSigLev */
 
-#endif /* SQUELCH_SIG_LEV_INCLUDED */
+#endif /** SQUELCH_SIG_LEV_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

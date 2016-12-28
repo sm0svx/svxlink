@@ -26,11 +26,11 @@
 #include <stdlib.h>
 
 
-#define PTT_HANGTIME	2	/* 2 seconds PTT hangtime */
-#define SQL_TIMEOUT	10	/* 10 minutes squelch timeout */
-#define RSSI_ADC_CH     0       /* ADC channel for RSSI measurements */
-#define SQL_LVL_ADC_CH  1       /* ADC channel for squelch level */
-#define WINDOW_SIZE     2       /* Size of the RSSI schmitt trigger window */
+#define PTT_HANGTIME	2	/** 2 seconds PTT hangtime */
+#define SQL_TIMEOUT	10	/** 10 minutes squelch timeout */
+#define RSSI_ADC_CH     0       /** ADC channel for RSSI measurements */
+#define SQL_LVL_ADC_CH  1       /** ADC channel for squelch level */
+#define WINDOW_SIZE     2       /** Size of the RSSI schmitt trigger window */
 
 struct siglev_tone_map_item
 {
@@ -90,7 +90,7 @@ int main(void)
   TCCR1A = _BV(COM1A1) | _BV(WGM11);
   TCCR1B = _BV(CS10) | _BV(WGM12) | _BV(WGM13);
   
-    /* Timer/Counter 1 Overflow Interrupt Enable */
+    /** Timer/Counter 1 Overflow Interrupt Enable */
   //TIMSK = _BV(TOV1);
   TIMSK |= _BV(TOIE1);
   
@@ -100,18 +100,18 @@ int main(void)
   set_sin_fq(siglev_tone_map[0].fq);
   ICR1 = 1;
   
-    /* ADC Left adjust result.	 */
-    /* AVcc as reference voltage */
+    /** ADC Left adjust result.	 */
+    /** AVcc as reference voltage */
   ADMUX = _BV(ADLAR) | _BV(REFS0);
   
-    /* ADC interrupt enable */
-    /* ADC prescaler division factor 128 */
+    /** ADC interrupt enable */
+    /** ADC prescaler division factor 128 */
   ADCSRA = _BV(ADIE) | _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);
   
-    /* Timer 0 clk/8 prescaler */
+    /** Timer 0 clk/8 prescaler */
   TCCR0 = 0x02;
   
-    /* Timer/Counter 0 Overflow Interrupt Enable */
+    /** Timer/Counter 0 Overflow Interrupt Enable */
   TIMSK |= _BV(TOIE0);
   
   sei();  // Enable interrupts
@@ -141,9 +141,9 @@ static inline void set_sin_fq(unsigned short fq)
     OCR1A = 0xffff;
     ICR1 = 511;
   }
-} /* set_sin_fq */
+} /** set_sin_fq */
 
-/*
+/**
  * Interrupt handling routine for timer 0 overflow. This timer is used for
  * clocking the A/D conversion interval.
  */
@@ -151,7 +151,7 @@ SIGNAL(SIG_OVERFLOW0)
 {
   static uint8_t divider = 0;
   
-    /* Divide clock down to 400Hz (2.5ms) */
+    /** Divide clock down to 400Hz (2.5ms) */
   if (++divider < 18)
   {
     return;
@@ -162,9 +162,9 @@ SIGNAL(SIG_OVERFLOW0)
   ADMUX = (ADMUX & 0xf0) | adc_ch;
   ADCSRA |= (_BV(ADEN) | _BV(ADSC));
   
-} /* SIGNAL(SIG_OVERFLOW0) */
+} /** SIGNAL(SIG_OVERFLOW0) */
 
-/*
+/**
  * Interrupt handling routine for time 1 overflow. This timer is used in PWM
  * mode to generate a sqare wave. This interrupt routine is responsible for
  * sliding the tone up or down to the correct value. The tone is slided to
@@ -185,14 +185,14 @@ SIGNAL(SIG_OVERFLOW1)
       OCR1A = (ICR1 + 1) >> 1;
     }
   }
-} /* SIGNAL(SIG_OVERFLOW1) */
+} /** SIGNAL(SIG_OVERFLOW1) */
 
-/*
+/**
  * Interrupt service routine for ADC conversion finished
  */
 SIGNAL(SIG_ADC)
 {
-    /* Read the ADC conversion result */
+    /** Read the ADC conversion result */
   uint8_t val = ADCH;
   
   if (adc_ch == RSSI_ADC_CH)
@@ -252,12 +252,12 @@ SIGNAL(SIG_ADC)
         if ((--ptt_hang == 0) ||
             ((sql_timeout > 0) && (--sql_timeout == 0)))
         {
-            /* Unkey PTT */
+            /** Unkey PTT */
           PORTB &= ~_BV(PB0);
         }
         else if (sql_timeout > 0)
         {
-            /* Key PTT */
+            /** Key PTT */
           PORTB |= _BV(PB0);
         }
       }
@@ -276,7 +276,7 @@ SIGNAL(SIG_ADC)
     siglev_tone_map[1].siglev = sql_thresh;
   }
   
-    /* Turn off ADC clock */
+    /** Turn off ADC clock */
   ADCSRA &= ~_BV(ADEN);
 }
 

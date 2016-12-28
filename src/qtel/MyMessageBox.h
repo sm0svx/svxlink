@@ -27,36 +27,36 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef MY_MESSAGE_BOX_INCLUDED
 #define MY_MESSAGE_BOX_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <QMessageBox>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 class MyMessageBox : public QMessageBox
@@ -84,11 +84,11 @@ class MyMessageBox : public QMessageBox
     
   private:
     
-};  /* class MyMessageBox */
+};  /** class MyMessageBox */
 
-#endif /* MY_MESSAGE_BOX_INCLUDED */
+#endif /** MY_MESSAGE_BOX_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

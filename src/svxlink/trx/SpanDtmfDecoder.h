@@ -26,39 +26,39 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SPAN_DTMF_DECODER_INCLUDED
 #define SPAN_DTMF_DECODER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
-/*
+/**
  * Project Includes
  */
 //#include <AsyncAudioSink.h>
 
-/*
+/**
  * Local Includes
  */
 #include "DtmfDecoder.h"
 #include "spandsp_tone_report_func_args.h"
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -130,11 +130,11 @@ class SpanDtmfDecoder : public DtmfDecoder
 
     void toneReport(int code);
 
-};  /* class SpanDtmfDecoder */
+};  /** class SpanDtmfDecoder */
 
-#endif /* SPAN_DTMF_DECODER_INCLUDED */
+#endif /** SPAN_DTMF_DECODER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

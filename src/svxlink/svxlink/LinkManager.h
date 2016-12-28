@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef LINK_MANAGER_INCLUDED
 #define LINK_MANAGER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
@@ -37,7 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <set>
 #include <stdint.h>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncConfig.h>
@@ -45,12 +45,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncAudioSelector.h>
 #include <AsyncAudioSplitter.h>
 
-/*
+/**
  * Local Includes
  */
 #include "CmdParser.h"
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -59,23 +59,23 @@ namespace Async
 };
 class Logic;
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Types
  */
 
-/*
+/**
  * Class definitions
  */
 
@@ -256,7 +256,7 @@ class LinkManager : public sigc::trackable
     void wantedConnections(LogicConSet &want);
     void activateLink(Link &link);
     void deactivateLink(Link &link);
-    /*
+    /**
     bool isConnected(const std::string& source_name,
                      const std::string& sink_name);
     */
@@ -264,10 +264,10 @@ class LinkManager : public sigc::trackable
     void logicIdleStateChanged(bool is_idle, const Logic *logic);
     void checkTimeoutTimer(Link &link);
 
-};  /* class LinkManager */
+};  /** class LinkManager */
 
-#endif /* LINK_MANAGER_INCLUDED */
+#endif /** LINK_MANAGER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

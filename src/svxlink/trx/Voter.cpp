@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <iostream>
@@ -39,7 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/time.h>
 #include <string.h>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncTimer.h>
@@ -49,23 +49,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <AsyncPty.h>
 #include <AsyncPtyStreamBuf.h>
 
-/*
+/**
  * Local Includes
  */
 #include "Voter.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace sigc;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 /**
@@ -281,19 +281,19 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     }
 };
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 Voter::Voter(Config &cfg, const std::string& name)
@@ -301,7 +301,7 @@ Voter::Voter(Config &cfg, const std::string& name)
     sm(Macho::State<Top>(this)), is_processing_event(false), voter_pty(0)
 {
   Rx::setVerbose(false);
-} /* Voter::Voter */
+} /** Voter::Voter */
 
 Voter::~Voter(void)
 {
@@ -319,7 +319,7 @@ Voter::~Voter(void)
     delete *it;
   }
   rxs.clear();
-} /* Voter::~Voter */
+} /** Voter::~Voter */
 
 bool Voter::initialize(void)
 {
@@ -460,14 +460,14 @@ bool Voter::initialize(void)
   
   return true;
   
-} /* Voter::initialize */
+} /** Voter::initialize */
 
 void Voter::setMuteState(MuteState new_mute_state)
 {
   //cout << "Voter::mute: do_mute=" << (do_mute ? "TRUE" : "FALSE") << endl;
   assert(!is_processing_event);
   dispatchEvent(Macho::Event(&Top::setMuteState, new_mute_state));
-} /* Voter::setMuteState */
+} /** Voter::setMuteState */
 
 
 bool Voter::addToneDetector(float fq, int bw, float thresh,
@@ -482,31 +482,31 @@ bool Voter::addToneDetector(float fq, int bw, float thresh,
   
   return success;
   
-} /* Voter::addToneDetector */
+} /** Voter::addToneDetector */
 
 float Voter::signalStrength(void) const
 {
     // Const cast needed since we cannot declare the signalStrength
     // method const due to how the state machine is implemented.
   return const_cast<Macho::Machine<Top>&>(sm)->signalStrength();
-} /* Voter::signalStrength */
+} /** Voter::signalStrength */
 
 int Voter::sqlRxId(void) const
 {
   return const_cast<Macho::Machine<Top>&>(sm)->sqlRxId();
-} /* Voter::sqlRxId */
+} /** Voter::sqlRxId */
 
 void Voter::reset(void)
 {
   assert(!is_processing_event);
   dispatchEvent(Macho::Event(&Top::reset));
-} /* Voter::reset */
+} /** Voter::reset */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 void Voter::commandHandler(const void *buf, size_t count) {
@@ -547,19 +547,19 @@ void Voter::dispatchEvent(Macho::IEvent<Top> *event)
   {
     event_queue.push_back(event);
   }
-} /* Voter::dispatchEvent */
+} /** Voter::dispatchEvent */
 
 void Voter::satSquelchOpen(bool is_open, SatRx *srx)
 {
   //cout << "Voter::satSquelchOpen: is_open=" << (is_open ? "TRUE" : "FALSE")
   //     << " srx=" << srx->name() << endl;
   dispatchEvent(Macho::Event(&Top::satSquelchOpen, srx, is_open));
-} /* Voter::satSquelchOpen */
+} /** Voter::satSquelchOpen */
 
 void Voter::satSignalLevelUpdated(float siglev, SatRx *srx)
 {
   dispatchEvent(Macho::Event(&Top::satSignalLevelUpdated, srx, siglev));
-} /* Voter::satSignalLevelUpdated */
+} /** Voter::satSignalLevelUpdated */
 
 void Voter::muteAllBut(SatRx *srx, Rx::MuteState mute_state)
 {
@@ -568,7 +568,7 @@ void Voter::muteAllBut(SatRx *srx, Rx::MuteState mute_state)
   {
     (*it)->setMuteState(*it == srx ? MUTE_NONE : mute_state);
   }
-} /* Voter::muteAllBut */
+} /** Voter::muteAllBut */
 
 void Voter::unmuteAll(void)
 {
@@ -577,7 +577,7 @@ void Voter::unmuteAll(void)
   {
     (*it)->setMuteState(MUTE_NONE);
   }
-} /* Voter::unmuteAll */
+} /** Voter::unmuteAll */
 
 void Voter::setRxStatus(char *name, bool status)
 {
@@ -599,7 +599,7 @@ void Voter::resetAll(void)
   {
     (*it)->reset();
   }
-} /* Voter::resetAll */
+} /** Voter::resetAll */
 
 void Voter::printSquelchState(void)
 {
@@ -626,7 +626,7 @@ void Voter::printSquelchState(void)
     os << " ";
   }
   publishStateEvent("Voter:sql_state", os.str());
-} /* Voter::printSquelchState */
+} /** Voter::printSquelchState */
 
 Voter::SatRx *Voter::findBestRx(void) const
 {
@@ -645,9 +645,9 @@ Voter::SatRx *Voter::findBestRx(void) const
 
   return best_rx;
 
-} /* Voter::findBestRx */
+} /** Voter::findBestRx */
 
-/*
+/**
  * Top state event handlers
  */
 
@@ -656,19 +656,19 @@ void Voter::Top::init(Voter *voter)
   box().voter = voter;
   box().event_timer.expired.connect(mem_fun(*this, &Top::eventTimerExpired));
   setState<Muted>();
-} /* Voter::Top::init */
+} /** Voter::Top::init */
 
 void Voter::Top::exit(void)
 {
   delete box().task_timer;
   box().task_timer = 0;
-} /* Voter::Top::exit */
+} /** Voter::Top::exit */
 
 void Voter::Top::reset(void)
 {
   voter().resetAll();
   setState<Muted>();
-} /* Voter::Top::reset */
+} /** Voter::Top::reset */
 
 void Voter::Top::setMuteState(Rx::MuteState new_mute_state)
 {
@@ -692,7 +692,7 @@ void Voter::Top::setMuteState(Rx::MuteState new_mute_state)
       break;
   }
   box().mute_state = new_mute_state;
-} /* Voter::Top::setMuteState */
+} /** Voter::Top::setMuteState */
 
 void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
 {
@@ -718,7 +718,7 @@ void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
       box().best_srx = srx;
     }
   }
-} /* Voter::Top::satSquelchOpen */
+} /** Voter::Top::satSquelchOpen */
 
 void Voter::Top::satSignalLevelUpdated(SatRx *srx, float siglev)
 {
@@ -736,7 +736,7 @@ void Voter::Top::satSignalLevelUpdated(SatRx *srx, float siglev)
   {
     runTask(bind(voter().signalLevelUpdated.make_slot(), siglev));
   }
-} /* Voter::Top::satSignalLevelUpdated */
+} /** Voter::Top::satSignalLevelUpdated */
 
 void Voter::Top::runTask(sigc::slot<void> task)
 {
@@ -747,7 +747,7 @@ void Voter::Top::runTask(sigc::slot<void> task)
     Timer *t = new Timer(0);
     t->expired.connect(mem_fun(*this, &Voter::Top::taskTimerExpired));
   }
-} /* Voter::Top::runTask */
+} /** Voter::Top::runTask */
 
 void Voter::Top::taskTimerExpired(Timer *t)
 {
@@ -760,32 +760,32 @@ void Voter::Top::taskTimerExpired(Timer *t)
   
   delete box().task_timer;
   box().task_timer = 0;
-} /* Voter::Top::taskTimerExpired */
+} /** Voter::Top::taskTimerExpired */
 
 void Voter::Top::startTimer(unsigned time_ms)
 {
   box().event_timer.setTimeout(time_ms);
   box().event_timer.setEnable(true);
-} /* Voter::Top::startTimer */
+} /** Voter::Top::startTimer */
 
 void Voter::Top::stopTimer(void)
 {
   box().event_timer.setEnable(false);
-} /* Voter::Top::stopTimer */
+} /** Voter::Top::stopTimer */
 
 void Voter::Top::eventTimerExpired(Timer *t)
 { 
   voter().dispatchEvent(Macho::Event(&Top::timerExpired));
-} /* Voter::Top::eventTimerExpired */
+} /** Voter::Top::eventTimerExpired */
 
-/*
+/**
  * Muted state event handlers
  */
 void Voter::Muted::entry(void)
 {
   //cout << "### Muted::entry\n";
   voter().muteAll(MUTE_ALL);
-} /* Voter::Muted::entry */
+} /** Voter::Muted::entry */
 
 void Voter::Muted::setMuteState(Rx::MuteState new_mute_state)
 {
@@ -795,7 +795,7 @@ void Voter::Muted::setMuteState(Rx::MuteState new_mute_state)
     doUnmute();
   }
   TOP::box().mute_state = new_mute_state;
-} /* Voter::Muted::setMuteState */
+} /** Voter::Muted::setMuteState */
 
 void Voter::Muted::doUnmute(void)
 {
@@ -808,9 +808,9 @@ void Voter::Muted::doUnmute(void)
   {
     setState<Idle>();
   }
-} /* Voter::Muted::doUnmute */
+} /** Voter::Muted::doUnmute */
 
-/*
+/**
  * Idle state event handlers
  */
 void Voter::Idle::entry(void)
@@ -820,7 +820,7 @@ void Voter::Idle::entry(void)
   {
     voter().unmuteAll();
   }
-} /* Voter::Idle::entry */
+} /** Voter::Idle::entry */
 
 void Voter::Idle::satSquelchOpen(SatRx *srx, bool is_open)
 {
@@ -836,22 +836,22 @@ void Voter::Idle::satSquelchOpen(SatRx *srx, bool is_open)
       setState<VotingDelay>();
     }
   }
-} /* Voter::Idle::satSquelchOpen */
+} /** Voter::Idle::satSquelchOpen */
 
-/*
+/**
  * VotingDelay state event handlers
  */
 void Voter::VotingDelay::entry(void)
 {
   //cout << "### VotingDelay::entry\n";
   startTimer(votingDelay());
-} /* Voter::VotingDelay::entry */
+} /** Voter::VotingDelay::entry */
 
 void Voter::VotingDelay::exit(void)
 {
   //cout << "### VotingDelay::exit\n";
   stopTimer();
-} /* Voter::VotingDelay::exit */
+} /** Voter::VotingDelay::exit */
 
 void Voter::VotingDelay::satSquelchOpen(SatRx *srx, bool is_open)
 {
@@ -870,16 +870,16 @@ void Voter::VotingDelay::satSquelchOpen(SatRx *srx, bool is_open)
       setState<Idle>();
     }
   }
-} /* Voter::VotingDelay::satSquelchOpen */
+} /** Voter::VotingDelay::satSquelchOpen */
 
 void Voter::VotingDelay::timerExpired(void)
 {
   assert(bestSrx() != 0);
   assert(bestSrx()->squelchIsOpen());
   setState<ActiveRxSelected>(bestSrx());
-} /* Voter::VotingDelay::timerExpired */
+} /** Voter::VotingDelay::timerExpired */
 
-/*
+/**
  * ActiveRxSelected state event handlers
  */
 void Voter::ActiveRxSelected::init(SatRx *srx)
@@ -895,12 +895,12 @@ void Voter::ActiveRxSelected::init(SatRx *srx)
     voter().muteAllBut(srx, MUTE_CONTENT);
   }
   setState<SquelchOpen>();
-} /* Voter::ActiveRxSelected::init */
+} /** Voter::ActiveRxSelected::init */
 
 void Voter::ActiveRxSelected::exit(void)
 {
   runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), true));  
-} /* Voter::ActiveRxSelected::exit */
+} /** Voter::ActiveRxSelected::exit */
 
 void Voter::ActiveRxSelected::setMuteState(Rx::MuteState new_mute_state)
 {
@@ -911,12 +911,12 @@ void Voter::ActiveRxSelected::setMuteState(Rx::MuteState new_mute_state)
   }
   activeSrx()->setMuteState(MUTE_NONE);
   TOP::box().mute_state = Rx::MUTE_NONE;
-} /* Voter::ActiveRxSelected::setMuteState */
+} /** Voter::ActiveRxSelected::setMuteState */
 
 int Voter::ActiveRxSelected::sqlRxId(void)
 {
   return box().active_srx->id();
-} /* Voter::ActiveRxSelected::sqlRxId */
+} /** Voter::ActiveRxSelected::sqlRxId */
 
 void Voter::ActiveRxSelected::changeActiveSrx(SatRx *srx)
 {
@@ -927,9 +927,9 @@ void Voter::ActiveRxSelected::changeActiveSrx(SatRx *srx)
   {
     activeSrx()->setMuteState(MUTE_NONE);
   }
-} /* Voter::ActiveRxSelected::changeActiveSrx */
+} /** Voter::ActiveRxSelected::changeActiveSrx */
 
-/*
+/**
  * SquelchOpen state event handlers
  */
 void Voter::SquelchOpen::entry(void)
@@ -945,12 +945,12 @@ void Voter::SquelchOpen::entry(void)
   runTask(bind(mem_fun(voter(), &Voter::setSquelchState), true));
   runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), false));
   runTask(mem_fun(voter(), &Voter::printSquelchState));
-} /* Voter::SquelchOpen::entry */
+} /** Voter::SquelchOpen::entry */
 
 void Voter::SquelchOpen::init(void)
 {
   setState<Receiving>();
-} /* Voter::SquelchOpen::init */
+} /** Voter::SquelchOpen::init */
 
 void Voter::SquelchOpen::exit(void)
 {
@@ -964,7 +964,7 @@ void Voter::SquelchOpen::exit(void)
   
   runTask(bind(mem_fun(voter(), &Voter::setSquelchState), false));
   runTask(mem_fun(voter(), &Voter::printSquelchState));
-} /* Voter::SquelchOpen::exit */
+} /** Voter::SquelchOpen::exit */
 
 void Voter::SquelchOpen::satSquelchOpen(SatRx *srx, bool is_open)
 {
@@ -973,34 +973,34 @@ void Voter::SquelchOpen::satSquelchOpen(SatRx *srx, bool is_open)
   {
     setState<SqlCloseWait>();
   }
-} /* Voter::SquelchOpen::satSquelchOpen */
+} /** Voter::SquelchOpen::satSquelchOpen */
 
 float Voter::SquelchOpen::signalStrength(void)
 {
   return activeSrx()->signalStrength();
-} /* Voter::SquelchOpen::signalStrength */
+} /** Voter::SquelchOpen::signalStrength */
 
 void Voter::SquelchOpen::changeActiveSrx(SatRx *srx)
 {
   runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), true));
   SUPER::changeActiveSrx(srx);
   runTask(bind(mem_fun(activeSrx(), &SatRx::stopOutput), false));  
-} /* Voter::SquelchOpen::changeActiveSrx */
+} /** Voter::SquelchOpen::changeActiveSrx */
 
-/*
+/**
  * SqlCloseWait state event handlers
  */
 void Voter::SqlCloseWait::entry(void)
 {
   //cout << "### SqlCloseWait::entry\n";
   startTimer(sqlCloseRevoteDelay());
-} /* Voter::SqlCloseWait::entry */
+} /** Voter::SqlCloseWait::entry */
 
 void Voter::SqlCloseWait::exit(void)
 {
   //cout << "### SqlCloseWait::exit\n";
   stopTimer();
-} /* Voter::SqlCloseWait::exit */
+} /** Voter::SqlCloseWait::exit */
 
 void Voter::SqlCloseWait::satSquelchOpen(SatRx *srx, bool is_open)
 {
@@ -1009,7 +1009,7 @@ void Voter::SqlCloseWait::satSquelchOpen(SatRx *srx, bool is_open)
   {
     setState<SquelchOpen>();
   }
-} /* Voter::SqlCloseWait::satSquelchOpen */
+} /** Voter::SqlCloseWait::satSquelchOpen */
 
 void Voter::SqlCloseWait::timerExpired(void)
 {
@@ -1022,9 +1022,9 @@ void Voter::SqlCloseWait::timerExpired(void)
   {
     setState<Idle>();
   }
-} /* Voter::SqlCloseWait::timerExpired */
+} /** Voter::SqlCloseWait::timerExpired */
 
-/*
+/**
  * Receiving state event handlers
  */
 void Voter::Receiving::entry(void)
@@ -1034,13 +1034,13 @@ void Voter::Receiving::entry(void)
   {
     startTimer(revoteInterval());
   }
-} /* Voter::Receiving::entry */
+} /** Voter::Receiving::entry */
 
 void Voter::Receiving::exit(void)
 {
   //cout << "### Receiving::exit\n";
   stopTimer();
-} /* Voter::Receiving::exit */
+} /** Voter::Receiving::exit */
 
 void Voter::Receiving::timerExpired(void)
 {
@@ -1063,16 +1063,16 @@ void Voter::Receiving::timerExpired(void)
   {
     startTimer(revoteInterval());
   }
-} /* Voter::Receiving::timerExpired */
+} /** Voter::Receiving::timerExpired */
 
-/*
+/**
  * SwitchActiveRx state event handlers
  */
 void Voter::SwitchActiveRx::entry(void)
 {
   //cout << "### SwitchActiveRx::entry\n";
   startTimer(rxSwitchDelay());
-} /* Voter::SwitchActiveRx::entry */
+} /** Voter::SwitchActiveRx::entry */
 
 void Voter::SwitchActiveRx::init(SatRx *srx)
 {
@@ -1081,7 +1081,7 @@ void Voter::SwitchActiveRx::init(SatRx *srx)
   {
     srx->setMuteState(MUTE_NONE);
   }
-} /* Voter::SwitchActiveRx::init */
+} /** Voter::SwitchActiveRx::init */
 
 void Voter::SwitchActiveRx::exit(void)
 {
@@ -1092,7 +1092,7 @@ void Voter::SwitchActiveRx::exit(void)
   }
 
   stopTimer();
-} /* Voter::SwitchActiveRx::exit */
+} /** Voter::SwitchActiveRx::exit */
 
 void Voter::SwitchActiveRx::setMuteState(Rx::MuteState new_mute_state)
 {
@@ -1104,7 +1104,7 @@ void Voter::SwitchActiveRx::setMuteState(Rx::MuteState new_mute_state)
   activeSrx()->setMuteState(MUTE_NONE);
   box().switch_to_srx->setMuteState(MUTE_NONE);
   TOP::box().mute_state = Rx::MUTE_NONE;
-} /* Voter::SwitchActiveRx::setMuteState */
+} /** Voter::SwitchActiveRx::setMuteState */
 
 void Voter::SwitchActiveRx::timerExpired(void)
 {
@@ -1131,8 +1131,8 @@ void Voter::SwitchActiveRx::timerExpired(void)
     box().switch_to_srx = 0;
   }
   setState<Receiving>();
-} /* Voter::SwitchActiveRx::timerExpired */
+} /** Voter::SwitchActiveRx::timerExpired */
 
-/*
+/**
  * This file has not been truncated
  */

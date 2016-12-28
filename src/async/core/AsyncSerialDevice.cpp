@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <sys/types.h>
@@ -36,45 +36,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <errno.h>
 #include <cstdio>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncFdWatch.h>
 
-/*
+/**
  * Local Includes
  */
 #include "AsyncSerial.h"
 #include "AsyncSerialDevice.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 map<string, SerialDevice *> SerialDevice::dev_map;
 
-/*
+/**
  * Public member functions
  */
 SerialDevice *SerialDevice::open(const string& port, bool flush)
@@ -98,7 +98,7 @@ SerialDevice *SerialDevice::open(const string& port, bool flush)
   
   return dev;
   
-} /* SerialDevice::instance */
+} /** SerialDevice::instance */
 
 bool SerialDevice::close(SerialDevice *dev)
 {
@@ -113,13 +113,13 @@ bool SerialDevice::close(SerialDevice *dev)
 
   return success;
   
-} /* SerialDevice::close */
+} /** SerialDevice::close */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 SerialDevice::SerialDevice(const string& port)
@@ -127,13 +127,13 @@ SerialDevice::SerialDevice(const string& port)
     rd_watch(0), restore_on_close(false)
 {
   
-} /* SerialDevice::SerialDevice */
+} /** SerialDevice::SerialDevice */
 
 
 SerialDevice::~SerialDevice(void)
 {
   delete rd_watch;
-} /* SerialDevice::~SerialDevice */
+} /** SerialDevice::~SerialDevice */
 
 
 bool SerialDevice::openPort(bool flush)
@@ -170,7 +170,7 @@ bool SerialDevice::openPort(bool flush)
   
   return true;
   
-} /* SerialDevice::openPort */
+} /** SerialDevice::openPort */
 
 
 bool SerialDevice::closePort(void)
@@ -197,7 +197,7 @@ bool SerialDevice::closePort(void)
   
   return true;
   
-} /* SerialDevice::closePort */
+} /** SerialDevice::closePort */
 
 void SerialDevice::onIncomingData(FdWatch *watch)
 {
@@ -214,9 +214,9 @@ void SerialDevice::onIncomingData(FdWatch *watch)
   buf[cnt] = 0;
   charactersReceived(buf, cnt);
   
-} /* SerialDevice::onIncomingData */
+} /** SerialDevice::onIncomingData */
 
-/*
+/**
  * This file has not been truncated
  */
 

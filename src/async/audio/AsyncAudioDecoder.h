@@ -26,44 +26,44 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ASYNC_AUDIO_DECODER_INCLUDED
 #define ASYNC_AUDIO_DECODER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
 #include <sigc++/sigc++.h>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioSource.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 
@@ -147,13 +147,13 @@ class AudioDecoder : public AudioSource, public sigc::trackable
     AudioDecoder(const AudioDecoder&);
     AudioDecoder& operator=(const AudioDecoder&);
     
-};  /* class AudioDecoder */
+};  /** class AudioDecoder */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AUDIO_DECODER_INCLUDED */
+#endif /** ASYNC_AUDIO_DECODER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

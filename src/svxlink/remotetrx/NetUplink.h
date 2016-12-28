@@ -26,25 +26,25 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef NET_UPLINK_INCLUDED
 #define NET_UPLINK_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sys/time.h>
 
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncTcpConnection.h>
 #include <NetTrxMsg.h>
 
-/*
+/**
  * Local Includes
  */
 #include "Uplink.h"
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -65,23 +65,23 @@ namespace NetTrxMsg
   class Msg;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -199,13 +199,13 @@ class NetUplink : public Uplink
     void forceDisconnect(void);
     void setState(State new_state) { state = new_state; }
 
-};  /* class NetUplink */
+};  /** class NetUplink */
 
-//} /* namespace */
+//} /** namespace */
 
-#endif /* NET_UPLINK_INCLUDED */
+#endif /** NET_UPLINK_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

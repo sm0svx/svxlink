@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <string>
@@ -41,11 +41,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <speex/speex.h>
 #endif
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "rtp.h"
@@ -53,18 +53,18 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "EchoLinkDispatcher.h"
 #include "EchoLinkQso.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 using namespace EchoLink;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 struct Qso::Private
@@ -94,19 +94,19 @@ struct Qso::Private
   {}
 };
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
@@ -155,7 +155,7 @@ Qso::Qso(const IpAddress& addr, const string& callsign, const string& name,
   init_ok = true;
   return;
   
-} /* Qso::Qso */
+} /** Qso::Qso */
 
 
 Qso::~Qso(void)
@@ -180,7 +180,7 @@ Qso::~Qso(void)
 
   delete p;
   p = 0;
-} /* Qso::~Qso */
+} /** Qso::~Qso */
 
 bool Qso::setLocalCallsign(const string& callsign)
 {
@@ -202,7 +202,7 @@ bool Qso::setLocalCallsign(const string& callsign)
   
   return true;
   
-} /* Qso::setLocalCallsign */
+} /** Qso::setLocalCallsign */
 
 bool Qso::setLocalName(const string& name)
 {
@@ -225,12 +225,12 @@ bool Qso::setLocalName(const string& name)
   
   return true;
   
-} /* Qso::setLocalName */
+} /** Qso::setLocalName */
 
 void Qso::setLocalInfo(const string& info)
 {
   local_stn_info = info;
-} /* Qso::setLocalInfo */
+} /** Qso::setLocalInfo */
 
 bool Qso::connect(void)
 {
@@ -249,7 +249,7 @@ bool Qso::connect(void)
   
   return setup_connection_ok;
   
-} /* Qso::connect */
+} /** Qso::connect */
 
 bool Qso::accept(void)
 {
@@ -267,7 +267,7 @@ bool Qso::accept(void)
   
   return setup_connection_ok;
   
-} /* Qso::accept */
+} /** Qso::accept */
 
 bool Qso::disconnect(void)
 {
@@ -288,7 +288,7 @@ bool Qso::disconnect(void)
   
   return true;
   
-} /* Qso::disconnect */
+} /** Qso::disconnect */
 
 bool Qso::sendInfoData(const string& info)
 {
@@ -318,7 +318,7 @@ bool Qso::sendInfoData(const string& info)
   
   return true;
   
-} /* Qso::sendInfoData */
+} /** Qso::sendInfoData */
 
 bool Qso::sendChatData(const string& msg)
 {
@@ -338,7 +338,7 @@ bool Qso::sendChatData(const string& msg)
   
   return true;
   
-} /* Qso::sendChatData */
+} /** Qso::sendChatData */
 
 bool Qso::sendAudioRaw(RawPacket *raw_packet)
 {
@@ -390,7 +390,7 @@ bool Qso::sendAudioRaw(RawPacket *raw_packet)
   
   return true;
 
-} /* Qso::sendAudioRaw */
+} /** Qso::sendAudioRaw */
 
 void Qso::setRemoteParams(const string& priv)
 {
@@ -403,7 +403,7 @@ void Qso::setRemoteParams(const string& priv)
     p->remote_codec = Private::CODEC_SPEEX;
   }
 #endif
-} /* Qso::setRemoteParams */
+} /** Qso::setRemoteParams */
 
 int Qso::writeSamples(const float *samples, int count)
 {
@@ -449,7 +449,7 @@ int Qso::writeSamples(const float *samples, int count)
   
   return samples_read;
   
-} /* Qso::writeSamples */
+} /** Qso::writeSamples */
 
 void Qso::flushSamples(void)
 {
@@ -467,30 +467,30 @@ void Qso::flushSamples(void)
   
   sourceAllSamplesFlushed();
   
-} /* Qso::flushSamples */
+} /** Qso::flushSamples */
 
 
 void Qso::resumeOutput(void)
 {
-} /* Qso::resumeOutput */
+} /** Qso::resumeOutput */
     
 
 void Qso::setUseGsmOnly(void)
 {
   use_gsm_only = true;
-} /* Qso::setGsmCodec */
+} /** Qso::setGsmCodec */
 
 
-/*
+/**
  * Protected member functions
  */
 
 void Qso::allSamplesFlushed(void)
 {
 
-} /* Qso::allSamplesFlushed */
+} /** Qso::allSamplesFlushed */
 
-/*
+/**
  * Private member functions
  */
 
@@ -513,7 +513,7 @@ void Qso::printData(const unsigned char *buf, int len)
   cerr << endl;
 
   cerr.flags(old_flags);
-} /* Qso::printData */
+} /** Qso::printData */
 
 void Qso::handleCtrlInput(unsigned char *buf, int len)
 {
@@ -532,7 +532,7 @@ void Qso::handleCtrlInput(unsigned char *buf, int len)
     cerr << "Unknown packet type received from " << remote_ip << endl;
     return;
   }
-} /* Qso::handleCtrlInput */
+} /** Qso::handleCtrlInput */
 
 inline void Qso::handleByePacket(unsigned char *buf, int len)
 {
@@ -545,7 +545,7 @@ inline void Qso::handleByePacket(unsigned char *buf, int len)
   {
     sendByePacket();
   }
-} /* Qso::handleByePacket */
+} /** Qso::handleByePacket */
 
 inline void Qso::handleSdesPacket(unsigned char *buf, int len)
 {
@@ -604,7 +604,7 @@ inline void Qso::handleSdesPacket(unsigned char *buf, int len)
     case STATE_BYE_RECEIVED:
       break;
   }  
-} /* Qso::handleSdesPacket */
+} /** Qso::handleSdesPacket */
 
 void Qso::handleAudioInput(unsigned char *buf, int len)
 {
@@ -615,7 +615,7 @@ void Qso::handleAudioInput(unsigned char *buf, int len)
     return;
   }
   
-  if(buf[0] != 0xc0) /* Not an audio packet */
+  if(buf[0] != 0xc0) /** Not an audio packet */
   {
     handleNonAudioPacket(buf, len);
   }
@@ -623,7 +623,7 @@ void Qso::handleAudioInput(unsigned char *buf, int len)
   {
     handleAudioPacket(buf, len);
   }
-} /* Qso::handleAudioInput */
+} /** Qso::handleAudioInput */
 
 inline void Qso::handleNonAudioPacket(unsigned char *buf, int len)
 {
@@ -644,7 +644,7 @@ inline void Qso::handleNonAudioPacket(unsigned char *buf, int len)
       string info_msg(info_buf+7, null);
       replace(info_msg.begin(), info_msg.end(), '\r', '\n');
       infoMsgReceived(info_msg);
-      /*
+      /**
       if (null+1 < info_buf+len)
       {
       	string trailing_data(null+1, info_buf+len);
@@ -684,7 +684,7 @@ inline void Qso::handleNonAudioPacket(unsigned char *buf, int len)
     return;
   }
   
-} /* Qso::handleNonAudioPacket */
+} /** Qso::handleNonAudioPacket */
 
 inline void Qso::handleAudioPacket(unsigned char *buf, int len)
 {
@@ -693,7 +693,7 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
   RawPacket raw_packet = { voice_packet, len, receive_buffer };
   short *sbuff = receive_buffer;
 
-  /* Check that we have received a valid header. */
+  /** Check that we have received a valid header. */
   if ((unsigned)len < sizeof(voice_packet->header))
   {
     cerr << "*** WARNING: Invalid audio packet size." << endl;
@@ -788,7 +788,7 @@ inline void Qso::handleAudioPacket(unsigned char *buf, int len)
 
   audioReceivedRaw(&raw_packet);
 
-} /* Qso::handleAudioPacket */
+} /** Qso::handleAudioPacket */
 
 bool Qso::sendSdesPacket(void)
 {
@@ -802,7 +802,7 @@ bool Qso::sendSdesPacket(void)
   
   return true;
   
-} /* Qso::sendSdesPacket */
+} /** Qso::sendSdesPacket */
 
 void Qso::sendKeepAlive(Timer *timer)
 {
@@ -815,7 +815,7 @@ void Qso::sendKeepAlive(Timer *timer)
   {
     sendSdesPacket();
   }
-} /* Qso::sendKeepAlive */
+} /** Qso::sendKeepAlive */
 
 void Qso::setState(State state)
 {
@@ -828,12 +828,12 @@ void Qso::setState(State state)
     }
     stateChange(state);
   }
-} /* Qso::setState */
+} /** Qso::setState */
 
 void Qso::connectionTimeout(Timer *timer)
 {
   cleanupConnection();
-} /* Qso::connectionTimeout */
+} /** Qso::connectionTimeout */
 
 bool Qso::setupConnection(void)
 {
@@ -850,7 +850,7 @@ bool Qso::setupConnection(void)
     
   return send_sdes_ok;
     
-} /* Qso::setupConnection */
+} /** Qso::setupConnection */
 
 void Qso::cleanupConnection(void)
 {
@@ -867,7 +867,7 @@ void Qso::cleanupConnection(void)
   delete con_timeout_timer;
   con_timeout_timer = 0;
   setState(STATE_DISCONNECTED);
-} /* Qso::cleanupConnection */
+} /** Qso::cleanupConnection */
 
 bool Qso::sendVoicePacket(void)
 {
@@ -922,7 +922,7 @@ bool Qso::sendVoicePacket(void)
   
   return true;
   
-} /* Qso::sendVoicePacket */
+} /** Qso::sendVoicePacket */
 
 void Qso::checkRxActivity(Timer *timer)
 {
@@ -937,7 +937,7 @@ void Qso::checkRxActivity(Timer *timer)
     delete rx_indicator_timer;
     rx_indicator_timer = 0;
   }
-} /* Qso::checkRxActivity */
+} /** Qso::checkRxActivity */
 
 bool Qso::sendByePacket(void)
 {
@@ -952,8 +952,8 @@ bool Qso::sendByePacket(void)
 
   return true;
 
-} /* Qso::sendByePacket */
+} /** Qso::sendByePacket */
 
-/*
+/**
  * This file has not been truncated
  */

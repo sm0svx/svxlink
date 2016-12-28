@@ -138,7 +138,7 @@ int main() {
 	return 0;
 }
 
-/*
+/**
    Output is:
 
    Top::entry

@@ -26,20 +26,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef S54S_DTMF_DECODER_INCLUDED
 #define S54S_DTMF_DECODER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "HwDtmfDecoder.h"
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -47,19 +47,19 @@ namespace Async
   class Serial;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -131,11 +131,11 @@ class S54sDtmfDecoder : public HwDtmfDecoder
     
     void charactersReceived(char *buf, int len);
 
-};  /* class S54sDtmfDecoder */
+};  /** class S54sDtmfDecoder */
 
-#endif /* S54S_DTMF_DECODER_INCLUDED */
+#endif /** S54S_DTMF_DECODER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

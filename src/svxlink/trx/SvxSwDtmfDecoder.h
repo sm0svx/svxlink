@@ -26,41 +26,41 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef SVX_SW_DTMF_DECODER_INCLUDED
 #define SVX_SW_DTMF_DECODER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <vector>
 #include <stdint.h>
 #include <sigc++/sigc++.h>
 
-/*
+/**
  * Project Includes
  */
 #include <CppStdCompat.h>
 
-/*
+/**
  * Local Includes
  */
 #include "DtmfDecoder.h"
 #include "Goertzel.h"
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -183,11 +183,11 @@ class SvxSwDtmfDecoder : public DtmfDecoder
 
     void processBlock(void);
 
-};  /* class SvxSwDtmfDecoder */
+};  /** class SvxSwDtmfDecoder */
 
-#endif /* SVX_SW_DTMF_DECODER_INCLUDED */
+#endif /** SVX_SW_DTMF_DECODER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

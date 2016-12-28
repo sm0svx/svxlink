@@ -24,49 +24,49 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <cstdlib>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncConfig.h>
 
-/*
+/**
  * Local Includes
  */
 #include "SigLevDetSim.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 unsigned int SigLevDetSim::next_seed = 0;
 
-/*
+/**
  * Public member functions
  */
 SigLevDetSim::SigLevDetSim(void)
@@ -76,11 +76,11 @@ SigLevDetSim::SigLevDetSim(void)
     block_size(0), siglev_min(0.0f), siglev_max(100.0f), siglev_default(0.0f),
     seed(next_seed++)
 {
-} /* SigLevDetSim::SigLevDetSim */
+} /** SigLevDetSim::SigLevDetSim */
 
 SigLevDetSim::~SigLevDetSim(void)
 {
-} /* SigLevDetSim::~SigLevDetSim */
+} /** SigLevDetSim::~SigLevDetSim */
 
 bool SigLevDetSim::initialize(Config &cfg, const string& name, int sample_rate)
 {
@@ -103,7 +103,7 @@ bool SigLevDetSim::initialize(Config &cfg, const string& name, int sample_rate)
 
   return SigLevDet::initialize(cfg, name, sample_rate);
   
-} /* SigLevDetSim::initialize */
+} /** SigLevDetSim::initialize */
 
 void SigLevDetSim::reset(void)
 {
@@ -113,13 +113,13 @@ void SigLevDetSim::reset(void)
   siglev_toggle_counter = 0;
   siglev_rand_counter = 0;
   siglev_values.clear();
-} /* SigLevDetSim::reset */
+} /** SigLevDetSim::reset */
 
 void SigLevDetSim::setContinuousUpdateInterval(int interval_ms)
 {
   update_interval = interval_ms * sample_rate / 1000;
   update_counter = 0;  
-} /* SigLevDetSim::setContinuousUpdateInterval */
+} /** SigLevDetSim::setContinuousUpdateInterval */
 
 void SigLevDetSim::setIntegrationTime(int time_ms)
 {
@@ -130,7 +130,7 @@ void SigLevDetSim::setIntegrationTime(int time_ms)
   {
     integration_time = 1;
   }
-} /* SigLevDetSim::setIntegrationTime */
+} /** SigLevDetSim::setIntegrationTime */
 
 float SigLevDetSim::siglevIntegrated(void) const
 {
@@ -145,9 +145,9 @@ float SigLevDetSim::siglevIntegrated(void) const
     return sum / siglev_values.size();
   }
   return 0;
-} /* SigLevDetSim::siglevIntegrated */
+} /** SigLevDetSim::siglevIntegrated */
 
-/*
+/**
  * Protected member functions
  */
 
@@ -195,10 +195,10 @@ int SigLevDetSim::writeSamples(const float *samples, int count)
   }
 
   return count;
-} /* SigLevDetSim::writeSamples */
+} /** SigLevDetSim::writeSamples */
 
 
-/*
+/**
  * Private member functions
  */
 
@@ -212,7 +212,7 @@ void SigLevDetSim::randNewSiglev(void)
   {
     last_siglev -= 1.0f;
   }
-} /* SigLevDetSim::randNewSiglev */
+} /** SigLevDetSim::randNewSiglev */
 
 void SigLevDetSim::toggleSiglev(void)
 {
@@ -224,8 +224,8 @@ void SigLevDetSim::toggleSiglev(void)
   {
     last_siglev = siglev_min;
   }
-} /* SigLevDetSim::toggleSiglev */
+} /** SigLevDetSim::toggleSiglev */
 
-/*
+/**
  * This file has not been truncated
  */

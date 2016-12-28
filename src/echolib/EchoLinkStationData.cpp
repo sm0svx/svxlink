@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <cstring>
@@ -34,42 +34,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sys/types.h>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "EchoLinkStationData.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace EchoLink;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 string StationData::statusStr(Status status)
@@ -97,15 +97,15 @@ string StationData::statusStr(Status status)
   
   return str;
   
-} /* StationData::statusStr */
+} /** StationData::statusStr */
 
 
 StationData::StationData(void)
 {
   clear();
-} /* StationData::StationData */
+} /** StationData::StationData */
 
-/*
+/**
  *------------------------------------------------------------------------
  * Method:    StationData::StationData
  * Purpose:   Constructor for the StationData struct
@@ -125,14 +125,14 @@ void StationData::clear(void)
   m_description = "";
   m_id = -1;
   m_code = "";
-} /* StationData::clear */
+} /** StationData::clear */
 
 
 void StationData::setCallsign(const string& callsign)
 {
   m_callsign = callsign;
   m_code = callToCode(callsign);
-} /* StationData::setCallsign  */
+} /** StationData::setCallsign  */
 
 void StationData::setData(const char *data)
 {
@@ -172,7 +172,7 @@ void StationData::setData(const char *data)
   m_description = str;
   removeTrailingSpaces(m_description);
   
-} /* StationData::setData */
+} /** StationData::setData */
 
 StationData& StationData::operator=(const StationData& rhs)
 {
@@ -186,13 +186,13 @@ StationData& StationData::operator=(const StationData& rhs)
   
   return *this;
   
-} /* StationData::operator= */
+} /** StationData::operator= */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 
@@ -211,7 +211,7 @@ void StationData::removeTrailingSpaces(string& str)
   {
     str = "";
   }
-} /* StationData::removeTrailingSpaces */
+} /** StationData::removeTrailingSpaces */
 
 string StationData::callToCode(const string& call)
 {
@@ -245,10 +245,10 @@ string StationData::callToCode(const string& call)
 
   return code;
   
-} /* StationData::callToCode  */
+} /** StationData::callToCode  */
 
 
-/*
+/**
  * This file has not been truncated
  */
 

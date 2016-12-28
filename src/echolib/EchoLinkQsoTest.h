@@ -26,11 +26,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef ECHOLINK_QSO_TEST_INCLUDED
 #define ECHOLINK_QSO_TEST_INCLUDED
 
-/*
+/**
  * System Includes
  */
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncCppApplication.h>
@@ -39,11 +39,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <EchoLinkDirectory.h>
 #include <EchoLinkQso.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -52,19 +52,19 @@ namespace Async
   class SigCAudioSource;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 
@@ -102,13 +102,13 @@ class EchoLinkQsoTest : public EchoLink::Qso
     void onStateChange(Qso::State state);
     int micAudioRead(float *buf, int len);
     
-};  /* class EchoLinkQsoTest */
+};  /** class EchoLinkQsoTest */
 
-//} /* namespace */
+//} /** namespace */
 
-#endif /* ECHOLINK_QSO_TEST_INCLUDED */
+#endif /** ECHOLINK_QSO_TEST_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

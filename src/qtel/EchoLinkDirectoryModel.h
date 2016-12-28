@@ -31,42 +31,42 @@ An example of how to use the EchoLinkDirectoryModel class
 #ifndef ECHOLINK_DIRECTORY_MODEL_INCLUDED
 #define ECHOLINK_DIRECTORY_MODEL_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <QList>
 #include <QAbstractItemModel>
 
-/*
+/**
  * Project Includes
  */
 #include <EchoLinkStationData.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -122,11 +122,11 @@ class EchoLinkDirectoryModel : public QAbstractItemModel
     EchoLinkDirectoryModel(const EchoLinkDirectoryModel&);
     EchoLinkDirectoryModel& operator=(const EchoLinkDirectoryModel&);
     
-};  /* class EchoLinkDirectoryModel */
+};  /** class EchoLinkDirectoryModel */
 
-#endif /* ECHOLINK_DIRECTORY_MODEL_INCLUDED */
+#endif /** ECHOLINK_DIRECTORY_MODEL_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

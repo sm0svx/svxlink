@@ -30,23 +30,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef LOCAL_RX_BASE_INCLUDED
 #define LOCAL_RX_BASE_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sys/time.h>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioValve.h>
 #include <AsyncAudioDelayLine.h>
 
-/*
+/**
  * Local Includes
  */
 #include "Rx.h"
 
-/*
+/**
  * Forward declarations
  */
 namespace Async
@@ -59,24 +59,24 @@ namespace Async
 
 class Squelch;
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class SigLevDet;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -215,11 +215,11 @@ class LocalRxBase : public Rx
     void setSqlHangtimeFromSiglev(float siglev);
     void rxReadyStateChanged(void);
 
-};  /* class LocalRxBase */
+};  /** class LocalRxBase */
 
-#endif /* LOCAL_RX_BASE_INCLUDED */
+#endif /** LOCAL_RX_BASE_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

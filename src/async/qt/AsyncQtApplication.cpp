@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 \endverbatim
 */
 
-/*
+/**
  * System Includes
  */
 #include <sigc++/sigc++.h>
@@ -40,11 +40,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <algorithm>
 #include <iostream>
 
-/*
+/**
  * Project Includes
  */
 
-/*
+/**
  * Local Includes
  */
 #include "AsyncQtDnsLookupWorker.h"
@@ -53,33 +53,33 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "AsyncQtTimer.h"
 #include "AsyncQtApplication.h"
 
-/*
+/**
  * Namespaces to use
  */
 using namespace std;
 using namespace Async;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Local class definitions
  */
 
-/*
+/**
  * Prototypes
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Local Global Variables
  */
 
-/*
+/**
  * Public member functions
  */
 
@@ -87,28 +87,28 @@ QtApplication::QtApplication(int &argc, char **argv)
   : QApplication(argc, argv)
 {
   
-} /* QtApplication::QtApplication */
+} /** QtApplication::QtApplication */
 
 QtApplication::~QtApplication(void)
 {
   
-} /* QtApplication::~QtApplication */
+} /** QtApplication::~QtApplication */
 
 void QtApplication::exec(void)
 {
   QApplication::exec();
-} /* QtApplication::exec */
+} /** QtApplication::exec */
 
 void QtApplication::quit(void)
 {
   QApplication::quit();
-} /* QtApplication::quit */
+} /** QtApplication::quit */
 
-/*
+/**
  * Protected member functions
  */
 
-/*
+/**
  * Private member functions
  */
 void QtApplication::addFdWatch(FdWatch *fd_watch)
@@ -131,7 +131,7 @@ void QtApplication::addFdWatch(FdWatch *fd_watch)
                        this, SLOT(wrFdActivity(int)));
       break;
   }  
-} /* QtApplication::addFdWatch */
+} /** QtApplication::addFdWatch */
 
 void QtApplication::delFdWatch(FdWatch *fd_watch)
 {
@@ -154,7 +154,7 @@ void QtApplication::delFdWatch(FdWatch *fd_watch)
       break;
   }
   
-} /* QtApplication::delFdWatch */
+} /** QtApplication::delFdWatch */
 
 void QtApplication::rdFdActivity(int socket)
 {
@@ -162,7 +162,7 @@ void QtApplication::rdFdActivity(int socket)
   iter = rd_watch_map.find(socket);
   assert(iter != rd_watch_map.end());
   iter->second.first->activity(iter->second.first);
-} /* QtApplication::rdFdActivity */
+} /** QtApplication::rdFdActivity */
 
 void QtApplication::wrFdActivity(int socket)
 {
@@ -170,13 +170,13 @@ void QtApplication::wrFdActivity(int socket)
   iter = wr_watch_map.find(socket);
   assert(iter != wr_watch_map.end());
   iter->second.first->activity(iter->second.first);
-} /* QtApplication::wrFdActivity */
+} /** QtApplication::wrFdActivity */
 
 void QtApplication::addTimer(Timer *timer)
 {
   AsyncQtTimer *t = new AsyncQtTimer(timer);
   timer_map[timer] = t;  
-} /* QtApplication::addTimer */
+} /** QtApplication::addTimer */
 
 void QtApplication::delTimer(Timer *timer)
 {
@@ -185,14 +185,14 @@ void QtApplication::delTimer(Timer *timer)
   assert(iter != timer_map.end());
   delete iter->second;
   timer_map.erase(iter);
-} /* QtApplication::delTimer */
+} /** QtApplication::delTimer */
 
 DnsLookupWorker *QtApplication::newDnsLookupWorker(const string& label)
 {
   return new QtDnsLookupWorker(label);
-} /* QtApplication::newDnsLookupWorker */
+} /** QtApplication::newDnsLookupWorker */
 
-/*
+/**
  * This file has not been truncated
  */
 

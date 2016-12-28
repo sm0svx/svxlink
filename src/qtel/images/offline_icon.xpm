@@ -1,6 +1,6 @@
-/* XPM */
+/** XPM */
 static const char *offline_icon[] = {
-/* columns rows colors chars-per-pixel */
+/** columns rows colors chars-per-pixel */
 "16 16 114 2",
 "   c gray22",
 ".  c #3a3a3a",
@@ -116,7 +116,7 @@ static const char *offline_icon[] = {
 "1. c #f9f9f9",
 "2. c white",
 "3. c None",
-/* pixels */
+/** pixels */
 "3.3.3.3.3.Y ( +.@.[ A - 3.3.3.3.",
 "3.3.3.L ~ >.2.2.2.2.>.Y : 3.3.3.",
 "3.3.Y B %.<.<.<.>.>.-.-.G : 3.3.",

@@ -26,42 +26,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef MODULE_HELP_INCLUDED
 #define MODULE_HELP_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 #include <Module.h>
 
-/*
+/**
  * Local Includes
  */
 #include "version/SVXLINK.h"
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -90,10 +90,10 @@ class ModuleHelp : public Module
     void dtmfCmdReceivedWhenIdle(const std::string &cmd);
     void playChooseModuleMsg(void);
 
-};  /* class ModuleHelp */
+};  /** class ModuleHelp */
 
-#endif /* MODULE_HELP_INCLUDED */
+#endif /** MODULE_HELP_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

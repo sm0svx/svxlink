@@ -34,44 +34,44 @@ An example of how to use the AsyncAtTimer class
 #ifndef ASYNC_AT_TIMER_INCLUDED
 #define ASYNC_AT_TIMER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <time.h>
 #include <sigc++/sigc++.h>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncTimer.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 
-/*
+/**
  * Namespace
  */
 namespace Async
 {
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -173,13 +173,13 @@ class AtTimer : public sigc::trackable
     int msecToTimeout(void);
     void onTimerExpired(Timer *t);
     
-};  /* class AtTimer */
+};  /** class AtTimer */
 
-} /* namespace */
+} /** namespace */
 
-#endif /* ASYNC_AT_TIMER_INCLUDED */
+#endif /** ASYNC_AT_TIMER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 

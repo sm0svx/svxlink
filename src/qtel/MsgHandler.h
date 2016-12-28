@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef MSG_HANDLER_INCLUDED
 #define MSG_HANDLER_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <string>
@@ -37,37 +37,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <sigc++/sigc++.h>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncAudioSource.h>
 
-/*
+/**
  * Local Includes
  */
 
-/*
+/**
  * Forward declarations
  */
 class QueueItem;
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -201,10 +201,10 @@ class MsgHandler : public sigc::trackable, public Async::AudioSource
     void deleteQueueItem(QueueItem *item);
     void clearP(void);
 
-}; /* class MsgHandler */
+}; /** class MsgHandler */
 
-#endif /* MSG_HANDLER_INCLUDED */
+#endif /** MSG_HANDLER_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */

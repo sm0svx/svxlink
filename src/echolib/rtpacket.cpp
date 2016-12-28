@@ -20,7 +20,7 @@ int rtp_make_sdes(unsigned char *p, const char *callsign,
     char tmp[256];
     int len;
 
-    /* Prefix the packet with a null receiver report.  This is
+    /** Prefix the packet with a null receiver report.  This is
        required by the RTP spec, but is not required in packets
        sent only to the Look Who's Listening server. */
 
@@ -33,18 +33,18 @@ int rtp_make_sdes(unsigned char *p, const char *callsign,
     *p++ = 0;
     *p++ = 0;
 
-    /* Set SDES version/misc data. */
+    /** Set SDES version/misc data. */
     ver = (RTP_VERSION << 14) | RTCP_SDES | (1 << 8);
     p[0] = ver >> 8;
     p[1] = ver;
 
-    /* Set SDES source. */
+    /** Set SDES source. */
     p[4] = 0;
     p[5] = 0;
     p[6] = 0;
     p[7] = 0;
 
-    /* At this point ap points to the beginning of the first SDES item. */
+    /** At this point ap points to the beginning of the first SDES item. */
     ap = p + 8;
 
     *ap++ = RTCP_SDES_CNAME;
@@ -69,18 +69,18 @@ int rtp_make_sdes(unsigned char *p, const char *callsign,
     *ap++ = RTCP_SDES_END;
     *ap++ = 0;
 
-    /* Some data padding for alignment. */
+    /** Some data padding for alignment. */
     while ((ap - p) & 3)
     {
         *ap++ = 0;
     }
 
-    /* Length of all items. */
+    /** Length of all items. */
     len = ((ap - p) / 4) - 1;
     p[2] = len >> 8;
     p[3] = len;
 
-    /* Size of the entire packet. */
+    /** Size of the entire packet. */
     return (ap - p) + 8;
 }
 
@@ -92,7 +92,7 @@ int rtp_make_bye(unsigned char *p)
     unsigned short ver;
     int len;
 
-    /* Prefix the packet with a null receiver report.  This is
+    /** Prefix the packet with a null receiver report.  This is
        required by the RTP spec, but is not required in packets
        sent only to the Look Who's Listening server. */
 
@@ -105,39 +105,39 @@ int rtp_make_bye(unsigned char *p)
     *p++ = 0;
     *p++ = 0;
 
-    /* Set BYE version/misc data. */
+    /** Set BYE version/misc data. */
     ver = (RTP_VERSION << 14) | RTCP_BYE | (1 << 8);
     p[0] = ver >> 8;
     p[1] = ver;
 
-    /* Set BYE source. */
+    /** Set BYE source. */
     p[4] = 0;
     p[5] = 0;
     p[6] = 0;
     p[7] = 0;
 
-    /* At this point ap points to the beginning of the trailing text. */
+    /** At this point ap points to the beginning of the trailing text. */
     ap = p + 8;
 
-    /* Add trailing text. */
+    /** Add trailing text. */
     addText(ap, "jan2002");
 
-    /* Some data padding for alignment. */
+    /** Some data padding for alignment. */
     while ((ap - p) & 3)
     {
         *ap++ = 0;
     }
     
-    /* Length of trailing text. */
+    /** Length of trailing text. */
     len = ((ap - p) / 4) - 1;
     p[2] = len >> 8;
     p[3] = len;
     
-    /* Size of the entire packet. */
+    /** Size of the entire packet. */
     return (ap - p) + 8;
 }
 
-/*  PARSESDES  --  Look for an SDES message in a possibly composite
+/**  PARSESDES  --  Look for an SDES message in a possibly composite
 		   RTCP packet. */
 
 /***************************************************/
@@ -147,10 +147,10 @@ bool parseSDES(char *r_text, unsigned char *packet, unsigned char r_item)
     bool success = false;
     unsigned char *p = packet;
 
-    /* Initialise the result in the request packet to NULL. */
+    /** Initialise the result in the request packet to NULL. */
     *r_text = 0;
 
-    /* Walk through the individual items in a possibly composite
+    /** Walk through the individual items in a possibly composite
        packet until we locate an SDES. This allows us to accept
        packets that comply with the RTP standard that all RTCP packets
        begin with an SR or RR. */
@@ -174,7 +174,7 @@ bool parseSDES(char *r_text, unsigned char *packet, unsigned char r_item)
 		    break;
 		}
 
-		/* Search for a match in the request and fill the
+		/** Search for a match in the request and fill the
 		   matching item. */
                 if (r_item == itype && *r_text == 0)
                 {
@@ -187,7 +187,7 @@ bool parseSDES(char *r_text, unsigned char *packet, unsigned char r_item)
 	    }
 	    break;
 	}
-	/* If not of interest to us, skip to next subpacket. */
+	/** If not of interest to us, skip to next subpacket. */
 	p += len;
     }
     return success;
@@ -195,17 +195,17 @@ bool parseSDES(char *r_text, unsigned char *packet, unsigned char r_item)
 
 
 /************************************/
-/*  ISRTCPBYEPACKET  --  Test if this RTCP packet contains a BYE.  */
+/**  ISRTCPBYEPACKET  --  Test if this RTCP packet contains a BYE.  */
 
 bool isRTCPByepacket(unsigned char *p, int len)
 {
     unsigned char *end = p + len;
     bool sawbye = false;
-                                                   /* Version incorrect ? */
+                                                   /** Version incorrect ? */
     if ((((p[0] >> 6) & 3) != RTP_VERSION && ((p[0] >> 6) & 3) != 1) ||
-        ((p[0] & 0x20) != 0) ||                    /* Padding in first packet ? */
+        ((p[0] & 0x20) != 0) ||                    /** Padding in first packet ? */
         ((p[1] != RTCP_SR) && (p[1] != RTCP_RR)))
-    { /* First item not SR or RR ? */
+    { /** First item not SR or RR ? */
         return false;
     }
 
@@ -214,7 +214,7 @@ bool isRTCPByepacket(unsigned char *p, int len)
         {
             sawbye = true;
         }
-        /* Advance to next subpacket */
+        /** Advance to next subpacket */
         p += (ntohs(*((uint16_t *) (p + 2))) + 1) * 4;
     } while (p < end && (((p[0] >> 6) & 3) == RTP_VERSION));
 
@@ -222,17 +222,17 @@ bool isRTCPByepacket(unsigned char *p, int len)
 }
 
 /************************************/
-/*  ISRTCPSDESPACKET  --  Test if this RTCP packet contains a SDES.  */
+/**  ISRTCPSDESPACKET  --  Test if this RTCP packet contains a SDES.  */
 
 bool isRTCPSdespacket(unsigned char *p, int len)
 {
     unsigned char *end = p + len;
     bool sawsdes = 0;
-                                                   /* Version incorrect ? */
+                                                   /** Version incorrect ? */
     if ((((p[0] >> 6) & 3) != RTP_VERSION && ((p[0] >> 6) & 3) != 1) ||
-        ((p[0] & 0x20) != 0) ||                    /* Padding in first packet ? */
+        ((p[0] & 0x20) != 0) ||                    /** Padding in first packet ? */
         ((p[1] != RTCP_SR) && (p[1] != RTCP_RR)))
-    { /* First item not SR or RR ? */
+    { /** First item not SR or RR ? */
         return false;
     }
 
@@ -241,7 +241,7 @@ bool isRTCPSdespacket(unsigned char *p, int len)
         {
             sawsdes = true;
         }
-        /* Advance to next subpacket */
+        /** Advance to next subpacket */
         p += (ntohs(*((uint16_t *) (p + 2))) + 1) * 4;
     } while (p < end && (((p[0] >> 6) & 3) == RTP_VERSION));
 

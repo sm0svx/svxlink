@@ -26,25 +26,25 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef NET_TX_INCLUDED
 #define NET_TX_INCLUDED
 
-/*
+/**
  * System Includes
  */
 #include <sigc++/sigc++.h>
 
 #include <string>
 
-/*
+/**
  * Project Includes
  */
 #include <AsyncConfig.h>
 #include <AsyncTcpClient.h>
 
-/*
+/**
  * Local Includes
  */
 #include "Tx.h"
 
-/*
+/**
  * Forward declarations
  */
 namespace NetTrxMsg
@@ -58,24 +58,24 @@ namespace Async
   class AudioEncoder;
 };
 
-/*
+/**
  * Namespace
  */
 
-/*
+/**
  * Forward declarations of classes inside of the declared namespace
  */
 class NetTrxTcpClient;
 
-/*
+/**
  * Defines & typedefs
  */
 
-/*
+/**
  * Exported Global Variables
  */
 
-/*
+/**
  * Class definitions
  */
 /**
@@ -157,11 +157,11 @@ class NetTx : public Tx
     void setIsTransmitting(bool is_transmitting);
     void allEncodedSamplesFlushed(void);
 
-};  /* class NetTx */
+};  /** class NetTx */
 
-#endif /* NET_TX_INCLUDED */
+#endif /** NET_TX_INCLUDED */
 
-/*
+/**
  * This file has not been truncated
  */
 
